@@ -3865,7 +3865,6 @@ FreeMat2/libs/libGraphics/VolumeCommands.cpp svn_keywords=Author+Date+Id+Revisio
 FreeMat2/libs/libGraphics/libGraphics.dsp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/trackball.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/trackball.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libMiniBLAS/Makefile svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniBLAS/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniBLAS/Makefile.in svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniBLAS/caxpy.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -3941,7 +3940,6 @@ FreeMat2/libs/libMiniBLAS/ztrmm.f svn_keywords=Author+Date+Id+Revision svn_eol_0
 FreeMat2/libs/libMiniBLAS/ztrmv.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniBLAS/ztrsm.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniBLAS/ztrsv.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libMiniLAPACK/Makefile svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/Makefile.in svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/complex/cgebak.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
