@@ -3703,6 +3703,7 @@ FreeMat2/autom4te.cache/requests svn_keywords=Author+Date+Id+Revision svn_eol_00
 FreeMat2/autom4te.cache/traces.0 svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/autom4te.cache/traces.1 svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/bootstrap svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/compile svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/conf1980.file svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/config-ml.in svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/config.guess svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
