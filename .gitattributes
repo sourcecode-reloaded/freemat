@@ -6019,6 +6019,7 @@ FreeMat2/src/win32/freemat.nsi svn_keywords=Author+Date+Id+Revision svn_eol_002d
 FreeMat2/src/win32/htmlhelp.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/win32/htmlhelp.lib svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/win32/main.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/src/win32/phi_logo_bmp.bmp svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/src/win32/resource.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/x11/DumbTerminal.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/x11/DumbTerminal.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
