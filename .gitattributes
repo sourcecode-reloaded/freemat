@@ -4479,7 +4479,6 @@ FreeMat2/libs/libMiniBLAS/f2c/icamax.c svn_keywords=Author+Date+Id+Revision svn_
 FreeMat2/libs/libMiniBLAS/f2c/idamax.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniBLAS/f2c/isamax.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniBLAS/f2c/izamax.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libMiniBLAS/f2c/lsame.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniBLAS/f2c/sasum.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniBLAS/f2c/saxpy.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniBLAS/f2c/scasum.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -4519,7 +4518,6 @@ FreeMat2/libs/libMiniBLAS/idamax.f svn_keywords=Author+Date+Id+Revision svn_eol_
 FreeMat2/libs/libMiniBLAS/isamax.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniBLAS/izamax.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniBLAS/libMiniBLAS.dsp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libMiniBLAS/lsame.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniBLAS/sasum.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniBLAS/saxpy.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniBLAS/scasum.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -4989,6 +4987,7 @@ FreeMat2/libs/libMiniLAPACK/f2c/icmax1.c svn_keywords=Author+Date+Id+Revision sv
 FreeMat2/libs/libMiniLAPACK/f2c/ieeeck.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/f2c/ilaenv.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/f2c/izmax1.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libMiniLAPACK/f2c/lsame.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/f2c/sbdsdc.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/f2c/sbdsqr.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/f2c/scsum1.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -5277,6 +5276,7 @@ FreeMat2/libs/libMiniLAPACK/util/icmax1.f svn_keywords=Author+Date+Id+Revision s
 FreeMat2/libs/libMiniLAPACK/util/ieeeck.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/util/ilaenv.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/util/izmax1.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libMiniLAPACK/util/lsame.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/BitmapFont.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/BitmapFont.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/BitmapPrinterGC.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
