@@ -4801,6 +4801,7 @@ FreeMat2/libs/libXP/System.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002d
 FreeMat2/libs/libXP/helv_table.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/libXP.dsp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/tmp.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libf2c/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libf2c/Notice svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libf2c/README svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libf2c/abort_.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -5081,6 +5082,7 @@ FreeMat2/libs/libffi/src/x86/unix64.S svn_keywords=Author+Date+Id+Revision svn_e
 FreeMat2/libs/libffi/src/x86/win32.S svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libffi/stamp-h.in svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libffi/testsuite/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libjpeg6b/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libjpeg6b/README svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libjpeg6b/ansi2knr.1 svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libjpeg6b/ansi2knr.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -5224,6 +5226,7 @@ FreeMat2/libs/libjpeg6b/wrppm.c svn_keywords=Author+Date+Id+Revision svn_eol_002
 FreeMat2/libs/libjpeg6b/wrrle.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libjpeg6b/wrtarga.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libtiff361/COPYRIGHT svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libtiff361/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libtiff361/README svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libtiff361/RELEASE-DATE svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libtiff361/TODO svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -5295,6 +5298,7 @@ FreeMat2/libs/libtiff361/libtiff/uvcode.h svn_keywords=Author+Date+Id+Revision s
 FreeMat2/libs/libtiff361/libtiff361.dsp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libtiff361/libtiff361.plg svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libtiff361/test_pics.sh svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libz/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libz/adler32.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libz/compress.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libz/crc32.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -5327,6 +5331,7 @@ FreeMat2/libs/lpng125/CHANGES svn_keywords=Author+Date+Id+Revision svn_eol_002ds
 FreeMat2/libs/lpng125/INSTALL svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/lpng125/KNOWNBUG svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/lpng125/LICENSE svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/lpng125/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/lpng125/README svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/lpng125/TODO svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/lpng125/Y2KINFO svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
