@@ -3945,6 +3945,7 @@ FreeMat2/libs/libFLTK/FL/win32.H svn_keywords=Author+Date+Id+Revision svn_eol_00
 FreeMat2/libs/libFLTK/FL/x.H svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFLTK/GL/glut.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFLTK/Makefile svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libFLTK/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFLTK/README svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFLTK/README.mac svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFLTK/README.win32 svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
