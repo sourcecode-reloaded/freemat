@@ -5547,6 +5547,7 @@ FreeMat2/libs/libffi/msvc_build/raw_api.c svn_keywords=Author+Date+Id+Revision s
 FreeMat2/libs/libffi/msvc_build/stest.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libffi/msvc_build/types.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libffi/msvc_build/win32.S svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libffi/msvc_build/win32c.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libffi/src/alpha/ffi.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libffi/src/alpha/osf.S svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libffi/src/arm/ffi.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
