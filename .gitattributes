@@ -5170,7 +5170,9 @@ FreeMat2/libs/libMiniLAPACK/complex16/zsteqr.f svn_keywords=Author+Date+Id+Revis
 FreeMat2/libs/libMiniLAPACK/complex16/ztgevc.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/complex16/ztrevc.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/complex16/ztrexc.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libMiniLAPACK/complex16/ztrsen.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/complex16/ztrsna.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libMiniLAPACK/complex16/ztrsyl.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/complex16/ztzrzf.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/complex16/zung2l.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/complex16/zung2r.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
