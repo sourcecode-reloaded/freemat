@@ -3577,6 +3577,7 @@ FreeMat/mpi/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=n
 FreeMat/mpi/Makefile.in svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/mpi/TeclaInterface.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/mpi/TeclaInterface.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat/native/build_font_tables.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/native/builft.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/native/doc.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/native/drawlib.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
