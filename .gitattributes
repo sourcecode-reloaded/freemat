@@ -4480,6 +4480,7 @@ FreeMat2/libs/libFreeMat/SingularValueDecompose.cpp svn_keywords=Author+Date+Id+
 FreeMat2/libs/libFreeMat/SingularValueDecompose.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Socket.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Socket.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libFreeMat/Sparse.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Stream.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/SymbolTable.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Types.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
