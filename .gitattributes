@@ -5524,6 +5524,7 @@ FreeMat2/src/mac/MainMenu.nib/objects.nib svn_mime_002dtype=application%2Foctet-
 FreeMat2/src/mac/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/mac/appIcon.icns svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/src/mac/auth svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/src/mac/donothing.sh svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/mac/droppable svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/mac/interpreter svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/mac/outputType svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
