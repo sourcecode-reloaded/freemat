@@ -3836,6 +3836,8 @@ FreeMat2/libs/libFreeMat/VectorOps.hpp svn_keywords=Author+Date+Id+Revision svn_
 FreeMat2/libs/libFreeMat/VectorOps_assist.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/WalkTree.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/WalkTree.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libFreeMat/libFreeMat.dsp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libFreeMat/libFreeMat.plg svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/Axis.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/Axis.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/DataSet2D.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
