@@ -5570,6 +5570,7 @@ FreeMat2/native/Rect2D.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyl
 FreeMat2/native/Rect2D.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/X_graphics.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/bld svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/build_font_table2.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/build_font_tables.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/builft.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/debug.pdf svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
