@@ -3853,6 +3853,7 @@ FreeMat2/libs/libFN/lmpar.f svn_keywords=Author+Date+Id+Revision svn_eol_002dsty
 FreeMat2/libs/libFN/main.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFN/psi.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFN/qrfac.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libFN/qrsolv.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFN/ribesl.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFN/rjbesl.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFN/rkbesl.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
