@@ -3726,6 +3726,8 @@ FreeMat2/libs/libCore/IO.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dst
 FreeMat2/libs/libCore/Inspect.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libCore/LoadCore.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libCore/LoadCore.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libCore/MPIWrap.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libCore/MPIWrap.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libCore/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libCore/Misc.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libCore/Random.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
