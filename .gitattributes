@@ -3724,6 +3724,7 @@ FreeMat2/help/makehelp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=na
 FreeMat2/help/mkhsetpath.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/install-sh svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libARPACK/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libARPACK/README svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libARPACK/SRC/cgetv0.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libARPACK/SRC/cnaitr.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
