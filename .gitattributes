@@ -5667,6 +5667,7 @@ FreeMat2/tests/core/test_assign5.m svn_keywords=Author+Date+Id+Revision svn_eol_
 FreeMat2/tests/core/test_assign6.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_assign7.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_assign8.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/tests/core/test_assign9.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_call1.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_call2.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_call3.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
