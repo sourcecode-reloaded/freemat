@@ -3667,6 +3667,7 @@ FreeMat2/FreeMat.sln svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=nati
 FreeMat2/FreeMat.vcproj svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/INSTALL svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/bind.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/clusterboot.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/copper.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/exit.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
