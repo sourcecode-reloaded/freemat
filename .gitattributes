@@ -5575,6 +5575,7 @@ FreeMat2/tests/core/test_assign7.m svn_keywords=Author+Date+Id+Revision svn_eol_
 FreeMat2/tests/core/test_assign8.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_call1.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_call2.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/tests/core/test_call3.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_core.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_core2.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_delete1.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -5596,6 +5597,7 @@ FreeMat2/tests/core/test_global1.m svn_keywords=Author+Date+Id+Revision svn_eol_
 FreeMat2/tests/core/test_if1.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_if2.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_if3.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/tests/core/test_image1.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_isempty.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_matcat1.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_matcat2.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -5604,6 +5606,7 @@ FreeMat2/tests/core/test_matcat4.m svn_keywords=Author+Date+Id+Revision svn_eol_
 FreeMat2/tests/core/test_matcat5.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_matcat6.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_persistent1.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/tests/core/test_plot1.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_range1.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_range2.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_range3.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
