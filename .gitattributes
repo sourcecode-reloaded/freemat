@@ -3855,6 +3855,7 @@ FreeMat2/libs/libFreeMat/MatrixMultiply.cpp svn_keywords=Author+Date+Id+Revision
 FreeMat2/libs/libFreeMat/MatrixMultiply.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Module.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Module.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libFreeMat/NewLex.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Parser.cxx svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Parser.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Parser.yxx svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
