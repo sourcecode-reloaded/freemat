@@ -5636,6 +5636,7 @@ FreeMat2/native/x11/main.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyl
 FreeMat2/native/x11/main.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/x11/notes.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/notes.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/src/util/helv.pfb svn_eol_002dstyle=native
 FreeMat2/src/win32/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/win32/Makefile.in svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/win32/WinGC.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
