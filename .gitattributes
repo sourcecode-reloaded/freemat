@@ -3742,12 +3742,8 @@ FreeMat2/libs/libCore/Transcendental.cpp svn_keywords=Author+Date+Id+Revision sv
 FreeMat2/libs/libCore/Trigonometric.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libCore/Utils.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libCore/Utils.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libCore/com.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libCore/libCore.dsp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libCore/libCore.vcproj svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libCore/linpack.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libCore/ranlib.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libCore/ranlib.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFFTPack/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFFTPack/cfftb.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFFTPack/cfftb1.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
