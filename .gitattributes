@@ -3675,6 +3675,8 @@ FreeMat2/MFiles/imagez.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=
 FreeMat2/MFiles/length.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/linspace.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/log2.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/mprintimage.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/mprintplot.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/popdir.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/pushdir.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/rawread.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
