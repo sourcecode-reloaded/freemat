@@ -4520,6 +4520,8 @@ FreeMat2/libs/libFreeMat/Interface.cpp svn_keywords=Author+Date+Id+Revision svn_
 FreeMat2/libs/libFreeMat/Interface.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/LAPACK.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/LAPACK.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libFreeMat/LUDecompose.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libFreeMat/LUDecompose.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/LeastSquaresSolver.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/LeastSquaresSolver.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Lexer.cxx svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
