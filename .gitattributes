@@ -6144,6 +6144,7 @@ FreeMat2/libs/libMiniLAPACK/f2c/zlarfb.c svn_keywords=Author+Date+Id+Revision sv
 FreeMat2/libs/libMiniLAPACK/f2c/zlarfg.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/f2c/zlarft.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/f2c/zlarfx.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libMiniLAPACK/f2c/zlarnv.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/f2c/zlartg.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/f2c/zlarz.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/f2c/zlarzb.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -6163,7 +6164,9 @@ FreeMat2/libs/libMiniLAPACK/f2c/zsteqr.c svn_keywords=Author+Date+Id+Revision sv
 FreeMat2/libs/libMiniLAPACK/f2c/ztgevc.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/f2c/ztrevc.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/f2c/ztrexc.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libMiniLAPACK/f2c/ztrsen.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/f2c/ztrsna.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libMiniLAPACK/f2c/ztrsyl.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/f2c/ztzrzf.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/f2c/zung2l.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/f2c/zung2r.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
