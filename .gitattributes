@@ -2792,6 +2792,8 @@ FreeMat/libs/libFreeMat/File.hpp svn_keywords=Author+Date+Id+Revision svn_eol_00
 FreeMat/libs/libFreeMat/FunctionDef.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/libs/libFreeMat/FunctionDef.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/libs/libFreeMat/HandleList.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat/libs/libFreeMat/IEEEFP.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat/libs/libFreeMat/IEEEFP.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/libs/libFreeMat/Interface.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/libs/libFreeMat/LAPACK.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/libs/libFreeMat/LAPACK.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
