@@ -3713,8 +3713,6 @@ FreeMat2/help/bldindex.pl svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle
 FreeMat2/help/dcptrans.pl svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/help/freemat.chm svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/help/freemat.hhp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/help/html/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/help/html/WARNINGS svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/help/html/images.aux svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/help/html/images.log svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/help/html/images.pl svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
