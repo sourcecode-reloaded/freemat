@@ -4056,6 +4056,8 @@ FreeMat2/help/html/zoom6.png svn_keywords=Author+Date+Id+Revision svn_eol_002dst
 FreeMat2/help/main.tex svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/help/makehelp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/help/master.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/help/toc.hhc svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/help/toc_template.hhc svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/install-sh svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/Makefile.in svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
