@@ -4778,6 +4778,8 @@ FreeMat2/libs/libMiniLAPACK/util/ilaenv.f svn_keywords=Author+Date+Id+Revision s
 FreeMat2/libs/libMiniLAPACK/util/izmax1.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/BitmapFont.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/BitmapFont.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libXP/BitmapPrinterGC.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libXP/BitmapPrinterGC.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/Color.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/Color.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/DynLib.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
