@@ -3566,6 +3566,10 @@ FreeMat/manual/zoom6.eps svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=
 FreeMat/manual/zoom6.jpg svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/missing svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/mkinstalldirs svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat/mpi/AppNoGUI.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat/mpi/AppNoGUI.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat/mpi/CLIThread.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat/mpi/CLIThread.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/mpi/KernelMainMPI.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/mpi/MPIWrap.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/mpi/MPIWrap.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
