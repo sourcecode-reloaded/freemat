@@ -6509,12 +6509,6 @@ FreeMat2/src/util/helv.pfb svn_eol_002dstyle=native
 FreeMat2/src/win32/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/win32/Script1.rc svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/win32/Script1_rc.in svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/src/win32/WinGC.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/src/win32/WinGC.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/src/win32/WinTerminal.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/src/win32/WinTerminal.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/src/win32/XWindow.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/src/win32/XWindow.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/win32/freemat.ico svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/src/win32/freemat.nsi svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/win32/freemat_nsi.in svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
