@@ -11,6 +11,7 @@ CVSROOT/taginfo svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 CVSROOT/verifymsg svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/COPYING svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/INSTALL svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat/MFiles/clusterboot.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/MFiles/copper.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/MFiles/exit.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/MFiles/eye.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
