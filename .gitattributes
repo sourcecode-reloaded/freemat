@@ -5370,6 +5370,7 @@ FreeMat2/ltcf-c.sh svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/ltconfig svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/ltmain.sh svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/missing svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/mkdist svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/mkinstalldirs svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/mpi/.deps/AppNoGUI.Po svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/mpi/.deps/CLIThread.Po svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
