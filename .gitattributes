@@ -4273,6 +4273,11 @@ FreeMat2/libs/libMiniLAPACK/double/dgesvx.f svn_keywords=Author+Date+Id+Revision
 FreeMat2/libs/libMiniLAPACK/double/dgetf2.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/double/dgetrf.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/double/dgetrs.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libMiniLAPACK/double/dggbak.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libMiniLAPACK/double/dggbal.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libMiniLAPACK/double/dggev.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libMiniLAPACK/double/dgghrd.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libMiniLAPACK/double/dhgeqz.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/double/dhseqr.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/double/dlabad.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/double/dlabrd.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -4283,6 +4288,7 @@ FreeMat2/libs/libMiniLAPACK/double/dlae2.f svn_keywords=Author+Date+Id+Revision 
 FreeMat2/libs/libMiniLAPACK/double/dlaed6.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/double/dlaev2.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/double/dlaexc.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libMiniLAPACK/double/dlag2.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/double/dlahqr.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/double/dlahrd.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/double/dlaic1.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -4367,6 +4373,7 @@ FreeMat2/libs/libMiniLAPACK/double/dsygst.f svn_keywords=Author+Date+Id+Revision
 FreeMat2/libs/libMiniLAPACK/double/dsygv.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/double/dsytd2.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/double/dsytrd.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libMiniLAPACK/double/dtgevc.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/double/dtrevc.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/double/dtrexc.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/double/dtrsna.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
