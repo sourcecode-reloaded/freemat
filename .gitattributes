@@ -5236,6 +5236,8 @@ FreeMat2/libs/libXP/Point2D.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002
 FreeMat2/libs/libXP/Point2D.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/PostScriptGC.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/PostScriptGC.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libXP/PrintableWidget.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libXP/PrintableWidget.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/RGBImage.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/RGBImage.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/RGBImageGC.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
