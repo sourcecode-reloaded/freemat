@@ -4016,6 +4016,7 @@ FreeMat2/libs/libMiniBLAS/icamax.f svn_keywords=Author+Date+Id+Revision svn_eol_
 FreeMat2/libs/libMiniBLAS/idamax.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniBLAS/isamax.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniBLAS/izamax.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libMiniBLAS/libMiniBLAS.dsp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniBLAS/lsame.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniBLAS/sasum.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniBLAS/saxpy.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -4664,6 +4665,7 @@ FreeMat2/libs/libMiniLAPACK/f2c/zunmlq.c svn_keywords=Author+Date+Id+Revision sv
 FreeMat2/libs/libMiniLAPACK/f2c/zunmqr.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/f2c/zunmr3.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/f2c/zunmrz.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libMiniLAPACK/libMiniLAPACK.dsp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/single/sbdsdc.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/single/sbdsqr.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/single/scsum1.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
