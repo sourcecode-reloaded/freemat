@@ -5498,6 +5498,14 @@ FreeMat2/native/x11/main.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyl
 FreeMat2/native/x11/main.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/x11/notes.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/src/mac/FreeMat svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/src/mac/Info.plist svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/src/mac/appIcon.icns svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/src/mac/auth svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/src/mac/droppable svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/src/mac/interpreter svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/src/mac/outputType svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/src/mac/script svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/notes.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/util/Makefile svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/util/build_font_table2.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
