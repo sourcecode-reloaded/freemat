@@ -3893,8 +3893,6 @@ FreeMat2/libs/libGraphics/Makefile.in svn_keywords=Author+Date+Id+Revision svn_e
 FreeMat2/libs/libGraphics/Plot2D.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/Plot2D.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/PlotCommands.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libGraphics/PrintableFrame.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libGraphics/PrintableFrame.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/ScalarImage.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/ScalarImage.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/VolView.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
