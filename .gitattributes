@@ -5440,6 +5440,12 @@ FreeMat2/native/ex1.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=nat
 FreeMat2/native/getweb svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/helv.afm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/helv.pfb svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/lexdbug/Lexer.lxx svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/lexdbug/Parser.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/lexdbug/Reserved.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/lexdbug/Reserved.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/lexdbug/mkbuild svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/lexdbug/notes.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/newdoc/Clear.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/newdoc/XLabel.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/newdoc/dcptom.pl svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
