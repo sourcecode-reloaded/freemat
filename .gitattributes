@@ -4329,8 +4329,6 @@ FreeMat2/libs/libXP/Reducer.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002
 FreeMat2/libs/libXP/Reducer.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/System.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/System.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libXP/XWindow.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libXP/XWindow.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/tmp.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libffi/ChangeLog svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libffi/ChangeLog.libgcj svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
