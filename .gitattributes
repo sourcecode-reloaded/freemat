@@ -3707,18 +3707,14 @@ FreeMat2/doc/dots/ASTdot2.dot svn_keywords=Author+Date+Id+Revision svn_eol_002ds
 FreeMat2/doc/dots/ASTdot3.dot svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/doc/dots/ASTdot4.dot svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/doc/dots/ASTdot5.dot svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/help/Index_template.hhk svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/help/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/help/bldindex.pl svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/help/dcptrans.pl svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/help/freemat.chm svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/help/freemat.hhp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/help/index.hhk svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/help/main.tex svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/help/makehelp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/help/master.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/help/toc.hhc svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/help/toc_template.hhc svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/install-sh svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libCore/Analyze.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
