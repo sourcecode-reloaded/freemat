@@ -3694,7 +3694,6 @@ FreeMat2/MFiles/winlev.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=
 FreeMat2/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/README svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/acinclude.m4 svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/aclocal.m4 svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/bootstrap svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/compile svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/conf1980.file svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
