@@ -6433,6 +6433,7 @@ FreeMat2/native/pargs.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=n
 FreeMat2/native/putweb svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/renderft.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/renderft.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/sparse/sparse.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/swiss.12 svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/swiss.12_arial svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/testmain.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
