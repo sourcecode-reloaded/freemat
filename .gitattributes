@@ -3716,6 +3716,7 @@ FreeMat2/help/bldmakefiles.pl svn_keywords=Author+Date+Id+Revision svn_eol_002ds
 FreeMat2/help/dcptrans.pl svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/help/main.tex svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/help/makehelp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/help/mkhsetpath.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/install-sh svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libCore/Analyze.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
