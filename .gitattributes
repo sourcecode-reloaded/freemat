@@ -7180,6 +7180,9 @@ FreeMat2/mkdist svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/mkinstalldirs svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/.DS_Store svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/.gdb_history svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/@base/base.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/@base/plus.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/@base/show.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/Arial svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/BitmapFont.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/BitmapFont.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
