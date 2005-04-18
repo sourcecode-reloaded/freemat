@@ -3674,6 +3674,7 @@ FreeMat2/MFiles/conv.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=
 FreeMat2/MFiles/copper.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/exit.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/eye.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/fftshift.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/filesep.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/flipdim.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/fliplr.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
