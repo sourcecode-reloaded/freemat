@@ -3716,7 +3716,10 @@ FreeMat2/MFiles/spy.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=n
 FreeMat2/MFiles/sqrt.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/squeeze.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/std.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/strcmp.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/strfind.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/strncmp.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/sub2ind.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/teps.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/xlim.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/ylim.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
