@@ -3667,6 +3667,8 @@ FreeMat2/FreeMat.dsw svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=nati
 FreeMat2/FreeMat.sln svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/FreeMat.vcproj svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/INSTALL svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/@inline/inline.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/@inline/subsref.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/bin2dec.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/bind.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
