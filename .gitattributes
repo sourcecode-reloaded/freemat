@@ -7467,6 +7467,8 @@ FreeMat2/tests/core/test_sparse110.m svn_keywords=Author+Date+Id+Revision svn_eo
 FreeMat2/tests/core/test_sparse111.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_sparse112.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_sparse113.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/tests/core/test_sparse114.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/tests/core/test_sparse115.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_sparse12.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_sparse13.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/test_sparse14.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
