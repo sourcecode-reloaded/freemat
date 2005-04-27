@@ -7669,6 +7669,8 @@ FreeMat2/tests/parse/bad6.m svn_keywords=Author+Date+Id+Revision svn_eol_002dsty
 FreeMat2/tests/parse/bad7.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/parse/bad8.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/parse/bad9.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/tests/timing/timetest2.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/tests/timing/timetest3.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/todo.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/ylwrap svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2\\libs\\libfltk/ANNOUNCEMENT svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
