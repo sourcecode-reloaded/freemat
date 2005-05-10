@@ -3698,6 +3698,7 @@ FreeMat2/MFiles/ischar.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyl
 FreeMat2/MFiles/isfield.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/islogical.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/isstr.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/isstruct.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/length.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/linspace.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/log10.mpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
