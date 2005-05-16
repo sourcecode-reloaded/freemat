@@ -7267,6 +7267,9 @@ FreeMat2/native/osx/mac.r svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle
 FreeMat2/native/osx/main.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/pargs.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/putweb svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/qt/term/TermWidget.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/qt/term/TermWidget.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/qt/term/term.pro svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/renderft.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/renderft.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/sparse/sparse.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
