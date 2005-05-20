@@ -7227,6 +7227,8 @@ FreeMat2/native/dg.pdf svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=na
 FreeMat2/native/doc.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/ex1.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/fltk/bld svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/fltk/term.cxx svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/fltk/term.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/fltk/twin.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/getweb svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/helv.afm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
