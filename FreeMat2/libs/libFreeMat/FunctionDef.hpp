@@ -25,7 +25,6 @@
 #include "AST.hpp"
 #include "Interface.hpp"
 #include <sys/stat.h>
-#include "ffi.h"
 
 namespace FreeMat {
 
@@ -313,6 +312,8 @@ namespace FreeMat {
   };
 
   typedef void (*GenericFuncPointer)();
+  
+  struct ffi_cif;
 
   class ImportedFunctionDef : public FunctionDef {
   public:
@@ -331,7 +332,7 @@ namespace FreeMat {
     /**
      * The call interface object.
      */
-    ffi_cif cif;
+    ffi_cif *cif;
     /**
      * The types of each argument
      */

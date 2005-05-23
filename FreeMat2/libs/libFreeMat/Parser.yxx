@@ -632,8 +632,10 @@ rowDef:
 %%
 
 namespace FreeMat {
-  
-//  int yyparse();
+
+#ifdef YYBYACC  
+  int yyparse();
+#endif
 
   void resetParser() {
     mainAST = NULL;

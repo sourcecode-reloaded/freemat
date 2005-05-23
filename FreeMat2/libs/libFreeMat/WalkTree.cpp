@@ -1537,8 +1537,9 @@ namespace FreeMat {
   void WalkTree::statementType(ASTPtr t, bool printIt) {
     ArrayVector m;
     FunctionDef *fdef;
-    // Fl::wait(0)
-
+#ifdef USE_FLTK
+    Fl::wait(0);
+#endif
     SetContext(t->context());
     // check the debug flag
     //    int fullcontext = t->context();

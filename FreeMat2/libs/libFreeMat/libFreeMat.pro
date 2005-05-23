@@ -2,9 +2,9 @@ TEMPLATE = lib
 
 TARGET = FreeMat
 
-CONFIG += warn_on staticlib
+CONFIG += staticlib
 
-INCLUDEPATH = ../libffi/include ../libXP ../libUMFPACK/UMFPACK/Include
+INCLUDEPATH = ../libffi/include ../libXP ../libUMFPACK/UMFPACK/Include ../..
 
 YACCSOURCES = Parser.yxx 
 
