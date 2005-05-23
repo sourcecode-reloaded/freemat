@@ -1046,6 +1046,7 @@ FreeMat2/libs/libFreeMat/WalkTree.hpp svn_keywords=Author+Date+Id+Revision svn_e
 FreeMat2/libs/libFreeMat/f2c/VectorOps_assist.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/libFreeMat.dsp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/libFreeMat.plg svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libFreeMat/libFreeMat.pro svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/libFreeMat.vcproj svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/Axis.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/Axis.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
