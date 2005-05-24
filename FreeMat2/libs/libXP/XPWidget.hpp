@@ -37,7 +37,7 @@ public:
   void Resize(Point2D pt);
   void Hide();
   void Show();
-  void Print(std::string filename);
+  bool Print(std::string filename,std::string type);
   // These are toolkit dependant routines that map the toolkit stuff to the above events
 private:
   void paintEvent(QPaintEvent* e);

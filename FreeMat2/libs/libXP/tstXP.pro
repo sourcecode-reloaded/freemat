@@ -8,7 +8,8 @@ XPWidget.hpp \
 XPWindow.hpp \
 Color.hpp \
 Point2D.hpp \
-Rect2D.hpp
+Rect2D.hpp \
+PostScriptGC.hpp
 
 SOURCES += GraphicsContext.cpp \
 QTGC.cpp \
@@ -17,4 +18,5 @@ XPWindow.cpp \
 tstXP.cpp \
 Color.cpp \
 Point2D.cpp \
-Rect2D.cpp
+Rect2D.cpp \
+PostScriptGC.cpp

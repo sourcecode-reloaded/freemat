@@ -1,4 +1,5 @@
 #include "XPWidget.hpp"
+#include "PostScriptGC.hpp"
 #include <qpainter.h>
 #include <qpixmap.h>
 #include <qimage.h>
@@ -54,27 +55,19 @@ void XPWidget::Resize(Point2D pt) {
   resize(pt.x,pt.y);
 }
 
-void XPWidget::Print(std::string filename) {
-  QPixmap pxmap(width(),height());
-  QPainter paint(&pxmap);
-  QTGC gc(paint,width(),height());
-  OnDraw(gc);
-  QImage img(pxmap.convertToImage());
-  img.save(filename,"PNG");
-  QStringList list = img.outputFormatList();
-  QStringList::Iterator it = list.begin();
-  while( it != list.end() ) {
-    std::cout << "image format " << *it << "\n";
-    ++it;
+bool XPWidget::Print(std::string filename, std::string type) {
+  if (type == "eps" || type == "ps") {
+    PostScriptGC gc(filename,width(),height());
+    OnDraw(gc);
+    return true;
+  } else {
+    QPixmap pxmap(width(),height());
+    QPainter paint(&pxmap);
+    QTGC gc(paint,width(),height());
+    OnDraw(gc);
+    QImage img(pxmap.convertToImage());
+    return img.save(filename,type.c_str());
   }
-#if 0
-  QPrinter prnt;
-  prnt.setOutputToFile(TRUE);
-  prnt.setOutputFileName("test.ps");
-  QPainter paint(&prnt);
-  QTGC gc(paint,width(),height());
-  OnDraw(gc);
-#endif
 }
 
 void XPWidget::GetClick(int &x, int &y) {

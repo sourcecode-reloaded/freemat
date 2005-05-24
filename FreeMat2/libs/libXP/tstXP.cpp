@@ -50,6 +50,6 @@ int main(int argc, char* argv[]) {
   switchme = false;
   while (!switchme) 
     myapp.processEvents();
-  roo->Print("test.png");
+  roo->Print("test.eps","eps");
   return(0);
 }
