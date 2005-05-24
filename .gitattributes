@@ -279,6 +279,7 @@ FreeMat2/libs/libARPACK/UTIL/smout.f svn_keywords=Author+Date+Id+Revision svn_eo
 FreeMat2/libs/libARPACK/UTIL/svout.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libARPACK/UTIL/zmout.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libARPACK/UTIL/zvout.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libARPACK/libARPACK.pro svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libARPACK/libARPACK.vcproj svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libCore/Analyze.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libCore/Cast.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
