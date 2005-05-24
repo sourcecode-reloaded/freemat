@@ -24,7 +24,6 @@
 #include "Array.hpp"
 #include "GraphicsContext.hpp"
 #include "PrintableWidget.hpp"
-#include "FLTKGC.hpp"
 
 namespace FreeMat {
 

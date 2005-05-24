@@ -1,7 +1,6 @@
 #include "Figure.hpp"
 #include "Exception.hpp"
 #include "GraphicsCore.hpp"
-#include "FLTKGC.hpp"
 #include <algorithm>
 #include "PostScriptGC.hpp"
 #include "BitmapPrinterGC.hpp"

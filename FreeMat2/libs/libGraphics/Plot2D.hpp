@@ -23,7 +23,6 @@
 
 #include "DataSet2D.hpp"
 #include "NewAxis.hpp"
-#include "FLTKGC.hpp"
 #include "PrintableWidget.hpp"
 
 namespace FreeMat {

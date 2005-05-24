@@ -21,7 +21,6 @@
 #include "SurfPlot.hpp"
 #include "RGBImage.hpp"
 #include "GraphicsCore.hpp"
-#include "FLTKGC.hpp"
 #include <math.h>
 #include <iostream>
 #include <stdio.h>

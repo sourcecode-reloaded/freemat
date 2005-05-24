@@ -23,7 +23,6 @@
 
 #include "DataSet2D.hpp"
 #include "Axis.hpp"
-#include "FLTKGC.hpp"
 #include "PrintableWidget.hpp"
 #include "NewAxis.hpp"
 
