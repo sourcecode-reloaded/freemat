@@ -1,30 +1,20 @@
 #ifndef __XPWindow_hpp__
 #define __XPWindow_hpp__
 
+#include "XPWidget.hpp"
 #include <string>
-#include "PrintableWidget.hpp"
+#include <qmainwindow.h>
 
-namespace FreeMat {
-  class XPWindow {
-  public:
-    XPWindow();
-    ~XPWindow();
-    XPWindow(int width, int height, std::string title);
-    int GetWidth();
-    int GetHeight();
-    void Redraw();
-    void Hide();
-    void Show();
-    void Title(std::string title);
-    void Resize(int width, int height);
-    void AddWidget(PrintableWidget *widget);
-    void Print(std::string filename);
-    void OnMouseDown(int x, int y);
-    void OnDrag(int x, int y);
-  };
-
-  void SaveFocus();
-  void RestoreFocus();
-}
+// A window is a widget with a title, frame, etc
+// It has one child widget
+class XPWindow : public QMainWindow {
+  XPWidget *child;
+public:
+  virtual ~XPWindow() {};
+  XPWindow(int width, int height);
+  void Title(std::string title);
+  void AddWidget(XPWidget *widget);
+  void Show() {show();}
+};
 
 #endif

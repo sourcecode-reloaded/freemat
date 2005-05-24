@@ -1,5 +1,4 @@
 #include "Color.hpp"
-#include "Exception.hpp"
 #include <string.h>
 
 Color::Color(int r, int g, int b) {
@@ -42,7 +41,7 @@ Color::Color(const char* name) {
   } else if (strcmp(name,"blue")==0) {
     blue = 255; red = green = 0;
   } else
-    throw FreeMat::Exception("Unrecognized color!");
+    blue = 0; red = 0; green = 0;
 }
 
 Color Color::Blend8(Color fg, Color bg, int level) {
