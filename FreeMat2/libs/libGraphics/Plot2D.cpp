@@ -185,16 +185,6 @@ namespace FreeMat {
     SetAxesAuto();
   }
 
-  void Plot2D::draw() {
-    FLTKGC gc(w(),h());
-    OnDraw(gc);
-  }
-
-  void Plot2D::resize(int x, int y, int w, int h) {
-    Fl_Widget::resize(x,y,w,h);
-    redraw();
-  }
-
   void Plot2D::DrawAxes(GraphicsContext &gc) {
     double xmin, xmax, ymin, ymax;
     int xc_min, xc_max, yc_min, yc_max;

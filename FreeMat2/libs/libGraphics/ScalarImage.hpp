@@ -42,7 +42,7 @@ namespace FreeMat {
     /**
      * Destructor.
      */
-    ~ScalarImage();
+    virtual ~ScalarImage();
     /**
      * Pick a point in the current image
      */
@@ -72,9 +72,7 @@ namespace FreeMat {
     double GetCurrentLevel();
     int getZoomColumns() {return zoomColumns;}
     int getZoomRows() {return zoomRows;}
-    void draw();
-    void resize(int, int, int, int);
-    int handle(int event);
+    void Resize(int, int, int, int);
   private:
     /**
      * Our pointer to the raw data.  We own this data, and

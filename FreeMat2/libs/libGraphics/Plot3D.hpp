@@ -40,7 +40,7 @@ namespace FreeMat {
     /**
      * Default destructor.
      */
-    ~Plot3D();
+    virtual ~Plot3D();
     void OnMouseDown(int x, int y);
     void OnMouseUp(int x, int y);
     void OnDrag(int x, int y);

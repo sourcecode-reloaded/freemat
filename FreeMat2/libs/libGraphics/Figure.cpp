@@ -1,8 +1,3 @@
-#include "FL/Fl.H"
-#include "FL/x.H"
-#include "FL/Fl_Button.H"
-#include "FL/Fl_Input.H"
-#include "FL/Fl_Slider.H"
 #include "Figure.hpp"
 #include "Exception.hpp"
 #include "GraphicsCore.hpp"
@@ -19,15 +14,13 @@
 namespace FreeMat {
   typedef struct {
     int type;
-    Fl_Widget* w;
+    PrintableWidget* w;
   } widget;
 
   HandleList<widget*> guiHandles;
 
   Figure* figs[MAX_FIGS];
   int currentFig;
-
-  Fl_Widget* focus_widget;
 
   typedef struct {
     int handle;
@@ -36,15 +29,6 @@ namespace FreeMat {
     Array payload;
   } cbstruct;
   
-  void SaveFocus() {
-    focus_widget = Fl::focus();
-  }
-
-  void RestoreFocus() {
-    if (focus_widget)
-      focus_widget->take_focus();
-  }
-
   void generic_cb(Fl_Widget*, void *dp) {
     cbstruct *ap;
     ap = (cbstruct *) dp;
@@ -60,14 +44,13 @@ namespace FreeMat {
       currentFig = -1;
   }
   
-  Figure::Figure(int fignum) :
-    Fl_Double_Window(500,400,"Figure Window") {
+  Figure::Figure(int fignum) : 
+    XPWindow(500,400,"Figure Window") {
     m_num = fignum;
     m_type = fignone;
     char buffer[1000];
     sprintf(buffer,"Figure %d",fignum+1);
-    label(strdup(buffer));
-    resizable(this);
+    Title(buffer);
   }
   
   Figure::~Figure() {
@@ -80,18 +63,16 @@ namespace FreeMat {
 
   void Figure::SetFigureChild(PrintableWidget *widget, figType typ) {
     m_type = typ;
-    clear();
-    add(widget);
-    resizable(widget);
+    AddWidget(widget);
     m_wid = widget;
   }
 
   void Figure::Copy() {
 #ifdef WIN32
-	  make_current();
-	  redraw();
-  // Obtain a handle to a reference device context. 
-  HDC hdcRef = GetDC(fl_window); 
+    make_current();
+    Redraw();
+    // Obtain a handle to a reference device context. 
+    HDC hdcRef = GetDC(fl_window); 
  
   // Determine the picture frame dimensions. 
   // iWidthMM is the display width in millimeters. 
@@ -137,10 +118,11 @@ namespace FreeMat {
 #endif
   }
 
+#if 0
   void Figure::Print(std::string filename) {
     if (m_type == fignone) return;
-    int width(m_wid->w());
-    int height(m_wid->h());
+    int width(m_wid->GetWidth());
+    int height(m_wid->GetHeight());
     int np = filename.find_last_of(".");
     if (np <= 0)
       throw FreeMat::Exception("Unable to determine format of output from filename");
@@ -164,6 +146,7 @@ namespace FreeMat {
       delete data;
     }      
   }
+#endif
   
   void InitializeFigureSubsystem() {
     currentFig = -1;
@@ -184,7 +167,7 @@ namespace FreeMat {
     }
     figs[figNum] = new Figure(figNum);
     SaveFocus();
-    figs[figNum]->show();
+    figs[figNum]->Show();
     RestoreFocus();
     currentFig = figNum;
   }
@@ -194,7 +177,7 @@ namespace FreeMat {
       figs[fignum] = new Figure(fignum);
     }
     SaveFocus();
-    figs[fignum]->show();
+    figs[fignum]->Show();
     RestoreFocus();
     currentFig = fignum;
   } 
@@ -203,7 +186,7 @@ namespace FreeMat {
     if (currentFig == -1)
       NewFig();
     SaveFocus();
-    figs[currentFig]->show();
+    figs[currentFig]->Show();
     RestoreFocus();
     return figs[currentFig];
   }
@@ -256,11 +239,6 @@ namespace FreeMat {
     Array t(arg[0]);
     Figure* f = GetCurrentFig();
     std::string outname(t.getContentsAsCString());
-    // Hack needed to avoid XLib core dump
-#ifndef __APPLE__
-    while (!fl_gc)
-      Fl::wait(0);
-#endif
     f->Print(outname);
     return ArrayVector();
   }
@@ -332,7 +310,7 @@ namespace FreeMat {
     nput->type(fl_input_type);
     int newhandle = guiHandles.assignHandle(nput) + MAX_FIGS;
     ptr->end();
-    ptr->redraw();
+    ptr->Redraw();
     return singleArrayVector(Array::int32Constructor(newhandle));    
   }
 
@@ -373,7 +351,7 @@ namespace FreeMat {
     nput->type(fl_input_type);
     int newhandle = guiHandles.assignHandle(nput) + MAX_FIGS;
     ptr->end();
-    ptr->redraw();
+    ptr->Redraw();
     return singleArrayVector(Array::int32Constructor(newhandle));
   }
 
@@ -423,14 +401,14 @@ namespace FreeMat {
       cb->payload = Array::emptyConstructor();
     ok->callback(generic_cb,cb);
     ptr->end();
-    ptr->redraw();
+    ptr->Redraw();
     return singleArrayVector(Array::int32Constructor(newhandle));
   }
 #endif
 
   ArrayVector DemoFunction(int nargout, const ArrayVector& arg) {
     Figure* f = GetCurrentFig();
-    SurfPlot* t = new SurfPlot(f->w(),f->h());
+    SurfPlot* t = new SurfPlot(f->GetWidth(),f->GetHeight());
     Array s(arg[0]);
     s.promoteType(FM_DOUBLE);
     if (s.getLength() != 256*3)
@@ -448,7 +426,7 @@ namespace FreeMat {
 	       x.getLength(),
 	       y.getLength());
     f->SetFigureChild(t,fig3plot);
-    f->redraw();
+    f->Redraw();
 #if 0
     XPContainer *c = new XPContainer(f, f->GetBoundingRect());
     XPLabel *l = new XPLabel(NULL, Rect2D(75,75,50,75), "Label!");
@@ -486,14 +464,14 @@ namespace FreeMat {
     width = w.getContentsAsIntegerScalar();
     height = h.getContentsAsIntegerScalar();
     Figure *f = GetCurrentFig();
-    f->resize(0,0,width,height);
+    f->Resize(width,height);
     return ArrayVector();
   }
 
   void CloseHelper(int fig) {
     if (fig == -1) return;
     if (figs[fig] == NULL) return;
-    figs[fig]->hide();
+    figs[fig]->Hide();
     delete figs[fig];
     figs[fig] = NULL;
     if (currentFig == fig)
@@ -605,6 +583,6 @@ namespace FreeMat {
 
   void ForceRefresh() {
     Figure* fig = GetCurrentFig();
-    fig->redraw();
+    fig->Redraw();
   }
 }

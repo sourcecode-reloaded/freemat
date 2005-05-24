@@ -23,7 +23,6 @@
 #include <iostream>
 #include "Malloc.hpp"
 #include "GraphicsCore.hpp"
-#include "FL/Fl.H"
 
 namespace FreeMat {
 
@@ -46,22 +45,11 @@ namespace FreeMat {
   }
 
 
-  int ScalarImage::handle(int event) {
-    if (event == FL_PUSH) {
-      inClickState = false;
-      xposClick = Fl::event_x();
-      yposClick = Fl::event_y();
-      return 1;
-    }
-    return 0;
-  }
-
   Array ScalarImage::GetPoint() {
-    inClickState = true;
-    ((Fl_Window*)parent())->cursor(FL_CURSOR_CROSS);
-    while (inClickState)
-      Fl::wait(0);
-    ((Fl_Window*)parent())->cursor(FL_CURSOR_DEFAULT);
+    int xposClick;
+    int yposClick;
+
+    GetClick(xposClick, yposClick);
     double valClick;
     if (zoomImage == NULL) 
       valClick = atof("nan");
@@ -113,8 +101,8 @@ namespace FreeMat {
     } else if (zoom == 0) {
       int client_width;
       int client_height;
-      client_width = w();
-      client_height = h();
+      client_width = GetWidth();
+      client_height = GetHeight();
       double zoomColFactor;
       zoomColFactor = ((double) client_width)/columns;
       double zoomRowFactor;
@@ -127,8 +115,8 @@ namespace FreeMat {
     } else {
       int client_width;
       int client_height;
-      client_width = w();
-      client_height = h();
+      client_width = GetWidth();
+      client_height = GetHeight();
       newZoomColumns = (int) (client_width);
       newZoomRows = (int) (client_height);
     }
@@ -161,16 +149,11 @@ namespace FreeMat {
     UpdateImage();
   }
 
-  void ScalarImage::draw() {
-    FLTKGC gc(w(),h());
-    OnDraw(gc);
-  }
-
-  void ScalarImage::resize(int x, int y, int w, int h) {
-    Fl_Widget::resize(x,y,w,h);
+  void ScalarImage::Resize(int x, int y, int w, int h) {
+    PrintableWidget::Resize(x,y,w,h);
     if (zoom <= 0) 
       UpdateZoom(false);
-    redraw();
+    Redraw();
   }
 
   void ScalarImage::OnDraw(GraphicsContext &gc) {

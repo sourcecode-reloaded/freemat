@@ -83,24 +83,9 @@ namespace FreeMat {
 	      -(2.0*x - szx) / szx / 10,
 	      (szy - 2.0*y) / szy / 10);
     add_quats( spin_quat, quat, quat );
-    redraw();
+    Redraw();
   }
 
-  void Plot3D::draw() {
-    FLTKGC gc(w(),h());
-    OnDraw(gc);
-  }
-
-  int Plot3D::handle(int event) {
-    if (event == FL_PUSH) {
-      OnMouseDown(Fl::event_x(),Fl::event_y());
-      return 1;
-    } else if (event == FL_DRAG) {
-      OnDrag(Fl::event_x(),Fl::event_y());
-      return 1;
-    }
-    return 0;
-  }
 
   void Plot3D::OnDraw(GraphicsContext &gc) {
     float m[4][4];

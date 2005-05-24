@@ -55,13 +55,6 @@ namespace FreeMat {
     SurfaceToQuads();
   }
 
-  void SurfPlot::resize(int x, int y, int w, int h) {
-    Fl_Widget::resize(x,y,w,h);
-    m_width = w;
-    m_height = h;
-    redraw();    
-  }
-
   void SurfPlot::SurfaceToQuads() {
     UpdateBounds();
     quads.clear();
@@ -160,7 +153,7 @@ namespace FreeMat {
 
   void SurfPlot::OnMouseUp(int x, int y) {
     dragging = false;
-    redraw();
+    Redraw();
   }
 
   void SurfPlot::OnDrag(int x, int y) {
@@ -170,25 +163,7 @@ namespace FreeMat {
     azim = (azim + 360) % 360;
     beginx = x;
     beginy = y;    
-    redraw();
-  }
-
-  void SurfPlot::draw() {
-    FLTKGC gc(w(),h());
-    OnDraw(gc);
-  }
-
-  int SurfPlot::handle(int event) {
-    if (event == FL_PUSH) {
-      OnMouseDown(Fl::event_x(),Fl::event_y());
-      return 1;
-    } else if (event == FL_DRAG) {
-      OnDrag(Fl::event_x(),Fl::event_y());
-      return 1;
-    } else if (event == FL_RELEASE) {
-      OnMouseUp(Fl::event_x(),Fl::event_y());
-    }
-    return 0;
+    Redraw();
   }
 
   void transformPoint(pt3d& src, pt3d& dst, float m[4][4]) {

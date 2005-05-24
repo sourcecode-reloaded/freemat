@@ -124,8 +124,6 @@ namespace FreeMat {
      * buffering added so as to make the labels come out nicely.
      */
     void SetAxesAuto();
-    void draw();
-    void resize(int, int, int, int);
     void MapPoint(double, double, int&, int&);
     void DrawAxes(GraphicsContext& gc);
   private:

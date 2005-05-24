@@ -53,7 +53,7 @@ namespace FreeMat {
     /**
      * Default destructor.
      */
-    ~SurfPlot();
+    virtual ~SurfPlot();
     void OnMouseDown(int x, int y);
     void OnMouseUp(int x, int y);
     void OnDrag(int x, int y);
