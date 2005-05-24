@@ -313,8 +313,6 @@ namespace FreeMat {
 
   typedef void (*GenericFuncPointer)();
   
-  struct ffi_cif;
-
   class ImportedFunctionDef : public FunctionDef {
   public:
     /**
@@ -330,9 +328,11 @@ namespace FreeMat {
      */
     GenericFuncPointer address;
     /**
-     * The call interface object.
+     * The call interface object - changed to a void* to 
+     * decouple the ffi lib from libFreeMat.  Should be
+     * a better way to do this...
      */
-    ffi_cif *cif;
+    void *cif;
     /**
      * The types of each argument
      */
