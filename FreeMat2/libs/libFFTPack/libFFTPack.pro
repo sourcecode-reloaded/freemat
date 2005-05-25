@@ -1,6 +1,6 @@
 TEMPLATE = lib
 
-TARGET = Core
+TARGET = FFTPack
 
 CONFIG += staticlib
 
