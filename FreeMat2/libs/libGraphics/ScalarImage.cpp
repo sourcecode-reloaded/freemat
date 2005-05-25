@@ -26,7 +26,7 @@
 
 namespace FreeMat {
 
-  ScalarImage::ScalarImage(int width, int height) : PrintableWidget(0,0,width,height) {
+  ScalarImage::ScalarImage(int width, int height) : XPWidget(NULL,Point2D(width,height)) {
     rawData = NULL;
     for (int i=0;i<256;i++) {
       colormap[0][i] = i;
@@ -149,8 +149,8 @@ namespace FreeMat {
     UpdateImage();
   }
 
-  void ScalarImage::Resize(int x, int y, int w, int h) {
-    PrintableWidget::Resize(x,y,w,h);
+  void ScalarImage::OnResize() {
+    XPWidget::OnResize();
     if (zoom <= 0) 
       UpdateZoom(false);
     Redraw();
@@ -203,8 +203,8 @@ namespace FreeMat {
     if (rawData == NULL) return;
     if (picData != NULL)
       delete picData;
-    picData = new byte[zoomColumns*zoomRows*3];
-    byte *op;
+    picData = new uchar[zoomColumns*zoomRows*3];
+    uchar *op;
     op = picData;
     int length = zoomColumns * zoomRows;
     double minval = level - window/2.0;

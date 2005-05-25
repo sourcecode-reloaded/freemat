@@ -23,7 +23,7 @@
 
 #include "Array.hpp"
 #include "GraphicsContext.hpp"
-#include "PrintableWidget.hpp"
+#include "XPWidget.hpp"
 
 namespace FreeMat {
 
@@ -31,7 +31,7 @@ namespace FreeMat {
    * This is a window for viewing a scalar image with
    * a color map.
    */
-  class ScalarImage : public PrintableWidget {
+  class ScalarImage : public XPWidget {
   public:
     /**
      * Create a new scalar image window with the given
@@ -71,7 +71,7 @@ namespace FreeMat {
     double GetCurrentLevel();
     int getZoomColumns() {return zoomColumns;}
     int getZoomRows() {return zoomRows;}
-    void Resize(int, int, int, int);
+    void OnResize();
   private:
     /**
      * Our pointer to the raw data.  We own this data, and
@@ -116,7 +116,7 @@ namespace FreeMat {
      */
     int zoomRows;
     // The data for the zoomed pic in RGB format
-    byte *picData;
+    uchar *picData;
     void UpdateZoom(bool forceUpdate);
     void UpdateImage();
     bool inClickState;

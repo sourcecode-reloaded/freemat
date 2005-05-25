@@ -23,7 +23,7 @@
 
 #include "DataSet2D.hpp"
 #include "Axis.hpp"
-#include "PrintableWidget.hpp"
+#include "XPWidget.hpp"
 #include "NewAxis.hpp"
 
 namespace FreeMat {
@@ -43,7 +43,7 @@ namespace FreeMat {
   } quad3d;
 
 
-  class SurfPlot: public PrintableWidget {
+  class SurfPlot: public XPWidget {
   public:
     /**
      * Default constructor.
@@ -53,13 +53,10 @@ namespace FreeMat {
      * Default destructor.
      */
     virtual ~SurfPlot();
-    void OnMouseDown(int x, int y);
-    void OnMouseUp(int x, int y);
-    void OnDrag(int x, int y);
+    void OnMouseDown(Point2D pt);
+    void OnMouseUp(Point2D pt);
+    void OnMouseDrag(Point2D pt);
     void OnDraw(GraphicsContext &gc);
-    void draw();
-    void resize(int x, int y, int w, int h);
-    int handle(int event);
     // Set the colormap
     void SetColormap(double *cmap);
     // Set the data to render
