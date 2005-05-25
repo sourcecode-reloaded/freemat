@@ -6,10 +6,13 @@
 #include <qprinter.h>
 #include "QTGC.hpp"
 #include <iostream>
+#include <qapplication.h>
 
 XPWidget::XPWidget(XPWidget *parent, Point2D size) 
-  : QWidget(parent), m_size(size) {
-  
+  : QWidget(parent), m_size(size) { 
+}
+
+XPWidget::XPWidget() : QWidget(NULL), m_size(Point2D(1,1)) {
 }
 
 void XPWidget::paintEvent(QPaintEvent* e) {
@@ -90,4 +93,15 @@ void XPWidget::resizeEvent(QResizeEvent* e) {
 
 QSize XPWidget::sizeHint() {
   return QSize(m_size.x,m_size.y);
+}
+
+QWidget *save;
+
+void SaveFocus() {
+  save = qApp->focusWidget();
+}
+
+void RestoreFocus() {
+  if (save)
+    save->setFocus();
 }

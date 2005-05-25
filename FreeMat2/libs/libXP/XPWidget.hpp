@@ -3,13 +3,14 @@
 
 #include "GraphicsContext.hpp"
 #include <qwidget.h>
+#include <iostream>
 
 // In its phoenix-like reincarnation, xpwidget is the base class that
 // represents a generic (cross platform) widget - it is a subregion
 // of another widget that can draw itself, receive mouse clicks, etc.
 // 
 // <soap>
-// If/when libXP is ported to a new platform/toolkit, first get XPWidget
+// If/when libXP is ported to a new platform/toolkit, get XPWidget
 // to work first (along with XPGC).  Then XPWindow.
 // </soap>
 class XPWidget : public QWidget {
@@ -48,4 +49,6 @@ private:
   QSize sizeHint();
 };
 
+void SaveFocus();
+void RestoreFocus();
 #endif
