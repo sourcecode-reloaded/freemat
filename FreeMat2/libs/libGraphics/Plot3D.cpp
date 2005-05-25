@@ -19,20 +19,17 @@
 // DEALINGS IN THE SOFTWARE.
 
 #include "Plot3D.hpp"
-#include "RGBImage.hpp"
 #include "GraphicsCore.hpp"
-#include "FLTKGC.hpp"
 #include <math.h>
 #include <iostream>
 #include <stdio.h>
-#include "FL/Fl.H"
 extern "C" {
 #include "trackball.h"
 }
 
 namespace FreeMat {
 
-  Plot3D::Plot3D(int width, int height) : PrintableWidget(0,0,width,height){
+  Plot3D::Plot3D(int width, int height) : XPWidget(NULL,Point2D(width,height)){
     m_width = width;
     m_height = height;
     trackball(quat,0.0,0.0,0.0,0.0);

@@ -23,7 +23,7 @@
 
 #include "DataSet2D.hpp"
 #include "NewAxis.hpp"
-#include "PrintableWidget.hpp"
+#include "XPWidget.hpp"
 
 namespace FreeMat {
 
@@ -35,7 +35,7 @@ namespace FreeMat {
    * number of 2D data sets.  It is responsible 
    * for drawing the data sets and managing them.
    */
-  class Plot2D : public PrintableWidget {
+  class Plot2D : public XPWidget {
   public:
     /**
      * Construct a 2D plot frame with the given
