@@ -93,10 +93,12 @@ void QTGC::DrawPoint(Point2D pos1) {
 }
 
 void QTGC::DrawCircle(Point2D pos, int radius) {
+  m_qt.setBrush(Qt::NoBrush);
   m_qt.drawEllipse(pos.x-radius,pos.y-radius,2*radius,2*radius);
 }
 
 void QTGC::DrawRectangle(Rect2D rect) {
+  m_qt.setBrush(Qt::NoBrush);
   m_qt.drawRect(rect.x1,rect.y1,rect.width,rect.height);
 }
 
