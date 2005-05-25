@@ -3699,6 +3699,7 @@ FreeMat2/src/x11/Terminal.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002ds
 FreeMat2/src/x11/Terminal.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/x11/freemat.xpm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/x11/main.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/src/x11/x11.pro svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/array/test_resize.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/multitest.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/multitest2.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
