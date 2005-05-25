@@ -1,12 +1,11 @@
 TEMPLATE = lib
 
-TARGET = FreeMat
+TARGET = FreeMatLib
 
 CONFIG += staticlib
 
 INCLUDEPATH = ../libffi/include ../libXP ../libUMFPACK/UMFPACK/Include ../..
 
-YACCSOURCES = Parser.yxx 
 
 HEADERS += Array.hpp \
 AST.hpp \
@@ -42,7 +41,8 @@ Interface.hpp \
 SymbolTable.hpp \
 Sparse.hpp \
 Class.hpp \
-NumericArray.hpp
+NumericArray.hpp \
+Parser.h
 
 SOURCES += NewLex.cpp \
 Array.cpp \
@@ -73,4 +73,5 @@ File.cpp \
 Interface.cpp \
 Sparse.cpp \
 Class.cpp \
-NumericArray.cpp
+NumericArray.cpp \
+Parser.cxx
