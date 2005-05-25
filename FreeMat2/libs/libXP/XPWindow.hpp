@@ -15,6 +15,11 @@ public:
   void Title(std::string title);
   void AddWidget(XPWidget *widget);
   void Show() {show();}
+  int GetHeight() {return height();}
+  int GetWidth() {return width();}
+  void Redraw() {repaint();}
+  void Resize(int w, int h) {resize(w,h);}
+  void Hide() {hide();}
 };
 
 #endif
