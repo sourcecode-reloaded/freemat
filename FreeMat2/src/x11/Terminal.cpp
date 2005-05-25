@@ -1,4 +1,4 @@
-#include <FL/Fl.H>
+#include <qapplication.h>
 #include "Terminal.hpp"
 #include <errno.h>
 #include <unistd.h>
@@ -327,7 +327,7 @@ namespace FreeMat {
     ReplacePrompt(prompt);
     DisplayPrompt();
     while(enteredLines.empty())
-      Fl::wait(1);
+      qApp->processOneEvent();
     std::string theline(enteredLines.front());
     enteredLines.pop_front();
     char *cp;
