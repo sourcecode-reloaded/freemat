@@ -3674,6 +3674,7 @@ FreeMat2/src/mac/main.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle
 FreeMat2/src/mac/outputType svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/mac/script svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/notes.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/src/src.pro svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/util/Makefile svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/util/build_font_table2.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/util/helv.afm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
