@@ -13,7 +13,7 @@
 namespace FreeMat {
   typedef struct {
     int type;
-    PrintableWidget* w;
+    XPWidget* w;
   } widget;
 
   HandleList<widget*> guiHandles;
@@ -28,15 +28,6 @@ namespace FreeMat {
     Array payload;
   } cbstruct;
   
-  void generic_cb(Fl_Widget*, void *dp) {
-    cbstruct *ap;
-    ap = (cbstruct *) dp;
-    FreeMat::ArrayVector tocall;
-    tocall.push_back(Array::int32Constructor(ap->handle));
-    tocall.push_back(ap->payload);
-    ap->fdef->evaluateFunction(ap->eval,tocall,0);
-  }
-  
   void NotifyFigClose(int fig) {
     figs[fig] = NULL;
     if (currentFig == fig)
@@ -44,7 +35,7 @@ namespace FreeMat {
   }
   
   Figure::Figure(int fignum) : 
-    XPWindow(500,400,"Figure Window") {
+    XPWindow(500,400) {
     m_num = fignum;
     m_type = fignone;
     char buffer[1000];
@@ -56,11 +47,11 @@ namespace FreeMat {
     NotifyFigClose(m_num);
   }
   
-  PrintableWidget* Figure::GetChildWidget() {
+  XPWidget* Figure::GetChildWidget() {
     return m_wid;
   }
 
-  void Figure::SetFigureChild(PrintableWidget *widget, figType typ) {
+  void Figure::SetFigureChild(XPWidget *widget, figType typ) {
     m_type = typ;
     AddWidget(widget);
     m_wid = widget;
@@ -238,7 +229,10 @@ namespace FreeMat {
     Array t(arg[0]);
     Figure* f = GetCurrentFig();
     std::string outname(t.getContentsAsCString());
-    f->Print(outname);
+    XPWidget* g = f->GetChildWidget();
+    if (g)
+      //FIXME - 
+      g->Print(outname,"PNG");
     return ArrayVector();
   }
 
