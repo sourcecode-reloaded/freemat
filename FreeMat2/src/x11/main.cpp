@@ -1,8 +1,7 @@
-#include <FL/Fl.H>
-#include <FL/x.H>
+#include <qapplication.h>
+#include <qsocketnotifier.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include "FLTKTerminal.hpp"
 #include "Terminal.hpp"
 #include "DumbTerminal.hpp"
 #include <stdio.h>
@@ -15,20 +14,22 @@
 #include "PathSearch.hpp"
 #include "ParserInterface.hpp"
 #include "File.hpp"
+#include "SocketCB.hpp"
 #include <stdlib.h>
 #include <signal.h>
 #include "config.h"
+
+#define VERSION "1.11"
+
 #if 0
 #include "freemat.xpm"
 #endif
 
 using namespace FreeMat;
 
-Display *d;
 int screen_num = 0;
 
 Terminal *term;
-FLTKTerminalWindow *win;
 
 sig_t signal_suspend_default;
 sig_t signal_resume_default;
@@ -52,7 +53,7 @@ void signal_resize(int a) {
   term->ResizeEvent();
 }
 
-void stdincb(int fd, void *data) {
+void stdincb() {
   char c;
   while (read(STDIN_FILENO, &c, 1) == 1) {
     term->ProcessChar(c);
@@ -254,6 +255,9 @@ char ** unpackBundledArgs(int& myargc, char bundlefunc[1024], int argc, char *ar
 }
 
 int main(int argc, char *argv[]) {
+
+  QApplication app(argc, argv, TRUE);
+
   // First thing to do is determine if we are bundled
   // or not. 
   int bundledMode;
@@ -283,11 +287,6 @@ int main(int argc, char *argv[]) {
   guimode = parseFlagArg(myargc,myargv,"-gui",false);
   if (parseFlagArg(myargc,myargv,"-help",false)) usage();
 
-  if (!withoutX) {
-    fl_open_display();
-    Fl::visual(FL_RGB);
-  }
-  
   // Instantiate the terminal class
   if (!scriptMode && !funcMode && !guimode) {
     term = new Terminal;
@@ -300,7 +299,9 @@ int main(int argc, char *argv[]) {
     signal_suspend_default = signal(SIGTSTP,signal_suspend);
     signal_resume_default = signal(SIGCONT,signal_resume);
     signal(SIGWINCH, signal_resize);
-    Fl::add_fd(STDIN_FILENO,FL_READ,stdincb);
+    QSocketNotifier *notify = new QSocketNotifier(STDIN_FILENO,QSocketNotifier::Read);
+    SocketCB *socketcb = new SocketCB(stdincb);
+    QObject::connect(notify, SIGNAL(activated(int)), socketcb, SLOT(activated(int)));
   }
   Context *context = new Context;
   LoadModuleFunctions(context);
@@ -363,7 +364,10 @@ int main(int argc, char *argv[]) {
       }
     }
     term->RestoreOriginalMode();
-  } else {
+  } 
+#if 0
+  //FIXME
+  else {
     // We need to find the help files...
     // To do so, we need to search through the
     // path.
@@ -401,5 +405,6 @@ int main(int argc, char *argv[]) {
       twalk->evalCLI();
     }
   }
+#endif
   return 0;
 }
