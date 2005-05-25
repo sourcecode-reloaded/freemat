@@ -308,6 +308,7 @@ namespace FreeMat {
       zoomfact = z.getContentsAsDoubleScalar();
     }
     f->SetImageArray(img,zoomfact);
+    f->Redraw();
     Figure *t = GetCurrentFig();
     t->Resize(f->getZoomColumns(),f->getZoomRows());
     t->Redraw();
