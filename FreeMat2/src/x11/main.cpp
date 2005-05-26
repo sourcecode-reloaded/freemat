@@ -18,6 +18,8 @@
 #include <stdlib.h>
 #include <signal.h>
 #include "config.h"
+#include "GUITerminal.hpp"
+#include "BaseTerminal.hpp"
 
 #define VERSION "1.11"
 
@@ -29,10 +31,10 @@ using namespace FreeMat;
 
 int screen_num = 0;
 
-Terminal *term;
-
 sig_t signal_suspend_default;
 sig_t signal_resume_default;
+
+BaseTerminal *term;
 
 void signal_suspend(int a) {
   term->RestoreOriginalMode();
@@ -55,9 +57,8 @@ void signal_resize(int a) {
 
 void stdincb() {
   char c;
-  while (read(STDIN_FILENO, &c, 1) == 1) {
-    term->ProcessChar(c);
-  }
+  while (read(STDIN_FILENO, &c, 1) == 1)
+    ((Terminal*)term)->ProcessChar(c);
 }
 
 std::string GetApplicationPath(char *argv0) {
@@ -291,10 +292,21 @@ int main(int argc, char *argv[]) {
   if (!scriptMode && !funcMode && !guimode) {
     term = new Terminal;
     fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL) | O_NONBLOCK);
+    try {
+      term->Initialize();
+    } catch(Exception &e) {
+      fprintf(stderr,"Unable to initialize terminal.  Try to start FreeMat with the '-e' option.");
+      exit(1);
+    }
   } else if (!guimode) {
     term = new DumbTerminal;
+  } else {
+    GUITerminal *iterm = new GUITerminal;
+    iterm->show();
+    iterm->resizeTextSurface();
+    term = (BaseTerminal*) iterm;
   }
-
+  
   if (!guimode) {
     signal_suspend_default = signal(SIGTSTP,signal_suspend);
     signal_resume_default = signal(SIGCONT,signal_resume);
@@ -314,58 +326,50 @@ int main(int argc, char *argv[]) {
   const char *envPtr;
   envPtr = getenv("FREEMAT_PATH");
 
-  if (!guimode) {
-    term->setContext(context);
-    if (envPtr)
-      term->setPath(std::string(envPtr));
-    else 
-      term->setPath(std::string(""));
-    WalkTree *twalk = new WalkTree(context,term);
-    term->SetEvalEngine(twalk);
+  term->setContext(context);
+  if (envPtr)
+    term->setPath(std::string(envPtr));
+  else 
+    term->setPath(std::string(""));
+  WalkTree *twalk = new WalkTree(context,term);
+  LoadBundleFunctions(myargv[0], twalk);
+  if (!funcMode && !bundledMode) {
+    term->outputMessage(" Freemat v");
+    term->outputMessage(VERSION);
+    term->outputMessage("\n");
+    term->outputMessage(" Copyright (c) 2002-2005 by Samit Basu\n");
+    while (twalk->getState() != FM_STATE_QUIT) {
+      twalk->resetState();
+      twalk->evalCLI();
+    }
+  } else {
+    char buffer[1024];
+    if (funcMode) {
+      sprintf(buffer,"%s",myargv[funcMode+1]);
+      for (int i=funcMode+2;i<myargc;i++) {
+	strcat(buffer," ");
+	strcat(buffer,myargv[i]);
+      }
+      strcat(buffer,"\n");
+    }
+    ParserState parserState = parseString(buffer);
+    if (parserState != ScriptBlock) {
+      printf("Error: syntax error in command line arguments to FreeMat\r\n");
+      term->RestoreOriginalMode();
+      return 1;
+    }
+    ASTPtr tree = getParsedScriptBlock();
     try {
-      term->Initialize();
+      twalk->block(tree);
     } catch(Exception &e) {
-      fprintf(stderr,"Unable to initialize terminal.  Try to start FreeMat with the '-e' option.");
-      exit(1);
+      e.printMe(term);
+      term->RestoreOriginalMode();
+      return 5;	
     }
-    LoadBundleFunctions(myargv[0], twalk);
-    if (!funcMode && !bundledMode) {
-      term->outputMessage(" Freemat v");
-      term->outputMessage(VERSION);
-      term->outputMessage("\n");
-      term->outputMessage(" Copyright (c) 2002-2005 by Samit Basu\n");
-      while (twalk->getState() != FM_STATE_QUIT) {
-	twalk->resetState();
-	twalk->evalCLI();
-      }
-    } else {
-      char buffer[1024];
-      if (funcMode) {
-	sprintf(buffer,"%s",myargv[funcMode+1]);
-	for (int i=funcMode+2;i<myargc;i++) {
-	  strcat(buffer," ");
-	  strcat(buffer,myargv[i]);
-	}
-	strcat(buffer,"\n");
-      }
-      ParserState parserState = parseString(buffer);
-      if (parserState != ScriptBlock) {
-	printf("Error: syntax error in command line arguments to FreeMat\r\n");
-	term->RestoreOriginalMode();
-	return 1;
-      }
-      ASTPtr tree = getParsedScriptBlock();
-      try {
-	twalk->block(tree);
-      } catch(Exception &e) {
-	e.printMe(term);
-	term->RestoreOriginalMode();
-	return 5;	
-      }
-    }
-    term->RestoreOriginalMode();
-  } 
-#if 0
+  }
+  term->RestoreOriginalMode();
+ 
+#if 0    
   //FIXME
   else {
     // We need to find the help files...
@@ -381,6 +385,30 @@ int main(int argc, char *argv[]) {
       }
     } else 
       helppath = "/usr/local/share/FreeMat/html/index.html";
+    
+    GUIInterface* term = new GUIInterface;
+    term->show();
+    term->setContext(context);
+    term->setPath(std::string(envPtr));
+    if (envPtr)
+      term->setPath(std::string(envPtr));
+    else 
+      term->setPath(std::string(""));
+    WalkTree *twalk = new WalkTree(context,term);
+    LoadBundleFunctions(myargv[0], twalk);
+    if (!funcMode && !bundledMode) {
+      term->outputMessage(" Freemat v");
+      term->outputMessage(VERSION);
+      term->outputMessage("\n");
+      term->outputMessage(" Copyright (c) 2002-2005 by Samit Basu\n");
+      while (twalk->getState() != FM_STATE_QUIT) {
+	twalk->resetState();
+	twalk->evalCLI();
+      }
+    }
+  }
+
+
     win = new FLTKTerminalWindow(400,300,"FreeMat v" VERSION,
 				 helppath.c_str());
     win->term()->setContext(context);
