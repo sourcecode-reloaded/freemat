@@ -2902,6 +2902,8 @@ FreeMat2/libs/libUMFPACK/UMFPACK/libUMFPACK_zi/libUMFPACK_zi.vcproj svn_keywords
 FreeMat2/libs/libUMFPACK/UMFPACKdi/UMFPACKdi.pro svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libUMFPACK/UMFPACKzi/UMFPACKzi.pro svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libUMFPACK/libUMFPACK.pro svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libXP/BaseTerminal.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libXP/BaseTerminal.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/BitmapFont.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/BitmapFont.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/BitmapPrinterGC.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -2910,6 +2912,8 @@ FreeMat2/libs/libXP/Color.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002ds
 FreeMat2/libs/libXP/Color.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/DynLib.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/DynLib.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libXP/GUITerminal.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libXP/GUITerminal.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/GraphicsContext.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/GraphicsContext.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/KeyManager.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
