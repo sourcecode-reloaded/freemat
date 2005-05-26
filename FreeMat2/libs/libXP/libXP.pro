@@ -18,7 +18,10 @@ KeyManager.hpp \
 helv_table.h \
 XPWidget.hpp \
 XPWindow.hpp \
-QTGC.hpp
+QTGC.hpp \
+GUIInterface.hpp \
+TermWidget.hpp \
+BaseTerminal.hpp
 
 SOURCES += DynLib.cpp \
 System.cpp \
@@ -31,5 +34,10 @@ Color.cpp \
 KeyManager.cpp \
 XPWidget.cpp \
 XPWindow.cpp \
-QTGC.cpp
+QTGC.cpp \
+GUITerminal.cpp \
+TermWidget.cpp \
+BaseTerminal.cpp
+
+
 
