@@ -74,7 +74,7 @@ bool XPWidget::Print(std::string filename, std::string type) {
 }
 
 void XPWidget::GetClick(int &x, int &y) {
-  //todo
+  //FIXME
 }
 
 XPWidget* XPWidget::GetParent() {
