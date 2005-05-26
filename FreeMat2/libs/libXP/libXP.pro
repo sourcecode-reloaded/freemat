@@ -9,16 +9,16 @@ INCLUDEPATH = ../libFreeMat ../..
 HEADERS += DynLib.hpp \
 System.hpp \
 PathSearch.hpp \
-RGBImage.hpp \
 Rect2D.hpp \
 PostScriptGC.hpp \
 Point2D.hpp \
 GraphicsContext.cpp \
 Color.hpp \
 KeyManager.hpp \
-BitmapPrinterGC.hpp \
 helv_table.h \
-PrintableWidget.hpp 
+XPWidget.hpp \
+XPWindow.hpp \
+QTGC.hpp
 
 SOURCES += DynLib.cpp \
 System.cpp \
@@ -29,6 +29,7 @@ Point2D.cpp \
 GraphicsContext.cpp \
 Color.cpp \
 KeyManager.cpp \
-BitmapPrinterGC.cpp \
-PrintableWidget.cpp 
+XPWidget.cpp \
+XPWindow.cpp \
+QTGC.cpp
 
