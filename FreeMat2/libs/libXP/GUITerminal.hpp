@@ -14,7 +14,7 @@ class GUITerminal : public TermWidget, public BaseTerminal {
   void ClearEOD();
   void MoveBOL();
   int getTerminalWidth() {return getTextWidth();};
-  void ProcessChar(char c) {OnChar(c);};
+  void ProcessChar(int c) {OnChar(c);};
 };
 
 #endif

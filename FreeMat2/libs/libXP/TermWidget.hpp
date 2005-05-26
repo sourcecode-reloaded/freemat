@@ -63,7 +63,7 @@ protected:
   TermWidget(QWidget *parent=0, const char *name=0);
   virtual ~TermWidget();
   void resizeTextSurface();
-  virtual void ProcessChar(char c) = 0;
+  virtual void ProcessChar(int c) = 0;
   void PutString(std::string txt);
   public slots:
   void refresh();

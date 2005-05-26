@@ -36,7 +36,7 @@ TermWidget::TermWidget(QWidget *parent, const char *name) :
   QObject::connect(m_timer_blink, SIGNAL(timeout()), this, SLOT(blink()));
   QObject::connect(m_scrollbar,SIGNAL(valueChanged(int)), this, SLOT(scrollBack(int)));
   adjustScrollbarPosition();
-  setFont(10);
+  setFont(12);
   cursorOn = false;
   blinkEnable = true;
   setBackgroundColor(Qt::white);
@@ -131,9 +131,11 @@ void TermWidget::PutString(std::string txt) {
   if (m_scrolling)
     setScrollbar(0);  
   for (int i=0;i<txt.size();i++) {
-    if (txt[i] == '\n' || txt[i] == '\r') {
-      setCursor(0,m_cursor_y+1);
-    } else {
+    if (txt[i] == '\n')
+      setCursor(m_cursor_x,m_cursor_y+1);
+    else if (txt[i] == '\r')
+      setCursor(0,m_cursor_y);
+    else {
       m_surface[m_cursor_x + m_cursor_y*m_width] = tagChar(txt[i]);
       setCursor(m_cursor_x+1,m_cursor_y);
     }
@@ -243,7 +245,28 @@ void TermWidget::setCursor(int x, int y) {
 void TermWidget::keyPressEvent(QKeyEvent *e) {
   if (m_scrolling) 
     setScrollbar(0);
-  ProcessChar(e->ascii());
+  int keycode = e->key();
+  if (!keycode) return;
+  if (keycode == Qt::Key_Left)
+    ProcessChar(KM_LEFT);
+  else if (keycode == Qt::Key_Right)
+    ProcessChar(KM_RIGHT);
+  else if (keycode == Qt::Key_Up)
+    ProcessChar(KM_UP);
+  else if (keycode == Qt::Key_Down)
+    ProcessChar(KM_DOWN);
+  else if (keycode == Qt::Key_Delete)
+    ProcessChar(KM_DELETE);
+  else if (keycode == Qt::Key_Insert)
+    ProcessChar(KM_INSERT);
+  else if (keycode == Qt::Key_Home)
+    ProcessChar(KM_HOME);
+  else if (keycode == Qt::Key_End)
+    ProcessChar(KM_END);
+  else {
+    char key = e->ascii();
+    if (key) ProcessChar(key);
+  }
 }
 
 void TermWidget::setFont(int size) {
