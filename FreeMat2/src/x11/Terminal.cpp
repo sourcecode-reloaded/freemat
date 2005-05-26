@@ -37,7 +37,7 @@ namespace FreeMat {
     SetRawMode();
     SetupControlStrings();
     ResizeEvent();
-    SetInterface(this);
+    //    SetInterface(this);
     state = 0;
   }
 
@@ -279,60 +279,4 @@ namespace FreeMat {
   int Terminal::getTerminalWidth() {
     return ncolumn;
   }
-
-  std::string TranslateString(std::string x) {
-    std::string y(x);
-    int n;
-    n = 0;
-    while (n<y.size()) {
-      if (y[n] == '\n') 
-	y.insert(n++,"\r");
-      n++;
-    }
-    return y;
-  }
-  
-  void Terminal::outputMessage(const char* msg) {
-    //     FILE *fp;
-    //     fp = fopen("log.txt","a");
-    //     fwrite(msg,strlen(msg),1,fp);
-    //     fclose(fp);
-    std::string msg2(TranslateString(msg));
-    OutputRawString(msg2);
-  }
-
-  void Terminal::errorMessage(const char* msg) {
-    std::string msg2(TranslateString(msg));
-    OutputRawString("Error: " + msg2 + "\r\n");
-  }
-
-  void Terminal::warningMessage(const char* msg) {
-    std::string msg2(TranslateString(msg));
-    OutputRawString("Warning: " + msg2 + "\r\n");
-  }
-
-  void Terminal::SetEvalEngine(WalkTree* a_eval) {
-    eval = a_eval;
-  }
-
-  void Terminal::ExecuteLine(const char * line) {
-//     if (eval->evaluateString((char*) line)) 
-//       exit(1);
-    enteredLines.push_back(line);
-    ReplacePrompt("");
-  }
-
-  char* Terminal::getLine(const char* prompt) {
-    fflush(stdout);
-    ReplacePrompt(prompt);
-    DisplayPrompt();
-    while(enteredLines.empty())
-      qApp->processOneEvent();
-    std::string theline(enteredLines.front());
-    enteredLines.pop_front();
-    char *cp;
-    cp = strdup(theline.c_str());
-    return cp;
-  }
-
 }

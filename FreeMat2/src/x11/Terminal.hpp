@@ -1,9 +1,7 @@
 #ifndef __Terminal_hpp__
 #define __Terminal_hpp__
 
-#include "Interface.hpp"
-#include "KeyManager.hpp"
-#include "WalkTree.hpp"
+#include "BaseTerminal.hpp"
 #include <termios.h>
 
 namespace FreeMat {
@@ -15,7 +13,7 @@ namespace FreeMat {
 
   typedef struct termios Termios;
 
-  class Terminal : public KeyManager, public Interface {
+  class Terminal : public BaseTerminal {
   protected:
     int state;
     Termios oldattr;
@@ -28,12 +26,11 @@ namespace FreeMat {
     char escseq[50];
     mapping *esc_seq_array;
     int esc_seq_count;
-    WalkTree *eval;
     std::vector<std::string> flist;
     std::list<std::string> enteredLines;
   public:
     Terminal();
-    ~Terminal();
+    virtual ~Terminal();
     virtual void Initialize();
     virtual void SetRawMode();
     virtual void RestoreOriginalMode();
@@ -51,12 +48,6 @@ namespace FreeMat {
     virtual void MoveBOL();
     virtual void OutputRawString(std::string txt);
     virtual int getTerminalWidth();
-    virtual void outputMessage(const char* msg);
-    virtual void errorMessage(const char* msg);
-    virtual void warningMessage(const char* msg);
-    virtual void SetEvalEngine(WalkTree* a_eval);
-    virtual void ExecuteLine(const char* line);
-    virtual char* getLine(const char* prompt);
   };
 }
 
