@@ -5,7 +5,6 @@ namespace FreeMat {
   }
 
   void DumbTerminal::Initialize() {
-    state = 0;
   }
 
   void DumbTerminal::RestoreOriginalMode() {
@@ -58,5 +57,9 @@ namespace FreeMat {
     printf("%s",buffer);
     fflush(stdout);
     return buffer;
+  }
+
+  int DumbTerminal::getTerminalWidth() {
+    return 80;
   }
 }

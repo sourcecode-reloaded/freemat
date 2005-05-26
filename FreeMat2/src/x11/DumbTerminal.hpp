@@ -1,13 +1,13 @@
 #ifndef __DumbTerminal_hpp__
 #define __DumbTerminal_hpp__
 
-#include "Terminal.hpp"
+#include "BaseTerminal.hpp"
 
 namespace FreeMat {
-  class DumbTerminal : public Terminal {
+  class DumbTerminal : public BaseTerminal {
   public:
     DumbTerminal();
-    ~DumbTerminal();
+    virtual ~DumbTerminal();
     virtual void Initialize();
     virtual void RestoreOriginalMode();
     virtual void OutputRawString(std::string txt); 
@@ -20,6 +20,7 @@ namespace FreeMat {
     virtual void ClearEOL();
     virtual void ClearEOD();
     virtual void MoveBOL();
+    virtual int getTerminalWidth();
   };
 }
 
