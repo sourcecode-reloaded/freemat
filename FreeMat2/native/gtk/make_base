@@ -1,2 +1,2 @@
 base: base.cpp
-	g++ -o base base.cpp `pkg-config gtk+-2 --libs --cflags`
+	g++ -o base base.cpp `pkg-config gtk+-2.0 --libs --cflags`

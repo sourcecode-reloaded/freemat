@@ -8,19 +8,19 @@
 
 
 class XPWindow {
-  GTKWidget *window;
+  GtkWidget *window;
 public:
   GdkPixmap *pixmap;
   XPWindow(int width, int height, std::string title);
-  ~XPWindow();
-  virtual void OnDraw();
-  virtual void OnResize();
+  virtual ~XPWindow();
+  virtual void OnDraw() {}
+  virtual void OnResize() {}
   void Show();
   void Hide();
   void Raise();
   void SetTitle(std::string title);
   virtual void OnMouseDown(int x, int y) {}
-  virtual void OnMouseDrag(int x, int y)
+  virtual void OnMouseDrag(int x, int y);
   virtual void OnMouseUp(int x, int y) {}
   virtual void OnKeyPress(int key) {}
   int GetHeight();
@@ -46,21 +46,21 @@ void XPWindow::Hide() {
 }
 
 int XPWindow::GetHeight() {
-  gint width, height;
-  gtk_widget_get_usize(window, &width, &height);
-  return height;
+//   gint width, height;
+//   gtk_widget_get_usize(window, &width, &height);
+//   return height;
 }
 
 int XPWindow::GetWidth() {
-  gint width, height;
-  gtk_widget_get_usize(window, &width, &height);
-  return width;
+//   gint width, height;
+//   gtk_widget_get_usize(window, &width, &height);
+//   return width;
 }
 
 static gint expose_event(GtkWidget *widget,
 			 GdkEventExpose *event) {
   XPWindow *winptr;
-  winptr = (XPWindow*) g_object_get_data(GOBJECT(widget),"this");
+  winptr = (XPWindow*) g_object_get_data(G_OBJECT(widget),"this");
   gdk_draw_drawable (widget->window,
 		     widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
 		     winptr->pixmap,
@@ -74,7 +74,7 @@ static gint expose_event(GtkWidget *widget,
 static gint button_press_event(GtkWidget *widget,
 			       GdkEventButton *event) {
   XPWindow *winptr;
-  winptr = (XPWindow*) g_object_get_data(GOBJECT(widget),"this");
+  winptr = (XPWindow*) g_object_get_data(G_OBJECT(widget),"this");
   if (event->button == 1)
     winptr->OnMouseDown(event->x, event->y);
   return TRUE;
@@ -83,7 +83,7 @@ static gint button_press_event(GtkWidget *widget,
 static gint button_release_event(GtkWidget *widget,
 				 GdkEventButton *event) {
   XPWindow *winptr;
-  winptr = (XPWindow*) g_object_get_data(GOBJECT(widget),"this");
+  winptr = (XPWindow*) g_object_get_data(G_OBJECT(widget),"this");
   if (event->button == 1)
     winptr->OnMouseUp(event->x, event->y);
   return TRUE;
@@ -93,7 +93,7 @@ static gint motion_notify_event(GtkWidget *widget,
 				GdkEventMotion *event) {
   if (!(event->state & GDK_BUTTON1_MASK)) return FALSE;
   XPWindow *winptr;
-  winptr = (XPWindow*) g_object_get_data(GOBJECT(widget),"this");
+  winptr = (XPWindow*) g_object_get_data(G_OBJECT(widget),"this");
   winptr->OnMouseDrag(event->x, event->y);
   return TRUE;
 }
@@ -101,7 +101,7 @@ static gint motion_notify_event(GtkWidget *widget,
 static gint keypress_event(GtkWidget *widget,
 			   GdkEventKey *event) {
   XPWindow *winptr;
-  winptr = (XPWindow*) g_object_get_data(GOBJECT(widget),"this");
+  winptr = (XPWindow*) g_object_get_data(G_OBJECT(widget),"this");
   winptr->OnKeyPress(event->keyval);
   return TRUE;
 }
@@ -111,7 +111,7 @@ static gint configure_event( GtkWidget         *widget,
                              GdkEventConfigure *event )
 {
   XPWindow *winptr;
-  winptr = (XPWindow*) g_object_get_data(GOBJECT(widget),"this");
+  winptr = (XPWindow*) g_object_get_data(G_OBJECT(widget),"this");
   
   if (winptr->pixmap)
     g_object_unref (winptr->pixmap);
@@ -133,7 +133,7 @@ static gint configure_event( GtkWidget         *widget,
 XPWindow::XPWindow(int width, int height, std::string title) {
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_widget_set_usize(window, width, height);
-  g_object_set_data(GOBJECT(window),"this",this);
+  g_object_set_data(G_OBJECT(window),"this",this);
   g_signal_connect (G_OBJECT (window), "expose_event",
 		    G_CALLBACK (expose_event), NULL);
   g_signal_connect (G_OBJECT (window),"configure_event",
@@ -147,6 +147,9 @@ XPWindow::XPWindow(int width, int height, std::string title) {
 			 | GDK_BUTTON_PRESS_MASK
 			 | GDK_POINTER_MOTION_MASK);
   pixmap = NULL;
+}
+
+XPWindow::~XPWindow() {
 }
 
 int main(int argc, char *argv[]) {
