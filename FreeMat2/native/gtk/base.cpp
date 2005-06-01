@@ -9,8 +9,8 @@
 
 class XPWindow {
   GTKWidget *window;
-  GdkPixmap *pixmap;
 public:
+  GdkPixmap *pixmap;
   XPWindow(int width, int height, std::string title);
   ~XPWindow();
   virtual void OnDraw();
