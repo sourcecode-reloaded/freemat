@@ -9,9 +9,11 @@
 
 
 class XPWindow {
-  GtkWidget *window;
 public:
+  GtkWidget *window;
   GdkPixmap *pixmap;
+  GtkWidget *drawing_area;
+public:
   XPWindow(int width, int height, std::string title);
   virtual ~XPWindow();
   virtual void OnDraw() {}
@@ -39,23 +41,21 @@ void XPWindow::Raise() {
 }
 
 void XPWindow::Show() {
-  gtk_widget_show_all(window);
+  gtk_widget_show(drawing_area);
+  gtk_widget_show(window);
 }
 
 void XPWindow::Hide() {
-  gtk_widget_hide_all(window);
+  gtk_widget_hide(drawing_area);
+  gtk_widget_hide(window);
 }
 
 int XPWindow::GetHeight() {
-//   gint width, height;
-//   gtk_widget_get_usize(window, &width, &height);
-//   return height;
+  return window->allocation.height;
 }
 
 int XPWindow::GetWidth() {
-//   gint width, height;
-//   gtk_widget_get_usize(window, &width, &height);
-//   return width;
+  return window->allocation.width;
 }
 
 static gint expose_event(GtkWidget *widget,
@@ -95,7 +95,6 @@ static gint motion_notify_event(GtkWidget *widget,
   if (!(event->state & GDK_BUTTON1_MASK)) return FALSE;
   XPWindow *winptr;
   winptr = (XPWindow*) g_object_get_data(G_OBJECT(widget),"this");
-  std::cout << "drag " << event->x << event->y << "\n";
   winptr->OnMouseDrag(event->x, event->y);
   return TRUE;
 }
@@ -114,10 +113,9 @@ static gint configure_event( GtkWidget         *widget,
 {
   XPWindow *winptr;
   winptr = (XPWindow*) g_object_get_data(G_OBJECT(widget),"this");
-  
   if (winptr->pixmap)
     g_object_unref (winptr->pixmap);
-
+  
   winptr->pixmap = gdk_pixmap_new (widget->window,
 				   widget->allocation.width,
 				   widget->allocation.height,
@@ -135,16 +133,19 @@ static gint configure_event( GtkWidget         *widget,
 XPWindow::XPWindow(int width, int height, std::string title) {
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_widget_set_usize(window, width, height);
-  g_object_set_data(G_OBJECT(window),"this",this);
-  g_signal_connect (G_OBJECT (window), "expose_event",
+  drawing_area = gtk_drawing_area_new();
+  gtk_widget_set_size_request(drawing_area,width,height);
+  gtk_container_add(GTK_CONTAINER(window),drawing_area);
+  g_object_set_data(G_OBJECT(drawing_area),"this",this);
+  g_signal_connect (G_OBJECT (drawing_area), "expose_event",
 		    G_CALLBACK (expose_event), NULL);
-  g_signal_connect (G_OBJECT (window),"configure_event",
+  g_signal_connect (G_OBJECT (drawing_area),"configure_event",
 		    G_CALLBACK (configure_event), NULL);
-  g_signal_connect (G_OBJECT (window), "motion_notify_event",
+  g_signal_connect (G_OBJECT (drawing_area), "motion_notify_event",
 		    G_CALLBACK (motion_notify_event), NULL);
-  g_signal_connect (G_OBJECT (window), "button_press_event",
+  g_signal_connect (G_OBJECT (drawing_area), "button_press_event",
 		    G_CALLBACK (button_press_event), NULL);
-  gtk_widget_set_events (window, GDK_EXPOSURE_MASK
+  gtk_widget_set_events (drawing_area, GDK_EXPOSURE_MASK
 			 | GDK_LEAVE_NOTIFY_MASK
 			 | GDK_BUTTON_PRESS_MASK
 			 | GDK_POINTER_MOTION_MASK);
