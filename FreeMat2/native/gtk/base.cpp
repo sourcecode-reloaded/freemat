@@ -15,19 +15,19 @@ public:
   GtkWidget *drawing_area;
 public:
   XPWindow(int width, int height, std::string title);
+  XPWindow() {}
   virtual ~XPWindow();
   virtual void OnDraw() {}
   virtual void OnResize() {}
-  void Show();
-  void Hide();
-  void Raise();
-  void SetTitle(std::string title);
+  virtual void Show();
+  virtual void Hide();
+  virtual void Raise();
   virtual void OnMouseDown(int x, int y) {}
   virtual void OnMouseDrag(int x, int y);
   virtual void OnMouseUp(int x, int y) {}
   virtual void OnKeyPress(int key) {}
-  int GetHeight();
-  int GetWidth();
+  virtual int GetHeight();
+  virtual int GetWidth();
 };
 
 void XPWindow::OnMouseDrag(int x, int y) {
@@ -155,9 +155,69 @@ XPWindow::XPWindow(int width, int height, std::string title) {
 XPWindow::~XPWindow() {
 }
 
+class XPScrolledWindow : public XPWindow {
+  GtkWidget *scroll_bar;
+public:
+  XPScrolledWindow(int width, int height, std::string title);
+  virtual ~XPScrolledWindow();
+};
+
+XPScrolledWindow::~XPScrolledWindow() {
+}
+
+XPScrolledWindow::XPScrolledWindow(int width, int height, std::string title) {
+  window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+//   GtkWidget* layout;
+//   layout = gtk_fixed_new();
+//   gtk_container_add(GTK_CONTAINER(window), layout);
+  
+//   gtk_widget_set_usize(window, 300, 300);
+//   gtk_container_set_border_width(GTK_CONTAINER(window), 0);
+//   scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+//   gtk_widget_show(scrolled_window);
+//   gtk_container_add(GTK_CONTAINER(window), scrolled_window);
+//   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
+// 				 GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
+//   drawing_area = gtk_drawing_area_new();
+//   gtk_widget_set_usize(drawing_areax, 300, 300);
+//   gtk_widget_show(drawing_area);
+//   gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrolled_window),  
+// 					drawing_area);
+//   gtk_widget_show(window);
+  //  gtk_widget_set_usize(window, width, height);
+
+  GtkWidget* hbox = gtk_hbox_new(FALSE, 0);
+  gtk_widget_show(hbox);
+  gtk_container_add(GTK_CONTAINER(window), hbox);
+  //  gtk_widget_set_size_request(drawing_area,width,height);
+  //  gtk_widget_set_size_request(drawing_area,width-16,height);
+  drawing_area = gtk_button_new_with_label("clickme");
+  gtk_widget_show(drawing_area);
+  gtk_box_pack_start(GTK_BOX(hbox),drawing_area,TRUE,TRUE,0);
+  scroll_bar = gtk_vscrollbar_new(NULL);
+  gtk_box_pack_start(GTK_BOX(hbox),scroll_bar,FALSE,FALSE,0);
+  gtk_widget_show(scroll_bar);
+
+  g_object_set_data(G_OBJECT(drawing_area),"this",this);
+  g_signal_connect (G_OBJECT (drawing_area), "expose_event",
+		    G_CALLBACK (expose_event), NULL);
+  g_signal_connect (G_OBJECT (drawing_area),"configure_event",
+		    G_CALLBACK (configure_event), NULL);
+  g_signal_connect (G_OBJECT (drawing_area), "motion_notify_event",
+		    G_CALLBACK (motion_notify_event), NULL);
+  g_signal_connect (G_OBJECT (drawing_area), "button_press_event",
+		    G_CALLBACK (button_press_event), NULL);
+  gtk_widget_set_events (drawing_area, GDK_EXPOSURE_MASK
+			 | GDK_LEAVE_NOTIFY_MASK
+			 | GDK_BUTTON_PRESS_MASK
+			 | GDK_POINTER_MOTION_MASK);
+  pixmap = NULL;
+  
+}
+
 int main(int argc, char *argv[]) {
   gtk_init(&argc, &argv);
-  XPWindow *win = new XPWindow(400,400,"Hello");
+  XPWindow *win = new XPScrolledWindow(400,400,"Hello");
   win->Show();
   gtk_main();
   return 0;
