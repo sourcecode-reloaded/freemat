@@ -5,6 +5,7 @@
 
 #include <gtk/gtk.h>
 #include <string>
+#include <iostream>
 
 
 class XPWindow {
@@ -94,6 +95,7 @@ static gint motion_notify_event(GtkWidget *widget,
   if (!(event->state & GDK_BUTTON1_MASK)) return FALSE;
   XPWindow *winptr;
   winptr = (XPWindow*) g_object_get_data(G_OBJECT(widget),"this");
+  std::cout << "drag " << event->x << event->y << "\n";
   winptr->OnMouseDrag(event->x, event->y);
   return TRUE;
 }
