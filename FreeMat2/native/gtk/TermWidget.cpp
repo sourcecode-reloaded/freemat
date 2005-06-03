@@ -3,7 +3,7 @@
 #define TMIN(a,b) ((a) < (b) ? (a) : (b))
 #define TMAX(a,b) ((a) > (b) ? (a) : (b))
 
-TermWidget::TermWidget(int width, int height, char *title) {
+TermWidget::TermWidget(int width, int height) {
   m_surface = NULL;
   m_onscreen = NULL;
   m_history = NULL;

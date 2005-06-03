@@ -46,7 +46,7 @@ protected:
   int m_scrollmin, m_scrollmax, m_scrollline, m_scrollpage;
  public:
   void scrollBack(int val);
-  TermWidget(int width, int height, char *title);
+  TermWidget(int width, int height);
   virtual ~TermWidget();
   void resizeTextSurface();
   //  virtual void ProcessChar(int c) = 0;

@@ -149,6 +149,7 @@ XPWindow::XPWindow(int width, int height, std::string title) {
 		    G_CALLBACK (button_press_event), NULL);
   g_signal_connect (G_OBJECT (window), "keypress_event",
 		    G_CALLBACK (keypress_event), NULL);
+  std::cout << "settingmask??\n";
   gtk_widget_set_events (drawing_area, GDK_EXPOSURE_MASK
 			 | GDK_LEAVE_NOTIFY_MASK
 			 | GDK_BUTTON_PRESS_MASK
@@ -186,6 +187,7 @@ XPScrolledWindow::XPScrolledWindow(int width, int height, std::string title) {
   gtk_box_pack_start(GTK_BOX(hbox),scroll_bar,FALSE,FALSE,0);
   gtk_widget_show(scroll_bar);
   g_object_set_data(G_OBJECT(drawing_area),"this",this);
+  g_object_set_data(G_OBJECT(window),"this",this);
   g_signal_connect (G_OBJECT (drawing_area), "expose_event",
 		    G_CALLBACK (expose_event), NULL);
   g_signal_connect (G_OBJECT (drawing_area),"configure_event",
@@ -194,14 +196,15 @@ XPScrolledWindow::XPScrolledWindow(int width, int height, std::string title) {
 		    G_CALLBACK (motion_notify_event), NULL);
   g_signal_connect (G_OBJECT (drawing_area), "button_press_event",
 		    G_CALLBACK (button_press_event), NULL);
-  g_signal_connect (G_OBJECT (drawing_area), "key_press_event",
+  g_signal_connect (G_OBJECT (window), "key_press_event",
 		    G_CALLBACK (keypress_event), NULL);
   gtk_widget_set_events (drawing_area, GDK_EXPOSURE_MASK
 			 | GDK_LEAVE_NOTIFY_MASK
 			 | GDK_BUTTON_PRESS_MASK
 			 | GDK_POINTER_MOTION_MASK
 			 | GDK_KEY_PRESS_MASK);
-  gtk_widget_grab_focus(drawing_area);
+  gtk_widget_set_events (window,GDK_KEY_PRESS_MASK);
+  gtk_widget_grab_focus(window);
   pixmap = NULL;
 }
 
@@ -227,7 +230,7 @@ void GTKTermWidget::OnKeyDown(int key) {
 
 GTKTermWidget::GTKTermWidget(int width, int height, std::string title) :
   XPScrolledWindow(width, height, title),
-  TermWidget(width, height, title.c_str()) {
+  TermWidget(width, height) {
 }
 
 int GTKTermWidget::GetWidth() {
