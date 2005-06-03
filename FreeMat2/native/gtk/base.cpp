@@ -6,7 +6,7 @@
 #include <gtk/gtk.h>
 #include <string>
 #include <iostream>
-
+#include "TermWidget.hpp"
 
 class XPWindow {
 public:
@@ -194,11 +194,80 @@ XPScrolledWindow::XPScrolledWindow(int width, int height, std::string title) {
 			 | GDK_BUTTON_PRESS_MASK
 			 | GDK_POINTER_MOTION_MASK);
   pixmap = NULL;
-  
 }
 
+class GTKTermWidget : public XPScrolledWindow, TermWidget {
+  GDKFont *myfont;
+public:
+  virtual void InstallEventTimers();
+  virtual void SetScrollBarValue(int val);
+  virtual void SetupScrollBar(int minval, int maxval, int step, int page, int val);
+  virtual void DrawContent();  
+  virtual void setFont(int size);
+};
 
+void GTKTermWidget::InstallEventTimers() {
+}
 
+void GTKTermWidget::SetScrollBarValue(int val) {
+  gtk_adjustment_set_value(GTK_ADJUSTMENT(adj1),val);
+}
+
+void GTKTermWidget::SetupScrollBar(int minval, int maxval, int step, int page, int val) {
+  GTK_ADJUSTMENT(adj1)->lower = minval;
+  GTK_ADJUSTMENT(adj1)->upper = maxval;
+  GTK_ADJUSTMENT(adj1)->step_increment = step;
+  GTK_ADJUSTMENT(adj1)->page_increment = page;
+  GTK_ADJUSTMENT(adj1)->page_size = page;
+  gtk_adjustment_set_value(GTK_ADJUSTMENT(adj1),val);
+}
+
+void GTKTermWidget::DrawContent() {
+  if (m_width == 0) return;
+  for (int i=0;i<m_height;i++) {
+    int j=0;
+    while (j<m_width) {
+      // skip over characters that do not need to be redrawn
+      while ((j < m_width) && 
+	     (m_onscreen[i*m_width+j] == m_surface[i*m_width+j])) j++;
+      if (j < m_width) {
+	tagChar g = m_surface[i*m_width+j];
+	if (m_scrolling) 
+	  g.flags &= ~CURSORBIT;
+	if (g.noflags()) {
+	  gdk_draw_rectangle(pixmap, window->style->white_gc,
+			     TRUE, j*m_char_w, i*m_char_h, 
+			     m_char_w, m_char_h);
+	  gdk_draw_text(pixmap, myfont, window->style->black_gc,
+			j*m_char_w, i*m_char_h, &g.v,1);
+	  gtk_widget_queue_draw_area(window, j*m_char_w, i*m_char_h, 
+				     m_char_w, m_char_h);
+	} else if (g.cursor()) {
+	  gdk_draw_rectangle(pixmap, window->style->black_gc,
+			     TRUE, j*m_char_w, i*m_char_h, 
+			     m_char_w, m_char_h);
+	  gdk_draw_text(pixmap, myfont, window->style->white_gc,
+			j*m_char_w, i*m_char_h, &g.v,1);
+	  gtk_widget_queue_draw_area(window, j*m_char_w, i*m_char_h, 
+				     m_char_w, m_char_h);
+	} else {
+// 	  CGContextSetRGBFillColor(gh,0,0,1,1);
+// 	  CGContextFillRect(gh,fill);
+//  	  CGContextSetRGBFillColor(gh,1,1,1,1);
+// 	  CGContextShowText(gh,&g.v,1);
+	}
+	m_onscreen[i*m_width+j] = g;
+	j++;
+      }
+    }
+  }
+}
+
+void GTKTermWidget::setFont(int size) {
+  myfont = gdk_font_load ("-misc-fixed-medium-r-*-*-*-140-*-*-*-*-*-*");
+  m_char_w = gdk_char_w(myfont,'w');
+  m_char_h = gdk_char_h(myfont,'l');
+}
 
 int main(int argc, char *argv[]) {
   gtk_init(&argc, &argv);

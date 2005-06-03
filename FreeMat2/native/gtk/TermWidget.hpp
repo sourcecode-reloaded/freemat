@@ -57,7 +57,6 @@ protected:
   void setScrollbar(int val);
   void OnResize();
   void OnKeyPress(int key);
-  void setFont(int size);
   void OnMouseDown(int x, int y);
   void OnMouseDrag(int x, int y);
   void OnMouseUp(int x, int y);
@@ -66,5 +65,6 @@ protected:
   virtual void SetScrollBarValue(int val) = 0;
   virtual void SetupScrollBar(int minval, int maxval, int step, int page, int val) = 0;
   virtual void DrawContent() = 0;
+  virtual void setFont(int size) = 0;
 };
 
