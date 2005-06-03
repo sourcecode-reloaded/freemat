@@ -127,6 +127,7 @@ static gint configure_event( GtkWidget         *widget,
 		      0, 0,
 		      widget->allocation.width,
 		      widget->allocation.height);
+  winptr->OnResize();
   return TRUE;
 }
 
@@ -209,7 +210,9 @@ XPScrolledWindow::XPScrolledWindow(int width, int height, std::string title) {
 }
 
 class GTKTermWidget : public XPScrolledWindow, TermWidget {
-  GdkFont *myfont;
+  PangoFontDescription *myFont;
+  PangoContext *cntxt;
+  PangoLayout *pango;
 public:
   GTKTermWidget(int width, int height, std::string title);
   virtual void InstallEventTimers();
@@ -222,15 +225,23 @@ public:
   virtual void ScrollLineUp();
   virtual void ScrollLineDown();
   virtual void OnKeyDown(int key);
+  virtual void OnResize();
 };
 
 void GTKTermWidget::OnKeyDown(int key) {
   TermWidget::OnKeyPress(key);
 }
 
+void GTKTermWidget::OnResize() {
+  TermWidget::OnResize();
+}
+
 GTKTermWidget::GTKTermWidget(int width, int height, std::string title) :
-  XPScrolledWindow(width, height, title),
-  TermWidget(width, height) {
+  XPScrolledWindow(width, height, title) {
+  cntxt = gtk_widget_get_pango_context(window);
+  pango = pango_layout_new(cntxt);  
+  TermWidget::Initialize();
+  InstallEventTimers();
 }
 
 int GTKTermWidget::GetWidth() {
@@ -249,7 +260,14 @@ void GTKTermWidget::ScrollLineDown() {
   //
 }
 
+static gint refresh_cb(gpointer data) {
+  GTKTermWidget* ptr = (GTKTermWidget*) data;
+  ptr->DrawContent();
+  return TRUE;
+}
+
 void GTKTermWidget::InstallEventTimers() {
+  g_timeout_add(100,refresh_cb,this);
 }
 
 void GTKTermWidget::SetScrollBarValue(int val) {
@@ -258,7 +276,7 @@ void GTKTermWidget::SetScrollBarValue(int val) {
 
 void GTKTermWidget::SetupScrollBar(int minval, int maxval, int step, int page, int val) {
   GTK_ADJUSTMENT(adj1)->lower = minval;
-  GTK_ADJUSTMENT(adj1)->upper = maxval;
+  GTK_ADJUSTMENT(adj1)->upper = maxval+1;
   GTK_ADJUSTMENT(adj1)->step_increment = step;
   GTK_ADJUSTMENT(adj1)->page_increment = page;
   GTK_ADJUSTMENT(adj1)->page_size = page;
@@ -266,6 +284,7 @@ void GTKTermWidget::SetupScrollBar(int minval, int maxval, int step, int page, i
 }
 
 void GTKTermWidget::DrawContent() {
+
   if (m_width == 0) return;
   for (int i=0;i<m_height;i++) {
     int j=0;
@@ -277,20 +296,21 @@ void GTKTermWidget::DrawContent() {
 	tagChar g = m_surface[i*m_width+j];
 	if (m_scrolling) 
 	  g.flags &= ~CURSORBIT;
+	pango_layout_set_text(pango, &g.v, 1);
 	if (g.noflags()) {
 	  gdk_draw_rectangle(pixmap, window->style->white_gc,
 			     TRUE, j*m_char_w, i*m_char_h, 
 			     m_char_w, m_char_h);
-	  gdk_draw_text(pixmap, myfont, window->style->black_gc,
-			j*m_char_w, i*m_char_h, &g.v,1);
+	  gdk_draw_layout(pixmap, window->style->black_gc,
+			  j*m_char_w, i*m_char_h, pango);
 	  gtk_widget_queue_draw_area(window, j*m_char_w, i*m_char_h, 
 				     m_char_w, m_char_h);
 	} else if (g.cursor()) {
 	  gdk_draw_rectangle(pixmap, window->style->black_gc,
 			     TRUE, j*m_char_w, i*m_char_h, 
 			     m_char_w, m_char_h);
-	  gdk_draw_text(pixmap, myfont, window->style->white_gc,
-			j*m_char_w, i*m_char_h, &g.v,1);
+	  gdk_draw_layout(pixmap, window->style->white_gc,
+			  j*m_char_w, i*m_char_h, pango);
 	  gtk_widget_queue_draw_area(window, j*m_char_w, i*m_char_h, 
 				     m_char_w, m_char_h);
 	} else {
@@ -307,9 +327,14 @@ void GTKTermWidget::DrawContent() {
 }
 
 void GTKTermWidget::setFont(int size) {
-  myfont = gdk_font_load ("-misc-fixed-medium-r-*-*-*-140-*-*-*-*-*-*");
-  m_char_w = gdk_char_width(myfont,'w');
-  m_char_h = gdk_char_height(myfont,'l');
+  if (myFont)
+    pango_font_description_free(myFont);
+  myFont = pango_font_description_new();
+  pango_font_description_set_family( myFont, "monospace" );
+  pango_font_description_set_size( myFont, size*PANGO_SCALE);
+  pango_layout_set_font_description( pango, myFont);
+  pango_layout_set_text(pango, "W", 1);
+  pango_layout_get_pixel_size(pango, &m_char_w, &m_char_h);
 }
 
 int main(int argc, char *argv[]) {

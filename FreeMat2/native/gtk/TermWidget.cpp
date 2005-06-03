@@ -3,7 +3,7 @@
 #define TMIN(a,b) ((a) < (b) ? (a) : (b))
 #define TMAX(a,b) ((a) > (b) ? (a) : (b))
 
-TermWidget::TermWidget(int width, int height) {
+TermWidget::TermWidget() {
   m_surface = NULL;
   m_onscreen = NULL;
   m_history = NULL;
@@ -12,18 +12,24 @@ TermWidget::TermWidget(int width, int height) {
   m_cursor_x = 0;
   m_cursor_y = 0;
   m_clearall = true;
-  //  setFont(12);
   cursorOn = false;
   m_blink_skip = true;
   blinkEnable = true;
   m_scrolling = false;
   m_scroll_offset = 0;
   m_mousePressed = false;
+  //  setFont(12);
   //  m_active_width = GetWidth();
   //  resizeTextSurface();
 }
 
 TermWidget::~TermWidget() {
+}
+
+void TermWidget::Initialize() {
+  setFont(12);
+  m_active_width = 400;
+  resizeTextSurface();
 }
 
 void TermWidget::scrollBack(int val) {

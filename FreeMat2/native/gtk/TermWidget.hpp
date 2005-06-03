@@ -46,7 +46,7 @@ protected:
   int m_scrollmin, m_scrollmax, m_scrollline, m_scrollpage;
  public:
   void scrollBack(int val);
-  TermWidget(int width, int height);
+  TermWidget();
   virtual ~TermWidget();
   void resizeTextSurface();
   //  virtual void ProcessChar(int c) = 0;
@@ -54,6 +54,7 @@ protected:
   void blink();
   void setCursor(int x, int y);
   int  getTextWidth() {return m_width;};
+  void Initialize();
   //TK dependant functions
  protected:
   void setScrollbar(int val);
