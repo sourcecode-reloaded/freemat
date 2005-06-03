@@ -1,3 +1,8 @@
+#include "TermWidget.hpp"
+
+#define TMIN(a,b) ((a) < (b) ? (a) : (b))
+#define TMAX(a,b) ((a) > (b) ? (a) : (b))
+
 TermWidget::TermWidget(int width, int height, char *title) {
   m_surface = NULL;
   m_onscreen = NULL;
@@ -7,15 +12,15 @@ TermWidget::TermWidget(int width, int height, char *title) {
   m_cursor_x = 0;
   m_cursor_y = 0;
   m_clearall = true;
-  setFont(12);
+  //  setFont(12);
   cursorOn = false;
   m_blink_skip = true;
   blinkEnable = true;
   m_scrolling = false;
   m_scroll_offset = 0;
   m_mousePressed = false;
-  m_active_width = GetWidth();
-  resizeTextSurface();
+  //  m_active_width = GetWidth();
+  //  resizeTextSurface();
 }
 
 TermWidget::~TermWidget() {
@@ -116,52 +121,6 @@ void TermWidget::OnResize() {
   resizeTextSurface();
 }
 
-
-// Update the onscreen buffer to match the text buffer surface.
-void TermWidget::OnDraw() {
-  XPWindow::OnDraw();
-  if (m_width == 0) return;
-  CGContextRef gh;
-  CreateCGContextForPort(GetWindowPort(win),&gh);
-  CGContextSelectFont(gh,"Monaco",12,kCGEncodingMacRoman);
-  for (int i=0;i<m_height;i++) {
-    int j=0;
-    while (j<m_width) {
-      // skip over characters that do not need to be redrawn
-      while ((j < m_width) && 
-	     (m_onscreen[i*m_width+j] == m_surface[i*m_width+j])) j++;
-      if (j < m_width) {
-	CGContextSetTextPosition(gh,j*m_char_w,(m_height-1-i)*m_char_h + 2);
-	CGRect fill = CGRectMake(j*m_char_w,(m_height-1-i)*m_char_h,
-				 m_char_w,m_char_h);
-	tagChar g = m_surface[i*m_width+j];
-	if (m_scrolling) 
-	  g.flags &= ~CURSORBIT;
-	if (g.noflags()) {
-	  CGContextSetRGBFillColor(gh,1,1,1,1);
-	  CGContextFillRect(gh,fill);
-	  CGContextSetRGBFillColor(gh,0,0,0,1);
-	  CGContextShowText(gh,&g.v,1);
-	} else if (g.cursor()) {
-	  CGContextSetRGBFillColor(gh,0,0,0,1);
-	  CGContextFillRect(gh,fill);
- 	  CGContextSetRGBFillColor(gh,1,1,1,1);
-	  CGContextShowText(gh,&g.v,1);
-	} else {
-	  CGContextSetRGBFillColor(gh,0,0,1,1);
-	  CGContextFillRect(gh,fill);
- 	  CGContextSetRGBFillColor(gh,1,1,1,1);
-	  CGContextShowText(gh,&g.v,1);
-	}
-	m_onscreen[i*m_width+j] = g;
-	j++;
-      }
-    }
-  }
-  CGContextFlush(gh);
-  CGContextRelease(gh);
-}
-
 void TermWidget::setCursor(int x, int y) {
   //   cursorOn = false;
   //   m_onscreen[m_cursor_x + m_cursor_y*m_width] = -1;
@@ -200,7 +159,7 @@ void TermWidget::OnKeyPress(int c) {
   if (c == 'q')
     exit(0);
   if (c == 'l') {
-    setCursor(QMAX(m_cursor_x-1,0),m_cursor_y);
+    setCursor(TMAX(m_cursor_x-1,0),m_cursor_y);
     return;
   }
   if (c != 'd' && c != 'x') {
@@ -243,24 +202,6 @@ void TermWidget::OnKeyPress(int c) {
     if (key) ProcessChar(key);
   }
 #endif
-}
-
-void TermWidget::setFont(int size) {
-  //  FPShowHideFontPanel();
-  //   // Get a platform font reference
-  //   CGFontRef myFont;
-  //   myFont = CGFontCreateWithPlatformFont(&platformFontReference);
-  CGContextRef gh;
-  char tst = 'w';
-  CreateCGContextForPort(GetWindowPort(win),&gh);
-  CGContextSelectFont(gh,"Monaco",size,kCGEncodingMacRoman);
-  CGContextSetTextPosition(gh,0,0);
-  CGContextSetRGBFillColor(gh,0,0,0,0);
-  CGContextShowText(gh,&tst,1);
-  CGPoint pt(CGContextGetTextPosition(gh));
-  CGContextRelease(gh);
-  m_char_w = pt.x;
-  m_char_h = size;
 }
 
 

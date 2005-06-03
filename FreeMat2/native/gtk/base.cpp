@@ -25,7 +25,7 @@ public:
   virtual void OnMouseDown(int x, int y) {}
   virtual void OnMouseDrag(int x, int y);
   virtual void OnMouseUp(int x, int y) {}
-  virtual void OnKeyPress(int key) {}
+  virtual void OnKeyDown(int key) {}
   virtual int GetHeight();
   virtual int GetWidth();
 };
@@ -103,7 +103,8 @@ static gint keypress_event(GtkWidget *widget,
 			   GdkEventKey *event) {
   XPWindow *winptr;
   winptr = (XPWindow*) g_object_get_data(G_OBJECT(widget),"this");
-  winptr->OnKeyPress(event->keyval);
+  winptr->OnKeyDown(event->keyval);
+  std::cout << "keydown " << event->keyval << "\n";
   return TRUE;
 }
 
@@ -137,6 +138,7 @@ XPWindow::XPWindow(int width, int height, std::string title) {
   gtk_widget_set_size_request(drawing_area,width,height);
   gtk_container_add(GTK_CONTAINER(window),drawing_area);
   g_object_set_data(G_OBJECT(drawing_area),"this",this);
+  g_object_set_data(G_OBJECT(window),"this",this);
   g_signal_connect (G_OBJECT (drawing_area), "expose_event",
 		    G_CALLBACK (expose_event), NULL);
   g_signal_connect (G_OBJECT (drawing_area),"configure_event",
@@ -145,6 +147,8 @@ XPWindow::XPWindow(int width, int height, std::string title) {
 		    G_CALLBACK (motion_notify_event), NULL);
   g_signal_connect (G_OBJECT (drawing_area), "button_press_event",
 		    G_CALLBACK (button_press_event), NULL);
+  g_signal_connect (G_OBJECT (window), "keypress_event",
+		    G_CALLBACK (keypress_event), NULL);
   gtk_widget_set_events (drawing_area, GDK_EXPOSURE_MASK
 			 | GDK_LEAVE_NOTIFY_MASK
 			 | GDK_BUTTON_PRESS_MASK
@@ -156,9 +160,10 @@ XPWindow::~XPWindow() {
 }
 
 class XPScrolledWindow : public XPWindow {
+ public:
   GtkWidget *scroll_bar;
   GtkObject *adj1;
-public:
+ public:
   XPScrolledWindow(int width, int height, std::string title);
   virtual ~XPScrolledWindow();
 };
@@ -189,22 +194,57 @@ XPScrolledWindow::XPScrolledWindow(int width, int height, std::string title) {
 		    G_CALLBACK (motion_notify_event), NULL);
   g_signal_connect (G_OBJECT (drawing_area), "button_press_event",
 		    G_CALLBACK (button_press_event), NULL);
+  g_signal_connect (G_OBJECT (drawing_area), "key_press_event",
+		    G_CALLBACK (keypress_event), NULL);
   gtk_widget_set_events (drawing_area, GDK_EXPOSURE_MASK
 			 | GDK_LEAVE_NOTIFY_MASK
 			 | GDK_BUTTON_PRESS_MASK
-			 | GDK_POINTER_MOTION_MASK);
+			 | GDK_POINTER_MOTION_MASK
+			 | GDK_KEY_PRESS_MASK);
+  gtk_widget_grab_focus(drawing_area);
   pixmap = NULL;
 }
 
 class GTKTermWidget : public XPScrolledWindow, TermWidget {
-  GDKFont *myfont;
+  GdkFont *myfont;
 public:
+  GTKTermWidget(int width, int height, std::string title);
   virtual void InstallEventTimers();
   virtual void SetScrollBarValue(int val);
   virtual void SetupScrollBar(int minval, int maxval, int step, int page, int val);
   virtual void DrawContent();  
   virtual void setFont(int size);
+  virtual int GetHeight();
+  virtual int GetWidth();
+  virtual void ScrollLineUp();
+  virtual void ScrollLineDown();
+  virtual void OnKeyDown(int key);
 };
+
+void GTKTermWidget::OnKeyDown(int key) {
+  TermWidget::OnKeyPress(key);
+}
+
+GTKTermWidget::GTKTermWidget(int width, int height, std::string title) :
+  XPScrolledWindow(width, height, title),
+  TermWidget(width, height, title.c_str()) {
+}
+
+int GTKTermWidget::GetWidth() {
+  return XPWindow::GetWidth();
+}
+
+int GTKTermWidget::GetHeight() {
+  return XPWindow::GetHeight();
+}
+
+void GTKTermWidget::ScrollLineUp() {
+  //
+}
+
+void GTKTermWidget::ScrollLineDown() {
+  //
+}
 
 void GTKTermWidget::InstallEventTimers() {
 }
@@ -265,13 +305,13 @@ void GTKTermWidget::DrawContent() {
 
 void GTKTermWidget::setFont(int size) {
   myfont = gdk_font_load ("-misc-fixed-medium-r-*-*-*-140-*-*-*-*-*-*");
-  m_char_w = gdk_char_w(myfont,'w');
-  m_char_h = gdk_char_h(myfont,'l');
+  m_char_w = gdk_char_width(myfont,'w');
+  m_char_h = gdk_char_height(myfont,'l');
 }
 
 int main(int argc, char *argv[]) {
   gtk_init(&argc, &argv);
-  XPWindow *win = new XPScrolledWindow(400,400,"Hello");
+  XPWindow *win = new GTKTermWidget(400,400,"Hello");
   win->Show();
   gtk_main();
   return 0;

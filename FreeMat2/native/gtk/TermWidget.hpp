@@ -1,5 +1,6 @@
 #define CURSORBIT 1
 #define SELECTBIT 2
+#include <string>
 
 class tagChar
 {
@@ -42,6 +43,7 @@ protected:
   int selectionStart;
   int selectionStop;
   int m_scroll_offset;
+  int m_scrollmin, m_scrollmax, m_scrollline, m_scrollpage;
  public:
   void scrollBack(int val);
   TermWidget(int width, int height, char *title);
@@ -61,7 +63,11 @@ protected:
   void OnMouseDrag(int x, int y);
   void OnMouseUp(int x, int y);
   void OnScroll(int val);
+  virtual int GetHeight() = 0;
+  virtual int GetWidth() = 0;
   virtual void InstallEventTimers() = 0;
+  virtual void ScrollLineUp() = 0;
+  virtual void ScrollLineDown() = 0;
   virtual void SetScrollBarValue(int val) = 0;
   virtual void SetupScrollBar(int minval, int maxval, int step, int page, int val) = 0;
   virtual void DrawContent() = 0;
