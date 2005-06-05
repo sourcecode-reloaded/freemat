@@ -237,10 +237,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
       wptr->OnMouseDown(LOWORD(lParam),HIWORD(lParam));
       return 0;
     case WM_MOUSEMOVE:
+		SetCapture(hwnd);
       if (wParam & MK_LBUTTON)
 	wptr->OnMouseDrag(LOWORD(lParam),HIWORD(lParam));
       return 0;
     case WM_LBUTTONUP:
+		ReleaseCapture();
       wptr->OnMouseUp(LOWORD(lParam),HIWORD(lParam));
       return 0;
     case WM_PAINT:

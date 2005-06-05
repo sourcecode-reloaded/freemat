@@ -260,9 +260,9 @@ void TermWidget::DrawContent() {
 }
 
 void TermWidget::OnMouseDrag(int x, int y) {
-  if (y < 10) 
+  if (y < 0) 
     ScrollLineUp();
-  if (y > GetHeight() - 10)
+  if (y > GetHeight())
     ScrollLineDown();
   // Get the position of the click
   // to a row and column
