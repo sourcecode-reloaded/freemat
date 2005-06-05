@@ -3642,6 +3642,8 @@ FreeMat2/native/win32/Rect2D.cpp svn_keywords=Author+Date+Id+Revision svn_eol_00
 FreeMat2/native/win32/Rect2D.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/win32/Reducer.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/win32/Reducer.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/win32/TermWidget.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/win32/TermWidget.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/win32/XWindow.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/win32/XWindow.cpp~ svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/win32/XWindow.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -3654,6 +3656,8 @@ FreeMat2/native/win32/winterm.dsw svn_keywords=Author+Date+Id+Revision svn_eol_0
 FreeMat2/native/win32/winterm.ncb svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/win32/winterm.opt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/win32/winterm.plg svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/win32/wt2.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/win32/wt2.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/x11/.gdb_history svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/x11/KeyManager.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/x11/KeyManager.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
