@@ -11,6 +11,7 @@ class WinTerminal : public TermWidget {
   CHOOSEFONT cft;
   LOGFONT lfont;
   HBITMAP hBitmp;
+  HBRUSH hWhiteBrush, hBlackBrush, hBlueBrush;
   bool bitmap_active;
   HDC hdcMem;
   int m_win_width;

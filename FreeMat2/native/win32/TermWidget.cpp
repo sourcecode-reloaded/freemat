@@ -19,6 +19,7 @@ TermWidget::TermWidget() {
   m_scrolling = false;
   m_scroll_offset = 0;
   m_mousePressed = false;
+  m_firsttime = true;
   //  setFont(12);
   //  m_active_width = GetWidth();
   //  resizeTextSurface();
@@ -54,7 +55,6 @@ void TermWidget::blink() {
 
 void TermWidget::resizeTextSurface() {
   std::cout << "resize called " << m_width << " x " << m_height << " " << m_active_width << "\n";
-  bool firsttime = (m_surface == NULL);
   if (m_surface)
     m_surface[m_cursor_y*m_width+m_cursor_x].clearCursor();  
   int cursor_offset = m_height - 1 - m_cursor_y;
@@ -79,9 +79,10 @@ void TermWidget::resizeTextSurface() {
   m_history = new_history;
   m_surface = m_history + (m_scrollback - new_height)*new_width;
   
-  if (!firsttime) {
+  if (!m_firsttime) {
     m_history_lines -= (new_height-m_height);
     m_history_lines = TMAX(0,m_history_lines);
+    std::cout << "history lines = " << m_history_lines << "..\n";
   }
 
   m_width = new_width;
@@ -104,6 +105,7 @@ void TermWidget::setScrollbar(int val) {
       (m_scrollmax != m_history_lines) ||
       (m_scrollline != 1) ||
 	  (m_scrollpage != m_height)) {
+    std::cout << "scset " << m_history_lines << " " << m_height  << " " << val << "\n";
     SetupScrollBar(0,m_history_lines,1,m_height,val);
 	m_scrollmin = 0;
 	m_scrollmax = m_history_lines;
@@ -115,6 +117,8 @@ void TermWidget::setScrollbar(int val) {
 }
 
 void TermWidget::PutString(std::string txt) {
+  m_firsttime = false;
+  std::cout << "m_scrolling = " << m_scrolling << "\n";
   if (m_scrolling) {
     setScrollbar(m_history_lines);
   }
@@ -148,7 +152,6 @@ void TermWidget::setCursor(int x, int y) {
     m_surface[m_cursor_y*m_width+m_cursor_x].toggleCursor();
   m_cursor_x = x;
   m_cursor_y = y;
-  std::cout << "x = " << x << " y = " << y << " wid = " << m_width << "\n";
   m_cursor_y += m_cursor_x/m_width;
   m_cursor_x %= m_width;
   if (m_cursor_y >= m_height) {
@@ -159,6 +162,7 @@ void TermWidget::setCursor(int x, int y) {
     for (int i=0;i<toscroll*m_width;i++)
       m_history[(m_scrollback - toscroll)*m_width+i] = tagChar();
     m_history_lines = TMIN(m_history_lines+toscroll,m_scrollback-m_height);
+    std::cout << "history lines " << m_history_lines << "\n";
     m_cursor_y -= toscroll;
     setScrollbar(m_history_lines);
   }
@@ -166,6 +170,7 @@ void TermWidget::setCursor(int x, int y) {
 }
 
 void TermWidget::OnScroll(int val) {
+  std::cout << "on scroll " << val << "\n";
   scrollBack(val);
 }
 
@@ -255,9 +260,9 @@ void TermWidget::DrawContent() {
 }
 
 void TermWidget::OnMouseDrag(int x, int y) {
-  if (y < 0) 
+  if (y < 10) 
     ScrollLineUp();
-  if (y > GetHeight())
+  if (y > GetHeight() - 10)
     ScrollLineDown();
   // Get the position of the click
   // to a row and column

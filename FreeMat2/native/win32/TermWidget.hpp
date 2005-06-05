@@ -44,6 +44,7 @@ protected:
   int selectionStop;
   int m_scroll_offset;
   int m_scrollmin, m_scrollmax, m_scrollline, m_scrollpage;
+  bool m_firsttime;
  public:
   void scrollBack(int val);
   TermWidget();

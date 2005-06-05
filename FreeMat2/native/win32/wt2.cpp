@@ -1,6 +1,7 @@
 #include "wt2.hpp"
 #include <string.h>
 #include <algorithm>
+#include <iostream>
 
 #include <direct.h>
 #define getcwd _getcwd
@@ -75,11 +76,11 @@ void WinTerminal::OnScroll(int scrollType) {
 }
 
 int WinTerminal::GetHeight() {
-	return m_win_height;
+  return m_win_height;
 }
 
 int WinTerminal::GetWidth() {
-	return m_win_width;
+  return m_win_width;
 }
 
 void WinTerminal::InstallEventTimers() {
@@ -90,16 +91,17 @@ void WinTerminal::ScrollLineUp() {
   si.cbSize = sizeof(si);
   si.fMask = SIF_ALL;
   GetScrollInfo(hwnd, SB_VERT, &si);
-  si.nPos--;
-  SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
+  int val;
+  val = si.nPos - 1;
+  val = (val < si.nMin) ? si.nMin : val;
+  SetScrollBarValue(val);
 }
 
 void WinTerminal::ScrollLineDown() {
   si.cbSize = sizeof(si);
   si.fMask = SIF_ALL;
   GetScrollInfo(hwnd, SB_VERT, &si);
-  si.nPos++;
-  SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
+  SetScrollBarValue(si.nPos+1);
 }
 
 void WinTerminal::SetScrollBarValue(int val) {
@@ -109,21 +111,26 @@ void WinTerminal::SetScrollBarValue(int val) {
   SetScrollInfo(hwnd,SB_VERT,&si,TRUE);
   char buffer[1024];
   sprintf(buffer,"scroll at %d\n",val);
-  OutputDebugString(buffer);
+  std::cout << buffer;
+  OnScroll(val);
 }
 
+// We want the scrollbar to take values between minval
+// and maxval (inclusive).  The win32 scrollbar takes 
+// values between nMin and nMax-nPage+1, so nMax = maxVal+nPage-1
 void WinTerminal::SetupScrollBar(int minval, int maxval,
 				 int step, int page, int val) {
+  std::cout << "scroll inputs " << minval << " " << maxval << " " << step << " " << page << " " << val << "\n";
   si.cbSize = sizeof(si);
-  si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
+  si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS | SIF_DISABLENOSCROLL;
   si.nMin = minval;
   si.nMax = maxval+page-1;
   si.nPage = page;
   si.nPos = val;
   SetScrollInfo(hwnd,SB_VERT,&si,TRUE);
   char buffer[1024];
-  sprintf(buffer,"scroll setup %d %d %d %d %d\n",minval,maxval,step,page,val);
-  OutputDebugString(buffer);
+  sprintf(buffer,"scroll setup %d %d %d %d %d\n",si.nMin,si.nMax,si.nPage,step,val);
+  std::cout << buffer;
 }
 
 void WinTerminal::PutTagChar(int x, int y, tagChar g) {
@@ -134,23 +141,17 @@ void WinTerminal::PutTagChar(int x, int y, tagChar g) {
   rct.bottom = y + m_char_h;
   SelectObject(hdcMem, hfnt);
   if (g.noflags()) {
-    HBRUSH whiteBrush = CreateSolidBrush(RGB(255,255,255));
-    FillRect(hdcMem, &rct, whiteBrush);
     SetTextColor(hdcMem, RGB(0, 0, 0));
+    SetBkColor(hdcMem, RGB(255,255,255));
     TextOut(hdcMem, x, y, &g.v, 1);
-    DeleteObject(whiteBrush);
   } else if (g.cursor()) {
-    HBRUSH blackBrush = CreateSolidBrush(RGB(0,0,0));
-    FillRect(hdcMem, &rct, blackBrush);
+    SetBkColor(hdcMem, RGB(0,0,0));
     SetTextColor(hdcMem, RGB(255, 255, 255));
     TextOut(hdcMem, x, y, &g.v, 1);
-    DeleteObject(blackBrush);
   } else {
-    HBRUSH blueBrush = CreateSolidBrush(RGB(0,0,255));
-    FillRect(hdcMem, &rct, blueBrush);
+    SetBkColor(hdcMem, RGB(0,0,255));
     SetTextColor(hdcMem, RGB(255, 255, 255));
     TextOut(hdcMem, x, y, &g.v, 1);
-    DeleteObject(blueBrush);
   }
   InvalidateRect(hwnd,&rct,FALSE);
 }
@@ -212,7 +213,9 @@ WinTerminal::WinTerminal(HINSTANCE hInstance, int iCmdShow) {
   TermWidget::Initialize();
   ShowWindow(hwnd, iCmdShow);
   InstallEventTimers();
-  SetupScrollBar(0,1,1,1,0);
+//   hWhiteBrush = (HBRUSH) GetStockObject(WHITE_BRUSH);
+//   hBlackBrush = (HBRUSH) GetStockObject(BLACK_BRUSH);
+//   hBlueBrush =  (HBRUSH) CreateSolidBrush(RGB(0,0,255));
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
