@@ -104,8 +104,12 @@ void WinTerminal::ScrollLineDown() {
 
 void WinTerminal::SetScrollBarValue(int val) {
   si.cbSize = sizeof(si);
+  si.fMask = SIF_POS;
   si.nPos = val;
   SetScrollInfo(hwnd,SB_VERT,&si,TRUE);
+  char buffer[1024];
+  sprintf(buffer,"scroll at %d\n",val);
+  OutputDebugString(buffer);
 }
 
 void WinTerminal::SetupScrollBar(int minval, int maxval,
@@ -113,10 +117,13 @@ void WinTerminal::SetupScrollBar(int minval, int maxval,
   si.cbSize = sizeof(si);
   si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
   si.nMin = minval;
-  si.nMax = maxval;
+  si.nMax = maxval+page-1;
   si.nPage = page;
   si.nPos = val;
   SetScrollInfo(hwnd,SB_VERT,&si,TRUE);
+  char buffer[1024];
+  sprintf(buffer,"scroll setup %d %d %d %d %d\n",minval,maxval,step,page,val);
+  OutputDebugString(buffer);
 }
 
 void WinTerminal::PutTagChar(int x, int y, tagChar g) {

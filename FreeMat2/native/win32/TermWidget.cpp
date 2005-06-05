@@ -103,8 +103,13 @@ void TermWidget::setScrollbar(int val) {
   if ((m_scrollmin != 0) ||
       (m_scrollmax != m_history_lines) ||
       (m_scrollline != 1) ||
-      (m_scrollpage != m_height))
+	  (m_scrollpage != m_height)) {
     SetupScrollBar(0,m_history_lines,1,m_height,val);
+	m_scrollmin = 0;
+	m_scrollmax = m_history_lines;
+	m_scrollline = 1;
+	m_scrollpage = m_height;
+	  }
   else
     SetScrollBarValue(val);
 }
