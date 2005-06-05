@@ -94,6 +94,9 @@ void WinTerminal::ScrollLineUp() {
   int val;
   val = si.nPos - 1;
   val = (val < si.nMin) ? si.nMin : val;
+  char buffer[1023];
+  sprintf(buffer,"scroll to %d %d\n",val,si.nMin);
+OutputDebugString(buffer);
   SetScrollBarValue(val);
 }
 
@@ -111,7 +114,7 @@ void WinTerminal::SetScrollBarValue(int val) {
   SetScrollInfo(hwnd,SB_VERT,&si,TRUE);
   char buffer[1024];
   sprintf(buffer,"scroll at %d\n",val);
-  std::cout << buffer;
+  OutputDebugString(buffer);
   OnScroll(val);
 }
 
@@ -130,7 +133,7 @@ void WinTerminal::SetupScrollBar(int minval, int maxval,
   SetScrollInfo(hwnd,SB_VERT,&si,TRUE);
   char buffer[1024];
   sprintf(buffer,"scroll setup %d %d %d %d %d\n",si.nMin,si.nMax,si.nPage,step,val);
-  std::cout << buffer;
+  OutputDebugString(buffer);
 }
 
 void WinTerminal::PutTagChar(int x, int y, tagChar g) {
@@ -234,16 +237,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
       return 0;
     case WM_LBUTTONDOWN:
-      wptr->OnMouseDown(LOWORD(lParam),HIWORD(lParam));
+      wptr->OnMouseDown((short)LOWORD(lParam),(short)HIWORD(lParam));
+	  SetCapture(hwnd);
       return 0;
     case WM_MOUSEMOVE:
-		SetCapture(hwnd);
       if (wParam & MK_LBUTTON)
-	wptr->OnMouseDrag(LOWORD(lParam),HIWORD(lParam));
+	    wptr->OnMouseDrag((short)LOWORD(lParam),(short)HIWORD(lParam));
       return 0;
     case WM_LBUTTONUP:
-		ReleaseCapture();
-      wptr->OnMouseUp(LOWORD(lParam),HIWORD(lParam));
+	  wptr->OnMouseUp((short)LOWORD(lParam),(short)HIWORD(lParam));
+	  ReleaseCapture();
       return 0;
     case WM_PAINT:
       HDC hdc;
