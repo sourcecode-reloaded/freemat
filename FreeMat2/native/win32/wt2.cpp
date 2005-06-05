@@ -15,15 +15,21 @@ void WinTerminal::OnExpose(int x, int y, int w, int h) {
 
 void WinTerminal::OnResize(int w, int h) {
   if (w == 0 || h == 0) return;
-  m_width = w;
-  m_height = h;
+  m_win_width = w;
+  m_win_height = h;
   HDC hdc = GetDC(hwnd);
   DeleteDC(hdcMem);
   hdcMem = CreateCompatibleDC(hdc);
   if (bitmap_active)
     DeleteObject(hBitmp);
-  hBitmp = CreateCompatibleBitmap(hdc, m_width, m_height);
+  hBitmp = CreateCompatibleBitmap(hdc, m_win_width, m_win_height);
+  RECT rct;
+  rct.top = 0;
+  rct.bottom = m_win_height;
+  rct.left = 0;
+  rct.right = m_win_width;
   SelectObject(hdcMem, hBitmp);
+  FillRect(hdcMem, &rct, (HBRUSH) GetStockObject(WHITE_BRUSH));
   TermWidget::OnResize();
   InvalidateRect(hwnd,NULL,TRUE);
   UpdateWindow(hwnd);
@@ -69,15 +75,11 @@ void WinTerminal::OnScroll(int scrollType) {
 }
 
 int WinTerminal::GetHeight() {
-  RECT winsze;
-  GetClientRect(hwnd, &winsze);
-  return winsze.bottom - winsze.top;
+	return m_win_height;
 }
 
 int WinTerminal::GetWidth() {
-  RECT winsze;
-  GetClientRect(hwnd, &winsze);
-  return winsze.right - winsze.left;
+	return m_win_width;
 }
 
 void WinTerminal::InstallEventTimers() {
@@ -169,10 +171,12 @@ void SetupWinTerminalClass(HINSTANCE hInstance) {
   wndclass.cbWndExtra = 4;
   wndclass.hInstance = hInstance;
   //wndclass.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
-  //    wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
+  wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
   wndclass.hbrBackground = (HBRUSH) GetStockObject(WHITE_BRUSH);
   //wndclass.lpszMenuName = MAKEINTRESOURCE(IDR_MENU1);
-  wndclass.lpszClassName = "WinTerminal";
+wndclass.lpszMenuName = NULL;
+wndclass.hIcon = 0;
+wndclass.lpszClassName = "WinTerminal";
   if (!RegisterClass(&wndclass))
     {
       MessageBox(NULL, TEXT("This program requires Windows NT!"),
@@ -194,8 +198,8 @@ WinTerminal::WinTerminal(HINSTANCE hInstance, int iCmdShow) {
 		      NULL,
 		      hInstance,
 		      NULL);
-  m_width = 500;
-  m_height = 400;
+  m_win_width = 500;
+  m_win_height = 400;
   SetWindowLong(hwnd,GWL_USERDATA,(LONG) this);
   bitmap_active = false;
   TermWidget::Initialize();

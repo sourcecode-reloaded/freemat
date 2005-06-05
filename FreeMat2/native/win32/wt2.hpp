@@ -13,6 +13,8 @@ class WinTerminal : public TermWidget {
   HBITMAP hBitmp;
   bool bitmap_active;
   HDC hdcMem;
+  int m_win_width;
+  int m_win_height;
 public:
   WinTerminal(HINSTANCE hInstance, int iCmdShow);
   ~WinTerminal() {};

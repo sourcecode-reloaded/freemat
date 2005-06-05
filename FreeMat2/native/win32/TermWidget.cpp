@@ -8,7 +8,7 @@ TermWidget::TermWidget() {
   m_surface = NULL;
   m_onscreen = NULL;
   m_history = NULL;
-  m_scrollback = 100;
+  m_scrollback = 1000;
   m_history_lines = 0;
   m_cursor_x = 0;
   m_cursor_y = 0;
