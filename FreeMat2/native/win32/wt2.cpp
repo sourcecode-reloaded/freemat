@@ -38,7 +38,8 @@ void WinTerminal::OnResize(int w, int h) {
   ReleaseDC(hwnd, hdc);
 }
 
-void WinTerminal::OnScroll(int scrollType) {
+void WinTerminal::OnScrollMsg(int scrollType) {
+  std::cout << "OnScroll Message received " << scrollType << "\n";
   int iVertpos;
   si.cbSize = sizeof(si);
   si.fMask = SIF_ALL;
@@ -85,36 +86,37 @@ int WinTerminal::GetWidth() {
 
 void WinTerminal::InstallEventTimers() {
   SetTimer(hwnd, 1, 100, NULL);
+  SetTimer(hwnd, 2, 1000, NULL);
 }
 
 void WinTerminal::ScrollLineUp() {
   si.cbSize = sizeof(si);
   si.fMask = SIF_ALL;
   GetScrollInfo(hwnd, SB_VERT, &si);
-  int val;
-  val = si.nPos - 1;
-  val = (val < si.nMin) ? si.nMin : val;
-  char buffer[1023];
-  sprintf(buffer,"scroll to %d %d\n",val,si.nMin);
-OutputDebugString(buffer);
-  SetScrollBarValue(val);
+  int newval = si.nPos - 1;
+  newval = (newval < si.nMin) ? si.nMin : newval;
+  SetScrollBarValue(newval);
 }
 
 void WinTerminal::ScrollLineDown() {
   si.cbSize = sizeof(si);
   si.fMask = SIF_ALL;
   GetScrollInfo(hwnd, SB_VERT, &si);
-  SetScrollBarValue(si.nPos+1);
+  int newval = si.nPos + 1;
+  newval = (newval > (si.nMax - si.nPage + 1)) ? (si.nMax-si.nPage+1):newval;
+  SetScrollBarValue(newval);
 }
 
 void WinTerminal::SetScrollBarValue(int val) {
   si.cbSize = sizeof(si);
   si.fMask = SIF_POS;
   si.nPos = val;
-  SetScrollInfo(hwnd,SB_VERT,&si,TRUE);
+  int p;
+  p = SetScrollInfo(hwnd,SB_VERT,&si,TRUE);
   char buffer[1024];
-  sprintf(buffer,"scroll at %d\n",val);
-  OutputDebugString(buffer);
+  sprintf(buffer,"scroll at  %d %d\n",p,val);
+  //  OutputDebugString(buffer);
+  std::cout << buffer;
   OnScroll(val);
 }
 
@@ -229,6 +231,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
   RECT rect;
   
   wptr = (WinTerminal*) GetWindowLong(hwnd, GWL_USERDATA);
+  
   switch (message)
     {
     case WM_SIZE:
@@ -269,11 +272,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
       break;
     }
     case WM_VSCROLL: {
-      wptr->OnScroll(LOWORD(wParam));
+      wptr->OnScrollMsg(LOWORD(wParam));
       break;
     }    
     case WM_TIMER: {
-      wptr->DrawContent();
+      if (LOWORD(wParam) == 1)
+	wptr->DrawContent();
+      else
+	wptr->blink();
       return 0;
       break;
     }
@@ -409,6 +415,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   }
 
   void WinTerminal::OnScroll(int scrollType) {
+    char buffer[1024];
+    sprintf(buffer,"OnScroll %d\n",scrollType);
+    OutputDebugString(buffer);
     int iVertpos;
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;

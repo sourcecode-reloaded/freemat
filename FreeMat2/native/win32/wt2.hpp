@@ -34,7 +34,7 @@ public:
   void OnExpose(int x, int y, int w, int h);
   HWND window() {return hwnd;};
   void OnResize(int w, int h);
-  void OnScroll(int v);
+  void OnScrollMsg(int v);
 };
 
 void SetupWinTerminalClass(HINSTANCE hInstance);
