@@ -3565,6 +3565,8 @@ FreeMat2/native/fltk/term.cxx svn_keywords=Author+Date+Id+Revision svn_eol_002ds
 FreeMat2/native/fltk/term.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/fltk/twin.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/getweb svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/gtk/GTKGC.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/gtk/GTKGC.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/gtk/Makefile svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/gtk/TermWidget.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/gtk/TermWidget.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native

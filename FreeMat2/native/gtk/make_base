@@ -1,2 +1,2 @@
-base: base.cpp TermWidget.cpp
-	g++ -o base base.cpp TermWidget.cpp `pkg-config gtk+-2.0 --libs --cflags` -g
+base: gt.cpp ../win32/TermWidget.cpp
+	g++ -o base gt.cpp ../win32/TermWidget.cpp `pkg-config gtk+-2.0 --libs --cflags` -g
