@@ -104,7 +104,6 @@ static gint keypress_event(GtkWidget *widget,
   XPWindow *winptr;
   winptr = (XPWindow*) g_object_get_data(G_OBJECT(widget),"this");
   winptr->OnKeyDown(event->keyval);
-  std::cout << "keydown " << event->keyval << "\n";
   return TRUE;
 }
 
@@ -150,7 +149,6 @@ XPWindow::XPWindow(int width, int height, std::string title) {
 		    G_CALLBACK (button_press_event), NULL);
   g_signal_connect (G_OBJECT (window), "keypress_event",
 		    G_CALLBACK (keypress_event), NULL);
-  std::cout << "settingmask??\n";
   gtk_widget_set_events (drawing_area, GDK_EXPOSURE_MASK
 			 | GDK_LEAVE_NOTIFY_MASK
 			 | GDK_BUTTON_PRESS_MASK
@@ -209,7 +207,7 @@ XPScrolledWindow::XPScrolledWindow(int width, int height, std::string title) {
   pixmap = NULL;
 }
 
-class GTKTermWidget : public XPScrolledWindow, TermWidget {
+class GTKTermWidget : public XPScrolledWindow, public TermWidget {
   PangoFontDescription *myFont;
   PangoContext *cntxt;
   PangoLayout *pango;
@@ -225,8 +223,23 @@ public:
   virtual void ScrollLineUp();
   virtual void ScrollLineDown();
   virtual void OnKeyDown(int key);
+  virtual void OnMouseDown(int x, int y);
+  virtual void OnMouseDrag(int x, int y);
+  virtual void OnMouseUp(int x, int y);
   virtual void OnResize();
 };
+
+void GTKTermWidget::OnMouseDown(int x, int y) {
+  TermWidget::OnMouseDown(x,y);
+}
+
+void GTKTermWidget::OnMouseUp(int x, int y) {
+  TermWidget::OnMouseUp(x,y);
+}
+
+void GTKTermWidget::OnMouseDrag(int x, int y) {
+  TermWidget::OnMouseDrag(x,y);
+}
 
 void GTKTermWidget::OnKeyDown(int key) {
   TermWidget::OnKeyPress(key);
@@ -236,16 +249,28 @@ void GTKTermWidget::OnResize() {
   TermWidget::OnResize();
 }
 
+static gint scroll_changed(GtkWidget *widget, gpointer *data) {
+  // Get the scroll value
+  GTKTermWidget *p = (GTKTermWidget*) data;
+  std::cout << "this = " << p << "\n";
+  int scrollvalue = GTK_ADJUSTMENT(p->adj1)->value;
+  std::cout << "scroll val = " << scrollvalue << "\n";
+  p->OnScroll(scrollvalue);
+  return TRUE;  
+}
+
 GTKTermWidget::GTKTermWidget(int width, int height, std::string title) :
   XPScrolledWindow(width, height, title) {
   cntxt = gtk_widget_get_pango_context(window);
   pango = pango_layout_new(cntxt);  
   TermWidget::Initialize();
   InstallEventTimers();
+  g_signal_connect(G_OBJECT(adj1), "value_changed", G_CALLBACK(scroll_changed), this);
+  SetupScrollBar(0,1,1,1,0);
 }
 
 int GTKTermWidget::GetWidth() {
-  return XPWindow::GetWidth();
+  return XPWindow::GetWidth() - 16;
 }
 
 int GTKTermWidget::GetHeight() {
@@ -253,11 +278,17 @@ int GTKTermWidget::GetHeight() {
 }
 
 void GTKTermWidget::ScrollLineUp() {
-  //
+  gtk_adjustment_set_value(GTK_ADJUSTMENT(adj1),GTK_ADJUSTMENT(adj1)->value - 1);
 }
 
 void GTKTermWidget::ScrollLineDown() {
-  //
+  gtk_adjustment_set_value(GTK_ADJUSTMENT(adj1),GTK_ADJUSTMENT(adj1)->value + 1);
+}
+
+static gint blink_cb(gpointer data) {
+  GTKTermWidget* ptr = (GTKTermWidget*) data;
+  ptr->blink();
+  return TRUE;
 }
 
 static gint refresh_cb(gpointer data) {
@@ -268,6 +299,7 @@ static gint refresh_cb(gpointer data) {
 
 void GTKTermWidget::InstallEventTimers() {
   g_timeout_add(100,refresh_cb,this);
+  g_timeout_add(1000,blink_cb,this);
 }
 
 void GTKTermWidget::SetScrollBarValue(int val) {
@@ -276,15 +308,14 @@ void GTKTermWidget::SetScrollBarValue(int val) {
 
 void GTKTermWidget::SetupScrollBar(int minval, int maxval, int step, int page, int val) {
   GTK_ADJUSTMENT(adj1)->lower = minval;
-  GTK_ADJUSTMENT(adj1)->upper = maxval+1;
+  GTK_ADJUSTMENT(adj1)->upper = maxval;
   GTK_ADJUSTMENT(adj1)->step_increment = step;
   GTK_ADJUSTMENT(adj1)->page_increment = page;
-  GTK_ADJUSTMENT(adj1)->page_size = page;
+  GTK_ADJUSTMENT(adj1)->page_size = 1;
   gtk_adjustment_set_value(GTK_ADJUSTMENT(adj1),val);
 }
 
 void GTKTermWidget::DrawContent() {
-
   if (m_width == 0) return;
   for (int i=0;i<m_height;i++) {
     int j=0;
@@ -314,10 +345,13 @@ void GTKTermWidget::DrawContent() {
 	  gtk_widget_queue_draw_area(window, j*m_char_w, i*m_char_h, 
 				     m_char_w, m_char_h);
 	} else {
-// 	  CGContextSetRGBFillColor(gh,0,0,1,1);
-// 	  CGContextFillRect(gh,fill);
-//  	  CGContextSetRGBFillColor(gh,1,1,1,1);
-// 	  CGContextShowText(gh,&g.v,1);
+	  gdk_draw_rectangle(pixmap, window->style->bg_gc[GTK_STATE_SELECTED],
+			     TRUE, j*m_char_w, i*m_char_h, 
+			     m_char_w, m_char_h);
+	  gdk_draw_layout(pixmap, window->style->fg_gc[GTK_STATE_SELECTED],
+			  j*m_char_w, i*m_char_h, pango);
+	  gtk_widget_queue_draw_area(window, j*m_char_w, i*m_char_h, 
+				     m_char_w, m_char_h);
 	}
 	m_onscreen[i*m_width+j] = g;
 	j++;

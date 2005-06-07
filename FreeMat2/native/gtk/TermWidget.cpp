@@ -1,4 +1,5 @@
 #include "TermWidget.hpp"
+#include <iostream>
 
 #define TMIN(a,b) ((a) < (b) ? (a) : (b))
 #define TMAX(a,b) ((a) > (b) ? (a) : (b))
@@ -7,7 +8,7 @@ TermWidget::TermWidget() {
   m_surface = NULL;
   m_onscreen = NULL;
   m_history = NULL;
-  m_scrollback = 1000;
+  m_scrollback = 100;
   m_history_lines = 0;
   m_cursor_x = 0;
   m_cursor_y = 0;
@@ -27,7 +28,7 @@ TermWidget::~TermWidget() {
 }
 
 void TermWidget::Initialize() {
-  setFont(12);
+  setFont(10);
   m_active_width = 400;
   resizeTextSurface();
 }
@@ -84,7 +85,8 @@ void TermWidget::resizeTextSurface() {
   m_height = new_height;
   m_clearall = true;
   // only do this the first time
-  if (firsttime) {
+  //  if (firsttime) {
+  if (!m_history_lines) {
     setCursor(0,0);
     setScrollbar(0);
   } else {
@@ -176,7 +178,7 @@ void TermWidget::OnKeyPress(int c) {
   } else if (c == 'd')
     PutString("Now is the time for all men to come to the aid of their country, and by their aid, assist those who need it, or something like that....");
   else if (c == 'x') {
-    for (int i=0;i<100;i++) {
+    for (int i=0;i<50;i++) {
       char buffer[1000];
       sprintf(buffer,"line %d\r\n",i);
       PutString(buffer);

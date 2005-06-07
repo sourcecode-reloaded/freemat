@@ -56,7 +56,7 @@ protected:
   int  getTextWidth() {return m_width;};
   void Initialize();
   //TK dependant functions
- protected:
+public:
   void setScrollbar(int val);
   void OnResize();
   void OnKeyPress(int key);
