@@ -29,9 +29,7 @@ TermWidget::~TermWidget() {
 }
 
 void TermWidget::Initialize() {
-  std::cout << "initializing\n";
   setFont(10);
-  std::cout << "font " << m_char_w << " x " << m_char_h << "\n";
   m_active_width = 400;
   resizeTextSurface();
 }
@@ -54,7 +52,7 @@ void TermWidget::blink() {
 }
 
 void TermWidget::resizeTextSurface() {
-  std::cout << "resize called " << m_width << " x " << m_height << " " << m_active_width << "\n";
+  if (!m_char_w || !m_char_h) return;
   if (m_surface)
     m_surface[m_cursor_y*m_width+m_cursor_x].clearCursor();  
   int cursor_offset = m_height - 1 - m_cursor_y;
@@ -82,7 +80,6 @@ void TermWidget::resizeTextSurface() {
   if (!m_firsttime) {
     m_history_lines -= (new_height-m_height);
     m_history_lines = TMAX(0,m_history_lines);
-    std::cout << "history lines = " << m_history_lines << "..\n";
   }
 
   m_width = new_width;
@@ -105,7 +102,6 @@ void TermWidget::setScrollbar(int val) {
       (m_scrollmax != m_history_lines) ||
       (m_scrollline != 1) ||
 	  (m_scrollpage != m_height)) {
-    std::cout << "scset " << m_history_lines << " " << m_height  << " " << val << "\n";
     SetupScrollBar(0,m_history_lines,1,m_height,val);
 	m_scrollmin = 0;
 	m_scrollmax = m_history_lines;
@@ -118,7 +114,6 @@ void TermWidget::setScrollbar(int val) {
 
 void TermWidget::PutString(std::string txt) {
   m_firsttime = false;
-  std::cout << "m_scrolling = " << m_scrolling << "\n";
   if (m_scrolling) {
     setScrollbar(m_history_lines);
   }
@@ -162,7 +157,6 @@ void TermWidget::setCursor(int x, int y) {
     for (int i=0;i<toscroll*m_width;i++)
       m_history[(m_scrollback - toscroll)*m_width+i] = tagChar();
     m_history_lines = TMIN(m_history_lines+toscroll,m_scrollback-m_height);
-    std::cout << "history lines " << m_history_lines << "\n";
     m_cursor_y -= toscroll;
     setScrollbar(m_history_lines);
   }
@@ -170,7 +164,6 @@ void TermWidget::setCursor(int x, int y) {
 }
 
 void TermWidget::OnScroll(int val) {
-  std::cout << "on scroll " << val << "\n";
   scrollBack(val);
 }
 
