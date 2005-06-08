@@ -3571,6 +3571,8 @@ FreeMat2/native/gtk/Makefile svn_keywords=Author+Date+Id+Revision svn_eol_002dst
 FreeMat2/native/gtk/TermWidget.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/gtk/TermWidget.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/gtk/base.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/gtk/gt.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/gtk/gt.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/gtk/make_base svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/gtk/testgc.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/helv.afm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
