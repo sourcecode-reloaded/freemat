@@ -187,9 +187,9 @@ void SetupWinTerminalClass(HINSTANCE hInstance) {
   wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
   wndclass.hbrBackground = (HBRUSH) GetStockObject(WHITE_BRUSH);
   //wndclass.lpszMenuName = MAKEINTRESOURCE(IDR_MENU1);
-wndclass.lpszMenuName = NULL;
-wndclass.hIcon = 0;
-wndclass.lpszClassName = "WinTerminal";
+  wndclass.lpszMenuName = NULL;
+  wndclass.hIcon = 0;
+  wndclass.lpszClassName = "WinTerminal";
   if (!RegisterClass(&wndclass))
     {
       MessageBox(NULL, TEXT("This program requires Windows NT!"),
