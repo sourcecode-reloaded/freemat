@@ -2,6 +2,7 @@
 #define __GTKGC_hpp__
 
 #include "GraphicsContext.hpp"
+#include <gtk/gtk.h>
 
 // The GraphicsContext class is a purely virtual base class for the
 // various graphics context types.
@@ -14,15 +15,12 @@ class GTKGC : public GraphicsContext {
   std::vector<Rect2D> clips;
   int m_fontsize;
   PangoFontDescription *myFont;
-  PangoContext *cntxt;
   PangoLayout *pango;  
 public:
+  GTKGC(GdkPixmap* pixmp, int width, int height, PangoLayout *pngo);
+  ~GTKGC();
   virtual Point2D GetCanvasSize();
   virtual Point2D GetTextExtent(std::string label);
-  virtual void DrawTextStringAligned(std::string text, Point2D pos, 
-				     XALIGNTYPE xalign, 
-				     YALIGNTYPE yalign,
-				     OrientationType orient = ORIENT_0);
   virtual void DrawTextString(std::string label, Point2D pos, OrientationType orient = ORIENT_0);
   virtual void SetFont(int fontsize);
   virtual Color SetBackGroundColor(Color col);
