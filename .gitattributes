@@ -3607,6 +3607,8 @@ FreeMat2/native/ogl/ogl.plg svn_keywords=Author+Date+Id+Revision svn_eol_002dsty
 FreeMat2/native/ogl/trackball.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/ogl/trackball.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/osx/Makefile svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/osx/OSXGC.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/osx/OSXGC.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/osx/mac.r svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/osx/main.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/osx/main.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
