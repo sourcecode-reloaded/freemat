@@ -182,6 +182,8 @@ void OSXTerminal::PutTagChar(int x, int y, tagChar g) {
   }
 }
 
+// Maybe get some help from:
+// http://cvs.sourceforge.net/viewcvs.py/tom7misc/vstplugins/dfxgui_mac/dfxguidisplay.cpp?rev=1.29
 void OSXTerminal::setFont(int size) {
   CGContextRef gh;
   char tst = 'w';
