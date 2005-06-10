@@ -2919,8 +2919,6 @@ FreeMat2/libs/libXP/GraphicsContext.cpp svn_keywords=Author+Date+Id+Revision svn
 FreeMat2/libs/libXP/GraphicsContext.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/KeyManager.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/KeyManager.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libXP/MainApp.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libXP/MainApp.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/PathSearch.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/PathSearch.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native

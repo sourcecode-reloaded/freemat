@@ -242,8 +242,8 @@ void TermWidget::setCursor(int x, int y) {
 }
 
 void TermWidget::keyPressEvent(QKeyEvent *e) {
-  if (m_scrolling) 
-    setScrollbar(0);
+  //  if (m_scrolling) 
+  setScrollbar(0);
   int keycode = e->key();
   if (!keycode) return;
   if (keycode == Qt::Key_Left)
@@ -269,7 +269,7 @@ void TermWidget::keyPressEvent(QKeyEvent *e) {
 }
 
 void TermWidget::setFont(int size) {
-  QFont afont("Monaco",size);
+  QFont afont("Monospace",size);
   QFrame::setFont(afont);
   QFontMetrics fmi(afont);
   m_char_w = fmi.width("w");

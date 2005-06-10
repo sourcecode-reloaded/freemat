@@ -26,6 +26,7 @@ public:
     gc.DrawLine(Point2D(0,0),Point2D(GetWidth(),GetHeight()));
     gc.DrawLine(Point2D(GetWidth(),0),Point2D(0,GetHeight()));
     gc.DrawCircle(Point2D(GetWidth()/2,GetHeight()/2),10);
+    gc.FillRectangle(Rect2D(0,0,20,30));
   }
 };
 
