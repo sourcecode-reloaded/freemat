@@ -20,7 +20,8 @@ XPWidget.hpp \
 XPWindow.hpp \
 QTGC.hpp \
 TermWidget.hpp \
-BaseTerminal.hpp 
+BaseTerminal.hpp \
+MainApp.hpp
 
 SOURCES += DynLib.cpp \
 System.cpp \
@@ -36,6 +37,7 @@ XPWindow.cpp \
 QTGC.cpp \
 GUITerminal.cpp \
 TermWidget.cpp \
-BaseTerminal.cpp 
+BaseTerminal.cpp \
+MainApp.cpp
 
 
