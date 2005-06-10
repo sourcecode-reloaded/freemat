@@ -126,7 +126,6 @@ void TermWidget::setScrollbar(int val) {
   m_scrollbar->setValue(val);
 }
 
-
 void TermWidget::PutString(std::string txt) {
   if (m_scrolling)
     setScrollbar(0);  

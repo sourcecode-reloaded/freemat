@@ -43,8 +43,10 @@ char* BaseTerminal::getLine(const char* prompt) {
   fflush(stdout);
   ReplacePrompt(prompt);
   DisplayPrompt();
+  qApp->exec();
   while(enteredLines.empty())
-    qApp->processOneEvent();
+    //    qApp->processOneEvent();
+    qApp->processEvents();
   std::string theline(enteredLines.front());
   enteredLines.pop_front();
   char *cp;

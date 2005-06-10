@@ -4,7 +4,7 @@ TARGET = XP
 
 CONFIG += staticlib
 
-INCLUDEPATH = ../libFreeMat ../..
+INCLUDEPATH = ../libFreeMat ../.. ../libCore ../libFN ../libGraphics
 
 HEADERS += DynLib.hpp \
 System.hpp \
@@ -21,7 +21,7 @@ XPWindow.hpp \
 QTGC.hpp \
 GUIInterface.hpp \
 TermWidget.hpp \
-BaseTerminal.hpp
+BaseTerminal.hpp 
 
 SOURCES += DynLib.cpp \
 System.cpp \
@@ -37,7 +37,6 @@ XPWindow.cpp \
 QTGC.cpp \
 GUITerminal.cpp \
 TermWidget.cpp \
-BaseTerminal.cpp
-
+BaseTerminal.cpp 
 
 
