@@ -19,7 +19,6 @@ helv_table.h \
 XPWidget.hpp \
 XPWindow.hpp \
 QTGC.hpp \
-GUIInterface.hpp \
 TermWidget.hpp \
 BaseTerminal.hpp 
 

@@ -269,7 +269,7 @@ void TermWidget::keyPressEvent(QKeyEvent *e) {
 }
 
 void TermWidget::setFont(int size) {
-  QFont afont("Courier",size);
+  QFont afont("Monaco",size);
   QFrame::setFont(afont);
   QFontMetrics fmi(afont);
   m_char_w = fmi.width("w");
