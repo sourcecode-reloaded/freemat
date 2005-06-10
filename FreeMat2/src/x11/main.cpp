@@ -5,15 +5,7 @@
 #include "Terminal.hpp"
 #include "DumbTerminal.hpp"
 #include <stdio.h>
-#include "Class.hpp"
-#include "Module.hpp"
-#include "LoadCore.hpp"
-#include "LoadFN.hpp"
-#include "GraphicsCore.hpp"
-#include "System.hpp"
 #include "PathSearch.hpp"
-#include "ParserInterface.hpp"
-#include "File.hpp"
 #include "SocketCB.hpp"
 #include <stdlib.h>
 #include <signal.h>
@@ -21,15 +13,16 @@
 #include "GUITerminal.hpp"
 #include "BaseTerminal.hpp"
 
+#include "Module.hpp"
+#include "Class.hpp"
+#include "LoadCore.hpp"
+#include "LoadFN.hpp"
+#include "GraphicsCore.hpp"
+#include "File.hpp"
+
 #define VERSION "1.11"
 
-#if 0
-#include "freemat.xpm"
-#endif
-
 using namespace FreeMat;
-
-int screen_num = 0;
 
 sig_t signal_suspend_default;
 sig_t signal_resume_default;
@@ -255,6 +248,35 @@ char ** unpackBundledArgs(int& myargc, char bundlefunc[1024], int argc, char *ar
   return myargv;
 }
 
+
+int RunMainApp(BaseTerminal* term, std::string helpPath) {
+  Context *context = new Context;
+  
+  LoadModuleFunctions(context);
+  LoadClassFunction(context);
+  LoadCoreFunctions(context);
+  LoadFNFunctions(context);
+  LoadGraphicsCoreFunctions(context);  
+  InitializeFigureSubsystem();
+
+  const char *envPtr;
+  envPtr = getenv("FREEMAT_PATH");
+  term->setContext(context);
+  if (envPtr)
+    term->setPath(std::string(envPtr));
+  else 
+    term->setPath(std::string(""));
+  WalkTree *twalk = new WalkTree(context,term);
+  term->outputMessage(" Freemat v2.0");
+  term->outputMessage("\n");
+  term->outputMessage(" Copyright (c) 2002-2005 by Samit Basu\n");
+  while (twalk->getState() != FM_STATE_QUIT) {
+    twalk->resetState();
+    twalk->evalCLI();
+  }
+  return 0;
+}
+
 int main(int argc, char *argv[]) {
 
   QApplication app(argc, argv, TRUE);
@@ -315,124 +337,20 @@ int main(int argc, char *argv[]) {
     SocketCB *socketcb = new SocketCB(stdincb);
     QObject::connect(notify, SIGNAL(activated(int)), socketcb, SLOT(activated(int)));
   }
-  Context *context = new Context;
-  LoadModuleFunctions(context);
-  LoadClassFunction(context);
-  LoadCoreFunctions(context);
-  LoadFNFunctions(context);
-  LoadGraphicsCoreFunctions(context);  
-  InitializeFigureSubsystem();
 
-  const char *envPtr;
-  envPtr = getenv("FREEMAT_PATH");
-
-  term->setContext(context);
-  if (envPtr)
-    term->setPath(std::string(envPtr));
-  else 
-    term->setPath(std::string(""));
-  WalkTree *twalk = new WalkTree(context,term);
-  LoadBundleFunctions(myargv[0], twalk);
-  if (!funcMode && !bundledMode) {
-    term->outputMessage(" Freemat v");
-    term->outputMessage(VERSION);
-    term->outputMessage("\n");
-    term->outputMessage(" Copyright (c) 2002-2005 by Samit Basu\n");
-    while (twalk->getState() != FM_STATE_QUIT) {
-      twalk->resetState();
-      twalk->evalCLI();
-    }
-  } else {
-    char buffer[1024];
-    if (funcMode) {
-      sprintf(buffer,"%s",myargv[funcMode+1]);
-      for (int i=funcMode+2;i<myargc;i++) {
-	strcat(buffer," ");
-	strcat(buffer,myargv[i]);
-      }
-      strcat(buffer,"\n");
-    }
-    ParserState parserState = parseString(buffer);
-    if (parserState != ScriptBlock) {
-      printf("Error: syntax error in command line arguments to FreeMat\r\n");
-      term->RestoreOriginalMode();
-      return 1;
-    }
-    ASTPtr tree = getParsedScriptBlock();
-    try {
-      twalk->block(tree);
-    } catch(Exception &e) {
-      e.printMe(term);
-      term->RestoreOriginalMode();
-      return 5;	
-    }
-  }
-  term->RestoreOriginalMode();
- 
-#if 0    
-  //FIXME
-  else {
-    // We need to find the help files...
-    // To do so, we need to search through the
-    // path.
-    std::string helppath;
-    if (envPtr) {
-      PathSearcher psearch(envPtr);
-      try {
-	helppath = psearch.ResolvePath("../html/index.html");
-      } catch (Exception& E) {
-	helppath = "/usr/local/share/FreeMat/html/index.html";
-      }
-    } else 
-      helppath = "/usr/local/share/FreeMat/html/index.html";
-    
-    GUIInterface* term = new GUIInterface;
-    term->show();
-    term->setContext(context);
-    term->setPath(std::string(envPtr));
-    if (envPtr)
-      term->setPath(std::string(envPtr));
-    else 
-      term->setPath(std::string(""));
-    WalkTree *twalk = new WalkTree(context,term);
-    LoadBundleFunctions(myargv[0], twalk);
-    if (!funcMode && !bundledMode) {
-      term->outputMessage(" Freemat v");
-      term->outputMessage(VERSION);
-      term->outputMessage("\n");
-      term->outputMessage(" Copyright (c) 2002-2005 by Samit Basu\n");
-      while (twalk->getState() != FM_STATE_QUIT) {
-	twalk->resetState();
-	twalk->evalCLI();
-      }
-    }
-  }
-
-
-    win = new FLTKTerminalWindow(400,300,"FreeMat v" VERSION,
-				 helppath.c_str());
-    win->term()->setContext(context);
-//     Pixmap p, mask;
-//     XpmCreatePixmapFromData(fl_display, DefaultRootWindow(fl_display),
-// 			    freemat, &p, &mask, NULL);
-//     win->icon((char*) p)
-    win->show();
-    if (envPtr)
-      win->term()->setPath(std::string(envPtr));
-    else 
-      win->term()->setPath(std::string(""));
-    WalkTree *twalk = new WalkTree(context,win->term());
-    win->term()->outputMessage(" Freemat v");
-    win->term()->outputMessage(VERSION);
-    win->term()->outputMessage("\n");
-    win->term()->outputMessage(" Copyright (c) 2002-2005 by Samit Basu\n");
-    while (twalk->getState() != FM_STATE_QUIT) {
-      if (twalk->getState() == FM_STATE_RETALL)
-	twalk->clearStacks();
-      twalk->resetState();
-      twalk->evalCLI();
-    }
-  }
-#endif
-  return 0;
+//   // We need to find the help files...
+//   // To do so, we need to search through the
+//   // path.
+//   std::string helppath;
+//   if (envPtr) {
+//     PathSearcher psearch(envPtr);
+//     try {
+//       helppath = psearch.ResolvePath("../html/index.html");
+//     } catch (Exception& E) {
+//       helppath = "/usr/local/share/FreeMat/html/index.html";
+//     }
+//   } else 
+//     helppath = "/usr/local/share/FreeMat/html/index.html";
+  //FIXME - fix bundled mode...
+  return RunMainApp(term, "");
 }

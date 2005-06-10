@@ -1,3 +1,10 @@
 TEMPLATE = subdirs
 
-SUBDIRS = x11
+macx {
+  SUBDIRS += mac
+}
+
+unix {
+  SUBDIRS += x11
+}
+
