@@ -20,8 +20,9 @@ XPWidget.hpp \
 XPWindow.hpp \
 QTGC.hpp \
 TermWidget.hpp \
-BaseTerminal.hpp \
-MainApp.hpp
+BaseTerminal.hpp 
+
+DEPENDPATH += INCLUDEPATH
 
 SOURCES += DynLib.cpp \
 System.cpp \
@@ -37,7 +38,6 @@ XPWindow.cpp \
 QTGC.cpp \
 GUITerminal.cpp \
 TermWidget.cpp \
-BaseTerminal.cpp \
-MainApp.cpp
+BaseTerminal.cpp 
 
 

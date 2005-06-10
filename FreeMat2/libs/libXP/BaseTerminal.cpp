@@ -1,6 +1,7 @@
 #include "BaseTerminal.hpp"
 #include <qapplication.h>
 #include <iostream>
+#include <qeventloop.h>
 
 std::string TranslateString(std::string x) {
   std::string y(x);
@@ -45,7 +46,8 @@ char* BaseTerminal::getLine(const char* prompt) {
   ReplacePrompt(prompt);
   DisplayPrompt();
   while(enteredLines.empty())
-    qApp->processOneEvent();
+    qApp->eventLoop()->processEvents(QEventLoop::AllEvents | QEventLoop::WaitForMore);
+    //    qApp->processOneEvent();
   //    qApp->processEvents();
   std::string theline(enteredLines.front());
   enteredLines.pop_front();

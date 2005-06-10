@@ -127,8 +127,9 @@ void TermWidget::setScrollbar(int val) {
 }
 
 void TermWidget::PutString(std::string txt) {
-  if (m_scrolling)
-    setScrollbar(0);  
+  if (m_scrolling) {
+    setScrollbar(m_history_lines);
+  }
   for (int i=0;i<txt.size();i++) {
     if (txt[i] == '\n')
       setCursor(m_cursor_x,m_cursor_y+1);
@@ -242,8 +243,8 @@ void TermWidget::setCursor(int x, int y) {
 }
 
 void TermWidget::keyPressEvent(QKeyEvent *e) {
-  //  if (m_scrolling) 
-  setScrollbar(0);
+  if (m_scrolling) 
+    setScrollbar(m_history_lines);
   int keycode = e->key();
   if (!keycode) return;
   if (keycode == Qt::Key_Left)
