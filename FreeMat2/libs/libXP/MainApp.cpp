@@ -49,6 +49,7 @@ int MainApp::Run() {
     twalk->resetState();
     twalk->evalCLI();
   }
+  m_term->RestoreOriginalMode();
   qApp->quit();
   return 0;
 }
