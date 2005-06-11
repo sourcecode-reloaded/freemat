@@ -5485,6 +5485,7 @@ FreeMat2/libs/libUMFPACK/AMD/Source/amd_valid.c svn_keywords=Author+Date+Id+Revi
 FreeMat2/libs/libUMFPACK/AMD/Source/amdbar.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libUMFPACK/AMD/libAMD/libAMD.vcproj svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libUMFPACK/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libUMFPACK/SConscript svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libUMFPACK/UMFPACK/Include/umfpack.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libUMFPACK/UMFPACK/Include/umfpack_col_to_triplet.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libUMFPACK/UMFPACK/Include/umfpack_defaults.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
