@@ -5463,9 +5463,8 @@ FreeMat2/libs/libMiniLAPACK/util/izmax1.f svn_keywords=Author+Date+Id+Revision s
 FreeMat2/libs/libMiniLAPACK/util/lsame.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/util/slamch.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMiniLAPACK/util/xerbla.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libUMFPACK/AMD/AMD.pro svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libUMFPACK/AMD/Include/amd.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libUMFPACK/AMD/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libUMFPACK/AMD/SConscript svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libUMFPACK/AMD/Source/GNUmakefile svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libUMFPACK/AMD/Source/Makefile svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libUMFPACK/AMD/Source/amd.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
