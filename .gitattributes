@@ -4348,6 +4348,7 @@ FreeMat2/libs/libXP/XPWidget.cpp svn_keywords=Author+Date+Id+Revision svn_eol_00
 FreeMat2/libs/libXP/XPWidget.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/XPWindow.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/XPWindow.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libXP/freemat-2.xpm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/tmp.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libffi/ChangeLog svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libffi/ChangeLog.libgcj svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
