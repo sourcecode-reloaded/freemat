@@ -4136,6 +4136,7 @@ FreeMat2/libs/libGraphics/SurfPlot.hpp svn_keywords=Author+Date+Id+Revision svn_
 FreeMat2/libs/libGraphics/VolView.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/VolView.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/VolumeCommands.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libGraphics/libGraphics.pro svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/trackball.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/trackball.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libUMFPACK/AMD/Include/amd.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
