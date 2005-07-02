@@ -3975,6 +3975,7 @@ FreeMat2/libs/libFFTPack/cpassf2.f svn_keywords=Author+Date+Id+Revision svn_eol_
 FreeMat2/libs/libFFTPack/cpassf3.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFFTPack/cpassf4.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFFTPack/cpassf5.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libFFTPack/libFFTPack.pro svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFFTPack/zfftb.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFFTPack/zfftb1.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFFTPack/zfftf.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
