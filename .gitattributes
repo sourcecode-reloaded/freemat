@@ -4451,6 +4451,7 @@ FreeMat2/libs/libffi/src/x86/unix64.S svn_keywords=Author+Date+Id+Revision svn_e
 FreeMat2/libs/libffi/src/x86/win32.S svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libffi/stamp-h.in svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libffi/testsuite/Makefile.am svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libs.pro svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/.DS_Store svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/.gdb_history svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/@base/base.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
