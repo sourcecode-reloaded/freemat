@@ -4205,6 +4205,7 @@ FreeMat2/libs/libUMFPACK/UMFPACK/Source/umf_apply_order.c svn_keywords=Author+Da
 FreeMat2/libs/libUMFPACK/UMFPACK/Source/umf_apply_order.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libUMFPACK/UMFPACK/Source/umf_assemble.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libUMFPACK/UMFPACK/Source/umf_assemble.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libUMFPACK/UMFPACK/Source/umf_assemble2.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libUMFPACK/UMFPACK/Source/umf_blas3_update.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libUMFPACK/UMFPACK/Source/umf_blas3_update.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libUMFPACK/UMFPACK/Source/umf_build_tuples.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
