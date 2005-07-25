@@ -4526,6 +4526,8 @@ FreeMat2/native/gtk/testgc.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002d
 FreeMat2/native/handle++/@dataset2d/dataset2d.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@dataset2d/drawme.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@dataset2d/getdatarange.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/handle++/@dataset2d/private/utilitymapcolorspectocolor.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/handle++/@dataset2d/private/utilitymaplinestyletotype.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@dataset2d/setpencolor.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@plot2d/addplot.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@plot2d/addtext.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -4554,6 +4556,7 @@ FreeMat2/native/handle++/@simpleaxis/getticklabels.m svn_keywords=Author+Date+Id
 FreeMat2/native/handle++/@simpleaxis/getticklocations.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@simpleaxis/manualsetaxis.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@simpleaxis/normalize.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/handle++/@simpleaxis/private/trimprint.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@simpleaxis/setaxislength.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@simpleaxis/setdatarange.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@simpleaxis/setlogarithmic.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
