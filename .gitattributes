@@ -4531,9 +4531,12 @@ FreeMat2/native/handle++/@dataset2d/private/utilitymaplinestyletotype.m svn_keyw
 FreeMat2/native/handle++/@dataset2d/setpencolor.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@plot2d/addplot.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@plot2d/addtext.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/handle++/@plot2d/drawaxes.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@plot2d/drawtextlabels.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@plot2d/getaxes.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@plot2d/getholdflag.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/handle++/@plot2d/mappoint.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/handle++/@plot2d/ondraw.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@plot2d/plot2d.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@plot2d/setaxes.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@plot2d/setaxesauto.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
