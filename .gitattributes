@@ -4526,6 +4526,8 @@ FreeMat2/native/gtk/testgc.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002d
 FreeMat2/native/handle++/@dataset2d/dataset2d.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@dataset2d/drawme.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@dataset2d/getdatarange.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/handle++/@dataset2d/private/infmax.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/handle++/@dataset2d/private/infmin.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@dataset2d/private/utilitymapcolorspectocolor.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@dataset2d/private/utilitymaplinestyletotype.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@dataset2d/setpencolor.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
