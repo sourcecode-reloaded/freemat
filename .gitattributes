@@ -4369,6 +4369,7 @@ FreeMat2/libs/libXP/libXP.pro svn_keywords=Author+Date+Id+Revision svn_eol_002ds
 FreeMat2/libs/libXP/private/qcore_mac_p.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/private/qfont_p.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/private/qfontengine_p.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libXP/private/qfontengine_win_p.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/private/qfragmentmap_p.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/private/qobject_p.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/private/qpaintengine_p.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
