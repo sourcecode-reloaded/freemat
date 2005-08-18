@@ -4356,6 +4356,8 @@ FreeMat2/libs/libXP/PathSearch.cpp svn_keywords=Author+Date+Id+Revision svn_eol_
 FreeMat2/libs/libXP/PathSearch.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/Point2D.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/Point2D.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libXP/QPSPaintEngine.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libXP/QPSPaintEngine.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/QTGC.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/QTGC.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/QTTerm.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
