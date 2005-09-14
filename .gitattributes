@@ -4775,6 +4775,9 @@ FreeMat2/tests/class/@mat/or.m svn_keywords=Author+Date+Id+Revision svn_eol_002d
 FreeMat2/tests/class/@mat/plus.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/class/@mat/power.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/class/@mat/rdivide.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/tests/class/@mat/subsasgn.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/tests/class/@mat/subsindex.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/tests/class/@mat/subsref.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/class/@mat/times.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/class/@mat/transpose.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/class/@mat/uminus.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
