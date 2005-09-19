@@ -4542,6 +4542,11 @@ FreeMat2/native/debug2.pdf svn_keywords=Author+Date+Id+Revision svn_eol_002dstyl
 FreeMat2/native/dg.pdf svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/doc.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/ex1.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/fessler/axis.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/fessler/im.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/fessler/notempty.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/fessler/penalty_mex.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/fessler/readme svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/fltk/bld svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/fltk/term.cxx svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/fltk/term.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
