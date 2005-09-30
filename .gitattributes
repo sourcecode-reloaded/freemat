@@ -4609,6 +4609,9 @@ FreeMat2/native/handle++/@simpleaxis/setlogarithmic.m svn_keywords=Author+Date+I
 FreeMat2/native/handle++/@simpleaxis/setticks.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/@simpleaxis/simpleaxis.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/handle++/tstplt.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/handle/@axes/axes.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/handle/@axes/get.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/handle/@axes/set.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/helv.afm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/helv.pfb svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/lexdbug/AST.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
