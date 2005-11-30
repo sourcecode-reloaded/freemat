@@ -4137,6 +4137,8 @@ FreeMat2/libs/libGraphics/HandleAxis.cpp svn_keywords=Author+Date+Id+Revision sv
 FreeMat2/libs/libGraphics/HandleAxis.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/HandleFigure.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/HandleFigure.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libGraphics/HandleLineSeries.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libGraphics/HandleLineSeries.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/HandleObject.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/HandleObject.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/HandleProperty.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -4158,6 +4160,7 @@ FreeMat2/libs/libGraphics/QPWidget.cpp svn_keywords=Author+Date+Id+Revision svn_
 FreeMat2/libs/libGraphics/QPWidget.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/QTDraw.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/QTDraw.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libGraphics/RenderEngine.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/RenderEngine.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/ScalarImage.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/ScalarImage.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
