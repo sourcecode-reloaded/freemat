@@ -4217,6 +4217,8 @@ FreeMat2/libs/libGraphics/HandleCommands.cpp svn_keywords=Author+Date+Id+Revisio
 FreeMat2/libs/libGraphics/HandleCommands.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/HandleFigure.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/HandleFigure.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libGraphics/HandleImage.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libGraphics/HandleImage.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/HandleLineSeries.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/HandleLineSeries.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/HandleObject.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
