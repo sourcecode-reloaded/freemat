@@ -3675,6 +3675,7 @@ FreeMat2/MFiles/bind.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=na
 FreeMat2/MFiles/circshift.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/cla.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/clf.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/colormap.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/conv.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/copper.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/cross.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -3713,6 +3714,7 @@ FreeMat2/MFiles/isnumeric.m svn_keywords=Author+Date+Id+Revision svn_eol_002dsty
 FreeMat2/MFiles/isreal.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/isstr.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/isstruct.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/legend.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/length.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/linspace.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/log10.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -3721,6 +3723,7 @@ FreeMat2/MFiles/mlogo.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=n
 FreeMat2/MFiles/mod.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/mpirun.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/mpiserver.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/mprint.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/mprintimage.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/mprintplot.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/ndgrid.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -3742,6 +3745,7 @@ FreeMat2/MFiles/rad2deg.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle
 FreeMat2/MFiles/rank.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/rawread.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/rescan.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/sizefig.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/speye.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/sprand.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/sprandn.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -3758,13 +3762,20 @@ FreeMat2/MFiles/surf.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=na
 FreeMat2/MFiles/teps.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/testtube.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/text.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/title.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/tplot.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/tst.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/tube.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/tubeplot.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/view.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/winlev.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/xlabel.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/xlim.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/ylabel.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/ylim.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/zlabel.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/zlim.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/zoom.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/NOTES.TXT svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/README svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/doc/Doxyfile.in svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
