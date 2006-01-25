@@ -3675,6 +3675,7 @@ FreeMat2/MFiles/bind.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=na
 FreeMat2/MFiles/circshift.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/cla.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/clf.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/colorbar.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/colormap.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/conv.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/copper.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
