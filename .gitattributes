@@ -3800,7 +3800,6 @@ FreeMat2/help/makehelp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=na
 FreeMat2/help/mkhsetpath.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/help/mppstrip.pl svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/help/mpptrans.pl svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/SConscript svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libCore/Analyze.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libCore/Cast.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libCore/Constants.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
