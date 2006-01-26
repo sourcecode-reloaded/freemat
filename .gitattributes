@@ -3781,6 +3781,7 @@ FreeMat2/doc/dots/ASTdot3.dot svn_keywords=Author+Date+Id+Revision svn_eol_002ds
 FreeMat2/doc/dots/ASTdot4.dot svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/doc/dots/ASTdot5.dot svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/AMD-1.2.tar.gz svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/extern/Makefile_freemat.mingw32 svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/UFconfig-1.0_freemat_patch.tar.gz svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/extern/UMFPACK-4.6.tar.gz svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/extern/arpack96_freemat_patch.tar.gz svn_mime_002dtype=application%2Foctet-stream
