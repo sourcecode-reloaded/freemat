@@ -4340,6 +4340,8 @@ FreeMat2/src/application.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyl
 FreeMat2/src/filesave.xpm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/freemat.ico svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/src/freemat.rc svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/src/highlighter.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/src/highlighter.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/main.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/notes.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/src.pro svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
