@@ -3810,12 +3810,17 @@ FreeMat2/help/makehelp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=na
 FreeMat2/help/mkhsetpath.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/help/mppstrip.pl svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/help/mpptrans.pl svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/images/close.png svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/images/copy.png svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/images/cut.png svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/images/freemat-2.xpm svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/images/home.png svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/images/new.png svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/images/next.png svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/images/open.png svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/images/paste.png svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/images/previous.png svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/images/quit.png svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/images/save.png svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/images/zoomin.png svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/images/zoomout.png svn_mime_002dtype=application%2Foctet-stream
