@@ -4340,6 +4340,8 @@ FreeMat2/src/DumbTerminal.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002ds
 FreeMat2/src/DumbTerminal.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/Editor.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/Editor.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/src/FileTool.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/src/FileTool.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/FuncTerminal.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/FuncTerminal.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/HistoryWidget.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
