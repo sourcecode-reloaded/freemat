@@ -4349,6 +4349,8 @@ FreeMat2/qconf/gfortran.qcm svn_keywords=Author+Date+Id+Revision svn_eol_002dsty
 FreeMat2/qconf/lapack.qcm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/qconf/qt41.qcm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/qconf/umfpack.qcm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/src/Common.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/src/Common.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/DumbTerminal.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/DumbTerminal.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/Editor.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
