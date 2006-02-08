@@ -3663,6 +3663,8 @@ FreeMat2/.DS_Store svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/COPYING svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/ChangeLog svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/FreeMat.pro svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/FreeMat.qc svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/FreeMat.qrc svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/INSTALL svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/@inline/inline.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/@inline/subsref.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -3773,6 +3775,7 @@ FreeMat2/MFiles/zlim.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=na
 FreeMat2/MFiles/zoom.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/NOTES.TXT svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/README svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/configure svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/doc/Doxyfile.in svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/doc/FLPort.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/doc/dots/ASTdot1.dot svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
