@@ -3841,8 +3841,6 @@ FreeMat2/libs/libCore/Misc.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002d
 FreeMat2/libs/libCore/RanLib.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libCore/RanLib.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libCore/Random.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libCore/Remote.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libCore/SConscript svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libCore/StringOps.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libCore/Transcendental.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libCore/Trigonometric.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -3856,7 +3854,6 @@ FreeMat2/libs/libFN/Interp1D.cpp svn_keywords=Author+Date+Id+Revision svn_eol_00
 FreeMat2/libs/libFN/LoadFN.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFN/LoadFN.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFN/OptFun.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libFN/SConscript svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFN/algama.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFN/calerf.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFN/daw.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -3885,7 +3882,6 @@ FreeMat2/libs/libFN/j0y0.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyl
 FreeMat2/libs/libFN/j1y1.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFN/k0.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFN/k1.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libFN/libFN.pro svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFN/lmdif.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFN/lmdif1.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFN/lmpar.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
