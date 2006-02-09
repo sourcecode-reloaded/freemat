@@ -3778,6 +3778,7 @@ FreeMat2/extern/Makefile_freemat.mingw32 svn_keywords=Author+Date+Id+Revision sv
 FreeMat2/extern/UFconfig-1.0_freemat_patch.tar.gz svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/extern/UMFPACK-4.6.tar.gz svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/extern/arpack96_freemat_patch.tar.gz svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/extern/chat svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/ffcall-1.10_freemat_patch.tar.gz svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/extern/fftw-3.0.1.tar.gz svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/extern/filelist svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
