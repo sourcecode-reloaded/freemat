@@ -3739,6 +3739,7 @@ FreeMat2/MFiles/pathsep.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle
 FreeMat2/MFiles/pinv.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/plot.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/plot3.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/point.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/polyfit.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/polyval.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/rad2deg.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
