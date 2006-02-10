@@ -3786,6 +3786,7 @@ FreeMat2/extern/filelist svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=
 FreeMat2/extern/lapack-3.0_freemat_patch.tgz svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/extern/qconf_cvs.zip svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/freemat.spec svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/help/section_descriptors.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/images/close.png svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/images/copy.png svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/images/cut.png svn_mime_002dtype=application%2Foctet-stream
