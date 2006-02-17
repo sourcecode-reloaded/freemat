@@ -3659,7 +3659,6 @@ FreeMat/tests/math/test_subtract6.m svn_keywords=Author+Date+Id+Revision svn_eol
 FreeMat/tests/math/test_subtract7.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/tests/math/test_subtract8.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/ylwrap svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/.DS_Store svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/COPYING svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/ChangeLog svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/FreeMat.pro svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
