@@ -3972,6 +3972,8 @@ FreeMat2/libs/libGraphics/RenderEngine.cpp svn_keywords=Author+Date+Id+Revision 
 FreeMat2/libs/libGraphics/RenderEngine.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMex/MexInterface.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libMex/MexInterface.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libMex/mex.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libMex/mxArray.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/DynLib.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/DynLib.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/GUITerminal.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
