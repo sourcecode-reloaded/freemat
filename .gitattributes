@@ -3970,6 +3970,8 @@ FreeMat2/libs/libGraphics/QTRenderEngine.cpp svn_keywords=Author+Date+Id+Revisio
 FreeMat2/libs/libGraphics/QTRenderEngine.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/RenderEngine.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/RenderEngine.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libMex/MexInterface.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/libs/libMex/MexInterface.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/DynLib.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/DynLib.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libXP/GUITerminal.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
