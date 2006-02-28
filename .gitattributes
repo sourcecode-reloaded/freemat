@@ -3785,6 +3785,7 @@ FreeMat2/extern/fftw-3.0.1.tar.gz svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/extern/filelist svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/lapack-3.0_freemat_patch.tgz svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/extern/libMATIO_freemat_patch.tar.gz svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/extern/libz_freemat_patch.tar.gz svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/extern/qconf_cvs.zip svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/freemat.spec svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/help/section_descriptors.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
