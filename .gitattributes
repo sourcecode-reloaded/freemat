@@ -4240,6 +4240,7 @@ FreeMat2/qconf/blas.qcm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=n
 FreeMat2/qconf/fftw.qcm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/qconf/gfortran.qcm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/qconf/lapack.qcm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/qconf/matio.qcm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/qconf/qt41.qcm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/qconf/umfpack.qcm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/Common.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
