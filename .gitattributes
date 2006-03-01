@@ -3703,6 +3703,7 @@ FreeMat2/MFiles/ifftshift.m svn_keywords=Author+Date+Id+Revision svn_eol_002dsty
 FreeMat2/MFiles/image.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/inline_evaluate.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/input.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/MFiles/install.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/isa.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/iscell.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/ischar.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
