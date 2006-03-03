@@ -3793,7 +3793,8 @@ FreeMat2/extern/AMD/Source/amd_postorder.c svn_keywords=Author+Date+Id+Revision 
 FreeMat2/extern/AMD/Source/amd_preprocess.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/AMD/Source/amd_valid.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/Makefile_freemat.mingw32 svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/extern/UFconfig-1.0_freemat_patch.tar.gz svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/extern/UFconfig/README.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/extern/UFconfig/UFconfig.mk svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/UMFPACK/Include/umfpack.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/UMFPACK/Include/umfpack_col_to_triplet.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/UMFPACK/Include/umfpack_defaults.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
