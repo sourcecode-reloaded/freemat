@@ -3787,6 +3787,7 @@ FreeMat2/extern/AMD/Source/amd_defaults.c svn_keywords=Author+Date+Id+Revision s
 FreeMat2/extern/AMD/Source/amd_dump.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/AMD/Source/amd_global.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/AMD/Source/amd_info.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/extern/AMD/Source/amd_internal.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/AMD/Source/amd_order.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/AMD/Source/amd_post_tree.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/AMD/Source/amd_postorder.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
