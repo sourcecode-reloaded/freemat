@@ -9460,7 +9460,6 @@ FreeMat2/extern/UMFPACK/Source/umfpack_tictoc.c svn_keywords=Author+Date+Id+Revi
 FreeMat2/extern/UMFPACK/Source/umfpack_timer.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/UMFPACK/Source/umfpack_transpose.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/UMFPACK/Source/umfpack_triplet_to_col.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/extern/arpack96_freemat_patch.tar.gz svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/extern/atlas3.6.0.tar.gz svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/extern/chat svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/ffcall-1.10/COPYING svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -10327,8 +10326,6 @@ FreeMat2/extern/ffcall-1.10/vacall/vacall.h.mingw32 svn_keywords=Author+Date+Id+
 FreeMat2/extern/ffcall-1.10/vacall/vacall.h.msvc svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/ffcall-1.10/vacall/vacall.html svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/ffcall-1.10/vacall/vacall.man svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/extern/ffcall-1.10_freemat_patch.tar.gz svn_mime_002dtype=application%2Foctet-stream
-FreeMat2/extern/fftw-3.0.1.tar.gz svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/extern/fftw-3.0.1/AUTHORS svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/fftw-3.0.1/CONVENTIONS svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/fftw-3.0.1/COPYING svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -11826,9 +11823,6 @@ FreeMat2/extern/fftw-3.0.1/tools/fftw_wisdom.1 svn_keywords=Author+Date+Id+Revis
 FreeMat2/extern/fftw-3.0.1/tools/fftw_wisdom.1.in svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/fftw-3.0.1/tools/fftwf-wisdom.1 svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/filelist svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/extern/lapack-3.0_freemat_patch.tgz svn_mime_002dtype=application%2Foctet-stream
-FreeMat2/extern/libMATIO_freemat_patch.tar.gz svn_mime_002dtype=application%2Foctet-stream
-FreeMat2/extern/libz_freemat_patch.tar.gz svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/extern/matio/COPYING svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/matio/ChangeLog svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/matio/Makefile svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -12016,7 +12010,6 @@ FreeMat2/extern/matio/zlib/zlib.3 svn_keywords=Author+Date+Id+Revision svn_eol_0
 FreeMat2/extern/matio/zlib/zlib.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/matio/zlib/zutil.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/matio/zlib/zutil.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/extern/matio_freemat_patch.tar.gz svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/extern/qconf_cvs.zip svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/freemat.spec svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/help/section_descriptors.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
