@@ -11939,6 +11939,7 @@ FreeMat2/extern/matio/src/matio.rc svn_keywords=Author+Date+Id+Revision svn_eol_
 FreeMat2/extern/matio/src/matio.tbz2 svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/matio/src/matioConfig.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/matio/src/matioConfig.h.in svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/extern/matio/src/matioConfig.h.macosX svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/matio/src/matio_private.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/matio/src/read_data.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/matio/src/snprintf.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
