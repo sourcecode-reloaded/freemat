@@ -3885,6 +3885,8 @@ FreeMat2/extern/ARPACK/UTIL/zmout.f svn_keywords=Author+Date+Id+Revision svn_eol
 FreeMat2/extern/ARPACK/UTIL/zvout.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/LAPACK/Makefile svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/LAPACK/README svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/extern/LAPACK/SRC/Makefile svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/extern/LAPACK/SRC/Makefile_freemat svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/LAPACK/SRC/cbdsqr.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/LAPACK/SRC/cgbbrd.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/LAPACK/SRC/cgbcon.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
