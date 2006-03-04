@@ -5373,6 +5373,17 @@ FreeMat2/extern/LAPACK/SRC/zunmrz.f svn_keywords=Author+Date+Id+Revision svn_eol
 FreeMat2/extern/LAPACK/SRC/zunmtr.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/LAPACK/SRC/zupgtr.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/LAPACK/SRC/zupmtr.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/extern/LAPACK/TESTING/EIG/Makefile svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/extern/LAPACK/TESTING/EIG/alahdg.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/extern/LAPACK/TESTING/EIG/alareq.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/extern/LAPACK/TESTING/EIG/alarqg.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/extern/LAPACK/TESTING/EIG/alasmg.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/extern/LAPACK/TESTING/EIG/alasum.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/extern/LAPACK/TESTING/EIG/alasvm.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/extern/LAPACK/TESTING/EIG/cbdt01.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/extern/LAPACK/TESTING/EIG/cbdt02.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/extern/LAPACK/TESTING/EIG/cbdt03.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/extern/LAPACK/TESTING/EIG/cchkbb.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/LAPACK/TESTING/EIG/cchkbd.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/LAPACK/TESTING/EIG/cchkbk.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/LAPACK/TESTING/EIG/cchkbl.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
