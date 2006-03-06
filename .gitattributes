@@ -5797,8 +5797,6 @@ FreeMat2/extern/UMFPACK/Source/umfpack_tictoc.c svn_keywords=Author+Date+Id+Revi
 FreeMat2/extern/UMFPACK/Source/umfpack_timer.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/UMFPACK/Source/umfpack_transpose.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/UMFPACK/Source/umfpack_triplet_to_col.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/extern/atlas3.6.0.tar.gz svn_mime_002dtype=application%2Foctet-stream
-FreeMat2/extern/chat svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/ffcall-1.10/COPYING svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/ffcall-1.10/Makefile svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/ffcall-1.10/Makefile.devel svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
