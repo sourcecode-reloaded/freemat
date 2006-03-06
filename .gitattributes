@@ -346,8 +346,6 @@ FreeMat2/extern/ATLAS/bin/slvtst.c svn_keywords=Author+Date+Id+Revision svn_eol_
 FreeMat2/extern/ATLAS/bin/substr.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/ATLAS/bin/trtritst.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/ATLAS/bin/uumtst.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/extern/ATLAS/chat_g77 svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/extern/ATLAS/chat_gfortran svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/ATLAS/config.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/ATLAS/doc/AtlasCredits.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/ATLAS/doc/ChangeLog svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
