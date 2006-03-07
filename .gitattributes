@@ -2669,6 +2669,8 @@ FreeMat2/extern/ATLAS/tune/sysinfo/emit_typ.c svn_keywords=Author+Date+Id+Revisi
 FreeMat2/extern/ATLAS/tune/sysinfo/findNT.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/ATLAS/tune/sysinfo/masearch.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/ATLAS/tune/sysinfo/time.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/extern/ATLAS/win32_prebuilt/libatlas.a svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/extern/ATLAS/win32_prebuilt/libf77blas.a svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/extern/LAPACK/BLAS/SRC/Makefile svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/LAPACK/BLAS/SRC/Makefile_freemat svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/LAPACK/BLAS/SRC/caxpy.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
