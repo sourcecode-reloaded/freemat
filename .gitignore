@@ -1,8 +1,13 @@
+FreeMat2/extern/AMD/Lib/*.a
+FreeMat2/extern/LAPACK/liblapack.a
+FreeMat2/extern/UMFPACK/Lib/libumfpack.a
 FreeMat2/extern/ffcall-1.10/avcall/*.asm
 FreeMat2/extern/ffcall-1.10/avcall/avcall.h
 FreeMat2/extern/ffcall-1.10/avcall/avcall.lib
+FreeMat2/extern/ffcall-1.10/avcall/libavcall.a
 FreeMat2/extern/ffcall-1.10/avcall/minitests.out
 FreeMat2/extern/ffcall-1.10/avcall/minitests.output.*
+FreeMat2/extern/ffcall-1.10/avcall/tests.exe
 FreeMat2/extern/ffcall-1.10/avcall/tests.out
 FreeMat2/extern/ffcall-1.10/avcall/tests.output.*
 FreeMat2/extern/ffcall-1.10/callback/callback.h
