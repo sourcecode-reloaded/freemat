@@ -8194,6 +8194,12 @@ FreeMat2/native/lexdbug/babble.m svn_keywords=Author+Date+Id+Revision svn_eol_00
 FreeMat2/native/lexdbug/mkbuild svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/lexdbug/newlex.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/lexdbug/notes.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/logo/freemat_small_mod.png svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/logo/freemat_small_mod_128.png svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/logo/freemat_small_mod_16.png svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/logo/freemat_small_mod_32.png svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/logo/freemat_small_mod_48.png svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/logo/freemat_small_mod_64.png svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/native/logo/logo.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/newdoc/Clear.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/newdoc/XLabel.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
