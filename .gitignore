@@ -1,4 +1,8 @@
+FreeMat2/libs/Makefile.in
+FreeMat2/libs/libCore/Makefile.in
 FreeMat2/libs/libFN/Makefile.in
+FreeMat2/libs/libFreeMat/Makefile.in
 FreeMat2/libs/libGraphics/Makefile.in
+FreeMat2/libs/libMex/Makefile.in
 FreeMat2/libs/libXP/Makefile.in
 FreeMat2/src/Makefile.in
