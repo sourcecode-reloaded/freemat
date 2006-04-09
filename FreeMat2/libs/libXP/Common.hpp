@@ -16,35 +16,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
-#ifndef __GUITerminal_hpp__
-#define __GUITerminal_hpp__
+#ifndef __Common_hpp__
+#define __Common_hpp__
 
-#include "QTTerm.hpp"
-#include "KeyManager.hpp"
-#include "BaseTerminal.hpp"
+#include <QString>
+#include <QStringList>
 
-class GUITerminal : public QTTerm {
-  Q_OBJECT
-
-  std::vector<std::string> cmd_list;
- protected:
-  void resizeEvent( QResizeEvent *e );
- public:
-  GUITerminal(QWidget *parent);
-  int getTerminalWidth() {return getTextWidth();};
-  virtual char* getLine(std::string aprompt);
-signals:
-  void CommandLine(QString);
-protected slots:
-  void QueueString(QString t);
-  void OutputRawString(std::string txt);
-  void MoveDown();
-  void MoveUp();
-  void MoveRight();
-  void MoveLeft();
-  void ClearEOL();
-  void ClearEOD();
-  void MoveBOL();
-};
+QStringList GetRecursiveDirList(QString basedir);
 
 #endif
