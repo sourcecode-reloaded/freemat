@@ -1,0 +1,51 @@
+AC_INIT(src/main.cpp)
+AM_INIT_AUTOMAKE(FreeMat, 2.0RC2)
+AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_F77
+AC_F77_LIBRARY_LDFLAGS
+AM_PROG_LEX
+AC_PROG_YACC
+AC_PROG_RANLIB
+BNV_HAVE_QT
+KSW_HAVE_QGL
+
+if test x"${QT_LIBS}" = x; then
+   echo ""
+   AC_MSG_ERROR([Qt4 is required.  If you have Qt installed see --help for more options])
+   echo ""
+fi
+
+if test x"$bnv_is_qt4" != xyes; then
+   echo ""
+   AC_MSG_ERROR([Qt was detected, but not version 4 or later.  If you have Qt 4 installed see --help for more options])
+   echo ""
+fi
+
+
+
+AC_CHECK_LIB(avcall,__structcpy,,AC_MSG_ERROR([Unable to find avcall library.]))
+AC_CHECK_LIB(amd,amd_postorder,,AC_MSG_ERROR([Unable to find amd library.]))
+AC_CHECK_LIB(umfpack,umfpack_zl_solve,,AC_MSG_ERROR([Unable to find umfpack library.]))
+AC_CHECK_LIB(fftw3f,fftwf_malloc,,AC_MSG_ERROR([Unable to find libfft (float version)]))
+AC_CHECK_LIB(fftw3,fftw_malloc,,AC_MSG_ERROR([Unable to find libfft (double version)]))
+AC_LANG_PUSH(Fortran 77)
+AC_CHECK_LIB(blas,dgemm,,AC_MSG_ERROR([Unable to find BLAS]))
+AC_CHECK_LIB(lapack,dgesvx,,AC_MSG_ERROR([Unable to find LAPACK]))
+AC_CHECK_LIB(arpack,znaupd,,AC_MSG_ERROR([Unable to find ARPACK]))
+AC_LANG_POP(Fortran 77)
+
+AC_LANG(C++)
+AC_CHECK_LIB(z,inflate,,AC_MSG_ERROR([Unable to find ZLib]))
+AC_CHECK_LIB(matio,Mat_Open,,AC_MSG_ERROR([Unable to find matio library]))
+
+AC_CHECK_HEADER(avcall.h,,AC_MSG_ERROR([Unable to find avcall.h header file]))
+
+MP_WITH_CURSES
+
+LIBS="$LIBS $CURSES_LIB"
+
+AC_OUTPUT([Makefile src/Makefile libs/Makefile libs/libFreeMat/Makefile
+		    libs/libCore/Makefile libs/libFN/Makefile
+		    libs/libMex/Makefile libs/libXP/Makefile 
+		    libs/libGraphics/Makefile])
