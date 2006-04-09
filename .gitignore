@@ -1,3 +1,7 @@
+FreeMat2/extern/Build
+FreeMat2/extern/Packages
+FreeMat2/extern/Root
+FreeMat2/extern/State
 FreeMat2/libs/Makefile.in
 FreeMat2/libs/libCore/Makefile.in
 FreeMat2/libs/libFN/Makefile.in

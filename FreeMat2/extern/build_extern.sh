@@ -54,23 +54,37 @@ ConfigureBuildAutoConf()
   fi
 }
 
+ConfigureBuildAMD() 
+{
+  echo "Configuring and building $1..."
+  if [ ! -f State/build_$1 ]
+  then
+      cdir=`pwd`
+      cd Build/$1/Source
+      make CC=gcc
+      cp ../Lib/libamd.a $cdir/Root/lib/.
+      cp ../Include/amd.h $cdir/Root/include/.
+      cd $cdir
+  fi
+  if [ -f Root/lib/libamd.a ]
+  then
+    touch State/build_$1
+  fi
+}
+
 ConfigureBuildUMFPACK() 
 {
   echo "Configuring and building $1..."
   if [ ! -f State/build_$1 ]
   then
       cdir=`pwd`
-      cd Build/$1/AMD/Source
-      make
-      cp ../Lib/libamd.a $cdir/Root/lib/.
-      cp ../Include/amd.h $cdir/Root/include/.
-      cd ../../UMFPACK/Source
-      make 
+      cd Build/$1/Source
+      make CC=gcc
       cp ../Lib/libumfpack.a $cdir/Root/lib/.
       cp ../Include/*.h $cdir/Root/include/.
       cd $cdir
   fi
-  if [ -f Build/$1/UMFPACK/Lib/libumfpack.a ]
+  if [ -f Root/lib/libumfpack.a ]
   then
     touch State/build_$1
   fi
@@ -155,7 +169,8 @@ ReportStatus()
   ReportStatusPackage ffcall
   ReportStatusPackage fftw
   ReportStatusPackage fftwf
-  ReportStatusPackage UMFPACKv4.1
+  ReportStatusPackage AMD
+  ReportStatusPackage UMFPACK
   ReportStatusPackage LAPACK
   ReportStatusPackage BLAS
   ReportStatusPackage ARPACK
@@ -166,20 +181,25 @@ MAKEOPTS=$1
 SetupDirs
 FetchFile ftp://ftp.santafe.edu/pub/gnu ffcall-1.10.tar.gz
 FetchFile http://www.fftw.org fftw-3.1.1.tar.gz
-FetchFile http://www.cise.ufl.edu/research/sparse/umfpack/v4.1 UMFPACKv4.1.tar.gz
+FetchFile http://www.cise.ufl.edu/research/sparse/umfpack/current UMFPACK.tar.gz
+FetchFile http://www.cise.ufl.edu/research/sparse/UFconfig/current UFconfig.tar.gz
+FetchFile http://www.cise.ufl.edu/research/sparse/amd/current AMD.tar.gz
 FetchFile http://www.netlib.org/lapack lapack.tgz
 FetchFile http://www.caam.rice.edu/software/ARPACK/SRC arpack96.tar.gz
 FetchFile http://www.mathworks.com/matlabcentral/files/8187 matio.zip
 UnpackTarball ffcall-1.10.tar.gz ffcall-1.10
 UnpackTarball fftw-3.1.1.tar.gz fftw-3.1.1
-UnpackTarball UMFPACKv4.1.tar.gz UMFPACKv4.1
+UnpackTarball UFconfig.tar.gz UFconfig
+UnpackTarball AMD.tar.gz AMD
+UnpackTarball UMFPACK.tar.gz UMFPACK
 UnpackTarball lapack.tgz LAPACK
 UnpackTarball arpack96.tar.gz ARPACK
 UnpackZip matio.zip matio
 ConfigureBuildAutoConf ffcall-1.10 ffcall libavcall.a $MAKEOPTS 
 ConfigureBuildAutoConf fftw-3.1.1 fftw libfftw3.a $MAKEOPTS 
 ConfigureBuildAutoConf fftw-3.1.1 fftwf libfftw3f.a --enable-single
-ConfigureBuildUMFPACK UMFPACKv4.1 $MAKEOPTS
+ConfigureBuildAMD AMD 
+ConfigureBuildUMFPACK UMFPACK 
 ConfigureBuildLAPACK LAPACK $MAKEOPTS
 ConfigureBuildBLAS BLAS $MAKEOPTS
 ConfigureBuildARPACK ARPACK $MAKEOPTS
