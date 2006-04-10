@@ -602,8 +602,6 @@ FreeMat2/src/application.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyl
 FreeMat2/src/freemat.ico svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/src/freemat.rc svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/freematv2.ico svn_mime_002dtype=application%2Foctet-stream
-FreeMat2/src/helpgen.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/src/helpgen.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/main.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/array/test_resize.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/class/@mat/and.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
