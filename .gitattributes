@@ -2,7 +2,6 @@ FreeMat2/COPYING svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/ChangeLog svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/FreeMat.pro svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/FreeMat.qc svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/FreeMat.qrc svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/INSTALL svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/@inline/inline.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/@inline/subsref.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
