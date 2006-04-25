@@ -1,5 +1,9 @@
 AC_INIT(src/main.cpp)
+
+AC_CANONICAL_SYSTEM
+
 AM_INIT_AUTOMAKE(FreeMat, 2.0RC2)
+
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_F77
@@ -7,8 +11,41 @@ AC_F77_LIBRARY_LDFLAGS
 AM_PROG_LEX
 AC_PROG_YACC
 AC_PROG_RANLIB
-BNV_HAVE_QT
-KSW_HAVE_QGL
+
+AC_MSG_CHECKING(system name)
+uname=`uname`
+uversion=`uname -r | sed -e '1,$s/[[^0-9]]//g'`
+if test "x$uname" = xIRIX64; then
+    uname="IRIX"
+fi
+AC_MSG_RESULT([$uname])
+
+AC_MSG_CHECKING(for msys)
+ismingw="no"
+case $uname in 
+     MINGW*)
+       ismingw="yes"
+       ;;
+esac
+AC_MSG_RESULT([$ismingw])
+
+if test x"$ismingw" = x"yes"; then
+   AC_MSG_CHECKING(for Qt4)
+   QT_CXXFLAGS="-I/c/Qt/4.1.0/include -I/c/Qt/4.1.0/include/QtCore -I/c/Qt/4.1.0/include/QtGui -I/c/Qt/4.1.0/include/QtNetwork -I/c/Qt/4.1.0/include/QtOpenGL"
+   QT_DIR="/c/Qt/4.1.0"
+   QT_LIBS="-L/c/Qt/4.1.0/lib -lQtGui -lQtCore -lQtNetwork -lQtOpenGL"
+   QT_MOC="/c/Qt/4.1.0/bin/moc"
+   bnv_is_qt4="yes"
+   AC_MSG_RESULT([yes:
+   QT_CXXFLAGS=$QT_CXXFLAGS
+   QT_DIR=$QT_DIR
+   QT_LIBS=$QT_LIBS
+   QT_UIC=$QT_UIC
+   QT_MOC=$QT_MOC])
+else
+    BNV_HAVE_QT
+    KSW_HAVE_QGL
+fi
 
 if test x"${QT_LIBS}" = x; then
    echo ""
