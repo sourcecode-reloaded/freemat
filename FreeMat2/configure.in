@@ -6,9 +6,6 @@ AM_INIT_AUTOMAKE(FreeMat, 2.0RC2)
 
 AC_PROG_CC
 AC_PROG_CXX
-AC_PROG_F77
-AC_F77_LIBRARY_LDFLAGS
-LIBS="$LIBS $FLIBS"
 AM_PROG_LEX
 AC_PROG_YACC
 AC_PROG_RANLIB
@@ -45,8 +42,11 @@ if test x"$ismingw" = x"yes"; then
    QT_MOC=$QT_MOC])
 else
     BNV_HAVE_QT
-    KSW_HAVE_QGL
 fi
+
+AC_PROG_F77
+AC_F77_LIBRARY_LDFLAGS
+LIBS="$LIBS $FLIBS"
 
 if test x"${QT_LIBS}" = x; then
    echo ""
@@ -87,74 +87,79 @@ fi
 AC_F77_FUNC(znaupd)
 AC_CHECK_LIB(arpack,$znaupd,found_arpack="yes",found_arpack="no")
 AC_CHECK_LIB(z,inflate,found_z="yes",found_z="no")
+if test x"$found_z" == xyes; then
+   LIBS="$LIBS -lz"
+fi
 AC_CHECK_LIB(matio,Mat_Open,found_matio="yes",found_matio="no")
 
 if test x"$found_avcall" != xyes; then
   need_extern="yes"
-  extern_flags="$extern_flags build_avcall"
+  extern_flags="$extern_flags --with-ffcall"
 fi
 
 if test x"$found_amd" != xyes; then
    need_extern="yes"
-   extern_flags="$extern_flags build_amd"
+   extern_flags="$extern_flags --with-umfpack"
 fi
 
 if test x"$found_umfpack" != xyes; then
    need_extern="yes"
-   extern_flags="$extern_flags build_umfpack"
+   extern_flags="$extern_flags --with-umfpack"
 fi
 
 if test x"$found_fftw3f" != xyes; then
    need_extern="yes"
-   extern_flags="$extern_flags build_fftw3f"
+   extern_flags="$extern_flags --with-fftw"
 fi
 
 if test x"$found_fftw3" != xyes; then
    need_extern="yes"
-   extern_flags="$extern_flags build_fftw3"
+   extern_flags="$extern_flags --with-fftw"
 fi
 
 if test x"$found_blas" != xyes; then
    need_extern="yes"
-   extern_flags="$extern_flags build_blas"
+   extern_flags="$extern_flags --with-blas"
 fi
 
 if test x"$found_lapack" != xyes; then
    need_extern="yes"
-   extern_flags="$extern_flags build_lapack"
+   extern_flags="$extern_flags --with-lapack"
 fi
 
 if test x"$found_arpack" != xyes; then
    need_extern="yes"
-   extern_flags="$extern_flags build_arpack"
+   extern_flags="$extern_flags --with-arpack"
 fi
 
 if test x"$found_z" != xyes; then
    need_extern="yes"
-   extern_flags="$extern_flags build_z"
+   extern_flags="$extern_flags --with-matio"
 fi
 
 if test x"$found_matio" != xyes; then
    need_extern="yes"
-   extern_flags="$extern_flags build_matio"
+   extern_flags="$extern_flags --with-matio"
+fi
+
+if test x"$ismingw" != xno; then
+   extern_flags="$extern_flags --mingw"
 fi
 
 MP_WITH_CURSES
 
 LIBS="$LIBS $CURSES_LIB"
 
-echo "Need extern is ${need_extern}"
-
 if test x"$need_extern" != xno; then
-AC_OUTPUT([extern/builddeps])
+AC_OUTPUT([builddeps])
 
-AS_MKDIR_P([extern/State])
-save_IFS=$IFS; IFS=" "
-for pkg in $extern_flags
-do
-  echo "1" >> extern/State/${pkg}
-done
-IFS=$save_IFS
+chmod +x builddeps
+
+echo \
+"#!/bin/sh
+./builddeps $extern_flags" > build_extern
+
+chmod +x build_extern
 
 echo \
 "**********************************************************************
@@ -170,7 +175,7 @@ found:
   ARPACK                    ${found_arpack}
   ZLIB                      ${found_z}
   MATIO                     ${found_matio}
-The script extern/build_extern will attempt to build these missing
+The script build_extern will attempt to build these missing
 dependencies.  If it succeeds, rerun configure.  If not, install
 the missing packages and try again.
 **********************************************************************"
