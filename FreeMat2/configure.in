@@ -8,6 +8,7 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_F77
 AC_F77_LIBRARY_LDFLAGS
+LIBS="$LIBS $FLIBS"
 AM_PROG_LEX
 AC_PROG_YACC
 AC_PROG_RANLIB
@@ -59,30 +60,127 @@ if test x"$bnv_is_qt4" != xyes; then
    echo ""
 fi
 
+cdir=`pwd`
+CFLAGS="$CFLAGS -I$cdir/extern/Root/include"
+CXXFLAGS="$CXXFLAGS -I$cdir/extern/Root/include"
+CPPFLAGS="$CPPFLAGS -I$cdir/extern/Root/include"
+LDFLAGS="$LDFLAGS -L$cdir/extern/Root/lib"
 
+extern_flags=""
+need_extern="no"
+AC_CHECK_LIB(avcall,__structcpy,found_avcall="yes",found_avcall="no")
+AC_CHECK_LIB(amd,amd_postorder,found_amd="yes",found_amd="no")
+if test x"$found_amd" == xyes; then
+  LIBS="$LIBS -lamd"
+fi
+AC_CHECK_LIB(umfpack,umfpack_zl_solve,found_umfpack="yes",found_umfpack="no")
+AC_CHECK_LIB(fftw3f,fftwf_malloc,found_fftw3f="yes",found_fftw3f="no")
+AC_CHECK_LIB(fftw3,fftw_malloc,found_fftw3="yes",found_fftw3="no")
+ACX_BLAS(found_blas="yes",found_blas="no")
+if test x"$found_blas" == xyes; then
+   LIBS="$BLAS_LIBS $LIBS"
+fi
+ACX_LAPACK(found_lapack="yes",found_lapack="no")
+if test x"$found_blas" == xyes; then
+   LIBS="$LAPACK_LIBS $LIBS"
+fi
+AC_F77_FUNC(znaupd)
+AC_CHECK_LIB(arpack,$znaupd,found_arpack="yes",found_arpack="no")
+AC_CHECK_LIB(z,inflate,found_z="yes",found_z="no")
+AC_CHECK_LIB(matio,Mat_Open,found_matio="yes",found_matio="no")
 
-AC_CHECK_LIB(avcall,__structcpy,,AC_MSG_ERROR([Unable to find avcall library.]))
-AC_CHECK_LIB(amd,amd_postorder,,AC_MSG_ERROR([Unable to find amd library.]))
-AC_CHECK_LIB(umfpack,umfpack_zl_solve,,AC_MSG_ERROR([Unable to find umfpack library.]))
-AC_CHECK_LIB(fftw3f,fftwf_malloc,,AC_MSG_ERROR([Unable to find libfft (float version)]))
-AC_CHECK_LIB(fftw3,fftw_malloc,,AC_MSG_ERROR([Unable to find libfft (double version)]))
-AC_LANG_PUSH(Fortran 77)
-AC_CHECK_LIB(blas,dgemm,,AC_MSG_ERROR([Unable to find BLAS]))
-AC_CHECK_LIB(lapack,dgesvx,,AC_MSG_ERROR([Unable to find LAPACK]))
-AC_CHECK_LIB(arpack,znaupd,,AC_MSG_ERROR([Unable to find ARPACK]))
-AC_LANG_POP(Fortran 77)
+if test x"$found_avcall" != xyes; then
+  need_extern="yes"
+  extern_flags="$extern_flags build_avcall"
+fi
 
-AC_LANG(C++)
-AC_CHECK_LIB(z,inflate,,AC_MSG_ERROR([Unable to find ZLib]))
-AC_CHECK_LIB(matio,Mat_Open,,AC_MSG_ERROR([Unable to find matio library]))
+if test x"$found_amd" != xyes; then
+   need_extern="yes"
+   extern_flags="$extern_flags build_amd"
+fi
 
-AC_CHECK_HEADER(avcall.h,,AC_MSG_ERROR([Unable to find avcall.h header file]))
+if test x"$found_umfpack" != xyes; then
+   need_extern="yes"
+   extern_flags="$extern_flags build_umfpack"
+fi
+
+if test x"$found_fftw3f" != xyes; then
+   need_extern="yes"
+   extern_flags="$extern_flags build_fftw3f"
+fi
+
+if test x"$found_fftw3" != xyes; then
+   need_extern="yes"
+   extern_flags="$extern_flags build_fftw3"
+fi
+
+if test x"$found_blas" != xyes; then
+   need_extern="yes"
+   extern_flags="$extern_flags build_blas"
+fi
+
+if test x"$found_lapack" != xyes; then
+   need_extern="yes"
+   extern_flags="$extern_flags build_lapack"
+fi
+
+if test x"$found_arpack" != xyes; then
+   need_extern="yes"
+   extern_flags="$extern_flags build_arpack"
+fi
+
+if test x"$found_z" != xyes; then
+   need_extern="yes"
+   extern_flags="$extern_flags build_z"
+fi
+
+if test x"$found_matio" != xyes; then
+   need_extern="yes"
+   extern_flags="$extern_flags build_matio"
+fi
 
 MP_WITH_CURSES
 
 LIBS="$LIBS $CURSES_LIB"
 
+echo "Need extern is ${need_extern}"
+
+if test x"$need_extern" != xno; then
+AC_OUTPUT([extern/builddeps])
+
+AS_MKDIR_P([extern/State])
+save_IFS=$IFS; IFS=" "
+for pkg in $extern_flags
+do
+  echo "1" >> extern/State/${pkg}
+done
+IFS=$save_IFS
+
+echo \
+"**********************************************************************
+One or more of the following external dependencies was not
+found:
+  AVCALL                    ${found_avcall}
+  AMD                       ${found_amd}
+  UMFPACK                   ${found_umfpack}
+  FFTW3 (Single Precision)  ${found_fftw3f}
+  FFTW3 (Double Precision)  ${found_fftw3}
+  BLAS                      ${found_blas}
+  LAPACK                    ${found_lapack}
+  ARPACK                    ${found_arpack}
+  ZLIB                      ${found_z}
+  MATIO                     ${found_matio}
+The script extern/build_extern will attempt to build these missing
+dependencies.  If it succeeds, rerun configure.  If not, install
+the missing packages and try again.
+**********************************************************************"
+else
+echo \
+"**********************************************************************
+All external dependencies satisfied.  Generating makefiles.
+**********************************************************************"
 AC_OUTPUT([Makefile src/Makefile libs/Makefile libs/libFreeMat/Makefile
 		    libs/libCore/Makefile libs/libFN/Makefile
 		    libs/libMex/Makefile libs/libXP/Makefile 
 		    libs/libGraphics/Makefile])
+fi
