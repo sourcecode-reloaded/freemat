@@ -60,6 +60,7 @@ if test x"$bnv_is_qt4" != xyes; then
    echo ""
 fi
 
+LIBS="$LIBS $FLIBS"
 cdir=`pwd`
 CFLAGS="$CFLAGS -I$cdir/extern/Root/include"
 CXXFLAGS="$CXXFLAGS -I$cdir/extern/Root/include"
@@ -92,6 +93,7 @@ if test x"$found_z" == xyes; then
 fi
 AC_CHECK_LIB(matio,Mat_Open,found_matio="yes",found_matio="no")
 
+>>>>>>> .r1904
 if test x"$found_avcall" != xyes; then
   need_extern="yes"
   extern_flags="$extern_flags --with-ffcall"
@@ -147,6 +149,7 @@ if test x"$ismingw" != xno; then
 fi
 
 MP_WITH_CURSES
+
 
 LIBS="$LIBS $CURSES_LIB"
 
