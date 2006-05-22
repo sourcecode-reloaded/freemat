@@ -520,6 +520,8 @@ FreeMat2/native/qt/edit/textunder.xpm svn_keywords=Author+Date+Id+Revision svn_e
 FreeMat2/native/qt/term/TermWidget.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/qt/term/TermWidget.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/qt/term/term.pro svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/rdparse/parseplay svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/rdparse/parserplay svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/native/renderft.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/renderft.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/sparse/sparse.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
