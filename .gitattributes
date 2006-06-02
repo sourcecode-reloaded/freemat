@@ -102,11 +102,8 @@ FreeMat2/MFiles/tubeplot.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyl
 FreeMat2/MFiles/view.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/winlev.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/xlabel.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/MFiles/xlim.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/ylabel.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/MFiles/ylim.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/zlabel.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/MFiles/zlim.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/MFiles/zoom.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/NOTES.TXT svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/extern/Packages/AMD.tar.gz svn_mime_002dtype=application%2Foctet-stream
