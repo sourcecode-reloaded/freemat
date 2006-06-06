@@ -565,6 +565,24 @@ FreeMat2/native/win32/winterm.opt svn_keywords=Author+Date+Id+Revision svn_eol_0
 FreeMat2/native/win32/winterm.plg svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/win32/wt2.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/win32/wt2.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/native/www/FreeMat-2.0.pdf svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/www/big_logo.gif svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/www/big_logo.png svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/www/freebsd.gif svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/www/linux.gif svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/www/macosx.gif svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/www/news.gif svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/www/phi_logo_16.gif svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/www/phi_logo_16.png svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/www/phi_logo_mini.gif svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/www/phi_logo_mini.png svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/www/screencap_linux.png svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/www/screencap_linux_small.png svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/www/screencap_osx.png svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/www/screencap_osx_small.png svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/www/screencap_win32.png svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/www/screencap_win32_small.png svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/native/www/windows.gif svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/native/x11/.gdb_history svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/x11/KeyManager.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/x11/KeyManager.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
