@@ -30,6 +30,7 @@ FreeMat2/images/player_stop.png svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/images/previous.png svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/images/quit.png svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/images/save.png svn_mime_002dtype=application%2Foctet-stream
+FreeMat2/images/stop.png svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/images/zoomin.png svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/images/zoomout.png svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/libs/libCore/Analyze.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
