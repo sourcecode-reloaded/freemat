@@ -1,5 +1,3 @@
-ARPACK96/arpack96.tar.gz svn_mime_002dtype=application%2Foctet-stream
-BLAS/blas.tgz svn_mime_002dtype=application%2Foctet-stream
 /FreeMat2 svn__003aignore
 FreeMat2/COPYING svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/ChangeLog svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -974,4 +972,3 @@ FreeMat2/tools/disttool/freemat_nsi.in svn_keywords=Author+Date+Id+Revision svn_
 FreeMat2/tools/helpgen/helpgen.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tools/helpgen/helpgen.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tools/helpgen/section_descriptors.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-LAPACK/lapack.tgz svn_mime_002dtype=application%2Foctet-stream
