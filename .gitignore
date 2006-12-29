@@ -4,10 +4,6 @@ FreeMat2/autom4te.cache
 FreeMat2/build
 FreeMat2/configure
 FreeMat2/depcomp
-FreeMat2/extern/Build
-FreeMat2/extern/Packages
-FreeMat2/extern/Root
-FreeMat2/extern/State
 FreeMat2/install-sh
 FreeMat2/libs/Makefile.in
 FreeMat2/libs/libCore/Makefile.in

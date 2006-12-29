@@ -3,14 +3,6 @@ FreeMat2/COPYING svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/ChangeLog svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/INSTALL svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/NOTES.TXT svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/extern/Packages/AMD.tar.gz svn_mime_002dtype=application%2Foctet-stream
-FreeMat2/extern/Packages/UFconfig.tar.gz svn_mime_002dtype=application%2Foctet-stream
-FreeMat2/extern/Packages/UMFPACK.tar.gz svn_mime_002dtype=application%2Foctet-stream
-FreeMat2/extern/Packages/arpack96.tar.gz svn_mime_002dtype=application%2Foctet-stream
-FreeMat2/extern/Packages/ffcall-1.10.tar.gz svn_mime_002dtype=application%2Foctet-stream
-FreeMat2/extern/Packages/fftw-3.1.1.tar.gz svn_mime_002dtype=application%2Foctet-stream
-FreeMat2/extern/Packages/lapack.tgz svn_mime_002dtype=application%2Foctet-stream
-FreeMat2/extern/Packages/matio.zip svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/images/cam_rotate.png svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/images/close.png svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/images/copy.png svn_mime_002dtype=application%2Foctet-stream
