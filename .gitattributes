@@ -401,7 +401,6 @@ FreeMat2/native/qt/edit/textjustify.xpm svn_keywords=Author+Date+Id+Revision svn
 FreeMat2/native/qt/edit/textleft.xpm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/qt/edit/textright.xpm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/qt/edit/textunder.xpm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/native/qt/serv/serv.app/Contents/MacOS/serv svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/native/qt/term/TermWidget.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/qt/term/TermWidget.h svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/qt/term/term.pro svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
