@@ -377,7 +377,6 @@ FreeMat2/native/osx/mt.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyl
 FreeMat2/native/osx/mt.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/pargs.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/putweb svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/native/qt/cli/cli.app/Contents/MacOS/cli svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/native/qt/edit/editcopy.xpm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/qt/edit/editcut.xpm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/native/qt/edit/editpaste.xpm svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
