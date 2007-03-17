@@ -900,8 +900,8 @@ FreeMat2/toolbox/binary/dec2bin.m svn_keywords=Author+Date+Id+Revision svn_eol_0
 FreeMat2/toolbox/deprecated/bind.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/toolbox/fitting/gausfit.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/toolbox/fitting/gfitfun.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/toolbox/function/@inline/inline.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/toolbox/function/@inline/subsref.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/toolbox/func/@inline/inline.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/toolbox/func/@inline/subsref.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/toolbox/general/install.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/toolbox/general/license.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/toolbox/geom/cross.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
