@@ -578,6 +578,7 @@ FreeMat2/src/toolbox/graph/ylabel.m svn_keywords=Author+Date+Id+Revision svn_eol
 FreeMat2/src/toolbox/graph/zlabel.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/toolbox/graph/zoom.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/toolbox/help/mprint.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/src/toolbox/help/section_descriptors.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/toolbox/io/input.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/toolbox/io/rawread.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/toolbox/matrix/eye.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -973,4 +974,3 @@ FreeMat2/tests/timing/timetest3.m svn_keywords=Author+Date+Id+Revision svn_eol_0
 FreeMat2/tools/disttool/freemat_nsi.in svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tools/helpgen/helpgen.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tools/helpgen/helpgen.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/tools/helpgen/section_descriptors.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
