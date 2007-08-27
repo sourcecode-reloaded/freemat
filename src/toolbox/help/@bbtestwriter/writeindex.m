@@ -1,0 +1,4 @@
+function writeindex(&p)
+
+  
+  
