@@ -3407,7 +3407,9 @@ ArrayVector WarningFunction(int nargout, const ArrayVector& arg, Interpreter* ev
 //@>
 //!
 ArrayVector VersionFunction(int nargout, const ArrayVector& arg) {
-  return ArrayVector() << Array::stringConstructor(VERSION);
+
+  #define QUOTEME(x) #x
+  return ArrayVector() << Array::stringConstructor(QUOTEME(VERSION));
 }
 
 
