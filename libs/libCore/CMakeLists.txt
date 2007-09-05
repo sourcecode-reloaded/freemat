@@ -1,4 +1,3 @@
-FIND_PACKAGE(Qt4)
 
 QT4_WRAP_CPP( helpwidget.moc.cpp helpwidget.cpp )
 QT4_WRAP_CPP( XML.moc.cpp XML.cpp )
