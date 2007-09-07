@@ -1,8 +1,6 @@
 
-QT4_WRAP_CPP( helpwidget.moc.cpp helpwidget.cpp )
-QT4_WRAP_CPP( XML.moc.cpp XML.cpp )
-
-ADD_DEFINITIONS( ${QT_DEFINITIONS} ) 
+QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/helpwidget.cpp ${CMAKE_CURRENT_SOURCE_DIR}/helpwidget.moc.cpp )
+QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/XML.cpp ${CMAKE_CURRENT_SOURCE_DIR}/XML.moc.cpp )
 
 INCLUDE_DIRECTORIES( ${QT_INCLUDE_DIR} ${QT_QTCORE_INCLUDE_DIR} ${QT_QTGUI_INCLUDE_DIR}  ${QT_QTNETWORK_INCLUDE_DIR} ${QT_QTXML_INCLUDE_DIR} )
 
@@ -27,5 +25,5 @@ Utils.cpp
 MatIO.cpp 
 XML.cpp 
 RPC.cpp 
-helpwidget.moc.cpp
-XML.moc.cpp )
+${CMAKE_CURRENT_SOURCE_DIR}/helpwidget.moc.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/XML.moc.cpp )

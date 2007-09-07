@@ -1,10 +1,10 @@
-
-QT4_WRAP_CPP( Intrepreter.moc.cpp Interpreter.hpp )
-ADD_DEFINITIONS( ${QT_DEFINITIONS} ) 
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 INCLUDE_DIRECTORIES( ${QT_INCLUDE_DIR} ${QT_QTCORE_INCLUDE_DIR} ${QT_QTGUI_INCLUDE_DIR} )
 
+QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/Interpreter.hpp ${CMAKE_CURRENT_SOURCE_DIR}/Intrepreter.moc.cpp)
  
-ADD_LIBRARY( FreeMat Array.cpp 
+ADD_LIBRARY( FreeMat 
+Array.cpp 
 Interpreter.cpp 
 Context.cpp 
 Data.cpp 
@@ -35,5 +35,6 @@ Scanner.cpp
 Tree.cpp 
 JITVM.cpp 
 FunctionDef.cpp 
-Interpreter.moc.cpp )
+${CMAKE_CURRENT_SOURCE_DIR}/Intrepreter.moc.cpp
+)
 
