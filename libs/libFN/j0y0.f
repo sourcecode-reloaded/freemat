@@ -14,7 +14,7 @@ C           Y = BESY0(X),
 C
 C   where the entry points correspond to the functions J0(X) and Y0(X),
 C   respectively.  The routine  CALJY0  is intended for internal packet
-C   use only, all computations within the packet being concentrated in
+C   us-e only, all computations within the packet being concentrated in
 C   this one routine.  The function subprograms invoke  CALJY0  with
 C   the statement
 C           CALL CALJY0(ARG,RESULT,JINT),

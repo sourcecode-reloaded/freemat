@@ -13,7 +13,7 @@ C                   Y=BESEK0(X)
 C
 C   where the entry points correspond to the functions K0(X) and
 C   EXP(X)*K0(X), respectively.  The routine CALCK0 is
-C   intended for internal packet use only, all computations within
+C   intended for internal packet us-e only, all computations within
 C   the packet being concentrated in this routine.  The function
 C   subprograms invoke CALCK0 with the statement
 C          CALL CALCK0(ARG,RESULT,JINT)

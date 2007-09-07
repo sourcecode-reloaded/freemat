@@ -13,7 +13,7 @@ C                   Y=BESEK1(X)
 C
 C   where the entry points correspond to the functions K1(X) and
 C   EXP(X)*K1(X), respectively.  The routine CALCK1 is intended
-C   for internal packet use only, all computations within the
+C   for internal packet us-e only, all computations within the
 C   packet being concentrated in this routine.  The function
 C   subprograms invoke CALCK1 with the statement
 C          CALL CALCK1(ARG,RESULT,JINT)

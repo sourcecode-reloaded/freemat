@@ -13,7 +13,7 @@ C                   Y=BESEI1(X)
 C
 C   where the entry points correspond to the functions I1(X) and
 C   EXP(-ABS(X))*I1(X), respectively.  The routine DCALCI1 is
-C   intended for internal packet use only, all computations within
+C   intended for internal packet us-e only, all computations within
 C   the packet being concentrated in this routine.  The function
 C   subprograms invoke DCALCI1 with the statement
 C          CALL DCALCI1(ARG,RESULT,JINT)
