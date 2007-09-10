@@ -57,6 +57,7 @@ const char *about_strings[] = {"Julie Maya & Neil - My Fan Club",
 			       "tubeplot - Written by Anders Sandberg",
 			       "nsis - Installer on Win32"};
 
+#define QUOTEME(x) #x
 #define MAKEASCII(x) x.toAscii().constData()
 #include <QtGui>
 
@@ -322,7 +323,7 @@ void ApplicationWindow::cleanhistory() {
 void ApplicationWindow::about() {
   QString text;
   text += "FreeMat Version ";
-  text += VERSION;
+  text += QUOTEME(VERSION);
   text += "\n\n";
   text += "Licensed under the GNU Public License Ver 2\n";
   text += "Web: http://freemat.sf.net\n";
@@ -364,7 +365,8 @@ void ApplicationWindow::httpRequestFinished(int requestId, bool error) {
     statusBar()->showMessage("Unable to check for updates...");
   if (requestId != httpGetId) return;
   const char *qp = m_buffer.data();
-  if (atof(VERSION) < atof(m_buffer.data())) {
+
+  if (atof(QUOTEME(VERSION)) < atof(m_buffer.data())) {
     sprintf(buffer,"A newer version of FreeMat appears to available. \n Please update by downloading version %s at http://freemat.sourceforge.net.",qp);
     QMessageBox::information(this,"Update Available",
 			     buffer,QMessageBox::Ok);

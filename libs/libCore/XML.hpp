@@ -1,6 +1,7 @@
 #ifndef __XML_hpp__
 #define __XML_hpp__
 
+#include <QObject>
 #include <QUrl>
 #include <QFile>
 #include <QThread>

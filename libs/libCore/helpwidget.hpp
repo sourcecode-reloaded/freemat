@@ -20,6 +20,7 @@
 #ifndef __HelpWidget_hpp__
 #define __HelpWidget_hpp__
 
+#include <QObject>
 #include <QMainWindow>
 #include <QDockWidget>
 #include <QTextBrowser>

@@ -1,3 +1,16 @@
+Windows XP / MingW / CMake 
+
+- Install Mingw and MSYS http://www.mingw.org/. You will need gcc and g77 packages.
+- Install OpenSource (Mingw) version of Qt 4.3 (4.1 should work too).
+- Install CMake (version 2.4.7 or later). Both Win32 version and 
+cygwin versions should work (if you have cygwin installed). http://www.cmake.org
+- Install BLAS or ATLAS. 
+
+
+
+
+
+
 Mac OS X 10.3.9
 
 - Install Developer Tools

@@ -19,6 +19,7 @@
 #ifndef __APPLICATION_H__
 #define __APPLICATION_H__
 
+#include <QObject>
 #include <QMainWindow>
 #include "QTTerm.hpp"
 #include "Editor.hpp"

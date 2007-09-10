@@ -20,7 +20,7 @@
 #define __MainApp_hpp__
 
 #include <string>
-#include <qobject.h>
+#include <QObject>
 #include "KeyManager.hpp"
 #include "application.hpp"
 #include "Interpreter.hpp"
