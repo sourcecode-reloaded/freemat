@@ -359,8 +359,7 @@ static std::string NestedMangleName(std::string cfunc, std::string fname) {
 
 std::string Interpreter::getVersionString() {
   //TODO: Fix VERSION 
-#define QUOTEME(x) #x
-  return std::string("FreeMat v" QUOTEME(VERSION));
+  return std::string("FreeMat v" VERSION);
 }
 
 // Run the thread function

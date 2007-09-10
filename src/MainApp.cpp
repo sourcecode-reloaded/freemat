@@ -37,8 +37,6 @@
 #include "HandleWindow.hpp"
 #include "PathSearch.hpp"
 
-#define QUOTEME(x) #x
-
 HandleList<Interpreter*> m_threadHandles;
 
 #ifdef Q_WS_X11 
@@ -321,7 +319,7 @@ void MainApp::CheckNonClosable() {
     wid = new NonClosable;
     wid->setGeometry(0,0,1,1);
     wid->setWindowIcon(QIcon(":/images/freemat_small_mod_64.png"));
-    wid->setWindowTitle("FreeMat v" QUOTEME(VERSION));
+    wid->setWindowTitle("FreeMat v" VERSION);
     wid->show();
   }
 }
@@ -883,12 +881,12 @@ void MainApp::UpdatePaths() {
       }
     } else {
       QSettings settings("FreeMat","FreeMat");
-      QDir dir1(QString(settings.value("root", QUOTEME(RESOURCEDIR)).toString())+"/toolbox");   
+      QDir dir1(QString(settings.value("root", RESOURCEDIR).toString())+"/toolbox");   
       if (dir1.exists()) {
 	QString path1(dir1.canonicalPath());
 	basePath += GetRecursiveDirList(path1);
       }
-      QDir dir2(QString(settings.value("root", QUOTEME(RESOURCEDIR)).toString())+"/help/text");
+      QDir dir2(QString(settings.value("root", RESOURCEDIR).toString())+"/help/text");
       if (dir2.exists()) {
 	QString path2(dir2.canonicalPath());
 	basePath += GetRecursiveDirList(path2);

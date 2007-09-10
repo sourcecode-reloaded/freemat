@@ -8,7 +8,7 @@ QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/DumbTerminal.hpp ${CMAKE_CURRENT_S
 
 QT4_ADD_RESOURCES( FreeMat_qrc ${CMAKE_CURRENT_SOURCE_DIR}/FreeMat.qrc  )
 
-ADD_EXECUTABLE( Freemat 
+ADD_EXECUTABLE( Freemat WIN32
 ${CMAKE_CURRENT_SOURCE_DIR}/application.moc.cpp 
 application.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/FuncMode.moc.cpp 
