@@ -23,6 +23,7 @@
 #include "HandleFigure.hpp"
 #include <QStackedWidget>
 #include <QTabWidget>
+#include <QObject>
 #include <QGLWidget>
 #include <QEventLoop>
 #include <QMenu>

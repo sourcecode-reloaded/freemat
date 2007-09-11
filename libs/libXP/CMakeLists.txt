@@ -16,10 +16,10 @@ Common.cpp
 ToolDock.cpp 
 VariablesTool.cpp 
 HistoryWidget.cpp 
-findform.ui 
-replaceform.ui 
-synlightconf.ui 
-indentconf.ui 
+${CMAKE_CURRENT_SOURCE_DIR}/findform.ui.h
+${CMAKE_CURRENT_SOURCE_DIR}/replaceform.ui.h 
+${CMAKE_CURRENT_SOURCE_DIR}/synlightconf.ui.h 
+${CMAKE_CURRENT_SOURCE_DIR}/indentconf.ui.h 
 ${CMAKE_CURRENT_SOURCE_DIR}/KeyManager.moc.cpp 
 ${CMAKE_CURRENT_SOURCE_DIR}/QTTerm.moc.cpp 
 ${CMAKE_CURRENT_SOURCE_DIR}/Editor.moc.cpp 
@@ -41,7 +41,8 @@ QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/FileTool.hpp ${CMAKE_CURRENT_SOURC
 QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/HistoryWidget.hpp ${CMAKE_CURRENT_SOURCE_DIR}/HistoryWidget.moc.cpp )  
 QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/ToolDock.hpp ${CMAKE_CURRENT_SOURCE_DIR}/ToolDock.moc.cpp )
 QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/VariablesTool.hpp ${CMAKE_CURRENT_SOURCE_DIR}/VariablesTool.moc.cpp )
-QT4_WRAP_UI( findform.ui.h findform.ui )
-QT4_WRAP_UI( replaceform.ui.h replaceform.ui )
-QT4_WRAP_UI( synlightconf.ui.h synlightconf.ui )  
-QT4_WRAP_UI( indentconf.ui.h indentconf.ui )
+
+QT4_GENERATE_UI( ${CMAKE_CURRENT_SOURCE_DIR}/findform.ui ${CMAKE_CURRENT_SOURCE_DIR}/findform.ui.h )
+QT4_GENERATE_UI( ${CMAKE_CURRENT_SOURCE_DIR}/replaceform.ui ${CMAKE_CURRENT_SOURCE_DIR}/replaceform.ui.h )
+QT4_GENERATE_UI( ${CMAKE_CURRENT_SOURCE_DIR}/synlightconf.ui ${CMAKE_CURRENT_SOURCE_DIR}/synlightconf.ui.h )  
+QT4_GENERATE_UI( ${CMAKE_CURRENT_SOURCE_DIR}/indentconf.ui ${CMAKE_CURRENT_SOURCE_DIR}/indentconf.ui.h )

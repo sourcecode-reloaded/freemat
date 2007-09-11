@@ -1,6 +1,7 @@
 #ifndef __HandleMultiEdit_hpp__
 #define __HandleMultiEdit_hpp__
 
+#include <QObject>
 #include <QTextEdit>
 
 class HandleMultiEdit : public QTextEdit
