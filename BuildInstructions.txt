@@ -6,9 +6,12 @@ Windows XP / MingW / CMake
 cygwin versions should work (if you have cygwin installed). http://www.cmake.org
 - Install BLAS or ATLAS. 
 
+Windows XP / Visual Studio Express / CMake 
 
-
-
+- Install CMake (version 2.4.7 or later) for Win32. http://www.cmake.org
+- Install gfortran http://gcc.gnu.org/wiki/GFortranBinariesWindows 
+Note: if you have mingw or cygwin installed you may run into a problem of gfortran using wrong
+ld, collect2, or ar -- you might need to adjust your path.
 
 
 Mac OS X 10.3.9

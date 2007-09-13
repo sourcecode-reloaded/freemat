@@ -22,7 +22,7 @@ WRITE_OUT_ALL_VARIABLES()
 
 FIND_LIBRARY(BLAS_LIBRARY NAMES blas atlas DOC "Location of BLAS or ATLAS library" PATHS /mingw/lib)
 FIND_LIBRARY(LAPACK_LIBRARY NAMES lapack DOC "Location of LAPACK library" PATHS /mingw/lib)
-FIND_LIBRARY(G2C_LIBRARY NAMES g2c DOC "Location of Fortran to C (g2c) library" PATHS /mingw/lib)
+FIND_LIBRARY(G2C_LIBRARY NAMES g2c gfortran DOC "Location of Fortran to C (g2c) library" PATHS /mingw/lib)
 
 FIND_PACKAGE(OpenGL REQUIRED) 
 
@@ -48,6 +48,7 @@ ENDMACRO (QT4_GENERATE_UI)
 
 
 
+###########################################################################################
 
 #Find AVCALL Library
 FIND_LIBRARY(AVCALL_LIBRARY NAMES avcall DOC "Location of the AVCALL library" PATHS /mingw/lib)
