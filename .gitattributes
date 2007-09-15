@@ -3,6 +3,7 @@
 /ChangeLog svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 /INSTALL svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 /NOTES.TXT svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+dependencies/AMD/Doc/AMD_UserGuide.pdf svn_mime_002dtype=application%2Foctet-stream
 images/cam_rotate.png svn_mime_002dtype=application%2Foctet-stream
 images/close.png svn_mime_002dtype=application%2Foctet-stream
 images/copy.png svn_mime_002dtype=application%2Foctet-stream
