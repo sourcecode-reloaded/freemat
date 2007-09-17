@@ -1,4 +1,7 @@
+IF( !WIN32 )
 PROJECT( XP Fortran )
+ENDIF( !WIN32 )
+
 INCLUDE_DIRECTORIES( ${QT_INCLUDE_DIR} ${QT_QTCORE_INCLUDE_DIR} ${QT_QTGUI_INCLUDE_DIR} )
 
 SET(F_FILES algama.f 
@@ -39,6 +42,24 @@ ribesl.f
 rjbesl.f 
 rkbesl.f 
 rybesl.f )
+
+IF( WIN32 AND F2C_PROG )
+	FOREACH( nm ${F_FILES} )
+		GET_FILENAME_COMPONENT(outfile ${it} NAME_WE)
+	
+		ADD_CUSTOM_COMMAND(OUTPUT ${outfile}.c 
+		  COMMAND ${F2C_PROG} ARGS ${F2C_FLAGS} ${nm}
+		  MAIN_DEPENDENCY FN
+		  DEPENDS ${nm}
+		  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		) 
+		MACRO_ADD_FILE_DEPENDENCIES(${nm} ${outfile}.c )
+		SET( C_FILES ${C_FILES} ${outfile}.c )
+	ENDFOREACH( nm ${F_FILES} )
+	SET( F_FILES ${C_FILES} )
+ENDIF( WIN32 AND F2C_PROG )
+
+
 
 ADD_LIBRARY( FN
 FNFun.cpp 
