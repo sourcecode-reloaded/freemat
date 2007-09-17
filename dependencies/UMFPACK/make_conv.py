@@ -31,6 +31,6 @@ for line in lines:
     dep_str += " OBJECT_DEPENDS " + "${CMAKE_CURRENT_SOURCE_DIR}/" + source
     dep_str += " GENERATED 1)\n"
     f.writelines( dep_str )
-    f.writelines( "MACRO_ADD_FILE_DEPENDENCIES( " + output + " " + "${CMAKE_CURRENT_SOURCE_DIR}/" + source + " " +" )\n")
+#    f.writelines( "MACRO_ADD_FILE_DEPENDENCIES( " + output + " " + "${CMAKE_CURRENT_SOURCE_DIR}/" + source + " " +" )\n")
 f.writelines( "ADD_LIBRARY( umfpack \n" + source_files + " )\n" )
 f.close()
