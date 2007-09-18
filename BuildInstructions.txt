@@ -10,24 +10,25 @@ Windows XP / Visual Studio Express / CMake
 
 - Install CMake (version 2.4.7 or later) for Win32. http://www.cmake.org
 - Install f2c
-Download f2c and libf2c sources from http://netlib.sandia.gov/f2c/index.html. Uncompress. 
-Build:
-cd libf2c
-<Path To Visual Studio Express>\VC\vcvarsall.bat
-nmake -f makefile.vc
-copy vcf2c.lib ..
+	Download f2c and libf2c sources from http://netlib.sandia.gov/f2c/index.html. Uncompress. 
+	Build:
+	cd libf2c
+	<Path To Visual Studio Express>\VC\vcvarsall.bat
+	nmake -f makefile.vc
+	copy vcf2c.lib ..
 
-cd ../f2c/src
-nmake -f makefile.vc f2c.exe
-copy f2c.exe ..\..
-copy f2c.h ..\..
+	cd ../f2c/src
+	nmake -f makefile.vc f2c.exe
+	copy f2c.exe ..\..
+	copy f2c.h ..\..
+Add f2c directory to your path.
+
+- Build ffcall
+	cd <FreeMat source dir>\dependencies\ffcall
+	<Path To Visual Studio Express>\VC\vcvarsall.bat
+	nmake -f makefile.msvc
 
 
-
-
-- Install gfortran http://gcc.gnu.org/wiki/GFortranBinariesWindows 
-Note: if you have mingw or cygwin installed you may run into a problem of gfortran using wrong
-ld, collect2, or ar -- you might need to adjust your path.
 
 
 Mac OS X 10.3.9

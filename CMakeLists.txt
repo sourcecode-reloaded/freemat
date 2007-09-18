@@ -1,9 +1,4 @@
-IF(WIN32)
-	PROJECT(FreeMat CXX C)
-ELSE(WIN32)
-	PROJECT(FreeMat CXX Fortran C)
-ENDIF(WIN32)
-
+PROJECT(FreeMat CXX C)
 
 SET( VERSION " svn")
 SET( RESOURCEDIR "" )
@@ -32,8 +27,8 @@ SET(QT_USE_QTNETWORK TRUE)
 SET(QT_USE_QTXML TRUE)
 SET(QT_USE_QTOPENGL TRUE)
 
-#FIND_PACKAGE(Qt4 REQUIRED)
-FIND_PACKAGE(Qt4)
+FIND_PACKAGE(Qt4 REQUIRED)
+#FIND_PACKAGE(Qt4)
 ADD_DEFINITIONS( ${QT_DEFINITIONS} ) 
 
 MACRO (QT4_GENERATE_UI infile outfile )
@@ -52,8 +47,8 @@ FIND_LIBRARY(BLAS_LIBRARY NAMES blas atlas DOC "Location of BLAS or ATLAS librar
 FIND_LIBRARY(LAPACK_LIBRARY NAMES lapack DOC "Location of LAPACK library" PATHS ${PROJECT_BINARY_DIR} /mingw/lib)
 
 #Find AVCALL Library
-FIND_LIBRARY(AVCALL_LIBRARY NAMES avcall DOC "Location of the AVCALL library" PATHS /mingw/lib)
-FIND_PATH(AVCALL_INCLUDE_DIR NAMES avcall.h DOC "Location of avcall.h" PATHS /mingw/include)
+FIND_LIBRARY(AVCALL_LIBRARY NAMES avcall DOC "Location of the AVCALL library" PATHS ${PROJECT_SOURCE_DIR}/dependencies/ffcall/avcall /mingw/lib)
+FIND_PATH(AVCALL_INCLUDE_DIR NAMES avcall.h DOC "Location of avcall.h" PATHS ${PROJECT_SOURCE_DIR}/dependencies/ffcall/avcall /mingw/include)
 IF( AVCALL_LIBRARY AND AVCALL_INCLUDE_DIR ) 
 	ADD_DEFINITIONS( -DHAVE_AVCALL )
 	INCLUDE_DIRECTORIES( ${AVCALL_INCLUDE_DIR} )
@@ -84,11 +79,6 @@ ENDIF( FFTWF_LIBRARY AND FFTW_INCLUDE_DIR )
 #        INCLUDE_DIRECTORIES( ${AMD_INCLUDE_DIR} )
 #ENDIF( UMFPACK_LIBRARY AND UMFPACK_INCLUDE_DIR AND AMD_LIBRARY AND AMD_INCLUDE_DIR )	
 
-FIND_LIBRARY(ARPACK_LIBRARY NAMES arpack DOC "Location of the ARPACK library" PATHS /mingw/lib)
-IF( ARPACK_LIBRARY ) 
-  ADD_DEFINITIONS( -DHAVE_ARPACK )
-ENDIF( ARPACK_LIBRARY )	
-
 ##############################################################################
 #Extra libraries
 IF(!WIN32)
@@ -104,20 +94,41 @@ ENDIF(!WIN32)
 ###########################################################################
 # F2C setup
 IF( WIN32 )
-	FIND_PROGRAM( F2C_PROG NAMES f2c.exe DOC "Fortran to C translator" )
-	FIND_LIBRARY( F2C_LIBRARY NAMES vcf2c f2c DOC "Fortran to C Library" )
-	FIND_PATH( F2C_INCLUDE_DIR f2c.h DOC "Path to f2c.h" )
-	SET( F2C_FLAGS STRING "-g -c" INTERNAL )
+	FIND_PROGRAM( F2C_PROG NAMES f2c.exe f2c PATHS ${PROJECT_SOURCE_DIR}/dependencies/f2c DOC "Fortran to C translator" )
+	FIND_LIBRARY( F2C_LIBRARY NAMES vcf2c f2c PATHS ${PROJECT_SOURCE_DIR}/dependencies/f2c  DOC "Fortran to C Library" )
+	FIND_PATH( F2C_INCLUDE_DIR f2c.h PATHS ${PROJECT_SOURCE_DIR}/dependencies/f2c  DOC "Path to f2c.h" )
+	INCLUDE_DIRECTORIES(${F2C_INCLUDE_DIR}) 
+	#SET( F2C_FLAGS STRING " -g -c " INTERNAL )
 ENDIF( WIN32 )
+
+###########################################################################
+# Macro for f2c conversion
+MACRO( CONVERT_F2C dep C_FILES )
+	IF( WIN32 AND F2C_PROG )
+		FOREACH( nm ${ARGN} )
+			GET_FILENAME_COMPONENT(outfile ${nm} NAME_WE)
+			ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${outfile}.c 
+			  COMMAND ${F2C_PROG} 
+			  ARGS -d${CMAKE_CURRENT_BINARY_DIR} -g -c ${nm}
+			  #MAIN_DEPENDENCY ${dep}
+			  DEPENDS ${nm}
+			  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+			  VERBATIM
+			) 
+			MACRO_ADD_FILE_DEPENDENCIES(${nm} ${CMAKE_CURRENT_BINARY_DIR}/${outfile}.c )
+			SET( ${C_FILES} ${${C_FILES}} ${CMAKE_CURRENT_BINARY_DIR}/${outfile}.c )
+		ENDFOREACH( nm ${ARGN} )
+	ENDIF( WIN32 AND F2C_PROG )
+ENDMACRO( CONVERT_F2C dep C_FILES )
 
 INCLUDE_DIRECTORIES( libs/libFreeMat libs/libGraphics 
 libs/libMex libs/libXP libs/libCore libs/libFN  ${QT_LIBRARIES} src)   
 
 ADD_SUBDIRECTORY( dependencies )
-#ADD_SUBDIRECTORY( libs )
-#ADD_SUBDIRECTORY( src )
+ADD_SUBDIRECTORY( libs )
+ADD_SUBDIRECTORY( src )
 
-#ADD_SUBDIRECTORY( images )
-#ADD_SUBDIRECTORY( tools )
+##ADD_SUBDIRECTORY( images )
+##ADD_SUBDIRECTORY( tools )
 
 #TODO Handle gfortran vs g77 issue: libgfortran vs libg2c
