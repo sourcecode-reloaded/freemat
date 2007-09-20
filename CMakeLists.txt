@@ -3,6 +3,7 @@ PROJECT(FreeMat CXX C)
 SET( VERSION " svn")
 SET( RESOURCEDIR "" )
 SET( CMAKE_VERBOSE_MAKEFILE TRUE )
+SET( LOCAL_PATH ${PROJECT_SOURCE_DIR}/dependencies/bin ${PROJECT_BINARY_DIR} /mingw/lib INTERNAL )
 
 ADD_DEFINITIONS( -D'VERSION=\"${VERSION}\"' -D'RESOURCEDIR=\"${RESOURCEDIR}\"')
 
@@ -43,8 +44,9 @@ MACRO (QT4_GENERATE_UI infile outfile )
 ENDMACRO (QT4_GENERATE_UI)
 
 ###########################################################################################
-FIND_LIBRARY(BLAS_LIBRARY NAMES blas atlas DOC "Location of BLAS or ATLAS library" PATHS ${PROJECT_BINARY_DIR} /mingw/lib)
-FIND_LIBRARY(LAPACK_LIBRARY NAMES lapack DOC "Location of LAPACK library" PATHS ${PROJECT_BINARY_DIR} /mingw/lib)
+FIND_LIBRARY(BLAS_LIBRARY NAMES blas atlas DOC "Location of BLAS or ATLAS library" PATHS  ${LOCAL_PATH} )
+
+FIND_LIBRARY(LAPACK_LIBRARY NAMES lapack clapack DOC "Location of LAPACK library" PATHS ${LOCAL_PATH} )
 
 #Find AVCALL Library
 FIND_LIBRARY(AVCALL_LIBRARY NAMES avcall DOC "Location of the AVCALL library" PATHS ${PROJECT_SOURCE_DIR}/dependencies/ffcall/avcall /mingw/lib)
@@ -55,18 +57,24 @@ IF( AVCALL_LIBRARY AND AVCALL_INCLUDE_DIR )
 ENDIF( AVCALL_LIBRARY AND AVCALL_INCLUDE_DIR )	
 
 #Find FFTW and FFTWF (single precision)
-FIND_LIBRARY(FFTW_LIBRARY NAMES fftw3 DOC "Location of the FFTW library" PATHS ${PROJECT_BINARY_DIR} /mingw/lib)
-FIND_PATH(FFTW_INCLUDE_DIR NAMES fftw3.h DOC "Location of fftw3.h" PATHS /mingw/include)
+FIND_LIBRARY(FFTW_LIBRARY NAMES fftw3 fftw3-3 libfftw3-3 DOC "Location of the FFTW library" PATHS ${LOCAL_PATH} )
+FIND_PATH(FFTW_INCLUDE_DIR NAMES fftw3.h DOC "Location of fftw3.h" PATHS ${LOCAL_PATH} /mingw/include)
 IF( FFTW_LIBRARY AND FFTW_INCLUDE_DIR ) 
 	ADD_DEFINITIONS( -DHAVE_FFTW )
 	INCLUDE_DIRECTORIES( ${FFTW_INCLUDE_DIR} )
 ENDIF( FFTW_LIBRARY AND FFTW_INCLUDE_DIR )	
 
-FIND_LIBRARY(FFTWF_LIBRARY NAMES fftw3f DOC "Location of the FFTW (single precision) library" PATHS ${PROJECT_BINARY_DIR} /mingw/lib )
+FIND_LIBRARY(FFTWF_LIBRARY NAMES fftw3f fftw3f-3 libfftw3f-3 DOC "Location of the FFTW (single precision) library" PATHS ${LOCAL_PATH} )
 IF( FFTWF_LIBRARY AND FFTW_INCLUDE_DIR ) 
 	ADD_DEFINITIONS( -DHAVE_FFTWF )
 	INCLUDE_DIRECTORIES( ${FFTW_INCLUDE_DIR} )
 ENDIF( FFTWF_LIBRARY AND FFTW_INCLUDE_DIR )	
+
+FIND_LIBRARY(ZLIB_LIBRARY NAMES zlib zlib1 DOC "Location of ZLIB library" PATHS ${LOCAL_PATH})
+FIND_PATH(ZLIB_INCLUDE_DIR NAMES zlib.h DOC "Location of zlib.h" PATHS ${LOCAL_PATH})
+IF( ZLIB_LIBRARY AND ZLIB_INCLUDE_DIR ) 
+	INCLUDE_DIRECTORIES( ${ZLIB_INCLUDE_DIR} )
+ENDIF( ZLIB_LIBRARY AND ZLIB_INCLUDE_DIR )	
 
 #Find UMFPACK
 #FIND_LIBRARY(UMFPACK_LIBRARY NAMES umfpack DOC "Location of the UMFPACK library" PATHS /mingw/lib)
@@ -94,9 +102,9 @@ ENDIF(!WIN32)
 ###########################################################################
 # F2C setup
 IF( WIN32 )
-	FIND_PROGRAM( F2C_PROG NAMES f2c.exe f2c PATHS ${PROJECT_SOURCE_DIR}/dependencies/f2c DOC "Fortran to C translator" )
-	FIND_LIBRARY( F2C_LIBRARY NAMES vcf2c f2c PATHS ${PROJECT_SOURCE_DIR}/dependencies/f2c  DOC "Fortran to C Library" )
-	FIND_PATH( F2C_INCLUDE_DIR f2c.h PATHS ${PROJECT_SOURCE_DIR}/dependencies/f2c  DOC "Path to f2c.h" )
+	FIND_PROGRAM( F2C_PROG NAMES f2c.exe f2c PATHS ${LOCAL_PATH} DOC "Fortran to C translator" )
+	FIND_LIBRARY( F2C_LIBRARY NAMES vcf2c f2c PATHS ${LOCAL_PATH} DOC "Fortran to C Library" )
+	FIND_PATH( F2C_INCLUDE_DIR f2c.h PATHS ${LOCAL_PATH} DOC "Path to f2c.h" )
 	INCLUDE_DIRECTORIES(${F2C_INCLUDE_DIR}) 
 	#SET( F2C_FLAGS STRING " -g -c " INTERNAL )
 ENDIF( WIN32 )

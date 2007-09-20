@@ -28,7 +28,21 @@ Add f2c directory to your path.
 	<Path To Visual Studio Express>\VC\vcvarsall.bat
 	nmake -f makefile.msvc
 
+- Download Clapack for Win32. http://www.netlib.org/clapack/ 
+(direct link http://www.netlib.org/clapack/CLAPACK3-Windows.zip)
+	Follow instructions in MSWin-Notes.txt to build clapack and blas.
+	Copy clapack.lib and blas.lib into <CMake source>\dependencies\bin or any
+	directory in your PATH environment.
 
+- Unpack fftw-3.1.2-dll.zip (URL ?) into <CMake source>\dependencies\bin or any
+	directory in your PATH environment. Follow directions in README-Windows file to 
+	create import libraries.
+
+- Download and build zlib-1.2.3. (URL ?)
+	Build using VC project file from zlib\projects\visualc6. Set active configuration to 
+	DLL release.
+	Copy zlib1.{lib, dll} files into <CMake source>\dependencies\bin.
+	Copy zlib.h from zlib directory into <CMake source>\dependencies\bin.
 
 
 Mac OS X 10.3.9

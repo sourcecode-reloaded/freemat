@@ -3,7 +3,7 @@ INCLUDE_DIRECTORIES( ${QT_INCLUDE_DIR} ${QT_QTCORE_INCLUDE_DIR} ${QT_QTGUI_INCLU
 
 QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/Interpreter.hpp ${CMAKE_CURRENT_SOURCE_DIR}/Intrepreter.moc.cpp)
  
-ADD_LIBRARY( FreeMat 
+ADD_LIBRARY( FreeMatlib 
 Array.cpp 
 Interpreter.cpp 
 Context.cpp 

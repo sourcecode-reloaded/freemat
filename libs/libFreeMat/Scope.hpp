@@ -24,6 +24,7 @@
  * A Scope is a combination of a variable hashtable and a function hashtable.
  */
 #include <string>
+#include <algorithm>
 #include <QMutex>
 
 #include "Array.hpp"
