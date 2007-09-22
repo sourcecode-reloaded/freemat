@@ -27,13 +27,13 @@
 #include "Serialize.hpp"
 #include <math.h>
 #include "Types.hpp"
-#include <algorithm>
 #include "Sparse.hpp"
 #include "Math.hpp"
 #include "LAPACK.hpp"
 #include "MemPtr.hpp"
 #include <QtCore>
-
+#include <algorithm>
+#include <time.h>
 
 ArrayVector HandleEmpty(Array arg) {
   ArrayVector retArray;

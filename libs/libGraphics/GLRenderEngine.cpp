@@ -21,6 +21,7 @@
 #include <qpainter.h>
 #include <QtOpenGL>
 #include <math.h>
+#include "IEEEFP.hpp"
 
 GLRenderEngine::GLRenderEngine(QGLWidget *widget, double x1, double y1,
 			       double width, double height) {
@@ -303,7 +304,7 @@ void GLRenderEngine::putText(double x, double y, std::string txt,
   int height = sze.height();
   // We now now the width and height.  From this,
   // we can compute the radial length
-  int radlength = (int) sqrt(width*width+height*height)*2;
+  int radlength = static_cast<int>(sqrt(static_cast<float>(width*width+height*height))*2);
   // We need a bitmap surface that is 2X this size.
   QImage img(radlength,radlength,QImage::Format_RGB32);
   QPainter pnt(&img);

@@ -20,7 +20,10 @@
 #include "Serialize.hpp"
 #include "Terminal.hpp"
 #include <errno.h>
+#if !defined(_MSC_VER ) 
 #include <unistd.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -105,6 +108,8 @@ const char* Terminal::LookupControlString(const char *name) {
     return NULL;
   else
     return strdup(value);
+#else
+	return NULL;
 #endif
 }
 

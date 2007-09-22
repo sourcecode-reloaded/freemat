@@ -133,7 +133,9 @@ MFunctionDef::MFunctionDef() {
   timeStamp = 0;
   localFunction = false;
   pcodeFunction = false;
+#if !defined(_MSC_VER)
 #warning - check pcode
+#endif
   nestedFunction = false;
   capturedFunction = false;
 }
@@ -181,8 +183,9 @@ void MFunctionDef::printMe(Interpreter*eval) {
   code.print();
 }
 
-
+#if !defined(_MSC_VER)
 #warning - This design causes an unneccesary copy - should use readonly pass first
+#endif
 void CaptureFunctionPointer(FuncPtr &val, Interpreter *walker, 
 			    MFunctionDef *parent, ScopePtr &workspace) {
   if (val->type() == FM_M_FUNCTION) {

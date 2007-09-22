@@ -21,7 +21,11 @@
 #include <qapplication.h>
 #include <qeventloop.h>
 #include <stdio.h>
+#if !defined(_MSC_VER ) 
 #include <unistd.h>
+#else
+#include <io.h>
+#endif
 
 DumbTerminal::DumbTerminal() {
 }
@@ -64,6 +68,10 @@ void DumbTerminal::OutputRawString(string txt) {
 
 void DumbTerminal::DoRead() {
   char c;
+#if !defined(_MSC_VER ) 
   while (read(STDIN_FILENO, &c, 1) == 1)
+#else
+  while (_read(0, &c, 1) == 1)
+#endif
     emit OnChar(c);
 }

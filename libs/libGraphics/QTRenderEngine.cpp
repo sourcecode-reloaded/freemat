@@ -20,6 +20,7 @@
 #include <math.h>
 #include <algorithm>
 #include <QDebug>
+#include "IEEEFP.hpp"
 
 bool operator<(const quad3d& a, const quad3d& b) {
   return (a.meanz < b.meanz);

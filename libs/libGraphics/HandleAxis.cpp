@@ -28,6 +28,7 @@
 #include "HandleCommands.hpp"
 #include <qgl.h>
 #include <QList>
+#include "IEEEFP.hpp"
 
 QList<double> GetTicksOuter(double amin, double amax, bool isLog, int requestedCounts) {
   double arange = amax - amin;

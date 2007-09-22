@@ -19,7 +19,9 @@
 #include <QDir>
 #include <QtGui>
 #include <QDebug>
+#if !defined(_MSC_VER ) 
 #include <unistd.h>
+#endif
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>

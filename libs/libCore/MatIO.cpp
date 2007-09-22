@@ -7,6 +7,7 @@
 #include "Array.hpp"
 #include "Interpreter.hpp"
 #include "Utils.hpp"
+#include <time.h>
 #include <zlib.h>
 
 // Things to still look at:

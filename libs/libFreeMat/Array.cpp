@@ -24,6 +24,12 @@
 #include "IEEEFP.hpp"
 #include "Interpreter.hpp"
 #include "Sparse.hpp"
+#if defined(_MSC_VER ) 
+	#include <float.h>
+	#define nextafter _nextafter
+	//HACK: this might not be safe
+	#define nextafterf _nextafter
+#endif 
 #include <math.h>
 #include <stdio.h>
 #include <set>

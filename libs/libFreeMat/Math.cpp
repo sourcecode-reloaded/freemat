@@ -27,6 +27,7 @@
 #include "Malloc.hpp"
 #include "Sparse.hpp"
 #include <math.h>
+#include "IEEEFP.hpp"
 
 // Sparse ops: +, -, neg, *
 

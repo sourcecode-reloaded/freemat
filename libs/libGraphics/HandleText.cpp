@@ -22,6 +22,7 @@
 #include "HandleProperty.hpp"
 #include "HandleList.hpp"
 #include <math.h>
+#include "IEEEFP.hpp"
 
 HandleText::HandleText() {
   ConstructProperties();

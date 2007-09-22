@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "Exception.hpp"
+#include <algorithm>
 
 extern string fm_reserved[];
 extern int fm_reserved_count;

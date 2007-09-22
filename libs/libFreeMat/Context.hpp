@@ -66,6 +66,7 @@ public:
     m_ptr = ptr;
     m_global = false;
     m_scope = NULL;
+	return *this;
   }
   inline ArrayReference& operator=(const ArrayReference& copy) {
     if (m_global)

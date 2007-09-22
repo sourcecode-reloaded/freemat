@@ -1,11 +1,16 @@
 PROJECT(FreeMat CXX C)
 
-SET( VERSION " svn")
+SET( VERSION "svn")
 SET( RESOURCEDIR "" )
 SET( CMAKE_VERBOSE_MAKEFILE TRUE )
 SET( LOCAL_PATH ${PROJECT_SOURCE_DIR}/dependencies/bin ${PROJECT_BINARY_DIR} /mingw/lib INTERNAL )
 
-ADD_DEFINITIONS( -D'VERSION=\"${VERSION}\"' -D'RESOURCEDIR=\"${RESOURCEDIR}\"')
+IF( MSVC )
+	ADD_DEFINITIONS( /Dsnprintf=_snprintf /DNOMINMAX /DVERSION="\\"${VERSION}"\\" /DRESOURCEDIR="\\"${RESOURCEDIR}"\\")
+ELSE( MSVC )
+	ADD_DEFINITIONS( -D'VERSION=\"${VERSION}\"' -D'RESOURCEDIR=\"${RESOURCEDIR}\"')
+ENDIF( MSVC )
+
 
 ######## CMake debugging macro
 MACRO(WRITE_OUT_ALL_VARIABLES)
@@ -44,9 +49,9 @@ MACRO (QT4_GENERATE_UI infile outfile )
 ENDMACRO (QT4_GENERATE_UI)
 
 ###########################################################################################
-FIND_LIBRARY(BLAS_LIBRARY NAMES blas atlas DOC "Location of BLAS or ATLAS library" PATHS  ${LOCAL_PATH} )
-
+FIND_LIBRARY(BLAS_LIBRARY NAMES blas DOC "Location of BLAS or ATLAS library" PATHS  ${LOCAL_PATH} )
 FIND_LIBRARY(LAPACK_LIBRARY NAMES lapack clapack DOC "Location of LAPACK library" PATHS ${LOCAL_PATH} )
+
 
 #Find AVCALL Library
 FIND_LIBRARY(AVCALL_LIBRARY NAMES avcall DOC "Location of the AVCALL library" PATHS ${PROJECT_SOURCE_DIR}/dependencies/ffcall/avcall /mingw/lib)
@@ -93,6 +98,10 @@ IF(!WIN32)
 	FIND_LIBRARY(NCURSES_LIBRARY ncurses DOC "Location of the ncurses library." PATH /mingw/lib)
 	FIND_LIBRARY(SOCKS_LIBRARY NAMES socks wsock32 DOC "Location of the winsock library." PATH /mingw/lib)
 	SET(EXTRA_LIBRARIES ${NCURSES_LIBRARY} ${SOCKS_LIBRARY} INTERNAL)  
+ELSE(!WIN32)
+	FIND_LIBRARY(I77_LIBRARY NAMES libI77 DOC "Location of f77 library" PATHS ${LOCAL_PATH} )
+	FIND_LIBRARY(F77_LIBRARY NAMES libF77 DOC "Location of f77 library" PATHS ${LOCAL_PATH} )
+	SET(EXTRA_LIBRARIES ${F77_LIBRARY} ${I77_LIBRARY})  
 ENDIF(!WIN32)
 
 #IF( WIN32 )

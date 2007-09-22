@@ -180,13 +180,13 @@ void ComputeScaleFactor(const T* array, int count, ArrayFormatInfo& format) {
   }
   if (!finiteElementFound) return;
   if (max_amplitude >= 100)
-    format.scalefact = pow(10.0,floor(log10(max_amplitude)));
+    format.scalefact = pow(10.0,static_cast<double>(floor(log10(max_amplitude))));
   else if (max_amplitude <= -100)
-    format.scalefact = pow(10.0,floor(log10(-max_amplitude)));
+    format.scalefact = pow(10.0,static_cast<double>(floor(log10(-max_amplitude))));
   else if ((max_amplitude <= .1) && (max_amplitude>0))
-    format.scalefact = pow(10.0,floor(log10(max_amplitude)));
+    format.scalefact = pow(10.0,static_cast<double>(floor(log10(max_amplitude))));
   else if ((max_amplitude >= -.1) && (max_amplitude<0))
-    format.scalefact = pow(10.0,floor(log10(-max_amplitude)));
+    format.scalefact = pow(10.0,static_cast<double>(floor(log10(-max_amplitude))));
   else
     format.scalefact = 1.0;
 }

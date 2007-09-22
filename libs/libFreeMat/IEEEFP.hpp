@@ -36,4 +36,10 @@ void ToHexString(double t, char *ptr);
 #define M_PI 3.141592653589793
 #endif
 
+#if defined(_MSC_VER )
+	double rint (double x);
+	double log1p(double x);
+	double expm1 (double x);
+#endif
+
 #endif

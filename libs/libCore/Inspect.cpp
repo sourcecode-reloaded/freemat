@@ -198,6 +198,11 @@ ArrayVector PathToolFunction(int nargout, const ArrayVector& arg, Interpreter* e
   return ArrayVector();
 }
 
+//BUG: Doesn't work for the full range of hex2dec. Rewrite hex2dec in matlab!
+#if defined(_MSC_VER)
+	#define strtoll strtol
+#endif
+
 //convert the supplied string to a decimal integer
 static double hex2dec_helper (string t) {
   return (double) strtoll(t.c_str(),NULL,16);

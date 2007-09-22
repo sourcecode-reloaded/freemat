@@ -26,6 +26,7 @@
 #include "HandleCommands.hpp"
 #include <QtGui>
 #include <math.h>
+#include "IEEEFP.hpp"
 
 class BaseFigureQt : public QWidget {
   HandleFigure *hfig;
