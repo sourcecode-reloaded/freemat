@@ -13,6 +13,8 @@ Windows XP / Visual Studio Express / CMake
 	Download f2c and libf2c sources from http://netlib.sandia.gov/f2c/index.html. Uncompress. 
 	Build:
 	cd libf2c
+	in file fio.h commment out line "extern int isatty(int);"
+	in file makefile.vc add -MD flag to CFLAGS variable.
 	<Path To Visual Studio Express>\VC\vcvarsall.bat
 	nmake -f makefile.vc
 	copy vcf2c.lib ..
@@ -26,7 +28,9 @@ Add f2c directory to your path.
 - Build ffcall
 	cd <FreeMat source dir>\dependencies\ffcall
 	<Path To Visual Studio Express>\VC\vcvarsall.bat
-	nmake -f makefile.msvc
+	nmake MFLAGS=-MD -f makefile.msvc
+	copy avcall\avcall.lib ..\bin
+	copy avcall\avcall.h ..\bin
 
 - Download Clapack for Win32. http://www.netlib.org/clapack/ 
 (direct link http://www.netlib.org/clapack/CLAPACK3-Windows.zip)
@@ -44,6 +48,8 @@ Add f2c directory to your path.
 	Copy zlib1.{lib, dll} files into <CMake source>\dependencies\bin.
 	Copy zlib.h from zlib directory into <CMake source>\dependencies\bin.
 
+Run CMake 
+	SOCKS_LIBRARY <Path To Visual Studio Express>\VC\PlatformSDK\Lib\WS2_32.lib
 
 Mac OS X 10.3.9
 

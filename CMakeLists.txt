@@ -49,13 +49,14 @@ MACRO (QT4_GENERATE_UI infile outfile )
 ENDMACRO (QT4_GENERATE_UI)
 
 ###########################################################################################
-FIND_LIBRARY(BLAS_LIBRARY NAMES blas DOC "Location of BLAS or ATLAS library" PATHS  ${LOCAL_PATH} )
-FIND_LIBRARY(LAPACK_LIBRARY NAMES lapack clapack DOC "Location of LAPACK library" PATHS ${LOCAL_PATH} )
-
+IF( !MSVC )
+	FIND_LIBRARY(BLAS_LIBRARY NAMES blas atlas DOC "Location of BLAS or ATLAS library" PATHS  ${LOCAL_PATH} )
+	FIND_LIBRARY(LAPACK_LIBRARY NAMES lapack clapack DOC "Location of LAPACK library" PATHS ${LOCAL_PATH} )
+ENDIF( !MSVC )
 
 #Find AVCALL Library
-FIND_LIBRARY(AVCALL_LIBRARY NAMES avcall DOC "Location of the AVCALL library" PATHS ${PROJECT_SOURCE_DIR}/dependencies/ffcall/avcall /mingw/lib)
-FIND_PATH(AVCALL_INCLUDE_DIR NAMES avcall.h DOC "Location of avcall.h" PATHS ${PROJECT_SOURCE_DIR}/dependencies/ffcall/avcall /mingw/include)
+FIND_LIBRARY(AVCALL_LIBRARY NAMES avcall DOC "Location of the AVCALL library" PATHS ${LOCAL_PATH})
+FIND_PATH(AVCALL_INCLUDE_DIR NAMES avcall.h DOC "Location of avcall.h" PATHS ${LOCAL_PATH} /mingw/include)
 IF( AVCALL_LIBRARY AND AVCALL_INCLUDE_DIR ) 
 	ADD_DEFINITIONS( -DHAVE_AVCALL )
 	INCLUDE_DIRECTORIES( ${AVCALL_INCLUDE_DIR} )
@@ -94,15 +95,17 @@ ENDIF( ZLIB_LIBRARY AND ZLIB_INCLUDE_DIR )
 
 ##############################################################################
 #Extra libraries
-IF(!WIN32)
+IF(!MSVC)
 	FIND_LIBRARY(NCURSES_LIBRARY ncurses DOC "Location of the ncurses library." PATH /mingw/lib)
 	FIND_LIBRARY(SOCKS_LIBRARY NAMES socks wsock32 DOC "Location of the winsock library." PATH /mingw/lib)
 	SET(EXTRA_LIBRARIES ${NCURSES_LIBRARY} ${SOCKS_LIBRARY} INTERNAL)  
-ELSE(!WIN32)
-	FIND_LIBRARY(I77_LIBRARY NAMES libI77 DOC "Location of f77 library" PATHS ${LOCAL_PATH} )
-	FIND_LIBRARY(F77_LIBRARY NAMES libF77 DOC "Location of f77 library" PATHS ${LOCAL_PATH} )
-	SET(EXTRA_LIBRARIES ${F77_LIBRARY} ${I77_LIBRARY})  
-ENDIF(!WIN32)
+ELSE(!MSVC)
+#	FIND_LIBRARY(I77_LIBRARY NAMES libI77 DOC "Location of f77 library" PATHS ${LOCAL_PATH} )
+#	FIND_LIBRARY(F77_LIBRARY NAMES libF77 DOC "Location of f77 library" PATHS ${LOCAL_PATH} )
+#	SET(EXTRA_LIBRARIES ${F77_LIBRARY} ${I77_LIBRARY})  
+	FIND_LIBRARY(SOCKS_LIBRARY NAMES socks wsock32 ws2_32 DOC "Location of the winsock library." PATH /mingw/lib)
+	SET(EXTRA_LIBRARIES ${SOCKS_LIBRARY} )  
+ENDIF(!MSVC)
 
 #IF( WIN32 )
 #	FIND_LIBRARY(G2C_LIBRARY NAMES g2c gfortran DOC "Location of Fortran to C (g2c) library" PATHS /mingw/lib)
@@ -110,18 +113,18 @@ ENDIF(!WIN32)
 
 ###########################################################################
 # F2C setup
-IF( WIN32 )
+IF( MSVC )
 	FIND_PROGRAM( F2C_PROG NAMES f2c.exe f2c PATHS ${LOCAL_PATH} DOC "Fortran to C translator" )
 	FIND_LIBRARY( F2C_LIBRARY NAMES vcf2c f2c PATHS ${LOCAL_PATH} DOC "Fortran to C Library" )
 	FIND_PATH( F2C_INCLUDE_DIR f2c.h PATHS ${LOCAL_PATH} DOC "Path to f2c.h" )
 	INCLUDE_DIRECTORIES(${F2C_INCLUDE_DIR}) 
 	#SET( F2C_FLAGS STRING " -g -c " INTERNAL )
-ENDIF( WIN32 )
+ENDIF( MSVC )
 
 ###########################################################################
 # Macro for f2c conversion
 MACRO( CONVERT_F2C dep C_FILES )
-	IF( WIN32 AND F2C_PROG )
+	IF( MSVC AND F2C_PROG )
 		FOREACH( nm ${ARGN} )
 			GET_FILENAME_COMPONENT(outfile ${nm} NAME_WE)
 			ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${outfile}.c 
@@ -135,7 +138,7 @@ MACRO( CONVERT_F2C dep C_FILES )
 			MACRO_ADD_FILE_DEPENDENCIES(${nm} ${CMAKE_CURRENT_BINARY_DIR}/${outfile}.c )
 			SET( ${C_FILES} ${${C_FILES}} ${CMAKE_CURRENT_BINARY_DIR}/${outfile}.c )
 		ENDFOREACH( nm ${ARGN} )
-	ENDIF( WIN32 AND F2C_PROG )
+	ENDIF( MSVC AND F2C_PROG )
 ENDMACRO( CONVERT_F2C dep C_FILES )
 
 INCLUDE_DIRECTORIES( libs/libFreeMat libs/libGraphics 

@@ -24,6 +24,10 @@ Terminal.cpp
 ${FreeMat_qrc}
 freemat.rc )
 
+#IF( MSVC )
+#	SET( LAPACK_LIBRARY ${lapack} )
+#ENDIF( MSVC )
+
 TARGET_LINK_LIBRARIES( Freemat 
 Core 
 FN 
@@ -37,6 +41,8 @@ ${FFTWF_LIBRARY}
 arpack
 umfpack
 amd
+lapack
+blas
 ${LAPACK_LIBRARY}
 ${BLAS_LIBRARY}
 ${ZLIB_LIBRARY}

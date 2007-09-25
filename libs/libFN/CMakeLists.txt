@@ -1,6 +1,6 @@
-IF( !WIN32 )
+IF( !MSVC )
 PROJECT( XP Fortran )
-ENDIF( !WIN32 )
+ENDIF( !MSVC )
 
 INCLUDE_DIRECTORIES( ${QT_INCLUDE_DIR} ${QT_QTCORE_INCLUDE_DIR} ${QT_QTGUI_INCLUDE_DIR} )
 
@@ -41,16 +41,18 @@ qrsolv.f
 ribesl.f 
 rjbesl.f 
 rkbesl.f 
-rybesl.f )
+rybesl.f 
+)
 
 CONVERT_F2C( FN c_src ${F_FILES} )
+SET(F_FILES ${c_src} )
 
 ADD_LIBRARY( FN
 FNFun.cpp 
 Interp1D.cpp 
 LoadFN.cpp 
 OptFun.cpp 
-${c_src}
+${F_FILES}
 )
 #SET_SOURCE_FILES_PROPERTIES( ${F_FILES} PROPERTIES HEADER_FILE_ONLY TRUE )
 SET_TARGET_PROPERTIES( FN PROPERTIES LINKER_LANGUAGE CXX )
