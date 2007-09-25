@@ -78,7 +78,7 @@ avcall.obj : avcall-$(CPU).obj
 
 avcall-i386.obj : $(srcdir)/avcall-i386-msvc.c
 	$(RM) avcall-i386.obj
-	$(CC) -c $(srcdir)/avcall-i386-msvc.c /Foavcall-i386.obj
+	$(CC) $(CFLAGS) -c $(srcdir)/avcall-i386-msvc.c /Foavcall-i386.obj
 
 structcpy.obj : $(srcdir)/structcpy.c
 	$(CC) $(CFLAGS) -c $(srcdir)/structcpy.c
