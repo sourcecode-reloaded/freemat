@@ -167,47 +167,49 @@ double log1p(double x){
 	const double limit = 0.29;
 	const double one = 1.0;
 
-__asm{
-/* BASED ON log1p.S from mingw
- * Written by J.T. Conklin <jtc@netbsd.org>.
- * Public domain.
- * Removed header file dependency for use in libmingwex.a by
- *   Danny Smith <dannysmith@users.sourceforge.net>
- */
+	__asm{
+	/* BASED ON log1p.S from mingw
+	 * Written by J.T. Conklin <jtc@netbsd.org>.
+	 * Public domain.
+	 * Removed header file dependency for use in libmingwex.a by
+	 *   Danny Smith <dannysmith@users.sourceforge.net>
+	 */
 
-        /* The fyl2xp1 can only be used for values in
-           -1 + sqrt(2) / 2 <= x <= 1 - sqrt(2) / 2
-           0.29 is a safe value.
-         */
-_log1p:
-        fldln2
-        fld     x //  [esp+4]
-        fxam
-        fnstsw	ax
-        fld        st
-        sahf
-        jc        l3        // in case x is NaN or ±Inf
+			/* The fyl2xp1 can only be used for values in
+			   -1 + sqrt(2) / 2 <= x <= 1 - sqrt(2) / 2
+			   0.29 is a safe value.
+			 */
+			fldln2
+			fld     x //  [esp+4]
+			fxam
+			fnstsw	ax
+			fld        st
+			sahf
+			jc        l3        // in case x is NaN or ±Inf
 
-l4:      
-		fabs
-        fcomp        limit
-        fnstsw	ax
-        sahf
-        jc        l2
-        fadd        one
-        fyl2x
-        ret
+	l4:      
+			fabs
+			fcomp        limit
+			fnstsw	ax
+			sahf
+			jc        l2
+			fadd        one
+			fyl2x
+			fstp x
+			jmp l5
 
-l2:      
-		fyl2xp1
-        ret
+	l2:      
+			fyl2xp1
+			fstp x
+			jmp l5
 
-l3:      
-		jp        l4        // in case x is ±Inf
-        fstp        st(1)
-        fstp        st(1)
-        ret
-};
+	l3:      
+			jp        l4        // in case x is ±Inf
+			fstp        st(1)
+			fstp        st(1)
+	l5:
+	};
+return x;
 }
 
 const long double LOGE2L  = 6.9314718055994530941723E-1L;
