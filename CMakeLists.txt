@@ -1,4 +1,23 @@
-PROJECT(FreeMat CXX C)
+######## CMake debugging macro
+MACRO(WRITE_OUT_ALL_VARIABLES)
+SET(DstFile ${CMAKE_CURRENT_BINARY_DIR}/AllVariables.txt)
+    
+#MESSAGE("DEBUG -- Writing out all variables to file ${DstFile}")
+    
+FILE(WRITE ${DstFile} "")
+GET_CMAKE_PROPERTY(VARS VARIABLES)
+FOREACH(var ${VARS})
+FILE(APPEND ${DstFile} "${var} \"${${var}}\"\n")
+ENDFOREACH(var ${VARS})
+ENDMACRO(WRITE_OUT_ALL_VARIABLES)
+WRITE_OUT_ALL_VARIABLES()
+### End Debugging tools
+
+IF( CMAKE_GENERATOR MATCHES "Visual Studio" )
+  PROJECT(FreeMat CXX C )
+ELSE( CMAKE_GENERATOR MATCHES "Visual Studio" )
+  PROJECT(FreeMat CXX C Fortran)
+ENDIF( CMAKE_GENERATOR MATCHES "Visual Studio" )
 
 SET( VERSION "svn")
 SET( RESOURCEDIR "" )
@@ -12,20 +31,6 @@ ELSE( MSVC )
 ENDIF( MSVC )
 
 
-######## CMake debugging macro
-MACRO(WRITE_OUT_ALL_VARIABLES)
-    SET(DstFile ${CMAKE_CURRENT_BINARY_DIR}/AllVariables.txt)
-    
-    #MESSAGE("DEBUG -- Writing out all variables to file ${DstFile}")
-    
-    FILE(WRITE ${DstFile} "")
-    GET_CMAKE_PROPERTY(VARS VARIABLES)
-    FOREACH(var ${VARS})
-        FILE(APPEND ${DstFile} "${var} \"${${var}}\"\n")
-    ENDFOREACH(var ${VARS})
-ENDMACRO(WRITE_OUT_ALL_VARIABLES)
-WRITE_OUT_ALL_VARIABLES()
-### End Debugging tools
 
 FIND_PACKAGE(OpenGL REQUIRED) 
 
@@ -76,7 +81,7 @@ IF( FFTWF_LIBRARY AND FFTW_INCLUDE_DIR )
 	INCLUDE_DIRECTORIES( ${FFTW_INCLUDE_DIR} )
 ENDIF( FFTWF_LIBRARY AND FFTW_INCLUDE_DIR )	
 
-FIND_LIBRARY(ZLIB_LIBRARY NAMES zlib zlib1 DOC "Location of ZLIB library" PATHS ${LOCAL_PATH})
+FIND_LIBRARY(ZLIB_LIBRARY NAMES z zlib zlib1 DOC "Location of ZLIB library" PATHS ${LOCAL_PATH})
 FIND_PATH(ZLIB_INCLUDE_DIR NAMES zlib.h DOC "Location of zlib.h" PATHS ${LOCAL_PATH})
 IF( ZLIB_LIBRARY AND ZLIB_INCLUDE_DIR ) 
 	INCLUDE_DIRECTORIES( ${ZLIB_INCLUDE_DIR} )
