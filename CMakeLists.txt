@@ -10,7 +10,6 @@ FOREACH(var ${VARS})
 FILE(APPEND ${DstFile} "${var} \"${${var}}\"\n")
 ENDFOREACH(var ${VARS})
 ENDMACRO(WRITE_OUT_ALL_VARIABLES)
-WRITE_OUT_ALL_VARIABLES()
 ### End Debugging tools
 
 IF( CMAKE_GENERATOR MATCHES "Visual Studio" )
@@ -54,10 +53,10 @@ MACRO (QT4_GENERATE_UI infile outfile )
 ENDMACRO (QT4_GENERATE_UI)
 
 ###########################################################################################
-IF( !MSVC )
+IF( NOT MSVC )
 	FIND_LIBRARY(BLAS_LIBRARY NAMES blas atlas DOC "Location of BLAS or ATLAS library" PATHS  ${LOCAL_PATH} )
 	FIND_LIBRARY(LAPACK_LIBRARY NAMES lapack clapack DOC "Location of LAPACK library" PATHS ${LOCAL_PATH} )
-ENDIF( !MSVC )
+ENDIF( NOT MSVC )
 
 #Find AVCALL Library
 FIND_LIBRARY(AVCALL_LIBRARY NAMES avcall DOC "Location of the AVCALL library" PATHS ${LOCAL_PATH})
@@ -100,17 +99,17 @@ ENDIF( ZLIB_LIBRARY AND ZLIB_INCLUDE_DIR )
 
 ##############################################################################
 #Extra libraries
-IF(!MSVC)
-	FIND_LIBRARY(NCURSES_LIBRARY ncurses DOC "Location of the ncurses library." PATH /mingw/lib)
+IF(NOT MSVC)
+	FIND_LIBRARY(NCURSES_LIBRARY NAMES ncurses DOC "Location of the ncurses library." PATH /mingw/lib)
 	FIND_LIBRARY(SOCKS_LIBRARY NAMES socks wsock32 DOC "Location of the winsock library." PATH /mingw/lib)
-	SET(EXTRA_LIBRARIES ${NCURSES_LIBRARY} ${SOCKS_LIBRARY} INTERNAL)  
-ELSE(!MSVC)
+	SET(EXTRA_LIBRARIES ${NCURSES_LIBRARY} ${SOCKS_LIBRARY} )  
+ELSE( NOT MSVC)
 #	FIND_LIBRARY(I77_LIBRARY NAMES libI77 DOC "Location of f77 library" PATHS ${LOCAL_PATH} )
 #	FIND_LIBRARY(F77_LIBRARY NAMES libF77 DOC "Location of f77 library" PATHS ${LOCAL_PATH} )
 #	SET(EXTRA_LIBRARIES ${F77_LIBRARY} ${I77_LIBRARY})  
 	FIND_LIBRARY(SOCKS_LIBRARY NAMES socks wsock32 ws2_32 DOC "Location of the winsock library." PATH /mingw/lib)
 	SET(EXTRA_LIBRARIES ${SOCKS_LIBRARY} )  
-ENDIF(!MSVC)
+ENDIF(NOT MSVC)
 
 #IF( WIN32 )
 #	FIND_LIBRARY(G2C_LIBRARY NAMES g2c gfortran DOC "Location of Fortran to C (g2c) library" PATHS /mingw/lib)
@@ -157,3 +156,4 @@ ADD_SUBDIRECTORY( src )
 ##ADD_SUBDIRECTORY( tools )
 
 #TODO Handle gfortran vs g77 issue: libgfortran vs libg2c
+WRITE_OUT_ALL_VARIABLES()
