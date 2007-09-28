@@ -1,28 +1,18 @@
-Windows XP / MingW / CMake 
-
-- Install Mingw and MSYS http://www.mingw.org/. You will need gcc and g77 packages.
-- Install OpenSource (Mingw) version of Qt 4.3 (4.1 should work too).
-- Install CMake (version 2.4.7 or later). Both Win32 version and 
-cygwin versions should work (if you have cygwin installed). http://www.cmake.org
-- Install BLAS or ATLAS. 
 
 Windows XP / Visual Studio Express / CMake 
 
 - Install CMake (version 2.4.7 or later) for Win32. http://www.cmake.org
-- Install f2c
-	Download f2c and libf2c sources from http://netlib.sandia.gov/f2c/index.html. Uncompress. 
-	Build:
+- Build f2c
+    cd dependencies\f2c
 	cd libf2c
-	in file fio.h commment out line "extern int isatty(int);"
-	in file makefile.vc add -MD flag to CFLAGS variable.
 	<Path To Visual Studio Express>\VC\vcvarsall.bat
 	nmake -f makefile.vc
-	copy vcf2c.lib ..
+	copy vcf2c.lib ..\..\bin
 
-	cd ../f2c/src
+	cd ..\src
 	nmake -f makefile.vc f2c.exe
-	copy f2c.exe ..\..
-	copy f2c.h ..\..
+	copy f2c.exe ..\..\bin
+	copy f2c.h ..\..\bin
 Add f2c directory to your path.
 
 - Build ffcall
@@ -31,12 +21,6 @@ Add f2c directory to your path.
 	nmake MFLAGS=-MD -f makefile.msvc
 	copy avcall\avcall.lib ..\bin
 	copy avcall\avcall.h ..\bin
-
-- Download Clapack for Win32. http://www.netlib.org/clapack/ 
-(direct link http://www.netlib.org/clapack/CLAPACK3-Windows.zip)
-	Follow instructions in MSWin-Notes.txt to build clapack and blas.
-	Copy clapack.lib and blas.lib into <CMake source>\dependencies\bin or any
-	directory in your PATH environment.
 
 - Unpack fftw-3.1.2-dll.zip (URL ?) into <CMake source>\dependencies\bin or any
 	directory in your PATH environment. Follow directions in README-Windows file to 
@@ -48,8 +32,39 @@ Add f2c directory to your path.
 	Copy zlib1.{lib, dll} files into <CMake source>\dependencies\bin.
 	Copy zlib.h from zlib directory into <CMake source>\dependencies\bin.
 
-Run CMake 
-	SOCKS_LIBRARY <Path To Visual Studio Express>\VC\PlatformSDK\Lib\WS2_32.lib
+- Download and build LLVM (http://www.llvm.org)
+	1. Unpack llvm-2.0.zip into <CMake source>\dependencies. You should 
+	get <CMake source>\dependencies\llvm-2.0 directory with llvm source directories in it 
+	(e.g. "docs", "win32", etc ).
+	2. Open VS solution file llvm-2.0\win32\llvm.sln
+	3. You will need to patch LLVM before building. In file llvm\utils\TableGen\RegisterInfoEmitter.cpp you 
+	have to replace line 481 [ OS << "}\n\n";" ] with [ OS << "return 0;}\n\n"; ]
+	4. Rename include\llvm\ADT\iterator.in => include\llvm\ADT\iterator
+	5. Rename include\llvm\ADT\hash_map.in => include\llvm\ADT\hash_map
+	6. Rename include\llvm\Support\DataTypes.h.in => include\llvm\Support\DataTypes.h
+	7. Build in Release mode. (Building in Debug mode requires additional patching.)
+	
+- Now we are ready to run CMake. 
+	1. Run CMake (CMakeSetup.exe if you are not using cmake icon.) Select build type that 
+	corresponds to your version of Visual Studio.
+	2. Enter path to <CMake source> in cmake source directory edit box. Enter path to build directory
+	(it is strongly suggested that the build directory should be outside the source tree.)
+	3. Click Configure button. 
+	4. CMake may have trouble locating path to SOCKS_LIBRARY. You may need to find windows socket library 
+	manually. On my computer I use <Path To Visual Studio Express>\VC\PlatformSDK\Lib\WS2_32.lib
+	5. Press "Ok" to generate VS solution files.
+
+- Build FreeMat
+	1. Open FreeMat.sln from the build directory.
+	2. Build FreeMat.
+	
+Windows XP / MingW / CMake 
+
+- Install Mingw and MSYS http://www.mingw.org/. You will need gcc and g77 packages.
+- Install OpenSource (Mingw) version of Qt 4.3 (4.1 should work too).
+- Install CMake (version 2.4.7 or later). Both Win32 version and 
+cygwin versions should work (if you have cygwin installed). http://www.cmake.org
+- Install BLAS or ATLAS. 
 
 Mac OS X 10.3.9
 
