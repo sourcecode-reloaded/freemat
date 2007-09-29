@@ -51,6 +51,7 @@
 //  that has the name of a JIT function should disable the JIT
 //  mechanism
 
+#include <math.h>
 #include "JITVM.hpp"
 #ifdef HAVE_LLVM
 #include "llvm/Analysis/Verifier.h"

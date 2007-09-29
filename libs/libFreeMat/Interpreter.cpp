@@ -3151,7 +3151,7 @@ int Interpreter::countLeftHandSides(const tree &t) {
     }
   }
   if (t.last().is('.')) 
-    return std::max(1,lhs.getLength());
+    return std::max(static_cast<size_t>(1),lhs.getLength());
   return 1;
 }
 

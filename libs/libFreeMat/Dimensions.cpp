@@ -36,8 +36,8 @@
 //quantities from Data to Dimensions.  And to have Dimensions be
 //responsible for cacheing the quantities of interest.
 
-int Dimensions::getMax() {
-  int maxL;
+size_t Dimensions::getMax() {
+  size_t maxL;
   maxL = 0;
   for (int i=0;i<length;i++)
     maxL = (maxL > data[i]) ? maxL : data[i];
@@ -70,12 +70,12 @@ void Dimensions::updateCacheVariables() {
     (m_cache_getColumns == m_cache_getElementCount);
 }
 
-void Dimensions::setDimensionLength(int dim, int len) {
+void Dimensions::setDimensionLength(size_t dim, size_t len) {
   if (dim >= maxDims )
     throw Exception("Too many dimensions! Current limit is 6.");
   if (dim >= length) {
-    int new_length = dim+1;
-    for (int j=length;j<new_length;j++)
+    size_t new_length = dim+1;
+    for (size_t j=length;j<new_length;j++)
       data[j] = 1;
     length = new_length;
   }
@@ -83,8 +83,8 @@ void Dimensions::setDimensionLength(int dim, int len) {
   updateCacheVariables();
 }
 
-int Dimensions::mapPoint(const Dimensions& point) const {
-  int retval;
+size_t Dimensions::mapPoint(const Dimensions& point) const {
+  size_t retval;
   int nextCoeff;
   int testableDims;
 
@@ -145,7 +145,7 @@ void Dimensions::expandToCover(const Dimensions& a) {
   }
 }
 
-void Dimensions::incrementModulo(const Dimensions& limit, int ordinal) {
+void Dimensions::incrementModulo(const Dimensions& limit, size_t ordinal) {
   int n;
 
   data[ordinal]++;
@@ -225,7 +225,7 @@ void Dimensions::makeScalar() {
   updateCacheVariables();
 }
 
-Dimensions Dimensions::permute(const int32* permutation) const {
+Dimensions Dimensions::permute(const uint32* permutation) const {
   Dimensions out(length);
   for (int i=0;i<length;i++)
     out.data[i] = data[permutation[i]-1];

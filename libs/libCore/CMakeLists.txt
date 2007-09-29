@@ -6,6 +6,7 @@ QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/XML.hpp ${CMAKE_CURRENT_SOURCE_DIR
 
 ADD_LIBRARY( Core Analyze.cpp 
 Cast.cpp 
+Cstruct.cpp
 Constants.cpp 
 Constructors.cpp 
 Directory.cpp 

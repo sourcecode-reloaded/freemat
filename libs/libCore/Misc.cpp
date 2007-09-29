@@ -4360,7 +4360,7 @@ ArrayVector PermuteFunction(int nargout, const ArrayVector& arg) {
   MemBlock<bool> p(Adims);
   bool *d = &p;
   for (int i=0;i<Adims;i++) d[i] = false;
-  const int32* dp = (const int32*) permutation.getDataPointer();
+  const uint32* dp = reinterpret_cast<const uint32*>( permutation.getDataPointer() );
   for (int i=0;i<Adims;i++) {
     if ((dp[i] < 1) || (dp[i] > Adims))
       throw Exception("permutation vector elements are limited to 1..ndims(A), where A is the array to permute");
