@@ -104,7 +104,7 @@ ENDIF( NOT MSVC )
 #Find LLVM
 IF( MSVC )
 	SET( LLVM_SEARCH_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm-2.0/include/llvm )
-    SET( LLVM_LIB_SRCH_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm-2.0/win32/release )	
+    SET( LLVM_LIB_SRCH_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm-2.0/win32/debug )	
 	FIND_PATH( LLVM_INCLUDE_DIR NAMES Module.h PATHS ${LLVM_SEARCH_PATH} DOC "Top level include directory for LLVM" )
 	
 	FIND_LIBRARY( LLVM_ExecEng_LIB NAMES ExecutionEngine PATHS ${LLVM_LIB_SRCH_PATH} )
