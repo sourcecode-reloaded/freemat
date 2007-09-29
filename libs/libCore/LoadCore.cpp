@@ -167,6 +167,7 @@ void LoadCoreFunctions(Context* context) {
   context->addFunction("fread",FreadFunction,3,2,"handle","size","precision",NULL);
   context->addFunction("fseek",FseekFunction,3,0,"handle","offset","style",NULL);
   context->addFunction("ftell",FtellFunction,1,1,"handle",NULL);
+  context->addFunction("fflush",FflushFunction,1,1,"handle",NULL);
   context->addFunction("fgetline",FgetlineFunction,1,1,"handle",NULL);
   context->addFunction("feof",FeofFunction,1,1,"handle",NULL);
   context->addSpecialFunction("printf",PrintfFunction,-1,0,NULL);
@@ -240,6 +241,12 @@ void LoadCoreFunctions(Context* context) {
   context->addFunction("htmlread",HTMLReadFunction,1,1,"filename",NULL);
   context->addFunction("urlwrite",URLWriteFunction,3,1,"url","filename","timeout",NULL);
   context->addFunction("p_end",EndFunction,3,1,"x","n","dims",NULL);
+  context->addFunction("ctypedefine",CtypeDefineFunction,-1,0,NULL);
+  context->addFunction("ctypesize",CtypeSizeFunction,2,1,"type","count",NULL);
+  context->addFunction("cenum",CenumFunction,2,1,"type","value",NULL);
+  context->addSpecialFunction("ctypefreeze",CtypeFreezeFunction,2,1,"s","type",NULL);
+  context->addSpecialFunction("ctypethaw",CtypeThawFunction,3,2,"x","type","count",NULL);
+  context->addSpecialFunction("ctypeprint",CtypePrintFunction,1,0,"type",NULL);
   InitializeFileSubsystem();
 #ifdef USE_MPI
   LoadMPIFunctions(context);

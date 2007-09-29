@@ -14,7 +14,7 @@ RanLib.hpp \
 Utils.hpp \
 MatIO.hpp \
 XML.hpp \
-RPC.hpp
+RPC.hpp 
 
 libCore_a_SOURCES = Analyze.cpp \
 Cast.cpp \
@@ -37,6 +37,7 @@ Utils.cpp \
 MatIO.cpp \
 XML.cpp \
 RPC.cpp \
+Cstruct.cpp \
 $(libCore_a_HFILES)
 
 nodist_libCore_a_SOURCES = $(libCore_a_MOC) 

@@ -99,6 +99,7 @@ ArrayVector FwriteFunction(int, const ArrayVector& arg);
 ArrayVector FcloseFunction(int, const ArrayVector& arg);
 ArrayVector FseekFunction(int, const ArrayVector& arg);
 ArrayVector FtellFunction(int, const ArrayVector& arg);
+ArrayVector FflushFunction(int, const ArrayVector& arg);
 ArrayVector FeofFunction(int, const ArrayVector& arg);
 ArrayVector FgetlineFunction(int, const ArrayVector& arg);
 ArrayVector MinFunction(int, const ArrayVector& arg);
@@ -243,5 +244,11 @@ ArrayVector MatLoadFunction(int nargout, string filename, rvstring varnames,
 ArrayVector MatSaveFunction(string filename, rvstring varnames,
 			    Interpreter *eval);
 ArrayVector ImReadFunction(int nargout, const ArrayVector& arg, Interpreter* eval);
+ArrayVector CtypeDefineFunction(int nargout, const ArrayVector& arg);
+ArrayVector CtypeSizeFunction(int nargout, const ArrayVector& arg);
+ArrayVector CtypePrintFunction(int nargout, const ArrayVector& arg, Interpreter* eval);
+ArrayVector CtypeFreezeFunction(int nargout, const ArrayVector& arg, Interpreter* eval);
+ArrayVector CtypeThawFunction(int nargout, const ArrayVector& arg, Interpreter* eval);
+ArrayVector CenumFunction(int nargout, const ArrayVector& arg);
 void SwapBuffer(char* cp, int count, int elsize);
 #endif

@@ -45,7 +45,7 @@ void ClearLibs(Interpreter* eval) {
 
 //!
 //@Module LOADLIB Load Library Function
-//@@Section FREEMAT
+//@@Section EXTERNAL
 //@@Usage
 //The @|loadlib| function allows a function in an external library
 //to be added to FreeMat dynamically.  This interface is generally
@@ -205,7 +205,7 @@ char* parseBoundsCheck(const char* &cp) {
 
 //!
 //@Module IMPORT Foreign Function Import
-//@@Section FREEMAT
+//@@Section EXTERNAL
 //@@Usage
 //The import function allows you to call functions that are compiled into
 //shared libraries, as if they were FreeMat functions. The usage is
@@ -355,6 +355,10 @@ char* parseBoundsCheck(const char* &cp) {
 //c
 //@>
 //!
+
+static inline bool issep(char t) {
+  return ((t=='/') || (t=='\\'));
+}
 ArrayVector ImportFunction(int nargout, const ArrayVector& arg, 
 			   Interpreter* eval)  {
 #ifdef HAVE_AVCALL
@@ -377,11 +381,11 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
   string current(QDir::currentPath().toStdString());
   // Prepend the current working directory... ugly, but necessary
 #ifdef WIN32
-  if (!((libfullpath[0] == '/') || ((libfullpath[1] == ':') && 
-				     (libfullpath[2] == '/'))))
+  if (!(issep(libfullpath[0]) || ((libfullpath[1] == ':') && 
+				  issep(libfullpath[2]))))
     libfullpath = current + "/" + libfullpath;
 #else
-  if (libfullpath[0] != '/')
+  if (!issep(libfullpath[0]))
     libfullpath = current + "/" + libfullpath;
 #endif
   symbolname = arg[1].getContentsAsString();

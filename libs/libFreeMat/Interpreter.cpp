@@ -1230,6 +1230,8 @@ void Interpreter::tryStatement(const tree &t) {
   // Turn off autostop for this statement block
   bool autostop_save = autostop;
   autostop = false;
+  bool intryblock_save = intryblock;
+  intryblock = true;
   // Get the state of the IDnum stack and the
   // contextStack and the cnameStack
   int stackdepth;
@@ -1244,6 +1246,7 @@ void Interpreter::tryStatement(const tree &t) {
     }
   } 
   autostop = autostop_save;
+  intryblock = intryblock_save;
 }
 
 
@@ -3069,6 +3072,10 @@ void Interpreter::statement(const tree &t) {
       stackTrace(true);
       doDebugCycle();
     } else  {
+      if (!e.wasHandled() && !InCLI && !intryblock) {
+	stackTrace(true);
+	e.markAsHandled();
+      }
       throw;
     }
   }
@@ -4948,6 +4955,7 @@ Interpreter::Interpreter(Context* aContext) {
   depth = 0;
   printLimit = 1000;
   autostop = false;
+  intryblock = false;
   jitcontrol = false;
   InCLI = false;
   stopoverload = false;
@@ -5042,6 +5050,7 @@ void Interpreter::ExecuteLine(std::string txt) {
   cmd_buffer.push_back(txt);
   bufferNotEmpty.wakeAll();
   mutex.unlock();
+  if (m_diaryState) diaryMessage(txt);
 }
 
 //PORT
@@ -5129,6 +5138,7 @@ void Interpreter::sleepMilliseconds(unsigned long msecs) {
 
 string Interpreter::getLine(string prompt) {
   emit SetPrompt(prompt);
+  if (m_diaryState) diaryMessage(prompt);
   string retstring;
   emit EnableRepaint();
   mutex.lock();
@@ -5162,8 +5172,10 @@ void Interpreter::evalCLI() {
     }
     if (m_captureState) 
       m_capture += prompt;
-    else
+    else {
       emit SetPrompt(prompt);
+      if (m_diaryState) diaryMessage(prompt);
+    }
     //     qDebug() << "IP: " << QString::fromStdString(ip_detailname) << ", " << (ip_context & 0xffff) << "";
     emit ShowActiveLine();
     string cmdset;
