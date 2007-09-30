@@ -18,7 +18,7 @@ ELSE( CMAKE_GENERATOR MATCHES "Visual Studio" )
   PROJECT(FreeMat CXX C Fortran)
 ENDIF( CMAKE_GENERATOR MATCHES "Visual Studio" )
 
-SET( VERSION "svn")
+SET( VERSION " svn")
 SET( RESOURCEDIR "" )
 SET( CMAKE_VERBOSE_MAKEFILE TRUE )
 SET( LOCAL_PATH ${PROJECT_SOURCE_DIR}/dependencies/bin ${PROJECT_BINARY_DIR} /mingw/lib INTERNAL )
@@ -130,7 +130,7 @@ IF( MSVC )
 	IF( LLVM_INCLUDE_DIR AND LLVM_ExecEng_LIB )
 		SET( LLVM_FOUND TRUE )
 		ADD_DEFINITIONS( -DHAVE_LLVM )
-		INCLUDE_DIRECTORIES( ${LLVM_INCLUDE_DIR}/../ )
+		INCLUDE_DIRECTORIES( ${LLVM_INCLUDE_DIR} ${LLVM_INCLUDE_DIR}/../  )
 	ENDIF( LLVM_INCLUDE_DIR AND LLVM_ExecEng_LIB )
 ENDIF( MSVC )
 
@@ -189,6 +189,40 @@ ADD_SUBDIRECTORY( src )
 
 ##ADD_SUBDIRECTORY( images )
 ##ADD_SUBDIRECTORY( tools )
+
+
+####################################################################################
+#Install section
+IF( MSVC )
+	FILE(GLOB INST_DLL "dependencies/bin/*.dll" )
+	INSTALL(FILES ${INST_DLL} DESTINATION bin )
+
+####################################################################################
+#Setup section
+
+INCLUDE(InstallRequiredSystemLibraries)
+
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Freemat")
+SET(CPACK_PACKAGE_VERSION_MAJOR "3")
+SET(CPACK_PACKAGE_VERSION_MINOR "5")
+SET(CPACK_PACKAGE_INSTALL_DIRECTORY "CMake ${CMake_VERSION_MAJOR}.${CMake_VERSION_MINOR}")
+IF(WIN32 AND NOT UNIX)
+  # There is a bug in NSI that does not handle full unix paths properly. Make
+  # sure there is at least one set of four (4) backlasshes.
+  #SET(CPACK_PACKAGE_ICON "${CMake_SOURCE_DIR}/Utilities/Release\\\\InstallIcon.bmp")
+  #SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\MyExecutable.exe")
+  SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} Freemat")
+  SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\freemat.sf.net")
+  SET(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\fremat.sf.net")
+  #SET(CPACK_NSIS_CONTACT "me@my-personal-home-page.com")
+  #SET(CPACK_NSIS_MODIFY_PATH ON)
+ELSE(WIN32 AND NOT UNIX)
+  #SET(CPACK_STRIP_FILES "bin/MyExecutable")
+  #SET(CPACK_SOURCE_STRIP_FILES "")
+ENDIF(WIN32 AND NOT UNIX)
+SET(CPACK_PACKAGE_EXECUTABLES "Fremat" "Fremat")
+INCLUDE(CPack)
+ENDIF( MSVC )
 
 #TODO Handle gfortran vs g77 issue: libgfortran vs libg2c
 WRITE_OUT_ALL_VARIABLES()
