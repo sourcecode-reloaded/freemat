@@ -1,36 +1,48 @@
 
 Windows XP / Visual Studio Express / CMake 
 
+- Install Visual C++ 2005 Express (http://msdn2.microsoft.com/en-us/express/default.aspx) 
+	and also Visual C++ Platform SDK. (Full version of VC should also work).
 - Install CMake (version 2.4.7 or later) for Win32. http://www.cmake.org
+- Checkout Freemat source code from the svn repository to a directory (<FreeMat source dir>). 
+Currently cmake version is located in 
+freemat.svn.sourceforge.net/svnroot/freemat/branches/cmake_build.
 - Build f2c
-    cd dependencies\f2c
+    cd <FreeMat source dir>\dependencies\f2c
 	cd libf2c
 	<Path To Visual Studio Express>\VC\vcvarsall.bat
 	nmake -f makefile.vc
-	copy vcf2c.lib ..\..\bin
+	copy vcf2c.lib <FreeMat source dir>\dependencies\bin
 
 	cd ..\src
 	nmake -f makefile.vc f2c.exe
-	copy f2c.exe ..\..\bin
-	copy f2c.h ..\..\bin
-Add f2c directory to your path.
+	copy f2c.exe <FreeMat source dir>\dependencies\bin
+	copy f2c.h <FreeMat source dir>\dependencies\bin
+
 
 - Build ffcall
 	cd <FreeMat source dir>\dependencies\ffcall
 	<Path To Visual Studio Express>\VC\vcvarsall.bat
 	nmake MFLAGS=-MD -f makefile.msvc
-	copy avcall\avcall.lib ..\bin
-	copy avcall\avcall.h ..\bin
+	copy avcall\avcall.lib <FreeMat source dir>\dependencies\bin
+	copy avcall\avcall.h <FreeMat source dir>\dependencies\bin
 
-- Unpack fftw-3.1.2-dll.zip (URL ?) into <CMake source>\dependencies\bin or any
-	directory in your PATH environment. Follow directions in README-Windows file to 
-	create import libraries.
+- Download and build Qt 4.3 (qt-win-opensource-src-4.3.1.zip from 
+	http://trolltech.com/developer/downloads/qt/windows)
+	You will need to follow instructions here: 
+	http://qtnode.net/wiki?title=Qt4_with_Visual_Studio
+	to build Qt with Visual C++ compiler. 
+	(Qt promised full support for VC++ Express starting with version 4.3.2)
+	
+- Unpack fftw-3.1.2-dll.zip (http://www.fftw.org/install/windows.html) into 
+	<FreeMat source dir>\dependencies\bin. Follow the directions in README-Windows file 
+	(for fftw) to create import libraries.
 
-- Download and build zlib-1.2.3. (URL ?)
+- Download and build zlib-1.2.3. (http://www.zlib.net/)
 	Build using VC project file from zlib\projects\visualc6. Set active configuration to 
 	DLL release.
-	Copy zlib1.{lib, dll} files into <CMake source>\dependencies\bin.
-	Copy zlib.h from zlib directory into <CMake source>\dependencies\bin.
+	Copy zlib1.{lib, dll} files into <FreeMat source dir>\dependencies\bin.
+	Copy zlib.h from zlib directory into <FreeMat source dir>\dependencies\bin.
 
 - Download and build LLVM (http://www.llvm.org)
 	1. Unpack llvm-2.0.zip into <CMake source>\dependencies. You should 
@@ -39,10 +51,17 @@ Add f2c directory to your path.
 	2. Open VS solution file llvm-2.0\win32\llvm.sln
 	3. You will need to patch LLVM before building. In file llvm\utils\TableGen\RegisterInfoEmitter.cpp you 
 	have to replace line 481 [ OS << "}\n\n";" ] with [ OS << "return 0;}\n\n"; ]
-	4. Rename include\llvm\ADT\iterator.in => include\llvm\ADT\iterator
-	5. Rename include\llvm\ADT\hash_map.in => include\llvm\ADT\hash_map
-	6. Rename include\llvm\Support\DataTypes.h.in => include\llvm\Support\DataTypes.h
-	7. Build in Release mode. (Building in Debug mode requires additional patching.)
+	4. Build llvm libraries. 
+	If you are building in Debug mode you might need to define .
+
+	5. If you get errors about missing header files you might need to:
+	 Copy include\llvm\ADT\iterator.in => include\llvm\ADT\iterator
+	 Copy include\llvm\ADT\hash_map.in => include\llvm\ADT\hash_map
+	 Copy include\llvm\Support\DataTypes.h.in => include\llvm\Support\DataTypes.h
+	 
+	 If you build debug version of llvm and get errors in xutility file you might need to 
+	 define _HAS_ITERATOR_DEBUGGING=0 for target "Transforms" (right click on Transforms->
+	 Properties->Configuration Properties->C/C++->Preprocessor->Preprocessor Definitions). 
 	
 - Now we are ready to run CMake. 
 	1. Run CMake (CMakeSetup.exe if you are not using cmake icon.) Select build type that 
@@ -57,6 +76,7 @@ Add f2c directory to your path.
 - Build FreeMat
 	1. Open FreeMat.sln from the build directory.
 	2. Build FreeMat.
+	
 	
 Windows XP / MingW / CMake 
 
