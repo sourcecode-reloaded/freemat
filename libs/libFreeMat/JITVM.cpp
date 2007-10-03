@@ -955,7 +955,7 @@ void JITVM::run(Interpreter *m_eval) {
   // Allocate the argument array
   args = (void**) malloc(sizeof(void*)*argumentList.size()*3);
   // For each argument in the array, retrieve it from the interpreter
-  array_inputs.reserve(argumentList.size());
+  array_inputs.resize(argumentList.size());
   for (int i=0;i<argumentList.size();i++) {
     JITSymbolInfo* v = symbols.findSymbol(argumentList[i]);
     if (v) {
