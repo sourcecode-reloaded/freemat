@@ -3817,7 +3817,10 @@ string Array::getContentsAsString() const  {
   if (dataClass() != FM_STRING)
     throw Exception("Unable to convert supplied object to a string!\n");
   int M = getLength();
-  return string((const char*) data(),M);
+  if( M )
+    return string((const char*) data(),M);
+
+  return string();
 }
 
 string Array::getContentsAsStringUpper() const {
