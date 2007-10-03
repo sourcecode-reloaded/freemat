@@ -29,8 +29,6 @@ ELSE( MSVC )
 	ADD_DEFINITIONS( -D'VERSION=\"${VERSION}\"' -D'RESOURCEDIR=\"${RESOURCEDIR}\"')
 ENDIF( MSVC )
 
-
-
 FIND_PACKAGE(OpenGL REQUIRED) 
 
 SET(QT_USE_QTNETWORK TRUE)
@@ -133,6 +131,15 @@ IF( MSVC )
 		INCLUDE_DIRECTORIES( ${LLVM_INCLUDE_DIR} ${LLVM_INCLUDE_DIR}/../  )
 	ENDIF( LLVM_INCLUDE_DIR AND LLVM_ExecEng_LIB )
 ENDIF( MSVC )
+
+##############################################################################
+#PCRE library
+FIND_LIBRARY(PCRE_LIBRARY NAMES pcre DOC "Location of PCRE library" PATHS ${LOCAL_PATH})
+FIND_PATH(PCRE_INCLUDE_DIR NAMES pcre.h DOC "Location of pcre.h" PATHS ${LOCAL_PATH})
+IF( PCRE_LIBRARY AND PCRE_INCLUDE_DIR ) 
+	INCLUDE_DIRECTORIES( ${PCRE_INCLUDE_DIR} )
+	ADD_DEFINITIONS( -DHAVE_PCRE )
+ENDIF( PCRE_LIBRARY AND PCRE_INCLUDE_DIR )	
 
 
 ##############################################################################

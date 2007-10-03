@@ -44,6 +44,11 @@ freemat.svn.sourceforge.net/svnroot/freemat/branches/cmake_build.
 	Copy zlib1.{lib, dll} files into <FreeMat source dir>\dependencies\bin.
 	Copy zlib.h from zlib directory into <FreeMat source dir>\dependencies\bin.
 
+- Download and build pcre 7.4. (http://www.pcre.org/)
+	Use CMake to create solution file for VC. 
+	Build using VC solution file from pcre directory.
+	Copy pcre.lib and pcre.h files into <FreeMat source dir>\dependencies\bin.
+
 - Download and build LLVM (http://www.llvm.org)
 	1. Unpack llvm-2.0.zip into <CMake source>\dependencies. You should 
 	get <CMake source>\dependencies\llvm-2.0 directory with llvm source directories in it 
