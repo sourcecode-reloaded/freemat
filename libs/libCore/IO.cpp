@@ -1541,7 +1541,10 @@ void convertEscapeSequences(char *dst, char* src) {
 char* xprintfFunction(int nargout, const ArrayVector& arg) {
   Array format(arg[0]);
   string frmt = format.getContentsAsString();
-  char *buff = strdup(frmt.c_str());
+
+  char *buff = new char[ frmt.length() + 1 ];
+  strcpy(buff, frmt.c_str());
+
   // Search for the start of a format subspec
   char *dp = buff;
   char *np;
@@ -1622,7 +1625,7 @@ char* xprintfFunction(int nargout, const ArrayVector& arg) {
       }
     }
   }
-  free(buff);
+  delete[] buff;
   return op;
 }
 
