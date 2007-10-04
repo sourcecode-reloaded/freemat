@@ -290,14 +290,6 @@ public:
   pt3d operator-(const pt3d& t) {return pt3d(x-t.x,y-t.y,z-t.z);}
 };
 
-static pt3d crossprod(pt3d v1, pt3d v2) {
-  pt3d temp;
-  temp.x = (v1.y * v2.z) - (v1.z * v2.y);
-  temp.y = (v1.z * v2.x) - (v1.x * v2.z);
-  temp.z = (v1.x * v2.y) - (v1.y * v2.x);
-  return temp;
-}
-
 static std::string TrimPrint(double val, bool scientificNotation) {
   char buffer[1000];
   char *p;
@@ -423,7 +415,7 @@ void HandleAxis::GetMaxTickMetric(RenderEngine &gc,
 				  double &maxx, double &maxy) {
   maxx = 0;
   maxy = 0;
-  for (int i=0;i<labs.size();i++) {
+  for (size_t i=0;i<labs.size();i++) {
     int width, height, xoffset, yoffset;
     gc.measureText(labs[i],m_font,
 		   RenderEngine::Min,RenderEngine::Min,
@@ -927,7 +919,7 @@ std::vector<double> HandleAxis::UnitsReinterpret(std::vector<double> a) {
   unsigned height = fig->GetHeight();
   HPUnits *hp = (HPUnits*) LookupProperty("units");
   if (hp->Is("normalized")) {
-    for (int i=0;i<a.size();i+=2) {
+    for (size_t i=0;i<a.size();i+=2) {
       a[i] *= width;
       a[i+1] *= height;
     }
@@ -954,7 +946,7 @@ static void MinMaxVector(double *vals, int len, double &vmin, double &vmax) {
 
 std::vector<double> HandleAxis::ReMap(std::vector<double> t) {
   std::vector<double> s;
-  for (int i=0;i<t.size();i+=3) {
+  for (size_t i=0;i<t.size();i+=3) {
     s.push_back(MapX(t[i]));
     s.push_back(MapY(t[i+1]));
     s.push_back(MapZ(t[i+2]));
@@ -965,7 +957,7 @@ std::vector<double> HandleAxis::ReMap(std::vector<double> t) {
 void HandleAxis::ReMap(std::vector<double> xs, std::vector<double> ys,
 		       std::vector<double> zs, std::vector<double> &ax,
 		       std::vector<double> &ay, std::vector<double> &az) {
-  for (int i=0;i<xs.size();i++) {
+  for (size_t i=0;i<xs.size();i++) {
     ax.push_back(MapX(xs[i]));
     ay.push_back(MapY(ys[i]));
     az.push_back(MapZ(zs[i]));
@@ -1072,8 +1064,6 @@ void HandleAxis::SetupProjection(RenderEngine &gc) {
   MinMaxVector(xvals,8,xmin,xmax);
   MinMaxVector(yvals,8,ymin,ymax);
   MinMaxVector(zvals,8,zmin,zmax);
-  double mzmin = qMin(fabs(zmin),fabs(zmax));
-  double mzmax = qMax(fabs(zmin),fabs(zmax));
   if (zmin == zmax) {
     zmin = zmax-1;
     zmax = zmax+1;
@@ -1168,21 +1158,21 @@ void HandleAxis::DrawGridLines(RenderEngine &gc) {
   HPColor *zc = (HPColor*) LookupProperty("zcolor");
   if (xvisible && ((HPOnOff*) LookupProperty("xgrid"))->AsBool()) {
     gc.color(xc->Data());
-    for (int i=0;i<xticks.size();i++) {
+    for (size_t i=0;i<xticks.size();i++) {
       GLfloat t = MapX(xticks[i]);
       DrawXGridLine(gc,t,limits);
     }
   }
   if (yvisible && ((HPOnOff*) LookupProperty("ygrid"))->AsBool()) {
     gc.color(yc->Data());
-    for (int i=0;i<yticks.size();i++) {
+    for (size_t i=0;i<yticks.size();i++) {
       GLfloat t = MapY(yticks[i]);
       DrawYGridLine(gc,t,limits);
     }
   }
   if (zvisible && ((HPOnOff*) LookupProperty("zgrid"))->AsBool()) {
     gc.color(zc->Data());
-    for (int i=0;i<zticks.size();i++) {
+    for (size_t i=0;i<zticks.size();i++) {
       GLfloat t = MapZ(zticks[i]);
       DrawZGridLine(gc,t,limits);
     }
@@ -1269,12 +1259,12 @@ void HandleAxis::DrawMinorGridLines(RenderEngine &gc) {
     gc.color(xc->Data());
     sp = (HPLinearLog*) LookupProperty("xscale");
     if (sp->Is("linear")) {
-      for (int i=0;i<xticks.size()-1;i++) {
+      for (size_t i=0;i<xticks.size()-1;i++) {
 	double t = MapX((xticks[i]+xticks[i+1])/2);
 	DrawXGridLine(gc,t,limits);
       }
     } else {
-      for (int i=0;i<xticks.size()-1;i++) {
+      for (size_t i=0;i<xticks.size()-1;i++) {
 	// Ticks should be in integer divisions
 	double t1 = xticks[i];
 	double t2 = xticks[i+1];
@@ -1293,12 +1283,12 @@ void HandleAxis::DrawMinorGridLines(RenderEngine &gc) {
     gc.color(yc->Data());
     sp = (HPLinearLog*) LookupProperty("yscale");
     if (sp->Is("linear")) {
-      for (int i=0;i<yticks.size()-1;i++) {
+      for (size_t i=0;i<yticks.size()-1;i++) {
 	GLfloat t = MapY((yticks[i]+yticks[i+1])/2);
 	DrawYGridLine(gc,t,limits);
       }
     } else {
-      for (int i=0;i<yticks.size()-1;i++) {
+      for (size_t i=0;i<yticks.size()-1;i++) {
 	// Ticks should be in integer divisions
 	double t1 = yticks[i];
 	double t2 = yticks[i+1];
@@ -1317,12 +1307,12 @@ void HandleAxis::DrawMinorGridLines(RenderEngine &gc) {
     gc.color(zc->Data());
     sp = (HPLinearLog*) LookupProperty("zscale");
     if (sp->Is("linear")) {
-      for (int i=0;i<zticks.size()-1;i++) {
+      for (size_t i=0;i<zticks.size()-1;i++) {
 	GLfloat t = MapZ((zticks[i]+zticks[i+1])/2);
 	DrawZGridLine(gc,t,limits);
       }
     } else {
-      for (int i=0;i<zticks.size()-1;i++) {
+      for (size_t i=0;i<zticks.size()-1;i++) {
 	// Ticks should be in integer divisions
 	double t1 = zticks[i];
 	double t2 = zticks[i+1];
@@ -1606,8 +1596,8 @@ void HandleAxis::DrawAxisLines(RenderEngine &gc) {
 
 // Assemble a font for the axis
 void HandleAxis::UpdateAxisFont() {
-  QFont::Style fstyle;
-  QFont::Weight fweight;
+  QFont::Style fstyle = QFont::StyleNormal;
+  QFont::Weight fweight = QFont::Normal;
   HPString *fontname = (HPString*) LookupProperty("fontname");
   HPFontAngle *fontangle = (HPFontAngle*) LookupProperty("fontangle");
   HPFontWeight *fontweight = (HPFontWeight*) LookupProperty("fontweight");
@@ -1778,7 +1768,7 @@ void HandleAxis::RePackFigure() {
     }
     HPStringSet *hp = (HPStringSet*) LookupProperty("xticklabel");
     std::vector<std::string> xlabels(hp->Data());
-    for (int i=0;i<xlabels.size();i++) {
+    for (size_t i=0;i<xlabels.size();i++) {
       QRect sze(fm.boundingRect(xlabels[i].c_str()));
       maxTickWidth = qMax(maxTickWidth,sze.width());
       maxTickHeight = qMax(maxTickHeight,sze.height());
@@ -1792,7 +1782,7 @@ void HandleAxis::RePackFigure() {
     }
     HPStringSet *hp = (HPStringSet*) LookupProperty("yticklabel");
     std::vector<std::string> ylabels(hp->Data());
-    for (int i=0;i<ylabels.size();i++) {
+    for (size_t i=0;i<ylabels.size();i++) {
       QRect sze(fm.boundingRect(ylabels[i].c_str()));
       maxTickWidth = qMax(maxTickWidth,sze.width());
       maxTickHeight = qMax(maxTickHeight,sze.height());
@@ -1806,7 +1796,7 @@ void HandleAxis::RePackFigure() {
     }
     HPStringSet *hp = (HPStringSet*) LookupProperty("zticklabel");
     std::vector<std::string> zlabels(hp->Data());
-    for (int i=0;i<zlabels.size();i++) {
+    for (size_t i=0;i<zlabels.size();i++) {
       QRect sze(fm.boundingRect(zlabels[i].c_str()));
       maxTickWidth = qMax(maxTickWidth,sze.width());
       maxTickHeight = qMax(maxTickHeight,sze.height());
@@ -1882,7 +1872,7 @@ void HandleAxis::UpdateLimits(bool x, bool y, bool z, bool a, bool c) {
   bool first = true;
   HPHandles *children = (HPHandles*) LookupProperty("children");
   std::vector<unsigned> handles(children->Data());
-  for (int i=0;i<handles.size();i++) {
+  for (size_t i=0;i<handles.size();i++) {
     HandleObject *fp = LookupHandleObject(handles[i]);
     std::vector<double> child_limits(fp->GetLimits());
     if (!child_limits.empty()) {
@@ -1890,7 +1880,7 @@ void HandleAxis::UpdateLimits(bool x, bool y, bool z, bool a, bool c) {
 	limits = child_limits;
 	first = false;
       } else {
-	for (int i=0;i<qMin(limits.size(),child_limits.size());i+=2) {
+	for (size_t i=0;i<qMin(limits.size(),child_limits.size());i+=2) {
 	  limits[i] = qMin(limits[i],child_limits[i]);
 	  limits[i+1] = qMax(limits[i+1],child_limits[i+1]);
 	}
@@ -2079,7 +2069,7 @@ void HandleAxis::UpdateState() {
 
   HPHandles *children = (HPHandles*) LookupProperty("children");
   std::vector<unsigned> handles(children->Data());
-  for (int i=0;i<handles.size();i++) {
+  for (size_t i=0;i<handles.size();i++) {
     HandleObject *fp = LookupHandleObject(handles[i]);
     fp->UpdateState();
   }    
@@ -2101,8 +2091,8 @@ void HandleAxis::DrawLabel(RenderEngine& gc,
 			   std::vector<double> color,
 			   std::string txt) {
   double angle = atan2(dy,dx)*180.0/M_PI;
-  RenderEngine::AlignmentFlag xalign;
-  RenderEngine::AlignmentFlag yalign;
+  RenderEngine::AlignmentFlag xalign = RenderEngine::Min;
+  RenderEngine::AlignmentFlag yalign = RenderEngine::Min;
   if (fabs(angle) < 10) {
     xalign = RenderEngine::Min;
     yalign = RenderEngine::Mean;
@@ -2144,9 +2134,6 @@ void HandleAxis::DrawTickMarks(RenderEngine &gc) {
   // each axis.  Now each axis sits on the boundary of
   // two facets.  If exactly one of the two facets is
   // visible, then the axis line is visible.
-  HandleFigure *fig = GetParentFigure();
-  unsigned width = fig->GetWidth();
-  unsigned height = fig->GetHeight();    
   HPVector *hp;
   hp = (HPVector*) LookupProperty("xtick");
   std::vector<double> xticks(hp->Data());
@@ -2201,13 +2188,13 @@ void HandleAxis::DrawTickMarks(RenderEngine &gc) {
   std::vector<double> outerpos(GetPropertyVectorAsPixels("outerposition"));
   if (xvisible) {
     std::vector<double> mapticks;
-    for (int i=0;i<xticks.size();i++)
+    for (size_t i=0;i<xticks.size();i++)
       mapticks.push_back(MapX(xticks[i]));
     std::vector<double> minorticks;
     HPLinearLog *sp;
     sp = (HPLinearLog*) LookupProperty("xscale");
     if (sp->Is("log")) {
-      for (int i=0;i<xticks.size()-1;i++) {
+      for (size_t i=0;i<xticks.size()-1;i++) {
 	double t1 = xticks[i];
 	double t2 = xticks[i+1];
 	int n = 2;
@@ -2227,13 +2214,13 @@ void HandleAxis::DrawTickMarks(RenderEngine &gc) {
   }
   if (yvisible) {
     std::vector<double> mapticks;
-    for (int i=0;i<yticks.size();i++)
+    for (size_t i=0;i<yticks.size();i++)
       mapticks.push_back(MapY(yticks[i]));
     std::vector<double> minorticks;
     HPLinearLog *sp;
     sp = (HPLinearLog*) LookupProperty("yscale");
     if (sp->Is("log")) {
-      for (int i=0;i<yticks.size()-1;i++) {
+      for (size_t i=0;i<yticks.size()-1;i++) {
 	double t1 = yticks[i];
 	double t2 = yticks[i+1];
 	int n = 2;
@@ -2253,13 +2240,13 @@ void HandleAxis::DrawTickMarks(RenderEngine &gc) {
   }
   if (zvisible) {
     std::vector<double> mapticks;
-    for (int i=0;i<zticks.size();i++)
+    for (size_t i=0;i<zticks.size();i++)
       mapticks.push_back(MapZ(zticks[i]));
     std::vector<double> minorticks;
     HPLinearLog *sp;
     sp = (HPLinearLog*) LookupProperty("zscale");
     if (sp->Is("log")) {
-      for (int i=0;i<zticks.size()-1;i++) {
+      for (size_t i=0;i<zticks.size()-1;i++) {
 	double t1 = zticks[i];
 	double t2 = zticks[i+1];
 	int n = 2;
@@ -2277,7 +2264,7 @@ void HandleAxis::DrawTickMarks(RenderEngine &gc) {
 		   mapticks,minorticks,zlabeltxt,
 		   "zlabel",ticlen,ticdir);
   }
-  HPHandles *lbl = (HPHandles*) LookupProperty("title");
+  //  HPHandles *lbl = (HPHandles*) LookupProperty("title");
   //     if (!lbl->Data().empty()) {
   //       HandleText *fp = handleset.lookupHandle(lbl->Data()[0]);
   //       HPThreeVector *gp = (HPThreeVector*) fp->LookupProperty("position");
@@ -2314,7 +2301,7 @@ void HandleAxis::DrawTickLabels(RenderEngine& gc,
   double norm = sqrt(delx*delx + dely*dely);
   delx /= norm; dely /= norm;
   // Draw the minor ticks
-  for (int i=0;i<minortics.size();i++) {
+  for (size_t i=0;i<minortics.size();i++) {
     double t = minortics[i];
     // Map the coords ourselves
     double x1, y1, x2, y2;
@@ -2327,7 +2314,7 @@ void HandleAxis::DrawTickLabels(RenderEngine& gc,
     gc.line(x1,y1,x2,y2);
     gc.releaseDirectDraw();
   }
-  for (int i=0;i<maptics.size();i++) {
+  for (size_t i=0;i<maptics.size();i++) {
     double t = maptics[i];
     // Map the coords ourselves
     double x1, y1, x2, y2;
@@ -2459,7 +2446,6 @@ void HandleAxis::DrawTickLabels(RenderEngine& gc,
     double xnorm, ynorm;
     xnorm = (xl1-outerpos[0])/outerpos[2];
     ynorm = (yl1-outerpos[1])/outerpos[3];
-    HandleFigure *fig = GetParentFigure();
     gp->Value(xnorm,ynorm,0.0);
   }      
 }
@@ -2515,7 +2501,7 @@ void HandleAxis::DrawAxisLabels(RenderEngine& gc) {
 void HandleAxis::DrawChildren(RenderEngine& gc) {
   HPHandles *children = (HPHandles*) LookupProperty("children");
   std::vector<unsigned> handles(children->Data());
-  for (int i=0;i<handles.size();i++) {
+  for (size_t i=0;i<handles.size();i++) {
     HandleObject *fp = LookupHandleObject(handles[i]);
     fp->PaintMe(gc);
   }

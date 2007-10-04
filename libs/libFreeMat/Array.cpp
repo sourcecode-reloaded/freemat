@@ -2216,7 +2216,8 @@ Array Array::cellConstructor(ArrayVector& m) {
 }
 
 Array Array::cellConstructor(ArrayMatrix& m) {
-  int columnCount, rowCount;
+  int columnCount = 0;
+  int rowCount;
   Array* qp = NULL;
 
   try {
@@ -2609,6 +2610,7 @@ static indexType scalarIndex(const Array& a, Interpreter* m_eval) {
     }
     break;
   }
+  throw Exception("Unhandled case in scalarIndex");
 }
 
 Array Array::getNDimSubsetScalars(ArrayVector& index, Interpreter* m_eval) {
@@ -3917,6 +3919,7 @@ int32 Array::nnz() const {
   case FM_FUNCPTR_ARRAY:
     return DoCountNNZReal<void*>(data(),getLength());
   }
+  throw Exception("Unhandled case in nnz");
 }
 
 bool Array::anyNotFinite() {

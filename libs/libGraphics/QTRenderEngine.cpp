@@ -67,16 +67,16 @@ QVector<QPointF> QTRenderEngine::Map(std::vector<double> xs,
 				     std::vector<double> ys, 
 				     std::vector<double> zs) {
   QVector<QPointF> retval;
-  for (int i=0;i<xs.size();i++)
+  for (size_t i=0;i<xs.size();i++)
     retval.push_back(Map(xs[i],ys[i],zs[i]));
   return retval;
 }
 
 std::vector<quad3d> QTRenderEngine::MapQuadsFacesOnly(std::vector<std::vector<cpoint> > &faces) {
   std::vector<quad3d> retval;
-  for (int i=0;i<faces.size();i++) {
+  for (size_t i=0;i<faces.size();i++) {
     std::vector<cpoint> qlist(faces[i]);
-    for (int j=2;j<qlist.size();j+=2){ 
+    for (size_t j=2;j<qlist.size();j+=2){ 
       quad3d qx;
       bool anyclipped = false;
       double zmean = 0;
@@ -109,9 +109,9 @@ std::vector<quad3d> QTRenderEngine::MapQuadsFacesOnly(std::vector<std::vector<cp
 
 std::vector<quad3d> QTRenderEngine::MapQuadsEdgesOnly(std::vector<std::vector<cpoint> > &edges) {
   std::vector<quad3d> retval;
-  for (int i=0;i<edges.size();i++) {
+  for (size_t i=0;i<edges.size();i++) {
     std::vector<cpoint> elist(edges[i]);
-    for (int j=2;j<elist.size();j+=2){ 
+    for (size_t j=2;j<elist.size();j+=2){ 
       quad3d qx;
       bool anyclipped = false;
       double zmean = 0;
@@ -148,10 +148,10 @@ std::vector<quad3d> QTRenderEngine::MapQuads(std::vector<std::vector<cpoint> > &
   std::vector<quad3d> retval;
   if (edges.size() == 0) return MapQuadsFacesOnly(faces);
   if (faces.size() == 0) return MapQuadsEdgesOnly(edges);
-  for (int i=0;i<faces.size();i++) {
+  for (size_t i=0;i<faces.size();i++) {
     std::vector<cpoint> qlist(faces[i]);
     std::vector<cpoint> elist(edges[i]);
-    for (int j=2;j<qlist.size();j+=2){ 
+    for (size_t j=2;j<qlist.size();j+=2){ 
       quad3d qx;
       bool anyclipped = false;
       double zmean = 0;
@@ -461,8 +461,6 @@ void QTRenderEngine::putText(double x, double y, std::string txt,
 			     QFont fnt, double rotation) {
   QFontMetrics fm(fnt);
   QRect sze(fm.boundingRect(txt.c_str()));
-  int x0 = sze.left();
-  int y0 = sze.bottom();
   int width = sze.width();
   int height = sze.height();
   // Adjust the raster position based on the alignment offsets
@@ -623,7 +621,7 @@ void QTRenderEngine::quadStrips(std::vector<std::vector<cpoint> > faces, bool fl
   //  qDebug() << "Edges " << edges.size();
   std::vector<quad3d> mapqds(MapQuads(faces,edges));
   std::sort(mapqds.begin(),mapqds.end());
-  for (int i=0;i<mapqds.size();i++) {
+  for (size_t i=0;i<mapqds.size();i++) {
     QPolygonF poly;
     poly.push_back(QPointF(mapqds[i].pts[0].x,mapqds[i].pts[0].y));
     poly.push_back(QPointF(mapqds[i].pts[1].x,mapqds[i].pts[1].y));
