@@ -115,7 +115,7 @@ public:
     variablesAccessed = varList;
   }
   inline bool variableAccessed(string varName) {
-    for (size_t i=0;i<variablesAccessed.size();i++)
+    for (int i=0;i<variablesAccessed.size();i++)
       if (variablesAccessed[i] == varName) return true;
     return false;
   }
@@ -129,7 +129,7 @@ public:
     return localVariables;
   }
   inline bool variableLocal(string varName) {
-    for (size_t i=0;i<localVariables.size();i++) 
+    for (int i=0;i<localVariables.size();i++) 
       if (localVariables[i] == varName) return true;
     return false;
   }
@@ -217,7 +217,7 @@ public:
   inline bool isVariableGlobal(const std::string& varName) {
     if (!anyGlobals) return false;
     bool foundName = false;
-    size_t i = 0;
+    int i = 0;
     if (globalVars.empty()) return false;
     while (i<globalVars.size() && !foundName) {
       foundName = (globalVars[i] == varName);
@@ -255,7 +255,7 @@ public:
   inline bool isVariablePersistent(const std::string& varName) {
     if (!anyPersistents) return false;
     bool foundName = false;
-    size_t i = 0;
+    int i = 0;
     if (persistentVars.empty()) return false;
     while (i<persistentVars.size() && !foundName) {
       foundName = (persistentVars[i] == varName);
@@ -307,9 +307,9 @@ public:
    */
   inline stringVector listAllVariables() {
     stringVector names(symTab.getCompletions(""));
-    for (size_t i=0;i<globalVars.size();i++)
+    for (int i=0;i<globalVars.size();i++)
       names.push_back(globalVars[i]);
-    for (size_t i=0;i<persistentVars.size();i++)
+    for (int i=0;i<persistentVars.size();i++)
       names.push_back(persistentVars[i]);
     return names;
   }

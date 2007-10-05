@@ -34,7 +34,7 @@
 
 static std::string helppath;
   
-void Tokenize(const std::string& str, std::vector<std::string>& tokens,
+void Tokenize(const std::string& str, QVector<std::string>& tokens,
 	      const std::string& delimiters = " \n") {
   // Skip delimiters at beginning.
   std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
@@ -412,7 +412,7 @@ ArrayVector HelpFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
     fp = fopen(mdcname.c_str(),"r");
     if (fp) {
       //Found it... relay to the output
-      std::vector<std::string> helplines;
+      QVector<std::string> helplines;
       std::string workingline;
       char buffer[4096];
       while (!feof(fp)) {
@@ -424,7 +424,7 @@ ArrayVector HelpFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
       // Get the output width (in characters)
       int outputWidth = eval->getTerminalWidth() - 20;
       for (int p=0;p<(int)helplines.size();p++) {
-	std::vector<std::string> tokens;
+	QVector<std::string> tokens;
 	// Tokenize the help line
 	Tokenize(helplines[p],tokens);
 	// Output words..

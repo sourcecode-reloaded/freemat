@@ -32,7 +32,7 @@ void ComplexSplit(const Array &x, Array &real, Array &imag) {
     const float *dp = (const float *) x.getDataPointer();
     float *rp = (float *) real.getReadWriteDataPointer();
     float *ip = (float *) imag.getReadWriteDataPointer();
-    for (unsigned i=0;i<x.getLength();i++) {
+    for (int i=0;i<x.getLength();i++) {
       rp[i] = dp[2*i];
       ip[i] = dp[2*i+1];
     }      
@@ -42,7 +42,7 @@ void ComplexSplit(const Array &x, Array &real, Array &imag) {
     const double *dp = (const double *) x.getDataPointer();
     double *rp = (double *) real.getReadWriteDataPointer();
     double *ip = (double *) imag.getReadWriteDataPointer();
-    for (unsigned i=0;i<x.getLength();i++) {
+    for (int i=0;i<x.getLength();i++) {
       rp[i] = dp[2*i];
       ip[i] = dp[2*i+1];
     }      
@@ -217,7 +217,7 @@ uint8 ByteFour(uint32 x) {
 
 Array FromDimensions(Dimensions dims) {
   Array x(FM_INT32,Dimensions(1,dims.getLength()));
-  for (size_t i=0;i<dims.getLength();i++)
+  for (int i=0;i<dims.getLength();i++)
     ((int32*) x.getReadWriteDataPointer())[i] = dims.get(i);
   return x;
 }
@@ -228,7 +228,7 @@ Dimensions ToDimensions(Array dims) {
 		    string("than maxDims (currently set to ") + 
 		    maxDims + ")."); // FIXME - more graceful ways to do this
   Dimensions dm;
-  for (size_t i=0;i<dims.getLength();i++)
+  for (int i=0;i<dims.getLength();i++)
     dm.set(i,((const int32*) dims.getDataPointer())[i]);
   return dm;
 }
@@ -260,7 +260,7 @@ Array MatIO::getSparseArray(Dimensions dm, bool complexFlag) {
   Array pi;
   ir.promoteType(FM_UINT32);
   uint32* ir_data = (uint32*) ir.getReadWriteDataPointer();
-  for (size_t i=0;i<ir.getLength();i++)
+  for (int i=0;i<ir.getLength();i++)
     ir_data[i]++;
   jc.promoteType(FM_UINT32);
   if (complexFlag) pi = getDataElement();
@@ -276,8 +276,8 @@ Array MatIO::getSparseArray(Dimensions dm, bool complexFlag) {
   MemBlock<uint32> jrBlock(nnz);
   uint32 *jr = &jrBlock;
   int outptr = 0;
-  for (size_t i=0;i<dm.get(1);i++)
-    for (size_t j=jc_data[i];j<jc_data[i+1];j++)
+  for (int i=0;i<dm.get(1);i++)
+    for (uint32 j=jc_data[i];j<jc_data[i+1];j++)
       jr[outptr++] = (i+1);
   if (!complexFlag)
     return Array(outType,dm,
@@ -377,14 +377,14 @@ Array MatIO::getNumericArray(mxArrayTypes arrayType, Dimensions dm, bool complex
       pi.promoteType(FM_FLOAT);
       float *dp = (float *) pr.getReadWriteDataPointer();
       const float *ip = (const float *) pi.getDataPointer();
-      for (size_t i=0;i<pr.getLength();i++)
+      for (int i=0;i<pr.getLength();i++)
 	dp[2*i+1] = ip[i];
     } else {
       pr.promoteType(FM_DCOMPLEX);
       pi.promoteType(FM_DOUBLE);
       double *dp = (double *) pr.getReadWriteDataPointer();
       const double *ip = (const double *) pi.getDataPointer();
-      for (size_t i=0;i<pr.getLength();i++)
+      for (int i=0;i<pr.getLength();i++)
 	dp[2*i+1] = ip[i];
     }
     pr.reshape(dm);
@@ -659,9 +659,9 @@ void MatIO::putStructArray(const Array &x) {
   // Calculate the maximum field name length
   rvstring fnames(x.fieldNames()); // FIXME - should we truncate to 32 byte fieldnames?
   int fieldNameCount = fnames.size();
-  size_t maxlen = 0;
+  int maxlen = 0;
   for (int i=0;i<fieldNameCount;i++)
-    maxlen = max(maxlen,fnames.at(i).size());
+    maxlen = max(maxlen,(int)fnames.at(i).size());
   // Write it as an int32 
   Array fieldNameLength(Array::int32Constructor(maxlen));
   putDataElement(fieldNameLength);
@@ -669,7 +669,7 @@ void MatIO::putStructArray(const Array &x) {
   Array fieldNameText(FM_INT8,Dimensions(1,fieldNameCount*maxlen));
   int8* dp = (int8*) fieldNameText.getReadWriteDataPointer();
   for (int i=0;i<fieldNameCount;i++)
-    for (size_t j=0;j<fnames.at(i).size();j++)
+    for (int j=0;j<(int)fnames.at(i).size();j++)
       dp[i*maxlen+j] = fnames.at(i)[j];
   putDataElement(fieldNameText);
   int num = x.getLength();
@@ -683,7 +683,7 @@ void MatIO::putClassArray(const Array &x) {
   string className = x.className().back();
   Array classNameArray(FM_INT8,Dimensions(1,className.size()));
   int8* dp = (int8*) classNameArray.getDataPointer();
-  for (size_t i=0;i<className.size();i++)
+  for (int i=0;i<(int)className.size();i++)
     dp[i] = className[i];
   putDataElement(classNameArray);
   putStructArray(x);
@@ -704,7 +704,7 @@ void MatIO::putCellArray(const Array &x) {
 }
 
 void MatIO::putArrayCompressed(const Array &x, string name) {
-  size_t spos, fpos;
+  int spos, fpos;
   // Set the write count to zero
   m_writecount = 0;
   m_phantomWriteMode = false;
