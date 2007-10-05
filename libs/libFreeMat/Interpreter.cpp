@@ -409,7 +409,7 @@ void Interpreter::doCLI() {
 }
 
 void Interpreter::sendGreeting() {
-  outputMessage(" " + getVersionString() + " (build 2820)\n");
+  outputMessage(" " + getVersionString() + "\n");
   outputMessage(" Copyright (c) 2002-2007 by Samit Basu\n");
   outputMessage(" Licensed under the GNU Public License (GPL)\n");
   outputMessage(" Type <help license> to find out more\n");
@@ -5020,9 +5020,9 @@ void Interpreter::dbtraceStatement(const tree &t) {
 
 static string EvalPrep(string line) {
   string buf1 = line;
-  if (buf1[buf1.size()-1] == '\n')
+  if (buf1.size()>0 && buf1[buf1.size()-1] == '\n')
     buf1.erase(buf1.end()-1);
-  if (buf1[buf1.size()-1] == '\r')
+  if (buf1.size()>0 && buf1[buf1.size()-1] == '\r')
     buf1.erase(buf1.end()-1);
   if (buf1.size() > 20)
     buf1 = string(buf1,0,20) + "...";

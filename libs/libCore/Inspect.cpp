@@ -287,7 +287,6 @@ ArrayVector Hex2DecFunction(int nargout, const ArrayVector& arg) {
 //!
 ArrayVector Dec2HexFunction(int nargout, const ArrayVector& arg) {
   char buffer[1000];
-  char fbuffer[1000];
   if (arg.size() < 1)
     throw Exception("dec2hex requires at least one argument");
   Array x(arg[0]);
@@ -304,7 +303,7 @@ ArrayVector Dec2HexFunction(int nargout, const ArrayVector& arg) {
     int n = ArrayToInt32(arg[1]);
     if ((n < 1) || (n > 32))
       throw Exception("illegal number of digits requested in dec2hex function");
-    while (retString.size() < n)
+    while ((int)retString.size() < n)
       retString = '0' + retString;
     return ArrayVector() << Array::stringConstructor(retString);
   }
@@ -397,7 +396,7 @@ ArrayVector HelpFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
     MFunctionDef *mptr;
     mptr = (MFunctionDef *) val;
     mptr->updateCode(eval);
-    for (int i=0;i<mptr->helpText.size();i++)
+    for (int i=0;i<(int)mptr->helpText.size();i++)
       eval->outputMessage(mptr->helpText[i]);
     return ArrayVector();
   } else {
@@ -424,7 +423,7 @@ ArrayVector HelpFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
       // Write the lines out...
       // Get the output width (in characters)
       int outputWidth = eval->getTerminalWidth() - 20;
-      for (int p=0;p<helplines.size();p++) {
+      for (int p=0;p<(int)helplines.size();p++) {
 	std::vector<std::string> tokens;
 	// Tokenize the help line
 	Tokenize(helplines[p],tokens);
@@ -432,7 +431,7 @@ ArrayVector HelpFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
 	int outlen = 0;
 	int tokencount = 0;
 	eval->outputMessage("\n          ");
-	while ((tokens.size() > 0) && (tokencount < tokens.size())) {
+	while ((tokens.size() > 0) && (tokencount < (int) tokens.size())) {
 	  // Can the next token be output without wrapping?
 	  int tsize;
 	  tsize = tokens[tokencount].size();
@@ -509,13 +508,13 @@ void ClearVariable(Interpreter* eval, string name) {
 void ClearAllFunction(Interpreter* eval) {
   ClearLibs(eval);
   stringVector names = eval->getContext()->listAllVariables();
-  for (int i=0;i<names.size();i++)
+  for (int i=0;i<(int)names.size();i++)
     ClearVariable(eval,names[i]);
 }
 
 void ClearPersistent(Interpreter* eval) {
   stringVector names = eval->getContext()->listGlobalVariables();
-  for (int i=0;i<names.size();i++) {
+  for (int i=0;i<(int)names.size();i++) {
     if ((names[i].size() >= 1) && (names[i][0] == '_'))
       eval->getContext()->deleteGlobalVariable(names[i]);
   }
@@ -524,7 +523,7 @@ void ClearPersistent(Interpreter* eval) {
 
 void ClearGlobal(Interpreter* eval) {
   stringVector names = eval->getContext()->listGlobalVariables();
-  for (int i=0;i<names.size();i++) {
+  for (int i=0;i<(int)names.size();i++) {
     if ((names[i].size() >= 1) && (names[i][0] != '_')) {
       eval->getContext()->deleteGlobalVariable(names[i]);
     }
@@ -539,7 +538,7 @@ ArrayVector ClearFunction(int nargout, const ArrayVector& arg, Interpreter* eval
   else
     for (int i=0;i<arg.size();i++) 
       names.push_back(ArrayToString(arg[i]));
-  for (int i=0;i<names.size();i++) {
+  for (int i=0;i<(int)names.size();i++) {
     if (names[i] == "all")
       ClearAllFunction(eval);
     else if (names[i] == "libs")
@@ -612,10 +611,10 @@ ArrayVector WhoFunction(int nargout, const ArrayVector& arg, Interpreter* eval) 
   std::sort(names.begin(),names.end());
   sprintf(buffer,"  Variable Name      Type   Flags             Size\n");
   eval->outputMessage(buffer);
-  for (i=0;i<names.size();i++) {
+  for (i=0;i<(int) names.size();i++) {
     Array lookup;
     ArrayReference ptr;
-    sprintf(buffer,"% 15s",names[i].c_str());
+    sprintf(buffer,"%15s",names[i].c_str());
     eval->outputMessage(buffer);
     ptr = eval->getContext()->lookupVariable(names[i]);
     if (!ptr.valid())
@@ -625,58 +624,58 @@ ArrayVector WhoFunction(int nargout, const ArrayVector& arg, Interpreter* eval) 
       Class t = lookup.dataClass();
       switch(t) {
       case FM_CELL_ARRAY:
-	sprintf(buffer,"% 10s","cell");
+	sprintf(buffer,"%10s","cell");
 	break;
       case FM_STRUCT_ARRAY:
 	if (lookup.isUserClass())
-	  sprintf(buffer,"% 10s",lookup.className().back().c_str());
+	  sprintf(buffer,"%10s",lookup.className().back().c_str());
 	else
-	  sprintf(buffer,"% 10s","struct");
+	  sprintf(buffer,"%10s","struct");
 	break;
       case FM_LOGICAL:
-	sprintf(buffer,"% 10s","logical");
+	sprintf(buffer,"%10s","logical");
 	break;
       case FM_UINT8:
-	sprintf(buffer,"% 10s","uint8");
+	sprintf(buffer,"%10s","uint8");
 	break;
       case FM_INT8:
-	sprintf(buffer,"% 10s","int8");
+	sprintf(buffer,"%10s","int8");
 	break;
       case FM_UINT16:
-	sprintf(buffer,"% 10s","uint16");
+	sprintf(buffer,"%10s","uint16");
 	break;
       case FM_INT16:
-	sprintf(buffer,"% 10s","int16");
+	sprintf(buffer,"%10s","int16");
 	break;
       case FM_UINT32:
-	sprintf(buffer,"% 10s","uint32");
+	sprintf(buffer,"%10s","uint32");
 	break;
       case FM_INT32:
-	sprintf(buffer,"% 10s","int32");
+	sprintf(buffer,"%10s","int32");
 	break;
       case FM_UINT64:
-	sprintf(buffer,"% 10s","uint64");
+	sprintf(buffer,"%10s","uint64");
 	break;
       case FM_INT64:
-	sprintf(buffer,"% 10s","int64");
+	sprintf(buffer,"%10s","int64");
 	break;
       case FM_FLOAT:
-	sprintf(buffer,"% 10s","float");
+	sprintf(buffer,"%10s","float");
 	break;
       case FM_DOUBLE:
-	sprintf(buffer,"% 10s","double");
+	sprintf(buffer,"%10s","double");
 	break;
       case FM_COMPLEX:
-	sprintf(buffer,"% 10s","complex");
+	sprintf(buffer,"%10s","complex");
 	break;
       case FM_DCOMPLEX:
-	sprintf(buffer,"% 10s","dcomplex");
+	sprintf(buffer,"%10s","dcomplex");
 	break;
       case FM_STRING:
-	sprintf(buffer,"% 10s","string");
+	sprintf(buffer,"%10s","string");
 	break;
       case FM_FUNCPTR_ARRAY:
-	sprintf(buffer,"% 10s","func ptr");
+	sprintf(buffer,"%10s","func ptr");
 	break;
       }
       eval->outputMessage(buffer);
@@ -808,21 +807,19 @@ ArrayVector SizeFunction(int nargout, const ArrayVector& arg) {
       return retval;
     } else {
       uint32 *dims = (uint32 *) Malloc(sizeof(uint32)*sze.getLength());
-      for (int i=0;i<sze.getLength();i++)
+      for (int i=0;i<(int)sze.getLength();i++)
 	dims[i] = sze.get(i);
       Array ret = Array(FM_UINT32,Dimensions(1,sze.getLength()),dims);
       retval.push_back(ret);
       return retval;
     } 
   }
-  if (arg.size() == 2) {
-    Array tmp(arg[1]);
-    int dimval = tmp.getContentsAsIntegerScalar();
-    if (dimval<1)
-      throw Exception("illegal value for dimension argument in call to size function");
-    retval.push_back(Array::uint32Constructor(sze.get(dimval-1)));
-    return retval;
-  }
+  Array tmp(arg[1]);
+  int dimval = tmp.getContentsAsIntegerScalar();
+  if (dimval<1)
+    throw Exception("illegal value for dimension argument in call to size function");
+  retval.push_back(Array::uint32Constructor(sze.get(dimval-1)));
+  return retval;
 }
 
 //   ArrayVector LengthFunction(int nargout, const ArrayVector& arg) {
@@ -1128,6 +1125,7 @@ ArrayVector IsNaNFunction(int nargout, const ArrayVector& arg) {
   int len(tmp.getLength());
   logical *op = (logical *) Malloc(len*sizeof(logical));
   switch (tmp.dataClass()) {
+  default: throw Exception("unhandled type as argument to isnan");
   case FM_STRING:
   case FM_LOGICAL:
   case FM_UINT8:
@@ -1201,6 +1199,7 @@ ArrayVector IsInfFunction(int nargout, const ArrayVector& arg) {
   int len(tmp.getLength());
   logical *op = (logical *) Malloc(len*sizeof(logical));
   switch (tmp.dataClass()) {
+  default: throw Exception("unhandled type as argument to isinf");
   case FM_STRING:
   case FM_LOGICAL:
   case FM_UINT8:
@@ -1426,7 +1425,6 @@ ArrayVector RCFindModeFull(Array x) {
   op_col = (uint32*) Malloc(nonZero*sizeof(uint32));
   int ndx;
   int rows = x.getDimensionLength(0);
-  int cols = x.getDimensionLength(1);
   ndx = 0;
   for (i=0;i<len;i++)
     if (dp[i]) {
@@ -1468,7 +1466,6 @@ ArrayVector RCVFindModeFullReal(Array x) {
   op_val = (T*) Malloc(nonZero*sizeof(T));
   int ndx;
   int rows = x.getDimensionLength(0);
-  int cols = x.getDimensionLength(1);
   ndx = 0;
   for (i=0;i<len;i++)
     if (dp[i]) {
@@ -1512,7 +1509,6 @@ ArrayVector RCVFindModeFullComplex(Array x) {
   op_val = (T*) Malloc(2*nonZero*sizeof(T));
   int ndx;
   int rows = x.getDimensionLength(0);
-  int cols = x.getDimensionLength(1);
   ndx = 0;
   for (i=0;i<len;i++)
     if (dp[2*i] || dp[2*i+1]) {
@@ -1539,6 +1535,7 @@ ArrayVector RCVFindModeFullComplex(Array x) {
 
 ArrayVector RCVFindModeFull(Array x) {
   switch (x.dataClass()) {
+  default: throw Exception("find not defined for reference types");
   case FM_LOGICAL:
     return RCVFindModeFullReal<logical>(x);
   case FM_UINT8:
