@@ -98,16 +98,22 @@ IF( UMFPACK_LIBRARY AND UMFPACK_INCLUDE_DIR AND AMD_LIBRARY AND AMD_INCLUDE_DIR)
 ENDIF( UMFPACK_LIBRARY AND UMFPACK_INCLUDE_DIR AND AMD_LIBRARY AND AMD_INCLUDE_DIR )	
 ENDIF( NOT MSVC )
 
+IF( MSVC )
+	ADD_DEFINITIONS( -DHAVE_ARPACK )
+	ADD_DEFINITIONS( -DHAVE_UMFPACK )
+	INCLUDE_DIRECTORIES( dependencies/umfpack/Include dependencies/UFconfig dependencies/AMD/Include dependencies/umfpack/Source)
+ENDIF( MSVC )
+
 #############################################################################
 #Find LLVM
 IF( MSVC )
 	SET( LLVM_SEARCH_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm-2.0/include/llvm )
 	
-	IF( CMAKE_BUILD_TYPE MATCHES "Debug" )
+	#IF( CMAKE_BUILD_TYPE MATCHES "Debug" )
 		SET( LLVM_LIB_SRCH_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm-2.0/win32/debug )	
-	ELSE( CMAKE_BUILD_TYPE MATCHES "Debug" )
-		SET( LLVM_LIB_SRCH_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm-2.0/win32/release )	
-	ENDIF( CMAKE_BUILD_TYPE MATCHES "Debug" )
+	#ELSE( CMAKE_BUILD_TYPE MATCHES "Debug" )
+	#	SET( LLVM_LIB_SRCH_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm-2.0/win32/release )	
+	#ENDIF( CMAKE_BUILD_TYPE MATCHES "Debug" )
 	
 	FIND_PATH( LLVM_INCLUDE_DIR NAMES Module.h PATHS ${LLVM_SEARCH_PATH} DOC "Top level include directory for LLVM" )
 	

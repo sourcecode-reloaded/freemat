@@ -23,8 +23,11 @@ for line in lines:
     source_files += output + '\n'
     f.writelines(o_str)
     dep_str ="SET_SOURCE_FILES_PROPERTIES( " + output + " PROPERTIES "
-    for d in defs: 
-        dep_str += " COMPILE_FLAGS " + "-D" + d
+    if len(defs) > 0 :
+        dep_str += ' COMPILE_FLAGS "'
+        for d in defs: 
+            dep_str += " -D" + d
+        dep_str += ' "'
     dep_str += " OBJECT_DEPENDS " + "${CMAKE_CURRENT_SOURCE_DIR}/" + source
     dep_str += " GENERATED 1)\n"
     f.writelines( dep_str )
