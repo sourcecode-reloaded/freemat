@@ -48,7 +48,11 @@ stringVector DoSystemCallCaptured(std::string cmd) {
   if (!toRun.waitForStarted())
     return ret;
   toRun.closeWriteChannel();
+#ifdef Q_OS_WIN32
+  while (!toRun.waitForFinished())
+#else
   while (!toRun.waitForFinished(100))
+#endif
     qApp->processEvents();
   QByteArray result = toRun.readAll();
   QTextStream myStream(&result);
