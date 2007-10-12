@@ -831,6 +831,10 @@ void JITVM::compile(tree t, Interpreter *m_eval) {
   // The signature for the compiled function should be:
   // int func(void** inputs);
   M = new Module("test");
+#if defined(_MSC_VER)  
+  M->setDataLayout("e-p:32:32-f64:32:64-i64:32:64");
+#endif
+
   initialize_JIT_functions();
   //  InitializeJITFunctions(M);
   std::vector<const Type*> DispatchFuncArgs;
@@ -885,6 +889,9 @@ void JITVM::compile(tree t, Interpreter *m_eval) {
   new BranchInst(func_epilog,ip);
   new ReturnInst(new LoadInst(return_val, "", false, func_epilog),func_epilog);
 
+  std::ofstream dbgout("c:\freemat_src\jit.log");
+  dbgout << (*M);
+  dbgout.flush();
   std::cout << (*M);
 #if 0
   if (0) {
@@ -984,7 +991,7 @@ void JITVM::run(Interpreter *m_eval) {
 //   return;
 
   ExistingModuleProvider* MP = new ExistingModuleProvider(M);
-  ExecutionEngine* EE = ExecutionEngine::create(MP, false);
+  ExecutionEngine* EE = ExecutionEngine::create(MP, /*true*/ false);
   std::vector<GenericValue> GVargs;
   GVargs.push_back(GenericValue(args));
   GVargs.push_back(GenericValue((void*) &v_resize));

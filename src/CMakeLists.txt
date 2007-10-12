@@ -22,7 +22,8 @@ DumbTerminal.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/Terminal.moc.cpp
 Terminal.cpp 
 ${FreeMat_qrc}
-freemat.rc )
+freemat.rc 
+${X86TARGET_OBJ} )
 
 #IF( MSVC )
 #	SET( LAPACK_LIBRARY ${lapack} )

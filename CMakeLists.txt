@@ -25,6 +25,7 @@ SET( LOCAL_PATH ${PROJECT_SOURCE_DIR}/dependencies/bin ${PROJECT_BINARY_DIR} /mi
 
 IF( MSVC )
 	ADD_DEFINITIONS( /Dsnprintf=_snprintf /DNOMINMAX /DVERSION="\\"${VERSION}"\\" /DRESOURCEDIR="\\"${RESOURCEDIR}"\\")
+	ADD_DEFINITIONS( /D_HAS_ITERATOR_DEBUGGING=0 /D_SECURE_SCL=0 )
 ELSE( MSVC )
 	ADD_DEFINITIONS( -D'VERSION=\"${VERSION}\"' -D'RESOURCEDIR=\"${RESOURCEDIR}\"')
 ENDIF( MSVC )
@@ -106,16 +107,22 @@ ENDIF( MSVC )
 
 #############################################################################
 #Find LLVM
+OPTION(USE_LLVM "Build with LLVM support?" ON)
+IF( USE_LLVM )
 IF( MSVC )
+
 	SET( LLVM_SEARCH_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm-2.0/include/llvm )
 	
 	#IF( CMAKE_BUILD_TYPE MATCHES "Debug" )
 		SET( LLVM_LIB_SRCH_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm-2.0/win32/debug )	
+		SET( X86TARGET_SRCH_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm-2.0/win32/x86/Debug )
 	#ELSE( CMAKE_BUILD_TYPE MATCHES "Debug" )
 	#	SET( LLVM_LIB_SRCH_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm-2.0/win32/release )	
+	#	SET( X86TARGET_SRCH_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm-2.0/win32/x86/Release )
 	#ENDIF( CMAKE_BUILD_TYPE MATCHES "Debug" )
 	
 	FIND_PATH( LLVM_INCLUDE_DIR NAMES Module.h PATHS ${LLVM_SEARCH_PATH} DOC "Top level include directory for LLVM" )
+	FIND_PATH( X86TARGET_PATH NAMES X86TargetMachine.obj PATHS ${X86TARGET_SRCH_PATH} DOC "Path to x86 target." )
 	
 	FIND_LIBRARY( LLVM_ExecEng_LIB NAMES ExecutionEngine PATHS ${LLVM_LIB_SRCH_PATH} )
 	FIND_LIBRARY( LLVM_CodegenEng_LIB NAMES CodeGen PATHS ${LLVM_LIB_SRCH_PATH} )
@@ -127,16 +134,18 @@ IF( MSVC )
 	FIND_LIBRARY( LLVM_System_LIB NAMES System PATHS ${LLVM_LIB_SRCH_PATH} )
 	FIND_LIBRARY( LLVM_Support_LIB NAMES Support PATHS ${LLVM_LIB_SRCH_PATH} )
 	
-	SET( LLVM_LIB ${LLVM_ExecEng_LIB} ${LLVM_CodegenEng_LIB} ${LLVM_X86_LIB} ${LLVM_VMCore_LIB} 
-	  ${LLVM_Analysis_LIB} ${LLVM_Transforms_LIB} ${LLVM_Target_LIB} ${LLVM_System_LIB} 
-	  ${LLVM_Support_LIB} )
 	
 	IF( LLVM_INCLUDE_DIR AND LLVM_ExecEng_LIB )
+		SET( LLVM_LIB ${LLVM_ExecEng_LIB} ${LLVM_CodegenEng_LIB} ${LLVM_VMCore_LIB} 
+			${LLVM_Analysis_LIB} ${LLVM_Transforms_LIB} ${LLVM_Target_LIB} ${LLVM_System_LIB} 
+			${LLVM_Support_LIB} ${LLVM_X86_LIB} )
+		SET( X86TARGET_OBJ ${X86TARGET_PATH}/X86TargetMachine.obj )
 		SET( LLVM_FOUND TRUE )
 		ADD_DEFINITIONS( -DHAVE_LLVM )
 		INCLUDE_DIRECTORIES( ${LLVM_INCLUDE_DIR} ${LLVM_INCLUDE_DIR}/../  )
 	ENDIF( LLVM_INCLUDE_DIR AND LLVM_ExecEng_LIB )
 ENDIF( MSVC )
+ENDIF( USE_LLVM )
 
 ##############################################################################
 #PCRE library
