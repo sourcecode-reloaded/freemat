@@ -198,63 +198,6 @@ ArrayVector PathToolFunction(int nargout, const ArrayVector& arg, Interpreter* e
   return ArrayVector();
 }
 
-//BUG: Doesn't work for the full range of hex2dec. Rewrite hex2dec in matlab!
-#if defined(_MSC_VER)
-	#define strtoll strtol
-#endif
-
-//convert the supplied string to a decimal integer
-static double hex2dec_helper (string t) {
-  return (double) strtoll(t.c_str(),NULL,16);
-}
-
-//!
-//@Module HEX2DEC Convert Hexadecimal Numbers To Decimal
-//@@Section ELEMENTARY
-//@@Usage
-//Converts a hexadecimal number (encoded as a string matrix) into integers.
-//The syntax for its use is
-//@[
-//   y = hex2dec(x)
-//@]
-//where @|x| is a character matrix where each row represents an integer
-//in hexadecimal form.  The output is of type @|FM_DOUBLE|.
-//@@Examples
-//@<
-//hex2dec('3ff')
-//@>
-//Or for a more complex example
-//@<
-//hex2dec(['0ff';'2de';'123'])
-//@>
-//!
-ArrayVector Hex2DecFunction(int nargout, const ArrayVector& arg) {
-  if (arg.size() == 0)
-    throw Exception("hex2dec requires an argument");
-  Array x(arg[0]);
-  if (x.dataClass() != FM_STRING)
-    throw Exception("hex2dec argument must be a string");
-  if (x.isVector()) {
-    string str(ArrayToString(x));
-    return ArrayVector() << Array::doubleConstructor(hex2dec_helper(str));
-  } else {
-    // Create a buffer to hold the string
-    int numrows = x.rows();
-    int numcolumns = x.columns();
-    MemBlock<uint8> p(numcolumns+1);
-    uint8 *b = &p;
-    // How many strings to convert?
-    const uint8* dp = (const uint8*) x.getDataPointer();
-    double *qp = (double*) Array::allocateArray(FM_DOUBLE,numrows);
-    for (int i=0;i<numrows;i++) {
-      for (int j=0;j<numcolumns;j++)
-	b[j] = dp[i+j*numrows];
-      qp[i] = hex2dec_helper((char*)b);
-    }
-    return ArrayVector() << Array(FM_DOUBLE,Dimensions(numrows,1),qp);
-  }
-  return ArrayVector();
-}
 
 //!
 //@Module DEC2HEX Convert Decimal Number to Hexadecimal
