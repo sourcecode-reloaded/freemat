@@ -1,0 +1,168 @@
+//This is a generated file. Do not edit!
+#ifndef __BLAS_H
+#define __BLAS_H
+
+#ifdef __cplusplus
+extern "C" { 
+#endif /* __cplusplus */
+
+void caxpy(int n, complex *alpha, complex *x, int incx, complex *y, int incy);
+void ccopy(int n, complex *x, int incx, complex *y, int incy);
+complex cdotc(int n, complex *x, int incx, complex *y, int incy);
+complex cdotu(int n, complex *x, int incx, complex *y, int incy);
+void cgbmv(char transa, int m, int n, int nsub, int nsuper, complex *alpha, complex *a, int lda, complex *x, int incx, complex *beta, complex *y, int incy);
+void cgemm(char transa, char transb, int m, int n, int k, complex *alpha, complex *a, int lda, complex *b, int ldb, complex *beta, complex *c, int ldc);
+void cgemv(char transa, int m, int n, complex *alpha, complex *a, int lda, complex *x, int incx, complex *beta, complex *y, int incy);
+void cgerc(int m, int n, complex *alpha, complex *x, int incx, complex *y, int incy, complex *a, int lda);
+void cgeru(int m, int n, complex *alpha, complex *x, int incx, complex *y, int incy, complex *a, int lda);
+void chbmv(char uplo, int n, int ndiag, complex *alpha, complex *a, int lda, complex *x, int incx, complex *beta, complex *y, int incy);
+void chemm(char side, char uplo, int m, int n, complex *alpha, complex *a, int lda, complex *b, int ldb, complex *beta, complex *c, int ldc);
+void chemv(char uplo, int n, complex *alpha, complex *a, int lda, complex *x, int incx, complex *beta, complex *y, int incy);
+void cher(char uplo, int n, float alpha, complex *x, int incx, complex *a, int lda);
+void cher2(char uplo, int n, complex *alpha, complex *x, int incx, complex *y, int incy, complex *a, int lda);
+void cher2k(char uplo, char transa, int n, int k, complex *alpha, complex *a, int lda, complex *b, int ldb, float beta, complex *c, int ldc);
+void cherk(char uplo, char transa, int n, int k, float alpha, complex *a, int lda, float beta, complex *c, int ldc);
+void chpmv(char uplo, int n, complex *alpha, complex *a, complex *x, int incx, complex *beta, complex *y, int incy);
+void chpr(char uplo, int n, float alpha, complex *x, int incx, complex *a);
+void chpr2(char uplo, int n, complex *alpha, complex *x, int incx, complex *y, int incy, complex *a);
+void classq(int n, complex *x, int incx, float *scale, float *sumsq);
+void crotg(complex *a, complex *b, float *c, complex *s);
+void cscal(int n, complex *alpha, complex *y, int incy);
+void csrot(int n, complex *x, int incx, complex *y, int incy, float c, float s);
+void csscal(int n, float alpha, complex *y, int incy);
+void cstemr(char jobz, char range, int n, float *d, float *e, float vl, float vu, int il, int iu, int *m, float *w, complex *z, int ldz, int *nzc, int *isuppz, int *tryrac, int *info);
+void cswap(int n, complex *x, int incx, complex *y, int incy);
+void csymm(char side, char uplo, int m, int n, complex *alpha, complex *a, int lda, complex *b, int ldb, complex *beta, complex *c, int ldc);
+void csyr2k(char uplo, char transa, int n, int k, complex *alpha, complex *a, int lda, complex *b, int ldb, complex *beta, complex *c, int ldc);
+void csyrk(char uplo, char transa, int n, int k, complex *alpha, complex *a, int lda, complex *beta, complex *c, int ldc);
+void ctbmv(char uplo, char transa, char diag, int n, int ndiag, complex *a, int lda, complex *y, int incy);
+void ctbsv(char uplo, char transa, char diag, int n, int ndiag, complex *a, int lda, complex *y, int incy);
+void ctpmv(char uplo, char transa, char diag, int n, complex *a, complex *y, int incy);
+void ctpsv(char uplo, char transa, char diag, int n, complex *a, complex *y, int incy);
+void ctrmm(char side, char uplo, char transa, char diag, int m, int n, complex *alpha, complex *a, int lda, complex *b, int ldb);
+void ctrmv(char uplo, char transa, char diag, int n, complex *a, int lda, complex *y, int incy);
+void ctrsm(char side, char uplo, char transa, char diag, int m, int n, complex *alpha, complex *a, int lda, complex *b, int ldb);
+void ctrsv(char uplo, char transa, char diag, int n, complex *a, int lda, complex *y, int incy);
+double dasum(int n, double *x, int incx);
+void daxpy(int n, double alpha, double *x, int incx, double *y, int incy);
+void dcopy(int n, double *x, int incx, double *y, int incy);
+double ddot(int n, double *x, int incx, double *y, int incy);
+void dgbmv(char transa, int m, int n, int nsub, int nsuper, double alpha, double *a, int lda, double *x, int incx, double beta, double *y, int incy);
+void dgemm(char transa, char transb, int m, int n, int k, double alpha, double *a, int lda, double *b, int ldb, double beta, double *c, int ldc);
+void dgemv(char transa, int m, int n, double alpha, double *a, int lda, double *x, int incx, double beta, double *y, int incy);
+void dger(int m, int n, double alpha, double *x, int incx, double *y, int incy, double *a, int lda);
+double dnrm2(int n, double *x, int incx);
+void drot(int n, double *x, int incx, double *y, int incy, double c, double s);
+void drotg(double *a, double *b, double *c, double *s);
+void drotm(int n, double *x, int incx, double *y, int incy, double *param);
+void drotmg(double d1, double d2, double b1, double b2, double *param);
+void dsbmv(char uplo, int n, int ndiag, double alpha, double *a, int lda, double *x, int incx, double beta, double *y, int incy);
+void dscal(int n, double alpha, double *y, int incy);
+double dsdot(int n, float *x, int incx, float *y, int incy);
+void dspmv(char uplo, int n, double alpha, double *a, double *x, int incx, double beta, double *y, int incy);
+void dspr(char uplo, int n, double alpha, double *x, int incx, double *a);
+void dspr2(char uplo, int n, double alpha, double *x, int incx, double *y, int incy, double *a);
+void dswap(int n, double *x, int incx, double *y, int incy);
+void dsymm(char side, char uplo, int m, int n, double alpha, double *a, int lda, double *b, int ldb, double beta, double *c, int ldc);
+void dsymv(char uplo, int n, double alpha, double *a, int lda, double *x, int incx, double beta, double *y, int incy);
+void dsyr(char uplo, int n, double alpha, double *x, int incx, double *a, int lda);
+void dsyr2(char uplo, int n, double alpha, double *x, int incx, double *y, int incy, double *a, int lda);
+void dsyr2k(char uplo, char transa, int n, int k, double alpha, double *a, int lda, double *b, int ldb, double beta, double *c, int ldc);
+void dsyrk(char uplo, char transa, int n, int k, double alpha, double *a, int lda, double beta, double *c, int ldc);
+void dtbmv(char uplo, char transa, char diag, int n, int ndiag, double *a, int lda, double *y, int incy);
+void dtbsv(char uplo, char transa, char diag, int n, int ndiag, double *a, int lda, double *y, int incy);
+void dtpmv(char uplo, char transa, char diag, int n, double *a, double *y, int incy);
+void dtpsv(char uplo, char transa, char diag, int n, double *a, double *y, int incy);
+void dtrmm(char side, char uplo, char transa, char diag, int m, int n, double alpha, double *a, int lda, double *b, int ldb);
+void dtrmv(char uplo, char transa, char diag, int n, double *a, int lda, double *y, int incy);
+void dtrsm(char side, char uplo, char transa, char diag, int m, int n, double alpha, double *a, int lda, double *b, int ldb);
+void dtrsv(char uplo, char transa, char diag, int n, double *a, int lda, double *y, int incy);
+double dzasum(int n, doublecomplex *x, int incx);
+double dznrm2(int n, doublecomplex *x, int incx);
+int icamax(int n, complex *x, int incx);
+int idamax(int n, double *x, int incx);
+int isamax(int n, float *x, int incx);
+int izamax(int n, doublecomplex *x, int incx);
+int lsame(char ca, char cb);
+float sasum(int n, float *x, int incx);
+void saxpy(int n, float alpha, float *x, int incx, float *y, int incy);
+float scasum(int n, complex *x, int incx);
+float scnrm2(int n, complex *x, int incx);
+void scopy(int n, float *x, int incx, float *y, int incy);
+float sdot(int n, float *x, int incx, float *y, int incy);
+float sdsdot(int n, float sb, float *sx, int incx, float *sy, int incy);
+void sgbmv(char transa, int m, int n, int nsub, int nsuper, float alpha, float *a, int lda, float *x, int incx, float beta, float *y, int incy);
+void sgemm(char transa, char transb, int m, int n, int k, float alpha, float *a, int lda, float *b, int ldb, float beta, float *c, int ldc);
+void sgemv(char transa, int m, int n, float alpha, float *a, int lda, float *x, int incx, float beta, float *y, int incy);
+void sger(int m, int n, float alpha, float *x, int incx, float *y, int incy, float *a, int lda);
+float snrm2(int n, float *x, int incx);
+void srot(int n, float *x, int incx, float *y, int incy, float c, float s);
+void srotg(float *a, float *b, float *c, float *s);
+void srotm(int n, float *x, int incx, float *y, int incy, float *param);
+void srotmg(float d1, float d2, float b1, float b2, float *param);
+void ssbmv(char uplo, int n, int ndiag, float alpha, float *a, int lda, float *x, int incx, float beta, float *y, int incy);
+void sscal(int n, float alpha, float *x, int incx);
+void sspmv(char uplo, int n, float alpha, float *a, float *x, int incx, float beta, float *y, int incy);
+void sspr(char uplo, int n, float alpha, float *x, int incx, float *a);
+void sspr2(char uplo, int n, float alpha, float *x, int incx, float *y, int incy, float *a);
+void sstemr(char jobz, char range, int n, float *d, float *e, float vl, float vu, int il, int iu, int *m, float *w, float *z, int ldz, int *nzc, int *isuppz, int *tryrac, int *info);
+void sswap(int n, float *x, int incx, float *y, int incy);
+void ssymm(char side, char uplo, int m, int n, float alpha, float *a, int lda, float *b, int ldb, float beta, float *c, int ldc);
+void ssymv(char uplo, int n, float alpha, float *a, int lda, float *x, int incx, float beta, float *y, int incy);
+void ssyr(char uplo, int n, float alpha, float *x, int incx, float *a, int lda);
+void ssyr2(char uplo, int n, float alpha, float *x, int incx, float *y, int incy, float *a, int lda);
+void ssyr2k(char uplo, char transa, int n, int k, float alpha, float *a, int lda, float *b, int ldb, float beta, float *c, int ldc);
+void ssyrk(char uplo, char transa, int n, int k, float alpha, float *a, int lda, float beta, float *c, int ldc);
+void stbmv(char uplo, char transa, char diag, int n, int ndiag, float *a, int lda, float *y, int incy);
+void stbsv(char uplo, char transa, char diag, int n, int ndiag, float *a, int lda, float *y, int incy);
+void stpmv(char uplo, char transa, char diag, int n, float *a, float *y, int incy);
+void stpsv(char uplo, char transa, char diag, int n, float *a, float *y, int incy);
+void strmm(char side, char uplo, char transa, char diag, int m, int n, float alpha, float *a, int lda, float *b, int ldb);
+void strmv(char uplo, char transa, char diag, int n, float *a, int lda, float *y, int incy);
+void strsm(char side, char uplo, char transa, char diag, int m, int n, float alpha, float *a, int lda, float *b, int ldb);
+void strsv(char uplo, char transa, char diag, int n, float *a, int lda, float *y, int incy);
+void xerbla(const char *srname, int *info);
+void zaxpy(int n, doublecomplex *alpha, doublecomplex *x, int incx, doublecomplex *y, int incy);
+void zcopy(int n, doublecomplex *x, int incx, doublecomplex *y, int incy);
+doublecomplex zdotc(int n, doublecomplex *x, int incx, doublecomplex *y, int incy);
+doublecomplex zdotu(int n, doublecomplex *x, int incx, doublecomplex *y, int incy);
+void zdrot(int n, doublecomplex *cx, int incx, doublecomplex *cy, int incy, double c, double s);
+void zdscal(int n, double alpha, doublecomplex *y, int incy);
+void zgbmv(char transa, int m, int n, int nsub, int nsuper, doublecomplex *alpha, doublecomplex *a, int lda, doublecomplex *x, int incx, doublecomplex *beta, doublecomplex *y, int incy);
+void zgemm(char transa, char transb, int m, int n, int k, doublecomplex *alpha, doublecomplex *a, int lda, doublecomplex *b, int ldb, doublecomplex *beta, doublecomplex *c, int ldc);
+void zgemv(char transa, int m, int n, doublecomplex *alpha, doublecomplex *a, int lda, doublecomplex *x, int incx, doublecomplex *beta, doublecomplex *y, int incy);
+void zgerc(int m, int n, doublecomplex *alpha, doublecomplex *x, int incx, doublecomplex *y, int incy, doublecomplex *a, int lda);
+void zgeru(int m, int n, doublecomplex *alpha, doublecomplex *x, int incx, doublecomplex *y, int incy, doublecomplex *a, int lda);
+void zhbmv(char uplo, int n, int ndiag, doublecomplex *alpha, doublecomplex *a, int lda, doublecomplex *x, int incx, doublecomplex *beta, doublecomplex *y, int incy);
+void zhemm(char side, char uplo, int m, int n, doublecomplex *alpha, doublecomplex *a, int lda, doublecomplex *b, int ldb, doublecomplex *beta, doublecomplex *c, int ldc);
+void zhemv(char uplo, int n, doublecomplex *alpha, doublecomplex *a, int lda, doublecomplex *x, int incx, doublecomplex *beta, doublecomplex *y, int incy);
+void zher(char uplo, int n, double alpha, doublecomplex *x, int incx, doublecomplex *a, int lda);
+void zher2(char uplo, int n, doublecomplex *alpha, doublecomplex *x, int incx, doublecomplex *y, int incy, doublecomplex *a, int lda);
+void zher2k(char uplo, char transa, int n, int k, doublecomplex *alpha, doublecomplex *a, int lda, doublecomplex *b, int ldb, double beta, doublecomplex *c, int ldc);
+void zherk(char uplo, char transa, int n, int k, double alpha, doublecomplex *a, int lda, double beta, doublecomplex *c, int ldc);
+void zhpmv(char uplo, int n, doublecomplex *alpha, doublecomplex *a, doublecomplex *x, int incx, doublecomplex *beta, doublecomplex *y, int incy);
+void zhpr(char uplo, int n, double alpha, doublecomplex *x, int incx, doublecomplex *a);
+void zhpr2(char uplo, int n, doublecomplex *alpha, doublecomplex *x, int incx, doublecomplex *y, int incy, doublecomplex *a);
+void zlassq(int n, doublecomplex *x, int incx, double *scale, double *sumsq);
+void zrotg(doublecomplex *a, doublecomplex *b, double *c, doublecomplex *s);
+void zscal(int n, doublecomplex *alpha, doublecomplex *y, int incy);
+void zstemr(char jobz, char range, int n, double *d, double *e, double vl, double vu, int il, int iu, int *m, double *w, doublecomplex *z, int ldz, int *nzc, int *isuppz, int *tryrac, int *info);
+void zswap(int n, doublecomplex *x, int incx, doublecomplex *y, int incy);
+void zsymm(char side, char uplo, int m, int n, doublecomplex *alpha, doublecomplex *a, int lda, doublecomplex *b, int ldb, doublecomplex *beta, doublecomplex *c, int ldc);
+void zsyr2k(char uplo, char transa, int n, int k, doublecomplex *alpha, doublecomplex *a, int lda, doublecomplex *b, int ldb, doublecomplex *beta, doublecomplex *c, int ldc);
+void zsyrk(char uplo, char transa, int n, int k, doublecomplex *alpha, doublecomplex *a, int lda, doublecomplex *beta, doublecomplex *c, int ldc);
+void ztbmv(char uplo, char transa, char diag, int n, int ndiag, doublecomplex *a, int lda, doublecomplex *y, int incy);
+void ztbsv(char uplo, char transa, char diag, int n, int ndiag, doublecomplex *a, int lda, doublecomplex *y, int incy);
+void ztpmv(char uplo, char transa, char diag, int n, doublecomplex *a, doublecomplex *y, int incy);
+void ztpsv(char uplo, char transa, char diag, int n, doublecomplex *a, doublecomplex *y, int incy);
+void ztrmm(char side, char uplo, char transa, char diag, int m, int n, doublecomplex *alpha, doublecomplex *a, int lda, doublecomplex *b, int ldb);
+void ztrmv(char uplo, char transa, char diag, int n, doublecomplex *a, int lda, doublecomplex *y, int incy);
+void ztrsm(char side, char uplo, char transa, char diag, int m, int n, doublecomplex *alpha, doublecomplex *a, int lda, doublecomplex *b, int ldb);
+void ztrsv(char uplo, char transa, char diag, int n, doublecomplex *a, int lda, doublecomplex *y, int incy);
+
+
+#ifdef __cplusplus 
+}
+#endif /* __cplusplus */
+
+#endif /*_BLAS_WRAP_H*/
