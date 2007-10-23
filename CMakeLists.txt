@@ -205,6 +205,11 @@ ENDMACRO( CONVERT_F2C dep C_FILES )
 INCLUDE_DIRECTORIES( libs/libFreeMat libs/libGraphics 
 libs/libMex libs/libXP libs/libCore libs/libFN  ${QT_LIBRARIES} src)   
 
+OPTION(USE_DYNLINK "Link dynamically" ON)
+IF( USE_DYNLINK )
+	INCLUDE_DIRECTORIES( libs/libDynLink )
+ENDIF( USE_DYNLINK )
+
 ADD_SUBDIRECTORY( dependencies )
 ADD_SUBDIRECTORY( libs )
 ADD_SUBDIRECTORY( src )
