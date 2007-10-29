@@ -25,16 +25,16 @@
 extern "C" {
   void sgemm_ (char * ta, char* tb, int* m, int* n, int* k, float *alp,
 	       const float*A, int* LDA, const float* B, 
-	       int* LDB, float* BETA, float *C, int*LDC);
+	       int* LDB, float* BETA, float *C, int*LDC, int transa_len, int transb_len);
   void cgemm_ (char * ta, char* tb, int* m, int* n, int* k, float *alp,
 	       const float*A, int* LDA, const float* B, 
-	       int* LDB, float* BETA, float *C, int*LDC);
+	       int* LDB, float* BETA, float *C, int*LDC, int transa_len, int transb_len);
   void dgemm_ (char * ta, char* tb, int* m, int* n, int* k, double *alp,
 	       const double*A, int* LDA, const double* B, 
-	       int* LDB, double* BETA, double *C, int*LDC);
+	       int* LDB, double* BETA, double *C, int*LDC, int transa_len, int transb_len);
   void zgemm_ (char * ta, char* tb, int* m, int* n, int* k, double *alp,
 	       const double*A, int* LDA, const double* B, 
-	       int* LDB, double* BETA, double *C, int*LDC);
+	       int* LDB, double* BETA, double *C, int*LDC, int transa_len, int transb_len);
 }
 
 /***************************************************************************
@@ -202,7 +202,7 @@ void floatMatrixMatrixMultiply(int m, int n, int k,
   int LDC = m;
 
   sgemm_( &TRANSA, &TRANSB, &M, &N, &K, &ALPHA, a, &LDA, b, &LDB,
-	  &BETA, C, &LDC );
+	  &BETA, C, &LDC, 1, 1 );
 }
 
 /***************************************************************************
@@ -377,7 +377,7 @@ void complexMatrixMatrixMultiply(int m, int n, int k,
   int LDC = m;
 
   cgemm_( &TRANSA, &TRANSB, &M, &N, &K, ALPHA, a, &LDA, b, &LDB,
-	  BETA, C, &LDC );
+	  BETA, C, &LDC, 1, 1 );
 }
 
 /***************************************************************************
@@ -547,7 +547,7 @@ void doubleMatrixMatrixMultiply(int m, int n, int k,
   int LDC = m;
 
   dgemm_( &TRANSA, &TRANSB, &M, &N, &K, &ALPHA, a, &LDA, b, &LDB,
-	  &BETA, C, &LDC );
+	  &BETA, C, &LDC, 1, 1 );
 }
 
 /***************************************************************************
@@ -721,5 +721,5 @@ void dcomplexMatrixMatrixMultiply(int m, int n, int k,
   int LDC = m;
 
   zgemm_( &TRANSA, &TRANSB, &M, &N, &K, ALPHA, a, &LDA, b, &LDB,
-	  BETA, C, &LDC );
+	  BETA, C, &LDC, 1, 1 );
 }

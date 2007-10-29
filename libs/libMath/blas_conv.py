@@ -29,6 +29,7 @@ fout=file('blas_wrap.cpp','w')
 preamble= \
 """//This is a generated file. Do not edit!
 #include "blas_wrap.h"
+#include "blas_dyn_link.h"
 #include <iostream>
 #include <vector>
 #include <QString>
@@ -52,7 +53,7 @@ fout.write('\n\n')
 # put wrapper function definitions
 i = 0
 for fn in fns:
-    fdecl = fn.return_type + ' ' + fn.function_name + fn.parameter_string + '\n{\n'
+    fdecl = fn.return_type + ' ' + fn.function_name + '_' + fn.parameter_string + '\n{\n'
     fdecl = fdecl + '\tif( !wrapper.fn['+ str(i) + '] )\n'
     fdecl = fdecl + '\t\twrapper.fn['+ str(i) + '] = wrapper.Resolve(\"' + fn.function_name + '\");\n'
     if fn.return_type != 'void':
@@ -74,83 +75,15 @@ postamble=\
 """
 fout.write( postamble )
 
-class_impl="""
-void BlasWrapper::DiscoverBlasLibrary( void )
-{
-    fileName = QString("libacml_dll.dll");
-    blasLib->setFileName( fileName );
-    if( ! blasLib->load() ){
-	std::cout << blasLib->errorString().toStdString() << "\\n";
-    }
-}
-
-void* BlasWrapper::Resolve( const char* function_name )
-{
-    void *p;
-    QString fname( function_name );
-    if( capitalized )
-	fname = fname.toUpper();
-    //TODO: handle prefix, suffix.
-
-    if( !(p = blasLib->resolve( fname.toAscii() ))){
-	std::cout << blasLib->errorString().toStdString() 
-	    << " while loading function: " << fname.toStdString() << "\\n";
-    }
-    return p;
-}
-
-"""
-fout.write(class_impl)
-
-#resolve function names
-fout.write("""
-void BlasWrapper::InitFunctions( void )
-{
-""")
-
-fout.write("\tfn.resize( %d );\n" % nblasfns)
-fout.write("}\n")
 fout.close()
 
-class_header="""
-#ifndef __BLAS_WRAP_H
+fout=file('blas_wrap.h','w')
+fout.write("""#ifndef __BLAS_WRAP_H
 #define __BLAS_WRAP_H
-
-#include <QString>
-#include <QLibrary> 
-#include <vector>
-typedef long int integer;
-typedef char *address;
-typedef short int shortint;
-typedef float real;
-typedef double doublereal;
-typedef struct { real r, i; } complex;
-typedef struct { doublereal r, i; } doublecomplex;
-typedef long int logical;
-typedef short int shortlogical;
-typedef char logical1;
-typedef char integer1;
-
-class BlasWrapper{
-    QString fileName;
-    QString prefix;
-    QString suffix;
-    bool capitalized;
-    QLibrary* blasLib;
-public:
-    BlasWrapper() : capitalized( false ) {  blasLib = new QLibrary();};
-    ~BlasWrapper() { delete blasLib; };
-    void DiscoverBlasLibrary( void );
-    void* Resolve( const char* function_name );
-    void InitFunctions( void );
-
-public:
-    std::vector<void*> fn;
-};
-#endif /*_BLAS_WRAP_H*/
-"""
-file('blas_wrap.h','w').write(class_header)
-
+""")
+fout.write("#define BLAS_NUM_FNS %d \n" % nblasfns)
+fout.write("#endif /*_BLAS_WRAP_H*/")
+fout.close()
 
 fout=file('blas.h','w')
 preamble= \
@@ -167,7 +100,7 @@ fout.write(preamble)
 
 # Put function typedefs
 for fn in fns:
-    fdef = fn.return_type + ' ' + fn.function_name + fn.parameter_string + ';\n'
+    fdef = fn.return_type + ' ' + fn.function_name + '_' + fn.parameter_string + ';\n'
     fout.write(fdef)
 fout.write('\n\n')
 
@@ -176,6 +109,17 @@ postamble=\
 }
 #endif /* __cplusplus */
 
-#endif /*_BLAS_WRAP_H*/
+#endif /*_BLAS_H*/
 """
 fout.write( postamble )
+
+fout=file('blas/blas_ref.def','w')
+fout.write("""
+LIBRARY blas_ref
+EXPORTS
+""")
+i=1
+for fn in fns:
+    fout.write(fn.function_name + '_' + '\t@' + str(i) + '\n')
+    i=i+1
+fout.close()

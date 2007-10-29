@@ -43,9 +43,9 @@ arpack
 umfpack
 amd
 lapack
-blas
 ${LAPACK_LIBRARY}
 ${BLAS_LIBRARY}
+blas
 ${ZLIB_LIBRARY}
 ${PCRE_LIBRARY}
 ${QT_QTCORE_LIBRARY} 
