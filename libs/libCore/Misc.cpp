@@ -4651,3 +4651,41 @@ ArrayVector Conv2Function(int nargout, const ArrayVector& arg) {
   throw Exception("could not recognize which form of conv2 was requested - check help conv2 for details");
 }
 
+//!
+//@Module  Control the Verbosity of the Interpreter
+//@@Section FREEMAT
+//@@Usage
+//The @|blaslib| function can be used to switch to a different BLAS library.
+//usage is
+//@[
+//  blaslib(name)
+//@]
+//where @|name| is a string containing the name of the BLAS library.
+//Calling blaslib without parameters will produce a list of valid BLAS libraries available
+//on current installation.
+//!
+#ifdef DYN_BLAS
+#include "blas_dyn_link.h"
+extern BlasWrapper wrapper;
+#endif
+ArrayVector BlasLibraryFunction(int nargout, const ArrayVector& arg, Interpreter *m_eval) {
+#ifdef DYN_BLAS
+    std::string msg;
+    if (arg.size() < 1){ 
+	wrapper.ListLibraries( msg );
+	m_eval->outputMessage( msg );
+	return ArrayVector();
+    }
+
+    string tname = ArrayToString(arg[0]);
+    if ( wrapper.LoadLibByName(tname, msg)) {
+	m_eval->outputMessage( msg );
+	return ArrayVector();
+    }
+    else{
+	throw Exception( msg );
+    }
+#endif
+    throw Exception( "Statically linked BLAS." );
+    return ArrayVector();  
+}

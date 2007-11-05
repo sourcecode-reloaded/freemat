@@ -246,6 +246,7 @@ void LoadCoreFunctions(Context* context) {
   context->addSpecialFunction("ctypefreeze",CtypeFreezeFunction,2,1,"s","type",NULL);
   context->addSpecialFunction("ctypethaw",CtypeThawFunction,3,2,"x","type","count",NULL);
   context->addSpecialFunction("ctypeprint",CtypePrintFunction,1,0,"type",NULL);
+  context->addSpecialFunction("blaslib",BlasLibraryFunction,1,0,"name",NULL);
   InitializeFileSubsystem();
 #ifdef USE_MPI
   LoadMPIFunctions(context);

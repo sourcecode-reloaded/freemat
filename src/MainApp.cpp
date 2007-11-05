@@ -859,6 +859,10 @@ Context *MainApp::NewContext() {
     LoadHandleGraphicsFunctions(context);  
   }
   LoadThreadFunctions(context);
+#ifdef DYN_BLAS
+  void LoadBlasFunctions( void );
+  LoadBlasFunctions();
+#endif
   return context;
 }
 
