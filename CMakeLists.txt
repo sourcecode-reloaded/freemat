@@ -99,6 +99,17 @@ IF( UMFPACK_LIBRARY AND UMFPACK_INCLUDE_DIR AND AMD_LIBRARY AND AMD_INCLUDE_DIR)
 ENDIF( UMFPACK_LIBRARY AND UMFPACK_INCLUDE_DIR AND AMD_LIBRARY AND AMD_INCLUDE_DIR )	
 ENDIF( NOT MSVC )
 
+IF( NOT MSVC )
+OPTION(USE_ARPACK "Build with ARPACK support?" ON)
+IF( USE_ARPACK )
+  FIND_LIBRARY(ARPACK_LIBRARY NAMES arpack DOC "Location of ARPACK library" PATHS ${LOCAL_PATH})
+  IF( ARPACK_LIBRARY ) 
+    ADD_DEFINITIONS( -DHAVE_ARPACK )
+  ENDIF( ARPACK_LIBRARY )	
+ENDIF( USE_ARPACK )
+ENDIF( NOT MSVC )
+
+
 IF( MSVC )
 	ADD_DEFINITIONS( -DHAVE_ARPACK )
 	ADD_DEFINITIONS( -DHAVE_UMFPACK )
@@ -143,7 +154,9 @@ IF( MSVC )
 		SET( LLVM_FOUND TRUE )
 		ADD_DEFINITIONS( -DHAVE_LLVM )
 		INCLUDE_DIRECTORIES( ${LLVM_INCLUDE_DIR} ${LLVM_INCLUDE_DIR}/../  )
-	ENDIF( LLVM_INCLUDE_DIR AND LLVM_ExecEng_LIB )
+        ENDIF( LLVM_INCLUDE_DIR AND LLVM_ExecEng_LIB )
+ELSE( MSVC )        
+        
 ENDIF( MSVC )
 ENDIF( USE_LLVM )
 
@@ -163,14 +176,13 @@ IF(NOT MSVC)
 	FIND_LIBRARY(NCURSES_LIBRARY NAMES ncurses DOC "Location of the ncurses library." PATH /mingw/lib)
 	FIND_LIBRARY(SOCKS_LIBRARY NAMES socks wsock32 DOC "Location of the winsock library." PATH /mingw/lib)
 	SET(EXTRA_LIBRARIES ${NCURSES_LIBRARY} ${SOCKS_LIBRARY} )  
+        FIND_LIBRARY(G2C_LIBRARY NAMES g2c DOC "Location of Fortran to C (g2c) library" PATHS /mingw/lib)
 ELSE(NOT MSVC)
 	FIND_LIBRARY(SOCKS_LIBRARY NAMES socks wsock32 ws2_32 DOC "Location of the winsock library." PATH /mingw/lib)
-	SET(EXTRA_LIBRARIES ${SOCKS_LIBRARY} )  
+        SET(EXTRA_LIBRARIES ${SOCKS_LIBRARY} )  
 ENDIF(NOT MSVC)
 
-#IF( WIN32 )
-#	FIND_LIBRARY(G2C_LIBRARY NAMES g2c gfortran DOC "Location of Fortran to C (g2c) library" PATHS /mingw/lib)
-#ENDIF( WIN32 )
+
 
 ###########################################################################
 # F2C setup
@@ -180,6 +192,8 @@ IF( MSVC )
 	FIND_PATH( F2C_INCLUDE_DIR f2c.h PATHS ${LOCAL_PATH} DOC "Path to f2c.h" )
 	INCLUDE_DIRECTORIES(${F2C_INCLUDE_DIR}) 
 	#SET( F2C_FLAGS STRING " -g -c " INTERNAL )
+ELSE( MSVC )
+  FIND_LIBRARY( F2C_LIBRARY NAMES gfortran PATHS ${LOCAL_PATH} DOC "Fortran to C Library" )
 ENDIF( MSVC )
 
 ###########################################################################

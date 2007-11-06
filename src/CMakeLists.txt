@@ -43,6 +43,7 @@ arpack
 umfpack
 amd
 lapack
+${ARPACK_LIBRARY}
 ${LAPACK_LIBRARY}
 ${BLAS_LIBRARY}
 blas
