@@ -5,7 +5,7 @@ IF( USE_DYNLINK )
   IF( MSVC )
     ADD_LIBRARY( blas_ref SHARED ${bc_src} blas_ref.def)
   ELSE( MSVC )
-    ADD_LIBRARY( blas_ref SHARED ${bc_src})
+    ADD_LIBRARY( blas_ref SHARED ${bf_src})
   ENDIF( MSVC )
     
       TARGET_LINK_LIBRARIES( blas_ref 

@@ -130,8 +130,6 @@ void BlasWrapper::DiscoverBlasLibrary( void )
     }
     delete libsettings;
     return;
-
-    delete libsettings;
 }
 
 void* BlasWrapper::Resolve( const char* function_name )
