@@ -3018,6 +3018,127 @@ ArrayVector Bin2IntFunction(int nargout, const ArrayVector& arg) {
   return retval;
 }
 
+
+template<class T> void BitShiftArray( const Array& x, Array& k, Array& n, Array& retval )
+{
+  Dimensions xdim(x.dimensions());
+  int nelem = xdim.getElementCount();
+  const T *dp = ((const T *)x.getDataPointer());
+  T *op = (T *)Malloc(nelem*sizeof(T));
+  
+  k.promoteType( FM_INT32 );
+
+  int32 * kshift = (int32 *) k.getDataPointer();
+  bool is_k_scalar = k.isScalar(); 
+
+  for (int i=0;i<nelem;i++){
+     const int32 ks = ( is_k_scalar ) ? kshift[0] : kshift[i];
+     op[i] = dp[i] << ks;
+  }
+
+  n.promoteType( FM_INT32 );
+  int32 * nmask = (int32 *) n.getDataPointer();
+  bool is_n_scalar = n.isScalar(); 
+
+  if( !n.isEmpty() ){
+      for (int i=0;i<nelem;i++){
+	 const int32 nm = ( is_n_scalar ) ? nmask[0] : nmask[i];
+	 if( nm > 0 && (nm < 8*sizeof(T))){
+	    const T mask = (((T)1)<<nm)-1; //construct a mask of all ones in the lower n bits
+	    const int sign = (op[i]<0)?-1:1;
+	    op[i] = sign*(op[i] & mask);
+	 }
+      }
+  }
+  retval = Array( x.dataClass(), xdim, op );
+}
+
+//!
+//@Module BITSHIFT Shift bits of unsigned int.
+//@@Section TYPECAST
+//@@Usage
+//Returns value of the unsigned integer shifted by a number of places.
+//The general syntax for its use is
+//@[
+//   y = bitshift(x,k)
+//   y = bitshift(x,k,n)
+//@]
+//where @|x| is a multi-dimensional unsigned integer array. @|k| number of bits 
+//to shift. @|n| number of low bits to keep.
+//@@Example
+//The following piece of code demonstrates various uses of the int2bin
+//function.  First the simplest example:
+//@<
+//A = [-1;2;-3;4];
+//B = bitshift(A,1);
+//C = bitshift(A,2,8);
+//D = bitshift([ -3 3 ],[1 2], [2 3]);
+//@>
+//!
+ArrayVector BitShiftFunction(int nargout, const ArrayVector& arg) 
+{
+  if (arg.size() < 2 || arg.size() > 3 )
+    throw Exception("bitshift requires two or three arguments");
+
+  Array x(arg[0]);
+  Array k(arg[1]);
+  Array n;
+
+  if( !( x.isIntegerClass() && k.isIntegerClass() ) )
+      throw Exception("bitshift arguments must be integer");
+
+  if (x.isEmpty()) {
+    ArrayVector retval;
+    retval.push_back(Array::emptyConstructor());
+    return retval;
+  }
+
+  if( !( k.isScalar() || x.isScalar() ) && ! k.dimensions().equals( x.dimensions() ))
+      throw Exception("Input dimensions should be either scalar or the same");
+
+  if( arg.size() == 3 ){
+      n.setValue( arg[2] );
+      if( (!( n.isScalar() || x.isScalar() ) && ! n.dimensions().equals( x.dimensions() ) ) || 
+	  (!( n.isScalar() || k.isScalar() ) && ! n.dimensions().equals( k.dimensions() ) ) )
+	  throw Exception("Input dimensions should be either scalar or the same");
+  }
+  
+  Class argType(x.dataClass());
+  Array output;
+  ArrayVector retval;
+
+  switch( argType ){
+    default: throw Exception("illegal type");
+    case FM_UINT8:
+	BitShiftArray<uint8>(x, k, n, output);
+	break;
+    case FM_INT8:
+	BitShiftArray<int8>(x, k, n, output);
+	break;
+    case FM_UINT16:
+	BitShiftArray<uint16>(x, k, n, output);
+	break;
+    case FM_INT16:
+	BitShiftArray<int16>(x, k, n, output);
+	break;
+    case FM_UINT32:
+	BitShiftArray<uint32>(x, k, n, output);
+	break;
+    case FM_INT32:
+	BitShiftArray<int32>(x, k, n, output);
+	break;
+    case FM_UINT64:
+	BitShiftArray<uint64>(x, k, n, output);
+	break;
+    case FM_INT64:
+	BitShiftArray<int64>(x, k, n, output);
+	break;
+  }
+  retval.push_back( output );
+  return retval;
+}
+
+
 //!
 //@Module PCODE Convert a Script or Function to P-Code
 //@@Section FREEMAT

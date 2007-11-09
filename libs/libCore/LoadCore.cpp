@@ -203,6 +203,7 @@ void LoadCoreFunctions(Context* context) {
   context->addFunction("wavrecord",WavRecordFunction,-1,1,NULL);
   context->addFunction("num2hex",Num2HexFunction,1,1,"x",NULL);
   context->addFunction("dec2hex",Dec2HexFunction,2,1,"x","n",NULL);
+  context->addFunction("bitshift",BitShiftFunction,3,1,"x","n","k",NULL);
   context->addSpecialFunction("save",SaveFunction,-1,0,NULL);
   context->addSpecialFunction("load",LoadFunction,-1,1,NULL);
   context->addSpecialFunction("clear",ClearFunction,-1,0,NULL);

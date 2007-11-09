@@ -169,6 +169,7 @@ ArrayVector RoundFunction(int, const ArrayVector& arg);
 ArrayVector AbsFunction(int, const ArrayVector& arg);
 ArrayVector Hex2DecFunction(int, const ArrayVector& arg);
 ArrayVector Dec2HexFunction(int, const ArrayVector& arg);
+ArrayVector BitShiftFunction(int, const ArrayVector& arg);
 ArrayVector Num2HexFunction(int, const ArrayVector& arg);
 ArrayVector FindFunction(int, const ArrayVector& arg, Interpreter* eval);
 ArrayVector HelpFunction(int, const ArrayVector& arg, Interpreter* eval);
