@@ -889,7 +889,7 @@ void JITVM::compile(Tree* t, Interpreter *m_eval) {
   new BranchInst(func_epilog,ip);
   new ReturnInst(new LoadInst(return_val, "", false, func_epilog),func_epilog);
 
-  std::ofstream dbgout("c:\freemat_src\jit.log");
+  std::ofstream dbgout("jit.log");
   dbgout << (*M);
   dbgout.flush();
   std::cout << (*M);

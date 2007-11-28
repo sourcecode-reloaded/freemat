@@ -1,8 +1,9 @@
 
 FILE( GLOB bf_src src/*.f )
-CONVERT_F2C( blas_ref bc_src ${bf_src} )
+
 IF( USE_DYNLINK )
   IF( MSVC )
+    CONVERT_F2C( blas_ref bc_src ${bf_src} )
     ADD_LIBRARY( blas_ref SHARED ${bc_src} blas_ref.def)
   ELSE( MSVC )
     ADD_LIBRARY( blas_ref SHARED ${bf_src})
@@ -15,6 +16,7 @@ IF( USE_DYNLINK )
       INSTALL(TARGETS blas_ref RUNTIME DESTINATION bin LIBRARY DESTINATION bin )
   ELSE( USE_DYNLINK )
     IF( MSVC )
+      CONVERT_F2C( blas_ref bc_src ${bf_src} )
       ADD_LIBRARY( blas ${bc_src} )
     ELSE( MSVC )
       ADD_LIBRARY( blas ${bf_src} )
