@@ -1952,19 +1952,19 @@ ArrayVector PrintfFunction(int nargout, const ArrayVector& arg,
 }
 
 //!
-//@Module FGETLINE Read a String from a File
+//@Module FGETS Read a String from a File
 //@@Section IO
 //@@Usage
-//Reads a string from a file.  The general syntax for its use
+//Reads a string from a file including the line end character.  The general syntax for its use
 //is
 //@[
-//  s = fgetline(handle)
+//  s = fgets(handle)
 //@]
 //This function reads characters from the file @|handle| into
 //a @|string| array @|s| until it encounters the end of the file
 //or a newline.  The newline, if any, is retained in the output
 //string.  If the file is at its end, (i.e., that @|feof| would
-//return true on this handle), @|fgetline| returns an empty
+//return true on this handle), @|fgets| returns an empty
 //string.
 //@@Example
 //First we write a couple of strings to a test file.
@@ -1977,12 +1977,12 @@ ArrayVector PrintfFunction(int nargout, const ArrayVector& arg,
 //Next, we read then back.
 //@<
 //fp = fopen('testtext','r')
-//fgetline(fp)
-//fgetline(fp)
+//fgets(fp)
+//fgets(fp)
 //fclose(fp);
 //@>
 //!
-ArrayVector FgetlineFunction(int nargout, const ArrayVector& arg) {
+ArrayVector FgetsFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("fgetline takes one argument, the file handle");
   Array tmp(arg[0]);
@@ -1993,6 +1993,11 @@ ArrayVector FgetlineFunction(int nargout, const ArrayVector& arg) {
   if (feof(fptr->fp))
     return singleArrayVector(Array::emptyConstructor());
   return singleArrayVector(Array::stringConstructor(buffer));
+}
+
+ArrayVector FgetlineFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
+	eval->warningMessage( "fgetline is deprecated. Use fgets instead." );
+	FgetsFunction( nargout, arg );
 }
 
 //!

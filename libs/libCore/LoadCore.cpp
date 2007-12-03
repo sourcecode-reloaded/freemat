@@ -168,7 +168,8 @@ void LoadCoreFunctions(Context* context) {
   context->addFunction("fseek",FseekFunction,3,0,"handle","offset","style",NULL);
   context->addFunction("ftell",FtellFunction,1,1,"handle",NULL);
   context->addFunction("fflush",FflushFunction,1,1,"handle",NULL);
-  context->addFunction("fgetline",FgetlineFunction,1,1,"handle",NULL);
+  context->addSpecialFunction("fgetline",FgetlineFunction,1,1,"handle",NULL); //freemat synonym for fgets
+  context->addFunction("fgets",FgetsFunction,1,1,"handle",NULL);
   context->addFunction("feof",FeofFunction,1,1,"handle",NULL);
   context->addSpecialFunction("printf",PrintfFunction,-1,0,NULL);
   context->addSpecialFunction("verstring",VerStringFunction,0,1,NULL);

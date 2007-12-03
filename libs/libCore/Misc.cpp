@@ -3133,10 +3133,10 @@ ArrayVector SimKeysFunction(int nargout, const ArrayVector& arg,
 			    Interpreter* eval) {
   if (arg.size() == 0)
     throw Exception("simkeys requires at least one argument (the cell array of strings to simulate)");
-  eval->clearCaptureString();
-  eval->setCaptureState(true);
   if (arg[0].dataClass() != FM_CELL_ARRAY)
     throw Exception("simkeys requires a cell array of strings");
+  eval->clearCaptureString();
+  eval->setCaptureState(true);
   const Array *dp = (const Array *) arg[0].getDataPointer();
   for (int i=0;i<(int) arg[0].getLength();i++)
     eval->ExecuteLine(ArrayToString(dp[i]));
@@ -3149,6 +3149,7 @@ ArrayVector SimKeysFunction(int nargout, const ArrayVector& arg,
   } catch (InterpreterReturnException& e) {
   } catch (InterpreterRetallException& e) {
   } catch (InterpreterQuitException& e) {
+  } catch (...){
   }
   eval->setCaptureState(false);
   return ArrayVector() << Array::stringConstructor(eval->getCaptureString());
