@@ -1,7 +1,7 @@
 ######## CMake debugging macro
 MACRO(WRITE_OUT_ALL_VARIABLES)
 SET(DstFile ${CMAKE_CURRENT_BINARY_DIR}/AllVariables.txt)
-    
+
 #MESSAGE("DEBUG -- Writing out all variables to file ${DstFile}")
     
 FILE(WRITE ${DstFile} "")
@@ -11,6 +11,13 @@ FILE(APPEND ${DstFile} "${var} \"${${var}}\"\n")
 ENDFOREACH(var ${VARS})
 ENDMACRO(WRITE_OUT_ALL_VARIABLES)
 ### End Debugging tools
+
+IF( NOT MSVC )
+# Only version 2.5 has Fortran parsing bug fixed.
+  CMAKE_MINIMUM_REQUIRED(VERSION 2.5 FATAL_ERROR)
+ELSE( NOT MSVC )
+  CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
+ENDIF( NOT MSVC )
 
 IF( CMAKE_GENERATOR MATCHES "Visual Studio" )
   PROJECT(FreeMat CXX C )
