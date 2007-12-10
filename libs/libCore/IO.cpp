@@ -36,8 +36,10 @@
 #include <QFile>
 #include <QTextStream>
 #include <QFileInfo>
+#include <QString>
 #include "Utils.hpp"
 #include "PathSearch.hpp"
+
 #if HAVE_PORTAUDIO19 || HAVE_PORTAUDIO18
 #include "portaudio.h"
 #endif
@@ -47,6 +49,7 @@ class FilePtr {
 public:
   FILE *fp;
   bool swapflag;
+  bool is64bit;
 };
   
 HandleList<FilePtr*> fileHandles;
@@ -968,13 +971,48 @@ void processPrecisionString(string prec, Class &dataClass, int& elementSize, int
 //fclose(fp)
 //@>
 //!
-ArrayVector FopenFunction(int nargout, const ArrayVector& arg) {
+void process_machprecision_flag( const string& flag, bool& swapendian, bool& Arch64 )
+{
   uint32 testEndian = 0xFEEDFACE;
   uint8 *dp;
   bool bigEndian;
+  swapendian = false;
 
+  Arch64 = false;
   dp = (uint8*) &testEndian;
   bigEndian = (dp[0] == 0xFE);
+
+    if (flag=="swap") { /*non-standard flag*/
+      swapendian = true;
+    } else if ((flag=="le") || /*non-standard flag*/
+	   (flag=="ieee-le") ||
+	   (flag=="ieee-le.l64") ||
+	   (flag=="little-endian") || /*non-standard flag*/
+	   (flag=="littleEndian") || /*non-standard flag*/
+	   (flag=="l") ||
+	   (flag=="a") ||
+	   (flag=="little")) { /*non-standard flag*/
+      swapendian = bigEndian;
+    } else 
+	if ((flag=="be") || /*non-standard flag*/
+	   (flag=="ieee-be") || 
+	   (flag=="ieee-be.l64") ||
+	   (flag=="big-endian") || /*non-standard flag*/
+	   (flag=="b") ||
+	   (flag=="s") ||
+	   (flag=="bigEndian") || /*non-standard flag*/
+	   (flag=="big")) { /*non-standard flag*/
+      swapendian = !bigEndian;
+    }
+
+    if( (flag=="ieee-be.l64") || (flag=="ieee.le.l64")){
+	    Arch64 = true;
+    }
+    //assumes fallthrough for flag 'native'
+    //missing flags 'vaxg' 'vaxd' 'cray'
+}
+
+ArrayVector FopenFunction(int nargout, const ArrayVector& arg) {
 
   if (arg.size() > 3)
     throw Exception("too many arguments to fopen");
@@ -990,24 +1028,13 @@ ArrayVector FopenFunction(int nargout, const ArrayVector& arg) {
     mode = arg[1].getContentsAsString();
   }
   bool swapendian = false;
+  bool is64bit = false;
   if (arg.size() > 2) {
-    string swapflag = arg[2].getContentsAsString();
-    if (swapflag=="swap") {
-      swapendian = true;
-    } else if ((swapflag=="le") ||
-	       (swapflag=="ieee-le") ||
-	       (swapflag=="little-endian") ||
-	       (swapflag=="littleEndian") ||
-	       (swapflag=="little")) {
-      swapendian = bigEndian;
-    } else if ((swapflag=="be") ||
-	       (swapflag=="ieee-be") ||
-	       (swapflag=="big-endian") ||
-	       (swapflag=="bigEndian") ||
-	       (swapflag=="big")) {
-      swapendian = !bigEndian;
-    } else if (!arg[2].isEmpty())
+    if (!arg[2].isEmpty())
       throw Exception("swap flag must be 'swap' or an endian spec ('le','ieee-le','little-endian','littleEndian','little','be','ieee-be','big-endian','bigEndian','big')");
+
+    string swapflag = arg[2].getContentsAsString();
+    process_machprecision_flag( swapflag, swapendian, is64bit );
   }
   FILE *fp = fopen(fname.c_str(),mode.c_str());
   if (!fp)
@@ -1015,6 +1042,7 @@ ArrayVector FopenFunction(int nargout, const ArrayVector& arg) {
   FilePtr *fptr = new FilePtr();
   fptr->fp = fp;
   fptr->swapflag = swapendian;
+  fptr->is64bit = is64bit;
   unsigned int rethan = fileHandles.assignHandle(fptr);
   ArrayVector retval;
   retval.push_back(Array::uint32Constructor(rethan-1));
@@ -1142,40 +1170,103 @@ ArrayVector FcloseFunction(int nargout, const ArrayVector& arg) {
 //@>
 //!
 ArrayVector FreadFunction(int nargout, const ArrayVector& arg) {
-  if (arg.size() < 3)
-    throw Exception("fread requires three arguments, the file handle, size, and precision");
-  Array tmp(arg[0]);
+  int argindex = 0;
+  int skip;
+  bool is64bit, needs_byte_swap;
+
+  if (arg.size() < 1)
+    throw Exception("fread requires at least the file handle");
+  Array tmp(arg[argindex++]);
+  
   int handle = tmp.getContentsAsIntegerScalar();
   FilePtr *fptr=(fileHandles.lookupHandle(handle+1));
-  if (!arg[2].isString())
-    throw Exception("second argument to fread must be a precision");
-  string prec = arg[2].getContentsAsString();
-  // Get the size argument
-  Array sze(arg[1]);
-  // Promote sze to a float argument
-  sze.promoteType(FM_FLOAT);
-  // Check for a single infinity
-  int dimCount(sze.getLength());
-  float *dp = ((float *) sze.getReadWriteDataPointer());
-  bool infinityFound = false;
-  int elementCount = 1;
-  int infiniteDim = 0;
-  for (int i=0;i<dimCount;i++) {
-    if (IsNaN(dp[i])) throw Exception("nan not allowed in size argument");
-    if (IsInfinite(dp[i])) {
-      if (infinityFound) throw Exception("only a single inf is allowed in size argument");
+  bool infinityFound;
+  int infiniteDim;
+  float *dp;
+  int dimCount;
+  int elementCount;
+
+  if( ( argindex > arg.size() ) || arg[argindex].isString() ){
+      //this is fread( fid, precision, ... ) case.
+      //load all the values from the file.
       infinityFound = true;
-      infiniteDim = i;
-    } else {
-      if (dp[i] < 0) throw Exception("illegal negative size argument");
-      elementCount *= (int) dp[i];
-    }
+      infiniteDim = 0;
   }
+  else{
+      // Get the size argument
+      Array sze(arg[argindex++]);
+      // Promote sze to a float argument
+      sze.promoteType(FM_FLOAT);
+      // Check for a single infinity
+      dimCount = sze.getLength();
+      dp = ((float *) sze.getReadWriteDataPointer());
+      infinityFound = false;
+      elementCount = 1;
+      infiniteDim = 0;
+      for (int i=0;i<dimCount;i++) {
+	if (IsNaN(dp[i])) throw Exception("nan not allowed in size argument");
+	if (IsInfinite(dp[i])) {
+	  if (infinityFound) throw Exception("only a single inf is allowed in size argument");
+	  infinityFound = true;
+	  infiniteDim = i;
+	} else {
+	  if (dp[i] < 0) throw Exception("illegal negative size argument");
+	  elementCount *= (int) dp[i];
+	}
+      }
+  }
+  
+  QString prec;
+  if( argindex < arg.size() ){
+      if (!arg[argindex].isString())
+	throw Exception("precision argument is required for fread");
+      prec = QString(arg[argindex].getContentsAsString().c_str());
+  }
+  else{
+      //precision argument is missing. Default: uint8.
+      prec = QString("uint8");
+  }
+  ++argindex;
+
+  if( (argindex >= arg.size()) || arg[argindex].isString() ){
+      //skip argument is omitted.
+      skip = 0;
+  }
+  else{
+    Array skiparr(arg[argindex]);
+    skiparr.promoteType(FM_INT32);
+    skip = *((int32*)(skiparr.getDataPointer()));
+  }
+  ++argindex;
+
+  if( argindex >= arg.size() ){
+      needs_byte_swap = fptr->swapflag;
+      is64bit = fptr->is64bit;
+  }
+  else{ 
+      if( arg[argindex].isString() ){
+	  process_machprecision_flag( arg[argindex].getContentsAsString(), needs_byte_swap, is64bit );
+      }
+      else
+	  throw Exception( "Invalid machine precision format" );
+  }  
+    
+
   // Map the precision string to a data class
-  Class dataClass;
-  int elementSize;
-  int swapSize;
-  processPrecisionString(prec,dataClass,elementSize,swapSize);
+  Class dataClass, outDataClass;
+  int elementSize, outElementSize;
+  int swapSize, outSwapSize;
+
+  QString outputprec(prec);
+  int iConv = prec.indexOf( QString("=>") );
+  if( iConv != -1 ){
+      //case of type1=>type2
+      prec.remove( iConv, prec.length() - iConv );
+      outputprec.remove(0, iConv+2);
+  }
+
+  processPrecisionString( prec.toStdString(), dataClass, elementSize, swapSize);
+  processPrecisionString( outputprec.toStdString(), outDataClass, outElementSize, outSwapSize);
   // If there is an infinity in the dimensions, we have to calculate the
   // appropriate value
   if (infinityFound) {
@@ -1204,8 +1295,14 @@ ArrayVector FreadFunction(int nargout, const ArrayVector& arg) {
     dims.set(j,(int) dp[j]);
   if (dimCount == 1)
     dims.set(1,1);
+
   ArrayVector retval;
-  retval.push_back(Array::Array(dataClass,dims,qp));
+  Array retData(dataClass,dims,qp);
+  if( dataClass != outDataClass ){
+    retData.promoteType( outDataClass );
+  }
+
+  retval.push_back(retData);
   if (nargout == 2)
     retval.push_back(Array::uint32Constructor(retval[0].getLength()));
   return retval;
@@ -1997,7 +2094,7 @@ ArrayVector FgetsFunction(int nargout, const ArrayVector& arg) {
 
 ArrayVector FgetlineFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
 	eval->warningMessage( "fgetline is deprecated. Use fgets instead." );
-	FgetsFunction( nargout, arg );
+	return FgetsFunction( nargout, arg );
 }
 
 //!
