@@ -1185,16 +1185,20 @@ ArrayVector FreadFunction(int nargout, const ArrayVector& arg) {
   float *dp;
   int dimCount;
   int elementCount;
-
+  Array sze( FM_FLOAT, Dimensions(1) );
+  
   if( ( argindex > arg.size() ) || arg[argindex].isString() ){
       //this is fread( fid, precision, ... ) case.
       //load all the values from the file.
       infinityFound = true;
       infiniteDim = 0;
+      elementCount = 1;
+      dimCount = sze.getLength();
+      dp = ((float *) sze.getReadWriteDataPointer());
   }
   else{
       // Get the size argument
-      Array sze(arg[argindex++]);
+      sze = arg[argindex++];
       // Promote sze to a float argument
       sze.promoteType(FM_FLOAT);
       // Check for a single infinity
