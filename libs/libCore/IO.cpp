@@ -2324,7 +2324,10 @@ ArrayVector FscanfFunction(int nargout, const ArrayVector& arg) {
   if (feof(fptr->fp))
     return singleArrayVector(Array::emptyConstructor());
   string frmt = format.getContentsAsString();
-  char *buff = strdup(frmt.c_str());
+
+  char *buff = new char[frmt.length()];
+  strncpy( buff, frmt.c_str(), frmt.length() );
+
   // Search for the start of a format subspec
   char *dp = buff;
   char *np;
@@ -2450,7 +2453,7 @@ ArrayVector FscanfFunction(int nargout, const ArrayVector& arg) {
       }
     }
   }
-  free(buff);
+  delete[] buff;
   return values;
 }
 
