@@ -1,0 +1,259 @@
+######## CMake debugging macro
+MACRO(WRITE_OUT_ALL_VARIABLES)
+SET(DstFile ${CMAKE_CURRENT_BINARY_DIR}/AllVariables.txt)
+
+#MESSAGE("DEBUG -- Writing out all variables to file ${DstFile}")
+    
+FILE(WRITE ${DstFile} "")
+GET_CMAKE_PROPERTY(VARS VARIABLES)
+FOREACH(var ${VARS})
+FILE(APPEND ${DstFile} "${var} \"${${var}}\"\n")
+ENDFOREACH(var ${VARS})
+ENDMACRO(WRITE_OUT_ALL_VARIABLES)
+### End Debugging tools
+
+IF( NOT MSVC )
+# Only version 2.5 has Fortran parsing bug fixed.
+  CMAKE_MINIMUM_REQUIRED(VERSION 2.5 FATAL_ERROR)
+ELSE( NOT MSVC )
+  CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
+ENDIF( NOT MSVC )
+
+PROJECT(FTest CXX C )
+
+SET( VERSION " svn")
+SET( RESOURCEDIR "" )
+SET( CMAKE_VERBOSE_MAKEFILE TRUE )
+SET( LOCAL_PATH ${PROJECT_SOURCE_DIR}/../dependencies/bin ${PROJECT_BINARY_DIR} /mingw/lib INTERNAL )
+
+IF( MSVC )
+	ADD_DEFINITIONS( /Dsnprintf=_snprintf /DNOMINMAX /DVERSION="\\"${VERSION}"\\" /DRESOURCEDIR="\\"${RESOURCEDIR}"\\")
+	ADD_DEFINITIONS( /D_HAS_ITERATOR_DEBUGGING=0 /D_SECURE_SCL=0 )
+ELSE( MSVC )
+	ADD_DEFINITIONS( -D'VERSION=\"${VERSION}\"' -D'RESOURCEDIR=\"${RESOURCEDIR}\"')
+ENDIF( MSVC )
+
+FIND_PACKAGE(OpenGL REQUIRED) 
+
+SET(QT_USE_QTNETWORK TRUE)
+SET(QT_USE_QTXML TRUE)
+SET(QT_USE_QTOPENGL TRUE)
+
+FIND_PACKAGE(Qt4 REQUIRED)
+#FIND_PACKAGE(Qt4)
+ADD_DEFINITIONS( ${QT_DEFINITIONS} ) 
+
+MACRO (QT4_GENERATE_UI infile outfile )
+     GET_FILENAME_COMPONENT(infile ${infile} ABSOLUTE)
+
+     ADD_CUSTOM_COMMAND(OUTPUT ${outfile}
+        COMMAND ${QT_UIC_EXECUTABLE}
+        ARGS -o ${outfile} ${infile}
+        DEPENDS ${infile})
+
+     MACRO_ADD_FILE_DEPENDENCIES(${infile} ${outfile})
+ENDMACRO (QT4_GENERATE_UI)
+
+###########################################################################################
+# IF( NOT MSVC )
+# 	FIND_LIBRARY(BLAS_LIBRARY NAMES blas atlas DOC "Location of BLAS or ATLAS library" PATHS  ${LOCAL_PATH} )
+# 	FIND_LIBRARY(LAPACK_LIBRARY NAMES lapack clapack DOC "Location of LAPACK library" PATHS ${LOCAL_PATH} )
+# ENDIF( NOT MSVC )
+
+# Find AVCALL Library
+# FIND_LIBRARY(AVCALL_LIBRARY NAMES avcall DOC "Location of the AVCALL library" PATHS ${LOCAL_PATH})
+# FIND_PATH(AVCALL_INCLUDE_DIR NAMES avcall.h DOC "Location of avcall.h" PATHS ${LOCAL_PATH} /mingw/include)
+# IF( AVCALL_LIBRARY AND AVCALL_INCLUDE_DIR ) 
+	# ADD_DEFINITIONS( -DHAVE_AVCALL )
+	# INCLUDE_DIRECTORIES( ${AVCALL_INCLUDE_DIR} )
+# ENDIF( AVCALL_LIBRARY AND AVCALL_INCLUDE_DIR )	
+
+# Find FFTW and FFTWF (single precision)
+# FIND_LIBRARY(FFTW_LIBRARY NAMES fftw3 fftw3-3 libfftw3-3 DOC "Location of the FFTW library" PATHS ${LOCAL_PATH} )
+# FIND_PATH(FFTW_INCLUDE_DIR NAMES fftw3.h DOC "Location of fftw3.h" PATHS ${LOCAL_PATH} /mingw/include)
+# IF( FFTW_LIBRARY AND FFTW_INCLUDE_DIR ) 
+	# ADD_DEFINITIONS( -DHAVE_FFTW )
+	# INCLUDE_DIRECTORIES( ${FFTW_INCLUDE_DIR} )
+# ENDIF( FFTW_LIBRARY AND FFTW_INCLUDE_DIR )	
+
+# FIND_LIBRARY(FFTWF_LIBRARY NAMES fftw3f fftw3f-3 libfftw3f-3 DOC "Location of the FFTW (single precision) library" PATHS ${LOCAL_PATH} )
+# IF( FFTWF_LIBRARY AND FFTW_INCLUDE_DIR ) 
+	# ADD_DEFINITIONS( -DHAVE_FFTWF )
+	# INCLUDE_DIRECTORIES( ${FFTW_INCLUDE_DIR} )
+# ENDIF( FFTWF_LIBRARY AND FFTW_INCLUDE_DIR )	
+
+# FIND_LIBRARY(ZLIB_LIBRARY NAMES z zlib zlib1 DOC "Location of ZLIB library" PATHS ${LOCAL_PATH})
+# FIND_PATH(ZLIB_INCLUDE_DIR NAMES zlib.h DOC "Location of zlib.h" PATHS ${LOCAL_PATH})
+# IF( ZLIB_LIBRARY AND ZLIB_INCLUDE_DIR ) 
+	# INCLUDE_DIRECTORIES( ${ZLIB_INCLUDE_DIR} )
+# ENDIF( ZLIB_LIBRARY AND ZLIB_INCLUDE_DIR )	
+
+#############################################################################
+#Find UMFPACK
+# IF( NOT MSVC )
+# FIND_LIBRARY(UMFPACK_LIBRARY NAMES umfpack DOC "Location of the UMFPACK library" PATHS /mingw/lib)
+# FIND_PATH(UMFPACK_INCLUDE_DIR NAMES umfpack.h DOC "Location of umfpack.h" PATHS /mingw/include)
+# FIND_LIBRARY(AMD_LIBRARY NAMES amd DOC "Location of the AMD library" PATHS /mingw/lib)
+# FIND_PATH(AMD_INCLUDE_DIR NAMES amd.h DOC "Location of amd.h" PATHS /mingw/include)
+# IF( UMFPACK_LIBRARY AND UMFPACK_INCLUDE_DIR AND AMD_LIBRARY AND AMD_INCLUDE_DIR) 
+# 	ADD_DEFINITIONS( -DHAVE_UMFPACK )
+#         INCLUDE_DIRECTORIES( ${UMFPACK_INCLUDE_DIR} )
+#         INCLUDE_DIRECTORIES( ${AMD_INCLUDE_DIR} )
+# ENDIF( UMFPACK_LIBRARY AND UMFPACK_INCLUDE_DIR AND AMD_LIBRARY AND AMD_INCLUDE_DIR )	
+# ENDIF( NOT MSVC )
+
+# IF( NOT MSVC )
+# OPTION(USE_ARPACK "Build with ARPACK support?" ON)
+# IF( USE_ARPACK )
+#   FIND_LIBRARY(ARPACK_LIBRARY NAMES arpack DOC "Location of ARPACK library" PATHS ${LOCAL_PATH})
+#   IF( ARPACK_LIBRARY ) 
+#     ADD_DEFINITIONS( -DHAVE_ARPACK )
+#   ENDIF( ARPACK_LIBRARY )	
+# ENDIF( USE_ARPACK )
+# ENDIF( NOT MSVC )
+
+
+# IF( MSVC )
+	# ADD_DEFINITIONS( -DHAVE_ARPACK )
+	# ADD_DEFINITIONS( -DHAVE_UMFPACK )
+	# INCLUDE_DIRECTORIES( dependencies/umfpack/Include dependencies/UFconfig dependencies/AMD/Include dependencies/umfpack/Source)
+# ENDIF( MSVC )
+
+#############################################################################
+#Find LLVM
+OPTION(USE_LLVM "Build with LLVM support?" ON)
+IF( USE_LLVM )
+IF( MSVC )
+
+	SET( LLVM_SEARCH_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm-2.1/include/llvm )
+	
+	#IF( CMAKE_BUILD_TYPE MATCHES "Debug" )
+		SET( LLVM_LIB_SRCH_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm-2.1/win32/debug )	
+		SET( X86TARGET_SRCH_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm-2.1/win32/x86/Debug )
+	#ELSE( CMAKE_BUILD_TYPE MATCHES "Debug" )
+	#	SET( LLVM_LIB_SRCH_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm-2.1/win32/release )	
+	#	SET( X86TARGET_SRCH_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm-2.1/win32/x86/Release )
+	#ENDIF( CMAKE_BUILD_TYPE MATCHES "Debug" )
+	
+	FIND_PATH( LLVM_INCLUDE_DIR NAMES Module.h PATHS ${LLVM_SEARCH_PATH} DOC "Top level include directory for LLVM" )
+	FIND_PATH( X86TARGET_PATH NAMES X86TargetMachine.obj PATHS ${X86TARGET_SRCH_PATH} DOC "Path to x86 target." )
+	
+	FIND_LIBRARY( LLVM_ExecEng_LIB NAMES ExecutionEngine PATHS ${LLVM_LIB_SRCH_PATH} )
+	FIND_LIBRARY( LLVM_CodegenEng_LIB NAMES CodeGen PATHS ${LLVM_LIB_SRCH_PATH} )
+	FIND_LIBRARY( LLVM_X86_LIB NAMES x86 PATHS ${LLVM_LIB_SRCH_PATH} )
+	FIND_LIBRARY( LLVM_VMCore_LIB NAMES VMCore PATHS ${LLVM_LIB_SRCH_PATH} )
+	FIND_LIBRARY( LLVM_Analysis_LIB NAMES Analysis PATHS ${LLVM_LIB_SRCH_PATH} )
+	FIND_LIBRARY( LLVM_Transforms_LIB NAMES Transforms PATHS ${LLVM_LIB_SRCH_PATH} )
+	FIND_LIBRARY( LLVM_Target_LIB NAMES Target PATHS ${LLVM_LIB_SRCH_PATH} )
+	FIND_LIBRARY( LLVM_System_LIB NAMES System PATHS ${LLVM_LIB_SRCH_PATH} )
+	FIND_LIBRARY( LLVM_Support_LIB NAMES Support PATHS ${LLVM_LIB_SRCH_PATH} )
+	
+	
+	IF( LLVM_INCLUDE_DIR AND LLVM_ExecEng_LIB )
+		SET( LLVM_LIB ${LLVM_ExecEng_LIB} ${LLVM_CodegenEng_LIB} ${LLVM_VMCore_LIB} 
+			${LLVM_Analysis_LIB} ${LLVM_Transforms_LIB} ${LLVM_Target_LIB} ${LLVM_System_LIB} 
+			${LLVM_Support_LIB} ${LLVM_X86_LIB} )
+		SET( X86TARGET_OBJ ${X86TARGET_PATH}/X86TargetMachine.obj )
+		SET( LLVM_FOUND TRUE )
+		ADD_DEFINITIONS( -DHAVE_LLVM )
+		INCLUDE_DIRECTORIES( ${LLVM_INCLUDE_DIR} ${LLVM_INCLUDE_DIR}/../  )
+        ENDIF( LLVM_INCLUDE_DIR AND LLVM_ExecEng_LIB )
+ELSE( MSVC )
+	FIND_PROGRAM( LLVM_CONFIG llvm-config )
+        EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --libfiles all OUTPUT_VARIABLE LLVM_LIB1 OUTPUT_STRIP_TRAILING_WHITESPACE)
+	EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --libdir OUTPUT_VARIABLE LLVM_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+	EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --includedir OUTPUT_VARIABLE LLVM_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+  	SEPARATE_ARGUMENTS( LLVM_LIB1 )
+	STRING( REGEX MATCHALL "[^ ;][a-zA-Z0-9/]*\\.o([ ;]|$)" X86TARGET_OBJ "${LLVM_LIB1}" )
+	STRING( REGEX MATCHALL "[^ ;][a-zA-Z0-9/]*\\.a([ ;]|$)" LLVM_LIB "${LLVM_LIB1}" )
+
+# 	SEPARATE_ARGUMENTS( X86TARGET_OBJ )
+# 	SEPARATE_ARGUMENTS( LLVM_LIB )
+
+	SET( LLVM_FOUND TRUE )
+	ADD_DEFINITIONS( -DHAVE_LLVM )
+	INCLUDE_DIRECTORIES( ${LLVM_INCLUDE_DIR} )
+
+# 	LINK_LIBRARIES( ${LLVM_LIB} )
+# 	LINK_DIRECTORIES( ${LLVM_DIR} )
+ENDIF( MSVC )
+ENDIF( USE_LLVM )
+
+##############################################################################
+#PCRE library
+# FIND_LIBRARY(PCRE_LIBRARY NAMES pcre DOC "Location of PCRE library" PATHS ${LOCAL_PATH})
+# FIND_PATH(PCRE_INCLUDE_DIR NAMES pcre.h DOC "Location of pcre.h" PATHS ${LOCAL_PATH})
+# IF( PCRE_LIBRARY AND PCRE_INCLUDE_DIR ) 
+	# INCLUDE_DIRECTORIES( ${PCRE_INCLUDE_DIR} )
+	# ADD_DEFINITIONS( -DHAVE_PCRE )
+# ENDIF( PCRE_LIBRARY AND PCRE_INCLUDE_DIR )	
+
+
+##############################################################################
+#Extra libraries
+# IF(NOT MSVC)
+	# FIND_LIBRARY(NCURSES_LIBRARY NAMES ncurses DOC "Location of the ncurses library." PATH /mingw/lib)
+	# FIND_LIBRARY(SOCKS_LIBRARY NAMES socks wsock32 DOC "Location of the winsock library." PATH /mingw/lib)
+	# SET(EXTRA_LIBRARIES ${NCURSES_LIBRARY} ${SOCKS_LIBRARY} )  
+        # FIND_LIBRARY(G2C_LIBRARY NAMES g2c DOC "Location of Fortran to C (g2c) library" PATHS /mingw/lib)
+# ELSE(NOT MSVC)
+	# FIND_LIBRARY(SOCKS_LIBRARY NAMES socks wsock32 ws2_32 DOC "Location of the winsock library." PATH /mingw/lib)
+        # SET(EXTRA_LIBRARIES ${SOCKS_LIBRARY} )  
+# ENDIF(NOT MSVC)
+
+
+
+###########################################################################
+# F2C setup
+# IF( MSVC )
+	# FIND_PROGRAM( F2C_PROG NAMES f2c.exe f2c PATHS ${LOCAL_PATH} DOC "Fortran to C translator" )
+	# FIND_LIBRARY( F2C_LIBRARY NAMES vcf2c f2c PATHS ${LOCAL_PATH} DOC "Fortran to C Library" )
+	# FIND_PATH( F2C_INCLUDE_DIR f2c.h PATHS ${LOCAL_PATH} DOC "Path to f2c.h" )
+	# INCLUDE_DIRECTORIES(${F2C_INCLUDE_DIR}) 
+	# SET( F2C_FLAGS STRING " -g -c " INTERNAL )
+# ELSE( MSVC )
+  	# FIND_LIBRARY( F2C_LIBRARY NAMES gfortran DOC "Fortran to C Library" )
+# ENDIF( MSVC )
+
+###########################################################################
+# Macro for f2c conversion
+# MACRO( CONVERT_F2C dep C_FILES )
+	# IF( MSVC AND F2C_PROG )
+		# FOREACH( nm ${ARGN} )
+			# GET_FILENAME_COMPONENT(outfile ${nm} NAME_WE)
+			# ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${outfile}.c 
+			  # COMMAND ${F2C_PROG} 
+			  # ARGS -d${CMAKE_CURRENT_BINARY_DIR} -g -c ${nm}
+			  # MAIN_DEPENDENCY ${dep}
+			  # DEPENDS ${nm}
+			  # WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+			  # VERBATIM
+			# ) 
+			# MACRO_ADD_FILE_DEPENDENCIES(${nm} ${CMAKE_CURRENT_BINARY_DIR}/${outfile}.c )
+			# SET( ${C_FILES} ${${C_FILES}} ${CMAKE_CURRENT_BINARY_DIR}/${outfile}.c )
+		# ENDFOREACH( nm ${ARGN} )
+	# ENDIF( MSVC AND F2C_PROG )
+# ENDMACRO( CONVERT_F2C dep C_FILES )
+
+# INCLUDE_DIRECTORIES( libs/libFreeMat libs/libGraphics 
+# libs/libMex libs/libXP libs/libCore libs/libFN  ${QT_LIBRARIES} src)   
+
+# OPTION(USE_DYNLINK "Link BLAS dynamically" ON)
+# IF( USE_DYNLINK )
+	# INCLUDE_DIRECTORIES( libs/libMath )
+	# ADD_DEFINITIONS( -DDYN_BLAS )
+	# INSTALL( FILES ${PROJECT_SOURCE_DIR}/blas.ini DESTINATION bin )
+# ELSE( USE_DYNLINK )
+ # IF( NOT MSVC )
+ 	# FIND_LIBRARY(BLAS_LIBRARY NAMES blas atlas DOC "Location of BLAS or ATLAS library" PATHS  ${LOCAL_PATH} )
+ 	# FIND_LIBRARY(LAPACK_LIBRARY NAMES lapack clapack DOC "Location of LAPACK library" PATHS ${LOCAL_PATH} )
+ # ENDIF( NOT MSVC )
+
+# ENDIF( USE_DYNLINK )
+
+ADD_SUBDIRECTORY( ArrayClass )
+ADD_SUBDIRECTORY( JIT )
+
+#TODO Handle gfortran vs g77 issue: libgfortran vs libg2c
+WRITE_OUT_ALL_VARIABLES()
