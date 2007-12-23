@@ -1,1 +1,1 @@
-ADD_EXECUTABLE( JITTest WIN32 testjit1.cpp )
+ADD_EXECUTABLE( JITTest testjit1.cpp )

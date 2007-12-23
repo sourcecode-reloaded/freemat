@@ -1,1 +1,1 @@
-ADD_EXECUTABLE( ArrayTest WIN32 test1.cpp )
+ADD_EXECUTABLE( ArrayTest test1.cpp Array.cpp )
