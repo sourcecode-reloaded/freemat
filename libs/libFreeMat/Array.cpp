@@ -49,7 +49,7 @@ bool isColonOperator(Array& a) {
 	  (((const char*) a.getDataPointer())[0] == ':'));
 }
 
-ArrayVector singleArrayVector(Array a) {
+ArrayVector SingleArrayVector(Array a) {
   ArrayVector retval;
   retval.push_back(a);
   return retval;
@@ -139,7 +139,7 @@ void outputSinglePrecisionFloat(char *buf, float num) {
 }
 
   
-void* Array::allocateArray(Class type, uint32 length, rvstring names) {
+void* Array::allocateArray(Class type, uint32 length, StringVector names) {
   if (length == 0) return NULL;
   switch(type) {
   case FM_FUNCPTR_ARRAY: {
@@ -486,7 +486,7 @@ void Array::toOrdinalType(Interpreter *m_eval)  {
  * Compute the ordinal index for a given field name from a
  * structure when the list of field names is given.
  */
-int32 getFieldIndexFromList(std::string fName,rvstring fieldNames) {
+int32 getFieldIndexFromList(std::string fName,StringVector fieldNames) {
   bool foundName = false;
   int i = 0;
   while (i<(int)(fieldNames.size()) && !foundName) {
@@ -1200,7 +1200,7 @@ void Array::copyElements(int srcIndex, void* dstPtr, int dstIndex,
  *    - logical dest = (real(source) == 0 && imag(source) == 0) ? 0:1
  *    - real dest = real(source)
  */
-void Array::promoteType(Class dstClass, rvstring fNames) {
+void Array::promoteType(Class dstClass, StringVector fNames) {
   int elCount;
   void *dstPtr;
 
@@ -1610,7 +1610,7 @@ break;
 #undef caseMacro
 
 void Array::promoteType(Class dstClass) {
-  promoteType(dstClass,rvstring());
+  promoteType(dstClass,StringVector());
 }
 
 /********************************************************************************
@@ -2001,7 +2001,7 @@ Array Array::matrixConstructor(ArrayMatrix& m) {
   Dimensions row_dims;
   Class maxType, minType;
   Class retType;
-  rvstring retNames;
+  StringVector retNames;
   Dimensions retDims;
   void *dstPtr = NULL;
   bool sparseArg = false;
@@ -2275,7 +2275,7 @@ Array Array::cellConstructor(ArrayMatrix& m) {
   }
 }
 
-Array Array::structConstructor(rvstring fNames, ArrayVector& values)  {
+Array Array::structConstructor(StringVector fNames, ArrayVector& values)  {
   const Array* rptr;
   Dimensions dims;
   bool nonSingularFound;
@@ -3001,7 +3001,7 @@ ArrayVector Array::getNDimContentsAsList(ArrayVector& index, Interpreter* m_eval
   constIndexPtr* indx = ProcessNDimIndexes(false,myDims,index,anyEmpty,colonIndex,outDims,true,m_eval);
   if (anyEmpty) {
     Free(indx);
-    return singleArrayVector(Array::emptyConstructor());
+    return SingleArrayVector(Array::emptyConstructor());
   }
   Dimensions argPointer(L);
   Dimensions currentIndex(L);
@@ -3500,7 +3500,7 @@ void Array::setNDimContentsAsList(ArrayVector& index, ArrayVector& rdata, Interp
  */
 void Array::setFieldAsList(std::string fieldName, ArrayVector& rdata)  {
   if (isEmpty()) {
-    rvstring names(fieldNames());
+    StringVector names(fieldNames());
     names.push_back(fieldName);
     promoteType(FM_STRUCT_ARRAY,names);
     Dimensions a(1,1);
@@ -3533,7 +3533,7 @@ void Array::setFieldAsList(std::string fieldName, ArrayVector& rdata)  {
 int Array::insertFieldName(std::string fieldName) {
   if (sparse())
     throw Exception("insertFieldName not supported for sparse arrays.");
-  rvstring names(fieldNames());
+  StringVector names(fieldNames());
   names.push_back(fieldName);
   const Array* qp = (const Array*) data();
   Array *rp = (Array*) allocateArray(dataClass(),getLength(),names);
@@ -4041,7 +4041,7 @@ string operator+(int d, string a) {
   return a+string(buf);
 }
 
-stringVector operator+(stringVector a, stringVector b) {
+StringVector operator+(StringVector a, StringVector b) {
   for (int i=0;i<b.size();i++)
     a.push_back(b[i]);
   return a;

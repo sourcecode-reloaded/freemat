@@ -26,6 +26,7 @@
 
 #include <qgl.h>
 #include <QtGui>
+#include <QtSvg>
 #include <ctype.h>
 #include <algorithm>
 #include "HandleLineSeries.hpp"
@@ -246,7 +247,7 @@ void FreeHandleObject(unsigned handle) {
 ArrayVector HFigureFunction(int nargout,const ArrayVector& arg) {
   if (arg.size() == 0) {
     NewFig();
-    return singleArrayVector(Array::int32Constructor(HcurrentFig+1));
+    return SingleArrayVector(Array::int32Constructor(HcurrentFig+1));
   } else {
     Array t(arg[0]);
     int fignum = t.getContentsAsIntegerScalar();
@@ -318,7 +319,7 @@ ArrayVector HAxesFunction(int nargout, const ArrayVector& arg) {
     // Add us to the children...
     AddToCurrentFigChildren(handle);
     fp->UpdateState();
-    return singleArrayVector(Array::uint32Constructor(handle));
+    return SingleArrayVector(Array::uint32Constructor(handle));
   } else {
     unsigned int handle = (unsigned int) ArrayToInt32(arg[0]);
     HandleObject* hp = LookupHandleObject(handle);
@@ -458,7 +459,7 @@ ArrayVector HGetFunction(int nargout, const ArrayVector& arg) {
   else
     fp = (HandleObject*) LookupHandleFigure(handle);
   // Use the address and property name to lookup the Get/Set handler
-  return singleArrayVector(fp->LookupProperty(propname)->Get());
+  return SingleArrayVector(fp->LookupProperty(propname)->Get());
 }
 
 unsigned GenericConstructor(HandleObject* fp, const ArrayVector& arg,
@@ -518,7 +519,7 @@ unsigned GenericConstructor(HandleObject* fp, const ArrayVector& arg,
 //the children of the current axis.
 //!
 ArrayVector HLineFunction(int nargout, const ArrayVector& arg) {
-  return singleArrayVector(Array::uint32Constructor(GenericConstructor(new HandleLineSeries,arg)));
+  return SingleArrayVector(Array::uint32Constructor(GenericConstructor(new HandleLineSeries,arg)));
 }
 
 //!
@@ -535,7 +536,7 @@ ArrayVector HLineFunction(int nargout, const ArrayVector& arg) {
 //the children of the current axis.
 //!
 ArrayVector HContourFunction(int nargout, const ArrayVector& arg) {
-  return singleArrayVector(Array::uint32Constructor(GenericConstructor(new HandleContour,arg)));
+  return SingleArrayVector(Array::uint32Constructor(GenericConstructor(new HandleContour,arg)));
 }
 
 //!
@@ -562,7 +563,7 @@ ArrayVector HUIControlFunction(int nargout, const ArrayVector& arg, Interpreter 
   QVector<unsigned> parent;
   parent.push_back(HcurrentFig+1);
   cp->Data(parent);
-  return singleArrayVector(Array::uint32Constructor(handleID));
+  return SingleArrayVector(Array::uint32Constructor(handleID));
 }
 
 //!
@@ -579,7 +580,7 @@ ArrayVector HUIControlFunction(int nargout, const ArrayVector& arg, Interpreter 
 //the children of the current axis.
 //!
 ArrayVector HImageFunction(int nargout, const ArrayVector& arg) {
-  return singleArrayVector(Array::uint32Constructor(GenericConstructor(new HandleImage,arg)));
+  return SingleArrayVector(Array::uint32Constructor(GenericConstructor(new HandleImage,arg)));
 }
 
 //!
@@ -596,7 +597,7 @@ ArrayVector HImageFunction(int nargout, const ArrayVector& arg) {
 //the children of the current axis.
 //!
 ArrayVector HTextFunction(int nargout, const ArrayVector& arg) {
-  return singleArrayVector(Array::uint32Constructor(GenericConstructor(new HandleText,arg)));
+  return SingleArrayVector(Array::uint32Constructor(GenericConstructor(new HandleText,arg)));
 }
 
 //!
@@ -613,7 +614,7 @@ ArrayVector HTextFunction(int nargout, const ArrayVector& arg) {
 //the children of the current axis.
 //!
 ArrayVector HSurfaceFunction(int nargout, const ArrayVector& arg) {
-  return singleArrayVector(Array::uint32Constructor(GenericConstructor(new HandleSurface,arg)));
+  return SingleArrayVector(Array::uint32Constructor(GenericConstructor(new HandleSurface,arg)));
 }
 
 //!
@@ -706,7 +707,7 @@ ArrayVector FigLowerFunction(int nargout, const ArrayVector& args) {
 ArrayVector HGCFFunction(int nargout, const ArrayVector& arg) {
   if (HcurrentFig == -1)
     NewFig();      
-  return singleArrayVector(Array::uint32Constructor(HcurrentFig+1));
+  return SingleArrayVector(Array::uint32Constructor(HcurrentFig+1));
 }
 
 
@@ -734,7 +735,7 @@ ArrayVector HGCAFunction(int nargout, const ArrayVector& arg) {
     HAxesFunction(0,arg2);
     current = fig->HandlePropertyLookup("currentaxes");
   }
-  return singleArrayVector(Array::uint32Constructor(current));
+  return SingleArrayVector(Array::uint32Constructor(current));
 }
 
 //!
@@ -781,7 +782,7 @@ ArrayVector HPropertyValidateFunction(int nargout, const ArrayVector& arg) {
     isvalid = false;
   }
   delete fp;
-  return singleArrayVector(Array::logicalConstructor(isvalid));
+  return SingleArrayVector(Array::logicalConstructor(isvalid));
 }
 
 bool PrintBaseFigure(HandleWindow* g, std::string filename, 
@@ -803,6 +804,14 @@ bool PrintBaseFigure(HandleWindow* g, std::string filename,
       prnt.setOutputFormat(QPrinter::PostScriptFormat);
     prnt.setOutputFileName(filename.c_str());
     QPainter pnt(&prnt);
+    QTRenderEngine gc(&pnt,0,0,g->width(),g->height());
+    g->HFig()->PaintMe(gc);
+    retval = true;
+  } else if (type == "SVG") {
+    QSvgGenerator gen;
+    gen.setFileName(QString::fromStdString(filename));
+    gen.setSize(QSize(g->width(),g->height()));
+    QPainter pnt(&gen);
     QTRenderEngine gc(&pnt,0,0,g->width(),g->height());
     g->HFig()->PaintMe(gc);
     retval = true;
@@ -909,7 +918,7 @@ ArrayVector HCopyFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector();
 }
   
-std::string NormalizeImageExtension(std::string ext) {
+static std::string NormalizeImageExtension(std::string ext) {
   std::string upperext(ext);
   std::string lowerext(ext);
   std::transform(upperext.begin(),upperext.end(),upperext.begin(),
@@ -917,7 +926,8 @@ std::string NormalizeImageExtension(std::string ext) {
   std::transform(lowerext.begin(),lowerext.end(),lowerext.begin(),
 		 (int(*)(int))tolower);
   if (upperext == "JPG") return std::string("JPEG");
-  if ((upperext == "PDF") || (upperext == "PS") || (upperext == "EPS")) return upperext;
+  if ((upperext == "SVG") || (upperext == "PDF") || 
+      (upperext == "PS") || (upperext == "EPS")) return upperext;
   QList<QByteArray> formats(QImageWriter::supportedImageFormats());
   for (int i=0;i<formats.count();i++) {
     if (formats.at(i).data() == upperext) return upperext;
@@ -956,6 +966,7 @@ std::string FormatListAsString() {
 //\item @|jpg|, @|jpeg|  --  JPEG file 
 //\item @|pdf| -- Portable Document Format file
 //\item @|png| -- Portable Net Graphics file
+//\item @|svg| -- Scalable Vector Graphics file
 //\end{itemize}
 //Postscript (PS, EPS) is supported on non-Mac-OSX Unix only.
 //Note that only the fig is printed, not the window displaying
@@ -1025,7 +1036,7 @@ ArrayVector HPointFunction(int nargout, const ArrayVector& arg) {
   d_ip = (double*) retval.getReadWriteDataPointer();
   d_ip[0] = (double) x;
   d_ip[1] = (double) y;
-  return singleArrayVector(retval);
+  return SingleArrayVector(retval);
 }
 
 //!
@@ -1047,7 +1058,7 @@ ArrayVector HIs2DViewFunction(int nargout, const ArrayVector& arg) {
   if (!hp->IsType("axes"))
     throw Exception("single argument to axes function must be handle for an axes"); 
   HandleAxis *axis = (HandleAxis*) hp;
-  return singleArrayVector(Array::logicalConstructor(axis->Is2DView()));
+  return SingleArrayVector(Array::logicalConstructor(axis->Is2DView()));
 }
 
 #if 0

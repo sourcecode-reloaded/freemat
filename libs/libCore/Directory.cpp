@@ -78,7 +78,7 @@ ArrayVector ChangeDirFunction(int nargout, const ArrayVector& arg, Interpreter* 
   return ArrayVector();
 }
 
-static void TabledOutput(stringVector sysresult, Interpreter* eval) {
+static void TabledOutput(StringVector sysresult, Interpreter* eval) {
   int maxlen = 0;
   // Find the maximal length
   for (int i=0;i<(int)sysresult.size();i++) {
@@ -166,7 +166,7 @@ ArrayVector DirFunction(int nargout, const ArrayVector& arg, Interpreter* eval) 
     }
   }
   if (nargout == 0) {
-    stringVector filelist;
+    StringVector filelist;
     for (int i=0;i<foo.size();i++)
       filelist.push_back(foo[i].fileName().toStdString());
     TabledOutput(filelist,eval);
@@ -182,7 +182,7 @@ ArrayVector DirFunction(int nargout, const ArrayVector& arg, Interpreter* eval) 
       bytes << Array::uint64Constructor(foo[i].size());
       isdirs << Array::logicalConstructor(foo[i].isDir());
     }
-    return ArrayVector() << Array::structConstructor(rvstring() 
+    return ArrayVector() << Array::structConstructor(StringVector() 
 						     << "name"
 						     << "date"
 						     << "bytes"
@@ -236,7 +236,7 @@ ArrayVector DirFunction(int nargout, const ArrayVector& arg, Interpreter* eval) 
 //@>
 //!
 ArrayVector ListFilesFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  stringVector sysresult;
+  StringVector sysresult;
   string buffer;
   int i;
 
@@ -275,7 +275,7 @@ ArrayVector ListFilesFunction(int nargout, const ArrayVector& arg, Interpreter* 
 //!
 ArrayVector DirSepFunction(int nargout, const ArrayVector& arg) {
   QString psep(QDir::separator());
-  return singleArrayVector(Array::stringConstructor(psep.toStdString()));
+  return SingleArrayVector(Array::stringConstructor(psep.toStdString()));
 }
 
 //!

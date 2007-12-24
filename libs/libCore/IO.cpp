@@ -1105,7 +1105,7 @@ ArrayVector FcloseFunction(int nargout, const ArrayVector& arg) {
     fileHandles.deleteHandle(handle+1);
     delete fptr;
   }
-  return singleArrayVector(Array::int32Constructor(retval));
+  return SingleArrayVector(Array::int32Constructor(retval));
 }
 
 //!
@@ -1758,7 +1758,7 @@ template <class T>
 Array Num2StrHelperReal(const T*dp, Dimensions Xdims, const char *formatspec) {
   int rows(Xdims.getRows());
   int cols(Xdims.getColumns());
-  stringVector row_string;
+  StringVector row_string;
   if (Xdims.getLength() == 2)
     Xdims.set(3,1);
   Dimensions Wdims(Xdims.getLength());
@@ -1804,7 +1804,7 @@ template <class T>
 Array Num2StrHelperComplex(const T*dp, Dimensions Xdims, const char *formatspec) {
   int rows(Xdims.getRows());
   int cols(Xdims.getColumns());
-  stringVector row_string;
+  StringVector row_string;
   if (Xdims.getLength() == 2)
     Xdims.set(3,1);
   Dimensions Wdims(Xdims.getLength());
@@ -1949,7 +1949,7 @@ ArrayVector SprintfFunction(int nargout, const ArrayVector& arg) {
   Array outString(Array::stringConstructor(buff));
   free(op);
   free(buff);
-  return singleArrayVector(outString);
+  return SingleArrayVector(outString);
 }
   
 //!
@@ -2092,8 +2092,8 @@ ArrayVector FgetsFunction(int nargout, const ArrayVector& arg) {
   char buffer[65535];
   fgets(buffer,sizeof(buffer),fptr->fp);
   if (feof(fptr->fp))
-    return singleArrayVector(Array::emptyConstructor());
-  return singleArrayVector(Array::stringConstructor(buffer));
+    return SingleArrayVector(Array::emptyConstructor());
+  return SingleArrayVector(Array::stringConstructor(buffer));
 }
 
 ArrayVector FgetlineFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
@@ -2166,7 +2166,7 @@ ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
   fprintf(fp,"%s",txt.c_str());
   rewind(fp);
   if (feof(fp))
-    return singleArrayVector(Array::emptyConstructor());
+    return SingleArrayVector(Array::emptyConstructor());
   string frmt = format.getContentsAsString();
   char *buff = strdup(frmt.c_str());
   // Search for the start of a format subspec
@@ -2322,7 +2322,7 @@ ArrayVector FscanfFunction(int nargout, const ArrayVector& arg) {
   if (!format.isString())
     throw Exception("fscanf format argument must be a string");
   if (feof(fptr->fp))
-    return singleArrayVector(Array::emptyConstructor());
+    return SingleArrayVector(Array::emptyConstructor());
   string frmt = format.getContentsAsString();
 
   char *buff = new char[frmt.length()];
@@ -2503,7 +2503,7 @@ ArrayVector FscanfFunction(int nargout, const ArrayVector& arg) {
 }
 
   
-ArrayVector SaveNativeFunction(string filename, rvstring names, Interpreter* eval) {
+ArrayVector SaveNativeFunction(string filename, StringVector names, Interpreter* eval) {
   File ofile(filename,"wb");
   Serialize output(&ofile);
   output.handshakeServer();
@@ -2530,7 +2530,7 @@ ArrayVector SaveNativeFunction(string filename, rvstring names, Interpreter* eva
   return ArrayVector();
 }
   
-ArrayVector SaveASCIIFunction(string filename, rvstring names, bool tabsMode,
+ArrayVector SaveASCIIFunction(string filename, StringVector names, bool tabsMode,
 			      bool doubleMode, Interpreter* eval) {
   FILE *fp = fopen(filename.c_str(),"w");
   if (!fp) throw Exception("unable to open file " + filename + " for writing.");
@@ -2714,16 +2714,16 @@ ArrayVector SaveFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
 	((fname[len-1] == 'T') || (fname[len-1] == 't'))) 
       matMode = true;    
   }
-  rvstring names;
+  StringVector names;
   for (int i=1;i<argCopy.size();i++) {
     if (!arg[i].isString())
       throw Exception("unexpected non-string argument to save command");
     names << ArrayToString(argCopy[i]);
   }
   Context *cntxt = eval->getContext();
-  rvstring toSave;
+  StringVector toSave;
   if (regexpMode || (names.size() == 0)) {
-    stringVector allNames = cntxt->listAllVariables();
+    StringVector allNames = cntxt->listAllVariables();
     for (int i=0;i<(int)allNames.size();i++)
       if ((names.size() == 0) || contains(names,allNames[i],regexpMode))
 	toSave << allNames[i];
@@ -3024,12 +3024,12 @@ ArrayVector LoadASCIIFunction(int nargout, string filename, Interpreter* eval) {
 }
 
 ArrayVector LoadNativeFunction(int nargout, string filename,
-			       rvstring names, bool regexpmode, Interpreter* eval) {
+			       StringVector names, bool regexpmode, Interpreter* eval) {
   File ofile(filename,"rb");
   Serialize input(&ofile);
   input.handshakeClient();
   string arrayName = input.getString();
-  rvstring fieldnames;
+  StringVector fieldnames;
   ArrayVector fieldvalues;
   while (arrayName != "__eof") {
     Array toRead;
@@ -3199,7 +3199,7 @@ ArrayVector LoadFunction(int nargout, const ArrayVector& arg,
       }
     }
   }
-  rvstring names;
+  StringVector names;
   for (int i=1;i<argCopy.size();i++) {
     if (!arg[i].isString())
       throw Exception("unexpected non-string argument to load command");
