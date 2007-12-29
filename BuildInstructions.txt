@@ -1,0 +1,172 @@
+
+Windows XP / Visual Studio Express / CMake 
+
+- Install Visual C++ 2005 Express (http://msdn2.microsoft.com/en-us/express/default.aspx) 
+	and also Visual C++ Platform SDK. (Full version of VC should also work).
+- Install CMake (version 2.4.7 or later) for Win32. http://www.cmake.org
+- Checkout Freemat source code from the svn repository to a directory (<FreeMat source dir>). 
+Currently cmake version is located in 
+freemat.svn.sourceforge.net/svnroot/freemat/branches/cmake_build.
+- Build f2c
+    cd <FreeMat source dir>\dependencies\f2c
+	cd libf2c
+	<Path To Visual Studio Express>\VC\vcvarsall.bat
+	nmake -f makefile.vc
+	copy vcf2c.lib <FreeMat source dir>\dependencies\bin
+
+	cd ..\src
+	nmake -f makefile.vc f2c.exe
+	copy f2c.exe <FreeMat source dir>\dependencies\bin
+	copy f2c.h <FreeMat source dir>\dependencies\bin
+
+
+- Build ffcall
+	cd <FreeMat source dir>\dependencies\ffcall
+	<Path To Visual Studio Express>\VC\vcvarsall.bat
+	nmake MFLAGS=-MD -f makefile.msvc
+	copy avcall\avcall.lib <FreeMat source dir>\dependencies\bin
+	copy avcall\avcall.h <FreeMat source dir>\dependencies\bin
+
+- Download and build Qt 4.3 (qt-win-opensource-src-4.3.1.zip from 
+	http://trolltech.com/developer/downloads/qt/windows)
+	You will need to follow instructions here: 
+	http://qtnode.net/wiki?title=Qt4_with_Visual_Studio
+	to build Qt with Visual C++ compiler. 
+	(Qt promised full support for VC++ Express starting with version 4.3.2)
+	
+- Unpack fftw-3.1.2-dll.zip (http://www.fftw.org/install/windows.html) into 
+	<FreeMat source dir>\dependencies\bin. Follow the directions in README-Windows file 
+	(for fftw) to create import libraries.
+
+- Download and build zlib-1.2.3. (http://www.zlib.net/)
+	Build using VC project file from zlib\projects\visualc6. Set active configuration to 
+	DLL release.
+	Copy zlib1.{lib, dll} files into <FreeMat source dir>\dependencies\bin.
+	Copy zlib.h from zlib directory into <FreeMat source dir>\dependencies\bin.
+
+- Download and build pcre 7.4. (http://www.pcre.org/)
+	Use CMake to create solution file for VC. 
+	Build using VC solution file from pcre directory.
+	Copy pcre.lib and pcre.h files into <FreeMat source dir>\dependencies\bin.
+
+- Download and build LLVM (http://www.llvm.org)
+	1. Unpack llvm-2.0.zip into <CMake source>\dependencies. You should 
+	get <CMake source>\dependencies\llvm-2.0 directory with llvm source directories in it 
+	(e.g. "docs", "win32", etc ).
+	2. Open VS solution file llvm-2.0\win32\llvm.sln
+	3. You will need to patch LLVM before building. In file llvm\utils\TableGen\RegisterInfoEmitter.cpp you 
+	have to replace line 481 [ OS << "}\n\n";" ] with [ OS << "return 0;}\n\n"; ]
+	4. Build llvm libraries. 
+	If you are building in Debug mode you might need to define .
+
+	5. If you get errors about missing header files you might need to:
+	 Copy include\llvm\ADT\iterator.in => include\llvm\ADT\iterator
+	 Copy include\llvm\ADT\hash_map.in => include\llvm\ADT\hash_map
+	 Copy include\llvm\Support\DataTypes.h.in => include\llvm\Support\DataTypes.h
+	 
+	 If you build debug version of llvm and get errors in xutility file you might need to 
+	 define _HAS_ITERATOR_DEBUGGING=0 for target "Transforms" (right click on Transforms->
+	 Properties->Configuration Properties->C/C++->Preprocessor->Preprocessor Definitions). 
+	
+- Now we are ready to run CMake. 
+	1. Run CMake (CMakeSetup.exe if you are not using cmake icon.) Select build type that 
+	corresponds to your version of Visual Studio.
+	2. Enter path to <CMake source> in cmake source directory edit box. Enter path to build directory
+	(it is strongly suggested that the build directory should be outside the source tree.)
+	3. Click Configure button. 
+	4. CMake may have trouble locating path to SOCKS_LIBRARY. You may need to find windows socket library 
+	manually. On my computer I use <Path To Visual Studio Express>\VC\PlatformSDK\Lib\WS2_32.lib
+	5. Press "Ok" to generate VS solution files.
+
+- Build FreeMat
+	1. Open FreeMat.sln from the build directory.
+	2. Build FreeMat.
+	
+	
+Windows XP / MingW / CMake 
+
+- Install Mingw and MSYS http://www.mingw.org/. You will need gcc and g77 packages.
+- Install OpenSource (Mingw) version of Qt 4.3 (4.1 should work too).
+- Install CMake (version 2.4.7 or later). Both Win32 version and 
+cygwin versions should work (if you have cygwin installed). http://www.cmake.org
+- Install BLAS or ATLAS. 
+
+Mac OS X 10.3.9
+
+- Install Developer Tools
+- Install Qt4.1
+- Install fink
+- Install fortran
+- Install libavcall into /usr/local:
+
+yum install atlas-sse2-devel.i386
+
+mkdir depends
+cd depends
+wget ftp://ftp.santafe.edu/pub/gnu/ffcall-1.10.tar.gz
+tar xvf ffcall-1.10.tar.gz
+cd ffcall-1.10
+./configure
+make && make install
+cd ..
+
+- Install fftw and fftwf into /usr/local - we build these
+in two seperate directories 
+wget http://www.fftw.org/fftw-3.1.2.tar.gz
+tar xvfz fftw-3.1.2.tar.gz
+cd fftw-3.1.2
+mkdir build_fftw
+cd build_fftw
+../configure
+make && make install
+cd ..
+mkdir build_fftwf
+cd build_fftwf
+../configure --enable-single --enable-altivec
+make && make install
+
+- Install ARPACK into /usr/local
+wget http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz
+tar xvfz arpack96.tar.gz
+cd ARPACK
+cd SRC
+g77 -c *.f
+cd ../UTIL
+g77 -c *.f
+cd ..
+ar crs libarpack.a SRC/*.o UTIL/*.o
+cp libarpack.a /usr/local/lib/.
+
+- Install UMFPACK into /usr/local
+wget http://www.cise.ufl.edu/research/sparse/umfpack/current/UMFPACK.tar.gz
+wget http://www.cise.ufl.edu/research/sparse/UFconfig/current/UFconfig.tar.gz
+wget http://www.cise.ufl.edu/research/sparse/amd/current/AMD.tar.gz
+
+cd AMD
+make lib
+cd ../UMFPACK
+make library
+cd ..
+cp AMD/Lib/libamd.a /usr/local/lib/.
+cp AMD/Include/*.h /usr/local/include/.
+cp UMFPACK/Lib/libumfpack.a /usr/local/lib/.
+cp UMFPACK/Include/*.h /usr/local/include/.
+cp UFconfig/UFconfig.h /usr/local/include/.
+
+
+
+******************************************************************************
+
+To build FreeMat...
+
+1.  Configure and make
+2.  make distcheck
+
+--> This is the source distro... (unless one of the following steps fails)
+
+3.  Unpack the new source tree
+4.  mkdir cbuild
+5.  cd cbuild
+6.  ../configure --host=i686-mingw32 --build=i686-pc-linux CPPFLAGS=-I/home/basu/dev/trunk/cross/include LDFLAGS=-L/home/basu/dev/trunk/cross/lib                                                                            
+7. make
+8. make package
