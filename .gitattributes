@@ -12,6 +12,33 @@ dependencies/UMFPACK/Tcov/badsym.umf svn_mime_002dtype=application%2Foctet-strea
 dependencies/ffcall/avcall/tests.output/i386-pc-win32-gcc svn_mime_002dtype=application%2Foctet-stream
 dependencies/ffcall/trampoline/tramp-mips64.old.o.irix6.2 svn_mime_002dtype=application%2Foctet-stream
 dependencies/lapack/install/lawn81.pdf svn_mime_002dtype=application%2Foctet-stream
+images/cam_rotate.png svn_mime_002dtype=application%2Foctet-stream
+images/close.png svn_mime_002dtype=application%2Foctet-stream
+images/copy.png svn_mime_002dtype=application%2Foctet-stream
+images/cut.png svn_mime_002dtype=application%2Foctet-stream
+images/dbgnext.png svn_mime_002dtype=application%2Foctet-stream
+images/dbgrun.png svn_mime_002dtype=application%2Foctet-stream
+images/dbgstep.png svn_mime_002dtype=application%2Foctet-stream
+images/find.png svn_mime_002dtype=application%2Foctet-stream
+images/freemat-2.xpm svn_mime_002dtype=application%2Foctet-stream
+images/freemat_small_mod_64.png svn_mime_002dtype=application%2Foctet-stream
+images/home.png svn_mime_002dtype=application%2Foctet-stream
+images/new.png svn_mime_002dtype=application%2Foctet-stream
+images/next.png svn_mime_002dtype=application%2Foctet-stream
+images/open.png svn_mime_002dtype=application%2Foctet-stream
+images/pan.png svn_mime_002dtype=application%2Foctet-stream
+images/paste.png svn_mime_002dtype=application%2Foctet-stream
+images/player_pause.png svn_mime_002dtype=application%2Foctet-stream
+images/player_play.png svn_mime_002dtype=application%2Foctet-stream
+images/player_stop.png svn_mime_002dtype=application%2Foctet-stream
+images/previous.png svn_mime_002dtype=application%2Foctet-stream
+images/quit.png svn_mime_002dtype=application%2Foctet-stream
+images/rotate.png svn_mime_002dtype=application%2Foctet-stream
+images/save.png svn_mime_002dtype=application%2Foctet-stream
+images/stop.png svn_mime_002dtype=application%2Foctet-stream
+images/zoom.png svn_mime_002dtype=application%2Foctet-stream
+images/zoomin.png svn_mime_002dtype=application%2Foctet-stream
+images/zoomout.png svn_mime_002dtype=application%2Foctet-stream
 libs/libCore/Analyze.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libCore/Cast.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libCore/Constants.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
