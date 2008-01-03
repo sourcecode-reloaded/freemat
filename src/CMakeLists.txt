@@ -40,6 +40,7 @@ Graphics
 FreeMatlib 
 XP 
 Mex
+MatC
 ${AVCALL_LIBRARY}
 ${FFTW_LIBRARY}
 ${FFTWF_LIBRARY}

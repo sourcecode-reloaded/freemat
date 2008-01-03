@@ -33,7 +33,7 @@ Token.cpp
 Parser.cpp 
 Scanner.cpp 
 Tree.cpp 
-JITVM.cpp 
+#JITVM.cpp 
 FunctionDef.cpp 
 ${CMAKE_CURRENT_SOURCE_DIR}/Intrepreter.moc.cpp
 )

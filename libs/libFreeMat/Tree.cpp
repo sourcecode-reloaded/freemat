@@ -5,6 +5,18 @@
 #include "Tree.hpp"
 #include "Serialize.hpp"
 
+Tree::~Tree() {
+  for (int i=0;i<m_children.size();i++) delete m_children.at(i);
+}
+
+Tree* Tree::deepTreeCopy(Tree* t) {
+  Tree *p = new Tree(t->m_node);
+  for (int i=0;i<t->m_children.size();i++)
+    p->addChild(Tree::deepTreeCopy(t->m_children.at(i)));
+  p->m_jitstate = t->m_jitstate;
+  return p;
+}
+
 static int indentlevel = 0;
 void Tree::print() const {
   for (int i=0;i<indentlevel;i++)
