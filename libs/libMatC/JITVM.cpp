@@ -1066,7 +1066,7 @@ void JITVM::compile(Tree* t, Interpreter *m_eval) {
   std::cout << "*  Before optimization \n";
   jit->Dump();
 
-  //  jit->OptimizeCode();
+  jit->OptimizeCode();
 
   std::cout << "************************************************************\n";
   std::cout << "*  After optimization \n";

@@ -242,7 +242,7 @@ MACRO( CONVERT_F2C dep C_FILES )
 ENDMACRO( CONVERT_F2C dep C_FILES )
 
 INCLUDE_DIRECTORIES( libs/libFreeMat libs/libGraphics 
-libs/libMex libs/libXP libs/libCore libs/libFN  ${QT_LIBRARIES} src)   
+libs/libMex libs/libXP libs/libCore libs/libFN libs/libMatC ${QT_LIBRARIES} src)   
 
 OPTION(USE_DYNLINK "Link BLAS dynamically" ON)
 IF( USE_DYNLINK )
