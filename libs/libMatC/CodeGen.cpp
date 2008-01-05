@@ -152,7 +152,8 @@ void CodeGen::compile_statement(Tree* t) {
 }
 
 JITScalar CodeGen::compile_function_call(Tree* t) {
-  
+  throw Exception("Not implemented");
+  return jit->FloatValue( 0. );
 }
 
 JITScalar CodeGen::compile_rhs(Tree* t) {
@@ -506,7 +507,7 @@ void CodeGen::compile(Tree* t) {
   jit->Dump();
 }
 
-#warning - How to detect non-integer loop bounds?
+//TODO: How to detect non-integer loop bounds?
 void CodeGen::compile_for_block(Tree* t) {
   if (!(t->first()->is('=') && t->first()->second()->is(':'))) 
     throw Exception("For loop cannot be compiled - need scalar bounds");

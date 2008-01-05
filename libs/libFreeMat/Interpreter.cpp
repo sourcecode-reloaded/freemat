@@ -17,6 +17,7 @@
  *
  */
 
+#include "JIT.hpp"
 #include "Interpreter.hpp"
 #include <math.h>
 #include <stdio.h>
@@ -39,7 +40,6 @@
 #include <QtCore>
 #include <fstream>
 #include <stdarg.h>
-#include "JIT.hpp"
 #include "CodeGen.hpp"
 
 

@@ -1,5 +1,6 @@
 #include "MCScanner.hpp"
 #include <iostream>
+#include <algorithm>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -244,7 +245,7 @@ void MCScanner::fetchIdentifier() {
   while (isalnumus(ahead(len))) len++;
   // Collect the identifier into a string
   string ident(string(m_text,m_ptr,len));
-  string *p = lower_bound(fm_reserved,fm_reserved+fm_reserved_count,ident);
+  string *p = std::lower_bound(fm_reserved,fm_reserved+fm_reserved_count,ident);
   if ((p!= fm_reserved+fm_reserved_count) && (*p == ident))
     setToken(TOK_KEYWORD+(p-fm_reserved)+1);
   else
