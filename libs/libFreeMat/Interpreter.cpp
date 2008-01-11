@@ -40,7 +40,7 @@
 #include <QtCore>
 #include <fstream>
 #include <stdarg.h>
-#include "CodeGen.hpp"
+#include "JITFunc.hpp"
 
 
 #ifdef WIN32
@@ -1818,28 +1818,27 @@ void Interpreter::forStatement(Tree *t) {
   // Try to compile this block to an instruction stream  
   if (jitcontrol) {
     if (t->JITState() == Tree::UNTRIED) {
-      t->print();
-      CodeGen cg(this);
+      JITFunc *cg = new JITFunc(this);
       bool success = false;
       try {
-	cg.compile(t);
+	cg->compile(t);
 	success = true;
-	//	t->setJITState(Tree::SUCCEEDED);
+	t->setJITState(Tree::SUCCEEDED);
+	t->setJITFunction(cg);
       } catch (Exception &e) {
 	t->print();
 	std::cout << e.getMessageCopy() << "\r\n";
 	success = false;
-	//	t->setJITState(Tree::FAILED);
+	t->setJITState(Tree::FAILED);
       }
       if (success) {
-	cg.run();
+	cg->run();
 	return;
-	//	jit->run(this);
-	//	return;
+      } else {
+	delete cg;
       }
     } else if (t->JITState() == Tree::SUCCEEDED) {
-      //      JITVM *jit = t->JITCode();
-      //      jit->run(this);
+      t->JITFunction()->run();
       return;
     }
   }

@@ -1,7 +1,7 @@
 function ft = timetest8
 
 printf('Starting time trial...\n');
-ft(1) = timeit('a=0;for j=1:10000; a=a+j;end; ');
+ft(1) = timeit('a=0;for j=1:10000; a=a+sin(j);end; ');
 
 
 function t = timeit(expr)

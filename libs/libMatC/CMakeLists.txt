@@ -5,6 +5,6 @@ ADD_LIBRARY( MatC
 	MCScanner.cpp 
 	MCParser.cpp 
 	JIT.cpp 
-	CodeGen.cpp
+	JITFunc.cpp
 )
 
