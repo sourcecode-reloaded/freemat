@@ -499,7 +499,13 @@ void JITFunc::compile_if_statement(Tree* t) {
   JITBlock if_exit = jit->NewBlock("if_exit");
   jit->Branch(if_true,if_continue,main_cond);
   jit->SetCurrentBlock(if_true);
-  compile_block(t->second());
+  bool failed = false;
+  try {
+    compile_block(t->second());
+  } catch(Exception &e) {
+    exception_store = e;
+    failed = true;
+  }
   jit->Jump(if_exit);
   int n=2;
   while (n < t->numChildren() && t->child(n)->is(TOK_ELSEIF)) {
@@ -509,31 +515,50 @@ void JITFunc::compile_if_statement(Tree* t) {
     if_continue = jit->NewBlock("elseif_continue");
     jit->Branch(if_true,if_continue,ttest);
     jit->SetCurrentBlock(if_true);
-    compile_block(t->child(n)->second());
+    try {
+      compile_block(t->child(n)->second());
+    } catch(Exception &e) {
+      exception_store = e;
+      failed = true;
+    }
     jit->Jump(if_exit);
     n++;
   }
   if (t->last()->is(TOK_ELSE)) {
     jit->SetCurrentBlock(if_continue);
-    compile_block(t->last()->first());
+    try {
+      compile_block(t->last()->first());
+    } catch(Exception &e) {
+      exception_store = e;
+      failed = true;
+    }
     jit->Jump(if_exit);
   } else {
     jit->SetCurrentBlock(if_continue);
     jit->Jump(if_exit);
   }
   jit->SetCurrentBlock(if_exit);
+  if (failed) throw exception_store;
 }
 
 template<class T> 
 inline T scalar_load(void* base, int argnum) {
   JITFunc *this_ptr = static_cast<JITFunc*>(base);
-  return ((T*)(this_ptr->array_inputs[argnum]->getDataPointer()))[0];
+  Array *a = this_ptr->array_inputs[argnum];
+  if (a->getLength() != 1) {
+    std::cout << "ACCCKKK!\r\n";
+  }
+  return ((T*)(a->getDataPointer()))[0];
 }
 
 template<class T>
 inline void scalar_store(void* base, int argnum, T value) {
   JITFunc *this_ptr = static_cast<JITFunc*>(base);
-  ((T*)(this_ptr->array_inputs[argnum]->getReadWriteDataPointer()))[0] = value;
+  Array *a = this_ptr->array_inputs[argnum];
+  if (a->getLength() != 1) {
+    std::cout << "ACCCKKK!\r\n";
+  }
+  ((T*)(a->getReadWriteDataPointer()))[0] = value;
 }
 
 template<class T>
@@ -751,6 +776,7 @@ void JITFunc::compile(Tree* t) {
   // int func(void** inputs);
   initialize();
   argument_count = 0;
+  std::cout << "Compiling main " << countm << "\r\n";
   func = jit->DefineFunction(jit->FunctionType("i","I"),std::string("main") + countm++);
   jit->SetCurrentFunction(func);
   prolog = jit->NewBlock("prolog");
@@ -763,7 +789,13 @@ void JITFunc::compile(Tree* t) {
   llvm::Function::arg_iterator args = func->arg_begin();
   this_ptr = args;
   this_ptr->setName("this_ptr");
-  compile_for_block(t);
+  bool failed = false;
+  try {
+    compile_for_block(t);
+  } catch (Exception &e) {
+    failed = true;
+    exception_store = e;
+  }
   jit->Jump(epilog);
   jit->SetCurrentBlock(prolog);
   jit->Jump(main_body);
@@ -771,11 +803,12 @@ void JITFunc::compile(Tree* t) {
   jit->Return(jit->Load(retcode));
   //  std::cout << "************************************************************\n";
   //  std::cout << "*  Before optimization \n";
-  //  jit->Dump( "unoptimized.bc.txt" );
-  jit->OptimizeCode();
+  jit->Dump( "unoptimized.bc.txt" );
+  //  jit->OptimizeCode();
   //  std::cout << "************************************************************\n";
   //  std::cout << "*  After optimization \n";
   //  jit->Dump( "optimized.bc.txt" );
+  if (failed) throw exception_store;
 }
 
 //TODO: #warning - How to detect non-integer loop bounds?
@@ -795,7 +828,6 @@ void JITFunc::compile_for_block(Tree* t) {
      loop_step = jit->DoubleValue( 1 );
      loop_stop = compile_expression(t->first()->second()->second());
   }
-
   string loop_index_name(t->first()->first()->text());
   SymbolInfo* v = add_argument_scalar(loop_index_name,loop_start,true);
   JITScalar loop_index_address = v->address;
@@ -806,7 +838,13 @@ void JITFunc::compile_for_block(Tree* t) {
   jit->Jump(looptest);
   // Create 3 blocks
   jit->SetCurrentBlock(loopbody);
-  compile_block(t->second());
+  bool failed = false;
+  try {
+    compile_block(t->second());
+  } catch(Exception &e) {
+    exception_store = e;
+    failed = true;
+  }
   JITScalar loop_index_value = jit->Load(loop_index_address);
   JITScalar next_loop_value = jit->Add(loop_index_value,loop_step);
   jit->Store(next_loop_value,loop_index_address);
@@ -816,6 +854,7 @@ void JITFunc::compile_for_block(Tree* t) {
   JITScalar loop_comparison = jit->LessEquals(loop_index_value,loop_stop);
   jit->Branch(loopbody,loopexit,loop_comparison);
   jit->SetCurrentBlock(loopexit);
+  if (failed) throw exception_store;
 }
 
 void JITFunc::run() {
