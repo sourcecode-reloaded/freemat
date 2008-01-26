@@ -178,7 +178,7 @@ void LoadCoreFunctions(Context* context) {
   context->addFunction("sprintf",SprintfFunction,-1,1,NULL);
   context->addSpecialFunction("fprintf",FprintfFunction,-1,0,NULL);
   context->addFunction("fscanf",FscanfFunction,2,-1,"handle","format",NULL);
-  context->addFunction("sscanf",SscanfFunction,2,-1,"string","format",NULL);
+  context->addFunction("sscanf",SscanfFunction,3,4,"string","format","shape",NULL);
   context->addFunction("str2num",Str2NumFunction,1,1,"string",NULL);
   context->addFunction("rand",RandFunction,-1,1,NULL);
   context->addFunction("randn",RandnFunction,-1,1,NULL);

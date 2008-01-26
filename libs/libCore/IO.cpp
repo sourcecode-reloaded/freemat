@@ -2154,11 +2154,39 @@ public:
 };
 
 ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
-  if ((arg.size() != 2) || (!arg[0].isString()) || (!arg[1].isString()))
+  if ((arg.size() > 3) || (arg.size() < 2) || (!arg[0].isString()) || (!arg[1].isString()))
     throw Exception("sscanf takes two arguments, the text and the format string");
   Array text(arg[0]);
   Array format(arg[1]);
-  string txt = text.getContentsAsString();
+  Array errormsg = Array::stringConstructor( "" );
+  Array dims;
+  int firstdim = -1;
+  int nMaxRead = -1, nRead = 0;
+
+  if( arg.size() == 3 ){
+      dims = arg[2];
+
+      if( !(dims.isIntegerClass() || dims.isReal()) || !dims.isPositive() || ( dims.getLength()>2 ))
+          throw Exception("dimension should be integer scalar or vector");
+  
+      dims.promoteType( FM_DOUBLE );
+      const double *dim = (const double *)dims.getDataPointer();
+      if( dims.getLength() == 1 ){
+	  if( IsFinite( dim[0] ) ){
+	      nMaxRead = dim[0];
+	      firstdim = dim[0];
+	  }
+      }
+      else{
+	  if( !IsFinite( dim[0] ) )
+	      throw Exception("Illegal size.");
+	  firstdim = dim[0];
+	  if( IsFinite( dim[1] ) )
+	      nMaxRead = dim[0]*dim[1];
+      }
+  }
+
+  std::string txt = text.getContentsAsString();
   FILE *fp = tmpfile();
   AutoFileCloser afc(fp);
   if (!fp)
@@ -2167,17 +2195,26 @@ ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
   rewind(fp);
   if (feof(fp))
     return SingleArrayVector(Array::emptyConstructor());
-  string frmt = format.getContentsAsString();
-  char *buff = strdup(frmt.c_str());
+  std::string frmt = format.getContentsAsString();
+
+  std::vector<char> buff( frmt.length()+1 ); //vectors are contiguous in memory. we'll use it instead of char[]
+  strncpy(&buff[0], frmt.c_str(), frmt.length()+1 );
+  
   // Search for the start of a format subspec
-  char *dp = buff;
+  char *dp = &buff[0];
   char *np;
   char sv;
   bool shortarg;
   bool doublearg;
+  bool stringarg = true;
+  int nNumRead = 0;
+  int nCharRead = 0;
+
   // Scan the string
   ArrayVector values;
-  while (*dp) {
+  while( !feof( fp ) && ( nMaxRead < 0 || nRead < nMaxRead ) ){
+    if ( !(*dp) ) //rewind the format
+	dp = &buff[0];
     np = dp;
     while ((*dp) && (*dp != '%')) dp++;
     // Print out the formatless segment
@@ -2190,8 +2227,10 @@ ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
     // Process the format spec
     if (*dp) {
       np = validateScanFormatSpec(dp+1);
-      if (!np)
-	throw Exception("erroneous format specification " + std::string(dp));
+      if (!np){
+	  errormsg=Array::stringConstructor("erroneous format specification " + std::string(dp));
+	  goto exit;
+      }
       else {
 	if (*(np-1) == '%') {
 	  fscanf(fp,"%%");
@@ -2218,6 +2257,7 @@ ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
 	      else {
 		fscanf(fp,dp,&sdumint);
 		values.push_back(Array::int16Constructor(sdumint));
+		stringarg = false; ++nNumRead; ++nRead;
 	      }
 	    } else {
 	      int sdumint;
@@ -2226,6 +2266,7 @@ ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
 	      else {
 		fscanf(fp,dp,&sdumint);
 		values.push_back(Array::int32Constructor(sdumint));
+		stringarg = false; ++nNumRead; ++nRead;
 	      }
 	    }
 	    break;
@@ -2241,6 +2282,7 @@ ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
 	      else {
 		fscanf(fp,dp,&sdumint);
 		values.push_back(Array::int32Constructor(sdumint));
+		stringarg = false; ++nNumRead; ++nRead;
 	      }
 	    } else {
 	      unsigned int dumint;
@@ -2249,6 +2291,7 @@ ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
 	      else {
 		fscanf(fp,dp,&dumint);
 		values.push_back(Array::uint32Constructor(dumint));
+		stringarg = false; ++nNumRead; ++nRead;
 	      }
 	    }
 	    break;
@@ -2265,6 +2308,7 @@ ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
 	      else {
 		fscanf(fp,dp,&dumfloat);
 		values.push_back(Array::doubleConstructor(dumfloat));
+		stringarg = false; ++nNumRead; ++nRead;
 	      }
 	    } else {
 	      float dumfloat;
@@ -2273,6 +2317,7 @@ ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
 	      else {
 		fscanf(fp,dp,&dumfloat);
 		values.push_back(Array::floatConstructor(dumfloat));
+		stringarg = false; ++nNumRead; ++nRead;
 	      }
 	    }
 	    break;
@@ -2283,10 +2328,12 @@ ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
 	    else {
 	      fscanf(fp,dp,stbuff);
 	      values.push_back(Array::stringConstructor(stbuff));
+	      nCharRead += strlen( stbuff ); ++nRead;
 	    }
 	    break;
 	  default:
-	    throw Exception("unsupported fscanf configuration");
+	      errormsg = Array::stringConstructor("illegal format");
+	      goto exit;
 	  }
 	  *np = sv;
 	  dp = np;
@@ -2294,8 +2341,58 @@ ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
       }
     }
   }
-  free(buff);
-  return values;
+exit:
+  ArrayVector ret; 
+  ret.resize(4); //sscanf returns 4 parameters (array, numread, errormsg, nextind)
+  ret[3] = Array::doubleConstructor( ftell( fp ) );
+  ret[2] = errormsg;
+  ret[1] = Array::doubleConstructor( nRead );
+  
+  int nVecElem; //number of elements in the output vector. Unfortunately may be different from the number of elements we read in.
+  nVecElem = nNumRead + nCharRead;
+  //the tricky case: due to string conversion we actually have more data than we expected. 
+  if( firstdim > 0 && (((int)(nNumRead + nCharRead)) % ((int) firstdim ))){
+    nVecElem = (((int)(nNumRead + nCharRead)) / ((int) firstdim )) * firstdim + firstdim;
+  }
+
+  if( !stringarg ){ //At least one of the read values was numerical. Convert strings to numbers.
+      ret[0] = Array::doubleVectorConstructor( nVecElem );
+      double *data = (double*) ret[0].getReadWriteDataPointer();
+
+      ArrayVector::iterator it = values.begin();
+      while( it != values.end() ){
+	  if( it->isString() ){
+	    const char* strdata = (const char*) it->getDataPointer();
+	    for( int j=0; j < it->getLength(); j++ ){
+	      *(data++) = strdata[j];
+	    }
+	  }
+	  else{
+	      *(data++) = it->getContentsAsDoubleScalar();
+	  }
+	  ++it;
+      }
+  }
+  else{ //all string input
+      std::string outstring;
+
+      ArrayVector::iterator it = values.begin();
+      while( it != values.end() ){
+	  if( it->isString() ){
+	    outstring.append( it->getContentsAsString() );
+	  }
+	  else{
+	    throw Exception("Internal Error in sscanf.");
+	  }
+	  ++it;
+      }
+      ret[0] = Array::stringConstructor( outstring );
+  }
+  if( firstdim > 0 ){
+    Dimensions dim( firstdim, nVecElem / firstdim ); 
+    ret[0].reshape( dim );
+  }
+  return ret;
 }
 
 //!
