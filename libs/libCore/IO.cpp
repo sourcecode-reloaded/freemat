@@ -2124,47 +2124,16 @@ ArrayVector Str2NumFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector() << Array::doubleConstructor(ArrayToDouble(data));
 }
 
-// How does sscanf work...
-// a whitespace matches any number/type of whitespace
-// a non-whitespace must be matched exactly
-// a %d, %ld, etc.  reads a number... 
-// a %s matches a sequence of characters that does
-// not contain whitespaces...
-// a mismatch - 
-
-//!
-//@Module SSCANF Formated String Input Function (C-Style)
-//@@Section IO
-//@@Usage
-//Reads values from a string.  The general syntax for its use is
-//@[
-//  [a1,...,an] = sscanf(text,format)
-//@]
-//Here @|format| is the format string, which is a string that
-//controls the format of the input.  Each value that is parsed
-//from the @|text| occupies one output slot.  See @|printf|
-//for a description of the format.
-//!
-
-class AutoFileCloser {
-  FILE *fp;
-public:
-  AutoFileCloser(FILE *g) {fp = g;}
-  ~AutoFileCloser() {fclose(fp);}
-};
-
-ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
-  if ((arg.size() > 3) || (arg.size() < 2) || (!arg[0].isString()) || (!arg[1].isString()))
-    throw Exception("sscanf takes two arguments, the text and the format string");
-  Array text(arg[0]);
-  Array format(arg[1]);
+ArrayVector ScanfHelperFunction( FILE* fp, const ArrayVector& arg )
+{
+  Array format(arg[0]);
   Array errormsg = Array::stringConstructor( "" );
   Array dims;
   int firstdim = -1;
   int nMaxRead = -1, nRead = 0;
 
-  if( arg.size() == 3 ){
-      dims = arg[2];
+  if( arg.size() == 2 ){
+      dims = arg[1];
 
       if( !(dims.isIntegerClass() || dims.isReal()) || !dims.isPositive() || ( dims.getLength()>2 ))
           throw Exception("dimension should be integer scalar or vector");
@@ -2186,15 +2155,6 @@ ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
       }
   }
 
-  std::string txt = text.getContentsAsString();
-  FILE *fp = tmpfile();
-  AutoFileCloser afc(fp);
-  if (!fp)
-    throw Exception("sscanf was unable to open a temp file (and so it won't work)");
-  fprintf(fp,"%s",txt.c_str());
-  rewind(fp);
-  if (feof(fp))
-    return SingleArrayVector(Array::emptyConstructor());
   std::string frmt = format.getContentsAsString();
 
   std::vector<char> buff( frmt.length()+1 ); //vectors are contiguous in memory. we'll use it instead of char[]
@@ -2392,7 +2352,62 @@ exit:
     Dimensions dim( firstdim, nVecElem / firstdim ); 
     ret[0].reshape( dim );
   }
+  else if( !stringarg ){
+    Dimensions dim( nNumRead + nCharRead, 1 ); 
+    ret[0].reshape( dim );
+  }
   return ret;
+}
+
+// How does sscanf work...
+// a whitespace matches any number/type of whitespace
+// a non-whitespace must be matched exactly
+// a %d, %ld, etc.  reads a number... 
+// a %s matches a sequence of characters that does
+// not contain whitespaces...
+// a mismatch - 
+
+//!
+//@Module SSCANF Formated String Input Function (C-Style)
+//@@Section IO
+//@@Usage
+//Reads values from a string.  The general syntax for its use is
+//@[
+//  [a, count, errmesg, nextindex] = sscanf(text,format,size)
+//@]
+//Here @|format| is the format string, which is a string that
+//controls the format of the input.  Each value that is parsed
+//from the @|text| occupies one output slot.  See @|printf|
+//for a description of the format. @|size| is in the form n or [m, n].
+//!
+
+class AutoFileCloser {
+  FILE *fp;
+public:
+  AutoFileCloser(FILE *g) {fp = g;}
+  ~AutoFileCloser() {fclose(fp);}
+};
+
+ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
+  if ((arg.size() > 3) || (arg.size() < 2) || (!arg[0].isString()) || (!arg[1].isString()))
+    throw Exception("incorrect number or types or the parameters");
+  Array text(arg[0]);
+  std::string txt = text.getContentsAsString();
+
+  FILE *fp = tmpfile();
+  AutoFileCloser afc(fp);
+  if (!fp)
+    throw Exception("sscanf was unable to open a temp file (and so it won't work)");
+  fprintf(fp,"%s",txt.c_str());
+  rewind(fp);
+  if (feof(fp))
+    return SingleArrayVector(Array::emptyConstructor());
+
+  ArrayVector helper_arg; 
+  helper_arg << arg[1];
+  if( arg.size() == 3 )
+      helper_arg << arg[2];
+  return ScanfHelperFunction( fp, helper_arg );
 }
 
 //!
@@ -2401,157 +2416,31 @@ exit:
 //@@Usage
 //Reads values from a file.  The general syntax for its use is
 //@[
-//  [a1,...,an] = fscanf(handle,format)
+//  [a, count, errmsg, nextind] = fscanf(handle,format,size)
 //@]
 //Here @|format| is the format string, which is a string that
 //controls the format of the input.  Each value that is parsed from
 //the file described by @|handle| occupies one output slot.
-//See @|printf| for a description of the format.  Note that if
+//See @|printf| for a description of the format. @|size| is in the form n or [m, n].
+//Note that if
 //the file is at the end-of-file, the fscanf will return 
 //!
 ArrayVector FscanfFunction(int nargout, const ArrayVector& arg) {
-  if (arg.size() != 2)
-    throw Exception("fscanf takes two arguments, the file handle and the format string");
+  if ((arg.size() > 3) || (arg.size() < 2) || (!arg[1].isString()))
+      throw Exception("incorrect number or types or the parameters");
+
   Array tmp(arg[0]);
   int handle = tmp.getContentsAsIntegerScalar();
   FilePtr *fptr=(fileHandles.lookupHandle(handle+1));
-  Array format(arg[1]);
-  if (!format.isString())
-    throw Exception("fscanf format argument must be a string");
   if (feof(fptr->fp))
     return SingleArrayVector(Array::emptyConstructor());
-  string frmt = format.getContentsAsString();
 
-  char *buff = new char[frmt.length()];
-  strncpy( buff, frmt.c_str(), frmt.length() );
+  ArrayVector helper_arg; 
+  helper_arg << arg[1];
+  if( arg.size() == 3 )
+      helper_arg << arg[2];
 
-  // Search for the start of a format subspec
-  char *dp = buff;
-  char *np;
-  char sv;
-  bool shortarg;
-  bool doublearg;
-  // Scan the string
-  ArrayVector values;
-  while (*dp) {
-    np = dp;
-    while ((*dp) && (*dp != '%')) dp++;
-    // Print out the formatless segment
-    sv = *dp;
-    *dp = 0;
-    fscanf(fptr->fp,np);
-    if (feof(fptr->fp))
-      values.push_back(Array::emptyConstructor());
-    *dp = sv;
-    // Process the format spec
-    if (*dp) {
-      np = validateScanFormatSpec(dp+1);
-      if (!np)
-	throw Exception("erroneous format specification " + std::string(dp));
-      else {
-	if (*(np-1) == '%') {
-	  fscanf(fptr->fp,"%%");
-	  dp+=2;
-	} else {
-	  shortarg = false;
-	  doublearg = false;
-	  if (*(np-1) == 'h') {
-	    shortarg = true;
-	    np++;
-	  } else if (*(np-1) == 'l') {
-	    doublearg = true;
-	    np++;
-	  } 
-	  sv = *np;
-	  *np = 0;
-	  switch (*(np-1)) {
-	  case 'd':
-	  case 'i':
-	    if (shortarg) {
-	      short sdumint;
-	      if (feof(fptr->fp))
-		values.push_back(Array::emptyConstructor());
-	      else {
-		fscanf(fptr->fp,dp,&sdumint);
-		values.push_back(Array::int16Constructor(sdumint));
-	      }
-	    } else {
-	      int sdumint;
-	      if (feof(fptr->fp))
-		values.push_back(Array::emptyConstructor());
-	      else {
-		fscanf(fptr->fp,dp,&sdumint);
-		values.push_back(Array::int32Constructor(sdumint));
-	      }
-	    }
-	    break;
-	  case 'o':
-	  case 'u':
-	  case 'x':
-	  case 'X':
-	  case 'c':
-	    if (shortarg) {
-	      int sdumint;
-	      if (feof(fptr->fp))
-		values.push_back(Array::emptyConstructor());
-	      else {
-		fscanf(fptr->fp,dp,&sdumint);
-		values.push_back(Array::int32Constructor(sdumint));
-	      }
-	    } else {
-	      unsigned int dumint;
-	      if (feof(fptr->fp))
-		values.push_back(Array::emptyConstructor());
-	      else {
-		fscanf(fptr->fp,dp,&dumint);
-		values.push_back(Array::uint32Constructor(dumint));
-	      }
-	    }
-	    break;
-	  case 'e':
-	  case 'E':
-	  case 'f':
-	  case 'F':
-	  case 'g':
-	  case 'G':
-	    if (doublearg) {
-	      double dumfloat;
-	      if (feof(fptr->fp))
-		values.push_back(Array::emptyConstructor());
-	      else {
-		fscanf(fptr->fp,dp,&dumfloat);
-		values.push_back(Array::doubleConstructor(dumfloat));
-	      }
-	    } else {
-	      float dumfloat;
-	      if (feof(fptr->fp))
-		values.push_back(Array::emptyConstructor());
-	      else {
-		fscanf(fptr->fp,dp,&dumfloat);
-		values.push_back(Array::floatConstructor(dumfloat));
-	      }
-	    }
-	    break;
-	  case 's':
-	    char stbuff[4096];
-	    if (feof(fptr->fp))
-	      values.push_back(Array::emptyConstructor());
-	    else {
-	      fscanf(fptr->fp,dp,stbuff);
-	      values.push_back(Array::stringConstructor(stbuff));
-	    }
-	    break;
-	  default:
-	    throw Exception("unsupported fscanf configuration");
-	  }
-	  *np = sv;
-	  dp = np;
-	}
-      }
-    }
-  }
-  delete[] buff;
-  return values;
+  return ScanfHelperFunction( fptr->fp, helper_arg );
 }
 
 //!

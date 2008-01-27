@@ -177,7 +177,7 @@ void LoadCoreFunctions(Context* context) {
   context->addFunction("dlmread",DlmReadFunction,4,1,"filename","delimiter","startrow","startcol",NULL);
   context->addFunction("sprintf",SprintfFunction,-1,1,NULL);
   context->addSpecialFunction("fprintf",FprintfFunction,-1,0,NULL);
-  context->addFunction("fscanf",FscanfFunction,2,-1,"handle","format",NULL);
+  context->addFunction("fscanf",FscanfFunction,3,4,"handle","format","shape",NULL);
   context->addFunction("sscanf",SscanfFunction,3,4,"string","format","shape",NULL);
   context->addFunction("str2num",Str2NumFunction,1,1,"string",NULL);
   context->addFunction("rand",RandFunction,-1,1,NULL);
