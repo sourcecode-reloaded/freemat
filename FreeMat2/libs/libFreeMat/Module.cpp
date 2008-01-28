@@ -45,7 +45,7 @@ void ClearLibs(Interpreter* eval) {
 
 //!
 //@Module LOADLIB Load Library Function
-//@@Section FREEMAT
+//@@Section EXTERNAL
 //@@Usage
 //The @|loadlib| function allows a function in an external library
 //to be added to FreeMat dynamically.  This interface is generally
@@ -120,28 +120,28 @@ const char* matchTest(const char* &cp, const char* tmplate) {
 const char* parseTypeName(const char* &cp) {
   const char* rp;
   skipWS(cp);
-  if (rp = matchTest(cp,"int8"))
-    return rp;
-  if (rp = matchTest(cp,"uint8"))
-    return rp;
-  if (rp = matchTest(cp,"int16"))
-    return rp;
-  if (rp = matchTest(cp,"uint16"))
-    return rp;
-  if (rp = matchTest(cp,"int32"))
-    return rp;
-  if (rp = matchTest(cp,"uint32"))
-    return rp;
-  if (rp = matchTest(cp,"float"))
-    return rp;
-  if (rp = matchTest(cp,"complex"))
-    return rp;
-  if (rp = matchTest(cp,"double"))
-    return rp;
-  if (rp = matchTest(cp,"dcomplex"))
-    return rp;
-  if (rp = matchTest(cp,"string"))
-    return rp;
+  rp = matchTest(cp,"int8");
+  if (rp) return rp;
+  rp = matchTest(cp,"uint8");
+  if (rp) return rp;
+  rp = matchTest(cp,"int16");
+  if (rp) return rp;
+  rp = matchTest(cp,"uint16");
+  if (rp) return rp;
+  rp = matchTest(cp,"int32");
+  if (rp) return rp;
+  rp = matchTest(cp,"uint32");
+  if (rp) return rp;
+  rp = matchTest(cp,"float");
+  if (rp) return rp;
+  rp = matchTest(cp,"complex");
+  if (rp) return rp;
+  rp = matchTest(cp,"double");
+  if (rp) return rp;
+  rp = matchTest(cp,"dcomplex");
+  if (rp) return rp;
+  rp = matchTest(cp,"string");
+  if (rp) return rp;
   return NULL;
 }
 
@@ -205,7 +205,7 @@ char* parseBoundsCheck(const char* &cp) {
 
 //!
 //@Module IMPORT Foreign Function Import
-//@@Section FREEMAT
+//@@Section EXTERNAL
 //@@Usage
 //The import function allows you to call functions that are compiled into
 //shared libraries, as if they were FreeMat functions. The usage is
@@ -355,6 +355,10 @@ char* parseBoundsCheck(const char* &cp) {
 //c
 //@>
 //!
+
+static inline bool issep(char t) {
+  return ((t=='/') || (t=='\\'));
+}
 ArrayVector ImportFunction(int nargout, const ArrayVector& arg, 
 			   Interpreter* eval)  {
 #ifdef HAVE_AVCALL
@@ -377,11 +381,11 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
   string current(QDir::currentPath().toStdString());
   // Prepend the current working directory... ugly, but necessary
 #ifdef WIN32
-  if (!((libfullpath[0] == '/') || ((libfullpath[1] == ':') && 
-				     (libfullpath[2] == '/'))))
+  if (!(issep(libfullpath[0]) || ((libfullpath[1] == ':') && 
+				  issep(libfullpath[2]))))
     libfullpath = current + "/" + libfullpath;
 #else
-  if (libfullpath[0] != '/')
+  if (!issep(libfullpath[0]))
     libfullpath = current + "/" + libfullpath;
 #endif
   symbolname = arg[1].getContentsAsString();
@@ -399,7 +403,7 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
   func = lib->GetSymbol(symbolname.c_str());
   stringVector types;
   stringVector arguments;
-  treeVector checks;
+  CodeList checks;
   /**
    * Parse the arglist...
    */
@@ -422,7 +426,7 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
       checks.push_back(ParseExpressionString(bc));
       free(bc);
     } else
-      checks.push_back(tree());
+      checks.push_back(CodeBlock(new Tree));
     char *ar;
     ar = parseArgumentName(cp);
     arguments.push_back(ar);

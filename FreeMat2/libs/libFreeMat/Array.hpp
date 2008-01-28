@@ -26,7 +26,6 @@
 #include "Dimensions.hpp"
 #include "Types.hpp"
 #include "Data.hpp"
-#include "RefVec.hpp"
 #include <QVector>
 #include "List.hpp"
 #include <QStringList>
@@ -94,7 +93,7 @@ private:
    * array.  Throws an exception if $$a(i)$$ is outside the range
    * $$1,\ldots,\mathrm{maxD}$.
    */
-  bool* getBinaryMap(uint32);
+  bool* getBinaryMap(int);
   /** Get the internal index corresponding to a given field name.
    * Get the internal index corresponding to a given field name.  This
    * is the index into the fieldname array of the argument.  If the
@@ -109,7 +108,7 @@ public:
    * successfully.  Throws an exception if the maximum value is zero or
    * negative.
    */
-  uint32 getMaxAsIndex();
+  indexType getMaxAsIndex();
   /**
    * Allocate an array.
    */
@@ -145,9 +144,9 @@ public:
   /**
    * Create an Array with the specified contents.
    */
-  inline Array(Class type, const Dimensions& dims, void* data, bool sparse = false, 
-	       rvstring fieldNames = rvstring(), rvstring classname = rvstring()) {
-    dp = new Data(type, dims, data, sparse, fieldNames, classname);
+  inline Array(Class type, const Dimensions& dims, void* t_data, bool t_sparse = false, 
+	       rvstring t_fieldNames = rvstring(), rvstring classname = rvstring()) {
+    dp = new Data(type, dims, t_data, t_sparse, t_fieldNames, classname);
   }
   /**
    * Create an Array with a default allocation of space - only useful for P.O.D. arrays
@@ -258,7 +257,10 @@ public:
 		      bool sparseflag = false, 
 		      rvstring fields = rvstring(),
 		      rvstring classname = rvstring()) {
-    dp->putData(aClass,dims,s,sparseflag,fields,classname);
+    if (dp)
+      dp->putData(aClass,dims,s,sparseflag,fields,classname);
+    else 
+      dp = new Data(aClass,dims,s,sparseflag,fields,classname);
   }
 
 
@@ -366,7 +368,7 @@ public:
    */
   const bool isRealAllZeros() const;
   inline const bool sparse() const {
-    return (dp->sparse());
+    return (dp && dp->sparse());
   }
   void makeSparse();
   void makeDense();
@@ -445,7 +447,7 @@ public:
    * Returns TRUE if we are an integer class.
    */
   inline const bool isIntegerClass() const {
-    return (dp->dataClass() < FM_FLOAT);
+    return ((dp->dataClass() < FM_FLOAT) && (dp->dataClass() >= FM_LOGICAL));
   }
   inline bool isColumnVector() const {
     return (is2D() && columns() == 1);
@@ -491,7 +493,7 @@ public:
    * we assume that the permutation vector is of the correct size and is a
    * valid permutation.
    */
-  void permute(const int32* permutation);
+  void permute(const uint32* permutation);
   /**
    * Diagonal constructor - construct an array from a given vector, with
    * the contents of the vector stored into the specified diagonal of the

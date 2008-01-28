@@ -25,7 +25,7 @@
 #include "Types.hpp"
 
 class Interpreter;
-const unsigned int maxDims = 6;
+const int maxDims = 6;
 
 /**
  * The Dimensions class is used to keep track of the number of
@@ -79,7 +79,7 @@ public:
   inline Dimensions(int dimCount) {
     if (dimCount < 0) 
       throw Exception("Illegal argument to Dimensions constructor");
-    memset(data, 0, sizeof(int)*dimCount);
+    memset(data, 0, sizeof(int)*maxDims);
     length = dimCount;
     updateCacheVariables();
   }
@@ -88,6 +88,7 @@ public:
    * rows and columns.
    */
   inline Dimensions(int rows, int cols) {
+    memset(data, 0, sizeof(int)*maxDims);
     data[0] = rows;
     data[1] = cols;
     length = 2;
@@ -103,6 +104,7 @@ public:
    * rows and columns and slices.
    */
   inline Dimensions(int rows, int cols, int slices) {
+    memset(data, 0, sizeof(int)*maxDims);
     data[0] = rows;
     data[1] = cols;
     data[2] = slices;
@@ -285,7 +287,7 @@ public:
   /**
    * Applies a permutation (assumed legal) to this dimension vector, and returns the permuted vector
    */
-  Dimensions permute(const int32* permutation) const;
+  Dimensions permute(const uint32* permutation) const;
 };
 
 #endif

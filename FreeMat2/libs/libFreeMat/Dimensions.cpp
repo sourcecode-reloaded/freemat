@@ -72,7 +72,8 @@ void Dimensions::updateCacheVariables() {
 
 void Dimensions::setDimensionLength(int dim, int len) {
   if (dim >= maxDims )
-    throw Exception("Too many dimensions! Current limit is 6.");
+    throw Exception(string("Too many dimensions! Current limit is ") + 
+		    maxDims + ".");
   if (dim >= length) {
     int new_length = dim+1;
     for (int j=length;j<new_length;j++)
@@ -159,7 +160,6 @@ void Dimensions::incrementModulo(const Dimensions& limit, int ordinal) {
 
 void Dimensions::simplify() {
   if (length <= 2) return;
-  int trimcount = 0;
   int i = length-1;
   while (i>1 && data[i] == 1) i--;
   length = i+1;
@@ -179,11 +179,11 @@ std::string Dimensions::asString() const {
   std::string output;
   output.append("[");
   for (int i=0;i<length-1;i++) {
-    snprintf(msgBuffer,MSGBUFLEN,"%d ",data[i]);
+    snprintf(msgBuffer,MSGBUFLEN,"%zu ",data[i]);
     output.append(msgBuffer);;
   }
   if (length >= 1)
-    snprintf(msgBuffer,MSGBUFLEN,"%d]",data[length-1]);
+    snprintf(msgBuffer,MSGBUFLEN,"%zu]",data[length-1]);
   else
     snprintf(msgBuffer,MSGBUFLEN,"]");
   output.append(msgBuffer);
@@ -195,11 +195,11 @@ void Dimensions::printMe(Interpreter* eval) const {
   snprintf(msgBuffer,MSGBUFLEN,"[");
   eval->outputMessage(msgBuffer);
   for (int i=0;i<length-1;i++) {
-    snprintf(msgBuffer,MSGBUFLEN,"%d ",data[i]);
+    snprintf(msgBuffer,MSGBUFLEN,"%zu ",data[i]);
     eval->outputMessage(msgBuffer);
   }
   if (length >= 1)
-    snprintf(msgBuffer,MSGBUFLEN,"%d]",data[length-1]);
+    snprintf(msgBuffer,MSGBUFLEN,"%zu]",data[length-1]);
   else
     snprintf(msgBuffer,MSGBUFLEN,"]");
   eval->outputMessage(msgBuffer);
@@ -225,7 +225,7 @@ void Dimensions::makeScalar() {
   updateCacheVariables();
 }
 
-Dimensions Dimensions::permute(const int32* permutation) const {
+Dimensions Dimensions::permute(const uint32* permutation) const {
   Dimensions out(length);
   for (int i=0;i<length;i++)
     out.data[i] = data[permutation[i]-1];

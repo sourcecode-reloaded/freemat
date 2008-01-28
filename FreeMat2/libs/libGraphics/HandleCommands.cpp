@@ -89,7 +89,7 @@ HandleList<HandleObject*> objectset;
 void NotifyFigureClosed(unsigned figNum) {
   //    delete Hfigs[figNum];
   Hfigs[figNum] = NULL;
-  if (figNum == HcurrentFig)
+  if (((int)figNum) == HcurrentFig)
     HcurrentFig = -1;
   // Check for all figures closed
   bool allClosed = true;
@@ -260,7 +260,7 @@ ArrayVector HFigureFunction(int nargout,const ArrayVector& arg) {
 void AddToCurrentFigChildren(unsigned handle) {
   HandleFigure *fig = CurrentFig();
   HPHandles *cp = (HPHandles*) fig->LookupProperty("children");
-  std::vector<unsigned> children(cp->Data());
+  QVector<unsigned> children(cp->Data());
   // Check to make sure that children does not contain our handle already
   int i=0;
   while (i<children.size()) {
@@ -341,7 +341,7 @@ void HSetChildrenFunction(HandleObject *fp, Array children) {
   // Retrieve the current list of children
   HandleObject *gp;
   HPHandles *hp = (HPHandles*) fp->LookupProperty("children");
-  std::vector<unsigned> my_children(hp->Data());
+  QVector<unsigned> my_children(hp->Data());
   for (int i=0;i<my_children.size();i++) {
     unsigned handle = my_children[i];
     if (handle >= HANDLE_OFFSET_OBJECT) {
@@ -490,11 +490,11 @@ unsigned GenericConstructor(HandleObject* fp, const ArrayVector& arg,
     }
     HandleAxis *axis = (HandleAxis*) LookupHandleObject(current);
     HPHandles *cp = (HPHandles*) axis->LookupProperty("children");
-    std::vector<unsigned> children(cp->Data());
+    QVector<unsigned> children(cp->Data());
     children.push_back(handle);
     cp->Data(children);
     cp = (HPHandles*) fp->LookupProperty("parent");
-    std::vector<unsigned> parent;
+    QVector<unsigned> parent;
     parent.push_back(current);
     cp->Data(parent);
     axis->UpdateState();
@@ -559,7 +559,7 @@ ArrayVector HUIControlFunction(int nargout, const ArrayVector& arg, Interpreter 
   // Parent the control to the current figure
   AddToCurrentFigChildren(handleID);
   HPHandles* cp = (HPHandles*) o->LookupProperty("parent");
-  std::vector<unsigned> parent;
+  QVector<unsigned> parent;
   parent.push_back(HcurrentFig+1);
   cp->Data(parent);
   return singleArrayVector(Array::uint32Constructor(handleID));

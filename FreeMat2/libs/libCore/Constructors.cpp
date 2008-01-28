@@ -111,12 +111,12 @@ ArrayVector ReshapeFunction(int nargout, const ArrayVector& arg) {
     t = arg[1];
     t.promoteType(FM_UINT32);
     dp = (int*) t.getDataPointer();
-    for (i=0;i<t.getLength();i++)
+    for (i=0;i<(int)t.getLength();i++)
       dims.set(i,dp[i]);
   }
   bool allPositive;
   allPositive = true;
-  for (i=0;i<dims.getLength();i++)
+  for (i=0;i<(int)dims.getLength();i++)
     allPositive &= (dims.get(i) >= 0);
   if (!allPositive)
     throw Exception("reshape function requires positive arguments");
@@ -138,7 +138,7 @@ ArrayVector ReshapeFunction(int nargout, const ArrayVector& arg) {
 //   y = zeros(d1,d2,...,dn).
 //@]
 //The resulting array has the given dimensions, and is filled with
-//all zeros.  The type of @|y| is @|float|, a 32-bit floating
+//all zeros.  The type of @|y| is @|double|, a 64-bit floating
 //point array.  To get arrays of other types, use the typecast 
 //functions (e.g., @|uint8|, @|int8|, etc.).  An alternative syntax
 //is to use the following notation:
@@ -202,7 +202,7 @@ ArrayVector ZerosFunction(int nargout, const ArrayVector& arg) {
   Array t, s;
   Dimensions dims;
   int32 *dp;
-  Class cls = FM_FLOAT;
+  Class cls = FM_DOUBLE;
   int i;
   // Trim out the classname if it was specified
   ArrayVector trim_arg(arg);
@@ -272,12 +272,12 @@ ArrayVector ZerosFunction(int nargout, const ArrayVector& arg) {
       t = trim_arg[0];
       t.promoteType(FM_UINT32);
       dp = (int*) t.getDataPointer();
-      for (i=0;i<t.getLength();i++)
+      for (i=0;i<(int)t.getLength();i++)
 	dims.set(i,dp[i]);
     }
     bool allPositive;
     allPositive = true;
-    for (i=0;i<dims.getLength();i++)
+    for (i=0;i<(int)dims.getLength();i++)
       allPositive &= (dims.get(i) >= 0);
     if (!allPositive)
       throw Exception("Zeros function requires positive arguments");
@@ -355,12 +355,12 @@ ArrayVector CellFunction(int nargout, const ArrayVector& arg) {
       t = arg[0];
       t.promoteType(FM_UINT32);
       dp = (int*) t.getDataPointer();
-      for (i=0;i<t.getLength();i++)
+      for (i=0;i<(int)t.getLength();i++)
 	dims.set(i,dp[i]);
     }
     bool allPositive;
     allPositive = true;
-    for (i=0;i<dims.getLength();i++)
+    for (i=0;i<(int)dims.getLength();i++)
       allPositive &= (dims.get(i) >= 0);
     if (!allPositive)
       throw Exception("Zeros function requires positive arguments");
@@ -444,12 +444,12 @@ ArrayVector OnesFunction(int nargout, const ArrayVector& arg) {
       t = arg[0];
       t.promoteType(FM_UINT32);
       dp = (int*) t.getDataPointer();
-      for (i=0;i<t.getLength();i++)
+      for (i=0;i<(int)t.getLength();i++)
 	dims.set(i,dp[i]);
     }
     bool allPositive;
     allPositive = true;
-    for (i=0;i<dims.getLength();i++)
+    for (i=0;i<(int)dims.getLength();i++)
       allPositive &= (dims.get(i) >= 0);
     if (!allPositive)
       throw Exception("Ones function requires positive arguments");

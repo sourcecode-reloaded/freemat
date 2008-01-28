@@ -102,13 +102,13 @@ public:
   /**
    * Construct a scope with the given name.
    */
-  Scope(std::string scopeName, bool nested) : name(scopeName), 
+  Scope(std::string scopeName, bool nested) : mutex(NULL),
+					      refcount(0),
+					      name(scopeName), 
 					      loopLevel(0), 
 					      anyPersistents(false), 
 					      anyGlobals(false),
-					      isNested(nested), 
-					      mutex(NULL),
-					      refcount(0)  {}
+					      isNested(nested)  {}
 
   inline void setVariablesAccessed(stringVector varList) {
     variablesAccessed = varList;
@@ -217,7 +217,6 @@ public:
     if (!anyGlobals) return false;
     bool foundName = false;
     int i = 0;
-    i = 0;
     if (globalVars.empty()) return false;
     while (i<globalVars.size() && !foundName) {
       foundName = (globalVars[i] == varName);
@@ -256,7 +255,6 @@ public:
     if (!anyPersistents) return false;
     bool foundName = false;
     int i = 0;
-    i = 0;
     if (persistentVars.empty()) return false;
     while (i<persistentVars.size() && !foundName) {
       foundName = (persistentVars[i] == varName);
@@ -308,10 +306,9 @@ public:
    */
   inline stringVector listAllVariables() {
     stringVector names(symTab.getCompletions(""));
-    int i;
-    for (i=0;i<globalVars.size();i++)
+    for (int i=0;i<globalVars.size();i++)
       names.push_back(globalVars[i]);
-    for (i=0;i<persistentVars.size();i++)
+    for (int i=0;i<persistentVars.size();i++)
       names.push_back(persistentVars[i]);
     return names;
   }

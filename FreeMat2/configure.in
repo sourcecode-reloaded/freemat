@@ -2,7 +2,7 @@ AC_INIT(src/main.cpp)
 
 AC_CANONICAL_SYSTEM
 
-AM_INIT_AUTOMAKE(FreeMat, 3.3)
+AM_INIT_AUTOMAKE(FreeMat, 3.6)
 
 AC_PROG_CC
 AC_PROG_CXX
@@ -93,8 +93,8 @@ fi
 if (test "$cross_compiling" = "no") && (test "$is_mac" = "yes"); then
    AC_MSG_NOTICE([Configuring for Mac OS X build])
    platform="--mac"
-   QT_CFLAGS=" -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_NETWORK_LIB -DQT_SHARED"
-   LIBS="-F/Library/Frameworks -L/Library/Frameworks -framework QtOpenGL -framework QtGui -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework Carbon -framework QuickTime -framework AppKit -framework QtCore -framework QtNetwork -framework QtXml -lz -lm -liconv -framework ApplicationServices -framework OpenGL -framework AGL $LIBS"
+   QT_CFLAGS=" -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_NETWORK_LIB -DQT_SHARED -I$prefix/include -I$prefix/include/QtCore -I$prefix/include/QtGui -I$prefix/include/QtOpenGL -I$prefix/include/QtGui -I$prefix/include/QtNetwork -I$prefix/include/QtXml"
+   LIBS="-L$prefix/lib -F$prefix/lib -F/Library/Frameworks -L/Library/Frameworks -framework QtOpenGL -framework QtGui -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework Carbon -framework QuickTime -framework AppKit -framework QtCore -framework QtNetwork -framework QtXml -lz -lm -liconv -framework ApplicationServices -framework OpenGL -framework AGL $LIBS"
    AC_CHECK_PROGS(QT_MOC, [moc4 moc-qt4 moc], [])
    AC_CHECK_PROGS(QT_RCC, [rcc4 rcc-qt4 rcc], [])
    AC_CHECK_PROGS(QT_UIC, [uic4 uic-qt4 uic], [])
@@ -132,7 +132,6 @@ if test x"${QT_CFLAGS}" = x; then
 fi
 
 cdir=`pwd`
-
 
 dnl Check external dependencies
 dnl   Fail?
@@ -253,6 +252,14 @@ echo \
 "    PORTAUDIO       Audio I/O                             Not Found"
 fi
 
+if (test x"$found_cycle" == xyes); then
+echo \
+"    CYCLE COUNTER   Profiling Functions                   Found"
+else
+echo \
+"    CYCLE COUNTER   Profiling Functions                   Not Found"
+fi
+
 echo \
 "********************************************************************"
 
@@ -262,7 +269,29 @@ One or more of the required external dependencies was not found.  Please
 install the missing dependencies (as listed above) and rerun configure.])
 fi
 
+AC_ARG_WITH([llvm],
+	    [AC_HELP_STRING([--with-llvm],
+	    [support Just In Time compiler (requires llvm > 2.0)])],
+	    use_llvm="yes",
+	    use_llvm="no")
+
+if (test "$use_llvm" = "yes"); then
+   AC_PATH_PROG(LLVM_CONFIG, llvm-config, no)
+   if test "$LLVM_CONFIG" = "no" ; then
+      AC_MSG_NOTICE([Unable to find llvm-config.  JIT support disabled.])
+   else
+      CXXFLAGS="`$LLVM_CONFIG --cxxflags` $CXXFLAGS"
+      LIBS="`$LLVM_CONFIG --libs jit engine interpreter` $LIBS";
+      LDFLAGS="`$LLVM_CONFIG --ldflags` $LDFLAGS";
+   fi
+   AC_DEFINE(HAVE_LLVM, 1, [Set to 1 if you have LLVM installed])
+fi
+
 AM_CONDITIONAL(USECLI, test x$ismingw = xfalse)
+
+MP_WITH_CURSES
+
+LIBS="$LIBS $CURSES_LIB"
 
 
 AC_OUTPUT([Makefile src/Makefile libs/Makefile libs/libFreeMat/Makefile

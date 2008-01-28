@@ -232,6 +232,7 @@ ArrayVector StrRepStringFunction(int nargout, const ArrayVector& arg) {
 //[start,stop,tokenExtents,match,tokens,named] = regexp('quick down town zoo','(.)own')
 //@>
 //!
+#if HAVE_PCRE
 static bool isSlotSpec(string t) {
   return ((t == "start") ||
 	  (t == "end") ||
@@ -240,6 +241,7 @@ static bool isSlotSpec(string t) {
 	  (t == "tokens") ||
 	  (t == "names"));
 }
+#endif
 
 ArrayVector RegExpCoreFunction(rvstring stringed_args, bool defaultMatchCase) {
 #if HAVE_PCRE
@@ -726,9 +728,7 @@ string RegExpRepCoreFunction(string subject,
   pcre *re;
   const char *error;
   int erroffset;
-  int namecount;
-  int name_entry_size;
-  int rc, i;
+  int rc;
 
   for (int j=0;j<modes.size();j++) {
     if (modes[j]=="once")
@@ -855,7 +855,7 @@ string RegExpRepCoreFunction(string subject,
   if (replacements.size() > 1)
     nextReplacement++;
   
-  if (globalMatch && (ovector[1] < subject.size())) {
+  if (globalMatch && (ovector[1] < (int)subject.size())) {
     for (;;)
       {
 	int options = 0;                 /* Normally no options */
@@ -867,7 +867,7 @@ string RegExpRepCoreFunction(string subject,
 	
 	if (ovector[0] == ovector[1])
 	  {
-	    if (ovector[0] == subject.size()) break;
+	    if (ovector[0] == (int) subject.size()) break;
 	    options = PCRE_NOTEMPTY | PCRE_ANCHORED;
 	  }
 	
@@ -959,7 +959,7 @@ string RegExpRepCoreFunction(string subject,
       }      /* End of loop to find second and subsequent matches */
   }
 
-  while (inputPointer < subject.size()) 
+  while (inputPointer < (int) subject.size()) 
     outputString += subject[inputPointer++];
   
   pcre_free(re);

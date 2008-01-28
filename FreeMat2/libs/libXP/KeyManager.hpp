@@ -21,7 +21,6 @@
 #define __KeyManager_hpp__
 
 #include <string>
-#include <vector>
 #include <list>
 #include "Scope.hpp"
 #include <QEventLoop>
@@ -34,6 +33,7 @@
 #define KM_CTRLE     0x05
 #define KM_TAB       0x09
 #define KM_CTRLK     0x0b
+#define KM_CTRLW     0x17
 #define KM_CTRLY     0x19
 #define KM_BACKSPACE 0x08
 #define KM_BACKSPACEALT 0x7f
@@ -79,8 +79,8 @@ public:
   void WriteHistory();
  private:
   Context *context;
-  vector<string> GetCompletions(string line, int word_end, 
-				string &matchString);
+  stringVector GetCompletions(string line, int word_end, 
+			      string &matchString);
   void CursorLeft();
   void CursorRight();
   void BeginningOfLine();
@@ -95,7 +95,8 @@ public:
   void AddStringToLine(string s);
   void SearchPrefix(string aline, int alen);
   void Yank();
-  void ListCompletions(vector<string> completions);
+  void ClearCurrentLine();
+  void ListCompletions(stringVector completions);
   void CompleteWord();
  protected:
   void EraseCharacters(int pos, int count);

@@ -41,9 +41,9 @@ Token.hpp \
 Parser.hpp \
 Scanner.hpp \
 Tree.hpp \
-RefVec.hpp \
-Compiler.hpp \
-List.hpp
+JITVM.hpp \
+List.hpp \
+fftw_cycle.h
 
 libFreeMat_a_SOURCES = Array.cpp \
 Interpreter.cpp \
@@ -74,8 +74,8 @@ Token.cpp \
 Parser.cpp \
 Scanner.cpp \
 Tree.cpp \
+JITVM.cpp \
 FunctionDef.cpp \
-Compiler.cpp \
 $(libFreeMat_a_HFILES) 
 
 nodist_libFreeMat_a_SOURCES = $(libFreeMat_a_MOC)

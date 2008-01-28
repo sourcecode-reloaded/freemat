@@ -1,3 +1,14 @@
+// Still need:
+//  Type promotion on loop entry.
+//  Range checking.
+//  Dynamic array resizing.
+//
+
+//
+// 
+//
+
+//
 // A prototype compiler for FreeMat.  Consider the simplest function
 //
 //  function y = add(a,b)
@@ -625,57 +636,6 @@ public:
 };
 
 
-typedef enum {
-  t_boolean,
-  unsigned_integer,
-  integer,
-  single_float,
-  double_float,
-  pointer
-} opcodeClass;
-
-typedef enum {
-  ADD,
-  SUB,
-  SET,
-  NOP,
-  LOAD,
-  STORE,
-  MUL,
-  LDIV,
-  RDIV,
-  OR,
-  AND,
-  XOR,
-  LT,
-  LE,
-  EQ,
-  NEQ,
-  GE,
-  GT,
-  JIT,
-  JIF,
-  JMP,
-  CASTI,
-  CASTU,
-  CASTF,
-  CASTD,
-  CASTB,
-  NEG,
-  POS,
-  NOT,
-  RET
-} opcodeType;
-
-typedef union {
-  bool b;
-  unsigned u;
-  int i;
-  float f;
-  double d;
-  void* p;
-} registerType;
-
 static inline registerType RTUnsigned(unsigned x) {
   registerType ret;
   ret.u = x;
@@ -760,6 +720,7 @@ std::string OpCodeName(opcodeType topcode) {
   case JIT:   return "JIT  ";
   case JIF:   return "JIF  ";
   case JMP:   return "JMP  ";
+  case COPY:  return "COPY ";
   case CASTB: return "CASTB";
   case CASTI: return "CASTI";
   case CASTU: return "CASTU";
@@ -768,6 +729,7 @@ std::string OpCodeName(opcodeType topcode) {
   case NEG:   return "NEG  ";
   case POS:   return "POS  ";
   case NOT:   return "NOT  ";
+  case DEC:   return "DEC  ";
   case RET:   return "RET  ";
   }
 }
@@ -783,474 +745,102 @@ std::string OpCodeClass(opcodeClass topclass) {
   }
 }
 
-class VMInstruction {
-public:
-  opcodeType opcode;
-  opcodeClass opclass;
-  unsigned arg1;
-  unsigned arg2;
-  unsigned dest;
-  registerType literal;
-  VMInstruction(opcodeType topcode,
-		opcodeClass topclass,
-		unsigned tdest,
-		unsigned targ1,
-		unsigned targ2,
-		registerType tlit) : opcode(topcode), opclass(topclass),
-				     arg1(targ1), arg2(targ2), dest(tdest),
-				     literal(tlit)
-  {}
-  VMInstruction(opcodeType topcode,
-		opcodeClass topclass,
-		unsigned tdest,
-		unsigned targ1,
-		unsigned targ2) : opcode(topcode), opclass(topclass),
-				  arg1(targ1), arg2(targ2), dest(tdest)
-  {}
-  VMInstruction(opcodeType topcode,
-		opcodeClass topclass,
-		unsigned tdest,
-		unsigned targ1) : opcode(topcode), opclass(topclass),
-				  arg1(targ1), dest(tdest)
-  {}
-  VMInstruction(opcodeType topcode,
-		opcodeClass topclass,
-		unsigned tdest,
-		registerType tlit) : opcode(topcode), opclass(topclass),
-				     dest(tdest), literal(tlit)
-  {}
-  VMInstruction(opcodeType topcode,
-		registerType tlit) : opcode(topcode), literal(tlit)
-  {}
-  VMInstruction(opcodeType topcode,
-		opcodeClass topclass,
-		registerType tlit) : opcode(topcode), opclass(topclass),
-				     literal(tlit)
-  {}
-  VMInstruction(opcodeType topcode) : opcode(topcode)
-  {}
-  void print(std::ostream& o) {
-    if (opcode == NOP) {
-      o << OpCodeName(opcode) << "\r\n";
-    } else if (opcode == SET) {
-      o << OpCodeName(opcode) << " <" << OpCodeClass(opclass) << "> \t";
-      o << "r" << dest << "," << RegisterName(opclass,literal) << "\r\n";
-    } else if ((opcode == JIT) || (opcode == JIF)) {
-      o << OpCodeName(opcode) << "       \t";
-      o << "r" << dest << "," << RegisterName(opclass,literal) << "\r\n";
-    } else if (opcode == JMP) {
-      o << OpCodeName(opcode) << "       \t";
-      o << RegisterName(opclass,literal) << "\r\n";
-    } else if ((opcode == CASTI) || (opcode == CASTU) || 
-	       (opcode == CASTF) || (opcode == CASTD) ||
-	       (opcode == NEG) || (opcode == POS) || 
-	       (opcode == NOT)) {
-      o << OpCodeName(opcode) << " <" << OpCodeClass(opclass) << "> \t";
-      o << "r" << dest << ",";
-      o << "r" << arg1 << "\r\n";
-    } else {
-      o << OpCodeName(opcode) << " <" << OpCodeClass(opclass) << "> \t";
-      o << "r" << dest << ",";
-      o << "r" << arg1 << ",";
-      o << "r" << arg2 << "\r\n";
+void VMInstruction::print(std::ostream& o) {
+  if (opcode == NOP) {
+    o << OpCodeName(opcode) << "\r\n";
+  } else if (opcode == SET) {
+    o << OpCodeName(opcode) << " <" << OpCodeClass(opclass) << "> \t";
+    o << "r" << dest << "," << RegisterName(opclass,literal) << "\r\n";
+  } else if ((opcode == JIT) || (opcode == JIF)) {
+    o << OpCodeName(opcode) << "       \t";
+    o << "r" << dest << "," << RegisterName(opclass,literal) << "\r\n";
+  } else if (opcode == JMP) {
+    o << OpCodeName(opcode) << "       \t";
+    o << RegisterName(opclass,literal) << "\r\n";
+  } else if (opcode == DEC) {
+    o << OpCodeName(opcode) << "       \t";
+    o << "r" << dest << "\r\n";
+  } else if ((opcode == CASTI) || (opcode == CASTU) || 
+	     (opcode == CASTF) || (opcode == CASTD) ||
+	     (opcode == NEG) || (opcode == POS) || 
+	     (opcode == NOT)) {
+    o << OpCodeName(opcode) << " <" << OpCodeClass(opclass) << "> \t";
+    o << "r" << dest << ",";
+    o << "r" << arg1 << "\r\n";
+  } else {
+    o << OpCodeName(opcode) << " <" << OpCodeClass(opclass) << "> \t";
+    o << "r" << dest << ",";
+    o << "r" << arg1 << ",";
+    o << "r" << arg2 << "\r\n";
+  }
+}
+
+void VMStream::Run(Interpreter* m_eval) {
+  // Fill out the arguments
+  stringVector syms(get_symbol_names());
+  for (int i=0;i<syms.size();i++) {
+    SymbolInformation *psym = find_symbol(syms[i]);
+    if (psym && psym->isArgument()) {
+      ArrayReference ptr(m_eval->getContext()->lookupVariable(syms[i]));
+      if (!ptr.valid())
+	throw Exception("Undefined variable reference: " + syms[i]);
+      if (psym->isScalar() && ptr->isScalar()) {
+	switch (ptr->dataClass()) {
+	case FM_FUNCPTR_ARRAY:
+	case FM_CELL_ARRAY:
+	case FM_STRUCT_ARRAY:
+	case FM_UINT8:
+	case FM_INT8:
+	case FM_UINT16:
+	case FM_INT16:
+	case FM_UINT64:
+	case FM_INT64:
+	case FM_COMPLEX:
+	case FM_DCOMPLEX:
+	case FM_STRING:
+	  throw Exception("Cannot JIT code because of type of :" + syms[i]);
+	case FM_LOGICAL:
+	  if (psym->m_type != t_boolean)
+	    throw Exception("Expected " + syms[i] + " to be a different type than it is");
+	  reg[psym->m_base.index()].b = ((const logical*)(ptr->getDataPointer()))[0];
+	  break;
+	case FM_UINT32:
+	  if (psym->m_type != unsigned_integer)
+	    throw Exception("Expected " + syms[i] + " to be a different type than it is");
+	  reg[psym->m_base.index()].u = ((const uint32*)(ptr->getDataPointer()))[0];
+	  break;
+	case FM_INT32:
+	  if (psym->m_type != integer)
+	    throw Exception("Expected " + syms[i] + " to be a different type than it is");
+	  reg[psym->m_base.index()].i = ((const int32*)(ptr->getDataPointer()))[0];
+	  break;
+	case FM_FLOAT:
+	  if (psym->m_type != single_float)
+	    throw Exception("Expected " + syms[i] + " to be a different type than it is");
+	  reg[psym->m_base.index()].f = ((const float*)(ptr->getDataPointer()))[0];
+	  break;
+	case FM_DOUBLE:
+	  if (psym->m_type != double_float)
+	    throw Exception("Expected " + syms[i] + " to be a different type than it is");
+	  reg[psym->m_base.index()].d = ((const double*)(ptr->getDataPointer()))[0];
+	}
+      } else {
+	if (psym->isReadOnly()) {
+	  reg[psym->m_base.index()].p = (void*) ptr->getDataPointer();
+	} else {
+	  reg[psym->m_base.index()].p = ptr->getReadWriteDataPointer();
+	}
+	reg[psym->m_rows.index()].u = ptr->rows();
+	reg[psym->m_cols.index()].u = ptr->columns();
+      }      
     }
   }
-};
-
-registerType reg[256];
-
-typedef std::vector<VMInstruction*> VMStream;
-
-static inline void SetOp(VMInstruction *op) {
-  switch (op->opclass) {
-  case t_boolean:
-    reg[op->dest].b = op->literal.b;
-    break;
-  case unsigned_integer:
-    reg[op->dest].u = op->literal.u;
-    break;
-  case integer:
-    reg[op->dest].i = op->literal.i;
-    break;
-  case single_float:
-    reg[op->dest].f = op->literal.f;
-    break;
-  case double_float:
-    reg[op->dest].d = op->literal.d;
-    break;
-  case pointer:
-    reg[op->dest].p = op->literal.p;
-  }
-}
-
-static inline void AddOp(VMInstruction *op) {
-  switch (op->opclass) {
-  case unsigned_integer:
-    reg[op->dest].u = reg[op->arg1].u + reg[op->arg2].u;	
-    break;
-  case integer:
-    reg[op->dest].i = reg[op->arg1].i + reg[op->arg2].i;
-    break;
-  case single_float:
-    reg[op->dest].f = reg[op->arg1].f + reg[op->arg2].f;
-    break;
-  case double_float:
-    reg[op->dest].d = reg[op->arg1].d + reg[op->arg2].d;
-    break;
-  }
-}
-
-static inline void SubOp(VMInstruction *op) {
-  switch (op->opclass) {
-  case unsigned_integer:
-    reg[op->dest].u = reg[op->arg1].u - reg[op->arg2].u;	
-    break;
-  case integer:
-    reg[op->dest].i = reg[op->arg1].i - reg[op->arg2].i;
-    break;
-  case single_float:
-    reg[op->dest].f = reg[op->arg1].f - reg[op->arg2].f;
-    break;
-  case double_float:
-    reg[op->dest].d = reg[op->arg1].d - reg[op->arg2].d;
-    break;
-  }
-}
-
-static inline void MulOp(VMInstruction *op) {
-  switch (op->opclass) {
-  case unsigned_integer:
-    reg[op->dest].u = reg[op->arg1].u * reg[op->arg2].u;	
-    break;
-  case integer:
-    reg[op->dest].i = reg[op->arg1].i * reg[op->arg2].i;
-    break;
-  case single_float:
-    reg[op->dest].f = reg[op->arg1].f * reg[op->arg2].f;
-    break;
-  case double_float:
-    reg[op->dest].d = reg[op->arg1].d * reg[op->arg2].d;
-    break;
-  }
-}
-
-static inline void RDivOp(VMInstruction *op) {
-  switch (op->opclass) {
-  case unsigned_integer:
-    reg[op->dest].u = reg[op->arg1].u / reg[op->arg2].u;	
-    break;
-  case integer:
-    reg[op->dest].i = reg[op->arg1].i / reg[op->arg2].i;
-    break;
-  case single_float:
-    reg[op->dest].f = reg[op->arg1].f / reg[op->arg2].f;
-    break;
-  case double_float:
-    reg[op->dest].d = reg[op->arg1].d / reg[op->arg2].d;
-    break;
-  }
-}
-
-static inline void LDivOp(VMInstruction *op) {
-  switch (op->opclass) {
-  case unsigned_integer:
-    reg[op->dest].u = reg[op->arg2].u / reg[op->arg1].u;	
-    break;
-  case integer:
-    reg[op->dest].i = reg[op->arg2].i / reg[op->arg1].i;
-    break;
-  case single_float:
-    reg[op->dest].f = reg[op->arg2].f / reg[op->arg1].f;
-    break;
-  case double_float:
-    reg[op->dest].d = reg[op->arg2].d / reg[op->arg1].d;
-    break;
-  }
-}
-
-static inline void LTOp(VMInstruction *op) {
-  switch (op->opclass) {
-  case unsigned_integer:
-    reg[op->dest].b = reg[op->arg1].u < reg[op->arg2].u;	
-    break;
-  case integer:
-    reg[op->dest].b = reg[op->arg1].i < reg[op->arg2].i;
-    break;
-  case single_float:
-    reg[op->dest].b = reg[op->arg1].f < reg[op->arg2].f;
-    break;
-  case double_float:
-    reg[op->dest].b = reg[op->arg1].d < reg[op->arg2].d;
-    break;
-  }
-}
-
-static inline void LEOp(VMInstruction *op) {
-  switch (op->opclass) {
-  case unsigned_integer:
-    reg[op->dest].b = reg[op->arg1].u <= reg[op->arg2].u;	
-    break;
-  case integer:
-    reg[op->dest].b = reg[op->arg1].i <= reg[op->arg2].i;
-    break;
-  case single_float:
-    reg[op->dest].b = reg[op->arg1].f <= reg[op->arg2].f;
-    break;
-  case double_float:
-    reg[op->dest].b = reg[op->arg1].d <= reg[op->arg2].d;
-    break;
-  }
-}
-
-static inline void EQOp(VMInstruction *op) {
-  switch (op->opclass) {
-  case unsigned_integer:
-    reg[op->dest].b = reg[op->arg1].u == reg[op->arg2].u;	
-    break;
-  case integer:
-    reg[op->dest].b = reg[op->arg1].i == reg[op->arg2].i;
-    break;
-  case single_float:
-    reg[op->dest].b = reg[op->arg1].f == reg[op->arg2].f;
-    break;
-  case double_float:
-    reg[op->dest].b = reg[op->arg1].d == reg[op->arg2].d;
-    break;
-  }
-}
-
-static inline void NEQOp(VMInstruction *op) {
-  switch (op->opclass) {
-  case unsigned_integer:
-    reg[op->dest].b = reg[op->arg1].u != reg[op->arg2].u;	
-    break;
-  case integer:
-    reg[op->dest].b = reg[op->arg1].i != reg[op->arg2].i;
-    break;
-  case single_float:
-    reg[op->dest].b = reg[op->arg1].f != reg[op->arg2].f;
-    break;
-  case double_float:
-    reg[op->dest].b = reg[op->arg1].d != reg[op->arg2].d;
-    break;
-  }
-}
-
-static inline void GTOp(VMInstruction *op) {
-  switch (op->opclass) {
-  case unsigned_integer:
-    reg[op->dest].b = reg[op->arg1].u > reg[op->arg2].u;	
-    break;
-  case integer:
-    reg[op->dest].b = reg[op->arg1].i > reg[op->arg2].i;
-    break;
-  case single_float:
-    reg[op->dest].b = reg[op->arg1].f > reg[op->arg2].f;
-    break;
-  case double_float:
-    reg[op->dest].b = reg[op->arg1].d > reg[op->arg2].d;
-    break;
-  }
-}
-
-static inline void CastBOp(VMInstruction *op) {
-  switch (op->opclass) {
-  case t_boolean:
-    reg[op->dest].b = reg[op->arg1].b;
-    break;
-  case unsigned_integer:
-    reg[op->dest].b = reg[op->arg1].u != 0;
-    break;
-  case integer:
-    reg[op->dest].b = reg[op->arg1].i != 0;
-    break;
-  case single_float:
-    reg[op->dest].b = reg[op->arg1].f != 0;
-    break;
-  case double_float:
-    reg[op->dest].b = reg[op->arg1].d != 0;
-    break;
-  }
-}
-
-static inline void CastUOp(VMInstruction *op) {
-  switch (op->opclass) {
-  case t_boolean:
-    reg[op->dest].u = reg[op->arg1].b ? 1 : 0;
-    break;
-  case unsigned_integer:
-    reg[op->dest].u = (unsigned) reg[op->arg1].u;
-    break;
-  case integer:
-    reg[op->dest].u = (unsigned) reg[op->arg1].i;
-    break;
-  case single_float:
-    reg[op->dest].u = (unsigned) reg[op->arg1].f;
-    break;
-  case double_float:
-    reg[op->dest].u = (unsigned) reg[op->arg1].d;
-    break;
-  }
-}
-
-static inline void CastIOp(VMInstruction *op) {
-  switch (op->opclass) {
-  case t_boolean:
-    reg[op->dest].i = reg[op->arg1].b ? 1 : 0;
-    break;
-  case unsigned_integer:
-    reg[op->dest].i = (int) reg[op->arg1].u;
-    break;
-  case integer:
-    reg[op->dest].i = (int) reg[op->arg1].i;
-    break;
-  case single_float:
-    reg[op->dest].i = (int) reg[op->arg1].f;
-    break;
-  case double_float:
-    reg[op->dest].i = (int) reg[op->arg1].d;
-    break;
-  }
-}
-
-static inline void CastFOp(VMInstruction *op) {
-  switch (op->opclass) {
-  case t_boolean:
-    reg[op->dest].f = reg[op->arg1].b ? 1 : 0;
-    break;
-  case unsigned_integer:
-    reg[op->dest].f = (float) reg[op->arg1].u;
-    break;
-  case integer:
-    reg[op->dest].f = (float) reg[op->arg1].i;
-    break;
-  case single_float:
-    reg[op->dest].f = (float) reg[op->arg1].f;
-    break;
-  case double_float:
-    reg[op->dest].f = (float) reg[op->arg1].d;
-    break;
-  }
-}
-
-static inline void CastDOp(VMInstruction *op) {
-  switch (op->opclass) {
-  case t_boolean:
-    reg[op->dest].d = reg[op->arg1].b ? 1 : 0;
-    break;
-  case unsigned_integer:
-    reg[op->dest].d = (double) reg[op->arg1].u;
-    break;
-  case integer:
-    reg[op->dest].d = (double) reg[op->arg1].i;
-    break;
-  case single_float:
-    reg[op->dest].d = (double) reg[op->arg1].f;
-    break;
-  case double_float:
-    reg[op->dest].d = (double) reg[op->arg1].d;
-    break;
-  }
-}
-
-static inline void NegOp(VMInstruction *op) {
-  switch (op->opclass) {
-  case t_boolean:
-    throw Exception("Neg not supported for boolean arguments");
-    break;
-  case unsigned_integer:
-    throw Exception("Neg not supported for unsigned arguments");
-    break;
-  case integer:
-    reg[op->dest].i = -reg[op->arg1].i;
-    break;
-  case single_float:
-    reg[op->dest].f = -reg[op->arg1].f;
-    break;
-  case double_float:
-    reg[op->dest].d = -reg[op->arg1].d;
-    break;
-  }
-}
-
-static inline void NotOp(VMInstruction *op) {
-  switch (op->opclass) {
-  case t_boolean:
-    reg[op->dest].b = !reg[op->arg1].b;
-    return;
-  }
-  throw Exception("NOT not supported for non-boolean arguments");
-}
-
-static inline void GEOp(VMInstruction *op) {
-  switch (op->opclass) {
-  case unsigned_integer:
-    reg[op->dest].b = reg[op->arg1].u >= reg[op->arg2].u;	
-    break;
-  case integer:
-    reg[op->dest].b = reg[op->arg1].i >= reg[op->arg2].i;
-    break;
-  case single_float:
-    reg[op->dest].b = reg[op->arg1].f >= reg[op->arg2].f;
-    break;
-  case double_float:
-    reg[op->dest].b = reg[op->arg1].d >= reg[op->arg2].d;
-    break;
-  }
-}
-
-static inline void OrOp(VMInstruction *op) {
-  reg[op->dest].b = reg[op->arg1].b | reg[op->arg2].b;
-}
-
-static inline void AndOp(VMInstruction *op) {
-  reg[op->dest].b = reg[op->arg1].b & reg[op->arg2].b;
-}
-
-static inline void XorOp(VMInstruction *op) {
-  reg[op->dest].b = reg[op->arg1].b ^ reg[op->arg2].b;
-}
-
-static inline void LoadOp(VMInstruction *op) {
-  switch (op->opclass) {
-  case unsigned_integer:
-    reg[op->dest].u = ((unsigned*) reg[op->arg1].p)[reg[op->arg2].u];
-    break;
-  case integer:
-    reg[op->dest].i = ((int*) reg[op->arg1].p)[reg[op->arg2].u];
-    break;
-  case single_float:
-    reg[op->dest].f = ((float*) reg[op->arg1].p)[reg[op->arg2].u];
-    break;
-  case double_float:
-    reg[op->dest].d = ((double*) reg[op->arg1].p)[reg[op->arg2].u];
-    break;
-  }
-}
-
-static inline void StoreOp(VMInstruction *op) {
-  switch (op->opclass) {
-  case unsigned_integer:
-    ((unsigned*) reg[op->dest].p)[reg[op->arg2].u] = reg[op->arg1].u;
-    break;
-  case integer:
-    ((int*) reg[op->dest].p)[reg[op->arg2].u] = reg[op->arg1].i;
-    break;
-  case single_float:
-    ((float*) reg[op->dest].p)[reg[op->arg2].u] = reg[op->arg1].f;
-    break;
-  case double_float:
-    ((double*) reg[op->dest].p)[reg[op->arg2].u] = reg[op->arg1].d;
-    break;
-  }
-}
-
-void Run(VMStream& data) {
+  
   bool term = false;
   unsigned ip = 0;
-  unsigned ops_max = data.size();
+  unsigned ops_max = p_data.size();
   while (ip < ops_max) {
-    VMInstruction *op = data[ip++];
+    VMInstruction *op = p_data[ip++];
     switch(op->opcode) {
     case ADD:
       AddOp(op);
@@ -1313,6 +903,12 @@ void Run(VMStream& data) {
       if (!reg[op->dest].b)
 	ip = op->literal.u;
       break;
+    case COPY:
+      CopyOp(op);
+      break;
+    case CASTB:
+      CastBOp(op);
+      break;
     case CASTU:
       CastUOp(op);
       break;
@@ -1333,6 +929,9 @@ void Run(VMStream& data) {
     case NOT:
       NotOp(op);
       break;
+    case DEC:
+      DecOp(op);
+      break;
     case RET:
       return;
     }
@@ -1340,6 +939,14 @@ void Run(VMStream& data) {
 }
 
 std::ostream& operator <<(std::ostream& o, VMStream& t) {
+  stringVector syms(t.get_symbol_names());
+  for (int i=0;i<syms.size();i++) {
+    SymbolInformation *psym = t.find_symbol(syms[i]);
+    if (psym && psym->isArgument()) {
+      std::cout << "ARG: " << syms[i] << " : ";
+      std::cout << "Base: " << psym->m_base.index() << "\r\n";
+    }
+  }
   for (int i=0;i<t.size();i++) {
     char buffer[1000];
     sprintf(buffer,"%03u: ",i);
@@ -1354,40 +961,11 @@ VMStream& operator <<(VMStream& o, VMInstruction* t) {
   return o;
 }
 
-class RegisterReference {
-  unsigned m_index;
-  opcodeClass m_type;
-public:
-  RegisterReference(unsigned t, opcodeClass s) : m_index(t), m_type(s) {}
-  RegisterReference() {}
-  inline unsigned index() {return m_index;}
-  inline opcodeClass type() {return m_type;}
-};
-
-static unsigned GetReg() {
-  static unsigned reglist = 0;
-  return reglist++;
-}
-
-class SymbolInformation {
-public:
-  RegisterReference m_rows;
-  RegisterReference m_cols;
-  opcodeClass m_type;
-  RegisterReference m_base;
-  bool m_scalar;
-  SymbolInformation(opcodeClass type, unsigned index) :
-    m_type(type), m_base(index,type), m_scalar(true) {}
-  bool isScalar() {return m_scalar;}
-};
-
-SymbolTable<SymbolInformation> symbols;
-
-void JITBlock(VMStream& o, tree t);
-RegisterReference JITExpression(VMStream& o, tree t);
+void JITBlock(VMStream& o, tree t, Interpreter* m_eval);
+RegisterReference JITExpression(VMStream& o, tree t, Interpreter* m_eval);
 
 RegisterReference JITPromote(VMStream& o, RegisterReference a, opcodeClass c) {
-  RegisterReference out(GetReg(),c);
+  RegisterReference out(o.GetReg(),c);
   if (a.type() == t_boolean) {
     switch(c) {
     case t_boolean:
@@ -1478,15 +1056,15 @@ RegisterReference JITPromote(VMStream& o, RegisterReference a, opcodeClass c) {
   throw Exception("Illegal type promotion call.");
 }
 
-RegisterReference JITBooleanOrOperator(VMStream& o, tree t) {
-  RegisterReference result(GetReg(),t_boolean);
-  RegisterReference a(JITExpression(o,t.first()));
+RegisterReference JITBooleanOrOperator(VMStream& o, tree t, Interpreter* m_eval) {
+  RegisterReference result(o.GetReg(),t_boolean);
+  RegisterReference a(JITExpression(o,t.first(),m_eval));
   RegisterReference atest(JITPromote(o,a,t_boolean));
   VMInstruction *jump_a_true = new VMInstruction(JIT,unsigned_integer,
 						 atest.index(),
 						 RTUnsigned(0));
   o << jump_a_true;
-  RegisterReference b(JITExpression(o,t.second()));
+  RegisterReference b(JITExpression(o,t.second(),m_eval));
   RegisterReference btest(JITPromote(o,b,t_boolean));
   VMInstruction *jump_b_true = new VMInstruction(JIT,unsigned_integer,
 						 btest.index(),
@@ -1503,23 +1081,23 @@ RegisterReference JITBooleanOrOperator(VMStream& o, tree t) {
   return result;
 }
 
-RegisterReference JITBooleanNotOperator(VMStream& o, tree t) {
-  RegisterReference result(GetReg(),t_boolean);
-  RegisterReference a(JITExpression(o,t.first()));
+RegisterReference JITBooleanNotOperator(VMStream& o, tree t, Interpreter* m_eval) {
+  RegisterReference result(o.GetReg(),t_boolean);
+  RegisterReference a(JITExpression(o,t.first(),m_eval));
   RegisterReference atest(JITPromote(o,a,t_boolean));
   o << new VMInstruction(NOT,t_boolean,result.index(),atest.index());
   return result;
 }
 
-RegisterReference JITBooleanAndOperator(VMStream& o, tree t) {
-  RegisterReference result(GetReg(),t_boolean);
-  RegisterReference a(JITExpression(o,t.first()));
+RegisterReference JITBooleanAndOperator(VMStream& o, tree t, Interpreter* m_eval) {
+  RegisterReference result(o.GetReg(),t_boolean);
+  RegisterReference a(JITExpression(o,t.first(),m_eval));
   RegisterReference atest(JITPromote(o,a,t_boolean));
   VMInstruction *jump_a_false = new VMInstruction(JIF,unsigned_integer,
 						  atest.index(),
 						  RTUnsigned(0));
   o << jump_a_false;
-  RegisterReference b(JITExpression(o,t.second()));
+  RegisterReference b(JITExpression(o,t.second(),m_eval));
   RegisterReference btest(JITPromote(o,b,t_boolean));
   VMInstruction *jump_b_false = new VMInstruction(JIF,unsigned_integer,
 						  btest.index(),
@@ -1536,9 +1114,9 @@ RegisterReference JITBooleanAndOperator(VMStream& o, tree t) {
   return result;
 }
 
-RegisterReference JITComparisonOperator(VMStream& o, tree t, opcodeType op) {
-  RegisterReference a(JITExpression(o,t.first()));
-  RegisterReference b(JITExpression(o,t.second()));
+RegisterReference JITComparisonOperator(VMStream& o, tree t, opcodeType op, Interpreter* m_eval) {
+  RegisterReference a(JITExpression(o,t.first(),m_eval));
+  RegisterReference b(JITExpression(o,t.second(),m_eval));
   opcodeClass outputClass;
   if (a.type() > b.type()) 
     outputClass = a.type();
@@ -1548,21 +1126,21 @@ RegisterReference JITComparisonOperator(VMStream& o, tree t, opcodeType op) {
     a = JITPromote(o,a,outputClass);
   if (b.type() != outputClass)
     b = JITPromote(o,b,outputClass);
-  RegisterReference c(GetReg(),t_boolean);
+  RegisterReference c(o.GetReg(),t_boolean);
   o << new VMInstruction(op,t_boolean,c.index(),a.index(),b.index());
   return c;
 }
 
-RegisterReference JITUnaryOperator(VMStream& o, tree t, opcodeType op) {
-  RegisterReference a(JITExpression(o,t.first()));
-  RegisterReference c(GetReg(),a.type());
+RegisterReference JITUnaryOperator(VMStream& o, tree t, opcodeType op, Interpreter* m_eval) {
+  RegisterReference a(JITExpression(o,t.first(),m_eval));
+  RegisterReference c(o.GetReg(),a.type());
   o << new VMInstruction(op,c.type(),c.index(),a.index());
   return c;
 }
 
-RegisterReference JITBinaryOperator(VMStream& o, tree t, opcodeType op) {
-  RegisterReference a(JITExpression(o,t.first()));
-  RegisterReference b(JITExpression(o,t.second()));
+RegisterReference JITBinaryOperator(VMStream& o, tree t, opcodeType op, Interpreter* m_eval) {
+  RegisterReference a(JITExpression(o,t.first(),m_eval));
+  RegisterReference b(JITExpression(o,t.second(),m_eval));
   opcodeClass outputClass;
   if (a.type() > b.type()) 
     outputClass = a.type();
@@ -1574,15 +1152,75 @@ RegisterReference JITBinaryOperator(VMStream& o, tree t, opcodeType op) {
     a = JITPromote(o,a,outputClass);
   if (b.type() != outputClass)
     b = JITPromote(o,b,outputClass);
-  RegisterReference c(GetReg(),outputClass);
+  RegisterReference c(o.GetReg(),outputClass);
   o << new VMInstruction(op,c.type(),c.index(),a.index(),b.index());
   return c;
 }
 
-RegisterReference JITRHS(VMStream& o, tree t) { 
-  SymbolInformation *v = symbols.findSymbol(t.first().text());
+SymbolInformation* JITAddArgument(VMStream& o, string name, Interpreter*m_eval, bool scalarVariable) {
+  ArrayReference ptr(m_eval->getContext()->lookupVariable(name));
+  if (!ptr.valid())
+    throw Exception("Undefined variable reference:" + name);
+  if (!ptr->is2D())
+    throw Exception("Cannot JIT multi-dimensional array:" + name);
+  if (ptr->isString() || ptr->isReferenceType())
+    throw Exception("Cannot JIT strings or reference types:" + name);
+  if (ptr->isComplex())
+    throw Exception("Cannot JIT complex arrays:" + name);
+  if (!ptr->isScalar() && scalarVariable)
+    throw Exception("JIT requires " + name + " be a scalar");
+  opcodeClass q_type;
+  switch (ptr->dataClass()) {
+  case FM_FUNCPTR_ARRAY:
+  case FM_CELL_ARRAY:
+  case FM_STRUCT_ARRAY:
+  case FM_UINT8:
+  case FM_INT8:
+  case FM_UINT16:
+  case FM_INT16:
+  case FM_UINT64:
+  case FM_INT64:
+  case FM_COMPLEX:
+  case FM_DCOMPLEX:
+  case FM_STRING:
+    throw Exception("Cannot JIT code because of type of :" + name);
+  case FM_LOGICAL:
+    q_type = t_boolean;
+    break;
+  case FM_UINT32:
+    q_type = unsigned_integer;
+    break;
+  case FM_INT32:
+    q_type = integer;
+    break;
+  case FM_FLOAT:
+    q_type = single_float;
+    break;
+  case FM_DOUBLE:
+    q_type = double_float;
+  }
+  // Allocate a symbol for the variable
+  SymbolInformation sym;
+  sym.m_rows = RegisterReference(o.GetReg(),unsigned_integer);
+  sym.m_cols = RegisterReference(o.GetReg(),unsigned_integer);
+  sym.m_type = q_type;
+  if (!scalarVariable)
+    sym.m_base = RegisterReference(o.GetReg(),pointer);
+  else
+    sym.m_base = RegisterReference(o.GetReg(),q_type);
+  sym.m_argument = true;
+  sym.m_scalar = scalarVariable;
+  sym.m_readonly = true;
+  o.add_symbol(name,sym);
+  return o.find_symbol(name);
+}
+
+RegisterReference JITRHS(VMStream& o, tree t, Interpreter* m_eval) { 
+  string symname(t.first().text());
+  SymbolInformation *v = o.find_symbol(symname);
   if (!v) 
-    throw Exception("Undefined variable reference:" + t.first().text());
+    // Try to look up the symbol in the current context
+    v = JITAddArgument(o,symname,m_eval,t.numchildren() == 1);
   if (t.numchildren() == 1) {
     if (!v->isScalar()) 
       throw Exception("Non-scalar reference returned in scalar context!");
@@ -1600,49 +1238,52 @@ RegisterReference JITRHS(VMStream& o, tree t) {
   if (s.numchildren() > 2)
     throw Exception("Expecting at most 2 array references for dereference...");
   if (s.numchildren() == 1) {
-    RegisterReference offset_n(JITExpression(o,s.first()));
-    RegisterReference offset_u(GetReg(),unsigned_integer);
+    RegisterReference offset_n(JITExpression(o,s.first(),m_eval));
+    RegisterReference offset_u(o.GetReg(),unsigned_integer);
     o << new VMInstruction(CASTU,offset_n.type(),offset_u.index(),offset_n.index());
-    RegisterReference val(GetReg(),v->m_type);
+    o << new VMInstruction(DEC,offset_u.type(),offset_u.index());
+    RegisterReference val(o.GetReg(),v->m_type);
     o << new VMInstruction(LOAD,v->m_type,val.index(),v->m_base.index(),offset_u.index());
     return val;
   } else if (s.numchildren() == 2) {
-    RegisterReference row_offset_n(JITExpression(o,s.first()));
-    RegisterReference row_offset_u(GetReg(),unsigned_integer);
+    RegisterReference row_offset_n(JITExpression(o,s.first(),m_eval));
+    RegisterReference row_offset_u(o.GetReg(),unsigned_integer);
     o << new VMInstruction(CASTU,row_offset_n.type(),row_offset_u.index(),row_offset_n.index());
-    RegisterReference col_offset_n(JITExpression(o,s.second()));
-    RegisterReference col_offset_u(GetReg(),unsigned_integer);
+    o << new VMInstruction(DEC,row_offset_u.type(),row_offset_u.index());
+    RegisterReference col_offset_n(JITExpression(o,s.second(),m_eval));
+    RegisterReference col_offset_u(o.GetReg(),unsigned_integer);
     o << new VMInstruction(CASTU,col_offset_n.type(),col_offset_u.index(),col_offset_n.index());
-    RegisterReference ndx_offset_u(GetReg(),unsigned_integer);
+    o << new VMInstruction(DEC,col_offset_u.type(),col_offset_u.index());    
+    RegisterReference ndx_offset_u(o.GetReg(),unsigned_integer);
     o << new VMInstruction(MUL,unsigned_integer,ndx_offset_u.index(),
 			   col_offset_u.index(),v->m_rows.index());
     o << new VMInstruction(ADD,unsigned_integer,ndx_offset_u.index(),
 			   ndx_offset_u.index(),row_offset_u.index());
-    RegisterReference val(GetReg(),v->m_type);
+    RegisterReference val(o.GetReg(),v->m_type);
     o << new VMInstruction(LOAD,v->m_type,val.index(),v->m_base.index(),ndx_offset_u.index());
     return val;
   }
   throw Exception("dereference not handled yet...");
 }
 
-RegisterReference JITExpression(VMStream& o, tree t) {
+RegisterReference JITExpression(VMStream& o, tree t, Interpreter* m_eval) {
   switch(t.token()) {
   case TOK_VARIABLE: 
-    return JITRHS(o,t);
+    return JITRHS(o,t,m_eval);
   case TOK_INTEGER: {
-    RegisterReference q(GetReg(),integer);
+    RegisterReference q(o.GetReg(),integer);
     o << new VMInstruction(SET,integer,q.index(),
 			   RTInteger(ArrayToInt32(t.array())));
     return q;
   }
   case TOK_FLOAT: {
-    RegisterReference q(GetReg(),single_float);
+    RegisterReference q(o.GetReg(),single_float);
     o << new VMInstruction(SET,single_float,q.index(),
 			   RTFloat(ArrayToDouble(t.array())));
     return q;
   }
   case TOK_DOUBLE: {
-    RegisterReference q(GetReg(),double_float);
+    RegisterReference q(o.GetReg(),double_float);
     o << new VMInstruction(SET,double_float,q.index(),
 			   RTDouble(ArrayToDouble(t.array())));
     return q;
@@ -1654,59 +1295,59 @@ RegisterReference JITExpression(VMStream& o, tree t) {
   case ':':
   case TOK_MATDEF: 
   case TOK_CELLDEF: 
-    throw Exception("Unsupported expression construct!");
+    throw Exception("JIT compiler does not support complex, string, END, matrix or cell defs");
   case '+': 
-    return JITBinaryOperator(o,t,ADD);
+    return JITBinaryOperator(o,t,ADD,m_eval);
   case '-': 
-    return JITBinaryOperator(o,t,SUB);
+    return JITBinaryOperator(o,t,SUB,m_eval);
   case '*': 
   case TOK_DOTTIMES: 
-    return JITBinaryOperator(o,t,MUL);
+    return JITBinaryOperator(o,t,MUL,m_eval);
   case '/': 
   case TOK_DOTRDIV: 
-    return JITBinaryOperator(o,t,RDIV);
+    return JITBinaryOperator(o,t,RDIV,m_eval);
   case '\\': 
   case TOK_DOTLDIV: 
-    return JITBinaryOperator(o,t,LDIV);
+    return JITBinaryOperator(o,t,LDIV,m_eval);
   case TOK_SOR: 
   case '|': 
-    return JITBooleanOrOperator(o,t);
+    return JITBooleanOrOperator(o,t,m_eval);
   case TOK_SAND: 
   case '&': 
-    return JITBooleanAndOperator(o,t);
+    return JITBooleanAndOperator(o,t,m_eval);
   case '<': 
-    return JITComparisonOperator(o,t,LT);
+    return JITComparisonOperator(o,t,LT,m_eval);
   case TOK_LE: 
-    return JITComparisonOperator(o,t,LE);
+    return JITComparisonOperator(o,t,LE,m_eval);
   case '>': 
-    return JITComparisonOperator(o,t,GT);
+    return JITComparisonOperator(o,t,GT,m_eval);
   case TOK_GE: 
-    return JITComparisonOperator(o,t,GE);
+    return JITComparisonOperator(o,t,GE,m_eval);
   case TOK_EQ: 
-    return JITComparisonOperator(o,t,EQ);
+    return JITComparisonOperator(o,t,EQ,m_eval);
   case TOK_NE: 
-    return JITComparisonOperator(o,t,NEQ);
+    return JITComparisonOperator(o,t,NEQ,m_eval);
   case TOK_UNARY_MINUS: 
-    return JITUnaryOperator(o,t,NEG);
+    return JITUnaryOperator(o,t,NEG,m_eval);
   case TOK_UNARY_PLUS: 
-    return JITUnaryOperator(o,t,POS);
+    return JITUnaryOperator(o,t,POS,m_eval);
   case '~': 
-    return JITBooleanNotOperator(o,t);
+    return JITBooleanNotOperator(o,t,m_eval);
     break;
   case '^': 
-    //    return DoBinaryOperator(t,Power,"mpower"); 
+    throw Exception("^ is not currently handled by the JIT compiler");
     break;
   case TOK_DOTPOWER: 
-    //    return DoBinaryOperator(t,DotPower,"power"); 
+    throw Exception(".^ is not currently handled by the JIT compiler");
     break;
   case '\'': 
-    //    return DoUnaryOperator(t,Transpose,"ctranspose"); 
+    throw Exception("' is not currently handled by the JIT compiler");
     break;
   case TOK_DOTTRANSPOSE: 
-    //    return DoUnaryOperator(t,DotTranspose,"transpose"); 
+    throw Exception(".' is not currently handled by the JIT compiler");
     break;
   case '@':
-    //    return FunctionPointer(t);
+    throw Exception("@ is not currently handled by the JIT compiler");
   default:
     std::cout << "******************************************************\r\n";
     t.print();
@@ -1714,16 +1355,16 @@ RegisterReference JITExpression(VMStream& o, tree t) {
   }
 }
 
-void JITBlock(VMStream& o, tree t);
+void JITBlock(VMStream& o, tree t, Interpreter* m_eval);
 
-void JITIfStatement(VMStream& o, tree t) {
+void JITIfStatement(VMStream& o, tree t, Interpreter* m_eval) {
   VMStream endInstructions;
-  RegisterReference test(JITExpression(o,t.first()));
+  RegisterReference test(JITExpression(o,t.first(),m_eval));
   VMInstruction *jmp1 = new VMInstruction(JIF,unsigned_integer,
 					  test.index(),RTUnsigned(0));
   o << jmp1;
   VMInstruction *prev_fixup = jmp1;
-  JITBlock(o,t.second());
+  JITBlock(o,t.second(),m_eval);
   VMInstruction *jmp2 = new VMInstruction(JMP,unsigned_integer,
 					  RTUnsigned(0));
   o << jmp2;
@@ -1731,12 +1372,12 @@ void JITIfStatement(VMStream& o, tree t) {
   unsigned n=2;
   while (n < t.numchildren() && t.child(n).is(TOK_ELSEIF)) {
     prev_fixup->literal = RTUnsigned(o.size());
-    RegisterReference ttest(JITExpression(o,t.child(n).first()));
+    RegisterReference ttest(JITExpression(o,t.child(n).first(),m_eval));
     VMInstruction *jmpn = new VMInstruction(JIF,unsigned_integer,
 					    ttest.index(),RTUnsigned(0));
     o << jmpn;
     prev_fixup = jmpn;
-    JITBlock(o,t.child(n).second());
+    JITBlock(o,t.child(n).second(),m_eval);
     VMInstruction *jmpp = new VMInstruction(JMP,unsigned_integer,
 					    RTUnsigned(0));
     o << jmpp;
@@ -1745,7 +1386,7 @@ void JITIfStatement(VMStream& o, tree t) {
   }
   if (t.last().is(TOK_ELSE)) {
     prev_fixup->literal = RTUnsigned(o.size());
-    JITBlock(o,t.last().first());
+    JITBlock(o,t.last().first(),m_eval);
   }
   int end_address = o.size();
   for (int i=0;i<endInstructions.size();i++)
@@ -1753,66 +1394,122 @@ void JITIfStatement(VMStream& o, tree t) {
   o << new VMInstruction(NOP);
 }
 
-void JITStatementType(VMStream& o, tree t) {
+// what happens with:
+//   if (b>0)
+//     a = 3.1;
+//   else
+//     a = 5;
+//   end
+// ??   When we come out of the if statement, what type is a  ??
+
+void JITAssignment(VMStream& o, tree t, Interpreter* m_eval) {
+  tree s(t.first());
+  string symname(s.first().text());
+  SymbolInformation *v = o.find_symbol(symname);
+  if (!v) 
+    v = JITAddArgument(o,symname,m_eval,s.numchildren() == 1);
+  v->m_readonly = false;
+  // evaluate the RHS of the assignment
+  RegisterReference RHS(JITExpression(o,t.second(),m_eval));
+  if (v->m_type != RHS.type())
+    throw Exception("polymorphic assignment to scalar detected.");
+  if (s.numchildren() == 1) {
+    if (!v->isScalar())
+      throw Exception("scalar assignment to array variable.");
+    o << new VMInstruction(COPY,RHS.type(),v->m_base.index(),RHS.index());
+  }
+  if (s.numchildren() > 2)
+    throw Exception("multiple levels of dereference not handled yet...");
+  if (v->isScalar())
+    throw Exception("array indexing of scalar values...");
+  tree q(s.second());
+  if (!q.is(TOK_PARENS))
+    throw Exception("non parenthetical dereferences not handled yet...");
+  if (q.numchildren() == 0)
+    throw Exception("Expecting at least 1 array reference for dereference...");
+  if (q.numchildren() > 2)
+    throw Exception("Expecting at most 2 array references for dereference...");
+  if (q.numchildren() == 1) {
+    RegisterReference offset_n(JITExpression(o,q.first(),m_eval));
+    RegisterReference offset_u(o.GetReg(),unsigned_integer);
+    o << new VMInstruction(CASTU,offset_n.type(),offset_u.index(),offset_n.index());
+    o << new VMInstruction(DEC,offset_u.type(),offset_u.index());
+    o << new VMInstruction(STORE,v->m_type,v->m_base.index(),RHS.index(),offset_u.index());
+  } else if (s.numchildren() == 2) {
+    RegisterReference row_offset_n(JITExpression(o,q.first(),m_eval));
+    RegisterReference row_offset_u(o.GetReg(),unsigned_integer);
+    o << new VMInstruction(CASTU,row_offset_n.type(),row_offset_u.index(),row_offset_n.index());
+    o << new VMInstruction(DEC,row_offset_u.type(),row_offset_u.index());
+    RegisterReference col_offset_n(JITExpression(o,q.second(),m_eval));
+    RegisterReference col_offset_u(o.GetReg(),unsigned_integer);
+    o << new VMInstruction(CASTU,col_offset_n.type(),col_offset_u.index(),col_offset_n.index());
+    o << new VMInstruction(DEC,col_offset_u.type(),col_offset_u.index());    
+    RegisterReference ndx_offset_u(o.GetReg(),unsigned_integer);
+    o << new VMInstruction(MUL,unsigned_integer,ndx_offset_u.index(),
+			   col_offset_u.index(),v->m_rows.index());
+    o << new VMInstruction(ADD,unsigned_integer,ndx_offset_u.index(),
+			   ndx_offset_u.index(),row_offset_u.index());
+    o << new VMInstruction(STORE,v->m_type,v->m_base.index(),RHS.index(),ndx_offset_u.index());
+  }
+}
+
+void JITForLoop(VMStream& o, tree t, Interpreter* m_eval);
+
+void JITStatementType(VMStream& o, tree t, Interpreter* m_eval) {
   switch(t.token()) {
   case '=': 
-    ///JITAssignment(o,t);
+    JITAssignment(o,t,m_eval);
     break;
   case TOK_MULTI:
-    //    multiFunctionCall(t,printIt);
-    break;
+    throw Exception("multi function calls do not JIT compile");
   case TOK_SPECIAL:
-    //    specialFunctionCall(t,printIt);
+    throw Exception("special function calls do not JIT compile");
+  case TOK_FOR:
+    JITForLoop(o,t,m_eval);
     break;
+  case TOK_WHILE:
+    throw Exception("nested while loops do not JIT compile");
   case TOK_IF:
-    JITIfStatement(o,t);
+    JITIfStatement(o,t,m_eval);
     break;
   case TOK_BREAK:
-    //    if (context->inLoop()) 
-    //      throw InterpreterBreakException();
+    throw Exception("break is not currently handled by the JIT compiler");
     break;
   case TOK_CONTINUE:
-    //    if (context->inLoop()) 
-    //      throw InterpreterContinueException();
+    throw Exception("continue is not currently handled by the JIT compiler");
     break;
   case TOK_DBSTEP:
-    //    qDebug() << "**********************DBStep";
-    //    dbstepStatement(t);
-    //    emit RefreshBPLists();
-    //    throw InterpreterReturnException();
+    throw Exception("dbstep is not currently handled by the JIT compiler");
     break;
   case TOK_DBTRACE:
-    //    qDebug() << "**********************DBTrace";
-    //    dbtraceStatement(t);
-    //    emit RefreshBPLists();
-    //    throw InterpreterReturnException();
+    throw Exception("dbtrace is not currently handled by the JIT compiler");
     break;
   case TOK_RETURN:
-    //    throw InterpreterReturnException();
+    throw Exception("return is not currently handled by the JIT compiler");
     break;
   case TOK_SWITCH:
-    //    switchStatement(t);
+    throw Exception("switch is not currently handled by the JIT compiler");
     break;
   case TOK_TRY:
-    //    tryStatement(t);
+    throw Exception("try is not currently handled by the JIT compiler");
     break;
   case TOK_QUIT:
-    //    throw InterpreterQuitException();
+    throw Exception("quit is not currently handled by the JIT compiler");
     break;
   case TOK_RETALL:
-    //    throw InterpreterRetallException();
+    throw Exception("retall is not currently handled by the JIT compiler");
     break;
   case TOK_KEYBOARD:
-    //    doDebugCycle();
+    throw Exception("keyboard is not currently handled by the JIT compiler");
     break;
   case TOK_GLOBAL:
-    //    globalStatement(t);
+    throw Exception("global is not currently handled by the JIT compiler");
     break;
   case TOK_PERSISTENT:
-    //    persistentStatement(t);
+    throw Exception("persistent is not currently handled by the JIT compiler");
     break;
   case TOK_EXPR:
-    JITExpression(o,t.first());
+    JITExpression(o,t.first(),m_eval);
     break;
   case TOK_NEST_FUNC:
     break;
@@ -1821,49 +1518,48 @@ void JITStatementType(VMStream& o, tree t) {
   }
 }
 
-void JITStatement(VMStream& o, tree t) {
+void JITStatement(VMStream& o, tree t, Interpreter* m_eval) {
   // ignore tok_qstatement/tok_statement
-  JITStatementType(o,t.first());
+  JITStatementType(o,t.first(),m_eval);
 }
 
-void JITBlock(VMStream& o, tree t) {
+void JITBlock(VMStream& o, tree t, Interpreter* m_eval) {
   const treeVector &statements(t.children());
   for (treeVector::const_iterator i=statements.begin();
        i!=statements.end();i++) 
-    JITStatement(o,*i);
+    JITStatement(o,*i,m_eval);
 }
 
-void JITLoop(tree t) {
-  VMStream loopjit;
-  
+void JITForLoop(VMStream& o, tree t, Interpreter* m_eval) {
+  if (!(t.first().is('=') && t.first().second().is(':') &&
+	t.first().second().first().is(TOK_INTEGER) &&
+	t.first().second().second().is(TOK_INTEGER))) 
+    throw Exception("For loop cannot be compiled - need integer bounds");
   int loop_start(atoi(t.first().second().first().text().c_str()));
   int loop_stop(atoi(t.first().second().second().text().c_str()));
   string loop_index(t.first().first().text());
-  std::cout << "Loop: " << loop_start << ":" << loop_stop << "\r\n";
-  t.print();
-  unsigned loop_index_register = GetReg();
-  symbols.insertSymbol(loop_index,
-		       SymbolInformation(integer,loop_index_register));
-  loopjit << new VMInstruction(SET,integer,loop_index_register,
+  unsigned loop_index_register = o.GetReg();
+  o.add_symbol(loop_index,
+		     SymbolInformation(integer,loop_index_register));
+  o << new VMInstruction(SET,integer,loop_index_register,
 			       RTInteger(loop_start));
-  unsigned loop_max_register = GetReg();
-  loopjit << new VMInstruction(SET,integer,loop_max_register,
+  unsigned loop_max_register = o.GetReg();
+  o << new VMInstruction(SET,integer,loop_max_register,
 			       RTInteger(loop_stop));
-  unsigned loop_increment_register = GetReg();
-  loopjit << new VMInstruction(SET,integer,loop_increment_register,
+  unsigned loop_increment_register = o.GetReg();
+  o << new VMInstruction(SET,integer,loop_increment_register,
 			       RTInteger(1));
-  unsigned loop_test_register = GetReg();
-  loopjit << new VMInstruction(SET,t_boolean,loop_test_register,RTBoolean(false));
-  unsigned loop_start_instruction = loopjit.size();
-  JITBlock(loopjit,t.second());
-  loopjit << new VMInstruction(ADD,integer,loop_index_register,
+  unsigned loop_test_register = o.GetReg();
+  o << new VMInstruction(SET,t_boolean,loop_test_register,RTBoolean(false));
+  unsigned loop_start_instruction = o.size();
+  JITBlock(o,t.second(),m_eval);
+  o << new VMInstruction(ADD,integer,loop_index_register,
 			       loop_index_register,loop_increment_register);
-  loopjit << new VMInstruction(LT,integer,loop_test_register,
+  o << new VMInstruction(LE,integer,loop_test_register,
 			       loop_index_register,loop_max_register);
-  loopjit << new VMInstruction(JIT,unsigned_integer,
+  o << new VMInstruction(JIT,unsigned_integer,
 			       loop_test_register,
-			       RTUnsigned(loop_start_instruction+1));
-  std::cout << loopjit;
+			       RTUnsigned(loop_start_instruction));
 }
 
 bool ScalarRequirements(tree t, LoopSignature &sig) {
@@ -1892,68 +1588,12 @@ bool ScalarRequirements(tree t, LoopSignature &sig) {
   return true;
 }
 
-bool AnyNonJITStatements(tree t) {
-  if (t.is(TOK_DBSTEP) || t.is(TOK_DBTRACE) ||
-      t.is(TOK_RETURN) || t.is(TOK_TRY) || t.is(TOK_RETALL) ||
-      t.is(TOK_KEYBOARD) || t.is(TOK_GLOBAL) || t.is(TOK_PERSISTENT) ||
-      t.is(TOK_NEST_FUNC) || t.is(TOK_END) || t.is(TOK_MATDEF) || 
-      t.is(TOK_CELLDEF)) return true;
-  for (int i=0;i<t.numchildren();i++)
-    if (AnyNonJITStatements(t.child(i))) return true;
-  return false;
-}
-
-bool HasInnerForStatementsRecurse(tree t) {
-  if (t.is(TOK_FOR)) return true;
-  for (int i=0;i<t.numchildren();i++)
-    if (HasInnerForStatementsRecurse(t.child(i)))
-      return true;
-  return false;
-}
-
-bool HasInnerForStatements(tree t) {
-  for (int i=0;i<t.numchildren();i++)
-    if (HasInnerForStatementsRecurse(t.child(i))) return true;
-  return false;
-}
-
-void EvaluateForStatement(tree t) {
-  if (!(t.first().is('=') && t.first().second().is(':') &&
-	t.first().second().first().is(TOK_INTEGER) &&
-	t.first().second().second().is(TOK_INTEGER))) return;
-  if (HasInnerForStatements(t)) return;
-  if (AnyNonJITStatements(t)) return;
-  LoopSignature sig;
-  if (!ScalarRequirements(t,sig)) return;
-  sig.remove_scalar(t.first().first().text());
-  //  InstanatiateScalars(sig.get_scalars());
-  //  InstantiateMatrices(sig.get_matrices());
-  JITLoop(t);
-}
-
-void FindInnerForStatements(tree t) {
-  if (t.is(TOK_FOR))
-    EvaluateForStatement(t);
-  for (int i=0;i<t.numchildren();i++)
-    FindInnerForStatements(t.child(i));
-}
-
-ArrayVector tqtFunction(int nargout, const ArrayVector& args, Interpreter* m_eval) {
-  if (args.size() == 0) return ArrayVector();
-  string name(ArrayToString(args[0]));
-  FuncPtr val;
-  if (!m_eval->lookupFunction(name,val))
-    throw Exception("Unable to resolve " + name + " to a function");
-  val->updateCode(m_eval);
-  if (!(val->type() == FM_M_FUNCTION))
-    throw Exception("Function " + name + " is not an M file (and cannot be compiled");
-  MFunctionDef *mptr = (MFunctionDef *) val;
-  tree code(mptr->code);
-  FindInnerForStatements(code);
-  return ArrayVector();
+VMStream CompileForBlock(const tree t, Interpreter* m_eval) {
+  VMStream o;
+  JITForLoop(o,t,m_eval);
+  return o;
 }
 
 void LoadCompileFunction(Context* context) {
   context->addSpecialFunction("fcc",fccFunction,-1,0); 
-  context->addSpecialFunction("tqt",tqtFunction,-1,0);
 }

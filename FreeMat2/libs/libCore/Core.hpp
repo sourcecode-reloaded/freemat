@@ -99,6 +99,7 @@ ArrayVector FwriteFunction(int, const ArrayVector& arg);
 ArrayVector FcloseFunction(int, const ArrayVector& arg);
 ArrayVector FseekFunction(int, const ArrayVector& arg);
 ArrayVector FtellFunction(int, const ArrayVector& arg);
+ArrayVector FflushFunction(int, const ArrayVector& arg);
 ArrayVector FeofFunction(int, const ArrayVector& arg);
 ArrayVector FgetlineFunction(int, const ArrayVector& arg);
 ArrayVector MinFunction(int, const ArrayVector& arg);
@@ -114,7 +115,7 @@ ArrayVector PrintfFunction(int, const ArrayVector& arg, Interpreter* eval);
 ArrayVector VerStringFunction(int, const ArrayVector& arg, Interpreter* eval);
 ArrayVector VersionFunction(int, const ArrayVector& arg);
 ArrayVector SprintfFunction(int, const ArrayVector& arg);
-ArrayVector FprintfFunction(int, const ArrayVector& arg);
+ArrayVector FprintfFunction(int, const ArrayVector& arg, Interpreter* eval);
 ArrayVector FscanfFunction(int, const ArrayVector& arg);
 ArrayVector SscanfFunction(int, const ArrayVector& arg);
 ArrayVector Str2NumFunction(int, const ArrayVector& arg);
@@ -196,6 +197,7 @@ ArrayVector Bin2IntFunction(int, const ArrayVector& arg);
 ArrayVector PCodeFunction(int, const ArrayVector& arg, Interpreter* eval);
 ArrayVector GetLineFunction(int, const ArrayVector& arg, Interpreter* eval);
 ArrayVector DbAutoFunction(int, const ArrayVector& arg, Interpreter* eval);
+ArrayVector JITControlFunction(int, const ArrayVector& arg, Interpreter* eval);
 ArrayVector DbStopFunction(int, const ArrayVector& arg, Interpreter* eval);
 ArrayVector DbDeleteFunction(int, const ArrayVector& arg, Interpreter* eval);
 ArrayVector DbListFunction(int, const ArrayVector& arg, Interpreter* eval);
@@ -234,7 +236,7 @@ ArrayVector FalseFunction(int nargout, const ArrayVector& arg);
 ArrayVector RegExpRepDriverFunction(int nargout, const ArrayVector& arg);
 ArrayVector RegExpFunction(int nargout, const ArrayVector& arg);
 ArrayVector RegExpIFunction(int nargout, const ArrayVector& arg);
-void Tokenize(const std::string& str, std::vector<std::string>& tokens,
+void Tokenize(const std::string& str, stringVector& tokens,
 	      const std::string& delimiters = " \n");
 bool inBundleMode();
 ArrayVector MatLoadFunction(int nargout, string filename, rvstring varnames, 
@@ -242,5 +244,11 @@ ArrayVector MatLoadFunction(int nargout, string filename, rvstring varnames,
 ArrayVector MatSaveFunction(string filename, rvstring varnames,
 			    Interpreter *eval);
 ArrayVector ImReadFunction(int nargout, const ArrayVector& arg, Interpreter* eval);
+ArrayVector CtypeDefineFunction(int nargout, const ArrayVector& arg);
+ArrayVector CtypeSizeFunction(int nargout, const ArrayVector& arg);
+ArrayVector CtypePrintFunction(int nargout, const ArrayVector& arg, Interpreter* eval);
+ArrayVector CtypeFreezeFunction(int nargout, const ArrayVector& arg, Interpreter* eval);
+ArrayVector CtypeThawFunction(int nargout, const ArrayVector& arg, Interpreter* eval);
+ArrayVector CenumFunction(int nargout, const ArrayVector& arg);
 void SwapBuffer(char* cp, int count, int elsize);
 #endif

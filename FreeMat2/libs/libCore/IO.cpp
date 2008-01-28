@@ -108,7 +108,7 @@ static int DoPlayBackCallback(void *, void *output,
   int framesToCalc;
   int finished = 0;
   int i;
-  if( pb->framesToGo < framesPerBuffer )
+  if( (unsigned long) pb->framesToGo < framesPerBuffer )
     {
       framesToCalc = pb->framesToGo;
       pb->framesToGo = 0;
@@ -171,7 +171,7 @@ static int DoRecordCallback(void *input, void *,
   int framesToCalc;
   int finished = 0;
   int i;
-  if( pb->framesToGo < framesPerBuffer )
+  if( (unsigned long) pb->framesToGo < framesPerBuffer )
     {
       framesToCalc = pb->framesToGo;
       pb->framesToGo = 0;
@@ -201,7 +201,6 @@ static int DoRecordCallback(void *input, void *,
 }
 
 static PaError err;
-static bool Initialized = false;
 static bool RunningStream = false;
 static PaStream *stream;
 static PlayBack *pb_obj;
@@ -460,11 +459,11 @@ ArrayVector WavRecordFunction(int nargout, const ArrayVector& argv) {
     else if (typestring == "INT32")
       datatype = FM_INT32;
     else if (typestring == "INT16")
-      datatype == FM_INT16;
+      datatype = FM_INT16;
     else if (typestring == "INT8")
-      datatype == FM_INT8;
+      datatype = FM_INT8;
     else if (typestring == "UINT8")
-      datatype == FM_UINT8;
+      datatype = FM_UINT8;
     else
       throw Exception("unrecognized data type - expecting one of: double, float, single, int32, int16, int8, uint8");
     argvCopy.pop_back();
@@ -483,6 +482,7 @@ ArrayVector WavRecordFunction(int nargout, const ArrayVector& argv) {
   if (rdatatype == FM_DOUBLE) rdatatype = FM_FLOAT;
   void *dp = Array::allocateArray(rdatatype,samples*channels);
   switch(rdatatype) {
+  default: throw Exception("Illegal data type argument for wavrecord");
   case FM_FLOAT:
     DoRecord(dp,samples,channels,sizeof(float),paFloat32,rate);
     retvec = Array(FM_FLOAT,Dimensions(samples,channels),dp);
@@ -1191,7 +1191,7 @@ ArrayVector FreadFunction(int nargout, const ArrayVector& arg) {
   // Next, we allocate space for the result
   void *qp = Malloc(elementCount*elementSize);
   // Read in the requested number of data points...
-  size_t g = fread(qp,elementSize,elementCount,fptr->fp);
+  int g = fread(qp,elementSize,elementCount,fptr->fp);
   if (g != elementCount)
     throw Exception("Insufficient data remaining in file to fill out requested size");
   if (ferror(fptr->fp)) 
@@ -1260,6 +1260,26 @@ ArrayVector FwriteFunction(int nargout, const ArrayVector& arg) {
   retval.push_back(Array::uint32Constructor(written));
   return retval;    
 }
+
+//!
+//@Module FFLUSH Force File Flush
+//@@Section IO
+//@@Usage
+//Flushes any pending output to a given file.  The general use of
+//this function is
+//@[
+//   fflush(handle)
+//@]
+//where @|handle| is an active file handle (as returned by @|fopen|).
+//!
+ ArrayVector FflushFunction(int nargout, const ArrayVector& arg) {
+   if (arg.size() != 1)
+     throw Exception("fflush requires an argument, the file handle.");
+   int handle = ArrayToInt32(arg[0]);
+   FilePtr *fptr = (fileHandles.lookupHandle(handle+1));
+   fflush(fptr->fp);
+   return ArrayVector();
+ }
 
 //!
 //@Module FTELL File Position Function
@@ -1656,8 +1676,8 @@ Array Num2StrHelperReal(const T*dp, Dimensions Xdims, const char *formatspec) {
   }
   // Next we compute the length of the largest string
   int maxlen = 0;
-  for (int n=0;n<row_string.size();n++)
-    if (row_string[n].size() > maxlen)
+  for (int n=0;n<(int)row_string.size();n++)
+    if ((int)row_string[n].size() > maxlen)
       maxlen = row_string[n].size();
   // Next we allocate a character array large enough to
   // hold the string array.
@@ -1667,7 +1687,7 @@ Array Num2StrHelperReal(const T*dp, Dimensions Xdims, const char *formatspec) {
   for (int i=0;i<slices;i++)
     for (int j=0;j<rows;j++) {
       string line(row_string[j+i*rows]);
-      for (int k=0;k<line.size();k++)
+      for (int k=0;k<(int)line.size();k++)
 	sp[j+i*rows*maxlen+k*rows] = line[k];
     }
   Dimensions odims(Xdims);
@@ -1707,8 +1727,8 @@ Array Num2StrHelperComplex(const T*dp, Dimensions Xdims, const char *formatspec)
   }
   // Next we compute the length of the largest string
   int maxlen = 0;
-  for (int n=0;n<row_string.size();n++)
-    if (row_string[n].size() > maxlen)
+  for (int n=0;n<(int)row_string.size();n++)
+    if ((int)row_string[n].size() > maxlen)
       maxlen = row_string[n].size();
   // Next we allocate a character array large enough to
   // hold the string array.
@@ -1718,7 +1738,7 @@ Array Num2StrHelperComplex(const T*dp, Dimensions Xdims, const char *formatspec)
   for (int i=0;i<slices;i++)
     for (int j=0;j<rows;j++) {
       string line(row_string[j+i*rows]);
-      for (int k=0;k<line.size();k++)
+      for (int k=0;k<(int)line.size();k++)
 	sp[j+i*rows*maxlen+k*rows] = line[k];
     }
   Dimensions odims(Xdims);
@@ -1746,6 +1766,7 @@ ArrayVector Num2StrFunction(int nargout, const ArrayVector& arg) {
   }
   switch (X.dataClass()) 
     {
+    default: throw Exception("illegal type argument to num2str");
     case FM_UINT8:
       return ArrayVector() << Num2StrHelperReal((const uint8*) X.getDataPointer(),
 						X.dimensions(),formatspec);
@@ -1911,7 +1932,8 @@ ArrayVector SprintfFunction(int nargout, const ArrayVector& arg) {
 //printf('float value is %+018.12f\n',pi);
 //@>
 //!
-ArrayVector PrintfFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
+ArrayVector PrintfFunction(int nargout, const ArrayVector& arg, 
+			   Interpreter* eval) {
   if (arg.size() == 0)
     throw Exception("printf requires at least one (string) argument");
   Array format(arg[0]);
@@ -2042,7 +2064,6 @@ ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
   char *dp = buff;
   char *np;
   char sv;
-  int nextArg = 2;
   bool shortarg;
   bool doublearg;
   // Scan the string
@@ -2199,7 +2220,6 @@ ArrayVector FscanfFunction(int nargout, const ArrayVector& arg) {
   char *dp = buff;
   char *np;
   char sv;
-  int nextArg = 2;
   bool shortarg;
   bool doublearg;
   // Scan the string
@@ -2344,11 +2364,17 @@ ArrayVector FscanfFunction(int nargout, const ArrayVector& arg) {
 //@@Examples
 //A number of examples are present in the Examples section of the @|printf| command.
 //!
-ArrayVector FprintfFunction(int nargout, const ArrayVector& arg) {
+ ArrayVector FprintfFunction(int nargout, const ArrayVector& arg, 
+			     Interpreter* eval) {
   if (arg.size() < 2)
     throw Exception("fprintf requires at least two arguments, the file handle and theformat string");
   Array tmp(arg[0]);
   int handle = tmp.getContentsAsIntegerScalar();
+  if (handle == 1) {
+    ArrayVector argCopy(arg);
+    argCopy.pop_front();
+    return PrintfFunction(nargout,argCopy,eval);
+  }
   FilePtr *fptr=(fileHandles.lookupHandle(handle+1));
   Array format(arg[1]);
   if (!format.isString())
@@ -2584,10 +2610,10 @@ ArrayVector SaveFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
   }
   Context *cntxt = eval->getContext();
   rvstring toSave;
-  if (regexpMode) {
+  if (regexpMode || (names.size() == 0)) {
     stringVector allNames = cntxt->listAllVariables();
-    for (int i=0;i<allNames.size();i++)
-      if (contains(names,allNames[i],regexpMode))
+    for (int i=0;i<(int)allNames.size();i++)
+      if ((names.size() == 0) || contains(names,allNames[i],regexpMode))
 	toSave << allNames[i];
   } else 
     toSave = names;
@@ -2701,7 +2727,7 @@ int DecodeSpreadsheetColumn(QString tx) {
     txb[i] = txb[i] - 'A';
   int ret = 0;
   for (int i=0;i<txb.count();i++) 
-    ret += txb.at(i)*pow(26.0,txb.count()-1-i);
+    ret += (int) (txb.at(i)*pow(26.0,txb.count()-1-i));
   return ret;
 }
 
@@ -2898,7 +2924,8 @@ ArrayVector LoadNativeFunction(int nargout, string filename,
     char flag;
     flag = input.getByte();
     input.getArray(toRead);
-    if (contains(names,arrayName,regexpmode) && (nargout == 0)) {
+    if ((names.size() == 0) || 
+	(contains(names,arrayName,regexpmode) && (nargout == 0))) {
       switch (flag) {
       case 'n':
 	break;

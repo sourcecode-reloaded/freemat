@@ -21,7 +21,7 @@
 #define __Types_hpp__
 
 #include <string>
-#include <vector>
+#include <QVector>
 #include <QtGlobal>
 #include <QList>
 #include <QRegExp>
@@ -36,7 +36,7 @@ typedef qint32    int32;
 typedef quint32   uint32;
 typedef qint64    int64;
 typedef quint64   uint64;
-typedef unsigned int   indexType;
+typedef int   indexType;
 typedef const indexType * constIndexPtr;
 
 typedef enum {
@@ -59,11 +59,13 @@ typedef enum {
   FM_STRING,
 } Class;
 
-typedef std::vector<std::string> stringVector;
+typedef QVector<std::string> stringVector;
 typedef QList<std::string> rvstring;
 
 inline size_t ByteSize(Class t) {
   switch(t) {
+  default:
+    throw Exception("Illegal argument to ByteSize function");
   case FM_CELL_ARRAY:
     return sizeof(void*);
   case FM_STRUCT_ARRAY:

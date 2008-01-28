@@ -289,14 +289,6 @@ public:
   pt3d operator-(const pt3d& t) {return pt3d(x-t.x,y-t.y,z-t.z);}
 };
 
-static pt3d crossprod(pt3d v1, pt3d v2) {
-  pt3d temp;
-  temp.x = (v1.y * v2.z) - (v1.z * v2.y);
-  temp.y = (v1.z * v2.x) - (v1.x * v2.z);
-  temp.z = (v1.x * v2.y) - (v1.y * v2.x);
-  return temp;
-}
-
 static std::string TrimPrint(double val, bool scientificNotation) {
   char buffer[1000];
   char *p;
@@ -353,8 +345,8 @@ double tlog(double x) {
 void FormatAxisManual(double t1, double t2, int tickcount,
 		      bool isLogarithmic,
 		      double& tStart, double &tStop,
-		      std::vector<double> &tickLocations,
-		      std::vector<std::string> &tlabels) {
+		      QVector<double> &tickLocations,
+		      stringVector &tlabels) {
   int tCount;
   tickLocations.clear();
   tlabels.clear();
@@ -386,8 +378,8 @@ void FormatAxisManual(double t1, double t2, int tickcount,
 void FormatAxisAuto(double tMin, double tMax, int tickcount,
 		    bool isLogarithmic,
 		    double& tStart, double &tStop,
-		    std::vector<double> &tickLocations,
-		    std::vector<std::string> &tlabels) {
+		    QVector<double> &tickLocations,
+		    stringVector &tlabels) {
   int tCount;
   tickLocations.clear();
   tlabels.clear();
@@ -418,7 +410,7 @@ void FormatAxisAuto(double tMin, double tMax, int tickcount,
 }
 
 void HandleAxis::GetMaxTickMetric(RenderEngine &gc,
-				  std::vector<std::string> labs,
+				  stringVector labs,
 				  double &maxx, double &maxy) {
   maxx = 0;
   maxy = 0;
@@ -782,7 +774,7 @@ void HandleAxis::SetupDefaults() {
   SetConstrainedStringDefault("clipping","on");
   SetThreeVectorDefault("color",1,1,1);
   // Set up the default color order
-  std::vector<double> colors;
+  QVector<double> colors;
   colors.push_back(0.0); colors.push_back(0.0); colors.push_back(1.0); 
   colors.push_back(0.0); colors.push_back(0.5); colors.push_back(0.0); 
   colors.push_back(1.0); colors.push_back(0.0); colors.push_back(0.0);
@@ -854,7 +846,7 @@ void HandleAxis::SetupDefaults() {
   UpdateAxisFont();
 }
 
-void HandleAxis::SetAxisLimits(std::vector<double> lims) {
+void HandleAxis::SetAxisLimits(QVector<double> lims) {
   //     qDebug("Set Limits %f %f %f %f %f %f",
   // 	   lims[0],lims[1],lims[2],lims[3],lims[4],lims[5]);
   HPLinearLog *sp;
@@ -875,9 +867,9 @@ void HandleAxis::SetAxisLimits(std::vector<double> lims) {
     SetTwoVectorDefault("zlim",pow(10.0,lims[4]),pow(10.0,lims[5]));
 }
 
-std::vector<double> HandleAxis::GetAxisLimits() {
+QVector<double> HandleAxis::GetAxisLimits() {
   HPTwoVector *hp;
-  std::vector<double> lims;
+  QVector<double> lims;
   HPLinearLog *sp;
   hp = (HPTwoVector*) LookupProperty("xlim");
   sp = (HPLinearLog*) LookupProperty("xscale");
@@ -920,7 +912,7 @@ HandleFigure* HandleAxis::GetParentFigure() {
   return fig;
 }
 
-std::vector<double> HandleAxis::UnitsReinterpret(std::vector<double> a) {
+QVector<double> HandleAxis::UnitsReinterpret(QVector<double> a) {
   HandleFigure *fig = GetParentFigure();
   unsigned width = fig->GetWidth();
   unsigned height = fig->GetHeight();
@@ -938,7 +930,7 @@ std::vector<double> HandleAxis::UnitsReinterpret(std::vector<double> a) {
   }
 }
   
-std::vector<double> HandleAxis::GetPropertyVectorAsPixels(std::string name) {
+QVector<double> HandleAxis::GetPropertyVectorAsPixels(std::string name) {
   HPFourVector *hp = (HPFourVector*) LookupProperty(name);
   return (UnitsReinterpret(hp->Data()));
 }
@@ -951,8 +943,8 @@ static void MinMaxVector(double *vals, int len, double &vmin, double &vmax) {
   }
 }
 
-std::vector<double> HandleAxis::ReMap(std::vector<double> t) {
-  std::vector<double> s;
+QVector<double> HandleAxis::ReMap(QVector<double> t) {
+  QVector<double> s;
   for (int i=0;i<t.size();i+=3) {
     s.push_back(MapX(t[i]));
     s.push_back(MapY(t[i+1]));
@@ -961,9 +953,9 @@ std::vector<double> HandleAxis::ReMap(std::vector<double> t) {
   return s;
 }
 
-void HandleAxis::ReMap(std::vector<double> xs, std::vector<double> ys,
-		       std::vector<double> zs, std::vector<double> &ax,
-		       std::vector<double> &ay, std::vector<double> &az) {
+void HandleAxis::ReMap(QVector<double> xs, QVector<double> ys,
+		       QVector<double> zs, QVector<double> &ax,
+		       QVector<double> &ay, QVector<double> &az) {
   for (int i=0;i<xs.size();i++) {
     ax.push_back(MapX(xs[i]));
     ay.push_back(MapY(ys[i]));
@@ -980,7 +972,7 @@ double HandleAxis::MapX(double x) {
   hp = (HPNormalReverse*) LookupProperty("xdir");
   HPTwoVector *xlim;
   xlim = (HPTwoVector*) LookupProperty("xlim");
-  std::vector<double> lims(xlim->Data());
+  QVector<double> lims(xlim->Data());
   HPLinearLog *sp;
   sp = (HPLinearLog*) LookupProperty("xscale");
   if (sp->Is("log"))
@@ -998,7 +990,7 @@ double HandleAxis::MapY(double y) {
   hp = (HPNormalReverse*) LookupProperty("ydir");
   HPTwoVector *ylim;
   ylim = (HPTwoVector*) LookupProperty("ylim");
-  std::vector<double> lims(ylim->Data());
+  QVector<double> lims(ylim->Data());
   HPLinearLog *sp;
   sp = (HPLinearLog*) LookupProperty("yscale");
   if (sp->Is("log"))
@@ -1016,7 +1008,7 @@ double HandleAxis::MapZ(double z) {
   hp = (HPNormalReverse*) LookupProperty("zdir");
   HPTwoVector *zlim;
   zlim = (HPTwoVector*) LookupProperty("zlim");
-  std::vector<double> lims(zlim->Data());
+  QVector<double> lims(zlim->Data());
   HPLinearLog *sp;
   sp = (HPLinearLog*) LookupProperty("zscale");
   if (sp->Is("log"))
@@ -1050,10 +1042,10 @@ void HandleAxis::SetupProjection(RenderEngine &gc) {
 	    tv2->Data()[0],tv2->Data()[1],tv2->Data()[2],
 	    tv3->Data()[0],tv3->Data()[1],tv3->Data()[2]);
   // Scale using the data aspect ratio
-  std::vector<double> dar(VectorPropertyLookup("dataaspectratio"));
+  QVector<double> dar(VectorPropertyLookup("dataaspectratio"));
   gc.scale(1.0/dar[0],1.0/dar[1],1.0/dar[2]);
   // Get the axis limits
-  std::vector<double> limits(GetAxisLimits());
+  QVector<double> limits(GetAxisLimits());
   // Map the 8 corners of the clipping cube to rotated space
   double xvals[8];
   double yvals[8];
@@ -1071,13 +1063,11 @@ void HandleAxis::SetupProjection(RenderEngine &gc) {
   MinMaxVector(xvals,8,xmin,xmax);
   MinMaxVector(yvals,8,ymin,ymax);
   MinMaxVector(zvals,8,zmin,zmax);
-  double mzmin = qMin(fabs(zmin),fabs(zmax));
-  double mzmax = qMax(fabs(zmin),fabs(zmax));
   if (zmin == zmax) {
     zmin = zmax-1;
     zmax = zmax+1;
   }
-  std::vector<double> position(GetPropertyVectorAsPixels("position"));
+  QVector<double> position(GetPropertyVectorAsPixels("position"));
   if (StringCheck("plotboxaspectratiomode","manual") ||
       StringCheck("dataaspectratiomode","manual")) {
     // Now we have to deal with the scale-to-fit issue.  If we
@@ -1107,7 +1097,7 @@ void HandleAxis::DrawBox(RenderEngine &gc) {
   // Get the limits
   HPColor *hp = (HPColor*) LookupProperty("color");
   if (hp->IsNone()) return;
-  std::vector<double> limits(GetAxisLimits());
+  QVector<double> limits(GetAxisLimits());
   gc.color(hp->Data());
   gc.depth(false);
   gc.quad( limits[0], limits[2], limits[4],
@@ -1140,7 +1130,7 @@ void HandleAxis::DrawBox(RenderEngine &gc) {
 
 
 void HandleAxis::DrawGridLines(RenderEngine &gc) {
-  std::vector<double> limits(GetAxisLimits());
+  QVector<double> limits(GetAxisLimits());
   gc.depth(false);
   // The normals of interest are 
   // [0,0,1],[0,0,-1],
@@ -1157,11 +1147,11 @@ void HandleAxis::DrawGridLines(RenderEngine &gc) {
   gc.setLineStyle(((HPLineStyle*) LookupProperty("gridlinestyle"))->Data());
   HPVector *hp;
   hp = (HPVector*) LookupProperty("xtick");
-  std::vector<double> xticks(hp->Data());
+  QVector<double> xticks(hp->Data());
   hp = (HPVector*) LookupProperty("ytick");
-  std::vector<double> yticks(hp->Data());
+  QVector<double> yticks(hp->Data());
   hp = (HPVector*) LookupProperty("ztick");
-  std::vector<double> zticks(hp->Data());
+  QVector<double> zticks(hp->Data());
   HPColor *xc = (HPColor*) LookupProperty("xcolor");
   HPColor *yc = (HPColor*) LookupProperty("ycolor");
   HPColor *zc = (HPColor*) LookupProperty("zcolor");
@@ -1190,7 +1180,7 @@ void HandleAxis::DrawGridLines(RenderEngine &gc) {
 }
 
 void HandleAxis::DrawXGridLine(RenderEngine &gc, double t, 
-			       std::vector<double> limits) {
+			       QVector<double> limits) {
   double m[16];
   gc.getModelviewMatrix(m);
   if (m[10] > 0) {
@@ -1210,7 +1200,7 @@ void HandleAxis::DrawXGridLine(RenderEngine &gc, double t,
 }
   
 void HandleAxis::DrawYGridLine(RenderEngine &gc, double t,
-			       std::vector<double> limits) {
+			       QVector<double> limits) {
   double m[16];
   gc.getModelviewMatrix(m);
   if (m[10] > 0) {
@@ -1230,7 +1220,7 @@ void HandleAxis::DrawYGridLine(RenderEngine &gc, double t,
 }
 
 void HandleAxis::DrawZGridLine(RenderEngine &gc, double t,
-			       std::vector<double> limits) {
+			       QVector<double> limits) {
   double m[16];
   gc.getModelviewMatrix(m);
   if (m[6] > 0) {
@@ -1250,16 +1240,16 @@ void HandleAxis::DrawZGridLine(RenderEngine &gc, double t,
 }				 
 
 void HandleAxis::DrawMinorGridLines(RenderEngine &gc) {
-  std::vector<double> limits(GetAxisLimits());
+  QVector<double> limits(GetAxisLimits());
   gc.setLineStyle(((HPLineStyle*) LookupProperty("minorgridlinestyle"))->Data());
   gc.depth(false);
   HPVector *hp;
   hp = (HPVector*) LookupProperty("xtick");
-  std::vector<double> xticks(hp->Data());
+  QVector<double> xticks(hp->Data());
   hp = (HPVector*) LookupProperty("ytick");
-  std::vector<double> yticks(hp->Data());
+  QVector<double> yticks(hp->Data());
   hp = (HPVector*) LookupProperty("ztick");
-  std::vector<double> zticks(hp->Data());
+  QVector<double> zticks(hp->Data());
   HPColor *xc = (HPColor*) LookupProperty("xcolor");
   HPColor *yc = (HPColor*) LookupProperty("ycolor");
   HPColor *zc = (HPColor*) LookupProperty("zcolor");
@@ -1340,21 +1330,21 @@ void HandleAxis::DrawMinorGridLines(RenderEngine &gc) {
 }
   
 double HandleAxis::flipX(double t) {
-  std::vector<double> limits(GetAxisLimits());
+  QVector<double> limits(GetAxisLimits());
   if (t == limits[0])
     return limits[1];
   return limits[0];
 }
 
 double HandleAxis::flipY(double t) {
-  std::vector<double> limits(GetAxisLimits());
+  QVector<double> limits(GetAxisLimits());
   if (t == limits[2])
     return limits[3];
   return limits[2];
 }
 
 double HandleAxis::flipZ(double t) {
-  std::vector<double> limits(GetAxisLimits());
+  QVector<double> limits(GetAxisLimits());
   if (t == limits[4])
     return limits[5];
   return limits[4];
@@ -1363,7 +1353,7 @@ double HandleAxis::flipZ(double t) {
 void HandleAxis::SetupAxis(RenderEngine &gc) {
   double model[16];
   gc.getModelviewMatrix(model);
-  std::vector<double> limits(GetAxisLimits());
+  QVector<double> limits(GetAxisLimits());
   // Query the axisproperties to set the z-position of the
   // x and y axis
   if (((HPTopBottom*)LookupProperty("xaxislocation"))->Is("bottom")) {
@@ -1547,7 +1537,7 @@ bool HandleAxis::Is2DView() {
 }
 
 void HandleAxis::DrawAxisLines(RenderEngine &gc) { 
-  std::vector<double> limits(GetAxisLimits());
+  QVector<double> limits(GetAxisLimits());
   HPColor *xc = (HPColor*) LookupProperty("xcolor");
   HPColor *yc = (HPColor*) LookupProperty("ycolor");
   HPColor *zc = (HPColor*) LookupProperty("zcolor");
@@ -1605,8 +1595,8 @@ void HandleAxis::DrawAxisLines(RenderEngine &gc) {
 
 // Assemble a font for the axis
 void HandleAxis::UpdateAxisFont() {
-  QFont::Style fstyle;
-  QFont::Weight fweight;
+  QFont::Style fstyle = QFont::StyleNormal;
+  QFont::Weight fweight = QFont::Normal;
   HPString *fontname = (HPString*) LookupProperty("fontname");
   HPFontAngle *fontangle = (HPFontAngle*) LookupProperty("fontangle");
   HPFontWeight *fontweight = (HPFontWeight*) LookupProperty("fontweight");
@@ -1656,13 +1646,13 @@ void HandleAxis::RecalculateTicks() {
   QTRenderEngine gc(&pnt,0,0,width,height);
   SetupProjection(gc);
   // We have to calculate the tick sets for each axis...
-  std::vector<double> limits(GetAxisLimits());
-  std::vector<double> xticks;
-  std::vector<std::string> xlabels;
-  std::vector<double> yticks;
-  std::vector<std::string> ylabels;
-  std::vector<double> zticks;
-  std::vector<std::string> zlabels;
+  QVector<double> limits(GetAxisLimits());
+  QVector<double> xticks;
+  stringVector xlabels;
+  QVector<double> yticks;
+  stringVector ylabels;
+  QVector<double> zticks;
+  stringVector zlabels;
   int xcnt, ycnt, zcnt;
   xcnt = GetTickCount(gc,limits[0],x1pos[1],x1pos[2],
 		      limits[1],x1pos[1],x1pos[2]);
@@ -1680,7 +1670,7 @@ void HandleAxis::RecalculateTicks() {
     FormatAxisAuto(limits[0],limits[1],xcnt,
 		   lp->Is("log"),xStart,xStop,xticks,xlabels);
     tp = (HPTwoVector*) LookupProperty("xlim");
-    std::vector<double> lims; 
+    QVector<double> lims; 
     if (lp->Is("linear")) {
       lims.push_back(xStart);
       lims.push_back(xStop);
@@ -1698,7 +1688,7 @@ void HandleAxis::RecalculateTicks() {
     FormatAxisAuto(limits[2],limits[3],ycnt,
 		   lp->Is("log"),yStart,yStop,yticks,ylabels);
     tp = (HPTwoVector*) LookupProperty("ylim");
-    std::vector<double> lims; 
+    QVector<double> lims; 
     if (lp->Is("linear")) {
       lims.push_back(yStart);
       lims.push_back(yStop);
@@ -1716,7 +1706,7 @@ void HandleAxis::RecalculateTicks() {
     FormatAxisAuto(limits[4],limits[5],zcnt,
 		   lp->Is("log"),zStart,zStop,zticks,zlabels);
     tp = (HPTwoVector*) LookupProperty("zlim");
-    std::vector<double> lims; 
+    QVector<double> lims; 
     if (lp->Is("linear")) {
       lims.push_back(zStart);
       lims.push_back(zStop);
@@ -1776,7 +1766,7 @@ void HandleAxis::RePackFigure() {
       xlabelHeight = fp->GetTextHeightInPixels();
     }
     HPStringSet *hp = (HPStringSet*) LookupProperty("xticklabel");
-    std::vector<std::string> xlabels(hp->Data());
+    stringVector xlabels(hp->Data());
     for (int i=0;i<xlabels.size();i++) {
       QRect sze(fm.boundingRect(xlabels[i].c_str()));
       maxTickWidth = qMax(maxTickWidth,sze.width());
@@ -1790,7 +1780,7 @@ void HandleAxis::RePackFigure() {
       ylabelHeight = fp->GetTextHeightInPixels();
     }
     HPStringSet *hp = (HPStringSet*) LookupProperty("yticklabel");
-    std::vector<std::string> ylabels(hp->Data());
+    stringVector ylabels(hp->Data());
     for (int i=0;i<ylabels.size();i++) {
       QRect sze(fm.boundingRect(ylabels[i].c_str()));
       maxTickWidth = qMax(maxTickWidth,sze.width());
@@ -1804,7 +1794,7 @@ void HandleAxis::RePackFigure() {
       zlabelHeight = fp->GetTextHeightInPixels();
     }
     HPStringSet *hp = (HPStringSet*) LookupProperty("zticklabel");
-    std::vector<std::string> zlabels(hp->Data());
+    stringVector zlabels(hp->Data());
     for (int i=0;i<zlabels.size();i++) {
       QRect sze(fm.boundingRect(zlabels[i].c_str()));
       maxTickWidth = qMax(maxTickWidth,sze.width());
@@ -1825,7 +1815,7 @@ void HandleAxis::RePackFigure() {
   maxLabelHeight = qMax(maxLabelHeight,zlabelHeight);
   //    qDebug("titleHeight = %d, maxLabelHeight = %d",titleHeight,maxLabelHeight);
   // Get the outer position vector...
-  std::vector<double> outerpos(GetPropertyVectorAsPixels("outerposition"));
+  QVector<double> outerpos(GetPropertyVectorAsPixels("outerposition"));
   // Special case - no labels at all --> super tight packing
   HandleFigure *fig = GetParentFigure();
   unsigned width = fig->GetWidth();
@@ -1877,13 +1867,13 @@ void HandleAxis::RePackFigure() {
 void HandleAxis::UpdateLimits(bool x, bool y, bool z, bool a, bool c) {
   if (!x && !y && !z && !a && !c) return;
   // Get our set of children
-  std::vector<double> limits;
+  QVector<double> limits;
   bool first = true;
   HPHandles *children = (HPHandles*) LookupProperty("children");
-  std::vector<unsigned> handles(children->Data());
+  QVector<unsigned> handles(children->Data());
   for (int i=0;i<handles.size();i++) {
     HandleObject *fp = LookupHandleObject(handles[i]);
-    std::vector<double> child_limits(fp->GetLimits());
+    QVector<double> child_limits(fp->GetLimits());
     if (!child_limits.empty()) {
       if (first) {
 	limits = child_limits;
@@ -1934,13 +1924,13 @@ void HandleAxis::HandlePlotBoxFlags() {
     (xflag && yflag && !zflag);
   //     qDebug("axesauto = %d darauto = %d pbauto = %d onemanual = %d",
   // 	   axesauto,darauto,pbaauto,onemanual);
-  std::vector<double> limits(GetAxisLimits());
+  QVector<double> limits(GetAxisLimits());
   double xrange = limits[1] - limits[0];
   double yrange = limits[3] - limits[2];
   double zrange = limits[5] - limits[4];
   double minrange = qMin(xrange,qMin(yrange,zrange));
   double maxrange = qMax(xrange,qMax(yrange,zrange));
-  std::vector<double> pba(VectorPropertyLookup("plotboxaspectratio"));
+  QVector<double> pba(VectorPropertyLookup("plotboxaspectratio"));
   double xratio = pba[0];
   double yratio = pba[1];
   double zratio = pba[2];
@@ -1948,7 +1938,7 @@ void HandleAxis::HandlePlotBoxFlags() {
   xratio/=minratio;
   yratio/=minratio;
   zratio/=minratio;
-  std::vector<double> dar(VectorPropertyLookup("dataaspectratio"));
+  QVector<double> dar(VectorPropertyLookup("dataaspectratio"));
   double xscale = dar[0];
   double yscale = dar[1];
   double zscale = dar[2];
@@ -1997,7 +1987,7 @@ void HandleAxis::HandlePlotBoxFlags() {
 }
   
 void HandleAxis::UpdateState() {
-  std::vector<std::string> tset;
+  stringVector tset;
   if (HasChanged("xlim")) ToManual("xlimmode");
   if (HasChanged("ylim")) ToManual("ylimmode");
   if (HasChanged("zlim")) ToManual("zlimmode");
@@ -2053,7 +2043,7 @@ void HandleAxis::UpdateState() {
   if (IsAuto("cameratargetmode")) {
     // Default to 2D
     HPThreeVector *tv = (HPThreeVector*) LookupProperty("cameratarget");
-    std::vector<double> limits(GetAxisLimits());
+    QVector<double> limits(GetAxisLimits());
     tv->Value((limits[0]+limits[1])/2.0,
 	      (limits[2]+limits[3])/2.0,
 	      (limits[4]+limits[5])/2.0);
@@ -2063,7 +2053,7 @@ void HandleAxis::UpdateState() {
   if (IsAuto("camerapositionmode")) {
     // Default to 2D
     HPThreeVector *tv = (HPThreeVector*) LookupProperty("cameraposition");
-    std::vector<double> limits(GetAxisLimits());
+    QVector<double> limits(GetAxisLimits());
     tv->Value((limits[0]+limits[1])/2.0,
 	      (limits[2]+limits[3])/2.0,
 	      limits[5]+1);
@@ -2077,7 +2067,7 @@ void HandleAxis::UpdateState() {
   }
 
   HPHandles *children = (HPHandles*) LookupProperty("children");
-  std::vector<unsigned> handles(children->Data());
+  QVector<unsigned> handles(children->Data());
   for (int i=0;i<handles.size();i++) {
     HandleObject *fp = LookupHandleObject(handles[i]);
     fp->UpdateState();
@@ -2097,11 +2087,11 @@ void HandleAxis::UpdateState() {
 void HandleAxis::DrawLabel(RenderEngine& gc,
 			   double dx, double dy, 
 			   double x2, double y2, 
-			   std::vector<double> color,
+			   QVector<double> color,
 			   std::string txt) {
   double angle = atan2(dy,dx)*180.0/M_PI;
-  RenderEngine::AlignmentFlag xalign;
-  RenderEngine::AlignmentFlag yalign;
+  RenderEngine::AlignmentFlag xalign = RenderEngine::Min;
+  RenderEngine::AlignmentFlag yalign = RenderEngine::Min;
   if (fabs(angle) < 10) {
     xalign = RenderEngine::Min;
     yalign = RenderEngine::Mean;
@@ -2143,25 +2133,22 @@ void HandleAxis::DrawTickMarks(RenderEngine &gc) {
   // each axis.  Now each axis sits on the boundary of
   // two facets.  If exactly one of the two facets is
   // visible, then the axis line is visible.
-  HandleFigure *fig = GetParentFigure();
-  unsigned width = fig->GetWidth();
-  unsigned height = fig->GetHeight();    
   HPVector *hp;
   hp = (HPVector*) LookupProperty("xtick");
-  std::vector<double> xticks(hp->Data());
+  QVector<double> xticks(hp->Data());
   hp = (HPVector*) LookupProperty("ytick");
-  std::vector<double> yticks(hp->Data());
+  QVector<double> yticks(hp->Data());
   hp = (HPVector*) LookupProperty("ztick");
-  std::vector<double> zticks(hp->Data());
+  QVector<double> zticks(hp->Data());
   gc.lineWidth(ScalarPropertyLookup("linewidth"));
   HPColor *xc = (HPColor*) LookupProperty("xcolor");
   HPColor *yc = (HPColor*) LookupProperty("ycolor");
   HPColor *zc = (HPColor*) LookupProperty("zcolor");
   // Compute the longest 
-  std::vector<double> position(GetPropertyVectorAsPixels("position"));
+  QVector<double> position(GetPropertyVectorAsPixels("position"));
   int maxlen = (int)((position[2] > position[3]) ? position[2] : position[3]);
   HPTwoVector *kp = (HPTwoVector*) LookupProperty("ticklength");
-  std::vector<double> ticklen(kp->Data());
+  QVector<double> ticklen(kp->Data());
   int ticlen;
   if (Is2DView())
     ticlen = (int) (maxlen*ticklen[0]);
@@ -2181,13 +2168,13 @@ void HandleAxis::DrawTickMarks(RenderEngine &gc) {
   }
   HPStringSet *qp;
   qp = (HPStringSet*) LookupProperty("xticklabel");
-  std::vector<std::string> xlabeltxt(qp->Data());
+  stringVector xlabeltxt(qp->Data());
   qp = (HPStringSet*) LookupProperty("yticklabel");
-  std::vector<std::string> ylabeltxt(qp->Data());
+  stringVector ylabeltxt(qp->Data());
   qp = (HPStringSet*) LookupProperty("zticklabel");
-  std::vector<std::string> zlabeltxt(qp->Data());
+  stringVector zlabeltxt(qp->Data());
   // Draw the ticks
-  std::vector<double> limits(GetAxisLimits());
+  QVector<double> limits(GetAxisLimits());
   // Next step - calculate the tick directions...
   // We have to draw the tics in flat space
   //
@@ -2197,12 +2184,12 @@ void HandleAxis::DrawTickMarks(RenderEngine &gc) {
   // n = max(maxx/dx,maxy/dy)
   //
   gc.setLineStyle("-");
-  std::vector<double> outerpos(GetPropertyVectorAsPixels("outerposition"));
+  QVector<double> outerpos(GetPropertyVectorAsPixels("outerposition"));
   if (xvisible) {
-    std::vector<double> mapticks;
+    QVector<double> mapticks;
     for (int i=0;i<xticks.size();i++)
       mapticks.push_back(MapX(xticks[i]));
-    std::vector<double> minorticks;
+    QVector<double> minorticks;
     HPLinearLog *sp;
     sp = (HPLinearLog*) LookupProperty("xscale");
     if (sp->Is("log")) {
@@ -2225,10 +2212,10 @@ void HandleAxis::DrawTickMarks(RenderEngine &gc) {
 		   "xlabel",ticlen,ticdir);
   }
   if (yvisible) {
-    std::vector<double> mapticks;
+    QVector<double> mapticks;
     for (int i=0;i<yticks.size();i++)
       mapticks.push_back(MapY(yticks[i]));
-    std::vector<double> minorticks;
+    QVector<double> minorticks;
     HPLinearLog *sp;
     sp = (HPLinearLog*) LookupProperty("yscale");
     if (sp->Is("log")) {
@@ -2251,10 +2238,10 @@ void HandleAxis::DrawTickMarks(RenderEngine &gc) {
 		   "ylabel",ticlen,ticdir);
   }
   if (zvisible) {
-    std::vector<double> mapticks;
+    QVector<double> mapticks;
     for (int i=0;i<zticks.size();i++)
       mapticks.push_back(MapZ(zticks[i]));
-    std::vector<double> minorticks;
+    QVector<double> minorticks;
     HPLinearLog *sp;
     sp = (HPLinearLog*) LookupProperty("zscale");
     if (sp->Is("log")) {
@@ -2276,7 +2263,7 @@ void HandleAxis::DrawTickMarks(RenderEngine &gc) {
 		   mapticks,minorticks,zlabeltxt,
 		   "zlabel",ticlen,ticdir);
   }
-  HPHandles *lbl = (HPHandles*) LookupProperty("title");
+  //  HPHandles *lbl = (HPHandles*) LookupProperty("title");
   //     if (!lbl->Data().empty()) {
   //       HandleText *fp = handleset.lookupHandle(lbl->Data()[0]);
   //       HPThreeVector *gp = (HPThreeVector*) fp->LookupProperty("position");
@@ -2286,14 +2273,14 @@ void HandleAxis::DrawTickMarks(RenderEngine &gc) {
 }
 
 void HandleAxis::DrawTickLabels(RenderEngine& gc,
-				std::vector<double> color,
+				QVector<double> color,
 				double px1, double py1, double pz1,
 				double px2, double py2, double pz2,
 				double limmin, double limmax,
 				double unitx, double unity, double unitz,
-				std::vector<double>  maptics,
-				std::vector<double>  minortics,
-				std::vector<std::string> labels,
+				QVector<double>  maptics,
+				QVector<double>  minortics,
+				stringVector labels,
 				std::string labelname,
 				int ticlen, double ticdir) {
   gc.color(color);
@@ -2454,11 +2441,10 @@ void HandleAxis::DrawTickLabels(RenderEngine& gc,
     // We now have the position of the label in absolute (pixel)
     // coordinates.  Need to translate this to normalized coordinates
     // relative to outerposition.
-    std::vector<double> outerpos(GetPropertyVectorAsPixels("outerposition"));
+    QVector<double> outerpos(GetPropertyVectorAsPixels("outerposition"));
     double xnorm, ynorm;
     xnorm = (xl1-outerpos[0])/outerpos[2];
     ynorm = (yl1-outerpos[1])/outerpos[3];
-    HandleFigure *fig = GetParentFigure();
     gp->Value(xnorm,ynorm,0.0);
   }      
 }
@@ -2467,7 +2453,7 @@ void HandleAxis::DrawAxisLabels(RenderEngine& gc) {
   // Set up the "annotation axis"
   gc.lookAt(0,0,1,0.0,0.0,0,0,1,0);
   gc.project(0,1,0,1,-1,1);
-  std::vector<double> outerpos(GetPropertyVectorAsPixels("outerposition"));
+  QVector<double> outerpos(GetPropertyVectorAsPixels("outerposition"));
   gc.viewport(outerpos[0],outerpos[1],outerpos[2],outerpos[3]);
   HPHandles *lbl;
   std::string xdir(StringPropertyLookup("xdir"));
@@ -2513,7 +2499,7 @@ void HandleAxis::DrawAxisLabels(RenderEngine& gc) {
 
 void HandleAxis::DrawChildren(RenderEngine& gc) {
   HPHandles *children = (HPHandles*) LookupProperty("children");
-  std::vector<unsigned> handles(children->Data());
+  QVector<unsigned> handles(children->Data());
   for (int i=0;i<handles.size();i++) {
     HandleObject *fp = LookupHandleObject(handles[i]);
     fp->PaintMe(gc);
@@ -2529,7 +2515,7 @@ void HandleAxis::PaintMe(RenderEngine& gc) {
     DrawGridLines(gc);
     DrawMinorGridLines(gc);
   }
-  std::vector<double> limits(GetAxisLimits());
+  QVector<double> limits(GetAxisLimits());
   gc.setClipBox(limits);
   DrawChildren(gc);
   if (StringCheck("visible","on")) {

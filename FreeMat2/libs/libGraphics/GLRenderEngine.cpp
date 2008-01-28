@@ -40,7 +40,7 @@ QGLWidget* GLRenderEngine::widget() {
 GLRenderEngine::~GLRenderEngine() {
 }
 
-void GLRenderEngine::clear(std::vector<double> color) {
+void GLRenderEngine::clear(QVector<double> color) {
   if (color[0] != -1) {
     glClearColor(color[0], color[1], color[2], 0.0f);
     glClearDepth(1.0f);
@@ -61,21 +61,6 @@ void GLRenderEngine::toPixels(double x, double y, double z,
   gluProject(x,y,z,model,proj,viewp,&c1,&c2,&c3);
   a = c1;
   b = c2;
-}
-
-void GLRenderEngine::unitx(double &x, double &y, double &z) {
-  // we need a unitvector such that model*v = [1;0;0]
-  double m00, m01, m02;
-  double m10, m11, m12;
-  double m20, m21, m22;
-  double det;
-  det = m00*(m11*m22-m12*m21) - m01*(m10*m22-m12*m21) + m02*(m10*m21-m11*m20);
-  x = (m11*m21-m12*m21)/det;
-  y = -(m10*m22-m12*m21)/det;
-  z = (m10*m21-m11*m20)/det;
-}
-
-void GLRenderEngine::unity(double &x, double &y, double &z) {
 }
 
 void GLRenderEngine::toPixels(double x, double y, double z, 
@@ -168,7 +153,7 @@ void GLRenderEngine::quadline(double x1, double y1, double z1,
   glEnd();
 }
 
-void GLRenderEngine::color(std::vector<double> col) {
+void GLRenderEngine::color(QVector<double> col) {
   glColor3f(col[0],col[1],col[2]);
 }
   
@@ -218,9 +203,9 @@ void GLRenderEngine::line(double x1, double y1, double x2, double y2) {
   glEnd();
 }
 
-void GLRenderEngine::lineSeries(std::vector<double> xs, 
-				std::vector<double> ys, 
-				std::vector<double> zs) {
+void GLRenderEngine::lineSeries(QVector<double> xs, 
+				QVector<double> ys, 
+				QVector<double> zs) {
   glBegin(GL_LINE_STRIP);
   for (int i=0;i<xs.size();i++)
     glVertex3f(xs[i],ys[i],zs[i]);
@@ -269,13 +254,6 @@ void GLRenderEngine::releaseDirectDraw() {
   glViewport(viewp[0],viewp[1],viewp[2],viewp[3]);
 }
   
-static int NextPowerTwo(int w) {
-  int x = 1;
-  while (x < w)
-    x <<= 1;
-  return x;
-}
-
 void GLRenderEngine::getModelviewMatrix(double amodel[16]) {
   for (int i=0;i<16;i++)
     amodel[i] = model[i];
@@ -292,13 +270,13 @@ void GLRenderEngine::getViewport(int aviewp[4]) {
 }
 
 void GLRenderEngine::putText(double x, double y, std::string txt, 
-			     std::vector<double> color, 
+			     QVector<double> color, 
 			     AlignmentFlag xflag, AlignmentFlag yflag,
 			     QFont fnt, double rotation) {
   QFontMetrics fm(fnt);
   QRect sze(fm.boundingRect(txt.c_str()));
-  int x0 = sze.left();
-  int y0 = sze.bottom();
+  //  int x0 = sze.left();
+  //  int y0 = sze.bottom();
   int width = sze.width();
   int height = sze.height();
   // We now now the width and height.  From this,
@@ -471,8 +449,8 @@ void GLRenderEngine::drawImage(double x1, double y1, double x2,
   m_widget->deleteTexture(texid);
 }
 
-void GLRenderEngine::quadStrips(std::vector<std::vector<cpoint> > faces, bool flatfaces,
-				std::vector<std::vector<cpoint> > edges, bool flatedges) {
+void GLRenderEngine::quadStrips(QVector<QVector<cpoint> > faces, bool flatfaces,
+				QVector<QVector<cpoint> > edges, bool flatedges) {
   glDisable(GL_CULL_FACE);
   glEnable(GL_POLYGON_OFFSET_FILL);
   if (flatfaces)
@@ -482,7 +460,7 @@ void GLRenderEngine::quadStrips(std::vector<std::vector<cpoint> > faces, bool fl
   glPolygonOffset(2,2);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   for (int i=0;i<faces.size();i++) {
-    std::vector<cpoint> qlist(faces[i]);
+    QVector<cpoint> qlist(faces[i]);
     glBegin(GL_QUAD_STRIP);
     for (int j=0;j<qlist.size();j++) {
       glColor4f(qlist[j].r,qlist[j].g,qlist[j].b,qlist[j].a);
@@ -497,7 +475,7 @@ void GLRenderEngine::quadStrips(std::vector<std::vector<cpoint> > faces, bool fl
   else
     glShadeModel(GL_SMOOTH);
   for (int i=0;i<edges.size();i++) {
-    std::vector<cpoint> qlist(edges[i]);
+    QVector<cpoint> qlist(edges[i]);
     glBegin(GL_QUAD_STRIP);
     for (int j=0;j<qlist.size();j++) {
       glColor4f(qlist[j].r,qlist[j].g,qlist[j].b,qlist[j].a);

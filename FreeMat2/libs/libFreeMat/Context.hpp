@@ -66,6 +66,7 @@ public:
     m_ptr = ptr;
     m_global = false;
     m_scope = NULL;
+    return *this;
   }
   inline ArrayReference& operator=(const ArrayReference& copy) {
     if (m_global)
@@ -106,7 +107,7 @@ class Context {
   /**
    * The normal stack of scopes.
    */
-  std::vector<ScopePtr> scopestack;
+  QVector<ScopePtr> scopestack;
   /**
    * The stack of scopes that have been "bypassed"
    */
