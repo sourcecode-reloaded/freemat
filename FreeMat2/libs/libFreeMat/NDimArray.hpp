@@ -250,11 +250,13 @@ class NDimArray {
   // The dimensions of the array.
   std::vector<index_t> m_dims;
   // The actual data for the array.
-  std::vector<T> m_data;
-  
-  
-  
+  std::vector<T> m_data;  
 };
+
+
+
+
+
 
 
 #endif
