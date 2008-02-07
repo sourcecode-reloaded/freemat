@@ -1730,6 +1730,7 @@ char* xprintfFunction(int nargout, const ArrayVector& arg) {
   return op;
 }
 
+
 //!
 //@Module NUM2STR Convert Numbers To Strings
 //@@Section ARRAY
@@ -1913,6 +1914,159 @@ ArrayVector Num2StrFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector();
 }
 
+//Common routine used by sprintf,printf,fprintf.  They all
+//take the same inputs, and output either to a string, the
+//console or a file.  For output to a console or a file, 
+//we want escape-translation on.  For output to a string, we
+//want escape-translation off.  So this common routine prints
+//the contents to a string, which is then processed by each 
+//subroutine.
+void PrintfHelperFunction(int nargout, const ArrayVector& arg, QTextStream& output, QByteArray& errmsg, Array& ret, bool convEscape = false ) 
+{
+    Array format(arg[0]);
+    std::string frmt = format.getContentsAsString();
+
+    std::vector<char> buff( frmt.length()+1 ); //vectors are contiguous in memory. we'll use it instead of char[]
+    strncpy(&buff[0], frmt.c_str(), frmt.length()+1 );
+
+    // Search for the start of a format subspec
+    char *dp = &buff[0];
+    char *np;
+    char sv;
+    int nprn = 0;
+    int noutput = 0;
+    // Buffer to hold each sprintf result
+#define BUFSIZE 65534
+    char nbuff[BUFSIZE+1];
+    memset( nbuff, 0, BUFSIZE+1 );
+
+    // Buffer to hold the output
+    //output.clear();
+    errmsg.clear();
+
+    int nextArg = 1; //format is arg[0], so we start from arg[1]
+    int valind = 0;
+    Array nextVal; 
+    double const* pVal = 0;
+    bool done = false;
+
+    //do while there is still data to output
+    do {
+	if ( !(*dp) ) //rewind the format
+	    dp = &buff[0];
+	np = dp;
+	int nbuf_ind = 0;
+	while ((*dp) && (*dp != '%') && nbuf_ind < BUFSIZE ){
+	    if (convEscape && isEscape(dp)) {
+		switch (*(dp+1)) {
+		  case '\\':
+		      *(nbuff+nbuf_ind) = '\\';
+		      break;
+		  case 'n':
+		      *(nbuff+nbuf_ind) = '\n';
+		      break;
+		  case 't':
+		      *(nbuff+nbuf_ind) = '\t';
+		      break;
+		  case 'r':
+		      *(nbuff+nbuf_ind) = '\r';
+		      break;
+		}
+		dp += 2; ++nbuf_ind;
+	    } else
+		*(nbuff+nbuf_ind++) = *(dp++);
+	}
+
+	// Print out the formatless segment
+	*(nbuff+nbuf_ind) = 0;
+	nprn = nbuf_ind; noutput += nbuf_ind;
+	output << nbuff;    
+
+	// Process the format spec
+	if (*dp == '%' && *dp) {
+	    np = validateFormatSpec(dp+1);
+	    if (!np)
+		throw Exception("erroneous format specification " + std::string(dp));
+	    else {
+		if (*(np-1) == '%') {
+		    nprn = snprintf(nbuff,BUFSIZE,"%%"); nbuff[nprn+1]='\0'; noutput += nbuf_ind;
+		    output << nbuff;    
+		    dp+=2;
+		} else {
+		    sv = *np;
+		    *np = 0;
+
+		    if( !pVal ){
+			if( nextArg > arg.size() ){
+			    if( (*(np-1) != 's') )
+				output << "[]";
+			    goto exit_;
+			}
+			nextVal = arg[nextArg++];
+			nextVal.promoteType( FM_DOUBLE );
+			pVal = (double const*)nextVal.getDataPointer();
+			valind = 0;
+		    }
+
+		    double data;
+		    if( valind < nextVal.getLength() ){ 
+			//there is more data in the current data vector
+			data = *( pVal + valind++ );
+		    }
+		    else{
+			if( nextArg > arg.size() )
+			    goto exit_;
+			nextVal = arg[nextArg++];
+			nextVal.promoteType( FM_DOUBLE );
+			pVal = (double const*)nextVal.getDataPointer();
+			valind = 0;
+			data = *pVal;
+		    }
+		    if( ( valind >= nextVal.getLength() ) && (nextArg >= arg.size()) )
+			done = true;
+
+		    switch (*(np-1)) 
+		    {
+		    case 'd':
+		    case 'i':
+		    case 'o':
+		    case 'u':
+		    case 'x':
+		    case 'X':
+		    case 'c':
+			nprn = snprintf(nbuff,BUFSIZE,dp,(int32)data); nbuff[nprn+1]='\0'; noutput += nbuf_ind;
+			output << nbuff;
+			break;
+		    case 'e':
+		    case 'E':
+		    case 'f':
+		    case 'F':
+		    case 'g':
+		    case 'G':
+			nprn = snprintf(nbuff,BUFSIZE,dp,data); nbuff[nprn+1]='\0'; noutput += nbuf_ind;
+			output << nbuff;
+			break;
+		    case 's':
+			Array strArg( arg[nextArg-1] );
+			const char* pStr = strArg.getContentsAsString().c_str() + valind;
+			nprn = snprintf(nbuff,BUFSIZE,dp,pStr); nbuff[nprn+1]='\0'; noutput += nbuf_ind;
+			output << nbuff;
+			valind += nprn;
+			break;
+		    }
+		}
+		*np = sv;
+		dp = np;
+	    }
+	}
+	else{
+	    goto exit_;
+	}
+    } while ( !done );
+    exit_: 
+    ret = Array::doubleConstructor( noutput );
+}
+
 //!
 //@Module SPRINTF Formated String Output Function (C-Style)
 //@@Section IO
@@ -1943,13 +2097,19 @@ ArrayVector SprintfFunction(int nargout, const ArrayVector& arg) {
   Array format(arg[0]);
   if (!format.isString())
     throw Exception("sprintf format argument must be a string");
-  char *op = xprintfFunction(nargout,arg);
-  char *buff = (char*) malloc(strlen(op)+1);
-  convertEscapeSequences(buff,op);
-  Array outString(Array::stringConstructor(buff));
-  free(op);
-  free(buff);
-  return SingleArrayVector(outString);
+
+  QByteArray outf;
+  QTextStream textstream( &outf );
+  QByteArray errmsg;
+  Array output;
+
+  PrintfHelperFunction( nargout, arg, textstream, errmsg, output, true );
+  ArrayVector ret;
+ 
+  textstream.flush();
+  ret << Array::stringConstructor( outf.constData() );
+  ret << output;
+  return ret;
 }
   
 //!
@@ -2043,12 +2203,17 @@ ArrayVector PrintfFunction(int nargout, const ArrayVector& arg,
   Array format(arg[0]);
   if (!format.isString())
     throw Exception("printf format argument must be a string");
-  char *op = xprintfFunction(nargout,arg);
-  char *buff = (char*) malloc(strlen(op)+1);
-  convertEscapeSequences(buff,op);
-  eval->outputMessage(buff);
-  free(buff);
-  free(op);
+
+  QByteArray outf;
+  QTextStream textstream( &outf );
+  QByteArray errmsg;
+  Array output;
+
+  PrintfHelperFunction( nargout, arg, textstream, errmsg, output, true );
+  ArrayVector ret;
+ 
+  textstream.flush();
+  eval->outputMessage(outf.constData());
   return ArrayVector();
 }
 
@@ -2443,6 +2608,7 @@ ArrayVector FscanfFunction(int nargout, const ArrayVector& arg) {
   return ScanfHelperFunction( fptr->fp, helper_arg );
 }
 
+
 //!
 //@Module FPRINTF Formated File Output Function (C-Style)
 //@@Section IO
@@ -2479,13 +2645,15 @@ ArrayVector FscanfFunction(int nargout, const ArrayVector& arg) {
     throw Exception("fprintf format argument must be a string");
   ArrayVector argcopy(arg);
   argcopy.pop_front();
-  char *op = xprintfFunction(nargout,argcopy);
-  char *buff = (char*) malloc(strlen(op)+1);
-  convertEscapeSequences(buff,op);
-  fprintf(fptr->fp,"%s",buff);
-  free(buff);
-  free(op);
-  return ArrayVector();
+
+  QFile outf;
+  outf.open(fptr->fp, QIODevice::WriteOnly);
+  QTextStream textstream( &outf );
+  QByteArray errmsg;
+  Array output;
+
+  PrintfHelperFunction( nargout, argcopy, textstream, errmsg, output, true );
+  return ArrayVector() << output;
 }
 
   
