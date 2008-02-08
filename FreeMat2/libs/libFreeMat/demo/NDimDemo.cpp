@@ -1,6 +1,16 @@
 #include "NDimArray.hpp"
 #include <iostream>
 
+template <typename T>
+void printMatrix(const BaseArray<T>& A) {
+  for (int i=1;i<=A.dimensions()[0];i++) {
+    for (int j=1;j<=A.dimensions()[1];j++) {
+      std::cout << A[NTuple(i,j)] << " ";
+    }
+    std::cout << "\n";
+  }
+}
+
 int main(int, const char *[]) {
   const int N = 4;
   NDimArray<float> A;//(NTuple(N,N,N));
@@ -71,7 +81,8 @@ int main(int, const char *[]) {
 
   std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&5\n";
 
-  NDimArray<float> C(B.resize(NTuple(5,6)));
+  NDimArray<float> C(B);
+  C.resize(NTuple(5,6));
   
   for (int i=1;i<=5;i++) {
     for (int j=1;j<=6;j++)
@@ -81,7 +92,8 @@ int main(int, const char *[]) {
 
   std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&6\n";
 
-  NDimArray<float> H(B.resize(NTuple(2,3)));
+  NDimArray<float> H(B);
+  H.resize(NTuple(2,3));
   
   for (int i=1;i<=2;i++) {
     for (int j=1;j<=3;j++)
@@ -89,6 +101,21 @@ int main(int, const char *[]) {
     std::cout << "\n";
   }
 
+  std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&6\n";
+
+  NDimArray<float> I;
+  I.resize(NTuple(11,15));
+  for (int i=1;i<11;i++)
+    for (int j=1;j<15;j++)
+      I[NTuple(i,j)] = ((float) i) + ((float) j)/100.0;
+  printMatrix<float>(I);
+
+  RangeSet rset(NTuple(1,1),
+		NTuple(2,2),
+		NTuple(5,9));
+  NDimSlice<float> J(I,rset);
+  std::cout << " slice size " << J.dimensions() << "\n";
+  printMatrix<float>(J);
 
   return 0;
 }

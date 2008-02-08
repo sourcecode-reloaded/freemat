@@ -17,7 +17,7 @@ typedef QString Exception;
 class NTuple {
   index_t m_data[NDims];
 public:
-  index_t map(const NTuple& pos) {
+  index_t map(const NTuple& pos) const {
     index_t retval = 1;
     index_t nextCoeff = 1;
     for (int i=0;i<NDims;i++) {
@@ -26,7 +26,7 @@ public:
     }
     return retval;
   }
-  inline bool validate(const NTuple& pos) {
+  inline bool validate(const NTuple& pos) const {
     for (int i=0;i<NDims;i++) 
       if ((pos.m_data[i] <= 0) || 
 	  (pos.m_data[i] > m_data[i])) return false;
@@ -74,6 +74,14 @@ public:
   }
 };
 
+inline std::ostream& operator<<(std::ostream& o, const NTuple &t) {
+  o << "<";
+  for (int i=0;i<NDims;i++)
+    o << t[i] << " ";
+  o << ">";
+  return o;
+}
+
 // consider 1:2:10 .. 1 3 5 7 9 -- 9/2 = 4.5 + 1 = 5
 // consider 1:1:1 .. 1 -- 0/1 = 0 + 1
 class RangeSet {
@@ -92,7 +100,7 @@ public:
   inline const NTuple& last() const {return m_last;}
   inline const NTuple& dims() const {return m_dims;}
   // Take a vector index, and convert to a sliced index
-  inline void remap(index_t pos, NTuple& out) {
+  inline void remap(index_t pos, NTuple& out) const {
     pos = pos-1;
     index_t pagesize = 1;
     for (int i=0;i<NDims-1;i++) {
@@ -102,20 +110,16 @@ public:
       pos = pos / pagesize;
     }
   }
-  inline void remap(const NTuple& pos, NTuple& out) {
+  inline void remap(const NTuple& pos, NTuple& out) const {
     for (int i=0;i<NDims;i++)
-      out[i] = m_first[i] + pos[i]*m_step[i];
+      out[i] = m_first[i] + (pos[i]-1)*m_step[i];
   }
   inline void calculateDims() {
     for (int i=0;i<NDims;i++)
       m_dims[i] = (((index_t) (m_last[i] - m_first[i])/(m_step[i])) + 1);
   }
   inline index_t count() {
-    index_t count;
-    count = 1;
-    for (int i=0;i<NDims;i++) 
-      count *= m_dims[i];
-    return count;
+    return m_dims.count();
   }
 };
 
@@ -131,104 +135,61 @@ class VectorIterator;
 template <typename T>
 class ConstVectorIterator;
 
+template <typename T>
+class BaseArray {
+public:
+  virtual const NTuple& dimensions() const = 0;
+  virtual const T& operator[](const NTuple& pos) const = 0;
+  virtual T& operator[](const NTuple& pos) = 0;
+  virtual const T& operator[](index_t pos) const = 0;
+  virtual T& operator[](index_t pos) = 0;
+  virtual void resize(const NTuple& pos) = 0;
+  virtual void resize(index_t pos) = 0;
+  virtual void reshape(const NTuple& pos) = 0;
+  virtual ~BaseArray() {}
+};
+
 // The NDimArray
 template <typename T>
-class NDimArray {
+class NDimArray : public BaseArray<T> {
   QVector<T> m_data;
   NTuple m_dims;
-  RangeSet m_slices;
-  bool m_sliced;  
 public:
-  NDimArray() : m_data(), m_dims(0,0), m_sliced(false) { }
-  NDimArray(const NTuple& dim) : m_data(), m_dims(dim), m_sliced(false) {
+  NDimArray() : m_data(), m_dims(0,0) { }
+  NDimArray(const NTuple& dim) : m_data(), m_dims(dim) {
     m_data.resize(m_dims.count());
   }
-  inline NTuple dimensions() {return m_dims;}
+  NDimArray(QVector<T> data, NTuple dims) : 
+    m_data(data), m_dims(dims) {}
   inline const NTuple& dimensions() const {return m_dims;}
-  inline const T& get(const NTuple& pos) const {
-    if (!m_sliced) {
-      if (m_dims.validate(pos))
-	return m_data[m_dims.map(pos)-1];
-      throw Exception("out of range");
-    } else {
-      NTuple tpos;
-      m_slices.remap(pos,tpos);
-      if (m_dims.validate(tpos))
-	return m_data[m_dims.map(tpos)-1];
-      throw Exception("out of range");
-    }
-  }
-  inline void slice(const RangeSet & slices) {
-    if (m_sliced) unslice(); // Reslicing is not supported
-    m_slices = slices;
-    m_sliced = true;
-  }
-  inline void unslice() {
-    QVector<T> data;
-    index_t count = m_slices.count();
-    data.resize(count);
-    ConstVectorIterator<T> p(this);
-    for (int i=0;i<count;i++) {
-      data[i] = *p;
-      ++p;
-    }
-    m_data = data;
-    m_dims = m_slices.dims();
-    m_sliced = false;
-  }
-  inline T& get(const NTuple& pos) {
-    if (m_sliced) unslice();
+  inline const T& operator[](const NTuple& pos) const {
     if (m_dims.validate(pos))
       return m_data[m_dims.map(pos)-1];
     throw Exception("out of range");
   }
-  inline const T & get(index_t pos) const {
-    if (m_sliced) {
-      NTuple mapped;
-      m_slices.remap(pos,mapped);
-      pos = m_dims.map(mapped);
-    }
-    if ((pos > 0) && (pos <= m_data.size()))
-      return m_data[pos-1];
-    throw Exception("out of range");
-  }
-  inline T& get(index_t pos) {
-    if (m_sliced) unslice();
-    if ((pos > 0) && (pos <= m_data.size()))
-      return m_data[pos-1];
-    throw Exception("out of range");
-  }
-  inline void set(const NTuple& pos, const T& val) {
-    if (m_sliced) unslice();
+  inline T& operator[](const NTuple& pos) {
     if (m_dims.validate(pos))
-      m_data[m_dims.map(pos)-1] = val;
+      return m_data[m_dims.map(pos)-1];
     else {
       resize(pos);
-      m_data[m_dims.map(pos)-1] = val;
+      return m_data[m_dims.map(pos)-1];
     }
-  }
-  inline void set(index_t pos, const T& val) {
-    if (m_sliced) unslice();
-    if (m_data.inVectorRange(pos))
-      m_data[pos-1] = val;
-    else {
-      resize(pos);
-      m_data[pos-1] = val;
-    }
-  }
-  inline const T& operator[](const NTuple& pos) const {
-    return get(pos);
-  }
-  inline  T& operator[](const NTuple& pos) {
-    return get(pos);
   }
   inline const T& operator[](index_t pos) const {
-    return get(pos);
+    if ((pos > 0) && (pos <= m_data.size()))
+      return m_data[pos-1];
+    throw Exception("out of range");
   }
   inline T& operator[](index_t pos) {
-    return get(pos);
+    if ((pos > 0) && (pos <= m_data.size()))
+      return m_data[pos-1];
+    if (pos > m_data.size()) {
+      resize(pos);
+      return m_data[pos-1];
+    }
+    throw Exception("out of range");
   }
-  inline NDimArray<T> resize(const NTuple& pos) const {
+  inline void resize(const NTuple& pos) {
     NDimArray<T> retval(pos);
     ConstNDimIterator<T> source(this,0);
     NDimIterator<T> dest(&retval,0);
@@ -238,21 +199,158 @@ public:
 	dest[i] = source[i];
       source.nextSlice();
       dest.nextSlice();
-    } 
-    return retval;
+    }
+    m_data = retval.m_data;
+    m_dims = retval.m_dims;
   }
   inline void resize(index_t pos) {
-    if (m_sliced) unslice();
     m_data.resize(pos);
     m_dims = NTuple(1,pos);
   }
   inline void reshape(const NTuple& pos) {
-    if (m_sliced) unslice();
     if (m_dims.count() == pos.count())
       m_dims = pos;
     else
       throw Exception("Illegal reshape");
   }
+};
+
+template <typename T>
+class NDimSlice : public BaseArray<T> {
+  NDimArray<T> &m_ref;
+  const RangeSet &m_slices;
+  NTuple m_dims;
+public:
+  NDimSlice(NDimArray<T> &ref, const RangeSet& slice) : 
+    m_ref(ref), m_slices(slice) { 
+    m_dims = m_slices.dims();
+  }
+  inline const NTuple& dimensions() const {
+    return m_dims;
+  }
+  inline const T& operator[](const NTuple& pos) const {
+    if (m_dims.validate(pos)) {
+      NTuple tpos;
+      m_slices.remap(pos,tpos);
+      if (m_ref.dimensions().validate(tpos))
+	return m_ref[tpos];
+    }
+    throw Exception("Out of range");
+  }
+  inline T& operator[](const NTuple& pos) {
+    if (m_dims.validate(pos)) {
+      NTuple tpos;
+      m_slices.remap(pos,tpos);
+      if (m_ref.dimensions().validate(tpos))
+	return m_ref[tpos];
+    }
+    throw Exception("Out of range");
+  }
+  inline const T& operator[](index_t) const {
+    throw Exception("unsupported op");
+  }
+  inline T& operator[](index_t) {
+    throw Exception("unsupported op");
+  }
+  inline void resize(const NTuple& ) {
+    throw Exception("unsupported op");
+  }
+  inline void resize(index_t) {
+    throw Exception("unsupported op");
+  }
+  inline void reshape(const NTuple& ) {
+    throw Exception("unsupported op");
+  }
+  //  inline void unslice() {
+  //    QVector<T> data;
+  //    index_t count = m_slices.count();
+  //    data.resize(count);
+  //    ConstVectorIterator<T> p(this);
+  //    for (int i=0;i<count;i++) {
+  //      data[i] = *p;
+  //      ++p;
+  //    }
+  //    m_data = data;
+  //    m_dims = m_slices.dims();
+  //    m_sliced = false;
+  //  }
+  //  inline T& get(const NTuple& pos) {
+  //    if (m_sliced) unslice();
+  //    if (m_dims.validate(pos))
+  //      return m_data[m_dims.map(pos)-1];
+  //    throw Exception("out of range");
+  //  }
+  //  inline const T & get(index_t pos) const {
+  //    if (m_sliced) {
+  //      NTuple mapped;
+  //      m_slices.remap(pos,mapped);
+  //      pos = m_dims.map(mapped);
+  //    }
+  //    if ((pos > 0) && (pos <= m_data.size()))
+  //      return m_data[pos-1];
+  //    throw Exception("out of range");
+  //  }
+  //  inline T& get(index_t pos) {
+  //    if (m_sliced) unslice();
+  //    if ((pos > 0) && (pos <= m_data.size()))
+  //      return m_data[pos-1];
+//    throw Exception("out of range");
+//  }
+//  inline void set(const NTuple& pos, const T& val) {
+//    if (m_sliced) unslice();
+//    if (m_dims.validate(pos))
+//      m_data[m_dims.map(pos)-1] = val;
+//    else {
+//      resize(pos);
+//      m_data[m_dims.map(pos)-1] = val;
+//    }
+//  }
+//  inline void set(index_t pos, const T& val) {
+//    if (m_sliced) unslice();
+//    if (m_data.inVectorRange(pos))
+//      m_data[pos-1] = val;
+//    else {
+//      resize(pos);
+//      m_data[pos-1] = val;
+//    }
+//  }
+//  inline const T& operator[](const NTuple& pos) const {
+//    return get(pos);
+//  }
+//  inline  T& operator[](const NTuple& pos) {
+//    return get(pos);
+//  }
+//  inline const T& operator[](index_t pos) const {
+//    return get(pos);
+//  }
+//  inline T& operator[](index_t pos) {
+//    return get(pos);
+//  }
+//  inline NDimArray<T> resize(const NTuple& pos) const {
+//    NDimArray<T> retval(pos);
+//    ConstNDimIterator<T> source(this,0);
+//    NDimIterator<T> dest(&retval,0);
+//    index_t line_size = qMin(source.lineSize(),dest.lineSize());
+//    while (source.isValid() && dest.isValid()) {
+//      for (int i=1;i<=line_size;i++)
+//	dest[i] = source[i];
+//      source.nextSlice();
+//      dest.nextSlice();
+//    } 
+//    return retval;
+//  }
+//  inline void resize(index_t pos) {
+//    if (m_sliced) unslice();
+//    m_data.resize(pos);
+//    m_dims = NTuple(1,pos);
+//  }
+//  inline void reshape(const NTuple& pos) {
+//    if (m_sliced) unslice();
+//    if (m_dims.count() == pos.count())
+//      m_dims = pos;
+//    else
+//      throw Exception("Illegal reshape");
+//  }
 };
 
 class VectorIteratorBase {
@@ -331,7 +429,7 @@ class NDimIterator : public NDimIteratorBase {
   NDimArray<T> *m_ptr;
 public:
   NDimIterator(NDimArray<T> *p, int dim) : NDimIteratorBase(p->dimensions(),dim) {m_ptr = p;}
-  inline T& operator[](index_t ndx) {return m_ptr->get(vectorAddress(ndx));}
+  inline T& operator[](index_t ndx) {return (*m_ptr)[vectorAddress(ndx)];}
 };
 
 template <typename T>
@@ -339,7 +437,7 @@ class ConstNDimIterator : public NDimIteratorBase {
   const NDimArray<T> *m_ptr;
 public:
   ConstNDimIterator(const NDimArray<T> *p, int dim) : NDimIteratorBase(p->dimensions(),dim) {m_ptr = p;}
-  inline T operator[](index_t ndx) const {return m_ptr->get(vectorAddress(ndx));}
+  inline T operator[](index_t ndx) const {return (*m_ptr)[vectorAddress(ndx)];}
 };
 
 std::ostream& operator<<(std::ostream& o, const NDimIteratorBase &x) {
