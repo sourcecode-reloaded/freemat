@@ -1,0 +1,409 @@
+#ifndef __NDimArray_hpp__
+#define __NDimArray_hpp__
+
+#include <QString>
+#include <QSharedData>
+#include <QVector>
+#include <QSharedDataPointer>
+
+#include <iostream>
+
+// Convert to all 1-based indexing
+// Add slicing?
+
+typedef qint64 index_t;
+
+const int NDims = 10;
+
+typedef QString Exception;
+
+class NTuple {
+  index_t m_data[NDims];
+public:
+  index_t map(const NTuple& pos) {
+    index_t retval = 1;
+    index_t nextCoeff = 1;
+    for (int i=0;i<NDims;i++) {
+      retval += nextCoeff*(pos[i]-1);
+      nextCoeff *= m_data[i];
+    }
+    return retval;
+  }
+  inline bool validate(const NTuple& pos) {
+    for (int i=0;i<NDims;i++) 
+      if ((pos.m_data[i] <= 0) || 
+	  (pos.m_data[i] > m_data[i])) return false;
+    return true;
+  }
+  inline NTuple(index_t rows, index_t cols) {
+    m_data[0] = rows;
+    m_data[1] = cols;
+    for (int i=2;i<NDims;i++) m_data[i] = 1;
+  }
+  inline NTuple(index_t rows, index_t cols, index_t slices) {
+    m_data[0] = rows;
+    m_data[1] = cols;
+    m_data[2] = slices;
+    for (int i=3;i<NDims;i++) m_data[i] = 1;
+  }
+  inline NTuple() {
+    m_data[0] = 0;
+    m_data[1] = 0;
+    for (int i=2;i<NDims;i++) m_data[i] = 1;
+  }
+  inline void set(int dim, index_t len) {
+    m_data[dim] = len;
+  }
+  inline index_t& get(int dim) {
+    if ((dim<0) || (dim >= NDims))
+      throw Exception("Illegal range in get");
+    return m_data[dim];
+  }
+  inline index_t get(int dim) const {
+    if ((dim<0) || (dim >= NDims))
+      throw Exception("Illegal range in get");
+    return m_data[dim];
+  }
+  index_t operator[](int dim) const {
+    return get(dim);
+  }
+  index_t& operator[](int dim) {
+    return get(dim);
+  }
+  inline index_t count() const {
+    index_t ret = 1;
+    for (int i=0;i<NDims;i++) ret *= m_data[i];
+    return ret;
+  }
+};
+
+
+template <typename T>
+class RVector : public QVector<T> {
+public:
+  RVector(const RVector& copy) : QVector<T>(copy) {
+    std::cout << "COPY\n";
+  }
+};
+
+// consider 1:2:10 .. 1 3 5 7 9 -- 9/2 = 4.5 + 1 = 5
+// consider 1:1:1 .. 1 -- 0/1 = 0 + 1
+class RangeSet {
+  NTuple m_first;
+  NTuple m_step;
+  NTuple m_last;
+public:
+  Range(NTuple first, NTuple step, NTuple last) :
+    m_first(first), m_step(step), m_last(last) {}
+  inline const NTuple& first() const {return m_first;}
+  inline const NTuple& step() const {return m_step;}
+  inline const NTuple& last() const {return m_last;}
+  inline NTuple& first() {return m_first;}
+  inline NTuple& step() {return m_step;}
+  inline NTuple& last() {return m_last;}
+  inline void increment(NTuple& dest) {
+  }
+  inline void remap(const NTuple& pos, NTuple& out) {
+    for (int i=0;i<NDim;i++)
+      out[i] = m_first[i] + pos[i]*m_step[i];
+  }
+  inline index_t count() {
+    index_t count;
+    count = 1;
+    for (int i=0;i<NDim;i++) 
+      count *= (((index_t) (m_last[i] - m_first[i])/(m_step[i])) + 1);
+    return count;
+  }
+};
+
+template <typename T>
+class MemBlock : public QSharedData {
+  QVector<T> m_data; // The vector of data
+  NTuple m_dims;     // The dimensions of this data
+  RangeSet m_slices; // Any slices of this data
+  bool m_sliced;
+public:
+  inline bool sliced() {return m_sliced;}
+  void slice(const RangeSet &slices) {
+    if (m_sliced) 
+      throw Exception("cannot reslice");
+    m_slices = slices;
+    m_sliced = true;
+  }
+  MemBlock(const MemBlock& copy) : QSharedData(copy) {
+    std::cout << "copy\n";
+    if (copy.m_sliced) {
+      index_t sliceLength = m_slices.count();
+      m_data.resize(sliceLength);
+      NTuple counter;
+      for (index_t i=0;i<sliceLength;i++) {
+	NTuple mapped;
+	m_slices.remap(counter,mapped);
+	m_slices.increment(counter);
+	m_data[i] = copy.m_data[m_dims.
+      }
+      m_offset = 0;
+      m_sliceLength = 0;
+      m_sliced = false;
+    } else {
+      m_data = copy.m_data;
+      m_offset = 0;
+      m_sliceLength = 0;
+      m_sliced = false;
+    }
+  }
+  MemBlock() : 
+    m_offset(0), 
+    m_sliceLength(0), 
+    m_sliced(false) { }
+  inline void resize(index_t len) {
+    m_data.resize(len);
+  }
+  inline index_t size() const {
+    if (m_sliced) 
+      return m_sliceLength; 
+    else 
+      return m_data.size();
+  }
+  inline const T& get(index_t pos) const {
+    if (m_sliced)
+      return m_data[m_offset+pos];
+    else
+      return m_data[pos];
+  }
+  inline T& get(index_t pos) {
+    if (m_sliced)
+      throw Exception("Sliced array assign!\n");
+    return m_data[pos];
+  }
+  inline const T& operator[](index_t pos) const {
+    return get(pos);
+  }
+  inline T& operator[](index_t pos) {
+    return get(pos);
+  }
+};
+
+
+template <typename T>
+class MemVector {
+  QSharedDataPointer<MemBlock<T> > d;
+public:
+  MemVector() {d = new MemBlock<T>;}
+  inline index_t size() const {
+    return d->size();
+  }
+  inline const T& operator[](index_t pos) const {
+    return d->get(pos);
+  }
+  inline T& operator[](index_t pos) {
+    if (d->sliced()) d = new MemBlock<T>(*d);
+    return d->get(pos);
+  }
+  inline const T& at(index_t pos) const {
+    return d->get(pos);
+  }
+  inline void resize(index_t len) {
+    if (d->sliced()) d = new MemBlock<T>(*d);
+    d->resize(len);
+  }
+  inline void slice(index_t offset, index_t count) {
+    if (d->sliced()) d = new MemBlock<T>(*d);
+    d->slice(offset,count);
+  }
+};
+
+// template <typename T>
+// class RVector : public QVector<T> {
+//   int m_offset;
+// public:
+//   RVector(const RVector& copy, int
+//   inline void setOffset(int t) {m_offset = t;}
+//   inline int offset() const {return m_offset;}
+//   inline const T& get(int pos) const {
+//     return (*this)[pos+m_offset];
+//   }
+//   inline T& get(int pos) {
+//     return (*this)[pos+m_offset];
+//   }
+// };
+
+
+template <typename T>
+class NDimIterator;
+
+template <typename T>
+class ConstNDimIterator;
+
+// The NDimArray
+template <typename T>
+class NDimArray {
+  QVector<T> m_data;
+  NTuple m_dims;
+  RangeSet m_slices;
+  bool m_sliced;  
+public:
+  NDimArray() : m_data(), m_dims(0,0), m_sliced(false) {
+  }
+  NDimArray(const NTuple& dim) : m_data(), m_dims(dim), m_sliced(false) {
+    m_data.resize(m_dims.count());
+  }
+  inline NTuple dimensions() {return m_dims;}
+  inline const NTuple& dimensions() const {return m_dims;}
+  inline const T& get(const NTuple& pos) const {
+    if (!m_sliced) {
+      if (m_dims.validate(pos))
+	return m_data[m_dims.map(pos)-1];
+      throw Exception("out of range");
+    } else {
+      NTuple tpos;
+      m_slices.remap(pos,tpos);
+      if (m_dims.validate(tpos))
+	return m_data[m_dims.map(tpos)-1];
+      throw Exception("out of range");
+    }
+  }
+  inline void unslice() {
+    QVector<T> data;
+    index_t count = m_slices.count();
+    data.resize(count);
+    ConstVectorIterator<T> p(this);
+    for (int i=0;i<count;i++) {
+      m_slices.increment(ptr);
+      
+    }
+  }
+  inline T& get(const NTuple& pos) {
+    if (m_sliced)
+      unslice();
+    if (m_dims.validate(pos))
+      return m_data[m_dims.map(pos)-1];
+    throw Exception("out of range");
+  }
+  inline T get(index_t pos) const {
+    if ((pos > 0) && (pos <= m_data.size()))
+      return m_data[pos-1];
+    throw Exception("out of range");
+  }
+  inline T& get(index_t pos) {
+    if ((pos > 0) && (pos <= m_data.size()))
+      return m_data[pos-1];
+    throw Exception("out of range");
+  }
+  inline void set(const NTuple& pos, const T& val) {
+    if (m_dims.validate(pos))
+      m_data[m_dims.map(pos)-1] = val;
+    else {
+      resize(pos);
+      m_data[m_dims.map(pos)-1] = val;
+    }
+  }
+  inline void set(index_t pos, const T& val) {
+    if (m_data.inVectorRange(pos))
+      m_data[pos-1] = val;
+    else {
+      resize(pos);
+      m_data[pos-1] = val;
+    }
+  }
+  inline  T operator[](const NTuple& pos) const {
+    return get(pos);
+  }
+  inline  T& operator[](const NTuple& pos) {
+    return get(pos);
+  }
+  inline T operator[](index_t pos) const {
+    return get(pos);
+  }
+  inline T& operator[](index_t pos) {
+    return get(pos);
+  }
+  NDimArray<T> resize(const NTuple& pos) const {
+    NDimArray<T> retval(pos);
+    ConstNDimIterator<T> source(this,0);
+    NDimIterator<T> dest(&retval,0);
+    index_t line_size = qMin(source.lineSize(),dest.lineSize());
+    while (source.isValid() && dest.isValid()) {
+      for (int i=1;i<=line_size;i++)
+	dest[i] = source[i];
+      source.nextSlice();
+      dest.nextSlice();
+    } 
+    return retval;
+  }
+  void resize(index_t pos) {
+    m_data.resize(pos);
+    m_dims = NTuple(1,pos);
+  }
+  void reshape(const NTuple& pos) {
+    if (m_dims.count() == pos.count())
+      m_dims = pos;
+    else
+      throw Exception("Illegal reshape");
+  }
+};
+
+  class VectorIteratorBase {
+  };
+
+class NDimIteratorBase {
+private:
+  index_t m_lineSize;
+  index_t m_planeSize;
+  index_t m_planeCount;
+  index_t m_plane;
+  index_t m_line;
+public:
+  NDimIteratorBase(const NTuple &dims, int dim) {
+    m_planeSize = 1;
+    for (int i=0;i<dim;i++)
+      m_planeSize *= dims[i];
+    m_lineSize = dims[dim];
+    m_planeCount = 1;
+    for (int i=dim+1;i<NDims;i++) 
+      m_planeCount *= dims[i];
+    m_plane = 0;
+    m_line = 1;
+  }
+  inline index_t lineSize() const {return m_lineSize;}
+  inline index_t planeSize() const {return m_planeSize;}
+  inline index_t planeCount() const {return m_planeCount;}
+  inline index_t plane() const {return m_plane;}
+  inline index_t line() const {return m_line;}
+  inline index_t vectorAddress(index_t ndx) const {
+    return m_plane*m_planeSize*m_lineSize+m_line+(ndx-1)*m_planeSize;
+  }
+  inline void nextSlice() {
+    m_line++;
+    if (m_line >= m_planeSize) {
+      m_line = 1;
+      m_plane++;
+    }
+  }
+  inline bool isValid() {
+    return (m_plane<m_planeCount);
+  }
+};
+
+template <typename T> 
+class NDimIterator : public NDimIteratorBase {
+  NDimArray<T> *m_ptr;
+public:
+  NDimIterator(NDimArray<T> *p, int dim) : NDimIteratorBase(p->dimensions(),dim) {m_ptr = p;}
+  inline T& operator[](index_t ndx) {return m_ptr->get(vectorAddress(ndx));}
+};
+
+template <typename T>
+class ConstNDimIterator : public NDimIteratorBase {
+  const NDimArray<T> *m_ptr;
+public:
+  ConstNDimIterator(const NDimArray<T> *p, int dim) : NDimIteratorBase(p->dimensions(),dim) {m_ptr = p;}
+  inline T operator[](index_t ndx) const {return m_ptr->get(vectorAddress(ndx));}
+};
+
+std::ostream& operator<<(std::ostream& o, const NDimIteratorBase &x) {
+  o << "<" << x.line() << "," << x.plane() << ">-<" << x.planeSize() << "," << x.planeCount() << ">";
+  return o;
+}
+
+#endif

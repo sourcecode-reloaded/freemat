@@ -14,6 +14,50 @@
  * SparseArray
  */
 
+
+// The base class for all FreeMat Arrays
+class Array {
+  virtual ~Array() {};
+  virtual void resize(const NTuple& size) = 0;
+  virtual void reshape(const NTuple& size) = 0;
+  virtual void resize(int N) = 0;
+  virtual void reshape(int N) = 0;
+};
+
+const int NDims = 10;
+
+class NTuple {
+  size_t m_data[NDims];
+  int m_len;
+public:
+  int size() const {return m_len;}
+  size_t map(const NTuple& pos);
+};
+
+
+// The NDimArray
+template <typename T>
+class NDimArray {
+  NTuple m_dims;
+  QVector<T> m_data;
+  size_t m_offset;
+public:
+  NTuple dimensions() {return m_dims;}
+  const NTuple& dimensions() const {return m_dims;}
+  virtual T get(const NTuple& pos) const = 0;
+  virtual T& get(const NTuple& pos) = 0;
+  void set(const T& val) const = 0;
+  virtual T operator[](const NTuple& pos) const = 0;
+  virtual T& operator[](const NTuple& pos) = 0;
+  virtual void resize(const NTuple& pos);
+  virtual void reshape(const NTuple& pos);
+};
+
+template <typename T>
+class NumericArray : public Array {
+  
+};
+
 template <typename T>
 Array {
   virtual size_t length() const = 0;
