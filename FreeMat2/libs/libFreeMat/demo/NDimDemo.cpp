@@ -1,6 +1,28 @@
 #include "NDimArray.hpp"
+#include "NDimSlice.hpp"
 #include <iostream>
 
+// The next issue to solve is the dynamic typing one.
+// Suppose we want to write a function to take the FFT of an array
+#if 0
+Array DoFFT<T>(const NumericalArray<T> &t, int dimension) {
+  ConstNDimIterator<T> *p = t.getConstNDimIterator(dimension);
+  NumericalArray<T> ret;
+  
+  while (p->valid()) {
+    for (int i=0;i<p->count();i++)
+      
+  }
+}
+
+Array DoFFTFunction(const Array &t) {
+  if (IsFloatArray(t))
+    return DoFFT<float>(t);
+  else if (IsDoubleArray(t))
+    return DoFFT<double>(t);
+}
+
+#endif
 template <typename T>
 void printMatrix(const BaseArray<T>& A) {
   for (int i=1;i<=A.dimensions()[0];i++) {
@@ -9,6 +31,18 @@ void printMatrix(const BaseArray<T>& A) {
     }
     std::cout << "\n";
   }
+}
+
+template <typename T>
+void printNDim(T* q) {
+  while (q->isValid()) {
+    for (int i=0;i<q->size();i++)  {
+      std::cout << q->get() << " ";
+      q->next();
+    }
+    std::cout << "\n";
+    q->nextSlice();
+  } 
 }
 
 int main(int, const char *[]) {
@@ -23,33 +57,18 @@ int main(int, const char *[]) {
       for (int k=1;k<=N;k++)
 	A[NTuple(i,j,k)] = (float) (k*100+i*10+j);
 
-  ConstNDimIterator<float> q(&A,1);
-  while (q.isValid()) {
-    for (int i=1;i<=q.lineSize();i++) 
-      std::cout << q[i] << " ";
-    std::cout << "\n";
-    q.nextSlice();
-  } 
+  ConstNDimIterator<float> *q = A.getConstNDimIterator(1);
+  printNDim(q);
 
   std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&1\n";
   
-  ConstNDimIterator<float> p(&A,0);
-  while (p.isValid()) {
-    for (int i=1;i<=p.lineSize();i++) 
-      std::cout << p[i] << " ";
-    std::cout << "\n";
-    p.nextSlice();
-  } 
+  ConstNDimIterator<float> *p = A.getConstNDimIterator(0);
+  printNDim(p);
 
   std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&2\n";
 
-  ConstNDimIterator<float> r(&A,2);
-  while (r.isValid()) {
-    for (int i=1;i<=r.lineSize();i++) 
-      std::cout << r[i] << " ";
-    std::cout << "\n";
-    r.nextSlice();
-  } 
+  ConstNDimIterator<float> *r = A.getConstNDimIterator(2);
+  printNDim(r);
 
   std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&3\n";
 
@@ -115,7 +134,8 @@ int main(int, const char *[]) {
 		NTuple(5,9));
   NDimSlice<float> J(I,rset);
   std::cout << " slice size " << J.dimensions() << "\n";
-  printMatrix<float>(J);
+  //  printMatrix<float>(J);
+  printNDim(J.getConstNDimIterator(0));
 
   return 0;
 }

@@ -9,5 +9,5 @@ INCLUDEPATH += .
 CONFIG += debug
 
 # Input
-HEADERS += NDimArray.hpp
+HEADERS += NDimArray.hpp NTuple.hpp BaseArray.hpp Iterators.hpp
 SOURCES += NDimDemo.cpp
