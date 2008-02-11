@@ -129,9 +129,9 @@ int main(int, const char *[]) {
       I[NTuple(i,j)] = ((float) i) + ((float) j)/100.0;
   printMatrix<float>(I);
 
-  RangeSet rset(NTuple(1,1),
-		NTuple(2,2),
-		NTuple(5,9));
+  RangeSet rset;
+  rset.set(0,new StepRange(1,2,5));
+  rset.set(1,new StepRange(1,2,9));
   NDimSlice<float> J(I,rset);
   std::cout << " slice size " << J.dimensions() << "\n";
   //  printMatrix<float>(J);
