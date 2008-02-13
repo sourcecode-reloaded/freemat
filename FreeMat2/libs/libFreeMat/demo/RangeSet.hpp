@@ -76,7 +76,7 @@ public:
   }
   inline void remap(const NTuple& pos, NTuple& out) const {
     for (int i=0;i<NDims;i++)
-      out[i] = m_range[i]->at(pos[i]-1);
+      out[i] = m_range[i]->at(pos[i]);
   }
   inline NTuple dims() const {
     NTuple out;

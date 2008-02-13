@@ -1,15 +1,11 @@
 #ifndef __NTuple_hpp__
 #define __NTuple_hpp__
 
-#include <QtGlobal>
 #include <QString>
 #include <iostream>
 
-typedef qint64 index_t;
-
-const int NDims = 10;
-
-typedef QString Exception;
+#include "Global.hpp"
+#include "NPerm.hpp"
 
 class NTuple {
   index_t m_data[NDims];
@@ -23,11 +19,47 @@ public:
     }
     return retval;
   }
+  inline void map(index_t vecndx, NTuple& pos) const {
+    vecndx--;
+    for (int i=0;i<NDims;i++) {
+      pos[i] = (vecndx % m_data[i]) + 1;
+      vecndx /= m_data[i];
+    }
+  }
   inline bool validate(const NTuple& pos) const {
     for (int i=0;i<NDims;i++) 
       if ((pos.m_data[i] <= 0) || 
 	  (pos.m_data[i] > m_data[i])) return false;
     return true;
+  }
+  inline void ripple(NTuple &pos) const {
+    for (int i=0;i<(NDims-1);i++) {
+      if (pos[i] > m_data[i]) {
+	pos[i] = 1;
+	pos[i+1]++;
+      }
+    }
+  }
+  inline void ripplePinned(NTuple &pos, int pin_dim) const {
+    for (int i=0;i<(NDims-1);i++) {
+      int dim = m_data[i];
+      if (i == pin_dim) dim = 1;
+      if (pos[i] > dim) {
+	pos[i] = 1;
+	pos[i+1]++;
+      }
+    }
+  }
+  inline void increment(NTuple &pos) const {
+    pos[0]++;
+    ripple(pos);
+  }
+  inline void increment(NTuple &pos, int pin_dim) const {
+    if (pin_dim == 0) 
+      pos[1]++;
+    else
+      pos[0]++;
+    ripplePinned(pos,pin_dim);
   }
   inline NTuple(index_t rows, index_t cols) {
     m_data[0] = rows;
@@ -63,6 +95,17 @@ public:
   }
   index_t& operator[](int dim) {
     return get(dim);
+  }
+  NTuple operator[](const NPerm &perm) const {
+    NTuple ret;
+    for (int i=0;i<NDims;i++)
+      ret[i] = m_data[perm[i]-1];
+    return ret;
+  }
+  bool operator<=(const NTuple& alt) const {
+    for (int i=0;i<NDims;i++)
+      if (m_data[i] > alt.m_data[i]) return false;
+    return true;
   }
   inline index_t count() const {
     index_t ret = 1;

@@ -1,5 +1,8 @@
 #include "NDimArray.hpp"
 #include "NDimSlice.hpp"
+#include "PermArray.hpp"
+#include "ShapeArray.hpp"
+#include "SparseArray.hpp"
 #include <iostream>
 
 // The next issue to solve is the dynamic typing one.
@@ -23,6 +26,9 @@ Array DoFFTFunction(const Array &t) {
 }
 
 #endif
+
+static int count = 0;
+
 template <typename T>
 void printMatrix(const BaseArray<T>& A) {
   for (int i=1;i<=A.dimensions()[0];i++) {
@@ -31,21 +37,77 @@ void printMatrix(const BaseArray<T>& A) {
     }
     std::cout << "\n";
   }
+  std::cout << "************************************************************ " << 
+    count++ << "\n";
 }
 
 template <typename T>
-void printNDim(T* q) {
-  while (q->isValid()) {
-    for (int i=0;i<q->size();i++)  {
-      std::cout << q->get() << " ";
-      q->next();
+void printNDim(const BaseArray<T>& A, int dim) {
+  ConstNDimIterator<T> q(&A,dim);
+  while (q.isValid()) {
+    for (int i=1;i<=q.size();i++)  {
+      std::cout << q[i] << " ";
     }
+    q.nextSlice();
     std::cout << "\n";
-    q->nextSlice();
   } 
+  std::cout << "************************************************************ " << 
+    count++ << "\n";
 }
 
 int main(int, const char *[]) {
+//   float *t = new float[1000*1000];
+//   for (int i=0;i<1000;i++)
+//     for (int j=0;j<1000;j++)
+//       t[i*1000+j] = i-j;
+
+//   return 0;
+
+
+  NDimArray<float> T(NTuple(1000,1000));
+
+//   for (int i=1;i<=1000;i++)
+//     for (int j=1;j<=1000;j++)
+//       T[NTuple(i,j)] = i-j;
+
+  NDimIterator<float> p(&T,0);
+  int i=0;
+  while (p.isValid()) {
+    for (int j=1;j<=p.size();j++) 
+      p[j] = i+1-j;
+    p.nextSlice();
+  }
+  return 0;
+
+  NTuple lims(3,4,5);
+  lims[3] = 6;
+  // Loop through 
+  NTuple pd(1,1,1);
+  while (pd <= lims) {
+    std::cout << pd << "\n";
+    lims.increment(pd);
+  }
+  
+  std::cout << "******************************************************\n";
+
+  // Loop through 
+  pd = NTuple(1,1,1);
+  while (pd <= lims) {
+    std::cout << pd << "\n";
+    lims.increment(pd,1);
+  }
+
+  std::cout << "******************************************************\n";
+  
+  NDimArray<float> P(NTuple(3,4));
+  for (int i=1;i<=12;i++)
+    P[i] = i;
+  printMatrix(P);
+
+  printNDim(P,1);  
+
+  printNDim(P,0);  
+
   const int N = 4;
   NDimArray<float> A;//(NTuple(N,N,N));
   A.resize(N*N*N);
@@ -57,26 +119,11 @@ int main(int, const char *[]) {
       for (int k=1;k<=N;k++)
 	A[NTuple(i,j,k)] = (float) (k*100+i*10+j);
 
-  ConstNDimIterator<float> *q = A.getConstNDimIterator(1);
-  printNDim(q);
+  printNDim(A,1);
 
-  std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&1\n";
-  
-  ConstNDimIterator<float> *p = A.getConstNDimIterator(0);
-  printNDim(p);
+  printNDim(A,0);
 
-  std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&2\n";
-
-  ConstNDimIterator<float> *r = A.getConstNDimIterator(2);
-  printNDim(r);
-
-  std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&3\n";
-
-  //A.set(NTuple(i,j),(float) (i*10+j));
-
-  for (int i=0;i<1000000;i++) {
-    NDimArray<float> B(A);
-  }
+  printNDim(A,2);
 
   // Print the array
   for (int i=1;i<=N;i++)  {
@@ -84,8 +131,6 @@ int main(int, const char *[]) {
       std::cout << A[NTuple(i,j)] << " ";
     std::cout << "\n";
   }
-
-  std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&4\n";
 
   NDimArray<float> B(NTuple(3,4));
   for (int i=1;i<=3;i++)
@@ -98,8 +143,6 @@ int main(int, const char *[]) {
     std::cout << "\n";
   }
 
-  std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&5\n";
-
   NDimArray<float> C(B);
   C.resize(NTuple(5,6));
   
@@ -108,8 +151,6 @@ int main(int, const char *[]) {
       std::cout << C[NTuple(i,j)] << " ";
     std::cout << "\n";
   }
-
-  std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&6\n";
 
   NDimArray<float> H(B);
   H.resize(NTuple(2,3));
@@ -120,12 +161,10 @@ int main(int, const char *[]) {
     std::cout << "\n";
   }
 
-  std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&6\n";
-
   NDimArray<float> I;
   I.resize(NTuple(11,15));
-  for (int i=1;i<11;i++)
-    for (int j=1;j<15;j++)
+  for (int i=1;i<=11;i++)
+    for (int j=1;j<=15;j++)
       I[NTuple(i,j)] = ((float) i) + ((float) j)/100.0;
   printMatrix<float>(I);
 
@@ -134,8 +173,27 @@ int main(int, const char *[]) {
   rset.set(1,new StepRange(1,2,9));
   NDimSlice<float> J(I,rset);
   std::cout << " slice size " << J.dimensions() << "\n";
-  //  printMatrix<float>(J);
-  printNDim(J.getConstNDimIterator(0));
+  printNDim(J,0);
+
+  J[NTuple(2,2)] = 0.4;
+  printNDim(J,1);
+
+  printNDim(J,1);
+
+  printNDim(I,1);
+
+  PermArray<float> K(J,NPerm(2,1));
+  printMatrix<float>(K);
+  
+  ShapeArray<float> M(K,NTuple(6,2));
+  printMatrix<float>(M);
+
+  NDimArray<float> MR(resize(M,NTuple(6,3)));
+  printMatrix<float>(MR);
+
+  SparseMatrix<float> S(QVector<index_t>() << 1 << 2 << 5 << 100,
+			QVector<index_t>() << 1 << 1 << 2 << 100,
+			QVector<float>() << 4 << 3 << 1 << 7);
 
   return 0;
 }

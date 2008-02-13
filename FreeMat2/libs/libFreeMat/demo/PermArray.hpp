@@ -1,38 +1,28 @@
-#ifndef __NDimSlice_hpp__
-#define __NDimSlice_hpp__
+#ifndef __PermArray_hpp__
+#define __PermArray_hpp__
 
 #include "BaseArray.hpp"
-#include "RangeSet.hpp"
-#include <QString>
-#include <QVector>
 
 template <typename T>
-class NDimSlice : public BaseArray<T> {
+class PermArray : public BaseArray<T> {
   BaseArray<T> &m_ref;
-  const RangeSet &m_slices;
+  NPerm m_perm;
   NTuple m_dims;
 public:
-  NDimSlice(BaseArray<T> &ref, const RangeSet& slice) : 
-    m_ref(ref), m_slices(slice) { 
-    m_dims = m_slices.dims();
-  }
+  PermArray(BaseArray<T> &ref, const NPerm &perm) :
+    m_ref(ref), m_perm(perm), m_dims(ref.dimensions()[m_perm]) {}
   inline const NTuple& dimensions() const {
     return m_dims;
   }
   inline const T& operator[](const NTuple& pos) const {
     if (m_dims.validate(pos)) {
-      NTuple tpos;
-      m_slices.remap(pos,tpos);
-      if (m_ref.dimensions().validate(tpos))
-	return m_ref[tpos];
+      return(m_ref[pos[m_perm]]);
     }
     throw Exception("Out of range");
   }
   inline T& operator[](const NTuple& pos) {
     if (m_dims.validate(pos)) {
-      NTuple tpos;
-      m_slices.remap(pos,tpos);
-      return m_ref[tpos];
+      return(m_ref[pos[m_perm]]);
     }
     throw Exception("Out of range");
   }
@@ -47,4 +37,5 @@ public:
     return (*this)[tpos];
   }
 };
+
 #endif

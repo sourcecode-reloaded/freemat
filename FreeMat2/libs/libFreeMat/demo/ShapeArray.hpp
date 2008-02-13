@@ -1,38 +1,30 @@
-#ifndef __NDimSlice_hpp__
-#define __NDimSlice_hpp__
+#ifndef __ShapeArray_hpp__
+#define __ShapeArray_hpp__
 
 #include "BaseArray.hpp"
-#include "RangeSet.hpp"
-#include <QString>
-#include <QVector>
 
 template <typename T>
-class NDimSlice : public BaseArray<T> {
+class ShapeArray : public BaseArray<T> {
   BaseArray<T> &m_ref;
-  const RangeSet &m_slices;
   NTuple m_dims;
 public:
-  NDimSlice(BaseArray<T> &ref, const RangeSet& slice) : 
-    m_ref(ref), m_slices(slice) { 
-    m_dims = m_slices.dims();
+  ShapeArray(BaseArray<T> &ref, const NTuple &dims) :
+    m_ref(ref), m_dims(dims) {
+    if (m_dims.count() != dims.count())
+      throw Exception("Illegal shape operation");
   }
   inline const NTuple& dimensions() const {
     return m_dims;
   }
   inline const T& operator[](const NTuple& pos) const {
     if (m_dims.validate(pos)) {
-      NTuple tpos;
-      m_slices.remap(pos,tpos);
-      if (m_ref.dimensions().validate(tpos))
-	return m_ref[tpos];
+      return(m_ref[m_dims.map(pos)]);
     }
     throw Exception("Out of range");
   }
   inline T& operator[](const NTuple& pos) {
     if (m_dims.validate(pos)) {
-      NTuple tpos;
-      m_slices.remap(pos,tpos);
-      return m_ref[tpos];
+      return(m_ref[m_dims.map(pos)]);
     }
     throw Exception("Out of range");
   }
@@ -45,6 +37,7 @@ public:
     NTuple tpos;
     m_dims.map(p,tpos);
     return (*this)[tpos];
-  }
+  }  
 };
+
 #endif

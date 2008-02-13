@@ -6,8 +6,8 @@ TEMPLATE = app
 TARGET = 
 DEPENDPATH += .
 INCLUDEPATH += .
-CONFIG += debug
+#CONFIG += debug
 
 # Input
-HEADERS += NDimArray.hpp NTuple.hpp BaseArray.hpp Iterators.hpp
+HEADERS += PermArray.hpp Global.hpp NPerm.hpp NDimArray.hpp NTuple.hpp BaseArray.hpp Iterators.hpp RangeSet.hpp 
 SOURCES += NDimDemo.cpp
