@@ -19,6 +19,7 @@ static JITFunction func_vector_load_double, func_vector_load_float, func_vector_
 static JITFunction func_vector_store_double, func_vector_store_float, func_vector_store_int32;
 static JITFunction func_matrix_load_double, func_matrix_load_float, func_matrix_load_int32;
 static JITFunction func_matrix_store_double, func_matrix_store_float, func_matrix_store_int32;
+static JITFunction func_debug_out_i, func_debug_out_d;
 
 SymbolInfo* JITFunc::add_argument_array(string name) {
   if (symbol_prefix.size() > 0)
@@ -726,6 +727,14 @@ extern "C" {
   JIT_EXPORT float cotf(float t) {
     return 1.0f/tanf(t);
   }
+
+  JIT_EXPORT void debug_out_i( int32 t ){
+      std::cout << t << "\n";
+  }
+  JIT_EXPORT void debug_out_d( double t ){
+      std::cout << t << "\n";
+  }
+
 }
 
 void JITFunc::register_std_function(std::string name) {
@@ -743,6 +752,7 @@ void JITFunc::initialize() {
   register_std_function("cot"); register_std_function("exp");
   register_std_function("expm1"); register_std_function("ceil");
   register_std_function("floor"); register_std_function("round");
+  double_funcs.insertSymbol("rint",jit->DefineLinkFunction("rint","d","d"));
   double_funcs.insertSymbol("abs",jit->DefineLinkFunction("fabs","d","d"));
   float_funcs.insertSymbol("abs",jit->DefineLinkFunction("fabsf","f","f"));
   int_funcs.insertSymbol("abs",jit->DefineLinkFunction("abs","i","i"));
@@ -766,6 +776,8 @@ void JITFunc::initialize() {
   func_matrix_store_int32 = jit->DefineLinkFunction("matrix_store_int32","i","Iiiii");
   func_matrix_store_double = jit->DefineLinkFunction("matrix_store_double","i","Iiiid");
   func_matrix_store_float = jit->DefineLinkFunction("matrix_store_float","i","Iiiif");
+  func_debug_out_i = jit->DefineLinkFunction("debug_out_i","v","i");
+  func_debug_out_d = jit->DefineLinkFunction("debug_out_d","v","d");
 }
 
 static int countm = 0;
@@ -806,7 +818,7 @@ void JITFunc::compile(Tree* t) {
   if (failed) throw exception_store;
 }
 
-//TODO: #warning - How to detect non-integer loop bounds?
+//TODO: handle other types for loop variables
 void JITFunc::compile_for_block(Tree* t) {
   JITScalar loop_start, loop_stop, loop_step;
 
@@ -827,8 +839,19 @@ void JITFunc::compile_for_block(Tree* t) {
   SymbolInfo* v = add_argument_scalar(loop_index_name,loop_start,true);
   JITScalar loop_index_address = v->address;
   jit->Store(loop_start,loop_index_address);
+
+  //precompute the number of iteration steps: round( (loop_stop - loop_start)/loop_step ) + 1
+  //we don't add 1 here and take into account when test exit
+  JITFunction* round_func = double_funcs.findSymbol(std::string("rint"));
+  JITScalar loop_nsteps = jit->Cast( jit->Call( *round_func, jit->Div( jit->Sub( jit->Cast( loop_stop, jit->DoubleType() ), jit->Cast( loop_start, jit->DoubleType() ) ), 
+      jit->Cast( loop_step, jit->DoubleType() ) ) ), jit->Int32Type());
+  
+  JITScalar loop_ind = jit->Alloc(jit->Int32Type(),""); 
+  jit->Store(jit->Zero(jit->Int32Type()),loop_ind); 
+
   JITBlock loopbody = jit->NewBlock("for_body");
   JITBlock looptest = jit->NewBlock("for_test");
+  JITBlock loopincr = jit->NewBlock("for_increment");
   JITBlock loopexit = jit->NewBlock("for_exit");
   jit->Jump(looptest);
   // Create 3 blocks
@@ -840,14 +863,24 @@ void JITFunc::compile_for_block(Tree* t) {
     exception_store = e;
     failed = true;
   }
-  JITScalar loop_index_value = jit->Load(loop_index_address);
-  JITScalar next_loop_value = jit->Add(loop_index_value,loop_step);
-  jit->Store(next_loop_value,loop_index_address);
+
   jit->Jump(looptest);
   jit->SetCurrentBlock(looptest);
-  loop_index_value = jit->Load(loop_index_address);
-  JITScalar loop_comparison = jit->LessEquals(loop_index_value,loop_stop);
-  jit->Branch(loopbody,loopexit,loop_comparison);
+
+  JITScalar loop_comparison = jit->LessEquals( jit->Load( loop_ind ), loop_nsteps);
+  jit->Branch(loopincr,loopexit,loop_comparison);
+
+  jit->SetCurrentBlock(loopincr);
+
+  //loop variable equal: loop_start+loop_ind*loop_step
+  JITScalar next_loop_value = jit->Add(loop_start,
+      jit->Mul( jit->Cast( jit->Load( loop_ind ), jit->DoubleType() ), loop_step ) );
+  jit->Store(next_loop_value,loop_index_address);
+
+  jit->Store( jit->Add( jit->Load( loop_ind ), jit->Int32Value( 1 ) ), loop_ind );
+
+  jit->Jump( loopbody );
+
   jit->SetCurrentBlock(loopexit);
   if (failed) throw exception_store;
 }

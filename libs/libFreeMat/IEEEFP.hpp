@@ -37,9 +37,11 @@ void ToHexString(double t, char *ptr);
 #endif
 
 #if defined(_MSC_VER )
-	double rint (double x);
-	double log1p(double x);
-	double expm1 (double x);
+extern "C"{
+	__declspec( dllexport ) double rint (double x);
+	__declspec( dllexport ) double log1p(double x);
+	__declspec( dllexport ) double expm1 (double x);
+}
 #endif
 
 #endif

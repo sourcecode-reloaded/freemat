@@ -151,7 +151,8 @@ void ToHexString(double t, char *ptr) {
 
 #include <math.h>
 
-double rint (double x)
+extern "C" { 
+__declspec( dllexport ) double rint (double x)
 {
   __asm{
 	  fld x
@@ -162,7 +163,7 @@ double rint (double x)
 }
 
 //VC doesn't define log1p so we borrow the definition from libm (mingw)
-double log1p(double x){
+__declspec( dllexport ) double log1p(double x){
 
 	const double limit = 0.29;
 	const double one = 1.0;
@@ -219,7 +220,7 @@ const long double LOG2EL  = 1.4426950408889634073599E0L;
  * Adapted to double by Danny Smith <dannysmith@users.sourceforge.net>. 
  * Public domain.
  */
-double expm1 (double x)
+__declspec( dllexport ) double expm1 (double x)
 {
   if (fabs(x) < LOGE2L)
     {
@@ -235,5 +236,5 @@ double expm1 (double x)
   else
     return exp(x) - 1.0;
 }
-
+}
 #endif 
