@@ -19,7 +19,9 @@
 
 #include "Array.hpp"
 #include "LAPACK.hpp"
+#include "IEEEFP.hpp"
 #include <math.h>
+#include <float.h>
 
 //!
 //@Module INF Infinity Constant
@@ -200,22 +202,74 @@ ArrayVector EFunction(int nargout, const ArrayVector& arg) {
 //for @|eps| is:
 //@[
 //   y = eps
+//   y = eps('double')
+//   y = eps(X)
 //@]
-//which returns @|eps| for @|double| precision values. For most
+//First form returns @|eps| for @|double| precision values. For most
 //typical processors, this value is approximately @|2^-52|, or 2.2204e-16.
+//Second form return @|eps| for class @|double| or @|single|.
+//Third form returns distance to the next value greater than X.
 //@@Example
 //The following example demonstrates the use of the @|eps| function,
 //and one of its numerical consequences.
 //@<
 //eps
 //1.0+eps
+//eps(1000.)
 //@>
+//@@Tests
+//@{ test_eps1.m
+//function test_val = test_eps1
+//a = eps;
+//b = eps(1.);
+//c = eps('single');
+//d = eps(single(1.));
+//test_val = test(a==b && c==d);
+//@}
 //!
 ArrayVector EpsFunction(int nargout, const ArrayVector& arg) {
-  char CMACH = 'E';
-  Array A(Array::doubleConstructor(dlamch_(&CMACH)));
-  ArrayVector retval;
-  retval.push_back(A);
+    double x = 1.;
+    bool isDouble = true;
+    ArrayVector retval;
+    
+    if( arg.size()> 1 )
+	throw Exception("eps takes no more than 1 argument");
+    if( arg.size()==1 ){
+	Array a( arg[0] );
+	if( a.isString() ){
+	    std::string str = a.getContentsAsString();
+	    if( str == std::string( "double" ) ){
+		retval << Array::doubleConstructor( nextafter( 1. , DBL_MAX ) - 1. );
+	    }
+	    else if( str == std::string( "single" ) ){
+		retval << Array::floatConstructor( nextafterf( 1. , FLT_MAX ) - 1. );
+	    }
+	    else{
+		throw Exception("Class must be 'double' or 'single'");
+	    }
+	}
+	else { //numeric argument
+	    switch( a.dataClass() ){
+		case FM_DOUBLE: 
+		    {
+			double x = fabs(*(double*)a.data());
+			retval << Array::doubleConstructor( nextafter( x , DBL_MAX ) - x );
+			break;
+		    }
+		case FM_FLOAT: 
+		    {
+			float x = fabsf(*(float*)a.data());
+			retval << Array::floatConstructor( nextafterf( x , FLT_MAX ) - x );
+			break;
+		    }
+		default:
+		    throw Exception("Class must be 'double' or 'single'");
+	    }
+	}
+    }
+    else{
+	retval << Array::doubleConstructor( nextafter( 1. , DBL_MAX ) - 1. );
+    }
   return retval;
 }
 

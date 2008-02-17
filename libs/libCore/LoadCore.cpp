@@ -210,7 +210,7 @@ void LoadCoreFunctions(Context* context) {
   context->addSpecialFunction("clear",ClearFunction,-1,0,NULL);
   context->addSpecialFunction("setprintlimit",SetPrintLimitFunction,1,0,"n",NULL);
   context->addSpecialFunction("getprintlimit",GetPrintLimitFunction,0,1,NULL);
-  context->addFunction("eps",EpsFunction,0,1,NULL);
+  context->addFunction("eps",EpsFunction,1,1,"x",NULL);
   context->addFunction("feps",FepsFunction,0,1,NULL);
   context->addFunction("repmat",RepMatFunction,3,1,"x","rows","cols",NULL);
   context->addSpecialFunction("docli",DoCLIFunction,0,0,NULL);
