@@ -50,4 +50,14 @@ extern "C"{
 #define nextafter _nextafter
 #endif
 
+//returns distance to the next nearest double value
+inline double feps( double x ){
+    return nextafter( x , DBL_MAX ) - x;
+}
+
+//returns distance to the next nearest float value
+inline float fepsf( float x ){
+    return nextafterf( x , FLT_MAX ) - x;
+}
+
 #endif
