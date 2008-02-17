@@ -85,12 +85,12 @@ public:
       throw Exception("Illegal range in get");
     return m_data[dim];
   }
-  inline index_t get(int dim) const {
+  inline const index_t get(int dim) const {
     if ((dim<0) || (dim >= NDims))
       throw Exception("Illegal range in get");
     return m_data[dim];
   }
-  index_t operator[](int dim) const {
+  const index_t operator[](int dim) const {
     return get(dim);
   }
   index_t& operator[](int dim) {
@@ -107,7 +107,7 @@ public:
       if (m_data[i] > alt.m_data[i]) return false;
     return true;
   }
-  inline index_t count() const {
+  inline const index_t count() const {
     index_t ret = 1;
     for (int i=0;i<NDims;i++) ret *= m_data[i];
     return ret;

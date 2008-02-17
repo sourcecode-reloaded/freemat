@@ -7,6 +7,12 @@
 #include <QString>
 #include <QVector>
 
+template <typename T>
+class NDimArrayIterator;
+
+template <typename T>
+class ConstNDimArrayIterator;
+
 // The NDimArray
 template <typename T>
 class NDimArray : public BaseArray<T> {
@@ -19,8 +25,8 @@ public:
   }
   NDimArray(QVector<T> data, NTuple dims) : 
     m_data(data), m_dims(dims) {}
-  inline const NTuple& dimensions() const {return m_dims;}
-  inline const T& operator[](const NTuple& pos) const {
+  inline const NTuple dimensions() const {return m_dims;}
+  inline const T operator[](const NTuple& pos) const {
     if (m_dims.validate(pos))
       return m_data[m_dims.map(pos)-1];
     throw Exception("out of range");
@@ -33,7 +39,7 @@ public:
       return m_data[m_dims.map(pos)-1];
     }
   }
-  inline const T& operator[](index_t pos) const {
+  inline const T operator[](index_t pos) const {
     if ((pos > 0) && (pos <= m_data.size()))
       return m_data[pos-1];
     throw Exception("out of range");
@@ -49,12 +55,14 @@ public:
   }
   inline void resize(const NTuple& pos) {
     NDimArray<T> retval(pos);
-    ConstNDimIterator<T> source(this,0);
-    NDimIterator<T> dest(&retval,0);
+    ConstNDimArrayIterator<T> source(this,0);
+    NDimArrayIterator<T> dest(this,0);
     index_t line_size = qMin(source.size(),dest.size());
     while (source.isValid() && dest.isValid()) {
-      for (int i=1;i<=line_size;i++)
-	dest[i] = source[i];
+      for (int i=1;i<=line_size;i++) {
+	dest.set(source.get());
+	dest.advance(); source.advance();
+      }
       source.nextSlice();
       dest.nextSlice();
     }
@@ -71,7 +79,65 @@ public:
     else
       throw Exception("Illegal reshape");
   }
+  NDimIterator<T>* getNDimIterator(int dim) {
+    return dynamic_cast<NDimIterator<T>*>
+      (new NDimArrayIterator<T>(this, dim));
+  }
+  ConstNDimIterator<T>* getConstNDimIterator(int dim) {
+    return dynamic_cast<ConstNDimIterator<T>*>
+      (new ConstNDimArrayIterator<T>(this, dim));
+  }
 };
+
+template <typename T>
+class NDimArrayIterator : public NDimIterator<T> {
+  index_t m_offset;
+  index_t m_stride;
+  index_t m_indx;
+public:
+  NDimArrayIterator(NDimArray<T> *ptr, int dim) 
+    : NDimIterator<T>(ptr,dim) {
+    m_offset = 1;
+    m_stride = 1;
+    for (int i=0;i<dim;i++) m_stride *= NDimArrayIterator::m_dim[i];
+    m_indx = 1;
+  }
+  void nextSlice() {
+    NDimIterator<T>::nextSlice();
+    m_indx = NDimArrayIterator::m_dim.map(NDimArrayIterator::m_pos);
+  }
+  void set(const T& val) {
+    (*NDimArrayIterator::m_ptr)[m_indx] = val;
+  }
+  const T get() const {
+    return ((*NDimArrayIterator::m_ptr)[m_indx]);
+  }
+  void advance() {m_indx += m_stride;}
+};
+
+template <typename T>
+class ConstNDimArrayIterator : public ConstNDimIterator<T> {
+  index_t m_offset;
+  index_t m_stride;
+  index_t m_indx;
+public:
+  ConstNDimArrayIterator(const NDimArray<T> *ptr, int dim) 
+    : ConstNDimIterator<T>(ptr,dim) {
+    m_offset = 1;
+    m_stride = 1;
+    for (int i=0;i<dim;i++) m_stride *= ConstNDimArrayIterator::m_dim[i];
+    m_indx = 1;
+  }
+  void nextSlice() {
+    ConstNDimIterator<T>::nextSlice();
+    m_indx = ConstNDimArrayIterator::m_dim.map(ConstNDimArrayIterator::m_pos);
+  }
+  const T get() const {
+    return ((*ConstNDimArrayIterator::m_ptr)[m_indx]);
+  }
+  void advance() {m_indx += m_stride;}
+};
+
 
 template <typename T>
 NDimArray<T> resize(const BaseArray<T> &src, const NTuple& size) {

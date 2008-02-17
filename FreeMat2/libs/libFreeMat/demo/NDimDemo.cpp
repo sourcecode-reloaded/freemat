@@ -56,6 +56,7 @@ void printNDim(const BaseArray<T>& A, int dim) {
 }
 
 int main(int, const char *[]) {
+  #if 0
 //   float *t = new float[1000*1000];
 //   for (int i=0;i<1000;i++)
 //     for (int j=0;j<1000;j++)
@@ -64,20 +65,20 @@ int main(int, const char *[]) {
 //   return 0;
 
 
-  NDimArray<float> T(NTuple(1000,1000));
+//  NDimArray<float> T(NTuple(1000,1000));
 
 //   for (int i=1;i<=1000;i++)
 //     for (int j=1;j<=1000;j++)
 //       T[NTuple(i,j)] = i-j;
 
-  NDimIterator<float> p(&T,0);
-  int i=0;
-  while (p.isValid()) {
-    for (int j=1;j<=p.size();j++) 
-      p[j] = i+1-j;
-    p.nextSlice();
-  }
-  return 0;
+//   NDimIterator<float> p(&T,0);
+//   int i=0;
+//   while (p.isValid()) {
+//     for (int j=1;j<=p.size();j++) 
+//       p[j] = i+1-j;
+//     p.nextSlice();
+//   }
+//   return 0;
 
   NTuple lims(3,4,5);
   lims[3] = 6;
@@ -191,9 +192,48 @@ int main(int, const char *[]) {
   NDimArray<float> MR(resize(M,NTuple(6,3)));
   printMatrix<float>(MR);
 
-  SparseMatrix<float> S(QVector<index_t>() << 1 << 2 << 5 << 100,
-			QVector<index_t>() << 1 << 1 << 2 << 100,
+  SparseMatrix<float> S(QVector<index_t>() << 1 << 2 << 5 << 6,
+			QVector<index_t>() << 1 << 1 << 2 << 5,
 			QVector<float>() << 4 << 3 << 1 << 7);
+  S[NTuple(3,3)] = 5;
+  printMatrix<float>(S);
 
+#endif
+
+  NDimArray<float> B(NTuple(1000,1000));
+
+  for (int k=1;k<=100;k++) {
+    ConstNDimIterator<float> *i = B.getConstNDimIterator(0);
+    float accum = 0;
+    while (i->isValid()) {
+      for (int j=0;j<i->size();j++) {
+	accum += i->get();
+	i->advance();
+      }
+      i->nextSlice();
+    }
+    delete i;
+  }
   return 0;
+  //  B.resize(NTuple(1000,1000));
+
+//   SparseMatrix<float> Z(QVector<index_t>() << 1 << 1000,
+// 			QVector<index_t>() << 1 << 1000,
+// 			QVector<float>() << 1 << 1);
+  
+#if 0
+  float accum = 0;
+  for (int k=0;k<100;k++) {
+    for (int i=1;i<=1000*1000;i++)
+      accum += B[i];
+  }
+  return 0;
+
+  for (int i=1;i<=1000;i++)
+    for (int j=1;j<=1000;j++)
+      //      accum += Z[NTuple(j,i)];
+      accum += B[NTuple(j,i)];
+  
+  return 0;
+#endif
 }

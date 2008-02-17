@@ -3,8 +3,8 @@
 
 #include <QtGlobal>
 
-typedef qint64 index_t;
-const int NDims = 7;
+typedef qint32 index_t;
+const int NDims = 6;
 typedef QString Exception;
 
 

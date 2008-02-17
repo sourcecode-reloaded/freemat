@@ -9,5 +9,5 @@ INCLUDEPATH += .
 #CONFIG += debug
 
 # Input
-HEADERS += PermArray.hpp Global.hpp NPerm.hpp NDimArray.hpp NTuple.hpp BaseArray.hpp Iterators.hpp RangeSet.hpp 
+HEADERS += PermArray.hpp Global.hpp NPerm.hpp NDimArray.hpp NTuple.hpp BaseArray.hpp Iterators.hpp RangeSet.hpp SparseArray.hpp
 SOURCES += NDimDemo.cpp

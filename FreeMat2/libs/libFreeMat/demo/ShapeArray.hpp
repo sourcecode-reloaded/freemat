@@ -13,10 +13,10 @@ public:
     if (m_dims.count() != dims.count())
       throw Exception("Illegal shape operation");
   }
-  inline const NTuple& dimensions() const {
+  inline const NTuple dimensions() const {
     return m_dims;
   }
-  inline const T& operator[](const NTuple& pos) const {
+  inline const T operator[](const NTuple& pos) const {
     if (m_dims.validate(pos)) {
       return(m_ref[m_dims.map(pos)]);
     }
@@ -28,7 +28,7 @@ public:
     }
     throw Exception("Out of range");
   }
-  inline const T& operator[](index_t p) const {
+  inline const T operator[](index_t p) const {
     NTuple tpos;
     m_dims.map(p,tpos);
     return (*this)[tpos];

@@ -28,15 +28,15 @@ public:
       throw Exception("Illegal range in get");
     return m_data[dim];
   }
-  inline int get(int dim) const {
+  inline const int get(int dim) const {
     if ((dim<0) || (dim >= NDims))
       throw Exception("Illegal range in get");
     return m_data[dim];
   }
-  int operator[](int dim) const {
+  inline const int operator[](int dim) const {
     return get(dim);
   }
-  int& operator[](int dim) {
+  inline int& operator[](int dim) {
     return get(dim);
   }
 };
