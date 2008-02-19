@@ -19,7 +19,7 @@ static JITFunction func_vector_load_double, func_vector_load_float, func_vector_
 static JITFunction func_vector_store_double, func_vector_store_float, func_vector_store_int32;
 static JITFunction func_matrix_load_double, func_matrix_load_float, func_matrix_load_int32;
 static JITFunction func_matrix_store_double, func_matrix_store_float, func_matrix_store_int32;
-static JITFunction func_debug_out_i, func_debug_out_d;
+static JITFunction func_niter_for_loop, func_debug_out_i, func_debug_out_d;
 
 SymbolInfo* JITFunc::add_argument_array(string name) {
   if (symbol_prefix.size() > 0)
@@ -728,6 +728,10 @@ extern "C" {
     return 1.0f/tanf(t);
   }
 
+  JIT_EXPORT int niter_for_loop( double first, double step, double last ){
+      return num_for_loop_iter( first, step, last );
+  }
+
   JIT_EXPORT void debug_out_i( int32 t ){
       std::cout << t << "\n";
   }
@@ -776,6 +780,7 @@ void JITFunc::initialize() {
   func_matrix_store_int32 = jit->DefineLinkFunction("matrix_store_int32","i","Iiiii");
   func_matrix_store_double = jit->DefineLinkFunction("matrix_store_double","i","Iiiid");
   func_matrix_store_float = jit->DefineLinkFunction("matrix_store_float","i","Iiiif");
+  func_niter_for_loop = jit->DefineLinkFunction("niter_for_loop","i","ddd");
   func_debug_out_i = jit->DefineLinkFunction("debug_out_i","v","i");
   func_debug_out_d = jit->DefineLinkFunction("debug_out_d","v","d");
 }
@@ -840,12 +845,9 @@ void JITFunc::compile_for_block(Tree* t) {
   JITScalar loop_index_address = v->address;
   jit->Store(loop_start,loop_index_address);
 
-  //precompute the number of iteration steps: round( (loop_stop - loop_start)/loop_step ) + 1
-  //we don't add 1 here and take into account when test exit
-  JITFunction* round_func = double_funcs.findSymbol(std::string("rint"));
-  JITScalar loop_nsteps = jit->Cast( jit->Call( *round_func, jit->Div( jit->Sub( jit->Cast( loop_stop, jit->DoubleType() ), jit->Cast( loop_start, jit->DoubleType() ) ), 
-      jit->Cast( loop_step, jit->DoubleType() ) ) ), jit->Int32Type());
-  
+  JITScalar loop_nsteps = jit->Call( func_niter_for_loop,  jit->Cast( loop_start, jit->DoubleType() ), 
+      jit->Cast( loop_step, jit->DoubleType() ), jit->Cast( loop_stop, jit->DoubleType() ) );
+
   JITScalar loop_ind = jit->Alloc(jit->Int32Type(),""); 
   jit->Store(jit->Zero(jit->Int32Type()),loop_ind); 
 
@@ -867,7 +869,7 @@ void JITFunc::compile_for_block(Tree* t) {
   jit->Jump(looptest);
   jit->SetCurrentBlock(looptest);
 
-  JITScalar loop_comparison = jit->LessEquals( jit->Load( loop_ind ), loop_nsteps);
+  JITScalar loop_comparison = jit->LessThan( jit->Load( loop_ind ), loop_nsteps);
   jit->Branch(loopincr,loopexit,loop_comparison);
 
   jit->SetCurrentBlock(loopincr);

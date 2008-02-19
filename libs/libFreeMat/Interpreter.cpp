@@ -41,6 +41,7 @@
 #include <fstream>
 #include <stdarg.h>
 #include "JITFunc.hpp"
+#include "IEEEFP.hpp"
 
 
 #ifdef WIN32
@@ -1717,6 +1718,34 @@ void ForLoopHelperComplex(Tree *codeBlock, Class indexClass,
       break;
     } 
   }
+}
+
+int num_for_loop_iter_f( float first, float step, float last )
+{
+    int signum = (step > 0) - (step < 0);
+    int nsteps = floor( ( last - first ) / step ) + 1;  
+    if( nsteps < 0 ) 
+	return 0;
+
+    float mismatch = signum*(first + nsteps*step - last);
+    if( (mismatch > 0) && ( mismatch < 3.*fepsf(last) ) && ( step != rint(step) ) ) //allow overshoot by 3 eps in some cases
+	nsteps++;
+    
+    return nsteps;
+}
+
+int num_for_loop_iter( double first, double step, double last )
+{
+    int signum = (step > 0) - (step < 0);
+    int nsteps = floor( ( last - first ) / step ) + 1;  
+    if( nsteps < 0 ) 
+	return 0;
+
+    double mismatch = signum*(first + nsteps*step - last);
+    if( (mismatch > 0) && ( mismatch < 3.*feps(last) ) && ( step != rint(step) ) ) //allow overshoot by 3 eps in some cases
+	nsteps++;
+
+    return nsteps;
 }
 
 //!

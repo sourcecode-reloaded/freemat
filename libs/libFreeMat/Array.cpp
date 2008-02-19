@@ -1922,12 +1922,11 @@ Array Array::floatRangeConstructor(float minval, float stepsize,
   // n_max = max(c-a)/min(b)
   // where min(x) = {y \in fp | |y| is max, |y| < |x|, sign(y) = sign(x)}
   //       max(x) = {y \in fp | |y| is min, |y| > |x|, sign(y) = sign(x)}
-  float ntest_min = nextafterf(maxval-minval,0)/nextafterf(stepsize,stepsize+stepsize);
-  float ntest_max = nextafterf(maxval-minval,maxval-minval+stepsize)/nextafterf(stepsize,0);
-  int npts = (int) floor(ntest_max);
-  bool use_double_sided = (ntest_min <= npts) && (npts <= ntest_max);
-  npts++;
-  if (npts < 0) npts = 0;
+
+  int npts = num_for_loop_iter_f( minval, stepsize, maxval );
+  double mismatch = fabsf( maxval - minval - (npts-1)*stepsize );
+  bool use_double_sided = (mismatch < 3*fepsf( maxval ));
+
   if (vert) {
     dim = Dimensions(npts,1);
   } else {
@@ -1971,11 +1970,11 @@ Array Array::doubleRangeConstructor(double minval, double stepsize,
   // n_max = max(c-a)/min(b)
   // where min(x) = {y \in fp | |y| is max, |y| < |x|, sign(y) = sign(x)}
   //       max(x) = {y \in fp | |y| is min, |y| > |x|, sign(y) = sign(x)}
-  double ntest_min = nextafter(maxval-minval,0)/nextafter(stepsize,stepsize+stepsize);
-  double ntest_max = nextafter(maxval-minval,maxval-minval+stepsize)/nextafter(stepsize,0);
-  int npts = (int) floor(ntest_max);
-  bool use_double_sided = (ntest_min <= npts) && (npts <= ntest_max);
-  npts++;
+  
+  int npts = num_for_loop_iter( minval, stepsize, maxval );
+  double mismatch = fabs( maxval - minval - (npts-1)*stepsize );
+  bool use_double_sided = (mismatch < 3*feps( maxval ));
+
   if (npts < 0) npts = 0;
   if (vert) {
     dim = Dimensions(npts,1);

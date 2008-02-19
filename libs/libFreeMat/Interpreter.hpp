@@ -1092,4 +1092,8 @@ private:
 void sigInterrupt(int arg);
 string TrimFilename(string);
 QString TildeExpand(string);
+
+int num_for_loop_iter( double first, double step, double last );
+int num_for_loop_iter_f( float first, float step, float last );
+
 #endif
