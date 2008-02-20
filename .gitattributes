@@ -153,7 +153,6 @@ FreeMat2/libs/libFreeMat/Sparse.hpp svn_keywords=Author+Date+Id+Revision svn_eol
 FreeMat2/libs/libFreeMat/Stream.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/SymbolTable.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Types.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libFreeMat/demo/demo svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/libs/libGraphics/GLLabel.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/GLLabel.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libGraphics/GLRenderEngine.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
