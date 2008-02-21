@@ -4,6 +4,8 @@
 #include "ShapeArray.hpp"
 #include "SparseArray.hpp"
 #include <iostream>
+#include <QVariant>
+//#include "Array.hpp"
 
 // The next issue to solve is the dynamic typing one.
 // Suppose we want to write a function to take the FFT of an array
@@ -30,10 +32,10 @@ Array DoFFTFunction(const Array &t) {
 static int count = 0;
 
 template <typename T>
-void printMatrix(const BaseArray<T>& A) {
-  for (int i=1;i<=A.dimensions()[0];i++) {
-    for (int j=1;j<=A.dimensions()[1];j++) {
-      std::cout << A[NTuple(i,j)] << " ";
+void printMatrix(const BaseArray<T>* A) {
+  for (int i=1;i<=A->dimensions()[0];i++) {
+    for (int j=1;j<=A->dimensions()[1];j++) {
+      std::cout << (*A)[NTuple(i,j)] << " ";
     }
     std::cout << "\n";
   }
@@ -56,14 +58,14 @@ void printNDim(const BaseArray<T>& A, int dim) {
 }
 
 int main(int, const char *[]) {
-  #if 0
-//   float *t = new float[1000*1000];
-//   for (int i=0;i<1000;i++)
-//     for (int j=0;j<1000;j++)
-//       t[i*1000+j] = i-j;
-
-//   return 0;
-
+#if 0
+  //   float *t = new float[1000*1000];
+  //   for (int i=0;i<1000;i++)
+  //     for (int j=0;j<1000;j++)
+  //       t[i*1000+j] = i-j;
+  
+  //   return 0;
+  
 
 //  NDimArray<float> T(NTuple(1000,1000));
 
@@ -200,6 +202,56 @@ int main(int, const char *[]) {
 
 #endif
 
+  NDimArray<float> A(NTuple(3,3));
+
+  for (int i=0;i<1000000;i++) {
+    NDimArray<float> B(A);
+  }
+
+  A[NTuple(1,1)] = 2;
+  A[NTuple(1,3)] = 5;
+  A[NTuple(2,2)] = 4;
+  printMatrix<float>(&A);
+  
+  //   Array t(3.14);
+  //   double p = 0;
+  //   for (int i=0;i<1000000;i++) {
+  //     Array y = t;
+  //     p = p + 1;
+  //   }
+  //   std::cout << "p = " << p << "\n";
+  
+  //   Array c(Array::Float, NTuple(3,3));
+  //   NumericArray<float>* m = c.asFloatArray();
+  //   BaseArray<float> *mp = m->real();
+  //   (*mp)[NTuple(1,1)] = 1;
+  //   (*mp)[NTuple(2,2)] = 2;
+  //   (*mp)[NTuple(3,3)] = 3;
+  //   (*mp)[NTuple(3,1)] = 5;
+  //   printMatrix<float>(m->constReal());
+  
+  //   Array c(Array::Cell, NTuple(3,3));
+  
+  //  BaseArray<Array>* ptr = c.asCellArray();
+  //  (*ptr)[NTuple(1,1)] = Array(1.23);
+  //  (*ptr)[NTuple(2,2)] = Array(3.52);
+  //  (*ptr)[NTuple(3,3)] = Array(4.32);
+  
+  return 0;
+
+#if 0
+
+  QVector<QVariant> T(1000*1000);
+  
+  for (int j=0;j<1000*1000;j++)
+    T[j] = QVariant((double) 1.323);
+
+  double accum = 0;
+  for (int j=0;j<1000*1000;j++)
+    accum += T[j].toDouble();
+
+  return 0;
+
   NDimArray<float> B(NTuple(1000,1000));
 
   for (int k=1;k<=100;k++) {
@@ -221,7 +273,6 @@ int main(int, const char *[]) {
 // 			QVector<index_t>() << 1 << 1000,
 // 			QVector<float>() << 1 << 1);
   
-#if 0
   float accum = 0;
   for (int k=0;k<100;k++) {
     for (int i=1;i<=1000*1000;i++)
