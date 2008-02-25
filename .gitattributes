@@ -937,3 +937,26 @@ FreeMat2/tests/parse/bad9.m svn_keywords=Author+Date+Id+Revision svn_eol_002dsty
 FreeMat2/tests/timing/timetest2.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/timing/timetest3.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tools/freemat_nsi.in svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+documentation/site/backup/assets/FreeMat_Head.png svn_mime_002dtype=application%2Foctet-stream
+documentation/site/backup/assets/FreeMat_Logo2.png svn_mime_002dtype=application%2Foctet-stream
+documentation/site/backup/assets/Screencap_linux.png svn_mime_002dtype=application%2Foctet-stream
+documentation/site/backup/assets/Screencap_linux_small.png svn_mime_002dtype=application%2Foctet-stream
+documentation/site/backup/assets/Screencap_osx.png svn_mime_002dtype=application%2Foctet-stream
+documentation/site/backup/assets/Screencap_osx_small.png svn_mime_002dtype=application%2Foctet-stream
+documentation/site/backup/assets/Screencap_win32.png svn_mime_002dtype=application%2Foctet-stream
+documentation/site/backup/assets/Screencap_win32_small.png svn_mime_002dtype=application%2Foctet-stream
+documentation/site/backup/assets/blank.gif svn_mime_002dtype=application%2Foctet-stream
+documentation/site/backup/assets/download.png svn_mime_002dtype=application%2Foctet-stream
+documentation/site/backup/assets/ico-osx-uni.png svn_mime_002dtype=application%2Foctet-stream
+documentation/site/backup/assets/ico-pdf.gif svn_mime_002dtype=application%2Foctet-stream
+documentation/site/backup/assets/ico-tux.png svn_mime_002dtype=application%2Foctet-stream
+documentation/site/backup/assets/ico-win.png svn_mime_002dtype=application%2Foctet-stream
+documentation/site/backup/assets/jquery-1.2.1.pack.js svn_eol_002dstyle=native
+documentation/site/backup/assets/jquery.lightbox.css svn_eol_002dstyle=native
+documentation/site/backup/assets/jquery.lightbox.js svn_eol_002dstyle=native
+documentation/site/backup/assets/jquery.lightbox.packed.js svn_eol_002dstyle=native
+documentation/site/backup/assets/loading.gif svn_mime_002dtype=application%2Foctet-stream
+documentation/site/backup/assets/next.gif svn_mime_002dtype=application%2Foctet-stream
+documentation/site/backup/assets/prev.gif svn_mime_002dtype=application%2Foctet-stream
+documentation/site/backup/assets/screencap_composite_small.png svn_mime_002dtype=application%2Foctet-stream
+documentation/site/backup/assets/style.css svn_eol_002dstyle=native
