@@ -21,6 +21,10 @@ public:
     Sparse = 5
   };
   // Creates a dense NDimArray
+  NDimArray() {
+    m_p = NULL;
+    m_type = Invalid;
+  }
   NDimArray(const NTuple &dims) {
     m_p = new DenseArray<T>(dims);
     m_type = Dense;
@@ -43,6 +47,7 @@ public:
     m_type = ref.m_type;
     switch (m_type) {
     case Invalid:
+      return;
     case Dense:
       m_p = new DenseArray<T>(*(reinterpret_cast<DenseArray<T>*>(ref.m_p)));
       return;
@@ -63,6 +68,7 @@ public:
   virtual ~NDimArray() {
     switch (m_type) {
     case Invalid:
+      return;
     case Dense:
       delete reinterpret_cast<DenseArray<T>*>(m_p);
       return;
@@ -81,6 +87,9 @@ public:
     }
   }
   // The BaseArray interface
+  inline bool isValid() const {
+    return (m_type != Invalid);
+  }
   virtual const NTuple dimensions() const {
     if (m_p) 
       return reinterpret_cast<BaseArray<T>*>(m_p)->dimensions();
@@ -104,16 +113,6 @@ public:
   virtual T& operator[](index_t pos) {
     if (m_p)
       return reinterpret_cast<BaseArray<T>*>(m_p)->operator[](pos);
-    throw Exception("Uninitialized NDimArray");
-  }
-  virtual NDimIterator<T>* getNDimIterator(int dim) {
-    if (m_p)
-      return reinterpret_cast<BaseArray<T>*>(m_p)->getNDimIterator(dim);
-    throw Exception("Uninitialized NDimArray");
-  }
-  virtual ConstNDimIterator<T>* getConstNDimIterator(int dim) {
-    if (m_p)
-      return reinterpret_cast<BaseArray<T>*>(m_p)->getConstNDimIterator(dim);
     throw Exception("Uninitialized NDimArray");
   }
   Type type() {return m_type;}

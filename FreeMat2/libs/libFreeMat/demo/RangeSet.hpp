@@ -56,9 +56,9 @@ public:
   RangeSet() {
     for (int i=0;i<NDims;i++) m_range[i] = new NullRange;
   }
-  inline void set(int i, BaseRangePtr t) {
+  inline BaseRangePtr& operator[](int i) {
     delete m_range[i];
-    m_range[i] = t;
+    return m_range[i];
   }
   ~RangeSet() {
     for (int i=0;i<NDims;i++) delete m_range[i];

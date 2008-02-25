@@ -1,3 +1,7 @@
+#include "BasicArray.hpp"
+#include "Array.hpp"
+#include "Cell.hpp"
+#include "NumericArray.hpp"
 #include "NDimArray.hpp"
 #include "NDimSlice.hpp"
 #include "PermArray.hpp"
@@ -32,10 +36,10 @@ Array DoFFTFunction(const Array &t) {
 static int count = 0;
 
 template <typename T>
-void printMatrix(const BaseArray<T>* A) {
-  for (int i=1;i<=A->dimensions()[0];i++) {
-    for (int j=1;j<=A->dimensions()[1];j++) {
-      std::cout << (*A)[NTuple(i,j)] << " ";
+void printMatrix(const BasicArray<T> &A) {
+  for (int i=1;i<=A.dimensions()[0];i++) {
+    for (int j=1;j<=A.dimensions()[1];j++) {
+      std::cout << A[NTuple(i,j)] << " ";
     }
     std::cout << "\n";
   }
@@ -44,12 +48,11 @@ void printMatrix(const BaseArray<T>* A) {
 }
 
 template <typename T>
-void printNDim(const BaseArray<T>& A, int dim) {
-  ConstNDimIterator<T> q(&A,dim);
+void printNDim(const BasicArray<T>& A, int dim) {
+  ConstBasicIterator<T> q(&A,dim);
   while (q.isValid()) {
-    for (int i=1;i<=q.size();i++)  {
+    for (int i=0;i<q.size();i++) 
       std::cout << q[i] << " ";
-    }
     q.nextSlice();
     std::cout << "\n";
   } 
@@ -202,16 +205,68 @@ int main(int, const char *[]) {
 
 #endif
 
-  NDimArray<float> A(NTuple(3,3));
-
-  for (int i=0;i<1000000;i++) {
-    NDimArray<float> B(A);
+  BasicArray<double> Y(NTuple(1000,1000));
+  for (int k=0;k<20;k++) {
+    BasicIterator<double> Z(&Y,0);
+    int i=0;
+    while (Z.isValid()) {
+      for (int j=0;j<Z.size();j++)
+	Z[j] = i+1-j;
+      Z.nextSlice();
+    }
   }
 
-  A[NTuple(1,1)] = 2;
-  A[NTuple(1,3)] = 5;
-  A[NTuple(2,2)] = 4;
-  printMatrix<float>(&A);
+#if 0
+  double *T = new double[1000*1000];
+  for (int k=0;k<20;k++) 
+  for (int i=0;i<1000;i++)
+    for (int j=0;j<1000;j++)
+      T[i*1000+j] = i - j + 1;
+#endif
+  
+
+  return 0;
+
+  BasicArray<double> A(NTuple(6,6));
+  for (int i=1;i<=6;i++)
+    for (int j=1;j<=6;j++)
+      A[NTuple(i,j)] = i*10 + j;
+
+  printMatrix<double>(A);
+
+  printNDim(A,1);
+
+#if 0
+  Array A(new NumericArray<double>(NTuple(6,6)));
+  NumericArray<double> *p = A.asDoubleArray();
+  for (int i=1;i<=6;i++)
+    for (int j=1;j<=6;j++) 
+      p->real()[NTuple(i,j)] = i*10 + j;
+  
+  printMatrix<double>(p->real());
+
+  RangeSet rset;
+  rset[0] = new StepRange(1,2,6);
+  rset[1] = new StepRange(1,2,6);
+  Array B(new NumericArray<double>(*p,rset));
+  
+  NumericArray<double> *q = B.asDoubleArray();
+  printMatrix<double>(q->real());
+
+  CellArray C(NTuple(1,4));
+  C[1] = A;
+  C[4] = B;
+#endif
+
+
+//   for (int i=0;i<1000000;i++) {
+//     NDimArray<float> B(A);
+//   }
+
+//   A[NTuple(1,1)] = 2;
+//   A[NTuple(1,3)] = 5;
+//   A[NTuple(2,2)] = 4;
+//   printMatrix<float>(&A);
   
   //   Array t(3.14);
   //   double p = 0;
@@ -241,10 +296,7 @@ int main(int, const char *[]) {
 
 #if 0
 
-  QVector<QVariant> T(1000*1000);
-  
-  for (int j=0;j<1000*1000;j++)
-    T[j] = QVariant((double) 1.323);
+
 
   double accum = 0;
   for (int j=0;j<1000*1000;j++)

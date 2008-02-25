@@ -1,149 +1,83 @@
 #ifndef __Array_hpp__
 #define __Array_hpp__
 
-#include "BaseArray.hpp"
-#include <QSharedData>
-
-template <typename T>
-class NumericArray;
-
-class ArrayBase : public QSharedData {
-};
-
-class Array;
-
+#include "Types.hpp"
+#include "NDimArray.hpp"
+#include "NumericArray.hpp"
 class StructArray;
+class CellArray;
 class StringArray;
 
 class Array {
 public:
   enum Type {
     Invalid = 0,
-    Scalar = 1,
-    Cell = 2,
-    Struct = 3,
-    String = 4,
-    Bool = 5,
-    Int8 = 6,
-    UInt8 = 7,
-    Int16 = 8,
-    UInt16 = 9,
-    Int32 = 10,
-    UInt32 = 11,
-    Int64 = 12,
-    UInt64 = 13,
-    Float = 14,
-    Double = 15
+    Cell = 1,
+    Struct = 2,
+    String = 3,
+    BoolArray = 4,
+    Int8Array = 5,
+    UInt8Array = 6,
+    Int16Array = 7,
+    UInt16Array = 8,
+    Int32Array = 9,
+    UInt32Array = 10,
+    Int64Array = 11,
+    UInt64Array = 12,
+    FloatArray = 13,
+    DoubleArray = 14,
   };
-  inline Array() {d = 0; type = Invalid;}
-  inline Array(double v) {
-    type = Double;
-    d = v;
+  inline Array() : m_ptr(NULL), m_type(Invalid) {}
+  inline Array(CellArray *p) : m_ptr(p), m_type(Cell) {}
+  inline Array(StructArray *p) : m_ptr(p), m_type(Struct) {}
+  inline Array(NumericArray<logical> *p) : m_ptr(p), m_type(BoolArray) {}
+  inline Array(NumericArray<int8> *p) : m_ptr(p), m_type(Int8Array) {}
+  inline Array(NumericArray<uint8> *p) : m_ptr(p), m_type(UInt8Array) {}
+  inline Array(NumericArray<int16> *p) : m_ptr(p), m_type(Int16Array) {}
+  inline Array(NumericArray<uint16> *p) : m_ptr(p), m_type(UInt16Array) {}
+  inline Array(NumericArray<int32> *p) : m_ptr(p), m_type(Int32Array) {}
+  inline Array(NumericArray<uint32> *p) : m_ptr(p), m_type(UInt32Array) {}
+  inline Array(NumericArray<int64> *p) : m_ptr(p), m_type(Int64Array) {}
+  inline Array(NumericArray<uint64> *p) : m_ptr(p), m_type(UInt64Array) {}
+  inline Array(NumericArray<float> *p) : m_ptr(p), m_type(FloatArray) {}
+  inline Array(NumericArray<double> *p) : m_ptr(p), m_type(DoubleArray) {}
+  //
+  inline const CellArray* asConstCellArray() const {
+    if (m_type != Cell) throw Exception("Not a cell array");
+    return reinterpret_cast<const CellArray*>(m_ptr);
   }
-  inline Array(Type t, const NTuple &dims);
-  //   inline const BaseArray<Array>* asConstCellArray() const {
-  //     if (type != Cell) throw Exception("not a cell array");
-  //     return static_cast<const BaseArray<Array>*>(p.constData());
-  //   }
-  //   inline BaseArray<Array>* asCellArray() {
-  //     if (type != Cell) throw Exception("not a cell array");
-  //     return static_cast<BaseArray<Array>*>(p.data());
-  //   }
-  inline const NumericArray<float>* asConstFloatArray() const {
-    if (type != Float) throw Exception("not a float array");
-    return reinterpret_cast<const NumericArray<float>*>(p.constData());
+  inline CellArray* asCellArray() {
+    if (m_type != Cell) throw Exception("Not a cell array");
+    return reinterpret_cast<CellArray*>(m_ptr);
   }
-  inline NumericArray<float>* asFloatArray() {
-    if (type != Float) throw Exception("not a float array");
-    return reinterpret_cast<NumericArray<float>*>(p.data());
+  inline const StructArray* asConstStructArray() const {
+    if (m_type != Struct) throw Exception("Not a struct array");
+    return reinterpret_cast<const StructArray*>(m_ptr);
   }
+  inline StructArray* asStructArray() {
+    if (m_type != Struct) throw Exception("Not a struct array");
+    return reinterpret_cast<StructArray*>(m_ptr);
+  }
+  inline const NumericArray<logical>* asConstLogicalArray() const {
+    if (m_type != BoolArray) throw Exception("Not a bool array");
+    return reinterpret_cast<const NumericArray<logical>*>(m_ptr);
+  }
+  inline NumericArray<logical>* asLogicalArray() {
+    if (m_type != BoolArray) throw Exception("Not a bool array");
+    return reinterpret_cast<NumericArray<logical>*>(m_ptr);
+  }
+  inline const NumericArray<double>* asConstDoubleArray() const {
+    if (m_type != DoubleArray) throw Exception("Not a bool array");
+    return reinterpret_cast<const NumericArray<double>*>(m_ptr);
+  }
+  inline NumericArray<double>* asDoubleArray() {
+    if (m_type != DoubleArray) throw Exception("Not a bool array");
+    return reinterpret_cast<NumericArray<double>*>(m_ptr);
+  }
+  Array(const Array &ref);
 private:
-  union {
-    double d;
-    void *p;
-  }
-  QSharedDataPointer<ArrayBase> p;
-  Type type;
+  void *m_ptr;
+  Type m_type;
 };
-
-class StructArray : public ArrayBase {
-  QVector<QSharedDataPointer<BaseArray<Array> > > data;
-  QVector<QString> fieldnames;
-public:
-  StructArray(const NTuple &dims) { }
-};
-
-template <typename T>
-class NumericArray : public ArrayBase {
-  QSharedDataPointer<BaseArray<T> > p_real;
-  QSharedDataPointer<BaseArray<T> > p_imag;
-public:
-  NumericArray(const NTuple &dims) {
-    p_real = new NDimArray<T>(dims);
-  }
-  const BaseArray<T>* constReal() const {return p_real.constData();}
-  BaseArray<T>* real() {return p_real.data();}
-};
-
-class StringArray : public ArrayBase {
-  QSharedDataPointer<BaseArray<quint16> > data;
-public:
-  StringArray(const NTuple &dims) {
-    data = new NDimArray<quint16>(dims);
-  }
-};
-
-Array::Array(Type t,const NTuple &dims) {
-  type = t;
-  switch (t) {
-  case Invalid:
-    throw Exception("Illegal array construction");
-  case Scalar:
-    throw Exception("Illegal array construction");
-  case Cell:
-    //     p = static_cast<ArrayBase*>(new NDimArray<Array>(dims));
-    break;
-  case Struct:
-    p = static_cast<ArrayBase*>(new StructArray(dims));
-    break;
-  case String:
-    p = static_cast<ArrayBase*>(new StringArray(dims));
-    break;
-  case Bool:
-    p = static_cast<ArrayBase*>(new NumericArray<bool>(dims));
-    break;
-  case UInt8:
-    p = static_cast<ArrayBase*>(new NumericArray<quint8>(dims));
-    break;
-  case Int8:
-    p = static_cast<ArrayBase*>(new NumericArray<qint8>(dims));
-    break;
-  case UInt16:
-    p = static_cast<ArrayBase*>(new NumericArray<quint16>(dims));
-    break;
-  case Int16:
-    p = static_cast<ArrayBase*>(new NumericArray<qint16>(dims));
-    break;
-  case UInt32:
-    p = static_cast<ArrayBase*>(new NumericArray<quint32>(dims));
-    break;
-  case Int32:
-    p = static_cast<ArrayBase*>(new NumericArray<qint32>(dims));
-    break;
-  case UInt64:
-    p = static_cast<ArrayBase*>(new NumericArray<quint64>(dims));
-    break;
-  case Int64:
-    p = static_cast<ArrayBase*>(new NumericArray<qint64>(dims));
-    break;
-  case Float:
-    p = static_cast<ArrayBase*>(new NumericArray<float>(dims));
-    break;
-  case Double:
-    p = static_cast<ArrayBase*>(new NumericArray<double>(dims));
-    break;
-  }
-}
-
 
 #endif

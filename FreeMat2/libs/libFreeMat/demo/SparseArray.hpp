@@ -36,10 +36,10 @@ public:
   inline const T operator[](const NTuple& pos) const {
     if (m_dims.validate(pos)) {
       if (!m_data.contains(pos[1]))
-	return 0;
+	return T();
       const SparseSlice<T> & col = m_data.value(pos[1]);
       if (!col.contains(pos[0]))
-	return 0;
+	return T();
       return col.value(pos[0]);
     }
     throw Exception("Out of range");
