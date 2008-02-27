@@ -15,17 +15,31 @@ public:
     Cell = 1,
     Struct = 2,
     String = 3,
-    BoolArray = 4,
-    Int8Array = 5,
-    UInt8Array = 6,
-    Int16Array = 7,
-    UInt16Array = 8,
-    Int32Array = 9,
-    UInt32Array = 10,
-    Int64Array = 11,
-    UInt64Array = 12,
-    FloatArray = 13,
-    DoubleArray = 14,
+    Bool = 4,
+    Int8 = 5,
+    UInt8 = 6,
+    Int16 = 7,
+    UInt16 = 8,
+    Int32 = 9,
+    UInt32 = 10,
+    Int64 = 11,
+    UInt64 = 12,
+    Float = 13,
+    Double = 14,
+    CellArray = 15,
+    StructArray = 16,
+    StringArray = 17,
+    BoolArray = 18,
+    Int8Array = 19,
+    UInt8Array = 20,
+    Int16Array = 21,
+    UInt16Array = 22,
+    Int32Array = 23,
+    UInt32Array = 24,
+    Int64Array = 25,
+    UInt64Array = 26,
+    FloatArray = 27,
+    DoubleArray = 28,
   };
   inline Array() : m_ptr(NULL), m_type(Invalid) {}
   inline Array(CellArray *p) : m_ptr(p), m_type(Cell) {}
@@ -75,6 +89,9 @@ public:
     return reinterpret_cast<NumericArray<double>*>(m_ptr);
   }
   Array(const Array &ref);
+  inline const Type type() const {
+    return m_type;
+  }
 private:
   void *m_ptr;
   Type m_type;

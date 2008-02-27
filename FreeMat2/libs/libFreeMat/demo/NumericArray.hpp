@@ -1,12 +1,12 @@
 #ifndef __NumericArray_hpp__
 #define __NumericArray_hpp__
 
-#include "NDimArray.hpp"
+#include "BasicArray.hpp"
 
 template <typename T>
 class NumericArray {
-  NDimArray<T> m_real;
-  NDimArray<T> m_imag;
+  BasicArray<T> m_real;
+  BasicArray<T> m_imag;
 public:
   NumericArray(const NTuple &dims) : m_real(dims) {}
   NumericArray(NumericArray<T> &ref, const RangeSet& slice) :
@@ -14,16 +14,16 @@ public:
   inline const NTuple dimensions() const {
     return m_real.dimensions();
   }
-  inline NDimArray<T>& real() {
+  inline BasicArray<T>& real() {
     return m_real;
   }
-  inline const NDimArray<T>& real() const {
+  inline const BasicArray<T>& real() const {
     return m_real;
   }
-  inline NDimArray<T>& imag() {
+  inline BasicArray<T>& imag() {
     return m_imag;
   }
-  inline const NDimArray<T>& imag() const {
+  inline const BasicArray<T>& imag() const {
     return m_imag;
   }
 };
