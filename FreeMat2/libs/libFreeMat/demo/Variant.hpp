@@ -1,12 +1,20 @@
 #ifndef __Variant_hpp__
 #define __Variant_hpp__
 
+#include <QSharedData>
 #include "Types.hpp"
-#include "NDimArray.hpp"
-#include "NumericArray.hpp"
+#include "BasicArray.hpp"
 class StructArray;
 class CellArray;
 class StringArray;
+
+class SharedObject;
+
+typedef union {
+  SharedObject *p;
+  uint64        u64;
+  double        d;
+} Data;
 
 class Variant {
 public:
@@ -38,119 +46,61 @@ public:
     FloatArray = 27,
     DoubleArray = 28,
   };
-  inline Variant() : 
-    m_real_u64(0), m_type(Invalid) {}
-  inline Variant(CellArray *p) : 
-    m_real_p(p), m_type(CellArray) {}
-  inline Variant(StructArray *p) : 
-    m_real_p(p), m_type(StructArray) {}
-  inline Variant(int8 real, int8 imag = 0) : 
-    m_real_i8(real), m_imag_i8(imag), m_type(Int8) {}
-  inline Variant(uint8 real, uint8 imag = 0) :
-    m_real_u8(real), m_imag_u8(imag), m_type(UInt8) {}
-  inline Variant(int16 real, int16 imag = 0) : 
-    m_real_i16(real), m_imag_i16(imag), m_type(Int16) {}
-  inline Variant(uint16 real, uint16 imag = 0) :
-    m_real_u16(real), m_imag_u16(imag), m_type(UInt16) {}
-  inline Variant(int32 real, int32 imag = 0) : 
-    m_real_i32(real), m_imag_i32(imag), m_type(Int32) {}
-  inline Variant(uint32 real, uint32 imag = 0) :
-    m_real_u32(real), m_imag_u32(imag), m_type(UInt32) {}
-  inline Variant(int64 real, int64 imag = 0) : 
-    m_real_i64(real), m_imag_i64(imag), m_type(Int64) {}
-  inline Variant(uint64 real, uint64 imag = 0) :
-    m_real_u64(real), m_imag_u64(imag), m_type(UInt64) {}
-  inline Variant(float real, float imag = 0) :
-    m_real_f(real), m_imag_f(imag), m_type(Float) {}
-  inline Variant(double real, double imag = 0) :
-    m_real_d(real), m_imag_d(imag), m_type(Double) {}
-  inline Variant(BasicArray<logical> *pr, BasicArray<logical> *pi = 0) :
-    m_real_p(pr), m_imag_p(pi), m_type(BoolArray) {}
-  inline Variant(BasicArray<int8> *pr, BasicArray<int8> *pi = 0) :
-    m_real_p(pr), m_imag_p(pi), m_type(Int8Array) {}
-  inline Variant(BasicArray<uint8> *pr, BasicArray<uint8> *pi = 0) :
-    m_real_p(pr), m_imag_p(pi), m_type(UInt8Array) {}
-  inline Variant(BasicArray<int16> *pr, BasicArray<int16> *pi = 0) :
-    m_real_p(pr), m_imag_p(pi), m_type(Int16Array) {}
-  inline Variant(BasicArray<uint16> *pr, BasicArray<uint16> *pi = 0) :
-    m_real_p(pr), m_imag_p(pi), m_type(UInt16Array) {}
-  inline Variant(BasicArray<int32> *pr, BasicArray<int32> *pi = 0) :
-    m_real_p(pr), m_imag_p(pi), m_type(Int32Array) {}
-  inline Variant(BasicArray<uint32> *pr, BasicArray<uint32> *pi = 0) :
-    m_real_p(pr), m_imag_p(pi), m_type(UInt32Array) {}
-  inline Variant(BasicArray<int64> *pr, BasicArray<int64> *pi = 0) :
-    m_real_p(pr), m_imag_p(pi), m_type(Int64Array) {}
-  inline Variant(BasicArray<uint64> *pr, BasicArray<uint64> *pi = 0) :
-    m_real_p(pr), m_imag_p(pi), m_type(UInt64Array) {}
-  inline Variant(BasicArray<float> *pr, BasicArray<float> *pi = 0) :
-    m_real_p(pr), m_imag_p(pi), m_type(FloatArray) {}
-  inline Variant(BasicArray<double> *pr, BasicArray<double> *pi = 0) :
-    m_real_p(pr), m_imag_p(pi), m_type(DoubleArray) {}
-
-  inline const CellArray* asConstCellArray() const {
-    if (m_type != Cell) throw Exception("Not a cell array");
-    return reinterpret_cast<const CellArray*>(m_ptr);
-  }
-  inline CellArray* asCellArray() {
-    if (m_type != Cell) throw Exception("Not a cell array");
-    return reinterpret_cast<CellArray*>(m_ptr);
-  }
-  inline const StructArray* asConstStructArray() const {
-    if (m_type != Struct) throw Exception("Not a struct array");
-    return reinterpret_cast<const StructArray*>(m_ptr);
-  }
-  inline StructArray* asStructArray() {
-    if (m_type != Struct) throw Exception("Not a struct array");
-    return reinterpret_cast<StructArray*>(m_ptr);
-  }
-  inline const NumericArray<logical>* asConstLogicalArray() const {
-    if (m_type != BoolArray) throw Exception("Not a bool array");
-    return reinterpret_cast<const NumericArray<logical>*>(m_ptr);
-  }
-  inline NumericArray<logical>* asLogicalArray() {
-    if (m_type != BoolArray) throw Exception("Not a bool array");
-    return reinterpret_cast<NumericArray<logical>*>(m_ptr);
-  }
-  inline const NumericArray<double>* asConstDoubleArray() const {
-    if (m_type != DoubleArray) throw Exception("Not a bool array");
-    return reinterpret_cast<const NumericArray<double>*>(m_ptr);
-  }
-  inline NumericArray<double>* asDoubleArray() {
-    if (m_type != DoubleArray) throw Exception("Not a bool array");
-    return reinterpret_cast<NumericArray<double>*>(m_ptr);
-  }
-  Variant(const Variant &ref);
-  inline const Type type() const {
-    return m_type;
-  }
+  Variant();
+  Variant(double real, double imag = 0);
+  Variant(BasicArray<double> *r);
+  Variant& operator=(const Variant &v);
+  inline Variant(const Variant &ref);
+  inline ~Variant();
+  inline void clear();
+  inline const Type type() const { return m_type; }
+  inline bool isArray() const {return m_type >= BoolArray;}
+  template <typename T>
+  inline BasicArray<T>& real() const;
+  template <typename T>
+  inline BasicArray<T>& imag() const;
 private:
-  union {
-    void *m_real_p;
-    int8 m_real_i8;
-    uint8 m_real_u8;
-    int16 m_real_i16;
-    uint16 m_real_u16;
-    int32 m_real_i32;
-    uint32 m_real_u32;
-    int64 m_real_i64;
-    uint64 m_real_u64;
-    float m_real_f;
-    double m_real_d;
-  };
-  union {
-    void *m_imag_p;
-    int8 m_imag_i8;
-    uint8 m_imag_u8;
-    int16 m_imag_i16;
-    uint16 m_imag_u16;
-    int32 m_imag_i32;
-    uint32 m_imag_u32;
-    int64 m_imag_i64;
-    uint64 m_imag_u64;
-    float m_imag_f;
-    double m_imag_d;
-  };
+  Data m_real;
+  Data m_imag;
   Type m_type;
 };
+
+class SharedObject : public QSharedData {
+  Variant::Type m_type;
+  void *m_p;
+public:
+  SharedObject(Variant::Type t, void* p) : m_type(t), m_p(p) {}
+  ~SharedObject();
+  inline void* ptr() const {return m_p;}
+};
+
+inline Variant::Variant(const Variant &ref) :
+  m_real(ref.m_real), m_imag(ref.m_imag), m_type(ref.m_type) {
+  if (isArray()) {
+    if (m_real.p) m_real.p->ref.ref();
+    if (m_imag.p) m_imag.p->ref.ref();
+  }
+}
+
+inline Variant::~Variant() {
+  clear();
+}
+
+inline void Variant::clear() {
+  if (isArray()) {
+    if (m_real.p && !m_real.p->ref.deref()) delete m_real.p;
+    if (m_imag.p && !m_imag.p->ref.deref()) delete m_imag.p;
+  }
+}
+
+template <typename T>
+inline BasicArray<T>& Variant::real() const {
+  return *(reinterpret_cast<BasicArray<T>*>(m_real.p->ptr()));
+}
+
+template <typename T>
+inline BasicArray<T>& Variant::imag() const {
+  return *(reinterpret_cast<BasicArray<T>*>(m_imag.p->ptr()));    
+}
 
 #endif

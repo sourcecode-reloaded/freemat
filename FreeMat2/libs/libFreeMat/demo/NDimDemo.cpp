@@ -1,7 +1,8 @@
 #include "BasicArray.hpp"
-#include "Array.hpp"
-#include "Cell.hpp"
-#include "NumericArray.hpp"
+//#include "Array.hpp"
+#include "Variant.hpp"
+//#include "Cell.hpp"
+//#include "NumericArray.hpp"
 #include "NDimArray.hpp"
 #include "NDimSlice.hpp"
 #include "PermArray.hpp"
@@ -205,7 +206,15 @@ int main(int, const char *[]) {
 
 #endif
 
-  BasicArray<double> Y(NTuple(1000,1000));
+  //  BasicArray<double> Y(NTuple(1000,1000));
+  BasicArray<double> Y(NTuple(5,5));
+  for (int i=1;i<=5;i++)
+    for (int j=1;j<=5;j++) {
+      Y[NTuple(i,j)] = i*10+j;
+    }
+  printMatrix<double>(Y);
+ 
+#if 0
   for (int k=0;k<20;k++) {
     BasicIterator<double> Z(&Y,0);
     int i=0;
@@ -215,7 +224,24 @@ int main(int, const char *[]) {
       Z.nextSlice();
     }
   }
+#endif
 
+  //  Variant Q(3.1233);
+  Variant V(Y);
+  printMatrix<double>(V.real<double>());
+  BasicArray<double> &Q2(V.real<double>());
+  Q2[NTuple(2,2)] = 99;
+  printMatrix<double>(V.real<double>());
+  printMatrix<double>(Y);
+  
+  
+  Variant P(V);
+  Variant Q = P;
+
+  BasicArray<double> Y2(P.real<double>());
+  Y2[NTuple(3,3)] = 0;
+  printMatrix<double>(Y2);
+  printMatrix<double>(Y);
 #if 0
   double *T = new double[1000*1000];
   for (int k=0;k<20;k++) 

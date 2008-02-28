@@ -3,6 +3,7 @@
 
 #include <QVector>
 #include "NTuple.hpp"
+#include <QDebug>
 
 template <typename T>
 class BasicIterator;
@@ -16,10 +17,17 @@ class BasicArray {
   NTuple m_dims;
   index_t m_offset;
 public:
-  BasicArray() : m_data(), m_dims(0,0), m_offset(0) {}
+  BasicArray() : m_data(), m_dims(0,0), m_offset(0) 
+  {
+    qDebug() << "Construct empty";
+  }
   BasicArray(const NTuple& dim) : m_data(), m_dims(dim), m_offset(0) 
   {
     m_data.resize(m_dims.count());
+    qDebug() << "Construct full";
+  }
+  ~BasicArray() {
+    //    qDebug() << "Destruct";
   }
   inline index_t offset() const {return m_offset;}
   inline QVector<T>& data() {return m_data;}
