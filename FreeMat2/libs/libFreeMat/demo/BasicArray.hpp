@@ -27,7 +27,7 @@ public:
     qDebug() << "Construct full";
   }
   ~BasicArray() {
-    //    qDebug() << "Destruct";
+    qDebug() << "Destruct";
   }
   inline index_t offset() const {return m_offset;}
   inline QVector<T>& data() {return m_data;}

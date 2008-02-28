@@ -206,13 +206,14 @@ int main(int, const char *[]) {
 
 #endif
 
-  //  BasicArray<double> Y(NTuple(1000,1000));
-  BasicArray<double> Y(NTuple(5,5));
+  Variant Y(DoubleArray,NTuple(5,5));
+
+  BasicArray<double> &Y2(Y.real<double>());
   for (int i=1;i<=5;i++)
     for (int j=1;j<=5;j++) {
-      Y[NTuple(i,j)] = i*10+j;
+      Y2[NTuple(i,j)] = i*10+j;
     }
-  printMatrix<double>(Y);
+  printMatrix<double>(Y.constReal<double>());
  
 #if 0
   for (int k=0;k<20;k++) {
@@ -228,7 +229,20 @@ int main(int, const char *[]) {
 
   //  Variant Q(3.1233);
   Variant V(Y);
-  printMatrix<double>(V.real<double>());
+  Variant P(V);
+  Variant Q(P);
+
+  for (int i=1;i<5;i++) {
+    BasicArray<double> &Q2(V.real<double>());
+    Q2[NTuple(i,i)] = (double) i;
+  }
+    
+  printMatrix<double>(V.constReal<double>());
+
+  printMatrix<double>(P.constReal<double>());
+
+#if 0  
+
   BasicArray<double> &Q2(V.real<double>());
   Q2[NTuple(2,2)] = 99;
   printMatrix<double>(V.real<double>());
@@ -242,6 +256,8 @@ int main(int, const char *[]) {
   Y2[NTuple(3,3)] = 0;
   printMatrix<double>(Y2);
   printMatrix<double>(Y);
+#endif
+
 #if 0
   double *T = new double[1000*1000];
   for (int k=0;k<20;k++) 
