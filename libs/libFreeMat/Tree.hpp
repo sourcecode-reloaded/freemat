@@ -86,7 +86,7 @@ public:
   inline void validate() {
     try {
       try_validate();
-    } catch(Exception &e) {
+    } catch(Exception &) {
       std::cout << "Tree fails validation!\n";
       print();
     }

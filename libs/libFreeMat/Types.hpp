@@ -59,6 +59,17 @@ typedef enum {
   FM_STRING,
 } Class;
 
+
+//CommonType is a helper function for binary and ternary operations (e.g. a:b, a:b:c)
+//When variable types are different the output type is the "least" of the input types.
+//(e.g. double:int8:float result is int8)
+inline Class CommonType( Class a, Class b ){
+    return ( a < b )? a : b;
+}
+inline Class CommonType( Class a, Class b, Class c ) {
+    return CommonType( a, CommonType( b, c ) );
+}
+
 typedef PList<std::string> StringVector;
 
 inline size_t ByteSize(Class t) {

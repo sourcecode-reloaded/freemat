@@ -1916,13 +1916,6 @@ Array Array::floatRangeConstructor(float minval, float stepsize,
   float *rp = NULL;
   if (stepsize == 0) throw Exception("step size must be nonzero in colon expression");
 
-  //ideally, n = (c-a)/b
-  // But this really defines an interval... we let
-  // n_min = min(c-a)/max(b)
-  // n_max = max(c-a)/min(b)
-  // where min(x) = {y \in fp | |y| is max, |y| < |x|, sign(y) = sign(x)}
-  //       max(x) = {y \in fp | |y| is min, |y| > |x|, sign(y) = sign(x)}
-
   int npts = num_for_loop_iter_f( minval, stepsize, maxval );
   double mismatch = fabsf( maxval - minval - (npts-1)*stepsize );
   bool use_double_sided = (mismatch < 3*fepsf( maxval ));
@@ -1964,13 +1957,6 @@ Array Array::doubleRangeConstructor(double minval, double stepsize,
   double *rp = NULL;
   if (stepsize == 0) throw Exception("step size must be nonzero in colon expression");
 
-  //ideally, n = (c-a)/b
-  // But this really defines an interval... we let
-  // n_min = min(c-a)/max(b)
-  // n_max = max(c-a)/min(b)
-  // where min(x) = {y \in fp | |y| is max, |y| < |x|, sign(y) = sign(x)}
-  //       max(x) = {y \in fp | |y| is min, |y| > |x|, sign(y) = sign(x)}
-  
   int npts = num_for_loop_iter( minval, stepsize, maxval );
   double mismatch = fabs( maxval - minval - (npts-1)*stepsize );
   bool use_double_sided = (mismatch < 3*feps( maxval ));
