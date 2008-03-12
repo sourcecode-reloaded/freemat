@@ -2,7 +2,7 @@
 #define __StructArray_hpp__
 
 class StructArray {
-  QMap<QString,NDimArray<Array> > m_data;
+  QMap<QString,BasicArray<Variant> > m_data;
 public:
   StructArray() {}
 };

@@ -1,3 +1,5 @@
+
+
 #ifndef __NTuple_hpp__
 #define __NTuple_hpp__
 
@@ -10,7 +12,32 @@
 class NTuple {
   index_t m_data[NDims];
 public:
-  index_t map(const NTuple& pos) const {
+  inline bool is2D() const {
+    return (m_data[0]*m_data[1] == count());
+  }
+  inline index_t rows() const {
+    return m_data[0];
+  }
+  inline index_t cols() const {
+    return m_data[1];
+  }
+  inline bool isVector() const {
+    return (is2D() && ((m_data[0] == 1) || (m_data[1] == 1)));
+  }
+  inline bool isColumnVector() const {
+    return (is2D() && (m_data[1] == 1));
+  }
+  inline bool isRowVector() const {
+    return (is2D() && (m_data[0] == 1));
+  }
+  inline index_t stride(int dim) const {
+    index_t nextCoeff = 1;
+    for (int i=1;i<=dim;i++) {
+      nextCoeff *= m_data[i-1];
+    }
+    return nextCoeff;
+  }
+  inline index_t map(const NTuple& pos) const {
     index_t retval = 1;
     index_t nextCoeff = 1;
     for (int i=0;i<NDims;i++) {

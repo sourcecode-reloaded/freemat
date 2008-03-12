@@ -1,6 +1,8 @@
+
 #include "BasicArray.hpp"
 //#include "Array.hpp"
 #include "Variant.hpp"
+#include "VariantList.hpp"
 //#include "Cell.hpp"
 //#include "NumericArray.hpp"
 #include "NDimArray.hpp"
@@ -10,6 +12,7 @@
 #include "SparseArray.hpp"
 #include <iostream>
 #include <QVariant>
+#include <QVarLengthArray>
 //#include "Array.hpp"
 
 // The next issue to solve is the dynamic typing one.
@@ -48,18 +51,37 @@ void printMatrix(const BasicArray<T> &A) {
     count++ << "\n";
 }
 
-template <typename T>
-void printNDim(const BasicArray<T>& A, int dim) {
-  ConstBasicIterator<T> q(&A,dim);
+template <typename T, typename S>
+void printNDim(const T& A, int dim) {
+  S q(&A,dim);
   while (q.isValid()) {
-    for (int i=0;i<q.size();i++) 
-      std::cout << q[i] << " ";
+    for (int i=0;i<q.size();i++)  {
+      std::cout << q.get() << " ";
+      q.next();
+    }
     q.nextSlice();
     std::cout << "\n";
   } 
   std::cout << "************************************************************ " << 
     count++ << "\n";
 }
+
+// template <typename T>
+// void printNDim(const BasicArray<T>& A, int dim) {
+//   ConstBasicIterator<T> q(&A,dim);
+//   while (q.isValid()) {
+//     for (int i=0;i<q.size();i++)  {
+//       std::cout << q.get() << " ";
+//       q.next();
+//     }
+//     q.nextSlice();
+//     std::cout << "\n";
+//   } 
+//   std::cout << "************************************************************ " << 
+//     count++ << "\n";
+// }
+
+
 
 int main(int, const char *[]) {
 #if 0
@@ -206,6 +228,42 @@ int main(int, const char *[]) {
 
 #endif
 
+  // Next step - fast VariantList & slicing.
+
+  class QVectorVariant : public QVarLengthArray<Variant,2> {
+  };
+
+  Variant M(433);
+  Variant R;
+  for (int i=0;i<100000000;i++) {
+    //    Variant K(DoubleArray,NTuple(1,1));
+    //    K.set(0,M);
+    Variant K(4243.0);
+    R = Variant(K.realScalar<double>() + 1);
+    //    Variant M = K;
+    //QList<Variant> T;
+    VariantList T;
+    //    std::vector<Variant> T;
+    T.push_back(K);
+    //     Variant *p = new Variant[1];
+    //     p[0] = K;
+    //     delete[] p;
+    //    Variant Q = K;
+    //    Variant M[2];
+    //    M[0] = K;
+  }
+
+  // Let's try something less grandiose for the slicing.
+  // The array interface has:
+  //   Variant getSubset(Variant index);
+  //   Variant getNDimSubset(VariantVector index);
+  //   Variant getField(Variant name);
+  //   VariantVector getField(Variant name);
+  
+  // So VariantVector is the next item
+
+  return 0;
+
   Variant Y(DoubleArray,NTuple(5,5));
 
   BasicArray<double> &Y2(Y.real<double>());
@@ -213,9 +271,68 @@ int main(int, const char *[]) {
     for (int j=1;j<=5;j++) {
       Y2[NTuple(i,j)] = i*10+j;
     }
-  printMatrix<double>(Y.constReal<double>());
- 
+  printNDim<BasicArray<double>,ConstBasicIterator<double> >(Y2,0);
+  printNDim<BasicArray<double>,ConstBasicIterator<double> >(Y2,1);
+  //  printMatrix<double>(Y.constReal<double>());
+  Y.set(7,Variant(1,3));
+  printNDim<Variant, ConstVariantIterator>(Y,0);
+
+  Variant L(UInt8Array,NTuple(5,5));
+  VariantIterator LP(&L,0);
+  for (int i=1;i<=5;i++) {
+    for (int j=1;j<=5;j++) {
+      LP.set(10*(i*10+j));
+      LP.next();
+    }
+    LP.nextSlice();
+  }
+  printNDim<Variant, ConstVariantIterator>(L,0);
+
+  return 0;
+
 #if 0
+
+  // Run a sum timing test
+  for (int i=0;i<10;i++) {
+    Variant Z(DoubleArray,NTuple(1000,1000));
+    double sum = 0;
+    ConstVariantIterator ZP(&Z,0);
+    while (ZP.isValid()) {
+      for (int j=0;j<ZP.size();j++)
+	sum += ZP.get().realDouble();
+      ZP.nextSlice();
+    }
+  }
+  return 0;
+
+  for (int i=0;i<10;i++) {
+    Variant Z(DoubleArray,NTuple(1000,1000));
+    BasicArray<double> &ZP2(Z.real<double>());
+    ConstBasicIterator<double> QQ(&ZP2,0);
+    double ssum = 0;
+    while (QQ.isValid()) {
+      for (int j=0;j<QQ.size();j++)
+	ssum += QQ.get();
+      QQ.nextSlice();
+    }
+  }
+
+  //  std::cout << "sum = " << ssum << "\n";
+  return 0;
+
+  Variant Y(DoubleArray,NTuple(5,5));
+
+  BasicArray<double> &Y2(Y.real<double>());
+  for (int i=1;i<=5;i++)
+    for (int j=1;j<=5;j++) {
+      Y2[NTuple(i,j)] = i*10+j;
+    }
+  printNDim<BasicArray<double>,ConstBasicIterator<double> >(Y2,0);
+  printNDim<BasicArray<double>,ConstBasicIterator<double> >(Y2,1);
+  //  printMatrix<double>(Y.constReal<double>());
+
+  printNDim<Variant, ConstVariantIterator>(Y,0);
+  
   for (int k=0;k<20;k++) {
     BasicIterator<double> Z(&Y,0);
     int i=0;
@@ -256,6 +373,8 @@ int main(int, const char *[]) {
   Y2[NTuple(3,3)] = 0;
   printMatrix<double>(Y2);
   printMatrix<double>(Y);
+
+
 #endif
 
 #if 0
@@ -276,7 +395,7 @@ int main(int, const char *[]) {
 
   printMatrix<double>(A);
 
-  printNDim(A,1);
+  printNDim<BasicArray<double>,ConstBasicIterator<double> >(A,1);
 
 #if 0
   Array A(new NumericArray<double>(NTuple(6,6)));
