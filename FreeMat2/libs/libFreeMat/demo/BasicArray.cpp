@@ -1,4 +1,6 @@
 #include "BasicArray.hpp"
+#include "Variant.hpp"
+#include "VariantList.hpp"
 
 template <typename T>
 void BasicArray<T>::resize(const NTuple& pos) {

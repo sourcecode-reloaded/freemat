@@ -74,12 +74,17 @@ public:
   inline Variant(T real, T imag = 0);
   Variant(const BasicArray<double> &r);
   Variant(Type t, const NTuple &dims);
+  Variant(const QString &text);
   const NTuple dimensions() const;
   const index_t length() const {return dimensions().count();}
   const index_t rows() const {return dimensions()[0];}
   const index_t columns() const {return dimensions()[1];}
   inline const Type type() const { return m_type; }
   inline bool isArray() const {return m_type >= BoolArray;}
+  inline bool isVector() const {return dimensions().isVector();}
+  inline bool isColumnVector() const {return dimensions().isColumnVector();}
+  inline bool isRowVector() const {return dimensions().isRowVector();}
+  QString string() const;
   inline bool isScalar() const {
     return ((m_type >= BoolScalar) && (m_type <= DoubleScalar));
   }
@@ -141,6 +146,8 @@ public:
 };
 
 std::ostream& operator<<(std::ostream& o, const Variant &t);
+
+bool IsColonOp(const Variant &arg);
 
 // Suppose we support a get/set interface:
 // And we support slicing through the iterators

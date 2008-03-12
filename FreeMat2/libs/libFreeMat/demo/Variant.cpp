@@ -72,6 +72,8 @@ static inline void* construct(Type t, const void *copy) {
 static inline void* construct_sized(Type t, const NTuple &dims) {
   switch (t) {
   default:
+  case String:
+    return Tconstruct_sized<BasicArray<uint16> >(dims);
   case BoolArray:
     return Tconstruct_sized<BasicArray<logical> >(dims);
   case Int8Array:
@@ -189,6 +191,7 @@ SharedObject::~SharedObject() {
   case Float:
     m_real.f = real; m_imag.f = imag;
     return;
+  }
 #endif
 
 void Variant::print(std::ostream& o) const {
@@ -236,6 +239,16 @@ Variant::Variant(const BasicArray<double> &r) {
 Variant::Variant(Type t, const NTuple &dims) {
   m_type = t;
   m_real.p = new SharedObject(t,construct_sized(t,dims));
+}
+
+Variant::Variant(const QString &text) {
+  m_type = String;
+  m_real.p = new SharedObject(String,
+			      construct_sized(String,
+					     NTuple(1,text.size())));
+  BasicArray<uint16> p(real<uint16>());
+  for (int i=0;i<text.size();i++) 
+    p[i+1] = text[i].unicode();
 }
 
 const NTuple Variant::dimensions() const {
@@ -383,4 +396,12 @@ void Variant::set(index_t pos, const Variant& val) {
 std::ostream& operator<<(std::ostream& o, const Variant &t) {
   t.print(o);
   return o;
+}
+  
+bool IsColonOp(const Variant &x) {
+  return (x.type() == String) && (x.string() == ":");
+}
+
+QString Variant::string() const {
+  
 }

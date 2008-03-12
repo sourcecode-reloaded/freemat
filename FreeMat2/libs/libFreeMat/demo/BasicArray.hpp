@@ -7,6 +7,9 @@
 #include <QDebug>
 #include "Types.hpp"
 
+class Variant;
+class VariantList;
+
 template <typename T>
 class BasicIterator;
 
@@ -32,6 +35,9 @@ public:
   inline index_t rows() const {return m_dims.rows();}
   inline index_t cols() const {return m_dims.cols();}
   inline index_t length() const {return m_dims.count();}
+  inline bool isEmpty() const {return (length() == 0);}
+  inline bool isColumnVector() const {return m_dims.isColumnVector();}
+  inline bool isRowVector() const {return m_dims.isRowVector();}
   inline const T operator[](const NTuple& pos) const {
     if (m_dims.validate(pos))
       return m_data[m_dims.map(pos)+m_offset-1];
