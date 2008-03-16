@@ -14,3 +14,5 @@ FreeMat2/libs/libMex/Makefile.in
 FreeMat2/libs/libXP/Makefile.in
 FreeMat2/missing
 FreeMat2/src/Makefile.in
+documentation/site/out
+documentation/site/site
