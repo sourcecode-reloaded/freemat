@@ -76,7 +76,6 @@ public:
   void SetCompletionContext(Context* ctxt);
   Context* GetCompletionContext();
   void getKeyPress();
-  void WriteHistory();
  private:
   Context *context;
   StringVector GetCompletions(string line, int word_end, 
@@ -165,6 +164,7 @@ signals:
 public slots:
   void Ready();
   void ClearHistory();
+  void WriteHistory();
   void OnChar( int c );
   void SetTermWidth(int w);
   void QueueString(QString);
@@ -177,6 +177,7 @@ public slots:
   void DbTraceAction();
   void SetPrompt(string);
   void ClearDisplayCommand();
+  void ChangeDir(const QString& dir);
 signals:
   void UpdateTermWidth(int);
   void RegisterInterrupt();

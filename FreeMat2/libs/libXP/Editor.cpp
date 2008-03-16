@@ -778,8 +778,10 @@ void FMEditor::createActions() {
   helpWinAct->setShortcut(Qt::Key_F1); 
   connect(helpWinAct,SIGNAL(triggered()),this,SLOT(helpWin()));
   helpOnSelectionAct = new QAction("Help on Selection",this);
-  helpOnSelectionAct->setShortcut(Qt::Key_F2); 
+  helpOnSelectionAct->setShortcut(Qt::Key_F2);
   connect(helpOnSelectionAct,SIGNAL(triggered()),this,SLOT(helpOnSelection()));
+  openSelectionAct = new QAction("Open Selection",this);
+  connect(openSelectionAct,SIGNAL(triggered()),this,SLOT(openSelection()));
   dbStepAct = new QAction(QIcon(":/images/dbgnext.png"),"&Step Over",this);
   dbStepAct->setShortcut(Qt::Key_F10); 
   connect(dbStepAct,SIGNAL(triggered()),this,SLOT(dbstep()));
@@ -867,6 +869,10 @@ void FMEditor::helpOnSelection() {
   emit EvaluateText("helpwin " + currentEditor()->textCursor().selectedText() + "\n");
 }
 
+void FMEditor::openSelection() {
+  emit EvaluateText("edit " + currentEditor()->textCursor().selectedText() + "\n");
+}
+
 void FMEditor::createMenus() {
   fileMenu = menuBar()->addMenu("&File");
   fileMenu->addAction(newAct);
@@ -913,6 +919,7 @@ void FMEditor::createMenus() {
   helpMenu->addAction(helpWinAct);
   helpMenu->addAction(helpOnSelectionAct);
   m_popup = new QMenu;
+  m_popup->addAction(openSelectionAct);
   m_popup->addAction(helpOnSelectionAct);
   m_popup->addAction(copyAct);
   m_popup->addAction(cutAct);
@@ -1077,17 +1084,7 @@ void FMEditor::open() {
   QStringList::Iterator it = fileNames.begin();
   while(it != fileNames.end()) {
     QString fileName = *it;
-    if (tab->tabText(tab->currentIndex()) != "untitled.m") { 
-      tab->addTab(new FMEditPane(m_eval),"untitled.m");
-      tab->setCurrentIndex(tab->count()-1);
-      updateFont();
-    }
-    if (!fileName.isEmpty() && !isFileOpened(fileName)) {
-      loadFile(fileName);
-      QFileInfo tokeep(fileName);
-      lastfile = tokeep.absolutePath();
-      lastfile_set = true;
-    }
+    loadFile(fileName);
     ++it;
   }
 }
@@ -1096,16 +1093,7 @@ void FMEditor::openRecentFile()
 {
   QAction *action = qobject_cast<QAction *>(sender());
   QString fileName = action->data().toString();
-  if (action && !fileName.isEmpty() && !isFileOpened(fileName)) {
-	  // Create a new tab
-	  if ((tab->tabText(tab->currentIndex()) != "untitled.m")) {
-		tab->addTab(new FMEditPane(m_eval),"untitled.m");
-		tab->setCurrentIndex(tab->count()-1);
-		updateFont();
-	  }
-	  // Load file
-      loadFile(action->data().toString());
-  }
+  loadFile(fileName);
 }
 
 
@@ -1410,16 +1398,19 @@ void FMEditor::closeEvent(QCloseEvent *event) {
 
 void FMEditor::loadFile(const QString &fileName)
 {
-  QFile file(fileName);
-  if (!file.open(QFile::ReadOnly | QFile::Text)) {
-    QMessageBox::warning(this, tr("FreeMat"),
-			 tr("Cannot read file %1:\n%2.")
-			 .arg(fileName)
-			 .arg(file.errorString()));
+  // ignore if empty filename
+  if (fileName.isEmpty())
     return;
+    
+  // check if there's already an unmodified "untitled.m" tab
+  // if not create a new tab
+  if (tab->tabText(tab->currentIndex()) != "untitled.m") { 
+    tab->addTab(new FMEditPane(m_eval),"untitled.m");
+    tab->setCurrentIndex(tab->count()-1);
+    updateFont();
   }
-  
   // Check for one of the editors that might be editing this file already
+  // if found, show its tab
   for (int i=0;i<tab->count();i++) {
     QWidget *w = tab->widget(i);
     FMEditPane *te = qobject_cast<FMEditPane*>(w);
@@ -1431,11 +1422,24 @@ void FMEditor::loadFile(const QString &fileName)
     }
   }
 
+  // open file and load into editor
+  QFile file(fileName);
+  if (!file.open(QFile::ReadOnly | QFile::Text)) {
+    QMessageBox::warning(this, tr("FreeMat"),
+			 tr("Cannot read file %1:\n%2.")
+			 .arg(fileName)
+			 .arg(file.errorString()));
+    return;
+  }
   QTextStream in(&file);
   QApplication::setOverrideCursor(Qt::WaitCursor);
   currentEditor()->setPlainText(in.readAll());
   QApplication::restoreOverrideCursor();
   
+  // remember filename and update recent file list
+  QFileInfo tokeep(fileName);
+  lastfile = tokeep.absolutePath();
+  lastfile_set = true;
   setCurrentFile(fileName);
   statusBar()->showMessage(tr("File loaded"), 2000);
 }
