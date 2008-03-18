@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include "Exception.hpp"
 #include <algorithm>
+#include "DebugStream.hpp"
 
 extern string fm_reserved[];
 extern int fm_reserved_count;
@@ -300,7 +301,7 @@ const Token& Scanner::next() {
   while (!m_tokValid) {
     fetch();
     if (m_tokValid && m_debugFlag)
-      cout << m_tok;
+      dbout << m_tok;
     if ((m_ptr < m_strlen) && (current() == '\n'))
       m_linenumber++;
   }

@@ -4,6 +4,7 @@
 #include <string>
 #include "Token.hpp"
 #include "Array.hpp"
+#include "DebugStream.hpp"
 
 // A rewrite of the tree class (yet again).  The lesson learned this time is that we want the
 // tree class to be as fast as possible.  And that we want to be able to tag the tree with profile
@@ -87,7 +88,7 @@ public:
     try {
       try_validate();
     } catch(Exception &) {
-      std::cout << "Tree fails validation!\n";
+      dbout << "Tree fails validation!\n";
       print();
     }
   }

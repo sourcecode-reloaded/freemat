@@ -39,6 +39,7 @@ class MainApp : public QObject
   ScopePtr m_global;
   QStringList basePath, userPath;
   QTimer *profilerTimer;
+ 
 public:
   MainApp();
   ~MainApp();
@@ -54,9 +55,11 @@ public:
   int  StartNewInterpreterThread();
   void UpdatePaths();
   void ControlProfiler(bool enableflag);
+  bool debugwin;
 public slots:
   int Run();
   void HelpWin();
+  void DbgWin();
   void PathTool();
   void Editor();
   void ExecuteLine(string txt);

@@ -11,6 +11,7 @@
 #include "llvm/Target/TargetData.h"
 #include <fstream>
 #include <iostream>
+#include "DebugStream.hpp"
 
 // We want some basic functions to be available to the JIT
 // such as sin, cos, abs, x^n, tan
@@ -28,7 +29,7 @@ JIT::JIT() {
   mp = new ExistingModuleProvider(m);
   std::string errorstring;
   ee = ExecutionEngine::create(mp,false,&errorstring);
-  std::cerr << "Execution engine: " << errorstring << "\n";
+  dbout << "Execution engine: " << errorstring << "\n";
   initialized = false;
   // Create the optimizer thingy
   opt = new FunctionPassManager(mp);
@@ -280,7 +281,7 @@ void JIT::Store(JITScalar Value, JITScalar Address) {
 }
 
 JITScalar JIT::String(string text) {
-  std::cout << "Allocate string :" << text << ":\n";
+  dbout << "Allocate string :" << text << ":\n";
   ArrayType* ty = ArrayType::get(IntegerType::get(8),text.size()+1);
   GlobalVariable* gv = new GlobalVariable(ty,true,
 					  GlobalValue::InternalLinkage,0,".str",m);
@@ -472,11 +473,11 @@ void JIT::Return() {
 }
 
 void JIT::Dump(JITFunction f) {
-  std::cout << (*f);
+  dbout << (*f);
 }
 
 void JIT::Dump() {
-  std::cout << (*m);
+  dbout << (*m);
 }
 
 void JIT::Dump( const std::string& fname ) {

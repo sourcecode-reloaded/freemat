@@ -21,6 +21,9 @@
 #include <QDebug>
 #if !defined(_MSC_VER ) 
 #include <unistd.h>
+#else
+#include <fstream>
+#include <iostream>
 #endif
 #include <signal.h>
 #include <stdio.h>
@@ -104,6 +107,7 @@ int main(int argc, char *argv[]) {
   int noplastique = parseFlagArg(argc,argv,"-noplastique",false);
   int installMode = parseFlagArg(argc,argv,"-i",true);
   int pathMode = parseFlagArg(argc,argv,"-p",true);
+  int debugWindow = parseFlagArg( argc, argv, "-debugwin", false);
 
   signal(SIGINT,sigDoNothing);
   
@@ -111,7 +115,7 @@ int main(int argc, char *argv[]) {
     app = new QCoreApplication(argc, argv);
     QSettings settings("FreeMat","FreeMat");
     settings.setValue("root",argv[installMode+1]);
-    std::cout << "FreeMat root path set to '" << argv[installMode+1] << "'\n";
+    dbout << "FreeMat root path set to '" << argv[installMode+1] << "'\n";
     return 0;
   }
 
@@ -151,5 +155,6 @@ int main(int argc, char *argv[]) {
  		     m_app->GetKeyManager(),SLOT(QueueSilent(QString)));
     QTimer::singleShot(0,m_func,SLOT(Fire()));
   }
+  m_app->debugwin = debugWindow;
   return app->exec();
 }

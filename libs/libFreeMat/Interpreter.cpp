@@ -1973,7 +1973,7 @@ static bool compileJITBlock(Interpreter *interp, Tree *t) {
     t->setJITState(Tree::SUCCEEDED);
     t->setJITFunction(cg);
   } catch (Exception &e) {
-    std::cout << e.getMessageCopy() << "\r\n";
+    dbout << e.getMessageCopy() << "\r\n";
     delete cg;
     success = false;
     t->setJITState(Tree::FAILED);

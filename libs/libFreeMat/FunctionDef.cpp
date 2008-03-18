@@ -123,7 +123,7 @@ void AnonymousFunctionDef::initialize(Tree *t, Interpreter *eval) {
   for (int i=0;i<vars.size();i++) {
     ArrayReference ptr(eval->getContext()->lookupVariable(vars[i]));
     if (ptr.valid()) {
-      //      cout << "Captured VAR: " << vars[i] << "\r\n";
+      //      dbout << "Captured VAR: " << vars[i] << "\r\n";
       workspace.insertSymbol(vars[i],*ptr);
     }
   }

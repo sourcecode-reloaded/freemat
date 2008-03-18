@@ -942,7 +942,7 @@ bool ClassResolveFunction(Interpreter* eval, Array& args, std::string funcName, 
 void printClassNames(Array a) {
   StringVector classname(a.className());
   for (int i=0;i<classname.size();i++)
-    std::cout << "class " << classname.at(i) << "\r\n";
+    dbout << "class " << classname.at(i) << "\r\n";
 }
 
 
