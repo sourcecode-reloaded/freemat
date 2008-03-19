@@ -126,7 +126,7 @@ public:
   void resize(const NTuple &size);
   void resize(index_t size);
   void reshape(const NTuple &size);
-  bool isEmpty() const;
+  inline bool isEmpty() const {return length() == 0;}
 private:
   Data m_real;
   Data m_imag;
@@ -148,6 +148,9 @@ public:
 std::ostream& operator<<(std::ostream& o, const Variant &t);
 
 bool IsColonOp(const Variant &arg);
+
+const BasicArray<index_t>& IndexTypeFromVariant(const Variant &index, const NTuple &dims, int ndx);
+
 
 // Suppose we support a get/set interface:
 // And we support slicing through the iterators

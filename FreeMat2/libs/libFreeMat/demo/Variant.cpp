@@ -405,3 +405,8 @@ bool IsColonOp(const Variant &x) {
 QString Variant::string() const {
   
 }
+
+const BasicArray<index_t>& IndexTypeFromVariant(const Variant &index, const NTuple &dims, int ndx) {
+  if ((index.type() == Int32Array) && index.allReal())
+    return index.constReal<index_t>();
+}

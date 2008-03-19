@@ -228,6 +228,26 @@ int main(int, const char *[]) {
 
 #endif
 
+  Variant L(DoubleArray,NTuple(5,5));
+  BasicArray<double> &L2(L.real<double>());
+  for (int i=1;i<=5;i++)
+    for (int j=1;j<=5;j++)
+      L2[NTuple(i,j)] = i*10+j;
+  std::cout << "Allzeros " << AllZeros(L2) << "\n";
+  Variant row(Int32Array,NTuple(2,1));
+  BasicArray<int32> &row_access(row.real<int32>());
+  row_access[1] = 2; row_access[2] = 3;
+  Variant col(Int32Array,NTuple(3,1));
+  BasicArray<int32> &col_access(col.real<int32>());
+  col_access[1] = 1; col_access[2] = 3; col_access[3] = 5;
+  VariantList ndx;
+  ndx.push_back(row); ndx.push_back(col);
+  BasicArray<double> L3(L2.getNDimSubset(ndx));
+  printMatrix(L2);
+  printMatrix(row_access);
+  printMatrix(col_access);
+  printMatrix(L3);
+
   // Next step - fast VariantList & slicing.
 
   class QVectorVariant : public QVarLengthArray<Variant,2> {
@@ -277,6 +297,7 @@ int main(int, const char *[]) {
   Y.set(7,Variant(1,3));
   printNDim<Variant, ConstVariantIterator>(Y,0);
 
+#if 0
   Variant L(UInt8Array,NTuple(5,5));
   VariantIterator LP(&L,0);
   for (int i=1;i<=5;i++) {
@@ -289,6 +310,7 @@ int main(int, const char *[]) {
   printNDim<Variant, ConstVariantIterator>(L,0);
 
   return 0;
+#endif
 
 #if 0
 

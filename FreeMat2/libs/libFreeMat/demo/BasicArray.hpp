@@ -108,7 +108,6 @@ public:
     ConstBaseIterator<BasicArray<S>,S>(ptr,dim) {}
 };
 
-#include "BasicArrayPrivate.hpp"
 
 
 #endif

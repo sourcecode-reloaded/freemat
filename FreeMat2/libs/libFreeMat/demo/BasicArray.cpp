@@ -45,8 +45,8 @@ template <typename T>
 bool IsSymmetric(const BasicArray<T>& arg) {
   if (!arg.dimensions().is2D()) 
     throw Exception("Symmetry check not valid for N-dimensional arrays");
-  for (int i=0;i<arg.cols();i++) 
-    for (int j=0;j<i;j++) 
+  for (int i=1;i<=arg.cols();i++) 
+    for (int j=1;j<=i;j++) 
       if (arg[NTuple(i,j)] != arg[NTuple(j,i)])
 	return false;
   return true;
@@ -67,49 +67,6 @@ bool AllZeros(const BasicArray<T>& arg) {
 }
 
 template <typename T>
-BasicArray<T> BasicArray<T>::getVectorSubset(const Variant& index) {
-  if (index.isEmpty())
-    return BasicArray<T>(index.dimensions());
-  if (IsColonOp(index) && isEmpty())
-    return *this;
-  if (isEmpty())
-    throw Exception("Cannot index into empty variable,");
-  if (IsColonOp(index)) {
-    BasicArray<T> retvec(*this);
-    retvec.reshape(length(),1);
-    return retvec;
-  }
-  Variant ndx(IndexTypeFromVariant(index,dimensions()));
-  NTuple retdims;
-  if (isColumnVector() && index.isRowVector())
-    retdims = NTuple(index.getLength(),1);
-  else
-    retdims = index.dimensions();
-  BasicArray<T> retvec(retdims);
-  for (int i=0;i<retvec.length();i++)
-    retvec[i+1] = get(ndx[i]);
-  return retvec;
-}
-
-template <typename T>
-BasicArray<T> BasicArray<T>::getNDimSubset(const VariantList& index) {
-  VariantList ndx;
-  NTuple outdims;
-  for (int i=0;i<index.size();i++) {
-    ndx.push_back(IndexTypeFromVariant(index,dimensions(),i));
-    outdims[i] = ndx[i].length();
-  }
-  BasicArray<T> retval(outdims);
-  // Suppose we have A(1:3,2:5) -- 
-  NTuple pos(1,1);
-  while (pos <= outdims) {
-    NTuple qp;
-    for (int i=0;i<index.size();i++) 
-      qp[i] = ndx[i][pos[i]];
-  }
-}
-
-template <typename T>
 BasicArray<T> Apply(const BasicArray<T>& arg, T (*func)(T)) {
   BasicArray<T> retval(arg.dimensions());
   Transformer<BasicArray<T>,T> transform(&retval,&arg);
@@ -122,3 +79,51 @@ BasicArray<T> Apply(const BasicArray<T>& arg, T (*func)(T)) {
   }
   return retval;
 }
+
+template <typename T>
+BasicArray<T> BasicArray<T>::getVectorSubset(const Variant& index) {
+  if (index.isEmpty())
+    return BasicArray<T>(index.dimensions());
+  if (IsColonOp(index) && isEmpty())
+    return *this;
+  if (isEmpty())
+    throw Exception("Cannot index into empty variable,");
+  if (IsColonOp(index)) {
+    BasicArray<T> retvec(*this);
+    retvec.reshape(NTuple(length(),1));
+    return retvec;
+  }
+  BasicArray<index_t> ndx(IndexTypeFromVariant(index,dimensions(),0));
+  NTuple retdims;
+  if (isColumnVector() && index.isRowVector())
+    retdims = NTuple(index.length(),1);
+  else
+    retdims = index.dimensions();
+  BasicArray<T> retvec(retdims);
+  for (int i=0;i<retvec.length();i++)
+    retvec[i+1] = get(ndx[i]);
+  return retvec;
+}
+
+template <typename T>
+BasicArray<T> BasicArray<T>::getNDimSubset(const VariantList& index) {
+  FastList<BasicArray<index_t> > ndx;
+  NTuple outdims;
+  for (int i=0;i<index.size();i++) {
+    ndx.push_back(IndexTypeFromVariant(index[i],dimensions(),i));
+    outdims[i] = ndx[i].length();
+  }
+  BasicArray<T> retval(outdims);
+  // Suppose we have A(1:3,2:5) -- 
+  NTuple pos(1,1);
+  while (pos <= outdims) {
+    NTuple qp;
+    for (int i=0;i<index.size();i++) 
+      qp[i] = ndx[i][pos[i]];
+    retval[pos] = (*this)[qp];
+    dimensions().increment(pos);
+  }
+  return retval;
+}
+
+#include "BasicArrayPrivate.hpp"
