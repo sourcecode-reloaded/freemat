@@ -149,8 +149,8 @@ std::ostream& operator<<(std::ostream& o, const Variant &t);
 
 bool IsColonOp(const Variant &arg);
 
-const BasicArray<index_t>& IndexTypeFromVariant(const Variant &index, const NTuple &dims, int ndx);
-
+BasicArray<index_t> IndexTypeFromVariant(const Variant &index, index_t len);
+index_t IndexTypeFromVariantScalar(const Variant &index);
 
 // Suppose we support a get/set interface:
 // And we support slicing through the iterators

@@ -247,7 +247,22 @@ int main(int, const char *[]) {
   printMatrix(row_access);
   printMatrix(col_access);
   printMatrix(L3);
-
+  VariantList ndx2;
+  Variant tstring(QString("Hello there peiples"));
+  qDebug() << tstring.string();
+  Variant colon(QString(":"));
+  ndx2.push_back(row); ndx2.push_back(colon);
+  printMatrix(L2);
+  BasicArray<double> L4(L2.getNDimSubset(ndx2));
+  printMatrix(L4);
+  BasicArray<double> L5(L2.getVectorSubset(colon));
+  printMatrix(L5);
+  VariantList ndx3;
+  ndx3.push_back(colon); ndx3.push_back(Variant((int32) 4));
+  BasicArray<double> L6(L2.getNDimSubset(ndx3));
+  // slice test!
+  printMatrix(L6);
+  return 0;
   // Next step - fast VariantList & slicing.
 
   class QVectorVariant : public QVarLengthArray<Variant,2> {

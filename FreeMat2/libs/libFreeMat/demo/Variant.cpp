@@ -44,6 +44,8 @@ static inline void* construct(Type t, const void *copy) {
   switch (t) {
   default:
     throw Exception("Unsupported construct");
+  case String:
+    return Tconstruct<BasicArray<uint16> >(copy);
   case BoolArray:
     return Tconstruct<BasicArray<logical> >(copy);
   case Int8Array:
@@ -103,6 +105,8 @@ static inline void destruct(Type t, void *todelete) {
   switch (t) {
   default:
     throw Exception("Unsupported construct");
+  case String:
+    return Tdestruct<BasicArray<uint16> >(todelete);
   case BoolArray:
     return Tdestruct<BasicArray<logical> >(todelete);
   case Int8Array:
@@ -246,7 +250,7 @@ Variant::Variant(const QString &text) {
   m_real.p = new SharedObject(String,
 			      construct_sized(String,
 					     NTuple(1,text.size())));
-  BasicArray<uint16> p(real<uint16>());
+  BasicArray<uint16> &p(real<uint16>());
   for (int i=0;i<text.size();i++) 
     p[i+1] = text[i].unicode();
 }
@@ -275,6 +279,7 @@ const NTuple Variant::dimensions() const {
     return (reinterpret_cast<const BasicArray<uint8>*>(m_real.p->ptr())->dimensions());
   case Int16Array:
     return (reinterpret_cast<const BasicArray<int16>*>(m_real.p->ptr())->dimensions());
+  case String:
   case UInt16Array:
     return (reinterpret_cast<const BasicArray<uint16>*>(m_real.p->ptr())->dimensions());
   case Int32Array:
@@ -403,10 +408,28 @@ bool IsColonOp(const Variant &x) {
 }
 
 QString Variant::string() const {
-  
+  if (m_type != String) throw Exception("Cannot convert array to string");
+  const BasicArray<uint16> &p(constReal<uint16>());
+  QString ret;
+  for (int i=0;i<p.length();i++)
+    ret += QChar(p[i+1]);
+  return ret;
 }
 
-const BasicArray<index_t>& IndexTypeFromVariant(const Variant &index, const NTuple &dims, int ndx) {
+BasicArray<index_t> IndexTypeFromVariant(const Variant &index, 
+						index_t len) {
   if ((index.type() == Int32Array) && index.allReal())
     return index.constReal<index_t>();
+  if (IsColonOp(index)) {
+    BasicArray<index_t> retvec(NTuple(len,1));
+    for (int i=0;i<len;i++) retvec[i+1] = i+1;
+    return retvec;
+  }
+  throw Exception("Illegal index type construct");
+}
+
+index_t IndexTypeFromVariantScalar(const Variant &index) {
+  if ((index.type() == Int32Scalar) && index.allReal())
+    return index.realScalar<int32>();
+  throw Exception("Illegal index type construct");
 }

@@ -61,8 +61,12 @@ public:
   inline const T get(index_t pos) const {
     return m_data[pos+m_offset-1];
   }
+  inline const T get(const NTuple& pos) {
+    return m_data[m_dims.map(pos)+m_offset-1];
+  }
   BasicArray<T> getVectorSubset(const Variant& index);
   BasicArray<T> getNDimSubset(const VariantList& index);
+  BasicArray<T> getSlice(const VariantList& index);
   void set(index_t pos, double val);
   void resize(const NTuple& pos);
   inline void reshape(const NTuple& pos) {
@@ -108,6 +112,6 @@ public:
     ConstBaseIterator<BasicArray<S>,S>(ptr,dim) {}
 };
 
-
+#include "BasicArrayPrivate.hpp"
 
 #endif
