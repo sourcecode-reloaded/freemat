@@ -2,53 +2,52 @@
 %@Module BITCMP Bitwise Boolean Complement Operation
 %@@Section BINARY
 %@@Usage
-%Performs a bitwise binary complement operation on the argument and
-%returns the result.  The syntax for its use is
+% Usage
+% 
+% Performs a bitwise binary complement operation on the argument and
+% returns the result.  The syntax for its use is
 %@[
-%   y = bitcmp(a)
+%    y = bitcmp(a)
 %@]
-%where @|a| is an unsigned integer arrays.  This version of the command
-%uses as many bits as required by the type of @|a|.  For example, if 
-%@|a| is an @|uint8| type, then the complement is formed using 8 bits.
-%The second form of @|bitcmp| allows you to specify the number of bits
-%to use, 
+% where a is an unsigned integer arrays.  This version of the command
+% uses as many bits as required by the type of a.  For example, if 
+% a is an uint8 type, then the complement is formed using 8 bits.
+% The second form of bitcmp allows you to specify the number of bits
+% to use, 
 %@[
-%   y = bitcmp(a,n)
+%    y = bitcmp(a,n)
 %@]
-%in which case the complement is taken with respect to @|n| bits. 
+% in which case the complement is taken with respect to n bits, where n must be 
+% less than the length of the integer type.
+%
 %@@Example
-%Generally, the bitwise complement of a number is known as its 
-%ones-complement.  Here are some examples.  First we take the binary
-%complement using 8 bits.
 %@<
-%bitcmp(uint8(55))
+%bitcmp(uint16(2^14-2))
+%bitcmp(uint16(2^14-2),14)
 %@>
-%Then the complement using 16 bits
-%@<
-%bitcmp(uint16(55))
-%@>
-%Finally, we look for the 4 bit complement
-%@<
-%bitcmp(3,4)
-%@>
-%@@Tests
-%@$"y=bitcmp(uint8(55))","200","exact"
-%@$"y=bitcmp(uint16(55))","65480","exact"
 %!
-% Copyright (c) 2002-2007 Samit Basu
-% Licensed under the GPL
-function y = bitcmp(a,n)
-    if (nargin == 1)
-        if (isa(a,'int8') || (isa(a,'uint8')))
-            n = 8;
-        elseif (isa(a,'int16') || (isa(a,'uint16')))
-            n = 16;
-        elseif (isa(a,'int32') || (isa(a,'uint32')))
-            n = 32;
-        else
-            n = 32;
-        end
-    end
-    y = cast(bin2int(~int2bin(a,n)),typeof(a));
-  
-  
+function Out = bitcmp(In, N)
+Out = bitcmp_cpp(In);
+if(nargin > 1)
+  Type = typeof(In);
+  Mask = cast((2^N-1), Type);
+  switch (Type)
+  case 'uint8'
+    Length = 8;
+  case 'uint16'
+    Length = 16;
+  case 'uint32'
+    Length = 32;
+  case 'uint64'
+    Length = 64;
+  otherwise
+    error('Only unsigned integer types are allowed');
+  end
+  if( N > Length)
+    error('Number of converted bits exceeds the bit length of the input type');
+  elseif( N < Length)
+    Out = bitand(Out, Mask);
+    High = bitand(In, bitcmp(Mask));
+    Out = bitor(Out, High);
+  end
+end

@@ -84,6 +84,8 @@ void signal_resize(int a) {
 
 #endif
 
+static FMEditor *edit = NULL;
+
 MainApp::MainApp() {
   guimode = true;
   GUIHack = false;
@@ -158,6 +160,10 @@ KeyManager* MainApp::GetKeyManager() {
   return m_keys;
 }
 
+ApplicationWindow* MainApp::getApplicationWindow() {
+  return m_win;
+}
+
 void MainApp::SetupDumbTerminalCase() {
 #ifdef Q_WS_X11
   GUIHack = true;
@@ -193,14 +199,22 @@ extern MainApp *m_app;
 //@]
 //!
 ArrayVector EditorFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  static FMEditor *edit = NULL;
   if (edit == NULL) {
     edit = new FMEditor(eval);
     QObject::connect(eval,SIGNAL(RefreshBPLists()),edit,SLOT(RefreshBPLists()));
     QObject::connect(eval,SIGNAL(ShowActiveLine()),edit,SLOT(ShowActiveLine()));
+    ApplicationWindow *m_win = m_app->getApplicationWindow();
+    QObject::connect(m_win,SIGNAL(shutdown()),edit,SLOT(close()));
     // Because of the threading setup, we need the keymanager to relay commands
     // from the editor to the interpreter.  
     QObject::connect(edit,SIGNAL(EvaluateText(QString)),m_app->GetKeyManager(),SLOT(QueueMultiString(QString)));
+    //Allow Editor to see the Context and refresh the content at the right time
+    edit->setContext(m_app->GetKeyManager()->GetCompletionContext());
+    QObject::connect(m_app->GetKeyManager(),SIGNAL(UpdateVariables()), 
+	    edit,SLOT(refreshContext()));
+    //Ask to change current path when setting breakpoint
+    QObject::connect(eval, SIGNAL(IllegalLineOrCurrentPath(string, int)), edit,
+        SLOT(IllegalLineOrCurrentPath(string, int)));
   }
   edit->showNormal();
   edit->raise();
@@ -218,7 +232,6 @@ ArrayVector EditorFunction(int nargout, const ArrayVector& arg, Interpreter* eva
 //@]
 //!
 ArrayVector EditFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  static FMEditor *edit= NULL;
   //Open the editor
   if (edit == NULL) {
     edit = new FMEditor(eval);
@@ -226,6 +239,8 @@ ArrayVector EditFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
         SLOT(RefreshBPLists()));
     QObject::connect(eval, SIGNAL(ShowActiveLine()), edit,
         SLOT(ShowActiveLine()));
+    ApplicationWindow *m_win = m_app->getApplicationWindow();
+    QObject::connect(m_win,SIGNAL(shutdown()),edit,SLOT(close()));
     // Because of the threading setup, we need the keymanager to relay commands
     // from the editor to the interpreter.  
     QObject::connect(edit, SIGNAL(EvaluateText(QString)),

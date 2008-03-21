@@ -4,6 +4,8 @@
 function helpgen(source_path)
   global sourcepath section_descriptors genfiles
 
+  diary([source_path,'/help_diary.txt']);
+
   genfiles = {};
   rmdir([source_path,'/help'],'s');
   rmdir([source_path,'/toolbox'],'s');
@@ -54,7 +56,7 @@ function helpgen(source_path)
   system('pdflatex main.tex');
   printf('Pass 3\n');
   system('pdflatex main.tex');
-  rmdir([source_path,'/help/tmp'],'s');
+%  rmdir([source_path,'/help/tmp'],'s');
 
   printf('Writing installation manifest...\n');
   install_list = helpgen_rdir([source_path,'/help/html']);

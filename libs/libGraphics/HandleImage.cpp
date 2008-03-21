@@ -19,6 +19,7 @@
 #include "HandleImage.hpp"
 #include "HandleAxis.hpp"
 #include <QMatrix>
+#include "DebugStream.hpp" 
 
 HandleImage::HandleImage() {
   ConstructProperties();
@@ -190,15 +191,23 @@ double* HandleImage::RGBExpandImage(const double *dp,
 
 void HandleImage::PrepImageRGBNoAlphaMap(const double *dp,
 					 int rows, int cols,
-					 QVector<double> &alpha) {
+					 QVector<double> &alpha,
+					 bool cdata_is_integer) {
   img = QImage(cols,rows,QImage::Format_ARGB32);
   for (int i=0;i<rows;i++) {
     QRgb *ibits = (QRgb*) img.scanLine(i);
     for (int j=0;j<cols;j++)
-      ibits[j] = qRgba((int)(255*dp[(i+j*rows)]),
-		       (int)(255*dp[(i+j*rows)+rows*cols]),
-		       (int)(255*dp[(i+j*rows)+2*rows*cols]),
-		       (int)(255*alpha[i+j*rows]));
+      if (!cdata_is_integer) {
+	ibits[j] = qRgba((int)(255*dp[(i+j*rows)]),
+			 (int)(255*dp[(i+j*rows)+rows*cols]),
+			 (int)(255*dp[(i+j*rows)+2*rows*cols]),
+			 (int)(255*alpha[i+j*rows]));
+      } else {
+	ibits[j] = qRgba((int)(dp[(i+j*rows)]),
+			 (int)(dp[(i+j*rows)+rows*cols]),
+			 (int)(dp[(i+j*rows)+2*rows*cols]),
+			 (int)(255*alpha[i+j*rows]));
+      }
   }
 }
 
@@ -257,8 +266,8 @@ void HandleImage::UpdateCAlphaData() {
     PrepImageRGBNoAlphaMap((const double*)cdata.getDataPointer(),
 			   cdata.getDimensionLength(0),
 			   cdata.getDimensionLength(1),
-			   alphas);
-  } else if (cdata.dimensions().getLength() == 2) {
+			   alphas,cdata_is_integer);
+  } else {
     double *dp = RGBExpandImage((const double*)cdata.getDataPointer(),
 				cdata.getDimensionLength(0),
 				cdata.getDimensionLength(1),
@@ -266,7 +275,7 @@ void HandleImage::UpdateCAlphaData() {
     PrepImageRGBNoAlphaMap(dp,
 			   cdata.getDimensionLength(0),
 			   cdata.getDimensionLength(1),
-			   alphas);
+			   alphas,false);
     delete[] dp;
   }
 }
@@ -320,6 +329,8 @@ void HandleImage::PaintMe(RenderEngine& gc) {
   gc.toPixels(xp->Data()[0],yp->Data()[0],0,x1,y1);
   gc.toPixels(xp->Data()[1],yp->Data()[1],0,x2,y2);
   if ((abs(x2-x1)> 4096) || (abs(y2-y1) > 4096)) return;
+  dbout << "bounds: " << xp->Data()[0] << ", " << yp->Data()[0] << " x " 
+      << xp->Data()[1] << ", " << yp->Data()[1] << " scale " << abs(x2-x1) << ", " << abs(y2-y1) << "\n";
   gc.drawImage(xp->Data()[0],yp->Data()[0],xp->Data()[1],
 	       yp->Data()[1],img.scaled(abs(x2-x1),abs(y2-y1)));
 }

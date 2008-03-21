@@ -30,6 +30,7 @@ images/pan.png svn_mime_002dtype=application%2Foctet-stream
 images/paste.png svn_mime_002dtype=application%2Foctet-stream
 images/player_pause.png svn_mime_002dtype=application%2Foctet-stream
 images/player_play.png svn_mime_002dtype=application%2Foctet-stream
+images/player_playselection.png svn_mime_002dtype=application%2Foctet-stream
 images/player_stop.png svn_mime_002dtype=application%2Foctet-stream
 images/previous.png svn_mime_002dtype=application%2Foctet-stream
 images/quit.png svn_mime_002dtype=application%2Foctet-stream
@@ -417,12 +418,9 @@ native/win32/TermWidget.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dsty
 native/win32/WinGC.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 native/win32/WinGC.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 native/win32/XWindow.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-native/win32/XWindow.cpp~ svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 native/win32/XWindow.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-native/win32/XWindow.hpp~ svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 native/win32/ex1.c svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 native/win32/main.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-native/win32/main.cpp~ svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 native/win32/testwgc.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 native/win32/winterm.dsp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 native/win32/winterm.dsw svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native

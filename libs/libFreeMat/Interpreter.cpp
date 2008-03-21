@@ -411,7 +411,7 @@ void Interpreter::doCLI() {
 
 void Interpreter::sendGreeting() {
   outputMessage(" " + getVersionString() + "\n");
-  outputMessage(" Copyright (c) 2002-2007 by Samit Basu\n");
+  outputMessage(" Copyright (c) 2002-2008 by Samit Basu\n");
   outputMessage(" Licensed under the GNU Public License (GPL)\n");
   outputMessage(" Type <help license> to find out more\n");
   outputMessage("      <helpwin> for online help\n");
@@ -633,6 +633,11 @@ void Interpreter::clearStacks() {
 //a = [1 2 3 4...
 //       5 6 7 8];
 //test_val = 1;
+//@}
+//@{ test_matcat8.m
+//% Check that [1:0] is sane
+//function test_val = test_matcat8
+//test_val = isa([1:0],'int32');
 //@}
 //!
 //Works
@@ -1963,6 +1968,7 @@ int num_for_loop_iter( double first, double step, double last )
 //!
 //Works
 
+#ifdef HAVE_LLVM
 static bool compileJITBlock(Interpreter *interp, Tree *t) {
   delete t->JITFunction();
   JITFunc *cg = new JITFunc(interp);
@@ -1987,10 +1993,12 @@ static bool prepJITBlock(Tree *t) {
     t->JITFunction()->prep();
     success = true;
   } catch (Exception &e) {
+    std::cout << e.getMessageCopy() << "\r\n";
     success = false;
   }
   return success;
 }
+#endif
 
 void Interpreter::forStatement(Tree *t) {
     // Try to compile this block to an instruction stream  
@@ -2867,6 +2875,24 @@ ArrayReference Interpreter::createVariable(string name) {
 //   catch
 //     test_val = 1;
 //   end
+//@}
+//@{ test_assign16.m
+//% Test for bug 1808557 - incorrect subset assignment with complex arrays
+//function test_val = test_assign16
+//   x = rand(4,2)+i*rand(4,2);
+//   y = rand(2,2)+i*rand(2,2);
+//   x(2:2:4,:)=y;
+//   z = x;
+//   for i=1:2;
+//     for j=1:2;
+//       z(2+(i-1)*2,j) = y(i,j);
+//     end
+//   end
+//  q = x;
+//  q(:,1) = y(:);
+//  p = [x,x];
+//  p(1,:) = y(:);
+//  test_val = all(vec(z==x)) && all(q(:,1) == y(:)) && all(p(1,:).' == y(:)); 
 //@}
 //@{ test_sparse56.m
 //% Test DeleteSparseMatrix function
@@ -4399,7 +4425,8 @@ void Interpreter::addBreakpoint(string name, int line) {
     }
   }
   if (best_dist > max_line_count)
-    warningMessage(std::string("Cannot set breakpoint at line ")+line+" of file "+name + ".  \r\nThis can be caused by an illegal line number, or a function that is not on the path or in the current directory.");
+//    warningMessage(std::string("Cannot set breakpoint at line ")+line+" of file "+name + ".  \r\nThis can be caused by an illegal line number, or a function that is not on the path or in the current directory.");
+    emit IllegalLineOrCurrentPath(name, line);
   else {
     addBreakpoint(stackentry(fullFileName,allFuncs[best_func],best_dist+line,bpList++));
   }

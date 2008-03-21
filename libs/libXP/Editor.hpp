@@ -34,6 +34,7 @@
 #include "Interpreter.hpp"
 #include "synlightconf.ui.h"
 #include "indentconf.ui.h"
+#include "Context.hpp"
 
 class FMFindDialog : public QDialog {
   Q_OBJECT
@@ -42,7 +43,7 @@ public:
   FMFindDialog(QWidget *parent = 0);
   void found();
   void notfound();
-
+  void setFindText(QString text);
 signals:
   void doFind(QString text, bool backwards, bool sensitive);
 private slots:
@@ -57,6 +58,7 @@ class FMReplaceDialog : public QDialog {
 
 public:
   FMReplaceDialog(QWidget *parent = 0);
+  void setReplaceText(QString text);
   void found();
   void notfound();
   void showrepcount(int cnt);
@@ -86,11 +88,16 @@ public:
   void contextMenuEvent(QContextMenuEvent*e);
   void comment();
   void uncomment();
+  void increaseIndent();
+  void decreaseIndent();
   bool replace(QString text, QString replace, QTextDocument::FindFlags flags);
   int replaceAll(QString text, QString replace, QTextDocument::FindFlags flags);
   void fontUpdate();
+protected:
+  bool event(QEvent *event);
 signals:
   void indent();
+  void showDataTips(QPoint pos, QString textSelected);
 };
 
 class FMIndent : public QObject {
@@ -176,11 +183,13 @@ private:
 
 class FMEditor : public QMainWindow {
   Q_OBJECT
-  QMenu *fileMenu, *editMenu, *toolsMenu, *debugMenu;
+  QMenu *fileMenu, *editMenu, *toolsMenu, *debugMenu, *helpMenu;
   QToolBar *editToolBar, *fileToolBar, *debugToolBar;
   QAction *newAct, *saveAct, *quitAct, *copyAct, *pasteAct;
   QAction *cutAct, *fontAct, *openAct, *saveAsAct, *closeAct;
   QAction *openNewAct, *findAct, *replaceAct, *commentAct, *uncommentAct;
+  QAction *increaseIndentAct, *decreaseIndentAct;
+  QAction *helpWinAct, *helpOnSelectionAct, *openSelectionAct;
   QAction *dbStepAct, *dbTraceAct, *dbContinueAct;
   QAction *dbSetClearBPAct, *dbStopAct;
   QAction *redoAct, *undoAct, *colorConfigAct, *indentConfigAct;
@@ -188,6 +197,7 @@ class FMEditor : public QMainWindow {
   QAction *separatorAct; 
   enum { MaxRecentFiles = 5 }; 
   QAction *recentFileActs[MaxRecentFiles]; 
+  QAction *dataTipConfigAct;
   QTabWidget *tab;
   FMTextEdit *prevEdit;
   QFont m_font;
@@ -195,6 +205,9 @@ class FMEditor : public QMainWindow {
   FMReplaceDialog *m_replace;
   QMenu *m_popup;
   Interpreter *m_eval;
+  QStringList varNameList, varTypeList, varFlagsList, varSizeList, varValueList;
+  Context *context;
+  bool isShowToolTip;
 public:
   FMEditor(Interpreter* eval);
   virtual ~FMEditor();
@@ -240,9 +253,13 @@ private slots:
 		    bool backwards, bool sensitive);
   void comment();
   void uncomment();
+  void increaseIndent();
+  void decreaseIndent();
   void undo();
   void redo();
   void RefreshBPLists();
+  void refreshContext();
+  void IllegalLineOrCurrentPath(string name, int line);
   void ShowActiveLine();
   void dbstep();
   void dbtrace();
@@ -254,8 +271,14 @@ private slots:
   void execSelected();
   void execCurrent();
   void openRecentFile(); 
+  void showDataTips(QPoint pos, QString textSelected);
+  void configDataTip();
+  void helpWin();
+  void helpOnSelection();
+  void openSelection();
 public:
   void closeEvent(QCloseEvent *event);
+  void setContext(Context *watch);
 };
 
 #endif

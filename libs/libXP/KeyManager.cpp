@@ -78,6 +78,7 @@ KeyManager::KeyManager()  {
     history.push_back("");
   for (int i=0;i<historyList.size();i++) 
     history.push_back(historyList[i].toStdString());
+  history.push_back(std::string("% ") + QDateTime::currentDateTime().toString().toStdString());
 }
 
 Context* KeyManager::GetCompletionContext() {
@@ -94,6 +95,7 @@ int KeyManager::getTerminalWidth() {
 
 void KeyManager::ClearHistory() {
   history.clear();
+  history.push_back(std::string("% ") + QDateTime::currentDateTime().toString().toStdString());
 }
 
 void KeyManager::SetTermWidth(int w) {
@@ -657,7 +659,7 @@ void KeyManager::AddHistory(string mline) {
   prefix = "";
   prefix_len = 0;
   if (mline.size() > 0) {
-    if (history.back() != mline)
+    if (history.size() > 0 && history.back() != mline)
       history.push_back(mline);
     while (history.size() > 1000)
       history.pop_front();
@@ -698,7 +700,7 @@ void KeyManager::HistoryFindBackwards() {
   if (startsearch == 0) return;
   i = startsearch-1;
   found = false;
-  while (i>=0 && !found) {
+  while (history.size() > 0 && i>=0 && !found) {
     found = (history[i].compare(0,prefix_len,prefix) == 0);
     if (!found) i--;
   }
@@ -1136,6 +1138,10 @@ void KeyManager::SetPrompt(string txt) {
   ReplacePrompt(txt);
   Redisplay();
   emit UpdateVariables();
+}
+
+void KeyManager::ChangeDir(const QString& dir) {
+  emit ExecuteLine("cd " + dir.toStdString() + "\n");
 }
 
 /*.......................................................................

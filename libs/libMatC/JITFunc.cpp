@@ -1,3 +1,5 @@
+#ifdef HAVE_LLVM
+
 #include "JITFunc.hpp"
 #include "Context.hpp"
 #include "Interpreter.hpp"
@@ -912,9 +914,7 @@ void JITFunc::prep() {
       array_inputs[v->argument_num] = ptr.pointer();
       if (v->type != map_dataclass(array_inputs[v->argument_num]->dataClass()))
 	throw Exception("DATA mismatch!");
-    } else {
-      throw Exception("Unexpected symbol found");
-    }
+    } 
   }
 }
 
@@ -924,3 +924,5 @@ void JITFunc::run() {
   if (gv.IntVal != 0)
     throw exception_store;
 }
+
+#endif

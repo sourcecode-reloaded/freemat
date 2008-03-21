@@ -20,6 +20,9 @@
 #include "Interpreter.hpp"
 #include "highlighter.hpp"
 #include <QtGui>
+#include "Scope.hpp"
+#include "Array.hpp"
+#include "Print.hpp"
 
 FMFindDialog::FMFindDialog(QWidget *parent) : QDialog(parent) {
   ui.setupUi(this);
@@ -29,6 +32,11 @@ FMFindDialog::FMFindDialog(QWidget *parent) : QDialog(parent) {
   setWindowTitle("Find - " + QString::fromStdString(Interpreter::getVersionString()));
   ui.btFind->setIcon(QIcon(QString::fromUtf8(":/images/find.png")));
   ui.btClose->setIcon(QIcon(QString::fromUtf8(":/images/close.png")));
+}
+
+void FMFindDialog::setFindText(QString text) {
+  ui.cmFindText->insertItem(0, text);
+  ui.cmFindText->setCurrentIndex(0);
 }
 
 void FMFindDialog::find() {
@@ -57,6 +65,11 @@ FMReplaceDialog::FMReplaceDialog(QWidget *parent) : QDialog(parent) {
   setWindowTitle("Find - " + QString::fromStdString(Interpreter::getVersionString()));
   ui.btFind->setIcon(QIcon(QString::fromUtf8(":/images/find.png")));
   ui.btClose->setIcon(QIcon(QString::fromUtf8(":/images/close.png")));
+}
+
+void FMReplaceDialog::setReplaceText(QString text) {
+  ui.cmFindText->insertItem(0, text);
+  ui.cmFindText->setCurrentIndex(0);
 }
 
 void FMReplaceDialog::find() {
@@ -148,12 +161,13 @@ void FMTextEdit::comment() {
     line1.setPosition(cursor.anchor());
   }
   line1.movePosition(QTextCursor::StartOfLine,QTextCursor::MoveAnchor);
+  QTextCursor line2Copy(line2);
   line2.movePosition(QTextCursor::StartOfLine,QTextCursor::MoveAnchor);
+  if (line2.position() == line2Copy.position()) //at beginning of line, ignore this line
+    line2.movePosition(QTextCursor::Up,QTextCursor::MoveAnchor);
   QTextCursor pos(line1);
   pos.beginEditBlock();
-  //while (pos.position() <= line2.position()) {
   while (pos.position() < line2.position()) { 
-    //pos.insertText("%");
     pos.insertText("% "); 
     pos.movePosition(QTextCursor::Down,QTextCursor::MoveAnchor);
   }
@@ -171,10 +185,12 @@ void FMTextEdit::uncomment() {
     line1.setPosition(cursor.anchor());
   }
   line1.movePosition(QTextCursor::StartOfLine,QTextCursor::MoveAnchor);
+  QTextCursor line2Copy(line2);
   line2.movePosition(QTextCursor::StartOfLine,QTextCursor::MoveAnchor);
+  if (line2.position() == line2Copy.position()) //at beginning of line, ignore this line
+    line2.movePosition(QTextCursor::Up,QTextCursor::MoveAnchor);
   QTextCursor pos(line1);
   pos.beginEditBlock();
-  //while (pos.position() <= line2.position()) {
   while (pos.position() < line2.position()) { 
     pos.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor);
     if (pos.selectedText() == "%") {
@@ -193,6 +209,82 @@ void FMTextEdit::uncomment() {
     pos.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor);
     if (pos.selectedText() == " ")  
       pos.deleteChar();
+  }
+  pos.endEditBlock();
+}
+
+void FMTextEdit::increaseIndent() {
+  QString Blanks;
+  Blanks.fill(' ',indentSize);
+  QTextCursor cursor(textCursor());
+  QTextCursor line1(cursor);
+  QTextCursor line2(cursor);
+  if (cursor.position() == cursor.anchor()) { //add blanks to align text
+    QTextCursor pos(cursor);
+    pos.movePosition(QTextCursor::StartOfLine,QTextCursor::MoveAnchor);
+    QString NewBlanks(Blanks);
+    NewBlanks.chop((cursor.position()-pos.position()+indentSize)%indentSize);
+    cursor.insertText(NewBlanks);
+    return;
+  }
+  
+  if (cursor.position() < cursor.anchor()) {
+    line2.setPosition(cursor.anchor());
+  } else {
+    line1.setPosition(cursor.anchor());
+  }
+  line1.movePosition(QTextCursor::StartOfLine,QTextCursor::MoveAnchor);
+  QTextCursor line2Copy(line2);
+  line2.movePosition(QTextCursor::StartOfLine,QTextCursor::MoveAnchor);
+  if (line2.position() == line2Copy.position()) //at beginning of line, ignore this line
+    line2.movePosition(QTextCursor::Up,QTextCursor::MoveAnchor);
+ 
+  QTextCursor pos(line1);
+  pos.beginEditBlock();
+  while (pos.position() < line2.position()) { 
+    pos.insertText(Blanks);
+    pos.movePosition(QTextCursor::Down,QTextCursor::MoveAnchor);
+  }
+  pos.insertText(Blanks);
+  pos.endEditBlock();
+}
+
+void FMTextEdit::decreaseIndent() {
+  QTextCursor cursor(textCursor());
+  QTextCursor line1(cursor);
+  QTextCursor line2(cursor);
+  if (cursor.position() < cursor.anchor()) {
+    line2.setPosition(cursor.anchor());
+  } else {
+    line1.setPosition(cursor.anchor());
+  }
+  line1.movePosition(QTextCursor::StartOfLine,QTextCursor::MoveAnchor);
+  QTextCursor line2Copy(line2);
+  line2.movePosition(QTextCursor::StartOfLine,QTextCursor::MoveAnchor);
+  if (line2.position() == line2Copy.position()) //at beginning of line, ignore this line
+    line2.movePosition(QTextCursor::Up,QTextCursor::MoveAnchor);
+  QTextCursor pos(line1);
+  pos.beginEditBlock();
+  while (pos.position() < line2.position()) { 
+    for (int i=0; i<indentSize; i++) { //remove at most "indentSize" of blank characters
+      pos.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor);
+      if (pos.selectedText() == " ") {
+        pos.deleteChar();
+      }
+      else
+      	break;
+    }
+    pos.movePosition(QTextCursor::Down,QTextCursor::MoveAnchor);
+    pos.movePosition(QTextCursor::StartOfLine,QTextCursor::MoveAnchor);
+  }
+
+  for (int i=0; i<indentSize; i++) { //remove at most "indentSize" of  blank characters
+    pos.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor);
+    if (pos.selectedText() == " ") {
+      pos.deleteChar();
+    }
+    else
+      break;
   }
   pos.endEditBlock();
 }
@@ -226,6 +318,17 @@ void FMTextEdit::keyPressEvent(QKeyEvent*e) {
   if (indentActive)
     if (delayedIndent) 
       emit indent();
+}
+
+bool FMTextEdit::event(QEvent *event){ 
+  if (event->type() == QEvent::ToolTip) {
+    QHelpEvent *helpEvent = static_cast<QHelpEvent *>(event);
+    QTextCursor Cursor = cursorForPosition(helpEvent->pos());
+    Cursor.select(QTextCursor::WordUnderCursor);
+    QString textSelected = Cursor.selectedText();
+    emit showDataTips(helpEvent->globalPos(), textSelected);
+  }
+  return QTextEdit::event(event);
 }
 
 void FMTextEdit::contextMenuEvent(QContextMenuEvent* e) {
@@ -515,6 +618,8 @@ void FMEditor::readSettings() {
     m_font = new_font;
   }
   updateFont();
+  isShowToolTip = settings.value("editor/isShowToolTip", true).toBool();
+  dataTipConfigAct->setChecked(isShowToolTip); 
 }
 
 void FMEditor::updateFont() {
@@ -531,6 +636,7 @@ void FMEditor::writeSettings() {
   settings.setValue("editor/pos", pos());
   settings.setValue("editor/size", size());
   settings.setValue("editor/font", m_font.toString());
+  settings.setValue("editor/isShowToolTip", isShowToolTip);
   settings.sync();
 }
 
@@ -600,10 +706,14 @@ void FMEditor::tabChanged(int newslot) {
   connect(copyAct,SIGNAL(triggered()),currentEditor(),SLOT(copy()));
   connect(pasteAct,SIGNAL(triggered()),currentEditor(),SLOT(paste()));
   // Disconnect each of the contents changed signals
-  if (prevEdit)
+  if (prevEdit) {
     disconnect(prevEdit->document(),SIGNAL(contentsChanged()),0,0);
+    disconnect(prevEdit,SIGNAL(showDataTips(QPoint, QString)),0,0);
+  }
   // NEED TO DISCONNECT...
   connect(currentEditor()->document(),SIGNAL(contentsChanged()),this,SLOT(documentWasModified()));
+  connect(currentEditor(),SIGNAL(showDataTips(QPoint, QString)),
+          this,SLOT(showDataTips(QPoint, QString)));
   updateTitles();
   prevEdit = currentEditor();
 }
@@ -659,6 +769,12 @@ void FMEditor::createActions() {
   uncommentAct = new QAction("Uncomment Region",this);
   uncommentAct->setShortcut(Qt::Key_T | Qt::CTRL); 
   connect(uncommentAct,SIGNAL(triggered()),this,SLOT(uncomment()));
+  increaseIndentAct = new QAction("Increase Indent",this);
+  increaseIndentAct->setShortcut(Qt::Key_Tab); 
+  connect(increaseIndentAct,SIGNAL(triggered()),this,SLOT(increaseIndent()));
+  decreaseIndentAct = new QAction("Decrease Indent",this);
+  decreaseIndentAct->setShortcut(Qt::Key_Tab | Qt::SHIFT); 
+  connect(decreaseIndentAct,SIGNAL(triggered()),this,SLOT(decreaseIndent()));
   undoAct = new QAction("Undo Edits",this);
   undoAct->setShortcut(Qt::Key_Z | Qt::CTRL);
   connect(undoAct,SIGNAL(triggered()),this,SLOT(undo()));
@@ -668,6 +784,14 @@ void FMEditor::createActions() {
   replaceAct = new QAction("Find and Replace",this);
   replaceAct->setShortcut(Qt::Key_H | Qt::CTRL); 
   connect(replaceAct,SIGNAL(triggered()),this,SLOT(replace()));
+  helpWinAct = new QAction("Online &Manual",this);
+  helpWinAct->setShortcut(Qt::Key_F1); 
+  connect(helpWinAct,SIGNAL(triggered()),this,SLOT(helpWin()));
+  helpOnSelectionAct = new QAction("Help on Selection",this);
+  helpOnSelectionAct->setShortcut(Qt::Key_F2);
+  connect(helpOnSelectionAct,SIGNAL(triggered()),this,SLOT(helpOnSelection()));
+  openSelectionAct = new QAction("Open Selection",this);
+  connect(openSelectionAct,SIGNAL(triggered()),this,SLOT(openSelection()));
   dbStepAct = new QAction(QIcon(":/images/dbgnext.png"),"&Step Over",this);
   dbStepAct->setShortcut(Qt::Key_F10); 
   connect(dbStepAct,SIGNAL(triggered()),this,SLOT(dbstep()));
@@ -687,16 +811,20 @@ void FMEditor::createActions() {
   connect(colorConfigAct,SIGNAL(triggered()),this,SLOT(configcolors()));
   indentConfigAct = new QAction("Indenting",this);
   connect(indentConfigAct,SIGNAL(triggered()),this,SLOT(configindent()));
-  executeSelectedAct = new QAction("Execute Selected Text",this);
+  dataTipConfigAct = new QAction("Enable datatips",this);
+  dataTipConfigAct->setCheckable(true);
+  dataTipConfigAct->setShortcut(Qt::Key_F1 | Qt::SHIFT);
+  connect(dataTipConfigAct,SIGNAL(triggered()),this,SLOT(configDataTip()));
+  executeSelectedAct = new QAction(QIcon(":/images/player_playselection.png"),"Execute Selected Text",this);
   executeSelectedAct->setShortcut(Qt::Key_F9); 
   connect(executeSelectedAct,SIGNAL(triggered()),this,SLOT(execSelected()));
-  executeCurrentAct = new QAction("Execute Current Buffer",this);
+  executeCurrentAct = new QAction(QIcon(":/images/player_play.png"),"Execute Current Buffer",this);
   executeCurrentAct->setShortcut(Qt::Key_F5); 
   connect(executeCurrentAct,SIGNAL(triggered()),this,SLOT(execCurrent()));
 }
 
 void FMEditor::execSelected() {
-  emit EvaluateText(currentEditor()->textCursor().selectedText());
+  emit EvaluateText(currentEditor()->textCursor().selectedText()+"\n");
 }
 
 void FMEditor::execCurrent() {
@@ -705,7 +833,7 @@ void FMEditor::execCurrent() {
   else {
     if (!maybeSave())
       return;
-    emit EvaluateText("source " + currentFilename() + "\n");
+    emit EvaluateText("source '" + currentFilename() + "'\n");
   }
 }
 
@@ -725,14 +853,36 @@ void FMEditor::uncomment() {
   currentEditor()->uncomment();
 }
 
+void FMEditor::increaseIndent() {
+  currentEditor()->increaseIndent();
+}
+
+void FMEditor::decreaseIndent() {
+  currentEditor()->decreaseIndent();
+}
+
 void FMEditor::find() {
+  m_find->setFindText(currentEditor()->textCursor().selectedText());
   m_find->show();
   m_find->raise();
 }
 
 void FMEditor::replace() {
+  m_replace->setReplaceText(currentEditor()->textCursor().selectedText());
   m_replace->show();
   m_replace->raise();
+}
+
+void FMEditor::helpWin() {
+  emit EvaluateText("helpwin\n");
+}
+
+void FMEditor::helpOnSelection() {
+  emit EvaluateText("helpwin " + currentEditor()->textCursor().selectedText() + "\n");
+}
+
+void FMEditor::openSelection() {
+  emit EvaluateText("edit " + currentEditor()->textCursor().selectedText() + "\n");
 }
 
 void FMEditor::createMenus() {
@@ -760,11 +910,14 @@ void FMEditor::createMenus() {
   configMenu->addAction(fontAct);
   configMenu->addAction(colorConfigAct);
   configMenu->addAction(indentConfigAct);
+  configMenu->addAction(dataTipConfigAct);
   toolsMenu = menuBar()->addMenu("&Tools");
   toolsMenu->addAction(findAct);
   toolsMenu->addAction(replaceAct);
   toolsMenu->addAction(commentAct);
   toolsMenu->addAction(uncommentAct);
+  toolsMenu->addAction(increaseIndentAct);
+  toolsMenu->addAction(decreaseIndentAct);
   debugMenu = menuBar()->addMenu("&Debug");
   debugMenu->addAction(executeCurrentAct);
   debugMenu->addAction(executeSelectedAct);
@@ -774,7 +927,12 @@ void FMEditor::createMenus() {
   debugMenu->addAction(dbContinueAct);
   debugMenu->addAction(dbSetClearBPAct);
   debugMenu->addAction(dbStopAct);
+  helpMenu = menuBar()->addMenu("&Help");
+  helpMenu->addAction(helpWinAct);
+  helpMenu->addAction(helpOnSelectionAct);
   m_popup = new QMenu;
+  m_popup->addAction(openSelectionAct);
+  m_popup->addAction(helpOnSelectionAct);
   m_popup->addAction(copyAct);
   m_popup->addAction(cutAct);
   m_popup->addAction(pasteAct);
@@ -813,6 +971,9 @@ void FMEditor::createToolBars() {
   editToolBar->addAction(cutAct);
   editToolBar->addAction(pasteAct);
   debugToolBar = addToolBar("Debug");
+  debugToolBar->addAction(executeCurrentAct);
+  debugToolBar->addAction(executeSelectedAct);
+  debugToolBar->addSeparator();
   debugToolBar->addAction(dbStepAct);
   debugToolBar->addAction(dbTraceAct);
   debugToolBar->addAction(dbContinueAct);
@@ -828,6 +989,17 @@ void FMEditor::configcolors() {
 void FMEditor::configindent() {
   FMIndentConf t(this);
   t.exec();
+}
+ 
+void FMEditor::configDataTip() {
+  if (dataTipConfigAct->isChecked()) {
+     isShowToolTip = true;
+     statusBar()->showMessage("Datatips on", 2000);
+  }
+  else {
+     isShowToolTip = false;
+     statusBar()->showMessage("Datatips off", 2000);
+  }
 }
 
 void FMEditor::dbstep() {
@@ -858,7 +1030,7 @@ void FMEditor::dbsetclearbp() {
 //   selections.push_back(sel);
 //   te->getEditor()->dsetExtraSelections(selections);
 
-  m_eval->toggleBP(te->getFileName(),te->getLineNumber()); //chuong 2007-01-07
+  m_eval->toggleBP(te->getFileName(),te->getLineNumber());
 }
 
 void FMEditor::dbstop() {
@@ -871,59 +1043,21 @@ void FMEditor::createStatusBar() {
 
 static QString lastfile;
 static bool lastfile_set = false;
-/*
-static QString GetOpenFileName(QWidget *w) {
-  QString retfile;
-  if (lastfile_set)
-    retfile = QFileDialog::getOpenFileName(w,"Open File in Editor",lastfile,
-					   "M files (*.m);;Text files (*.txt);;All files (*)");
-  else
-    retfile = QFileDialog::getOpenFileName(w,"Open File in Editor",QString(),
-					   "M files (*.m);;Text files (*.txt);;All files (*)");
-  if (!retfile.isEmpty()) {
-    QFileInfo tokeep(retfile);
-    lastfile = tokeep.absolutePath();
-    lastfile_set = true;
-  }
-  return retfile;
-}
-*/
 
-static QString GetOpenFileName(QWidget *w, const QString &filePath = QString()) { 
-  QString retfile;
+static QStringList GetOpenFileNames(QWidget *w, const QString &filePath = QString()) { 
+  QStringList retfiles;
   if (!filePath.isEmpty())
-    retfile = QFileDialog::getOpenFileName(w,"Open File in Editor",filePath,
+    retfiles = QFileDialog::getOpenFileNames(w,"Open File in Editor",filePath,
 					   "M files (*.m);;Text files (*.txt);;All files (*)");  
   else if (lastfile_set)
-    retfile = QFileDialog::getOpenFileName(w,"Open File in Editor",lastfile,
+    retfiles = QFileDialog::getOpenFileNames(w,"Open File in Editor",lastfile,
 					   "M files (*.m);;Text files (*.txt);;All files (*)");
   else
-    retfile = QFileDialog::getOpenFileName(w,"Open File in Editor",QString(),
+    retfiles = QFileDialog::getOpenFileNames(w,"Open File in Editor",QString(),
 					   "M files (*.m);;Text files (*.txt);;All files (*)");
-  if (!retfile.isEmpty()) {
-    QFileInfo tokeep(retfile);
-    lastfile = tokeep.absolutePath();
-    lastfile_set = true;
-  }
-  return retfile;
+  return retfiles;
 }
-/*
-static QString GetSaveFileName(QWidget *w) {
-  QString retfile;
-  if (lastfile_set)
-    retfile = QFileDialog::getSaveFileName(w,"Save File",lastfile,
-					   "M files (*.m);;Text files (*.txt);;All files (*)");
-  else
-    retfile = QFileDialog::getSaveFileName(w,"Save File",QString(),
-					   "M files (*.m);;Text files (*.txt);;All files (*)");
-  if (!retfile.isEmpty()) {
-    QFileInfo tokeep(retfile);
-    lastfile = tokeep.absolutePath();
-    lastfile_set = true;
-  }
-  return retfile;  
-}
-*/
+
 static QString GetSaveFileName(QWidget *w, const QString &filePath = QString()) { 
   QString retfile;
   if (!filePath.isEmpty())
@@ -935,11 +1069,6 @@ static QString GetSaveFileName(QWidget *w, const QString &filePath = QString()) 
   else
     retfile = QFileDialog::getSaveFileName(w,"Save File",QString(),
 					   "M files (*.m);;Text files (*.txt);;All files (*)");
-  if (!retfile.isEmpty()) {
-    QFileInfo tokeep(retfile);
-    lastfile = tokeep.absolutePath();
-    lastfile_set = true;
-  }
   return retfile;  
 }
 
@@ -961,21 +1090,14 @@ bool FMEditor::isFileOpened(const QString &fileName)
 }
 
 void FMEditor::open() {
- //if (currentEditor()->document()->isModified() ||
-  //    (tab->tabText(tab->currentIndex()) != "untitled.m")) {
   QFileInfo fileInfo(currentFilename()); 
-  if (tab->tabText(tab->currentIndex()) != "untitled.m") { 
-    tab->addTab(new FMEditPane(m_eval),"untitled.m");
-    tab->setCurrentIndex(tab->count()-1);
-    updateFont();
-  }
-  
-  //QString fileName = GetOpenFileName(this);
-  //if (!fileName.isEmpty()) {
   QString filePath = fileInfo.absolutePath(); 
-  QString fileName = GetOpenFileName(this, filePath); 
-  if (!fileName.isEmpty() && !isFileOpened(fileName) ) { 
+  QStringList fileNames = GetOpenFileNames(this, filePath);
+  QStringList::Iterator it = fileNames.begin();
+  while(it != fileNames.end()) {
+    QString fileName = *it;
     loadFile(fileName);
+    ++it;
   }
 }
 
@@ -983,16 +1105,7 @@ void FMEditor::openRecentFile()
 {
   QAction *action = qobject_cast<QAction *>(sender());
   QString fileName = action->data().toString();
-  if (action && !fileName.isEmpty() && !isFileOpened(fileName)) {
-	  // Create a new tab
-	  if ((tab->tabText(tab->currentIndex()) != "untitled.m")) {
-		tab->addTab(new FMEditPane(m_eval),"untitled.m");
-		tab->setCurrentIndex(tab->count()-1);
-		updateFont();
-	  }
-	  // Load file
-      loadFile(action->data().toString());
-  }
+  loadFile(fileName);
 }
 
 
@@ -1034,6 +1147,40 @@ void FMEditor::RefreshBPLists() {
   update();
 }
 
+void FMEditor::IllegalLineOrCurrentPath(string name, int line) {
+  QString fullname = QString::fromStdString(name);
+  QFileInfo fileInfo(fullname);
+  QString filePath = QFileInfo(fullname).absolutePath();
+  QString currentPath = QDir::currentPath();
+  if (filePath !=currentPath) {
+     int ret = QMessageBox::warning(this, tr("FreeMat"),
+				   "File " + fullname + " is not on the current path."
+				   " To set breakpoint, do you want to change current "
+				   " path to the path of this file?",
+				   QMessageBox::Yes | QMessageBox::Default,
+				   QMessageBox::No,
+				   QMessageBox::Cancel | QMessageBox::Escape);
+	if (ret == QMessageBox::Yes) {
+	  emit EvaluateText("cd " + filePath + "\n");
+	  // leave some time to finish the above command
+#ifndef WIN32
+	  sleep(1);
+#else
+	  Sleep(1);
+#endif
+	  // make sure the current path is the file path
+	  // before execute toggleBP() 
+	  currentPath = QDir::currentPath();
+	  if (filePath == currentPath)
+	     m_eval->toggleBP(fullname, line);
+	   else
+	     statusBar()->showMessage("Try again", 2000);
+	}
+  }
+  else 
+     statusBar()->showMessage("Illegal line number", 2000);
+}
+
 void FMEditor::ShowActiveLine() {
   // Find the tab with this matching filename
   QString tname(QString::fromStdString(m_eval->getInstructionPointerFileName()));
@@ -1058,6 +1205,145 @@ void FMEditor::ShowActiveLine() {
   }
   loadFile(tname);
   update();
+}
+
+void FMEditor::refreshContext() {
+  if (!context) return;
+  
+  //Reset all the values
+  varNameList = QStringList();
+  varTypeList = QStringList();
+  varFlagsList = QStringList();
+  varSizeList = QStringList();
+  varValueList = QStringList();
+
+  StringVector varnames = StringVector(context->listAllVariables());
+  std::sort(varnames.begin(),varnames.end());
+  for (int i=0;i<varnames.size();i++) {
+    QString name(QString::fromStdString(varnames[i]));
+    QString type;
+    QString flags;
+    QString size;
+    QString value;
+    Array lookup;
+    ArrayReference ptr;
+    ptr = context->lookupVariable(varnames[i]);
+    if (!ptr.valid()) {
+      type = "undefined";
+    } else {
+      lookup = *ptr;
+      Class t = lookup.dataClass();
+      switch(t) {
+      case FM_CELL_ARRAY:
+	type = "cell";
+	break;
+      case FM_STRUCT_ARRAY:
+	if (lookup.isUserClass())
+	  type = QString::fromStdString(lookup.className().back());
+	else
+	  type = "struct";
+	break;
+      case FM_LOGICAL:
+	type = "logical";
+	break;
+      case FM_UINT8:
+	type = "uint8";
+	break;
+      case FM_INT8:
+	type = "int8";
+	break;
+      case FM_UINT16:
+	type = "uint16";
+	break;
+      case FM_INT16:
+	type = "int16";
+	break;
+      case FM_UINT32:
+	type = "uint32";
+	break;
+      case FM_INT32:
+	type = "int32";
+	break;
+      case FM_UINT64:
+	type = "uint64";
+	break;
+      case FM_INT64:
+	type = "int64";
+	break;
+      case FM_FLOAT:
+	type = "float";
+	break;
+      case FM_DOUBLE:
+	type = "double";
+	break;
+      case FM_COMPLEX:
+	type = "complex";
+	break;
+      case FM_DCOMPLEX:
+	type = "dcomplex";
+	break;
+      case FM_STRING:
+	type = "string";
+	break;
+      case FM_FUNCPTR_ARRAY:
+	type = "func ptr";
+	break;
+      }
+      if (lookup.sparse())
+	flags = "Sparse ";
+      if (context->isVariableGlobal(varnames[i])) {
+	flags += "Global ";
+      } else if (context->isVariablePersistent(varnames[i])) {
+	flags += "Persistent ";
+      }
+      size = QString::fromStdString(lookup.dimensions().asString());
+      try {
+	value = QString::fromStdString(ArrayToPrintableString(lookup));
+      } catch (Exception& e) {
+      }
+    }
+    varNameList << name;
+	varTypeList << type;
+	varFlagsList << flags;
+	varSizeList << size;
+	varValueList << value;	    
+  }
+}
+
+void FMEditor::setContext(Context *watch) {
+  context = watch;
+  refreshContext();
+}
+
+void FMEditor::showDataTips(QPoint pos, QString textSelected) {
+
+  if (!isShowToolTip)
+     return;
+     
+  bool foundTip = false;
+  if (!textSelected.isEmpty()) {
+    //split selected text into smaller parts and match with existing variable names
+ 	QStringList list = textSelected.split(QRegExp("\\W+"), QString::SkipEmptyParts);
+	 for (int j = 0; j < list.size(); j++)
+		for (int i = 0; i < varNameList.size(); i++)
+		  if (list.at(j) == varNameList.at(i)) {
+			foundTip = true;
+			if (varValueList.at(i).isEmpty())
+			  QToolTip::showText(pos, varNameList.at(i) + ": " + 
+				                    varSizeList.at(i) + " " + 
+				                    varTypeList.at(i));
+			else
+			  QToolTip::showText(pos, varNameList.at(i) + ": " + 
+				                    varSizeList.at(i) + " " + 
+				                    varTypeList.at(i) + " =\n    " + 
+				                    varValueList.at(i) );
+			break;
+	      }
+    if (!foundTip)
+      QToolTip::hideText(); 
+  }
+  else
+    QToolTip::hideText();
 }
 
 void FMEditor::closeTab() {
@@ -1124,16 +1410,19 @@ void FMEditor::closeEvent(QCloseEvent *event) {
 
 void FMEditor::loadFile(const QString &fileName)
 {
-  QFile file(fileName);
-  if (!file.open(QFile::ReadOnly | QFile::Text)) {
-    QMessageBox::warning(this, tr("FreeMat"),
-			 tr("Cannot read file %1:\n%2.")
-			 .arg(fileName)
-			 .arg(file.errorString()));
+  // ignore if empty filename
+  if (fileName.isEmpty())
     return;
+    
+  // check if there's already an unmodified "untitled.m" tab
+  // if not create a new tab
+  if (tab->tabText(tab->currentIndex()) != "untitled.m") { 
+    tab->addTab(new FMEditPane(m_eval),"untitled.m");
+    tab->setCurrentIndex(tab->count()-1);
+    updateFont();
   }
-  
   // Check for one of the editors that might be editing this file already
+  // if found, show its tab
   for (int i=0;i<tab->count();i++) {
     QWidget *w = tab->widget(i);
     FMEditPane *te = qobject_cast<FMEditPane*>(w);
@@ -1145,11 +1434,24 @@ void FMEditor::loadFile(const QString &fileName)
     }
   }
 
+  // open file and load into editor
+  QFile file(fileName);
+  if (!file.open(QFile::ReadOnly | QFile::Text)) {
+    QMessageBox::warning(this, tr("FreeMat"),
+			 tr("Cannot read file %1:\n%2.")
+			 .arg(fileName)
+			 .arg(file.errorString()));
+    return;
+  }
   QTextStream in(&file);
   QApplication::setOverrideCursor(Qt::WaitCursor);
   currentEditor()->setPlainText(in.readAll());
   QApplication::restoreOverrideCursor();
   
+  // remember filename and update recent file list
+  QFileInfo tokeep(fileName);
+  lastfile = tokeep.absolutePath();
+  lastfile_set = true;
   setCurrentFile(fileName);
   statusBar()->showMessage(tr("File loaded"), 2000);
 }

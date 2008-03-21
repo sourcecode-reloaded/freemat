@@ -35,14 +35,20 @@ public:
     DebugBuf() : dbwin(0) {};
     void setOutWindow( QTextCursor* _dbwin ) { dbwin = _dbwin; };
     
-    virtual std::streamsize xsputn(const char_type *_Ptr, std::streamsize _Count ){
-	std::streamsize sz = std::stringbuf::xsputn( _Ptr, _Count );
+ //   virtual std::streamsize xsputn(const char_type *_Ptr, std::streamsize _Count ){
+	//std::streamsize sz = std::stringbuf::xsputn( _Ptr, _Count );
+	//if( dbwin ){
+	//    std::string s( _Ptr, _Count );
+	//    dbwin->insertText( s.c_str() );
+	//}
+	//return sz;
+ //   }
+    int pubsync( void ){
 	if( dbwin ){
-	    std::string s( _Ptr, _Count );
-	    dbwin->insertText( s.c_str() );
+	    dbwin->insertText( str().c_str() );
 	}
-	return sz;
-    }
+	return sync();
+    };
 };
 
 class DebugStream : public std::ostream

@@ -591,6 +591,46 @@ void TComplexProd(const T* sp, T* dp, int planes, int planesize, int linesize) {
   }
 }
 
+template <class T>
+void TBitAnd(int N, T*C, const T*A, int stride1, const T*B, int stride2) {
+  int m, p;
+  m = 0; p = 0;
+  for (int i=0;i<N;i++) {
+    C[i] = A[m] & B[p];
+    m += stride1;
+    p += stride2;
+  }
+}
+
+template <class T>
+void TBitOr(int N, T*C, const T*A, int stride1, const T*B, int stride2) {
+  int m, p;
+  m = 0; p = 0;
+  for (int i=0;i<N;i++) {
+    C[i] = A[m] | B[p];
+    m += stride1;
+    p += stride2;
+  }
+}
+
+template <class T>
+void TBitXOr(int N, T*C, const T*A, int stride1, const T*B, int stride2) {
+  int m, p;
+  m = 0; p = 0;
+  for (int i=0;i<N;i++) {
+    C[i] = A[m] ^ B[p];
+    m += stride1;
+    p += stride2;
+  }
+}
+
+template <class T>
+void TBitCmp(int N, T*C, const T*A) {
+  for (int i=0;i<N;i++) {
+    C[i] = ~A[i];
+  }
+}
+
 ArrayVector LessThan(int nargout, const ArrayVector& arg) {
   ArrayVector retvec;
   Array x(arg[0]);
@@ -874,6 +914,10 @@ ArrayVector MinFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 2)
     return LessThan(nargout,arg);
   Array input(arg[0]);
+
+  if( input.isEmpty() )
+	return ArrayVector() << Array::emptyConstructor(input.dimensions());
+
   Class argType(input.dataClass());
   if (input.isReferenceType() || input.isString())
     throw Exception("min only defined for numeric types");
@@ -1324,6 +1368,10 @@ ArrayVector MaxFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 2)
     return GreaterThan(nargout,arg);
   Array input(arg[0]);
+
+  if( input.isEmpty() )
+	return ArrayVector() << Array::emptyConstructor(input.dimensions());
+
   Class argType(input.dataClass());
   if (input.isReferenceType() || input.isString())
     throw Exception("max only defined for numeric types");
@@ -2889,6 +2937,241 @@ ArrayVector ProdFunction(int nargout, const ArrayVector& arg) {
     retval = Array(FM_DCOMPLEX,outDim,ptr);
     break;
   }
+  }
+  ArrayVector retArray;
+  retArray.push_back(retval);
+  return retArray;
+}
+//!
+//@Module BITAND Bitwise Boolean And Operation
+//@@Section BINARY
+//@@Usage
+//Performs a bitwise binary and operation on the two arguments and
+//returns the result.  The syntax for its use is
+//@[
+//   y = bitand(a,b)
+//@]
+//where @|a| and @|b| are multi-dimensional unsigned integer arrays.
+//The and operation is performed using 32 bit unsigned intermediates.  Note that if a
+//or b is a scalar, then each element of the other array is and'ed with
+// that scalar.  Otherwise the two arrays must match in size.
+//@@Example
+//@<
+//bitand(uint16([1,16,255]),uint16([3,17,128]))
+//bitand(uint16([1,16,255]),uint16(3))
+//@>
+//!
+ArrayVector BitandFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 2)
+    throw Exception("bitand requires at least two arguments");
+  Array A(arg[0]);
+  A.promoteType(FM_UINT32);
+  Array B(arg[1]);
+  B.promoteType(FM_UINT32);
+
+  int Astride, Bstride;
+  void *Cp = NULL;
+  int Clen;
+  Dimensions CDim;
+
+  if (A.isScalar()) {
+    Astride = 0;
+    Bstride = 1;
+    CDim = B.dimensions();
+    Clen = B.getLength();
+  } else if (B.isScalar()) {
+    Astride = 1;
+    Bstride = 0;
+    CDim = A.dimensions();
+    Clen = A.getLength();
+  } else {
+    Astride = 1;
+    Bstride = 1;
+    CDim = A.dimensions();
+    Clen = A.getLength();
+  }
+
+  Cp = Malloc(Clen*B.getElementSize());
+  TBitAnd<uint32>( Clen, (uint32*) Cp, (uint32*) A.getDataPointer(), Astride, (uint32*) B.getDataPointer(), Bstride );
+  Array retval;
+  retval = Array(FM_UINT32, CDim, Cp);
+
+  ArrayVector retArray;
+  retArray.push_back(retval);
+  return retArray;
+}
+
+//!
+//@Module BITOR Bitwise Boolean Or Operation
+//@@Section BINARY
+//@@Usage
+//Performs a bitwise binary or operation on the two arguments and
+//returns the result.  The syntax for its use is
+//@[
+//   y = bitor(a,b)
+//@]
+//where @|a| and @|b| are multi-dimensional unsigned integer arrays.
+//The and operation is performed using 32 bit unsigned intermediates.  Note that if a
+//or b is a scalar, then each element of the other array is or'ed with
+//that scalar.  Otherwise the two arrays must match in size.
+//@@Example
+//@<
+//bitand(uint16([1,16,255]),uint16([3,17,128]))
+//bitand(uint16([1,16,255]),uint16(3))
+//@>
+//!
+ArrayVector BitorFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 2)
+    throw Exception("bitor requires at least two arguments");
+  Array A(arg[0]);
+  A.promoteType(FM_UINT32);
+  Array B(arg[1]);
+  B.promoteType(FM_UINT32);
+
+  int Astride, Bstride;
+  void *Cp = NULL;
+  int Clen;
+  Dimensions CDim;
+
+  if (A.isScalar()) {
+    Astride = 0;
+    Bstride = 1;
+    CDim = B.dimensions();
+    Clen = B.getLength();
+  } else if (B.isScalar()) {
+    Astride = 1;
+    Bstride = 0;
+    CDim = A.dimensions();
+    Clen = A.getLength();
+  } else {
+    Astride = 1;
+    Bstride = 1;
+    CDim = A.dimensions();
+    Clen = A.getLength();
+  }
+
+  Cp = Malloc(Clen*B.getElementSize());
+  TBitOr<uint32>( Clen, (uint32*) Cp, (uint32*) A.getDataPointer(), Astride, (uint32*) B.getDataPointer(), Bstride );
+  Array retval;
+  retval = Array(FM_UINT32, CDim, Cp);
+
+  ArrayVector retArray;
+  retArray.push_back(retval);
+  return retArray;
+}
+
+//!
+//@Module BITXOR Bitwise Boolean Exclusive-Or (XOR) Operation
+//@@Section BINARY
+//@@Usage
+//Performs a bitwise binary xor operation on the two arguments and
+//returns the result.  The syntax for its use is
+//@[
+//   y = bitxor(a,b)
+//@]
+//where @|a| and @|b| are multi-dimensional unsigned integer arrays.
+//The and operation is performed using 32 bit unsigned intermediates.  Note that if a
+//or b is a scalar, then each element of the other array is xor'ed with
+// that scalar.  Otherwise the two arrays must match in size.
+//@@Example
+//@<
+//bitand(uint16([1,16,255]),uint16([3,17,128]))
+//bitand(uint16([1,16,255]),uint16(3))
+//@>
+//!
+ArrayVector BitxorFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 2)
+    throw Exception("bitxor requires at least two arguments");
+  Array A(arg[0]);
+  A.promoteType(FM_UINT32);
+  Array B(arg[1]);
+  B.promoteType(FM_UINT32);
+
+  int Astride, Bstride;
+  void *Cp = NULL;
+  int Clen;
+  Dimensions CDim;
+
+  if (A.isScalar()) {
+    Astride = 0;
+    Bstride = 1;
+    CDim = B.dimensions();
+    Clen = B.getLength();
+  } else if (B.isScalar()) {
+    Astride = 1;
+    Bstride = 0;
+    CDim = A.dimensions();
+    Clen = A.getLength();
+  } else {
+    Astride = 1;
+    Bstride = 1;
+    CDim = A.dimensions();
+    Clen = A.getLength();
+  }
+
+  Cp = Malloc(Clen*B.getElementSize());
+  TBitXOr<uint32>( Clen, (uint32*) Cp, (uint32*) A.getDataPointer(), Astride, (uint32*) B.getDataPointer(), Bstride );
+  Array retval;
+  retval = Array(FM_UINT32, CDim, Cp);
+
+  ArrayVector retArray;
+  retArray.push_back(retval);
+  return retArray;
+}
+
+//!
+//@Module BITCMP_CPP Bitwise Boolean Complement Operation
+//@@Section BINARY
+//@@Usage
+//Performs a bitwise binary complement operation on the argument and
+//returns the result.  The syntax for its use is
+//@[
+//   y = bitcmp_cpp(a)
+//@]
+//where @|a| is a  multi-dimensional unsigned integer arrays.  This version of the command
+//uses as many bits as required by the type of a.  For example, if 
+//a is an uint8 type, then the complement is formed using 8 bits.
+//
+//@<
+//bitcmp_cpp(uint16(2^14-2))
+//@>
+//!
+ArrayVector BitcmpFunction(int nargout, const ArrayVector& arg) {
+  Array A(arg[0]);
+  Class argType(A.dataClass());
+
+  void *Cp = NULL;
+  int Clen;
+  Dimensions CDim;
+
+  CDim = A.dimensions();
+  Clen = A.getLength();
+
+  Cp = Malloc(Clen*A.getElementSize());
+  Array retval;
+  switch (argType) {
+  case FM_UINT8: {
+    TBitCmp<uint8>( Clen, (uint8*) Cp, (uint8*) A.getDataPointer() );
+    retval = Array(FM_UINT8, CDim, Cp);
+    break;
+  }
+  case FM_UINT16: {
+    TBitCmp<uint16>( Clen, (uint16*) Cp, (uint16*) A.getDataPointer() );
+    retval = Array(FM_UINT16, CDim, Cp);
+    break;
+  }
+  case FM_UINT32: {
+    TBitCmp<uint32>( Clen, (uint32*) Cp, (uint32*) A.getDataPointer() );
+    retval = Array(FM_UINT32, CDim, Cp);
+    break;
+  }
+  case FM_UINT64: {
+    TBitCmp<uint64>( Clen, (uint64*) Cp, (uint64*) A.getDataPointer() );
+    retval = Array(FM_UINT64, CDim, Cp);
+    break;
+  }
+  default:
+    throw Exception("bitcmp: argument type limited to unsigned integers");
   }
   ArrayVector retArray;
   retArray.push_back(retval);

@@ -19,8 +19,8 @@
 #include "QTRenderEngine.hpp"
 #include <math.h>
 #include <algorithm>
-#include <QDebug>
 #include "IEEEFP.hpp"
+#include "DebugStream.hpp" 
 
 bool operator<(const quad3d& a, const quad3d& b) {
   return (a.meanz < b.meanz);
@@ -564,7 +564,7 @@ void QTRenderEngine::drawImage(double x1, double y1, double x2, double y2,
 			       QImage pic) {
   QPointF pt(Map(x1,y1,0));
   pt.setY(pt.y()-pic.height());
-  //  qDebug() << "image draw at " << pt << "," << pic.size();
+  dbout << "image draw at " << pt.x() << ", " << pt.y() << " size:" << pic.height() << ", " << pic.width() << "\n";
   pnt->drawImage(pt,pic);
 }
 

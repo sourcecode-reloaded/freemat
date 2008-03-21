@@ -49,6 +49,7 @@ public:
   void SetupInteractiveTerminalCase();
   void SetupDumbTerminalCase();
   KeyManager* GetKeyManager();
+  ApplicationWindow* getApplicationWindow();
   void SetGUIMode(bool mode);
   void TerminalReset();
   Context *NewContext();
