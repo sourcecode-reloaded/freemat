@@ -2977,6 +2977,8 @@ ArrayVector FscanfFunction(int nargout, const ArrayVector& arg) {
     throw Exception("fprintf format argument must be a string");
   ArrayVector argcopy(arg);
   argcopy.pop_front();
+  
+  FilePtr *fptr=(fileHandles.lookupHandle(handle+1));
 
   QFile outf;
   outf.open(fptr->fp, QIODevice::WriteOnly);
