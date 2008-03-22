@@ -27,40 +27,38 @@
 #include <QTextCursor>
 #include "DebugWin.hpp"
 
-class DebugBuf : public std::stringbuf
+template <class CharT, class TraitsT = std::char_traits<CharT> >
+class DebugBuf : public std::basic_stringbuf<CharT, TraitsT>
 {
 private:
     QTextCursor* dbwin; 
 public:
     DebugBuf() : dbwin(0) {};
+    ~DebugBuf() { sync(); }
     void setOutWindow( QTextCursor* _dbwin ) { dbwin = _dbwin; };
-    
- //   virtual std::streamsize xsputn(const char_type *_Ptr, std::streamsize _Count ){
-	//std::streamsize sz = std::stringbuf::xsputn( _Ptr, _Count );
-	//if( dbwin ){
-	//    std::string s( _Ptr, _Count );
-	//    dbwin->insertText( s.c_str() );
-	//}
-	//return sz;
- //   }
-    int pubsync( void ){
+
+protected:
+    virtual int sync(  ){
 	if( dbwin ){
 	    dbwin->insertText( str().c_str() );
 	}
-	return sync();
+	str(std::basic_string<CharT>());
+	return 0;
     };
 };
 
-class DebugStream : public std::ostream
+template<class CharT, class TraitsT = std::char_traits<CharT> >
+class basic_DebugStream : public std::basic_ostream<CharT, TraitsT>
 {
 private:
     QTextCursor* dbwin;    
-    DebugBuf* dbuf;
+    DebugBuf<CharT, TraitsT>* dbuf;
 public:
-    DebugStream() : std::ostream( dbuf = new DebugBuf() ) {};
-    ~DebugStream() { delete rdbuf(); };
+    basic_DebugStream() : std::basic_ostream<CharT, TraitsT>( dbuf = new DebugBuf<CharT, TraitsT>() ) { setf(std::ios::unitbuf); };
+    ~basic_DebugStream() { dbuf->pubsync(); delete rdbuf(); };
     void setOutWindow( QTextCursor* _dbwin ) { dbwin = _dbwin; dbuf->setOutWindow( dbwin ); };
 };
 
+typedef basic_DebugStream<char>    DebugStream;
 extern DebugStream dbout;
 #endif /* __DEBUGSTREAM_HPP__ */
