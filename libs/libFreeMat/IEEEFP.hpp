@@ -36,10 +36,12 @@ void ToHexString(double t, char *ptr);
 #define M_PI 3.141592653589793
 #endif
 
+#include <float.h>
+#include <math.h>
+
 #if defined(_MSC_VER )
 
 extern "C"{
-	#include <float.h>
 	__declspec( dllexport ) double rint (double x);
 	__declspec( dllexport ) double log1p(double x);
 	__declspec( dllexport ) double expm1 (double x);

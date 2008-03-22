@@ -40,7 +40,7 @@ public:
 protected:
     virtual int sync(  ){
 	if( dbwin ){
-	    dbwin->insertText( str().c_str() );
+	    dbwin->insertText( std::basic_stringbuf<CharT, TraitsT>::str().c_str() );
 	}
 	str(std::basic_string<CharT>());
 	return 0;
@@ -54,8 +54,8 @@ private:
     QTextCursor* dbwin;    
     DebugBuf<CharT, TraitsT>* dbuf;
 public:
-    basic_DebugStream() : std::basic_ostream<CharT, TraitsT>( dbuf = new DebugBuf<CharT, TraitsT>() ) { setf(std::ios::unitbuf); };
-    ~basic_DebugStream() { dbuf->pubsync(); delete rdbuf(); };
+    basic_DebugStream() : std::basic_ostream<CharT, TraitsT>( dbuf = new DebugBuf<CharT, TraitsT>() ) { std::basic_ostream<CharT, TraitsT>::setf(std::ios::unitbuf); };
+    ~basic_DebugStream() { dbuf->pubsync(); delete std::basic_ostream<CharT, TraitsT>::rdbuf(); };
     void setOutWindow( QTextCursor* _dbwin ) { dbwin = _dbwin; dbuf->setOutWindow( dbwin ); };
 };
 

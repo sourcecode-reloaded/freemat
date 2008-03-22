@@ -2126,7 +2126,8 @@ void Interpreter::forStatement(Tree *t) {
 	else {
 	  first = expression(t->first()->second()->first());
 	  last = expression(t->first()->second()->second());
-	  ForLoopIterator( codeBlock, indexVarName, first, last, Array::doubleConstructor( 1 ), this);
+	  Array tmp = Array::doubleConstructor( 1 );
+	  ForLoopIterator( codeBlock, indexVarName, first, last, tmp, this);
 	    //return unitColon(t);
 	}
     }
