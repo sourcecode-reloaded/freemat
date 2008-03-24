@@ -31,7 +31,7 @@ static inline double Tget_imag(const Variant*ptr, index_t ndx) {
 }
 
 template <typename T>
-static void Tset(Variant *ptr, index_t pos, double vreal, double vimag) {
+static void Tset(Variant *ptr, index_t pos, T vreal, T vimag) {
   BasicArray<T>& real(ptr->real<T>());
   real.set(pos,vreal);
   if (vimag != 0) {
@@ -336,67 +336,67 @@ const Variant Variant::asScalar() const {
   throw Exception("Unhandled case");
 }
 
-void Variant::set(index_t pos, const Variant& val) {
-  switch (m_type) {
-  default:
-    throw Exception("Unsupported type for set");
-  case BoolArray:  {
-    Variant valp(val.asScalar());
-    Tset<logical>(this,pos,valp.m_real.d,valp.m_imag.d);
-    return;
-  }
-  case Int8Array:  {
-    Variant valp(val.asScalar());
-    Tset<int8>(this,pos,valp.m_real.d,valp.m_imag.d);
-    return;
-  }
-  case UInt8Array:  {
-    Variant valp(val.asScalar());
-    Tset<uint8>(this,pos,valp.m_real.d,valp.m_imag.d);
-    return;
-  }
-  case Int16Array:  {
-    Variant valp(val.asScalar());
-    Tset<int16>(this,pos,valp.m_real.d,valp.m_imag.d);
-    return;
-  }
-  case UInt16Array:  {
-    Variant valp(val.asScalar());
-    Tset<uint16>(this,pos,valp.m_real.d,valp.m_imag.d);
-    return;
-  }
-  case Int32Array:   {
-    Variant valp(val.asScalar());
-    Tset<int32>(this,pos,valp.m_real.d,valp.m_imag.d);
-    return;
-  }
-  case UInt32Array:    {
-    Variant valp(val.asScalar());
-    Tset<uint32>(this,pos,valp.m_real.d,valp.m_imag.d);
-    return;
-  }
-  case Int64Array:   {
-    Variant valp(val.asScalar());
-    Tset<int64>(this,pos,valp.m_real.d,valp.m_imag.d);
-    return;
-  }
-  case UInt64Array:    {
-    Variant valp(val.asScalar());
-    Tset<uint64>(this,pos,valp.m_real.d,valp.m_imag.d);
-    return;
-  }
-  case FloatArray:    {
-    Variant valp(val.asScalar());
-    Tset<float>(this,pos,valp.m_real.d,valp.m_imag.d);
-    return;
-  }
-  case DoubleArray:    {
-    Variant valp(val.asScalar());
-    Tset<double>(this,pos,valp.m_real.d,valp.m_imag.d);
-    return;
-  }
-  }
-}
+// void Variant::set(index_t pos, const Variant& val) {
+//   switch (m_type) {
+//   default:
+//     throw Exception("Unsupported type for set");
+//   case BoolArray:  {
+//     Variant valp(val.asScalar());
+//     Tset<logical>(this,pos,valp.m_real.d,valp.m_imag.d);
+//     return;
+//   }
+//   case Int8Array:  {
+//     Variant valp(val.asScalar());
+//     Tset<int8>(this,pos,valp.m_real.d,valp.m_imag.d);
+//     return;
+//   }
+//   case UInt8Array:  {
+//     Variant valp(val.asScalar());
+//     Tset<uint8>(this,pos,valp.m_real.d,valp.m_imag.d);
+//     return;
+//   }
+//   case Int16Array:  {
+//     Variant valp(val.asScalar());
+//     Tset<int16>(this,pos,valp.m_real.d,valp.m_imag.d);
+//     return;
+//   }
+//   case UInt16Array:  {
+//     Variant valp(val.asScalar());
+//     Tset<uint16>(this,pos,valp.m_real.d,valp.m_imag.d);
+//     return;
+//   }
+//   case Int32Array:   {
+//     Variant valp(val.asScalar());
+//     Tset<int32>(this,pos,valp.m_real.d,valp.m_imag.d);
+//     return;
+//   }
+//   case UInt32Array:    {
+//     Variant valp(val.asScalar());
+//     Tset<uint32>(this,pos,valp.m_real.d,valp.m_imag.d);
+//     return;
+//   }
+//   case Int64Array:   {
+//     Variant valp(val.asScalar());
+//     Tset<int64>(this,pos,valp.m_real.d,valp.m_imag.d);
+//     return;
+//   }
+//   case UInt64Array:    {
+//     Variant valp(val.asScalar());
+//     Tset<uint64>(this,pos,valp.m_real.d,valp.m_imag.d);
+//     return;
+//   }
+//   case FloatArray:    {
+//     Variant valp(val.asScalar());
+//     Tset<float>(this,pos,valp.m_real.d,valp.m_imag.d);
+//     return;
+//   }
+//   case DoubleArray:    {
+//     Variant valp(val.asScalar());
+//     Tset<double>(this,pos,valp.m_real.d,valp.m_imag.d);
+//     return;
+//   }
+//   }
+// }
 
 std::ostream& operator<<(std::ostream& o, const Variant &t) {
   t.print(o);
@@ -420,6 +420,9 @@ BasicArray<index_t> IndexTypeFromVariant(const Variant &index,
 						index_t len) {
   if ((index.type() == Int32Array) && index.allReal())
     return index.constReal<index_t>();
+  if (index.type() == Int32Scalar) {
+    return BasicArray<index_t>(index.realScalar<index_t>());
+  }
   if (IsColonOp(index)) {
     BasicArray<index_t> retvec(NTuple(len,1));
     for (int i=0;i<len;i++) retvec[i+1] = i+1;

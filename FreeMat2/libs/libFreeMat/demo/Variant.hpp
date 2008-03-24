@@ -112,7 +112,7 @@ public:
   inline T realScalar() const;
   template <typename T>
   inline T imagScalar() const;
-  void set(index_t pos, const Variant& val);
+  //  void set(index_t pos, const Variant& val);
   const Variant get(index_t pos) const;
   inline bool allReal() const {return (!m_imag.p);}
   const Variant asScalar() const;

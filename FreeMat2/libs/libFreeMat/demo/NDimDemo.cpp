@@ -13,6 +13,7 @@
 #include <iostream>
 #include <QVariant>
 #include <QVarLengthArray>
+#include <QTime>
 //#include "Array.hpp"
 
 // The next issue to solve is the dynamic typing one.
@@ -227,12 +228,14 @@ int main(int, const char *[]) {
   printMatrix<float>(S);
 
 #endif
+  QTime timer;
 
   Variant L(DoubleArray,NTuple(5,5));
   BasicArray<double> &L2(L.real<double>());
   for (int i=1;i<=5;i++)
     for (int j=1;j<=5;j++)
       L2[NTuple(i,j)] = i*10+j;
+  BasicArray<double> L0(L2);
   std::cout << "Allzeros " << AllZeros(L2) << "\n";
   Variant row(Int32Array,NTuple(2,1));
   BasicArray<int32> &row_access(row.real<int32>());
@@ -262,6 +265,36 @@ int main(int, const char *[]) {
   BasicArray<double> L6(L2.getNDimSubset(ndx3));
   // slice test!
   printMatrix(L6);
+  printMatrix(L2);
+  L2.setVectorSubset(col,9);
+  printMatrix(L2);
+  BasicArray<double> L7(L2);
+  L7.setNDimSubset(ndx2,0);
+  printMatrix(L7);
+  BasicArray<double> L8(L2);
+  L8.setNDimSubset(ndx3,1);
+  printMatrix(L8);
+  VariantList ndx4;
+  Variant row2(Int32Array,NTuple(5,1));
+  BasicArray<int32> &row2_access(row2.real<int32>());
+  row2_access[1] = 1; row2_access[2] = 2;
+  row2_access[3] = 3; row2_access[4] = 4;
+  row2_access[5] = 5;
+  ndx4.push_back(row2);
+  ndx4.push_back(Variant((int32) 4));
+  BasicArray<double> L9(L2);
+  L9.setNDimSubset(ndx4,1);
+  printMatrix(L9);
+  Variant delset(Int32Array,NTuple(4,1));
+  BasicArray<int32> &deldat(delset.real<int32>());
+  deldat[1] = 1; deldat[2] = 3; deldat[3] = 6; deldat[4] = 8;
+  BasicArray<double> L10(L0);
+  BasicArray<double> rhs;
+  printMatrix(L10);
+  L10.setVectorSubset(delset,1.5);
+  printMatrix(L10);
+  L10.setVectorSubset(delset,rhs);
+  printMatrix(L10);
   return 0;
   // Next step - fast VariantList & slicing.
 
@@ -309,8 +342,8 @@ int main(int, const char *[]) {
   printNDim<BasicArray<double>,ConstBasicIterator<double> >(Y2,0);
   printNDim<BasicArray<double>,ConstBasicIterator<double> >(Y2,1);
   //  printMatrix<double>(Y.constReal<double>());
-  Y.set(7,Variant(1,3));
-  printNDim<Variant, ConstVariantIterator>(Y,0);
+  //  Y.set(7,Variant(1,3));
+  //  printNDim<Variant, ConstVariantIterator>(Y,0);
 
 #if 0
   Variant L(UInt8Array,NTuple(5,5));
