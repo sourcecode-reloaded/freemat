@@ -84,6 +84,7 @@ public:
   inline bool isVector() const {return dimensions().isVector();}
   inline bool isColumnVector() const {return dimensions().isColumnVector();}
   inline bool isRowVector() const {return dimensions().isRowVector();}
+  inline bool is2D() const {return dimensions().is2D();}
   QString string() const;
   inline bool isScalar() const {
     return ((m_type >= BoolScalar) && (m_type <= DoubleScalar));

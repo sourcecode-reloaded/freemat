@@ -295,6 +295,33 @@ int main(int, const char *[]) {
   printMatrix(L10);
   L10.setVectorSubset(delset,rhs);
   printMatrix(L10);
+  BasicArray<double> L11(L2);
+  printMatrix(L11);
+  VariantList ndx5;
+  ndx5.push_back(colon); ndx5.push_back(col);
+  L11.setNDimSubset(ndx5,rhs);
+  printMatrix(L11);
+  // Next - special cases for scalar indexing
+  BasicArray<double> L12(L2);
+  printMatrix(L12);
+  for (int i=0;i<5;i++) {
+    VariantList args;
+    args.push_back(Variant((double) (i+1)));
+    args.push_back(Variant((double) (i+1)));
+    L12.setNDimSubset(args,-4);
+  }
+  printMatrix(L12);
+  Variant K(DoubleArray,NTuple(1000,1000));
+  BasicArray<double> &Kref(K.real<double>());
+  timer.start();
+  for (int i=0;i<1000;i++)
+    for (int j=0;j<1000;j++) {
+      VariantList args;
+      args.push_back(Variant((double) (j+1)));
+      args.push_back(Variant((double) (i+1)));
+      Kref.setNDimSubset(args,(double)(i-j));
+    }
+  std::cout << "Time for toeplitz set " << timer.elapsed() << "\n";
   return 0;
   // Next step - fast VariantList & slicing.
 

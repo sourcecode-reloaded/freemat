@@ -113,6 +113,8 @@ bool IsSymmetric(const BasicArray<T>& arg);
 template <typename T>
 bool AllZeros(const BasicArray<T>& arg);
 
+bool AllTrue(const BasicArray<bool>& arg);
+
 template <typename T>
 bool AnyNotFinite(const BasicArray<T>& arg);
 

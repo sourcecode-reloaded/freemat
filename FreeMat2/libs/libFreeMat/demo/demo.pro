@@ -6,7 +6,7 @@ TEMPLATE = app
 TARGET = 
 DEPENDPATH += .
 INCLUDEPATH += .
-CONFIG += debug
+#CONFIG += debug
 
 # Input
 HEADERS += PermArray.hpp Global.hpp NPerm.hpp NDimArray.hpp NTuple.hpp BaseArray.hpp Iterators.hpp RangeSet.hpp SparseArray.hpp Array.hpp BasicArray.hpp Variant.hpp VariantList.hpp BasicArrayPrivate.hpp
