@@ -1,5 +1,3 @@
-
-
 #ifndef __NTuple_hpp__
 #define __NTuple_hpp__
 
@@ -8,6 +6,7 @@
 
 #include "Global.hpp"
 #include "NPerm.hpp"
+#include "Types.hpp"
 
 class NTuple {
   index_t m_data[NDims];
@@ -47,11 +46,11 @@ public:
     return retval;
   }
   inline void map(index_t vecndx, NTuple& pos) const {
-#error - assumes index_t is of class int.
-    vecndx--;
+    int64 vecndxi = (int64) (vecndx);
+    vecndxi--;
     for (int i=0;i<NDims;i++) {
-      pos[i] = (vecndx % m_data[i]) + 1;
-      vecndx /= m_data[i];
+      pos[i] = (vecndxi % ((int64) m_data[i])) + 1;
+      vecndxi /= ((int64) m_data[i]);
     }
   }
   inline bool validate(const NTuple& pos) const {
@@ -70,7 +69,7 @@ public:
   }
   inline void ripplePinned(NTuple &pos, int pin_dim) const {
     for (int i=0;i<(NDims-1);i++) {
-      int dim = m_data[i];
+      int64 dim = (int64) m_data[i];
       if (i == pin_dim) dim = 1;
       if (pos[i] > dim) {
 	pos[i] = 1;

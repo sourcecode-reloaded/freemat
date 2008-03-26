@@ -1,6 +1,17 @@
 #include "BasicArray.hpp"
-//#include "Variant.hpp"
-//#include "VariantList.hpp"
+
+static bool IsColonOp(const IndexArray& ndx) {
+  if (!ndx.isScalar()) return false;
+  return (ndx.get(1) == -1);
+}
+
+static IndexArray ExpandColons(const IndexArray& ndx, index_t len) {
+  if (!IsColonOp(ndx)) return ndx;
+  IndexArray retvec(NTuple(len,1));
+  for (int i=0;i<len;i++) 
+    retvec.set(i+1,i+1);
+  return retvec;
+}
 
 template <typename T>
 void BasicArray<T>::vectorResize(index_t len) {
@@ -137,7 +148,7 @@ BasicArray<T> BasicArray<T>::getVectorSubset(const IndexArray& index) const {
     retdims = index.dimensions();
   BasicArray<T> retvec(retdims);
   for (int i=1;i<=retvec.length();i++)
-    retvec[i] = get(ndx.get(i));
+    retvec[i] = get(index.get(i));
   return retvec;
 }
 
@@ -162,8 +173,8 @@ void BasicArray<T>::setVectorSubset(const IndexArray& index,
   } 
   index_t max_ndx = MaxValue(index);
   if (max_ndx > length()) vectorResize(max_ndx);
-  for (int i=1;i<=ndx.length();i++)
-    set(ndx[i],data);
+  for (int i=1;i<=index.length();i++)
+    set(index[i],data);
 }
 
 template <typename T>
@@ -178,14 +189,18 @@ void BasicArray<T>::setNDimSubset(const IndexArrayList& index,
     setSlice(index,data);
     return;
   }
-  BasicArrayList ndx;
+  IndexArrayList ndx;
   NTuple secdims;
+  NTuple maxsze;
   for (int i=0;i<index.size();i++) {
     ndx.push_back(ExpandColons(index[i],dimensions()[i]));
     secdims[i] = ndx[i].length();
+    maxsze[i] = MaxValue(ndx[i]);
   }
   if (secdims.count() != data.length())
     throw Exception("mismatch in size for assignment A(I1,I2,...) = B");
+  if (dimensions() <= maxsze)
+    resize(maxsze);
   NTuple pos(1,1);
   index_t j=1;
   while (pos <= secdims) {
@@ -221,6 +236,13 @@ void BasicArray<T>::setSlice(const IndexArrayList& index,
 //   return;
 // }
 
+template <typename T>
+void BasicArray<T>::setNDimSubset(const NTuple& index, const T& data) {
+  if (dimensions() <= index)
+    resize(index);
+  set(index,data);
+}
+
 // #1, The Larch
 template <typename T>
 void BasicArray<T>::setNDimSubset(const IndexArrayList& index,
@@ -232,10 +254,14 @@ void BasicArray<T>::setNDimSubset(const IndexArrayList& index,
   }
   IndexArrayList ndx;
   NTuple secdims;
+  NTuple maxsze;
   for (int i=0;i<index.size();i++) {
     ndx.push_back(ExpandColons(index[i],dimensions()[i]));
     secdims[i] = ndx[i].length();
+    maxsze[i] = MaxValue(ndx[i]);
   }
+  if (dimensions() <= maxsze)
+    resize(maxsze);
   NTuple pos(1,1);
   while (pos <= secdims) {
     NTuple qp;
@@ -328,7 +354,7 @@ void BasicArray<T>::deleteVectorSubset(const IndexArray& index) {
     newDim = NTuple(1,newSize);
   else
     newDim = NTuple(newSize,1);
-  QVector<T> rdata(newSize);
+  QVector<T> rdata((int64)newSize);
   int j=0;
   for (index_t i=1;i<=map.length();i++) 
     if (!map[i]) rdata[j++] = get(i);
@@ -363,7 +389,7 @@ void BasicArray<T>::setVectorSubset(const IndexArray& index,
   if (index.length() != data.length()) 
     throw Exception("Assignment A(I) = B requires I and B to be the same size");
   for (index_t i=1;i<=index.length();i++)
-    set(ndx.get(i),data.get(i));
+    set(index.get(i),data.get(i));
 }
 
 
@@ -432,5 +458,8 @@ void BasicArray<double>::setNDimSubset(const IndexArrayList&,
 
 template
 void BasicArray<double>::setNDimSubset(const IndexArrayList&, const double&);
+
+template
+void BasicArray<double>::setNDimSubset(const NTuple&, const double&);
 
 				       

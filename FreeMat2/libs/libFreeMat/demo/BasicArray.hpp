@@ -8,11 +8,17 @@
 #include "Types.hpp"
 #include "FastList.hpp"
 
-//class Variant;
-//class VariantList;
+//typedef IndexArray;
+//typedef IndexArrayList;
 
-class IndexArray;
-class IndexArrayList;
+// class IndexArray;
+// class IndexArrayList;
+
+template <typename T>
+class BasicArray;
+
+typedef BasicArray<index_t> IndexArray;
+typedef FastList<IndexArray> IndexArrayList;
 
 template <typename T>
 class BasicIterator;
@@ -90,6 +96,7 @@ public:
   void setVectorSubset(const IndexArray& index, const BasicArray<T>& data);
   void setNDimSubset(const IndexArrayList& index, const T& data);
   void setNDimSubset(const IndexArrayList& index, const BasicArray<T>& data);
+  void setNDimSubset(const NTuple& index, const T& data);
   void deleteNDimSubset(const IndexArrayList& index);
   void deleteVectorSubset(const IndexArray& index);
   void resize(const NTuple& pos);
@@ -101,10 +108,6 @@ public:
       throw Exception("Illegal reshape");
   }
 };
-
-class IndexArray : public BasicArray<index_t> {};
-
-class IndexArrayList : public FastList<IndexArray> {};
 
 template <typename T>
 BasicArray<T> Apply(const BasicArray<T>& arg, T (*func)(T));
@@ -160,6 +163,5 @@ public:
 
 BasicArray<bool> GetDeletionMap(const BasicArray<index_t>& vec,
 				index_t length);
-//#include "BasicArrayPrivate.hpp"
 
 #endif

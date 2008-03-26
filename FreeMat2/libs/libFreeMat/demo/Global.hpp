@@ -3,7 +3,8 @@
 
 #include <QtGlobal>
 
-typedef double index_t;
+//typedef double index_t;
+typedef int index_t;
 const int NDims = 6;
 typedef QString Exception;
 
