@@ -1,6 +1,6 @@
 #include "BasicArray.hpp"
-#include "Variant.hpp"
-#include "VariantList.hpp"
+//#include "Variant.hpp"
+//#include "VariantList.hpp"
 
 template <typename T>
 void BasicArray<T>::vectorResize(index_t len) {
@@ -120,7 +120,7 @@ BasicArray<T> Apply(const BasicArray<T>& arg, T (*func)(T)) {
 }
 
 template <typename T>
-BasicArray<T> BasicArray<T>::getVectorSubset(const Variant& index) const {
+BasicArray<T> BasicArray<T>::getVectorSubset(const IndexArray& index) const {
   if (index.isEmpty())
     return BasicArray<T>(index.dimensions());
   if (IsColonOp(index)) {
@@ -130,7 +130,6 @@ BasicArray<T> BasicArray<T>::getVectorSubset(const Variant& index) const {
   }
   if (isEmpty())
     throw Exception("Cannot index into empty variable,");
-  BasicArray<index_t> ndx(IndexTypeFromVariant(index,length()));
   NTuple retdims;
   if (isColumnVector() && index.isRowVector())
     retdims = NTuple(index.length(),1);
@@ -143,7 +142,7 @@ BasicArray<T> BasicArray<T>::getVectorSubset(const Variant& index) const {
 }
 
 // Check for the case of (:,4,2,5)
-static bool isSliceIndexCase(const VariantList& index) {
+static bool isSliceIndexCase(const IndexArrayList& index) {
   if (IsColonOp(index[0])) {
     bool allScalars = true;
     for (int i=1;i<index.size();i++)
@@ -154,23 +153,21 @@ static bool isSliceIndexCase(const VariantList& index) {
 }
 
 template <typename T>
-void BasicArray<T>::setVectorSubset(const Variant& index,
+void BasicArray<T>::setVectorSubset(const IndexArray& index,
 				    const T& data) {
   if (index.isEmpty()) return;
   if (IsColonOp(index)) {
     for (int i=1;i<=length();i++) set(i,data);
     return;
   } 
-  BasicArray<index_t> ndx(IndexTypeFromVariant(index,length()));
-  if (ndx.isEmpty()) return;
-  index_t max_ndx = MaxValue(ndx);
+  index_t max_ndx = MaxValue(index);
   if (max_ndx > length()) vectorResize(max_ndx);
   for (int i=1;i<=ndx.length();i++)
     set(ndx[i],data);
 }
 
 template <typename T>
-void BasicArray<T>::setNDimSubset(const VariantList& index,
+void BasicArray<T>::setNDimSubset(const IndexArrayList& index,
 				  const BasicArray<T>& data) {
   if (index.empty()) return;
   if (data.isEmpty()) {
@@ -181,16 +178,16 @@ void BasicArray<T>::setNDimSubset(const VariantList& index,
     setSlice(index,data);
     return;
   }
-  FastList<BasicArray<index_t> > ndx;
+  BasicArrayList ndx;
   NTuple secdims;
   for (int i=0;i<index.size();i++) {
-    ndx.push_back(IndexTypeFromVariant(index[i],dimensions()[i]));
+    ndx.push_back(ExpandColons(index[i],dimensions()[i]));
     secdims[i] = ndx[i].length();
   }
   if (secdims.count() != data.length())
     throw Exception("mismatch in size for assignment A(I1,I2,...) = B");
   NTuple pos(1,1);
-  int j=1;
+  index_t j=1;
   while (pos <= secdims) {
     NTuple qp;
     for (int i=0;i<index.size();i++)
@@ -201,47 +198,42 @@ void BasicArray<T>::setNDimSubset(const VariantList& index,
 }
 
 template <typename T>
-void BasicArray<T>::setSlice(const VariantList& index,
+void BasicArray<T>::setSlice(const IndexArrayList& index,
 			     const T& data) {
   index_t offset = getSliceIndex(dimensions(),index);
-  for (int i=1;i<=dimensions()[0];i++)
+  for (index_t i=1;i<=dimensions()[0];i++)
     set(offset+i,data);
 }
 
 template <typename T>
-void BasicArray<T>::setSlice(const VariantList& index,
+void BasicArray<T>::setSlice(const IndexArrayList& index,
 			     const BasicArray<T>& data) {
   index_t offset = getSliceIndex(dimensions(),index);
-  for (int i=1;i<=dimensions()[0];i++)
-    set(offset+i,data[i+1]);
+  for (index_t i=1;i<=dimensions()[0];i++)
+    set(offset+i,data.get(i));
 }
 
-static inline bool AllDoubleScalars(const VariantList& index) {
-  for (int i=0;i<index.size();i++)
-    if (index[i].type() != DoubleScalar) return false;
-  return true;
-}
+// if (AllDoubleScalars(index)) {
+//   NTuple pos;
+//   for (int i=0;i<index.size();i++)
+//     pos[i] = (index_t) index[i].realScalar<double>();
+//   set(pos,data);
+//   return;
+// }
 
 // #1, The Larch
 template <typename T>
-void BasicArray<T>::setNDimSubset(const VariantList& index,
+void BasicArray<T>::setNDimSubset(const IndexArrayList& index,
 				  const T& data) {
-  if (AllDoubleScalars(index)) {
-    NTuple pos;
-    for (int i=0;i<index.size();i++)
-      pos[i] = (index_t) index[i].realScalar<double>();
-    set(pos,data);
-    return;
-  }
   if (index.empty()) return;
   if (isSliceIndexCase(index)) {
     setSlice(index,data);
     return;
   }
-  FastList<BasicArray<index_t> > ndx;
+  IndexArrayList ndx;
   NTuple secdims;
   for (int i=0;i<index.size();i++) {
-    ndx.push_back(IndexTypeFromVariant(index[i],dimensions()[i]));
+    ndx.push_back(ExpandColons(index[i],dimensions()[i]));
     secdims[i] = ndx[i].length();
   }
   NTuple pos(1,1);
@@ -254,27 +246,19 @@ void BasicArray<T>::setNDimSubset(const VariantList& index,
   }
 }
 
-BasicArray<bool> GetDeletionMap(const BasicArray<index_t>& vec,
-				index_t length) {
+BasicArray<bool> GetDeletionMap(const IndexArray& vec, index_t length) {
   BasicArray<bool> retvec(NTuple(length,1));
-  for (int i=1;i<=vec.length();i++)
+  for (index_t i=1;i<=vec.length();i++)
     retvec[vec[i]] = true;
   return retvec;
 }
 
-BasicArray<bool> GetDeletionMapFromVariant(const Variant& ndx,
-					   index_t length) {
-  BasicArray<index_t> ndx_i(IndexTypeFromVariant(ndx,length));
-  BasicArray<bool> map(GetDeletionMap(ndx_i,length));
-  return map;
-}
-
-static inline bool DimensionCovered(const Variant& ndx, index_t length) {
-  return AllTrue(GetDeletionMapFromVariant(ndx,length));
+static inline bool DimensionCovered(const IndexArray& ndx, index_t length) {
+  return AllTrue(GetDeletionMap(ndx,length));
 }
 
 template <typename T>
-void BasicArray<T>::deleteNDimSubset(const VariantList& index) {
+void BasicArray<T>::deleteNDimSubset(const IndexArrayList& index) {
   // The strategy for dealing with deletions is simplified relative
   // to 3.x code.  An NDim deletion is only valid if there is one
   // dimension that is not covered.
@@ -300,7 +284,7 @@ void BasicArray<T>::deleteNDimSubset(const VariantList& index) {
   if (uncovered_count > 1)
     throw Exception("Deletion A(:,...,:) = [] cannot have more than one non-singular dimension");
   index_t dimLen = dimensions()[first_uncovered];
-  BasicArray<bool> map(GetDeletionMapFromVariant(index[first_uncovered],dimLen));
+  BasicArray<bool> map(GetDeletionMap(index[first_uncovered],dimLen));
   int newSize = 0;
   for (int i=1;i<=map.length();i++)
     if (!map.get(i)) newSize++;
@@ -311,7 +295,7 @@ void BasicArray<T>::deleteNDimSubset(const VariantList& index) {
   ConstBasicIterator<T> source(this,first_uncovered);
   BasicIterator<T> dest(&retvec,first_uncovered);
   while (source.isValid() && dest.isValid()) {
-    for (int i=1;i<=dimLen;i++) {
+    for (index_t i=1;i<=dimLen;i++) {
       if (!map.get(i)) {
 	dest.set(source.get());
 	dest.next();
@@ -327,14 +311,14 @@ void BasicArray<T>::deleteNDimSubset(const VariantList& index) {
 }
 
 template <typename T>
-void BasicArray<T>::deleteVectorSubset(const Variant& index) {
+void BasicArray<T>::deleteVectorSubset(const IndexArray& index) {
   if (IsColonOp(index)) {
     m_data.clear();
     m_dims = NTuple(0,0);
     m_offset = 0;
     return;
   }
-  BasicArray<bool> map(GetDeletionMapFromVariant(index,length()));
+  BasicArray<bool> map(GetDeletionMap(index,length()));
   index_t newSize = 0;
   for (int i=1;i<=map.length();i++)
     if (!map[i]) newSize++;
@@ -346,7 +330,7 @@ void BasicArray<T>::deleteVectorSubset(const Variant& index) {
     newDim = NTuple(newSize,1);
   QVector<T> rdata(newSize);
   int j=0;
-  for (int i=1;i<=map.length();i++) 
+  for (index_t i=1;i<=map.length();i++) 
     if (!map[i]) rdata[j++] = get(i);
   m_data = rdata;
   m_offset = 0;
@@ -354,7 +338,7 @@ void BasicArray<T>::deleteVectorSubset(const Variant& index) {
 }
 
 template <typename T>
-void BasicArray<T>::setVectorSubset(const Variant& index, 
+void BasicArray<T>::setVectorSubset(const IndexArray& index, 
 				    const BasicArray<T>& data) {
   if (index.isEmpty()) return;
   if (data.isEmpty()) {
@@ -374,23 +358,21 @@ void BasicArray<T>::setVectorSubset(const Variant& index,
     m_offset = data.m_offset;
     return;
   }
-  BasicArray<index_t> ndx(IndexTypeFromVariant(index,length()));
-  if (ndx.isEmpty()) return;
-  index_t max_ndx = MaxValue(ndx);
+  index_t max_ndx = MaxValue(index);
   if (max_ndx > length()) vectorResize(max_ndx);
-  if (ndx.length() != data.length()) 
+  if (index.length() != data.length()) 
     throw Exception("Assignment A(I) = B requires I and B to be the same size");
-  for (int i=1;i<=ndx.length();i++)
+  for (index_t i=1;i<=index.length();i++)
     set(ndx.get(i),data.get(i));
 }
 
 
 static index_t getSliceIndex(const NTuple &dimensions,
-			     const VariantList& index) {
+			     const IndexArrayList& index) {
   NTuple dim;
   dim[0] = 1;
   for (int i=1;i<index.size();i++)
-    dim[i] = IndexTypeFromVariantScalar(index[i]);
+    dim[i] = index[i][1];
   index_t offset = dimensions.map(dim)-1;
   return offset;
 }
@@ -398,7 +380,7 @@ static index_t getSliceIndex(const NTuple &dimensions,
 // A slice is a vector subset of a current array, obtainable by 
 // simply offsetting into the array.
 template <typename T>
-BasicArray<T> BasicArray<T>::getSlice(const VariantList& index) const {
+BasicArray<T> BasicArray<T>::getSlice(const IndexArrayList& index) const {
   index_t offset = getSliceIndex(dimensions(),index);
   BasicArray<T> retvec;
   retvec.m_dims = NTuple(dimensions()[0],1);
@@ -408,13 +390,13 @@ BasicArray<T> BasicArray<T>::getSlice(const VariantList& index) const {
 }
 
 template <typename T>
-BasicArray<T> BasicArray<T>::getNDimSubset(const VariantList& index) const {
+BasicArray<T> BasicArray<T>::getNDimSubset(const IndexArrayList& index) const {
   if (index.empty()) return BasicArray<T>();
   if (isSliceIndexCase(index)) return getSlice(index);
-  FastList<BasicArray<index_t> > ndx;
+  IndexArrayList ndx;
   NTuple outdims;
   for (int i=0;i<index.size();i++) {
-    ndx.push_back(IndexTypeFromVariant(index[i],dimensions()[i]));
+    ndx.push_back(ExpandColons(index[i],dimensions()[i]));
     outdims[i] = ndx[i].length();
   }
   BasicArray<T> retval(outdims);
@@ -432,23 +414,23 @@ BasicArray<T> BasicArray<T>::getNDimSubset(const VariantList& index) const {
 
 
 template
-BasicArray<double> BasicArray<double>::getVectorSubset(const Variant&) const;
+BasicArray<double> BasicArray<double>::getVectorSubset(const IndexArray&) const;
 
 template
-BasicArray<double> BasicArray<double>::getNDimSubset(const VariantList&) const;
+BasicArray<double> BasicArray<double>::getNDimSubset(const IndexArrayList&) const;
 
 template
-void BasicArray<double>::setVectorSubset(const Variant&, 
+void BasicArray<double>::setVectorSubset(const IndexArray&, 
 					 const BasicArray<double>&);
 
 template
-void BasicArray<double>::setVectorSubset(const Variant&, const double&);
+void BasicArray<double>::setVectorSubset(const IndexArray&, const double&);
 
 template
-void BasicArray<double>::setNDimSubset(const VariantList&, 
+void BasicArray<double>::setNDimSubset(const IndexArrayList&, 
 				       const BasicArray<double>&);
 
 template
-void BasicArray<double>::setNDimSubset(const VariantList&, const double&);
+void BasicArray<double>::setNDimSubset(const IndexArrayList&, const double&);
 
 				       

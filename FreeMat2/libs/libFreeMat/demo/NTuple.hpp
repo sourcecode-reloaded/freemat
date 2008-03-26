@@ -47,6 +47,7 @@ public:
     return retval;
   }
   inline void map(index_t vecndx, NTuple& pos) const {
+#error - assumes index_t is of class int.
     vecndx--;
     for (int i=0;i<NDims;i++) {
       pos[i] = (vecndx % m_data[i]) + 1;

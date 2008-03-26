@@ -6,9 +6,13 @@
 #include "NTuple.hpp"
 #include <QDebug>
 #include "Types.hpp"
+#include "FastList.hpp"
 
-class Variant;
-class VariantList;
+//class Variant;
+//class VariantList;
+
+class IndexArray;
+class IndexArrayList;
 
 template <typename T>
 class BasicIterator;
@@ -25,7 +29,7 @@ public:
   BasicArray() : m_data(), m_dims(0,0), m_offset(0) {}
   BasicArray(const NTuple& dim) : 
     m_data(), m_dims(dim), m_offset(0) {
-    m_data.resize(m_dims.count());
+    m_data.resize((int64)(m_dims.count()));
   }
   BasicArray(T val) {
     m_data << val; 
@@ -47,47 +51,47 @@ public:
   inline bool isVector() const {return isColumnVector() || isRowVector();}
   inline const T operator[](const NTuple& pos) const {
     if (m_dims.validate(pos))
-      return m_data[m_dims.map(pos)+m_offset-1];
+      return m_data[(int64)(m_dims.map(pos)+m_offset-1)];
     throw Exception("out of range");
   }
   inline T& operator[](const NTuple& pos) {
     if (m_dims.validate(pos))
-      return m_data[m_dims.map(pos)+m_offset-1];
+      return m_data[(int64)(m_dims.map(pos)+m_offset-1)];
     throw Exception("out of range");
   }
   inline const T operator[](index_t pos) const {
     if ((pos > 0) && (pos <= m_data.size()))
-      return m_data[pos+m_offset-1];
+      return m_data[(int64)(pos+m_offset-1)];
     throw Exception("out of range");
   }
   inline T& operator[](index_t pos) {
     if ((pos > 0) && (pos <= m_data.size()))
-      return m_data[pos+m_offset-1];
+      return m_data[(int64)(pos+m_offset-1)];
     throw Exception("out of range");
   }
   inline void set(const NTuple& pos, const T& val) {
-    m_data[m_dims.map(pos)+m_offset-1] = val;
+    m_data[(int64)(m_dims.map(pos)+m_offset-1)] = val;
   }
   inline void set(index_t pos, const T& val) {
-    m_data[pos+m_offset-1] = val;
+    m_data[(int64)(pos+m_offset-1)] = val;
   }
   inline const T get(index_t pos) const {
-    return m_data[pos+m_offset-1];
+    return m_data[(int64)(pos+m_offset-1)];
   }
   inline const T get(const NTuple& pos) const {
-    return m_data[m_dims.map(pos)+m_offset-1];
+    return m_data[(int64)(m_dims.map(pos)+m_offset-1)];
   }
-  BasicArray<T> getVectorSubset(const Variant& index) const;
-  BasicArray<T> getNDimSubset(const VariantList& index) const;
-  BasicArray<T> getSlice(const VariantList& index) const;
-  void setSlice(const VariantList& index, const BasicArray<T>& data);
-  void setSlice(const VariantList& index, const T& data);
-  void setVectorSubset(const Variant& index, const T& data);
-  void setVectorSubset(const Variant& index, const BasicArray<T>& data);
-  void setNDimSubset(const VariantList& index, const T& data);
-  void setNDimSubset(const VariantList& index, const BasicArray<T>& data);
-  void deleteNDimSubset(const VariantList& index);
-  void deleteVectorSubset(const Variant& index);
+  BasicArray<T> getVectorSubset(const IndexArray& index) const;
+  BasicArray<T> getNDimSubset(const IndexArrayList& index) const;
+  BasicArray<T> getSlice(const IndexArrayList& index) const;
+  void setSlice(const IndexArrayList& index, const BasicArray<T>& data);
+  void setSlice(const IndexArrayList& index, const T& data);
+  void setVectorSubset(const IndexArray& index, const T& data);
+  void setVectorSubset(const IndexArray& index, const BasicArray<T>& data);
+  void setNDimSubset(const IndexArrayList& index, const T& data);
+  void setNDimSubset(const IndexArrayList& index, const BasicArray<T>& data);
+  void deleteNDimSubset(const IndexArrayList& index);
+  void deleteVectorSubset(const IndexArray& index);
   void resize(const NTuple& pos);
   void vectorResize(index_t len);
   inline void reshape(const NTuple& pos) {
@@ -97,6 +101,10 @@ public:
       throw Exception("Illegal reshape");
   }
 };
+
+class IndexArray : public BasicArray<index_t> {};
+
+class IndexArrayList : public FastList<IndexArray> {};
 
 template <typename T>
 BasicArray<T> Apply(const BasicArray<T>& arg, T (*func)(T));

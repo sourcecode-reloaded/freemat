@@ -10,5 +10,5 @@ INCLUDEPATH += .
 
 # Input
 HEADERS += PermArray.hpp Global.hpp NPerm.hpp NDimArray.hpp NTuple.hpp BaseArray.hpp Iterators.hpp RangeSet.hpp SparseArray.hpp Array.hpp BasicArray.hpp Variant.hpp VariantList.hpp BasicArrayPrivate.hpp
-SOURCES += NDimDemo.cpp Variant.cpp BasicArray.cpp
+SOURCES += BasicArray.cpp Variant.cpp NDimDemo.cpp 
 
