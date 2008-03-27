@@ -8,12 +8,6 @@
 #include "Types.hpp"
 #include "FastList.hpp"
 
-//typedef IndexArray;
-//typedef IndexArrayList;
-
-// class IndexArray;
-// class IndexArrayList;
-
 template <typename T>
 class BasicArray;
 

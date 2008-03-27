@@ -194,6 +194,7 @@ void BasicArray<T>::setNDimSubset(const IndexArrayList& index,
   NTuple maxsze;
   for (int i=0;i<index.size();i++) {
     ndx.push_back(ExpandColons(index[i],dimensions()[i]));
+    ndx.push_back(index[i]);
     secdims[i] = ndx[i].length();
     maxsze[i] = MaxValue(ndx[i]);
   }

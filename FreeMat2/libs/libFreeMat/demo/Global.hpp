@@ -2,9 +2,10 @@
 #define __Global_hpp__
 
 #include <QtGlobal>
+#include "Types.hpp"
 
-//typedef double index_t;
-typedef int index_t;
+typedef double index_t;
+//typedef int64 index_t;
 const int NDims = 6;
 typedef QString Exception;
 

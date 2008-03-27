@@ -273,34 +273,32 @@ int main(int, const char *[]) {
   L8.setNDimSubset(ndx3,1);
   printMatrix(L8);
   IndexArrayList ndx4;
-  Variant row2(Index_TArray,NTuple(5,1));
-  BasicArray<index_t> &row2_access(row2.real<index_t>());
-  row2_access[1] = 1; row2_access[2] = 2;
-  row2_access[3] = 3; row2_access[4] = 4;
-  row2_access[5] = 5;
-  ndx4.push_back(row2.real<index_t>());
+  BasicArray<index_t> row2(NTuple(5,1));
+  row2[1] = 1; row2[2] = 2;
+  row2[3] = 3; row2[4] = 4;
+  row2[5] = 5;
+  ndx4.push_back(row2);
   ndx4.push_back(IndexArray(4));
-  BasicArray<index_t> L9(L2);
+  BasicArray<double> L9(L2);
   L9.setNDimSubset(ndx4,1);
   printMatrix(L9);
-  Variant delset(DoubleArray,NTuple(4,1));
-  BasicArray<index_t> &deldat(delset.real<index_t>());
+  BasicArray<index_t> deldat(NTuple(4,1));
   deldat[1] = 1; deldat[2] = 3; deldat[3] = 6; deldat[4] = 8;
-  BasicArray<index_t> L10(L0);
-  BasicArray<index_t> rhs;
+  BasicArray<double> L10(L0);
+  BasicArray<double> rhs;
   printMatrix(L10);
-  L10.setVectorSubset(delset.real<index_t>(),1.5);
+  L10.setVectorSubset(deldat,1.5);
   printMatrix(L10);
-  L10.setVectorSubset(delset.real<index_t>(),rhs);
+  L10.setVectorSubset(deldat,rhs);
   printMatrix(L10);
-  BasicArray<index_t> L11(L2);
+  BasicArray<double> L11(L2);
   printMatrix(L11);
   IndexArrayList ndx5;
-  ndx5.push_back(colon); ndx5.push_back(col.real<index_t>());
+  ndx5.push_back(colon); ndx5.push_back(col);
   L11.setNDimSubset(ndx5,rhs);
   printMatrix(L11);
   // Next - special cases for scalar indexing
-  BasicArray<index_t> L12(L2);
+  BasicArray<double> L12(L2);
   printMatrix(L12);
   for (int i=0;i<7;i++) {
     IndexArrayList args;
@@ -320,11 +318,27 @@ int main(int, const char *[]) {
       Kref.setNDimSubset(args,(double)(i-j));
     }
   std::cout << "Time for toeplitz set " << timer.elapsed() << "\n";
+  timer.start();
   for (int i=0;i<1000;i++)
     for (int j=0;j<1000;j++) {
-      Kref.setNDimSubset(NTuple(i+1,j+1),(double)(i-j));
+      Kref.setNDimSubset(NTuple(j+1,i+1),(double)(i-j));
+      //Kref.set(NTuple(j+1,i+1),(double)(i-j));
+      //      Kref.set((j+1)+(i)*1000,(double)(i-j));
     }
   std::cout << "Time for toeplitz (2) set " << timer.elapsed() << "\n";
+  timer.start();
+  IndexArray toepr(NTuple(1,1));
+  IndexArray toepc(NTuple(1,1));
+  for (int i=0;i<1000;i++)
+    for (int j=0;j<1000;j++) {
+      IndexArrayList args;
+      toepr.set(1,j+1);
+      toepc.set(1,i+1);
+      args.push_back(toepr);
+      args.push_back(toepc);
+      Kref.setNDimSubset(args,(double)(i-j));
+    }
+  std::cout << "Time for toeplitz (3) set " << timer.elapsed() << "\n";
   return 0;
   // Next step - fast VariantList & slicing.
 
