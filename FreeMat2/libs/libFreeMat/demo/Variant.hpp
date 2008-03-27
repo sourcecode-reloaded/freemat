@@ -71,8 +71,20 @@ class Variant {
 public:
   inline Variant() {}
   template <typename T>
-  inline Variant(T real, T imag = 0);
-  Variant(const BasicArray<double> &r);
+  inline Variant(T real, T imag = 0); // Defined in VariantPrivate
+  //  Variant(const BasicArray<double> &r);
+  //  Variant(const BasicArray<double> &r, const BasicArray<double> &i);
+  template <typename T> 
+  inline Variant(Type t, const BasicArray<T> &r) {
+    m_type = t;
+    m_real.p = new SharedObject(t, new BasicArray<T>(r));
+  }
+  template <typename T> 
+  inline Variant(Type t, const BasicArray<T> &r, const BasicArray<T> &i) {
+    m_type = t;
+    m_real.p = new SharedObject(t, new BasicArray<T>(r));
+    m_imag.p = new SharedObject(t, new BasicArray<T>(i));
+  }
   Variant(Type t, const NTuple &dims);
   Variant(const QString &text);
   const NTuple dimensions() const;
@@ -109,16 +121,16 @@ public:
       throw Exception("Illegal request for imaginary part of real-only array");
     return (*reinterpret_cast<const BasicArray<T>*>(m_imag.p->ptr()));
   }						
-  template <typename T>
-  inline T realScalar() const;
-  template <typename T>
-  inline T imagScalar() const;
-  //  void set(index_t pos, const Variant& val);
-  const Variant get(index_t pos) const;
+  template <typename T> inline T realScalar() const;
+  template <typename T> inline T imagScalar() const;
   inline bool allReal() const {return (!m_imag.p);}
   const Variant asScalar() const;
+  const index_t asIndexScalar() const;
+  const Variant getVectorSubset(const IndexArray& index) const;
   const Variant getVectorSubset(const Variant& index) const;
+  const Variant getVectorSubset(index_t index) const;
   const Variant getNDimSubset(const VariantList& indices) const;
+  const Variant toType(const Type t) const;
   void setVectorSubset(const Variant& index, const Variant& data);
   void setNDimSubset(const VariantList& index, const Variant& data);
   void deleteVectorSubset(const Variant& index);
@@ -150,8 +162,7 @@ std::ostream& operator<<(std::ostream& o, const Variant &t);
 
 bool IsColonOp(const Variant &arg);
 
-BasicArray<index_t> IndexTypeFromVariant(const Variant &index, index_t len);
-index_t IndexTypeFromVariantScalar(const Variant &index);
+const IndexArray IndexArrayFromVariant(const Variant &index);
 
 // Suppose we support a get/set interface:
 // And we support slicing through the iterators

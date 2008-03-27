@@ -126,8 +126,13 @@ bool AnyNotFinite(const BasicArray<T>& arg);
 template <typename T>
 T MaxValue(const BasicArray<T>& arg);
 
-template <typename T, typename S>
-const BasicArray<T>& ConvertType(const BasicArray<S>& arg);
+template <typename S, typename T>
+void ConvertBasicArray(const BasicArray<S>& source, BasicArray<T>& dest) {
+  if (source.length() != dest.length())
+    throw Exception("Mismatch between source and destination arrays in call to Convert BasicArray");
+  for (index_t i=1;i<=source.length();i++)
+    dest.set(i,(T) source.get(i));
+}
 
 template <typename S>
 class BasicIterator : public BaseIterator<BasicArray<S>,S> {

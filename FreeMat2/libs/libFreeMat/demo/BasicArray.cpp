@@ -439,9 +439,18 @@ BasicArray<T> BasicArray<T>::getNDimSubset(const IndexArrayList& index) const {
   return retval;
 }
 
+template BasicArray<bool>   BasicArray<bool>::getVectorSubset(const IndexArray&) const;
+template BasicArray<uint8>  BasicArray<uint8>::getVectorSubset(const IndexArray&) const;
+template BasicArray<int8>   BasicArray<int8>::getVectorSubset(const IndexArray&) const;
+template BasicArray<uint16> BasicArray<uint16>::getVectorSubset(const IndexArray&) const;
+template BasicArray<int16>  BasicArray<int16>::getVectorSubset(const IndexArray&) const;
+template BasicArray<uint32> BasicArray<uint32>::getVectorSubset(const IndexArray&) const;
+template BasicArray<int32>  BasicArray<int32>::getVectorSubset(const IndexArray&) const;
+template BasicArray<uint64> BasicArray<uint64>::getVectorSubset(const IndexArray&) const;
+template BasicArray<int64>  BasicArray<int64>::getVectorSubset(const IndexArray&) const;
+template BasicArray<float>  BasicArray<float>::getVectorSubset(const IndexArray&) const;
+template BasicArray<double> BasicArray<double>::getVectorSubset(const IndexArray&) const;
 
-template
-BasicArray<double> BasicArray<double>::getVectorSubset(const IndexArray&) const;
 
 template
 BasicArray<double> BasicArray<double>::getNDimSubset(const IndexArrayList&) const;
