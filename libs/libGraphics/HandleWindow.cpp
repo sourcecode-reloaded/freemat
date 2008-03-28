@@ -27,6 +27,7 @@
 #include <QtGui>
 #include <math.h>
 #include "IEEEFP.hpp"
+#include "DebugStream.hpp"
 
 class BaseFigureQt : public QWidget {
   HandleFigure *hfig;
@@ -561,17 +562,36 @@ void HandleWindow::mouseReleaseEvent(QMouseEvent * e) {
 	  HandleAxis *h = GetContainingAxis(hfig,remapX(rect.x()),remapY(rect.y()));
 	  if (h) {
 	    QVector<double> position(h->GetPropertyVectorAsPixels("position"));
-	    double xminfrac = (remapX(rect.x()) - position[0])/position[2];
-	    double xmaxfrac = (remapX(rect.x()+rect.width()) - position[0])/position[2];
-	    double yminfrac = (remapY(rect.y()+rect.height()) - position[1])/position[3];
-	    double ymaxfrac = (remapY(rect.y()) - position[1])/position[3];
-// 	    qDebug() << "xrange " << xminfrac << "," << xmaxfrac;
-// 	    qDebug() << "yrange " << yminfrac << "," << ymaxfrac;
+	    QVector<double> pba(h->VectorPropertyLookup("plotboxaspectratio"));
+	    QVector<double> dar(h->VectorPropertyLookup("dataaspectratio"));
+	    double x = position[0], y = position[1];
+	    double width = position[2], height = position[3];
+	    double xyratio = 1;
+	    if( h->IsAuto("plotboxaspectratiomode") ) 
+		xyratio *= pba[0]/pba[1];
+	    if( h->IsAuto("dataaspectratiomode") )
+		xyratio *= dar[0]/dar[1];
+	    if( h->IsAuto("plotboxaspectratiomode") || h->IsAuto("dataaspectratiomode") ){
+		if( width > height*xyratio ){
+		    width = height*xyratio;
+		    x += (position[2]-width)/2;
+		}
+		else{
+		    height = width / xyratio;
+		    y += (position[3]-height)/2;
+		}
+	    }
+	    double xminfrac = (remapX(rect.x()) - x)/width;
+	    double xmaxfrac = (remapX(rect.x()+rect.width()) - x)/width;
+	    double yminfrac = (remapY(rect.y()+rect.height()) - y)/height;
+	    double ymaxfrac = (remapY(rect.y()) - y)/height;
+/* 	    dbout << "xrange " << xminfrac << "," << xmaxfrac;
+ 	    dbout << "yrange " << yminfrac << "," << ymaxfrac;*/
 	    xminfrac = qMax(0.,qMin(1.,xminfrac));
 	    xmaxfrac = qMax(0.,qMin(1.,xmaxfrac));
 	    yminfrac = qMax(0.,qMin(1.,yminfrac));
 	    ymaxfrac = qMax(0.,qMin(1.,ymaxfrac));
-	    if (h->StringCheck("ydir","reverse")) {
+/*	    if (h->StringCheck("ydir","reverse")) {
 	      double y1 = 1-yminfrac;
 	      double y2 = 1-ymaxfrac;
 	      yminfrac = y2;
@@ -582,7 +602,7 @@ void HandleWindow::mouseReleaseEvent(QMouseEvent * e) {
 	      double x2 = 1-xmaxfrac;
 	      xminfrac = x2;
 	      xmaxfrac = x1;
-	    }
+	    }*/
 	    HPTwoVector *hp = (HPTwoVector*) h->LookupProperty("xlim");
 	    double range = (hp->Data()[1] - hp->Data()[0]);
 	    double mean = (hp->Data()[1] + hp->Data()[0])/2;
