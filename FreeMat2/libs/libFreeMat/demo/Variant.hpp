@@ -125,13 +125,15 @@ public:
   template <typename T> inline T imagScalar() const;
   inline bool allReal() const {return (!m_imag.p);}
   const Variant asScalar() const;
-  const index_t asIndexScalar() const;
+  const index_t asIndexScalar() const; 
+  const Variant toType(const Type t) const;
   const Variant getVectorSubset(const IndexArray& index) const;
   const Variant getVectorSubset(const Variant& index) const;
   const Variant getVectorSubset(index_t index) const;
   const Variant getNDimSubset(const VariantList& indices) const;
-  const Variant toType(const Type t) const;
   void setVectorSubset(const Variant& index, const Variant& data);
+  void setVectorSubset(const IndexArray& index, const Variant& data);
+  void setVectorSubset(index_t index, const Variant& data);
   void setNDimSubset(const VariantList& index, const Variant& data);
   void deleteVectorSubset(const Variant& index);
   void deleteNDimSubset(const VariantList& index);

@@ -47,6 +47,15 @@ static inline const Variant Tget_vector(const Variant*ptr, const IndexArray &ndx
 }
 
 template <typename T>
+static inline const Variant Tset_vector(const Variant*ptr, const IndexArray &ndx, const Variant& data) {
+  if (ptr->allReal() && data->allReal()) {
+    BasicArray<T> &real(ptr->real<T>());
+    Variant dataTyped(data.toType(ptr->type()));
+#error - Need to finish -- have to handle the case where data is a scalar
+  }
+}
+
+template <typename T>
 static void Tset(Variant *ptr, index_t pos, T vreal, T vimag) {
   BasicArray<T>& real(ptr->real<T>());
   real.set(pos,vreal);
@@ -353,6 +362,35 @@ const NTuple Variant::dimensions() const {
   };
 }
 
+void Variant::setVectorSubset(const IndexArray& index, const Variant& data) {
+  switch (m_type) {
+  default:
+    throw Exception("Unsupported type for setVectorSubset(IndexArray)");
+  case BoolArray:
+    return Tset_vector<logical>(this,index,data);
+  case Int8Array:
+    return Tset_vector<int8>(this,index,data);
+  case UInt8Array:
+    return Tset_vector<uint8>(this,index,data);
+  case Int16Array:
+    return Tset_vector<int16>(this,index,data);
+  case UInt16Array:
+    return Tset_vector<uint16>(this,index,data);
+  case Int32Array:
+    return Tset_vector<int32>(this,index,data);
+  case UInt32Array:
+    return Tset_vector<uint32>(this,index,data);
+  case Int64Array:
+    return Tset_vector<int64>(this,index,data);
+  case UInt64Array:
+    return Tset_vector<uint64>(this,index,data);
+  case FloatArray:
+    return Tset_vector<float>(this,index,data);
+  case DoubleArray:
+    return Tset_vector<double>(this,index,data);
+  }  
+}
+
 const Variant Variant::getVectorSubset(const IndexArray& index) const {
   switch (m_type) {
   default: 
@@ -383,6 +421,7 @@ const Variant Variant::getVectorSubset(const IndexArray& index) const {
 }
 
 const Variant Variant::toType(const Type t) const {
+  if (type() == t) return *this;
   switch (t) {
   default:
     throw Exception("Unsupported type for toType");
@@ -448,6 +487,16 @@ const Variant Variant::getVectorSubset(const Variant& index) const {
   }
   else 
     return getVectorSubset(IndexArrayFromVariant(index));
+}
+
+void Variant::setVectorSubset(const Variant& index, const Variant& data) {
+  if (index.isScalar()) {
+    if (!index.allReal())
+      Warn("Complex part of index ignored");
+    setVectorSubset(index.asIndexScalar(),data);
+  }
+  else
+    setVectorSubset(IndexArrayFromVariant(index),data);
 }
 
 const index_t Variant::asIndexScalar() const {
@@ -578,5 +627,7 @@ const IndexArray IndexArrayFromVariant(const Variant &index) {
   if (!index_converted.allReal())
     Warn("Complex part of index ignored");
   return index_converted.constReal<index_t>();
+  if (IsColonOp(index))
+    return IndexArray(-1);
   throw Exception("Unsupported index type");
 }

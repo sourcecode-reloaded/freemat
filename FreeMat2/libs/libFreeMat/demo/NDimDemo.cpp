@@ -339,6 +339,12 @@ int main(int, const char *[]) {
       Kref.setNDimSubset(args,(double)(i-j));
     }
   std::cout << "Time for toeplitz (3) set " << timer.elapsed() << "\n";
+  
+  for (int i=0;i<5;i++) {
+    std::cout << "L[" << i << "," << i << "] = " << 
+      L.getVectorSubset(Variant((index_t) i*5+i+1)) << "\n";
+  }
+
   return 0;
   // Next step - fast VariantList & slicing.
 
