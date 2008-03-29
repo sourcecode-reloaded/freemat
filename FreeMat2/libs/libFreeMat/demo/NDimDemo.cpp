@@ -2,7 +2,6 @@
 #include "BasicArray.hpp"
 //#include "Array.hpp"
 #include "Variant.hpp"
-#include "VariantList.hpp"
 //#include "Cell.hpp"
 //#include "NumericArray.hpp"
 //#include "NDimArray.hpp"
