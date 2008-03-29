@@ -243,7 +243,7 @@ int main(int, const char *[]) {
   col[1] = 1; col[2] = 3; col[3] = 5;
   IndexArrayList ndx;
   ndx.push_back(row); ndx.push_back(col);
-  BasicArray<double> L3(L2.getNDimSubset(ndx));
+  BasicArray<double> L3(L2.get(ndx));
   printMatrix(L2);
   printMatrix(row);
   printMatrix(col);
@@ -254,23 +254,23 @@ int main(int, const char *[]) {
   BasicArray<index_t> colon(-1);
   ndx2.push_back(row); ndx2.push_back(colon);
   printMatrix(L2);
-  BasicArray<double> L4(L2.getNDimSubset(ndx2));
+  BasicArray<double> L4(L2.get(ndx2));
   printMatrix(L4);
-  BasicArray<double> L5(L2.getVectorSubset(colon));
+  BasicArray<double> L5(L2.get(colon));
   printMatrix(L5);
   IndexArrayList ndx3;
   ndx3.push_back(colon); ndx3.push_back(IndexArray(4));
-  BasicArray<double> L6(L2.getNDimSubset(ndx3));
+  BasicArray<double> L6(L2.get(ndx3));
   // slice test!
   printMatrix(L6);
   printMatrix(L2);
-  L2.setVectorSubset(col,9);
+  L2.set(col,9);
   printMatrix(L2);
   BasicArray<double> L7(L2);
-  L7.setNDimSubset(ndx2,0);
+  L7.set(ndx2,0);
   printMatrix(L7);
   BasicArray<double> L8(L2);
-  L8.setNDimSubset(ndx3,1);
+  L8.set(ndx3,1);
   printMatrix(L8);
   IndexArrayList ndx4;
   BasicArray<index_t> row2(NTuple(5,1));
@@ -280,22 +280,22 @@ int main(int, const char *[]) {
   ndx4.push_back(row2);
   ndx4.push_back(IndexArray(4));
   BasicArray<double> L9(L2);
-  L9.setNDimSubset(ndx4,1);
+  L9.set(ndx4,1);
   printMatrix(L9);
   BasicArray<index_t> deldat(NTuple(4,1));
   deldat[1] = 1; deldat[2] = 3; deldat[3] = 6; deldat[4] = 8;
   BasicArray<double> L10(L0);
   BasicArray<double> rhs;
   printMatrix(L10);
-  L10.setVectorSubset(deldat,1.5);
+  L10.set(deldat,1.5);
   printMatrix(L10);
-  L10.setVectorSubset(deldat,rhs);
+  L10.set(deldat,rhs);
   printMatrix(L10);
   BasicArray<double> L11(L2);
   printMatrix(L11);
   IndexArrayList ndx5;
   ndx5.push_back(colon); ndx5.push_back(col);
-  L11.setNDimSubset(ndx5,rhs);
+  L11.set(ndx5,rhs);
   printMatrix(L11);
   // Next - special cases for scalar indexing
   BasicArray<double> L12(L2);
@@ -304,7 +304,7 @@ int main(int, const char *[]) {
     IndexArrayList args;
     args.push_back(IndexArray(i+1));
     args.push_back(IndexArray(i+1));
-    L12.setNDimSubset(args,-4);
+    L12.set(args,-4);
   }
   printMatrix(L12);
   Variant K(DoubleArray,NTuple(1000,1000));
@@ -315,13 +315,13 @@ int main(int, const char *[]) {
       IndexArrayList args;
       args.push_back(IndexArray(j+1));
       args.push_back(IndexArray(i+1));
-      Kref.setNDimSubset(args,(double)(i-j));
+      Kref.set(args,(double)(i-j));
     }
   std::cout << "Time for toeplitz set " << timer.elapsed() << "\n";
   timer.start();
   for (int i=0;i<1000;i++)
     for (int j=0;j<1000;j++) {
-      Kref.setNDimSubset(NTuple(j+1,i+1),(double)(i-j));
+      Kref.set(NTuple(j+1,i+1),(double)(i-j));
       //Kref.set(NTuple(j+1,i+1),(double)(i-j));
       //      Kref.set((j+1)+(i)*1000,(double)(i-j));
     }
@@ -336,14 +336,36 @@ int main(int, const char *[]) {
       toepc.set(1,i+1);
       args.push_back(toepr);
       args.push_back(toepc);
-      Kref.setNDimSubset(args,(double)(i-j));
+      Kref.set(args,(double)(i-j));
     }
   std::cout << "Time for toeplitz (3) set " << timer.elapsed() << "\n";
+  timer.start();
+  for (int i=0;i<1000;i++)
+    for (int j=0;j<1000;j++) {
+      VariantList args;
+      args.push_back(Variant((index_t)(j+1)));
+      args.push_back(Variant((index_t)(i+1)));
+      K.set(args,Variant((double)(i-1)));
+    }
+  std::cout << "Time for toeplitz (4) set " << timer.elapsed() << "\n";
   
   for (int i=0;i<5;i++) {
     std::cout << "L[" << i << "," << i << "] = " << 
-      L.getVectorSubset(Variant((index_t) i*5+i+1)) << "\n";
+      L.get(Variant((index_t) i*5+i+1)) << "\n";
   }
+
+  for (int i=0;i<5;i++) {
+    L.set(Variant((index_t) i*5+i+1),Variant((int16)(i*4)));
+  }
+  printMatrix(L.constReal<double>());
+
+  for (int i=0;i<5;i++) {
+    VariantList args;
+    args.push_back(Variant((index_t) i+1));
+    args.push_back(Variant((index_t) i+1));
+    L.set(args,Variant((float)(i*1.23)));
+  }
+  printMatrix(L.constReal<double>());
 
   return 0;
   // Next step - fast VariantList & slicing.
@@ -374,7 +396,7 @@ int main(int, const char *[]) {
   // Let's try something less grandiose for the slicing.
   // The array interface has:
   //   Variant getSubset(Variant index);
-  //   Variant getNDimSubset(VariantVector index);
+  //   Variant get(VariantVector index);
   //   Variant getField(Variant name);
   //   VariantVector getField(Variant name);
   

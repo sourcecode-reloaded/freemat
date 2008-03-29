@@ -14,7 +14,7 @@ static IndexArray ExpandColons(const IndexArray& ndx, index_t len) {
 }
 
 template <typename T>
-void BasicArray<T>::vectorResize(index_t len) {
+void BasicArray<T>::resize(index_t len) {
   if (len > length()) {
     NTuple newDim;
     if (isEmpty() || isScalar()) {
@@ -131,7 +131,7 @@ BasicArray<T> Apply(const BasicArray<T>& arg, T (*func)(T)) {
 }
 
 template <typename T>
-BasicArray<T> BasicArray<T>::getVectorSubset(const IndexArray& index) const {
+BasicArray<T> BasicArray<T>::get(const IndexArray& index) const {
   if (index.isEmpty())
     return BasicArray<T>(index.dimensions());
   if (IsColonOp(index)) {
@@ -164,7 +164,7 @@ static bool isSliceIndexCase(const IndexArrayList& index) {
 }
 
 template <typename T>
-void BasicArray<T>::setVectorSubset(const IndexArray& index,
+void BasicArray<T>::set(const IndexArray& index,
 				    const T& data) {
   if (index.isEmpty()) return;
   if (IsColonOp(index)) {
@@ -172,17 +172,17 @@ void BasicArray<T>::setVectorSubset(const IndexArray& index,
     return;
   } 
   index_t max_ndx = MaxValue(index);
-  if (max_ndx > length()) vectorResize(max_ndx);
+  if (max_ndx > length()) resize(max_ndx);
   for (int i=1;i<=index.length();i++)
     set(index[i],data);
 }
 
 template <typename T>
-void BasicArray<T>::setNDimSubset(const IndexArrayList& index,
+void BasicArray<T>::set(const IndexArrayList& index,
 				  const BasicArray<T>& data) {
   if (index.empty()) return;
   if (data.isEmpty()) {
-    deleteNDimSubset(index);
+    del(index);
     return;
   }
   if (isSliceIndexCase(index)) {
@@ -237,16 +237,10 @@ void BasicArray<T>::setSlice(const IndexArrayList& index,
 //   return;
 // }
 
-template <typename T>
-void BasicArray<T>::setNDimSubset(const NTuple& index, const T& data) {
-  if (dimensions() <= index)
-    resize(index);
-  set(index,data);
-}
 
 // #1, The Larch
 template <typename T>
-void BasicArray<T>::setNDimSubset(const IndexArrayList& index,
+void BasicArray<T>::set(const IndexArrayList& index,
 				  const T& data) {
   if (index.empty()) return;
   if (isSliceIndexCase(index)) {
@@ -285,7 +279,7 @@ static inline bool DimensionCovered(const IndexArray& ndx, index_t length) {
 }
 
 template <typename T>
-void BasicArray<T>::deleteNDimSubset(const IndexArrayList& index) {
+void BasicArray<T>::del(const IndexArrayList& index) {
   // The strategy for dealing with deletions is simplified relative
   // to 3.x code.  An NDim deletion is only valid if there is one
   // dimension that is not covered.
@@ -338,7 +332,7 @@ void BasicArray<T>::deleteNDimSubset(const IndexArrayList& index) {
 }
 
 template <typename T>
-void BasicArray<T>::deleteVectorSubset(const IndexArray& index) {
+void BasicArray<T>::del(const IndexArray& index) {
   if (IsColonOp(index)) {
     m_data.clear();
     m_dims = NTuple(0,0);
@@ -365,11 +359,11 @@ void BasicArray<T>::deleteVectorSubset(const IndexArray& index) {
 }
 
 template <typename T>
-void BasicArray<T>::setVectorSubset(const IndexArray& index, 
-				    const BasicArray<T>& data) {
+void BasicArray<T>::set(const IndexArray& index, 
+			const BasicArray<T>& data) {
   if (index.isEmpty()) return;
   if (data.isEmpty()) {
-    deleteVectorSubset(index);
+    del(index);
     return;
   }
   if (IsColonOp(index)) {
@@ -386,7 +380,7 @@ void BasicArray<T>::setVectorSubset(const IndexArray& index,
     return;
   }
   index_t max_ndx = MaxValue(index);
-  if (max_ndx > length()) vectorResize(max_ndx);
+  if (max_ndx > length()) resize(max_ndx);
   if (index.length() != data.length()) 
     throw Exception("Assignment A(I) = B requires I and B to be the same size");
   for (index_t i=1;i<=index.length();i++)
@@ -417,7 +411,7 @@ BasicArray<T> BasicArray<T>::getSlice(const IndexArrayList& index) const {
 }
 
 template <typename T>
-BasicArray<T> BasicArray<T>::getNDimSubset(const IndexArrayList& index) const {
+BasicArray<T> BasicArray<T>::get(const IndexArrayList& index) const {
   if (index.empty()) return BasicArray<T>();
   if (isSliceIndexCase(index)) return getSlice(index);
   IndexArrayList ndx;
@@ -439,37 +433,89 @@ BasicArray<T> BasicArray<T>::getNDimSubset(const IndexArrayList& index) const {
   return retval;
 }
 
-template BasicArray<bool>   BasicArray<bool>::getVectorSubset(const IndexArray&) const;
-template BasicArray<uint8>  BasicArray<uint8>::getVectorSubset(const IndexArray&) const;
-template BasicArray<int8>   BasicArray<int8>::getVectorSubset(const IndexArray&) const;
-template BasicArray<uint16> BasicArray<uint16>::getVectorSubset(const IndexArray&) const;
-template BasicArray<int16>  BasicArray<int16>::getVectorSubset(const IndexArray&) const;
-template BasicArray<uint32> BasicArray<uint32>::getVectorSubset(const IndexArray&) const;
-template BasicArray<int32>  BasicArray<int32>::getVectorSubset(const IndexArray&) const;
-template BasicArray<uint64> BasicArray<uint64>::getVectorSubset(const IndexArray&) const;
-template BasicArray<int64>  BasicArray<int64>::getVectorSubset(const IndexArray&) const;
-template BasicArray<float>  BasicArray<float>::getVectorSubset(const IndexArray&) const;
-template BasicArray<double> BasicArray<double>::getVectorSubset(const IndexArray&) const;
+template BasicArray<bool>   BasicArray<bool>::get(const IndexArray&) const;
+template BasicArray<uint8>  BasicArray<uint8>::get(const IndexArray&) const;
+template BasicArray<int8>   BasicArray<int8>::get(const IndexArray&) const;
+template BasicArray<uint16> BasicArray<uint16>::get(const IndexArray&) const;
+template BasicArray<int16>  BasicArray<int16>::get(const IndexArray&) const;
+template BasicArray<uint32> BasicArray<uint32>::get(const IndexArray&) const;
+template BasicArray<int32>  BasicArray<int32>::get(const IndexArray&) const;
+template BasicArray<uint64> BasicArray<uint64>::get(const IndexArray&) const;
+template BasicArray<int64>  BasicArray<int64>::get(const IndexArray&) const;
+template BasicArray<float>  BasicArray<float>::get(const IndexArray&) const;
+template BasicArray<double> BasicArray<double>::get(const IndexArray&) const;
 
+template BasicArray<bool>   BasicArray<bool>::get(const IndexArrayList&) const;
+template BasicArray<uint8>  BasicArray<uint8>::get(const IndexArrayList&) const;
+template BasicArray<int8>   BasicArray<int8>::get(const IndexArrayList&) const;
+template BasicArray<uint16> BasicArray<uint16>::get(const IndexArrayList&) const;
+template BasicArray<int16>  BasicArray<int16>::get(const IndexArrayList&) const;
+template BasicArray<uint32> BasicArray<uint32>::get(const IndexArrayList&) const;
+template BasicArray<int32>  BasicArray<int32>::get(const IndexArrayList&) const;
+template BasicArray<uint64> BasicArray<uint64>::get(const IndexArrayList&) const;
+template BasicArray<int64>  BasicArray<int64>::get(const IndexArrayList&) const;
+template BasicArray<float>  BasicArray<float>::get(const IndexArrayList&) const;
+template BasicArray<double> BasicArray<double>::get(const IndexArrayList&) const;
 
-template
-BasicArray<double> BasicArray<double>::getNDimSubset(const IndexArrayList&) const;
+template void BasicArray<bool>::set(const IndexArray&,const BasicArray<bool>&);
+template void BasicArray<uint8>::set(const IndexArray&,const BasicArray<uint8>&);
+template void BasicArray<int8>::set(const IndexArray&,const BasicArray<int8>&);
+template void BasicArray<uint16>::set(const IndexArray&,const BasicArray<uint16>&);
+template void BasicArray<int16>::set(const IndexArray&,const BasicArray<int16>&);
+template void BasicArray<uint32>::set(const IndexArray&,const BasicArray<uint32>&);
+template void BasicArray<int32>::set(const IndexArray&,const BasicArray<int32>&);
+template void BasicArray<uint64>::set(const IndexArray&,const BasicArray<uint64>&);
+template void BasicArray<int64>::set(const IndexArray&,const BasicArray<int64>&);
+template void BasicArray<float>::set(const IndexArray&,const BasicArray<float>&);
+template void BasicArray<double>::set(const IndexArray&,const BasicArray<double>&);
 
-template
-void BasicArray<double>::setVectorSubset(const IndexArray&, 
-					 const BasicArray<double>&);
+template void BasicArray<bool>::set(const IndexArray&, const bool&);
+template void BasicArray<uint8>::set(const IndexArray&, const uint8&);
+template void BasicArray<int8>::set(const IndexArray&, const int8&);
+template void BasicArray<uint16>::set(const IndexArray&, const uint16&);
+template void BasicArray<int16>::set(const IndexArray&, const int16&);
+template void BasicArray<uint32>::set(const IndexArray&, const uint32&);
+template void BasicArray<int32>::set(const IndexArray&, const int32&);
+template void BasicArray<uint64>::set(const IndexArray&, const uint64&);
+template void BasicArray<int64>::set(const IndexArray&, const int64&);
+template void BasicArray<float>::set(const IndexArray&, const float&);
+template void BasicArray<double>::set(const IndexArray&, const double&);
 
-template
-void BasicArray<double>::setVectorSubset(const IndexArray&, const double&);
+template void BasicArray<bool>::set(const IndexArrayList&,const BasicArray<bool>&);
+template void BasicArray<uint8>::set(const IndexArrayList&,const BasicArray<uint8>&);
+template void BasicArray<int8>::set(const IndexArrayList&,const BasicArray<int8>&);
+template void BasicArray<uint16>::set(const IndexArrayList&,const BasicArray<uint16>&);
+template void BasicArray<int16>::set(const IndexArrayList&,const BasicArray<int16>&);
+template void BasicArray<uint32>::set(const IndexArrayList&,const BasicArray<uint32>&);
+template void BasicArray<int32>::set(const IndexArrayList&,const BasicArray<int32>&);
+template void BasicArray<uint64>::set(const IndexArrayList&,const BasicArray<uint64>&);
+template void BasicArray<int64>::set(const IndexArrayList&,const BasicArray<int64>&);
+template void BasicArray<float>::set(const IndexArrayList&,const BasicArray<float>&);
+template void BasicArray<double>::set(const IndexArrayList&,const BasicArray<double>&);
 
-template
-void BasicArray<double>::setNDimSubset(const IndexArrayList&, 
-				       const BasicArray<double>&);
+template void BasicArray<bool>::set(const IndexArrayList&, const bool&);
+template void BasicArray<uint8>::set(const IndexArrayList&, const uint8&);
+template void BasicArray<int8>::set(const IndexArrayList&, const int8&);
+template void BasicArray<uint16>::set(const IndexArrayList&, const uint16&);
+template void BasicArray<int16>::set(const IndexArrayList&, const int16&);
+template void BasicArray<uint32>::set(const IndexArrayList&, const uint32&);
+template void BasicArray<int32>::set(const IndexArrayList&, const int32&);
+template void BasicArray<uint64>::set(const IndexArrayList&, const uint64&);
+template void BasicArray<int64>::set(const IndexArrayList&, const int64&);
+template void BasicArray<float>::set(const IndexArrayList&, const float&);
+template void BasicArray<double>::set(const IndexArrayList&, const double&);
 
-template
-void BasicArray<double>::setNDimSubset(const IndexArrayList&, const double&);
+template void BasicArray<bool>::set(const NTuple&, const bool&);
+template void BasicArray<uint8>::set(const NTuple&, const uint8&);
+template void BasicArray<int8>::set(const NTuple&, const int8&);
+template void BasicArray<uint16>::set(const NTuple&, const uint16&);
+template void BasicArray<int16>::set(const NTuple&, const int16&);
+template void BasicArray<uint32>::set(const NTuple&, const uint32&);
+template void BasicArray<int32>::set(const NTuple&, const int32&);
+template void BasicArray<uint64>::set(const NTuple&, const uint64&);
+template void BasicArray<int64>::set(const NTuple&, const int64&);
+template void BasicArray<float>::set(const NTuple&, const float&);
+template void BasicArray<double>::set(const NTuple&, const double&);
 
-template
-void BasicArray<double>::setNDimSubset(const NTuple&, const double&);
 
 				       

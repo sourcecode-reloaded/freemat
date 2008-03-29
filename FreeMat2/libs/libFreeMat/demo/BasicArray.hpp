@@ -70,9 +70,11 @@ public:
     throw Exception("out of range");
   }
   inline void set(const NTuple& pos, const T& val) {
+    if (dimensions() <= pos) resize(pos);
     m_data[(int64)(m_dims.map(pos)+m_offset-1)] = val;
   }
   inline void set(index_t pos, const T& val) {
+    if (dimensions().count() <= pos) resize(pos);
     m_data[(int64)(pos+m_offset-1)] = val;
   }
   inline const T get(index_t pos) const {
@@ -81,20 +83,19 @@ public:
   inline const T get(const NTuple& pos) const {
     return m_data[(int64)(m_dims.map(pos)+m_offset-1)];
   }
-  BasicArray<T> getVectorSubset(const IndexArray& index) const;
-  BasicArray<T> getNDimSubset(const IndexArrayList& index) const;
+  BasicArray<T> get(const IndexArray& index) const;
+  BasicArray<T> get(const IndexArrayList& index) const;
   BasicArray<T> getSlice(const IndexArrayList& index) const;
   void setSlice(const IndexArrayList& index, const BasicArray<T>& data);
   void setSlice(const IndexArrayList& index, const T& data);
-  void setVectorSubset(const IndexArray& index, const T& data);
-  void setVectorSubset(const IndexArray& index, const BasicArray<T>& data);
-  void setNDimSubset(const IndexArrayList& index, const T& data);
-  void setNDimSubset(const IndexArrayList& index, const BasicArray<T>& data);
-  void setNDimSubset(const NTuple& index, const T& data);
-  void deleteNDimSubset(const IndexArrayList& index);
-  void deleteVectorSubset(const IndexArray& index);
+  void set(const IndexArray& index, const T& data);
+  void set(const IndexArray& index, const BasicArray<T>& data);
+  void set(const IndexArrayList& index, const T& data);
+  void set(const IndexArrayList& index, const BasicArray<T>& data);
+  void del(const IndexArrayList& index);
+  void del(const IndexArray& index);
   void resize(const NTuple& pos);
-  void vectorResize(index_t len);
+  void resize(index_t len);
   inline void reshape(const NTuple& pos) {
     if (m_dims.count() == pos.count())
       m_dims = pos;

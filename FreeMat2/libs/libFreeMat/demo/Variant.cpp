@@ -21,37 +21,83 @@ static inline void Tdestruct(void *todelete) {
   delete p;
 }
 
-template <typename T>
-static inline double Tget_real(const Variant*ptr, index_t ndx) {
+template <typename S, typename T>
+static inline double Tget_real(const Variant*ptr, S ndx) {
   const BasicArray<T>& real(ptr->constReal<T>());
   return real.get(ndx);
 }
 
-template <typename T>
-static inline double Tget_imag(const Variant*ptr, index_t ndx) {
+template <typename S, typename T>
+static inline double Tget_imag(const Variant*ptr, S ndx) {
   if (ptr->allReal()) return T();
   const BasicArray<T>& imag(ptr->constImag<T>());
   return imag.get(ndx);
 }
 
-template <typename T>
-static inline const Variant Tget_vector(const Variant*ptr, const IndexArray &ndx) {
+template <typename S, typename T>
+static inline const Variant Tget(const Variant*ptr, S ndx) {
   if (ptr->allReal()) {
     const BasicArray<T> &real(ptr->constReal<T>());
-    return Variant(ptr->type(),real.getVectorSubset(ndx));
+    return Variant(ptr->type(),real.get(ndx));
   } else {
     const BasicArray<T> &real(ptr->constReal<T>());
     const BasicArray<T> &imag(ptr->constImag<T>());
-    return Variant(ptr->type(),real.getVectorSubset(ndx),imag.getVectorSubset(ndx));
+    return Variant(ptr->type(),real.get(ndx),imag.get(ndx));
   }
 }
 
-template <typename T>
-static inline const Variant Tset_vector(const Variant*ptr, const IndexArray &ndx, const Variant& data) {
-  if (ptr->allReal() && data->allReal()) {
-    BasicArray<T> &real(ptr->real<T>());
-    Variant dataTyped(data.toType(ptr->type()));
-#error - Need to finish -- have to handle the case where data is a scalar
+static inline Type ScalarType(Type x) {
+  switch (x) {
+  default:
+    return x;
+  case BoolArray:
+    return BoolScalar;
+  case Int8Array:
+    return Int8Scalar;
+  case UInt8Array:
+    return UInt8Scalar;
+  case Int16Array:
+    return Int16Scalar;
+  case UInt16Array:
+    return UInt16Scalar;
+  case Int32Array:
+    return Int32Scalar;
+  case UInt32Array:
+    return UInt32Scalar;
+  case Int64Array:
+    return Int64Scalar;
+  case UInt64Array:
+    return UInt64Scalar;
+  case FloatArray:
+    return FloatScalar;
+  case DoubleArray:
+    return DoubleScalar;
+  }
+}
+
+template <typename S, typename T>
+static inline void Tset_scalar_rhs(Variant* ptr, S ndx, const Variant& data) {
+  BasicArray<T> &real(ptr->real<T>());
+  Variant dataTyped(data.toType(ScalarType(ptr->type())));
+  real.set(ndx,dataTyped.realScalar<T>());
+  if (!data.allReal()) {
+    BasicArray<T> &imag(ptr->imag<T>());
+    imag.set(ndx,dataTyped.imagScalar<T>());
+  }
+}
+
+template <typename S, typename T>
+static inline void Tset(Variant* ptr, S ndx, const Variant& data) {
+  if (data.isScalar()) {
+    Tset_scalar_rhs<S, T>(ptr,ndx,data);
+    return;
+  }
+  BasicArray<T> &real(ptr->real<T>());
+  Variant dataTyped(data.toType(ptr->type()));
+  real.set(ndx,dataTyped.constReal<T>());
+  if (!data.allReal()) {
+    BasicArray<T> &imag(ptr->imag<T>());
+    imag.set(ndx,dataTyped.constImag<T>());
   }
 }
 
@@ -76,6 +122,38 @@ inline static const Variant Tcast_case(Type t, const Variant *copy) {
     ConvertBasicArray(copy->constImag<S>(),retvec.imag<T>());
   }
   return retvec;
+}
+
+
+template <typename T>
+inline static const Variant TcastScalar(Type t, const Variant *copy) {
+  if (copy->type() == t) return *copy;
+  switch (copy->type()) {
+  default:
+    throw Exception("Unsupported type for conversion");
+  case BoolScalar:
+    return Variant((T)copy->realScalar<bool>(),(T) 0);
+  case Int8Scalar:
+    return Variant((T)copy->realScalar<int8>(),(T)copy->imagScalar<int8>());
+  case UInt8Scalar:
+    return Variant((T)copy->realScalar<uint8>(),(T)copy->imagScalar<uint8>());
+  case Int16Scalar:
+    return Variant((T)copy->realScalar<int16>(),(T)copy->imagScalar<int16>());
+  case UInt16Scalar:
+    return Variant((T)copy->realScalar<uint16>(),(T)copy->imagScalar<uint16>());
+  case Int32Scalar:
+    return Variant((T)copy->realScalar<int32>(),(T)copy->imagScalar<int32>());
+  case UInt32Scalar:
+    return Variant((T)copy->realScalar<uint32>(),(T)copy->imagScalar<uint32>());
+  case Int64Scalar:
+    return Variant((T)copy->realScalar<int64>(),(T)copy->imagScalar<int64>());
+  case UInt64Scalar:
+    return Variant((T)copy->realScalar<uint64>(),(T)copy->imagScalar<uint64>());
+  case FloatScalar:
+    return Variant((T)copy->realScalar<float>(),(T)copy->imagScalar<float>());
+  case DoubleScalar:
+    return Variant((T)copy->realScalar<double>(),(T)copy->imagScalar<double>());
+  }
 }
 
 // T - dest type
@@ -200,6 +278,12 @@ static inline void destruct(Type t, void *todelete) {
   case DoubleArray:
     return Tdestruct<BasicArray<double> >(todelete);
   }
+}
+
+static inline bool AllScalars(const VariantList& index) {
+  for (int i=0;i<index.size();i++)
+    if (!index[i].isScalar()) return false;
+  return true;
 }
 
 SharedObject::SharedObject(Type t, void* p) : m_type(t), m_p(p) {}
@@ -362,61 +446,221 @@ const NTuple Variant::dimensions() const {
   };
 }
 
-void Variant::setVectorSubset(const IndexArray& index, const Variant& data) {
+void Variant::set(index_t index, const Variant& data) {
   switch (m_type) {
   default:
-    throw Exception("Unsupported type for setVectorSubset(IndexArray)");
+    throw Exception("Unsupported type for set(index_t)");
   case BoolArray:
-    return Tset_vector<logical>(this,index,data);
+    Tset_scalar_rhs<index_t,logical>(this,index,data);
+    return;
   case Int8Array:
-    return Tset_vector<int8>(this,index,data);
+    Tset_scalar_rhs<index_t,int8>(this,index,data);
+    return;
   case UInt8Array:
-    return Tset_vector<uint8>(this,index,data);
+    Tset_scalar_rhs<index_t,uint8>(this,index,data);
+    return;
   case Int16Array:
-    return Tset_vector<int16>(this,index,data);
+    Tset_scalar_rhs<index_t,int16>(this,index,data);
+    return;
   case UInt16Array:
-    return Tset_vector<uint16>(this,index,data);
+    Tset_scalar_rhs<index_t,uint16>(this,index,data);
+    return;
   case Int32Array:
-    return Tset_vector<int32>(this,index,data);
+    Tset_scalar_rhs<index_t,int32>(this,index,data);
+    return;
   case UInt32Array:
-    return Tset_vector<uint32>(this,index,data);
+    Tset_scalar_rhs<index_t,uint32>(this,index,data);
+    return;
   case Int64Array:
-    return Tset_vector<int64>(this,index,data);
+    Tset_scalar_rhs<index_t,int64>(this,index,data);
+    return;
   case UInt64Array:
-    return Tset_vector<uint64>(this,index,data);
+    Tset_scalar_rhs<index_t,uint64>(this,index,data);
+    return;
   case FloatArray:
-    return Tset_vector<float>(this,index,data);
+    Tset_scalar_rhs<index_t,float>(this,index,data);
+    return;
   case DoubleArray:
-    return Tset_vector<double>(this,index,data);
+    Tset_scalar_rhs<index_t,double>(this,index,data);
+    return;
   }  
 }
 
-const Variant Variant::getVectorSubset(const IndexArray& index) const {
+void Variant::set(const NTuple& index, const Variant& data) {
+  switch (m_type) {
+  default:
+    throw Exception("Unsupported type for set(const NTuple&)");
+  case BoolArray:
+    Tset_scalar_rhs<const NTuple&,logical>(this,index,data);
+    return;
+  case Int8Array:
+    Tset_scalar_rhs<const NTuple&,int8>(this,index,data);
+    return;
+  case UInt8Array:
+    Tset_scalar_rhs<const NTuple&,uint8>(this,index,data);
+    return;
+  case Int16Array:
+    Tset_scalar_rhs<const NTuple&,int16>(this,index,data);
+    return;
+  case UInt16Array:
+    Tset_scalar_rhs<const NTuple&,uint16>(this,index,data);
+    return;
+  case Int32Array:
+    Tset_scalar_rhs<const NTuple&,int32>(this,index,data);
+    return;
+  case UInt32Array:
+    Tset_scalar_rhs<const NTuple&,uint32>(this,index,data);
+    return;
+  case Int64Array:
+    Tset_scalar_rhs<const NTuple&,int64>(this,index,data);
+    return;
+  case UInt64Array:
+    Tset_scalar_rhs<const NTuple&,uint64>(this,index,data);
+    return;
+  case FloatArray:
+    Tset_scalar_rhs<const NTuple&,float>(this,index,data);
+    return;
+  case DoubleArray:
+    Tset_scalar_rhs<const NTuple&,double>(this,index,data);
+    return;
+  }  
+}
+
+void Variant::set(const IndexArray& index, const Variant& data) {
+  switch (m_type) {
+  default:
+    throw Exception("Unsupported type for set(IndexArray)");
+  case BoolArray:
+    Tset<const IndexArray&,logical>(this,index,data);
+    return;
+  case Int8Array:
+    Tset<const IndexArray&,int8>(this,index,data);
+    return;
+  case UInt8Array:
+    Tset<const IndexArray&,uint8>(this,index,data);
+    return;
+  case Int16Array:
+    Tset<const IndexArray&,int16>(this,index,data);
+    return;
+  case UInt16Array:
+    Tset<const IndexArray&,uint16>(this,index,data);
+    return;
+  case Int32Array:
+    Tset<const IndexArray&,int32>(this,index,data);
+    return;
+  case UInt32Array:
+    Tset<const IndexArray&,uint32>(this,index,data);
+    return;
+  case Int64Array:
+    Tset<const IndexArray&,int64>(this,index,data);
+    return;
+  case UInt64Array:
+    Tset<const IndexArray&,uint64>(this,index,data);
+    return;
+  case FloatArray:
+    Tset<const IndexArray&,float>(this,index,data);
+    return;
+  case DoubleArray:
+    Tset<const IndexArray&,double>(this,index,data);
+    return;
+  }  
+}
+
+void Variant::set(const IndexArrayList& index, const Variant& data) {
+  switch (m_type) {
+  default:
+    throw Exception("Unsupported type for set(IndexArray)");
+  case BoolArray:
+    Tset<const IndexArrayList&,logical>(this,index,data);
+    return;
+  case Int8Array:
+    Tset<const IndexArrayList&,int8>(this,index,data);
+    return;
+  case UInt8Array:
+    Tset<const IndexArrayList&,uint8>(this,index,data);
+    return;
+  case Int16Array:
+    Tset<const IndexArrayList&,int16>(this,index,data);
+    return;
+  case UInt16Array:
+    Tset<const IndexArrayList&,uint16>(this,index,data);
+    return;
+  case Int32Array:
+    Tset<const IndexArrayList&,int32>(this,index,data);
+    return;
+  case UInt32Array:
+    Tset<const IndexArrayList&,uint32>(this,index,data);
+    return;
+  case Int64Array:
+    Tset<const IndexArrayList&,int64>(this,index,data);
+    return;
+  case UInt64Array:
+    Tset<const IndexArrayList&,uint64>(this,index,data);
+    return;
+  case FloatArray:
+    Tset<const IndexArrayList&,float>(this,index,data);
+    return;
+  case DoubleArray:
+    Tset<const IndexArrayList&,double>(this,index,data);
+    return;
+  }  
+}
+
+const Variant Variant::get(const IndexArray& index) const {
   switch (m_type) {
   default: 
-    throw Exception("Unsupported type for getVectorSubset(index_t)");
+    throw Exception("Unsupported type for get(index_t)");
   case BoolArray:
-    return Tget_vector<logical>(this,index);
+    return Tget<const IndexArray&,logical>(this,index);
   case Int8Array:
-    return Tget_vector<int8>(this,index);
+    return Tget<const IndexArray&,int8>(this,index);
   case UInt8Array:
-    return Tget_vector<uint8>(this,index);
+    return Tget<const IndexArray&,uint8>(this,index);
   case Int16Array:
-    return Tget_vector<int16>(this,index);
+    return Tget<const IndexArray&,int16>(this,index);
   case UInt16Array:
-    return Tget_vector<uint16>(this,index);
+    return Tget<const IndexArray&,uint16>(this,index);
   case Int32Array:
-    return Tget_vector<int32>(this,index);
+    return Tget<const IndexArray&,int32>(this,index);
   case UInt32Array:
-    return Tget_vector<uint32>(this,index);
+    return Tget<const IndexArray&,uint32>(this,index);
   case Int64Array:
-    return Tget_vector<int64>(this,index);
+    return Tget<const IndexArray&,int64>(this,index);
   case UInt64Array:
-    return Tget_vector<uint64>(this,index);
+    return Tget<const IndexArray&,uint64>(this,index);
   case FloatArray:
-    return Tget_vector<float>(this,index);
+    return Tget<const IndexArray&,float>(this,index);
   case DoubleArray:
-    return Tget_vector<double>(this,index);
+    return Tget<const IndexArray&,double>(this,index);
+  }  
+}
+
+const Variant Variant::get(const IndexArrayList& index) const {
+  switch (m_type) {
+  default: 
+    throw Exception("Unsupported type for get(index_t)");
+  case BoolArray:
+    return Tget<const IndexArrayList&,logical>(this,index);
+  case Int8Array:
+    return Tget<const IndexArrayList&,int8>(this,index);
+  case UInt8Array:
+    return Tget<const IndexArrayList&,uint8>(this,index);
+  case Int16Array:
+    return Tget<const IndexArrayList&,int16>(this,index);
+  case UInt16Array:
+    return Tget<const IndexArrayList&,uint16>(this,index);
+  case Int32Array:
+    return Tget<const IndexArrayList&,int32>(this,index);
+  case UInt32Array:
+    return Tget<const IndexArrayList&,uint32>(this,index);
+  case Int64Array:
+    return Tget<const IndexArrayList&,int64>(this,index);
+  case UInt64Array:
+    return Tget<const IndexArrayList&,uint64>(this,index);
+  case FloatArray:
+    return Tget<const IndexArrayList&,float>(this,index);
+  case DoubleArray:
+    return Tget<const IndexArrayList&,double>(this,index);
   }  
 }
 
@@ -425,6 +669,28 @@ const Variant Variant::toType(const Type t) const {
   switch (t) {
   default:
     throw Exception("Unsupported type for toType");
+  case BoolScalar:
+    return TcastScalar<bool>(t,this);
+  case Int8Scalar:
+    return TcastScalar<int8>(t,this);
+  case UInt8Scalar:
+    return TcastScalar<uint8>(t,this);
+  case Int16Scalar:
+    return TcastScalar<int16>(t,this);
+  case UInt16Scalar:
+    return TcastScalar<uint16>(t,this);
+  case Int32Scalar:
+    return TcastScalar<int32>(t,this);
+  case UInt32Scalar:
+    return TcastScalar<uint32>(t,this);
+  case Int64Scalar:
+    return TcastScalar<int64>(t,this);
+  case UInt64Scalar:
+    return TcastScalar<uint64>(t,this);
+  case FloatScalar:
+    return TcastScalar<float>(t,this);
+  case DoubleScalar:
+    return TcastScalar<double>(t,this);
   case BoolArray:
     return Tcast<bool>(t,this);
   case Int8Array:
@@ -450,54 +716,114 @@ const Variant Variant::toType(const Type t) const {
   }
 }
 
-const Variant Variant::getVectorSubset(index_t index) const {
+const Variant Variant::get(const NTuple& index) const {
   switch (m_type) {
   default: 
-    throw Exception("Unsupported type for getVectorSubset(index_t)");
+    throw Exception("Unsupported type for get(index_t)");
   case BoolArray:
-    return Variant(Tget_real<logical>(this,index),Tget_imag<logical>(this,index));
+    return Variant(Tget_real<const NTuple&,logical>(this,index),Tget_imag<const NTuple&,logical>(this,index));
   case Int8Array:
-    return Variant(Tget_real<int8>(this,index),Tget_imag<int8>(this,index));
+    return Variant(Tget_real<const NTuple&,int8>(this,index),Tget_imag<const NTuple&,int8>(this,index));
   case UInt8Array:
-    return Variant(Tget_real<uint8>(this,index),Tget_imag<uint8>(this,index));
+    return Variant(Tget_real<const NTuple&,uint8>(this,index),Tget_imag<const NTuple&,uint8>(this,index));
   case Int16Array:
-    return Variant(Tget_real<int16>(this,index),Tget_imag<int16>(this,index));
+    return Variant(Tget_real<const NTuple&,int16>(this,index),Tget_imag<const NTuple&,int16>(this,index));
   case UInt16Array:
-    return Variant(Tget_real<uint16>(this,index),Tget_imag<uint16>(this,index));
+    return Variant(Tget_real<const NTuple&,uint16>(this,index),Tget_imag<const NTuple&,uint16>(this,index));
   case Int32Array:
-    return Variant(Tget_real<int32>(this,index),Tget_imag<int32>(this,index));
+    return Variant(Tget_real<const NTuple&,int32>(this,index),Tget_imag<const NTuple&,int32>(this,index));
   case UInt32Array:
-    return Variant(Tget_real<uint32>(this,index),Tget_imag<uint32>(this,index));
+    return Variant(Tget_real<const NTuple&,uint32>(this,index),Tget_imag<const NTuple&,uint32>(this,index));
   case Int64Array:
-    return Variant(Tget_real<int64>(this,index),Tget_imag<int64>(this,index));
+    return Variant(Tget_real<const NTuple&,int64>(this,index),Tget_imag<const NTuple&,int64>(this,index));
   case UInt64Array:
-    return Variant(Tget_real<uint64>(this,index),Tget_imag<uint64>(this,index));
+    return Variant(Tget_real<const NTuple&,uint64>(this,index),Tget_imag<const NTuple&,uint64>(this,index));
   case FloatArray:
-    return Variant(Tget_real<float>(this,index),Tget_imag<float>(this,index));
+    return Variant(Tget_real<const NTuple&,float>(this,index),Tget_imag<const NTuple&,float>(this,index));
   case DoubleArray:
-    return Variant(Tget_real<double>(this,index),Tget_imag<double>(this,index));
+    return Variant(Tget_real<const NTuple&,double>(this,index),Tget_imag<const NTuple&,double>(this,index));
   }
 }
 
-const Variant Variant::getVectorSubset(const Variant& index) const {
+const Variant Variant::get(index_t index) const {
+  switch (m_type) {
+  default: 
+    throw Exception("Unsupported type for get(index_t)");
+  case BoolArray:
+    return Variant(Tget_real<index_t,logical>(this,index),Tget_imag<index_t,logical>(this,index));
+  case Int8Array:
+    return Variant(Tget_real<index_t,int8>(this,index),Tget_imag<index_t,int8>(this,index));
+  case UInt8Array:
+    return Variant(Tget_real<index_t,uint8>(this,index),Tget_imag<index_t,uint8>(this,index));
+  case Int16Array:
+    return Variant(Tget_real<index_t,int16>(this,index),Tget_imag<index_t,int16>(this,index));
+  case UInt16Array:
+    return Variant(Tget_real<index_t,uint16>(this,index),Tget_imag<index_t,uint16>(this,index));
+  case Int32Array:
+    return Variant(Tget_real<index_t,int32>(this,index),Tget_imag<index_t,int32>(this,index));
+  case UInt32Array:
+    return Variant(Tget_real<index_t,uint32>(this,index),Tget_imag<index_t,uint32>(this,index));
+  case Int64Array:
+    return Variant(Tget_real<index_t,int64>(this,index),Tget_imag<index_t,int64>(this,index));
+  case UInt64Array:
+    return Variant(Tget_real<index_t,uint64>(this,index),Tget_imag<index_t,uint64>(this,index));
+  case FloatArray:
+    return Variant(Tget_real<index_t,float>(this,index),Tget_imag<index_t,float>(this,index));
+  case DoubleArray:
+    return Variant(Tget_real<index_t,double>(this,index),Tget_imag<index_t,double>(this,index));
+  }
+}
+
+const Variant Variant::get(const Variant& index) const {
   if (index.isScalar()) {
     if (!index.allReal())
       Warn("Complex part of index ignored");
-    return getVectorSubset(index.asIndexScalar());
+    return get(index.asIndexScalar());
   }
   else 
-    return getVectorSubset(IndexArrayFromVariant(index));
+    return get(IndexArrayFromVariant(index));
 }
 
-void Variant::setVectorSubset(const Variant& index, const Variant& data) {
+const Variant Variant::get(const VariantList& index) const {
+  if (AllScalars(index)) {
+    NTuple addr(1,1);
+    for (int i=0;i<index.size();i++)
+      addr[i] = index[i].asIndexScalar();
+    return get(addr);
+  }
+  else {
+    IndexArrayList addr;
+    for (int i=0;i<index.size();i++)
+      addr.push_back(IndexArrayFromVariant(index[i]));
+    return get(addr);
+  }  
+}
+
+void Variant::set(const Variant& index, const Variant& data) {
   if (index.isScalar()) {
     if (!index.allReal())
       Warn("Complex part of index ignored");
-    setVectorSubset(index.asIndexScalar(),data);
+    set(index.asIndexScalar(),data);
   }
   else
-    setVectorSubset(IndexArrayFromVariant(index),data);
+    set(IndexArrayFromVariant(index),data);
 }
+
+void Variant::set(const VariantList& index, const Variant& data) {
+  if (AllScalars(index)) {
+    NTuple addr(1,1);
+    for (int i=0;i<index.size();i++)
+      addr[i] = index[i].asIndexScalar();
+    set(addr,data);
+  }
+  else {
+    IndexArrayList addr;
+    for (int i=0;i<index.size();i++)
+      addr[i] = IndexArrayFromVariant(index[i]);
+    set(addr,data);
+  }
+}
+
 
 const index_t Variant::asIndexScalar() const {
   switch (type()) {
@@ -532,7 +858,7 @@ const Variant Variant::asScalar() const {
   if (isScalar()) return *this;
   if (isArray()) {
     if (dimensions().count() == 1) 
-      return getVectorSubset((index_t)1);
+      return get((index_t)1);
     throw Exception("Illegal scalar -- array assignment");
   }
   throw Exception("Unhandled case");

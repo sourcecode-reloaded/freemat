@@ -29,6 +29,9 @@ public:
   inline bool isRowVector() const {
     return (is2D() && (m_data[0] == 1));
   }
+  inline bool isScalar() const {
+    return (count() == 1);
+  }
   inline index_t stride(int dim) const {
     index_t nextCoeff = 1;
     for (int i=1;i<=dim;i++) {

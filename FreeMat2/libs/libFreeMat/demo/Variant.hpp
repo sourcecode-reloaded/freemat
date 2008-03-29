@@ -4,10 +4,14 @@
 #include <QSharedData>
 #include "Types.hpp"
 #include "BasicArray.hpp"
+#include "FastList.hpp"
 class StructArray;
 class CellArray;
 class StringArray;
-class VariantList;
+
+
+class Variant;
+typedef FastList<Variant> VariantList;
 
 enum Type {
   Invalid = 0,
@@ -99,7 +103,8 @@ public:
   inline bool is2D() const {return dimensions().is2D();}
   QString string() const;
   inline bool isScalar() const {
-    return ((m_type >= BoolScalar) && (m_type <= DoubleScalar));
+    return (((m_type >= BoolScalar) && (m_type <= DoubleScalar)) ||
+	    dimensions().isScalar());
   }
   template <typename T>
   inline BasicArray<T>& real() {
@@ -123,20 +128,36 @@ public:
   }						
   template <typename T> inline T realScalar() const;
   template <typename T> inline T imagScalar() const;
-  inline bool allReal() const {return (!m_imag.p);}
+  inline bool allReal() const {
+    if (m_type <= BoolScalar) return false;
+    if (m_type > BoolScalar && m_type <= DoubleScalar) 
+      return (m_imag.u64 == 0);
+    if (m_type >= BoolArray)
+      return (!m_imag.p);
+    return false;
+  }
   const Variant asScalar() const;
   const index_t asIndexScalar() const; 
   const Variant toType(const Type t) const;
-  const Variant getVectorSubset(const IndexArray& index) const;
-  const Variant getVectorSubset(const Variant& index) const;
-  const Variant getVectorSubset(index_t index) const;
-  const Variant getNDimSubset(const VariantList& indices) const;
-  void setVectorSubset(const Variant& index, const Variant& data);
-  void setVectorSubset(const IndexArray& index, const Variant& data);
-  void setVectorSubset(index_t index, const Variant& data);
-  void setNDimSubset(const VariantList& index, const Variant& data);
-  void deleteVectorSubset(const Variant& index);
-  void deleteNDimSubset(const VariantList& index);
+
+  const Variant get(const IndexArray& index) const;
+  const Variant get(const Variant& index) const;
+  const Variant get(index_t index) const;
+
+  const Variant get(const NTuple& index) const;
+  const Variant get(const IndexArrayList& indices) const;
+  const Variant get(const VariantList& indices) const;
+
+  void set(const Variant& index, const Variant& data);
+  void set(const IndexArray& index, const Variant& data);
+  void set(index_t index, const Variant& data);
+
+  void set(const VariantList& index, const Variant& data);
+  void set(const IndexArrayList& index, const Variant& data);
+  void set(const NTuple& index, const Variant& data);
+
+  void del(const Variant& index);
+  void del(const VariantList& index);
   void print(std::ostream& o) const;
   void resize(const NTuple &size);
   void resize(index_t size);
