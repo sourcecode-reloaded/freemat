@@ -74,20 +74,23 @@ typedef struct {
 class Variant {
 public:
   inline Variant() {}
-  template <typename T>
-  inline Variant(T real, T imag = 0); // Defined in VariantPrivate
+  // Defined in VariantPrivate
+  template <typename T> inline Variant(T real); 
+  template <typename T> inline Variant(T real, T imag); 
   //  Variant(const BasicArray<double> &r);
   //  Variant(const BasicArray<double> &r, const BasicArray<double> &i);
   template <typename T> 
   inline Variant(Type t, const BasicArray<T> &r) {
     m_type = t;
     m_real.p = new SharedObject(t, new BasicArray<T>(r));
+    m_complex = false;
   }
   template <typename T> 
   inline Variant(Type t, const BasicArray<T> &r, const BasicArray<T> &i) {
     m_type = t;
     m_real.p = new SharedObject(t, new BasicArray<T>(r));
     m_imag.p = new SharedObject(t, new BasicArray<T>(i));
+    m_complex = true;
   }
   Variant(Type t, const NTuple &dims);
   Variant(const QString &text);
@@ -116,8 +119,11 @@ public:
   }						
   template <typename T>
   inline BasicArray<T>& imag() {
-    if (!m_imag.p)
+    if (!m_imag.p) {
+      std::cout << "INSTANTIATE\n";
       m_imag.p = new SharedObject(m_type, new BasicArray<T>(dimensions()));
+      m_complex = true;
+    }
     return (*reinterpret_cast<BasicArray<T>*>(m_imag.p->ptr()));
   }
   template <typename T>
@@ -129,12 +135,7 @@ public:
   template <typename T> inline T realScalar() const;
   template <typename T> inline T imagScalar() const;
   inline bool allReal() const {
-    if (m_type <= BoolScalar) return false;
-    if (m_type > BoolScalar && m_type <= DoubleScalar) 
-      return (m_imag.u64 == 0);
-    if (m_type >= BoolArray)
-      return (!m_imag.p);
-    return false;
+    return (!m_complex);
   }
   const Variant asScalar() const;
   const index_t asIndexScalar() const; 
@@ -163,10 +164,13 @@ public:
   void resize(index_t size);
   void reshape(const NTuple &size);
   inline bool isEmpty() const {return length() == 0;}
+
+  bool operator==(const Variant &b) const;
 private:
   Data m_real;
   Data m_imag;
   Type m_type;
+  bool m_complex;
 };
 
 class VariantIterator : public BaseIterator<Variant, Variant> {

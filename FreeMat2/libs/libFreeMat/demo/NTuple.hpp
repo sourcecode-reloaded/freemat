@@ -137,6 +137,11 @@ public:
       if (m_data[i] > alt.m_data[i]) return false;
     return true;
   }
+  bool operator==(const NTuple& alt) const {
+    for (int i=0;i<NDims;i++)
+      if (m_data[i] != alt.m_data[i]) return false;
+    return true;
+  }
   inline const index_t count() const {
     index_t ret = 1;
     for (int i=0;i<NDims;i++) ret *= m_data[i];

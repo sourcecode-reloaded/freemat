@@ -69,6 +69,7 @@ public:
       return m_data[(int64)(pos+m_offset-1)];
     throw Exception("out of range");
   }
+  bool operator==(const BasicArray<T>& b) const;
   inline void set(const NTuple& pos, const T& val) {
     if (dimensions() <= pos) resize(pos);
     m_data[(int64)(m_dims.map(pos)+m_offset-1)] = val;
@@ -164,4 +165,18 @@ public:
 BasicArray<bool> GetDeletionMap(const BasicArray<index_t>& vec,
 				index_t length);
 
+template <typename T>
+BasicArray<index_t> Find(const BasicArray<T>& vec) {
+  index_t count = 0;
+  for (index_t i=1;i<=vec.length();i++)
+    if (vec[i] != T()) count++;
+  BasicArray<index_t> retvec(NTuple(count,1));
+  count = 1;
+  for (index_t i=1;i<=vec.length();i++)
+    if (vec[i] != T()) {
+      retvec.set(count,i);
+      count++;
+    }
+  return retvec;
+}
 #endif

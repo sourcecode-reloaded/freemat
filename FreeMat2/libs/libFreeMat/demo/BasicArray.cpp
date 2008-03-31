@@ -107,9 +107,6 @@ bool AllZeros(const BasicArray<T>& arg) {
   return true;
 }
 
-template 
-bool AllZeros<double>(const BasicArray<double>&);
-
 bool AllTrue(const BasicArray<bool>& arg) {
   for (int i=1;i<=arg.length();i++)
     if (!arg.get(i)) return false;
@@ -388,6 +385,13 @@ void BasicArray<T>::set(const IndexArray& index,
 }
 
 
+template <typename T>
+bool BasicArray<T>::operator==(const BasicArray<T> &b) const {
+  for (index_t i=1;i<b.length();i++) 
+    if (get(i) != b.get(i)) return false;
+  return true;
+}
+
 static index_t getSliceIndex(const NTuple &dimensions,
 			     const IndexArrayList& index) {
   NTuple dim;
@@ -517,5 +521,26 @@ template void BasicArray<int64>::set(const NTuple&, const int64&);
 template void BasicArray<float>::set(const NTuple&, const float&);
 template void BasicArray<double>::set(const NTuple&, const double&);
 
+template bool BasicArray<bool>::operator==(const BasicArray<bool>&) const;
+template bool BasicArray<uint8>::operator==(const BasicArray<uint8>&) const;
+template bool BasicArray<int8>::operator==(const BasicArray<int8>&) const;
+template bool BasicArray<uint16>::operator==(const BasicArray<uint16>&) const;
+template bool BasicArray<int16>::operator==(const BasicArray<int16>&) const;
+template bool BasicArray<uint32>::operator==(const BasicArray<uint32>&) const;
+template bool BasicArray<int32>::operator==(const BasicArray<int32>&) const;
+template bool BasicArray<uint64>::operator==(const BasicArray<uint64>&) const;
+template bool BasicArray<int64>::operator==(const BasicArray<int64>&) const;
+template bool BasicArray<float>::operator==(const BasicArray<float>&) const;
+template bool BasicArray<double>::operator==(const BasicArray<double>&) const;
 
-				       
+template bool AllZeros(const BasicArray<bool>&);
+template bool AllZeros(const BasicArray<uint8>&);
+template bool AllZeros(const BasicArray<int8>&);
+template bool AllZeros(const BasicArray<uint16>&);
+template bool AllZeros(const BasicArray<int16>&);
+template bool AllZeros(const BasicArray<uint32>&);
+template bool AllZeros(const BasicArray<int32>&);
+template bool AllZeros(const BasicArray<uint64>&);
+template bool AllZeros(const BasicArray<int64>&);
+template bool AllZeros(const BasicArray<float>&);
+template bool AllZeros(const BasicArray<double>&);

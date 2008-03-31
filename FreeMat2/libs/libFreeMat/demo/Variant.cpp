@@ -101,15 +101,6 @@ static inline void Tset(Variant* ptr, S ndx, const Variant& data) {
   }
 }
 
-template <typename T>
-static void Tset(Variant *ptr, index_t pos, T vreal, T vimag) {
-  BasicArray<T>& real(ptr->real<T>());
-  real.set(pos,vreal);
-  if (vimag != 0) {
-    BasicArray<T>& imag(ptr->imag<T>());
-    imag.set(pos,vimag);
-  }
-}
 
 // S - source type, T - dest type
 template <typename S, typename T>
@@ -132,27 +123,57 @@ inline static const Variant TcastScalar(Type t, const Variant *copy) {
   default:
     throw Exception("Unsupported type for conversion");
   case BoolScalar:
-    return Variant((T)copy->realScalar<bool>(),(T) 0);
+    return Variant((T)copy->realScalar<bool>());
   case Int8Scalar:
-    return Variant((T)copy->realScalar<int8>(),(T)copy->imagScalar<int8>());
+    if (!copy->allReal())
+      return Variant((T)copy->realScalar<int8>(),(T)copy->imagScalar<int8>());
+    else
+      return Variant((T)copy->realScalar<int8>());
   case UInt8Scalar:
-    return Variant((T)copy->realScalar<uint8>(),(T)copy->imagScalar<uint8>());
+    if (!copy->allReal())
+      return Variant((T)copy->realScalar<uint8>(),(T)copy->imagScalar<uint8>());
+    else
+      return Variant((T)copy->realScalar<uint8>());
   case Int16Scalar:
-    return Variant((T)copy->realScalar<int16>(),(T)copy->imagScalar<int16>());
+    if (!copy->allReal())
+      return Variant((T)copy->realScalar<int16>(),(T)copy->imagScalar<int16>());
+    else
+      return Variant((T)copy->realScalar<int16>());
   case UInt16Scalar:
-    return Variant((T)copy->realScalar<uint16>(),(T)copy->imagScalar<uint16>());
+    if (!copy->allReal())
+      return Variant((T)copy->realScalar<uint16>(),(T)copy->imagScalar<uint16>());
+    else
+      return Variant((T)copy->realScalar<uint16>());
   case Int32Scalar:
-    return Variant((T)copy->realScalar<int32>(),(T)copy->imagScalar<int32>());
+    if (!copy->allReal())
+      return Variant((T)copy->realScalar<int32>(),(T)copy->imagScalar<int32>());
+    else
+      return Variant((T)copy->realScalar<int32>());
   case UInt32Scalar:
-    return Variant((T)copy->realScalar<uint32>(),(T)copy->imagScalar<uint32>());
+    if (!copy->allReal())
+      return Variant((T)copy->realScalar<uint32>(),(T)copy->imagScalar<uint32>());
+    else
+      return Variant((T)copy->realScalar<uint32>());
   case Int64Scalar:
-    return Variant((T)copy->realScalar<int64>(),(T)copy->imagScalar<int64>());
+    if (!copy->allReal())
+      return Variant((T)copy->realScalar<int64>(),(T)copy->imagScalar<int64>());
+    else
+      return Variant((T)copy->realScalar<int64>());
   case UInt64Scalar:
-    return Variant((T)copy->realScalar<uint64>(),(T)copy->imagScalar<uint64>());
+    if (!copy->allReal())
+      return Variant((T)copy->realScalar<uint64>(),(T)copy->imagScalar<uint64>());
+    else
+      return Variant((T)copy->realScalar<uint64>());
   case FloatScalar:
-    return Variant((T)copy->realScalar<float>(),(T)copy->imagScalar<float>());
+    if (!copy->allReal())
+      return Variant((T)copy->realScalar<float>(),(T)copy->imagScalar<float>());
+    else
+      return Variant((T)copy->realScalar<float>());
   case DoubleScalar:
-    return Variant((T)copy->realScalar<double>(),(T)copy->imagScalar<double>());
+    if (!copy->allReal())
+      return Variant((T)copy->realScalar<double>(),(T)copy->imagScalar<double>());
+    else
+      return Variant((T)copy->realScalar<double>());
   }
 }
 
@@ -357,34 +378,64 @@ void Variant::print(std::ostream& o) const {
   default:
     throw Exception("unsupported type");
   case UInt8Scalar:
-    o << "(" << m_real.u8 << "," << m_imag.u8 << ")"; 
+    if (m_complex)
+      o << "(" << (int) m_real.u8 << "," << (int) m_imag.u8 << ")"; 
+    else
+      o << (int) m_real.u8;
     return;
   case UInt16Scalar:
-    o << "(" << m_real.u16 << "," << m_imag.u16 << ")";
+    if (m_complex)
+      o << "(" << m_real.u16 << "," << m_imag.u16 << ")";
+    else
+      o << m_real.u16;
     return;
   case UInt32Scalar:
-    o << "(" << m_real.u32 << "," << m_imag.u32 << ")";
+    if (m_complex)
+      o << "(" << m_real.u32 << "," << m_imag.u32 << ")";
+    else
+      o << m_real.u32;
     return;
   case UInt64Scalar:
-    o << "(" << m_real.u64 << "," << m_imag.u64 << ")";
+    if (m_complex)
+      o << "(" << m_real.u64 << "," << m_imag.u64 << ")";
+    else
+      o << m_real.u64;
     return;
   case Int8Scalar:
-    o << "(" << m_real.i8 << "," << m_imag.i8 << ")";
+    if (m_complex)
+      o << "(" << (int) m_real.i8 << "," << (int) m_imag.i8 << ")";
+    else
+      o << (int) m_real.i8;
     return;
   case Int16Scalar:
-    o << "(" << m_real.i16 << "," << m_imag.i16 << ")";
+    if (m_complex)
+      o << "(" << m_real.i16 << "," << m_imag.i16 << ")";
+    else
+      o << m_real.i16;
     return;
   case Int32Scalar:
-    o << "(" << m_real.i32 << "," << m_imag.i32 << ")";
+    if (m_complex)
+      o << "(" << m_real.i32 << "," << m_imag.i32 << ")";
+    else
+      o << m_real.i32;
     return;
   case Int64Scalar:
-    o << "(" << m_real.i64 << "," << m_imag.i64 << ")";
+    if (m_complex)
+      o << "(" << m_real.i64 << "," << m_imag.i64 << ")";
+    else
+      o << m_real.i64;
     return;
   case FloatScalar:
-    o << "(" << m_real.f << "," << m_imag.f << ")";
+    if (m_complex)
+      o << "(" << m_real.f << "," << m_imag.f << ")";
+    else
+      o << m_real.f;
     return;
   case DoubleScalar:
-    o << "(" << m_real.d << "," << m_imag.d << ")";
+    if (m_complex)
+      o << "(" << m_real.d << "," << m_imag.d << ")";
+    else
+      o << m_real.d;
     return;
   }
 }
@@ -392,6 +443,7 @@ void Variant::print(std::ostream& o) const {
 Variant::Variant(Type t, const NTuple &dims) {
   m_type = t;
   m_real.p = new SharedObject(t,construct_sized(t,dims));
+  m_complex = false;
 }
 
 Variant::Variant(const QString &text) {
@@ -402,6 +454,7 @@ Variant::Variant(const QString &text) {
   BasicArray<uint16> &p(real<uint16>());
   for (int i=0;i<text.size();i++) 
     p[i+1] = text[i].unicode();
+  m_complex = false;
 }
 
 const NTuple Variant::dimensions() const {
@@ -721,27 +774,67 @@ const Variant Variant::get(const NTuple& index) const {
   default: 
     throw Exception("Unsupported type for get(index_t)");
   case BoolArray:
-    return Variant(Tget_real<const NTuple&,logical>(this,index),Tget_imag<const NTuple&,logical>(this,index));
+    return Variant((logical)Tget_real<const NTuple&,logical>(this,index));
   case Int8Array:
-    return Variant(Tget_real<const NTuple&,int8>(this,index),Tget_imag<const NTuple&,int8>(this,index));
+    if (m_complex)
+      return Variant((int8)Tget_real<const NTuple&,int8>(this,index),
+		     (int8)Tget_imag<const NTuple&,int8>(this,index));
+    else
+      return Variant((int8)Tget_real<const NTuple&,int8>(this,index));
   case UInt8Array:
-    return Variant(Tget_real<const NTuple&,uint8>(this,index),Tget_imag<const NTuple&,uint8>(this,index));
+    if (m_complex)
+      return Variant((uint8)Tget_real<const NTuple&,uint8>(this,index),
+		     (uint8)Tget_imag<const NTuple&,uint8>(this,index));
+    else
+      return Variant((uint8)Tget_real<const NTuple&,uint8>(this,index));
   case Int16Array:
-    return Variant(Tget_real<const NTuple&,int16>(this,index),Tget_imag<const NTuple&,int16>(this,index));
+    if (m_complex)
+      return Variant((int16)Tget_real<const NTuple&,int16>(this,index),
+		     (int16)Tget_imag<const NTuple&,int16>(this,index));
+    else
+      return Variant((int16)Tget_real<const NTuple&,int16>(this,index));
   case UInt16Array:
-    return Variant(Tget_real<const NTuple&,uint16>(this,index),Tget_imag<const NTuple&,uint16>(this,index));
+    if (m_complex)
+      return Variant((uint16)Tget_real<const NTuple&,uint16>(this,index),
+		     (uint16)Tget_imag<const NTuple&,uint16>(this,index));
+    else
+      return Variant((uint16)Tget_real<const NTuple&,uint16>(this,index));
   case Int32Array:
-    return Variant(Tget_real<const NTuple&,int32>(this,index),Tget_imag<const NTuple&,int32>(this,index));
+    if (m_complex)
+      return Variant((int32)Tget_real<const NTuple&,int32>(this,index),
+		     (int32)Tget_imag<const NTuple&,int32>(this,index));
+    else
+      return Variant((int32)Tget_real<const NTuple&,int32>(this,index));
   case UInt32Array:
-    return Variant(Tget_real<const NTuple&,uint32>(this,index),Tget_imag<const NTuple&,uint32>(this,index));
+    if (m_complex)
+      return Variant((uint32)Tget_real<const NTuple&,uint32>(this,index),
+		     (uint32)Tget_imag<const NTuple&,uint32>(this,index));
+    else
+      return Variant((uint32)Tget_real<const NTuple&,uint32>(this,index));
   case Int64Array:
-    return Variant(Tget_real<const NTuple&,int64>(this,index),Tget_imag<const NTuple&,int64>(this,index));
+    if (m_complex)
+      return Variant((int64)Tget_real<const NTuple&,int64>(this,index),
+		     (int64)Tget_imag<const NTuple&,int64>(this,index));
+    else
+      return Variant((int64)Tget_real<const NTuple&,int64>(this,index));
   case UInt64Array:
-    return Variant(Tget_real<const NTuple&,uint64>(this,index),Tget_imag<const NTuple&,uint64>(this,index));
+    if (m_complex)
+      return Variant((uint64)Tget_real<const NTuple&,uint64>(this,index),
+		     (uint64)Tget_imag<const NTuple&,uint64>(this,index));
+    else
+      return Variant((uint64)Tget_real<const NTuple&,uint64>(this,index));
   case FloatArray:
-    return Variant(Tget_real<const NTuple&,float>(this,index),Tget_imag<const NTuple&,float>(this,index));
+    if (m_complex)
+      return Variant((float)Tget_real<const NTuple&,float>(this,index),
+		     (float)Tget_imag<const NTuple&,float>(this,index));
+    else
+      return Variant((float)Tget_real<const NTuple&,float>(this,index));
   case DoubleArray:
-    return Variant(Tget_real<const NTuple&,double>(this,index),Tget_imag<const NTuple&,double>(this,index));
+    if (m_complex)
+      return Variant((double)Tget_real<const NTuple&,double>(this,index),
+		     (double)Tget_imag<const NTuple&,double>(this,index));
+    else
+      return Variant((double)Tget_real<const NTuple&,double>(this,index));
   }
 }
 
@@ -749,35 +842,90 @@ const Variant Variant::get(index_t index) const {
   switch (m_type) {
   default: 
     throw Exception("Unsupported type for get(index_t)");
+  case BoolScalar:
+  case Int8Scalar:
+  case UInt8Scalar:
+  case Int16Scalar:
+  case UInt16Scalar:
+  case Int32Scalar:
+  case UInt32Scalar:
+  case Int64Scalar:
+  case UInt64Scalar:
+  case FloatScalar:
+  case DoubleScalar:
+    if (index != 1) throw Exception("A(n) exceeds dimensions of A");
+    return *this;
   case BoolArray:
-    return Variant(Tget_real<index_t,logical>(this,index),Tget_imag<index_t,logical>(this,index));
+    return Variant((logical) Tget_real<index_t,logical>(this,index));
   case Int8Array:
-    return Variant(Tget_real<index_t,int8>(this,index),Tget_imag<index_t,int8>(this,index));
+    if (m_complex)
+      return Variant((int8)Tget_real<index_t,int8>(this,index),
+		     (int8)Tget_imag<index_t,int8>(this,index));
+    else
+      return Variant((int8)Tget_real<index_t,int8>(this,index));
   case UInt8Array:
-    return Variant(Tget_real<index_t,uint8>(this,index),Tget_imag<index_t,uint8>(this,index));
+    if (m_complex)
+      return Variant((uint8)Tget_real<index_t,uint8>(this,index),
+		     (uint8)Tget_imag<index_t,uint8>(this,index));
+    else
+      return Variant((uint8)Tget_real<index_t,uint8>(this,index));
   case Int16Array:
-    return Variant(Tget_real<index_t,int16>(this,index),Tget_imag<index_t,int16>(this,index));
+    if (m_complex)
+      return Variant((int16)Tget_real<index_t,int16>(this,index),
+		     (int16)Tget_imag<index_t,int16>(this,index));
+    else
+      return Variant((int16)Tget_real<index_t,int16>(this,index));
   case UInt16Array:
-    return Variant(Tget_real<index_t,uint16>(this,index),Tget_imag<index_t,uint16>(this,index));
+    if (m_complex)
+      return Variant((uint16)Tget_real<index_t,uint16>(this,index),
+		     (uint16)Tget_imag<index_t,uint16>(this,index));
+    else
+      return Variant((uint16)Tget_real<index_t,uint16>(this,index));
   case Int32Array:
-    return Variant(Tget_real<index_t,int32>(this,index),Tget_imag<index_t,int32>(this,index));
+    if (m_complex)
+      return Variant((int32)Tget_real<index_t,int32>(this,index),
+		     (int32)Tget_imag<index_t,int32>(this,index));
+    else
+      return Variant((int32)Tget_real<index_t,int32>(this,index));
   case UInt32Array:
-    return Variant(Tget_real<index_t,uint32>(this,index),Tget_imag<index_t,uint32>(this,index));
+    if (m_complex)
+      return Variant((uint32)Tget_real<index_t,uint32>(this,index),
+		     (uint32)Tget_imag<index_t,uint32>(this,index));
+    else
+      return Variant((uint32)Tget_real<index_t,uint32>(this,index));
   case Int64Array:
-    return Variant(Tget_real<index_t,int64>(this,index),Tget_imag<index_t,int64>(this,index));
+    if (m_complex)
+      return Variant((int64)Tget_real<index_t,int64>(this,index),
+		     (int64)Tget_imag<index_t,int64>(this,index));
+    else
+      return Variant((int64)Tget_real<index_t,int64>(this,index));
   case UInt64Array:
-    return Variant(Tget_real<index_t,uint64>(this,index),Tget_imag<index_t,uint64>(this,index));
+    if (m_complex)
+      return Variant((uint64)Tget_real<index_t,uint64>(this,index),
+		     (uint64)Tget_imag<index_t,uint64>(this,index));
+    else
+      return Variant((uint64)Tget_real<index_t,uint64>(this,index));
   case FloatArray:
-    return Variant(Tget_real<index_t,float>(this,index),Tget_imag<index_t,float>(this,index));
+    if (m_complex)
+      return Variant((float)Tget_real<index_t,float>(this,index),
+		     (float)Tget_imag<index_t,float>(this,index));
+    else
+      return Variant((float)Tget_real<index_t,float>(this,index));
   case DoubleArray:
-    return Variant(Tget_real<index_t,double>(this,index),Tget_imag<index_t,double>(this,index));
+    if (m_complex)
+      return Variant((double)Tget_real<index_t,double>(this,index),
+		     (double)Tget_imag<index_t,double>(this,index));
+    else
+      return Variant((double)Tget_real<index_t,double>(this,index));
   }
 }
 
 const Variant Variant::get(const Variant& index) const {
   if (index.isScalar()) {
     if (!index.allReal())
-      Warn("Complex part of index ignored");
+     Warn("Complex part of index ignored");
+    if (index.type() == BoolScalar && !index.realScalar<logical>())
+      return Variant(type(),NTuple(0,0));
     return get(index.asIndexScalar());
   }
   else 
@@ -830,7 +978,8 @@ const index_t Variant::asIndexScalar() const {
   default:
     throw Exception("Unsupported type called on asIndexScalar");
   case BoolScalar:
-    return (index_t) m_real.l;
+    if (m_real.l) return (index_t) 1;
+    return (index_t) 0;
   case Int8Scalar:
     return (index_t) m_real.i8;
   case UInt8Scalar:
@@ -855,13 +1004,129 @@ const index_t Variant::asIndexScalar() const {
 }
 
 const Variant Variant::asScalar() const {
-  if (isScalar()) return *this;
+  if ((m_type >= BoolScalar) &&
+      (m_type <= DoubleScalar)) return *this;
   if (isArray()) {
     if (dimensions().count() == 1) 
       return get((index_t)1);
     throw Exception("Illegal scalar -- array assignment");
   }
   throw Exception("Unhandled case");
+}
+
+#error Need to make this more general.
+bool Variant::operator==(const Variant &b) const {
+  if (isScalar() && b.isScalar()) {
+    Variant a_scalar(asScalar());
+    Variant b_scalar(b.asScalar());
+    if (a_scalar.type() != b_scalar.type()) return false;
+    switch (a_scalar.type()) {
+    default:
+      throw Exception("Unhandled scalar case");
+    case BoolScalar:
+      return ((a_scalar.realScalar<logical>() == b_scalar.realScalar<logical>()));
+    case Int8Scalar:
+      return ((a_scalar.realScalar<int8>() == b_scalar.realScalar<int8>()) &&
+	      (a_scalar.imagScalar<int8>() == b_scalar.imagScalar<int8>()));
+    case UInt8Scalar:
+      return ((a_scalar.realScalar<uint8>() == b_scalar.realScalar<uint8>()) &&
+	      (a_scalar.imagScalar<uint8>() == b_scalar.imagScalar<uint8>()));
+    case Int16Scalar:
+      return ((a_scalar.realScalar<int16>() == b_scalar.realScalar<int16>()) &&
+	      (a_scalar.imagScalar<int16>() == b_scalar.imagScalar<int16>()));
+    case UInt16Scalar:
+      return ((a_scalar.realScalar<uint16>() == b_scalar.realScalar<uint16>()) &&
+	      (a_scalar.imagScalar<uint16>() == b_scalar.imagScalar<uint16>()));
+    case Int32Scalar:
+      return ((a_scalar.realScalar<int32>() == b_scalar.realScalar<int32>()) &&
+	      (a_scalar.imagScalar<int32>() == b_scalar.imagScalar<int32>()));
+    case UInt32Scalar:
+      return ((a_scalar.realScalar<uint32>() == b_scalar.realScalar<uint32>()) &&
+	      (a_scalar.imagScalar<uint32>() == b_scalar.imagScalar<uint32>()));
+    case Int64Scalar:
+      return ((a_scalar.realScalar<int64>() == b_scalar.realScalar<int64>()) &&
+	      (a_scalar.imagScalar<int64>() == b_scalar.imagScalar<int64>()));
+    case UInt64Scalar:
+      return ((a_scalar.realScalar<uint64>() == b_scalar.realScalar<uint64>()) &&
+	      (a_scalar.imagScalar<uint64>() == b_scalar.imagScalar<uint64>()));
+    case FloatScalar:
+      return ((a_scalar.realScalar<float>() == b_scalar.realScalar<float>()) &&
+	      (a_scalar.imagScalar<float>() == b_scalar.imagScalar<float>()));
+    case DoubleScalar:
+      return ((a_scalar.realScalar<double>() == b_scalar.realScalar<double>()) &&
+	      (a_scalar.imagScalar<double>() == b_scalar.imagScalar<double>()));
+    }
+    return false;
+  }
+  if (!(dimensions() == b.dimensions())) return false;
+  if (type() != b.type()) return false;
+  if (allReal() ^ b.allReal()) return false;
+  switch (type()) {
+  default:
+    throw Exception("Unhandled case as argument to == operator for Variant class");
+  case BoolArray:
+    return constReal<logical>() == b.constReal<logical>();
+  case Int8Array:
+    if (allReal())
+      return constReal<int8>() == b.constReal<int8>();
+    else
+      return ((constReal<int8>() == b.constReal<int8>()) &&
+	      (constImag<int8>() == b.constImag<int8>()));
+  case UInt8Array:
+    if (allReal())
+      return constReal<uint8>() == b.constReal<uint8>();
+    else
+      return ((constReal<uint8>() == b.constReal<uint8>()) &&
+	      (constImag<uint8>() == b.constImag<uint8>()));
+  case Int16Array:
+    if (allReal())
+      return constReal<int16>() == b.constReal<int16>();
+    else
+      return ((constReal<int16>() == b.constReal<int16>()) &&
+	      (constImag<int16>() == b.constImag<int16>()));
+  case UInt16Array:
+    if (allReal())
+      return constReal<uint16>() == b.constReal<uint16>();
+    else
+      return ((constReal<uint16>() == b.constReal<uint16>()) &&
+	      (constImag<uint16>() == b.constImag<uint16>()));
+  case Int32Array:
+    if (allReal())
+      return constReal<int32>() == b.constReal<int32>();
+    else
+      return ((constReal<int32>() == b.constReal<int32>()) &&
+	      (constImag<int32>() == b.constImag<int32>()));
+  case UInt32Array:
+    if (allReal())
+      return constReal<uint32>() == b.constReal<uint32>();
+    else
+      return ((constReal<uint32>() == b.constReal<uint32>()) &&
+	      (constImag<uint32>() == b.constImag<uint32>()));
+  case Int64Array:
+    if (allReal())
+      return constReal<int64>() == b.constReal<int64>();
+    else
+      return ((constReal<int64>() == b.constReal<int64>()) &&
+	      (constImag<int64>() == b.constImag<int64>()));
+  case UInt64Array:
+    if (allReal())
+      return constReal<uint64>() == b.constReal<uint64>();
+    else
+      return ((constReal<uint64>() == b.constReal<uint64>()) &&
+	      (constImag<uint64>() == b.constImag<uint64>()));
+  case FloatArray:
+    if (allReal())
+      return constReal<float>() == b.constReal<float>();
+    else
+      return ((constReal<float>() == b.constReal<float>()) &&
+	      (constImag<float>() == b.constImag<float>()));
+  case DoubleArray:
+    if (allReal())
+      return constReal<double>() == b.constReal<double>();
+    else
+      return ((constReal<double>() == b.constReal<double>()) &&
+	      (constImag<double>() == b.constImag<double>()));
+  }
 }
 
 // void Variant::set(index_t pos, const Variant& val) {
@@ -949,6 +1214,8 @@ const IndexArray IndexArrayFromVariant(const Variant &index) {
     Warn("Complex part of index ignored");
   if (index.type() == DoubleArray)
     return index.constReal<index_t>();
+  if (index.type() == BoolArray)
+    return Find(index.constReal<logical>());
   Variant index_converted(index.toType(DoubleArray));
   if (!index_converted.allReal())
     Warn("Complex part of index ignored");
