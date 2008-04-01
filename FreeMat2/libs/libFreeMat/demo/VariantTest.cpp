@@ -152,11 +152,35 @@ void InitializeDataVecs() {
 
 static int count = 0;
 
-template <typename T>
+template <typename T, typename S>
+void TestScalarSet(Variant arg, Variant data) {
+  Variant sub(arg);
+  sub.set(Variant((S)1),data);
+  Variant sub2(sub.get(Variant((S)1)));
+  if (sub == sub2)
+    std::cout << "Test " << count++ << " passed\n";
+  else
+    std::cout << "Test " << count++ << " failed\n";
+}
+
+template <typename T, typename S>
 void TestScalarGet(Variant arg) {
-  Variant sub(arg.get(Variant((index_t)1)));
+  Variant sub(arg.get(Variant((S)1)));
   Variant sub2((T) 3);
-  if (!(sub == sub2))
+  if (sub == sub2)
+    std::cout << "Test " << count++ << " passed\n";
+  else
+    std::cout << "Test " << count++ << " failed\n";
+}
+
+template <typename T, typename S>
+void TestScalarNGet(Variant arg) {
+  VariantList ndx;
+  ndx.push_back(Variant((S)1));
+  ndx.push_back(Variant((S)1));
+  Variant sub(arg.get(ndx));
+  Variant sub2((T) 3);
+  if (sub == sub2)
     std::cout << "Test " << count++ << " passed\n";
   else
     std::cout << "Test " << count++ << " failed\n";
@@ -230,17 +254,46 @@ void TestMatCases(Variant ndx) {
   TestMatGet<double>(DoubleMat,ndx);  
 }
 
+template <typename T>
 void TestScalarVecGet() {
-  TestScalarGet<int8>(Int8ScalarIndex);
-  TestScalarGet<uint8>(UInt8ScalarIndex);
-  TestScalarGet<int16>(Int16ScalarIndex);
-  TestScalarGet<uint16>(UInt16ScalarIndex);
-  TestScalarGet<int32>(Int32ScalarIndex);
-  TestScalarGet<uint32>(UInt32ScalarIndex);
-  TestScalarGet<int64>(Int64ScalarIndex);
-  TestScalarGet<uint64>(UInt64ScalarIndex);
-  TestScalarGet<float>(FloatScalarIndex);
-  TestScalarGet<double>(DoubleScalarIndex); 
+  TestScalarGet<int8,T>(Int8ScalarIndex);
+  TestScalarGet<uint8,T>(UInt8ScalarIndex);
+  TestScalarGet<int16,T>(Int16ScalarIndex);
+  TestScalarGet<uint16,T>(UInt16ScalarIndex);
+  TestScalarGet<int32,T>(Int32ScalarIndex);
+  TestScalarGet<uint32,T>(UInt32ScalarIndex);
+  TestScalarGet<int64,T>(Int64ScalarIndex);
+  TestScalarGet<uint64,T>(UInt64ScalarIndex);
+  TestScalarGet<float,T>(FloatScalarIndex);
+  TestScalarGet<double,T>(DoubleScalarIndex); 
+}
+
+template <typename T>
+void TestScalarNDimGet() {
+  TestScalarNGet<int8,T>(Int8ScalarIndex);
+  TestScalarNGet<uint8,T>(UInt8ScalarIndex);
+  TestScalarNGet<int16,T>(Int16ScalarIndex);
+  TestScalarNGet<uint16,T>(UInt16ScalarIndex);
+  TestScalarNGet<int32,T>(Int32ScalarIndex);
+  TestScalarNGet<uint32,T>(UInt32ScalarIndex);
+  TestScalarNGet<int64,T>(Int64ScalarIndex);
+  TestScalarNGet<uint64,T>(UInt64ScalarIndex);
+  TestScalarNGet<float,T>(FloatScalarIndex);
+  TestScalarNGet<double,T>(DoubleScalarIndex); 
+}
+
+template <typename T>
+void TestScalarVecSet() {
+  TestScalarSet<int8,T>(Int8ScalarIndex,UInt8ScalarIndex);
+  TestScalarSet<uint8,T>(UInt8ScalarIndex,Int16ScalarIndex);
+  TestScalarSet<int16,T>(Int16ScalarIndex,UInt16ScalarIndex);
+  TestScalarSet<uint16,T>(UInt16ScalarIndex,Int32ScalarIndex);
+  TestScalarSet<int32,T>(Int32ScalarIndex,UInt32ScalarIndex);
+  TestScalarSet<uint32,T>(UInt32ScalarIndex,Int64ScalarIndex);
+  TestScalarSet<int64,T>(Int64ScalarIndex,UInt64ScalarIndex);
+  TestScalarSet<uint64,T>(UInt64ScalarIndex,FloatScalarIndex);
+  TestScalarSet<float,T>(FloatScalarIndex,DoubleScalarIndex);
+  TestScalarSet<double,T>(DoubleScalarIndex,Int8ScalarIndex); 
 }
 
 int main() {
@@ -296,6 +349,38 @@ int main() {
   TestMatCases(FloatScalarIndex);
   TestMatCases(DoubleScalarIndex);
 
-  TestScalarVecGet();
+  TestScalarVecGet<int8>();
+  TestScalarVecGet<uint8>();
+  TestScalarVecGet<int16>();
+  TestScalarVecGet<uint16>();
+  TestScalarVecGet<int32>();
+  TestScalarVecGet<uint32>();
+  TestScalarVecGet<int64>();
+  TestScalarVecGet<uint64>();
+  TestScalarVecGet<float>();
+  TestScalarVecGet<double>();
+
+  TestScalarNDimGet<int8>();
+  TestScalarNDimGet<uint8>();
+  TestScalarNDimGet<int16>();
+  TestScalarNDimGet<uint16>();
+  TestScalarNDimGet<int32>();
+  TestScalarNDimGet<uint32>();
+  TestScalarNDimGet<int64>();
+  TestScalarNDimGet<uint64>();
+  TestScalarNDimGet<float>();
+  TestScalarNDimGet<double>();
+
+  TestScalarVecSet<int8>();
+  TestScalarVecSet<uint8>();
+  TestScalarVecSet<int16>();
+  TestScalarVecSet<uint16>();
+  TestScalarVecSet<int32>();
+  TestScalarVecSet<uint32>();
+  TestScalarVecSet<int64>();
+  TestScalarVecSet<uint64>();
+  TestScalarVecSet<float>();
+  TestScalarVecSet<double>();
+
   return 0;
 }

@@ -499,6 +499,7 @@ const NTuple Variant::dimensions() const {
   };
 }
 
+#error Need to extend to scalar variables.
 void Variant::set(index_t index, const Variant& data) {
   switch (m_type) {
   default:
@@ -772,7 +773,20 @@ const Variant Variant::toType(const Type t) const {
 const Variant Variant::get(const NTuple& index) const {
   switch (m_type) {
   default: 
-    throw Exception("Unsupported type for get(index_t)");
+    throw Exception("Unsupported type for get(const NTuple&)");
+  case BoolScalar:
+  case Int8Scalar:
+  case UInt8Scalar:
+  case Int16Scalar:
+  case UInt16Scalar:
+  case Int32Scalar:
+  case UInt32Scalar:
+  case Int64Scalar:
+  case UInt64Scalar:
+  case FloatScalar:
+  case DoubleScalar:
+    if (!index.isScalar()) throw Exception("A(n) exceeds dimensions of A");
+    return *this;
   case BoolArray:
     return Variant((logical)Tget_real<const NTuple&,logical>(this,index));
   case Int8Array:
@@ -1014,11 +1028,12 @@ const Variant Variant::asScalar() const {
   throw Exception("Unhandled case");
 }
 
-#error Need to make this more general.
+// Need to make this more general - how so?
 bool Variant::operator==(const Variant &b) const {
   if (isScalar() && b.isScalar()) {
     Variant a_scalar(asScalar());
     Variant b_scalar(b.asScalar());
+    if (allReal() ^ b.allReal()) return false;
     if (a_scalar.type() != b_scalar.type()) return false;
     switch (a_scalar.type()) {
     default:
@@ -1026,35 +1041,65 @@ bool Variant::operator==(const Variant &b) const {
     case BoolScalar:
       return ((a_scalar.realScalar<logical>() == b_scalar.realScalar<logical>()));
     case Int8Scalar:
-      return ((a_scalar.realScalar<int8>() == b_scalar.realScalar<int8>()) &&
-	      (a_scalar.imagScalar<int8>() == b_scalar.imagScalar<int8>()));
+      if (allReal())
+	return ((a_scalar.realScalar<int8>() == b_scalar.realScalar<int8>()));
+      else
+	return ((a_scalar.realScalar<int8>() == b_scalar.realScalar<int8>()) &&
+		(a_scalar.imagScalar<int8>() == b_scalar.imagScalar<int8>()));
     case UInt8Scalar:
-      return ((a_scalar.realScalar<uint8>() == b_scalar.realScalar<uint8>()) &&
-	      (a_scalar.imagScalar<uint8>() == b_scalar.imagScalar<uint8>()));
+      if (allReal())
+	return ((a_scalar.realScalar<uint8>() == b_scalar.realScalar<uint8>()));
+      else
+	return ((a_scalar.realScalar<uint8>() == b_scalar.realScalar<uint8>()) &&
+		(a_scalar.imagScalar<uint8>() == b_scalar.imagScalar<uint8>()));
     case Int16Scalar:
-      return ((a_scalar.realScalar<int16>() == b_scalar.realScalar<int16>()) &&
-	      (a_scalar.imagScalar<int16>() == b_scalar.imagScalar<int16>()));
+      if (allReal())
+	return ((a_scalar.realScalar<int16>() == b_scalar.realScalar<int16>()));
+      else
+	return ((a_scalar.realScalar<int16>() == b_scalar.realScalar<int16>()) &&
+		(a_scalar.imagScalar<int16>() == b_scalar.imagScalar<int16>()));
     case UInt16Scalar:
-      return ((a_scalar.realScalar<uint16>() == b_scalar.realScalar<uint16>()) &&
-	      (a_scalar.imagScalar<uint16>() == b_scalar.imagScalar<uint16>()));
+      if (allReal())
+	return ((a_scalar.realScalar<uint16>() == b_scalar.realScalar<uint16>()));
+      else
+	return ((a_scalar.realScalar<uint16>() == b_scalar.realScalar<uint16>()) &&
+		(a_scalar.imagScalar<uint16>() == b_scalar.imagScalar<uint16>()));
     case Int32Scalar:
-      return ((a_scalar.realScalar<int32>() == b_scalar.realScalar<int32>()) &&
-	      (a_scalar.imagScalar<int32>() == b_scalar.imagScalar<int32>()));
+      if (allReal())
+	return ((a_scalar.realScalar<int32>() == b_scalar.realScalar<int32>()));
+      else
+	return ((a_scalar.realScalar<int32>() == b_scalar.realScalar<int32>()) &&
+		(a_scalar.imagScalar<int32>() == b_scalar.imagScalar<int32>()));
     case UInt32Scalar:
-      return ((a_scalar.realScalar<uint32>() == b_scalar.realScalar<uint32>()) &&
-	      (a_scalar.imagScalar<uint32>() == b_scalar.imagScalar<uint32>()));
+      if (allReal())
+	return ((a_scalar.realScalar<uint32>() == b_scalar.realScalar<uint32>()));
+      else
+	return ((a_scalar.realScalar<uint32>() == b_scalar.realScalar<uint32>()) &&
+		(a_scalar.imagScalar<uint32>() == b_scalar.imagScalar<uint32>()));
     case Int64Scalar:
-      return ((a_scalar.realScalar<int64>() == b_scalar.realScalar<int64>()) &&
-	      (a_scalar.imagScalar<int64>() == b_scalar.imagScalar<int64>()));
+      if (allReal())
+	return ((a_scalar.realScalar<int64>() == b_scalar.realScalar<int64>()));
+      else
+	return ((a_scalar.realScalar<int64>() == b_scalar.realScalar<int64>()) &&
+		(a_scalar.imagScalar<int64>() == b_scalar.imagScalar<int64>()));
     case UInt64Scalar:
-      return ((a_scalar.realScalar<uint64>() == b_scalar.realScalar<uint64>()) &&
-	      (a_scalar.imagScalar<uint64>() == b_scalar.imagScalar<uint64>()));
+      if (allReal())
+	return ((a_scalar.realScalar<uint64>() == b_scalar.realScalar<uint64>()));
+      else
+	return ((a_scalar.realScalar<uint64>() == b_scalar.realScalar<uint64>()) &&
+		(a_scalar.imagScalar<uint64>() == b_scalar.imagScalar<uint64>()));
     case FloatScalar:
-      return ((a_scalar.realScalar<float>() == b_scalar.realScalar<float>()) &&
-	      (a_scalar.imagScalar<float>() == b_scalar.imagScalar<float>()));
+      if (allReal())
+	return ((a_scalar.realScalar<float>() == b_scalar.realScalar<float>()));
+      else
+	return ((a_scalar.realScalar<float>() == b_scalar.realScalar<float>()) &&
+		(a_scalar.imagScalar<float>() == b_scalar.imagScalar<float>()));
     case DoubleScalar:
-      return ((a_scalar.realScalar<double>() == b_scalar.realScalar<double>()) &&
-	      (a_scalar.imagScalar<double>() == b_scalar.imagScalar<double>()));
+      if (allReal())
+	return ((a_scalar.realScalar<double>() == b_scalar.realScalar<double>()));
+      else
+	return ((a_scalar.realScalar<double>() == b_scalar.realScalar<double>()) &&
+		(a_scalar.imagScalar<double>() == b_scalar.imagScalar<double>()));
     }
     return false;
   }
