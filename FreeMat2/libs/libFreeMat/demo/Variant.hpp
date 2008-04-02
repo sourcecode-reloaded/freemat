@@ -132,8 +132,10 @@ public:
       throw Exception("Illegal request for imaginary part of real-only array");
     return (*reinterpret_cast<const BasicArray<T>*>(m_imag.p->ptr()));
   }						
-  template <typename T> inline T realScalar() const;
-  template <typename T> inline T imagScalar() const;
+  template <typename T> inline T constRealScalar() const;
+  template <typename T> inline T constImagScalar() const;
+  template <typename T> inline T& realScalar();
+  template <typename T> inline T& imagScalar();
   inline bool allReal() const {
     return (!m_complex);
   }
@@ -163,6 +165,8 @@ public:
   void resize(const NTuple &size);
   void resize(index_t size);
   void reshape(const NTuple &size);
+
+  void forceArrayType();
   inline bool isEmpty() const {return length() == 0;}
 
   bool operator==(const Variant &b) const;

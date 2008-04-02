@@ -2,7 +2,232 @@
 #define __VariantPrivate_hpp__
 
 template <>
-inline double Variant::realScalar() const {
+inline double& Variant::realScalar()  {
+  if (m_type != DoubleScalar) {
+    if (m_type == DoubleArray)
+      return real<double>()[1];
+    throw Exception("type mismatch");
+  }
+  return m_real.d;
+}
+
+template <>
+inline float& Variant::realScalar()  {
+  if (m_type != FloatScalar) {
+    if (m_type == FloatArray)
+      return real<float>()[1];
+    throw Exception("type mismatch");
+  }
+  return m_real.f;
+}
+
+template <>
+inline uint64& Variant::realScalar()  {
+  if (m_type != UInt64Scalar) {
+    if (m_type == UInt64Array)
+      return real<uint64>()[1];
+    throw Exception("type mismatch");
+  }
+  return m_real.u64;
+}
+
+template <>
+inline int64& Variant::realScalar()  {
+  if (m_type != Int64Scalar) {
+    if (m_type == Int64Array)
+      return real<int64>()[1];
+    throw Exception("type mismatch");
+  }
+  return m_real.i64;
+}
+
+template <>
+inline uint32& Variant::realScalar()  {
+  if (m_type != UInt32Scalar) {
+    if (m_type == UInt32Array)
+      return real<uint32>()[1];
+    throw Exception("type mismatch");
+  }
+  return m_real.u32;
+}
+
+template <>
+inline int32& Variant::realScalar()  {
+  if (m_type != Int32Scalar) {
+    if (m_type == Int32Array)
+      return real<int32>()[1];
+    throw Exception("type mismatch");
+  }
+  return m_real.i32;
+}
+
+template <>
+inline uint16& Variant::realScalar()  {
+  if (m_type != UInt16Scalar) {
+    if (m_type == UInt16Array)
+      return real<uint16>()[1];
+    throw Exception("type mismatch");
+  }
+  return m_real.u16;
+}
+
+template <>
+inline int16& Variant::realScalar()  {
+  if (m_type != Int16Scalar) {
+    if (m_type == Int16Array)
+      return real<int16>()[1];
+    throw Exception("type mismatch");
+  }
+  return m_real.i16;
+}
+
+template <>
+inline uint8& Variant::realScalar()  {
+  if (m_type != UInt8Scalar) {
+    if (m_type == UInt8Array)
+      return real<uint8>()[1];
+    throw Exception("type mismatch");
+  }
+  return m_real.u8;
+}
+
+template <>
+inline int8& Variant::realScalar()  {
+  if (m_type != Int8Scalar) {
+    if (m_type == Int8Array)
+      return real<int8>()[1];
+    throw Exception("type mismatch");
+  }
+  return m_real.i8;
+}
+
+template <>
+inline logical& Variant::realScalar()  {
+  if (m_type != BoolScalar) {
+    if (m_type == BoolArray)
+      return real<logical>()[1];
+    throw Exception("type mismatch");
+  }
+  return m_real.l;
+}
+
+template <>
+inline double& Variant::imagScalar()  {
+  m_complex = true;
+  if (m_type != DoubleScalar) {
+    if (m_type == DoubleArray)
+      return imag<double>()[1];
+    throw Exception("type mismatch");
+  }
+  return m_imag.d;
+}
+
+template <>
+inline float& Variant::imagScalar()  {
+  m_complex = true;
+  if (m_type != FloatScalar) {
+    if (m_type == FloatArray)
+      return imag<float>()[1];
+    throw Exception("type mismatch");
+  }
+  return m_imag.f;
+}
+
+template <>
+inline uint64& Variant::imagScalar()  {
+  m_complex = true;
+  if (m_type != UInt64Scalar) {
+    if (m_type == UInt64Array)
+      return imag<uint64>()[1];
+    throw Exception("type mismatch");
+  }
+  return m_imag.u64;
+}
+
+template <>
+inline int64& Variant::imagScalar()  {
+  m_complex = true;
+  if (m_type != Int64Scalar) {
+    if (m_type == Int64Array)
+      return imag<int64>()[1];
+    throw Exception("type mismatch");
+  }
+  return m_imag.i64;
+}
+
+template <>
+inline uint32& Variant::imagScalar()  {
+  m_complex = true;
+  if (m_type != UInt32Scalar) {
+    if (m_type == UInt32Array)
+      return imag<uint32>()[1];
+    throw Exception("type mismatch");
+  }
+  return m_imag.u32;
+}
+
+template <>
+inline int32& Variant::imagScalar()  {
+  m_complex = true;
+  if (m_type != Int32Scalar) {
+    if (m_type == Int32Array)
+      return imag<int32>()[1];
+    throw Exception("type mismatch");
+  }
+  return m_imag.i32;
+}
+
+template <>
+inline uint16& Variant::imagScalar()  {
+  m_complex = true;
+  if (m_type != UInt16Scalar) {
+    if (m_type == UInt16Array)
+      return imag<uint16>()[1];
+    throw Exception("type mismatch");
+  }
+  return m_imag.u16;
+}
+
+template <>
+inline int16& Variant::imagScalar()  {
+  m_complex = true;
+  if (m_type != Int16Scalar) {
+    if (m_type == Int16Array)
+      return imag<int16>()[1];
+    throw Exception("type mismatch");
+  }
+  return m_imag.i16;
+}
+
+template <>
+inline uint8& Variant::imagScalar()  {
+  m_complex = true;
+  if (m_type != UInt8Scalar) {
+    if (m_type == UInt8Array)
+      return imag<uint8>()[1];
+    throw Exception("type mismatch");
+  }
+  return m_imag.u8;
+}
+
+template <>
+inline int8& Variant::imagScalar()  {
+  m_complex = true;
+  if (m_type != Int8Scalar) {
+    if (m_type == Int8Array)
+      return imag<int8>()[1];
+    throw Exception("type mismatch");
+  }
+  return m_imag.i8;
+}
+
+template <>
+inline logical& Variant::imagScalar()  {
+  throw Exception("imaginary part of logical variables is undefined");
+}
+
+template <>
+inline double Variant::constRealScalar() const {
   if (m_type != DoubleScalar) {
     if (m_type == DoubleArray)
       return constReal<double>()[1];
@@ -12,7 +237,7 @@ inline double Variant::realScalar() const {
 }
 
 template <>
-inline float Variant::realScalar() const {
+inline float Variant::constRealScalar() const {
   if (m_type != FloatScalar) {
     if (m_type == FloatArray)
       return constReal<float>()[1];
@@ -22,7 +247,7 @@ inline float Variant::realScalar() const {
 }
 
 template <>
-inline uint64 Variant::realScalar() const {
+inline uint64 Variant::constRealScalar() const {
   if (m_type != UInt64Scalar) {
     if (m_type == UInt64Array)
       return constReal<uint64>()[1];
@@ -32,7 +257,7 @@ inline uint64 Variant::realScalar() const {
 }
 
 template <>
-inline int64 Variant::realScalar() const {
+inline int64 Variant::constRealScalar() const {
   if (m_type != Int64Scalar) {
     if (m_type == Int64Array)
       return constReal<int64>()[1];
@@ -42,7 +267,7 @@ inline int64 Variant::realScalar() const {
 }
 
 template <>
-inline uint32 Variant::realScalar() const {
+inline uint32 Variant::constRealScalar() const {
   if (m_type != UInt32Scalar) {
     if (m_type == UInt32Array)
       return constReal<uint32>()[1];
@@ -52,7 +277,7 @@ inline uint32 Variant::realScalar() const {
 }
 
 template <>
-inline int32 Variant::realScalar() const {
+inline int32 Variant::constRealScalar() const {
   if (m_type != Int32Scalar) {
     if (m_type == Int32Array)
       return constReal<int32>()[1];
@@ -62,7 +287,7 @@ inline int32 Variant::realScalar() const {
 }
 
 template <>
-inline uint16 Variant::realScalar() const {
+inline uint16 Variant::constRealScalar() const {
   if (m_type != UInt16Scalar) {
     if (m_type == UInt16Array)
       return constReal<uint16>()[1];
@@ -72,7 +297,7 @@ inline uint16 Variant::realScalar() const {
 }
 
 template <>
-inline int16 Variant::realScalar() const {
+inline int16 Variant::constRealScalar() const {
   if (m_type != Int16Scalar) {
     if (m_type == Int16Array)
       return constReal<int16>()[1];
@@ -82,7 +307,7 @@ inline int16 Variant::realScalar() const {
 }
 
 template <>
-inline uint8 Variant::realScalar() const {
+inline uint8 Variant::constRealScalar() const {
   if (m_type != UInt8Scalar) {
     if (m_type == UInt8Array)
       return constReal<uint8>()[1];
@@ -92,7 +317,7 @@ inline uint8 Variant::realScalar() const {
 }
 
 template <>
-inline int8 Variant::realScalar() const {
+inline int8 Variant::constRealScalar() const {
   if (m_type != Int8Scalar) {
     if (m_type == Int8Array)
       return constReal<int8>()[1];
@@ -102,7 +327,7 @@ inline int8 Variant::realScalar() const {
 }
 
 template <>
-inline logical Variant::realScalar() const {
+inline logical Variant::constRealScalar() const {
   if (m_type != BoolScalar) {
     if (m_type == BoolArray)
       return constReal<logical>()[1];
@@ -112,7 +337,7 @@ inline logical Variant::realScalar() const {
 }
 
 template <>
-inline double Variant::imagScalar() const {
+inline double Variant::constImagScalar() const {
   if (!m_complex) return 0;
   if (m_type != DoubleScalar) {
     if (m_type == DoubleArray)
@@ -123,7 +348,7 @@ inline double Variant::imagScalar() const {
 }
 
 template <>
-inline float Variant::imagScalar() const {
+inline float Variant::constImagScalar() const {
   if (!m_complex) return 0;
   if (m_type != FloatScalar) {
     if (m_type == FloatArray)
@@ -134,7 +359,7 @@ inline float Variant::imagScalar() const {
 }
 
 template <>
-inline uint64 Variant::imagScalar() const {
+inline uint64 Variant::constImagScalar() const {
   if (!m_complex) return 0;
   if (m_type != UInt64Scalar) {
     if (m_type == UInt64Array)
@@ -145,7 +370,7 @@ inline uint64 Variant::imagScalar() const {
 }
 
 template <>
-inline int64 Variant::imagScalar() const {
+inline int64 Variant::constImagScalar() const {
   if (!m_complex) return 0;
   if (m_type != Int64Scalar) {
     if (m_type == Int64Array)
@@ -156,7 +381,7 @@ inline int64 Variant::imagScalar() const {
 }
 
 template <>
-inline uint32 Variant::imagScalar() const {
+inline uint32 Variant::constImagScalar() const {
   if (!m_complex) return 0;
   if (m_type != UInt32Scalar) {
     if (m_type == UInt32Array)
@@ -167,7 +392,7 @@ inline uint32 Variant::imagScalar() const {
 }
 
 template <>
-inline int32 Variant::imagScalar() const {
+inline int32 Variant::constImagScalar() const {
   if (!m_complex) return 0;
   if (m_type != Int32Scalar) {
     if (m_type == Int32Array)
@@ -178,7 +403,7 @@ inline int32 Variant::imagScalar() const {
 }
 
 template <>
-inline uint16 Variant::imagScalar() const {
+inline uint16 Variant::constImagScalar() const {
   if (!m_complex) return 0;
   if (m_type != UInt16Scalar) {
     if (m_type == UInt16Array)
@@ -189,7 +414,7 @@ inline uint16 Variant::imagScalar() const {
 }
 
 template <>
-inline int16 Variant::imagScalar() const {
+inline int16 Variant::constImagScalar() const {
   if (!m_complex) return 0;
   if (m_type != Int16Scalar) {
     if (m_type == Int16Array)
@@ -200,7 +425,7 @@ inline int16 Variant::imagScalar() const {
 }
 
 template <>
-inline uint8 Variant::imagScalar() const {
+inline uint8 Variant::constImagScalar() const {
   if (!m_complex) return 0;
   if (m_type != UInt8Scalar) {
     if (m_type == UInt8Array)
@@ -211,7 +436,7 @@ inline uint8 Variant::imagScalar() const {
 }
 
 template <>
-inline int8 Variant::imagScalar() const {
+inline int8 Variant::constImagScalar() const {
   if (!m_complex) return 0;
   if (m_type != Int8Scalar) {
     if (m_type == Int8Array)
@@ -222,7 +447,7 @@ inline int8 Variant::imagScalar() const {
 }
 
 template <>
-inline logical Variant::imagScalar() const {
+inline logical Variant::constImagScalar() const {
   throw Exception("imaginary part of logical variables is undefined");
 }
 

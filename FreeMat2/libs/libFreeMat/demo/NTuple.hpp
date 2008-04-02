@@ -142,6 +142,12 @@ public:
       if (m_data[i] != alt.m_data[i]) return false;
     return true;
   }
+  bool operator==(index_t alt) const {
+    if (m_data[0] != alt) return false;
+    for (int i=1;i<NDims;i++)
+      if (m_data[i] != 1) return false;
+    return true;
+  }
   inline const index_t count() const {
     index_t ret = 1;
     for (int i=0;i<NDims;i++) ret *= m_data[i];
