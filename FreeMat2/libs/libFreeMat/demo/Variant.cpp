@@ -1,5 +1,9 @@
 #include "Variant.hpp"
 
+// Suppose a StructArray is a BasicArray<Struct>
+// Where:
+// Struct: QMap<QString,Variant> Struct;
+
 void Warn(const char *msg) {
   std::cout << "Warning:" << msg;
 }
@@ -22,17 +26,97 @@ static inline void Tdestruct(void *todelete) {
 }
 
 template <typename S, typename T>
-static inline double Tget_real(const Variant*ptr, S ndx) {
+static inline T Tget_real(const Variant*ptr, S ndx) {
   const BasicArray<T>& real(ptr->constReal<T>());
   return real.get(ndx);
 }
 
 template <typename S, typename T>
-static inline double Tget_imag(const Variant*ptr, S ndx) {
+static inline T Tget_imag(const Variant*ptr, S ndx) {
   if (ptr->allReal()) return T();
   const BasicArray<T>& imag(ptr->constImag<T>());
   return imag.get(ndx);
 }
+
+template <typename S>
+static inline Variant Tget_struct(const Variant*ptr, S ndx) {
+  const StructArray &rp(ptr->constStructPtr());
+  Variant ret(Struct,NTuple(1,1));
+  StructArray &lp(ret.structPtr());
+  StructArray::const_iterator i=rp.constBegin();
+  while (i != rp.constEnd()) {
+    lp[i.key()] = i.value().get(ndx);
+    ++i;
+  }
+  return ret;
+}
+
+template <typename S>
+static inline Variant Tget_struct_scalar(const Variant*ptr, S ndx) {
+  const StructArray &rp(ptr->constStructPtr());
+  Variant ret(Struct,NTuple(1,1));
+  StructArray &lp(ret.structPtr());
+  StructArray::const_iterator i=rp.constBegin();
+  while (i != rp.constEnd()) {
+    lp[i.key()].set(1,i.value().get(ndx).get(1));
+    ++i;
+  }
+  return ret;
+}
+
+template <typename S>
+static inline const void Tset_struct(Variant*ptr, S ndx, const Variant &rhs) {
+  if (rhs.type() != Struct)
+    throw Exception("Assignment A(I)=B where A is a structure array implies that B is also a structure array.");
+  // First loop through the elements
+  const StructArray &rp(rhs.constStructPtr());
+  StructArray &lp(ptr->structPtr());
+  StructArray::const_iterator i=rp.constBegin();
+  while (i!=rp.constEnd()) {
+    lp[i.key()].set(ndx,i.value());
+    ++i;
+  }
+  // Loop through the output and force all arrays to be the same size
+#error This is not correct, as if one component becomes [Mx1], what happens
+  NTuple newSize;
+  i = lp.constBegin();
+  while (i!= lp.constEnd()) {
+    newSize.cover(i.value().dimensions());
+    ++i;
+  }
+  StructArray::iterator j=lp.begin();
+  while (j != lp.end()) {
+    j.value().resize(newSize);
+    ++j;
+  }
+}
+
+template <typename S>
+static inline const void Tset_struct_scalar_rhs(Variant*ptr, S ndx, const Variant &rhs) {
+  if (rhs.type() != Struct)
+    throw Exception("Assignment A(I)=B where A is a structure array implies that B is also a structure array.");
+  // First loop through the elements
+  const StructArray &rp(rhs.constStructPtr());
+  StructArray &lp(ptr->structPtr());
+  StructArray::const_iterator i=rp.constBegin();
+  while (i!=rp.constEnd()) {
+    lp[i.key()].set(ndx,i.value().get(1));
+    ++i;
+  }
+  // Loop through the output and force all arrays to be the same size
+  NTuple newSize;
+  i = lp.constBegin();
+  while (i!= lp.constEnd()) {
+    newSize.cover(i.value().dimensions());
+    ++i;
+  }
+  StructArray::iterator j=lp.begin();
+  while (j != lp.end()) {
+    j.value().resize(newSize);
+    ++j;
+  }
+}
+
 
 template <typename S, typename T>
 static inline const Variant Tget(const Variant*ptr, S ndx) {
@@ -83,6 +167,26 @@ static inline void Tset_scalar_rhs(Variant* ptr, S ndx, const Variant& data) {
   if (!dataTyped.allReal()) {
     BasicArray<T> &imag(ptr->imag<T>());
     imag.set(ndx,dataTyped.constImagScalar<T>());
+  }
+}
+
+template <typename S>
+static inline void Tresize_struct(Variant* ptr, S ndx) {
+  StructArray &lp(ptr->structPtr());
+  StructArray::iterator i=lp.begin();
+  while (i != lp.end()) {
+    i.value().resize(ndx);
+    ++i;
+  }
+}
+
+template <typename S, typename T>
+static inline void Tresize(Variant* ptr, S ndx) {
+  BasicArray<T> &real(ptr->real<T>());
+  real.resize(ndx);
+  if (!ptr->allReal()) {
+    BasicArray<T> &imag(ptr->imag<T>());
+    imag.resize(ndx);
   }
 }
 
@@ -192,6 +296,7 @@ inline static const Variant Tcast(Type t, const Variant *copy) {
     return Tcast_case<uint8,T>(t,copy);
   case Int16Array:
     return Tcast_case<int16,T>(t,copy);
+  case StringArray:
   case UInt16Array:
     return Tcast_case<uint16,T>(t,copy);
   case Int32Array:
@@ -213,8 +318,10 @@ static inline void* construct(Type t, const void *copy) {
   switch (t) {
   default:
     throw Exception("Unsupported construct");
-  case String:
-    return Tconstruct<BasicArray<uint16> >(copy);
+  case CellArray:
+    return Tconstruct<BasicArray<Variant> >(copy);
+  case Struct:
+    return Tconstruct<StructArray>(copy);
   case BoolArray:
     return Tconstruct<BasicArray<logical> >(copy);
   case Int8Array:
@@ -223,6 +330,7 @@ static inline void* construct(Type t, const void *copy) {
     return Tconstruct<BasicArray<uint8> >(copy);
   case Int16Array:
     return Tconstruct<BasicArray<int16> >(copy);
+  case StringArray:
   case UInt16Array:
     return Tconstruct<BasicArray<uint16> >(copy);
   case Int32Array:
@@ -243,8 +351,11 @@ static inline void* construct(Type t, const void *copy) {
 static inline void* construct_sized(Type t, const NTuple &dims) {
   switch (t) {
   default:
-  case String:
-    return Tconstruct_sized<BasicArray<uint16> >(dims);
+    throw Exception("Unsupported constructor");
+  case CellArray:
+    return Tconstruct_sized<BasicArray<Variant> >(dims);
+  case Struct:
+    return reinterpret_cast<void*>(new StructArray);
   case BoolArray:
     return Tconstruct_sized<BasicArray<logical> >(dims);
   case Int8Array:
@@ -253,6 +364,7 @@ static inline void* construct_sized(Type t, const NTuple &dims) {
     return Tconstruct_sized<BasicArray<uint8> >(dims);
   case Int16Array:
     return Tconstruct_sized<BasicArray<int16> >(dims);
+  case StringArray:
   case UInt16Array:
     return Tconstruct_sized<BasicArray<uint16> >(dims);
   case Int32Array:
@@ -274,8 +386,10 @@ static inline void destruct(Type t, void *todelete) {
   switch (t) {
   default:
     throw Exception("Unsupported construct");
-  case String:
-    return Tdestruct<BasicArray<uint16> >(todelete);
+  case CellArray:
+    return Tdestruct<BasicArray<Variant> >(todelete);
+  case Struct:
+    return Tdestruct<StructArray>(todelete);
   case BoolArray:
     return Tdestruct<BasicArray<logical> >(todelete);
   case Int8Array:
@@ -284,6 +398,7 @@ static inline void destruct(Type t, void *todelete) {
     return Tdestruct<BasicArray<uint8> >(todelete);
   case Int16Array:
     return Tdestruct<BasicArray<int16> >(todelete);
+  case StringArray:
   case UInt16Array:
     return Tdestruct<BasicArray<uint16> >(todelete);
   case Int32Array:
@@ -311,7 +426,6 @@ SharedObject::SharedObject(Type t, void* p) : m_type(t), m_p(p) {}
 
 SharedObject::SharedObject(const SharedObject& copy) : 
   QSharedData(copy), m_type(copy.m_type) {
-  qDebug() << "SO copy";
   m_p = construct(m_type,copy.m_p);
 }
 
@@ -326,52 +440,6 @@ SharedObject& SharedObject::operator=(const SharedObject& copy) {
 SharedObject::~SharedObject() {
   destruct(m_type,m_p);
 }
-
-#if 0
-  switch(m_type) {
-  default:
-    throw Exception("Unhandle scalar type");
-  case Bool:
-    m_real.b = (real != 0);
-    m_imag.b = (imag != 0);
-    return;
-  case Int8:
-    m_real.i8 = Bound((int8) SCHAR_MIN, (int8) SCHAR_MAX, real);
-    m_imag.i64 = Bound((int8) SCHAR_MIN, (int8) SCHAR_MAX, imag);
-    return;
-  case UInt8:
-    m_real.u8 = Bound((uint8) 0, (uint8) UCHAR_MAX, real);
-    m_imag.u8 = Bound((uint8) 0, (uint8) UCHAR_MAX, imag);
-    return;
-  case Int16:
-    m_real.i16 = Bound((int16) SHRT_MIN, (int16) USHRT_MAX, real);
-    m_imag.i16 = Bound((int16) SHRT_MIN, (int16) USHRT_MAX, imag);
-    return;
-  case UInt16:
-    m_real.u16 = Bound((uint16) 0, (uint16) USHRT_MAX, real);
-    m_imag.u16 = Bound((uint16) 0, (uint16) USHRT_MAX, imag);
-    return;
-  case Int32:
-    m_real.i32 = Bound((int32) INT_MIN, (int32) INT_MAX, real);
-    m_imag.i32 = Bound((int32) INT_MIN, (int32) INT_MAX, imag);
-    return;
-  case UInt32:
-    m_real.u32 = Bound((uint32) 0, (uint32) UINT_MAX, real);
-    m_imag.u32 = Bound((uint32) 0, (uint32) UINT_MAX, imag);
-    return;
-  case Int64:
-    m_real.i64 = Bound((int64) LLONG_MIN, (int64) LLONG_MAX, real);
-    m_imag.i64 = Bound((int64) LLONG_MIN, (int64) LLONG_MAX, imag);
-    return;
-  case UInt64:
-    m_real.u64 = Bound((uint64) 0, (uint64) ULLONG_MAX, real);
-    m_imag.u64 = Bound((uint64) 0, (uint64) ULLONG_MAX, imag);
-    return;
-  case Float:
-    m_real.f = real; m_imag.f = imag;
-    return;
-  }
-#endif
 
 void Variant::print(std::ostream& o) const {
   switch (m_type) {
@@ -437,6 +505,16 @@ void Variant::print(std::ostream& o) const {
     else
       o << m_real.d;
     return;
+//   case UInt8Array:
+//   case UInt16Array:
+//   case UInt32Array:
+//   case UInt64Array:
+//   case Int8Array:
+//   case Int16Array:
+//   case Int32Array:
+//   case Int64Array:
+//   case FloatArray:
+//   case DoubleArray:
   }
 }
 
@@ -447,9 +525,9 @@ Variant::Variant(Type t, const NTuple &dims) {
 }
 
 Variant::Variant(const QString &text) {
-  m_type = String;
-  m_real.p = new SharedObject(String,
-			      construct_sized(String,
+  m_type = StringArray;
+  m_real.p = new SharedObject(StringArray,
+			      construct_sized(StringArray,
 					     NTuple(1,text.size())));
   BasicArray<uint16> &p(real<uint16>());
   for (int i=0;i<text.size();i++) 
@@ -473,29 +551,31 @@ const NTuple Variant::dimensions() const {
   case FloatScalar:
   case DoubleScalar:
     return NTuple(1,1);
+  case CellArray:
+    return (constReal<Variant>().dimensions());
   case BoolArray:
-    return (reinterpret_cast<const BasicArray<logical>*>(m_real.p->ptr())->dimensions());
+    return (constReal<logical>().dimensions());
   case Int8Array:
-    return (reinterpret_cast<const BasicArray<int8>*>(m_real.p->ptr())->dimensions());
+    return (constReal<int8>().dimensions());
   case UInt8Array:
-    return (reinterpret_cast<const BasicArray<uint8>*>(m_real.p->ptr())->dimensions());
+    return (constReal<uint8>().dimensions());
   case Int16Array:
-    return (reinterpret_cast<const BasicArray<int16>*>(m_real.p->ptr())->dimensions());
-  case String:
+    return (constReal<int16>().dimensions());
+  case StringArray:
   case UInt16Array:
-    return (reinterpret_cast<const BasicArray<uint16>*>(m_real.p->ptr())->dimensions());
+    return (constReal<uint16>().dimensions());
   case Int32Array:
-    return (reinterpret_cast<const BasicArray<int32>*>(m_real.p->ptr())->dimensions());
+    return (constReal<int32>().dimensions());
   case UInt32Array:
-    return (reinterpret_cast<const BasicArray<uint32>*>(m_real.p->ptr())->dimensions());
+    return (constReal<uint32>().dimensions());
   case Int64Array:
-    return (reinterpret_cast<const BasicArray<int64>*>(m_real.p->ptr())->dimensions());
+    return (constReal<int64>().dimensions());
   case UInt64Array:
-    return (reinterpret_cast<const BasicArray<uint64>*>(m_real.p->ptr())->dimensions());
+    return (constReal<uint64>().dimensions());
   case FloatArray:
-    return (reinterpret_cast<const BasicArray<float>*>(m_real.p->ptr())->dimensions());
+    return (constReal<float>().dimensions());
   case DoubleArray:
-    return (reinterpret_cast<const BasicArray<double>*>(m_real.p->ptr())->dimensions());
+    return (constReal<double>().dimensions());
   };
 }
 
@@ -514,8 +594,14 @@ void Variant::set(index_t index, const Variant& data) {
   case UInt64Scalar:
   case FloatScalar:
   case DoubleScalar:
-    forceArrayType();
+    *this = asArrayType();
     set(index,data);
+    return;
+  case CellArray:
+    real<Variant>().set(index,data);
+    return;
+  case Struct:
+    Tset_struct_scalar_rhs<index_t>(this,index,data);
     return;
   case BoolArray:
     Tset_scalar_rhs<index_t,logical>(this,index,data);
@@ -529,6 +615,7 @@ void Variant::set(index_t index, const Variant& data) {
   case Int16Array:
     Tset_scalar_rhs<index_t,int16>(this,index,data);
     return;
+  case StringArray:
   case UInt16Array:
     Tset_scalar_rhs<index_t,uint16>(this,index,data);
     return;
@@ -568,8 +655,16 @@ void Variant::set(const NTuple& index, const Variant& data) {
   case UInt64Scalar:
   case FloatScalar:
   case DoubleScalar:
-    forceArrayType();
+    *this = asArrayType();
     set(index,data);
+    return;
+  case CellArray:
+    if (data.type () != CellArray) 
+      throw Exception("Assignment A(I)=B where A is a cell array implies that B is also a cell array.");
+    real<Variant>().set(index,data.get((index_t)1));
+    return;
+  case Struct:
+    Tset_struct_scalar_rhs<const NTuple&>(this,index,data);
     return;
   case BoolArray:
     Tset_scalar_rhs<const NTuple&,logical>(this,index,data);
@@ -583,6 +678,7 @@ void Variant::set(const NTuple& index, const Variant& data) {
   case Int16Array:
     Tset_scalar_rhs<const NTuple&,int16>(this,index,data);
     return;
+  case StringArray:
   case UInt16Array:
     Tset_scalar_rhs<const NTuple&,uint16>(this,index,data);
     return;
@@ -611,6 +707,28 @@ void Variant::set(const IndexArray& index, const Variant& data) {
   switch (m_type) {
   default:
     throw Exception("Unsupported type for set(IndexArray)");
+  case BoolScalar:
+  case Int8Scalar:
+  case UInt8Scalar:
+  case Int16Scalar:
+  case UInt16Scalar:
+  case Int32Scalar:
+  case UInt32Scalar:
+  case Int64Scalar:
+  case UInt64Scalar:
+  case FloatScalar:
+  case DoubleScalar:
+    *this = asArrayType();
+    set(index,data);
+    return;
+  case CellArray:
+    if (data.type () != CellArray) 
+      throw Exception("Assignment A(I)=B where A is a cell array implies that B is also a cell array.");
+    real<Variant>().set(index,data.get((index_t)1));
+    return;
+  case Struct:
+    Tset_struct<const IndexArray&>(this,index,data);
+    return;
   case BoolArray:
     Tset<const IndexArray&,logical>(this,index,data);
     return;
@@ -623,6 +741,7 @@ void Variant::set(const IndexArray& index, const Variant& data) {
   case Int16Array:
     Tset<const IndexArray&,int16>(this,index,data);
     return;
+  case StringArray:
   case UInt16Array:
     Tset<const IndexArray&,uint16>(this,index,data);
     return;
@@ -651,6 +770,28 @@ void Variant::set(const IndexArrayList& index, const Variant& data) {
   switch (m_type) {
   default:
     throw Exception("Unsupported type for set(IndexArray)");
+  case BoolScalar:
+  case Int8Scalar:
+  case UInt8Scalar:
+  case Int16Scalar:
+  case UInt16Scalar:
+  case Int32Scalar:
+  case UInt32Scalar:
+  case Int64Scalar:
+  case UInt64Scalar:
+  case FloatScalar:
+  case DoubleScalar:
+    *this = asArrayType();
+    set(index,data);
+    return;
+  case CellArray:
+    if (data.type () != CellArray) 
+      throw Exception("Assignment A(I)=B where A is a cell array implies that B is also a cell array.");
+    real<Variant>().set(index,data.get((index_t)1));
+    return;
+  case Struct:
+    Tset_struct<const IndexArrayList&>(this,index,data);
+    return;
   case BoolArray:
     Tset<const IndexArrayList&,logical>(this,index,data);
     return;
@@ -663,6 +804,7 @@ void Variant::set(const IndexArrayList& index, const Variant& data) {
   case Int16Array:
     Tset<const IndexArrayList&,int16>(this,index,data);
     return;
+  case StringArray:
   case UInt16Array:
     Tset<const IndexArrayList&,uint16>(this,index,data);
     return;
@@ -687,10 +829,122 @@ void Variant::set(const IndexArrayList& index, const Variant& data) {
   }  
 }
 
+void Variant::resize(const NTuple &size) {
+  switch (m_type) {
+  default:
+    throw Exception("Unhandled case for resize");
+  case BoolScalar:
+  case Int8Scalar:
+  case UInt8Scalar:
+  case Int16Scalar:
+  case UInt16Scalar:
+  case Int32Scalar:
+  case UInt32Scalar:
+  case Int64Scalar:
+  case UInt64Scalar:
+  case FloatScalar:
+  case DoubleScalar:
+    *this = asArrayType();
+    resize(size);
+    return;
+  case CellArray:
+    return Tresize<const NTuple&,Variant>(this,size);
+  case Struct:
+    return Tresize_struct<const NTuple&>(this,size);
+  case BoolArray:
+    return Tresize<const NTuple&,logical>(this,size);
+  case Int8Array:
+    return Tresize<const NTuple&,int8>(this,size);
+  case UInt8Array:
+    return Tresize<const NTuple&,uint8>(this,size);
+  case Int16Array:
+    return Tresize<const NTuple&,int16>(this,size);
+  case StringArray:
+  case UInt16Array:
+    return Tresize<const NTuple&,uint16>(this,size);
+  case Int32Array:
+    return Tresize<const NTuple&,int32>(this,size);
+  case UInt32Array:
+    return Tresize<const NTuple&,uint32>(this,size);
+  case Int64Array:
+    return Tresize<const NTuple&,int64>(this,size);
+  case UInt64Array:
+    return Tresize<const NTuple&,uint64>(this,size);
+  case FloatArray:
+    return Tresize<const NTuple&,float>(this,size);
+  case DoubleArray:
+    return Tresize<const NTuple&,double>(this,size);
+  }  
+}
+
+void Variant::resize(index_t size) {
+  switch (m_type) {
+  default:
+    throw Exception("Unhandled case for resize");
+  case BoolScalar:
+  case Int8Scalar:
+  case UInt8Scalar:
+  case Int16Scalar:
+  case UInt16Scalar:
+  case Int32Scalar:
+  case UInt32Scalar:
+  case Int64Scalar:
+  case UInt64Scalar:
+  case FloatScalar:
+  case DoubleScalar:
+    *this = asArrayType();
+    resize(size);
+    return;
+  case CellArray:
+    return Tresize<index_t,Variant>(this,size);
+  case Struct:
+    return Tresize_struct<index_t>(this,size);
+  case BoolArray:
+    return Tresize<index_t,logical>(this,size);
+  case Int8Array:
+    return Tresize<index_t,int8>(this,size);
+  case UInt8Array:
+    return Tresize<index_t,uint8>(this,size);
+  case Int16Array:
+    return Tresize<index_t,int16>(this,size);
+  case StringArray:
+  case UInt16Array:
+    return Tresize<index_t,uint16>(this,size);
+  case Int32Array:
+    return Tresize<index_t,int32>(this,size);
+  case UInt32Array:
+    return Tresize<index_t,uint32>(this,size);
+  case Int64Array:
+    return Tresize<index_t,int64>(this,size);
+  case UInt64Array:
+    return Tresize<index_t,uint64>(this,size);
+  case FloatArray:
+    return Tresize<index_t,float>(this,size);
+  case DoubleArray:
+    return Tresize<index_t,double>(this,size);
+  }  
+}
+
 const Variant Variant::get(const IndexArray& index) const {
   switch (m_type) {
   default: 
     throw Exception("Unsupported type for get(index_t)");
+  case BoolScalar:
+  case Int8Scalar:
+  case UInt8Scalar:
+  case Int16Scalar:
+  case UInt16Scalar:
+  case Int32Scalar:
+  case UInt32Scalar:
+  case Int64Scalar:
+  case UInt64Scalar:
+  case FloatScalar:
+  case DoubleScalar:
+    return asArrayType().get(index);
+  case CellArray:
+    return Tget<const IndexArray&,Variant>(this,index);
+  case Struct:
+    return Tget_struct<const IndexArray&>(this,index);
   case BoolArray:
     return Tget<const IndexArray&,logical>(this,index);
   case Int8Array:
@@ -699,6 +953,7 @@ const Variant Variant::get(const IndexArray& index) const {
     return Tget<const IndexArray&,uint8>(this,index);
   case Int16Array:
     return Tget<const IndexArray&,int16>(this,index);
+  case StringArray:
   case UInt16Array:
     return Tget<const IndexArray&,uint16>(this,index);
   case Int32Array:
@@ -720,6 +975,22 @@ const Variant Variant::get(const IndexArrayList& index) const {
   switch (m_type) {
   default: 
     throw Exception("Unsupported type for get(index_t)");
+  case BoolScalar:
+  case Int8Scalar:
+  case UInt8Scalar:
+  case Int16Scalar:
+  case UInt16Scalar:
+  case Int32Scalar:
+  case UInt32Scalar:
+  case Int64Scalar:
+  case UInt64Scalar:
+  case FloatScalar:
+  case DoubleScalar:
+    return asArrayType().get(index);
+  case CellArray:
+    return Tget<const IndexArrayList&,Variant>(this,index);
+  case Struct:
+    return Tget_struct<const IndexArrayList&>(this,index);
   case BoolArray:
     return Tget<const IndexArrayList&,logical>(this,index);
   case Int8Array:
@@ -728,6 +999,7 @@ const Variant Variant::get(const IndexArrayList& index) const {
     return Tget<const IndexArrayList&,uint8>(this,index);
   case Int16Array:
     return Tget<const IndexArrayList&,int16>(this,index);
+  case StringArray:
   case UInt16Array:
     return Tget<const IndexArrayList&,uint16>(this,index);
   case Int32Array:
@@ -780,6 +1052,7 @@ const Variant Variant::toType(const Type t) const {
     return Tcast<uint8>(t,this);
   case Int16Array:
     return Tcast<int16>(t,this);
+  case StringArray:
   case UInt16Array:
     return Tcast<uint16>(t,this);
   case Int32Array:
@@ -814,68 +1087,73 @@ const Variant Variant::get(const NTuple& index) const {
   case DoubleScalar:
     if (!index.isScalar()) throw Exception("A(n) exceeds dimensions of A");
     return *this;
+  case CellArray:
+    return Tget_real<const NTuple&,Variant>(this,index);
+  case Struct:
+    return Tget_struct_scalar<const NTuple&>(this,index);
   case BoolArray:
     return Variant((logical)Tget_real<const NTuple&,logical>(this,index));
   case Int8Array:
     if (m_complex)
-      return Variant((int8)Tget_real<const NTuple&,int8>(this,index),
-		     (int8)Tget_imag<const NTuple&,int8>(this,index));
+      return Variant(Tget_real<const NTuple&,int8>(this,index),
+		     Tget_imag<const NTuple&,int8>(this,index));
     else
-      return Variant((int8)Tget_real<const NTuple&,int8>(this,index));
+      return Variant(Tget_real<const NTuple&,int8>(this,index));
   case UInt8Array:
     if (m_complex)
-      return Variant((uint8)Tget_real<const NTuple&,uint8>(this,index),
-		     (uint8)Tget_imag<const NTuple&,uint8>(this,index));
+      return Variant(Tget_real<const NTuple&,uint8>(this,index),
+		     Tget_imag<const NTuple&,uint8>(this,index));
     else
-      return Variant((uint8)Tget_real<const NTuple&,uint8>(this,index));
+      return Variant(Tget_real<const NTuple&,uint8>(this,index));
   case Int16Array:
     if (m_complex)
-      return Variant((int16)Tget_real<const NTuple&,int16>(this,index),
-		     (int16)Tget_imag<const NTuple&,int16>(this,index));
+      return Variant(Tget_real<const NTuple&,int16>(this,index),
+		     Tget_imag<const NTuple&,int16>(this,index));
     else
-      return Variant((int16)Tget_real<const NTuple&,int16>(this,index));
+      return Variant(Tget_real<const NTuple&,int16>(this,index));
+  case StringArray:
   case UInt16Array:
     if (m_complex)
-      return Variant((uint16)Tget_real<const NTuple&,uint16>(this,index),
-		     (uint16)Tget_imag<const NTuple&,uint16>(this,index));
+      return Variant(Tget_real<const NTuple&,uint16>(this,index),
+		     Tget_imag<const NTuple&,uint16>(this,index));
     else
-      return Variant((uint16)Tget_real<const NTuple&,uint16>(this,index));
+      return Variant(Tget_real<const NTuple&,uint16>(this,index));
   case Int32Array:
     if (m_complex)
-      return Variant((int32)Tget_real<const NTuple&,int32>(this,index),
-		     (int32)Tget_imag<const NTuple&,int32>(this,index));
+      return Variant(Tget_real<const NTuple&,int32>(this,index),
+		     Tget_imag<const NTuple&,int32>(this,index));
     else
-      return Variant((int32)Tget_real<const NTuple&,int32>(this,index));
+      return Variant(Tget_real<const NTuple&,int32>(this,index));
   case UInt32Array:
     if (m_complex)
-      return Variant((uint32)Tget_real<const NTuple&,uint32>(this,index),
-		     (uint32)Tget_imag<const NTuple&,uint32>(this,index));
+      return Variant(Tget_real<const NTuple&,uint32>(this,index),
+		     Tget_imag<const NTuple&,uint32>(this,index));
     else
-      return Variant((uint32)Tget_real<const NTuple&,uint32>(this,index));
+      return Variant(Tget_real<const NTuple&,uint32>(this,index));
   case Int64Array:
     if (m_complex)
-      return Variant((int64)Tget_real<const NTuple&,int64>(this,index),
-		     (int64)Tget_imag<const NTuple&,int64>(this,index));
+      return Variant(Tget_real<const NTuple&,int64>(this,index),
+		     Tget_imag<const NTuple&,int64>(this,index));
     else
-      return Variant((int64)Tget_real<const NTuple&,int64>(this,index));
+      return Variant(Tget_real<const NTuple&,int64>(this,index));
   case UInt64Array:
     if (m_complex)
-      return Variant((uint64)Tget_real<const NTuple&,uint64>(this,index),
-		     (uint64)Tget_imag<const NTuple&,uint64>(this,index));
+      return Variant(Tget_real<const NTuple&,uint64>(this,index),
+		     Tget_imag<const NTuple&,uint64>(this,index));
     else
-      return Variant((uint64)Tget_real<const NTuple&,uint64>(this,index));
+      return Variant(Tget_real<const NTuple&,uint64>(this,index));
   case FloatArray:
     if (m_complex)
-      return Variant((float)Tget_real<const NTuple&,float>(this,index),
-		     (float)Tget_imag<const NTuple&,float>(this,index));
+      return Variant(Tget_real<const NTuple&,float>(this,index),
+		     Tget_imag<const NTuple&,float>(this,index));
     else
-      return Variant((float)Tget_real<const NTuple&,float>(this,index));
+      return Variant(Tget_real<const NTuple&,float>(this,index));
   case DoubleArray:
     if (m_complex)
-      return Variant((double)Tget_real<const NTuple&,double>(this,index),
-		     (double)Tget_imag<const NTuple&,double>(this,index));
+      return Variant(Tget_real<const NTuple&,double>(this,index),
+		     Tget_imag<const NTuple&,double>(this,index));
     else
-      return Variant((double)Tget_real<const NTuple&,double>(this,index));
+      return Variant(Tget_real<const NTuple&,double>(this,index));
   }
 }
 
@@ -896,6 +1174,10 @@ const Variant Variant::get(index_t index) const {
   case DoubleScalar:
     if (index != 1) throw Exception("A(n) exceeds dimensions of A");
     return *this;
+  case CellArray:
+    return Tget_real<index_t,Variant>(this,index);
+  case Struct:
+    return Tget_struct_scalar<index_t>(this,index);
   case BoolArray:
     return Variant((logical) Tget_real<index_t,logical>(this,index));
   case Int8Array:
@@ -916,6 +1198,7 @@ const Variant Variant::get(index_t index) const {
 		     (int16)Tget_imag<index_t,int16>(this,index));
     else
       return Variant((int16)Tget_real<index_t,int16>(this,index));
+  case StringArray:
   case UInt16Array:
     if (m_complex)
       return Variant((uint16)Tget_real<index_t,uint16>(this,index),
@@ -1006,7 +1289,7 @@ void Variant::set(const VariantList& index, const Variant& data) {
   else {
     IndexArrayList addr;
     for (int i=0;i<index.size();i++)
-      addr[i] = IndexArrayFromVariant(index[i]);
+      addr.push_back(IndexArrayFromVariant(index[i]));
     set(addr,data);
   }
 }
@@ -1134,6 +1417,8 @@ bool Variant::operator==(const Variant &b) const {
   switch (type()) {
   default:
     throw Exception("Unhandled case as argument to == operator for Variant class");
+  case CellArray:
+    return constReal<Variant>() == b.constReal<Variant>();
   case BoolArray:
     return constReal<logical>() == b.constReal<logical>();
   case Int8Array:
@@ -1154,6 +1439,7 @@ bool Variant::operator==(const Variant &b) const {
     else
       return ((constReal<int16>() == b.constReal<int16>()) &&
 	      (constImag<int16>() == b.constImag<int16>()));
+  case StringArray:
   case UInt16Array:
     if (allReal())
       return constReal<uint16>() == b.constReal<uint16>();
@@ -1199,79 +1485,17 @@ bool Variant::operator==(const Variant &b) const {
   }
 }
 
-// void Variant::set(index_t pos, const Variant& val) {
-//   switch (m_type) {
-//   default:
-//     throw Exception("Unsupported type for set");
-//   case BoolArray:  {
-//     Variant valp(val.asScalar());
-//     Tset<logical>(this,pos,valp.m_real.d,valp.m_imag.d);
-//     return;
-//   }
-//   case Int8Array:  {
-//     Variant valp(val.asScalar());
-//     Tset<int8>(this,pos,valp.m_real.d,valp.m_imag.d);
-//     return;
-//   }
-//   case UInt8Array:  {
-//     Variant valp(val.asScalar());
-//     Tset<uint8>(this,pos,valp.m_real.d,valp.m_imag.d);
-//     return;
-//   }
-//   case Int16Array:  {
-//     Variant valp(val.asScalar());
-//     Tset<int16>(this,pos,valp.m_real.d,valp.m_imag.d);
-//     return;
-//   }
-//   case UInt16Array:  {
-//     Variant valp(val.asScalar());
-//     Tset<uint16>(this,pos,valp.m_real.d,valp.m_imag.d);
-//     return;
-//   }
-//   case Int32Array:   {
-//     Variant valp(val.asScalar());
-//     Tset<int32>(this,pos,valp.m_real.d,valp.m_imag.d);
-//     return;
-//   }
-//   case UInt32Array:    {
-//     Variant valp(val.asScalar());
-//     Tset<uint32>(this,pos,valp.m_real.d,valp.m_imag.d);
-//     return;
-//   }
-//   case Int64Array:   {
-//     Variant valp(val.asScalar());
-//     Tset<int64>(this,pos,valp.m_real.d,valp.m_imag.d);
-//     return;
-//   }
-//   case UInt64Array:    {
-//     Variant valp(val.asScalar());
-//     Tset<uint64>(this,pos,valp.m_real.d,valp.m_imag.d);
-//     return;
-//   }
-//   case FloatArray:    {
-//     Variant valp(val.asScalar());
-//     Tset<float>(this,pos,valp.m_real.d,valp.m_imag.d);
-//     return;
-//   }
-//   case DoubleArray:    {
-//     Variant valp(val.asScalar());
-//     Tset<double>(this,pos,valp.m_real.d,valp.m_imag.d);
-//     return;
-//   }
-//   }
-// }
-
 std::ostream& operator<<(std::ostream& o, const Variant &t) {
   t.print(o);
   return o;
 }
   
 bool IsColonOp(const Variant &x) {
-  return (x.type() == String) && (x.string() == ":");
+  return (x.type() == StringArray) && (x.string() == ":");
 }
 
 QString Variant::string() const {
-  if (m_type != String) throw Exception("Cannot convert array to string");
+  if (m_type != StringArray) throw Exception("Cannot convert array to string");
   const BasicArray<uint16> &p(constReal<uint16>());
   QString ret;
   for (int i=0;i<p.length();i++)
@@ -1291,154 +1515,78 @@ static inline void Tforce(Variant *ptr, Type t) {
   }
 }
 
-void Variant::forceArrayType() {
+Variant Variant::asArrayType() const {
   switch (type()) {
   default:
-    return;
+    return *this;
   case BoolScalar:
-    m_real.p = new SharedObject(BoolArray, 
-				new BasicArray<logical>(constRealScalar<logical>()));
-    m_type = BoolArray;
-    return;
+    return Variant(BoolArray,new BasicArray<logical>(constRealScalar<logical>()));
   case Int8Scalar:
-    if (allReal()) {
-      m_real.p = new SharedObject(Int8Array, 
-				  new BasicArray<int8>(constRealScalar<int8>()));
-      m_type = Int8Array;
-    } else {
-      m_real.p = new SharedObject(Int8Array, 
-				  new BasicArray<int8>(constRealScalar<int8>()));
-      m_imag.p = new SharedObject(Int8Array, 
-				  new BasicArray<int8>(constImagScalar<int8>()));
-      m_type = Int8Array;
-    }
-    return;
+    if (allReal())
+      return Variant(Int8Array,new BasicArray<int8>(constRealScalar<int8>()));
+    else
+      return Variant(Int8Array,new BasicArray<int8>(constRealScalar<int8>()),
+		     new BasicArray<int8>(constImagScalar<int8>()));
   case UInt8Scalar:
-    if (allReal()) {
-      m_real.p = new SharedObject(UInt8Array, 
-				  new BasicArray<uint8>(constRealScalar<uint8>()));
-      m_type = UInt8Array;
-    } else {
-      m_real.p = new SharedObject(UInt8Array, 
-				  new BasicArray<uint8>(constRealScalar<uint8>()));
-      m_imag.p = new SharedObject(UInt8Array, 
-				  new BasicArray<uint8>(constImagScalar<uint8>()));
-      m_type = UInt8Array;
-    }
-    return;
+    if (allReal())
+      return Variant(UInt8Array,new BasicArray<uint8>(constRealScalar<uint8>()));
+    else
+      return Variant(UInt8Array,new BasicArray<uint8>(constRealScalar<uint8>()),
+		     new BasicArray<uint8>(constImagScalar<uint8>()));
   case Int16Scalar:
-    if (allReal()) {
-      m_real.p = new SharedObject(Int16Array, 
-				  new BasicArray<int16>(constRealScalar<int16>()));
-      m_type = Int16Array;
-    } else {
-      m_real.p = new SharedObject(Int16Array, 
-				  new BasicArray<int16>(constRealScalar<int16>()));
-      m_imag.p = new SharedObject(Int16Array, 
-				  new BasicArray<int16>(constImagScalar<int16>()));
-      m_type = Int16Array;
-    }
-    return;
+    if (allReal())
+      return Variant(Int16Array,new BasicArray<int16>(constRealScalar<int16>()));
+    else
+      return Variant(Int16Array,new BasicArray<int16>(constRealScalar<int16>()),
+		     new BasicArray<int16>(constImagScalar<int16>()));
   case UInt16Scalar:
-    if (allReal()) {
-      m_real.p = new SharedObject(UInt16Array, 
-				  new BasicArray<uint16>(constRealScalar<uint16>()));
-      m_type = UInt16Array;
-    } else {
-      m_real.p = new SharedObject(UInt16Array, 
-				  new BasicArray<uint16>(constRealScalar<uint16>()));
-      m_imag.p = new SharedObject(UInt16Array, 
-				  new BasicArray<uint16>(constImagScalar<uint16>()));
-      m_type = UInt16Array;
-    }
-    return;
+    if (allReal())
+      return Variant(UInt16Array,new BasicArray<uint16>(constRealScalar<uint16>()));
+    else
+      return Variant(UInt16Array,new BasicArray<uint16>(constRealScalar<uint16>()),
+		     new BasicArray<uint16>(constImagScalar<uint16>()));
   case Int32Scalar:
-    if (allReal()) {
-      m_real.p = new SharedObject(Int32Array, 
-				  new BasicArray<int32>(constRealScalar<int32>()));
-      m_type = Int32Array;
-    } else {
-      m_real.p = new SharedObject(Int32Array, 
-				  new BasicArray<int32>(constRealScalar<int32>()));
-      m_imag.p = new SharedObject(Int32Array, 
-				  new BasicArray<int32>(constImagScalar<int32>()));
-      m_type = Int32Array;
-    }
-    return;
+    if (allReal())
+      return Variant(Int32Array,new BasicArray<int32>(constRealScalar<int32>()));
+    else
+      return Variant(Int32Array,new BasicArray<int32>(constRealScalar<int32>()),
+		     new BasicArray<int32>(constImagScalar<int32>()));
   case UInt32Scalar:
-    if (allReal()) {
-      m_real.p = new SharedObject(UInt32Array, 
-				  new BasicArray<uint32>(constRealScalar<uint32>()));
-      m_type = UInt32Array;
-    } else {
-      m_real.p = new SharedObject(UInt32Array, 
-				  new BasicArray<uint32>(constRealScalar<uint32>()));
-      m_imag.p = new SharedObject(UInt32Array, 
-				  new BasicArray<uint32>(constImagScalar<uint32>()));
-      m_type = UInt32Array;
-    }
-    return;
+    if (allReal())
+      return Variant(UInt32Array,new BasicArray<uint32>(constRealScalar<uint32>()));
+    else
+      return Variant(UInt32Array,new BasicArray<uint32>(constRealScalar<uint32>()),
+		     new BasicArray<uint32>(constImagScalar<uint32>()));
   case Int64Scalar:
-    if (allReal()) {
-      m_real.p = new SharedObject(Int64Array, 
-				  new BasicArray<int64>(constRealScalar<int64>()));
-      m_type = Int64Array;
-    } else {
-      m_real.p = new SharedObject(Int64Array, 
-				  new BasicArray<int64>(constRealScalar<int64>()));
-      m_imag.p = new SharedObject(Int64Array, 
-				  new BasicArray<int64>(constImagScalar<int64>()));
-      m_type = Int64Array;
-    }
-    return;
+    if (allReal())
+      return Variant(Int64Array,new BasicArray<int64>(constRealScalar<int64>()));
+    else
+      return Variant(Int64Array,new BasicArray<int64>(constRealScalar<int64>()),
+		     new BasicArray<int64>(constImagScalar<int64>()));
   case UInt64Scalar:
-    if (allReal()) {
-      m_real.p = new SharedObject(UInt64Array, 
-				  new BasicArray<uint64>(constRealScalar<uint64>()));
-      m_type = UInt64Array;
-    } else {
-      m_real.p = new SharedObject(UInt64Array, 
-				  new BasicArray<uint64>(constRealScalar<uint64>()));
-      m_imag.p = new SharedObject(UInt64Array, 
-				  new BasicArray<uint64>(constImagScalar<uint64>()));
-      m_type = UInt64Array;
-    }
-    return;
+    if (allReal())
+      return Variant(UInt64Array,new BasicArray<uint64>(constRealScalar<uint64>()));
+    else
+      return Variant(UInt64Array,new BasicArray<uint64>(constRealScalar<uint64>()),
+		     new BasicArray<uint64>(constImagScalar<uint64>()));
   case FloatScalar:
-    if (allReal()) {
-      m_real.p = new SharedObject(FloatArray, 
-				  new BasicArray<float>(constRealScalar<float>()));
-      m_type = FloatArray;
-    } else {
-      m_real.p = new SharedObject(FloatArray, 
-				  new BasicArray<float>(constRealScalar<float>()));
-      m_imag.p = new SharedObject(FloatArray, 
-				  new BasicArray<float>(constImagScalar<float>()));
-      m_type = FloatArray;
-    }
-    return;
+    if (allReal())
+      return Variant(FloatArray,new BasicArray<float>(constRealScalar<float>()));
+    else
+      return Variant(FloatArray,new BasicArray<float>(constRealScalar<float>()),
+		     new BasicArray<float>(constImagScalar<float>()));
   case DoubleScalar:
-    if (allReal()) {
-      m_real.p = new SharedObject(DoubleArray, 
-				  new BasicArray<double>(constRealScalar<double>()));
-      m_type = DoubleArray;
-    } else {
-      m_real.p = new SharedObject(DoubleArray, 
-				  new BasicArray<double>(constRealScalar<double>()));
-      m_imag.p = new SharedObject(DoubleArray, 
-				  new BasicArray<double>(constImagScalar<double>()));
-      m_type = DoubleArray;
-    }
-    return;
+    if (allReal())
+      return Variant(DoubleArray,new BasicArray<double>(constRealScalar<double>()));
+    else
+      return Variant(DoubleArray,new BasicArray<double>(constRealScalar<double>()),
+		     new BasicArray<double>(constImagScalar<double>()));
   }
 }
 
 const IndexArray IndexArrayFromVariant(const Variant &index) {
-  if (index.type() == BoolScalar) {
-    Variant indexvec(index);
-    indexvec.forceArrayType();
-    return Find(indexvec.constReal<logical>());
-  }
+  if (index.type() == BoolScalar)
+    return Find(index.asArrayType().constReal<logical>());
   if (!index.allReal())
     Warn("Complex part of index ignored");
   if (index.type() == DoubleArray)

@@ -132,6 +132,11 @@ public:
       ret[i] = m_data[perm[i]-1];
     return ret;
   }
+  void cover(const NTuple& alt) {
+    for (int i=0;i<NDims;i++)
+      if (m_data[i] < alt.m_data[i]) 
+	m_data[i] = alt.m_data[i];
+  }
   bool operator<=(const NTuple& alt) const {
     for (int i=0;i<NDims;i++)
       if (m_data[i] > alt.m_data[i]) return false;

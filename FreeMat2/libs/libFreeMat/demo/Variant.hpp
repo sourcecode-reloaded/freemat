@@ -5,19 +5,19 @@
 #include "Types.hpp"
 #include "BasicArray.hpp"
 #include "FastList.hpp"
-class StructArray;
 class CellArray;
 class StringArray;
 
-
 class Variant;
+
 typedef FastList<Variant> VariantList;
+typedef QMap<QString,BasicArray<Variant> > StructArray;
 
 enum Type {
   Invalid = 0,
-  Cell = 1,
+  CellArray = 1,
   Struct = 2,
-  String = 3,
+  StringArray = 3,
   BoolScalar = 4,
   Int8Scalar = 5,
   UInt8Scalar = 6,
@@ -77,8 +77,6 @@ public:
   // Defined in VariantPrivate
   template <typename T> inline Variant(T real); 
   template <typename T> inline Variant(T real, T imag); 
-  //  Variant(const BasicArray<double> &r);
-  //  Variant(const BasicArray<double> &r, const BasicArray<double> &i);
   template <typename T> 
   inline Variant(Type t, const BasicArray<T> &r) {
     m_type = t;
@@ -92,7 +90,20 @@ public:
     m_imag.p = new SharedObject(t, new BasicArray<T>(i));
     m_complex = true;
   }
-  Variant(Type t, const NTuple &dims);
+  template <typename T>
+  inline Variant(Type t, BasicArray<T> *r) {
+    m_type = t;
+    m_real.p = new SharedObject(t,r);
+    m_complex = false;
+  }
+  template <typename T>
+  inline Variant(Type t, BasicArray<T> *r, BasicArray<T> *i) {
+    m_type = t;
+    m_real.p = new SharedObject(t,r);
+    m_imag.p = new SharedObject(t,i);
+    m_complex = true;
+  }
+  Variant(Type t, const NTuple &dims = NTuple(0,0));
   Variant(const QString &text);
   const NTuple dimensions() const;
   const index_t length() const {return dimensions().count();}
@@ -113,6 +124,12 @@ public:
   inline BasicArray<T>& real() {
     return (*reinterpret_cast<BasicArray<T>*>(m_real.p->ptr()));
   }
+  inline const StructArray& constStructPtr() const {
+    return (*reinterpret_cast<const StructArray*>(m_real.p->ptr()));
+  }
+  inline StructArray& structPtr() {
+    return (*reinterpret_cast<StructArray*>(m_real.p->ptr()));
+  }
   template <typename T>
   inline const BasicArray<T>& constReal() const {
     return (*reinterpret_cast<const BasicArray<T>*>(m_real.p->ptr()));
@@ -120,7 +137,6 @@ public:
   template <typename T>
   inline BasicArray<T>& imag() {
     if (!m_imag.p) {
-      std::cout << "INSTANTIATE\n";
       m_imag.p = new SharedObject(m_type, new BasicArray<T>(dimensions()));
       m_complex = true;
     }
@@ -166,10 +182,18 @@ public:
   void resize(index_t size);
   void reshape(const NTuple &size);
 
-  void forceArrayType();
+  Variant asArrayType() const;
   inline bool isEmpty() const {return length() == 0;}
 
   bool operator==(const Variant &b) const;
+  inline bool operator!=(const Variant &b) const {return !(*this == b);}
+
+  inline void addField(QString name) {
+    if (type() != Struct)
+      throw Exception("addField only valid for structure arrays");
+    if (!structPtr().contains(name))
+      structPtr().insert(name,BasicArray<Variant>());
+  }
 private:
   Data m_real;
   Data m_imag;

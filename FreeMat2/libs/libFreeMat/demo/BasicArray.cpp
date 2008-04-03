@@ -1,4 +1,5 @@
 #include "BasicArray.hpp"
+#include "Variant.hpp"
 
 static bool IsColonOp(const IndexArray& ndx) {
   if (!ndx.isScalar()) return false;
@@ -448,6 +449,7 @@ template BasicArray<uint64> BasicArray<uint64>::get(const IndexArray&) const;
 template BasicArray<int64>  BasicArray<int64>::get(const IndexArray&) const;
 template BasicArray<float>  BasicArray<float>::get(const IndexArray&) const;
 template BasicArray<double> BasicArray<double>::get(const IndexArray&) const;
+template BasicArray<Variant> BasicArray<Variant>::get(const IndexArray&) const;
 
 template BasicArray<bool>   BasicArray<bool>::get(const IndexArrayList&) const;
 template BasicArray<uint8>  BasicArray<uint8>::get(const IndexArrayList&) const;
@@ -460,6 +462,7 @@ template BasicArray<uint64> BasicArray<uint64>::get(const IndexArrayList&) const
 template BasicArray<int64>  BasicArray<int64>::get(const IndexArrayList&) const;
 template BasicArray<float>  BasicArray<float>::get(const IndexArrayList&) const;
 template BasicArray<double> BasicArray<double>::get(const IndexArrayList&) const;
+template BasicArray<Variant> BasicArray<Variant>::get(const IndexArrayList&) const;
 
 template void BasicArray<bool>::set(const IndexArray&,const BasicArray<bool>&);
 template void BasicArray<uint8>::set(const IndexArray&,const BasicArray<uint8>&);
@@ -472,6 +475,7 @@ template void BasicArray<uint64>::set(const IndexArray&,const BasicArray<uint64>
 template void BasicArray<int64>::set(const IndexArray&,const BasicArray<int64>&);
 template void BasicArray<float>::set(const IndexArray&,const BasicArray<float>&);
 template void BasicArray<double>::set(const IndexArray&,const BasicArray<double>&);
+template void BasicArray<Variant>::set(const IndexArray&,const BasicArray<Variant>&);
 
 template void BasicArray<bool>::set(const IndexArray&, const bool&);
 template void BasicArray<uint8>::set(const IndexArray&, const uint8&);
@@ -484,6 +488,7 @@ template void BasicArray<uint64>::set(const IndexArray&, const uint64&);
 template void BasicArray<int64>::set(const IndexArray&, const int64&);
 template void BasicArray<float>::set(const IndexArray&, const float&);
 template void BasicArray<double>::set(const IndexArray&, const double&);
+template void BasicArray<Variant>::set(const IndexArray&, const Variant&);
 
 template void BasicArray<bool>::set(const IndexArrayList&,const BasicArray<bool>&);
 template void BasicArray<uint8>::set(const IndexArrayList&,const BasicArray<uint8>&);
@@ -496,6 +501,7 @@ template void BasicArray<uint64>::set(const IndexArrayList&,const BasicArray<uin
 template void BasicArray<int64>::set(const IndexArrayList&,const BasicArray<int64>&);
 template void BasicArray<float>::set(const IndexArrayList&,const BasicArray<float>&);
 template void BasicArray<double>::set(const IndexArrayList&,const BasicArray<double>&);
+template void BasicArray<Variant>::set(const IndexArrayList&,const BasicArray<Variant>&);
 
 template void BasicArray<bool>::set(const IndexArrayList&, const bool&);
 template void BasicArray<uint8>::set(const IndexArrayList&, const uint8&);
@@ -508,6 +514,7 @@ template void BasicArray<uint64>::set(const IndexArrayList&, const uint64&);
 template void BasicArray<int64>::set(const IndexArrayList&, const int64&);
 template void BasicArray<float>::set(const IndexArrayList&, const float&);
 template void BasicArray<double>::set(const IndexArrayList&, const double&);
+template void BasicArray<Variant>::set(const IndexArrayList&, const Variant&);
 
 template void BasicArray<bool>::set(const NTuple&, const bool&);
 template void BasicArray<uint8>::set(const NTuple&, const uint8&);
@@ -520,6 +527,7 @@ template void BasicArray<uint64>::set(const NTuple&, const uint64&);
 template void BasicArray<int64>::set(const NTuple&, const int64&);
 template void BasicArray<float>::set(const NTuple&, const float&);
 template void BasicArray<double>::set(const NTuple&, const double&);
+template void BasicArray<Variant>::set(const NTuple&, const Variant&);
 
 template bool BasicArray<bool>::operator==(const BasicArray<bool>&) const;
 template bool BasicArray<uint8>::operator==(const BasicArray<uint8>&) const;
@@ -532,6 +540,7 @@ template bool BasicArray<uint64>::operator==(const BasicArray<uint64>&) const;
 template bool BasicArray<int64>::operator==(const BasicArray<int64>&) const;
 template bool BasicArray<float>::operator==(const BasicArray<float>&) const;
 template bool BasicArray<double>::operator==(const BasicArray<double>&) const;
+template bool BasicArray<Variant>::operator==(const BasicArray<Variant>&) const;
 
 template bool AllZeros(const BasicArray<bool>&);
 template bool AllZeros(const BasicArray<uint8>&);
@@ -544,3 +553,4 @@ template bool AllZeros(const BasicArray<uint64>&);
 template bool AllZeros(const BasicArray<int64>&);
 template bool AllZeros(const BasicArray<float>&);
 template bool AllZeros(const BasicArray<double>&);
+//template bool AllZeros(const BasicArray<Variant>&);

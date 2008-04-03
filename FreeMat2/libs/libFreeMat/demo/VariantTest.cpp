@@ -157,9 +157,7 @@ void TestScalarSet(Variant arg, Variant data) {
   Variant sub(arg);
   sub.set(Variant((S)1),data);
   Variant sub2(sub.get(Variant((S)1)));
-  if (sub == sub2)
-    std::cout << "Test " << count++ << " passed\n";
-  else
+  if (!(sub == sub2))
     std::cout << "Test " << count++ << " failed\n";
 }
 
@@ -167,9 +165,7 @@ template <typename T, typename S>
 void TestScalarGet(Variant arg) {
   Variant sub(arg.get(Variant((S)1)));
   Variant sub2((T) 3);
-  if (sub == sub2)
-    std::cout << "Test " << count++ << " passed\n";
-  else
+  if (!(sub == sub2))
     std::cout << "Test " << count++ << " failed\n";
 }
 
@@ -180,9 +176,7 @@ void TestScalarNGet(Variant arg) {
   ndx.push_back(Variant((S)1));
   Variant sub(arg.get(ndx));
   Variant sub2((T) 3);
-  if (sub == sub2)
-    std::cout << "Test " << count++ << " passed\n";
-  else
+  if (!(sub == sub2))
     std::cout << "Test " << count++ << " failed\n";
 }
 
@@ -196,9 +190,7 @@ void TestVecGet(Variant arg, Variant ndx) {
   for (index_t i=1;i<=ndx.length();i++) {
     sub2.set(i,arg.get(ndx.get(i)));
   }
-  if (sub == sub2)
-    std::cout << "Test " << count++ << " passed\n";
-  else
+  if (!(sub == sub2))
     std::cout << "Test " << count++ << " failed\n";
 }
 
@@ -220,9 +212,7 @@ void TestMatGet(Variant arg, Variant ndx) {
       sub2.set(NTuple(j,i),arg.get(sset));
     }
   }
-  if (sub == sub2)
-    std::cout << "Test " << count++ << " passed\n";
-  else
+  if (!(sub == sub2))
     std::cout << "Test " << count++ << " failed\n";
 }
 
@@ -294,6 +284,22 @@ void TestScalarVecSet() {
   TestScalarSet<uint64,T>(UInt64ScalarIndex,FloatScalarIndex);
   TestScalarSet<float,T>(FloatScalarIndex,DoubleScalarIndex);
   TestScalarSet<double,T>(DoubleScalarIndex,Int8ScalarIndex); 
+}
+
+void TestStructCase() {
+  Variant tst(Struct);
+  tst.addField(QString("color"));
+  tst.resize(NTuple(1,3));
+  Variant g1(Struct);
+  g1.structPtr()[QString("color")].set(1,Variant(QString("red")));
+  Variant g2(Struct);
+  g2.structPtr()[QString("color")].set(1,Variant(QString("blue")));
+  Variant g3(Struct);
+  g3.structPtr()[QString("color")].set(1,Variant(QString("green")));
+  g3.structPtr()[QString("size")].set(1,Variant(QString("small")));
+  tst.set(1,g1);
+  tst.set(2,g2);
+  tst.set(3,g3);
 }
 
 int main() {
@@ -382,5 +388,8 @@ int main() {
   TestScalarVecSet<float>();
   TestScalarVecSet<double>();
 
+  TestStructCase();
+
   return 0;
 }
+
