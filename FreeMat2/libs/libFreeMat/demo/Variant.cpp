@@ -72,18 +72,13 @@ static inline const void Tset_struct(Variant*ptr, S ndx, const Variant &rhs) {
   const StructArray &rp(rhs.constStructPtr());
   StructArray &lp(ptr->structPtr());
   StructArray::const_iterator i=rp.constBegin();
+  NTuple newSize(ptr->dimensions());
   while (i!=rp.constEnd()) {
     lp[i.key()].set(ndx,i.value());
+    newSize = lp[i.key()].dimensions();
     ++i;
   }
   // Loop through the output and force all arrays to be the same size
-#error This is not correct, as if one component becomes [Mx1], what happens
-  NTuple newSize;
-  i = lp.constBegin();
-  while (i!= lp.constEnd()) {
-    newSize.cover(i.value().dimensions());
-    ++i;
-  }
   StructArray::iterator j=lp.begin();
   while (j != lp.end()) {
     j.value().resize(newSize);
