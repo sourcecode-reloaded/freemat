@@ -22,6 +22,7 @@
 #include "DebugStream.hpp" 
 
 HandleImage::HandleImage() {
+  MTr.setMatrix(1,0,0,1,0,0);
   ConstructProperties();
   SetupDefaults();
 }
@@ -304,19 +305,16 @@ void HandleImage::UpdateState() {
   xflip = (ax->StringCheck("xdir","reverse"));
   // Reverse the yflip bit - so that images naturally have the first row at the top
   yflip = !(ax->StringCheck("ydir","reverse"));
-  if (xflip || yflip) {
-    double m11, m22;
-    if (xflip)
-      m11 = -1;
-    else
-      m11 = 1;
-    if (yflip)
-      m22 = -1;
-    else
-      m22 = 1;
-    QMatrix m(m11,0,0,m22,0,0);
-    img = img.transformed(m);
-  }
+  double m11, m22;
+  if (xflip)
+    m11 = -1;
+  else
+    m11 = 1;
+  if (yflip)
+    m22 = -1;
+  else
+    m22 = 1;
+  MTr.setMatrix(m11,0,0,m22,0,0);
 }
 
 void HandleImage::PaintMe(RenderEngine& gc) {
@@ -324,13 +322,9 @@ void HandleImage::PaintMe(RenderEngine& gc) {
     return;
   HPTwoVector *xp = (HPTwoVector *) LookupProperty("xdata");
   HPTwoVector *yp = (HPTwoVector *) LookupProperty("ydata");
-  // Rescale the image
-  int x1, y1, x2, y2;
-  gc.toPixels(xp->Data()[0],yp->Data()[0],0,x1,y1);
-  gc.toPixels(xp->Data()[1],yp->Data()[1],0,x2,y2);
-  if ((abs(x2-x1)> 4096) || (abs(y2-y1) > 4096)) return;
-  dbout << "bounds: " << xp->Data()[0] << ", " << yp->Data()[0] << " x " 
-      << xp->Data()[1] << ", " << yp->Data()[1] << " scale " << abs(x2-x1) << ", " << abs(y2-y1) << "\n";
-  gc.drawImage(xp->Data()[0],yp->Data()[0],xp->Data()[1],
-	       yp->Data()[1],img.scaled(abs(x2-x1),abs(y2-y1)));
+  HandleAxis *ax = GetParentAxis();
+  HPTwoVector *xlim = (HPTwoVector *) ax->LookupProperty("xlim");
+  HPTwoVector *ylim = (HPTwoVector *) ax->LookupProperty("ylim");
+
+  gc.drawImage(xp, yp, xlim, ylim,img.transformed(MTr));
 }
