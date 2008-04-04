@@ -97,6 +97,7 @@ public:
   void del(const IndexArray& index);
   void resize(const NTuple& pos);
   void resize(index_t len);
+  void printMe(std::ostream& o) const;
   inline void reshape(const NTuple& pos) {
     if (m_dims.count() == pos.count())
       m_dims = pos;
@@ -104,6 +105,12 @@ public:
       throw Exception("Illegal reshape");
   }
 };
+
+template <typename T>
+std::ostream& operator<<(std::ostream& o, const BasicArray<T>& arg) {
+  arg.printMe(o);
+  return o;
+}
 
 template <typename T>
 BasicArray<T> Apply(const BasicArray<T>& arg, T (*func)(T));

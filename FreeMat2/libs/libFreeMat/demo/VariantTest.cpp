@@ -300,6 +300,22 @@ void TestStructCase() {
   tst.set(1,g1);
   tst.set(2,g2);
   tst.set(3,g3);
+  std::cout << tst;
+  std::cout << FloatIndex;
+  Variant p(QString("hello"));
+  std::cout << p << "\n";
+  std::cout << g3.get(QString("color")) << "\n";
+  std::cout << tst.getList(QString("color"));
+  VariantList m;
+  m.push_back(Variant(1.2));
+  m.push_back(Variant(3.5));
+  m.push_back(Variant(QString("pos")));
+  VariantList m_copy(m);
+  tst.setList(QString("misc"),m);
+  Variant q(Struct);
+  q.setList(QString("test"),m_copy);
+  std::cout << tst;
+  std::cout << q;
 }
 
 int main() {

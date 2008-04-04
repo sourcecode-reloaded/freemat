@@ -15,6 +15,14 @@ static IndexArray ExpandColons(const IndexArray& ndx, index_t len) {
 }
 
 template <typename T>
+void BasicArray<T>::printMe(std::ostream& o) const {
+  o << dimensions() << "[";
+  for (int i=0;i<length();i++)
+    o << get(i+1) << " ";
+  o << "]\n";
+}
+
+template <typename T>
 void BasicArray<T>::resize(index_t len) {
   if (len > length()) {
     NTuple newDim;
@@ -528,6 +536,19 @@ template void BasicArray<int64>::set(const NTuple&, const int64&);
 template void BasicArray<float>::set(const NTuple&, const float&);
 template void BasicArray<double>::set(const NTuple&, const double&);
 template void BasicArray<Variant>::set(const NTuple&, const Variant&);
+
+template void BasicArray<bool>::printMe(std::ostream& o) const;
+template void BasicArray<uint8>::printMe(std::ostream& o) const;
+template void BasicArray<int8>::printMe(std::ostream& o) const;
+template void BasicArray<uint16>::printMe(std::ostream& o) const;
+template void BasicArray<int16>::printMe(std::ostream& o) const;
+template void BasicArray<uint32>::printMe(std::ostream& o) const;
+template void BasicArray<int32>::printMe(std::ostream& o) const;
+template void BasicArray<uint64>::printMe(std::ostream& o) const;
+template void BasicArray<int64>::printMe(std::ostream& o) const;
+template void BasicArray<float>::printMe(std::ostream& o) const;
+template void BasicArray<double>::printMe(std::ostream& o) const;
+template void BasicArray<Variant>::printMe(std::ostream& o) const;
 
 template bool BasicArray<bool>::operator==(const BasicArray<bool>&) const;
 template bool BasicArray<uint8>::operator==(const BasicArray<uint8>&) const;

@@ -440,12 +440,33 @@ void Variant::print(std::ostream& o) const {
   switch (m_type) {
   default:
     throw Exception("unsupported type");
+  case Invalid:
+    o << "[] ";
+    return;
+  case CellArray:
+    o << constReal<Variant>();
+    return;
+  case Struct:
+    {
+      const StructArray &rp(constStructPtr());
+      for (StructArray::const_iterator i=rp.constBegin();i!=rp.constEnd();++i) {
+	o << "field: " << i.key() << "\n";
+	o << "value: " << i.value();
+      }
+    }
+    return;
   case UInt8Scalar:
     if (m_complex)
       o << "(" << (int) m_real.u8 << "," << (int) m_imag.u8 << ")"; 
     else
       o << (int) m_real.u8;
     return;
+  case StringArray:
+    {
+      QString val(string());
+      o << val.toStdString().c_str();
+      return;
+    }
   case UInt16Scalar:
     if (m_complex)
       o << "(" << m_real.u16 << "," << m_imag.u16 << ")";
@@ -500,16 +521,76 @@ void Variant::print(std::ostream& o) const {
     else
       o << m_real.d;
     return;
-//   case UInt8Array:
-//   case UInt16Array:
-//   case UInt32Array:
-//   case UInt64Array:
-//   case Int8Array:
-//   case Int16Array:
-//   case Int32Array:
-//   case Int64Array:
-//   case FloatArray:
-//   case DoubleArray:
+  case UInt8Array:
+    if (m_complex)
+      o << "real\n" << constReal<uint8>() 
+	<< "complex\n" << constImag<uint8>();
+    else
+      o << "real\n" << constReal<uint8>();
+    return;
+  case UInt16Array:
+    if (m_complex)
+      o << "real\n" << constReal<uint16>() 
+	<< "complex\n" << constImag<uint16>();
+    else
+      o << "real\n" << constReal<uint16>();
+    return;
+  case UInt32Array:
+    if (m_complex)
+      o << "real\n" << constReal<uint32>() 
+	<< "complex\n" << constImag<uint32>();
+    else
+      o << "real\n" << constReal<uint32>();
+    return;
+  case UInt64Array:
+    if (m_complex)
+      o << "real\n" << constReal<uint64>() 
+	<< "complex\n" << constImag<uint64>();
+    else
+      o << "real\n" << constReal<uint64>();
+    return;
+  case Int8Array:
+    if (m_complex)
+      o << "real\n" << constReal<int8>() 
+	<< "complex\n" << constImag<int8>();
+    else
+      o << "real\n" << constReal<int8>();
+    return;
+  case Int16Array:
+    if (m_complex)
+      o << "real\n" << constReal<int16>() 
+	<< "complex\n" << constImag<int16>();
+    else
+      o << "real\n" << constReal<int16>();
+    return;
+  case Int32Array:
+    if (m_complex)
+      o << "real\n" << constReal<int32>() 
+	<< "complex\n" << constImag<int32>();
+    else
+      o << "real\n" << constReal<int32>();
+    return;
+  case Int64Array:
+    if (m_complex)
+      o << "real\n" << constReal<int64>() 
+	<< "complex\n" << constImag<int64>();
+    else
+      o << "real\n" << constReal<int64>();
+    return;
+  case FloatArray:
+    if (m_complex)
+      o << "real\n" << constReal<float>() 
+	<< "complex\n" << constImag<float>();
+    else
+      o << "real\n" << constReal<float>();
+    return;
+  case DoubleArray:
+    if (m_complex)
+      o << "real\n" << constReal<double>() 
+	<< "complex\n" << constImag<double>();
+    else
+      o << "real\n" << constReal<double>();
+    return;
   }
 }
 
@@ -548,6 +629,13 @@ const NTuple Variant::dimensions() const {
     return NTuple(1,1);
   case CellArray:
     return (constReal<Variant>().dimensions());
+  case Struct:
+    {
+      const StructArray &rp(constStructPtr());
+      StructArray::const_iterator i=rp.constBegin();
+      if (i == rp.constEnd()) return NTuple(0,0);
+      return i.value().dimensions();
+    }
   case BoolArray:
     return (constReal<logical>().dimensions());
   case Int8Array:
@@ -920,6 +1008,51 @@ void Variant::resize(index_t size) {
   }  
 }
 
+const VariantList Variant::toVariantList() const {
+  if (m_type != CellArray) 
+    throw Exception("Unsupported type for call to toVariantList");
+  VariantList ret;
+  const BasicArray<Variant> &rp(constReal<Variant>());
+  for (index_t i=1;i<=length();i++)
+    ret.push_back(rp.get(i));
+  return ret;
+}
+
+void Variant::setList(const QString& field, VariantList& data) {
+  if (m_type != Struct) throw Exception("Unsupported type for A.field=B");
+  StructArray &rp(structPtr());
+  if (isEmpty()) 
+    rp.insert(field,BasicArray<Variant>(NTuple(1,1)));
+  if (!rp.contains(field))
+    rp.insert(field,BasicArray<Variant>(dimensions()));
+  if (data.size() < length())
+    throw Exception("Not enough right hand values to satisfy left hand side expression.");
+  BasicArray<Variant> &val(rp[field]);
+  for (int i=0;i<length();i++) {
+    val.set(i+1,data.front());
+    data.pop_front();
+  }
+}
+
+const VariantList Variant::getList(const QString& field) const {
+  if (m_type != Struct) throw Exception("Unsupported type for get(string)");
+  const StructArray &rp(constStructPtr());
+  if (!rp.contains(field)) throw Exception("Reference to non-existent field " + field);
+  VariantList ret;
+  const BasicArray<Variant> &val(rp.value(field));
+  for (index_t i=1;i<=val.length();i++)
+    ret.push_back(val.get(i));
+  return ret;
+}
+
+const Variant Variant::get(const QString& field) const {
+  if (m_type != Struct) throw Exception("Unsupported type for get(string)");
+  if (!isScalar()) throw Exception("Structure a.foo requires a be a singleton");
+  const StructArray &rp(constStructPtr());
+  if (!rp.contains(field)) throw Exception("Reference to non-existent field " + field);
+  return rp.value(field).get(1);
+}
+
 const Variant Variant::get(const IndexArray& index) const {
   switch (m_type) {
   default: 
@@ -1244,8 +1377,9 @@ const Variant Variant::get(const Variant& index) const {
     if (!index.allReal())
      Warn("Complex part of index ignored");
     return get(index.asIndexScalar());
-  }
-  else 
+  } else if ((m_type == Struct) && (index.type() == StringArray))
+    return get(index.string());
+  else
     return get(IndexArrayFromVariant(index));
 }
 

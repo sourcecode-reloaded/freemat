@@ -160,7 +160,16 @@ public:
       push_back(other.at(i));
     return *this;
   }
+  void printMe(std::ostream& o) const {
+    for (int i=0;i<size();i++)
+      o << at(i) << "\n";
+  }
 };
 
+template <typename T>
+std::ostream& operator<<(std::ostream& o, const FastList<T> &a) {
+  a.printMe(o);
+  return o;
+}
 
 #endif

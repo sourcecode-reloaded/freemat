@@ -162,6 +162,7 @@ public:
   const Variant get(const IndexArray& index) const;
   const Variant get(const Variant& index) const;
   const Variant get(index_t index) const;
+  const Variant get(const QString& field) const;
 
   const Variant get(const NTuple& index) const;
   const Variant get(const IndexArrayList& indices) const;
@@ -174,6 +175,15 @@ public:
   void set(const VariantList& index, const Variant& data);
   void set(const IndexArrayList& index, const Variant& data);
   void set(const NTuple& index, const Variant& data);
+
+  const VariantList getList(const QString& field) const;
+  void setList(const QString& field, VariantList& data);
+
+  void setList(const Variant& index, VariantList& data);
+  void setList(const IndexArray& index, VariantList& data);
+  void setList(index_t index, VariantList& data);
+
+  const VariantList toVariantList() const;
 
   void del(const Variant& index);
   void del(const VariantList& index);
