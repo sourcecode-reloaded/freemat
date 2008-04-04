@@ -588,8 +588,8 @@ void QTRenderEngine::drawImage(HPTwoVector* xp, HPTwoVector* yp, HPTwoVector* xl
 
     float source_x = (viewport_x - data_x)*pic.width()/data_width;
     float source_y = (viewport_y - data_y)*pic.height()/data_height;
-    float source_width = pic.width()*viewport_width/data_width;
-    float source_height = pic.height()*viewport_height/data_height;
+    float source_width = (pic.width()+1)*viewport_width/data_width;
+    float source_height = (pic.height()+1)*viewport_height/data_height;
     QRectF source( source_x, source_y, source_width, source_height );
     pnt->drawImage( target, pic, source );
 }
