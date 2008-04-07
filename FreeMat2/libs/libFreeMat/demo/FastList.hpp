@@ -26,6 +26,12 @@ public:
     m_vec = copy.m_vec;
     if (m_vec) m_vec = new QVector<T>(*m_vec);
   }
+  inline void clear() {
+    if (m_size > 2) m_vec->clear();
+    m_slot1 = T();
+    m_slot2 = T();
+    m_size = 0;
+  }
   inline ~FastList() {
     if (m_vec) delete m_vec;
   }

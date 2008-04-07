@@ -45,6 +45,7 @@ public:
   inline index_t cols() const {return m_dims.cols();}
   inline index_t length() const {return m_dims.count();}
   inline index_t isScalar() const {return length() == 1;}
+  inline bool is2D() const {return m_dims.is2D();}
   inline bool isEmpty() const {return (length() == 0);}
   inline bool isColumnVector() const {return m_dims.isColumnVector();}
   inline bool isRowVector() const {return m_dims.isRowVector();}
@@ -134,6 +135,8 @@ bool AnyNotFinite(const BasicArray<T>& arg);
 
 template <typename T>
 T MaxValue(const BasicArray<T>& arg);
+
+bool IsColonOp(const IndexArray& ndx);
 
 template <typename S, typename T>
 void ConvertBasicArray(const BasicArray<S>& source, BasicArray<T>& dest) {

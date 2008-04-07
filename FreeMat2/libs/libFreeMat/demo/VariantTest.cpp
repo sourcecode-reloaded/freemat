@@ -104,22 +104,22 @@ void InitializeIndexArrays() {
 }
 
 void InitializeDataMat() {
-  BoolMat.set(NTuple(1,1),(logical) 1);
-  BoolMat.set(NTuple(2,1),(logical) 1);
-  BoolMat.set(NTuple(5,1),(logical) 1);
-  BoolMat.set(NTuple(2,2),(logical) 1);
-  BoolMat.set(NTuple(3,2),(logical) 1);
-  BoolMat.set(NTuple(4,2),(logical) 1);
-  BoolMat.set(NTuple(5,2),(logical) 1);
-  BoolMat.set(NTuple(2,3),(logical) 1);
-  BoolMat.set(NTuple(3,3),(logical) 1);
-  BoolMat.set(NTuple(4,3),(logical) 1);
-  BoolMat.set(NTuple(1,4),(logical) 1);
-  BoolMat.set(NTuple(2,4),(logical) 1);
-  BoolMat.set(NTuple(3,4),(logical) 1);
-  BoolMat.set(NTuple(1,5),(logical) 1);
-  BoolMat.set(NTuple(3,5),(logical) 1);
-  BoolMat.set(NTuple(4,5),(logical) 1);
+  BoolMat.set(NTuple(1,1),Variant((logical) 1));
+  BoolMat.set(NTuple(2,1),Variant((logical) 1));
+  BoolMat.set(NTuple(5,1),Variant((logical) 1));
+  BoolMat.set(NTuple(2,2),Variant((logical) 1));
+  BoolMat.set(NTuple(3,2),Variant((logical) 1));
+  BoolMat.set(NTuple(4,2),Variant((logical) 1));
+  BoolMat.set(NTuple(5,2),Variant((logical) 1));
+  BoolMat.set(NTuple(2,3),Variant((logical) 1));
+  BoolMat.set(NTuple(3,3),Variant((logical) 1));
+  BoolMat.set(NTuple(4,3),Variant((logical) 1));
+  BoolMat.set(NTuple(1,4),Variant((logical) 1));
+  BoolMat.set(NTuple(2,4),Variant((logical) 1));
+  BoolMat.set(NTuple(3,4),Variant((logical) 1));
+  BoolMat.set(NTuple(1,5),Variant((logical) 1));
+  BoolMat.set(NTuple(3,5),Variant((logical) 1));
+  BoolMat.set(NTuple(4,5),Variant((logical) 1));
   InitializeDataMatrix<int8>(Int8Mat);
   InitializeDataMatrix<uint8>(UInt8Mat);
   InitializeDataMatrix<int16>(Int16Mat);
@@ -133,11 +133,11 @@ void InitializeDataMat() {
 }
 
 void InitializeDataVecs() {
-  BoolVec.set(1,(logical) 1);
-  BoolVec.set(2,(logical) 0);
-  BoolVec.set(3,(logical) 0);
-  BoolVec.set(4,(logical) 1);
-  BoolVec.set(5,(logical) 1);
+  BoolVec.set(1,Variant((logical) 1));
+  BoolVec.set(2,Variant((logical) 0));
+  BoolVec.set(3,Variant((logical) 0));
+  BoolVec.set(4,Variant((logical) 1));
+  BoolVec.set(5,Variant((logical) 1));
   InitializeDataVec<int8>(Int8Vec);
   InitializeDataVec<uint8>(UInt8Vec);
   InitializeDataVec<int16>(Int16Vec);
@@ -305,15 +305,15 @@ void TestStructCase() {
   Variant p(QString("hello"));
   std::cout << p << "\n";
   std::cout << g3.get(QString("color")) << "\n";
-  std::cout << tst.getList(QString("color"));
+  std::cout << tst.get(QString("color"));
   VariantList m;
   m.push_back(Variant(1.2));
   m.push_back(Variant(3.5));
   m.push_back(Variant(QString("pos")));
   VariantList m_copy(m);
-  tst.setList(QString("misc"),m);
+  tst.set(QString("misc"),m);
   Variant q(Struct);
-  q.setList(QString("test"),m_copy);
+  q.set(QString("test"),m_copy);
   std::cout << tst;
   std::cout << q;
 }

@@ -1,7 +1,7 @@
 #include "BasicArray.hpp"
 #include "Variant.hpp"
 
-static bool IsColonOp(const IndexArray& ndx) {
+bool IsColonOp(const IndexArray& ndx) {
   if (!ndx.isScalar()) return false;
   return (ndx.get(1) == -1);
 }

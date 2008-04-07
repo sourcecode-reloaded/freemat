@@ -5,6 +5,7 @@
 #include "Types.hpp"
 #include "BasicArray.hpp"
 #include "FastList.hpp"
+#include "SparseMatrix.hpp"
 class CellArray;
 class StringArray;
 
@@ -39,7 +40,8 @@ enum Type {
   Int64Array = 22,
   UInt64Array = 23,
   FloatArray = 24,
-  DoubleArray = 25
+  DoubleArray = 25,
+  DoubleSparse = 26
 };
 
 class SharedObject : public QSharedData {
@@ -75,8 +77,8 @@ class Variant {
 public:
   inline Variant() {}
   // Defined in VariantPrivate
-  template <typename T> inline Variant(T real); 
-  template <typename T> inline Variant(T real, T imag); 
+  template <typename T> inline explicit Variant(T real); 
+  template <typename T> inline explicit Variant(T real, T imag); 
   template <typename T> 
   inline Variant(Type t, const BasicArray<T> &r) {
     m_type = t;
@@ -105,6 +107,8 @@ public:
   }
   Variant(Type t, const NTuple &dims = NTuple(0,0));
   Variant(const QString &text);
+  Variant(const SparseMatrix& real);
+  Variant(const SparseMatrix& real, const SparseMatrix& imag);
   const NTuple dimensions() const;
   const index_t length() const {return dimensions().count();}
   const index_t rows() const {return dimensions()[0];}
@@ -129,6 +133,24 @@ public:
   }
   inline StructArray& structPtr() {
     return (*reinterpret_cast<StructArray*>(m_real.p->ptr()));
+  }
+  inline const SparseMatrix& constRealSparse() const {
+    return (*reinterpret_cast<const SparseMatrix*>(m_real.p->ptr()));
+  }
+  inline const SparseMatrix& constImagSparse() const {
+    if (!m_imag.p)
+      throw Exception("Illegal request for imaginary part of real-only array");
+    return (*reinterpret_cast<const SparseMatrix*>(m_imag.p->ptr()));
+  }
+  inline SparseMatrix& realSparse() {
+    return (*reinterpret_cast<SparseMatrix*>(m_real.p->ptr()));
+  }
+  inline SparseMatrix& imagSparse() {
+    if (!m_imag.p) {
+      m_imag.p = new SharedObject(m_type, new SparseMatrix(dimensions()));
+      m_complex = true;
+    }
+    return (*reinterpret_cast<SparseMatrix*>(m_imag.p->ptr()));
   }
   template <typename T>
   inline const BasicArray<T>& constReal() const {
@@ -162,7 +184,7 @@ public:
   const Variant get(const IndexArray& index) const;
   const Variant get(const Variant& index) const;
   const Variant get(index_t index) const;
-  const Variant get(const QString& field) const;
+  const VariantList get(const QString& field) const;
 
   const Variant get(const NTuple& index) const;
   const Variant get(const IndexArrayList& indices) const;
@@ -175,18 +197,8 @@ public:
   void set(const VariantList& index, const Variant& data);
   void set(const IndexArrayList& index, const Variant& data);
   void set(const NTuple& index, const Variant& data);
+  void set(const QString& field, VariantList& data);
 
-  const VariantList getList(const QString& field) const;
-  void setList(const QString& field, VariantList& data);
-
-  void setList(const Variant& index, VariantList& data);
-  void setList(const IndexArray& index, VariantList& data);
-  void setList(index_t index, VariantList& data);
-
-  const VariantList toVariantList() const;
-
-  void del(const Variant& index);
-  void del(const VariantList& index);
   void print(std::ostream& o) const;
   void resize(const NTuple &size);
   void resize(index_t size);
@@ -197,13 +209,7 @@ public:
 
   bool operator==(const Variant &b) const;
   inline bool operator!=(const Variant &b) const {return !(*this == b);}
-
-  inline void addField(QString name) {
-    if (type() != Struct)
-      throw Exception("addField only valid for structure arrays");
-    if (!structPtr().contains(name))
-      structPtr().insert(name,BasicArray<Variant>());
-  }
+  void addField(QString name);
 private:
   Data m_real;
   Data m_imag;
@@ -228,6 +234,15 @@ std::ostream& operator<<(std::ostream& o, const Variant &t);
 bool IsColonOp(const Variant &arg);
 
 const IndexArray IndexArrayFromVariant(const Variant &index);
+
+const VariantList VariantListFromCellArray(const Variant &arg);
+const Variant CellArrayFromVariantList(VariantList &arg, index_t cnt);
+void SetCellContents(Variant &cell, const Variant& index, VariantList& data);
+void SetCellContents(Variant &cell, const VariantList& index, VariantList& data);
+QStringList FieldNames(const Variant& arg);
+
+SparseMatrix ToRealSparse(const Variant& data);
+SparseMatrix ToImagSparse(const Variant& data);
 
 // Suppose we support a get/set interface:
 // And we support slicing through the iterators

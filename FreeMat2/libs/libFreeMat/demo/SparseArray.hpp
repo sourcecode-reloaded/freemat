@@ -14,6 +14,9 @@ class SparseMatrix : public BaseArray<T> {
   QMap<index_t, SparseSlice<T> > m_data;
   NTuple m_dims;
 public:
+  SparseMatrix(const NTuple &dims) {
+    m_dims = dims;
+  }
   SparseMatrix(QVector<index_t> row, QVector<index_t> col, QVector<T> val) {
     std::cout << "row " << row.size() << "\n";
     std::cout << "col " << col.size() << "\n";

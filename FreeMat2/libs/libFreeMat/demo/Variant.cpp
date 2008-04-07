@@ -1,8 +1,5 @@
 #include "Variant.hpp"
-
-// Suppose a StructArray is a BasicArray<Struct>
-// Where:
-// Struct: QMap<QString,Variant> Struct;
+#include <QStringList>
 
 void Warn(const char *msg) {
   std::cout << "Warning:" << msg;
@@ -112,7 +109,6 @@ static inline const void Tset_struct_scalar_rhs(Variant*ptr, S ndx, const Varian
   }
 }
 
-
 template <typename S, typename T>
 static inline const Variant Tget(const Variant*ptr, S ndx) {
   if (ptr->allReal()) {
@@ -124,6 +120,16 @@ static inline const Variant Tget(const Variant*ptr, S ndx) {
     return Variant(ptr->type(),real.get(ndx),imag.get(ndx));
   }
 }
+
+template <typename S>
+static inline const Variant Tget_sparse(const Variant*ptr, S ndx) {
+  if (ptr->allReal())
+    return Variant(ptr->constRealSparse().get(ndx));
+  else
+    return Variant(ptr->constRealSparse().get(ndx),
+		   ptr->constImagSparse().get(ndx));
+}
+
 
 static inline Type ScalarType(Type x) {
   switch (x) {
@@ -151,6 +157,8 @@ static inline Type ScalarType(Type x) {
     return FloatScalar;
   case DoubleArray:
     return DoubleScalar;
+  case DoubleSparse:
+    return DoubleScalar;
   }
 }
 
@@ -163,6 +171,14 @@ static inline void Tset_scalar_rhs(Variant* ptr, S ndx, const Variant& data) {
     BasicArray<T> &imag(ptr->imag<T>());
     imag.set(ndx,dataTyped.constImagScalar<T>());
   }
+}
+
+template <typename S>
+static inline void Tset_sparse_scalar_rhs(Variant*ptr, S ndx, const Variant &rhs) {
+  Variant dataTyped(rhs.asScalar().toType(ScalarType(ptr->type())));
+  ptr->realSparse().set(ndx,dataTyped.constRealScalar<double>());
+  if (!dataTyped.allReal()) 
+    ptr->imagSparse().set(ndx,dataTyped.constImagScalar<double>());
 }
 
 template <typename S>
@@ -183,6 +199,52 @@ static inline void Tresize(Variant* ptr, S ndx) {
     BasicArray<T> &imag(ptr->imag<T>());
     imag.resize(ndx);
   }
+}
+
+template <typename S>
+static inline void Tresize_sparse(Variant* ptr, S ndx) {
+  ptr->realSparse().resize(ndx);
+  if (!ptr->allReal()) 
+    ptr->imagSparse().resize(ndx);
+}
+
+
+template <typename S>
+static inline void Treshape_struct(Variant* ptr, S ndx) {
+  StructArray &lp(ptr->structPtr());
+  StructArray::iterator i=lp.begin();
+  while (i != lp.end()) {
+    i.value().reshape(ndx);
+    ++i;
+  }
+}
+
+template <typename S>
+static inline void Treshape_sparse(Variant* ptr, S ndx) {
+  ptr->realSparse().reshape(ndx);
+  if (!ptr->allReal()) 
+    ptr->imagSparse().reshape(ndx);
+}
+
+template <typename S, typename T>
+static inline void Treshape(Variant* ptr, S ndx) {
+  BasicArray<T> &real(ptr->real<T>());
+  real.reshape(ndx);
+  if (!ptr->allReal()) {
+    BasicArray<T> &imag(ptr->imag<T>());
+    imag.reshape(ndx);
+  }
+}
+
+template <typename S>
+static inline void Tset_sparse(Variant* ptr, S ndx, const Variant& data) {
+  if (data.isScalar()) {
+    Tset_sparse_scalar_rhs<S>(ptr,ndx,data);
+    return;
+  }
+  ptr->realSparse().set(ndx,ToRealSparse(data));
+  if (!data.allReal())
+    ptr->imagSparse().set(ndx,ToImagSparse(data));
 }
 
 template <typename S, typename T>
@@ -340,6 +402,8 @@ static inline void* construct(Type t, const void *copy) {
     return Tconstruct<BasicArray<float> >(copy);
   case DoubleArray:
     return Tconstruct<BasicArray<double> >(copy);
+  case DoubleSparse:
+    return Tconstruct<SparseMatrix>(copy);
   }
 }
 
@@ -374,6 +438,8 @@ static inline void* construct_sized(Type t, const NTuple &dims) {
     return Tconstruct_sized<BasicArray<float> >(dims);
   case DoubleArray:
     return Tconstruct_sized<BasicArray<double> >(dims);
+  case DoubleSparse:
+    return reinterpret_cast<void*>(new SparseMatrix(dims));
   }
 }
 
@@ -408,6 +474,8 @@ static inline void destruct(Type t, void *todelete) {
     return Tdestruct<BasicArray<float> >(todelete);
   case DoubleArray:
     return Tdestruct<BasicArray<double> >(todelete);
+  case DoubleSparse:
+    return Tdestruct<SparseMatrix>(todelete);
   }
 }
 
@@ -591,6 +659,12 @@ void Variant::print(std::ostream& o) const {
     else
       o << "real\n" << constReal<double>();
     return;
+  case DoubleSparse:
+    if (m_complex)
+      o << "real\n" << constRealSparse()
+	<< "complex\n" << constImagSparse();
+    else
+      o << "real\n" << constRealSparse();
   }
 }
 
@@ -598,6 +672,20 @@ Variant::Variant(Type t, const NTuple &dims) {
   m_type = t;
   m_real.p = new SharedObject(t,construct_sized(t,dims));
   m_complex = false;
+}
+
+Variant::Variant(const SparseMatrix& real) {
+  m_type = DoubleSparse;
+  m_real.p = new SharedObject(DoubleSparse,new SparseMatrix(real));
+  m_complex = false;
+}
+
+Variant::Variant(const SparseMatrix& real, 
+		 const SparseMatrix& imag) {
+  m_type = DoubleSparse;
+  m_real.p = new SharedObject(DoubleSparse,new SparseMatrix(real));
+  m_imag.p = new SharedObject(DoubleSparse,new SparseMatrix(imag));
+  m_complex = true;
 }
 
 Variant::Variant(const QString &text) {
@@ -659,6 +747,8 @@ const NTuple Variant::dimensions() const {
     return (constReal<float>().dimensions());
   case DoubleArray:
     return (constReal<double>().dimensions());
+  case DoubleSparse:
+    return (constRealSparse().dimensions());
   };
 }
 
@@ -720,14 +810,17 @@ void Variant::set(index_t index, const Variant& data) {
   case DoubleArray:
     Tset_scalar_rhs<index_t,double>(this,index,data);
     return;
-  }  
+  case DoubleSparse:
+    Tset_sparse_scalar_rhs<index_t>(this,index,data);
+    return;
+  }
 }
 
 void Variant::set(const NTuple& index, const Variant& data) {
   switch (m_type) {
   default:
-    throw Exception("Unsupported type for set(const NTuple&)");
-  case BoolScalar:
+    throw Exception("Unsupported type for set(const NTuple&)"); 
+ case BoolScalar:
   case Int8Scalar:
   case UInt8Scalar:
   case Int16Scalar:
@@ -782,6 +875,9 @@ void Variant::set(const NTuple& index, const Variant& data) {
     return;
   case DoubleArray:
     Tset_scalar_rhs<const NTuple&,double>(this,index,data);
+    return;
+  case DoubleSparse:
+    Tset_sparse_scalar_rhs<const NTuple&>(this,index,data);
     return;
   }  
 }
@@ -846,6 +942,9 @@ void Variant::set(const IndexArray& index, const Variant& data) {
   case DoubleArray:
     Tset<const IndexArray&,double>(this,index,data);
     return;
+  case DoubleSparse:
+    Tset_sparse<const IndexArray&>(this,index,data);
+    return;
   }  
 }
 
@@ -909,6 +1008,59 @@ void Variant::set(const IndexArrayList& index, const Variant& data) {
   case DoubleArray:
     Tset<const IndexArrayList&,double>(this,index,data);
     return;
+  case DoubleSparse:
+    Tset_sparse<const IndexArrayList&>(this,index,data);
+    return;
+  }  
+}
+
+void Variant::reshape(const NTuple &size) {
+  switch (m_type) {
+  default:
+    throw Exception("Unhandled case for reshape");
+  case BoolScalar:
+  case Int8Scalar:
+  case UInt8Scalar:
+  case Int16Scalar:
+  case UInt16Scalar:
+  case Int32Scalar:
+  case UInt32Scalar:
+  case Int64Scalar:
+  case UInt64Scalar:
+  case FloatScalar:
+  case DoubleScalar:
+    *this = asArrayType();
+    reshape(size);
+    return;
+  case CellArray:
+    return Treshape<const NTuple&,Variant>(this,size);
+  case Struct:
+    return Treshape_struct<const NTuple&>(this,size);
+  case BoolArray:
+    return Treshape<const NTuple&,logical>(this,size);
+  case Int8Array:
+    return Treshape<const NTuple&,int8>(this,size);
+  case UInt8Array:
+    return Treshape<const NTuple&,uint8>(this,size);
+  case Int16Array:
+    return Treshape<const NTuple&,int16>(this,size);
+  case StringArray:
+  case UInt16Array:
+    return Treshape<const NTuple&,uint16>(this,size);
+  case Int32Array:
+    return Treshape<const NTuple&,int32>(this,size);
+  case UInt32Array:
+    return Treshape<const NTuple&,uint32>(this,size);
+  case Int64Array:
+    return Treshape<const NTuple&,int64>(this,size);
+  case UInt64Array:
+    return Treshape<const NTuple&,uint64>(this,size);
+  case FloatArray:
+    return Treshape<const NTuple&,float>(this,size);
+  case DoubleArray:
+    return Treshape<const NTuple&,double>(this,size);
+  case DoubleSparse:
+    return Treshape_sparse<const NTuple&>(this,size);
   }  
 }
 
@@ -957,6 +1109,8 @@ void Variant::resize(const NTuple &size) {
     return Tresize<const NTuple&,float>(this,size);
   case DoubleArray:
     return Tresize<const NTuple&,double>(this,size);
+  case DoubleSparse:
+    return Tresize_sparse<const NTuple&>(this,size);
   }  
 }
 
@@ -1005,20 +1159,12 @@ void Variant::resize(index_t size) {
     return Tresize<index_t,float>(this,size);
   case DoubleArray:
     return Tresize<index_t,double>(this,size);
+  case DoubleSparse:
+    return Tresize_sparse<index_t>(this,size);
   }  
 }
 
-const VariantList Variant::toVariantList() const {
-  if (m_type != CellArray) 
-    throw Exception("Unsupported type for call to toVariantList");
-  VariantList ret;
-  const BasicArray<Variant> &rp(constReal<Variant>());
-  for (index_t i=1;i<=length();i++)
-    ret.push_back(rp.get(i));
-  return ret;
-}
-
-void Variant::setList(const QString& field, VariantList& data) {
+void Variant::set(const QString& field, VariantList& data) {
   if (m_type != Struct) throw Exception("Unsupported type for A.field=B");
   StructArray &rp(structPtr());
   if (isEmpty()) 
@@ -1034,7 +1180,7 @@ void Variant::setList(const QString& field, VariantList& data) {
   }
 }
 
-const VariantList Variant::getList(const QString& field) const {
+const VariantList Variant::get(const QString& field) const {
   if (m_type != Struct) throw Exception("Unsupported type for get(string)");
   const StructArray &rp(constStructPtr());
   if (!rp.contains(field)) throw Exception("Reference to non-existent field " + field);
@@ -1043,14 +1189,6 @@ const VariantList Variant::getList(const QString& field) const {
   for (index_t i=1;i<=val.length();i++)
     ret.push_back(val.get(i));
   return ret;
-}
-
-const Variant Variant::get(const QString& field) const {
-  if (m_type != Struct) throw Exception("Unsupported type for get(string)");
-  if (!isScalar()) throw Exception("Structure a.foo requires a be a singleton");
-  const StructArray &rp(constStructPtr());
-  if (!rp.contains(field)) throw Exception("Reference to non-existent field " + field);
-  return rp.value(field).get(1);
 }
 
 const Variant Variant::get(const IndexArray& index) const {
@@ -1096,6 +1234,8 @@ const Variant Variant::get(const IndexArray& index) const {
     return Tget<const IndexArray&,float>(this,index);
   case DoubleArray:
     return Tget<const IndexArray&,double>(this,index);
+  case DoubleSparse:
+    return Tget_sparse<const IndexArray&>(this,index);
   }  
 }
 
@@ -1142,6 +1282,8 @@ const Variant Variant::get(const IndexArrayList& index) const {
     return Tget<const IndexArrayList&,float>(this,index);
   case DoubleArray:
     return Tget<const IndexArrayList&,double>(this,index);
+  case DoubleSparse:
+    return Tget_sparse<const IndexArrayList&>(this,index);
   }  
 }
 
@@ -1282,6 +1424,12 @@ const Variant Variant::get(const NTuple& index) const {
 		     Tget_imag<const NTuple&,double>(this,index));
     else
       return Variant(Tget_real<const NTuple&,double>(this,index));
+  case DoubleSparse:
+    if (m_complex)
+      return Variant(constRealSparse().get(index),
+		     constImagSparse().get(index));
+    else
+      return Variant(constRealSparse().get(index));
   }
 }
 
@@ -1369,6 +1517,12 @@ const Variant Variant::get(index_t index) const {
 		     (double)Tget_imag<index_t,double>(this,index));
     else
       return Variant((double)Tget_real<index_t,double>(this,index));
+  case DoubleSparse:
+    if (m_complex)
+      return Variant(constRealSparse().get(index),
+		     constImagSparse().get(index));
+    else
+      return Variant(constRealSparse().get(index));
   }
 }
 
@@ -1377,9 +1531,7 @@ const Variant Variant::get(const Variant& index) const {
     if (!index.allReal())
      Warn("Complex part of index ignored");
     return get(index.asIndexScalar());
-  } else if ((m_type == Struct) && (index.type() == StringArray))
-    return get(index.string());
-  else
+  } else
     return get(IndexArrayFromVariant(index));
 }
 
@@ -1423,6 +1575,12 @@ void Variant::set(const VariantList& index, const Variant& data) {
   }
 }
 
+void Variant::addField(QString name) {
+  if (type() != Struct)
+    throw Exception("addField only valid for structure arrays");
+  if (!structPtr().contains(name))
+    structPtr().insert(name,BasicArray<Variant>());
+}
 
 const index_t Variant::asIndexScalar() const {
   switch (type()) {
@@ -1611,6 +1769,12 @@ bool Variant::operator==(const Variant &b) const {
     else
       return ((constReal<double>() == b.constReal<double>()) &&
 	      (constImag<double>() == b.constImag<double>()));
+  case DoubleSparse:
+    if (allReal())
+      return constRealSparse() == b.constRealSparse();
+    else
+      return ((constRealSparse() == b.constRealSparse()) &&
+	      (constImagSparse() == b.constImagSparse()));
   }
 }
 
@@ -1722,7 +1886,7 @@ const IndexArray IndexArrayFromVariant(const Variant &index) {
     return index.constReal<index_t>();
   if (index.type() == BoolArray)
     return Find(index.constReal<logical>());
-  Variant index_converted(index.toType(DoubleArray));
+  Variant index_converted(index.asArrayType().toType(DoubleArray));
   if (!index_converted.allReal())
     Warn("Complex part of index ignored");
   return index_converted.constReal<index_t>();
@@ -1730,3 +1894,72 @@ const IndexArray IndexArrayFromVariant(const Variant &index) {
     return IndexArray(-1);
   throw Exception("Unsupported index type");
 }
+
+const VariantList VariantListFromCellArray(const Variant &arg) {
+  if (arg.type() != CellArray) 
+    throw Exception("Unsupported type for call to toVariantList");
+  VariantList ret;
+  const BasicArray<Variant> &rp(arg.constReal<Variant>());
+  for (index_t i=1;i<=arg.length();i++)
+    ret.push_back(rp.get(i));
+  return ret;
+}
+
+const Variant CellArrayFromVariantList(VariantList &arg, index_t cnt) {
+  Variant ret(CellArray,NTuple(1,arg.size()));
+  BasicArray<Variant> &rp(ret.real<Variant>());
+  for (index_t i=1;i<=cnt;i++) {
+    rp.set(i,arg.front());
+    arg.pop_front();
+  }
+  return ret;
+}
+
+void SetCellContents(Variant &cell, const Variant& index, 
+		     VariantList& data) {
+  if (cell.type() != CellArray)
+    throw Exception("A{B} = C only supported for cell arrays.");
+  if (IsColonOp(index)) {
+    if (cell.length() > data.size())
+      throw Exception("Not enough right hand side values to satisfy left hand side expression.");
+    cell.set(index,CellArrayFromVariantList(data,data.size()));
+    data.clear();
+    return;
+  }
+  IndexArray ndx(IndexArrayFromVariant(index));
+  if (ndx.length() > data.size())
+    throw Exception("Not enought right hand side values to satisfy left hand side expression.");
+  cell.set(ndx,CellArrayFromVariantList(data,ndx.length()));
+}
+
+void SetCellContents(Variant &cell, const VariantList& index, 
+		     VariantList& data) {
+  if (cell.type() != CellArray)
+    throw Exception("A{B1,B2,...BN} = B only supported for cell arrays.");
+  IndexArrayList addr;
+  NTuple dims;
+  for (int i=0;i<index.size();i++) {
+    addr.push_back(IndexArrayFromVariant(index[i]));
+    if (IsColonOp(addr[i]))
+      dims[i] = cell.dimensions()[i];
+    else
+      dims[i] = addr[i].length();
+  }
+  if (data.size() < dims.count())
+    throw Exception("Not enough right hand side values to satisfy left hand side expression");
+  cell.set(addr,CellArrayFromVariantList(data,dims.count()));
+}
+
+QStringList FieldNames(const Variant& arg) {
+  if (arg.type() != Struct)
+    throw Exception("fieldnames only valid for structure arrays");
+  const StructArray &rp(arg.constStructPtr());
+  StructArray::const_iterator i=rp.constBegin();
+  QStringList ret;
+  while (i != rp.constEnd()) {
+    ret << i.key(); 
+    ++i;
+  }
+  return ret;
+}
+
