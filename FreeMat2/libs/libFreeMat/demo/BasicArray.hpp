@@ -13,6 +13,10 @@ class BasicArray;
 
 typedef BasicArray<index_t> IndexArray;
 typedef FastList<IndexArray> IndexArrayList;
+BasicArray<bool> GetDeletionMap(const IndexArray& vec, index_t length);
+
+bool IsColonOp(const IndexArray& ndx);
+bool DimensionCovered(const IndexArray& ndx, index_t length);
 
 template <typename T>
 class BasicIterator;
@@ -70,7 +74,11 @@ public:
       return m_data[(int64)(pos+m_offset-1)];
     throw Exception("out of range");
   }
-  bool operator==(const BasicArray<T>& b) const;
+  bool operator==(const BasicArray<T>& b) const {
+    for (index_t i=1;i<b.length();i++) 
+      if (get(i) != b.get(i)) return false;
+    return true;
+  }
   inline void set(const NTuple& pos, const T& val) {
     if (dimensions() <= pos) resize(pos);
     m_data[(int64)(m_dims.map(pos)+m_offset-1)] = val;
@@ -85,20 +93,127 @@ public:
   inline const T get(const NTuple& pos) const {
     return m_data[(int64)(m_dims.map(pos)+m_offset-1)];
   }
-  BasicArray<T> get(const IndexArray& index) const;
-  BasicArray<T> get(const IndexArrayList& index) const;
-  BasicArray<T> getSlice(const IndexArrayList& index) const;
-  void setSlice(const IndexArrayList& index, const BasicArray<T>& data);
-  void setSlice(const IndexArrayList& index, const T& data);
-  void set(const IndexArray& index, const T& data);
-  void set(const IndexArray& index, const BasicArray<T>& data);
-  void set(const IndexArrayList& index, const T& data);
-  void set(const IndexArrayList& index, const BasicArray<T>& data);
-  void del(const IndexArrayList& index);
-  void del(const IndexArray& index);
-  void resize(const NTuple& pos);
-  void resize(index_t len);
-  void printMe(std::ostream& o) const;
+  BasicArray<T> getSlice(const IndexArrayList& index) const {
+    index_t offset = getSliceIndex(dimensions(),index);
+    BasicArray<T> retvec;
+    retvec.m_dims = NTuple(dimensions()[0],1);
+    retvec.m_offset = offset;
+    retvec.m_data = m_data;
+    return retvec;
+  }
+  void del(const IndexArrayList& index) {
+    // The strategy for dealing with deletions is simplified relative
+    // to 3.x code.  An NDim deletion is only valid if there is one
+    // dimension that is not covered.
+    QVector<bool> covered(index.size());
+    for (int i=0;i<index.size();i++) {
+      index_t dimLen = dimensions()[i];
+      covered[i] = (IsColonOp(index[i]) || DimensionCovered(index[i],dimLen));
+    }
+    // Count the number of uncovered dimensions
+    int uncovered_count = 0;
+    int first_uncovered = 0;
+    for (int i=0;i<index.size();i++)
+      if (!covered[i]) {
+	first_uncovered = i;
+	uncovered_count++;
+      }
+    if (uncovered_count == 0) {
+      m_data.clear();
+      m_dims = NTuple(0,0);
+      m_offset = 0;
+      return;
+    }
+    if (uncovered_count > 1)
+      throw Exception("Deletion A(:,...,:) = [] cannot have more than one non-singular dimension");
+    index_t dimLen = dimensions()[first_uncovered];
+    BasicArray<bool> map(GetDeletionMap(index[first_uncovered],dimLen));
+    int newSize = 0;
+    for (int i=1;i<=map.length();i++)
+      if (!map.get(i)) newSize++;
+    // Create an output array..
+    NTuple outdims(dimensions());
+    outdims[first_uncovered] = newSize;
+    BasicArray<T> retvec(outdims);
+    ConstBasicIterator<T> source(this,first_uncovered);
+    BasicIterator<T> dest(&retvec,first_uncovered);
+    while (source.isValid() && dest.isValid()) {
+      for (index_t i=1;i<=dimLen;i++) {
+	if (!map.get(i)) {
+	  dest.set(source.get());
+	  dest.next();
+	}
+	source.next();
+      }
+      source.nextSlice();
+      dest.nextSlice();
+    }
+    m_data = retvec.m_data;
+    m_offset = retvec.m_offset;
+    m_dims = retvec.m_dims;
+  }
+  void del(const IndexArray& index) {
+    if (IsColonOp(index)) {
+      m_data.clear();
+      m_dims = NTuple(0,0);
+      m_offset = 0;
+      return;
+    }
+    BasicArray<bool> map(GetDeletionMap(index,length()));
+    index_t newSize = 0;
+    for (int i=1;i<=map.length();i++)
+      if (!map[i]) newSize++;
+    if (newSize == length()) return;
+    NTuple newDim;
+    if (isRowVector())
+      newDim = NTuple(1,newSize);
+    else
+      newDim = NTuple(newSize,1);
+    QVector<T> rdata((int64)newSize);
+    int j=0;
+    for (index_t i=1;i<=map.length();i++)
+      if (!map[i]) rdata[j++] = get(i);
+    m_data = rdata;
+    m_offset = 0;
+    m_dims = newDim;
+  }
+  void resize(const NTuple& pos) {
+    BasicArray<T> retval(pos);
+    Transformer<BasicArray<T>,T> transform(&retval,this);
+    while (transform.isValid()) {
+      for (int i=0;i<transform.size();i++) {
+	transform.set(transform.get());
+	transform.next();
+      }
+      transform.nextSlice();
+    }
+    m_data = retval.m_data;
+    m_dims = retval.m_dims;
+    m_offset = 0;
+  }
+  void resize(index_t len) {
+    if (len > length()) {
+      NTuple newDim;
+      if (isEmpty() || isScalar()) {
+	newDim = NTuple(1,len);
+      } else if (isVector()) {
+	if (rows() != 1)
+	  newDim = NTuple(len,1);
+	else
+	  newDim = NTuple(1,len);
+      } else {
+	m_dims = NTuple(1,length());
+	newDim = NTuple(1,len);
+      }
+      resize(newDim);
+    }
+  }
+  void printMe(std::ostream& o) const {
+    o << dimensions() << "[";
+    for (int i=0;i<length();i++)
+      o << get(i+1) << " ";
+    o << "]\n";
+  }
   inline void reshape(const NTuple& pos) {
     if (m_dims.count() == pos.count())
       m_dims = pos;
@@ -114,29 +229,99 @@ std::ostream& operator<<(std::ostream& o, const BasicArray<T>& arg) {
 }
 
 template <typename T>
-BasicArray<T> Apply(const BasicArray<T>& arg, T (*func)(T));
+BasicArray<T> Apply(const BasicArray<T>& arg, T (*func)(T)) {
+  BasicArray<T> retval(arg.dimensions());
+  Transformer<BasicArray<T>,T> transform(&retval,&arg);
+  while (transform.isValid()) {
+    for (int i=0;i<transform.size();i++) {
+      transform.set(func(transform.get()));
+      transform.next();
+    }
+    transform.nextSlice();
+  }
+  return retval;
+}
 
 template <typename T>
-BasicArray<T> Transpose(const BasicArray<T>& arg);
+BasicArray<T> Transpose(const BasicArray<T>& arg) {
+  if (!arg.dimensions().is2D())
+    throw Exception("Cannot transpose multi-dimensional arrays");
+  BasicArray<T> retval(NTuple(arg.cols(),arg.rows()));
+  Transformer<BasicArray<T>,T> transform(&retval,&arg,0,1);
+  while (transform.isValid()) {
+    for (int i=0;i<transform.size();i++) {
+      transform.set(transform.get());
+      transform.next();
+    }
+    transform.nextSlice();
+  }
+  return retval;
+}
 
 template <typename T>
-bool IsPositive(const BasicArray<T>& arg);
+bool IsPositive(const BasicArray<T>& arg) {
+  for (int i=0;i<arg.length();i++) 
+    if (arg.get(i) < 0) return false;
+  return true;
+}
 
 template <typename T>
-bool IsSymmetric(const BasicArray<T>& arg);
+bool IsSymmetric(const BasicArray<T>& arg) {
+  if (!arg.dimensions().is2D()) 
+    throw Exception("Symmetry check not valid for N-dimensional arrays");
+  for (int i=0;i<arg.cols();i++) 
+    for (int j=i+1;j<arg.rows();j++) 
+      if (arg[NTuple(i,j)] != arg[NTuple(j,i)])
+	return false;
+  return true;
+}
 
 template <typename T>
-bool AllZeros(const BasicArray<T>& arg);
-
-bool AllTrue(const BasicArray<bool>& arg);
+bool AllZeros(const BasicArray<T>& arg) {
+  for (int i=1;i<=arg.length();i++)
+    if (arg.get(i) != T(0)) return false;
+  return true;
+}
 
 template <typename T>
-bool AnyNotFinite(const BasicArray<T>& arg);
+bool AnyNotFinite(const BasicArray<T>& arg) {
+  for (int i=0;i<arg.length();i++) 
+    if (!IsFinite(arg.get(i))) return true;
+  return false;
+}
 
 template <typename T>
-T MaxValue(const BasicArray<T>& arg);
+T MaxValue(const BasicArray<T>& arg) {
+  if (arg.isEmpty()) 
+    throw Exception("Cannot use this max function on empty arrays.");
+  T retval = arg[1];
+  for (int i=2;i<=arg.length();i++)
+    if (retval < arg[i])
+      retval = arg[i];
+  return retval;
+}
 
-bool IsColonOp(const IndexArray& ndx);
+template <typename T>
+IndexArray Find(const BasicArray<T>& vec) {
+  index_t count = 0;
+  for (index_t i=1;i<=vec.length();i++)
+    if (vec[i] != T()) count++;
+  IndexArray retvec(NTuple(count,1));
+  count = 1;
+  for (index_t i=1;i<=vec.length();i++)
+    if (vec[i] != T()) {
+      retvec.set(count,i);
+      count++;
+    }
+  return retvec;
+}
+
+inline bool AllTrue(const BasicArray<bool>& arg) {
+  for (int i=1;i<=arg.length();i++)
+    if (!arg.get(i)) return false;
+  return true;
+}
+
 
 template <typename S, typename T>
 void ConvertBasicArray(const BasicArray<S>& source, BasicArray<T>& dest) {
@@ -172,21 +357,4 @@ public:
   }
 };
 
-BasicArray<bool> GetDeletionMap(const BasicArray<index_t>& vec,
-				index_t length);
-
-template <typename T>
-BasicArray<index_t> Find(const BasicArray<T>& vec) {
-  index_t count = 0;
-  for (index_t i=1;i<=vec.length();i++)
-    if (vec[i] != T()) count++;
-  BasicArray<index_t> retvec(NTuple(count,1));
-  count = 1;
-  for (index_t i=1;i<=vec.length();i++)
-    if (vec[i] != T()) {
-      retvec.set(count,i);
-      count++;
-    }
-  return retvec;
-}
 #endif

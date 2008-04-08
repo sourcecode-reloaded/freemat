@@ -9,6 +9,6 @@ INCLUDEPATH += .
 CONFIG += debug
 
 # Input
-HEADERS += PermArray.hpp Global.hpp NPerm.hpp NDimArray.hpp NTuple.hpp BaseArray.hpp Iterators.hpp RangeSet.hpp SparseMatrix.hpp Array.hpp BasicArray.hpp Variant.hpp BasicArrayPrivate.hpp
-SOURCES += BasicArray.cpp Variant.cpp VariantTest.cpp SparseMatrix.cpp
+HEADERS += PermArray.hpp Global.hpp NPerm.hpp NDimArray.hpp NTuple.hpp BaseArray.hpp Iterators.hpp RangeSet.hpp SparseMatrix.hpp Array.hpp BasicArray.hpp Variant.hpp BasicArrayPrivate.hpp IndexArray.hpp
+SOURCES += Variant.cpp VariantTest.cpp SparseMatrix.cpp IndexArray.cpp
 

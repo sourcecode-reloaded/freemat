@@ -1,4 +1,5 @@
 #include "Variant.hpp"
+#include "GetSet.hpp"
 #include <QStringList>
 
 void Warn(const char *msg) {
@@ -42,7 +43,7 @@ static inline Variant Tget_struct(const Variant*ptr, S ndx) {
   StructArray &lp(ret.structPtr());
   StructArray::const_iterator i=rp.constBegin();
   while (i != rp.constEnd()) {
-    lp[i.key()] = i.value().get(ndx);
+    lp[i.key()] = Get(i.value(),ndx);
     ++i;
   }
   return ret;
@@ -55,7 +56,7 @@ static inline Variant Tget_struct_scalar(const Variant*ptr, S ndx) {
   StructArray &lp(ret.structPtr());
   StructArray::const_iterator i=rp.constBegin();
   while (i != rp.constEnd()) {
-    lp[i.key()].set(1,i.value().get(ndx).get(1));
+    lp[i.key()].set(1,Get(i.value(),ndx).get(1));
     ++i;
   }
   return ret;
@@ -71,7 +72,7 @@ static inline const void Tset_struct(Variant*ptr, S ndx, const Variant &rhs) {
   StructArray::const_iterator i=rp.constBegin();
   NTuple newSize(ptr->dimensions());
   while (i!=rp.constEnd()) {
-    lp[i.key()].set(ndx,i.value());
+    Set(lp[i.key()],ndx,i.value());
     newSize = lp[i.key()].dimensions();
     ++i;
   }
@@ -92,7 +93,7 @@ static inline const void Tset_struct_scalar_rhs(Variant*ptr, S ndx, const Varian
   StructArray &lp(ptr->structPtr());
   StructArray::const_iterator i=rp.constBegin();
   while (i!=rp.constEnd()) {
-    lp[i.key()].set(ndx,i.value().get(1));
+    Set(lp[i.key()],ndx,i.value().get(1));
     ++i;
   }
   // Loop through the output and force all arrays to be the same size
@@ -113,21 +114,21 @@ template <typename S, typename T>
 static inline const Variant Tget(const Variant*ptr, S ndx) {
   if (ptr->allReal()) {
     const BasicArray<T> &real(ptr->constReal<T>());
-    return Variant(ptr->type(),real.get(ndx));
+    return Variant(ptr->type(),Get(real,ndx));
   } else {
     const BasicArray<T> &real(ptr->constReal<T>());
     const BasicArray<T> &imag(ptr->constImag<T>());
-    return Variant(ptr->type(),real.get(ndx),imag.get(ndx));
+    return Variant(ptr->type(),Get(real,ndx),Get(imag,ndx));
   }
 }
 
 template <typename S>
 static inline const Variant Tget_sparse(const Variant*ptr, S ndx) {
   if (ptr->allReal())
-    return Variant(ptr->constRealSparse().get(ndx));
+    return Variant(Get(ptr->constRealSparse(),ndx));
   else
-    return Variant(ptr->constRealSparse().get(ndx),
-		   ptr->constImagSparse().get(ndx));
+    return Variant(Get(ptr->constRealSparse(),ndx),
+		   Get(ptr->constImagSparse(),ndx));
 }
 
 
@@ -166,19 +167,19 @@ template <typename S, typename T>
 static inline void Tset_scalar_rhs(Variant* ptr, S ndx, const Variant& data) {
   BasicArray<T> &real(ptr->real<T>());
   Variant dataTyped(data.asScalar().toType(ScalarType(ptr->type())));
-  real.set(ndx,dataTyped.constRealScalar<T>());
+  Set(real,ndx,dataTyped.constRealScalar<T>());
   if (!dataTyped.allReal()) {
     BasicArray<T> &imag(ptr->imag<T>());
-    imag.set(ndx,dataTyped.constImagScalar<T>());
+    Set(imag,ndx,dataTyped.constImagScalar<T>());
   }
 }
 
 template <typename S>
 static inline void Tset_sparse_scalar_rhs(Variant*ptr, S ndx, const Variant &rhs) {
   Variant dataTyped(rhs.asScalar().toType(ScalarType(ptr->type())));
-  ptr->realSparse().set(ndx,dataTyped.constRealScalar<double>());
+  Set(ptr->realSparse(),ndx,dataTyped.constRealScalar<double>());
   if (!dataTyped.allReal()) 
-    ptr->imagSparse().set(ndx,dataTyped.constImagScalar<double>());
+    Set(ptr->imagSparse(),ndx,dataTyped.constImagScalar<double>());
 }
 
 template <typename S>
@@ -242,9 +243,9 @@ static inline void Tset_sparse(Variant* ptr, S ndx, const Variant& data) {
     Tset_sparse_scalar_rhs<S>(ptr,ndx,data);
     return;
   }
-  ptr->realSparse().set(ndx,ToRealSparse(data));
+  Set(ptr->realSparse(),ndx,ToRealSparse(data));
   if (!data.allReal())
-    ptr->imagSparse().set(ndx,ToImagSparse(data));
+    Set(ptr->imagSparse(),ndx,ToImagSparse(data));
 }
 
 template <typename S, typename T>
@@ -255,10 +256,10 @@ static inline void Tset(Variant* ptr, S ndx, const Variant& data) {
   }
   BasicArray<T> &real(ptr->real<T>());
   Variant dataTyped(data.toType(ptr->type()));
-  real.set(ndx,dataTyped.constReal<T>());
+  Set(real,ndx,dataTyped.constReal<T>());
   if (!data.allReal()) {
     BasicArray<T> &imag(ptr->imag<T>());
-    imag.set(ndx,dataTyped.constImag<T>());
+    Set(imag,ndx,dataTyped.constImag<T>());
   }
 }
 
@@ -771,7 +772,7 @@ void Variant::set(index_t index, const Variant& data) {
     set(index,data);
     return;
   case CellArray:
-    real<Variant>().set(index,data);
+    Set(real<Variant>(),index,data);
     return;
   case Struct:
     Tset_struct_scalar_rhs<index_t>(this,index,data);
@@ -837,7 +838,7 @@ void Variant::set(const NTuple& index, const Variant& data) {
   case CellArray:
     if (data.type () != CellArray) 
       throw Exception("Assignment A(I)=B where A is a cell array implies that B is also a cell array.");
-    real<Variant>().set(index,data.get((index_t)1));
+    Set(real<Variant>(),index,data.get((index_t)1));
     return;
   case Struct:
     Tset_struct_scalar_rhs<const NTuple&>(this,index,data);
@@ -903,7 +904,7 @@ void Variant::set(const IndexArray& index, const Variant& data) {
   case CellArray:
     if (data.type () != CellArray) 
       throw Exception("Assignment A(I)=B where A is a cell array implies that B is also a cell array.");
-    real<Variant>().set(index,data.get((index_t)1));
+    Set(real<Variant>(),index,data.get((index_t)1));
     return;
   case Struct:
     Tset_struct<const IndexArray&>(this,index,data);
@@ -969,7 +970,7 @@ void Variant::set(const IndexArrayList& index, const Variant& data) {
   case CellArray:
     if (data.type () != CellArray) 
       throw Exception("Assignment A(I)=B where A is a cell array implies that B is also a cell array.");
-    real<Variant>().set(index,data.get((index_t)1));
+    Set(real<Variant>(),index,data.get((index_t)1));
     return;
   case Struct:
     Tset_struct<const IndexArrayList&>(this,index,data);
@@ -1174,8 +1175,8 @@ void Variant::set(const QString& field, VariantList& data) {
   if (data.size() < length())
     throw Exception("Not enough right hand values to satisfy left hand side expression.");
   BasicArray<Variant> &val(rp[field]);
-  for (int i=0;i<length();i++) {
-    val.set(i+1,data.front());
+  for (index_t i=1;i<=length();i++) {
+    val.set(i,data.front());
     data.pop_front();
   }
 }
@@ -1426,10 +1427,10 @@ const Variant Variant::get(const NTuple& index) const {
       return Variant(Tget_real<const NTuple&,double>(this,index));
   case DoubleSparse:
     if (m_complex)
-      return Variant(constRealSparse().get(index),
-		     constImagSparse().get(index));
+      return Variant(Get(constRealSparse(),index),
+		     Get(constImagSparse(),index));
     else
-      return Variant(constRealSparse().get(index));
+      return Variant(Get(constRealSparse(),index));
   }
 }
 
@@ -1519,10 +1520,10 @@ const Variant Variant::get(index_t index) const {
       return Variant((double)Tget_real<index_t,double>(this,index));
   case DoubleSparse:
     if (m_complex)
-      return Variant(constRealSparse().get(index),
-		     constImagSparse().get(index));
+      return Variant(Get(constRealSparse(),index),
+		     Get(constImagSparse(),index));
     else
-      return Variant(constRealSparse().get(index));
+      return Variant(Get(constRealSparse(),index));
   }
 }
 

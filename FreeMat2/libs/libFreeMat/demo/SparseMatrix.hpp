@@ -17,6 +17,7 @@ public:
   SparseMatrix(const NTuple &dims) {
     m_dims = dims;
   }
+  SparseMatrix() : m_dims(NTuple(0,0)) {}
   SparseMatrix(QVector<index_t> row, QVector<index_t> col, QVector<double> val) {
     std::cout << "row " << row.size() << "\n";
     std::cout << "col " << col.size() << "\n";
@@ -73,13 +74,17 @@ public:
   inline const double get(const NTuple& pos) const {
     return (*this)[pos];
   }
-  SparseMatrix get(const IndexArray& index) const;
-  SparseMatrix get(const IndexArrayList& index) const;
-  void set(const IndexArray& index, const double& data);
-  void set(const IndexArray& index, const SparseMatrix& data);
-  void set(const IndexArrayList& index, const double& data);
-  void set(const IndexArrayList& index, const SparseMatrix& data);
-  
+  void set(const NTuple& pos, const double& val) {
+    if (dimensions() <= pos) resize(pos);
+    (*this)[pos] = val;
+  }
+  void set(index_t pos, const double& val) {
+    if (dimensions().count() <= pos) resize(pos);
+    (*this)[pos] = val;
+  }
+  SparseMatrix getSlice(const IndexArrayList& index) const;
+  void del(const IndexArray& index);
+  void del(const IndexArrayList& index);
   void printMe(std::ostream& o) const;
   void resize(const NTuple& pos);
   void resize(index_t len);
@@ -88,7 +93,7 @@ public:
 
 };
 
-std::ostream& operator<<(std::ostream& o, const SparseMatrix& arg) {
+inline std::ostream& operator<<(std::ostream& o, const SparseMatrix& arg) {
   arg.printMe(o);
   return o;
 }
@@ -100,8 +105,6 @@ class SparseIterator {
 public:
   SparseIterator(SparseMatrix *ptr, int dim) : 
     m_ptr(ptr), m_dim(dim) {}
-  
-  
 };
 
 #endif
