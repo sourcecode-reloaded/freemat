@@ -8,16 +8,18 @@
 #include "NTuple.hpp"
 #include "BasicArray.hpp"
 
-class SparseSlice : public QMap<index_t,double> {};
+typedef QMap<index_t,double> SparseSlice;
+typedef QMap<index_t,SparseSlice> SparseData;
 
 class SparseMatrix {
-  QMap<index_t, SparseSlice> m_data;
+  SparseData m_data;
   NTuple m_dims;
 public:
   SparseMatrix(const NTuple &dims) {
     m_dims = dims;
   }
   SparseMatrix() : m_dims(NTuple(0,0)) {}
+  const SparseData& constData() const {return m_data;}
   SparseMatrix(QVector<index_t> row, QVector<index_t> col, QVector<double> val) {
     std::cout << "row " << row.size() << "\n";
     std::cout << "col " << col.size() << "\n";
@@ -34,13 +36,18 @@ public:
     }
     m_dims = NTuple(maxrow,maxcol);
   }
+  SparseMatrix(const BasicArray<double> &A);
   inline const NTuple dimensions() const {
     return m_dims;
   }
   inline index_t length() const {return m_dims.count();}
+  inline index_t isScalar() const {return length() == 1;}
   inline bool isEmpty() const {return (length() == 0);}
   inline bool isColumnVector() const {return m_dims.isColumnVector();}
   inline bool isRowVector() const {return m_dims.isRowVector();}
+  inline bool isVector() const {return isColumnVector() || isRowVector();}
+  inline index_t rows() const {return m_dims.rows();}
+  inline index_t cols() const {return m_dims.cols();}
   inline const double operator[](const NTuple& pos) const {
     if (m_dims.validate(pos)) {
       if (!m_data.contains(pos[1]))
@@ -83,6 +90,8 @@ public:
     (*this)[pos] = val;
   }
   SparseMatrix getSlice(const IndexArrayList& index) const;
+  void deleteColumns(const IndexArray& index);
+  void deleteRows(const IndexArray& index);
   void del(const IndexArray& index);
   void del(const IndexArrayList& index);
   void printMe(std::ostream& o) const;
@@ -90,7 +99,6 @@ public:
   void resize(index_t len);
   void reshape(const NTuple& pos);
   bool operator==(const SparseMatrix &data) const;
-
 };
 
 inline std::ostream& operator<<(std::ostream& o, const SparseMatrix& arg) {
@@ -98,13 +106,16 @@ inline std::ostream& operator<<(std::ostream& o, const SparseMatrix& arg) {
   return o;
 }
 
-class SparseIterator {
-  SparseMatrix *m_ptr;
-  int m_dim;
-  
+class ConstSparseIterator {
+  const SparseMatrix *m_ptr;
+  SparseData::const_iterator m_col;
+  SparseSlice::const_iterator m_row;
 public:
-  SparseIterator(SparseMatrix *ptr, int dim) : 
-    m_ptr(ptr), m_dim(dim) {}
+  ConstSparseIterator(const SparseMatrix *ptr);
+  void next();
+  bool isValid() const;
+  double value();
+  const NTuple pos() const;
 };
 
 #endif

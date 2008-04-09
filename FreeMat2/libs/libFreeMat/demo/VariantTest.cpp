@@ -286,6 +286,18 @@ void TestScalarVecSet() {
   TestScalarSet<double,T>(DoubleScalarIndex,Int8ScalarIndex); 
 }
 
+void TestSparseCase() {
+  SparseMatrix A(DoubleMat.constReal<double>());
+  std::cout << A;
+  SparseMatrix B(A);
+  B.deleteRows(IndexArray(3));
+  std::cout << B;
+  B.deleteColumns(IndexArray(2));
+  std::cout << B;
+  B.set(NTuple(1,5),0);
+  std::cout << B;
+}
+
 void TestStructCase() {
   Variant tst(Struct);
   tst.addField(QString("color"));
@@ -405,6 +417,7 @@ int main() {
   TestScalarVecSet<double>();
 
   TestStructCase();
+  TestSparseCase();
 
   return 0;
 }

@@ -165,5 +165,4 @@ const T Get(const T& arg, const IndexArrayList& index) {
   return retval;
 }
 
-
 #endif

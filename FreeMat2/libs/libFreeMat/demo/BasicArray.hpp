@@ -187,9 +187,7 @@ public:
       }
       transform.nextSlice();
     }
-    m_data = retval.m_data;
-    m_dims = retval.m_dims;
-    m_offset = 0;
+    *this = retval;
   }
   void resize(index_t len) {
     if (len > length()) {

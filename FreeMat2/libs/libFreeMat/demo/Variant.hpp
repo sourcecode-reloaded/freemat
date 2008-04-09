@@ -75,7 +75,7 @@ typedef struct {
 
 class Variant {
 public:
-  inline Variant() {}
+  inline Variant() {m_type = Invalid;}
   // Defined in VariantPrivate
   template <typename T> inline explicit Variant(T real); 
   template <typename T> inline explicit Variant(T real, T imag); 

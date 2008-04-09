@@ -167,19 +167,19 @@ template <typename S, typename T>
 static inline void Tset_scalar_rhs(Variant* ptr, S ndx, const Variant& data) {
   BasicArray<T> &real(ptr->real<T>());
   Variant dataTyped(data.asScalar().toType(ScalarType(ptr->type())));
-  Set(real,ndx,dataTyped.constRealScalar<T>());
+  real.set(ndx,dataTyped.constRealScalar<T>());
   if (!dataTyped.allReal()) {
     BasicArray<T> &imag(ptr->imag<T>());
-    Set(imag,ndx,dataTyped.constImagScalar<T>());
+    imag.set(ndx,dataTyped.constImagScalar<T>());
   }
 }
 
 template <typename S>
 static inline void Tset_sparse_scalar_rhs(Variant*ptr, S ndx, const Variant &rhs) {
   Variant dataTyped(rhs.asScalar().toType(ScalarType(ptr->type())));
-  Set(ptr->realSparse(),ndx,dataTyped.constRealScalar<double>());
+  ptr->realSparse().set(ndx,dataTyped.constRealScalar<double>());
   if (!dataTyped.allReal()) 
-    Set(ptr->imagSparse(),ndx,dataTyped.constImagScalar<double>());
+    ptr->imagSparse().set(ndx,dataTyped.constImagScalar<double>());
 }
 
 template <typename S>
@@ -239,8 +239,8 @@ static inline void Treshape(Variant* ptr, S ndx) {
 
 template <typename S>
 static inline void Tset_sparse(Variant* ptr, S ndx, const Variant& data) {
-  if (data.isScalar()) {
-    Tset_sparse_scalar_rhs<S>(ptr,ndx,data);
+  if (data.type() >= BoolScalar && data.type() <= DoubleScalar) {
+    Tset_sparse<S>(ptr,ndx,data.asArrayType());
     return;
   }
   Set(ptr->realSparse(),ndx,ToRealSparse(data));
@@ -250,8 +250,8 @@ static inline void Tset_sparse(Variant* ptr, S ndx, const Variant& data) {
 
 template <typename S, typename T>
 static inline void Tset(Variant* ptr, S ndx, const Variant& data) {
-  if (data.isScalar()) {
-    Tset_scalar_rhs<S, T>(ptr,ndx,data);
+  if (data.type() >= BoolScalar && data.type() <= DoubleScalar) {
+    Tset<S,T>(ptr,ndx,data.asArrayType());
     return;
   }
   BasicArray<T> &real(ptr->real<T>());
@@ -1964,3 +1964,22 @@ QStringList FieldNames(const Variant& arg) {
   return ret;
 }
 
+SparseMatrix ToRealSparse(const Variant& data) {
+  if (data.type() == DoubleSparse) return data.constRealSparse();
+  Variant cdata(data);
+  if (cdata.isScalar())
+    cdata = data.asArrayType();
+  if (!cdata.is2D()) throw Exception("Sparse matrix cannot be created from multidimensional arrays");
+  cdata = cdata.toType(DoubleArray);
+  return SparseMatrix(cdata.constReal<double>());
+}
+
+SparseMatrix ToImagSparse(const Variant& data) {
+  if (data.type() == DoubleSparse) return data.constImagSparse();
+  Variant cdata(data);
+  if (cdata.isScalar())
+    cdata = cdata.asArrayType();
+  if (!cdata.is2D()) throw Exception("Sparse matrix cannot be created from multidimensional arrays");
+  cdata = cdata.toType(DoubleArray);
+  return SparseMatrix(cdata.constImag<double>());
+}
