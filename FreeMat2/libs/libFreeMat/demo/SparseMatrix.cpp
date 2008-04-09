@@ -98,10 +98,18 @@ void SparseMatrix::del(const IndexArray& index) {
     newDim = NTuple(newSize,1);
   SparseMatrix ret(newDim);
   ConstSparseIterator source(this);
-  index_t dst;
+  index_t deleted_count = 0;
+  index_t dp = 1;
   while (source.isValid()) {
-    if (!delete_set.contains(uint64(dimensions().map(source.pos()))))
-      ret.set(dst,source.value());
+    index_t source_pos = m_dims.map(source.pos());
+    if (!delete_set.contains(uint64(source_pos))) {
+      // This element was not deleted.  
+      while (dp < source_pos) {
+	if (delete_set.contains(uint64(dp))) ++deleted_count;
+	++dp;
+      }
+      ret.set(source_pos-deleted_count,source.value());
+    }
     source.next();
   }
   *this = ret;
@@ -122,11 +130,17 @@ void SparseMatrix::del(const IndexArrayList& index) {
 
 void SparseMatrix::deleteColumns(const IndexArray& index) {
   QSet<uint64> delete_set;
-  for (index_t i=1;i<=index.length();i++) {
-    m_data.remove(uint64(index.get(i)));
+  for (index_t i=1;i<=index.length();i++)
     delete_set.insert(uint64(index.get(i)));
+  SparseData copy;
+  index_t deleted_count = 0;
+  for (index_t i=1;i<=cols();i++) {
+    if (delete_set.contains(uint64(i))) deleted_count++;
+    if (m_data.contains(i))
+      copy[i-deleted_count] = m_data[i];
   }
   m_dims = NTuple(m_dims[0],m_dims[1] - delete_set.count());
+  m_data = copy;
 }
 
 void SparseMatrix::deleteRows(const IndexArray& index) {
@@ -134,10 +148,19 @@ void SparseMatrix::deleteRows(const IndexArray& index) {
   for (index_t i=1;i<=index.length();++i)
     delete_set.insert(uint64(index.get(i)));
   for (SparseData::iterator i=m_data.begin();i!=m_data.end();++i) {
+    index_t deleted_count = 0;
+    SparseSlice copy;
+    index_t dp = 1;
     for (SparseSlice::iterator j=i.value().begin();j!=i.value().end();++j) {
-      if (delete_set.contains(uint64(j.key())))
-	i.value().erase(j);
+      if (!delete_set.contains(uint64(j.key()))) {
+	while (dp < j.key()) {
+	  if (delete_set.contains(uint64(dp))) ++deleted_count;
+	  ++dp;
+	}
+	copy[j.key()-deleted_count] = j.value();
+      }
     }
+    i.value() = copy;
   }
   m_dims = NTuple(m_dims[0] - delete_set.count(),m_dims[1]);
 }
