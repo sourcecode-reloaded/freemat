@@ -103,6 +103,11 @@ end
   else
     error('Unrecognized arguments to surf command');
   end
+if ~ishold
+	view( handle, 3 );
+	grid;
+end
+
 axes(saveca);
 if (nargout > 0)
     ohandle = h;

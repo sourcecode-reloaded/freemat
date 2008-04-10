@@ -212,11 +212,9 @@ ArrayVector EFunction(int nargout, const ArrayVector& arg) {
 //@>
 //!
 ArrayVector EpsFunction(int nargout, const ArrayVector& arg) {
-  char CMACH = 'E';
-  Array A(Array::doubleConstructor(dlamch_(&CMACH)));
+  
   ArrayVector retval;
-  retval.push_back(A);
-  return retval;
+  return retval << Array::doubleConstructor(nextafter(1.,2.)-1.);
 }
 
 //!
@@ -240,11 +238,8 @@ ArrayVector EpsFunction(int nargout, const ArrayVector& arg) {
 //@>
 //!
 ArrayVector FepsFunction(int nargout, const ArrayVector& arg) {
-  char CMACH = 'E';
-  Array A(Array::floatConstructor(slamch_(&CMACH)));
   ArrayVector retval;
-  retval.push_back(A);
-  return retval;
+  return retval << Array::floatConstructor(nextafterf(1.,2.)-(float)1.);
 }
 
 //!

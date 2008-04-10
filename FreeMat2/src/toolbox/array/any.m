@@ -41,6 +41,8 @@
 %@>
 %@@Tests
 %@$"y=any([1,0,0;1,0,0;0,0,1],2)","[1;1;1]","exact"
+%@$"y=any(eye(3))","[1 1 1]","exact"
+%@$"y=any(ones(0,3),1)","[0 0 0]","exact"
 %!
 
 % Copyright (c) 2002-2006 Samit Basu
@@ -49,8 +51,15 @@ function y = any(A,dim)
   if (nargin == 0)
     error 'any function requires at least one argument'
   end
+  A(find(isnan(A)))=0;
   if (nargin == 1)
-    y = max(logical(A(:)));
-  else
-    y = max(logical(A),[],dim);
+    y = max(logical(A));
+ else
+    if ~isempty( A )
+       y = max(logical(A),[],dim);
+    else
+       v=size(A);
+       v(dim)=1;
+       y=zeros(v);
+    end
   end

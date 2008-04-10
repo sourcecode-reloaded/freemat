@@ -192,6 +192,12 @@ ArrayVector IsInfFunction(int, const ArrayVector& arg);
 ArrayVector RepMatFunction(int, const ArrayVector& arg);
 ArrayVector EpsFunction(int, const ArrayVector& arg);
 ArrayVector FepsFunction(int, const ArrayVector& arg);
+// 
+ArrayVector BitandFunction(int, const ArrayVector& arg);
+ArrayVector BitorFunction(int, const ArrayVector& arg);
+ArrayVector BitxorFunction(int, const ArrayVector& arg);
+ArrayVector BitcmpFunction(int, const ArrayVector& arg);
+// 
 ArrayVector Int2BinFunction(int, const ArrayVector& arg);
 ArrayVector Bin2IntFunction(int, const ArrayVector& arg);
 ArrayVector PCodeFunction(int, const ArrayVector& arg, Interpreter* eval);
@@ -244,6 +250,7 @@ ArrayVector MatLoadFunction(int nargout, string filename, rvstring varnames,
 ArrayVector MatSaveFunction(string filename, rvstring varnames,
 			    Interpreter *eval);
 ArrayVector ImReadFunction(int nargout, const ArrayVector& arg, Interpreter* eval);
+ArrayVector ImWriteFunction(int nargout, const ArrayVector& arg, Interpreter* eval);
 ArrayVector CtypeDefineFunction(int nargout, const ArrayVector& arg);
 ArrayVector CtypeSizeFunction(int nargout, const ArrayVector& arg);
 ArrayVector CtypePrintFunction(int nargout, const ArrayVector& arg, Interpreter* eval);

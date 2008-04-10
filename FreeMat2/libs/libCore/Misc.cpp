@@ -4075,6 +4075,14 @@ ArrayVector BuiltinFunction(int nargout, const ArrayVector& arg,Interpreter* eva
 //@$"y = feval(@cos,pi)","-1","close"
 //@$"y = feval('cos',pi)","-1","close"
 //@$"y = feval(inline('cos(t)'),pi)","-1","close"
+//@{ test_feval1.m
+//function test_val = test_feval1
+//y = 0;
+//test_val = feval('test_feval1_local_func',y);
+//
+//function z = test_feval1_local_func(x)
+//z = 1;
+//@}
 //!
 ArrayVector FevalFunction(int nargout, const ArrayVector& arg,Interpreter* eval){
   if (arg.size() == 0)
@@ -4084,9 +4092,12 @@ ArrayVector FevalFunction(int nargout, const ArrayVector& arg,Interpreter* eval)
   FuncPtr funcDef;
   if (arg[0].isString()) {
     string fname = arg[0].getContentsAsString();
-    Context *context = eval->getContext();
-    if (!context->lookupFunction(fname,funcDef))
+    eval->popDebug();
+    if (!eval->lookupFunction(fname,funcDef)) {
+      eval->pushDebug("feval","feval");
       throw Exception(std::string("function ") + fname + " undefined!");
+    }
+    eval->pushDebug("feval","feval");
   } else {
     if (!arg[0].isScalar())
       throw Exception("function handle argument to feval must be a scalar");
@@ -4650,3 +4661,464 @@ ArrayVector Conv2Function(int nargout, const ArrayVector& arg) {
   throw Exception("could not recognize which form of conv2 was requested - check help conv2 for details");
 }
 
+<<<<<<< .working
+=======
+#define BENCHLEN 1
+
+class BenchData : public QSharedData
+{
+public:
+  BenchData() {
+    length = BENCHLEN;
+    data = new float[length];
+  }
+  BenchData(const BenchData &other) {
+    length = other.length;
+    data = new float[length];
+    memcpy(data,other.data,length*sizeof(float));
+  }
+  ~BenchData() {
+    delete[] data;
+  }
+  int length;
+  float *data;
+};
+
+class Dims {
+  int64 rows;
+  int64 cols;
+  int64 *extras;
+  int n_extras;
+public:
+  Dims() {
+    n_extras = 0;
+    extras = NULL;
+  }
+  Dims(const Dims& copy) {
+    rows = copy.rows;
+    cols = copy.cols;
+    n_extras = copy.n_extras;
+    if (n_extras) {
+      extras = new int64[n_extras];
+      memcpy(extras,copy.extras,n_extras*sizeof(int64));
+    } else {
+      extras = NULL;
+    }
+  }
+  Dims& operator=(const Dims& copy) {
+    if (extras) delete[] extras;
+    rows = copy.rows;
+    cols = copy.cols;
+    n_extras = copy.n_extras;
+    if (n_extras) {
+      extras = new int64[n_extras];
+      memcpy(extras,copy.extras,n_extras*sizeof(int64));
+    } else {
+      extras = NULL;
+    }    
+  }
+};
+
+class FOO : public QSharedData {
+  int64 dims[16];
+};
+
+class BenchArray {
+  //  std::vector<int64> dims;
+  //  int64 dims[8];
+  //  int64 *dims;
+  //  QVector<int64> dims;
+  //  Dims dims;
+  bool m_isScalar;
+  //  QSharedDataPointer<FOO> p;
+  //  QSharedDataPointer<BenchData> d;
+  float m_scalar;
+  //  QSharedDataPointer<FOO> m_dims;
+  QSharedDataPointer<BenchData> m_data;
+public:
+  BenchArray() {
+    //    m_data = NULL;
+    //    m_dims = NULL;
+    m_isScalar = true;
+    m_scalar = 1.0;
+  }
+  BenchArray(const BenchArray& copy) {
+    m_isScalar = copy.m_isScalar;
+    m_scalar = copy.m_scalar;
+    if (!m_isScalar) {
+      m_data = copy.m_data;
+      //      m_dims = copy.m_dims;
+    }
+  }
+  BenchArray& operator=(const BenchArray& other) {
+    if (m_isScalar && other.m_isScalar) {
+      m_scalar = other.m_scalar;
+      return *this;
+    } else {
+      if (!m_isScalar && other.m_isScalar) {
+	m_data = NULL;
+	//	m_dims = NULL;
+	m_isScalar = true;
+	m_scalar = other.m_scalar;
+	return *this;
+      }
+    }
+    m_data = other.m_data;
+    //    m_dims = other.m_dims;
+    m_isScalar = other.m_isScalar;
+    m_scalar = other.m_scalar;
+  }
+  void resize() {
+    m_data = new BenchData;
+    //    m_dims = new FOO;
+    m_isScalar = false;
+    m_scalar = 0;
+    //    dims.resize(4);
+    //      dims.push_back(3);
+    //      dims.push_back(4);
+    //      dims.push_back(5);
+    //      dims.push_back(6);
+    //    dims[0] = dims[1] = dims[2] = dims[3] = 1;
+  }
+};
+
+template <class T>
+class TList {
+  T *d;
+  int n;
+public:
+  TList() : d(NULL), n(0) {
+  }
+  ~TList() {
+    if (d) delete[] d;
+  }
+  TList(const TList<T>& other) {
+    if (!other.d) {
+      d = NULL;
+      n = 0;
+      return;
+    } else {
+      n = other.n;
+      d = new T[n];
+      for (int i=0;i<n;i++)
+	d[i] = other.d[i];
+    }
+  }
+  TList<T>& operator=(const TList<T>& other) {
+    if (d) delete d;
+    if (other.d) {
+      n = other.n;
+      d = new T[n];
+      for (int i=0;i<n;i++)
+	d[i] = other.d[i];
+    } else {
+      d = NULL;
+      n = 0;
+    }
+    return *this;
+  }
+  inline int size() const {
+    if (d) 
+      return n; 
+    else 
+      return 0;
+  }
+  inline T& operator[](int i) {
+    if (d) 
+      return d[i]; 
+    else 
+      throw Exception("Illegal list access");
+  }
+  inline const T& operator[](int i) const {
+    if (d) 
+      return d[i]; 
+    else
+      throw Exception("Illegal list access (const)");
+  }
+  inline bool empty() const {
+    return (n>0);
+  }
+  inline void push_back(const T & value) {
+    if (d) {
+      T* q = new T[n+1];
+      for (int i=0;i<n;i++) q[i] = d[i];
+      q[n] = value;
+      d = q;
+    } else {
+      d = new T[1];
+      d[0] = value;
+    }
+    n++;
+  }
+  inline void push_front(const T & value) {
+    if (d) {
+      T* q = new T[n+1];
+      for (int i=0;i<n;i++)
+	q[i+1] = d[i];
+      q[0] = value;
+      d = q;
+    } else {
+      d = new T[1];
+      d[0] = value;
+    }
+    n++;
+  }
+  inline const T& at(int i) const {
+    if (d && (i>=0) && (i<n))
+      return d[i];
+    else 
+      throw Exception("Illegal list access (at)");
+  }
+//   inline void pop_front() {
+//     if (d) {
+//       d->pop_front();
+//     } else
+//       throw Exception("Illegal list access (pop_front)");
+//   }
+//   inline void pop_back() {
+//     if (d)
+//       d->pop_back();
+//     else
+//       throw Exception("Illegal list access (pop_back)");
+//   }
+  inline T& front() {
+    if (d)
+      return d[0];
+    else
+      throw Exception("Illegal list access (front)");
+  }
+  inline const T& front() const {
+    if (d)
+      return d[0];
+    else
+      throw Exception("Illegal list access (const front)");
+  }
+  inline T& back() {
+    if (d)
+      return d[n-1];
+    else
+      throw Exception("Illegal list access (back)");
+  }
+  inline const T& back() const {
+    if (d)
+      return d[n-1];
+    else
+      throw Exception("Illegal list access (const back)");
+  }
+  inline TList<T>& operator<<(const T & value) {
+    push_back(value);
+    return *this;
+  }
+//   inline TList<T>& operator+=(const TList<T>& other) {
+//     if (other.d) {
+//       if (d) {
+// 	(*d) += *(other.d);
+//       } else {
+// 	d = new QList<T>;
+// 	(*d) += *(other.d);
+//       }
+//     }
+//     return *this;
+//   }
+//   inline bool operator==(const TList<T>& other) {
+//     if (d && other.d) {
+//       return ((*d) == (*other.d));
+//     } else if (!d && !other.d)
+//       return true;
+//     else
+//       return false;
+//   }
+};
+
+ArrayVector CosFunction(int nargout, const ArrayVector& arg);
+
+
+ArrayVector DemoFunction(int nargout, const ArrayVector& arg) {
+#if 0
+  int test = ArrayToInt32(arg[0]);
+  switch (test) {
+  case 0:
+    {
+      Array t(Array::int32Constructor(54));
+      for (int i=0;i<100000;i++) {
+	ArrayVector g;
+	g.push_back(t);
+      }
+    }
+    break;
+  case 1:
+    {
+      Array t(Array::int32Constructor(54));
+      for (int i=0;i<100000;i++) {
+	Array g[5];
+	g[0] = t;
+      }
+    }
+    break;
+  case 2:
+    {
+      Array t(Array::int32Constructor(54));
+      for (int i=0;i<100000;i++) {
+	FMList<Array> k;
+	k.push_back(t);
+      }
+    }
+    break;
+  case 3:
+    {
+      Array t(Array::int32Constructor(54));
+      for (int i=0;i<100000;i++) {
+	Array *k = new Array;
+	k[0] = t;
+	delete k;
+      }
+    }
+  case 4:
+    {
+      Array t(Array::int32Constructor(54));
+      ArrayVector g;
+      g.push_back(t);
+      for (int i=0;i<100000;i++) {
+	ArrayVector p = g;
+      }
+    }
+  case 5:
+    {
+      Array t(Array::int32Constructor(54));
+      Array g[5];
+      g[0] = t;
+      for (int i=0;i<100000;i++) {
+	Array h[5];
+	for (int j=0;j<5;j++) h[j] = g[j];
+      }
+      
+    }
+  case 6:
+    {
+      Array t(Array::int32Constructor(54));
+      for (int i=0;i<100000;i++) {
+	std::vector<Array> k;
+	k.push_back(t);
+      }
+    }
+    break;
+  case 7:
+    {
+      Array t(Array::int32Constructor(54));
+      std::vector<Array> p;
+      for (int i=0;i<100000;i++) {
+	std::vector<Array> k;
+	k = p;
+      }
+    }
+    break;
+  case 8:
+    {
+      Array t(Array::int32Constructor(54));
+      for (int i=0;i<100000;i++) {
+	TList<Array> k;
+	k.push_back(t);
+      }
+    }
+    break;
+  case 9:
+    {
+      Array t(Array::int32Constructor(54));
+      TList<Array> p;
+      p.push_back(t);
+      for (int i=0;i<100000;i++) {
+	TList<Array> k;
+	k = p;
+      }
+    }
+    break;
+  case 10:
+    {
+      Array t(Array::int32Constructor(54));
+      for (int i=0;i<100000;i++) {
+	QVector<Array> k;
+	k.push_back(t);
+      }
+    }
+    break;
+  case 11:
+    {
+      Array t(Array::int32Constructor(54));
+      QVector<Array> p;
+      p.push_back(t);
+      for (int i=0;i<100000;i++) {
+	QVector<Array> k;
+	k = p;
+      }
+    }
+    break;
+  case 12:
+    {
+      Array t(Array::int32Constructor(54));
+      for (int i=0;i<100000;i++) {
+	QList<Array> k;
+	k.push_back(t);
+      }
+    }
+    break;
+  case 13:
+    {
+      Array t(Array::int32Constructor(54));
+      QList<Array> p;
+      p.push_back(t);
+      for (int i=0;i<100000;i++) {
+	QList<Array> k;
+	k = p;
+      }
+    }
+    break;
+  case 14:
+    {
+      MCScanner scanner(ArrayToString(arg[1]),"test.mc");
+      MCParser parser(scanner);
+      CodeBlock t(parser.processStatementList());
+      t.tree()->print();
+    }
+    break;
+  case 15:
+    {
+      Array t;
+      for (int i=0;i<1000000;i++) {
+	ArrayVector x;
+	x.push_back(Array::floatConstructor(i));
+	ArrayVector y(CosFunction(1,x));
+      }
+    }
+    break;
+  case 16:
+    {
+      BenchArray a;
+      a.resize();
+      for (int i=0;i<1000000;i++) {
+	BenchArray b = a;
+      }
+    }
+    break;
+  case 17:
+    {
+      float *g = new float[BENCHLEN];
+      for (int i=0;i<1000000;i++) {
+	float *h = new float[BENCHLEN];
+	memcpy(h,g,sizeof(float)*BENCHLEN);
+	delete[] h;
+      }
+    }
+    break;
+  case 18:
+    {
+      Array a(Array::int32RangeConstructor(0,1,100,false));
+      for (int i=0;i<1000000;i++) {
+	Array b = a;
+      }
+    }
+    break;
+  }
+#endif
+  return ArrayVector();
+}
+>>>>>>> .merge-right.r3199

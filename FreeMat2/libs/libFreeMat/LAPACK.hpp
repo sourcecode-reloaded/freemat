@@ -26,7 +26,7 @@
 extern "C" {
   double dlamch_(char * CMACH);
   
-  double slamch_(char * CMACH);
+  float slamch_(char * CMACH);
 
   void dgesvx_(char* FACT, char* TRANS, int * N, int * NRHS, 
 	       double *A, int * LDA, double * AF, int * LDAF, 
@@ -210,11 +210,11 @@ extern "C" {
 
   float snrm2_(int *N, float *X, int *INCX);
   
-  float dnrm2_(int *N, double *X, int *INCX);
+  double dnrm2_(int *N, double *X, int *INCX);
 
   float scnrm2_(int *N, float *X, int *INCX);
   
-  float dznrm2_(int *N, double *X, int *INCX);
+  double dznrm2_(int *N, double *X, int *INCX);
 
   void dgecon_(char *norm, int *N, double *A, int *LDA, double *Anorm,
 	       double *rcond, double *work, int *iwork, int *info);

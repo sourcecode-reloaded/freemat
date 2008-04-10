@@ -1740,6 +1740,10 @@ Array Array::emptyConstructor() {
   return Array(FM_DOUBLE,Dimensions(0,0),NULL);
 }
 
+Array Array::emptyConstructor(const Dimensions& dims){
+  return Array(FM_DOUBLE,dims,NULL);
+}
+
 Array Array::funcPtrConstructor(FuncPtr fptr) {
   FuncPtr *data = (FuncPtr*) allocateArray(FM_FUNCPTR_ARRAY,1);
   data[0] = fptr;
@@ -1999,6 +2003,7 @@ Array Array::matrixConstructor(ArrayMatrix& m) {
   Dimensions retDims;
   void *dstPtr = NULL;
   bool sparseArg = false;
+  bool initialized = false;
 
   try {
     maxType = FM_FUNCPTR_ARRAY;
@@ -2010,6 +2015,10 @@ Array Array::matrixConstructor(ArrayMatrix& m) {
       ArrayVector ptr = (ArrayVector) *i;
       for (int j=0;j<ptr.size();j++) {
 	const Array& d = ptr[j];
+	if (!initialized) {
+	  initialized = true;
+	  maxType = minType = d.dataClass();
+	}
 	if (d.sparse())
 	  sparseArg = true;
 	if (!d.isEmpty()) {
@@ -2461,7 +2470,10 @@ constIndexPtr* ProcessNDimIndexes(bool preserveColons,
   colonIndex = -1;
   for (int i=0;i<index.size();i++) {
     bool isColon = isColonOperator(index[i]);
-    if (!colonFound && isColon && preserveColons) {
+    // Hack - to fix issues with colon operators and complex values
+    // am disabling colon preservation for colons that are not in
+    // the first dimensional slot.
+    if (!colonFound && isColon && preserveColons && (i == 0)) {
       colonFound = true;
       colonIndex = i;
       outndx[i] = NULL;
@@ -3269,13 +3281,13 @@ void Array::setNDimSubset(ArrayVector& index, Array& rdata, Interpreter* m_eval)
       setNDimSubsetNumericDispatchBurst<float>(colonIndex,(float*) qp,
 					       (const float*) rdata.getDataPointer(),
 					       outDimsInt,srcDimsInt,
-					       indx, L, 2,advance);
+					       indx, L, 2, advance);
       break;
     case FM_DCOMPLEX: 
       setNDimSubsetNumericDispatchBurst<double>(colonIndex,(double*) qp,
 						(const double*) rdata.getDataPointer(),
 						outDimsInt,srcDimsInt,
-						indx, L, 2,advance);
+						indx, L, 2, advance);
       break;
     case FM_LOGICAL: 
       setNDimSubsetNumericDispatchReal<logical>(colonIndex,(logical*) qp,
@@ -3576,7 +3588,10 @@ void Array::deleteVectorSubset(Array& arg, Interpreter* m_eval) {
     for (i=0;i<N;i++) 
       if (!deletionMap[i]) newSize++;
     // Special case - if newSize==getLength, the delete is a no-op
-    if (newSize == getLength()) return;
+    if (newSize == getLength()) {
+      Free(deletionMap);
+      return;
+    }
     // Allocate a new space to hold the rdata.
     qp = allocateArray(dataClass(),newSize,fieldNames());
     // Loop through the indices - copy elements in that 

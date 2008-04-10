@@ -21,6 +21,7 @@
 #include <QMatrix>
 
 HandleImage::HandleImage() {
+  MTr.setMatrix(1,0,0,1,0,0);
   ConstructProperties();
   SetupDefaults();
 }
@@ -190,15 +191,23 @@ double* HandleImage::RGBExpandImage(const double *dp,
 
 void HandleImage::PrepImageRGBNoAlphaMap(const double *dp,
 					 int rows, int cols,
-					 QVector<double> &alpha) {
+					 QVector<double> &alpha,
+					 bool cdata_is_integer) {
   img = QImage(cols,rows,QImage::Format_ARGB32);
   for (int i=0;i<rows;i++) {
     QRgb *ibits = (QRgb*) img.scanLine(i);
     for (int j=0;j<cols;j++)
-      ibits[j] = qRgba((int)(255*dp[(i+j*rows)]),
-		       (int)(255*dp[(i+j*rows)+rows*cols]),
-		       (int)(255*dp[(i+j*rows)+2*rows*cols]),
-		       (int)(255*alpha[i+j*rows]));
+      if (!cdata_is_integer) {
+	ibits[j] = qRgba((int)(255*dp[(i+j*rows)]),
+			 (int)(255*dp[(i+j*rows)+rows*cols]),
+			 (int)(255*dp[(i+j*rows)+2*rows*cols]),
+			 (int)(255*alpha[i+j*rows]));
+      } else {
+	ibits[j] = qRgba((int)(dp[(i+j*rows)]),
+			 (int)(dp[(i+j*rows)+rows*cols]),
+			 (int)(dp[(i+j*rows)+2*rows*cols]),
+			 (int)(255*alpha[i+j*rows]));
+      }
   }
 }
 
@@ -257,8 +266,8 @@ void HandleImage::UpdateCAlphaData() {
     PrepImageRGBNoAlphaMap((const double*)cdata.getDataPointer(),
 			   cdata.getDimensionLength(0),
 			   cdata.getDimensionLength(1),
-			   alphas);
-  } else if (cdata.dimensions().getLength() == 2) {
+			   alphas,cdata_is_integer);
+  } else {
     double *dp = RGBExpandImage((const double*)cdata.getDataPointer(),
 				cdata.getDimensionLength(0),
 				cdata.getDimensionLength(1),
@@ -266,7 +275,7 @@ void HandleImage::UpdateCAlphaData() {
     PrepImageRGBNoAlphaMap(dp,
 			   cdata.getDimensionLength(0),
 			   cdata.getDimensionLength(1),
-			   alphas);
+			   alphas,false);
     delete[] dp;
   }
 }
@@ -295,19 +304,16 @@ void HandleImage::UpdateState() {
   xflip = (ax->StringCheck("xdir","reverse"));
   // Reverse the yflip bit - so that images naturally have the first row at the top
   yflip = !(ax->StringCheck("ydir","reverse"));
-  if (xflip || yflip) {
-    double m11, m22;
-    if (xflip)
-      m11 = -1;
-    else
-      m11 = 1;
-    if (yflip)
-      m22 = -1;
-    else
-      m22 = 1;
-    QMatrix m(m11,0,0,m22,0,0);
-    img = img.transformed(m);
-  }
+  double m11, m22;
+  if (xflip)
+    m11 = -1;
+  else
+    m11 = 1;
+  if (yflip)
+    m22 = -1;
+  else
+    m22 = 1;
+  MTr.setMatrix(m11,0,0,m22,0,0);
 }
 
 void HandleImage::PaintMe(RenderEngine& gc) {
@@ -315,11 +321,9 @@ void HandleImage::PaintMe(RenderEngine& gc) {
     return;
   HPTwoVector *xp = (HPTwoVector *) LookupProperty("xdata");
   HPTwoVector *yp = (HPTwoVector *) LookupProperty("ydata");
-  // Rescale the image
-  int x1, y1, x2, y2;
-  gc.toPixels(xp->Data()[0],yp->Data()[0],0,x1,y1);
-  gc.toPixels(xp->Data()[1],yp->Data()[1],0,x2,y2);
-  if ((abs(x2-x1)> 4096) || (abs(y2-y1) > 4096)) return;
-  gc.drawImage(xp->Data()[0],yp->Data()[0],xp->Data()[1],
-	       yp->Data()[1],img.scaled(abs(x2-x1),abs(y2-y1)));
+  HandleAxis *ax = GetParentAxis();
+  HPTwoVector *xlim = (HPTwoVector *) ax->LookupProperty("xlim");
+  HPTwoVector *ylim = (HPTwoVector *) ax->LookupProperty("ylim");
+
+  gc.drawImage(xp, yp, xlim, ylim,img.transformed(MTr));
 }

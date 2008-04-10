@@ -25,8 +25,9 @@
 class HandleImage : public HandleObject {
 protected:
   QImage img;
+  QMatrix MTr;
   void PrepImageRGBNoAlphaMap(const double *dp, int rows, int cols,
-			      QVector<double> &alpha);
+			      QVector<double> &alpha, bool intData);
   double* RGBExpandImage(const double *dp, int rows, int cols, bool floatData);
   QVector<double> GetAlphaMap(int rows, int cols);
 public:
@@ -36,6 +37,7 @@ public:
   virtual void SetupDefaults();
   virtual void UpdateState();
   virtual void PaintMe(RenderEngine& gc);
+  virtual void AxisPaintingDone( void ){};
   QVector<double> GetLimits();
   void UpdateCAlphaData();
 };

@@ -1,6 +1,49 @@
 #ifndef __NDimArray_hpp__
 #define __NDimArray_hpp__
 
+class Array {
+public:
+  virtual size_t length() const = 0;
+  virtual size_t rows() const = 0;
+  virtual size_t columns() const = 0;
+  virtual bool isEmpty() const = 0;
+  virtual bool isScalar() const = 0;
+  virtual bool is2D() const = 0;
+  virtual bool isVector() const = 0;
+  virtual bool isColumnVector() const = 0;
+  virtual bool isRowVector() const = 0;
+  virtual void resize(const Ntuple &a) = 0;
+  virtual void vectorResize(int n) = 0;
+  virtual void reshape(const Ntuple& a) = 0;
+  virtual ~Array() {}
+};
+
+template <typename T>
+class NumericArray : public Array {
+public:
+  virtual T get(const Ntuple& a) const = 0;
+  virtual void set(const Ntuple& a, T val) = 0;
+  virtual T operator[](const Ntuple& a) const = 0;
+  virtual T& operator[](const Ntuple& a) = 0;
+};
+
+template <typename T>
+class SingletonArray : public NumericArray {
+  T m_value;
+public:
+  
+}
+
+template <typename T>
+class ScalarArray {
+  T m_value;
+public:
+  ScalarArray(T value) : m_value(value);
+  inline T value() const {return m_value;}
+  inline void setValue(T value) {m_value = value;}
+  
+};
+
 // Issues around the design of the array class:
 //
 //  Sparse vs Dense

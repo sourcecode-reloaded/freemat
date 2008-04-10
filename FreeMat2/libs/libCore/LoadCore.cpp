@@ -29,9 +29,10 @@
 #endif
 
 void LoadGUICoreFunctions(Context* context) {
-  context->addGfxSpecialFunction("helpwin",HelpWinFunction,0,0,NULL);
+  context->addGfxSpecialFunction("helpwin",HelpWinFunction,1,0,"function",NULL);
   context->addGfxSpecialFunction("pathtool",PathToolFunction,0,0,NULL);
   context->addGfxSpecialFunction("imread",ImReadFunction,1,3,"filename",NULL);
+  context->addGfxSpecialFunction("imwrite",ImWriteFunction,4,0,"filename","A","map","alpha",NULL);
 }
 
 void LoadCoreFunctions(Context* context) {
@@ -103,6 +104,12 @@ void LoadCoreFunctions(Context* context) {
   context->addFunction("svd",SVDFunction,2,3,"x","flag",NULL);
   context->addFunction("diag",DiagFunction,2,1,"x","n",NULL);
   context->addFunction("qr",QRDFunction,2,-1,"x","n",NULL);
+// 
+  context->addFunction("bitand",BitandFunction,2,1,"x","n",NULL);
+  context->addFunction("bitor",BitorFunction,2,1,"x","n",NULL);
+  context->addFunction("bitxor",BitxorFunction,2,1,"x","n",NULL);
+  context->addFunction("bitcmp_cpp",BitcmpFunction,1,1,"x",NULL);
+// 
   context->addFunction("int2bin",Int2BinFunction,2,1,"x","n",NULL);
   context->addFunction("bin2int",Bin2IntFunction,2,1,"x","flags",NULL);
   context->addSpecialFunction("eig",EigFunction,2,2,"A","balanceflag",NULL);
