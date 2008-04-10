@@ -1,5 +1,5 @@
-#ifndef __Variant_hpp__
-#define __Variant_hpp__
+#ifndef __Array_hpp__
+#define __Array_hpp__
 
 #include <QSharedData>
 #include "Types.hpp"
@@ -9,10 +9,10 @@
 class CellArray;
 class StringArray;
 
-class Variant;
+class Array;
 
-typedef FastList<Variant> VariantList;
-typedef QMap<QString,BasicArray<Variant> > StructArray;
+typedef FastList<Array> ArrayList;
+typedef QMap<QString,BasicArray<Array> > StructArray;
 
 enum Type {
   Invalid = 0,
@@ -73,42 +73,42 @@ typedef struct {
   };
 } Data;
 
-class Variant {
+class Array {
 public:
-  inline Variant() {m_type = Invalid;}
-  // Defined in VariantPrivate
-  template <typename T> inline explicit Variant(T real); 
-  template <typename T> inline explicit Variant(T real, T imag); 
+  inline Array() {m_type = Invalid;}
+  // Defined in ArrayPrivate
+  template <typename T> inline explicit Array(T real); 
+  template <typename T> inline explicit Array(T real, T imag); 
   template <typename T> 
-  inline Variant(Type t, const BasicArray<T> &r) {
+  inline Array(Type t, const BasicArray<T> &r) {
     m_type = t;
     m_real.p = new SharedObject(t, new BasicArray<T>(r));
     m_complex = false;
   }
   template <typename T> 
-  inline Variant(Type t, const BasicArray<T> &r, const BasicArray<T> &i) {
+  inline Array(Type t, const BasicArray<T> &r, const BasicArray<T> &i) {
     m_type = t;
     m_real.p = new SharedObject(t, new BasicArray<T>(r));
     m_imag.p = new SharedObject(t, new BasicArray<T>(i));
     m_complex = true;
   }
   template <typename T>
-  inline Variant(Type t, BasicArray<T> *r) {
+  inline Array(Type t, BasicArray<T> *r) {
     m_type = t;
     m_real.p = new SharedObject(t,r);
     m_complex = false;
   }
   template <typename T>
-  inline Variant(Type t, BasicArray<T> *r, BasicArray<T> *i) {
+  inline Array(Type t, BasicArray<T> *r, BasicArray<T> *i) {
     m_type = t;
     m_real.p = new SharedObject(t,r);
     m_imag.p = new SharedObject(t,i);
     m_complex = true;
   }
-  Variant(Type t, const NTuple &dims = NTuple(0,0));
-  Variant(const QString &text);
-  Variant(const SparseMatrix& real);
-  Variant(const SparseMatrix& real, const SparseMatrix& imag);
+  Array(Type t, const NTuple &dims = NTuple(0,0));
+  Array(const QString &text);
+  Array(const SparseMatrix& real);
+  Array(const SparseMatrix& real, const SparseMatrix& imag);
   const NTuple dimensions() const;
   const index_t length() const {return dimensions().count();}
   const index_t rows() const {return dimensions()[0];}
@@ -177,38 +177,38 @@ public:
   inline bool allReal() const {
     return (!m_complex);
   }
-  const Variant asScalar() const;
+  const Array asScalar() const;
   const index_t asIndexScalar() const; 
-  const Variant toType(const Type t) const;
+  const Array toType(const Type t) const;
 
-  const Variant get(const IndexArray& index) const;
-  const Variant get(const Variant& index) const;
-  const Variant get(index_t index) const;
-  const VariantList get(const QString& field) const;
+  const Array get(const IndexArray& index) const;
+  const Array get(const Array& index) const;
+  const Array get(index_t index) const;
+  const ArrayList get(const QString& field) const;
 
-  const Variant get(const NTuple& index) const;
-  const Variant get(const IndexArrayList& indices) const;
-  const Variant get(const VariantList& indices) const;
+  const Array get(const NTuple& index) const;
+  const Array get(const IndexArrayList& indices) const;
+  const Array get(const ArrayList& indices) const;
 
-  void set(const Variant& index, const Variant& data);
-  void set(const IndexArray& index, const Variant& data);
-  void set(index_t index, const Variant& data);
+  void set(const Array& index, const Array& data);
+  void set(const IndexArray& index, const Array& data);
+  void set(index_t index, const Array& data);
 
-  void set(const VariantList& index, const Variant& data);
-  void set(const IndexArrayList& index, const Variant& data);
-  void set(const NTuple& index, const Variant& data);
-  void set(const QString& field, VariantList& data);
+  void set(const ArrayList& index, const Array& data);
+  void set(const IndexArrayList& index, const Array& data);
+  void set(const NTuple& index, const Array& data);
+  void set(const QString& field, ArrayList& data);
 
   void print(std::ostream& o) const;
   void resize(const NTuple &size);
   void resize(index_t size);
   void reshape(const NTuple &size);
 
-  Variant asArrayType() const;
+  Array asArrayType() const;
   inline bool isEmpty() const {return length() == 0;}
 
-  bool operator==(const Variant &b) const;
-  inline bool operator!=(const Variant &b) const {return !(*this == b);}
+  bool operator==(const Array &b) const;
+  inline bool operator!=(const Array &b) const {return !(*this == b);}
   void addField(QString name);
 private:
   Data m_real;
@@ -217,32 +217,32 @@ private:
   bool m_complex;
 };
 
-class VariantIterator : public BaseIterator<Variant, Variant> {
+class ArrayIterator : public BaseIterator<Array, Array> {
 public:
-  VariantIterator(Variant *ptr, int dim) : 
-    BaseIterator<Variant,Variant>(ptr,dim) {}
+  ArrayIterator(Array *ptr, int dim) : 
+    BaseIterator<Array,Array>(ptr,dim) {}
 };
 
-class ConstVariantIterator : public ConstBaseIterator<Variant, Variant> {
+class ConstArrayIterator : public ConstBaseIterator<Array, Array> {
 public:
-  ConstVariantIterator(const Variant *ptr, int dim) :
-    ConstBaseIterator<Variant,Variant>(ptr,dim) {}
+  ConstArrayIterator(const Array *ptr, int dim) :
+    ConstBaseIterator<Array,Array>(ptr,dim) {}
 };
 
-std::ostream& operator<<(std::ostream& o, const Variant &t);
+std::ostream& operator<<(std::ostream& o, const Array &t);
 
-bool IsColonOp(const Variant &arg);
+bool IsColonOp(const Array &arg);
 
-const IndexArray IndexArrayFromVariant(const Variant &index);
+const IndexArray IndexArrayFromArray(const Array &index);
 
-const VariantList VariantListFromCellArray(const Variant &arg);
-const Variant CellArrayFromVariantList(VariantList &arg, index_t cnt);
-void SetCellContents(Variant &cell, const Variant& index, VariantList& data);
-void SetCellContents(Variant &cell, const VariantList& index, VariantList& data);
-QStringList FieldNames(const Variant& arg);
+const ArrayList ArrayListFromCellArray(const Array &arg);
+const Array CellArrayFromArrayList(ArrayList &arg, index_t cnt);
+void SetCellContents(Array &cell, const Array& index, ArrayList& data);
+void SetCellContents(Array &cell, const ArrayList& index, ArrayList& data);
+QStringList FieldNames(const Array& arg);
 
-SparseMatrix ToRealSparse(const Variant& data);
-SparseMatrix ToImagSparse(const Variant& data);
+SparseMatrix ToRealSparse(const Array& data);
+SparseMatrix ToImagSparse(const Array& data);
 
 // Suppose we support a get/set interface:
 // And we support slicing through the iterators
@@ -251,7 +251,7 @@ SparseMatrix ToImagSparse(const Variant& data);
 // We can capture this as an iterator:
 //  V = SliceIterator(A,1:2:end,1:5:end);
 // Or in a variant itself.
-//  B = Variant(A,1:2:end,1:5:end)
+//  B = Array(A,1:2:end,1:5:end)
 // In which case, as long as we have get/set support
 // for the variant class, we are OK.  We do need a
 // sideband for the imaginary/real part of the equation
@@ -263,6 +263,6 @@ SparseMatrix ToImagSparse(const Variant& data);
 // clarity, we have given up some of the performance.  One idea
 // is to do something like this:
 
-#include "VariantPrivate.hpp"
+#include "ArrayPrivate.hpp"
 
 #endif
