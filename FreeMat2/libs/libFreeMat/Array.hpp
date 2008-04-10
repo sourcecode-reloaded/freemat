@@ -6,7 +6,6 @@
 #include "BasicArray.hpp"
 #include "FastList.hpp"
 #include "SparseMatrix.hpp"
-class CellArray;
 class StringArray;
 
 class Array;
