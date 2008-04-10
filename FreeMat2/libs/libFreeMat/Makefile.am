@@ -7,14 +7,15 @@ libFreeMat_a_MOC = Interpreter.moc.cpp
 BUILT_SOURCES = $(libFreeMat_a_MOC)
 
 libFreeMat_a_HFILES = Array.hpp \
+ArrayPrivate.hpp \
 Class.hpp \
 Context.hpp \
-Data.hpp \
-Dimensions.hpp \
+CommonIterator.hpp \
 EigenDecompose.hpp \
 Exception.hpp \
 File.hpp \
 FunctionDef.hpp \
+GetSet.hpp \
 HandleList.hpp \
 IEEEFP.hpp \
 LAPACK.hpp \
@@ -26,12 +27,11 @@ Math.hpp \
 MatrixMultiply.hpp \
 MemPtr.hpp \
 Module.hpp \
-NumericArray.hpp \
 QRDecompose.hpp \
 Scope.hpp \
 Serialize.hpp \
 SingularValueDecompose.hpp \
-Sparse.hpp \
+SparseMatrix.hpp \
 Stream.hpp \
 SymbolTable.hpp \
 Types.hpp \
@@ -42,14 +42,11 @@ Parser.hpp \
 Scanner.hpp \
 Tree.hpp \
 JITVM.hpp \
-List.hpp \
-fftw_cycle.h
+FastList.hpp 
 
 libFreeMat_a_SOURCES = Array.cpp \
 Interpreter.cpp \
 Context.cpp \
-Data.cpp \
-Dimensions.cpp \
 EigenDecompose.cpp \
 Exception.cpp \
 File.cpp \
@@ -62,12 +59,12 @@ Malloc.cpp \
 Math.cpp \
 MatrixMultiply.cpp \
 Module.cpp \
-NumericArray.cpp \
+NTuple.cpp \
 QRDecompose.cpp \
 Scope.cpp \
 Serialize.cpp \
 SingularValueDecompose.cpp \
-Sparse.cpp \
+SparseMatrix.cpp \
 Class.cpp \
 Print.cpp \
 Token.cpp \
