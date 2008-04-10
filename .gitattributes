@@ -99,16 +99,12 @@ FreeMat2/libs/libFN/ribesl.f svn_keywords=Author+Date+Id+Revision svn_eol_002dst
 FreeMat2/libs/libFN/rjbesl.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFN/rkbesl.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFN/rybesl.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libFreeMat/Array.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libFreeMat/Array.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Class.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Class.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Context.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Context.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Data.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Data.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libFreeMat/Dimensions.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libFreeMat/Dimensions.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/EigenDecompose.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/EigenDecompose.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Exception.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -139,8 +135,6 @@ FreeMat2/libs/libFreeMat/MatrixMultiply.hpp svn_keywords=Author+Date+Id+Revision
 FreeMat2/libs/libFreeMat/MemPtr.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Module.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Module.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libFreeMat/NumericArray.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libFreeMat/NumericArray.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/QRDecompose.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/QRDecompose.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Scope.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -149,8 +143,6 @@ FreeMat2/libs/libFreeMat/Serialize.cpp svn_keywords=Author+Date+Id+Revision svn_
 FreeMat2/libs/libFreeMat/Serialize.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/SingularValueDecompose.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/SingularValueDecompose.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libFreeMat/Sparse.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libFreeMat/Sparse.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Stream.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/SymbolTable.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Types.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
