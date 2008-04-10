@@ -60,6 +60,7 @@ public:
 
 class Interpreter;
 class UserClass;
+class JIT;
 
 typedef Array (*BinaryFunc)(Array, Array, Interpreter*);
 typedef Array (*UnaryFunc)(Array, Interpreter*);
@@ -127,6 +128,10 @@ class Interpreter : public QThread {
    */
   bool jitcontrol;
   /**
+   * jit instance for this interpreter
+   */
+  JIT *m_jit;
+  /**
    * When this flag is active, autostop does nothing.
    */
   bool InCLI;
@@ -137,7 +142,7 @@ class Interpreter : public QThread {
   /**
    * The command buffer
    */
-  stringVector cmd_buffer;
+  StringVector cmd_buffer;
   /**
    * A buffer of return values from graphics calls
    */
@@ -490,12 +495,16 @@ public:
    * an exception occurs
    */
   inline bool AutoStop() {return autostop;}
-  inline void AutoStop(bool a) {autostop = a;}
+  inline void setAutoStop(bool a) {autostop = a;}
   /**
    * Set the JITControl flag
    */
   inline bool JITControl() {return jitcontrol;}
-  inline void JITControl(bool a) {jitcontrol = a;}
+  inline void setJITControl(bool a) {jitcontrol = a;}
+  /**
+   * Get the JIT pointer
+   */
+  JIT* JITPointer();
   /**
    * Set the print limit (number of element printed prior to truncation).
    */
@@ -637,17 +646,17 @@ private:
    * expressions from a function call
    */
   void collectKeywords(Tree *q, ArrayVector &keyvals,
-		       TreeList &keyexpr, stringVector &keywords);
+		       TreeList &keyexpr, StringVector &keywords);
   /**
    * Sort keywords into a proper call order.
    */
-  int* sortKeywords(ArrayVector &m, stringVector &keywords,
-		    stringVector arguments, ArrayVector keyvals);
+  int* sortKeywords(ArrayVector &m, StringVector &keywords,
+		    StringVector arguments, ArrayVector keyvals);
   /**
    * For values passed by reference, update the caller's variables.
    */
-  void handlePassByReference(Tree *q, stringVector arguments,
-			     ArrayVector m,stringVector keywords,
+  void handlePassByReference(Tree *q, StringVector arguments,
+			     ArrayVector m,StringVector keywords,
 			     TreeList keyexpr, int* argTypeMap);
   /**
    * Create a variable in the correct scope, and return a reference to it

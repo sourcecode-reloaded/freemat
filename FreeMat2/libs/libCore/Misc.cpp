@@ -32,6 +32,7 @@
 #include "Print.hpp"
 #include "MemPtr.hpp"
 #include "Parser.hpp"
+#include "List.hpp"
 
 #include <algorithm>
 #undef max
@@ -551,7 +552,7 @@ ArrayVector SparseFunction(int nargout, const ArrayVector& arg, Interpreter* eva
     if ((r.dataClass() != FM_LOGICAL) && (r.dataClass() < FM_INT32))
       r.promoteType(FM_INT32);
     r.makeSparse();
-    return singleArrayVector(r);
+    return SingleArrayVector(r);
   } else if (arg.size() == 2) {
     Array m_arg(arg[0]);
     Array n_arg(arg[1]);
@@ -559,7 +560,7 @@ ArrayVector SparseFunction(int nargout, const ArrayVector& arg, Interpreter* eva
     m = m_arg.getContentsAsIntegerScalar();
     n = n_arg.getContentsAsIntegerScalar();
     Dimensions dim(m,n);
-    return singleArrayVector(Array(FM_FLOAT,dim,SparseFloatZeros(m,n),true));
+    return SingleArrayVector(Array(FM_FLOAT,dim,SparseFloatZeros(m,n),true));
   } else if (arg.size() == 3) {
     Array i_arg(arg[0]);
     Array j_arg(arg[1]);
@@ -606,7 +607,7 @@ ArrayVector SparseFunction(int nargout, const ArrayVector& arg, Interpreter* eva
     for (int j=0;j<jlen;j++)
       cols = (jp[j] > cols) ? jp[j] : cols;
     Dimensions dim(rows,cols);
-    return singleArrayVector(Array(v_arg.dataClass(),dim,
+    return SingleArrayVector(Array(v_arg.dataClass(),dim,
 				   makeSparseFromIJV(v_arg.dataClass(),
 						     rows,cols,olen,
 						     ip,istride,jp,jstride,
@@ -658,7 +659,7 @@ ArrayVector SparseFunction(int nargout, const ArrayVector& arg, Interpreter* eva
     Dimensions dim(rows,cols);
     uint32 *ip = (uint32*) i_arg.getDataPointer();
     uint32 *jp = (uint32*) j_arg.getDataPointer();
-    return singleArrayVector(Array(v_arg.dataClass(),dim,
+    return SingleArrayVector(Array(v_arg.dataClass(),dim,
 				   makeSparseFromIJV(v_arg.dataClass(),
 						     rows,cols,olen,
 						     ip,istride,jp,jstride,
@@ -693,7 +694,7 @@ ArrayVector InvFunction(int nargout, const ArrayVector& arg, Interpreter* eval) 
   if (arg.size() != 1)
     throw Exception("inv function needs at least one argument");
   Array r(arg[0]);
-  return singleArrayVector(InvertMatrix(r,eval));
+  return SingleArrayVector(InvertMatrix(r,eval));
 }
 
 //!
@@ -733,7 +734,7 @@ ArrayVector FullFunction(int nargout, const ArrayVector& arg) {
     throw Exception("Need one argument to full function");
   Array r(arg[0]);
   r.makeDense();
-  return singleArrayVector(r);
+  return SingleArrayVector(r);
 }
 
 //!
@@ -920,7 +921,7 @@ ArrayVector GetLineFunction(int nargout, const ArrayVector& arg, Interpreter* ev
       throw Exception("getline requires a string prompt");
     prompt = A.getContentsAsString();
   }
-  return singleArrayVector(Array::stringConstructor(eval->getLine(prompt)));
+  return SingleArrayVector(Array::stringConstructor(eval->getLine(prompt)));
 }
 
 ArrayVector GenEigFunction(int nargout, const ArrayVector &arg, Interpreter* m_eval) {
@@ -3138,9 +3139,13 @@ ArrayVector SimKeysFunction(int nargout, const ArrayVector& arg,
   if (arg[0].dataClass() != FM_CELL_ARRAY)
     throw Exception("simkeys requires a cell array of strings");
   const Array *dp = (const Array *) arg[0].getDataPointer();
-  for (int i=0;i<(int) arg[0].getLength();i++)
-    eval->ExecuteLine(ArrayToString(dp[i]));
-  eval->ExecuteLine("quit\n");
+  for (int i=0;i<(int) arg[0].getLength();i++) {
+    string txt(ArrayToString(dp[i]));
+    if ((txt.size() > 0) && (txt[txt.size()-1] != '\n'))
+      txt.push_back('\n');
+    eval->ExecuteLine(txt);
+  }
+  eval->ExecuteLine("\nquit\n");
   try {
     while(1) 
       eval->evalCLI();
@@ -3363,13 +3368,13 @@ ArrayVector SponesFunction(int nargout, const ArrayVector& arg) {
     throw Exception("spones function requires a sparse matrix template argument");
   Array tmp(arg[0]);
   if (tmp.isEmpty())
-    return singleArrayVector(Array::emptyConstructor());
+    return SingleArrayVector(Array::emptyConstructor());
   if(tmp.isReferenceType())
     throw Exception("spones function requires a numeric sparse matrix argument");
   tmp.makeSparse();
   if (!tmp.sparse())
     throw Exception("spones function requires a sparse matrix template argument");
-  return singleArrayVector(Array::Array(FM_FLOAT,Dimensions(tmp.getDimensionLength(0),tmp.getDimensionLength(1)),SparseOnesFunc(tmp.dataClass(),tmp.getDimensionLength(0),tmp.getDimensionLength(1),tmp.getSparseDataPointer()),true));
+  return SingleArrayVector(Array::Array(FM_FLOAT,Dimensions(tmp.getDimensionLength(0),tmp.getDimensionLength(1)),SparseOnesFunc(tmp.dataClass(),tmp.getDimensionLength(0),tmp.getDimensionLength(1),tmp.getSparseDataPointer()),true));
 }
 
 //!
@@ -3451,7 +3456,7 @@ ArrayVector VerStringFunction(int nargout, const ArrayVector& arg, Interpreter* 
 //function evenoddtest(n)
 //  if (n==0)
 //    error('zero is neither even nor odd');
-//  elseif (~isa(n,'int32'))
+//  elseif ( n ~= fix(n) )
 //    error('expecting integer argument');
 //  end;
 //  if (n==int32(n/2)*2)
@@ -3587,7 +3592,7 @@ ArrayVector EvalTryFunction(int nargout, const ArrayVector& arg, Interpreter* ev
     ArrayVector retval;
     bool autostop;
     autostop = eval->AutoStop();
-    eval->AutoStop(false);
+    eval->setAutoStop(false);
     try {
       eval->getContext()->bypassScope(popSpec);
       eval->evaluateString(try_buf,true);
@@ -3598,7 +3603,7 @@ ArrayVector EvalTryFunction(int nargout, const ArrayVector& arg, Interpreter* ev
       eval->evaluateString(catch_buf,false);
       retval = RetrieveCallVars(eval,nargout);
     }
-    eval->AutoStop(autostop);
+    eval->setAutoStop(autostop);
     return retval;
   } else {
     string try_line = arg[0].getContentsAsString();
@@ -3607,7 +3612,7 @@ ArrayVector EvalTryFunction(int nargout, const ArrayVector& arg, Interpreter* ev
     string catch_buf = catch_line + "\n";
     bool autostop;
     autostop = eval->AutoStop();
-    eval->AutoStop(false);
+    eval->setAutoStop(false);
     try {
       eval->getContext()->bypassScope(popSpec);
       eval->evaluateString(try_buf,true);
@@ -3616,7 +3621,7 @@ ArrayVector EvalTryFunction(int nargout, const ArrayVector& arg, Interpreter* ev
       eval->getContext()->restoreBypassedScopes();
       eval->evaluateString(catch_buf,false);
     }
-    eval->AutoStop(autostop);
+    eval->setAutoStop(autostop);
     return ArrayVector();
   }
 }
@@ -4199,7 +4204,7 @@ ArrayVector RepMatFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 2)
     throw Exception("repmat function requires at least two arguments");
   Array x(arg[0]);
-  if (x.isEmpty()) return singleArrayVector(Array::emptyConstructor());
+  if (x.isEmpty()) return SingleArrayVector(Array::emptyConstructor());
   Dimensions repcount;
   // Case 1, look for a scalar second argument
   if ((arg.size() == 2) && (arg[1].isScalar())) {
@@ -4304,7 +4309,7 @@ ArrayVector SystemFunction(int nargout, const ArrayVector& arg) {
   ArrayVector retval;
   if (systemArg.size() == 0) 
     return retval;
-  stringVector cp(DoSystemCallCaptured(systemArg));
+  StringVector cp(DoSystemCallCaptured(systemArg));
   Array* np = new Array[cp.size()];
   for (int i=0;i<(int)cp.size();i++)
     np[i] = Array::stringConstructor(cp[i]);
@@ -4590,7 +4595,7 @@ static ArrayVector Conv2FunctionFullXY(Array X, Array Y) {
   Cn = X.getDimensionLength(1) + Y.getDimensionLength(1) - 1;
   Cm_offset = 0;
   Cn_offset = 0;
-  return singleArrayVector(Conv2FunctionDispatch(X,Y,Cm,Cn,Cm_offset,Cn_offset));
+  return SingleArrayVector(Conv2FunctionDispatch(X,Y,Cm,Cn,Cm_offset,Cn_offset));
 }
 
 static ArrayVector Conv2FunctionSameXY(Array X, Array Y) {
@@ -4599,7 +4604,7 @@ static ArrayVector Conv2FunctionSameXY(Array X, Array Y) {
   Cn = X.getDimensionLength(1);
   Cm_offset = (int) floor((double)((Y.getDimensionLength(0)-1)/2));
   Cn_offset = (int) floor((double)((Y.getDimensionLength(1)-1)/2));
-  return singleArrayVector(Conv2FunctionDispatch(X,Y,Cm,Cn,Cm_offset,Cn_offset));
+  return SingleArrayVector(Conv2FunctionDispatch(X,Y,Cm,Cn,Cm_offset,Cn_offset));
 }
 
 static ArrayVector Conv2FunctionValidXY(Array X, Array Y) {
@@ -4607,10 +4612,10 @@ static ArrayVector Conv2FunctionValidXY(Array X, Array Y) {
   Cm = X.getDimensionLength(0)-Y.getDimensionLength(0)+1;
   Cn = X.getDimensionLength(1)-Y.getDimensionLength(1)+1;
   if ((Cm <= 0) || (Cn <= 0))
-    return singleArrayVector(Array::emptyConstructor());
+    return SingleArrayVector(Array::emptyConstructor());
   Cm_offset = Y.getDimensionLength(0)-1;
   Cn_offset = Y.getDimensionLength(1)-1;
-  return singleArrayVector(Conv2FunctionDispatch(X,Y,Cm,Cn,Cm_offset,Cn_offset));    
+  return SingleArrayVector(Conv2FunctionDispatch(X,Y,Cm,Cn,Cm_offset,Cn_offset));    
 }
 
 ArrayVector Conv2FunctionXY(Array X, Array Y, string type) {
@@ -4661,8 +4666,6 @@ ArrayVector Conv2Function(int nargout, const ArrayVector& arg) {
   throw Exception("could not recognize which form of conv2 was requested - check help conv2 for details");
 }
 
-<<<<<<< .working
-=======
 #define BENCHLEN 1
 
 class BenchData : public QSharedData
@@ -5121,4 +5124,3 @@ ArrayVector DemoFunction(int nargout, const ArrayVector& arg) {
 #endif
   return ArrayVector();
 }
->>>>>>> .merge-right.r3199

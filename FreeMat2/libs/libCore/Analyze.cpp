@@ -681,7 +681,7 @@ ArrayVector LessThan(int nargout, const ArrayVector& arg) {
   if (x.sparse() || y.sparse()) {
     if (!(x.sparse() && y.sparse()))
       throw Exception("Cannot perform max operation with mixed sparse and full types");
-    return singleArrayVector(Array(outType,
+    return SingleArrayVector(Array(outType,
 				   outDim,
 				   SparseLessThan(outType,
 						  outDim.getDimensionLength(0),
@@ -964,7 +964,7 @@ ArrayVector MinFunction(int nargout, const ArrayVector& arg) {
     planecount *= inDim.get(d);
   if (input.sparse()) {
     if (workDim == 0)
-      return singleArrayVector(Array(input.dataClass(),
+      return SingleArrayVector(Array(input.dataClass(),
 				     outDim,
 				     SparseMatrixMinColumns(input.dataClass(),
 							    input.getDimensionLength(0),
@@ -972,7 +972,7 @@ ArrayVector MinFunction(int nargout, const ArrayVector& arg) {
 							    input.getSparseDataPointer()),
 				     true));
     else if (workDim == 1)
-      return singleArrayVector(Array(input.dataClass(),
+      return SingleArrayVector(Array(input.dataClass(),
 				     outDim,
 				     SparseMatrixMinRows(input.dataClass(),
 							 input.getDimensionLength(0),
@@ -980,7 +980,7 @@ ArrayVector MinFunction(int nargout, const ArrayVector& arg) {
 							 input.getSparseDataPointer()),
 				     true));
     else
-      return singleArrayVector(input);
+      return SingleArrayVector(input);
   }
   // Allocate the output that contains the indices
   uint32* iptr = (uint32 *) Malloc(sizeof(uint32)*outDim.getElementCount());
@@ -1137,7 +1137,7 @@ ArrayVector GreaterThan(int nargout, const ArrayVector& arg) {
   if (x.sparse() || y.sparse()) {
     if (!(x.sparse() && y.sparse()))
       throw Exception("Cannot perform max operation with mixed sparse and full types");
-    return singleArrayVector(Array(outType,
+    return SingleArrayVector(Array(outType,
 				   outDim,
 				   SparseGreaterThan(outType,
 						     outDim.getDimensionLength(0),
@@ -1418,7 +1418,7 @@ ArrayVector MaxFunction(int nargout, const ArrayVector& arg) {
     planecount *= inDim.get(d);
   if (input.sparse()) {
     if (workDim == 0)
-      return singleArrayVector(Array(input.dataClass(),
+      return SingleArrayVector(Array(input.dataClass(),
 				     outDim,
 				     SparseMatrixMaxColumns(input.dataClass(),
 							    input.getDimensionLength(0),
@@ -1426,7 +1426,7 @@ ArrayVector MaxFunction(int nargout, const ArrayVector& arg) {
 							    input.getSparseDataPointer()),
 				     true));
     else if (workDim == 1)
-      return singleArrayVector(Array(input.dataClass(),
+      return SingleArrayVector(Array(input.dataClass(),
 				     outDim,
 				     SparseMatrixMaxRows(input.dataClass(),
 							 input.getDimensionLength(0),
@@ -1434,7 +1434,7 @@ ArrayVector MaxFunction(int nargout, const ArrayVector& arg) {
 							 input.getSparseDataPointer()),
 				     true));
     else
-      return singleArrayVector(input);
+      return SingleArrayVector(input);
   }
   // Allocate the output that contains the indices
   uint32* iptr = (uint32 *) Malloc(sizeof(uint32)*outDim.getElementCount());
@@ -1858,7 +1858,7 @@ ArrayVector CumsumFunction(int nargout, const ArrayVector& arg) {
   if (input.isEmpty()) 
     return HandleEmpty(input);
   if (input.isScalar())
-    return singleArrayVector(input);
+    return SingleArrayVector(input);
   // No dimension supplied, look for a non-singular dimension
   Dimensions inDim(input.dimensions());
   if (workDim == -1) {
@@ -1990,7 +1990,7 @@ ArrayVector CumprodFunction(int nargout, const ArrayVector& arg) {
   if (input.isEmpty()) 
     return HandleEmpty(input);
   if (input.isScalar())
-    return singleArrayVector(input);
+    return SingleArrayVector(input);
   // No dimension supplied, look for a non-singular dimension
   Dimensions inDim(input.dimensions());
   if (workDim == -1) {
@@ -2123,7 +2123,7 @@ ArrayVector SumFunction(int nargout, const ArrayVector& arg) {
   if (input.isEmpty()) 
     return HandleEmpty(input);
   if (input.isScalar())
-    return singleArrayVector(input);
+    return SingleArrayVector(input);
   // No dimension supplied, look for a non-singular dimension
   Dimensions inDim(input.dimensions());
   if (workDim == -1) {
@@ -2151,7 +2151,7 @@ ArrayVector SumFunction(int nargout, const ArrayVector& arg) {
   // Special case Sparse Matrices
   if (input.sparse()) {
     if (workDim == 0)
-      return singleArrayVector(Array(input.dataClass(),
+      return SingleArrayVector(Array(input.dataClass(),
 				     outDim,
 				     SparseMatrixSumColumns(input.dataClass(),
 							    input.getDimensionLength(0),
@@ -2159,7 +2159,7 @@ ArrayVector SumFunction(int nargout, const ArrayVector& arg) {
 							    input.getSparseDataPointer()),
 				     true));
     else if (workDim == 1)
-      return singleArrayVector(Array(input.dataClass(),
+      return SingleArrayVector(Array(input.dataClass(),
 				     outDim,
 				     SparseMatrixSumRows(input.dataClass(),
 							 input.getDimensionLength(0),
@@ -2167,7 +2167,7 @@ ArrayVector SumFunction(int nargout, const ArrayVector& arg) {
 							 input.getSparseDataPointer()),
 				     true));
     else
-      return singleArrayVector(input);
+      return SingleArrayVector(input);
   }
   Array retval;
   switch (argType) {
@@ -2277,7 +2277,7 @@ ArrayVector MeanFunction(int nargout, const ArrayVector& arg) {
   if (input.isEmpty()) 
     return HandleEmpty(input);
   if (input.isScalar())
-    return singleArrayVector(input);
+    return SingleArrayVector(input);
   // No dimension supplied, look for a non-singular dimension
   Dimensions inDim(input.dimensions());
   if (workDim == -1) {
@@ -2700,7 +2700,7 @@ ArrayVector AbsFunction(int nargout, const ArrayVector& arg) {
     throw Exception("argument to abs function must be numeric");
   if (tmp.sparse()) {
     Class rettype;
-    if (tmp.dataClass() == FM_LOGICAL) return singleArrayVector(tmp);
+    if (tmp.dataClass() == FM_LOGICAL) return SingleArrayVector(tmp);
     rettype = tmp.dataClass();
     if (tmp.dataClass() == FM_COMPLEX) rettype = FM_FLOAT;
     if (tmp.dataClass() == FM_DCOMPLEX) rettype = FM_DOUBLE;
@@ -2709,7 +2709,7 @@ ArrayVector AbsFunction(int nargout, const ArrayVector& arg) {
 				   tmp.getDimensionLength(0),
 				   tmp.getDimensionLength(1),
 				   tmp.getSparseDataPointer()),true);
-    return singleArrayVector(retval);
+    return SingleArrayVector(retval);
   }
   Class argType(tmp.dataClass());
   Array retval;
@@ -2872,9 +2872,9 @@ ArrayVector ProdFunction(int nargout, const ArrayVector& arg) {
       throw Exception("Dimension argument to prod should be positive");
   }
   if (input.isEmpty())
-    return singleArrayVector(Array::int32Constructor(1));
+    return SingleArrayVector(Array::int32Constructor(1));
   if (input.isScalar())
-    return singleArrayVector(input);
+    return SingleArrayVector(input);
   // No dimension supplied, look for a non-singular dimension
   Dimensions inDim(input.dimensions());
   if (workDim == -1) {
@@ -3674,7 +3674,7 @@ ArrayVector UniqueFunctionRowModeComplex(int nargout, Array& input) {
       i++;
     }
     delete[] sp;
-    return singleArrayVector(Array(cls,Dimensions(cnt,cols),op));
+    return SingleArrayVector(Array(cls,Dimensions(cnt,cols),op));
   } else {
     uint32* np = (uint32*) Malloc(sizeof(int32)*len);
     uint32* mp = (uint32*) Malloc(sizeof(int32)*cnt);
@@ -3748,7 +3748,7 @@ ArrayVector UniqueFunctionRowModeReal(int nargout, Array& input) {
       i++;
     }
     delete[] sp;
-    return singleArrayVector(Array(cls,Dimensions(cnt,cols),op));
+    return SingleArrayVector(Array(cls,Dimensions(cnt,cols),op));
   } else {
     uint32* np = (uint32*) Malloc(sizeof(int32)*len);
     uint32* mp = (uint32*) Malloc(sizeof(int32)*cnt);
@@ -3811,7 +3811,7 @@ ArrayVector UniqueFunctionString(int nargout, Array& input) {
       i++;
     }
     delete[] buf;
-    return singleArrayVector(Array(FM_CELL_ARRAY,Dimensions(cnt,1),op));
+    return SingleArrayVector(Array(FM_CELL_ARRAY,Dimensions(cnt,1),op));
   } else {
     uint32* np = (uint32*) Malloc(sizeof(int32)*len);
     uint32* mp = (uint32*) Malloc(sizeof(int32)*cnt);
@@ -3885,7 +3885,7 @@ ArrayVector UniqueFunction(int nargout, const ArrayVector& arg) {
   Array input(arg[0]);
   if (input.isEmpty()) {
     if (nargout <= 1)
-      return singleArrayVector(Array::emptyConstructor());
+      return SingleArrayVector(Array::emptyConstructor());
     else {
       ArrayVector retval;
       retval.push_back(Array::emptyConstructor());
@@ -3966,7 +3966,7 @@ ArrayVector ClockFunction(int nargout, const ArrayVector& arg) {
   dp[3] = ctime.time().hour();
   dp[4] = ctime.time().minute();
   dp[5] = ctime.time().second() + ctime.time().msec()/1.0e3;
-  return singleArrayVector(retvec);
+  return SingleArrayVector(retvec);
 }
 
 //!
@@ -4013,7 +4013,7 @@ ArrayVector ClockToTimeFunction(int nargout, const ArrayVector& arg) {
   time_t qtime = mktime(&breakdown);
   double retval;
   retval = qtime + (dp[5] - (int) dp[5]);
-  return singleArrayVector(Array::doubleConstructor(retval));
+  return SingleArrayVector(Array::doubleConstructor(retval));
 }
   
 
@@ -4037,7 +4037,7 @@ ArrayVector ClockToTimeFunction(int nargout, const ArrayVector& arg) {
 //!
   
 ArrayVector TocFunction(int nargout, const ArrayVector& arg) {
-  return singleArrayVector(Array::doubleConstructor(ticvalue.elapsed()/1.0e3));
+  return SingleArrayVector(Array::doubleConstructor(ticvalue.elapsed()/1.0e3));
 }
 
 //!
@@ -4069,25 +4069,25 @@ ArrayVector XNrm2Function(int nargout, const ArrayVector& arg) {
     float *ptr = (float*) input.getDataPointer();
     int len = input.getLength();
     int one = 1;
-    return singleArrayVector(Array::floatConstructor(snrm2_(&len,ptr,&one)));
+    return SingleArrayVector(Array::floatConstructor(snrm2_(&len,ptr,&one)));
   }
   case FM_DOUBLE:  {
     double *ptr = (double*) input.getDataPointer();
     int len = input.getLength();
     int one = 1;
-    return singleArrayVector(Array::doubleConstructor(dnrm2_(&len,ptr,&one)));
+    return SingleArrayVector(Array::doubleConstructor(dnrm2_(&len,ptr,&one)));
   }
   case FM_COMPLEX:  {
     float *ptr = (float*) input.getDataPointer();
     int len = input.getLength();
     int one = 1;
-    return singleArrayVector(Array::floatConstructor(scnrm2_(&len,ptr,&one)));
+    return SingleArrayVector(Array::floatConstructor(scnrm2_(&len,ptr,&one)));
   }
   case FM_DCOMPLEX: {
     double *ptr = (double*) input.getDataPointer();
     int len = input.getLength();
     int one = 1;
-    return singleArrayVector(Array::doubleConstructor(dznrm2_(&len,ptr,&one)));
+    return SingleArrayVector(Array::doubleConstructor(dznrm2_(&len,ptr,&one)));
   }
   }
   return ArrayVector();
@@ -4518,17 +4518,17 @@ ArrayVector RcondFunction(int nargout, const ArrayVector& arg) {
   switch (Aclass) {
   default: throw Exception("Unsupported type for rcond operation");
   case FM_FLOAT:
-    return singleArrayVector(Array::floatConstructor(floatRecipCond(nrows,ncols,
+    return SingleArrayVector(Array::floatConstructor(floatRecipCond(nrows,ncols,
 								    (float*)A.getReadWriteDataPointer())));
   case FM_DOUBLE:
-    return singleArrayVector(Array::doubleConstructor(doubleRecipCond(nrows,
+    return SingleArrayVector(Array::doubleConstructor(doubleRecipCond(nrows,
 								      ncols,
 								      (double*)A.getReadWriteDataPointer())));
   case FM_COMPLEX:
-    return singleArrayVector(Array::floatConstructor(complexRecipCond(nrows,ncols,
+    return SingleArrayVector(Array::floatConstructor(complexRecipCond(nrows,ncols,
 								      (float*)A.getReadWriteDataPointer())));
   case FM_DCOMPLEX:
-    return singleArrayVector(Array::doubleConstructor(dcomplexRecipCond(nrows,
+    return SingleArrayVector(Array::doubleConstructor(dcomplexRecipCond(nrows,
 									ncols,
 									(double*)A.getReadWriteDataPointer())));
   }

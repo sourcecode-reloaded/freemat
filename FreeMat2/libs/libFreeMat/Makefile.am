@@ -1,6 +1,6 @@
 noinst_LIBRARIES = libFreeMat.a
 
-INCLUDES = -I@top_srcdir@/libs/libXP -I@top_srcdir@/libs/libMex 
+INCLUDES = -I@top_srcdir@/libs/libXP -I@top_srcdir@/libs/libMex -I@top_srcdir@/libs/libMatC
 
 libFreeMat_a_MOC = Interpreter.moc.cpp
 
@@ -41,7 +41,6 @@ Token.hpp \
 Parser.hpp \
 Scanner.hpp \
 Tree.hpp \
-JITVM.hpp \
 FastList.hpp 
 
 libFreeMat_a_SOURCES = Array.cpp \
@@ -71,7 +70,6 @@ Token.cpp \
 Parser.cpp \
 Scanner.cpp \
 Tree.cpp \
-JITVM.cpp \
 FunctionDef.cpp \
 $(libFreeMat_a_HFILES) 
 

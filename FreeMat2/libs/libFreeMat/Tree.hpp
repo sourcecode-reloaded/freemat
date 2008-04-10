@@ -9,29 +9,50 @@
 // tree class to be as fast as possible.  And that we want to be able to tag the tree with profile
 // information.
 class Tree;
+class JITFunc;
 
 typedef QList<Tree*> TreeList;
 
 class Tree {
+public:
+  typedef enum {
+    UNTRIED,
+    FAILED,
+    SUCCEEDED
+  } JITState_t;
+private:
   Token m_node;
   TreeList m_children;
+  JITState_t m_jitstate;
+  JITFunc *m_jitfunc;
 public:
-  Tree(): m_node(TOK_INVALID) {}
-  Tree(const Token& tok) : m_node(tok) {m_node.fillArray();}
-  Tree(byte token, unsigned position) : m_node(Token(token,position)) {}
-  Tree(const Token& tok, Tree* child1, Tree* child2) : m_node(tok) {
+  Tree(): m_node(TOK_INVALID), m_jitstate(UNTRIED), m_jitfunc(NULL)
+  {}
+  Tree(const Token& tok) : m_node(tok), 
+			   m_jitstate(UNTRIED), m_jitfunc(NULL)
+  {m_node.fillArray();}
+  Tree(byte token, unsigned position) : m_node(Token(token,position)), 
+					m_jitstate(UNTRIED), m_jitfunc(NULL)
+  {}
+  Tree(const Token& tok, Tree* child1, Tree* child2) : m_node(tok), 
+						       m_jitstate(UNTRIED), m_jitfunc(NULL)
+  {
     m_children.push_back(child1);
     m_children.push_back(child2);
   }
-  Tree(const Token& tok, Tree* child1) : m_node(tok) {
+  Tree(const Token& tok, Tree* child1) : m_node(tok), 
+					 m_jitstate(UNTRIED), m_jitfunc(NULL)
+  {
     m_children.push_back(child1);
   }
   Tree(Serialize *s);
-  ~Tree() {
-    for (int i=0;i<m_children.size();i++) delete m_children.at(i);
-  }
+  ~Tree();
   inline const Token& node() const {return m_node;}
   void print() const;
+  inline JITState_t JITState() const {return m_jitstate;}
+  inline void setJITState(JITState_t t) {m_jitstate = t;}
+  inline JITFunc* JITFunction() const {return m_jitfunc;}
+  inline void setJITFunction(JITFunc *t) {m_jitfunc = t;}
   inline void rename(byte newtok) {m_node.setValue(newtok);}
   inline unsigned context() const {return m_node.position();}
   inline bool valid() const {return !(m_node.is(TOK_INVALID));}
@@ -54,19 +75,30 @@ public:
     m_children.push_back(child1);
     m_children.push_back(child2);
   }
-  void freeze(Serialize *s) const;
-  static Tree* deepTreeCopy(Tree *t) {
-    Tree *p = new Tree(t->m_node);
-    for (int i=0;i<t->m_children.size();i++)
-      p->addChild(Tree::deepTreeCopy(t->m_children.at(i)));
-    return p;
+  inline void try_validate() {
+    for (int i=0;i<m_children.size();i++) {
+      if (m_children.at(i)) 
+	m_children.at(i)->try_validate();
+      else
+	throw Exception("validation failed");
+    }
   }
+  inline void validate() {
+    try {
+      try_validate();
+    } catch(Exception &e) {
+      std::cout << "Tree fails validation!\n";
+      print();
+    }
+  }
+  void freeze(Serialize *s) const;
+  static Tree* deepTreeCopy(Tree *t);
 };
 
 class CodeBlock {
   Tree* m_tree;
 public:
-  inline CodeBlock(Tree *t, bool needClone = false) : m_tree(t) {if (needClone) clone();}
+  inline CodeBlock(Tree *t, bool needClone = false) : m_tree(t) {if (needClone) clone(); m_tree->validate();}
   inline CodeBlock(const CodeBlock& copy) {m_tree = copy.m_tree; clone();}
   inline CodeBlock() : m_tree(NULL) {}
   inline CodeBlock& operator=(const CodeBlock& copy) {
