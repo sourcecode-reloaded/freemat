@@ -294,7 +294,7 @@ void TestSparseCase() {
   std::cout << B;
   B.deleteColumns(IndexArray(2));
   std::cout << B;
-  B.set(NTuple(1,5),0);
+  B.set(NTuple(1,4),0);
   std::cout << B;
 }
 

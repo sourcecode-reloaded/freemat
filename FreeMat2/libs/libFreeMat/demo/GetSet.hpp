@@ -74,7 +74,7 @@ void Set(T& arg, const IndexArrayList& index, const T& data) {
   while (pos <= secdims) {
     NTuple qp;
     for (int i=0;i<index.size();i++)
-      qp[i] = ndx[i][pos[i]];
+      qp[i] = ndx[i].get(pos[i]);
     arg.set(qp,data.get(j++));
     secdims.increment(pos);
   }
@@ -101,7 +101,7 @@ void Set(T& arg, const IndexArrayList& index, const S& data) {
   while (pos <= secdims) {
     NTuple qp;
     for (int i=0;i<index.size();i++)
-      qp[i] = ndx[i][pos[i]];
+      qp[i] = ndx[i].get(pos[i]);
     arg.set(qp,data);
     secdims.increment(pos);
   }
@@ -118,7 +118,7 @@ void Set(T& arg, const IndexArray& index, const S& data) {
   index_t max_ndx = MaxValue(index);
   if (max_ndx > arg.length()) arg.resize(max_ndx);
   for (index_t i=1;i<=index.length();i++)
-    arg.set(index[i],data);  
+    arg.set(index.get(i),data);  
 }
 
 template <typename T>
@@ -139,7 +139,7 @@ const T Get(const T& arg, const IndexArray& index) {
     retdims = index.dimensions();
   T retvec(retdims);
   for (index_t i=1;i<=retvec.length();i++)
-    retvec[i] = arg.get(index.get(i));
+    retvec.set(i,arg.get(index.get(i)));
   return retvec;
 }
 
@@ -158,8 +158,8 @@ const T Get(const T& arg, const IndexArrayList& index) {
   while (pos <= outdims) {
     NTuple qp;
     for (int i=0;i<index.size();i++) 
-      qp[i] = ndx[i][pos[i]];
-    retval[pos] = arg.get(qp);
+      qp[i] = ndx[i].get(pos[i]);
+    retval.set(pos,arg.get(qp));
     outdims.increment(pos);
   }
   return retval;

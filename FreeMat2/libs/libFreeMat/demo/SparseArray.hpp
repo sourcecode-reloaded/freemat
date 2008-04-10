@@ -36,33 +36,33 @@ public:
   inline const NTuple dimensions() const {
     return m_dims;
   }
-  inline const T operator[](const NTuple& pos) const {
-    if (m_dims.validate(pos)) {
-      if (!m_data.contains(pos[1]))
-	return T();
-      const SparseSlice<T> & col = m_data.value(pos[1]);
-      if (!col.contains(pos[0]))
-	return T();
-      return col.value(pos[0]);
-    }
-    throw Exception("Out of range");
-  }
-  inline T& operator[](const NTuple& pos) {
-    if (m_dims.validate(pos)) {
-      return m_data[pos[1]][pos[0]];
-    }
-    throw Exception("Out of range");
-  }
-  inline const T operator[](index_t pos) const {
-    NTuple tpos;
-    m_dims.map(pos,tpos);
-    return (*this)[tpos];
-  }
-  inline T& operator[](index_t pos) {
-    NTuple tpos;
-    m_dims.map(pos,tpos);
-    return (*this)[tpos];
-  }
+//   inline const T operator[](const NTuple& pos) const {
+//     if (m_dims.validate(pos)) {
+//       if (!m_data.contains(pos[1]))
+// 	return T();
+//       const SparseSlice<T> & col = m_data.value(pos[1]);
+//       if (!col.contains(pos[0]))
+// 	return T();
+//       return col.value(pos[0]);
+//     }
+//     throw Exception("Out of range");
+//   }
+//   inline T& operator[](const NTuple& pos) {
+//     if (m_dims.validate(pos)) {
+//       return m_data[pos[1]][pos[0]];
+//     }
+//     throw Exception("Out of range");
+//   }
+//   inline const T operator[](index_t pos) const {
+//     NTuple tpos;
+//     m_dims.map(pos,tpos);
+//     return (*this)[tpos];
+//   }
+//   inline T& operator[](index_t pos) {
+//     NTuple tpos;
+//     m_dims.map(pos,tpos);
+//     return (*this)[tpos];
+//   }
 };
 
 template <typename T>
