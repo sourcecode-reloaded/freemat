@@ -4,8 +4,6 @@
 #include <QString>
 #include <iostream>
 
-#include "Global.hpp"
-#include "NPerm.hpp"
 #include "Types.hpp"
 
 class NTuple {
@@ -125,12 +123,6 @@ public:
   }
   index_t& operator[](int dim) {
     return get(dim);
-  }
-  NTuple operator[](const NPerm &perm) const {
-    NTuple ret;
-    for (int i=0;i<NDims;i++)
-      ret[i] = m_data[perm[i]-1];
-    return ret;
   }
   void cover(const NTuple& alt) {
     for (int i=0;i<NDims;i++)

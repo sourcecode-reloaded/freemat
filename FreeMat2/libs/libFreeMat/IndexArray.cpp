@@ -1,7 +1,7 @@
 #include "IndexArray.hpp"
 #include "BasicArray.hpp"
 
-index_t getSliceIndex(const NTuple &dimensions, const IndexArrayList& index) {
+index_t getSliceIndex(const NTuple &dimensions, const IndexArrayVector& index) {
   NTuple dim;
   dim[0] = 1;
   for (int i=1;i<index.size();i++)
@@ -23,7 +23,7 @@ IndexArray ExpandColons(const IndexArray& ndx, index_t len) {
   return retvec;
 }
 
-bool isSliceIndexCase(const IndexArrayList& index) {
+bool isSliceIndexCase(const IndexArrayVector& index) {
   if (IsColonOp(index[0])) {
     bool allScalars = true;
     for (int i=1;i<index.size();i++)

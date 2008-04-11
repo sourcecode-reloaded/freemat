@@ -9,10 +9,10 @@ bool IsColonOp(const IndexArray& ndx);
 
 IndexArray ExpandColons(const IndexArray& ndx, index_t len);
 
-bool isSliceIndexCase(const IndexArrayList& index);
+bool isSliceIndexCase(const IndexArrayVector& index);
 
 bool DimensionCovered(const IndexArray& ndx, index_t length);
 
-index_t getSliceIndex(const NTuple &dimensions, const IndexArrayList& index);
+index_t getSliceIndex(const NTuple &dimensions, const IndexArrayVector& index);
 
 #endif

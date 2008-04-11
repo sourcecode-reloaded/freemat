@@ -4,7 +4,7 @@
 #include <QMap>
 #include <QtGlobal>
 #include <iostream>
-#include "Global.hpp"
+#include "Types.hpp"
 #include "NTuple.hpp"
 #include "BasicArray.hpp"
 
@@ -89,11 +89,11 @@ public:
     if (dimensions().count() <= pos) resize(pos);
     (*this)[pos] = val;
   }
-  SparseMatrix getSlice(const IndexArrayList& index) const;
+  SparseMatrix getSlice(const IndexArrayVector& index) const;
   void deleteColumns(const IndexArray& index);
   void deleteRows(const IndexArray& index);
   void del(const IndexArray& index);
-  void del(const IndexArrayList& index);
+  void del(const IndexArrayVector& index);
   void printMe(std::ostream& o) const;
   void resize(const NTuple& pos);
   void resize(index_t len);

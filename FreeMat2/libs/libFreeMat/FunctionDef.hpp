@@ -27,7 +27,6 @@
 #include "mex.h"
 #include <QSharedData>
 #include "Scope.hpp"
-#include <string>
 
 using namespace std;
 
@@ -67,7 +66,7 @@ public:
   /**
    * The name of the function - must follow identifier rules.
    */
-  std::string name;
+  QString name;
   /**
    * The reference count for this functiondef
    */
@@ -194,7 +193,7 @@ public:
   /**
    * Location of the function's defining file in the current filesystem.
    */
-  std::string fileName;
+  QString fileName;
   /**
    * Time function was last modified.
    */
@@ -390,7 +389,7 @@ public:
   /**
    * The return type of the function
    */
-  std::string retType;
+  QString retType;
   /**
    * Default constructor
    */
@@ -398,7 +397,7 @@ public:
 		      StringVector types_arg,
 		      StringVector arguments_arg,
 		      CodeList sizeChecks,
-		      std::string retType_arg);
+		      QString retType_arg);
   /**
    * Default destructor
    */
@@ -431,7 +430,7 @@ public:
   /**
    * The full name of the library to link to
    */
-  std::string fullname;
+  QString fullname;
   /**
    * The dynamic library object
    */
@@ -448,7 +447,7 @@ public:
   /**
    * Default constructor
    */
-  MexFunctionDef(std::string fullpathname);
+  MexFunctionDef(QString fullpathname);
   /**
    * Default destructor
    */

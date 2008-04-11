@@ -1,6 +1,9 @@
 #ifndef __FastList_hpp__
 #define __FastList_hpp__
 
+#include <QVector>
+#include "Exception.hpp"
+
 template <typename T>
 class FastList {
   T m_slot1;

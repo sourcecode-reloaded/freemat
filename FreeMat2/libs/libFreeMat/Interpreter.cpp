@@ -61,43 +61,43 @@ const int max_line_count = 1000000;
   endCount = oldEndCount; \
   endTotal = oldEndTotal;  \
 
-QString TildeExpand(string path) {
+QString TildeExpand(QString path) {
   if ((path.size() > 0) && (path[0] == '~')) {
-    path.erase(path.begin());
-    return QDir::homePath() + QString::fromStdString(path);
+    path.remove(0,1);
+    return QDir::homePath() + path;
   }
-  return QString::fromStdString(path);
+  return path;
 }
 
-void Interpreter::setPath(std::string path) {
-  QString pathdata(QString::fromStdString(path));
+void Interpreter::setPath(QString path) {
+  QString pathdata(path);
   QStringList pathset(pathdata.split(PATHSEP,QString::SkipEmptyParts));
   m_userPath.clear();
   for (int i=0;i<pathset.size();i++) 
     if (pathset[i] != ".") {
-      QDir tpath(TildeExpand(pathset[i].toStdString()));
+      QDir tpath(TildeExpand(pathset[i]));
       m_userPath << tpath.absolutePath();
     }
   rescanPath();
 }
 
-std::string Interpreter::getTotalPath() {
-  std::string retpath;
+QString Interpreter::getTotalPath() {
+  QString retpath;
   QStringList totalPath(QStringList() << m_basePath << m_userPath);
   for (int i=0;i<totalPath.size()-1;i++) 
-    retpath = retpath + totalPath[i].toStdString() + PATHSEP;
+    retpath = retpath + totalPath[i] + PATHSEP;
   if (totalPath.size() > 0) 
-    retpath = retpath + totalPath[totalPath.size()-1].toStdString();
+    retpath = retpath + totalPath[totalPath.size()-1];
   return retpath;
 }
   
-std::string Interpreter::getPath() {
-  std::string retpath;
+QString Interpreter::getPath() {
+  QString retpath;
   QStringList totalPath(m_userPath);
   for (int i=0;i<totalPath.size()-1;i++) 
-    retpath = retpath + totalPath[i].toStdString() + PATHSEP;
+    retpath = retpath + totalPath[i] + PATHSEP;
   if (totalPath.size() > 0) 
-    retpath = retpath + totalPath[totalPath.size()-1].toStdString();
+    retpath = retpath + totalPath[totalPath.size()-1];
   return retpath;
 }
   
@@ -105,11 +105,11 @@ void Interpreter::rescanPath() {
   if (!context) return;
   context->flushTemporaryGlobalFunctions();
   for (int i=0;i<m_basePath.size();i++)
-    scanDirectory(m_basePath[i].toStdString(),false,"");
+    scanDirectory(m_basePath[i],false,"");
   for (int i=0;i<m_userPath.size();i++)
-    scanDirectory(m_userPath[i].toStdString(),false,"");
+    scanDirectory(m_userPath[i],false,"");
   // Scan the current working directory.
-  scanDirectory(QDir::currentPath().toStdString(),true,"");
+  scanDirectory(QDir::currentPath(),true,"");
   emit CWDChanged();
 }
   
@@ -135,25 +135,25 @@ static QString mexExtension() {
   return "fmx";
 }
   
-void Interpreter::scanDirectory(std::string scdir, bool tempfunc,
-				std::string prefix) {
-  QDir dir(QString::fromStdString(scdir));
+void Interpreter::scanDirectory(QString scdir, bool tempfunc,
+				QString prefix) {
+  QDir dir(scdir);
   dir.setFilter(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot);
   dir.setNameFilters(QStringList() << "*.m" << "*.p" 
 		     << "@*" << "private" << "*."+mexExtension());
   QFileInfoList list(dir.entryInfoList());
   for (int i=0;i<((int)list.size());i++) {
     QFileInfo fileInfo(list.at(i));
-    std::string fileSuffix(fileInfo.suffix().toStdString());
-    std::string fileBaseName(fileInfo.baseName().toStdString());
-    std::string fileAbsoluteFilePath(fileInfo.absoluteFilePath().toStdString());
+    QString fileSuffix(fileInfo.suffix());
+    QString fileBaseName(fileInfo.baseName());
+    QString fileAbsoluteFilePath(fileInfo.absoluteFilePath());
     if (fileSuffix == "m" || fileSuffix == "M") 
-      if (prefix.empty())
+      if (prefix.isEmpty())
 	procFileM(fileBaseName,fileAbsoluteFilePath,tempfunc);
       else
 	procFileM(prefix + ":" + fileBaseName,fileAbsoluteFilePath,tempfunc);
     else if (fileSuffix == "p" || fileSuffix == "P")
-      if (prefix.empty())
+      if (prefix.isEmpty())
 	procFileP(fileBaseName,fileAbsoluteFilePath,tempfunc);
       else
 	procFileP(prefix + ":" + fileBaseName,fileAbsoluteFilePath,tempfunc);
@@ -166,7 +166,7 @@ void Interpreter::scanDirectory(std::string scdir, bool tempfunc,
   }
 }
   
-void Interpreter::procFileM(std::string fname, std::string fullname, bool tempfunc) {
+void Interpreter::procFileM(QString fname, QString fullname, bool tempfunc) {
   MFunctionDef *adef;
   adef = new MFunctionDef();
   adef->name = fname;
@@ -175,11 +175,11 @@ void Interpreter::procFileM(std::string fname, std::string fullname, bool tempfu
   context->insertFunction(adef, tempfunc);
 }
   
-void Interpreter::procFileP(std::string fname, std::string fullname, bool tempfunc) {
+void Interpreter::procFileP(QString fname, QString fullname, bool tempfunc) {
   MFunctionDef *adef;
   // Open the file
   try {
-    File *f = new File(fullname.c_str(),"rb");
+    File *f = new File(fullname,"rb");
     Serialize *s = new Serialize(f);
     s->handshakeClient();
     s->checkSignature('p',2);
@@ -191,7 +191,7 @@ void Interpreter::procFileP(std::string fname, std::string fullname, bool tempfu
   }
 }
 
-void Interpreter::procFileMex(std::string fname, std::string fullname, bool tempfunc) {
+void Interpreter::procFileMex(QString fname, QString fullname, bool tempfunc) {
   MexFunctionDef *adef;
   adef = new MexFunctionDef(fullname);
   adef->name = fname;
@@ -208,7 +208,7 @@ void Interpreter::RegisterGfxResults(ArrayVector m) {
   mutex.unlock();
 }
 
-void Interpreter::RegisterGfxError(string msg) {
+void Interpreter::RegisterGfxError(QString msg) {
   mutex.lock();
   gfxError = msg;
   gfxErrorOccured = true;
@@ -245,8 +245,8 @@ int Interpreter::getTerminalWidth() {
   return m_ncols;
 }
 
-std::string TranslateString(std::string x) {
-  std::string y(x);
+QStringp TranslateString(QString x) {
+  QString y(x);
   unsigned int n;
   n = 0;
   while (n<y.size()) {
@@ -257,13 +257,13 @@ std::string TranslateString(std::string x) {
   return y;
 }
 
-void Interpreter::diaryMessage(std::string msg) {
+void Interpreter::diaryMessage(QString msg) {
   ofstream diaryFile(m_diaryFilename.c_str(), ios::app);
   diaryFile << msg;
 }
 
 
-void Interpreter::outputMessage(std::string msg) {
+void Interpreter::outputMessage(QString msg) {
   if (m_diaryState) diaryMessage(msg);
   if (m_captureState) 
     m_capture += msg;
@@ -278,10 +278,10 @@ void Interpreter::outputMessage(const char* format,...) {
   va_start(ap,format);
   vsnprintf(buffer,4096,format,ap);
   va_end(ap);
-  outputMessage(string(buffer));
+  outputMessage(QString(buffer));
 }
 
-void Interpreter::errorMessage(std::string msg) {
+void Interpreter::errorMessage(QString msg) {
   if (m_diaryState) diaryMessage("Error: " + msg + "\n");
   if (m_captureState) 
     m_capture += "Error: " + msg + "\n";
@@ -290,7 +290,7 @@ void Interpreter::errorMessage(std::string msg) {
       emit outputRawText(TranslateString("Error: " + msg + "\r\n"));
 }
 
-void Interpreter::warningMessage(std::string msg) {
+void Interpreter::warningMessage(QString msg) {
   if (m_diaryState) diaryMessage("Warning: " + msg + "\n");
   if (m_captureState) 
     m_capture += "Warning: " + msg + "\n";
@@ -299,7 +299,7 @@ void Interpreter::warningMessage(std::string msg) {
       emit outputRawText(TranslateString("Warning: " +msg + "\r\n"));
 }
 
-static bool isMFile(std::string arg) {
+static bool isMFile(QString arg) {
   // Not completely right...
   return (((arg[arg.size()-1] == 'm') ||
 	   (arg[arg.size()-1] == 'p')) && 
@@ -313,23 +313,23 @@ void Interpreter::SetContext(int a) {
   ip_context = a;
 }
 
-std::string TrimFilename(std::string arg) {
-  int ndx = arg.rfind(QString(QDir::separator()).toStdString());
+QString TrimFilename(QString arg) {
+  int ndx = arg.rfind(QString(QDir::separator()));
   if (ndx>=0)
     arg.erase(0,ndx+1);
   return arg;
 }
 
-std::string TrimExtension(std::string arg) {
+QString TrimExtension(QString arg) {
   if (arg.size() > 2 && arg[arg.size()-2] == '.')
     arg.erase(arg.size()-2,arg.size());
   return arg;
 }
 
-static std::string PrivateMangleName(std::string currentFunctionPath, std::string fname) {
+static QString PrivateMangleName(QString currentFunctionPath, QString fname) {
   if (currentFunctionPath.empty()) return "";
   // First look to see if we are already a private function
-  string separator("/");
+  QString separator("/");
   int ndx1 = currentFunctionPath.rfind(separator + "private" + separator);
   if (ndx1>=0) {
     // The current function is already in a private directory
@@ -344,21 +344,20 @@ static std::string PrivateMangleName(std::string currentFunctionPath, std::strin
   return currentFunctionPath + "private:" + fname;
 }
 
-static std::string LocalMangleName(std::string currentFunctionPath, std::string fname) {
+static QString LocalMangleName(QString currentFunctionPath, QString fname) {
   int ndx = currentFunctionPath.rfind("/");
   if (ndx >= 0)
     currentFunctionPath.erase(ndx,currentFunctionPath.size());
-  std::string tmp = currentFunctionPath + "/" + fname;
-  //  qDebug() << "Lookup " << QString::fromStdString(tmp);
+  QString tmp = currentFunctionPath + "/" + fname;
   return currentFunctionPath + "/" + fname;
 }
 
-static std::string NestedMangleName(std::string cfunc, std::string fname) {
+static QString NestedMangleName(QString cfunc, QString fname) {
   return cfunc + "/" + fname;
 }
 
-std::string Interpreter::getVersionString() {
-  return std::string("FreeMat v" VERSION);
+QString Interpreter::getVersionString() {
+  return QString("FreeMat v" VERSION);
 }
 
 // Run the thread function
@@ -418,8 +417,8 @@ void Interpreter::sendGreeting() {
   outputMessage(" Use ctrl-b to stop execution of a function/script\n");
 }
 
-std::string Interpreter::getLocalMangledName(std::string fname) {
-  std::string ret;
+QString Interpreter::getLocalMangledName(QString fname) {
+  QString ret;
   if (isMFile(ip_funcname))
     ret = LocalMangleName(ip_detailname,fname);
   else
@@ -427,34 +426,34 @@ std::string Interpreter::getLocalMangledName(std::string fname) {
   return ret;
 }
 
-std::string Interpreter::getPrivateMangledName(std::string fname) {
-  std::string ret;
+QString Interpreter::getPrivateMangledName(QString fname) {
+  QString ret;
   if (isMFile(ip_funcname)) 
     ret = PrivateMangleName(ip_funcname,fname);
   else {
-    ret = QDir::currentPath().toStdString() + 
-      QString(QDir::separator()).toStdString() + 
-      std::string("private:" + fname);
+    ret = QDir::currentPath() + 
+      QString(QDir::separator()) + 
+      QString("private:" + fname);
   }
   return ret; 
 }
 
-std::string Interpreter::getMFileName() {
+QString Interpreter::getMFileName() {
   if (isMFile(ip_funcname)) 
     return TrimFilename(TrimExtension(ip_funcname));
   for (int i=cstack.size()-1;i>=0;i--)
     if (isMFile(cstack[i].cname)) 
       return TrimFilename(TrimExtension(cstack[i].cname));
-  return std::string("");
+  return QString("");
 }
 
-std::string Interpreter::getInstructionPointerFileName() {
+QString Interpreter::getInstructionPointerFileName() {
   if (isMFile(ip_funcname)) 
     return ip_funcname;
-  return string("");
+  return QString("");
 }
 
-stackentry::stackentry(std::string cntxt, std::string det, 
+stackentry::stackentry(QString cntxt, QString det, 
 		       int id, int num, int strp, int stcl) :
   cname(cntxt), detail(det), tokid(id), number(num),
   steptrap(strp), stepcurrentline(stcl)
@@ -468,7 +467,7 @@ stackentry::~stackentry() {
 }
 
 Array Interpreter::DoBinaryOperator(Tree *t, BinaryFunc fnc, 
-				    std::string funcname) {
+				    QString funcname) {
   Array a(expression(t->first()));
   Array b(expression(t->second()));
   if (!(a.isUserClass() || b.isUserClass())) 
@@ -477,7 +476,7 @@ Array Interpreter::DoBinaryOperator(Tree *t, BinaryFunc fnc,
 }
 
 Array Interpreter::DoUnaryOperator(Tree *t, UnaryFunc fnc, 
-				   std::string funcname) {
+				   QString funcname) {
   Array a(expression(t->first()));
   if (!a.isUserClass())
     return fnc(a,this);
@@ -836,7 +835,7 @@ void Interpreter::multiexpr(Tree *t, ArrayVector &q, int lhsCount) {
     } else if (s->is('.')) {
       q += r.getFieldAsList(s->first()->text());
     } else if (s->is(TOK_DYN)) {
-      string field;
+      QString field;
       try {
 	Array fname(expression(s->first()));
 	field = fname.getContentsAsString();
@@ -1685,7 +1684,7 @@ public:
 
 template <class T>
 void ForLoopHelper(Tree *codeBlock, Class indexClass, const T *indexSet, 
-		   int count, string indexName, Interpreter *eval) {
+		   int count, QString indexName, Interpreter *eval) {
   for (int m=0;m<count;m++) {
     Array *vp = eval->getContext()->lookupVariableLocally(indexName);
     if ((!vp) || (vp->dataClass() != indexClass) || (!vp->isScalar())) {
@@ -1705,7 +1704,7 @@ void ForLoopHelper(Tree *codeBlock, Class indexClass, const T *indexSet,
 template <class T>
 void ForLoopHelperComplex(Tree *codeBlock, Class indexClass, 
 			  const T *indexSet, int count, 
-			  string indexName, Interpreter *eval) {
+			  QString indexName, Interpreter *eval) {
   for (int m=0;m<count;m++) {
     Array *vp = eval->getContext()->lookupVariableLocally(indexName);
     if ((!vp) || (vp->dataClass() != indexClass) || (!vp->isScalar())) {
@@ -1878,7 +1877,7 @@ void Interpreter::forStatement(Tree *t) {
   }
 #endif
   Array indexSet;
-  string indexVarName;
+  QString indexVarName;
   /* Get the name of the indexing variable */
   if (t->first()->is('=')) {
     indexVarName = t->first()->first()->text();
@@ -2362,7 +2361,7 @@ void Interpreter::expressionStatement(Tree *s, bool printIt) {
       } else 
 	b = m[0];
       if (printIt && (!emptyOutput)) {
-	outputMessage(std::string("\nans = \n"));
+	outputMessage(QString("\nans = \n"));
 	displayArray(b);
       }
     } else {
@@ -2372,12 +2371,12 @@ void Interpreter::expressionStatement(Tree *s, bool printIt) {
       else {
 	b = m[0];
 	if (printIt) {
-	  outputMessage(std::string("\nans = \n"));
+	  outputMessage(QString("\nans = \n"));
 	  for (int j=0;j<m.size();j++) {
 	    char buffer[1000];
 	    if (m.size() > 1) {
 	      sprintf(buffer,"\n%d of %d:\n",j+1,m.size());
-	      outputMessage(std::string(buffer));
+	      outputMessage(QString(buffer));
 	    }
 	    displayArray(m[j]);
 	  }
@@ -2387,7 +2386,7 @@ void Interpreter::expressionStatement(Tree *s, bool printIt) {
   } else {
     b = expression(t);
     if (printIt) {
-      outputMessage(std::string("\nans = \n"));
+      outputMessage(QString("\nans = \n"));
       displayArray(b);
     } 
   }
@@ -2427,7 +2426,7 @@ void Interpreter::multiassign(ArrayReference r, Tree *s, ArrayVector &data) {
   } else if (s->is('.')) {
     r->setFieldAsList(s->first()->text(),data);
   } else if (s->is(TOK_DYN)) {
-    string field;
+    QString field;
     try {
       Array fname(expression(s->first()));
       field = fname.getContentsAsString();
@@ -2473,7 +2472,7 @@ void Interpreter::assign(ArrayReference r, Tree *s, Array &data) {
     ArrayVector datav(SingleArrayVector(data));
     r->setFieldAsList(s->first()->text(),datav);
   } else if (s->is(TOK_DYN)) {
-    string field;
+    QString field;
     try {
       Array fname(expression(s->first()));
       field = fname.getContentsAsString();
@@ -2487,14 +2486,14 @@ void Interpreter::assign(ArrayReference r, Tree *s, Array &data) {
 }
 
 
-ArrayReference Interpreter::createVariable(string name) {
+ArrayReference Interpreter::createVariable(QString name) {
   // Are we in a nested scope?
   if (!context->isCurrentScopeNested() || context->variableLocalToCurrentScope(name)) {
     // if not, just create a local variable in the current scope, and move on.
     context->insertVariable(name,Array::emptyConstructor());
   } else {
     // if so - walk up the scope chain until we are no longer nested
-    string localScopeName = context->scopeName();
+    QString localScopeName = context->scopeName();
     context->bypassScope(1);
     while (context->currentScopeNests(localScopeName))
       context->bypassScope(1);
@@ -2939,7 +2938,7 @@ ArrayReference Interpreter::createVariable(string name) {
 //@}
 //!
 void Interpreter::assignment(Tree *var, bool printIt, Array &b) {
-  string name(var->first()->text());
+  QString name(var->first()->text());
   ArrayReference ptr(context->lookupVariable(name));
   if (!ptr.valid()) 
     ptr = createVariable(name);
@@ -3245,7 +3244,7 @@ void Interpreter::setBreakpoint(stackentry bp, bool enableFlag) {
   FuncPtr val;
   bool isFun = lookupFunction(bp.detail,val);
   if (!isFun) {
-    warningMessage(string("unable to find function ") + 
+    warningMessage(QString("unable to find function ") + 
 		   bp.detail + " to set breakpoint");
     return;
   }
@@ -3312,7 +3311,7 @@ void Interpreter::multiFunctionCall(Tree *t, bool printIt) {
   int index;
   for (index=0;(index<s.size()) && (m.size() > 0);index++) {
     Tree *var(s[index]);
-    string name(var->first()->text());
+    QString name(var->first()->text());
     ArrayReference ptr(context->lookupVariable(name));
     if (!ptr.valid()) 
       ptr = createVariable(name);
@@ -3367,9 +3366,9 @@ void Interpreter::multiFunctionCall(Tree *t, bool printIt) {
     warningMessage("one or more outputs not assigned in call.");
 }
 
-int getArgumentIndex(StringVector list, std::string t) {
+int getArgumentIndex(StringVector list, QString t) {
   bool foundArg = false;
-  std::string q;
+  QString q;
   int i = 0;
   while (i<list.size() && !foundArg) {
     q = list[i];
@@ -4047,7 +4046,7 @@ void Interpreter::handlePassByReference(Tree *q, StringVector arguments,
       if (qindx >= q->second()->numChildren())
 	qindx = q->second()->numChildren()-1;
     }
-    std::string args(arguments[i]);
+    QString args(arguments[i]);
     if (args[0] == '&') {
       args.erase(0,1);
       // This argument was passed by reference
@@ -4102,9 +4101,9 @@ void Interpreter::functionExpression(Tree *t,
     if (funcDef->updateCode(this)) refreshBreakpoints();
     if (funcDef->scriptFlag) {
       if (t->numChildren()>=2)
-	throw Exception(std::string("Cannot use arguments in a call to a script."));
+	throw Exception(QString("Cannot use arguments in a call to a script."));
       if ((narg_out > 0) && !outputOptional)
-	throw Exception(std::string("Cannot assign outputs in a call to a script."));
+	throw Exception(QString("Cannot assign outputs in a call to a script."));
       CLIFlagsave = InCLI;
       InCLI = false;
       pushDebug(((MFunctionDef*)funcDef)->fileName,
@@ -4130,10 +4129,10 @@ void Interpreter::functionExpression(Tree *t,
 	argTypeMap = NULL;
       if ((funcDef->inputArgCount() >= 0) && 
 	  (m.size() > funcDef->inputArgCount()))
-	throw Exception(std::string("Too many inputs to function ")+t->first()->text());
+	throw Exception(QString("Too many inputs to function ")+t->first()->text());
       if ((funcDef->outputArgCount() >= 0) && 
 	  (narg_out > funcDef->outputArgCount() && !outputOptional))
-	throw Exception(std::string("Too many outputs to function ")+t->first()->text());
+	throw Exception(QString("Too many outputs to function ")+t->first()->text());
       CLIFlagsave = InCLI;
       InCLI = false;
       if (!funcDef->graphicsFunction)
@@ -4172,7 +4171,7 @@ void Interpreter::functionExpression(Tree *t,
 
 void Interpreter::toggleBP(QString fname, int lineNumber) {
   if (isBPSet(fname,lineNumber)) {
-    string fname_string(fname.toStdString());
+    QString fname_string(fname);
     for (int i=0;i<bpStack.size();i++) 
       if ((bpStack[i].cname == fname_string) &&
 	  ((bpStack[i].tokid & 0xffff) == lineNumber)) {
@@ -4181,11 +4180,11 @@ void Interpreter::toggleBP(QString fname, int lineNumber) {
 	return;
       }
   } else {
-    addBreakpoint(fname.toStdString(),lineNumber);
+    addBreakpoint(fname,lineNumber);
   }    
 }
 
-MFunctionDef* Interpreter::lookupFullPath(string fname) {
+MFunctionDef* Interpreter::lookupFullPath(QString fname) {
   StringVector allFuncs(context->listAllFunctions());
   FuncPtr val;
   for (int i=0;i<allFuncs.size();i++) {
@@ -4202,11 +4201,11 @@ MFunctionDef* Interpreter::lookupFullPath(string fname) {
 
 static int bpList = 1;
 // Add a breakpoint - name is used to track to a full filename
-void Interpreter::addBreakpoint(string name, int line) {
-  //  qDebug() << "Add bp " << QString::fromStdString(name) << " : " << line << "";
+void Interpreter::addBreakpoint(QString name, int line) {
+  //  qDebug() << "Add bp " << QString::fromStdQString(name) << " : " << line << "";
   FuncPtr val;
   // Map the name argument to a full file name.
-  string fullFileName;
+  QString fullFileName;
   if (context->lookupFunction(name,val) && (val->type() == FM_M_FUNCTION))
     fullFileName = ((MFunctionDef*) val)->fileName;
   else
@@ -4256,7 +4255,7 @@ void Interpreter::addBreakpoint(string name, int line) {
     }
   }
   if (best_dist > max_line_count)
-//    warningMessage(std::string("Cannot set breakpoint at line ")+line+" of file "+name + ".  \r\nThis can be caused by an illegal line number, or a function that is not on the path or in the current directory.");
+//    warningMessage(QString("Cannot set breakpoint at line ")+line+" of file "+name + ".  \r\nThis can be caused by an illegal line number, or a function that is not on the path or in the current directory.");
     emit IllegalLineOrCurrentPath(name, line);
   else {
     addBreakpoint(stackentry(fullFileName,allFuncs[best_func],best_dist+line,bpList++));
@@ -4264,7 +4263,7 @@ void Interpreter::addBreakpoint(string name, int line) {
 }
 
 bool Interpreter::isBPSet(QString fname, int lineNumber) {
-  string fname_string(fname.toStdString());
+  QString fname_string(fname);
   for (int i=0;i<bpStack.size();i++) 
     if ((bpStack[i].cname == fname_string) &&
 	((bpStack[i].tokid & 0xffff) == lineNumber)) return true;
@@ -4272,7 +4271,7 @@ bool Interpreter::isBPSet(QString fname, int lineNumber) {
 }
 
 bool Interpreter::isInstructionPointer(QString fname, int lineNumber) {
-  return ((fname.toStdString() == ip_funcname) && ((lineNumber == (ip_context & 0xffff)) || ((lineNumber == 1) && ((ip_context & 0xffff) == 0))));
+  return ((fname == ip_funcname) && ((lineNumber == (ip_context & 0xffff)) || ((lineNumber == 1) && ((ip_context & 0xffff) == 0))));
 }
 
 void Interpreter::listBreakpoints() {
@@ -4301,26 +4300,26 @@ void Interpreter::deleteBreakpoint(int number) {
 
 void Interpreter::stackTrace(bool includeCurrent) {
   for (int i=0;i<cstack.size();i++) {
-    std::string cname_trim(TrimExtension(TrimFilename(cstack[i].cname)));
+    QString cname_trim(TrimExtension(TrimFilename(cstack[i].cname)));
     outputMessage(string("In ") + cname_trim + "("
 		  + cstack[i].detail + ") on line " +
 		  (cstack[i].tokid & 0x0000FFFF) + "\r\n");
   }
   if (includeCurrent) {
-    std::string ip_trim(TrimExtension(TrimFilename(ip_funcname)));
-    outputMessage(string("In ") + ip_trim + "("
+    QString ip_trim(TrimExtension(TrimFilename(ip_funcname)));
+    outputMessage(QString("In ") + ip_trim + "("
 		  + ip_detailname + ") on line " +
 		  (ip_context & 0x0000FFFF) + "\r\n");
   }
 }
 
-bool Interpreter::inMethodCall(std::string classname) {
+bool Interpreter::inMethodCall(QString classname) {
   if (ip_detailname.empty()) return false;
   if (ip_detailname[0] != '@') return false;
   return (ip_detailname.compare(1,classname.size(),classname)==0);
 }
 
-void Interpreter::pushDebug(std::string fname, std::string detail) {
+void Interpreter::pushDebug(QString fname, QString detail) {
   cstack.push_back(stackentry(ip_funcname,ip_detailname,
 			      ip_context,0,steptrap,
 			      stepcurrentline));
@@ -4346,15 +4345,15 @@ void Interpreter::popDebug() {
     outputMessage("IDERROR\n");
 }
 
-bool Interpreter::isUserClassDefined(std::string classname) {
+bool Interpreter::isUserClassDefined(QString classname) {
   return (classTable.findSymbol(classname)!=NULL);
 }
   
-UserClass Interpreter::lookupUserClass(std::string classname) {
+UserClass Interpreter::lookupUserClass(QString classname) {
   return(*(classTable.findSymbol(classname)));
 }
 
-void Interpreter::registerUserClass(std::string classname, UserClass cdata) {
+void Interpreter::registerUserClass(QString classname, UserClass cdata) {
   classTable.insertSymbol(classname,cdata);
 }
 
@@ -4362,16 +4361,16 @@ void Interpreter::clearUserClasses() {
   classTable = SymbolTable<UserClass>();
 }
 
-bool Interpreter::lookupFunction(std::string funcName, FuncPtr& val) {
+bool Interpreter::lookupFunction(QString funcName, FuncPtr& val) {
   ArrayVector dummy;
   return(lookupFunction(funcName,val,dummy));
 }
 
-bool IsNestedName(std::string basename) {
+bool IsNestedName(QString basename) {
   return (basename.rfind("/") >= 0);
 }
 
-std::string StripNestLevel(std::string basename) {
+QString StripNestLevel(QString basename) {
   int ndx = basename.rfind("/");
   if (ndx >= 0)
     basename.erase(ndx,basename.size());
@@ -4382,7 +4381,7 @@ std::string StripNestLevel(std::string basename) {
 
 // Look up a function by name.  Use the arguments (if available) to assist
 // in resolving method calls for objects
-bool Interpreter::lookupFunction(std::string funcName, FuncPtr& val, 
+bool Interpreter::lookupFunction(QString funcName, FuncPtr& val, 
 				 ArrayVector &args, bool disableOverload) {
   int passcount = 0;
   while(passcount < 2) {
@@ -4395,7 +4394,7 @@ bool Interpreter::lookupFunction(std::string funcName, FuncPtr& val,
     // Not a nested function of the current scope.  We have to look for nested
     // functions of all parent scopes. Sigh.
     if (context->isCurrentScopeNested()) {
-      std::string basename = ip_detailname;
+      QString basename = ip_detailname;
       while (!basename.empty()) {
 	if (context->lookupFunction(NestedMangleName(basename,funcName),val))
 	  return true;
@@ -4426,7 +4425,7 @@ bool Interpreter::lookupFunction(std::string funcName, FuncPtr& val,
       // Yes, try and resolve the call to a method
       if (anyClasses && ClassResolveFunction(this,args[i],funcName,val))
 	return true;
-    }
+    }o
     if (context->lookupFunction(funcName,val)) {
       //      qDebug() << "Lookup " << QString::fromStdString(funcName);
       return true;
@@ -4478,7 +4477,7 @@ ArrayVector Interpreter::FunctionPointerDispatch(Array r, Tree *args,
   if (fun->updateCode(this)) refreshBreakpoints();
   if (fun->scriptFlag) {
     if (!m.empty())
-      throw Exception(std::string("Cannot use arguments in a call to a script."));
+      throw Exception(QString("Cannot use arguments in a call to a script."));
     CLIFlagsave = InCLI;
     InCLI = false;
     pushDebug(((MFunctionDef*)fun)->fileName,
@@ -4937,7 +4936,7 @@ void Interpreter::deref(Array &r, Tree *s) {
   } else if (s->is('.')) {
     r = r.getField(s->first()->text());
   } else if (s->is(TOK_DYN)) {
-    string field;
+    QString field;
     try {
       Array fname(expression(s->first()));
       field = fname.getContentsAsString();
@@ -4994,7 +4993,7 @@ int Interpreter::getErrorCount() {
 
 Interpreter::Interpreter(Context* aContext) {
   errorCount = 0;
-  lasterr = string("");
+  lasterr = QString("");
   context = aContext;
   depth = 0;
   printLimit = 1000;
@@ -5059,7 +5058,7 @@ void Interpreter::dbstepStatement(Tree *t) {
   FuncPtr val;
   if (bp.detail == "base") return;
   if (!lookupFunction(bp.detail,val)) {
-    warningMessage(string("unable to find function ") + bp.detail + " to single step");
+    warningMessage(QString("unable to find function ") + bp.detail + " to single step");
     return;
   }
   cstack[cstack.size()-1].steptrap = lines;
@@ -5081,7 +5080,7 @@ void Interpreter::dbtraceStatement(Tree *t) {
   FuncPtr val;
   if (bp.detail == "base") return;
   if (!lookupFunction(bp.detail,val)) {
-    warningMessage(string("unable to find function ") + bp.detail + " to single step");
+    warningMessage(QString("unable to find function ") + bp.detail + " to single step");
     return;
   }
   tracetrap = lines;
@@ -5090,18 +5089,18 @@ void Interpreter::dbtraceStatement(Tree *t) {
 //     tracecurrentline << " with wait of " << lines << " lines";
 }
 
-static string EvalPrep(string line) {
-  string buf1 = line;
+static QString EvalPrep(QString line) {
+  QString buf1 = line;
   if (buf1[buf1.size()-1] == '\n')
     buf1.erase(buf1.end()-1);
   if (buf1[buf1.size()-1] == '\r')
     buf1.erase(buf1.end()-1);
   if (buf1.size() > 20)
-    buf1 = string(buf1,0,20) + "...";
+    buf1 = QString(buf1,0,20) + "...";
   return buf1;
 }
 
-void Interpreter::ExecuteLine(std::string txt) {
+void Interpreter::ExecuteLine(QQString txt) {
   mutex.lock();
   cmd_buffer.push_back(txt);
   bufferNotEmpty.wakeAll();
@@ -5110,7 +5109,7 @@ void Interpreter::ExecuteLine(std::string txt) {
 }
 
 //PORT
-void Interpreter::evaluateString(string line, bool propogateExceptions) {
+void Interpreter::evaluateString(QString line, bool propogateExceptions) {
   CodeBlock b;
   Tree *t;
   m_interrupt = false;
@@ -5156,11 +5155,11 @@ void Interpreter::evaluateString(string line, bool propogateExceptions) {
   popDebug();
 }
   
-string Interpreter::getLastErrorString() {
+QString Interpreter::getLastErrorString() {
   return lasterr;
 }
 
-void Interpreter::setLastErrorString(string txt) {
+void Interpreter::setLastErrorString(QString txt) {
   lasterr = txt;
 }
 
@@ -5168,7 +5167,7 @@ void Interpreter::setGreetingFlag(bool skip) {
   m_skipflag = skip;
 }
 
-bool NeedsMoreInput(Interpreter *eval, string txt) {
+bool NeedsMoreInput(Interpreter *eval, QString txt) {
   // Check for ... or an open []
   try {
     Scanner S(txt,"");
@@ -5194,10 +5193,10 @@ void Interpreter::sleepMilliseconds(unsigned long msecs) {
   QThread::msleep(msecs);
 }
 
-string Interpreter::getLine(string prompt) {
+QString Interpreter::getLine(QString prompt) {
   emit SetPrompt(prompt);
   if (m_diaryState) diaryMessage(prompt);
-  string retstring;
+  QString retstring;
   emit EnableRepaint();
   mutex.lock();
   if (cmd_buffer.empty())
@@ -5236,8 +5235,8 @@ void Interpreter::evalCLI() {
     }
     //     qDebug() << "IP: " << QString::fromStdString(ip_detailname) << ", " << (ip_context & 0xffff) << "";
     emit ShowActiveLine();
-    string cmdset;
-    std::string cmdline;
+    QString cmdset;
+    QString cmdline;
     emit EnableRepaint();
     mutex.lock();
     while ((cmdset.empty() || 

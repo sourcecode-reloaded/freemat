@@ -19,7 +19,7 @@ SparseMatrix::SparseMatrix(const BasicArray<double> &A) {
   m_dims = A.dimensions();
 }
 
-SparseMatrix SparseMatrix::getSlice(const IndexArrayList& index) const {
+SparseMatrix SparseMatrix::getSlice(const IndexArrayVector& index) const {
   SparseMatrix ret;
   ret.m_dims = NTuple(m_dims[0],1);
   ret.m_data[1] = m_data[index[1].get((index_t)1)];
@@ -115,7 +115,7 @@ void SparseMatrix::del(const IndexArray& index) {
   *this = ret;
 }
 
-void SparseMatrix::del(const IndexArrayList& index) {
+void SparseMatrix::del(const IndexArrayVector& index) {
   if (IsColonOp(index[0]) && IsColonOp(index[1])) {
     *this = SparseMatrix();
     return;

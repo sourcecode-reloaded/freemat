@@ -30,7 +30,7 @@ class File : public Stream{
   FILE *fp;
 public:
   // Create a file with the given access code
-  File(string filename, string accessmode);
+  File(QString filename, QString accessmode);
   File(FILE*afp);
   // Close the file
   virtual ~File();

@@ -12,7 +12,7 @@ template <typename T>
 class BasicArray;
 
 typedef BasicArray<index_t> IndexArray;
-typedef FastList<IndexArray> IndexArrayList;
+typedef FastList<IndexArray> IndexArrayVector;
 BasicArray<bool> GetDeletionMap(const IndexArray& vec, index_t length);
 
 bool IsColonOp(const IndexArray& ndx);
@@ -93,7 +93,7 @@ public:
   inline const T get(const NTuple& pos) const {
     return m_data[(int64)(m_dims.map(pos)+m_offset-1)];
   }
-  BasicArray<T> getSlice(const IndexArrayList& index) const {
+  BasicArray<T> getSlice(const IndexArrayVector& index) const {
     index_t offset = getSliceIndex(dimensions(),index);
     BasicArray<T> retvec;
     retvec.m_dims = NTuple(dimensions()[0],1);
@@ -101,7 +101,7 @@ public:
     retvec.m_data = m_data;
     return retvec;
   }
-  void del(const IndexArrayList& index) {
+  void del(const IndexArrayVector& index) {
     // The strategy for dealing with deletions is simplified relative
     // to 3.x code.  An NDim deletion is only valid if there is one
     // dimension that is not covered.

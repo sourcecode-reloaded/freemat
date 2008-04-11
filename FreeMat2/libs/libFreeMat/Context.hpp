@@ -193,7 +193,7 @@ public:
   /**
    * Push the given scope onto the bottom of the scope stack.
    */
-  inline void pushScope(std::string name, bool nestflag = false) {
+  inline void pushScope(QString name, bool nestflag = false) {
     if (scopestack.size() > 100)
       throw Exception("Allowable stack depth exceeded...");
     scopestack.push_back(new Scope(name,nestflag));
@@ -216,9 +216,9 @@ public:
    * scope if the array is in the global list, and mangled in
    * global list if it is persistent.  
    */
-  inline void insertVariable(const std::string& varName, const Array& var) {
+  inline void insertVariable(const QString& varName, const Array& var) {
     ScopePtr active;
-    std::string mapName;
+    QString mapName;
 
     if (bottomScope->isVariablePersistent(varName)) {
       mapName = bottomScope->getMangledName(varName);
@@ -237,7 +237,7 @@ public:
    * Insert a variable into the local scope - do not check the
    * global list.
    */
-  inline void insertVariableLocally(std::string varName, const Array& var) {
+  inline void insertVariableLocally(QString varName, const Array& var) {
     bottomScope->insertVariable(varName,var);
   }
   /**
@@ -254,9 +254,9 @@ public:
    * with the given name, and inserted into the scope that was
    * searched.  A pointer to this newly created variable is returned.
    */
-  inline ArrayReference lookupVariable(const std::string& varName) {
+  inline ArrayReference lookupVariable(const QString& varName) {
     ScopePtr active;
-    std::string mapName;
+    QString mapName;
     bool global = false;
     if (bottomScope->isVariablePersistent(varName)) {
       mapName = bottomScope->getMangledName(varName);
@@ -285,7 +285,7 @@ public:
     }
     return (ArrayReference(active->lookupVariable(mapName),global,active));
   }
-  inline bool variableLocalToCurrentScope(string varName) {
+  inline bool variableLocalToCurrentScope(QString varName) {
     return bottomScope->variableLocal(varName);
   }
   inline void setVariablesAccessed(StringVector va) {
@@ -297,7 +297,7 @@ public:
   /**
    * Look for a variable, but only locally.
    */
-  inline Array* lookupVariableLocally(std::string varName) {
+  inline Array* lookupVariableLocally(QString varName) {
     return bottomScope->lookupVariable(varName);
   }
   /**
@@ -311,7 +311,7 @@ public:
   /**
    * Remove a function definition from the code table.
    */
-  inline void deleteFunction(const std::string& funcName) {
+  inline void deleteFunction(const QString& funcName) {
     codeTab.deleteSymbol(funcName);
   }
   /**
@@ -325,7 +325,7 @@ public:
   /**
    * Add a built in function to the global scope with the given name.
    */
-  inline void addFunction(std::string name, BuiltInFuncPtr fptr, int argc_in, int argc_out, ...) {
+  inline void addFunction(QString name, BuiltInFuncPtr fptr, int argc_in, int argc_out, ...) {
     StringVector args;
     va_list argp;
     if (argc_in>0) {
@@ -334,14 +334,14 @@ public:
 	const char *t = va_arg(argp, const char *);
 	if (!t) {
 	  qDebug() << "addFunction for function " << 
-	    QString::fromStdString(name) << " is wrong!\n";
+	    name << " is wrong!\n";
 	  exit(1);
 	}
 	args.push_back(t);
       }
       if (va_arg(argp,const char *) != NULL) {
 	qDebug() << "addFunction for function " << 
-	  QString::fromStdString(name) << " is wrong!\n";
+	  name << " is wrong!\n";
 	exit(1);
       }
       va_end(argp);
@@ -358,7 +358,7 @@ public:
   /**
    * Add a special function to the global scope with the given name.
    */
-  inline void addSpecialFunction(std::string name, SpecialFuncPtr fptr, int argc_in, int argc_out, ...) {
+  inline void addSpecialFunction(QString name, SpecialFuncPtr fptr, int argc_in, int argc_out, ...) {
     StringVector args;
     va_list argp;
     if (argc_in>0) {
@@ -367,14 +367,14 @@ public:
 	const char *t = va_arg(argp, const char *);
 	if (!t) {
 	  qDebug() << "addSpecialFunction for function " << 
-	    QString::fromStdString(name) << " is wrong!\n";
+	    (name) << " is wrong!\n";
 	  exit(1);
 	}
 	args.push_back(t);
       }
       if (va_arg(argp,const char *) != NULL) {
 	qDebug() << "addSpecialFunction for function " << 
-	  QString::fromStdString(name) << " is wrong!\n";
+	  (name) << " is wrong!\n";
 	exit(1);
       }
       va_end(argp);
@@ -392,7 +392,7 @@ public:
    * Add a built in function to the global scope with the given name
    * and tag it as a graphics function
    */
-  inline void addGfxFunction(std::string name, BuiltInFuncPtr fptr, int argc_in, int argc_out, ...) {
+  inline void addGfxFunction(QString name, BuiltInFuncPtr fptr, int argc_in, int argc_out, ...) {
     StringVector args;
     va_list argp;
     if (argc_in>0) {
@@ -401,14 +401,14 @@ public:
 	const char *t = va_arg(argp, const char *);
 	if (!t) {
 	  qDebug() << "addGfxFunction for function " << 
-	    QString::fromStdString(name) << " is wrong!\n";
+	    (name) << " is wrong!\n";
 	  exit(1);
 	}
 	args.push_back(t);
       }
       if (va_arg(argp,const char *) != NULL) {
 	qDebug() << "addGfxFunction for function " << 
-	  QString::fromStdString(name) << " is wrong!\n";
+	  (name) << " is wrong!\n";
 	exit(1);
       }
       va_end(argp);
@@ -427,7 +427,7 @@ public:
    * Add a special function to the global scope with the given name, and
    * tag it as a graphics function
    */
-  inline void addGfxSpecialFunction(std::string name, SpecialFuncPtr fptr, int argc_in, int argc_out, ...) {
+  inline void addGfxSpecialFunction(QString name, SpecialFuncPtr fptr, int argc_in, int argc_out, ...) {
     StringVector args;
     va_list argp;
     if (argc_in>0) {
@@ -436,14 +436,14 @@ public:
 	const char *t = va_arg(argp, const char *);
 	if (!t) {
 	  qDebug() << "addGfxSpecialFunction for function " << 
-	    QString::fromStdString(name) << " is wrong!\n";
+	    (name) << " is wrong!\n";
 	  exit(1);
 	}
 	args.push_back(t);
       }
       if (va_arg(argp,const char *) != NULL) {
 	qDebug() << "addGfxSpecialFunction for function " << 
-	  QString::fromStdString(name) << " is wrong!\n";
+	  (name) << " is wrong!\n";
 	exit(1);
       }
       va_end(argp);
@@ -481,7 +481,7 @@ public:
     bottomScope->clearPersistentVariableList();
   }
 
-  inline StringVector getCompletions(const std::string& prefix) {
+  inline StringVector getCompletions(const QString& prefix) {
     StringVector local_completions = bottomScope->getCompletions(prefix);
     StringVector global_completions = topScope->getCompletions(prefix);
     StringVector code_completions = codeTab.getCompletions(prefix);
@@ -493,7 +493,7 @@ public:
     return completions;
   }
 
-  inline bool lookupFunction(std::string funcName, FuncPtr& val) {
+  inline bool lookupFunction(QString funcName, FuncPtr& val) {
     FuncPtr* ret = codeTab.findSymbol(funcName);
     if (ret) {
       val = *ret;
@@ -511,7 +511,7 @@ public:
    *     persistent variable.  If the variable does not exist in the
    *     global scope, then an empty variable is inserted.
    */
-  inline void addPersistentVariable(std::string var) {
+  inline void addPersistentVariable(QString var) {
     // Delete local variables with this name
     bottomScope->deleteVariable(var);
     // Delete global variables with this name
@@ -523,7 +523,7 @@ public:
    * scope.  If the variable does not exist in the global scope, an
    * empty variable is added.
    */
-  inline void addGlobalVariable(std::string var) {
+  inline void addGlobalVariable(QString var) {
     // Delete local variables with this name
     bottomScope->deleteVariable(var);
     // Delete global persistent variables with this name
@@ -531,14 +531,14 @@ public:
     // Add a point in the local scope to the global variable
     bottomScope->addGlobalVariablePointer(var);
   }
-  inline void deleteGlobalVariable(std::string var) {
+  inline void deleteGlobalVariable(QString var) {
     topScope->deleteVariable(var);
   }
   /**
    * Delete a variable if its defined.  Handles global and persistent
    * variables also.
    */
-  inline void deleteVariable(std::string var) {
+  inline void deleteVariable(QString var) {
     if (isVariableGlobal(var)) {
       topScope->deleteVariable(var);
       bottomScope->deleteGlobalVariablePointer(var);
@@ -566,13 +566,13 @@ public:
   inline bool isCurrentScopeNested() {
     return bottomScope->isnested();
   }
-  inline string scopeName() {
+  inline QString scopeName() {
     return bottomScope->getName();
   }
-  inline bool currentScopeNests(string name) {
+  inline bool currentScopeNests(QString name) {
     return bottomScope->nests(name);
   }
-  inline bool currentScopeVariableAccessed(string name) {
+  inline bool currentScopeVariableAccessed(QString name) {
     return bottomScope->variableAccessed(name);
   }
   /**
@@ -585,13 +585,13 @@ public:
   /**
    * Returns true if the given variable is global.
    */
-  inline bool isVariableGlobal(const std::string& varName) {
+  inline bool isVariableGlobal(const QString& varName) {
     return bottomScope->isVariableGlobal(varName);
   }
   /**
    * Returns true if the given variable is persistent
    */
-  inline bool isVariablePersistent(const std::string& varName) {
+  inline bool isVariablePersistent(const QString& varName) {
     return bottomScope->isVariablePersistent(varName);
   }
 };

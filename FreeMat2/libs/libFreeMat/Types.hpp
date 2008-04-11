@@ -20,14 +20,14 @@
 #ifndef __Types_hpp__
 #define __Types_hpp__
 
-#include <string>
+#include <QStringList>
 #include <QVector>
 #include <QtGlobal>
 #include <QList>
 #include <QRegExp>
-#include "List.hpp"
+#include "FastList.hpp"
 
-typedef quint8    logical;
+typedef bool      logical;
 typedef qint8     int8;
 typedef quint8    uint8;
 typedef qint16    int16;
@@ -36,8 +36,8 @@ typedef qint32    int32;
 typedef quint32   uint32;
 typedef qint64    int64;
 typedef quint64   uint64;
-typedef int   indexType;
-typedef const indexType * constIndexPtr;
+typedef double index_t;
+const int NDims = 6;
 
 typedef enum {
   FM_FUNCPTR_ARRAY,
@@ -59,7 +59,7 @@ typedef enum {
   FM_STRING,
 } Class;
 
-typedef PList<std::string> StringVector;
+typedef QStringList StringVector;
 
 inline size_t ByteSize(Class t) {
   switch(t) {

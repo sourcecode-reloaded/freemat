@@ -4,14 +4,14 @@
 #include "IndexArray.hpp"
 
 template <typename T>
-void SetSlice(T& arg, const IndexArrayList& index, const T& data) {
+void SetSlice(T& arg, const IndexArrayVector& index, const T& data) {
   index_t offset = getSliceIndex(arg.dimensions(),index);
   for (index_t i=1;i<=arg.dimensions()[0];i++)
     arg.set(offset+i,data.get(i));
 }
 
 template <typename T, typename S>
-void SetSlice(T& arg, const IndexArrayList& index, const S& data) {
+void SetSlice(T& arg, const IndexArrayVector& index, const S& data) {
   index_t offset = getSliceIndex(arg.dimensions(),index);
   for (index_t i=1;i<=arg.dimensions()[0];i++)
     arg.set(offset+i,data);  
@@ -47,7 +47,7 @@ void Set(T& arg, const IndexArray& index, const T& data) {
 
 
 template <typename T>
-void Set(T& arg, const IndexArrayList& index, const T& data) {
+void Set(T& arg, const IndexArrayVector& index, const T& data) {
   if (index.empty()) return;
   if (data.isEmpty()) {
     arg.del(index);
@@ -57,7 +57,7 @@ void Set(T& arg, const IndexArrayList& index, const T& data) {
     SetSlice(arg,index,data);
     return;
   }
-  IndexArrayList ndx;
+  IndexArrayVector ndx;
   NTuple secdims;
   NTuple maxsze;
   for (int i=0;i<index.size();i++) {
@@ -81,13 +81,13 @@ void Set(T& arg, const IndexArrayList& index, const T& data) {
 }
 
 template <typename T, typename S>
-void Set(T& arg, const IndexArrayList& index, const S& data) {
+void Set(T& arg, const IndexArrayVector& index, const S& data) {
   if (index.empty()) return;
   if (isSliceIndexCase(index)) {
     SetSlice(arg,index,data);
     return;
   }
-  IndexArrayList ndx;
+  IndexArrayVector ndx;
   NTuple secdims;
   NTuple maxsze;
   for (int i=0;i<index.size();i++) {
@@ -144,10 +144,10 @@ const T Get(const T& arg, const IndexArray& index) {
 }
 
 template <typename T>
-const T Get(const T& arg, const IndexArrayList& index) {
+const T Get(const T& arg, const IndexArrayVector& index) {
   if (index.empty()) return T();
   if (isSliceIndexCase(index)) return arg.getSlice(index);
-  IndexArrayList ndx;
+  IndexArrayVector ndx;
   NTuple outdims;
   for (int i=0;i<index.size();i++) {
     ndx.push_back(ExpandColons(index[i],arg.dimensions()[i]));

@@ -4,13 +4,16 @@
 #include <QSharedData>
 #include "Types.hpp"
 #include "BasicArray.hpp"
+#include "IndexArray.hpp"
 #include "FastList.hpp"
 #include "SparseMatrix.hpp"
+#include "Exception.hpp"
 class StringArray;
 
 class Array;
 
 typedef FastList<Array> ArrayVector;
+typedef QVector<ArrayVector> ArrayMatrix;
 typedef QMap<QString,BasicArray<Array> > StructArray;
 
 enum Type {

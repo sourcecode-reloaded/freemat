@@ -74,11 +74,11 @@ public:
   void putDataClass(Class cls, bool sparseflag, 
 		    bool isuserclass, StringVector className);
   void putArray(const Array& dat);
-  void putDimensions(const Dimensions& dim);
+  void putDimensions(const NTuple& dim);
   // Get an array
   Class getDataClass(bool& sparseflag, StringVector& className);
   void getArray(Array& dat);
-  Dimensions getDimensions();
+  NTuple getDimensions();
 };
 
 #endif

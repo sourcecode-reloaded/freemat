@@ -20,9 +20,7 @@
 #ifndef __Exception_hpp__
 #define __Exception_hpp__
 
-#include <string>
-
-using namespace std;
+#include <QVector>
 
 class Interpreter;
 
@@ -33,14 +31,14 @@ class Interpreter;
  * the exception types are not encoded using RTTI...
  */
 class Exception {
-  string msg;
+  QString msg;
   bool handled;
 public:
   Exception() : msg(""), handled(false)  {}
   /**
    * Construct an exception object with a given STL-string.
    */
-  Exception(std::string msg_in);
+  Exception(QString msg_in);
   /**
    * Output the contents of the exception to the console.
    */
@@ -48,13 +46,14 @@ public:
   /**
    * Returns true if 
    */
-  bool matches(string tst_msg);
+  bool matches(QString tst_msg);
   inline bool wasHandled() {return handled;}
   inline void markAsHandled() {handled = true;}
+  bool operator==(QString tst_msg) {return matches(tst_msg);}
   /**
    * Get a copy of the message 
    */
-  string getMessageCopy();
+  QString getMessageCopy();
 };
 
 void printExceptionCount();
