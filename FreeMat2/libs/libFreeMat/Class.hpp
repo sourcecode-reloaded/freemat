@@ -23,23 +23,23 @@
 #include "Interpreter.hpp"
 #include "Types.hpp"
 
-class UserClass {
+class UserClassTemplate {
   StringVector fieldNames;
   StringVector parentClasses;
 public:
-  UserClass();
-  UserClass(StringVector fields, StringVector parents);
-  bool matchClass(UserClass test);
+  UserClassTemplate();
+  UserClassTemplate(StringVector fields, StringVector parents);
+  bool matchClass(UserClassTemplate test);
   StringVector getParentClasses();
-  ~UserClass();
+  ~UserClassTemplate();
 };
 
-Array ClassTrinaryOperator(Array a, Array b, Array c, std::string funcname, Interpreter* eval);
+Array ClassTrinaryOperator(Array a, Array b, Array c, QString funcname, Interpreter* eval);
 
-Array ClassBinaryOperator(Array a, Array b, std::string funcname,
+Array ClassBinaryOperator(Array a, Array b, QString funcname,
 			  Interpreter* eval);
 
-Array ClassUnaryOperator(Array a, std::string funcname,
+Array ClassUnaryOperator(Array a, QString funcname,
 			 Interpreter* eval);
 
 Array ClassMatrixConstructor(ArrayMatrix m, Interpreter* eval);
@@ -51,9 +51,9 @@ ArrayVector ClassRHSExpression(Array a, Tree *t, Interpreter* eval);
 
 void ClassAssignExpression(ArrayReference r, Tree *t, const Array& value, Interpreter* eval);
   
-bool ClassResolveFunction(Interpreter* eval, Array &args, std::string funcName, FuncPtr& val);
+bool ClassResolveFunction(Interpreter* eval, Array &args, QString funcName, FuncPtr& val);
   
-std::string ClassMangleName(std::string className, std::string funcName);
+QString ClassMangleName(QString className, QString funcName);
 
 void LoadClassFunction(Context* context);
 

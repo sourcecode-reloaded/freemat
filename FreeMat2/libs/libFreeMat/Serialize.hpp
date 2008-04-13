@@ -46,7 +46,7 @@ public:
   void putFloats(const float* ptr, int count);
   void putDoubles(const double* ptr, int count);
   // Send a scalar object
-  void putString(string t);
+  void putString(QString t);
   void putByte(char t);
   void putShort(short t);
   void putInt(int t);
@@ -62,7 +62,7 @@ public:
   void getFloats(float* ptr, int count);
   void getDoubles(double* ptr, int count);
   // Get a scalar object
-  string  getString();
+  QString  getString();
   char   getByte();
   short  getShort();
   int    getInt();
@@ -71,12 +71,11 @@ public:
   bool   getBool();
   StringVector getStringVector();
   // Put an array
-  void putDataClass(Class cls, bool sparseflag, 
-		    bool isuserclass, StringVector className);
+  void putDataClass(Type cls);
   void putArray(const Array& dat);
   void putDimensions(const NTuple& dim);
   // Get an array
-  Class getDataClass(bool& sparseflag, StringVector& className);
+  Type getDataClass();
   void getArray(Array& dat);
   NTuple getDimensions();
 };

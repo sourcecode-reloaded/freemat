@@ -132,7 +132,7 @@ static inline const Array Tget_sparse(const Array*ptr, S ndx) {
 }
 
 
-static inline Type ScalarType(Type x) {
+Type ScalarType(Type x) {
   switch (x) {
   default:
     return x;

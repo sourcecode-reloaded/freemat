@@ -1,10 +1,8 @@
 #ifndef __Token_hpp__
 #define __Token_hpp__
 
-#include <string>
 #include "Array.hpp"
-
-using namespace std;
+#include <QTextStream>
 
 typedef unsigned char byte;
 const byte TOK_INVALID = 0;
@@ -79,21 +77,21 @@ class Serialize;
 
 class ParseException {
   unsigned m_pos;
-  string m_text;
+  QString m_text;
 public:
-  ParseException(unsigned pos = 0, string text = string()) : m_pos(pos), m_text(text) {}
+  ParseException(unsigned pos = 0, QString text = QString()) : m_pos(pos), m_text(text) {}
   unsigned Position() {return m_pos;}
-  string Text() {return m_text;}
+  QString Text() {return m_text;}
 };
 
 class Token {
   byte m_tok;
   unsigned m_pos;
-  string m_text;
+  QString m_text;
   Array m_array;
 public:
   Token();
-  Token(byte tok, unsigned pos = 0, string text = string());
+  Token(byte tok, unsigned pos = 0, QString text = QString());
   Token(Serialize *s);
   void freeze(Serialize *s) const;
   bool is(byte tok) const {return m_tok == tok;}
@@ -104,16 +102,16 @@ public:
   byte value() const {return m_tok;}
   void setValue(byte a) {m_tok = a;}
   unsigned position()  const {return m_pos;}
-  string text()  const {return m_text;}
-  void setText(string txt) {m_text = txt;}
+  QString text()  const {return m_text;}
+  void setText(QString txt) {m_text = txt;}
   Array array() const {return m_array;}
   void fillArray();
-  void print(ostream& o) const;
+  void print(QTextStream& o) const;
 };
 
-string TokenToString(const Token& b);
+QString TokenToString(const Token& b);
 
-ostream& operator<<(ostream& o, const Token& b);
+QTextStream& operator<<(QTextStream& o, const Token& b);
 
 void FreezeToken(const Token& a, Serialize *s);
 

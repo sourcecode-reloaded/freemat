@@ -42,7 +42,7 @@ public:
   }
   StringVector getCompletions(const QString& prefix) {
     StringVector retvec;
-    for (QHash<QString,T>::const_iterator i=map.constBegin();i != map.constEnd();++i) {
+    for (typename QHash<QString,T>::const_iterator i=map.constBegin();i != map.constEnd();++i) {
       if ((i.key().size() > prefix.size()) &&
 	  (i.key().left(prefix.size()) == prefix))
 	retvec << i.key();

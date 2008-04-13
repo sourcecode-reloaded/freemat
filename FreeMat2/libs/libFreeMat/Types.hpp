@@ -39,65 +39,7 @@ typedef quint64   uint64;
 typedef double index_t;
 const int NDims = 6;
 
-typedef enum {
-  FM_FUNCPTR_ARRAY,
-  FM_CELL_ARRAY,
-  FM_STRUCT_ARRAY,
-  FM_LOGICAL,
-  FM_UINT8,
-  FM_INT8,
-  FM_UINT16,
-  FM_INT16,
-  FM_UINT32,
-  FM_INT32,
-  FM_UINT64,
-  FM_INT64,
-  FM_FLOAT,
-  FM_DOUBLE,
-  FM_COMPLEX,
-  FM_DCOMPLEX,
-  FM_STRING,
-} Class;
-
 typedef QStringList StringVector;
 
-inline size_t ByteSize(Class t) {
-  switch(t) {
-  default:
-    throw Exception("Illegal argument to ByteSize function");
-  case FM_CELL_ARRAY:
-    return sizeof(void*);
-  case FM_STRUCT_ARRAY:
-    return sizeof(void*);
-  case FM_LOGICAL:
-    return sizeof(logical);
-  case   FM_UINT8:
-    return sizeof(uint8);
-  case   FM_INT8:
-    return sizeof(int8);
-  case   FM_UINT16:
-    return sizeof(uint16);
-  case   FM_INT16:
-    return sizeof(int16);
-  case   FM_UINT32:
-    return sizeof(uint32);
-  case   FM_INT32:
-    return sizeof(int32);
-  case   FM_UINT64:
-    return sizeof(uint64);
-  case   FM_INT64:
-    return sizeof(int64);
-  case   FM_FLOAT:
-    return sizeof(float);
-  case   FM_DOUBLE:
-    return sizeof(double);
-  case   FM_COMPLEX:
-    return sizeof(float)*2;
-  case   FM_DCOMPLEX:
-    return sizeof(double)*2;
-  case   FM_STRING:
-    return sizeof(char);
-  }
-}
 
 #endif

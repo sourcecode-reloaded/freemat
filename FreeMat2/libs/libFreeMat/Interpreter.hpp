@@ -58,7 +58,7 @@ public:
 };
 
 class Interpreter;
-class UserClass;
+class UserClassTemplate;
 class JIT;
 
 typedef Array (*BinaryFunc)(Array, Array, Interpreter*);
@@ -189,7 +189,7 @@ class Interpreter : public QThread {
   /**
    * The class records (store information about each user defined class)
    */
-  SymbolTable<UserClass> classTable;
+  SymbolTable<UserClassTemplate> classTable;
   /**
    * Set this flag to true to stop overloading of methods
    */
@@ -467,11 +467,11 @@ public:
   /**
    * Lookup a user class.
    */
-  UserClass lookupUserClass(QString classname);
+  UserClassTemplate lookupUserClass(QString classname);
   /**
    * Register a new user class.
    */
-  void registerUserClass(QString classname, UserClass cdata);
+  void registerUserClass(QString classname, UserClassTemplate cdata);
   /**
    * Clear the registered class table
    */
@@ -804,7 +804,7 @@ private:
    * call.  In particular, logic is used to figure out what to do about
    * undefined variables.
    */
-  int countLeftHandSides(Tree *t);
+  index_t countLeftHandSides(Tree *t);
   /**
    * Evaluate a function and return the results of the function as
    * an ArrayVector.  For scripts, the body of the function is

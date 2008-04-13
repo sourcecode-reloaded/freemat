@@ -12,6 +12,12 @@ class FastList {
   int m_size;
 public:
   inline FastList() : m_vec(0), m_size(0) {}
+  inline FastList(const T& val) {
+    m_vec = 0;
+    m_size = 1;
+    m_slot1 = val;
+    m_slot2 = T();
+  }
   inline FastList(const FastList &copy) : 
     m_slot1(copy.m_slot1),
     m_slot2(copy.m_slot2),

@@ -1,7 +1,7 @@
 #ifndef __Tree_hpp__
 #define __Tree_hpp__
 
-#include <string>
+#include <QString>
 #include "Token.hpp"
 #include "Array.hpp"
 
@@ -63,8 +63,8 @@ public:
   inline byte token() const {return m_node.value();}
   inline int numChildren() const {return m_children.size();}
   inline bool hasChildren() const {return (m_children.size()>0);}
-  inline string text() const {return m_node.text();}
-  inline void setText(string t) {m_node.setText(t);}
+  inline QString text() const {return m_node.text();}
+  inline void setText(QString t) {m_node.setText(t);}
   inline Array array() const {return m_node.array();}
   inline const TreeList& children() const {return m_children;}
   inline Tree* last() const {return m_children.back();}

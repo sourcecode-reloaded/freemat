@@ -20,30 +20,31 @@ enum Type {
   Invalid = 0,
   CellArray = 1,
   Struct = 2,
-  StringArray = 3,
-  BoolScalar = 4,
-  Int8Scalar = 5,
-  UInt8Scalar = 6,
-  Int16Scalar = 7,
-  UInt16Scalar = 8,
-  Int32Scalar = 9,
-  UInt32Scalar = 10,
-  Int64Scalar = 11,
-  UInt64Scalar = 12,
-  FloatScalar = 13,
-  DoubleScalar = 14,
-  BoolArray = 15,
-  Int8Array = 16,
-  UInt8Array = 17,
-  Int16Array = 18,
-  UInt16Array = 19,
-  Int32Array = 20,
-  UInt32Array = 21,
-  Int64Array = 22,
-  UInt64Array = 23,
-  FloatArray = 24,
-  DoubleArray = 25,
-  DoubleSparse = 26
+  UserClass = 3,
+  StringArray = 4,
+  BoolScalar = 5,
+  Int8Scalar = 6,
+  UInt8Scalar = 7,
+  Int16Scalar = 8,
+  UInt16Scalar = 9,
+  Int32Scalar = 10,
+  UInt32Scalar = 11,
+  Int64Scalar = 12,
+  UInt64Scalar = 13,
+  FloatScalar = 14,
+  DoubleScalar = 15,
+  BoolArray = 16,
+  Int8Array = 17,
+  UInt8Array = 18,
+  Int16Array = 19,
+  UInt16Array = 20,
+  Int32Array = 21,
+  UInt32Array = 22,
+  Int64Array = 23,
+  UInt64Array = 24,
+  FloatArray = 25,
+  DoubleArray = 26,
+  DoubleSparse = 27
 };
 
 class SharedObject : public QSharedData {
@@ -121,6 +122,8 @@ public:
   inline bool isColumnVector() const {return dimensions().isColumnVector();}
   inline bool isRowVector() const {return dimensions().isRowVector();}
   inline bool is2D() const {return dimensions().is2D();}
+  inline bool isUserClass() const {return m_type == UserClass;}
+  inline bool isString() const {return m_type == StringArray;}
   QString string() const;
   inline bool isScalar() const {
     return (((m_type >= BoolScalar) && (m_type <= DoubleScalar)) ||
@@ -212,6 +215,8 @@ public:
   bool operator==(const Array &b) const;
   inline bool operator!=(const Array &b) const {return !(*this == b);}
   void addField(QString name);
+
+  QString className() const;
 private:
   Data m_real;
   Data m_imag;
@@ -246,8 +251,15 @@ QStringList FieldNames(const Array& arg);
 SparseMatrix ToRealSparse(const Array& data);
 SparseMatrix ToImagSparse(const Array& data);
 
-// Suppose we support a get/set interface:
-// And we support slicing through the iterators
+Array MatrixConstructor(const ArrayMatrix& data);
+Array CellConstructor(const ArrayMatrix& data);
+
+bool TestForCaseMatch(const Array &s, const Array &r);
+bool RealAllZeros(const Array &t);
+
+Type ScalarType(Type x);
+
+// Suppose we support a get/set interface:// And we support slicing through the iterators
 // themselves.  For example, consider
 // p = A(1:2:end,1:5:end);
 // We can capture this as an iterator:
