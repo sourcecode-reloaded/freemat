@@ -125,6 +125,7 @@ public:
   inline bool isUserClass() const {return m_type == UserClass;}
   inline bool isString() const {return m_type == StringArray;}
   QString string() const;
+  int integer() const;
   inline bool isScalar() const {
     return (((m_type >= BoolScalar) && (m_type <= DoubleScalar)) ||
 	    dimensions().isScalar());

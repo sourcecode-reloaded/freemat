@@ -5,7 +5,7 @@
 #include <ctype.h>
 #include "Exception.hpp"
 
-extern string fm_reserved[];
+extern QString fm_reserved[];
 extern int fm_reserved_count;
 
 static bool isalnumus(byte a) {
@@ -20,7 +20,7 @@ unsigned Scanner::contextNum() {
   return (m_ptr << 16 | m_linenumber);
 }
 
-void Scanner::setToken(byte tok, string text) {
+void Scanner::setToken(byte tok, QString text) {
   m_tok = Token(tok,m_ptr << 16 | m_linenumber,text);
 }
 
@@ -32,7 +32,7 @@ bool Scanner::peek(int chars, byte tok) {
   return (ahead(chars) == tok);
 }
 
-Scanner::Scanner(string buf, string fname) {
+Scanner::Scanner(QString buf, QString fname) {
   m_text = buf;
   m_filename = fname;
   m_ptr = 0;
@@ -145,9 +145,9 @@ void Scanner::fetchString() {
   }
   if (ahead(len+1) == '\n')
     throw Exception("unterminated string" + context());
-  string ret(m_text,m_ptr+1,len);
-  string::size_type ndx = ret.find("''");
-  while (ndx != string::npos) {
+  QString ret(m_text,m_ptr+1,len);
+  QString::size_type ndx = ret.find("''");
+  while (ndx != QString::npos) {
     ret.erase(ndx,1);
     ndx = ret.find("''");
   }
@@ -237,7 +237,7 @@ void Scanner::fetchNumber() {
 	(ahead(lookahead) == '\\') ||
 	(ahead(lookahead) == '^') ||
 	(ahead(lookahead) == '\'')))) lookahead--;
-  string numtext(string(m_text,m_ptr,lookahead));
+  QString numtext(QString(m_text,m_ptr,lookahead));
   m_ptr += lookahead;
   if ((numclass == complex_class) ||
       (numclass == dcomplex_class))
@@ -265,12 +265,12 @@ void Scanner::fetchIdentifier() {
   int len = 0;
   while (isalnumus(ahead(len))) len++;
   // Collect the identifier into a string
-  string ident(string(m_text,m_ptr,len));
-  string *p = lower_bound(fm_reserved,fm_reserved+fm_reserved_count,ident);
+  QString ident(QString(m_text,m_ptr,len));
+  QString *p = lower_bound(fm_reserved,fm_reserved+fm_reserved_count,ident);
   if ((p!= fm_reserved+fm_reserved_count) && (*p == ident))
     setToken(TOK_KEYWORD+(p-fm_reserved)+1);
   else
-    setToken(TOK_IDENT,string(m_text,m_ptr,len));
+    setToken(TOK_IDENT,QString(m_text,m_ptr,len));
   m_ptr += len;
 }
 
@@ -288,7 +288,7 @@ void Scanner::fetchBlob() {
 	   (ahead(len) != '%') && (ahead(len) != ',') &&
 	   (ahead(len) != ';')) len++;
     if (len > 0) {
-      setToken(TOK_STRING,string(m_text,m_ptr,len));
+      setToken(TOK_STRING,QString(m_text,m_ptr,len));
       m_ptr += len;
       m_tokValid = true;    
     } 
@@ -349,35 +349,35 @@ byte Scanner::ahead(int n) {
     return m_text.at(m_ptr+n);
 }
 
-string Scanner::context() {
+QString Scanner::context() {
   return context(contextNum());
 }
 
-static string stringFromNumber(unsigned line) {
+static QString stringFromNumber(unsigned line) {
   char buffer[1000];
   sprintf(buffer,"%d",line);
-  return string(buffer);
+  return QString(buffer);
 }
 
-string Scanner::snippet(unsigned pos1, unsigned pos2) {
+QString Scanner::snippet(unsigned pos1, unsigned pos2) {
   unsigned ptr1 = pos1 >> 16;
   unsigned ptr2 = pos2 >> 16;
-  return string(m_text,ptr1,ptr2-ptr1+1);
+  return QString(m_text,ptr1,ptr2-ptr1+1);
 }
 
-string Scanner::context(unsigned pos) {
+QString Scanner::context(unsigned pos) {
   pos = pos >> 16;
-  string::size_type line_start = 0;
+  QString::size_type line_start = 0;
   int linenumber = 1;
-  string::size_type line_stop = m_text.find("\n");
-  string prevline;
+  QString::size_type line_stop = m_text.find("\n");
+  QString prevline;
   while (pos > line_stop) {
-    prevline = string(m_text,line_start,line_stop-line_start);
+    prevline = QString(m_text,line_start,line_stop-line_start);
     line_start = line_stop+1;
     line_stop = m_text.find("\n",line_start);
     linenumber++;
   }
-  string retstring;
+  QString retstring;
   if (m_filename.size() > 0) {
     retstring = " at line number: " + stringFromNumber(linenumber);
     retstring += " of file " + m_filename + "\n";

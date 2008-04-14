@@ -34,6 +34,7 @@ public:
     m_size = copy.m_size;
     m_vec = copy.m_vec;
     if (m_vec) m_vec = new QVector<T>(*m_vec);
+    return *this;
   }
   inline void clear() {
     if (m_size > 2) m_vec->clear();

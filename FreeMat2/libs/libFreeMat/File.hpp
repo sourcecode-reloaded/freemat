@@ -21,9 +21,7 @@
 #define __File_hpp__
 #include <stdio.h>
 #include "Stream.hpp"
-#include <string>
-
-using namespace std;
+#include <QString>
 
 class File : public Stream{
   bool autoclose;

@@ -273,87 +273,89 @@ void ComplexLU(int nrows, int ncols, T *l, T *u, T*a,
 ArrayVector LUDecompose(int nargout, Array A) {
   if (nargout > 3)
     throw Exception("illegal usage of lu function - for dense matrices, maximum number of outputs is 3");
-  int nrows = A.getDimensionLength(0);
-  int ncols = A.getDimensionLength(1);
+  int nrows = int(A.rows());
+  int ncols = int(A.columns());
   int p = min(nrows,ncols);
-  if (A.isIntegerClass())
-    A.promoteType(FM_DOUBLE);
   ArrayVector retval;
-  switch (A.dataClass()) {
+  A = A.asArrayType();
+  switch (A.type()) {
   default:
     throw Exception("unhandled input type for lu function");
-  case FM_FLOAT: {
-    float *l = (float*) Malloc(sizeof(float)*nrows*p);
-    float *u = (float*) Malloc(sizeof(float)*p*ncols);
-    if (nargout <= 2) {
-      RealLU<float>(nrows,ncols,l,u,
-		     (float*) A.getReadWriteDataPointer(),sgetrf_);
-      retval.push_back(Array(A.dataClass(),Dimensions(nrows,p),l));
-      retval.push_back(Array(A.dataClass(),Dimensions(p,ncols),u));
-    } else if (nargout == 3) {
-      float *piv = (float*) Malloc(sizeof(float)*nrows*nrows);
-      RealLUP<float>(nrows,ncols,l,u,piv,
-		     (float*) A.getReadWriteDataPointer(),sgetrf_);
-      retval.push_back(Array(A.dataClass(),Dimensions(nrows,p),l));
-      retval.push_back(Array(A.dataClass(),Dimensions(p,ncols),u));
-      retval.push_back(Array(A.dataClass(),Dimensions(nrows,nrows),piv));
+  case FloatArray: 
+    {
+      if (A.allReal()) {
+	BasicArray<float> l(NTuple(nrows,p));
+	BasicArray<float> u(NTuple(p,ncols));
+	if (nargout <= 2) {
+	  RealLU<float>(nrows,ncols,l.data(),u.data(),A.real<float>().data(),sgetrf_);
+	  retval.push_back(Array(FloatArray,l));
+	  retval.push_back(Array(FloatArray,u));
+	} else if (nargout == 3) {
+	  BasicArray<float> piv(NTuple(nrows,ncols));
+	  RealLUP<float>(nrows,ncols,l.data(),u.data(),piv.data(),A.real<float>().data(),sgetrf_);
+	  retval.push_back(Array(FloatArray,l));
+	  retval.push_back(Array(FloatArray,u));
+	  retval.push_back(Array(FloatArray,piv));
+	}
+	return retval;
+      } else {
+	BasicArray<float> l(NTuple(2*nrows,p));
+	BasicArray<float> u(NTuple(2*p,ncols));
+	BasicArray<float> Atotal(MergeComplex(A.constReal<float>(),A.constImag<float>()));
+	if (nargout <= 2) {
+	  ComplexLU<float>(nrows,ncols,l.data(),u.data(),Atotal.data(),cgetrf_);
+	  retval.push_back(Array(DoubleArray,SplitReal(l),SplitImag(l)));
+	  retval.push_back(Array(DoubleArray,SplitReal(u),SplitImag(u)));
+	} else if (nargout == 3) {
+	  BasicArray<float> piv(NTuple(nrows,nrows));
+	  ComplexLUP<float>(nrows,ncols,l.data(),u.data(),piv.data(),
+			    Atotal.data(),cgetrf_);
+	  retval.push_back(Array(DoubleArray,SplitReal(l),SplitImag(l)));
+	  retval.push_back(Array(DoubleArray,SplitReal(u),SplitImag(u)));
+	  retval.push_back(Array(DoubleArray,piv));
+	}
+	return retval;
+      }
     }
-    return retval;
-  }
-  case FM_DOUBLE: {
-    double *l = (double*) Malloc(sizeof(double)*nrows*p);
-    double *u = (double*) Malloc(sizeof(double)*p*ncols);
-    if (nargout <= 2) {
-      RealLU<double>(nrows,ncols,l,u,
-		     (double*) A.getReadWriteDataPointer(),dgetrf_);
-      retval.push_back(Array(A.dataClass(),Dimensions(nrows,p),l));
-      retval.push_back(Array(A.dataClass(),Dimensions(p,ncols),u));
-    } else if (nargout == 3) {
-      double *piv = (double*) Malloc(sizeof(double)*nrows*nrows);
-      RealLUP<double>(nrows,ncols,l,u,piv,
-		      (double*) A.getReadWriteDataPointer(),dgetrf_);
-      retval.push_back(Array(A.dataClass(),Dimensions(nrows,p),l));
-      retval.push_back(Array(A.dataClass(),Dimensions(p,ncols),u));
-      retval.push_back(Array(A.dataClass(),Dimensions(nrows,nrows),piv));
+    break;
+  case DoubleArray:
+    {
+      if (A.allReal()) {
+	BasicArray<double> l(NTuple(nrows,p));
+	BasicArray<double> u(NTuple(p,ncols));
+	if (nargout <= 2) {
+	  RealLU<double>(nrows,ncols,l.data(),u.data(),A.real<double>().data(),dgetrf_);
+	  retval.push_back(Array(DoubleArray,l));
+	  retval.push_back(Array(DoubleArray,u));
+	} else if (nargout == 3) {
+	  BasicArray<double> piv(NTuple(nrows,ncols));
+	  RealLUP<double>(nrows,ncols,l.data(),u.data(),piv.data(),
+			  A.real<double>().data(),dgetrf_);
+	  retval.push_back(Array(DoubleArray,l));
+	  retval.push_back(Array(DoubleArray,u));
+	  retval.push_back(Array(DoubleArray,piv));
+	}
+	return retval;
+      } else {
+	BasicArray<double> l(NTuple(2*nrows,p));
+	BasicArray<double> u(NTuple(2*p,ncols));
+	BasicArray<double> Atotal(MergeComplex(A.constReal<double>(),A.constImag<double>()));
+	if (nargout <= 2) {
+	  ComplexLU<double>(nrows,ncols,l.data(),u.data(),Atotal.data(),zgetrf_);
+	  retval.push_back(Array(DoubleArray,SplitReal(l),SplitImag(l)));
+	  retval.push_back(Array(DoubleArray,SplitReal(u),SplitImag(u)));
+	} else if (nargout == 3) {
+	  BasicArray<double> piv(NTuple(nrows,nrows));
+	  ComplexLUP<double>(nrows,ncols,l.data(),u.data(),piv.data(),
+			    Atotal.data(),zgetrf_);
+	  retval.push_back(Array(DoubleArray,SplitReal(l),SplitImag(l)));
+	  retval.push_back(Array(DoubleArray,SplitReal(u),SplitImag(u)));
+	  retval.push_back(Array(DoubleArray,piv));
+	}
+	return retval;
+      }
     }
-    return retval;
-  }
-  case FM_COMPLEX: {
-    float *l = (float*) Malloc(2*sizeof(float)*nrows*p);
-    float *u = (float*) Malloc(2*sizeof(float)*p*ncols);
-    if (nargout <= 2) {
-      ComplexLU<float>(nrows,ncols,l,u,
-		       (float*) A.getReadWriteDataPointer(),cgetrf_);
-      retval.push_back(Array(A.dataClass(),Dimensions(nrows,p),l));
-      retval.push_back(Array(A.dataClass(),Dimensions(p,ncols),u));
-    } else if (nargout == 3) {
-      float *piv = (float*) Malloc(sizeof(float)*nrows*nrows);
-      ComplexLUP<float>(nrows,ncols,l,u,piv,
-			(float*) A.getReadWriteDataPointer(),cgetrf_);
-      retval.push_back(Array(A.dataClass(),Dimensions(nrows,p),l));
-      retval.push_back(Array(A.dataClass(),Dimensions(p,ncols),u));
-      retval.push_back(Array(FM_FLOAT,Dimensions(nrows,nrows),piv));
-    }
-    return retval;
-  }
-  case FM_DCOMPLEX: {
-    double *l = (double*) Malloc(2*sizeof(double)*nrows*p);
-    double *u = (double*) Malloc(2*sizeof(double)*p*ncols);
-    if (nargout <= 2) {
-      ComplexLU<double>(nrows,ncols,l,u,
-			(double*) A.getReadWriteDataPointer(),zgetrf_);
-      retval.push_back(Array(A.dataClass(),Dimensions(nrows,p),l));
-      retval.push_back(Array(A.dataClass(),Dimensions(p,ncols),u));
-    } else if (nargout == 3) {
-      double *piv = (double*) Malloc(sizeof(double)*nrows*nrows);
-      ComplexLUP<double>(nrows,ncols,l,u,piv,
-			 (double*) A.getReadWriteDataPointer(),zgetrf_);
-      retval.push_back(Array(A.dataClass(),Dimensions(nrows,p),l));
-      retval.push_back(Array(A.dataClass(),Dimensions(p,ncols),u));
-      retval.push_back(Array(FM_DOUBLE,Dimensions(nrows,nrows),piv));
-    }
-    return retval;
-  }
+    break;
   }
 }
 

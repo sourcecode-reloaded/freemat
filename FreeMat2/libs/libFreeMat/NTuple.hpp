@@ -134,6 +134,9 @@ public:
       if (m_data[i] > alt.m_data[i]) return false;
     return true;
   }
+  bool operator!=(const NTuple& alt) const {
+    return !(*this == alt);
+  }
   bool operator==(const NTuple& alt) const {
     for (int i=0;i<NDims;i++)
       if (m_data[i] != alt.m_data[i]) return false;

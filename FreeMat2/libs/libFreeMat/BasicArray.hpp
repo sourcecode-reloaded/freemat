@@ -42,8 +42,8 @@ public:
   }
   ~BasicArray() {}
   inline index_t offset() const {return m_offset;}
-  inline QVector<T>& data() {return m_data;}
-  inline const QVector<T>& data() const {return m_data;}
+  //  inline QVector<T>& data() {return m_data;}
+  //inline const QVector<T>& data() const {return m_data;}
   inline const NTuple dimensions() const {return m_dims;}
   inline index_t rows() const {return m_dims.rows();}
   inline index_t cols() const {return m_dims.cols();}
@@ -73,6 +73,12 @@ public:
     if ((pos > 0) && (pos <= m_data.size()))
       return m_data[(int64)(pos+m_offset-1)];
     throw Exception("out of range");
+  }
+  inline const T* constData() const {
+    return &(m_data.at(int64(m_offset)));
+  }
+  inline T* data() {
+    return &(m_data[int64(m_offset)]);
   }
   bool operator==(const BasicArray<T>& b) const {
     for (index_t i=1;i<b.length();i++) 
@@ -224,6 +230,40 @@ template <typename T>
 std::ostream& operator<<(std::ostream& o, const BasicArray<T>& arg) {
   arg.printMe(o);
   return o;
+}
+
+template <typename T>
+BasicArray<T> MergeComplex(const BasicArray<T>& real, const BasicArray<T>& imag) {
+  NTuple retdim(real.dimensions());
+  if (retdim != imag.dimensions()) 
+    throw Exception("Cannot merge arrays of unequal size into complex array");
+  retdim[0] = retdim[0]*2;
+  BasicArray<T> retval(retdim);
+  for (index_t i=1;i <= real.length();i++) {
+    retval.set(2*i-1,real.get(i));
+    retval.set(2*i,imag.get(i));
+  }
+  return retval;
+}
+
+template <typename T>
+BasicArray<T> SplitReal(const BasicArray<T>& A) {
+  NTuple retdim(A.dimensions());
+  retdim[0] = retdim[0]/2;
+  BasicArray<T> retval(retdim);
+  for (index_t i=1;i <= retval.length();i++) 
+    retval.set(i,A.get(2*i-1));
+  return retval;
+}
+
+template <typename T>
+BasicArray<T> SplitImag(const BasicArray<T>& A) {
+  NTuple retdim(A.dimensions());
+  retdim[0] = retdim[0]/2;
+  BasicArray<T> retval(retdim);
+  for (index_t i=1;i <= retval.length();i++) 
+    retval.set(i,A.get(2*i));
+  return retval;
 }
 
 template <typename T>

@@ -246,15 +246,7 @@ int Interpreter::getTerminalWidth() {
 }
 
 QString TranslateString(QString x) {
-  QString y(x);
-  unsigned int n;
-  n = 0;
-  while (n<y.size()) {
-    if (y[n] == '\n') 
-      y.insert(n++,"\r");
-    n++;
-  }
-  return y;
+  return x.replace("\n","\r\n");
 }
 
 void Interpreter::diaryMessage(QString msg) {
@@ -370,7 +362,7 @@ void Interpreter::run() {
       m_threadFuncRets = m_threadFunc->evaluateFunction(this,m_threadFuncArgs,m_threadNargout);
     } catch (Exception &e) {
       m_threadErrorState = true;      
-      lasterr = e.getMessageCopy();
+      lasterr = e.msg();
     } catch (InterpreterQuitException &e) {
       m_threadErrorState = true;      
       lasterr = "'quit' called in non-main thread";
@@ -773,18 +765,12 @@ ArrayVector Interpreter::handleReindexing(Tree *t, const ArrayVector &p) {
     return p;
 }
 
-void Interpreter::multiexpr(Tree *t, ArrayVector &q, int lhsCount) {
+void Interpreter::multiexpr(Tree *t, ArrayVector &q, index_t lhsCount) {
   if (t->is(TOK_VARIABLE)) {
     ArrayReference ptr(context->lookupVariable(t->first()->text()));
     if (!ptr.valid()) {
       ArrayVector p;
-      functionExpression(t,lhsCount,false,p);
-      q += handleReindexing(t,p);
-      return;
-    }
-    if ((ptr->dataClass() == FM_FUNCPTR_ARRAY &&
-	 ptr->isScalar()) && (t->numChildren() > 1)) {
-      ArrayVector p = FunctionPointerDispatch(*ptr,t->second(),1);
+      functionExpression(t,int(lhsCount),false,p);
       q += handleReindexing(t,p);
       return;
     }
@@ -960,17 +946,18 @@ Array Interpreter::expression(Tree *t) {
 }
 
 Array Interpreter::FunctionPointer(Tree *t) {
-  if (t->first()->is(TOK_ANONYMOUS_FUNC)) {
-    AnonymousFunctionDef *q = new AnonymousFunctionDef;
-    q->initialize(t->first(),this);
-    return Array::funcPtrConstructor(FuncPtr(q));
-  } else {
-    FuncPtr val;
-    if (!lookupFunction(t->first()->text(),val))
-      throw Exception("unable to resolve " + t->first()->text() + 
-		      " to a function call");
-    return Array::funcPtrConstructor(val);
-  }
+//   if (t->first()->is(TOK_ANONYMOUS_FUNC)) {
+//     AnonymousFunctionDef *q = new AnonymousFunctionDef;
+//     q->initialize(t->first(),this);
+//     return Array::funcPtrConstructor(FuncPtr(q));
+//   } else {
+//     FuncPtr val;
+//     if (!lookupFunction(t->first()->text(),val))
+//       throw Exception("unable to resolve " + t->first()->text() + 
+// 		      " to a function call");
+//     return Array::funcPtrConstructor(val);
+//   }
+//FIXME
 }
 
 //!
@@ -1788,7 +1775,7 @@ static bool compileJITBlock(Interpreter *interp, Tree *t) {
     t->setJITState(Tree::SUCCEEDED);
     t->setJITFunction(cg);
   } catch (Exception &e) {
-    std::cout << e.getMessageCopy() << "\r\n";
+    std::cout << e.msg() << "\r\n";
     delete cg;
     success = false;
     t->setJITState(Tree::FAILED);
@@ -1802,7 +1789,7 @@ static bool prepJITBlock(Tree *t) {
     t->JITFunction()->prep();
     success = true;
   } catch (Exception &e) {
-    std::cout << e.getMessageCopy() << "\r\n";
+    std::cout << e.msg() << "\r\n";
     success = false;
   }
   return success;
@@ -3056,7 +3043,7 @@ void Interpreter::block(Tree *t) {
 	statement(*i);
     }
   } catch (Exception &e) {
-    lasterr = e.getMessageCopy();
+    lasterr = e.msg();
     throw;
   }
 }
@@ -4360,44 +4347,6 @@ bool Interpreter::lookupFunction(QString funcName, FuncPtr& val,
 //   [x,y] = handle(arg1,arg2)
 //@]
 //!
-//Works
-ArrayVector Interpreter::FunctionPointerDispatch(Array r, Tree *args, 
-						 int narg_out) {
-  const FunctionDef** dp;
-  bool CLIFlagsave;
-  dp = (const FunctionDef**) r.getDataPointer();
-  FunctionDef* fun = (FunctionDef*) dp[0];
-  if (!fun) return ArrayVector();
-  if (!args->is(TOK_PARENS))
-    throw Exception("Expected either '()' or function arguments inside parenthesis");
-  ArrayVector m;
-  for (int p = 0; p< args->numChildren(); p++)
-    multiexpr(args->child(p),m);
-  ArrayVector n;
-  if (fun->updateCode(this)) refreshBreakpoints();
-  if (fun->scriptFlag) {
-    if (!m.isEmpty())
-      throw Exception(QString("Cannot use arguments in a call to a script."));
-    CLIFlagsave = InCLI;
-    InCLI = false;
-    pushDebug(((MFunctionDef*)fun)->fileName,
-	      ((MFunctionDef*)fun)->name);
-    try {
-      block(((MFunctionDef*)fun)->code.tree());
-    } catch (InterpreterReturnException& e) {
-    }
-    popDebug();
-    InCLI = CLIFlagsave;
-  } else {
-    CLIFlagsave = InCLI;
-    InCLI = false;
-    //HACK!
-    int narg_out = 1;
-    n = fun->evaluateFunction(this,m,narg_out);
-    InCLI = CLIFlagsave;
-  }
-  return n;
-}
 
 //!
 //@Module INDEXING Indexing Expressions
@@ -4817,9 +4766,9 @@ void Interpreter::deref(Array &r, Tree *s) {
       }
       subsindex(m);
       if (m.size() == 1)
-	r = r.getVectorSubset(m[0],this);
+	r = r.get(m[0]);
       else
-	r = r.getNDimSubset(m,this);
+	r = r.get(m);
     }
   } else if (s->is(TOK_BRACES)) {
     ArrayVector m;
@@ -4830,11 +4779,11 @@ void Interpreter::deref(Array &r, Tree *s) {
     }
     subsindex(m);
     if (m.size() == 1)
-      r = r.getVectorContents(m[0],this);
+      r = ArrayVectorFromCellArray(r.get(m[0])).front();
     else
-      r = r.getNDimContents(m,this);
+      r = ArrayVectorFromCellArray(r.get(m)).front();
   } else if (s->is('.')) {
-    r = r.get(s->first()->text());
+    r = r.get(s->first()->text()).front();
   } else if (s->is(TOK_DYN)) {
     QString field;
     try {
@@ -4843,7 +4792,7 @@ void Interpreter::deref(Array &r, Tree *s) {
     } catch (Exception &e) {
       throw Exception("dynamic field reference to structure requires a string argument");
     }
-    r = r.get(field);
+    r = r.get(field).front();
   }
   RestoreEndInfo;
 }
@@ -4853,15 +4802,6 @@ void Interpreter::deref(Array &r, Tree *s) {
    if (!ptr.valid()) {
      ArrayVector m;
      functionExpression(t,1,false,m);
-     m = handleReindexing(t,m);
-     if (m.size() >= 1)
-       return m[0];
-     else
-       return Array(DoubleArray);
-   }
-   if ((ptr->dataClass() == FM_FUNCPTR_ARRAY &&
-	ptr->isScalar()) && (t->numChildren() > 1)) {
-     ArrayVector m(FunctionPointerDispatch(*ptr,t->second(),1));
      m = handleReindexing(t,m);
      if (m.size() >= 1)
        return m[0];
@@ -4950,7 +4890,7 @@ void Interpreter::dbstepStatement(Tree *t) {
   int lines = 1;
   if (t->hasChildren()) {
     Array lval(expression(t->first()));
-    lines = lval.getContentsAsIntegerScalar();
+    lines = lval.integer();
   }
   // Get the current function
   if (cstack.size() < 1) throw Exception("cannot dbstep unless inside an M-function");
@@ -4972,7 +4912,7 @@ void Interpreter::dbtraceStatement(Tree *t) {
   int lines = 1;
   if (t->hasChildren()) {
     Array lval(expression(t->first()));
-    lines = lval.getContentsAsIntegerScalar();
+    lines = lval.integer();
   }
   // Get the current function
   if (cstack.size() < 1) throw Exception("cannot dbtrace unless inside an M-function");
@@ -4991,16 +4931,16 @@ void Interpreter::dbtraceStatement(Tree *t) {
 
 static QString EvalPrep(QString line) {
   QString buf1 = line;
-  if (buf1[buf1.size()-1] == '\n')
-    buf1.remove(buf1.end()-1);
-  if (buf1[buf1.size()-1] == '\r')
-    buf1.remove(buf1.end()-1);
+  if (buf1.endsWith('\n'))
+    buf1.chop(1);
+  if (buf1.endsWith('\r'))
+    buf1.chop(1);
   if (buf1.size() > 20)
-    buf1 = QString(buf1,0,20) + "...";
+    buf1 = buf1.left(20) + "...";
   return buf1;
 }
 
-void Interpreter::ExecuteLine(QQString txt) {
+void Interpreter::ExecuteLine(QString txt) {
   mutex.lock();
   cmd_buffer.push_back(txt);
   bufferNotEmpty.wakeAll();
@@ -5082,7 +5022,7 @@ bool NeedsMoreInput(Interpreter *eval, QString txt) {
     CodeBlock root(P.process());
     return false;
   } catch (Exception &e) {
-    if (e.getMessageCopy().substr(0,13) == "Expecting end") {
+    if (e.msg().left(13) == "Expecting end") {
       return true;
     }
   }
@@ -5111,15 +5051,14 @@ QString Interpreter::getLine(QString prompt) {
 // This is a "generic" CLI routine.  The user interface (non-debug)
 // version of this is "docli"
 void Interpreter::evalCLI() {
-  char prompt[150];
+  QString prompt;
   bool rootCLI;
 
   if ((depth == 0) || (cstack.size() == 0)) {
-    snprintf(prompt,150,"--> ");
+    prompt = "--> ";
     rootCLI = true;
   } else {
-    snprintf(prompt,150,"[%s,%d]--> ",ip_detailname.c_str(),
-	     ip_context & 0xffff);
+    prompt = QString("[%1,%2]--> ").arg(ip_detailname).arg(ip_context & 0xffff);
     rootCLI = false;
   }
   while(1) {
@@ -5133,7 +5072,6 @@ void Interpreter::evalCLI() {
       emit SetPrompt(prompt);
       if (m_diaryState) diaryMessage(prompt);
     }
-    //     qDebug() << "IP: " << QString::fromStdString(ip_detailname) << ", " << (ip_context & 0xffff) << "";
     emit ShowActiveLine();
     QString cmdset;
     QString cmdline;
@@ -5170,8 +5108,8 @@ void Interpreter::evalCLI() {
 Array Interpreter::subsindex(const Array &m) {
   if (m.isUserClass() && !stopoverload) {
     Array t(ClassUnaryOperator(m,"subsindex",this));
-    t.promoteType(FM_UINT32);
-    return Add(t,Array::uint32Constructor(1),this);
+    t.toType(DoubleArray);
+    return Add(t,Array(index_t(1)),this);
   }
   return m;
 }

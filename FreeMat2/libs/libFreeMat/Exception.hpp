@@ -20,7 +20,7 @@
 #ifndef __Exception_hpp__
 #define __Exception_hpp__
 
-#include <QVector>
+#include <QString>
 
 class Interpreter;
 
@@ -31,10 +31,10 @@ class Interpreter;
  * the exception types are not encoded using RTTI...
  */
 class Exception {
-  QString msg;
+  QString m_msg;
   bool handled;
 public:
-  Exception() : msg(""), handled(false)  {}
+  Exception() :  m_msg(""), handled(false)  {}
   /**
    * Construct an exception object with a given STL-string.
    */
@@ -53,7 +53,7 @@ public:
   /**
    * Get a copy of the message 
    */
-  QString getMessageCopy();
+  inline QString msg() {return m_msg;}
 };
 
 void printExceptionCount();

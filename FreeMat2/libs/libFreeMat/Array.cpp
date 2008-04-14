@@ -1788,6 +1788,10 @@ bool IsColonOp(const Array &x) {
   return (x.type() == StringArray) && (x.string() == ":");
 }
 
+int32 Array::integer() const {
+  return (this->asScalar().toType(Int32Scalar).constRealScalar<int32>());
+}
+
 QString Array::string() const {
   if (m_type != StringArray) throw Exception("Cannot convert array to string");
   const BasicArray<uint16> &p(constReal<uint16>());

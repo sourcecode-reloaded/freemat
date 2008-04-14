@@ -674,10 +674,6 @@ private:
    */
   Array FunctionPointer(Tree *args);
   /**
-   * Dispatch a function pointer
-   */
-  ArrayVector FunctionPointerDispatch(Array r, Tree *args, int narg_out);
-  /**
    * Set the context of the interpreter.  This is an integer that indicates
    * where in the source file we are.
    */
@@ -720,7 +716,7 @@ private:
   /**
    * Evaluate the expression into a variable-array
    */
-  void multiexpr(Tree *t, ArrayVector& m, int lhsCount = 1);
+  void multiexpr(Tree *t, ArrayVector& m, index_t lhsCount = 1);
 
   /**
    * Evaluate a unit colon expression.  The AST input should look like:
