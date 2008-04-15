@@ -1268,6 +1268,53 @@ inline Array DoBoolTwoArgFunction(Array A, Array B, vvfun exec, std::string opna
 //@@Tests
 //@$"y=zeros(3,0,4)+zeros(3,0,4)","zeros(3,0,4)","exact"
 //!
+
+//
+// Consider the operation of addition.
+//   Can we map: a + b?
+// Suppose we rank the classes as:
+//
+//  logical string double single int64 uint64 int32 uint32 int16 uint16 int8 uint8
+//
+Array PlusVectorInteger(const Array &Ain, const Array &Bin) {
+  if (Ain.type() != Bin.type())
+    throw Exception("Cannot combine integer arrays of mismatched types");
+  Type out_type(Ain.type());
+  Array A(Ain.toType(DoubleArray));
+  Array B(Bin.toType(DoubleArray));
+  Array C(DoubleArray,Ain.dimensions());
+  const BasicArray<double> &Areal(A.constReal<double>());
+  const BasicArray<double> &Breal(B.constReal<double>());
+  BasicArray<double> &Creal(C.real<double>());
+  for (index_t i=1;i<=A.length();i++)
+    Creal.set(i,Areal.get(i) + Breal.get(i));
+  if (!Adouble.allReal() && !Bdouble.allReal()) {
+    BasicArray<double> &Cimag(C.imag<double>());
+    const BasicArray<double> &Aimag(A.constImag<double>());
+    const BasicArray<double> &Bimag(B.constImag<double>());
+    for (index_t i=1;i<=A.length();i++)
+      Cimag.set(i,A.imag.get(i) + Breal.get(i));
+  } else if (Adouble.allReal()) {
+    C.imag<double>() = B.constImag<double>();
+  } else if (Bdouble.allReal()) {
+    C.imag<double>() = A.constImag<double>();
+  }
+  return C.toType(out_type);
+}
+
+Array PlusVectorScalar(const Array &Ain, const Array &Bin) {
+  if (!((Ain.type() == Bin.type()) || Bin.isDoubleScalar()))
+    throw Exception("Cannot combine integer arrays with non-double precision scalars"); 
+  Type out_type(Ain.type());
+  Array A(Ain.toType(DoubleArray));
+  
+}
+
+ArrayVector Plus(int nargout, const ArrayVector& A) {
+  
+  
+}
+
 Array Add(Array A, Array B, Interpreter* m_eval) { 
   // Process the two arguments through the type check and dimension checks...
   VectorCheck(A,B,false,"+");
