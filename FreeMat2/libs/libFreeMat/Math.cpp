@@ -1276,6 +1276,281 @@ inline Array DoBoolTwoArgFunction(Array A, Array B, vvfun exec, std::string opna
 //
 //  logical string double single int64 uint64 int32 uint32 int16 uint16 int8 uint8
 //
+
+
+// For each operator, we need six versions:
+// op_real(vec,scalar)
+// op_real(scalar,vec)
+// op_real(vec,vec)
+// op_complex(vec,scalar)
+// op_complex(scalar,vec)
+// op_complex(vec,vec)
+
+struct Add {
+  template <typename T>
+  static inline T func(const T& v1, const T& v2) {
+    return v1+v2;
+  }
+  static inline void func(const T& ar, const T& ai,
+			  const T& br, const T& bi,
+			  T& cr, T& ci) {
+    cr = ar + br;
+    ci = ai + bi;
+  }
+};
+
+struct Subtract {
+  template <typename T>
+  static inline T func(const T& v1, const T& v2) {
+    return v1-v2;
+  }
+  static inline void func(const T& ar, const T& ai,
+			  const T& br, const T& bi,
+			  T& cr, T& ci) {
+    cr = ar - br;
+    ci = ai - bi;
+  }
+};
+
+
+
+typedef <typename T, typename C>
+BasicArray<T> DotOp(const BasicArray<T> &A, const T& B) {
+  BasicArray<T> retvec(A.dimensions());
+  for (index_t i=1;i<=A.length();++i)
+    retvec.set(i,C::func(A.get(i),B));
+  return retvec;
+}
+
+typedef <typename T, typename C>
+BasicArray<T> DotOp(const T& A, const BasicArray<T>& B) {
+  BasicArray<T> retvec(B.dimensions());
+  for (index_t i=1;i<=B.length();++i)
+    retvec.set(i,C::func(A,B.get(i)));
+  return retvec;  
+}
+
+typedef <typename T, typename C>
+BasicArray<T> DotOp(const BasicArray<T> &A,
+		    const BasicArray<T> &B) {
+  if (A.dimensions() != B.dimensions())
+    throw Exception("Mismatched argument sizes to plus operator");
+  BasicArray<T> retvec(A.dimensions());
+  for (index_t i=1;i<=A.length();++i)
+    retvec.set(i,C::func(A.get(i),B.get(i)));
+  return retvec;
+}
+
+typedef <typename T, typename C>
+void DotOp(const BasicArray<T> &a_real,
+	   const BasicArray<T> &a_imag,
+	   const T& b_real, 
+	   const T& b_imag,
+	   BasicArray<T> &c_real,
+	   BasicArray<T> &c_imag) {
+  if (a_real.dimensions() != a_imag.dimensions())
+    throw Exception("Mismatch in size of real and imaginary part!");
+  c_real = BasicArray<T>(a_real.dimensions());
+  c_imag = BasicArray<T>(a_imag.dimensions());
+  for (index_t i=1;i<=a_real.length();++i) {
+    T real, imag;
+    C::func(a_real.get(i),a_imag.get(i),
+	    b_real,b_imag,real,imag);
+    c_real.set(i,real);
+    c_imag.set(i,imag);
+  }
+}
+
+typedef <typename T, typename C>
+void DotOp(const T& a_real, 
+	   const T& a_imag,
+	   const BasicArray<T> &b_real,
+	   const BasicArray<T> &b_imag,
+	   BasicArray<T> &c_real,
+	   BasicArray<T> &c_imag) {
+  if (b_real.dimensions() != b_imag.dimensions())
+    throw Exception("Mismatch in size of real and imaginary part!");
+  c_real = BasicArray<T>(b_real.dimensions());
+  c_imag = BasicArray<T>(b_imag.dimensions());
+  for (index_t i=1;i<=b_real.length();++i) {
+    T real, imag;
+    C::func(a_real,a_imag,b_real.get(i),b_imag.get(i),
+	    real,imag);
+    c_real.set(i,real);
+    c_imag.set(i,imag);
+  }  
+}
+
+typedef <typename T, typename C>
+void DotOp(const BasicArray<T> &a_real,
+	   const BasicArray<T> &a_imag,
+	   const BasicArray<T> &b_real,
+	   const BasicArray<T> &b_imag,
+	   BasicArray<T> &c_real,
+	   BasicArray<T> &c_imag) {
+  if ((a_real.dimensions() != b_real.dimensions()) ||
+      (a_imag.dimensions() != b_imag.dimensions()) ||
+      (a_real.dimensions() != a_imag.dimensions()))
+    throw Exception("Mismatch in size arguments to binary operator");
+  c_real = BasicArray<T>(b_real.dimensions());
+  c_imag = BasicArray<T>(b_imag.dimensions());
+  for (index_t i=1;i<=a_real.length();++i) {
+    T real, imag;
+    C::func(a_real.get(i),a_imag.get(i),b_real.get(i),b_imag.get(i),
+	    real,imag);
+    c_real.set(i,real);
+    c_real.set(i,imag);
+  }
+}
+
+
+typedef <typename T, typename C>
+BasicArray<T> Plus(const BasicArray<T> &A, T B) {
+  BasicArray<T> retvec(A.dimensions());
+  for (index_t i=1;i<=A.length();i++)
+    retvec.set(i,A.get(i)+B);
+  return retvec;
+}
+
+typedef <typename T>
+BasicArray<T> Plus(T A, const BasicArray<T> &B) {
+  BasicArray<T> retvec(B.dimensions());
+  for (index_t i=1;i<=B.length();i++)
+    retvec.set(i,A+B.get(i));
+  return retvec;
+}
+
+typedef <typename T>
+BasicArray<T> Plus(const BasicArray<T> &A, const BasicArray<T> &B) {
+  if (A.dimensions() != B.dimensions())
+    throw Exception("Mismatched argument sizes to plus operator");
+  BasicArray<T> retvec(A.dimensions());
+  for (index_t i=1;i<=B.length();i++)
+    retvec.set(i,A.get(i)+B.get(i));
+  return retvec;
+}
+
+typedef <typename T>
+void Plus(const BasicArray<T> &A, T B) {
+  BasicArray<T> retvec(A.dimensions());
+  for (index_t i=1;i<=A.length();i++)
+    retvec.set(i,A.get(i)+B);
+  return retvec;
+}
+
+typedef <typename T>
+BasicArray<T> Plus(T A, const BasicArray<T> &B) {
+  BasicArray<T> retvec(B.dimensions());
+  for (index_t i=1;i<=B.length();i++)
+    retvec.set(i,A+B.get(i));
+  return retvec;
+}
+
+typedef <typename T>
+BasicArray<T> Plus(const BasicArray<T> &A, const BasicArray<T> &B) {
+  if (A.dimensions() != B.dimensions())
+    throw Exception("Mismatched argument sizes to plus operator");
+  BasicArray<T> retvec(A.dimensions());
+  for (index_t i=1;i<=B.length();i++)
+    retvec.set(i,A.get(i)+B.get(i));
+  return retvec;
+}
+
+
+
+
+
+typedef <typename T>
+BasicArray<T> Subtract(const BasicArray<T> &A, T B) {
+  BasicArray<T> retvec(A.dimensions());
+  for (index_t i=1;i<=A.length();i++)
+    retvec.set(i,A.get(i)-B);
+  return retvec;
+}
+
+typedef <typename T>
+BasicArray<T> Subtract(T A, const BasicArray<T> &B) {
+  BasicArray<T> retvec(B.dimensions());
+  for (index_t i=1;i<=B.length();i++)
+    retvec.set(i,A-B.get(i));
+  return retvec;
+}
+
+typedef <typename T>
+BasicArray<T> Subtract(const BasicArray<T> &A, const BasicArray<T> &B) {
+  if (A.dimensions() != B.dimensions())
+    throw Exception("Mismatched argument sizes to plus operator");
+  BasicArray<T> retvec(A.dimensions());
+  for (index_t i=1;i<=B.length();i++)
+    retvec.set(i,A.get(i)-B.get(i));
+  return retvec;
+}
+
+typedef <typename T>
+BasicArray<T> DotTimes(const BasicArray<T> &A, T B) {
+  BasicArray<T> retvec(A.dimensions());
+  for (index_t i=1;i<=A.length();i++)
+    retvec.set(i,A.get(i)*B);
+  return retvec;
+}
+
+typedef <typename T>
+BasicArray<T> DotTimes(T A, const BasicArray<T> &B) {
+  BasicArray<T> retvec(B.dimensions());
+  for (index_t i=1;i<=B.length();i++)
+    retvec.set(i,A*B.get(i));
+  return retvec;
+}
+
+typedef <typename T>
+BasicArray<T> DotDivide(const BasicArray<T> &A, const BasicArray<T> &B) {
+  if (A.dimensions() != B.dimensions())
+    throw Exception("Mismatched argument sizes to plus operator");
+  BasicArray<T> retvec(A.dimensions());
+  for (index_t i=1;i<=B.length();i++)
+    retvec.set(i,A.get(i)*B.get(i));
+  return retvec;
+}
+
+typedef <typename T>
+BasicArray<T> DotDivide(const BasicArray<T> &A, T B) {
+  BasicArray<T> retvec(A.dimensions());
+  for (index_t i=1;i<=A.length();i++)
+    retvec.set(i,A.get(i)*B);
+  return retvec;
+}
+
+typedef <typename T>
+BasicArray<T> DotDivide(T A, const BasicArray<T> &B) {
+  BasicArray<T> retvec(B.dimensions());
+  for (index_t i=1;i<=B.length();i++)
+    retvec.set(i,A*B.get(i));
+  return retvec;
+}
+
+typedef <typename T>
+BasicArray<T> DotTimes(const BasicArray<T> &A, const BasicArray<T> &B) {
+  if (A.dimensions() != B.dimensions())
+    throw Exception("Mismatched argument sizes to plus operator");
+  BasicArray<T> retvec(A.dimensions());
+  for (index_t i=1;i<=B.length();i++)
+    retvec.set(i,A.get(i)*B.get(i));
+  return retvec;
+}
+
+
+
+void DotDivide(const BasicArray<T>& a_real,
+	       const BasicArray<T>& a_imag,
+	       const BasicArray<T>& b_real,
+	       const BasicArray<T>& b_imag,
+	       BasicArray<T>& c_real,
+	       BasicArray<T>& c_imag) {
+  
+}
+
+
+
 Array PlusVectorInteger(const Array &Ain, const Array &Bin) {
   if (Ain.type() != Bin.type())
     throw Exception("Cannot combine integer arrays of mismatched types");
@@ -1310,10 +1585,12 @@ Array PlusVectorScalar(const Array &Ain, const Array &Bin) {
   
 }
 
+
 ArrayVector Plus(int nargout, const ArrayVector& A) {
   
-  
 }
+
+
 
 Array Add(Array A, Array B, Interpreter* m_eval) { 
   // Process the two arguments through the type check and dimension checks...
