@@ -66,312 +66,75 @@ void neg(int N, T* C, const T*A) {
 }
 
 
-template <class T>
-void addfullreal(int N, T*C, const T*A, int stride1, 
-		 const T*B, int stride2) {
-  int m, p;
-  m = 0; p = 0;
-  for (int i=0;i<N;i++) {
-    C[i] = A[m] + B[p];
-    m += stride1;
-    p += stride2;
+template <typename T>
+static inline T powi(T a, int b) {
+  T p, x;
+  int n;
+  unsigned long u;
+    
+  p = 1;
+  x = a;
+  n = b;
+  
+  if(n != 0) {
+    if(n < 0) {
+      n = -n;
+      x = 1/x;
+    }
+    for(u = n; ; )  {
+      if(u & 01)
+	p *= x;
+      if(u >>= 1)
+	x *= x;
+      else
+	break;
+    }
   }
-}
+  return(p);
+}  
 
-template <class T>
-void addfullcomplex(int N, T*C, const T*A, int stride1, 
-		    const T*B, int stride2) {
-  int m, p;
-  m = 0; p = 0;
-  for (int i=0;i<N;i++) {
-    C[2*i] = A[2*m] + B[2*p];
-    C[2*i+1] = A[2*m+1] + B[2*p+1];
-    m += stride1;
-    p += stride2;
-  }
-}
-
-template <class T>
-void subtractfullreal(int N, T*C, const T*A, int stride1, 
-		      const T*B, int stride2) {
-  int m, p;
-  m = 0; p = 0;
-  for (int i=0;i<N;i++) {
-    C[i] = A[m] - B[p];
-    m += stride1;
-    p += stride2;
-  }
-}
-
-template <class T>
-void subtractfullcomplex(int N, T*C, const T*A, int stride1, 
-			 const T*B, int stride2) {
-  int m, p;
-  m = 0; p = 0;
-  for (int i=0;i<N;i++) {
-    C[2*i] = A[2*m] - B[2*p];
-    C[2*i+1] = A[2*m+1] - B[2*p+1];
-    m += stride1;
-    p += stride2;
-  }
-}
-
-
-template <class T>
-void multiplyfullreal(int N, T*C, const T*A, int stride1, 
-		      const T*B, int stride2) {
-  int m, p;
-  m = 0; p = 0;
-  for (int i=0;i<N;i++) {
-    C[i] = A[m] * B[p];
-    m += stride1;
-    p += stride2;
-  }
-}
-
-template <class T>
-void multiplyfullcomplex(int N, T*C, const T*A, int stride1, 
-			 const T*B, int stride2) {
-  int m, p;
-  m = 0; p = 0;
-  for (int i=0;i<N;i++) {
-    C[2*i] = A[2*m] * B[2*p] - A[2*m+1] * B[2*p+1];
-    C[2*i+1] = A[2*m] * B[2*p+1] + A[2*m+1] * B[2*p];
-    m += stride1;
-    p += stride2;
-  }
-}
-
-
-template <class T>
-void dividefullreal(int N, T*C, const T*A, int stride1, 
-		    const T*B, int stride2) {
-  int m, p;
-  m = 0; p = 0;
-  for (int i=0;i<N;i++) {
-    C[i] = A[m] / B[p];
-    m += stride1;
-    p += stride2;
-  }
-}
-
-template <class T>
-void complex_divide(T* c, const T* a, const T* b) {
+template <typename T>
+static inline void complex_divide(const T& ar, const T& ai,
+				  const T& br, const T& bi,
+				  T& cr, T& ci) {
   double ratio, den;
   double abr, abi, cr;
-    
-  if( (abr = b[0]) < 0.)
+  
+  if( (abr = br) < 0.)
     abr = - abr;
-  if( (abi = b[1]) < 0.)
+  if( (abi = bi) < 0.)
     abi = - abi;
   if( abr <= abi )
     {
       if(abi == 0) {
-	if (a[1] != 0 || a[0] != 0)
+	if (ai != 0 || ar != 0)
 	  abi = 1.;
-	c[1] = c[0] = abi / abr;
+	c1 = c0 = abi / abr;
 	return;
       }
-      ratio = b[0] / b[1] ;
-      den = b[1] * (1 + ratio*ratio);
-      cr = (a[0]*ratio + a[1]) / den;
-      c[1] = (a[1]*ratio - a[0]) / den;
+      ratio = br / bi ;
+      den = bi * (1 + ratio*ratio);
+      cr = (ar*ratio + ai) / den;
+      c1 = (ai*ratio - ar) / den;
     }
   else
     {
-      ratio = b[1] / b[0] ;
-      den = b[0] * (1 + ratio*ratio);
-      cr = (a[0] + a[1]*ratio) / den;
-      c[1] = (a[1] - a[0]*ratio) / den;
+      ratio = bi / br ;
+      den = br * (1 + ratio*ratio);
+      cr = (ar + ai*ratio) / den;
+      c1 = (ai - ar*ratio) / den;
     }
-  c[0] = cr;
+  c0 = cr;
 }
 
-template <class T>
-void dividefullcomplex(int N, T*C, const T*A, int stride1, const T*B, 
-		       int stride2) {
-  int m, p;
-  m = 0; p = 0;
-  for (int i=0;i<N;i++) {
-    complex_divide<T>(C+2*i,A+2*m,B+2*p);
-    m += stride1;
-    p += stride2;
-  }
-}
-  
-template <class T>
-void lessthanfuncreal(int N, logical* C, const T*A, int stride1, const T*B, 
-		      int stride2) {
-  int m, p;
-  m = 0; p = 0;
-  for (int i=0;i<N;i++) {
-    C[i] = (A[m] < B[p]) ? 1 : 0;
-    m += stride1;
-    p += stride2;
-  }
-}
-
-
-
-template <class T>
-void lessthanfunccomplex(int N, logical* C, const T*A, int stride1, 
-			 const T*B, int stride2) {
-  int m, p;
-  m = 0; p = 0;
-  for (int i=0;i<N;i++) {
-    C[i] = (complex_abs<T>(A[2*m],A[2*m+1]) < 
-	    complex_abs<T>(B[2*p],B[2*p+1])) ? 1 : 0;
-    m += stride1;
-    p += stride2;
-  }
-}
-
-template <class T>
-void lessequalsfuncreal(int N, logical* C, const T*A, int stride1, const T*B, 
-			int stride2) {
-  int m, p;
-  m = 0; p = 0;
-  for (int i=0;i<N;i++) {
-    C[i] = (A[m] <= B[p]) ? 1 : 0;
-    m += stride1;
-    p += stride2;
-  }
-}
-
-template <class T>
-void lessequalsfunccomplex(int N, logical* C, const T*A, int stride1, 
-			   const T*B, int stride2) {
-  int m, p;
-  m = 0; p = 0;
-  for (int i=0;i<N;i++) {
-    C[i] = (complex_abs<T>(A[2*m],A[2*m+1]) <= 
-	    complex_abs<T>(B[2*p],B[2*p+1])) ? 1 : 0;
-    m += stride1;
-    p += stride2;
-  }
-}
-
-template <class T>
-void equalsfuncreal(int N, logical* C, const T*A, int stride1, const T*B, 
-		    int stride2) {
-  int m, p;
-  m = 0; p = 0;
-  for (int i=0;i<N;i++) {
-    C[i] = (A[m] == B[p]) ? 1 : 0;
-    m += stride1;
-    p += stride2;
-  }
-}
-
-template <class T>
-void equalsfunccomplex(int N, logical* C, const T*A, int stride1, 
-		       const T*B, int stride2) {
-  int m, p;
-  m = 0; p = 0;
-  for (int i=0;i<N;i++) {
-    C[i] = ((A[2*m] == B[2*p]) && 
-	    (A[2*m+1] == B[2*p+1])) ? 1 : 0;
-    m += stride1;
-    p += stride2;
-  }
-}
-
-template <class T>
-void notequalsfuncreal(int N, logical* C, const T*A, int stride1, const T*B, 
-		       int stride2) {
-  int m, p;
-  m = 0; p = 0;
-  for (int i=0;i<N;i++) {
-    C[i] = (A[m] != B[p]) ? 1 : 0;
-    m += stride1;
-    p += stride2;
-  }
-}
-
-template <class T>
-void notequalsfunccomplex(int N, logical* C, const T*A, int stride1, 
-			  const T*B, int stride2) {
-  int m, p;
-  m = 0; p = 0;
-  for (int i=0;i<N;i++) {
-    C[i] = ((A[2*m] != B[2*p]) ||
-	    (A[2*m+1] != B[2*p+1])) ? 1 : 0;
-    m += stride1;
-    p += stride2;
-  }
-}
-
-template <class T>
-void greaterthanfuncreal(int N, logical* C, const T*A, int stride1, const T*B, 
-			 int stride2) {
-  int m, p;
-  m = 0; p = 0;
-  for (int i=0;i<N;i++) {
-    C[i] = (A[m] > B[p]) ? 1 : 0;
-    m += stride1;
-    p += stride2;
-  }
-}
-
-template <class T>
-void greaterthanfunccomplex(int N, logical* C, const T*A, int stride1, 
-			    const T*B, int stride2) {
-  int m, p;
-  m = 0; p = 0;
-  for (int i=0;i<N;i++) {
-    C[i] = (complex_abs<T>(A[2*m],A[2*m+1]) >
-	    complex_abs<T>(B[2*p],B[2*p+1])) ? 1 : 0;
-    m += stride1;
-    p += stride2;
-  }
-}
-
-template <class T>
-void greaterequalsfuncreal(int N, logical* C, const T*A, int stride1, 
-			   const T*B, int stride2) {
-  int m, p;
-  m = 0; p = 0;
-  for (int i=0;i<N;i++) {
-    C[i] = (A[m] >= B[p]) ? 1 : 0;
-    m += stride1;
-    p += stride2;
-  }
-}
-
-template <class T>
-void greaterequalsfunccomplex(int N, logical* C, const T*A, int stride1, 
-			      const T*B, int stride2) {
-  int m, p;
-  m = 0; p = 0;
-  for (int i=0;i<N;i++) {
-    C[i] = (complex_abs<T>(A[2*m],A[2*m+1]) >= 
-	    complex_abs<T>(B[2*p],B[2*p+1])) ? 1 : 0;
-    m += stride1;
-    p += stride2;
-  }
-}
-
-/**
- * These are the power functions...
- */
-// cicPower --> pow_zi
-// cfcPower --> pow_zz
-// zdzPower --> pow_zz
-// cccPower --> pow_zz
-// zzzPower --> pow_zz
-// zizPower --> pow_zi
-// didPower --> pow_di
-// dddPower --> pow_dd
-// fifPower --> pow_ri
-// fffPower --> pow_dd
-
-void power_zi(double *p, const double *a, int b) 	/* p = a**b  */
-{
+template <typename T>
+static inline void powi(const T& ar, const T& ai, int b,
+			T& pr, T& pi) {
   int n;
   unsigned long u;
-  double t;
-  double q[2], x[2];
-  static double one[2] = {1.0, 0.0};
+  T t;
+  T q[2], x[2];
+  static T one[2] = {1.0, 0.0};
   n = b;
   q[0] = 1;
   q[1] = 0;
@@ -381,12 +144,12 @@ void power_zi(double *p, const double *a, int b) 	/* p = a**b  */
   if(n < 0)
     {
       n = -n;
-      complex_divide<double>(x,one,a);
+      complex_divide<T>(x[0],x[1],one[0],one[1],ar,ai);
     }
   else
     {
-      x[0] = a[0];
-      x[1] = a[1];
+      x[0] = ar;
+      x[1] = ai;
     }
   for(u = n; ; )
     {
@@ -406,255 +169,31 @@ void power_zi(double *p, const double *a, int b) 	/* p = a**b  */
 	break;
     }
  done:
-  p[1] = q[1];
-  p[0] = q[0];
+  pi = q[1];
+  pr = q[0];
 }
 
-void power_zz(double *c, const double *a, const double *b) 
-{
-  double logr, logi, x, y;
-  double mag = complex_abs<double>(a[0], a[1]);
-  if (mag == 0) {
-    c[0] = 0;
-    c[1] = 0;
-    return;
-  }
-  logr = log(mag);
-  logi = atan2(a[1], a[0]);
-    
-  x = exp( logr * b[0] - logi * b[1] );
-  y = logr * b[1] + logi * b[0];
-    
-  c[0] = x * cos(y);
-  c[1] = x * sin(y);
-}
-
-double power_di(double a, int b) {
-  double pow, x;
-  int n;
-  unsigned long u;
-    
-  pow = 1;
-  x = a;
-  n = b;
-
-  if(n != 0)
-    {
-      if(n < 0)
-	{
-	  n = -n;
-	  x = 1/x;
-	}
-      for(u = n; ; )
-	{
-	  if(u & 01)
-	    pow *= x;
-	  if(u >>= 1)
-	    x *= x;
-	  else
-	    break;
-	}
+template <typename T>
+static inline void pow(const T& ar, const T& ai,
+		       const T& br, const T& bi,
+		       T& cr, T& ci) {
+    T logr, logi, x, y;
+    T mag = complex_abs<T>(ar, ai);
+    if (mag == 0) {
+      cr = 0;
+      ci = 0;
+      return;
     }
-  return(pow);
-}  
-
-double power_dd(double a, double b) {
-  return pow(a,b);
-}
-  
-  
-void cicpower(int n, float *c, float *a, int stride1, int *b, 
-	      int stride2) {
-  int m, p;
-  double z1[2];
-  double z3[2];
-  m = 0;
-  p = 0;
-  for (int i=0;i<n;i++) {
-    z1[0] = a[2*m];
-    z1[1] = a[2*m+1];
-    power_zi(z3,z1,b[p]);
-    c[2*i] = z3[0];
-    c[2*i+1] = z3[1];
-    m += stride1;
-    p += stride2;
+    logr = log(mag);
+    logi = atan2(ai, ar);
+    
+    x = exp( logr * br - logi * bi );
+    y = logr * bi + logi * br;
+    
+    cr = x * cos(y);
+    ci = x * sin(y);
   }
 }
-  
-void cfcpower(int n, float *c, float *a, int stride1, float *b, 
-	      int stride2) {
-  int m, p;
-  double z1[2];
-  double z2[2];
-  double z3[2];
-  m = 0;
-  p = 0;
-  for (int i=0;i<n;i++) {
-    z1[0] = a[2*m];
-    z1[1] = a[2*m+1];
-    z2[0] = b[p];
-    z2[1] = 0;
-    power_zz(z3,z1,z2);
-    c[2*i] = z3[0];
-    c[2*i+1] = z3[1];
-    m += stride1;
-    p += stride2;
-  }
-} 
-  
-void zdzpower(int n, double *c, double *a, int stride1, 
-	      double *b, int stride2) { 
-  int m, p;
-  double z1[2];
-  double z2[2];
-  double z3[2];
-  m = 0;
-  p = 0;
-  for (int i=0;i<n;i++) {
-    z1[0] = a[2*m];
-    z1[1] = a[2*m+1];
-    z2[0] = b[p];
-    z2[1] = 0;
-    power_zz(z3,z1,z2);
-    c[2*i] = z3[0];
-    c[2*i+1] = z3[1];
-    m += stride1;
-    p += stride2;
-  }
-}
-  
-void cccpower(int n, float *c, float *a, int stride1, float *b, 
-	      int stride2) {
-  int m, p;
-  double z1[2];
-  double z2[2];
-  double z3[2];
-  m = 0;
-  p = 0;
-  for (int i=0;i<n;i++) {
-    z1[0] = a[2*m];
-    z1[1] = a[2*m+1];
-    z2[0] = b[2*p];
-    z2[1] = b[2*p+1];
-    power_zz(z3,z1,z2);
-    c[2*i] = z3[0];
-    c[2*i+1] = z3[1];
-    m += stride1;
-    p += stride2;
-  }
-}
-  
-void zzzpower(int n, double *c, double *a, int stride1, double *b, 
-	      int stride2) {
-  int m, p;
-  double z1[2];
-  double z2[2];
-  double z3[2];
-  m = 0;
-  p = 0;
-  for (int i=0;i<n;i++) {
-    z1[0] = a[2*m];
-    z1[1] = a[2*m+1];
-    z2[0] = b[2*p];
-    z2[1] = b[2*p+1];
-    power_zz(z3,z1,z2);
-    c[2*i] = z3[0];
-    c[2*i+1] = z3[1];
-    m += stride1;
-    p += stride2;
-  }
-}
-
-void zizpower(int n, double *c, double *a, int stride1, int *b,
-	      int stride2) {
-  int m, p;
-  double z1[2];
-  double z3[2];
-  m = 0;
-  p = 0;
-  for (int i=0;i<n;i++) {
-    z1[0] = a[2*m];
-    z1[1] = a[2*m+1];
-    power_zi(z3,z1,b[p]);
-    c[2*i] = z3[0];
-    c[2*i+1] = z3[1];
-    m += stride1;
-    p += stride2;
-  }
-}
-
-void didpower(int n, double *c, double *a, int stride1, int *b,
-	      int stride2) {
-  int m, p;
-  m = 0;
-  p = 0;
-  for (int i=0;i<n;i++) {
-    c[i] = power_di(a[m],b[p]);
-    m += stride1;
-    p += stride2;
-  }
-}
-
-void dddpower(int n, double *c, double *a, int stride1, double *b,
-	      int stride2) {
-  int m, p;
-  m = 0;
-  p = 0;
-  for (int i=0;i<n;i++) {
-    c[i] = power_dd(a[m],b[p]);
-    m += stride1;
-    p += stride2;
-  }
-}
-
-void fifpower(int n, float *c, float *a, int stride1, int *b,
-	      int stride2) {
-  int m, p;
-  m = 0;
-  p = 0;
-  for (int i=0;i<n;i++) {
-    c[i] = power_di(a[m],b[p]);
-    m += stride1;
-    p += stride2;
-  }
-}
-
-void fffpower(int n, float *c, float *a, int stride1, float *b,
-	      int stride2) {
-  int m, p;
-  m = 0;
-  p = 0;
-  for (int i=0;i<n;i++) {
-    c[i] = power_dd(a[m],b[p]);
-    m += stride1;
-    p += stride2;
-  }
-}
-
-/**
- * This is the generic function interface into calculations
- * that can be performed on some type.
- */
-typedef void (*vvfun) (const int length, 
-		       void* result,
-		       const void* arg1,
-		       const int stride1,
-		       const void* arg2,
-		       const int stride2);
-
-/**
- * This structure holds pointers to functions when
- * all types can be handled.
- */
-
-typedef struct {
-  bool  promoteInt32ToDouble;
-  vvfun int32func;
-  vvfun floatfunc;
-  vvfun doublefunc;
-  vvfun complexfunc;
-  vvfun dcomplexfunc;
-} packVectorVector;
 
 /**
  * Check that both of the argument objects are numeric.
@@ -1312,7 +851,114 @@ struct Subtract {
   }
 };
 
+struct Multiply {
+  template <typename T>
+  static inline T func(const T& v1, const T& v2) {
+    return v1*v2;
+  }
+  static inline void func(const T& ar, const T& ai,
+			  const T& br, const T& bi,
+			  T& cr, T& ci) {
+    cr = ar * br - ai * bi;
+    ci = ar * bi + ai * br;
+  }
+};
 
+struct Divide {
+  template <typename T>
+  static inline T func(const T& v1, const T& v2) {
+    return v1/v2;
+  }
+  static inline void func(const T& ar, const T& ai,
+			  const T& br, const T& bi,
+			  T& c0, T& c1) {
+    complex_divide<T>(ar,ai,br,bi,c0,c1);
+  }
+};
+
+struct LessThan {
+  template <typename T>
+  static inline bool func(const T& v1, const T& v2) {
+    return v1 < v2;
+  }
+  static inline bool func(const T& ar, const T& ai,
+			  const T& br, const T& bi) {
+    return complex_abs<T>(ar,ai) < complex_abs<T>(br,bi);
+  }
+};
+
+struct LessEquals {
+  template <typename T>
+  static inline bool func(const T& v1, const T& v2) {
+    return v1 <= v2;
+  }
+  static inline bool func(const T& ar, const T& ai,
+			  const T& br, const T& bi) {
+    return complex_abs<T>(ar,ai) <= complex_abs<T>(br,bi);
+  }
+};
+
+struct Equals {
+  template <typename T>
+  static inline bool func(const T& v1, const T& v2) {
+    return v1 == v2;
+  }
+  static inline bool func(const T& ar, const T& ai,
+			  const T& br, const T& bi) {
+    return ((ar == br) && (ai == bi));
+  }
+};
+
+struct NotEquals {
+  template <typename T>
+  static inline bool func(const T& v1, const T& v2) {
+    return v1 != v2;
+  }
+  static inline bool func(const T& ar, const T& ai,
+			  const T& br, const T& bi) {
+    return ((ar != br) || (ai != bi));
+  }
+};
+
+struct GreaterThan {
+  template <typename T>
+  static inline bool func(const T& v1, const T& v2) {
+    return v1 > v2;
+  }
+  static inline bool func(const T& ar, const T& ai,
+			  const T& br, const T& bi) {
+    return complex_abs<T>(ar,ai) > complex_abs<T>(br,bi);
+  }
+};
+
+struct GreaterEquals {
+  template <typename T>
+  static inline bool func(const T& v1, const T& v2) {
+    return v1 >= v2;
+  }
+  static inline bool func(const T& ar, const T& ai,
+			  const T& br, const T& bi) {
+    return complex_abs<T>(ar,ai) >= complex_abs<T>(br,bi);
+  }
+};
+
+struct Power {
+  template <typename T>
+  static inline T func(const T& v1, const T& v2) {
+    if (v2 == int(v2))
+      return powi(v1,int(v2));
+    else
+      return pow(v1,v2);
+  }
+  static inline void func(const T& ar, const T& ai,
+			  const T& br, const T& bi,
+			  T& cr, T& ci) {
+    if ((br == int(br)) && (bi == 0))
+      powi(ar,ai,int(br),cr,ci);
+    else
+      pow(ar,ai,br,bi,cr,ci);
+  }
+};
 
 typedef <typename T, typename C>
 BasicArray<T> DotOp(const BasicArray<T> &A, const T& B) {
@@ -1402,153 +1048,6 @@ void DotOp(const BasicArray<T> &a_real,
     c_real.set(i,imag);
   }
 }
-
-
-typedef <typename T, typename C>
-BasicArray<T> Plus(const BasicArray<T> &A, T B) {
-  BasicArray<T> retvec(A.dimensions());
-  for (index_t i=1;i<=A.length();i++)
-    retvec.set(i,A.get(i)+B);
-  return retvec;
-}
-
-typedef <typename T>
-BasicArray<T> Plus(T A, const BasicArray<T> &B) {
-  BasicArray<T> retvec(B.dimensions());
-  for (index_t i=1;i<=B.length();i++)
-    retvec.set(i,A+B.get(i));
-  return retvec;
-}
-
-typedef <typename T>
-BasicArray<T> Plus(const BasicArray<T> &A, const BasicArray<T> &B) {
-  if (A.dimensions() != B.dimensions())
-    throw Exception("Mismatched argument sizes to plus operator");
-  BasicArray<T> retvec(A.dimensions());
-  for (index_t i=1;i<=B.length();i++)
-    retvec.set(i,A.get(i)+B.get(i));
-  return retvec;
-}
-
-typedef <typename T>
-void Plus(const BasicArray<T> &A, T B) {
-  BasicArray<T> retvec(A.dimensions());
-  for (index_t i=1;i<=A.length();i++)
-    retvec.set(i,A.get(i)+B);
-  return retvec;
-}
-
-typedef <typename T>
-BasicArray<T> Plus(T A, const BasicArray<T> &B) {
-  BasicArray<T> retvec(B.dimensions());
-  for (index_t i=1;i<=B.length();i++)
-    retvec.set(i,A+B.get(i));
-  return retvec;
-}
-
-typedef <typename T>
-BasicArray<T> Plus(const BasicArray<T> &A, const BasicArray<T> &B) {
-  if (A.dimensions() != B.dimensions())
-    throw Exception("Mismatched argument sizes to plus operator");
-  BasicArray<T> retvec(A.dimensions());
-  for (index_t i=1;i<=B.length();i++)
-    retvec.set(i,A.get(i)+B.get(i));
-  return retvec;
-}
-
-
-
-
-
-typedef <typename T>
-BasicArray<T> Subtract(const BasicArray<T> &A, T B) {
-  BasicArray<T> retvec(A.dimensions());
-  for (index_t i=1;i<=A.length();i++)
-    retvec.set(i,A.get(i)-B);
-  return retvec;
-}
-
-typedef <typename T>
-BasicArray<T> Subtract(T A, const BasicArray<T> &B) {
-  BasicArray<T> retvec(B.dimensions());
-  for (index_t i=1;i<=B.length();i++)
-    retvec.set(i,A-B.get(i));
-  return retvec;
-}
-
-typedef <typename T>
-BasicArray<T> Subtract(const BasicArray<T> &A, const BasicArray<T> &B) {
-  if (A.dimensions() != B.dimensions())
-    throw Exception("Mismatched argument sizes to plus operator");
-  BasicArray<T> retvec(A.dimensions());
-  for (index_t i=1;i<=B.length();i++)
-    retvec.set(i,A.get(i)-B.get(i));
-  return retvec;
-}
-
-typedef <typename T>
-BasicArray<T> DotTimes(const BasicArray<T> &A, T B) {
-  BasicArray<T> retvec(A.dimensions());
-  for (index_t i=1;i<=A.length();i++)
-    retvec.set(i,A.get(i)*B);
-  return retvec;
-}
-
-typedef <typename T>
-BasicArray<T> DotTimes(T A, const BasicArray<T> &B) {
-  BasicArray<T> retvec(B.dimensions());
-  for (index_t i=1;i<=B.length();i++)
-    retvec.set(i,A*B.get(i));
-  return retvec;
-}
-
-typedef <typename T>
-BasicArray<T> DotDivide(const BasicArray<T> &A, const BasicArray<T> &B) {
-  if (A.dimensions() != B.dimensions())
-    throw Exception("Mismatched argument sizes to plus operator");
-  BasicArray<T> retvec(A.dimensions());
-  for (index_t i=1;i<=B.length();i++)
-    retvec.set(i,A.get(i)*B.get(i));
-  return retvec;
-}
-
-typedef <typename T>
-BasicArray<T> DotDivide(const BasicArray<T> &A, T B) {
-  BasicArray<T> retvec(A.dimensions());
-  for (index_t i=1;i<=A.length();i++)
-    retvec.set(i,A.get(i)*B);
-  return retvec;
-}
-
-typedef <typename T>
-BasicArray<T> DotDivide(T A, const BasicArray<T> &B) {
-  BasicArray<T> retvec(B.dimensions());
-  for (index_t i=1;i<=B.length();i++)
-    retvec.set(i,A*B.get(i));
-  return retvec;
-}
-
-typedef <typename T>
-BasicArray<T> DotTimes(const BasicArray<T> &A, const BasicArray<T> &B) {
-  if (A.dimensions() != B.dimensions())
-    throw Exception("Mismatched argument sizes to plus operator");
-  BasicArray<T> retvec(A.dimensions());
-  for (index_t i=1;i<=B.length();i++)
-    retvec.set(i,A.get(i)*B.get(i));
-  return retvec;
-}
-
-
-
-void DotDivide(const BasicArray<T>& a_real,
-	       const BasicArray<T>& a_imag,
-	       const BasicArray<T>& b_real,
-	       const BasicArray<T>& b_imag,
-	       BasicArray<T>& c_real,
-	       BasicArray<T>& c_imag) {
-  
-}
-
 
 
 Array PlusVectorInteger(const Array &Ain, const Array &Bin) {
