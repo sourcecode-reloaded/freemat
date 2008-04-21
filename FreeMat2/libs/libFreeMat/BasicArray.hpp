@@ -298,8 +298,22 @@ BasicArray<T> Transpose(const BasicArray<T>& arg) {
 
 template <typename T>
 bool IsPositive(const BasicArray<T>& arg) {
-  for (int i=0;i<arg.length();i++) 
+  for (index_t i=1;i<=arg.length();i++) 
+    if (arg.get(i) <= 0) return false;
+  return true;
+}
+
+template <typename T>
+bool IsNonNegative(const BasicArray<T> &arg) {
+  for (index_t i=1;i<=arg.length();i++)
     if (arg.get(i) < 0) return false;
+  return true;
+}
+
+template <typename T>
+bool IsInteger(const BasicArray<T> &arg) {
+  for (index_t i=1;i<=arg.length();++i)
+    if (IsInteger(arg.get(i))) return false;
   return true;
 }
 

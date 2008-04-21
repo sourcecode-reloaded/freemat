@@ -26,71 +26,71 @@
 /**
  * Add the two argument arrays together: $$C_n = A_n + B_n$$.
  */
-Array Add(Array A, Array B, Interpreter* m_eval);
+Array Add(const Array& A, const Array& B);
 /**
  * Subtract the second array from the first: $$C_n = A_n - B_n$$.
  */
-Array Subtract(Array A, Array B, Interpreter* m_eval);
+Array Subtract(const Array& A, const Array& B);
 /**
  * Element-wise multiply of two arrays: $$C_n = A_n B_n$$.
  */
-Array DotMultiply(Array A, Array B, Interpreter* m_eval);
+Array DotMultiply(const Array& A, const Array& B);
 /**
  * Element-wise divide of two arrays: $$C_n = \frac{A_n}{B_n}$$.
  */
-Array DotRightDivide(Array A, Array B, Interpreter* m_eval);
+Array DotRightDivide(const Array& A, const Array& B);
 /**
  * Element-wise divide of two arrays: $$C_n = \frac{B_n}{A_n}$$.
  */
-Array DotLeftDivide(Array A, Array B, Interpreter* m_eval);
+Array DotLeftDivide(const Array& A, const Array& B);
 /**
  * Element-wise compare (lt) of two arrays: $$C_n = A_n < B_n$$.
  */ 
-Array LessThan(Array A, Array B, Interpreter* m_eval);
+Array LessThan(const Array& A, const Array& B);
 /**
  * Element-wise compare (le) of two arrays: $$C_n = A_n \leq B_n$$.
  */   
-Array LessEquals(Array A, Array B, Interpreter* m_eval);
+Array LessEquals(const Array& A, const Array& B);
 /**
  * Element-wise compare (gt) of two arrays: $$C_n = A_n > B_n$$.
  */ 
-Array GreaterThan(Array A, Array B, Interpreter* m_eval);
+Array GreaterThan(const Array& A, const Array& B);
 /**
  * Element-wise compare (ge) of two arrays: $$C_n = A_n \geq B_n$$.
  */ 
-Array GreaterEquals(Array A, Array B, Interpreter* m_eval);
+Array GreaterEquals(const Array& A, const Array& B);
 /**
  * Element-wise compare (eq) of two arrays: $$C_n = A_n == B_n$$.
  */ 
-Array Equals(Array A, Array B, Interpreter* m_eval);
+Array Equals(const Array& A, const Array& B);
 /**
  * Element-wise compare (ne) of two arrays: $$C_n = A_n \neq B_n$$.
  */ 
-Array NotEquals(Array A, Array B, Interpreter* m_eval);
+Array NotEquals(const Array& A, const Array& B);
 /**
  * Element-wise or of two arrays: $$C_n = A_n \or B_n$$.
  */
-Array Or(Array A, Array B, Interpreter* m_eval);
+Array Or(const Array& A, const Array& B);
 /**
  * Element-wise and of two arrays: $$C_n = A_n \and B_n$$.
  */
-Array And(Array A, Array B, Interpreter* m_eval);
+Array And(const Array& A, const Array& B);
 /**
  * Element-wise not of argument: $$C_n = \not A_n$$.
  */
-Array Not(Array A, Interpreter* m_eval);
+Array Not(const Array& A);
 /**
  * Element-wise plus of argument: $$C_n = + A_n$$.
  */
-Array Plus(Array A, Interpreter* m_eval);
+Array Plus(const Array& A);
 /**
  * Element-wise negate of argument: $$C_n = - A_n$$.
  */
-Array Negate(Array A, Interpreter* m_eval);
+Array Negate(const Array& A);
 /**
  * Element-wise power: $$C_n = A_n ^ {B_n}$$.
  */
-Array DotPower(Array A, Array B, Interpreter* m_eval);
+Array DotPower(const Array& A, const Array& B);
 /**
  * Matrix to matrix power.  The calculation performed
  * depends on the sizes of the arguments.
@@ -109,28 +109,28 @@ Array DotPower(Array A, Array B, Interpreter* m_eval);
  *   - either of the arguments is more than 2-dimensional
  *   - any of the arguments are rectangular.
  */
-Array Power(Array A, Array B, Interpreter* m_eval);
+Array Power(const Array& A, const Array& B);
 /**
  * Transposes the argument (actually does a Hermitian transpose).
  * The output is $$C_{i,j} = \conj{A_{j,i}}$$.
  */
-Array Transpose(Array A, Interpreter* m_eval);
+Array Transpose(const Array& A);
 /**
  * Dot-transpose the argument, equivalent to $$C_{i,j} = A_{j,i}$$.
  */
-Array DotTranspose(Array, Interpreter* m_eval);
+Array DotTranspose(const Array&);
 /**
  * Matrix multiply of the arguments.  For $$m \times n$$ matrix $$A$$,
  * and $$n \times k$$ matrix $$B$$, the output matrix $$C$$ is of 
  * size $$m \times k$$, defined by  $$C_{i,j} = \sum_{p=1}^{n} A_{i,p} B_{p,j}$$.
  * Throws an exception if the sizes are not conformant.
  */
-Array Multiply(Array A, Array B, Interpreter* m_eval);
+Array Multiply(const Array& A, const Array& B);
 /**
  * The right divide operation is related to the left divide operation
  * via: B/A = (A'\B')'.
  */
-Array RightDivide(Array A, Array B, Interpreter* m_eval);
+Array RightDivide(const Array& A, const Array& B);
 /**
  * The left divide operation is equivalent to solving the system of equations
  * $$A C = B$$ for the matrix $$C$$, where $$A$$ is of size $$m \times n$$,
@@ -138,42 +138,38 @@ Array RightDivide(Array A, Array B, Interpreter* m_eval);
  * Uses the linear equation solver from LAPACK to solve these equations.
  * They are effectively solved independently for each column of $$B$$.
  */
-Array LeftDivide(Array A, Array B, Interpreter* m_eval);
+Array LeftDivide(const Array& A, const Array& B);
 /**
  * Compute the eigendecomposition of the matrix $$A$$, the two matrices
  * $$V$$ and $$D$$, where $$D$$ is diagonal, and $$V$$ has unit norm
  * columns.  If $$A$$ is real, the eigenvectors $$V$$ are real, and 
  * the eigenvalues come in conjugate pairs.  
  */
-void EigenDecomposeCompactSymmetric(Array A, Array& D, Interpreter* m_eval);
-void EigenDecomposeFullSymmetric(Array A, Array& V, Array& D, Interpreter* m_eval);
-void EigenDecomposeFullGeneral(Array A, Array& V, Array& D, bool balanceFlag, Interpreter* m_eval);
-void EigenDecomposeCompactGeneral(Array A, Array& D, bool balanceFlag, Interpreter* m_eval);
-bool GeneralizedEigenDecomposeCompactSymmetric(Array A, Array B, Array& D, Interpreter* m_eval);
-bool GeneralizedEigenDecomposeFullSymmetric(Array A, Array B, Array& V, Array& D, Interpreter* m_eval);
-void GeneralizedEigenDecomposeFullGeneral(Array A, Array B, Array& V, Array& D, Interpreter* m_eval);
-void GeneralizedEigenDecomposeCompactGeneral(Array A, Array B, Array& D, Interpreter* m_eval);
+void EigenDecomposeCompactSymmetric(const Array& A, Array& D);
+void EigenDecomposeFullSymmetric(const Array& A, Array& V, Array& D);
+void EigenDecomposeFullGeneral(const Array& A, Array& V, Array& D, bool balanceFlag);
+void EigenDecomposeCompactGeneral(const Array& A, Array& D, bool balanceFlag);
+bool GeneralizedEigenDecomposeCompactSymmetric(const Array& A, const Array& B, Array& D);
+bool GeneralizedEigenDecomposeFullSymmetric(const Array& A, const Array& B, Array& V, Array& D);
+void GeneralizedEigenDecomposeFullGeneral(const Array& A, const Array& B, Array& V, Array& D);
+void GeneralizedEigenDecomposeCompactGeneral(const Array& A, const Array& B, Array& D);
 /**
  * For scalars $$A$$ and $$B$$, the output is the row vector
  * $$[A,A+1,\ldots,A+n]$$, where $$n$$ is the largest integer
  * such that $$A+n < B$$.
  */
-Array UnitColon(Array A, Array B);
+Array UnitColon(const Array& A, const Array& B);
 /**
  * For scalars $$A$$, $$B$$ and $$C$$, the output is the row vector
  * $$[A,A+B,\ldots,A+nB]$$, where $$n$$ is the largest integer
  * such that $$A+nB < C$$.
  */
-Array DoubleColon(Array A, Array B, Array C);
+Array DoubleColon(const Array& A, const Array& B, const Array& C);
 
 void TypeCheck(Array &A, Array &B, bool isDivOrMatrix);
 
-Array InvertMatrix(Array A, Interpreter* m_eval);
+Array InvertMatrix(const Array& A);
 
-void power_zi(double *p, const double *a, int b);
-void power_zz(double *c, const double *a, const double *b);
-double power_di(double a, int b);
-double power_dd(double a, double b);
 template <class T>
 T complex_abs(T real, T imag) {
   double temp;

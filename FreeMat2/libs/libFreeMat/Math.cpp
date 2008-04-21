@@ -25,34 +25,9 @@
 #include "LeastSquaresSolver.hpp"
 #include "EigenDecompose.hpp"
 #include "Malloc.hpp"
-#include "Sparse.hpp"
+#include "SparseMatrix.hpp"
 #include <math.h>
 
-// Sparse ops: +, -, neg, *
-
-void boolean_and(int N, logical* C, const logical *A, int Astride, 
-		 const logical *B, int Bstride) {
-  int m,p;
-  m = 0;
-  p = 0;
-  for (int i=0;i<N;i++) {
-    C[i] = A[m] && B[p];
-    m += Astride;
-    p += Bstride;
-  }
-}
-
-void boolean_or(int N, logical* C, const logical *A, int Astride, 
-		const logical *B, int Bstride) {
-  int m,p;
-  m = 0;
-  p = 0;
-  for (int i=0;i<N;i++) {
-    C[i] = A[m] || B[p];
-    m += Astride;
-    p += Bstride;
-  }
-}
 
 void boolean_not(int N, logical* C, const logical *A) {
   for (int i=0;i<N;i++)
@@ -96,7 +71,7 @@ static inline T powi(T a, int b) {
 template <typename T>
 static inline void complex_divide(const T& ar, const T& ai,
 				  const T& br, const T& bi,
-				  T& cr, T& ci) {
+				  T& c0, T& c1) {
   double ratio, den;
   double abr, abi, cr;
   
@@ -177,480 +152,450 @@ template <typename T>
 static inline void pow(const T& ar, const T& ai,
 		       const T& br, const T& bi,
 		       T& cr, T& ci) {
-    T logr, logi, x, y;
-    T mag = complex_abs<T>(ar, ai);
-    if (mag == 0) {
-      cr = 0;
-      ci = 0;
-      return;
+  T logr, logi, x, y;
+  T mag = complex_abs<T>(ar, ai);
+  if (mag == 0) {
+    cr = 0;
+    ci = 0;
+    return;
+  }
+  logr = log(mag);
+  logi = atan2(ai, ar);
+  
+  x = exp( logr * br - logi * bi );
+  y = logr * bi + logi * br;
+  
+  cr = x * cos(y);
+  ci = x * sin(y);
+}
+
+struct OpAdd {
+  template <typename T>
+  static inline T func(const T& v1, const T& v2) {
+    return v1+v2;
+  }
+  template <typename T>
+  static inline void func(const T& ar, const T& ai,
+			  const T& br, const T& bi,
+			  T& cr, T& ci) {
+    cr = ar + br;
+    ci = ai + bi;
+  }
+};
+
+struct OpSubtract {
+  template <typename T>
+  static inline T func(const T& v1, const T& v2) {
+    return v1-v2;
+  }
+  template <typename T>
+  static inline void func(const T& ar, const T& ai,
+			  const T& br, const T& bi,
+			  T& cr, T& ci) {
+    cr = ar - br;
+    ci = ai - bi;
+  }
+};
+
+struct OpMultiply {
+  template <typename T>
+  static inline T func(const T& v1, const T& v2) {
+    return v1*v2;
+  }
+  template <typename T>
+  static inline void func(const T& ar, const T& ai,
+			  const T& br, const T& bi,
+			  T& cr, T& ci) {
+    cr = ar * br - ai * bi;
+    ci = ar * bi + ai * br;
+  }
+};
+
+struct OpDivide {
+  template <typename T>
+  static inline T func(const T& v1, const T& v2) {
+    return v1/v2;
+  }
+  template <typename T>
+  static inline void func(const T& ar, const T& ai,
+			  const T& br, const T& bi,
+			  T& c0, T& c1) {
+    complex_divide<T>(ar,ai,br,bi,c0,c1);
+  }
+};
+
+struct OpLessThan {
+  template <typename T>
+  static inline bool func(const T& v1, const T& v2) {
+    return v1 < v2;
+  }
+  template <typename T>
+  static inline bool func(const T& ar, const T& ai,
+			  const T& br, const T& bi) {
+    return complex_abs<T>(ar,ai) < complex_abs<T>(br,bi);
+  }
+};
+
+struct OpLessEquals {
+  template <typename T>
+  static inline bool func(const T& v1, const T& v2) {
+    return v1 <= v2;
+  }
+  template <typename T>
+  static inline bool func(const T& ar, const T& ai,
+			  const T& br, const T& bi) {
+    return complex_abs<T>(ar,ai) <= complex_abs<T>(br,bi);
+  }
+};
+
+struct OpEquals {
+  template <typename T>
+  static inline bool func(const T& v1, const T& v2) {
+    return v1 == v2;
+  }
+  template <typename T>
+  static inline bool func(const T& ar, const T& ai,
+			  const T& br, const T& bi) {
+    return ((ar == br) && (ai == bi));
+  }
+};
+
+struct OpNotEquals {
+  template <typename T>
+  static inline bool func(const T& v1, const T& v2) {
+    return v1 != v2;
+  }
+  template <typename T>
+  static inline bool func(const T& ar, const T& ai,
+			  const T& br, const T& bi) {
+    return ((ar != br) || (ai != bi));
+  }
+};
+
+struct OpGreaterThan {
+  template <typename T>
+  static inline bool func(const T& v1, const T& v2) {
+    return v1 > v2;
+  }
+  template <typename T>
+  static inline bool func(const T& ar, const T& ai,
+			  const T& br, const T& bi) {
+    return complex_abs<T>(ar,ai) > complex_abs<T>(br,bi);
+  }
+};
+
+struct OpGreaterEquals {
+  template <typename T>
+  static inline bool func(const T& v1, const T& v2) {
+    return v1 >= v2;
+  }
+  template <typename T>
+  static inline bool func(const T& ar, const T& ai,
+			  const T& br, const T& bi) {
+    return complex_abs<T>(ar,ai) >= complex_abs<T>(br,bi);
+  }
+};
+
+struct OpAnd {
+  static inline bool func(const bool& v1, const bool& v2) {
+    return (v1 && v2);
+  }
+};
+
+struct OpOr {
+  static inline bool func(const bool& v1, const bool& v2) {
+    return (v1 || v2);
+  }
+};
+
+struct OpPower {
+  template <typename T>
+  static inline T func(const T& v1, const T& v2) {
+    if (v2 == int(v2))
+      return powi(v1,int(v2));
+    else
+      return pow(v1,v2);
+  }
+  template <typename T>
+  static inline void func(const T& ar, const T& ai,
+			  const T& br, const T& bi,
+			  T& cr, T& ci) {
+    if ((br == int(br)) && (bi == 0))
+      powi(ar,ai,int(br),cr,ci);
+    else
+      pow(ar,ai,br,bi,cr,ci);
+  }
+};
+
+template <class Op>
+static inline SparseMatrix DotOp(const SparseMatrix &A, const double& B) {
+  ConstSparseIterator spin(&A);
+  SparseMatrix retval;
+  while (spin.isValid()) {
+    retval.set(spin.pos(),Op::func(spin.value(),B));
+    spin.next();
+  }
+  return retval;
+}
+
+template <class Op>
+static inline SparseMatrix DotOp(const double& A, const SparseMatrix &B) {
+  ConstSparseIterator spin(&B);
+  SparseMatrix retval;
+  while (spin.isValid()) {
+    retval.set(spin.pos(),Op::func(A,spin.value()));
+    spin.next();
+  }
+  return retval;
+}
+
+template <class Op>
+static inline SparseMatrix DotOp(const SparseMatrix& A, const SparseMatrix& B) {
+  ConstSparseIterator aspin(&A);
+  ConstSparseIterator bspin(&B);
+  SparseMatrix retval;
+  while (aspin.isValid() || bspin.isValid()) {
+    if (aspin.pos() == bspin.pos()) {
+      retval.set(aspin.pos(),Op::func(aspin.value(),bspin.value()));
+      aspin.next();
+      bspin.next();
+    } else if (A.dimensions().map(aspin.pos()) <
+	       B.dimensions().map(bspin.pos())) {
+      retval.set(aspin.pos(),Op::func(aspin.value(),0));
+      aspin.next();
+    } else {
+      retval.set(bspin.pos(),Op::func(0,bspin.value()));
+      bspin.next();
     }
-    logr = log(mag);
-    logi = atan2(ai, ar);
-    
-    x = exp( logr * br - logi * bi );
-    y = logr * bi + logi * br;
-    
-    cr = x * cos(y);
-    ci = x * sin(y);
+  }
+  return retval;
+}
+
+template <typename T>
+class SpinIterator {
+  const T &m_value;
+public:
+  SpinIterator(const T& value) : m_value(value) {}
+  inline T get(index_t) const {return m_value;}
+};
+
+// Complex,Complex --> Real
+template <typename T, typename Atype, typename Btype, class Op>
+static inline void DotOp(const Atype& A_real, const Atype& A_imag, 
+			 const Btype& B_real, const Btype& B_imag,
+			 BasicArray<T> &retvec,
+			 const NTuple& dims) {
+  retvec = BasicArray<T>(dims);
+  for (index_t i=1;i<=dims.count();i++) {
+    retvec.set(i,Op::func(A_real.get(i),A_imag.get(i),
+			  B_real.get(i),B_imag.get(i)));
+  }
+  return retvec;  
+}
+
+// Real,Real --> Real
+template <typename T, typename Atype, typename Btype, class Op>
+static inline void DotOp(const Atype& A, const Btype& B, 
+			 BasicArray<T> &retvec, const NTuple& dims) {
+  retvec = BasicArray<T>(dims);
+  for (index_t i=1;i<=dims.count();i++) {
+    retvec.set(i,Op::func(A.get(i),B.get(i)));
+  }
+  return retvec;
+}
+
+// Real,Real --> Complex
+template <typename T, typename Atype, typename Btype, class Op>
+static inline void DotOp(const Atype& A, const Btype& B, 
+			 BasicArray<T>& C_real, BasicArray<T>& C_imag,
+			 const NTuple& dims) {
+  C_real = BasicArray<T>(dims);
+  C_imag = BasicArray<T>(dims);
+  for (index_t i=1;i<=dims.count();++i) {
+    T real, imag;
+    Op::func(A.get(i),0,B.get(i),0,real,imag);
+    C_real.set(i,real);
+    C_imag.set(i,imag);
   }
 }
 
-/**
- * Check that both of the argument objects are numeric.
- */
-inline void CheckNumeric(Array &A, Array &B, std::string opname){
-  bool Anumeric, Bnumeric;
-
-  Anumeric = !A.isReferenceType();
-  Bnumeric = !B.isReferenceType();
-  if (!(Anumeric && Bnumeric))
-    throw Exception(std::string("Cannot apply numeric operation ") + 
-		    opname + std::string(" to reference types."));
+// Complex,Complex --> Complex
+template <typename T, typename Atype, typename Btype, class Op>
+static inline void DotOp(const Atype& A_real, const Atype& A_imag,
+			 const Btype& B_real, const Btype& B_imag,
+			 BasicArray<T>& C_real, BasicArray<T>& C_imag, 
+			 const NTuple& dims) {
+  C_real = BasicArray<T>(dims);
+  C_imag = BasicArray<T>(dims);
+  for (index_t i=1;i<=dims.count();++i) {
+    T real, imag;
+    Op::func(A_real.get(i),A_imag.get(i),B_real.get(i),B_imag.get(i),real,imag);
+    C_real.set(i,real);
+    C_imag.set(i,imag);
+  }
 }
 
-/**
- * Check that both of the argument objects are of the
- * same type.  If not, apply conversion.  Here are the
- * rules:
- *   Float operations produce float results.
- *   Double operations produce double results.
- *   Mixtures of float and double operations produce double results.
- *   Integer operations (of any kind) produce int results - 
- *     the question is what type do these objects get promoted too?  The
- *     answer is a signed int (32 bits).
- *   Mixtures of real and complex operations produce complex results.
- *   Integer constants are 32 bit by default
- *   Float constants are 64 bit by default
- *   Division operations lead to promotion 
- *   Character types are automatically (demoted) to 32 bit integers.
- *
- *   The way to accomplish this is as follows: compute the larger
- *   of the types of A and B.  Call this type t_max.  If t_max
- *   is not an integer type, promote both types to this type.
- *   If t_max is an integer type, promote both objects to an FM_INT32.
- *   If this is a division operation or a matrix operation, promote both 
- *    objects to an FM_DOUBLE64!
- *
- */
-
-//!
-//@Module TYPERULES Type Rules
-//@@Section FreeMat
-//@@Usage
-//FreeMat follows an extended form of C's type rules (the extension
-//is to handle complex data types.  The general rules are as follows:
-//\begin{itemize}
-//  \item Integer types are promoted to @|int32| types, except
-//        for matrix operations and division operations.
-//  \item Mixtures of @|float| and @|complex| types produce @|complex|
-//        outputs.
-//  \item Mixtures of @|double| or @|int32| types and @|dcomplex|
-//        types produce @|dcomplex| outputs.
-//  \item Arguments to operators are promoted to the largest type
-//        present among the operands.
-//  \item Type promotion is not allowed to reduce the information
-//        content of the variable.  The only exception to this is
-//        64-bit integers, which can lose information when they
-//        are promoted to 64-bit @|double| values.  
-//\end{itemize}
-//These rules look tricky, but in reality, they are designed so that
-//you do not actively have to worry about the types when performing
-//mathematical operations in FreeMat.  The flip side of this, of course
-//is that unlike C, the output of numerical operations is not automatically
-//typecast to the type of the variable you assign the value to. 
-//@@Tests
-//@$"y=1+2","3","exact"
-//@$"y=1f*i","i","exact"
-//@$"y=pi+i","dcomplex(pi+i)","close"
-//@$"y=1/2","0.5","exact"
-//!
-void TypeCheck(Array &A, Array &B, bool isDivOrMatrix) {
-  Class Aclass(A.dataClass());
-  Class Bclass(B.dataClass());
-  Class Cclass;
-  // First, anything less than an int32 is promoted to an int32
-  // Strings are treates as int32.
-  if ((Aclass < FM_INT32) || (Aclass == FM_STRING)) Aclass = FM_INT32;
-  if ((Bclass < FM_INT32) || (Bclass == FM_STRING)) Bclass = FM_INT32;
-  // Division or matrix operations do no allow integer
-  // data types.  These must be promoted to doubles.
-  if (isDivOrMatrix && (Aclass < FM_FLOAT)) Aclass = FM_DOUBLE;
-  if (isDivOrMatrix && (Bclass < FM_FLOAT)) Bclass = FM_DOUBLE;
-  // An integer or double mixed with a complex is promoted to a dcomplex type
-  if ((Aclass == FM_COMPLEX) && ((Bclass == FM_DOUBLE) || (Bclass < FM_FLOAT))) Bclass = FM_DCOMPLEX;
-  if ((Bclass == FM_COMPLEX) && ((Aclass == FM_DOUBLE) || (Aclass < FM_FLOAT))) Aclass = FM_DCOMPLEX;
-  // The output class is now the dominant class remaining:
-  Cclass = (Aclass > Bclass) ? Aclass : Bclass;
-  A.promoteType(Cclass);
-  B.promoteType(Cclass);
-}
-
-/**
- * We want to perform a matrix-matrix operation between two data objects.
- * The following checks are required:
- *  1. If A or B is a scalar, then return false - this is really a 
- *     vector operation, and the arguments should be passed to a 
- *     vector checker (like VectorCheck).
- *  2. Both A & B must be numeric
- *  3. Both A & B must be the same type (if not, the lesser type is
- *     automatically promoted).
- *  4. Both A & B must be 2-Dimensional.
- *  5. A & B must be conformant, i.e. the number of columns in A must
- *     match the number of rows in B.
- */
-inline bool MatrixCheck(Array &A, Array &B, std::string opname){
-  // Test for either a scalar (test 1)
-  if (A.isScalar() || B.isScalar())
-    return false;
-
-  // Test for A & B numeric
-  CheckNumeric(A,B,opname);
-
-  // Test for 2D
-  if (!A.is2D() || !B.is2D()) 
-    throw Exception(std::string("Cannot apply matrix operation ") + 
-		    opname + std::string(" to N-Dimensional arrays."));
-  
-  // Test the types
-  TypeCheck(A,B,true);
-  return true;
-}
-
-
-/*
- * Check to see if two dimensions (when treated as vectors) are equivalent in size.
- */
-bool SameSizeCheck(Dimensions Adim, Dimensions Bdim) {
-  Adim.simplify();
-  Bdim.simplify();
-  return (Adim.equals(Bdim));
-}
-
-/**
- * We want to perform a vector operation between two data objects.
- * The following checks are required:
- *  1. Both A & B must be numeric
- *  2. Either A & B are the same size or
- *      A is a scalar or B is a scalar.
- */
-inline void VectorCheck(Array& A, Array& B, bool promote, std::string opname){
-  StringVector dummySV;
-
-  // Check for numeric types
-  CheckNumeric(A,B,opname);
-  
-  if (!(SameSizeCheck(A.dimensions(),B.dimensions()) || A.isScalar() || B.isScalar()))
-    throw Exception(std::string("Size mismatch on arguments to arithmetic operator ") + opname);
-  
-  // Test the types.
-  TypeCheck(A,B,promote);
-}
-
-/**
- * We want to perform a vector operator between two logical data objects.
- * The following operations are performed:
- *  1. Both A & B are converted to logical types.
- *  2. Either A & B must be the same size, or A is a
- *     scalar or B is a scalar.
- */
-inline void BoolVectorCheck(Array& A, Array& B,std::string opname){
-  A.promoteType(FM_LOGICAL);
-  B.promoteType(FM_LOGICAL);
-
-  if (!(SameSizeCheck(A.dimensions(),B.dimensions()) || A.isScalar() || B.isScalar()))
-    throw Exception(std::string("Size mismatch on arguments to ") + opname);
-}
-
-
-/**
- * Handle a particular type case in the power operator.
- */
-inline Array doPowerAssist(Array A, Class AClass, 
-			   Array B, Class BClass,
-			   Class CClass, vvfun exec) {
-  Array C;
-  A.promoteType(AClass);
-  B.promoteType(BClass);
-
-  // S^F, F^S, S^S are all done via full intermediate products
-  // Only S^scalar is done using a sparse algorithm
-  if (B.isScalar() && A.sparse())
-    return SparsePowerFunc(A,B);
-  A.makeDense();
-  B.makeDense();
-
-  if (A.isScalar()) {
-    int Blen(B.getLength());
-    C = Array(CClass,B.dimensions(),NULL);
-    void *Cp = Malloc(Blen*C.getElementSize());
-    exec(Blen,Cp,A.getDataPointer(),0,B.getDataPointer(),1);
-    C.setDataPointer(Cp);
-  } else if (B.isScalar()) {
-    int Alen(A.getLength());
-    C = Array(CClass,A.dimensions(),NULL);
-    void *Cp = Malloc(Alen*C.getElementSize());
-    exec(Alen,Cp,A.getDataPointer(),1,B.getDataPointer(),0);
-    C.setDataPointer(Cp);
+// Perform the operation via a typed intermediary
+template <typename T, class Op>
+static inline Array DotOp(const Array &Ain, const Array &Bin, Type TScalar, Type TArray) {
+  Array F(TArray);
+  if (Ain.isScalar() && Bin.isScalar()) {
+    Array Ascalar(Ain.asScalar().toType(TScalar));
+    Array Bscalar(Bin.asScalar().toType(TScalar));
+    if (Ascalar.allReal() && Bscalar.allReal()) {
+      F = Array::Array(Op::func(Ascalar.constRealScalar<T>(),
+				Bscalar.constRealScalar<T>()));
+    } else {
+      F = Array::Array(T(0),T(0));
+      Op::func(Ascalar.constRealScalar<T>(),Ascalar.constImagScalar<T>(),
+	       Bscalar.constRealScalar<T>(),Bscalar.constImagScalar<T>(),
+	       F.realScalar<T>(),F.imagScalar<T>());
+    }
+  } else if (Ain.isScalar()) {
+    Array Ascalar(Ain.asScalar().toType(TScalar));
+    Array Bcast(Bin.toType(TArray));
+    if (Ascalar.allReal() && Bcast.allReal()) {
+      DotOp<T,SpinIterator<T>,BasicArray<T>,Op>(SpinIterator<T>(Ascalar.constRealScalar<T>()),
+						Bcast.constReal<T>(),F.real<T>(),Bcast.dimensions());
+    } else {
+      DotOp<T,SpinIterator<T>,BasicArray<T>,Op>(SpinIterator<T>(Ascalar.constRealScalar<T>()),
+						SpinIterator<T>(Ascalar.constImagScalar<T>()),
+						Bcast.constReal<T>(),
+						Bcast.constImag<T>(),
+						F.real<T>(),
+						F.imag<T>(),
+						Bcast.dimensions());
+    }
+  } else if (Bin.isScalar()) {
+    Array Acast(Ain.toType(TArray));
+    Array Bscalar(Bin.asScalar().toType(TScalar));
+    if (Bscalar.allReal() && Acast.allReal()) {
+      DotOp<T,BasicArray<T>,SpinIterator<T>,Op>(Acast.constReal<T>(),
+						SpinIterator<T>(Bscalar.constRealScalar<T>()),
+						F.real<T>(),
+						Acast.dimensions());
+    } else {
+      DotOp<T,BasicArray<T>,SpinIterator<T>,Op>(Acast.constReal<T>(),
+						Acast.constImag<T>(),
+						SpinIterator<T>(Bscalar.constRealScalar<T>()),
+						SpinIterator<T>(Bscalar.constImagScalar<T>()),
+						F.real<T>(),
+						F.imag<T>(),
+						Acast.dimensions());
+    }
   } else {
-    int Alen(A.getLength());
-    C = Array(CClass,A.dimensions(),NULL);
-    void *Cp = Malloc(Alen*C.getElementSize());
-    exec(Alen,Cp,A.getDataPointer(),1,B.getDataPointer(),1);
-    C.setDataPointer(Cp);
+    Array Acast(Ain.toType(TArray));
+    Array Bcast(Bin.toType(TScalar));
+    if (Acast.dimensions() != Bcast.dimensions())
+      throw Exception("size mismatch in arguments to binary operator");
+    if (Bcast.allReal() && Acast.allReal()) {
+      DotOp<T,BasicArray<T>,BasicArray<T>,Op>(Acast.constReal<T>(),
+					      Bcast.constReal<T>(),
+					      F.real<T>(),
+					      Acast.dimensions());
+    } else {
+      DotOp<T,BasicArray<T>,BasicArray<T>,Op>(Acast.constReal<T>(),
+					      Acast.constImag<T>(),
+					      Bcast.constReal<T>(),
+					      Bcast.constImag<T>(),
+					      F.real<T>(),
+					      F.imag<T>(),
+					      Acast.dimensions());
+    }
   }
-  return C;
+  return F;
 }
 
-// Invert a square matrix - Should check for diagonal matrices
-// as a special case
-Array InvertMatrix(Array a, Interpreter* m_eval) {
-  if (!a.is2D())
-    throw Exception("Cannot invert N-dimensional arrays.");
-  if (a.isReferenceType())
-    throw Exception("Cannot invert reference-type arrays.");
-  if (a.isScalar())
-    return DotPower(a,Array::floatConstructor(-1),m_eval);
-  int N(a.getDimensionLength(0));
-  if (a.sparse()) {
-    uint32 *I = (uint32*) Malloc(sizeof(uint32)*N);
-    for (int k=0;k<N;k++)
-      I[k] = k+1;
-    float v = 1.0f;
-    Array B(FM_FLOAT,a.dimensions(),
-	    makeSparseFromIJV(FM_FLOAT,N,N,N,I,1,I,1,&v,0),true);
-    Free(I);
-    Array c(LeftDivide(a,B,m_eval));
-    c.makeSparse();
-    return c;
+// Assumes that the operation cannot create complex values from real ones
+template <class Op>
+static inline Array DotOp(const Array &Ain, const Array &Bin) {
+  if ((Ain.type() != Bin.type()) && (!Ain.isDouble() && !Bin.isDouble()))
+    throw Exception("Unsupported type combinations to binary operator");
+  Type out_type;
+  Array F;
+  if (Ain.isDouble()) 
+    out_type = Bin.type();
+  else
+    out_type = Ain.type();
+  if (out_type == DoubleSparse) {
   } else {
-    Array ones(Array::floatVectorConstructor(N));
-    float *dp = (float*) ones.getReadWriteDataPointer();
-    for (int i=0;i<N;i++) dp[i] = 1.0f;
-    Array B(Array::diagonalConstructor(ones,0));
-    return LeftDivide(a,B,m_eval);
+    F = DotOp<double,Op>(Ain,Bin,DoubleScalar,DoubleArray);
   }
-}
-  
-// Handle matrix powers for sparse matrices
-Array MatrixPowerSparse(Array a, Array b, Interpreter* m_eval) {
-  // The expression a^B where a is a scalar, and B is sparse is not handled
-  if (a.isScalar() && !b.isScalar())
-    throw Exception("expression a^B, where a is a scalar and B is a sparse matrix is not supported (use full to convert B to non-sparse matrix");
-  // The expression A^B is not supported
-  if (!a.isScalar() && !b.isScalar())
-    throw Exception("expression A^B where A and B are both sparse matrices is not supported (or defined)");
-  // The expression A^b where b is not an integer is not supported
-  if (!b.isReal())
-    throw Exception("expression A^b where b is complex and A is sparse is not supported (use full to convert A to a non-sparse matrix)");
-  b.promoteType(FM_DOUBLE);
-  const double*dp = (const double*) b.getDataPointer();
-  if ((*dp) != rint(*dp))
-    throw Exception("expression A^b where b is non-integer and A is sparse is not supported (use full to convert A to a non-sparse matrix)");
-  if (a.getDimensionLength(0) != a.getDimensionLength(1))
-    throw Exception("expression A^b requires A to be square.");
-  int power = (int) *dp;
-  if (power < 0) {
-    a = InvertMatrix(a,m_eval);
-    power = -power;
-  }
-  if (power == 0) {
-    Array r(FM_FLOAT,a.dimensions(),
-	    SparseOnesFunc(a.dataClass(),a.getDimensionLength(0),a.getDimensionLength(1),
-			   a.getSparseDataPointer()),true);
-    r.promoteType(a.dataClass());
-    return r;
-  }
-  Array c(a);
-  for (int i=1;i<power;i++)
-    c = Multiply(c,a,m_eval);
-  return c;
-}
-
-/**
- * The power function is a special case of the vector-vector operations.  
- * In this case, if the real vector contains any negative elements
- * A real vector can be written as (r*e^(j\theta))^p = r^p*e^(j*\theta*p)
- * If there are any components of A negative raised to a non-integer power,
- * then A and B are promoted to complex types.  If A is a double, then they
- * are promoted to dcomplex types.  So the rules are as follows:
- * A complex, B arbitrary -> output is complex, unless B is double or dcomplex
- * A dcomplex, B arbitrary -> output is dcomplex
- * A double, arbitrary, B integer -> output is double
- * A double, negative, B noninteger -> output is dcomplex
- * A float, arbitrary, B integer -> output is float
- * A float, negative, B noninteger -> output is complex, unless B is double or dcomplex
- *
- * Some simplification can take place - the following type combinations
- * are possible - with the unique combinations numbered
- * 1. complex, integer   -> complex
- * 2. complex, float     -> complex
- * 3. complex, double    >> dcomplex, double   -> dcomplex
- * 4. complex, complex   -> complex
- * 5. complex, dcomplex  >> dcomplex, dcomplex -> dcomplex
- * 6. dcomplex, integer  -> dcomplex
- *    dcomplex, float    >> dcomplex, double   -> dcomplex (3)
- *    dcomplex, double   >> dcomplex, double   -> dcomplex (3)
- *    dcomplex, complex  >> dcomplex, dcomplex -> dcomplex (5)
- *    dcomplex, dcomplex >> dcomplex, dcomplex -> dcomplex (5)
- * 7. double, integer    -> double
- *    double-, float     >> dcomplex, dcomplex -> dcomplex (5)
- *    double-, double    >> dcomplex, dcomplex -> dcomplex (5)
- *    double-, complex   >> dcomplex, dcomplex -> dcomplex (5)
- *    double-, dcomplex  >> dcomplex, dcomplex -> dcomplex (5)
- * 8. double+, float     >> double, double -> double
- *    double+, double    >> double, double -> double (8)
- *    double+, complex   >> dcomplex, dcomplex -> dcomplex (5)
- *    double+, dcomplex  >> dcomplex, dcomplex -> dcomplex (5)
- * 9. float, integer     -> float
- *    float-, float      >> complex, complex -> complex (4)
- *    float-, double     >> dcomplex, dcomplex -> dcomplex (5)
- *    float-, complex    >> complex, complex -> complex (4)
- *    float-, dcomplex   >> dcomplex, dcomplex -> dcomplex (5)
- *10. float+, float      >> float, float -> float
- *    float+, double     >> double, double -> double (8)
- *    float+, complex    >> complex, complex -> complex (4)
- *    float+, dcomplex   >> dcomplex, dcomplex -> dcomplex (5)
- *
- * This type scheme is complicated, but workable.  If A is an 
- * integer type, it is first promoted to double, before the
- * rules are applied.  Then, we note that the rules can be cleaved
- * along the lines of B being integer or not.  If B is integer,
- * we apply the appropriate version of 1., 6., 7., 9..  This
- * covers 4 of the 6 cases.  Next, we determine if A is complex.
- * If A is complex, we check if B is double or dcomplex. If either
- * is the case, we promote A to dcomplex.  If A is dcomplex,
- * we promote B to double or dcomplex.  Next, we test for
- * rules 2., 3., 4., 5.  
- */
-
-#define OPCASE(t,o) case t: opType = o; break;
-#define MAPOP(o,a,b,c,f) case o: return doPowerAssist(A,a,B,b,c,f);
-inline Array DoPowerTwoArgFunction(Array A, Array B){
-  Array C;
-  bool Anegative;
-  StringVector dummySV;
-  Class AClass, BClass;
-  int opType;
-
-  if (A.isEmpty() || B.isEmpty())
-    return Array::emptyConstructor();
-  CheckNumeric(A,B,"^");
-  if (!(SameSizeCheck(A.dimensions(),B.dimensions()) || A.isScalar() || B.isScalar()))
-    throw Exception("Size mismatch on arguments to power (^) operator.");
-  // If A is not at least a float type, promote it to double
-  AClass = A.dataClass();
-  BClass = B.dataClass();
-  if (AClass < FM_FLOAT) AClass = FM_DOUBLE;
-  if (BClass < FM_INT32) BClass = FM_INT32;
-  // Get a read on if A is positive
-  Anegative = !(A.isPositive());
-  // Check through the different type cases...
-  opType = 0;
-  if (AClass == FM_COMPLEX) {
-    switch (BClass) {
-    default: throw Exception("Unhandled type for second argument to A^B");
-      OPCASE(FM_INT32,1);
-      OPCASE(FM_FLOAT,2);
-      OPCASE(FM_DOUBLE,3);
-      OPCASE(FM_COMPLEX,4);
-      OPCASE(FM_DCOMPLEX,5);
-    }
-  } else if (AClass == FM_DCOMPLEX) {
-    switch(BClass) {
-    default: throw Exception("Unhandled type for second argument to A^B");
-      OPCASE(FM_INT32,6);
-      OPCASE(FM_FLOAT,3);
-      OPCASE(FM_DOUBLE,3);
-      OPCASE(FM_COMPLEX,5);
-      OPCASE(FM_DCOMPLEX,5);
-    }
-  } else if (AClass == FM_DOUBLE && Anegative) {
-    switch(BClass) {
-    default: throw Exception("Unhandled type for second argument to A^B");
-      OPCASE(FM_INT32,7);
-      OPCASE(FM_FLOAT,5);
-      OPCASE(FM_DOUBLE,5);
-      OPCASE(FM_COMPLEX,5);
-      OPCASE(FM_DCOMPLEX,5);
-    }      
-  } else if (AClass == FM_DOUBLE && (!Anegative)){
-    switch(BClass) {
-    default: throw Exception("Unhandled type for second argument to A^B");
-      OPCASE(FM_INT32,7);
-      OPCASE(FM_FLOAT,8);
-      OPCASE(FM_DOUBLE,8);
-      OPCASE(FM_COMPLEX,5);
-      OPCASE(FM_DCOMPLEX,5);
-    }      
-  } else if (AClass == FM_FLOAT && Anegative) {
-    switch(BClass) {
-    default: throw Exception("Unhandled type for second argument to A^B");
-      OPCASE(FM_INT32,9);
-      OPCASE(FM_FLOAT,4);
-      OPCASE(FM_DOUBLE,5);
-      OPCASE(FM_COMPLEX,4);
-      OPCASE(FM_DCOMPLEX,5);
-    }      
-  } else if (AClass == FM_FLOAT && (!Anegative)){
-    switch(BClass) {
-    default: throw Exception("Unhandled type for second argument to A^B");
-      OPCASE(FM_INT32,9);
-      OPCASE(FM_FLOAT,10);
-      OPCASE(FM_DOUBLE,8);
-      OPCASE(FM_COMPLEX,4);
-      OPCASE(FM_DCOMPLEX,5);
-    }
-  }
-  // Invoke the appropriate case
-  switch(opType) {
-    default: throw Exception("Unhandled type combination for A^B");
-    MAPOP(1,FM_COMPLEX,FM_INT32,FM_COMPLEX,(vvfun) cicpower);
-    MAPOP(2,FM_COMPLEX,FM_FLOAT,FM_COMPLEX,(vvfun) cfcpower);
-    MAPOP(3,FM_DCOMPLEX,FM_DOUBLE,FM_DCOMPLEX,(vvfun) zdzpower);
-    MAPOP(4,FM_COMPLEX,FM_COMPLEX,FM_COMPLEX,(vvfun) cccpower);
-    MAPOP(5,FM_DCOMPLEX,FM_DCOMPLEX,FM_DCOMPLEX,(vvfun) zzzpower);
-    MAPOP(6,FM_DCOMPLEX,FM_INT32,FM_DCOMPLEX,(vvfun) zizpower);
-    MAPOP(7,FM_DOUBLE,FM_INT32,FM_DOUBLE,(vvfun) didpower);
-    MAPOP(8,FM_DOUBLE,FM_DOUBLE,FM_DOUBLE,(vvfun) dddpower);
-    MAPOP(9,FM_FLOAT,FM_INT32,FM_FLOAT,(vvfun) fifpower);
-    MAPOP(10,FM_FLOAT,FM_FLOAT,FM_FLOAT,(vvfun) fffpower);
-  }
+  return F.toType(out_type);
 }
 
 
-/**
- * For all of the Vector-Vector operations that have vector and scalar versions,
- * the general behavior is the same.  We require 3 functions to handle the 3
- * cases that generally arise:
- *   logical vector vector
- *   logical vector scalar
- *   logical scalar vector
- * The remaining 3 function placeholders in the packVectorVector are unused.
- */
-inline Array DoBoolTwoArgFunction(Array A, Array B, vvfun exec, std::string opname) {
-  Array C;
-  
-  BoolVectorCheck(A,B,opname);
-  if (A.isScalar()) {
-    int Blen(B.getLength());
-    C = Array(FM_LOGICAL,B.dimensions(),NULL);
-    void *Cp = Malloc(Blen*C.getElementSize());
-    exec(Blen,Cp,A.getDataPointer(),0,B.getDataPointer(),1);
-    C.setDataPointer(Cp);
-  } else if (B.isScalar()) {
-    int Alen(A.getLength());
-    C = Array(FM_LOGICAL,A.dimensions(),NULL);
-    void *Cp = Malloc(Alen*C.getElementSize());
-    exec(Alen,Cp,A.getDataPointer(),1,B.getDataPointer(),0);
-    C.setDataPointer(Cp);
+template <typename T, class Op>
+static inline Array CmpOp(const Array &Ain, const Array &Bin, Type TScalar, Type TArray) {
+  Array F(BoolArray);
+  if (Ain.isScalar() && Bin.isScalar()) {
+    Array Ascalar(Ain.asScalar().toType(TScalar));
+    Array Bscalar(Bin.asScalar().toType(TScalar));
+    if (Ascalar.allReal() && Bscalar.allReal()) {
+      F = Array::Array(Op::func(Ascalar.constRealScalar<T>(),
+				Bscalar.constRealScalar<T>()));
+    } else {
+      F = Array::Array(Op::func(Ascalar.constRealScalar<T>(),Ascalar.constImagScalar<T>(),
+				Bscalar.constRealScalar<T>(),Bscalar.constImagScalar<T>()));
+    }
+  } else if (Ain.isScalar()) {
+    Array Ascalar(Ain.asScalar().toType(TScalar));
+    Array Bcast(Bin.toType(TArray));
+    if (Ascalar.allReal() && Bcast.allReal()) {
+      DotOp<bool,SpinIterator<T>,BasicArray<T>,Op>(SpinIterator<T>(Ascalar.constRealScalar<T>()),
+						   Bcast.constReal<T>(),F.real<bool>(),
+						   Bcast.dimensions());
+    } else {
+      DotOp<bool,SpinIterator<T>,BasicArray<T>,Op>(SpinIterator<T>(Ascalar.constRealScalar<T>()),
+						   SpinIterator<T>(Ascalar.constImagScalar<T>()),
+						   Bcast.constReal<T>(), Bcast.constImag<T>(),
+						   F.real<bool>(), Bcast.dimensions());
+    }
+  } else if (Bin.isScalar()) {
+    Array Acast(Ain.toType(TArray));
+    Array Bscalar(Bin.asScalar().toType(TScalar));
+    if (Bscalar.allReal() && Acast.allReal()) {
+      DotOp<bool,BasicArray<T>,SpinIterator<T>,Op>(Acast.constReal<T>(),
+						   SpinIterator<T>(Bscalar.constRealScalar<T>()),
+						   F.real<bool>(), Acast.dimensions());
+    } else {
+      DotOp<bool,BasicArray<T>,SpinIterator<T>,Op>(Acast.constReal<T>(), Acast.constImag<T>(),
+						   SpinIterator<T>(Bscalar.constRealScalar<T>()),
+						   SpinIterator<T>(Bscalar.constImagScalar<T>()),
+						   F.real<bool>(), Acast.dimensions());
+    }
   } else {
-    int Alen(A.getLength());
-    C = Array(FM_LOGICAL,A.dimensions(),NULL);
-    void *Cp = Malloc(Alen*C.getElementSize());
-    exec(Alen,Cp,A.getDataPointer(),1,B.getDataPointer(),1);
-    C.setDataPointer(Cp);
+    Array Acast(Ain.toType(TArray));
+    Array Bcast(Bin.toType(TScalar));
+    if (Acast.dimensions() != Bcast.dimensions())
+      throw Exception("size mismatch in arguments to binary operator");
+    if (Bcast.allReal() && Acast.allReal()) {
+      DotOp<bool,BasicArray<T>,BasicArray<T>,Op>(Acast.constReal<T>(), Bcast.constReal<T>(),
+						 F.real<bool>(), Acast.dimensions());
+    } else {
+      DotOp<bool,BasicArray<T>,BasicArray<T>,Op>(Acast.constReal<T>(), Acast.constImag<T>(),
+					      Bcast.constReal<T>(), Bcast.constImag<T>(),
+					      F.real<bool>(), F.imag<T>(), Acast.dimensions());
+    }
   }
-  return C;
+  return F;
+}
+
+template <class Op>
+static inline Array CmpOp(const Array &Ain, const Array &Bin) {
+  if ((Ain.type() != Bin.type()) && (!Ain.isDouble() && !Bin.isDouble()))
+    throw Exception("Unsupported type combinations to binary operator");
+  Type out_type;
+  Array F;
+  if (Ain.isDouble()) 
+    out_type = Bin.type();
+  else
+    out_type = Ain.type();
+  if (out_type == DoubleSparse) {
+  } else {
+    F = CmpOp<double,Op>(Ain,Bin,DoubleScalar,DoubleArray);
+  }
+  return F.toType(BoolArray);
 }
 
 /**
@@ -807,374 +752,10 @@ inline Array DoBoolTwoArgFunction(Array A, Array B, vvfun exec, std::string opna
 //@@Tests
 //@$"y=zeros(3,0,4)+zeros(3,0,4)","zeros(3,0,4)","exact"
 //!
-
-//
-// Consider the operation of addition.
-//   Can we map: a + b?
-// Suppose we rank the classes as:
-//
-//  logical string double single int64 uint64 int32 uint32 int16 uint16 int8 uint8
-//
-
-
-// For each operator, we need six versions:
-// op_real(vec,scalar)
-// op_real(scalar,vec)
-// op_real(vec,vec)
-// op_complex(vec,scalar)
-// op_complex(scalar,vec)
-// op_complex(vec,vec)
-
-struct Add {
-  template <typename T>
-  static inline T func(const T& v1, const T& v2) {
-    return v1+v2;
-  }
-  static inline void func(const T& ar, const T& ai,
-			  const T& br, const T& bi,
-			  T& cr, T& ci) {
-    cr = ar + br;
-    ci = ai + bi;
-  }
-};
-
-struct Subtract {
-  template <typename T>
-  static inline T func(const T& v1, const T& v2) {
-    return v1-v2;
-  }
-  static inline void func(const T& ar, const T& ai,
-			  const T& br, const T& bi,
-			  T& cr, T& ci) {
-    cr = ar - br;
-    ci = ai - bi;
-  }
-};
-
-struct Multiply {
-  template <typename T>
-  static inline T func(const T& v1, const T& v2) {
-    return v1*v2;
-  }
-  static inline void func(const T& ar, const T& ai,
-			  const T& br, const T& bi,
-			  T& cr, T& ci) {
-    cr = ar * br - ai * bi;
-    ci = ar * bi + ai * br;
-  }
-};
-
-struct Divide {
-  template <typename T>
-  static inline T func(const T& v1, const T& v2) {
-    return v1/v2;
-  }
-  static inline void func(const T& ar, const T& ai,
-			  const T& br, const T& bi,
-			  T& c0, T& c1) {
-    complex_divide<T>(ar,ai,br,bi,c0,c1);
-  }
-};
-
-struct LessThan {
-  template <typename T>
-  static inline bool func(const T& v1, const T& v2) {
-    return v1 < v2;
-  }
-  static inline bool func(const T& ar, const T& ai,
-			  const T& br, const T& bi) {
-    return complex_abs<T>(ar,ai) < complex_abs<T>(br,bi);
-  }
-};
-
-struct LessEquals {
-  template <typename T>
-  static inline bool func(const T& v1, const T& v2) {
-    return v1 <= v2;
-  }
-  static inline bool func(const T& ar, const T& ai,
-			  const T& br, const T& bi) {
-    return complex_abs<T>(ar,ai) <= complex_abs<T>(br,bi);
-  }
-};
-
-struct Equals {
-  template <typename T>
-  static inline bool func(const T& v1, const T& v2) {
-    return v1 == v2;
-  }
-  static inline bool func(const T& ar, const T& ai,
-			  const T& br, const T& bi) {
-    return ((ar == br) && (ai == bi));
-  }
-};
-
-struct NotEquals {
-  template <typename T>
-  static inline bool func(const T& v1, const T& v2) {
-    return v1 != v2;
-  }
-  static inline bool func(const T& ar, const T& ai,
-			  const T& br, const T& bi) {
-    return ((ar != br) || (ai != bi));
-  }
-};
-
-struct GreaterThan {
-  template <typename T>
-  static inline bool func(const T& v1, const T& v2) {
-    return v1 > v2;
-  }
-  static inline bool func(const T& ar, const T& ai,
-			  const T& br, const T& bi) {
-    return complex_abs<T>(ar,ai) > complex_abs<T>(br,bi);
-  }
-};
-
-struct GreaterEquals {
-  template <typename T>
-  static inline bool func(const T& v1, const T& v2) {
-    return v1 >= v2;
-  }
-  static inline bool func(const T& ar, const T& ai,
-			  const T& br, const T& bi) {
-    return complex_abs<T>(ar,ai) >= complex_abs<T>(br,bi);
-  }
-};
-
-struct Power {
-  template <typename T>
-  static inline T func(const T& v1, const T& v2) {
-    if (v2 == int(v2))
-      return powi(v1,int(v2));
-    else
-      return pow(v1,v2);
-  }
-  static inline void func(const T& ar, const T& ai,
-			  const T& br, const T& bi,
-			  T& cr, T& ci) {
-    if ((br == int(br)) && (bi == 0))
-      powi(ar,ai,int(br),cr,ci);
-    else
-      pow(ar,ai,br,bi,cr,ci);
-  }
-};
-
-typedef <typename T, typename C>
-BasicArray<T> DotOp(const BasicArray<T> &A, const T& B) {
-  BasicArray<T> retvec(A.dimensions());
-  for (index_t i=1;i<=A.length();++i)
-    retvec.set(i,C::func(A.get(i),B));
-  return retvec;
+Array Add(const Array& A, const Array& B) {
+  return DotOp<OpAdd>(A,B);
 }
 
-typedef <typename T, typename C>
-BasicArray<T> DotOp(const T& A, const BasicArray<T>& B) {
-  BasicArray<T> retvec(B.dimensions());
-  for (index_t i=1;i<=B.length();++i)
-    retvec.set(i,C::func(A,B.get(i)));
-  return retvec;  
-}
-
-typedef <typename T, typename C>
-BasicArray<T> DotOp(const BasicArray<T> &A,
-		    const BasicArray<T> &B) {
-  if (A.dimensions() != B.dimensions())
-    throw Exception("Mismatched argument sizes to plus operator");
-  BasicArray<T> retvec(A.dimensions());
-  for (index_t i=1;i<=A.length();++i)
-    retvec.set(i,C::func(A.get(i),B.get(i)));
-  return retvec;
-}
-
-typedef <typename T, typename C>
-void DotOp(const BasicArray<T> &a_real,
-	   const BasicArray<T> &a_imag,
-	   const T& b_real, 
-	   const T& b_imag,
-	   BasicArray<T> &c_real,
-	   BasicArray<T> &c_imag) {
-  if (a_real.dimensions() != a_imag.dimensions())
-    throw Exception("Mismatch in size of real and imaginary part!");
-  c_real = BasicArray<T>(a_real.dimensions());
-  c_imag = BasicArray<T>(a_imag.dimensions());
-  for (index_t i=1;i<=a_real.length();++i) {
-    T real, imag;
-    C::func(a_real.get(i),a_imag.get(i),
-	    b_real,b_imag,real,imag);
-    c_real.set(i,real);
-    c_imag.set(i,imag);
-  }
-}
-
-typedef <typename T, typename C>
-void DotOp(const T& a_real, 
-	   const T& a_imag,
-	   const BasicArray<T> &b_real,
-	   const BasicArray<T> &b_imag,
-	   BasicArray<T> &c_real,
-	   BasicArray<T> &c_imag) {
-  if (b_real.dimensions() != b_imag.dimensions())
-    throw Exception("Mismatch in size of real and imaginary part!");
-  c_real = BasicArray<T>(b_real.dimensions());
-  c_imag = BasicArray<T>(b_imag.dimensions());
-  for (index_t i=1;i<=b_real.length();++i) {
-    T real, imag;
-    C::func(a_real,a_imag,b_real.get(i),b_imag.get(i),
-	    real,imag);
-    c_real.set(i,real);
-    c_imag.set(i,imag);
-  }  
-}
-
-typedef <typename T, typename C>
-void DotOp(const BasicArray<T> &a_real,
-	   const BasicArray<T> &a_imag,
-	   const BasicArray<T> &b_real,
-	   const BasicArray<T> &b_imag,
-	   BasicArray<T> &c_real,
-	   BasicArray<T> &c_imag) {
-  if ((a_real.dimensions() != b_real.dimensions()) ||
-      (a_imag.dimensions() != b_imag.dimensions()) ||
-      (a_real.dimensions() != a_imag.dimensions()))
-    throw Exception("Mismatch in size arguments to binary operator");
-  c_real = BasicArray<T>(b_real.dimensions());
-  c_imag = BasicArray<T>(b_imag.dimensions());
-  for (index_t i=1;i<=a_real.length();++i) {
-    T real, imag;
-    C::func(a_real.get(i),a_imag.get(i),b_real.get(i),b_imag.get(i),
-	    real,imag);
-    c_real.set(i,real);
-    c_real.set(i,imag);
-  }
-}
-
-
-Array PlusVectorInteger(const Array &Ain, const Array &Bin) {
-  if (Ain.type() != Bin.type())
-    throw Exception("Cannot combine integer arrays of mismatched types");
-  Type out_type(Ain.type());
-  Array A(Ain.toType(DoubleArray));
-  Array B(Bin.toType(DoubleArray));
-  Array C(DoubleArray,Ain.dimensions());
-  const BasicArray<double> &Areal(A.constReal<double>());
-  const BasicArray<double> &Breal(B.constReal<double>());
-  BasicArray<double> &Creal(C.real<double>());
-  for (index_t i=1;i<=A.length();i++)
-    Creal.set(i,Areal.get(i) + Breal.get(i));
-  if (!Adouble.allReal() && !Bdouble.allReal()) {
-    BasicArray<double> &Cimag(C.imag<double>());
-    const BasicArray<double> &Aimag(A.constImag<double>());
-    const BasicArray<double> &Bimag(B.constImag<double>());
-    for (index_t i=1;i<=A.length();i++)
-      Cimag.set(i,A.imag.get(i) + Breal.get(i));
-  } else if (Adouble.allReal()) {
-    C.imag<double>() = B.constImag<double>();
-  } else if (Bdouble.allReal()) {
-    C.imag<double>() = A.constImag<double>();
-  }
-  return C.toType(out_type);
-}
-
-Array PlusVectorScalar(const Array &Ain, const Array &Bin) {
-  if (!((Ain.type() == Bin.type()) || Bin.isDoubleScalar()))
-    throw Exception("Cannot combine integer arrays with non-double precision scalars"); 
-  Type out_type(Ain.type());
-  Array A(Ain.toType(DoubleArray));
-  
-}
-
-
-ArrayVector Plus(int nargout, const ArrayVector& A) {
-  
-}
-
-
-
-Array Add(Array A, Array B, Interpreter* m_eval) { 
-  // Process the two arguments through the type check and dimension checks...
-  VectorCheck(A,B,false,"+");
-  // Get a pointer to the function we ultimately need to execute
-  int Astride, Bstride;
-  void *Cp = NULL;
-  int Clen;
-  bool sparse;
-  Dimensions Cdim;
-  if (A.isScalar() && B.isScalar()) {
-    Clen = 1;
-    Astride = 0;
-    Bstride = 0;
-    Cdim = Dimensions(1,1);
-  } else if (A.isScalar()) {
-    Astride = 0;
-    Bstride = 1;
-    Cdim = B.dimensions();
-    Clen = B.getLength();
-  } else if (B.isScalar()) {
-    Astride = 1;
-    Bstride = 0;
-    Cdim = A.dimensions();
-    Clen = A.getLength();
-  } else {
-    Astride = 1;
-    Bstride = 1;
-    Cdim = A.dimensions();
-    Clen = A.getLength();
-  }
-  if (!Astride || !Bstride) {
-    A.makeDense();
-    B.makeDense();
-  }
-  if (A.sparse() && !B.sparse()) 
-    A.makeDense();
-  if (!A.sparse() && B.sparse()) 
-    B.makeDense();
-  if (A.sparse()) {
-    sparse = true;
-    Cp = SparseSparseAdd(A.dataClass(),
-			 A.getSparseDataPointer(),
-			 A.getDimensionLength(0),
-			 A.getDimensionLength(1),
-			 B.getSparseDataPointer());
-  } else {
-    sparse = false;
-    Cp = Malloc(Clen*B.getElementSize());
-    switch(B.dataClass()) {
-    default: throw Exception("Unhandled type for second argument to A+B");
-    case FM_INT32:
-      addfullreal<int32>(Clen,(int32*) Cp, 
-			 (int32*) A.getDataPointer(), Astride,
-			 (int32*) B.getDataPointer(), Bstride);
-      break;
-    case FM_INT64:
-      addfullreal<int64>(Clen,(int64*) Cp, 
-			 (int64*) A.getDataPointer(), Astride,
-			 (int64*) B.getDataPointer(), Bstride);
-      break;
-    case FM_FLOAT:
-      addfullreal<float>(Clen,(float*) Cp, 
-			 (float*) A.getDataPointer(), Astride,
-			 (float*) B.getDataPointer(), Bstride);
-      break;
-    case FM_DOUBLE:
-      addfullreal<double>(Clen,(double*) Cp, 
-			  (double*) A.getDataPointer(), Astride,
-			  (double*) B.getDataPointer(), Bstride);
-      break;
-    case FM_COMPLEX:
-      addfullcomplex<float>(Clen,(float*) Cp, 
-			    (float*) A.getDataPointer(), Astride,
-			    (float*) B.getDataPointer(), Bstride);
-      break;
-    case FM_DCOMPLEX:
-      addfullcomplex<double>(Clen,(double*) Cp, 
-			     (double*) A.getDataPointer(), Astride,
-			     (double*) B.getDataPointer(), Bstride);
-      break;			 
-    }
-  }
-  return Array(B.dataClass(),Cdim,Cp,sparse);
-}
 
 /**
  * Subtract two objects.
@@ -1331,85 +912,8 @@ Array Add(Array A, Array B, Interpreter* m_eval) {
 //x = testeq(yi1-yi2,zi1-zi2) & testeq(yf1-yf2,zf1-zf2) & testeq(yd1-yd2,zd1-zd2) & testeq(yc1-yc2,zc1-zc2) & testeq(yz1-yz2,zz1-zz2);
 //@}
 //!
-Array Subtract(Array A, Array B, Interpreter* m_eval) {
-  // Process the two arguments through the type check and dimension checks...
-  VectorCheck(A,B,false,"-");
-  // Get a pointer to the function we ultimately need to execute
-  int Astride, Bstride;
-  void *Cp = NULL;
-  int Clen;
-  Dimensions Cdim;
-  bool sparse;
-
-  if (A.isScalar()) {
-    Astride = 0;
-    Bstride = 1;
-    Cdim = B.dimensions();
-    Clen = B.getLength();
-  } else if (B.isScalar()) {
-    Astride = 1;
-    Bstride = 0;
-    Cdim = A.dimensions();
-    Clen = A.getLength();
-  } else {
-    Astride = 1;
-    Bstride = 1;
-    Cdim = A.dimensions();
-    Clen = A.getLength();
-  }
-  if (!Astride || !Bstride) {
-    A.makeDense();
-    B.makeDense();
-  }
-  if (A.sparse() && !B.sparse()) 
-    A.makeDense();
-  if (!A.sparse() && B.sparse()) 
-    B.makeDense();
-  if (A.sparse()) {
-    sparse = true;
-    Cp = SparseSparseSubtract(A.dataClass(),
-			      A.getSparseDataPointer(),
-			      A.getDimensionLength(0),
-			      A.getDimensionLength(1),
-			      B.getSparseDataPointer());
-  } else {
-    sparse = false;
-    Cp = Malloc(Clen*B.getElementSize());
-    switch(B.dataClass()) {
-    default: throw Exception("Unhandled type for second argument to A-B");
-    case FM_INT32:
-      subtractfullreal<int32>(Clen,(int32*) Cp, 
-			      (int32*) A.getDataPointer(), Astride,
-			      (int32*) B.getDataPointer(), Bstride);
-      break;
-    case FM_INT64:
-      subtractfullreal<int64>(Clen,(int64*) Cp, 
-			      (int64*) A.getDataPointer(), Astride,
-			      (int64*) B.getDataPointer(), Bstride);
-      break;
-    case FM_FLOAT:
-      subtractfullreal<float>(Clen,(float*) Cp, 
-			      (float*) A.getDataPointer(), Astride,
-			      (float*) B.getDataPointer(), Bstride);
-      break;
-    case FM_DOUBLE:
-      subtractfullreal<double>(Clen,(double*) Cp, 
-			       (double*) A.getDataPointer(), Astride,
-			       (double*) B.getDataPointer(), Bstride);
-      break;
-    case FM_COMPLEX:
-      subtractfullcomplex<float>(Clen,(float*) Cp, 
-				 (float*) A.getDataPointer(), Astride,
-				 (float*) B.getDataPointer(), Bstride);
-      break;
-    case FM_DCOMPLEX:
-      subtractfullcomplex<double>(Clen,(double*) Cp, 
-				  (double*) A.getDataPointer(), Astride,
-				  (double*) B.getDataPointer(), Bstride);
-      break;			 
-    }
-  }
-  return Array(B.dataClass(),Cdim,Cp,sparse);
+Array Subtract(const Array& A, const Array &B) {
+  return DotOp<OpSubtract>(A,B);
 }
 
 /**
@@ -1582,99 +1086,8 @@ Array Subtract(Array A, Array B, Interpreter* m_eval) {
 //x = testeq(c,C);
 //@}
 //!
-Array DotMultiply(Array A, Array B, Interpreter* m_eval) {
-  // Process the two arguments through the type check and dimension checks...
-  VectorCheck(A,B,false,".*");
-  // Get a pointer to the function we ultimately need to execute
-  int Astride, Bstride;
-  void *Cp = NULL;
-  int Clen;
-  Dimensions Cdim;
-  bool sparse;
-  if (A.isScalar()) {
-    Astride = 0;
-    Bstride = 1;
-    Cdim = B.dimensions();
-    Clen = B.getLength();
-  } else if (B.isScalar()) {
-    Astride = 1;
-    Bstride = 0;
-    Cdim = A.dimensions();
-    Clen = A.getLength();
-  } else {
-    Astride = 1;
-    Bstride = 1;
-    Cdim = A.dimensions();
-    Clen = A.getLength();
-  }
-  //FIXME - these rules don't apply for multiplication!!
-  if (A.sparse() && B.isScalar()) {
-    sparse = true;
-    B.makeDense();
-    Cp = SparseScalarMultiply(A.dataClass(),
-			      A.getSparseDataPointer(),
-			      A.getDimensionLength(0),
-			      A.getDimensionLength(1),
-			      B.getDataPointer());
-  } else if (B.sparse() && A.isScalar()) {
-    sparse = true;
-    A.makeDense();
-    Cp = SparseScalarMultiply(B.dataClass(),
-			      B.getSparseDataPointer(),
-			      B.getDimensionLength(0),
-			      B.getDimensionLength(1),
-			      A.getDataPointer());
-  } else {
-    if (A.sparse() && !B.sparse()) 
-      A.makeDense();
-    if (!A.sparse() && B.sparse()) 
-      B.makeDense();
-    if (A.sparse()) {
-      sparse = true;
-      Cp = SparseSparseMultiply(A.dataClass(),
-				A.getSparseDataPointer(),
-				A.getDimensionLength(0),
-				A.getDimensionLength(1),
-				B.getSparseDataPointer());
-    } else {
-      sparse = false;
-      Cp = Malloc(Clen*B.getElementSize());
-      switch(B.dataClass()) {
-      default: throw Exception("Unhandled type for second argument to A.*B");
-      case FM_INT32:
-	multiplyfullreal<int32>(Clen,(int32*) Cp, 
-				(int32*) A.getDataPointer(), Astride,
-				(int32*) B.getDataPointer(), Bstride);
-	break;
-      case FM_INT64:
-	multiplyfullreal<int64>(Clen,(int64*) Cp, 
-				(int64*) A.getDataPointer(), Astride,
-				(int64*) B.getDataPointer(), Bstride);
-	break;
-      case FM_FLOAT:
-	multiplyfullreal<float>(Clen,(float*) Cp, 
-				(float*) A.getDataPointer(), Astride,
-				(float*) B.getDataPointer(), Bstride);
-	break;
-      case FM_DOUBLE:
-	multiplyfullreal<double>(Clen,(double*) Cp, 
-				 (double*) A.getDataPointer(), Astride,
-				 (double*) B.getDataPointer(), Bstride);
-	break;
-      case FM_COMPLEX:
-	multiplyfullcomplex<float>(Clen,(float*) Cp, 
-				   (float*) A.getDataPointer(), Astride,
-				   (float*) B.getDataPointer(), Bstride);
-	break;
-      case FM_DCOMPLEX:
-	multiplyfullcomplex<double>(Clen,(double*) Cp, 
-				    (double*) A.getDataPointer(), Astride,
-				    (double*) B.getDataPointer(), Bstride);
-	break;			 
-      }
-    }
-  }
-  return Array(B.dataClass(),Cdim,Cp,sparse);
+Array DotMultiply(const Array& A, const Array &B) {
+  return DotOp<OpMultiply>(A,B);
 }
  
 /**
@@ -1748,66 +1161,8 @@ Array DotMultiply(Array A, Array B, Interpreter* m_eval) {
 //c = 3 ./ a
 //@>
 //!
-Array DotRightDivide(Array A, Array B, Interpreter* m_eval) {
-  // Process the two arguments through the type check and dimension checks...
-  VectorCheck(A,B,true,"./");
-  // Get a pointer to the function we ultimately need to execute
-  int Astride, Bstride;
-  void *Cp = NULL;
-  int Clen;
-  Dimensions Cdim;
-
-  if (A.isScalar()) {
-    Astride = 0;
-    Bstride = 1;
-    Cdim = B.dimensions();
-    Clen = B.getLength();
-  } else if (B.isScalar()) {
-    Astride = 1;
-    Bstride = 0;
-    Cdim = A.dimensions();
-    Clen = A.getLength();
-  } else {
-    Astride = 1;
-    Bstride = 1;
-    Cdim = A.dimensions();
-    Clen = A.getLength();
-  }
-  Cp = Malloc(Clen*B.getElementSize());
-  switch(B.dataClass()) {
-    default: throw Exception("Unhandled type for second argument to A./B");
-  case FM_INT32:
-    dividefullreal<int32>(Clen,(int32*) Cp, 
-			  (int32*) A.getDataPointer(), Astride,
-			  (int32*) B.getDataPointer(), Bstride);
-    break;
-  case FM_INT64:
-    dividefullreal<int64>(Clen,(int64*) Cp, 
-			  (int64*) A.getDataPointer(), Astride,
-			  (int64*) B.getDataPointer(), Bstride);
-    break;
-  case FM_FLOAT:
-    dividefullreal<float>(Clen,(float*) Cp, 
-			  (float*) A.getDataPointer(), Astride,
-			  (float*) B.getDataPointer(), Bstride);
-    break;
-  case FM_DOUBLE:
-    dividefullreal<double>(Clen,(double*) Cp, 
-			   (double*) A.getDataPointer(), Astride,
-			   (double*) B.getDataPointer(), Bstride);
-    break;
-  case FM_COMPLEX:
-    dividefullcomplex<float>(Clen,(float*) Cp, 
-			     (float*) A.getDataPointer(), Astride,
-			     (float*) B.getDataPointer(), Bstride);
-    break;
-  case FM_DCOMPLEX:
-    dividefullcomplex<double>(Clen,(double*) Cp, 
-			      (double*) A.getDataPointer(), Astride,
-			      (double*) B.getDataPointer(), Bstride);
-    break;			 
-  }
-  return Array(B.dataClass(),Cdim,Cp);
+Array DotRightDivide(const Array& A, const Array& B) {
+  return DotOp<OpDivide>(A,B);
 }
 
 /**
@@ -1882,10 +1237,8 @@ Array DotRightDivide(Array A, Array B, Interpreter* m_eval) {
 //c = 3 .\ a
 //@>
 //!
-Array DotLeftDivide(Array A, Array B, Interpreter* m_eval) {
-  // Process the two arguments through the type check and dimension checks...
-  VectorCheck(A,B,true,".\\");
-  return DotRightDivide(B,A,m_eval);
+Array DotLeftDivide(const Array& A, const Array& B) {
+  return DotOp<OpDivide>(B,A);
 }
 
 /**
@@ -1958,23 +1311,19 @@ Array DotLeftDivide(Array A, Array B, Interpreter* m_eval) {
 //@}
 //!
 
-static Array ScreenIntegerScalars(Array B) {
-  if (B.isScalar() && (B.dataClass() >= FM_FLOAT)
-      && (B.dataClass() <= FM_DOUBLE)) {
-    double Bval = B.getContentsAsDoubleScalar();
-    if (Bval == rint(Bval))
-      return Array::int32Constructor(B.getContentsAsIntegerScalar());
+// Simplified test -- if A & B are both real
+// then if A is negative and B is non-integer,
+// then the complex case is used.
+Array DotPower(const Array& A, const Array& B) {
+  if (A.allReal() && B.allReal() &&
+      !IsNonNegative(A) && !IsInteger(B)) {
+    Array Acomplex(A);
+    Array Bcomplex(B);
+    Acomplex.forceComplex();
+    Bcomplex.forceComplex();
+    return DotOp<OpPower>(A,B);
   }
-  return B;
-}
-
-Array DotPower(Array A, Array B, Interpreter* m_eval) {
-  // Special case -- kludge to fix bug 1804267
-  B = ScreenIntegerScalars(B);
-  Array C(DoPowerTwoArgFunction(A,B));
-  if (A.sparse())
-    C.makeSparse();
-  return(C);
+  return DotOp<OpPower>(A,B);
 }
 
 /**
@@ -2434,572 +1783,43 @@ Array DotPower(Array A, Array B, Interpreter* m_eval) {
 //x = x & testeq(c,C);
 //@}
 //!
-Array LessThan(Array A, Array B, Interpreter* m_eval) {
-  // Process the two arguments through the type check and dimension checks...
-  VectorCheck(A,B,false,"<");
-  int Astride, Bstride;
-  void *Cp = NULL;
-  int Clen;
-  Dimensions Cdim;
-
-  if (A.isScalar()) {
-    Astride = 0;
-    Bstride = 1;
-    Cdim = B.dimensions();
-  } else if (B.isScalar()) {
-    Astride = 1;
-    Bstride = 0;
-    Cdim = A.dimensions();
-  } else {
-    Astride = 1;
-    Bstride = 1;
-    Cdim = A.dimensions();
-  }
-
-  // Check for sparse arguments
-  if (Astride && Bstride && A.sparse() && B.sparse()) {
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseSparseLogicalOp(A.dataClass(),
-				       A.getDimensionLength(0),
-				       A.getDimensionLength(1),
-				       A.getSparseDataPointer(),
-				       B.getSparseDataPointer(),
-				       SLO_LT),true);
-  } else if (Astride && !Bstride && A.sparse()) {
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseScalarLogicalOp(A.dataClass(),
-				       A.getDimensionLength(0),
-				       A.getDimensionLength(1),
-				       A.getSparseDataPointer(),
-				       B.getDataPointer(),
-				       SLO_LT),true);
-  } else if (!Astride && Bstride && B.sparse()) {
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseScalarLogicalOp(B.dataClass(),
-				       B.getDimensionLength(0),
-				       B.getDimensionLength(1),
-				       B.getSparseDataPointer(),
-				       A.getDataPointer(),
-				       SLO_GT),true);
-  }
-
-  A.makeDense();
-  B.makeDense();
-
-  Clen = Cdim.getElementCount();
-  Cp = Malloc(Clen*sizeof(logical));
-  switch(B.dataClass()) {
-    default: throw Exception("Unhandled type for second argument to A<B");
-  case FM_INT32:
-    lessthanfuncreal<int32>(Clen,(logical*) Cp, 
-			    (int32*) A.getDataPointer(), Astride,
-			    (int32*) B.getDataPointer(), Bstride);
-    break;
-  case FM_INT64:
-    lessthanfuncreal<int64>(Clen,(logical*) Cp, 
-			    (int64*) A.getDataPointer(), Astride,
-			    (int64*) B.getDataPointer(), Bstride);
-    break;
-  case FM_FLOAT:
-    lessthanfuncreal<float>(Clen,(logical*) Cp, 
-			    (float*) A.getDataPointer(), Astride,
-			    (float*) B.getDataPointer(), Bstride);
-    break;
-  case FM_DOUBLE:
-    lessthanfuncreal<double>(Clen,(logical*) Cp, 
-			     (double*) A.getDataPointer(), Astride,
-			     (double*) B.getDataPointer(), Bstride);
-    break;
-  case FM_COMPLEX:
-    lessthanfunccomplex<float>(Clen,(logical*) Cp, 
-			       (float*) A.getDataPointer(), Astride,
-			       (float*) B.getDataPointer(), Bstride);
-    break;
-  case FM_DCOMPLEX:
-    lessthanfunccomplex<double>(Clen,(logical*) Cp, 
-				(double*) A.getDataPointer(), Astride,
-				(double*) B.getDataPointer(), Bstride);
-    break;			 
-  }
-  return Array(FM_LOGICAL,Cdim,Cp);
+Array LessThan(const Array& A, const Array& B) {
+  return CmpOp<OpLessThan>(A,B);
 }
 
 /**
  * Element-wise less equals.
  */
-Array LessEquals(Array A, Array B, Interpreter* m_eval) {
-  // Process the two arguments through the type check and dimension checks...
-  VectorCheck(A,B,false,"<=");
-  int Astride, Bstride;
-  void *Cp = NULL;
-  int Clen;
-  Dimensions Cdim;
-
-  if (A.isScalar()) {
-    Astride = 0;
-    Bstride = 1;
-    Cdim = B.dimensions();
-  } else if (B.isScalar()) {
-    Astride = 1;
-    Bstride = 0;
-    Cdim = A.dimensions();
-  } else {
-    Astride = 1;
-    Bstride = 1;
-    Cdim = A.dimensions();
-  }
-  // Check for sparse arguments
-  if (Astride && Bstride && A.sparse() && B.sparse()) {
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseSparseLogicalOp(A.dataClass(),
-				       A.getDimensionLength(0),
-				       A.getDimensionLength(1),
-				       A.getSparseDataPointer(),
-				       B.getSparseDataPointer(),
-				       SLO_LE),true);
-  } else if (Astride && !Bstride && A.sparse()) {
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseScalarLogicalOp(A.dataClass(),
-				       A.getDimensionLength(0),
-				       A.getDimensionLength(1),
-				       A.getSparseDataPointer(),
-				       B.getDataPointer(),
-				       SLO_LE),true);
-  } else if (!Astride && Bstride && B.sparse()) {
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseScalarLogicalOp(B.dataClass(),
-				       B.getDimensionLength(0),
-				       B.getDimensionLength(1),
-				       B.getSparseDataPointer(),
-				       A.getDataPointer(),
-				       SLO_GE),true);
-  }
-
-  A.makeDense();
-  B.makeDense();
-
-  Clen = Cdim.getElementCount();
-  Cp = Malloc(Clen*sizeof(logical));
-  switch(B.dataClass()) {
-    default: throw Exception("Unhandled type for second argument to A<=B");
-  case FM_INT32:
-    lessequalsfuncreal<int32>(Clen,(logical*) Cp, 
-			      (int32*) A.getDataPointer(), Astride,
-			      (int32*) B.getDataPointer(), Bstride);
-    break;
-  case FM_INT64:
-    lessequalsfuncreal<int64>(Clen,(logical*) Cp, 
-			      (int64*) A.getDataPointer(), Astride,
-			      (int64*) B.getDataPointer(), Bstride);
-    break;
-  case FM_FLOAT:
-    lessequalsfuncreal<float>(Clen,(logical*) Cp, 
-			      (float*) A.getDataPointer(), Astride,
-			      (float*) B.getDataPointer(), Bstride);
-    break;
-  case FM_DOUBLE:
-    lessequalsfuncreal<double>(Clen,(logical*) Cp, 
-			       (double*) A.getDataPointer(), Astride,
-			       (double*) B.getDataPointer(), Bstride);
-    break;
-  case FM_COMPLEX:
-    lessequalsfunccomplex<float>(Clen,(logical*) Cp, 
-				 (float*) A.getDataPointer(), Astride,
-				 (float*) B.getDataPointer(), Bstride);
-    break;
-  case FM_DCOMPLEX:
-    lessequalsfunccomplex<double>(Clen,(logical*) Cp, 
-				  (double*) A.getDataPointer(), Astride,
-				  (double*) B.getDataPointer(), Bstride);
-    break;			 
-  }
-  return Array(FM_LOGICAL,Cdim,Cp);
+Array LessEquals(const Array& A, const Array& B) {
+  return CmpOp<OpLessEquals>(A,B);
 }
   
 /**
  * Element-wise greater than.
  */
-Array GreaterThan(Array A, Array B, Interpreter* m_eval) {
-  // Process the two arguments through the type check and dimension checks...
-  VectorCheck(A,B,false,">");
-  int Astride, Bstride;
-  void *Cp = NULL;
-  int Clen;
-  Dimensions Cdim;
-
-  if (A.isScalar()) {
-    Astride = 0;
-    Bstride = 1;
-    Cdim = B.dimensions();
-  } else if (B.isScalar()) {
-    Astride = 1;
-    Bstride = 0;
-    Cdim = A.dimensions();
-  } else {
-    Astride = 1;
-    Bstride = 1;
-    Cdim = A.dimensions();
-  }
-  // Check for sparse arguments
-  if (Astride && Bstride && A.sparse() && B.sparse()) {
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseSparseLogicalOp(A.dataClass(),
-				       A.getDimensionLength(0),
-				       A.getDimensionLength(1),
-				       A.getSparseDataPointer(),
-				       B.getSparseDataPointer(),
-				       SLO_GT),true);
-  } else if (Astride && !Bstride && A.sparse()) {
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseScalarLogicalOp(A.dataClass(),
-				       A.getDimensionLength(0),
-				       A.getDimensionLength(1),
-				       A.getSparseDataPointer(),
-				       B.getDataPointer(),
-				       SLO_GT),true);
-  } else if (!Astride && Bstride && B.sparse()) {
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseScalarLogicalOp(B.dataClass(),
-				       B.getDimensionLength(0),
-				       B.getDimensionLength(1),
-				       B.getSparseDataPointer(),
-				       A.getDataPointer(),
-				       SLO_LT),true);
-  }
-
-  A.makeDense();
-  B.makeDense();
-
-  Clen = Cdim.getElementCount();
-  Cp = Malloc(Clen*sizeof(logical));
-  switch(B.dataClass()) {
-    default: throw Exception("Unhandled type for second argument to A>B");
-  case FM_INT32:
-    greaterthanfuncreal<int32>(Clen,(logical*) Cp, 
-			       (int32*) A.getDataPointer(), Astride,
-			       (int32*) B.getDataPointer(), Bstride);
-    break;
-  case FM_INT64:
-    greaterthanfuncreal<int64>(Clen,(logical*) Cp, 
-			       (int64*) A.getDataPointer(), Astride,
-			       (int64*) B.getDataPointer(), Bstride);
-    break;
-  case FM_FLOAT:
-    greaterthanfuncreal<float>(Clen,(logical*) Cp, 
-			       (float*) A.getDataPointer(), Astride,
-			       (float*) B.getDataPointer(), Bstride);
-    break;
-  case FM_DOUBLE:
-    greaterthanfuncreal<double>(Clen,(logical*) Cp, 
-				(double*) A.getDataPointer(), Astride,
-				(double*) B.getDataPointer(), Bstride);
-    break;
-  case FM_COMPLEX:
-    greaterthanfunccomplex<float>(Clen,(logical*) Cp, 
-				  (float*) A.getDataPointer(), Astride,
-				  (float*) B.getDataPointer(), Bstride);
-    break;
-  case FM_DCOMPLEX:
-    greaterthanfunccomplex<double>(Clen,(logical*) Cp, 
-				   (double*) A.getDataPointer(), Astride,
-				   (double*) B.getDataPointer(), Bstride);
-    break;			 
-  }
-  return Array(FM_LOGICAL,Cdim,Cp);
+Array GreaterThan(const Array& A, const Array& B) {
+  return CmpOp<OpGreaterThan>(A,B);
 }
 
 /**
  * Element-wise greater equals.
  */
-Array GreaterEquals(Array A, Array B, Interpreter* m_eval) {
-  // Process the two arguments through the type check and dimension checks...
-  VectorCheck(A,B,false,">=");
-  int Astride, Bstride;
-  void *Cp = NULL;
-  int Clen;
-  Dimensions Cdim;
-
-  if (A.isScalar()) {
-    Astride = 0;
-    Bstride = 1;
-    Cdim = B.dimensions();
-  } else if (B.isScalar()) {
-    Astride = 1;
-    Bstride = 0;
-    Cdim = A.dimensions();
-  } else {
-    Astride = 1;
-    Bstride = 1;
-    Cdim = A.dimensions();
-  }
-  // Check for sparse arguments
-  if (Astride && Bstride && A.sparse() && B.sparse()) {
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseSparseLogicalOp(A.dataClass(),
-				       A.getDimensionLength(0),
-				       A.getDimensionLength(1),
-				       A.getSparseDataPointer(),
-				       B.getSparseDataPointer(),
-				       SLO_GE),true);
-  } else if (Astride && !Bstride && A.sparse()) {
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseScalarLogicalOp(A.dataClass(),
-				       A.getDimensionLength(0),
-				       A.getDimensionLength(1),
-				       A.getSparseDataPointer(),
-				       B.getDataPointer(),
-				       SLO_GE),true);
-  } else if (!Astride && Bstride && B.sparse()) {
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseScalarLogicalOp(B.dataClass(),
-				       B.getDimensionLength(0),
-				       B.getDimensionLength(1),
-				       B.getSparseDataPointer(),
-				       A.getDataPointer(),
-				       SLO_LE),true);
-  }
-
-  A.makeDense();
-  B.makeDense();
-
-  Clen = Cdim.getElementCount();
-  Cp = Malloc(Clen*sizeof(logical));
-  switch(B.dataClass()) {
-    default: throw Exception("Unhandled type for second argument to A>=B");
-  case FM_INT32:
-    greaterequalsfuncreal<int32>(Clen,(logical*) Cp, 
-				 (int32*) A.getDataPointer(), Astride,
-				 (int32*) B.getDataPointer(), Bstride);
-    break;
-  case FM_INT64:
-    greaterequalsfuncreal<int64>(Clen,(logical*) Cp, 
-				 (int64*) A.getDataPointer(), Astride,
-				 (int64*) B.getDataPointer(), Bstride);
-    break;
-  case FM_FLOAT:
-    greaterequalsfuncreal<float>(Clen,(logical*) Cp, 
-				 (float*) A.getDataPointer(), Astride,
-				 (float*) B.getDataPointer(), Bstride);
-    break;
-  case FM_DOUBLE:
-    greaterequalsfuncreal<double>(Clen,(logical*) Cp, 
-				  (double*) A.getDataPointer(), Astride,
-				  (double*) B.getDataPointer(), Bstride);
-    break;
-  case FM_COMPLEX:
-    greaterequalsfunccomplex<float>(Clen,(logical*) Cp, 
-				    (float*) A.getDataPointer(), Astride,
-				    (float*) B.getDataPointer(), Bstride);
-    break;
-  case FM_DCOMPLEX:
-    greaterequalsfunccomplex<double>(Clen,(logical*) Cp, 
-				     (double*) A.getDataPointer(), Astride,
-				     (double*) B.getDataPointer(), Bstride);
-    break;			 
-  }
-  return Array(FM_LOGICAL,Cdim,Cp);
+Array GreaterEquals(const Array& A, const Array& B) {
+  return CmpOp<OpGreaterEquals>(A,B);
 }
 
 /**
  * Element-wise equals.
  */
-Array Equals(Array A, Array B, Interpreter* m_eval) {
-  // Process the two arguments through the type check and dimension checks...
-  VectorCheck(A,B,false,"==");
-  int Astride, Bstride;
-  void *Cp = NULL;
-  int Clen;
-  Dimensions Cdim;
-
-  if (A.isScalar()) {
-    Astride = 0;
-    Bstride = 1;
-    Cdim = B.dimensions();
-  } else if (B.isScalar()) {
-    Astride = 1;
-    Bstride = 0;
-    Cdim = A.dimensions();
-  } else {
-    Astride = 1;
-    Bstride = 1;
-    Cdim = A.dimensions();
-  }
-  // Check for sparse arguments
-  if (Astride && Bstride && A.sparse() && B.sparse()) {
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseSparseLogicalOp(A.dataClass(),
-				       A.getDimensionLength(0),
-				       A.getDimensionLength(1),
-				       A.getSparseDataPointer(),
-				       B.getSparseDataPointer(),
-				       SLO_EQ),true);
-  } else if (Astride && !Bstride && A.sparse()) {
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseScalarLogicalOp(A.dataClass(),
-				       A.getDimensionLength(0),
-				       A.getDimensionLength(1),
-				       A.getSparseDataPointer(),
-				       B.getDataPointer(),
-				       SLO_EQ),true);
-  } else if (!Astride && Bstride && B.sparse()) {
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseScalarLogicalOp(B.dataClass(),
-				       B.getDimensionLength(0),
-				       B.getDimensionLength(1),
-				       B.getSparseDataPointer(),
-				       A.getDataPointer(),
-				       SLO_EQ),true);
-  }
-
-  A.makeDense();
-  B.makeDense();
-
-  Clen = Cdim.getElementCount();
-  Cp = Malloc(Clen*sizeof(logical));
-  switch(B.dataClass()) {
-    default: throw Exception("Unhandled type for second argument to A==B");
-  case FM_INT32:
-    equalsfuncreal<int32>(Clen,(logical*) Cp, 
-			  (int32*) A.getDataPointer(), Astride,
-			  (int32*) B.getDataPointer(), Bstride);
-    break;
-  case FM_INT64:
-    equalsfuncreal<int64>(Clen,(logical*) Cp, 
-			  (int64*) A.getDataPointer(), Astride,
-			  (int64*) B.getDataPointer(), Bstride);
-    break;
-  case FM_FLOAT:
-    equalsfuncreal<float>(Clen,(logical*) Cp, 
-			  (float*) A.getDataPointer(), Astride,
-			  (float*) B.getDataPointer(), Bstride);
-    break;
-  case FM_DOUBLE:
-    equalsfuncreal<double>(Clen,(logical*) Cp, 
-			   (double*) A.getDataPointer(), Astride,
-			   (double*) B.getDataPointer(), Bstride);
-    break;
-  case FM_COMPLEX:
-    equalsfunccomplex<float>(Clen,(logical*) Cp, 
-			     (float*) A.getDataPointer(), Astride,
-			     (float*) B.getDataPointer(), Bstride);
-    break;
-  case FM_DCOMPLEX:
-    equalsfunccomplex<double>(Clen,(logical*) Cp, 
-			      (double*) A.getDataPointer(), Astride,
-			      (double*) B.getDataPointer(), Bstride);
-    break;			 
-  }
-  return Array(FM_LOGICAL,Cdim,Cp);
+Array Equals(const Array& A, const Array& B) {
+  return CmpOp<OpEquals>(A,B);
 }
 
 /**
  * Element-wise notEquals.
  */
-Array NotEquals(Array A, Array B, Interpreter* m_eval) {
-  // Process the two arguments through the type check and dimension checks...
-  VectorCheck(A,B,false,"~=");
-  int Astride, Bstride;
-  void *Cp = NULL;
-  int Clen;
-  Dimensions Cdim;
-
-  if (A.isScalar()) {
-    Astride = 0;
-    Bstride = 1;
-    Cdim = B.dimensions();
-  } else if (B.isScalar()) {
-    Astride = 1;
-    Bstride = 0;
-    Cdim = A.dimensions();
-  } else {
-    Astride = 1;
-    Bstride = 1;
-    Cdim = A.dimensions();
-  }
-  // Check for sparse arguments
-  if (Astride && Bstride && A.sparse() && B.sparse()) {
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseSparseLogicalOp(A.dataClass(),
-				       A.getDimensionLength(0),
-				       A.getDimensionLength(1),
-				       A.getSparseDataPointer(),
-				       B.getSparseDataPointer(),
-				       SLO_NE),true);
-  } else if (Astride && !Bstride && A.sparse()) {
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseScalarLogicalOp(A.dataClass(),
-				       A.getDimensionLength(0),
-				       A.getDimensionLength(1),
-				       A.getSparseDataPointer(),
-				       B.getDataPointer(),
-				       SLO_NE),true);
-  } else if (!Astride && Bstride && B.sparse()) {
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseScalarLogicalOp(B.dataClass(),
-				       B.getDimensionLength(0),
-				       B.getDimensionLength(1),
-				       B.getSparseDataPointer(),
-				       A.getDataPointer(),
-				       SLO_NE),true);
-  }
-
-  A.makeDense();
-  B.makeDense();
-
-  Clen = Cdim.getElementCount();
-  Cp = Malloc(Clen*sizeof(logical));
-  switch(B.dataClass()) {
-    default: throw Exception("Unhandled type for second argument to A~=B");
-  case FM_INT32:
-    notequalsfuncreal<int32>(Clen,(logical*) Cp, 
-			     (int32*) A.getDataPointer(), Astride,
-			     (int32*) B.getDataPointer(), Bstride);
-    break;
-  case FM_INT64:
-    notequalsfuncreal<int64>(Clen,(logical*) Cp, 
-			     (int64*) A.getDataPointer(), Astride,
-			     (int64*) B.getDataPointer(), Bstride);
-    break;
-  case FM_FLOAT:
-    notequalsfuncreal<float>(Clen,(logical*) Cp, 
-			     (float*) A.getDataPointer(), Astride,
-			     (float*) B.getDataPointer(), Bstride);
-    break;
-  case FM_DOUBLE:
-    notequalsfuncreal<double>(Clen,(logical*) Cp, 
-			      (double*) A.getDataPointer(), Astride,
-			      (double*) B.getDataPointer(), Bstride);
-    break;
-  case FM_COMPLEX:
-    notequalsfunccomplex<float>(Clen,(logical*) Cp, 
-				(float*) A.getDataPointer(), Astride,
-				(float*) B.getDataPointer(), Bstride);
-    break;
-  case FM_DCOMPLEX:
-    notequalsfunccomplex<double>(Clen,(logical*) Cp, 
-				 (double*) A.getDataPointer(), Astride,
-				 (double*) B.getDataPointer(), Bstride);
-    break;			 
-  }
-  return Array(FM_LOGICAL,Cdim,Cp);
+Array NotEquals(const Array& A, const Array& B) {
+  return CmpOp<OpNotEquals>(A,B);
 }
 
 /**
@@ -3094,151 +1914,31 @@ Array NotEquals(Array A, Array B, Interpreter* m_eval) {
 //x = x | testeq(c,C);
 //@}
 //!
-Array And(Array A, Array B, Interpreter* m_eval) {
-  int Astride, Bstride;
-  void *Cp = NULL;
-  int Clen;
-  Dimensions Cdim;
-
-  BoolVectorCheck(A,B,"&");
-
-  if (A.isScalar()) {
-    Astride = 0;
-    Bstride = 1;
-    Cdim = B.dimensions();
-  } else if (B.isScalar()) {
-    Astride = 1;
-    Bstride = 0;
-    Cdim = A.dimensions();
-  } else {
-    Astride = 1;
-    Bstride = 1;
-    Cdim = A.dimensions();
-  }
-
-  // Check for sparse arguments
-  if (Astride && Bstride && A.sparse() && B.sparse()) {
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseSparseLogicalOp(A.dataClass(),
-				       A.getDimensionLength(0),
-				       A.getDimensionLength(1),
-				       A.getSparseDataPointer(),
-				       B.getSparseDataPointer(),
-				       SLO_AND),true);
-  } else if (Astride && !Bstride && A.sparse()) {
-    B.promoteType(FM_UINT32);
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseScalarLogicalOp(A.dataClass(),
-				       A.getDimensionLength(0),
-				       A.getDimensionLength(1),
-				       A.getSparseDataPointer(),
-				       B.getDataPointer(),
-				       SLO_AND),true);
-  } else if (!Astride && Bstride && B.sparse()) {
-    A.promoteType(FM_UINT32);
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseScalarLogicalOp(B.dataClass(),
-				       B.getDimensionLength(0),
-				       B.getDimensionLength(1),
-				       B.getSparseDataPointer(),
-				       A.getDataPointer(),
-				       SLO_AND),true);
-  }
-
-  A.makeDense();
-  B.makeDense();
-
-  Clen = Cdim.getElementCount();
-  Cp = Malloc(Clen*B.getElementSize());
-  boolean_and(Clen, (logical*) Cp, (const logical*) A.getDataPointer(), Astride, 
-	      (const logical*) B.getDataPointer(), Bstride);
-  return Array(FM_LOGICAL,Cdim,Cp);
+Array And(const Array& A, const Array& B) {
+  return DotOp<bool,OpAnd>(A,B,BoolScalar,BoolArray);
 }
 
 /**
  * Element-wise or
  */
-Array Or(Array A, Array B, Interpreter* m_eval) {
-  int Astride, Bstride;
-  void *Cp = NULL;
-  int Clen;
-  Dimensions Cdim;
-
-  BoolVectorCheck(A,B,"|");
-
-  if (A.isScalar()) {
-    Astride = 0;
-    Bstride = 1;
-    Cdim = B.dimensions();
-  } else if (B.isScalar()) {
-    Astride = 1;
-    Bstride = 0;
-    Cdim = A.dimensions();
-  } else {
-    Astride = 1;
-    Bstride = 1;
-    Cdim = A.dimensions();
-  }
-  // Check for sparse arguments
-  if (Astride && Bstride && A.sparse() && B.sparse()) {
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseSparseLogicalOp(A.dataClass(),
-				       A.getDimensionLength(0),
-				       A.getDimensionLength(1),
-				       A.getSparseDataPointer(),
-				       B.getSparseDataPointer(),
-				       SLO_OR),true);
-  } else if (Astride && !Bstride && A.sparse()) {
-    B.promoteType(FM_UINT32);
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseScalarLogicalOp(A.dataClass(),
-				       A.getDimensionLength(0),
-				       A.getDimensionLength(1),
-				       A.getSparseDataPointer(),
-				       B.getDataPointer(),
-				       SLO_OR),true);
-  } else if (!Astride && Bstride && B.sparse()) {
-    A.promoteType(FM_UINT32);
-    return Array(FM_LOGICAL,
-		 Cdim,
-		 SparseScalarLogicalOp(B.dataClass(),
-				       B.getDimensionLength(0),
-				       B.getDimensionLength(1),
-				       B.getSparseDataPointer(),
-				       A.getDataPointer(),
-				       SLO_OR),true);
-  }
-
-  A.makeDense();
-  B.makeDense();
-
-  Clen = Cdim.getElementCount();
-  Cp = Malloc(Clen*B.getElementSize());
-  boolean_or(Clen, (logical*) Cp, (const logical*) A.getDataPointer(), Astride, 
-	     (const logical*) B.getDataPointer(), Bstride);
-  return Array(FM_LOGICAL,Cdim,Cp);
+Array Or(const Array& A, const Array& B) {
+  return DotOp<bool,OpOr>(A,B,BoolScalar,BoolArray);
 }
 
 /**
  * Element-wise not
  */
-Array Not(Array A, Interpreter* m_eval) {
-  Array C;
-
-  A.promoteType(FM_LOGICAL);
-  C = Array(FM_LOGICAL,A.dimensions(),NULL);
-  void *Cp = Malloc(A.getLength()*C.getElementSize());
-  boolean_not(A.getLength(),(logical*)Cp,(const logical*) A.getDataPointer());
-  C.setDataPointer(Cp);
-  return C;
+static bool notfunc(bool t) {
+  return (!t);
 }
 
-Array Plus(Array A, Interpreter* m_eval) {
+Array Not(const Array& A) {
+  if (A.isScalar())
+    return Array::Array(!A.asScalar().toType(BoolScalar).constRealScalar<bool>());
+  return Array::Array(BoolArray,Apply(A.toType(BoolArray).constReal<bool>(),notfunc));
+}
+
+Array Plus(const Array& A) {
   return A;
 }
 
@@ -3246,48 +1946,436 @@ Array Plus(Array A, Interpreter* m_eval) {
  * Element-wise negate - this one is a custom job, so to speak.
  * 
  */
-Array Negate(Array A, Interpreter* m_eval){
-  Array C;
-  Class Aclass;
-
+Array Negate(const Array& A){
   if (A.isReferenceType())
     throw Exception("Cannot negate non-numeric types.");
-  Aclass = A.dataClass();
+  if (IsUnsigned(A))
+    throw Exception("negation not supported for unsigned types.");
+  Array B(double(0.0));
+  return DotOp<OpSubtract>(B,A);
+}
+
+/**
+ * Check that both of the argument objects are numeric.
+ */
+inline void CheckNumeric(Array &A, Array &B, QString opname){
+  bool Anumeric, Bnumeric;
+
+  Anumeric = !A.isReferenceType();
+  Bnumeric = !B.isReferenceType();
+  if (!(Anumeric && Bnumeric))
+    throw Exception(QString("Cannot apply numeric operation ") + 
+		    opname + QString(" to reference types."));
+}
+
+/**
+ * Check that both of the argument objects are of the
+ * same type.  If not, apply conversion.  Here are the
+ * rules:
+ *   Float operations produce float results.
+ *   Double operations produce double results.
+ *   Mixtures of float and double operations produce double results.
+ *   Integer operations (of any kind) produce int results - 
+ *     the question is what type do these objects get promoted too?  The
+ *     answer is a signed int (32 bits).
+ *   Mixtures of real and complex operations produce complex results.
+ *   Integer constants are 32 bit by default
+ *   Float constants are 64 bit by default
+ *   Division operations lead to promotion 
+ *   Character types are automatically (demoted) to 32 bit integers.
+ *
+ *   The way to accomplish this is as follows: compute the larger
+ *   of the types of A and B.  Call this type t_max.  If t_max
+ *   is not an integer type, promote both types to this type.
+ *   If t_max is an integer type, promote both objects to an FM_INT32.
+ *   If this is a division operation or a matrix operation, promote both 
+ *    objects to an FM_DOUBLE64!
+ *
+ */
+
+//!
+//@Module TYPERULES Type Rules
+//@@Section FreeMat
+//@@Usage
+//FreeMat follows an extended form of C's type rules (the extension
+//is to handle complex data types.  The general rules are as follows:
+//\begin{itemize}
+//  \item Integer types are promoted to @|int32| types, except
+//        for matrix operations and division operations.
+//  \item Mixtures of @|float| and @|complex| types produce @|complex|
+//        outputs.
+//  \item Mixtures of @|double| or @|int32| types and @|dcomplex|
+//        types produce @|dcomplex| outputs.
+//  \item Arguments to operators are promoted to the largest type
+//        present among the operands.
+//  \item Type promotion is not allowed to reduce the information
+//        content of the variable.  The only exception to this is
+//        64-bit integers, which can lose information when they
+//        are promoted to 64-bit @|double| values.  
+//\end{itemize}
+//These rules look tricky, but in reality, they are designed so that
+//you do not actively have to worry about the types when performing
+//mathematical operations in FreeMat.  The flip side of this, of course
+//is that unlike C, the output of numerical operations is not automatically
+//typecast to the type of the variable you assign the value to. 
+//@@Tests
+//@$"y=1+2","3","exact"
+//@$"y=1f*i","i","exact"
+//@$"y=pi+i","dcomplex(pi+i)","close"
+//@$"y=1/2","0.5","exact"
+//!
+void TypeCheck(Array &A, Array &B, bool isDivOrMatrix) {
+  Class Aclass(A.dataClass());
+  Class Bclass(B.dataClass());
+  Class Cclass;
+  // First, anything less than an int32 is promoted to an int32
+  // Strings are treates as int32.
+  if ((Aclass < FM_INT32) || (Aclass == FM_STRING)) Aclass = FM_INT32;
+  if ((Bclass < FM_INT32) || (Bclass == FM_STRING)) Bclass = FM_INT32;
+  // Division or matrix operations do no allow integer
+  // data types.  These must be promoted to doubles.
+  if (isDivOrMatrix && (Aclass < FM_FLOAT)) Aclass = FM_DOUBLE;
+  if (isDivOrMatrix && (Bclass < FM_FLOAT)) Bclass = FM_DOUBLE;
+  // An integer or double mixed with a complex is promoted to a dcomplex type
+  if ((Aclass == FM_COMPLEX) && ((Bclass == FM_DOUBLE) || (Bclass < FM_FLOAT))) Bclass = FM_DCOMPLEX;
+  if ((Bclass == FM_COMPLEX) && ((Aclass == FM_DOUBLE) || (Aclass < FM_FLOAT))) Aclass = FM_DCOMPLEX;
+  // The output class is now the dominant class remaining:
+  Cclass = (Aclass > Bclass) ? Aclass : Bclass;
+  A.promoteType(Cclass);
+  B.promoteType(Cclass);
+}
+
+/**
+ * We want to perform a matrix-matrix operation between two data objects.
+ * The following checks are required:
+ *  1. If A or B is a scalar, then return false - this is really a 
+ *     vector operation, and the arguments should be passed to a 
+ *     vector checker (like VectorCheck).
+ *  2. Both A & B must be numeric
+ *  3. Both A & B must be the same type (if not, the lesser type is
+ *     automatically promoted).
+ *  4. Both A & B must be 2-Dimensional.
+ *  5. A & B must be conformant, i.e. the number of columns in A must
+ *     match the number of rows in B.
+ */
+inline bool MatrixCheck(Array &A, Array &B, std::string opname){
+  // Test for either a scalar (test 1)
+  if (A.isScalar() || B.isScalar())
+    return false;
+
+  // Test for A & B numeric
+  CheckNumeric(A,B,opname);
+
+  // Test for 2D
+  if (!A.is2D() || !B.is2D()) 
+    throw Exception(std::string("Cannot apply matrix operation ") + 
+		    opname + std::string(" to N-Dimensional arrays."));
   
-  if (Aclass == FM_STRING)
-    Aclass = FM_INT32;
-  else if (Aclass < FM_INT32)
-    Aclass = FM_INT32;
+  // Test the types
+  TypeCheck(A,B,true);
+  return true;
+}
 
-  A.promoteType(Aclass);
 
-  C = Array(Aclass,A.dimensions(),NULL);
-  void *Cp = Malloc(A.getLength()*C.getElementSize());
-  switch (Aclass) {
-  default: throw Exception("Unhandled type for -A");
-  case FM_INT32:
-    neg<int32>(A.getLength(),(int32*)Cp,(int32*)A.getDataPointer());
-    break;
-  case FM_INT64:
-    neg<int64>(A.getLength(),(int64*)Cp,(int64*)A.getDataPointer());
-    break;
-  case FM_FLOAT:
-    neg<float>(A.getLength(),(float*)Cp,(float*)A.getDataPointer());
-    break;
-  case FM_DOUBLE:
-    neg<double>(A.getLength(),(double*)Cp,(double*)A.getDataPointer());
-    break;
-  case FM_COMPLEX:
-    neg<float>(2*A.getLength(),(float*)Cp,(float*)A.getDataPointer());
-    break;
-  case FM_DCOMPLEX:
-    neg<double>(2*A.getLength(),(double*)Cp,(double*)A.getDataPointer());
-    break;
+/*
+ * Check to see if two dimensions (when treated as vectors) are equivalent in size.
+ */
+bool SameSizeCheck(Dimensions Adim, Dimensions Bdim) {
+  Adim.simplify();
+  Bdim.simplify();
+  return (Adim.equals(Bdim));
+}
+
+/**
+ * We want to perform a vector operation between two data objects.
+ * The following checks are required:
+ *  1. Both A & B must be numeric
+ *  2. Either A & B are the same size or
+ *      A is a scalar or B is a scalar.
+ */
+inline void VectorCheck(Array& A, Array& B, bool promote, std::string opname){
+  StringVector dummySV;
+
+  // Check for numeric types
+  CheckNumeric(A,B,opname);
+  
+  if (!(SameSizeCheck(A.dimensions(),B.dimensions()) || A.isScalar() || B.isScalar()))
+    throw Exception(std::string("Size mismatch on arguments to arithmetic operator ") + opname);
+  
+  // Test the types.
+  TypeCheck(A,B,promote);
+}
+
+/**
+ * We want to perform a vector operator between two logical data objects.
+ * The following operations are performed:
+ *  1. Both A & B are converted to logical types.
+ *  2. Either A & B must be the same size, or A is a
+ *     scalar or B is a scalar.
+ */
+inline void BoolVectorCheck(Array& A, Array& B,std::string opname){
+  A.promoteType(FM_LOGICAL);
+  B.promoteType(FM_LOGICAL);
+
+  if (!(SameSizeCheck(A.dimensions(),B.dimensions()) || A.isScalar() || B.isScalar()))
+    throw Exception(std::string("Size mismatch on arguments to ") + opname);
+}
+
+
+/**
+ * Handle a particular type case in the power operator.
+ */
+inline Array doPowerAssist(Array A, Class AClass, 
+			   Array B, Class BClass,
+			   Class CClass, vvfun exec) {
+  Array C;
+  A.promoteType(AClass);
+  B.promoteType(BClass);
+
+  // S^F, F^S, S^S are all done via full intermediate products
+  // Only S^scalar is done using a sparse algorithm
+  if (B.isScalar() && A.sparse())
+    return SparsePowerFunc(A,B);
+  A.makeDense();
+  B.makeDense();
+
+  if (A.isScalar()) {
+    int Blen(B.getLength());
+    C = Array(CClass,B.dimensions(),NULL);
+    void *Cp = Malloc(Blen*C.getElementSize());
+    exec(Blen,Cp,A.getDataPointer(),0,B.getDataPointer(),1);
+    C.setDataPointer(Cp);
+  } else if (B.isScalar()) {
+    int Alen(A.getLength());
+    C = Array(CClass,A.dimensions(),NULL);
+    void *Cp = Malloc(Alen*C.getElementSize());
+    exec(Alen,Cp,A.getDataPointer(),1,B.getDataPointer(),0);
+    C.setDataPointer(Cp);
+  } else {
+    int Alen(A.getLength());
+    C = Array(CClass,A.dimensions(),NULL);
+    void *Cp = Malloc(Alen*C.getElementSize());
+    exec(Alen,Cp,A.getDataPointer(),1,B.getDataPointer(),1);
+    C.setDataPointer(Cp);
   }
-  C.setDataPointer(Cp);
   return C;
 }
 
+// Invert a square matrix - Should check for diagonal matrices
+// as a special case
+Array InvertMatrix(Array a, Interpreter* m_eval) {
+  if (!a.is2D())
+    throw Exception("Cannot invert N-dimensional arrays.");
+  if (a.isReferenceType())
+    throw Exception("Cannot invert reference-type arrays.");
+  if (a.isScalar())
+    return DotPower(a,Array::floatConstructor(-1),m_eval);
+  int N(a.getDimensionLength(0));
+  if (a.sparse()) {
+    uint32 *I = (uint32*) Malloc(sizeof(uint32)*N);
+    for (int k=0;k<N;k++)
+      I[k] = k+1;
+    float v = 1.0f;
+    Array B(FM_FLOAT,a.dimensions(),
+	    makeSparseFromIJV(FM_FLOAT,N,N,N,I,1,I,1,&v,0),true);
+    Free(I);
+    Array c(LeftDivide(a,B,m_eval));
+    c.makeSparse();
+    return c;
+  } else {
+    Array ones(Array::floatVectorConstructor(N));
+    float *dp = (float*) ones.getReadWriteDataPointer();
+    for (int i=0;i<N;i++) dp[i] = 1.0f;
+    Array B(Array::diagonalConstructor(ones,0));
+    return LeftDivide(a,B,m_eval);
+  }
+}
+  
+// Handle matrix powers for sparse matrices
+Array MatrixPowerSparse(Array a, Array b, Interpreter* m_eval) {
+  // The expression a^B where a is a scalar, and B is sparse is not handled
+  if (a.isScalar() && !b.isScalar())
+    throw Exception("expression a^B, where a is a scalar and B is a sparse matrix is not supported (use full to convert B to non-sparse matrix");
+  // The expression A^B is not supported
+  if (!a.isScalar() && !b.isScalar())
+    throw Exception("expression A^B where A and B are both sparse matrices is not supported (or defined)");
+  // The expression A^b where b is not an integer is not supported
+  if (!b.isReal())
+    throw Exception("expression A^b where b is complex and A is sparse is not supported (use full to convert A to a non-sparse matrix)");
+  b.promoteType(FM_DOUBLE);
+  const double*dp = (const double*) b.getDataPointer();
+  if ((*dp) != rint(*dp))
+    throw Exception("expression A^b where b is non-integer and A is sparse is not supported (use full to convert A to a non-sparse matrix)");
+  if (a.getDimensionLength(0) != a.getDimensionLength(1))
+    throw Exception("expression A^b requires A to be square.");
+  int power = (int) *dp;
+  if (power < 0) {
+    a = InvertMatrix(a,m_eval);
+    power = -power;
+  }
+  if (power == 0) {
+    Array r(FM_FLOAT,a.dimensions(),
+	    SparseOnesFunc(a.dataClass(),a.getDimensionLength(0),a.getDimensionLength(1),
+			   a.getSparseDataPointer()),true);
+    r.promoteType(a.dataClass());
+    return r;
+  }
+  Array c(a);
+  for (int i=1;i<power;i++)
+    c = Multiply(c,a,m_eval);
+  return c;
+}
+
+/**
+ * The power function is a special case of the vector-vector operations.  
+ * In this case, if the real vector contains any negative elements
+ * A real vector can be written as (r*e^(j\theta))^p = r^p*e^(j*\theta*p)
+ * If there are any components of A negative raised to a non-integer power,
+ * then A and B are promoted to complex types.  If A is a double, then they
+ * are promoted to dcomplex types.  So the rules are as follows:
+ * A complex, B arbitrary -> output is complex, unless B is double or dcomplex
+ * A dcomplex, B arbitrary -> output is dcomplex
+ * A double, arbitrary, B integer -> output is double
+ * A double, negative, B noninteger -> output is dcomplex
+ * A float, arbitrary, B integer -> output is float
+ * A float, negative, B noninteger -> output is complex, unless B is double or dcomplex
+ *
+ * Some simplification can take place - the following type combinations
+ * are possible - with the unique combinations numbered
+ * 1. complex, integer   -> complex
+ * 2. complex, float     -> complex
+ * 3. complex, double    >> dcomplex, double   -> dcomplex
+ * 4. complex, complex   -> complex
+ * 5. complex, dcomplex  >> dcomplex, dcomplex -> dcomplex
+ * 6. dcomplex, integer  -> dcomplex
+ *    dcomplex, float    >> dcomplex, double   -> dcomplex (3)
+ *    dcomplex, double   >> dcomplex, double   -> dcomplex (3)
+ *    dcomplex, complex  >> dcomplex, dcomplex -> dcomplex (5)
+ *    dcomplex, dcomplex >> dcomplex, dcomplex -> dcomplex (5)
+ * 7. double, integer    -> double
+ *    double-, float     >> dcomplex, dcomplex -> dcomplex (5)
+ *    double-, double    >> dcomplex, dcomplex -> dcomplex (5)
+ *    double-, complex   >> dcomplex, dcomplex -> dcomplex (5)
+ *    double-, dcomplex  >> dcomplex, dcomplex -> dcomplex (5)
+ * 8. double+, float     >> double, double -> double
+ *    double+, double    >> double, double -> double (8)
+ *    double+, complex   >> dcomplex, dcomplex -> dcomplex (5)
+ *    double+, dcomplex  >> dcomplex, dcomplex -> dcomplex (5)
+ * 9. float, integer     -> float
+ *    float-, float      >> complex, complex -> complex (4)
+ *    float-, double     >> dcomplex, dcomplex -> dcomplex (5)
+ *    float-, complex    >> complex, complex -> complex (4)
+ *    float-, dcomplex   >> dcomplex, dcomplex -> dcomplex (5)
+ *10. float+, float      >> float, float -> float
+ *    float+, double     >> double, double -> double (8)
+ *    float+, complex    >> complex, complex -> complex (4)
+ *    float+, dcomplex   >> dcomplex, dcomplex -> dcomplex (5)
+ *
+ * This type scheme is complicated, but workable.  If A is an 
+ * integer type, it is first promoted to double, before the
+ * rules are applied.  Then, we note that the rules can be cleaved
+ * along the lines of B being integer or not.  If B is integer,
+ * we apply the appropriate version of 1., 6., 7., 9..  This
+ * covers 4 of the 6 cases.  Next, we determine if A is complex.
+ * If A is complex, we check if B is double or dcomplex. If either
+ * is the case, we promote A to dcomplex.  If A is dcomplex,
+ * we promote B to double or dcomplex.  Next, we test for
+ * rules 2., 3., 4., 5.  
+ */
+
+#define OPCASE(t,o) case t: opType = o; break;
+#define MAPOP(o,a,b,c,f) case o: return doPowerAssist(A,a,B,b,c,f);
+inline Array DoPowerTwoArgFunction(Array A, Array B){
+  Array C;
+  bool Anegative;
+  StringVector dummySV;
+  Class AClass, BClass;
+  int opType;
+
+  if (A.isEmpty() || B.isEmpty())
+    return Array::emptyConstructor();
+  CheckNumeric(A,B,"^");
+  if (!(SameSizeCheck(A.dimensions(),B.dimensions()) || A.isScalar() || B.isScalar()))
+    throw Exception("Size mismatch on arguments to power (^) operator.");
+  // If A is not at least a float type, promote it to double
+  AClass = A.dataClass();
+  BClass = B.dataClass();
+  if (AClass < FM_FLOAT) AClass = FM_DOUBLE;
+  if (BClass < FM_INT32) BClass = FM_INT32;
+  // Get a read on if A is positive
+  Anegative = !(A.isPositive());
+  // Check through the different type cases...
+  opType = 0;
+  if (AClass == FM_COMPLEX) {
+    switch (BClass) {
+    default: throw Exception("Unhandled type for second argument to A^B");
+      OPCASE(FM_INT32,1);
+      OPCASE(FM_FLOAT,2);
+      OPCASE(FM_DOUBLE,3);
+      OPCASE(FM_COMPLEX,4);
+      OPCASE(FM_DCOMPLEX,5);
+    }
+  } else if (AClass == FM_DCOMPLEX) {
+    switch(BClass) {
+    default: throw Exception("Unhandled type for second argument to A^B");
+      OPCASE(FM_INT32,6);
+      OPCASE(FM_FLOAT,3);
+      OPCASE(FM_DOUBLE,3);
+      OPCASE(FM_COMPLEX,5);
+      OPCASE(FM_DCOMPLEX,5);
+    }
+  } else if (AClass == FM_DOUBLE && Anegative) {
+    switch(BClass) {
+    default: throw Exception("Unhandled type for second argument to A^B");
+      OPCASE(FM_INT32,7);
+      OPCASE(FM_FLOAT,5);
+      OPCASE(FM_DOUBLE,5);
+      OPCASE(FM_COMPLEX,5);
+      OPCASE(FM_DCOMPLEX,5);
+    }      
+  } else if (AClass == FM_DOUBLE && (!Anegative)){
+    switch(BClass) {
+    default: throw Exception("Unhandled type for second argument to A^B");
+      OPCASE(FM_INT32,7);
+      OPCASE(FM_FLOAT,8);
+      OPCASE(FM_DOUBLE,8);
+      OPCASE(FM_COMPLEX,5);
+      OPCASE(FM_DCOMPLEX,5);
+    }      
+  } else if (AClass == FM_FLOAT && Anegative) {
+    switch(BClass) {
+    default: throw Exception("Unhandled type for second argument to A^B");
+      OPCASE(FM_INT32,9);
+      OPCASE(FM_FLOAT,4);
+      OPCASE(FM_DOUBLE,5);
+      OPCASE(FM_COMPLEX,4);
+      OPCASE(FM_DCOMPLEX,5);
+    }      
+  } else if (AClass == FM_FLOAT && (!Anegative)){
+    switch(BClass) {
+    default: throw Exception("Unhandled type for second argument to A^B");
+      OPCASE(FM_INT32,9);
+      OPCASE(FM_FLOAT,10);
+      OPCASE(FM_DOUBLE,8);
+      OPCASE(FM_COMPLEX,4);
+      OPCASE(FM_DCOMPLEX,5);
+    }
+  }
+  // Invoke the appropriate case
+  switch(opType) {
+    default: throw Exception("Unhandled type combination for A^B");
+    MAPOP(1,FM_COMPLEX,FM_INT32,FM_COMPLEX,(vvfun) cicpower);
+    MAPOP(2,FM_COMPLEX,FM_FLOAT,FM_COMPLEX,(vvfun) cfcpower);
+    MAPOP(3,FM_DCOMPLEX,FM_DOUBLE,FM_DCOMPLEX,(vvfun) zdzpower);
+    MAPOP(4,FM_COMPLEX,FM_COMPLEX,FM_COMPLEX,(vvfun) cccpower);
+    MAPOP(5,FM_DCOMPLEX,FM_DCOMPLEX,FM_DCOMPLEX,(vvfun) zzzpower);
+    MAPOP(6,FM_DCOMPLEX,FM_INT32,FM_DCOMPLEX,(vvfun) zizpower);
+    MAPOP(7,FM_DOUBLE,FM_INT32,FM_DOUBLE,(vvfun) didpower);
+    MAPOP(8,FM_DOUBLE,FM_DOUBLE,FM_DOUBLE,(vvfun) dddpower);
+    MAPOP(9,FM_FLOAT,FM_INT32,FM_FLOAT,(vvfun) fifpower);
+    MAPOP(10,FM_FLOAT,FM_FLOAT,FM_FLOAT,(vvfun) fffpower);
+  }
+}
 
 /**
  * Matrix-matrix multiply

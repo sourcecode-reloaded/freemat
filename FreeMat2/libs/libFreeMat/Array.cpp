@@ -1613,6 +1613,46 @@ const index_t Array::asIndexScalar() const {
   }
 }
 
+void Array::forceComplex() {
+  switch (type()) {
+  default:
+    return;
+  case Int8Scalar:
+    imag<int8>();
+    return;
+  case UInt8Scalar:
+    imag<uint8>();
+    return;
+  case Int16Scalar:
+    imag<int16>();
+    return;
+  case UInt16Scalar:
+    imag<uint16>();
+    return;
+  case Int32Scalar:
+    imag<int32>();
+    return;
+  case UInt32Scalar:
+    imag<uint32>();
+    return;
+  case Int64Scalar:
+    imag<int64>();
+    return;
+  case UInt64Scalar:
+    imag<uint64>();
+    return;
+  case FloatScalar:
+    imag<float>();
+    return;
+  case DoubleScalar:
+    imag<double>();
+    return;
+  case DoubleSparse:
+    imagSparse();
+    return;
+  }
+}
+
 const Array Array::asScalar() const {
   if ((m_type >= BoolScalar) &&
       (m_type <= DoubleScalar)) return *this;
@@ -1786,6 +1826,96 @@ std::ostream& operator<<(std::ostream& o, const Array &t) {
   
 bool IsColonOp(const Array &x) {
   return (x.type() == StringArray) && (x.string() == ":");
+}
+
+bool IsNonNegative(const Array &x) {
+  if (!x.allReal()) return false;
+  switch (x.type()) {
+  default:
+    return false;
+  case BoolArray:
+    return true;
+  case Int8Array:
+    return IsNonNegative(x.constReal<int8>());
+  case UInt8Array:
+    return true;
+  case Int16Array:
+    return IsNonNegative(x.constReal<int16>());
+  case StringArray:
+  case UInt16Array:
+    return true;
+  case Int32Array:
+    return IsNonNegative(x.constReal<int32>());
+  case UInt32Array:
+    return true;
+  case Int64Array:
+    return IsNonNegative(x.constReal<int64>());
+  case UInt64Array:
+    return true;
+  case FloatArray:
+    return IsNonNegative(x.constReal<float>());
+  case DoubleArray:
+    return IsNonNegative(x.constReal<double>());
+  case DoubleSparse:
+    return IsNonNegative(x.constRealSparse());
+  }
+}
+
+bool IsUnsigned(const Array &x) {
+  switch (x.type()) {
+  default:
+    return false;
+  case BoolArray:
+  case UInt8Array:
+  case StringArray:
+  case UInt16Array:
+  case UInt32Array:
+  case UInt64Array:
+  case BoolScalar:
+  case UInt8Scalar:
+  case UInt16Scalar:
+  case UInt32Scalar:
+  case UInt64Scalar:
+    return true;
+  }
+}
+
+bool IsInteger(const Array &x) {
+  if (!x.allReal()) return false;
+  switch (x.type()) {
+  default:
+    return false;
+  case BoolArray:
+  case Int8Array:
+  case UInt8Array:
+  case Int16Array:
+  case StringArray:
+  case UInt16Array:
+  case Int32Array:
+  case UInt32Array:
+  case Int64Array:
+  case UInt64Array:
+  case BoolScalar:
+  case Int8Scalar:
+  case UInt8Scalar:
+  case Int16Scalar:
+  case UInt16Scalar:
+  case Int32Scalar:
+  case UInt32Scalar:
+  case Int64Scalar:
+  case UInt64Scalar:
+    return true;
+  case FloatArray:
+    return IsInteger(x.constReal<float>());
+  case DoubleArray:
+    return IsInteger(x.constReal<double>());
+  case DoubleSparse:
+    return IsInteger(x.constRealSparse());
+  case FloatScalar:
+    return IsInteger(x.constRealScalar<float>());
+  case DoubleScalar:
+    return IsInteger(x.constRealScalar<double>());
+  }
 }
 
 int32 Array::integer() const {

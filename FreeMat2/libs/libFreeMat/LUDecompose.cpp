@@ -270,7 +270,7 @@ void ComplexLU(int nrows, int ncols, T *l, T *u, T*a,
 }
 
 
-ArrayVector LUDecompose_Single(int nargout, Array A) {
+ArrayVector LUDecompose(int nargout, Array A) {
   if (nargout > 3)
     throw Exception("illegal usage of lu function - for dense matrices, maximum number of outputs is 3");
   int nrows = int(A.rows());
@@ -278,86 +278,81 @@ ArrayVector LUDecompose_Single(int nargout, Array A) {
   int p = min(nrows,ncols);
   ArrayVector retval;
   A = A.asArrayType();
-  if (A.type() != FloatArray)
-    throw Exception("wrong type for @single/lu function");
-  if (A.allReal()) {
-    BasicArray<float> l(NTuple(nrows,p));
-    BasicArray<float> u(NTuple(p,ncols));
-    if (nargout <= 2) {
-      RealLU<float>(nrows,ncols,l.data(),u.data(),A.real<float>().data(),sgetrf_);
-      retval.push_back(Array(FloatArray,l));
-      retval.push_back(Array(FloatArray,u));
-    } else if (nargout == 3) {
-      BasicArray<float> piv(NTuple(nrows,ncols));
-      RealLUP<float>(nrows,ncols,l.data(),u.data(),piv.data(),A.real<float>().data(),sgetrf_);
-      retval.push_back(Array(FloatArray,l));
-      retval.push_back(Array(FloatArray,u));
-      retval.push_back(Array(FloatArray,piv));
+  switch (A.type()) {
+  default:
+    throw Exception("unhandled type for lu function");
+  case FloatArray:
+    {
+      if (A.allReal()) {
+	BasicArray<float> l(NTuple(nrows,p));
+	BasicArray<float> u(NTuple(p,ncols));
+	if (nargout <= 2) {
+	  RealLU<float>(nrows,ncols,l.data(),u.data(),A.real<float>().data(),sgetrf_);
+	  retval.push_back(Array(FloatArray,l));
+	  retval.push_back(Array(FloatArray,u));
+	} else if (nargout == 3) {
+	  BasicArray<float> piv(NTuple(nrows,ncols));
+	  RealLUP<float>(nrows,ncols,l.data(),u.data(),piv.data(),A.real<float>().data(),sgetrf_);
+	  retval.push_back(Array(FloatArray,l));
+	  retval.push_back(Array(FloatArray,u));
+	  retval.push_back(Array(FloatArray,piv));
+	}
+	return retval;
+      } else {
+	BasicArray<float> l(NTuple(2*nrows,p));
+	BasicArray<float> u(NTuple(2*p,ncols));
+	BasicArray<float> Atotal(MergeComplex(A.constReal<float>(),A.constImag<float>()));
+	if (nargout <= 2) {
+	  ComplexLU<float>(nrows,ncols,l.data(),u.data(),Atotal.data(),cgetrf_);
+	  retval.push_back(Array(DoubleArray,SplitReal(l),SplitImag(l)));
+	  retval.push_back(Array(DoubleArray,SplitReal(u),SplitImag(u)));
+	} else if (nargout == 3) {
+	  BasicArray<float> piv(NTuple(nrows,nrows));
+	  ComplexLUP<float>(nrows,ncols,l.data(),u.data(),piv.data(),
+			    Atotal.data(),cgetrf_);
+	  retval.push_back(Array(DoubleArray,SplitReal(l),SplitImag(l)));
+	  retval.push_back(Array(DoubleArray,SplitReal(u),SplitImag(u)));
+	  retval.push_back(Array(DoubleArray,piv));
+	}
+      }
     }
-    return retval;
-  } else {
-    BasicArray<float> l(NTuple(2*nrows,p));
-    BasicArray<float> u(NTuple(2*p,ncols));
-    BasicArray<float> Atotal(MergeComplex(A.constReal<float>(),A.constImag<float>()));
-    if (nargout <= 2) {
-      ComplexLU<float>(nrows,ncols,l.data(),u.data(),Atotal.data(),cgetrf_);
-      retval.push_back(Array(DoubleArray,SplitReal(l),SplitImag(l)));
-      retval.push_back(Array(DoubleArray,SplitReal(u),SplitImag(u)));
-    } else if (nargout == 3) {
-      BasicArray<float> piv(NTuple(nrows,nrows));
-      ComplexLUP<float>(nrows,ncols,l.data(),u.data(),piv.data(),
-			Atotal.data(),cgetrf_);
-      retval.push_back(Array(DoubleArray,SplitReal(l),SplitImag(l)));
-      retval.push_back(Array(DoubleArray,SplitReal(u),SplitImag(u)));
-      retval.push_back(Array(DoubleArray,piv));
+  case DoubleArray: 
+    {
+      if (A.allReal()) {
+	BasicArray<double> l(NTuple(nrows,p));
+	BasicArray<double> u(NTuple(p,ncols));
+	if (nargout <= 2) {
+	  RealLU<double>(nrows,ncols,l.data(),u.data(),A.real<double>().data(),dgetrf_);
+	  retval.push_back(Array(DoubleArray,l));
+	  retval.push_back(Array(DoubleArray,u));
+	} else if (nargout == 3) {
+	  BasicArray<double> piv(NTuple(nrows,ncols));
+	  RealLUP<double>(nrows,ncols,l.data(),u.data(),piv.data(),
+			  A.real<double>().data(),dgetrf_);
+	  retval.push_back(Array(DoubleArray,l));
+	  retval.push_back(Array(DoubleArray,u));
+	  retval.push_back(Array(DoubleArray,piv));
+	}
+	return retval;
+      } else {
+	BasicArray<double> l(NTuple(2*nrows,p));
+	BasicArray<double> u(NTuple(2*p,ncols));
+	BasicArray<double> Atotal(MergeComplex(A.constReal<double>(),A.constImag<double>()));
+	if (nargout <= 2) {
+	  ComplexLU<double>(nrows,ncols,l.data(),u.data(),Atotal.data(),zgetrf_);
+	  retval.push_back(Array(DoubleArray,SplitReal(l),SplitImag(l)));
+	  retval.push_back(Array(DoubleArray,SplitReal(u),SplitImag(u)));
+	} else if (nargout == 3) {
+	  BasicArray<double> piv(NTuple(nrows,nrows));
+	  ComplexLUP<double>(nrows,ncols,l.data(),u.data(),piv.data(),
+			     Atotal.data(),zgetrf_);
+	  retval.push_back(Array(DoubleArray,SplitReal(l),SplitImag(l)));
+	  retval.push_back(Array(DoubleArray,SplitReal(u),SplitImag(u)));
+	  retval.push_back(Array(DoubleArray,piv));
+	}
+      }
     }
-    return retval;
   }
-}
-
-ArrayVector LUDecompose_Double(int nargout, Array A) {
-  if (nargout > 3)
-    throw Exception("illegal usage of lu function - for dense matrices, maximum number of outputs is 3");
-  int nrows = int(A.rows());
-  int ncols = int(A.columns());
-  int p = min(nrows,ncols);
-  ArrayVector retval;
-  A = A.asArrayType();
-  if (A.type() != DoubleArray)
-    throw Exception("wrong type for @double/lu function");
-  if (A.allReal()) {
-    BasicArray<double> l(NTuple(nrows,p));
-    BasicArray<double> u(NTuple(p,ncols));
-    if (nargout <= 2) {
-      RealLU<double>(nrows,ncols,l.data(),u.data(),A.real<double>().data(),dgetrf_);
-      retval.push_back(Array(DoubleArray,l));
-      retval.push_back(Array(DoubleArray,u));
-    } else if (nargout == 3) {
-      BasicArray<double> piv(NTuple(nrows,ncols));
-      RealLUP<double>(nrows,ncols,l.data(),u.data(),piv.data(),
-		      A.real<double>().data(),dgetrf_);
-      retval.push_back(Array(DoubleArray,l));
-      retval.push_back(Array(DoubleArray,u));
-      retval.push_back(Array(DoubleArray,piv));
-    }
-    return retval;
-  } else {
-    BasicArray<double> l(NTuple(2*nrows,p));
-    BasicArray<double> u(NTuple(2*p,ncols));
-    BasicArray<double> Atotal(MergeComplex(A.constReal<double>(),A.constImag<double>()));
-    if (nargout <= 2) {
-      ComplexLU<double>(nrows,ncols,l.data(),u.data(),Atotal.data(),zgetrf_);
-      retval.push_back(Array(DoubleArray,SplitReal(l),SplitImag(l)));
-      retval.push_back(Array(DoubleArray,SplitReal(u),SplitImag(u)));
-    } else if (nargout == 3) {
-      BasicArray<double> piv(NTuple(nrows,nrows));
-      ComplexLUP<double>(nrows,ncols,l.data(),u.data(),piv.data(),
-			 Atotal.data(),zgetrf_);
-      retval.push_back(Array(DoubleArray,SplitReal(l),SplitImag(l)));
-      retval.push_back(Array(DoubleArray,SplitReal(u),SplitImag(u)));
-      retval.push_back(Array(DoubleArray,piv));
-    }
-    return retval;
-  }
+  return retval;
 }
 

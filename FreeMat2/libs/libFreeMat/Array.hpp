@@ -44,7 +44,8 @@ enum Type {
   UInt64Array = 24,
   FloatArray = 25,
   DoubleArray = 26,
-  DoubleSparse = 27
+  DoubleSparse = 27,
+  BoolSparse = 28
 };
 
 class SharedObject : public QSharedData {
@@ -124,8 +125,16 @@ public:
   inline bool is2D() const {return dimensions().is2D();}
   inline bool isUserClass() const {return m_type == UserClass;}
   inline bool isString() const {return m_type == StringArray;}
+  inline bool isReferenceType() const {
+    return ((m_type == Invalid) || (m_type == CellArray) ||
+	    (m_type == Struct) || (m_type == UserClass));
+  }
   QString string() const;
   int integer() const;
+  inline bool isDouble() const {
+    return ((m_type == DoubleScalar) || (m_type == DoubleArray) ||
+	    (m_type == DoubleSparse));
+  }
   inline bool isScalar() const {
     return (((m_type >= BoolScalar) && (m_type <= DoubleScalar)) ||
 	    dimensions().isScalar());
@@ -183,6 +192,7 @@ public:
   inline bool allReal() const {
     return (!m_complex);
   }
+  void forceComplex();
   const Array asScalar() const;
   const index_t asIndexScalar() const; 
   const Array toType(const Type t) const;
@@ -240,6 +250,9 @@ public:
 std::ostream& operator<<(std::ostream& o, const Array &t);
 
 bool IsColonOp(const Array &arg);
+bool IsNonNegative(const Array &arg);
+bool IsInteger(const Array &arg);
+bool IsUnsigned(const Array &arg);
 
 const IndexArray IndexArrayFromArray(const Array &index);
 

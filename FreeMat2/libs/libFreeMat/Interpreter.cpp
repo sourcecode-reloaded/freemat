@@ -466,7 +466,7 @@ Array Interpreter::DoBinaryOperator(Tree *t, BinaryFunc fnc,
   Array a(expression(t->first()));
   Array b(expression(t->second()));
   if (!(a.isUserClass() || b.isUserClass())) 
-    return fnc(a,b,this);
+    return fnc(a,b);
   return ClassBinaryOperator(a,b,funcname,this);
 }
 
@@ -474,7 +474,7 @@ Array Interpreter::DoUnaryOperator(Tree *t, UnaryFunc fnc,
 				   QString funcname) {
   Array a(expression(t->first()));
   if (!a.isUserClass())
-    return fnc(a,this);
+    return fnc(a);
   return ClassUnaryOperator(a,funcname,this);
 }
 
@@ -5109,7 +5109,7 @@ Array Interpreter::subsindex(const Array &m) {
   if (m.isUserClass() && !stopoverload) {
     Array t(ClassUnaryOperator(m,"subsindex",this));
     t.toType(DoubleArray);
-    return Add(t,Array(index_t(1)),this);
+    return Add(t,Array(index_t(1)));
   }
   return m;
 }

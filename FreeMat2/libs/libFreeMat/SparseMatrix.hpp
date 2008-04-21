@@ -7,6 +7,7 @@
 #include "Types.hpp"
 #include "NTuple.hpp"
 #include "BasicArray.hpp"
+#include <cmath>
 
 typedef QMap<index_t,double> SparseSlice;
 typedef QMap<index_t,SparseSlice> SparseData;
@@ -81,12 +82,28 @@ public:
   inline const double get(const NTuple& pos) const {
     return (*this)[pos];
   }
+  void erase(const NTuple& pos) {
+    if (!m_data.contains(pos[1])) return;
+    SparseSlice &col = m_data[pos[1]];
+    if (!col.contains(pos[0])) return;
+    col.remove(pos[0]);
+  }
   void set(const NTuple& pos, const double& val) {
     if (dimensions() <= pos) resize(pos);
+    if (val == 0) {
+      erase(pos);
+      return;
+    }
     (*this)[pos] = val;
   }
   void set(index_t pos, const double& val) {
     if (dimensions().count() <= pos) resize(pos);
+    if (val == 0) {
+      NTuple tpos;
+      m_dims.map(pos,tpos);
+      erase(tpos);
+      return;
+    }
     (*this)[pos] = val;
   }
   SparseMatrix getSlice(const IndexArrayVector& index) const;
@@ -100,6 +117,7 @@ public:
   void reshape(const NTuple& pos);
   bool operator==(const SparseMatrix &data) const;
 };
+
 
 inline std::ostream& operator<<(std::ostream& o, const SparseMatrix& arg) {
   arg.printMe(o);
@@ -117,5 +135,23 @@ public:
   double value();
   const NTuple pos() const;
 };
+
+bool IsNonNegative(const SparseMatrix &x) {
+  ConstSparseIterator i(&x);
+  while (i.isValid()) {
+    if (i.value() < 0) return false;
+    i.next();
+  }
+  return true;
+}
+
+bool IsInteger(const SparseMatrix &x) {
+  ConstSparseIterator i(&x);
+  while (i.isValid()) {
+    if (IsInteger(i.value())) return false;
+    i.next();
+  }
+  return true;
+}
 
 #endif

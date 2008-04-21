@@ -25,6 +25,7 @@
 #include <QtGlobal>
 #include <QList>
 #include <QRegExp>
+#include <cmath>
 #include "FastList.hpp"
 
 typedef bool      logical;
@@ -41,5 +42,12 @@ const int NDims = 6;
 
 typedef QStringList StringVector;
 
+inline bool IsInteger(float x) {
+  return rintf(x) == x;
+}
+
+inline bool IsInteger(double x) {
+  return rint(x) == x;
+}
 
 #endif

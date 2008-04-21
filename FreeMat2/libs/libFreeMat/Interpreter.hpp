@@ -61,8 +61,8 @@ class Interpreter;
 class UserClassTemplate;
 class JIT;
 
-typedef Array (*BinaryFunc)(Array, Array, Interpreter*);
-typedef Array (*UnaryFunc)(Array, Interpreter*);
+typedef Array (*BinaryFunc)(const Array &, const Array &);
+typedef Array (*UnaryFunc)(const Array &);
 
 /**
  * This is the class that implements the interpreter - it generally
