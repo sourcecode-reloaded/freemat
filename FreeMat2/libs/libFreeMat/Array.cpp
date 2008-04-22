@@ -675,11 +675,6 @@ Array::Array(Type t, const NTuple &dims) {
   m_complex = false;
 }
 
-Array::Array(const SparseMatrix& real) {
-  m_type = DoubleSparse;
-  m_real.p = new SharedObject(DoubleSparse,new SparseMatrix(real));
-  m_complex = false;
-}
 
 Array::Array(const SparseMatrix& real, 
 		 const SparseMatrix& imag) {

@@ -16,37 +16,39 @@ typedef FastList<Array> ArrayVector;
 typedef QVector<ArrayVector> ArrayMatrix;
 typedef QMap<QString,BasicArray<Array> > StructArray;
 
-enum Type {
+// Assume this has to fit in 32 bits
+//   scalar flag  - 1 bit
+//   sparse flag  - 1 bit
+//   complex flag - 1 bit
+//   class flag   - 5 bits
+//   user class   - 24 bits
+
+enum DataClass {
   Invalid = 0,
   CellArray = 1,
   Struct = 2,
   UserClass = 3,
-  StringArray = 4,
-  BoolScalar = 5,
-  Int8Scalar = 6,
-  UInt8Scalar = 7,
-  Int16Scalar = 8,
-  UInt16Scalar = 9,
-  Int32Scalar = 10,
-  UInt32Scalar = 11,
-  Int64Scalar = 12,
-  UInt64Scalar = 13,
-  FloatScalar = 14,
-  DoubleScalar = 15,
-  BoolArray = 16,
-  Int8Array = 17,
-  UInt8Array = 18,
-  Int16Array = 19,
-  UInt16Array = 20,
-  Int32Array = 21,
-  UInt32Array = 22,
-  Int64Array = 23,
-  UInt64Array = 24,
-  FloatArray = 25,
-  DoubleArray = 26,
-  DoubleSparse = 27,
-  BoolSparse = 28
+  String = 4,
+  Bool = 5,
+  Int8 = 6,
+  UInt8 = 7,
+  Int16 = 8,
+  UInt16 = 9,
+  Int32 = 10,
+  UInt32 = 11,
+  Int64 = 12,
+  UInt64 = 13,
+  Float = 14,
+  Double = 15
 };
+
+typedef struct {
+  unsigned Class : 5;
+  unsigned Scalar : 1;
+  unsigned Complex : 1;
+  unsigned Sparse : 1;
+  unsigned User : 24;
+} Type;
 
 class SharedObject : public QSharedData {
   Type m_type;
@@ -84,35 +86,58 @@ public:
   template <typename T> inline explicit Array(T real); 
   template <typename T> inline explicit Array(T real, T imag); 
   template <typename T> 
-  inline Array(Type t, const BasicArray<T> &r) {
-    m_type = t;
-    m_real.p = new SharedObject(t, new BasicArray<T>(r));
-    m_complex = false;
+  inline Array(DataClass t, const BasicArray<T> &r) {
+    m_type.Class = t;
+    m_type.Complex = 0;
+    m_type.Sparse = 0;
+    m_type.Scalar = 0;
+    m_real.p = new SharedObject(m_type, new BasicArray<T>(r));
   }
   template <typename T> 
-  inline Array(Type t, const BasicArray<T> &r, const BasicArray<T> &i) {
-    m_type = t;
-    m_real.p = new SharedObject(t, new BasicArray<T>(r));
-    m_imag.p = new SharedObject(t, new BasicArray<T>(i));
-    m_complex = true;
+  inline Array(DataClass t, const BasicArray<T> &r, const BasicArray<T> &i) {
+    m_type.Class = t;
+    m_type.Complex = 1;
+    m_type.Sparse = 0;
+    m_type.Scalar = 0;
+    m_real.p = new SharedObject(m_type, new BasicArray<T>(r));
+    m_imag.p = new SharedObject(m_type, new BasicArray<T>(i));
   }
   template <typename T>
-  inline Array(Type t, BasicArray<T> *r) {
-    m_type = t;
-    m_real.p = new SharedObject(t,r);
-    m_complex = false;
+  inline Array(DataClass t, BasicArray<T> *r) {
+    m_type.Class = t;
+    m_type.Complex = 0;
+    m_type.Sparse = 0;
+    m_type.Scalar = 0;
+    m_real.p = new SharedObject(m_type,r);
   }
   template <typename T>
-  inline Array(Type t, BasicArray<T> *r, BasicArray<T> *i) {
-    m_type = t;
-    m_real.p = new SharedObject(t,r);
-    m_imag.p = new SharedObject(t,i);
-    m_complex = true;
+  inline Array(DataClass t, BasicArray<T> *r, BasicArray<T> *i) {
+    m_type.Class = t;
+    m_type.Complex = 1;
+    m_type.Sparse = 0;
+    m_type.Scalar = 0;
+    m_real.p = new SharedObject(m_type,r);
+    m_imag.p = new SharedObject(m_type,i);
   }
-  Array(Type t, const NTuple &dims = NTuple(0,0));
+  Array(DataClass t, const NTuple &dims = NTuple(0,0));
   Array(const QString &text);
-  Array(const SparseMatrix& real);
-  Array(const SparseMatrix& real, const SparseMatrix& imag);
+  template <typename T>
+  inline Array(DataClass t, const SparseMatrix<T>& real) {
+    m_type.Class = t;
+    m_type.Complex = 0;
+    m_type.Sparse = 1;
+    m_type.Scalar = 0;
+    m_real.p = new SharedObject(m_type,new SparseMatrix<T>(real));
+  }
+  template <typename T>
+  Array(DataClass t, const SparseMatrix& real, const SparseMatrix& imag) {
+    m_type.Class = t;
+    m_type.Complex = 1;
+    m_type.Sparse = 1;
+    m_type.Scalar = 0;
+    m_real.p = new SharedObject(m_type,new SparseMatrix<T>(real));
+    m_imag.p = new SharedObject(m_type,new SparseMatrix<T>(imag));
+  }
   const NTuple dimensions() const;
   const index_t length() const {return dimensions().count();}
   const index_t rows() const {return dimensions()[0];}
