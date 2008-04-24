@@ -64,7 +64,7 @@ static inline Array Tget_struct_scalar(const Array*ptr, S ndx) {
 
 template <typename S>
 static inline const void Tset_struct(Array*ptr, S ndx, const Array &rhs) {
-  if (rhs.type() != Struct)
+  if (rhs.type().Class != Struct)
     throw Exception("Assignment A(I)=B where A is a structure array implies that B is also a structure array.");
   // First loop through the elements
   const StructArray &rp(rhs.constStructPtr());
@@ -86,7 +86,7 @@ static inline const void Tset_struct(Array*ptr, S ndx, const Array &rhs) {
 
 template <typename S>
 static inline const void Tset_struct_scalar_rhs(Array*ptr, S ndx, const Array &rhs) {
-  if (rhs.type() != Struct)
+  if (rhs.type().Class != Struct)
     throw Exception("Assignment A(I)=B where A is a structure array implies that B is also a structure array.");
   // First loop through the elements
   const StructArray &rp(rhs.constStructPtr());
@@ -132,54 +132,21 @@ static inline const Array Tget_sparse(const Array*ptr, S ndx) {
 }
 
 
-Type ScalarType(Type x) {
-  switch (x) {
-  default:
-    return x;
-  case BoolArray:
-    return BoolScalar;
-  case Int8Array:
-    return Int8Scalar;
-  case UInt8Array:
-    return UInt8Scalar;
-  case Int16Array:
-    return Int16Scalar;
-  case UInt16Array:
-    return UInt16Scalar;
-  case Int32Array:
-    return Int32Scalar;
-  case UInt32Array:
-    return UInt32Scalar;
-  case Int64Array:
-    return Int64Scalar;
-  case UInt64Array:
-    return UInt64Scalar;
-  case FloatArray:
-    return FloatScalar;
-  case DoubleArray:
-    return DoubleScalar;
-  case DoubleSparse:
-    return DoubleScalar;
-  }
-}
-
 template <typename S, typename T>
 static inline void Tset_scalar_rhs(Array* ptr, S ndx, const Array& data) {
   BasicArray<T> &real(ptr->real<T>());
-  Array dataTyped(data.asScalar().toType(ScalarType(ptr->type())));
-  real.set(ndx,dataTyped.constRealScalar<T>());
+  real.set(ndx,data.constRealScalar<T>());
   if (!dataTyped.allReal()) {
     BasicArray<T> &imag(ptr->imag<T>());
     imag.set(ndx,dataTyped.constImagScalar<T>());
   }
 }
 
-template <typename S>
+template <typename S, typename T>
 static inline void Tset_sparse_scalar_rhs(Array*ptr, S ndx, const Array &rhs) {
-  Array dataTyped(rhs.asScalar().toType(ScalarType(ptr->type())));
-  ptr->realSparse().set(ndx,dataTyped.constRealScalar<double>());
+  ptr->realSparse<T>().set(ndx,rhs.constRealScalar<T>());
   if (!dataTyped.allReal()) 
-    ptr->imagSparse().set(ndx,dataTyped.constImagScalar<double>());
+    ptr->imagSparse<T>().set(ndx,dataTyped.constImagScalar<T>());
 }
 
 template <typename S>
@@ -237,32 +204,31 @@ static inline void Treshape(Array* ptr, S ndx) {
   }
 }
 
-template <typename S>
+template <typename S, typename T>
 static inline void Tset_sparse(Array* ptr, S ndx, const Array& data) {
-  if (data.type() >= BoolScalar && data.type() <= DoubleScalar) {
-    Tset_sparse<S>(ptr,ndx,data.asArrayType());
+  if (data.type().Scalar == 1) {
+    Tset_sparse_scalar_rhs<S,T>(ptr,ndx,data);
     return;
   }
-  Set(ptr->realSparse(),ndx,ToRealSparse(data));
+  Set(ptr->realSparse<T>(),ndx,ToRealSparse(data));
   if (!data.allReal())
-    Set(ptr->imagSparse(),ndx,ToImagSparse(data));
+    Set(ptr->imagSparse<T>(),ndx,ToImagSparse(data));
 }
 
 template <typename S, typename T>
 static inline void Tset(Array* ptr, S ndx, const Array& data) {
-  if (data.type() >= BoolScalar && data.type() <= DoubleScalar) {
-    Tset<S,T>(ptr,ndx,data.asArrayType());
+  if (data.type().Scalar == 1) {
+    Tset_scalar_rhs<S,T>(ptr,ndx,data);
     return;
   }
   BasicArray<T> &real(ptr->real<T>());
-  Array dataTyped(data.toType(ptr->type()));
+  Array dataTyped(data.toClass(ptr->type()));
   Set(real,ndx,dataTyped.constReal<T>());
   if (!data.allReal()) {
     BasicArray<T> &imag(ptr->imag<T>());
     Set(imag,ndx,dataTyped.constImag<T>());
   }
 }
-
 
 // S - source type, T - dest type
 template <typename S, typename T>
@@ -276,7 +242,6 @@ inline static const Array Tcast_case(Type t, const Array *copy) {
   }
   return retvec;
 }
-
 
 template <typename T>
 inline static const Array TcastScalar(Type t, const Array *copy) {
@@ -676,41 +641,32 @@ Array::Array(Type t, const NTuple &dims) {
 }
 
 
-Array::Array(const SparseMatrix& real, 
-		 const SparseMatrix& imag) {
-  m_type = DoubleSparse;
-  m_real.p = new SharedObject(DoubleSparse,new SparseMatrix(real));
-  m_imag.p = new SharedObject(DoubleSparse,new SparseMatrix(imag));
-  m_complex = true;
-}
-
 Array::Array(const QString &text) {
-  m_type = StringArray;
+  m_type.Class = String;
   m_real.p = new SharedObject(StringArray,
-			      construct_sized(StringArray,
-					     NTuple(1,text.size())));
+			      construct_sized(String,
+					      NTuple(1,text.size())));
   BasicArray<uint16> &p(real<uint16>());
   for (int i=0;i<text.size();i++) 
     p[i+1] = text[i].unicode();
-  m_complex = false;
+  m_type.Complex = 0;
+  m_type.Sparse = 0;
+  m_type.Scalar = 0;
 }
 
+#define MacroDimensions(ctype,cls)			\
+  case cls:						\
+  if (m_type.Sparse == 0)				\
+    return constReal<ctype>().dimensions();		\
+  else							\
+    return constSparseReal<ctyle>().dimensions();	\
+  break;
+
 const NTuple Array::dimensions() const {
-  switch (m_type) {
+  if (m_type.Scalar == 1) return NTuple(1,1);
+  switch (m_type.Class) {
   default:
     throw Exception("unhandled type");
-  case BoolScalar:
-  case Int8Scalar:
-  case UInt8Scalar:
-  case Int16Scalar:
-  case UInt16Scalar:
-  case Int32Scalar:
-  case UInt32Scalar:
-  case Int64Scalar:
-  case UInt64Scalar:
-  case FloatScalar:
-  case DoubleScalar:
-    return NTuple(1,1);
   case CellArray:
     return (constReal<Array>().dimensions());
   case Struct:
@@ -720,35 +676,30 @@ const NTuple Array::dimensions() const {
       if (i == rp.constEnd()) return NTuple(0,0);
       return i.value().dimensions();
     }
-  case BoolArray:
-    return (constReal<logical>().dimensions());
-  case Int8Array:
-    return (constReal<int8>().dimensions());
-  case UInt8Array:
-    return (constReal<uint8>().dimensions());
-  case Int16Array:
-    return (constReal<int16>().dimensions());
-  case StringArray:
-  case UInt16Array:
-    return (constReal<uint16>().dimensions());
-  case Int32Array:
-    return (constReal<int32>().dimensions());
-  case UInt32Array:
-    return (constReal<uint32>().dimensions());
-  case Int64Array:
-    return (constReal<int64>().dimensions());
-  case UInt64Array:
-    return (constReal<uint64>().dimensions());
-  case FloatArray:
-    return (constReal<float>().dimensions());
-  case DoubleArray:
-    return (constReal<double>().dimensions());
-  case DoubleSparse:
-    return (constRealSparse().dimensions());
+    MacroDimensions(uint16,String);
+    MacroExpandCases(MacroDimensions);
   };
 }
 
+#define MacroSetScalar(ctype,cls)					\
+  case cls:								\
+  if (!data.isScalar())							\
+    throw Exception("Mismatch of sizes in assignment A(n) = B");	\
+  realScalar<ctype>() == data.constRealScalar<ctype>();			\
+  if (!data.allReal())							\
+    imagScalar<ctype>() == data.constImagScalar<ctype>();		\
+  return;
+
 void Array::set(index_t index, const Array& data) {
+  if ((m_type.Scalar == 1) && (index == 1)) {
+    switch (m_type.Class()) {
+      MacroExpandCases(MacroSetScalar);
+    }
+    *this = asDenseArray();
+  }
+  
+
+  
   switch (m_type) {
   default:
     throw Exception("Unsupported type for set(index_t)");
@@ -1283,11 +1234,11 @@ const Array Array::get(const IndexArrayVector& index) const {
   }  
 }
 
-const Array Array::toType(const Type t) const {
-  if (type() == t) return *this;
+const Array Array::toClass(const Type t) const {
+  if (type().Class == t.Class) return *this;
   switch (t) {
   default:
-    throw Exception("Unsupported type for toType");
+    throw Exception("Unsupported type for toClass");
   case BoolScalar:
     return TcastScalar<bool>(t,this);
   case Int8Scalar:
@@ -1429,96 +1380,29 @@ const Array Array::get(const NTuple& index) const {
   }
 }
 
+
+#define MacroArrayGet(ctype,cls)				\
+  case cls:						\
+  if (m_type.Complex == 1)				\
+    return Array(constReal<ctype>().get(index),		\
+		 constImag<ctype>().get(index));	\
+  else							\
+    return Array(constReal<ctype>().get(index));	
+
 const Array Array::get(index_t index) const {
-  switch (m_type) {
-  default: 
-    throw Exception("Unsupported type for get(index_t)");
-  case BoolScalar:
-  case Int8Scalar:
-  case UInt8Scalar:
-  case Int16Scalar:
-  case UInt16Scalar:
-  case Int32Scalar:
-  case UInt32Scalar:
-  case Int64Scalar:
-  case UInt64Scalar:
-  case FloatScalar:
-  case DoubleScalar:
+  if (m_type.Scalar == 1) {
     if (index != 1) throw Exception("A(n) exceeds dimensions of A");
     return *this;
+  }
+  switch (m_type.Class) {
+  default:
+    throw Exception("Unhandled case for get(index)");
   case CellArray:
     return Tget_real<index_t,Array>(this,index);
   case Struct:
     return Tget_struct_scalar<index_t>(this,index);
-  case BoolArray:
-    return Array((logical) Tget_real<index_t,logical>(this,index));
-  case Int8Array:
-    if (m_complex)
-      return Array((int8)Tget_real<index_t,int8>(this,index),
-		     (int8)Tget_imag<index_t,int8>(this,index));
-    else
-      return Array((int8)Tget_real<index_t,int8>(this,index));
-  case UInt8Array:
-    if (m_complex)
-      return Array((uint8)Tget_real<index_t,uint8>(this,index),
-		     (uint8)Tget_imag<index_t,uint8>(this,index));
-    else
-      return Array((uint8)Tget_real<index_t,uint8>(this,index));
-  case Int16Array:
-    if (m_complex)
-      return Array((int16)Tget_real<index_t,int16>(this,index),
-		     (int16)Tget_imag<index_t,int16>(this,index));
-    else
-      return Array((int16)Tget_real<index_t,int16>(this,index));
-  case StringArray:
-  case UInt16Array:
-    if (m_complex)
-      return Array((uint16)Tget_real<index_t,uint16>(this,index),
-		     (uint16)Tget_imag<index_t,uint16>(this,index));
-    else
-      return Array((uint16)Tget_real<index_t,uint16>(this,index));
-  case Int32Array:
-    if (m_complex)
-      return Array((int32)Tget_real<index_t,int32>(this,index),
-		     (int32)Tget_imag<index_t,int32>(this,index));
-    else
-      return Array((int32)Tget_real<index_t,int32>(this,index));
-  case UInt32Array:
-    if (m_complex)
-      return Array((uint32)Tget_real<index_t,uint32>(this,index),
-		     (uint32)Tget_imag<index_t,uint32>(this,index));
-    else
-      return Array((uint32)Tget_real<index_t,uint32>(this,index));
-  case Int64Array:
-    if (m_complex)
-      return Array((int64)Tget_real<index_t,int64>(this,index),
-		     (int64)Tget_imag<index_t,int64>(this,index));
-    else
-      return Array((int64)Tget_real<index_t,int64>(this,index));
-  case UInt64Array:
-    if (m_complex)
-      return Array((uint64)Tget_real<index_t,uint64>(this,index),
-		     (uint64)Tget_imag<index_t,uint64>(this,index));
-    else
-      return Array((uint64)Tget_real<index_t,uint64>(this,index));
-  case FloatArray:
-    if (m_complex)
-      return Array((float)Tget_real<index_t,float>(this,index),
-		     (float)Tget_imag<index_t,float>(this,index));
-    else
-      return Array((float)Tget_real<index_t,float>(this,index));
-  case DoubleArray:
-    if (m_complex)
-      return Array((double)Tget_real<index_t,double>(this,index),
-		     (double)Tget_imag<index_t,double>(this,index));
-    else
-      return Array((double)Tget_real<index_t,double>(this,index));
-  case DoubleSparse:
-    if (m_complex)
-      return Array(Get(constRealSparse(),index),
-		     Get(constImagSparse(),index));
-    else
-      return Array(Get(constRealSparse(),index));
+    ExpandCases(MacroArrayGet);
+    MacroArrayGet(uint16,String);
   }
 }
 
@@ -1578,33 +1462,18 @@ void Array::addField(QString name) {
     structPtr().insert(name,BasicArray<Array>());
 }
 
+#define MacroAsIndexScalar(ctype,cls) \
+  case cls:			      \
+  return index_t(constRealScalar<ctyle>());
+
 const index_t Array::asIndexScalar() const {
-  switch (type()) {
+  switch (type().Class) {
   default:
     throw Exception("Unsupported type called on asIndexScalar");
-  case BoolScalar:
-    if (m_real.l) return (index_t) 1;
+  case Bool:
+    if (constRealScalar<bool>()) return (index_t) 1;
     return (index_t) 0;
-  case Int8Scalar:
-    return (index_t) m_real.i8;
-  case UInt8Scalar:
-    return (index_t) m_real.u8;
-  case Int16Scalar:
-    return (index_t) m_real.i16;
-  case UInt16Scalar:
-    return (index_t) m_real.u16;
-  case Int32Scalar:
-    return (index_t) m_real.i32;
-  case UInt32Scalar:
-    return (index_t) m_real.u32;
-  case Int64Scalar:
-    return (index_t) m_real.i64;
-  case UInt64Scalar:
-    return (index_t) m_real.u64;
-  case FloatScalar:
-    return (index_t) m_real.f;
-  case DoubleScalar:
-    return m_real.d;
+  MacroExpandCasesNoBool(MacroAsIndexScalar);    
   }
 }
 
@@ -2091,24 +1960,4 @@ QStringList FieldNames(const Array& arg) {
     ++i;
   }
   return ret;
-}
-
-SparseMatrix ToRealSparse(const Array& data) {
-  if (data.type() == DoubleSparse) return data.constRealSparse();
-  Array cdata(data);
-  if (cdata.isScalar())
-    cdata = data.asArrayType();
-  if (!cdata.is2D()) throw Exception("Sparse matrix cannot be created from multidimensional arrays");
-  cdata = cdata.toType(DoubleArray);
-  return SparseMatrix(cdata.constReal<double>());
-}
-
-SparseMatrix ToImagSparse(const Array& data) {
-  if (data.type() == DoubleSparse) return data.constImagSparse();
-  Array cdata(data);
-  if (cdata.isScalar())
-    cdata = cdata.asArrayType();
-  if (!cdata.is2D()) throw Exception("Sparse matrix cannot be created from multidimensional arrays");
-  cdata = cdata.toType(DoubleArray);
-  return SparseMatrix(cdata.constImag<double>());
 }

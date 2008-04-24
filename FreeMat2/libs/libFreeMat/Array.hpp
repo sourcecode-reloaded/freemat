@@ -27,27 +27,26 @@ enum DataClass {
   Invalid = 0,
   CellArray = 1,
   Struct = 2,
-  UserClass = 3,
-  String = 4,
-  Bool = 5,
-  Int8 = 6,
-  UInt8 = 7,
-  Int16 = 8,
-  UInt16 = 9,
-  Int32 = 10,
-  UInt32 = 11,
-  Int64 = 12,
-  UInt64 = 13,
-  Float = 14,
-  Double = 15
+  String = 3,
+  Bool = 4,
+  Int8 = 5,
+  UInt8 = 6,
+  Int16 = 7,
+  UInt16 = 8,
+  Int32 = 9,
+  UInt32 = 10,
+  Int64 = 11,
+  UInt64 = 12,
+  Float = 13,
+  Double = 14,
+  User = 100
 };
 
 typedef struct {
-  unsigned Class : 5;
+  unsigned Class : 29;
   unsigned Scalar : 1;
   unsigned Complex : 1;
   unsigned Sparse : 1;
-  unsigned User : 24;
 } Type;
 
 class SharedObject : public QSharedData {
@@ -65,23 +64,23 @@ public:
 typedef struct {
   QSharedDataPointer<SharedObject> p;
   union {
-    logical l;
-    int8 i8;
-    uint8 u8;
-    int16 i16;
-    uint16 u16;
-    int32 i32;
-    uint32 u32;
-    int64 i64;
-    uint64 u64;
-    float f;
-    double d;
+    bool Bool;
+    int8 Int8;
+    uint8 UInt8;
+    int16 Int16;
+    uint16 UInt16;
+    int32 Int32;
+    uint32 UInt32;
+    int64 Int64;
+    uint64 UInt64;
+    float Float;
+    double Double;
   };
 } Data;
 
 class Array {
 public:
-  inline Array() {m_type = Invalid;}
+  inline Array() {m_type.Class = Invalid;}
   // Defined in ArrayPrivate
   template <typename T> inline explicit Array(T real); 
   template <typename T> inline explicit Array(T real, T imag); 
@@ -130,7 +129,7 @@ public:
     m_real.p = new SharedObject(m_type,new SparseMatrix<T>(real));
   }
   template <typename T>
-  Array(DataClass t, const SparseMatrix& real, const SparseMatrix& imag) {
+  Array(DataClass t, const SparseMatrix<T>& real, const SparseMatrix<T>& imag) {
     m_type.Class = t;
     m_type.Complex = 1;
     m_type.Sparse = 1;
@@ -143,26 +142,24 @@ public:
   const index_t rows() const {return dimensions()[0];}
   const index_t columns() const {return dimensions()[1];}
   inline const Type type() const { return m_type; }
-  inline bool isArray() const {return m_type >= BoolArray;}
+  inline bool isArray() const {return (m_type.Scalar == 0);}
   inline bool isVector() const {return dimensions().isVector();}
   inline bool isColumnVector() const {return dimensions().isColumnVector();}
   inline bool isRowVector() const {return dimensions().isRowVector();}
   inline bool is2D() const {return dimensions().is2D();}
-  inline bool isUserClass() const {return m_type == UserClass;}
-  inline bool isString() const {return m_type == StringArray;}
+  inline bool isUserClass() const {return m_type.Class == UserClass;}
+  inline bool isString() const {return m_type.Class == String;}
   inline bool isReferenceType() const {
-    return ((m_type == Invalid) || (m_type == CellArray) ||
-	    (m_type == Struct) || (m_type == UserClass));
+    return ((m_type.Class == Invalid) || (m_type.Class == CellArray) ||
+	    (m_type.Class == Struct) || (m_type.Class == UserClass));
   }
   QString string() const;
   int integer() const;
   inline bool isDouble() const {
-    return ((m_type == DoubleScalar) || (m_type == DoubleArray) ||
-	    (m_type == DoubleSparse));
+    return (m_type.Class == Double);
   }
   inline bool isScalar() const {
-    return (((m_type >= BoolScalar) && (m_type <= DoubleScalar)) ||
-	    dimensions().isScalar());
+    return ((m_type.Scalar == 1) || dimensions().isScalar());
   }
   template <typename T>
   inline BasicArray<T>& real() {
@@ -174,23 +171,27 @@ public:
   inline StructArray& structPtr() {
     return (*reinterpret_cast<StructArray*>(m_real.p->ptr()));
   }
-  inline const SparseMatrix& constRealSparse() const {
-    return (*reinterpret_cast<const SparseMatrix*>(m_real.p->ptr()));
+  template <typename T>
+  inline const SparseMatrix<T>& constRealSparse() const {
+    return (*reinterpret_cast<const SparseMatrix<T> *>(m_real.p->ptr()));
   }
-  inline const SparseMatrix& constImagSparse() const {
+  template <typename T>
+  inline const SparseMatrix<T>& constImagSparse() const {
     if (!m_imag.p)
       throw Exception("Illegal request for imaginary part of real-only array");
-    return (*reinterpret_cast<const SparseMatrix*>(m_imag.p->ptr()));
+    return (*reinterpret_cast<const SparseMatrix<T> *>(m_imag.p->ptr()));
   }
-  inline SparseMatrix& realSparse() {
-    return (*reinterpret_cast<SparseMatrix*>(m_real.p->ptr()));
+  template <typename T>
+  inline SparseMatrix<T>& realSparse() {
+    return (*reinterpret_cast<SparseMatrix<T> *>(m_real.p->ptr()));
   }
-  inline SparseMatrix& imagSparse() {
+  template <typename T>
+  inline SparseMatrix<T>& imagSparse() {
     if (!m_imag.p) {
-      m_imag.p = new SharedObject(m_type, new SparseMatrix(dimensions()));
+      m_imag.p = new SharedObject(m_type, new SparseMatrix<T>(dimensions()));
       m_complex = true;
     }
-    return (*reinterpret_cast<SparseMatrix*>(m_imag.p->ptr()));
+    return (*reinterpret_cast<SparseMatrix<T> *>(m_imag.p->ptr()));
   }
   template <typename T>
   inline const BasicArray<T>& constReal() const {
@@ -215,12 +216,12 @@ public:
   template <typename T> inline T& realScalar();
   template <typename T> inline T& imagScalar();
   inline bool allReal() const {
-    return (!m_complex);
+    return (m_type.Complex == 0);
   }
   void forceComplex();
   const Array asScalar() const;
   const index_t asIndexScalar() const; 
-  const Array toType(const Type t) const;
+  const Array toClass(const Type t) const;
 
   const Array get(const IndexArray& index) const;
   const Array get(const Array& index) const;
@@ -245,7 +246,7 @@ public:
   void resize(index_t size);
   void reshape(const NTuple &size);
 
-  Array asArrayType() const;
+  Array asDenseArray() const;
   inline bool isEmpty() const {return length() == 0;}
 
   bool operator==(const Array &b) const;
@@ -287,8 +288,25 @@ void SetCellContents(Array &cell, const Array& index, ArrayVector& data);
 void SetCellContents(Array &cell, const ArrayVector& index, ArrayVector& data);
 QStringList FieldNames(const Array& arg);
 
-SparseMatrix ToRealSparse(const Array& data);
-SparseMatrix ToImagSparse(const Array& data);
+template <typename T>
+SparseMatrix<T> ToRealSparse(const Array& data) {
+  if (data.type().Sparse == 1) return data.constRealSparse<T>();
+  Array cdata(data);
+  if (cdata.isScalar())
+    cdata = data.asArrayType();
+  if (!cdata.is2D()) throw Exception("Sparse matrix cannot be created from multidimensional arrays");
+  return SparseMatrix<T>(cdata.constReal<T>());
+}
+
+template <typename T>
+SparseMatrix<T> ToImagSparse(const Array& data) {
+  if (data.type().Sparse == 1) return data.constImagSparse<T>();
+  Array cdata(data);
+  if (cdata.isScalar())
+    cdata = cdata.asArrayType();
+  if (!cdata.is2D()) throw Exception("Sparse matrix cannot be created from multidimensional arrays");
+  return SparseMatrix<T>(cdata.constImag<T>());
+}
 
 Array MatrixConstructor(const ArrayMatrix& data);
 Array CellConstructor(const ArrayMatrix& data);

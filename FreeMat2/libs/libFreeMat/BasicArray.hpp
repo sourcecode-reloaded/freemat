@@ -376,11 +376,11 @@ inline bool AllTrue(const BasicArray<bool>& arg) {
 
 
 template <typename S, typename T>
-void ConvertBasicArray(const BasicArray<S>& source, BasicArray<T>& dest) {
-  if (source.length() != dest.length())
-    throw Exception("Mismatch between source and destination arrays in call to Convert BasicArray");
+BasicArray<T> ConvertBasicArray(const BasicArray<S>& source) {
+  BasicArray<T> dest(source.dimensions());
   for (index_t i=1;i<=source.length();i++)
     dest.set(i,(T) source.get(i));
+  return dest;
 }
 
 template <typename S>
