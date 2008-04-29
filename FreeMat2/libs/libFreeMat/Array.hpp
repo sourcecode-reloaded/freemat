@@ -27,7 +27,7 @@ enum DataClass {
   Invalid = 0,
   CellArray = 1,
   Struct = 2,
-  String = 3,
+  StringArray = 3,
   Bool = 4,
   Int8 = 5,
   UInt8 = 6,
@@ -148,7 +148,7 @@ public:
   inline bool isRowVector() const {return dimensions().isRowVector();}
   inline bool is2D() const {return dimensions().is2D();}
   inline bool isUserClass() const {return m_type.Class == UserClass;}
-  inline bool isString() const {return m_type.Class == String;}
+  inline bool isString() const {return m_type.Class == StringArray;}
   inline bool isReferenceType() const {
     return ((m_type.Class == Invalid) || (m_type.Class == CellArray) ||
 	    (m_type.Class == Struct) || (m_type.Class == UserClass));
@@ -189,7 +189,7 @@ public:
   inline SparseMatrix<T>& imagSparse() {
     if (!m_imag.p) {
       m_imag.p = new SharedObject(m_type, new SparseMatrix<T>(dimensions()));
-      m_complex = true;
+      m_type.Complex = 1;
     }
     return (*reinterpret_cast<SparseMatrix<T> *>(m_imag.p->ptr()));
   }
@@ -201,7 +201,7 @@ public:
   inline BasicArray<T>& imag() {
     if (!m_imag.p) {
       m_imag.p = new SharedObject(m_type, new BasicArray<T>(dimensions()));
-      m_complex = true;
+      m_type.Complex = true;
     }
     return (*reinterpret_cast<BasicArray<T>*>(m_imag.p->ptr()));
   }
@@ -219,7 +219,6 @@ public:
     return (m_type.Complex == 0);
   }
   void forceComplex();
-  const Array asScalar() const;
   const index_t asIndexScalar() const; 
   const Array toClass(const Type t) const;
 
@@ -247,6 +246,7 @@ public:
   void reshape(const NTuple &size);
 
   Array asDenseArray() const;
+  void ensureNotScalarEncoded() {if (m_type.Scalar == 1) *this = asDenseArray();}
   inline bool isEmpty() const {return length() == 0;}
 
   bool operator==(const Array &b) const;
@@ -258,7 +258,6 @@ private:
   Data m_real;
   Data m_imag;
   Type m_type;
-  bool m_complex;
 };
 
 class ArrayIterator : public BaseIterator<Array, Array> {
@@ -293,7 +292,7 @@ SparseMatrix<T> ToRealSparse(const Array& data) {
   if (data.type().Sparse == 1) return data.constRealSparse<T>();
   Array cdata(data);
   if (cdata.isScalar())
-    cdata = data.asArrayType();
+    cdata = data.asDenseArray();
   if (!cdata.is2D()) throw Exception("Sparse matrix cannot be created from multidimensional arrays");
   return SparseMatrix<T>(cdata.constReal<T>());
 }
@@ -303,7 +302,7 @@ SparseMatrix<T> ToImagSparse(const Array& data) {
   if (data.type().Sparse == 1) return data.constImagSparse<T>();
   Array cdata(data);
   if (cdata.isScalar())
-    cdata = cdata.asArrayType();
+    cdata = cdata.asDenseArray();
   if (!cdata.is2D()) throw Exception("Sparse matrix cannot be created from multidimensional arrays");
   return SparseMatrix<T>(cdata.constImag<T>());
 }

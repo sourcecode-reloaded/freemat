@@ -17,6 +17,11 @@
   MacroExpandCases(func);			\
   func(bool,Bool);				
 
+#define MacroExpandCasesAll(func)		\
+  MacroExpandCases(func);			\
+  func(uint16,StringArray);			\
+  func(Array,CellArray);
+
 #define MacroArrayRealScalar(ctype,cls)			\
   template <>						\
   inline ctype & Array::realScalar() {			\
