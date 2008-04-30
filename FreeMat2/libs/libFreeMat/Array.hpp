@@ -23,27 +23,28 @@ typedef QMap<QString,BasicArray<Array> > StructArray;
 //   class flag   - 5 bits
 //   user class   - 24 bits
 
-enum DataClass {
-  Invalid = 0,
-  CellArray = 1,
-  Struct = 2,
-  StringArray = 3,
-  Bool = 4,
-  Int8 = 5,
-  UInt8 = 6,
-  Int16 = 7,
-  UInt16 = 8,
-  Int32 = 9,
-  UInt32 = 10,
-  Int64 = 11,
-  UInt64 = 12,
-  Float = 13,
-  Double = 14,
-  User = 100
-};
+typedef unsigned DataClass;
+
+const DataClass Invalid = 0;
+const DataClass CellArray = 1;
+const DataClass Struct = 2;
+const DataClass StringArray = 3;
+const DataClass Bool = 4;
+const DataClass Int8 = 5;
+const DataClass UInt8 = 6;
+const DataClass Int16 = 7;
+const DataClass UInt16 = 8;
+const DataClass Int32 = 9;
+const DataClass UInt32 = 10;
+const DataClass Int64 = 11;
+const DataClass UInt64 = 12;
+const DataClass Float = 13;
+const DataClass Double = 14;
+const DataClass UserClass = 15;
 
 typedef struct {
-  unsigned Class : 29;
+  DataClass Class : 5;
+  unsigned User : 22;
   unsigned Scalar : 1;
   unsigned Complex : 1;
   unsigned Sparse : 1;
@@ -149,6 +150,7 @@ public:
   inline bool is2D() const {return dimensions().is2D();}
   inline bool isUserClass() const {return m_type.Class == UserClass;}
   inline bool isString() const {return m_type.Class == StringArray;}
+  inline bool isSparse() const {return m_type.Sparse == 1;}
   inline bool isReferenceType() const {
     return ((m_type.Class == Invalid) || (m_type.Class == CellArray) ||
 	    (m_type.Class == Struct) || (m_type.Class == UserClass));
@@ -220,7 +222,7 @@ public:
   }
   void forceComplex();
   const index_t asIndexScalar() const; 
-  const Array toClass(const Type t) const;
+  const Array toClass(DataClass t) const;
 
   const Array get(const IndexArray& index) const;
   const Array get(const Array& index) const;

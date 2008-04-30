@@ -10,13 +10,11 @@
 #include <cmath>
 
 template <typename T>
-struct SparseSlice {
-  QMap<index_t,T> p;
+class SparseSlice : public QMap<index_t,T> {
 };
 
 template <typename T>
-struct SparseData {
-  QMap<index_t,SparseSlice<T> > p;
+class SparseData : public QMap<index_t,SparseSlice<T> > {
 };
 
 template <typename T>
@@ -78,15 +76,15 @@ public:
       if (!m_data.contains(pos[1]))
 	return T(0);
       const SparseSlice<T>& col = m_data.value(pos[1]);
-      if (!col.p.contains(pos[0]))
+      if (!col.contains(pos[0]))
 	return T(0);
-      return col.p.value(pos[0]);
+      return col.value(pos[0]);
     }
     throw Exception("Out of range");
   }
   inline T& operator[](const NTuple& pos) {
     if (m_dims.validate(pos)) {
-      return m_data.p[pos[1]].p[pos[0]];
+      return m_data[pos[1]][pos[0]];
     }
     throw Exception("Out of range");
   }
@@ -100,17 +98,17 @@ public:
     m_dims.map(pos,tpos);
     return (*this)[tpos];
   }
-  inline const double get(index_t pos) const {
+  inline const T get(index_t pos) const {
     return (*this)[pos];
   }
-  inline const double get(const NTuple& pos) const {
+  inline const T get(const NTuple& pos) const {
     return (*this)[pos];
   }
   void erase(const NTuple& pos) {
     if (!m_data.contains(pos[1])) return;
     SparseSlice<T> &col = m_data[pos[1]];
-    if (!col.p.contains(pos[0])) return;
-    col.p.remove(pos[0]);
+    if (!col.contains(pos[0])) return;
+    col.remove(pos[0]);
   }
   void set(const NTuple& pos, const T& val) {
     if (dimensions() <= pos) resize(pos);
@@ -255,6 +253,15 @@ public:
       throw Exception("Illegal reshape");
     resize(pos);
   }
+  const BasicArray<T> asDense() const {
+    ConstSparseIterator<T> source(this);
+    BasicArray<T> retvec(dimensions());
+    while (source.isValid()) {
+      retvec.set(source.pos(),source.value());
+      source.next();
+    }
+    return retvec;
+  }
   bool operator==(const SparseMatrix<T> &data) const {
     ConstSparseIterator<T> source(this);
     ConstSparseIterator<T> dest(&data);
@@ -322,6 +329,17 @@ bool IsInteger(const SparseMatrix<T> &x) {
     i.next();
   }
   return true;
+}
+
+template <typename S, typename T>
+SparseMatrix<T> ConvertSparseArray(const SparseMatrix<S> &x) {
+  SparseMatrix<T> retvec(x.dimensions());
+  ConstSparseIterator<S> i(&x);
+  while (i.isValid()) {
+    retvec.set(i.pos(),T(i.value()));
+    i.next();
+  }
+  return retvec;
 }
 
 #endif

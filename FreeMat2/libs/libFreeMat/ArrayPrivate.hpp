@@ -14,12 +14,15 @@
   func(int8,Int8);				
 
 #define MacroExpandCases(func)			\
-  MacroExpandCases(func);			\
+  MacroExpandCasesNoBool(func);			\
   func(bool,Bool);				
 
-#define MacroExpandCasesAll(func)		\
+#define MacroExpandCasesSimple(func)		\
   MacroExpandCases(func);			\
-  func(uint16,StringArray);			\
+  func(uint16,StringArray);
+
+#define MacroExpandCasesAll(func)		\
+  MacroExpandCasesSimple(func);			\
   func(Array,CellArray);
 
 #define MacroArrayRealScalar(ctype,cls)			\

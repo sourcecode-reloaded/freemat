@@ -636,7 +636,7 @@ void Interpreter::clearStacks() {
 Array Interpreter::matrixDefinition(Tree *t) {
   ArrayMatrix m;
   if (t->numChildren() == 0) 
-    return Array(DoubleArray);
+    return Array(Double);
   for (int i=0;i<t->numChildren();i++) {
     Tree *s(t->child(i));
     ArrayVector n;
