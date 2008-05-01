@@ -138,11 +138,20 @@ public:
     m_real.p = new SharedObject(m_type,new SparseMatrix<T>(real));
     m_imag.p = new SharedObject(m_type,new SparseMatrix<T>(imag));
   }
+  static Array scalarConstructor(DataClass t) {
+    Array ret;
+    ret.m_type.Class = t;
+    ret.m_type.Complex = 0;
+    ret.m_type.Sparse = 0;
+    ret.m_type.Scalar = 1;
+    return ret;
+  }
   const NTuple dimensions() const;
   const index_t length() const {return dimensions().count();}
   const index_t rows() const {return dimensions()[0];}
   const index_t columns() const {return dimensions()[1];}
   inline const Type type() const { return m_type; }
+  inline const DataClass dataClass() const {return m_type.Class;}
   inline bool isArray() const {return (m_type.Scalar == 0);}
   inline bool isVector() const {return dimensions().isVector();}
   inline bool isColumnVector() const {return dimensions().isColumnVector();}

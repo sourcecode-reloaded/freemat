@@ -327,10 +327,10 @@ struct OpPower {
   }
 };
 
-template <class Op>
-static inline SparseMatrix DotOp(const SparseMatrix &A, const double& B) {
-  ConstSparseIterator spin(&A);
-  SparseMatrix retval;
+template <typename T, class Op>
+static inline SparseMatrix<T> DotOp(const SparseMatrix<T> &A, const T& B) {
+  ConstSparseIterator<T> spin(&A);
+  SparseMatrix<T> retval;
   while (spin.isValid()) {
     retval.set(spin.pos(),Op::func(spin.value(),B));
     spin.next();
@@ -338,10 +338,10 @@ static inline SparseMatrix DotOp(const SparseMatrix &A, const double& B) {
   return retval;
 }
 
-template <class Op>
-static inline SparseMatrix DotOp(const double& A, const SparseMatrix &B) {
-  ConstSparseIterator spin(&B);
-  SparseMatrix retval;
+template <typename T, class Op>
+static inline SparseMatrix<T> DotOp(const T& A, const SparseMatrix<T> &B) {
+  ConstSparseIterator<T> spin(&B);
+  SparseMatrix<T> retval;
   while (spin.isValid()) {
     retval.set(spin.pos(),Op::func(A,spin.value()));
     spin.next();
@@ -349,11 +349,12 @@ static inline SparseMatrix DotOp(const double& A, const SparseMatrix &B) {
   return retval;
 }
 
-template <class Op>
-static inline SparseMatrix DotOp(const SparseMatrix& A, const SparseMatrix& B) {
-  ConstSparseIterator aspin(&A);
-  ConstSparseIterator bspin(&B);
-  SparseMatrix retval;
+template <typename T, class Op>
+static inline SparseMatrix<T> DotOp(const SparseMatrix<T>& A, 
+				    const SparseMatrix<T>& B) {
+  ConstSparseIterator<T> aspin(&A);
+  ConstSparseIterator<T> bspin(&B);
+  SparseMatrix<T> retval;
   while (aspin.isValid() || bspin.isValid()) {
     if (aspin.pos() == bspin.pos()) {
       retval.set(aspin.pos(),Op::func(aspin.value(),bspin.value()));
@@ -361,10 +362,10 @@ static inline SparseMatrix DotOp(const SparseMatrix& A, const SparseMatrix& B) {
       bspin.next();
     } else if (A.dimensions().map(aspin.pos()) <
 	       B.dimensions().map(bspin.pos())) {
-      retval.set(aspin.pos(),Op::func(aspin.value(),0));
+      retval.set(aspin.pos(),Op::func(aspin.value(),T(0)));
       aspin.next();
     } else {
-      retval.set(bspin.pos(),Op::func(0,bspin.value()));
+      retval.set(bspin.pos(),Op::func(T(0),bspin.value()));
       bspin.next();
     }
   }
@@ -437,70 +438,74 @@ static inline void DotOp(const Atype& A_real, const Atype& A_imag,
 
 // Perform the operation via a typed intermediary
 template <typename T, class Op>
-static inline Array DotOp(const Array &Ain, const Array &Bin, Type TScalar, Type TArray) {
-  Array F(TArray);
-  if (Ain.isScalar() && Bin.isScalar()) {
-    Array Ascalar(Ain.asScalar().toType(TScalar));
-    Array Bscalar(Bin.asScalar().toType(TScalar));
-    if (Ascalar.allReal() && Bscalar.allReal()) {
-      F = Array::Array(Op::func(Ascalar.constRealScalar<T>(),
-				Bscalar.constRealScalar<T>()));
+static inline Array DotOp(const Array &Ain, const Array &Bin, DataClass Tclass) {
+  Array Acast(Ain.toClass(Tclass));
+  Array Bcast(Bin.toClass(Tclass));
+  Array F(Tclass);
+  if (Acast.isScalar() && Bcast.isScalar()) {
+    if (Acast.allReal() && Bcast.allReal()) {
+      F = Array::Array(Op::func(Acast.constRealScalar<T>(),
+				Bcast.constRealScalar<T>()));
     } else {
       F = Array::Array(T(0),T(0));
-      Op::func(Ascalar.constRealScalar<T>(),Ascalar.constImagScalar<T>(),
-	       Bscalar.constRealScalar<T>(),Bscalar.constImagScalar<T>(),
+      Op::func(Acast.constRealScalar<T>(),
+	       Acast.constImagScalar<T>(),
+	       Bcast.constRealScalar<T>(),
+	       Bcast.constImagScalar<T>(),
 	       F.realScalar<T>(),F.imagScalar<T>());
     }
-  } else if (Ain.isScalar()) {
-    Array Ascalar(Ain.asScalar().toType(TScalar));
-    Array Bcast(Bin.toType(TArray));
-    if (Ascalar.allReal() && Bcast.allReal()) {
-      DotOp<T,SpinIterator<T>,BasicArray<T>,Op>(SpinIterator<T>(Ascalar.constRealScalar<T>()),
-						Bcast.constReal<T>(),F.real<T>(),Bcast.dimensions());
+  } else if (Acast.isScalar()) {
+    if (Acast.allReal() && Bcast.allReal()) {
+      DotOp<T,SpinIterator<T>,BasicArray<T>,Op>
+	(SpinIterator<T>(Acast.constRealScalar<T>()),
+	 Bcast.constReal<T>(),
+	 F.real<T>(),
+	 Bcast.dimensions());
     } else {
-      DotOp<T,SpinIterator<T>,BasicArray<T>,Op>(SpinIterator<T>(Ascalar.constRealScalar<T>()),
-						SpinIterator<T>(Ascalar.constImagScalar<T>()),
-						Bcast.constReal<T>(),
-						Bcast.constImag<T>(),
-						F.real<T>(),
-						F.imag<T>(),
-						Bcast.dimensions());
+      DotOp<T,SpinIterator<T>,BasicArray<T>,Op>
+	(SpinIterator<T>(Acast.constRealScalar<T>()),
+	 SpinIterator<T>(Acast.constImagScalar<T>()),
+	 Bcast.constReal<T>(),
+	 Bcast.constImag<T>(),
+	 F.real<T>(),
+	 F.imag<T>(),
+	 Bcast.dimensions());
     }
-  } else if (Bin.isScalar()) {
-    Array Acast(Ain.toType(TArray));
-    Array Bscalar(Bin.asScalar().toType(TScalar));
-    if (Bscalar.allReal() && Acast.allReal()) {
-      DotOp<T,BasicArray<T>,SpinIterator<T>,Op>(Acast.constReal<T>(),
-						SpinIterator<T>(Bscalar.constRealScalar<T>()),
-						F.real<T>(),
-						Acast.dimensions());
+  } else if (Bcast.isScalar()) {
+    if (Bcast.allReal() && Acast.allReal()) {
+      DotOp<T,BasicArray<T>,SpinIterator<T>,Op>
+	(Acast.constReal<T>(),
+	 SpinIterator<T>(Bcast.constRealScalar<T>()),
+	 F.real<T>(),
+	 Acast.dimensions());
     } else {
-      DotOp<T,BasicArray<T>,SpinIterator<T>,Op>(Acast.constReal<T>(),
-						Acast.constImag<T>(),
-						SpinIterator<T>(Bscalar.constRealScalar<T>()),
-						SpinIterator<T>(Bscalar.constImagScalar<T>()),
-						F.real<T>(),
-						F.imag<T>(),
-						Acast.dimensions());
+      DotOp<T,BasicArray<T>,SpinIterator<T>,Op>
+	(Acast.constReal<T>(),
+	 Acast.constImag<T>(),
+	 SpinIterator<T>(Bcast.constRealScalar<T>()),
+	 SpinIterator<T>(Bcast.constImagScalar<T>()),
+	 F.real<T>(),
+	 F.imag<T>(),
+	 Acast.dimensions());
     }
   } else {
-    Array Acast(Ain.toType(TArray));
-    Array Bcast(Bin.toType(TScalar));
     if (Acast.dimensions() != Bcast.dimensions())
       throw Exception("size mismatch in arguments to binary operator");
     if (Bcast.allReal() && Acast.allReal()) {
-      DotOp<T,BasicArray<T>,BasicArray<T>,Op>(Acast.constReal<T>(),
-					      Bcast.constReal<T>(),
-					      F.real<T>(),
-					      Acast.dimensions());
+      DotOp<T,BasicArray<T>,BasicArray<T>,Op>
+	(Acast.constReal<T>(),
+	 Bcast.constReal<T>(),
+	 F.real<T>(),
+	 Acast.dimensions());
     } else {
-      DotOp<T,BasicArray<T>,BasicArray<T>,Op>(Acast.constReal<T>(),
-					      Acast.constImag<T>(),
-					      Bcast.constReal<T>(),
-					      Bcast.constImag<T>(),
-					      F.real<T>(),
-					      F.imag<T>(),
-					      Acast.dimensions());
+      DotOp<T,BasicArray<T>,BasicArray<T>,Op>
+	(Acast.constReal<T>(),
+	 Acast.constImag<T>(),
+	 Bcast.constReal<T>(),
+	 Bcast.constImag<T>(),
+	 F.real<T>(),
+	 F.imag<T>(),
+	 Acast.dimensions());
     }
   }
   return F;
@@ -509,73 +514,76 @@ static inline Array DotOp(const Array &Ain, const Array &Bin, Type TScalar, Type
 // Assumes that the operation cannot create complex values from real ones
 template <class Op>
 static inline Array DotOp(const Array &Ain, const Array &Bin) {
-  if ((Ain.type() != Bin.type()) && (!Ain.isDouble() && !Bin.isDouble()))
+  if ((Ain.dataClass() != Bin.dataClass()) && 
+      (!Ain.isDouble() && !Bin.isDouble()))
     throw Exception("Unsupported type combinations to binary operator");
-  Type out_type;
+  DataClass out_type;
   Array F;
   if (Ain.isDouble()) 
-    out_type = Bin.type();
+    out_type = Bin.dataClass();
   else
-    out_type = Ain.type();
-  if (out_type == DoubleSparse) {
-  } else {
-    F = DotOp<double,Op>(Ain,Bin,DoubleScalar,DoubleArray);
-  }
-  return F.toType(out_type);
+    out_type = Ain.dataClass();
+  if (out_type == Float)
+    F = DotOp<float,Op>(Ain,Bin,Float);
+  else
+    F = DotOp<double,Op>(Ain,Bin,Double);
+  return F.toClass(out_type);
 }
 
 
 template <typename T, class Op>
-static inline Array CmpOp(const Array &Ain, const Array &Bin, Type TScalar, Type TArray) {
-  Array F(BoolArray);
-  if (Ain.isScalar() && Bin.isScalar()) {
-    Array Ascalar(Ain.asScalar().toType(TScalar));
-    Array Bscalar(Bin.asScalar().toType(TScalar));
-    if (Ascalar.allReal() && Bscalar.allReal()) {
-      F = Array::Array(Op::func(Ascalar.constRealScalar<T>(),
-				Bscalar.constRealScalar<T>()));
+static inline Array CmpOp(const Array &Ain, const Array &Bin, DataClass Tclass) {
+  Array Acast(Ain.toClass(Tclass));
+  Array Bcast(Bin.toClass(Tclass));
+  Array F(Bool);
+  if (Acast.isScalar() && Bcast.isScalar()) {
+    if (Acast.allReal() && Bcast.allReal()) {
+      F = Array::Array(Op::func(Acast.constRealScalar<T>(),
+				Bcast.constRealScalar<T>()));
     } else {
-      F = Array::Array(Op::func(Ascalar.constRealScalar<T>(),Ascalar.constImagScalar<T>(),
-				Bscalar.constRealScalar<T>(),Bscalar.constImagScalar<T>()));
+      F = Array::Array(Op::func(Acast.constRealScalar<T>(),
+				Acast.constImagScalar<T>(),
+				Bcast.constRealScalar<T>(),
+				Bcast.constImagScalar<T>()));
     }
-  } else if (Ain.isScalar()) {
-    Array Ascalar(Ain.asScalar().toType(TScalar));
-    Array Bcast(Bin.toType(TArray));
-    if (Ascalar.allReal() && Bcast.allReal()) {
-      DotOp<bool,SpinIterator<T>,BasicArray<T>,Op>(SpinIterator<T>(Ascalar.constRealScalar<T>()),
-						   Bcast.constReal<T>(),F.real<bool>(),
-						   Bcast.dimensions());
+  } else if (Acast.isScalar()) {
+    if (Acast.allReal() && Bcast.allReal()) {
+      DotOp<bool,SpinIterator<T>,BasicArray<T>,Op>
+	(SpinIterator<T>(Acast.constRealScalar<T>()),
+	 Bcast.constReal<T>(),F.real<bool>(),
+	 Bcast.dimensions());
     } else {
-      DotOp<bool,SpinIterator<T>,BasicArray<T>,Op>(SpinIterator<T>(Ascalar.constRealScalar<T>()),
-						   SpinIterator<T>(Ascalar.constImagScalar<T>()),
-						   Bcast.constReal<T>(), Bcast.constImag<T>(),
-						   F.real<bool>(), Bcast.dimensions());
+      DotOp<bool,SpinIterator<T>,BasicArray<T>,Op>
+	(SpinIterator<T>(Acast.constRealScalar<T>()),
+	 SpinIterator<T>(Acast.constImagScalar<T>()),
+	 Bcast.constReal<T>(), Bcast.constImag<T>(),
+	 F.real<bool>(), Bcast.dimensions());
     }
-  } else if (Bin.isScalar()) {
-    Array Acast(Ain.toType(TArray));
-    Array Bscalar(Bin.asScalar().toType(TScalar));
-    if (Bscalar.allReal() && Acast.allReal()) {
-      DotOp<bool,BasicArray<T>,SpinIterator<T>,Op>(Acast.constReal<T>(),
-						   SpinIterator<T>(Bscalar.constRealScalar<T>()),
-						   F.real<bool>(), Acast.dimensions());
+  } else if (Bcast.isScalar()) {
+    if (Bcast.allReal() && Acast.allReal()) {
+      DotOp<bool,BasicArray<T>,SpinIterator<T>,Op>
+	(Acast.constReal<T>(),
+	 SpinIterator<T>(Bcast.constRealScalar<T>()),
+	 F.real<bool>(), Acast.dimensions());
     } else {
-      DotOp<bool,BasicArray<T>,SpinIterator<T>,Op>(Acast.constReal<T>(), Acast.constImag<T>(),
-						   SpinIterator<T>(Bscalar.constRealScalar<T>()),
-						   SpinIterator<T>(Bscalar.constImagScalar<T>()),
-						   F.real<bool>(), Acast.dimensions());
+      DotOp<bool,BasicArray<T>,SpinIterator<T>,Op>
+	(Acast.constReal<T>(), Acast.constImag<T>(),
+	 SpinIterator<T>(Bcast.constRealScalar<T>()),
+	 SpinIterator<T>(Bcast.constImagScalar<T>()),
+	 F.real<bool>(), Acast.dimensions());
     }
   } else {
-    Array Acast(Ain.toType(TArray));
-    Array Bcast(Bin.toType(TScalar));
     if (Acast.dimensions() != Bcast.dimensions())
       throw Exception("size mismatch in arguments to binary operator");
     if (Bcast.allReal() && Acast.allReal()) {
-      DotOp<bool,BasicArray<T>,BasicArray<T>,Op>(Acast.constReal<T>(), Bcast.constReal<T>(),
-						 F.real<bool>(), Acast.dimensions());
+      DotOp<bool,BasicArray<T>,BasicArray<T>,Op>
+	(Acast.constReal<T>(), Bcast.constReal<T>(),
+	 F.real<bool>(), Acast.dimensions());
     } else {
-      DotOp<bool,BasicArray<T>,BasicArray<T>,Op>(Acast.constReal<T>(), Acast.constImag<T>(),
-					      Bcast.constReal<T>(), Bcast.constImag<T>(),
-					      F.real<bool>(), F.imag<T>(), Acast.dimensions());
+      DotOp<bool,BasicArray<T>,BasicArray<T>,Op>
+	(Acast.constReal<T>(), Acast.constImag<T>(),
+	 Bcast.constReal<T>(), Bcast.constImag<T>(),
+	 F.real<bool>(), F.imag<T>(), Acast.dimensions());
     }
   }
   return F;
@@ -583,19 +591,20 @@ static inline Array CmpOp(const Array &Ain, const Array &Bin, Type TScalar, Type
 
 template <class Op>
 static inline Array CmpOp(const Array &Ain, const Array &Bin) {
-  if ((Ain.type() != Bin.type()) && (!Ain.isDouble() && !Bin.isDouble()))
+  if ((Ain.dataClass() != Bin.dataClass()) && 
+      (!Ain.isDouble() && !Bin.isDouble()))
     throw Exception("Unsupported type combinations to binary operator");
-  Type out_type;
+  DataClass out_type;
   Array F;
   if (Ain.isDouble()) 
-    out_type = Bin.type();
+    out_type = Bin.dataClass();
   else
-    out_type = Ain.type();
-  if (out_type == DoubleSparse) {
-  } else {
-    F = CmpOp<double,Op>(Ain,Bin,DoubleScalar,DoubleArray);
-  }
-  return F.toType(BoolArray);
+    out_type = Ain.dataClass();
+  if (out_type == Float) 
+    F = CmpOp<float,Op>(Ain,Bin,Float);
+  else
+    F = CmpOp<double,Op>(Ain,Bin,Double);
+  return F.toClass(Bool);
 }
 
 /**
@@ -1915,14 +1924,14 @@ Array NotEquals(const Array& A, const Array& B) {
 //@}
 //!
 Array And(const Array& A, const Array& B) {
-  return DotOp<bool,OpAnd>(A,B,BoolScalar,BoolArray);
+  return DotOp<bool,OpAnd>(A,B,Bool);
 }
 
 /**
  * Element-wise or
  */
 Array Or(const Array& A, const Array& B) {
-  return DotOp<bool,OpOr>(A,B,BoolScalar,BoolArray);
+  return DotOp<bool,OpOr>(A,B,Bool);
 }
 
 /**
@@ -1934,8 +1943,8 @@ static bool notfunc(bool t) {
 
 Array Not(const Array& A) {
   if (A.isScalar())
-    return Array::Array(!A.asScalar().toType(BoolScalar).constRealScalar<bool>());
-  return Array::Array(BoolArray,Apply(A.toType(BoolArray).constReal<bool>(),notfunc));
+    return Array::Array(!A.toClass(Bool).constRealScalar<bool>());
+  return Array::Array(Bool,Apply(A.toClass(Bool).constReal<bool>(),notfunc));
 }
 
 Array Plus(const Array& A) {

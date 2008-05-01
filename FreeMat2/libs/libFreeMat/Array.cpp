@@ -87,7 +87,7 @@ static inline void destruct(Type t, void *todelete) {
 
 static inline bool AllNonBoolScalars(const ArrayVector& index) {
   for (int i=0;i<index.size();i++)
-    if (!index[i].isScalar() || (index[i].type().Class == Bool)) return false;
+    if (!index[i].isScalar() || (index[i].dataClass() == Bool)) return false;
   return true;
 }
 
@@ -236,7 +236,7 @@ static inline void Tset_scalar(Array *ptr, S ndx, const Array& data) {
 
 template <typename S>
 static inline const void Tset_struct_scalar(Array*ptr, S ndx, const Array &rhs) {
-  if (rhs.type().Class != Struct)
+  if (rhs.dataClass() != Struct)
     throw Exception("Assignment A(I)=B where A is a structure array implies that B is also a structure array.");
   // First loop through the elements
   const StructArray &rp(rhs.constStructPtr());
@@ -299,7 +299,7 @@ static inline void Tset(Array* ptr, S ndx, const Array& data) {
       Set(ptr->imagSparse<T>(),ndx,ToImagSparse<T>(data));
     return;
   }
-  Array dataTyped(data.toClass(ptr->type().Class));
+  Array dataTyped(data.toClass(ptr->dataClass()));
   Set(ptr->real<T>(),ndx,dataTyped.constReal<T>());
   if (!data.allReal()) {
     Set(ptr->imag<T>(),ndx,dataTyped.constImag<T>());
@@ -308,7 +308,7 @@ static inline void Tset(Array* ptr, S ndx, const Array& data) {
 
 template <typename S>
 static inline const void Tset_struct(Array*ptr, S ndx, const Array &rhs) {
-  if (rhs.type().Class != Struct)
+  if (rhs.dataClass() != Struct)
     throw Exception("Assignment A(I)=B where A is a structure array implies that B is also a structure array.");
   // First loop through the elements
   const StructArray &rp(rhs.constStructPtr());
@@ -492,18 +492,18 @@ template <typename S, typename T>
 static inline const Array Tget(const Array *ptr, S ndx) {
   if (ptr->isSparse()) {
     if (ptr->allReal())
-      return Array(ptr->type().Class,
+      return Array(ptr->dataClass(),
 		   Get(ptr->constRealSparse<T>(),ndx));
     else
-      return Array(ptr->type().Class,
+      return Array(ptr->dataClass(),
 		   Get(ptr->constRealSparse<T>(),ndx),
 		   Get(ptr->constImagSparse<T>(),ndx));
   } else {
     if (ptr->allReal())
-      return Array(ptr->type().Class,
+      return Array(ptr->dataClass(),
 		   Get(ptr->constReal<T>(),ndx));
     else
-      return Array(ptr->type().Class,
+      return Array(ptr->dataClass(),
 		   Get(ptr->constReal<T>(),ndx),
 		   Get(ptr->constImag<T>(),ndx));
   }
@@ -572,7 +572,7 @@ inline static const Array Tcast(DataClass t, const Array *ptr) {
 
 template <typename T>
 inline static const Array TcastCase(DataClass t, const Array *ptr) {
-  switch (ptr->type().Class) {
+  switch (ptr->dataClass()) {
   default:
     throw Exception("Cannot perform type conversions with this type");
     MacroExpandCasesSimple(MacroTcast);
@@ -585,7 +585,7 @@ inline static const Array TcastCase(DataClass t, const Array *ptr) {
   case cls: return TcastCase<ctype>(t,this);
 
 const Array Array::toClass(DataClass t) const {
-  if (type().Class == t) return *this;
+  if (dataClass() == t) return *this;
   switch (t) {
   default:
     throw Exception("Cannot perform type conversions with this type.");
@@ -657,7 +657,7 @@ const Array Array::get(index_t index) const {
 #undef MacroGetIndexT
 
 const Array Array::get(const Array& index) const {
-  if (index.isScalar() && (index.type().Class != Bool)) {
+  if (index.isScalar() && (index.dataClass() != Bool)) {
     if (!index.allReal())
      Warn("Complex part of index ignored");
     return get(index.asIndexScalar());
@@ -681,7 +681,7 @@ const Array Array::get(const ArrayVector& index) const {
 }
 
 void Array::set(const Array& index, const Array& data) {
-  if (index.isScalar() && (index.type().Class != Bool)) {
+  if (index.isScalar() && (index.dataClass() != Bool)) {
     if (!index.allReal())
       Warn("Complex part of index ignored");
     set(index.asIndexScalar(),data);
@@ -706,7 +706,7 @@ void Array::set(const ArrayVector& index, const Array& data) {
 }
 
 void Array::addField(QString name) {
-  if (type().Class != Struct)
+  if (dataClass() != Struct)
     throw Exception("addField only valid for structure arrays");
   if (!structPtr().contains(name))
     structPtr().insert(name,BasicArray<Array>());
@@ -717,7 +717,7 @@ void Array::addField(QString name) {
   return index_t(constRealScalar<ctype>());
 
 const index_t Array::asIndexScalar() const {
-  switch (type().Class) {
+  switch (dataClass()) {
   default:
     throw Exception("Unsupported type called on asIndexScalar");
   case Bool:
@@ -745,7 +745,7 @@ static inline void T_force_complex(Array *ptr) {
   case cls: return T_force_complex<ctype>(this);
 
 void Array::forceComplex() {
-  switch (type().Class) {
+  switch (dataClass()) {
   default:
     return;
     MacroExpandCasesNoBool(MacroForceComplex);
@@ -805,8 +805,8 @@ static inline bool Tequals_array(const Array *pA, const Array *pB) {
 bool Array::operator==(const Array &b) const {
   if (isScalar() && b.isScalar()) {
     if (allReal() ^ b.allReal()) return false;
-    if (type().Class != b.type().Class) return false;
-    switch (type().Class) {
+    if (dataClass() != b.dataClass()) return false;
+    switch (dataClass()) {
     default:
       throw Exception("Unhandled scalar case");
       MacroExpandCasesAll(MacroScalarEquals);
@@ -814,9 +814,9 @@ bool Array::operator==(const Array &b) const {
     return false;
   }
   if (!(dimensions() == b.dimensions())) return false;
-  if (type().Class != b.type().Class) return false;
+  if (dataClass() != b.dataClass()) return false;
   if (allReal() ^ b.allReal()) return false;
-  switch (type().Class) {
+  switch (dataClass()) {
   default:
     throw Exception("Unhandled case as argument to == operator for Array class");
     MacroExpandCasesAll(MacroArrayEquals);
@@ -835,7 +835,7 @@ std::ostream& operator<<(std::ostream& o, const Array &t) {
 }
   
 bool IsColonOp(const Array &x) {
-  return (x.type().Class == StringArray) && (x.string() == ":");
+  return (x.dataClass() == StringArray) && (x.string() == ":");
 }
 
 template <typename T>
@@ -848,7 +848,7 @@ static inline bool Tis_negative(const Array &x) {
 
 bool IsNonNegative(const Array &x) {
   if (!x.allReal()) return false;
-  switch (x.type().Class) {
+  switch (x.dataClass()) {
   default:
     return false;
   case Bool:
@@ -868,7 +868,7 @@ bool IsNonNegative(const Array &x) {
 }
 
 bool IsUnsigned(const Array &x) {
-  switch (x.type().Class) {
+  switch (x.dataClass()) {
   default:
     return false;
   case Bool:
@@ -892,7 +892,7 @@ static inline bool Tis_integer(const Array &x) {
 
 bool IsInteger(const Array &x) {
   if (!x.allReal()) return false;
-  switch (x.type().Class) {
+  switch (x.dataClass()) {
   default:
     return false;
   case Int8:
@@ -925,9 +925,9 @@ QString Array::string() const {
 template <typename T>
 static inline Array Tscalar_to_dense(const Array *ptr) {
   if (ptr->allReal())
-    return Array(ptr->type().Class, new BasicArray<T>(ptr->constRealScalar<T>()));
+    return Array(ptr->dataClass(), new BasicArray<T>(ptr->constRealScalar<T>()));
   else {
-    return Array(ptr->type().Class, 
+    return Array(ptr->dataClass(), 
 		 new BasicArray<T>(ptr->constRealScalar<T>()),
 		 new BasicArray<T>(ptr->constImagScalar<T>()));
   }
@@ -936,9 +936,9 @@ static inline Array Tscalar_to_dense(const Array *ptr) {
 template <typename T>
 static inline Array Tsparse_to_dense(const Array *ptr) {
   if (ptr->allReal())
-    return Array(ptr->type().Class,ptr->constRealSparse<T>().asDense());
+    return Array(ptr->dataClass(),ptr->constRealSparse<T>().asDense());
   else
-    return Array(ptr->type().Class,
+    return Array(ptr->dataClass(),
 		 ptr->constRealSparse<T>().asDense(),
 		 ptr->constImagSparse<T>().asDense());
 }
@@ -970,15 +970,15 @@ Array Array::asDenseArray() const {
 #undef MacroScalarToDense
 
 const IndexArray IndexArrayFromArray(const Array &index) {
-  if ((index.type().Class == Bool) && (index.type().Scalar == 1))
+  if ((index.dataClass() == Bool) && (index.type().Scalar == 1))
     return Find(index.asDenseArray().constReal<bool>());
   if (index.type().Sparse == 1)
     throw Exception("Sparse indexing not supported currently");
   if (!index.allReal())
     Warn("Complex part of index ignored");
-  if (index.type().Class == Double)
+  if (index.dataClass() == Double)
     return index.constReal<index_t>();
-  if (index.type().Class == Bool)
+  if (index.dataClass() == Bool)
     return Find(index.constReal<logical>());
   Array index_converted(index.toClass(Double));
   if (!index_converted.allReal())
@@ -990,7 +990,7 @@ const IndexArray IndexArrayFromArray(const Array &index) {
 }
 
 const ArrayVector ArrayVectorFromCellArray(const Array &arg) {
-  if (arg.type().Class != CellArray) 
+  if (arg.dataClass() != CellArray) 
     throw Exception("Unsupported type for call to toArrayVector");
   ArrayVector ret;
   const BasicArray<Array> &rp(arg.constReal<Array>());
@@ -1011,7 +1011,7 @@ const Array CellArrayFromArrayVector(ArrayVector &arg, index_t cnt) {
 
 void SetCellContents(Array &cell, const Array& index, 
 		     ArrayVector& data) {
-  if (cell.type().Class != CellArray)
+  if (cell.dataClass() != CellArray)
     throw Exception("A{B} = C only supported for cell arrays.");
   if (IsColonOp(index)) {
     if (cell.length() > data.size())
@@ -1028,7 +1028,7 @@ void SetCellContents(Array &cell, const Array& index,
 
 void SetCellContents(Array &cell, const ArrayVector& index, 
 		     ArrayVector& data) {
-  if (cell.type().Class != CellArray)
+  if (cell.dataClass() != CellArray)
     throw Exception("A{B1,B2,...BN} = B only supported for cell arrays.");
   IndexArrayVector addr;
   NTuple dims;
@@ -1045,7 +1045,7 @@ void SetCellContents(Array &cell, const ArrayVector& index,
 }
 
 QStringList FieldNames(const Array& arg) {
-  if (arg.type().Class != Struct)
+  if (arg.dataClass() != Struct)
     throw Exception("fieldnames only valid for structure arrays");
   const StructArray &rp(arg.constStructPtr());
   StructArray::const_iterator i=rp.constBegin();
