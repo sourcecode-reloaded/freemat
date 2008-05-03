@@ -252,6 +252,13 @@ double getEPS();
  * a double-precision floating point number.
  */
 float getFloatEPS();
+
+template <typename T>
+T lamch();
+
+template <typename T>
+void changeStride(T*dst, int dstStride, T*src, int srcStride, int rowCount, int colCount);
+
 /**
  * This function effectively pads each column in the source matrix by a
  * number of zeros.  It actually allows us to change the stride of the

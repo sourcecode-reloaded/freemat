@@ -221,7 +221,11 @@ public:
     if (!m_imag.p)
       throw Exception("Illegal request for imaginary part of real-only array");
     return (*reinterpret_cast<const BasicArray<T>*>(m_imag.p->ptr()));
-  }						
+  }
+  template <typename T>
+  inline BasicArray<T> fortran() const {
+    return MergeComplex(constReal<T>(),constImag<T>());
+  }
   template <typename T> inline T constRealScalar() const;
   template <typename T> inline T constImagScalar() const;
   template <typename T> inline T& realScalar();

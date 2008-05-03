@@ -26,6 +26,7 @@
 #include "EigenDecompose.hpp"
 #include "Malloc.hpp"
 #include "SparseMatrix.hpp"
+#include "Complex.hpp"
 #include <math.h>
 
 
@@ -67,40 +68,6 @@ static inline T powi(T a, int b) {
   }
   return(p);
 }  
-
-template <typename T>
-static inline void complex_divide(const T& ar, const T& ai,
-				  const T& br, const T& bi,
-				  T& c0, T& c1) {
-  double ratio, den;
-  double abr, abi, cr;
-  
-  if( (abr = br) < 0.)
-    abr = - abr;
-  if( (abi = bi) < 0.)
-    abi = - abi;
-  if( abr <= abi )
-    {
-      if(abi == 0) {
-	if (ai != 0 || ar != 0)
-	  abi = 1.;
-	c1 = c0 = abi / abr;
-	return;
-      }
-      ratio = br / bi ;
-      den = bi * (1 + ratio*ratio);
-      cr = (ar*ratio + ai) / den;
-      c1 = (ai*ratio - ar) / den;
-    }
-  else
-    {
-      ratio = bi / br ;
-      den = br * (1 + ratio*ratio);
-      cr = (ar + ai*ratio) / den;
-      c1 = (ai - ar*ratio) / den;
-    }
-  c0 = cr;
-}
 
 template <typename T>
 static inline void powi(const T& ar, const T& ai, int b,
@@ -327,34 +294,13 @@ struct OpPower {
   }
 };
 
-template <typename T, class Op>
-static inline SparseMatrix<T> DotOp(const SparseMatrix<T> &A, const T& B) {
-  ConstSparseIterator<T> spin(&A);
-  SparseMatrix<T> retval;
-  while (spin.isValid()) {
-    retval.set(spin.pos(),Op::func(spin.value(),B));
-    spin.next();
-  }
-  return retval;
-}
-
-template <typename T, class Op>
-static inline SparseMatrix<T> DotOp(const T& A, const SparseMatrix<T> &B) {
-  ConstSparseIterator<T> spin(&B);
-  SparseMatrix<T> retval;
-  while (spin.isValid()) {
-    retval.set(spin.pos(),Op::func(A,spin.value()));
-    spin.next();
-  }
-  return retval;
-}
-
-template <typename T, class Op>
-static inline SparseMatrix<T> DotOp(const SparseMatrix<T>& A, 
+// Real, Real --> Real
+template <typename S, typename T, class Op>
+static inline SparseMatrix<S> DotOp(const SparseMatrix<T>& A, 
 				    const SparseMatrix<T>& B) {
   ConstSparseIterator<T> aspin(&A);
   ConstSparseIterator<T> bspin(&B);
-  SparseMatrix<T> retval;
+  SparseMatrix<S> retval;
   while (aspin.isValid() || bspin.isValid()) {
     if (aspin.pos() == bspin.pos()) {
       retval.set(aspin.pos(),Op::func(aspin.value(),bspin.value()));
@@ -371,6 +317,125 @@ static inline SparseMatrix<T> DotOp(const SparseMatrix<T>& A,
   }
   return retval;
 }
+
+
+template <typename T>
+static inline void RetrieveSparseComplexValue(ConstSparseIterator<T> & a_realspin,
+					      ConstSparseIterator<T> & a_imagspin,
+					      const NTuple & dim,
+					      T& value_a_real, T& value_a_imag, NTuple &apos) {
+  if (dim.map(a_realspin.pos()) > dim(a_imagspin.pos())) {
+    value_a_real = T(0);
+    value_a_imag = a_imagspin.value();
+    apos = a_imagspin.pos();
+  } else if (dim.map(a_realspin.pos()) < dim(a_imagspin.pos())) {
+    value_a_real = a_realspin.value();
+    value_a_imag = T(0);
+    apos = a_realspin.pos();
+  } else {
+    value_a_real = a_realspin.value();
+    value_a_imag = a_imagspin.value();
+    apos = a_realspin.pos();
+  }
+}
+
+template <typename T>
+static inline void AdvanceSpins(ConstSparseIterator<T> & real_spin,
+				ConstSparseIterator<T> & imag_spin,
+				const NTuple &dim) {
+  if (dim.map(real_spin.pos()) > dim.map(imag_spin.pos())) {
+    imag_spin.next();
+  } else if (dim.map(real_spin.pos()) < dim.map(imag_spin.pos())) {
+    real_spin.next();
+  } else {
+    imag_spin.next();
+    real_spin.next();
+  }
+}
+				
+	
+// Complex, Complex --> Complex
+template <typename S, typename T, class Op>
+static inline void DotOp(const SparseMatrix<T>& A_real, 
+			 const SparseMatrix<T>& A_imag,
+			 const SparseMatrix<T>& B_real,
+			 const SparseMatrix<T>& B_imag,
+			 SparseMatrix<S>& C_real,
+			 SparseMatrix<S>& C_imag) {
+  C_real = SparseMatrix<S>(A_real.dimensions());
+  C_imag = SparseMatrix<S>(A_imag.dimensions());
+  ConstSparseIterator<T> a_realspin(&A_real);
+  ConstSparseIterator<T> a_imagspin(&A_imag);
+  ConstSparseIterator<T> b_realspin(&B_real);
+  ConstSparseIterator<T> b_imagspin(&B_real);
+  NTuple dim(A_real.dimensions());
+  while (a_realspin.isValid() || 
+	 a_imagspin.isValid() ||
+	 b_realspin.isValid() ||
+	 b_imagspin.isValid()) {
+    NTuple apos, bpos;
+    T value_a_real, value_a_imag;
+    T value_b_real, value_b_imag;
+    T value_c_real, value_c_imag;
+    RetrieveSparseComplexValue(a_realspin,a_imagspin,dim,value_a_real,value_a_imag,apos);
+    RetrieveSparseComplexValue(b_realspin,b_imagspin,dim,value_b_real,value_b_imag,bpos);
+    if (apos == bpos) {
+      Op::func(value_a_real,value_a_imag,value_b_real,value_b_imag,value_c_real,value_c_imag);
+      C_real.set(apos,value_c_real);
+      C_real.set(apos,value_c_imag);
+      AdvanceSpins(a_realspin,a_imagspin,dim);
+      AdvanceSpins(b_realspin,b_imagspin,dim);
+    } else if (dim.map(apos) < dim.map(bpos)) {
+      Op::func(value_a_real,value_a_imag,0,0,value_c_real,value_c_imag);
+      C_real.set(apos,value_c_real);
+      C_real.set(apos,value_c_imag);
+      AdvanceSpins(a_realspin,a_imagspin,dim);
+    } else {
+      Op::func(0,0,value_b_real,value_b_imag,value_c_real,value_c_imag);
+      C_real.set(bpos,value_c_real);
+      C_real.set(bpos,value_c_imag);
+      AdvanceSpins(b_realspin,b_imagspin,dim);
+    }
+  }
+}
+	
+// Complex, Complex --> Real
+template <typename S, typename T, class Op>
+static inline SparseMatrix<S> DotOp(const SparseMatrix<T>& A_real, 
+				    const SparseMatrix<T>& A_imag,
+				    const SparseMatrix<T>& B_real,
+				    const SparseMatrix<T>& B_imag) {
+  SparseMatrix<S> C;
+  ConstSparseIterator<T> a_realspin(&A_real);
+  ConstSparseIterator<T> a_imagspin(&A_imag);
+  ConstSparseIterator<T> b_realspin(&B_real);
+  ConstSparseIterator<T> b_imagspin(&B_real);
+  NTuple dim(A_real.dimensions());
+  while (a_realspin.isValid() || 
+	 a_imagspin.isValid() ||
+	 b_realspin.isValid() ||
+	 b_imagspin.isValid()) {
+    NTuple apos, bpos;
+    T value_a_real, value_a_imag;
+    T value_b_real, value_b_imag;
+    T value_c_real, value_c_imag;
+    RetrieveSparseComplexValue(a_realspin,a_imagspin,dim,value_a_real,value_a_imag,apos);
+    RetrieveSparseComplexValue(b_realspin,b_imagspin,dim,value_b_real,value_b_imag,bpos);
+    if (apos == bpos) {
+      C.set(apos,Op::func(value_a_real,value_a_imag,value_b_real,value_b_imag));
+      C.set(apos,value_c_real);
+      AdvanceSpins(a_realspin,a_imagspin,dim);
+      AdvanceSpins(b_realspin,b_imagspin,dim);
+    } else if (dim.map(apos) < dim.map(bpos)) {
+      C.set(apos,Op::func(value_a_real,value_a_imag,0,0));
+      AdvanceSpins(a_realspin,a_imagspin,dim);
+    } else {
+      C.set(bpos,Op::func(0,0,value_b_real,value_b_imag));
+      AdvanceSpins(b_realspin,b_imagspin,dim);
+    }
+  }
+}
+
 
 template <typename T>
 class SpinIterator {
@@ -442,6 +507,24 @@ static inline Array DotOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
   Array Acast(Ain.toClass(Tclass));
   Array Bcast(Bin.toClass(Tclass));
   Array F(Tclass);
+  if (Acast.isSparse() && Bcast.isSparse()) {
+    if (Acast.dimensions() != Bcast.dimensions())
+      throw Exception("size mismatch in arguments to binary operator");
+    if (Bcast.allReal() && Acast.allReal()) {
+      F = DotOp<T,T,Op>(Acast.constRealSparse<T>(),
+			Bcast.constRealSparse<T>());
+    } else {
+      DotOp<T,T,Op>(Acast.constRealSparse<T>(),
+		    Acast.constImagSparse<T>(),
+		    Bcast.constRealSparse<T>(),
+		    Bcast.constImagSparse<T>(),
+		    F.realSparse<T>(),
+		    F.imagSparse<T>());
+    }
+    return F;
+  }
+  if (!Acast.isScalar()) Acast = Acast.asDenseArray();
+  if (!Bcast.isScalar()) Bcast = Bcast.asDenseArray();
   if (Acast.isScalar() && Bcast.isScalar()) {
     if (Acast.allReal() && Bcast.allReal()) {
       F = Array::Array(Op::func(Acast.constRealScalar<T>(),
@@ -536,6 +619,24 @@ static inline Array CmpOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
   Array Acast(Ain.toClass(Tclass));
   Array Bcast(Bin.toClass(Tclass));
   Array F(Bool);
+  if (Acast.isSparse() && Bcast.isSparse()) {
+    if (Acast.dimensions() != Bcast.dimensions())
+      throw Exception("size mismatch in arguments to binary operator");
+    if (Bcast.allReal() && Acast.allReal()) {
+      F = DotOp<bool,T,Op>(Acast.constRealSparse<T>(),
+			   Bcast.constRealSparse<T>());
+    } else {
+      DotOp<bool,T,Op>(Acast.constRealSparse<T>(),
+		       Acast.constImagSparse<T>(),
+		       Bcast.constRealSparse<T>(),
+		       Bcast.constImagSparse<T>(),
+		       F.realSparse<bool>(),
+		       F.imagSparse<bool>());
+    }
+    return F;
+  }
+  if (!Acast.isScalar()) Acast = Acast.asDenseArray();
+  if (!Bcast.isScalar()) Bcast = Bcast.asDenseArray();
   if (Acast.isScalar() && Bcast.isScalar()) {
     if (Acast.allReal() && Bcast.allReal()) {
       F = Array::Array(Op::func(Acast.constRealScalar<T>(),
@@ -1964,43 +2065,6 @@ Array Negate(const Array& A){
   return DotOp<OpSubtract>(B,A);
 }
 
-/**
- * Check that both of the argument objects are numeric.
- */
-inline void CheckNumeric(Array &A, Array &B, QString opname){
-  bool Anumeric, Bnumeric;
-
-  Anumeric = !A.isReferenceType();
-  Bnumeric = !B.isReferenceType();
-  if (!(Anumeric && Bnumeric))
-    throw Exception(QString("Cannot apply numeric operation ") + 
-		    opname + QString(" to reference types."));
-}
-
-/**
- * Check that both of the argument objects are of the
- * same type.  If not, apply conversion.  Here are the
- * rules:
- *   Float operations produce float results.
- *   Double operations produce double results.
- *   Mixtures of float and double operations produce double results.
- *   Integer operations (of any kind) produce int results - 
- *     the question is what type do these objects get promoted too?  The
- *     answer is a signed int (32 bits).
- *   Mixtures of real and complex operations produce complex results.
- *   Integer constants are 32 bit by default
- *   Float constants are 64 bit by default
- *   Division operations lead to promotion 
- *   Character types are automatically (demoted) to 32 bit integers.
- *
- *   The way to accomplish this is as follows: compute the larger
- *   of the types of A and B.  Call this type t_max.  If t_max
- *   is not an integer type, promote both types to this type.
- *   If t_max is an integer type, promote both objects to an FM_INT32.
- *   If this is a division operation or a matrix operation, promote both 
- *    objects to an FM_DOUBLE64!
- *
- */
 
 //!
 //@Module TYPERULES Type Rules
@@ -2033,26 +2097,6 @@ inline void CheckNumeric(Array &A, Array &B, QString opname){
 //@$"y=pi+i","dcomplex(pi+i)","close"
 //@$"y=1/2","0.5","exact"
 //!
-void TypeCheck(Array &A, Array &B, bool isDivOrMatrix) {
-  Class Aclass(A.dataClass());
-  Class Bclass(B.dataClass());
-  Class Cclass;
-  // First, anything less than an int32 is promoted to an int32
-  // Strings are treates as int32.
-  if ((Aclass < FM_INT32) || (Aclass == FM_STRING)) Aclass = FM_INT32;
-  if ((Bclass < FM_INT32) || (Bclass == FM_STRING)) Bclass = FM_INT32;
-  // Division or matrix operations do no allow integer
-  // data types.  These must be promoted to doubles.
-  if (isDivOrMatrix && (Aclass < FM_FLOAT)) Aclass = FM_DOUBLE;
-  if (isDivOrMatrix && (Bclass < FM_FLOAT)) Bclass = FM_DOUBLE;
-  // An integer or double mixed with a complex is promoted to a dcomplex type
-  if ((Aclass == FM_COMPLEX) && ((Bclass == FM_DOUBLE) || (Bclass < FM_FLOAT))) Bclass = FM_DCOMPLEX;
-  if ((Bclass == FM_COMPLEX) && ((Aclass == FM_DOUBLE) || (Aclass < FM_FLOAT))) Aclass = FM_DCOMPLEX;
-  // The output class is now the dominant class remaining:
-  Cclass = (Aclass > Bclass) ? Aclass : Bclass;
-  A.promoteType(Cclass);
-  B.promoteType(Cclass);
-}
 
 /**
  * We want to perform a matrix-matrix operation between two data objects.
@@ -2086,49 +2130,7 @@ inline bool MatrixCheck(Array &A, Array &B, std::string opname){
 }
 
 
-/*
- * Check to see if two dimensions (when treated as vectors) are equivalent in size.
- */
-bool SameSizeCheck(Dimensions Adim, Dimensions Bdim) {
-  Adim.simplify();
-  Bdim.simplify();
-  return (Adim.equals(Bdim));
-}
 
-/**
- * We want to perform a vector operation between two data objects.
- * The following checks are required:
- *  1. Both A & B must be numeric
- *  2. Either A & B are the same size or
- *      A is a scalar or B is a scalar.
- */
-inline void VectorCheck(Array& A, Array& B, bool promote, std::string opname){
-  StringVector dummySV;
-
-  // Check for numeric types
-  CheckNumeric(A,B,opname);
-  
-  if (!(SameSizeCheck(A.dimensions(),B.dimensions()) || A.isScalar() || B.isScalar()))
-    throw Exception(std::string("Size mismatch on arguments to arithmetic operator ") + opname);
-  
-  // Test the types.
-  TypeCheck(A,B,promote);
-}
-
-/**
- * We want to perform a vector operator between two logical data objects.
- * The following operations are performed:
- *  1. Both A & B are converted to logical types.
- *  2. Either A & B must be the same size, or A is a
- *     scalar or B is a scalar.
- */
-inline void BoolVectorCheck(Array& A, Array& B,std::string opname){
-  A.promoteType(FM_LOGICAL);
-  B.promoteType(FM_LOGICAL);
-
-  if (!(SameSizeCheck(A.dimensions(),B.dimensions()) || A.isScalar() || B.isScalar()))
-    throw Exception(std::string("Size mismatch on arguments to ") + opname);
-}
 
 
 /**
@@ -2921,76 +2923,35 @@ Array RightDivide(Array A, Array B, Interpreter* m_eval) {
 /**
  * Eigen decomposition, symmetric matrix, compact decomposition case
  */
-void EigenDecomposeCompactSymmetric(Array A, Array& D, Interpreter* m_eval) {
-  Class Aclass;
+template <typename T>
+static inline void EigenDecomposeCompactSymmetric(DataClass cls, Array &D, Array A) {
+  int N = A.rows();
+  NTuple Vdims(N,1);
+  if (A.allReal()) {
+    D = Array(cls,Vdims);
+    realEigenDecomposeSymmetric(N, NULL, D.real<T>().data(), 
+				A.real<T>(),false);
+  } else {
+    D = Array(cls,Vdims);
+    complexEigenDecomposeSymmetric(N, NULL, D.real<T>().data(),
+				   A.fortran<T>().data(),false);
+  }
+}
 
-  // Test for numeric
-  if (A.isReferenceType())
-    throw Exception("Cannot apply eigendecomposition to reference types.");
-  
+void EigenDecomposeCompactSymmetric(Array A, Array& D, Interpreter* m_eval) {
   if (!A.is2D())
     throw Exception("Cannot apply eigendecomposition to N-Dimensional arrays.");
-
-  if (A.getDimensionLength(0) != A.getDimensionLength(1))
+  if (A.rows() != A.columns())
     throw Exception("Cannot eigendecompose a non-square matrix.");
-
-  int N = A.getDimensionLength(0);
-
   // Create one square matrix to store the eigenvectors
-  Dimensions Vdims(N,1);
-
-  // Handle the type of A - if it is an integer type, then promote to double
-  Aclass = A.dataClass();
-  if (Aclass < FM_FLOAT) {
-    A.promoteType(FM_DOUBLE);
-    Aclass = FM_DOUBLE;
-  }
-
-  // Select the eigenvector decomposition routine based on A's type
-  Dimensions VDims(N,1);
-  switch (Aclass) {
-  default: throw Exception("Unhandled type for symmetric eigendecomposition");
-  case FM_FLOAT: 
-    {
-      // A temporary vector to store the eigenvalues
-      float *eigenvals = (float*) Malloc(N*sizeof(float));
-      floatEigenDecomposeSymmetric(N, NULL, eigenvals, 
-				   (float*)A.getReadWriteDataPointer(),
-				   false);
-      // Copy the eigenvalues into a diagonal (float) matrix
-      D = Array(FM_FLOAT,Vdims,eigenvals);
-    }
+  switch (A.class()) {
+  default: 
+    throw Exception("Unhandled type for symmetric eigendecomposition");
+  case Float:
+    EigenDecomposeCompactSymmetric<float>(Float,D,A);
     break;
-  case FM_DOUBLE: 
-    {
-      // A temporary vector to store the eigenvalues
-      double *eigenvals = (double*) Malloc(N*sizeof(double));
-      doubleEigenDecomposeSymmetric(N, NULL, eigenvals, 
-				    (double*)A.getReadWriteDataPointer(),
-				    false);
-      // Copy the eigenvalues into a diagonal (double) matrix
-      D = Array(FM_DOUBLE,Vdims,eigenvals);
-    }
-    break;
-  case FM_COMPLEX:
-    {
-      float *eigenvals = (float*) Malloc(N*sizeof(float));
-      complexEigenDecomposeSymmetric(N, NULL, eigenvals, 
-				     (float*)A.getReadWriteDataPointer(),
-				     false);
-      // Copy the eigenvalues into a diagonal (complex) matrix
-      D = Array(FM_FLOAT,Vdims,eigenvals);
-    }
-    break;
-  case FM_DCOMPLEX:
-    {
-      double *eigenvals = (double*) Malloc(N*sizeof(double));
-      dcomplexEigenDecomposeSymmetric(N, NULL, eigenvals, 
-				      (double*)A.getReadWriteDataPointer(),
-				      false);
-      // Copy the eigenvalues into a diagonaal (complex) matrix
-      D = Array(FM_DOUBLE,Vdims,eigenvals);
-    }
+  case Double:
+    EigenDecomposeCompactSymmetric<double>(Double,D,A);
     break;
   }
 }
@@ -2998,100 +2959,42 @@ void EigenDecomposeCompactSymmetric(Array A, Array& D, Interpreter* m_eval) {
 /**
  * Eigen decomposition, symmetric matrix, full decomposition case
  */
-void EigenDecomposeFullSymmetric(Array A, Array& V, Array& D, Interpreter* m_eval) {
-  int i;
-  Class Aclass;
+template <typename T>
+static inline EigenDecomposeFullSymmetric(DataClass cls, Array &V, Array &D, Array A) {
+  int N = A.rows();
+  NTuple Vdims(N,N);
+  if (A.allReal()) {
+    BasicArray<T> eigenvals(NTuple(N,1));
+    V = Array(cls,Vdims);
+    realEigenDecomposeSymmetric(N, V.real<T>().data(), 
+				eigenvals.data(), 
+				A.real<T>().data(),
+				true);
+    D = DiagonalArray(cls,Vdims,eigenvals);
+  } else {
+    BasicArray<T> eigenvals(NTuple(N,1));
+    V = Array(cls,Vdims);
+    complexEigenDecomposeSymmetric(N,V.real<T>().data(),
+				   eigenvals.data(),
+				   A.fortran<T>().data(),
+				   true);
+    D = DiagonalArray(cls,Vdims,eigenvals);
+  }
+}
 
-  // Test for numeric
-  if (A.isReferenceType())
-    throw Exception("Cannot apply eigendecomposition to reference types.");
-  
+void EigenDecomposeFullSymmetric(Array A, Array& V, Array& D) {
   if (!A.is2D())
     throw Exception("Cannot apply eigendecomposition to N-Dimensional arrays.");
-
-  if (A.getDimensionLength(0) != A.getDimensionLength(1))
+  if (A.rows() != A.columns())
     throw Exception("Cannot eigendecompose a non-square matrix.");
-
-  int N = A.getDimensionLength(0);
-
-  // Create one square matrix to store the eigenvectors
-  Dimensions Vdims(N,N);
-
-  // Handle the type of A - if it is an integer type, then promote to double
-  Aclass = A.dataClass();
-  if (Aclass < FM_FLOAT) {
-    A.promoteType(FM_DOUBLE);
-    Aclass = FM_DOUBLE;
-  }
-
   // Select the eigenvector decomposition routine based on A's type
   switch (Aclass) {
   default: throw Exception("Unhandled type for eigendecomposition");
-  case FM_FLOAT: 
-    {
-      // A temporary vector to store the eigenvalues
-      float *eigenvals = (float*) Malloc(N*sizeof(float));
-      float *Vp = (float*) Malloc(N*N*A.getElementSize());
-      floatEigenDecomposeSymmetric(N, Vp, eigenvals, (float*)A.getReadWriteDataPointer(),
-				   true);
-      // Copy the eigenvalues into a diagonal (float) matrix
-      D = Array(FM_FLOAT,Vdims,NULL);
-      float *Dp = (float*) Malloc(N*N*D.getElementSize());
-      for (i=0;i<N;i++)
-	Dp[i+N*i] = eigenvals[i];
-      D.setDataPointer(Dp);
-      V = Array(FM_FLOAT,Vdims,Vp);
-    }
+  case Float:
+    EigenDecomposeFullSymmetric<float>(Float,V,D,A);
     break;
-  case FM_DOUBLE: 
-    {
-      // A temporary vector to store the eigenvalues
-      double *eigenvals = (double*) Malloc(N*sizeof(double));
-      double *Vp = (double*) Malloc(N*N*A.getElementSize());
-      doubleEigenDecomposeSymmetric(N, Vp, eigenvals, (double*)A.getReadWriteDataPointer(),
-				    true);
-      // Copy the eigenvalues into a diagonal (double) matrix
-      D = Array(FM_DOUBLE,Vdims,NULL);
-      double *Dp = (double*) Malloc(N*N*D.getElementSize());
-      for (i=0;i<N;i++)
-	Dp[i+N*i] = eigenvals[i];
-      D.setDataPointer(Dp);
-      V = Array(FM_DOUBLE,Vdims,Vp);
-    }
-    break;
-  case FM_COMPLEX:
-    {
-      float *eigenvals = (float*) Malloc(N*sizeof(float));
-      float *Vp = (float*) Malloc(N*N*A.getElementSize());
-      complexEigenDecomposeSymmetric(N, Vp, eigenvals, 
-				     (float*)A.getReadWriteDataPointer(),
-				     true);
-      // Copy the eigenvalues into a diagonal (real) matrix
-      D = Array(FM_FLOAT,Vdims,NULL);
-      float *Dp = (float*) Malloc(N*N*sizeof(float));
-      for (i=0;i<N;i++) 
-	Dp[i+N*i] = eigenvals[i];
-      D.setDataPointer(Dp);
-      V = Array(FM_COMPLEX,Vdims,Vp);
-      Free(eigenvals);
-    }
-    break;
-  case FM_DCOMPLEX:
-    {
-      double *eigenvals = (double*) Malloc(N*sizeof(double));
-      double *Vp = (double*) Malloc(N*N*A.getElementSize());
-      dcomplexEigenDecomposeSymmetric(N, Vp, eigenvals, 
-				      (double*)A.getReadWriteDataPointer(),
-				      true);
-      // Copy the eigenvalues into a diagonal (complex) matrix
-      D = Array(FM_DOUBLE,Vdims,NULL);
-      double *Dp = (double*) Malloc(N*N*sizeof(double));
-      for (i=0;i<N;i++) 
-	Dp[i+N*i] = eigenvals[i];
-      D.setDataPointer(Dp);
-      V = Array(FM_DCOMPLEX,Vdims,Vp);
-      Free(eigenvals);
-    }
+  case Double:
+    EigenDecomposeFullSymmetric<double>(Double,V,D,A);
     break;
   }
 }
@@ -3100,6 +3003,7 @@ void EigenDecomposeFullSymmetric(Array A, Array& V, Array& D, Interpreter* m_eva
  * Perform an eigen decomposition of the matrix A - This version computes the 
  * eigenvectors, and returns the eigenvalues in a diagonal matrix
  */
+#error - Start here...
 void EigenDecomposeFullGeneral(Array A, Array& V, Array& D, bool balanceFlag, Interpreter* m_eval) {
   int i, j;
   Class Aclass;
@@ -3573,6 +3477,7 @@ bool GeneralizedEigenDecomposeFullSymmetric(Array A, Array B, Array& V, Array& D
 	Free(Vp);
 	return false;
       }
+
       // Copy the eigenvalues into a diagonal (complex) matrix
       D = Array(FM_DOUBLE,Vdims,NULL);
       double *Dp = (double*) Malloc(N*N*sizeof(double));
@@ -3763,106 +3668,51 @@ void GeneralizedEigenDecomposeFullGeneral(Array A, Array B, Array& V, Array& D, 
     }
     break;
   }
-}
+  }
 
 /**
  * Perform an eigen decomposition of the matrix A - This version computes the 
  * eigenvalues only in a vector
  */
-void GeneralizedEigenDecomposeCompactGeneral(Array A, Array B, Array& D, Interpreter* m_eval) {
-  int i;
-  Class Aclass(A.dataClass());
-  int N = A.getDimensionLength(0);
-  // Create one square matrix to store the eigenvectors
-  Dimensions Vdims(N,1);
-  // Select the eigenvector decomposition routine based on A's type
-  switch (Aclass) {
-  default: throw Exception("Unhandled type for eigendecomposition");
-  case FM_FLOAT: 
-    {
-      // A temporary vector to store the eigenvalues
-      float *eigenvals = (float*) Malloc(2*N*sizeof(float));
-      floatGenEigenDecompose(N, NULL, eigenvals, 
-			     (float*)A.getReadWriteDataPointer(),
-			     (float*)B.getReadWriteDataPointer(),
+template <typename T>
+static inline void GeneralizedEigenDecomposeCompactGeneral(DataClass cls, Array A, 
+							   Array B, Array& D) {
+  int N = A.rows();
+  NTuple Vdims(N,1);
+  if (A.allReal()) {
+    // A temporary vector to store the eigenvalues
+    BasicArray<T> eigenvals(NTuple(2*N,1));
+    realGenEigenDecompose(N, NULL, eigenvals.data(),
+			  A.real<T>().data(),
+			  B.real<T>().data(),false);
+    // Make a pass through the eigenvals, and look for complex eigenvalues.
+    bool complexEigenvalues = MergedArrayHasComplexComponents(eigenvals);
+    if (!complexEigenvalues) {
+      D = Array(cls,Vdims,SplitReal<T>(eigenvals));
+    } else {
+      // Copy the eigenvalues into a complex vector
+      D = Array(cls,SplitReal<T>(eigenvals),SplitImag<T>(eigenvals));
+    }
+  } else {
+    BasicArray<T> eigenvals(NTuple(2*N,1));
+    complexGenEigenDecompose(N, NULL, eigenvals.data(), 
+			     A.fortran<T>().data(), 
+			     B.fortran<T>().data(),
 			     false);
-      // Make a pass through the eigenvals, and look for complex eigenvalues.
-      bool complexEigenvalues = false;
-      for (i=0;(i<N) && !complexEigenvalues;i++)
-	complexEigenvalues = (eigenvals[2*i+1] != 0);
-      if (!complexEigenvalues) {
-	// Copy the eigenvalues into a real (float) vector
-	D = Array(FM_FLOAT,Vdims,NULL);
-	float *Dp = (float*) Malloc(N*D.getElementSize());
-	for (i=0;i<N;i++)
-	  Dp[i] = eigenvals[2*i];
-	D.setDataPointer(Dp);
-      } else {
-	// Copy the eigenvalues into a complex vector
-	D = Array(FM_COMPLEX,Vdims,NULL);
-	float *Dp = (float*) Malloc(N*D.getElementSize());
-	for (i=0;i<N;i++) {
-	  Dp[2*i] = eigenvals[2*i];
-	  Dp[2*i+1] = eigenvals[2*i+1];
-	}
-	D.setDataPointer(Dp);
-      }
-      Free(eigenvals);
-    }
+    D = Array(cls,Vdims,SplitReal(eigenvals),SplitImag(eigenvals));
+  }
+}
+
+void GeneralizedEigenDecomposeCompactGeneral(Array A, Array B, Array& D) {
+  // Select the eigenvector decomposition routine based on A's type
+  switch (A.class()) {
+  default: 
+    throw Exception("Unhandled type for eigendecomposition");
+  case Float: 
+    GeneralizedEigenDecomposeCompactGeneral<float>(Float,A,B,D);
     break;
-  case FM_DOUBLE: 
-    {
-      // A temporary vector to store the eigenvalues
-      double *eigenvals = (double*) Malloc(2*N*sizeof(double));
-      doubleGenEigenDecompose(N, NULL, eigenvals, 
-			      (double*)A.getReadWriteDataPointer(),
-			      (double*)B.getReadWriteDataPointer(),
-			      false);
-      // Make a pass through the eigenvals, and look for complex eigenvalues.
-      bool complexEigenvalues = false;
-      for (i=0;(i<N) && !complexEigenvalues;i++)
-	complexEigenvalues = (eigenvals[2*i+1] != 0);
-      if (!complexEigenvalues) {
-	// Copy the eigenvalues into a real (double) vector
-	D = Array(FM_DOUBLE,Vdims,NULL);
-	double *Dp = (double*) Malloc(N*D.getElementSize());
-	for (i=0;i<N;i++)
-	  Dp[i] = eigenvals[2*i];
-	D.setDataPointer(Dp);
-      } else {
-	// Copy the eigenvalues into a complex vector
-	D = Array(FM_DCOMPLEX,Vdims,NULL);
-	double *Dp = (double*) Malloc(N*D.getElementSize());
-	for (i=0;i<N;i++) {
-	  Dp[2*i] = eigenvals[2*i];
-	  Dp[2*i+1] = eigenvals[2*i+1];
-	}
-	D.setDataPointer(Dp);
-      }
-      Free(eigenvals);
-    }
-    break;
-  case FM_COMPLEX:
-    {
-      float *eigenvals = (float*) Malloc(2*N*sizeof(float));
-      complexGenEigenDecompose(N, NULL, eigenvals, 
-			       (float*)A.getReadWriteDataPointer(),
-			       (float*)B.getReadWriteDataPointer(),
-			       false);
-      // Copy the eigenvalues into a diagonal (complex) matrix
-      D = Array(FM_COMPLEX,Vdims,eigenvals);
-    }
-    break;
-  case FM_DCOMPLEX:
-    {
-      double *eigenvals = (double*) Malloc(2*N*sizeof(double));
-      dcomplexGenEigenDecompose(N, NULL, eigenvals, 
-				(double*)A.getReadWriteDataPointer(),
-				(double*)B.getReadWriteDataPointer(),
-				false);
-      // Copy the eigenvalues into a diagonal (complex) matrix
-      D = Array(FM_DCOMPLEX,Vdims,eigenvals);
-    }
+  case Double:
+    GeneralizedEigenDecomposeCompactGeneral<double>(Double,A,B,D);
     break;
   }
 }

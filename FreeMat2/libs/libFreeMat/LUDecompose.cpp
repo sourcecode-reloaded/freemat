@@ -303,15 +303,15 @@ ArrayVector LUDecompose(int nargout, Array A) {
       } else {
 	BasicArray<float> l(NTuple(2*nrows,p));
 	BasicArray<float> u(NTuple(2*p,ncols));
-	BasicArray<float> Atotal(MergeComplex(A.constReal<float>(),A.constImag<float>()));
 	if (nargout <= 2) {
-	  ComplexLU<float>(nrows,ncols,l.data(),u.data(),Atotal.data(),cgetrf_);
+	  ComplexLU<float>(nrows,ncols,l.data(),u.data(),
+			   A.fortran<float>().data(),cgetrf_);
 	  retval.push_back(Array(Double,SplitReal(l),SplitImag(l)));
 	  retval.push_back(Array(Double,SplitReal(u),SplitImag(u)));
 	} else if (nargout == 3) {
 	  BasicArray<float> piv(NTuple(nrows,nrows));
 	  ComplexLUP<float>(nrows,ncols,l.data(),u.data(),piv.data(),
-			    Atotal.data(),cgetrf_);
+			    A.fortran<float>().data(),cgetrf_);
 	  retval.push_back(Array(Double,SplitReal(l),SplitImag(l)));
 	  retval.push_back(Array(Double,SplitReal(u),SplitImag(u)));
 	  retval.push_back(Array(Double,piv));
@@ -339,15 +339,15 @@ ArrayVector LUDecompose(int nargout, Array A) {
       } else {
 	BasicArray<double> l(NTuple(2*nrows,p));
 	BasicArray<double> u(NTuple(2*p,ncols));
-	BasicArray<double> Atotal(MergeComplex(A.constReal<double>(),A.constImag<double>()));
 	if (nargout <= 2) {
-	  ComplexLU<double>(nrows,ncols,l.data(),u.data(),Atotal.data(),zgetrf_);
+	  ComplexLU<double>(nrows,ncols,l.data(),u.data(),
+			    A.fortran<double>().data(),zgetrf_);
 	  retval.push_back(Array(Double,SplitReal(l),SplitImag(l)));
 	  retval.push_back(Array(Double,SplitReal(u),SplitImag(u)));
 	} else if (nargout == 3) {
 	  BasicArray<double> piv(NTuple(nrows,nrows));
 	  ComplexLUP<double>(nrows,ncols,l.data(),u.data(),piv.data(),
-			     Atotal.data(),zgetrf_);
+			     A.fortran<double>().data(),zgetrf_);
 	  retval.push_back(Array(Double,SplitReal(l),SplitImag(l)));
 	  retval.push_back(Array(Double,SplitReal(u),SplitImag(u)));
 	  retval.push_back(Array(Double,piv));

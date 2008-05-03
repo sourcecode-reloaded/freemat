@@ -28,14 +28,15 @@
  * eigenvalues are stored in the array d, with the real and 
  * imaginary parts stored sequentially.
  */
-void floatEigenDecompose(int n, float *v, float *d, float *a,
-			 bool eigenvectors, bool balance);
-void floatEigenDecomposeSymmetric(int n, float *v, float *d, float *a,
-				  bool eigenvectors);
-void floatGenEigenDecompose(int n, float *v, float *d, float *a,
-			    float *b, bool eigenvectors);
-bool floatGenEigenDecomposeSymmetric(int n, float *v, float *d,
-				     float *a, float *b, bool eigenvectors);
+template <typename T>
+void realEigenDecompose(int n, T *v, T *d, T *a, bool eigenvectors, bool balance);
+template <typename T>
+void realEigenDecomposeSymmetric(int n, T *v, T *d, T *a, bool eigenvectors);
+template <typename T>
+void realGenEigenDecompose(int n, T *v, T *d, T *a, T *b, bool eigenvectors);
+template <typename T>
+bool realGenEigenDecomposeSymmetric(int n, T *v, T *d, T *a, T *b, bool eigenvectors);
+
 /**
  * Compute the eigen decomposition of an arbitrary, complex valued
  * matrix of size $$n \times n$$.  The $$n \times n$$ matrix of
@@ -43,47 +44,13 @@ bool floatGenEigenDecomposeSymmetric(int n, float *v, float *d,
  * pre-allocated before the routine is called.  The $$n$$ complex 
  * eigenvalues are stored in the array d.
  */
-void complexEigenDecompose(int n, float *v, float *d, float *a,
-			   bool eigenvectors, bool balance);
-void complexEigenDecomposeSymmetric(int n, float *v, float *d, 
-				    float *a, bool eigenvectors);
-void complexGenEigenDecompose(int n, float *v, float *d, float *a,
-			      float *b, bool eigenvectors);
-bool complexGenEigenDecomposeSymmetric(int n, float *v, float *d,
-				       float *a, float *b, 
-				       bool eigenvectors);
-/**
- * Compute the eigen decomposition of an arbitrary, double valued
- * matrix of size $$n \times n$$.  The $$n \times n$$ matrix of
- * double eigenvectors are stored in the array v, which must be 
- * pre-allocated before the routine is called.  The $$n$$ dcomplex 
- * eigenvalues are stored in the array d, with the real and 
- * imaginary parts stored sequentially.
- */
-void doubleEigenDecompose(int n, double *v, double *d, double *a,
-			  bool eigenvectors, bool balance);
-void doubleEigenDecomposeSymmetric(int n, double *v, double *d, 
-				   double *a, bool eigenvectors);
-void doubleGenEigenDecompose(int n, double *v, double *d, double *a,
-			     double *b, bool eigenvectors);
-bool doubleGenEigenDecomposeSymmetric(int n, double *v, double *d,
-				      double *a, double *b, 
-				      bool eigenvectors);
-/**
- * Compute the eigen decomposition of an arbitrary, dcomplex valued
- * matrix of size $$n \times n$$.  The $$n \times n$$ matrix of
- * dcomplex eigenvectors are stored in the array v, which must be 
- * pre-allocated before the routine is called.  The $$n$$ dcomplex 
- * eigenvalues are stored in the array d.
- */
-void dcomplexEigenDecompose(int n, double *v, double *d, double *a,
-			    bool eigenvectors, bool balance);
-void dcomplexEigenDecomposeSymmetric(int n, double *v, double *d, 
-				     double *a, bool eigenvectors);
-void dcomplexGenEigenDecompose(int n, double *v, double *d, double *a,
-			       double *b, bool eigenvectors);
-bool dcomplexGenEigenDecomposeSymmetric(int n, double *v, double *d,
-					double *a, double *b, 
-					bool eigenvectors);
+template <typename T>
+void complexEigenDecompose(int n, T *v, T *d, T *a, bool eigenvectors, bool balance);
+template <typename T>
+void complexEigenDecomposeSymmetric(int n, T *v, T *d, T *a, bool eigenvectors);
+template <typename T>
+void complexGenEigenDecompose(int n, T *v, T *d, T *a, T *b, bool eigenvectors);
+template <typename T>
+bool complexGenEigenDecomposeSymmetric(int n, T *v, T *d, T *a, T *b, bool eigenvectors);
 
 #endif
