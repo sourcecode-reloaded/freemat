@@ -1332,7 +1332,7 @@ ArrayVector FopenFunction(int nargout, const ArrayVector& arg) {
   bool swapendian = false;
   bool is64bit = false;
   if (arg.size() > 2) {
-    if (!arg[2].isEmpty())
+    if (arg[2].isEmpty())
       throw Exception("swap flag must be 'swap' or an endian spec ('le','ieee-le','little-endian','littleEndian','little','be','ieee-be','big-endian','bigEndian','big')");
 
     string swapflag = arg[2].getContentsAsString();
