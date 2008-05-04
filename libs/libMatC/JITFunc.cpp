@@ -833,24 +833,23 @@ void JITFunc::compile_for_block(Tree* t) {
     throw Exception("For loop cannot be compiled - need scalar bounds");
 
   if (t->first()->second()->first()->is(':')){ //triple format 
-        loop_start = compile_expression(t->first()->second()->first()->first());
-	loop_step = compile_expression(t->first()->second()->first()->second());
-	loop_stop = compile_expression(t->first()->second()->second());
+      loop_start = jit->Cast( compile_expression(t->first()->second()->first()->first()), jit->DoubleType() );
+      loop_step = jit->Cast( compile_expression(t->first()->second()->first()->second()), jit->DoubleType() );
+      loop_stop = jit->Cast( compile_expression(t->first()->second()->second()), jit->DoubleType() );
   }
   else{ //double format
-     loop_start = compile_expression(t->first()->second()->first());
-     loop_step = jit->DoubleValue( 1 );
-     loop_stop = compile_expression(t->first()->second()->second());
+      loop_start = jit->Cast( compile_expression(t->first()->second()->first()), jit->DoubleType() );
+      loop_step = jit->DoubleValue( 1 );
+      loop_stop = jit->Cast( compile_expression(t->first()->second()->second()), jit->DoubleType() );
   }
   string loop_index_name(t->first()->first()->text());
   SymbolInfo* v = add_argument_scalar(loop_index_name,loop_start,true);
   JITScalar loop_index_address = v->address;
   jit->Store(loop_start,loop_index_address);
 
-  JITScalar loop_nsteps = jit->Call( func_niter_for_loop,  jit->Cast( loop_start, jit->DoubleType() ), 
-      jit->Cast( loop_step, jit->DoubleType() ), jit->Cast( loop_stop, jit->DoubleType() ) );
+  JITScalar loop_nsteps = jit->Call( func_niter_for_loop, loop_start, loop_step, loop_stop );
 
-  JITScalar loop_ind = jit->Alloc(jit->Int32Type(),""); 
+  JITScalar loop_ind = jit->Alloc(jit->Int32Type(),"loop_ind"); 
   jit->Store(jit->Zero(jit->Int32Type()),loop_ind); 
 
   JITBlock loopbody = jit->NewBlock("for_body");
