@@ -267,6 +267,13 @@ BasicArray<T> SplitImag(const BasicArray<T>& A) {
 }
 
 template <typename T>
+bool MergedArrayHasComplexComponents(const BasicArray<T>& arg) {
+  for (index_t i=2;i<=arg.length();i+=2) 
+    if (arg.get(i) != 0) return true;
+  return false;
+}
+
+template <typename T>
 BasicArray<T> Apply(const BasicArray<T>& arg, T (*func)(T)) {
   BasicArray<T> retval(arg.dimensions());
   Transformer<BasicArray<T>,T> transform(&retval,&arg);

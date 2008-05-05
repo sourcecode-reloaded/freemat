@@ -25,6 +25,14 @@
   MacroExpandCasesSimple(func);			\
   func(Array,CellArray);
 
+
+#define MacroGetDataClass(ctype,cls)		\
+  template <>					\
+  static inline DataClass GetDataClass(ctype) { \
+    return cls;					\
+  } 
+
+
 #define MacroArrayRealScalar(ctype,cls)			\
   template <>						\
   inline ctype & Array::realScalar() {			\
@@ -107,11 +115,15 @@ MacroExpandCases(MacroArrayConstImagScalar);
 MacroExpandCases(MacroArrayComplexConstructor);
 MacroExpandCases(MacroArrayRealConstructor);
 
+MacroExpandCases(MacroGetDataClass);
+MacroGetDataClass(Array,CellArray);
+
 #undef MacroArrayRealScalar
 #undef MacroArrayImagScalar
 #undef MacroArrayConstRealScalar
 #undef MacroArrayConstImagScalar
 #undef MacroArrayComplexConstructor
 #undef MacroArrayRealConstructor
+#undef MacroGetDataClass
 
 #endif

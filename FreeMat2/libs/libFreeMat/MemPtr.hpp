@@ -27,6 +27,7 @@ public:
   ~MemBlock() {delete [] ptr;}
   T* Pointer() {return ptr;}
   T* operator&() {return ptr;}
+  T operator[](int n) {return ptr[n];}
 };
 
 #endif

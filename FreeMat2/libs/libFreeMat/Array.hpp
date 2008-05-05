@@ -42,6 +42,9 @@ const DataClass Float = 13;
 const DataClass Double = 14;
 const DataClass UserClass = 15;
 
+template <typename T>
+static inline DataClass GetDataClass(T = 0);
+
 typedef struct {
   DataClass Class : 5;
   unsigned User : 22;
@@ -86,16 +89,16 @@ public:
   template <typename T> inline explicit Array(T real); 
   template <typename T> inline explicit Array(T real, T imag); 
   template <typename T> 
-  inline Array(DataClass t, const BasicArray<T> &r) {
-    m_type.Class = t;
+  inline Array(const BasicArray<T> &r) {
+    m_type.Class = GetDataClass<T>();
     m_type.Complex = 0;
     m_type.Sparse = 0;
     m_type.Scalar = 0;
     m_real.p = new SharedObject(m_type, new BasicArray<T>(r));
   }
   template <typename T> 
-  inline Array(DataClass t, const BasicArray<T> &r, const BasicArray<T> &i) {
-    m_type.Class = t;
+  inline Array(const BasicArray<T> &r, const BasicArray<T> &i) {
+    m_type.Class = GetDataClass<T>();
     m_type.Complex = 1;
     m_type.Sparse = 0;
     m_type.Scalar = 0;
@@ -103,16 +106,16 @@ public:
     m_imag.p = new SharedObject(m_type, new BasicArray<T>(i));
   }
   template <typename T>
-  inline Array(DataClass t, BasicArray<T> *r) {
-    m_type.Class = t;
+  inline Array(BasicArray<T> *r) {
+    m_type.Class = GetDataClass<T>();
     m_type.Complex = 0;
     m_type.Sparse = 0;
     m_type.Scalar = 0;
     m_real.p = new SharedObject(m_type,r);
   }
   template <typename T>
-  inline Array(DataClass t, BasicArray<T> *r, BasicArray<T> *i) {
-    m_type.Class = t;
+  inline Array(BasicArray<T> *r, BasicArray<T> *i) {
+    m_type.Class = GetDataClass<T>();
     m_type.Complex = 1;
     m_type.Sparse = 0;
     m_type.Scalar = 0;
@@ -122,16 +125,16 @@ public:
   Array(DataClass t, const NTuple &dims = NTuple(0,0));
   Array(const QString &text);
   template <typename T>
-  inline Array(DataClass t, const SparseMatrix<T>& real) {
-    m_type.Class = t;
+  inline Array(const SparseMatrix<T>& real) {
+    m_type.Class = GetDataClass<T>();
     m_type.Complex = 0;
     m_type.Sparse = 1;
     m_type.Scalar = 0;
     m_real.p = new SharedObject(m_type,new SparseMatrix<T>(real));
   }
   template <typename T>
-  Array(DataClass t, const SparseMatrix<T>& real, const SparseMatrix<T>& imag) {
-    m_type.Class = t;
+  Array(const SparseMatrix<T>& real, const SparseMatrix<T>& imag) {
+    m_type.Class = GetDataClass<T>();
     m_type.Complex = 1;
     m_type.Sparse = 1;
     m_type.Scalar = 0;
@@ -320,6 +323,26 @@ SparseMatrix<T> ToImagSparse(const Array& data) {
     cdata = cdata.asDenseArray();
   if (!cdata.is2D()) throw Exception("Sparse matrix cannot be created from multidimensional arrays");
   return SparseMatrix<T>(cdata.constImag<T>());
+}
+
+template <typename T>
+Array DiagonalArray(const BasicArray<T> &in) {
+  BasicArray<T> retmat(NTuple(in.length(),in.length()));
+  for (index_t i=1;i<=in.length();i++)
+    retmat.set(NTuple(i,i),in.get(i));
+  return Array(retmat);
+}
+
+template <typename T>
+Array DiagonalArray(const BasicArray<T> &in_r, 
+		    const BasicArray<T> &in_i) {
+  BasicArray<T> retmat_r(NTuple(in_r.length(),in_r.length()));
+  BasicArray<T> retmat_i(NTuple(in_i.length(),in_i.length()));
+  for (index_t i=1;i<=in_r.length();i++) {
+    retmat_r.set(NTuple(i,i),in_r.get(i));
+    retmat_i.set(NTuple(i,i),in_i.get(i));
+  }
+  return Array(retmat_r,retmat_i);
 }
 
 Array MatrixConstructor(const ArrayMatrix& data);

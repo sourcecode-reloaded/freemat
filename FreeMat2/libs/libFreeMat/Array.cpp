@@ -492,19 +492,15 @@ template <typename S, typename T>
 static inline const Array Tget(const Array *ptr, S ndx) {
   if (ptr->isSparse()) {
     if (ptr->allReal())
-      return Array(ptr->dataClass(),
-		   Get(ptr->constRealSparse<T>(),ndx));
+      return Array(Get(ptr->constRealSparse<T>(),ndx));
     else
-      return Array(ptr->dataClass(),
-		   Get(ptr->constRealSparse<T>(),ndx),
+      return Array(Get(ptr->constRealSparse<T>(),ndx),
 		   Get(ptr->constImagSparse<T>(),ndx));
   } else {
     if (ptr->allReal())
-      return Array(ptr->dataClass(),
-		   Get(ptr->constReal<T>(),ndx));
+      return Array(Get(ptr->constReal<T>(),ndx));
     else
-      return Array(ptr->dataClass(),
-		   Get(ptr->constReal<T>(),ndx),
+      return Array(Get(ptr->constReal<T>(),ndx),
 		   Get(ptr->constImag<T>(),ndx));
   }
 }
@@ -553,17 +549,15 @@ inline static const Array Tcast(DataClass t, const Array *ptr) {
   }
   if (ptr->isSparse()) {
     if (ptr->allReal())
-      return Array(t,ConvertSparseArray<S,T>(ptr->constRealSparse<S>()));
+      return Array(ConvertSparseArray<S,T>(ptr->constRealSparse<S>()));
     else
-      return Array(t,
-		   ConvertSparseArray<S,T>(ptr->constRealSparse<S>()),
+      return Array(ConvertSparseArray<S,T>(ptr->constRealSparse<S>()),
 		   ConvertSparseArray<S,T>(ptr->constImagSparse<S>()));
   }
   if (ptr->allReal())
-    return Array(t,ConvertBasicArray<S,T>(ptr->constReal<S>()));
+    return Array(ConvertBasicArray<S,T>(ptr->constReal<S>()));
   else
-    return Array(t,
-		 ConvertBasicArray<S,T>(ptr->constReal<S>()),
+    return Array(ConvertBasicArray<S,T>(ptr->constReal<S>()),
 		 ConvertBasicArray<S,T>(ptr->constImag<S>()));
 }
 
@@ -925,10 +919,9 @@ QString Array::string() const {
 template <typename T>
 static inline Array Tscalar_to_dense(const Array *ptr) {
   if (ptr->allReal())
-    return Array(ptr->dataClass(), new BasicArray<T>(ptr->constRealScalar<T>()));
+    return Array(new BasicArray<T>(ptr->constRealScalar<T>()));
   else {
-    return Array(ptr->dataClass(), 
-		 new BasicArray<T>(ptr->constRealScalar<T>()),
+    return Array(new BasicArray<T>(ptr->constRealScalar<T>()),
 		 new BasicArray<T>(ptr->constImagScalar<T>()));
   }
 }
@@ -936,10 +929,9 @@ static inline Array Tscalar_to_dense(const Array *ptr) {
 template <typename T>
 static inline Array Tsparse_to_dense(const Array *ptr) {
   if (ptr->allReal())
-    return Array(ptr->dataClass(),ptr->constRealSparse<T>().asDense());
+    return Array(ptr->constRealSparse<T>().asDense());
   else
-    return Array(ptr->dataClass(),
-		 ptr->constRealSparse<T>().asDense(),
+    return Array(ptr->constRealSparse<T>().asDense(),
 		 ptr->constImagSparse<T>().asDense());
 }
 

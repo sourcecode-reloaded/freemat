@@ -20,37 +20,21 @@
 #ifndef __EigenDecompose_hpp__
 #define __EigenDecompose_hpp__
 
-/**
- * Compute the eigen decomposition of an arbitrary, real valued
- * matrix of size $$n \times n$$.  The $$n \times n$$ matrix of
- * real eigenvectors are stored in the array v, which must be 
- * pre-allocated before the routine is called.  The $$n$$ complex 
- * eigenvalues are stored in the array d, with the real and 
- * imaginary parts stored sequentially.
- */
-template <typename T>
-void realEigenDecompose(int n, T *v, T *d, T *a, bool eigenvectors, bool balance);
-template <typename T>
-void realEigenDecomposeSymmetric(int n, T *v, T *d, T *a, bool eigenvectors);
-template <typename T>
-void realGenEigenDecompose(int n, T *v, T *d, T *a, T *b, bool eigenvectors);
-template <typename T>
-bool realGenEigenDecomposeSymmetric(int n, T *v, T *d, T *a, T *b, bool eigenvectors);
+#include "Array.hpp"
 
 /**
- * Compute the eigen decomposition of an arbitrary, complex valued
- * matrix of size $$n \times n$$.  The $$n \times n$$ matrix of
- * complex eigenvectors are stored in the array v, which must be 
- * pre-allocated before the routine is called.  The $$n$$ complex 
- * eigenvalues are stored in the array d.
+ * Compute the eigendecomposition of the matrix $$A$$, the two matrices
+ * $$V$$ and $$D$$, where $$D$$ is diagonal, and $$V$$ has unit norm
+ * columns.  If $$A$$ is real, the eigenvectors $$V$$ are real, and 
+ * the eigenvalues come in conjugate pairs.  
  */
-template <typename T>
-void complexEigenDecompose(int n, T *v, T *d, T *a, bool eigenvectors, bool balance);
-template <typename T>
-void complexEigenDecomposeSymmetric(int n, T *v, T *d, T *a, bool eigenvectors);
-template <typename T>
-void complexGenEigenDecompose(int n, T *v, T *d, T *a, T *b, bool eigenvectors);
-template <typename T>
-bool complexGenEigenDecomposeSymmetric(int n, T *v, T *d, T *a, T *b, bool eigenvectors);
+void EigenDecomposeCompactSymmetric(const Array& A, Array& D);
+void EigenDecomposeFullSymmetric(const Array& A, Array& V, Array& D);
+void EigenDecomposeFullGeneral(const Array& A, Array& V, Array& D, bool balanceFlag);
+void EigenDecomposeCompactGeneral(const Array& A, Array& D, bool balanceFlag);
+bool GeneralizedEigenDecomposeCompactSymmetric(const Array& A, const Array& B, Array& D);
+bool GeneralizedEigenDecomposeFullSymmetric(const Array& A, const Array& B, Array& V, Array& D);
+void GeneralizedEigenDecomposeFullGeneral(const Array& A, const Array& B, Array& V, Array& D);
+void GeneralizedEigenDecomposeCompactGeneral(const Array& A, const Array& B, Array& D);
 
 #endif

@@ -140,20 +140,6 @@ Array RightDivide(const Array& A, const Array& B);
  */
 Array LeftDivide(const Array& A, const Array& B);
 /**
- * Compute the eigendecomposition of the matrix $$A$$, the two matrices
- * $$V$$ and $$D$$, where $$D$$ is diagonal, and $$V$$ has unit norm
- * columns.  If $$A$$ is real, the eigenvectors $$V$$ are real, and 
- * the eigenvalues come in conjugate pairs.  
- */
-void EigenDecomposeCompactSymmetric(const Array& A, Array& D);
-void EigenDecomposeFullSymmetric(const Array& A, Array& V, Array& D);
-void EigenDecomposeFullGeneral(const Array& A, Array& V, Array& D, bool balanceFlag);
-void EigenDecomposeCompactGeneral(const Array& A, Array& D, bool balanceFlag);
-bool GeneralizedEigenDecomposeCompactSymmetric(const Array& A, const Array& B, Array& D);
-bool GeneralizedEigenDecomposeFullSymmetric(const Array& A, const Array& B, Array& V, Array& D);
-void GeneralizedEigenDecomposeFullGeneral(const Array& A, const Array& B, Array& V, Array& D);
-void GeneralizedEigenDecomposeCompactGeneral(const Array& A, const Array& B, Array& D);
-/**
  * For scalars $$A$$ and $$B$$, the output is the row vector
  * $$[A,A+1,\ldots,A+n]$$, where $$n$$ is the largest integer
  * such that $$A+n < B$$.
