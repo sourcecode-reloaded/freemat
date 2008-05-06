@@ -237,6 +237,7 @@ public:
     return (m_type.Complex == 0);
   }
   void forceComplex();
+  const Array asComplex() const;
   const index_t asIndexScalar() const; 
   const Array toClass(DataClass t) const;
 

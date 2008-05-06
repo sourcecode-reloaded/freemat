@@ -2111,26 +2111,34 @@ Array Negate(const Array& A){
  *  5. A & B must be conformant, i.e. the number of columns in A must
  *     match the number of rows in B.
  */
-inline bool MatrixCheck(Array &A, Array &B, std::string opname){
+
+inline void CheckNumeric(Array &A, Array &B, QString opname){
+  bool Anumeric, Bnumeric;
+
+  Anumeric = !A.isReferenceType();
+  Bnumeric = !B.isReferenceType();
+  if (!(Anumeric && Bnumeric))
+    throw Exception(QString("Cannot apply numeric operation ") + 
+		    opname + QString(" to reference types."));
+}
+
+
+inline bool MatrixCheck(Array &A, Array &B, QString opname){
   // Test for either a scalar (test 1)
   if (A.isScalar() || B.isScalar())
     return false;
 
-  // Test for A & B numeric
   CheckNumeric(A,B,opname);
 
   // Test for 2D
   if (!A.is2D() || !B.is2D()) 
-    throw Exception(std::string("Cannot apply matrix operation ") + 
-		    opname + std::string(" to N-Dimensional arrays."));
+    throw Exception(QString("Cannot apply matrix operation ") + 
+		    opname + QString(" to N-Dimensional arrays."));
   
   // Test the types
   TypeCheck(A,B,true);
   return true;
 }
-
-
-
 
 
 /**
@@ -2596,72 +2604,74 @@ inline Array DoPowerTwoArgFunction(Array A, Array B){
 //x = testeq(yi1*yi2,zi1*zi2) & testeq(yf1*yf2,zf1*zf2) & testeq(yd1*yd2,zd1*zd2) & testeq(yc1*yc2,zc1*zc2) & testeq(yz1*yz2,zz1*zz2);
 //@}
 //!
-Array Multiply(Array A, Array B, Interpreter* m_eval){
+
+template <typename T>
+static inline Array Multiply(const Array& A, const Array& B) {
+  if (A.isSparse() && !B.isSparse()) {
+    if (A.allReal() && B.allReal()) {
+      return Array(SparseMatrixMultiply<T>(A.constRealSparse<T>(),
+					   B.constReal<T>()));
+    } else {
+      return Array(SparseMatrixMultiply<T>(A.constRealSparse<T>(),
+					   A.constImagSparse<T>(),
+					   
+    }
+  } else if (!A.isSparse() && B.isSparse()) {
+  } else if (A.isSparse() && B.isSparse()) {
+  } else {
+    if (A.allReal() && B.allReal())  {
+      BasicArray<T> C(NTuple(A.rows(),B.columns()));
+      return Array(realMatrixMatrixMultiply<T>(A.rows(),
+					       B.columns(),
+					       A.columns(),
+					       C.real<T>().data(),
+					       A.constReal<T>().data(),
+					       B.constReal<T>().data()));
+      return Array(C);
+    } else {
+      BasicArray<T> C(NTuple(A.rows()*2,B.columns()));
+      return Array(complexMatrixMatrixMultiply<T>(A.rows(),
+						  B.columns(),
+						  A.columns(),
+						  C.real<T>().data(),
+						  A.fortran<T>().data(),
+						  B.fortran<T>().data()));
+      return Array(SplitReal<T>(C),SplitImag<T>(C));
+    }
+  }
+}
+  }
+}
+
+template <typename T>
+static inline Array RealMultiply(const Array & A, const Array& B) {
+  
+}
+
+template <typename T>
+static inline Array Multiply(const Array& A, const Array& B) {
+  if (A.allReal() && B.allReal())
+    return RealMultiply<T>(A,B);
+  else
+    return ComplexMultiply<T>(A.asComplex(),B.asComplex());
+}
+
+Array Multiply(const Array& A, const Array& B){
   // Process our arguments
   if (!MatrixCheck(A,B,"*"))
     // Its really a vector product, pass...
-    return DotMultiply(A,B,m_eval);
+    return DotMultiply(A,B);
   
   // Test for conformancy
-  if (A.getDimensionLength(1) != B.getDimensionLength(0)) 
+  if (A.columns() != B.rows()) 
     throw Exception("Requested matrix multiplication requires arguments to be conformant.");
 
-  int Arows, Acols;
-  int Bcols;
-  
-  Arows = A.getDimensionLength(0);
-  Acols = A.getDimensionLength(1);
-  Bcols = B.getDimensionLength(1);
-
-  Dimensions outDim(Arows,Bcols);
-  
-  // Check for sparse multiply case
-  if (A.sparse() && !B.sparse())
-    return Array(A.dataClass(),
-		 outDim,
-		 SparseDenseMatrixMultiply(A.dataClass(),
-					   Arows,Acols,Bcols,
-					   A.getSparseDataPointer(),
-					   B.getDataPointer()),
-		 false);
-  if (!A.sparse() && B.sparse())
-    return Array(A.dataClass(),
-		 outDim,
-		 DenseSparseMatrixMultiply(A.dataClass(),
-					   Arows,Acols,Bcols,
-					   A.getDataPointer(),
-					   B.getSparseDataPointer()),
-		 false);
-  if (A.sparse() && B.sparse())
-    return Array(A.dataClass(),
-		 outDim,
-		 SparseSparseMatrixMultiply(A.dataClass(),
-					    Arows,Acols,Bcols,
-					    A.getSparseDataPointer(),
-					    B.getSparseDataPointer()),
-		 true);
-
-  // Its really a matrix-matrix operation, and the arguments are
-  // satisfactory.  Check for the type.
-  void *Cp = Malloc(Arows*Bcols*A.getElementSize());
-  
-  if (A.dataClass() == FM_FLOAT)
-    floatMatrixMatrixMultiply(Arows,Bcols,Acols,(float*)Cp,
-			      (const float*)A.getDataPointer(),
-			      (const float*)B.getDataPointer());
-  else if (A.dataClass() == FM_DOUBLE)
-    doubleMatrixMatrixMultiply(Arows,Bcols,Acols,(double*)Cp,
-			       (const double*)A.getDataPointer(),
-			       (const double*)B.getDataPointer());
-  else if (A.dataClass() == FM_COMPLEX)
-    complexMatrixMatrixMultiply(Arows,Bcols,Acols,(float*)Cp,
-				(const float*)A.getDataPointer(),
-				(const float*)B.getDataPointer());
-  else if (A.dataClass() == FM_DCOMPLEX)
-    dcomplexMatrixMatrixMultiply(Arows,Bcols,Acols,(double*)Cp,
-				 (const double*)A.getDataPointer(),
-				 (const double*)B.getDataPointer());
-  return Array(A.dataClass(),outDim,Cp);
+  if ((A.dataClass() == Float) && (B.dataClass() == Float)) {
+    return Multiply<float>(A,B);
+  } else if ((A.dataClass() == Double) && (B.dataClass() == Double)) {
+    return Multiply<double>(A,B);
+  } else
+    throw Exception("Cannot multiply matrices of different types");
 }
     
 /**

@@ -746,6 +746,17 @@ void Array::forceComplex() {
   }
 }
 
+
+#define MacroAsComplex(ctype,cls) \
+  case cls: return T_as_complex<ctype>(this);
+
+const Array Array::asComplex() const {
+  if (!allReal()) return *this;
+  Array tmp(*this);
+  tmp.forceComplex();
+  return tmp;
+}
+
 static inline bool Tequals_struct(const Array *pA, const Array *pB) {
   const StructArray &ap(pA->constStructPtr());
   const StructArray &bp(pB->constStructPtr());

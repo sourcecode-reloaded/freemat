@@ -29,27 +29,15 @@
  * $$n \times k$$, and all three are single precision.  Uses the 
  * BLAS function sgemm.
  */
-void floatMatrixMatrixMultiply(int m, int n, int k,
-			       float* c, const float* a, const float *b);
+template <typename T>
+void realMatrixMatrixMultiply(int m, int n, int k, T* c, 
+			      const T* a, const T *b);
 /**
  * Compute $$C = A B$$, where $$A$$ is $$m \times n$$ and $$B$$ is
  * $$n \times k$$, and all three are complex precision.  Uses the 
  * BLAS function cgemm.
  */
-void complexMatrixMatrixMultiply(int m, int n, int k,
-				 float* c, const float* a, const float *b);
-/**
- * Compute $$C = A B$$, where $$A$$ is $$m \times n$$ and $$B$$ is
- * $$n \times k$$, and all three are double precision.  Uses the 
- * BLAS function dgemm.
- */
-void doubleMatrixMatrixMultiply(int m, int n, int k,
-				double* c, const double* a, const double *b);
-/**
- * Compute $$C = A B$$, where $$A$$ is $$m \times n$$ and $$B$$ is
- * $$n \times k$$, and all three are double complex precision.  Uses the 
- * BLAS function zgemm.
- */
-void dcomplexMatrixMatrixMultiply(int m, int n, int k,
-				  double* c, const double* a, const double *b);
+template <typename T>
+void complexMatrixMatrixMultiply(int m, int n, int k, T* c, 
+				 const T* a, const T *b);
 #endif
