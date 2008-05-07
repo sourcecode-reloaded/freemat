@@ -312,6 +312,48 @@ public:
 };
 
 template <typename T>
+class ConstComplexSparseIterator {
+  ConstSparseIterator<T> m_real;
+  ConstSparseIterator<T> m_imag;
+  NTuple m_dims;
+public:
+  ConstComplexSparseIterator(const SparseMatrix<T> *real,
+			     const SparseMatrix<T> *imag) : 
+    m_real(real), m_imag(imag), m_dims(real->dimensions()) {}
+  void next() {
+    if (m_dims.map(m_real.pos()) < m_dims.map(m_imag.pos()))
+      m_real.next();
+    else if (m_dims.map(m_imag.pos()) < m_dims.map(m_real.pos()))
+      m_imag.next();
+    else {
+      m_real.next();
+      m_imag.next();
+    }
+  }
+  const NTuple pos() const {
+    if (m_dims.map(m_real.pos()) <= m_dims.map(m_imag.pos()))
+      return m_real.pos();
+    else
+      return m_imag.pos();
+  }
+  bool isValid() const {
+    return (m_real.isValid() || m_imag.isValid());
+  }
+  T realValue() const {
+    if (m_dims.map(m_real.pos()) <= m_dims.map(m_imag.pos()))
+      return m_real.value();
+    else
+      return 0;
+  }
+  T imagValue() const {
+    if (m_dims.map(m_imag.pos()) <= m_dims.map(m_real.pos()))
+      return m_imag.value();
+    else
+      return 0;
+  }
+};
+
+template <typename T>
 bool IsNonNegative(const SparseMatrix<T> &x) {
   ConstSparseIterator<T> i(&x);
   while (i.isValid()) {

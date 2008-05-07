@@ -317,42 +317,6 @@ static inline SparseMatrix<S> DotOp(const SparseMatrix<T>& A,
   }
   return retval;
 }
-
-
-template <typename T>
-static inline void RetrieveSparseComplexValue(ConstSparseIterator<T> & a_realspin,
-					      ConstSparseIterator<T> & a_imagspin,
-					      const NTuple & dim,
-					      T& value_a_real, T& value_a_imag, NTuple &apos) {
-  if (dim.map(a_realspin.pos()) > dim(a_imagspin.pos())) {
-    value_a_real = T(0);
-    value_a_imag = a_imagspin.value();
-    apos = a_imagspin.pos();
-  } else if (dim.map(a_realspin.pos()) < dim(a_imagspin.pos())) {
-    value_a_real = a_realspin.value();
-    value_a_imag = T(0);
-    apos = a_realspin.pos();
-  } else {
-    value_a_real = a_realspin.value();
-    value_a_imag = a_imagspin.value();
-    apos = a_realspin.pos();
-  }
-}
-
-template <typename T>
-static inline void AdvanceSpins(ConstSparseIterator<T> & real_spin,
-				ConstSparseIterator<T> & imag_spin,
-				const NTuple &dim) {
-  if (dim.map(real_spin.pos()) > dim.map(imag_spin.pos())) {
-    imag_spin.next();
-  } else if (dim.map(real_spin.pos()) < dim.map(imag_spin.pos())) {
-    real_spin.next();
-  } else {
-    imag_spin.next();
-    real_spin.next();
-  }
-}
-				
 	
 // Complex, Complex --> Complex
 template <typename S, typename T, class Op>
@@ -364,37 +328,30 @@ static inline void DotOp(const SparseMatrix<T>& A_real,
 			 SparseMatrix<S>& C_imag) {
   C_real = SparseMatrix<S>(A_real.dimensions());
   C_imag = SparseMatrix<S>(A_imag.dimensions());
-  ConstSparseIterator<T> a_realspin(&A_real);
-  ConstSparseIterator<T> a_imagspin(&A_imag);
-  ConstSparseIterator<T> b_realspin(&B_real);
-  ConstSparseIterator<T> b_imagspin(&B_real);
+  ConstComplexSparseIterator<T> a_spin(&A_real, &A_imag);
+  ConstComplexSparseIterator<T> b_spin(&B_real, &B_imag);
   NTuple dim(A_real.dimensions());
-  while (a_realspin.isValid() || 
-	 a_imagspin.isValid() ||
-	 b_realspin.isValid() ||
-	 b_imagspin.isValid()) {
-    NTuple apos, bpos;
-    T value_a_real, value_a_imag;
-    T value_b_real, value_b_imag;
+  while (a_spin.isValid() || b_spin.isValid()) {
     T value_c_real, value_c_imag;
-    RetrieveSparseComplexValue(a_realspin,a_imagspin,dim,value_a_real,value_a_imag,apos);
-    RetrieveSparseComplexValue(b_realspin,b_imagspin,dim,value_b_real,value_b_imag,bpos);
-    if (apos == bpos) {
-      Op::func(value_a_real,value_a_imag,value_b_real,value_b_imag,value_c_real,value_c_imag);
-      C_real.set(apos,value_c_real);
-      C_real.set(apos,value_c_imag);
-      AdvanceSpins(a_realspin,a_imagspin,dim);
-      AdvanceSpins(b_realspin,b_imagspin,dim);
-    } else if (dim.map(apos) < dim.map(bpos)) {
-      Op::func(value_a_real,value_a_imag,0,0,value_c_real,value_c_imag);
-      C_real.set(apos,value_c_real);
-      C_real.set(apos,value_c_imag);
-      AdvanceSpins(a_realspin,a_imagspin,dim);
+    if (a_spin.pos() == b_spin.pos()) {
+      Op::func(a_spin.realValue(),a_spin.imagValue(),
+	       b_spin.realValue(),b_spin.imagValue(),
+	       value_c_real,value_c_imag);
+      C_real.set(a_spin.pos(),value_c_real);
+      C_imag.set(a_spin.pos(),value_c_imag);
+      a_spin.next(); b_spin.next();
+    } else if (dim.map(a_spin.pos()) < dim.map(b_spin.pos())) {
+      Op::func(a_spin.realValue(),a_spin.imagValue(),0,0,
+	       value_c_real,value_c_imag);
+      C_real.set(a_spin.pos(),value_c_real);
+      C_imag.set(a_spin.pos(),value_c_imag);
+      a_spin.next();
     } else {
-      Op::func(0,0,value_b_real,value_b_imag,value_c_real,value_c_imag);
-      C_real.set(bpos,value_c_real);
-      C_real.set(bpos,value_c_imag);
-      AdvanceSpins(b_realspin,b_imagspin,dim);
+      Op::func(0,0,b_spin.realValue(),b_spin.imagValue(),
+	       value_c_real,value_c_imag);
+      C_real.set(b_spin.pos(),value_c_real);
+      C_imag.set(b_spin.pos(),value_c_imag);
+      b_spin.next();
     }
   }
 }
@@ -406,32 +363,21 @@ static inline SparseMatrix<S> DotOp(const SparseMatrix<T>& A_real,
 				    const SparseMatrix<T>& B_real,
 				    const SparseMatrix<T>& B_imag) {
   SparseMatrix<S> C;
-  ConstSparseIterator<T> a_realspin(&A_real);
-  ConstSparseIterator<T> a_imagspin(&A_imag);
-  ConstSparseIterator<T> b_realspin(&B_real);
-  ConstSparseIterator<T> b_imagspin(&B_real);
+  ConstComplexSparseIterator<T> a_spin(&A_real, &A_imag);
+  ConstComplexSparseIterator<T> b_spin(&B_real, &B_imag);
   NTuple dim(A_real.dimensions());
-  while (a_realspin.isValid() || 
-	 a_imagspin.isValid() ||
-	 b_realspin.isValid() ||
-	 b_imagspin.isValid()) {
-    NTuple apos, bpos;
-    T value_a_real, value_a_imag;
-    T value_b_real, value_b_imag;
-    T value_c_real, value_c_imag;
-    RetrieveSparseComplexValue(a_realspin,a_imagspin,dim,value_a_real,value_a_imag,apos);
-    RetrieveSparseComplexValue(b_realspin,b_imagspin,dim,value_b_real,value_b_imag,bpos);
-    if (apos == bpos) {
-      C.set(apos,Op::func(value_a_real,value_a_imag,value_b_real,value_b_imag));
-      C.set(apos,value_c_real);
-      AdvanceSpins(a_realspin,a_imagspin,dim);
-      AdvanceSpins(b_realspin,b_imagspin,dim);
-    } else if (dim.map(apos) < dim.map(bpos)) {
-      C.set(apos,Op::func(value_a_real,value_a_imag,0,0));
-      AdvanceSpins(a_realspin,a_imagspin,dim);
+  while (a_spin.isValid() || b_spin.isValid()) {
+    if (a_spin.pos() == b_spin.pos()) {
+      C.set(a_spin.pos(),
+	    Op::func(a_spin.realValue(),a_spin.imagValue(),
+		     b_spin.realValue(),b_spin.imagValue()));
+      a_spin.next(); b_spin.next();
+    } else if (dim.map(a_spin.pos()) < dim.map(b_spin.pos())) {
+      C.set(a_spin.pos(),Op::func(a_spin.realValue(),a_spin.imagValue(),0,0));
+      a_spin.next();
     } else {
-      C.set(bpos,Op::func(0,0,value_b_real,value_b_imag));
-      AdvanceSpins(b_realspin,b_imagspin,dim);
+      C.set(b_spin.pos(),Op::func(0,0,b_spin.realValue(),b_spin.imagValue()));
+      b_spin.next();
     }
   }
 }
