@@ -358,3 +358,64 @@ ArrayVector LUDecompose(int nargout, Array A) {
   return retval;
 }
 
+template <typename T>
+static Array InvertMatrixReal(const BasicArray<T> &A,
+			      void (*getrf)(int*,int*,T*,int*,int*,int*),
+			      void (*getri)(int*,T*,int*,int*,T*,int*)) {
+  int M = A.rows();
+  int N = A.columns();
+  BasicArray<T> Acopy(A);
+  int LDA = A.rows();
+  BasicArray<int> IPIV(NTuple(qMin(M,N),1));
+  int INFO;
+  // Do the decomposition
+  getrf(&M,&N,Acopy.data(),&LDA,IPIV.data(),&INFO);
+  // Compute the inverse
+  T WORKSIZE;
+  int IWORKSIZE = -1;
+  getri(&N,Acopy.data(),&LDA,IPIV.data(),&WORKSIZE,&IWORKSIZE);
+  IWORKSIZE = int(WORKSIZE);
+  BasicArray<T> WORK(NTuple(IWORKSIZE,1));
+  getri(&N,Acopy.data(),&LDA,IPIV.data(),WORK.data(),&IWORKSIZE);
+  return Array(Acopy);
+}
+
+template <typename T>
+static Array InvertMatrixComplex(const BasicArray<T> &A,
+				 void (*getrf)(int*,int*,T*,int*,int*,int*),
+				 void (*getri)(int*,T*,int*,int*,T*,int*)) {
+  int M = A.rows()/2;
+  int N = A.columns();
+  BasicArray<T> Acopy(A);
+  int LDA = M;
+  BasicArray<int> IPIV(NTuple(qMin(M,N),1));
+  int INFO;
+  // Do the decomposition
+  getrf(&M,&N,Acopy.data(),&LDA,IPIV.data(),&INFO);
+  // Compute the inverse
+  T WORKSIZE[2];
+  int IWORKSIZE = -1;
+  getri(&N,Acopy.data(),&LDA,IPIV.data(),WORKSIZE,&IWORKSIZE);
+  IWORKSIZE = int(WORKSIZE);
+  BasicArray<T> WORK(NTuple(IWORKSIZE*2,1));
+  getri(&N,Acopy.data(),&LDA,IPIV.data(),WORK.data(),&IWORKSIZE);
+  return Array(SplitReal<T>(Acopy),SplitImag<T>(Acopy));
+}
+
+Array Invert(const Array &A) {
+  if (A.isSparse()) 
+    throw Exception("Sparse matrix inverse not currently supported");
+  switch (A.dataClass()) {
+  default: throw Exception("Invert does not support this data class");
+  Float:
+    if (A.allReal())
+      return InvertMatrixReal(A.constReal<float>(),sgetrf_,sgetri_);
+    else
+      return InvertMatrixComplex(A.fortran<float>(),cgetrf_,cgetri_);
+  Double:
+    if (A.allReal())
+      return InvertMatrixReal(A.constReal<double>(),dgetrf_,dgetri_);
+    else
+      return InvertMatrixComplex(A.fotran<double>(),zgetrf_,zgetri_);
+  }
+}

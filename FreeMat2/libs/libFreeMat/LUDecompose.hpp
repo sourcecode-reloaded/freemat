@@ -22,5 +22,5 @@
 #include "Array.hpp"
 
 ArrayVector LUDecompose(int nargout, Array A);
-
+Array Invert(const Array &A);
 #endif

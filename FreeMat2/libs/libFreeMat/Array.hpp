@@ -160,6 +160,7 @@ public:
   inline bool isColumnVector() const {return dimensions().isColumnVector();}
   inline bool isRowVector() const {return dimensions().isRowVector();}
   inline bool is2D() const {return dimensions().is2D();}
+  inline bool isSquare() const {return (is2D() && (rows() == columns()));}
   inline bool isUserClass() const {return m_type.Class == UserClass;}
   inline bool isString() const {return m_type.Class == StringArray;}
   inline bool isSparse() const {return m_type.Sparse == 1;}
@@ -353,6 +354,10 @@ bool TestForCaseMatch(const Array &s, const Array &r);
 bool RealAllZeros(const Array &t);
 
 Type ScalarType(Type x);
+
+Array GetDiagonal(const Array &a, int diagonal);
+Array DiagonalArray(const Array &f, int diagonal);
+bool IsSymmetric(const Array &a);
 
 // Suppose we support a get/set interface:// And we support slicing through the iterators
 // themselves.  For example, consider

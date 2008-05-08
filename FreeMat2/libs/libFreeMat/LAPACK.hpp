@@ -206,6 +206,14 @@ extern "C" {
   
   void zgetrf_(int *M, int *N, double *A, int *LDA, int *IPIV, int *INFO);
 
+  void sgetri_(int *N, float *A, int *LDA, int *IPIV, float *WORK, int *LWORK, int *INFO);
+
+  void cgetri_(int *N, float *A, int *LDA, int *IPIV, float *WORK, int *LWORK, int *INFO);
+
+  void dgetri_(int *N, float *A, int *LDA, int *IPIV, float *WORK, int *LWORK, int *INFO);
+  
+  void zgetri_(int *N, float *A, int *LDA, int *IPIV, float *WORK, int *LWORK, int *INFO);
+
   int xerbla_(char *srname, int *info);
 
   float snrm2_(int *N, float *X, int *INCX);

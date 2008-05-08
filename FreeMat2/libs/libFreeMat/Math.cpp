@@ -302,18 +302,22 @@ static inline SparseMatrix<S> DotOp(const SparseMatrix<T>& A,
   ConstSparseIterator<T> bspin(&B);
   SparseMatrix<S> retval;
   while (aspin.isValid() || bspin.isValid()) {
-    if (aspin.pos() == bspin.pos()) {
-      retval.set(aspin.pos(),Op::func(aspin.value(),bspin.value()));
-      aspin.next();
-      bspin.next();
-    } else if (A.dimensions().map(aspin.pos()) <
-	       B.dimensions().map(bspin.pos())) {
-      retval.set(aspin.pos(),Op::func(aspin.value(),T(0)));
-      aspin.next();
-    } else {
-      retval.set(bspin.pos(),Op::func(T(0),bspin.value()));
-      bspin.next();
+    while (aspin.moreInSlice() || bspin.moreInSlice()) {
+      if (aspin.pos() == bspin.pos()) {
+	retval.set(aspin.pos(),Op::func(aspin.value(),bspin.value()));
+	aspin.next();
+	bspin.next();
+      } else if (A.dimensions().map(aspin.pos()) <
+		 B.dimensions().map(bspin.pos())) {
+	retval.set(aspin.pos(),Op::func(aspin.value(),T(0)));
+	aspin.next();
+      } else {
+	retval.set(bspin.pos(),Op::func(T(0),bspin.value()));
+	bspin.next();
+      }
     }
+    aspin.nextSlice();
+    bspin.nextSlice();
   }
   return retval;
 }
@@ -1373,11 +1377,7 @@ Array DotLeftDivide(const Array& A, const Array& B) {
 Array DotPower(const Array& A, const Array& B) {
   if (A.allReal() && B.allReal() &&
       !IsNonNegative(A) && !IsInteger(B)) {
-    Array Acomplex(A);
-    Array Bcomplex(B);
-    Acomplex.forceComplex();
-    Bcomplex.forceComplex();
-    return DotOp<OpPower>(A,B);
+    return DotOp<OpPower>(A.asComplex(),B.asComplex());
   }
   return DotOp<OpPower>(A,B);
 }
@@ -2058,102 +2058,15 @@ Array Negate(const Array& A){
  *     match the number of rows in B.
  */
 
-inline void CheckNumeric(Array &A, Array &B, QString opname){
-  bool Anumeric, Bnumeric;
-
-  Anumeric = !A.isReferenceType();
-  Bnumeric = !B.isReferenceType();
-  if (!(Anumeric && Bnumeric))
-    throw Exception(QString("Cannot apply numeric operation ") + 
-		    opname + QString(" to reference types."));
-}
-
-
-inline bool MatrixCheck(Array &A, Array &B, QString opname){
-  // Test for either a scalar (test 1)
-  if (A.isScalar() || B.isScalar())
-    return false;
-
-  CheckNumeric(A,B,opname);
-
-  // Test for 2D
-  if (!A.is2D() || !B.is2D()) 
-    throw Exception(QString("Cannot apply matrix operation ") + 
-		    opname + QString(" to N-Dimensional arrays."));
-  
-  // Test the types
-  TypeCheck(A,B,true);
-  return true;
-}
-
-
-/**
- * Handle a particular type case in the power operator.
- */
-inline Array doPowerAssist(Array A, Class AClass, 
-			   Array B, Class BClass,
-			   Class CClass, vvfun exec) {
-  Array C;
-  A.promoteType(AClass);
-  B.promoteType(BClass);
-
-  // S^F, F^S, S^S are all done via full intermediate products
-  // Only S^scalar is done using a sparse algorithm
-  if (B.isScalar() && A.sparse())
-    return SparsePowerFunc(A,B);
-  A.makeDense();
-  B.makeDense();
-
-  if (A.isScalar()) {
-    int Blen(B.getLength());
-    C = Array(CClass,B.dimensions(),NULL);
-    void *Cp = Malloc(Blen*C.getElementSize());
-    exec(Blen,Cp,A.getDataPointer(),0,B.getDataPointer(),1);
-    C.setDataPointer(Cp);
-  } else if (B.isScalar()) {
-    int Alen(A.getLength());
-    C = Array(CClass,A.dimensions(),NULL);
-    void *Cp = Malloc(Alen*C.getElementSize());
-    exec(Alen,Cp,A.getDataPointer(),1,B.getDataPointer(),0);
-    C.setDataPointer(Cp);
-  } else {
-    int Alen(A.getLength());
-    C = Array(CClass,A.dimensions(),NULL);
-    void *Cp = Malloc(Alen*C.getElementSize());
-    exec(Alen,Cp,A.getDataPointer(),1,B.getDataPointer(),1);
-    C.setDataPointer(Cp);
-  }
-  return C;
-}
 
 // Invert a square matrix - Should check for diagonal matrices
 // as a special case
-Array InvertMatrix(Array a, Interpreter* m_eval) {
+Array InvertMatrix(Array a) {
   if (!a.is2D())
     throw Exception("Cannot invert N-dimensional arrays.");
-  if (a.isReferenceType())
-    throw Exception("Cannot invert reference-type arrays.");
   if (a.isScalar())
-    return DotPower(a,Array::floatConstructor(-1),m_eval);
-  int N(a.getDimensionLength(0));
-  if (a.sparse()) {
-    uint32 *I = (uint32*) Malloc(sizeof(uint32)*N);
-    for (int k=0;k<N;k++)
-      I[k] = k+1;
-    float v = 1.0f;
-    Array B(FM_FLOAT,a.dimensions(),
-	    makeSparseFromIJV(FM_FLOAT,N,N,N,I,1,I,1,&v,0),true);
-    Free(I);
-    Array c(LeftDivide(a,B,m_eval));
-    c.makeSparse();
-    return c;
-  } else {
-    Array ones(Array::floatVectorConstructor(N));
-    float *dp = (float*) ones.getReadWriteDataPointer();
-    for (int i=0;i<N;i++) dp[i] = 1.0f;
-    Array B(Array::diagonalConstructor(ones,0));
-    return LeftDivide(a,B,m_eval);
-  }
+    return DotRightDivide(Array(1.0),a);
+  return Invert(a);
 }
   
 // Handle matrix powers for sparse matrices
@@ -2191,156 +2104,6 @@ Array MatrixPowerSparse(Array a, Array b, Interpreter* m_eval) {
   return c;
 }
 
-/**
- * The power function is a special case of the vector-vector operations.  
- * In this case, if the real vector contains any negative elements
- * A real vector can be written as (r*e^(j\theta))^p = r^p*e^(j*\theta*p)
- * If there are any components of A negative raised to a non-integer power,
- * then A and B are promoted to complex types.  If A is a double, then they
- * are promoted to dcomplex types.  So the rules are as follows:
- * A complex, B arbitrary -> output is complex, unless B is double or dcomplex
- * A dcomplex, B arbitrary -> output is dcomplex
- * A double, arbitrary, B integer -> output is double
- * A double, negative, B noninteger -> output is dcomplex
- * A float, arbitrary, B integer -> output is float
- * A float, negative, B noninteger -> output is complex, unless B is double or dcomplex
- *
- * Some simplification can take place - the following type combinations
- * are possible - with the unique combinations numbered
- * 1. complex, integer   -> complex
- * 2. complex, float     -> complex
- * 3. complex, double    >> dcomplex, double   -> dcomplex
- * 4. complex, complex   -> complex
- * 5. complex, dcomplex  >> dcomplex, dcomplex -> dcomplex
- * 6. dcomplex, integer  -> dcomplex
- *    dcomplex, float    >> dcomplex, double   -> dcomplex (3)
- *    dcomplex, double   >> dcomplex, double   -> dcomplex (3)
- *    dcomplex, complex  >> dcomplex, dcomplex -> dcomplex (5)
- *    dcomplex, dcomplex >> dcomplex, dcomplex -> dcomplex (5)
- * 7. double, integer    -> double
- *    double-, float     >> dcomplex, dcomplex -> dcomplex (5)
- *    double-, double    >> dcomplex, dcomplex -> dcomplex (5)
- *    double-, complex   >> dcomplex, dcomplex -> dcomplex (5)
- *    double-, dcomplex  >> dcomplex, dcomplex -> dcomplex (5)
- * 8. double+, float     >> double, double -> double
- *    double+, double    >> double, double -> double (8)
- *    double+, complex   >> dcomplex, dcomplex -> dcomplex (5)
- *    double+, dcomplex  >> dcomplex, dcomplex -> dcomplex (5)
- * 9. float, integer     -> float
- *    float-, float      >> complex, complex -> complex (4)
- *    float-, double     >> dcomplex, dcomplex -> dcomplex (5)
- *    float-, complex    >> complex, complex -> complex (4)
- *    float-, dcomplex   >> dcomplex, dcomplex -> dcomplex (5)
- *10. float+, float      >> float, float -> float
- *    float+, double     >> double, double -> double (8)
- *    float+, complex    >> complex, complex -> complex (4)
- *    float+, dcomplex   >> dcomplex, dcomplex -> dcomplex (5)
- *
- * This type scheme is complicated, but workable.  If A is an 
- * integer type, it is first promoted to double, before the
- * rules are applied.  Then, we note that the rules can be cleaved
- * along the lines of B being integer or not.  If B is integer,
- * we apply the appropriate version of 1., 6., 7., 9..  This
- * covers 4 of the 6 cases.  Next, we determine if A is complex.
- * If A is complex, we check if B is double or dcomplex. If either
- * is the case, we promote A to dcomplex.  If A is dcomplex,
- * we promote B to double or dcomplex.  Next, we test for
- * rules 2., 3., 4., 5.  
- */
-
-#define OPCASE(t,o) case t: opType = o; break;
-#define MAPOP(o,a,b,c,f) case o: return doPowerAssist(A,a,B,b,c,f);
-inline Array DoPowerTwoArgFunction(Array A, Array B){
-  Array C;
-  bool Anegative;
-  StringVector dummySV;
-  Class AClass, BClass;
-  int opType;
-
-  if (A.isEmpty() || B.isEmpty())
-    return Array::emptyConstructor();
-  CheckNumeric(A,B,"^");
-  if (!(SameSizeCheck(A.dimensions(),B.dimensions()) || A.isScalar() || B.isScalar()))
-    throw Exception("Size mismatch on arguments to power (^) operator.");
-  // If A is not at least a float type, promote it to double
-  AClass = A.dataClass();
-  BClass = B.dataClass();
-  if (AClass < FM_FLOAT) AClass = FM_DOUBLE;
-  if (BClass < FM_INT32) BClass = FM_INT32;
-  // Get a read on if A is positive
-  Anegative = !(A.isPositive());
-  // Check through the different type cases...
-  opType = 0;
-  if (AClass == FM_COMPLEX) {
-    switch (BClass) {
-    default: throw Exception("Unhandled type for second argument to A^B");
-      OPCASE(FM_INT32,1);
-      OPCASE(FM_FLOAT,2);
-      OPCASE(FM_DOUBLE,3);
-      OPCASE(FM_COMPLEX,4);
-      OPCASE(FM_DCOMPLEX,5);
-    }
-  } else if (AClass == FM_DCOMPLEX) {
-    switch(BClass) {
-    default: throw Exception("Unhandled type for second argument to A^B");
-      OPCASE(FM_INT32,6);
-      OPCASE(FM_FLOAT,3);
-      OPCASE(FM_DOUBLE,3);
-      OPCASE(FM_COMPLEX,5);
-      OPCASE(FM_DCOMPLEX,5);
-    }
-  } else if (AClass == FM_DOUBLE && Anegative) {
-    switch(BClass) {
-    default: throw Exception("Unhandled type for second argument to A^B");
-      OPCASE(FM_INT32,7);
-      OPCASE(FM_FLOAT,5);
-      OPCASE(FM_DOUBLE,5);
-      OPCASE(FM_COMPLEX,5);
-      OPCASE(FM_DCOMPLEX,5);
-    }      
-  } else if (AClass == FM_DOUBLE && (!Anegative)){
-    switch(BClass) {
-    default: throw Exception("Unhandled type for second argument to A^B");
-      OPCASE(FM_INT32,7);
-      OPCASE(FM_FLOAT,8);
-      OPCASE(FM_DOUBLE,8);
-      OPCASE(FM_COMPLEX,5);
-      OPCASE(FM_DCOMPLEX,5);
-    }      
-  } else if (AClass == FM_FLOAT && Anegative) {
-    switch(BClass) {
-    default: throw Exception("Unhandled type for second argument to A^B");
-      OPCASE(FM_INT32,9);
-      OPCASE(FM_FLOAT,4);
-      OPCASE(FM_DOUBLE,5);
-      OPCASE(FM_COMPLEX,4);
-      OPCASE(FM_DCOMPLEX,5);
-    }      
-  } else if (AClass == FM_FLOAT && (!Anegative)){
-    switch(BClass) {
-    default: throw Exception("Unhandled type for second argument to A^B");
-      OPCASE(FM_INT32,9);
-      OPCASE(FM_FLOAT,10);
-      OPCASE(FM_DOUBLE,8);
-      OPCASE(FM_COMPLEX,4);
-      OPCASE(FM_DCOMPLEX,5);
-    }
-  }
-  // Invoke the appropriate case
-  switch(opType) {
-    default: throw Exception("Unhandled type combination for A^B");
-    MAPOP(1,FM_COMPLEX,FM_INT32,FM_COMPLEX,(vvfun) cicpower);
-    MAPOP(2,FM_COMPLEX,FM_FLOAT,FM_COMPLEX,(vvfun) cfcpower);
-    MAPOP(3,FM_DCOMPLEX,FM_DOUBLE,FM_DCOMPLEX,(vvfun) zdzpower);
-    MAPOP(4,FM_COMPLEX,FM_COMPLEX,FM_COMPLEX,(vvfun) cccpower);
-    MAPOP(5,FM_DCOMPLEX,FM_DCOMPLEX,FM_DCOMPLEX,(vvfun) zzzpower);
-    MAPOP(6,FM_DCOMPLEX,FM_INT32,FM_DCOMPLEX,(vvfun) zizpower);
-    MAPOP(7,FM_DOUBLE,FM_INT32,FM_DOUBLE,(vvfun) didpower);
-    MAPOP(8,FM_DOUBLE,FM_DOUBLE,FM_DOUBLE,(vvfun) dddpower);
-    MAPOP(9,FM_FLOAT,FM_INT32,FM_FLOAT,(vvfun) fifpower);
-    MAPOP(10,FM_FLOAT,FM_FLOAT,FM_FLOAT,(vvfun) fffpower);
-  }
-}
 
 /**
  * Matrix-matrix multiply
@@ -2969,41 +2732,6 @@ Array DotTranspose(Array A, Interpreter* m_eval) {
 }
 
 
-inline Array PowerScalarMatrix(Array A, Array B, Interpreter* m_eval) {
-  // Do an eigendecomposition of B
-  Array V, D;
-  if (B.isSymmetric())
-    EigenDecomposeFullSymmetric(B,V,D,m_eval);
-  else
-    EigenDecomposeFullGeneral(B,V,D,false,m_eval);
-  // Get the diagonal part of D
-  Array E = D.getDiagonal(0);
-  // Call the vector version of the exponential
-  Array F = DoPowerTwoArgFunction(A,E); // B, V, D, E, F
-  // Construct a diagonal matrix from F
-  Array G = Array::diagonalConstructor(F,0); // B, V, D, G, E, F
-  // The output is (V*G)/V
-  E = Multiply(V,G,m_eval); // B, V, D, E, F
-  return RightDivide(E,V,m_eval); // B, D, F
-}
-
-inline Array PowerMatrixScalar(Array A, Array B, Interpreter* m_eval) {
-  // Do an eigendecomposition of A
-  Array V, D;
-  if (A.isSymmetric())
-    EigenDecomposeFullSymmetric(A,V,D,m_eval); //A, B, V, D
-  else
-    EigenDecomposeFullGeneral(A,V,D,false,m_eval);
-  // Get the diagonal part of D
-  Array E = D.getDiagonal(0); // A, B, V, D, E
-  // Call the vector version of the exponential
-  Array F = DoPowerTwoArgFunction(E,B); // F, A, V, D
-  // Construct a diagonal matrix from F
-  Array G = Array::diagonalConstructor(F,0); // G, A, V, D, F
-  // The output is (V*G)/V
-  E = Multiply(V,G,m_eval); // A, V, D, E, F
-  return RightDivide(E,V,m_eval); // C, A, D, F
-}
 
 /**
  * Matrix-matrix power - These are the cases to consider:
@@ -3075,47 +2803,62 @@ inline Array PowerMatrixScalar(Array A, Array B, Interpreter* m_eval) {
 //@>
 //!
 
-Array Power(Array A, Array B, Interpreter* m_eval){
+// Raises Scalar^Matrix
+static Array PowerScalarMatrix(const Array &A, const Array &B) {
+  // Do an eigendecomposition of B
+  Array V, D;
+  if (IsSymmetric(B))
+    EigenDecomposeFullSymmetric(B,V,D);
+  else
+    EigenDecomposeFullGeneral(B,V,D,false);
+  // Get the diagonal part of D
+  Array E = GetDiagonal(D,0);
+  // Call the vector version of the exponential
+  Array F = DotPower(A,E); // B, V, D, E, F
+  // Construct a diagonal matrix from F
+  Array G = DiagonalArray(F,0); // B, V, D, G, E, F
+  // The output is (V*G)/V
+  E = Multiply(V,G); // B, V, D, E, F
+  return RightDivide(E,V); // B, D, F
+}
 
+// Raises Matrix^Scalar
+static Array PowerMatrixScalar(const Array &A, const Array &B) {
+  // Do an eigendecomposition of A
+  Array V, D;
+  if (IsSymmetric(A))
+    EigenDecomposeFullSymmetric(A,V,D); //A, B, V, D
+  else
+    EigenDecomposeFullGeneral(A,V,D,false);
+  // Get the diagonal part of D
+  Array E = GetDiagonal(D,0); // A, B, V, D, E
+  // Call the vector version of the exponential
+  Array F = DotPower(E,B); // F, A, V, D
+  // Construct a diagonal matrix from F
+  Array G = DiagonalArray(F,0); // G, A, V, D, F
+  // The output is (V*G)/V
+  E = Multiply(V,G); // A, V, D, E, F
+  return RightDivide(E,V); // C, A, D, F
+}
+
+Array Power(const Array& A, const Array& B){
   if (A.isEmpty() || B.isEmpty())
-    return Array::emptyConstructor();
-
-  // Special case -- kludge to fix bug 1804267
-  B = ScreenIntegerScalars(B);
-
-  if (A.isScalar() && B.isScalar()) return DotPower(A,B,m_eval);
-
-  // Check for A & B numeric
-  CheckNumeric(A,B,"^");
-
-  // Test for 2D on both A & B
-  if (!A.is2D() || !B.is2D())
-    throw Exception("Cannot apply exponential operation to N-Dimensional arrays.");
-
-  if (B.isReal() && B.isScalar()) {
-    Array C(B);
-    C.promoteType(FM_DOUBLE);
-    const double*dp = (const double*) C.getDataPointer();
-    if (*dp == rint(*dp) && (*dp == -1))
-      return InvertMatrix(A,m_eval);
-  }
-
-  // Test the types
-  TypeCheck(A,B,true);
-
+    return Array(Double);
+  if (A.isScalar() && B.isScalar()) return DotPower(A,B);
+  if (!A.is2D() || !B.is2D()) 
+    throw Exception("Cannot apply exponential operator to N-Dimensional arrays.");
+  if (B.isReal() && B.isScalar() && (B.toClass(Double).constRealScalar() == -1))
+    return InvertMatrix(A);
   // Both arguments must be square
-  if ((A.getDimensionLength(0) != A.getDimensionLength(1)) ||
-      (B.getDimensionLength(0) != B.getDimensionLength(1)))
+  if (!(A.isSquare() && B.isSquare()))
     throw Exception("Power (^) operator can only be applied to scalar and square arguments.");
-
-  if (A.sparse() || B.sparse())
-    return MatrixPowerSparse(A,B,m_eval);
-
+  if (A.isSparse() || B.isSparse())
+    return MatrixPowerSparse(A,B);
   // OK - check for A a scalar - if so, do a decomposition of B
   if (A.isScalar())
-    return PowerScalarMatrix(A,B,m_eval);
+    return PowerScalarMatrix(A,B);
   else if (B.isScalar())
-    return PowerMatrixScalar(A,B,m_eval);
+    return PowerMatrixScalar(A,B);
   else 
     throw Exception("One of the arguments to (^) must be a scalar.");
 }
@@ -3126,42 +2869,9 @@ Array UnitColon(Array A, Array B) {
     throw Exception("Both arguments to (:) operator must be scalars.");
   if (A.isComplex() || B.isComplex())
     throw Exception("Both arguments to (:) operator must be real.");
-  // Make sure A and B are the same type - at least INT32
-  Class Aclass, Bclass, Cclass;
-  Aclass = A.dataClass();
-  Bclass = B.dataClass();
-  Cclass = (Aclass > Bclass) ? Aclass : Bclass;
-  Cclass = (FM_INT32 > Cclass) ? FM_INT32 : Cclass;
-  A.promoteType(Cclass);
-  B.promoteType(Cclass);
-  switch (Cclass) {
-  default: throw Exception("Unhandled type for A:B");
-  case FM_INT32:
-    C = Array::int32RangeConstructor(*((int32*)A.getDataPointer()),
-				     1,
-				     *((int32*)B.getDataPointer()),
-				     false);
-    break;
-  case FM_INT64:
-    C = Array::int64RangeConstructor(*((int64*)A.getDataPointer()),
-				     1,
-				     *((int64*)B.getDataPointer()),
-				     false);
-    break;
-  case FM_FLOAT: 
-    C = Array::floatRangeConstructor(*((float*)A.getDataPointer()),
-				     1,
-				     *((float*)B.getDataPointer()),
-				     false);
-    break;
-  case FM_DOUBLE:
-    C = Array::doubleRangeConstructor(*((double*)A.getDataPointer()),
-				      1,
-				      *((double*)B.getDataPointer()),
-				      false);
-    break;
-  }
-  return C;
+  if (!((A.dataClass() == Double) && (B.dataClass() == Double)))
+    throw Exception("All arguments to (:) operator must be of class double.");
+  return RangeConstructor(A.constScalar<double>(),1,B.constScalar<double>(),false);
 }
 
 Array DoubleColon(Array A, Array B, Array C){
@@ -3170,43 +2880,8 @@ Array DoubleColon(Array A, Array B, Array C){
     throw Exception("All three arguments to (:) operator must be scalars.");
   if (A.isComplex() || B.isComplex() || C.isComplex())
     throw Exception("All arguments to (:) operator must be real.");
-  // Make sure A and B are the same type - at least INT32
-  Class Aclass, Bclass, Cclass, Dclass;
-  Aclass = A.dataClass();
-  Bclass = B.dataClass();
-  Cclass = C.dataClass();
-  Dclass = (Aclass > Bclass) ? Aclass : Bclass;
-  Dclass = (Dclass > Cclass) ? Dclass : Cclass;
-  Dclass = (FM_INT32 > Dclass) ? FM_INT32 : Dclass;
-  A.promoteType(Dclass);
-  B.promoteType(Dclass);
-  C.promoteType(Dclass);
-  switch (Dclass) {
-  default: throw Exception("Unhandled type for A:B:C");
-  case FM_INT32:
-    D = Array::int32RangeConstructor(*((int32*)A.getDataPointer()),
-				     *((int32*)B.getDataPointer()),
-				     *((int32*)C.getDataPointer()),
-				     false);
-    break;
-  case FM_INT64:
-    D = Array::int64RangeConstructor(*((int64*)A.getDataPointer()),
-				     *((int64*)B.getDataPointer()),
-				     *((int64*)C.getDataPointer()),
-				     false);
-    break;
-  case FM_FLOAT: 
-    D = Array::floatRangeConstructor(*((float*)A.getDataPointer()),
-				     *((float*)B.getDataPointer()),
-				     *((float*)C.getDataPointer()),
-				     false);
-    break;
-  case FM_DOUBLE:
-    D =  Array::doubleRangeConstructor(*((double*)A.getDataPointer()),
-				       *((double*)B.getDataPointer()),
-				       *((double*)C.getDataPointer()),
-				       false);
-    break;
-  }
-  return D;
+  if (!((A.dataClass() == Double) && (B.dataClass() == Double) && (C.dataClass() == Double)))
+    throw Exception("All arguments to (:) operator must be of class double.");
+  return RangeConstructor(A.constScalar<double>(),B.constScalar<double>(),
+			  C.constScalar<double>(),false);
 }

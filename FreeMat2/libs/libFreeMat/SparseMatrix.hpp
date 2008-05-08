@@ -292,12 +292,18 @@ public:
     m_col = m_ptr->constData().constBegin();
     m_row = m_col.value().constBegin();
   }
-  void next() {
-    ++m_row;
-    if (m_row == m_col.value().constEnd()) {
+  inline bool moreInSlice() const {
+    return (m_row != m_col.value().constEnd());
+  }
+  inline void next() {
+    if (moreInSlice())
+      ++m_row;
+  }
+  inline void nextSlice() {
+    if (isValid()) {
       ++m_col;
-      if (m_col != m_ptr->constData().constEnd())
-	m_row = m_col.value().constBegin();
+      if (isValid())
+    	m_row = m_col.value().constBegin();
     }
   }
   bool isValid() const {
@@ -320,6 +326,9 @@ public:
   ConstComplexSparseIterator(const SparseMatrix<T> *real,
 			     const SparseMatrix<T> *imag) : 
     m_real(real), m_imag(imag), m_dims(real->dimensions()) {}
+  inline bool moreInSlice() const {
+    return (m_real.moreInSlice() || m_imag.moreInSlice());
+  }
   void next() {
     if (m_dims.map(m_real.pos()) < m_dims.map(m_imag.pos()))
       m_real.next();
@@ -329,6 +338,10 @@ public:
       m_real.next();
       m_imag.next();
     }
+  }
+  void nextSlice() {
+    m_real.nextSlice();
+    m_imag.nextSlice();
   }
   const NTuple pos() const {
     if (m_dims.map(m_real.pos()) <= m_dims.map(m_imag.pos()))
@@ -357,8 +370,11 @@ template <typename T>
 bool IsNonNegative(const SparseMatrix<T> &x) {
   ConstSparseIterator<T> i(&x);
   while (i.isValid()) {
-    if (i.value() < 0) return false;
-    i.next();
+    while (i.moreInSlice()) {
+      if (i.value() < 0) return false;
+      i.next();
+    }
+    i.nextSlice();
   }
   return true;
 }
@@ -367,8 +383,11 @@ template <typename T>
 bool IsInteger(const SparseMatrix<T> &x) {
   ConstSparseIterator<T> i(&x);
   while (i.isValid()) {
-    if (IsInteger(i.value())) return false;
-    i.next();
+    while (i.moreInSlice()) {
+      if (IsInteger(i.value())) return false;
+      i.next();
+    }
+    i.nextSlice();
   }
   return true;
 }
@@ -378,10 +397,25 @@ SparseMatrix<T> ConvertSparseArray(const SparseMatrix<S> &x) {
   SparseMatrix<T> retvec(x.dimensions());
   ConstSparseIterator<S> i(&x);
   while (i.isValid()) {
-    retvec.set(i.pos(),T(i.value()));
-    i.next();
+    while (i.moreInSlice()) {
+      retvec.set(i.pos(),T(i.value()));
+      i.next();
+    }
+    i.nextSlice();
   }
   return retvec;
+}
+
+template <typename T>
+SparseMatrix<T> MatrixMultiply(const SparseMatrix<T> &A, const SparseMatrix<T> &B) {
+  if (A.columns() != B.rows())
+    throw Exception("Non conforming arrays for matrix multiply");
+  ConstSparseIterator<T> Aspin(&A);
+  ConstSparseIterator<T> Bspin(&B);
+  SparseMatrix<T> C(A.rows(),B.columns());
+  while (Bspin.isValid()) {
+    
+  }
 }
 
 #endif
