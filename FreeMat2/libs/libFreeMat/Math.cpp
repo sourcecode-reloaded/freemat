@@ -24,6 +24,7 @@
 #include "LinearEqSolver.hpp"
 #include "LeastSquaresSolver.hpp"
 #include "EigenDecompose.hpp"
+#include "LUDecompose.hpp"
 #include "Malloc.hpp"
 #include "SparseMatrix.hpp"
 #include "Complex.hpp"
@@ -2348,7 +2349,7 @@ static inline Array Multiply(const Array& A, const Array& B) {
       return Array(SplitReal<T>(C),SplitImag<T>(C));
     }
   }
-}
+    }
   }
 }
 
