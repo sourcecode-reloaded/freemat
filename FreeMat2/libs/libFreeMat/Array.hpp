@@ -355,8 +355,8 @@ bool RealAllZeros(const Array &t);
 
 Type ScalarType(Type x);
 
-Array GetDiagonal(const Array &a, int diagonal);
-Array DiagonalArray(const Array &f, int diagonal);
+Array GetDiagonal(const Array &a, int diagonal = 0);
+Array DiagonalArray(const Array &f, int diagonal = 0);
 bool IsSymmetric(const Array &a);
 
 // Suppose we support a get/set interface:// And we support slicing through the iterators

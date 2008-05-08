@@ -2813,11 +2813,11 @@ static Array PowerScalarMatrix(const Array &A, const Array &B) {
   else
     EigenDecomposeFullGeneral(B,V,D,false);
   // Get the diagonal part of D
-  Array E = GetDiagonal(D,0);
+  Array E = GetDiagonal(D);
   // Call the vector version of the exponential
   Array F = DotPower(A,E); // B, V, D, E, F
   // Construct a diagonal matrix from F
-  Array G = DiagonalArray(F,0); // B, V, D, G, E, F
+  Array G = DiagonalArray(F); // B, V, D, G, E, F
   // The output is (V*G)/V
   E = Multiply(V,G); // B, V, D, E, F
   return RightDivide(E,V); // B, D, F
@@ -2832,11 +2832,11 @@ static Array PowerMatrixScalar(const Array &A, const Array &B) {
   else
     EigenDecomposeFullGeneral(A,V,D,false);
   // Get the diagonal part of D
-  Array E = GetDiagonal(D,0); // A, B, V, D, E
+  Array E = GetDiagonal(D); // A, B, V, D, E
   // Call the vector version of the exponential
   Array F = DotPower(E,B); // F, A, V, D
   // Construct a diagonal matrix from F
-  Array G = DiagonalArray(F,0); // G, A, V, D, F
+  Array G = DiagonalArray(F); // G, A, V, D, F
   // The output is (V*G)/V
   E = Multiply(V,G); // A, V, D, E, F
   return RightDivide(E,V); // C, A, D, F
