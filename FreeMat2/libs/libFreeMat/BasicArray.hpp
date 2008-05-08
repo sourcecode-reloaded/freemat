@@ -46,6 +46,7 @@ public:
   //inline const QVector<T>& data() const {return m_data;}
   inline const NTuple dimensions() const {return m_dims;}
   inline index_t rows() const {return m_dims.rows();}
+  inline index_t columns() const {return m_dims.cols();}
   inline index_t cols() const {return m_dims.cols();}
   inline index_t length() const {return m_dims.count();}
   inline index_t isScalar() const {return length() == 1;}

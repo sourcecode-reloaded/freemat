@@ -210,9 +210,9 @@ extern "C" {
 
   void cgetri_(int *N, float *A, int *LDA, int *IPIV, float *WORK, int *LWORK, int *INFO);
 
-  void dgetri_(int *N, float *A, int *LDA, int *IPIV, float *WORK, int *LWORK, int *INFO);
+  void dgetri_(int *N, double *A, int *LDA, int *IPIV, double *WORK, int *LWORK, int *INFO);
   
-  void zgetri_(int *N, float *A, int *LDA, int *IPIV, float *WORK, int *LWORK, int *INFO);
+  void zgetri_(int *N, double *A, int *LDA, int *IPIV, double *WORK, int *LWORK, int *INFO);
 
   int xerbla_(char *srname, int *info);
 

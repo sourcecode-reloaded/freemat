@@ -361,11 +361,11 @@ ArrayVector LUDecompose(int nargout, Array A) {
 template <typename T>
 static Array InvertMatrixReal(const BasicArray<T> &A,
 			      void (*getrf)(int*,int*,T*,int*,int*,int*),
-			      void (*getri)(int*,T*,int*,int*,T*,int*)) {
-  int M = A.rows();
-  int N = A.columns();
+			      void (*getri)(int*,T*,int*,int*,T*,int*,int*)) {
+  int M = int(A.rows());
+  int N = int(A.columns());
   BasicArray<T> Acopy(A);
-  int LDA = A.rows();
+  int LDA = M;
   BasicArray<int> IPIV(NTuple(qMin(M,N),1));
   int INFO;
   // Do the decomposition
@@ -373,19 +373,19 @@ static Array InvertMatrixReal(const BasicArray<T> &A,
   // Compute the inverse
   T WORKSIZE;
   int IWORKSIZE = -1;
-  getri(&N,Acopy.data(),&LDA,IPIV.data(),&WORKSIZE,&IWORKSIZE);
+  getri(&N,Acopy.data(),&LDA,IPIV.data(),&WORKSIZE,&IWORKSIZE,&INFO);
   IWORKSIZE = int(WORKSIZE);
   BasicArray<T> WORK(NTuple(IWORKSIZE,1));
-  getri(&N,Acopy.data(),&LDA,IPIV.data(),WORK.data(),&IWORKSIZE);
+  getri(&N,Acopy.data(),&LDA,IPIV.data(),WORK.data(),&IWORKSIZE,&INFO);
   return Array(Acopy);
 }
 
 template <typename T>
 static Array InvertMatrixComplex(const BasicArray<T> &A,
 				 void (*getrf)(int*,int*,T*,int*,int*,int*),
-				 void (*getri)(int*,T*,int*,int*,T*,int*)) {
-  int M = A.rows()/2;
-  int N = A.columns();
+				 void (*getri)(int*,T*,int*,int*,T*,int*,int*)) {
+  int M = int(A.rows()/2);
+  int N = int(A.columns());
   BasicArray<T> Acopy(A);
   int LDA = M;
   BasicArray<int> IPIV(NTuple(qMin(M,N),1));
@@ -395,10 +395,10 @@ static Array InvertMatrixComplex(const BasicArray<T> &A,
   // Compute the inverse
   T WORKSIZE[2];
   int IWORKSIZE = -1;
-  getri(&N,Acopy.data(),&LDA,IPIV.data(),WORKSIZE,&IWORKSIZE);
+  getri(&N,Acopy.data(),&LDA,IPIV.data(),WORKSIZE,&IWORKSIZE,&INFO);
   IWORKSIZE = int(WORKSIZE);
   BasicArray<T> WORK(NTuple(IWORKSIZE*2,1));
-  getri(&N,Acopy.data(),&LDA,IPIV.data(),WORK.data(),&IWORKSIZE);
+  getri(&N,Acopy.data(),&LDA,IPIV.data(),WORK.data(),&IWORKSIZE,&INFO);
   return Array(SplitReal<T>(Acopy),SplitImag<T>(Acopy));
 }
 
@@ -416,6 +416,6 @@ Array Invert(const Array &A) {
     if (A.allReal())
       return InvertMatrixReal(A.constReal<double>(),dgetrf_,dgetri_);
     else
-      return InvertMatrixComplex(A.fotran<double>(),zgetrf_,zgetri_);
+      return InvertMatrixComplex(A.fortran<double>(),zgetrf_,zgetri_);
   }
 }
