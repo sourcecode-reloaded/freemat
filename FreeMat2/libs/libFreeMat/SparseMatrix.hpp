@@ -30,6 +30,7 @@ public:
   }
   SparseMatrix() : m_dims(NTuple(0,0)) {}
   const SparseData<T>& constData() const {return m_data;}
+  SparseData<T>& data() {return m_data;}
   SparseMatrix(QVector<index_t> row, QVector<index_t> col, QVector<T> val) {
     if (!((row.size() == col.size()) &&
 	  (row.size() == val.size())))
@@ -315,6 +316,12 @@ public:
   const NTuple pos() const {
     return NTuple(m_row.key(),m_col.key());
   }
+  index_t row() const {
+    return m_row.key();
+  }
+  index_t col() const {
+    return m_col.key();
+  }
 };
 
 template <typename T>
@@ -406,16 +413,56 @@ SparseMatrix<T> ConvertSparseArray(const SparseMatrix<S> &x) {
   return retvec;
 }
 
+// c_ij = sum_k a_ik * b_kj
+// For j fixed
+// For all i
+// c_i = sum_k a_ik * b_k
 template <typename T>
 SparseMatrix<T> MatrixMultiply(const SparseMatrix<T> &A, const SparseMatrix<T> &B) {
   if (A.columns() != B.rows())
     throw Exception("Non conforming arrays for matrix multiply");
-  ConstSparseIterator<T> Aspin(&A);
-  ConstSparseIterator<T> Bspin(&B);
-  SparseMatrix<T> C(A.rows(),B.columns());
-  while (Bspin.isValid()) {
-    
+  typename SparseData<T>::const_iterator B_iter(B.constData().constBegin());
+  SparseMatrix<T> C;
+  while (B_iter != B.constData().constEnd()) {
+    SparseData<T> c_slice;
+    SparseData<T> b_slice(B_iter.value());
+    ConstSparseIterator<T> A_iter(&A);
+    while (A_iter.isValid()) {
+      while (A_iter.moreInSlice()) {
+	c_slice[A_iter.row()] += A_iter.value()*b_slice[A_iter.col()];
+	A_iter.next();
+      }
+      A_iter.nextSlice();
+    }
+    C.data()[B_iter.key()] = c_slice;
+    B_iter.nextSlice();
   }
+  return C;
 }
 
+template <typename T>
+SparseMatrix<T> MatrixMultiply(const SparseMatrix<T> &A, const BasicArray<T> &B) {
+  if (A.columns() != B.rows())
+    throw Exception("Non conforming arrays for matrix multiply");
+  SparseMatrix<T> C;
+  for (index_t col = 1;col <= B.cols();col++) {
+    SparseData<T> c_slice;
+    ConstSparseIterator<T> A_iter(&A);
+    while (A_iter.isValid()) {
+      while (A_iter.moreInSlice()) {
+	c_slice[A_iter.row()] += A_iter.value()*B.get(NTuple(A_iter.col(),col));
+	A_iter.next();
+      }
+      A_iter.nextSlice();
+    }
+    C.data()[col] = c_slice;
+    B_iter.nextSlice();
+  }
+  return C;
+}
+
+template <typename T>
+SparseMatrix<T> MatrixMultiply(const BasicArray<T> &A, const SparseArray<T> &B) {
+  
+}
 #endif
