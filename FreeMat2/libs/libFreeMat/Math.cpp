@@ -2062,16 +2062,36 @@ Array Negate(const Array& A){
 
 // Invert a square matrix - Should check for diagonal matrices
 // as a special case
-Array InvertMatrix(Array a) {
+Array InvertMatrix(const Array &a) {
   if (!a.is2D())
     throw Exception("Cannot invert N-dimensional arrays.");
   if (a.isScalar())
     return DotRightDivide(Array(1.0),a);
   return Invert(a);
 }
-  
+ 
+template <typename T>
+static inline SparseMatrix<T> SparseOnesFunc(const NTuple & dims) {
+  SparseMatrix<T> ret(dims);
+  for (index_t i=1;i<=qMin(dims[0],dims[1]);i++)
+    ret.set(NTuple(i,i),T(1));
+  return ret;
+}
+
+#define MacroSparseOnes(ctype,cls) \
+  case cls: return Array(SparseOnesFunc<ctype>(dims));
+ 
+Array SparseOnes(DataClass type, const NTuple & dims) {
+  switch (type) {
+  default: throw Exception("Unsupported type for sparse ones function");
+  MacroExpandCasesAll(MacroSparseOnes);
+  }
+}
+
+#undef MacroSparseOnes
+
 // Handle matrix powers for sparse matrices
-Array MatrixPowerSparse(Array a, Array b, Interpreter* m_eval) {
+Array MatrixPowerSparse(Array a, Array b) {
   // The expression a^B where a is a scalar, and B is sparse is not handled
   if (a.isScalar() && !b.isScalar())
     throw Exception("expression a^B, where a is a scalar and B is a sparse matrix is not supported (use full to convert B to non-sparse matrix");
@@ -2079,29 +2099,22 @@ Array MatrixPowerSparse(Array a, Array b, Interpreter* m_eval) {
   if (!a.isScalar() && !b.isScalar())
     throw Exception("expression A^B where A and B are both sparse matrices is not supported (or defined)");
   // The expression A^b where b is not an integer is not supported
-  if (!b.isReal())
+  if (!b.allReal())
     throw Exception("expression A^b where b is complex and A is sparse is not supported (use full to convert A to a non-sparse matrix)");
-  b.promoteType(FM_DOUBLE);
-  const double*dp = (const double*) b.getDataPointer();
-  if ((*dp) != rint(*dp))
+  if (!IsInteger(b))
     throw Exception("expression A^b where b is non-integer and A is sparse is not supported (use full to convert A to a non-sparse matrix)");
-  if (a.getDimensionLength(0) != a.getDimensionLength(1))
+  if (!a.isSquare())
     throw Exception("expression A^b requires A to be square.");
-  int power = (int) *dp;
+  int32 power = b.toClass(Int32).constRealScalar<int32>();
   if (power < 0) {
-    a = InvertMatrix(a,m_eval);
+    a = InvertMatrix(a);
     power = -power;
   }
-  if (power == 0) {
-    Array r(FM_FLOAT,a.dimensions(),
-	    SparseOnesFunc(a.dataClass(),a.getDimensionLength(0),a.getDimensionLength(1),
-			   a.getSparseDataPointer()),true);
-    r.promoteType(a.dataClass());
-    return r;
-  }
+  if (power == 0)
+    return SparseOnes(a.dataClass(),a.dimensions());
   Array c(a);
   for (int i=1;i<power;i++)
-    c = Multiply(c,a,m_eval);
+    c = Multiply(c,a);
   return c;
 }
 
@@ -2316,46 +2329,64 @@ Array MatrixPowerSparse(Array a, Array b, Interpreter* m_eval) {
 //!
 
 template <typename T>
-static inline Array Multiply(const Array& A, const Array& B) {
+static inline Array RealMultiply(const Array & A, const Array& B) {
   if (A.isSparse() && !B.isSparse()) {
-    if (A.allReal() && B.allReal()) {
-      return Array(SparseMatrixMultiply<T>(A.constRealSparse<T>(),
-					   B.constReal<T>()));
-    } else {
-      return Array(SparseMatrixMultiply<T>(A.constRealSparse<T>(),
-					   A.constImagSparse<T>(),
-					   
-    }
+    return Array(MatrixMultiply<T>(A.constRealSparse<T>(),B.constReal<T>()));
   } else if (!A.isSparse() && B.isSparse()) {
+    return Array(MatrixMultiply<T>(A.constReal<T>(),
+				   B.constRealSparse<T>()));
   } else if (A.isSparse() && B.isSparse()) {
+    return Array(MatrixMultiply<T>(A.constRealSparse<T>(),
+				   B.constRealSparse<T>()));
   } else {
-    if (A.allReal() && B.allReal())  {
-      BasicArray<T> C(NTuple(A.rows(),B.columns()));
-      return Array(realMatrixMatrixMultiply<T>(A.rows(),
-					       B.columns(),
-					       A.columns(),
-					       C.real<T>().data(),
-					       A.constReal<T>().data(),
-					       B.constReal<T>().data()));
-      return Array(C);
-    } else {
-      BasicArray<T> C(NTuple(A.rows()*2,B.columns()));
-      return Array(complexMatrixMatrixMultiply<T>(A.rows(),
-						  B.columns(),
-						  A.columns(),
-						  C.real<T>().data(),
-						  A.fortran<T>().data(),
-						  B.fortran<T>().data()));
-      return Array(SplitReal<T>(C),SplitImag<T>(C));
-    }
-  }
-    }
+    BasicArray<T> C(NTuple(A.rows(),B.columns()));
+    return Array(realMatrixMatrixMultiply<T>(A.rows(),
+					     B.columns(),
+					     A.columns(),
+					     C.data(),
+					     A.constReal<T>().data(),
+					     B.constReal<T>().data()));
+    return Array(C);
   }
 }
 
 template <typename T>
-static inline Array RealMultiply(const Array & A, const Array& B) {
-  
+static inline Array ComplexMultiply(const Array & A, const Array & B) {
+  if (A.isSparse() && !B.isSparse()) {
+    return Array(DotOp<T,T,OpSubtract>(MatrixMultiply<T>(A.constRealSparse<T>(),
+							 B.constReal<T>()),
+				       MatrixMultiply<T>(A.constImagSparse<T>(),
+							 B.constImag<T>())),
+		 DotOp<T,T,OpAdd>(MatrixMultiply<T>(A.constRealSparse<T>(),B.constImag<T>()),
+				  MatrixMultiply<T>(A.constImagSparse<T>(),B.constReal<T>())));
+  } else if (!A.isSparse() && B.isSparse()) {
+    return Array(DotOp<T,T,OpSubtract>(MatrixMultiply<T>(A.constReal<T>(),
+							 B.constRealSparse<T>()),
+				       MatrixMultiply<T>(A.constImag<T>(),
+							 B.constImagSparse<T>())),
+		 DotOp<T,T,OpAdd>(MatrixMultiply<T>(A.constReal<T>(),
+						    B.constImagSparse<T>()),
+				  MatrixMultiply<T>(A.constImag<T>(),
+						    B.constRealSparse<T>())));
+  } else if (A.isSparse() && B.isSparse()) {
+    return Array(DotOp<T,T,OpSubtract>(MatrixMultiply<T>(A.constRealSparse<T>(),
+							 B.constRealSparse<T>()),
+				       MatrixMultiply<T>(A.constImagSparse<T>(),
+							 B.constImagSparse<T>())),
+		 DotOp<T,T,OpAdd>(MatrixMultiply<T>(A.constRealSparse<T>(),
+						    B.constImagSparse<T>()),
+				  MatrixMultiply<T>(A.constImagSparse<T>(),
+						    B.constRealSparse<T>())));
+  } else {
+    BasicArray<T> C(NTuple(A.rows()*2,B.columns()));
+    return Array(complexMatrixMatrixMultiply<T>(A.rows(),
+						B.columns(),
+						A.columns(),
+						C.data(),
+						A.fortran<T>().data(),
+						B.fortran<T>().data()));
+    return Array(SplitReal<T>(C),SplitImag<T>(C));
+  }
 }
 
 template <typename T>
@@ -2368,7 +2399,7 @@ static inline Array Multiply(const Array& A, const Array& B) {
 
 Array Multiply(const Array& A, const Array& B){
   // Process our arguments
-  if (!MatrixCheck(A,B,"*"))
+  if (A.isScalar() || B.isScalar())
     // Its really a vector product, pass...
     return DotMultiply(A,B);
   
@@ -2470,17 +2501,14 @@ Array Multiply(const Array& A, const Array& B){
 //@>
 //which is the same solution.
 //!
-Array LeftDivide(Array A, Array B, Interpreter* m_eval) {
-//   if (A.isEmpty() || B.isEmpty())
-//     return Array::emptyConstructor();
-  StringVector dummySV;
+Array LeftDivide(Array A, Array B) {
   // Process our arguments
-  if (!MatrixCheck(A,B,"\\"))
+  if (A.isScalar() || B.isScalar())
     // Its really a vector product, pass...
-    return DotLeftDivide(A,B,m_eval);
+    return DotLeftDivide(A,B);
   
   // Test for conformancy
-  if (A.getDimensionLength(0) != B.getDimensionLength(0)) 
+  if (!A.isSquare()) 
     throw Exception("Requested divide operation requires arguments to have correct dimensions.");
 
   int Arows, Acols;
@@ -2627,7 +2655,7 @@ Array RightDivide(Array A, Array B, Interpreter* m_eval) {
   Array C;
 
   // Process our arguments
-  if (!MatrixCheck(A,B,"/"))
+  if (A.isScalar() || B.isScalar())
     // Its really a vector product, pass...
     return DotRightDivide(A,B,m_eval);
 

@@ -190,16 +190,19 @@ public:
     index_t deleted_count = 0;
     index_t dp = 1;
     while (source.isValid()) {
-      index_t source_pos = m_dims.map(source.pos());
-      if (!delete_set.contains(uint64(source_pos))) {
-	// This element was not deleted.  
-	while (dp < source_pos) {
-	  if (delete_set.contains(uint64(dp))) ++deleted_count;
-	  ++dp;
+      while (source.moreInSlice()) {
+	index_t source_pos = m_dims.map(source.pos());
+	if (!delete_set.contains(uint64(source_pos))) {
+	  // This element was not deleted.  
+	  while (dp < source_pos) {
+	    if (delete_set.contains(uint64(dp))) ++deleted_count;
+	    ++dp;
+	  }
+	  ret.set(source_pos-deleted_count,source.value());
 	}
-	ret.set(source_pos-deleted_count,source.value());
-      }
-      source.next();
+	source.next();
+      } 
+      source.nextSlice();
     }
     *this = ret;
   }
@@ -218,17 +221,23 @@ public:
   void printMe(std::ostream& o) const {
     ConstSparseIterator<T> source(this);
     while (source.isValid()) {
-      NTuple pos(source.pos());
-      o << pos[1] << "," << pos[0] << "," << source.value() << "\n";
-      source.next();
+      while (source.moreInSlice()) {
+	NTuple pos(source.pos());
+	o << pos[1] << "," << pos[0] << "," << source.value() << "\n";
+	source.next();
+      }
+      source.nextSlice();
     }
   }
   void resize(const NTuple& pos) {
     SparseMatrix<T> ret(pos);
     ConstSparseIterator<T> source(this);
     while (source.isValid()) {
-      ret.set(dimensions().map(source.pos()),source.value());
-      source.next();
+      while (source.moreInSlice()) {
+	ret.set(dimensions().map(source.pos()),source.value());
+	source.next();
+      } 
+      source.nextSlice();
     }
     *this = ret;
   }
@@ -258,8 +267,11 @@ public:
     ConstSparseIterator<T> source(this);
     BasicArray<T> retvec(dimensions());
     while (source.isValid()) {
-      retvec.set(source.pos(),source.value());
-      source.next();
+      while (source.moreInSlice()) {
+	retvec.set(source.pos(),source.value());
+	source.next();
+      } 
+      source.nextSlice();
     }
     return retvec;
   }
@@ -267,10 +279,14 @@ public:
     ConstSparseIterator<T> source(this);
     ConstSparseIterator<T> dest(&data);
     while (source.isValid() && dest.isValid()) {
-      if (!(source.pos() == dest.pos())) return false;
-      if (source.value() != dest.value()) return false;
-      source.next();
-      dest.next();
+      while (source.moreInSlice() && dest.moreInSlice()) {
+	if (!(source.pos() == dest.pos())) return false;
+	if (source.value() != dest.value()) return false;
+	source.next();
+	dest.next();
+      }
+      source.nextSlice();
+      dest.nextSlice();
     }
     return true;
   }
@@ -429,7 +445,7 @@ SparseMatrix<T> MatrixMultiply(const SparseMatrix<T> &A, const SparseMatrix<T> &
     ConstSparseIterator<T> A_iter(&A);
     while (A_iter.isValid()) {
       while (A_iter.moreInSlice()) {
-	c_slice[A_iter.row()] += A_iter.value()*b_slice[A_iter.col()];
+	c_slice[A_iter.row()] += A_iter.value() * b_slice[A_iter.col()];
 	A_iter.next();
       }
       A_iter.nextSlice();
@@ -450,19 +466,32 @@ SparseMatrix<T> MatrixMultiply(const SparseMatrix<T> &A, const BasicArray<T> &B)
     ConstSparseIterator<T> A_iter(&A);
     while (A_iter.isValid()) {
       while (A_iter.moreInSlice()) {
-	c_slice[A_iter.row()] += A_iter.value()*B.get(NTuple(A_iter.col(),col));
+	c_slice[A_iter.row()] += A_iter.value() * B.get(NTuple(A_iter.col(),col));
 	A_iter.next();
       }
       A_iter.nextSlice();
     }
     C.data()[col] = c_slice;
-    B_iter.nextSlice();
   }
   return C;
 }
 
 template <typename T>
-SparseMatrix<T> MatrixMultiply(const BasicArray<T> &A, const SparseArray<T> &B) {
-  
+SparseMatrix<T> MatrixMultiply(const BasicArray<T> &A, const SparseMatrix<T> &B) {
+  if (A.columns() != B.rows())
+    throw Exception("Non conforming arrays for matrix multiply");
+  SparseMatrix<T> C;
+  ConstSparseIterator<T> Biter(&B);
+  while (Biter.isValid()) {
+    SparseData<T> c_slice;
+    while (Biter.moreInSlice()) {
+      for (index_t i=1;i <= A.rows(); i++)
+	c_slice[i] += A[NTuple(i,Biter.row())] * Biter.value();
+      Biter.next();
+    }
+    C.data()[Biter.col()] = c_slice;
+    Biter.nextSlice();
+  }
+  return C;
 }
 #endif

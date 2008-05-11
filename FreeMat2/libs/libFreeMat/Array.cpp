@@ -847,6 +847,8 @@ template <typename T>
 static inline bool Tis_negative(const Array &x) {
   if (x.isSparse())
     return IsNonNegative(x.constRealSparse<T>());
+  else if (x.isScalar())
+    return IsNonNegative(x.constRealScalar<T>());
   else
     return IsNonNegative(x.constReal<T>());
 }
@@ -890,6 +892,8 @@ template <typename T>
 static inline bool Tis_integer(const Array &x) {
   if (x.isSparse()) {
     return IsInteger(x.constRealSparse<T>());
+  } else if (x.isScalar()) {
+    return IsInteger(x.constRealScalar<T>());
   } else {
     return IsInteger(x.constReal<T>());
   }
