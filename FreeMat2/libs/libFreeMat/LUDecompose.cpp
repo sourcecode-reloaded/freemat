@@ -396,7 +396,7 @@ static Array InvertMatrixComplex(const BasicArray<T> &A,
   T WORKSIZE[2];
   int IWORKSIZE = -1;
   getri(&N,Acopy.data(),&LDA,IPIV.data(),WORKSIZE,&IWORKSIZE,&INFO);
-  IWORKSIZE = int(WORKSIZE);
+  IWORKSIZE = int(WORKSIZE[0]);
   BasicArray<T> WORK(NTuple(IWORKSIZE*2,1));
   getri(&N,Acopy.data(),&LDA,IPIV.data(),WORK.data(),&IWORKSIZE,&INFO);
   return Array(SplitReal<T>(Acopy),SplitImag<T>(Acopy));

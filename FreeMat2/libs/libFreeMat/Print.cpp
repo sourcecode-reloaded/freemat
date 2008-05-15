@@ -389,11 +389,27 @@ void PrintSheet(Interpreter*io, const ArrayFormatInfo &format,
   io->outputMessage("\n");
 }
 
+static inline void PrintStructArray(const Array& A, Interpreter* io) {
+  const StructArray& Ap(A.constStructPtr());
+  if (A.isScalar()) {
+    StructArray::const_iterator
+  }
+}
+
+template <class T>
+static inline void PrintSparseMatrix(const Array& A, Interpreter* io) {
+  if (A.allReal())
+    PrintMe(A.constRealSparse<ctype>(),io);
+  else
+    PrintMe(A.constRealSparse<ctype>(),A.constImagSparse<ctype>(),io);
+}
+
+#define MacroSparse(ctype,cls) \
+  case cls: PrintSparseMatrix<ctype>(A,io);
 
 void PrintArrayClassic(const Array &A, int printlimit, Interpreter* io) {
   if (printlimit == 0) return;
   int termWidth = io->getTerminalWidth();
-  DataClass Aclass(A.dataClass());
   NTuple Adims(A.dimensions());
   if (A.isUserClass())  return;
   if (A.isEmpty()) {
@@ -407,9 +423,15 @@ void PrintArrayClassic(const Array &A, int printlimit, Interpreter* io) {
     return;
   }
   if (A.isSparse()) {
-    io->outputMessage("\tMatrix is sparse with %d nonzeros\n",A.getNonzeros());
+    switch (A.dataClass()) {
+    default:
+      throw Exception("Unknown sparse array");
+      MacroExpandCases(MacroSparse);
+    }
     return;
   }
+  if (A.dataClass() == Struct)
+    PrintStructArray(A,io);
   if (Aclass == FM_STRUCT_ARRAY) {
     if (Adims.isScalar()) {
       Array *ap;

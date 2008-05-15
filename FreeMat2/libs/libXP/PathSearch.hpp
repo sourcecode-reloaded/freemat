@@ -28,13 +28,13 @@ class PathSearcher{
   QString path;
   QStringList pathList;
 public:
-  PathSearcher(std::string mpath);
-  std::string ResolvePath(std::string fname);
+  PathSearcher(QString mpath);
+  QString ResolvePath(QString fname);
 };
-bool FileExists(std::string filename);
-std::string GetPathOnly(std::string a);
-std::string GetFilenameOnly(std::string a);
-std::string CheckEndSlash(std::string a);
+bool FileExists(QString filename);
+QString GetPathOnly(QString a);
+QString GetFilenameOnly(QString a);
+QString CheckEndSlash(QString a);
 
 #endif  
 
