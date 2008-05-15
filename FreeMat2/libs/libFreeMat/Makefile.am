@@ -29,7 +29,6 @@ MemPtr.hpp \
 Module.hpp \
 QRDecompose.hpp \
 Scope.hpp \
-Serialize.hpp \
 SingularValueDecompose.hpp \
 SparseMatrix.hpp \
 Stream.hpp \
@@ -41,7 +40,8 @@ Token.hpp \
 Parser.hpp \
 Scanner.hpp \
 Tree.hpp \
-FastList.hpp 
+FastList.hpp \
+SparseCCS.hpp
 
 libFreeMat_a_SOURCES = Array.cpp \
 Interpreter.cpp \
@@ -58,10 +58,8 @@ Malloc.cpp \
 Math.cpp \
 MatrixMultiply.cpp \
 Module.cpp \
-NTuple.cpp \
 QRDecompose.cpp \
 Scope.cpp \
-Serialize.cpp \
 SingularValueDecompose.cpp \
 SparseMatrix.cpp \
 Class.cpp \
@@ -71,6 +69,7 @@ Parser.cpp \
 Scanner.cpp \
 Tree.cpp \
 FunctionDef.cpp \
+SparseCCS.cpp \
 $(libFreeMat_a_HFILES) 
 
 nodist_libFreeMat_a_SOURCES = $(libFreeMat_a_MOC)

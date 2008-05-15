@@ -68,32 +68,32 @@ void ClearLibs(Interpreter* eval) {
 //!
 ArrayVector LoadLibFunction(int c_nargout,const ArrayVector& narg,
 			    Interpreter* eval) {
-  string libfile;
-  string symbolName;
-  string funcName;
+  QString libfile;
+  QString symbolName;
+  QString funcName;
   int nargin;
   int nargout;
   ArrayVector arg(narg);
 
   if (arg.size() < 2) 
     throw Exception("Must supply at least the library file and symbol name");
-  libfile = arg[0].getContentsAsString();
-  symbolName = arg[1].getContentsAsString();
+  libfile = arg[0].asString();
+  symbolName = arg[1].asString();
   if (arg.size() < 5)
     nargout = 0;
   else
-    nargout = (int) arg[4].getContentsAsIntegerScalar();
+    nargout = (int) arg[4].asInteger();
   if (arg.size() < 4)
     nargin = 0;
   else
-    nargin = (int) arg[3].getContentsAsIntegerScalar();
+    nargin = (int) arg[3].asInteger();
   if (arg.size() < 3)
     funcName = symbolName;
   else
-    funcName = arg[2].getContentsAsString();
+    funcName = arg[2].asString();
   void *func;
   DynLib *lib = new DynLib(libfile);
-  func = lib->GetSymbol(symbolName.c_str());
+  func = lib->GetSymbol(symbolName);
   BuiltInFunctionDef *fdef = new BuiltInFunctionDef;
   fdef->retCount = nargout;
   fdef->argCount = nargin;
@@ -158,7 +158,7 @@ char* parseArgumentName(const char* &cp) {
   }
   skipWS(cp);
   if (!isalpha(*cp))
-    throw Exception(std::string("malformed import function prototype") + 
+    throw Exception(QString("malformed import function prototype") + 
 		    " - error starting at " + cp);
   rp = cp;
   cp++;
@@ -191,7 +191,7 @@ char* parseBoundsCheck(const char* &cp) {
     cp++;
   }
   if (bracketDepth > 0)
-    throw Exception(std::string("malformed bounds check - error starting at ") + 
+    throw Exception(QString("malformed bounds check - error starting at ") + 
 		    cp);
   char *op;
   int bcLength;

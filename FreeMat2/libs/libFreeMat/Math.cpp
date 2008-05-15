@@ -31,18 +31,6 @@
 #include <math.h>
 
 
-void boolean_not(int N, logical* C, const logical *A) {
-  for (int i=0;i<N;i++)
-    C[i] = !A[i];
-}
-
-template <class T>
-void neg(int N, T* C, const T*A) {
-  for (int i=0;i<N;i++)
-    C[i] = -A[i];
-}
-
-
 template <typename T>
 static inline T powi(T a, int b) {
   T p, x;
@@ -87,7 +75,7 @@ static inline void powi(const T& ar, const T& ai, int b,
   if(n < 0)
     {
       n = -n;
-      complex_divide<T>(x[0],x[1],one[0],one[1],ar,ai);
+      complex_divide<T>(one[0],one[1],ar,ai,x[0],x[1]);
     }
   else
     {
@@ -268,11 +256,17 @@ struct OpAnd {
   static inline bool func(const bool& v1, const bool& v2) {
     return (v1 && v2);
   }
+  static inline void func(const bool&, const bool&, const bool&, const bool&, bool &, bool &) {
+    // Unused...
+  }
 };
 
 struct OpOr {
   static inline bool func(const bool& v1, const bool& v2) {
     return (v1 || v2);
+  }
+  static inline void func(const bool&, const bool&, const bool&, const bool&, bool &, bool &) {
+    // Unused...
   }
 };
 
@@ -337,7 +331,7 @@ static inline void DotOp(const SparseMatrix<T>& A_real,
   ConstComplexSparseIterator<T> b_spin(&B_real, &B_imag);
   NTuple dim(A_real.dimensions());
   while (a_spin.isValid() || b_spin.isValid()) {
-    T value_c_real, value_c_imag;
+    S value_c_real, value_c_imag;
     if (a_spin.pos() == b_spin.pos()) {
       Op::func(a_spin.realValue(),a_spin.imagValue(),
 	       b_spin.realValue(),b_spin.imagValue(),
@@ -346,13 +340,13 @@ static inline void DotOp(const SparseMatrix<T>& A_real,
       C_imag.set(a_spin.pos(),value_c_imag);
       a_spin.next(); b_spin.next();
     } else if (dim.map(a_spin.pos()) < dim.map(b_spin.pos())) {
-      Op::func(a_spin.realValue(),a_spin.imagValue(),0,0,
+      Op::func(a_spin.realValue(),a_spin.imagValue(),T(0),T(0),
 	       value_c_real,value_c_imag);
       C_real.set(a_spin.pos(),value_c_real);
       C_imag.set(a_spin.pos(),value_c_imag);
       a_spin.next();
     } else {
-      Op::func(0,0,b_spin.realValue(),b_spin.imagValue(),
+      Op::func(T(0),T(0),b_spin.realValue(),b_spin.imagValue(),
 	       value_c_real,value_c_imag);
       C_real.set(b_spin.pos(),value_c_real);
       C_imag.set(b_spin.pos(),value_c_imag);
@@ -378,10 +372,10 @@ static inline SparseMatrix<S> DotOp(const SparseMatrix<T>& A_real,
 		     b_spin.realValue(),b_spin.imagValue()));
       a_spin.next(); b_spin.next();
     } else if (dim.map(a_spin.pos()) < dim.map(b_spin.pos())) {
-      C.set(a_spin.pos(),Op::func(a_spin.realValue(),a_spin.imagValue(),0,0));
+      C.set(a_spin.pos(),Op::func(a_spin.realValue(),a_spin.imagValue(),T(0),T(0)));
       a_spin.next();
     } else {
-      C.set(b_spin.pos(),Op::func(0,0,b_spin.realValue(),b_spin.imagValue()));
+      C.set(b_spin.pos(),Op::func(T(0),T(0),b_spin.realValue(),b_spin.imagValue()));
       b_spin.next();
     }
   }
@@ -407,7 +401,6 @@ static inline void DotOp(const Atype& A_real, const Atype& A_imag,
     retvec.set(i,Op::func(A_real.get(i),A_imag.get(i),
 			  B_real.get(i),B_imag.get(i)));
   }
-  return retvec;  
 }
 
 // Real,Real --> Real
@@ -418,7 +411,6 @@ static inline void DotOp(const Atype& A, const Btype& B,
   for (index_t i=1;i<=dims.count();i++) {
     retvec.set(i,Op::func(A.get(i),B.get(i)));
   }
-  return retvec;
 }
 
 // Real,Real --> Complex
@@ -430,7 +422,7 @@ static inline void DotOp(const Atype& A, const Btype& B,
   C_imag = BasicArray<T>(dims);
   for (index_t i=1;i<=dims.count();++i) {
     T real, imag;
-    Op::func(A.get(i),0,B.get(i),0,real,imag);
+    Op::func(A.get(i),T(0),B.get(i),T(0),real,imag);
     C_real.set(i,real);
     C_imag.set(i,imag);
   }
@@ -577,12 +569,10 @@ static inline Array CmpOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
       F = DotOp<bool,T,Op>(Acast.constRealSparse<T>(),
 			   Bcast.constRealSparse<T>());
     } else {
-      DotOp<bool,T,Op>(Acast.constRealSparse<T>(),
-		       Acast.constImagSparse<T>(),
-		       Bcast.constRealSparse<T>(),
-		       Bcast.constImagSparse<T>(),
-		       F.realSparse<bool>(),
-		       F.imagSparse<bool>());
+      F = DotOp<bool,T,Op>(Acast.constRealSparse<T>(),
+			   Acast.constImagSparse<T>(),
+			   Bcast.constRealSparse<T>(),
+			   Bcast.constImagSparse<T>());
     }
     return F;
   }
@@ -635,7 +625,7 @@ static inline Array CmpOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
       DotOp<bool,BasicArray<T>,BasicArray<T>,Op>
 	(Acast.constReal<T>(), Acast.constImag<T>(),
 	 Bcast.constReal<T>(), Bcast.constImag<T>(),
-	 F.real<bool>(), F.imag<T>(), Acast.dimensions());
+	 F.real<bool>(), Acast.dimensions());
     }
   }
   return F;
@@ -2008,8 +1998,7 @@ Array Negate(const Array& A){
     throw Exception("Cannot negate non-numeric types.");
   if (IsUnsigned(A))
     throw Exception("negation not supported for unsigned types.");
-  Array B(double(0.0));
-  return DotOp<OpSubtract>(B,A);
+  return Negate(A);
 }
 
 
@@ -2340,12 +2329,8 @@ static inline Array RealMultiply(const Array & A, const Array& B) {
 				   B.constRealSparse<T>()));
   } else {
     BasicArray<T> C(NTuple(A.rows(),B.columns()));
-    return Array(realMatrixMatrixMultiply<T>(A.rows(),
-					     B.columns(),
-					     A.columns(),
-					     C.data(),
-					     A.constReal<T>().data(),
-					     B.constReal<T>().data()));
+    realMatrixMatrixMultiply<T>(int(A.rows()),int(B.columns()),int(A.columns()),C.data(),
+				A.constReal<T>().constData(),B.constReal<T>().constData());
     return Array(C);
   }
 }
@@ -2379,12 +2364,8 @@ static inline Array ComplexMultiply(const Array & A, const Array & B) {
 						    B.constRealSparse<T>())));
   } else {
     BasicArray<T> C(NTuple(A.rows()*2,B.columns()));
-    return Array(complexMatrixMatrixMultiply<T>(A.rows(),
-						B.columns(),
-						A.columns(),
-						C.data(),
-						A.fortran<T>().data(),
-						B.fortran<T>().data()));
+    complexMatrixMatrixMultiply<T>(int(A.rows()),int(B.columns()),int(A.columns()),
+				   C.data(),A.fortran<T>().data(),B.fortran<T>().data());
     return Array(SplitReal<T>(C),SplitImag<T>(C));
   }
 }
@@ -2501,96 +2482,30 @@ Array Multiply(const Array& A, const Array& B){
 //@>
 //which is the same solution.
 //!
-Array LeftDivide(Array A, Array B) {
+Array LeftDivide(const Array& A, const Array& B) {
   // Process our arguments
   if (A.isScalar() || B.isScalar())
     // Its really a vector product, pass...
     return DotLeftDivide(A,B);
-  
-  // Test for conformancy
-  if (!A.isSquare()) 
-    throw Exception("Requested divide operation requires arguments to have correct dimensions.");
-
-  int Arows, Acols;
-  int Brows, Bcols;
-  
-  Arows = A.getDimensionLength(0);
-  Acols = A.getDimensionLength(1);
-  Brows = B.getDimensionLength(0);
-  Bcols = B.getDimensionLength(1);
-
   // Check for sparse case...
-  if (A.sparse()) {
-    // Make sure B is _not_ sparse
-    B.makeDense();
-    // Make sure A is square
-    if (Arows != Acols)
-      throw Exception("FreeMat currently only supports A\\b for square matrices A");
-    // Make sure A is either double or dcomplex
-    if ((A.dataClass() == FM_FLOAT) || (A.dataClass() == FM_COMPLEX))
-      throw Exception("FreeMat currently only supports A\\b for double and dcomplex matrices A");
-    Dimensions outDim(Arows,Bcols);
-    return Array(A.dataClass(),outDim,
-		 SparseSolveLinEq(A.dataClass(),Arows,Acols,A.getSparseDataPointer(),
-				  Brows,Bcols,B.getDataPointer()),false);
+  if (A.isSparse()) {
+//     // Make sure B is _not_ sparse
+//     B.makeDense();
+//     // Make sure A is square
+//     if (Arows != Acols)
+//       throw Exception("FreeMat currently only supports A\\b for square matrices A");
+//     // Make sure A is either double or dcomplex
+//     if ((A.dataClass() == FM_FLOAT) || (A.dataClass() == FM_COMPLEX))
+//       throw Exception("FreeMat currently only supports A\\b for double and dcomplex matrices A");
+//     Dimensions outDim(Arows,Bcols);
+//     return Array(A.dataClass(),outDim,
+// 		 SparseSolveLinEq(A.dataClass(),Arows,Acols,A.getSparseDataPointer(),
+// 				  Brows,Bcols,B.getDataPointer()),false);
   }
-  
-  // Its really a matrix-matrix operation, and the arguments are
-  // satisfactory.  Check for the type.
-  void *Cp;
-  Dimensions outDim(2);
-  if (Arows == Acols) {
-    // Square matrix case - A is N x N, B is N x K - use 
-    // linear equation solver.  Output is N x K.
-    Cp = Malloc(Arows*Bcols*A.getElementSize());
-    if (A.dataClass() == FM_FLOAT)
-      floatSolveLinEq(m_eval,
-		      Arows,Bcols,(float*)Cp,
-		      (float*)A.getReadWriteDataPointer(),
-		      (float*)B.getReadWriteDataPointer());
-    else if (A.dataClass() == FM_COMPLEX)
-      complexSolveLinEq(m_eval,
-			Arows,Bcols,(float*)Cp,
-			(float*)A.getReadWriteDataPointer(),
-			(float*)B.getReadWriteDataPointer());
-    else if (A.dataClass() == FM_DOUBLE)
-      doubleSolveLinEq(m_eval,
-		       Arows,Bcols,(double*)Cp,
-		       (double*)A.getReadWriteDataPointer(),
-		       (double*)B.getReadWriteDataPointer());
-    else if (A.dataClass() == FM_DCOMPLEX)
-      dcomplexSolveLinEq(m_eval,
-			 Arows,Bcols,(double*)Cp,
-			 (double*)A.getReadWriteDataPointer(),
-			 (double*)B.getReadWriteDataPointer());
-    outDim = Dimensions(Arows,Bcols);
-  } else {
-    // Rectangular matrix case - A is M x N, B must be M x K - use
-    // lease squares equation solver.  Output is N x K.
-    Cp = Malloc(Acols*Bcols*A.getElementSize());
-    if (A.dataClass() == FM_FLOAT)
-      floatSolveLeastSq(m_eval,
-			Arows,Acols,Bcols,(float*)Cp,
-			(float*)A.getReadWriteDataPointer(),
-			(float*)B.getReadWriteDataPointer());
-    else if (A.dataClass() == FM_COMPLEX)
-      complexSolveLeastSq(m_eval,
-			  Arows,Acols,Bcols,(float*)Cp,
-			  (float*)A.getReadWriteDataPointer(),
-			  (float*)B.getReadWriteDataPointer());
-    else if (A.dataClass() == FM_DOUBLE)
-      doubleSolveLeastSq(m_eval,
-			 Arows,Acols,Bcols,(double*)Cp,
-			 (double*)A.getReadWriteDataPointer(),
-			 (double*)B.getReadWriteDataPointer());
-    else if (A.dataClass() == FM_DCOMPLEX)
-      dcomplexSolveLeastSq(m_eval,
-			   Arows,Acols,Bcols,(double*)Cp,
-			   (double*)A.getReadWriteDataPointer(),
-			   (double*)B.getReadWriteDataPointer());
-    outDim = Dimensions(Acols,Bcols);
-  }
-  return Array(A.dataClass(),outDim,Cp);
+  if (A.isSquare())
+    return SolveLinearEq(A,B);
+  else
+    return SolveLeastSquares(A,B);
 }
     
 /**
@@ -2651,21 +2566,15 @@ Array LeftDivide(Array A, Array B) {
 //  x = max(k(:)) < (size(a,2)*size(a,1)*eps*4);
 //@}
 //!
-Array RightDivide(Array A, Array B, Interpreter* m_eval) {
+Array RightDivide(const Array& A, const Array& B) {
   Array C;
 
   // Process our arguments
   if (A.isScalar() || B.isScalar())
     // Its really a vector product, pass...
-    return DotRightDivide(A,B,m_eval);
+    return DotRightDivide(A,B);
 
-  A.transpose();
-  B.transpose();
-
-  C = LeftDivide(B,A,m_eval);
-  C.transpose();
-
-  return C;
+  return Transpose(LeftDivide(Transpose(B),Transpose(A)));
 }
 
 
@@ -2710,10 +2619,6 @@ Array RightDivide(Array A, Array B, Interpreter* m_eval) {
 //x = testeq(yi1',zi1') & testeq(yf1',zf1') & testeq(yd1',zd1') & testeq(yc1',zc1') & testeq(yz1',zz1');
 //@}
 //!
-Array Transpose(Array A, Interpreter* m_eval) {
-  A.hermitian();
-  return A;
-}
 
 //!
 //@Module TRANSPOSE Matrix Transpose Operator
@@ -2755,11 +2660,6 @@ Array Transpose(Array A, Interpreter* m_eval) {
 //x = testeq(yi1.',zi1.') & testeq(yf1.',zf1.') & testeq(yd1.',zd1.') & testeq(yc1.',zc1.') & testeq(yz1.',zz1.');
 //@}
 //!
-Array DotTranspose(Array A, Interpreter* m_eval) {
-  A.transpose();
-  return A;
-}
-
 
 
 /**
@@ -2876,7 +2776,7 @@ Array Power(const Array& A, const Array& B){
   if (A.isScalar() && B.isScalar()) return DotPower(A,B);
   if (!A.is2D() || !B.is2D()) 
     throw Exception("Cannot apply exponential operator to N-Dimensional arrays.");
-  if (B.isReal() && B.isScalar() && (B.toClass(Double).constRealScalar() == -1))
+  if (B.allReal() && B.isScalar() && (B.asDouble() == -1))
     return InvertMatrix(A);
   // Both arguments must be square
   if (!(A.isSquare() && B.isSquare()))
@@ -2900,7 +2800,7 @@ Array UnitColon(Array A, Array B) {
     throw Exception("Both arguments to (:) operator must be real.");
   if (!((A.dataClass() == Double) && (B.dataClass() == Double)))
     throw Exception("All arguments to (:) operator must be of class double.");
-  return RangeConstructor(A.constScalar<double>(),1,B.constScalar<double>(),false);
+  return RangeConstructor(A.asDouble(),1,B.asDouble(),false);
 }
 
 Array DoubleColon(Array A, Array B, Array C){
@@ -2911,6 +2811,5 @@ Array DoubleColon(Array A, Array B, Array C){
     throw Exception("All arguments to (:) operator must be real.");
   if (!((A.dataClass() == Double) && (B.dataClass() == Double) && (C.dataClass() == Double)))
     throw Exception("All arguments to (:) operator must be of class double.");
-  return RangeConstructor(A.constScalar<double>(),B.constScalar<double>(),
-			  C.constScalar<double>(),false);
+  return RangeConstructor(A.asDouble(),B.asDouble(),C.asDouble(),false);
 }

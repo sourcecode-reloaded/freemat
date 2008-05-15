@@ -187,10 +187,6 @@ class Interpreter : public QThread {
    */
   stackentry stepTrap;
   /**
-   * The class records (store information about each user defined class)
-   */
-  SymbolTable<UserClassTemplate> classTable;
-  /**
    * Set this flag to true to stop overloading of methods
    */
   bool stopoverload;
@@ -460,22 +456,6 @@ public:
    * Generate a stacktrace
    */
   void stackTrace(bool includeCurrent);
-  /**
-   * Returns true if a userclass with the given name is defined
-   */
-  bool isUserClassDefined(QString classname);
-  /**
-   * Lookup a user class.
-   */
-  UserClassTemplate lookupUserClass(QString classname);
-  /**
-   * Register a new user class.
-   */
-  void registerUserClass(QString classname, UserClassTemplate cdata);
-  /**
-   * Clear the registered class table
-   */
-  void clearUserClasses();
   /**
    * Push a function name and detail onto the debug stack
    */
@@ -1090,4 +1070,7 @@ private:
 void sigInterrupt(int arg);
 QString TrimFilename(QString);
 QString TildeExpand(QString);
+
+void WarningMessage(QString);
+
 #endif

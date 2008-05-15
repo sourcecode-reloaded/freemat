@@ -248,6 +248,16 @@ BasicArray<T> MergeComplex(const BasicArray<T>& real, const BasicArray<T>& imag)
 }
 
 template <typename T>
+BasicArray<T> MergeComplex(const BasicArray<T>& real) {
+  NTuple retdim(real.dimensions());
+  retdim[0] = retdim[0]*2;
+  BasicArray<T> retval(retdim);
+  for (index_t i=1;i <= real.length();i++)
+    retval.set(2*i-1,real.get(i));
+  return retval;
+}
+
+template <typename T>
 BasicArray<T> SplitReal(const BasicArray<T>& A) {
   NTuple retdim(A.dimensions());
   retdim[0] = retdim[0]/2;
@@ -305,6 +315,14 @@ BasicArray<T> Transpose(const BasicArray<T>& arg) {
 }
 
 template <typename T>
+static inline T neg(T v) { return -v;}
+
+template <typename T>
+BasicArray<T> Negate(const BasicArray<T>& arg) {
+  return Apply(arg,neg);
+}
+
+template <typename T>
 bool IsPositive(const BasicArray<T>& arg) {
   for (index_t i=1;i<=arg.length();i++) 
     if (arg.get(i) <= 0) return false;
@@ -314,7 +332,7 @@ bool IsPositive(const BasicArray<T>& arg) {
 template <typename T>
 bool IsNonNegative(const BasicArray<T> &arg) {
   for (index_t i=1;i<=arg.length();i++)
-    if (arg.get(i) < 0) return false;
+    if (!IsNonNegative(arg.get(i))) return false;
   return true;
 }
 

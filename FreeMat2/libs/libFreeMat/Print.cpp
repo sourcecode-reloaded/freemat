@@ -28,13 +28,37 @@ public:
     width(w), floatasint(f), decimals(d), expformat(e), scalefact(s) {}
 };
 
+template <typename T>
+static QString TSummarizeArrayCellEntryScalar(const Array &dp) {
+  if (dp.allReal())
+    return QString("%1").arg(dp.constRealScalar<T>());
+  else
+    return QString("%1+%2i").arg(dp.constRealScalar<T>()).arg(dp.constImagScalar<T>());
+}
+
+#define MacroSummarize(ctype,cls) \
+  case cls: return TSummarizeArrayCellEntryScalar<ctype>(dp);
+
+static QString SummarizeArrayCellEntry(const Array &dp) {
+  // Special cases
+  if (dp.isEmpty()) return QString("[]");
+  if (dp.isString() && dp.rows() == 1) return dp.asString();
+  if (dp.isScalar() && !dp.isReferenceType()) {
+    switch (dp.dataClass()) {
+      MacroExpandCases(MacroSummarize);
+    default:   // fall through
+    }
+  }
+  return QString("[") + dp.dimensions().toString() + " " + dp.className() + " array ]"
+}
+
 /**
  * Summary of this object when it is an element of a cell array.  This is
  * generally a shorthand summary of the description of the object.
  */
 template <class T>
-string NumericCellEntry(const T* data, Dimensions dims, string name, 
-			const char *formatcode, bool isSparse = false) {
+QString NumericCellEntry(const T* data, const NTuple &dims, string name, 
+			 const char *formatcode, bool isSparse = false) {
   char msgBuffer[MSGBUFLEN];
   if (dims.isScalar()) {
     snprintf(msgBuffer,MSGBUFLEN,formatcode,data[0]);

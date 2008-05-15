@@ -22,18 +22,6 @@
 
 #include "Interpreter.hpp"
 
-/**
- * Solve $$A  X = B$$ in a least-squares sense, where $$A$$ is $$m \times n$$, 
- * and $$B$$ is $$m \times k$$. $$C$$ is $$n \times k$$, and all of the terms 
- * are double precision.  Uses the LAPACK routine dgelsy.
- */
-template <typename T>
-void realSolveLeastSq(Interpreter* eval, int m, int n, int k, T *c, T *a, T *b);
-/**
- * Solve $$A  X = B$$ in a least-squares sense, where $$A$$ is $$m \times n$$, 
- * and $$B$$ is $$m \times k$$. $$C$$ is $$n \times k$$, and all of the terms 
- * are dcomplex precision.  Uses the LAPACK routine zgelsy.
- */
-template <typename T>
-void complexSolveLeastSq(Interpreter* eval, int m, int n, int k, T *c, T *a, T *b);
+Array SolveLeastSquares(const Array &A, const Array &B);
+
 #endif

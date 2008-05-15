@@ -23,16 +23,6 @@
 #include "Interpreter.hpp"
 #include "Types.hpp"
 
-class UserClassTemplate {
-  StringVector fieldNames;
-  StringVector parentClasses;
-public:
-  UserClassTemplate();
-  UserClassTemplate(StringVector fields, StringVector parents);
-  bool matchClass(UserClassTemplate test);
-  StringVector getParentClasses();
-  ~UserClassTemplate();
-};
 
 Array ClassTrinaryOperator(Array a, Array b, Array c, QString funcname, Interpreter* eval);
 
@@ -56,5 +46,22 @@ bool ClassResolveFunction(Interpreter* eval, Array &args, QString funcName, Func
 QString ClassMangleName(QString className, QString funcName);
 
 void LoadClassFunction(Context* context);
+
+/**
+ * Returns true if a userclass with the given name is defined
+ */
+bool isUserClassDefined(QString classname);
+/**
+ * Lookup a user class.
+ */
+UserClassTemplate lookupUserClass(QString classname);
+/**
+ * Register a new user class.
+ */
+void registerUserClass(QString classname, UserClassTemplate cdata);
+/**
+ * Clear the registered class table
+ */
+void clearUserClasses();
 
 #endif

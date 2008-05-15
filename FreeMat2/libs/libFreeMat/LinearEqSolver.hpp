@@ -22,8 +22,6 @@
 
 #include "Interpreter.hpp"
 
-template <typename T>
-void realSolveLinEq(Interpreter *m_eval, int n, T *c, T* a, T *b);
-template <typename T>
-void complexSolveLinEq(Interpreter *m_eval, int m, int n, T *c, T* a, T *b);
+Array SolveLinearEq(const Array& A, const Array& B);
+
 #endif

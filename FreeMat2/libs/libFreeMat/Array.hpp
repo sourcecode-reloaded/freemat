@@ -9,12 +9,11 @@
 #include "SparseMatrix.hpp"
 #include "Exception.hpp"
 class StringArray;
-
+class StructArray;
 class Array;
 
 typedef FastList<Array> ArrayVector;
 typedef QVector<ArrayVector> ArrayMatrix;
-typedef QMap<QString,BasicArray<Array> > StructArray;
 
 // Assume this has to fit in 32 bits
 //   scalar flag  - 1 bit
@@ -40,14 +39,12 @@ const DataClass Int64 = 11;
 const DataClass UInt64 = 12;
 const DataClass Float = 13;
 const DataClass Double = 14;
-const DataClass UserClass = 15;
 
 template <typename T>
 static inline DataClass GetDataClass(T = 0);
 
 typedef struct {
   DataClass Class : 5;
-  unsigned User : 22;
   unsigned Scalar : 1;
   unsigned Complex : 1;
   unsigned Sparse : 1;
@@ -153,23 +150,26 @@ public:
   const index_t length() const {return dimensions().count();}
   const index_t rows() const {return dimensions()[0];}
   const index_t columns() const {return dimensions()[1];}
+  const index_t cols() const {return dimensions()[1];}
   inline const Type type() const { return m_type; }
   inline const DataClass dataClass() const {return m_type.Class;}
+  QString className() const;
+  bool isUserClass() const;
   inline bool isArray() const {return (m_type.Scalar == 0);}
   inline bool isVector() const {return dimensions().isVector();}
   inline bool isColumnVector() const {return dimensions().isColumnVector();}
   inline bool isRowVector() const {return dimensions().isRowVector();}
   inline bool is2D() const {return dimensions().is2D();}
   inline bool isSquare() const {return (is2D() && (rows() == columns()));}
-  inline bool isUserClass() const {return m_type.Class == UserClass;}
   inline bool isString() const {return m_type.Class == StringArray;}
   inline bool isSparse() const {return m_type.Sparse == 1;}
   inline bool isReferenceType() const {
     return ((m_type.Class == Invalid) || (m_type.Class == CellArray) ||
-	    (m_type.Class == Struct) || (m_type.Class == UserClass));
+	    (m_type.Class == Struct));
   }
-  QString string() const;
-  int integer() const;
+  QString asString() const;
+  int asInteger() const;
+  double asDouble() const;
   inline bool isDouble() const {
     return (m_type.Class == Double);
   }
@@ -228,7 +228,10 @@ public:
   }
   template <typename T>
   inline BasicArray<T> fortran() const {
-    return MergeComplex(constReal<T>(),constImag<T>());
+    if (m_imag.p)
+      return MergeComplex(constReal<T>(),constImag<T>());
+    else
+      return MergeComplex(constReal<T>());
   }
   template <typename T> inline T constRealScalar() const;
   template <typename T> inline T constImagScalar() const;
@@ -236,6 +239,9 @@ public:
   template <typename T> inline T& imagScalar();
   inline bool allReal() const {
     return (m_type.Complex == 0);
+  }
+  inline bool isComplex() const {
+    return !allReal();
   }
   void forceComplex();
   const Array asComplex() const;
@@ -273,7 +279,6 @@ public:
   inline bool operator!=(const Array &b) const {return !(*this == b);}
   void addField(QString name);
 
-  QString className() const;
 private:
   Data m_real;
   Data m_imag;
@@ -347,8 +352,11 @@ Array DiagonalArray(const BasicArray<T> &in_r,
   return Array(retmat_r,retmat_i);
 }
 
+BasicArray<Array> ArrayVectorToBasicArray(const ArrayVector& a);
+
 Array MatrixConstructor(const ArrayMatrix& data);
 Array CellConstructor(const ArrayMatrix& data);
+inline Array EmptyConstructor() {return Array(Double);}
 
 bool TestForCaseMatch(const Array &s, const Array &r);
 bool RealAllZeros(const Array &t);
@@ -358,6 +366,11 @@ Type ScalarType(Type x);
 Array GetDiagonal(const Array &a, int diagonal = 0);
 Array DiagonalArray(const Array &f, int diagonal = 0);
 bool IsSymmetric(const Array &a);
+
+Array RangeConstructor(double start, double step, double stop, bool vertical);
+Array Transpose(const Array &A);
+Array Hermitian(const Array &A);
+Array Negate(const Array &A);
 
 // Suppose we support a get/set interface:// And we support slicing through the iterators
 // themselves.  For example, consider

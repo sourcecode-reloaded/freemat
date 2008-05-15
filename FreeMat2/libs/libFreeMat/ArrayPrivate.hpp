@@ -1,17 +1,20 @@
 #ifndef __ArrayPrivate_hpp__
 #define __ArrayPrivate_hpp__
 
-#define MacroExpandCasesNoBool(func)		\
+#define MacroExpandCasesSigned(func)		\
   func(double,Double);				\
   func(float,Float);				\
-  func(uint64,UInt64);				\
   func(int64,Int64);				\
-  func(uint32,UInt32);				\
   func(int32,Int32);				\
-  func(uint16,UInt16);				\
   func(int16,Int16);				\
-  func(uint8,UInt8);				\
   func(int8,Int8);				
+
+#define MacroExpandCasesNoBool(func)		\
+  MacroExpandCasesSigned(func)			\
+  func(uint64,UInt64);				\
+  func(uint32,UInt32);				\
+  func(uint16,UInt16);				\
+  func(uint8,UInt8);				
 
 #define MacroExpandCases(func)			\
   MacroExpandCasesNoBool(func);			\

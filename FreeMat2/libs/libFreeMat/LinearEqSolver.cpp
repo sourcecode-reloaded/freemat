@@ -23,74 +23,75 @@
 #include <stdio.h>
 #include <iostream>
 #include "MemPtr.hpp"
+#include "SparseCCS.hpp"
 
 /***************************************************************************
  * Linear equation solver for real matrices
  ***************************************************************************/
 
 template <typename T>
-void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS, 
-	    T *A, int * LDA, T * AF, int * LDAF, 
-	    int * IPIV, char * EQUED, T * R, T * C, 
-	    T * B, int * LDB, T * X, int * LDX, 
-	    T * RCOND, T * FERR, T * BERR,
-	    T * WORK, int * IWORK, int * INFO);
+static void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS, 
+		   T *A, int * LDA, T * AF, int * LDAF, 
+		   int * IPIV, char * EQUED, T * R, T * C, 
+		   T * B, int * LDB, T * X, int * LDX, 
+		   T * RCOND, T * FERR, T * BERR,
+		   T * WORK, int * IWORK, int * INFO);
 
 template <>
-void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS, 
-	    float *A, int * LDA, float * AF, int * LDAF, 
-	    int * IPIV, char * EQUED, float * R, float * C, 
-	    float * B, int * LDB, float * X, int * LDX, 
-	    float * RCOND, float * FERR, float * BERR,
-	    float * WORK, int * IWORK, int * INFO) {
+static void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS, 
+		   float *A, int * LDA, float * AF, int * LDAF, 
+		   int * IPIV, char * EQUED, float * R, float * C, 
+		   float * B, int * LDB, float * X, int * LDX, 
+		   float * RCOND, float * FERR, float * BERR,
+		   float * WORK, int * IWORK, int * INFO) {
   return sgesvx_(FACT,TRANS,N,NRHS,A,LDA,AF,LDAF,IPIV,EQUED,R,C,B,
 		 LDB,X,LDX,RCOND,FERR,BERR,WORK,IWORK,INFO);
 }
 
 template <>
-void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS, 
-	    double *A, int * LDA, double * AF, int * LDAF, 
-	    int * IPIV, char * EQUED, double * R, double * C, 
-	    double * B, int * LDB, double * X, int * LDX, 
-	    double * RCOND, double * FERR, double * BERR,
-	    double * WORK, int * IWORK, int * INFO) {
+static void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS, 
+		   double *A, int * LDA, double * AF, int * LDAF, 
+		   int * IPIV, char * EQUED, double * R, double * C, 
+		   double * B, int * LDB, double * X, int * LDX, 
+		   double * RCOND, double * FERR, double * BERR,
+		   double * WORK, int * IWORK, int * INFO) {
   return dgesvx_(FACT,TRANS,N,NRHS,A,LDA,AF,LDAF,IPIV,EQUED,R,C,B,
 		 LDB,X,LDX,RCOND,FERR,BERR,WORK,IWORK,INFO);
 }
 
 template <typename T>
-void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS, 
-	    T *A, int * LDA, T * AF, int * LDAF, 
-	    int * IPIV, char * EQUED, T * R, T * C, 
-	    T * B, int * LDB, T * X, int * LDX, 
-	    T * RCOND, T * FERR, T * BERR,
-	    T * WORK, T * RWORK, int * INFO);
+static void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS, 
+		   T *A, int * LDA, T * AF, int * LDAF, 
+		   int * IPIV, char * EQUED, T * R, T * C, 
+		   T * B, int * LDB, T * X, int * LDX, 
+		   T * RCOND, T * FERR, T * BERR,
+		   T * WORK, T * RWORK, int * INFO);
 
 template <>
-void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS, 
-	    float *A, int * LDA, float * AF, int * LDAF, 
-	    int * IPIV, char * EQUED, float * R, float * C, 
-	    float * B, int * LDB, float * X, int * LDX, 
-	    float * RCOND, float * FERR, float * BERR,
-	    float * WORK, float * RWORK, int * INFO) {
+static void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS, 
+		   float *A, int * LDA, float * AF, int * LDAF, 
+		   int * IPIV, char * EQUED, float * R, float * C, 
+		   float * B, int * LDB, float * X, int * LDX, 
+		   float * RCOND, float * FERR, float * BERR,
+		   float * WORK, float * RWORK, int * INFO) {
   return cgesvx_(FACT, TRANS, N, NRHS, A, LDA, AF, LDAF, IPIV, EQUED, R, C, B,
 		 LDB, X, LDX, RCOND, FERR, BERR, WORK, RWORK, INFO);
 }
 
 template <>
-void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS, 
-	    double *A, int * LDA, double * AF, int * LDAF, 
-	    int * IPIV, char * EQUED, double * R, double * C, 
-	    double * B, int * LDB, double * X, int * LDX, 
-	    double * RCOND, double * FERR, double * BERR,
-	    double * WORK, double * RWORK, int * INFO) {
+static void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS, 
+		   double *A, int * LDA, double * AF, int * LDAF, 
+		   int * IPIV, char * EQUED, double * R, double * C, 
+		   double * B, int * LDB, double * X, int * LDX, 
+		   double * RCOND, double * FERR, double * BERR,
+		   double * WORK, double * RWORK, int * INFO) {
   return zgesvx_(FACT, TRANS, N, NRHS, A, LDA, AF, LDAF, IPIV, EQUED, R, C, B,
 		 LDB, X, LDX, RCOND, FERR, BERR, WORK, RWORK, INFO);
 }
 
 // Solve A*C = B, where A is m x m, and B is m x n, all quantities are real.
 template <typename T>
-void realSolveLinEq(Interpreter *m_eval, int m, int n, T *c, T* a, T *b) {
+static void realSolveLinEq(int m, int n, T *c, T* a, T *b) {
   if ((m == 0) || (n == 0)) return;
   // Here are the comments from the LAPACK routine used:
   //SUBROUTINE DGESVX( FACT, TRANS, N, NRHS, A, LDA, AF, LDAF, IPIV,
@@ -394,13 +395,13 @@ void realSolveLinEq(Interpreter *m_eval, int m, int n, T *c, T* a, T *b) {
   Tgesvx(&FACT, &TRANS, &N, &NRHS, A, &LDA, &AF, &LDAF, &IPIV, &EQUED, &R, &C, B,
 	 &LDB, X, &LDX, &RCOND, &FERR, &BERR, &WORK, &IWORK, &INFO);
   if ((INFO == N) || (INFO == N+1) || (RCOND < lamch<T>()))
-    m_eval->warningMessage(QString("Matrix is singular to working precision.  RCOND = %1\n").arg(RCOND));
+    WarningMessage(QString("Matrix is singular to working precision.  RCOND = %1\n").arg(RCOND));
 }
 
 // Solve A*C = B, where A is m x m, and B is m x n, all quantities are real.
 
 template <typename T>
-void complexSolveLinEq(Interpreter* eval, int m, int n, T *c, T* a, T* b) {
+static void complexSolveLinEq(int m, int n, T *c, T* a, T* b) {
   if ((m == 0) || (n == 0)) return;
   // Here are the comments from the LAPACK routine used:
   //SUBROUTINE ZGESVX( FACT, TRANS, N, NRHS, A, LDA, AF, LDAF, IPIV,
@@ -701,9 +702,112 @@ void complexSolveLinEq(Interpreter* eval, int m, int n, T *c, T* a, T* b) {
 
   int INFO;
 
-  zgesvx_(&FACT, &TRANS, &N, &NRHS, A, &LDA, AF, &LDAF, IPIV, &EQUED, R, C, B,
-	  &LDB, X, &LDX, &RCOND, FERR, BERR, WORK, RWORK, &INFO);
+  Tgesvx(&FACT, &TRANS, &N, &NRHS, A, &LDA, &AF, &LDAF, &IPIV, &EQUED, &R, &C, B,
+	 &LDB, X, &LDX, &RCOND, &FERR, &BERR, &WORK, &RWORK, &INFO);
   if ((INFO == N) || (INFO == N+1) || (RCOND < lamch<T>())) {
-    eval->warningMessage(QString("Matrix is singular to working precision.  RCOND = %1\n").arg(RCOND));
+    WarningMessage(QString("Matrix is singular to working precision.  RCOND = %1\n").arg(RCOND));
   }
+}
+
+template <typename T>
+static Array SolveLinearEqReal(BasicArray<T> A, BasicArray<T> B) {
+  BasicArray<T> C(NTuple(A.rows(),B.cols()));
+  realSolveLinEq(int(A.rows()),int(B.cols()),C.data(),A.data(),B.data());
+  return Array(C);
+}
+
+template <typename T>
+static Array SolveLinearEqComplex(BasicArray<T> A, BasicArray<T> B) {
+  BasicArray<T> C(NTuple(A.rows(),B.cols()));
+  complexSolveLinEq(int(A.rows()/2),int(B.cols()),C.data(),A.data(),B.data());
+  return Array(SplitReal<T>(C),SplitImag<T>(C));
+}
+
+// Only double precision currently supported by umfpack
+Array SparseSolveLinEq(const SparseMatrix<double> &A, const BasicArray<double> &B) {
+#if HAVE_UMFPACK
+  CCSForm Accs;
+  ConvertSparseToCCS(A,Accs);
+  double *null = (double *) NULL ;
+  void *Symbolic, *Numeric ;
+  (void) umfpack_di_symbolic (int(A.cols()), int(A.cols()), Accs.colstart(), Accs.rowindx(), Accs.data(), 
+			      &Symbolic, null, null);
+  (void) umfpack_di_numeric (Accs.colstart(), Accs.rowindx(), Accs.data(), Symbolic, 
+			     &Numeric, null, null) ;
+  umfpack_di_free_symbolic (&Symbolic) ;
+  BasicArray<T> x(NTuple(A.rows(),B.cols()));
+  for (index_t i=1;i<=B.cols();i++) {
+    (void) umfpack_di_solve (UMFPACK_A, Accs.colstart(), Accs.rowindx(), 
+			     Accs.data(), x.data()+(i-1)*A.rows(), B.constData()+(i-1)*B.rows(), 
+			     Numeric, null, null) ;
+  }
+  umfpack_di_free_numeric (&Numeric);
+  return Array(x);
+#else
+  throw Exception("Solving sparse systems of linear equations requires UMFPACK support, which was not available at compile time.  You must have UMFPACK installed at compile time for FreeMat to enable this functionality.");
+#endif
+}
+
+Array SparseSolveLinEq(const SparseMatrix<double> &Ar, const SparseMatrix<double> &Ai,
+		      const BasicArray<double> &Br, const BasicArray<double> &Bi) {
+#if HAVE_UMFPACK
+  CCSForm Accs;
+  ConvertSparseToCCS(Ar,Ai,Accs);
+  double *null = (double *) NULL ;
+  void *Symbolic, *Numeric ;
+  (void) umfpack_zi_symbolic (int(A.cols()), int(A.cols()), Accs.colstart(), Accs.rowindx(), 
+			      Accs.data(), Accs.imag(), &Symbolic, null, null);
+  (void) umfpack_zi_numeric (Accs.colstart(), Accs.rowindx(), Accs.data(), Accs.imag(),
+			     Symbolic, &Numeric, null, null) ;
+  umfpack_zi_free_symbolic (&Symbolic) ;
+  BasicArray<T> xr(NTuple(A.rows(),B.cols()));
+  BasicArray<T> xi(NTuple(A.rows(),B.cols()));
+  for (index_t i=1;i<=B.cols();i++) {
+    (void) umfpack_zi_solve (UMFPACK_A, Accs.colstart(), Accs.rowindx(), 
+			     Accs.data(), Accs.imag(), 
+			     xr.data()+(i-1)*A.rows(),
+			     xi.data()+(i-1)*A.rows(),
+			     Br.constData()+(i-1)*Br.rows(),
+			     Bi.constData()+(i-1)*Br.rows(),
+			     Numeric, null, null) ;
+  }
+  umfpack_zi_free_numeric (&Numeric);
+  return Array(xr,xi);  
+#else
+  throw Exception("Solving sparse systems of linear equations requires UMFPACK support, which was not available at compile time.  You must have UMFPACK installed at compile time for FreeMat to enable this functionality.");  
+#endif
+}
+
+Array SolveLinearEq(const Array & A, const Array &B) {
+  if (!A.isSquare() || (A.rows() != B.rows())) 
+    throw Exception("Solving Ax=B requires A be square (use least squares solver for rectangular matrices A");
+  if (A.dataClass() != B.dataClass())
+    throw Exception("Cannot mix arrays of different data classes in solving linear systems of equations");
+  if (A.isSparse() && ((A.dataClass() != Double) || (B.dataClass() != Double) || (B.isSparse())))
+    throw Exception("Sparse matrix support is currently only for arrays of dataclass Double, with dense RHS");
+  if (A.isSparse()) {
+    if (A.allReal() && B.allReal())
+      return SparseSolveLinEq(A.constRealSparse<double>(),B.constReal<double>());
+    else {
+      return SparseSolveLinEq(A.constRealSparse<double>(),
+			      A.asComplex().constImagSparse<double>(),
+			      B.constReal<double>(),
+			      B.asComplex().constImag<double>());
+    }
+  }
+  switch (A.dataClass()) {
+  default:
+    throw Exception("Unsupported data type for linear equation solver");
+  case Float:
+    if (A.allReal() && B.allReal())
+      return SolveLinearEqReal<float>(A.constReal<float>(),B.constReal<float>());
+    else
+      return SolveLinearEqComplex<float>(A.fortran<float>(),B.fortran<float>());
+  case Double:
+    if (A.allReal() && B.allReal())
+      return SolveLinearEqReal<double>(A.constReal<double>(),B.constReal<double>());
+    else
+      return SolveLinearEqComplex<double>(A.fortran<double>(),B.fortran<double>());
+  }
+  return Array();
 }

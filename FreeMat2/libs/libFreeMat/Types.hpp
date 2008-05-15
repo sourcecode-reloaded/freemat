@@ -50,4 +50,9 @@ inline bool IsInteger(double x) {
   return rint(x) == x;
 }
 
+template <typename T>
+inline bool IsNonNegative(T x) {
+  return (x >= 0);
+}
+
 #endif

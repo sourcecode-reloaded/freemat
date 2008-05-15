@@ -26,46 +26,46 @@
 #define MSGBUFLEN 2048
 
 template <typename T>
-void Tgelsy(int* M, int *N, int *NRHS, T* A, int *LDA,
+static void Tgelsy(int* M, int *N, int *NRHS, T* A, int *LDA,
 	    T *B, int *LDB, int *JPVT, T* RCOND,
 	    int *RANK, T *WORK, int* LWORK, int* INFO);
 
 template <>
-void Tgelsy(int* M, int *N, int *NRHS, double* A, int *LDA,
-	    double *B, int *LDB, int *JPVT, double* RCOND,
-	    int *RANK, double *WORK, int* LWORK, int* INFO) {
+static void Tgelsy(int* M, int *N, int *NRHS, double* A, int *LDA,
+		   double *B, int *LDB, int *JPVT, double* RCOND,
+		   int *RANK, double *WORK, int* LWORK, int* INFO) {
   return dgelsy_(M,N,NRHS,A,LDA,B,LDB,JPVT,RCOND,
 		 RANK,WORK,LWORK,INFO);
 }
 
 template <>
-void Tgelsy(int* M, int *N, int *NRHS, float* A, int *LDA,
-	    float *B, int *LDB, int *JPVT, float* RCOND,
-	    int *RANK, float *WORK, int* LWORK, int* INFO) {
+static void Tgelsy(int* M, int *N, int *NRHS, float* A, int *LDA,
+		   float *B, int *LDB, int *JPVT, float* RCOND,
+		   int *RANK, float *WORK, int* LWORK, int* INFO) {
   return sgelsy_(M,N,NRHS,A,LDA,B,LDB,JPVT,RCOND,
 		 RANK,WORK,LWORK,INFO);  
 }
 
 template <typename T>
-void Tgelsy(int* M, int *N, int *NRHS, T* A, int *LDA,
-	    T *B, int *LDB, int *JPVT, T* RCOND,
-	    int *RANK, T *WORK, int* LWORK, T* RWORK,
-	    int* INFO);
+static void Tgelsy(int* M, int *N, int *NRHS, T* A, int *LDA,
+		   T *B, int *LDB, int *JPVT, T* RCOND,
+		   int *RANK, T *WORK, int* LWORK, T* RWORK,
+		   int* INFO);
 
 template <>
-void Tgelsy(int* M, int *N, int *NRHS, float* A, int *LDA,
-	    float *B, int *LDB, int *JPVT, float* RCOND,
-	    int *RANK, float *WORK, int* LWORK, float* RWORK,
-	    int* INFO) {
+static void Tgelsy(int* M, int *N, int *NRHS, float* A, int *LDA,
+		   float *B, int *LDB, int *JPVT, float* RCOND,
+		   int *RANK, float *WORK, int* LWORK, float* RWORK,
+		   int* INFO) {
   return cgelsy_(M,N,NRHS,A,LDA,B,LDB,JPVT,RCOND,
 		 RANK,WORK,LWORK,RWORK,INFO);
 }
 
 template <>
-void Tgelsy(int* M, int *N, int *NRHS, double* A, int *LDA,
-	    double *B, int *LDB, int *JPVT, double* RCOND,
-	    int *RANK, double *WORK, int* LWORK, double* RWORK,
-	    int* INFO) {
+static void Tgelsy(int* M, int *N, int *NRHS, double* A, int *LDA,
+		   double *B, int *LDB, int *JPVT, double* RCOND,
+		   int *RANK, double *WORK, int* LWORK, double* RWORK,
+		   int* INFO) {
   return zgelsy_(M,N,NRHS,A,LDA,B,LDB,JPVT,RCOND,
 		 RANK,WORK,LWORK,RWORK,INFO);
 }
@@ -79,7 +79,7 @@ void Tgelsy(int* M, int *N, int *NRHS, double* A, int *LDA,
  * C is n x k.
  */
 template <typename T>
-void realSolveLeastSq(Interpreter* eval,int m, int n, int k, T *c, T *a, T *b) {
+static void realSolveLeastSq(int m, int n, int k, T *c, T *a, T *b) {
   if ((m == 0) || (n == 0)) return;
   // Here are the comments from the LAPACK routine used:
   //SUBROUTINE DGELSY( M, N, NRHS, A, LDA, B, LDB, JPVT, RCOND, RANK,
@@ -257,12 +257,12 @@ void realSolveLeastSq(Interpreter* eval,int m, int n, int k, T *c, T *a, T *b) {
   if (M > N) {
     // Problem should be overdetermined, rank should be N
     if (RANK < N) {
-      eval->warningMessage(QString("Matrix is rank deficient to machine precision.  RANK = %1\n").arg(RANK));
+      WarningMessage(QString("Matrix is rank deficient to machine precision.  RANK = %1\n").arg(RANK));
     }
   } else
     // Problem should be underdetermined, rank should be M
     if (RANK < M) {
-      eval->warningMessage(QString("Matrix is rank deficient to machine precision.  RANK = %1\n").arg(RANK));
+      WarningMessage(QString("Matrix is rank deficient to machine precision.  RANK = %1\n").arg(RANK));
     }
   changeStride(c,n,&B,Bsize,n,k);
 }
@@ -276,7 +276,7 @@ void realSolveLeastSq(Interpreter* eval,int m, int n, int k, T *c, T *a, T *b) {
  * C is n x k.
  */
 template <typename T>
-void complexSolveLeastSq(Interpreter* eval,int m, int n, int k, T *c, T *a, T*b) {
+static void complexSolveLeastSq(int m, int n, int k, T *c, T *a, T*b) {
   if ((m == 0) || (n == 0)) return;
   //	SUBROUTINE ZGELSY( M, N, NRHS, A, LDA, B, LDB, JPVT, RCOND, RANK,
   //     $                   WORK, LWORK, RWORK, INFO )
@@ -459,11 +459,48 @@ void complexSolveLeastSq(Interpreter* eval,int m, int n, int k, T *c, T *a, T*b)
   if (M > N) {
     // Problem should be overdetermined, rank should be N
     if (RANK < N)
-      eval->warningMessage(QString("Matrix is rank deficient to machine precision.  RANK = %1\n").arg(RANK));
+      WarningMessage(QString("Matrix is rank deficient to machine precision.  RANK = %1\n").arg(RANK));
   } else
     // Problem should be underderemined, rank should be M
     if (RANK < M) 
-      eval->warningMessage(QString("Matrix is rank deficient to machine precision.  RANK = %1\n").arg(RANK));
+      WarningMessage(QString("Matrix is rank deficient to machine precision.  RANK = %1\n").arg(RANK));
   changeStride(c,2*n,&B,2*Bsize,2*n,k);
 }
 
+
+template <typename T>
+static Array SolveLeastSquaresReal(BasicArray<T> A, BasicArray<T> B) {
+  BasicArray<T> C(NTuple(A.rows(),B.cols()));
+  realSolveLeastSq(int(A.rows()),int(A.cols()),int(B.cols()),C.data(),A.data(),B.data());
+  return Array(C);
+}
+
+template <typename T>
+static Array SolveLeastSquaresComplex(BasicArray<T> A, BasicArray<T> B) {
+  BasicArray<T> C(NTuple(A.rows(),B.cols()));
+  complexSolveLeastSq(int(A.rows()/2),int(A.cols()),int(B.cols()),C.data(),A.data(),B.data());
+  return Array(SplitReal<T>(C),SplitImag<T>(C));
+}
+
+// MxN * N x K = M x K
+Array SolveLeastSquaresEq(const Array & A, const Array &B) {
+  if (A.rows() != B.rows()) 
+    throw Exception("Solving Ax=B in a least squares sense requires the number of rows in A and B to be the same.");
+  if (A.dataClass() != B.dataClass())
+    throw Exception("Cannot mix arrays of different data classes in solving linear systems of equations");
+  switch (A.dataClass()) {
+  default:
+    throw Exception("Unsupported data type for linear equation solver");
+  case Float:
+    if (A.allReal() && B.allReal())
+      return SolveLeastSquaresReal<float>(A.constReal<float>(),B.constReal<float>());
+    else
+      return SolveLeastSquaresComplex<float>(A.fortran<float>(),B.fortran<float>());
+  case Double:
+    if (A.allReal() && B.allReal())
+      return SolveLeastSquaresReal<double>(A.constReal<double>(),B.constReal<double>());
+    else
+      return SolveLeastSquaresComplex<double>(A.fortran<double>(),B.fortran<double>());
+  }
+  return Array();
+}

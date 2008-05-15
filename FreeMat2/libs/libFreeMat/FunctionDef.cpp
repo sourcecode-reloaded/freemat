@@ -623,39 +623,6 @@ unsigned MFunctionDef::ClosestLine(unsigned line) {
   return bestline;
 }
 
-void FreezeMFunction(MFunctionDef *fptr, Serialize *s) {
-  s->putString(fptr->name.c_str());
-  s->putString(fptr->fileName.c_str());
-  s->putBool(fptr->scriptFlag);
-  s->putStringVector(fptr->arguments);
-  s->putStringVector(fptr->returnVals);
-  s->putBool(fptr->functionCompiled);
-  s->putBool(fptr->localFunction);
-  s->putBool(fptr->nestedFunction);
-  s->putBool(fptr->capturedFunction);
-  s->putStringVector(fptr->helpText);
-  s->putStringVector(fptr->variablesAccessed);
-  FreezeScope(fptr->workspace,s);
-  fptr->code.tree()->freeze(s);
-}
-
-MFunctionDef* ThawMFunction(Serialize *s) {
-  MFunctionDef *t = new MFunctionDef();
-  t->name = std::string(s->getString());
-  t->fileName = std::string(s->getString());
-  t->scriptFlag = s->getBool();
-  t->arguments = s->getStringVector();
-  t->returnVals = s->getStringVector();
-  t->functionCompiled = s->getBool();
-  t->localFunction = s->getBool();
-  t->nestedFunction = s->getBool();
-  t->capturedFunction = s->getBool();
-  t->helpText = s->getStringVector();
-  t->variablesAccessed = s->getStringVector();
-  t->workspace = ThawScope(s);
-  t->code = CodeBlock(new Tree(s));
-  return t;
-}
 
 BuiltInFunctionDef::BuiltInFunctionDef() {
 }

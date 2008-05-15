@@ -111,15 +111,6 @@ Array DotPower(const Array& A, const Array& B);
  */
 Array Power(const Array& A, const Array& B);
 /**
- * Transposes the argument (actually does a Hermitian transpose).
- * The output is $$C_{i,j} = \conj{A_{j,i}}$$.
- */
-Array Transpose(const Array& A);
-/**
- * Dot-transpose the argument, equivalent to $$C_{i,j} = A_{j,i}$$.
- */
-Array DotTranspose(const Array&);
-/**
  * Matrix multiply of the arguments.  For $$m \times n$$ matrix $$A$$,
  * and $$n \times k$$ matrix $$B$$, the output matrix $$C$$ is of 
  * size $$m \times k$$, defined by  $$C_{i,j} = \sum_{p=1}^{n} A_{i,p} B_{p,j}$$.

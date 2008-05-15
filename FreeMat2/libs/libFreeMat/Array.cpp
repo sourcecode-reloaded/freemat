@@ -1,6 +1,7 @@
 #include "Array.hpp"
 #include "GetSet.hpp"
 #include <QStringList>
+#include "Struct.hpp"
 
 void Warn(const char *msg) {
   std::cout << "Warning:" << msg;
@@ -161,7 +162,7 @@ void Array::print(std::ostream& o) const {
     return;
   case StringArray:
     {
-      QString val(string());
+      QString val(asString());
       o << val.toStdString().c_str();
       return;
     }
@@ -561,6 +562,30 @@ inline static const Array Tcast(DataClass t, const Array *ptr) {
 		 ConvertBasicArray<S,T>(ptr->constImag<S>()));
 }
 
+#define MacroClassName(ctype,cls) \
+  case cls: return QString(#cls).toLower();
+
+QString Array::className() const {
+  if ((dataClass() == Struct) && (constStructPtr().isUserClass()))
+    return constStructPtr().className();
+  else {
+    switch (dataClass()) {
+    default: throw Exception("Unknown class?!");
+    case CellArray: return QString("cell");
+    case Struct: return QString("struct");
+    case StringArray: return QString("string");
+    case Bool: return QString("logical");
+      MacroExpandCasesNoBool(MacroClassName);
+    }
+  }
+}
+
+#undef MacroClassName
+
+bool Array::isUserClass() const {
+  return ((dataClass() == Struct) && constStructPtr().isUserClass());;
+}
+
 #define MacroTcast(ctype,cls) \
   case cls: return Tcast<ctype,T>(t,ptr);
 
@@ -840,7 +865,7 @@ std::ostream& operator<<(std::ostream& o, const Array &t) {
 }
   
 bool IsColonOp(const Array &x) {
-  return (x.dataClass() == StringArray) && (x.string() == ":");
+  return (x.dataClass() == StringArray) && (x.asString() == ":");
 }
 
 template <typename T>
@@ -852,6 +877,9 @@ static inline bool Tis_negative(const Array &x) {
   else
     return IsNonNegative(x.constReal<T>());
 }
+
+#define MacroIsNonNegative(ctype, cls) \
+  case cls: return Tis_negative<ctype>(x);
 
 bool IsNonNegative(const Array &x) {
   if (!x.allReal()) return false;
@@ -865,14 +893,11 @@ bool IsNonNegative(const Array &x) {
   case UInt32:
   case UInt64:
     return true;
-  case Int8: return Tis_negative<int8>(x);
-  case Int16: return Tis_negative<int16>(x);
-  case Int32: return Tis_negative<int32>(x);
-  case Int64: return Tis_negative<int64>(x);
-  case Float: return Tis_negative<float>(x);
-  case Double: return Tis_negative<double>(x);
+    MacroExpandCasesSigned(MacroIsNonNegative);
   }
 }
+#undef MacroIsNonNegative
+
 
 bool IsUnsigned(const Array &x) {
   switch (x.dataClass()) {
@@ -918,11 +943,15 @@ bool IsInteger(const Array &x) {
   }
 }
 
-int32 Array::integer() const {
+int32 Array::asInteger() const {
   return (this->toClass(Int32).constRealScalar<int32>());
 }
 
-QString Array::string() const {
+double Array::asDouble() const {
+  return (this->toClass(Double).constRealScalar<double>());
+}
+
+QString Array::asString() const {
   if (m_type.Class != StringArray) throw Exception("Cannot convert array to string");
   const BasicArray<uint16> &p(constReal<uint16>());
   QString ret;
@@ -1063,3 +1092,158 @@ QStringList FieldNames(const Array& arg) {
   }
   return ret;
 }
+
+static inline void do_single_sided_algo_double(double a, double b,double *pvec, 
+					       int adder, int count) {
+  double d = a;
+  for (int i=0;i<count;i++) {
+    pvec[i*adder] = (double) d;
+    d += b;
+  }
+}
+  
+static inline void do_double_sided_algo_double(double a, double b, double c, double *pvec, 
+					       int adder, int count) {
+  if (count%2) {
+    do_single_sided_algo_double(a,b,pvec,adder,count/2);
+    do_single_sided_algo_double(c,-b,pvec+(count-1)*adder,-adder,count/2+1);
+  } else {
+    do_single_sided_algo_double(a,b,pvec,adder,count/2);
+    do_single_sided_algo_double(c,-b,pvec+(count-1)*adder,-adder,count/2);
+  }
+}
+
+Array RangeConstructor(double minval, double stepsize, double maxval, bool vert) {
+  NTuple dim;
+  if (stepsize == 0) 
+    throw Exception("step size must be nonzero in colon expression");
+  //ideally, n = (c-a)/b
+  // But this really defines an interval... we let
+  // n_min = min(c-a)/max(b)
+  // n_max = max(c-a)/min(b)
+  // where min(x) = {y \in fp | |y| is max, |y| < |x|, sign(y) = sign(x)}
+  //       max(x) = {y \in fp | |y| is min, |y| > |x|, sign(y) = sign(x)}
+  double ntest_min = nextafter(maxval-minval,0)/nextafter(stepsize,stepsize+stepsize);
+  double ntest_max = nextafter(maxval-minval,maxval-minval+stepsize)/nextafter(stepsize,0);
+  index_t npts = (index_t) floor(ntest_max);
+  bool use_double_sided = (ntest_min <= npts) && (npts <= ntest_max);
+  npts++;
+  if (npts < 0) npts = 0;
+  if (vert) {
+    dim = NTuple(npts,1);
+  } else {
+    dim = NTuple(1,npts);
+  }
+  BasicArray<double> rp(dim);
+  if (use_double_sided)
+    do_double_sided_algo_double(minval,stepsize,maxval,rp.data(),int(1),int(npts));
+  else
+    do_single_sided_algo_double(minval,stepsize,rp.data(),int(1),int(npts));
+  return Array(rp);
+}
+
+template <typename T>
+static inline Array T_Transpose(const Array &x) {
+  if (x.isScalar())
+    return x;
+  if (x.isSparse()) {
+    if (x.allReal())
+      return Array(Transpose(x.constRealSparse<T>()));
+    else
+      return Array(Transpose(x.constRealSparse<T>()),
+		   Transpose(x.constImagSparse<T>()));
+  } else {
+    if (x.allReal())
+      return Array(Transpose(x.constReal<T>()));
+    else
+      return Array(Transpose(x.constReal<T>()),
+		   Transpose(x.constImag<T>()));
+  }
+}
+
+#define MacroTranspose(ctype,cls) \
+  case cls: return T_Transpose<ctype>(A);
+
+Array Transpose(const Array &A) {
+  switch (A.dataClass()) {
+  default:
+    throw Exception("Type not supported by transpose operator");
+    MacroExpandCasesAll(MacroTranspose);
+  }
+}
+
+#undef MacroTranspose
+
+template <typename T>
+static inline Array T_Hermitian(const Array &x) {
+  if (x.isScalar())
+    if (x.allReal())
+      return x;
+    else 
+      return Array(x.constRealScalar<T>(),(T)-x.constImagScalar<T>());
+  if (x.isSparse()) {
+    if (x.allReal())
+      return Array(Transpose(x.constRealSparse<T>()));
+    else
+      return Array(Transpose(x.constRealSparse<T>()),
+		   Negate(Transpose(x.constImagSparse<T>())));
+  } else {
+    if (x.allReal())
+      return Array(Transpose(x.constReal<T>()));
+    else
+      return Array(Transpose(x.constReal<T>()),
+		   Negate(Transpose(x.constImag<T>())));
+  }
+}
+
+#define MacroHermitian(ctype,cls) \
+  case cls: return T_Hermitian<ctype>(A);
+
+Array Hermitian(const Array &A) {
+  switch (A.dataClass()) {
+  default:
+    throw Exception("Type not supported by transpose operator");
+    MacroExpandCasesSigned(MacroHermitian);
+  }
+}
+
+#undef MacroHermitian
+
+template <typename T>
+static inline Array T_Negate(const Array &x) {
+  if (x.isScalar())
+    if (x.allReal())
+      return Array((T)(-x.constRealScalar<T>()));
+    else
+      return Array((T)(-x.constRealScalar<T>()),(T)(-x.constImagScalar<T>()));
+  if (x.isSparse()) 
+    if (x.allReal())
+      return Array(Negate(x.constRealSparse<T>()));
+    else
+      return Array(Negate(x.constRealSparse<T>()),Negate(x.constImagSparse<T>()));
+  if (x.allReal())
+    return Array(Negate(x.constReal<T>()));
+  else
+    return Array(Negate(x.constReal<T>()),Negate(x.constImag<T>()));
+}
+
+#define MacroNegate(ctype,cls) \
+  case cls: return T_Negate<ctype>(A);
+
+Array Negate(const Array &A) {
+  switch (A.dataClass()) {
+  default:
+    throw Exception("Type not supported by negate operator");
+    MacroExpandCasesSigned(MacroNegate);
+  }
+}
+
+#undef MacroNegate
+
+BasicArray<Array> ArrayVectorToBasicArray(const ArrayVector& a) {
+  BasicArray<Array> retvec(NTuple(a.size(),1));
+  for (int i=0;i<a.size();i++) 
+    retvec.set(index_t(i+1),a.at(i));
+  return retvec;
+}
+

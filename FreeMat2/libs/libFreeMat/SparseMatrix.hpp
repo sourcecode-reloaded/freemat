@@ -72,6 +72,7 @@ public:
   inline bool isVector() const {return isColumnVector() || isRowVector();}
   inline index_t rows() const {return m_dims.rows();}
   inline index_t cols() const {return m_dims.cols();}
+  inline index_t columns() const {return m_dims.cols();}
   inline const T operator[](const NTuple& pos) const {
     if (m_dims.validate(pos)) {
       if (!m_data.contains(pos[1]))
@@ -372,6 +373,12 @@ public:
     else
       return m_imag.pos();
   }
+  index_t row() const {
+    return pos()[0];
+  }
+  index_t col() const {
+    return pos()[1];
+  }
   bool isValid() const {
     return (m_real.isValid() || m_imag.isValid());
   }
@@ -440,8 +447,8 @@ SparseMatrix<T> MatrixMultiply(const SparseMatrix<T> &A, const SparseMatrix<T> &
   typename SparseData<T>::const_iterator B_iter(B.constData().constBegin());
   SparseMatrix<T> C;
   while (B_iter != B.constData().constEnd()) {
-    SparseData<T> c_slice;
-    SparseData<T> b_slice(B_iter.value());
+    SparseSlice<T> c_slice;
+    SparseSlice<T> b_slice(B_iter.value());
     ConstSparseIterator<T> A_iter(&A);
     while (A_iter.isValid()) {
       while (A_iter.moreInSlice()) {
@@ -451,7 +458,7 @@ SparseMatrix<T> MatrixMultiply(const SparseMatrix<T> &A, const SparseMatrix<T> &
       A_iter.nextSlice();
     }
     C.data()[B_iter.key()] = c_slice;
-    B_iter.nextSlice();
+    B_iter++;
   }
   return C;
 }
@@ -462,7 +469,7 @@ SparseMatrix<T> MatrixMultiply(const SparseMatrix<T> &A, const BasicArray<T> &B)
     throw Exception("Non conforming arrays for matrix multiply");
   SparseMatrix<T> C;
   for (index_t col = 1;col <= B.cols();col++) {
-    SparseData<T> c_slice;
+    SparseSlice<T> c_slice;
     ConstSparseIterator<T> A_iter(&A);
     while (A_iter.isValid()) {
       while (A_iter.moreInSlice()) {
@@ -483,7 +490,7 @@ SparseMatrix<T> MatrixMultiply(const BasicArray<T> &A, const SparseMatrix<T> &B)
   SparseMatrix<T> C;
   ConstSparseIterator<T> Biter(&B);
   while (Biter.isValid()) {
-    SparseData<T> c_slice;
+    SparseSlice<T> c_slice;
     while (Biter.moreInSlice()) {
       for (index_t i=1;i <= A.rows(); i++)
 	c_slice[i] += A[NTuple(i,Biter.row())] * Biter.value();
@@ -494,4 +501,38 @@ SparseMatrix<T> MatrixMultiply(const BasicArray<T> &A, const SparseMatrix<T> &B)
   }
   return C;
 }
+
+template <typename T>
+SparseMatrix<T> Apply(const SparseMatrix<T>& arg, T (*func)(T)) {
+  SparseMatrix<T> retval(arg.dimensions());
+  ConstSparseIterator<T> Aiter(&arg);
+  while (Aiter.isValid()) {
+    while (Aiter.moreInSlice()) {
+      retval.set(Aiter.pos(),func(Aiter.value()));
+      Aiter.next();
+    }
+    Aiter.nextSlice();
+  }
+  return retval;
+}
+
+template <typename T>
+SparseMatrix<T> Negate(const SparseMatrix<T>& arg) {
+  return Apply<T>(arg,neg);
+}
+
+template <typename T>
+SparseMatrix<T> Transpose(const SparseMatrix<T> &arg) {
+  SparseMatrix<T> retval(NTuple(arg.cols(),arg.rows()));
+  ConstSparseIterator<T> Aiter(&arg);
+  while (Aiter.isValid()) {
+    while (Aiter.moreInSlice()) {
+      retval.set(NTuple(Aiter.col(),Aiter.row()),Aiter.value());
+      Aiter.next();
+    }
+    Aiter.nextSlice();
+  }
+  return retval;
+}
+
 #endif

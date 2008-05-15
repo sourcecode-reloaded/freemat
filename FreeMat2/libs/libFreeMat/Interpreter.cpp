@@ -29,7 +29,6 @@
 #include "Token.hpp"
 #include "Module.hpp"
 #include "File.hpp"
-#include "Serialize.hpp"
 #include <signal.h>
 #include "Class.hpp"
 #include "Print.hpp"
@@ -176,19 +175,7 @@ void Interpreter::procFileM(QString fname, QString fullname, bool tempfunc) {
 }
   
 void Interpreter::procFileP(QString fname, QString fullname, bool tempfunc) {
-  MFunctionDef *adef;
-  // Open the file
-  try {
-    File *f = new File(fullname,"rb");
-    Serialize *s = new Serialize(f);
-    s->handshakeClient();
-    s->checkSignature('p',2);
-    adef = ThawMFunction(s);
-    adef->pcodeFunction = true;
-    delete f;
-    context->insertFunction(adef, tempfunc);
-  } catch (Exception &e) {
-  }
+  throw Exception("P-files are not supported in this version of FreeMat");
 }
 
 void Interpreter::procFileMex(QString fname, QString fullname, bool tempfunc) {
@@ -823,7 +810,7 @@ void Interpreter::multiexpr(Tree *t, ArrayVector &q, index_t lhsCount) {
       QString field;
       try {
 	Array fname(expression(s->first()));
-	field = fname.string();
+	field = fname.asString();
       } catch (Exception &e) {
 	throw Exception("dynamic field reference to structure requires a string argument");
       }
@@ -933,10 +920,10 @@ Array Interpreter::expression(Tree *t) {
     return DoBinaryOperator(t,DotPower,"power"); 
     break;
   case '\'': 
-    return DoUnaryOperator(t,Transpose,"ctranspose"); 
+    return DoUnaryOperator(t,Hermitian,"ctranspose"); 
     break;
   case TOK_DOTTRANSPOSE: 
-    return DoUnaryOperator(t,DotTranspose,"transpose"); 
+    return DoUnaryOperator(t,Transpose,"transpose"); 
     break;
   case '@':
     return FunctionPointer(t);
@@ -2323,7 +2310,7 @@ void Interpreter::multiassign(ArrayReference r, Tree *s, ArrayVector &data) {
     QString field;
     try {
       Array fname(expression(s->first()));
-      field = fname.string();
+      field = fname.asString();
     } catch (Exception &e) {
       throw Exception("dynamic field reference to structure requires a string argument");
     }
@@ -2369,7 +2356,7 @@ void Interpreter::assign(ArrayReference r, Tree *s, Array &data) {
     QString field;
     try {
       Array fname(expression(s->first()));
-      field = fname.string();
+      field = fname.asString();
     } catch (Exception &e) {
       throw Exception("dynamic field reference to structure requires a string argument");
     }
@@ -4233,22 +4220,6 @@ void Interpreter::popDebug() {
     outputMessage("IDERROR\n");
 }
 
-bool Interpreter::isUserClassDefined(QString classname) {
-  return (classTable.findSymbol(classname)!=NULL);
-}
-  
-UserClassTemplate Interpreter::lookupUserClass(QString classname) {
-  return(*(classTable.findSymbol(classname)));
-}
-
-void Interpreter::registerUserClass(QString classname, UserClassTemplate cdata) {
-  classTable.insertSymbol(classname,cdata);
-}
-
-void Interpreter::clearUserClasses() {
-  classTable = SymbolTable<UserClassTemplate>();
-}
-
 bool Interpreter::lookupFunction(QString funcName, FuncPtr& val) {
   ArrayVector dummy;
   return(lookupFunction(funcName,val,dummy));
@@ -4789,7 +4760,7 @@ void Interpreter::deref(Array &r, Tree *s) {
     QString field;
     try {
       Array fname(expression(s->first()));
-      field = fname.string();
+      field = fname.asString();
     } catch (Exception &e) {
       throw Exception("dynamic field reference to structure requires a string argument");
     }
@@ -4891,7 +4862,7 @@ void Interpreter::dbstepStatement(Tree *t) {
   int lines = 1;
   if (t->hasChildren()) {
     Array lval(expression(t->first()));
-    lines = lval.integer();
+    lines = lval.asInteger();
   }
   // Get the current function
   if (cstack.size() < 1) throw Exception("cannot dbstep unless inside an M-function");
@@ -4913,7 +4884,7 @@ void Interpreter::dbtraceStatement(Tree *t) {
   int lines = 1;
   if (t->hasChildren()) {
     Array lval(expression(t->first()));
-    lines = lval.integer();
+    lines = lval.asInteger();
   }
   // Get the current function
   if (cstack.size() < 1) throw Exception("cannot dbtrace unless inside an M-function");

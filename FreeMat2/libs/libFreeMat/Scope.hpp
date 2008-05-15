@@ -32,7 +32,6 @@
 #include "SymbolTable.hpp"
 
 typedef SymbolTable<Array> VariableTable;
-class Serialize;
 
 
 /**
@@ -388,8 +387,5 @@ public:
   operator Scope* () const {return d;}
 };
 #endif
-
-void FreezeScope(ScopePtr scope, Serialize *s);
-ScopePtr ThawScope(Serialize *s);
 
 #endif

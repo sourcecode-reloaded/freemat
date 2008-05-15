@@ -153,6 +153,11 @@ public:
     for (int i=0;i<NDims;i++) ret *= m_data[i];
     return ret;
   }
+  inline QString toString() const {
+    int last_one = NDims-1;
+    while ((m_data[last_one] == 1) && (last_one > 1)) last_one--;
+#error Finishme    
+  }
 };
 
 inline std::ostream& operator<<(std::ostream& o, const NTuple &t) {

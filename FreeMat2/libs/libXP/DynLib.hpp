@@ -20,7 +20,7 @@
 #ifndef __DynLib_hpp__
 #define __DynLib_hpp__
 
-#include <string>
+#include <QString>
 
 #ifdef WIN32
 #include <windows.h>
@@ -33,8 +33,8 @@ typedef void* libhandle;
 class DynLib {
   libhandle lib;
 public:
-  DynLib(std::string filename);
-  void* GetSymbol(const char* symbolName);
+  DynLib(QString filename);
+  void* GetSymbol(QString symbolName);
   ~DynLib();
 };
 

@@ -29,7 +29,7 @@
 
 class Interpreter;
 void PrintArrayClassic(Array A, int printLimit, Interpreter *eval);
-string ArrayToPrintableString(const Array& a);
+QString ArrayToPrintableString(const Array& a);
 
 typedef enum {
   format_native,
