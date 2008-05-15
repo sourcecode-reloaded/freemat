@@ -1,4 +1,4 @@
-#ifdef __SparseCCS_hpp__
+#ifndef __SparseCCS_hpp__
 #define __SparseCCS_hpp__
 
 #include <QVector>

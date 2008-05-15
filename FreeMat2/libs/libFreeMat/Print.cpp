@@ -33,7 +33,10 @@ static QString TSummarizeArrayCellEntryScalar(const Array &dp) {
   if (dp.allReal())
     return QString("%1").arg(dp.constRealScalar<T>());
   else
-    return QString("%1+%2i").arg(dp.constRealScalar<T>()).arg(dp.constImagScalar<T>());
+    if (dp.constImagScalar<T>() > 0)
+      return QString("%1+%2 i").arg(dp.constRealScalar<T>()).arg(dp.constImagScalar<T>());
+    else
+      return QString("%1%2 i").arg(dp.constRealScalar<T>()).arg(dp.constImagScalar<T>());
 }
 
 #define MacroSummarize(ctype,cls) \
@@ -47,104 +50,15 @@ static QString SummarizeArrayCellEntry(const Array &dp) {
     switch (dp.dataClass()) {
       MacroExpandCases(MacroSummarize);
     default:   // fall through
+      ;
     }
   }
-  return QString("[") + dp.dimensions().toString() + " " + dp.className() + " array ]"
+  QString sparseFlag;
+  if (dp.isSparse()) sparseFlag = " sparse";
+  return QString("[") + dp.dimensions().toString() + " " + 
+    dp.className() + sparseFlag + " array ]";
 }
 
-/**
- * Summary of this object when it is an element of a cell array.  This is
- * generally a shorthand summary of the description of the object.
- */
-template <class T>
-QString NumericCellEntry(const T* data, const NTuple &dims, string name, 
-			 const char *formatcode, bool isSparse = false) {
-  char msgBuffer[MSGBUFLEN];
-  if (dims.isScalar()) {
-    snprintf(msgBuffer,MSGBUFLEN,formatcode,data[0]);
-    return msgBuffer;
-  } else {
-    string ret = "[" + dims.asString() + " ";
-    if (isSparse)
-      ret += " sparse";
-    ret += name + "]";
-    return ret;
-  }
-}
-
-template <class T>
-string ComplexNumericCellEntry(const T* data, Dimensions dims, string name, 
-			       const char *formatcode, bool isSparse = false) {
-  char msgBuffer[MSGBUFLEN];
-  if (dims.isScalar()) {
-    snprintf(msgBuffer,MSGBUFLEN,formatcode,data[0],data[1]);
-    return msgBuffer;
-  } else {
-    string ret = "[" + dims.asString() + " ";
-    if (isSparse)
-      ret += " sparse";
-    ret += name + "]";
-    return ret;
-  }
-}
-
-string SummarizeArrayCellEntry(Array dp)  {
-  if (dp.isEmpty()) 
-    return ("[]");
-  else {
-    switch(dp.dataClass()) {
-    case FM_FUNCPTR_ARRAY:
-      return "{" + dp.dimensions().asString() + " function pointer array }";
-    case FM_CELL_ARRAY:
-      return "{" + dp.dimensions().asString() + " cell }";
-    case FM_STRUCT_ARRAY: 
-      {
-	string ret;
-	ret = "[" + dp.dimensions().asString();
-	if (dp.isUserClass()) {
-	  ret += " " + dp.className().back() + " object";
-	} else 
-	  ret += " struct array";
-	return ret + "]";
-      }
-    case FM_STRING:
-      if (dp.dimensions().getRows() == 1)
-	return "['" + dp.getContentsAsString() + "']";
-      else
-	return "[" + dp.dimensions().asString() + " string ]";
-    case FM_LOGICAL:
-      return NumericCellEntry((const logical *)dp.getDataPointer(),dp.dimensions(),"logical","[%u]");
-    case FM_UINT8:
-      return NumericCellEntry((const uint8 *)dp.getDataPointer(),dp.dimensions(),"uint8","[%u]");
-    case FM_INT8:
-      return NumericCellEntry((const uint8 *)dp.getDataPointer(),dp.dimensions(),"int8","[%d]");
-    case FM_UINT16:
-      return NumericCellEntry((const uint16 *)dp.getDataPointer(),dp.dimensions(),"uint16","[%u]");
-    case FM_INT16:
-      return NumericCellEntry((const uint16 *)dp.getDataPointer(),dp.dimensions(),"int16","[%d]");
-    case FM_UINT32:
-      return NumericCellEntry((const uint32 *)dp.getDataPointer(),dp.dimensions(),"uint32","[%u]");
-    case FM_INT32:
-      return NumericCellEntry((const uint32 *)dp.getDataPointer(),dp.dimensions(),"int32","[%d]");
-    case FM_UINT64:
-      return NumericCellEntry((const uint64 *)dp.getDataPointer(),dp.dimensions(),"uint64","[%llu]");
-    case FM_INT64:
-      return NumericCellEntry((const uint64 *)dp.getDataPointer(),dp.dimensions(),"int64","[%lld]");
-    case FM_DOUBLE:
-      return NumericCellEntry((const double *)dp.getDataPointer(),dp.dimensions(),"double","[%lg]",dp.sparse());
-    case FM_FLOAT:
-      return NumericCellEntry((const float *)dp.getDataPointer(),dp.dimensions(),"float","[%g]",dp.sparse());
-    case FM_COMPLEX:
-      return ComplexNumericCellEntry((const float *)dp.getDataPointer(),dp.dimensions(),
-				     "complex","[%g+%gi]",dp.sparse());
-    case FM_DCOMPLEX:
-      return ComplexNumericCellEntry((const float *)dp.getDataPointer(),dp.dimensions(),
-				     "complex","[%lg+%lgi]",dp.sparse());
-    }
-  }
-  return string("?");
-}
- 
 template <class T>
 bool AllIntegerValues(T *t, int len) {
   if (len == 0) return false;
@@ -475,27 +389,24 @@ void PrintSheet(Interpreter*io, const ArrayFormatInfo &format,
   io->outputMessage("\n");
 }
 
-void PrintArrayClassic(Array A, int printlimit, Interpreter* io) {
+
+void PrintArrayClassic(const Array &A, int printlimit, Interpreter* io) {
   if (printlimit == 0) return;
   int termWidth = io->getTerminalWidth();
-  //   bool showClassSize = true; // FINISH
-  //   if (!A.isEmpty() && showClassSize)
-  //     PrintArrayClassAndSize(A,io);
-  Class Aclass(A.dataClass());
-  Dimensions Adims(A.dimensions());
-  if (A.isUserClass())
-    return;
+  DataClass Aclass(A.dataClass());
+  NTuple Adims(A.dimensions());
+  if (A.isUserClass())  return;
   if (A.isEmpty()) {
-    if (A.dimensions().equals(zeroDim))
+    if (A.dimensions() == NTuple(0,0))
       io->outputMessage("  []\n");
     else {
       io->outputMessage("  Empty array ");
-      A.dimensions().printMe(io);
+      io->outputMessage(A.dimensions().toString());
       io->outputMessage("\n");
     }
     return;
   }
-  if (A.sparse()) {
+  if (A.isSparse()) {
     io->outputMessage("\tMatrix is sparse with %d nonzeros\n",A.getNonzeros());
     return;
   }
@@ -557,107 +468,18 @@ void PrintArrayClassic(Array A, int printlimit, Interpreter* io) {
     io->outputMessage("\nPrint limit has been reached.  Use setprintlimit function to enable longer printouts\n");
 }
 
-string ArrayToPrintableString(const Array& a) {
-  static char msgBuffer[MSGBUFLEN];
-  if (a.isEmpty())
-    return string("[]");
-  if (a.sparse())
-    return string("");
-  if (a.isString())
-    return string(ArrayToString(a));
-  if (a.isReferenceType())
-    return string("");
-  if (!a.isScalar() && !a.isString())
-    return string("");
-  const void *dp = a.getDataPointer();
+QString ArrayToPrintableString(const Array& a) {
+  if (a.isEmpty()) return QString("[]");
+  if (a.isSparse()) return QString("");
+  if (a.isString()) return a.asString();
+  if (a.isReferenceType()) return QString("");
+  if (!a.isScalar() && !a.isString()) return QString("");
   switch (a.dataClass()) {
   default:
     return string("?");
-  case FM_INT8: {
-    const int8 *ap;
-    ap = (const int8*) dp;
-    snprintf(msgBuffer,MSGBUFLEN,"%d",ap[0]);
-    return string(msgBuffer);
+    MacroExpandCases(MacroSummarize);
   }
-  case FM_UINT8: {
-    const uint8 *ap;
-    ap = (const uint8*) dp;
-    snprintf(msgBuffer,MSGBUFLEN,"%u",ap[0]);
-    return string(msgBuffer);
-  }
-  case FM_INT16: {
-    const int16 *ap;
-    ap = (const int16*) dp;
-    snprintf(msgBuffer,MSGBUFLEN,"%d",ap[0]);
-    return string(msgBuffer);
-  }
-  case FM_UINT16: {
-    const uint16 *ap;
-    ap = (const uint16*) dp;
-    snprintf(msgBuffer,MSGBUFLEN,"%u",ap[0]);
-    return string(msgBuffer);
-  }
-  case FM_INT32: {
-    const int32 *ap;
-    ap = (const int32*) dp;
-    snprintf(msgBuffer,MSGBUFLEN,"%d",ap[0]);
-    return string(msgBuffer);
-  }
-  case FM_UINT32: {
-    const uint32 *ap;
-    ap = (const uint32*) dp;
-    snprintf(msgBuffer,MSGBUFLEN,"%u",ap[0]);
-    return string(msgBuffer);
-  }
-  case FM_INT64: {
-    const int64 *ap;
-    ap = (const int64*) dp;
-    snprintf(msgBuffer,MSGBUFLEN,"%lld",ap[0]);
-    return string(msgBuffer);
-  }
-  case FM_UINT64: {
-    const uint64 *ap;
-    ap = (const uint64*) dp;
-    snprintf(msgBuffer,MSGBUFLEN,"%llu",ap[0]);
-    return string(msgBuffer);
-  }
-  case FM_LOGICAL: {
-    const logical *ap;
-    ap = (const logical*) dp;
-    snprintf(msgBuffer,MSGBUFLEN,"%d",ap[0]);
-    return string(msgBuffer);
-  }
-  case FM_FLOAT: {
-    const float *ap;
-    ap = (const float*) dp;
-    snprintf(msgBuffer,MSGBUFLEN,"%g",ap[0]);
-    return string(msgBuffer);
-  }
-  case FM_DOUBLE: {
-    const double *ap;
-    ap = (const double*) dp;
-    snprintf(msgBuffer,MSGBUFLEN,"%g",ap[0]);
-    return string(msgBuffer);
-  }
-  case FM_COMPLEX: {
-    const float *ap;
-    ap = (const float*) dp;
-    if (ap[1] > 0)
-      snprintf(msgBuffer,MSGBUFLEN,"%g+%g i",ap[0],ap[1]);
-    else
-      snprintf(msgBuffer,MSGBUFLEN,"%g%g i",ap[0],ap[1]);
-    return string(msgBuffer);
-  }
-  case FM_DCOMPLEX: {
-    const double *ap;
-    ap = (const double*) dp;
-    if (ap[1] > 0)
-      snprintf(msgBuffer,MSGBUFLEN,"%g+%g i",ap[0],ap[1]);
-    else
-      snprintf(msgBuffer,MSGBUFLEN,"%g%g i",ap[0],ap[1]);
-    return string(msgBuffer);
-  }
-  }
-  return string("");
 }
+
+#undef MacroSummarize
   

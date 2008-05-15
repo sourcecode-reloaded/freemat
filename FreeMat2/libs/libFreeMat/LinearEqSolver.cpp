@@ -25,6 +25,13 @@
 #include "MemPtr.hpp"
 #include "SparseCCS.hpp"
 
+#if HAVE_UMFPACK
+extern "C" {
+#include "umfpack.h"
+}
+#endif
+
+
 /***************************************************************************
  * Linear equation solver for real matrices
  ***************************************************************************/
@@ -735,10 +742,11 @@ Array SparseSolveLinEq(const SparseMatrix<double> &A, const BasicArray<double> &
   (void) umfpack_di_numeric (Accs.colstart(), Accs.rowindx(), Accs.data(), Symbolic, 
 			     &Numeric, null, null) ;
   umfpack_di_free_symbolic (&Symbolic) ;
-  BasicArray<T> x(NTuple(A.rows(),B.cols()));
+  BasicArray<double> x(NTuple(A.rows(),B.cols()));
   for (index_t i=1;i<=B.cols();i++) {
     (void) umfpack_di_solve (UMFPACK_A, Accs.colstart(), Accs.rowindx(), 
-			     Accs.data(), x.data()+(i-1)*A.rows(), B.constData()+(i-1)*B.rows(), 
+			     Accs.data(), x.data()+int((i-1)*A.rows()), 
+			     B.constData()+int((i-1)*B.rows()), 
 			     Numeric, null, null) ;
   }
   umfpack_di_free_numeric (&Numeric);
@@ -755,20 +763,20 @@ Array SparseSolveLinEq(const SparseMatrix<double> &Ar, const SparseMatrix<double
   ConvertSparseToCCS(Ar,Ai,Accs);
   double *null = (double *) NULL ;
   void *Symbolic, *Numeric ;
-  (void) umfpack_zi_symbolic (int(A.cols()), int(A.cols()), Accs.colstart(), Accs.rowindx(), 
+  (void) umfpack_zi_symbolic (int(Ar.cols()), int(Ar.cols()), Accs.colstart(), Accs.rowindx(), 
 			      Accs.data(), Accs.imag(), &Symbolic, null, null);
   (void) umfpack_zi_numeric (Accs.colstart(), Accs.rowindx(), Accs.data(), Accs.imag(),
 			     Symbolic, &Numeric, null, null) ;
   umfpack_zi_free_symbolic (&Symbolic) ;
-  BasicArray<T> xr(NTuple(A.rows(),B.cols()));
-  BasicArray<T> xi(NTuple(A.rows(),B.cols()));
-  for (index_t i=1;i<=B.cols();i++) {
+  BasicArray<double> xr(NTuple(Ar.rows(),Br.cols()));
+  BasicArray<double> xi(NTuple(Ar.rows(),Br.cols()));
+  for (index_t i=1;i<=Br.cols();i++) {
     (void) umfpack_zi_solve (UMFPACK_A, Accs.colstart(), Accs.rowindx(), 
 			     Accs.data(), Accs.imag(), 
-			     xr.data()+(i-1)*A.rows(),
-			     xi.data()+(i-1)*A.rows(),
-			     Br.constData()+(i-1)*Br.rows(),
-			     Bi.constData()+(i-1)*Br.rows(),
+			     xr.data()+int((i-1)*Ar.rows()),
+			     xi.data()+int((i-1)*Ar.rows()),
+			     Br.constData()+int((i-1)*Br.rows()),
+			     Bi.constData()+int((i-1)*Br.rows()),
 			     Numeric, null, null) ;
   }
   umfpack_zi_free_numeric (&Numeric);

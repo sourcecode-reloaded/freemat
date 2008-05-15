@@ -266,7 +266,6 @@ public:
   void set(const NTuple& index, const Array& data);
   void set(const QString& field, ArrayVector& data);
 
-  void print(std::ostream& o) const;
   void resize(const NTuple &size);
   void resize(index_t size);
   void reshape(const NTuple &size);
@@ -296,8 +295,6 @@ public:
   ConstArrayIterator(const Array *ptr, int dim) :
     ConstBaseIterator<Array,Array>(ptr,dim) {}
 };
-
-std::ostream& operator<<(std::ostream& o, const Array &t);
 
 bool IsColonOp(const Array &arg);
 bool IsNonNegative(const Array &arg);

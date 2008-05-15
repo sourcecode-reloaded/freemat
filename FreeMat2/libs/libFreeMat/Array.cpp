@@ -111,66 +111,6 @@ SharedObject::~SharedObject() {
   destruct(m_type,m_p);
 }
 
-template <typename T>
-static inline void Tprint(std::ostream& o, const Array *ptr) {
-  if (ptr->type().Scalar == 1) {
-    if (ptr->allReal()) {
-      o << double(ptr->constRealScalar<T>());
-    } else {
-      o << "(" << double(ptr->constRealScalar<T>()) << "," <<
-	double(ptr->constImagScalar<T>()) << ")";
-    }
-  } else if (ptr->type().Sparse == 1) {
-    if (ptr->allReal()) {
-      o << "real:\n" << ptr->constRealSparse<T>();
-    } else {
-      o << "real:\n" << ptr->constRealSparse<T>();
-      o << "imag:\n" << ptr->constImagSparse<T>();
-    }
-  } else {
-    if (ptr->allReal()) {
-      o << "real:\n" << ptr->constReal<T>();
-    } else {
-      o << "real:\n" << ptr->constReal<T>();
-      o << "imag:\n" << ptr->constImag<T>();
-    }
-  }
-}
-
-#define MacroPrint(ctype,cls) \
-  case cls: return Tprint<ctype>(o,this);
-
-void Array::print(std::ostream& o) const {
-  switch (m_type.Class) {
-  default:
-    throw Exception("unsupported type");
-  case Invalid:
-    o << "[] ";
-    return;
-    MacroExpandCases(MacroPrint);
-  case CellArray:
-    o << constReal<Array>();
-    return;
-  case Struct:
-    {
-      const StructArray &rp(constStructPtr());
-      for (StructArray::const_iterator i=rp.constBegin();i!=rp.constEnd();++i) {
-	o << "field: " << i.key() << "\n";
-	o << "value: " << i.value();
-      }
-    }
-    return;
-  case StringArray:
-    {
-      QString val(asString());
-      o << val.toStdString().c_str();
-      return;
-    }
-  }
-}
-
-#undef MacroPrint
-
 Array::Array(DataClass t, const NTuple &dims) {
   m_type.Class = t;
   m_type.Complex = 0;
@@ -178,7 +118,6 @@ Array::Array(DataClass t, const NTuple &dims) {
   m_type.Scalar = 0;
   m_real.p = new SharedObject(m_type,construct_sized(m_type,dims));
 }
-
 
 Array::Array(const QString &text) {
   m_type.Class = StringArray;
@@ -859,11 +798,6 @@ bool Array::operator==(const Array &b) const {
 
 #undef MacroScalarEquals
 
-std::ostream& operator<<(std::ostream& o, const Array &t) {
-  t.print(o);
-  return o;
-}
-  
 bool IsColonOp(const Array &x) {
   return (x.dataClass() == StringArray) && (x.asString() == ":");
 }

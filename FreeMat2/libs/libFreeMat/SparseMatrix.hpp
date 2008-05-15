@@ -219,17 +219,6 @@ public:
     else
       throw Exception("Unsupported deletion for sparse matrices.");
   }
-  void printMe(std::ostream& o) const {
-    ConstSparseIterator<T> source(this);
-    while (source.isValid()) {
-      while (source.moreInSlice()) {
-	NTuple pos(source.pos());
-	o << pos[1] << "," << pos[0] << "," << source.value() << "\n";
-	source.next();
-      }
-      source.nextSlice();
-    }
-  }
   void resize(const NTuple& pos) {
     SparseMatrix<T> ret(pos);
     ConstSparseIterator<T> source(this);
@@ -292,6 +281,12 @@ public:
     return true;
   }
 };
+
+template <typename T>
+void PrintMe(const SparseMatrix<T> &a, Interpreter* io);
+
+template <typename T>
+void PrintMe(const SparseMatrix<T> &ar, const SparseMatrix<T> &ai, Interpreter* io);
 
 template <typename T>
 inline std::ostream& operator<<(std::ostream& o, const SparseMatrix<T>& arg) {
