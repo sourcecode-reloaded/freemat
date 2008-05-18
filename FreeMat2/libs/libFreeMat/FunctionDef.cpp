@@ -159,24 +159,18 @@ int MFunctionDef::outputArgCount() {
 
 void MFunctionDef::printMe(Interpreter*eval) {
   StringVector tmp;
-  char msgBuffer[MSGBUFLEN];
-  snprintf(msgBuffer,MSGBUFLEN,"Function name:%s\n",name.c_str());
-  eval->outputMessage(msgBuffer);
+  eval->outputMessage("Function name:" + name);
   eval->outputMessage("Function class: Compiled M function\n");
   eval->outputMessage("returnVals: ");
   tmp = returnVals;
   int i;
-  for (i=0;i<tmp.size();i++) {
-    snprintf(msgBuffer,MSGBUFLEN,"%s ",tmp[i].c_str());
-    eval->outputMessage(msgBuffer);
-  }
+  for (i=0;i<tmp.size();i++)
+    eval->outputMessage(tmp[i] + " ");
   eval->outputMessage("\n");
   eval->outputMessage("arguments: ");
   tmp = arguments;
-  for (i=0;i<tmp.size();i++) {
-    snprintf(msgBuffer,MSGBUFLEN,"%s ",tmp[i].c_str());
-    eval->outputMessage(msgBuffer);
-  }
+  for (i=0;i<tmp.size();i++) 
+    eval->outputMessage(tmp[i] + " ");
   eval->outputMessage("\ncode: \n");
   code.tree()->print();
 }
@@ -190,9 +184,9 @@ void CaptureFunctionPointer(FuncPtr &val, Interpreter *walker,
       MFunctionDef* optr = new MFunctionDef;
       (*optr) = (*mptr);
       Context* context = walker->getContext();
-      string myScope = context->scopeName();
+      QString myScope = context->scopeName();
       context->bypassScope(1);
-      string parentScope = context->scopeName();
+      QString parentScope = context->scopeName();
       context->restoreScope(1);
       if (!Scope::nests(parentScope,myScope)) {
 	// Now capture the variables in our current scope
@@ -254,18 +248,16 @@ ArrayVector MFunctionDef::evaluateFunction(Interpreter *walker,
     minCount = (((int)inputs.size()) < arguments.size()) ? 
       inputs.size() : arguments.size();
     for (int i=0;i<minCount;i++) {
-      std::string arg(arguments[i]);
+      QString arg(arguments[i]);
       if (arg[0] == '&')
 	arg.erase(0,1);
       context->insertVariableLocally(arg,inputs[i]);
     }
-    context->insertVariableLocally("nargin",
-				   Array::int32Constructor(minCount));
+    context->insertVariableLocally("nargin",Array::int32Constructor(minCount));
   } else {
     // Count the number of supplied arguments
     int inputCount = inputs.size();
-    context->insertVariableLocally("nargin",
-				   Array::int32Constructor(inputCount));
+    context->insertVariableLocally("nargin",Array::int32Constructor(inputCount));
     // Get the number of explicit arguments
     int explicitCount = arguments.size() - 1;
     // For each explicit argument (that we have an input for),
@@ -273,16 +265,15 @@ ArrayVector MFunctionDef::evaluateFunction(Interpreter *walker,
     minCount = (explicitCount < inputCount) ? explicitCount : inputCount;
     int i;
     for (i=0;i<minCount;i++) {
-      std::string arg(arguments[i]);
+      QString arg(arguments[i]);
       if (arg[0] == '&')
 	arg.erase(0,1);
       context->insertVariableLocally(arg,inputs[i]);
     }
     inputCount -= minCount;
     // Put minCount...inputCount 
-    Array varg(FM_CELL_ARRAY);
-    varg.vectorResize(inputCount);
-    Array* dp = (Array *) varg.getReadWriteDataPointer();
+    Array varg(CellArray);
+    varg.resize(index_t(inputCount));
     for (i=0;i<inputCount;i++)
       dp[i] = inputs[i+minCount];
     context->insertVariableLocally("varargin",varg);

@@ -5,14 +5,42 @@
 #include <ctype.h>
 #include "Exception.hpp"
 
-extern QString fm_reserved[];
-extern int fm_reserved_count;
+static QHash<QString, TokenType> fm_reserved;
 
-static bool isalnumus(byte a) {
+static bool fm_reserved_initialized = false;
+
+void InitializeReservedTable() {
+  if (fm_reserved_initialized) return;
+  fm_reserved["break"] = TOK_BREAK;
+  fm_reserved["case"] = TOK_CASE;
+  fm_reserved["catch"] = TOK_CATCH;
+  fm_reserved["continue"] = TOK_CONTINUE;
+  fm_reserved["dbstep"] = TOK_DBSTEP;
+  fm_reserved["dbtrace"] = TOK_DBTRACE;
+  fm_reserved["else"] = TOK_ELSE;
+  fm_reserved["elseif"] = TOK_ELSEIF;
+  fm_reserved["end"] = TOK_END;
+  fm_reserved["for"] = TOK_FOR;
+  fm_reserved["function"] = TOK_FUNCTION;
+  fm_reserved["global"] = TOK_GLOBAL;
+  fm_reserved["if"] = TOK_IF;
+  fm_reserved["keyboard"] = TOK_KEYBOARD;
+  fm_reserved["otherwise"] = TOK_OTHERWISE;
+  fm_reserved["persistent"] = TOK_PERSISTENT;
+  fm_reserved["quit"] = TOK_QUIT;
+  fm_reserved["retall"] = TOK_RETALL;
+  fm_reserved["return"] = TOK_RETURN;
+  fm_reserved["switch"] = TOK_SWITCH;
+  fm_reserved["try"] = TOK_TRY;
+  fm_reserved["while"] = TOK_WHILE;
+  fm_reserved_initialized = true;
+}
+
+static bool isalnumus(TokenType a) {
   return (isalnum(a) || (a=='_'));
 }
 
-static bool isablank(byte a) {
+static bool isablank(TokenType a) {
   return (a==' ' || a=='\t' || a=='\r');
 }
 
@@ -20,7 +48,7 @@ unsigned Scanner::contextNum() {
   return (m_ptr << 16 | m_linenumber);
 }
 
-void Scanner::setToken(byte tok, QString text) {
+void Scanner::setToken(TokenType tok, QString text) {
   m_tok = Token(tok,m_ptr << 16 | m_linenumber,text);
 }
 
@@ -28,11 +56,12 @@ bool Scanner::done() {
   return (m_ptr >= (int)(m_text.size()));
 }
 
-bool Scanner::peek(int chars, byte tok) {
+bool Scanner::peek(int chars, TokenType tok) {
   return (ahead(chars) == tok);
 }
 
 Scanner::Scanner(QString buf, QString fname) {
+  InitializeReservedTable();
   m_text = buf;
   m_filename = fname;
   m_ptr = 0;
@@ -91,7 +120,7 @@ void Scanner::fetch() {
   m_tokValid = true;
 }
 
-bool Scanner::tryFetchBinary(const char* op, byte tok) {
+bool Scanner::tryFetchBinary(const char* op, TokenType tok) {
   if ((current() == op[0]) && (ahead(1) == op[1])) {
     setToken(tok);
     m_ptr += 2;
@@ -119,15 +148,15 @@ void Scanner::fetchOther() {
   if (tryFetchBinary("~=",TOK_NE)) return;
   if (tryFetchBinary("&&",TOK_SAND)) return;
   if (tryFetchBinary("||",TOK_SOR)) return;
-  setToken(m_text[m_ptr]);
+  setToken(m_text[m_ptr].unicode());
   if (m_text[m_ptr] == '[')
     m_bracketDepth++;
   if (m_text[m_ptr] == ']')
-    m_bracketDepth = min(0,m_bracketDepth-1);
+    m_bracketDepth = qMin(0,m_bracketDepth-1);
   if (m_text[m_ptr] == '{')
     m_bracketDepth++;
   if (m_text[m_ptr] == '}')
-    m_bracketDepth = min(0,m_bracketDepth-1);
+    m_bracketDepth = qMin(0,m_bracketDepth-1);
   m_ptr++;
 }
 
@@ -145,12 +174,8 @@ void Scanner::fetchString() {
   }
   if (ahead(len+1) == '\n')
     throw Exception("unterminated string" + context());
-  QString ret(m_text,m_ptr+1,len);
-  QString::size_type ndx = ret.find("''");
-  while (ndx != QString::npos) {
-    ret.erase(ndx,1);
-    ndx = ret.find("''");
-  }
+  QString ret(m_text.mid(m_ptr+1,len));
+  ret.replace("''","'");
   setToken(TOK_STRING,ret);
   m_ptr += len+2;
 }
@@ -174,24 +199,15 @@ void Scanner::fetchWhitespace() {
 //
 // flags - int, float, double, complex
 //
-typedef enum {
-  integer_class,
-  float_class,
-  double_class,
-  complex_class,
-  dcomplex_class
-} number_class;
 
 void Scanner::fetchNumber() {
   int len = 0;
   int lookahead = 0;
-  number_class numclass;
+  bool imagnumber = false;
 
-  numclass = integer_class;
   while (isdigit(ahead(len))) len++;
   lookahead = len;
   if (ahead(lookahead) == '.') {
-    numclass = double_class;
     lookahead++;
     len = 0;
     while (isdigit(ahead(len+lookahead))) len++;
@@ -199,7 +215,6 @@ void Scanner::fetchNumber() {
   }
   if ((ahead(lookahead) == 'E') ||
       (ahead(lookahead) == 'e')) {
-    numclass = double_class;
     lookahead++;
     if ((ahead(lookahead) == '+') ||
 	(ahead(lookahead) == '-')) {
@@ -209,22 +224,12 @@ void Scanner::fetchNumber() {
     while (isdigit(ahead(len+lookahead))) len++;
     lookahead+=len;
   }
-  if ((ahead(lookahead) == 'f') ||
-      (ahead(lookahead) == 'F')) {
-    numclass = float_class;
-    lookahead++;
-  }
-  if ((ahead(lookahead) == 'd') ||
-      (ahead(lookahead) == 'D')) {
-    numclass = double_class;
-    lookahead++;
-  }
   // Recognize the complex constants, but strip the "i" off
   if ((ahead(lookahead) == 'i') ||
       (ahead(lookahead) == 'I') ||
       (ahead(lookahead) == 'j') ||
       (ahead(lookahead) == 'J')) {
-    numclass = (numclass == float_class) ? complex_class : dcomplex_class;
+    imagnumber = true;
   }
   // Back off if we aggregated a "." from "..." into the number
   if (((ahead(lookahead-1) == '.') &&
@@ -237,40 +242,25 @@ void Scanner::fetchNumber() {
 	(ahead(lookahead) == '\\') ||
 	(ahead(lookahead) == '^') ||
 	(ahead(lookahead) == '\'')))) lookahead--;
-  QString numtext(QString(m_text,m_ptr,lookahead));
+  QString numtext(m_text.mid(m_ptr,lookahead));
   m_ptr += lookahead;
-  if ((numclass == complex_class) ||
-      (numclass == dcomplex_class))
+  if (imagnumber)
     m_ptr++;
-  switch (numclass) {
-  case integer_class:
-    setToken(TOK_INTEGER,numtext);
-    return;
-  case float_class:
-    setToken(TOK_FLOAT,numtext);
-    return;
-  case double_class:
-    setToken(TOK_DOUBLE,numtext);
-    return;
-  case complex_class:
-    setToken(TOK_COMPLEX,numtext);
-    return;
-  case dcomplex_class:
-    setToken(TOK_DCOMPLEX,numtext);
-    return;
-  }
+  if (!imagnumber)
+    setToken(TOK_REAL,numtext);
+  else
+    setToken(TOK_IMAG,numtext);
 }
 
 void Scanner::fetchIdentifier() {
   int len = 0;
   while (isalnumus(ahead(len))) len++;
   // Collect the identifier into a string
-  QString ident(QString(m_text,m_ptr,len));
-  QString *p = lower_bound(fm_reserved,fm_reserved+fm_reserved_count,ident);
-  if ((p!= fm_reserved+fm_reserved_count) && (*p == ident))
-    setToken(TOK_KEYWORD+(p-fm_reserved)+1);
+  QString ident(m_text.mid(m_ptr,len));
+  if (fm_reserved.contains(ident))
+    setToken(fm_reserved[ident]);
   else
-    setToken(TOK_IDENT,QString(m_text,m_ptr,len));
+    setToken(TOK_IDENT,m_text.mid(m_ptr,len));
   m_ptr += len;
 }
 
@@ -288,7 +278,7 @@ void Scanner::fetchBlob() {
 	   (ahead(len) != '%') && (ahead(len) != ',') &&
 	   (ahead(len) != ';')) len++;
     if (len > 0) {
-      setToken(TOK_STRING,QString(m_text,m_ptr,len));
+      setToken(TOK_STRING,m_text.mid(m_ptr,len));
       m_ptr += len;
       m_tokValid = true;    
     } 
@@ -298,8 +288,8 @@ void Scanner::fetchBlob() {
 const Token& Scanner::next() {
   while (!m_tokValid) {
     fetch();
-    if (m_tokValid && m_debugFlag)
-      cout << m_tok;
+    //     if (m_tokValid && m_debugFlag)
+    //       qDebug() << m_tok;
     if ((m_ptr < m_strlen) && (current() == '\n'))
       m_linenumber++;
   }
@@ -320,16 +310,16 @@ void Scanner::consume() {
   m_tokValid = false;
 }
 
-byte Scanner::current() {
+TokenType Scanner::current() {
   if (m_ptr < m_strlen)
-    return m_text.at(m_ptr);
+    return m_text.at(m_ptr).unicode();
   else
     return 0;
 }
 
-byte Scanner::previous() {
+TokenType Scanner::previous() {
   if (m_ptr)
-    return m_text.at(m_ptr-1);
+    return m_text.at(m_ptr-1).unicode();
   else
     return 0;
 }
@@ -342,51 +332,45 @@ void Scanner::popWSFlag() {
   m_ignorews.pop();
 }
 
-byte Scanner::ahead(int n) {
+TokenType Scanner::ahead(int n) {
   if ((m_ptr+n) >= (int)(m_text.size()))
     return 0;
   else
-    return m_text.at(m_ptr+n);
+    return m_text.at(m_ptr+n).unicode();
 }
 
 QString Scanner::context() {
   return context(contextNum());
 }
 
-static QString stringFromNumber(unsigned line) {
-  char buffer[1000];
-  sprintf(buffer,"%d",line);
-  return QString(buffer);
-}
-
 QString Scanner::snippet(unsigned pos1, unsigned pos2) {
   unsigned ptr1 = pos1 >> 16;
   unsigned ptr2 = pos2 >> 16;
-  return QString(m_text,ptr1,ptr2-ptr1+1);
+  return m_text.mid(ptr1,ptr2-ptr1+1);
 }
 
 QString Scanner::context(unsigned pos) {
   pos = pos >> 16;
-  QString::size_type line_start = 0;
+  int line_start = 0;
   int linenumber = 1;
-  QString::size_type line_stop = m_text.find("\n");
+  int line_stop = m_text.indexOf("\n");
   QString prevline;
   while (pos > line_stop) {
-    prevline = QString(m_text,line_start,line_stop-line_start);
+    prevline = m_text.mid(line_start,line_stop-line_start);
     line_start = line_stop+1;
-    line_stop = m_text.find("\n",line_start);
+    line_stop = m_text.indexOf("\n",line_start);
     linenumber++;
   }
   QString retstring;
   if (m_filename.size() > 0) {
-    retstring = " at line number: " + stringFromNumber(linenumber);
+    retstring = " at line number: " + QString::number(linenumber);
     retstring += " of file " + m_filename + "\n";
   }  else
     retstring += "\n";
   retstring += "     " + prevline + "\n";
-  retstring += "     " + string(m_text,line_start,line_stop-line_start);
+  retstring += "     " + m_text.mid(line_start,line_stop-line_start);
   int offset = pos-line_start-1;
   if (offset < 0) offset = 0;
-  retstring += "\n     " + string(offset,' ') + "^";
+  retstring += "\n     " + QString(offset,' ') + "^";
   return(retstring);
 }

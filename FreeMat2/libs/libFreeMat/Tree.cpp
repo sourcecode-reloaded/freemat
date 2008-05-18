@@ -19,9 +19,10 @@ Tree* Tree::deepTreeCopy(Tree* t) {
 
 static int indentlevel = 0;
 void Tree::print() const {
+  QTextStream out(stdout);
   for (int i=0;i<indentlevel;i++)
-    cout << " ";
-  cout << m_node;
+    out << " ";
+  out << m_node;
   indentlevel+=3;
   for (int i=0;i<m_children.size();i++)
     m_children[i]->print();

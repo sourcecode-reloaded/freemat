@@ -50,6 +50,16 @@ inline bool IsInteger(double x) {
   return rint(x) == x;
 }
 
+inline bool IsInteger(int8 x) { return true; }
+inline bool IsInteger(uint8 x) { return true;}
+inline bool IsInteger(int16 x) { return true; }
+inline bool IsInteger(uint16 x) { return true;}
+inline bool IsInteger(int32 x) { return true; }
+inline bool IsInteger(uint32 x) { return true;}
+inline bool IsInteger(int64 x) { return true; }
+inline bool IsInteger(uint64 x) { return true;}
+inline bool IsInteger(bool x) { return true; }
+
 template <typename T>
 inline bool IsNonNegative(T x) {
   return (x >= 0);

@@ -6,7 +6,9 @@
 
 class Array;
 
-class StructArray : public QMap<QString, BasicArray<Array> > {
+class StructArray {
+  QStringList m_fields;
+  QVector<BasicArray<Array> > m_data;
   StringVector m_classPath;
 public:
   bool isUserClass() const {return !m_classPath.empty();}
@@ -15,6 +17,27 @@ public:
   void unsliceClass() {m_classPath.pop_back();}
   const StringVector & classPath() const {return m_classPath;}
   void setClassPath(const StringVector & classPath) {m_classPath = classPath;}
+  StringVector fieldNames() const {return m_fields;}
+  int fieldCount() const {return m_fields.size();}
+  QString fieldName(int i) const {return m_fields[i];}
+  int fieldIndex(QString name) const {
+    if (m_fields.contains(name)) 
+      return m_fields.indexOf(name);
+    throw Exception("Fieldname " + name + " not defined");
+  }
+  bool contains(QString name) const { return m_fields.contains(name); }
+  void insert(QString name, BasicArray<Array> t) {
+    if (!contains(name)) m_fields += name;
+    (*this)[name] = t;
+  }
+  BasicArray<Array>& operator[](int i) {return m_data[i];}
+  const BasicArray<Array>& operator[](int i) const {return m_data[i];}
+  BasicArray<Array>& operator[](QString name) {
+    if (!m_fields.contains(name))
+      m_fields += name;
+    return m_data[fieldIndex(name)];
+  }
+  const BasicArray<Array>& operator[](QString name) const {return m_data[fieldIndex(name)];}
 };
 
 #endif

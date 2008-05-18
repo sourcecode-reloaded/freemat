@@ -66,6 +66,24 @@ bool IsInfinite(double t) {
 
 }
 
+bool IsInfinite(int8) {return false;}
+bool IsInfinite(int16) {return false;}
+bool IsInfinite(int32) {return false;}
+bool IsInfinite(int64) {return false;}
+bool IsInfinite(uint8) {return false;}
+bool IsInfinite(uint16) {return false;}
+bool IsInfinite(uint32) {return false;}
+bool IsInfinite(uint64) {return false;}
+
+bool IsFinite(int8) {return true;}
+bool IsFinite(int16) {return true;}
+bool IsFinite(int32) {return true;}
+bool IsFinite(int64) {return true;}
+bool IsFinite(uint8) {return true;}
+bool IsFinite(uint16) {return true;}
+bool IsFinite(uint32) {return true;}
+bool IsFinite(uint64) {return true;}
+
 bool IsNaN(int32 t) {
   return true;
 }

@@ -31,7 +31,7 @@ public:
   Tree(const Token& tok) : m_node(tok), 
 			   m_jitstate(UNTRIED), m_jitfunc(NULL)
   {m_node.fillArray();}
-  Tree(byte token, unsigned position) : m_node(Token(token,position)), 
+  Tree(TokenType token, unsigned position) : m_node(Token(token,position)), 
 					m_jitstate(UNTRIED), m_jitfunc(NULL)
   {}
   Tree(const Token& tok, Tree* child1, Tree* child2) : m_node(tok), 
@@ -53,14 +53,14 @@ public:
   inline void setJITState(JITState_t t) {m_jitstate = t;}
   inline JITFunc* JITFunction() const {return m_jitfunc;}
   inline void setJITFunction(JITFunc *t) {m_jitfunc = t;}
-  inline void rename(byte newtok) {m_node.setValue(newtok);}
+  inline void rename(TokenType newtok) {m_node.setValue(newtok);}
   inline unsigned context() const {return m_node.position();}
   inline bool valid() const {return !(m_node.is(TOK_INVALID));}
   bool operator== (const Tree &copy) const;
   inline Tree* first() const {return m_children.front();}
   inline Tree* second() const {return m_children.at(1);}
-  inline bool is(byte tok) const {return (token()==tok);}
-  inline byte token() const {return m_node.value();}
+  inline bool is(TokenType tok) const {return (token()==tok);}
+  inline TokenType token() const {return m_node.value();}
   inline int numChildren() const {return m_children.size();}
   inline bool hasChildren() const {return (m_children.size()>0);}
   inline QString text() const {return m_node.text();}

@@ -825,11 +825,8 @@ Array Interpreter::expression(Tree *t) {
   switch(t->token()) {
   case TOK_VARIABLE: 
     return rhs(t);
-  case TOK_INTEGER:
-  case TOK_FLOAT:
-  case TOK_DOUBLE:
-  case TOK_COMPLEX:
-  case TOK_DCOMPLEX:
+  case TOK_REAL:
+  case TOK_IMAG:
   case TOK_STRING:
     return t->array();
   case TOK_END:

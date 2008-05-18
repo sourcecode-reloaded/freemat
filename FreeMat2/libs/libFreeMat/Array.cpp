@@ -151,9 +151,8 @@ const NTuple Array::dimensions() const {
   case Struct:
     {
       const StructArray &rp(constStructPtr());
-      StructArray::const_iterator i=rp.constBegin();
-      if (i == rp.constEnd()) return NTuple(0,0);
-      return i.value().dimensions();
+      if (rp.fieldCount() == 0) return NTuple(0,0);
+      return rp[0].dimensions();
     }
     MacroExpandCasesAll(MacroDimensions);
   }
@@ -181,23 +180,14 @@ static inline const void Tset_struct_scalar(Array*ptr, S ndx, const Array &rhs) 
   // First loop through the elements
   const StructArray &rp(rhs.constStructPtr());
   StructArray &lp(ptr->structPtr());
-  StructArray::const_iterator i=rp.constBegin();
-  while (i!=rp.constEnd()) {
-    Set(lp[i.key()],ndx,i.value().get(1));
-    ++i;
-  }
+  for (int i=0;i<rp.fieldCount();i++) 
+    Set(lp[rp.fieldName(i)],ndx,rp[i].get(1));
   // Loop through the output and force all arrays to be the same size
   NTuple newSize;
-  i = lp.constBegin();
-  while (i!= lp.constEnd()) {
-    newSize.cover(i.value().dimensions());
-    ++i;
-  }
-  StructArray::iterator j=lp.begin();
-  while (j != lp.end()) {
-    j.value().resize(newSize);
-    ++j;
-  }
+  for (int i=0;i<lp.fieldCount();i++)
+    newSize.cover(lp[i].dimensions());
+  for (int i=0;i<lp.fieldCount();i++)
+    lp[i].resize(newSize);
 }
 
 
@@ -253,19 +243,14 @@ static inline const void Tset_struct(Array*ptr, S ndx, const Array &rhs) {
   // First loop through the elements
   const StructArray &rp(rhs.constStructPtr());
   StructArray &lp(ptr->structPtr());
-  StructArray::const_iterator i=rp.constBegin();
   NTuple newSize(ptr->dimensions());
-  while (i!=rp.constEnd()) {
-    Set(lp[i.key()],ndx,i.value());
-    newSize = lp[i.key()].dimensions();
-    ++i;
+  for (int i=0;i<rp.fieldCount();i++) {
+    Set(lp[rp.fieldName(i)],ndx,rp[i]);
+    newSize = lp[rp.fieldName(i)].dimensions();
   }
   // Loop through the output and force all arrays to be the same size
-  StructArray::iterator j=lp.begin();
-  while (j != lp.end()) {
-    j.value().resize(newSize);
-    ++j;
-  }
+  for (int j=0;j<lp.fieldCount();j++) 
+    lp[j].resize(newSize);
 }
 
 #define MacroSetIndexArray(ctype,cls)		\
@@ -301,11 +286,8 @@ void Array::set(const IndexArrayVector& index, const Array& data) {
 template <typename S>
 static inline void Treshape_struct(Array* ptr, S ndx) {
   StructArray &lp(ptr->structPtr());
-  StructArray::iterator i=lp.begin();
-  while (i != lp.end()) {
-    i.value().reshape(ndx);
-    ++i;
-  }
+  for (int i=0;i<lp.fieldCount();i++)
+    lp[i].reshape(ndx);
 }
 
 template <typename S, typename T>
@@ -339,11 +321,8 @@ void Array::reshape(const NTuple &size) {
 template <typename S>
 static inline void Tresize_struct(Array* ptr, S ndx) {
   StructArray &lp(ptr->structPtr());
-  StructArray::iterator i=lp.begin();
-  while (i != lp.end()) {
-    i.value().resize(ndx);
-    ++i;
-  }
+  for (int i=0;i<lp.fieldCount();i++)
+    lp[i].resize(ndx);
 }
 
 template <typename S, typename T>
@@ -409,7 +388,7 @@ const ArrayVector Array::get(const QString& field) const {
   const StructArray &rp(constStructPtr());
   if (!rp.contains(field)) throw Exception("Reference to non-existent field " + field);
   ArrayVector ret;
-  const BasicArray<Array> &val(rp.value(field));
+  const BasicArray<Array> &val(rp[field]);
   for (index_t i=1;i<=val.length();i++)
     ret.push_back(val.get(i));
   return ret;
@@ -420,11 +399,8 @@ static inline Array Tget_struct(const Array*ptr, S ndx) {
   const StructArray &rp(ptr->constStructPtr());
   Array ret(Struct,NTuple(1,1));
   StructArray &lp(ret.structPtr());
-  StructArray::const_iterator i=rp.constBegin();
-  while (i != rp.constEnd()) {
-    lp[i.key()] = Get(i.value(),ndx);
-    ++i;
-  }
+  for (int i=0;i<rp.fieldCount();i++)
+    lp[rp.fieldName(i)] = Get(rp[i],ndx);
   return ret;
 }
 
@@ -574,11 +550,8 @@ static inline Array Tget_struct_scalar(const Array*ptr, S ndx) {
   const StructArray &rp(ptr->constStructPtr());
   Array ret(Struct,NTuple(1,1));
   StructArray &lp(ret.structPtr());
-  StructArray::const_iterator i=rp.constBegin();
-  while (i != rp.constEnd()) {
-    lp[i.key()].set(1,Get(i.value(),ndx).get(1));
-    ++i;
-  }
+  for (int i=0;i<rp.fieldCount();i++)
+    lp[rp.fieldName(i)].set(1,Get(rp[i],ndx).get(1));
   return ret;
 }
 
@@ -724,15 +697,9 @@ const Array Array::asComplex() const {
 static inline bool Tequals_struct(const Array *pA, const Array *pB) {
   const StructArray &ap(pA->constStructPtr());
   const StructArray &bp(pB->constStructPtr());
-  StructArray::const_iterator i=ap.constBegin();
-  StructArray::const_iterator j=bp.constBegin();
-  while ((i!= ap.constEnd()) && (j != bp.constEnd())) {
-    if (!(i.key() == j.key())) return false;
-    if (!(i.value() == j.value())) return false;
-    ++i; ++j;
-  }
-  if ((i != ap.constEnd()) || (j != bp.constEnd()))
-    return false;
+  if (ap.fieldNames() != bp.fieldNames()) return false;
+  for (int i=0;i<ap.fieldCount();i++)
+    if (!(ap[i] == bp[i])) return false;
   return true;
 }
 
@@ -1018,13 +985,7 @@ QStringList FieldNames(const Array& arg) {
   if (arg.dataClass() != Struct)
     throw Exception("fieldnames only valid for structure arrays");
   const StructArray &rp(arg.constStructPtr());
-  StructArray::const_iterator i=rp.constBegin();
-  QStringList ret;
-  while (i != rp.constEnd()) {
-    ret << i.key(); 
-    ++i;
-  }
-  return ret;
+  return rp.fieldNames();
 }
 
 static inline void do_single_sided_algo_double(double a, double b,double *pvec, 

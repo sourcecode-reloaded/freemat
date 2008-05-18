@@ -339,7 +339,7 @@ bool IsNonNegative(const BasicArray<T> &arg) {
 template <typename T>
 bool IsInteger(const BasicArray<T> &arg) {
   for (index_t i=1;i<=arg.length();++i)
-    if (IsInteger(arg.get(i))) return false;
+    if (!IsInteger(arg.get(i))) return false;
   return true;
 }
 
