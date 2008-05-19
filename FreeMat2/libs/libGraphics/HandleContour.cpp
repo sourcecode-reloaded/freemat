@@ -155,10 +155,10 @@ inline void Join(cline& current, const cline& toadd) {
 lineset HandleContour::ContourCDriver(Array m, double val, Array x, Array y) {
   lineset allLines;
   lineset bundledLines;
-  m.promoteType(FM_DOUBLE);
-  const double *func = (const double *) m.getDataPointer();
-  int numy = m.rows();
-  int numx = m.columns();
+  m = m.toClass(Double);
+  const double *func = m.constReal<double>().constData();
+  int numy = int(m.rows());
+  int numx = int(m.columns());
   for (int row=1;row<numy;row++)
     for (int col=1;col<numx;col++) {
       int l = 0;
@@ -238,8 +238,8 @@ lineset HandleContour::ContourCDriver(Array m, double val, Array x, Array y) {
   }
   // Final step is to transform the lines into the
   // given coordinates
-  const double *xp = (const double *) x.getDataPointer();
-  const double *yp = (const double *) y.getDataPointer();
+  const double *xp = (const double *) (x.constReal<double>().constData());
+  const double *yp = (const double *) (y.constReal<double>().constData(););
 #define X(a,b) xp[(b)+(a)*numy]
 #define Y(a,b) yp[(b)+(a)*numy]
   for (int i=0;i<bundledLines.size();i++)
