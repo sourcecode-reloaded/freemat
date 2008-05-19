@@ -350,7 +350,7 @@ void QTRenderEngine::color(QVector<double> col) {
   pnt->setBrush(brush);
 }
 
-void QTRenderEngine::setLineStyle(std::string style) {
+void QTRenderEngine::setLineStyle(QString style) {
   QPen pen(pnt->pen());
   if (style == "-") 
     pen.setStyle(Qt::SolidLine);
@@ -454,7 +454,7 @@ void QTRenderEngine::getViewport(int aviewp[4]) {
     aviewp[i] = viewp[i];    
 }
 
-void QTRenderEngine::putText(double x, double y, std::string txt, 
+void QTRenderEngine::putText(double x, double y, QString txt, 
 			     QVector<double> color, 
 			     AlignmentFlag xflag, AlignmentFlag yflag,
 			     QFont fnt, double rotation) {
@@ -499,7 +499,7 @@ void QTRenderEngine::putText(double x, double y, std::string txt,
   pnt->setPen(pen);
 }
 
-void QTRenderEngine::measureText(std::string txt, QFont fnt, AlignmentFlag xflag, 
+void QTRenderEngine::measureText(QString txt, QFont fnt, AlignmentFlag xflag, 
 				 AlignmentFlag yflag,int &width, int &height,
 				 int &xoffset, int &yoffset) {
   QFontMetrics fm(fnt);
@@ -646,7 +646,7 @@ void QTRenderEngine::quadStrips(QVector<QVector<cpoint> > faces, bool flatfaces,
   //  qDebug() << "Faces " << faces.size();
   //  qDebug() << "Edges " << edges.size();
   QVector<quad3d> mapqds(MapQuads(faces,edges));
-  std::sort(mapqds.begin(),mapqds.end());
+  qSort(mapqds.begin(),mapqds.end());
   for (int i=0;i<mapqds.size();i++) {
     QPolygonF poly;
     poly.push_back(QPointF(mapqds[i].pts[0].x,mapqds[i].pts[0].y));

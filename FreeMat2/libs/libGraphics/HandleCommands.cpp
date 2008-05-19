@@ -247,10 +247,10 @@ void FreeHandleObject(unsigned handle) {
 ArrayVector HFigureFunction(int nargout,const ArrayVector& arg) {
   if (arg.size() == 0) {
     NewFig();
-    return SingleArrayVector(Array::int32Constructor(HcurrentFig+1));
+    return ArrayVector(Array(double(HcurrentFig+1)));
   } else {
     Array t(arg[0]);
-    int fignum = t.getContentsAsIntegerScalar();
+    int fignum = t.asInteger();
     if ((fignum<=0) || (fignum>MAX_FIGS))
       throw Exception("figure number is out of range - it must be between 1 and 50");
     SelectFig(fignum-1);
@@ -307,7 +307,7 @@ ArrayVector HAxesFunction(int nargout, const ArrayVector& arg) {
     unsigned int handle = AssignHandleObject(fp);
     ArrayVector t(arg);
     while (t.size() >= 2) {
-      std::string propname(ArrayToString(t[0]));
+      QString propname(t[0].asString());
       fp->LookupProperty(propname)->Set(t[1]);
       t.pop_front();
       t.pop_front();
@@ -319,9 +319,9 @@ ArrayVector HAxesFunction(int nargout, const ArrayVector& arg) {
     // Add us to the children...
     AddToCurrentFigChildren(handle);
     fp->UpdateState();
-    return SingleArrayVector(Array::uint32Constructor(handle));
+    return ArrayVector(Array(double(handle)));
   } else {
-    unsigned int handle = (unsigned int) ArrayToInt32(arg[0]);
+    unsigned int handle = (unsigned int) arg[0].asInteger();
     HandleObject* hp = LookupHandleObject(handle);
     if (!hp->IsType("axes"))
       throw Exception("single argument to axes function must be handle for an axes"); 
@@ -334,10 +334,10 @@ ArrayVector HAxesFunction(int nargout, const ArrayVector& arg) {
 }
 
 void HSetChildrenFunction(HandleObject *fp, Array children) {
-  children.promoteType(FM_UINT32);
-  const unsigned *dp = (const unsigned*) children.getDataPointer();
+  children = children.toClass(UInt32);
+  const BasicArray<uint32> &dp(children.constReal<uint32>());
   // make sure they are all valid handles
-  for (int i=0;i<children.getLength();i++) 
+  for (index_t i=1;i<=dp.length();i++) 
     ValidateHandle(dp[i]);
   // Retrieve the current list of children
   HandleObject *gp;
@@ -351,7 +351,7 @@ void HSetChildrenFunction(HandleObject *fp, Array children) {
     }
   }
   // Loop through the new list of children
-  for (int i=0;i<children.getLength();i++) {
+  for (index_t i=1;i<=dp.length();i++) {
     unsigned handle = dp[i];
     if (handle >= HANDLE_OFFSET_OBJECT) {
       gp = LookupHandleObject(handle);
@@ -395,7 +395,7 @@ void HSetChildrenFunction(HandleObject *fp, Array children) {
 ArrayVector HSetFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 3)
     throw Exception("set doesn't handle all cases yet!");
-  int handle = ArrayToInt32(arg[0]);
+  int handle = arg[0].asInteger();
   // Lookup the handle
   HandleObject *fp;
   if (handle >= HANDLE_OFFSET_OBJECT)
@@ -405,7 +405,7 @@ ArrayVector HSetFunction(int nargout, const ArrayVector& arg) {
   int ptr = 1;
   while (arg.size() >= (ptr+2)) {
     // Use the address and property name to lookup the Get/Set handler
-    std::string propname = ArrayToString(arg[ptr]);
+    QString propname = arg[ptr].asString();
     // Special case 'set' for 'children' - this can change reference counts
     // Special case 'set' for 'figsize' - this requires help from the OS
     if (propname == "children")
@@ -418,7 +418,8 @@ ArrayVector HSetFunction(int nargout, const ArrayVector& arg) {
       try {
 	fp->LookupProperty(propname)->Set(arg[ptr+1]);
       } catch (Exception &e) {
-	throw Exception(std::string("Got error ") + std::string(e.getMessageCopy()) + std::string(" for property ") + propname);
+	throw Exception(QString("Got error ") + QString(e.msg()) + 
+			QString(" for property ") + propname);
       }
     }
     ptr+=2;
@@ -450,8 +451,8 @@ ArrayVector HSetFunction(int nargout, const ArrayVector& arg) {
 ArrayVector HGetFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 2)
     throw Exception("get doesn't handle all cases yet!");
-  int handle = ArrayToInt32(arg[0]);
-  std::string propname = ArrayToString(arg[1]);
+  int handle = arg[0].asInteger();
+  QString propname = arg[1].asString();
   // Lookup the handle
   HandleObject *fp;
   if (handle >= HANDLE_OFFSET_OBJECT)
@@ -459,7 +460,7 @@ ArrayVector HGetFunction(int nargout, const ArrayVector& arg) {
   else
     fp = (HandleObject*) LookupHandleFigure(handle);
   // Use the address and property name to lookup the Get/Set handler
-  return SingleArrayVector(fp->LookupProperty(propname)->Get());
+  return ArrayVector(fp->LookupProperty(propname)->Get());
 }
 
 unsigned GenericConstructor(HandleObject* fp, const ArrayVector& arg,
@@ -467,15 +468,16 @@ unsigned GenericConstructor(HandleObject* fp, const ArrayVector& arg,
   unsigned int handle = AssignHandleObject(fp);
   ArrayVector t(arg);
   while (t.size() >= 2) {
-    std::string propname(ArrayToString(t[0]));
+    QString propname(t[0].asString());
     if (propname == "autoparent") {
-      std::string pval(ArrayToString(t[1]));
+      QString pval(t[1].asString());
       autoParentGiven = (pval == "on");
     }	else {
       try {
 	fp->LookupProperty(propname)->Set(t[1]);
       } catch (Exception &e) {
-	throw Exception(std::string("Got error ") + std::string(e.getMessageCopy()) + std::string(" for property ") + propname);
+	throw Exception(QString("Got error ") + e.msg() + 
+			QString(" for property ") + propname);
       }
     }
     t.pop_front();
@@ -519,7 +521,7 @@ unsigned GenericConstructor(HandleObject* fp, const ArrayVector& arg,
 //the children of the current axis.
 //!
 ArrayVector HLineFunction(int nargout, const ArrayVector& arg) {
-  return SingleArrayVector(Array::uint32Constructor(GenericConstructor(new HandleLineSeries,arg)));
+  return ArrayVector(Array(double(GenericConstructor(new HandleLineSeries,arg))));
 }
 
 //!
@@ -536,7 +538,7 @@ ArrayVector HLineFunction(int nargout, const ArrayVector& arg) {
 //the children of the current axis.
 //!
 ArrayVector HContourFunction(int nargout, const ArrayVector& arg) {
-  return SingleArrayVector(Array::uint32Constructor(GenericConstructor(new HandleContour,arg)));
+  return ArrayVector(Array(double(GenericConstructor(new HandleContour,arg))));
 }
 
 //!
@@ -563,7 +565,7 @@ ArrayVector HUIControlFunction(int nargout, const ArrayVector& arg, Interpreter 
   QVector<unsigned> parent;
   parent.push_back(HcurrentFig+1);
   cp->Data(parent);
-  return SingleArrayVector(Array::uint32Constructor(handleID));
+  return ArrayVector(Array(double(handleID)));
 }
 
 //!
@@ -580,7 +582,7 @@ ArrayVector HUIControlFunction(int nargout, const ArrayVector& arg, Interpreter 
 //the children of the current axis.
 //!
 ArrayVector HImageFunction(int nargout, const ArrayVector& arg) {
-  return SingleArrayVector(Array::uint32Constructor(GenericConstructor(new HandleImage,arg)));
+  return ArrayVector(Array(double(GenericConstructor(new HandleImage,arg))));
 }
 
 //!
@@ -597,7 +599,7 @@ ArrayVector HImageFunction(int nargout, const ArrayVector& arg) {
 //the children of the current axis.
 //!
 ArrayVector HTextFunction(int nargout, const ArrayVector& arg) {
-  return SingleArrayVector(Array::uint32Constructor(GenericConstructor(new HandleText,arg)));
+  return ArrayVector(Array(double(GenericConstructor(new HandleText,arg))));
 }
 
 //!
@@ -614,7 +616,7 @@ ArrayVector HTextFunction(int nargout, const ArrayVector& arg) {
 //the children of the current axis.
 //!
 ArrayVector HSurfaceFunction(int nargout, const ArrayVector& arg) {
-  return SingleArrayVector(Array::uint32Constructor(GenericConstructor(new HandleSurface,arg)));
+  return ArrayVector(Array(double(GenericConstructor(new HandleSurface,arg))));
 }
 
 //!
@@ -635,7 +637,7 @@ ArrayVector FigRaiseFunction(int nargout, const ArrayVector& args) {
   if (args.size() == 0)
     CurrentWindow()->raise();
   else {
-    int fignum = ArrayToInt32(args[0]);
+    int fignum = args[0].asInteger();
     if ((fignum >= 1) && (fignum < MAX_FIGS+1)) {
       if (Hfigs[fignum-1])
 	Hfigs[fignum-1]->raise();
@@ -669,7 +671,7 @@ ArrayVector FigLowerFunction(int nargout, const ArrayVector& args) {
   if (args.size() == 0)
     CurrentWindow()->lower();
   else {
-    int fignum = ArrayToInt32(args[0]);
+    int fignum = args[0].asInteger();
     if ((fignum >= 1) && (fignum < MAX_FIGS+1)) {
       if (Hfigs[fignum-1])
 	Hfigs[fignum-1]->lower();
@@ -707,7 +709,7 @@ ArrayVector FigLowerFunction(int nargout, const ArrayVector& args) {
 ArrayVector HGCFFunction(int nargout, const ArrayVector& arg) {
   if (HcurrentFig == -1)
     NewFig();      
-  return SingleArrayVector(Array::uint32Constructor(HcurrentFig+1));
+  return ArrayVector(Array(double(HcurrentFig+1)));
 }
 
 
@@ -735,7 +737,7 @@ ArrayVector HGCAFunction(int nargout, const ArrayVector& arg) {
     HAxesFunction(0,arg2);
     current = fig->HandlePropertyLookup("currentaxes");
   }
-  return SingleArrayVector(Array::uint32Constructor(current));
+  return ArrayVector(Array(double(current)));
 }
 
 //!
@@ -763,7 +765,7 @@ ArrayVector HGCAFunction(int nargout, const ArrayVector& arg) {
 ArrayVector HPropertyValidateFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 2)
     throw Exception("pvalid requires two arguments, an object type name and a property name");
-  std::string objectname = ArrayToString(arg[0]);
+  QString objectname = arg[0].asString();
   HandleObject *fp;
   if (objectname == "axes")
     fp = new HandleAxis;
@@ -773,7 +775,7 @@ ArrayVector HPropertyValidateFunction(int nargout, const ArrayVector& arg) {
     fp = new HandleText;
   else
     throw Exception("Unrecognized object type name " + objectname);
-  std::string propname = ArrayToString(arg[1]);
+  QString propname = arg[1].asString();
   bool isvalid;
   isvalid = true;
   try {
@@ -782,11 +784,11 @@ ArrayVector HPropertyValidateFunction(int nargout, const ArrayVector& arg) {
     isvalid = false;
   }
   delete fp;
-  return SingleArrayVector(Array::logicalConstructor(isvalid));
+  return ArrayVector(Array(bool(isvalid)));
 }
 
-bool PrintBaseFigure(HandleWindow* g, std::string filename, 
-		     std::string type) {
+bool PrintBaseFigure(HandleWindow* g, QString filename, 
+		     QString type) {
   bool retval;
   HPColor *color = (HPColor*) g->HFig()->LookupProperty("color");
   double cr, cg, cb;
@@ -802,14 +804,14 @@ bool PrintBaseFigure(HandleWindow* g, std::string filename,
       prnt.setOutputFormat(QPrinter::PdfFormat);
     else
       prnt.setOutputFormat(QPrinter::PostScriptFormat);
-    prnt.setOutputFileName(filename.c_str());
+    prnt.setOutputFileName(filename);
     QPainter pnt(&prnt);
     QTRenderEngine gc(&pnt,0,0,g->width(),g->height());
     g->HFig()->PaintMe(gc);
     retval = true;
   } else if (type == "SVG") {
     QSvgGenerator gen;
-    gen.setFileName(QString::fromStdString(filename));
+    gen.setFileName(filename);
     gen.setSize(QSize(g->width(),g->height()));
     QPainter pnt(&gen);
     QTRenderEngine gc(&pnt,0,0,g->width(),g->height());
@@ -819,7 +821,7 @@ bool PrintBaseFigure(HandleWindow* g, std::string filename,
     // Binary print - use grabWidget
     QPixmap pxmap(QPixmap::grabWidget(g->GetQtWidget()));
     QImage img(pxmap.toImage());
-    retval = img.save(filename.c_str(),type.c_str());
+    retval = img.save(filename,type.toAscii().data());
   }
   g->HFig()->SetThreeVectorDefault("color",cr,cg,cb);
   g->UpdateState();
@@ -870,13 +872,13 @@ ArrayVector HCloseFunction(int nargout, const ArrayVector& arg) {
   else {
     Array t(arg[0]);
     if (t.isString()) {
-      string allflag = t.getContentsAsString();
+      QString allflag = t.asString();
       if (allflag == "all") 
 	action = -1;
       else
 	throw Exception("string argument to close function must be 'all'");
     } else {
-      int handle = t.getContentsAsIntegerScalar();
+      int handle = t.asInteger();
       if (handle < 1)
 	throw Exception("Invalid figure number argument to close function");
       action = handle;
@@ -918,14 +920,10 @@ ArrayVector HCopyFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector();
 }
   
-static std::string NormalizeImageExtension(std::string ext) {
-  std::string upperext(ext);
-  std::string lowerext(ext);
-  std::transform(upperext.begin(),upperext.end(),upperext.begin(),
-		 (int(*)(int))toupper);
-  std::transform(lowerext.begin(),lowerext.end(),lowerext.begin(),
-		 (int(*)(int))tolower);
-  if (upperext == "JPG") return std::string("JPEG");
+static QString NormalizeImageExtension(QString ext) {
+  QString upperext(ext.toUpper());
+  QString lowerext(ext.toLower());
+  if (upperext == "JPG") return QString("JPEG");
   if ((upperext == "SVG") || (upperext == "PDF") || 
       (upperext == "PS") || (upperext == "EPS")) return upperext;
   QList<QByteArray> formats(QImageWriter::supportedImageFormats());
@@ -933,11 +931,11 @@ static std::string NormalizeImageExtension(std::string ext) {
     if (formats.at(i).data() == upperext) return upperext;
     if (formats.at(i).data() == lowerext) return lowerext;
   }
-  return std::string();
+  return QString();
 }
 
-std::string FormatListAsString() {
-  std::string ret_text = "Supported Formats: ";
+QString FormatListAsString() {
+  QString ret_text = "Supported Formats: ";
   QList<QByteArray> formats(QImageWriter::supportedImageFormats());
   for (int i=0;i<formats.count();i++)
     ret_text = ret_text + formats.at(i).data() + " ";
@@ -995,15 +993,15 @@ ArrayVector HPrintFunction(int nargout, const ArrayVector& arg) {
   if (HcurrentFig == -1)
     return ArrayVector();
   HandleWindow *f = Hfigs[HcurrentFig];
-  std::string outname(t.getContentsAsString());
-  int pos = outname.rfind(".");
+  QString outname(t.asString());
+  int pos = outname.lastIndexOf(".");
   if (pos < 0)
     throw Exception("print function argument must contain an extension - which is used to determine the format for the output");
-  std::string original_extension(outname.substr(pos+1,outname.size()));
-  std::string modified_extension = 
+  QString original_extension(outname.mid(pos+1,outname.size()));
+  QString modified_extension = 
     NormalizeImageExtension(original_extension);
-  if (modified_extension.empty())
-    throw Exception(std::string("unsupported output format ") + 
+  if (modified_extension.isEmpty())
+    throw Exception(QString("unsupported output format ") + 
 		    original_extension + " for print.\n" + 
 		    FormatListAsString());
   if (!PrintBaseFigure(f,outname,modified_extension))
@@ -1031,12 +1029,10 @@ ArrayVector HPointFunction(int nargout, const ArrayVector& arg) {
   f->setFocus(Qt::OtherFocusReason);
   int x, y;
   f->GetClick(x,y);
-  Array retval(Array::doubleVectorConstructor(2));
-  double *d_ip;
-  d_ip = (double*) retval.getReadWriteDataPointer();
-  d_ip[0] = (double) x;
-  d_ip[1] = (double) y;
-  return SingleArrayVector(retval);
+  BasicArray<double> retvec(NTuple(2,1));
+  retvec.set(1,x);
+  retvec.set(2,y);
+  return ArrayVector(Array(retvec));
 }
 
 //!
@@ -1053,12 +1049,12 @@ ArrayVector HPointFunction(int nargout, const ArrayVector& arg) {
 //!
 ArrayVector HIs2DViewFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0) throw Exception("is2DView expects a handle to axes");
-  unsigned int handle = (unsigned int) ArrayToInt32(arg[0]);
+  unsigned int handle = (unsigned int) (arg[0].asInteger());
   HandleObject* hp = LookupHandleObject(handle);
   if (!hp->IsType("axes"))
     throw Exception("single argument to axes function must be handle for an axes"); 
   HandleAxis *axis = (HandleAxis*) hp;
-  return SingleArrayVector(Array::logicalConstructor(axis->Is2DView()));
+  return ArrayVector(Array(bool(axis->Is2DView())));
 }
 
 #if 0
@@ -1115,11 +1111,10 @@ ArrayVector ContourCFunction(int nargout, const ArrayVector& arg) {
   lineset allLines;
   lineset bundledLines;
   if (arg.size() < 2) throw Exception("contourc expects two arguments");
-  double val = ArrayToDouble(arg[1]);
+  double val = arg[1].asDouble();
   if (!arg[0].is2D())
     throw Exception("First argument to contourc must be a 2D matrix");
-  Array m(arg[0]);
-  m.promoteType(FM_DOUBLE);
+  Array m(arg[0].toClass(Double));
   const double *func = (const double *) m.getDataPointer();
   int outcnt = 0;
   int numy = m.rows();

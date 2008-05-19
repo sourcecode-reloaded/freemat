@@ -22,7 +22,6 @@
 
 #include <QString>
 #include <QStringList>
-#include <string>
 
 class PathSearcher{
   QString path;

@@ -277,7 +277,7 @@ public:
   bool operator==(const Array &b) const;
   inline bool operator!=(const Array &b) const {return !(*this == b);}
   void addField(QString name);
-
+  void* getVoidPointer();
 private:
   Data m_real;
   Data m_imag;
@@ -305,6 +305,8 @@ const IndexArray IndexArrayFromArray(const Array &index);
 
 const ArrayVector ArrayVectorFromCellArray(const Array &arg);
 const Array CellArrayFromArrayVector(ArrayVector &arg, index_t cnt);
+const Array CellArrayFromArray(const Array &arg);
+
 void SetCellContents(Array &cell, const Array& index, ArrayVector& data);
 void SetCellContents(Array &cell, const ArrayVector& index, ArrayVector& data);
 QStringList FieldNames(const Array& arg);

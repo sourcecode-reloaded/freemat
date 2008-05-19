@@ -289,7 +289,7 @@ public:
   pt3d operator-(const pt3d& t) {return pt3d(x-t.x,y-t.y,z-t.z);}
 };
 
-static std::string TrimPrint(double val, bool scientificNotation) {
+static QString TrimPrint(double val, bool scientificNotation) {
   char buffer[1000];
   char *p;
   if (!scientificNotation) {
@@ -304,27 +304,27 @@ static std::string TrimPrint(double val, bool scientificNotation) {
       //	*(p+1) = '0';
       //	*(p+2) = 0;
     }
-    return std::string(buffer);
+    return QString(buffer);
   } else {
     sprintf(buffer,"%e",val);
-    std::string label(buffer);
+    QString label(buffer);
     unsigned int ePtr;
     ePtr = label.size() - 1;
     while ((label[ePtr] != 'e') && (label[ePtr] != 'E'))
       ePtr--;
     ePtr--;
     while (label[ePtr] == '0') {
-      label.erase(ePtr,1);
+      label.remove(ePtr,1);
       ePtr--;
     }
     if ((label[ePtr] == '.') || (label[ePtr] == ','))
-      label.insert(ePtr+1, 1,'0');
+      label.insert(ePtr+1, '0');
     ePtr = label.size() - 1;
     while ((label[ePtr] != 'e') && (label[ePtr] != 'E'))
       ePtr--;
     ePtr+=2;
     while ((label[ePtr] == '0') && ePtr < label.size()) {
-      label.erase(ePtr,1);
+      label.remove(ePtr,1);
     }
     if (ePtr == label.size())
       label.append("0");
@@ -930,7 +930,7 @@ QVector<double> HandleAxis::UnitsReinterpret(QVector<double> a) {
   }
 }
   
-QVector<double> HandleAxis::GetPropertyVectorAsPixels(std::string name) {
+QVector<double> HandleAxis::GetPropertyVectorAsPixels(QString name) {
   HPFourVector *hp = (HPFourVector*) LookupProperty(name);
   return (UnitsReinterpret(hp->Data()));
 }
@@ -1616,7 +1616,7 @@ void HandleAxis::UpdateAxisFont() {
   if (fontweight->Is("demi"))
     fweight = QFont::DemiBold;
   // Lookup the font
-  QFont fnt(fontname->Data().c_str(),(int)(fontsize->Data()[0]));
+  QFont fnt(fontname->Data(),(int)(fontsize->Data()[0]));
   fnt.setStyle(fstyle);
   fnt.setWeight(fweight);
   m_font = fnt;
@@ -1768,7 +1768,7 @@ void HandleAxis::RePackFigure() {
     HPStringSet *hp = (HPStringSet*) LookupProperty("xticklabel");
     StringVector xlabels(hp->Data());
     for (int i=0;i<xlabels.size();i++) {
-      QRect sze(fm.boundingRect(xlabels[i].c_str()));
+      QRect sze(fm.boundingRect(xlabels[i]));
       maxTickWidth = qMax(maxTickWidth,sze.width());
       maxTickHeight = qMax(maxTickHeight,sze.height());
     }
@@ -1782,7 +1782,7 @@ void HandleAxis::RePackFigure() {
     HPStringSet *hp = (HPStringSet*) LookupProperty("yticklabel");
     StringVector ylabels(hp->Data());
     for (int i=0;i<ylabels.size();i++) {
-      QRect sze(fm.boundingRect(ylabels[i].c_str()));
+      QRect sze(fm.boundingRect(ylabels[i]));
       maxTickWidth = qMax(maxTickWidth,sze.width());
       maxTickHeight = qMax(maxTickHeight,sze.height());
     }
@@ -1796,7 +1796,7 @@ void HandleAxis::RePackFigure() {
     HPStringSet *hp = (HPStringSet*) LookupProperty("zticklabel");
     StringVector zlabels(hp->Data());
     for (int i=0;i<zlabels.size();i++) {
-      QRect sze(fm.boundingRect(zlabels[i].c_str()));
+      QRect sze(fm.boundingRect(zlabels[i]));
       maxTickWidth = qMax(maxTickWidth,sze.width());
       maxTickHeight = qMax(maxTickHeight,sze.height());
     }
@@ -2088,7 +2088,7 @@ void HandleAxis::DrawLabel(RenderEngine& gc,
 			   double dx, double dy, 
 			   double x2, double y2, 
 			   QVector<double> color,
-			   std::string txt) {
+			   QString txt) {
   double angle = atan2(dy,dx)*180.0/M_PI;
   RenderEngine::AlignmentFlag xalign = RenderEngine::Min;
   RenderEngine::AlignmentFlag yalign = RenderEngine::Min;
@@ -2281,7 +2281,7 @@ void HandleAxis::DrawTickLabels(RenderEngine& gc,
 				QVector<double>  maptics,
 				QVector<double>  minortics,
 				StringVector labels,
-				std::string labelname,
+				QString labelname,
 				int ticlen, double ticdir) 
 {
   gc.color(color);
@@ -2459,12 +2459,12 @@ void HandleAxis::DrawAxisLabels(RenderEngine& gc) {
   QVector<double> outerpos(GetPropertyVectorAsPixels("outerposition"));
   gc.viewport(outerpos[0],outerpos[1],outerpos[2],outerpos[3]);
   HPHandles *lbl;
-  std::string xdir(StringPropertyLookup("xdir"));
-  std::string ydir(StringPropertyLookup("ydir"));
+  QString xdir(StringPropertyLookup("xdir"));
+  QString ydir(StringPropertyLookup("ydir"));
   SetStringDefault("xdir","normal");
   SetStringDefault("ydir","normal");
-  std::string xscale(StringPropertyLookup("xscale"));
-  std::string yscale(StringPropertyLookup("yscale"));
+  QString xscale(StringPropertyLookup("xscale"));
+  QString yscale(StringPropertyLookup("yscale"));
   SetStringDefault("xscale","linear");
   SetStringDefault("yscale","linear");
   if (xvisible) {

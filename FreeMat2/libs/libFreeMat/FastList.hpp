@@ -167,6 +167,12 @@ public:
     else
       throw Exception("failure in back");
   }
+  inline FastList mid(int start, int count) const {
+    FastList ret;
+    for (int i=start;i<start+count;i++) 
+      ret.push_back(at(i));
+    return ret;
+  }
   inline FastList& operator<<(const T &other) {
     push_back(other);
     return *this;

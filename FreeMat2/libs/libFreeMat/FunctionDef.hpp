@@ -25,6 +25,7 @@
 #include "DynLib.hpp"
 #include "mex.h"
 #include <QSharedData>
+#include <QDateTime>
 #include "Scope.hpp"
 
 using namespace std;
@@ -196,7 +197,7 @@ public:
   /**
    * Time function was last modified.
    */
-  time_t timeStamp;
+  QDateTime timeStamp;
   /**
    * Set to true for all of the localFunctions.  
    */

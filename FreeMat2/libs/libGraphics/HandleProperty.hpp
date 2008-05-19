@@ -37,7 +37,7 @@ class HPArray : public HandleProperty {
 protected:
   Array data;
 public:
-  HPArray() : data(Array::emptyConstructor()) {}
+  HPArray() : data(EmptyConstructor()) {}
   virtual ~HPArray() {}
   virtual Array Get() {return data;}
   virtual void Set(Array m) {HandleProperty::Set(m); data = m;}
@@ -85,16 +85,16 @@ public:
 
 class HPString : public HandleProperty {
 protected:
-  std::string data;
+  QString data;
 public:
   HPString() {}
   virtual ~HPString() {}
   virtual Array Get();
   virtual void Set(Array);
-  std::string Data() {return data;}
-  void Data(std::string m) {data = m;}
-  void Value(std::string m) {data = m;}
-  bool Is(std::string m) {return (data == m);}
+  QString Data() {return data;}
+  void Data(QString m) {data = m;}
+  void Value(QString m) {data = m;}
+  bool Is(QString m) {return (data == m);}
 };
 
 class HPStringSet : public HandleProperty {

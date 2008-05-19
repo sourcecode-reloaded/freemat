@@ -643,6 +643,19 @@ void Array::addField(QString name) {
     structPtr().insert(name,BasicArray<Array>());
 }
 
+#define MacroGetVoidPointer(ctype,cls) \
+  case cls: return (void*)(real<ctype>().data());
+
+void* Array::getVoidPointer() {
+  switch (dataClass()) {
+  default:
+    throw Exception("Unsupported type called for getVoidPointer");
+    MacroExpandCasesSimple(MacroGetVoidPointer);
+  }
+}
+
+#undef MacroGetVoidPointer
+
 #define MacroAsIndexScalar(ctype,cls) \
   case cls:			      \
   return index_t(constRealScalar<ctype>());
@@ -933,6 +946,12 @@ const ArrayVector ArrayVectorFromCellArray(const Array &arg) {
   const BasicArray<Array> &rp(arg.constReal<Array>());
   for (index_t i=1;i<=arg.length();i++)
     ret.push_back(rp.get(i));
+  return ret;
+}
+
+const Array CellArrayFromArray(const Array & arg) {
+  Array ret(CellArray,NTuple(1,1));
+  ret.real<Array>().set(1,arg);
   return ret;
 }
 

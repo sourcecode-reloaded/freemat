@@ -282,7 +282,7 @@ Array HPColor::Get() {
 Array HPStringSet::Get() {
   if (data.size() == 0)
     return Array::stringConstructor("");
-  std::string retval;
+  QString retval;
   for (int i=0;i<data.size()-1;i++) {
     retval.append(data[i]);
     retval.append("|");
@@ -295,7 +295,7 @@ void HPStringSet::Set(Array arg) {
   HandleProperty::Set(arg);
   if (!arg.isString()) 
     throw Exception("expecting a '|'-delimited list of strings for property argument");
-  std::string args(ArrayToString(arg));
+  QString args(ArrayToString(arg));
   data.clear();
   Tokenize(args,data,"|");
 }
@@ -364,7 +364,7 @@ void HPConstrainedString::Set(Array arg) {
   HandleProperty::Set(arg);
   if (!arg.isString())
     throw Exception("expecting a string for property");
-  std::string tst(ArrayToString(arg));
+  QString tst(ArrayToString(arg));
   if (find(m_dictionary.begin(),m_dictionary.end(),tst) == m_dictionary.end())
     throw Exception("illegal selection for property");
   HPString::Set(arg);

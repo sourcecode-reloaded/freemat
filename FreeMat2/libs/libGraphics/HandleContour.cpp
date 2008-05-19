@@ -297,7 +297,7 @@ void HandleContour::RebuildContourMatrix() {
   hp->Data(out);
 }
 
-Array HandleContour::GetCoordinateMatrix(std::string name, bool isXcoord) {
+Array HandleContour::GetCoordinateMatrix(QString name, bool isXcoord) {
   // Get the elevation data from the object
   Array zdata(ArrayPropertyLookup("zdata"));
   int zrows(zdata.rows());

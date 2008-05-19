@@ -27,7 +27,10 @@
 #include "Types.hpp"
 #include "MexInterface.hpp"
 #include <QDebug>
+#include <QFile>
+#include <QFileInfo>
 #include <sys/stat.h>
+#include "MemPtr.hpp"
 
 #if HAVE_AVCALL
 #include "avcall.h"
@@ -131,7 +134,6 @@ void AnonymousFunctionDef::initialize(Tree *t, Interpreter *eval) {
 
 MFunctionDef::MFunctionDef() {
   functionCompiled = false;
-  timeStamp = 0;
   localFunction = false;
   pcodeFunction = false;
   nestedFunction = false;
@@ -176,8 +178,8 @@ void MFunctionDef::printMe(Interpreter*eval) {
 }
 
 
-void CaptureFunctionPointer(FuncPtr &val, Interpreter *walker, 
-			    MFunctionDef *parent, ScopePtr &workspace) {
+static void CaptureFunctionPointer(FuncPtr &val, Interpreter *walker, 
+				   MFunctionDef *parent, ScopePtr &workspace) {
   if (val->type() == FM_M_FUNCTION) {
     MFunctionDef* mptr = (MFunctionDef*) val;
     if (mptr->nestedFunction && !mptr->capturedFunction) {
@@ -206,17 +208,18 @@ void CaptureFunctionPointer(FuncPtr &val, Interpreter *walker,
   }
 }
 
-void CaptureFunctionPointers(ArrayVector& outputs, Interpreter *walker, 
+static void CaptureFunctionPointers(ArrayVector& outputs, Interpreter *walker, 
 			     MFunctionDef *parent) {
-  ScopePtr workspace = NULL;
-  // First check for any 
-  for (int i=0;i<((int)outputs.size());i++) {
-    if (outputs[i].dataClass() == FM_FUNCPTR_ARRAY) {
-      FuncPtr *dp = (FuncPtr*) outputs[i].getReadWriteDataPointer();
-      for (int j=0;j<outputs[i].getLength();j++)
-	CaptureFunctionPointer(dp[j],walker,parent,workspace);
-    }
-  }
+// FIXME
+//   ScopePtr workspace = NULL;
+//   // First check for any 
+//   for (int i=0;i<((int)outputs.size());i++) {
+//     if (outputs[i].dataClass() == FM_FUNCPTR_ARRAY) {
+//       FuncPtr *dp = (FuncPtr*) outputs[i].getReadWriteDataPointer();
+//       for (int j=0;j<outputs[i].getLength();j++)
+// 	CaptureFunctionPointer(dp[j],walker,parent,workspace);
+//     }
+//   }
 }
 
 ArrayVector MFunctionDef::evaluateFunction(Interpreter *walker, 
@@ -250,14 +253,14 @@ ArrayVector MFunctionDef::evaluateFunction(Interpreter *walker,
     for (int i=0;i<minCount;i++) {
       QString arg(arguments[i]);
       if (arg[0] == '&')
-	arg.erase(0,1);
+	arg.remove(0,1);
       context->insertVariableLocally(arg,inputs[i]);
     }
-    context->insertVariableLocally("nargin",Array::int32Constructor(minCount));
+    context->insertVariableLocally("nargin",Array(double(minCount)));
   } else {
     // Count the number of supplied arguments
     int inputCount = inputs.size();
-    context->insertVariableLocally("nargin",Array::int32Constructor(inputCount));
+    context->insertVariableLocally("nargin",Array(double(inputCount)));
     // Get the number of explicit arguments
     int explicitCount = arguments.size() - 1;
     // For each explicit argument (that we have an input for),
@@ -267,19 +270,16 @@ ArrayVector MFunctionDef::evaluateFunction(Interpreter *walker,
     for (i=0;i<minCount;i++) {
       QString arg(arguments[i]);
       if (arg[0] == '&')
-	arg.erase(0,1);
+	arg.remove(0,1);
       context->insertVariableLocally(arg,inputs[i]);
     }
     inputCount -= minCount;
     // Put minCount...inputCount 
-    Array varg(CellArray);
-    varg.resize(index_t(inputCount));
-    for (i=0;i<inputCount;i++)
-      dp[i] = inputs[i+minCount];
-    context->insertVariableLocally("varargin",varg);
+    ArrayVector varargin(inputs.mid(minCount,inputCount));
+    context->insertVariableLocally(QString("varargin"),
+				   CellArrayFromArrayVector(varargin,varargin.size()));
   }
-  context->insertVariableLocally("nargout",
-				 Array::int32Constructor(nargout));
+  context->insertVariableLocally(QString("nargout"),Array(double(nargout)));
   try {
     try {
       walker->block(code.tree());
@@ -304,7 +304,7 @@ ArrayVector MFunctionDef::evaluateFunction(Interpreter *walker,
 	for (int i=0;i<returnVals.size();i++) {
 	  Array *ptr = context->lookupVariableLocally(returnVals[i]);
 	  if (!ptr)
-	    outputs[i] = Array::emptyConstructor();
+	    outputs[i] = EmptyConstructor();
 	  else
 	    outputs[i] = *ptr;
 	  if (!ptr && (i < ((int)nargout)))
@@ -323,7 +323,7 @@ ArrayVector MFunctionDef::evaluateFunction(Interpreter *walker,
       for (int i=0;i<explicitCount;i++) {
 	Array *ptr = context->lookupVariableLocally(returnVals[i]);
 	if (!ptr)
-	  outputs[i] = Array::emptyConstructor();
+	  outputs[i] = EmptyConstructor();
 	else
 	  outputs[i] = *ptr;
 	if (!ptr  && (i < nargout)) 
@@ -340,17 +340,17 @@ ArrayVector MFunctionDef::evaluateFunction(Interpreter *walker,
 	if (!ptr)
 	  throw Exception("The special variable 'varargout' was not defined as expected");
 	varargout = *ptr;
-	if (varargout.dataClass() != FM_CELL_ARRAY)
+	if (varargout.dataClass() != CellArray)
 	  throw Exception("The special variable 'varargout' was not defined as a cell-array");
 	// Get the data pointer
-	const Array *dp = ((const Array*) varargout.getDataPointer());
+	const BasicArray<Array> &dp(varargout.constReal<Array>());
 	// Get the length
-	int varlen = varargout.getLength();
+	int varlen = int(varargout.length());
 	int toFill = nargout - explicitCount;
 	if (toFill > varlen) 
 	  throw Exception("Not enough outputs in varargout to satisfy call");
 	for (int i=0;i<toFill;i++)
-	  outputs[explicitCount+i] = dp[i];
+	  outputs[explicitCount+i] = dp[index_t(i+1)];
       }
       // Special case - nargout = 0, only variable outputs from function
       if ((nargout == 0) && (explicitCount == 0)) {
@@ -359,21 +359,20 @@ ArrayVector MFunctionDef::evaluateFunction(Interpreter *walker,
 	ptr = context->lookupVariableLocally("varargout");
 	if (ptr) {
 	  varargout = *ptr;
-	  if (varargout.dataClass() != FM_CELL_ARRAY)
+	  if (varargout.dataClass() != CellArray)
 	    throw Exception("The special variable 'varargout' was not defined as a cell-array");
-	  // Get the data pointer
-	  const Array *dp = ((const Array*) varargout.getDataPointer());
-	  if (varargout.getLength() > 0)
-	    outputs << dp[0];
+	  if (varargout.length() > 0) {
+	    outputs << varargout.constReal<Array>().get(index_t(1));
+	  }
 	}	
       }
     }
     // Check for arguments that were passed by reference, and 
     // update their values.
     for (int i=0;i<minCount;i++) {
-      std::string arg(arguments[i]);
+      QString arg(arguments[i]);
       if (arg[0] == '&')
-	arg.erase(0,1);
+	arg.remove(0,1);
       Array *ptr = context->lookupVariableLocally(arg);
       if (ptr)
 	inputs[i] = *ptr;
@@ -416,19 +415,10 @@ ArrayVector MFunctionDef::evaluateFunction(Interpreter *walker,
   }
 }
   
-static string ReadFileIntoString(FILE *fp) {
-  struct stat st;
-  clearerr(fp);
-  fstat(fileno(fp),&st);
-  long cpos = st.st_size;
-  // Allocate enough for the text, an extra newline, and null
-  char *buffer = (char*) calloc(cpos+2,sizeof(char));
-  int n = fread(buffer,sizeof(char),cpos,fp);
-  buffer[n]='\n';
-  buffer[n+1]=0;
-  string retval(buffer);
-  free(buffer);
-  return retval;
+static inline QString ReadFileIntoString(QString filename) {
+  QFile fp(filename);
+  QTextStream io(&fp);
+  return io.readAll();
 }
 
 
@@ -484,49 +474,39 @@ bool MFunctionDef::updateCode(Interpreter *m_eval) {
   if (pcodeFunction) return false;
   if (nestedFunction) return false;
   // First, stat the file to get its time stamp
-  struct stat filestat;
-  stat(fileName.c_str(),&filestat);
-  if (!functionCompiled || (filestat.st_mtime != timeStamp)) {
+  QFileInfo filestat(fileName);
+  if (!functionCompiled || (filestat.lastModified() != timeStamp)) {
     // Record the time stamp
-    timeStamp = filestat.st_mtime;
-    // Next, open the function's file
-    FILE *fp = fopen(fileName.c_str(),"r");
-    if (fp == NULL) 
-      throw Exception(std::string("Unable to open file :") + fileName);
-    // read lines until we get to a non-comment line
-    bool commentsOnly;
-    commentsOnly = true;
+    timeStamp = filestat.lastModified();
+    QFile fp(fileName);
+    if (!fp.open(QIODevice::ReadOnly))
+      throw Exception(QString("Unable to open file :") + fileName);
+    bool commentsOnly = true;
     helpText.clear();
-    char buffer[1000];
-    while (!feof(fp) && commentsOnly) {
-      buffer[0] = 0;
-      fgets(buffer,1000,fp);
-      char *cp;
-      cp = buffer;
-      while ((*cp == ' ') || (*cp == '\t'))
-	cp++;
-      if (*cp == '\n')
-	continue;
-      if (*cp != '%') 
+    QTextStream io(&fp);
+    QString cp;
+    while (!io.atEnd() && commentsOnly) {
+      cp = io.readLine();
+      while ((cp.size() > 1) && (cp.at(0).isSpace()))
+	cp.remove(0,1);
+      if (cp == "\n") continue;
+      if (cp.at(0) != QChar('%'))
 	commentsOnly = false;
       else {
-	string htext(++cp);
-	if ((htext.size() > 1) && (htext[htext.size()-1] != '\n'))
-	  helpText.push_back(htext + "\n");
+	if ((cp.size() > 1) && (!cp.endsWith(QChar('\n'))))
+	  helpText.push_back(cp + "\n");
 	else
-	  helpText.push_back(htext);
+	  helpText.push_back(cp);
       }
     }
     if (helpText.size() == 0)
-      helpText.push_back(buffer);
-    rewind(fp);
+      helpText.push_back(cp);
     try {
       // Read the file into a string
-      string fileText = ReadFileIntoString(fp);
+      QString fileText = ReadFileIntoString(fileName);
       Scanner S(fileText,fileName);
       Parser P(S);
       CodeBlock pcode(P.process());
-      fclose(fp);
       if (pcode.tree()->is(TOK_FUNCTION_DEFS)) {
 	scriptFlag = false;
 	// Get the main function..
@@ -567,7 +547,6 @@ bool MFunctionDef::updateCode(Interpreter *m_eval) {
 	code = CodeBlock(pcode.tree()->first(),true);
       }
     } catch (Exception &e) {
-      if (fp) fclose(fp);
       functionCompiled = false;
       throw;
     }
@@ -609,8 +588,9 @@ unsigned MFunctionDef::ClosestLine(unsigned line) {
   bestline = 1000000000;
   TreeLine(code.tree(),bestline,line);
   if (bestline == 1000000000)
-    throw Exception(string("Unable to find a line close to ") + 
-		    line + string(" in routine ") + name);
+    throw Exception(QString("Unable to find a line close to ") + 
+		    QString::number(line) + 
+		    QString(" in routine ") + name);
   return bestline;
 }
 
@@ -630,15 +610,10 @@ int BuiltInFunctionDef::outputArgCount() {
 }
 
 void BuiltInFunctionDef::printMe(Interpreter *eval) {
-  StringVector tmp;
-  char msgBuffer[MSGBUFLEN];
-  snprintf(msgBuffer,MSGBUFLEN," Function name:%s\n",name.c_str());
-  eval->outputMessage(msgBuffer);
+  eval->outputMessage(" Function name:" + name);
   eval->outputMessage(" Function class: Built in\n");
-  snprintf(msgBuffer,MSGBUFLEN," Return count: %d\n",retCount);
-  eval->outputMessage(msgBuffer);
-  snprintf(msgBuffer,MSGBUFLEN," Argument count: %d\n",argCount);
-  eval->outputMessage(msgBuffer);
+  eval->outputMessage(QString(" Return count: %1\n").arg(retCount));
+  eval->outputMessage(QString(" Argument count: %1\n").arg(argCount));
 }
 
 
@@ -717,7 +692,7 @@ ImportedFunctionDef::ImportedFunctionDef(GenericFuncPointer address_arg,
 					 StringVector types_arg,
 					 StringVector arguments_arg,
 					 CodeList sizeChecks,
-					 std::string retType_arg) {
+					 QString retType_arg) {
   address = address_arg;
   types = types_arg;
   arguments = arguments_arg;
@@ -739,22 +714,19 @@ ImportedFunctionDef::~ImportedFunctionDef() {
 void ImportedFunctionDef::printMe(Interpreter *) {
 }
 #if HAVE_AVCALL
-static Class mapTypeNameToClass(std::string name) {
-  if (name == "logical") return FM_LOGICAL;
-  if (name == "uint8") return FM_UINT8;
-  if (name == "int8") return FM_INT8;
-  if (name == "uint16") return FM_UINT16;
-  if (name == "int16") return FM_INT16;
-  if (name == "uint32") return FM_UINT32;
-  if (name == "int32") return FM_INT32;
-  if (name == "uint64") return FM_UINT64;
-  if (name == "int64") return FM_INT64;
-  if (name == "float") return FM_FLOAT;
-  if (name == "complex") return FM_COMPLEX;  
-  if (name == "double") return FM_DOUBLE;
-  if (name == "dcomplex") return FM_DCOMPLEX;
-  if (name == "string") return FM_STRING;
-  if (name == "void") return FM_UINT32;
+static DataClass mapTypeNameToClass(QString name) {
+  if (name == "uint8") return UInt8;
+  if (name == "int8") return Int8;
+  if (name == "uint16") return UInt16;
+  if (name == "int16") return Int16;
+  if (name == "uint32") return UInt32;
+  if (name == "int32") return Int32;
+  if (name == "uint64") return UInt64;
+  if (name == "int64") return Int64;
+  if (name == "float") return Float;
+  if (name == "double") return Double;
+  if (name == "string") return StringArray;
+  if (name == "void") return Int32;
   throw Exception("unrecognized type " + name + " in imported function setup");
 }
 #endif
@@ -770,7 +742,7 @@ ArrayVector ImportedFunctionDef::evaluateFunction(Interpreter *walker,
    */
   int i;
   for (i=0;i<inputs.size();i++)
-    inputs[i].promoteType(mapTypeNameToClass(types[i]));
+    inputs[i] = inputs[i].toClass(mapTypeNameToClass(types[i]));
   /**
    * Next, we count how many of the inputs are to be passed by
    * reference.
@@ -803,8 +775,8 @@ ArrayVector ImportedFunctionDef::evaluateFunction(Interpreter *walker,
 	if (arguments[i][0] != '&') {
 	  context->insertVariableLocally(arguments[i],inputs[i]);
 	} else {
-	  string nme(arguments[i]);
-	  nme.erase(nme.begin());
+	  QString nme(arguments[i]);
+	  nme.remove(0,1);
 	  context->insertVariableLocally(nme,inputs[i]);
 	}
       }
@@ -814,10 +786,9 @@ ArrayVector ImportedFunctionDef::evaluateFunction(Interpreter *walker,
       for (i=0;i<inputs.size();i++) {
 	if (sizeCheckExpressions[i].tree()->valid()) {
 	  Array ret(walker->expression(sizeCheckExpressions[i].tree()));
-	  ret.promoteType(FM_INT32);
-	  int len;
-	  len = ret.getContentsAsIntegerScalar();
-	  if (len != (int)(inputs[i].getLength())) {
+	  ret = ret.toClass(Int32);
+	  int len = ret.asInteger();
+	  if (len != (int)(inputs[i].length())) {
 	    throw Exception("array input " + arguments[i] + 
 			    " length different from computed bounds" + 
 			    " check length");
@@ -839,25 +810,25 @@ ArrayVector ImportedFunctionDef::evaluateFunction(Interpreter *walker,
    * Allocate an array of pointers to store for variables passed
    * by reference.
    */
-  void **refPointers;
-  refPointers = (void**) malloc(sizeof(void*)*passByReference);
+  MemBlock<void*> retBlock(passByReference);
+  void **refPointers = &retBlock;
   /** 
    * Allocate an array of value pointers...
    */
-  void **values;
-  values = (void**) malloc(sizeof(void*)*inputs.size());
+  MemBlock<void*> valBlock(inputs.size());
+  void **values = &valBlock;
   int ptr = 0;
   for (i=0;i<inputs.size();i++) {
     if (types[i] != "string") {
       if ((arguments[i][0] == '&') || (sizeCheckExpressions[i].tree()->valid())) {
-	refPointers[ptr] = inputs[i].getReadWriteDataPointer();
+	refPointers[ptr] = inputs[i].getVoidPointer();
 	values[i] = &refPointers[ptr];
 	ptr++;
       } else {
-	values[i] = inputs[i].getReadWriteDataPointer();
+	values[i] = inputs[i].getVoidPointer();
       }
     } else {
-      refPointers[ptr] = strdup(inputs[i].getContentsAsString().c_str());
+      refPointers[ptr] = strdup(inputs[i].asString().toStdString().c_str());
       values[i] = &refPointers[ptr];
       ptr++;
     }
@@ -878,7 +849,7 @@ ArrayVector ImportedFunctionDef::evaluateFunction(Interpreter *walker,
   double ret_double;
 
   // First pass - based on the return type, call the right version of av_start_*
-  if ((retType == "uint8") || (retType == "logical")) {
+  if (retType == "uint8") {
     av_start_uchar(alist,address,&ret_uint8);
   } else if (retType == "int8") {      
     av_start_schar(alist,address,&ret_int8);
@@ -905,7 +876,7 @@ ArrayVector ImportedFunctionDef::evaluateFunction(Interpreter *walker,
 	sizeCheckExpressions[i].tree()->valid())
       av_ptr(alist,void*,*((void**)values[i]));
     else {
-      if ((types[i] == "logical") || (types[i] == "uint8"))
+      if (types[i] == "uint8")
 	av_uchar(alist,*((uint8*)values[i]));
       else if (types[i] == "int8")
 	av_char(alist,*((int8*)values[i]));
@@ -917,9 +888,9 @@ ArrayVector ImportedFunctionDef::evaluateFunction(Interpreter *walker,
 	av_uint(alist,*((uint32*)values[i]));
       else if (types[i] == "int32")
 	av_int(alist,*((int32*)values[i]));
-      else if ((types[i] == "float") || (types[i] == "complex"))
+      else if (types[i] == "float")
 	av_float(alist,*((float*)values[i]));
-      else if ((types[i] == "double") || (types[i] == "dcomplex"))
+      else if (types[i] == "double")
 	av_double(alist,*((double*)values[i]));
     }
   }
@@ -928,24 +899,24 @@ ArrayVector ImportedFunctionDef::evaluateFunction(Interpreter *walker,
   av_call(alist);
 
   // Extract the return value
-  if ((retType == "uint8") || (retType == "logical")) {
-    retArray = Array::uint8Constructor(ret_uint8);
+  if (retType == "uint8") {
+    retArray = Array(ret_uint8);
   } else if (retType == "int8") {
-    retArray = Array::int8Constructor(ret_int8);
+    retArray = Array(ret_int8);
   } else if (retType == "uint16") {
-    retArray = Array::uint16Constructor(ret_uint16);
+    retArray = Array(ret_uint16);
   } else if (retType == "int16") {
-    retArray = Array::int16Constructor(ret_int16);
+    retArray = Array(ret_int16);
   } else if (retType== "uint32") {
-    retArray = Array::uint32Constructor(ret_uint32);
+    retArray = Array(ret_uint32);
   } else if (retType == "int32") {
-    retArray = Array::int32Constructor(ret_int32);
-  } else if ((retType == "float") || (retType == "complex")) {
-    retArray = Array::floatConstructor(ret_float);
-  } else if ((retType == "double") || (retType == "dcomplex")) {
-    retArray = Array::doubleConstructor(ret_double);
+    retArray = Array(ret_int32);
+  } else if (retType == "float") {
+    retArray = Array(ret_float);
+  } else if (retType == "double") {
+    retArray = Array(ret_double);
   } else {
-    retArray = Array::emptyConstructor();
+    retArray = EmptyConstructor();
   }
     
   // Strings that were passed by reference have to be
@@ -954,21 +925,18 @@ ArrayVector ImportedFunctionDef::evaluateFunction(Interpreter *walker,
   for (i=0;i<inputs.size();i++) {
     if ((arguments[i][0] == '&') || (types[i] == "string")) {
       if ((types[i] == "string") && (arguments[i][0] == '&'))
-	inputs[i] = Array::stringConstructor((char*) refPointers[ptr]);
+	inputs[i] = Array(QString((char*) refPointers[ptr]));
       ptr++;
     }
   }
-
-  free(refPointers);
-  free(values);
   walker->popDebug();
-  return SingleArrayVector(retArray);
+  return ArrayVector(retArray);
 #else
   throw Exception("Support for the import command requires that the avcall library be installed.  FreeMat was compiled without this library being available, and hence imported functions are unavailable. To enable imported commands, please install avcall and recompile FreeMat.");
 #endif
 }
 
-MexFunctionDef::MexFunctionDef(std::string fullpathname) {
+MexFunctionDef::MexFunctionDef(QString fullpathname) {
   fullname = fullpathname;
   importSuccess = false;
   lib = new DynLib(fullname);
@@ -1002,7 +970,7 @@ ArrayVector MexFunctionDef::evaluateFunction(Interpreter *walker,
   mxArray** rets = new mxArray*[lhsCount];
   try {
     address(lhsCount,rets,inputs.size(),(const mxArray**)args);
-  } catch (std::string &e) {
+  } catch (QString &e) {
     throw Exception(e);
   }
   ArrayVector retvec;
