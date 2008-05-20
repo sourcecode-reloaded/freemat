@@ -239,7 +239,7 @@ lineset HandleContour::ContourCDriver(Array m, double val, Array x, Array y) {
   // Final step is to transform the lines into the
   // given coordinates
   const double *xp = (const double *) (x.constReal<double>().constData());
-  const double *yp = (const double *) (y.constReal<double>().constData(););
+  const double *yp = (const double *) (y.constReal<double>().constData());
 #define X(a,b) xp[(b)+(a)*numy]
 #define Y(a,b) yp[(b)+(a)*numy]
   for (int i=0;i<bundledLines.size();i++)
@@ -280,8 +280,8 @@ void HandleContour::RebuildContourMatrix() {
   }
   // Create the contour matrix
   int outcount = pointcount+linecount;
-  Array out(Array::doubleMatrixConstructor(2,outcount));
-  double *output = (double *) out.getReadWriteDataPointer();
+  Array out(Double,NTuple(2,outcount));
+  double *output = out.real<double>().data();
   for (int i=0;i<pset.size();i++) {
     for (int j=0;j<pset[i].size();j++) {
       *output++ = zvals[i];
@@ -300,18 +300,18 @@ void HandleContour::RebuildContourMatrix() {
 Array HandleContour::GetCoordinateMatrix(QString name, bool isXcoord) {
   // Get the elevation data from the object
   Array zdata(ArrayPropertyLookup("zdata"));
-  int zrows(zdata.rows());
-  int zcols(zdata.columns());
+  index_t zrows = zdata.rows();
+  index_t zcols = zdata.columns();
   if (StringCheck(name+"mode","manual")) {
     // not auto mode...
     Array cdata(ArrayPropertyLookup(name));
     if (cdata.isVector() && 
-	((isXcoord && (cdata.getLength() == zcols)) ||
-	 (!isXcoord && (cdata.getLength() == zrows)))) {
-      cdata.promoteType(FM_DOUBLE);
-      const double *qp = (const double*) cdata.getDataPointer();
-      Array mat(Array::doubleMatrixConstructor(zrows,zcols));
-      double *dp = (double*) mat.getReadWriteDataPointer();
+	((isXcoord && (cdata.length() == zcols)) ||
+	 (!isXcoord && (cdata.length() == zrows)))) {
+      cdata = cdata.toClass(Double);
+      const double *qp = cdata.constReal<double>().constData();
+      Array mat(Double,NTuple(zrows,zcols));
+      double *dp = mat.real<double>().data();
       for (int i=0;i<zcols;i++)
 	for (int j=0;j<zrows;j++) {
 	  if (isXcoord)
@@ -327,8 +327,8 @@ Array HandleContour::GetCoordinateMatrix(QString name, bool isXcoord) {
     } 
   }
   // In auto mode, or the given data is bogus...
-  Array mat(Array::doubleMatrixConstructor(zrows,zcols));
-  double *dp = (double*) mat.getReadWriteDataPointer();
+  Array mat(Double,NTuple(zrows,zcols));
+  double *dp = mat.real<double>().data();
   for (int i=0;i<zcols;i++)
     for (int j=0;j<zrows;j++) {
       if (isXcoord)

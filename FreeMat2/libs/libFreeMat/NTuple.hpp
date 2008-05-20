@@ -154,14 +154,15 @@ public:
     return ret;
   }
   inline int lastNotOne() const {
-    int last_not_one = NDims-1;
-    while ((m_data[last_not_one] == 1) && (last_not_one > 1)) last_not_one--;
+    int last_not_one = NDims;
+    while ((m_data[last_not_one-1] == 1) && 
+	   (last_not_one > 2)) last_not_one--;
     return last_not_one;
   }
   inline QString toString() const {
     int last_not_one = lastNotOne();
     QString ret = QString("%1").arg(m_data[0]);
-    for (int i=1;i<=last_not_one;i++)
+    for (int i=1;i<last_not_one;i++)
       ret += QString("x%1").arg(m_data[i]);
     return ret;
   }

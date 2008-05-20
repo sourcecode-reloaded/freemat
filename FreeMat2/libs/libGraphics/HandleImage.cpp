@@ -44,7 +44,7 @@ QVector<double> HandleImage::GetLimits() {
   // The clim limit is just the min and max values of cdata
   Array cdata(ArrayPropertyLookup("cdata"));
   if (!cdata.isEmpty()) {
-    cdata.promoteType(FM_DOUBLE);
+    cdata = cdata.toClass(Double);
     limits.push_back(ArrayMin(cdata));
     limits.push_back(ArrayMax(cdata));
   } else {
@@ -255,26 +255,26 @@ void HandleImage::UpdateCAlphaData() {
   // Calculate the QImage
   Array cdata(ArrayPropertyLookup("cdata"));
   if (cdata.isEmpty()) return;
-  bool cdata_is_integer = cdata.isIntegerClass();
-  cdata.promoteType(FM_DOUBLE);
+  bool cdata_is_integer = IsInteger(cdata);
+  cdata = cdata.toClass(Double);
   // Retrieve alpha map
-  QVector<double> alphas(GetAlphaMap(cdata.getDimensionLength(0),
-					 cdata.getDimensionLength(1)));
+  QVector<double> alphas(GetAlphaMap(int(cdata.rows()),
+				     int(cdata.cols())));
   // Check for the indexed or non-indexed case
-  if ((cdata.dimensions().getLength() == 3) &&
-      (cdata.getDimensionLength(2) == 3)) {
-    PrepImageRGBNoAlphaMap((const double*)cdata.getDataPointer(),
-			   cdata.getDimensionLength(0),
-			   cdata.getDimensionLength(1),
+  if ((cdata.dimensions().lastNotOne() == 3) &&
+      (cdata.dimensions()[2] == 3)) {
+    PrepImageRGBNoAlphaMap(cdata.constReal<double>().constData(),
+			   int(cdata.rows()),
+			   int(cdata.cols()),
 			   alphas,cdata_is_integer);
   } else {
-    double *dp = RGBExpandImage((const double*)cdata.getDataPointer(),
-				cdata.getDimensionLength(0),
-				cdata.getDimensionLength(1),
+    double *dp = RGBExpandImage(cdata.constReal<double>().constData(),
+				int(cdata.rows()),
+				int(cdata.cols()),
 				!cdata_is_integer);
     PrepImageRGBNoAlphaMap(dp,
-			   cdata.getDimensionLength(0),
-			   cdata.getDimensionLength(1),
+			   int(cdata.rows()),
+			   int(cdata.cols()),
 			   alphas,false);
     delete[] dp;
   }
@@ -285,15 +285,15 @@ void HandleImage::UpdateState() {
   Array cdata(ArrayPropertyLookup("cdata"));
   HPTwoVector *xp = (HPTwoVector *) LookupProperty("xdata");
   if (xp->Data().empty()) {
-    if (cdata.getDimensionLength(1) > 1)
-      SetTwoVectorDefault("xdata",1,cdata.getDimensionLength(1));
+    if (cdata.cols() > 1)
+      SetTwoVectorDefault("xdata",1,cdata.cols());
     else
       SetTwoVectorDefault("xdata",1,2);
   }
   HPTwoVector *yp = (HPTwoVector *) LookupProperty("ydata");
   if (yp->Data().empty()) {
-    if (cdata.getDimensionLength(0) > 1)
-      SetTwoVectorDefault("ydata",1,cdata.getDimensionLength(0));
+    if (cdata.rows() > 1)
+      SetTwoVectorDefault("ydata",1,cdata.rows());
     else
       SetTwoVectorDefault("ydata",1,2);
   }

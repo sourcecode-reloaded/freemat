@@ -93,44 +93,44 @@ void HandleUIControl::UpdateState() {
   if (HasChanged("string") || newwidget) {
     if (StringCheck("style","pushbutton") || 
 	StringCheck("style","toggle")) {
-      ((QPushButton*)widget)->setText(QString::fromStdString(StringPropertyLookup("string")));
+      ((QPushButton*)widget)->setText(StringPropertyLookup("string"));
     }
     if (StringCheck("style","radiobutton")) {
-      ((QRadioButton*)widget)->setText(QString::fromStdString(StringPropertyLookup("string")));
+      ((QRadioButton*)widget)->setText(StringPropertyLookup("string"));
     }
     if (StringCheck("style","checkbox")) {
-      ((QCheckBox*)widget)->setText(QString::fromStdString(StringPropertyLookup("string")));
+      ((QCheckBox*)widget)->setText(StringPropertyLookup("string"));
     }
     if (StringCheck("style","popupmenu")) {
       ((QComboBox*)widget)->clear();
-      string txt(StringPropertyLookup("string"));
+      QString txt(StringPropertyLookup("string"));
       StringVector data;
       Tokenize(txt,data,"|");
       for (int i=0;i<data.size();i++)
-	((QComboBox*)widget)->addItem(QString::fromStdString(data[i]));
+	((QComboBox*)widget)->addItem(data[i]);
     }
     if (StringCheck("style","listbox")) {
       ((QListWidget*)widget)->clear();
-      string txt(StringPropertyLookup("string"));
+      QString txt(StringPropertyLookup("string"));
       StringVector data;
       Tokenize(txt,data,"|");
       for (int i=0;i<data.size();i++)
-	((QListWidget*)widget)->addItem(QString::fromStdString(data[i]));
+	((QListWidget*)widget)->addItem(data[i]);
     }
     if (StringCheck("style","text")) {
-      ((QLabel*)widget)->setText(QString::fromStdString(StringPropertyLookup("string")));
+      ((QLabel*)widget)->setText(StringPropertyLookup("string"));
     }
     if (StringCheck("style","edit")) {
       if (widget->objectName() == "multiline")
-	((HandleMultiEdit*)widget)->setPlainText(QString::fromStdString(StringPropertyLookup("string")));
+	((HandleMultiEdit*)widget)->setPlainText(StringPropertyLookup("string"));
       else
-	((QLineEdit*)widget)->setText(QString::fromStdString(StringPropertyLookup("string")));
+	((QLineEdit*)widget)->setText(StringPropertyLookup("string"));
 	  
     }
     ClearChanged("string");
   }
   if (HasChanged("tooltipstring") || newwidget) {
-    widget->setToolTip(QString::fromStdString(StringPropertyLookup("tooltipstring")));
+    widget->setToolTip(StringPropertyLookup("tooltipstring"));
     ClearChanged("tooltipstring");
   }
   if (StringCheck("style","slider") && 
@@ -303,9 +303,9 @@ void HandleUIControl::clicked() {
 
   if (StringCheck("style","edit") && widget) {
     if (widget->objectName() == "multiline") {
-      SetStringDefault("string",((HandleMultiEdit*)widget)->toPlainText().toStdString());
+      SetStringDefault("string",((HandleMultiEdit*)widget)->toPlainText());
     } else {
-      SetStringDefault("string",((QLineEdit*)widget)->text().toStdString());
+      SetStringDefault("string",((QLineEdit*)widget)->text());
     }
   }
 

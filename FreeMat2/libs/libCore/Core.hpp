@@ -243,12 +243,12 @@ ArrayVector FalseFunction(int nargout, const ArrayVector& arg);
 ArrayVector RegExpRepDriverFunction(int nargout, const ArrayVector& arg);
 ArrayVector RegExpFunction(int nargout, const ArrayVector& arg);
 ArrayVector RegExpIFunction(int nargout, const ArrayVector& arg);
-void Tokenize(const std::string& str, StringVector& tokens,
-	      const std::string& delimiters = " \n");
+void Tokenize(QString str, StringVector& tokens,
+	      QString delimiters = " \n");
 bool inBundleMode();
-ArrayVector MatLoadFunction(int nargout, string filename, StringVector varnames, 
+ArrayVector MatLoadFunction(int nargout, QString filename, StringVector varnames, 
 			    bool regexp, Interpreter *eval);
-ArrayVector MatSaveFunction(string filename, StringVector varnames,
+ArrayVector MatSaveFunction(QString filename, StringVector varnames,
 			    Interpreter *eval);
 ArrayVector ImReadFunction(int nargout, const ArrayVector& arg, Interpreter* eval);
 ArrayVector ImWriteFunction(int nargout, const ArrayVector& arg, Interpreter* eval);

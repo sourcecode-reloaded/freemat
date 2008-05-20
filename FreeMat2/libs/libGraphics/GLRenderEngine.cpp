@@ -157,7 +157,7 @@ void GLRenderEngine::color(QVector<double> col) {
   glColor3f(col[0],col[1],col[2]);
 }
   
-void GLRenderEngine::setLineStyle(std::string style) {
+void GLRenderEngine::setLineStyle(QString style) {
   if (style == "-") {
     glDisable(GL_LINE_STIPPLE);
     return;
@@ -269,12 +269,12 @@ void GLRenderEngine::getViewport(int aviewp[4]) {
     aviewp[i] = viewp[i];
 }
 
-void GLRenderEngine::putText(double x, double y, std::string txt, 
+void GLRenderEngine::putText(double x, double y, QString txt, 
 			     QVector<double> color, 
 			     AlignmentFlag xflag, AlignmentFlag yflag,
 			     QFont fnt, double rotation) {
   QFontMetrics fm(fnt);
-  QRect sze(fm.boundingRect(txt.c_str()));
+  QRect sze(fm.boundingRect(txt));
   //  int x0 = sze.left();
   //  int y0 = sze.bottom();
   int width = sze.width();
@@ -295,7 +295,7 @@ void GLRenderEngine::putText(double x, double y, std::string txt,
   pnt.translate(radlength/2,radlength/2);
   pnt.rotate(-rotation);
   //    pnt.drawText(-width/2,height/2,txt.c_str());
-  pnt.drawText(0,0,txt.c_str());
+  pnt.drawText(0,0,txt);
   pnt.end();
 
   // The next step is to trim the bitmap from the bottom up
@@ -370,11 +370,11 @@ void GLRenderEngine::depth(bool flag) {
     glDisable(GL_DEPTH_TEST);
 }
 
-void GLRenderEngine::measureText(std::string txt, QFont fnt, AlignmentFlag xflag, 
+void GLRenderEngine::measureText(QString txt, QFont fnt, AlignmentFlag xflag, 
 				 AlignmentFlag yflag,int &width, int &height,
 				 int &xoffset, int &yoffset) {
   QFontMetrics fm(fnt);
-  QRect sze(fm.boundingRect(txt.c_str()));
+  QRect sze(fm.boundingRect(txt));
   width = sze.width();
   height = sze.height();
   yoffset = -height;

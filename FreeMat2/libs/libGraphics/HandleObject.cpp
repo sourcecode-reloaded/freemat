@@ -293,9 +293,9 @@ double VecMax(QVector<double> &v) {
 
 double ArrayMin(Array a) {
   if (a.isEmpty()) return 0;
-  a.promoteType(FM_DOUBLE);
-  const double* v = (const double *) a.getDataPointer();
-  int len = a.getLength();
+  a = a.toClass(Double);
+  const double* v = a.constReal<double>().constData();
+  int len = int(a.length());
   double min = 0;
   bool first = true;
   for (int i=0;i<len;i++) {
@@ -312,9 +312,9 @@ double ArrayMin(Array a) {
 
 double ArrayMax(Array a) {
   if (a.isEmpty()) return 0;
-  a.promoteType(FM_DOUBLE);
-  const double* v = (const double *) a.getDataPointer();
-  int len = a.getLength();
+  a = a.toClass(Double);
+  const double* v = a.constReal<double>().constData();
+  int len = int(a.length());
   double max = 0;
   bool first = true;
   for (int i=0;i<len;i++) {
