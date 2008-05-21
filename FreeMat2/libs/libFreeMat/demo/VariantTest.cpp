@@ -330,7 +330,46 @@ void TestStructCase() {
   std::cout << q;
 }
 
+template <typename S, typename T>
+class Reducer {
+  BaseIterator<S,T> m_dest;
+  ConstBaseIterator<S,T> m_source;
+public:
+  inline Reducer(S* dest, const S* src, int dim = 0) :
+    m_dest(dest,dim), m_source(src,dim) {}
+  inline index_t size() const {return m_source.size();}
+  inline bool isValid() const {return m_dest.isValid() && m_source.isValid();}
+  inline void next() {m_source.next();}
+  inline void nextSlice() {m_dest.nextSlice(); m_source.nextSlice();}
+  inline const T get() const {return m_source.get();}
+  inline void set(const T& val) {m_dest.set(val);}
+};
 
+void TestReduction() {
+  std::cout << "Test reduction ******************\n";
+  BasicArray<float> tVec(NTuple(3,4,5));
+  for (index_t i=1;i<=3;i++)
+    for (index_t j=1;j<=4;j++)
+      for (index_t k=1;k<=5;k++) 
+	tVec[NTuple(i,j,k)] = i*100.0+j*10.0+k;
+  BasicArray<float> sVec(NTuple(3,1,5));
+  Reducer<BasicArray<float>,float> cumsum(&sVec,&tVec,1);
+  while (cumsum.isValid()) {
+    std::cout << "Line ";
+    float accum = 0;
+    for (int i=0;i<cumsum.size();i++) {
+      std::cout << " " << cumsum.get();
+      accum += cumsum.get();
+      cumsum.next();
+    }
+    std::cout << " -- " << accum << "\n";
+    cumsum.set(accum);
+    cumsum.nextSlice();
+  }
+  tVec.printMe(std::cout);
+  std::cout << "*********************************\n";
+  sVec.printMe(std::cout);
+}
 
 int main() {
   InitializeIndexArrays();
@@ -420,6 +459,8 @@ int main() {
 
   TestStructCase();
   TestSparseCase();
+
+  TestReduction();
 
   return 0;
 }
