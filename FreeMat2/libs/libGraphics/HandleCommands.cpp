@@ -23,7 +23,6 @@
 #include "Scanner.hpp"
 #include "Token.hpp"
 
-
 #include <qgl.h>
 #include <QtGui>
 #include <QtSvg>
@@ -145,24 +144,6 @@ static void SelectFig(int fignum) {
   HcurrentFig = fignum;
 }
 
-//!
-//@Module DRAWNOW Flush the Event Queue
-//@@Section HANDLE
-//@@Usage
-//The @|drawnow| function can be used to process the events in the
-//event queue of the FreeMat application.  The syntax for its use
-//is
-//@[
-//   drawnow
-//@]
-//Now that FreeMat is threaded, you do not generally need to call this
-//function, but it is provided for compatibility.
-//@@Signature
-//gfunction drawnow DrawNowFunction
-//input none
-//output none
-//!
-
 
 bool AnyDirty(bool issueUpdates) {
   bool retval = false;
@@ -188,6 +169,23 @@ void DoDrawNow() {
   in_DoDrawNow = false;
 }
 
+//!
+//@Module DRAWNOW Flush the Event Queue
+//@@Section HANDLE
+//@@Usage
+//The @|drawnow| function can be used to process the events in the
+//event queue of the FreeMat application.  The syntax for its use
+//is
+//@[
+//   drawnow
+//@]
+//Now that FreeMat is threaded, you do not generally need to call this
+//function, but it is provided for compatibility.
+//@@Signature
+//gfunction drawnow DrawNowFunction
+//input none
+//output none
+//!
 ArrayVector DrawNowFunction(int nargout, const ArrayVector& arg) {
   GfxEnableRepaint();
   DoDrawNow();
@@ -314,8 +312,6 @@ void AddToCurrentFigChildren(unsigned handle) {
 //input varargin
 //output handle
 //!
-
-
 ArrayVector HAxesFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1) {
     HandleObject *fp = new HandleAxis;
@@ -569,7 +565,6 @@ ArrayVector HLineFunction(int nargout, const ArrayVector& arg) {
 //input varargin
 //output handle
 //!
-
 ArrayVector HContourFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(Array(double(GenericConstructor(new HandleContour,arg))));
 }
@@ -591,7 +586,6 @@ ArrayVector HContourFunction(int nargout, const ArrayVector& arg) {
 //input varargin
 //output handle
 //!
-
 ArrayVector HUIControlFunction(int nargout, const ArrayVector& arg, Interpreter *eval) {
   HandleUIControl *o = new HandleUIControl;
   o->SetEvalEngine(eval);
@@ -623,7 +617,6 @@ ArrayVector HUIControlFunction(int nargout, const ArrayVector& arg, Interpreter 
 //input varargin
 //output handle
 //!
-
 ArrayVector HImageFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(Array(double(GenericConstructor(new HandleImage,arg))));
 }
@@ -645,8 +638,6 @@ ArrayVector HImageFunction(int nargout, const ArrayVector& arg) {
 //input varargin
 //output handle
 //!
-
-
 ArrayVector HTextFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(Array(double(GenericConstructor(new HandleText,arg))));
 }
@@ -668,7 +659,6 @@ ArrayVector HTextFunction(int nargout, const ArrayVector& arg) {
 //input varargin
 //output handle
 //!
-
 ArrayVector HSurfaceFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(Array(double(GenericConstructor(new HandleSurface,arg))));
 }
@@ -691,7 +681,6 @@ ArrayVector HSurfaceFunction(int nargout, const ArrayVector& arg) {
 //input handle
 //output none
 //!
-
 ArrayVector FigRaiseFunction(int nargout, const ArrayVector& args) {
   if (args.size() == 0)
     CurrentWindow()->raise();
@@ -730,7 +719,6 @@ ArrayVector FigRaiseFunction(int nargout, const ArrayVector& args) {
 //input handle
 //output none
 //!
-
 ArrayVector FigLowerFunction(int nargout, const ArrayVector& args) {
   if (args.size() == 0)
     CurrentWindow()->lower();
@@ -769,18 +757,16 @@ ArrayVector FigLowerFunction(int nargout, const ArrayVector& args) {
 //retrieve the colormap of the current figure, you could 
 //use @|get(gcf,'colormap')|, or to obtain the colormap for figure 3, 
 //use @|get(3,'colormap')|.
+//@@Signature
+//gfunction gcf HGCFFunction
+//input none
+//output handle
 //!
-
-//## gfunction gcf HGCFFunction
-//##
-//## handle
 ArrayVector HGCFFunction(int nargout, const ArrayVector& arg) {
   if (HcurrentFig == -1)
     NewFig();      
   return ArrayVector(Array(double(HcurrentFig+1)));
 }
-
-
 
 //!
 //@Module GCA Get Current Axis
@@ -793,11 +779,11 @@ ArrayVector HGCFFunction(int nargout, const ArrayVector& arg) {
 //@]
 //where @|handle| is the handle of the active axis.  All object
 //creation functions will be children of this axis.
+//@@Signature
+//gfunction gca HGCAFunction
+//input none
+//output handle
 //!
-
-//## gfunction gca HGCAFunction
-//##
-//## handle
 ArrayVector HGCAFunction(int nargout, const ArrayVector& arg) {
   // Get the current figure...
   if (HcurrentFig == -1)
@@ -833,11 +819,11 @@ ArrayVector HGCAFunction(int nargout, const ArrayVector& arg) {
 //pvalid('axes','children')
 //pvalid('axes','foobar')
 //@>
+//@@Signature
+//gfunction pvalid HPropertyValidateFunction
+//input type property
+//output bool
 //!
-
-//## gfunction pvalid HPropertyValidateFunction
-//## type property
-//## bool
 ArrayVector HPropertyValidateFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 2)
     throw Exception("pvalid requires two arguments, an object type name and a property name");
@@ -938,12 +924,11 @@ void CloseHelper(int fig) {
 //   close('all')
 //@]
 //closes all figure windows currently open.
+//@@Signature
+//gfunction close HCloseFunction
+//input handle
+//output none
 //!
-
-//## gfunction close HCloseFunction
-//## handle
-//##
-
 ArrayVector HCloseFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() > 1)
     throw Exception("close takes at most one argument - either the string 'all' to close all figures, or a scalar integer indicating which figure is to be closed.");
@@ -990,12 +975,11 @@ ArrayVector HCloseFunction(int nargout, const ArrayVector& arg) {
 //@]
 //The resulting figure is copied as a bitmap to the clipboard, 
 //and can then be pasted into any suitable application.
+//@@Signature
+//gfunction copy HCopyFunction
+//input none 
+//output none
 //!
-
-//## gfunction copy HCopyFunction
-//## 
-//##
-
 ArrayVector HCopyFunction(int nargout, const ArrayVector& arg) {
   if (HcurrentFig == -1)
     return ArrayVector();
@@ -1069,11 +1053,11 @@ QString FormatListAsString() {
 //which creates two plots @|printfig1.png|, which is a Portable
 //Net Graphics file, and @|printfig1.jpg| which is a JPEG file.
 //@figure printfig1
+//@@Signature
+//gfunction print HPrintFunction
+//input varargin
+//output none
 //!
-
-//## gfunction print HPrintFunction
-//## varargin
-//##
 ArrayVector HPrintFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("print function takes a single, string argument");
@@ -1109,12 +1093,11 @@ ArrayVector HPrintFunction(int nargout, const ArrayVector& arg) {
 //@[
 //  [x,y] = hpoint
 //@]
+//@@Signature
+//gfunction hpoint HPointFunction
+//input none
+//output coords
 //!
-
-//## gfunction hpoint HPointFunction
-//##
-//## coords
-
 ArrayVector HPointFunction(int nargout, const ArrayVector& arg) {
   if (HcurrentFig == -1)
     return ArrayVector();
@@ -1141,6 +1124,10 @@ ArrayVector HPointFunction(int nargout, const ArrayVector& arg) {
 //  y = is2dview(x)
 //@]
 //where @|x| is the handle of an axes object.
+//@@Signature
+//gfunction is2dview
+//input handle
+//output bool
 //!
 ArrayVector HIs2DViewFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0) throw Exception("is2DView expects a handle to axes");
@@ -1309,8 +1296,5 @@ ArrayVector ContourCFunction(int nargout, const ArrayVector& arg) {
 #endif 
 
 void LoadHandleGraphicsFunctions(Context* context) {
-  context->addGfxFunction("is2dview",HIs2DViewFunction,1,1,"x",NULL);
-  //  context->addFunction("contourc",ContourCFunction,2,1,"z","v",NULL);
-  //  context->addSpecialFunction("demo",HDemoFunction,1,1,NULL);
   InitializeHandleGraphics();
 };
