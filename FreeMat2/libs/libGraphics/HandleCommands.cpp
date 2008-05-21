@@ -157,11 +157,12 @@ static void SelectFig(int fignum) {
 //@]
 //Now that FreeMat is threaded, you do not generally need to call this
 //function, but it is provided for compatibility.
+//@@Signature
+//gfunction drawnow DrawNowFunction
+//input none
+//output none
 //!
 
-//## gfunction drawnow DrawNowFunction
-//## input none
-//## output none
 
 bool AnyDirty(bool issueUpdates) {
   bool retval = false;
@@ -247,11 +248,11 @@ void FreeHandleObject(unsigned handle) {
 //current figure, (e.g., the colormap).  So, for figure @|3|, for 
 //example, you can use @|get(3,'colormap')| to retrieve the colormap
 //for the current figure.
+//@@Signature
+//gfunction figure HFigureFunction
+//input number
+//output handle
 //!
-
-//## gfunction figure HFigureFunction
-//## input number
-//## input handle
 ArrayVector HFigureFunction(int nargout,const ArrayVector& arg) {
   if (arg.size() == 0) {
     NewFig();
@@ -308,11 +309,12 @@ void AddToCurrentFigChildren(unsigned handle) {
 //@]
 //and makes @|handle| the current axes, placing it at the head of
 //the list of children for the current figure.
+//@@Signature
+//gfunction axes HAxesFunction
+//input varargin
+//output handle
 //!
 
-//## gfunction axes HAxesFunction
-//## input varargin
-//## output handle
 
 ArrayVector HAxesFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1) {
@@ -404,12 +406,11 @@ void HSetChildrenFunction(HandleObject *fp, Array children) {
 //type of the variable @|value| depends on the property being
 //set.  See the help for the properties to see what values
 //you can set.
+//@@Signature
+//gfunction set HSetFunction
+//input varargin
+//output none
 //!
-
-//## gfunction set HSetFunction
-//## input varargin
-//## output none
-
 ArrayVector HSetFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 3)
     throw Exception("set doesn't handle all cases yet!");
@@ -465,11 +466,11 @@ ArrayVector HSetFunction(int nargout, const ArrayVector& arg) {
 //type of the variable @|value| depends on the property being
 //set.  See the help for the properties to see what values
 //you can set.
+//@@Signature
+//gfunction get HGetFunction
+//input handle property
+//output value
 //!
-
-//## gfunction get HGetFunction
-//## input handle property
-//## output value
 
 ArrayVector HGetFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 2)
@@ -542,12 +543,11 @@ static unsigned GenericConstructor(HandleObject* fp, const ArrayVector& arg,
 //where @|property| and @|value| are set.  The handle ID for the
 //resulting object is returned.  It is automatically added to
 //the children of the current axis.
+//@@Signature
+//gfunction hline HLineFunction
+//input varargin
+//output handle
 //!
-
-//## gfunction hline HLineFunction
-//## input varargin
-//## output handle
-
 ArrayVector HLineFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(Array(double(GenericConstructor(new HandleLineSeries,arg))));
 }
@@ -564,11 +564,12 @@ ArrayVector HLineFunction(int nargout, const ArrayVector& arg) {
 //where @|property| and @|value| are set.  The handle ID for the
 //resulting object is returned.  It is automatically added to
 //the children of the current axis.
+//@@Signature
+//gfunction hcontour HContourFunction
+//input varargin
+//output handle
 //!
 
-//## gfunction hcontour HContourFunction
-//## input varargin
-//## output handle
 ArrayVector HContourFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(Array(double(GenericConstructor(new HandleContour,arg))));
 }
@@ -585,11 +586,12 @@ ArrayVector HContourFunction(int nargout, const ArrayVector& arg) {
 //where @|property| and @|value| are set.  The handle ID for the
 //resulting object is returned.  It is automatically added to
 //the children of the current figure.
+//@@Signature
+//sgfunction uicontrol HUIControlFunction
+//input varargin
+//output handle
 //!
 
-//## sgfunction uicontrol HUIControlFunction
-//## input varargin
-//## output handle
 ArrayVector HUIControlFunction(int nargout, const ArrayVector& arg, Interpreter *eval) {
   HandleUIControl *o = new HandleUIControl;
   o->SetEvalEngine(eval);
@@ -616,11 +618,12 @@ ArrayVector HUIControlFunction(int nargout, const ArrayVector& arg, Interpreter 
 //where @|property| and @|value| are set.  The handle ID for the
 //resulting object is returned.  It is automatically added to
 //the children of the current axis.
+//@@Signature
+//gfunction himage HImageFunction
+//input varargin
+//output handle
 //!
 
-//## gfunction himage HImageFunction
-//## input varargin
-//## output handle
 ArrayVector HImageFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(Array(double(GenericConstructor(new HandleImage,arg))));
 }
@@ -637,11 +640,12 @@ ArrayVector HImageFunction(int nargout, const ArrayVector& arg) {
 //where @|property| and @|value| are set.  The handle ID for the
 //resulting object is returned.  It is automatically added to
 //the children of the current axis.
+//@@Signature
+//gfunction htext HTextFunction
+//input varargin
+//output handle
 //!
 
-//## gfunction htext HTextFunction
-//## input varargin
-//## output handle
 
 ArrayVector HTextFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(Array(double(GenericConstructor(new HandleText,arg))));
@@ -659,11 +663,11 @@ ArrayVector HTextFunction(int nargout, const ArrayVector& arg) {
 //where @|property| and @|value| are set.  The handle ID for the
 //resulting object is returned.  It is automatically added to
 //the children of the current axis.
+//@@Signature
+//gfunction surface HSurfaceFunction
+//input varargin
+//output handle
 //!
-
-//## gfunction surface HSurfaceFunction
-//## input varargin
-//## output handle
 
 ArrayVector HSurfaceFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(Array(double(GenericConstructor(new HandleSurface,arg))));
@@ -682,11 +686,11 @@ ArrayVector HSurfaceFunction(int nargout, const ArrayVector& arg) {
 //be raised to the top of the GUI stack (meaning that it we be visible).
 //Note that this function does not cause @|fignum| to become the current
 //figure, you must use the @|figure| command for that.
+//@@Signature
+//gfunction figraise FigRaiseFunction
+//input handle
+//output none
 //!
-
-//## gfunction figraise FigRaiseFunction
-//## handle
-//##
 
 ArrayVector FigRaiseFunction(int nargout, const ArrayVector& args) {
   if (args.size() == 0)
@@ -721,11 +725,11 @@ ArrayVector FigRaiseFunction(int nargout, const ArrayVector& args) {
 //become the current  figure, you must use the @|figure| command for that.
 //Similarly, if @|fignum| is the current figure, it will remain the current
 //figure (even though the figure is now behind others).
+//@@Signature
+//gfunction fitlower FigLowerFunction
+//input handle
+//output none
 //!
-
-//## gfunction fitlower FigLowerFunction
-//## handle
-//##
 
 ArrayVector FigLowerFunction(int nargout, const ArrayVector& args) {
   if (args.size() == 0)

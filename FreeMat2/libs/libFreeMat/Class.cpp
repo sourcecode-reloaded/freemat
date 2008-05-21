@@ -716,11 +716,11 @@ static Array ClassAux(const Array &s, QString classname, const StringVector &par
 //in which case @|subsindex(a)| must return a vector containing
 //integers between @|0| and @|N-1| where @|N| is the number
 //of elements in the vector @|b|.
+//@@Signature
+//function class ClassFunction
+//input classname
+//output varargout
 //!
-
-//## function class ClassFunction
-//## input classname
-//## output varargout 
 ArrayVector ClassFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0)
     throw Exception("class function requires at least one argument");
