@@ -1,8 +1,8 @@
-#ifndef __ArrayPrivate_hpp__
-#define __ArrayPrivate_hpp__
+#ifndef __VariantPrivate_hpp__
+#define __VariantPrivate_hpp__
 
 template <>
-inline double& Array::realScalar()  {
+inline double& Variant::realScalar()  {
   if (m_type != DoubleScalar) {
     if (m_type == DoubleArray)
       return real<double>()[1];
@@ -12,7 +12,7 @@ inline double& Array::realScalar()  {
 }
 
 template <>
-inline float& Array::realScalar()  {
+inline float& Variant::realScalar()  {
   if (m_type != FloatScalar) {
     if (m_type == FloatArray)
       return real<float>()[1];
@@ -22,7 +22,7 @@ inline float& Array::realScalar()  {
 }
 
 template <>
-inline uint64& Array::realScalar()  {
+inline uint64& Variant::realScalar()  {
   if (m_type != UInt64Scalar) {
     if (m_type == UInt64Array)
       return real<uint64>()[1];
@@ -32,7 +32,7 @@ inline uint64& Array::realScalar()  {
 }
 
 template <>
-inline int64& Array::realScalar()  {
+inline int64& Variant::realScalar()  {
   if (m_type != Int64Scalar) {
     if (m_type == Int64Array)
       return real<int64>()[1];
@@ -42,7 +42,7 @@ inline int64& Array::realScalar()  {
 }
 
 template <>
-inline uint32& Array::realScalar()  {
+inline uint32& Variant::realScalar()  {
   if (m_type != UInt32Scalar) {
     if (m_type == UInt32Array)
       return real<uint32>()[1];
@@ -52,7 +52,7 @@ inline uint32& Array::realScalar()  {
 }
 
 template <>
-inline int32& Array::realScalar()  {
+inline int32& Variant::realScalar()  {
   if (m_type != Int32Scalar) {
     if (m_type == Int32Array)
       return real<int32>()[1];
@@ -62,7 +62,7 @@ inline int32& Array::realScalar()  {
 }
 
 template <>
-inline uint16& Array::realScalar()  {
+inline uint16& Variant::realScalar()  {
   if (m_type != UInt16Scalar) {
     if (m_type == UInt16Array)
       return real<uint16>()[1];
@@ -72,7 +72,7 @@ inline uint16& Array::realScalar()  {
 }
 
 template <>
-inline int16& Array::realScalar()  {
+inline int16& Variant::realScalar()  {
   if (m_type != Int16Scalar) {
     if (m_type == Int16Array)
       return real<int16>()[1];
@@ -82,7 +82,7 @@ inline int16& Array::realScalar()  {
 }
 
 template <>
-inline uint8& Array::realScalar()  {
+inline uint8& Variant::realScalar()  {
   if (m_type != UInt8Scalar) {
     if (m_type == UInt8Array)
       return real<uint8>()[1];
@@ -92,7 +92,7 @@ inline uint8& Array::realScalar()  {
 }
 
 template <>
-inline int8& Array::realScalar()  {
+inline int8& Variant::realScalar()  {
   if (m_type != Int8Scalar) {
     if (m_type == Int8Array)
       return real<int8>()[1];
@@ -102,7 +102,7 @@ inline int8& Array::realScalar()  {
 }
 
 template <>
-inline logical& Array::realScalar()  {
+inline logical& Variant::realScalar()  {
   if (m_type != BoolScalar) {
     if (m_type == BoolArray)
       return real<logical>()[1];
@@ -112,7 +112,7 @@ inline logical& Array::realScalar()  {
 }
 
 template <>
-inline double& Array::imagScalar()  {
+inline double& Variant::imagScalar()  {
   m_complex = true;
   if (m_type != DoubleScalar) {
     if (m_type == DoubleArray)
@@ -123,7 +123,7 @@ inline double& Array::imagScalar()  {
 }
 
 template <>
-inline float& Array::imagScalar()  {
+inline float& Variant::imagScalar()  {
   m_complex = true;
   if (m_type != FloatScalar) {
     if (m_type == FloatArray)
@@ -134,7 +134,7 @@ inline float& Array::imagScalar()  {
 }
 
 template <>
-inline uint64& Array::imagScalar()  {
+inline uint64& Variant::imagScalar()  {
   m_complex = true;
   if (m_type != UInt64Scalar) {
     if (m_type == UInt64Array)
@@ -145,7 +145,7 @@ inline uint64& Array::imagScalar()  {
 }
 
 template <>
-inline int64& Array::imagScalar()  {
+inline int64& Variant::imagScalar()  {
   m_complex = true;
   if (m_type != Int64Scalar) {
     if (m_type == Int64Array)
@@ -156,7 +156,7 @@ inline int64& Array::imagScalar()  {
 }
 
 template <>
-inline uint32& Array::imagScalar()  {
+inline uint32& Variant::imagScalar()  {
   m_complex = true;
   if (m_type != UInt32Scalar) {
     if (m_type == UInt32Array)
@@ -167,7 +167,7 @@ inline uint32& Array::imagScalar()  {
 }
 
 template <>
-inline int32& Array::imagScalar()  {
+inline int32& Variant::imagScalar()  {
   m_complex = true;
   if (m_type != Int32Scalar) {
     if (m_type == Int32Array)
@@ -178,7 +178,7 @@ inline int32& Array::imagScalar()  {
 }
 
 template <>
-inline uint16& Array::imagScalar()  {
+inline uint16& Variant::imagScalar()  {
   m_complex = true;
   if (m_type != UInt16Scalar) {
     if (m_type == UInt16Array)
@@ -189,7 +189,7 @@ inline uint16& Array::imagScalar()  {
 }
 
 template <>
-inline int16& Array::imagScalar()  {
+inline int16& Variant::imagScalar()  {
   m_complex = true;
   if (m_type != Int16Scalar) {
     if (m_type == Int16Array)
@@ -200,7 +200,7 @@ inline int16& Array::imagScalar()  {
 }
 
 template <>
-inline uint8& Array::imagScalar()  {
+inline uint8& Variant::imagScalar()  {
   m_complex = true;
   if (m_type != UInt8Scalar) {
     if (m_type == UInt8Array)
@@ -211,7 +211,7 @@ inline uint8& Array::imagScalar()  {
 }
 
 template <>
-inline int8& Array::imagScalar()  {
+inline int8& Variant::imagScalar()  {
   m_complex = true;
   if (m_type != Int8Scalar) {
     if (m_type == Int8Array)
@@ -222,12 +222,12 @@ inline int8& Array::imagScalar()  {
 }
 
 template <>
-inline logical& Array::imagScalar()  {
+inline logical& Variant::imagScalar()  {
   throw Exception("imaginary part of logical variables is undefined");
 }
 
 template <>
-inline double Array::constRealScalar() const {
+inline double Variant::constRealScalar() const {
   if (m_type != DoubleScalar) {
     if (m_type == DoubleArray)
       return constReal<double>()[1];
@@ -237,7 +237,7 @@ inline double Array::constRealScalar() const {
 }
 
 template <>
-inline float Array::constRealScalar() const {
+inline float Variant::constRealScalar() const {
   if (m_type != FloatScalar) {
     if (m_type == FloatArray)
       return constReal<float>()[1];
@@ -247,7 +247,7 @@ inline float Array::constRealScalar() const {
 }
 
 template <>
-inline uint64 Array::constRealScalar() const {
+inline uint64 Variant::constRealScalar() const {
   if (m_type != UInt64Scalar) {
     if (m_type == UInt64Array)
       return constReal<uint64>()[1];
@@ -257,7 +257,7 @@ inline uint64 Array::constRealScalar() const {
 }
 
 template <>
-inline int64 Array::constRealScalar() const {
+inline int64 Variant::constRealScalar() const {
   if (m_type != Int64Scalar) {
     if (m_type == Int64Array)
       return constReal<int64>()[1];
@@ -267,7 +267,7 @@ inline int64 Array::constRealScalar() const {
 }
 
 template <>
-inline uint32 Array::constRealScalar() const {
+inline uint32 Variant::constRealScalar() const {
   if (m_type != UInt32Scalar) {
     if (m_type == UInt32Array)
       return constReal<uint32>()[1];
@@ -277,7 +277,7 @@ inline uint32 Array::constRealScalar() const {
 }
 
 template <>
-inline int32 Array::constRealScalar() const {
+inline int32 Variant::constRealScalar() const {
   if (m_type != Int32Scalar) {
     if (m_type == Int32Array)
       return constReal<int32>()[1];
@@ -287,7 +287,7 @@ inline int32 Array::constRealScalar() const {
 }
 
 template <>
-inline uint16 Array::constRealScalar() const {
+inline uint16 Variant::constRealScalar() const {
   if (m_type != UInt16Scalar) {
     if (m_type == UInt16Array)
       return constReal<uint16>()[1];
@@ -297,7 +297,7 @@ inline uint16 Array::constRealScalar() const {
 }
 
 template <>
-inline int16 Array::constRealScalar() const {
+inline int16 Variant::constRealScalar() const {
   if (m_type != Int16Scalar) {
     if (m_type == Int16Array)
       return constReal<int16>()[1];
@@ -307,7 +307,7 @@ inline int16 Array::constRealScalar() const {
 }
 
 template <>
-inline uint8 Array::constRealScalar() const {
+inline uint8 Variant::constRealScalar() const {
   if (m_type != UInt8Scalar) {
     if (m_type == UInt8Array)
       return constReal<uint8>()[1];
@@ -317,7 +317,7 @@ inline uint8 Array::constRealScalar() const {
 }
 
 template <>
-inline int8 Array::constRealScalar() const {
+inline int8 Variant::constRealScalar() const {
   if (m_type != Int8Scalar) {
     if (m_type == Int8Array)
       return constReal<int8>()[1];
@@ -327,7 +327,7 @@ inline int8 Array::constRealScalar() const {
 }
 
 template <>
-inline logical Array::constRealScalar() const {
+inline logical Variant::constRealScalar() const {
   if (m_type != BoolScalar) {
     if (m_type == BoolArray)
       return constReal<logical>()[1];
@@ -337,7 +337,7 @@ inline logical Array::constRealScalar() const {
 }
 
 template <>
-inline double Array::constImagScalar() const {
+inline double Variant::constImagScalar() const {
   if (!m_complex) return 0;
   if (m_type != DoubleScalar) {
     if (m_type == DoubleArray)
@@ -348,7 +348,7 @@ inline double Array::constImagScalar() const {
 }
 
 template <>
-inline float Array::constImagScalar() const {
+inline float Variant::constImagScalar() const {
   if (!m_complex) return 0;
   if (m_type != FloatScalar) {
     if (m_type == FloatArray)
@@ -359,7 +359,7 @@ inline float Array::constImagScalar() const {
 }
 
 template <>
-inline uint64 Array::constImagScalar() const {
+inline uint64 Variant::constImagScalar() const {
   if (!m_complex) return 0;
   if (m_type != UInt64Scalar) {
     if (m_type == UInt64Array)
@@ -370,7 +370,7 @@ inline uint64 Array::constImagScalar() const {
 }
 
 template <>
-inline int64 Array::constImagScalar() const {
+inline int64 Variant::constImagScalar() const {
   if (!m_complex) return 0;
   if (m_type != Int64Scalar) {
     if (m_type == Int64Array)
@@ -381,7 +381,7 @@ inline int64 Array::constImagScalar() const {
 }
 
 template <>
-inline uint32 Array::constImagScalar() const {
+inline uint32 Variant::constImagScalar() const {
   if (!m_complex) return 0;
   if (m_type != UInt32Scalar) {
     if (m_type == UInt32Array)
@@ -392,7 +392,7 @@ inline uint32 Array::constImagScalar() const {
 }
 
 template <>
-inline int32 Array::constImagScalar() const {
+inline int32 Variant::constImagScalar() const {
   if (!m_complex) return 0;
   if (m_type != Int32Scalar) {
     if (m_type == Int32Array)
@@ -403,7 +403,7 @@ inline int32 Array::constImagScalar() const {
 }
 
 template <>
-inline uint16 Array::constImagScalar() const {
+inline uint16 Variant::constImagScalar() const {
   if (!m_complex) return 0;
   if (m_type != UInt16Scalar) {
     if (m_type == UInt16Array)
@@ -414,7 +414,7 @@ inline uint16 Array::constImagScalar() const {
 }
 
 template <>
-inline int16 Array::constImagScalar() const {
+inline int16 Variant::constImagScalar() const {
   if (!m_complex) return 0;
   if (m_type != Int16Scalar) {
     if (m_type == Int16Array)
@@ -425,7 +425,7 @@ inline int16 Array::constImagScalar() const {
 }
 
 template <>
-inline uint8 Array::constImagScalar() const {
+inline uint8 Variant::constImagScalar() const {
   if (!m_complex) return 0;
   if (m_type != UInt8Scalar) {
     if (m_type == UInt8Array)
@@ -436,7 +436,7 @@ inline uint8 Array::constImagScalar() const {
 }
 
 template <>
-inline int8 Array::constImagScalar() const {
+inline int8 Variant::constImagScalar() const {
   if (!m_complex) return 0;
   if (m_type != Int8Scalar) {
     if (m_type == Int8Array)
@@ -447,127 +447,127 @@ inline int8 Array::constImagScalar() const {
 }
 
 template <>
-inline logical Array::constImagScalar() const {
+inline logical Variant::constImagScalar() const {
   throw Exception("imaginary part of logical variables is undefined");
 }
 
 template <>
-inline Array::Array(double real, double imag) {
+inline Variant::Variant(double real, double imag) {
   m_real.d = real; m_imag.d = imag; 
   m_type = DoubleScalar; m_complex = true;
 }
 
 template <>
-inline Array::Array(float real, float imag) {
+inline Variant::Variant(float real, float imag) {
   m_real.f = real; m_imag.f = imag; 
   m_type = FloatScalar; m_complex = true;
 }
 
 template <>
-inline Array::Array(int64 real, int64 imag) {
+inline Variant::Variant(int64 real, int64 imag) {
   m_real.i64 = real; m_imag.i64 = imag; 
   m_type = Int64Scalar; m_complex = true;
 }
 
 template <>
-inline Array::Array(int32 real, int32 imag) {
+inline Variant::Variant(int32 real, int32 imag) {
   m_real.i32 = real; m_imag.i32 = imag; 
   m_type = Int32Scalar; m_complex = true;
 }
 
 template <>
-inline Array::Array(int16 real, int16 imag) {
+inline Variant::Variant(int16 real, int16 imag) {
   m_real.i16 = real; m_imag.i16 = imag; 
   m_type = Int16Scalar; m_complex = true;
 }
 
 template <>
-inline Array::Array(int8 real, int8 imag) {
+inline Variant::Variant(int8 real, int8 imag) {
   m_real.i8 = real; m_imag.i8 = imag; 
   m_type = Int8Scalar; m_complex = true;
 }
 
 template <>
-inline Array::Array(uint64 real, uint64 imag) {
+inline Variant::Variant(uint64 real, uint64 imag) {
   m_real.u64 = real; m_imag.u64 = imag; 
   m_type = UInt64Scalar; m_complex = true;
 }
 
 template <>
-inline Array::Array(uint32 real, uint32 imag) {
+inline Variant::Variant(uint32 real, uint32 imag) {
   m_real.u32 = real; m_imag.u32 = imag; 
   m_type = UInt32Scalar; m_complex = true;
 }
 
 template <>
-inline Array::Array(uint16 real, uint16 imag) {
+inline Variant::Variant(uint16 real, uint16 imag) {
   m_real.u16 = real; m_imag.u16 = imag; 
   m_type = UInt16Scalar; m_complex = true;
 }
 
 template <>
-inline Array::Array(uint8 real, uint8 imag) {
+inline Variant::Variant(uint8 real, uint8 imag) {
   m_real.u8 = real; m_imag.u8 = imag; 
   m_type = UInt8Scalar; m_complex = true;
 }
 
 template <>
-inline Array::Array(logical, logical) {
+inline Variant::Variant(logical, logical) {
   throw Exception("Complex logical values not allowed");
 }
 
 template <>
-inline Array::Array(double real) {
+inline Variant::Variant(double real) {
   m_real.d = real; m_type = DoubleScalar; m_complex = false;
 }
 
 template <>
-inline Array::Array(float real) {
+inline Variant::Variant(float real) {
   m_real.f = real; m_type = FloatScalar; m_complex = false;
 }
 
 template <>
-inline Array::Array(int64 real) {
+inline Variant::Variant(int64 real) {
   m_real.i64 = real; m_type = Int64Scalar; m_complex = false;
 }
 
 template <>
-inline Array::Array(int32 real) {
+inline Variant::Variant(int32 real) {
   m_real.i32 = real; m_type = Int32Scalar; m_complex = false;
 }
 
 template <>
-inline Array::Array(int16 real) {
+inline Variant::Variant(int16 real) {
   m_real.i16 = real; m_type = Int16Scalar; m_complex = false;
 }
 
 template <>
-inline Array::Array(int8 real) {
+inline Variant::Variant(int8 real) {
   m_real.i8 = real; m_type = Int8Scalar; m_complex = false;
 }
 
 template <>
-inline Array::Array(uint64 real) {
+inline Variant::Variant(uint64 real) {
   m_real.u64 = real; m_type = UInt64Scalar; m_complex = false;
 }
 
 template <>
-inline Array::Array(uint32 real) {
+inline Variant::Variant(uint32 real) {
   m_real.u32 = real; m_type = UInt32Scalar; m_complex = false;
 }
 
 template <>
-inline Array::Array(uint16 real) {
+inline Variant::Variant(uint16 real) {
   m_real.u16 = real; m_type = UInt16Scalar; m_complex = false;
 }
 
 template <>
-inline Array::Array(uint8 real) {
+inline Variant::Variant(uint8 real) {
   m_real.u8 = real; m_type = UInt8Scalar; m_complex = false;
 }
 
 template <>
-inline Array::Array(logical real) {
+inline Variant::Variant(logical real) {
   m_real.l = real; m_type = BoolScalar; m_complex = false;
 }
 

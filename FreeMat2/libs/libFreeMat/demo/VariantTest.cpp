@@ -330,6 +330,8 @@ void TestStructCase() {
   std::cout << q;
 }
 
+
+
 int main() {
   InitializeIndexArrays();
   InitializeDataVecs();
