@@ -28,60 +28,25 @@
 #include <math.h>
 #include "Types.hpp"
 #include <algorithm>
-#include "Sparse.hpp"
+#include "SparseMatrix.hpp"
 #include "Math.hpp"
 #include "LAPACK.hpp"
 #include "MemPtr.hpp"
 #include <QtCore>
 
 
-ArrayVector HandleEmpty(Array arg) {
-  ArrayVector retArray;
+#define MacroEmpty(ctype,cls)			\
+  case cls: return ArrayVector(Array(ctype(0)));
+
+static inline ArrayVector HandleEmpty(Array arg) {
   switch (arg.dataClass()) {
   default:
     throw Exception("Unexpected type argument to HandleEmpty");
-  case FM_LOGICAL:
-    retArray.push_back(Array::logicalConstructor(false));
-    break;
-  case FM_UINT8:
-    retArray.push_back(Array::uint8Constructor(0));
-    break;
-  case FM_INT8:
-    retArray.push_back(Array::int8Constructor(0));
-    break;
-  case FM_UINT16:
-    retArray.push_back(Array::uint16Constructor(0));
-    break;
-  case FM_INT16:
-    retArray.push_back(Array::int16Constructor(0));
-    break;
-  case FM_UINT32:
-    retArray.push_back(Array::uint32Constructor(0));
-    break;
-  case FM_INT32:
-    retArray.push_back(Array::int32Constructor(0));
-    break;
-  case FM_UINT64:
-    retArray.push_back(Array::uint64Constructor(0));
-    break;
-  case FM_INT64:
-    retArray.push_back(Array::int64Constructor(0));
-    break;
-  case FM_FLOAT:
-    retArray.push_back(Array::floatConstructor(0));
-    break;
-  case FM_DOUBLE:
-    retArray.push_back(Array::doubleConstructor(0));
-    break;
-  case FM_COMPLEX:
-    retArray.push_back(Array::complexConstructor(0,0));
-    break;
-  case FM_DCOMPLEX:
-    retArray.push_back(Array::dcomplexConstructor(0,0));
-    break;
+    MacroExpandCases(MacroEmpty);
   }
-  return retArray;
 }
+
+#undef MacroEmpty
 
 template <class T>
 void TRealLess(const T* spx, const T* spy, T* dp, int count, 
