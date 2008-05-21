@@ -21,7 +21,7 @@
 #include "Exception.hpp"
 
 File::File(QString filename, QString accessmode) {
-  fp = fopen(filename.toStdString().c_str(),accessmode.toStdString().c_str());
+  fp = fopen(qPrintable(filename),qPrintable(accessmode));
   if (fp == NULL)
     throw Exception(QString("unable to open file ") + filename + 
 		    QString(" with file mode ") + accessmode);

@@ -21,21 +21,13 @@
 #define __DynLib_hpp__
 
 #include <QString>
-
-#ifdef WIN32
-#include <windows.h>
-typedef HMODULE libhandle;
-#else
-#include <dlfcn.h>
-typedef void* libhandle;
-#endif
+#include <QLibrary>
 
 class DynLib {
-  libhandle lib;
+  QLibrary lib;
 public:
   DynLib(QString filename);
   void* GetSymbol(QString symbolName);
-  ~DynLib();
 };
 
 #endif

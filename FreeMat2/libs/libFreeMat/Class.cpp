@@ -718,9 +718,9 @@ static Array ClassAux(const Array &s, QString classname, const StringVector &par
 //of elements in the vector @|b|.
 //!
 
-//** function class ClassFunction
-//** classname
-//** varargout 
+//## function class ClassFunction
+//## input classname
+//## output varargout 
 ArrayVector ClassFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0)
     throw Exception("class function requires at least one argument");

@@ -828,7 +828,7 @@ ArrayVector ImportedFunctionDef::evaluateFunction(Interpreter *walker,
 	values[i] = inputs[i].getVoidPointer();
       }
     } else {
-      refPointers[ptr] = strdup(inputs[i].asString().toStdString().c_str());
+      refPointers[ptr] = strdup(qPrintable(inputs[i].asString()));
       values[i] = &refPointers[ptr];
       ptr++;
     }

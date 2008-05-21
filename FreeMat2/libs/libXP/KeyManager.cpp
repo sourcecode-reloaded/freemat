@@ -77,8 +77,8 @@ KeyManager::KeyManager()  {
   if (!historyList.size())
     history.push_back("");
   for (int i=0;i<historyList.size();i++) 
-    history.push_back(historyList[i].toStdString());
-  history.push_back(std::string("% ") + QDateTime::currentDateTime().toString().toStdString());
+    history.push_back(historyList[i]);
+  history.push_back(QString("% ") + QDateTime::currentDateTime().toString());
 }
 
 Context* KeyManager::GetCompletionContext() {
@@ -95,7 +95,7 @@ int KeyManager::getTerminalWidth() {
 
 void KeyManager::ClearHistory() {
   history.clear();
-  history.push_back(std::string("% ") + QDateTime::currentDateTime().toString().toStdString());
+  history.push_back(QString("% ") + QDateTime::currentDateTime().toString());
 }
 
 void KeyManager::SetTermWidth(int w) {
@@ -128,22 +128,15 @@ void KeyManager::PlaceCursor(int n) {
   SetTermCurpos(tmpi);
 }
 
-int KeyManager::DisplayedCharWidth(char c, int aterm_curpos) {
+int KeyManager::DisplayedCharWidth(QChar c, int aterm_curpos) {
   if(c=='\t')
     return TAB_WIDTH - ((aterm_curpos % ncolumn) % TAB_WIDTH);
-  if(IS_CTRL_CHAR(c))
-    return 2;
-  if(!isprint((int)(unsigned char) c)) {
-    char string[TAB_WIDTH + 4];
-    sprintf(string, "\\%o", (int)(unsigned char)c);
-    return strlen(string);
-  };
   return 1;
 }
 
 // Return the number of terminal characters needed to display a
 // given substring.
-int KeyManager::DisplayedStringWidth(string s, int nc, int aterm_curpos) {
+int KeyManager::DisplayedStringWidth(QString s, int nc, int aterm_curpos) {
   int slen=0;   /* The displayed number of characters */
   int i;
   /*
@@ -159,24 +152,24 @@ int KeyManager::DisplayedStringWidth(string s, int nc, int aterm_curpos) {
   return slen;
 }
 
-void KeyManager::InsertString(int pos, string s) {
+void KeyManager::InsertString(int pos, QString s) {
   lineData.insert(pos,s);
 }
 
-void KeyManager::InsertCharacter(int pos, char c) {
-  lineData.insert(pos,1,c);
+void KeyManager::InsertCharacter(int pos, QChar c) {
+  lineData.insert(pos,c);
 }
 
 void KeyManager::EraseCharacters(int pos, int cnt) {
-  lineData.erase(pos,cnt);
+  lineData.remove(pos,cnt);
 }
 
-void KeyManager::SetCharacter(int pos, char c) {
+void KeyManager::SetCharacter(int pos, QChar c) {
   if (pos < (int)(lineData.size()))
     lineData[pos] = c;
   else {
     int topad = (pos-lineData.size()+1);
-    lineData.append(topad,' ');
+    lineData.append(QString(topad,' '));
     lineData[pos] = c;
   }
 }
@@ -219,7 +212,7 @@ void KeyManager::setTerminalWidth(int w) {
   ncolumn = w; 
 }
 
-void KeyManager::ReplacePrompt(string aprompt) {
+void KeyManager::ReplacePrompt(QString aprompt) {
   prompt = aprompt;
   prompt_len = DisplayedStringWidth(aprompt,-1,0);
 }
@@ -312,7 +305,11 @@ void KeyManager::TruncateDisplay() {
   term_len = term_curpos;  
 }
 
-void KeyManager::AddCharToLine(char c) {
+static inline QString RightSubstring(const QString &a, int m) {
+  return (a.right(a.length()-1-m));
+}
+
+void KeyManager::AddCharToLine(QChar c) {
   /*
    * Keep a record of the current cursor position.
    */
@@ -354,7 +351,7 @@ void KeyManager::AddCharToLine(char c) {
      * Redraw the line from the cursor position to the end of the line,
      * and move the cursor to just after the added character.
      */
-    OutputString(string(lineData,sbuff_curpos), '\0');
+    OutputString(RightSubstring(lineData,sbuff_curpos), '\0');
     SetTermCurpos(sterm_curpos + width);
     /*
      * Are we overwriting an existing character?
@@ -377,7 +374,7 @@ void KeyManager::AddCharToLine(char c) {
      * with spaces.
      */
     if(old_width > width) {
-      OutputString(string(lineData,sbuff_curpos), '\0');
+      OutputString(RightSubstring(lineData,sbuff_curpos), '\0');
       /*
        * Clear to the end of the terminal.
        */
@@ -396,7 +393,7 @@ void KeyManager::AddCharToLine(char c) {
        * Redraw the line from the cursor position to the end of the line,
        * and move the cursor to just after the added character.
        */
-      OutputString(string(lineData,sbuff_curpos), '\0');
+      OutputString(RightSubstring(lineData,sbuff_curpos), '\0');
       SetTermCurpos(sterm_curpos + width);
       buff_curpos++;
       /*
@@ -447,10 +444,9 @@ int KeyManager::DisplayPrompt() {
  * Output:
  *  return    int     0 - OK.
  */ 
-void KeyManager::OutputChar(char c, char pad) {
-  char string[TAB_WIDTH + 4]; /* A work area for composing compound strings */
-  int nchar;                  /* The number of terminal characters */
-  int i;
+void KeyManager::OutputChar(QChar c, QChar pad) {
+  QString ostring;
+  int nchar;
   /*
    * Check for special characters.
    */
@@ -460,30 +456,15 @@ void KeyManager::OutputChar(char c, char pad) {
      * column?
      */
     nchar = DisplayedCharWidth('\t', term_curpos);
-    /*
-     * Compose the tab string.
-     */
-    for(i=0; i<nchar; i++)
-      string[i] = ' ';
-  } else if(IS_CTRL_CHAR(c)) {
-    string[0] = '^';
-    string[1] = CTRL_TO_CHAR(c);
-    nchar = 2;
-  } else if(!isprint((int)(unsigned char) c)) {
-    sprintf(string, "\\%o", (int)(unsigned char)c);
-    nchar = strlen(string);
+    ostring = QString(nchar,' ');
   } else {
-    string[0] = c;
     nchar = 1;
+    ostring = QString(1,c);
   };
-  /*
-   * Terminate the string.
-   */
-  string[nchar] = '\0';
   /*
    * Write the string to the terminal.
    */
-  emit OutputRawString(string);
+  emit OutputRawString(ostring);
   /*
    * Except for one exception to be described in a moment, the cursor should
    * now have been positioned after the character that was just output.
@@ -503,12 +484,12 @@ void KeyManager::OutputChar(char c, char pad) {
    */
   if(term_curpos % ncolumn == 0) {
     int sterm_curpos = term_curpos;
-    OutputChar(pad ? pad : ' ', ' ');
+    OutputChar((pad != '\0') ? pad : ' ', ' ');
     SetTermCurpos(sterm_curpos);
   };
 }
 
-void KeyManager::OutputString(string st, char pad) {
+void KeyManager::OutputString(QString st, QChar pad) {
   if (st.size() == 0) return;
   for(int i=0;i<((int)st.size())-1;i++)
     OutputChar(st[i],st[i+1]);
@@ -597,7 +578,7 @@ void KeyManager::DeleteChars(int nc, int cut) {
   /*
    * Redraw the remaining characters following the cursor.
    */
-  OutputString(string(lineData,buff_curpos), '\0');
+  OutputString(RightSubstring(lineData,buff_curpos), '\0');
   /*
    * Clear to the end of the terminal.
    */
@@ -620,16 +601,16 @@ void KeyManager::ClearCurrentLine() {
 }
 
 void KeyManager::KillLine() {
-  cutbuf = string(lineData,buff_curpos);
+  cutbuf = RightSubstring(lineData,buff_curpos);
   ntotal = buff_curpos;
-  lineData.erase(ntotal);
+  lineData.remove(ntotal,lineData.size()-1-ntotal);
   TruncateDisplay();
   PlaceCursor(buff_curpos);
 }
 
 void KeyManager::HistorySearchBackward() {
   if (last_search != keyseq_count-1) {
-    SearchPrefix(string(lineData),buff_curpos);
+    SearchPrefix(lineData,buff_curpos);
     startsearch = history.size();
   }
   last_search = keyseq_count;
@@ -641,7 +622,7 @@ void KeyManager::HistorySearchBackward() {
 
 void KeyManager::HistorySearchForward() {
   if (last_search != keyseq_count-1)
-    SearchPrefix(string(lineData),buff_curpos);
+    SearchPrefix(lineData,buff_curpos);
   last_search = keyseq_count;
   HistoryFindForwards();
   ntotal = lineData.size();
@@ -649,13 +630,13 @@ void KeyManager::HistorySearchForward() {
   Redisplay();
 }
 
-void KeyManager::SearchPrefix(string aline, int aprefix_len) {
-  prefix = string(aline,0,aprefix_len);
+void KeyManager::SearchPrefix(QString aline, int aprefix_len) {
+  prefix = aline.left(aprefix_len);
   prefix_len = aprefix_len;
   startsearch = history.size();
 }
 
-void KeyManager::AddHistory(string mline) {
+void KeyManager::AddHistory(QString mline) {
   prefix = "";
   prefix_len = 0;
   if (mline.size() > 0) {
@@ -664,7 +645,7 @@ void KeyManager::AddHistory(string mline) {
     while (history.size() > 1000)
       history.pop_front();
   }
-  emit SendCommand(QString::fromStdString(mline));
+  emit SendCommand(mline);
   return;
 }
 
@@ -681,7 +662,7 @@ void KeyManager::HistoryFindForwards() {
   found = false;
   while (i<((int)history.size()) && !found) {
     found = (prefix_len == 0) || 
-      (history[i].compare(0,prefix_len,prefix) == 0);
+      (history[i].left(prefix_len) == prefix);
     if (!found) i++;
   }
   if (!found && (i >= ((int)history.size()))) {
@@ -701,7 +682,7 @@ void KeyManager::HistoryFindBackwards() {
   i = startsearch-1;
   found = false;
   while (history.size() > 0 && i>=0 && !found) {
-    found = (history[i].compare(0,prefix_len,prefix) == 0);
+    found = (history[i].left(prefix_len) == prefix);
     if (!found) i--;
   }
   if (!found) return;
@@ -722,7 +703,7 @@ void KeyManager::HistoryFindBackwards() {
  *  return   int     0 - OK.
  *                   1 - Insufficient room.
  */
-void KeyManager::AddStringToLine(string s) {
+void KeyManager::AddStringToLine(QString s) {
   int buff_slen;   /* The length of the string being added to line[] */
   int term_slen;   /* The length of the string being written to the terminal */
   int sbuff_curpos; /* The original value of gl->buff_curpos */
@@ -761,13 +742,13 @@ void KeyManager::AddStringToLine(string s) {
    * Write the modified part of the line to the terminal, then move
    * the terminal cursor to the end of the displayed input string.
    */
-  OutputString(string(lineData,sbuff_curpos), '\0');
+  OutputString(RightSubstring(lineData,sbuff_curpos), '\0');
   SetTermCurpos(sterm_curpos + term_slen);
 }
 
 void KeyManager::Yank() {
   buff_mark = buff_curpos;
-  if (cutbuf.empty())
+  if (cutbuf.isEmpty())
     return;
   AddStringToLine(cutbuf);
 }
@@ -822,24 +803,24 @@ void KeyManager::ListCompletions(StringVector completions) {
       int m = col*nrow + row;
       if(m < completions.size()) {
 	char buffer[4096];
-	sprintf(buffer, "%s%-*s%s", completions[m].c_str(),
+	sprintf(buffer, "%s%-*s%s", qPrintable(completions[m]),
 		(int) (ncol > 1 ? maxlen - completions[m].length():0),
 		"", col<ncol-1 ? "  " : "\r\n");
 	emit OutputRawString(buffer);
       } else {
 	emit OutputRawString("\r\n");
 	break;
-      };
-    };
-  };
+      }
+    }
+  }
 }
 
-string GetCommonPrefix(StringVector matches,
-		       string tempstring) {
+QString GetCommonPrefix(StringVector matches,
+			QString tempstring) {
   int minlength;
   int prefixlength;
   bool allmatch;
-  string templ;
+  QString templ;
   int i, j;
   
   minlength = matches[0].size();
@@ -852,16 +833,16 @@ string GetCommonPrefix(StringVector matches,
     j = 0;
     allmatch = true;
     while (allmatch && (j<prefixlength)) {
-      string mtch(matches[i]);
+      QString mtch(matches[i]);
       allmatch = (mtch[j] == templ[j]);
       if (allmatch) j++;
     }
     prefixlength = (j < prefixlength) ? j : prefixlength;
   }
   if (prefixlength <= (int) tempstring.length())
-    return (string(""));
+    return (QString(""));
   else
-    return(templ.substr(tempstring.length(),prefixlength-tempstring.length()));
+    return(templ.mid(tempstring.length(),prefixlength-tempstring.length()));
 }
 
 
@@ -882,7 +863,7 @@ void KeyManager::CompleteWord() {
   /*
    * Perform the completion.
    */
-  string tempstring;
+  QString tempstring;
   matches = GetCompletions(lineData, buff_curpos, tempstring);
   if(matches.size() == 0) {
     emit OutputRawString("\r\n");
@@ -903,7 +884,7 @@ void KeyManager::CompleteWord() {
     /*
      * Find the common prefix
      */
-    string prefix;
+    QString prefix;
     prefix = GetCommonPrefix(matches, tempstring);
     /*
      * Get the length of the suffix and any continuation suffix to add to it.
@@ -925,7 +906,7 @@ void KeyManager::CompleteWord() {
 	/*
 	 * Make room to insert the filename extension.
 	 */
-	InsertString(buff_curpos,string(prefix,0,nextra));
+	InsertString(buff_curpos,prefix.left(nextra));
 	/*
 	 * Record the increased length of the line.
 	 */
@@ -941,24 +922,22 @@ void KeyManager::CompleteWord() {
 	 */
 	if(!redisplay) {
 	  TruncateDisplay();
-	  OutputString(string(lineData,buff_pos), '\0');
+	  OutputString(RightSubstring(lineData,buff_pos), '\0');
 	  PlaceCursor(buff_curpos);
 	  return;
-	};
+	}
       } else {
 	redisplay = 1;
-      };
-    };
-  };
+      }
+    }
+  }
   /*
    * Redisplay the whole line?
    */
   if(redisplay) {
     term_curpos = 0;
     Redisplay();
-    return;
-  };
-  return;
+  }
 }
 
 void KeyManager::getKeyPress() {
@@ -1040,8 +1019,7 @@ void KeyManager::OnChar( int c ) {
 }
 
 void KeyManager::QueueString(QString t) {
-  string g(t.toStdString());
-  AddStringToLine(g);
+  AddStringToLine(t);
 }
 
 void KeyManager::QueueMultiString(QString t) {
@@ -1054,13 +1032,13 @@ void KeyManager::QueueMultiString(QString t) {
   }
   QStringList tlist(t.split("\n"));
   for (int i=0;i<tlist.size()-1;i++) {
-    string t(tlist[i].toStdString());
+    QString t(tlist[i]);
     emit OutputRawString(t+"\r\n");
     emit ExecuteLine(t+"\n");
     AddHistory(t);
   }
   if (t.endsWith('\n')) {
-    string t(tlist.back().toStdString());
+    QString t(tlist.back());
     emit OutputRawString(t+"\r\n");
     emit ExecuteLine(t+"\n");
     AddHistory(t);
@@ -1072,7 +1050,7 @@ void KeyManager::QueueMultiString(QString t) {
 
 void KeyManager::QueueCommand(QString t) {
   QueueString(t);
-  AddHistory(t.toStdString());
+  AddHistory(t);
   emit OutputRawString("\r\n");
   emit ExecuteLine(lineData+"\n");
   ResetLineBuffer();
@@ -1080,7 +1058,7 @@ void KeyManager::QueueCommand(QString t) {
 }
 
 void KeyManager::QueueSilent(QString t) {
-  emit ExecuteLine(t.toStdString()+"\n");
+  emit ExecuteLine(t+"\n");
 }
 
 //char* KeyManager::getLine(string aprompt) {
@@ -1134,14 +1112,14 @@ void KeyManager::DbTraceAction() {
   emit ExecuteLine("dbtrace\n");
 }
 
-void KeyManager::SetPrompt(string txt) {
+void KeyManager::SetPrompt(QString txt) {
   ReplacePrompt(txt);
   Redisplay();
   emit UpdateVariables();
 }
 
 void KeyManager::ChangeDir(const QString& dir) {
-  emit ExecuteLine("cd " + dir.toStdString() + "\n");
+  emit ExecuteLine("cd " + dir + "\n");
 }
 
 /*.......................................................................
@@ -1192,9 +1170,9 @@ static char *start_of_path(const char *string, int back_from)
   return (char *)string + i + 1;
 }
 
-StringVector KeyManager::GetCompletions(string line, 
-					  int word_end, 
-					  string &matchString) {
+StringVector KeyManager::GetCompletions(QString line, 
+					int word_end, 
+					QString &matchString) {
   StringVector completions;
   if (!context->getMutex()->tryLock()) return completions;
   QMutexLocker lock(context->getMutex());
@@ -1203,14 +1181,14 @@ StringVector KeyManager::GetCompletions(string line,
    * Find the start of the filename prefix to be completed, searching
    * backwards for the first unescaped space, or the start of the line.
    */
-  char *start = start_of_path(line.c_str(), word_end);
+  char *start = start_of_path(qPrintable(line), word_end);
   char *tmp;
   int mtchlen;
-  mtchlen = word_end - (start-line.c_str());
+  mtchlen = word_end - (start-qPrintable(line));
   tmp = (char*) malloc(mtchlen+1);
   memcpy(tmp,start,mtchlen);
   tmp[mtchlen] = 0;
-  matchString = string(tmp);
+  matchString = QString(tmp);
   
   /*
    *  the preceeding character was not a ' (quote), then
@@ -1218,14 +1196,14 @@ StringVector KeyManager::GetCompletions(string line,
    */
   if (!context) return completions;
   if (start[-1] != '\'') {
-    StringVector local_completions(context->getCompletions(string(start)));
+    StringVector local_completions(context->getCompletions(QString(start)));
     for (int i=0;i<local_completions.size();i++) 
-      if (local_completions[i].find("private:") == local_completions[i].npos)
+      if (local_completions[i].indexOf("private:") == -1)
 	completions.push_back(local_completions[i]);
   }
   StringVector comp(GetCompletionList(tmp));
   for (int i=0;i<comp.size();i++) 
-    if (comp[i].find("private:") == comp[i].npos)
+    if (comp[i].indexOf("private:") == -1)
       completions.push_back(comp[i]);
   sort(completions.begin(),completions.end());
   return completions;
@@ -1235,6 +1213,6 @@ void KeyManager::WriteHistory() {
   QSettings settings("FreeMat","FreeMat");
   QStringList historyList;
   for (int i=0;i<history.size();i++) 
-    historyList << QString::fromStdString(history[i]);
+    historyList << history[i];
   settings.setValue("interpreter/history",historyList);
 }

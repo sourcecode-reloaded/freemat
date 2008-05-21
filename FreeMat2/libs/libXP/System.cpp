@@ -54,7 +54,7 @@ StringVector DoSystemCallCaptured(std::string cmd) {
   QTextStream myStream(&result);
   while (!myStream.atEnd()) {
     QString line(myStream.readLine(0));
-    ret.push_back(line.toStdString());
+    ret.push_back(line);
   }
   return ret;
 }

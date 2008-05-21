@@ -19,40 +19,16 @@
 
 #include "DynLib.hpp"
 #include "Exception.hpp"
-#include <string>
-#include <iostream>
 
-DynLib::DynLib(std::string filename) {
-#ifdef WIN32
-  lib = LoadLibrary(filename.c_str());
-  if (!lib)
-    throw Exception(std::string("Unable to open module: ") + filename);
-#else
-  lib = dlopen(filename.c_str(),RTLD_LAZY);
-  if (!lib)
-    throw Exception(std::string("Unable to open module: ") + filename + ", operating system reported error: " + dlerror());
-#endif
+DynLib::DynLib(QString filename) : lib(filename) {
+  if (!lib.load())
+    throw Exception("Unable to open module: " + filename);
 }
 
-DynLib::~DynLib() {
-#ifdef WIN32
-  FreeLibrary(lib);
-#else
-  dlclose(lib);
-#endif
-}
 
-void* DynLib::GetSymbol(const char*symbolName) {
-#ifdef WIN32
-  void *func;
-  func = (void*) GetProcAddress(lib,symbolName);
+void* DynLib::GetSymbol(QString symbolName) {
+  void * func = lib.resolve(qPrintable(symbolName));
   if (func == NULL)
-    throw Exception(std::string("Unable to find symbol ") + ((const char*) symbolName));
+    throw Exception("Unable to find symbol " + symbolName);
   return func;
-#else
-  void *func = dlsym(lib,symbolName);
-  if (func == NULL)
-    throw Exception(std::string("Unable to find symbol ") + ((const char*) symbolName) + " : " + dlerror());
-  return func;
-#endif
 }

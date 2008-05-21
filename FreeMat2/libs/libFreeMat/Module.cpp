@@ -408,7 +408,7 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
     libPointers.insertSymbol(libfullpath,lib);
   } else
     lib = *ptr;
-  func = lib->GetSymbol(symbolname.toStdString().c_str());
+  func = lib->GetSymbol(symbolname);
   StringVector types;
   StringVector arguments;
   CodeList checks;
@@ -416,7 +416,7 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
    * Parse the arglist...
    */
   const char *cp;
-  cp = arglist.toStdString().c_str();
+  cp = qPrintable(arglist);
 
   while (*cp != 0) {
     /**

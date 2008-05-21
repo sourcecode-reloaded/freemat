@@ -29,7 +29,7 @@ FMFindDialog::FMFindDialog(QWidget *parent) : QDialog(parent) {
   connect(ui.btFind,SIGNAL(clicked()),this,SLOT(find()));
   connect(ui.btClose,SIGNAL(clicked()),this,SLOT(hide()));
   setWindowIcon(QIcon(QString::fromUtf8(":/images/freemat_small_mod_64.png")));
-  setWindowTitle("Find - " + QString::fromStdString(Interpreter::getVersionString()));
+  setWindowTitle("Find - " + Interpreter::getVersionString());
   ui.btFind->setIcon(QIcon(QString::fromUtf8(":/images/find.png")));
   ui.btClose->setIcon(QIcon(QString::fromUtf8(":/images/close.png")));
 }
@@ -62,7 +62,7 @@ FMReplaceDialog::FMReplaceDialog(QWidget *parent) : QDialog(parent) {
   connect(ui.btReplace,SIGNAL(clicked()),this,SLOT(replace()));
   connect(ui.btReplaceAll,SIGNAL(clicked()),this,SLOT(replaceAll()));
   setWindowIcon(QIcon(QString::fromUtf8(":/images/freemat_small_mod_64.png")));
-  setWindowTitle("Find - " + QString::fromStdString(Interpreter::getVersionString()));
+  setWindowTitle("Find - " + Interpreter::getVersionString());
   ui.btFind->setIcon(QIcon(QString::fromUtf8(":/images/find.png")));
   ui.btClose->setIcon(QIcon(QString::fromUtf8(":/images/close.png")));
 }
@@ -693,7 +693,7 @@ QString FMEditor::shownName() {
 
 void FMEditor::updateTitles() {
   tab->setTabText(tab->currentIndex(),shownName());
-  setWindowTitle(QString("%1[*]").arg(shownName()) + " - " + QString::fromStdString(Interpreter::getVersionString()) + " Editor");
+  setWindowTitle(QString("%1[*]").arg(shownName()) + " - " + Interpreter::getVersionString() + " Editor");
   documentWasModified();
 }
 
@@ -1183,7 +1183,7 @@ void FMEditor::IllegalLineOrCurrentPath(string name, int line) {
 
 void FMEditor::ShowActiveLine() {
   // Find the tab with this matching filename
-  QString tname(QString::fromStdString(m_eval->getInstructionPointerFileName()));
+  QString tname(m_eval->getInstructionPointerFileName());
   if (tname == "") return;
   // Check for one of the editors that might be editing this file already
   for (int i=0;i<tab->count();i++) {
@@ -1218,9 +1218,9 @@ void FMEditor::refreshContext() {
   varValueList = QStringList();
 
   StringVector varnames = StringVector(context->listAllVariables());
-  std::sort(varnames.begin(),varnames.end());
+  qSort(varnames.begin(),varnames.end());
   for (int i=0;i<varnames.size();i++) {
-    QString name(QString::fromStdString(varnames[i]));
+    QString name(varnames[i]);
     QString type;
     QString flags;
     QString size;
@@ -1232,81 +1232,25 @@ void FMEditor::refreshContext() {
       type = "undefined";
     } else {
       lookup = *ptr;
-      Class t = lookup.dataClass();
-      switch(t) {
-      case FM_CELL_ARRAY:
-	type = "cell";
-	break;
-      case FM_STRUCT_ARRAY:
-	if (lookup.isUserClass())
-	  type = QString::fromStdString(lookup.className().back());
-	else
-	  type = "struct";
-	break;
-      case FM_LOGICAL:
-	type = "logical";
-	break;
-      case FM_UINT8:
-	type = "uint8";
-	break;
-      case FM_INT8:
-	type = "int8";
-	break;
-      case FM_UINT16:
-	type = "uint16";
-	break;
-      case FM_INT16:
-	type = "int16";
-	break;
-      case FM_UINT32:
-	type = "uint32";
-	break;
-      case FM_INT32:
-	type = "int32";
-	break;
-      case FM_UINT64:
-	type = "uint64";
-	break;
-      case FM_INT64:
-	type = "int64";
-	break;
-      case FM_FLOAT:
-	type = "float";
-	break;
-      case FM_DOUBLE:
-	type = "double";
-	break;
-      case FM_COMPLEX:
-	type = "complex";
-	break;
-      case FM_DCOMPLEX:
-	type = "dcomplex";
-	break;
-      case FM_STRING:
-	type = "string";
-	break;
-      case FM_FUNCPTR_ARRAY:
-	type = "func ptr";
-	break;
-      }
-      if (lookup.sparse())
+      type = lookup.className();
+      if (lookup.isSparse())
 	flags = "Sparse ";
       if (context->isVariableGlobal(varnames[i])) {
 	flags += "Global ";
       } else if (context->isVariablePersistent(varnames[i])) {
 	flags += "Persistent ";
       }
-      size = QString::fromStdString(lookup.dimensions().asString());
+      size = lookup.dimensions().toString();
       try {
-	value = QString::fromStdString(ArrayToPrintableString(lookup));
+	value = ArrayToPrintableString(lookup);
       } catch (Exception& e) {
       }
     }
     varNameList << name;
-	varTypeList << type;
-	varFlagsList << flags;
-	varSizeList << size;
-	varValueList << value;	    
+    varTypeList << type;
+    varFlagsList << flags;
+    varSizeList << size;
+    varValueList << value;	    
   }
 }
 
@@ -1323,22 +1267,22 @@ void FMEditor::showDataTips(QPoint pos, QString textSelected) {
   bool foundTip = false;
   if (!textSelected.isEmpty()) {
     //split selected text into smaller parts and match with existing variable names
- 	QStringList list = textSelected.split(QRegExp("\\W+"), QString::SkipEmptyParts);
-	 for (int j = 0; j < list.size(); j++)
-		for (int i = 0; i < varNameList.size(); i++)
-		  if (list.at(j) == varNameList.at(i)) {
-			foundTip = true;
-			if (varValueList.at(i).isEmpty())
-			  QToolTip::showText(pos, varNameList.at(i) + ": " + 
-				                    varSizeList.at(i) + " " + 
-				                    varTypeList.at(i));
-			else
-			  QToolTip::showText(pos, varNameList.at(i) + ": " + 
-				                    varSizeList.at(i) + " " + 
-				                    varTypeList.at(i) + " =\n    " + 
-				                    varValueList.at(i) );
-			break;
-	      }
+    QStringList list = textSelected.split(QRegExp("\\W+"), QString::SkipEmptyParts);
+    for (int j = 0; j < list.size(); j++)
+      for (int i = 0; i < varNameList.size(); i++)
+	if (list.at(j) == varNameList.at(i)) {
+	  foundTip = true;
+	  if (varValueList.at(i).isEmpty())
+	    QToolTip::showText(pos, varNameList.at(i) + ": " + 
+			       varSizeList.at(i) + " " + 
+			       varTypeList.at(i));
+	  else
+	    QToolTip::showText(pos, varNameList.at(i) + ": " + 
+			       varSizeList.at(i) + " " + 
+			       varTypeList.at(i) + " =\n    " + 
+			       varValueList.at(i) );
+	  break;
+	}
     if (!foundTip)
       QToolTip::hideText(); 
   }

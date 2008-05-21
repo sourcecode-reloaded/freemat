@@ -47,7 +47,7 @@ void VariablesTool::refresh() {
   m_flist->setColumnCount(5);
   m_flist->setHorizontalHeaderLabels(QStringList() << "Name" << "Type" << "Flags" << "Size" << "Value");
   for (int i=0;i<varnames.size();i++) {
-    QString varname(QString::fromStdString(varnames[i]));
+    QString varname(varnames[i]);
     QString type;
     QString flags;
     QString size;
@@ -59,73 +59,17 @@ void VariablesTool::refresh() {
       type = "undefined";
     } else {
       lookup = *ptr;
-      Class t = lookup.dataClass();
-      switch(t) {
-      case FM_CELL_ARRAY:
-	type = "cell";
-	break;
-      case FM_STRUCT_ARRAY:
-	if (lookup.isUserClass())
-	  type = QString::fromStdString(lookup.className().back());
-	else
-	  type = "struct";
-	break;
-      case FM_LOGICAL:
-	type = "logical";
-	break;
-      case FM_UINT8:
-	type = "uint8";
-	break;
-      case FM_INT8:
-	type = "int8";
-	break;
-      case FM_UINT16:
-	type = "uint16";
-	break;
-      case FM_INT16:
-	type = "int16";
-	break;
-      case FM_UINT32:
-	type = "uint32";
-	break;
-      case FM_INT32:
-	type = "int32";
-	break;
-      case FM_UINT64:
-	type = "uint64";
-	break;
-      case FM_INT64:
-	type = "int64";
-	break;
-      case FM_FLOAT:
-	type = "float";
-	break;
-      case FM_DOUBLE:
-	type = "double";
-	break;
-      case FM_COMPLEX:
-	type = "complex";
-	break;
-      case FM_DCOMPLEX:
-	type = "dcomplex";
-	break;
-      case FM_STRING:
-	type = "string";
-	break;
-      case FM_FUNCPTR_ARRAY:
-	type = "func ptr";
-	break;
-      }
-      if (lookup.sparse())
+      type = lookup.className();
+      if (lookup.isSparse())
 	flags = "Sparse ";
       if (context->isVariableGlobal(varnames[i])) {
 	flags += "Global ";
       } else if (context->isVariablePersistent(varnames[i])) {
 	flags += "Persistent ";
       }
-      size = QString::fromStdString(lookup.dimensions().asString());
+      size = lookup.dimensions().toString();
       try {
-	value = QString::fromStdString(ArrayToPrintableString(lookup));
+	value = ArrayToPrintableString(lookup);
       } catch (Exception& e) {
       }
     }
