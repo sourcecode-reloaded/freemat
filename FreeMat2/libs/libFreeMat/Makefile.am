@@ -27,6 +27,7 @@ Math.hpp \
 MatrixMultiply.hpp \
 MemPtr.hpp \
 Module.hpp \
+Operators.hpp \
 QRDecompose.hpp \
 Scope.hpp \
 SingularValueDecompose.hpp \

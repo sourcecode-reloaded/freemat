@@ -82,6 +82,11 @@ public:
     pos[0]++;
     ripple(pos);
   }
+  inline NTuple forceOne(int pin_dim) const {
+    NTuple copy(*this);
+    copy[pin_dim] = 1;
+    return copy;
+  }
   inline void increment(NTuple &pos, int pin_dim) const {
     if (pin_dim == 0) 
       pos[1]++;

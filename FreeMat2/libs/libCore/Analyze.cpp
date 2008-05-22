@@ -1931,7 +1931,7 @@ ArrayVector CumsumFunction(int nargout, const ArrayVector& arg) {
 //@@Tests
 //@$"y=cumprod([1,2,3,4])","[1,2,6,24]","exact"
 //@$"y=cumprod([1,2,3,4]+i*[4,3,2,1])","[1+4i,-10+11i,-52+13i,-221]","exact"
-//!  
+//!
 ArrayVector CumprodFunction(int nargout, const ArrayVector& arg) {
   // Get the data argument
   if (arg.size() < 1)
@@ -2065,117 +2065,30 @@ ArrayVector CumprodFunction(int nargout, const ArrayVector& arg) {
 //sum(A,2)
 //@>
 //!
+
+struct OpSum {
+  template <typename T>
+  static inline T init() {return T(0);}
+  static inline T func(T prev, T current) {return prev + current;}
+  static inline T init_real() {return T(0);}
+  static inline T init_imag() {return T(0);}
+  static inline void func(T &prev_r, T &prev_i, T next_r, T next i) {
+    prev_r = prev_r + next_r;
+    prev_i = prev_i + next_i;
+  }
+};
+
 ArrayVector SumFunction(int nargout, const ArrayVector& arg) {
   // Get the data argument
   if (arg.size() < 1)
     throw Exception("sum requires at least one argument");
   Array input(arg[0]);
-  Class argType(input.dataClass());
-  if (input.isReferenceType() || input.isString())
-    throw Exception("sum only defined for numeric types");
-  if ((argType >= FM_LOGICAL) && (argType < FM_INT32)) {
-    input.promoteType(FM_INT32);
-    argType = FM_INT32;
-  }    
-  // Get the dimension argument (if supplied)
-  int workDim = -1;
-  if (arg.size() > 1) {
-    Array WDim(arg[1]);
-    workDim = WDim.getContentsAsIntegerScalar() - 1;
-    if (workDim < 0)
-      throw Exception("Dimension argument to sum should be positive");
-  }
-  if (input.isEmpty()) 
-    return HandleEmpty(input);
-  if (input.isScalar())
-    return SingleArrayVector(input);
-  // No dimension supplied, look for a non-singular dimension
-  Dimensions inDim(input.dimensions());
-  if (workDim == -1) {
-    int d = 0;
-    while (inDim.get(d) == 1) 
-      d++;
-    workDim = d;      
-  }
-  // Calculate the output size
-  Dimensions outDim(inDim);
-  outDim.set(workDim,1);
-  // Calculate the stride...
-  int d;
-  int planecount;
-  int planesize;
-  int linesize;
-  linesize = inDim.get(workDim);
-  planesize = 1;
-  for (d=0;d<workDim;d++)
-    planesize *= inDim.get(d);
-  planecount = 1;
-  for (d=workDim+1;d<(int)inDim.getLength();d++)
-    planecount *= inDim.get(d);
-  // Allocate the values output, and call the appropriate helper func.
-  // Special case Sparse Matrices
-  if (input.sparse()) {
-    if (workDim == 0)
-      return SingleArrayVector(Array(input.dataClass(),
-				     outDim,
-				     SparseMatrixSumColumns(input.dataClass(),
-							    input.getDimensionLength(0),
-							    input.getDimensionLength(1),
-							    input.getSparseDataPointer()),
-				     true));
-    else if (workDim == 1)
-      return SingleArrayVector(Array(input.dataClass(),
-				     outDim,
-				     SparseMatrixSumRows(input.dataClass(),
-							 input.getDimensionLength(0),
-							 input.getDimensionLength(1),
-							 input.getSparseDataPointer()),
-				     true));
-    else
-      return SingleArrayVector(input);
-  }
-  Array retval;
-  switch (argType) {
-  default: throw Exception("Unsupported type for sum operation");
-  case FM_INT32: {
-    char* ptr = (char *) Malloc(sizeof(int32)*outDim.getElementCount());
-    TRealSum<int32>((const int32 *) input.getDataPointer(),
-		    (int32 *) ptr, planecount, planesize, linesize);
-    retval = Array(FM_INT32,outDim,ptr);
-    break;
-  }
-  case FM_FLOAT: {
-    char* ptr = (char *) Malloc(sizeof(float)*outDim.getElementCount());
-    TRealSum<float>((const float *) input.getDataPointer(),
-		    (float *) ptr, planecount, planesize, linesize);
-    retval = Array(FM_FLOAT,outDim,ptr);
-    break;
-  }
-  case FM_DOUBLE: {
-    char* ptr = (char *) Malloc(sizeof(double)*outDim.getElementCount());
-    TRealSum<double>((const double *) input.getDataPointer(),
-		     (double *) ptr, planecount, planesize, linesize);
-    retval = Array(FM_DOUBLE,outDim,ptr);
-    break;
-  }
-  case FM_COMPLEX: {
-    char* ptr = (char *) Malloc(2*sizeof(float)*outDim.getElementCount());
-    TComplexSum<float>((const float *) input.getDataPointer(),
-		       (float *) ptr, planecount, planesize, linesize);
-    retval = Array(FM_COMPLEX,outDim,ptr);
-    break;
-  }
-  case FM_DCOMPLEX: {
-    char* ptr = (char *) Malloc(2*sizeof(double)*outDim.getElementCount());
-    TComplexSum<double>((const double *) input.getDataPointer(),
-			(double *) ptr, planecount, planesize, linesize);
-    retval = Array(FM_DCOMPLEX,outDim,ptr);
-    break;
-  }
-  }
-  ArrayVector retArray;
-  retArray.push_back(retval);
-  return retArray;
+  int dim;
+  if (arg.size() > 1)
+    dim = arg[1].asInteger()-1;
+  else
+    dim = input.dimensions().firstNonsingular();
+  return ArrayVector(ReductionOp<OpSum>(input,dim));
 }
 
 //!

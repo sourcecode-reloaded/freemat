@@ -74,6 +74,14 @@ public:
   inline void set(const T& val) {m_dest.set(val);}
 };
 
+template <typename T>
+class SpinIterator {
+  const T &m_value;
+public:
+  SpinIterator(const T& value) : m_value(value) {}
+  inline T get(index_t) const {return m_value;}
+};
+
 #endif
 
 
