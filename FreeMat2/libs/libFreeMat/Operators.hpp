@@ -699,4 +699,48 @@ static inline Array SimpleFilterOp(const Array &Ain, int dim) {
   else
     return SimpleFilterOp<double,Op>(Ain,dim,Double).toClass(Ain.dataClass());
 }
+
+
+template <typename T, class Op>
+static inline Array VectorOp(const BasicArray<T> &real, index_t out, int dim) {
+  NTuple outdims(real.dimensions()); outdims[dim] = out;
+  BasicArray<T> F(outdims); 
+  if (dim == 0) {
+    ConstBasicIterator<T> source(&real,dim);
+    BasicIterator<T> dest(&F.real<T>(),dim);
+    while (source.isValid() && dest.isValid()) {
+      Op::func(real.slice(source.pos()),F.slice(dest.pos()));
+      source.nextSlice(); dest.nextSlice();
+    }
+  } else {
+    ConstBasicIterator<T> source(&real,dim);
+    BasicIterator<T> dest(&F.real<T>(),dim);
+    while (source.isValid() && dest.isValid()) {
+#error finishme      
+    }
+  }
+}
+
+template <typename T, class Op>
+static inline Array VectorOp(const Array &Ain, index_t out, int dim, DataClass Tclass) {
+  Array Acast(Ain.toClass(Tclass));
+  Array F(Tclass);
+  if (Acast.isSparse())
+    throw Exception("Operation does not support sparse arrays");
+  if (!Acast.isScalar()) Acast = Acast.asDenseArray();
+  if (Acast.allReal()) {
+    VectorOp<T,Op>(Acast.constReal<T>(),out,dim);
+  } else {
+    VectorOp<T,Op>(Acast.constReal<T>(),Acast.constImag<T>(),out,dim);
+  }
+}
+
+template <class Op>
+  static inline Array VectorOp(const Array &Ain, int out, int dim) {
+  if (Ain.dataClass() == Float)
+    return VectorOp<float,Op>(Ain,dim,Float).toClass(Ain.dataClass());
+  else
+    return VectorOp<double,Op>(Ain,dim,Double).toClass(Ain.dataClass());
+}
+
 #endif
