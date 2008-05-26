@@ -16,7 +16,24 @@ MatIO.hpp \
 XML.hpp \
 RPC.hpp 
 
-libCore_a_SOURCES = Analyze.cpp \
+libCore_a_SOURCES = Abs.cpp \
+Binary.cpp \
+Ceil.cpp \
+Conj.cpp \
+CumProd.cpp \
+CumSum.cpp \
+Floor.cpp \
+Max.cpp \
+Min.cpp \
+Prod.cpp \
+RCond.cpp \
+Round.cpp \
+Sum.cpp \
+Time.cpp \
+Variance.cpp \
+RealImag.cpp \
+Sort.cpp \
+Analyze.cpp \
 Cast.cpp \
 Constants.cpp \
 Constructors.cpp \
