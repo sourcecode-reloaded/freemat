@@ -1,6 +1,9 @@
 #ifndef __Operators_hpp__
 #define __Operators_hpp__
 
+#include "Array.hpp"
+#include "SparseMatrix.hpp"
+
 // Real, Real --> Real
 template <typename S, typename T, class Op>
 static inline SparseMatrix<S> DotOp(const SparseMatrix<T>& A, 
@@ -464,242 +467,94 @@ static inline Array UnaryOp(const Array &Ain) {
     return UnaryOp<double,Op>(Ain,Double).toClass(Ain.dataClass());
 }
 
-// Real --> Real
-template <typename S, typename T, class Op>
-static inline SparseMatrix<S> ReductionOp(const SparseMatrix<T>& A, int dim) {
-  ConstSparseIterator<T> aspin(&A);
-  SparseMatrix<S> retval(A.dimensions().forceOne(dim));
-  // Reduce down the columns
-  if (dim == 0) {
-    while (aspin.isValid()) {
-      T accum = Op::init();
-      while (aspin.moreInSlice()) {
-	accum = Op::func(accum,aspin.value());
-	aspin.next();
-      }
-      retval.set(aspin.pos().forceOne(0),accum);
-      aspin.nextSlice();
-    }
-  } else {
-    for (index_t i=1;i<=A.rows();i++)
-      retval.set(NTuple(i,1),Op::init());
-    while (aspin.isValid()) {
-      while (aspin.moreInSlice()) {
-	retval.set(aspin.pos().forceOne(1),
-		   Op::func(retval.get(aspin.pos().forceOne(1),
-				       aspin.value())));
-	aspin.next();
-      }
-      aspin.nextSlice();
-    }
-  }
-  return retval;
-}
-
-// Complex --> Complex
-template <typename S, typename T, class Op>
-static inline void ReductionOp(const SparseMatrix<T>& A_real, 
-			       const SparseMatrix<T>& A_imag,
-			       int dim,
-			       SparseMatrix<S>& C_real,
-			       SparseMatrix<S>& C_imag) {
-  C_real = SparseMatrix<S>(A_real.dimensions().forceOne(dim));
-  C_imag = SparseMatrix<S>(A_imag.dimensions().forceOne(dim));
-  ConstComplexSparseIterator<T> a_spin(&A_real, &A_imag);
-  if (dim == 0) {
-    while (a_spin.isValid()) {
-      T accum_real = Op::init_real();
-      T accum_imag = Op::init_imag();
-      while (a_spin.moreInSlice()) {
-	Op::func(accum_real,accum_imag,
-		 a_spin.realValue(),a_spin.imagValue());
-	a_spin.next();
-      }
-      C_real.set(a_spin.pos().forceOne(dim),accum_real);
-      C_imag.set(a_spin.pos().forceOne(dim),accum_imag);
-      a_spin.nextSlice();
-    }
-  } else {
-    for (index_t i=1;i<=C_real.rows();i++) {
-      C_real.set(NTuple(i,1),Op::init_real());
-      C_imag.set(NTuple(i,1),Op::init_imag());
-    }
-    while (a_spin.isValid()) {
-      while (a_spin.moreInSlice()) {
-	T accum_real = C_real.get(a_spin.pos().forceOne(dim));
-	T accum_imag = C_imag.get(a_spin.pos().forceOne(dim));
-	Op::func(accum_real,accum_imag,
-		    a_spin.realValue(),a_spin.imagValue());
-	C_real.set(a_spin.pos().forceOne(dim),accum_real);
-	C_imag.set(a_spin.pos().forceOne(dim),accum_imag);
-	a_spin.next();
-      }
-      a_spin.nextSlice();
-    }
-  }
-}
-
-// Real --> Real
-template <typename T, typename Atype, class Op>
-static inline void ReductionOp(const Atype& A, 
-			       int dim,
-			       BasicArray<T> &retvec, const NTuple& dims) {
-  retvec = BasicArray<T>(dims.forceOne(dim));
-  ConstBaseIterator<Atype,T> m_source(&A,dim);
-  BaseIterator<BasicArray<T>,T> m_dest(&retvec,dim);
-  while (m_dest.isValid() && m_source.isValid()) {
-    T accum = Op::init();
-    for (int i=0;i<m_source.size();i++) {
-      accum = Op::func(accum,m_source.get());
-      m_source.next();
-    }
-    m_dest.set(accum);
-    m_dest.nextSlice();
-    m_source.nextSlice();
-  }
-}
-
-// Complex --> Complex
-template <typename T, typename Atype, class Op>
-static inline void ReductionOp(const Atype& A_real, const Atype& A_imag,
-			       int dim,
-			       BasicArray<T>& C_real, BasicArray<T>& C_imag, 
-			       const NTuple& dims) {
-  C_real = BasicArray<T>(dims.forceOne(dim));
-  C_imag = BasicArray<T>(dims.forceOne(dim));
-  ConstBaseIterator<Atype,T> m_source_real(&A_real,dim);
-  ConstBaseIterator<Atype,T> m_source_imag(&A_imag,dim);
-  BaseIterator<BasicArray<T>,T> m_dest_real(&C_real,dim);
-  BaseIterator<BasicArray<T>,T> m_dest_imag(&C_imag,dim);
-  while (m_dest_real.isValid() && m_dest_imag.isValid() &&
-	 m_source_real.isValid() && m_source_imag.isValid()) {
-    T accum_real = Op::init_real();
-    T accum_imag = Op::init_imag();
-    for (int i=0;i<m_source_real.size();i++) {
-      Op::func(accum_real,accum_imag,
-	       m_source_real.get(),m_source_imag.get());
-      m_source_real.next(); m_source_imag.next();
-    }
-    m_dest_real.set(accum_real); m_dest_imag.set(accum_imag);
-    m_dest_real.nextSlice(); m_dest_imag.nextSlice();
-    m_source_real.nextSlice(); m_source_imag.nextSlice();
-  }
-}
-
-// Perform the reduction via a typed intermediary
 template <typename T, class Op>
-static inline Array ReductionOp(const Array &Ain, int dim, DataClass Tclass) {
-  Array Acast(Ain.toClass(Tclass));
-  Array F(Tclass);
-  if (Acast.isSparse()) {
-    if (Acast.allReal()) {
-      F = ReductionOp<T,T,Op>(Acast.constRealSparse<T>(),dim);
-    } else {
-      ReductionOp<T,T,Op>(Acast.constRealSparse<T>(),
-			  Acast.constImagSparse<T>(),
-			  dim,
-			  F.realSparse<T>(),
-			  F.imagSparse<T>());
+static inline Array VectorOp(const BasicArray<T> &real,
+			     const BasicArray<T> &imag, 
+			     index_t out, int dim) {
+  NTuple outdims(real.dimensions()); outdims[dim] = out;
+  BasicArray<T> F_real(outdims); 
+  BasicArray<T> F_imag(outdims);
+  if (dim == 0) {
+    ConstBasicIterator<T> source_real(&real,dim);
+    ConstBasicIterator<T> source_imag(&imag,dim);
+    BasicIterator<T> dest_real(&F_real,dim);
+    BasicIterator<T> dest_imag(&F_imag,dim);
+    while (source_real.isValid() && dest_real.isValid()) {
+      Op::func(real.slice(source_real.pos()),
+	       imag.slice(source_imag.pos()),
+	       F_real.slice(dest_real.pos()),
+	       F_imag.slice(dest_imag.pos()));
+      source_real.nextSlice(); source_imag.nextSlice();
+      dest_real.nextSlice(); dest_imag.nextSlice();
     }
-    return F;
-  }
-  if (!Acast.isScalar()) Acast = Acast.asDenseArray();
-  if (Acast.allReal()) {
-    ReductionOp<T,BasicArray<T>,Op>
-      (Acast.constReal<T>(),dim,F.real<T>(),Acast.dimensions());
   } else {
-    ReductionOp<T,BasicArray<T>,Op>
-      (Acast.constReal<T>(),Acast.constImag<T>(),dim,
-       F.real<T>(),F.imag<T>(),Acast.dimensions());
-  }
-  return F;
-}
-
-// The main template for a reduction operation
-// Requires an operator to apply as the reduction,
-// and a dimension along which to apply it
-template <class Op>
-static inline Array ReductionOp(const Array &Ain, int dim) {
-  if (Ain.dataClass() == Float)
-    return ReductionOp<float,Op>(Ain,dim,Float).toClass(Ain.dataClass());
-  else
-    return ReductionOp<double,Op>(Ain,dim,Double).toClass(Ain.dataClass());
-}
-
-// Real --> Real
-template <typename T, typename Atype, class Op>
-static inline void SimpleFilterOp(const Atype& A, int dim,
-				  BasicArray<T> &retvec, const NTuple& dims) {
-  retvec = BasicArray<T>(dims);
-  ConstBaseIterator<Atype,T> m_source(&A,dim);
-  BaseIterator<BasicArray<T>,T> m_dest(&retvec,dim);
-  while (m_dest.isValid() && m_source.isValid()) {
-    T accum = Op::init();
-    for (int i=0;i<m_source.size();i++) {
-      accum = Op::func(accum,m_source.get());
-      m_dest.set(accum);
-      m_source.next();
-      m_dest.next();
+    ConstBasicIterator<T> source_real(&real,dim);
+    ConstBasicIterator<T> source_imag(&imag,dim);
+    BasicIterator<T> dest_real(&F_real,dim);
+    BasicIterator<T> dest_imag(&F_imag,dim);
+    BasicArray<T> in_buffer_real(NTuple(real.dimensions()[dim],1));
+    BasicArray<T> in_buffer_imag(NTuple(imag.dimensions()[dim],1));
+    BasicArray<T> out_buffer_real(NTuple(out,1));
+    BasicArray<T> out_buffer_imag(NTuple(out,1));
+    while (source_real.isValid() && dest_real.isValid()) {
+      for (index_t i=1;i<=source_real.size();i++) {
+	in_buffer_real[i] = source_real.get();
+	in_buffer_imag[i] = source_imag.get();
+	source_real.next(); source_imag.next();
+      }
+      Op::func(in_buffer_real,in_buffer_imag,
+	       out_buffer_real,out_buffer_imag);
+      for (index_t i=1;i<=out;i++) {
+	dest_real.set(out_buffer_real[i]);
+	dest_imag.set(out_buffer_imag[i]);
+	dest_real.next(); dest_imag.next();
+      }
+      source_real.nextSlice(); source_imag.nextSlice();
+      dest_real.nextSlice(); dest_imag.nextSlice();
     }
-    m_dest.nextSlice();
-    m_source.nextSlice();
   }
+  return Array(F_real,F_imag);
 }
 
-// Complex --> Complex
-template <typename T, typename Atype, class Op>
-static inline void SimpleFilterOp(const Atype& A_real, const Atype& A_imag, int dim,
-			    BasicArray<T>& C_real, BasicArray<T>& C_imag, 
-			    const NTuple& dims) {
-  C_real = BasicArray<T>(dims.forceOne(dim));
-  C_imag = BasicArray<T>(dims.forceOne(dim));
-  ConstBaseIterator<Atype,T> m_source_real(&A_real,dim);
-  ConstBaseIterator<Atype,T> m_source_imag(&A_imag,dim);
-  BaseIterator<BasicArray<T>,T> m_dest_real(&C_real,dim);
-  BaseIterator<BasicArray<T>,T> m_dest_imag(&C_imag,dim);
-  while (m_dest_real.isValid() && m_dest_imag.isValid() &&
-	 m_source_real.isValid() && m_source_imag.isValid()) {
-    T accum_real = Op::init_real();
-    T accum_imag = Op::init_imag();
-    for (int i=0;i<m_source_real.size();i++) {
-      Op::func(accum_real,accum_imag,
-	       m_source_real.get(),m_source_imag.get());
-      m_dest_real.set(accum_real); m_dest_imag.set(accum_imag);
-      m_source_real.next(); m_source_imag.next();
-      m_dest_real.next(); m_dest_imag.next();
-    }
-    m_dest_real.nextSlice(); m_dest_imag.nextSlice();
-    m_source_real.nextSlice(); m_source_imag.nextSlice();
-  }
-}
-
-// Perform the filter via a typed intermediary
 template <typename T, class Op>
-static inline Array SimpleFilterOp(const Array &Ain, int dim, DataClass Tclass) {
-  Array Acast(Ain.toClass(Tclass));
-  Array F(Tclass);
-  if (Acast.isSparse())
-    throw Exception("Operation does not support sparse arrays");
-  if (!Acast.isScalar()) Acast = Acast.asDenseArray();
-  if (Acast.allReal()) {
-    SimpleFilterOp<T,BasicArray<T>,Op>
-      (Acast.constReal<T>(),dim,F.real<T>(),Acast.dimensions());
-  } else {
-    SimpleFilterOp<T,BasicArray<T>,Op>
-      (Acast.constReal<T>(),Acast.constImag<T>(),dim,
-       F.real<T>(),F.imag<T>(),Acast.dimensions());
-  }
-  return F;
+static inline Array VectorOp(const SparseMatrix<T>& real, index_t out, int dim) {
+  if (dim == 0) {
+    ConstSparseIterator<T> spin_real(&real);
+    NTuple outdims(real.dimensions()); outdims[dim] = out;
+    SparseMatrix<T> retval(outdims);
+    while (spin_real.isValid()) {
+      SparseSlice<T> this_col;
+      Op::func(spin_real,this_col);
+      retval.data()[spin_real.col()] = this_col;
+      spin_real.nextSlice();
+    }
+    return Array(retval);
+  } else
+    return Transpose(VectorOp<T,Op>(Transpose(real),out,0));
 }
 
-template <class Op>
-static inline Array SimpleFilterOp(const Array &Ain, int dim) {
-  if (Ain.dataClass() == Float)
-    return SimpleFilterOp<float,Op>(Ain,dim,Float).toClass(Ain.dataClass());
-  else
-    return SimpleFilterOp<double,Op>(Ain,dim,Double).toClass(Ain.dataClass());
+template <typename T, class Op>
+static inline Array VectorOp(const SparseMatrix<T> &real,
+			     const SparseMatrix<T> &imag, 
+			     index_t out, int dim) {
+  if (dim == 0) {
+    ConstComplexSparseIterator<T> spin_complex(&real,&imag);
+    NTuple outdims(real.dimensions()); outdims[dim] = out;
+    SparseMatrix<T> retval_real(outdims);
+    SparseMatrix<T> retval_imag(outdims);
+    while (spin_complex.isValid()) {
+      SparseSlice<T> this_real_col;
+      SparseSlice<T> this_imag_col;
+      Op::func(spin_complex,this_real_col,this_imag_col);
+      retval_real.data()[spin_complex.col()] = this_real_col;
+      retval_imag.data()[spin_complex.col()] = this_imag_col;
+      spin_complex.nextSlice();
+    }
+    return Array(retval_real,retval_imag);
+  } else
+    return Transpose(VectorOp<T,Op>(Transpose(real),
+				    Transpose(imag),out,0));
 }
-
 
 template <typename T, class Op>
 static inline Array VectorOp(const BasicArray<T> &real, index_t out, int dim) {
@@ -707,40 +562,251 @@ static inline Array VectorOp(const BasicArray<T> &real, index_t out, int dim) {
   BasicArray<T> F(outdims); 
   if (dim == 0) {
     ConstBasicIterator<T> source(&real,dim);
-    BasicIterator<T> dest(&F.real<T>(),dim);
+    BasicIterator<T> dest(&F,dim);
     while (source.isValid() && dest.isValid()) {
       Op::func(real.slice(source.pos()),F.slice(dest.pos()));
       source.nextSlice(); dest.nextSlice();
     }
   } else {
     ConstBasicIterator<T> source(&real,dim);
-    BasicIterator<T> dest(&F.real<T>(),dim);
+    BasicIterator<T> dest(&F,dim);
+    BasicArray<T> in_buffer(NTuple(real.dimensions()[dim],1));
+    BasicArray<T> out_buffer(NTuple(out,1));
     while (source.isValid() && dest.isValid()) {
-#error finishme      
+      for (index_t i=1;i<=source.size();i++) {
+	in_buffer[i] = source.get();
+	source.next();
+      }
+      Op::func(in_buffer,out_buffer);
+      for (index_t i=1;i<=out;i++) {
+	dest.set(out_buffer[i]);
+	dest.next();
+      }
+      source.nextSlice(); dest.nextSlice();
     }
   }
+  return Array(F);
 }
 
 template <typename T, class Op>
 static inline Array VectorOp(const Array &Ain, index_t out, int dim, DataClass Tclass) {
   Array Acast(Ain.toClass(Tclass));
-  Array F(Tclass);
-  if (Acast.isSparse())
-    throw Exception("Operation does not support sparse arrays");
+  Array F;
+  if (Acast.isSparse()) {
+    if (Acast.allReal())
+      F = VectorOp<T,Op>(Acast.constRealSparse<T>(),out,dim);
+    else
+      F = VectorOp<T,Op>(Acast.constRealSparse<T>(),
+			 Acast.constImagSparse<T>(),out,dim);
+  }
   if (!Acast.isScalar()) Acast = Acast.asDenseArray();
   if (Acast.allReal()) {
-    VectorOp<T,Op>(Acast.constReal<T>(),out,dim);
+    F = VectorOp<T,Op>(Acast.constReal<T>(),out,dim);
   } else {
-    VectorOp<T,Op>(Acast.constReal<T>(),Acast.constImag<T>(),out,dim);
+    F = VectorOp<T,Op>(Acast.constReal<T>(),Acast.constImag<T>(),out,dim);
   }
+  return F.toClass(Ain.dataClass());
 }
 
 template <class Op>
   static inline Array VectorOp(const Array &Ain, int out, int dim) {
   if (Ain.dataClass() == Float)
-    return VectorOp<float,Op>(Ain,dim,Float).toClass(Ain.dataClass());
+    return VectorOp<float,Op>(Ain,out,dim,Float).toClass(Ain.dataClass());
   else
-    return VectorOp<double,Op>(Ain,dim,Double).toClass(Ain.dataClass());
+    return VectorOp<double,Op>(Ain,out,dim,Double).toClass(Ain.dataClass());
+}
+
+template <typename T, class Op>
+static inline Array BiVectorOp(const BasicArray<T> &real,
+			       const BasicArray<T> &imag, 
+			       index_t out, int dim,
+			       Array &D) {
+  NTuple outdims(real.dimensions()); outdims[dim] = out;
+  BasicArray<T> F_real(outdims); 
+  BasicArray<T> F_imag(outdims);
+  BasicArray<index_t> Ddata(outdims);
+  if (dim == 0) {
+    ConstBasicIterator<T> source_real(&real,dim);
+    ConstBasicIterator<T> source_imag(&imag,dim);
+    BasicIterator<T> dest_real(&F_real,dim);
+    BasicIterator<T> dest_imag(&F_imag,dim);
+    BasicIterator<index_t> D_iter(&Ddata,dim);
+    while (source_real.isValid() && dest_real.isValid()) {
+      Op::func(real.slice(source_real.pos()),
+	       imag.slice(source_imag.pos()),
+	       F_real.slice(dest_real.pos()),
+	       F_imag.slice(dest_imag.pos()),
+	       Ddata.slice(D_iter.pos()));
+      source_real.nextSlice(); source_imag.nextSlice();
+      dest_real.nextSlice(); dest_imag.nextSlice();
+      D_iter.nextSlice();
+    }
+  } else {
+    ConstBasicIterator<T> source_real(&real,dim);
+    ConstBasicIterator<T> source_imag(&imag,dim);
+    BasicIterator<T> dest_real(&F_real,dim);
+    BasicIterator<T> dest_imag(&F_imag,dim);
+    BasicArray<T> in_buffer_real(NTuple(real.dimensions()[dim],1));
+    BasicArray<T> in_buffer_imag(NTuple(imag.dimensions()[dim],1));
+    BasicArray<T> out_buffer_real(NTuple(out,1));
+    BasicArray<T> out_buffer_imag(NTuple(out,1));
+    BasicArray<index_t> out_buffer_index(NTuple(out,1));
+    BasicIterator<index_t> D_iter(&Ddata,dim);
+    while (source_real.isValid() && dest_real.isValid()) {
+      for (index_t i=1;i<=source_real.size();i++) {
+	in_buffer_real[i] = source_real.get();
+	in_buffer_imag[i] = source_imag.get();
+	source_real.next(); source_imag.next();
+      }
+      Op::func(in_buffer_real,in_buffer_imag,
+	       out_buffer_real,out_buffer_imag,
+	       out_buffer_index);
+      for (index_t i=1;i<=out;i++) {
+	dest_real.set(out_buffer_real[i]);
+	dest_imag.set(out_buffer_imag[i]);
+	D_iter.set(out_buffer_index[i]);
+	dest_real.next(); dest_imag.next();
+	D_iter.next();
+      }
+      source_real.nextSlice(); source_imag.nextSlice();
+      dest_real.nextSlice(); dest_imag.nextSlice();
+      D_iter.nextSlice();
+    }
+  }
+  D = Array(Ddata);
+  return Array(F_real,F_imag);
+}
+
+template <typename T, class Op>
+static inline Array BiVectorOp(const SparseMatrix<T>& real, index_t out, int dim,
+			       Array &D) {
+  if (dim == 0) {
+    ConstSparseIterator<T> spin_real(&real);
+    NTuple outdims(real.dimensions()); outdims[dim] = out;
+    SparseMatrix<T> retval(outdims);
+    SparseMatrix<index_t> Dval(outdims);
+    while (spin_real.isValid()) {
+      SparseSlice<T> this_col;
+      SparseSlice<index_t> this_index;
+      Op::func(spin_real,this_col,this_index);
+      retval.data()[spin_real.col()] = this_col;
+      Dval.data()[spin_real.col()] = this_index;
+      spin_real.nextSlice();
+    }
+    D = Array(Dval);
+    return Array(retval);
+  } else {
+    Array F = Transpose(BiVectorOp<T,Op>(Transpose(real),out,0,D));
+    D = Transpose(D);
+    return F;
+  }
+}
+
+template <typename T, class Op>
+static inline Array BiVectorOp(const SparseMatrix<T> &real,
+			       const SparseMatrix<T> &imag, index_t out, int dim,
+			       Array &D) {
+  if (dim == 0) {
+    ConstComplexSparseIterator<T> spin_complex(&real,&imag);
+    NTuple outdims(real.dimensions()); outdims[dim] = out;
+    SparseMatrix<T> retval_real(outdims);
+    SparseMatrix<T> retval_imag(outdims);
+    SparseMatrix<index_t> Dval(outdims);
+    while (spin_complex.isValid()) {
+      SparseSlice<T> this_real_col;
+      SparseSlice<T> this_imag_col;
+      SparseSlice<index_t> this_index;
+      Op::func(spin_complex,this_real_col,this_imag_col,this_index);
+      retval_real.data()[spin_complex.col()] = this_real_col;
+      retval_imag.data()[spin_complex.col()] = this_imag_col;
+      Dval.data()[spin_complex.col()] = this_index;
+      spin_complex.nextSlice();
+    }
+    D = Array(Dval);
+    return Array(retval_real,retval_imag);
+  } else {
+    Array F = Transpose(BiVectorOp<T,Op>(Transpose(real),
+					 Transpose(imag),out,0,D));
+    D = Transpose(D);
+    return F;
+  }
+}
+
+template <typename T, class Op>
+static inline Array BiVectorOp(const BasicArray<T> &real, index_t out, int dim,
+			       Array &D) {
+  NTuple outdims(real.dimensions()); outdims[dim] = out;
+  BasicArray<T> F(outdims); 
+  BasicArray<index_t> Ddata(outdims);
+  if (dim == 0) {
+    ConstBasicIterator<T> source(&real,dim);
+    BasicIterator<T> dest(&F,dim);
+    BasicIterator<index_t> destD(&Ddata,dim);
+    while (source.isValid() && dest.isValid() && destD.isValid()) {
+      Op::func(real.slice(source.pos()),F.slice(dest.pos()),Ddata.slice(destD.pos()));
+      source.nextSlice(); dest.nextSlice(); destD.nextSlice();
+    }
+  } else {
+    ConstBasicIterator<T> source(&real,dim);
+    BasicIterator<T> dest(&F,dim);
+    BasicIterator<index_t> destD(&Ddata,dim);
+    BasicArray<T> in_buffer(NTuple(real.dimensions()[dim],1));
+    BasicArray<T> out_buffer1(NTuple(out,1));
+    BasicArray<index_t> out_buffer2(NTuple(out,1));
+    while (source.isValid() && dest.isValid() && destD.isValid()) {
+      for (index_t i=1;i<=source.size();i++) {
+	in_buffer[i] = source.get();
+	source.next();
+      }
+      Op::func(in_buffer,out_buffer1,out_buffer2);
+      for (index_t i=1;i<=out;i++) {
+	dest.set(out_buffer1[i]);
+	destD.set(out_buffer2[i]);
+	dest.next();
+	destD.next();
+      }
+      source.nextSlice(); dest.nextSlice(); destD.nextSlice();
+    }
+  }
+  D = Array(Ddata);
+  return Array(F);
+}
+
+template <typename T, class Op>
+static inline ArrayVector BiVectorOp(const Array &Ain, index_t out, 
+				     int dim, DataClass Tclass) {
+  Array Acast(Ain.toClass(Tclass));
+  Array F, D;
+  if (Acast.isSparse()) {
+    if (Acast.allReal())
+      F = BiVectorOp<T,Op>(Acast.constRealSparse<T>(),out,dim,D);
+    else
+      F = BiVectorOp<T,Op>(Acast.constRealSparse<T>(),
+			 Acast.constImagSparse<T>(),out,dim,D);
+  }
+  if (!Acast.isScalar()) Acast = Acast.asDenseArray();
+  if (Acast.allReal()) {
+    F = BiVectorOp<T,Op>(Acast.constReal<T>(),out,dim,D);
+  } else {
+    F = BiVectorOp<T,Op>(Acast.constReal<T>(),Acast.constImag<T>(),out,dim,D);
+  }
+  F.toClass(Ain.dataClass());
+  ArrayVector ret;
+  ret.push_back(F);
+  ret.push_back(D);
+}
+
+template <class Op>
+  static inline ArrayVector BiVectorOp(const Array &Ain, int out, int dim) {
+  if (Ain.dataClass() == Float) {
+    ArrayVector Ret(BiVectorOp<float,Op>(Ain,out,dim,Float));
+    Ret[0] = Ret[0].toClass(Ain.dataClass());
+    return Ret;
+  } else {
+    ArrayVector Ret(BiVectorOp<double,Op>(Ain,out,dim,Double));
+    Ret[0] = Ret[0].toClass(Ain.dataClass());
+    return Ret;
+  }
 }
 
 #endif

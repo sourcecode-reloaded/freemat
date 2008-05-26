@@ -29,6 +29,7 @@ public:
   inline index_t size() const {return m_dim[m_pinDim];}
   inline void set(const T& val) {m_ptr->set(m_ndx,val);}
   inline const T get() const {return m_ptr->get(m_ndx);}
+  inline NTuple pos() const {return m_pos;}
   ~BaseIterator() {}
 };
 
@@ -56,6 +57,7 @@ public:
   inline bool isValid() const {return (m_pos <= m_dim);}
   inline index_t size() const {return m_dim[m_pinDim];}
   inline const T get() const {return m_ptr->get(m_ndx);}
+  inline NTuple pos() const {return m_pos;}
   ~ConstBaseIterator() {}
 };
 

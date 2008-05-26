@@ -146,7 +146,7 @@ const T Get(const T& arg, const IndexArray& index) {
 template <typename T>
 const T Get(const T& arg, const IndexArrayVector& index) {
   if (index.empty()) return T();
-  if (isSliceIndexCase(index)) return arg.getSlice(index);
+  if (isSliceIndexCase(index)) return arg.slice(index);
   IndexArrayVector ndx;
   NTuple outdims;
   for (int i=0;i<index.size();i++) {

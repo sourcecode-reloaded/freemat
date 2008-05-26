@@ -311,6 +311,8 @@ void SetCellContents(Array &cell, const Array& index, ArrayVector& data);
 void SetCellContents(Array &cell, const ArrayVector& index, ArrayVector& data);
 QStringList FieldNames(const Array& arg);
 
+bool IsCellStringArray(const Array &arg);
+
 template <typename T>
 SparseMatrix<T> ToRealSparse(const Array& data) {
   if (data.type().Sparse == 1) return data.constRealSparse<T>();
@@ -370,6 +372,8 @@ Array RangeConstructor(double start, double step, double stop, bool vertical);
 Array Transpose(const Array &A);
 Array Hermitian(const Array &A);
 Array Negate(const Array &A);
+Array Real(const Array &A);
+Array Imag(const Array &A);
 
 // Suppose we support a get/set interface:// And we support slicing through the iterators
 // themselves.  For example, consider

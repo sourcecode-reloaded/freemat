@@ -100,13 +100,25 @@ public:
   inline const T get(const NTuple& pos) const {
     return m_data[(int64)(m_dims.map(pos)+m_offset-1)];
   }
-  BasicArray<T> getSlice(const IndexArrayVector& index) const {
+  BasicArray<T> slice(const IndexArrayVector& index) const {
     index_t offset = getSliceIndex(dimensions(),index);
     BasicArray<T> retvec;
     retvec.m_dims = NTuple(dimensions()[0],1);
     retvec.m_offset = offset;
     retvec.m_data = m_data;
     return retvec;
+  }
+  BasicArray<T> slice(const NTuple& pos) const {
+    index_t offset = dimensions().map(pos)-1;
+    BasicArray<T> retvec;
+    retvec.m_dims = NTuple(dimensions()[0],1);
+    retvec.m_offset = offset;
+    retvec.m_data = m_data;
+    return retvec;
+  }
+  BasicArray<T>& slice(const NTuple& pos) {
+    m_offset = dimensions().map(pos)-1;
+    return *this;
   }
   void del(const IndexArrayVector& index) {
     // The strategy for dealing with deletions is simplified relative

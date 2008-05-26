@@ -148,7 +148,7 @@ void TypeCheck(Array &A, Array &B, bool isDivOrMatrix);
 Array InvertMatrix(const Array& A);
 
 template <class T>
-T complex_abs(T real, T imag) {
+inline T complex_abs(const T &real, const T &imag) {
   double temp;
   if(real < 0)
     real = -real;
@@ -165,4 +165,56 @@ T complex_abs(T real, T imag) {
   temp = real*sqrt(1.0 + temp*temp);  /*overflow!!*/
   return(temp);
 }
+
+template <typename T>
+inline T complex_phase(const T &ar, const T &ai) {
+  return atan2(ai,ar);
+}
+
+template <typename T>
+inline void complex_multiply(const T &ar, const T &ai, 
+			     const T &br, const T &bi, 
+			     T &cr, T &ci) {
+  cr = ar * br - ai * bi;
+  ci = ar * bi + ai * br;  
+}
+
+template <typename T>
+inline bool complex_lt(const T &ar, const T &ai, 
+		const T &br, const T &bi) {
+  T mag_a = complex_abs(ar,ai);
+  T mag_b = complex_abs(br,bi);
+  if (mag_a < mag_b) return true;
+  if (mag_b < mag_a) return false;
+  return (complex_phase(ar,ai) < complex_phase(br,bi));
+}
+
+template <typename T>
+inline bool complex_gt(const T &ar, const T &ai, 
+		const T &br, const T &bi) {
+  T mag_a = complex_abs(ar,ai);
+  T mag_b = complex_abs(br,bi);
+  if (mag_a > mag_b) return true;
+  if (mag_b > mag_a) return false;
+  return (complex_phase(ar,ai) > complex_phase(br,bi));
+}
+
+template <typename T>
+inline bool complex_eq(const T & ar, const T & ai, 
+		const T & br, const T & bi) {
+  return ((ar == br) && (ai == bi));
+}
+
+template <typename T>
+inline bool complex_le(const T & ar, const T & ai, 
+		const T & br, const T & bi) {
+  return complex_eq(ar,ai,br,bi) || complex_lt(ar,ai,br,bi);
+}
+
+template <typename T>
+inline bool complex_ge(const T & ar, const T & ai, 
+		const T & br, const T & bi) {
+  return complex_eq(ar,ai,br,bi) || complex_gt(ar,ai,br,bi);
+}
+
 #endif

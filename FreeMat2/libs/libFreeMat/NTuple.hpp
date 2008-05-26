@@ -164,6 +164,14 @@ public:
 	   (last_not_one > 2)) last_not_one--;
     return last_not_one;
   }
+  inline int firstNonsingular() const {
+    int non_singular = 0;
+    while ((m_data[non_singular] == 1) && (non_singular < NDims))
+      non_singular++;
+    if (non_singular == NDims-1)
+      return 0;
+    return non_singular;
+  }
   inline QString toString() const {
     int last_not_one = lastNotOne();
     QString ret = QString("%1").arg(m_data[0]);

@@ -175,8 +175,7 @@ struct OpMultiply {
   static inline void func(const T& ar, const T& ai,
 			  const T& br, const T& bi,
 			  T& cr, T& ci) {
-    cr = ar * br - ai * bi;
-    ci = ar * bi + ai * br;
+    complex_multiply(ar,ai,br,bi,cr,ci);
   }
 };
 
@@ -201,7 +200,7 @@ struct OpLessThan {
   template <typename T>
   static inline bool func(const T& ar, const T& ai,
 			  const T& br, const T& bi) {
-    return complex_abs<T>(ar,ai) < complex_abs<T>(br,bi);
+    return complex_lt<T>(ar,ai,br,bi);
   }
 };
 
@@ -213,7 +212,7 @@ struct OpLessEquals {
   template <typename T>
   static inline bool func(const T& ar, const T& ai,
 			  const T& br, const T& bi) {
-    return complex_abs<T>(ar,ai) <= complex_abs<T>(br,bi);
+    return complex_le<T>(ar,ai,br,bi);
   }
 };
 
@@ -225,7 +224,8 @@ struct OpEquals {
   template <typename T>
   static inline bool func(const T& ar, const T& ai,
 			  const T& br, const T& bi) {
-    return ((ar == br) && (ai == bi));
+
+    return complex_eq<T>(ar,ai,br,bi);
   }
 };
 
@@ -237,7 +237,7 @@ struct OpNotEquals {
   template <typename T>
   static inline bool func(const T& ar, const T& ai,
 			  const T& br, const T& bi) {
-    return ((ar != br) || (ai != bi));
+    return complex_ne<T>(ar,ai,br,bi);
   }
 };
 
@@ -249,7 +249,7 @@ struct OpGreaterThan {
   template <typename T>
   static inline bool func(const T& ar, const T& ai,
 			  const T& br, const T& bi) {
-    return complex_abs<T>(ar,ai) > complex_abs<T>(br,bi);
+    return complex_gr<T>(ar,ai,br,bi);
   }
 };
 
@@ -261,7 +261,7 @@ struct OpGreaterEquals {
   template <typename T>
   static inline bool func(const T& ar, const T& ai,
 			  const T& br, const T& bi) {
-    return complex_abs<T>(ar,ai) >= complex_abs<T>(br,bi);
+    return complex_ge<T>(ar,ai,br,bi);
   }
 };
 

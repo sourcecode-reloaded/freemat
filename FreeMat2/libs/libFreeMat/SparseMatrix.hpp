@@ -130,7 +130,7 @@ public:
     }
     (*this)[pos] = val;
   }
-  SparseMatrix<T> getSlice(const IndexArrayVector& index) const {
+  SparseMatrix<T> slice(const IndexArrayVector& index) const {
     SparseMatrix<T> ret;
     ret.m_dims = NTuple(m_dims[0],1);
     ret.m_data[1] = m_data[index[1].get((index_t)1)];
@@ -305,6 +305,9 @@ public:
     m_col = m_ptr->constData().constBegin();
     m_row = m_col.value().constBegin();
   }
+  inline index_t rows() const {
+    return m_ptr->rows();
+  }
   inline bool moreInSlice() const {
     return (m_row != m_col.value().constEnd());
   }
@@ -347,6 +350,9 @@ public:
     m_real(real), m_imag(imag), m_dims(real->dimensions()) {}
   inline bool moreInSlice() const {
     return (m_real.moreInSlice() || m_imag.moreInSlice());
+  }
+  inline index_t rows() const {
+    return m_real.rows();
   }
   void next() {
     if (m_dims.map(m_real.pos()) < m_dims.map(m_imag.pos()))
