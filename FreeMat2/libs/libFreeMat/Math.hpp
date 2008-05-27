@@ -149,21 +149,21 @@ Array InvertMatrix(const Array& A);
 
 template <class T>
 inline T complex_abs(T real, T imag) {
-  double temp;
+  T swap;
   if(real < 0)
     real = -real;
   if(imag < 0)
     imag = -imag;
   if(imag > real){
-    temp = real;
+    swap = real;
     real = imag;
-    imag = temp;
+    imag = swap;
   }
   if((real+imag) == real)
     return(real);
-  temp = imag/real;
+  double temp = double(imag)/double(real);
   temp = real*sqrt(1.0 + temp*temp);  /*overflow!!*/
-  return(temp);
+  return(T(temp));
 }
 
 template <typename T>

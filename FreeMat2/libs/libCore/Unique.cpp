@@ -1,4 +1,5 @@
 #include "Array.hpp"
+#include "Math.hpp"
 #include <QtCore>
 
 //!
@@ -78,7 +79,7 @@ bool operator<(const UniqueEntryReal<Array> &A, const UniqueEntryReal<Array> &B)
 template <class T>
 void UniqueFunctionReal(const BasicArray<T> &data, BasicArray<T> &u_data, 
 			BasicArray<index_t> &m_array, BasicArray<index_t> &n_array) {
-  QMap<UniqueEntryReal,index_t> qSet;
+  QMap<UniqueEntryReal<T>,index_t> qSet;
   for (index_t i=1;i<=data.rows();i++) {
     UniqueEntryReal<T> tmp;
     tmp.real = BasicArray<T>(NTuple(1,data.cols()));
@@ -86,7 +87,7 @@ void UniqueFunctionReal(const BasicArray<T> &data, BasicArray<T> &u_data,
       tmp.real[j] = data.get(NTuple(i,j));
     qSet.insertMulti(tmp,i);
   }
-  QList<UniqueEntryReal> qKeys(qSet.uniqueKeys());
+  QList<UniqueEntryReal<T> > qKeys(qSet.uniqueKeys());
   u_data = BasicArray<T>(NTuple(qKeys.size(),data.cols()));
   m_array = BasicArray<index_t>(NTuple(qKeys.size(),1));
   n_array = BasicArray<index_t>(NTuple(data.rows(),1));
@@ -110,12 +111,17 @@ public:
 };
 
 template <class T>
-bool operator<(const UniqueEntryComplex<T> &A, const UniqueEntryReal<T> &B) {
+bool operator<(const UniqueEntryComplex<T> &A, const UniqueEntryComplex<T> &B) {
   for (index_t i=1;i<=A.real.length();i++) {
     if (complex_lt(B.real[i],B.imag[i],A.real[i],A.imag[i])) return false;
     if (complex_lt(A.real[i],A.imag[i],B.real[i],B.imag[i])) return true;
   }
   return false;
+}
+
+template <>
+bool operator<(const UniqueEntryComplex<Array> &A, const UniqueEntryComplex<Array> &B) {
+  throw Exception("Unused case!");
 }
 
 template <class T>
@@ -125,25 +131,25 @@ void UniqueFunctionComplex(const BasicArray<T> &data_real,
 			   BasicArray<T> &u_data_imag,
 			   BasicArray<index_t> &m_array, 
 			   BasicArray<index_t> &n_array) {
-  QMap<UniqueEntryComplex,index_t> qSet;
+  QMap<UniqueEntryComplex<T>,index_t> qSet;
   for (index_t i=1;i<=data_real.rows();i++) {
     UniqueEntryComplex<T> tmp;
     tmp.real = BasicArray<T>(NTuple(1,data_real.cols()));
     tmp.imag = BasicArray<T>(NTuple(1,data_real.cols()));
-    for (index_t j=1;j<=data.cols();j++) {
+    for (index_t j=1;j<=data_real.cols();j++) {
       tmp.real[j] = data_real.get(NTuple(i,j));
       tmp.imag[j] = data_imag.get(NTuple(i,j));
     }
     qSet.insertMulti(tmp,i);
   }
-  QList<UniqueEntryComplex> qKeys(qSet.uniqueKeys());
-  u_data_real = BasicArray<T>(NTuple(qKeys.size(),data.cols()));
-  u_data_imag = BasicArray<T>(NTuple(qKeys.size(),data.cols()));
+  QList<UniqueEntryComplex<T> > qKeys(qSet.uniqueKeys());
+  u_data_real = BasicArray<T>(NTuple(qKeys.size(),data_real.cols()));
+  u_data_imag = BasicArray<T>(NTuple(qKeys.size(),data_real.cols()));
   m_array = BasicArray<index_t>(NTuple(qKeys.size(),1));
-  n_array = BasicArray<index_t>(NTuple(data.rows(),1));
+  n_array = BasicArray<index_t>(NTuple(data_real.rows(),1));
   for (int i=0;i<qKeys.size();i++) {
     QList<index_t> qValues(qSet.values(qKeys[i]));
-    for (index_t j=1;j<=data.cols();j++) {
+    for (index_t j=1;j<=data_real.cols();j++) {
       u_data_real.set(NTuple(i+1,j),qKeys[i].real[j]);
       u_data_imag.set(NTuple(i+1,j),qKeys[i].imag[j]);
     }
@@ -172,9 +178,11 @@ static inline ArrayVector UniqueFunctionAux(const Array &arg) {
     BasicArray<T> u_data_imag;
     BasicArray<index_t> m_array;
     BasicArray<index_t> n_array;
-    UniqueFunctionReal(arg.constReal<T>(),
-		       arg.constImag<T>(),
-		       u_data,m_array,n_array);
+    UniqueFunctionComplex(arg.constReal<T>(),
+			  arg.constImag<T>(),
+			  u_data_real,
+			  u_data_imag,
+			  m_array,n_array);
     ArrayVector ret;
     ret.push_back(Array(u_data_real,u_data_imag));
     ret.push_back(Array(m_array));
