@@ -313,6 +313,8 @@ QStringList FieldNames(const Array& arg);
 
 bool IsCellStringArray(const Array &arg);
 
+Array Vectorize(const Array& arg);
+
 template <typename T>
 SparseMatrix<T> ToRealSparse(const Array& data) {
   if (data.type().Sparse == 1) return data.constRealSparse<T>();

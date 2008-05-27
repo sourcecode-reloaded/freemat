@@ -249,7 +249,7 @@ struct OpGreaterThan {
   template <typename T>
   static inline bool func(const T& ar, const T& ai,
 			  const T& br, const T& bi) {
-    return complex_gr<T>(ar,ai,br,bi);
+    return complex_gt<T>(ar,ai,br,bi);
   }
 };
 

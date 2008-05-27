@@ -148,7 +148,7 @@ void TypeCheck(Array &A, Array &B, bool isDivOrMatrix);
 Array InvertMatrix(const Array& A);
 
 template <class T>
-inline T complex_abs(const T &real, const T &imag) {
+inline T complex_abs(T real, T imag) {
   double temp;
   if(real < 0)
     real = -real;
@@ -201,13 +201,19 @@ inline bool complex_gt(const T &ar, const T &ai,
 
 template <typename T>
 inline bool complex_eq(const T & ar, const T & ai, 
-		const T & br, const T & bi) {
+		       const T & br, const T & bi) {
   return ((ar == br) && (ai == bi));
 }
 
 template <typename T>
+inline bool complex_ne(const T & ar, const T & ai,
+		       const T & br, const T & bi) {
+  return ((ar != br) || (ai != bi));
+}
+
+template <typename T>
 inline bool complex_le(const T & ar, const T & ai, 
-		const T & br, const T & bi) {
+		       const T & br, const T & bi) {
   return complex_eq(ar,ai,br,bi) || complex_lt(ar,ai,br,bi);
 }
 
