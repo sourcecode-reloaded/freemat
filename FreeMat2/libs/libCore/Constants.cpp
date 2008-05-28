@@ -19,6 +19,7 @@
 
 #include "Array.hpp"
 #include "LAPACK.hpp"
+#include "IEEEFP.hpp"
 #include <math.h>
 
 //!
@@ -56,17 +57,13 @@
 //uint32(inf)
 //complex(inf)
 //@>
+//@@Signature
+//function inf InfFunction
+//inputs none
+//outputs y
 //!
 ArrayVector InfFunction(int nargout, const ArrayVector& arg) {
-  union {
-    float f;
-    unsigned int i;
-  } u;
-  u.i = 0x7f800000;
-  Array A(Array::doubleConstructor(u.f));
-  ArrayVector retval;
-  retval.push_back(A);
-  return retval;
+  return ArrayVector(Array(Inf()));
 }
 
 //!
@@ -92,17 +89,13 @@ ArrayVector InfFunction(int nargout, const ArrayVector& arg) {
 //uint32(nan)
 //complex(nan)
 //@>
+//@@Signature
+//function nan NaNFunction
+//inputs none
+//outputs y
 //!
 ArrayVector NaNFunction(int nargout, const ArrayVector& arg) {
-  union {
-    float f;
-    unsigned int i;
-  } u;
-  u.i = 0x7fC00000;
-  Array A(Array::doubleConstructor(u.f));
-  ArrayVector retval;
-  retval.push_back(A);
-  return retval;
+  return ArrayVector(Array(NaN()));
 }
   
 //!
@@ -137,12 +130,13 @@ ArrayVector NaNFunction(int nargout, const ArrayVector& arg) {
 //clear i
 //i
 //@>
+//@@Signature
+//function i IFunction
+//inputs none
+//outputs y
 //!
 ArrayVector IFunction(int nargout, const ArrayVector& arg) {
-  Array A(Array::complexConstructor(0.0,1.0));
-  ArrayVector retval;
-  retval.push_back(A);
-  return retval;
+  return ArrayVector(Array(double(0),double(1)));
 }
 
 //!
@@ -160,12 +154,13 @@ ArrayVector IFunction(int nargout, const ArrayVector& arg) {
 //pi
 //cos(pi)
 //@>
+//@@Signature
+//function pi PiFunction
+//inputs none
+//outputs y
 //!
 ArrayVector PiFunction(int nargout, const ArrayVector& arg) {
-  Array A(Array::doubleConstructor(4.0*atan(1.0)));
-  ArrayVector retval;
-  retval.push_back(A);
-  return retval;
+  return ArrayVector(Array(double(4.0*atan(1.0))));
 }  
 
 //!
@@ -183,12 +178,13 @@ ArrayVector PiFunction(int nargout, const ArrayVector& arg) {
 //e
 //log(e)
 //@>
+//@@Signature
+//function e EFunction
+//inputs none
+//outputs y
 //!
 ArrayVector EFunction(int nargout, const ArrayVector& arg) {
-  Array A(Array::doubleConstructor(exp(1.0)));
-  ArrayVector retval;
-  retval.push_back(A);
-  return retval;
+  return ArrayVector(Array(exp(1.0)));
 }  
 
 //!
@@ -210,11 +206,13 @@ ArrayVector EFunction(int nargout, const ArrayVector& arg) {
 //eps
 //1.0+eps
 //@>
+//@@Signature
+//function eps EpsFunction
+//inputs none
+//outputs y
 //!
 ArrayVector EpsFunction(int nargout, const ArrayVector& arg) {
-  
-  ArrayVector retval;
-  return retval << Array::doubleConstructor(nextafter(1.,2.)-1.);
+  return ArrayVector(Array(nextafter(1.0,2.0)-1.0));
 }
 
 //!
@@ -236,10 +234,13 @@ ArrayVector EpsFunction(int nargout, const ArrayVector& arg) {
 //feps
 //1.0f+eps
 //@>
+//@@Signature
+//function feps FepsFunction
+//inputs none
+//outputs y
 //!
 ArrayVector FepsFunction(int nargout, const ArrayVector& arg) {
-  ArrayVector retval;
-  return retval << Array::floatConstructor(nextafterf(1.,2.)-(float)1.);
+  return ArrayVector(Array(float(nextafterf(1.0,2.0)-1.0f)));
 }
 
 //!
@@ -253,9 +254,13 @@ ArrayVector FepsFunction(int nargout, const ArrayVector& arg) {
 //@@Tests
 //@$"y=logical(1)","true","exact"
 //@$"y=logical(0)","~true","exact"
+//@@Signature
+//function true TrueFunction
+//inputs none
+//outputs y
 //!
 ArrayVector TrueFunction(int nargout, const ArrayVector& arg) {
-  return ArrayVector() << Array::logicalConstructor(1);
+  return ArrayVector(Array(bool(true)));
 }
 
 //!
@@ -271,5 +276,5 @@ ArrayVector TrueFunction(int nargout, const ArrayVector& arg) {
 //@$"y=logical(1)","~false","exact"
 //!
 ArrayVector FalseFunction(int nargout, const ArrayVector& arg) {
-  return ArrayVector() << Array::logicalConstructor(0);
+  return ArrayVector(Array(bool(false)));
 }

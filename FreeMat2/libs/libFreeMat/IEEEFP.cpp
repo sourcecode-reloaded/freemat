@@ -141,6 +141,24 @@ bool IsFinite(double t) {
   return (!(IsNaN(t) || IsInfinite(t)));
 }
 
+double NaN() {
+  union {
+    float f;
+    unsigned int i;
+  } u;
+  u.i = 0x7fC00000;
+  return u.f;
+}
+
+double Inf() {
+  union {
+    float f;
+    unsigned int i;
+  } u;
+  u.i = 0x7f800000;
+  return u.f;
+}
+
 void ToHexString(float t, char *ptr) {
   union {
     float f;

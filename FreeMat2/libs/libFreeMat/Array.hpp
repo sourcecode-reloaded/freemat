@@ -359,6 +359,8 @@ BasicArray<Array> ArrayVectorToBasicArray(const ArrayVector& a);
 
 Array MatrixConstructor(const ArrayMatrix& data);
 Array CellConstructor(const ArrayMatrix& data);
+Array CellConstructor(const ArrayVector& data);
+Array StructConstructor(const StringVector& fields, const ArrayVector& values);
 inline Array EmptyConstructor() {return Array(Double);}
 
 bool TestForCaseMatch(const Array &s, const Array &r);

@@ -39,15 +39,15 @@
 //@<
 //logical([pi,pi,0,e,0,-1])
 //@>
+//@@Specification
+//function logical LogicalFunction
+//inputs x
+//outputs y
 //!
 ArrayVector LogicalFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1) 
     throw Exception("type conversion function requires one argument");
-  Array A(arg[0]);
-  A.promoteType(FM_LOGICAL);
-  ArrayVector retval;
-  retval.push_back(A);
-  return retval;
+  return ArrayVector(arg[0].toClass(Bool));
 }
 
 //!
@@ -67,15 +67,15 @@ ArrayVector LogicalFunction(int nargout, const ArrayVector& arg) {
 //a = [104,101,108,108,111]
 //string(a)
 //@>
+//@@Specification
+//function string StringFunction
+//inputs x
+//outputs y
 //!
 ArrayVector StringFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("type conversion function requires one argument");
-  Array A(arg[0]);
-  A.promoteType(FM_STRING);
-  ArrayVector retval;
-  retval.push_back(A);
-  return retval;
+  return ArrayVector(arg[0].toClass(StringArray));
 }
 
 //!
@@ -121,15 +121,15 @@ ArrayVector StringFunction(int nargout, const ArrayVector& arg) {
 //@<1
 //uint8({4})
 //@>
+//@@Specification
+//function uint8 UInt8Function
+//inputs x
+//outputs y
 //!
 ArrayVector UInt8Function(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1) 
     throw Exception("type conversion function requires one argument");
-  Array A(arg[0]);
-  A.promoteType(FM_UINT8);
-  ArrayVector retval;
-  retval.push_back(A);
-  return retval;
+  return ArrayVector(arg[0].toClass(UInt8));
 }
 
 //!
@@ -175,15 +175,15 @@ ArrayVector UInt8Function(int nargout, const ArrayVector& arg) {
 //@<1
 //uint16({4})
 //@>
+//@@Specification
+//function uint16 UInt16Function
+//inputs x
+//outputs y
 //!
 ArrayVector UInt16Function(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1) 
     throw Exception("type conversion function requires one argument");
-  Array A(arg[0]);
-  A.promoteType(FM_UINT16);
-  ArrayVector retval;
-  retval.push_back(A);
-  return retval;
+  return ArrayVector(arg[0].toClass(UInt16));
 }
 
 //!
@@ -229,15 +229,15 @@ ArrayVector UInt16Function(int nargout, const ArrayVector& arg) {
 //@<1
 //uint32({4})
 //@>
+//@@Specification
+//function uint32 UInt32Function
+//inputs x
+//outputs y
 //!
 ArrayVector UInt32Function(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1) 
     throw Exception("type conversion function requires one argument");
-  Array A(arg[0]);
-  A.promoteType(FM_UINT32);
-  ArrayVector retval;
-  retval.push_back(A);
-  return retval;
+  return ArrayVector(arg[0].toClass(UInt32));
 }
 
 //!
@@ -283,15 +283,15 @@ ArrayVector UInt32Function(int nargout, const ArrayVector& arg) {
 //@<1
 //uint64({4})
 //@>
+//@@Specification
+//function uint64 UInt64Function
+//inputs x
+//outputs y
 //!
 ArrayVector UInt64Function(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1) 
     throw Exception("type conversion function requires one argument");
-  Array A(arg[0]);
-  A.promoteType(FM_UINT64);
-  ArrayVector retval;
-  retval.push_back(A);
-  return retval;
+  return ArrayVector(arg[0].toClass(UInt64));
 }
 
 //!
@@ -334,15 +334,15 @@ ArrayVector UInt64Function(int nargout, const ArrayVector& arg) {
 //@<1
 //int8({4})
 //@>
+//@@Specification
+//function int8 Int8Function
+//inputs x
+//outputs y
 //!
 ArrayVector Int8Function(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1) 
     throw Exception("type conversion function requires one argument");
-  Array A(arg[0]);
-  A.promoteType(FM_INT8);
-  ArrayVector retval;
-  retval.push_back(A);
-  return retval;
+  return ArrayVector(arg[0].toClass(Int8));
 }
 
 //!
@@ -385,15 +385,15 @@ ArrayVector Int8Function(int nargout, const ArrayVector& arg) {
 //@<1
 //int16({4})
 //@>
+//@@Specification
+//function int16 Int16Function
+//inputs x
+//outputs y
 //!
 ArrayVector Int16Function(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1) 
     throw Exception("type conversion function requires one argument");
-  Array A(arg[0]);
-  A.promoteType(FM_INT16);
-  ArrayVector retval;
-  retval.push_back(A);
-  return retval;
+  return ArrayVector(arg[0].toClass(Int16));
 }
 
 //!
@@ -436,15 +436,15 @@ ArrayVector Int16Function(int nargout, const ArrayVector& arg) {
 //@<1
 //int32({4})
 //@>
+//@@Specification
+//function int32 Int32Function
+//inputs x
+//outputs y
 //!
 ArrayVector Int32Function(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1) 
     throw Exception("type conversion function requires one argument");
-  Array A(arg[0]);
-  A.promoteType(FM_INT32);
-  ArrayVector retval;
-  retval.push_back(A);
-  return retval;
+  return ArrayVector(arg[0].toClass(Int32));
 }
 
 //!
@@ -487,15 +487,15 @@ ArrayVector Int32Function(int nargout, const ArrayVector& arg) {
 //@<1
 //int64({4})
 //@>
+//@@Specification
+//function int64 Int64Function
+//inputs x
+//outputs y
 //!
 ArrayVector Int64Function(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1) 
     throw Exception("type conversion function requires one argument");
-  Array A(arg[0]);
-  A.promoteType(FM_INT64);
-  ArrayVector retval;
-  retval.push_back(A);
-  return retval;
+  return ArrayVector(arg[0].toClass(Int64));
 }
 
 //!
@@ -506,7 +506,7 @@ ArrayVector Int64Function(int nargout, const ArrayVector& arg) {
 //a 32-bit floating point number.  The syntax
 //for its use is
 //@[
-//   y = float(x)
+//   y = single(x)
 //@]
 //where @|x| is an @|n|-dimensional numerical array.  Conversion 
 //follows the general C rules.  Note that both @|NaN| and @|Inf| 
@@ -582,15 +582,15 @@ ArrayVector Int64Function(int nargout, const ArrayVector& arg) {
 //
 //x = xz & xc & xd & xf & xi;
 //@}
+//@@Specification
+//function float FloatFunction
+//inputs x
+//outputs y
 //!
 ArrayVector FloatFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1) 
     throw Exception("type conversion function requires one argument");
-  Array A(arg[0]);
-  A.promoteType(FM_FLOAT);
-  ArrayVector retval;
-  retval.push_back(A);
-  return retval;
+  return ArrayVector(arg[0].toClass(Float));
 }
 
 //!
@@ -624,15 +624,15 @@ ArrayVector FloatFunction(int nargout, const ArrayVector& arg) {
 //@<1
 //double({4})
 //@>
+//@@Specification
+//function double DoubleFunction
+//inputs x
+//outputs y
 //!
 ArrayVector DoubleFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1) 
     throw Exception("type conversion function requires one argument");
-  Array A(arg[0]);
-  A.promoteType(FM_DOUBLE);
-  ArrayVector retval;
-  retval.push_back(A);
-  return retval;
+  return ArrayVector(arg[0].toClass(Double));
 }
 
 //!
@@ -670,15 +670,15 @@ ArrayVector DoubleFunction(int nargout, const ArrayVector& arg) {
 //@<1
 //complex({4})
 //@>
+//@@Specification
+//function complex ComplexFunction
+//inputs x
+//outputs y
 //!
 ArrayVector ComplexFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1) 
     throw Exception("type conversion function requires one argument");
-  Array A(arg[0]);
-  A.promoteType(FM_COMPLEX);
-  ArrayVector retval;
-  retval.push_back(A);
-  return retval;
+  return ArrayVector(arg[0].toClass(Float));
 }
 
 //!
@@ -716,15 +716,15 @@ ArrayVector ComplexFunction(int nargout, const ArrayVector& arg) {
 //@<1
 //dcomplex({4})
 //@>
+//@@Specification
+//function dcomplex DcomplexFunction
+//inputs x
+//outputs y
 //!
 ArrayVector DcomplexFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1) 
     throw Exception("type conversion function requires one argument");
-  Array A(arg[0]);
-  A.promoteType(FM_DCOMPLEX);
-  ArrayVector retval;
-  retval.push_back(A);
-  return retval;
+  return ArrayVector(arg[0].toClass(Double));
 }
 
 //!
@@ -820,60 +820,5 @@ ArrayVector DcomplexFunction(int nargout, const ArrayVector& arg) {
 ArrayVector TypeOfFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("typeof function requires exactly one argument");
-  Array retval;
-  Class t = arg[0].dataClass();
-  switch(t) {
-  case FM_CELL_ARRAY:
-    retval = Array::stringConstructor(std::string("cell"));
-    break;
-  case FM_STRUCT_ARRAY:
-    retval = Array::stringConstructor(std::string("struct"));
-    break;
-  case FM_LOGICAL:
-    retval = Array::stringConstructor(std::string("logical"));
-    break;
-  case FM_UINT8:
-    retval = Array::stringConstructor(std::string("uint8"));
-    break;
-  case FM_INT8:
-    retval = Array::stringConstructor(std::string("int8"));
-    break;
-  case FM_UINT16:
-    retval = Array::stringConstructor(std::string("uint16"));
-    break;
-  case FM_INT16:
-    retval = Array::stringConstructor(std::string("int16"));
-    break;
-  case FM_UINT32:
-    retval = Array::stringConstructor(std::string("uint32"));
-    break;
-  case FM_INT32:
-    retval = Array::stringConstructor(std::string("int32"));
-    break;
-  case FM_UINT64:
-    retval = Array::stringConstructor(std::string("uint64"));
-    break;
-  case FM_INT64:
-    retval = Array::stringConstructor(std::string("int64"));
-    break;
-  case FM_FLOAT:
-    retval = Array::stringConstructor(std::string("float"));
-    break;
-  case FM_DOUBLE:
-    retval = Array::stringConstructor(std::string("double"));
-    break;
-  case FM_COMPLEX:
-    retval = Array::stringConstructor(std::string("complex"));
-    break;
-  case FM_DCOMPLEX:
-    retval = Array::stringConstructor(std::string("dcomplex"));
-    break;
-  case FM_STRING:
-    retval = Array::stringConstructor(std::string("string"));
-    break;
-  case FM_FUNCPTR_ARRAY:
-    retval = Array::stringConstructor(std::string("funcptr"));
-    break;
-  }
-  return ArrayVector() << retval;
+  return ArrayVector(Array(arg[0].className()));
 }

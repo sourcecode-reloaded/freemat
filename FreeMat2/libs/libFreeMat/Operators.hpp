@@ -94,6 +94,7 @@ static inline SparseMatrix<S> DotOp(const SparseMatrix<T>& A_real,
       b_spin.next();
     }
   }
+  return C;
 }
 
 // Complex,Complex --> Real
@@ -794,6 +795,7 @@ static inline ArrayVector BiVectorOp(const Array &Ain, index_t out,
   ArrayVector ret;
   ret.push_back(F);
   ret.push_back(D);
+  return ret;
 }
 
 template <class Op>

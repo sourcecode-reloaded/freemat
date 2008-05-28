@@ -111,6 +111,7 @@ public:
     for (int i=2;i<NDims;i++) m_data[i] = 1;
   }
   inline void set(int dim, index_t len) {
+    if (len < 0) throw Exception("Negative dimensions are not allowed");
     m_data[dim] = len;
   }
   inline index_t& get(int dim) {

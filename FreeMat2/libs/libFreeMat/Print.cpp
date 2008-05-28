@@ -127,6 +127,7 @@ static ArrayFormatInfo GetArrayFormatReal(float) {
     return ArrayFormatInfo(11,false,4,true);
   else if (formatMode == format_long_e)
     return ArrayFormatInfo(14,false,7,true);
+  throw Exception("Unhandled format type");
 }
 
 template <>
@@ -139,6 +140,7 @@ static ArrayFormatInfo GetArrayFormatReal(double) {
     return ArrayFormatInfo(11,false,4,true);
   else if (formatMode == format_long_e)
     return ArrayFormatInfo(21,false,14,true);
+  throw Exception("Unhandled format type");
 }
 
 template <>
@@ -151,6 +153,7 @@ static ArrayFormatInfo GetArrayFormatComplex(float) {
     return ArrayFormatInfo(19,false,4,true);
   else if (formatMode == format_long_e)
     return ArrayFormatInfo(23,false,7,true);
+  throw Exception("Unhandled format type");
 }
 
 template <>
@@ -163,6 +166,7 @@ static ArrayFormatInfo GetArrayFormatComplex(double) {
     return ArrayFormatInfo(19,false,4,true);
   else if (formatMode == format_long_e)
     return ArrayFormatInfo(37,false,14,true);
+  throw Exception("Unhandled format type");
 }
 
 template <typename T>

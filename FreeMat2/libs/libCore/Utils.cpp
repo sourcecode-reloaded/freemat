@@ -21,45 +21,6 @@
 #include "Exception.hpp"
 #include <math.h>
 
-float complex_abs(float real, float imag) {
-  float temp;
-  
-  if(real < 0)
-    real = -real;
-  if(imag < 0)
-    imag = -imag;
-  if(imag > real){
-    temp = real;
-    real = imag;
-    imag = temp;
-  }
-  if((real+imag) == real)
-    return(real);
-  
-  temp = imag/real;
-  temp = real*sqrt(1.0 + temp*temp);  /*overflow!!*/
-  return(temp);
-}
-
-double complex_abs(double real, double imag) {
-  double temp;
-  
-  if(real < 0)
-    real = -real;
-  if(imag < 0)
-    imag = -imag;
-  if(imag > real){
-    temp = real;
-    real = imag;
-    imag = temp;
-  }
-  if((real+imag) == real)
-    return(real);
-  
-  temp = imag/real;
-  temp = real*sqrt(1.0 + temp*temp);  /*overflow!!*/
-  return(temp);
-}
 
 void c_log(float real, float imag, float *re, float *im) {
   *re = log(complex_abs(real,imag));
@@ -129,3 +90,34 @@ bool contains(StringVector& list, std::string s, bool regexpmode) {
   return false;
 };
 
+NTuple ArrayVectorAsDimensions(const ArrayVector &arg) {
+  NTuple dims;
+  if (arg.size() == 0)
+    return NTuple(1,1);
+  // Case 1 - all of the entries are scalar
+  bool allScalars;
+  allScalars = true;
+  for (i=0;i<arg.size();i++)
+    allScalars &= arg[i].isScalar();
+  if (allScalars) {
+    if (arg.size() == 1) {
+      // If all scalars and only one argument - we want a square matrix
+      dims.set(0,arg[0].asInteger());
+      dims.set(1,arg[0].asInteger());
+    } else {
+      // If all scalars and and multiple arguments, we count dimensions
+      for (i=0;i<arg.size();i++) 
+	dims.set(i,arg[i].asInteger());
+    }
+  } else {
+    if (arg.size() > 1)
+      throw Exception("Dimension arguments must be either all scalars or a single vector");
+    Array t = arg[0].toClass(UInt32);
+    const BasicArray<uint32> &td(t.constReal<uint32>());
+    for (index_t i=1;i<=t.length();i++)
+      dims.set(int(i-1),td.get(i));
+  }
+  return dims;
+}
+  
+}

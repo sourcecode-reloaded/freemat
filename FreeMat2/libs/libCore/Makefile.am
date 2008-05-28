@@ -34,10 +34,15 @@ Variance.cpp \
 RealImag.cpp \
 Sort.cpp \
 Unique.cpp \
+XNorm.cpp \
 Analyze.cpp \
 Cast.cpp \
 Constants.cpp \
-Constructors.cpp \
+Reshape.cpp \
+Zeros.cpp \
+Ones.cpp \
+Cell.cpp \
+Struct.cpp \
 Directory.cpp \
 FFT.cpp \
 helpwidget.cpp \

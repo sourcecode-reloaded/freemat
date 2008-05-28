@@ -26,10 +26,10 @@ struct OpVecMax {
 			  SparseSlice<T>& dest,
 			  SparseSlice<index_t>& dest_index) {
     bool init = false;
-    T result;
+    T result = 0;
     index_t count = 0;
-    index_t zero_index;
-    index_t index;
+    index_t zero_index = 0;
+    index_t index = 0;
     while (src.moreInSlice()) {
       count++;
       if (src.row() != count) zero_index = src.row();
@@ -67,11 +67,11 @@ struct OpVecMax {
 			  SparseSlice<T>& dest_imag,
 			  SparseSlice<index_t>& dest_index) {
     bool init = false;
-    T result_real;
-    T result_imag;
+    T result_real = 0;
+    T result_imag = 0;
     index_t count = 0;
-    index_t zero_index;
-    index_t index;
+    index_t zero_index = 0;
+    index_t index = 0;;
     while (src.moreInSlice()) {
       count++;
       if (src.row() != count) zero_index = src.row();
@@ -105,8 +105,8 @@ struct OpVecMax {
 			  BasicArray<T>& dest,
 			  BasicArray<index_t>& dest_index) {
     bool init = false;
-    T result;
-    double index;
+    T result = 0;
+    double index = 0;
     for (index_t i=1;i<=src.length();i++) {
       if (!IsNaN(src[i])) {
 	if (!init) {
@@ -122,7 +122,7 @@ struct OpVecMax {
       }
     }
     if (!init) {
-      result = NaN<T>();
+      result = NaN();
       index = 0;
     }
     dest[1] = result;
@@ -135,9 +135,9 @@ struct OpVecMax {
 			  BasicArray<T>& dest_imag,
 			  BasicArray<index_t>& dest_index) {
     bool init = false;
-    T result_real;
-    T result_imag;
-    double index;
+    T result_real = 0;
+    T result_imag = 0;
+    double index = 0;
     for (index_t i=1;i<=src_real.length();i++) {
       if (!IsNaN(src_real[i]) && !IsNaN(src_imag[i])) {
 	if (!init) {
@@ -156,8 +156,8 @@ struct OpVecMax {
       }
     }
     if (!init) {
-      result_real = NaN<T>();
-      result_imag = NaN<T>();
+      result_real = NaN();
+      result_imag = NaN();
       index = 0;
     }
     dest_real[1] = result_real;

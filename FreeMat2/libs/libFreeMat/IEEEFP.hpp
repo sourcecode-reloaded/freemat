@@ -48,8 +48,9 @@ bool IsFinite(uint32);
 bool IsFinite(uint64);
 void ToHexString(float t, char *ptr);
 void ToHexString(double t, char *ptr);
-template <typename T>
-T NaN();
+double NaN(void);
+double Inf(void);
+
 #ifndef M_PI
 #define M_PI 3.141592653589793
 #endif
