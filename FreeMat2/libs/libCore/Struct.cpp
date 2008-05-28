@@ -1,4 +1,5 @@
 #include "Array.hpp"
+#include "Struct.hpp"
 
 //!
 //@Module STRUCT Structure Array Constructor
@@ -135,7 +136,7 @@
 ArrayVector StructFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 1) {
     Array t(arg[0]);
-    if (!t.isUserClass() && t.dataClass() == StructArray)
+    if (!t.isUserClass() && t.dataClass() == Struct)
       return ArrayVector(t);
     if (!t.isUserClass())
       throw Exception("can only convert objects (user-defined types) into structs");

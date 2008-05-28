@@ -175,7 +175,7 @@ ArrayVector DirFunction(int nargout, const ArrayVector& arg, Interpreter* eval) 
   if (nargout == 0) {
     StringVector filelist;
     for (int i=0;i<foo.size();i++)
-      filelist.push_back(foo[i].fileName().toStdString());
+      filelist.push_back(foo[i].fileName());
     TabledOutput(filelist,eval);
   } else {
     // Output is a structure array
@@ -189,16 +189,16 @@ ArrayVector DirFunction(int nargout, const ArrayVector& arg, Interpreter* eval) 
       bytes << Array(double(foo[i].size()));
       isdirs << Array(bool(foo[i].isDir()));
     }
-    return ArrayVector() << Array::structConstructor(StringVector() 
-						     << "name"
-						     << "date"
-						     << "bytes"
-						     << "isdir",
-						     ArrayVector() 
-						     << CellArrayFromQStringList(fileNames)
-						     << CellArrayFromQStringList(dates)
-						     << CellConstructor(bytes)
-						     << CellConstructor(isdirs));
+    return ArrayVector() << StructConstructor(StringVector() 
+					      << "name"
+					      << "date"
+					      << "bytes"
+					      << "isdir",
+					      ArrayVector() 
+					      << CellArrayFromQStringList(fileNames)
+					      << CellArrayFromQStringList(dates)
+					      << CellConstructor(bytes)
+					      << CellConstructor(isdirs));
   }
   return ArrayVector();
 }
