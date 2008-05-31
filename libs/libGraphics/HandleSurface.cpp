@@ -430,14 +430,7 @@ void HandleSurface::PaintMe(RenderEngine& gc) {
   UpdateState();
   if (StringCheck("visible","off"))
     return;
-  // Get the x,y,z & color data points
-  Array xdata(ArrayPropertyLookup("xdata"));
-  xdata.promoteType(FM_DOUBLE);
-  Array ydata(ArrayPropertyLookup("ydata"));
-  ydata.promoteType(FM_DOUBLE);
-  Array zdata(ArrayPropertyLookup("zdata"));
-  zdata.promoteType(FM_DOUBLE);
-  if (zdata.isEmpty()) return;
+
   // There are many render styles...
   // edgealpha, edgecolor, facealpha, facecolor
   // facecolor

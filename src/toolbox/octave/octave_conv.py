@@ -7,7 +7,7 @@ p=os.getcwd()
 if len(sys.argv) > 1:
     p = sys.argv[1]
 
-keyword_dict = { 'endif':'end',  'endfor':'end',  'endfunction':'end',  'endswitch':'end',  "isn't":"is not" }
+keyword_dict = { 'endif':'end',  'endfor':'end',  'endfunction':'end',  'endswitch':'end',  "isn't":"is not",  "doesn't":"does not", r"'%s'":r"''%s''" }
 syntax_dict = { '#':'%', '!':'~', '"':"'" }
 
 def process_comments( script ):
