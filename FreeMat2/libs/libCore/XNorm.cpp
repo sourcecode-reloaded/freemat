@@ -21,7 +21,7 @@ ArrayVector XNrm2Function(int nargout, const ArrayVector& arg) {
   int one = 1;
   if (arg.size() < 1)
     throw Exception("xnrm2 requires at least one argument");
-  Array A(arg[0]);
+  Array A(arg[0].asDenseArray());
   int len = int(A.length());
   switch (A.dataClass()) {
   default:

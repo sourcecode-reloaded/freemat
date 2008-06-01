@@ -145,7 +145,7 @@ static double doubleRecipCond(int m, int n, double *a) {
 ArrayVector RcondFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)
     throw Exception("rcond function requires at least one argument - the matrix to compute the condition number for.");
-  Array A(arg[0]);
+  Array A(arg[0].asDenseArray());
   if (!A.is2D()) throw Exception("Cannot apply matrix operations to N-dimensional arrays.");
   switch (A.dataClass()) {
   default: throw Exception("Unsupported type for rcond operation");

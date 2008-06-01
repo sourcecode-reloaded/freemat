@@ -18,4 +18,17 @@ struct CCSForm {
 void ConvertSparseToCCS(const SparseMatrix<double>&A, CCSForm &B);
 void ConvertSparseToCCS(const SparseMatrix<double>&Ar, const SparseMatrix<double>&Ai, CCSForm &B);
 
+class IJVForm {
+  Array m_rows;
+  Array m_cols;
+  index_t m_size_rows;
+  Array m_values;
+public:
+  IJVForm(const Array &x);
+  Array rows();
+  Array cols();
+  Array indices();
+  Array values();
+};
+
 #endif

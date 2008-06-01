@@ -179,8 +179,8 @@ ArrayVector DirFunction(int nargout, const ArrayVector& arg, Interpreter* eval) 
     TabledOutput(filelist,eval);
   } else {
     // Output is a structure array
-    QStringList fileNames;
-    QStringList dates;
+    StringVector fileNames;
+    StringVector dates;
     ArrayVector bytes;
     ArrayVector isdirs;
     for (int i=0;i<foo.size();i++) {
@@ -195,8 +195,8 @@ ArrayVector DirFunction(int nargout, const ArrayVector& arg, Interpreter* eval) 
 					      << "bytes"
 					      << "isdir",
 					      ArrayVector() 
-					      << CellArrayFromQStringList(fileNames)
-					      << CellArrayFromQStringList(dates)
+					      << CellArrayFromStringVector(fileNames)
+					      << CellArrayFromStringVector(dates)
 					      << CellConstructor(bytes)
 					      << CellConstructor(isdirs));
   }

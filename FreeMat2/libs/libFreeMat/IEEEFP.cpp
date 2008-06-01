@@ -159,16 +159,16 @@ double Inf() {
   return u.f;
 }
 
-void ToHexString(float t, char *ptr) {
+QString ToHexString(float t) {
   union {
     float f;
     unsigned int i;
   } u;
   u.f = t;
-  sprintf(ptr,"%08x",u.i);
+  return QString("%1").arg(uint(u.i),int(8),int(16),QChar('0'));
 }
 
-void ToHexString(double t, char *ptr) {
+QString ToHexString(double t, char *ptr) {
   union {
     double f;
     unsigned int i[2];
@@ -177,7 +177,7 @@ void ToHexString(double t, char *ptr) {
   if (!endianDetected) 
     CheckBigEndian();
   if (!bigEndian) 
-    sprintf(ptr,"%08x%08x",u.i[1],u.i[0]);
+    return QString("%1%2").arg(uint(u.i[1]),int(8),int(16),QChar('0')).arg(uint(u.i[0]),int(8),int(16),QChar('0'));
   else
-    sprintf(ptr,"%08x%08x",u.i[0],u.i[1]);
+    return QString("%1%2").arg(uint(u.i[0]),int(8),int(16),QChar('0')).arg(uint(u.i[1]),int(8),int(16),QChar('0'));
 }

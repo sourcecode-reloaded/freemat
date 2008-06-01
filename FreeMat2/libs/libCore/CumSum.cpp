@@ -4,13 +4,13 @@ struct OpVecCumSum {
   template <typename T>
   static inline void func(const ConstSparseIterator<T> & src, 
 			  SparseSlice<T>& dest) {
-    throw Exception("cumprod not supported for sparse matrices");
+    throw Exception("cumsum not supported for sparse matrices");
   }
   template <typename T>
   static inline void func(const ConstComplexSparseIterator<T> & src, 
 			  SparseSlice<T>& dest_real,
 			  SparseSlice<T>& dest_imag) {
-    throw Exception("cumprod not supported for sparse matrices");
+    throw Exception("cumsum not supported for sparse matrices");
   }
   template <typename T>
   static inline void func(const BasicArray<T> & src, 

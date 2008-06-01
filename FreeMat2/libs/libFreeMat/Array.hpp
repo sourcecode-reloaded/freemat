@@ -39,6 +39,7 @@ const DataClass Int64 = 11;
 const DataClass UInt64 = 12;
 const DataClass Float = 13;
 const DataClass Double = 14;
+const DataClass Index = 15;
 
 template <typename T>
 static inline DataClass GetDataClass(T = 0);
@@ -168,6 +169,7 @@ public:
 	    (m_type.Class == Struct));
   }
   QString asString() const;
+  StringVector asStringVector() const;
   int asInteger() const;
   double asDouble() const;
   inline bool isDouble() const {
@@ -178,26 +180,36 @@ public:
   }
   template <typename T>
   inline BasicArray<T>& real() {
+    if (!m_real.p)
+      throw Exception("Illegal request for real array part of scalar - this is bug!");
     return (*reinterpret_cast<BasicArray<T>*>(m_real.p->ptr()));
   }
   inline const StructArray& constStructPtr() const {
+    if (!m_real.p)
+      throw Exception("Illegal request for real part of undefined structure array - this is bug!");
     return (*reinterpret_cast<const StructArray*>(m_real.p->ptr()));
   }
   inline StructArray& structPtr() {
+    if (!m_real.p)
+      throw Exception("Illegal request for real part of undefined structure array - this is bug!");
     return (*reinterpret_cast<StructArray*>(m_real.p->ptr()));
   }
   template <typename T>
   inline const SparseMatrix<T>& constRealSparse() const {
+    if (!m_real.p)
+      throw Exception("Illegal request for (sparse) real part of scalar - this is bug!");
     return (*reinterpret_cast<const SparseMatrix<T> *>(m_real.p->ptr()));
   }
   template <typename T>
   inline const SparseMatrix<T>& constImagSparse() const {
     if (!m_imag.p)
-      throw Exception("Illegal request for imaginary part of real-only array");
+      throw Exception("Illegal request for (sparse) imaginary part of real-only array");
     return (*reinterpret_cast<const SparseMatrix<T> *>(m_imag.p->ptr()));
   }
   template <typename T>
   inline SparseMatrix<T>& realSparse() {
+    if (!m_real.p)
+      throw Exception("Illegal request for (sparse) real part of scalar - this is bug!");
     return (*reinterpret_cast<SparseMatrix<T> *>(m_real.p->ptr()));
   }
   template <typename T>
@@ -210,6 +222,8 @@ public:
   }
   template <typename T>
   inline const BasicArray<T>& constReal() const {
+    if (!m_real.p)
+      throw Exception("Illegal request for real part of scalar - this is bug!");
     return (*reinterpret_cast<const BasicArray<T>*>(m_real.p->ptr()));
   }						
   template <typename T>
@@ -306,6 +320,8 @@ const IndexArray IndexArrayFromArray(const Array &index);
 const ArrayVector ArrayVectorFromCellArray(const Array &arg);
 const Array CellArrayFromArrayVector(ArrayVector &arg, index_t cnt);
 const Array CellArrayFromArray(const Array &arg);
+const Array CellArrayFromStringVector(const StringVector& arg);
+const Array StringArrayFromStringVector(const StringVector& arg);
 
 void SetCellContents(Array &cell, const Array& index, ArrayVector& data);
 void SetCellContents(Array &cell, const ArrayVector& index, ArrayVector& data);

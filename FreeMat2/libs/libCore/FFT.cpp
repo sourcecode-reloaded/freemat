@@ -21,6 +21,7 @@
 #include "Exception.hpp"
 #include "Array.hpp"
 #include "Malloc.hpp"
+#include "Operators.hpp"
 #include <math.h>
 #if HAVE_FFTW | HAVE_FFTWF
 #include "fftw3.h"
@@ -40,7 +41,7 @@ static fftw_plan p_backward;
 static int zN = 0;
 #endif
 
-void complex_fft_init(int Narg) {
+static void complex_fft_init(int Narg) {
 #if HAVE_FFTWF
   if (cN == Narg) return;
   if (cN != 0) {
@@ -59,7 +60,7 @@ void complex_fft_init(int Narg) {
 #endif
 }
 
-void complex_fft_forward(int Narg, float *dp) {
+static void complex_fft_forward(int Narg, float *dp) {
 #if HAVE_FFTWF
   if (cN != Narg) complex_fft_init(Narg);
   memcpy(inf,dp,sizeof(float)*Narg*2);
@@ -69,8 +70,8 @@ void complex_fft_forward(int Narg, float *dp) {
   throw Exception("Single precision FFT support not available.  Please build the single precision version of FFTW and rebuild FreeMat to enable this functionality.");
 #endif
 }
-  
-void complex_fft_backward(int Narg, float *dp) {
+
+static void complex_fft_backward(int Narg, float *dp) {
 #if HAVE_FFTWF
   if (cN != Narg) complex_fft_init(Narg);
   memcpy(inf,dp,sizeof(float)*Narg*2);
@@ -83,7 +84,7 @@ void complex_fft_backward(int Narg, float *dp) {
 #endif
 }
 
-void dcomplex_fft_init(int Narg) {
+static void complex_fft_init_double(int Narg) {
 #if HAVE_FFTW
   if (zN == Narg) return;
   if (zN != 0) {
@@ -102,9 +103,9 @@ void dcomplex_fft_init(int Narg) {
 #endif
 }
 
-void dcomplex_fft_forward(int Narg, double *dp) { 
+static void complex_fft_forward(int Narg, double *dp) { 
 #if HAVE_FFTW
- if (zN != Narg) dcomplex_fft_init(Narg);
+  if (zN != Narg) complex_fft_init_double(Narg);
   memcpy(in,dp,sizeof(double)*Narg*2);
   fftw_execute(p_forward);
   memcpy(dp,out,sizeof(double)*Narg*2);
@@ -113,9 +114,9 @@ void dcomplex_fft_forward(int Narg, double *dp) {
 #endif
 }
 
-void dcomplex_fft_backward(int Narg, double *dp) {
+static void complex_fft_backward(int Narg, double *dp) {
 #if HAVE_FFTW
-  if (zN != Narg) dcomplex_fft_init(Narg);
+  if (zN != Narg) complex_fft_init_double(Narg);
   memcpy(in,dp,sizeof(double)*Narg*2);
   fftw_execute(p_backward);
   memcpy(dp,out,sizeof(double)*Narg*2);
@@ -126,127 +127,73 @@ void dcomplex_fft_backward(int Narg, double *dp) {
 #endif
 }
 
-Array complexFFTFunction(const Array& input, int FFTLen, int FFTDim,
-			 bool inverse) {
-  Dimensions inDim(input.dimensions());
-  // Allocate the output vector...
-  Dimensions outDim(inDim);
-  outDim.set(FFTDim,FFTLen);
-    
-  // Calculate the stride...
-  int d;
-  int planecount;
-  int planesize;
-  int linesize;
-  linesize = inDim.get(FFTDim);
-  planesize = 1;
-  for (d=0;d<FFTDim;d++)
-    planesize *= inDim.get(d);
-  planecount = 1;
-  for (d=FFTDim+1;d<(int)inDim.getLength();d++)
-    planecount *= inDim.get(d);
-    
-  // Allocate the buffer for the FFT
-  float *buffer;
-  buffer = (float*) Malloc(sizeof(float)*FFTLen*2);
-  // Allocate the output vector...
-  float *ob;
-  ob = (float*) Malloc(sizeof(float)*2*outDim.getElementCount());
-  int copyIn;
-  if ((int)inDim.get(FFTDim) < FFTLen)
-    copyIn = inDim.get(FFTDim);
-  else
-    copyIn = FFTLen;
-  // Get the data pointer
-  float *dp;
-  dp = (float*) input.getDataPointer();
-  // Do the ffts...d
-  for (int i=0;i<planecount;i++) {
-    for (int j=0;j<planesize;j++) {
-      // Reset the buffer
-      memset(buffer,0,sizeof(float)*FFTLen*2);
-      // Copy the data
-      int k;
-      for (k=0;k<copyIn;k++) {
-	buffer[2*k] = dp[2*(i*planesize*linesize + j + k*planesize)];
-	buffer[2*k+1] = dp[2*(i*planesize*linesize + j + k*planesize)+1];
-      }
-      // Take the FFT
-      if (!inverse)
-	complex_fft_forward(FFTLen,buffer);
-      else
-	complex_fft_backward(FFTLen,buffer);
-      // Copy the result out
-      for (k=0;k<FFTLen;k++) {
-	ob[2*(i*planesize*FFTLen + j + k*planesize)] = buffer[2*k];
-	ob[2*(i*planesize*FFTLen + j + k*planesize) + 1] = buffer[2*k+1];
-      }
-    }
+struct OpVecFFT {
+  template <typename T>
+  static inline void func(const ConstSparseIterator<T> & src, SparseSlice<T>& dest) {
+    throw Exception("fft not supported for sparse matrices");
   }
-  Free(buffer);
-  return Array(FM_COMPLEX,outDim,ob);
-}
+  template <typename T>
+  static inline void func(const ConstComplexSparseIterator<T> & src, 
+			  SparseSlice<T>& dest_real,
+			  SparseSlice<T>& dest_imag) {
+    throw Exception("fft not supported for sparse matrices");
+  }
+  template <typename T>
+  static inline void func(const BasicArray<T> & src, BasicArray<T>& dest) {
+    throw Exception("fft not defined for real arrays");
+  }
+  template <typename T>
+  static inline void func(const BasicArray<T> & src_real,
+			  const BasicArray<T> & src_imag,
+			  BasicArray<T>& dest_real,
+			  BasicArray<T>& dest_imag) {
+    if (src_real.length() == 0) return;
+    QVector<T> tbuf(int(dest_real.length()*2));
+    for (index_t i=1;i<=src_real.length();i++) {
+      tbuf[int(2*i-1)] = src_real[i];
+      tbuf[int(2*i)] = src_imag[i];
+    }
+    complex_fft_forward(tbuf.size(),tbuf.data());
+    for (index_t i=1;i<=dest_real.length();i++) {
+      dest_real[i] = tbuf[int(2*i-1)];
+      dest_imag[i] = tbuf[int(2*i)];
+    }
+  }  
+};
 
-Array dcomplexFFTFunction(const Array& input, int FFTLen, int FFTDim,
-			  bool inverse) {
-  Dimensions inDim(input.dimensions());
-  // Allocate the output vector...
-  Dimensions outDim(inDim);
-  outDim.set(FFTDim,FFTLen);
-    
-  // Calculate the stride...
-  int d;
-  int planecount;
-  int planesize;
-  int linesize;
-  linesize = inDim.get(FFTDim);
-  planesize = 1;
-  for (d=0;d<FFTDim;d++)
-    planesize *= inDim.get(d);
-  planecount = 1;
-  for (d=FFTDim+1;d<(int)inDim.getLength();d++)
-    planecount *= inDim.get(d);
-    
-  // Allocate the buffer for the FFT
-  double *buffer;
-  buffer = (double*) Malloc(sizeof(double)*FFTLen*2);
-  // Allocate the output vector...
-  double *ob;
-  ob = (double*) Malloc(sizeof(double)*2*outDim.getElementCount());
-  int copyIn;
-  if ((int)inDim.get(FFTDim) < FFTLen)
-    copyIn = inDim.get(FFTDim);
-  else
-    copyIn = FFTLen;
-  // Get the data pointer
-  double *dp;
-  dp = (double*) input.getDataPointer();
-  // Do the ffts...
-  for (int i=0;i<planecount;i++) {
-    for (int j=0;j<planesize;j++) {
-      // Reset the buffer
-      memset(buffer,0,sizeof(double)*FFTLen*2);
-      // Copy the data
-      int k;
-      for (k=0;k<copyIn;k++) {
-	buffer[2*k] = dp[2*(i*planesize*linesize + j + k*planesize)];
-	buffer[2*k+1] = dp[2*(i*planesize*linesize + j + k*planesize)+1];
-      }
-      // Take the FFT
-      if (!inverse)
-	dcomplex_fft_forward(FFTLen,buffer);
-      else
-	dcomplex_fft_backward(FFTLen,buffer);
-      // Copy the result out
-      for (k=0;k<FFTLen;k++) {
-	ob[2*(i*planesize*FFTLen + j + k*planesize)] = buffer[2*k];
-	ob[2*(i*planesize*FFTLen + j + k*planesize) + 1] = buffer[2*k+1];
-      }
+struct OpVecIFFT {
+  template <typename T>
+  static inline void func(const ConstSparseIterator<T> & src, SparseSlice<T>& dest) {
+    throw Exception("ifft not supported for sparse matrices");
+  }
+  template <typename T>
+  static inline void func(const ConstComplexSparseIterator<T> & src, 
+			  SparseSlice<T>& dest_real,
+			  SparseSlice<T>& dest_imag) {
+    throw Exception("ifft not supported for sparse matrices");
+  }
+  template <typename T>
+  static inline void func(const BasicArray<T> & src, BasicArray<T>& dest) {
+    throw Exception("ifft not defined for real arrays");
+  }
+  template <typename T>
+  static inline void func(const BasicArray<T> & src_real,
+			  const BasicArray<T> & src_imag,
+			  BasicArray<T>& dest_real,
+			  BasicArray<T>& dest_imag) {
+    if (src_real.length() == 0) return;
+    QVector<T> tbuf(int(dest_real.length()*2));
+    for (index_t i=1;i<=src_real.length();i++) {
+      tbuf[int(2*i-1)] = src_real[i];
+      tbuf[int(2*i)] = src_imag[i];
+    }
+    complex_fft_backward(tbuf.size(),tbuf.data());
+    for (index_t i=1;i<=dest_real.length();i++) {
+      dest_real[i] = tbuf[int(2*i-1)];
+      dest_imag[i] = tbuf[int(2*i)];
     }
   }
-  Free(buffer);
-  return Array(FM_DCOMPLEX,outDim,ob);
-}
+};
 
 //!
 //@Module FFT (Inverse) Fast Fourier Transform Function
@@ -338,103 +285,58 @@ Array dcomplexFFTFunction(const Array& input, int FFTLen, int FFTDim,
 //@>
 //The resulting plot is:
 //@figure fft2
+//@@Signature
+//function fft FFTFunction
+//inputs x len dim
+//outputs y
+//function ifft IFFTFunction
+//inputs x len dim
+//outputs y
 //!
 ArrayVector FFTFunction(int nargout, const ArrayVector& arg) {
   // Get the data argument
   if (arg.size() < 1)
     throw Exception("FFT requires at least one argument");
-  Array input(arg[0]);
-  Class argType(input.dataClass());
-  if (argType <= FM_COMPLEX && argType != FM_DOUBLE)
-    input.promoteType(FM_COMPLEX);
-  else
-    input.promoteType(FM_DCOMPLEX);
   // Get the length of the zero pad
   int FFTLength = -1;
   if ((arg.size() > 1) && (!arg[1].isEmpty())) {
-    Array FLen(arg[1]);
-    FFTLength = FLen.getContentsAsIntegerScalar();
+    FFTLength = arg[1].asInteger();
     if (FFTLength <= 0)
       throw Exception("Length argument to FFT should be positive");
   }
   // Get the dimension to FFT along.
-  int FFTDim = -1;
+  int FFTDim;
   if (arg.size() > 2) {
-    Array FDim(arg[2]);
-    FFTDim = FDim.getContentsAsIntegerScalar() - 1;
+    FFTDim = arg[2].asInteger() - 1;
     if (FFTDim < 0)
       throw Exception("Dimension argument to FFT should be positive");
-  }
-  if (input.isScalar() || input.isEmpty()) {
-    ArrayVector retval;
-    retval.push_back(arg[0]);
-    return retval;
-  }
-  // Was the dimension specified?  If not, search for it...
-  if (FFTDim == -1) {
-    Dimensions inDim(input.dimensions());
-    int d = 0;
-    while (inDim.get(d) == 1) 
-      d++;
-    FFTDim = d;
-  }
+  } else
+    FFTDim = arg[0].dimensions().firstNonsingular();
   if (FFTLength == -1)
-    FFTLength = input.getDimensionLength(FFTDim);
-  // Handle the fft based on the case...
-  ArrayVector retval;
-  if (input.dataClass() == FM_COMPLEX)
-    retval.push_back(complexFFTFunction(input,FFTLength,FFTDim,false));
-  else
-    retval.push_back(dcomplexFFTFunction(input,FFTLength,FFTDim,false));
-  return retval;
+    FFTLength = int(arg[0].dimensions()[FFTDim]);
+  return ArrayVector(VectorOp<OpVecFFT>(arg[0],FFTLength,FFTDim));
 }
 
 ArrayVector IFFTFunction(int nargout, const ArrayVector& arg) {
   // Get the data argument
   if (arg.size() < 1)
     throw Exception("IFFT requires at least one argument");
-  Array input(arg[0]);
-  Class argType(input.dataClass());
-  if (argType <= FM_COMPLEX  && argType != FM_DOUBLE)
-    input.promoteType(FM_COMPLEX);
-  else
-    input.promoteType(FM_DCOMPLEX);
   // Get the length of the zero pad
   int FFTLength = -1;
   if ((arg.size() > 1) && (!arg[1].isEmpty())) {
-    Array FLen(arg[1]);
-    FFTLength = FLen.getContentsAsIntegerScalar();
+    FFTLength = arg[1].asInteger();
     if (FFTLength <= 0)
-      throw Exception("Length argument to IFFT should be positive");
+      throw Exception("Length argument to FFT should be positive");
   }
   // Get the dimension to FFT along.
-  int FFTDim = -1;
+  int FFTDim;
   if (arg.size() > 2) {
-    Array FDim(arg[2]);
-    FFTDim = FDim.getContentsAsIntegerScalar() - 1;
+    FFTDim = arg[2].asInteger() - 1;
     if (FFTDim < 0)
-      throw Exception("Dimension argument to IFFT should be positive");
-  }
-  if (input.isScalar() || input.isEmpty()) {
-    ArrayVector retval;
-    retval.push_back(arg[0]);
-    return retval;
-  }
-  // Was the dimension specified?  If not, search for it...
-  if (FFTDim == -1) {
-    Dimensions inDim(input.dimensions());
-    int d = 0;
-    while (inDim.get(d) == 1) 
-      d++;
-    FFTDim = d;
-  }
+      throw Exception("Dimension argument to FFT should be positive");
+  } else
+    FFTDim = arg[0].dimensions().firstNonsingular();
   if (FFTLength == -1)
-    FFTLength = input.getDimensionLength(FFTDim);
-  // Handle the fft based on the case...
-  ArrayVector retval;
-  if (input.dataClass() == FM_COMPLEX)
-    retval.push_back(complexFFTFunction(input,FFTLength,FFTDim,true));
-  else
-    retval.push_back(dcomplexFFTFunction(input,FFTLength,FFTDim,true));
-  return retval;
+    FFTLength = int(arg[0].dimensions()[FFTDim]);
+  return ArrayVector(VectorOp<OpVecIFFT>(arg[0],FFTLength,FFTDim));
 }

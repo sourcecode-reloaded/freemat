@@ -415,12 +415,13 @@ ArrayVector MFunctionDef::evaluateFunction(Interpreter *walker,
   }
 }
   
-static inline QString ReadFileIntoString(QString filename) {
+inline QString ReadFileIntoString(QString filename) {
   QFile fp(filename);
+  if (!fp.open(QIODevice::ReadOnly)) 
+    throw Exception(QString("Unable to open file :") + filename);
   QTextStream io(&fp);
   return io.readAll();
 }
-
 
 //MFunctionDef* ConvertParseTreeToMFunctionDef(tree t, string fileName) {
 //  MFunctionDef *fp = new MFunctionDef;

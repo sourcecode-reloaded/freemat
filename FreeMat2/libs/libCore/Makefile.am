@@ -46,6 +46,12 @@ Struct.cpp \
 Directory.cpp \
 FFT.cpp \
 helpwidget.cpp \
+Help.cpp \
+Hex.cpp \
+Clear.cpp \
+Exist.cpp \
+Find.cpp \
+Is.cpp \
 Inspect.cpp \
 IO.cpp \
 LoadCore.cpp \
