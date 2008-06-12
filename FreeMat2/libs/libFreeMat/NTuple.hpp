@@ -12,6 +12,14 @@ public:
   inline bool is2D() const {
     return (m_data[0]*m_data[1] == count());
   }
+  inline bool isValid() const {
+    for (int i=0;i<NDims;i++)
+      if (m_data[i] < 0) return false;
+    return true;
+  }
+  inline void zero() {
+    for (int i=0;i<NDims;i++) m_data[i] = 0;
+  }
   inline index_t rows() const {
     return m_data[0];
   }
@@ -177,7 +185,7 @@ public:
     int last_not_one = lastNotOne();
     QString ret = QString("%1").arg(m_data[0]);
     for (int i=1;i<last_not_one;i++)
-      ret += QString("x%1").arg(m_data[i]);
+      ret += QString(" %1").arg(m_data[i]);
     return ret;
   }
 };

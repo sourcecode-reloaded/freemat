@@ -29,6 +29,7 @@ class Serialize {
   Stream *s;
   bool endianSwap;
 public:
+  Serialize(QIODevice*);
   Serialize(Stream*);
   ~Serialize();
   // Handshake between two serialize objects

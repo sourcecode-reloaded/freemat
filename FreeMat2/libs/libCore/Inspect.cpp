@@ -19,70 +19,35 @@
 
 #include "Array.hpp"
 #include "Interpreter.hpp"
-#include "Malloc.hpp"
-#include "PathSearch.hpp"
-#include "IEEEFP.hpp"
-#include "Sparse.hpp"
-#include "helpwidget.hpp"
-#include <algorithm>
-#include "Editor.hpp"
-#include "PathTool.hpp"
 #include <QtCore>
-#include <QtGui>
-#include "Module.hpp"
-#include "MemPtr.hpp"
 
-void Tokenize(const std::string& str, StringVector& tokens,
-	      const std::string& delimiters = " \n") {
-  // Skip delimiters at beginning.
-  std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
-  // Find first "non-delimiter".
-  std::string::size_type pos     = str.find_first_of(delimiters, lastPos);
-    
-  while (std::string::npos != pos || std::string::npos != lastPos)
-    {
-      // Found a token, add it to the vector.
-      tokens.push_back(str.substr(lastPos, pos - lastPos));
-      // Skip delimiters.  Note the "not_of"
-      lastPos = str.find_first_not_of(delimiters, pos);
-      // Find next "non-delimiter"
-      pos = str.find_first_of(delimiters, lastPos);
-    }
-}
-
-
+//!
+//@Module END End Function
+//@@Section INSPECTION
+//@@Usage
+//Computes the size of a variable along a given dimension.  The syntax
+//for its use is 
+//@[
+//   y = end(x,dim,subindexes)
+//@]
+//where @|x| is the array to be analyzed, @|dim| is the dimension along
+//which to compute the end, and @|subindexes| indicates how many dimensions
+//are involved in the @|end| calculation.
+//@@Signature
+//function end EndFunction
+//inputs x dim subindexes
+//outputs y
+//!
 ArrayVector EndFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 3)
     throw Exception("End function requires 3 arguments, the array, the end index, and the number of subindexes");
-  Dimensions t(arg[0].dimensions());
-  int enddim(ArrayToInt32(arg[1]));
-  int totalndxs(ArrayToInt32(arg[2]));
+  NTuple t(arg[0].dimensions());
+  index_t enddim(arg[1].asDouble());
+  index_t totalndxs(arg[2].asDouble());
   if (totalndxs == 1)
-    return SingleArrayVector(Array::int32Constructor(t.getElementCount()));
-  return SingleArrayVector(Array::int32Constructor(t.get(enddim-1)));
+    return ArrayVector(Array(index_t(arg[0].length())));
+  return ArrayVector(Array(index_t(t[int(enddim-1)])));
 }
-
-//!
-//@Module PATHTOOL Open Path Setting Tool
-//@@Section FREEMAT
-//@@Usage
-//Brings up the pathtool dialog.  The @|pathtool| function takes
-//no arguments:
-//@[
-//  pathtool
-//@]
-//!
-ArrayVector PathToolFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  PathTool p;
-  p.exec();
-  QSettings settings("FreeMat","FreeMat");
-  QStringList userPath = settings.value("interpreter/path").toStringList();
-  eval->setUserPath(userPath);
-  eval->rescanPath();
-  return ArrayVector();
-}
-
-
 
 //!
 //@Module WHO Describe Currently Defined Variables
@@ -124,106 +89,44 @@ ArrayVector PathToolFunction(int nargout, const ArrayVector& arg, Interpreter* e
 //who c
 //who('c')
 //@>
+//@@Signature
+//sfunction who WhoFunction
+//inputs varargin
+//outputs none
 //!
 ArrayVector WhoFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  int i;
   StringVector names;
-  char buffer[1000];
-  if (arg.size() == 0) {
+  if (arg.size() == 0)
     names = eval->getContext()->listAllVariables();
-  } else {
-    for (i=0;i<arg.size();i++) {
-      Array varName(arg[i]);
-      names.push_back(varName.getContentsAsString());
-    }
-  }
-  std::sort(names.begin(),names.end());
-  sprintf(buffer,"  Variable Name      Type   Flags             Size\n");
-  eval->outputMessage(buffer);
-  for (i=0;i<(int) names.size();i++) {
+  else
+    for (int i=0;i<arg.size();i++)
+      names.push_back(arg[i].asString());
+  qSort(names.begin(),names.end());
+  eval->outputMessage("  Variable Name      Type   Flags             Size\n");
+  for (int i=0;i<names.size();i++) {
     Array lookup;
     ArrayReference ptr;
-    sprintf(buffer,"%15s",names[i].c_str());
-    eval->outputMessage(buffer);
+    eval->outputMessage(names[i].leftJustified(15,' ',false));
     ptr = eval->getContext()->lookupVariable(names[i]);
     if (!ptr.valid())
       eval->outputMessage("   <undefined>");
     else {
       lookup = *ptr;
-      Class t = lookup.dataClass();
-      switch(t) {
-      case FM_CELL_ARRAY:
-	sprintf(buffer,"%10s","cell");
-	break;
-      case FM_STRUCT_ARRAY:
-	if (lookup.isUserClass())
-	  sprintf(buffer,"%10s",lookup.className().back().c_str());
-	else
-	  sprintf(buffer,"%10s","struct");
-	break;
-      case FM_LOGICAL:
-	sprintf(buffer,"%10s","logical");
-	break;
-      case FM_UINT8:
-	sprintf(buffer,"%10s","uint8");
-	break;
-      case FM_INT8:
-	sprintf(buffer,"%10s","int8");
-	break;
-      case FM_UINT16:
-	sprintf(buffer,"%10s","uint16");
-	break;
-      case FM_INT16:
-	sprintf(buffer,"%10s","int16");
-	break;
-      case FM_UINT32:
-	sprintf(buffer,"%10s","uint32");
-	break;
-      case FM_INT32:
-	sprintf(buffer,"%10s","int32");
-	break;
-      case FM_UINT64:
-	sprintf(buffer,"%10s","uint64");
-	break;
-      case FM_INT64:
-	sprintf(buffer,"%10s","int64");
-	break;
-      case FM_FLOAT:
-	sprintf(buffer,"%10s","float");
-	break;
-      case FM_DOUBLE:
-	sprintf(buffer,"%10s","double");
-	break;
-      case FM_COMPLEX:
-	sprintf(buffer,"%10s","complex");
-	break;
-      case FM_DCOMPLEX:
-	sprintf(buffer,"%10s","dcomplex");
-	break;
-      case FM_STRING:
-	sprintf(buffer,"%10s","string");
-	break;
-      case FM_FUNCPTR_ARRAY:
-	sprintf(buffer,"%10s","func ptr");
-	break;
-      }
-      eval->outputMessage(buffer);
-      if (lookup.sparse())
+      eval->outputMessage(lookup.className().leftJustified(15,' ',false));
+      if (lookup.isSparse())
 	eval->outputMessage("   sparse");
       else
 	eval->outputMessage("         ");	  
       if (eval->getContext()->isVariableGlobal(names[i])) {
-	sprintf(buffer,"  global ");
-	eval->outputMessage(buffer);
+	eval->outputMessage("  global ");
       } else if (eval->getContext()->isVariablePersistent(names[i])) {
-	sprintf(buffer," persist ");
-	eval->outputMessage(buffer);
+	eval->outputMessage(" persist ");
       } else {
-	sprintf(buffer,"         ");
-	eval->outputMessage(buffer);
+	eval->outputMessage("         ");
       }
-      eval->outputMessage("  ");
-      lookup.dimensions().printMe(eval);
+      eval->outputMessage(QString("  [") + 
+			  lookup.dimensions().toString() + 
+			  QString("]"));
     }
     eval->outputMessage("\n");
   }
@@ -247,146 +150,21 @@ ArrayVector WhoFunction(int nargout, const ArrayVector& arg, Interpreter* eval) 
 //y.foo = 3; y.goo = 'hello';
 //x = fieldnames(y)
 //@>
+//@@Signature
+//function fieldnames FieldNamesFunction
+//inputs y
+//outputs x
 //!
 ArrayVector FieldNamesFunction(int nargout, const ArrayVector& arg) {
-  ArrayVector retval;
   if (arg.size() < 1)
     throw Exception("fieldnames function requires at least one argument");
-  Array a(arg[0]);
-  if (a.dataClass() != FM_STRUCT_ARRAY) {
-    Array ret(Array::emptyConstructor());
-    ret.promoteType(FM_CELL_ARRAY);
-    return SingleArrayVector(ret);
-  }
-  StringVector names(a.fieldNames());
+  if (arg[0].dataClass() != Struct)
+    return ArrayVector(Array(CellArray));
+  StringVector names(FieldNames(arg[0]));
   ArrayMatrix m;
   for (int i=0;i<names.size();i++)
-    m.push_back(SingleArrayVector(Array::stringConstructor(names.at(i))));
-  return SingleArrayVector(Array::cellConstructor(m));
-}
-
-//!
-//@Module SIZE Size of a Variable
-//@@Section INSPECTION
-//@@Usage
-//Returns the size of a variable.  There are two syntaxes for its
-//use.  The first syntax returns the size of the array as a vector
-//of integers, one integer for each dimension
-//@[
-//  [d1,d2,...,dn] = size(x)
-//@]
-//The other format returns the size of @|x| along a particular
-//dimension:
-//@[
-//  d = size(x,n)
-//@]
-//where @|n| is the dimension along which to return the size.
-//@@Example
-//@<
-//a = randn(23,12,5);
-//size(a)
-//@>
-//Here is an example of the second form of @|size|.
-//@<
-//size(a,2)
-//@>
-//@@Tests
-//@{ test_size1.m
-//% Check the size function with an n-dim argument & one output
-//function test_val = test_size1
-//a = [];
-//a(3,7,2) = 1.0;
-//c = size(a);
-//test_val = test(c(1) == 3) & test(c(2) == 7) & test(c(3) == 2);
-//@}
-//@{ test_size2.m
-//% Check the size function with an n-dim argument & multiple outputs
-//function test_val = test_size2
-//a = [1,2,3;4,5,6];
-//[c1,c2,c3] = size(a);
-//test_val = test(c1 == 2) & test(c2 == 3) & test(c3 == 1);
-//@}
-//@{ test_size3.m
-//% Check the size function with two arguments and one output
-//function test_val = test_size3
-//a = [1,2,3;4,5,6];
-//n = size(a,2);
-//test_val = test(n == 3);
-//@}
-//@{ test_size4.m
-//% Check the size function with two arguments and two outputs
-//function test_val = test_size4
-//a = [1,2,3;4,5,6];
-//test_val = 0;
-//[c,d] = size(a,2);
-//test_val = (c == 3);
-//@}
-//!
-ArrayVector SizeFunction(int nargout, const ArrayVector& arg) {
-  ArrayVector retval;
-  if (arg.size() < 1)
-    throw Exception("size function requires either one or two arguments");
-  Dimensions sze;
-  sze = arg[0].dimensions();
-  if (arg.size() == 1) {
-    if (nargout > 1) {
-      ArrayVector retval;
-      for (int i=0;i<nargout;i++)
-	retval.push_back(Array::uint32Constructor(sze.get(i)));
-      return retval;
-    } else {
-      uint32 *dims = (uint32 *) Malloc(sizeof(uint32)*sze.getLength());
-      for (int i=0;i<(int)sze.getLength();i++)
-	dims[i] = sze.get(i);
-      Array ret = Array(FM_UINT32,Dimensions(1,sze.getLength()),dims);
-      retval.push_back(ret);
-      return retval;
-    } 
-  }
-  Array tmp(arg[1]);
-  int dimval = tmp.getContentsAsIntegerScalar();
-  if (dimval<1)
-    throw Exception("illegal value for dimension argument in call to size function");
-  retval.push_back(Array::uint32Constructor(sze.get(dimval-1)));
-  return retval;
-}
-
-//   ArrayVector LengthFunction(int nargout, const ArrayVector& arg) {
-//     Array A(Array::int32Constructor(arg[0].dimensions().getMax()));
-//     ArrayVector retval;
-//     retval.push_back(A);
-//     return retval;
-//   }
-
-
-    
-  
-
-//!
-//@Module NNZ Number of Nonzeros
-//@@Section SPARSE
-//@@Usage
-//Returns the number of nonzero elements in a matrix.
-//The general format for its use is
-//@[
-//   y = nnz(x)
-//@]
-//This function returns the number of nonzero elements
-//in a matrix or array.  This function works for both
-//sparse and non-sparse arrays.  For 
-//@@Example
-//@<
-//a = [1,0,0,5;0,3,2,0]
-//nnz(a)
-//A = sparse(a)
-//nnz(A)
-//@>
-//!
-ArrayVector NNZFunction(int nargout, const ArrayVector& arg) {
-  if (arg.size() != 1)
-    throw Exception("nnz function takes one argument - the array");
-  Array tmp(arg[0]);
-  return SingleArrayVector(Array::int32Constructor(tmp.nnz()));
+    m.push_back(ArrayVector(Array(names.at(i))));
+  return ArrayVector(CellConstructor(m));
 }
 
 
@@ -425,9 +203,12 @@ ArrayVector NNZFunction(int nargout, const ArrayVector& arg) {
 //chain1
 //where
 //@>
+//@@Signature
+//sfunction where WhereFunction
+//inputs none
+//outputs none
 //!
 ArrayVector WhereFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  //    eval->stackTrace(false);
   eval->stackTrace(true);
   return ArrayVector();
 }
@@ -458,16 +239,20 @@ ArrayVector WhereFunction(int nargout, const ArrayVector& arg, Interpreter* eval
 //@<
 //which fliplr
 //@>
+//@@Signature
+//sfunction which WhichFunction
+//inputs functionname
+//outputs location
 //!
-ArrayVector WhichFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
+ArrayVector WhichFunction(int nargout, const ArrayVector& arg, 
+			  Interpreter* eval) {
   if (arg.size() != 1)
     throw Exception("which function takes one string argument (the name of the function to look up)");
-  string fname = arg[0].getContentsAsString();
+  QString fname = arg[0].asString();
   bool isFun;
   FuncPtr val;
   isFun = eval->lookupFunction(fname,val);
-  char buffer[1000];
-  Array ret(Array::emptyConstructor());
+  Array ret(Double);
   if (isFun) {
     if (val->type() == FM_M_FUNCTION) {
       MFunctionDef *mptr;
@@ -476,51 +261,43 @@ ArrayVector WhichFunction(int nargout, const ArrayVector& arg, Interpreter* eval
       if (mptr->pcodeFunction) {
 	if (mptr->scriptFlag) {
 	  if (nargout == 0) {
-	    sprintf(buffer,"Function %s, P-code script\n",fname.c_str());
-	    eval->outputMessage(buffer);
+	    eval->outputMessage("Function "+fname+", P-code script\n");
 	  }
 	} else {
 	  if (nargout == 0) {
-	    sprintf(buffer,"Function %s, P-code function\n",fname.c_str());
-	    eval->outputMessage(buffer);
+	    eval->outputMessage("Function "+fname+", P-code function\n");
 	  }
 	}
       } else {
 	if (mptr->scriptFlag) {
 	  if (nargout == 0) {
-	    sprintf(buffer,"Function %s, M-File script in file '%s'\n",fname.c_str(),
-		    mptr->fileName.c_str());
-	    eval->outputMessage(buffer);
+	    eval->outputMessage("Function "+fname+", M-File script in file '"+mptr->fileName+"'\n");
 	  } else 
-	    ret = Array::stringConstructor(mptr->fileName);
+	    ret = Array(mptr->fileName);
 	} else {
 	  if (nargout == 0) {
-	    sprintf(buffer,"Function %s, M-File function in file '%s'\n",
-		    fname.c_str(),mptr->fileName.c_str());
-	    eval->outputMessage(buffer);
+	    eval->outputMessage("Function "+fname+", M-File function in file '"+mptr->fileName+"'\n");
 	  } else
-	    ret = Array::stringConstructor(mptr->fileName);
+	    ret = Array(mptr->fileName);
 	}
       }
-    } else if ((val->type() == FM_BUILT_IN_FUNCTION) || (val->type() == FM_SPECIAL_FUNCTION) ) {
+    } else if ((val->type() == FM_BUILT_IN_FUNCTION) || 
+	       (val->type() == FM_SPECIAL_FUNCTION) ) {
       if (nargout == 0) {
-	sprintf(buffer,"Function %s is a built in function\n",fname.c_str());
-	eval->outputMessage(buffer);
+	eval->outputMessage("Function "+fname+" is a built in function\n");
       }
     } else {
       if (nargout == 0) {
-	sprintf(buffer,"Function %s is an imported function\n",fname.c_str());
-	eval->outputMessage(buffer);
+	eval->outputMessage("Function "+fname+" is an imported function\n");
       }
     }
   } else {
     if (nargout == 0) {
-      sprintf(buffer,"Function %s is unknown!\n",fname.c_str());
-      eval->outputMessage(buffer);
+      eval->outputMessage("Function "+fname+" is unknown!\n");
     }
   }
   if (nargout > 0)
-    return SingleArrayVector(ret);
+    return ArrayVector(ret);
   else
     return ArrayVector();
 }
@@ -536,21 +313,13 @@ ArrayVector WhichFunction(int nargout, const ArrayVector& arg, Interpreter* eval
 //@[
 //    y = mfilename
 //@]
+//@@Signature
+//sfunction mfilename MFilenameFunction
+//inputs none
+//outputs filename
 //!
-
-static std::string fname_only(std::string name) {
-  int ndx;
-  ndx = name.rfind("/");
-  if (ndx>=0)
-    name.erase(0,ndx+1);
-  ndx = name.rfind(".");
-  if (ndx>=0)
-    name.erase(ndx,name.size());
-  return name;
-}
-
 ArrayVector MFilenameFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  return SingleArrayVector(Array::stringConstructor(fname_only(eval->getMFileName())));
+  return ArrayVector(Array(QFileInfo(eval->getMFileName()).fileName()));
 }
 
 //!
@@ -569,14 +338,18 @@ ArrayVector MFilenameFunction(int nargout, const ArrayVector& arg, Interpreter* 
 //  \item @|'MAC'| - Mac OS X
 //  \item @|'UNIX'| - All others
 //\end{itemize}
+//@@Signature
+//function computer ComputerFunction
+//inputs none
+//outputs str
 //!
 ArrayVector ComputerFunction(int nargout, const ArrayVector& arg) {
 #ifdef WIN32
-  return SingleArrayVector(Array::stringConstructor("PCWIN"));
+  return ArrayVector(Array(QString("PCWIN")));
 #elif defined(__APPLE__)
-  return SingleArrayVector(Array::stringConstructor("MAC"));
+  return ArrayVector(Array(QString("MAC")));
 #else
-  return SingleArrayVector(Array::stringConstructor("UNIX"));
+  return ArrayVector(Array(QString("UNIX")));
 #endif
 }
 

@@ -858,10 +858,12 @@ bool IsInteger(const Array &x) {
 }
 
 int32 Array::asInteger() const {
+  if (m_type.Class == StringArray) return asString().toInt();
   return (this->toClass(Int32).constRealScalar<int32>());
 }
 
 double Array::asDouble() const {
+  if (m_type.Class == StringArray) return asString().toDouble();
   return (this->toClass(Double).constRealScalar<double>());
 }
 

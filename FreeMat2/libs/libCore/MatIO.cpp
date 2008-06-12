@@ -908,7 +908,7 @@ MatIO::~MatIO() {
   fclose(m_fp);
 }
 
-ArrayVector MatLoadFunction(int nargout, string filename, 
+ArrayVector MatLoadFunction(int nargout, QString filename, 
 			    StringVector varnames, bool regexpmode, Interpreter *eval) {
   StringVector fieldnames;
   ArrayVector fieldvalues;
@@ -940,8 +940,7 @@ ArrayVector MatLoadFunction(int nargout, string filename,
       Array::structConstructor(fieldnames,fieldvalues);
 }
 
-ArrayVector MatSaveFunction(string filename, StringVector names, 
-			    Interpreter *eval) {
+ArrayVector MatSaveFunction(QString filename, StringVector names, Interpreter *eval) {
   MatIO m(filename,MatIO::writeMode);
   Context *cntxt = eval->getContext();
   char header[116];

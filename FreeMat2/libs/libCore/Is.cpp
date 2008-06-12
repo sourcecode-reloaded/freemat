@@ -1,5 +1,7 @@
 #include "Array.hpp"
 #include "Interpreter.hpp"
+#include "IEEEFP.hpp"
+#include "Operators.hpp"
 
 //!
 //@Module ISSET Test If Variable Set
@@ -76,6 +78,18 @@ ArrayVector IsSparseFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(Array(arg[0].isSparse()));
 }
 
+struct OpIsNaN {
+  static inline float func(float t) {return (IsNaN(t) ? 1.0 : 0.0);}
+  static inline double func(double t) {return (IsNaN(t) ? 1.0 : 0.0);}
+  static inline void func(float x, float y, float &rx, float &ry) {
+    rx = (IsNaN(x) || IsNaN(y)) ? 1.0 : 0.0; ry = 0;
+  }
+  static inline void func(double x, double y, double &rx, double &ry) {
+    rx = (IsNaN(x) || IsNaN(y)) ? 1.0 : 0.0; ry = 0;
+  }
+};
+
+
 //!
 //@Module ISNAN Test for Not-a-Numbers
 //@@Section INSPECTION
@@ -104,54 +118,21 @@ ArrayVector IsSparseFunction(int nargout, const ArrayVector& arg) {
 //!
 ArrayVector IsNaNFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
-    throw Exception("isnan function takes one argument - the array to test");
-  Array tmp(arg[0]);
-  if (tmp.isReferenceType())
-    throw Exception("isnan is not defined for reference types");
-  ArrayVector retval;
-  int len(tmp.getLength());
-  logical *op = (logical *) Malloc(len*sizeof(logical));
-  switch (tmp.dataClass()) {
-  default: throw Exception("unhandled type as argument to isnan");
-  case FM_STRING:
-  case FM_LOGICAL:
-  case FM_UINT8:
-  case FM_INT8:
-  case FM_UINT16:
-  case FM_INT16:
-  case FM_UINT32:
-  case FM_INT32:
-  case FM_UINT64:
-  case FM_INT64:
-    break;
-  case FM_FLOAT: {
-    const float *dp = (const float *)tmp.getDataPointer();
-    for (int i=0;i<len;i++)
-      op[i] = IsNaN(dp[i]) ? 1 : 0;
-    break;
-  }
-  case FM_DOUBLE: {
-    const double *dp = (const double *)tmp.getDataPointer();
-    for (int i=0;i<len;i++)
-      op[i] = IsNaN(dp[i]) ? 1 : 0;
-    break;
-  }
-  case FM_COMPLEX: {
-    const float *dp = (const float *)tmp.getDataPointer();
-    for (int i=0;i<len;i++)
-      op[i] = (IsNaN(dp[2*i]) || IsNaN(dp[2*i+1])) ? 1 : 0;
-    break;
-  }
-  case FM_DCOMPLEX: {
-    const double *dp = (const double *)tmp.getDataPointer();
-    for (int i=0;i<len;i++)
-      op[i] = (IsNaN(dp[2*i]) || IsNaN(dp[2*i+1])) ? 1 : 0;
-    break;
-  }
-  }
-  retval.push_back(Array(FM_LOGICAL,tmp.dimensions(),op));
-  return(retval);
+   throw Exception("isnan function takes one argument - the array to test");
+  return ArrayVector(UnaryOp<OpIsNaN>(arg[0]).toClass(Bool));
 }
+
+
+struct OpIsInf {
+  static inline float func(float t) {return (IsInfinite(t) ? 1.0 : 0.0);}
+  static inline double func(double t) {return (IsInfinite(t) ? 1.0 : 0.0);}
+  static inline void func(float x, float y, float &rx, float &ry) {
+    rx = (IsInfinite(x) || IsInfinite(y)) ? 1.0 : 0.0; ry = 0;
+  }
+  static inline void func(double x, double y, double &rx, double &ry) {
+    rx = (IsInfinite(x) || IsInfinite(y)) ? 1.0 : 0.0; ry = 0;
+  }
+};
 
 //!
 //@Module ISINF Test for infinities
@@ -175,54 +156,68 @@ ArrayVector IsNaNFunction(int nargout, const ArrayVector& arg) {
 //isinf(a)
 //b = 3./[2 5 0 3 1]
 //@>
+//@@Signature
+//function isinf IsInfFunction
+//inputs x
+//outputs y
 //!
 ArrayVector IsInfFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("isinf function takes one argument - the array to test");
-  Array tmp(arg[0]);
-  if (tmp.isReferenceType())
-    throw Exception("isinf is not defined for reference types");
-  ArrayVector retval;
-  int len(tmp.getLength());
-  logical *op = (logical *) Malloc(len*sizeof(logical));
-  switch (tmp.dataClass()) {
-  default: throw Exception("unhandled type as argument to isinf");
-  case FM_STRING:
-  case FM_LOGICAL:
-  case FM_UINT8:
-  case FM_INT8:
-  case FM_UINT16:
-  case FM_INT16:
-  case FM_UINT32:
-  case FM_INT32:
-  case FM_UINT64:
-  case FM_INT64:
-    break;
-  case FM_FLOAT: {
-    const float *dp = (const float *)tmp.getDataPointer();
-    for (int i=0;i<len;i++)
-      op[i] = IsInfinite(dp[i]) ? 1 : 0;
-    break;
-  }
-  case FM_DOUBLE: {
-    const double *dp = (const double *)tmp.getDataPointer();
-    for (int i=0;i<len;i++)
-      op[i] = IsInfinite(dp[i]) ? 1 : 0;
-    break;
-  }
-  case FM_COMPLEX: {
-    const float *dp = (const float *)tmp.getDataPointer();
-    for (int i=0;i<len;i++)
-      op[i] = (IsInfinite(dp[2*i]) || IsInfinite(dp[2*i+1])) ? 1 : 0;
-    break;
-  }
-  case FM_DCOMPLEX: {
-    const double *dp = (const double *)tmp.getDataPointer();
-    for (int i=0;i<len;i++)
-      op[i] = (IsInfinite(dp[2*i]) || IsInfinite(dp[2*i+1])) ? 1 : 0;
-    break;
-  }
-  }
-  retval.push_back(Array(FM_LOGICAL,tmp.dimensions(),op));
-  return(retval);
+  return ArrayVector(UnaryOp<OpIsInf>(arg[0]).toClass(Bool));
+}
+
+//!
+//@Module ISEMPTY Test For Variable Empty
+//@@Section INSPECTION
+//@@Usage
+//The @|isempty| function returns a boolean that indicates
+//if the argument variable is empty or not.  The general
+//syntax for its use is
+//@[
+//  y = isempty(x).
+//@]
+//@@Examples
+//Here are some examples of the @|isempty| function
+//@<
+//a = []
+//isempty(a)
+//b = 1:3
+//isempty(b)
+//@>
+//Note that if the variable is not defined, @|isempty| 
+//does not return true.
+//@<1
+//clear x
+//isempty(x)
+//@>
+//@@Tests
+//@{ test_empty.m
+//% Test the arithmetic operators with empty arguments
+//function test_val = test_empty
+//test_val = isempty([]+[]);
+//test_val = test_val & isempty([]-[]);
+//test_val = test_val & isempty(-[]);
+//test_val = test_val & isempty([]*[]);
+//test_val = test_val & isempty([]/[]);
+//test_val = test_val & isempty([]\[]);
+//test_val = test_val & isempty([].*[]);
+//test_val = test_val & isempty([]./[]);
+//test_val = test_val & isempty([].\[]);
+//test_val = test_val & isempty([]^[]);
+//test_val = test_val & isempty([].^[]);
+//test_val = test_val & isempty([]>[]);
+//test_val = test_val & isempty([]>=[]);
+//test_val = test_val & isempty([]<[]);
+//test_val = test_val & isempty([]<=[]);
+//@}
+//@@Signature
+//function isempty IsEmptyFunction
+//inputs x
+//outputs flag
+//!
+ArrayVector IsEmptyFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 1)
+    throw Exception("isempty function requires at least input argument");
+  return ArrayVector(Array(bool(arg[0].isEmpty())));
 }

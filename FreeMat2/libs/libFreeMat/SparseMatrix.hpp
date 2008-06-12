@@ -536,4 +536,17 @@ SparseMatrix<T> Transpose(const SparseMatrix<T> &arg) {
   return retval;
 }
 
+template <typename T>
+bool IsSymmetric(const SparseMatrix<T> &arg) {
+  ConstSparseIterator<T> Aiter(&arg);
+  while (Aiter.isValid()) {
+    while (Aiter.moreInSlice()) {
+      if (arg.get(NTuple(Aiter.col(),Aiter.row())) != Aiter.value())
+	return false;
+      Aiter.next();
+    }
+    Aiter.nextSlice();
+  }
+  return true;
+}
 #endif

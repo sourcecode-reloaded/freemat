@@ -1,5 +1,7 @@
 #include "Array.hpp"
 #include "Interpreter.hpp"
+#include "Module.hpp"
+#include "Class.hpp"
 
 //!
 //@Module CLEAR Clear or Delete a Variable
@@ -100,7 +102,7 @@ ArrayVector ClearFunction(int nargout, const ArrayVector& arg, Interpreter* eval
     else if (names[i] == "global")
       ClearGlobal(eval);
     else if (names[i] == "classes")
-      eval->clearUserClasses();
+      clearUserClasses();
     else 
       ClearVariable(eval,names[i]);
   }

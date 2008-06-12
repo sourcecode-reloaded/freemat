@@ -3,6 +3,7 @@
 
 #include <QVector>
 #include "SparseMatrix.hpp"
+#include "Array.hpp"
 
 struct CCSForm {
   QVector<int> Acolstart;
@@ -29,6 +30,7 @@ public:
   Array cols();
   Array indices();
   Array values();
+  index_t nnz();
 };
 
 #endif

@@ -1,5 +1,6 @@
 #include "Array.hpp"
 #include "Interpreter.hpp"
+#include "PathSearch.hpp"
 #include <QtCore>
 
 static int ExistBuiltinFunction(QString fname, Interpreter* eval) {    

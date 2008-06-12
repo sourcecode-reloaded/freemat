@@ -14,6 +14,7 @@ RanLib.hpp \
 Utils.hpp \
 MatIO.hpp \
 XML.hpp \
+Printf.hpp \
 RPC.hpp 
 
 libCore_a_SOURCES = Abs.cpp \
@@ -52,13 +53,26 @@ Clear.cpp \
 Exist.cpp \
 Find.cpp \
 Is.cpp \
+Size.cpp \
+Path.cpp \
 Inspect.cpp \
+Audio.cpp \
+Random.cpp \
+RanLib.cpp \
+Image.cpp \
+File.cpp \
+Printf.cpp \
 IO.cpp \
+Conv.cpp \
+Eval.cpp \
+Debug.cpp \
+LU.cpp \
+Eigen.cpp \
+SVD.cpp \
+Array.cpp \
 LoadCore.cpp \
 Misc.cpp \
 MPIWrap.cpp \
-Random.cpp \
-RanLib.cpp \
 StringOps.cpp \
 Transcendental.cpp \
 Trigonometric.cpp \

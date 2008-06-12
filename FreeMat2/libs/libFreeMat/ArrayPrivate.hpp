@@ -136,4 +136,15 @@ MacroGetDataClass(Array,CellArray);
 #undef MacroArrayRealConstructor
 #undef MacroGetDataClass
 
+#define MacroByteSize(ctype,cls)		\
+  case cls: return sizeof(ctype);
+
+size_t ByteSizeOfDataClass(DataClass x) {
+  switch(x) {
+  default:
+    throw Exception("Unhandled dataclass for ByteSizeOfDataClass");
+    MacroExpandCasesSimple(MacroByteSize);
+  }
+}
+
 #endif

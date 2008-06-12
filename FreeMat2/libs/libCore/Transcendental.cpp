@@ -35,10 +35,17 @@
 //  y = log1p(x)
 //@]
 //where @|x| is an @|n|-dimensional array of numerical type.
+//@@Signature
+//function log1p Log1PFunction
+//inputs x
+//output y
 //!
 ArrayVector Log1PFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("Log1p function takes exactly one argument");
+  Array input(arg[0]);
+  if (!IsPositive(input)) input.forceComplex();
+#error finishme
   Array input(arg[0]);
   Array output;
   Class argType(input.dataClass());

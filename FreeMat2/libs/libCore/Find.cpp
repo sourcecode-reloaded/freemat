@@ -3,7 +3,7 @@
 
 static inline index_t CountNonZeros(const BasicArray<bool> &dp) {
   index_t nonZero = 0;
-  for (index_t i=1;i<=dp.length();dp++)
+  for (index_t i=1;i<=dp.length();i++)
     if (dp[i]) nonZero++;
   return nonZero;
 }
@@ -19,7 +19,7 @@ static ArrayVector SingleFindModeFull(const Array &arg) {
     retdims = NTuple(nonZero,1);
   BasicArray<index_t> sp(retdims);
   index_t j = 1;
-  for (index_t i=1;i<=dp.length();dp++)
+  for (index_t i=1;i<=dp.length();i++)
     if (dp[i]) 
       sp[j++] = i;
   return ArrayVector(Array(sp));
@@ -38,7 +38,7 @@ static ArrayVector RCFindModeFull(const Array &arg) {
   BasicArray<index_t> cp(retdims);
   index_t j = 1;
   index_t rows = arg.rows();
-  for (index_t i=1;i<=dp.length();dp++)
+  for (index_t i=1;i<=dp.length();i++)
     if (dp[i]) {
       rp[j] = (uint64(i-1) % uint64(rows)) + 1;
       cp[j] = (uint64(i-1) / uint64(rows)) + 1;
@@ -66,7 +66,7 @@ static ArrayVector RCVFindModeFullReal(Array arg) {
   BasicArray<T> qp(retdims);
   index_t j = 1;
   index_t rows = arg.rows();
-  for (index_t i=1;i<=dp.length();dp++)
+  for (index_t i=1;i<=dp.length();i++)
     if (dp[i]) {
       rp[j] = (uint64(i-1) % uint64(rows)) + 1;
       cp[j] = (uint64(i-1) / uint64(rows)) + 1;
@@ -81,7 +81,7 @@ static ArrayVector RCVFindModeFullReal(Array arg) {
 }  
 
 template <class T>
-static ArrayVector RCVFindModeFullComplex(Array x) {
+static ArrayVector RCVFindModeFullComplex(Array arg) {
   Array x(arg.toClass(Bool));
   const BasicArray<bool> &dp(x.constReal<bool>());
   const BasicArray<T> &vp(arg.constReal<T>());
@@ -98,7 +98,7 @@ static ArrayVector RCVFindModeFullComplex(Array x) {
   BasicArray<T> ip(retdims);
   index_t j = 1;
   index_t rows = arg.rows();
-  for (index_t i=1;i<=dp.length();dp++)
+  for (index_t i=1;i<=dp.length();i++)
     if (dp[i]) {
       rp[j] = (uint64(i-1) % uint64(rows)) + 1;
       cp[j] = (uint64(i-1) / uint64(rows)) + 1;
@@ -116,9 +116,10 @@ static ArrayVector RCVFindModeFullComplex(Array x) {
 template <class T>
 static ArrayVector RCVFindModeFull(Array x) {
   if (x.allReal())
-    return RCVFindModeFullReal(x);
+    return RCVFindModeFullReal<T>(x);
   else
-    return RCVFindModeFullComplex(x);
+    return RCVFindModeFullComplex<T>
+(x);
 }
 
 #define MacroFindFull(ctype,cls) \
@@ -134,6 +135,7 @@ static ArrayVector RCVFindModeFull(Array x) {
 static ArrayVector FindModeSparse(Array x, int nargout) {
   IJVForm ijv(x);
   NTuple retDim;
+  index_t nnz = ijv.nnz();
   if (x.isRowVector())
     retDim = NTuple(1,nnz);
   else
@@ -142,7 +144,7 @@ static ArrayVector FindModeSparse(Array x, int nargout) {
   if (nargout == 3) {
     retval.push_back(ijv.rows());
     retval.push_back(ijv.cols());
-    retval.push_back(ijv,values());
+    retval.push_back(ijv.values());
   } else if (nargout == 2) {
     retval.push_back(ijv.rows());
     retval.push_back(ijv.cols());
@@ -288,7 +290,7 @@ static ArrayVector FindModeSparse(Array x, int nargout) {
 //outputs row col vals
 //!  
 
-static ArrayVector FindTrim(ArrayVector a, int cnt, bool first_flag, Interpreter* m_eval) {
+static ArrayVector FindTrim(ArrayVector a, int cnt, bool first_flag) {
   if (cnt < 0) return a;
   if (a.size() == 0) return a;
   int N = int(a[0].length());
@@ -323,13 +325,13 @@ ArrayVector FindFunction(int nargout, const ArrayVector& arg) {
     else
       throw Exception("third option to find must be either 'first' or 'last'");
   }
-  if ((nargout <= 1) && !tmp.sparse())
-    return FindTrim(SingleFindModeFull(tmp),k,first_flag,m_eval);
-  if ((nargout == 2) && !tmp.sparse())
-    return FindTrim(RCFindModeFull(tmp),k,first_flag,m_eval);
-  if ((nargout == 3) && !tmp.sparse())
-    return FindTrim(RCVFindModeFull(tmp),k,first_flag,m_eval);
+  if ((nargout <= 1) && !tmp.isSparse())
+    return FindTrim(SingleFindModeFull(tmp),k,first_flag);
+  if ((nargout == 2) && !tmp.isSparse())
+    return FindTrim(RCFindModeFull(tmp),k,first_flag);
+  if ((nargout == 3) && !tmp.isSparse())
+    return FindTrim(RCVFindModeFull(tmp),k,first_flag);
   if (nargout > 3)
     throw Exception("Do not understand syntax of find call (too many output arguments).");
-  return FindTrim(FindModeSparse(tmp,nargout),k,first_flag,m_eval);
+  return FindTrim(FindModeSparse(tmp,nargout),k,first_flag);
 }

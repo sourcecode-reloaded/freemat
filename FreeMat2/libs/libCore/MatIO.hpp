@@ -55,10 +55,10 @@ public:
 
 private:
   FILE *m_fp;
-  string m_filename;
+  QString m_filename;
   bool m_endianSwap;
   openMode m_mode;
-  string m_txt;
+  QString m_txt;
   bool m_compressed_data;
   uint8* m_compression_buffer;
   z_streamp zstream;
@@ -66,11 +66,11 @@ private:
   bool m_phantomWriteMode;
 private:
   // Reads various types of arrays
-  Array getSparseArray(Dimensions dm, bool complexFlag);
-  Array getNumericArray(mxArrayTypes arrayType, Dimensions dm, bool complexFlag);
-  Array getClassArray(Dimensions dm);
-  Array getStructArray(Dimensions dm);
-  Array getCellArray(Dimensions dm);
+  Array getSparseArray(NTuple dm, bool complexFlag);
+  Array getNumericArray(mxArrayTypes arrayType, NTuple dm, bool complexFlag);
+  Array getClassArray(NTuple dm);
+  Array getStructArray(NTuple dm);
+  Array getCellArray(NTuple dm);
   Array getDataElement();
   // Writes various types of arrays
   void putSparseArray(const Array &x);
@@ -105,7 +105,7 @@ private:
   void WriteData(const void *dest, uint32 towrite);
 public:
   // Constructor pairs
-  MatIO(string filename, MatIO::openMode mode);
+  MatIO(QString filename, MatIO::openMode mode);
   ~MatIO();
   // Get/Put for arrays
   Array getArray(bool &atEof, string &name, bool &match, bool &isGlobal);
@@ -116,7 +116,9 @@ public:
   void putHeader(string header);
 };
 
-ArrayVector MatLoadFunction(int nargout, string filename, StringVector varnames, 
+ArrayVector MatLoadFunction(int nargout, QString filename, StringVector varnames, 
 			    bool regexp, Interpreter *eval);
+ArrayVector MatSaveFunction(QString filename, StringVector names, Interpreter *eval);
+
 
 #endif

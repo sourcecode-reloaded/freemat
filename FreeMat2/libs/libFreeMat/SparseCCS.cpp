@@ -1,3 +1,6 @@
+
+
+
 #include "SparseCCS.hpp"
 #include "Math.hpp"
 
@@ -16,4 +19,8 @@ Array IJVForm::indices() {
 
 Array IJVForm::values() {
   return m_values;
+}
+
+index_t IJVForm::nnz() {
+  return m_values.length();
 }

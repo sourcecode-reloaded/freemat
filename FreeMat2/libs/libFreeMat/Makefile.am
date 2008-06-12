@@ -30,7 +30,6 @@ Module.hpp \
 Operators.hpp \
 QRDecompose.hpp \
 Scope.hpp \
-SingularValueDecompose.hpp \
 SparseMatrix.hpp \
 Stream.hpp \
 SymbolTable.hpp \
@@ -61,7 +60,6 @@ MatrixMultiply.cpp \
 Module.cpp \
 QRDecompose.cpp \
 Scope.cpp \
-SingularValueDecompose.cpp \
 SparseMatrix.cpp \
 Class.cpp \
 Print.cpp \

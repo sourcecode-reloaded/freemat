@@ -44,6 +44,8 @@ const DataClass Index = 15;
 template <typename T>
 static inline DataClass GetDataClass(T = 0);
 
+size_t ByteSizeOfDataClass(DataClass);
+
 typedef struct {
   DataClass Class : 5;
   unsigned Scalar : 1;
@@ -387,6 +389,7 @@ Type ScalarType(Type x);
 Array GetDiagonal(const Array &a, int diagonal = 0);
 Array DiagonalArray(const Array &f, int diagonal = 0);
 bool IsSymmetric(const Array &a);
+bool IsPositive(const Array &a);
 
 Array RangeConstructor(double start, double step, double stop, bool vertical);
 Array Transpose(const Array &A);
@@ -394,6 +397,10 @@ Array Hermitian(const Array &A);
 Array Negate(const Array &A);
 Array Real(const Array &A);
 Array Imag(const Array &A);
+Array Permute(const Array &A, const BasicArray<uint32> &dp);
+
+NTuple ConvertArrayToNTuple(const Array &A);
+bool AnyNotFinite(const Array &A);
 
 // Suppose we support a get/set interface:// And we support slicing through the iterators
 // themselves.  For example, consider

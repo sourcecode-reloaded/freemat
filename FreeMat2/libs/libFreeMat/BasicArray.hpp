@@ -76,13 +76,23 @@ public:
     throw Exception("out of range");
   }
   inline const T* constData() const {
-    return &(m_data.at(int64(m_offset)));
+    if (length() > 0)
+      return &(m_data.at(int64(m_offset)));
+    else
+      return NULL;
   }
   inline T* data() {
-    return &(m_data[int64(m_offset)]);
+    if (length() > 0)
+      return &(m_data[int64(m_offset)]);
+    else
+      return NULL;
+  }
+  void fill(T val) {
+    for (index_t i=1;i<=length();i++) 
+      m_data[(int64)(i+m_offset-1)] = val;
   }
   bool operator==(const BasicArray<T>& b) const {
-    for (index_t i=1;i<b.length();i++) 
+    for (index_t i=1;i<=b.length();i++) 
       if (get(i) != b.get(i)) return false;
     return true;
   }
@@ -238,6 +248,13 @@ public:
       throw Exception("Illegal reshape");
   }
 };
+
+template <typename T>
+BasicArray<T> Uniform(const NTuple &dims, T val) {
+  BasicArray<T> retval(dims);
+  retval.fill(val);
+  return retval;
+}
 
 template <typename T>
 std::ostream& operator<<(std::ostream& o, const BasicArray<T>& arg) {

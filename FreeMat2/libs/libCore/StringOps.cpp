@@ -29,27 +29,30 @@
 #include <pcre.h>
 #endif
 
-
+//!
+//@Module STRCMP String Compare Function
+//@@Section STRING
+//@@Usage
+//Compares two string, and returns @|true| if they equal
+//and @|false| if not.
+//@@Signature
+//function strcmp StrCmpFunction
+//inputs string1 string2
+//outputs flag
+//!
 ArrayVector StrCmpFunction(int nargout, const ArrayVector& arg) {
-  Array retval, arg1, arg2;
+  Array retval;
   if (arg.size() != 2)
-    throw Exception("strcomp function requires two arguments");
-  arg1 = arg[0];
-  arg2 = arg[1];
-  if (!(arg1.isString()))
-    return SingleArrayVector(Array::logicalConstructor(false));
-  if (!(arg2.isString()))
-    return SingleArrayVector(Array::logicalConstructor(false));
-  if (!(arg1.dimensions().equals(arg2.dimensions())))
-    retval = Array::logicalConstructor(false);
-  else {
-    string s1 = arg1.getContentsAsString();
-    string s2 = arg2.getContentsAsString();
-    retval = Array::logicalConstructor(s1 == s2);
-  }
-  ArrayVector o;
-  o.push_back(retval);
-  return o;
+    throw Exception("strcmp function requires two arguments");
+  if (!(arg[0].isString()))
+    return ArrayVector(Array(Bool(false)));
+  if (!(arg[1].isString()))
+    return ArrayVector(Array(Bool(false)));
+  if (!(arg[0].dimensions() == arg[1].dimensions()))
+    return ArrayVector(Array(Bool(false)));
+  else
+    return ArrayVector(Array(Bool(arg[0].asString() == arg[1].asString())));
+  return ArrayVector(Array(Bool(false)));
 }
 
 //!
@@ -72,6 +75,10 @@ ArrayVector StrCmpFunction(int nargout, const ArrayVector& arg) {
 //strstr('quick brown fox','own')
 //strstr('free stuff','lunch')
 //@>
+//@@Signature
+//function strstr StrStrFunction
+//inputs x y
+//outputs flag
 //!
 ArrayVector StrStrFunction(int nargout, const ArrayVector& arg) {
   Array retval, arg1, arg2;
@@ -992,3 +999,249 @@ ArrayVector RegExpRepDriverFunction(int nargout, const ArrayVector& arg) {
 									 modes,
 									 replist));
 }				  
+
+//!
+//@Module NUM2STR Convert Numbers To Strings
+//@@Section ARRAY
+//@@Usage
+//Converts an array into its string representation.  The general syntax
+//for this function is
+//@[
+//   s = num2str(X)
+//@]
+//where @|s| is a string (or string matrix) and @|X| is an array.  By
+//default, the @|num2str| function uses 4 digits of precision and an 
+//exponent if required.  If you want more digits of precision, you can 
+//specify the precition via the form
+//@[
+//   s = num2str(X, precision)
+//@]
+//where @|precision| is the number of digits to include in the string
+//representation.  For more control over the format of the output, you 
+//can also specify a format specifier (see @|printf| for more details).
+//@[
+//   s = num2str(X, format)
+//@]
+//where @|format| is the specifier string.
+//!
+template <class T>
+Array Num2StrHelperReal(const T*dp, Dimensions Xdims, const char *formatspec) {
+  int rows(Xdims.getRows());
+  int cols(Xdims.getColumns());
+  StringVector row_string;
+  if (Xdims.getLength() == 2)
+    Xdims.set(3,1);
+  Dimensions Wdims(Xdims.getLength());
+  int offset = 0;
+  while (Wdims.inside(Xdims)) {
+    for (int i=0;i<rows;i++) {
+      string colbuffer;
+      for (int j=0;j<cols;j++) {
+	char elbuffer[1024];
+	sprintf(elbuffer,formatspec,dp[i+j*rows+offset]);
+	char elbuffer2[1024];
+	convertEscapeSequences(elbuffer2,elbuffer);
+	if (j > 0)
+	  colbuffer += " ";
+	colbuffer += string(elbuffer2);
+      }
+      row_string.push_back(colbuffer);
+    }
+    offset += rows*cols;
+    Wdims.incrementModulo(Xdims,2);
+  }
+  // Next we compute the length of the largest string
+  int maxlen = 0;
+  for (int n=0;n<(int)row_string.size();n++)
+    if ((int)row_string[n].size() > maxlen)
+      maxlen = row_string[n].size();
+  // Next we allocate a character array large enough to
+  // hold the string array.
+  char *sp = (char*) Array::allocateArray(FM_STRING,maxlen*row_string.size());
+  // Now we copy 
+  int slices = row_string.size() / rows;
+  for (int i=0;i<slices;i++)
+    for (int j=0;j<rows;j++) {
+      string line(row_string[j+i*rows]);
+      for (int k=0;k<(int)line.size();k++)
+	sp[j+i*rows*maxlen+k*rows] = line[k];
+    }
+  Dimensions odims(Xdims);
+  odims.set(1,maxlen);
+  odims.simplify();
+  return Array(FM_STRING,odims,sp);
+}
+
+template <class T>
+Array Num2StrHelperComplex(const T*dp, Dimensions Xdims, const char *formatspec) {
+  int rows(Xdims.getRows());
+  int cols(Xdims.getColumns());
+  StringVector row_string;
+  if (Xdims.getLength() == 2)
+    Xdims.set(3,1);
+  Dimensions Wdims(Xdims.getLength());
+  int offset = 0;
+  while (Wdims.inside(Xdims)) {
+    for (int i=0;i<rows;i++) {
+      string colbuffer;
+      for (int j=0;j<cols;j++) {
+	char elbuffer[1024];
+	char elbuffer2[1024];
+	sprintf(elbuffer,formatspec,dp[2*(i+j*rows+offset)]);
+	convertEscapeSequences(elbuffer2,elbuffer);
+	if (j > 0)
+	  colbuffer += " ";
+	colbuffer += string(elbuffer2);
+	sprintf(elbuffer,formatspec,dp[2*(i+j*rows+offset)+1]);
+	convertEscapeSequences(elbuffer2,elbuffer);
+	if (dp[2*(i+j*rows+offset)+1]>=0) 
+	  colbuffer += "+";
+	colbuffer += string(elbuffer2) + "i";
+      }
+      row_string.push_back(colbuffer);
+    }
+    offset += rows*cols;
+    Wdims.incrementModulo(Xdims,2);
+  }
+  // Next we compute the length of the largest string
+  int maxlen = 0;
+  for (int n=0;n<(int)row_string.size();n++)
+    if ((int)row_string[n].size() > maxlen)
+      maxlen = row_string[n].size();
+  // Next we allocate a character array large enough to
+  // hold the string array.
+  char *sp = (char*) Array::allocateArray(FM_STRING,maxlen*row_string.size());
+  // Now we copy 
+  int slices = row_string.size() / rows;
+  for (int i=0;i<slices;i++)
+    for (int j=0;j<rows;j++) {
+      string line(row_string[j+i*rows]);
+      for (int k=0;k<(int)line.size();k++)
+	sp[j+i*rows*maxlen+k*rows] = line[k];
+    }
+  Dimensions odims(Xdims);
+  odims.set(1,maxlen);
+  odims.simplify();
+  return Array(FM_STRING,odims,sp);
+}
+
+
+ArrayVector Num2StrFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() == 0)
+    throw Exception("num2str function requires at least one argument");
+  Array X(arg[0]);
+  if (X.isReferenceType())
+    throw Exception("num2str function requires a numeric input");
+  char formatspec[1024];
+  if (X.isIntegerClass())
+    sprintf(formatspec,"%%d");
+  else
+//    sprintf(formatspec,"%%11.4g");
+    sprintf(formatspec,"%%g"); //without preceding space
+  if (arg.size() > 1) {
+    Array format(arg[1]);
+    if (format.isString())
+      strcpy(formatspec,ArrayToString(format).c_str());
+  }
+  switch (X.dataClass()) 
+    {
+    default: throw Exception("illegal type argument to num2str");
+    case FM_UINT8:
+      return ArrayVector() << Num2StrHelperReal((const uint8*) X.getDataPointer(),
+						X.dimensions(),formatspec);
+    case FM_INT8:
+      return ArrayVector() << Num2StrHelperReal((const int8*) X.getDataPointer(),
+						X.dimensions(),formatspec);
+    case FM_UINT16:
+      return ArrayVector() << Num2StrHelperReal((const uint16*) X.getDataPointer(),
+						X.dimensions(),formatspec);
+    case FM_INT16:
+      return ArrayVector() << Num2StrHelperReal((const int16*) X.getDataPointer(),
+						X.dimensions(),formatspec);
+    case FM_UINT32:
+      return ArrayVector() << Num2StrHelperReal((const uint32*) X.getDataPointer(),
+						X.dimensions(),formatspec);
+    case FM_INT32:
+      return ArrayVector() << Num2StrHelperReal((const int32*) X.getDataPointer(),
+						X.dimensions(),formatspec);
+    case FM_UINT64:
+      return ArrayVector() << Num2StrHelperReal((const uint64*) X.getDataPointer(),
+						X.dimensions(),formatspec);
+    case FM_INT64:
+      return ArrayVector() << Num2StrHelperReal((const int64*) X.getDataPointer(),
+						X.dimensions(),formatspec);
+    case FM_FLOAT:
+      return ArrayVector() << Num2StrHelperReal((const float*) X.getDataPointer(),
+						X.dimensions(),formatspec);
+    case FM_DOUBLE:
+      return ArrayVector() << Num2StrHelperReal((const double*) X.getDataPointer(),
+						X.dimensions(),formatspec);
+    case FM_COMPLEX:
+      return ArrayVector() << Num2StrHelperComplex((const float*) X.getDataPointer(),
+						   X.dimensions(),formatspec);
+    case FM_DCOMPLEX:
+      return ArrayVector() << Num2StrHelperComplex((const double*) X.getDataPointer(),
+						   X.dimensions(),formatspec);
+    case FM_STRING:
+      throw Exception("argument to num2str must be numeric type");
+    }
+  return ArrayVector();
+}
+
+//!
+//@Module STR2NUM Convert a String to a Number
+//@@Section IO
+//@@Usage
+//Converts a string to a number.  The general syntax for its use
+//is
+//@[
+//  x = str2num(string)
+//@]
+//Here @|string| is the data string, which contains the data to 
+//be converted into a number.  The output is in double precision,
+//and must be typecasted to the appropriate type based on what
+//you need.
+//@@Signature
+//function str2num Str2NumFunction
+//inputs string
+//outputs x
+//!
+ArrayVector Str2NumFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() != 1)
+    throw Exception("str2num takes a single argument, the string to convert into a number");
+  Array data(arg[0]);
+  if (!data.isString())
+    throw Exception("the first argument to str2num must be a string");
+  return ArrayVector(Array(data.asDouble()));
+}
+
+
+//!
+//@Module SSCANF Formated String Input Function (C-Style)
+//@@Section IO
+//@@Usage
+//Reads values from a string.  The general syntax for its use is
+//@[
+//  [a1,...,an] = sscanf(text,format)
+//@]
+//Here @|format| is the format string, which is a string that
+//controls the format of the input.  Each value that is parsed
+//from the @|text| occupies one output slot.  See @|printf|
+//for a description of the format.
+//@@Signature
+//function sscanf SscanfFunction
+//inputs text format
+//outputs varargout
+//!
+ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
+  if ((arg.size() != 2) || (!arg[0].isString()) || (!arg[1].isString()))
+    throw Exception("sscanf takes two arguments, the text and the format string");
+  QTemporaryFile fp;
+  if (!fp.open())
+    throw Exception("sscanf was unable to open a temp file (and so it won't work)");
+  QTextStream out(&fp);
+  out << arg[0].asString();
+  out.seek(0);
+  fp.seek(0);
+  return ScanFunction(&fp,arg[1].asString());
+}
