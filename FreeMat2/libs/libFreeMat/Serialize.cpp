@@ -19,8 +19,10 @@
 
 #include "Serialize.hpp"
 #include "Exception.hpp"
-#include "Malloc.hpp"
+#include "Algorithms.hpp"
+#include "Struct.hpp"
 #include <stdio.h>
+#include "SparseCCS.hpp"
 
 #ifdef WIN32
 #include <winsock2.h>
@@ -28,7 +30,8 @@
 #include <netinet/in.h>
 #endif
 
-Serialize::Serialize(Stream *sck) {
+
+Serialize::Serialize(QIODevice *sck) {
   endianSwap = false;
   s = sck;
 }
@@ -39,16 +42,16 @@ Serialize::~Serialize() {
 void Serialize::handshakeServer() {
   try {
     char hand = 'A';
-    s->writeBytes(&hand,sizeof(char));
+    s->write((const char*) &hand,sizeof(char));
     hand = 'Y';
-    s->writeBytes(&hand,sizeof(char));
+    s->write((const char*) &hand,sizeof(char));
     hand = 'B';
-    s->writeBytes(&hand,sizeof(char));
+    s->write((const char*) &hand,sizeof(char));
     hand = 'S';
-    s->writeBytes(&hand,sizeof(char));
+    s->write((const char*) &hand,sizeof(char));
     unsigned short t;
     t = 1;
-    s->writeBytes(&t,sizeof(short));
+    s->write((const char *)&t,sizeof(short));
   } catch (Exception& e) {
     throw;
   }
@@ -57,20 +60,20 @@ void Serialize::handshakeServer() {
 void Serialize::handshakeClient() {
   try {
     char hand;
-    s->readBytes(&hand,sizeof(char));
+    s->read((char*) &hand,sizeof(char));
     if (hand != 'A')
       throw Exception("Handshaking error! Unable to establish serialization");
-    s->readBytes(&hand,sizeof(char));
+    s->read((char*) &hand,sizeof(char));
     if (hand != 'Y')
       throw Exception("Handshaking error! Unable to establish serialization");
-    s->readBytes(&hand,sizeof(char));
+    s->read((char*) &hand,sizeof(char));
     if (hand != 'B')
       throw Exception("Handshaking error! Unable to establish serialization");
-    s->readBytes(&hand,sizeof(char));
+    s->read((char*) &hand,sizeof(char));
     if (hand != 'S')
       throw Exception("Handshaking error! Unable to establish serialization");
     unsigned short t = 1;
-    s->readBytes(&t,sizeof(short));
+    s->read((char*) &t,sizeof(short));
     if (t == 1)
       endianSwap = false;
     else if (t == 256)
@@ -83,17 +86,17 @@ void Serialize::handshakeClient() {
 }
 
 void Serialize::sendSignature(char type, int count) {
-  s->writeBytes(&type,1);
+  s->write((const char*) &type,1);
   long netcount;
   netcount = htonl(count);
-  s->writeBytes(&netcount,sizeof(long));
+  s->write((const char*) &netcount,sizeof(long));
 }
 
 void Serialize::checkSignature(char type, int count) {
   char rtype;
   long rcount;
-  s->readBytes(&rtype,1);
-  s->readBytes(&rcount,sizeof(long));
+  s->read((char*) &rtype,1);
+  s->read((char*) &rcount,sizeof(long));
   rcount = ntohl(rcount);
   if (!((type == rtype) && (count == rcount))) {
     char buffer[1000];
@@ -106,40 +109,40 @@ void Serialize::checkSignature(char type, int count) {
 // Send a stream of base objects
 void Serialize::putBytes(const char *ptr, int count) {
   sendSignature('c',count);
-  s->writeBytes(ptr,count*sizeof(char));
+  s->write((const char*) ptr,count*sizeof(char));
 }
 
 void Serialize::putShorts(const short *ptr, int count) {
   sendSignature('s',count);
-  s->writeBytes(ptr,count*sizeof(short));
+  s->write((const char*) ptr,count*sizeof(short));
 }
 
 void Serialize::putI64s(const int64 *ptr, int count) {
   sendSignature('z',count);
-  s->writeBytes(ptr,count*sizeof(int64));
+  s->write((const char*) ptr,count*sizeof(int64));
 }
 
 void Serialize::putInts(const int *ptr, int count) {
   sendSignature('i',count);
-  s->writeBytes(ptr,count*sizeof(int));
+  s->write((const char*) ptr,count*sizeof(int));
 }
 
 void Serialize::putFloats(const float *ptr, int count) {
   sendSignature('f',count);
-  s->writeBytes(ptr,count*sizeof(float));
+  s->write((const char*) ptr,count*sizeof(float));
 }
 
 void Serialize::putDoubles(const double *ptr, int count) {
   sendSignature('d',count);
-  s->writeBytes(ptr,count*sizeof(double));
+  s->write((const char*) ptr,count*sizeof(double));
 }
 
-void Serialize::putString(string p) {
+void Serialize::putString(QString p) {
   unsigned int len;
   sendSignature('x',0);
   len = p.size()+1;
   putInts((int*)&len,1);
-  putBytes(p.c_str(),len);
+  putBytes(qPrintable(p),len);
 }
 
 void Serialize::putBool(bool b) {
@@ -163,7 +166,7 @@ void Serialize::putStringVector(StringVector t) {
   sendSignature('S',1);
   putInt(t.size());
   for (int i=0;i<t.size();i++)
-    putString(t[i].c_str());
+    putString(t[i]);
 }
 
 StringVector Serialize::getStringVector() {
@@ -194,13 +197,13 @@ void Serialize::putDouble(double t) {
 
 void Serialize::getBytes(char *ptr, int count) {
   checkSignature('c',count);
-  s->readBytes(ptr,count*sizeof(char));
+  s->read((char*) ptr,count*sizeof(char));
 }
 
 #define SWAP(a,b) {tmp = a; a = b; b = tmp;}
 void Serialize::getShorts(short *ptr, int count) {
   checkSignature('s',count);
-  s->readBytes(ptr,count*sizeof(short));
+  s->read((char*) ptr,count*sizeof(short));
   if (endianSwap) {
     char *cptr = (char *) ptr;
     char tmp;
@@ -211,7 +214,7 @@ void Serialize::getShorts(short *ptr, int count) {
 
 void Serialize::getI64s(int64 *ptr, int count) {
   checkSignature('z',count);
-  s->readBytes(ptr,count*sizeof(int64));
+  s->read((char*) ptr,count*sizeof(int64));
   if (endianSwap) {
     char *cptr = (char *) ptr;
     char tmp;
@@ -226,7 +229,7 @@ void Serialize::getI64s(int64 *ptr, int count) {
 
 void Serialize::getInts(int *ptr, int count) {
   checkSignature('i',count);
-  s->readBytes(ptr,count*sizeof(int));
+  s->read((char*) ptr,count*sizeof(int));
   if (endianSwap) {
     char *cptr = (char *) ptr;
     char tmp;
@@ -239,7 +242,7 @@ void Serialize::getInts(int *ptr, int count) {
 
 void Serialize::getFloats(float *ptr, int count) {
   checkSignature('f',count);
-  s->readBytes(ptr,count*sizeof(float));
+  s->read((char*) ptr,count*sizeof(float));
   if (endianSwap) {
     char *cptr = (char *) ptr;
     char tmp;
@@ -252,7 +255,7 @@ void Serialize::getFloats(float *ptr, int count) {
 
 void Serialize::getDoubles(double *ptr, int count) {
   checkSignature('d',count);
-  s->readBytes(ptr,count*sizeof(double));
+  s->read((char*)ptr,count*sizeof(double));
   if (endianSwap) {
     char *cptr = (char *) ptr;
     char tmp;
@@ -265,14 +268,14 @@ void Serialize::getDoubles(double *ptr, int count) {
   }
 }
 
-string Serialize::getString() {
+QString Serialize::getString() {
   checkSignature('x',0);
   unsigned int len;
   getInts((int*) &len,1);
-  if (len == 0) return string();
+  if (len == 0) return QString();
   char *cp = (char*) malloc(len*sizeof(char));
   getBytes(cp,len);
-  string ret(cp);
+  QString ret(cp);
   free(cp);
   return ret;
 }
@@ -307,10 +310,11 @@ double Serialize::getDouble() {
   return t;
 }
 
-Class Serialize::getDataClass(bool& sparseflag, StringVector& className) {
+DataClass Serialize::getDataClass(bool& sparseflag, StringVector& className, bool& complexflag) {
   checkSignature('a',1);
   char a = getByte();
   sparseflag = (a & 16) > 0;
+  complexflag = false;
   // For compatibility reasons, the sparse flag is stuck at
   // 16.  Which is binary:
   //   0001 0000
@@ -319,429 +323,381 @@ Class Serialize::getDataClass(bool& sparseflag, StringVector& className) {
   a = a & 239;
   switch (a) {
   case 1:
-    return FM_CELL_ARRAY;
+    return CellArray;
   case 2:
-    return FM_STRUCT_ARRAY;
+    return Struct;
   case 3:
-    return FM_LOGICAL;
+    return Bool;
   case 4:
-    return FM_UINT8;
+    return UInt8;
   case 5:
-    return FM_INT8;
+    return Int8;
   case 6:
-    return FM_UINT16;
+    return UInt16;
   case 7:
-    return FM_INT16;
+    return Int16;
   case 8:
-    return FM_UINT32;
+    return UInt32;
   case 9:
-    return FM_INT32;
+    return Int32;
   case 32:
-    return FM_UINT64;
+    return UInt64;
   case 33:
-    return FM_INT64;
+    return Int64;
   case 10:
-    return FM_FLOAT;
+    return Float;
   case 11:
-    return FM_DOUBLE;
+    return Double;
   case 12:
-    return FM_COMPLEX;
+    complexflag = true;
+    return Float;
   case 13:
-    return FM_DCOMPLEX;
+    complexflag = true;
+    return Double;
   case 14:
-    return FM_STRING;
+    return StringArray;
   case 128: {
     int cnt(getInt());
     for (int i=0;i<cnt;i++)
       className.push_back(getString());
-    return FM_STRUCT_ARRAY;
+    return Struct;
   }    
   default:
     throw Exception("Unrecognized array type received!");
   }
 }
 
-void Serialize::putDataClass(Class cls, bool issparse, 
-			     bool isuserclass, StringVector className) {
+void Serialize::putDataClass(DataClass cls, bool issparse, bool isuserclass, StringVector className, bool complexflag) {
   char sparseval;
   sparseval = issparse ? 16 : 0;
   sendSignature('a',1);
   switch (cls) {
   default:
     throw Exception("Unhandled type in putDataClass.");
-  case FM_CELL_ARRAY:
+  case CellArray:
     putByte(1);
     return;
-  case FM_STRUCT_ARRAY:
+  case Struct:
     if (!isuserclass)
       putByte(2);
     else {
       putByte(128);
       putInt(className.size());
       for (int i=0;i<className.size();i++)
-	putString(className.at(i).c_str());
+	putString(className.at(i));
     }
     return;
-  case FM_LOGICAL:
+  case Bool:
     putByte(3);
     return;
-  case FM_UINT8:
+  case UInt8:
+    if (complexflag) throw Exception("complex uint8 not supported");
+    if (sparseval) throw Exception("sparse uint8 not supported");
     putByte(4);
     return;
-  case FM_INT8:
+  case Int8:
+    if (complexflag) throw Exception("complex int8 not supported");
+    if (sparseval) throw Exception("sparse int8 not supported");
     putByte(5);
     return;
-  case FM_UINT16:
+  case UInt16:
+    if (complexflag) throw Exception("complex uint16 not supported");
+    if (sparseval) throw Exception("sparse uint16 not supported");
     putByte(6);
     return;
-  case FM_INT16:
+  case Int16:
+    if (complexflag) throw Exception("complex int16 not supported");
+    if (sparseval) throw Exception("sparse int16 not supported");
     putByte(7);
     return;
-  case FM_UINT32:
+  case UInt32:
+    if (complexflag) throw Exception("complex uint32 not supported");
+    if (sparseval) throw Exception("sparse uint32 not supported");
     putByte(8);
     return;
-  case FM_INT32:
+  case Int32:
+    if (complexflag) throw Exception("complex int32 not supported");
     putByte(9 | sparseval);
     return;
-  case FM_UINT64:
+  case UInt64:
+    if (complexflag) throw Exception("complex uint64 not supported");
+    if (sparseval) throw Exception("sparse uint64 not supported");
     putByte(32);
     return;
-  case FM_INT64:
+  case Int64:
+    if (complexflag) throw Exception("complex int64 not supported");
     putByte(33 | sparseval);
     return;
-  case FM_FLOAT:
-    putByte(10 | sparseval);
+  case Float:
+    if (complexflag) {
+      putByte(12 | sparseval);
+    } else {
+      putByte(10 | sparseval);
+    }
     return;
-  case FM_DOUBLE:
-    putByte(11 | sparseval);
+  case Double:
+    if (complexflag) {
+      putByte(13 | sparseval);
+    } else {
+      putByte(11 | sparseval);
+    }
     return;
-  case FM_COMPLEX:
-    putByte(12 | sparseval);
-    return;
-  case FM_DCOMPLEX:
-    putByte(13 | sparseval);
-    return;
-  case FM_STRING:
+  case StringArray:
     putByte(14);
     return;
   }
 }
 
-void Serialize::putDimensions(const Dimensions& dim) {
+void Serialize::putDimensions(const NTuple& dim) {
   sendSignature('D',1);
-  putInt(dim.getLength());
-  for (int i=0;i<dim.getLength();i++)
-    putInt(dim.getDimensionLength(i));
+  putInt(NDims);
+  for (int i=0;i<NDims;i++)
+    putInt(int(dim[i]));
 }
 
-Dimensions Serialize::getDimensions() {
+NTuple Serialize::getDimensions() {
   checkSignature('D',1);
+  NTuple dim;
   int len;
   len = getInt();
-  Dimensions dim(len);
   for (int i=0;i<len;i++)
-    dim.setDimensionLength(i,getInt());
+    dim[i] = getInt();
   return dim;
 }
 
+#define MacroPutCase(func,ctype,class,ftype)				\
+  {									\
+    func((const ctype*)dat.asDenseArray().toClass(class).constReal<ftype>().constData(),int(dat.length())); \
+    return;								\
+  }
+
+
+#define MacroPutComplexCase(func,ctype,class,ftype)			\
+  {									\
+    func((const ctype*)dat.asDenseArray().toClass(class).fortran<ftype>().constData(),int(2*dat.length())); \
+    return;								\
+  }
+
+
 void Serialize::putArray(const Array& dat) {
   sendSignature('A',1);
-  Class dclass(dat.dataClass());
-  putDataClass(dclass,dat.sparse(),dat.isUserClass(),dat.className());
+  DataClass dclass(dat.dataClass());
+  putDataClass(dclass,dat.isSparse(),dat.isUserClass(),StringVector(dat.className()),dat.isComplex());
   putDimensions(dat.dimensions());
-  int elCount(dat.getLength());
   if (dat.isEmpty()) return;
   switch(dclass) {
   default: throw Exception("unhandled type in putArray");
-  case FM_CELL_ARRAY: {
-    const Array *dp=((const Array *) dat.getDataPointer());
-    for (int i=0;i<elCount;i++)
-      putArray(dp[i]);
+  case CellArray: {
+    const BasicArray<Array> &rp(dat.constReal<Array>());
+    for (index_t i=1;i!=rp.length();i++)
+      putArray(rp[i]);
     return;
   }
-  case FM_STRUCT_ARRAY: {
-    StringVector fnames(dat.fieldNames());
+  case Struct: {    
+    StringVector fnames(FieldNames(dat));
     int ncount(fnames.size());
     putInt(ncount);
-    int i;
-    for (i=0;i<ncount;i++)
-      putString(fnames.at(i).c_str());
-    const Array *dp=((const Array *) dat.getDataPointer());
-    for (i=0;i<elCount*ncount;i++)
-      putArray(dp[i]);
+    for (int i=0;i<ncount;i++)
+      putString(fnames.at(i));
+    const StructArray &rp(dat.constStructPtr());
+    for (index_t j=1;j!=dat.length();j++)
+      for (int i=0;i<ncount;i++) {
+	const BasicArray<Array>& dp(rp[i]);
+	putArray(dp[j]);
+      }
     return;
   }
-  case FM_LOGICAL: {
-    const logical *dp=((const logical *)dat.getDataPointer());
-    putBytes((const char*) dp,elCount);
-    return;
-  }
-  case FM_STRING:
-  case FM_UINT8: {
-    const uint8 *dp=((const uint8 *)dat.getDataPointer());
-    putBytes((const char*) dp,elCount);
-    return;
-  }
-  case FM_UINT16: {
-    const uint16 *dp=((const uint16 *)dat.getDataPointer());
-    putShorts((const short*) dp,elCount);
-    return;
-  }
-  case FM_UINT32: {
-    const uint32 *dp=((const uint32 *)dat.getDataPointer());
-    putInts((const int*) dp,elCount);
-    return;
-  }
-  case FM_UINT64: {
-    const uint64 *dp = ((const uint64 *)dat.getDataPointer());
-    putI64s((const int64*) dp, elCount);
-    return;
-  }
-  case FM_INT8: {
-    const int8 *dp=((const int8 *)dat.getDataPointer());
-    putBytes((const char*) dp,elCount);
-    return;
-  }
-  case FM_INT16: {
-    const int16 *dp=((const int16 *)dat.getDataPointer());
-    putShorts((const short*) dp,elCount);
-    return;
-  }
-  case FM_INT32: {
-    if (!dat.sparse()) {
-      const int32 *dp=((const int32 *)dat.getDataPointer());
-      putInts((const int*) dp,elCount);
-    } else {
-      const int32 **dp = ((const int32 **) dat.getSparseDataPointer());
-      for (int i=0;i<dat.getDimensionLength(1);i++) {
+  case Bool: MacroPutCase(putBytes,char,Int8,int8);
+  case StringArray: MacroPutCase(putBytes,char,UInt8,uint8);
+  case UInt8: MacroPutCase(putBytes,char,UInt8,uint8);
+  case UInt16: MacroPutCase(putShorts,short,UInt16,uint16);
+  case UInt32: MacroPutCase(putInts,int,UInt32,uint32);
+  case UInt64: MacroPutCase(putI64s,int64,UInt64,uint64);
+  case Int8: MacroPutCase(putBytes,char,Int8,int8);
+  case Int16: MacroPutCase(putShorts,short,Int16,int16);
+  case Int32: 
+    if (dat.isSparse()) {
+      QVector<QVector<int32> > dp(SparseFM3(dat.constRealSparse<int32>()));
+      for (int i=0;i<dat.cols();i++) {
 	putInt(1+dp[i][0]);
-	putInts((const int*) dp[i],1+dp[i][0]);
-      }
-    }
-    return;
-  }
-  case FM_INT64: {
-    const int64 *dp = ((const int64 *)dat.getDataPointer());
-    putI64s((const int64*) dp, elCount);
-    return;
-  }
-  case FM_FLOAT: {      
-    if (!dat.sparse()) {
-      const float *dp=((const float *)dat.getDataPointer());
-      putFloats(dp,elCount);
+	putInts((const int*) dp[i].constData(),int(1+dp[i][0]));
+      } 
+      return;
+    } else
+       MacroPutCase(putInts,int,Int32,int32);
+  case Int64: MacroPutCase(putI64s,int64,Int64,int64);
+  case Float: 
+    if (dat.allReal()) {
+      if (dat.isSparse()) {
+	QVector<QVector<float> > dp(SparseFM3(dat.constRealSparse<float>()));
+	for (int i=0;i<dat.cols();i++) {
+	  putFloat(1+dp[i][0]);
+	  putFloats((const float*) dp[i].constData(),int(1+dp[i][0]));
+	} 
+	return;
+      } else
+	MacroPutCase(putFloats,float,Float,float);
     } else {
-      const float **dp = ((const float **) dat.getSparseDataPointer());
-      for (int i=0;i<dat.getDimensionLength(1);i++) {
-	putFloat(1+dp[i][0]);
-	putFloats((const float*) dp[i],(int)(1+dp[i][0]));
-      }
+      if (dat.isSparse()) {
+	QVector<QVector<float> > dp(SparseFM3(dat.constRealSparse<float>(),dat.constImagSparse<float>()));
+	for (int i=0;i<dat.cols();i++) {
+	  putFloat(1+dp[i][0]);
+	  putFloats((const float*) dp[i].constData(),int(1+dp[i][0]));
+	} 	
+      } else
+	MacroPutComplexCase(putFloats,float,Float,float);
     }
-    return;
-  }
-  case FM_DOUBLE: {
-    if (!dat.sparse()) {
-      const double *dp=((const double *)dat.getDataPointer());
-      putDoubles(dp,elCount);
+  case Double:
+    if (dat.allReal()) {
+      if (dat.isSparse()) {
+	QVector<QVector<double> > dp(SparseFM3(dat.constRealSparse<double>()));
+	for (int i=0;i<dat.cols();i++) {
+	  putDouble(1+dp[i][0]);
+	  putDoubles((const double*) dp[i].constData(),int(1+dp[i][0]));
+	} 
+	return;
+      } else
+	MacroPutCase(putDoubles,double,Double,double);
     } else {
-      const double **dp = ((const double **) dat.getSparseDataPointer());
-      for (int i=0;i<dat.getDimensionLength(1);i++) {
-	putDouble(1+dp[i][0]);
-	putDoubles((const double*) dp[i],(int)(1+dp[i][0]));
-      }
+      if (dat.isSparse()) {
+	QVector<QVector<double> > dp(SparseFM3(dat.constRealSparse<double>(),dat.constImagSparse<double>()));
+	for (int i=0;i<dat.cols();i++) {
+	  putDouble(1+dp[i][0]);
+	  putDoubles((const double*) dp[i].constData(),int(1+dp[i][0]));
+	} 	
+      } else
+	MacroPutComplexCase(putDoubles,double,Double,double);
     }
-    return;
-  }
-  case FM_COMPLEX: {
-    if (!dat.sparse()) {
-      const float *dp=((const float *)dat.getDataPointer());
-      putFloats(dp,elCount*2);
-    } else {
-      const float **dp = ((const float **) dat.getSparseDataPointer());
-      for (int i=0;i<dat.getDimensionLength(1);i++) {
-	putFloat(1+dp[i][0]);
-	putFloats((const float*) dp[i],(int)(1+dp[i][0]));
-      }
-    }
-    return;
-  }
-  case FM_DCOMPLEX: {
-    if (!dat.sparse()) {
-      const double *dp=((const double *)dat.getDataPointer());
-      putDoubles(dp,elCount*2);
-    } else {
-      const double **dp = ((const double **) dat.getSparseDataPointer());
-      for (int i=0;i<dat.getDimensionLength(1);i++) {
-	putDouble(1+dp[i][0]);
-	putDoubles((const double*) dp[i],(int)(1+dp[i][0]));
-      }
-    }
-    return;
-  }
   }
 }
+
+#define MacroGetCase(func,ctype,class,ftype)	\
+  {						\
+    BasicArray<ftype> rp(dims);			\
+    func((ctype*) rp.data(),int(dat.length()));	\
+    dat = Array(rp).toClass(class);		\
+    return;					\
+  }
+
+#define MacroGetComplexCase(func,ctype,class,ftype)		\
+  {								\
+    BasicArray<ftype> rp(dims.replace(0,dims[0]*2));		\
+    func((ctype*) rp.data(),int(dat.length()));			\
+    dat = Array(SplitReal(rp),SplitImag(rp)).toClass(class);	\
+    return;							\
+  }
 
 void Serialize::getArray(Array& dat) {
   checkSignature('A',1);
   bool sparseflag;
   StringVector className;
-  Class dclass(getDataClass(sparseflag,className));
-  Dimensions dims(getDimensions());
-  int elCount(dims.getElementCount());
+  bool complexflag;
+  DataClass dclass(getDataClass(sparseflag,className,complexflag));
+  NTuple dims(getDimensions());
+  int elCount(int(dims.count()));
   if (elCount == 0) {
-    dat = Array(dclass,dims,NULL);
+    dat = EmptyConstructor();
     return;
   }
   switch(dclass) {
   default:
     throw Exception("Unhandled type in getArray");
-  case FM_CELL_ARRAY: {
-    Array *dp = new Array[elCount];
-    for (int i=0;i<elCount;i++)
-      getArray(dp[i]);
-    dat = Array(dclass,dims,dp);
+  case CellArray: {
+    BasicArray<Array> rp(dims);
+    for (index_t i=1;i!=rp.length();i++)
+      getArray(rp[i]);
+    dat = Array(rp);
     return;
   }
-  case FM_STRUCT_ARRAY: {
+  case Struct: {
     StringVector fnames;
     int ncount(getInt());
-    int i;
-    for (i=0;i<ncount;i++) 
-      fnames.push_back(getString());
-    Array *dp = new Array[elCount*ncount];
-    for (i=0;i<elCount*ncount;i++)
-      getArray(dp[i]);
-    dat = Array(dclass,dims,dp,false,fnames,className);
+    StructArray rp;
+    for (int i=0;i<ncount;i++) 
+      rp.insert(getString(),BasicArray<Array>(dims));
+    rp.setClassPath(className);
+    for (index_t j=1;j!=dims.count();j++)
+      for (int i=0;i<ncount;i++)
+	getArray(rp[i][j]);
+    dat = Array(rp);
     return;
   }
-  case FM_LOGICAL: {
-    logical *dp = (logical*) Malloc(sizeof(logical)*elCount);
-    getBytes((char*)dp, elCount);
-    dat = Array(dclass,dims,dp);
-    return;
-  }
-  case FM_STRING:
-  case FM_UINT8: {
-    uint8 *dp = (uint8*) Malloc(sizeof(uint8)*elCount);
-    getBytes((char*)dp,elCount);
-    dat = Array(dclass,dims,dp);
-    return;
-  }
-  case FM_INT8: {
-    int8 *dp =  (int8*) Malloc(sizeof(int8)*elCount);
-    getBytes((char*) dp,elCount);
-    dat = Array(dclass,dims,dp);
-    return;
-  }
-  case FM_UINT16: {
-    uint16 *dp = (uint16*) Malloc(sizeof(uint16)*elCount);
-    getShorts((short*) dp,elCount);
-    dat = Array(dclass,dims,dp);
-    return;
-  }
-  case FM_INT16: {
-    int16 *dp = (int16*) Malloc(sizeof(int16)*elCount);
-    getShorts((short*) dp,elCount);
-    dat = Array(dclass,dims,dp);
-    return;
-  }
-  case FM_INT64: {
-    int64 *dp = (int64*) Malloc(sizeof(int64)*elCount);
-    getI64s((int64*) dp,elCount);
-    dat = Array(dclass,dims,dp);
-    return;
-  }
-  case FM_UINT64: {
-    uint64 *dp = (uint64*) Malloc(sizeof(uint64)*elCount);
-    getI64s((int64*) dp,elCount);
-    dat = Array(dclass,dims,dp);
-    return;
-  }
-  case FM_UINT32: {
-    uint32 *dp = (uint32*) Malloc(sizeof(uint32)*elCount);
-    getInts((int*) dp,elCount);
-    dat = Array(dclass,dims,dp);
-    return;
-  }
-  case FM_INT32: {
-    if (!sparseflag) {
-      int32 *dp = (int32*) Malloc(sizeof(int32)*elCount);
-      getInts((int*) dp,elCount);
-      dat = Array(dclass,dims,dp);
-    } else {
-      int32 **dp = new int32*[dims.getColumns()];
-      for (int i=0;i<dims.getColumns();i++) {
+  case Bool: MacroGetCase(getBytes,char,Bool,int8);
+  case StringArray: MacroGetCase(getBytes,char,StringArray,uint8);
+  case UInt8: MacroGetCase(getBytes,char,UInt8,uint8);
+  case UInt16: MacroGetCase(getShorts,short,UInt16,uint16);
+  case UInt32: MacroGetCase(getInts,int,UInt32,uint32);
+  case UInt64: MacroGetCase(getI64s,int64,UInt64,uint64);
+  case Int64: MacroGetCase(getI64s,int64,Int64,int64);
+  case Int32:
+    if (sparseflag) {
+      QVector<QVector<int32> > dp;
+      for (index_t i=1;i!=dims.cols();i++) {
 	int len = getInt();
-	dp[i] = new int32[len];
-	getInts(dp[i],len);
+	QVector<int32> col(len);
+	getInts(col.data(),len);
+	dp << col;
       }
-      dat = Array(dclass,dims,dp,true);
-    }
-    return;
-  }
-  case FM_FLOAT: {
-    if (!sparseflag) {
-      float *dp =  (float*) Malloc(sizeof(float)*elCount);
-      getFloats(dp,elCount);
-      dat = Array(dclass,dims,dp);
+      dat = FM3Sparse(dp,dims);
+      return;
+    } else
+      MacroGetCase(getInts,int,Int32,int32);
+  case Float:
+    if (!complexflag) {
+      if (sparseflag) {
+	QVector<QVector<float> > dp;
+	for (index_t i=1;i!=dims.cols();i++) {
+	  int len = int(getFloat());
+	  QVector<float> col(len);
+	  getFloats(col.data(),len);
+	  dp << col;
+	}
+	dat = FM3Sparse(dp,dims);
+	return;
+      } else
+	MacroGetCase(getFloats,float,Float,float);
     } else {
-      float **dp = new float*[dims.getColumns()];
-      for (int i=0;i<dims.getColumns();i++) {
-	int len = (int) getFloat();
-	dp[i] = new float[len];
-	getFloats(dp[i],len);
-      }
-      dat = Array(dclass,dims,dp,true);
+      if (sparseflag) {
+	QVector<QVector<float> > dp;
+	for (index_t i=1;i!=dims.cols();i++) {
+	  int len = int(getFloat());
+	  QVector<float> col(len);
+	  getFloats(col.data(),len);
+	  dp << col;
+	}
+	dat = FM3SparseComplex(dp,dims);
+	return;
+      } else
+	MacroGetComplexCase(getFloats,float,Float,float);
     }
-    return;
-  }
-  case FM_DOUBLE: {
-    if (!sparseflag) {
-      double *dp = (double*) Malloc(sizeof(double)*elCount);
-      getDoubles(dp,elCount);
-      dat = Array(dclass,dims,dp);
+  case Double:
+    if (!complexflag) {
+      if (sparseflag) {
+	QVector<QVector<double> > dp;
+	for (index_t i=1;i!=dims.cols();i++) {
+	  int len = int(getDouble());
+	  QVector<double> col(len);
+	  getDoubles(col.data(),len);
+	  dp << col;
+	}
+	dat = FM3Sparse(dp,dims);
+	return;
+      } else
+	MacroGetCase(getDoubles,double,Double,double);
     } else {
-      double **dp = new double*[dims.getColumns()];
-      for (int i=0;i<dims.getColumns();i++) {
-	int len = (int) getDouble();
-	dp[i] = new double[len];
-	getDoubles(dp[i],len);
-      }
-      dat = Array(dclass,dims,dp,true);
+      if (sparseflag) {
+	QVector<QVector<double> > dp;
+	for (index_t i=1;i!=dims.cols();i++) {
+	  int len = int(getDouble());
+	  QVector<double> col(len);
+	  getDoubles(col.data(),len);
+	  dp << col;
+	}
+	dat = FM3SparseComplex(dp,dims);
+	return;
+      } else
+	MacroGetComplexCase(getDoubles,double,Double,double);
     }
-    return;
-  }
-  case FM_COMPLEX: {
-    if (!sparseflag) {
-      float *dp = (float*) Malloc(sizeof(float)*elCount*2);
-      getFloats(dp,elCount*2);
-      dat = Array(dclass,dims,dp);
-    } else {
-      float **dp = new float*[dims.getColumns()];
-      for (int i=0;i<dims.getColumns();i++) {
-	int len = (int) getFloat();
-	dp[i] = new float[len];
-	getFloats(dp[i],len);
-      }
-      dat = Array(dclass,dims,dp,true);
-    }
-    return;
-  }
-  case FM_DCOMPLEX: {
-    if (!sparseflag) {
-      double *dp = (double*) Malloc(sizeof(double)*elCount*2);
-      getDoubles(dp,elCount*2);
-      dat = Array(dclass,dims,dp);
-    } else {
-      double **dp = new double*[dims.getColumns()];
-      for (int i=0;i<dims.getColumns();i++) {
-	int len = (int) getDouble();
-	dp[i] = new double[len];
-	getDoubles(dp[i],len);
-      }
-      dat = Array(dclass,dims,dp,true);
-    }
-    return;
-  }
   }
 }
 

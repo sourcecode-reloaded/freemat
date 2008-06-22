@@ -23,7 +23,6 @@
 #include "Exception.hpp"
 #include "Math.hpp"
 #include "Array.hpp"
-#include "Malloc.hpp"
 #include "Parser.hpp"
 #include "Scanner.hpp"
 #include "Token.hpp"
@@ -40,6 +39,7 @@
 #include <stdarg.h>
 #include "JIT.hpp"
 #include "JITFunc.hpp"
+#include "Algorithms.hpp"
 
 
 #ifdef WIN32

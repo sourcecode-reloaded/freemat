@@ -2,8 +2,10 @@
 #include "GetSet.hpp"
 #include <QStringList>
 #include "Struct.hpp"
+#include "Algorithms.hpp"
 
-void Warn(const char *msg) {
+static void Warn(const char *msg) {
+#warning FIXME
   std::cout << "Warning:" << msg;
 }
 
@@ -119,6 +121,14 @@ Array::Array(DataClass t, const NTuple &dims) {
   m_real.p = new SharedObject(m_type,construct_sized(m_type,dims));
 }
 
+Array::Array(const StructArray& real) {
+  m_type.Class = Struct;
+  m_type.Complex = 0;
+  m_type.Sparse = 0;
+  m_type.Scalar = 0;
+  m_real.p = new SharedObject(m_type,new StructArray(real));
+}
+
 Array::Array(const QString &text) {
   m_type.Class = StringArray;
   m_type.Complex = 0;
@@ -174,6 +184,12 @@ static inline void Tset_scalar(Array *ptr, S ndx, const Array& data) {
 }
 
 template <typename S>
+static inline const void Tset_cell_scalar(Array*ptr, S ndx, const Array &rhs) {
+  BasicArray<Array> &rp(ptr->real<Array>());
+  Set(rp,ndx,rhs);
+}
+
+template <typename S>
 static inline const void Tset_struct_scalar(Array*ptr, S ndx, const Array &rhs) {
   if (rhs.dataClass() != Struct)
     throw Exception("Assignment A(I)=B where A is a structure array implies that B is also a structure array.");
@@ -197,7 +213,8 @@ static inline const void Tset_struct_scalar(Array*ptr, S ndx, const Array &rhs) 
 void Array::set(index_t index, const Array& data) {
   ensureNotScalarEncoded();
   switch (m_type.Class) {
-    MacroExpandCasesAll(MacroSetIndexT);
+    MacroExpandCasesSimple(MacroSetIndexT);
+  case CellArray: Tset_cell_scalar<index_t>(this,index,data); return;
   case Struct: Tset_struct_scalar<index_t>(this,index,data); return;
   default:
     throw Exception("Unhandled case for A(n) = B");
@@ -212,7 +229,8 @@ void Array::set(index_t index, const Array& data) {
 void Array::set(const NTuple& index, const Array& data) {
   ensureNotScalarEncoded();
   switch (m_type.Class) {
-    MacroExpandCasesAll(MacroSetNTuple);
+    MacroExpandCasesSimple(MacroSetNTuple);
+  case CellArray: Tset_cell_scalar<const NTuple&>(this,index,data); return;
   case Struct: Tset_struct_scalar<const NTuple&>(this,index,data); return;
   default:
     throw Exception("Unhandled case for A(n1,..,nm) = B");
@@ -430,7 +448,7 @@ const Array Array::get(const IndexArray& index) const {
   switch (m_type.Class) {
   default: 
     throw Exception("Unsupported type for get(index_t)");
-  MacroExpandCasesAll(MacroGetIndexArray);
+    MacroExpandCasesAll(MacroGetIndexArray);
   case Struct: return Tget_struct<const IndexArray&>(this,index);
   }
 }
@@ -555,6 +573,13 @@ static inline Array Tget_struct_scalar(const Array*ptr, S ndx) {
   return ret;
 }
 
+template <typename S>
+static inline Array Tget_cell_scalar(const Array* ptr, S ndx) {
+  BasicArray<Array> ret(NTuple(1,1));
+  ret.set(1,Get(ptr->constReal<Array>(),ndx));
+  return ret;
+}
+
 #define MacroGetNTuple(ctype,cls) \
   case cls: return Tget_scalar<const NTuple&,ctype>(this,index);
 
@@ -564,7 +589,8 @@ const Array Array::get(const NTuple& index) const {
   switch (m_type.Class) {
   default:
     throw Exception("Unsupported type for get(const NTuple&)");
-    MacroExpandCasesAll(MacroGetNTuple);
+    MacroExpandCasesSimple(MacroGetNTuple);
+  case CellArray: return Tget_cell_scalar<const NTuple&>(this,index);
   case Struct: return Tget_struct_scalar<const NTuple&>(this,index);
   }
 }
@@ -580,7 +606,8 @@ const Array Array::get(index_t index) const {
   switch (m_type.Class) {
   default:
     throw Exception("Unhandled case for get(index)");
-    MacroExpandCasesAll(MacroGetIndexT);
+    MacroExpandCasesSimple(MacroGetIndexT);
+  case CellArray: return Tget_cell_scalar<index_t>(this,index);
   case Struct: return Tget_struct_scalar<index_t>(this,index);
   }
 }
@@ -778,85 +805,6 @@ bool Array::operator==(const Array &b) const {
 
 #undef MacroScalarEquals
 
-bool IsColonOp(const Array &x) {
-  return (x.dataClass() == StringArray) && (x.asString() == ":");
-}
-
-template <typename T>
-static inline bool Tis_negative(const Array &x) {
-  if (x.isSparse())
-    return IsNonNegative(x.constRealSparse<T>());
-  else if (x.isScalar())
-    return IsNonNegative(x.constRealScalar<T>());
-  else
-    return IsNonNegative(x.constReal<T>());
-}
-
-#define MacroIsNonNegative(ctype, cls) \
-  case cls: return Tis_negative<ctype>(x);
-
-bool IsNonNegative(const Array &x) {
-  if (!x.allReal()) return false;
-  switch (x.dataClass()) {
-  default:
-    return false;
-  case Bool:
-  case UInt8:
-  case UInt16:
-  case StringArray:
-  case UInt32:
-  case UInt64:
-    return true;
-    MacroExpandCasesSigned(MacroIsNonNegative);
-  }
-}
-#undef MacroIsNonNegative
-
-
-bool IsUnsigned(const Array &x) {
-  switch (x.dataClass()) {
-  default:
-    return false;
-  case Bool:
-  case UInt8:
-  case StringArray:
-  case UInt16:
-  case UInt32:
-  case UInt64:
-    return true;
-  }
-}
-
-template <typename T>
-static inline bool Tis_integer(const Array &x) {
-  if (x.isSparse()) {
-    return IsInteger(x.constRealSparse<T>());
-  } else if (x.isScalar()) {
-    return IsInteger(x.constRealScalar<T>());
-  } else {
-    return IsInteger(x.constReal<T>());
-  }
-}
-
-bool IsInteger(const Array &x) {
-  if (!x.allReal()) return false;
-  switch (x.dataClass()) {
-  default:
-    return false;
-  case Int8:
-  case UInt8:
-  case Int16:
-  case UInt16:
-  case Int32:
-  case UInt32:
-  case Int64:
-  case UInt64:
-    return true;
-  case Float: return Tis_integer<float>(x);
-  case Double: return Tis_integer<double>(x);
-  }
-}
-
 int32 Array::asInteger() const {
   if (m_type.Class == StringArray) return asString().toInt();
   return (this->toClass(Int32).constRealScalar<int32>());
@@ -875,6 +823,7 @@ QString Array::asString() const {
     ret += QChar(p[i+1]);
   return ret;
 }
+
 
 template <typename T>
 static inline Array Tscalar_to_dense(const Array *ptr) {
@@ -920,246 +869,4 @@ Array Array::asDenseArray() const {
 
 #undef MacroSparseToDense
 #undef MacroScalarToDense
-
-const IndexArray IndexArrayFromArray(const Array &index) {
-  if ((index.dataClass() == Bool) && (index.type().Scalar == 1))
-    return Find(index.asDenseArray().constReal<bool>());
-  if (index.type().Sparse == 1)
-    throw Exception("Sparse indexing not supported currently");
-  if (!index.allReal())
-    Warn("Complex part of index ignored");
-  if (index.dataClass() == Double)
-    return index.constReal<index_t>();
-  if (index.dataClass() == Bool)
-    return Find(index.constReal<logical>());
-  Array index_converted(index.toClass(Double));
-  if (!index_converted.allReal())
-    Warn("Complex part of index ignored");
-  return index_converted.constReal<index_t>();
-  if (IsColonOp(index))
-    return IndexArray(-1);
-  throw Exception("Unsupported index type");
-}
-
-const ArrayVector ArrayVectorFromCellArray(const Array &arg) {
-  if (arg.dataClass() != CellArray) 
-    throw Exception("Unsupported type for call to toArrayVector");
-  ArrayVector ret;
-  const BasicArray<Array> &rp(arg.constReal<Array>());
-  for (index_t i=1;i<=arg.length();i++)
-    ret.push_back(rp.get(i));
-  return ret;
-}
-
-const Array CellArrayFromArray(const Array & arg) {
-  Array ret(CellArray,NTuple(1,1));
-  ret.real<Array>().set(1,arg);
-  return ret;
-}
-
-const Array CellArrayFromArrayVector(ArrayVector &arg, index_t cnt) {
-  Array ret(CellArray,NTuple(1,arg.size()));
-  BasicArray<Array> &rp(ret.real<Array>());
-  for (index_t i=1;i<=cnt;i++) {
-    rp.set(i,arg.front());
-    arg.pop_front();
-  }
-  return ret;
-}
-
-void SetCellContents(Array &cell, const Array& index, 
-		     ArrayVector& data) {
-  if (cell.dataClass() != CellArray)
-    throw Exception("A{B} = C only supported for cell arrays.");
-  if (IsColonOp(index)) {
-    if (cell.length() > data.size())
-      throw Exception("Not enough right hand side values to satisfy left hand side expression.");
-    cell.set(index,CellArrayFromArrayVector(data,data.size()));
-    data.clear();
-    return;
-  }
-  IndexArray ndx(IndexArrayFromArray(index));
-  if (ndx.length() > data.size())
-    throw Exception("Not enought right hand side values to satisfy left hand side expression.");
-  cell.set(ndx,CellArrayFromArrayVector(data,ndx.length()));
-}
-
-void SetCellContents(Array &cell, const ArrayVector& index, 
-		     ArrayVector& data) {
-  if (cell.dataClass() != CellArray)
-    throw Exception("A{B1,B2,...BN} = B only supported for cell arrays.");
-  IndexArrayVector addr;
-  NTuple dims;
-  for (int i=0;i<index.size();i++) {
-    addr.push_back(IndexArrayFromArray(index[i]));
-    if (IsColonOp(addr[i]))
-      dims[i] = cell.dimensions()[i];
-    else
-      dims[i] = addr[i].length();
-  }
-  if (data.size() < dims.count())
-    throw Exception("Not enough right hand side values to satisfy left hand side expression");
-  cell.set(addr,CellArrayFromArrayVector(data,dims.count()));
-}
-
-QStringList FieldNames(const Array& arg) {
-  if (arg.dataClass() != Struct)
-    throw Exception("fieldnames only valid for structure arrays");
-  const StructArray &rp(arg.constStructPtr());
-  return rp.fieldNames();
-}
-
-static inline void do_single_sided_algo_double(double a, double b,double *pvec, 
-					       int adder, int count) {
-  double d = a;
-  for (int i=0;i<count;i++) {
-    pvec[i*adder] = (double) d;
-    d += b;
-  }
-}
-  
-static inline void do_double_sided_algo_double(double a, double b, double c, double *pvec, 
-					       int adder, int count) {
-  if (count%2) {
-    do_single_sided_algo_double(a,b,pvec,adder,count/2);
-    do_single_sided_algo_double(c,-b,pvec+(count-1)*adder,-adder,count/2+1);
-  } else {
-    do_single_sided_algo_double(a,b,pvec,adder,count/2);
-    do_single_sided_algo_double(c,-b,pvec+(count-1)*adder,-adder,count/2);
-  }
-}
-
-Array RangeConstructor(double minval, double stepsize, double maxval, bool vert) {
-  NTuple dim;
-  if (stepsize == 0) 
-    throw Exception("step size must be nonzero in colon expression");
-  //ideally, n = (c-a)/b
-  // But this really defines an interval... we let
-  // n_min = min(c-a)/max(b)
-  // n_max = max(c-a)/min(b)
-  // where min(x) = {y \in fp | |y| is max, |y| < |x|, sign(y) = sign(x)}
-  //       max(x) = {y \in fp | |y| is min, |y| > |x|, sign(y) = sign(x)}
-  double ntest_min = nextafter(maxval-minval,0)/nextafter(stepsize,stepsize+stepsize);
-  double ntest_max = nextafter(maxval-minval,maxval-minval+stepsize)/nextafter(stepsize,0);
-  index_t npts = (index_t) floor(ntest_max);
-  bool use_double_sided = (ntest_min <= npts) && (npts <= ntest_max);
-  npts++;
-  if (npts < 0) npts = 0;
-  if (vert) {
-    dim = NTuple(npts,1);
-  } else {
-    dim = NTuple(1,npts);
-  }
-  BasicArray<double> rp(dim);
-  if (use_double_sided)
-    do_double_sided_algo_double(minval,stepsize,maxval,rp.data(),int(1),int(npts));
-  else
-    do_single_sided_algo_double(minval,stepsize,rp.data(),int(1),int(npts));
-  return Array(rp);
-}
-
-template <typename T>
-static inline Array T_Transpose(const Array &x) {
-  if (x.isScalar())
-    return x;
-  if (x.isSparse()) {
-    if (x.allReal())
-      return Array(Transpose(x.constRealSparse<T>()));
-    else
-      return Array(Transpose(x.constRealSparse<T>()),
-		   Transpose(x.constImagSparse<T>()));
-  } else {
-    if (x.allReal())
-      return Array(Transpose(x.constReal<T>()));
-    else
-      return Array(Transpose(x.constReal<T>()),
-		   Transpose(x.constImag<T>()));
-  }
-}
-
-#define MacroTranspose(ctype,cls) \
-  case cls: return T_Transpose<ctype>(A);
-
-Array Transpose(const Array &A) {
-  switch (A.dataClass()) {
-  default:
-    throw Exception("Type not supported by transpose operator");
-    MacroExpandCasesAll(MacroTranspose);
-  }
-}
-
-#undef MacroTranspose
-
-template <typename T>
-static inline Array T_Hermitian(const Array &x) {
-  if (x.isScalar())
-    if (x.allReal())
-      return x;
-    else 
-      return Array(x.constRealScalar<T>(),(T)-x.constImagScalar<T>());
-  if (x.isSparse()) {
-    if (x.allReal())
-      return Array(Transpose(x.constRealSparse<T>()));
-    else
-      return Array(Transpose(x.constRealSparse<T>()),
-		   Negate(Transpose(x.constImagSparse<T>())));
-  } else {
-    if (x.allReal())
-      return Array(Transpose(x.constReal<T>()));
-    else
-      return Array(Transpose(x.constReal<T>()),
-		   Negate(Transpose(x.constImag<T>())));
-  }
-}
-
-#define MacroHermitian(ctype,cls) \
-  case cls: return T_Hermitian<ctype>(A);
-
-Array Hermitian(const Array &A) {
-  switch (A.dataClass()) {
-  default:
-    throw Exception("Type not supported by transpose operator");
-    MacroExpandCasesSigned(MacroHermitian);
-  }
-}
-
-#undef MacroHermitian
-
-template <typename T>
-static inline Array T_Negate(const Array &x) {
-  if (x.isScalar())
-    if (x.allReal())
-      return Array((T)(-x.constRealScalar<T>()));
-    else
-      return Array((T)(-x.constRealScalar<T>()),(T)(-x.constImagScalar<T>()));
-  if (x.isSparse()) 
-    if (x.allReal())
-      return Array(Negate(x.constRealSparse<T>()));
-    else
-      return Array(Negate(x.constRealSparse<T>()),Negate(x.constImagSparse<T>()));
-  if (x.allReal())
-    return Array(Negate(x.constReal<T>()));
-  else
-    return Array(Negate(x.constReal<T>()),Negate(x.constImag<T>()));
-}
-
-#define MacroNegate(ctype,cls) \
-  case cls: return T_Negate<ctype>(A);
-
-Array Negate(const Array &A) {
-  switch (A.dataClass()) {
-  default:
-    throw Exception("Type not supported by negate operator");
-    MacroExpandCasesSigned(MacroNegate);
-  }
-}
-
-#undef MacroNegate
-
-BasicArray<Array> ArrayVectorToBasicArray(const ArrayVector& a) {
-  BasicArray<Array> retvec(NTuple(a.size(),1));
-  for (int i=0;i<a.size();i++) 
-    retvec.set(index_t(i+1),a.at(i));
-  return retvec;
-}
 

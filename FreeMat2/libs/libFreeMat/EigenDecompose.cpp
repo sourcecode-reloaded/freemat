@@ -24,6 +24,7 @@
 #include "MemPtr.hpp"
 #include "Complex.hpp"
 #include "Math.hpp"
+#include "Algorithms.hpp"
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
@@ -146,7 +147,7 @@ static void Tggev(char *JOBVL, char *JOBVR, int *N, float *A, int *LDA,
 		WORK,LWORK,RWORK,INFO);
 }
 
-template <typename T>
+template <>
 static void Tggev(char *JOBVL, char *JOBVR, int *N, double *A, int *LDA, 
 		  double *B, int *LDB, double *ALPHA, double *BETA, 
 		  double *VL, int *LDVL, double *VR, int *LDVR, 
@@ -542,7 +543,7 @@ static inline void EigenDecomposeFullSymmetric(Array &V, Array &D, Array A) {
   }
 }
 
-void EigenDecomposeFullSymmetric(Array A, Array& V, Array& D) {
+void EigenDecomposeFullSymmetric(const Array &A, Array& V, Array& D) {
   if (!A.is2D())
     throw Exception("Cannot apply eigendecomposition to N-Dimensional arrays.");
   if (A.rows() != A.columns())
@@ -619,7 +620,7 @@ static void EigenDecomposeFullGeneral(Array A, Array &V, Array &D,
   }
 }
 
-void EigenDecomposeFullGeneral(Array A, Array& V, Array& D, bool balanceFlag) {
+void EigenDecomposeFullGeneral(const Array &A, Array& V, Array& D, bool balanceFlag) {
   if (!A.is2D())
     throw Exception("Cannot apply eigendecomposition to N-Dimensional arrays.");
   if (A.rows() != A.columns())
@@ -705,8 +706,7 @@ static bool GeneralizedEigenDecomposeCompactSymmetric(Array A, Array B,
   return true;
 }
 
-bool GeneralizedEigenDecomposeCompactSymmetric(Array A, Array B, 
-						      Array& D) {
+bool GeneralizedEigenDecomposeCompactSymmetric(Array A, Array B, Array& D) {
   switch (A.dataClass()) {
   default: throw Exception("Unhandled type for eigendecomposition");
   case Float:
@@ -722,8 +722,7 @@ bool GeneralizedEigenDecomposeCompactSymmetric(Array A, Array B,
  */
 
 template <typename T>
-static bool GeneralizedEigenDecomposeFullSymmetric(Array A, Array B, 
-						   Array &V, Array &D) {
+static bool GeneralizedEigenDecomposeFullSymmetric(Array A, Array B, Array &V, Array &D) {
   index_t N = A.rows();
   if (A.allReal()) {
       // A temporary vector to store the eigenvalues
@@ -766,8 +765,7 @@ bool GeneralizedEigenDecomposeFullSymmetric(Array A, Array B, Array& V, Array& D
  */
 
 template <typename T>
-static void GeneralizedEigenDecomposeFullGeneral(Array A, Array B, 
-						 Array &V, Array &D) {
+static void GeneralizedEigenDecomposeFullGeneral(Array A, Array B, Array &V, Array &D) {
   index_t N = A.rows();
   if (A.allReal()) {
     // A temporary vector to store the eigenvalues

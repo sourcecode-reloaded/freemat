@@ -20,24 +20,12 @@
 #ifndef __MatrixMultiply_hpp__
 #define __MatrixMultiply_hpp__
 
+#include "Array.hpp"
+
 /**
  * Matrix-matrix multiplies.
  */
 
-/**
- * Compute $$C = A B$$, where $$A$$ is $$m \times n$$ and $$B$$ is
- * $$n \times k$$, and all three are single precision.  Uses the 
- * BLAS function sgemm.
- */
-template <typename T>
-void realMatrixMatrixMultiply(int m, int n, int k, T* c, 
-			      const T* a, const T *b);
-/**
- * Compute $$C = A B$$, where $$A$$ is $$m \times n$$ and $$B$$ is
- * $$n \times k$$, and all three are complex precision.  Uses the 
- * BLAS function cgemm.
- */
-template <typename T>
-void complexMatrixMatrixMultiply(int m, int n, int k, T* c, 
-				 const T* a, const T *b);
+Array MatrixMultiply(const Array &A, const Array &B);
+
 #endif

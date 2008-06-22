@@ -1,4 +1,5 @@
 #include "Array.hpp"
+#include "Algorithms.hpp"
 
 //!
 //@Module REAL Real Function

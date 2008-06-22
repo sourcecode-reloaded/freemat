@@ -102,6 +102,11 @@ public:
       pos[0]++;
     ripplePinned(pos,pin_dim);
   }
+  inline NTuple replace(int dim, index_t val) const {
+    NTuple copy(*this);
+    copy[dim] = val;
+    return copy;
+  }
   inline NTuple(index_t rows, index_t cols) {
     m_data[0] = rows;
     m_data[1] = cols;
@@ -155,6 +160,12 @@ public:
     for (int i=0;i<NDims;i++)
       if (m_data[i] != alt.m_data[i]) return false;
     return true;
+  }
+  NTuple permute(const NTuple& perm) const {
+    NTuple ret;
+    for (int i=0;i<NDims;i++)
+      ret.m_data[i] = m_data[int(perm[i]-1)];
+    return ret;
   }
   bool operator==(index_t alt) const {
     if (m_data[0] != alt) return false;

@@ -20,6 +20,7 @@
 #define __HandleProperty_hpp__
 
 #include "Array.hpp"
+#include "Algorithms.hpp"
 #include <string>
 
 class HandleProperty {

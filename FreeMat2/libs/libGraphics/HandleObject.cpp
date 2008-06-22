@@ -220,8 +220,7 @@ void HandleObject::SetConstrainedStringDefault(QString name, QString value) {
 
 void HandleObject::SetConstrainedStringSetDefault(QString name, QString values) {
   HPConstrainedStringSet *hp = (HPConstrainedStringSet*) LookupProperty(name);
-  StringVector data;
-  Tokenize(values,data,"|");
+  StringVector data(values.split("|"));
   ((HPStringSet*)hp)->Data(data);
 }
 

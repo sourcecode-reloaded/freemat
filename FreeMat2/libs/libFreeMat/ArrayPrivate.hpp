@@ -139,7 +139,7 @@ MacroGetDataClass(Array,CellArray);
 #define MacroByteSize(ctype,cls)		\
   case cls: return sizeof(ctype);
 
-size_t ByteSizeOfDataClass(DataClass x) {
+inline size_t ByteSizeOfDataClass(DataClass x) {
   switch(x) {
   default:
     throw Exception("Unhandled dataclass for ByteSizeOfDataClass");

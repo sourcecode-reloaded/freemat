@@ -1,4 +1,5 @@
 #include "LUDecompose.hpp"
+#include "Algorithms.hpp"
 
 //!
 //@Module LU LU Decomposition for Matrices

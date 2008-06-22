@@ -26,6 +26,7 @@
 #include "Utils.hpp"
 #include "MatIO.hpp"
 #include <QtCore>
+#include "Algorithms.hpp"
 
 //!
 //@Module FORMAT Control the Format of Matrix Display

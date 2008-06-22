@@ -19,76 +19,23 @@
 
 #include "Utils.hpp"
 #include "Exception.hpp"
+#include "IEEEFP.hpp"
 #include <math.h>
 
 
-void c_log(float real, float imag, float *re, float *im) {
-  *re = log(complex_abs(real,imag));
-  *im = atan2(imag,real);
-}
-
-void c_exp(float real, float imag, float *re, float *im) {
-  float t;
-  t = exp(real);
-  *re = t*cos(imag);
-  *im = t*sin(imag);
-}
-
-// Complex square root is defined as exp(0.5*log(a))
-void c_sqrt(float real, float imag, float *re, float *im) {
-  float tr, ti;
-  c_log(real,imag,&tr,&ti);
-  tr /= 2.0;
-  ti /= 2.0;
-  c_exp(tr,ti,re,im);
-}
-
-// Square a complex value: (a+i*b)*(a+i*b) = (a^2-b^2) + 2*i*a*b
-void c_sqr(float real, float imag, float *re, float *im) {
-  *re = real*real - imag*imag;
-  *im = 2.0*real*imag;
-}
-
-void z_log(double real, double imag, double *re, double *im) {
-  *re = log(complex_abs(real,imag));
-  *im = atan2(imag,real);
-}
-
-void z_exp(double real, double imag, double *re, double *im) {
-  double t;
-  t = exp(real);
-  *re = t*cos(imag);
-  *im = t*sin(imag);
-}
-
-// Complex square root is defined as exp(0.5*log(a))
-void z_sqrt(double real, double imag, double *re, double *im) {
-  double tr, ti;
-  z_log(real,imag,&tr,&ti);
-  tr /= 2.0;
-  ti /= 2.0;
-  z_exp(tr,ti,re,im);
-}
-
-// Square a complex value: (a+i*b)*(a+i*b) = (a^2-b^2) + 2*i*a*b
-void z_sqr(double real, double imag, double *re, double *im) {
-  *re = real*real - imag*imag;
-  *im = 2.0*real*imag;
-}
-
-bool contains(StringVector& list, std::string s, bool regexpmode) {
+bool contains(StringVector& list, QString s, bool regexpmode) {
   QRegExp t;
   for (int i=0;i<list.size();i++) {
     if (regexpmode) {
-      t = QRegExp(QString::fromStdString(list[i]));
-      if (t.exactMatch(QString::fromStdString(s)) &&
-	  (t.matchedLength() == (int) s.size())) return true;
+      t = QRegExp(list[i]);
+      if (t.exactMatch(s) &&
+	  (t.matchedLength() == s.size())) return true;
     } else {
       if (list[i] == s) return true;
     }
   }
   return false;
-};
+}
 
 NTuple ArrayVectorAsDimensions(const ArrayVector &arg) {
   NTuple dims;
@@ -97,7 +44,7 @@ NTuple ArrayVectorAsDimensions(const ArrayVector &arg) {
   // Case 1 - all of the entries are scalar
   bool allScalars;
   allScalars = true;
-  for (i=0;i<arg.size();i++)
+  for (int i=0;i<arg.size();i++)
     allScalars &= arg[i].isScalar();
   if (allScalars) {
     if (arg.size() == 1) {
@@ -106,7 +53,7 @@ NTuple ArrayVectorAsDimensions(const ArrayVector &arg) {
       dims.set(1,arg[0].asInteger());
     } else {
       // If all scalars and and multiple arguments, we count dimensions
-      for (i=0;i<arg.size();i++) 
+      for (int i=0;i<arg.size();i++) 
 	dims.set(i,arg[i].asInteger());
     }
   } else {
@@ -119,5 +66,26 @@ NTuple ArrayVectorAsDimensions(const ArrayVector &arg) {
   }
   return dims;
 }
-  
+
+double ArrayRange(const Array& dp) {
+  if ((dp.dataClass() != Float) && (dp.dataClass() != Double))
+    throw Exception("Unsupported type for function");
+  const BasicArray<double> &rp(dp.asDenseArray().toClass(Double).constReal<double>());
+  if (rp.length() == 0) return 0;
+  double result;
+  bool init = false;
+  for (index_t i=1;i!=rp.length();i++) {
+    if (!IsNaN(rp[i])) {
+      if (!init) {
+	init = true;
+	result = fabs(rp[i]);
+      } else {
+	if (fabs(rp[i]) > result) 
+	  result = fabs(rp[i]);
+      }
+    }
+  }
+  if (!init) return NaN();
+  return result;
 }
+  

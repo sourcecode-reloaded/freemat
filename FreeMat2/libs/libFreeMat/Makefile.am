@@ -8,6 +8,7 @@ BUILT_SOURCES = $(libFreeMat_a_MOC)
 
 libFreeMat_a_HFILES = Array.hpp \
 ArrayPrivate.hpp \
+Algorithms.hpp \
 Class.hpp \
 Context.hpp \
 CommonIterator.hpp \
@@ -22,14 +23,13 @@ LAPACK.hpp \
 LeastSquaresSolver.hpp \
 LinearEqSolver.hpp \
 LUDecompose.hpp \
-Malloc.hpp \
 Math.hpp \
 MatrixMultiply.hpp \
 MemPtr.hpp \
 Module.hpp \
 Operators.hpp \
-QRDecompose.hpp \
 Scope.hpp \
+Serialize.hpp \
 SparseMatrix.hpp \
 Stream.hpp \
 SymbolTable.hpp \
@@ -44,22 +44,23 @@ FastList.hpp \
 SparseCCS.hpp
 
 libFreeMat_a_SOURCES = Array.cpp \
+Algorithms.cpp \
 Interpreter.cpp \
 Context.cpp \
 EigenDecompose.cpp \
 Exception.cpp \
 File.cpp \
 IEEEFP.cpp \
+IndexArray.cpp \
 LAPACK.cpp \
 LeastSquaresSolver.cpp \
 LinearEqSolver.cpp \
 LUDecompose.cpp \
-Malloc.cpp \
 Math.cpp \
 MatrixMultiply.cpp \
 Module.cpp \
-QRDecompose.cpp \
 Scope.cpp \
+Serialize.cpp \
 SparseMatrix.cpp \
 Class.cpp \
 Print.cpp \

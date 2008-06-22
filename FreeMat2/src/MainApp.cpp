@@ -193,6 +193,10 @@ extern MainApp *m_app;
 //@[
 //  editor
 //@]
+//@@Signature
+//sfunction editor EditorFunction
+//inputs none
+//outputs none
 //!
 ArrayVector EditorFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   if (edit == NULL) {
@@ -226,6 +230,10 @@ ArrayVector EditorFunction(int nargout, const ArrayVector& arg, Interpreter* eva
 //@[
 //  edit file1 file2 file3
 //@]
+//@@Signature
+//sfunction edit EditFunction
+//inputs varargin
+//outputs none
 //!
 ArrayVector EditFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   //Open the editor
@@ -247,7 +255,7 @@ ArrayVector EditFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
     //Load files listed in the command line
     for (int i=0; i<arg.size(); ++i ) {
       if (arg[i].isString()) {
-        string fname = arg[i].getContentsAsString();
+        QString fname = arg[i].asString();
 
         FuncPtr val;
         bool isFun = eval->getContext()->lookupFunction(fname,val);
@@ -262,7 +270,7 @@ ArrayVector EditFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
           PathSearcher psearch(eval->getTotalPath());
           fname = psearch.ResolvePath( fname );
         }
-        edit->loadFile(QString::fromStdString(fname));
+        edit->loadFile(fname);
       } else {
         throw Exception("Illegal file name");
       }
@@ -315,7 +323,7 @@ void MainApp::UpdateTermWidth(int w) {
   m_eval->setTerminalWidth(w);
 }
 
-void MainApp::ExecuteLine(string txt) {
+void MainApp::ExecuteLine(QString txt) {
   m_eval->ExecuteLine(txt);
 }
 
@@ -343,7 +351,7 @@ void MainApp::DoGraphicsCall(Interpreter* interp, FuncPtr f, ArrayVector m, int 
     ArrayVector n(f->evaluateFunction(interp,m,narg));
     interp->RegisterGfxResults(n);
   } catch (Exception& e) {
-    interp->RegisterGfxError(e.getMessageCopy());
+    interp->RegisterGfxError(e.msg());
   }
 }
 
@@ -368,9 +376,13 @@ void MainApp::DoGraphicsCall(Interpreter* interp, FuncPtr f, ArrayVector m, int 
 //id = threadcall(t_id,1000,'threadid')
 //threadfree(t_id);
 //@>
+//@@Signature
+//sfunction threadid ThreadIDFunction
+//inputs none
+//outputs id
 //!
 ArrayVector ThreadIDFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  return ArrayVector() << Array::uint32Constructor(eval->getThreadID());
+  return ArrayVector(Array(double(eval->getThreadID())));
 }
 
 //!
@@ -399,6 +411,10 @@ ArrayVector ThreadIDFunction(int nargout, const ArrayVector& arg, Interpreter* e
 //   pause off
 //@]
 //which disables all @|pause| statements, both with and without arguments.
+//@@Signature
+//sfunction pause PauseFunction
+//inputs flag
+//outputs none
 //!
 static bool pause_active = true;
 
@@ -406,7 +422,7 @@ ArrayVector PauseFunction(int nargout, const ArrayVector& arg, Interpreter* eval
   if (arg.size() == 1) {
     // Check for the first argument being a string
     if (arg[0].isString()) {
-      string parg(arg[0].getContentsAsStringUpper());
+      QString parg(arg[0].asString().toUpper());
       if (parg == "ON")
 	pause_active = true;
       else if (parg == "OFF")
@@ -415,7 +431,7 @@ ArrayVector PauseFunction(int nargout, const ArrayVector& arg, Interpreter* eval
 	throw Exception("Unrecognized argument to pause function - must be either 'on' or 'off'");
     }
     if (pause_active)
-      eval->sleepMilliseconds((unsigned long)(ArrayToDouble(arg[0])*1000));
+      eval->sleepMilliseconds((unsigned long)(arg[0].asDouble()*1000));
   } else {
     // Do something...
     if (pause_active)
@@ -434,13 +450,16 @@ ArrayVector PauseFunction(int nargout, const ArrayVector& arg, Interpreter* eval
 //  sleep(n),
 //@]
 //where @|n| is the number of seconds to wait.
+//@@Signature
+//sfunction sleep SleepFunction
+//inputs n
+//outputs none
 //!
 ArrayVector SleepFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   if (arg.size() != 1)
     throw Exception("sleep function requires 1 argument");
   int sleeptime;
-  Array a(arg[0]);
-  sleeptime = a.getContentsAsIntegerScalar();
+  sleeptime = arg[0].asInteger();
   eval->sleepMilliseconds(1000*sleeptime);
   return ArrayVector();
 }
@@ -472,6 +491,10 @@ ArrayVector SleepFunction(int nargout, const ArrayVector& arg, Interpreter* eval
 //be used to share data.  Threads and FreeMat are a new feature, so
 //there is room for improvement in the API and behavior.  The best
 //way to improve threads is to experiment with them, and send feedback.
+//@@Signature
+//sfunction threadnew ThreadNewFunction
+//inputs none
+//outputs handle
 //!
 ArrayVector ThreadNewFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   // Create a new thread
@@ -479,7 +502,7 @@ ArrayVector ThreadNewFunction(int nargout, const ArrayVector& arg, Interpreter* 
   // Translate the path from the starter thread to the new thread
   Interpreter* thread = m_threadHandles.lookupHandle(threadID);
   thread->setPath(eval->getPath());
-  return ArrayVector() << Array::uint32Constructor(threadID);
+  return ArrayVector(Array(double(threadID)));
 }
 
 //!
@@ -579,22 +602,25 @@ ArrayVector ThreadNewFunction(int nargout, const ArrayVector& arg, Interpreter* 
 //sigmas = threadvalue(a);
 //threadfree(a)
 //@>
-//
+//@@Signature
+//sfunction threadstart ThreadStartFunction
+//inputs threadid function nargout varargin
+//outputs none
 //!
 ArrayVector ThreadStartFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   if (arg.size() < 3) throw Exception("threadstart requires at least three arguments (the thread id, the function to spawn, and the number of output arguments)");
-  int32 handle = ArrayToInt32(arg[0]);
+  int32 handle = arg[0].asInteger();
   Interpreter* thread = m_threadHandles.lookupHandle(handle);
   if (!thread) throw Exception("invalid thread handle");
-  string fnc = ArrayToString(arg[1]);
+  QString fnc = arg[1].asString();
   // Lookup this function in base interpreter to see if it is defined
   FuncPtr val;
   if (!eval->lookupFunction(fnc, val))
-    throw Exception(string("Unable to map ") + fnc + " to a defined function ");
+    throw Exception(QString("Unable to map ") + fnc + " to a defined function ");
   val->updateCode(eval);
   // if (val->scriptFlag)
   //   throw Exception(string("Cannot use a script as the main function in a thread."));
-  int tnargout = ArrayToInt32(arg[2]);
+  int tnargout = arg[2].asInteger();
   if (!thread->wait(1))  throw Exception("thread was busy");
   ArrayVector args(arg);
   args.pop_front();
@@ -660,15 +686,19 @@ ArrayVector ThreadStartFunction(int nargout, const ArrayVector& arg, Interpreter
 //@>
 //Note that the error has the text @|Thread:| prepended to the message
 //to help you identify that this was an error in a different thread.
+//@@Signature
+//function threadvalue ThreadValueFunction
+//inputs handle timeout
+//outputs varargout
 //!
 ArrayVector ThreadValueFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1) throw Exception("threadvalue requires at least one argument (thread id to retrieve value from)");
-  int32 handle = ArrayToInt32(arg[0]);
+  int32 handle = arg[0].asInteger();
   Interpreter* thread = m_threadHandles.lookupHandle(handle);
   if (!thread) throw Exception("invalid thread handle");
   unsigned long timeout = ULONG_MAX;
   if (arg.size() > 1)
-    timeout = (unsigned long) ArrayToInt32(arg[1]);
+    timeout = (unsigned long) arg[1].asInteger();
   if (!thread->wait()) throw Exception("error waiting for thread to complete");
   if (thread->getLastErrorState())
     throw Exception("Thread: " + thread->getLastErrorString());
@@ -713,19 +743,23 @@ ArrayVector ThreadValueFunction(int nargout, const ArrayVector& arg) {
 //threadwait(a,10000)           % 10 second wait is long enough
 //threadfree(a)
 //@>
+//@@Signature
+//function threadwait ThreadWaitFunction
+//inputs handle
+//outputs success
 //!
 ArrayVector ThreadWaitFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1) throw Exception("threadwait requires at least one argument (thread id to wait on)");
-  int32 handle = ArrayToInt32(arg[0]);
+  int32 handle = arg[0].asInteger();
   unsigned long timeout = ULONG_MAX;
   Interpreter* thread = m_threadHandles.lookupHandle(handle);
   if (!thread) throw Exception("invalid thread handle");
   if (arg.size() > 1)
-    timeout = (unsigned long) ArrayToInt32(arg[1]);
+    timeout = arg[1].asInteger();
   bool retval = thread->wait(timeout);
   if (retval && thread->getLastErrorState())
     throw Exception("Thread: " + thread->getLastErrorString());
-  return ArrayVector() << Array::logicalConstructor(retval);
+  return ArrayVector(Array(bool(retval)));
 }
 
 //!
@@ -776,10 +810,14 @@ ArrayVector ThreadWaitFunction(int nargout, const ArrayVector& arg) {
 //count
 //threadfree(a)
 //@>
+//@@Signature
+//function threadkill ThreadKillFunction
+//inputs handle
+//outputs none
 //!
 ArrayVector ThreadKillFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1) throw Exception("threadkill requires at least one argument (thread id to kill)");
-  int32 handle = ArrayToInt32(arg[0]);
+  int32 handle = arg[0].asInteger();
   if (handle == 1) throw Exception("threadkill cannot be used on the main thread");
   Interpreter* thread = m_threadHandles.lookupHandle(handle);
   thread->setKill();
@@ -807,16 +845,19 @@ ArrayVector ThreadKillFunction(int nargout, const ArrayVector& arg) {
 //@]
 //where @|timeout| is a time to wait in milliseconds.  If the thread
 //fails to complete before the timeout expires, an error occurs.
-//
+//@@Signature
+//function threadfree ThreadFreeFunction
+//inputs handle timeout
+//outputs none
 //!
 ArrayVector ThreadFreeFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1) throw Exception("threadfree requires at least one argument (thread id to wait on) - the optional second argument is the timeout to wait for the thread to finish");
-  int32 handle = ArrayToInt32(arg[0]);
+  int32 handle = arg[0].asInteger();
   Interpreter* thread = m_threadHandles.lookupHandle(handle);
   thread->setKill();
   unsigned long timeout = ULONG_MAX;
   if (arg.size() > 1)
-    timeout = (unsigned long) ArrayToInt32(arg[1]);
+    timeout = (unsigned long) arg[1].asInteger();
   if (!thread->wait(timeout))
     throw Exception("Cannot free thread... it is still running");
   delete thread;
@@ -833,6 +874,10 @@ ArrayVector ThreadFreeFunction(int nargout, const ArrayVector& arg) {
 //@[
 //   clc
 //@]
+//@@Signature
+//function clc ClcFunction
+//inputs none
+//outputs none
 //!
 ArrayVector ClcFunction(int nargout, const ArrayVector& arg) {
   m_app->GetKeyManager()->ClearDisplayCommand();
@@ -842,7 +887,7 @@ ArrayVector ClcFunction(int nargout, const ArrayVector& arg) {
 // The database of samples.  There is one profile per function.
 //std::map<std::string, unsigned[1000] >  profileDB;
 typedef std::vector<unsigned> ProfileVector;
-typedef std::map<std::string, ProfileVector> ProfileDB;
+typedef std::map<QString, ProfileVector> ProfileDB;
 static ProfileDB m_profileDB;
 static bool m_profiler_active = false;
 static double m_profiler_ticks = 0;
@@ -851,7 +896,7 @@ static void DumpProfileDB() {
   double profiler_ticks = m_profiler_ticks;
   std::cout << "Total ticks " << m_profiler_ticks << "\r\n";
   for (ProfileDB::const_iterator i=m_profileDB.begin();i!=m_profileDB.end();i++) {
-    std::cout << "Module " << i->first << "\r\n";
+    //    std::cout << "Module " << i->first << "\r\n";
     const ProfileVector &p(i->second);
     double ticks_this_module = 0;
     for (int j=0;j<p.size();j++) {
@@ -859,8 +904,8 @@ static void DumpProfileDB() {
 	std::cout << "Line " << j << " " << p[j] << " counts " << p[j]/profiler_ticks*100.0 << "%\r\n";
       ticks_this_module += p[j];
     }
-    std::cout << "Total time in " << i->first << " " << ticks_this_module << " counts "  
-	      << ticks_this_module/profiler_ticks*100.0 << "%\r\n";
+    //    std::cout << "Total time in " << i->first << " " << ticks_this_module << " counts "  
+    //	      << ticks_this_module/profiler_ticks*100.0 << "%\r\n";
   }
 }
 
@@ -891,17 +936,21 @@ static void DumpProfileDB() {
 //@[
 //   profiler
 //@]
+//@@Signature
+//function profiler ProfilerFunction
+//inputs varargin
+//outputs none
 //!
 ArrayVector ProfilerFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1) {
     if (m_profiler_active)
-      return SingleArrayVector(Array::stringConstructor("on"));
+      return ArrayVector(Array(QString("on")));
     else
-      return SingleArrayVector(Array::stringConstructor("off"));
+      return ArrayVector(Array(QString("off")));
   } else {
     if (!arg[0].isString())
       throw Exception("second argument to profile function must be either on/off/list");
-    string txt = arg[0].getContentsAsStringUpper();
+    QString txt = arg[0].asString().toUpper();
     if (txt == "ON")
       m_app->ControlProfiler(true);
     else if (txt == "OFF")
@@ -1066,7 +1115,7 @@ static int m_mainID;
 void MainApp::CollectProfileSample() {
   m_profiler_ticks++;
   unsigned linenumber;
-  string ip_name = m_eval->sampleInstructionPointer(linenumber);
+  QString ip_name = m_eval->sampleInstructionPointer(linenumber);
   if ((linenumber != 0) || (ip_name != "CLI")) {
     ProfileVector &p(m_profileDB[ip_name]);
     if (p.size() < linenumber) p.resize(linenumber+1);

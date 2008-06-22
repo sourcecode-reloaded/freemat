@@ -16,6 +16,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
+
+#if 0
 #include <QtNetwork>
 #include "Array.hpp"
 #include "Malloc.hpp"
@@ -780,3 +782,5 @@ ArrayVector TCPStateFunction(int nargout, const ArrayVector& arg) {
   }
   return ArrayVector() << Array::stringConstructor("unknown");
 }
+
+#endif

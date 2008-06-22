@@ -67,10 +67,12 @@ Conv.cpp \
 Eval.cpp \
 Debug.cpp \
 LU.cpp \
+QR.cpp \
 Eigen.cpp \
 SVD.cpp \
 Array.cpp \
-LoadCore.cpp \
+Version.cpp \
+Error.cpp \
 Misc.cpp \
 MPIWrap.cpp \
 StringOps.cpp \
@@ -81,6 +83,7 @@ MatIO.cpp \
 XML.cpp \
 RPC.cpp \
 Cstruct.cpp \
+LoadCore.cpp \
 $(libCore_a_HFILES)
 
 nodist_libCore_a_SOURCES = $(libCore_a_MOC) 

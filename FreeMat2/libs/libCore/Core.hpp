@@ -243,8 +243,6 @@ ArrayVector FalseFunction(int nargout, const ArrayVector& arg);
 ArrayVector RegExpRepDriverFunction(int nargout, const ArrayVector& arg);
 ArrayVector RegExpFunction(int nargout, const ArrayVector& arg);
 ArrayVector RegExpIFunction(int nargout, const ArrayVector& arg);
-void Tokenize(QString str, StringVector& tokens,
-	      QString delimiters = " \n");
 bool inBundleMode();
 ArrayVector MatLoadFunction(int nargout, QString filename, StringVector varnames, 
 			    bool regexp, Interpreter *eval);

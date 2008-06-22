@@ -189,14 +189,13 @@ static ArrayFormatInfo ComputeArrayFormatInfo(const Array &rp) {
 #define MacroComputeArrayFormat(ctype,cls)	\
   case cls: return ComputeArrayFormatInfo<ctype>(ref);
 
-ArrayFormatInfo ComputeArrayFormatInfo(const Array &ref) {
+static ArrayFormatInfo ComputeArrayFormatInfo(const Array &ref) {
   switch (ref.dataClass()) {
   default: throw Exception("unexpected class for ComputeArrayFormatInfo");
-    MacroExpandCasesNoBool(MacroComputeArrayFormat);
-  case Bool:
-    return ArrayFormatInfo(1);
-  case StringArray:
-    return ArrayFormatInfo(1);
+  case Float: return ComputeArrayFormatInfo<float>(ref);
+  case Double: return ComputeArrayFormatInfo<double>(ref);
+  case Bool: return ArrayFormatInfo(1);
+  case StringArray: return ArrayFormatInfo(1);
   case CellArray:
     {
       int maxwidth = 1;
@@ -212,7 +211,7 @@ ArrayFormatInfo ComputeArrayFormatInfo(const Array &ref) {
 #undef MacroComputeArrayFormat
 
 template <class T>
-static void emitIntegerReal(Interpreter* io, T val, 
+static inline void emitIntegerReal(Interpreter* io, T val, 
 			    const ArrayFormatInfo &format,
 			    bool sgned) {
   if (sgned) 
@@ -222,7 +221,7 @@ static void emitIntegerReal(Interpreter* io, T val,
 }
 
 template <class T>
-static void emitFloatReal(Interpreter*io, T val, const ArrayFormatInfo &format) {
+static inline void emitFloatReal(Interpreter*io, T val, const ArrayFormatInfo &format) {
   if (val != 0) 
     if (format.expformat)
       io->outputMessage("%*.*e",format.width,format.decimals,val);
@@ -233,7 +232,7 @@ static void emitFloatReal(Interpreter*io, T val, const ArrayFormatInfo &format) 
 }
 
 template <class T>
-static void emitIntegerComplex(Interpreter* io, T real, T imag, 
+static inline void emitIntegerComplex(Interpreter* io, T real, T imag, 
 			       const ArrayFormatInfo &format,
 			       bool sgned) {
   if (sgned) {
@@ -249,7 +248,7 @@ static void emitIntegerComplex(Interpreter* io, T real, T imag,
 }
 
 template <class T>
-static void emitFloatComplex(Interpreter* io, T real, T imag, 
+static inline void emitFloatComplex(Interpreter* io, T real, T imag, 
 			     const ArrayFormatInfo &format) {
   int width = format.width/2;
   if ((real != 0) || (imag != 0)) {
@@ -319,23 +318,10 @@ static void Emit(Interpreter* io, const Array &rp,
 #undef MacroEmitUnsignedInt
 #undef MacroEmitSignedInt
 
-//   case FM_STRING:
-//     io->outputMessage("%c\0",((const char*) dp)[num]);
-//     return;
-//   case FM_CELL_ARRAY: {
-//     Array *ap;
-//     ap = (Array*) dp;
-//     if (ap == NULL)
-//       io->outputMessage("[]");
-//     else
-//       io->outputMessage(SummarizeArrayCellEntry(ap[num]));
-//     io->outputMessage("  ");
-//     break;
-//   }
 
-void PrintSheet(Interpreter *io, const ArrayFormatInfo &format,
-		index_t offset, const Array &rp, int termWidth, 
-		int &printlimit, bool complex) {
+static inline void PrintSheet(Interpreter *io, const ArrayFormatInfo &format,
+			      index_t offset, const Array &rp, int termWidth, 
+			      int &printlimit, bool complex) {
   if (printlimit == 0) return;
   // Determine how many columns will fit across
   // the terminal width
@@ -368,15 +354,44 @@ void PrintSheet(Interpreter *io, const ArrayFormatInfo &format,
   io->outputMessage("\n");
 }
  
+
 template <class T>
-static inline void PrintSparseMatrix(const Array& A, Interpreter* io) {
-  if (A.allReal())
-    PrintMe(A.constRealSparse<T>(),io);
-  else
-    PrintMe(A.constRealSparse<T>(),A.constImagSparse<T>(),io);
+static void PrintSparse(const SparseMatrix<T> &A, Interpreter* io, const ArrayFormatInfo &format) {
+  ConstSparseIterator<T> i(&A);
+  while (i.isValid()) {
+    while (i.moreInSlice()) {
+      io->outputMessage(QString(" %1 %2 ").arg(i.row()).arg(i.col()));
+      Emit(io,Array(i.value()),format,false);
+      io->outputMessage("\n");
+      i.next();
+    }
+    i.nextSlice();
+  }
 }
 
-static inline void PrintStructArray(const Array& A, Interpreter* io) {
+template <class T>
+static void PrintSparse(const SparseMatrix<T> &Areal, const SparseMatrix<T> &Aimag, Interpreter* io, const ArrayFormatInfo &format) {
+  ConstComplexSparseIterator<T> i(&Areal,&Aimag);
+  while (i.isValid()) {
+    while (i.moreInSlice()) {
+      io->outputMessage(QString(" %1 %2 ").arg(i.row()).arg(i.col()));
+      Emit(io,Array(i.realValue(),i.imagValue()),format,true);
+      io->outputMessage("\n");
+      i.next();
+    }
+    i.nextSlice();
+  }  
+}
+
+template <class T>
+static void PrintSparseMatrix(const Array& A, Interpreter* io, const ArrayFormatInfo &format) {
+  if (A.allReal())
+    PrintSparse(A.constRealSparse<T>(),io,format);
+  else
+    PrintSparse(A.constRealSparse<T>(),A.constImagSparse<T>(),io,format);
+}
+
+static void PrintStructArray(const Array& A, Interpreter* io) {
   const StructArray &rp(A.constStructPtr());
   if (A.isScalar()) {
     for (int i=0;i<rp.fieldCount();i++) {
@@ -397,9 +412,9 @@ static inline void PrintStructArray(const Array& A, Interpreter* io) {
 }
 
 #define MacroSparse(ctype,cls) \
-  case cls: return PrintSparseMatrix<ctype>(A,io);
+  case cls: return PrintSparseMatrix<ctype>(A,io,format);
 
-void PrintArrayClassic(const Array &A, int printlimit, Interpreter* io) {
+void PrintArrayClassic(Array A, int printlimit, Interpreter* io) {
   if (printlimit == 0) return;
   int termWidth = io->getTerminalWidth();
   NTuple Adims(A.dimensions());
@@ -414,21 +429,24 @@ void PrintArrayClassic(const Array &A, int printlimit, Interpreter* io) {
     }
     return;
   }
-  if (A.isSparse()) {
-    switch (A.dataClass()) {
-    default:
-      throw Exception("Unknown sparse array");
-      MacroExpandCases(MacroSparse);
-    }
-    return;
-  }
   if (A.dataClass() == Struct)
-    PrintStructArray(A,io);
+    return PrintStructArray(A,io);
+  if ((A.dataClass() != CellArray) && (A.dataClass() != StringArray) && (A.dataClass() != Float))
+    A = A.toClass(Double);
   ArrayFormatInfo format(ComputeArrayFormatInfo(A));
   if (!A.isScalar() && (format.scalefact != 1))
     io->outputMessage("\n   %.1e * \n",format.scalefact);
   if (A.isScalar() && (format.scalefact != 1) && !format.floatasint)
     format.expformat = true;
+  if (A.isSparse()) {
+    switch (A.dataClass()) {
+    default:
+      throw Exception("Unknown sparse array");
+    case Float: return PrintSparseMatrix<float>(A,io,format);
+    case Double: return PrintSparseMatrix<double>(A,io,format);
+    }
+    return;
+  }
   bool complexFlag = !A.allReal();
   if (A.is2D()) 
     PrintSheet(io,format,index_t(1),A,termWidth,printlimit,complexFlag);

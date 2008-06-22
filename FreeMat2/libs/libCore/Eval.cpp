@@ -1,5 +1,6 @@
 #include "Array.hpp"
 #include "Interpreter.hpp"
+#include "Algorithms.hpp"
 
 //!
 //@Module EVAL Evaluate a String

@@ -1,6 +1,7 @@
 #include "Operators.hpp"
 #include "IEEEFP.hpp"
 #include "Math.hpp"
+#include "Complex.hpp"
 
 // The GreaterThan function is called by Max
 struct OpGreaterThan {

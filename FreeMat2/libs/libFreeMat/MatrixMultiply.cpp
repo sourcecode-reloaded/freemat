@@ -18,9 +18,6 @@
  */
 
 #include "MatrixMultiply.hpp"
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 extern "C" {
   void sgemm_ (char * ta, char* tb, int* m, int* n, int* k, float *alp,
@@ -38,20 +35,20 @@ extern "C" {
 }
 
 template <typename T>
-void Trealgemm(char * ta, char* tb, int* m, int* n, int* k, T *alp,
+static void Trealgemm(char * ta, char* tb, int* m, int* n, int* k, T *alp,
 	       const T*A, int* LDA, const T* B, int* LDB, 
 	       T* BETA, T *C, int*LDC);
 
 
 template <>
-void Trealgemm(char * ta, char* tb, int* m, int* n, int* k, float *alp,
+static void Trealgemm(char * ta, char* tb, int* m, int* n, int* k, float *alp,
 	       const float*A, int* LDA, const float* B, int* LDB, 
 	       float* BETA, float *C, int*LDC) {
   return sgemm_(ta,tb,m,n,k,alp,A,LDA,B,LDB,BETA,C,LDC);
 }
 
 template <>
-void Trealgemm(char * ta, char* tb, int* m, int* n, int* k, double *alp,
+static void Trealgemm(char * ta, char* tb, int* m, int* n, int* k, double *alp,
 	       const double*A, int* LDA, const double* B, int* LDB, 
 	       double* BETA, double *C, int*LDC) {
   return dgemm_(ta,tb,m,n,k,alp,A,LDA,B,LDB,BETA,C,LDC);
@@ -59,12 +56,12 @@ void Trealgemm(char * ta, char* tb, int* m, int* n, int* k, double *alp,
 
 
 template <typename T>
-void Tcomplexgemm(char * ta, char* tb, int* m, int* n, int* k, T *alp,
+static void Tcomplexgemm(char * ta, char* tb, int* m, int* n, int* k, T *alp,
 		  const T*A, int* LDA, const T* B, int* LDB, 
 		  T* BETA, T *C, int*LDC);
 
 template <>
-void Tcomplexgemm(char * ta, char* tb, int* m, int* n, int* k, float *alp,
+static void Tcomplexgemm(char * ta, char* tb, int* m, int* n, int* k, float *alp,
 		  const float*A, int* LDA, const float* B, int* LDB, 
 		  float* BETA, float *C, int*LDC) {
   return cgemm_(ta,tb,m,n,k,alp,A,LDA,B,LDB,BETA,C,LDC);
@@ -82,7 +79,7 @@ void Tcomplexgemm(char * ta, char* tb, int* m, int* n, int* k, double *alp,
  ***************************************************************************/
 
 template <typename T>
-void realMatrixMatrixMultiply(int m, int n, int k,
+static void realMatrixMatrixMultiply(int m, int n, int k,
 			       T* c, const T* a, const T *b) {
   if ((m == 0) || (n == 0) || (k == 0)) return;
   // Use gemm, which computes
@@ -175,7 +172,7 @@ void realMatrixMatrixMultiply(int m, int n, int k,
   //*           Unchanged on exit.
   //*
   
-  float ALPHA = 1.0f;
+  T ALPHA = 1;
   
   //*  A      - REAL             array of DIMENSION ( LDA, ka ), where ka is
   //*           k  when  TRANSA = 'N' or 'n',  and is  m  otherwise.
@@ -246,12 +243,13 @@ void realMatrixMatrixMultiply(int m, int n, int k,
 	     &BETA, C, &LDC );
 }
 
+
 /***************************************************************************
  * Matrix-matrix multiply for complex arguments
  ***************************************************************************/
 
 template <typename T>
-void complexMatrixMatrixMultiply(int m, int n, int k,
+static void complexMatrixMatrixMultiply(int m, int n, int k,
 				 T* c, const T* a, const T*b) {
   if ((m == 0) || (n == 0) || (k == 0)) return;
   // Use gemm, which computes
@@ -422,3 +420,33 @@ void complexMatrixMatrixMultiply(int m, int n, int k,
 		BETA, C, &LDC );
 }
 
+
+template <typename T>
+static Array realMatrixMultiply(const BasicArray<T> &A, const BasicArray<T> &B) {
+  BasicArray<T> C(NTuple(A.rows(),B.cols()));
+  realMatrixMatrixMultiply<T>(int(A.rows()),int(B.cols()),int(A.cols()),C.data(),A.constData(),B.constData());
+  return Array(C);
+}
+
+template <typename T>
+static Array complexMatrixMultiply(const BasicArray<T> &A, const BasicArray<T> &B) {
+  BasicArray<T> C(NTuple(A.rows()*2,B.cols()));
+  complexMatrixMatrixMultiply<T>(int(A.rows()),int(B.cols()),int(A.cols()),C.data(),A.constData(),B.constData());
+  return Array(SplitReal(C),SplitImag(C));
+}
+  
+Array MatrixMultiply(const Array &A, const Array &B) {
+  switch (A.dataClass()) {
+  default: throw Exception("Unhandled case for matrix matrix multiply");
+  case Float:
+    if (A.allReal() && B.allReal()) 
+      return realMatrixMultiply(A.constReal<float>(),B.constReal<float>());
+    else 
+      return complexMatrixMultiply(A.fortran<float>(),B.fortran<float>());
+  case Double:
+    if (A.allReal() && B.allReal())
+      return realMatrixMultiply(A.constReal<double>(),B.constReal<double>());
+    else 
+      return complexMatrixMultiply(A.fortran<double>(),B.fortran<double>());
+  }
+}

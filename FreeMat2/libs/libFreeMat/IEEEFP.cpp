@@ -168,7 +168,7 @@ QString ToHexString(float t) {
   return QString("%1").arg(uint(u.i),int(8),int(16),QChar('0'));
 }
 
-QString ToHexString(double t, char *ptr) {
+QString ToHexString(double t) {
   union {
     double f;
     unsigned int i[2];

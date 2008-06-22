@@ -31,6 +31,7 @@
 #include <QFileInfo>
 #include <sys/stat.h>
 #include "MemPtr.hpp"
+#include "Algorithms.hpp"
 
 #if HAVE_AVCALL
 #include "avcall.h"

@@ -141,6 +141,7 @@ public:
     m_real.p = new SharedObject(m_type,new SparseMatrix<T>(real));
     m_imag.p = new SharedObject(m_type,new SparseMatrix<T>(imag));
   }
+  Array(const StructArray& real);
   static Array scalarConstructor(DataClass t) {
     Array ret;
     ret.m_type.Class = t;
@@ -171,7 +172,6 @@ public:
 	    (m_type.Class == Struct));
   }
   QString asString() const;
-  StringVector asStringVector() const;
   int asInteger() const;
   double asDouble() const;
   inline bool isDouble() const {
@@ -294,6 +294,7 @@ public:
   inline bool operator!=(const Array &b) const {return !(*this == b);}
   void addField(QString name);
   void* getVoidPointer();
+  const void* getVoidPointer() const;
 private:
   Data m_real;
   Data m_imag;
@@ -311,114 +312,6 @@ public:
   ConstArrayIterator(const Array *ptr, int dim) :
     ConstBaseIterator<Array,Array>(ptr,dim) {}
 };
-
-bool IsColonOp(const Array &arg);
-bool IsNonNegative(const Array &arg);
-bool IsInteger(const Array &arg);
-bool IsUnsigned(const Array &arg);
-
-const IndexArray IndexArrayFromArray(const Array &index);
-
-const ArrayVector ArrayVectorFromCellArray(const Array &arg);
-const Array CellArrayFromArrayVector(ArrayVector &arg, index_t cnt);
-const Array CellArrayFromArray(const Array &arg);
-const Array CellArrayFromStringVector(const StringVector& arg);
-const Array StringArrayFromStringVector(const StringVector& arg);
-
-void SetCellContents(Array &cell, const Array& index, ArrayVector& data);
-void SetCellContents(Array &cell, const ArrayVector& index, ArrayVector& data);
-QStringList FieldNames(const Array& arg);
-
-bool IsCellStringArray(const Array &arg);
-
-Array Vectorize(const Array& arg);
-
-template <typename T>
-SparseMatrix<T> ToRealSparse(const Array& data) {
-  if (data.type().Sparse == 1) return data.constRealSparse<T>();
-  Array cdata(data);
-  if (cdata.isScalar())
-    cdata = data.asDenseArray();
-  if (!cdata.is2D()) throw Exception("Sparse matrix cannot be created from multidimensional arrays");
-  return SparseMatrix<T>(cdata.constReal<T>());
-}
-
-template <typename T>
-SparseMatrix<T> ToImagSparse(const Array& data) {
-  if (data.type().Sparse == 1) return data.constImagSparse<T>();
-  Array cdata(data);
-  if (cdata.isScalar())
-    cdata = cdata.asDenseArray();
-  if (!cdata.is2D()) throw Exception("Sparse matrix cannot be created from multidimensional arrays");
-  return SparseMatrix<T>(cdata.constImag<T>());
-}
-
-template <typename T>
-Array DiagonalArray(const BasicArray<T> &in) {
-  BasicArray<T> retmat(NTuple(in.length(),in.length()));
-  for (index_t i=1;i<=in.length();i++)
-    retmat.set(NTuple(i,i),in.get(i));
-  return Array(retmat);
-}
-
-template <typename T>
-Array DiagonalArray(const BasicArray<T> &in_r, 
-		    const BasicArray<T> &in_i) {
-  BasicArray<T> retmat_r(NTuple(in_r.length(),in_r.length()));
-  BasicArray<T> retmat_i(NTuple(in_i.length(),in_i.length()));
-  for (index_t i=1;i<=in_r.length();i++) {
-    retmat_r.set(NTuple(i,i),in_r.get(i));
-    retmat_i.set(NTuple(i,i),in_i.get(i));
-  }
-  return Array(retmat_r,retmat_i);
-}
-
-BasicArray<Array> ArrayVectorToBasicArray(const ArrayVector& a);
-
-Array MatrixConstructor(const ArrayMatrix& data);
-Array CellConstructor(const ArrayMatrix& data);
-Array CellConstructor(const ArrayVector& data);
-Array StructConstructor(const StringVector& fields, const ArrayVector& values);
-inline Array EmptyConstructor() {return Array(Double);}
-
-bool TestForCaseMatch(const Array &s, const Array &r);
-bool RealAllZeros(const Array &t);
-
-Type ScalarType(Type x);
-
-Array GetDiagonal(const Array &a, int diagonal = 0);
-Array DiagonalArray(const Array &f, int diagonal = 0);
-bool IsSymmetric(const Array &a);
-bool IsPositive(const Array &a);
-
-Array RangeConstructor(double start, double step, double stop, bool vertical);
-Array Transpose(const Array &A);
-Array Hermitian(const Array &A);
-Array Negate(const Array &A);
-Array Real(const Array &A);
-Array Imag(const Array &A);
-Array Permute(const Array &A, const BasicArray<uint32> &dp);
-
-NTuple ConvertArrayToNTuple(const Array &A);
-bool AnyNotFinite(const Array &A);
-
-// Suppose we support a get/set interface:// And we support slicing through the iterators
-// themselves.  For example, consider
-// p = A(1:2:end,1:5:end);
-// We can capture this as an iterator:
-//  V = SliceIterator(A,1:2:end,1:5:end);
-// Or in a variant itself.
-//  B = Array(A,1:2:end,1:5:end)
-// In which case, as long as we have get/set support
-// for the variant class, we are OK.  We do need a
-// sideband for the imaginary/real part of the equation
-
-
-// How do we want to ultimately implement something like:
-// A(1,:,3) = B(4,:)
-// Where A and B are arbitrary variants.  In the name of 
-// clarity, we have given up some of the performance.  One idea
-// is to do something like this:
 
 #include "ArrayPrivate.hpp"
 

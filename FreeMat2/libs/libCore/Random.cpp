@@ -19,7 +19,6 @@
 
 #include "Core.hpp"
 #include "Exception.hpp"
-#include "Malloc.hpp"
 #include <math.h>
 #include <stdio.h>
 #include "RanLib.hpp"

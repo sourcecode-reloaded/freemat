@@ -1,5 +1,7 @@
 #include "Array.hpp"
 #include "Math.hpp"
+#include "Complex.hpp"
+#include "Algorithms.hpp"
   
 template <class T>
 static void Conv2MainReal(T* C, const T* A, const T*B,

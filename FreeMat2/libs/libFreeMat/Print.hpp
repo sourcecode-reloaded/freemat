@@ -28,7 +28,7 @@
 #include "Array.hpp"
 
 class Interpreter;
-void PrintArrayClassic(const Array &A, int printLimit, Interpreter *eval);
+void PrintArrayClassic(Array A, int printLimit, Interpreter *eval);
 QString ArrayToPrintableString(const Array& a);
 
 typedef enum {

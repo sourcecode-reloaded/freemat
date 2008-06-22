@@ -1,4 +1,38 @@
 //!
+//@Module SPONES Sparse Ones Function
+//@@Section SPARSE
+//@@Usage
+//Returns a sparse @|float| matrix with ones where the argument
+//matrix has nonzero values.  The general syntax for it is
+//@[
+//  y = spones(x)
+//@]
+//where @|x| is a matrix (it may be full or sparse).  The output
+//matrix @|y| is the same size as @|x|, has type @|float|, and contains
+//ones in the nonzero positions of @|x|.
+//@@Examples
+//Here are some examples of the @|spones| function
+//@<
+//a = [1,0,3,0,5;0,0,2,3,0;1,0,0,0,1]
+//b = spones(a)
+//full(b)
+//@>
+//!
+ArrayVector SponesFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 1)
+    throw Exception("spones function requires a sparse matrix template argument");
+  Array tmp(arg[0]);
+  if (tmp.isEmpty())
+    return SingleArrayVector(Array::emptyConstructor());
+  if(tmp.isReferenceType())
+    throw Exception("spones function requires a numeric sparse matrix argument");
+  tmp.makeSparse();
+  if (!tmp.sparse())
+    throw Exception("spones function requires a sparse matrix template argument");
+  return SingleArrayVector(Array::Array(FM_FLOAT,Dimensions(tmp.getDimensionLength(0),tmp.getDimensionLength(1)),SparseOnesFunc(tmp.dataClass(),tmp.getDimensionLength(0),tmp.getDimensionLength(1),tmp.getSparseDataPointer()),true));
+}
+
+//!
 //@Module SPARSE Construct a Sparse Matrix
 //@@Section SPARSE
 //@@Usage

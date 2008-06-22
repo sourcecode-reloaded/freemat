@@ -1,5 +1,7 @@
 #include "Array.hpp"
 #include "Math.hpp"
+#include "Complex.hpp"
+#include "Algorithms.hpp"
 #include <QtCore>
 
 //!

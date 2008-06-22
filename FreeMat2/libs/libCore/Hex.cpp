@@ -1,5 +1,6 @@
 #include "Array.hpp"
 #include "IEEEFP.hpp"
+#include "Algorithms.hpp"
 
 //!
 //@Module HEX2DEC Convert Hexadecimal Numbers To Decimal
@@ -33,7 +34,7 @@ ArrayVector Hex2DecFunction(int nargout, const ArrayVector& arg) {
   if (arg[0].isVector()) 
     return ArrayVector(Array(double(arg[0].asString().toInt(0,16))));
   else {
-    StringVector sv(arg[0].asStringVector());
+    StringVector sv(StringVectorFromArray(arg[0]));
     Array rp(Double,NTuple(sv.size(),1));
     BasicArray<double> &qp(rp.real<double>());
     for (int i=0;i<sv.size();i++)

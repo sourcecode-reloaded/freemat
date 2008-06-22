@@ -1,5 +1,6 @@
 #include "Operators.hpp"
 #include "Math.hpp"
+#include "Complex.hpp"
 
 struct OpVecProd {
   template <typename T>

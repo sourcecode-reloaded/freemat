@@ -549,4 +549,81 @@ bool IsSymmetric(const SparseMatrix<T> &arg) {
   }
   return true;
 }
+
+template <typename T>
+bool IsSymmetric(const SparseMatrix<T> &arg, const SparseMatrix<T> &img) {
+  ConstComplexSparseIterator<T> Aiter(&arg,&img);
+  while (Aiter.isValid()) {
+    while (Aiter.moreInSlice()) {
+      if (arg.get(NTuple(Aiter.col(),Aiter.row())) != Aiter.realValue()) return false;
+      if (img.get(NTuple(Aiter.col(),Aiter.row())) != -Aiter.imagValue()) return false;
+      Aiter.next();
+    }
+    Aiter.nextSlice();
+  }
+  return true;
+}
+
+template <typename T>
+bool AnyNotFinite(const SparseMatrix<T> &arg) {
+  ConstSparseIterator<T> Aiter(&arg);
+  while (Aiter.isValid()) {
+    while (Aiter.moreInSlice()) {
+      if (!IsFinite(Aiter.value())) 
+	return true;
+      Aiter.next();
+    }
+    Aiter.nextSlice();
+  }
+  return false;
+}
+
+template <typename T>
+bool AllZeros(const SparseMatrix<T> &arg) {
+  ConstSparseIterator<T> Aiter(&arg);
+  while (Aiter.isValid()) {
+    while (Aiter.moreInSlice()) {
+      if (Aiter.value() != 0) return false;
+      Aiter.next();
+    }
+    Aiter.nextSlice();
+  }
+  return true;
+}
+
+template <typename T>
+SparseMatrix<T> GetDiagonal(const SparseMatrix<T>& arg, int diagonal) {
+  index_t outLen;
+  if (diagonal < 0) {
+    outLen = qMax(index_t(0),qMin(arg.rows()+diagonal,arg.cols()));
+    if (outLen == 0) return SparseMatrix<T>();
+    SparseMatrix<T> retvec(NTuple(outLen,1));
+    for (index_t i=1;i!=outLen;i++)
+      retvec[i] = arg[NTuple(i-diagonal,i)];
+    return retvec;
+  } else {
+    outLen = qMax(index_t(0),qMin(arg.rows(),arg.cols()-diagonal));
+    if (outLen == 0) return SparseMatrix<T>();
+    SparseMatrix<T> retvec(NTuple(outLen,1));
+    for (index_t i=1;i!=outLen;i++)
+      retvec[i] = arg[NTuple(i,i+diagonal)];
+    return retvec;
+  }
+}
+
+template <typename T>
+SparseMatrix<T> DiagonalArray(const SparseMatrix<T> &arg, int diagonal) {
+  index_t outLen = arg.length();
+  index_t M = outLen + abs(diagonal);
+  SparseMatrix<T> retval(NTuple(M,M));
+  if (diagonal < 0) {
+    for (index_t i=1;i!=outLen;i++)
+      retval[NTuple(i-diagonal,i)] = arg[i];
+  } else {
+    for (index_t i=1;i!=outLen;i++)
+      retval[NTuple(i,i+diagonal)] = arg[i];
+  }
+  return retval;
+}
+
 #endif

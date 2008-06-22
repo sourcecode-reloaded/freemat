@@ -25,26 +25,26 @@
 #include <windows.h>
 #endif
 
-StringVector DoSystemCallCaptured(std::string cmd) {
+StringVector DoSystemCallCaptured(QString cmd) {
   QProcess toRun;
   StringVector ret;
-  bool runDetached = (cmd[cmd.size()-1] == '&');
+  bool runDetached = (cmd.endsWith('&'));
 
   if (runDetached)
-    cmd.erase(cmd.size()-1,1);
+    cmd.chop(1);
 #ifdef Q_OS_WIN32
   char shellCmd[_MAX_PATH];
   if( !GetEnvironmentVariable("ComSpec", shellCmd, _MAX_PATH) )
     throw Exception("Unable to find command shell!");
-  cmd = std::string(shellCmd) + " /a /c " + std::string(cmd);
+  cmd = QString(shellCmd) + " /a /c " + cmd;
 #else
-  cmd = std::string("sh -c \"") + cmd + std::string("\"");
+  cmd = QString("sh -c \"") + cmd + QString("\"");
 #endif
   if (runDetached) {
-    QProcess::startDetached(QString::fromStdString(cmd));
+    QProcess::startDetached(cmd);
     return ret;
   }
-  toRun.start(QString::fromStdString(cmd));
+  toRun.start(cmd);
   if (!toRun.waitForStarted())
     return ret;
   toRun.closeWriteChannel();

@@ -1,6 +1,7 @@
 #include "Array.hpp"
 #include "MemPtr.hpp"
 #include "LAPACK.hpp"
+#include "Algorithms.hpp"
 #include <QtCore>
 
 

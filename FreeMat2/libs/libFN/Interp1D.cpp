@@ -20,10 +20,9 @@
 #include "Interpreter.hpp"
 #include "FunctionDef.hpp"
 #include "Exception.hpp"
-#include "Malloc.hpp"
 
 template <class T>
-int interv(const T *xt, int lxt, T x, int *left, int *mflag)
+static int interv(const T *xt, int lxt, T x, int *left, int *mflag)
 {
 
   /* Initialized data */
@@ -179,7 +178,7 @@ int interv(const T *xt, int lxt, T x, int *left, int *mflag)
 } /* interv_ */
 
 template <class T>
-bool TestForMonotonicReal(const T*dp, int len) {
+bool TestForMonotonicReal(const T*dp, index_t len) {
   bool monotonic = true;
   int k = 0;
   while (monotonic && (k<len-1)) {
@@ -189,49 +188,10 @@ bool TestForMonotonicReal(const T*dp, int len) {
   return monotonic;
 }
 
-
 template <class T>
-void DoLinearInterpolationComplex(const T* x1, const T* y1, 
-				  int x1count, const T* xi,
-				  int xicount, T* yi, int xtrapflag) {
-  int left, mflag;
-  int k;
-  T frac;
-  
-  for (k=0;k<xicount;k++) {
-    interv<T>(x1,x1count,xi[k],&left,&mflag);
-    if ((mflag==0) || (xtrapflag == 3)) {
-      frac = (xi[k] - x1[left-1])/(x1[left]-x1[left-1]);
-      yi[2*k] = y1[2*(left-1)] + frac*(y1[2*left]-y1[2*(left-1)]);
-      yi[2*k+1] = y1[2*(left-1)+1] + frac*(y1[2*left+1]-y1[2*(left-1)+1]);
-    } else {
-      switch (xtrapflag) {
-      case 0:
-	yi[2*k] = atof("nan");
-	yi[2*k+1] = atof("nan");
-	break;
-      case 1:
-	yi[2*k] = 0;
-	yi[2*k+1] = 0;
-	break;
-      case 2:
-	if (mflag == -1) {
-	  yi[2*k] = y1[0];
-	  yi[2*k+1] = y1[1];
-	} else if (mflag == 1) {
-	  yi[2*k] = y1[2*(x1count-1)];
-	  yi[2*k+1] = y1[2*(x1count-1)+1];
-	}
-	break;
-      }
-    }
-  }
-}
-
-template <class T>
-void DoLinearInterpolationReal(const T* x1, const T* y1, 
-			       int x1count, const T* xi,
-			       int xicount, T* yi, int xtrapflag) {
+static void DoLinearInterpolationReal(const T* x1, const T* y1, 
+				      int x1count, const T* xi,
+				      int xicount, T* yi, int xtrapflag) {
   int left, mflag;
   int k;
   T frac;
@@ -260,16 +220,22 @@ void DoLinearInterpolationReal(const T* x1, const T* y1,
   }
 }
 
-bool TestForMonotonic(Array x) {
+static bool TestForMonotonic(Array x) {
   switch (x.dataClass()) {
   default: throw Exception("unhandled type in argument to testformonotonic");
-  case FM_FLOAT:
-    return TestForMonotonicReal<float>((const float*) x.getDataPointer(),
-				       x.getLength());
-  case FM_DOUBLE:
-    return TestForMonotonicReal<double>((const double*) x.getDataPointer(),
-					x.getLength());
+  case Float:
+    return TestForMonotonicReal<float>(x.real<float>().data(),x.length());
+  case Double:
+    return TestForMonotonicReal<double>(x.real<double>().data(),x.length());
   }
+}
+
+template <typename T>
+static BasicArray<T> Lint(const BasicArray<T> &x1, const BasicArray<T> &y1, const BasicArray<T> &xi, int xtrapflag) {
+  BasicArray<T> yi(xi.dimensions());
+  DoLinearInterpolationReal(x1.constData(),y1.constData(),int(x1.length()),
+			    xi.constData(),int(xi.length()),yi.data(),xtrapflag);
+  return yi;
 }
 
 //!
@@ -328,6 +294,10 @@ bool TestForMonotonic(Array x) {
 //@>
 //which is shown here
 //@figure interplin1_2
+//@@Signature
+//function interplin1 Interplin1Function
+//inputs x1 y1 xi
+//outputs yi
 //!
 ArrayVector Interplin1Function(int nargout, const ArrayVector& arg) {
   if (arg.size() < 3)
@@ -335,38 +305,24 @@ ArrayVector Interplin1Function(int nargout, const ArrayVector& arg) {
   Array x1(arg[0]);
   Array y1(arg[1]);
   Array xi(arg[2]);
-    
   // Verify that x1 are numerical
   if (x1.isReferenceType() || y1.isReferenceType() || xi.isReferenceType())
     throw Exception("arguments to interplin1 must be numerical arrays");
   if (x1.isComplex() || xi.isComplex())
     throw Exception("x-coordinates cannot be complex in interplin1");
-  if (x1.dataClass() < FM_FLOAT)
-    x1.promoteType(FM_DOUBLE);
-  if (y1.dataClass() < FM_FLOAT)
-    y1.promoteType(FM_DOUBLE);
-  if (xi.dataClass() < FM_FLOAT)
-    xi.promoteType(FM_DOUBLE);
-  if (x1.dataClass() < y1.dataClass())
-    x1.promoteType(y1.dataClass());
-  else
-    y1.promoteType(x1.dataClass());
-  if (xi.dataClass() > x1.dataClass())
-    x1.promoteType(xi.dataClass());
-  if (x1.dataClass() > xi.dataClass())
-    xi.promoteType(x1.dataClass());
+  if (!((x1.dataClass() == y1.dataClass()) && (x1.dataClass() == xi.dataClass())))
+    throw Exception("types of all three arguments to interplin1 must be the same");
   // Make sure x1 and y1 are the same length
-  if (x1.getLength() != y1.getLength())
+  if (x1.length() != y1.length())
     throw Exception("vectors x1 and y1 must be the same length");
   if (!TestForMonotonic(x1))
     throw Exception("vector x1 must be monotonically increasing");
   // Check for extrapolation flag
   int xtrap = 0;
   if (arg.size() == 4) {
-    Array xtrapFlag(arg[3]);
-    if (!xtrapFlag.isString())
+    if (!arg[3].isString())
       throw Exception("extrapolation flag must be a string");
-    string xtrap_c = xtrapFlag.getContentsAsString();
+    QString xtrap_c = arg[3].asString();
     if (xtrap_c=="nan")
       xtrap = 0;
     else if (xtrap_c=="zero")
@@ -378,50 +334,21 @@ ArrayVector Interplin1Function(int nargout, const ArrayVector& arg) {
     else
       throw Exception("unrecognized extrapolation type flag to routine interplin1");
   }
-  Array retval;
-  char *dp;
   switch(y1.dataClass()) {
   default: throw Exception("unhandled type as argument to interplin1");
-  case FM_FLOAT: {
-    dp = (char*) Malloc(sizeof(float)*xi.getLength());
-    DoLinearInterpolationReal<float>((const float*) x1.getDataPointer(),
-				     (const float*) y1.getDataPointer(),
-				     x1.getLength(),
-				     (const float*) xi.getDataPointer(),
-				     xi.getLength(), (float*) dp, xtrap);
-    break;
+  case Float:
+    if (y1.allReal()) {
+      return ArrayVector(Array(Lint(x1.constReal<float>(),y1.constReal<float>(),xi.constReal<float>(),xtrap)));
+    } else {
+      return ArrayVector(Array(Lint(x1.constReal<float>(),y1.constReal<float>(),xi.constReal<float>(),xtrap),
+			       Lint(x1.constReal<float>(),y1.constImag<float>(),xi.constReal<float>(),xtrap)));
+    }
+  case Double:
+    if (y1.allReal()) {
+      return ArrayVector(Array(Lint(x1.constReal<double>(),y1.constReal<double>(),xi.constReal<double>(),xtrap)));
+    } else {
+      return ArrayVector(Array(Lint(x1.constReal<double>(),y1.constReal<double>(),xi.constReal<double>(),xtrap),
+			       Lint(x1.constReal<double>(),y1.constImag<double>(),xi.constReal<double>(),xtrap)));
+    }
   }
-  case FM_DOUBLE: {
-    dp = (char*) Malloc(sizeof(double)*xi.getLength());
-    DoLinearInterpolationReal<double>((const double*) x1.getDataPointer(),
-				      (const double*) y1.getDataPointer(),
-				      x1.getLength(),
-				      (const double*) xi.getDataPointer(),
-				      xi.getLength(), (double*) dp, xtrap);
-    break;
-  }
-  case FM_COMPLEX: {
-    dp = (char*) Malloc(sizeof(float)*xi.getLength()*2);
-    DoLinearInterpolationComplex<float>((const float*) x1.getDataPointer(),
-					(const float*) y1.getDataPointer(),
-					x1.getLength(),
-					(const float*) xi.getDataPointer(),
-					xi.getLength(), (float*) dp, xtrap);
-    break;
-  }
-  case FM_DCOMPLEX: {
-    dp = (char*) Malloc(sizeof(double)*xi.getLength()*2);
-    DoLinearInterpolationComplex<double>((const double*) x1.getDataPointer(),
-					 (const double*) y1.getDataPointer(),
-					 x1.getLength(),
-					 (const double*) xi.getDataPointer(),
-					 xi.getLength(), (double*) dp, 
-					 xtrap);
-    break;
-  }
-  }
-  return SingleArrayVector(Array(y1.dataClass(),
-				 xi.dimensions(),
-				 dp));
-      
 }

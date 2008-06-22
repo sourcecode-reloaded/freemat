@@ -483,7 +483,7 @@ static Array SolveLeastSquaresComplex(BasicArray<T> A, BasicArray<T> B) {
 }
 
 // MxN * N x K = M x K
-Array SolveLeastSquaresEq(const Array & A, const Array &B) {
+Array SolveLeastSquares(const Array & A, const Array &B) {
   if (A.rows() != B.rows()) 
     throw Exception("Solving Ax=B in a least squares sense requires the number of rows in A and B to be the same.");
   if (A.dataClass() != B.dataClass())

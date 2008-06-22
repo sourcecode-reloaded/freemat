@@ -384,6 +384,70 @@ bool IsSymmetric(const BasicArray<T>& arg) {
 }
 
 template <typename T>
+bool IsSymmetric(const BasicArray<T>& arg, const BasicArray<T>& img) {
+  if (!arg.dimensions().is2D() || !img.dimensions().is2D())
+    throw Exception("Symmetry check not valid for N-dimensional arrays");
+  if (arg.dimensions() != img.dimensions())
+    throw Exception("Symmetry check requires both arrays must be the same size");
+  for (int i=0;i<arg.cols();i++) 
+    for (int j=i+1;j<arg.rows();j++) 
+      if ((arg[NTuple(i,j)] != arg[NTuple(j,i)]) ||
+	  (img[NTuple(i,j)] != -img[NTuple(j,i)]))
+	return false;
+  return true;
+}
+
+template <typename T>
+BasicArray<T> GetDiagonal(const BasicArray<T>& arg, int diagonal) {
+  if (!arg.dimensions().is2D())
+    throw Exception("Cannot get diagonal for N-dimensional arrays");
+  index_t outLen;
+  if (diagonal < 0) {
+    outLen = qMax(index_t(0),qMin(arg.rows()+diagonal,arg.cols()));
+    if (outLen == 0) return BasicArray<T>();
+    BasicArray<T> retvec(NTuple(outLen,1));
+    for (index_t i=1;i!=outLen;i++)
+      retvec[i] = arg[NTuple(i-diagonal,i)];
+    return retvec;
+  } else {
+    outLen = qMax(index_t(0),qMin(arg.rows(),arg.cols()-diagonal));
+    if (outLen == 0) return BasicArray<T>();
+    BasicArray<T> retvec(NTuple(outLen,1));
+    for (index_t i=1;i!=outLen;i++)
+      retvec[i] = arg[NTuple(i,i+diagonal)];
+    return retvec;
+  }
+}
+
+template <typename T>
+BasicArray<T> DiagonalArray(const BasicArray<T> &arg, int diagonal) {
+  index_t outLen = arg.length();
+  index_t M = outLen + abs(diagonal);
+  BasicArray<T> retval(NTuple(M,M));
+  if (diagonal < 0) {
+    for (index_t i=1;i!=outLen;i++)
+      retval[NTuple(i-diagonal,i)] = arg[i];
+  } else {
+    for (index_t i=1;i!=outLen;i++)
+      retval[NTuple(i,i+diagonal)] = arg[i];
+  }
+  return retval;  
+}
+
+template <typename T>
+BasicArray<T> Permute(const BasicArray<T>& arg, NTuple perm) {
+  BasicArray<T> retval(arg.dimensions().permute(perm));
+  ConstBasicIterator<T> iter(&arg,0);
+  while (iter.isValid()) {
+    for (index_t i=1;i!=iter.size();i++) {
+      retval[iter.pos().permute(perm)] = iter.get();
+      iter.next();
+    }
+    iter.nextSlice();
+  }
+}
+
+template <typename T>
 bool AllZeros(const BasicArray<T>& arg) {
   for (int i=1;i<=arg.length();i++)
     if (arg.get(i) != T(0)) return false;

@@ -25,7 +25,6 @@
 #include "LeastSquaresSolver.hpp"
 #include "EigenDecompose.hpp"
 #include "LUDecompose.hpp"
-#include "Malloc.hpp"
 #include "SparseMatrix.hpp"
 #include "Complex.hpp"
 #include "Operators.hpp"
@@ -1980,12 +1979,8 @@ static inline Array RealMultiply(const Array & A, const Array& B) {
   } else if (A.isSparse() && B.isSparse()) {
     return Array(MatrixMultiply<T>(A.constRealSparse<T>(),
 				   B.constRealSparse<T>()));
-  } else {
-    BasicArray<T> C(NTuple(A.rows(),B.columns()));
-    realMatrixMatrixMultiply<T>(int(A.rows()),int(B.columns()),int(A.columns()),C.data(),
-				A.constReal<T>().constData(),B.constReal<T>().constData());
-    return Array(C);
-  }
+  } else 
+    return MatrixMultiply(A,B);
 }
 
 template <typename T>
@@ -2015,12 +2010,8 @@ static inline Array ComplexMultiply(const Array & A, const Array & B) {
 						    B.constImagSparse<T>()),
 				  MatrixMultiply<T>(A.constImagSparse<T>(),
 						    B.constRealSparse<T>())));
-  } else {
-    BasicArray<T> C(NTuple(A.rows()*2,B.columns()));
-    complexMatrixMatrixMultiply<T>(int(A.rows()),int(B.columns()),int(A.columns()),
-				   C.data(),A.fortran<T>().data(),B.fortran<T>().data());
-    return Array(SplitReal<T>(C),SplitImag<T>(C));
-  }
+  } else 
+    return MatrixMultiply(A,B);
 }
 
 template <typename T>
@@ -2445,7 +2436,7 @@ Array Power(const Array& A, const Array& B){
     throw Exception("One of the arguments to (^) must be a scalar.");
 }
 
-Array UnitColon(Array A, Array B) {
+Array UnitColon(const Array& A, const Array& B) {
   Array C;
   if (!A.isScalar() || !B.isScalar())
     throw Exception("Both arguments to (:) operator must be scalars.");
@@ -2456,7 +2447,7 @@ Array UnitColon(Array A, Array B) {
   return RangeConstructor(A.asDouble(),1,B.asDouble(),false);
 }
 
-Array DoubleColon(Array A, Array B, Array C){
+Array DoubleColon(const Array& A, const Array& B, const Array& C){
   Array D;
   if (!A.isScalar() || !B.isScalar() || !C.isScalar())
     throw Exception("All three arguments to (:) operator must be scalars.");

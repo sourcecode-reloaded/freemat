@@ -28,14 +28,14 @@
  * columns.  If $$A$$ is real, the eigenvectors $$V$$ are real, and 
  * the eigenvalues come in conjugate pairs.  
  */
-void EigenDecomposeCompactSymmetric(const Array& A, Array& D);
+void EigenDecomposeCompactSymmetric(Array A, Array& D);
 void EigenDecomposeFullSymmetric(const Array& A, Array& V, Array& D);
 void EigenDecomposeFullGeneral(const Array& A, Array& V, Array& D, bool balanceFlag);
-void EigenDecomposeCompactGeneral(const Array& A, Array& D, bool balanceFlag);
-bool GeneralizedEigenDecomposeCompactSymmetric(const Array& A, const Array& B, Array& D);
-bool GeneralizedEigenDecomposeFullSymmetric(const Array& A, const Array& B, Array& V, Array& D);
-void GeneralizedEigenDecomposeFullGeneral(const Array& A, const Array& B, Array& V, Array& D);
-void GeneralizedEigenDecomposeCompactGeneral(const Array& A, const Array& B, Array& D);
+void EigenDecomposeCompactGeneral(Array A, Array& D, bool balanceFlag);
+bool GeneralizedEigenDecomposeCompactSymmetric(Array A, Array B, Array& D);
+bool GeneralizedEigenDecomposeFullSymmetric(Array A,  Array B, Array& V, Array& D);
+void GeneralizedEigenDecomposeFullGeneral(Array A, Array B, Array& V, Array& D);
+void GeneralizedEigenDecomposeCompactGeneral(Array A, Array B, Array& D);
 ArrayVector SparseEigDecompose(int nargout, Array A, int k, QString whichFlag);
 ArrayVector SparseEigDecomposeShifted(int nargout, Array A, int k, double shift[2]);
 

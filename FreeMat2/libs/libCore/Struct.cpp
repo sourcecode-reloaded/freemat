@@ -1,5 +1,6 @@
 #include "Array.hpp"
 #include "Struct.hpp"
+#include "Algorithms.hpp"
 
 //!
 //@Module STRUCT Structure Array Constructor

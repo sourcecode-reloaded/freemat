@@ -4,8 +4,7 @@
 #include "Array.hpp"
 #include <string>
 #include <zlib.h>
-
-using namespace std;
+#include <QFile>
 
 enum MatTypes {
   miINT8 = 1,
@@ -54,7 +53,7 @@ public:
   };
 
 private:
-  FILE *m_fp;
+  QFile *m_fp;
   QString m_filename;
   bool m_endianSwap;
   openMode m_mode;
@@ -79,7 +78,7 @@ private:
   void putStructArray(const Array &x);
   void putCellArray(const Array &x);
   void putDataElement(const Array &x);
-  void putArraySpecific(const Array &x, Array aFlags, string name, mxArrayTypes arrayType);
+  void putArraySpecific(const Array &x, Array aFlags, QString name, mxArrayTypes arrayType);
   // Align us to the next 64 bit boundary.
   void Align64Bit();
   // Elementary read/write operations
@@ -108,12 +107,12 @@ public:
   MatIO(QString filename, MatIO::openMode mode);
   ~MatIO();
   // Get/Put for arrays
-  Array getArray(bool &atEof, string &name, bool &match, bool &isGlobal);
-  void putArray(const Array &x, string name = string(), bool isGlobal = false);
-  void putArrayCompressed(const Array &x, string name);
+  Array getArray(bool &atEof, QString &name, bool &match, bool &isGlobal);
+  void putArray(const Array &x, QString name = QString(), bool isGlobal = false);
+  void putArrayCompressed(const Array &x, QString name);
   // Header routines
-  string getHeader();
-  void putHeader(string header);
+  QString getHeader();
+  void putHeader(QString header);
 };
 
 ArrayVector MatLoadFunction(int nargout, QString filename, StringVector varnames, 

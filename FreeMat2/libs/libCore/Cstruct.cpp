@@ -17,6 +17,8 @@
  *
  */
 
+#if 0
+
 // The central idea is to add a mechanism for passing complex data structures 
 // efficiently between C/C++ and FreeMat .m files.  It will consist of these 
 // new functions
@@ -69,11 +71,8 @@
 
 #include "Array.hpp"
 #include "Interpreter.hpp"
-#include <string>
 #include <vector>
 #include <map>
-
-using namespace std;
 
 // Base of the type system
 class Ctype {
@@ -87,19 +86,14 @@ public:
 };
 
 // Type table
-class CTable : public map<string, Ctype*> {
+class CTable : public QMap<QString, Ctype*> {
 public:
-  bool contains(string name) {
-    return (count(name) > 0);
+  Ctype* lookup(QString name) {
+    if (!contains(name)) 
+      throw Exception("Request for lookup of unknown type " + name);
+    return value(name);
   }
-  Ctype* lookup(string name) {
-    if (!contains(name)) throw Exception("Request for lookup of unknown type " + name);
-    return find(name)->second; 
-  }
-  void add(string name, Ctype* val) {
-    if (count(name) > 0) {
-      delete find(name)->second;
-    }
+  void add(QString name, Ctype* val) {
     (*this)[name] = val;
   }
   CTable();
@@ -107,14 +101,13 @@ public:
 
 static CTable CtypeTable;
 
-
 // A builtin type
 class Cbuiltin : public Ctype {
-  Class dataClass;
+  DataClass dataClass;
   int t_size;
 public:
-  Cbuiltin(Class i_Class, int i_size) : dataClass(i_Class), t_size(i_size) {}
-  Class getDataClass() { return dataClass; }
+  Cbuiltin(DataClass i_Class, int i_size) : dataClass(i_Class), t_size(i_size) {}
+  DataClass getDataClass() { return dataClass; }
   int getSize() { return t_size;}
   void print(Interpreter *m_eval) {
     m_eval->outputMessage("built in\n");
@@ -592,7 +585,7 @@ ArrayVector CtypeThawFunction(int nargout, const ArrayVector& arg, Interpreter* 
   if (arg.size() < 2)
     throw Exception("ctypethaw requires two arguments - the uint8 array to thaw the structure from, and the typename to use");
   Array s(arg[0]);
-  string ttype(ArrayToString(arg[1]));
+  QString ttype(arg[1].asString());
   int count = 1;
   if (arg.size() > 2) count = ArrayToInt32(arg[2]);
   if (!CtypeTable.contains(ttype))
@@ -611,3 +604,5 @@ ArrayVector CtypeThawFunction(int nargout, const ArrayVector& arg, Interpreter* 
   }
   return outputs;
 }
+
+#endif

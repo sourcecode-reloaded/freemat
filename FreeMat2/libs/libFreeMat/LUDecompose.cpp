@@ -18,7 +18,6 @@
  */
 #include "LAPACK.hpp"
 #include "LUDecompose.hpp"
-#include "Malloc.hpp"
 
 #define min(a,b) ((a) < (b) ? (a) : (b))
 #define max(a,b) ((a) > (b) ? (a) : (b))

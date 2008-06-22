@@ -20,7 +20,6 @@
 #include "Core.hpp"
 #include "Exception.hpp"
 #include "Array.hpp"
-#include "Malloc.hpp"
 #include "MemPtr.hpp"
 #if HAVE_PCRE
 #ifdef WIN32
@@ -28,6 +27,9 @@
 #endif
 #include <pcre.h>
 #endif
+#include <QtCore>
+#include "Printf.hpp"
+#include "Algorithms.hpp"
 
 //!
 //@Module STRCMP String Compare Function
@@ -45,14 +47,14 @@ ArrayVector StrCmpFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 2)
     throw Exception("strcmp function requires two arguments");
   if (!(arg[0].isString()))
-    return ArrayVector(Array(Bool(false)));
+    return ArrayVector(Array(bool(false)));
   if (!(arg[1].isString()))
-    return ArrayVector(Array(Bool(false)));
+    return ArrayVector(Array(bool(false)));
   if (!(arg[0].dimensions() == arg[1].dimensions()))
-    return ArrayVector(Array(Bool(false)));
+    return ArrayVector(Array(bool(false)));
   else
-    return ArrayVector(Array(Bool(arg[0].asString() == arg[1].asString())));
-  return ArrayVector(Array(Bool(false)));
+    return ArrayVector(Array(bool(arg[0].asString() == arg[1].asString())));
+  return ArrayVector(Array(bool(false)));
 }
 
 //!
@@ -84,77 +86,35 @@ ArrayVector StrStrFunction(int nargout, const ArrayVector& arg) {
   Array retval, arg1, arg2;
   if (arg.size() != 2)
     throw Exception("strstr function requires two string arguments");
-  arg1 = arg[0];
-  arg2 = arg[1];
-  if (!(arg1.isString()))
+  if (!(arg[0].isString()))
     throw Exception("strstr function requires two string arguments");
-  if (!(arg2.isString()))
+  if (!(arg[1].isString()))
     throw Exception("strstr function requires two string arguments");
-  string s1 = arg1.getContentsAsString();
-  string s2 = arg2.getContentsAsString();
-  size_t pos = s1.find(s2);
-  int retndx;
-  if (pos == string::npos)
-    retndx = 0;
-  else
-    retndx = pos+1;
-  return SingleArrayVector(Array::int32Constructor(retndx));
+  return ArrayVector(Array(double(arg[0].asString().indexOf(arg[1].asString())+1)));
 }
 
-char* strrep(const char* source, const char* pattern, const char* replace) {
-  // Count how many instances of 'pattern' occur
-  int instances = 0;
-  const char *cp = source;
-  while (cp) {
-    cp = strstr(cp,pattern);
-    if (cp) {
-      cp += strlen(pattern);
-      instances++;
-    }
-  }
-  // The output array should be large enough...
-  int outlen = strlen(source) + instances*(strlen(replace) - strlen(pattern)) + 1;
-  char *op = (char*) malloc(sizeof(char)*outlen);
-  char *opt = op;
-  // Retrace through the source array
-  cp = source;
-  const char *lastp = source;
-  while (cp) {
-    cp = strstr(cp,pattern);
-    if (cp) {
-      memcpy(opt,lastp,(cp-lastp));
-      opt += (cp-lastp);
-      memcpy(opt,replace,strlen(replace));
-      opt += strlen(replace);
-      cp += strlen(pattern);
-      lastp = cp;
-      instances++;
-    } else
-      memcpy(opt,lastp,strlen(source)-(lastp-source)+1);
-  }
-  return op;
-}
 
+//!
+//@Module STRREP_STRING String Replace Function
+//@@Section STRING
+//@@Usage
+//Replaces instances of a substring string with another.  This is a lower
+//level function used by @|strrep|.
+//@@Signature
+//function strrep_string StrRepStringFunction
+//inputs mainstring searchstring repstring
+//outputs modifiedstring
+//!
 ArrayVector StrRepStringFunction(int nargout, const ArrayVector& arg) {
-  Array arg1, arg2, arg3;
   if (arg.size() != 3)
     throw Exception("strrep_string function requires three string arguments");
-  arg1 = arg[0];
-  arg2 = arg[1];
-  arg3 = arg[2];
-  if (!(arg1.isString()))
+  if (!(arg[0].isString()))
     throw Exception("strrep_string function requires three string arguments");
-  if (!(arg2.isString()))
+  if (!(arg[1].isString()))
     throw Exception("strrep_string function requires three string arguments");
-  if (!(arg3.isString()))
+  if (!(arg[2].isString()))
     throw Exception("strrep_string function requires three string arguments");
-  string s1 = arg1.getContentsAsString();
-  string s2 = arg2.getContentsAsString();
-  string s3 = arg3.getContentsAsString();
-  char *cp = strrep(s1.c_str(),s2.c_str(),s3.c_str());
-  ArrayVector retval(SingleArrayVector(Array::stringConstructor(cp)));
-  free(cp);
-  return retval;
+  return ArrayVector(Array(arg[0].asString().replace(arg[1].asString(),arg[2].asString())));
 }
 
 //!
@@ -238,9 +198,21 @@ ArrayVector StrRepStringFunction(int nargout, const ArrayVector& arg) {
 //@<
 //[start,stop,tokenExtents,match,tokens,named] = regexp('quick down town zoo','(.)own')
 //@>
+//@@Signature
+//function regexp RegExpFunction
+//inputs string expr varargin
+//outputs start stop tokenExtents match tokens names
+//@@Signature
+//function regexpi RegExpIFunction
+//inputs string expr varargin
+//outputs start stop tokenExtents match tokens names
+//@@Signature
+//function regexprepdriver RegExpRepDriverFunction
+//inputs varargin
+//outputs y
 //!
 #if HAVE_PCRE
-static bool isSlotSpec(string t) {
+static bool isSlotSpec(QString t) {
   return ((t == "start") ||
 	  (t == "end") ||
 	  (t == "tokenExtents") ||
@@ -250,7 +222,7 @@ static bool isSlotSpec(string t) {
 }
 #endif
 
-ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMatchCase) {
+static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMatchCase) {
 #if HAVE_PCRE
   // These are the default options
   bool globalMatch = true;
@@ -627,35 +599,28 @@ ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMatchCase
 
 }
 
-static bool IsCellStrings(Array t) {
-  if (t.dataClass() != FM_CELL_ARRAY) return false;
-  const Array *dp = (const Array *) t.getDataPointer();
-  for (int j=0;j<t.getLength();j++)
-    if (!dp[j].isString()) return false;
-  return true;
-}
-
 // res is organized like this:
 //  <o1 o2 o3 o4>
 //  <o1 o2 o3 o4>
 // ...
 // We want to perform a transpose
-static ArrayVector CellifyRegexpResults(QList<ArrayVector> res, Dimensions dims) {
+static ArrayVector CellifyRegexpResults(QList<ArrayVector> res, const NTuple &dims) {
   ArrayVector retVec;
   if (res.size() == 0) return ArrayVector();
   for (int i=0;i<res[0].size();i++) {
     ArrayVector slice;
     for (int j=0;j<res.size();j++) 
       slice << res[j][i];
-    Array sliceArray(Array::cellConstructor(slice));
+    int slice_len = slice.size();
+    Array sliceArray(CellArrayFromArrayVector(slice,slice_len));
     sliceArray.reshape(dims);
     retVec << sliceArray;
   }
   return retVec;
 }
 
-ArrayVector RegExpWrapperFunction(int nargout, const ArrayVector& arg, 
-				  bool caseMatch) {
+static ArrayVector RegExpWrapperFunction(int nargout, const ArrayVector& arg, 
+					 bool caseMatch) {
   if (arg.size() < 2) throw Exception("regexp requires at least two arguments to function");
   for (int i=2;i<arg.size();i++) 
     if (!arg[i].isString())
@@ -665,43 +630,43 @@ ArrayVector RegExpWrapperFunction(int nargout, const ArrayVector& arg,
     StringVector stringed_args;
     // Convert the argument array to strings
     for (int i=0;i<arg.size();i++) 
-      stringed_args << ArrayToString(arg[i]);
+      stringed_args << arg[i].asString();
     return RegExpCoreFunction(stringed_args,caseMatch);
-  } else if (IsCellStrings(arg[0]) && arg[1].isString()) {
-    const Array *dp = (const Array *) arg[0].getDataPointer();
+  } else if (IsCellStringArray(arg[0]) && arg[1].isString()) {
+    StringVector arg0(StringVectorFromArray(arg[0]));
     QList<ArrayVector> results;
-    for (int j=0;j<arg[0].getLength();j++) {
+    for (int j=0;j<arg0.size();j++) {
       StringVector stringed_args;
-      stringed_args << ArrayToString(dp[j]);
+      stringed_args << arg0[j];
       for (int i=1;i<arg.size();i++) 
-	stringed_args << ArrayToString(arg[i]);
+	stringed_args << arg[i].asString();
       results << RegExpCoreFunction(stringed_args,caseMatch);
     }
     return CellifyRegexpResults(results,arg[0].dimensions());
-  } else if (arg[0].isString() && IsCellStrings(arg[1])) {
-    const Array *dp = (const Array *) arg[1].getDataPointer();
+  } else if (arg[0].isString() && IsCellStringArray(arg[1])) {
+    StringVector arg1(StringVectorFromArray(arg[1]));
     QList<ArrayVector> results;
-    for (int j=0;j<arg[1].getLength();j++) {
+    for (int j=0;j<arg1.size();j++) {
       StringVector stringed_args;
-      stringed_args << ArrayToString(arg[0]);
-      stringed_args << ArrayToString(dp[j]);
+      stringed_args << arg[0].asString();
+      stringed_args << arg1[j];
       for (int i=2;i<arg.size();i++) 
-	stringed_args << ArrayToString(arg[i]);
+	stringed_args << arg[i].asString();
       results << RegExpCoreFunction(stringed_args,caseMatch);
     }
     return CellifyRegexpResults(results,arg[1].dimensions());
-  } else if (IsCellStrings(arg[0]) && IsCellStrings(arg[1])) {
-    if (arg[0].getLength() != arg[1].getLength())
+  } else if (IsCellStringArray(arg[0]) && IsCellStringArray(arg[1])) {
+    if (arg[0].length() != arg[1].length())
       throw Exception("cell-arrays of strings as the first two arguments to regexp must be the same size");
-    const Array *dp = (const Array *) arg[0].getDataPointer();
-    const Array *sp = (const Array *) arg[1].getDataPointer();
+    StringVector dp(StringVectorFromArray(arg[0]));
+    StringVector sp(StringVectorFromArray(arg[1]));
     QList<ArrayVector> results;
-    for (int j=0;j<arg[0].getLength();j++) {
+    for (int j=0;j<arg[0].length();j++) {
       StringVector stringed_args;
-      stringed_args << ArrayToString(dp[j]);
-      stringed_args << ArrayToString(sp[j]);
+      stringed_args << dp[j];
+      stringed_args << sp[j];
       for (int i=2;i<arg.size();i++) 
-	stringed_args << ArrayToString(arg[i]);
+	stringed_args << arg[i].asString();
       results << RegExpCoreFunction(stringed_args,caseMatch);
     }
     return CellifyRegexpResults(results,arg[0].dimensions());
@@ -720,10 +685,10 @@ ArrayVector RegExpIFunction(int nargout, const ArrayVector& arg) {
 }
 
 // Perform a replace 
-string RegExpRepCoreFunction(string subject,
-			     string pattern,
-			     StringVector modes,
-			     StringVector replacements) {
+QString RegExpRepCoreFunction(QString subject,
+			      QString pattern,
+			      StringVector modes,
+			      StringVector replacements) {
 #if HAVE_PCRE
   // These are the default options
   bool globalMatch = true;
@@ -983,21 +948,18 @@ ArrayVector RegExpRepDriverFunction(int nargout, const ArrayVector& arg) {
       throw Exception("all arguments to regexprep must be strings");
   StringVector modes;
   for (int i=3;i<arg.size();i++)
-    modes << ArrayToString(arg[i]);
-  string subject = ArrayToString(arg[0]);
-  string pattern = ArrayToString(arg[1]);
+    modes << arg[i].asString();
+  QString subject = arg[0].asString();
+  QString pattern = arg[1].asString();
   StringVector replist;
   if (arg[2].isString())
-    replist << ArrayToString(arg[2]);
-  else if (IsCellStrings(arg[2])) {
-    const Array *dp = (const Array *) arg[2].getDataPointer();
-    for (int i=0;i<arg[2].getLength();i++)
-      replist << ArrayToString(dp[i]);
+    replist << arg[2].asString();
+  else if (IsCellStringArray(arg[2])) {
+    StringVector dp(StringVectorFromArray(arg[2]));
+    for (int i=0;i<dp.size();i++)
+      replist << dp[i];
   }
-  return ArrayVector() << Array::stringConstructor(RegExpRepCoreFunction(subject,
-									 pattern,
-									 modes,
-									 replist));
+  return ArrayVector(Array(RegExpRepCoreFunction(subject,pattern,modes,replist)));
 }				  
 
 //!
@@ -1024,107 +986,57 @@ ArrayVector RegExpRepDriverFunction(int nargout, const ArrayVector& arg) {
 //@]
 //where @|format| is the specifier string.
 //!
+
 template <class T>
-Array Num2StrHelperReal(const T*dp, Dimensions Xdims, const char *formatspec) {
-  int rows(Xdims.getRows());
-  int cols(Xdims.getColumns());
-  StringVector row_string;
-  if (Xdims.getLength() == 2)
-    Xdims.set(3,1);
-  Dimensions Wdims(Xdims.getLength());
-  int offset = 0;
-  while (Wdims.inside(Xdims)) {
-    for (int i=0;i<rows;i++) {
-      string colbuffer;
-      for (int j=0;j<cols;j++) {
-	char elbuffer[1024];
-	sprintf(elbuffer,formatspec,dp[i+j*rows+offset]);
-	char elbuffer2[1024];
-	convertEscapeSequences(elbuffer2,elbuffer);
-	if (j > 0)
-	  colbuffer += " ";
-	colbuffer += string(elbuffer2);
-      }
-      row_string.push_back(colbuffer);
+static Array Num2StrHelperReal(const BasicArray<T> &dp, const char *formatspec) {
+  ConstBasicIterator<T> iter(&dp,1);
+  StringVector all_rows;
+  while (iter.isValid()) {
+    QString row_string;
+    for (index_t i=1;i!=iter.size();i++) {
+      if (i != 1) row_string += " ";
+      row_string += QString().sprintf(formatspec,iter.get());
+      iter.next();
     }
-    offset += rows*cols;
-    Wdims.incrementModulo(Xdims,2);
+    all_rows << row_string;
+    iter.nextSlice();
   }
-  // Next we compute the length of the largest string
-  int maxlen = 0;
-  for (int n=0;n<(int)row_string.size();n++)
-    if ((int)row_string[n].size() > maxlen)
-      maxlen = row_string[n].size();
-  // Next we allocate a character array large enough to
-  // hold the string array.
-  char *sp = (char*) Array::allocateArray(FM_STRING,maxlen*row_string.size());
-  // Now we copy 
-  int slices = row_string.size() / rows;
-  for (int i=0;i<slices;i++)
-    for (int j=0;j<rows;j++) {
-      string line(row_string[j+i*rows]);
-      for (int k=0;k<(int)line.size();k++)
-	sp[j+i*rows*maxlen+k*rows] = line[k];
-    }
-  Dimensions odims(Xdims);
-  odims.set(1,maxlen);
-  odims.simplify();
-  return Array(FM_STRING,odims,sp);
+  return StringArrayFromStringVector(all_rows);
 }
 
 template <class T>
-Array Num2StrHelperComplex(const T*dp, Dimensions Xdims, const char *formatspec) {
-  int rows(Xdims.getRows());
-  int cols(Xdims.getColumns());
-  StringVector row_string;
-  if (Xdims.getLength() == 2)
-    Xdims.set(3,1);
-  Dimensions Wdims(Xdims.getLength());
-  int offset = 0;
-  while (Wdims.inside(Xdims)) {
-    for (int i=0;i<rows;i++) {
-      string colbuffer;
-      for (int j=0;j<cols;j++) {
-	char elbuffer[1024];
-	char elbuffer2[1024];
-	sprintf(elbuffer,formatspec,dp[2*(i+j*rows+offset)]);
-	convertEscapeSequences(elbuffer2,elbuffer);
-	if (j > 0)
-	  colbuffer += " ";
-	colbuffer += string(elbuffer2);
-	sprintf(elbuffer,formatspec,dp[2*(i+j*rows+offset)+1]);
-	convertEscapeSequences(elbuffer2,elbuffer);
-	if (dp[2*(i+j*rows+offset)+1]>=0) 
-	  colbuffer += "+";
-	colbuffer += string(elbuffer2) + "i";
-      }
-      row_string.push_back(colbuffer);
+Array Num2StrHelperComplex(const BasicArray<T> &rp, const BasicArray<T> &ip, const char *formatspec) {
+  ConstBasicIterator<T> iter_real(&rp,1);
+  ConstBasicIterator<T> iter_imag(&ip,1);
+  StringVector all_rows;
+  while (iter_real.isValid() && iter_imag.isValid()) {
+    QString row_string;
+    for (index_t i=1;i!=iter_real.size();i++) {
+      if (i != 1) row_string += " ";
+      row_string += QString().sprintf(formatspec,iter_real.get());
+      if (iter_imag.get() >= 0) row_string += "+";
+      row_string += QString().sprintf(formatspec,iter_imag.get());
+      row_string += "i";
+      iter_real.next();
+      iter_imag.next();
     }
-    offset += rows*cols;
-    Wdims.incrementModulo(Xdims,2);
+    all_rows << row_string;
+    iter_real.nextSlice();
+    iter_imag.nextSlice();
   }
-  // Next we compute the length of the largest string
-  int maxlen = 0;
-  for (int n=0;n<(int)row_string.size();n++)
-    if ((int)row_string[n].size() > maxlen)
-      maxlen = row_string[n].size();
-  // Next we allocate a character array large enough to
-  // hold the string array.
-  char *sp = (char*) Array::allocateArray(FM_STRING,maxlen*row_string.size());
-  // Now we copy 
-  int slices = row_string.size() / rows;
-  for (int i=0;i<slices;i++)
-    for (int j=0;j<rows;j++) {
-      string line(row_string[j+i*rows]);
-      for (int k=0;k<(int)line.size();k++)
-	sp[j+i*rows*maxlen+k*rows] = line[k];
-    }
-  Dimensions odims(Xdims);
-  odims.set(1,maxlen);
-  odims.simplify();
-  return Array(FM_STRING,odims,sp);
+  return StringArrayFromStringVector(all_rows);
 }
 
+template <typename T>
+static ArrayVector Num2Str(const Array &X, const char *formatspec) {
+  if (X.allReal())
+    return ArrayVector(Num2StrHelperReal(X.constReal<T>(),formatspec));
+  else
+    return ArrayVector(Num2StrHelperComplex(X.constReal<T>(),X.constImag<T>(),formatspec));
+}
+
+#define MacroNum2Str(ctype,cls) \
+  case cls: return Num2Str<ctype>(X,formatspec);
 
 ArrayVector Num2StrFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0)
@@ -1132,60 +1044,23 @@ ArrayVector Num2StrFunction(int nargout, const ArrayVector& arg) {
   Array X(arg[0]);
   if (X.isReferenceType())
     throw Exception("num2str function requires a numeric input");
+  if (X.isSparse())
+    throw Exception("num2str not defined for sparse inputs");
+  X = X.asDenseArray();
   char formatspec[1024];
-  if (X.isIntegerClass())
+  if ((X.dataClass() != Float) && (X.dataClass() != Double))
     sprintf(formatspec,"%%d");
   else
-//    sprintf(formatspec,"%%11.4g");
     sprintf(formatspec,"%%g"); //without preceding space
   if (arg.size() > 1) {
     Array format(arg[1]);
     if (format.isString())
-      strcpy(formatspec,ArrayToString(format).c_str());
+      strcpy(formatspec,qPrintable(format.asString()));
   }
-  switch (X.dataClass()) 
-    {
+  switch (X.dataClass())  {
     default: throw Exception("illegal type argument to num2str");
-    case FM_UINT8:
-      return ArrayVector() << Num2StrHelperReal((const uint8*) X.getDataPointer(),
-						X.dimensions(),formatspec);
-    case FM_INT8:
-      return ArrayVector() << Num2StrHelperReal((const int8*) X.getDataPointer(),
-						X.dimensions(),formatspec);
-    case FM_UINT16:
-      return ArrayVector() << Num2StrHelperReal((const uint16*) X.getDataPointer(),
-						X.dimensions(),formatspec);
-    case FM_INT16:
-      return ArrayVector() << Num2StrHelperReal((const int16*) X.getDataPointer(),
-						X.dimensions(),formatspec);
-    case FM_UINT32:
-      return ArrayVector() << Num2StrHelperReal((const uint32*) X.getDataPointer(),
-						X.dimensions(),formatspec);
-    case FM_INT32:
-      return ArrayVector() << Num2StrHelperReal((const int32*) X.getDataPointer(),
-						X.dimensions(),formatspec);
-    case FM_UINT64:
-      return ArrayVector() << Num2StrHelperReal((const uint64*) X.getDataPointer(),
-						X.dimensions(),formatspec);
-    case FM_INT64:
-      return ArrayVector() << Num2StrHelperReal((const int64*) X.getDataPointer(),
-						X.dimensions(),formatspec);
-    case FM_FLOAT:
-      return ArrayVector() << Num2StrHelperReal((const float*) X.getDataPointer(),
-						X.dimensions(),formatspec);
-    case FM_DOUBLE:
-      return ArrayVector() << Num2StrHelperReal((const double*) X.getDataPointer(),
-						X.dimensions(),formatspec);
-    case FM_COMPLEX:
-      return ArrayVector() << Num2StrHelperComplex((const float*) X.getDataPointer(),
-						   X.dimensions(),formatspec);
-    case FM_DCOMPLEX:
-      return ArrayVector() << Num2StrHelperComplex((const double*) X.getDataPointer(),
-						   X.dimensions(),formatspec);
-    case FM_STRING:
-      throw Exception("argument to num2str must be numeric type");
-    }
-  return ArrayVector();
+      MacroExpandCases(MacroNum2Str);
+  }
 }
 
 //!
@@ -1243,5 +1118,5 @@ ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
   out << arg[0].asString();
   out.seek(0);
   fp.seek(0);
-  return ScanFunction(&fp,arg[1].asString());
+  return ScanfFunction(&fp,arg[1].asString());
 }

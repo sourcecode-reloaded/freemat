@@ -20,7 +20,6 @@
 #include "Core.hpp"
 #include "Exception.hpp"
 #include "Array.hpp"
-#include "Malloc.hpp"
 #include "RPC.hpp"
 #include <math.h>
 

@@ -20,8 +20,8 @@
 #include "FN.hpp"
 #include "Exception.hpp"
 #include "Array.hpp"
-#include "Malloc.hpp"
 #include <math.h>
+#include "Operators.hpp"
 
 //!
 //@Module ERFC Complimentary Error Function
@@ -50,35 +50,25 @@
 //@>
 //which results in the following plot.
 //@figure erfc1
+//@@Signature
+//function erfc ErfcFunction
+//inputs x
+//outputs y
 //!
+
+struct OpErfc {
+  static inline float func(float x) {return erfcf(x);}
+  static inline double func(double x) {return erfc(x);}
+  static inline void func(float, float, float&, float&) 
+  { throw Exception("erfc not defined for complex types");}
+  static inline void func(float, float, double&, double&) 
+  { throw Exception("erfc not defined for complex types");}
+};
+
 ArrayVector ErfcFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)
     throw Exception("erfc requires at least one argument");
-  Array tmp(arg[0]);
-  if (tmp.dataClass() < FM_FLOAT)
-    tmp.promoteType(FM_DOUBLE);
-  if (tmp.isComplex())
-    throw Exception("erfc does not work with complex arguments");
-  if (tmp.isReferenceType() || tmp.isString())
-    throw Exception("erfc function requires numerical arguments");
-  if (tmp.dataClass() == FM_FLOAT) {
-    Dimensions odims(tmp.dimensions());
-    int olen(odims.getElementCount());
-    float *sp = (float*) tmp.getDataPointer();
-    float *dp = (float*) Array::allocateArray(FM_FLOAT,olen);
-    for (int i=0;i<olen;i++)
-      dp[i] = erfcf(sp[i]);
-    return SingleArrayVector(Array(FM_FLOAT,odims,dp));
-  } else if (tmp.dataClass() == FM_DOUBLE) {
-    Dimensions odims(tmp.dimensions());
-    int olen(odims.getElementCount());
-    double *sp = (double*) tmp.getDataPointer();
-    double *dp = (double*) Array::allocateArray(FM_DOUBLE,olen);
-    for (int i=0;i<olen;i++)
-      dp[i] = erfc(sp[i]);
-    return SingleArrayVector(Array(FM_DOUBLE,odims,dp));
-  }
-  return ArrayVector();
+  return ArrayVector(UnaryOp<OpErfc>(arg[0]));
 }
 
 //!
@@ -108,35 +98,25 @@ ArrayVector ErfcFunction(int nargout, const ArrayVector& arg) {
 //@>
 //which results in the following plot.
 //@figure erf1
+//@@Signature
+//function erf ErfFunction
+//inputs x
+//outputs y
 //!
+
+struct OpErf {
+  static inline float func(float x) {return erff(x);}
+  static inline double func(double x) {return erf(x);}
+  static inline void func(float, float, float&, float&) 
+  { throw Exception("erf not defined for complex types");}
+  static inline void func(float, float, double&, double&) 
+  { throw Exception("erf not defined for complex types");}
+};
+
 ArrayVector ErfFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)
     throw Exception("erf requires at least one argument");
-  Array tmp(arg[0]);
-  if (tmp.dataClass() < FM_FLOAT)
-    tmp.promoteType(FM_DOUBLE);
-  if (tmp.isComplex())
-    throw Exception("erf does not work with complex arguments");
-  if (tmp.isReferenceType() || tmp.isString())
-    throw Exception("erf function requires numerical arguments");
-  if (tmp.dataClass() == FM_FLOAT) {
-    Dimensions odims(tmp.dimensions());
-    int olen(odims.getElementCount());
-    float *sp = (float*) tmp.getDataPointer();
-    float *dp = (float*) Array::allocateArray(FM_FLOAT,olen);
-    for (int i=0;i<olen;i++)
-      dp[i] = erff(sp[i]);
-    return SingleArrayVector(Array(FM_FLOAT,odims,dp));
-  } else if (tmp.dataClass() == FM_DOUBLE) {
-    Dimensions odims(tmp.dimensions());
-    int olen(odims.getElementCount());
-    double *sp = (double*) tmp.getDataPointer();
-    double *dp = (double*) Array::allocateArray(FM_DOUBLE,olen);
-    for (int i=0;i<olen;i++)
-      dp[i] = erf(sp[i]);
-    return SingleArrayVector(Array(FM_DOUBLE,odims,dp));
-  }
-  return ArrayVector();
+  return ArrayVector(UnaryOp<OpErf>(arg[0]));
 }
   
 //!
@@ -171,35 +151,25 @@ ArrayVector ErfFunction(int nargout, const ArrayVector& arg) {
 //@>
 //which results in the following plot.
 //@figure gamma1
+//@@Signature
+//function gamma GammaFunction
+//inputs x
+//outputs y
 //!
+
+struct OpGamma {
+  static inline float func(float x) {return tgammaf(x);}
+  static inline double func(double x) {return tgamma(x);}
+  static inline void func(float, float, float&, float&) 
+  { throw Exception("gamma not defined for complex types");}
+  static inline void func(float, float, double&, double&) 
+  { throw Exception("gamma not defined for complex types");}
+};
+
 ArrayVector GammaFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)
     throw Exception("gamma requires at least one argument");
-  Array tmp(arg[0]);
-  if (tmp.dataClass() < FM_FLOAT)
-    tmp.promoteType(FM_DOUBLE);
-  if (tmp.isComplex())
-    throw Exception("gamma does not work with complex arguments");
-  if (tmp.isReferenceType() || tmp.isString())
-    throw Exception("gamma function requires numerical arguments");
-  if (tmp.dataClass() == FM_FLOAT) {
-    Dimensions odims(tmp.dimensions());
-    int olen(odims.getElementCount());
-    float *sp = (float*) tmp.getDataPointer();
-    float *dp = (float*) Array::allocateArray(FM_FLOAT,olen);
-    for (int i=0;i<olen;i++) 
-      dp[i] = tgammaf(sp[i]);
-    return SingleArrayVector(Array(FM_FLOAT,odims,dp));
-  } else if (tmp.dataClass() == FM_DOUBLE) {
-    Dimensions odims(tmp.dimensions());
-    int olen(odims.getElementCount());
-    double *sp = (double*) tmp.getDataPointer();
-    double *dp = (double*) Array::allocateArray(FM_DOUBLE,olen);
-    for (int i=0;i<olen;i++) 
-      dp[i] = tgamma(sp[i]);
-    return SingleArrayVector(Array(FM_DOUBLE,odims,dp));
-  }
-  return ArrayVector();
+  return ArrayVector(UnaryOp<OpGamma>(arg[0]));
 }
 
 //!
@@ -223,33 +193,23 @@ ArrayVector GammaFunction(int nargout, const ArrayVector& arg) {
 //@>
 //which results in the following plot.
 //@figure gammaln1
+//@@Signature
+//function gammaln GammaLnFunction
+//inputs x
+//outputs y
 //!
+
+struct OpGammaLn {
+  static inline float func(float x) {return lgammaf(x);}
+  static inline double func(double x) {return lgamma(x);}
+  static inline void func(float, float, float&, float&) 
+  { throw Exception("gammaln not defined for complex types");}
+  static inline void func(float, float, double&, double&) 
+  { throw Exception("gammaln not defined for complex types");}
+};
+
 ArrayVector GammaLnFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)
     throw Exception("gammaln requires at least one argument");
-  Array tmp(arg[0]);
-  if (tmp.dataClass() < FM_FLOAT)
-    tmp.promoteType(FM_DOUBLE);
-  if (tmp.isComplex())
-    throw Exception("gammaln does not work with complex arguments");
-  if (tmp.isReferenceType() || tmp.isString())
-    throw Exception("gammaln function requires numerical arguments");
-  if (tmp.dataClass() == FM_FLOAT) {
-    Dimensions odims(tmp.dimensions());
-    int olen(odims.getElementCount());
-    float *sp = (float*) tmp.getDataPointer();
-    float *dp = (float*) Array::allocateArray(FM_FLOAT,olen);
-    for (int i=0;i<olen;i++) 
-      dp[i] = lgammaf(sp[i]);
-    return SingleArrayVector(Array(FM_FLOAT,odims,dp));
-  } else if (tmp.dataClass() == FM_DOUBLE) {
-    Dimensions odims(tmp.dimensions());
-    int olen(odims.getElementCount());
-    double *sp = (double*) tmp.getDataPointer();
-    double *dp = (double*) Array::allocateArray(FM_DOUBLE,olen);
-    for (int i=0;i<olen;i++) 
-      dp[i] = lgamma(sp[i]);
-    return SingleArrayVector(Array(FM_DOUBLE,odims,dp));
-  }
-  return ArrayVector();
+  return ArrayVector(UnaryOp<OpGammaLn>(arg[0]));
 }

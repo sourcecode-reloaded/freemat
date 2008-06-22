@@ -1,307 +1,926 @@
-ArrayVector QRDNoPivotFunction(bool compactDec, Array A) {
-  int nrows = A.getDimensionLength(0);
-  int ncols = A.getDimensionLength(1);
-  int orows = nrows;
-  int ocols = ncols;
-  if ((!compactDec) && (nrows > ncols)) {
-    Dimensions newDim(nrows,nrows);
-    A.resize(newDim);
-    ncols = nrows;
-  } else 
-    compactDec = true;
-  Class Aclass(A.dataClass());
-  if (Aclass < FM_FLOAT) {
-    A.promoteType(FM_DOUBLE);
-    Aclass = FM_DOUBLE;
-  }
-  int minmn = (nrows < ncols) ? nrows : ncols;
-  ArrayVector retval;
-  Array rmat, qmat;
-  Dimensions dim;
-  switch (Aclass) {
-  default: throw Exception("illegal argument type to QRD");
-  case FM_FLOAT:
-    {
-      float *q = (float*) Malloc(nrows*minmn*sizeof(float));
-      float *r = (float*) Malloc(ncols*minmn*sizeof(float));
-      floatQRD(nrows,ncols,q,r,(float*) A.getReadWriteDataPointer());
-      if (!compactDec) {
-	float *r2 = (float*) Malloc(orows*ocols*sizeof(float));
-	memcpy(r2,r,orows*ocols*sizeof(float));
-	dim.set(0,orows);
-	dim.set(1,ocols);
-	rmat = Array(FM_FLOAT,dim,r2);
-	Free(r);
-      } else {	  
-	dim.set(0,minmn);
-	dim.set(1,ncols);
-	rmat = Array(FM_FLOAT,dim,r);
-      }
-      dim.set(0,nrows);
-      dim.set(1,minmn);
-      qmat = Array(FM_FLOAT,dim,q);
-      retval.push_back(qmat);
-      retval.push_back(rmat);
-      break;
-    }
-  case FM_DOUBLE:
-    {
-      double *q = (double*) Malloc(nrows*minmn*sizeof(double));
-      double *r = (double*) Malloc(ncols*minmn*sizeof(double));
-      doubleQRD(nrows,ncols,q,r,(double*) A.getReadWriteDataPointer());
-      if (!compactDec) {
-	double *r2 = (double*) Malloc(orows*ocols*sizeof(double));
-	memcpy(r2,r,orows*ocols*sizeof(double));
-	dim.set(0,orows);
-	dim.set(1,ocols);
-	rmat = Array(FM_DOUBLE,dim,r2);
-	Free(r);
-      } else {	  
-	dim.set(0,minmn);
-	dim.set(1,ncols);
-	rmat = Array(FM_DOUBLE,dim,r);
-      }
-      dim.set(0,nrows);
-      dim.set(1,minmn);
-      qmat = Array(FM_DOUBLE,dim,q);
-      retval.push_back(qmat);
-      retval.push_back(rmat);
-      break;
-    }
-  case FM_COMPLEX:
-    {
-      float *q = (float*) Malloc(2*nrows*minmn*sizeof(float));
-      float *r = (float*) Malloc(2*ncols*minmn*sizeof(float));
-      complexQRD(nrows,ncols,q,r,(float*) A.getReadWriteDataPointer());
-      if (!compactDec) {
-	float *r2 = (float*) Malloc(2*orows*ocols*sizeof(float));
-	memcpy(r2,r,2*orows*ocols*sizeof(float));
-	dim.set(0,orows);
-	dim.set(1,ocols);
-	rmat = Array(FM_COMPLEX,dim,r2);
-	Free(r);
-      } else {	  
-	dim.set(0,minmn);
-	dim.set(1,ncols);
-	rmat = Array(FM_COMPLEX,dim,r);
-      }
-      dim.set(0,nrows);
-      dim.set(1,minmn);
-      qmat = Array(FM_COMPLEX,dim,q);
-      retval.push_back(qmat);
-      retval.push_back(rmat);
-      break;
-    }
-  case FM_DCOMPLEX:
-    {
-      double *q = (double*) Malloc(2*nrows*minmn*sizeof(double));
-      double *r = (double*) Malloc(2*ncols*minmn*sizeof(double));
-      dcomplexQRD(nrows,ncols,q,r,(double*) A.getReadWriteDataPointer());
-      if (!compactDec) {
-	double *r2 = (double*) Malloc(2*orows*ocols*sizeof(double));
-	memcpy(r2,r,2*orows*ocols*sizeof(double));
-	dim.set(0,orows);
-	dim.set(1,ocols);
-	rmat = Array(FM_DCOMPLEX,dim,r2);
-	Free(r);
-      } else {	  
-	dim.set(0,minmn);
-	dim.set(1,ncols);
-	rmat = Array(FM_DCOMPLEX,dim,r);
-      }
-      dim.set(0,nrows);
-      dim.set(1,minmn);
-      qmat = Array(FM_DCOMPLEX,dim,q);
-      retval.push_back(qmat);
-      retval.push_back(rmat);
-      break;
-    }
-  }
-  return retval;
+#include "Array.hpp"
+#include "MemPtr.hpp"
+#include "LAPACK.hpp"
+#include "Algorithms.hpp"
+
+// Need to wrap:
+//sgeqrf, sorgqr, cungqr, sgeqp3_, 
+template <typename T>
+static void Rgeqrf(int *M, int *N, T *A, int *LDA, T *TAU, T *WORK, int *LWORK, int *INFO);
+
+template <>
+static void Rgeqrf(int *M, int *N, float *A, int *LDA, float *TAU, float *WORK, int *LWORK, int *INFO) {
+  sgeqrf_(M,N,A,LDA,TAU,WORK,LWORK,INFO);
 }
 
-ArrayVector QRDPivotFunction(bool compactDec, Array A) {
-  int nrows = A.getDimensionLength(0);
-  int ncols = A.getDimensionLength(1);
-  int orows = nrows;
-  int ocols = ncols;
-  int i;
-  bool compactSav = compactDec;
-  if ((!compactDec) && (nrows > ncols)) {
-    Dimensions newDim(nrows,nrows);
-    A.resize(newDim);
-    ncols = nrows;
-  } else 
+template <>
+static void Rgeqrf(int *M, int *N, double *A, int *LDA, double *TAU, double *WORK, int *LWORK, int *INFO) {
+  dgeqrf_(M,N,A,LDA,TAU,WORK,LWORK,INFO);
+}
+
+template <typename T>
+static void Rorgqr(int *M, int *N, int *K, T *A, int *LDA, T *TAU, T *WORK, int *LWORK, int *INFO);
+
+template <>
+static void Rorgqr(int *M, int *N, int *K, float *A, int *LDA, float *TAU, float *WORK, int *LWORK, int *INFO) {
+  sorgqr_(M,N,K,A,LDA,TAU,WORK,LWORK,INFO);
+}
+
+template <>
+static void Rorgqr(int *M, int *N, int *K, double *A, int *LDA, double *TAU, double *WORK, int *LWORK, int *INFO) {
+  dorgqr_(M,N,K,A,LDA,TAU,WORK,LWORK,INFO);
+}
+
+template <typename T>
+static void Cgeqrf(int *M, int *N, T *A, int *LDA, T *TAU, T *WORK, int *LWORK, int *INFO);
+
+template <>
+static void Cgeqrf(int *M, int *N, float *A, int *LDA, float *TAU, float *WORK, int *LWORK, int *INFO) {
+  cgeqrf_(M,N,A,LDA,TAU,WORK,LWORK,INFO);
+}
+
+template <>
+static void Cgeqrf(int *M, int *N, double *A, int *LDA, double *TAU, double *WORK, int *LWORK, int *INFO) {
+  zgeqrf_(M,N,A,LDA,TAU,WORK,LWORK,INFO);
+}
+
+template <typename T>
+static void Cungqr(int *M, int *N, int *K, T *A, int *LDA, T *TAU, T *WORK, int *LWORK, int *INFO);
+
+template <>
+static void Cungqr(int *M, int *N, int *K, float *A, int *LDA, float *TAU, float *WORK, int *LWORK, int *INFO) {
+  cungqr_(M,N,K,A,LDA,TAU,WORK,LWORK,INFO);
+}
+
+template <>
+static void Cungqr(int *M, int *N, int *K, double *A, int *LDA, double *TAU, double *WORK, int *LWORK, int *INFO) {
+  zungqr_(M,N,K,A,LDA,TAU,WORK,LWORK,INFO);
+}
+
+template <typename T>
+static void Rgeqp3(int *M, int *N, T *A, int *LDA, int *JPVT, T *TAU, T *WORK, int *LWORK, int *INFO);
+
+template <>
+static void Rgeqp3(int *M, int *N, float *A, int *LDA, int *JPVT, float *TAU, float *WORK, int *LWORK, int *INFO) {
+  sgeqp3_(M,N,A,LDA,JPVT,TAU,WORK,LWORK,INFO);
+}
+
+template <>
+static void Rgeqp3(int *M, int *N, double *A, int *LDA, int *JPVT, double *TAU, double *WORK, int *LWORK, int *INFO) {
+  dgeqp3_(M,N,A,LDA,JPVT,TAU,WORK,LWORK,INFO);
+}
+
+template <typename T>
+static void Cgeqp3(int *M, int *N, T *A, int *LDA, int *JPVT, T *TAU, T *WORK, int *LWORK, T *RWORK, int *INFO);
+
+template <>
+static void Cgeqp3(int *M, int *N, float *A, int *LDA, int *JPVT, float *TAU, float *WORK, int *LWORK, float *RWORK, int *INFO) {
+  cgeqp3_(M,N,A,LDA,JPVT,TAU,WORK,LWORK,RWORK,INFO);
+}
+
+template <>
+static void Cgeqp3(int *M, int *N, double *A, int *LDA, int *JPVT, double *TAU, double *WORK, int *LWORK, double *RWORK, int *INFO) {
+  zgeqp3_(M,N,A,LDA,JPVT,TAU,WORK,LWORK,RWORK,INFO);
+}
+
+template <typename T>
+static void RealQRD(BasicArray<T> &Q, BasicArray<T> &R, BasicArray<T> &A) {
+  // Note - to get a complete QR decomposition, we need 2 LAPACK routines.
+  // The first is sgeqrf, which computes the QR decomposition, but stores
+  // the matrix Q as a sequence of Householder transformations.  To get
+  // a usable representation of Q within FreeMat, the routine sorgqr must
+  // be called to expand the transformations into a Q matrix.
+  // Generally speaking, a QR decomposition should be Q=MxN and R=NxN
+  // if M>N.  If M<=N, then Q=MxM, R = MxN.  In either case, if L=min(M,N),
+  // then Q = MxL and R=LxN
+  //      SUBROUTINE SGEQRF( M, N, A, LDA, TAU, WORK, LWORK, INFO )
+  //*
+  //*  -- LAPACK routine (version 3.0) --
+  //*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+  //*     Courant Institute, Argonne National Lab, and Rice University
+  //*     June 30, 1999
+  //*
+  //*     .. Scalar Arguments ..
+  //      INTEGER            INFO, LDA, LWORK, M, N
+  //*     ..
+  //*     .. Array Arguments ..
+  //      REAL               A( LDA, * ), TAU( * ), WORK( * )
+  //*     ..
+  //*
+  //*  Purpose
+  //*  =======
+  //*
+  //*  SGEQRF computes a QR factorization of a real M-by-N matrix A:
+  //*  A = Q * R.
+  //*
+  //*  Arguments
+  //*  =========
+  //*
+  //*  M       (input) INTEGER
+  //*          The number of rows of the matrix A.  M >= 0.
+  //*
+  int M = int(A.rows());
+  //*  N       (input) INTEGER
+  //*          The number of columns of the matrix A.  N >= 0.
+  //*
+  int N = int(A.cols());
+  //*  A       (input/output) REAL array, dimension (LDA,N)
+  //*          On entry, the M-by-N matrix A.
+  //*          On exit, the elements on and above the diagonal of the array
+  //*          contain the min(M,N)-by-N upper trapezoidal matrix R (R is
+  //*          upper triangular if m >= n); the elements below the diagonal,
+  //*          with the array TAU, represent the orthogonal matrix Q as a
+  //*          product of min(m,n) elementary reflectors (see Further
+  //*          Details).
+  //*
+  //*  LDA     (input) INTEGER
+  //*          The leading dimension of the array A.  LDA >= max(1,M).
+  //*
+  int LDA = M;
+  //*  TAU     (output) REAL array, dimension (min(M,N))
+  //*          The scalar factors of the elementary reflectors (see Further
+  //*          Details).
+  //*
+  MemBlock<T> TAUBlock(qMin(M,N)); 
+  T *TAU = &TAUBlock;
+  //*  WORK    (workspace/output) REAL array, dimension (LWORK)
+  //*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+  //*
+  //*  LWORK   (input) INTEGER
+  //*          The dimension of the array WORK.  LWORK >= max(1,N).
+  //*          For optimum performance LWORK >= N*NB, where NB is 
+  //*          the optimal blocksize.
+  //*
+  //*          If LWORK = -1, then a workspace query is assumed; the routine
+  //*          only calculates the optimal size of the WORK array, returns
+  //*          this value as the first entry of the WORK array, and no error
+  //*          message related to LWORK is issued by XERBLA.
+  //
+  int LWORK;
+  //*  INFO    (output) INTEGER
+  //*          = 0:  successful exit
+  //*          < 0:  if INFO = -i, the i-th argument had an illegal value
+  LWORK = -1;
+  T WORKSZE;
+  int INFO;
+  Rgeqrf(&M, &N, A.data(), &LDA, TAU, &WORKSZE, &LWORK, &INFO);
+  LWORK = (int) WORKSZE;
+  MemBlock<T> WORKBlock(LWORK);
+  T* WORK = &WORKBlock;
+  Rgeqrf(&M, &N, A.data(), &LDA, TAU, WORK, &LWORK, &INFO);
+  int minmn = qMin(M,N);
+  // Need to copy out the upper triangle of A into the upper triangle of R
+  T* r = R.data();
+  T* a = A.data();
+  T* q = Q.data();
+  memset(r,0,minmn*N*sizeof(T));
+  int i, j, k;
+  for (i=0;i<N;i++) {
+    k = qMin(minmn-1,i);
+    for (j=0;j<=k;j++)
+      r[j+i*minmn] = a[j+i*M];
+  }
+  memset(q,0,M*minmn*sizeof(T));
+  for (i=0;i<M;i++)
+    for (j=0;j<minmn;j++)
+      q[i+j*M] = a[i+j*M];
+  //      SUBROUTINE SORGQR( M, N, K, A, LDA, TAU, WORK, LWORK, INFO )
+  //*
+  //*  -- LAPACK routine (version 3.0) --
+  //*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+  //*     Courant Institute, Argonne National Lab, and Rice University
+  //*     June 30, 1999
+  //*
+  //*     .. Scalar Arguments ..
+  //      INTEGER            INFO, K, LDA, LWORK, M, N
+  //*     ..
+  //*     .. Array Arguments ..
+  //      REAL               A( LDA, * ), TAU( * ), WORK( * )
+  //*     ..
+  //*
+  //*  Purpose
+  //*  =======
+  //*
+  //*  SORGQR generates an M-by-N real matrix Q with orthonormal columns,
+  //*  which is defined as the first N columns of a product of K elementary
+  //*  reflectors of order M
+  //*
+  //*        Q  =  H(1) H(2) . . . H(k)
+  //*
+  //*  as returned by SGEQRF.
+  //*
+  //*  Arguments
+  //*  =========
+  //*
+  //*  M       (input) INTEGER
+  //*          The number of rows of the matrix Q. M >= 0.
+  //*
+  //*  N       (input) INTEGER
+  //*          The number of columns of the matrix Q. M >= N >= 0.
+  //*
+  //*  K       (input) INTEGER
+  //*          The number of elementary reflectors whose product defines the
+  //*          matrix Q. N >= K >= 0.
+  int K;
+  K = minmn;
+  //*
+  //*  A       (input/output) REAL array, dimension (LDA,N)
+  //*          On entry, the i-th column must contain the vector which
+  //*          defines the elementary reflector H(i), for i = 1,2,...,k, as
+  //*          returned by SGEQRF in the first k columns of its array
+  //*          argument A.
+  //*          On exit, the M-by-N matrix Q.
+  //*
+  //*  LDA     (input) INTEGER
+  //*          The first dimension of the array A. LDA >= max(1,M).
+  LDA = M;
+  //*
+  //*  TAU     (input) REAL array, dimension (K)
+  //*          TAU(i) must contain the scalar factor of the elementary
+  //*          reflector H(i), as returned by SGEQRF.
+  //*
+  //*  WORK    (workspace/output) REAL array, dimension (LWORK)
+  //*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+  //*
+  //*  LWORK   (input) INTEGER
+  //*          The dimension of the array WORK. LWORK >= max(1,N).
+  //*          For optimum performance LWORK >= N*NB, where NB is the
+  //*          optimal blocksize.
+  //*
+  //*          If LWORK = -1, then a workspace query is assumed; the routine
+  //*          only calculates the optimal size of the WORK array, returns
+  //*          this value as the first entry of the WORK array, and no error
+  //*          message related to LWORK is issued by XERBLA.
+  //*
+  //*  INFO    (output) INTEGER
+  //*          = 0:  successful exit
+  //*          < 0:  if INFO = -i, the i-th argument has an illegal value
+  //*
+  LWORK = -1;
+  Rorgqr(&M, &N, &K, q, &LDA, TAU, &WORKSZE, &LWORK, &INFO);
+  LWORK = (int) WORKSZE;
+  MemBlock<T> WORKBlock2(LWORK); 
+  WORK = &WORKBlock2;
+  Rorgqr(&M, &N, &K, q, &LDA, TAU, WORK, &LWORK, &INFO);
+}
+
+template <typename T>
+static void ComplexQRD(BasicArray<T> &Q, BasicArray<T> &R, BasicArray<T> A) {
+  //      SUBROUTINE CGEQRF( M, N, A, LDA, TAU, WORK, LWORK, INFO )
+  //*
+  //*  -- LAPACK routine (version 3.0) --
+  //*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+  //*     Courant Institute, Argonne National Lab, and Rice University
+  //*     June 30, 1999
+  //*
+  //*     .. Scalar Arguments ..
+  //      INTEGER            INFO, LDA, LWORK, M, N
+  //*     ..
+  //*     .. Array Arguments ..
+  //      COMPLEX            A( LDA, * ), TAU( * ), WORK( * )
+  //*     ..
+  //*
+  //*  Purpose
+  //*  =======
+  //*
+  //*  CGEQRF computes a QR factorization of a complex M-by-N matrix A:
+  //*  A = Q * R.
+  //*
+  //*  Arguments
+  //*  =========
+  //*
+  //*  M       (input) INTEGER
+  //*          The number of rows of the matrix A.  M >= 0.
+  //*
+  int M = int(A.rows());
+  //*  N       (input) INTEGER
+  //*          The number of columns of the matrix A.  N >= 0.
+  //*
+  int N = int(A.cols());
+  //*  A       (input/output) COMPLEX array, dimension (LDA,N)
+  //*          On entry, the M-by-N matrix A.
+  //*          On exit, the elements on and above the diagonal of the array
+  //*          contain the min(M,N)-by-N upper trapezoidal matrix R (R is
+  //*          upper triangular if m >= n); the elements below the diagonal,
+  //*          with the array TAU, represent the unitary matrix Q as a
+  //*          product of min(m,n) elementary reflectors (see Further
+  //*          Details).
+  //*
+  //*  LDA     (input) INTEGER
+  //*          The leading dimension of the array A.  LDA >= max(1,M).
+  //*
+  int LDA = M;
+  //*  TAU     (output) COMPLEX array, dimension (min(M,N))
+  //*          The scalar factors of the elementary reflectors (see Further
+  //*          Details).
+  //*
+  MemBlock<T> TAUBlock(qMin(M,N)*2);
+  T *TAU = &TAUBlock;
+  //*  WORK    (workspace/output) COMPLEX array, dimension (LWORK)
+  //*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+  //*
+  //*  LWORK   (input) INTEGER
+  //*          The dimension of the array WORK.  LWORK >= max(1,N).
+  //*          For optimum performance LWORK >= N*NB, where NB is
+  //*          the optimal blocksize.
+  //*
+  //*          If LWORK = -1, then a workspace query is assumed; the routine
+  //*          only calculates the optimal size of the WORK array, returns
+  //*          this value as the first entry of the WORK array, and no error
+  //*          message related to LWORK is issued by XERBLA.
+  //*
+  int LWORK;
+  //*  INFO    (output) INTEGER
+  //*          = 0:  successful exit
+  //*          < 0:  if INFO = -i, the i-th argument had an illegal value
+  //
+  LWORK = -1;
+  T WORKSZE[2];
+  int INFO;
+  Cgeqrf(&M, &N, A.data(), &LDA, TAU, WORKSZE, &LWORK, &INFO);
+  LWORK = (int) WORKSZE[0];
+  MemBlock<T> WORKBlock(LWORK*2);
+  T *WORK = &WORKBlock;
+  Cgeqrf(&M, &N, A.data(), &LDA, TAU, WORK, &LWORK, &INFO);
+  int minmn = qMin(M,N);
+  T* r = R.data();
+  T* a = A.data();
+  T* q = Q.data();
+  // Need to copy out the upper triangle of A into the upper triangle of R
+  memset(r,0,minmn*N*sizeof(T)*2);
+  int i, j, k;
+  for (i=0;i<N;i++) {
+    k = qMin(minmn-1,i);
+    for (j=0;j<=k;j++) {
+      r[2*(j+i*minmn)] = a[2*(j+i*M)];
+      r[2*(j+i*minmn)+1] = a[2*(j+i*M)+1];
+    }
+  }
+  memset(q,0,M*minmn*sizeof(T)*2);
+  for (i=0;i<M;i++)
+    for (j=0;j<minmn;j++) {
+      q[2*(i+j*M)] = a[2*(i+j*M)];
+      q[2*(i+j*M)+1] = a[2*(i+j*M)+1];
+    }
+  //      SUBROUTINE CUNGQR( M, N, K, A, LDA, TAU, WORK, LWORK, INFO )
+  //*
+  //*  -- LAPACK routine (version 3.0) --
+  //*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+  //*     Courant Institute, Argonne National Lab, and Rice University
+  //*     June 30, 1999
+  //*
+  //*     .. Scalar Arguments ..
+  //      INTEGER            INFO, K, LDA, LWORK, M, N
+  //*     ..
+  //*     .. Array Arguments ..
+  //      COMPLEX            A( LDA, * ), TAU( * ), WORK( * )
+  //*     ..
+  //*
+  //*  Purpose
+  //*  =======
+  //*
+  //*  CUNGQR generates an M-by-N complex matrix Q with orthonormal columns,
+  //*  which is defined as the first N columns of a product of K elementary
+  //*  reflectors of order M
+  //*
+  //*        Q  =  H(1) H(2) . . . H(k)
+  //*
+  //*  as returned by CGEQRF.
+  //*
+  //*  Arguments
+  //*  =========
+  //*
+  //*  M       (input) INTEGER
+  //*          The number of rows of the matrix Q. M >= 0.
+  //*
+  //*  N       (input) INTEGER
+  //*          The number of columns of the matrix Q. M >= N >= 0.
+  N = minmn;
+  //*
+  //*  K       (input) INTEGER
+  //*          The number of elementary reflectors whose product defines the
+  //*          matrix Q. N >= K >= 0.
+  int K;
+  K = minmn;
+  //*
+  //*  A       (input/output) COMPLEX array, dimension (LDA,N)
+  //*          On entry, the i-th column must contain the vector which
+  //*          defines the elementary reflector H(i), for i = 1,2,...,k, as
+  //*          returned by CGEQRF in the first k columns of its array
+  //*          argument A.
+  //*          On exit, the M-by-N matrix Q.
+  //*
+  //*  LDA     (input) INTEGER
+  //*          The first dimension of the array A. LDA >= max(1,M).
+  LDA = M;
+  //*
+  //*  TAU     (input) COMPLEX array, dimension (K)
+  //*          TAU(i) must contain the scalar factor of the elementary
+  //*          reflector H(i), as returned by CGEQRF.
+  //*
+  //*  WORK    (workspace/output) COMPLEX array, dimension (LWORK)
+  //*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+  //*
+  //*  LWORK   (input) INTEGER
+  //*          The dimension of the array WORK. LWORK >= max(1,N).
+  //*          For optimum performance LWORK >= N*NB, where NB is the
+  //*          optimal blocksize.
+  //*
+  //*          If LWORK = -1, then a workspace query is assumed; the routine
+  //*          only calculates the optimal size of the WORK array, returns
+  //*          this value as the first entry of the WORK array, and no error
+  //*          message related to LWORK is issued by XERBLA.
+  //*
+  //*  INFO    (output) INTEGER
+  //*          = 0:  successful exit
+  //*          < 0:  if INFO = -i, the i-th argument has an illegal value
+  //*
+  LWORK = -1;
+  Cungqr(&M, &N, &K, q, &LDA, TAU, WORKSZE, &LWORK, &INFO);
+  LWORK = (int) WORKSZE[0];
+  MemBlock<T> WORKBlock2(LWORK*2);
+  WORK = &WORKBlock2;
+  Cungqr(&M, &N, &K, q, &LDA, TAU, WORK, &LWORK, &INFO);
+}
+
+template <typename T>
+static void RealQRDP(BasicArray<T> &Q, BasicArray<T> &R, BasicArray<T> &P, BasicArray<T> &A) {
+  //      SUBROUTINE SGEQP3( M, N, A, LDA, JPVT, TAU, WORK, LWORK, INFO )
+  //*
+  //*  -- LAPACK routine (version 3.0) --
+  //*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+  //*     Courant Institute, Argonne National Lab, and Rice University
+  //*     June 30, 1999
+  //*
+  //*     .. Scalar Arguments ..
+  //      INTEGER            INFO, LDA, LWORK, M, N
+  //*     ..
+  //*     .. Array Arguments ..
+  //      INTEGER            JPVT( * )
+  //      REAL               A( LDA, * ), TAU( * ), WORK( * )
+  //*     ..
+  //*
+  //*  Purpose
+  //*  =======
+  //*
+  //*  SGEQP3 computes a QR factorization with column pivoting of a
+  //*  matrix A:  A*P = Q*R  using Level 3 BLAS.
+  //*
+  //*  Arguments
+  //*  =========
+  //*
+  //*  M       (input) INTEGER
+  //*          The number of rows of the matrix A. M >= 0.
+  //*
+  int M = int(A.rows());
+  //*  N       (input) INTEGER
+  //*          The number of columns of the matrix A.  N >= 0.
+  //*
+  int N = int(A.cols());
+  //*  A       (input/output) REAL array, dimension (LDA,N)
+  //*          On entry, the M-by-N matrix A.
+  //*          On exit, the upper triangle of the array contains the
+  //*          min(M,N)-by-N upper trapezoidal matrix R; the elements below
+  //*          the diagonal, together with the array TAU, represent the
+  //*          orthogonal matrix Q as a product of min(M,N) elementary
+  //*          reflectors.
+  //*
+  //*  LDA     (input) INTEGER
+  //*          The leading dimension of the array A. LDA >= max(1,M).
+  //*
+  int LDA = int(A.rows());
+  //*  JPVT    (input/output) INTEGER array, dimension (N)
+  //*          On entry, if JPVT(J).ne.0, the J-th column of A is permuted
+  //*          to the front of A*P (a leading column); if JPVT(J)=0,
+  //*          the J-th column of A is a free column.
+  //*          On exit, if JPVT(J)=K, then the J-th column of A*P was the
+  //*          the K-th column of A.
+  //*
+  MemBlock<int> JPVTBlock(N);
+  int *JPVT = &JPVTBlock;
+  //*  TAU     (output) REAL array, dimension (min(M,N))
+  //*          The scalar factors of the elementary reflectors.
+  //*
+  MemBlock<T> TAUBlock(qMin(M,N)); 
+  T* TAU = &TAUBlock;
+  //*  WORK    (workspace/output) REAL array, dimension (LWORK)
+  //*          On exit, if INFO=0, WORK(1) returns the optimal LWORK.
+  //*
+  //*  LWORK   (input) INTEGER
+  //*          The dimension of the array WORK. LWORK >= 3*N+1.
+  //*          For optimal performance LWORK >= 2*N+( N+1 )*NB, where NB
+  //*          is the optimal blocksize.
+  //*
+  //*          If LWORK = -1, then a workspace query is assumed; the routine
+  //*          only calculates the optimal size of the WORK array, returns
+  //*          this value as the first entry of the WORK array, and no error
+  //*          message related to LWORK is issued by XERBLA.
+  //*
+  int LWORK;
+  //*  INFO    (output) INTEGER
+  //*          = 0: successful exit.
+  //*          < 0: if INFO = -i, the i-th argument had an illegal value.
+  LWORK = -1;
+  T WORKSZE;
+  int INFO;
+  Rgeqp3(&M, &N, A.data(), &LDA, JPVT, TAU, &WORKSZE, &LWORK, &INFO);
+  LWORK = (int) WORKSZE;
+  MemBlock<T> WORKBlock(LWORK); 
+  T* WORK = &WORKBlock;
+  Rgeqp3(&M, &N, A.data(), &LDA, JPVT, TAU, WORK, &LWORK, &INFO);
+  int minmn = qMin(M,N);
+  // Need to copy out the upper triangle of A into the upper triangle of R
+  T *r = R.data();
+  T *q = Q.data();
+  T *a = A.data();
+  memset(r,0,minmn*N*sizeof(T));
+  int i, j, k;
+  for (i=0;i<N;i++) {
+    k = qMin(minmn-1,i);
+    for (j=0;j<=k;j++)
+      r[j+i*minmn] = a[j+i*M];
+  }
+  memset(q,0,M*minmn*sizeof(T));
+  for (i=0;i<M;i++)
+    for (j=0;j<minmn;j++)
+      q[i+j*M] = a[i+j*M];
+  //      SUBROUTINE SORGQR( M, N, K, A, LDA, TAU, WORK, LWORK, INFO )
+  //*
+  //*  -- LAPACK routine (version 3.0) --
+  //*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+  //*     Courant Institute, Argonne National Lab, and Rice University
+  //*     June 30, 1999
+  //*
+  //*     .. Scalar Arguments ..
+  //      INTEGER            INFO, K, LDA, LWORK, M, N
+  //*     ..
+  //*     .. Array Arguments ..
+  //      REAL               A( LDA, * ), TAU( * ), WORK( * )
+  //*     ..
+  //*
+  //*  Purpose
+  //*  =======
+  //*
+  //*  SORGQR generates an M-by-N real matrix Q with orthonormal columns,
+  //*  which is defined as the first N columns of a product of K elementary
+  //*  reflectors of order M
+  //*
+  //*        Q  =  H(1) H(2) . . . H(k)
+  //*
+  //*  as returned by SGEQRF.
+  //*
+  //*  Arguments
+  //*  =========
+  //*
+  //*  M       (input) INTEGER
+  //*          The number of rows of the matrix Q. M >= 0.
+  M = int(A.rows());
+  //*
+  //*  N       (input) INTEGER
+  //*          The number of columns of the matrix Q. M >= N >= 0.
+  N = minmn;
+  //*
+  //*  K       (input) INTEGER
+  //*          The number of elementary reflectors whose product defines the
+  //*          matrix Q. N >= K >= 0.
+  int K;
+  K = minmn;
+  //*
+  //*  A       (input/output) REAL array, dimension (LDA,N)
+  //*          On entry, the i-th column must contain the vector which
+  //*          defines the elementary reflector H(i), for i = 1,2,...,k, as
+  //*          returned by SGEQRF in the first k columns of its array
+  //*          argument A.
+  //*          On exit, the M-by-N matrix Q.
+  //*
+  //*  LDA     (input) INTEGER
+  //*          The first dimension of the array A. LDA >= max(1,M).
+  LDA = M;
+  //*
+  //*  TAU     (input) REAL array, dimension (K)
+  //*          TAU(i) must contain the scalar factor of the elementary
+  //*          reflector H(i), as returned by SGEQRF.
+  //*
+  //*  WORK    (workspace/output) REAL array, dimension (LWORK)
+  //*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+  //*
+  //*  LWORK   (input) INTEGER
+  //*          The dimension of the array WORK. LWORK >= max(1,N).
+  //*          For optimum performance LWORK >= N*NB, where NB is the
+  //*          optimal blocksize.
+  //*
+  //*          If LWORK = -1, then a workspace query is assumed; the routine
+  //*          only calculates the optimal size of the WORK array, returns
+  //*          this value as the first entry of the WORK array, and no error
+  //*          message related to LWORK is issued by XERBLA.
+  //*
+  //*  INFO    (output) INTEGER
+  //*          = 0:  successful exit
+  //*          < 0:  if INFO = -i, the i-th argument has an illegal value
+  //*
+  LWORK = -1;
+  Rorgqr(&M, &N, &K, q, &LDA, TAU, &WORKSZE, &LWORK, &INFO);
+  LWORK = (int) WORKSZE;
+  MemBlock<T> WORKBlock2(LWORK);
+  WORK = &WORKBlock2;
+  Rorgqr(&M, &N, &K, q, &LDA, TAU, WORK, &LWORK, &INFO);
+  for (int i=0;i<N;i++)
+    P.set(i+1,JPVT[i]);
+}
+
+template <typename T>
+static void ComplexQRDP(BasicArray<T> &Q, BasicArray<T> &R, BasicArray<T> &P, BasicArray<T> A) {
+  //      SUBROUTINE CGEQP3( M, N, A, LDA, JPVT, TAU, WORK, LWORK, RWORK,
+  //     $                   INFO )
+  //*
+  //*  -- LAPACK routine (version 3.0) --
+  //*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+  //*     Courant Institute, Argonne National Lab, and Rice University
+  //*     June 30, 1999
+  //*
+  //*     .. Scalar Arguments ..
+  //      INTEGER            INFO, LDA, LWORK, M, N
+  //*     ..
+  //*     .. Array Arguments ..
+  //      INTEGER            JPVT( * )
+  //      REAL               RWORK( * )
+  //      COMPLEX            A( LDA, * ), TAU( * ), WORK( * )
+  //*     ..
+  //*
+  //*  Purpose
+  //*  =======
+  //*
+  //*  CGEQP3 computes a QR factorization with column pivoting of a
+  //*  matrix A:  A*P = Q*R  using Level 3 BLAS.
+  //*
+  //*  Arguments
+  //*  =========
+  //*
+  //*  M       (input) INTEGER
+  //*          The number of rows of the matrix A. M >= 0.
+  //*
+  int M = int(A.rows());
+  //*  N       (input) INTEGER
+  //*          The number of columns of the matrix A.  N >= 0.
+  //*
+  int N = int(A.cols());
+  //*  A       (input/output) COMPLEX array, dimension (LDA,N)
+  //*          On entry, the M-by-N matrix A.
+  //*          On exit, the upper triangle of the array contains the
+  //*          min(M,N)-by-N upper trapezoidal matrix R; the elements below
+  //*          the diagonal, together with the array TAU, represent the
+  //*          unitary matrix Q as a product of min(M,N) elementary
+  //*          reflectors.
+  //*
+  //*  LDA     (input) INTEGER
+  //*          The leading dimension of the array A. LDA >= max(1,M).
+  //*
+  int LDA = int(A.rows());
+  //*  JPVT    (input/output) INTEGER array, dimension (N)
+  //*          On entry, if JPVT(J).ne.0, the J-th column of A is permuted
+  //*          to the front of A*P (a leading column); if JPVT(J)=0,
+  //*          the J-th column of A is a free column.
+  //*          On exit, if JPVT(J)=K, then the J-th column of A*P was the
+  //*          the K-th column of A.
+  //*
+  MemBlock<int> JPVTBlock(N);
+  int *JPVT = &JPVTBlock;
+  //*  TAU     (output) COMPLEX array, dimension (min(M,N))
+  //*          The scalar factors of the elementary reflectors.
+  //*
+  MemBlock<T> TAUBlock(qMin(M,N)*2);
+  T *TAU = &TAUBlock;
+  //*  WORK    (workspace/output) COMPLEX array, dimension (LWORK)
+  //*          On exit, if INFO=0, WORK(1) returns the optimal LWORK.
+  //*
+  //*  LWORK   (input) INTEGER
+  //*          The dimension of the array WORK. LWORK >= N+1.
+  //*          For optimal performance LWORK >= ( N+1 )*NB, where NB
+  //*          is the optimal blocksize.
+  //*
+  //*          If LWORK = -1, then a workspace query is assumed; the routine
+  //*          only calculates the optimal size of the WORK array, returns
+  //*          this value as the first entry of the WORK array, and no error
+  //*          message related to LWORK is issued by XERBLA.
+  //* 
+  int LWORK;
+  //*  RWORK   (workspace) REAL array, dimension (2*N)
+  //*
+  MemBlock<T> RWORKBlock(2*N);
+  T *RWORK = &RWORKBlock;
+  //*  INFO    (output) INTEGER
+  //*          = 0: successful exit.
+  //*          < 0: if INFO = -i, the i-th argument had an illegal value.
+  LWORK = -1;
+  T WORKSZE[2];
+  int INFO;
+  Cgeqp3(&M, &N, A.data(), &LDA, JPVT, TAU, WORKSZE, &LWORK, RWORK, &INFO);
+  LWORK = (int) WORKSZE[0];
+  MemBlock<T> WORKBlock(LWORK*2);
+  T *WORK = &WORKBlock;
+  Cgeqp3(&M, &N, A.data(), &LDA, JPVT, TAU, WORK, &LWORK, RWORK, &INFO);
+  int minmn = qMin(M,N);
+  T *r = R.data();
+  T *a = A.data();
+  T *q = Q.data();
+  // Need to copy out the upper triangle of A into the upper triangle of R
+  memset(r,0,minmn*N*sizeof(float)*2);
+  int i, j, k;
+  for (i=0;i<N;i++) {
+    k = qMin(minmn-1,i);
+    for (j=0;j<=k;j++) {
+      r[2*(j+i*minmn)] = a[2*(j+i*M)];
+      r[2*(j+i*minmn)+1] = a[2*(j+i*M)+1];
+    }
+  }
+  memset(q,0,M*minmn*sizeof(float)*2);
+  for (i=0;i<M;i++)
+    for (j=0;j<minmn;j++) {
+      q[2*(i+j*M)] = a[2*(i+j*M)];
+      q[2*(i+j*M)+1] = a[2*(i+j*M)+1];
+    }
+  //      SUBROUTINE CUNGQR( M, N, K, A, LDA, TAU, WORK, LWORK, INFO )
+  //*
+  //*  -- LAPACK routine (version 3.0) --
+  //*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+  //*     Courant Institute, Argonne National Lab, and Rice University
+  //*     June 30, 1999
+  //*
+  //*     .. Scalar Arguments ..
+  //      INTEGER            INFO, K, LDA, LWORK, M, N
+  //*     ..
+  //*     .. Array Arguments ..
+  //      COMPLEX            A( LDA, * ), TAU( * ), WORK( * )
+  //*     ..
+  //*
+  //*  Purpose
+  //*  =======
+  //*
+  //*  CUNGQR generates an M-by-N complex matrix Q with orthonormal columns,
+  //*  which is defined as the first N columns of a product of K elementary
+  //*  reflectors of order M
+  //*
+  //*        Q  =  H(1) H(2) . . . H(k)
+  //*
+  //*  as returned by CGEQRF.
+  //*
+  //*  Arguments
+  //*  =========
+  //*
+  //*  M       (input) INTEGER
+  //*          The number of rows of the matrix Q. M >= 0.
+  M = int(A.rows());    
+  //*
+  //*  N       (input) INTEGER
+  //*          The number of columns of the matrix Q. M >= N >= 0.
+  N = minmn;
+  //*
+  //*  K       (input) INTEGER
+  //*          The number of elementary reflectors whose product defines the
+  //*          matrix Q. N >= K >= 0.
+  int K;
+  K = minmn;
+  //*
+  //*  A       (input/output) COMPLEX array, dimension (LDA,N)
+  //*          On entry, the i-th column must contain the vector which
+  //*          defines the elementary reflector H(i), for i = 1,2,...,k, as
+  //*          returned by CGEQRF in the first k columns of its array
+  //*          argument A.
+  //*          On exit, the M-by-N matrix Q.
+  //*
+  //*  LDA     (input) INTEGER
+  //*          The first dimension of the array A. LDA >= max(1,M).
+  LDA = M;
+  //*
+  //*  TAU     (input) COMPLEX array, dimension (K)
+  //*          TAU(i) must contain the scalar factor of the elementary
+  //*          reflector H(i), as returned by CGEQRF.
+  //*
+  //*  WORK    (workspace/output) COMPLEX array, dimension (LWORK)
+  //*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+  //*
+  //*  LWORK   (input) INTEGER
+  //*          The dimension of the array WORK. LWORK >= max(1,N).
+  //*          For optimum performance LWORK >= N*NB, where NB is the
+  //*          optimal blocksize.
+  //*
+  //*          If LWORK = -1, then a workspace query is assumed; the routine
+  //*          only calculates the optimal size of the WORK array, returns
+  //*          this value as the first entry of the WORK array, and no error
+  //*          message related to LWORK is issued by XERBLA.
+  //*
+  //*  INFO    (output) INTEGER
+  //*          = 0:  successful exit
+  //*          < 0:  if INFO = -i, the i-th argument has an illegal value
+  //*
+  LWORK = -1;
+  Cungqr(&M, &N, &K, q, &LDA, TAU, WORKSZE, &LWORK, &INFO);
+  LWORK = (int) WORKSZE[0];
+  MemBlock<T> WORKBlock2(LWORK*2);
+  WORK = &WORKBlock2;
+  Cungqr(&M, &N, &K, q, &LDA, TAU, WORK, &LWORK, &INFO);
+  for (int i=0;i<N;i++)
+    P.set(i+1,JPVT[i]);
+}
+
+template <typename T>
+static BasicArray<T> Trim(BasicArray<T> in, const NTuple &dim) {
+  BasicArray<T> ret(dim);
+  for (index_t i=1;i!=dim.count();i++)
+    ret.set(i,in[i]);
+  return ret;
+}
+
+template <typename T>
+static ArrayVector QRDNoPivotFunction(bool compactDec, NTuple odims, Array A) {
+  ArrayVector retvec;
+  index_t minmn = qMin(A.rows(),A.cols());
+  if (A.allReal()) {
+    BasicArray<T> q(NTuple(A.rows(),minmn));
+    BasicArray<T> r(NTuple(minmn,A.cols()));
+    RealQRD(q,r,A.real<T>());
+    retvec << Array(q);
+    if (compactDec)
+      retvec << Array(r);
+    else
+      retvec << Array(Trim(r,odims));
+  } else {
+    BasicArray<T> q(NTuple(2*A.rows(),minmn));
+    BasicArray<T> r(NTuple(2*minmn,A.cols()));
+    ComplexQRD(q,r,A.fortran<T>());
+    retvec << Array(SplitReal(q),SplitImag(q));
+    if (compactDec)
+      retvec << Array(SplitReal(r),SplitImag(r));
+    else
+      retvec << Array(Trim(SplitReal(r),odims),Trim(SplitImag(r),odims));
+  }
+  return retvec;
+}
+
+template <typename T>
+static ArrayVector QRDPivotFunction(bool compactDec, bool compactSav, NTuple odims, Array A) {
+  ArrayVector retvec;
+  index_t minmn = qMin(A.rows(),A.cols());
+  BasicArray<T> p(NTuple(1,A.cols()));
+  if (A.allReal()) {
+    BasicArray<T> q(NTuple(A.rows(),minmn));
+    BasicArray<T> r(NTuple(minmn,A.cols()));
+    RealQRDP(q,r,p,A.real<T>());
+    retvec << Array(q);
+    if (compactDec)
+      retvec << Array(r);
+    else
+      retvec << Array(Trim(r,odims));
+  } else {
+    BasicArray<T> q(NTuple(2*A.rows(),minmn));
+    BasicArray<T> r(NTuple(2*minmn,A.cols()));
+    ComplexQRDP(q,r,p,A.fortran<T>());
+    retvec << Array(SplitReal(q),SplitImag(q));
+    if (compactDec)
+      retvec << Array(SplitReal(r),SplitImag(r));
+    else
+      retvec << Array(Trim(SplitReal(r),odims),Trim(SplitImag(r),odims));
+  }
+  if (compactSav)
+    retvec << Array(p);
+  else {
+    BasicArray<T> p2(NTuple(A.cols(),A.cols()));
+    for (index_t i=1;i!=A.cols();i++) 
+      p2.set(NTuple(p.get(i),i),1);
+    retvec << Array(p2);
+  }
+  return retvec;  
+}
+
+static ArrayVector QRDNoPivotFunction(bool compactDec, Array A) {
+  NTuple odims(A.dimensions());
+  if ((!compactDec) && (A.rows() > A.cols()))
+    A.resize(NTuple(A.rows(),A.rows()));
+  else 
     compactDec = true;
-  Class Aclass(A.dataClass());
-  if (Aclass < FM_FLOAT) {
-    A.promoteType(FM_DOUBLE);
-    Aclass = FM_DOUBLE;
+  switch (A.dataClass()) {
+  default: throw Exception("illegal argument type to qr");
+  case Float:
+    return QRDNoPivotFunction<float>(compactDec,odims,A);
+  case Double:
+    return QRDNoPivotFunction<double>(compactDec,odims,A);
   }
-  int minmn = (nrows < ncols) ? nrows : ncols;
-  ArrayVector retval;
-  Array rmat, qmat, pmat;
-  Dimensions dim;
-  switch (Aclass) {
-  default: throw Exception("illegal argument type to QRD");
-  case FM_FLOAT:
-    {
-      float *q = (float*) Malloc(nrows*minmn*sizeof(float));
-      float *r = (float*) Malloc(ncols*minmn*sizeof(float));
-      int *p = (int*) Malloc(ncols*sizeof(int));
-      floatQRDP(nrows,ncols,q,r,p,(float*) A.getReadWriteDataPointer());
-      if (!compactDec) {
-	float *r2 = (float*) Malloc(orows*ocols*sizeof(float));
-	memcpy(r2,r,orows*ocols*sizeof(float));
-	dim.set(0,orows);
-	dim.set(1,ocols);
-	rmat = Array(FM_FLOAT,dim,r2);
-	Free(r);
-      } else {	  
-	dim.set(0,minmn);
-	dim.set(1,ncols);
-	rmat = Array(FM_FLOAT,dim,r);
-      }
-      if (!compactSav) {
-	int *p2 = (int*) Malloc(ncols*ncols*sizeof(int));
-	for (i=0;i<ncols;i++) 
-	  p2[p[i] + i*ncols - 1] = 1;
-	dim.set(0,ncols);
-	dim.set(1,ncols);
-	pmat = Array(FM_INT32,dim,p2);
-	Free(p);
-      } else {
-	dim.set(0,1);
-	dim.set(1,ncols);
-	pmat = Array(FM_INT32,dim,p);
-      }
-      dim.set(0,nrows);
-      dim.set(1,minmn);
-      qmat = Array(FM_FLOAT,dim,q);
-      retval.push_back(qmat);
-      retval.push_back(rmat);
-      retval.push_back(pmat);
-      break;
-    }
-  case FM_DOUBLE:
-    {
-      double *q = (double*) Malloc(nrows*minmn*sizeof(double));
-      double *r = (double*) Malloc(ncols*minmn*sizeof(double));
-      int *p = (int*) Malloc(ncols*sizeof(int));
-      doubleQRDP(nrows,ncols,q,r,p,(double*) A.getReadWriteDataPointer());
-      if (!compactDec) {
-	double *r2 = (double*) Malloc(orows*ocols*sizeof(double));
-	memcpy(r2,r,orows*ocols*sizeof(double));
-	dim.set(0,orows);
-	dim.set(1,ocols);
-	rmat = Array(FM_DOUBLE,dim,r2);
-	Free(r);
-      } else {	  
-	dim.set(0,minmn);
-	dim.set(1,ncols);
-	rmat = Array(FM_DOUBLE,dim,r);
-      }
-      if (!compactSav) {
-	int *p2 = (int*) Malloc(ncols*ncols*sizeof(int));
-	for (i=0;i<ncols;i++) 
-	  p2[p[i] + i*ncols - 1] = 1;
-	dim.set(0,ncols);
-	dim.set(1,ncols);
-	pmat = Array(FM_INT32,dim,p2);
-	Free(p);
-      } else {
-	dim.set(0,1);
-	dim.set(1,ncols);
-	pmat = Array(FM_INT32,dim,p);
-      }
-      dim.set(0,nrows);
-      dim.set(1,minmn);
-      qmat = Array(FM_DOUBLE,dim,q);
-      retval.push_back(qmat);
-      retval.push_back(rmat);
-      retval.push_back(pmat);
-      break;
-    }
-  case FM_COMPLEX:
-    {
-      float *q = (float*) Malloc(2*nrows*minmn*sizeof(float));
-      float *r = (float*) Malloc(2*ncols*minmn*sizeof(float));
-      int *p = (int*) Malloc(ncols*sizeof(int));
-      complexQRDP(nrows,ncols,q,r,p,(float*) A.getReadWriteDataPointer());
-      if (!compactDec) {
-	float *r2 = (float*) Malloc(2*orows*ocols*sizeof(float));
-	memcpy(r2,r,2*orows*ocols*sizeof(float));
-	dim.set(0,orows);
-	dim.set(1,ocols);
-	rmat = Array(FM_COMPLEX,dim,r2);
-	Free(r);
-      } else {	  
-	dim.set(0,minmn);
-	dim.set(1,ncols);
-	rmat = Array(FM_COMPLEX,dim,r);
-      }
-      if (!compactSav) {
-	int *p2 = (int*) Malloc(ncols*ncols*sizeof(int));
-	for (i=0;i<ncols;i++) 
-	  p2[p[i] + i*ncols - 1] = 1;
-	dim.set(0,ncols);
-	dim.set(1,ncols);
-	pmat = Array(FM_INT32,dim,p2);
-	Free(p);
-      } else {
-	dim.set(0,1);
-	dim.set(1,ncols);
-	pmat = Array(FM_INT32,dim,p);
-      }
-      dim.set(0,nrows);
-      dim.set(1,minmn);
-      qmat = Array(FM_COMPLEX,dim,q);
-      retval.push_back(qmat);
-      retval.push_back(rmat);
-      retval.push_back(pmat);
-      break;
-    }
-  case FM_DCOMPLEX:
-    {
-      double *q = (double*) Malloc(2*nrows*minmn*sizeof(double));
-      double *r = (double*) Malloc(2*ncols*minmn*sizeof(double));
-      int *p = (int*) Malloc(ncols*sizeof(int));
-      dcomplexQRDP(nrows,ncols,q,r,p,(double*) A.getReadWriteDataPointer());
-      if (!compactDec) {
-	double *r2 = (double*) Malloc(2*orows*ocols*sizeof(double));
-	memcpy(r2,r,2*orows*ocols*sizeof(double));
-	dim.set(0,orows);
-	dim.set(1,ocols);
-	rmat = Array(FM_DCOMPLEX,dim,r2);
-	Free(r);
-      } else {	  
-	dim.set(0,minmn);
-	dim.set(1,ncols);
-	rmat = Array(FM_DCOMPLEX,dim,r);
-      }
-      if (!compactSav) {
-	int *p2 = (int*) Malloc(ncols*ncols*sizeof(int));
-	for (i=0;i<ncols;i++) 
-	  p2[p[i] + i*ncols - 1] = 1;
-	dim.set(0,ncols);
-	dim.set(1,ncols);
-	pmat = Array(FM_INT32,dim,p2);
-	Free(p);
-      } else {
-	dim.set(0,1);
-	dim.set(1,ncols);
-	pmat = Array(FM_INT32,dim,p);
-      }
-      dim.set(0,nrows);
-      dim.set(1,minmn);
-      qmat = Array(FM_DCOMPLEX,dim,q);
-      retval.push_back(qmat);
-      retval.push_back(rmat);
-      retval.push_back(pmat);
-      break;
-    }
+}
+
+static ArrayVector QRDPivotFunction(bool compactDec, Array A) {
+  NTuple odims(A.dimensions());
+  bool compactSav = compactDec;
+  if ((!compactDec) && (A.rows() > A.cols())) 
+    A.resize(NTuple(A.rows(),A.rows()));
+  else 
+    compactDec = true;
+  switch (A.dataClass()) {
+  default: throw Exception("illegal argument type to qr");
+  case Float:
+    return QRDPivotFunction<float>(compactDec,compactSav,odims,A);
+  case Double:
+    return QRDPivotFunction<double>(compactDec,compactSav,odims,A);
   }
-  return retval;
 }
 
 //!
@@ -715,14 +1334,11 @@ ArrayVector QRDFunction(int nargout, const ArrayVector& arg) {
     throw Exception("Cannot apply qr decomposition to reference types.");
   if (!A.is2D())
     throw Exception("Cannot apply matrix operations to N-Dimensional arrays.");
-  if (A.anyNotFinite())
+  if (AnyNotFinite(A))
     throw Exception("QR Decomposition only defined for matrices with finite entries.");
   bool compactDecomposition = false;
-  if (arg.size() == 2) {
-    Array cflag(arg[1]);
-    int cflag_int = cflag.getContentsAsIntegerScalar();
-    if (cflag_int == 0) compactDecomposition = true;
-  }
+  if ((arg.size() == 2) && (arg[1].asInteger() == 0))
+    compactDecomposition = true;
   if (nargout == 3)
     return QRDPivotFunction(compactDecomposition, A);
   else

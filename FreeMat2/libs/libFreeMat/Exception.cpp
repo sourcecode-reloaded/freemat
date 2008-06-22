@@ -22,7 +22,6 @@
 #include <stdio.h>
 #include <iostream>
 #include "Exception.hpp"
-#include "Malloc.hpp"
 #include "Interpreter.hpp"
 
 Exception::Exception(QString msg_in) {

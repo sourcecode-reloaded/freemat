@@ -20,6 +20,7 @@
 #include "Array.hpp"
 #include "Interpreter.hpp"
 #include <QtCore>
+#include "Algorithms.hpp"
 
 //!
 //@Module END End Function

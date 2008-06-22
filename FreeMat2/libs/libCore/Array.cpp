@@ -1,6 +1,8 @@
 #include "Array.hpp"
+#include "Struct.hpp"
 #include "MemPtr.hpp"
 #include <QtCore>
+#include "Algorithms.hpp"
 
 //!
 //@Module PERMUTE Array Permutation Function
@@ -67,7 +69,7 @@ ArrayVector PermuteFunction(int nargout, const ArrayVector& arg) {
   // Check that all are covered
   for (int i=0;i<Adims;i++)
     if (!d[i]) throw Exception("second argument to permute function is not a permutation (no duplicates allowed)");
-  return ArrayVector(Permute(arg[0],dp));
+  return ArrayVector(Permute(arg[0],ConvertArrayToNTuple(dp)));
 }
 
 //!
@@ -118,7 +120,7 @@ ArrayVector PermuteFunction(int nargout, const ArrayVector& arg) {
 //!
 
 template <typename T>
-static Array RepMat(const BasicArray<T> &dp, const NTuple &outdim, const NTuple &repcount) {
+static BasicArray<T> RepMat(const BasicArray<T> &dp, const NTuple &outdim, const NTuple &repcount) {
   // Copy can work by pushing or by pulling.  I have opted for
   // pushing, because we can push a column at a time, which might
   // be slightly more efficient.
@@ -152,7 +154,29 @@ static Array RepMat(const BasicArray<T> &dp, const NTuple &outdim, const NTuple 
     }
     repcount.increment(copySelect);
   }
-  return Array(x);
+  return x;
+}
+
+template <typename T>
+static SparseMatrix<T> RepMat(const SparseMatrix<T>& dp, const NTuple &outdim, 
+			      const NTuple &repcount) {
+  if (repcount.lastNotOne() > 2)
+    throw Exception("repmat cannot create N-dimensional sparse arrays");
+  SparseMatrix<T> retvec;
+  for (int rowcopy=0;rowcopy < repcount[0];rowcopy++)
+    for (int colcopy=0;colcopy < repcount[1];colcopy++) {
+      ConstSparseIterator<T> iter(&dp);
+      while (iter.isValid()) {
+	while (iter.moreInSlice()) {
+	  retvec.set(NTuple(iter.row()+rowcopy*dp.rows(),
+			    iter.col()+colcopy*dp.cols()),
+		     iter.value());
+	  iter.next();
+	}
+	iter.nextSlice();
+      }
+    }
+  return retvec;
 }
 
 template <typename T>
@@ -176,6 +200,13 @@ static Array RepMat(const Array &dp, const NTuple &outdim, const NTuple &repcoun
   else
     return Array(RepMat(dp.constReal<T>(),outdim,repcount),
 		 RepMat(dp.constImag<T>(),outdim,repcount));
+}
+
+static Array RepMatStruct(const StructArray& dp, const NTuple &outdim, const NTuple &repcount) {
+  StructArray ret(dp);
+  for (int i=0;i<ret.fieldCount();i++)
+    ret[i] = RepMat<Array>(ret[i],outdim,repcount);
+  return Array(ret);
 }
 
 #define MacroRepMat(ctype,cls)					\
@@ -213,6 +244,115 @@ ArrayVector RepMatFunction(int nargout, const ArrayVector& arg) {
   default: throw Exception("Unhandled type for repmat");
     MacroExpandCasesAll(MacroRepMat);
   case Struct:
-    return ArrayVector(RepMat(x.constStructPtr(),outdims,repcount));
+    return ArrayVector(RepMatStruct(x.constStructPtr(),outdims,repcount));
   }
+}
+
+//!
+//@Module DIAG Diagonal Matrix Construction/Extraction
+//@@Section ARRAY
+//@@Usage
+//The @|diag| function is used to either construct a 
+//diagonal matrix from a vector, or return the diagonal
+//elements of a matrix as a vector.  The general syntax
+//for its use is
+//@[
+//  y = diag(x,n)
+//@]
+//If @|x| is a matrix, then @|y| returns the @|n|-th 
+//diagonal.  If @|n| is omitted, it is assumed to be
+//zero.  Conversely, if @|x| is a vector, then @|y|
+//is a matrix with @|x| set to the @|n|-th diagonal.
+//@@Examples
+//Here is an example of @|diag| being used to extract
+//a diagonal from a matrix.
+//@<
+//A = int32(10*rand(4,5))
+//diag(A)
+//diag(A,1)
+//@>
+//Here is an example of the second form of @|diag|, being
+//used to construct a diagonal matrix.
+//@<
+//x = int32(10*rand(1,3))
+//diag(x)
+//diag(x,-1)
+//@>
+//@@Tests
+//@{ test_diag1.m
+//% Test the diagonal extraction function
+//function test_val = test_diag1
+//a = [1,2,3,4;5,6,7,8;9,10,11,12];
+//b = diag(a);
+//test_val = test(b == [1;6;11]);
+//@}
+//@{ test_diag2.m
+//% Test the diagonal extraction function with a non-zero diagonal
+//function test_val = test_diag2
+//a = [1,2,3,4;5,6,7,8;9,10,11,12];
+//b = diag(a,1);
+//test_val = test(b == [2;7;12]);
+//@}
+//@{ test_diag3.m
+//% Test the diagonal creation function
+//function test_val = test_diag3
+//a = [2,3];
+//b = diag(a);
+//test_val = test(b == [2,0;0,3]);
+//@}
+//@{ test_diag4.m
+//% Test the diagonal creation function with a non-zero diagonal
+//function test_val = test_diag4
+//a = [2,3];
+//b = diag(a,-1);
+//test_val = test(b == [0,0,0;2,0,0;0,3,0]);
+//@}
+//@{ test_diag5.m
+//% Test the diagonal creation function with no arguments (bug 1620051)
+//function test_val = test_diag5
+//test_val = 1;
+//try
+//  b = diag;
+//catch
+//  test_val = 1;
+//end
+//@}
+//@@Tests
+//@{ test_sparse74.m
+//% Test sparse matrix array diagonal extraction
+//function x = test_sparse74
+//[yi1,zi1] = sparse_test_mat('int32',300,400);
+//[yf1,zf1] = sparse_test_mat('float',300,400);
+//[yd1,zd1] = sparse_test_mat('double',300,400);
+//[yc1,zc1] = sparse_test_mat('complex',300,400);
+//[yz1,zz1] = sparse_test_mat('dcomplex',300,400);
+//x = testeq(diag(yi1,30),diag(zi1,30)) & testeq(diag(yf1,30),diag(zf1,30)) & testeq(diag(yd1,30),diag(zd1,30)) & testeq(diag(yc1,30),diag(zc1,30)) & testeq(diag(yz1,30),diag(zz1,30));
+//@}
+//@@Signature
+//function diag DiagFunction
+//inputs x n
+//outputs y
+//!
+ArrayVector DiagFunction(int nargout, const ArrayVector& arg) {
+  // First, get the diagonal order, and synthesize it if it was
+  // not supplied
+  int diagonalOrder;
+  if (arg.size() == 0)
+    throw Exception("diag requires at least one argument.\n");
+  if (arg.size() == 1) 
+    diagonalOrder = 0;
+  else {
+    if (!arg[1].isScalar()) 
+      throw Exception("second argument must be a scalar.\n");
+    diagonalOrder = arg[1].asInteger();
+  }
+  // Next, make sure the first argument is 2D
+  if (!arg[0].is2D()) 
+    throw Exception("First argument to 'diag' function must be 2D.\n");
+  // Case 1 - if the number of columns in a is 1, then this is a diagonal
+  // constructor call.
+  if (arg[0].isVector())
+    return ArrayVector(DiagonalArray(arg[0],diagonalOrder));
+  else
+    return ArrayVector(GetDiagonal(arg[0],diagonalOrder));
 }

@@ -1,5 +1,6 @@
 #include "Math.hpp"
 #include "EigenDecompose.hpp"
+#include "Algorithms.hpp"
 
 static ArrayVector GenEigFunction(int nargout, const ArrayVector &arg) {
   Array A(arg[0]);

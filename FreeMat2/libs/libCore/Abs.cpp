@@ -1,4 +1,5 @@
 #include "Operators.hpp"
+#include "Complex.hpp"
 #include "Math.hpp"
 #include <cmath>
 

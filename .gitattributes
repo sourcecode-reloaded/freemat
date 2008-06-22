@@ -94,8 +94,6 @@ FreeMat2/libs/libFreeMat/LeastSquaresSolver.cpp svn_keywords=Author+Date+Id+Revi
 FreeMat2/libs/libFreeMat/LeastSquaresSolver.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/LinearEqSolver.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/LinearEqSolver.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libFreeMat/Malloc.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/libs/libFreeMat/Malloc.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Math.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/Math.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/libs/libFreeMat/MatrixMultiply.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native

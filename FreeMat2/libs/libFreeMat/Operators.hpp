@@ -3,6 +3,7 @@
 
 #include "Array.hpp"
 #include "SparseMatrix.hpp"
+#include "Algorithms.hpp"
 
 // Real, Real --> Real
 template <typename S, typename T, class Op>

@@ -1,6 +1,7 @@
 #include "Array.hpp"
 #include "Operators.hpp"
 #include "Math.hpp"
+#include "Complex.hpp"
 
 struct OpVecVar {
   template <typename T>

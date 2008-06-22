@@ -73,7 +73,7 @@ void Terminal::SetRawMode() {
   newattr.c_cc[VTIME] = 0;
   while (tcsetattr(STDIN_FILENO, TCSADRAIN, &newattr)) {
     if (errno != EINTR) 
-      throw Exception(string("Unable to set up terminal attributes: tcsetattr error:") + strerror(errno));
+      throw Exception(QString("Unable to set up terminal attributes: tcsetattr error:") + QString::fromStdString(strerror(errno)));
   }
 #endif
 }
@@ -83,7 +83,7 @@ void Terminal::RestoreOriginalMode() {
   // Restore the original terminal setttings
   while (tcsetattr(STDIN_FILENO, TCSADRAIN, &oldattr)) {
     if (errno != EINTR)
-      throw Exception(string("Unable to set up terminal attributes: tcsetattr error:") + strerror(errno));
+      throw Exception(QString("Unable to set up terminal attributes: tcsetattr error:") + QString::fromStdString(strerror(errno)));
   }
 #endif
 }
@@ -94,7 +94,7 @@ void Terminal::RetrieveTerminalName() {
   if (!term)
     throw Exception("Unable to retrieve terminal name!");
   if (setupterm((char*) term, STDIN_FILENO, NULL) == ERR)
-    throw Exception(string("Unable to retrieve terminal info for ") + term);
+    throw Exception(QString("Unable to retrieve terminal info for ") + term);
 #endif
 }
 

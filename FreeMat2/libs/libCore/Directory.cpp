@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include "System.hpp"
 #include <QtCore>
+#include "Algorithms.hpp"
 
 //!
 //@Module CD Change Working Directory Function
@@ -287,7 +288,7 @@ ArrayVector ListFilesFunction(int nargout, const ArrayVector& arg, Interpreter* 
 //outputs y
 //!
 ArrayVector DirSepFunction(int nargout, const ArrayVector& arg) {
-  return ArrayVector(Array(QDir::separator()));
+  return ArrayVector(Array(QString(QDir::separator())));
 }
 
 //!
@@ -402,11 +403,11 @@ ArrayVector FilePartsFunction(int nargout, const ArrayVector& arg) {
   if (fi.suffix().size() > 0)
     suffix = Array("." + fi.suffix());
   else
-    suffix = Array("");
+    suffix = Array(QString(""));
   return ArrayVector() << path
 		       << name
 		       << suffix
-		       << Array("");
+		       << Array(QString(""));
 }
 
 //!

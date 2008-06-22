@@ -1,6 +1,6 @@
 #include "Operators.hpp"
 #include "Math.hpp"
-
+#include "Complex.hpp"
 
 template <class T>
 struct XNEntryReal {

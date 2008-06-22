@@ -296,7 +296,7 @@ void HPStringSet::Set(Array arg) {
     throw Exception("expecting a '|'-delimited list of strings for property argument");
   QString args(arg.asString());
   data.clear();
-  Tokenize(args,data,"|");
+  data = args.split("|");
 }
 
 double HPConstrainedStringScalar::Scalar() {

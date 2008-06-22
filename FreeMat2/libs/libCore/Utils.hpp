@@ -21,18 +21,12 @@
 #define __Utils_hpp__
 
 #include "Types.hpp"
-
-void c_log(float real, float imag, float *re, float *im);
-void c_exp(float real, float imag, float *re, float *im);
-void c_sqrt(float real, float imag, float *re, float *im);
-void c_sqr(float real, float imag, float *re, float *im);
-void z_log(double real, double imag, double *re, double *im);
-void z_exp(double real, double imag, double *re, double *im);
-void z_sqrt(double real, double imag, double *re, double *im);
-void z_sqr(double real, double imag, double *re, double *im);
+#include "Array.hpp"
 
 bool contains(StringVector& list, QString s, bool regexpmode);
 
 NTuple ArrayVectorAsDimensions(const ArrayVector &arg);
+
+double ArrayRange(const Array& dp);
 
 #endif

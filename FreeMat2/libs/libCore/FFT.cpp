@@ -20,7 +20,6 @@
 #include "Core.hpp"
 #include "Exception.hpp"
 #include "Array.hpp"
-#include "Malloc.hpp"
 #include "Operators.hpp"
 #include <math.h>
 #if HAVE_FFTW | HAVE_FFTWF

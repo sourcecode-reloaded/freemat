@@ -20,8 +20,9 @@
 #include "Context.hpp"
 #include "Struct.hpp"
 #include "Array.hpp"
+#include "Algorithms.hpp"
 
-// The meta-info for a clas
+// The meta-info for a class
 struct UserClassMetaInfo {
   StringVector fieldNames;
   StringVector parentClasses;
@@ -1106,3 +1107,6 @@ QString ClassMangleName(QString className, QString funcName) {
   return "@" + className + ":" + funcName;
 }
 
+void clearUserClasses() {
+  classTable.clear();
+}

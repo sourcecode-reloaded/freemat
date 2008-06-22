@@ -1,5 +1,6 @@
 #include "Array.hpp"
 #include "SparseCCS.hpp"
+#include "Algorithms.hpp"
 
 static inline index_t CountNonZeros(const BasicArray<bool> &dp) {
   index_t nonZero = 0;

@@ -4,6 +4,7 @@
 #include "IEEEFP.hpp"
 #include "MemPtr.hpp"
 #include "Printf.hpp"
+#include "Algorithms.hpp"
 
 class FilePtr {
 public:

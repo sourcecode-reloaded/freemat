@@ -1,5 +1,6 @@
 #include "Printf.hpp"
 #include "Print.hpp"
+#include "Algorithms.hpp"
 
 static int flagChar(char c) {
   return ((c == '#') ||  (c == '0') || (c == '-') ||  

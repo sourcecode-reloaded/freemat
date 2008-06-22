@@ -22,15 +22,15 @@
 
 #include "Stream.hpp"
 #include "Array.hpp"
+#include <QIODevice>
 
 // This is the cross-platform serialization object...
 
 class Serialize {
-  Stream *s;
+  QIODevice *s;
   bool endianSwap;
 public:
   Serialize(QIODevice*);
-  Serialize(Stream*);
   ~Serialize();
   // Handshake between two serialize objects
   void handshakeServer();
@@ -72,11 +72,11 @@ public:
   bool   getBool();
   StringVector getStringVector();
   // Put an array
-  void putDataClass(Type cls);
+  void putDataClass(DataClass cls, bool sparseflag, bool isuserclass, StringVector className, bool complexflag);
   void putArray(const Array& dat);
   void putDimensions(const NTuple& dim);
   // Get an array
-  Type getDataClass();
+  DataClass getDataClass(bool& sparseflag, StringVector& className, bool& complexflag);
   void getArray(Array& dat);
   NTuple getDimensions();
 };
