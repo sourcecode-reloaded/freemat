@@ -30,6 +30,7 @@
 #include <QtCore>
 #include "Printf.hpp"
 #include "Algorithms.hpp"
+#include "Utils.hpp"
 
 //!
 //@Module STRCMP String Compare Function
@@ -245,10 +246,10 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
   QList<uint32> tokenStartList;
   QList<uint32> tokenStopList;
   QList<QList<uint32> > tokenExtentsList;
-  QList<QStringList> tokenList;
-  QStringList matchList;
+  QList<StringVector> tokenList;
+  StringVector matchList;
   StringVector namedTokenNames;
-  QList<QStringList> namedTokenValues;
+  QList<StringVector> namedTokenValues;
 
   pcre *re;
   const char *error;
@@ -278,7 +279,7 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
     count_slots = 0;
     // Process inputs
     for (int i=2;i<stringed_args.size();i++) {
-      string t = stringed_args[i];
+      QString t = stringed_args[i];
       if (t == "start")  start_slot = count_slots++;
       if (t == "end") end_slot = count_slots++;
       if (t == "tokenExtents") tokenExtents_slot = count_slots++;
@@ -289,7 +290,7 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
   }
   
   for (int i=0;i<count_slots;i++)
-    retvec << Array::emptyConstructor();
+    retvec << EmptyConstructor();
   
   for (int j=2;j<stringed_args.size();j++) {
     if (stringed_args[j]=="once")
@@ -312,8 +313,8 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
       literalSpacing = false;
   }
 
-  pattern = stringed_args[1].c_str();
-  subject = stringed_args[0].c_str();
+  pattern = stringed_args[1].toUtf8().constData();
+  subject = stringed_args[0].toUtf8().constData();
   subject_length = (int)strlen(subject);
   QString qsubject(subject);
 
@@ -339,7 +340,7 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
   /* Compilation failed: print the error message and exit */
   
   if (re == NULL) 
-    throw Exception(string("regular expression compilation failed at offset ") + 
+    throw Exception(QString("regular expression compilation failed at offset ") + 
 		    erroffset + ": " + error);
   
   /* Determine how many capture expressions there are */
@@ -395,7 +396,7 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
      application you might want to do things other than print them. */
 
   QList<uint32> tEList;
-  QStringList   tList;
+  StringVector   tList;
   for (i = 1; i < rc; i++)
     {
       tEList << ovector[2*i]+1;
@@ -441,9 +442,9 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
     tabptr = name_table;
     for (i = 0; i < namecount; i++)
       {
-	namedTokenValues << QStringList();
+	namedTokenValues << StringVector();
 	int n = (tabptr[0] << 8) | tabptr[1];
-	namedTokenNames << QString((char*)(tabptr+2)).left(name_entry_size-3).toStdString();
+	namedTokenNames << QString((char*)(tabptr+2)).left(name_entry_size-3);
 	namedTokenValues[i] << qsubject.mid(ovector[2*n],ovector[2*n+1]-ovector[2*n]);
 	tabptr += name_entry_size;
       }
@@ -535,7 +536,7 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
 	matchList << qsubject.mid(ovector[0],ovector[1]-ovector[0]);
 
 	QList<uint32> tEList;
-	QStringList   tList;
+	StringVector   tList;
 	for (i = 1; i < rc; i++)
 	  {
 	    tEList << ovector[2*i]+1;
@@ -560,24 +561,24 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
   }
 
   // Return this data to the user
-  Array start(Uint32VectorFromQList(startList));
-  Array end(Uint32VectorFromQList(stopList));
-  Array matches(CellArrayFromQStringList(matchList));
+  Array start(DoubleVectorFromQList(startList));
+  Array end(DoubleVectorFromQList(stopList));
+  Array matches(CellArrayFromStringVector(matchList));
   // Now build the tokens array
   ArrayVector tokensArrayContents;
   for (int i=0;i<tokenList.size();i++) 
-    tokensArrayContents << CellArrayFromQStringList(tokenList[i]);
-  Array tokens(Array::cellConstructor(tokensArrayContents));
+    tokensArrayContents << CellArrayFromStringVector(tokenList[i]);
+  Array tokens(CellConstructor(tokensArrayContents));
   // Finally the token extents array
   ArrayVector tokensExtentsContents;
   for (int i=0;i<tokenExtentsList.size();i++)
-    tokensExtentsContents << Uint32VectorFromQList(tokenExtentsList[i]);
-  Array tokenExtents(Array::cellConstructor(tokensExtentsContents));
+    tokensExtentsContents << DoubleVectorFromQList(tokenExtentsList[i]);
+  Array tokenExtents(CellConstructor(tokensExtentsContents));
   // The named token data has to be resliced
   ArrayVector namedTokenValueContents;
   for (int i=0;i<namedTokenValues.size();i++)
-    namedTokenValueContents << CellArrayFromQStringList(namedTokenValues[i]);
-  Array namedTokens(Array::structConstructor(namedTokenNames,namedTokenValueContents));
+    namedTokenValueContents << CellArrayFromStringVector(namedTokenValues[i]);
+  Array namedTokens(StructConstructor(namedTokenNames,namedTokenValueContents));
   // Stuff it all into a return vector
   pcre_free(re);
   if (start_slot >= 0)
@@ -736,7 +737,7 @@ QString RegExpRepCoreFunction(QString subject,
    *************************************************************************/
   
   re = pcre_compile(
-		    pattern.c_str(),      /* the pattern */
+		    pattern.toUtf8().constData(),      /* the pattern */
 		    options,              /* default options */
 		    &error,               /* for error message */
 		    &erroffset,           /* for error offset */
@@ -745,7 +746,7 @@ QString RegExpRepCoreFunction(QString subject,
   /* Compilation failed: print the error message and exit */
   
   if (re == NULL) 
-    throw Exception(string("regular expression compilation failed at offset ") + 
+    throw Exception(QString("regular expression compilation failed at offset ") + 
 		    erroffset + ": " + error);
 
   /* Determine how many capture expressions there are */
@@ -766,8 +767,8 @@ QString RegExpRepCoreFunction(QString subject,
   rc = pcre_exec(
 		 re,                   /* the compiled pattern */
 		 NULL,                 /* no extra data - we didn't study the pattern */
-		 subject.c_str(),      /* the subject string */
-		 subject.size(),       /* the length of the subject */
+		 subject.toUtf8().constData(),      /* the subject string */
+		 subject.toUtf8().size(),       /* the length of the subject */
 		 0,                    /* start at offset 0 in the subject */
 		 0,                    /* default options */
 		 ovector,              /* output vector for substring information */
@@ -780,8 +781,8 @@ QString RegExpRepCoreFunction(QString subject,
     return subject;
   }
   
-  string outputString;
-  string tokenSelect;
+  QString outputString;
+  QString tokenSelect;
   int nextReplacement = 0;
   int inputPointer = 0;
   int outputPtr = 0;
@@ -796,17 +797,17 @@ QString RegExpRepCoreFunction(QString subject,
       outputString += replacements[nextReplacement][outputPtr++];
     else
       if ((outputPtr < (replacementLength-1)) &&
-	  isdigit(replacements[nextReplacement][outputPtr+1])) {
+	  replacements[nextReplacement][outputPtr+1].isDigit()) {
 	// Try to collect a token name
 	digitFinder = outputPtr+1;
 	while ((digitFinder < replacementLength) && 
-	       isdigit(replacements[nextReplacement][digitFinder])) {
+	       replacements[nextReplacement][digitFinder].isDigit()) {
 	  // Add this digit to the token name
 	  tokenSelect += replacements[nextReplacement][digitFinder];
 	  digitFinder++;
 	}
 	// try to map this to a token number
-	tokenNumber = atoi(tokenSelect.c_str());
+	tokenNumber = tokenSelect.toInt();
 	// Is this a valid tokenNumber?
 	if (tokenNumber <= captureCount) {
 	  // Yes - skip
@@ -848,8 +849,8 @@ QString RegExpRepCoreFunction(QString subject,
 	rc = pcre_exec(
 		       re,                   /* the compiled pattern */
 		       NULL,                 /* no extra data - we didn't study the pattern */
-		       subject.c_str(),      /* the subject string */
-		       subject.size(),       /* the length of the subject */
+		       subject.toUtf8().constData(),      /* the subject string */
+		       subject.toUtf8().size(),       /* the length of the subject */
 		       start_offset,         /* starting offset in the subject */
 		       options,              /* options */
 		       ovector,              /* output vector for substring information */
@@ -898,17 +899,17 @@ QString RegExpRepCoreFunction(QString subject,
 	    outputString += replacements[nextReplacement][outputPtr++];
 	  else
 	    if ((outputPtr < (replacementLength-1)) &&
-		isdigit(replacements[nextReplacement][outputPtr+1])) {
+		replacements[nextReplacement][outputPtr+1].isDigit()) {
 	      // Try to collect a token name
 	      digitFinder = outputPtr+1;
 	      while ((digitFinder < replacementLength) && 
-		     isdigit(replacements[nextReplacement][digitFinder])) {
+		     replacements[nextReplacement][digitFinder].isDigit()) {
 		// Add this digit to the token name
 		tokenSelect += replacements[nextReplacement][digitFinder];
 		digitFinder++;
 	      }
 	      // try to map this to a token number
-	      tokenNumber = atoi(tokenSelect.c_str());
+	      tokenNumber = tokenSelect.toInt();
 	      // Is this a valid tokenNumber?
 	      if (tokenNumber <= captureCount) {
 		// Yes - skip

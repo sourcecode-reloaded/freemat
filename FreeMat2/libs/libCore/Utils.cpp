@@ -88,4 +88,20 @@ double ArrayRange(const Array& dp) {
   if (!init) return NaN();
   return result;
 }
-  
+
+Array DoubleVectorFromQList(QList<uint32> &ref) {
+  BasicArray<double> retvec(NTuple(1,ref.size()));
+  for (int i=0;i<ref.size();i++)
+    retvec[i+1] = ref[i];
+  return Array(retvec);
+}  
+
+void SwapBuffer(char* cp, int count, int elsize) {
+  char tmp;
+  for (int i=0;i<count;i++)
+    for (int j=0;j<elsize/2;j++) {
+      tmp = cp[i*elsize+j];
+      cp[i*elsize+j] = cp[i*elsize+elsize-1-j];
+      cp[i*elsize+elsize-1-j] = tmp;
+    }    
+}

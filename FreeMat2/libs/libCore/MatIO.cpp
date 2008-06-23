@@ -277,7 +277,7 @@ void MatIO::putDataElement(const Array &x) {
   uint32 ByteCount(uint32(x.length()*ElementSize(fmClass)));
   putUint32((uint32)DataType);
   putUint32(ByteCount);
-  WriteData(x.getVoidPointer(),ByteCount);
+  WriteData(x.getConstVoidPointer(),ByteCount);
   Align64Bit();
 }
 

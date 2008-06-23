@@ -29,4 +29,7 @@ NTuple ArrayVectorAsDimensions(const ArrayVector &arg);
 
 double ArrayRange(const Array& dp);
 
+Array DoubleVectorFromQList(QList<uint32> &ref);
+
+void SwapBuffer(char* cp, int count, int elsize);
 #endif

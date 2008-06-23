@@ -5,6 +5,7 @@
 #include "MemPtr.hpp"
 #include "Printf.hpp"
 #include "Algorithms.hpp"
+#include "Utils.hpp"
 
 class FilePtr {
 public:
@@ -37,15 +38,6 @@ static void InitializeFileSubsystem() {
   init = true;
 }
 
-static void SwapBuffer(char* cp, int count, int elsize) {
-  char tmp;
-  for (int i=0;i<count;i++)
-    for (int j=0;j<elsize/2;j++) {
-      tmp = cp[i*elsize+j];
-      cp[i*elsize+j] = cp[i*elsize+elsize-1-j];
-      cp[i*elsize+elsize-1-j] = tmp;
-    }    
-}
 
 #define MATCH(x) (prec==x)
 

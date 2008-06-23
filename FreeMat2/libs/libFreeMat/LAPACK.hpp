@@ -264,22 +264,17 @@ float getFloatEPS();
 template <typename T>
 T lamch();
 
+/**
+ * This function effectively pads each column in the source matrix by a
+ * number of zeros.  It actually allows us to change the stride of the
+ * matrix (amount that must be added to an index to move from one column
+ * to the next).  
+ */
 template <typename T>
-void changeStride(T*dst, int dstStride, T*src, int srcStride, int rowCount, int colCount);
-
-/**
- * This function effectively pads each column in the source matrix by a
- * number of zeros.  It actually allows us to change the stride of the
- * matrix (amount that must be added to an index to move from one column
- * to the next).  
- */
-void changeStrideDouble(double*dst, int dstStride, double*src, int srcStride, int rowCount, int colCount);
-/**
- * This function effectively pads each column in the source matrix by a
- * number of zeros.  It actually allows us to change the stride of the
- * matrix (amount that must be added to an index to move from one column
- * to the next).  
- */
-void changeStrideFloat(float*dst, int dstStride, float*src, int srcStride, int rowCount, int colCount);
+void changeStride(T*dst, int dstStride, T*src, int srcStride, 
+		  int rowCount, int colCount) {
+  for (int i=0;i<colCount;i++)
+    memcpy(dst + i*dstStride, src + i*srcStride, rowCount*sizeof(T));
+}
 
 #endif

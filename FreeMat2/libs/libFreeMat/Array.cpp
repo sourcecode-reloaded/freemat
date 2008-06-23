@@ -683,6 +683,17 @@ void* Array::getVoidPointer() {
 
 #undef MacroGetVoidPointer
 
+#define MacroGetConstVoidPointer(ctype,cls) \
+  case cls: return (const void*)(constReal<ctype>().constData());
+
+const void* Array::getConstVoidPointer() const {
+  switch (dataClass()) {
+  default:
+    throw Exception("Unsupported type called for getConstVoidPointer");
+    MacroExpandCasesSimple(MacroGetConstVoidPointer);
+  }
+}
+
 #define MacroAsIndexScalar(ctype,cls) \
   case cls:			      \
   return index_t(constRealScalar<ctype>());
@@ -743,6 +754,10 @@ static inline bool Tequals_struct(const Array *pA, const Array *pB) {
   return true;
 }
 
+static inline bool Tequals_cell(const Array *pA, const Array *pB) {
+  return (pA->constReal<Array>() == pB->constReal<Array>());
+}
+
 template <typename T>
 static inline bool Tequals_scalar(const Array *pA, const Array *pB) {
   if (pA->allReal())
@@ -779,13 +794,13 @@ static inline bool Tequals_array(const Array *pA, const Array *pB) {
 
 // Need to make this more general - how so?
 bool Array::operator==(const Array &b) const {
-  if (isScalar() && b.isScalar()) {
+  if (!isReferenceType() && !b.isReferenceType() && isScalar() && b.isScalar()) {
     if (allReal() ^ b.allReal()) return false;
     if (dataClass() != b.dataClass()) return false;
     switch (dataClass()) {
     default:
       throw Exception("Unhandled scalar case");
-      MacroExpandCasesAll(MacroScalarEquals);
+      MacroExpandCasesSimple(MacroScalarEquals);
     }
     return false;
   }
@@ -795,7 +810,8 @@ bool Array::operator==(const Array &b) const {
   switch (dataClass()) {
   default:
     throw Exception("Unhandled case as argument to == operator for Array class");
-    MacroExpandCasesAll(MacroArrayEquals);
+    MacroExpandCasesSimple(MacroArrayEquals);
+  case CellArray: return Tequals_cell(this,&b);
   case Struct: return Tequals_struct(this,&b);
   }
   return false;
@@ -857,13 +873,13 @@ Array Array::asDenseArray() const {
     switch (m_type.Class) {
     default:
       throw Exception("Cannot convert supplied array to dense type");
-      MacroExpandCasesAll(MacroScalarToDense);
+      MacroExpandCasesSimple(MacroScalarToDense);
     }
   }
   switch (m_type.Class) {
   default:
     throw Exception("Cannot convert supplied sparse array to dense type");
-    MacroExpandCasesAll(MacroSparseToDense);
+    MacroExpandCasesSimple(MacroSparseToDense);
   }
 }
 

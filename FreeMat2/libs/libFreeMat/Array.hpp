@@ -294,7 +294,7 @@ public:
   inline bool operator!=(const Array &b) const {return !(*this == b);}
   void addField(QString name);
   void* getVoidPointer();
-  const void* getVoidPointer() const;
+  const void* getConstVoidPointer() const;
 private:
   Data m_real;
   Data m_imag;

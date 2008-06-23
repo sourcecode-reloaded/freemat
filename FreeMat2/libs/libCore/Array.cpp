@@ -202,6 +202,10 @@ static Array RepMat(const Array &dp, const NTuple &outdim, const NTuple &repcoun
 		 RepMat(dp.constImag<T>(),outdim,repcount));
 }
 
+static Array RepMatCell(const Array &dp, const NTuple &outdim, const NTuple &repcount) {
+  return Array(RepMat<Array>(dp.constReal<Array>(),outdim,repcount));
+}
+
 static Array RepMatStruct(const StructArray& dp, const NTuple &outdim, const NTuple &repcount) {
   StructArray ret(dp);
   for (int i=0;i<ret.fieldCount();i++)
@@ -242,7 +246,9 @@ ArrayVector RepMatFunction(int nargout, const ArrayVector& arg) {
     outdims[i] = x.dimensions()[i]*repcount[i];
   switch (x.dataClass()) {
   default: throw Exception("Unhandled type for repmat");
-    MacroExpandCasesAll(MacroRepMat);
+    MacroExpandCasesSimple(MacroRepMat);
+  case CellArray:
+    return ArrayVector(RepMatCell(x,outdims,repcount));
   case Struct:
     return ArrayVector(RepMatStruct(x.constStructPtr(),outdims,repcount));
   }

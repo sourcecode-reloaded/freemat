@@ -256,5 +256,5 @@ ArrayVector CtypePrintFunction(int nargout, const ArrayVector& arg, Interpreter*
 ArrayVector CtypeFreezeFunction(int nargout, const ArrayVector& arg, Interpreter* eval);
 ArrayVector CtypeThawFunction(int nargout, const ArrayVector& arg, Interpreter* eval);
 ArrayVector CenumFunction(int nargout, const ArrayVector& arg);
-void SwapBuffer(char* cp, int count, int elsize);
+//void SwapBuffer(char* cp, int count, int elsize);
 #endif

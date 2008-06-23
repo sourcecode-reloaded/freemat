@@ -1336,7 +1336,9 @@ ArrayVector SparseEigDecomposeNonsymmetricComplex(const SparseMatrix<double> &a_
 // UMFPack routines, and then use the result in repeated solutions.
 ArrayVector SparseEigDecomposeNonsymmetricRealShifted(const SparseMatrix<double> &A,
 						      int nev, int nargout, double shift) {
-#if (HAVE_UMFPACK & HAVE_ARPACK)
+#if 0
+#warning FIXME
+  //#if (HAVE_UMFPACK & HAVE_ARPACK)
   // Set up the scaled identity matrix
   double** scI = (double**) MakeSparseScaledIdentityReal<double>(shift, rows);
   // Compute A - scI
@@ -1512,7 +1514,9 @@ ArrayVector SparseEigDecomposeNonsymmetricRealShifted(const SparseMatrix<double>
 ArrayVector SparseEigDecomposeNonsymmetricComplexShifted(const SparseMatrix<double> &Areal,
 							 const SparseMatrix<double> &Aimag,
 							 int nev, int nargout, double *shift) {
-#if (HAVE_UMFPACK & HAVE_ARPACK)
+#if 0
+  //#if (HAVE_UMFPACK & HAVE_ARPACK)
+#warning FINISHME
   // Set up the scaled identity matrix
   double** scI = (double**) MakeSparseScaledIdentityComplex<double>(shift[0], shift[1], rows);
   // Compute A - scI

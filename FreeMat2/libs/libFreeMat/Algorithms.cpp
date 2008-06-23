@@ -2,7 +2,7 @@
 #include "Struct.hpp"
 #include "IEEEFP.hpp"
 
-static void WarningMessage(QString msg) {
+void WarningMessage(QString msg) {
 #warning FIXME
   std::cout << "Warning:" << qPrintable(msg);
 }

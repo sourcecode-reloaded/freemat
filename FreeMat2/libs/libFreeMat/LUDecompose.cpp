@@ -420,7 +420,8 @@ Array Invert(const Array &A) {
 }
 
 static ArrayVector SparseLUDecomposeReal(const SparseMatrix<double> &A) {
-#if HAVE_UMFPACK
+#if 0
+  //#if HAVE_UMFPACK
   // Convert A into CCS form
   CCSForm Accs;
   ConvertSparseToCCS(A,Accs);
@@ -509,7 +510,9 @@ static ArrayVector SparseLUDecomposeReal(const SparseMatrix<double> &A) {
 }
 
 static ArrayVector SparseLUDecomposeComplex(const SparseMatrix<double> &Ar, const SparseMatrix<double> &Ai) {
-#if HAVE_UMFPACK
+#if 0
+#warning finishme
+  //#if HAVE_UMFPACK
   CCSForm Accs;
   ConvertSparseToCCS(Ar,Ai,Accs);
   double *null = (double *) NULL ;

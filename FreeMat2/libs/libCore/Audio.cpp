@@ -209,10 +209,10 @@ void DoPlayBack(const void *data, int count, int channels,
 		      pb_obj);
 #endif
   if (err != paNoError) 
-    throw Exception(string("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
+    throw Exception(QString("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
   err = Pa_StartStream(stream);
   if (err != paNoError) 
-    throw Exception(string("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
+    throw Exception(QString("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
   if (!asyncMode)
     PAShutdown();
   else
@@ -309,7 +309,7 @@ ArrayVector WavPlayFunction(int nargout, const ArrayVector& argv) {
     throw Exception("wavplay requires at least one argument (the audio data to playback)");
   Array y(argv[0]);
   int SampleRate = 11025;
-  string mode = "SYNC";
+  QString mode = "SYNC";
   if (argv.size() > 1)
     SampleRate = argv[1].asInteger();
   if (argv.size() > 2)
@@ -322,18 +322,18 @@ ArrayVector WavPlayFunction(int nargout, const ArrayVector& argv) {
     y = y.toClass(Float);
   if ((y.dataClass() == Int64) || (y.dataClass() == UInt64))
     throw Exception("wavplay does not support 64 bit data types.");
-  if (y.dataClass() == FM_UInt32)
+  if (y.dataClass() == UInt32)
     throw Exception("wavplay does not support unsigned 32-bit data types.");
-  if (y.dataClass() == FM_UInt16)
+  if (y.dataClass() == UInt16)
     throw Exception("wavplay does not support unsigned 16-bit data types.");
   int samples;
   int channels;
   if (!y.isVector()) {
-    channels = y.columns();
-    samples = y.rows();
+    channels = int(y.columns());
+    samples = int(y.rows());
   } else {
     channels = 1;
-    samples = y.getLength();
+    samples = int(y.length());
   }
   if (y.dataClass() == Float)
     DoPlayBack(y.constReal<float>().constData(),samples,channels,sizeof(float),
@@ -398,7 +398,7 @@ ArrayVector WavRecordFunction(int nargout, const ArrayVector& argv) {
   DataClass datatype = Double;
   ArrayVector argvCopy(argv);
   if ((argvCopy.size() > 1) && (argvCopy.back().isString())) {
-    QString typestring = argvCopy.back().getContentsAsStringUpper();
+    QString typestring = argvCopy.back().asString().toUpper();
     if ((typestring == "FLOAT") || (typestring == "SINGLE"))
       datatype = Float;
     else if (typestring == "DOUBLE")
@@ -427,7 +427,6 @@ ArrayVector WavRecordFunction(int nargout, const ArrayVector& argv) {
   DataClass rdatatype(datatype);
   Array retvec;
   if (rdatatype == Double) rdatatype = Float;
-  void *dp = Array::allocateArray(rdatatype,samples*channels);
   switch(rdatatype) {
   default: throw Exception("Illegal data type argument for wavrecord");
   case Float: 
@@ -439,7 +438,7 @@ ArrayVector WavRecordFunction(int nargout, const ArrayVector& argv) {
   case Int8:
     return ArrayVector(WavRecord<int8>(samples,channels,paInt8,rate).toClass(datatype));
   case UInt8:
-    return ArrayVector(WavRecord<uint8>(samples,channels,paUint8,rate).toClass(datatype));
+    return ArrayVector(WavRecord<uint8>(samples,channels,paUInt8,rate).toClass(datatype));
   }
 #else
   throw Exception("Audio read/write support not available.  Please build the PortAudio library and rebuild FreeMat to enable this functionality.");

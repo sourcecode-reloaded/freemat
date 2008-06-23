@@ -3,6 +3,7 @@
 
 #include "Array.hpp"
 
+void WarningMessage(QString msg);
 
 bool IsColonOp(const Array &arg);
 bool IsNonNegative(const Array &arg);
