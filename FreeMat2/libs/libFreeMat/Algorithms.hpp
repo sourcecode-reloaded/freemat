@@ -97,6 +97,7 @@ Array ConvertNTupleToArray(const NTuple &D);
 bool AnyNotFinite(const Array &A);
 
 Array MergeToComplex(const Array &Real, const Array &Imag);
-Array IJVSparseConstructor(const Array &ir, const Array &jc, const Array &pr, const Array &pi, bool complexFlag);
+Array MatIJVToSparse(const Array &ir, const Array &jc, const Array &pr, const Array &pi, bool complexFlag);
+void SparseToIJVMat(const Array &x, Array &rows, Array &cols, Array &vals);
 
 #endif

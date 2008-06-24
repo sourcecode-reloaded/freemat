@@ -784,3 +784,25 @@ bool TestForCaseMatch(const Array &s, const Array &x) {
     if (s == xp[i]) return true;
   return false;
 }
+
+template <class T>
+static SparseMatrix<T> MatIJVToSparse(const BasicArray<uint32> &irp,
+				      const BasicArray<uint32> &jcp,
+				      const BasicArray<T> &prp) {
+  // Decode the row data
+  
+}
+
+template <class T>
+static IJVSparseConstructComplex(const BasicArray<uint32> &irp,
+				 const BasicArray<uint32> &jcp,
+				 const BasicArray<T> &prp,
+				 const BasicArray<T> &pip) {
+}
+
+Array MatIJVToSparse(const Array &ir, const Array &jc,
+		     const Array &pr, const Array &pi, bool complexFlag) {
+  const BasicArray<uint32> &irp(ir.constReal<uint32>());
+  const BasicArray<uint32> &jcp(jc.constReal<uint32>());
+  
+}

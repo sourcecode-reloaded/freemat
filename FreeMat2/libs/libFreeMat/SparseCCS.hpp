@@ -33,20 +33,6 @@ public:
   index_t nnz();
 };
 
-class IJV2Form {
-  Array m_rows;
-  Array m_cols;
-  Array m_vals;
-  NTuple m_dims;
-public:
-  IJV2Form(const Array &x);
-  Array rows();
-  Array cols();
-  Array values();
-  NTuple dims();
-};
-
-
 template <class T>
 class RLEEncoderComplex {
   QVector<T> buffer;

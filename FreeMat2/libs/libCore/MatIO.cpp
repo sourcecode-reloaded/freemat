@@ -176,12 +176,13 @@ uint8 ByteFour(uint32 x) {
 }
 
 void MatIO::putSparseArray(const Array &x) {
-  IJV2Form y(x);
-  putDataElement(y.rows());
-  putDataElement(y.cols());
-  putDataElement(Real(y.values()));
+  Array rows, cols, vals_real, vals_imag;
+  SparseToMatIJV(x,rows,cols,vals_real,vals_imag);
+  putDataElement(rows);
+  putDataElement(cols);
+  putDataElement(vals_real);
   if (!x.allReal())
-    putDataElement(Imag(y.values()));
+    putDataElement(vals_imag);
 }
 
 Array MatIO::getSparseArray(NTuple dm, bool complexFlag) {
@@ -191,7 +192,7 @@ Array MatIO::getSparseArray(NTuple dm, bool complexFlag) {
   index_t nnz = pr.length();
   Array pi;
   if (complexFlag) pi = getDataElement();
-  return IJVSparseConstructor(ir,jc,pr,pi,complexFlag);
+  return MatIJVToSparse(ir,jc,pr,pi,complexFlag);
 }
 
 Array MatIO::getNumericArray(mxArrayTypes arrayType, NTuple dm, bool complexFlag) {

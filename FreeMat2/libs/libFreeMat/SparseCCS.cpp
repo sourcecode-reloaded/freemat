@@ -70,19 +70,3 @@ Array IJVForm::values() {
 index_t IJVForm::nnz() {
   return m_values.length();
 }
-
-Array IJV2Form::rows() {
-  return m_rows;
-}
-
-Array IJV2Form::cols() {
-  return m_cols;
-}
-
-Array IJV2Form::values() {
-  return m_vals;
-}
-
-NTuple IJV2Form::dims() {
-  return m_dims;
-}
