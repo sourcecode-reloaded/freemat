@@ -733,19 +733,21 @@ static Array SolveLinearEqComplex(BasicArray<T> A, BasicArray<T> B) {
 // Only double precision currently supported by umfpack
 Array SparseSolveLinEq(const SparseMatrix<double> &A, const BasicArray<double> &B) {
 #if HAVE_UMFPACK
-  CCSForm Accs;
-  ConvertSparseToCCS(A,Accs);
+  QVector<int> rowindx, colstart;
+  QVector<double> accsdata;
+  SparseToCCS(A,rowindx,colstart,accsdata);
   double *null = (double *) NULL ;
   void *Symbolic, *Numeric ;
-  (void) umfpack_di_symbolic (int(A.cols()), int(A.cols()), Accs.colstart(), Accs.rowindx(), Accs.data(), 
+  (void) umfpack_di_symbolic (int(A.cols()), int(A.cols()), colstart.data(), 
+			      rowindx.data(), accsdata.data(), 
 			      &Symbolic, null, null);
-  (void) umfpack_di_numeric (Accs.colstart(), Accs.rowindx(), Accs.data(), Symbolic, 
+  (void) umfpack_di_numeric (colstart.data(), rowindx.data(), accsdata.data(), Symbolic, 
 			     &Numeric, null, null) ;
   umfpack_di_free_symbolic (&Symbolic) ;
   BasicArray<double> x(NTuple(A.rows(),B.cols()));
   for (index_t i=1;i<=B.cols();i++) {
-    (void) umfpack_di_solve (UMFPACK_A, Accs.colstart(), Accs.rowindx(), 
-			     Accs.data(), x.data()+int((i-1)*A.rows()), 
+    (void) umfpack_di_solve (UMFPACK_A, colstart.data(), rowindx.data(), 
+			     accsdata.data(), x.data()+int((i-1)*A.rows()), 
 			     B.constData()+int((i-1)*B.rows()), 
 			     Numeric, null, null) ;
   }
@@ -759,20 +761,21 @@ Array SparseSolveLinEq(const SparseMatrix<double> &A, const BasicArray<double> &
 Array SparseSolveLinEq(const SparseMatrix<double> &Ar, const SparseMatrix<double> &Ai,
 		      const BasicArray<double> &Br, const BasicArray<double> &Bi) {
 #if HAVE_UMFPACK
-  CCSForm Accs;
-  ConvertSparseToCCS(Ar,Ai,Accs);
+  QVector<int> rowindx, colstart;
+  QVector<double> accsreal, accsimag;
+  SparseToCCS(Ar,Ai,rowindx,colstart,accsreal,accsimag);
   double *null = (double *) NULL ;
   void *Symbolic, *Numeric ;
-  (void) umfpack_zi_symbolic (int(Ar.cols()), int(Ar.cols()), Accs.colstart(), Accs.rowindx(), 
-			      Accs.data(), Accs.imag(), &Symbolic, null, null);
-  (void) umfpack_zi_numeric (Accs.colstart(), Accs.rowindx(), Accs.data(), Accs.imag(),
+  (void) umfpack_zi_symbolic (int(Ar.cols()), int(Ar.cols()), colstart.data(), rowindx.data(), 
+			      accsreal.data(), accsimag.data(), &Symbolic, null, null);
+  (void) umfpack_zi_numeric (colstart.data(), rowindx.data(), accsreal.data(), accsimag.data(),
 			     Symbolic, &Numeric, null, null) ;
   umfpack_zi_free_symbolic (&Symbolic) ;
   BasicArray<double> xr(NTuple(Ar.rows(),Br.cols()));
   BasicArray<double> xi(NTuple(Ar.rows(),Br.cols()));
   for (index_t i=1;i<=Br.cols();i++) {
-    (void) umfpack_zi_solve (UMFPACK_A, Accs.colstart(), Accs.rowindx(), 
-			     Accs.data(), Accs.imag(), 
+    (void) umfpack_zi_solve (UMFPACK_A, colstart.data(), rowindx.data(), 
+			     accsreal.data(), accsimag.data(), 
 			     xr.data()+int((i-1)*Ar.rows()),
 			     xi.data()+int((i-1)*Ar.rows()),
 			     Br.constData()+int((i-1)*Br.rows()),

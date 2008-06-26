@@ -785,24 +785,49 @@ bool TestForCaseMatch(const Array &s, const Array &x) {
   return false;
 }
 
-template <class T>
-static SparseMatrix<T> MatIJVToSparse(const BasicArray<uint32> &irp,
-				      const BasicArray<uint32> &jcp,
-				      const BasicArray<T> &prp) {
-  // Decode the row data
-  
+static BasicArray<uint32> DecompressCCSCols(const BasicArray<uint32> &colstart, index_t len) {
+  BasicArray<uint32> retval(NTuple(1,len));
+  index_t p=1;
+  for (index_t i=2;i!=colstart.length();i++)
+    for (index_t j=1;j!=(colstart[i]-colstart[i-1]);j++) {
+      retval[p] = uint32(i-2);
+      p = p + 1;
+    }
+  return retval;
 }
 
-template <class T>
-static IJVSparseConstructComplex(const BasicArray<uint32> &irp,
-				 const BasicArray<uint32> &jcp,
-				 const BasicArray<T> &prp,
-				 const BasicArray<T> &pip) {
+template <typename T>
+static SparseMatrix<T> CCSToSparse(const BasicArray<uint32> &rowstart,
+			    const BasicArray<uint32> &colstart,
+			    const BasicArray<T> &Adata) {
+  BasicArray<uint32> cols(DecompressCCSCols(colstart,Adata.length()));
+  SparseMatrix<T> retvec;
+  for (uint32 i=1;i!=cols.length();i++) 
+    retvec[NTuple(rowstart[i]+1,cols[i]+1)] = Adata[i];
+  return retvec;
 }
+
+template <typename T>
+static Array IJVToSparse(const BasicArray<uint32> &irp,
+			 const BasicArray<uint32> &jcp,
+			 const Array &pr, const Array &pi, 
+			 bool complexFlag) {
+  if (!complexFlag)
+    return Array(CCSToSparse(irp,jcp,pr.asDenseArray().constReal<T>()));
+  else
+    return Array(CCSToSparse(irp,jcp,pr.asDenseArray().constReal<T>()),
+		 CCSToSparse(irp,jcp,pi.asDenseArray().constImag<T>()));
+}
+
+#define MacroIJVToSparse(ctype,cls)					\
+  case cls: return IJVToSparse<ctype>(irp,jcp,pr,pi,complexFlag);
 
 Array MatIJVToSparse(const Array &ir, const Array &jc,
 		     const Array &pr, const Array &pi, bool complexFlag) {
   const BasicArray<uint32> &irp(ir.constReal<uint32>());
   const BasicArray<uint32> &jcp(jc.constReal<uint32>());
-  
+  switch(pr.dataClass()) {
+  default: throw Exception("Unsupported data type " + pr.className() + " in sparse constructor");
+    MacroExpandCasesSimple(MacroIJVToSparse);
+  }
 }

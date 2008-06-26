@@ -1,53 +1,25 @@
 #include "SparseCCS.hpp"
 #include "Math.hpp"
 
-void ConvertSparseToCCS(const SparseMatrix<double>&A, CCSForm &B) {
-  B.Acolstart.resize(int(A.cols()+1));
-  int m = 1;
-  int col = 0;
-  B.Acolstart[0] = 0;
-  ConstSparseIterator<double> iter(&A);
-  while (iter.isValid()) {
-    while (m <iter.col()) {
-      B.Acolstart[m] = B.Adata.size();
-      m++;
-    }
-    while (iter.moreInSlice()) {
-      B.Arowindex << int(iter.row()-1);
-      B.Adata << iter.value();
-      iter.next();
-    }
-    iter.nextSlice();
-  }
-  while (m <= A.cols()) {
-    B.Acolstart[m] = B.Adata.size();
-    m++;
-  }
-}
+// Normally, the i,j,v representation for a sparse matrix has
+// a great degree of redundancy in one of the components.  If
+// j is the column coordinate then a vector such as:
+//   1 3
+//   3 3
+//   5 3
 
-void ConvertSparseToCCS(const SparseMatrix<double> &Areal, const SparseMatrix<double> &Aimag, CCSForm &B) {
-  B.Acolstart.resize(int(Areal.cols()+1));
-  int m = 1;
-  int col = 0;
-  B.Acolstart[0] = 0;
-  ConstComplexSparseIterator<double> iter(&Areal,&Aimag);
-  while (iter.isValid()) {
-    while (m <iter.col()) {
-      B.Acolstart[m] = B.Adata.size();
-      m++;
+QVector<int> CompressCCSCols(const QVector<int> &cols, int colcount) {
+  QVector<int> y(colcount+1);
+  int xp = 0;
+  for (int i=0;i<colcount;i++) {
+    if ((xp >= cols.size()) || (i < cols[xp]))
+      y[i+1] = y[i];
+    else {
+      while ((xp < cols.size()) && (cols[xp] == i)) xp++;
+      y[i+1] = xp-1;
     }
-    while (iter.moreInSlice()) {
-      B.Arowindex << int(iter.row()-1);
-      B.Adata << iter.realValue();
-      B.Aimag << iter.imagValue();
-      iter.next();
-    }
-    iter.nextSlice();
   }
-  while (m <= Areal.cols()) {
-    B.Acolstart[m] = B.Adata.size();
-    m++;
-  }
+  return y;
 }
   
 Array IJVForm::rows() {

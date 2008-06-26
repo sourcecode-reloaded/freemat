@@ -5,19 +5,47 @@
 #include "SparseMatrix.hpp"
 #include "Array.hpp"
 
-struct CCSForm {
-  QVector<int> Acolstart;
-  QVector<int> Arowindex;
-  QVector<double> Adata;
-  QVector<double> Aimag;
-  const int* colstart() const {return Acolstart.constData();}
-  const int* rowindx() const {return Arowindex.constData();}
-  const double* data() const {return Adata.constData();}
-  const double* imag() const {return Aimag.constData();}
-};
+QVector<int> CompressCCSCols(const QVector<int> &cols, int colcount);
 
-void ConvertSparseToCCS(const SparseMatrix<double>&A, CCSForm &B);
-void ConvertSparseToCCS(const SparseMatrix<double>&Ar, const SparseMatrix<double>&Ai, CCSForm &B);
+template <typename T>
+void SparseToCCS(const SparseMatrix<T>&A,
+		 QVector<int> &rowstart,
+		 QVector<int> &colstart,
+		 QVector<T> &Adata) {
+  QVector<int> cols;
+  ConstSparseIterator<T> iter(&A);
+  while (iter.isValid()) {
+    while (iter.moreInSlice()) {
+      cols << int(iter.col()-1);
+      rowstart << int(iter.row()-1);
+      Adata << iter.value();
+      iter.next();
+    }
+    iter.nextSlice();
+  }
+  colstart = CompressCCSCols(cols,int(A.cols()));
+}
+
+template <typename T>
+void SparseToCCS(const SparseMatrix<T> &Areal, 
+		 const SparseMatrix<T> &Aimag,
+		 QVector<int> &rowstart,
+		 QVector<int> &colstart,
+		 QVector<T> &Areal_part,
+		 QVector<T> &Aimag_part) {
+  QVector<int> cols;
+  ConstComplexSparseIterator<T> iter(&Areal,&Aimag);
+  while (iter.isValid()) {
+    while (iter.moreInSlice()) {
+      cols << int(iter.col()-1);
+      rowstart << int(iter.row()-1);
+      Areal_part << iter.realValue();
+      Aimag_part << iter.imagValue();
+    }
+    iter.nextSlice();
+  }
+  colstart = CompressCCSCols(cols,int(Areal.cols()));
+}
 
 class IJVForm {
   Array m_rows;

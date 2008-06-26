@@ -176,13 +176,13 @@ uint8 ByteFour(uint32 x) {
 }
 
 void MatIO::putSparseArray(const Array &x) {
-  Array rows, cols, vals_real, vals_imag;
-  SparseToMatIJV(x,rows,cols,vals_real,vals_imag);
+  Array rows, cols, vals;
+  SparseToIJVMat(x,rows,cols,vals);
   putDataElement(rows);
   putDataElement(cols);
-  putDataElement(vals_real);
+  putDataElement(Real(vals));
   if (!x.allReal())
-    putDataElement(vals_imag);
+    putDataElement(Imag(vals));
 }
 
 Array MatIO::getSparseArray(NTuple dm, bool complexFlag) {
