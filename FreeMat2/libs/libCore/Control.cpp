@@ -15,9 +15,9 @@
 ArrayVector JITControlFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   if (arg.size() < 1) {
     if (eval->JITControl())
-      return SingleArrayVector(Array(QString("on")));
+      return ArrayVector(Array(QString("on")));
     else
-      return SingleArrayVector(Array(QString("off")));
+      return ArrayVector(Array(QString("off")));
   } else {
     if (!arg[0].isString())
       throw Exception("jitcontrol function takes only a single, string argument");
@@ -77,9 +77,9 @@ ArrayVector JITControlFunction(int nargout, const ArrayVector& arg, Interpreter*
 ArrayVector DbAutoFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   if (arg.size() < 1) {
     if (eval->AutoStop()) 
-      return SingleArrayVector(Array(QString("on")));
+      return ArrayVector(Array(QString("on")));
     else 
-      return SingleArrayVector(Array(QString("off")));
+      return ArrayVector(Array(QString("off")));
   } else {
     if (!arg[0].isString())
       throw Exception("dbauto function takes only a single, string argument");

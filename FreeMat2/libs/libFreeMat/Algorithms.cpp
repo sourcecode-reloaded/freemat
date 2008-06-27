@@ -1,6 +1,7 @@
 #include "Algorithms.hpp"
 #include "Struct.hpp"
 #include "IEEEFP.hpp"
+#include "SparseCCS.hpp"
 
 void WarningMessage(QString msg) {
 #warning FIXME
@@ -829,5 +830,49 @@ Array MatIJVToSparse(const Array &ir, const Array &jc,
   switch(pr.dataClass()) {
   default: throw Exception("Unsupported data type " + pr.className() + " in sparse constructor");
     MacroExpandCasesSimple(MacroIJVToSparse);
+  }
+}
+
+template <typename T>
+void SparseToIJVReal(const SparseMatrix<T> &x, Array &rows, Array &cols, Array &vals) {
+  QVector<uint32> rowstart;
+  QVector<uint32> colstart;
+  QVector<T> xdata;
+  SparseToCCS(x,rowstart,colstart,xdata);
+  rows = Array(ToBasicArray(rowstart));
+  cols = Array(ToBasicArray(colstart));
+  vals = Array(ToBasicArray(xdata));
+}
+
+template <typename T>
+void SparseToIJVComplex(const SparseMatrix<T> &xr, const SparseMatrix<T> &xi,
+			Array &rows, Array &cols, Array &vals) {
+  QVector<uint32> rowstart;
+  QVector<uint32> colstart;
+  QVector<T> xdata_real;
+  QVector<T> xdata_imag;
+  SparseToCCS(xr,rowstart,colstart,xdata_real);
+  SparseToCCS(xi,rowstart,colstart,xdata_imag);
+  rows = Array(ToBasicArray(rowstart));
+  cols = Array(ToBasicArray(colstart));
+  vals = Array(ToBasicArray(xdata_real),ToBasicArray(xdata_imag));
+}
+
+template <typename T>
+void SparseToIJV(const Array &x, Array &rows, Array &cols, Array &vals) {
+  if (x.allReal())
+    SparseToIJVReal(x.constRealSparse<T>(),rows,cols,vals);
+  else
+    SparseToIJVComplex(x.constRealSparse<T>(),x.constImagSparse<T>(),rows,cols,vals);
+}
+
+#define MacroSparseToIJV(ctype,cls)				\
+  case cls: return SparseToIJV<ctype>(x,rows,cols,vals);
+
+void SparseToIJVMat(const Array &x, Array &rows, Array &cols, Array &vals) {
+  if (!x.isSparse()) throw Exception("x must be sparse");
+  switch (x.dataClass()) {
+  default: throw Exception("unhandled case");
+    MacroExpandCasesSimple(MacroSparseToIJV);
   }
 }

@@ -1,3 +1,6 @@
+#include "Array.hpp"
+#include "Algorithms.hpp"
+
 //!
 //@Module SPONES Sparse Ones Function
 //@@Section SPARSE
@@ -18,18 +21,57 @@
 //full(b)
 //@>
 //!
+
+template <typename T>
+static Array SponesSparse(const SparseMatrix<T> &A) {
+  ConstSparseIterator<T> iter(&A);
+  SparseMatrix<double> ret(NTuple(A.rows(),A.cols()));
+  while (iter.isValid()) {
+    while (iter.moreInSlice()) {
+      ret[iter.pos()] = 1;
+      iter.next();
+    }
+    iter.nextSlice();
+  }
+  return Array(ret);
+}
+
+template <typename T>
+static Array SponesDense(const BasicArray<T> &A) {
+  ConstBasicIterator<T> iter(&A);
+  SparseMatrix<double> ret(NTuple(A.rows(),A.cols()));
+  while (iter.isValid()) {
+    for (index_t i=1;i!=iter.size();i++) {
+      ret[iter.pos()] = 1.0;
+      iter.next();
+    }
+    iter.nextSlice();
+  }
+  return Array(ret);
+}
+
+template <typename T>
+static Array Spones(const Array &A) {
+  if (A.isSparse())
+    return SponesSparse(A.constRealSparse<T>());
+  else
+    return SponesDense(A.asDenseArray().constReal<T>());
+}
+
+#define MacroSpones(ctype,cls)				\
+  case cls: return ArrayVector(Spones<ctype>(arg[0]));
+
 ArrayVector SponesFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)
     throw Exception("spones function requires a sparse matrix template argument");
-  Array tmp(arg[0]);
-  if (tmp.isEmpty())
-    return SingleArrayVector(Array::emptyConstructor());
-  if(tmp.isReferenceType())
+  if (arg[0].isEmpty())
+    return ArrayVector(EmptyConstructor());
+  if(arg[0].isReferenceType())
     throw Exception("spones function requires a numeric sparse matrix argument");
-  tmp.makeSparse();
-  if (!tmp.sparse())
-    throw Exception("spones function requires a sparse matrix template argument");
-  return SingleArrayVector(Array::Array(FM_FLOAT,Dimensions(tmp.getDimensionLength(0),tmp.getDimensionLength(1)),SparseOnesFunc(tmp.dataClass(),tmp.getDimensionLength(0),tmp.getDimensionLength(1),tmp.getSparseDataPointer()),true));
+  switch (arg[0].dataClass()) {
+  default: throw Exception("Unhandled type for spones");
+    MacroExpandCasesSimple(MacroSpones);
+  }
 }
 
 //!

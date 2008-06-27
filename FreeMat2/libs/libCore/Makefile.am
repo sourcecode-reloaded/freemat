@@ -74,6 +74,7 @@ Array.cpp \
 Version.cpp \
 Error.cpp \
 Misc.cpp \
+Mean.cpp \
 MPIWrap.cpp \
 StringOps.cpp \
 Transcendental.cpp \
@@ -84,6 +85,8 @@ XML.cpp \
 RPC.cpp \
 Cstruct.cpp \
 LoadCore.cpp \
+Control.cpp \
+Sparse.cpp \
 $(libCore_a_HFILES)
 
 nodist_libCore_a_SOURCES = $(libCore_a_MOC) 

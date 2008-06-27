@@ -8,8 +8,8 @@
 //   3 3
 //   5 3
 
-QVector<int> CompressCCSCols(const QVector<int> &cols, int colcount) {
-  QVector<int> y(colcount+1);
+QVector<uint32> CompressCCSCols(const QVector<uint32> &cols, int colcount) {
+  QVector<uint32> y(colcount+1);
   int xp = 0;
   for (int i=0;i<colcount;i++) {
     if ((xp >= cols.size()) || (i < cols[xp]))

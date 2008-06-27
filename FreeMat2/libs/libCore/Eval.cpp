@@ -156,7 +156,7 @@ static ArrayVector EvalNoTryFunction(int nargout, const ArrayVector& arg, Interp
   }
 }
 
-static ArrayVector EvalFunction(int nargout, const ArrayVector& arg,Interpreter* eval){
+ArrayVector EvalFunction(int nargout, const ArrayVector& arg,Interpreter* eval){
   if (arg.size() == 0)
     throw Exception("eval function takes at least one argument - the string to execute");
   if (arg.size() == 2)

@@ -5,14 +5,14 @@
 #include "SparseMatrix.hpp"
 #include "Array.hpp"
 
-QVector<int> CompressCCSCols(const QVector<int> &cols, int colcount);
+QVector<uint32> CompressCCSCols(const QVector<uint32> &cols, int colcount);
 
 template <typename T>
 void SparseToCCS(const SparseMatrix<T>&A,
-		 QVector<int> &rowstart,
-		 QVector<int> &colstart,
+		 QVector<uint32> &rowstart,
+		 QVector<uint32> &colstart,
 		 QVector<T> &Adata) {
-  QVector<int> cols;
+  QVector<uint32> cols;
   ConstSparseIterator<T> iter(&A);
   while (iter.isValid()) {
     while (iter.moreInSlice()) {
@@ -29,11 +29,11 @@ void SparseToCCS(const SparseMatrix<T>&A,
 template <typename T>
 void SparseToCCS(const SparseMatrix<T> &Areal, 
 		 const SparseMatrix<T> &Aimag,
-		 QVector<int> &rowstart,
-		 QVector<int> &colstart,
+		 QVector<uint32> &rowstart,
+		 QVector<uint32> &colstart,
 		 QVector<T> &Areal_part,
 		 QVector<T> &Aimag_part) {
-  QVector<int> cols;
+  QVector<uint32> cols;
   ConstComplexSparseIterator<T> iter(&Areal,&Aimag);
   while (iter.isValid()) {
     while (iter.moreInSlice()) {

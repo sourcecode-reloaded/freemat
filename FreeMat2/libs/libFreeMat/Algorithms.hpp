@@ -28,6 +28,14 @@ bool IsCellStringArray(const Array &arg);
 Array Vectorize(const Array& arg);
 
 template <typename T>
+BasicArray<T> ToBasicArray(const QVector<T> &x) {
+  BasicArray<T> retvec(NTuple(1,index_t(x.size())));
+  for (int i=0;i<x.size();i++)
+    retvec[index_t(i)+1] = x[i];
+  return retvec;
+}
+
+template <typename T>
 SparseMatrix<T> ToRealSparse(const Array& data) {
   if (data.type().Sparse == 1) return data.constRealSparse<T>();
   Array cdata(data);

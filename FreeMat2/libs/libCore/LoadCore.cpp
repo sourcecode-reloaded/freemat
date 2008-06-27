@@ -35,14 +35,14 @@ void LoadGUICoreFunctions(Context* context) {
 }
 
 void LoadCoreFunctions(Context* context) {
-  context->addFunction("tcpserver",TCPServerFunction,1,1,"port",NULL);
-  context->addFunction("tcpaccept",TCPAcceptFunction,2,1,"handle","timeout",NULL);
-  context->addFunction("tcpconnect",TCPConnectFunction,3,1,"remoteip","port","timeout",NULL);
-  context->addFunction("tcpsend",TCPSendFunction,3,1,"handle","data","timeout",NULL);
-  context->addFunction("tcprecv",TCPRecvFunction,2,1,"handle","timeout",NULL);
-  context->addFunction("tcpclose",TCPCloseFunction,1,0,"handle",NULL);
-  context->addFunction("tcpserverclose",TCPServerCloseFunction,1,0,"handle",NULL);
-  context->addFunction("tcpstate",TCPStateFunction,1,1,"handle",NULL);
+  // context->addFunction("tcpserver",TCPServerFunction,1,1,"port",NULL);
+//   context->addFunction("tcpaccept",TCPAcceptFunction,2,1,"handle","timeout",NULL);
+//   context->addFunction("tcpconnect",TCPConnectFunction,3,1,"remoteip","port","timeout",NULL);
+//   context->addFunction("tcpsend",TCPSendFunction,3,1,"handle","data","timeout",NULL);
+//   context->addFunction("tcprecv",TCPRecvFunction,2,1,"handle","timeout",NULL);
+//   context->addFunction("tcpclose",TCPCloseFunction,1,0,"handle",NULL);
+//   context->addFunction("tcpserverclose",TCPServerCloseFunction,1,0,"handle",NULL);
+//   context->addFunction("tcpstate",TCPStateFunction,1,1,"handle",NULL);
   context->addFunction("true",TrueFunction,0,1,NULL);
   context->addFunction("false",FalseFunction,0,1,NULL);
   context->addFunction("regexp",RegExpFunction,-1,6,NULL);
@@ -111,7 +111,7 @@ void LoadCoreFunctions(Context* context) {
 // 
   context->addFunction("int2bin",Int2BinFunction,2,1,"x","n",NULL);
   context->addFunction("bin2int",Bin2IntFunction,2,1,"x","flags",NULL);
-  context->addSpecialFunction("eig",EigFunction,2,2,"A","balanceflag",NULL);
+  context->addFunction("eig",EigFunction,2,2,"A","balanceflag",NULL);
   context->addFunction("eigs",EigsFunction,-1,-1,"A",NULL);
   context->addFunction("isempty",IsEmptyFunction,1,1,"x",NULL);
   context->addFunction("zeros",ZerosFunction,-1,1,NULL);
@@ -137,7 +137,7 @@ void LoadCoreFunctions(Context* context) {
   context->addFunction("IsNaN",IsNaNFunction,1,1,"x",NULL);
   context->addFunction("isnan",IsNaNFunction,1,1,"x",NULL);
   context->addFunction("issparse",IsSparseFunction,1,1,"x",NULL);
-  context->addFunction("nnz",NNZFunction,1,1,"x",NULL);
+  //  context->addFunction("nnz",NNZFunction,1,1,"x",NULL);
   context->addFunction("spones",SponesFunction,1,1,"x",NULL);
   context->addFunction("IsInf",IsInfFunction,1,1,"x",NULL);
   context->addFunction("isinf",IsInfFunction,1,1,"x",NULL);
@@ -177,7 +177,7 @@ void LoadCoreFunctions(Context* context) {
   context->addFunction("fgetline",FgetlineFunction,1,1,"handle",NULL);
   context->addFunction("feof",FeofFunction,1,1,"handle",NULL);
   context->addSpecialFunction("printf",PrintfFunction,-1,0,NULL);
-  context->addSpecialFunction("verstring",VerStringFunction,0,1,NULL);
+  context->addFunction("verstring",VerStringFunction,0,1,NULL);
   context->addFunction("version",VersionFunction,0,1,NULL);
   context->addFunction("dlmread",DlmReadFunction,4,1,"filename","delimiter","startrow","startcol",NULL);
   context->addFunction("sprintf",SprintfFunction,-1,1,NULL);
@@ -200,7 +200,7 @@ void LoadCoreFunctions(Context* context) {
   context->addFunction("randchi",RandChiFunction,1,1,"dof",NULL);
   context->addFunction("randexp",RandExpFunction,1,1,"means",NULL);
   context->addFunction("randp",RandPoissonFunction,1,1,"means",NULL);
-  context->addSpecialFunction("find",FindFunction,3,-1,"x","k","flags",NULL);
+  context->addFunction("find",FindFunction,3,-1,"x","k","flags",NULL);
   context->addFunction("conj",ConjFunction,1,1,"x",NULL);
   context->addFunction("real",RealFunction,1,1,"x",NULL);
   context->addFunction("imag",ImagFunction,1,1,"x",NULL);
@@ -241,20 +241,20 @@ void LoadCoreFunctions(Context* context) {
   context->addFunction("conv2",Conv2Function,4,1,"A","B","C","keep",NULL);
   context->addFunction("demo",DemoFunction,2,0,"x","string",NULL);
   context->addFunction("permute",PermuteFunction,2,1,"A","permutation",NULL);
-  context->addSpecialFunction("inv",InvFunction,1,1,"A",NULL);
+  context->addFunction("inv",InvFunction,1,1,"A",NULL);
   context->addFunction("rcond",RcondFunction,1,1,"A",NULL);
   context->addFunction("end",EndFunction,3,1,"x","n","dims",NULL);
   context->addFunction("xmlread",XMLReadFunction,1,1,"filename",NULL);
   context->addFunction("htmlread",HTMLReadFunction,1,1,"filename",NULL);
   context->addFunction("urlwrite",URLWriteFunction,3,1,"url","filename","timeout",NULL);
   context->addFunction("p_end",EndFunction,3,1,"x","n","dims",NULL);
-  context->addFunction("ctypedefine",CtypeDefineFunction,-1,0,NULL);
-  context->addFunction("ctypesize",CtypeSizeFunction,2,1,"type","count",NULL);
-  context->addFunction("cenum",CenumFunction,2,1,"type","value",NULL);
-  context->addSpecialFunction("ctypefreeze",CtypeFreezeFunction,2,1,"s","type",NULL);
-  context->addSpecialFunction("ctypethaw",CtypeThawFunction,3,2,"x","type","count",NULL);
-  context->addSpecialFunction("ctypeprint",CtypePrintFunction,1,0,"type",NULL);
-  InitializeFileSubsystem();
+//   context->addFunction("ctypedefine",CtypeDefineFunction,-1,0,NULL);
+//   context->addFunction("ctypesize",CtypeSizeFunction,2,1,"type","count",NULL);
+//   context->addFunction("cenum",CenumFunction,2,1,"type","value",NULL);
+//   context->addSpecialFunction("ctypefreeze",CtypeFreezeFunction,2,1,"s","type",NULL);
+//   context->addSpecialFunction("ctypethaw",CtypeThawFunction,3,2,"x","type","count",NULL);
+//   context->addSpecialFunction("ctypeprint",CtypePrintFunction,1,0,"type",NULL);
+//   InitializeFileSubsystem();
 #ifdef USE_MPI
   LoadMPIFunctions(context);
 #endif

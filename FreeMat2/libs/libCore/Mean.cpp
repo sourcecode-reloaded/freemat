@@ -3,7 +3,7 @@
 
 struct OpVecMean {
   template <typename T>
-  static inline void func(const ConstSparseIterator<T> & src, 
+  static inline void func(ConstSparseIterator<T> & src, 
 			  SparseSlice<T>& dest) {
     T accum = 0;
     while (src.moreInSlice()) {
@@ -13,7 +13,7 @@ struct OpVecMean {
     dest[1] = accum/src.rows();
   }
   template <typename T>
-  static inline void func(const ConstComplexSparseIterator<T> & src, 
+  static inline void func(ConstComplexSparseIterator<T> & src, 
 			  SparseSlice<T>& dest_real,
 			  SparseSlice<T>& dest_imag) {
     T accum_real = 0;
