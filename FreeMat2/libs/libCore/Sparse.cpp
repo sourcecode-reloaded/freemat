@@ -1,5 +1,7 @@
 #include "Array.hpp"
 #include "Algorithms.hpp"
+#include "Interpreter.hpp"
+#include "SparseCCS.hpp"
 
 //!
 //@Module SPONES Sparse Ones Function
@@ -38,7 +40,7 @@ static Array SponesSparse(const SparseMatrix<T> &A) {
 
 template <typename T>
 static Array SponesDense(const BasicArray<T> &A) {
-  ConstBasicIterator<T> iter(&A);
+  ConstBasicIterator<T> iter(&A,0);
   SparseMatrix<double> ret(NTuple(A.rows(),A.cols()));
   while (iter.isValid()) {
     for (index_t i=1;i!=iter.size();i++) {
@@ -553,127 +555,21 @@ ArrayVector SponesFunction(int nargout, const ArrayVector& arg) {
 //outputs y
 //!
 ArrayVector SparseFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  if (arg.size() == 1) {
-    Array r(arg[0]);
-    if ((r.dataClass() != FM_LOGICAL) && (r.dataClass() < FM_INT32))
-      r.promoteType(FM_INT32);
-    r.makeSparse();
-    return SingleArrayVector(r);
-  } else if (arg.size() == 2) {
-    Array m_arg(arg[0]);
-    Array n_arg(arg[1]);
-    int m, n;
-    m = m_arg.getContentsAsIntegerScalar();
-    n = n_arg.getContentsAsIntegerScalar();
-    Dimensions dim(m,n);
-    return SingleArrayVector(Array(FM_FLOAT,dim,SparseFloatZeros(m,n),true));
-  } else if (arg.size() == 3) {
-    Array i_arg(arg[0]);
-    Array j_arg(arg[1]);
-    Array v_arg(arg[2]);
-    i_arg.promoteType(FM_UINT32);
-    j_arg.promoteType(FM_UINT32);
-    if (v_arg.dataClass() != FM_LOGICAL && v_arg.dataClass() < FM_INT32)
-      v_arg.promoteType(FM_INT32);
-    int ilen, jlen, vlen;
-    ilen = i_arg.getLength();
-    jlen = j_arg.getLength();
-    vlen = v_arg.getLength();
-    int olen;
-    olen = ilen > jlen ? ilen : jlen;
-    olen = vlen > olen ? vlen : olen;
-    int istride = 0, jstride = 0, vstride = 0;
-    if (olen > 1) {
-      if (ilen == 1)
-	istride = 0;
-      else if (ilen == olen)
-	istride = 1;
-      else
-	throw Exception("in I, J, V format, all three vectors must be the same size or be scalars");
-      if (jlen == 1)
-	jstride = 0;
-      else if (jlen == olen)
-	jstride = 1;
-      else
-	throw Exception("in I, J, V format, all three vectors must be the same size or be scalars");
-      if (vlen == 1)
-	vstride = 0;
-      else if (vlen == olen)
-	vstride = 1;
-      else
-	throw Exception("in I, J, V format, all three vectors must be the same size or be scalars");
-    }
-    // Calculate the number of rows in the matrix
-    uint32 *ip = (uint32*) i_arg.getDataPointer();
-    uint32 rows = 0;
-    for (int i=0;i<ilen;i++)
-      rows = (ip[i] > rows) ? ip[i] : rows;
-    uint32 *jp = (uint32*) j_arg.getDataPointer();
-    uint32 cols = 0;
-    for (int j=0;j<jlen;j++)
-      cols = (jp[j] > cols) ? jp[j] : cols;
-    Dimensions dim(rows,cols);
-    return SingleArrayVector(Array(v_arg.dataClass(),dim,
-				   makeSparseFromIJV(v_arg.dataClass(),
-						     rows,cols,olen,
-						     ip,istride,jp,jstride,
-						     v_arg.getDataPointer(),
-						     vstride),
-				   true));
+  if (arg.size() == 1) 
+    return ArrayVector(ToSparse(arg[0]));
+  else if (arg.size() == 2) 
+    return ArrayVector(Array(SparseMatrix<double>(NTuple(arg[0].asInteger(),
+							 arg[1].asInteger()))));
+  else if (arg.size() == 3) {
+    const BasicArray<index_t> &ip(arg[0].asDenseArray().toClass(Index).constReal<index_t>());
+    const BasicArray<index_t> &jp(arg[1].asDenseArray().toClass(Index).constReal<index_t>());
+    return ArrayVector(IJVToSparse(ip,jp,arg[2]));
   } else if (arg.size() >= 5) {
-    if (arg.size() > 5)
-      eval->warningMessage("extra arguments to sparse (nnz to reserve) ignored");
-    Array i_arg(arg[0]);
-    Array j_arg(arg[1]);
-    Array v_arg(arg[2]);
-    i_arg.promoteType(FM_UINT32);
-    j_arg.promoteType(FM_UINT32);
-    if (v_arg.dataClass() != FM_LOGICAL && v_arg.dataClass() < FM_INT32)
-      v_arg.promoteType(FM_INT32);
-    int ilen, jlen, vlen;
-    ilen = i_arg.getLength();
-    jlen = j_arg.getLength();
-    vlen = v_arg.getLength();
-    int olen;
-    olen = ilen > jlen ? ilen : jlen;
-    olen = vlen > olen ? vlen : olen;
-    int istride = 0, jstride = 0, vstride = 0;
-    if (olen > 1) {
-      if (ilen == 1)
-	istride = 0;
-      else if (ilen == olen)
-	istride = 1;
-      else
-	throw Exception("in I, J, V format, all three vectors must be the same size or be scalars");
-      if (jlen == 1)
-	jstride = 0;
-      else if (jlen == olen)
-	jstride = 1;
-      else
-	throw Exception("in I, J, V format, all three vectors must be the same size or be scalars");
-      if (vlen == 1)
-	vstride = 0;
-      else if (vlen == olen)
-	vstride = 1;
-      else
-	throw Exception("in I, J, V format, all three vectors must be the same size or be scalars");
-    }
-    Array m_arg(arg[3]);
-    Array n_arg(arg[4]);
-    int rows = m_arg.getContentsAsIntegerScalar();
-    int cols = n_arg.getContentsAsIntegerScalar();
-    Dimensions dim(rows,cols);
-    uint32 *ip = (uint32*) i_arg.getDataPointer();
-    uint32 *jp = (uint32*) j_arg.getDataPointer();
-    return SingleArrayVector(Array(v_arg.dataClass(),dim,
-				   makeSparseFromIJV(v_arg.dataClass(),
-						     rows,cols,olen,
-						     ip,istride,jp,jstride,
-						     v_arg.getDataPointer(),
-						     vstride),
-				   true));
+    eval->warningMessage("extra arguments to sparse (nnz to reserve) ignored");
+    const BasicArray<index_t> &ip(arg[0].asDenseArray().toClass(Index).constReal<index_t>());
+    const BasicArray<index_t> &jp(arg[1].asDenseArray().toClass(Index).constReal<index_t>());
+    return ArrayVector(IJVToSparse(ip,jp,arg[2],arg[3].asDouble(),arg[4].asDouble()));
   }
-  throw Exception("unrecognized form of sparse - see help for the allowed forms of sparse");
 }
 
 //!

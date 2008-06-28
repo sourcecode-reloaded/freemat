@@ -21,14 +21,14 @@
 
 #include <qglobal.h>
 #include <QObject>
+#include <QString>
+#include <QVector>
 #ifdef Q_WS_X11
 #include <termios.h>
 #endif
 #include <vector>
 #include <list>
 #include <string>
-
-using namespace std;
 
 typedef struct {
   const char *sequence;
@@ -55,8 +55,8 @@ protected:
   char escseq[50];
   mapping *esc_seq_array;
   int esc_seq_count;
-  vector<string> flist;
-  list<string> enteredLines;
+  QVector<QString> flist;
+  QList<QString> enteredLines;
   int nline;
 public:
   Terminal();
@@ -77,7 +77,7 @@ public slots:
   void ClearEOL();
   void ClearEOD();
   void MoveBOL();
-  void OutputRawString(string txt);
+  void OutputRawString(QString txt);
   void DoRead();
   void ClearDisplay();
 signals:

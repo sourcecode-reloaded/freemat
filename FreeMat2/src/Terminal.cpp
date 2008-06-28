@@ -27,7 +27,6 @@
 #ifdef Q_WS_X11
 #include <term.h>
 #include <curses.h>
-#include <string>
 #include <sys/ioctl.h>
 #include "Exception.hpp"
 #include <sys/types.h>
@@ -270,7 +269,7 @@ void Terminal::MoveBOL() {
 #endif
 }
 
-void Terminal::OutputRawString(string txt) {
+void Terminal::OutputRawString(QString txt) {
 #ifdef Q_WS_X11
   int ndone = 0;   /* The number of characters written so far */
   /*
@@ -282,7 +281,7 @@ void Terminal::OutputRawString(string txt) {
    * write if a signal is caught.
    */
   while(ndone < slen) {
-    int nnew = write(STDOUT_FILENO, txt.c_str() + ndone, 
+    int nnew = write(STDOUT_FILENO, qPrintable(txt) + ndone, 
 		     sizeof(char)*(slen-ndone));
     if(nnew > 0)
       ndone += nnew;

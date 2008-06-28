@@ -213,8 +213,8 @@ ArrayVector EditorFunction(int nargout, const ArrayVector& arg, Interpreter* eva
     QObject::connect(m_app->GetKeyManager(),SIGNAL(UpdateVariables()), 
 	    edit,SLOT(refreshContext()));
     //Ask to change current path when setting breakpoint
-    QObject::connect(eval, SIGNAL(IllegalLineOrCurrentPath(string, int)), edit,
-        SLOT(IllegalLineOrCurrentPath(string, int)));
+    QObject::connect(eval, SIGNAL(IllegalLineOrCurrentPath(QString, int)), edit,
+        SLOT(IllegalLineOrCurrentPath(QString, int)));
   }
   edit->showNormal();
   edit->raise();
@@ -1034,8 +1034,8 @@ void MainApp::DisableRepaint() {
 			 
 Context *MainApp::NewContext() {
   Context *context = new Context(m_global);
-  LoadModuleFunctions(context);
-  LoadClassFunction(context);
+  //  LoadModuleFunctions(context);
+  //  LoadClassFunction(context);
   LoadCoreFunctions(context);
   LoadFNFunctions(context);
   if (guimode) {
@@ -1084,8 +1084,8 @@ int MainApp::StartNewInterpreterThread() {
   p_eval->setBasePath(basePath);
   p_eval->setUserPath(userPath);
   p_eval->rescanPath();
-  connect(p_eval,SIGNAL(outputRawText(string)),m_term,SLOT(OutputRawString(string)));
-  connect(p_eval,SIGNAL(SetPrompt(string)),m_keys,SLOT(SetPrompt(string)));
+  connect(p_eval,SIGNAL(outputRawText(QString)),m_term,SLOT(OutputRawString(QString)));
+  connect(p_eval,SIGNAL(SetPrompt(QString)),m_keys,SLOT(SetPrompt(QString)));
   connect(p_eval,SIGNAL(doGraphicsCall(Interpreter*,FuncPtr,ArrayVector,int)),
 	  this,SLOT(DoGraphicsCall(Interpreter*,FuncPtr,ArrayVector,int)));
   connect(p_eval,SIGNAL(CWDChanged()),m_keys,SIGNAL(UpdateCWD()));
@@ -1146,7 +1146,7 @@ int MainApp::Run() {
   qRegisterMetaType<FuncPtr>("FuncPtr");
   qRegisterMetaType<ArrayVector>("ArrayVector");
   qRegisterMetaType<Interpreter*>("Interpreter*");
-  connect(m_keys,SIGNAL(ExecuteLine(string)),this,SLOT(ExecuteLine(string)));
+  connect(m_keys,SIGNAL(ExecuteLine(QString)),this,SLOT(ExecuteLine(QString)));
   connect(m_keys,SIGNAL(UpdateTermWidth(int)),this,SLOT(UpdateTermWidth(int)));
   connect(m_keys,SIGNAL(RegisterInterrupt()),this,SLOT(RegisterInterrupt()));
   // Set up the profile timer (but don't start it)

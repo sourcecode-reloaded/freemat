@@ -11,14 +11,13 @@
 #include <QtGui>
 
 using namespace FreeMat;
-using namespace std;
 
 void InterpreterThread::run() {
   //  qDebug("interpreter thread on standby...\n");
   eval->sendGreeting();
   emit Ready();
   forever {
-    std::string cmdline;
+    QString cmdline;
     mutex.lock();
     if (cmd_buffer.empty())
       condition.wait(&mutex);
@@ -80,7 +79,7 @@ void InterpreterThread::Setup() {
   eval->rescanPath();
 }
 
-void InterpreterThread::ExecuteLine(std::string cmd) {
+void InterpreterThread::ExecuteLine(QString cmd) {
   mutex.lock();
   cmd_buffer.push_back(cmd);
   condition.wakeAll();

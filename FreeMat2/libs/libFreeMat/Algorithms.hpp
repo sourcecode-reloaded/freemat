@@ -108,4 +108,5 @@ Array MergeToComplex(const Array &Real, const Array &Imag);
 Array MatIJVToSparse(const Array &ir, const Array &jc, const Array &pr, const Array &pi, bool complexFlag);
 void SparseToIJVMat(const Array &x, Array &rows, Array &cols, Array &vals);
 
+Array ToSparse(const Array& data);
 #endif

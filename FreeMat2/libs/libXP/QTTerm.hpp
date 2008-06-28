@@ -107,7 +107,7 @@ public slots:
   void ClearEOD();
   void MoveBOL();
   void ClearDisplay();
-  void OutputRawString(string txt);
+  void OutputRawString(QString txt);
 signals:
   void OnChar(int c);
   void SetTextWidth(int);

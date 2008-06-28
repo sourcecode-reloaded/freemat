@@ -73,7 +73,7 @@ ArrayVector HelpFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
 
 static HelpWindow *m_helpwin=0;
 
-static bool inBundleMode() {
+bool inBundleMode() {
   QDir dir(QApplication::applicationDirPath());
   dir.cdUp();
   return (dir.dirName() == "Contents");

@@ -1,6 +1,7 @@
 #include "Array.hpp"
 #include "SparseCCS.hpp"
 #include "Algorithms.hpp"
+#include "Math.hpp"
 
 static inline index_t CountNonZeros(const BasicArray<bool> &dp) {
   index_t nonZero = 0;
@@ -134,23 +135,25 @@ static ArrayVector RCVFindModeFull(Array x) {
 }
 
 static ArrayVector FindModeSparse(Array x, int nargout) {
-  IJVForm ijv(x);
+  Array xrows, xcols, xdata;
+  xdata = SparseToIJV(x,xrows,xcols);
   NTuple retDim;
-  index_t nnz = ijv.nnz();
+  index_t nnz = xdata.length();
   if (x.isRowVector())
     retDim = NTuple(1,nnz);
   else
     retDim = NTuple(nnz,1);
   ArrayVector retval;
   if (nargout == 3) {
-    retval.push_back(ijv.rows());
-    retval.push_back(ijv.cols());
-    retval.push_back(ijv.values());
+    retval.push_back(xrows);
+    retval.push_back(xcols);
+    retval.push_back(xdata);
   } else if (nargout == 2) {
-    retval.push_back(ijv.rows());
-    retval.push_back(ijv.cols());
+    retval.push_back(xrows);
+    retval.push_back(xcols);
   } else {
-    retval.push_back(ijv.indices());
+    retval.push_back(Add(Multiply(Subtract(xcols,Array(double(1))),
+				  Array(double(x.rows()))),xrows));
   }
   return retval;
 }

@@ -57,8 +57,8 @@ void DumbTerminal::MoveBOL() {
   fflush(stdout);
 }
 
-void DumbTerminal::OutputRawString(string txt) {
-  printf("%s",txt.c_str());
+void DumbTerminal::OutputRawString(QString txt) {
+  printf("%s",qPrintable(txt));
   fflush(stdout);
 }
 

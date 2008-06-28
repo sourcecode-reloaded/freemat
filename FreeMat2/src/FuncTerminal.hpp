@@ -29,8 +29,8 @@ public:
   virtual ~FuncTerminal();
   virtual void Initialize();
   virtual void RestoreOriginalMode();
-  virtual void OutputRawString(string txt); 
-  virtual char* getLine(string prompt);
+  virtual void OutputRawString(QString txt); 
+  virtual char* getLine(QString prompt);
   virtual void ResizeEvent();
   virtual void MoveDown();
   virtual void MoveUp();

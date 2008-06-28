@@ -5,7 +5,7 @@
 #include "SparseMatrix.hpp"
 #include "Array.hpp"
 
-QVector<uint32> CompressCCSCols(const QVector<uint32> &cols, int colcount);
+QVector<uint32> CompressCCSCols(const QVector<uint32> &cols, index_t colcount);
 
 template <typename T>
 void SparseToCCS(const SparseMatrix<T>&A,
@@ -16,14 +16,14 @@ void SparseToCCS(const SparseMatrix<T>&A,
   ConstSparseIterator<T> iter(&A);
   while (iter.isValid()) {
     while (iter.moreInSlice()) {
-      cols << int(iter.col()-1);
-      rowstart << int(iter.row()-1);
+      cols << uint32(iter.col()-1);
+      rowstart << uint32(iter.row()-1);
       Adata << iter.value();
       iter.next();
     }
     iter.nextSlice();
   }
-  colstart = CompressCCSCols(cols,int(A.cols()));
+  colstart = CompressCCSCols(cols,A.cols());
 }
 
 template <typename T>
@@ -37,29 +37,21 @@ void SparseToCCS(const SparseMatrix<T> &Areal,
   ConstComplexSparseIterator<T> iter(&Areal,&Aimag);
   while (iter.isValid()) {
     while (iter.moreInSlice()) {
-      cols << int(iter.col()-1);
-      rowstart << int(iter.row()-1);
+      cols << uint32(iter.col()-1);
+      rowstart << uint32(iter.row()-1);
       Areal_part << iter.realValue();
       Aimag_part << iter.imagValue();
     }
     iter.nextSlice();
   }
-  colstart = CompressCCSCols(cols,int(Areal.cols()));
+  colstart = CompressCCSCols(cols,Areal.cols());
 }
 
-class IJVForm {
-  Array m_rows;
-  Array m_cols;
-  index_t m_size_rows;
-  Array m_values;
-public:
-  IJVForm(const Array &x);
-  Array rows();
-  Array cols();
-  Array indices();
-  Array values();
-  index_t nnz();
-};
+Array IJVToSparse(const BasicArray<index_t> &ip,const BasicArray<index_t> &jp,const Array &dat);
+Array IJVToSparse(const BasicArray<index_t> &ip, const BasicArray<index_t> &jp, const Array &dat,
+		  index_t rows, index_t cols);
+
+Array SparseToIJV(const Array &a, Array &rows, Array &cols);
 
 template <class T>
 class RLEEncoderComplex {

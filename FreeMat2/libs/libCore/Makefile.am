@@ -87,6 +87,7 @@ Cstruct.cpp \
 LoadCore.cpp \
 Control.cpp \
 Sparse.cpp \
+Matrix.cpp \
 $(libCore_a_HFILES)
 
 nodist_libCore_a_SOURCES = $(libCore_a_MOC) 

@@ -178,16 +178,16 @@ uint8 ByteFour(uint32 x) {
 void MatIO::putSparseArray(const Array &x) {
   Array rows, cols, vals;
   SparseToIJVMat(x,rows,cols,vals);
-  putDataElement(rows);
-  putDataElement(cols);
+  putDataElement(rows.toClass(Int32));
+  putDataElement(cols.toClass(Int32));
   putDataElement(Real(vals));
   if (!x.allReal())
     putDataElement(Imag(vals));
 }
 
 Array MatIO::getSparseArray(NTuple dm, bool complexFlag) {
-  Array ir(getDataElement().toClass(UInt32));
-  Array jc(getDataElement().toClass(UInt32));
+  Array ir(getDataElement().toClass(Index));
+  Array jc(getDataElement().toClass(Index));
   Array pr(getDataElement());
   index_t nnz = pr.length();
   Array pi;

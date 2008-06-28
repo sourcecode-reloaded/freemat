@@ -786,31 +786,31 @@ bool TestForCaseMatch(const Array &s, const Array &x) {
   return false;
 }
 
-static BasicArray<uint32> DecompressCCSCols(const BasicArray<uint32> &colstart, index_t len) {
-  BasicArray<uint32> retval(NTuple(1,len));
+static BasicArray<index_t> DecompressCCSCols(const BasicArray<index_t> &colstart, index_t len) {
+  BasicArray<index_t> retval(NTuple(1,len));
   index_t p=1;
   for (index_t i=2;i!=colstart.length();i++)
     for (index_t j=1;j!=(colstart[i]-colstart[i-1]);j++) {
-      retval[p] = uint32(i-2);
+      retval[p] = index_t(i-2);
       p = p + 1;
     }
   return retval;
 }
 
 template <typename T>
-static SparseMatrix<T> CCSToSparse(const BasicArray<uint32> &rowstart,
-			    const BasicArray<uint32> &colstart,
-			    const BasicArray<T> &Adata) {
-  BasicArray<uint32> cols(DecompressCCSCols(colstart,Adata.length()));
+static SparseMatrix<T> CCSToSparse(const BasicArray<index_t> &rowstart,
+				   const BasicArray<index_t> &colstart,
+				   const BasicArray<T> &Adata) {
+  BasicArray<index_t> cols(DecompressCCSCols(colstart,Adata.length()));
   SparseMatrix<T> retvec;
-  for (uint32 i=1;i!=cols.length();i++) 
+  for (index_t i=1;i!=cols.length();i++) 
     retvec[NTuple(rowstart[i]+1,cols[i]+1)] = Adata[i];
   return retvec;
 }
 
 template <typename T>
-static Array IJVToSparse(const BasicArray<uint32> &irp,
-			 const BasicArray<uint32> &jcp,
+static Array IJVToSparse(const BasicArray<index_t> &irp,
+			 const BasicArray<index_t> &jcp,
 			 const Array &pr, const Array &pi, 
 			 bool complexFlag) {
   if (!complexFlag)
@@ -825,8 +825,8 @@ static Array IJVToSparse(const BasicArray<uint32> &irp,
 
 Array MatIJVToSparse(const Array &ir, const Array &jc,
 		     const Array &pr, const Array &pi, bool complexFlag) {
-  const BasicArray<uint32> &irp(ir.constReal<uint32>());
-  const BasicArray<uint32> &jcp(jc.constReal<uint32>());
+  const BasicArray<index_t> &irp(ir.constReal<index_t>());
+  const BasicArray<index_t> &jcp(jc.constReal<index_t>());
   switch(pr.dataClass()) {
   default: throw Exception("Unsupported data type " + pr.className() + " in sparse constructor");
     MacroExpandCasesSimple(MacroIJVToSparse);
@@ -839,8 +839,8 @@ void SparseToIJVReal(const SparseMatrix<T> &x, Array &rows, Array &cols, Array &
   QVector<uint32> colstart;
   QVector<T> xdata;
   SparseToCCS(x,rowstart,colstart,xdata);
-  rows = Array(ToBasicArray(rowstart));
-  cols = Array(ToBasicArray(colstart));
+  rows = Array(ToBasicArray(rowstart)).toClass(Index);
+  cols = Array(ToBasicArray(colstart)).toClass(Index);
   vals = Array(ToBasicArray(xdata));
 }
 
@@ -853,8 +853,8 @@ void SparseToIJVComplex(const SparseMatrix<T> &xr, const SparseMatrix<T> &xi,
   QVector<T> xdata_imag;
   SparseToCCS(xr,rowstart,colstart,xdata_real);
   SparseToCCS(xi,rowstart,colstart,xdata_imag);
-  rows = Array(ToBasicArray(rowstart));
-  cols = Array(ToBasicArray(colstart));
+  rows = Array(ToBasicArray(rowstart)).toClass(Index);
+  cols = Array(ToBasicArray(colstart)).toClass(Index);
   vals = Array(ToBasicArray(xdata_real),ToBasicArray(xdata_imag));
 }
 
@@ -876,3 +876,25 @@ void SparseToIJVMat(const Array &x, Array &rows, Array &cols, Array &vals) {
     MacroExpandCasesSimple(MacroSparseToIJV);
   }
 }
+
+#undef MacroSparseToIJV
+
+template <typename T>
+Array ToSparse(const Array &data) {
+  if (data.allReal())
+    return Array(ToRealSparse<T>(data));
+  else
+    return Array(ToRealSparse<T>(data),ToImagSparse<T>(data));
+}
+
+#define MacroToSparse(ctype,cls)		\
+  case cls: return ToSparse<ctype>(data);
+
+Array ToSparse(const Array& data) {
+  switch (data.dataClass()) {
+  default: throw Exception("unhandled case for sparse");
+    MacroExpandCases(MacroToSparse);
+  }
+}
+
+#undef MacroToSparse
