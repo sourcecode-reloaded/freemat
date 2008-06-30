@@ -306,7 +306,7 @@ void KeyManager::TruncateDisplay() {
 }
 
 static inline QString RightSubstring(const QString &a, int m) {
-  return (a.right(a.length()-1-m));
+  return (a.right(a.length()-m));
 }
 
 void KeyManager::AddCharToLine(QChar c) {
@@ -1173,6 +1173,7 @@ static char *start_of_path(const char *string, int back_from)
 StringVector KeyManager::GetCompletions(QString line, 
 					int word_end, 
 					QString &matchString) {
+  if (line.isEmpty()) return StringVector();
   StringVector completions;
   if (!context->getMutex()->tryLock()) return completions;
   QMutexLocker lock(context->getMutex());

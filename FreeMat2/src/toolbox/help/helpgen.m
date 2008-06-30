@@ -228,9 +228,6 @@ function tok = mustmatch(line,pattern)
   if (isempty(toks)) error(sprintf('Error on line: %s',line)); end;
   tok = toks{1}{1};
 
-function res = testmatch(line,pattern)
-  res = ~isempty(regexp(line,pattern));
-
 function handle_filedump(&line,fp,pset,&writers)
   global genfiles
   fname = mustmatch(line,pset.fnin);

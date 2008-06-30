@@ -308,7 +308,7 @@ ArrayVector DirSepFunction(int nargout, const ArrayVector& arg) {
 //@@Signature
 //function pwd PrintWorkingDirectoryFunction
 //inputs none
-//output y
+//outputs y
 //!
 ArrayVector PrintWorkingDirectoryFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(Array(QDir::currentPath()));
@@ -332,7 +332,7 @@ ArrayVector PrintWorkingDirectoryFunction(int nargout, const ArrayVector& arg) {
 //@@Signature
 //function rmdir RMDirFunction
 //inputs dirname flag
-//outputs
+//outputs none
 //!
 inline void RemoveDirectory(QString dirname) {
   QDir::current().rmdir(dirname);

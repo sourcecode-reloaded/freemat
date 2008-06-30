@@ -1142,7 +1142,6 @@ void MainApp::RegisterInterrupt() {
 
 int MainApp::Run() {
   UpdatePaths();
-  qRegisterMetaType<string>("string");
   qRegisterMetaType<FuncPtr>("FuncPtr");
   qRegisterMetaType<ArrayVector>("ArrayVector");
   qRegisterMetaType<Interpreter*>("Interpreter*");
