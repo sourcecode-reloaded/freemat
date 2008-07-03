@@ -979,7 +979,7 @@ static inline BasicArray<T> BasicArrayFromNative(const T* data, NTuple dims) {
 
 template <typename T>
 static void SparseDenseMatrixMultiply(const SparseMatrix<T> &A, const T* B, int Bcols, T* C) {
-  for (index_t col = 1;col != Bcols;col++) {
+  for (index_t col = 1;col <= Bcols;col++) {
     T* c_slice = C + int((col-1)*A.rows());
     memset(c_slice,0,int(sizeof(T)*A.rows()));
     ConstSparseIterator<T> A_iter(&A);
@@ -998,7 +998,7 @@ static void SparseDenseMatrixMultiply(const SparseMatrix<T> &A_real,
 				      const SparseMatrix<T> &A_imag,
 				      const T*B, int Bcols, T* C) {
   int rows = int(A_real.rows());
-  for (index_t col = 1;col != Bcols;col++) {
+  for (index_t col = 1;col <= Bcols;col++) {
     T* c_slice = C + int(2*(col-1)*rows);
     memset(c_slice,0,int(2*sizeof(T)*rows));
     ConstComplexSparseIterator<T> A_iter(&A_real,&A_imag);

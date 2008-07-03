@@ -228,7 +228,7 @@ Array MatIO::getStructArray(NTuple dm) {
   Array ret(Struct);
   for (int j=0;j<fieldNameCount;j++) {
     BasicArray<Array> dp(dm);
-    for (index_t i=1;i!=dm.count();i++) {
+    for (index_t i=1;i<=dm.count();i++) {
       bool atEof; QString name; bool match; bool global;
       dp[i] = getArray(atEof,name,match,global);
     }
@@ -239,7 +239,7 @@ Array MatIO::getStructArray(NTuple dm) {
 
 Array MatIO::getCellArray(NTuple dm) {
   BasicArray<Array> rp(dm);
-  for (index_t i=1;i!=dm.count();i++) {
+  for (index_t i=1;i<=dm.count();i++) {
     bool ateof; QString name; bool match; bool global;
     rp[i] = getArray(ateof,name,match,global);
   }
@@ -452,7 +452,7 @@ void MatIO::putStructArray(const Array &x) {
   putDataElement(fieldNameText);
   for (int i=0;i<fieldNameCount;i++) {
     const BasicArray<Array> &rp(x.constStructPtr()[i]);
-    for (index_t j=1;j!=rp.length();j++)
+    for (index_t j=1;j<=rp.length();j++)
       putArray(rp[j]);
   }
 }
@@ -472,7 +472,7 @@ void MatIO::putClassArray(const Array &x) {
 
 void MatIO::putCellArray(const Array &x) {
   const BasicArray<Array> &rp(x.constReal<Array>());
-  for (index_t i=1;i!=rp.length();i++)
+  for (index_t i=1;i<=rp.length();i++)
     putArray(rp[i]);
 }
 

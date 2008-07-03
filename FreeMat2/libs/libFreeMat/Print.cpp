@@ -199,7 +199,7 @@ static ArrayFormatInfo ComputeArrayFormatInfo(const Array &ref) {
   case CellArray:
     {
       int maxwidth = 1;
-      for (index_t i=1;i<ref.length();i++) {
+      for (index_t i=1;i<=ref.length();i++) {
 	int len = SummarizeArrayCellEntry(ref.get(i)).size();
 	maxwidth = qMax(maxwidth,len);
       }
@@ -360,9 +360,7 @@ static void PrintSparse(const SparseMatrix<T> &A, Interpreter* io, const ArrayFo
   ConstSparseIterator<T> i(&A);
   while (i.isValid()) {
     while (i.moreInSlice()) {
-      io->outputMessage(QString(" %1 %2 ").arg(i.row()).arg(i.col()));
-      Emit(io,Array(i.value()),format,false);
-      io->outputMessage("\n");
+      io->outputMessage(QString(" %1 %2 %3\n").arg(i.row()).arg(i.col()).arg(i.value()));
       i.next();
     }
     i.nextSlice();
@@ -374,8 +372,12 @@ static void PrintSparse(const SparseMatrix<T> &Areal, const SparseMatrix<T> &Aim
   ConstComplexSparseIterator<T> i(&Areal,&Aimag);
   while (i.isValid()) {
     while (i.moreInSlice()) {
-      io->outputMessage(QString(" %1 %2 ").arg(i.row()).arg(i.col()));
-      Emit(io,Array(i.realValue(),i.imagValue()),format,true);
+      if (i.imagValue() >= 0)
+	io->outputMessage(QString(" %1 %2 %3+%4").arg(i.row()).arg(i.col()).
+			  arg(i.realValue()).arg(i.imagValue()));
+      else
+	io->outputMessage(QString(" %1 %2 %3%4").arg(i.row()).arg(i.col()).
+			  arg(i.realValue()).arg(i.imagValue()));	
       io->outputMessage("\n");
       i.next();
     }

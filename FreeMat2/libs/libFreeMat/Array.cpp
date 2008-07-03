@@ -3,6 +3,7 @@
 #include <QStringList>
 #include "Struct.hpp"
 #include "Algorithms.hpp"
+#include "Cast.hpp"
 
 static void Warn(const char *msg) {
 #warning FIXME
@@ -184,6 +185,11 @@ static inline void Tset_scalar(Array *ptr, S ndx, const Array& data) {
 }
 
 template <typename S>
+static inline const void Tset_string_scalar(Array*ptr, S ndx, const Array &rhs) {
+  ptr->real<QChar>().set(ndx,rhs.constReal<QChar>()[1]);
+}
+
+template <typename S>
 static inline const void Tset_cell_scalar(Array*ptr, S ndx, const Array &rhs) {
   BasicArray<Array> &rp(ptr->real<Array>());
   Set(rp,ndx,rhs);
@@ -216,6 +222,7 @@ void Array::set(index_t index, const Array& data) {
     MacroExpandCasesSimple(MacroSetIndexT);
   case CellArray: Tset_cell_scalar<index_t>(this,index,data); return;
   case Struct: Tset_struct_scalar<index_t>(this,index,data); return;
+  case StringArray: Tset_string_scalar<index_t>(this,index,data); return;
   default:
     throw Exception("Unhandled case for A(n) = B");
   }
@@ -232,6 +239,7 @@ void Array::set(const NTuple& index, const Array& data) {
     MacroExpandCasesSimple(MacroSetNTuple);
   case CellArray: Tset_cell_scalar<const NTuple&>(this,index,data); return;
   case Struct: Tset_struct_scalar<const NTuple&>(this,index,data); return;
+  case StringArray: Tset_string_scalar<const NTuple&>(this,index,data); return;
   default:
     throw Exception("Unhandled case for A(n1,..,nm) = B");
   }
@@ -472,27 +480,27 @@ const Array Array::get(const IndexArrayVector& index) const {
 
 #undef MacroGetIndexArrayVector
 
-template <typename S, typename T>
+template <typename T, typename S>
 inline static const Array Tcast(DataClass t, const Array *ptr) {
   if (ptr->isScalar()) {
     if (ptr->allReal())
-      return Array(T(ptr->constRealScalar<S>()));
+      return Array(CastConvert<T,S>(ptr->constRealScalar<S>()));
     else
-      return Array(T(ptr->constRealScalar<S>()),
-		   T(ptr->constImagScalar<S>()));
+      return Array(CastConvert<T,S>(ptr->constRealScalar<S>()),
+		   CastConvert<T,S>(ptr->constImagScalar<S>()));
   }
   if (ptr->isSparse()) {
     if (ptr->allReal())
-      return Array(ConvertSparseArray<S,T>(ptr->constRealSparse<S>()));
+      return Array(ConvertSparseArray<T,S>(ptr->constRealSparse<S>()));
     else
-      return Array(ConvertSparseArray<S,T>(ptr->constRealSparse<S>()),
-		   ConvertSparseArray<S,T>(ptr->constImagSparse<S>()));
+      return Array(ConvertSparseArray<T,S>(ptr->constRealSparse<S>()),
+		   ConvertSparseArray<T,S>(ptr->constImagSparse<S>()));
   }
   if (ptr->allReal())
-    return Array(ConvertBasicArray<S,T>(ptr->constReal<S>()));
+    return Array(ConvertBasicArray<T,S>(ptr->constReal<S>()));
   else
-    return Array(ConvertBasicArray<S,T>(ptr->constReal<S>()),
-		 ConvertBasicArray<S,T>(ptr->constImag<S>()));
+    return Array(ConvertBasicArray<T,S>(ptr->constReal<S>()),
+		 ConvertBasicArray<T,S>(ptr->constImag<S>()));
 }
 
 #define MacroClassName(ctype,cls) \
@@ -520,7 +528,7 @@ bool Array::isUserClass() const {
 }
 
 #define MacroTcast(ctype,cls) \
-  case cls: return Tcast<ctype,T>(t,ptr);
+  case cls: return Tcast<T,ctype>(t,ptr);
 
 template <typename T>
 inline static const Array TcastCase(DataClass t, const Array *ptr) {
@@ -569,14 +577,21 @@ static inline Array Tget_struct_scalar(const Array*ptr, S ndx) {
   Array ret(Struct,NTuple(1,1));
   StructArray &lp(ret.structPtr());
   for (int i=0;i<rp.fieldCount();i++)
-    lp[rp.fieldName(i)].set(1,Get(rp[i],ndx).get(1));
+    lp[rp.fieldName(i)].set(1,rp[i].get(ndx).get(1));
+  return ret;
+}
+
+template <typename S>
+static inline Array Tget_string_scalar(const Array* ptr, S ndx) {
+  BasicArray<QChar> ret(NTuple(1,1));
+  ret.set(1,ptr->constReal<QChar>()[ndx]);
   return ret;
 }
 
 template <typename S>
 static inline Array Tget_cell_scalar(const Array* ptr, S ndx) {
   BasicArray<Array> ret(NTuple(1,1));
-  ret.set(1,Get(ptr->constReal<Array>(),ndx));
+  ret.set(1,ptr->constReal<Array>()[ndx]);
   return ret;
 }
 
@@ -592,6 +607,7 @@ const Array Array::get(const NTuple& index) const {
     MacroExpandCasesSimple(MacroGetNTuple);
   case CellArray: return Tget_cell_scalar<const NTuple&>(this,index);
   case Struct: return Tget_struct_scalar<const NTuple&>(this,index);
+  case StringArray: return Tget_string_scalar<const NTuple&>(this,index);
   }
 }
 
@@ -608,6 +624,7 @@ const Array Array::get(index_t index) const {
     throw Exception("Unhandled case for get(index)");
     MacroExpandCasesSimple(MacroGetIndexT);
   case CellArray: return Tget_cell_scalar<index_t>(this,index);
+  case StringArray: return Tget_string_scalar<index_t>(this,index);
   case Struct: return Tget_struct_scalar<index_t>(this,index);
   }
 }
@@ -754,6 +771,10 @@ static inline bool Tequals_struct(const Array *pA, const Array *pB) {
   return true;
 }
 
+static inline bool Tequals_string(const Array *pA, const Array *pB) {
+  return (pA->constReal<QChar>() == pB->constReal<QChar>());
+}
+
 static inline bool Tequals_cell(const Array *pA, const Array *pB) {
   return (pA->constReal<Array>() == pB->constReal<Array>());
 }
@@ -813,6 +834,7 @@ bool Array::operator==(const Array &b) const {
     MacroExpandCasesSimple(MacroArrayEquals);
   case CellArray: return Tequals_cell(this,&b);
   case Struct: return Tequals_struct(this,&b);
+  case StringArray: return Tequals_string(this,&b);
   }
   return false;
 }

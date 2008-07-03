@@ -74,7 +74,7 @@ double ArrayRange(const Array& dp) {
   if (rp.length() == 0) return 0;
   double result;
   bool init = false;
-  for (index_t i=1;i!=rp.length();i++) {
+  for (index_t i=1;i<=rp.length();i++) {
     if (!IsNaN(rp[i])) {
       if (!init) {
 	init = true;

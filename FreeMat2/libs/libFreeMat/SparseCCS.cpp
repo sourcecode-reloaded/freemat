@@ -103,7 +103,7 @@ static SparseMatrix<T> TIJVToSparse(const BasicArray<index_t> &ip,
   index_t dd = (dp.isScalar() == 1) ? 0 : 1;
   SparseMatrix<T> retval(NTuple(rows,cols));
   index_t len = qMax(ip.length(),qMax(jp.length(),dp.length()));
-  for (index_t i=1;i!=len;i++)
+  for (index_t i=1;i<=len;i++)
     retval[NTuple(ip[(i-1)*ii+1],jp[(i-1)*jj+1])] = dp[(i-1)*dd+1];
   return retval;
 }

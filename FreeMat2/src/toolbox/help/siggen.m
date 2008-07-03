@@ -4,14 +4,16 @@ function siggen(source_path)
   file_list = {};
   file_list = [file_list;helpgen_rdir([source_path,'/libs'])];
   file_list = [file_list;helpgen_rdir([source_path,'/src'])];
+  s = [];
   for i=1:numel(file_list)
-    siggen_processfile(file_list{i});
+    siggen_processfile(file_list{i},s);
   end
-
-function siggen_processfile(filename)
+  siggen_genloader(s);
+  
+function siggen_processfile(filename,&s)
   [path,name,suffix] = fileparts(filename);
   if (~strcmp(suffix,'.cpp')) return; end
-%  printf('Processing file %s...\n',filename);
+  %  printf('Processing file %s...\n',filename);
   try 
     fp = fopen(filename,'r');
   catch
@@ -39,16 +41,38 @@ function siggen_processfile(filename)
       oline = strtrim(strrep(oline,'//output',''));
       oline = regexprep(oline,'\s+',',');
       if (testmatch(iline,'input') || testmatch(oline,'output'))
-	printf('MALFORMED Function I/O spec: %s, %s\n',iline,oline);
+         printf('MALFORMED Function I/O spec: %s, %s\n',iline,oline);
       end
       catch
-	printf('MALFORMED Function Signature: %s\n',fline);
+         printf('MALFORMED Function Signature: %s\n',fline);
       end
-%     printf('function line: %s',fline);
-%     printf('input line: %s',iline);
-%     printf('output line: %s',oline);
-      printf('function code: %s\n',function_type);
+      %     printf('function line: %s',fline);
+      %     printf('input line: %s',iline);
+      %     printf('output line: %s',oline);
+      %     printf('function code: %s\n',function_type);
+      p.function_type = function_type;
+      p.function_name = function_name;
+      p.function_internal_name = function_internal_name;
+      p.iline = iline;
+      p.oline = oline;
+      s = [s,p];
    end
   end
 
-
+function siggen_genloaders(s)
+   fp = fopen('libs/libCore/Loader.cpp','w');
+   for i=1:numel(s)
+      switch (s(i).function_type)
+         case 'function'
+         fprintf(fp,'ArrayVector %s(int, const ArrayVector&);\n',s(i).function_internal_name);
+         case 'sfunction'
+         fprintf(fp,'ArrayVector %s(int, const ArrayVector&, Interpreter*);\n',s(i).function_internal_name);
+         case 'gfunction'
+         fprintf(fp,'ArrayVector %s(int, const ArrayVector&);\n',s(i).function_internal_name);
+         case 'sgfunction'
+         fprintf(fp,'ArrayVector %s(int, const ArrayVector&, Interpreter*);\n',s(i).function_internal_name);
+         otherwise
+         error(['Unsupported function type ' s(i).function_type]);
+      end
+   end
+   fclose(fp);

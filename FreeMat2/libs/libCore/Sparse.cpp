@@ -43,7 +43,7 @@ static Array SponesDense(const BasicArray<T> &A) {
   ConstBasicIterator<T> iter(&A,0);
   SparseMatrix<double> ret(NTuple(A.rows(),A.cols()));
   while (iter.isValid()) {
-    for (index_t i=1;i!=iter.size();i++) {
+    for (index_t i=1;i<=iter.size();i++) {
       ret[iter.pos()] = 1.0;
       iter.next();
     }

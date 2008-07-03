@@ -14,9 +14,9 @@ const Array StringArrayFromStringVector(const StringVector& arg) {
     maxlen = qMax(maxlen,arg[i].size());
   Array ret(StringArray,NTuple(arg.size(),maxlen));
   BasicArray<uint16> &sp(ret.real<uint16>());
-  for (index_t i=1;i!=arg.size();i++) 
-    for (index_t j=1;j!=arg[int(i-1)].size();j++)
-      sp.set(NTuple(i,j),arg[int(i-1)][int(j-1)].unicode());
+  for (int i=0;i<arg.size();i++) 
+    for (int j=0;j<arg[i].size();j++)
+      sp.set(NTuple(index_t(i+1),index_t(j+1)),arg[i][j].unicode());
   return ret;
 }
 
@@ -33,7 +33,7 @@ bool IsColonOp(const Array &x) {
 bool IsCellStringArray(const Array &arg) {
   if (arg.dataClass() != CellArray) return false;
   const BasicArray<Array> &rp(arg.constReal<Array>());
-  for (index_t i=1;i!=arg.length();i++)
+  for (index_t i=1;i<=arg.length();i++)
     if (!rp[i].isString()) return false;
   return true;
 }
@@ -152,7 +152,7 @@ const Array CellArrayFromArray(const Array & arg) {
 const Array CellArrayFromArrayVector(ArrayVector &arg, index_t cnt) {
   Array ret(CellArray,NTuple(1,arg.size()));
   BasicArray<Array> &rp(ret.real<Array>());
-  for (index_t i=1;i!=cnt;i++) {
+  for (index_t i=1;i<=cnt;i++) {
     rp.set(i,arg.front());
     arg.pop_front();
   }
@@ -167,8 +167,8 @@ Array CellConstructor(const ArrayVector &arg) {
 const Array CellArrayFromStringVector(const StringVector& arg) {
   Array ret(CellArray,NTuple(1,arg.size()));
   BasicArray<Array> &rp(ret.real<Array>());
-  for (index_t i=1;i!=arg.size();i++) 
-    rp.set(i,arg[int(i-1)]);
+  for (int i=0;i<arg.size();i++)
+    rp.set(index_t(i+1),arg[i]);
   return rp;
 }
 
@@ -178,7 +178,7 @@ StringVector StringVectorFromArray(const Array &arg) {
   if (!IsCellStringArray(arg)) throw Exception("Cannot convert array to a set of a strings");
   StringVector ret;
   const BasicArray<Array> &rp(arg.constReal<Array>());
-  for (index_t i=1;i!=rp.length();i++)
+  for (index_t i=1;i<=rp.length();i++)
     ret.push_back(rp[i].asString());
   return ret;
 }
@@ -356,7 +356,7 @@ NTuple ConvertArrayToNTuple(const Array &A) {
   Array B(A.asDenseArray().toClass(Index));
   const BasicArray<index_t> &rp(B.constReal<index_t>());
   NTuple dm;
-  for (index_t i=1;i!=B.length();i++)
+  for (index_t i=1;i<=B.length();i++)
     dm[int(i-1)] = rp[i];
   return dm;
 }
@@ -364,7 +364,7 @@ NTuple ConvertArrayToNTuple(const Array &A) {
 Array ConvertNTupleToArray(const NTuple &D) {
   index_t Dsize(D.lastNotOne());
   BasicArray<index_t> rp(NTuple(1,Dsize));
-  for (index_t i=1;i!=Dsize;i++)
+  for (index_t i=1;i<=Dsize;i++)
     rp.set(i,D[int(i-1)]);
   return Array(rp);
 }
@@ -593,6 +593,16 @@ Array DiagonalArray(const Array &A, int diagonal) {
 
 // This is the generic version that works along any dimension.
 // It only works with dense arrays, and not with structure arrays
+
+// How this algorithm is supposed to work:
+// We want to concatenate several arrays into a single array.
+// [a,b,c,d]
+// We want to iterate over the output array, and select which
+// array an element belongs to - this
+// adjusted is the index 
+//
+//
+
 Array NCat(const ArrayVector& data, int catdim) {
   // Compute the output dataclass
   if (data.size() == 0) return EmptyConstructor();
@@ -613,7 +623,7 @@ Array NCat(const ArrayVector& data, int catdim) {
   while (iter.isValid()) {
     int selector = 0;
     index_t adjusted = 1;
-    for (index_t i=1;i!=iter.size();i++) {
+    for (index_t i=1;i<=iter.size();i++) {
       while (adjusted > data[selector].dimensions()[catdim]) {
 	adjusted -= data[selector].dimensions()[catdim];
 	selector++;
@@ -781,7 +791,7 @@ bool TestForCaseMatch(const Array &s, const Array &x) {
   if (((x.dataClass() != CellArray) && x.isScalar()) || x.isString())
     return (s == x);
   const BasicArray<Array> &xp(x.constReal<Array>());
-  for (index_t i=1;i!=xp.length();i++) 
+  for (index_t i=1;i<=xp.length();i++) 
     if (s == xp[i]) return true;
   return false;
 }
@@ -789,8 +799,8 @@ bool TestForCaseMatch(const Array &s, const Array &x) {
 static BasicArray<index_t> DecompressCCSCols(const BasicArray<index_t> &colstart, index_t len) {
   BasicArray<index_t> retval(NTuple(1,len));
   index_t p=1;
-  for (index_t i=2;i!=colstart.length();i++)
-    for (index_t j=1;j!=(colstart[i]-colstart[i-1]);j++) {
+  for (index_t i=2;i<=colstart.length();i++)
+    for (index_t j=1;j<=(colstart[i]-colstart[i-1]);j++) {
       retval[p] = index_t(i-2);
       p = p + 1;
     }
@@ -803,7 +813,7 @@ static SparseMatrix<T> CCSToSparse(const BasicArray<index_t> &rowstart,
 				   const BasicArray<T> &Adata) {
   BasicArray<index_t> cols(DecompressCCSCols(colstart,Adata.length()));
   SparseMatrix<T> retvec;
-  for (index_t i=1;i!=cols.length();i++) 
+  for (index_t i=1;i<=cols.length();i++) 
     retvec[NTuple(rowstart[i]+1,cols[i]+1)] = Adata[i];
   return retvec;
 }

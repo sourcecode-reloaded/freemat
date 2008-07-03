@@ -7,6 +7,7 @@
 #include "Types.hpp"
 #include "NTuple.hpp"
 #include "BasicArray.hpp"
+#include "Cast.hpp"
 #include <cmath>
 
 template <typename T>
@@ -423,13 +424,13 @@ bool IsInteger(const SparseMatrix<T> &x) {
   return true;
 }
 
-template <typename S, typename T>
+template <typename T, typename S>
 SparseMatrix<T> ConvertSparseArray(const SparseMatrix<S> &x) {
   SparseMatrix<T> retvec(x.dimensions());
   ConstSparseIterator<S> i(&x);
   while (i.isValid()) {
     while (i.moreInSlice()) {
-      retvec.set(i.pos(),T(i.value()));
+      retvec.set(i.pos(),CastConvert<T,S>(i.value()));
       i.next();
     }
     i.nextSlice();
@@ -598,14 +599,14 @@ SparseMatrix<T> GetDiagonal(const SparseMatrix<T>& arg, int diagonal) {
     outLen = qMax(index_t(0),qMin(arg.rows()+diagonal,arg.cols()));
     if (outLen == 0) return SparseMatrix<T>();
     SparseMatrix<T> retvec(NTuple(outLen,1));
-    for (index_t i=1;i!=outLen;i++)
+    for (index_t i=1;i<=outLen;i++)
       retvec[i] = arg[NTuple(i-diagonal,i)];
     return retvec;
   } else {
     outLen = qMax(index_t(0),qMin(arg.rows(),arg.cols()-diagonal));
     if (outLen == 0) return SparseMatrix<T>();
     SparseMatrix<T> retvec(NTuple(outLen,1));
-    for (index_t i=1;i!=outLen;i++)
+    for (index_t i=1;i<=outLen;i++)
       retvec[i] = arg[NTuple(i,i+diagonal)];
     return retvec;
   }
@@ -617,10 +618,10 @@ SparseMatrix<T> DiagonalArray(const SparseMatrix<T> &arg, int diagonal) {
   index_t M = outLen + abs(diagonal);
   SparseMatrix<T> retval(NTuple(M,M));
   if (diagonal < 0) {
-    for (index_t i=1;i!=outLen;i++)
+    for (index_t i=1;i<=outLen;i++)
       retval[NTuple(i-diagonal,i)] = arg[i];
   } else {
-    for (index_t i=1;i!=outLen;i++)
+    for (index_t i=1;i<=outLen;i++)
       retval[NTuple(i,i+diagonal)] = arg[i];
   }
   return retval;

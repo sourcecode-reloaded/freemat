@@ -117,7 +117,7 @@ ArrayVector SeedFunction(int nargout, const ArrayVector& arg) {
 struct OpRandBeta {
   template <typename T>
   static inline T func(const T& v1, const T& v2) {
-    return T(genbet(float(v1),float(v2)));
+    return CastConvert<T,float>(genbet(float(v1),float(v2)));
   }
   template <typename T>
   static inline void func(const T& ar, const T& ai, const T& br, const T& bi, T& cr, T& ci) {
@@ -158,7 +158,7 @@ ArrayVector RandBetaFunction(int nargout, const ArrayVector& arg) {
 struct OpRandI {
   template <typename T>
   static inline T func(const T& v1, const T& v2) {
-    return T(ignuin(long(v1),long(v2)));
+    return CastConvert<T,long>(ignuin(long(v1),long(v2)));
   }
   template <typename T>
   static inline void func(const T&, const T&, const T&, const T&, T&, T&) {
@@ -219,7 +219,7 @@ struct OpRandChi {
   template <typename T>
   static inline T func(const T& v1) {
     if (v1 <= 0) throw Exception("argument to randchi must be positive");
-    return T(genchi(float(v1)));
+    return CastConvert<T,float>(genchi(float(v1)));
   }
   template <typename T>
   static inline void func(const T&, const T&, T&, T&) {
@@ -265,7 +265,7 @@ ArrayVector RandChiFunction(int nargout, const ArrayVector& arg) {
 struct OpRandExp {
   template <typename T>
   static inline T func(const T& v1) {
-    return T(genexp(float(v1)));
+    return CastConvert<T,float>(genexp(float(v1)));
   }
   template <typename T>
   static inline void func(const T&, const T&, T&, T&) {
@@ -315,7 +315,7 @@ ArrayVector RandExpFunction(int nargout, const ArrayVector& arg) {
 struct OpRandPoisson {
   template <typename T>
   static inline T func(const T& v1) {
-    return T(ignpoi(int32(v1)));
+    return CastConvert<T,long>(ignpoi(int32(v1)));
   }
   template <typename T>
   static inline void func(const T&, const T&, T&, T&) {
@@ -365,7 +365,7 @@ ArrayVector RandPoissonFunction(int nargout, const ArrayVector& arg) {
 struct OpRandBin {
   template <typename T>
   static inline T func(const T& v1, const T& v2) {
-    return T(ignbin(uint32(v1),float(v2)));
+    return CastConvert<T,long>(ignbin(uint32(v1),float(v2)));
   }
   template <typename T>
   static inline void func(const T&, const T&, const T&, const T&, T&, T&) {
@@ -411,7 +411,7 @@ ArrayVector RandBinFunction(int nargout, const ArrayVector& arg) {
 struct OpRandNBin {
   template <typename T>
   static inline T func(const T& v1, const T& v2) {
-    return T(ignnbn(uint32(v1),float(v2)));
+    return CastConvert<T,long>(ignnbn(uint32(v1),float(v2)));
   }
   template <typename T>
   static inline void func(const T&, const T&, const T&, const T&, T&, T&) {
@@ -464,7 +464,7 @@ struct OpRandF {
   template <typename T>
   static inline T func(const T& v1, const T& v2) {
     if ((v1 <= 0) || (v2 <= 0)) throw Exception("randf requires positive arguments");
-    return T(genf(float(v1),float(v2)));
+    return CastConvert<T,float>(genf(float(v1),float(v2)));
   }
   template <typename T>
   static inline void func(const T&, const T&, const T&, const T&, T&, T&) {
@@ -519,7 +519,7 @@ ArrayVector RandFFunction(int nargout, const ArrayVector& arg) {
 struct OpRandGamma {
   template <typename T>
   static inline T func(const T& v1, const T& v2) {
-    return T(gengam(float(v1),float(v2)));
+    return CastConvert<T,float>(gengam(float(v1),float(v2)));
   }
   template <typename T>
   static inline void func(const T&, const T&, const T&, const T&, T&, T&) {
@@ -584,12 +584,12 @@ ArrayVector RandMultiFunction(int nargout, const ArrayVector& arg) {
   if (arg2.isSparse()) throw Exception("randmulti does not work with sparse arguments");
   BasicArray<float> &dp(arg2.real<float>());
   float Psum = 0;
-  for (index_t i=1;i<arg2.length();i++) {
+  for (index_t i=1;i<=arg2.length();i++) {
     if ((dp[i] < 0) || (dp[i] > 1))
       throw Exception("probability vector argument to randmulti must have all elements between 0 and 1");
     Psum += dp[i];
   }
-  for (index_t i=1;i<arg2.length();i++) 
+  for (index_t i=1;i<=arg2.length();i++) 
     dp[i] /= Psum;
   NTuple outDims(arg2.dimensions());
   BasicArray<int32> rp(outDims);
@@ -629,7 +629,7 @@ struct OpRandNChi {
   static inline T func(const T& v1, const T& v2) {
     if (v1 <= 1) throw Exception("degrees of freedom argument must be > 1");
     if (v2 < 0) throw Exception("noncentrality parameter must be positive");
-    return T(gennch(float(v1),float(v2)));
+    return CastConvert<T,float>(gennch(float(v1),float(v2)));
   }
   template <typename T>
   static inline void func(const T&, const T&, const T&, const T&, T&, T&) {

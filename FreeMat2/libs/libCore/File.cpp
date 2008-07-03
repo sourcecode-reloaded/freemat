@@ -381,7 +381,7 @@ ArrayVector FreadFunction(int nargout, const ArrayVector& arg) {
   bool infinityFound = false;
   index_t elementCount = 1;
   index_t infiniteDim = 0;
-  for (index_t i=1;i!=dp.length();i++) {
+  for (index_t i=1;i<=dp.length();i++) {
     if (IsNaN(dp[i])) throw Exception("nan not allowed in size argument");
     if (IsInfinite(dp[i])) {
       if (infinityFound) throw Exception("only a single inf is allowed in size argument");
@@ -402,7 +402,7 @@ ArrayVector FreadFunction(int nargout, const ArrayVector& arg) {
     elementCount *= dp[infiniteDim];
   }
   NTuple dims;
-  for (index_t j=1;j<qMin(NDims,int(dp.length()));j++) 
+  for (index_t j=1;j<=qMin(NDims,int(dp.length()));j++) 
     dims[int(j-1)] = dp[j];
   Array A;
   switch (dataClass) {

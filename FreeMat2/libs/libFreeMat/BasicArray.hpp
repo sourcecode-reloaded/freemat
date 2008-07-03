@@ -7,6 +7,7 @@
 #include <QDebug>
 #include "Types.hpp"
 #include "FastList.hpp"
+#include "Cast.hpp"
 
 template <typename T>
 class BasicArray;
@@ -269,7 +270,7 @@ BasicArray<T> MergeComplex(const BasicArray<T>& real, const BasicArray<T>& imag)
     throw Exception("Cannot merge arrays of unequal size into complex array");
   retdim[0] = retdim[0]*2;
   BasicArray<T> retval(retdim);
-  for (index_t i=1;i <= real.length();i++) {
+  for (index_t i=1;i<=real.length();i++) {
     retval.set(2*i-1,real.get(i));
     retval.set(2*i,imag.get(i));
   }
@@ -281,7 +282,7 @@ BasicArray<T> MergeComplex(const BasicArray<T>& real) {
   NTuple retdim(real.dimensions());
   retdim[0] = retdim[0]*2;
   BasicArray<T> retval(retdim);
-  for (index_t i=1;i <= real.length();i++)
+  for (index_t i=1;i<=real.length();i++)
     retval.set(2*i-1,real.get(i));
   return retval;
 }
@@ -291,7 +292,7 @@ BasicArray<T> SplitReal(const BasicArray<T>& A) {
   NTuple retdim(A.dimensions());
   retdim[0] = retdim[0]/2;
   BasicArray<T> retval(retdim);
-  for (index_t i=1;i <= retval.length();i++) 
+  for (index_t i=1;i<=retval.length();i++) 
     retval.set(i,A.get(2*i-1));
   return retval;
 }
@@ -301,7 +302,7 @@ BasicArray<T> SplitImag(const BasicArray<T>& A) {
   NTuple retdim(A.dimensions());
   retdim[0] = retdim[0]/2;
   BasicArray<T> retval(retdim);
-  for (index_t i=1;i <= retval.length();i++) 
+  for (index_t i=1;i<=retval.length();i++) 
     retval.set(i,A.get(2*i));
   return retval;
 }
@@ -406,14 +407,14 @@ BasicArray<T> GetDiagonal(const BasicArray<T>& arg, int diagonal) {
     outLen = qMax(index_t(0),qMin(arg.rows()+diagonal,arg.cols()));
     if (outLen == 0) return BasicArray<T>();
     BasicArray<T> retvec(NTuple(outLen,1));
-    for (index_t i=1;i!=outLen;i++)
+    for (index_t i=1;i<=outLen;i++)
       retvec[i] = arg[NTuple(i-diagonal,i)];
     return retvec;
   } else {
     outLen = qMax(index_t(0),qMin(arg.rows(),arg.cols()-diagonal));
     if (outLen == 0) return BasicArray<T>();
     BasicArray<T> retvec(NTuple(outLen,1));
-    for (index_t i=1;i!=outLen;i++)
+    for (index_t i=1;i<=outLen;i++)
       retvec[i] = arg[NTuple(i,i+diagonal)];
     return retvec;
   }
@@ -425,10 +426,10 @@ BasicArray<T> DiagonalArray(const BasicArray<T> &arg, int diagonal) {
   index_t M = outLen + abs(diagonal);
   BasicArray<T> retval(NTuple(M,M));
   if (diagonal < 0) {
-    for (index_t i=1;i!=outLen;i++)
+    for (index_t i=1;i<=outLen;i++)
       retval[NTuple(i-diagonal,i)] = arg[i];
   } else {
-    for (index_t i=1;i!=outLen;i++)
+    for (index_t i=1;i<=outLen;i++)
       retval[NTuple(i,i+diagonal)] = arg[i];
   }
   return retval;  
@@ -439,7 +440,7 @@ BasicArray<T> Permute(const BasicArray<T>& arg, NTuple perm) {
   BasicArray<T> retval(arg.dimensions().permute(perm));
   ConstBasicIterator<T> iter(&arg,0);
   while (iter.isValid()) {
-    for (index_t i=1;i!=iter.size();i++) {
+    for (index_t i=1;i<=iter.size();i++) {
       retval[iter.pos().permute(perm)] = iter.get();
       iter.next();
     }
@@ -494,11 +495,11 @@ inline bool AllTrue(const BasicArray<bool>& arg) {
 }
 
 
-template <typename S, typename T>
+template <typename T, typename S>
 BasicArray<T> ConvertBasicArray(const BasicArray<S>& source) {
   BasicArray<T> dest(source.dimensions());
   for (index_t i=1;i<=source.length();i++)
-    dest.set(i,(T) source.get(i));
+    dest.set(i,CastConvert<T,S>(source.get(i)));
   return dest;
 }
 

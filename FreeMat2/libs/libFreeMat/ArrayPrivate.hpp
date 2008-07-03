@@ -13,7 +13,6 @@
   func(uint16,UInt16);				\
   func(uint8,UInt8);				
 
-
 #define MacroExpandCasesSigned(func)		\
   func(double,Double);				\
   func(float,Float);				\
@@ -28,20 +27,18 @@
   func(bool,Bool);				
 
 #define MacroExpandCasesSimple(func)		\
-  MacroExpandCases(func);			\
-  func(uint16,StringArray);
+  MacroExpandCases(func);			
 
 #define MacroExpandCasesAll(func)		\
   MacroExpandCasesSimple(func);			\
+  func(QChar,StringArray);			\
   func(Array,CellArray);
-
 
 #define MacroGetDataClass(ctype,cls)		\
   template <>					\
   static inline DataClass GetDataClass(ctype) { \
     return cls;					\
   } 
-
 
 #define MacroArrayRealScalar(ctype,cls)			\
   template <>						\
@@ -126,6 +123,7 @@ MacroExpandCases(MacroArrayComplexConstructor);
 MacroExpandCases(MacroArrayRealConstructor);
 
 MacroExpandCases(MacroGetDataClass);
+MacroGetDataClass(QChar,StringArray);
 MacroGetDataClass(Array,CellArray);
 
 #undef MacroArrayRealScalar

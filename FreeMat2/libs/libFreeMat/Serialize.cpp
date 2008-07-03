@@ -489,7 +489,7 @@ void Serialize::putArray(const Array& dat) {
   default: throw Exception("unhandled type in putArray");
   case CellArray: {
     const BasicArray<Array> &rp(dat.constReal<Array>());
-    for (index_t i=1;i!=rp.length();i++)
+    for (index_t i=1;i<=rp.length();i++)
       putArray(rp[i]);
     return;
   }
@@ -500,7 +500,7 @@ void Serialize::putArray(const Array& dat) {
     for (int i=0;i<ncount;i++)
       putString(fnames.at(i));
     const StructArray &rp(dat.constStructPtr());
-    for (index_t j=1;j!=dat.length();j++)
+    for (index_t j=1;j<=dat.length();j++)
       for (int i=0;i<ncount;i++) {
 	const BasicArray<Array>& dp(rp[i]);
 	putArray(dp[j]);
@@ -604,7 +604,7 @@ void Serialize::getArray(Array& dat) {
     throw Exception("Unhandled type in getArray");
   case CellArray: {
     BasicArray<Array> rp(dims);
-    for (index_t i=1;i!=rp.length();i++)
+    for (index_t i=1;i<=rp.length();i++)
       getArray(rp[i]);
     dat = Array(rp);
     return;
@@ -616,7 +616,7 @@ void Serialize::getArray(Array& dat) {
     for (int i=0;i<ncount;i++) 
       rp.insert(getString(),BasicArray<Array>(dims));
     rp.setClassPath(className);
-    for (index_t j=1;j!=dims.count();j++)
+    for (index_t j=1;j<=dims.count();j++)
       for (int i=0;i<ncount;i++)
 	getArray(rp[i][j]);
     dat = Array(rp);
@@ -632,7 +632,7 @@ void Serialize::getArray(Array& dat) {
   case Int32:
     if (sparseflag) {
       QVector<QVector<int32> > dp;
-      for (index_t i=1;i!=dims.cols();i++) {
+      for (index_t i=1;i<=dims.cols();i++) {
 	int len = getInt();
 	QVector<int32> col(len);
 	getInts(col.data(),len);
@@ -646,7 +646,7 @@ void Serialize::getArray(Array& dat) {
     if (!complexflag) {
       if (sparseflag) {
 	QVector<QVector<float> > dp;
-	for (index_t i=1;i!=dims.cols();i++) {
+	for (index_t i=1;i<=dims.cols();i++) {
 	  int len = int(getFloat());
 	  QVector<float> col(len);
 	  getFloats(col.data(),len);
@@ -659,7 +659,7 @@ void Serialize::getArray(Array& dat) {
     } else {
       if (sparseflag) {
 	QVector<QVector<float> > dp;
-	for (index_t i=1;i!=dims.cols();i++) {
+	for (index_t i=1;i<=dims.cols();i++) {
 	  int len = int(getFloat());
 	  QVector<float> col(len);
 	  getFloats(col.data(),len);
@@ -674,7 +674,7 @@ void Serialize::getArray(Array& dat) {
     if (!complexflag) {
       if (sparseflag) {
 	QVector<QVector<double> > dp;
-	for (index_t i=1;i!=dims.cols();i++) {
+	for (index_t i=1;i<=dims.cols();i++) {
 	  int len = int(getDouble());
 	  QVector<double> col(len);
 	  getDoubles(col.data(),len);
@@ -687,7 +687,7 @@ void Serialize::getArray(Array& dat) {
     } else {
       if (sparseflag) {
 	QVector<QVector<double> > dp;
-	for (index_t i=1;i!=dims.cols();i++) {
+	for (index_t i=1;i<=dims.cols();i++) {
 	  int len = int(getDouble());
 	  QVector<double> col(len);
 	  getDoubles(col.data(),len);

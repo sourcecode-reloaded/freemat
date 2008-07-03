@@ -74,7 +74,7 @@ Array ArrayFromMexArray(mxArray *array_ptr) {
     NTuple dim = GetDimensions(array_ptr);
     mxArray** dp = (mxArray**) array_ptr->realdata;
     BasicArray<Array> rp(dim);
-    for (index_t i=1;i!=rp.length();i++)
+    for (index_t i=1;i<=rp.length();i++)
       rp[i] = ArrayFromMexArray(dp[int(i-1)]);
     return Array(rp);
   } else 
@@ -90,7 +90,7 @@ static mxArray* MexArrayFromCellArray(Array array) {
   mxArray *ret = mxCreateCellArray(num_dim,dim_vec);
   const BasicArray<Array> &rp(array.constReal<Array>());
   mxArray **dp = (mxArray **) ret->realdata;
-  for (index_t i=1;i!=array.length();i++)
+  for (index_t i=1;i<=array.length();i++)
     dp[int(i-1)] = MexArrayFromArray(rp[i]);
   free(dim_vec);
   return ret;

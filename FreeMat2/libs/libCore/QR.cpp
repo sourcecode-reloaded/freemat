@@ -826,7 +826,7 @@ static void ComplexQRDP(BasicArray<T> &Q, BasicArray<T> &R, BasicArray<T> &P, Ba
 template <typename T>
 static BasicArray<T> Trim(BasicArray<T> in, const NTuple &dim) {
   BasicArray<T> ret(dim);
-  for (index_t i=1;i!=dim.count();i++)
+  for (index_t i=1;i<=dim.count();i++)
     ret.set(i,in[i]);
   return ret;
 }
@@ -885,7 +885,7 @@ static ArrayVector QRDPivotFunction(bool compactDec, bool compactSav, NTuple odi
     retvec << Array(p);
   else {
     BasicArray<T> p2(NTuple(A.cols(),A.cols()));
-    for (index_t i=1;i!=A.cols();i++) 
+    for (index_t i=1;i<=A.cols();i++) 
       p2.set(NTuple(p.get(i),i),1);
     retvec << Array(p2);
   }

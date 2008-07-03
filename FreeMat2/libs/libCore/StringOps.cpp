@@ -994,7 +994,7 @@ static Array Num2StrHelperReal(const BasicArray<T> &dp, const char *formatspec) 
   StringVector all_rows;
   while (iter.isValid()) {
     QString row_string;
-    for (index_t i=1;i!=iter.size();i++) {
+    for (index_t i=1;i<=iter.size();i++) {
       if (i != 1) row_string += " ";
       row_string += QString().sprintf(formatspec,iter.get());
       iter.next();
@@ -1012,7 +1012,7 @@ Array Num2StrHelperComplex(const BasicArray<T> &rp, const BasicArray<T> &ip, con
   StringVector all_rows;
   while (iter_real.isValid() && iter_imag.isValid()) {
     QString row_string;
-    for (index_t i=1;i!=iter_real.size();i++) {
+    for (index_t i=1;i<=iter_real.size();i++) {
       if (i != 1) row_string += " ";
       row_string += QString().sprintf(formatspec,iter_real.get());
       if (iter_imag.get() >= 0) row_string += "+";

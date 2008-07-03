@@ -52,7 +52,7 @@ ArrayVector SimKeysFunction(int nargout, const ArrayVector& arg,
   if (arg[0].dataClass() != CellArray)
     throw Exception("simkeys requires a cell array of strings");
   const BasicArray<Array> &dp(arg[0].constReal<Array>());
-  for (index_t i=1;i!=dp.length();i++) {
+  for (index_t i=1;i<=dp.length();i++) {
     QString txt(dp[i].asString());
     if ((txt.size() > 0) && (!txt.endsWith('\n')))
       txt.push_back('\n');

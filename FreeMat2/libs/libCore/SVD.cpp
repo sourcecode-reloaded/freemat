@@ -420,7 +420,7 @@ static ArrayVector SVDFunction(BasicArray<T> &A, bool computevectors, bool compa
       smat = BasicArray<T>(NTuple(A.rows(),A.cols()));
     else
       smat = BasicArray<T>(NTuple(mindim,mindim));
-    for (index_t i=1;i!=mindim;i++)
+    for (index_t i=1;i<=mindim;i++)
       smat[NTuple(i,i)] = svals[i];
     retval.push_back(Array(smat));
     retval.push_back(Transpose(Array(vtmat)));
@@ -464,7 +464,7 @@ static ArrayVector SVDFunction(BasicArray<T> &A_real,
       smat_real = BasicArray<T>(NTuple(mindim,mindim));
       smat_imag = BasicArray<T>(NTuple(mindim,mindim));
     }
-    for (index_t i=1;i!=mindim;i++) {
+    for (index_t i=1;i<=mindim;i++) {
       smat_real[NTuple(i,i)] = svals[2*i-1];
       smat_imag[NTuple(i,i)] = svals[2*i];
     }
