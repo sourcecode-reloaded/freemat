@@ -39,7 +39,7 @@ const DataClass Int64 = 11;
 const DataClass UInt64 = 12;
 const DataClass Float = 13;
 const DataClass Double = 14;
-const DataClass Index = 15;
+const DataClass Index = 14;
 
 template <typename T>
 static inline DataClass GetDataClass(T = 0);
@@ -184,6 +184,7 @@ public:
   inline BasicArray<T>& real() {
     if (!m_real.p)
       throw Exception("Illegal request for real array part of scalar - this is bug!");
+    if (m_type.Class != GetDataClass(T(0))) throw Exception("data type mismatch in array -- bug");
     return (*reinterpret_cast<BasicArray<T>*>(m_real.p->ptr()));
   }
   inline const StructArray& constStructPtr() const {
@@ -200,18 +201,21 @@ public:
   inline const SparseMatrix<T>& constRealSparse() const {
     if (!m_real.p)
       throw Exception("Illegal request for (sparse) real part of scalar - this is bug!");
+    if (m_type.Class != GetDataClass(T(0))) throw Exception("data type mismatch in array -- bug");
     return (*reinterpret_cast<const SparseMatrix<T> *>(m_real.p->ptr()));
   }
   template <typename T>
   inline const SparseMatrix<T>& constImagSparse() const {
     if (!m_imag.p)
       throw Exception("Illegal request for (sparse) imaginary part of real-only array");
+    if (m_type.Class != GetDataClass(T(0))) throw Exception("data type mismatch in array -- bug");
     return (*reinterpret_cast<const SparseMatrix<T> *>(m_imag.p->ptr()));
   }
   template <typename T>
   inline SparseMatrix<T>& realSparse() {
     if (!m_real.p)
       throw Exception("Illegal request for (sparse) real part of scalar - this is bug!");
+    if (m_type.Class != GetDataClass(T(0))) throw Exception("data type mismatch in array -- bug");
     return (*reinterpret_cast<SparseMatrix<T> *>(m_real.p->ptr()));
   }
   template <typename T>
@@ -220,12 +224,14 @@ public:
       m_imag.p = new SharedObject(m_type, new SparseMatrix<T>(dimensions()));
       m_type.Complex = 1;
     }
+    if (m_type.Class != GetDataClass(T(0))) throw Exception("data type mismatch in array -- bug");
     return (*reinterpret_cast<SparseMatrix<T> *>(m_imag.p->ptr()));
   }
   template <typename T>
   inline const BasicArray<T>& constReal() const {
     if (!m_real.p)
       throw Exception("Illegal request for real part of scalar - this is bug!");
+    if (m_type.Class != GetDataClass(T(0))) throw Exception("data type mismatch in array -- bug");
     return (*reinterpret_cast<const BasicArray<T>*>(m_real.p->ptr()));
   }						
   template <typename T>
@@ -234,16 +240,19 @@ public:
       m_imag.p = new SharedObject(m_type, new BasicArray<T>(dimensions()));
       m_type.Complex = true;
     }
+    if (m_type.Class != GetDataClass(T(0))) throw Exception("data type mismatch in array -- bug");
     return (*reinterpret_cast<BasicArray<T>*>(m_imag.p->ptr()));
   }
   template <typename T>
   inline const BasicArray<T>& constImag() const {
     if (!m_imag.p)
       throw Exception("Illegal request for imaginary part of real-only array");
+    if (m_type.Class != GetDataClass(T(0))) throw Exception("data type mismatch in array -- bug");
     return (*reinterpret_cast<const BasicArray<T>*>(m_imag.p->ptr()));
   }
   template <typename T>
   inline BasicArray<T> fortran() const {
+    if (m_type.Class != GetDataClass(T(0))) throw Exception("data type mismatch in array -- bug");
     if (m_imag.p)
       return MergeComplex(constReal<T>(),constImag<T>());
     else

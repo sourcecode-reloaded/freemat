@@ -78,16 +78,16 @@
 //!
 
 #define MacroZeros(ctype,cls) \
-  if (cp == #cls) dataclass = cls;
+  if (cp == #ctype) dataclass = cls;
 
 ArrayVector ZerosFunction(int nargout, const ArrayVector& arg) {
   // Trim out the classname if it was specified
   DataClass dataclass = Double;
   ArrayVector trim_arg(arg);
   if (trim_arg.size() > 0) {
-    // Check for the classname
-    dataclass = Invalid;
     if (trim_arg.back().isString()) {
+      // Check for the classname
+      dataclass = Invalid;
       // Get the classname as a string
       QString cp = trim_arg.back().asString().toLower();
       MacroExpandCasesSimple(MacroZeros);

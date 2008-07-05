@@ -203,7 +203,7 @@ static inline ArrayVector UniqueFunctionAux(const Array &arg) {
   switch (arg.dataClass()) {
   default:
     throw Exception("Unhandled type for unique function");
-    MacroExpandCasesAll(MacroUnique);
+    MacroExpandCasesSimple(MacroUnique);
   }
 }
 

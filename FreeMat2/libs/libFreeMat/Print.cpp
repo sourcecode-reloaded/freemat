@@ -2,6 +2,7 @@
 #include "IEEEFP.hpp"
 #include "FunctionDef.hpp"
 #include "Interpreter.hpp"
+#include "Algorithms.hpp"
 #include "Struct.hpp"
 #include <cmath>
 
@@ -311,6 +312,12 @@ static void Emit(Interpreter* io, const Array &rp,
     MacroExpandCasesIntUnsigned(MacroEmitUnsignedInt);
     MacroEmitFloat(float,Float);
     MacroEmitFloat(double,Double);
+  case StringArray:
+    io->outputMessage(QString(rp.constReal<QChar>().get(1)));
+    return;
+  case CellArray:
+    io->outputMessage("[" + SummarizeArrayCellEntry(ArrayVectorFromCellArray(rp)[0]) + "]");
+    return;
   }
 }
 
@@ -346,7 +353,8 @@ static inline void PrintSheet(Interpreter *io, const ArrayFormatInfo &format,
 	Emit(io,rp.get(i+(k*colsPerPage+j)*rows+offset),format,complex);
 	printlimit--;
 	if (printlimit <= 0) return;
-	io->outputMessage(" ");
+	if (rp.dataClass() != StringArray)
+	  io->outputMessage(" ");
       }
       io->outputMessage("\n");
     }
@@ -467,12 +475,12 @@ void PrintArrayClassic(Array A, int printlimit, Interpreter* io) {
     index_t columns = A.cols();
     while (wdims <= A.dimensions()) {
       io->outputMessage("(:,:");
-      for (int m=2;m<=A.dimensions().lastNotOne();m++) 
-	io->outputMessage(",%d",wdims[m]);
+      for (int m=2;m<A.dimensions().lastNotOne();m++) 
+	io->outputMessage(QString(",%1").arg(wdims[m]));
       io->outputMessage(") = \n");
       PrintSheet(io,format,offset,A,termWidth,printlimit,complexFlag);
       offset += rows*columns;
-      wdims[1]++; 
+      wdims[2]++; 
       A.dimensions().ripple(wdims);
     }
   }

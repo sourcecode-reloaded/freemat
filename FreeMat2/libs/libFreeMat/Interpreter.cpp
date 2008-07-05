@@ -40,7 +40,7 @@
 #include "JIT.hpp"
 #include "JITFunc.hpp"
 #include "Algorithms.hpp"
-
+#include "GetSet.hpp"
 
 #ifdef WIN32
 #define PATHSEP ";"

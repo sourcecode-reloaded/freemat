@@ -138,9 +138,9 @@ Array::Array(const QString &text) {
   m_real.p = new SharedObject(m_type,
 			      construct_sized(m_type,
 					      NTuple(1,text.size())));
-  BasicArray<uint16> &p(real<uint16>());
+  BasicArray<QChar> &p(real<QChar>());
   for (int i=0;i<text.size();i++) 
-    p[i+1] = text[i].unicode();
+    p[i+1] = text[i];
 }
 
 template <typename T>
@@ -205,16 +205,16 @@ static inline const void Tset_struct_scalar(Array*ptr, S ndx, const Array &rhs) 
   for (int i=0;i<rp.fieldCount();i++) 
     Set(lp[rp.fieldName(i)],ndx,rp[i].get(1));
   // Loop through the output and force all arrays to be the same size
-  NTuple newSize;
+  NTuple newSize(0,0);
   for (int i=0;i<lp.fieldCount();i++)
-    newSize.cover(lp[i].dimensions());
+    newSize = max(newSize,lp[i].dimensions());
   for (int i=0;i<lp.fieldCount();i++)
     lp[i].resize(newSize);
 }
 
 
 #define MacroSetIndexT(ctype,cls)		\
-  case cls: Tset_scalar<index_t,ctype>(this,index,data); return;
+  case cls: Tset_scalar<index_t,ctype>(this,index,data.toClass(this->dataClass())); return;
 
 void Array::set(index_t index, const Array& data) {
   ensureNotScalarEncoded();
@@ -231,7 +231,7 @@ void Array::set(index_t index, const Array& data) {
 #undef MacroSetIndexT
 
 #define MacroSetNTuple(ctype,cls)		\
-  case cls: Tset_scalar<const NTuple&,ctype>(this,index,data); return;
+  case cls: Tset_scalar<const NTuple&,ctype>(this,index,data.toClass(this->dataClass())); return;
 
 void Array::set(const NTuple& index, const Array& data) {
   ensureNotScalarEncoded();
@@ -482,7 +482,7 @@ const Array Array::get(const IndexArrayVector& index) const {
 
 template <typename T, typename S>
 inline static const Array Tcast(DataClass t, const Array *ptr) {
-  if (ptr->isScalar()) {
+  if (ptr->type().Scalar == 1) {
     if (ptr->allReal())
       return Array(CastConvert<T,S>(ptr->constRealScalar<S>()));
     else
@@ -855,10 +855,10 @@ double Array::asDouble() const {
 
 QString Array::asString() const {
   if (m_type.Class != StringArray) throw Exception("Cannot convert array to string");
-  const BasicArray<uint16> &p(constReal<uint16>());
+  const BasicArray<QChar> &p(constReal<QChar>());
   QString ret;
   for (int i=0;i<p.length();i++)
-    ret += QChar(p[i+1]);
+    ret += p[i+1];
   return ret;
 }
 

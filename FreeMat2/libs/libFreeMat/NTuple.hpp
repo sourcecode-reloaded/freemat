@@ -143,11 +143,6 @@ public:
   index_t& operator[](int dim) {
     return get(dim);
   }
-  void cover(const NTuple& alt) {
-    for (int i=0;i<NDims;i++)
-      if (m_data[i] < alt.m_data[i]) 
-	m_data[i] = alt.m_data[i];
-  }
   bool operator<=(const NTuple& alt) const {
     for (int i=0;i<NDims;i++)
       if (m_data[i] > alt.m_data[i]) return false;
@@ -207,6 +202,13 @@ inline std::ostream& operator<<(std::ostream& o, const NTuple &t) {
     o << t[i] << " ";
   o << ">";
   return o;
+}
+
+inline NTuple max(const NTuple &a, const NTuple &b) {
+  NTuple ret;
+  for (int i=0;i<NDims;i++)
+    ret[i] = (a[i] > b[i]) ? a[i] : b[i];
+  return ret;
 }
 
 #endif

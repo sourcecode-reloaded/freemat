@@ -98,7 +98,7 @@ public:
     return true;
   }
   inline void set(const NTuple& pos, const T& val) {
-    if (dimensions() <= pos) resize(pos);
+    if (!(pos <= dimensions())) resize(max(dimensions(),pos));
     m_data[(int64)(m_dims.map(pos)+m_offset-1)] = val;
   }
   inline void set(index_t pos, const T& val) {

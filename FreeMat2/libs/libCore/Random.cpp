@@ -158,7 +158,7 @@ ArrayVector RandBetaFunction(int nargout, const ArrayVector& arg) {
 struct OpRandI {
   template <typename T>
   static inline T func(const T& v1, const T& v2) {
-    return CastConvert<T,long>(ignuin(long(v1),long(v2)));
+    return CastConvert<T,uint32>(ignuin(long(v1),long(v2)));
   }
   template <typename T>
   static inline void func(const T&, const T&, const T&, const T&, T&, T&) {
@@ -315,7 +315,7 @@ ArrayVector RandExpFunction(int nargout, const ArrayVector& arg) {
 struct OpRandPoisson {
   template <typename T>
   static inline T func(const T& v1) {
-    return CastConvert<T,long>(ignpoi(int32(v1)));
+    return CastConvert<T,int32>(ignpoi(int32(v1)));
   }
   template <typename T>
   static inline void func(const T&, const T&, T&, T&) {
@@ -365,7 +365,7 @@ ArrayVector RandPoissonFunction(int nargout, const ArrayVector& arg) {
 struct OpRandBin {
   template <typename T>
   static inline T func(const T& v1, const T& v2) {
-    return CastConvert<T,long>(ignbin(uint32(v1),float(v2)));
+    return CastConvert<T,int32>(ignbin(uint32(v1),float(v2)));
   }
   template <typename T>
   static inline void func(const T&, const T&, const T&, const T&, T&, T&) {
@@ -411,7 +411,7 @@ ArrayVector RandBinFunction(int nargout, const ArrayVector& arg) {
 struct OpRandNBin {
   template <typename T>
   static inline T func(const T& v1, const T& v2) {
-    return CastConvert<T,long>(ignnbn(uint32(v1),float(v2)));
+    return CastConvert<T,int32>(ignnbn(uint32(v1),float(v2)));
   }
   template <typename T>
   static inline void func(const T&, const T&, const T&, const T&, T&, T&) {

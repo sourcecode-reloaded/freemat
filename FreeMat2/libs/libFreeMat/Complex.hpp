@@ -61,7 +61,7 @@ inline T complex_abs(T real, T imag) {
 
 template <typename T>
 inline T complex_phase(const T &ar, const T &ai) {
-  return atan2(ai,ar);
+  return T(atan2(double(ai),double(ar)));
 }
 
 template <typename T>

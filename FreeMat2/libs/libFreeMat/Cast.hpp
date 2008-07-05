@@ -196,14 +196,6 @@ MacroCastNoLimit(double,uint64);
 
 MacroCastNoOp(double,double);
 MacroCastNoOp(float,float);
-// MacroCastNoOp(uint64,uint64);
-// MacroCastNoOp(uint32,uint32);
-// MacroCastNoOp(uint16,uint16);
-// MacroCastNoOp(uint8,uint8);
-// MacroCastNoOp(int64,int64);
-// MacroCastNoOp(int32,int32);
-// MacroCastNoOp(int16,int16);
-// MacroCastNoOp(int8,int8);
 MacroCastNoOp(QChar,QChar);
 MacroCastNoOp(bool,bool);
 
