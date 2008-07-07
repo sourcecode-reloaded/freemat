@@ -115,13 +115,52 @@
     m_type.Scalar = 1;					     \
   };
 
+#define MacroArrayRealScalarArrayEncodedOnly(ctype,cls) \
+  template <>						\
+  inline ctype& Array::realScalar() {			\
+    if (m_type.Class != cls)				\
+      throw Exception("type mismatch");			\
+    return real<ctype>()[1];				\
+  }
+
+#define MacroArrayImagScalarArrayEncodedOnly(ctype,cls) \
+  template <>						\
+  inline ctype& Array::imagScalar() {			\
+    if (m_type.Class != cls)				\
+      throw Exception("type mismatch");			\
+    return imag<ctype>()[1];				\
+  }
+
+#define MacroArrayConstRealScalarArrayEncodedOnly(ctype,cls)	\
+  template <>							\
+  inline ctype Array::constRealScalar() const {			\
+    if (m_type.Class != cls)					\
+      throw Exception("type mismatch");				\
+    return constReal<ctype>()[1];				\
+  }
+
+#define MacroArrayConstImagScalarArrayEncodedOnly(ctype,cls)	\
+  template <>							\
+  inline ctype Array::constImagScalar() const {			\
+    if (m_type.Class != cls)					\
+      throw Exception("type mismatch");				\
+    return constImag<ctype>()[1];				\
+  }
+
 MacroExpandCases(MacroArrayRealScalar);
 MacroExpandCases(MacroArrayImagScalar);
 MacroExpandCases(MacroArrayConstRealScalar);
 MacroExpandCases(MacroArrayConstImagScalar);
 MacroExpandCases(MacroArrayComplexConstructor);
+MacroArrayRealScalarArrayEncodedOnly(Array,CellArray);
+MacroArrayRealScalarArrayEncodedOnly(QChar,StringArray);
+MacroArrayImagScalarArrayEncodedOnly(Array,CellArray);
+MacroArrayImagScalarArrayEncodedOnly(QChar,StringArray);
+MacroArrayConstRealScalarArrayEncodedOnly(Array,CellArray);
+MacroArrayConstRealScalarArrayEncodedOnly(QChar,StringArray);
+MacroArrayConstImagScalarArrayEncodedOnly(Array,CellArray);
+MacroArrayConstImagScalarArrayEncodedOnly(QChar,StringArray);
 MacroExpandCases(MacroArrayRealConstructor);
-
 MacroExpandCases(MacroGetDataClass);
 MacroGetDataClass(QChar,StringArray);
 MacroGetDataClass(Array,CellArray);
@@ -130,6 +169,10 @@ MacroGetDataClass(Array,CellArray);
 #undef MacroArrayImagScalar
 #undef MacroArrayConstRealScalar
 #undef MacroArrayConstImagScalar
+#undef MacroArrayRealScalarArrayEncodedOnly
+#undef MacroArrayImagScalarArrayEncodedOnly
+#undef MacroArrayConstRealScalarArrayEncodedOnly
+#undef MacroArrayConstImagScalarArrayEncodedOnly
 #undef MacroArrayComplexConstructor
 #undef MacroArrayRealConstructor
 #undef MacroGetDataClass

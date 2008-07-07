@@ -121,15 +121,15 @@ const IndexArray IndexArrayFromArray(const Array &index) {
   if (!index.allReal())
     WarningMessage("Complex part of index ignored");
   if (index.dataClass() == Double)
-    return index.constReal<index_t>();
+    return index.asDenseArray().constReal<index_t>();
   if (index.dataClass() == Bool)
-    return Find(index.constReal<logical>());
+    return Find(index.asDenseArray().constReal<logical>());
+  if (IsColonOp(index))
+    return IndexArray(-1);
   Array index_converted(index.toClass(Double));
   if (!index_converted.allReal())
     WarningMessage("Complex part of index ignored");
-  return index_converted.constReal<index_t>();
-  if (IsColonOp(index))
-    return IndexArray(-1);
+  return index_converted.asDenseArray().constReal<index_t>();
   throw Exception("Unsupported index type");
 }
 

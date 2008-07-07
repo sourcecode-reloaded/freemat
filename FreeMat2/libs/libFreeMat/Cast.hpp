@@ -193,10 +193,69 @@ MacroCastNoLimit(double,uint16);
 MacroCastNoLimit(double,uint32);
 MacroCastNoLimit(double,uint64);
 
-
 MacroCastNoOp(double,double);
 MacroCastNoOp(float,float);
 MacroCastNoOp(QChar,QChar);
 MacroCastNoOp(bool,bool);
+
+template <>
+inline bool CastConvert(QChar val) {
+  return (val != QChar(0));
+}
+
+template <>
+inline QChar CastConvert(bool val) {
+  if (val) return QChar(1); 
+  return QChar(0);
+}
+
+template <>
+inline uint8 CastConvert(QChar val) {
+  return uint8(val.toAscii());
+}
+
+template <>
+inline int8 CastConvert(QChar val) {
+  return int8(val.toAscii());
+}
+
+#define MacroCastFromQChar(outtype)			\
+  template <>						\
+  inline outtype CastConvert(QChar val) {		\
+    return outtype(val.unicode());			\
+  }
+
+MacroCastFromQChar(int16);
+MacroCastFromQChar(int32);
+MacroCastFromQChar(int64);
+MacroCastFromQChar(uint16);
+MacroCastFromQChar(uint32);
+MacroCastFromQChar(uint64);
+MacroCastFromQChar(float);
+MacroCastFromQChar(double);
+
+#define MacroCastToQChar(intype)		\
+  template <>					\
+  inline QChar CastConvert(intype val) {	\
+    return QChar(val);				\
+  }
+
+MacroCastToQChar(int8);
+MacroCastToQChar(int16);
+MacroCastToQChar(int32);
+MacroCastToQChar(uint8);
+MacroCastToQChar(uint16);
+MacroCastToQChar(uint32);
+
+#define MacroCastToQCharViaInt(intype)		\
+  template <>					\
+  inline QChar CastConvert(intype val) {	\
+    return QChar(uint32(val));			\
+  }
+
+MacroCastToQCharViaInt(float);
+MacroCastToQCharViaInt(double);
+MacroCastToQCharViaInt(int64);
+MacroCastToQCharViaInt(uint64);
 
 #endif

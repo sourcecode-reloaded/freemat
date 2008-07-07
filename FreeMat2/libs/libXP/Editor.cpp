@@ -1147,8 +1147,8 @@ void FMEditor::RefreshBPLists() {
   update();
 }
 
-void FMEditor::IllegalLineOrCurrentPath(string name, int line) {
-  QString fullname = QString::fromStdString(name);
+void FMEditor::IllegalLineOrCurrentPath(QString name, int line) {
+  QString fullname = name;
   QFileInfo fileInfo(fullname);
   QString filePath = QFileInfo(fullname).absolutePath();
   QString currentPath = QDir::currentPath();

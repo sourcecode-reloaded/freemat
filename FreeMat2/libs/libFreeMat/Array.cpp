@@ -91,7 +91,7 @@ static inline void destruct(Type t, void *todelete) {
 
 static inline bool AllNonBoolScalars(const ArrayVector& index) {
   for (int i=0;i<index.size();i++)
-    if (!index[i].isScalar() || (index[i].dataClass() == Bool)) return false;
+    if (!index[i].isScalar() || (index[i].dataClass() == Bool) || (index[i].dataClass() == StringArray)) return false;
   return true;
 }
 
@@ -128,6 +128,22 @@ Array::Array(const StructArray& real) {
   m_type.Sparse = 0;
   m_type.Scalar = 0;
   m_real.p = new SharedObject(m_type,new StructArray(real));
+}
+
+Array::Array(const QChar &, const QChar &) {
+  throw Exception("Complex strings are not supported");
+}
+
+Array::Array(const QChar &t) {
+  m_type.Class = StringArray;
+  m_type.Complex = 0;
+  m_type.Sparse = 0;
+  m_type.Scalar = 0;
+  m_real.p = new SharedObject(m_type,
+			      construct_sized(m_type,
+					      NTuple(1,1)));
+  BasicArray<QChar> &p(real<QChar>());
+  p[1] = t;
 }
 
 Array::Array(const QString &text) {
@@ -185,17 +201,6 @@ static inline void Tset_scalar(Array *ptr, S ndx, const Array& data) {
 }
 
 template <typename S>
-static inline const void Tset_string_scalar(Array*ptr, S ndx, const Array &rhs) {
-  ptr->real<QChar>().set(ndx,rhs.constReal<QChar>()[1]);
-}
-
-template <typename S>
-static inline const void Tset_cell_scalar(Array*ptr, S ndx, const Array &rhs) {
-  BasicArray<Array> &rp(ptr->real<Array>());
-  Set(rp,ndx,rhs);
-}
-
-template <typename S>
 static inline const void Tset_struct_scalar(Array*ptr, S ndx, const Array &rhs) {
   if (rhs.dataClass() != Struct)
     throw Exception("Assignment A(I)=B where A is a structure array implies that B is also a structure array.");
@@ -219,10 +224,8 @@ static inline const void Tset_struct_scalar(Array*ptr, S ndx, const Array &rhs) 
 void Array::set(index_t index, const Array& data) {
   ensureNotScalarEncoded();
   switch (m_type.Class) {
-    MacroExpandCasesSimple(MacroSetIndexT);
-  case CellArray: Tset_cell_scalar<index_t>(this,index,data); return;
+    MacroExpandCasesAll(MacroSetIndexT);
   case Struct: Tset_struct_scalar<index_t>(this,index,data); return;
-  case StringArray: Tset_string_scalar<index_t>(this,index,data); return;
   default:
     throw Exception("Unhandled case for A(n) = B");
   }
@@ -236,10 +239,8 @@ void Array::set(index_t index, const Array& data) {
 void Array::set(const NTuple& index, const Array& data) {
   ensureNotScalarEncoded();
   switch (m_type.Class) {
-    MacroExpandCasesSimple(MacroSetNTuple);
-  case CellArray: Tset_cell_scalar<const NTuple&>(this,index,data); return;
+    MacroExpandCasesAll(MacroSetNTuple);
   case Struct: Tset_struct_scalar<const NTuple&>(this,index,data); return;
-  case StringArray: Tset_string_scalar<const NTuple&>(this,index,data); return;
   default:
     throw Exception("Unhandled case for A(n1,..,nm) = B");
   }
@@ -247,6 +248,8 @@ void Array::set(const NTuple& index, const Array& data) {
 
 #undef MacroSetNTuple
 
+// Handles assignment of A(ndx) = B, where ndx is an IndexArray or IndexArrayVector,
+// and A is a basic array of simple types (excludes strings, cell arrays, and structs).
 template <typename S, typename T>
 static inline void Tset(Array* ptr, S ndx, const Array& data) {
   if (ptr->isSparse()) {
@@ -256,9 +259,14 @@ static inline void Tset(Array* ptr, S ndx, const Array& data) {
     return;
   }
   Array dataTyped(data.toClass(ptr->dataClass()));
-  Set(ptr->real<T>(),ndx,dataTyped.constReal<T>());
-  if (!data.allReal()) {
-    Set(ptr->imag<T>(),ndx,dataTyped.constImag<T>());
+  if (dataTyped.isScalar()) {
+    Set(ptr->real<T>(),ndx,dataTyped.constRealScalar<T>());
+    if (!dataTyped.allReal()) 
+      Set(ptr->imag<T>(),ndx,dataTyped.constImagScalar<T>());
+  } else {
+    Set(ptr->real<T>(),ndx,dataTyped.constReal<T>());
+    if (!dataTyped.allReal()) 
+      Set(ptr->imag<T>(),ndx,dataTyped.constImag<T>());
   }
 }
 
@@ -280,7 +288,7 @@ static inline const void Tset_struct(Array*ptr, S ndx, const Array &rhs) {
 }
 
 #define MacroSetIndexArray(ctype,cls)		\
-  case cls: Tset<const IndexArray&,ctype>(this,index,data);
+  case cls: return Tset<const IndexArray&,ctype>(this,index,data);
 
 void Array::set(const IndexArray& index, const Array& data) {
   ensureNotScalarEncoded();
@@ -295,7 +303,7 @@ void Array::set(const IndexArray& index, const Array& data) {
 #undef MacroSetIndexArray
 
 #define MacroSetIndexArrayVector(ctype,cls) \
-  case cls: Tset<const IndexArrayVector&,ctype>(this,index,data);
+  case cls: return Tset<const IndexArrayVector&,ctype>(this,index,data);
 
 void Array::set(const IndexArrayVector& index, const Array& data) {
   ensureNotScalarEncoded();
@@ -330,7 +338,7 @@ static inline void Treshape(Array* ptr, S ndx) {
 }
 
 #define MacroReshapeNTuple(ctype,cls) \
-  case cls: Treshape<const NTuple&, ctype>(this,size);
+  case cls: return Treshape<const NTuple&, ctype>(this,size); 
 
 void Array::reshape(const NTuple &size) {
   ensureNotScalarEncoded();
@@ -365,7 +373,7 @@ static inline void Tresize(Array* ptr, S ndx) {
 }
 
 #define MacroResizeNTuple(ctype,cls) \
-  case cls: Tresize<const NTuple&,ctype>(this,size);
+  case cls: return Tresize<const NTuple&,ctype>(this,size);
 
 void Array::resize(const NTuple &size) {
   ensureNotScalarEncoded();
@@ -379,7 +387,7 @@ void Array::resize(const NTuple &size) {
 #undef MacroResizeNTuple
 
 #define MacroResizeIndex(ctype,cls) \
-  case cls: Tresize<index_t,ctype>(this,size);
+  case cls: return Tresize<index_t,ctype>(this,size);
 
 void Array::resize(index_t size) {
   ensureNotScalarEncoded();
@@ -536,6 +544,7 @@ inline static const Array TcastCase(DataClass t, const Array *ptr) {
   default:
     throw Exception("Cannot perform type conversions with this type");
     MacroExpandCasesSimple(MacroTcast);
+    MacroTcast(QChar,StringArray);
   }
 }
 
@@ -550,6 +559,7 @@ const Array Array::toClass(DataClass t) const {
   default:
     throw Exception("Cannot perform type conversions with this type.");
     MacroExpandCasesSimple(MacroTcastCase);
+    MacroTcastCase(QChar,StringArray);
   }
 }
 
@@ -632,7 +642,7 @@ const Array Array::get(index_t index) const {
 #undef MacroGetIndexT
 
 const Array Array::get(const Array& index) const {
-  if (index.isScalar() && (index.dataClass() != Bool)) {
+  if (index.isScalar() && (index.dataClass() != Bool) && (index.dataClass() != StringArray)) {
     if (!index.allReal())
      Warn("Complex part of index ignored");
     return get(index.asIndexScalar());
@@ -720,8 +730,10 @@ const index_t Array::asIndexScalar() const {
   default:
     throw Exception("Unsupported type called on asIndexScalar");
   case Bool:
-    if (constRealScalar<bool>()) return (index_t) 1;
-    return (index_t) 0;
+    if (constRealScalar<bool>()) return index_t(1);
+    return index_t(0);
+  case StringArray:
+      throw Exception("Illegal indexing expression");
   MacroExpandCasesNoBool(MacroAsIndexScalar);    
   }
 }

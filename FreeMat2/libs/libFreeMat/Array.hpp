@@ -123,6 +123,8 @@ public:
     m_imag.p = new SharedObject(m_type,i);
   }
   Array(DataClass t, const NTuple &dims = NTuple(0,0));
+  Array(const QChar &t);
+  Array(const QChar &, const QChar &);
   Array(const QString &text);
   template <typename T>
   inline Array(const SparseMatrix<T>& real) {

@@ -196,7 +196,7 @@ static ArrayFormatInfo ComputeArrayFormatInfo(const Array &ref) {
   case Float: return ComputeArrayFormatInfo<float>(ref);
   case Double: return ComputeArrayFormatInfo<double>(ref);
   case Bool: return ArrayFormatInfo(1);
-  case StringArray: return ArrayFormatInfo(1);
+  case StringArray: return ArrayFormatInfo(0);
   case CellArray:
     {
       int maxwidth = 1;
@@ -336,6 +336,7 @@ static inline void PrintSheet(Interpreter *io, const ArrayFormatInfo &format,
   int rows = int(rp.rows());
   int colsPerPage = (int) floor((termWidth-1)/((double) format.width + 2));
   colsPerPage = (colsPerPage < 1) ? 1 : colsPerPage;
+  if (rp.dataClass() == StringArray) colsPerPage = termWidth-2;
   int pageCount = (int) ceil(columns/((double)colsPerPage));
   for (int k=0;k<pageCount;k++) {
     int colsInThisPage;
