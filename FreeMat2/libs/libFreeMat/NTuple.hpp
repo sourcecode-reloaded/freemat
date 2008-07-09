@@ -137,21 +137,26 @@ public:
       throw Exception("Illegal range in get");
     return m_data[dim];
   }
-  const index_t operator[](int dim) const {
+  inline const index_t operator[](int dim) const {
     return get(dim);
   }
-  index_t& operator[](int dim) {
+  inline index_t& operator[](int dim) {
     return get(dim);
   }
-  bool operator<=(const NTuple& alt) const {
+  inline bool operator>=(const NTuple& alt) const {
+    for (int i=0;i<NDims;i++)
+      if (m_data[i] < alt.m_data[i]) return false;
+    return true;
+  }
+  inline bool operator<=(const NTuple& alt) const {
     for (int i=0;i<NDims;i++)
       if (m_data[i] > alt.m_data[i]) return false;
     return true;
   }
-  bool operator!=(const NTuple& alt) const {
+  inline bool operator!=(const NTuple& alt) const {
     return !(*this == alt);
   }
-  bool operator==(const NTuple& alt) const {
+  inline bool operator==(const NTuple& alt) const {
     for (int i=0;i<NDims;i++)
       if (m_data[i] != alt.m_data[i]) return false;
     return true;

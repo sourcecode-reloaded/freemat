@@ -603,7 +603,10 @@ Array DiagonalArray(const Array &A, int diagonal) {
 //
 //
 
-Array NCat(const ArrayVector& data, int catdim) {
+Array NCat(const ArrayVector& pdata, int catdim) {
+  ArrayVector data;
+  for (int i=0;i<pdata.size();i++)
+    if (!pdata[i].isEmpty()) data.push_back(pdata[i]);
   // Compute the output dataclass
   if (data.size() == 0) return EmptyConstructor();
   DataClass cls(data[0].dataClass());

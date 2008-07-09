@@ -1125,7 +1125,7 @@ ArrayVector HPointFunction(int nargout, const ArrayVector& arg) {
 //@]
 //where @|x| is the handle of an axes object.
 //@@Signature
-//gfunction is2dview
+//gfunction is2dview HIs2DViewFunction
 //input handle
 //output bool
 //!

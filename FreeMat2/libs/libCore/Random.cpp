@@ -109,7 +109,7 @@ ArrayVector SeedFunction(int nargout, const ArrayVector& arg) {
 //randbeta(3*ones(1,5),7*ones(1,5))
 //@>
 //@@Signature
-//function randbeta
+//function randbeta RandBetaFunction
 //inputs alpha beta
 //outputs y
 //!
@@ -151,7 +151,7 @@ ArrayVector RandBetaFunction(int nargout, const ArrayVector& arg) {
 //randi(zeros(1,6),5*ones(1,6))
 //@>
 //@@Signature
-//function randi
+//function randi RandIFunction
 //inputs low high
 //outputs y
 //!

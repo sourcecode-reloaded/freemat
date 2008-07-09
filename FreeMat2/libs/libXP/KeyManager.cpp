@@ -1122,54 +1122,6 @@ void KeyManager::ChangeDir(const QString& dir) {
   emit ExecuteLine("cd " + dir + "\n");
 }
 
-/*.......................................................................
- * Search backwards for the potential start of a filename. This
- * looks backwards from the specified index in a given string,
- * stopping at the first unescaped space or the start of the line.
- *
- * Input:
- *  string  const char *  The string to search backwards in.
- *  back_from      int    The index of the first character in string[]
- *                        that follows the pathname.
- * Output:
- *  return        char *  The pointer to the first character of
- *                        the potential pathname, or NULL on error.
- */
-static char *start_of_path(const char *string, int back_from)
-{
-  int i, j;
-  /*
-   * Search backwards from the specified index.
-   */
-  for(i=back_from-1; i>=0; i--) {
-    int c = string[i];
-    /*
-     * Stop on unescaped spaces.
-     */
-    if(isspace((int)(unsigned char)c)) {
-      /*
-       * The space can't be escaped if we are at the start of the line.
-       */
-      if(i==0)
-	break;
-      /*
-       * Find the extent of the escape characters which precedes the space.
-       */
-      for(j=i-1; j>=0 && string[j]=='\\'; j--)
-	;
-      /*
-       * If there isn't an odd number of escape characters before the space,
-       * then the space isn't escaped.
-       */
-      if((i - 1 - j) % 2 == 0)
-	break;
-    } 
-    else if (!isalpha(c) && !isdigit(c) && (c != '_') && (c != '.') && (c != '\\') && (c != '/'))
-      break;
-  };
-  return (char *)string + i + 1;
-}
-
 StringVector KeyManager::GetCompletions(QString line, 
 					int word_end, 
 					QString &matchString) {
@@ -1182,27 +1134,21 @@ StringVector KeyManager::GetCompletions(QString line,
    * Find the start of the filename prefix to be completed, searching
    * backwards for the first unescaped space, or the start of the line.
    */
-  char *start = start_of_path(qPrintable(line), word_end);
-  char *tmp;
-  int mtchlen;
-  mtchlen = word_end - (start-qPrintable(line));
-  tmp = (char*) malloc(mtchlen+1);
-  memcpy(tmp,start,mtchlen);
-  tmp[mtchlen] = 0;
-  matchString = QString(tmp);
-  
+  int startOfPath = line.lastIndexOf(QRegExp("[^\\\\] |^ "),word_end);
+  if (startOfPath < 0) startOfPath = 0;
+  matchString = line.mid(startOfPath+2,word_end-startOfPath-1);
   /*
    *  the preceeding character was not a ' (quote), then
    * do a command expansion, otherwise, do a filename expansion.
    */
   if (!context) return completions;
-  if (start[-1] != '\'') {
-    StringVector local_completions(context->getCompletions(QString(start)));
+  if ((startOfPath > 0) && (line[startOfPath-1] != '\'')) {
+    StringVector local_completions(context->getCompletions(matchString));
     for (int i=0;i<local_completions.size();i++) 
       if (local_completions[i].indexOf("private:") == -1)
 	completions.push_back(local_completions[i]);
   }
-  StringVector comp(GetCompletionList(tmp));
+  StringVector comp(GetCompletionList(matchString));
   for (int i=0;i<comp.size();i++) 
     if (comp[i].indexOf("private:") == -1)
       completions.push_back(comp[i]);

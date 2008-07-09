@@ -67,12 +67,12 @@ public:
     throw Exception("out of range");
   }
   inline const T operator[](index_t pos) const {
-    if ((pos > 0) && (pos <= m_data.size()))
+    if ((pos > 0) && (pos <= length()))
       return m_data[(int64)(pos+m_offset-1)];
     throw Exception("out of range");
   }
   inline T& operator[](index_t pos) {
-    if ((pos > 0) && (pos <= m_data.size()))
+    if ((pos > 0) && (pos <= length()))
       return m_data[(int64)(pos+m_offset-1)];
     throw Exception("out of range");
   }
@@ -106,10 +106,15 @@ public:
     m_data[(int64)(pos+m_offset-1)] = val;
   }
   inline const T get(index_t pos) const {
+    if ((pos<1) || (pos>length())) 
+      throw Exception("index is out of bounds");
     return m_data[(int64)(pos+m_offset-1)];
   }
   inline const T get(const NTuple& pos) const {
-    return m_data[(int64)(m_dims.map(pos)+m_offset-1)];
+    if (m_dims.validate(pos))
+      return m_data[(int64)(m_dims.map(pos)+m_offset-1)];
+    else
+      throw Exception("index is out of bounds");
   }
   BasicArray<T> slice(const IndexArrayVector& index) const {
     index_t offset = getSliceIndex(dimensions(),index);

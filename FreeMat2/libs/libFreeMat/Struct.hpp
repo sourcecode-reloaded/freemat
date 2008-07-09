@@ -28,13 +28,15 @@ public:
   bool contains(QString name) const { return m_fields.contains(name); }
   void insert(QString name, BasicArray<Array> t) {
     if (!contains(name)) m_fields += name;
-    (*this)[name] = t;
+    m_data.push_back(t);
   }
   BasicArray<Array>& operator[](int i) {return m_data[i];}
   const BasicArray<Array>& operator[](int i) const {return m_data[i];}
   BasicArray<Array>& operator[](QString name) {
-    if (!m_fields.contains(name))
+    if (!m_fields.contains(name)) {
       m_fields += name;
+      m_data.push_back(BasicArray<Array>());
+    }
     return m_data[fieldIndex(name)];
   }
   const BasicArray<Array>& operator[](QString name) const {return m_data[fieldIndex(name)];}

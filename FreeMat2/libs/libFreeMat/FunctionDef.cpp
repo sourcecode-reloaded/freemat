@@ -491,7 +491,7 @@ bool MFunctionDef::updateCode(Interpreter *m_eval) {
       cp = io.readLine();
       while ((cp.size() > 1) && (cp.at(0).isSpace()))
 	cp.remove(0,1);
-      if (cp == "\n") continue;
+      if (cp == "\n" || cp.isEmpty()) continue;
       if (cp.at(0) != QChar('%'))
 	commentsOnly = false;
       else {

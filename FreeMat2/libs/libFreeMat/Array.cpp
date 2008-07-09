@@ -402,6 +402,8 @@ void Array::resize(index_t size) {
 #undef MacroResizeIndex
 
 void Array::set(const QString& field, ArrayVector& data) {
+  if (isEmpty() && m_type.Class != Struct)
+    *this = Array::Array(Struct,NTuple(0,0));
   if (m_type.Class != Struct) throw Exception("Unsupported type for A.field=B");
   StructArray &rp(structPtr());
   if (isEmpty()) 

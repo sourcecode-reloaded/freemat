@@ -8,7 +8,7 @@ function siggen(source_path)
   for i=1:numel(file_list)
     siggen_processfile(file_list{i},s);
   end
-  siggen_genloader(s);
+  siggen_genloaders(s);
   
 function siggen_processfile(filename,&s)
   [path,name,suffix] = fileparts(filename);
@@ -34,6 +34,9 @@ function siggen_processfile(filename,&s)
       function_type = ftokens{1}{1};
       function_name = ftokens{1}{2};
       function_internal_name = ftokens{1}{3};
+      if (isempty(function_name) | isempty(function_internal_name))
+         printf('MISSING Function Name: %s %s %s\n',fline,function_name,function_internal_name);
+      end
       iline = strtrim(strrep(iline,'//inputs',''));
       iline = strtrim(strrep(iline,'//input',''));
       iline = regexprep(iline,'\s+',',');
@@ -55,7 +58,11 @@ function siggen_processfile(filename,&s)
       p.function_internal_name = function_internal_name;
       p.iline = iline;
       p.oline = oline;
-      s = [s,p];
+      if (~isempty(s))
+         s = [s,p];
+      else
+         s = p;
+      end
    end
   end
 

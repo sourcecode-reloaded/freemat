@@ -299,7 +299,7 @@ void DoRecord(void *data, int count, int channels,
 //complete.  For @|'async'| playback, the function returns immediately (unless
 //a former playback is still issuing).
 //@@Signature
-//function wavplay
+//function wavplay WavPlayFunction
 //inputs y sampling_rate mode
 //outputs none
 //!
@@ -376,7 +376,7 @@ ArrayVector WavPlayFunction(int nargout, const ArrayVector& argv) {
 //can specify the type of the recorded data (defaults to @|FM_DOUBLE|).
 //Valid choices are @|float, double, int32, int16, int8, uint8|.
 //@@Signature
-//function wavrecord
+//function wavrecord WavRecordFunction
 //inputs varargin
 //outputs y
 //!
