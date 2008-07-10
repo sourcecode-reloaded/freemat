@@ -90,7 +90,7 @@ bool inBundleMode() {
 //  helpwin FunctionName
 //@]
 //@@Signature
-//sfunction helpwin HelpWinFunction
+//sgfunction helpwin HelpWinFunction
 //inputs functionname
 //outputs none
 //!

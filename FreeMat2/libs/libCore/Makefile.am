@@ -8,7 +8,6 @@ BUILT_SOURCES = $(libCore_a_MOC)
 
 libCore_a_HFILES = Core.hpp \
 helpwidget.hpp \
-LoadCore.hpp \
 MPIWrap.hpp \
 RanLib.hpp \
 Utils.hpp \
@@ -84,7 +83,7 @@ MatIO.cpp \
 XML.cpp \
 RPC.cpp \
 Cstruct.cpp \
-LoadCore.cpp \
+Loader.cpp \
 Control.cpp \
 Sparse.cpp \
 Matrix.cpp \

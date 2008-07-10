@@ -274,6 +274,10 @@ ArrayVector TrueFunction(int nargout, const ArrayVector& arg) {
 //@@Tests
 //@$"y=logical(0)","false","exact"
 //@$"y=logical(1)","~false","exact"
+//@@Signature
+//function false FalseFunction
+//inputs none
+//outputs y
 //!
 ArrayVector FalseFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(Array(bool(false)));
