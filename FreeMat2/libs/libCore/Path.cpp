@@ -72,7 +72,7 @@ ArrayVector SetPathFunction(int nargout, const ArrayVector& arg, Interpreter* ev
 //  pathtool
 //@]
 //@@Signature
-//sfunction pathtool PathToolFunction
+//sgfunction pathtool PathToolFunction
 //inputs none
 //outputs none
 //!

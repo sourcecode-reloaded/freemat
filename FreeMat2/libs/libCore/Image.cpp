@@ -23,7 +23,7 @@
 //The returned values will depend on the type of the original image.  Generally
 //you can read images in the @|jpg,png,xpm,ppm| and some other formats.
 //@@Signature
-//sfunction imread ImReadFunction
+//sgfunction imread ImReadFunction
 //inputs filename
 //outputs A map alpha
 //!
@@ -170,7 +170,7 @@ ArrayVector ImReadFunction(int nargout, const ArrayVector& arg,
 //within 0-1.  @|map| contains the colormap information (for indexed images),
 //and @|alpha| the alphamap (transparency).
 //@@Signature
-//sfunction imwrite ImWriteFunction
+//sgfunction imwrite ImWriteFunction
 //inputs filename A map alpha
 //outputs none
 //!
