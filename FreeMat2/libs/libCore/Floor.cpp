@@ -49,7 +49,7 @@ struct OpFloor {
 //floor(-5.32)
 //@>
 //@@Signature
-//function round RoundFunction
+//function floor FloorFunction
 //input x
 //output y
 //!

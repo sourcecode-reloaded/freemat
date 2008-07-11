@@ -288,6 +288,7 @@ struct OpVecIFFT {
 //function fft FFTFunction
 //inputs x len dim
 //outputs y
+//@@Signature
 //function ifft IFFTFunction
 //inputs x len dim
 //outputs y

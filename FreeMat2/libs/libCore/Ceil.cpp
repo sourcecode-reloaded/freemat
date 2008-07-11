@@ -48,6 +48,10 @@ struct OpCeil {
 //ceil(4.312)
 //ceil(-5.32)
 //@>
+//@@Signature
+//function ceil CeilFunction
+//input x
+//output y
 //!
 ArrayVector CeilFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)

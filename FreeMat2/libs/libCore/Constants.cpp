@@ -134,6 +134,10 @@ ArrayVector NaNFunction(int nargout, const ArrayVector& arg) {
 //function i IFunction
 //inputs none
 //outputs y
+//@@Signature
+//function j IFunction
+//inputs none
+//outputs y
 //!
 ArrayVector IFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(Array(double(0),double(1)));

@@ -39,7 +39,7 @@
 //@<
 //logical([pi,pi,0,e,0,-1])
 //@>
-//@@Specification
+//@@Signature
 //function logical LogicalFunction
 //inputs x
 //outputs y
@@ -67,7 +67,7 @@ ArrayVector LogicalFunction(int nargout, const ArrayVector& arg) {
 //a = [104,101,108,108,111]
 //string(a)
 //@>
-//@@Specification
+//@@Signature
 //function string StringFunction
 //inputs x
 //outputs y
@@ -121,7 +121,7 @@ ArrayVector StringFunction(int nargout, const ArrayVector& arg) {
 //@<1
 //uint8({4})
 //@>
-//@@Specification
+//@@Signature
 //function uint8 UInt8Function
 //inputs x
 //outputs y
@@ -175,7 +175,7 @@ ArrayVector UInt8Function(int nargout, const ArrayVector& arg) {
 //@<1
 //uint16({4})
 //@>
-//@@Specification
+//@@Signature
 //function uint16 UInt16Function
 //inputs x
 //outputs y
@@ -229,7 +229,7 @@ ArrayVector UInt16Function(int nargout, const ArrayVector& arg) {
 //@<1
 //uint32({4})
 //@>
-//@@Specification
+//@@Signature
 //function uint32 UInt32Function
 //inputs x
 //outputs y
@@ -283,7 +283,7 @@ ArrayVector UInt32Function(int nargout, const ArrayVector& arg) {
 //@<1
 //uint64({4})
 //@>
-//@@Specification
+//@@Signature
 //function uint64 UInt64Function
 //inputs x
 //outputs y
@@ -334,7 +334,7 @@ ArrayVector UInt64Function(int nargout, const ArrayVector& arg) {
 //@<1
 //int8({4})
 //@>
-//@@Specification
+//@@Signature
 //function int8 Int8Function
 //inputs x
 //outputs y
@@ -385,7 +385,7 @@ ArrayVector Int8Function(int nargout, const ArrayVector& arg) {
 //@<1
 //int16({4})
 //@>
-//@@Specification
+//@@Signature
 //function int16 Int16Function
 //inputs x
 //outputs y
@@ -436,7 +436,7 @@ ArrayVector Int16Function(int nargout, const ArrayVector& arg) {
 //@<1
 //int32({4})
 //@>
-//@@Specification
+//@@Signature
 //function int32 Int32Function
 //inputs x
 //outputs y
@@ -487,7 +487,7 @@ ArrayVector Int32Function(int nargout, const ArrayVector& arg) {
 //@<1
 //int64({4})
 //@>
-//@@Specification
+//@@Signature
 //function int64 Int64Function
 //inputs x
 //outputs y
@@ -582,7 +582,7 @@ ArrayVector Int64Function(int nargout, const ArrayVector& arg) {
 //
 //x = xz & xc & xd & xf & xi;
 //@}
-//@@Specification
+//@@Signature
 //function float FloatFunction
 //inputs x
 //outputs y
@@ -624,7 +624,7 @@ ArrayVector FloatFunction(int nargout, const ArrayVector& arg) {
 //@<1
 //double({4})
 //@>
-//@@Specification
+//@@Signature
 //function double DoubleFunction
 //inputs x
 //outputs y
@@ -670,7 +670,7 @@ ArrayVector DoubleFunction(int nargout, const ArrayVector& arg) {
 //@<1
 //complex({4})
 //@>
-//@@Specification
+//@@Signature
 //function complex ComplexFunction
 //inputs x
 //outputs y
@@ -716,7 +716,7 @@ ArrayVector ComplexFunction(int nargout, const ArrayVector& arg) {
 //@<1
 //dcomplex({4})
 //@>
-//@@Specification
+//@@Signature
 //function dcomplex DcomplexFunction
 //inputs x
 //outputs y

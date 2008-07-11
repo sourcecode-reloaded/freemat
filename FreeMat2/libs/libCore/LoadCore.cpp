@@ -27,13 +27,6 @@
 #include "MPIWrap.hpp"
 #endif
 
-void LoadGUICoreFunctions(Context* context) {
-  context->addGfxSpecialFunction("helpwin",HelpWinFunction,1,0,"function",NULL);
-  context->addGfxSpecialFunction("pathtool",PathToolFunction,0,0,NULL);
-  context->addGfxSpecialFunction("imread",ImReadFunction,1,3,"filename",NULL);
-  context->addGfxSpecialFunction("imwrite",ImWriteFunction,4,0,"filename","A","map","alpha",NULL);
-}
-
 void LoadCoreFunctions(Context* context) {
   // context->addFunction("tcpserver",TCPServerFunction,1,1,"port",NULL);
 //   context->addFunction("tcpaccept",TCPAcceptFunction,2,1,"handle","timeout",NULL);
@@ -43,48 +36,8 @@ void LoadCoreFunctions(Context* context) {
 //   context->addFunction("tcpclose",TCPCloseFunction,1,0,"handle",NULL);
 //   context->addFunction("tcpserverclose",TCPServerCloseFunction,1,0,"handle",NULL);
 //   context->addFunction("tcpstate",TCPStateFunction,1,1,"handle",NULL);
-  context->addFunction("true",TrueFunction,0,1,NULL);
-  context->addFunction("false",FalseFunction,0,1,NULL);
-  context->addFunction("regexp",RegExpFunction,-1,6,NULL);
-  context->addFunction("regexprepdriver",RegExpRepDriverFunction,-1,1,NULL);
-  context->addFunction("regexpi",RegExpIFunction,-1,6,NULL);
-  context->addFunction("cos",CosFunction,1,1,"x",NULL);
-  context->addFunction("acos",ArccosFunction,1,1,"x",NULL);
-  context->addFunction("csc",CscFunction,1,1,"x",NULL);
-  context->addFunction("sec",SecFunction,1,1,"x",NULL);
-  context->addFunction("sin",SinFunction,1,1,"x",NULL);
-  context->addFunction("asin",ArcsinFunction,1,1,"x",NULL);
-  context->addFunction("tan",TanFunction,1,1,"x",NULL);
-  context->addFunction("atan",ArctanFunction,1,1,"x",NULL);
-  context->addFunction("atan2",Arctan2Function,2,1,"y","x",NULL);
-  context->addFunction("cot",CotFunction,1,1,"x",NULL);
-  context->addFunction("exp",ExpFunction,1,1,"x",NULL);
-  context->addFunction("expm1",ExpM1Function,1,1,"x",NULL);
-  context->addFunction("log",LogFunction,1,1,"x",NULL);
-  context->addFunction("log1p",Log1PFunction,1,1,"x",NULL);
-  context->addFunction("min",MinFunction,3,2,"x","z","n",NULL);
-  context->addFunction("max",MaxFunction,3,2,"x","z","n",NULL);
-  context->addFunction("sum",SumFunction,2,1,"x","d",NULL);
-  context->addFunction("cumsum",CumsumFunction,2,1,"x","d",NULL);
-  context->addFunction("cumprod",CumprodFunction,2,1,"x","d",NULL);
-  context->addFunction("mean",MeanFunction,2,1,"x","d",NULL);
-  context->addFunction("var",VarFunction,2,1,"x","d",NULL);
-  context->addFunction("prod",ProdFunction,2,1,"x","d",NULL);
-  context->addFunction("ceil",CeilFunction,1,1,"x",NULL);
-  context->addFunction("floor",FloorFunction,1,1,"x",NULL);
-  context->addFunction("round",RoundFunction,1,1,"x",NULL);
-  context->addFunction("fft",FFTFunction,3,1,"x","n","d",NULL);
-  context->addFunction("ifft",IFFTFunction,3,1,"x","n","d",NULL);
-  context->addSpecialFunction("disp",DispFunction,-1,0,"x",NULL);
-  context->addSpecialFunction("dbstop",DbStopFunction,2,0,"file","line",NULL);
   //  context->addSpecialFunction("dbstep",DbStepFunction,1,0,"line",NULL);
-  context->addSpecialFunction("dblist",DbListFunction,0,0,"dblist",NULL);
-  context->addSpecialFunction("dbdelete",DbDeleteFunction,1,0,"number",NULL);
-  context->addFunction("i",IFunction,0,1,NULL);
   context->addFunction("j",IFunction,0,1,NULL);
-  context->addFunction("pi",PiFunction,0,1,NULL);
-  context->addFunction("e",EFunction,0,1,NULL);
-  context->addFunction("format",FormatFunction,2,1,"lenth","fmt",NULL);
   context->addFunction("float",FloatFunction,1,1,"x",NULL);
   context->addFunction("single",FloatFunction,1,1,"x",NULL);
   context->addFunction("double",DoubleFunction,1,1,"x",NULL);

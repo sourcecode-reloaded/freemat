@@ -254,7 +254,7 @@ struct OpVecMax {
 //max(a,0)
 //@>
 //@@Signature
-//function min MaxFunction
+//function max MaxFunction
 //input x z dim
 //output y n
 //!

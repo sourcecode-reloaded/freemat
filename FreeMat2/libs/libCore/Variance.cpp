@@ -102,7 +102,8 @@ struct OpVecVar {
 //@<
 //var(A,2)
 //@>
-//function var VarFunctin
+//@@Signature
+//function var VarFunction
 //inputs x dim
 //outputs y
 //!
