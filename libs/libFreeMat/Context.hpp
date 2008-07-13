@@ -318,7 +318,7 @@ public:
    * Flush temporary function definitions from the global context
    */
   inline void flushTemporaryGlobalFunctions() {
-    for (int i=0;i<tempFunctions.size();i++)
+    for (unsigned int i=0;i<tempFunctions.size();i++)
       deleteFunction(tempFunctions[i]);
     tempFunctions.clear();
   }
@@ -486,9 +486,9 @@ public:
     StringVector global_completions = topScope->getCompletions(prefix);
     StringVector code_completions = codeTab.getCompletions(prefix);
     StringVector completions(local_completions);
-    for (int i=0;i<global_completions.size();i++)
+    for (unsigned int i=0;i<global_completions.size();i++)
       completions.push_back(global_completions[i]);
-    for (int i=0;i<code_completions.size();i++)
+    for (unsigned int i=0;i<code_completions.size();i++)
       completions.push_back(code_completions[i]);
     return completions;
   }

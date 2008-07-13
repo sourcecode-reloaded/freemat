@@ -25,6 +25,46 @@
 #include <QPainterPath>
 #include "HandleProperty.hpp"
 
+
+namespace ColorMode { enum ColorMode { ColorSpec, None, Flat, Interp }; };
+namespace AlphaMode { enum AlphaMode { Scalar, Flat, Interp }; };
+namespace EraseMode { enum EraseMode { Normal, None, Xor, Background }; };
+namespace LightningMode{ enum LightingMode { None, Flat, Gouraud, Phong }; };
+
+class ColorData{
+public:
+  double r;
+  double g;
+  double b;
+  double a;
+  ColorData() {};
+  ColorData( double red, double green, double blue, double alpha ) : r(red), g(green), b(blue), a(alpha) {};
+};
+
+
+class point{
+public:
+    double x;
+    double y;
+    double z;
+    point() {};
+    point( double x_, double y_, double z_ ) : x(x_), y(y_), z(z_) {};
+};
+
+
+class Face{
+public:
+    QVector<point> vertices;
+    QVector<ColorData> edgecolors;
+    QVector<ColorData> vertexcolors;
+    ColorData FaceColor;  
+    ColorData EdgeColor;
+    enum ColorMode::ColorMode FaceColorMode;
+    enum ColorMode::ColorMode EdgeColorMode;
+};
+
+typedef QList<Face> FaceList;
+
 class cpoint {
 public:
   double x;
@@ -34,10 +74,9 @@ public:
   double g;
   double b;
   double a;
-  cpoint() {}
-  cpoint(double ax, double ay, double az, double ar, double ag, double ab, double aa) {
-    x = ax; y = ay; z = az; r = ar; g = ag; b = ab; a = aa;
-  }
+  cpoint() {};
+  cpoint(double ax, double ay, double az, double ar, double ag, double ab, double aa) 
+      : x(ax), y(ay), z(az), r(ar), g(ag), b(ab), a(aa) {};
 };
 
 class RenderEngine {
@@ -109,6 +148,8 @@ public:
   virtual void quadStrips(QVector<QVector<cpoint> > faces, bool flatfaces,
 			  QVector<QVector<cpoint> > edges, bool flatedges) = 0;
   virtual void setClipBox(QVector<double> limits) {};
+  virtual void drawPatch(const FaceList& faces) = 0;
+
 };
   
 void DrawSymbol(RenderEngine& gc, RenderEngine::SymbolType symb,

@@ -16,6 +16,7 @@ HandleLineSeries.cpp
 HandleObject.cpp 
 HandleProperty.cpp 
 HandleSurface.cpp 
+HandlePatch.cpp
 HandleText.cpp 
 HandleWindow.cpp 
 LoadGraphicsCore.cpp 

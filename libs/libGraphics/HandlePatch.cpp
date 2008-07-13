@@ -18,6 +18,7 @@
  */
 #include "HandlePatch.hpp"
 #include "HandleAxis.hpp"
+#include "IEEEFP.hpp"
 #include <qgl.h>
 
 HandlePatch::HandlePatch() {
@@ -154,7 +155,7 @@ void HandlePatch::ConstructProperties() {
   AddProperty(new HPMappingMode, "alphadatamapping");
   AddProperty(new HPScalar,"ambientstrength");
   AddProperty(new HPBackFaceLighting,"backfacelighting");
-  AddProperty(new HPArray, "cdata");
+  AddProperty(new HPColorVector, "cdata");
   AddProperty(new HPDataMappingMode, "cdatamapping");
   AddProperty(new HPAutoManual, "cdatamode");
   AddProperty(new HPHandles,"children");
@@ -165,6 +166,8 @@ void HandlePatch::ConstructProperties() {
   AddProperty(new HPFaceAlpha,"facealpha");
   AddProperty(new HPColorInterp,"facecolor");
   AddProperty(new HPLightingMode,"facelighting");
+  AddProperty(new HPArray, "faces");
+  AddProperty(new HPArray, "facevertexcdata");
   AddProperty(new HPLineStyle,"linestyle");
   AddProperty(new HPScalar,"linewidth");
   AddProperty(new HPSymbol,"marker");
@@ -181,6 +184,7 @@ void HandlePatch::ConstructProperties() {
   AddProperty(new HPString,"type");
   AddProperty(new HPArray,"userdata");
   AddProperty(new HPArray,"vertexnormals");
+  AddProperty(new HPArray,"vertices");
   AddProperty(new HPArray,"xdata");
   AddProperty(new HPAutoManual,"xdatamode");
   AddProperty(new HPArray,"ydata");
@@ -209,7 +213,7 @@ void HandlePatch::SetupDefaults() {
   SetConstrainedStringColorDefault("edgecolor","colorspec",0,0,0);
   SetConstrainedStringDefault("edgelighting","none");
   SetConstrainedStringScalarDefault("facealpha","scalar",1);
-  SetConstrainedStringDefault("facecolor","flat");
+  SetConstrainedStringColorDefault("facecolor","colorspec",0,0,0);
   SetConstrainedStringDefault("facelighting","none");
   SetConstrainedStringDefault("linestyle","-");
   SetScalarDefault("linewidth",0.5);
@@ -224,99 +228,145 @@ void HandlePatch::SetupDefaults() {
   SetStringDefault("ydatamode","auto");
 }
 
-void HandlePatch::DoAutoXMode() {
-  Array zdata(ArrayPropertyLookup("zdata"));
-  Array xdata(Array::doubleMatrixConstructor(zdata.rows(),zdata.columns()));
-  double *dp = (double*) xdata.getReadWriteDataPointer();
-  int cols(zdata.columns());
-  int rows(zdata.rows());
-  for (int j=0;j<cols;j++)
-    for (int i=0;i<rows;i++)
-      dp[i+j*rows] = j+1;
-  HPArray *hp = (HPArray*) LookupProperty("xdata");
-  hp->Data(xdata);
+void HandlePatch::BuildPolygons( FaceList& faces )
+{
+    Array facedata(ArrayPropertyLookup("faces"));
+    facedata.promoteType(FM_DOUBLE);
+    Array vertexdata(ArrayPropertyLookup("vertices"));
+    vertexdata.promoteType(FM_DOUBLE);
+    Array fvcdata( ArrayPropertyLookup("facevertexcdata") );
+    fvcdata.promoteType(FM_DOUBLE);
+
+    enum ColorMode::ColorMode FaceColorMode, EdgeColorMode;
+
+    if( StringCheck("facecolor","flat") ) FaceColorMode = ColorMode::Flat;
+    else if( StringCheck("facecolor","none") ) FaceColorMode = ColorMode::None;
+    else if( StringCheck("facecolor","interp") ) FaceColorMode = ColorMode::Interp;
+    else FaceColorMode = ColorMode::ColorSpec;
+
+    if( StringCheck("edgecolor","flat") ) EdgeColorMode = ColorMode::Flat;
+    else if( StringCheck("edgecolor","none") ) EdgeColorMode = ColorMode::None;
+    else if( StringCheck("edgecolor","interp") ) EdgeColorMode = ColorMode::Interp;
+    else EdgeColorMode = ColorMode::ColorSpec;
+
+    
+    if (vertexdata.isEmpty() || facedata.isEmpty()) return;
+
+    double *pVertOrder = (double*)facedata.getDataPointer();
+    double *pVertData = (double*)vertexdata.getDataPointer();
+    double *pVertColor = (double*)fvcdata.getDataPointer();
+
+    if( vertexdata.columns() != 3 ) throw Exception("Vertex Data should be Nx3 dimensional matrix.");
+    
+    /* "vertices" property defines vertex coordinates in a nVertices x 3 array. */
+    int nVertices = vertexdata.rows();
+
+    QVector<cpoint> polygon_vert;
+
+    int nFaces = facedata.rows();
+    /* "faces" property is oddly defined. Each row corresponds to 
+    a face, each column to a vertex. Extraneous vertices are set to NaN. */
+    int maxVertsPerFace = facedata.columns();
+
+    for( int j = 0; j < nFaces; j++ ){
+	Face face;
+	
+	face.FaceColorMode = FaceColorMode;
+	face.EdgeColorMode = EdgeColorMode;
+
+	if( face.FaceColorMode == ColorMode::ColorSpec ){
+	    HPConstrainedStringColor *fc = (HPConstrainedStringColor*) LookupProperty("facecolor");
+	    if( !fc ) throw Exception("Invalid Face Colorspec for Patch");
+	    QVector<double> colorspec = fc->ColorSpec();
+	    face.FaceColor = ColorData( colorspec[0], colorspec[1], colorspec[2], 1);
+	}
+
+	//we check that color data and vertex data are consistent
+	if( face.FaceColorMode == ColorMode::Flat && (fvcdata.columns()!=3) &&
+	    ((fvcdata.rows()!=1) || ((fvcdata.rows()!=nVertices))))
+	    throw Exception("Incorrect number of FaceVertexCData parameters");
+
+	if( face.FaceColorMode == ColorMode::Interp && (fvcdata.columns()!=3) && 
+		(fvcdata.rows()!=nVertices) )
+	    throw Exception("Incorrect number of FaceVertexCData parameters");
+
+	if( face.EdgeColorMode == ColorMode::ColorSpec ){
+	    HPConstrainedStringColor *ec = (HPConstrainedStringColor*) LookupProperty("edgecolor");
+	    if( !ec ) throw Exception("Invalid Edge Colorspec for Patch");
+	    QVector<double> colorspec = ec->ColorSpec();
+	    face.EdgeColor = ColorData( colorspec[0], colorspec[1], colorspec[2], 1);
+	}
+
+	if( face.EdgeColorMode == ColorMode::Flat && (fvcdata.columns()!=3) &&
+	    ((fvcdata.rows()!=1) || ((fvcdata.rows()!=nVertices) )))
+	    throw Exception("Incorrect number of FaceVertexCData parameters");
+
+	if( face.EdgeColorMode == ColorMode::Interp && (fvcdata.columns()!=3) && 
+		(fvcdata.rows()!=nVertices) )
+	    throw Exception("Incorrect number of FaceVertexCData parameters");
+
+	for( int k = 0; k < maxVertsPerFace; k++ ){
+	    if( !IsNaN( *(pVertOrder+j*maxVertsPerFace+k) ) ){ //ignore vertices set to NaN
+		
+		point vert;
+    		int vertIndex = (int)(*(pVertOrder+j*maxVertsPerFace+k));
+
+		if( vertIndex > nVertices ) 
+		    throw Exception("Vertex Index out of bounds");
+
+		vert.x = *(pVertData+3*vertIndex);
+		vert.y = *(pVertData+3*vertIndex+1);
+		vert.z = *(pVertData+3*vertIndex+2);
+		
+		face.vertices.append( vert );
+
+		/* Handle color. */
+		
+		if( face.FaceColorMode == ColorMode::Flat ){
+		    int firstVertIndex = (fvcdata.rows()!=1) ? (int)(*(pVertOrder+j*maxVertsPerFace)) : 0;
+		    ColorData vertColor(*(pVertColor+3*firstVertIndex), *(pVertColor+3*firstVertIndex+1), *(pVertColor+3*firstVertIndex+2), 1);
+		    face.vertexcolors.append(vertColor);    		    
+		}
+		else if( face.FaceColorMode == ColorMode::Interp ){
+		    ColorData vertColor(*(pVertColor+3*vertIndex), *(pVertColor+3*vertIndex+1), *(pVertColor+3*vertIndex+2), 1);
+		    face.vertexcolors.append(vertColor);    		    
+		}
+		if( face.EdgeColorMode == ColorMode::Flat ){
+		    int firstVertIndex = (fvcdata.rows()!=1) ? (int)(*(pVertOrder+j*maxVertsPerFace)) : 0;
+		    ColorData vertColor(*(pVertColor+3*firstVertIndex), *(pVertColor+3*firstVertIndex+1), *(pVertColor+3*firstVertIndex+2), 1);
+		    face.edgecolors.append(vertColor);    		    
+		}
+		else if( face.EdgeColorMode == ColorMode::Interp ){
+		    ColorData vertColor(*(pVertColor+3*vertIndex), *(pVertColor+3*vertIndex+1), *(pVertColor+3*vertIndex+2), 1);
+		    face.edgecolors.append(vertColor);    		    
+		}
+	    }
+	}
+	faces.append(face);
+    }
 }
 
-void HandlePatch::DoAutoYMode() {
-  Array zdata(ArrayPropertyLookup("zdata"));
-  Array ydata(Array::doubleMatrixConstructor(zdata.rows(),zdata.columns()));
-  double *dp = (double*) ydata.getReadWriteDataPointer();
-  int cols(zdata.columns());
-  int rows(zdata.rows());
-  for (int j=0;j<cols;j++)
-    for (int i=0;i<rows;i++)
-      dp[i+j*rows] = i+1;
-  HPArray *hp = (HPArray*) LookupProperty("ydata");
-  hp->Data(ydata);
-}
-
-void HandlePatch::DoAutoCMode() {
-  Array zdata(ArrayPropertyLookup("zdata"));
-  HPArray *hp = (HPArray*) LookupProperty("cdata");
-  hp->Data(zdata);
-}
-
-void HandlePatch::UpdateState() {
-  if (HasChanged("xdata"))
-    ToManual("xdatamode");
-  if (HasChanged("ydata"))
-    ToManual("ydatamode");
-  if (HasChanged("cdata"))
-    ToManual("cdatamode");
-  if (IsAuto("xdatamode")) 
-    DoAutoXMode();
-  if (IsAuto("ydatamode"))
-    DoAutoYMode();
-  if (IsAuto("cdatamode"))
-    DoAutoCMode();
-  HandleImage::UpdateCAlphaData();
-}
-
-
+FaceList Saved_faces;
 
 void HandlePatch::PaintMe(RenderEngine& gc) {
   UpdateState();
   if (StringCheck("visible","off"))
     return;
-  // Get the x,y,z & color data points
-  Array xdata(ArrayPropertyLookup("xdata"));
-  xdata.promoteType(FM_DOUBLE);
-  Array ydata(ArrayPropertyLookup("ydata"));
-  ydata.promoteType(FM_DOUBLE);
-  Array zdata(ArrayPropertyLookup("zdata"));
-  zdata.promoteType(FM_DOUBLE);
-  if (zdata.isEmpty()) return;
-  // There are many render styles...
-  // edgealpha, edgecolor, facealpha, facecolor
-  // facecolor
-  // Texture mapping not supported yet
-  if (StringCheck("facecolor","texturemap")) return;
-  if (StringCheck("facealpha","texturemap")) return;
-  // A quadstrip is defined by its 
-  QVector<QVector<cpoint> > surfquads(BuildQuadsNoTexMap((HPConstrainedStringColor*) 
-								 LookupProperty("facecolor"),
-								 (HPConstrainedStringScalar*)
-								 LookupProperty("facealpha")));
-  QVector<QVector<cpoint> > edgequads(BuildQuadsNoTexMap((HPConstrainedStringColor*) 
-								 LookupProperty("edgecolor"),
-								 (HPConstrainedStringScalar*)
-								 LookupProperty("edgealpha")));
+
+  FaceList faces;
+  BuildPolygons( faces );
 
   HandleAxis *ax = GetParentAxis();
   if( ax->StringCheck("nextplot","add") ){
-      Saved_surfquads += surfquads;
-      Saved_edgequads += edgequads;
+    Saved_faces += faces;
   }
   else{
-      Saved_surfquads = surfquads;
-      Saved_edgequads = edgequads;
+      Saved_faces = faces;
   }
-  gc.quadStrips(Saved_surfquads,StringCheck("facecolor","flat"),
-		Saved_edgequads,StringCheck("edgecolor","flat"));
+  gc.drawPatch(Saved_faces);
 }
 
 void HandlePatch::AxisPaintingDone( void )
 {
-    Saved_surfquads.clear();
-    Saved_edgequads.clear();
+    Saved_faces.clear();
 }

@@ -19,21 +19,19 @@
 #ifndef __HandlePatch_hpp__
 #define __HandlePatch_hpp__
 
-#include "HandleImage.hpp"
-#include <qimage.h>
+#include "HandleObject.hpp"
 
-class HandlePatch : public HandleImage {
-  void DoAutoXMode();
-  void DoAutoYMode();
-  void DoAutoCMode();
+
+class HandlePatch : public HandleObject {
   Array GetCoordinateMatrix(std::string name, bool isXcoord);
+  FaceList faces;
+  virtual void BuildPolygons( FaceList& faces );
 
 public:
   HandlePatch();
   virtual ~HandlePatch();
   virtual void ConstructProperties();
   virtual void SetupDefaults();
-  virtual void UpdateState();
   virtual void PaintMe(RenderEngine& gc);
   virtual void AxisPaintingDone( void );
   QVector<double> GetLimits();

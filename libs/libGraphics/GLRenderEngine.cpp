@@ -491,3 +491,8 @@ void GLRenderEngine::quadStrips(QVector<QVector<cpoint> > faces, bool flatfaces,
     glEnd();
   }
 }
+
+void GLRenderEngine::drawPatch(const FaceList& faces)
+{
+}
+

@@ -94,6 +94,7 @@ public:
 			 QImage pic);
   virtual void quadStrips(QVector<QVector<cpoint> > faces, bool flatfaces,
 			  QVector<QVector<cpoint> > edges, bool flatedges);
+  virtual void drawPatch(const FaceList& faces);
 };
 
 #endif

@@ -132,5 +132,6 @@ public:
 			  double x3, double y3, double z3,
 			  double x4, double y4, double z4);
   virtual void setClipBox(QVector<double> limits);
+  virtual void drawPatch(const FaceList& faces);
 };
 #endif
