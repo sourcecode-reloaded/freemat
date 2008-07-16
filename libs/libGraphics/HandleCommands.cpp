@@ -37,6 +37,7 @@
 #include <qapplication.h>
 #include "HandleList.hpp"
 #include "HandleSurface.hpp"
+#include "HandlePatch.hpp"
 #include "HandleWindow.hpp"
 #include "HandleContour.hpp"
 #include "HandleUIControl.hpp"
@@ -618,6 +619,24 @@ ArrayVector HSurfaceFunction(int nargout, const ArrayVector& arg) {
 }
 
 //!
+//@Module HPATCH Create a patch object
+//@@Section HANDLE
+//@@Usage
+//Creates a patch object and parents it to the current axis.  The
+//syntax for its use is 
+//@[
+//  handle = hpatch(property,value,property,value,...)
+//@]
+//where @|property| and @|value| are set.  The handle ID for the
+//resulting object is returned.  It is automatically added to
+//the children of the current axis.
+//!
+ArrayVector HPatchFunction(int nargout, const ArrayVector& arg) {
+  return SingleArrayVector(Array::uint32Constructor(GenericConstructor(new HandlePatch,arg)));
+}
+
+
+//!
 //@Module FIGRAISE Raise a Figure Window
 //@@Section HANDLE
 //@@Usage
@@ -771,6 +790,8 @@ ArrayVector HPropertyValidateFunction(int nargout, const ArrayVector& arg) {
     fp = new HandleLineSeries;
   else if (objectname == "text")
     fp = new HandleText;
+  else if (objectname == "patch")
+    fp = new HandlePatch;
   else
     throw Exception("Unrecognized object type name " + objectname);
   std::string propname = ArrayToString(arg[1]);
@@ -1226,6 +1247,7 @@ void LoadHandleGraphicsFunctions(Context* context) {
   context->addGfxFunction("himage",HImageFunction,-1,1,NULL);
   context->addGfxFunction("hcontour",HContourFunction,-1,1,NULL);
   context->addGfxFunction("surface",HSurfaceFunction,-1,1,NULL);
+  context->addGfxFunction("hpatch",HPatchFunction,-1,1,NULL);
   context->addGfxFunction("set",HSetFunction,-1,0,NULL);
   context->addGfxFunction("get",HGetFunction,2,1,"handle","propname",NULL);
   context->addGfxFunction("figure",HFigureFunction,1,1,"number",NULL);
