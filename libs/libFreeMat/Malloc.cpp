@@ -21,7 +21,7 @@
 #include "Exception.hpp"
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <string.h>
 
 void* Malloc(int count) {
   void* ptr;

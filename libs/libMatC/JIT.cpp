@@ -24,7 +24,7 @@ JIT::JIT() {
   #if defined(_MSC_VER)  
     m->setDataLayout("e-p:32:32-f64:32:64-i64:32:64");
   #endif
-  // m->setTargetTriple("i686-pc-linux-gnu");
+  m->setTargetTriple("i686-pc-linux-gnu");
 
   mp = new ExistingModuleProvider(m);
   std::string errorstring;

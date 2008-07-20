@@ -2,6 +2,7 @@
 #include "Serialize.hpp"
 #include <iostream>
 #include <errno.h>
+#include <limits.h>
 
 // These must appear as sequential token numbers
 string fm_reserved[22] = {

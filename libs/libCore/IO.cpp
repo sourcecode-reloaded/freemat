@@ -2586,7 +2586,7 @@ ArrayVector FgetsFunction(int nargout, const ArrayVector& arg) {
 }
 
 ArrayVector FgetlineFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-	eval->warningMessage( "fgetline is deprecated. Use fgets instead." );
+	//eval->warningMessage( "fgetline is deprecated. Use fgets instead." );
 	return FgetsFunction( nargout, arg );
 }
 
