@@ -692,16 +692,15 @@ void QTRenderEngine::drawPatch(const FaceList& faces)
 	    pnt->setBrush( QColor( (int)(face.FaceColor.r*255), (int)(face.FaceColor.g*255), 
 		(int)(face.FaceColor.b*255), (int)(face.FaceColor.a*255) ) );
 	}
-	if( face.EdgeColorMode == ColorMode::ColorSpec ){
-	    pnt->setPen( QColor( (int)(face.EdgeColor.r*255), (int)(face.EdgeColor.g*255), 
-		(int)(face.EdgeColor.b*255), (int)(face.EdgeColor.a*255) ) );
-	}
-
 	if( face.FaceColorMode == ColorMode::Flat || face.FaceColorMode == ColorMode::Interp ){
 	    pnt->setBrush( QColor( (int)(face.vertexcolors[0].r*255), (int)(face.vertexcolors[0].g*255), 
 		(int)(face.vertexcolors[0].b*255), (int)(face.vertexcolors[0].a*255) ) );
 	}
 	if( face.EdgeColorMode == ColorMode::ColorSpec ){
+	    pnt->setPen( QColor( (int)(face.EdgeColor.r*255), (int)(face.EdgeColor.g*255), 
+		(int)(face.EdgeColor.b*255), (int)(face.EdgeColor.a*255) ) );
+	}
+	if( face.EdgeColorMode == ColorMode::Flat || face.EdgeColorMode == ColorMode::Interp ){
 	    pnt->setPen( QColor( (int)(face.edgecolors[0].r*255), (int)(face.edgecolors[0].g*255), 
 		(int)(face.edgecolors[0].b*255), (int)(face.edgecolors[0].a*255) ) );
 	}
@@ -710,8 +709,9 @@ void QTRenderEngine::drawPatch(const FaceList& faces)
 	    double x, y, z;
 	    bool bClipped;
 	    point v = *vert_it;
-	    toPixels( v.x, v.y, v.z, x, y, z, bClipped );
-	    poly.push_back( QPointF( x, y ) );
+	    //toPixels( v.x, v.y, v.z, x, y, z, bClipped );
+	    //poly.push_back( QPointF( x, y ) );
+	    poly.push_back( Map( v.x, v.y, v.z ));
 	    ++vert_it;
 	}
 	pnt->drawPolygon( poly );

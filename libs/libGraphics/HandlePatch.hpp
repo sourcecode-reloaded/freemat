@@ -34,6 +34,7 @@ public:
   virtual void SetupDefaults();
   virtual void PaintMe(RenderEngine& gc);
   virtual void AxisPaintingDone( void );
+  //virtual void UpdateState( void );
   QVector<double> GetLimits();
 };
 

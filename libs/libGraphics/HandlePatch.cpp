@@ -32,23 +32,62 @@ HandlePatch::~HandlePatch() {
 QVector<double> HandlePatch::GetLimits() {
   QVector<double> limits;
   UpdateState();
-  Array xdata(ArrayPropertyLookup("xdata"));
-  Array ydata(ArrayPropertyLookup("ydata"));
-  Array zdata(ArrayPropertyLookup("zdata"));
-  Array cdata(ArrayPropertyLookup("cdata"));
-  limits.push_back(ArrayMin(xdata));
-  limits.push_back(ArrayMax(xdata));
-  limits.push_back(ArrayMin(ydata));
-  limits.push_back(ArrayMax(ydata));
-  limits.push_back(ArrayMin(zdata));
-  limits.push_back(ArrayMax(zdata));
-  limits.push_back(ArrayMin(cdata));
-  limits.push_back(ArrayMax(cdata));
+
+  Array vertexdata(ArrayPropertyLookup("vertices"));
+  vertexdata.promoteType(FM_DOUBLE);
+  int nrows = vertexdata.rows();
+  int ncols = vertexdata.columns();
+
+  double *pVertDataX = (double*)vertexdata.getDataPointer();
+  double *pVertDataY = pVertDataX+nrows;
+  double *pVertDataZ = pVertDataY+nrows;
+
+  double max_x = *pVertDataX;
+  double min_x = max_x;
+  double max_y = *pVertDataY;
+  double min_y = max_y;
+  double max_z = *pVertDataZ;
+  double min_z = max_z;
+  
+  for( int i=0; i<nrows; i++ ){
+      max_x = std::max( max_x, *pVertDataX );
+      min_x = std::min( min_x, *pVertDataX );
+      max_y = std::max( max_y, *pVertDataY );
+      min_y = std::min( min_y, *pVertDataY );
+      max_z = std::max( max_z, *pVertDataZ );
+      min_z = std::min( min_z, *pVertDataZ );
+      ++pVertDataX; ++pVertDataY; ++pVertDataZ; 
+  }
+
+  Array fvcdata( ArrayPropertyLookup("facevertexcdata") );
+  fvcdata.promoteType(FM_DOUBLE);
+
+  limits.push_back(min_x);
+  limits.push_back(max_x);
+  limits.push_back(min_y);
+  limits.push_back(max_y);
+  limits.push_back(min_z);
+  limits.push_back(max_z);
+  limits.push_back(ArrayMin(fvcdata));
+  limits.push_back(ArrayMax(fvcdata));
   QVector<double> alphadata(VectorPropertyLookup("alphadata"));
   limits.push_back(VecMin(alphadata));
   limits.push_back(VecMax(alphadata));
   return limits;
 }
+/*
+void HandlePatch::UpdateState() {
+    StringVector tset;
+    tset.push_back( "xdata" ); tset.push_back( "ydata" ); 
+    tset.push_back( "zdata" ); tset.push_back( "cdata" ); 
+
+    if( HasChanged(tset){
+
+	ClearChanged( tset );
+    }
+  HandleImage::UpdateCAlphaData();
+}
+*/
 
 void HandlePatch::ConstructProperties() {
   //!
@@ -155,7 +194,7 @@ void HandlePatch::ConstructProperties() {
   AddProperty(new HPMappingMode, "alphadatamapping");
   AddProperty(new HPScalar,"ambientstrength");
   AddProperty(new HPBackFaceLighting,"backfacelighting");
-  AddProperty(new HPColorVector, "cdata");
+  AddProperty(new HPArray, "cdata");
   AddProperty(new HPDataMappingMode, "cdatamapping");
   AddProperty(new HPAutoManual, "cdatamode");
   AddProperty(new HPHandles,"children");
@@ -305,45 +344,52 @@ void HandlePatch::BuildPolygons( FaceList& faces )
 		(fvcdata.rows()!=nVertices) )
 	    throw Exception("Incorrect number of FaceVertexCData parameters");
 
-	for( int k = 0; k < maxVertsPerFace; k++ ){
-	    if( !IsNaN( *(pVertOrder+j*maxVertsPerFace+k) ) ){ //ignore vertices set to NaN
-		
-		point vert;
-    		int vertIndex = (int)(*(pVertOrder+j*maxVertsPerFace+k));
+#define pVertD( i, j ) ((i<vertexdata.rows() && j<vertexdata.columns())?(pVertData+i+nVertices*j):(throw Exception("Out of bounds"), pVertData))
+#define pVertC( i, j ) ((i<fvcdata.rows() && j<fvcdata.columns())?(pVertColor+i+fvcdata.rows()*j):(throw Exception("Out of bounds"), pVertColor))
 
-		if( vertIndex > nVertices ) 
+	for( int k = 0; k < maxVertsPerFace; k++ ){
+	    if( !IsNaN( *(pVertOrder+j+k*nFaces) ) ){ //ignore vertices set to NaN
+
+		point vert;
+    		int vertIndex = (int)(*(pVertOrder+j+k*nFaces))-1;
+
+		if( vertIndex >= nVertices || vertIndex < 0 ) 
 		    throw Exception("Vertex Index out of bounds");
 
-		vert.x = *(pVertData+3*vertIndex);
-		vert.y = *(pVertData+3*vertIndex+1);
-		vert.z = *(pVertData+3*vertIndex+2);
+		vert.x = *(pVertD(vertIndex,0));
+		vert.y = *(pVertD(vertIndex,1));
+		vert.z = *(pVertD(vertIndex,2));
 		
 		face.vertices.append( vert );
 
 		/* Handle color. */
 		
 		if( face.FaceColorMode == ColorMode::Flat ){
-		    int firstVertIndex = (fvcdata.rows()!=1) ? (int)(*(pVertOrder+j*maxVertsPerFace)) : 0;
-		    ColorData vertColor(*(pVertColor+3*firstVertIndex), *(pVertColor+3*firstVertIndex+1), *(pVertColor+3*firstVertIndex+2), 1);
+		    int firstVertIndex = (fvcdata.rows()!=1) ? (int)(*(pVertOrder+j+k*nFaces)-1) : 0;
+		    firstVertIndex = (fvcdata.rows()==nFaces)? j : firstVertIndex; //if colors are per face, than use face index
+		    ColorData vertColor(*(pVertC(firstVertIndex,0)), *(pVertC(firstVertIndex,1)), *(pVertC(firstVertIndex,2)), 1);
 		    face.vertexcolors.append(vertColor);    		    
 		}
 		else if( face.FaceColorMode == ColorMode::Interp ){
-		    ColorData vertColor(*(pVertColor+3*vertIndex), *(pVertColor+3*vertIndex+1), *(pVertColor+3*vertIndex+2), 1);
+		    ColorData vertColor(*(pVertC(vertIndex,0)), *(pVertC(vertIndex,1)), *(pVertC(vertIndex,2)), 1);
 		    face.vertexcolors.append(vertColor);    		    
 		}
 		if( face.EdgeColorMode == ColorMode::Flat ){
-		    int firstVertIndex = (fvcdata.rows()!=1) ? (int)(*(pVertOrder+j*maxVertsPerFace)) : 0;
-		    ColorData vertColor(*(pVertColor+3*firstVertIndex), *(pVertColor+3*firstVertIndex+1), *(pVertColor+3*firstVertIndex+2), 1);
+		    int firstVertIndex = (fvcdata.rows()!=1) ? (int)(*(pVertOrder+j+k*nFaces)-1) : 0;
+		    firstVertIndex = (fvcdata.rows()==nFaces)? j : firstVertIndex; //if colors are per face, than use face index
+		    ColorData vertColor(*(pVertC(firstVertIndex,0)), *(pVertC(firstVertIndex,1)), *(pVertC(firstVertIndex,2)), 1);
 		    face.edgecolors.append(vertColor);    		    
 		}
 		else if( face.EdgeColorMode == ColorMode::Interp ){
-		    ColorData vertColor(*(pVertColor+3*vertIndex), *(pVertColor+3*vertIndex+1), *(pVertColor+3*vertIndex+2), 1);
+		    ColorData vertColor(*(pVertC(vertIndex,0)), *(pVertC(vertIndex,1)), *(pVertC(vertIndex,2)), 1);
 		    face.edgecolors.append(vertColor);    		    
 		}
 	    }
 	}
 	faces.append(face);
     }
+#undef pVertC
+#undef pVertD
 }
 
 FaceList Saved_faces;
