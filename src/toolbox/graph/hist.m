@@ -1,5 +1,5 @@
 %!
-%@Module PLOT Plot Function
+%@Module HIST Histogram Function
 %@@Section HANDLE
 %@@Usage
 %@[
@@ -26,9 +26,10 @@
 %
 %!
 
-%% Copyright (C) 2008 Samit Basu, Eugene Ingerman
 %% Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2002, 2003,
 %%               2004, 2005, 2006, 2007 John W. Eaton
+%%
+%% Copyright (C) 2008 Samit Basu, Eugene Ingerman
 %%
 %% This file is adopted in FreeMat from Octave under the conditions of the GNU 
 %% General Public License
@@ -56,7 +57,7 @@ function [nn, xx] = hist (y, varargin)
 
   arg_is_vector = isvector (y);
 
-  if (rows (y) == 1)
+  if (size(y,1) == 1)
     y = y(:);
   end
 
@@ -74,7 +75,8 @@ function [nn, xx] = hist (y, varargin)
     x = x * (max_val - min_val) + ones(size(x)) * min_val;
   else
     %% nargin is either 2 or 3
-    x = varargin{iarg++};
+    x = varargin{iarg};
+    iarg=iarg+1;
     if (isscalar (x))
       n = x;
       if (n <= 0)
@@ -144,17 +146,31 @@ function [nn, xx] = hist (y, varargin)
     bar (x, freq, 1.0, varargin{iarg:end});
   end
 
+ % function y=diff(x)
+	% y=x(2:end)-x(1:end-1);
+	
 function h=bar( x, y, width, varargin )
 
 	x=x(:);
+	y=y(:);
+	if (length(x) ~= length(y))
+		error('cannot handle this case');
+	end
+		
 	df = width*diff( x )/2;
-
-	x_r=x(1:end-1)-df;
-	x_l=x(2:end)+df;
-	x_r=[x_r x_l];
-	x_l=[x_l x_l+df(end)]
+   df(end+1) = df(end);
+	x_r=x(1:end)-df;
+	x_l=x(1:end)+df;
 	
-
+	n = length(x);
+	vertices = [ x_r zeros(size(x_r)) ones(size(x_r)) ;...
+				x_r y ones(size(x_r)) ;...
+				x_l y ones(size(x_r)) ;...
+				x_l zeros(size(x_l)) ones(size(x_r))];
+	
+	ind=(1:n)';
+	faces = [ind ind+n ind+2*n ind+3*n];
+	h=patch('Faces',faces,'Vertices',vertices,'FaceColor',[0 0 1]);
 
 %!test
 %!  [nn,xx]=hist([1:4],3);
