@@ -128,7 +128,7 @@ static BasicArray<T> RepMat(const BasicArray<T> &dp, const NTuple &outdim, const
   index_t colcount = dp.length()/colsize;
   // copySelect stores which copy we are pushing.
   NTuple originalSize(dp.dimensions());
-  NTuple copySelect;
+  NTuple copySelect(1,1);
   // anchor is used to calculate where this copy lands in the output matrix
   // sourceAddress is used to track which column we are pushing in the
   // source matrix
@@ -136,19 +136,19 @@ static BasicArray<T> RepMat(const BasicArray<T> &dp, const NTuple &outdim, const
   BasicArray<T> x(outdim);
   for (index_t i=1;i<=copyCount;i++) {
     // Reset the source address
-    NTuple sourceAddress;
+    NTuple sourceAddress(1,1);
     // Next, we loop over the columns of the source matrix
     for (index_t j=1;j<=colcount;j++) {
       NTuple anchor;
       // We can calculate the anchor of this copy by multiplying the source
       // address by the copySelect vector
       for (int k=0;k<NDims;k++)
-	anchor[k] = copySelect[k]*originalSize[k]+sourceAddress[k];
+	anchor[k] = (copySelect[k]-1)*originalSize[k]+sourceAddress[k];
       // Now, we map this to a point in the destination array
       index_t destanchor = outdim.map(anchor);
       // And copy the elements
       for (index_t n=1;n<=colsize;n++)
-	x[destanchor+n] = dp[j*colsize+n];
+	x[destanchor+n-1] = dp[(j-1)*colsize+n];
       // Now increment the source address
       originalSize.increment(sourceAddress,0);
     }

@@ -450,8 +450,8 @@ void Serialize::putDataClass(DataClass cls, bool issparse, bool isuserclass, Str
 
 void Serialize::putDimensions(const NTuple& dim) {
   sendSignature('D',1);
-  putInt(NDims);
-  for (int i=0;i<NDims;i++)
+  putInt(dim.lastNotOne());
+  for (int i=0;i<dim.lastNotOne();i++)
     putInt(int(dim[i]));
 }
 
@@ -574,7 +574,7 @@ void Serialize::putArray(const Array& dat) {
 #define MacroGetCase(func,ctype,class,ftype)	\
   {						\
     BasicArray<ftype> rp(dims);			\
-    func((ctype*) rp.data(),int(dat.length()));	\
+    func((ctype*) rp.data(),int(dims.count()));	\
     dat = Array(rp).toClass(class);		\
     return;					\
   }

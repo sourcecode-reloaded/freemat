@@ -91,7 +91,7 @@ struct OpVecMean {
 //mean(A,2)
 //@>
 //@@Signature
-//function mean MeanFunctin
+//function mean MeanFunction
 //inputs x dim
 //outputs y
 //!

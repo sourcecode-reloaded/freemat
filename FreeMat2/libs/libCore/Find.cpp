@@ -316,6 +316,7 @@ ArrayVector FindFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)
     throw Exception("find function takes at least one argument");
   Array tmp(arg[0]);
+  if (tmp.isScalar()) tmp = tmp.asDenseArray();
   int k = -1;
   bool first_flag = true;
   if (arg.size() > 1)

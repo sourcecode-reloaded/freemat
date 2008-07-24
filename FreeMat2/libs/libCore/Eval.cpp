@@ -63,6 +63,10 @@
 //Note that in the second case, @|b| takes the value of 33, indicating
 //that the evaluation of the first expression failed (because @|z| is
 //not defined).
+//@@Signature
+//sfunction eval EvalFunction
+//inputs string
+//outputs varargout
 //!
 static QString PrePendCallVars(QString line, int nargout) {
   QString gp;

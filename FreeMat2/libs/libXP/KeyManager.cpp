@@ -1134,9 +1134,12 @@ StringVector KeyManager::GetCompletions(QString line,
    * Find the start of the filename prefix to be completed, searching
    * backwards for the first unescaped space, or the start of the line.
    */
-  int startOfPath = line.lastIndexOf(QRegExp("[^\\\\] |^ "),word_end);
-  if (startOfPath < 0) startOfPath = 0;
-  matchString = line.mid(startOfPath+2,word_end-startOfPath-1);
+  int startOfPath = line.lastIndexOf(QRegExp("[^\\\\] |^ |'"),word_end);
+  if (startOfPath < 0) 
+    startOfPath = 0;
+  else
+    startOfPath++;
+  matchString = line.mid(startOfPath,qMax(0,word_end-startOfPath));
   /*
    *  the preceeding character was not a ' (quote), then
    * do a command expansion, otherwise, do a filename expansion.

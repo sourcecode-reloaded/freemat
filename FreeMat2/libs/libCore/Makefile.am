@@ -13,8 +13,7 @@ RanLib.hpp \
 Utils.hpp \
 MatIO.hpp \
 XML.hpp \
-Printf.hpp \
-RPC.hpp 
+Printf.hpp 
 
 libCore_a_SOURCES = Abs.cpp \
 Binary.cpp \
@@ -81,7 +80,6 @@ Trigonometric.cpp \
 Utils.cpp \
 MatIO.cpp \
 XML.cpp \
-RPC.cpp \
 Cstruct.cpp \
 Loader.cpp \
 Control.cpp \

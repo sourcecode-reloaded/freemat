@@ -41,6 +41,8 @@ Parser.hpp \
 Scanner.hpp \
 Tree.hpp \
 FastList.hpp \
+AnonFunc.hpp \
+FuncPtr.hpp \
 SparseCCS.hpp
 
 libFreeMat_a_SOURCES = Array.cpp \
@@ -69,6 +71,8 @@ Parser.cpp \
 Scanner.cpp \
 Tree.cpp \
 FunctionDef.cpp \
+FuncPtr.cpp \
+AnonFunc.cpp \
 SparseCCS.cpp \
 $(libFreeMat_a_HFILES) 
 

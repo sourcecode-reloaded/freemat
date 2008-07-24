@@ -586,6 +586,10 @@ ArrayVector Int64Function(int nargout, const ArrayVector& arg) {
 //function float FloatFunction
 //inputs x
 //outputs y
+//@@Signature
+//function single FloatFunction
+//inputs x
+//outputs y
 //!
 ArrayVector FloatFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1) 
@@ -816,6 +820,10 @@ ArrayVector DcomplexFunction(int nargout, const ArrayVector& arg) {
 //a = 2.0 + i;
 //test_val = test(strcmp(typeof(a),'dcomplex'));
 //@}
+//@@Signature
+//function typeof TypeOfFunction
+//inputs x
+//outputs typename
 //!
 ArrayVector TypeOfFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)

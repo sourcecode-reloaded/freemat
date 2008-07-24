@@ -126,6 +126,10 @@ ArrayVector BitorFunction(int nargout, const ArrayVector& arg) {
 //bitand(uint16([1,16,255]),uint16([3,17,128]))
 //bitand(uint16([1,16,255]),uint16(3))
 //@>
+//@@Signature
+//function bitxor BitxorFunction
+//inputs a b
+//outputs y
 //!
 ArrayVector BitxorFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 2)

@@ -109,4 +109,6 @@ Array MatIJVToSparse(const Array &ir, const Array &jc, const Array &pr, const Ar
 void SparseToIJVMat(const Array &x, Array &rows, Array &cols, Array &vals);
 
 Array ToSparse(const Array& data);
+
+bool Equals(const StringVector& a, const StringVector& b);
 #endif

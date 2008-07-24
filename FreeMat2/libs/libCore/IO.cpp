@@ -156,7 +156,7 @@ ArrayVector FormatFunction(int nargout, const ArrayVector& arg) {
 //setprintlimit(1000)
 //@>
 //@@Signature
-//sfunction setprintlimit SetPrimitLimitFunction
+//sfunction setprintlimit SetPrintLimitFunction
 //inputs linecount
 //outputs none
 //!
@@ -251,7 +251,7 @@ static ArrayVector SaveASCIIFunction(QString filename, StringVector names, bool 
       }
       if (toWrite->isComplex()) 
 	eval->warningMessage("variable " + names[i] + " is complex valued - only real part will be written to ASCII file");
-      Array A(*toWrite); A = A.toClass(Double);
+      Array A(*toWrite); A = A.toClass(Double).asDenseArray();
       int rows = int(A.rows());
       int cols = int(A.columns());
       const BasicArray<double> &dp(A.constReal<double>());

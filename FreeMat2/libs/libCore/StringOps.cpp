@@ -39,7 +39,7 @@
 //Compares two string, and returns @|true| if they equal
 //and @|false| if not.
 //@@Signature
-//function strcmp StrCmpFunction
+//function strcomp StrCmpFunction
 //inputs string1 string2
 //outputs flag
 //!
@@ -986,6 +986,10 @@ ArrayVector RegExpRepDriverFunction(int nargout, const ArrayVector& arg) {
 //   s = num2str(X, format)
 //@]
 //where @|format| is the specifier string.
+//@@Signature
+//function num2str Num2StrFunction
+//inputs x format
+//outputs string
 //!
 
 template <class T>

@@ -188,7 +188,7 @@ public:
     int non_singular = 0;
     while ((m_data[non_singular] == 1) && (non_singular < NDims))
       non_singular++;
-    if (non_singular == NDims-1)
+    if (non_singular == NDims)
       return 0;
     return non_singular;
   }

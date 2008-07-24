@@ -28,7 +28,6 @@
 #include "File.hpp"
 #include "Module.hpp"
 #include "Class.hpp"
-#include "LoadCore.hpp"
 #include "LoadFN.hpp"
 #include "HandleCommands.hpp"
 #include "Core.hpp"
@@ -194,7 +193,7 @@ extern MainApp *m_app;
 //  editor
 //@]
 //@@Signature
-//sfunction editor EditorFunction
+//sgfunction editor EditorFunction
 //inputs none
 //outputs none
 //!
@@ -231,7 +230,7 @@ ArrayVector EditorFunction(int nargout, const ArrayVector& arg, Interpreter* eva
 //  edit file1 file2 file3
 //@]
 //@@Signature
-//sfunction edit EditFunction
+//sgfunction edit EditFunction
 //inputs varargin
 //outputs none
 //!
@@ -1008,22 +1007,6 @@ ArrayVector ProfilerFunction(int nargout, const ArrayVector& arg) {
 }
 
 
-void LoadThreadFunctions(Context *context) {
-  context->addSpecialFunction("threadid",ThreadIDFunction,0,1,NULL);
-  context->addSpecialFunction("threadnew",ThreadNewFunction,0,1,NULL);
-  context->addSpecialFunction("threadstart",ThreadStartFunction,-1,0,NULL);
-  context->addFunction("threadvalue",ThreadValueFunction,2,-1,"handle","timeout",NULL);
-  context->addFunction("threadwait",ThreadWaitFunction,2,1,"handle","timeout",NULL);
-  context->addFunction("threadkill",ThreadKillFunction,1,0,"handle",NULL);
-  context->addFunction("threadfree",ThreadFreeFunction,2,0,"handle","timeout",NULL);
-  context->addGfxSpecialFunction("pause",PauseFunction,1,0,"x",NULL);
-  context->addGfxSpecialFunction("sleep",SleepFunction,1,0,"x",NULL);
-  context->addGfxFunction("clc",ClcFunction,0,0,NULL);
-  context->addGfxSpecialFunction("editor",EditorFunction,0,0,NULL);
-  context->addGfxSpecialFunction("edit",EditFunction,-1,0,NULL);
-  context->addFunction("profiler",ProfilerFunction,-1,1,NULL);
-}
-
 void MainApp::EnableRepaint() {
   GfxEnableRepaint();
 }
@@ -1032,17 +1015,27 @@ void MainApp::DisableRepaint() {
   GfxDisableRepaint();
 }
 			 
+void LoadBuiltinFunctions(Context *context, bool guimode);
+
+static bool first_time = true;
+
 Context *MainApp::NewContext() {
   Context *context = new Context(m_global);
-  //  LoadModuleFunctions(context);
-  //  LoadClassFunction(context);
-  LoadCoreFunctions(context);
-  LoadFNFunctions(context);
-  if (guimode) {
-    LoadGUICoreFunctions(context);
-    LoadHandleGraphicsFunctions(context);  
+  LoadBuiltinFunctions(context,guimode);
+  if (first_time) {
+    first_time = false;
+    InitializeHandleGraphics();
+    InitializeFileSubsystem();
   }
-  LoadThreadFunctions(context);
+  //  LoadModuleFunctions(context); -- done
+  //  LoadClassFunction(context); -- done
+  //  LoadCoreFunctions(context); -- done
+  //  LoadFNFunctions(context); -- done
+  //  if (guimode) {
+  //    LoadGUICoreFunctions(context); -- done
+  //    LoadHandleGraphicsFunctions(context); -- done 
+  //  }
+  //  LoadThreadFunctions(context);
   return context;
 }
 

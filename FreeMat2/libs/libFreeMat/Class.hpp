@@ -34,8 +34,7 @@ Array ClassUnaryOperator(Array a, QString funcname,
 
 Array ClassMatrixConstructor(ArrayMatrix m, Interpreter* eval);
 
-ArrayVector ClassFunction(int nargout, const ArrayVector& arg,
-			  Interpreter* eval);
+ArrayVector ClassFunction(int nargout, const ArrayVector& arg);
 
 ArrayVector ClassRHSExpression(Array a, Tree *t, Interpreter* eval);
 

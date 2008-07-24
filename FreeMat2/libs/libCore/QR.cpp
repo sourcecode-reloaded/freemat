@@ -1324,6 +1324,10 @@ static ArrayVector QRDPivotFunction(bool compactDec, Array A) {
 //  end
 //  test_val = t1all & t2all & t3all & t4all;
 //@}
+//@@Signature
+//function qr QRDFunction
+//inputs x n
+//outputs varargout
 //!
 ArrayVector QRDFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)

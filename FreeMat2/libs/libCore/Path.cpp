@@ -21,7 +21,7 @@
 //getpath
 //@>
 //@@Signature
-//function getpath GetPathFunction
+//sfunction getpath GetPathFunction
 //inputs none
 //outputs y
 //!

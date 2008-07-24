@@ -45,6 +45,10 @@
 //@]
 //The compiled functions are written to the current
 //directory.
+//@@Signature
+//sfunction pcode PCodeFunction
+//inputs varargin
+//outputs none
 //!
 ArrayVector PCodeFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   throw Exception("P-code functions currently unsupported");

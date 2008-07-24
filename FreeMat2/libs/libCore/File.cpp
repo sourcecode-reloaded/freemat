@@ -17,7 +17,7 @@ HandleList<FilePtr*> fileHandles;
 
 static bool init = false;
 
-static void InitializeFileSubsystem() {
+void InitializeFileSubsystem() {
   if (init) 
     return;
   FilePtr *fptr = new FilePtr();
@@ -273,7 +273,7 @@ ArrayVector FcloseFunction(int nargout, const ArrayVector& arg) {
     fileHandles.deleteHandle(handle+1);
     delete fptr;
   }
-  return ArrayVector(Array(0));
+  return ArrayVector();
 }
 
 //!
@@ -786,6 +786,10 @@ ArrayVector FgetlineFunction(int nargout, const ArrayVector& arg) {
 //the file described by @|handle| occupies one output slot.
 //See @|printf| for a description of the format.  Note that if
 //the file is at the end-of-file, the fscanf will return 
+//@@Signature
+//function fscanf FscanfFunction
+//inputs handle format
+//outputs varargout
 //!
 ArrayVector FscanfFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 2)

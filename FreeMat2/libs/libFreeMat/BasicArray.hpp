@@ -32,11 +32,11 @@ class BasicArray {
   index_t m_offset;
 public:
   BasicArray() : m_data(), m_dims(0,0), m_offset(0) {}
-  BasicArray(const NTuple& dim) : 
+  explicit BasicArray(const NTuple& dim) : 
     m_data(), m_dims(dim), m_offset(0) {
     m_data.resize((int64)(m_dims.count()));
   }
-  BasicArray(T val) {
+  explicit BasicArray(T val) {
     m_data << val; 
     m_dims = NTuple(1,1); 
     m_offset = 0;
@@ -135,6 +135,9 @@ public:
   BasicArray<T>& slice(const NTuple& pos) {
     m_offset = dimensions().map(pos)-1;
     return *this;
+  }
+  void unslice() {
+    m_offset = 0;
   }
   void del(const IndexArrayVector& index) {
     // The strategy for dealing with deletions is simplified relative

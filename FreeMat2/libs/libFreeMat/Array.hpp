@@ -299,7 +299,7 @@ public:
 
   Array asDenseArray() const;
   void ensureNotScalarEncoded() {if (m_type.Scalar == 1) *this = asDenseArray();}
-  inline bool isEmpty() const {return length() == 0;}
+  inline bool isEmpty() const {return ((m_type.Class == Invalid) || (length() == 0));}
 
   bool operator==(const Array &b) const;
   inline bool operator!=(const Array &b) const {return !(*this == b);}

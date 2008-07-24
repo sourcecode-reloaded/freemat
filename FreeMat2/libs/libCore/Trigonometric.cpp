@@ -592,7 +592,7 @@ struct OpAtan {
   }
 };
 
-ArrayVector ArctanFunction(int nargout, const ArrayVector& arg) {
+ArrayVector ArcTanFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("Arctan Function takes exactly one argument");
   return ArrayVector(UnaryOp<OpAtan>(arg[0]));

@@ -115,6 +115,7 @@
     m_type.Scalar = 1;					     \
   };
 
+
 #define MacroArrayRealScalarArrayEncodedOnly(ctype,cls) \
   template <>						\
   inline ctype& Array::realScalar() {			\
@@ -146,6 +147,7 @@
       throw Exception("type mismatch");				\
     return constImag<ctype>()[1];				\
   }
+
 
 MacroExpandCases(MacroArrayRealScalar);
 MacroExpandCases(MacroArrayImagScalar);

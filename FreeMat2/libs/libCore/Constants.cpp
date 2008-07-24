@@ -61,6 +61,10 @@
 //function inf InfFunction
 //inputs none
 //outputs y
+//@@Signature
+//function Inf InfFunction
+//inputs none
+//outputs y
 //!
 ArrayVector InfFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(Array(Inf()));
@@ -91,6 +95,10 @@ ArrayVector InfFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@@Signature
 //function nan NaNFunction
+//inputs none
+//outputs y
+//@@Signature
+//function NaN NaNFunction
 //inputs none
 //outputs y
 //!

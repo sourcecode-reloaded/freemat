@@ -41,7 +41,7 @@
 
 QMutex functiondefmutex;
 
-static StringVector IdentifierList(Tree *t) {
+StringVector IdentifierList(Tree *t) {
   StringVector retval;
   for (int index=0;index<t->numChildren();index++) {
     if (t->child(index)->is('&'))
@@ -52,7 +52,7 @@ static StringVector IdentifierList(Tree *t) {
   return retval;
 }
 
-static void VariableReferencesList(Tree *t, StringVector& idents) {
+void VariableReferencesList(Tree *t, StringVector& idents) {
   if (t->is(TOK_NEST_FUNC)) return;
   if (t->is(TOK_VARIABLE)) {
     bool exists = false;

@@ -368,6 +368,10 @@ ArrayVector RMDirFunction(int nargout, const ArrayVector& arg) {
 }
 
 // See mkdir.m for documentation
+//@@Signature
+//function mkdir_core MKDirCoreFunction
+//inputs dir
+//outputs flag
 ArrayVector MKDirCoreFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0)
     throw Exception("mkdir requires at least one argument (the directory to create)");

@@ -59,19 +59,24 @@ void VariablesTool::refresh() {
       type = "undefined";
     } else {
       lookup = *ptr;
-      type = lookup.className();
-      if (lookup.isSparse())
-	flags = "Sparse ";
-      if (context->isVariableGlobal(varnames[i])) {
-	flags += "Global ";
-      } else if (context->isVariablePersistent(varnames[i])) {
-	flags += "Persistent ";
-      }
-      size = lookup.dimensions().toString();
+      try {
+	type = lookup.className();
+      } catch (Exception& e) {}
+      try {
+	if (lookup.isSparse())
+	  flags = "Sparse ";
+	if (context->isVariableGlobal(varnames[i])) {
+	  flags += "Global ";
+	} else if (context->isVariablePersistent(varnames[i])) {
+	  flags += "Persistent ";
+	}
+      } catch (Exception& e) {}
+      try {
+	size = lookup.dimensions().toString();
+      } catch (Exception& e) {}
       try {
 	value = ArrayToPrintableString(lookup);
-      } catch (Exception& e) {
-      }
+      } catch (Exception& e) {}
     }
     m_flist->setItem(i,0,new QTableWidgetItem(varname));
     m_flist->setItem(i,1,new QTableWidgetItem(type));

@@ -489,6 +489,8 @@ static inline Array VectorOp(const BasicArray<T> &real,
       source_real.nextSlice(); source_imag.nextSlice();
       dest_real.nextSlice(); dest_imag.nextSlice();
     }
+    F_real.unslice();
+    F_imag.unslice();
   } else {
     ConstBasicIterator<T> source_real(&real,dim);
     ConstBasicIterator<T> source_imag(&imag,dim);
@@ -569,6 +571,7 @@ static inline Array VectorOp(const BasicArray<T> &real, index_t out, int dim) {
       Op::func(real.slice(source.pos()),F.slice(dest.pos()));
       source.nextSlice(); dest.nextSlice();
     }
+    F.unslice();
   } else {
     ConstBasicIterator<T> source(&real,dim);
     BasicIterator<T> dest(&F,dim);
@@ -643,6 +646,7 @@ static inline Array BiVectorOp(const BasicArray<T> &real,
       dest_real.nextSlice(); dest_imag.nextSlice();
       D_iter.nextSlice();
     }
+    F_real.unslice(); F_imag.unslice(); Ddata.unslice();
   } else {
     ConstBasicIterator<T> source_real(&real,dim);
     ConstBasicIterator<T> source_imag(&imag,dim);
@@ -748,6 +752,7 @@ static inline Array BiVectorOp(const BasicArray<T> &real, index_t out, int dim,
       Op::func(real.slice(source.pos()),F.slice(dest.pos()),Ddata.slice(destD.pos()));
       source.nextSlice(); dest.nextSlice(); destD.nextSlice();
     }
+    F.unslice(); Ddata.unslice();
   } else {
     ConstBasicIterator<T> source(&real,dim);
     BasicIterator<T> dest(&F,dim);

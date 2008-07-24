@@ -158,7 +158,7 @@ ArrayVector RandBetaFunction(int nargout, const ArrayVector& arg) {
 struct OpRandI {
   template <typename T>
   static inline T func(const T& v1, const T& v2) {
-    return CastConvert<T,uint32>(ignuin(long(v1),long(v2)));
+    return CastConvert<T,int32>(ignuin(long(v1),long(v2)));
   }
   template <typename T>
   static inline void func(const T&, const T&, const T&, const T&, T&, T&) {

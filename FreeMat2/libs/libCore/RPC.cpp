@@ -17,7 +17,6 @@
  *
  */
 
-#if 0
 #include <QtNetwork>
 #include "Array.hpp"
 #include "Malloc.hpp"
@@ -449,12 +448,11 @@ HandleList<QTcpSocket*> m_sockets;
 ArrayVector TCPServerFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0)
     throw Exception("tcpserver requires one address - the port to set up the server on");
-  unsigned int port = ArrayToInt32(arg[0]);
+  unsigned int port = arg[0].asInteger();
   QTcpServer *server = new QTcpServer;
   if (!server->listen(QHostAddress::Any,port))
     throw Exception("unable to create a tcp server to listen to the given address");
-  return ArrayVector() <<
-    Array::uint32Constructor(m_servers.assignHandle(server));
+  return ArrayVector() << Array(double(m_servers.assignHandle(server)));
 }
 
 //@Module TCPACCEPT Accept a connection on a TCP server
@@ -482,16 +480,15 @@ ArrayVector TCPServerFunction(int nargout, const ArrayVector& arg) {
 ArrayVector TCPAcceptFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)
     throw Exception("tcpaccept requires one argument - the handle of the server to read, and an optional timeout to wait before failure (in milliseconds)");
-  unsigned int server_handle = ArrayToInt32(arg[0]);
+  unsigned int server_handle = arg[0].asInteger();
   unsigned int timeout = 30000;
   if (arg.size() == 2)
-    timeout = ArrayToInt32(arg[1]);
+    timeout = arg[1].asInteger();
   QTcpServer *server = m_servers.lookupHandle(server_handle);
   if (!server->waitForNewConnection(timeout))
     throw Exception("Wait for connection in tcpaccept timed out");
   QTcpSocket *sock = server->nextPendingConnection();
-  return ArrayVector() <<
-    Array::uint32Constructor(m_sockets.assignHandle(sock));
+  return ArrayVector() << Array(double(m_sockets.assignHandle(sock));
 }
 
 //@Module TCPCONNECT Connect to a remote TCP server
@@ -515,17 +512,16 @@ ArrayVector TCPAcceptFunction(int nargout, const ArrayVector& arg) {
 ArrayVector TCPConnectFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 2)
     throw Exception("tcpconnect requires two arguments - the remote address of the server to connect to and the port number - an optional timeout can be specified also");
-  string host = ArrayToString(arg[0]);
-  unsigned int port = ArrayToInt32(arg[1]);
+  QString host = arg[0].asString();
+  unsigned int port = arg[1].asInteger();
   int timeout = 30000;
   if (arg.size() == 3)
-    timeout = ArrayToInt32(arg[2]);
+    timeout = arg[2].asInteger();
   QTcpSocket *a_sock = new QTcpSocket;
-  a_sock->connectToHost(QString::fromStdString(host),port);
+  a_sock->connectToHost(host,port);
   if (!a_sock->waitForConnected(timeout))
-    throw Exception(string("tcpconnect failed to connect to ") + host + " on port " + port);
-  return ArrayVector() <<
-    Array::uint32Constructor(m_sockets.assignHandle(a_sock));
+    throw Exception(QString("tcpconnect failed to connect to ") + host + " on port " + port);
+  return ArrayVector() << Array(double(m_sockets.assignHandle(a_sock));
 }
 
 //@Module TCPCLOSE Close a TCP socket
@@ -559,13 +555,12 @@ ArrayVector TCPCloseFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0)
     throw Exception("tcpclose requires at least one argument - the handle to close, or the string 'all' to close all tcp socket handles");
   int timeout = 30000;
-  qDebug() << "Closing socket";
   if (arg.size() >= 2)
-    timeout = ArrayToInt32(arg[1]);
+    timeout = arg[1].asInteger();
   if (arg[0].isString()) {
-    string txtval = arg[0].getContentsAsStringUpper();
+    QString txtval = arg[0].asString().toUpper();
     if (txtval != "ALL")
-      throw Exception(string("Unrecognized argument to tcpclose ") + txtval);
+      throw Exception(QString("Unrecognized argument to tcpclose ") + txtval);
     // Close all sockets
     for (unsigned i=0;i<=m_sockets.maxHandle();i++) {
       try {
@@ -574,7 +569,8 @@ ArrayVector TCPCloseFunction(int nargout, const ArrayVector& arg) {
 	  sock->disconnectFromHost();
 	  if (sock->state() != QAbstractSocket::UnconnectedState)
 	    if (!sock->waitForDisconnected(timeout))
-	      throw Exception(string("Failed to disconnect socket: ") + sock->errorString().toStdString());
+	      throw Exception(QString("Failed to disconnect socket: ") + 
+			      sock->errorString());
 	  delete sock;
 	}
 	m_sockets.deleteHandle(i);
@@ -583,12 +579,12 @@ ArrayVector TCPCloseFunction(int nargout, const ArrayVector& arg) {
     }
     return ArrayVector();
   }
-  int handle = ArrayToInt32(arg[0]);
+  int handle = arg[0].asInteger();
   QTcpSocket *sock = m_sockets.lookupHandle(handle);
   sock->disconnectFromHost();
   if (sock->state() != QAbstractSocket::UnconnectedState)
     if (!sock->waitForDisconnected(timeout))
-      throw Exception(string("Failed to disconnect socket: ") + sock->errorString().toStdString());
+      throw Exception(string("Failed to disconnect socket: ") + sock->errorString());
   delete sock;
   m_sockets.deleteHandle(handle);
   return ArrayVector();
@@ -612,9 +608,9 @@ ArrayVector TCPServerCloseFunction(int nargout, const ArrayVector& arg) {
     throw Exception("tcpserverclose requires at least one argument - the handle to close, or the string 'all' to close all tcp socket handles");
   qDebug() << "Closing server";
   if (arg[0].isString()) {
-    string txtval = arg[0].getContentsAsStringUpper();
+    QString txtval = arg[0].asString().toUpper();
     if (txtval != "ALL")
-      throw Exception(string("Unrecognized argument to tcpserverclose ") + txtval);
+      throw Exception(QString("Unrecognized argument to tcpserverclose ") + txtval);
     // Close all sockets
     for (unsigned i=0;i<=m_servers.maxHandle();i++) {
       try {
@@ -627,7 +623,7 @@ ArrayVector TCPServerCloseFunction(int nargout, const ArrayVector& arg) {
     }
     return ArrayVector();
   }
-  int handle = ArrayToInt32(arg[0]);
+  int handle = arg[0].asInteger();
   QTcpServer *sock = m_servers.lookupHandle(handle);
   m_servers.deleteHandle(handle);
   sock->close();
@@ -657,13 +653,13 @@ ArrayVector TCPSendFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 2)
     throw Exception("tcpsend requires two arguments - the handle of the connection to use, and the array to send - an optional timeout can be specified also");
   qDebug() << "Start send";
-  unsigned int handle = ArrayToInt32(arg[0]);
+  unsigned int handle = arg[0].asInteger();
   QTcpSocket *sock = m_sockets.lookupHandle(handle);
   if (sock->state() != QAbstractSocket::ConnectedState)
     throw Exception("tcpsend only works on connected sockets");
   int timeout = 30000;
   if (arg.size() == 3)
-    timeout = ArrayToInt32(arg[2]);
+    timeout = arg[2].asInteger();
   QByteArray block;
   QDataStream out(&block, QIODevice::WriteOnly);
   out.setVersion(QDataStream::Qt_4_2);
@@ -762,25 +758,24 @@ ArrayVector TCPRecvFunction(int nargout, const ArrayVector& arg) {
 ArrayVector TCPStateFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)
     throw Exception("tcpstate requires one argument - the handle of the socket to examine");
-  unsigned int handle = ArrayToInt32(arg[0]);
+  unsigned int handle = arg[0].asInteger();
   QTcpSocket *a_sock = m_sockets.lookupHandle(handle);
   switch (a_sock->state()) {
   case QAbstractSocket::UnconnectedState:
-    return ArrayVector() << Array::stringConstructor("unconnected");
+    return ArrayVector() << Array(QString("unconnected"));
   case QAbstractSocket::HostLookupState:
-    return ArrayVector() << Array::stringConstructor("hostlookup");
+    return ArrayVector() << Array(QString("hostlookup"));
   case QAbstractSocket::ConnectingState:
-    return ArrayVector() << Array::stringConstructor("connecting");
+    return ArrayVector() << Array(QString("connecting"));
   case QAbstractSocket::ConnectedState:
-    return ArrayVector() << Array::stringConstructor("connected");
+    return ArrayVector() << Array(QString("connected"));
   case QAbstractSocket::BoundState:
-    return ArrayVector() << Array::stringConstructor("bound");
+    return ArrayVector() << Array(QString("bound"));
   case QAbstractSocket::ClosingState:
-    return ArrayVector() << Array::stringConstructor("closing");
+    return ArrayVector() << Array(QString("closing"));
   case QAbstractSocket::ListeningState:
-    return ArrayVector() << Array::stringConstructor("listening");
+    return ArrayVector() << Array(QString("listening"));
   }
-  return ArrayVector() << Array::stringConstructor("unknown");
+  return ArrayVector() << Array(QString("unknown"));
 }
 
-#endif

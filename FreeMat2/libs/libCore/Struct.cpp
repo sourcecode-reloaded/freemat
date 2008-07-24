@@ -133,6 +133,10 @@
 //d(3).shoo = 3;
 //test_val = test(d(3).shoo == 3);
 //@}
+//@@Signature
+//function struct StructFunction
+//inputs varargin
+//outputs struct
 //!
 ArrayVector StructFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 1) {

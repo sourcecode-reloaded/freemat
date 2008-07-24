@@ -18,6 +18,10 @@
 //result of running @|help| is the contents of the comments at the top
 //of the file.  If FreeMat finds no comments, then it simply displays
 //the function declaration.
+//@@Signature
+//sfunction help HelpFunction
+//inputs function
+//outputs none
 //!
 ArrayVector HelpFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
 {

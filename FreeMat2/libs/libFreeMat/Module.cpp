@@ -65,11 +65,12 @@ void ClearLibs(Interpreter* eval) {
 //(defaults to 0), and @|nargout| is the number of output arguments (defaults
 //to 0).  If the number of (input or output) arguments is variable then
 //set the corresponding argument to @|-1|.
+//@@Signature
+//sfunction loadlib LoadLibFunction
+//inputs libfile symbolname functionname nargin nargout
+//outputs none
 //!
 
-//** sfunction loadlib LoadLibFunction
-//** libfile symbolname functionname nargin nargout
-//** none
 ArrayVector LoadLibFunction(int c_nargout,const ArrayVector& narg,
 			    Interpreter* eval) {
   QString libfile;
@@ -358,15 +359,16 @@ char* parseBoundsCheck(const char* &cp) {
 //addArrays(length(a),a,b,c)
 //c
 //@>
+//@@Signature
+//sfunction import ImportFunction
+//inputs libraryname symbol function returntype arguments
+//outputs none 
 //!
 
 static inline bool issep(QChar t) {
   return ((t=='/') || (t=='\\'));
 }
 
-//** sfunction import ImportFunction
-//** libraryname symbol function returntype arguments
-//** none
 ArrayVector ImportFunction(int nargout, const ArrayVector& arg, 
 			   Interpreter* eval)  {
 #ifdef HAVE_AVCALL

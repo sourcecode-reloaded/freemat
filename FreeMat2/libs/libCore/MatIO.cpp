@@ -587,7 +587,7 @@ Array MatIO::getArray(bool &atEof, QString &name, bool &match, bool &isGlobal) {
   Array aFlags(getDataElement());
   if ((aFlags.dataClass() != UInt32) || (aFlags.length() != 2))
     throw Exception("Corrupted MAT file - array flags");
-  const BasicArray<uint32> &dp(aFlags.constReal<uint32>());
+  const BasicArray<uint32> &dp(aFlags.asDenseArray().constReal<uint32>());
   mxArrayTypes arrayType = (mxArrayTypes) (ByteOne(dp[1]));
   uint8 arrayFlags = ByteTwo(dp[1]);
   bool isComplex = (arrayFlags & bcomplexFlag) != 0;

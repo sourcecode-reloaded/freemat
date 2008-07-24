@@ -911,3 +911,17 @@ Array ToSparse(const Array& data) {
 }
 
 #undef MacroToSparse
+
+bool Equals(const StringVector& a, const StringVector& b) {
+  qDebug() << "Equals test\n";
+  qDebug() << "a = ";
+  for (int i=0;i<a.size();i++)
+    qDebug() << a[i];
+  qDebug() << "b = ";
+  for (int i=0;i<b.size();i++)
+    qDebug() << b[i];
+  if (a.size() != b.size()) return false;
+  for (int i=0;i<a.size();i++)
+    if (a[i] != b[i]) return false;
+  return true;
+}

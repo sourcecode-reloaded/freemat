@@ -22,6 +22,10 @@
 //b = spones(a)
 //full(b)
 //@>
+//@@Signature
+//function spones SponesFunction
+//inputs x
+//outputs y
 //!
 
 template <typename T>

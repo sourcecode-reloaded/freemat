@@ -307,7 +307,7 @@ ArrayVector WavPlayFunction(int nargout, const ArrayVector& argv) {
 #if HAVE_PORTAUDIO18 || HAVE_PORTAUDIO19
   if(argv.size() == 0)
     throw Exception("wavplay requires at least one argument (the audio data to playback)");
-  Array y(argv[0]);
+  Array y(argv[0].asDenseArray());
   int SampleRate = 11025;
   QString mode = "SYNC";
   if (argv.size() > 1)

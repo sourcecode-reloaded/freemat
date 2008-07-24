@@ -23,6 +23,7 @@
 #include "Exception.hpp"
 #include "Math.hpp"
 #include "Array.hpp"
+#include "Struct.hpp"
 #include "Parser.hpp"
 #include "Scanner.hpp"
 #include "Token.hpp"
@@ -41,6 +42,8 @@
 #include "JITFunc.hpp"
 #include "Algorithms.hpp"
 #include "GetSet.hpp"
+#include "FuncPtr.hpp"
+#include "AnonFunc.hpp"
 
 #ifdef WIN32
 #define PATHSEP ";"
@@ -930,18 +933,19 @@ Array Interpreter::expression(Tree *t) {
 }
 
 Array Interpreter::FunctionPointer(Tree *t) {
-//   if (t->first()->is(TOK_ANONYMOUS_FUNC)) {
-//     AnonymousFunctionDef *q = new AnonymousFunctionDef;
-//     q->initialize(t->first(),this);
-//     return Array::funcPtrConstructor(FuncPtr(q));
-//   } else {
-//     FuncPtr val;
-//     if (!lookupFunction(t->first()->text(),val))
-//       throw Exception("unable to resolve " + t->first()->text() + 
-// 		      " to a function call");
-//     return Array::funcPtrConstructor(val);
-//   }
-//FIXME
+   if (t->first()->is(TOK_ANONYMOUS_FUNC)) {
+     return AnonFuncConstructor(this,t->first());
+     // AnonymousFunctionDef *q = new AnonymousFunctionDef;
+     // q->initialize(t->first(),this);
+     //     return Array::funcPtrConstructor(FuncPtr(q));
+     // FIXME
+   } else {
+     FuncPtr val;
+     if (!lookupFunction(t->first()->text(),val))
+       throw Exception("unable to resolve " + t->first()->text() + 
+		       " to a function call");
+     return FuncPtrConstructor(this,val);
+   }
 }
 
 //!
@@ -4175,20 +4179,20 @@ void Interpreter::stackTrace(bool includeCurrent) {
     QString cname_trim(TrimExtension(TrimFilename(cstack[i].cname)));
     outputMessage(QString("In ") + cname_trim + "("
 		  + cstack[i].detail + ") on line " +
-		  QString().setNum(cstack[i].tokid & 0x0000FFFF) + "\r\n");
+		  QString().setNum(int(cstack[i].tokid & 0x0000FFFF)) + "\r\n");
   }
   if (includeCurrent) {
     QString ip_trim(TrimExtension(TrimFilename(ip_funcname)));
     outputMessage(QString("In ") + ip_trim + "("
 		  + ip_detailname + ") on line " +
-		  (ip_context & 0x0000FFFF) + "\r\n");
+		  QString().setNum(int(ip_context & 0x0000FFFF)) + "\r\n");
   }
 }
 
 bool Interpreter::inMethodCall(QString classname) {
   if (ip_detailname.isEmpty()) return false;
   if (ip_detailname[0] != '@') return false;
-  return (ip_detailname.left(classname.size()) == classname);
+  return (ip_detailname.mid(1,classname.size()) == classname);
 }
 
 void Interpreter::pushDebug(QString fname, QString detail) {

@@ -53,6 +53,10 @@
 //A = {'hi','bye','good','tell','hi','bye'}
 //unique(A)
 //@>
+//@@Signature
+//function unique UniqueFunction
+//inputs A mode
+//outputs y m n
 //!
 template <class T>
 class UniqueEntryReal {

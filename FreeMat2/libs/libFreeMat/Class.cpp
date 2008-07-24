@@ -138,7 +138,8 @@ static Array ClassAux(const Array &s, QString classname, const StringVector &par
       meta.parentClasses.push_back(parentNames[i]);
     }
     classTable[classname] = meta;
-  }
+  } else
+    meta = classTable.value(classname);
   StringVector s_fields(FieldNames(s));
   if (meta.fieldNames != s_fields)
     throw Exception("fieldnames of structure provided must match the fieldnames for the registered class");
@@ -154,7 +155,7 @@ static Array ClassAux(const Array &s, QString classname, const StringVector &par
     rp[s_fields.at(i)] = sp[s_fields.at(i)];
   // Now the parent members
   for (int i=0;i<parentNames.size();i++)
-    rp[parentNames[i]] = parents[i];
+    rp[parentNames[i]] = BasicArray<Array>(parents[i]);
   rp.setClassPath(StringVector() << classname);
   return retval;
 }
@@ -719,8 +720,8 @@ static Array ClassAux(const Array &s, QString classname, const StringVector &par
 //of elements in the vector @|b|.
 //@@Signature
 //function class ClassFunction
-//input classname
-//output varargout
+//input varargin
+//output classname
 //!
 ArrayVector ClassFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0)
@@ -755,8 +756,6 @@ static bool ClassSearchOverload(Interpreter* eval, ArrayVector t,
       eval->getContext()->lookupFunction(ClassMangleName(t[userset[k]].className(),name),val);
     if (!overload) k++;
   }
-  if (!overload)
-    throw Exception(QString("Unable to find overloaded '") + name + "' for user defined classes");
   return overload;
 }
 

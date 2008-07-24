@@ -124,6 +124,14 @@ class Context {
    */
   StringVector tempFunctions;
   /**
+   * The set of builtin functions
+   */
+  CodeTable builtinTab;
+  /**
+   * The set of captured mfunctions
+   */ 
+  QMultiMap<QString,FuncPtr> mFunctions;
+  /**
    * Mutex to control access to this context class.
    */
   QMutex mutex;
@@ -323,6 +331,32 @@ public:
     tempFunctions.clear();
   }
   /**
+   * Capture a m function
+   */
+  inline void captureMFunction(FuncPtr ptr) {
+    mFunctions.insert(ptr->name,ptr);
+  }
+  /**
+   * Lookup a captured m function
+   */
+  inline FuncPtr lookupCapturedMFunction(const QString& name, const QString& filename) {
+    QList<FuncPtr> matches = mFunctions.values(name);
+    for (int i=0;i<matches.size();i++)
+      if (((MFunctionDef*)matches[i])->fileName == filename)
+	return matches[i];
+    return FuncPtr();
+  }
+  /**
+   * Lookup a builtin function
+   */
+  inline FuncPtr lookupBuiltinFunction(const QString& funcName) {
+    FuncPtr* ret = builtinTab.findSymbol(funcName);
+    if (ret) 
+      return *ret;
+    else
+      throw Exception("Unable to find builtin function definition " + funcName);
+  }
+  /**
    * Add a built in function to the global scope with the given name.
    */
   inline void addFunction(QString name, BuiltInFuncPtr fptr, int argc_in, int argc_out, ...) {
@@ -354,6 +388,7 @@ public:
     f2def->fptr = fptr;
     f2def->arguments = args;
     insertFunction(f2def,false);  
+    builtinTab.insertSymbol(name,f2def);
   }
   /**
    * Add a special function to the global scope with the given name.
@@ -387,6 +422,7 @@ public:
     f2def->fptr = fptr;
     f2def->arguments = args;
     insertFunction(f2def,false);
+    builtinTab.insertSymbol(name,f2def);
   }
   /**
    * Add a built in function to the global scope with the given name
@@ -422,6 +458,7 @@ public:
     f2def->arguments = args;
     f2def->graphicsFunction = true;
     insertFunction(f2def,false);  
+    builtinTab.insertSymbol(name,f2def);
   }
   /**
    * Add a special function to the global scope with the given name, and
@@ -457,6 +494,7 @@ public:
     f2def->arguments = args;
     f2def->graphicsFunction = true;
     insertFunction(f2def,false);
+    builtinTab.insertSymbol(name,f2def);
   }
   
   inline StringVector listAllFunctions() {

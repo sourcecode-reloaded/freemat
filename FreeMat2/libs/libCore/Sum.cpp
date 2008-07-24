@@ -91,7 +91,7 @@ struct OpVecSum {
 //sum(A,2)
 //@>
 //@@Signature
-//function sum SumFunctin
+//function sum SumFunction
 //inputs x dim
 //outputs y
 //!

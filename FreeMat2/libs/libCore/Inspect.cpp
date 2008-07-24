@@ -35,7 +35,7 @@
 //which to compute the end, and @|subindexes| indicates how many dimensions
 //are involved in the @|end| calculation.
 //@@Signature
-//function end EndFunction
+//function p_end EndFunction
 //inputs x dim subindexes
 //outputs y
 //!

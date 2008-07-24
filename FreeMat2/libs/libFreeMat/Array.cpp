@@ -55,8 +55,12 @@ static inline void* construct_sized(Type t, const NTuple &dims) {
   default:
     throw Exception("Unsupported constructor");
     MacroExpandCasesAll(MacroTConstructSized);
-  case Struct:
-    return reinterpret_cast<void*>(new StructArray);
+  case Struct: 
+    {
+      StructArray *p = new StructArray;
+      p->setDimensions(dims);
+      return reinterpret_cast<void*>(p);
+    }
   }
 }
 
@@ -175,12 +179,10 @@ const NTuple Array::dimensions() const {
   switch (m_type.Class) {
   default:
     throw Exception("unhandled type");
+  case Invalid:
+    return NTuple(0,0);
   case Struct:
-    {
-      const StructArray &rp(constStructPtr());
-      if (rp.fieldCount() == 0) return NTuple(0,0);
-      return rp[0].dimensions();
-    }
+    return constStructPtr().dimensions();
     MacroExpandCasesAll(MacroDimensions);
   }
 }
@@ -189,6 +191,19 @@ const NTuple Array::dimensions() const {
 
 template <typename S, typename T>
 static inline void Tset_scalar(Array *ptr, S ndx, const Array& data) {
+  if (data.isEmpty()) {
+    //     if (ptr->isSparse()) {
+    //       ptr->realSparse<T>().del(ndx);
+    //       if (!ptr->allReal())
+    //     	ptr->imagSparse<T>().del(ndx);
+    //       return;
+    //     }
+    //     ptr->real<T>().del(ndx);
+    //     if (!ptr->allReal())
+    //       ptr->imag<T>().del(ndx);
+    //     return;
+    throw Exception("Deletion not covered yet");
+  }
   if (ptr->isSparse()) {
     ptr->realSparse<T>().set(ndx,data.constRealScalar<T>());
     if (!data.allReal())
@@ -201,6 +216,14 @@ static inline void Tset_scalar(Array *ptr, S ndx, const Array& data) {
 }
 
 template <typename S>
+static inline const void Tset_string_scalar(Array*ptr, S ndx, const Array &rhs) {
+  if (rhs.isEmpty())
+    ptr->real<QChar>().del(ndx);
+  else
+    ptr->real<QChar>().set(ndx,rhs.constReal<QChar>()[1]);
+}
+
+template <typename S>
 static inline const void Tset_struct_scalar(Array*ptr, S ndx, const Array &rhs) {
   if (rhs.dataClass() != Struct)
     throw Exception("Assignment A(I)=B where A is a structure array implies that B is also a structure array.");
@@ -208,13 +231,14 @@ static inline const void Tset_struct_scalar(Array*ptr, S ndx, const Array &rhs) 
   const StructArray &rp(rhs.constStructPtr());
   StructArray &lp(ptr->structPtr());
   for (int i=0;i<rp.fieldCount();i++) 
-    Set(lp[rp.fieldName(i)],ndx,rp[i].get(1));
+    lp[rp.fieldName(i)].set(ndx,rp[i].get(1));
   // Loop through the output and force all arrays to be the same size
   NTuple newSize(0,0);
   for (int i=0;i<lp.fieldCount();i++)
     newSize = max(newSize,lp[i].dimensions());
   for (int i=0;i<lp.fieldCount();i++)
     lp[i].resize(newSize);
+  lp.updateDims();
 }
 
 
@@ -285,6 +309,7 @@ static inline const void Tset_struct(Array*ptr, S ndx, const Array &rhs) {
   // Loop through the output and force all arrays to be the same size
   for (int j=0;j<lp.fieldCount();j++) 
     lp[j].resize(newSize);
+  lp.updateDims();
 }
 
 #define MacroSetIndexArray(ctype,cls)		\
@@ -322,6 +347,7 @@ static inline void Treshape_struct(Array* ptr, S ndx) {
   StructArray &lp(ptr->structPtr());
   for (int i=0;i<lp.fieldCount();i++)
     lp[i].reshape(ndx);
+  lp.updateDims();
 }
 
 template <typename S, typename T>
@@ -357,6 +383,7 @@ static inline void Tresize_struct(Array* ptr, S ndx) {
   StructArray &lp(ptr->structPtr());
   for (int i=0;i<lp.fieldCount();i++)
     lp[i].resize(ndx);
+  lp.updateDims();
 }
 
 template <typename S, typename T>
@@ -417,6 +444,7 @@ void Array::set(const QString& field, ArrayVector& data) {
     val.set(i,data.front());
     data.pop_front();
   }
+  rp.updateDims();
 }
 
 const ArrayVector Array::get(const QString& field) const {
@@ -522,6 +550,7 @@ QString Array::className() const {
   else {
     switch (dataClass()) {
     default: throw Exception("Unknown class?!");
+    case Invalid: return QString("");
     case CellArray: return QString("cell");
     case Struct: return QString("struct");
     case StringArray: return QString("string");
@@ -557,9 +586,10 @@ inline static const Array TcastCase(DataClass t, const Array *ptr) {
 
 const Array Array::toClass(DataClass t) const {
   if (dataClass() == t) return *this;
+  if (isEmpty()) return Array(t);
   switch (t) {
   default:
-    throw Exception("Cannot perform type conversions with this type.");
+    throw Exception("unhandled case for type conversion");
     MacroExpandCasesSimple(MacroTcastCase);
     MacroTcastCase(QChar,StringArray);
   }
@@ -589,7 +619,8 @@ static inline Array Tget_struct_scalar(const Array*ptr, S ndx) {
   Array ret(Struct,NTuple(1,1));
   StructArray &lp(ret.structPtr());
   for (int i=0;i<rp.fieldCount();i++)
-    lp[rp.fieldName(i)].set(1,rp[i].get(ndx).get(1));
+    lp[rp.fieldName(i)].set(1,rp[i].get(ndx));
+  lp.updateDims();
   return ret;
 }
 

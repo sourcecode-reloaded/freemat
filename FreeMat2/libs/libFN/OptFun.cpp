@@ -98,7 +98,7 @@ void lmdif1_(fcnptr, int*m, int*n, double*x, double*fvec, double*tol,
 //test_val = abs((x-O)/O*100)<.1;
 //@}
 //@@Signature
-//function fitfun FitFunFunction
+//sfunction fitfun FitFunFunction
 //inputs fcn xinit y weights tol varargin
 //outputs xopt yopt
 //!

@@ -115,6 +115,10 @@ struct OpIsNaN {
 //function isnan IsNaNFunction
 //inputs x
 //outputs y
+//@@Signature
+//function IsNaN IsNaNFunction
+//inputs x
+//outputs y
 //!
 ArrayVector IsNaNFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
@@ -158,6 +162,10 @@ struct OpIsInf {
 //@>
 //@@Signature
 //function isinf IsInfFunction
+//inputs x
+//outputs y
+//@@Signature
+//function IsInf IsInfFunction
 //inputs x
 //outputs y
 //!
