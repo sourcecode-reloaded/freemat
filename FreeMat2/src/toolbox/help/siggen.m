@@ -5,10 +5,14 @@ function siggen(source_path)
   file_list = [file_list;helpgen_rdir([source_path,'/libs'])];
   file_list = [file_list;helpgen_rdir([source_path,'/src'])];
   s = [];
+  printf('Processing source files...\n');
   for i=1:numel(file_list)
+    printf('Completed %d/%d files...   \r',i,numel(file_list));
     siggen_processfile(file_list{i},s);
   end
+  printf('Generating output...\n');
   siggen_genloaders(s);
+  printf('Done.\n');
 end
   
 function siggen_processfile(filename,&s)
