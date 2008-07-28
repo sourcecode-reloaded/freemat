@@ -626,7 +626,7 @@ void Interpreter::clearStacks() {
 Array Interpreter::matrixDefinition(Tree *t) {
   ArrayMatrix m;
   if (t->numChildren() == 0) 
-    return Array(Double);
+    return EmptyConstructor();
   for (int i=0;i<t->numChildren();i++) {
     Tree *s(t->child(i));
     ArrayVector n;
@@ -746,7 +746,7 @@ ArrayVector Interpreter::handleReindexing(Tree *t, const ArrayVector &p) {
       if (p.size() == 1)
 	r = p[0];
       else
-	r = Array(Double);
+	r = EmptyConstructor();
       for (int index = 2;index < t->numChildren();index++) 
 	deref(r,t->child(index));
       return ArrayVector() << r;
@@ -2238,7 +2238,7 @@ void Interpreter::expressionStatement(Tree *s, bool printIt) {
       m = handleReindexing(t,m);
       bool emptyOutput = false;
       if (m.size() == 0) {
-	b = Array(Double);
+	b = EmptyConstructor();
 	emptyOutput = true;
       } else 
 	b = m[0];
@@ -2249,7 +2249,7 @@ void Interpreter::expressionStatement(Tree *s, bool printIt) {
     } else {
       multiexpr(t,m);
       if (m.size() == 0)
-	b = Array(Double);
+	b = EmptyConstructor();
       else {
 	b = m[0];
 	if (printIt) {
@@ -2372,7 +2372,7 @@ ArrayReference Interpreter::createVariable(QString name) {
   // Are we in a nested scope?
   if (!context->isCurrentScopeNested() || context->variableLocalToCurrentScope(name)) {
     // if not, just create a local variable in the current scope, and move on.
-    context->insertVariable(name,Array(Double));
+    context->insertVariable(name,EmptyConstructor());
   } else {
     // if so - walk up the scope chain until we are no longer nested
     QString localScopeName = context->scopeName();
@@ -2389,7 +2389,7 @@ ArrayReference Interpreter::createVariable(QString name) {
     // Either we are back in the local scope, or we are pointing to
     // a scope that (at least theoretically) accesses a variable with 
     // the given name.
-    context->insertVariable(name,Array(Double));
+    context->insertVariable(name,EmptyConstructor());
     context->restoreBypassedScopes();
   } 
   ArrayReference np(context->lookupVariable(name));
@@ -2841,7 +2841,7 @@ void Interpreter::assignment(Tree *var, bool printIt, Array &b) {
 	try {
 	  deref(data,var->child(index));
 	} catch (Exception &e) {
-	  data = Array(Double);
+	  data = EmptyConstructor();
 	}
       }
       stack.push_back(data);
@@ -3043,7 +3043,7 @@ index_t Interpreter::countLeftHandSides(Tree *t) {
   Array lhs;
   ArrayReference ptr(context->lookupVariable(t->first()->text()));
   if (!ptr.valid())
-    lhs = Array(Double);
+    lhs = EmptyConstructor();
   else
     lhs = *ptr;
   if (t->numChildren() == 1) return 1;
@@ -3052,7 +3052,7 @@ index_t Interpreter::countLeftHandSides(Tree *t) {
     try {
       deref(lhs,t->child(index));
     } catch (Exception& e) {
-      lhs = Array(Double);
+      lhs = EmptyConstructor();
     }
   }
   if (t->last()->is(TOK_BRACES)) {
@@ -3088,7 +3088,7 @@ index_t Interpreter::countLeftHandSides(Tree *t) {
 }
 
 Array Interpreter::AllColonReference(Array v, int index, int count) {
-  if (v.isUserClass()) return Array(Double);
+  if (v.isUserClass()) return EmptyConstructor();
   return Array(QString(":"));
 }
   
@@ -3216,7 +3216,7 @@ void Interpreter::multiFunctionCall(Tree *t, bool printIt) {
 	  try {
 	    deref(data,var->child(index));
 	  } catch (Exception &e) {
-	    data = Array(Double);
+	    data = EmptyConstructor();
 	  }
 	}
 	stack.push_back(data);
@@ -3894,7 +3894,7 @@ int* Interpreter::sortKeywords(ArrayVector &m, StringVector &keywords,
   // remaining arguments
   for (int i=0;i<totalCount;i++)
     if (!filled[i])
-      toFill[i] = Array(Double);
+      toFill[i] = EmptyConstructor();
   // Clean up
   delete[] filled;
   delete[] keywordNdx;
@@ -4779,7 +4779,7 @@ void Interpreter::deref(Array &r, Tree *s) {
      if (m.size() >= 1)
        return m[0];
      else
-       return Array(Double);
+       return EmptyConstructor();
    }
    if (t->numChildren() == 1)
      return *ptr;
@@ -4789,7 +4789,7 @@ void Interpreter::deref(Array &r, Tree *s) {
      if (m.size() >= 1)
        return m[0];
      else
-       return Array(Double);
+       return EmptyConstructor();
    }
    Array r(*ptr);
    for (int index = 1;index < t->numChildren();index++) 

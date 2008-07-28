@@ -2416,7 +2416,7 @@ static Array PowerMatrixScalar(const Array &A, const Array &B) {
 
 Array Power(const Array& A, const Array& B){
   if (A.isEmpty() || B.isEmpty())
-    return Array(Double);
+    return EmptyConstructor();
   if (A.isScalar() && B.isScalar()) return DotPower(A,B);
   if (!A.is2D() || !B.is2D()) 
     throw Exception("Cannot apply exponential operator to N-Dimensional arrays.");

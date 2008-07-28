@@ -51,7 +51,7 @@ public:
     while (source.isValid()) {
       SparseSlice<T> this_col;
       for (index_t row=1;row<=source.size();row++) {
-	if (source.get() != 0)
+	if (source.get() != T(0))
 	  this_col[row] = source.get();
 	source.next();
       }
@@ -115,7 +115,7 @@ public:
   }
   void set(const NTuple& pos, const T& val) {
     if (dimensions() <= pos) resize(pos);
-    if (val == 0) {
+    if (val == T(0)) {
       erase(pos);
       return;
     }
@@ -123,7 +123,7 @@ public:
   }
   void set(index_t pos, const T& val) {
     if (dimensions().count() <= pos) resize(pos);
-    if (val == 0) {
+    if (val == T(0)) {
       NTuple tpos;
       m_dims.map(pos,tpos);
       erase(tpos);

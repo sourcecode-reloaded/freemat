@@ -969,8 +969,8 @@ Array IndexExpressionToStruct(Interpreter* eval, Tree *t, Array r) {
       subs_args.push_back(CellConstructor(q));
     }
     if (t->child(index)->is('.')) {
-      type_args.push_back(QString("."));
-      subs_args.push_back(t->child(index)->first()->text());
+      type_args.push_back(Array(QString(".")));
+      subs_args.push_back(Array(t->child(index)->first()->text()));
     }
   }
   Array retval(Struct);

@@ -168,7 +168,7 @@ const Array CellArrayFromStringVector(const StringVector& arg) {
   Array ret(CellArray,NTuple(1,arg.size()));
   BasicArray<Array> &rp(ret.real<Array>());
   for (int i=0;i<arg.size();i++)
-    rp.set(index_t(i+1),arg[i]);
+    rp.set(index_t(i+1),Array(arg[i]));
   return rp;
 }
 

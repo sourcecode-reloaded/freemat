@@ -1,6 +1,7 @@
 #include <QImage>
 #include <QImageWriter>
 #include "Array.hpp"
+#include "Algorithms.hpp"
 #include <QtGui>
 #include "PathSearch.hpp"
 #include "Interpreter.hpp"
@@ -68,8 +69,8 @@ static ArrayVector imreadHelperRGB32(QImage img) {
       }
     }
     return ArrayVector() << Array(img_data_dp)
-			 << Array(Double) 
-			 << Array(Double);
+			 << EmptyConstructor() 
+			 << EmptyConstructor();
   }
   else {
     BasicArray<uint8> img_data_dp(NTuple(img.height(),img.width(),3));
@@ -84,8 +85,8 @@ static ArrayVector imreadHelperRGB32(QImage img) {
       }
     }
     return ArrayVector() << Array(img_data_dp)
-			 << Array(Double) 
-			 << Array(Double);
+			 << EmptyConstructor() 
+			 << EmptyConstructor();
   }
 }
 
@@ -103,7 +104,7 @@ static ArrayVector imreadHelperARGB32(QImage img) {
       }
     }
     return ArrayVector() << Array(img_data_dp)
-			 << Array(Double) 
+			 << EmptyConstructor() 
 			 << Array(img_alpha_dp);
   } else {
     BasicArray<uint8> img_data_dp(NTuple(img.height(),img.width(),3));
@@ -119,7 +120,7 @@ static ArrayVector imreadHelperARGB32(QImage img) {
       }
     }
     return ArrayVector() << Array(img_data_dp)
-			 << Array(Double) 
+			 << EmptyConstructor() 
 			 << Array(img_alpha_dp);
   }
 }

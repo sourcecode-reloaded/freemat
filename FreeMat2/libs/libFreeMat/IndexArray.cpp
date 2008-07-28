@@ -43,3 +43,14 @@ BasicArray<bool> GetDeletionMap(const IndexArray& vec, index_t length) {
 bool DimensionCovered(const IndexArray& ndx, index_t length) {
   return AllTrue(GetDeletionMap(ndx,length));
 }
+
+IndexArray ScalarToIndex(index_t val) {
+  return IndexArray(val);
+}
+
+IndexArrayVector ScalarToIndex(const NTuple& val) {
+  IndexArrayVector ret;
+  for (int i=0;i<val.lastNotOne();i++)
+    ret.push_back(IndexArray(val[i]));
+  return ret;
+}

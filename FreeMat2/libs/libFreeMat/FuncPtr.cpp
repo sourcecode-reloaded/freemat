@@ -56,7 +56,7 @@ Array FuncPtrConstructor(Interpreter *eval, FuncPtr val) {
     throw Exception("Cannot use function pointers on imported functions");
     break;
   }
-  values.push_back(typecode);
+  values.push_back(Array(typecode));
   QString location = "";
   if (val->type() == FM_M_FUNCTION) {
     MFunctionDef *mptr;

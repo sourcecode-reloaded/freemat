@@ -222,8 +222,8 @@ ArrayVector UniqueFunction(int nargout, const ArrayVector& arg) {
     else {
       ArrayVector retval;
       retval.push_back(arg[0]);
-      retval.push_back(Array(Double));
-      retval.push_back(Array(Double));
+      retval.push_back(EmptyConstructor());
+      retval.push_back(EmptyConstructor());
       return retval;
     }
   }

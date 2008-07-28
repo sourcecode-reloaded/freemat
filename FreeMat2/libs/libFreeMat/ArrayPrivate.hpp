@@ -29,9 +29,12 @@
 #define MacroExpandCasesSimple(func)		\
   MacroExpandCases(func);			
 
-#define MacroExpandCasesAll(func)		\
+#define MacroExpandCasesNoCell(func)		\
   MacroExpandCasesSimple(func);			\
-  func(QChar,StringArray);			\
+  func(QChar,StringArray);
+
+#define MacroExpandCasesAll(func)		\
+  MacroExpandCasesNoCell(func);			\
   func(Array,CellArray);
 
 #define MacroGetDataClass(ctype,cls)		\

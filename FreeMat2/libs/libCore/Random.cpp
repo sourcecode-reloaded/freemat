@@ -576,7 +576,7 @@ ArrayVector RandMultiFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 2)
     throw Exception("randmulti requires two parameter arguments");
   if (arg[0].isEmpty() || arg[1].isEmpty())
-    return ArrayVector(Array(Double));
+    return ArrayVector(EmptyConstructor());
   int N = arg[0].asInteger();
   if (N<0) 
     throw Exception("number of events to generate for randmulti must be a nonnegative integer");
@@ -680,7 +680,7 @@ ArrayVector RandNFFunction(int nargout, const ArrayVector& arg) {
   Array arg2(arg[1].asDenseArray().toClass(Float));
   Array arg3(arg[2].asDenseArray().toClass(Float));
   if (arg1.isEmpty() || arg2.isEmpty() || arg3.isEmpty()) 
-    return ArrayVector(Array(Double));
+    return ArrayVector(EmptyConstructor());
   int arg1_advance = (arg1.isScalar()) ? 0 : 1;
   int arg2_advance = (arg2.isScalar()) ? 0 : 1;
   int arg3_advance = (arg3.isScalar()) ? 0 : 1;

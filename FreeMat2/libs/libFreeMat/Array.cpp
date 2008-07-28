@@ -190,20 +190,22 @@ const NTuple Array::dimensions() const {
 #undef MacroDimensions
 
 template <typename S, typename T>
-static inline void Tset_scalar(Array *ptr, S ndx, const Array& data) {
-  if (data.isEmpty()) {
-    //     if (ptr->isSparse()) {
-    //       ptr->realSparse<T>().del(ndx);
-    //       if (!ptr->allReal())
-    //     	ptr->imagSparse<T>().del(ndx);
-    //       return;
-    //     }
-    //     ptr->real<T>().del(ndx);
-    //     if (!ptr->allReal())
-    //       ptr->imag<T>().del(ndx);
-    //     return;
-    throw Exception("Deletion not covered yet");
+static inline void Tdel_scalar(Array *ptr, S ndx) {
+  if (ptr->isSparse()) {
+    ptr->realSparse<T>().del(ScalarToIndex(ndx));
+    if (!ptr->allReal())
+      ptr->imagSparse<T>().del(ScalarToIndex(ndx));
+    return;
   }
+  ptr->real<T>().del(ScalarToIndex(ndx));
+  if (!ptr->allReal())
+    ptr->imag<T>().del(ScalarToIndex(ndx));
+}
+
+template <typename S, typename T>
+static inline void Tset_scalar(Array *ptr, S ndx, const Array& data) {
+  if (data.isEmpty())
+    return Tdel_scalar<S,T>(ptr,ndx);
   if (ptr->isSparse()) {
     ptr->realSparse<T>().set(ndx,data.constRealScalar<T>());
     if (!data.allReal())
@@ -494,13 +496,13 @@ const Array Array::get(const IndexArray& index) const {
   switch (m_type.Class) {
   default: 
     throw Exception("Unsupported type for get(index_t)");
-    MacroExpandCasesAll(MacroGetIndexArray);
+    MacroExpandCasesNoCell(MacroGetIndexArray);
+  case CellArray: return Get(constReal<Array>(),index);
   case Struct: return Tget_struct<const IndexArray&>(this,index);
   }
 }
 
 #undef MacroGetIndexArray
-
 
 #define MacroGetIndexArrayVector(ctype,cls) \
   case cls: return Tget<const IndexArrayVector&,ctype>(this,index);
@@ -511,7 +513,8 @@ const Array Array::get(const IndexArrayVector& index) const {
   switch (m_type.Class) {
   default:
     throw Exception("Unsupported type for get(indexarrayvector)");
-  MacroExpandCasesAll(MacroGetIndexArrayVector);
+  MacroExpandCasesNoCell(MacroGetIndexArrayVector);
+  case CellArray: return Get(constReal<Array>(),index);
   case Struct: return Tget_struct<const IndexArrayVector&>(this,index);
   }
 }

@@ -15,4 +15,8 @@ bool DimensionCovered(const IndexArray& ndx, index_t length);
 
 index_t getSliceIndex(const NTuple &dimensions, const IndexArrayVector& index);
 
+IndexArray ScalarToIndex(index_t val);
+
+IndexArrayVector ScalarToIndex(const NTuple& val);
+
 #endif

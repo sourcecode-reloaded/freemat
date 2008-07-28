@@ -123,8 +123,7 @@ void Set(T& arg, const IndexArray& index, const S& data) {
 
 template <typename T>
 const T Get(const T& arg, const IndexArray& index) {
-  if (index.isEmpty())
-    return T(index.dimensions());
+  if (index.isEmpty()) return T(index.dimensions());
   if (IsColonOp(index)) {
     T retvec(arg);
     retvec.reshape(NTuple(arg.length(),1));

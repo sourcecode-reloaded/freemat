@@ -81,7 +81,7 @@ Array MatrixConstructor(const ArrayMatrix& data);
 Array CellConstructor(const ArrayMatrix& data);
 Array CellConstructor(const ArrayVector& data);
 Array StructConstructor(const StringVector& fields, const ArrayVector& values);
-inline Array EmptyConstructor() {return Array(Double);}
+inline Array EmptyConstructor() {return Array(Double,NTuple(0,0));}
 
 bool TestForCaseMatch(const Array &s, const Array &r);
 bool RealAllZeros(const Array &t);

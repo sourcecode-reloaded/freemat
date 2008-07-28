@@ -22,32 +22,34 @@ typedef QVector<ArrayVector> ArrayMatrix;
 //   class flag   - 5 bits
 //   user class   - 24 bits
 
-typedef unsigned DataClass;
+typedef struct {
+  unsigned m_type;
+} DataClass;
 
-const DataClass Invalid = 0;
-const DataClass CellArray = 1;
-const DataClass Struct = 2;
-const DataClass StringArray = 3;
-const DataClass Bool = 4;
-const DataClass Int8 = 5;
-const DataClass UInt8 = 6;
-const DataClass Int16 = 7;
-const DataClass UInt16 = 8;
-const DataClass Int32 = 9;
-const DataClass UInt32 = 10;
-const DataClass Int64 = 11;
-const DataClass UInt64 = 12;
-const DataClass Float = 13;
-const DataClass Double = 14;
-const DataClass Index = 14;
+const DataClass Invalid = {0};
+const DataClass CellArray = {1};
+const DataClass Struct = {2};
+const DataClass StringArray = {3};
+const DataClass Bool = {4};
+const DataClass Int8 = {5};
+const DataClass UInt8 = {6};
+const DataClass Int16 = {7};
+const DataClass UInt16 = {8};
+const DataClass Int32 = {9};
+const DataClass UInt32 = {10};
+const DataClass Int64 = {11};
+const DataClass UInt64 = {12};
+const DataClass Float = {13};
+const DataClass Double = {14};
+const DataClass Index = {14};
 
 template <typename T>
-static inline DataClass GetDataClass(T = 0);
+static inline DataClass GetDataClass(T = T());
 
 size_t ByteSizeOfDataClass(DataClass);
 
 typedef struct {
-  DataClass Class : 5;
+  unsigned Class : 5;
   unsigned Scalar : 1;
   unsigned Complex : 1;
   unsigned Sparse : 1;
@@ -84,7 +86,7 @@ typedef struct {
 
 class Array {
 public:
-  inline Array() {m_type.Class = Invalid;}
+  inline Array() {m_type.Class = Invalid.m_type;}
   // Defined in ArrayPrivate
   template <typename T> inline explicit Array(T real); 
   template <typename T> inline explicit Array(T real, T imag); 
@@ -122,10 +124,10 @@ public:
     m_real.p = new SharedObject(m_type,r);
     m_imag.p = new SharedObject(m_type,i);
   }
-  Array(DataClass t, const NTuple &dims = NTuple(0,0));
-  Array(const QChar &t);
-  Array(const QChar &, const QChar &);
-  Array(const QString &text);
+  Array(DataClass t, const NTuple &dims);
+  explicit Array(const QChar &t);
+  explicit Array(const QChar &, const QChar &);
+  explicit Array(const QString &text);
   template <typename T>
   inline Array(const SparseMatrix<T>& real) {
     m_type.Class = GetDataClass<T>();
