@@ -224,6 +224,12 @@ void Scanner::fetchNumber() {
     while (isdigit(ahead(len+lookahead))) len++;
     lookahead+=len;
   }
+  if ((ahead(lookahead) == 'f') ||
+      (ahead(lookahead) == 'F') ||
+      (ahead(lookahead) == 'd') ||
+      (ahead(lookahead) == 'D')) {
+    throw Exception("FreeMat 4.0 does not support precision specifiers for numbers (i.e., the 'f','F','d','D' suffixes for numbers.");
+  }
   // Recognize the complex constants, but strip the "i" off
   if ((ahead(lookahead) == 'i') ||
       (ahead(lookahead) == 'I') ||
