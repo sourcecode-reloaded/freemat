@@ -432,7 +432,7 @@ void Array::resize(index_t size) {
 
 void Array::set(const QString& field, ArrayVector& data) {
   if (isEmpty() && m_type.Class != Struct)
-    *this = Array::Array(Struct,NTuple(0,0));
+    *this = Array::Array(Struct);
   if (m_type.Class != Struct) throw Exception("Unsupported type for A.field=B");
   StructArray &rp(structPtr());
   if (isEmpty()) 
@@ -589,7 +589,7 @@ inline static const Array TcastCase(DataClass t, const Array *ptr) {
 
 const Array Array::toClass(DataClass t) const {
   if (dataClass() == t) return *this;
-  if (isEmpty()) return Array(t);
+  if (isEmpty()) return Array(t,dimensions());
   switch (t) {
   default:
     throw Exception("unhandled case for type conversion");

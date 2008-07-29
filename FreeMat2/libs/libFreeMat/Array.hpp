@@ -22,26 +22,24 @@ typedef QVector<ArrayVector> ArrayMatrix;
 //   class flag   - 5 bits
 //   user class   - 24 bits
 
-typedef struct {
-  unsigned m_type;
-} DataClass;
-
-const DataClass Invalid = {0};
-const DataClass CellArray = {1};
-const DataClass Struct = {2};
-const DataClass StringArray = {3};
-const DataClass Bool = {4};
-const DataClass Int8 = {5};
-const DataClass UInt8 = {6};
-const DataClass Int16 = {7};
-const DataClass UInt16 = {8};
-const DataClass Int32 = {9};
-const DataClass UInt32 = {10};
-const DataClass Int64 = {11};
-const DataClass UInt64 = {12};
-const DataClass Float = {13};
-const DataClass Double = {14};
-const DataClass Index = {14};
+enum DataClass {
+  Invalid = 0,
+  CellArray = 1,
+  Struct = 2,
+  StringArray = 3,
+  Bool = 4,
+  Int8 = 5,
+  UInt8 = 6,
+  Int16 = 7,
+  UInt16 = 8,
+  Int32 = 9,
+  UInt32 = 10,
+  Int64 = 11,
+  UInt64 = 12,
+  Float = 13,
+  Double = 14,
+  Index = 14  
+};
 
 template <typename T>
 static inline DataClass GetDataClass(T = T());
@@ -86,7 +84,7 @@ typedef struct {
 
 class Array {
 public:
-  inline Array() {m_type.Class = Invalid.m_type;}
+  inline Array() {m_type.Class = Invalid;}
   // Defined in ArrayPrivate
   template <typename T> inline explicit Array(T real); 
   template <typename T> inline explicit Array(T real, T imag); 
@@ -124,7 +122,7 @@ public:
     m_real.p = new SharedObject(m_type,r);
     m_imag.p = new SharedObject(m_type,i);
   }
-  Array(DataClass t, const NTuple &dims);
+  Array(DataClass t, const NTuple &dims = NTuple(0,0));
   explicit Array(const QChar &t);
   explicit Array(const QChar &, const QChar &);
   explicit Array(const QString &text);
@@ -160,7 +158,7 @@ public:
   const index_t columns() const {return dimensions()[1];}
   const index_t cols() const {return dimensions()[1];}
   inline const Type type() const { return m_type; }
-  inline const DataClass dataClass() const {return m_type.Class;}
+  inline const DataClass dataClass() const {return DataClass(m_type.Class);}
   QString className() const;
   bool isUserClass() const;
   inline bool isArray() const {return (m_type.Scalar == 0);}
@@ -169,18 +167,16 @@ public:
   inline bool isRowVector() const {return dimensions().isRowVector();}
   inline bool is2D() const {return dimensions().is2D();}
   inline bool isSquare() const {return (is2D() && (rows() == columns()));}
-  inline bool isString() const {return m_type.Class == StringArray;}
+  inline bool isString() const {return dataClass() ==  StringArray;}
   inline bool isSparse() const {return m_type.Sparse == 1;}
   inline bool isReferenceType() const {
-    return ((m_type.Class == Invalid) || (m_type.Class == CellArray) ||
-	    (m_type.Class == Struct));
+    return ((dataClass() == Invalid) || (dataClass() == CellArray) ||
+	    (dataClass() == Struct));
   }
   QString asString() const;
   int asInteger() const;
   double asDouble() const;
-  inline bool isDouble() const {
-    return (m_type.Class == Double);
-  }
+  inline bool isDouble() const {return dataClass() == Double;}
   inline bool isScalar() const {
     return ((m_type.Scalar == 1) || dimensions().isScalar());
   }
@@ -301,7 +297,7 @@ public:
 
   Array asDenseArray() const;
   void ensureNotScalarEncoded() {if (m_type.Scalar == 1) *this = asDenseArray();}
-  inline bool isEmpty() const {return ((m_type.Class == Invalid) || (length() == 0));}
+  inline bool isEmpty() const {return ((dataClass() == Invalid) || (length() == 0));}
 
   bool operator==(const Array &b) const;
   inline bool operator!=(const Array &b) const {return !(*this == b);}

@@ -107,7 +107,7 @@ void HPHandles::Set(Array arg) {
     HandleProperty::Set(arg);
     return;
   }
-  arg = arg.toClass(UInt32);
+  arg = arg.asDenseArray().toClass(UInt32);
   const uint32 *dp = arg.constReal<uint32>().constData();
   // make sure they are all valid handles
   for (int i=0;i<int(arg.length());i++) 
@@ -139,7 +139,7 @@ Array HPVector::Get() {
   
 void HPVector::Set(Array num) {
   HandleProperty::Set(num);
-  num = num.toClass(Double);
+  num = num.asDenseArray().toClass(Double);
   const double *dp = num.constReal<double>().constData();
   data.clear();
   for (int i=0;i<int(num.length());i++)
@@ -148,7 +148,7 @@ void HPVector::Set(Array num) {
   
 void HPFixedVector::Set(Array num) {
   HandleProperty::Set(num);
-  num = num.toClass(Double);
+  num = num.asDenseArray().toClass(Double);
   const double *dp = num.constReal<double>().constData();
   data.clear();
   for (int i=0;i<qMin(m_len,int(num.length()));i++)
@@ -165,7 +165,7 @@ double& HPVector::operator[](int ndx) {
 
 void HPColorVector::Set(Array arg) {
   HandleProperty::Set(arg);
-  arg = arg.toClass(Double);
+  arg = arg.asDenseArray().toClass(Double);
   if ((!arg.is2D()) || (arg.cols() != 3))
     throw Exception("Expect an m x 3 matrix for color orders");
   const double *dp = arg.constReal<double>().constData();
@@ -251,7 +251,7 @@ bool ParseColorSpec(Array arg, QVector<double> &data) {
   } else {
     if (arg.length() != 3)
       return false;
-    arg = arg.toClass(Double);
+    arg = arg.asDenseArray().toClass(Double);
     const double *dp = arg.constReal<double>().constData();
     if (((dp[0] < 0) || (dp[0] > 1)) ||
 	((dp[1] < 0) || (dp[1] > 1)) ||

@@ -106,7 +106,7 @@ QString TokenToString(const Token& b) {
   case TOK_NEST_FUNC: return "nest func";
   case TOK_TYPE_DECL: return "type decl";
   }
-  return QString(1,QChar(b.value()));
+  return QString(1,QChar(b.value()))+QString(" val = %1").arg(b.value());
 }
 
 void Token::freeze(Serialize *s) const {

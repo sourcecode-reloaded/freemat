@@ -201,7 +201,7 @@ static ArrayFormatInfo ComputeArrayFormatInfo(const Array &ref) {
     {
       int maxwidth = 1;
       for (index_t i=1;i<=ref.length();i++) {
-	int len = SummarizeArrayCellEntry(ref.get(i)).size();
+	int len = SummarizeArrayCellEntry(ref.get(i).constRealScalar<Array>()).size();
 	maxwidth = qMax(maxwidth,len);
       }
       return ArrayFormatInfo(maxwidth);
@@ -316,7 +316,9 @@ static void Emit(Interpreter* io, const Array &rp,
     io->outputMessage(QString(rp.constReal<QChar>().get(1)));
     return;
   case CellArray:
-    io->outputMessage("[" + SummarizeArrayCellEntry(ArrayVectorFromCellArray(rp)[0]) + "]");
+    io->outputMessage("[" + 
+		      SummarizeArrayCellEntry(rp.constRealScalar<Array>()) + 
+		      "]");
     return;
   }
 }

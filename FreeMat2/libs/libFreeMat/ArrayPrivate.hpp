@@ -46,7 +46,7 @@
 #define MacroArrayRealScalar(ctype,cls)			\
   template <>						\
   inline ctype & Array::realScalar() {			\
-    if (m_type.Class != cls)				\
+    if (dataClass() != cls)				\
       throw Exception("type mismatch");			\
     if (m_type.Scalar == 1)				\
       return m_real.cls;				\
@@ -61,7 +61,7 @@
   inline ctype & Array::imagScalar() {					\
     if (cls == Bool)							\
       throw Exception("imaginary part not defined for logical types");	\
-    if (m_type.Class != cls)						\
+    if (dataClass() != cls)						\
       throw Exception("type mismatch");					\
     m_type.Complex = 1;							\
     if (m_type.Scalar == 1)						\
@@ -75,7 +75,7 @@
 #define MacroArrayConstRealScalar(ctype,cls)	\
   template <>					\
   inline ctype Array::constRealScalar() const {	\
-    if (m_type.Class != cls)			\
+    if (dataClass() != cls)			\
       throw Exception("type mismatch");		\
     if (m_type.Scalar == 1)			\
       return m_real.cls;			\
@@ -90,7 +90,7 @@
   inline ctype Array::constImagScalar() const {				\
     if (cls == Bool)							\
       throw Exception("imaginary part not defined for logical types");	\
-    if (m_type.Class != cls)						\
+    if (dataClass() != cls)						\
       throw Exception("type mismatch");					\
     if (m_type.Scalar == 1)						\
       return m_imag.cls;						\
@@ -118,11 +118,10 @@
     m_type.Scalar = 1;					     \
   };
 
-
 #define MacroArrayRealScalarArrayEncodedOnly(ctype,cls) \
   template <>						\
   inline ctype& Array::realScalar() {			\
-    if (m_type.Class != cls)				\
+    if (dataClass() != cls)				\
       throw Exception("type mismatch");			\
     return real<ctype>()[1];				\
   }
@@ -130,7 +129,7 @@
 #define MacroArrayImagScalarArrayEncodedOnly(ctype,cls) \
   template <>						\
   inline ctype& Array::imagScalar() {			\
-    if (m_type.Class != cls)				\
+    if (dataClass() !=  cls)				\
       throw Exception("type mismatch");			\
     return imag<ctype>()[1];				\
   }
@@ -138,7 +137,7 @@
 #define MacroArrayConstRealScalarArrayEncodedOnly(ctype,cls)	\
   template <>							\
   inline ctype Array::constRealScalar() const {			\
-    if (m_type.Class != cls)					\
+    if (dataClass() != cls)					\
       throw Exception("type mismatch");				\
     return constReal<ctype>()[1];				\
   }
@@ -146,7 +145,7 @@
 #define MacroArrayConstImagScalarArrayEncodedOnly(ctype,cls)	\
   template <>							\
   inline ctype Array::constImagScalar() const {			\
-    if (m_type.Class != cls)					\
+    if (dataClass() != cls)					\
       throw Exception("type mismatch");				\
     return constImag<ctype>()[1];				\
   }

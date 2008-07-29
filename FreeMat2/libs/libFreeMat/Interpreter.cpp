@@ -726,7 +726,7 @@ Array Interpreter::ShortCutAnd(Tree *t) {
     retval = DoBinaryOperator(t,And,"and");
   } else {
     // A is a scalar - is it false?
-    if (a.toClass(Bool).constRealScalar<bool>())
+    if (!a.toClass(Bool).constRealScalar<bool>())
       retval = a;
     else 
       retval = DoBinaryOperator(t,And,"and");

@@ -289,7 +289,9 @@ const Token& Scanner::next() {
   while (!m_tokValid) {
     fetch();
     //     if (m_tokValid && m_debugFlag)
-    //       qDebug() << m_tok;
+    //    qDebug() << m_tok;
+    //     if (m_tokValid)
+    //       qDebug() << TokenToString(m_tok);
     if ((m_ptr < m_strlen) && (current() == '\n'))
       m_linenumber++;
   }
