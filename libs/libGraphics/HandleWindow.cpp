@@ -22,7 +22,7 @@
 #include <qgl.h>
 #include "GLRenderEngine.hpp"
 #include "QTRenderEngine.hpp"
-#include <QStackedLayout>
+//#include <QStackedLayout>
 #include "HandleCommands.hpp"
 #include <QtGui>
 #include <math.h>
@@ -36,16 +36,16 @@ public:
   BaseFigureQt(QWidget *parent, HandleFigure *fig);
   void paintEvent(QPaintEvent *e);
   void resizeEvent(QResizeEvent *e);
-  //  QSize sizeHint() const;
+  QSize sizeHint() const;
   //  QSizePolicy sizePolicy() const;
 };
 
-//  QSize BaseFigureQt::sizeHint() const {
-//    HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
-//    qDebug() << "Size hint " << (htv->Data()[0]) << "," << (htv->Data()[1]) << "\r\n";
-//    return QSize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
-//   //  return QSize(10000,10000);
-//  }
+  QSize BaseFigureQt::sizeHint() const {
+    HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
+    qDebug() << "Size hint " << (htv->Data()[0]) << "," << (htv->Data()[1]) << "\r\n";
+    return QSize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
+   //  return QSize(10000,10000);
+  }
 
 void BaseFigureQt::resizeEvent(QResizeEvent *e) {
   QWidget::resizeEvent(e);
@@ -101,6 +101,7 @@ public:
   virtual void initializeGL();
   virtual void paintGL();
   virtual void resizeGL(int width, int height);
+  QSize sizeHint() const;
   // Support dragging...
   //   void mousePressEvent(QMouseEvent* e);
   //   void mouseMoveEvent(QMouseEvent* e);
@@ -111,7 +112,7 @@ public:
 BaseFigureGL::BaseFigureGL(QWidget *parent, HandleFigure *fig) : 
   QGLWidget(parent) {
   hfig = fig;
-  hfig->resizeGL(width(),height());
+  //hfig->resizeGL(width(),height());
 }
   
 void BaseFigureGL::initializeGL() {
@@ -133,6 +134,13 @@ void BaseFigureGL::resizeGL(int width, int height) {
   //    qDebug("GLsize");
   hfig->resizeGL(width,height);
 }
+
+QSize BaseFigureGL::sizeHint() const {
+    HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
+    qDebug() << "Size hint " << (htv->Data()[0]) << "," << (htv->Data()[1]) << "\r\n";
+    return QSize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
+   //  return QSize(10000,10000);
+  }
 
 #if 0
 void BaseFigureGL::mousePressEvent(QMouseEvent* e) {
@@ -183,7 +191,7 @@ HandleWindow::HandleWindow(unsigned ahandle) : QMainWindow() {
   char buffer[1000];
   sprintf(buffer,"Figure %d",ahandle+1);
   setWindowTitle(buffer);
-  qtchild = new BaseFigureQt(this,hfig);
+  child = new BaseFigureQt(this,hfig);
   band = NULL;
   setMinimumSize(50,50);
   //   if (QGLFormat::hasOpenGL())
@@ -203,7 +211,7 @@ HandleWindow::HandleWindow(unsigned ahandle) : QMainWindow() {
   createActions();
   createMenus();
   createToolBars();
-  setCentralWidget(qtchild);
+  setCentralWidget(child);
   resize(600,400);
   initialized = true;
   mode = normal_mode;
@@ -385,7 +393,7 @@ void HandleWindow::mousePressEvent(QMouseEvent* e) {
       zoom_active = false;
     if (mode == pan_mode) {
       origin = e->pos();
-      QRect plot_region(qtchild->geometry());
+      QRect plot_region(child->geometry());
       HandleAxis *h = GetContainingAxis(hfig,remapX(e->x()),remapY(e->y()));
       if (h) {
 	HPTwoVector *hp = (HPTwoVector*) h->LookupProperty("xlim");
@@ -401,7 +409,7 @@ void HandleWindow::mousePressEvent(QMouseEvent* e) {
     }
     if ((mode == rotate_mode) || (mode == cam_rotate_mode)) {
       origin = e->pos();
-      QRect plot_region(qtchild->geometry());
+      QRect plot_region(child->geometry());
       HandleAxis *h = GetContainingAxis(hfig,remapX(e->x()),remapY(e->y()));
       if (h) {
 	rotate_active = true;
@@ -434,7 +442,7 @@ void HandleWindow::mouseMoveEvent(QMouseEvent* e) {
       band->setGeometry(QRect(origin, e->pos()).normalized());
     if ((mode == pan_mode) && pan_active) {
       QPoint dest(e->pos());
-      QRect plot_region(qtchild->geometry());
+      QRect plot_region(child->geometry());
       HandleAxis *h = GetContainingAxis(hfig,remapX(origin.x()),remapY(origin.y()));
       if (h) {
 	QVector<double> position(h->GetPropertyVectorAsPixels("position"));
@@ -460,7 +468,7 @@ void HandleWindow::mouseMoveEvent(QMouseEvent* e) {
     }
     if ((mode == rotate_mode) && rotate_active) {
       QPoint dest(e->pos());
-      QRect plot_region(qtchild->geometry());
+      QRect plot_region(child->geometry());
       HandleAxis *h = GetContainingAxis(hfig,remapX(origin.x()),remapY(origin.y()));
       if (h) {
 	double az = (e->x() - origin.x())/180.0*M_PI;
@@ -499,7 +507,7 @@ void HandleWindow::mouseMoveEvent(QMouseEvent* e) {
     }
     if ((mode == cam_rotate_mode) && rotate_active) {
       QPoint dest(e->pos());
-      QRect plot_region(qtchild->geometry());
+      QRect plot_region(child->geometry());
       HandleAxis *h = GetContainingAxis(hfig,remapX(origin.x()),remapY(origin.y()));
       if (h) {
 	double el = (e->y() - origin.y())/180.0*M_PI;
@@ -520,12 +528,12 @@ void HandleWindow::mouseMoveEvent(QMouseEvent* e) {
 }
 
 int HandleWindow::remapX(int x) {
-  QRect plot_region(qtchild->geometry());
+  QRect plot_region(child->geometry());
   return x - plot_region.x();
 }
 
 int HandleWindow::remapY(int y) {
-  QRect plot_region(qtchild->geometry());
+  QRect plot_region(child->geometry());
   return (plot_region.height()-y+plot_region.y());
 }
 
@@ -558,7 +566,7 @@ void HandleWindow::mouseReleaseEvent(QMouseEvent * e) {
 	    hfig->Repaint();
 	  }
 	} else {       
-	  QRect plot_region(qtchild->geometry());
+	  QRect plot_region(child->geometry());
 	  HandleAxis *h = GetContainingAxis(hfig,remapX(rect.x()),remapY(rect.y()));
 	  if (h) {
 	    QVector<double> position(h->GetPropertyVectorAsPixels("position"));
@@ -622,7 +630,7 @@ void HandleWindow::mouseReleaseEvent(QMouseEvent * e) {
 	int click_x, click_y;
 	click_x = e->x();
 	click_y = e->y();
-	QRect plot_region(qtchild->geometry());
+	QRect plot_region(child->geometry());
 	HandleAxis *h = GetContainingAxis(hfig,remapX(click_x),remapY(click_y));
 	if (h) {
 	  HPTwoVector *hp = (HPTwoVector*) h->LookupProperty("xlim");
@@ -652,28 +660,31 @@ void HandleWindow::markClean() {
 void HandleWindow::UpdateState() {
   if (!initialized) return;
   dirty = true;
-  //  HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
-  //  qtchild->resize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
-  //  qtchild->updateGeometry();
-  //  adjustSize();
-  //   if (hfig->StringCheck("renderer","opengl") && (QGLFormat::hasOpenGL())) {
-  //     if (layout->currentWidget() != glchild) {
-  //       layout->setCurrentWidget(glchild);
-  //       glchild->show();
-  //       glchild->updateGeometry();
-  //       repaint();
-  //       glchild->updateGL();
-  //       update();
-  //       UpdateState();
-  //     }
-  //     glchild->updateGL();
-  //     update();
-  //   } else if (hfig->StringCheck("renderer","painters")) {
-  //     if (layout->currentWidget() != qtchild) {
-  //       if (QGLFormat::hasOpenGL())
-  // 	glchild->setGeometry(0,0,1,1);
-  //  layout->setCurrentWidget(qtchild);
-  //     }
+  HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
+  child->resize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
+  child->updateGeometry();
+  adjustSize();
+  if (hfig->StringCheck("renderer","opengl") && (QGLFormat::hasOpenGL())) {
+      if ( QString("QGLWidget").compare(child->metaObject()->className() ) != 0 ) {
+	  BaseFigureGL* newchild = new BaseFigureGL(this,hfig);
+	  //layout->setCurrentWidget(child);
+	  setCentralWidget(newchild); //deletes old child
+	  child = newchild;
+          child->show();
+          child->updateGeometry();
+          //repaint();
+          UpdateState();
+       }
+     } else if (hfig->StringCheck("renderer","painters")) {
+       if (QString("QWidget").compare(child->metaObject()->className()) != 0 ) {
+	   BaseFigureQt* newchild = new BaseFigureQt(this,hfig);
+	   //layout->setCurrentWidget(child);
+	   setCentralWidget(newchild); //deletes old child
+	   child = newchild;
+           child->show();
+           child->updateGeometry();
+	   UpdateState();
+       }
     repaint();
-  //   }
+  }
 }

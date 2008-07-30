@@ -48,10 +48,10 @@ protected:
   bool dirty;
   unsigned handle;
   bool glActive;
-  //  QGLWidget *glchild;
-  QWidget *qtchild;
+  //QGLWidget *glchild;
+  QWidget *child;
   HandleFigure *hfig;
-  //  QStackedWidget *layout;
+  //QStackedWidget *layout;
   QToolBar *toolBar;
   QAction *zoomAct, *panAct, *rotateAct, *camRotateAct;
   QAction *saveAct, *copyAct, *closeAct;
@@ -74,7 +74,7 @@ protected:
   int remapX(int x);
   int remapY(int y);
 public:
-  QWidget *GetQtWidget() {return qtchild;}
+  QWidget *GetQtWidget() {return child;}
   HandleWindow(unsigned ahandle);
   ~HandleWindow() {delete hfig;}
   bool isDirty() {return dirty;}
