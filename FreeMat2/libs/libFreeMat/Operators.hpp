@@ -157,7 +157,7 @@ template <typename T, class Op>
 static inline Array DotOp(const Array &Ain, const Array &Bin, DataClass Tclass) {
   Array Acast(Ain.toClass(Tclass));
   Array Bcast(Bin.toClass(Tclass));
-  Array F(Tclass);
+  Array F(Tclass,NTuple(0,0));
   if (Acast.isSparse() && Bcast.isSparse()) {
     if (Acast.dimensions() != Bcast.dimensions())
       throw Exception("size mismatch in arguments to binary operator");
@@ -165,6 +165,7 @@ static inline Array DotOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
       F = DotOp<T,T,Op>(Acast.constRealSparse<T>(),
 			Bcast.constRealSparse<T>());
     } else {
+      Acast.forceComplex(); Bcast.forceComplex();
       DotOp<T,T,Op>(Acast.constRealSparse<T>(),
 		    Acast.constImagSparse<T>(),
 		    Bcast.constRealSparse<T>(),
@@ -181,6 +182,7 @@ static inline Array DotOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
       F = Array::Array(Op::func(Acast.constRealScalar<T>(),
 				Bcast.constRealScalar<T>()));
     } else {
+      Acast.forceComplex(); Bcast.forceComplex();
       F = Array::Array(T(0),T(0));
       Op::func(Acast.constRealScalar<T>(),
 	       Acast.constImagScalar<T>(),
@@ -196,6 +198,7 @@ static inline Array DotOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
 	 F.real<T>(),
 	 Bcast.dimensions());
     } else {
+      Acast.forceComplex(); Bcast.forceComplex();
       DotOp<T,SpinIterator<T>,BasicArray<T>,Op>
 	(SpinIterator<T>(Acast.constRealScalar<T>()),
 	 SpinIterator<T>(Acast.constImagScalar<T>()),
@@ -212,7 +215,8 @@ static inline Array DotOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
 	 SpinIterator<T>(Bcast.constRealScalar<T>()),
 	 F.real<T>(),
 	 Acast.dimensions());
-    } else {
+    } else { 
+      Acast.forceComplex(); Bcast.forceComplex();
       DotOp<T,BasicArray<T>,SpinIterator<T>,Op>
 	(Acast.constReal<T>(),
 	 Acast.constImag<T>(),
@@ -232,6 +236,7 @@ static inline Array DotOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
 	 F.real<T>(),
 	 Acast.dimensions());
     } else {
+      Acast.forceComplex(); Bcast.forceComplex();
       DotOp<T,BasicArray<T>,BasicArray<T>,Op>
 	(Acast.constReal<T>(),
 	 Acast.constImag<T>(),
@@ -269,7 +274,7 @@ template <typename T, class Op>
 static inline Array CmpOp(const Array &Ain, const Array &Bin, DataClass Tclass) {
   Array Acast(Ain.toClass(Tclass));
   Array Bcast(Bin.toClass(Tclass));
-  Array F(Bool);
+  Array F(Bool,NTuple(0,0));
   if (Acast.isSparse() && Bcast.isSparse()) {
     if (Acast.dimensions() != Bcast.dimensions())
       throw Exception("size mismatch in arguments to binary operator");
@@ -277,6 +282,7 @@ static inline Array CmpOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
       F = DotOp<bool,T,Op>(Acast.constRealSparse<T>(),
 			   Bcast.constRealSparse<T>());
     } else {
+      Acast.forceComplex(); Bcast.forceComplex();
       F = DotOp<bool,T,Op>(Acast.constRealSparse<T>(),
 			   Acast.constImagSparse<T>(),
 			   Bcast.constRealSparse<T>(),
@@ -291,6 +297,7 @@ static inline Array CmpOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
       F = Array::Array(Op::func(Acast.constRealScalar<T>(),
 				Bcast.constRealScalar<T>()));
     } else {
+      Acast.forceComplex(); Bcast.forceComplex();
       F = Array::Array(Op::func(Acast.constRealScalar<T>(),
 				Acast.constImagScalar<T>(),
 				Bcast.constRealScalar<T>(),
@@ -303,6 +310,7 @@ static inline Array CmpOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
 	 Bcast.constReal<T>(),F.real<bool>(),
 	 Bcast.dimensions());
     } else {
+      Acast.forceComplex(); Bcast.forceComplex();
       DotOp<bool,SpinIterator<T>,BasicArray<T>,Op>
 	(SpinIterator<T>(Acast.constRealScalar<T>()),
 	 SpinIterator<T>(Acast.constImagScalar<T>()),
@@ -316,6 +324,7 @@ static inline Array CmpOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
 	 SpinIterator<T>(Bcast.constRealScalar<T>()),
 	 F.real<bool>(), Acast.dimensions());
     } else {
+      Acast.forceComplex(); Bcast.forceComplex();
       DotOp<bool,BasicArray<T>,SpinIterator<T>,Op>
 	(Acast.constReal<T>(), Acast.constImag<T>(),
 	 SpinIterator<T>(Bcast.constRealScalar<T>()),
@@ -330,6 +339,7 @@ static inline Array CmpOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
 	(Acast.constReal<T>(), Bcast.constReal<T>(),
 	 F.real<bool>(), Acast.dimensions());
     } else {
+      Acast.forceComplex(); Bcast.forceComplex();
       DotOp<bool,BasicArray<T>,BasicArray<T>,Op>
 	(Acast.constReal<T>(), Acast.constImag<T>(),
 	 Bcast.constReal<T>(), Bcast.constImag<T>(),
@@ -421,7 +431,7 @@ static inline void UnaryOp(const Atype& A_real, const Atype& A_imag,
 template <typename T, class Op>
 static inline Array UnaryOp(const Array &Ain, DataClass Tclass) {
   Array Acast(Ain.toClass(Tclass));
-  Array F(Tclass);
+  Array F(Tclass,NTuple(0,0));
   if (Acast.isSparse()) {
     if (Acast.allReal()) {
       F = UnaryOp<T,T,Op>(Acast.constRealSparse<T>());

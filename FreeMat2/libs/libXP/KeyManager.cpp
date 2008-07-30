@@ -1140,6 +1140,7 @@ StringVector KeyManager::GetCompletions(QString line,
   else
     startOfPath++;
   matchString = line.mid(startOfPath,qMax(0,word_end-startOfPath));
+  if (matchString.startsWith(' ')) matchString.remove(0,1);
   /*
    *  the preceeding character was not a ' (quote), then
    * do a command expansion, otherwise, do a filename expansion.

@@ -160,7 +160,7 @@ ArrayVector FieldNamesFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)
     throw Exception("fieldnames function requires at least one argument");
   if (arg[0].dataClass() != Struct)
-    return ArrayVector(Array(CellArray));
+    return ArrayVector(Array(CellArray,NTuple(0,0)));
   StringVector names(FieldNames(arg[0]));
   ArrayMatrix m;
   for (int i=0;i<names.size();i++)
@@ -253,7 +253,7 @@ ArrayVector WhichFunction(int nargout, const ArrayVector& arg,
   bool isFun;
   FuncPtr val;
   isFun = eval->lookupFunction(fname,val);
-  Array ret(Double);
+  Array ret(Double,NTuple(0,0));
   if (isFun) {
     if (val->type() == FM_M_FUNCTION) {
       MFunctionDef *mptr;

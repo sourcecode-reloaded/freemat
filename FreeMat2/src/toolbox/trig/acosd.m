@@ -19,7 +19,7 @@
 %@>
 %@@Tests
 %@$"y=acosd(0.342)","70.00122819209012","close"
-%@$"y=acosd(0.523f)","58.4662971f","close"
+%@$"y=acosd(float(0.523))","float(58.4662971)","close"
 %@$"y=acosd(0.5)","60","close"
 %!
 

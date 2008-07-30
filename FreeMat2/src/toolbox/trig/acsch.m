@@ -26,7 +26,7 @@
 %@$"y=acsch(0.342)","1.79412760639059","close"
 %@$"y=acsch(0.342+0.532i)","1.12267740551487-0.89903500983626i","close"
 %@$"y=acsch(inf)","0","exact"
-%@$"y=acsch(0.523f)","1.4035949f","close"
+%@$"y=acsch(float(0.523))","float(1.4035949)","close"
 %!
 
 
@@ -37,5 +37,5 @@ function y = acsch(x)
   if (nargin == 0 || ~isnumeric(x))
     error('acsch expects a single, numeric input');
   end
-  y = asinh(1.f./x);
+  y = asinh(1 ./ x);
   

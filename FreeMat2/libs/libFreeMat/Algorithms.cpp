@@ -473,9 +473,12 @@ bool AnyNotFinite(const Array &A) {
 
 template <typename T>
 static inline bool Tispositive(const Array *ptr) {
-  if (ptr->isScalar() && ptr->allReal())
-    return (ptr->constRealScalar<T>() >= 0);
-  else if (ptr->isSparse())
+  if (ptr->isScalar()) {
+    if (ptr->allReal())
+      return (ptr->constRealScalar<T>() >= 0);
+    else
+      return false;
+  } else if (ptr->isSparse())
     return IsPositive(ptr->constRealSparse<T>());
   else
     return IsPositive(ptr->constReal<T>());

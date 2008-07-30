@@ -79,5 +79,6 @@ ArrayVector RealFunction(int nargout, const ArrayVector& arg) {
 ArrayVector ImagFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("imag function requires 1 argument");
-  return ArrayVector(Imag(arg[0]));
+  Array arg0(arg[0]); arg0.forceComplex();
+  return ArrayVector(Imag(arg0));
 }
