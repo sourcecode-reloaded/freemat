@@ -22,6 +22,8 @@
 
 #include "Types.hpp"
 #include "Array.hpp"
+#include <QString>
+#include <QFile>
 
 bool contains(StringVector& list, QString s, bool regexpmode);
 
@@ -32,4 +34,15 @@ double ArrayRange(const Array& dp);
 Array DoubleVectorFromQList(QList<uint32> &ref);
 
 void SwapBuffer(char* cp, int count, int elsize);
+
+QString ReadQStringFromFile(QFile *fp);
+
+void WriteQStringToFile(QFile *fp, QString txt);
+
+double QFileReadInteger(QFile *fp, int base);
+
+double QFileReadFloat(QFile *fp);
+
+QString QFileReadString(QFile *fp);
+
 #endif

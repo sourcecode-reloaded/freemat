@@ -250,7 +250,57 @@ static inline Array DotOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
   return F;
 }
 
+
 // Assumes that the operation cannot create complex values from real ones
+//
+// So the table looks like this (order is unimportant)
+// a  b  c v
+// s  s  s s
+// s  d  s s
+// s  c  s s
+// s  l  s s
+// s  i  e 
+// d  d  d d
+// d  c  d d
+// d  l  d d
+// d  i  i d
+// i1 i2 e 
+//
+// if (a or b single) --> v single, c single
+// else {
+//   v double
+//   if (a and b not integer) --> c double, else c integer
+// }
+//
+// Arithmetic Operations on Floating-Point Numbers
+// This section describes which classes you can use in arithmetic operations with floating-point numbers.
+// Double-Precision.   You can perform basic arithmetic operations with double and any of the following other classes. When one or more operands is an integer (scalar or array), the double operand must be a scalar. The result is of type double, except where noted otherwise:
+//       single  The result is of type single
+//       double
+//       int* or uint*  The result has the same data type as the integer operand
+//       char
+//       logical
+// This example performs arithmetic on data of types char and double. The result is of type double:
+// c = 'uppercase' - 32;
+// class(c)
+// ans =
+//    double
+// char(c)
+// ans =
+//    UPPERCASE
+// Single-Precision.   You can perform basic arithmetic operations with single and any of the following other classes. The result is always single:
+//       single
+//       double
+//       char
+//       logical
+// Arithmetic Operations on Integer Classes
+// MATLAB can perform integer arithmetic on the following types of data:
+//       Integers or integer arrays of the same integer data type. This yields a result that has the same data type as the operands:
+//          x = uint32([132 347 528]) .* uint32(75);
+//       Integers or integer arrays and scalar double-precision floating-point numbers. This yields a result that has the same data type as the integer operands:
+//          x = uint32([132 347 528]) .* 75.49;
+// For all binary operations in which one operand is an array of integer data type and the other is a scalar double, MATLAB computes the operation using elementwise double-precision arithmetic, and then converts the result back to the original integer data type.
+
 template <class Op>
 static inline Array DotOp(const Array &Ain, const Array &Bin) {
   if ((Ain.dataClass() != Bin.dataClass()) && 

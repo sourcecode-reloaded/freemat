@@ -139,6 +139,7 @@ function helpgen_processfile(filename,&writers)
   try
     fp = fopen(filename,'r');
   catch
+    printf('Error %s...\n',lasterr);
     return;
   end
   while (1)

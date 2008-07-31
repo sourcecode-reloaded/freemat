@@ -713,10 +713,8 @@ ArrayVector FgetlineFunction(int nargout, const ArrayVector& arg) {
   FilePtr *fptr=(fileHandles.lookupHandle(handle+1));
   if (fptr->fp->atEnd())
     return ArrayVector(EmptyConstructor());
-  else {
-    QTextStream in(fptr->fp);
-    return ArrayVector(Array(in.readLine()));
-  }
+  else 
+    return ArrayVector(Array(ReadQStringFromFile(fptr->fp)));
 }
 
 //!
@@ -767,8 +765,7 @@ ArrayVector FgetlineFunction(int nargout, const ArrayVector& arg) {
   if (handle == 1)
     return PrintfFunction(nargout,argCopy,eval);
   FilePtr *fptr=(fileHandles.lookupHandle(handle+1));
-  QTextStream out(fptr->fp);
-  out << ConvertEscapeSequences(XprintfFunction(nargout,argCopy));
+  WriteQStringToFile(fptr->fp,ConvertEscapeSequences(XprintfFunction(nargout,argCopy)));
   return ArrayVector();
 }
 

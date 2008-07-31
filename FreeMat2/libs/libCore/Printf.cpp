@@ -1,6 +1,8 @@
 #include "Printf.hpp"
 #include "Print.hpp"
 #include "Algorithms.hpp"
+#include "Utils.hpp"
+#include <QTextCodec>
 
 static int flagChar(char c) {
   return ((c == '#') ||  (c == '0') || (c == '-') ||  
@@ -307,7 +309,8 @@ ArrayVector DispFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
 
 ArrayVector ScanfFunction(QFile *fp, QString format) {
   char *buff = strdup(qPrintable(format));
-  QTextStream in(fp);
+  //#error - Invalid use of QTS
+  //  QTextStream in(fp);
   // Search for the start of a format subspec
   char *dp = buff;
   char *np;
@@ -323,8 +326,9 @@ ArrayVector ScanfFunction(QFile *fp, QString format) {
     // Print out the formatless segment
     sv = *dp;
     *dp = 0;
-    for (int i=0;i<strlen(np);i++) in >> dum;
-    if (in.atEnd())
+    for (int i=0;i<strlen(np);i++) 
+      fp->getChar(&dum);
+    if (fp->atEnd())
       values.push_back(EmptyConstructor());
     *dp = sv;
     // Process the format spec
@@ -334,7 +338,7 @@ ArrayVector ScanfFunction(QFile *fp, QString format) {
 	throw Exception("erroneous format specification " + QString(dp));
       else {
 	if (*(np-1) == '%') {
-	  in >> dum;
+	  fp->getChar(&dum);
 	  dp+=2;
 	} else {
 	  shortarg = false;
@@ -351,30 +355,20 @@ ArrayVector ScanfFunction(QFile *fp, QString format) {
 	  switch (*(np-1)) {
 	  case 'd':
 	  case 'i':
-	    if (shortarg) {
-	      short sdumint;
-	      in >> sdumint;
-	      values.push_back(Array(double(sdumint)));
-	    } else {
-	      int sdumint;
-	      in >> sdumint;
-	      values.push_back(Array(double(sdumint)));
-	    }
+	    values.push_back(Array(QFileReadInteger(fp,0)));
 	    break;
 	  case 'o':
+	    values.push_back(Array(QFileReadInteger(fp,8)));
+	    break;
 	  case 'u':
+	    values.push_back(Array(QFileReadInteger(fp,10)));
+	    break;
 	  case 'x':
 	  case 'X':
+	    values.push_back(Array(QFileReadInteger(fp,16)));
+	    break;
 	  case 'c':
-	    if (shortarg) {
-	      int sdumint;
-	      in >> sdumint;
-	      values.push_back(Array(double(sdumint)));
-	    } else {
-	      unsigned int dumint;
-	      in >> dumint;
-	      values.push_back(Array(double(dumint)));
-	    }
+	    values.push_back(Array(QFileReadInteger(fp,10)));
 	    break;
 	  case 'e':
 	  case 'E':
@@ -382,23 +376,19 @@ ArrayVector ScanfFunction(QFile *fp, QString format) {
 	  case 'F':
 	  case 'g':
 	  case 'G':
-	    if (doublearg) {
-	      double dumfloat;
-	      in >> dumfloat;
-	      values.push_back(Array(double(dumfloat)));
-	    } else {
-	      float dumfloat;
-	      in >> dumfloat;
-	      values.push_back(Array(double(dumfloat)));
-	    }
+	    values.push_back(Array(QFileReadFloat(fp)));
 	    break;
-	  case 's':
+	  case 's': 
 	    {
-	      QString str;
-	      in >> str;
-	      values.push_back(Array(str));
+	      QByteArray r;
+	      char t;
+	      while (fp->getChar(&t) && !isspace(t))
+		r.push_back(t);
+	      fp->ungetChar(t);
+	      values.push_back(Array(QTextCodec::codecForLocale()->
+				     toUnicode(r)));
+	      break;
 	    }
-	    break;
 	  default:
 	    throw Exception("unsupported fscanf configuration");
 	  }
