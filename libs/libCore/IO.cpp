@@ -2263,7 +2263,7 @@ void PrintfHelperFunction(int nargout, const ArrayVector& arg, QTextStream& outp
 
     //do while there is still data to output
     do {
-	if ( !(*dp) ) //rewind the format
+	if ( !(*dp) && ( nextArg < arg.size() ) ) //rewind the format
 	    dp = &buff[0];
 	np = dp;
 	int nbuf_ind = 0;
@@ -2303,7 +2303,16 @@ void PrintfHelperFunction(int nargout, const ArrayVector& arg, QTextStream& outp
 		    nprn = snprintf(nbuff,BUFSIZE,"%%"); nbuff[nprn+1]='\0'; noutput += nbuf_ind;
 		    output << nbuff;    
 		    dp+=2;
-		} else {
+		    sv=0;
+		} else 
+		if( *(np-1) == 's') {
+		    Array strArg( arg[nextArg++] );
+		    std::string str = strArg.getContentsAsString();
+		    const char* pStr = str.c_str();
+		    nprn = snprintf(nbuff,BUFSIZE,dp,pStr); nbuff[nprn+1]='\0'; noutput += nbuf_ind;
+		    output << nbuff;
+		    sv = 0;
+		} else{
 		    sv = *np;
 		    *np = 0;
 
@@ -2325,7 +2334,7 @@ void PrintfHelperFunction(int nargout, const ArrayVector& arg, QTextStream& outp
 			data = *( pVal + valind++ );
 		    }
 		    else{
-			if( nextArg > arg.size() )
+			if( nextArg >= arg.size() )
 			    goto exit_;
 			nextVal = arg[nextArg++];
 			nextVal.promoteType( FM_DOUBLE );
@@ -2357,16 +2366,10 @@ void PrintfHelperFunction(int nargout, const ArrayVector& arg, QTextStream& outp
 			nprn = snprintf(nbuff,BUFSIZE,dp,data); nbuff[nprn+1]='\0'; noutput += nbuf_ind;
 			output << nbuff;
 			break;
-		    case 's':
-			Array strArg( arg[nextArg-1] );
-			const char* pStr = strArg.getContentsAsString().c_str() + valind;
-			nprn = snprintf(nbuff,BUFSIZE,dp,pStr); nbuff[nprn+1]='\0'; noutput += nbuf_ind;
-			output << nbuff;
-			valind += nprn;
-			break;
 		    }
 		}
-		*np = sv;
+		if( sv )
+		    *np = sv;
 		dp = np;
 	    }
 	}
