@@ -744,7 +744,7 @@ ArrayVector ThreadValueFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@@Signature
 //function threadwait ThreadWaitFunction
-//inputs handle
+//inputs handle timeout
 //outputs success
 //!
 ArrayVector ThreadWaitFunction(int nargout, const ArrayVector& arg) {

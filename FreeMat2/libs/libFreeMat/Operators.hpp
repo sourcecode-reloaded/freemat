@@ -265,6 +265,18 @@ static inline Array DotOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
 // d  l  d d
 // d  i  i d
 // i1 i2 e 
+// c  i  e
+// c  l  d d
+// c  c  d d
+// l  l  d d
+//
+// The resulting rule:
+//   default: c is double, v is double
+//   if (a or b is single), c is single, v is single
+//   if (a or b is an integer)
+//     if (same type, or one is a double), 
+//       c is integer
+//     else illegal.
 //
 // if (a or b single) --> v single, c single
 // else {
@@ -301,18 +313,29 @@ static inline Array DotOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
 //          x = uint32([132 347 528]) .* 75.49;
 // For all binary operations in which one operand is an array of integer data type and the other is a scalar double, MATLAB computes the operation using elementwise double-precision arithmetic, and then converts the result back to the original integer data type.
 
+static inline bool IsIntegerDataClass(const Array &Ain) {
+  return ((Ain.dataClass() >= Int8) && (Ain.dataClass() <= UInt64));
+}
+
 template <class Op>
 static inline Array DotOp(const Array &Ain, const Array &Bin) {
-  if ((Ain.dataClass() != Bin.dataClass()) && 
-      (!Ain.isDouble() && !Bin.isDouble()))
-    throw Exception("Unsupported type combinations to binary operator");
-  DataClass out_type;
+  DataClass via_type = Double;
+  DataClass out_type = Double;
+
+  if (Ain.dataClass() == Float || Bin.dataClass() == Float) {
+    if (IsIntegerDataClass(Ain) || IsIntegerDataClass(Bin))
+      throw Exception("Cannot combine single precision and integer class data");
+    via_type = Float;
+    out_type = Float;
+  } else {
+    if (IsIntegerDataClass(Ain) && IsIntegerDataClass(Bin) &&
+	Ain.dataClass() != Bin.dataClass()) 
+      throw Exception("Cannot combine data of different integer data classes");
+    if (IsIntegerDataClass(Ain)) out_type = Ain.dataClass();
+    if (IsIntegerDataClass(Bin)) out_type = Bin.dataClass();
+  }
   Array F;
-  if (Ain.isDouble()) 
-    out_type = Bin.dataClass();
-  else
-    out_type = Ain.dataClass();
-  if (out_type == Float)
+  if (via_type == Float)
     F = DotOp<float,Op>(Ain,Bin,Float);
   else
     F = DotOp<double,Op>(Ain,Bin,Double);
@@ -851,7 +874,7 @@ static inline ArrayVector BiVectorOp(const Array &Ain, index_t out,
       F = BiVectorOp<T,Op>(Acast.constRealSparse<T>(),
 			 Acast.constImagSparse<T>(),out,dim,D);
   }
-  if (!Acast.isScalar()) Acast = Acast.asDenseArray();
+  if (Acast.isScalar()) Acast = Acast.asDenseArray();
   if (Acast.allReal()) {
     F = BiVectorOp<T,Op>(Acast.constReal<T>(),out,dim,D);
   } else {

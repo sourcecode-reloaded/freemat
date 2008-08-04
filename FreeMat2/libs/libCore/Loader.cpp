@@ -296,7 +296,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("float",FloatFunction,1,1,"x",NULL);
   context->addFunction("single",FloatFunction,1,1,"x",NULL);
   context->addFunction("double",DoubleFunction,1,1,"x",NULL);
-  context->addFunction("complex",ComplexFunction,1,1,"x",NULL);
+  context->addFunction("complex",ComplexFunction,2,1,"x","z",NULL);
   context->addFunction("dcomplex",DcomplexFunction,1,1,"x",NULL);
   context->addFunction("typeof",TypeOfFunction,1,1,"x",NULL);
   context->addFunction("ceil",CeilFunction,1,1,"x",NULL);
@@ -549,7 +549,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addSpecialFunction("threadnew",ThreadNewFunction,0,1,NULL);
   context->addSpecialFunction("threadstart",ThreadStartFunction,-1,0,NULL);
   context->addFunction("threadvalue",ThreadValueFunction,2,-1,"handle","timeout",NULL);
-  context->addFunction("threadwait",ThreadWaitFunction,1,1,"handle",NULL);
+  context->addFunction("threadwait",ThreadWaitFunction,2,1,"handle","timeout",NULL);
   context->addFunction("threadkill",ThreadKillFunction,1,0,"handle",NULL);
   context->addFunction("threadfree",ThreadFreeFunction,2,0,"handle","timeout",NULL);
   context->addFunction("clc",ClcFunction,0,0,NULL);

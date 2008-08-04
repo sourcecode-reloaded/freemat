@@ -87,7 +87,7 @@
 
 function hout = subplot(varargin)
   m = 1; n = 1; p = 1;
-  if ((nargin == 2) && (isa(varargin{1},'string')))
+  if ((nargin == 2) && (isa(varargin{1},'char')))
     if (strcmp(lower(varargin{1}),'position'))
         h = axes('outerposition',varargin{2});
         if (nargout > 0), hout = h; end;
@@ -95,7 +95,7 @@ function hout = subplot(varargin)
     end
   end
   if (nargin == 1)
-    if (isa(varargin{1},'string'))
+    if (isa(varargin{1},'char'))
       str = varargin{1};
       if (length(str) ~= 3), error('Subplot with a string argument requires a string of the type mnp'); end
       m = str(1)-'0';

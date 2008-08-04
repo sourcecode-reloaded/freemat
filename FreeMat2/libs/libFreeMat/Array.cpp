@@ -551,12 +551,13 @@ QString Array::className() const {
   if ((dataClass() == Struct) && (constStructPtr().isUserClass()))
     return constStructPtr().className();
   else {
+    if (dataClass() == Float) return QString("single");
     switch (dataClass()) {
     default: throw Exception("Unknown class?!");
     case Invalid: return QString("");
     case CellArray: return QString("cell");
     case Struct: return QString("struct");
-    case StringArray: return QString("string");
+    case StringArray: return QString("char");
     case Bool: return QString("logical");
       MacroExpandCasesNoBool(MacroClassName);
     }
@@ -702,7 +703,8 @@ const Array Array::get(const ArrayVector& index) const {
 }
 
 void Array::set(const Array& index, const Array& data) {
-  if (index.isScalar() && (index.dataClass() != Bool)) {
+  if (index.isScalar() && (index.dataClass() != Bool)
+      && (index.dataClass() != StringArray)) {
     if (!index.allReal())
       Warn("Complex part of index ignored");
     set(index.asIndexScalar(),data);

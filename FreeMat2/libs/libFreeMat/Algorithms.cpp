@@ -426,6 +426,9 @@ static inline Array Tmerge(const Array *p_real, const Array *p_imag) {
     return Array(p_real->constReal<T>(),p_imag->constReal<T>());
 }
 
+#define MacroMerge(ctype,cls)			\
+  case cls: return Tmerge<ctype>(&Real,&Imag);
+
 Array MergeToComplex(const Array &Real, const Array &Imag) {
   if (Real.dataClass() != Imag.dataClass()) 
     throw Exception("cannot merge unlike types into a complex type");
@@ -435,7 +438,10 @@ Array MergeToComplex(const Array &Real, const Array &Imag) {
     throw Exception("reference types cannot be combined into a complex type");
   if (Real.dimensions() != Imag.dimensions())
     throw Exception("cannot merge different sized arrays into a complex type");
-  
+  switch (Real.dataClass()) {
+  default: throw Exception("Unhandled type for complex output");
+    MacroExpandCasesNoBool(MacroMerge);
+  }
 }
 #undef MacroMerge
 
@@ -606,6 +612,154 @@ Array DiagonalArray(const Array &A, int diagonal) {
 //
 //
 
+// #  Wes Campaigne replied on June 5th, 2007 at 11:57 pm :
+
+// How does cat choose the dominant class, i.e., the class of its return value?
+
+// A quick experiment with the basic types seems to reveal a descending priority of:
+// char
+// integer types (if there are multiple different integer-typed operands, the type of the left-most of these is dominant)
+// single
+// double
+// logical
+
+// Appropriate warnings are given most of the time, but truncation of floats to char doesnt throw any. And promotion of one integer type (or logicals) to a bigger integer type DOES throw a warning, even though its unnecessary.
+
+// Is there a particular reasoning behind all this behaviour? I havent noticed it documented anywhere.
+
+// Combining Unlike Classes
+
+// Matrices and arrays can be composed of elements of most any MATLAB data type as long as all elements in the matrix are of the same type. If you do include elements of unlike classes when constructing a matrix, MATLAB converts some elements so that all elements of the resulting matrix are of the same type. (See Built-In Classes (Data Types) for information on any of the MATLAB classes discussed here.)
+
+// Data type conversion is done with respect to a preset precedence of classes. The following table shows the five classes you can concatenate with an unlike type without generating an error (that is, with the exception of character and logical).
+
+// Table is usual C,I,S,D,L, with C-L combination made illegal
+
+// For example, concatenating a double and single matrix always yields a matrix of type single. MATLAB converts the double element to single to accomplish this.
+// Combining Unlike Integer Types
+
+// If you combine different integer types in a matrix (e.g., signed with unsigned, or 8-bit integers with 16-bit integers), MATLAB returns a matrix in which all elements are of one common type. MATLAB sets all elements of the resulting matrix to the data type of the left-most element in the input matrix. For example, the result of the following concatenation is a vector of three 16-bit signed integers:
+
+// A = [int16(450) uint8(250) int32(1000000)]
+
+// MATLAB also displays a warning to inform you that the result may not be what you had expected:
+
+// A = [int16(450) uint8(250) int32(1000000)];
+// Warning: Concatenation with dominant (left-most) integer class 
+// may overflow other operands on conversion to return class.
+
+// You can disable this warning by entering the following two commands directly after the operation that caused the warning. The first command retrieves the message identifier associated with the most recent warning issued by MATLAB. The second command uses this identifier to disable any further warnings of that type from being issued:
+
+// [msg, intcat_msgid] = lastwarn;
+// warning('off', intcat_msgid);
+
+// To reenable the warning so that it will now be displayed, use
+
+// warning('on', intcat_msgid);
+
+// You can use these commands to disable or enable the display of any MATLAB warning.
+
+// Example of Combining Unlike Integer Sizes.   After disabling the integer concatenation warnings as shown above, concatenate the following two numbers once, and then switch their order. The return value depends on the order in which the integers are concatenated. The left-most type determines the data type for all elements in the vector:
+
+// A = [int16(5000) int8(50)]
+// A =
+//    5000   50
+
+// B = [int8(50) int16(5000)]
+// B =
+//    50   127
+
+// The first operation returns a vector of 16-bit integers. The second returns a vector of 8-bit integers. The element int16(5000) is set to 127, the maximum value for an 8-bit signed integer.
+
+// The same rules apply to vertical concatenation:
+
+// C = [int8(50); int16(5000)]
+// C =
+//     50
+//    127
+
+//       Note   You can find the maximum or minimum values for any MATLAB integer type using the intmax and intmin functions. For floating-point types, use realmax and realmin.
+
+// Example of Combining Signed with Unsigned.   Now do the same exercise with signed and unsigned integers. Again, the left-most element determines the data type for all elements in the resulting matrix:
+
+// A = [int8(-100) uint8(100)]
+// A =
+//    -100   100
+
+// B = [uint8(100) int8(-100)]
+// B =
+//    100   0
+
+// The element int8(-100) is set to zero because it is no longer signed.
+
+// MATLAB evaluates each element prior to concatenating them into a combined array. In other words, the following statement evaluates to an 8-bit signed integer (equal to 50) and an 8-bit unsigned integer (unsigned -50 is set to zero) before the two elements are combined. Following the concatenation, the second element retains its zero value but takes on the unsigned int8 type:
+
+// A = [int8(50), uint8(-50)]
+// A =
+//   50    0
+
+// Combining Integer and Noninteger Data
+
+// If you combine integers with double, single, or logical classes, all elements of the resulting matrix are given the data type of the left-most integer. For example, all elements of the following vector are set to int32:
+
+// A = [true pi int32(1000000) single(17.32) uint8(250)]
+
+// Empty Matrices
+
+// If you construct a matrix using empty matrix elements, the empty matrices are ignored in the resulting matrix:
+
+// A = [5.36; 7.01; []; 9.44]
+// A =
+//     5.3600
+//     7.0100
+//     9.4400
+
+// Concatenation Examples
+
+// Here are some examples of data type conversion during matrix construction.
+
+// Combining Single and Double Types.   Combining single values with double values yields a single matrix. Note that 5.73*10^300 is too big to be stored as a single, thus the conversion from double to single sets it to infinity. (The class function used in this example returns the data type for the input value):
+
+// x = [single(4.5) single(-2.8) pi 5.73*10^300]
+// x =
+//     4.5000   -2.8000    3.1416       Inf
+
+// class(x)              % Display the data type of x
+// ans =
+//    single
+
+// Combining Integer and Double Types.   Combining integer values with double values yields an integer matrix. Note that the fractional part of pi is rounded to the nearest integer. (The int8 function used in this example converts its numeric argument to an 8-bit integer):
+
+// x = [int8(21) int8(-22) int8(23) pi 45/6]
+// x =
+//     21   -22    23     3     7
+
+// class(x)
+// ans =
+//    int8
+
+// Combining Character and Double Types.   Combining character values with double values yields a character matrix. MATLAB converts the double elements in this example to their character equivalents:
+
+// x = ['A' 'B' 'C' 68 69 70]
+// x =
+//    ABCDEF
+
+// class(x)
+// ans =
+//    char
+
+// Combining Logical and Double Types.   Combining logical values with double values yields a double matrix. MATLAB converts the logical true and false elements in this example to double:
+
+// x = [true false false pi sqrt(7)]
+// x =
+//     1.0000         0         0    3.1416    2.6458
+
+// class(x)
+// ans =
+//    double
+
+
+
 Array NCat(const ArrayVector& pdata, int catdim) {
   ArrayVector data;
   for (int i=0;i<pdata.size();i++)
@@ -725,6 +879,7 @@ Array StructConstructor(const StringVector& fnames, const ArrayVector& values) {
     }
     qp.insert(fnames[i],rp);
   }
+  qp.updateDims();
   return Array(qp);
 }
 
@@ -761,6 +916,7 @@ static Array StructPermute(const Array &x, const NTuple &dp) {
   StructArray ret;
   for (int i=0;i<sp.fieldCount();i++)
     ret.insert(sp.fieldName(i),Permute(sp[i],dp));
+  ret.updateDims();
   return Array(ret);
 }
 

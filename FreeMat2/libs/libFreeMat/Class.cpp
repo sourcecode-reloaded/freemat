@@ -157,6 +157,7 @@ static Array ClassAux(const Array &s, QString classname, const StringVector &par
   for (int i=0;i<parentNames.size();i++)
     rp[parentNames[i]] = BasicArray<Array>(parents[i]);
   rp.setClassPath(StringVector() << classname);
+  rp.updateDims();
   return retval;
 }
 
@@ -977,6 +978,7 @@ Array IndexExpressionToStruct(Interpreter* eval, Tree *t, Array r) {
   StructArray& rp(retval.structPtr());
   rp["type"] = ArrayVectorToBasicArray(type_args);
   rp["subs"] = ArrayVectorToBasicArray(subs_args);
+  rp.updateDims();
   return retval;
 }
   

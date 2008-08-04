@@ -39,8 +39,8 @@ struct OpCeil {
 //@>
 //Next, we take the @|ceil| of a floating point value:
 //@<
-//ceil(3.023f)
-//ceil(-2.341f)
+//ceil(float(3.023))
+//ceil(float(-2.341))
 //@>
 //Note that the return type is a @|float| also.  Finally, for a @|double|
 //type:

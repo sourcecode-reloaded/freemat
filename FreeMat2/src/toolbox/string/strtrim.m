@@ -34,7 +34,7 @@
 % Licensed under the GPL
 
 function y = strtrim(x)
-  if (isa(x,'string'))
+  if (isa(x,'char'))
     y = strtrim_string(x);
   elseif (iscellstr(x))
     y = cell(size(x));
@@ -46,7 +46,7 @@ function y = strtrim(x)
   end
 
 function y = strtrim_string(x)
-  if (~isa(x,'string'))
+  if (~isa(x,'char'))
     error('strtrim expects string arguments or a cell array of strings');
   end
   ndx = find(~isspace(x(:)));

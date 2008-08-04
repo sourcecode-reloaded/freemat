@@ -37,7 +37,7 @@
 
 function y = strfind(source,pattern)
   patlen = length(pattern);
-  if (isa(source,'string'))
+  if (isa(source,'char'))
     y = strfind_string(source,pattern);
   elseif (iscellstr(source))
     y = cell(size(source));
@@ -49,7 +49,7 @@ function y = strfind(source,pattern)
   end
 
 function y = strfind_string(source,pattern)
-  if (~isa(source,'string') | ~isa(pattern,'string'))
+  if (~isa(source,'char') | ~isa(pattern,'char'))
     error('strfind expects string arguments or a cell array of strings');
   end
   patlen = length(pattern);

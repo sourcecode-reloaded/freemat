@@ -431,7 +431,12 @@ void PrintArrayClassic(Array A, int printlimit, Interpreter* io) {
   if (printlimit == 0) return;
   int termWidth = io->getTerminalWidth();
   NTuple Adims(A.dimensions());
-  if (A.isUserClass())  return;
+  if (A.isUserClass())  {
+    if (!A.isScalar())
+      io->outputMessage("  " + A.dimensions().toString() + " array of");
+    io->outputMessage("  " + A.className() + "\n");
+    return;
+  }
   if (A.isEmpty()) {
     if (A.dimensions() == NTuple(0,0))
       io->outputMessage("  []\n");

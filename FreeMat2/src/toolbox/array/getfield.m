@@ -30,7 +30,7 @@ end
 
 % Check for the simple case of a single field index
 field = varargin{1};
-if (length(varargin)==1 && isa(field,'string'))
+if (length(varargin)==1 && isa(field,'char'))
   y = x.(field);
   return;
 end
@@ -40,7 +40,7 @@ for i=1:length(varargin)
   ndx = varargin{i};
   if (isa(ndx,'cell'))
     y = y(ndx{:});
-  elseif (isa(ndx,'string'))
+  elseif (isa(ndx,'char'))
     % Dereference the field - if a contents list is returned
     % handle appropriately using a deal call
     if (length(y) == 1)

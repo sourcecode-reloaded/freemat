@@ -619,6 +619,7 @@ void Serialize::getArray(Array& dat) {
     for (index_t j=1;j<=dims.count();j++)
       for (int i=0;i<ncount;i++)
 	getArray(rp[i][j]);
+    rp.updateDims();
     dat = Array(rp);
     return;
   }

@@ -313,8 +313,8 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
       literalSpacing = false;
   }
 
-  pattern = stringed_args[1].toUtf8().constData();
-  subject = stringed_args[0].toUtf8().constData();
+  pattern = strdup(stringed_args[1].toAscii().constData());
+  subject = strdup(stringed_args[0].toAscii().constData());
   subject_length = (int)strlen(subject);
   QString qsubject(subject);
 
@@ -341,7 +341,7 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
   
   if (re == NULL) 
     throw Exception(QString("regular expression compilation failed at offset ") + 
-		    erroffset + ": " + error);
+		    QString("%1").arg(erroffset) + ": " + error);
   
   /* Determine how many capture expressions there are */
   int captureCount;

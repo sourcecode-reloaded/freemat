@@ -27,7 +27,7 @@
 %\item @|'double'| for 64-bit floating point numbers
 %\item @|'complex'| for complex floating point numbers with 32-bits per field
 %\item @|'dcomplex'| for complex floating point numbers with 64-bits per field
-%\item @|'string'| for string arrays
+%\item @|'char'| for string arrays
 %\end{itemize}
 %@@Example
 %Here is an example of a typecast from a float to an 8-bit integer
@@ -78,7 +78,7 @@ function y = cast(a,toclass)
         y = complex(a);
       case 'dcomplex'
         y = dcomplex(a);
-      case 'string'
+      case 'char'
         y = string(a);
       otherwise
         error(['Unsupported class ' toclass ' requested in typecast'])

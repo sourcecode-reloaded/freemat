@@ -18,6 +18,7 @@
  */
 
 #include "Array.hpp"
+#include "Algorithms.hpp"
 
 //!
 //@Module LOGICAL Convert to Logical
@@ -640,49 +641,28 @@ ArrayVector DoubleFunction(int nargout, const ArrayVector& arg) {
 }
 
 //!
-//@Module COMPLEX Convert to 32-bit Complex Floating Point
+//@Module COMPLEX Create a Complex Number
 //@@Section TYPECAST
 //@@Usage
-//Converts the argument to a 32-bit complex floating point number.  The syntax
+//Converts the two real input arguments into the real and imaginary part
+//(respectively) of a complex number.  The syntax
 //for its use is
 //@[
-//   y = complex(x)
+//   y = complex(x,z)
 //@]
-//where @|x| is an @|n|-dimensional numerical array.  Conversion follows the general C rules.  Note that both @|NaN| and @|Inf| in the real and imaginary parts are both preserved under type conversion.
-//@@Example
-//The following piece of code demonstrates several uses of @|complex|.  First, we convert from an integer (the argument is an integer because no decimal is present):
-//@<
-//complex(200)
-//@>
-//In the next example, a double precision argument is passed in (the presence of a decimal without the @|f| suffix implies double precision).
-//@<
-//complex(400.0)
-//@>
-//In the next example, a dcomplex argument is passed in. 
-//@<
-//complex(3.0+4.0*i)
-//@>
-//In the next example, a string argument is passed in.  The string argument is converted into an integer array corresponding to the ASCII values of each character.
-//@<
-//complex('he')
-//@>
-//In the next example, the @|NaN| argument is converted.
-//@<
-//complex(nan)
-//@>
-//In the last example, a cell-array is passed in.  For cell-arrays and structure arrays, the result is an error.
-//@<1
-//complex({4})
-//@>
+//where @|x| and @|z| are @|n|-dimensional numerical arrays of the same size and type.  
 //@@Signature
 //function complex ComplexFunction
-//inputs x
+//inputs x z
 //outputs y
 //!
 ArrayVector ComplexFunction(int nargout, const ArrayVector& arg) {
-  if (arg.size() != 1) 
-    throw Exception("type conversion function requires one argument");
-  return ArrayVector(arg[0].toClass(Float));
+  if (arg.size() < 1) 
+    throw Exception("type conversion function requires at least one argument");
+  if (arg.size() == 1)
+    return ArrayVector(arg[0]);
+  else
+    return ArrayVector(MergeToComplex(arg[0],arg[1]));
 }
 
 //!

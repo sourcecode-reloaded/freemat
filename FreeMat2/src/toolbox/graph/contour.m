@@ -153,7 +153,7 @@ function b = islinespec(t,&colorspec,&markerspec,&linespec)
    %   a colorspec - y,m,c,r,g,b,w,k
    %   a markerspec - +o*.xs,square,s,diamond,d,^v><
    %   a linespec - -,--,:,-.
-   if (~isa(t,'string'))
+   if (~isa(t,'char'))
       b = 0;
       return;
    end

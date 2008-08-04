@@ -210,6 +210,7 @@ static Array RepMatStruct(const StructArray& dp, const NTuple &outdim, const NTu
   StructArray ret(dp);
   for (int i=0;i<ret.fieldCount();i++)
     ret[i] = RepMat<Array>(ret[i],outdim,repcount);
+  ret.updateDims();
   return Array(ret);
 }
 
