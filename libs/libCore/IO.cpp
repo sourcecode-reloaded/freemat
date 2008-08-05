@@ -2225,6 +2225,66 @@ ArrayVector Num2StrFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector();
 }
 
+
+class PrintfDataServer{
+private:
+    const ArrayVector arg;
+    int vec_ind;
+    int elem_ind;
+    bool hasMoreData;
+    void IncDataPtr(void){
+	if( ++elem_ind >= arg[ vec_ind ].getLength() ){
+	    if( ++vec_ind < arg.size() ){
+		elem_ind = 0;
+	    }
+	    else{
+		hasMoreData = false;
+	    }
+	}
+    };
+    Array GetCurrentArg(void){
+    
+    };
+  
+public:
+    PrintfDataServer( const ArrayVector& arg_ ):arg(arg_),vec_ind(1),elem_ind(0){
+	//vec_ind starts with 1, because zeroth argument is format string
+	if( !arg.size()>1 && arg[1].getLength() > 0 ){
+	    hasMoreData = true;
+	}
+    };
+
+    void GetNextAsDouble(double& data){
+	if( !hasMoreData )
+	    throw Exception("Error: no more data");
+	Array d(arg[ vec_ind ]);
+	d.promoteType( FM_DOUBLE );
+	const double *pVal = (double const*)d.getDataPointer();
+	data = *(pVal + elem_ind);
+	IncDataPtr();
+    };
+
+    void GetNextAsString(std::string& str){
+	if( !hasMoreData )
+	    throw Exception("Error: no more data");
+	Array d(arg[ vec_ind ]);
+	
+	if( d.dataClass()== FM_STRING ){
+	    const char *pVal = (char const*)d.getDataPointer();
+	    while( elem_ind < d.getLength() ){
+		str.push_back(*(pVal + elem_ind++));
+	    }
+	}else{
+	    d.promoteType( FM_STRING );
+	    const char *pVal = (char const*)d.getDataPointer();
+	    str.push_back(*(pVal + elem_ind));
+	}
+	IncDataPtr();
+    };
+    bool HasMoreData(void){ return hasMoreData; };
+};
+
+
 //Common routine used by sprintf,printf,fprintf.  They all
 //take the same inputs, and output either to a string, the
 //console or a file.  For output to a console or a file, 
@@ -2255,19 +2315,17 @@ void PrintfHelperFunction(int nargout, const ArrayVector& arg, QTextStream& outp
     //output.clear();
     errmsg.clear();
 
-    int nextArg = 1; //format is arg[0], so we start from arg[1]
-    int valind = 0;
-    Array nextVal; 
-    double const* pVal = 0;
-    bool done = false;
+    PrintfDataServer ps( arg );
 
-    //do while there is still data to output
-    do {
-	if ( !(*dp) && ( nextArg < arg.size() ) ) //rewind the format
+    //do while there is still data to output or format string to save
+    while( (*dp) || ps.HasMoreData() ) {
+	if ( !(*dp) && ps.HasMoreData() ) //still have arguments, need to rewind format.
 	    dp = &buff[0];
+
 	np = dp;
 	int nbuf_ind = 0;
-	while ((*dp) && (*dp != '%') && nbuf_ind < BUFSIZE ){
+	//copy string upto formatting character and do escape conversion in the process
+	while ((*dp) && (*dp != '%') && nbuf_ind < BUFSIZE ){ 
 	    if (convEscape && isEscape(dp)) {
 		switch (*(dp+1)) {
 		  case '\\':
@@ -2293,8 +2351,9 @@ void PrintfHelperFunction(int nargout, const ArrayVector& arg, QTextStream& outp
 	nprn = nbuf_ind; noutput += nbuf_ind;
 	output << nbuff;    
 
+	
 	// Process the format spec
-	if (*dp == '%' && *dp) {
+	if (*dp == '%' && *(dp+1)) {
 	    np = validateFormatSpec(dp+1);
 	    if (!np)
 		throw Exception("erroneous format specification " + std::string(dp));
@@ -2302,48 +2361,22 @@ void PrintfHelperFunction(int nargout, const ArrayVector& arg, QTextStream& outp
 		if (*(np-1) == '%') {
 		    nprn = snprintf(nbuff,BUFSIZE,"%%"); nbuff[nprn+1]='\0'; noutput += nbuf_ind;
 		    output << nbuff;    
-		    dp+=2;
 		    sv=0;
 		} else 
 		if( *(np-1) == 's') {
-		    Array strArg( arg[nextArg++] );
-		    std::string str = strArg.getContentsAsString();
+		    std::string str;
+		    ps.GetNextAsString( str );
 		    const char* pStr = str.c_str();
+		    sv = *np;
+		    *np = 0;
 		    nprn = snprintf(nbuff,BUFSIZE,dp,pStr); nbuff[nprn+1]='\0'; noutput += nbuf_ind;
 		    output << nbuff;
-		    sv = 0;
 		} else{
 		    sv = *np;
 		    *np = 0;
 
-		    if( !pVal ){
-			if( nextArg > arg.size() ){
-			    if( (*(np-1) != 's') )
-				output << "[]";
-			    goto exit_;
-			}
-			nextVal = arg[nextArg++];
-			nextVal.promoteType( FM_DOUBLE );
-			pVal = (double const*)nextVal.getDataPointer();
-			valind = 0;
-		    }
-
 		    double data;
-		    if( valind < nextVal.getLength() ){ 
-			//there is more data in the current data vector
-			data = *( pVal + valind++ );
-		    }
-		    else{
-			if( nextArg >= arg.size() )
-			    goto exit_;
-			nextVal = arg[nextArg++];
-			nextVal.promoteType( FM_DOUBLE );
-			pVal = (double const*)nextVal.getDataPointer();
-			valind = 0;
-			data = *pVal;
-		    }
-		    if( ( valind >= nextVal.getLength() ) && (nextArg >= arg.size()) )
-			done = true;
+		    ps.GetNextAsDouble( data );
 
 		    switch (*(np-1)) 
 		    {
@@ -2373,11 +2406,7 @@ void PrintfHelperFunction(int nargout, const ArrayVector& arg, QTextStream& outp
 		dp = np;
 	    }
 	}
-	else{
-	    goto exit_;
-	}
-    } while ( !done );
-    exit_: 
+    }
     ret = Array::doubleConstructor( noutput );
 }
 
