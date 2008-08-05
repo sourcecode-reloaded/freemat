@@ -670,10 +670,10 @@ void HandleWindow::UpdateState() {
 	  //layout->setCurrentWidget(child);
 	  setCentralWidget(newchild); //deletes old child
 	  child = newchild;
-          child->show();
+          //child->show();
           child->updateGeometry();
           //repaint();
-          UpdateState();
+          //UpdateState();
        }
      } else if (hfig->StringCheck("renderer","painters")) {
        if (QString("QWidget").compare(child->metaObject()->className()) != 0 ) {
@@ -681,9 +681,9 @@ void HandleWindow::UpdateState() {
 	   //layout->setCurrentWidget(child);
 	   setCentralWidget(newchild); //deletes old child
 	   child = newchild;
-           child->show();
+           //child->show();
            child->updateGeometry();
-	   UpdateState();
+	   //UpdateState();
        }
     repaint();
   }

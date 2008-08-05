@@ -169,8 +169,11 @@ function h=bar( x, y, width, varargin )
 				x_l zeros(size(x_l)) ones(size(x_r))];
 	
 	ind=(1:n)';
-	faces = [ind ind+n ind+2*n ind+3*n];
-	h=patch('Faces',faces,'Vertices',vertices,'FaceColor',[0 0 1]);
+   faces = [ind ind+n ind+2*n ind+3*n];
+   if ~ishold
+      clf
+   end
+   h=patch('Faces',faces,'Vertices',vertices,'FaceColor',[0 0 1]);
 
 %!test
 %!  [nn,xx]=hist([1:4],3);

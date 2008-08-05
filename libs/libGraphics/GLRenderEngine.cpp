@@ -494,5 +494,78 @@ void GLRenderEngine::quadStrips(QVector<QVector<cpoint> > faces, bool flatfaces,
 
 void GLRenderEngine::drawPatch(const FaceList& faces)
 {
+    FaceList::const_iterator it = faces.constBegin();
+    
+    glDisable(GL_CULL_FACE);
+    
+    while( it != faces.constEnd() ){
+	const Face face = *it;
+	QVector<point>::const_iterator vert_it = face.vertices.constBegin();
+	QVector<ColorData>::const_iterator color_it = face.vertexcolors.constBegin();
+	QVector<point>::const_iterator vert_it_edge = face.vertices.constBegin();
+	QVector<ColorData>::const_iterator color_it_edge = face.vertexcolors.constBegin();
+
+	QPolygonF poly;
+
+	glBegin(GL_TRIANGLE_FAN);
+
+	//First we draw polygon faces
+	glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(2,2);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	if( face.FaceColorMode == ColorMode::Interp )
+	    glShadeModel(GL_SMOOTH);
+	else
+	    glShadeModel(GL_FLAT);
+
+	if( face.FaceColorMode == ColorMode::ColorSpec ){
+	    glColor4f( face.FaceColor.r, face.FaceColor.g,
+		face.FaceColor.b, face.FaceColor.a);
+	}
+	if( face.FaceColorMode == ColorMode::Flat ){
+	    glColor4f( face.vertexcolors[0].r, face.vertexcolors[0].g, 
+		face.vertexcolors[0].b, face.vertexcolors[0].a );
+	}
+	while( vert_it != face.vertices.constEnd() ){
+	    point v = *vert_it;
+	    if( face.FaceColorMode == ColorMode::Interp ){
+		ColorData c = *color_it;
+		glColor4f( c.r, c.g, c.b, c.a );
+		++color_it;
+	    }
+	    glVertex3f( v.x, v.y, v.z );
+	    ++vert_it;
+	}
+
+	//Now we draw the edges, which may be different color than the faces.
+	glDisable(GL_POLYGON_OFFSET_FILL);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	if (face.EdgeColorMode == ColorMode::Interp)
+	    glShadeModel(GL_FLAT);
+	else
+	    glShadeModel(GL_SMOOTH);
+
+	if( face.EdgeColorMode == ColorMode::ColorSpec ){
+	    glColor4f( face.EdgeColor.r, face.EdgeColor.g,
+		face.EdgeColor.b, face.EdgeColor.a);
+	}
+	if( face.FaceColorMode == ColorMode::Flat ){
+	    glColor4f( face.edgecolors[0].r, face.edgecolors[0].g, 
+		face.edgecolors[0].b, face.edgecolors[0].a );
+	}
+	while( vert_it_edge != face.vertices.constEnd() ){
+	    point v = *vert_it_edge;
+	    if( face.EdgeColorMode == ColorMode::Interp ){
+		ColorData c = *color_it_edge;
+		glColor4f( c.r, c.g, c.b, c.a );
+		++color_it_edge;
+	    }
+	    glVertex3f( v.x, v.y, v.z );
+	    ++vert_it_edge;
+	}
+	glEnd();
+	++it;
+    }
 }
 
