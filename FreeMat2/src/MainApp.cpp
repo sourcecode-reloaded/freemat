@@ -411,7 +411,7 @@ ArrayVector ThreadIDFunction(int nargout, const ArrayVector& arg, Interpreter* e
 //@]
 //which disables all @|pause| statements, both with and without arguments.
 //@@Signature
-//sfunction pause PauseFunction
+//sgfunction pause PauseFunction
 //inputs flag
 //outputs none
 //!
@@ -450,7 +450,7 @@ ArrayVector PauseFunction(int nargout, const ArrayVector& arg, Interpreter* eval
 //@]
 //where @|n| is the number of seconds to wait.
 //@@Signature
-//sfunction sleep SleepFunction
+//sgfunction sleep SleepFunction
 //inputs n
 //outputs none
 //!
@@ -874,7 +874,7 @@ ArrayVector ThreadFreeFunction(int nargout, const ArrayVector& arg) {
 //   clc
 //@]
 //@@Signature
-//function clc ClcFunction
+//gfunction clc ClcFunction
 //inputs none
 //outputs none
 //!

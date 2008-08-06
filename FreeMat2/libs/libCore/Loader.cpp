@@ -522,7 +522,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
    if (guiflag)
      context->addGfxFunction("figraise",FigRaiseFunction,1,0,"handle",NULL);
    if (guiflag)
-     context->addGfxFunction("fitlower",FigLowerFunction,1,0,"handle",NULL);
+     context->addGfxFunction("figlower",FigLowerFunction,1,0,"handle",NULL);
    if (guiflag)
      context->addGfxFunction("gcf",HGCFFunction,0,1,NULL);
    if (guiflag)
@@ -544,15 +544,18 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
    if (guiflag)
      context->addGfxSpecialFunction("edit",EditFunction,-1,0,NULL);
   context->addSpecialFunction("threadid",ThreadIDFunction,0,1,NULL);
-  context->addSpecialFunction("pause",PauseFunction,1,0,"flag",NULL);
-  context->addSpecialFunction("sleep",SleepFunction,1,0,"n",NULL);
+   if (guiflag)
+     context->addGfxSpecialFunction("pause",PauseFunction,1,0,"flag",NULL);
+   if (guiflag)
+     context->addGfxSpecialFunction("sleep",SleepFunction,1,0,"n",NULL);
   context->addSpecialFunction("threadnew",ThreadNewFunction,0,1,NULL);
   context->addSpecialFunction("threadstart",ThreadStartFunction,-1,0,NULL);
   context->addFunction("threadvalue",ThreadValueFunction,2,-1,"handle","timeout",NULL);
   context->addFunction("threadwait",ThreadWaitFunction,2,1,"handle","timeout",NULL);
   context->addFunction("threadkill",ThreadKillFunction,1,0,"handle",NULL);
   context->addFunction("threadfree",ThreadFreeFunction,2,0,"handle","timeout",NULL);
-  context->addFunction("clc",ClcFunction,0,0,NULL);
+   if (guiflag)
+     context->addGfxFunction("clc",ClcFunction,0,0,NULL);
   context->addFunction("profiler",ProfilerFunction,-1,0,NULL);
 }
 

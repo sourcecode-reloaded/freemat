@@ -915,11 +915,11 @@ QString Array::asString() const {
 
 template <typename T>
 static inline Array Tscalar_to_dense(const Array *ptr) {
-  if (ptr->allReal())
+  if (ptr->allReal()) {
     return Array(new BasicArray<T>(ptr->constRealScalar<T>()));
-  else {
+  } else {
     return Array(new BasicArray<T>(ptr->constRealScalar<T>()),
-		 new BasicArray<T>(ptr->constImagScalar<T>()));
+    		 new BasicArray<T>(ptr->constImagScalar<T>()));
   }
 }
 

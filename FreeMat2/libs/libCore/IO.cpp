@@ -660,23 +660,25 @@ ArrayVector DlmReadFunction(int nargout, const ArrayVector& arg) {
     for (int j=0;j<=qMin(data_real[i].size()-1,stopcol);j++) 
       if (data_imag[i][j] != 0) anyNonzeroImaginary = true;
   Array A;
-  if (!anyNonzeroImaginary) {
-    A = Array(Double,NTuple(numrows,numcols));
-    BasicArray<double> &dp(A.real<double>());
-    for (int i=startrow;i<=stoprow;i++)
-      for (int j=startcol;j<=stopcol;j++)
-	if (j <= (data_real[i].size()-1))
-	  dp[i-startrow+(j-startcol)*numrows+1] = data_real[i][j];
-  } else {
-    A = Array(Double,NTuple(numrows,numcols));
-    BasicArray<double> &dp(A.real<double>());
-    BasicArray<double> &ip(A.imag<double>());
-    for (int i=startrow;i<=stoprow;i++)
-      for (int j=startcol;j<=stopcol;j++)
-	if (j <= (data_real[i].size()-1)) {
-	  dp[i-startrow+(j-startcol)*numrows+1] = data_real[i][j];
-	  ip[i-startrow+(j-startcol)*numrows+1] = data_imag[i][j];
-	}
+  if ((numrows > 0) && (numcols > 0)) {
+    if (!anyNonzeroImaginary) {
+      A = Array(Double,NTuple(numrows,numcols));
+      BasicArray<double> &dp(A.real<double>());
+      for (int i=startrow;i<=stoprow;i++)
+	for (int j=startcol;j<=stopcol;j++)
+	  if (j <= (data_real[i].size()-1))
+	    dp[i-startrow+(j-startcol)*numrows+1] = data_real[i][j];
+    } else {
+      A = Array(Double,NTuple(numrows,numcols));
+      BasicArray<double> &dp(A.real<double>());
+      BasicArray<double> &ip(A.imag<double>());
+      for (int i=startrow;i<=stoprow;i++)
+	for (int j=startcol;j<=stopcol;j++)
+	  if (j <= (data_real[i].size()-1)) {
+	    dp[i-startrow+(j-startcol)*numrows+1] = data_real[i][j];
+	    ip[i-startrow+(j-startcol)*numrows+1] = data_imag[i][j];
+	  }
+    }
   }
   return ArrayVector(A);
 }

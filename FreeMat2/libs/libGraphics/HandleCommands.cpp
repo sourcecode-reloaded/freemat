@@ -715,7 +715,7 @@ ArrayVector FigRaiseFunction(int nargout, const ArrayVector& args) {
 //Similarly, if @|fignum| is the current figure, it will remain the current
 //figure (even though the figure is now behind others).
 //@@Signature
-//gfunction fitlower FigLowerFunction
+//gfunction figlower FigLowerFunction
 //input handle
 //output none
 //!
