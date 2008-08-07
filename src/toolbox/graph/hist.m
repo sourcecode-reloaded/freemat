@@ -24,6 +24,8 @@
 %
 % Extreme values are lumped in the first and last bins.
 %
+%@@Tests
+%@$"y=hist(linspace(1,100),3)","[34 33 33]","exact"
 %!
 
 %% Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2002, 2003,

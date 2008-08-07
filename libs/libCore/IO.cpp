@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <math.h>
+#include <string>
 #include "Malloc.hpp"
 #include "HandleList.hpp"
 #include "Interpreter.hpp"
@@ -35,7 +36,7 @@
 #include <QImageWriter>
 #include <QColor>
 #include <QFile>
-#include <QTextStream>
+//#include <QTextStream>
 #include <QFileInfo>
 #include <QString>
 #include "Utils.hpp"
@@ -52,7 +53,34 @@ public:
   bool swapflag;
   bool is64bit;
 };
-  
+
+class PrintfStream{
+public:
+    virtual PrintfStream& operator <<( const char* data ) = 0;
+};
+
+class PrintfFileStream : public PrintfStream{
+private:
+    FILE* fp;
+public:
+    PrintfFileStream( FILE* fp_ ) : fp(fp_){};
+    virtual PrintfFileStream& operator <<( const char* data ){
+	fprintf( fp, "%s", data );
+	return *this;
+    };
+};
+
+class PrintfStringStream : public PrintfStream{
+private:
+    std::string* str;
+public:
+    PrintfStringStream( std::string* str_ ) : str(str_){};
+    virtual PrintfStringStream& operator <<( const char* data ){
+	*str += std::string( data );
+	return *this;
+    };
+};
+
 HandleList<FilePtr*> fileHandles;
 
 static bool init = false;
@@ -1936,106 +1964,7 @@ void convertEscapeSequences(char *dst, char* src) {
   // Null terminate
   *dp = 0;
 }
-
   
-//Common routine used by sprintf,printf,fprintf.  They all
-//take the same inputs, and output either to a string, the
-//console or a file.  For output to a console or a file, 
-//we want escape-translation on.  For output to a string, we
-//want escape-translation off.  So this common routine prints
-//the contents to a string, which is then processed by each 
-//subroutine.
-char* xprintfFunction(int nargout, const ArrayVector& arg) {
-  Array format(arg[0]);
-  string frmt = format.getContentsAsString();
-
-  char *buff = new char[ frmt.length() + 1 ];
-  strcpy(buff, frmt.c_str());
-
-  // Search for the start of a format subspec
-  char *dp = buff;
-  char *np;
-  char sv;
-  // Buffer to hold each sprintf result
-#define BUFSIZE 65536
-  char nbuff[BUFSIZE];
-  // Buffer to hold the output
-  char *op;
-  op = (char*) malloc(sizeof(char));
-  *op = 0;
-  int nextArg = 1;
-  // Scan the string
-  while (*dp) {
-    np = dp;
-    while ((*dp) && (*dp != '%')) dp++;
-    // Print out the formatless segment
-    sv = *dp;
-    *dp = 0;
-    snprintf(nbuff,BUFSIZE,np);
-    op = (char*) realloc(op,strlen(op)+strlen(nbuff)+1);
-    strcat(op,nbuff);
-    *dp = sv;
-    // Process the format spec
-    if (*dp) {
-      np = validateFormatSpec(dp+1);
-      if (!np)
-	throw Exception("erroneous format specification " + std::string(dp));
-      else {
-	if (*(np-1) == '%') {
-	  snprintf(nbuff,BUFSIZE,"%%");
-	  op = (char*) realloc(op,strlen(op)+strlen(nbuff)+1);
-	  strcat(op,nbuff);
-	  dp+=2;
-	} else {
-	  sv = *np;
-	  *np = 0;
-	  if (arg.size() <= nextArg)
-	    throw Exception("not enough arguments to satisfy format specification");
-	  Array nextVal(arg[nextArg++]);
-	  if ((*(np-1) != 's') && (nextVal.isEmpty())) {
-	    op = (char*) realloc(op,strlen(op)+strlen("[]")+1);
-	    strcat(op,"[]");
-	  } else {
-	    switch (*(np-1)) {
-	    case 'd':
-	    case 'i':
-	    case 'o':
-	    case 'u':
-	    case 'x':
-	    case 'X':
-	    case 'c':
-	      nextVal.promoteType(FM_INT32);
-	      snprintf(nbuff,BUFSIZE,dp,*((int32*)nextVal.getDataPointer()));
-	      op = (char*) realloc(op,strlen(op)+strlen(nbuff)+1);
-	      strcat(op,nbuff);
-	      break;
-	    case 'e':
-	    case 'E':
-	    case 'f':
-	    case 'F':
-	    case 'g':
-	    case 'G':
-	      nextVal.promoteType(FM_DOUBLE);
-	      snprintf(nbuff,BUFSIZE,dp,*((double*)nextVal.getDataPointer()));
-	      op = (char*) realloc(op,strlen(op)+strlen(nbuff)+1);
-	      strcat(op,nbuff);
-	      break;
-	    case 's':
-	      snprintf(nbuff,BUFSIZE,dp,nextVal.getContentsAsString().c_str());
-	      op = (char*) realloc(op,strlen(op)+strlen(nbuff)+1);
-	      strcat(op,nbuff);
-	    }
-	  }
-	  *np = sv;
-	  dp = np;
-	}
-      }
-    }
-  }
-  delete[] buff;
-  return op;
-}
-
 
 //!
 //@Module NUM2STR Convert Numbers To Strings
@@ -2284,7 +2213,6 @@ public:
     bool HasMoreData(void){ return hasMoreData; };
 };
 
-
 //Common routine used by sprintf,printf,fprintf.  They all
 //take the same inputs, and output either to a string, the
 //console or a file.  For output to a console or a file, 
@@ -2292,7 +2220,7 @@ public:
 //want escape-translation off.  So this common routine prints
 //the contents to a string, which is then processed by each 
 //subroutine.
-void PrintfHelperFunction(int nargout, const ArrayVector& arg, QTextStream& output, QByteArray& errmsg, Array& ret, bool convEscape = false ) 
+void PrintfHelperFunction(int nargout, const ArrayVector& arg, PrintfStream& output, QByteArray& errmsg, Array& ret, bool convEscape = false ) 
 {
     Array format(arg[0]);
     std::string frmt = format.getContentsAsString();
@@ -2433,6 +2361,11 @@ void PrintfHelperFunction(int nargout, const ArrayVector& arg, QTextStream& outp
 //l = {}; for i = 1:5; s = sprintf('file_%d.dat',i); l(i) = {s}; end;
 //l
 //@>
+//@@Tests
+//@$"s=sprintf('hello %d',5)","'hello 5'","exact"
+//@$"s=sprintf('%d aa %s',5,'bcd')","'5 aa bcd'","exact"
+//@$"s=sprintf('%d %%aa %s %f',5,'bcd',5","'5 %aa bcd 5.000000'","exact"
+//@$"s=sprintf('%d aa ',[5 6; 7 8])","'5 aa 7 aa 6 aa 8 aa '","exact"
 //!
 ArrayVector SprintfFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0)
@@ -2441,16 +2374,16 @@ ArrayVector SprintfFunction(int nargout, const ArrayVector& arg) {
   if (!format.isString())
     throw Exception("sprintf format argument must be a string");
 
-  QByteArray outf;
-  QTextStream textstream( &outf );
+
+  std::string outf;
+  PrintfStringStream textstream( &outf );
   QByteArray errmsg;
   Array output;
 
   PrintfHelperFunction( nargout, arg, textstream, errmsg, output, true );
   ArrayVector ret;
  
-  textstream.flush();
-  ret << Array::stringConstructor( outf.constData() );
+  ret << Array::stringConstructor( outf );
   ret << output;
   return ret;
 }
@@ -2560,16 +2493,16 @@ ArrayVector PrintfFunction(int nargout, const ArrayVector& arg,
   if (!format.isString())
     throw Exception("printf format argument must be a string");
 
-  QByteArray outf;
-  QTextStream textstream( &outf );
+  std::string outf;
+  PrintfStringStream textstream( &outf );
+
   QByteArray errmsg;
   Array output;
 
   PrintfHelperFunction( nargout, arg, textstream, errmsg, output, true );
   ArrayVector ret;
  
-  textstream.flush();
-  eval->outputMessage(outf.constData());
+  eval->outputMessage( outf );
   return ArrayVector();
 }
 
@@ -3012,9 +2945,7 @@ ArrayVector FscanfFunction(int nargout, const ArrayVector& arg) {
   
   FilePtr *fptr=(fileHandles.lookupHandle(handle+1));
 
-  QFile outf;
-  outf.open(fptr->fp, QIODevice::WriteOnly);
-  QTextStream textstream( &outf );
+  PrintfFileStream textstream( fptr->fp );
   QByteArray errmsg;
   Array output;
 
@@ -3742,3 +3673,102 @@ ArrayVector LoadFunction(int nargout, const ArrayVector& arg,
   }
   return ArrayVector();
 }
+
+//////Common routine used by sprintf,printf,fprintf.  They all
+//////take the same inputs, and output either to a string, the
+//////console or a file.  For output to a console or a file, 
+//////we want escape-translation on.  For output to a string, we
+//////want escape-translation off.  So this common routine prints
+//////the contents to a string, which is then processed by each 
+//////subroutine.
+////char* xprintfFunction(int nargout, const ArrayVector& arg) {
+////  Array format(arg[0]);
+////  string frmt = format.getContentsAsString();
+////
+////  char *buff = new char[ frmt.length() + 1 ];
+////  strcpy(buff, frmt.c_str());
+////
+////  // Search for the start of a format subspec
+////  char *dp = buff;
+////  char *np;
+////  char sv;
+////  // Buffer to hold each sprintf result
+////#define BUFSIZE 65536
+////  char nbuff[BUFSIZE];
+////  // Buffer to hold the output
+////  char *op;
+////  op = (char*) malloc(sizeof(char));
+////  *op = 0;
+////  int nextArg = 1;
+////  // Scan the string
+////  while (*dp) {
+////    np = dp;
+////    while ((*dp) && (*dp != '%')) dp++;
+////    // Print out the formatless segment
+////    sv = *dp;
+////    *dp = 0;
+////    snprintf(nbuff,BUFSIZE,np);
+////    op = (char*) realloc(op,strlen(op)+strlen(nbuff)+1);
+////    strcat(op,nbuff);
+////    *dp = sv;
+////    // Process the format spec
+////    if (*dp) {
+////      np = validateFormatSpec(dp+1);
+////      if (!np)
+////	throw Exception("erroneous format specification " + std::string(dp));
+////      else {
+////	if (*(np-1) == '%') {
+////	  snprintf(nbuff,BUFSIZE,"%%");
+////	  op = (char*) realloc(op,strlen(op)+strlen(nbuff)+1);
+////	  strcat(op,nbuff);
+////	  dp+=2;
+////	} else {
+////	  sv = *np;
+////	  *np = 0;
+////	  if (arg.size() <= nextArg)
+////	    throw Exception("not enough arguments to satisfy format specification");
+////	  Array nextVal(arg[nextArg++]);
+////	  if ((*(np-1) != 's') && (nextVal.isEmpty())) {
+////	    op = (char*) realloc(op,strlen(op)+strlen("[]")+1);
+////	    strcat(op,"[]");
+////	  } else {
+////	    switch (*(np-1)) {
+////	    case 'd':
+////	    case 'i':
+////	    case 'o':
+////	    case 'u':
+////	    case 'x':
+////	    case 'X':
+////	    case 'c':
+////	      nextVal.promoteType(FM_INT32);
+////	      snprintf(nbuff,BUFSIZE,dp,*((int32*)nextVal.getDataPointer()));
+////	      op = (char*) realloc(op,strlen(op)+strlen(nbuff)+1);
+////	      strcat(op,nbuff);
+////	      break;
+////	    case 'e':
+////	    case 'E':
+////	    case 'f':
+////	    case 'F':
+////	    case 'g':
+////	    case 'G':
+////	      nextVal.promoteType(FM_DOUBLE);
+////	      snprintf(nbuff,BUFSIZE,dp,*((double*)nextVal.getDataPointer()));
+////	      op = (char*) realloc(op,strlen(op)+strlen(nbuff)+1);
+////	      strcat(op,nbuff);
+////	      break;
+////	    case 's':
+////	      snprintf(nbuff,BUFSIZE,dp,nextVal.getContentsAsString().c_str());
+////	      op = (char*) realloc(op,strlen(op)+strlen(nbuff)+1);
+////	      strcat(op,nbuff);
+////	    }
+////	  }
+////	  *np = sv;
+////	  dp = np;
+////	}
+////      }
+////    }
+////  }
+////  delete[] buff;
+////  return op;
+////}
+////
