@@ -454,7 +454,7 @@ ArrayVector ArccosFunction(int nargout, const ArrayVector& arg) {
   Array input(arg[0]);
   if (input.allReal() && (ArrayRange(input) > 1))
     input.forceComplex();
-  return ArrayVector(UnaryOp<OpAcos>(arg[0]));
+  return ArrayVector(UnaryOp<OpAcos>(input));
 }
 
 //!
@@ -532,7 +532,7 @@ ArrayVector ArcsinFunction(int nargout, const ArrayVector& arg) {
   Array input(arg[0]);
   if (input.allReal() && (ArrayRange(input) > 1))
     input.forceComplex();
-  return ArrayVector(UnaryOp<OpAsin>(arg[0]));
+  return ArrayVector(UnaryOp<OpAsin>(input));
 }
 
 //!

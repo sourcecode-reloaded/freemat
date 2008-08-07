@@ -458,14 +458,14 @@ BasicArray<T> Permute(const BasicArray<T>& arg, NTuple perm) {
 
 template <typename T>
 bool AllZeros(const BasicArray<T>& arg) {
-  for (int i=1;i<=arg.length();i++)
+  for (index_t i=1;i<=arg.length();i++)
     if (arg.get(i) != T(0)) return false;
   return true;
 }
 
 template <typename T>
 bool AnyNotFinite(const BasicArray<T>& arg) {
-  for (int i=0;i<arg.length();i++) 
+  for (index_t i=1;i<=arg.length();i++) 
     if (!IsFinite(arg.get(i))) return true;
   return false;
 }

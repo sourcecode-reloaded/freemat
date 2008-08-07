@@ -332,6 +332,8 @@ static inline Array T_Hermitian(const Array &x) {
   case cls: return T_Hermitian<ctype>(A);
 
 Array Hermitian(const Array &A) {
+  if (A.allReal())
+    return Transpose(A);
   switch (A.dataClass()) {
   default:
     throw Exception("Type not supported by transpose operator");

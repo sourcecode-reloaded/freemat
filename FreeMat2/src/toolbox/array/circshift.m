@@ -31,7 +31,6 @@
 function x = circshift(y,shiftvec)
   szey = size(y);
   ndim = prod(size(szey));
-  shiftvec = int32(shiftvec);
   shiftvec = shiftvec(:);
   shiftlen = prod(size(shiftvec));
   d = {};
@@ -41,6 +40,6 @@ function x = circshift(y,shiftvec)
     else
       shift = 0;
     end
-    d{k} = int32(mod((1:szey(k)) - 1 - shift,szey(k)) + 1);
+    d{k} = mod((1:szey(k)) - 1 - shift,szey(k)) + 1;
   end;
   x = y(d{:});

@@ -406,12 +406,12 @@ Array Invert(const Array &A) {
     throw Exception("Sparse matrix inverse not currently supported");
   switch (A.dataClass()) {
   default: throw Exception("Invert does not support this data class");
-  Float:
+  case Float:
     if (A.allReal())
       return InvertMatrixReal(A.constReal<float>(),sgetrf_,sgetri_);
     else
       return InvertMatrixComplex(A.fortran<float>(),cgetrf_,cgetri_);
-  Double:
+  case Double:
     if (A.allReal())
       return InvertMatrixReal(A.constReal<double>(),dgetrf_,dgetri_);
     else

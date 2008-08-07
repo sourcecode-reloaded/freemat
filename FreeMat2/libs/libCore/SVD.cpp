@@ -999,8 +999,8 @@ ArrayVector SVDFunction(int nargout, const ArrayVector& arg) {
       return SVDFunction(A.real<float>(),A.imag<float>(),computevectors,compactform);
   case Double:
     if (A.allReal())
-      return SVDFunction(A.real<float>(),computevectors,compactform);
+      return SVDFunction(A.real<double>(),computevectors,compactform);
     else
-      return SVDFunction(A.real<float>(),A.imag<float>(),computevectors,compactform);
+      return SVDFunction(A.real<double>(),A.imag<double>(),computevectors,compactform);
   }
 }

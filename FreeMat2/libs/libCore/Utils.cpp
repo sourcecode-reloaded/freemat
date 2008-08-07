@@ -70,10 +70,12 @@ NTuple ArrayVectorAsDimensions(const ArrayVector &arg) {
   return dims;
 }
 
+
 double ArrayRange(const Array& dp) {
   if ((dp.dataClass() != Float) && (dp.dataClass() != Double))
     throw Exception("Unsupported type for function");
-  const BasicArray<double> &rp(dp.asDenseArray().toClass(Double).constReal<double>());
+  const Array &tmp(dp.asDenseArray().toClass(Double));
+  const BasicArray<double> &rp(tmp.constReal<double>());
   if (rp.length() == 0) return 0;
   double result;
   bool init = false;
