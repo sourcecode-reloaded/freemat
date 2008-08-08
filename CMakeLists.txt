@@ -115,11 +115,9 @@ ENDIF( ZLIB_LIBRARY AND ZLIB_INCLUDE_DIR )
 # ENDIF( NOT MSVC )
 
 
-IF( MSVC )
-	ADD_DEFINITIONS( -DHAVE_ARPACK )
-	ADD_DEFINITIONS( -DHAVE_UMFPACK )
-	INCLUDE_DIRECTORIES( dependencies/umfpack/Include dependencies/UFconfig dependencies/AMD/Include dependencies/umfpack/Source)
-ENDIF( MSVC )
+ADD_DEFINITIONS( -DHAVE_ARPACK )
+ADD_DEFINITIONS( -DHAVE_UMFPACK )
+INCLUDE_DIRECTORIES( dependencies/UMFPACK/Include dependencies/UFconfig dependencies/AMD/Include dependencies/UMFPACK/Source)
 
 #############################################################################
 #Find LLVM
