@@ -2178,9 +2178,7 @@ private:
 public:
     PrintfDataServer( const ArrayVector& arg_ ):arg(arg_),vec_ind(1),elem_ind(0){
 	//vec_ind starts with 1, because zeroth argument is format string
-	if( (arg.size() > 1) && (arg[1].getLength() > 0)){
-	    hasMoreData = true;
-	}
+	hasMoreData = (arg.size() > 1); //( (arg.size() > 1) && (arg[1].getLength() > 0));
     };
 
     void GetNextAsDouble(double& data){

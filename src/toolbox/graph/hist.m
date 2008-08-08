@@ -25,7 +25,7 @@
 % Extreme values are lumped in the first and last bins.
 %
 %@@Tests
-%@$"y=hist(linspace(1,100),3)","[34 33 33]","exact"
+%@$"y=hist(linspace(1,100),3)","[34,33,33]","exact"
 %!
 
 %% Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2002, 2003,
@@ -177,28 +177,28 @@ function h=bar( x, y, width, varargin )
    end
    h=patch('Faces',faces,'Vertices',vertices,'FaceColor',[0 0 1]);
 
-%!test
-%!  [nn,xx]=hist([1:4],3);
-%!  assert(xx, [1.5,2.5,3.5]);
-%!  assert(nn, [2,1,1]);
-%!test
-%!  [nn,xx]=hist([1:4]',3);
-%!  assert(xx, [1.5,2.5,3.5]);
-%!  assert(nn, [2,1,1]);
-%!test
-%!  [nn,xx]=hist([1 1 1 NaN NaN NaN 2 2 3],[1 2 3]);
-%!  assert(xx, [1,2,3]);
-%!  assert(nn, [3,2,1]);
-%!test
-%!  [nn,xx]=hist([[1:4]',[1:4]'],3);
-%!  assert(xx, [1.5;2.5;3.5]);
-%!  assert(nn, [[2,1,1]',[2,1,1]']);
-%!assert(hist(1,1),1);
-%!test
-%!  for n = [10, 30, 100, 1000]
-%!    assert( sum(hist([1:n], n)), n );
-%!    assert( sum(hist([1:n], [2:n-1])), n);
-%!    assert( sum(hist([1:n], [1:n])), n );
-%!    assert( sum(hist([1:n], 29)), n);
-%!    assert( sum(hist([1:n], 30)), n);
-%!  endfor
+%test
+%  [nn,xx]=hist([1:4],3);
+%  assert(xx, [1.5,2.5,3.5]);
+%  assert(nn, [2,1,1]);
+%test
+%  [nn,xx]=hist([1:4]',3);
+%  assert(xx, [1.5,2.5,3.5]);
+%  assert(nn, [2,1,1]);
+%test
+%  [nn,xx]=hist([1 1 1 NaN NaN NaN 2 2 3],[1 2 3]);
+%  assert(xx, [1,2,3]);
+%  assert(nn, [3,2,1]);
+%test
+%  [nn,xx]=hist([[1:4]',[1:4]'],3);
+%  assert(xx, [1.5;2.5;3.5]);
+%  assert(nn, [[2,1,1]',[2,1,1]']);
+%assert(hist(1,1),1);
+%test
+%  for n = [10, 30, 100, 1000]
+%    assert( sum(hist([1:n], n)), n );
+%    assert( sum(hist([1:n], [2:n-1])), n);
+%    assert( sum(hist([1:n], [1:n])), n );
+%    assert( sum(hist([1:n], 29)), n);
+%    assert( sum(hist([1:n], 30)), n);
+%  endfor

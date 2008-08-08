@@ -32,4 +32,4 @@ hi = ( d >= 'a' && d <= 'f' );
 d( hi ) = d( hi ) - 'a' + 10;
 
 ex=16.^(length(d)-1:-1:0);
-y=sum(ex.*d,2);
+y=d*(ex');
