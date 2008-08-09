@@ -649,18 +649,18 @@ ArrayVector DlmReadFunction(int nargout, const ArrayVector& arg) {
     else
       throw Exception("Unable to decode the range arguments to the dlmread function");
   }
+  Array A;
   startrow = qMax(0,qMin(row_count-1,startrow));
   startcol = qMax(0,qMin(col_count-1,startcol));
   stoprow = qMax(0,qMin(row_count-1,stoprow));
   stopcol = qMax(0,qMin(col_count-1,stopcol));
   int numrows = stoprow-startrow+1;
   int numcols = stopcol-startcol+1;
-  bool anyNonzeroImaginary = false;
-  for (int i=startrow;i<=stoprow;i++) 
-    for (int j=0;j<=qMin(data_real[i].size()-1,stopcol);j++) 
-      if (data_imag[i][j] != 0) anyNonzeroImaginary = true;
-  Array A;
-  if ((numrows > 0) && (numcols > 0)) {
+  if ((numrows > 0) && (numcols > 0) && (row_count > 0) && (col_count > 0)) {
+    bool anyNonzeroImaginary = false;
+    for (int i=startrow;i<=stoprow;i++) 
+      for (int j=0;j<=qMin(data_real[i].size()-1,stopcol);j++) 
+	if (data_imag[i][j] != 0) anyNonzeroImaginary = true;
     if (!anyNonzeroImaginary) {
       A = Array(Double,NTuple(numrows,numcols));
       BasicArray<double> &dp(A.real<double>());

@@ -133,6 +133,7 @@ ArrayVector IsNaNFunction(int, const ArrayVector&);
 ArrayVector IsNaNFunction(int, const ArrayVector&);
 ArrayVector IsInfFunction(int, const ArrayVector&);
 ArrayVector IsInfFunction(int, const ArrayVector&);
+ArrayVector IsRealFunction(int, const ArrayVector&);
 ArrayVector IsEmptyFunction(int, const ArrayVector&);
 ArrayVector LUFunction(int, const ArrayVector&);
 ArrayVector InvFunction(int, const ArrayVector&);
@@ -396,6 +397,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("IsNaN",IsNaNFunction,1,1,"x",NULL);
   context->addFunction("isinf",IsInfFunction,1,1,"x",NULL);
   context->addFunction("IsInf",IsInfFunction,1,1,"x",NULL);
+  context->addFunction("isreal",IsRealFunction,1,1,"x",NULL);
   context->addFunction("isempty",IsEmptyFunction,1,1,"x",NULL);
   context->addFunction("lu",LUFunction,1,3,"x",NULL);
   context->addFunction("inv",InvFunction,1,1,"x",NULL);

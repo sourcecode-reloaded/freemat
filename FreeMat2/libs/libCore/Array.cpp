@@ -247,7 +247,7 @@ ArrayVector RepMatFunction(int nargout, const ArrayVector& arg) {
     outdims[i] = x.dimensions()[i]*repcount[i];
   switch (x.dataClass()) {
   default: throw Exception("Unhandled type for repmat");
-    MacroExpandCasesSimple(MacroRepMat);
+    MacroExpandCasesNoCell(MacroRepMat);
   case CellArray:
     return ArrayVector(RepMatCell(x,outdims,repcount));
   case Struct:

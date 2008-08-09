@@ -176,6 +176,27 @@ ArrayVector IsInfFunction(int nargout, const ArrayVector& arg) {
 }
 
 //!
+//@Module ISREAL Test For Real Array
+//@@Section INSPECTION
+//@@Usage
+//The syntax for @|isreal| is 
+//@[
+//   x = isreal(y)
+//@]
+//and it returns a logical 1 if the argument is real valued
+//and a logical 0 otherwise.
+//@@Signature
+//function isreal IsRealFunction
+//inputs x
+//outputs y
+//!
+ArrayVector IsRealFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() != 1)
+    throw Exception("isreal function takes one argument - the array to test");
+  return ArrayVector(Array(arg[0].allReal()));
+}
+
+//!
 //@Module ISEMPTY Test For Variable Empty
 //@@Section INSPECTION
 //@@Usage

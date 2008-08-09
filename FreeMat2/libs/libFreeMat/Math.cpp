@@ -301,6 +301,33 @@ struct OpPower {
   }
 };
 
+//!
+//@Module TYPERULES Type Rules for Operators
+//@@Section OPERATORS
+//@@Usage
+//Starting with FreeMat 4.0, the type of @|y| is determined according to the
+//same rules as Matlab.  These are the rules:
+//\begin{enumerate}
+//\item Integer types of the same class can be combined.  The answer is
+//the same type as the inputs, and the operation is performed using 
+//saturating arithmetic.  Integer types can also be combined with double
+//precision values (again, the result is of the integer type).
+//\item Single precision floating point values can be combined with double
+//precision, logical and character array classes.  The result is of 
+//class single.
+//\item Double precision floating point values can be combined with all
+//other types.  Except as noted above, the output is of double precision.
+//\end{enumerate}
+//These rules look strange, and they are.   In general, computations are
+//done in double precision in almost all cases.  When single precision
+//values are involved, the computations take place in single precision.
+//@@Tests
+//@$"y=1+2","3","exact"
+//@$"y=1*i","i","exact"
+//@$"y=pi+i","complex(pi,1)","close"
+//@$"y=1/2","0.5","exact"
+//!
+
 /**
  * Add two objects.
  */
@@ -320,22 +347,9 @@ struct OpPower {
 //in which case @|y| is the same size as the larger argument,
 //and is the sum of the scalar added to each element of the other argument.
 //
-//The type of @|y| depends on the types of @|a| and @|b| using the type 
-//promotion rules.  The types are ordered as:
-//\begin{enumerate}
-//\item @|uint8| - unsigned, 8-bit integers range @|[0,255]|
-//\item @|int8| - signed, 8-bit integers @|[-127,128]|
-//\item @|uint16| - unsigned, 16-bit integers @|[0,65535]|
-//\item @|int16| - signed, 16-bit integers @|[-32768,32767]|
-//\item @|uint32| - unsigned, 32-bit integers @|[0,4294967295]|
-//\item @|int32| - signed, 32-bit integers @|[-2147483648,2147483647]|
-//\item @|float| - 32-bit floating point
-//\item @|double| - 64-bit floating point
-//\item @|complex| - 32-bit complex floating point
-//\item @|dcomplex| - 64-bit complex floating point
-//\end{enumerate}
-//Note that the type promotion and combination rules work similar to 
-//@|C|.  Numerical overflow rules are also the same as @|C|.
+//The rules for manipulating types has changed in FreeMat 4.0.  See @|typerules|
+//for more details.
+//
 //@@Function Internals
 //There are three formulae for the addition operator, depending on the
 //sizes of the three arguments.  In the most general case, in which 
@@ -354,39 +368,24 @@ struct OpPower {
 //@@Examples
 //Here are some examples of using the addition operator.  First, a 
 //straight-forward usage of the plus operator.  The first example
-//is straightforward - the @|int32| is the default type used for
-//integer constants (same as in @|C|), hence the output is the
-//same type:
+//is straightforward:
 //@<
 //3 + 8
 //@>
-//Next, we use the floating point syntax to force one of the arguments
-//to be a @|double|, which results in the output being @|double|:
+//Next, we add a scalar to a vector of values:
 //@<
-//3.1 + 2
+//3.1 + [2,4,5,6,7]
 //@>
-//Note that if one of the arguments is complex-valued, the output will be
-//complex also.
+//With complex values
 //@<
 //a = 3 + 4*i
-//b = a + 2.0f
+//b = a + 2
 //@>
-//If a @|complex| value is added to a @|double|, the result is 
-//promoted to @|dcomplex|.
-//@<
-//b = a + 2.0
-//@>
-//We can also demonstrate the three forms of the addition operator.  First
-//the element-wise version:
+//Finally, the element-wise version:
 //@<
 //a = [1,2;3,4]
 //b = [2,3;6,7]
 //c = a + b
-//@>
-//Then the scalar versions
-//@<
-//c = a + 1
-//c = 1 + b
 //@>
 //@@Tests
 //@{ test_sparse37.m
@@ -479,22 +478,9 @@ Array Add(const Array& A, const Array& B) {
 //in which case @|y| is the same size as the larger argument,
 //and is the difference of the scalar to each element of the other argument.
 //
-//The type of @|y| depends on the types of @|a| and @|b| using the type 
-//promotion rules.  The types are ordered as:
-//\begin{enumerate}
-//\item @|uint8| - unsigned, 8-bit integers range @|[0,255]|
-//\item @|int8| - signed, 8-bit integers @|[-127,128]|
-//\item @|uint16| - unsigned, 16-bit integers @|[0,65535]|
-//\item @|int16| - signed, 16-bit integers @|[-32768,32767]|
-//\item @|uint32| - unsigned, 32-bit integers @|[0,4294967295]|
-//\item @|int32| - signed, 32-bit integers @|[-2147483648,2147483647]|
-//\item @|float| - 32-bit floating point
-//\item @|double| - 64-bit floating point
-//\item @|complex| - 32-bit complex floating point
-//\item @|dcomplex| - 64-bit complex floating point
-//\end{enumerate}
-//Note that the type promotion and combination rules work similar to 
-//@|C|.  Numerical overflow rules are also the same as @|C|.
+//The rules for manipulating types has changed in FreeMat 4.0.  See @|typerules|
+//for more details.
+//
 //@@Function Internals
 //There are three formulae for the subtraction operator, depending on the
 //sizes of the three arguments.  In the most general case, in which 
@@ -513,39 +499,24 @@ Array Add(const Array& A, const Array& B) {
 //@@Examples
 //Here are some examples of using the subtraction operator.  First, a 
 //straight-forward usage of the minus operator.  The first example
-//is straightforward - the @|int32| is the default type used for
-//integer constants (same as in @|C|), hence the output is the
-//same type:
+//is straightforward:
 //@<
 //3 - 8
 //@>
-//Next, we use the floating point syntax to force one of the arguments
-//to be a @|double|, which results in the output being @|double|:
+//Next, we subtract a vector of values from a scalar:
 //@<
-//3.1 - 2
+//3.1 - [2,4,5,6,7]
 //@>
-//Note that if one of the arguments is complex-valued, the output will be
-//complex also.
+//With complex values
 //@<
-//a = 3 + 4*i
-//b = a - 2.0f
+//a = 3 - 4*i
+//b = a - 2
 //@>
-//If a @|double| value is subtracted from a @|complex|, the result is 
-//promoted to @|dcomplex|.
-//@<
-//b = a - 2.0
-//@>
-//We can also demonstrate the three forms of the subtraction operator.  First
-//the element-wise version:
+//Finally, the element-wise version:
 //@<
 //a = [1,2;3,4]
 //b = [2,3;6,7]
 //c = a - b
-//@>
-//Then the scalar versions
-//@<
-//c = a - 1
-//c = 1 - b
 //@>
 //@@Tests
 //@{ test_sparse39.m
@@ -638,10 +609,10 @@ Array Subtract(const Array& A, const Array &B) {
 //in which case @|y| is the same size as the larger argument,
 //and is the product of the scalar with each element of the other argument.
 //
-//The type of @|y| depends on the types of @|a| and @|b| using type 
-//promotion rules. All of the types are preserved under multiplication except
-// for integer types, which are promoted to @|int32| prior to 
-//multiplication (same as @|C|).
+//
+//The rules for manipulating types has changed in FreeMat 4.0.  See @|typerules|
+//for more details.
+//
 //@@Function Internals
 //There are three formulae for the dot-times operator, depending on the
 //sizes of the three arguments.  In the most general case, in which 
@@ -664,41 +635,20 @@ Array Subtract(const Array& A, const Array &B) {
 //@<
 //3 .* 8
 //@>
-//Note, however, that because of the way that input is parsed, eliminating
-//the spaces @|3.*8| results in the input being parsed as @|3. * 8|,
-//which yields a @|double| result:
+//Next, we multiply a scalar by a vector of values:
 //@<
-//3.*8
+//3.1 .* [2,4,5,6,7]
 //@>
-//This is really an invokation of the @|times| operator.
-//
-//Next, we use the floating point syntax to force one of the arguments
-//to be a @|double|, which results in the output being @|double|:
-//@<
-//3.1 .* 2
-//@>
-//Note that if one of the arguments is complex-valued, the output will be
-//complex also.
+//With complex values
 //@<
 //a = 3 + 4*i
-//b = a .* 2.0f
+//b = a .* 2
 //@>
-//If a @|complex| value is multiplied by a @|double|, the result is 
-//promoted to @|dcomplex|.
-//@<
-//b = a .* 2.0
-//@>
-//We can also demonstrate the three forms of the dottimes operator.  First
-//the element-wise version:
+//Finally, the element-wise version:
 //@<
 //a = [1,2;3,4]
 //b = [2,3;6,7]
 //c = a .* b
-//@>
-//Then the scalar versions
-//@<
-//c = a .* 3
-//c = 3 .* a
 //@>
 //@@Tests
 //@{ test_sparse41.m
@@ -812,9 +762,9 @@ Array DotMultiply(const Array& A, const Array &B) {
 //in which case @|y| is the same size as the larger argument,
 //and is the division of the scalar with each element of the other argument.
 //
-//The type of @|y| depends on the types of @|a| and @|b| using type 
-//promotion rules, with one important exception: unlike @|C|, integer
-//types are promoted to @|double| prior to division.
+//The rules for manipulating types has changed in FreeMat 4.0.  See @|typerules|
+//for more details.
+//
 //@@Function Internals
 //There are three formulae for the dot-right-divide operator, depending on the
 //sizes of the three arguments.  In the most general case, in which 
@@ -837,19 +787,12 @@ Array DotMultiply(const Array& A, const Array &B) {
 //@<
 //3 ./ 8
 //@>
-//Note that this is not the same as evaluating @|3/8| in @|C| - there,
-//the output would be @|0|, the result of the integer division.
 //
 //We can also divide complex arguments:
 //@<
 //a = 3 + 4*i
 //b = 5 + 8*i
 //c = a ./ b
-//@>
-//If a @|complex| value is divided by a @|double|, the result is 
-//promoted to @|dcomplex|.
-//@<
-//b = a ./ 2.0
 //@>
 //We can also demonstrate the three forms of the dot-right-divide operator.  First
 //the element-wise version:
@@ -888,9 +831,9 @@ Array DotRightDivide(const Array& A, const Array& B) {
 //in which case @|y| is the same size as the larger argument,
 //and is the division of the scalar with each element of the other argument.
 //
-//The type of @|y| depends on the types of @|a| and @|b| using type 
-//promotion rules, with one important exception: unlike @|C|, integer
-//types are promoted to @|double| prior to division.
+//The rules for manipulating types has changed in FreeMat 4.0.  See @|typerules|
+//for more details.
+//
 //@@Function Internals
 //There are three formulae for the dot-left-divide operator, depending on the
 //sizes of the three arguments.  In the most general case, in which 
@@ -913,19 +856,12 @@ Array DotRightDivide(const Array& A, const Array& B) {
 //@<
 //3 .\ 8
 //@>
-//Note that this is not the same as evaluating @|8/3| in @|C| - there,
-//the output would be @|2|, the result of the integer division.
 //
 //We can also divide complex arguments:
 //@<
 //a = 3 + 4*i
 //b = 5 + 8*i
 //c = b .\ a
-//@>
-//If a @|complex| value is divided by a @|double|, the result is 
-//promoted to @|dcomplex|.
-//@<
-//b = a .\ 2.0
 //@>
 //We can also demonstrate the three forms of the dot-left-divide operator.  First
 //the element-wise version:
@@ -961,7 +897,10 @@ Array DotLeftDivide(const Array& A, const Array& B) {
 //  \item @|a| is an @|n|-dimensional numerical array, and @|b| is a scalar, then the output is the same size as @|a|, and is defined by each element of @|a| raised to the power @|b|.
 //  \item @|a| and @|b| are both @|n|-dimensional numerical arrays of \emph{the same size}.  In this case, each element of the output is the corresponding element of @|a| raised to the power defined by the corresponding element of @|b|.
 //\end{enumerate}
-//The output follows the standard type promotion rules, although types are not generally preserved under the power operation.  In particular, integers are automatically converted to @|double| type, and negative numbers raised to fractional powers can return complex values.
+//
+//The rules for manipulating types has changed in FreeMat 4.0.  See @|typerules|
+//for more details.
+//
 //@@Function Internals
 //There are three formulae for this operator.  For the first form
 //\[
@@ -1047,7 +986,7 @@ Array DotPower(const Array& A, const Array& B) {
 //  \item @|a| is an n-dimensional array, @|b| is a scalar - the output is the same size as @|a|, and contains the result of comparing each element in @|a| to the scalar @|b|.
 //  \item @|a| and @|b| are both n-dimensional arrays of the same size - the output is then the same size as both @|a| and @|b|, and contains the result of an element-wise comparison between @|a| and @|b|.
 //\end{enumerate}
-//The operators behave the same way as in @|C|, with unequal types meing promoted using the standard type promotion rules prior to comparisons.  The only difference is that in FreeMat, the not-equals operator is @|~=| instead of @|!=|.
+//The operators behave the same way as in @|C|, with unequal types being promoted using the standard type promotion rules prior to comparisons.  The only difference is that in FreeMat, the not-equals operator is @|~=| instead of @|!=|.
 //@@Examples
 //Some simple examples of comparison operations.  First a comparison with a scalar:
 //@<
@@ -1654,38 +1593,6 @@ Array Negate(const Array& A){
 }
 
 
-//!
-//@Module TYPERULES Type Rules
-//@@Section FreeMat
-//@@Usage
-//FreeMat follows an extended form of C's type rules (the extension
-//is to handle complex data types.  The general rules are as follows:
-//\begin{itemize}
-//  \item Integer types are promoted to @|int32| types, except
-//        for matrix operations and division operations.
-//  \item Mixtures of @|float| and @|complex| types produce @|complex|
-//        outputs.
-//  \item Mixtures of @|double| or @|int32| types and @|dcomplex|
-//        types produce @|dcomplex| outputs.
-//  \item Arguments to operators are promoted to the largest type
-//        present among the operands.
-//  \item Type promotion is not allowed to reduce the information
-//        content of the variable.  The only exception to this is
-//        64-bit integers, which can lose information when they
-//        are promoted to 64-bit @|double| values.  
-//\end{itemize}
-//These rules look tricky, but in reality, they are designed so that
-//you do not actively have to worry about the types when performing
-//mathematical operations in FreeMat.  The flip side of this, of course
-//is that unlike C, the output of numerical operations is not automatically
-//typecast to the type of the variable you assign the value to. 
-//@@Tests
-//@$"y=1+2","3","exact"
-//@$"y=1f*i","i","exact"
-//@$"y=pi+i","dcomplex(pi+i)","close"
-//@$"y=1/2","0.5","exact"
-//!
-
 /**
  * We want to perform a matrix-matrix operation between two data objects.
  * The following checks are required:
@@ -1780,7 +1687,8 @@ Array MatrixPowerSparse(Array a, Array b) {
 //  \item @|b| is a scalar, @|a| is an arbitrary @|n|-dimensional numerical array, in which case the output is the element-wise product of @|a| with the scalar @|b|.
 //  \item @|a,b| are conformant matrices, i.e., @|a| is of size @|M x K|, and @|b| is of size @|K x N|, in which case the output is of size @|M x N| and is the matrix product of @|a|, and @|b|.
 //\end{enumerate}
-//The output follows the standard type promotion rules, although in the first two cases, if @|a| and @|b| are integers, the output is an integer also, while in the third case if @|a| and @|b| are integers, ,the output is of type @|double|.
+//Matrix multiplication is only defined for matrices of type @|double| 
+//and @|single|.
 //@@Function Internals
 //There are three formulae for the times operator.  For the first form
 //\[

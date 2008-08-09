@@ -54,21 +54,13 @@ function csvwrite(filename,x,firstrow,firstcol)
     if (~isnumeric(x))
         error('csvwrite cannot write non-numerical arrays');
     end
-    if (any(strcmp({'uint8','int8','uint16','int16','uint32',...
-                    'int32','uint64','int64'}, ...
-            class(x))))
-        csvwrite_real(filename,x,firstrow,firstcol,'%d');
-    elseif(isreal(x))
-        csvwrite_real(filename,x,firstrow,firstcol,'%.20f');
+    if (isreal(x))
+      csvwrite_real(filename,x,firstrow,firstcol);
     else
-        if (isa(x,'complex'))
-            csvwrite_complex(filename,x,firstrow,firstcol,'%.10f');
-        else
-            csvwrite_complex(filename,x,firstrow,firstcol,'%.20f');
-        end
+      csvwrite_complex(filename,x,firstrow,firstcol);
     end
     
-function csvwrite_real(filename,x,firstrow,firstcol,format)
+function csvwrite_real(filename,x,firstrow,firstcol)
     fp = fopen(filename,'w');
     for i=0:(firstrow-1)
         fprintf(fp,'\n');
@@ -81,15 +73,15 @@ function csvwrite_real(filename,x,firstrow,firstcol,format)
     for j=1:size(x,1)
         fprintf(fp,prepend_string);
         for k=1:(size(x,2)-1)
-            fprintf(fp,format,x(j,k));
+            fprintf(fp,'%.20g',x(j,k));
             fprintf(fp,',');
         end
-        fprintf(fp,format,x(j,end));
+        fprintf(fp,'%.20g',x(j,end));
         fprintf(fp,'\n');
     end
     fclose(fp);
     
-function csvwrite_complex(filename,x,firstrow,firstcol,format)
+function csvwrite_complex(filename,x,firstrow,firstcol)
     fp = fopen(filename,'w');
     for i=0:(firstrow-1)
         fprintf(fp,'\n');
@@ -102,10 +94,10 @@ function csvwrite_complex(filename,x,firstrow,firstcol,format)
     for j=1:size(x,1)
         fprintf(fp,prepend_string);
         for k=1:(size(x,2)-1)
-            fprintf(fp,[format,'+',format,'i'],real(x(j,k)),imag(x(j,k)));
+            fprintf(fp,['%.20g','+','%.20g','i'],real(x(j,k)),imag(x(j,k)));
             fprintf(fp,',');
         end
-        fprintf(fp,[format,'+',format,'i'],real(x(j,end)),imag(x(j,end)));
+        fprintf(fp,['%.20g','+','%.20g','i'],real(x(j,end)),imag(x(j,end)));
         fprintf(fp,'\n');
     end
     fclose(fp);
