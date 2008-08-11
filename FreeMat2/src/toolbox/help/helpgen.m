@@ -1,8 +1,8 @@
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL
 
-function helpgen(source_path)
-  global sourcepath section_descriptors genfiles
+function helpgen(source_path,test_only)
+  global sourcepath section_descriptors genfiles skipexec
 
   diary([source_path,'/help_diary.txt']);
 
@@ -19,8 +19,14 @@ function helpgen(source_path)
 
   sourcepath = source_path;
   read_section_descriptors;
-  p = groupwriter({htmlwriter,latexwriter,bbtestwriter,textwriter, ...
-                   testwriter});
+  if (exist('test_only'))
+    p = groupwriter({testwriter,bbtestwriter});
+    skipexec = true;
+  else
+    p = groupwriter({htmlwriter,latexwriter,bbtestwriter,textwriter, ...
+                     testwriter});
+    skipexec = false;
+  end
   file_list = {};
   file_list = [file_list;helpgen_rdir([source_path,'/libs'])];
   file_list = [file_list;helpgen_rdir([source_path,'/src'])];
@@ -32,6 +38,7 @@ function helpgen(source_path)
     end
   end
 
+  if (skipexec) return; end;
   file_list = helpgen_rdir([source_path,'/src/toolbox']);
   for i=1:numel(file_list)
     merge_mfile(file_list{i});
@@ -317,7 +324,7 @@ function handle_output(&line,fp,pset,&writers)
   line = getline(fp);
 
 function handle_exec(&line,fp,pset,&writers,exec_id)
-  global sourcepath
+  global sourcepath skipexec
   line = mustmatch(line,pset.execin);
   errors_expected = str2num(line);
   cmdlist = {};
@@ -331,6 +338,7 @@ function handle_exec(&line,fp,pset,&writers,exec_id)
 %  cmdlist = strrep(cmdlist,'\r','\\r');
 %  cmdlist = strrep(cmdlist,'\n','\\n');
   docomputeblock(writers,cmdlist,errors_expected);
+  if (skipexec) return; end;
   cd([sourcepath,'/help/tmp']);
   beginverbatim(writers);
   etext = threadcall(exec_id,100000,'simkeys',cmdlist);

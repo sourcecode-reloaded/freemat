@@ -2053,6 +2053,7 @@ Array LeftDivide(const Array& A, const Array& B) {
 //     return Array(A.dataClass(),outDim,
 // 		 SparseSolveLinEq(A.dataClass(),Arows,Acols,A.getSparseDataPointer(),
 // 				  Brows,Bcols,B.getDataPointer()),false);
+#warning FINISHME
   }
   if (A.isSquare())
     return SolveLinearEq(A,B);

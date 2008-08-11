@@ -163,15 +163,15 @@ static void RealQRD(BasicArray<T> &Q, BasicArray<T> &R, BasicArray<T> &A) {
   LWORK = -1;
   T WORKSZE;
   int INFO;
-  Rgeqrf(&M, &N, A.data(), &LDA, TAU, &WORKSZE, &LWORK, &INFO);
+  T* a = A.data();
+  Rgeqrf(&M, &N, a, &LDA, TAU, &WORKSZE, &LWORK, &INFO);
   LWORK = (int) WORKSZE;
   MemBlock<T> WORKBlock(LWORK);
   T* WORK = &WORKBlock;
-  Rgeqrf(&M, &N, A.data(), &LDA, TAU, WORK, &LWORK, &INFO);
+  Rgeqrf(&M, &N, a, &LDA, TAU, WORK, &LWORK, &INFO);
   int minmn = qMin(M,N);
   // Need to copy out the upper triangle of A into the upper triangle of R
   T* r = R.data();
-  T* a = A.data();
   T* q = Q.data();
   memset(r,0,minmn*N*sizeof(T));
   int i, j, k;
@@ -218,6 +218,7 @@ static void RealQRD(BasicArray<T> &Q, BasicArray<T> &R, BasicArray<T> &A) {
   //*  N       (input) INTEGER
   //*          The number of columns of the matrix Q. M >= N >= 0.
   //*
+  N = minmn;
   //*  K       (input) INTEGER
   //*          The number of elementary reflectors whose product defines the
   //*          matrix Q. N >= K >= 0.
@@ -292,7 +293,7 @@ static void ComplexQRD(BasicArray<T> &Q, BasicArray<T> &R, BasicArray<T> A) {
   //*  M       (input) INTEGER
   //*          The number of rows of the matrix A.  M >= 0.
   //*
-  int M = int(A.rows());
+  int M = int(A.rows()/2);
   //*  N       (input) INTEGER
   //*          The number of columns of the matrix A.  N >= 0.
   //*
@@ -496,12 +497,13 @@ static void RealQRDP(BasicArray<T> &Q, BasicArray<T> &R, BasicArray<T> &P, Basic
   //*          On exit, if JPVT(J)=K, then the J-th column of A*P was the
   //*          the K-th column of A.
   //*
+  int minmn = qMin(M,N);
   MemBlock<int> JPVTBlock(N);
   int *JPVT = &JPVTBlock;
   //*  TAU     (output) REAL array, dimension (min(M,N))
   //*          The scalar factors of the elementary reflectors.
   //*
-  MemBlock<T> TAUBlock(qMin(M,N)); 
+  MemBlock<T> TAUBlock(minmn); 
   T* TAU = &TAUBlock;
   //*  WORK    (workspace/output) REAL array, dimension (LWORK)
   //*          On exit, if INFO=0, WORK(1) returns the optimal LWORK.
@@ -528,7 +530,6 @@ static void RealQRDP(BasicArray<T> &Q, BasicArray<T> &R, BasicArray<T> &P, Basic
   MemBlock<T> WORKBlock(LWORK); 
   T* WORK = &WORKBlock;
   Rgeqp3(&M, &N, A.data(), &LDA, JPVT, TAU, WORK, &LWORK, &INFO);
-  int minmn = qMin(M,N);
   // Need to copy out the upper triangle of A into the upper triangle of R
   T *r = R.data();
   T *q = Q.data();
@@ -624,7 +625,7 @@ static void RealQRDP(BasicArray<T> &Q, BasicArray<T> &R, BasicArray<T> &P, Basic
   MemBlock<T> WORKBlock2(LWORK);
   WORK = &WORKBlock2;
   Rorgqr(&M, &N, &K, q, &LDA, TAU, WORK, &LWORK, &INFO);
-  for (int i=0;i<N;i++)
+  for (int i=0;i<A.cols();i++)
     P.set(i+1,JPVT[i]);
 }
 
@@ -659,7 +660,7 @@ static void ComplexQRDP(BasicArray<T> &Q, BasicArray<T> &R, BasicArray<T> &P, Ba
   //*  M       (input) INTEGER
   //*          The number of rows of the matrix A. M >= 0.
   //*
-  int M = int(A.rows());
+  int M = int(A.rows()/2);
   //*  N       (input) INTEGER
   //*          The number of columns of the matrix A.  N >= 0.
   //*
@@ -675,7 +676,7 @@ static void ComplexQRDP(BasicArray<T> &Q, BasicArray<T> &R, BasicArray<T> &P, Ba
   //*  LDA     (input) INTEGER
   //*          The leading dimension of the array A. LDA >= max(1,M).
   //*
-  int LDA = int(A.rows());
+  int LDA = int(A.rows()/2);
   //*  JPVT    (input/output) INTEGER array, dimension (N)
   //*          On entry, if JPVT(J).ne.0, the J-th column of A is permuted
   //*          to the front of A*P (a leading column); if JPVT(J)=0,
@@ -769,7 +770,7 @@ static void ComplexQRDP(BasicArray<T> &Q, BasicArray<T> &R, BasicArray<T> &P, Ba
   //*
   //*  M       (input) INTEGER
   //*          The number of rows of the matrix Q. M >= 0.
-  M = int(A.rows());    
+  M = int(A.rows()/2);    
   //*
   //*  N       (input) INTEGER
   //*          The number of columns of the matrix Q. M >= N >= 0.
@@ -819,7 +820,7 @@ static void ComplexQRDP(BasicArray<T> &Q, BasicArray<T> &R, BasicArray<T> &P, Ba
   MemBlock<T> WORKBlock2(LWORK*2);
   WORK = &WORKBlock2;
   Cungqr(&M, &N, &K, q, &LDA, TAU, WORK, &LWORK, &INFO);
-  for (int i=0;i<N;i++)
+  for (int i=0;i<A.cols();i++)
     P.set(i+1,JPVT[i]);
 }
 

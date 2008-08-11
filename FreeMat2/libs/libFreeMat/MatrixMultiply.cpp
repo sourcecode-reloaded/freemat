@@ -430,8 +430,8 @@ static Array realMatrixMultiply(const BasicArray<T> &A, const BasicArray<T> &B) 
 
 template <typename T>
 static Array complexMatrixMultiply(const BasicArray<T> &A, const BasicArray<T> &B) {
-  BasicArray<T> C(NTuple(A.rows()*2,B.cols()));
-  complexMatrixMatrixMultiply<T>(int(A.rows()),int(B.cols()),int(A.cols()),C.data(),A.constData(),B.constData());
+  BasicArray<T> C(NTuple(A.rows(),B.cols()));
+  complexMatrixMatrixMultiply<T>(int(A.rows()/2),int(B.cols()),int(A.cols()),C.data(),A.constData(),B.constData());
   return Array(SplitReal(C),SplitImag(C));
 }
   

@@ -191,6 +191,7 @@ static ArrayFormatInfo ComputeArrayFormatInfo(const Array &rp) {
   case cls: return ComputeArrayFormatInfo<ctype>(ref);
 
 static ArrayFormatInfo ComputeArrayFormatInfo(const Array &ref) {
+  if (ref.isSparse()) return ArrayFormatInfo(1);
   switch (ref.dataClass()) {
   default: throw Exception("unexpected class for ComputeArrayFormatInfo");
   case Float: return ComputeArrayFormatInfo<float>(ref);

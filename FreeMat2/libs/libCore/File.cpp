@@ -363,7 +363,7 @@ Array Tread(QFile* fp, NTuple dim, bool swapflag) {
 }
 
 #define MacroRead(ctype,cls)			\
-  case cls: { A = Tread<ctype>(fptr->fp,dims,fptr->swapflag); }
+  case cls: { A = Tread<ctype>(fptr->fp,dims,fptr->swapflag); break; }
 
 ArrayVector FreadFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 3)

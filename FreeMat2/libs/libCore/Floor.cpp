@@ -28,7 +28,7 @@ struct OpFloor {
 //function preserves the type of the argument.  So integer arguments 
 //are not modified, and @|float| arrays return @|float| arrays as 
 //outputs, and similarly for @|double| arrays.  The @|floor| function 
-//is not defined for @|complex| or @|dcomplex| types.
+//is not defined for complex types.
 //@@Example
 //The following demonstrates the @|floor| function applied to various
 //(numerical) arguments.  For integer arguments, the floor function has
@@ -39,14 +39,8 @@ struct OpFloor {
 //@>
 //Next, we take the @|floor| of a floating point value:
 //@<
-//floor(3.023f)
-//floor(-2.341f)
-//@>
-//Note that the return type is a @|float| also.  Finally, for a @|double|
-//type:
-//@<
-//floor(4.312)
-//floor(-5.32)
+//floor(3.023)
+//floor(-2.341)
 //@>
 //@@Signature
 //function floor FloorFunction
