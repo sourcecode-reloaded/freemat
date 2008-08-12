@@ -12,19 +12,51 @@ static inline SparseMatrix<S> DotOp(const SparseMatrix<T>& A,
   ConstSparseIterator<T> aspin(&A);
   ConstSparseIterator<T> bspin(&B);
   SparseMatrix<S> retval(A.dimensions());
+  // While more columns...
   while (aspin.isValid() || bspin.isValid()) {
-    while (aspin.moreInSlice() || bspin.moreInSlice()) {
-      if (aspin.pos() == bspin.pos()) {
-	retval.set(aspin.pos(),Op::func(aspin.value(),bspin.value()));
-	aspin.next();
-	bspin.next();
-      } else if (A.dimensions().map(aspin.pos()) <
-		 B.dimensions().map(bspin.pos())) {
+    if (aspin.col() == bspin.col()) {
+      while (aspin.moreInSlice() || bspin.moreInSlice()) {
+	qDebug() << "Aspin " << aspin.moreInSlice();
+	if (aspin.moreInSlice())
+	  qDebug() << "  pos " << aspin.pos().toString() << " value " << aspin.value();
+	qDebug() << "Bspin " << bspin.moreInSlice();
+	if (bspin.moreInSlice())
+	  qDebug() << "  pos " << bspin.pos().toString() << " value " << bspin.value();      
+	if (aspin.moreInSlice() && bspin.moreInSlice()) {
+	  if (aspin.pos() == bspin.pos()) {
+	    qDebug() << " C " << aspin.pos().toString() << " value " << Op::func(aspin.value(),bspin.value());
+	    retval.set(aspin.pos(),Op::func(aspin.value(),bspin.value()));
+	    aspin.next();
+	    bspin.next();
+	  } else if (A.dimensions().map(aspin.pos()) <
+		     B.dimensions().map(bspin.pos())) {
+	    qDebug() << " C " << aspin.pos().toString() << " value " << Op::func(aspin.value(),T(0));
+	    retval.set(aspin.pos(),Op::func(aspin.value(),T(0)));
+	    aspin.next();
+	  } else {
+	    qDebug() << " C " << bspin.pos().toString() << " value " << Op::func(T(0),bspin.value());
+	    retval.set(bspin.pos(),Op::func(T(0),bspin.value()));
+	    bspin.next();
+	  }
+	} else if (aspin.moreInSlice()) {
+	  qDebug() << " C " << aspin.pos().toString() << " value " << Op::func(aspin.value(),T(0));
+	  retval.set(aspin.pos(),Op::func(aspin.value(),T(0)));
+	  aspin.next();
+	} else {
+	  qDebug() << " C " << bspin.pos().toString() << " value " << Op::func(T(0),bspin.value());
+	  retval.set(bspin.pos(),Op::func(T(0),bspin.value()));
+	  bspin.next();
+	}
+      }
+    } else if (aspin.col() < bspin.col()) {
+      while (aspin.moreInSlice()) {
 	retval.set(aspin.pos(),Op::func(aspin.value(),T(0)));
 	aspin.next();
-      } else {
-	retval.set(bspin.pos(),Op::func(T(0),bspin.value()));
-	bspin.next();
+      }
+    } else {
+      while (bspin.moreInSlice()) {
+	retval.set(bspin.pos(),Op::func(bspin.value(),T(0)));
+	bspin.next();	
       }
     }
     aspin.nextSlice();
