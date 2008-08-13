@@ -192,19 +192,16 @@ public:
     index_t deleted_count = 0;
     index_t dp = 1;
     while (source.isValid()) {
-      while (source.moreInSlice()) {
-	index_t source_pos = m_dims.map(source.pos());
-	if (!delete_set.contains(uint64(source_pos))) {
-	  // This element was not deleted.  
-	  while (dp < source_pos) {
-	    if (delete_set.contains(uint64(dp))) ++deleted_count;
-	    ++dp;
-	  }
-	  ret.set(source_pos-deleted_count,source.value());
+      index_t source_pos = m_dims.map(source.pos());
+      if (!delete_set.contains(uint64(source_pos))) {
+	// This element was not deleted.  
+	while (dp < source_pos) {
+	  if (delete_set.contains(uint64(dp))) ++deleted_count;
+	  ++dp;
 	}
-	source.next();
-      } 
-      source.nextSlice();
+	ret.set(source_pos-deleted_count,source.value());
+      }
+      source.next();
     }
     *this = ret;
   }
@@ -224,11 +221,8 @@ public:
     SparseMatrix<T> ret(pos);
     ConstSparseIterator<T> source(this);
     while (source.isValid()) {
-      while (source.moreInSlice()) {
-	ret.set(dimensions().map(source.pos()),source.value());
-	source.next();
-      } 
-      source.nextSlice();
+      ret.set(dimensions().map(source.pos()),source.value());
+      source.next();
     }
     *this = ret;
   }
@@ -258,11 +252,8 @@ public:
     ConstSparseIterator<T> source(this);
     BasicArray<T> retvec(dimensions());
     while (source.isValid()) {
-      while (source.moreInSlice()) {
-	retvec.set(source.pos(),source.value());
-	source.next();
-      } 
-      source.nextSlice();
+      retvec.set(source.pos(),source.value());
+      source.next();
     }
     return retvec;
   }
@@ -270,14 +261,10 @@ public:
     ConstSparseIterator<T> source(this);
     ConstSparseIterator<T> dest(&data);
     while (source.isValid() && dest.isValid()) {
-      while (source.moreInSlice() && dest.moreInSlice()) {
-	if (!(source.pos() == dest.pos())) return false;
-	if (source.value() != dest.value()) return false;
-	source.next();
-	dest.next();
-      }
-      source.nextSlice();
-      dest.nextSlice();
+      if (!(source.pos() == dest.pos())) return false;
+      if (source.value() != dest.value()) return false;
+      source.next();
+      dest.next();
     }
     return true;
   }
@@ -309,18 +296,13 @@ public:
   inline index_t rows() const {
     return m_ptr->rows();
   }
-  inline bool moreInSlice() const {
-    return (m_row != m_col.value().constEnd());
-  }
   inline void next() {
-    if (moreInSlice())
-      ++m_row;
-  }
-  inline void nextSlice() {
-    if (isValid()) {
+    if (!isValid()) return;
+    ++m_row;
+    if (m_row == m_col.value().constEnd()) {
       ++m_col;
-      if (isValid())
-    	m_row = m_col.value().constBegin();
+      if (m_col != m_ptr->constData().constEnd())
+	m_row = m_col.value().constBegin();
     }
   }
   bool isValid() const {
@@ -349,9 +331,6 @@ public:
   ConstComplexSparseIterator(const SparseMatrix<T> *real,
 			     const SparseMatrix<T> *imag) : 
     m_real(real), m_imag(imag), m_dims(real->dimensions()) {}
-  inline bool moreInSlice() const {
-    return (m_real.moreInSlice() || m_imag.moreInSlice());
-  }
   inline index_t rows() const {
     return m_real.rows();
   }
@@ -364,10 +343,6 @@ public:
       m_real.next();
       m_imag.next();
     }
-  }
-  void nextSlice() {
-    m_real.nextSlice();
-    m_imag.nextSlice();
   }
   const NTuple pos() const {
     if (m_dims.map(m_real.pos()) <= m_dims.map(m_imag.pos()))
@@ -402,11 +377,8 @@ template <typename T>
 bool IsNonNegative(const SparseMatrix<T> &x) {
   ConstSparseIterator<T> i(&x);
   while (i.isValid()) {
-    while (i.moreInSlice()) {
-      if (i.value() < 0) return false;
-      i.next();
-    }
-    i.nextSlice();
+    if (i.value() < 0) return false;
+    i.next();
   }
   return true;
 }
@@ -415,11 +387,8 @@ template <typename T>
 bool IsInteger(const SparseMatrix<T> &x) {
   ConstSparseIterator<T> i(&x);
   while (i.isValid()) {
-    while (i.moreInSlice()) {
-      if (IsInteger(i.value())) return false;
-      i.next();
-    }
-    i.nextSlice();
+    if (IsInteger(i.value())) return false;
+    i.next();
   }
   return true;
 }
@@ -429,11 +398,8 @@ SparseMatrix<T> ConvertSparseArray(const SparseMatrix<S> &x) {
   SparseMatrix<T> retvec(x.dimensions());
   ConstSparseIterator<S> i(&x);
   while (i.isValid()) {
-    while (i.moreInSlice()) {
-      retvec.set(i.pos(),CastConvert<T,S>(i.value()));
-      i.next();
-    }
-    i.nextSlice();
+    retvec.set(i.pos(),CastConvert<T,S>(i.value()));
+    i.next();
   }
   return retvec;
 }
@@ -453,11 +419,8 @@ SparseMatrix<T> MatrixMultiply(const SparseMatrix<T> &A, const SparseMatrix<T> &
     SparseSlice<T> b_slice(B_iter.value());
     ConstSparseIterator<T> A_iter(&A);
     while (A_iter.isValid()) {
-      while (A_iter.moreInSlice()) {
-	c_slice[A_iter.row()] += A_iter.value() * b_slice[A_iter.col()];
-	A_iter.next();
-      }
-      A_iter.nextSlice();
+      c_slice[A_iter.row()] += A_iter.value() * b_slice[A_iter.col()];
+      A_iter.next();
     }
     C.data()[B_iter.key()] = c_slice;
     B_iter++;
@@ -474,11 +437,8 @@ SparseMatrix<T> MatrixMultiply(const SparseMatrix<T> &A, const BasicArray<T> &B)
     SparseSlice<T> c_slice;
     ConstSparseIterator<T> A_iter(&A);
     while (A_iter.isValid()) {
-      while (A_iter.moreInSlice()) {
-	c_slice[A_iter.row()] += A_iter.value() * B.get(NTuple(A_iter.col(),col));
-	A_iter.next();
-      }
-      A_iter.nextSlice();
+      c_slice[A_iter.row()] += A_iter.value() * B.get(NTuple(A_iter.col(),col));
+      A_iter.next();
     }
     C.data()[col] = c_slice;
   }
@@ -509,11 +469,8 @@ SparseMatrix<T> Apply(const SparseMatrix<T>& arg, T (*func)(T)) {
   SparseMatrix<T> retval(arg.dimensions());
   ConstSparseIterator<T> Aiter(&arg);
   while (Aiter.isValid()) {
-    while (Aiter.moreInSlice()) {
-      retval.set(Aiter.pos(),func(Aiter.value()));
-      Aiter.next();
-    }
-    Aiter.nextSlice();
+    retval.set(Aiter.pos(),func(Aiter.value()));
+    Aiter.next();
   }
   return retval;
 }
@@ -528,11 +485,8 @@ SparseMatrix<T> Transpose(const SparseMatrix<T> &arg) {
   SparseMatrix<T> retval(NTuple(arg.cols(),arg.rows()));
   ConstSparseIterator<T> Aiter(&arg);
   while (Aiter.isValid()) {
-    while (Aiter.moreInSlice()) {
-      retval.set(NTuple(Aiter.col(),Aiter.row()),Aiter.value());
-      Aiter.next();
-    }
-    Aiter.nextSlice();
+    retval.set(NTuple(Aiter.col(),Aiter.row()),Aiter.value());
+    Aiter.next();
   }
   return retval;
 }
@@ -541,12 +495,9 @@ template <typename T>
 bool IsSymmetric(const SparseMatrix<T> &arg) {
   ConstSparseIterator<T> Aiter(&arg);
   while (Aiter.isValid()) {
-    while (Aiter.moreInSlice()) {
-      if (arg.get(NTuple(Aiter.col(),Aiter.row())) != Aiter.value())
-	return false;
-      Aiter.next();
-    }
-    Aiter.nextSlice();
+    if (arg.get(NTuple(Aiter.col(),Aiter.row())) != Aiter.value())
+      return false;
+    Aiter.next();
   }
   return true;
 }
@@ -569,12 +520,9 @@ template <typename T>
 bool AnyNotFinite(const SparseMatrix<T> &arg) {
   ConstSparseIterator<T> Aiter(&arg);
   while (Aiter.isValid()) {
-    while (Aiter.moreInSlice()) {
-      if (!IsFinite(Aiter.value())) 
-	return true;
-      Aiter.next();
-    }
-    Aiter.nextSlice();
+    if (!IsFinite(Aiter.value())) 
+      return true;
+    Aiter.next();
   }
   return false;
 }
@@ -583,11 +531,8 @@ template <typename T>
 bool AllZeros(const SparseMatrix<T> &arg) {
   ConstSparseIterator<T> Aiter(&arg);
   while (Aiter.isValid()) {
-    while (Aiter.moreInSlice()) {
-      if (Aiter.value() != 0) return false;
-      Aiter.next();
-    }
-    Aiter.nextSlice();
+    if (Aiter.value() != 0) return false;
+    Aiter.next();
   }
   return true;
 }

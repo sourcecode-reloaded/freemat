@@ -15,13 +15,10 @@ void SparseToCCS(const SparseMatrix<T>&A,
   QVector<uint32> cols;
   ConstSparseIterator<T> iter(&A);
   while (iter.isValid()) {
-    while (iter.moreInSlice()) {
-      cols << uint32(iter.col()-1);
-      rowstart << uint32(iter.row()-1);
-      Adata << iter.value();
-      iter.next();
-    }
-    iter.nextSlice();
+    cols << uint32(iter.col()-1);
+    rowstart << uint32(iter.row()-1);
+    Adata << iter.value();
+    iter.next();
   }
   colstart = CompressCCSCols(cols,A.cols());
 }
@@ -36,13 +33,11 @@ void SparseToCCS(const SparseMatrix<T> &Areal,
   QVector<uint32> cols;
   ConstComplexSparseIterator<T> iter(&Areal,&Aimag);
   while (iter.isValid()) {
-    while (iter.moreInSlice()) {
-      cols << uint32(iter.col()-1);
-      rowstart << uint32(iter.row()-1);
-      Areal_part << iter.realValue();
-      Aimag_part << iter.imagValue();
-    }
-    iter.nextSlice();
+    cols << uint32(iter.col()-1);
+    rowstart << uint32(iter.row()-1);
+    Areal_part << iter.realValue();
+    Aimag_part << iter.imagValue();
+    iter.next();
   }
   colstart = CompressCCSCols(cols,Areal.cols());
 }

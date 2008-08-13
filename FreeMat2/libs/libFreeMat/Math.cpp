@@ -455,78 +455,56 @@ struct OpPower {
 //@$"y=zeros(3,0,4)+zeros(3,0,4)","zeros(3,0,4)","exact"
 //!
 
-template <class Op>
-static inline SparseMatrix<double> TDotOp(const SparseMatrix<double>& A, 
-					  const SparseMatrix<double>& B) {
-  ConstSparseIterator<double> aspin(&A);
-  ConstSparseIterator<double> bspin(&B);
-  SparseMatrix<double> retval(A.dimensions());
-  // While more columns...
-  while (aspin.isValid() || bspin.isValid()) {
-    if (aspin.col() == bspin.col()) {
-      while (aspin.moreInSlice() || bspin.moreInSlice()) {
-	qDebug() << "Aspin " << aspin.moreInSlice();
-	if (aspin.moreInSlice())
-	  qDebug() << "  pos " << aspin.pos().toString() << " value " << aspin.value();
-	qDebug() << "Bspin " << bspin.moreInSlice();
-	if (bspin.moreInSlice())
-	  qDebug() << "  pos " << bspin.pos().toString() << " value " << bspin.value();      
-	if (aspin.moreInSlice() && bspin.moreInSlice()) {
-	  if (aspin.pos() == bspin.pos()) {
-	    qDebug() << " C " << aspin.pos().toString() << " value " << Op::func(aspin.value(),bspin.value());
-	    retval.set(aspin.pos(),Op::func(aspin.value(),bspin.value()));
-	    aspin.next();
-	    bspin.next();
-	  } else if (A.dimensions().map(aspin.pos()) <
-		     B.dimensions().map(bspin.pos())) {
-	    qDebug() << " C " << aspin.pos().toString() << " value " << Op::func(aspin.value(),double(0));
-	    retval.set(aspin.pos(),Op::func(aspin.value(),double(0)));
-	    aspin.next();
-	  } else {
-	    qDebug() << " C " << bspin.pos().toString() << " value " << Op::func(double(0),bspin.value());
-	    retval.set(bspin.pos(),Op::func(double(0),bspin.value()));
-	    bspin.next();
-	  }
-	} else if (aspin.moreInSlice()) {
-	  qDebug() << " C " << aspin.pos().toString() << " value " << Op::func(aspin.value(),double(0));
-	  retval.set(aspin.pos(),Op::func(aspin.value(),double(0)));
-	  aspin.next();
-	} else {
-	  qDebug() << " C " << bspin.pos().toString() << " value " << Op::func(double(0),bspin.value());
-	  retval.set(bspin.pos(),Op::func(double(0),bspin.value()));
-	  bspin.next();
-	}
-      }
-    } else if (aspin.col() < bspin.col()) {
-      while (aspin.moreInSlice()) {
-	retval.set(aspin.pos(),Op::func(aspin.value(),double(0)));
-	aspin.next();
-      }
-    } else {
-      while (bspin.moreInSlice()) {
-	retval.set(bspin.pos(),Op::func(bspin.value(),double(0)));
-	bspin.next();	
-      }
-    }
-    if (aspin.col() < bspin.col())
-      aspin.nextSlice();
-    else if (bspin.col() < aspin.col())
-      bspin.nextSlice();
-    else {
-      aspin.nextSlice();
-      bspin.nextSlice();
+template <typename T>
+class CSparseIterator {
+  const SparseMatrix<T> *m_ptr;
+  typename SparseData<T>::const_iterator m_col;
+  typename SparseSlice<T>::const_iterator m_row;
+public:
+  CSparseIterator(const SparseMatrix<T> *ptr) {
+    m_ptr = ptr;
+    m_col = m_ptr->constData().constBegin();
+    m_row = m_col.value().constBegin();
+  }
+  inline index_t rows() const {
+    return m_ptr->rows();
+  }
+  inline void next() {
+    ++m_row;
+    if (m_row == m_col.value().constEnd()) {
+      ++m_col;
+      if (m_col != m_ptr->constData().constEnd())
+	m_row = m_col.value().constBegin();
     }
   }
-  return retval;
-}
-
+  bool isValid() const {
+    return (m_col != m_ptr->constData().constEnd());
+  }
+  T value() const {
+    return m_row.value();
+  }
+  const NTuple pos() const {
+    return NTuple(m_row.key(),m_col.key());
+  }
+  index_t row() const {
+    return m_row.key();
+  }
+  index_t col() const {
+    return m_col.key();
+  }
+};
 
 Array Add(const Array& A, const Array& B) {
-  if (A.isSparse() && B.isSparse()) {
-    return Array(TDotOp<OpAdd>(A.constRealSparse<double>(),
-			       B.constRealSparse<double>()));
-  } else
-    return DotOp<OpAdd>(A,B);
+  if (A.isSparse()) {
+    const SparseMatrix<double> &ref(A.constRealSparse<double>());
+    CSparseIterator<double> iter(&ref);
+    while (iter.isValid()) {
+      qDebug() << "Value: " << iter.value() << " pos " << iter.pos().toString();
+      iter.next();
+      qDebug() << "  " << iter.isValid();
+    }
+  }
+  return DotOp<OpAdd>(A,B);
 }
 
 

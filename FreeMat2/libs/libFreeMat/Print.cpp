@@ -371,11 +371,8 @@ template <class T>
 static void PrintSparse(const SparseMatrix<T> &A, Interpreter* io, const ArrayFormatInfo &format) {
   ConstSparseIterator<T> i(&A);
   while (i.isValid()) {
-    while (i.moreInSlice()) {
-      io->outputMessage(QString(" %1 %2 %3\n").arg(i.row()).arg(i.col()).arg(i.value()));
-      i.next();
-    }
-    i.nextSlice();
+    io->outputMessage(QString(" %1 %2 %3\n").arg(i.row()).arg(i.col()).arg(i.value()));
+    i.next();
   }
 }
 
@@ -383,18 +380,15 @@ template <class T>
 static void PrintSparse(const SparseMatrix<T> &Areal, const SparseMatrix<T> &Aimag, Interpreter* io, const ArrayFormatInfo &format) {
   ConstComplexSparseIterator<T> i(&Areal,&Aimag);
   while (i.isValid()) {
-    while (i.moreInSlice()) {
-      if (i.imagValue() >= 0)
-	io->outputMessage(QString(" %1 %2 %3+%4").arg(i.row()).arg(i.col()).
-			  arg(i.realValue()).arg(i.imagValue()));
-      else
-	io->outputMessage(QString(" %1 %2 %3%4").arg(i.row()).arg(i.col()).
-			  arg(i.realValue()).arg(i.imagValue()));	
-      io->outputMessage("\n");
-      i.next();
-    }
-    i.nextSlice();
-  }  
+    if (i.imagValue() >= 0)
+      io->outputMessage(QString(" %1 %2 %3+%4").arg(i.row()).arg(i.col()).
+			arg(i.realValue()).arg(i.imagValue()));
+    else
+      io->outputMessage(QString(" %1 %2 %3%4").arg(i.row()).arg(i.col()).
+			arg(i.realValue()).arg(i.imagValue()));	
+    io->outputMessage("\n");
+    i.next();
+  }
 }
 
 template <class T>

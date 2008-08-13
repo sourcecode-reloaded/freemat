@@ -984,11 +984,8 @@ static void SparseDenseMatrixMultiply(const SparseMatrix<T> &A, const T* B, int 
     memset(c_slice,0,int(sizeof(T)*A.rows()));
     ConstSparseIterator<T> A_iter(&A);
     while (A_iter.isValid()) {
-      while (A_iter.moreInSlice()) {
-	c_slice[int(A_iter.row())] += A_iter.value() * B[int(A_iter.col()+col*A.rows()-1)];
-	A_iter.next();
-      }
-      A_iter.nextSlice();
+      c_slice[int(A_iter.row())] += A_iter.value() * B[int(A_iter.col()+col*A.rows()-1)];
+      A_iter.next();
     }
   }
 }
@@ -1003,14 +1000,11 @@ static void SparseDenseMatrixMultiply(const SparseMatrix<T> &A_real,
     memset(c_slice,0,int(2*sizeof(T)*rows));
     ConstComplexSparseIterator<T> A_iter(&A_real,&A_imag);
     while (A_iter.isValid()) {
-      while (A_iter.moreInSlice()) {
-	complex_multiply(A_iter.realValue(),A_iter.imagValue(),
-			 B[2*(int(A_iter.col()+col*rows-1))],
-			 B[2*(int(A_iter.col()+col*rows-1))+1],
-			 c_slice[int(2*A_iter.row())],c_slice[int(2*A_iter.row()+1)]);
-	A_iter.next();
-      }
-      A_iter.nextSlice();
+      complex_multiply(A_iter.realValue(),A_iter.imagValue(),
+		       B[2*(int(A_iter.col()+col*rows-1))],
+		       B[2*(int(A_iter.col()+col*rows-1))+1],
+		       c_slice[int(2*A_iter.row())],c_slice[int(2*A_iter.row()+1)]);
+      A_iter.next();
     }
   }
 }
