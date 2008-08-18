@@ -31,7 +31,8 @@ struct OpVecMin {
     index_t count = 0;
     index_t zero_index = 0;
     index_t index = 0;
-    while (src.moreInSlice()) {
+    index_t col = src.col();
+    while (src.col() == col) {
       count++;
       if (src.row() != count) zero_index = src.row();
       if (!IsNaN(src.value())) {
@@ -73,7 +74,8 @@ struct OpVecMin {
     index_t count = 0;
     index_t zero_index = 0;
     index_t index = 0;
-    while (src.moreInSlice()) {
+    index_t col = src.col();
+    while (src.col() == col) {
       count++;
       if (src.row() != count) zero_index = src.row();
       if (!IsNaN(src.realValue()) && !IsNaN(src.imagValue())) {

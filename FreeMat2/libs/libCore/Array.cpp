@@ -162,18 +162,15 @@ static SparseMatrix<T> RepMat(const SparseMatrix<T>& dp, const NTuple &outdim,
 			      const NTuple &repcount) {
   if (repcount.lastNotOne() > 2)
     throw Exception("repmat cannot create N-dimensional sparse arrays");
-  SparseMatrix<T> retvec;
+  SparseMatrix<T> retvec(outdim);
   for (int rowcopy=0;rowcopy < repcount[0];rowcopy++)
     for (int colcopy=0;colcopy < repcount[1];colcopy++) {
       ConstSparseIterator<T> iter(&dp);
       while (iter.isValid()) {
-	while (iter.moreInSlice()) {
-	  retvec.set(NTuple(iter.row()+rowcopy*dp.rows(),
-			    iter.col()+colcopy*dp.cols()),
-		     iter.value());
-	  iter.next();
-	}
-	iter.nextSlice();
+	retvec.set(NTuple(iter.row()+rowcopy*dp.rows(),
+			  iter.col()+colcopy*dp.cols()),
+		   iter.value());
+	iter.next();
       }
     }
   return retvec;

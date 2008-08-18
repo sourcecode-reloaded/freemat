@@ -33,11 +33,8 @@ static Array SponesSparse(const SparseMatrix<T> &A) {
   ConstSparseIterator<T> iter(&A);
   SparseMatrix<double> ret(NTuple(A.rows(),A.cols()));
   while (iter.isValid()) {
-    while (iter.moreInSlice()) {
-      ret[iter.pos()] = 1;
-      iter.next();
-    }
-    iter.nextSlice();
+    ret[iter.pos()] = 1;
+    iter.next();
   }
   return Array(ret);
 }

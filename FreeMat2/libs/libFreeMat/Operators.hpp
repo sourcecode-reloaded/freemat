@@ -14,28 +14,18 @@ static inline SparseMatrix<S> DotOp(const SparseMatrix<T>& A,
   SparseMatrix<S> retval(A.dimensions());
   // While more columns...
   while (aspin.isValid() || bspin.isValid()) {
-    if (aspin.isValid() && bspin.isValid()) {
-      if (aspin.col() == bspin.col()) {
-	retval.set(aspin.pos(),Op::func(aspin.value(),bspin.value()));
-	aspin.next();
-	bspin.next();
-      } else if (A.dimensions().map(aspin.pos()) <
-		 B.dimensions().map(bspin.pos())) {
-	retval.set(aspin.pos(),Op::func(aspin.value(),T(0)));
-	aspin.next();
-      } else {
-	retval.set(bspin.pos(),Op::func(T(0),bspin.value()));
-	bspin.next();
-      }
-    } else if (aspin.isValid()) {
+    if (aspin.pos() == bspin.pos()) {
+      retval.set(aspin.pos(),Op::func(aspin.value(),bspin.value()));
+      aspin.next();
+      bspin.next();
+    } else if (A.dimensions().map(aspin.pos()) <
+	       B.dimensions().map(bspin.pos())) {
       retval.set(aspin.pos(),Op::func(aspin.value(),T(0)));
       aspin.next();
     } else {
       retval.set(bspin.pos(),Op::func(T(0),bspin.value()));
       bspin.next();
     }
-    aspin.next();
-    bspin.next();
   }
   return retval;
 }
@@ -173,12 +163,14 @@ static inline Array DotOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
 			Bcast.constRealSparse<T>());
     } else {
       Acast.forceComplex(); Bcast.forceComplex();
+      SparseMatrix<T> Freal(Acast.dimensions());
+      SparseMatrix<T> Fimag(Acast.dimensions());;
       DotOp<T,T,Op>(Acast.constRealSparse<T>(),
 		    Acast.constImagSparse<T>(),
 		    Bcast.constRealSparse<T>(),
 		    Bcast.constImagSparse<T>(),
-		    F.realSparse<T>(),
-		    F.imagSparse<T>());
+		    Freal, Fimag);
+      F = Array(Freal,Fimag);
     }
     return F;
   }
@@ -513,10 +505,12 @@ static inline Array UnaryOp(const Array &Ain, DataClass Tclass) {
     if (Acast.allReal()) {
       F = UnaryOp<T,T,Op>(Acast.constRealSparse<T>());
     } else {
+      SparseMatrix<T> Freal(Acast.dimensions());
+      SparseMatrix<T> Fimag(Acast.dimensions());
       UnaryOp<T,T,Op>(Acast.constRealSparse<T>(),
 		      Acast.constImagSparse<T>(),
-		      F.realSparse<T>(),
-		      F.imagSparse<T>());
+		      Freal,Fimag);
+      F = Array(Freal,Fimag);
     }
     return F;
   }
@@ -615,9 +609,9 @@ static inline Array VectorOp(const SparseMatrix<T>& real, index_t out, int dim) 
     SparseMatrix<T> retval(outdims);
     while (spin_real.isValid()) {
       SparseSlice<T> this_col;
+      index_t col_number = spin_real.col();
       Op::func(spin_real,this_col);
-      retval.data()[spin_real.col()] = this_col;
-      spin_real.nextSlice();
+      retval.data()[col_number] = this_col;
     }
     return Array(retval);
   } else
@@ -636,10 +630,10 @@ static inline Array VectorOp(const SparseMatrix<T> &real,
     while (spin_complex.isValid()) {
       SparseSlice<T> this_real_col;
       SparseSlice<T> this_imag_col;
+      index_t col_number = spin_complex.col();
       Op::func(spin_complex,this_real_col,this_imag_col);
-      retval_real.data()[spin_complex.col()] = this_real_col;
-      retval_imag.data()[spin_complex.col()] = this_imag_col;
-      spin_complex.nextSlice();
+      retval_real.data()[col_number] = this_real_col;
+      retval_imag.data()[col_number] = this_imag_col;
     }
     return Array(retval_real,retval_imag);
   } else
@@ -781,10 +775,10 @@ static inline Array BiVectorOp(const SparseMatrix<T>& real, index_t out, int dim
     while (spin_real.isValid()) {
       SparseSlice<T> this_col;
       SparseSlice<index_t> this_index;
+      index_t col_number = spin_real.col();
       Op::func(spin_real,this_col,this_index);
-      retval.data()[spin_real.col()] = this_col;
-      Dval.data()[spin_real.col()] = this_index;
-      spin_real.nextSlice();
+      retval.data()[col_number] = this_col;
+      Dval.data()[col_number] = this_index;
     }
     D = Array(Dval);
     return Array(retval);
@@ -809,11 +803,11 @@ static inline Array BiVectorOp(const SparseMatrix<T> &real,
       SparseSlice<T> this_real_col;
       SparseSlice<T> this_imag_col;
       SparseSlice<index_t> this_index;
+      index_t col_number = spin_complex.col();
       Op::func(spin_complex,this_real_col,this_imag_col,this_index);
-      retval_real.data()[spin_complex.col()] = this_real_col;
-      retval_imag.data()[spin_complex.col()] = this_imag_col;
-      Dval.data()[spin_complex.col()] = this_index;
-      spin_complex.nextSlice();
+      retval_real.data()[col_number] = this_real_col;
+      retval_imag.data()[col_number] = this_imag_col;
+      Dval.data()[col_number] = this_index;
     }
     D = Array(Dval);
     return Array(retval_real,retval_imag);

@@ -976,7 +976,7 @@ static SparseMatrix<T> CCSToSparse(const BasicArray<index_t> &rowstart,
 				   const BasicArray<index_t> &colstart,
 				   const BasicArray<T> &Adata) {
   BasicArray<index_t> cols(DecompressCCSCols(colstart,Adata.length()));
-  SparseMatrix<T> retvec;
+  SparseMatrix<T> retvec(NTuple(MaxValue(rowstart)+1,MaxValue(cols)+1));
   for (index_t i=1;i<=cols.length();i++) 
     retvec[NTuple(rowstart[i]+1,cols[i]+1)] = Adata[i];
   return retvec;

@@ -455,55 +455,7 @@ struct OpPower {
 //@$"y=zeros(3,0,4)+zeros(3,0,4)","zeros(3,0,4)","exact"
 //!
 
-template <typename T>
-class CSparseIterator {
-  const SparseMatrix<T> *m_ptr;
-  typename SparseData<T>::const_iterator m_col;
-  typename SparseSlice<T>::const_iterator m_row;
-public:
-  CSparseIterator(const SparseMatrix<T> *ptr) {
-    m_ptr = ptr;
-    m_col = m_ptr->constData().constBegin();
-    m_row = m_col.value().constBegin();
-  }
-  inline index_t rows() const {
-    return m_ptr->rows();
-  }
-  inline void next() {
-    ++m_row;
-    if (m_row == m_col.value().constEnd()) {
-      ++m_col;
-      if (m_col != m_ptr->constData().constEnd())
-	m_row = m_col.value().constBegin();
-    }
-  }
-  bool isValid() const {
-    return (m_col != m_ptr->constData().constEnd());
-  }
-  T value() const {
-    return m_row.value();
-  }
-  const NTuple pos() const {
-    return NTuple(m_row.key(),m_col.key());
-  }
-  index_t row() const {
-    return m_row.key();
-  }
-  index_t col() const {
-    return m_col.key();
-  }
-};
-
 Array Add(const Array& A, const Array& B) {
-  if (A.isSparse()) {
-    const SparseMatrix<double> &ref(A.constRealSparse<double>());
-    CSparseIterator<double> iter(&ref);
-    while (iter.isValid()) {
-      qDebug() << "Value: " << iter.value() << " pos " << iter.pos().toString();
-      iter.next();
-      qDebug() << "  " << iter.isValid();
-    }
-  }
   return DotOp<OpAdd>(A,B);
 }
 

@@ -306,8 +306,8 @@ Array FM3Sparse(const QVector<QVector<T> >& arg, NTuple dims) {
 
 template <typename T>
 Array FM3SparseComplex(const QVector<QVector<T> >&arg, NTuple dims) {
-  SparseMatrix<T> real;
-  SparseMatrix<T> imag;
+  SparseMatrix<T> real(dims);
+  SparseMatrix<T> imag(dims);
   for (int i=0;i<arg.size();i++) {
     RLEDecoderComplex<T> rle(arg[i]);
     rle.update();
@@ -326,14 +326,14 @@ QVector<QVector<T> > SparseFM3(const SparseMatrix<T>& arg) {
   ConstSparseIterator<T> iter(&arg);
   while (iter.isValid()) {
     RLEEncoder<T> rle;
-    while (iter.moreInSlice()) {
+    index_t col_number = iter.col();
+    while (iter.col() == col_number) {
       rle.set(int(iter.row()-1));
       rle.push(iter.value());
       iter.next();
     }
     rle.end(int(arg.rows()));
-    ret[int(iter.col()-1)] = rle.copyout();
-    iter.nextSlice();
+    ret[int(col_number-1)] = rle.copyout();
   }
   return ret;
 }
@@ -344,14 +344,14 @@ QVector<QVector<T> > SparseFM3(const SparseMatrix<T>& real, const SparseMatrix<T
   ConstComplexSparseIterator<T> iter(&real,&imag);
   while (iter.isValid()) {
     RLEEncoderComplex<T> rle;
-    while (iter.moreInSlice()) {
+    index_t col_number = iter.col();
+    while (iter.col() == col_number) {
       rle.set(int(iter.row()-1));
       rle.push(iter.realValue(),iter.imagValue());
       iter.next();
     }
     rle.end(int(real.rows()));
-    ret[int(iter.col()-1)] = rle.copyout();
-    iter.nextSlice();
+    ret[int(col_number-1)] = rle.copyout();
   }
   return ret;
 }

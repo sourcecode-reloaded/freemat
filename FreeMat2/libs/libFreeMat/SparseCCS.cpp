@@ -28,13 +28,10 @@ static void TSparseMatToIJV(const SparseMatrix<T>&A, QVector<index_t> &rows,
 			    QVector<index_t> &cols, QVector<T> &Adata) {
   ConstSparseIterator<T> iter(&A);
   while (iter.isValid()) {
-    while (iter.moreInSlice()) {
-      cols << iter.col();
-      rows << iter.row();
-      Adata << iter.value();
-      iter.next();
-    }
-    iter.nextSlice();
+    cols << iter.col();
+    rows << iter.row();
+    Adata << iter.value();
+    iter.next();
   }
 }
 
@@ -44,13 +41,11 @@ static void TSparseMatToIJV(const SparseMatrix<T> &Areal, const SparseMatrix<T> 
 			    QVector<T> &Areal_part,	QVector<T> &Aimag_part) {
   ConstComplexSparseIterator<T> iter(&Areal,&Aimag);
   while (iter.isValid()) {
-    while (iter.moreInSlice()) {
-      cols << iter.col();
-      rows << iter.row();
-      Areal_part << iter.realValue();
-      Aimag_part << iter.imagValue();
-    }
-    iter.nextSlice();
+    cols << iter.col();
+    rows << iter.row();
+    Areal_part << iter.realValue();
+    Aimag_part << iter.imagValue();
+    iter.next();
   }
 }
 

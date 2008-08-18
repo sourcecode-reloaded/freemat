@@ -29,7 +29,6 @@ public:
   SparseMatrix(const NTuple &dims) {
     m_dims = dims;
   }
-  SparseMatrix() : m_dims(NTuple(0,0)) {}
   const SparseData<T>& constData() const {return m_data;}
   SparseData<T>& data() {return m_data;}
   SparseMatrix(QVector<index_t> row, QVector<index_t> col, QVector<T> val) {
@@ -132,8 +131,7 @@ public:
     (*this)[pos] = val;
   }
   SparseMatrix<T> slice(const IndexArrayVector& index) const {
-    SparseMatrix<T> ret;
-    ret.m_dims = NTuple(m_dims[0],1);
+    SparseMatrix<T> ret(NTuple(m_dims[0],1));
     ret.m_data[1] = m_data[index[1].get((index_t)1)];
     return ret;
   }
@@ -174,7 +172,7 @@ public:
   }
   void del(const IndexArray& index) {
     if (IsColonOp(index)) {
-      *this = SparseMatrix();
+      *this = SparseMatrix(NTuple(0,0));
       return;
     }
     QSet<uint64> delete_set;
@@ -207,7 +205,7 @@ public:
   }
   void del(const IndexArrayVector& index) {
     if (IsColonOp(index[0]) && IsColonOp(index[1])) {
-      *this = SparseMatrix();
+      *this = SparseMatrix(NTuple(0,0));
       return;
     }
     if (IsColonOp(index[0]))
@@ -251,7 +249,9 @@ public:
   const BasicArray<T> asDense() const {
     ConstSparseIterator<T> source(this);
     BasicArray<T> retvec(dimensions());
+    qDebug() << "out dim = " << dimensions().toString();
     while (source.isValid()) {
+      qDebug() << "Set " << source.pos().toString() << " to " << source.value();
       retvec.set(source.pos(),source.value());
       source.next();
     }
@@ -312,7 +312,10 @@ public:
     return m_row.value();
   }
   const NTuple pos() const {
-    return NTuple(m_row.key(),m_col.key());
+    if (isValid())
+      return NTuple(m_row.key(),m_col.key());
+    else
+      return NTuple(m_ptr->rows()+1,m_ptr->cols()+1);
   }
   index_t row() const {
     return m_row.key();
@@ -413,7 +416,7 @@ SparseMatrix<T> MatrixMultiply(const SparseMatrix<T> &A, const SparseMatrix<T> &
   if (A.columns() != B.rows())
     throw Exception("Non conforming arrays for matrix multiply");
   typename SparseData<T>::const_iterator B_iter(B.constData().constBegin());
-  SparseMatrix<T> C;
+  SparseMatrix<T> C(NTuple(A.rows(),B.cols()));
   while (B_iter != B.constData().constEnd()) {
     SparseSlice<T> c_slice;
     SparseSlice<T> b_slice(B_iter.value());
@@ -432,7 +435,7 @@ template <typename T>
 SparseMatrix<T> MatrixMultiply(const SparseMatrix<T> &A, const BasicArray<T> &B) {
   if (A.columns() != B.rows())
     throw Exception("Non conforming arrays for matrix multiply");
-  SparseMatrix<T> C;
+  SparseMatrix<T> C(NTuple(A.rows(),B.cols()));
   for (index_t col = 1;col <= B.cols();col++) {
     SparseSlice<T> c_slice;
     ConstSparseIterator<T> A_iter(&A);
@@ -449,17 +452,17 @@ template <typename T>
 SparseMatrix<T> MatrixMultiply(const BasicArray<T> &A, const SparseMatrix<T> &B) {
   if (A.columns() != B.rows())
     throw Exception("Non conforming arrays for matrix multiply");
-  SparseMatrix<T> C;
+  SparseMatrix<T> C(NTuple(A.rows(),B.cols()));
   ConstSparseIterator<T> Biter(&B);
   while (Biter.isValid()) {
     SparseSlice<T> c_slice;
-    while (Biter.moreInSlice()) {
+    index_t col_number = Biter.col();
+    while (Biter.col() == col_number) {
       for (index_t i=1;i <= A.rows(); i++)
 	c_slice[i] += A[NTuple(i,Biter.row())] * Biter.value();
       Biter.next();
     }
-    C.data()[Biter.col()] = c_slice;
-    Biter.nextSlice();
+    C.data()[col_number] = c_slice;
   }
   return C;
 }
@@ -506,12 +509,9 @@ template <typename T>
 bool IsSymmetric(const SparseMatrix<T> &arg, const SparseMatrix<T> &img) {
   ConstComplexSparseIterator<T> Aiter(&arg,&img);
   while (Aiter.isValid()) {
-    while (Aiter.moreInSlice()) {
-      if (arg.get(NTuple(Aiter.col(),Aiter.row())) != Aiter.realValue()) return false;
-      if (img.get(NTuple(Aiter.col(),Aiter.row())) != -Aiter.imagValue()) return false;
-      Aiter.next();
-    }
-    Aiter.nextSlice();
+    if (arg.get(NTuple(Aiter.col(),Aiter.row())) != Aiter.realValue()) return false;
+    if (img.get(NTuple(Aiter.col(),Aiter.row())) != -Aiter.imagValue()) return false;
+    Aiter.next();
   }
   return true;
 }
@@ -542,14 +542,14 @@ SparseMatrix<T> GetDiagonal(const SparseMatrix<T>& arg, int diagonal) {
   index_t outLen;
   if (diagonal < 0) {
     outLen = qMax(index_t(0),qMin(arg.rows()+diagonal,arg.cols()));
-    if (outLen == 0) return SparseMatrix<T>();
+    if (outLen == 0) return SparseMatrix<T>(NTuple(0,0));
     SparseMatrix<T> retvec(NTuple(outLen,1));
     for (index_t i=1;i<=outLen;i++)
       retvec[i] = arg[NTuple(i-diagonal,i)];
     return retvec;
   } else {
     outLen = qMax(index_t(0),qMin(arg.rows(),arg.cols()-diagonal));
-    if (outLen == 0) return SparseMatrix<T>();
+    if (outLen == 0) return SparseMatrix<T>(NTuple(0,0));
     SparseMatrix<T> retvec(NTuple(outLen,1));
     for (index_t i=1;i<=outLen;i++)
       retvec[i] = arg[NTuple(i,i+diagonal)];

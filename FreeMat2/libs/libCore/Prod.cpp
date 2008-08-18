@@ -8,7 +8,8 @@ struct OpVecProd {
 			  SparseSlice<T>& dest) {
     T result = 1;
     index_t count = 0;
-    while (src.moreInSlice()) {
+    index_t col = src.col();
+    while (src.col() == col) {
       count++;
       result = result * src.value();
       src.next();
@@ -24,7 +25,8 @@ struct OpVecProd {
     T result_real = 1;
     T result_imag = 0;
     index_t count = 0;
-    while (src.moreInSlice()) {
+    index_t col = src.col();
+    while (src.col() == col) {
       count++;
       complex_multiply(result_real,result_imag,src.realValue(),src.imagValue(),
 		       result_real,result_imag);

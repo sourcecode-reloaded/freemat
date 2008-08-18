@@ -229,7 +229,7 @@ ArrayVector UniqueFunction(int nargout, const ArrayVector& arg) {
   }
   bool rowmode = false;
   if (arg.size() == 2) {
-    if (arg[1].asString().toLower() == "rows")
+    if (arg[1].asString().toLower() != "rows")
       throw Exception("second argument to unique must be 'rows'");
     rowmode = true;
   }

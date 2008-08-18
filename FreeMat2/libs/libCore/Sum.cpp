@@ -6,7 +6,8 @@ struct OpVecSum {
   static inline void func(ConstSparseIterator<T> & src, 
 			  SparseSlice<T>& dest) {
     T accum = 0;
-    while (src.moreInSlice()) {
+    index_t col = src.col();
+    while (src.col() == col) {
       accum += src.value();
       src.next();
     }
@@ -18,7 +19,8 @@ struct OpVecSum {
 			  SparseSlice<T>& dest_imag) {
     T accum_real = 0;
     T accum_imag = 0;
-    while (src.moreInSlice()) {
+    index_t col = src.col();
+    while (src.col() == col) {
       accum_real += src.realValue();
       accum_imag += src.imagValue();
       src.next();
