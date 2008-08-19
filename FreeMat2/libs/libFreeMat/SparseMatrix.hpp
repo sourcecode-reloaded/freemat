@@ -249,9 +249,7 @@ public:
   const BasicArray<T> asDense() const {
     ConstSparseIterator<T> source(this);
     BasicArray<T> retvec(dimensions());
-    qDebug() << "out dim = " << dimensions().toString();
     while (source.isValid()) {
-      qDebug() << "Set " << source.pos().toString() << " to " << source.value();
       retvec.set(source.pos(),source.value());
       source.next();
     }

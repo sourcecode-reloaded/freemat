@@ -467,14 +467,16 @@ NTuple Serialize::getDimensions() {
 
 #define MacroPutCase(func,ctype,class,ftype)				\
   {									\
-    func((const ctype*)dat.asDenseArray().toClass(class).constReal<ftype>().constData(),int(dat.length())); \
+    const Array &t(dat.asDenseArray().toClass(class));			\
+    func((const ctype*)t.constReal<ftype>().constData(),int(dat.length())); \
     return;								\
   }
 
 
 #define MacroPutComplexCase(func,ctype,class,ftype)			\
   {									\
-    func((const ctype*)dat.asDenseArray().toClass(class).fortran<ftype>().constData(),int(2*dat.length())); \
+    const Array &t(dat.asDenseArray().toClass(class)); \
+    func((const ctype*)t.fortran<ftype>().constData(),int(2*dat.length()));		\
     return;								\
   }
 

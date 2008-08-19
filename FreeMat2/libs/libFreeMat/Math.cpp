@@ -1574,7 +1574,8 @@ static bool notfunc(bool t) {
 Array Not(const Array& A) {
   if (A.isScalar())
     return Array::Array(!A.toClass(Bool).constRealScalar<bool>());
-  return Array::Array(Apply(A.toClass(Bool).constReal<bool>(),notfunc));
+  const Array &Abool(A.toClass(Bool));
+  return Array::Array(Apply(Abool.constReal<bool>(),notfunc));
 }
 
 Array Plus(const Array& A) {

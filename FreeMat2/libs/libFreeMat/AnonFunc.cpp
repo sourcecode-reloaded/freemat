@@ -60,7 +60,8 @@ ArrayVector AnonFuncDispFunction(int nargout, const ArrayVector& arg,
 ArrayVector AnonFuncSubsrefFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   // We should be in our own scope currently...
   // Insert the variables from the workspace into the context
-  const StructArray &sp(LOOKUP(arg[0],"workspace").constStructPtr());
+  const Array &var(LOOKUP(arg[0],"workspace"));
+  const StructArray &sp(var.constStructPtr());
   Context *context = eval->getContext();
   for (int i=0;i<sp.fieldCount();i++)
     context->insertVariableLocally(sp.fieldName(i),sp[i].get(1));
@@ -69,7 +70,8 @@ ArrayVector AnonFuncSubsrefFunction(int nargout, const ArrayVector& arg, Interpr
   if (arg.size() == 2) {
     if (LOOKUP(arg[1],"type").asString() != "()")
       throw Exception("for anonymous functions, only a(x,...,y) is defined");
-    const BasicArray<Array> &rp(LOOKUP(arg[1],"subs").constReal<Array>());
+    const Array &sub(LOOKUP(arg[1],"subs"));
+    const BasicArray<Array> &rp(sub.constReal<Array>());
     for (index_t i=1;i<=rp.length();i++)
       argSet.push_back(rp[i]);
   }

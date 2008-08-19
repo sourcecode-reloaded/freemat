@@ -195,7 +195,8 @@ public:
     Array values(CtypeTable.lookup("int32")->thaw(input,pos,length,m_eval));
     if (length == 1)
       return Array(lookupByNumber(values.asInteger()));
-    const BasicArray<int32> &dp(values.toClass(Int32).asDenseArray().constReal<int32>());
+    const Array &values_int(values.toClass(Int32).asDenseArray());
+    const BasicArray<int32> &dp(values_int.constReal<int32>());
     ArrayVector vals;
     for (int i=0;i<length;i++) 
       vals << Array(lookupByNumber(dp[i]));

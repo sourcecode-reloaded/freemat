@@ -114,22 +114,29 @@ bool IsInteger(const Array &x) {
 }
 
 const IndexArray IndexArrayFromArray(const Array &index) {
-  if ((index.dataClass() == Bool) && (index.type().Scalar == 1))
-    return Find(index.asDenseArray().constReal<bool>());
+  if ((index.dataClass() == Bool) && (index.type().Scalar == 1)) {
+    const Array &index_dense(index.asDenseArray());
+    return Find(index_dense.constReal<bool>());
+  }
   if (index.type().Sparse == 1)
     throw Exception("Sparse indexing not supported currently");
   if (!index.allReal())
     WarningMessage("Complex part of index ignored");
-  if (index.dataClass() == Double)
-    return index.asDenseArray().constReal<index_t>();
-  if (index.dataClass() == Bool)
-    return Find(index.asDenseArray().constReal<logical>());
+  if (index.dataClass() == Double) {
+    const Array &index_dense(index.asDenseArray());
+    return IndexArray(index_dense.constReal<index_t>());
+  }
+  if (index.dataClass() == Bool) {
+    const Array &index_dense(index.asDenseArray());
+    return Find(index_dense.constReal<logical>());
+  }
   if (IsColonOp(index))
     return IndexArray(-1);
   Array index_converted(index.toClass(Double));
   if (!index_converted.allReal())
     WarningMessage("Complex part of index ignored");
-  return index_converted.asDenseArray().constReal<index_t>();
+  index_converted = index_converted.asDenseArray();
+  return index_converted.constReal<index_t>();
   throw Exception("Unsupported index type");
 }
 
@@ -987,11 +994,16 @@ static Array IJVToSparse(const BasicArray<index_t> &irp,
 			 const BasicArray<index_t> &jcp,
 			 const Array &pr, const Array &pi, 
 			 bool complexFlag) {
-  if (!complexFlag)
-    return Array(CCSToSparse(irp,jcp,pr.asDenseArray().constReal<T>()));
-  else
-    return Array(CCSToSparse(irp,jcp,pr.asDenseArray().constReal<T>()),
-		 CCSToSparse(irp,jcp,pi.asDenseArray().constImag<T>()));
+  if (!complexFlag) {
+    const Array &pr_dense(pr.asDenseArray());
+    return Array(CCSToSparse(irp,jcp,pr_dense.constReal<T>()));
+  }
+  else {
+    const Array &pr_dense(pr.asDenseArray());
+    const Array &pi_dense(pi.asDenseArray());
+    return Array(CCSToSparse(irp,jcp,pr_dense.constReal<T>()),
+		 CCSToSparse(irp,jcp,pi_dense.constImag<T>()));
+  }
 }
 
 #define MacroIJVToSparse(ctype,cls)					\

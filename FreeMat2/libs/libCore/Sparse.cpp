@@ -57,8 +57,10 @@ template <typename T>
 static Array Spones(const Array &A) {
   if (A.isSparse())
     return SponesSparse(A.constRealSparse<T>());
-  else
-    return SponesDense(A.asDenseArray().constReal<T>());
+  else {
+    const Array &Adense(A.asDenseArray());
+    return SponesDense(Adense.constReal<T>());
+  }
 }
 
 #define MacroSpones(ctype,cls)				\
@@ -562,13 +564,17 @@ ArrayVector SparseFunction(int nargout, const ArrayVector& arg, Interpreter* eva
     return ArrayVector(Array(SparseMatrix<double>(NTuple(arg[0].asInteger(),
 							 arg[1].asInteger()))));
   else if (arg.size() == 3) {
-    const BasicArray<index_t> &ip(arg[0].asDenseArray().toClass(Index).constReal<index_t>());
-    const BasicArray<index_t> &jp(arg[1].asDenseArray().toClass(Index).constReal<index_t>());
+    const Array &ip_typed(arg[0].asDenseArray().toClass(Index));
+    const Array &jp_typed(arg[1].asDenseArray().toClass(Index));
+    const BasicArray<index_t> &ip(ip_typed.constReal<index_t>());
+    const BasicArray<index_t> &jp(jp_typed.constReal<index_t>());
     return ArrayVector(IJVToSparse(ip,jp,arg[2]));
   } else if (arg.size() >= 5) {
     eval->warningMessage("extra arguments to sparse (nnz to reserve) ignored");
-    const BasicArray<index_t> &ip(arg[0].asDenseArray().toClass(Index).constReal<index_t>());
-    const BasicArray<index_t> &jp(arg[1].asDenseArray().toClass(Index).constReal<index_t>());
+    const Array &ip_typed(arg[0].asDenseArray().toClass(Index));
+    const Array &jp_typed(arg[1].asDenseArray().toClass(Index));
+    const BasicArray<index_t> &ip(ip_typed.constReal<index_t>());
+    const BasicArray<index_t> &jp(jp_typed.constReal<index_t>());
     return ArrayVector(IJVToSparse(ip,jp,arg[2],arg[3].asDouble(),arg[4].asDouble()));
   }
 }

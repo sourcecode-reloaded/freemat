@@ -806,10 +806,12 @@ Array SolveLinearEq(const Array & A, const Array &B) {
     if (A.allReal() && B.allReal())
       return SparseSolveLinEq(A.constRealSparse<double>(),B.constReal<double>());
     else {
+      const Array &AComplex(A.asComplex());
+      const Array &BComplex(B.asComplex());
       return SparseSolveLinEq(A.constRealSparse<double>(),
-			      A.asComplex().constImagSparse<double>(),
+			      AComplex.constImagSparse<double>(),
 			      B.constReal<double>(),
-			      B.asComplex().constImag<double>());
+			      BComplex.constImag<double>());
     }
   }
   switch (A.dataClass()) {

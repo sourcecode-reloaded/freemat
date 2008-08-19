@@ -110,7 +110,8 @@ ArrayVector FuncPtrSubsrefFunction(int nargout, const ArrayVector& arg, Interpre
   if (arg.size() == 2) {
     if (LOOKUP(arg[1],"type").asString() != "()")
       throw Exception("for function pointers, only p(x) is defined");
-    const BasicArray<Array> &rp(LOOKUP(arg[1],"subs").constReal<Array>());
+    const Array &sub(LOOKUP(arg[1],"subs"));
+    const BasicArray<Array> &rp(sub.constReal<Array>());
     for (index_t i=1;i<=rp.length();i++)
       fevalArgs.push_back(rp[i]);
   }

@@ -313,8 +313,10 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
       literalSpacing = false;
   }
 
-  pattern = strdup(stringed_args[1].toAscii().constData());
-  subject = strdup(stringed_args[0].toAscii().constData());
+  QByteArray pattern_ba(stringed_args[1].toAscii());
+  QByteArray subject_ba(stringed_args[0].toAscii());
+  pattern = pattern_ba.constData();
+  subject = subject_ba.constData();
   subject_length = (int)strlen(subject);
   QString qsubject(subject);
 
@@ -736,8 +738,9 @@ QString RegExpRepCoreFunction(QString subject,
    * and errors that are detected.                                          *
    *************************************************************************/
   
+  QByteArray pattern_ba(pattern.toAscii());
   re = pcre_compile(
-		    pattern.toUtf8().constData(),      /* the pattern */
+		    pattern_ba.constData(),      /* the pattern */
 		    options,              /* default options */
 		    &error,               /* for error message */
 		    &erroffset,           /* for error offset */
@@ -764,11 +767,12 @@ QString RegExpRepCoreFunction(QString subject,
    * further matching is needed, it will be done below.                     *
    *************************************************************************/
   
+  QByteArray subject_ba(subject.toAscii());
   rc = pcre_exec(
 		 re,                   /* the compiled pattern */
 		 NULL,                 /* no extra data - we didn't study the pattern */
-		 subject.toUtf8().constData(),      /* the subject string */
-		 subject.toUtf8().size(),       /* the length of the subject */
+		 subject_ba.constData(),      /* the subject string */
+		 subject_ba.size(),       /* the length of the subject */
 		 0,                    /* start at offset 0 in the subject */
 		 0,                    /* default options */
 		 ovector,              /* output vector for substring information */
@@ -846,11 +850,12 @@ QString RegExpRepCoreFunction(QString subject,
 	
 	/* Run the next matching operation */
 	
+	QByteArray subject_ba(subject.toAscii());
 	rc = pcre_exec(
 		       re,                   /* the compiled pattern */
 		       NULL,                 /* no extra data - we didn't study the pattern */
-		       subject.toUtf8().constData(),      /* the subject string */
-		       subject.toUtf8().size(),       /* the length of the subject */
+		       subject_ba.constData(),      /* the subject string */
+		       subject_ba.size(),       /* the length of the subject */
 		       start_offset,         /* starting offset in the subject */
 		       options,              /* options */
 		       ovector,              /* output vector for substring information */
