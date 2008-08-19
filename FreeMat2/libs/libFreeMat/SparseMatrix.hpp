@@ -289,7 +289,8 @@ public:
   ConstSparseIterator(const SparseMatrix<T> *ptr) {
     m_ptr = ptr;
     m_col = m_ptr->constData().constBegin();
-    m_row = m_col.value().constBegin();
+    if (m_col != m_ptr->constData().constEnd())
+      m_row = m_col.value().constBegin();
   }
   inline index_t rows() const {
     return m_ptr->rows();
@@ -307,19 +308,26 @@ public:
     return (m_col != m_ptr->constData().constEnd());
   }
   T value() const {
+    if (!isValid()) throw Exception("Error -- attempt to retrieve value of invalid iterator");
     return m_row.value();
   }
   const NTuple pos() const {
     if (isValid())
       return NTuple(m_row.key(),m_col.key());
     else
-      return NTuple(m_ptr->rows()+1,m_ptr->cols()+1);
+      return NTuple(1,m_ptr->cols()+1);
   }
   index_t row() const {
-    return m_row.key();
+    if (isValid())
+      return m_row.key();
+    else
+      return 1;
   }
   index_t col() const {
-    return m_col.key();
+    if (isValid())
+      return m_col.key();
+    else 
+      return m_ptr->cols()+1;
   }
 };
 
