@@ -431,14 +431,11 @@ void GLRenderEngine::circleFill(double x, double y, double radius) {
   
 void GLRenderEngine::drawImage(double x1, double y1, double x2,
 			       double y2, QImage pic) {
-  pic = QGLWidget::convertToGLFormat(pic);
-  glRasterPos2d(x1,y1);
-  glDrawPixels(pic.width(),pic.height(),GL_RGBA,GL_UNSIGNED_BYTE,pic.bits());
-  return;
   int texid = m_widget->bindTexture(pic);
   glColor3f(1,1,1);
   glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glPushAttrib( GL_LIGHTING_BIT );
   glDisable(GL_LIGHTING);
   glBegin(GL_QUADS);
   glTexCoord2d(0,0); glVertex2f(x1,y1);
@@ -446,14 +443,51 @@ void GLRenderEngine::drawImage(double x1, double y1, double x2,
   glTexCoord2d(1,1); glVertex2f(x2,y2);
   glTexCoord2d(0,1); glVertex2f(x1,y2);
   glEnd();
-  //    glEnable(GL_LIGHTING);
+  glPopAttrib();
   m_widget->deleteTexture(texid);
 }
 
 void GLRenderEngine::drawImage(HPTwoVector* xp, HPTwoVector* yp, HPTwoVector* xlim, HPTwoVector* ylim,
 			 QImage pic)
 { 
-    //not yet implemented
+    float x1 = xp->Data()[0];
+    float y1 = yp->Data()[0];
+    float x2 = xp->Data()[1];
+    float y2 = yp->Data()[1];
+    float data_width = x2 - x1;
+    float data_height = y2 - y1;
+
+    if( data_width <= 0 || data_height <= 0 )
+	return;
+
+    float viewport_x = xlim->Data()[0];
+    float viewport_y = ylim->Data()[0];
+    float viewport_width = xlim->Data()[1]-viewport_x;
+    float viewport_height = ylim->Data()[1]-viewport_y;
+    
+    float s1, s2, t1, t2;
+    float sc_w = viewport_width / (data_width*data_width);
+    float sc_h = viewport_height / (data_height*data_height);
+
+    s1 = sc_w*(viewport_x - x1);
+    t1 = sc_h*(viewport_y - y1);
+    s2 = sc_w*(viewport_x - x1 + viewport_width);
+    t2 = sc_h*(viewport_y - y1 + viewport_height);
+
+    int texid = m_widget->bindTexture(pic);
+    glColor3f(1,1,1);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glPushAttrib( GL_LIGHTING_BIT );
+    glDisable(GL_LIGHTING);
+    glBegin(GL_QUADS);
+    glTexCoord2d(s1,t1); glVertex2f(x1,y1);
+    glTexCoord2d(s2,t1); glVertex2f(x2,y1);
+    glTexCoord2d(s2,t2); glVertex2f(x2,y2);
+    glTexCoord2d(s1,t2); glVertex2f(x1,y2);
+    glEnd();
+    glPopAttrib();
+    m_widget->deleteTexture(texid);
 }
 
 void GLRenderEngine::quadStrips(QVector<QVector<cpoint> > faces, bool flatfaces,

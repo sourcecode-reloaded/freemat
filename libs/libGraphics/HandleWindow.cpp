@@ -22,7 +22,6 @@
 #include <qgl.h>
 #include "GLRenderEngine.hpp"
 #include "QTRenderEngine.hpp"
-//#include <QStackedLayout>
 #include "HandleCommands.hpp"
 #include <QtGui>
 #include <math.h>
@@ -42,7 +41,7 @@ public:
 
   QSize BaseFigureQt::sizeHint() const {
     HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
-    qDebug() << "Size hint " << (htv->Data()[0]) << "," << (htv->Data()[1]) << "\r\n";
+    //qDebug() << "Size hint " << (htv->Data()[0]) << "," << (htv->Data()[1]) << "\r\n";
     return QSize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
    //  return QSize(10000,10000);
   }
@@ -137,7 +136,7 @@ void BaseFigureGL::resizeGL(int width, int height) {
 
 QSize BaseFigureGL::sizeHint() const {
     HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
-    qDebug() << "Size hint " << (htv->Data()[0]) << "," << (htv->Data()[1]) << "\r\n";
+    //qDebug() << "Size hint " << (htv->Data()[0]) << "," << (htv->Data()[1]) << "\r\n";
     return QSize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
    //  return QSize(10000,10000);
   }
@@ -194,20 +193,6 @@ HandleWindow::HandleWindow(unsigned ahandle) : QMainWindow() {
   child = new BaseFigureQt(this,hfig);
   band = NULL;
   setMinimumSize(50,50);
-  //   if (QGLFormat::hasOpenGL())
-  //     glchild = new BaseFigureGL(NULL,hfig);
-  //  layout = new QStackedWidget(this);
-  //  QHBoxLayout *box = new QHBoxLayout(this);
-  //  box->setMargin(0);
-  //  setLayout(box);
-  //   layout = new QTabWidget;
-  //   layout->addTab(qtchild,"QT");
-  //   layout->addTab(glchild,"GL");
-  //  layout->addWidget(qtchild);
-  //   if (QGLFormat::hasOpenGL())
-  //     layout->addWidget(glchild);
-  //  layout->show();
-  //  box->addWidget(layout);
   createActions();
   createMenus();
   createToolBars();

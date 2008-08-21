@@ -326,5 +326,5 @@ void HandleImage::PaintMe(RenderEngine& gc) {
   HPTwoVector *xlim = (HPTwoVector *) ax->LookupProperty("xlim");
   HPTwoVector *ylim = (HPTwoVector *) ax->LookupProperty("ylim");
 
-  gc.drawImage(xp, yp, xlim, ylim,img.transformed(MTr));
+  gc.drawImage(xp, yp, xlim, ylim, img.transformed(MTr));
 }
