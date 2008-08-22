@@ -167,7 +167,7 @@ public:
     index_t dimLen = dimensions()[first_uncovered];
     BasicArray<bool> map(GetDeletionMap(index[first_uncovered],dimLen));
     int newSize = 0;
-    for (int i=1;i<=map.length();i++)
+    for (index_t i=1;i<=map.length();i++)
       if (!map.get(i)) newSize++;
     // Create an output array..
     NTuple outdims(dimensions());
@@ -199,7 +199,7 @@ public:
     }
     BasicArray<bool> map(GetDeletionMap(index,length()));
     index_t newSize = 0;
-    for (int i=1;i<=map.length();i++)
+    for (index_t i=1;i<=map.length();i++)
       if (!map[i]) newSize++;
     if (newSize == length()) return;
     NTuple newDim;
@@ -246,8 +246,8 @@ public:
   }
   void printMe(std::ostream& o) const {
     o << dimensions() << "[";
-    for (int i=0;i<length();i++)
-      o << get(i+1) << " ";
+    for (index_t i=1;i<=length();i++)
+      o << get(i) << " ";
     o << "]\n";
   }
   inline void reshape(const NTuple& pos) {
@@ -385,8 +385,8 @@ template <typename T>
 bool IsSymmetric(const BasicArray<T>& arg) {
   if (!arg.dimensions().is2D()) 
     throw Exception("Symmetry check not valid for N-dimensional arrays");
-  for (int i=0;i<arg.cols();i++) 
-    for (int j=i+1;j<arg.rows();j++) 
+  for (index_t i=1;i<=arg.cols();i++) 
+    for (index_t j=i+1;j<=arg.rows();j++) 
       if (arg[NTuple(i,j)] != arg[NTuple(j,i)])
 	return false;
   return true;
@@ -398,8 +398,8 @@ bool IsSymmetric(const BasicArray<T>& arg, const BasicArray<T>& img) {
     throw Exception("Symmetry check not valid for N-dimensional arrays");
   if (arg.dimensions() != img.dimensions())
     throw Exception("Symmetry check requires both arrays must be the same size");
-  for (int i=0;i<arg.cols();i++) 
-    for (int j=i+1;j<arg.rows();j++) 
+  for (index_t i=1;i<=arg.cols();i++) 
+    for (index_t j=i+1;j<=arg.rows();j++) 
       if ((arg[NTuple(i,j)] != arg[NTuple(j,i)]) ||
 	  (img[NTuple(i,j)] != -img[NTuple(j,i)]))
 	return false;

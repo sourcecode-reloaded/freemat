@@ -204,6 +204,7 @@ void Scanner::fetchNumber() {
   int len = 0;
   int lookahead = 0;
   bool imagnumber = false;
+  bool singleprecision = false;
 
   while (isdigit(ahead(len))) len++;
   lookahead = len;
@@ -224,11 +225,12 @@ void Scanner::fetchNumber() {
     while (isdigit(ahead(len+lookahead))) len++;
     lookahead+=len;
   }
-  if ((ahead(lookahead) == 'f') ||
-      (ahead(lookahead) == 'F') ||
-      (ahead(lookahead) == 'd') ||
-      (ahead(lookahead) == 'D')) {
-    throw Exception("FreeMat 4.0 does not support precision specifiers for numbers (i.e., the 'f','F','d','D' suffixes for numbers.");
+  if ((ahead(lookahead) == 'f') || (ahead(lookahead) == 'F')) {
+    singleprecision = true;
+    lookahead++;
+  } 
+  if ((ahead(lookahead) == 'd') || (ahead(lookahead) == 'D')) {
+    lookahead++;
   }
   // Recognize the complex constants, but strip the "i" off
   if ((ahead(lookahead) == 'i') ||
@@ -252,10 +254,17 @@ void Scanner::fetchNumber() {
   m_ptr += lookahead;
   if (imagnumber)
     m_ptr++;
-  if (!imagnumber)
-    setToken(TOK_REAL,numtext);
-  else
-    setToken(TOK_IMAG,numtext);
+  if (!imagnumber) {
+    if (singleprecision)
+      setToken(TOK_REALF,numtext);
+    else
+      setToken(TOK_REAL,numtext);
+  } else {
+    if (singleprecision)
+      setToken(TOK_IMAGF,numtext);
+    else
+      setToken(TOK_IMAG,numtext);
+  }
 }
 
 void Scanner::fetchIdentifier() {

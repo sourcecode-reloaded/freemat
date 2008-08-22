@@ -386,7 +386,7 @@ static void TSVD(int nrows, int ncols, BasicArray<T> &U, BasicArray<T> &VT,
   MemBlock<T> WORKBlock(2*LWORK);
   T* WORK = &WORKBlock;
   Tgesdd( &JOBZ, &M, &N, A.data(), &LDA, S.data(), U.data(), &LDU, VT.data(), &LDVT, 
-	  WORKSZE, &LWORK, RWORK, IWORK, &INFO);
+	  WORK, &LWORK, RWORK, IWORK, &INFO);
 }
 
 
@@ -436,7 +436,7 @@ static ArrayVector SVDFunction(BasicArray<T> &A_real,
   int ncols = int(A_real.cols());
   int mindim = (nrows < ncols) ? nrows : ncols;
   // A vector to store the singular values
-  BasicArray<T> svals(NTuple(2*mindim,1));
+  BasicArray<T> svals(NTuple(mindim,1));
   // A matrix to store the left singular vectors
   BasicArray<T> umat;
   // A matrix to store the right singular vectors
@@ -452,23 +452,19 @@ static ArrayVector SVDFunction(BasicArray<T> &A_real,
   TSVD<T>(nrows,ncols,umat,vtmat,svals,A_real,A_imag,compactform,computevectors);
   ArrayVector retval;
   if (!computevectors) {
-    retval.push_back(Array(SplitReal(svals),SplitImag(svals)));
+    retval.push_back(Array(svals));
   } else {
     retval.push_back(Array(SplitReal(umat),SplitImag(umat)));
     BasicArray<T> smat_real;
-    BasicArray<T> smat_imag;
     if (!compactform) {
       smat_real = BasicArray<T>(NTuple(A_real.rows(),A_real.cols()));
-      smat_imag = BasicArray<T>(NTuple(A_real.rows(),A_real.cols()));
     } else {
       smat_real = BasicArray<T>(NTuple(mindim,mindim));
-      smat_imag = BasicArray<T>(NTuple(mindim,mindim));
     }
     for (index_t i=1;i<=mindim;i++) {
-      smat_real[NTuple(i,i)] = svals[2*i-1];
-      smat_imag[NTuple(i,i)] = svals[2*i];
+      smat_real[NTuple(i,i)] = svals[i];
     }
-    retval.push_back(Array(smat_real,smat_imag));
+    retval.push_back(Array(smat_real));
     retval.push_back(Hermitian(Array(SplitReal(vtmat),SplitImag(vtmat))));
   }
   return retval;

@@ -314,7 +314,9 @@ ArrayVector FFTFunction(int nargout, const ArrayVector& arg) {
     FFTDim = arg[0].dimensions().firstNonsingular();
   if (FFTLength == -1)
     FFTLength = int(arg[0].dimensions()[FFTDim]);
-  return ArrayVector(VectorOp<OpVecFFT>(arg[0],FFTLength,FFTDim));
+  Array arg0(arg[0]);
+  arg0.forceComplex();
+  return ArrayVector(VectorOp<OpVecFFT>(arg0,FFTLength,FFTDim));
 }
 
 ArrayVector IFFTFunction(int nargout, const ArrayVector& arg) {
@@ -338,5 +340,7 @@ ArrayVector IFFTFunction(int nargout, const ArrayVector& arg) {
     FFTDim = arg[0].dimensions().firstNonsingular();
   if (FFTLength == -1)
     FFTLength = int(arg[0].dimensions()[FFTDim]);
-  return ArrayVector(VectorOp<OpVecIFFT>(arg[0],FFTLength,FFTDim));
+  Array arg0(arg[0]);
+  arg0.forceComplex();
+  return ArrayVector(VectorOp<OpVecIFFT>(arg0,FFTLength,FFTDim));
 }

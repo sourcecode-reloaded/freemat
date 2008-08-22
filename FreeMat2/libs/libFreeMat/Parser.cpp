@@ -186,7 +186,8 @@ Tree* Parser::functionDefinition() {
 }
 
 bool Parser::matchNumber() {
-  return (match(TOK_REAL) || match(TOK_IMAG));
+  return (match(TOK_REAL) || match(TOK_IMAG) || 
+	  match(TOK_REALF) || match(TOK_IMAGF));
 }
 
 Tree* Parser::specialFunctionCall() {

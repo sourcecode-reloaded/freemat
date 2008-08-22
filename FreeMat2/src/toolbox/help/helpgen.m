@@ -151,6 +151,7 @@ function helpgen_processfile(filename,&writers)
   end
   while (1)
     line = getline(fp);
+    keyboard
     if (feof(fp))
       fclose(fp);
       return;

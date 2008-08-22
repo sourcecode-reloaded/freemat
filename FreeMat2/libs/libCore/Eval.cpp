@@ -65,7 +65,7 @@
 //not defined).
 //@@Signature
 //sfunction eval EvalFunction
-//inputs string
+//inputs try_clause catch_clause
 //outputs varargout
 //!
 static QString PrePendCallVars(QString line, int nargout) {

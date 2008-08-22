@@ -830,6 +830,8 @@ Array Interpreter::expression(Tree *t) {
     return rhs(t);
   case TOK_REAL:
   case TOK_IMAG:
+  case TOK_REALF:
+  case TOK_IMAGF:
   case TOK_STRING:
     return t->array();
   case TOK_END:

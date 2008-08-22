@@ -97,6 +97,8 @@ QString TokenToString(const Token& b) {
   case TOK_SAND: return "&&";
   case TOK_QSTATEMENT: return "qstmnt";
   case TOK_STATEMENT: return "stmnt";
+  case TOK_REALF: return "(real single)" + b.text();
+  case TOK_IMAGF: return "(imag single)" + b.text();
   case TOK_REAL: return "(real)" + b.text();
   case TOK_IMAG: return "(imag)" + b.text();
   case TOK_FUNCTION_DEFS: return "functions:";
@@ -128,11 +130,33 @@ void Token::fillArray() {
   default:
     return;
   case TOK_REAL:
-    retval = Array(double(m_text.toDouble()));
-    break;
+    {
+      QString mt(m_text);
+      if (mt.toUpper().endsWith("D")) mt.chop(1);
+      retval = Array(double(mt.toDouble()));
+      break;
+    }
   case TOK_IMAG:
-    retval = Array(double(0),double(m_text.toDouble()));
-    break;
+    {
+      QString mt(m_text);
+      if (mt.toUpper().endsWith("D")) mt.chop(1);
+      retval = Array(double(0),double(mt.toDouble()));
+      break;
+    }
+  case TOK_REALF:
+    {
+      QString mt(m_text);
+      if (mt.toUpper().endsWith("F")) mt.chop(1);
+      retval = Array(float(mt.toFloat()));
+      break;
+    }
+  case TOK_IMAGF:
+    {
+      QString mt(m_text);
+      if (mt.toUpper().endsWith("F")) mt.chop(1);
+      retval = Array(float(0),float(mt.toFloat()));
+      break;
+    }
   case TOK_STRING:
     retval = Array(m_text);
     break;

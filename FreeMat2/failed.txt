@@ -7,10 +7,10 @@ Here is the current list of tests failed by FreeMat 4.0 (array-rework branch):
 Number of tests: 996
 Failed tests: 146
    Test bbtest_contour3.m failed -- fixed
-   Test bbtest_eig.m failed
+   Test bbtest_eig.m failed -- fixed
    Test bbtest_eigs.m failed
-   Test bbtest_eval.m failed
-   Test bbtest_expm.m failed
+   Test bbtest_eval.m failed -- fixed
+   Test bbtest_expm.m failed -- fixed
    Test bbtest_feval.m failed
    Test bbtest_fft.m failed
    Test bbtest_fgetline.m failed

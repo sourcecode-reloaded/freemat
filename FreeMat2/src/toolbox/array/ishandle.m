@@ -16,6 +16,10 @@
 % Licensed under the GPL
 
 function b = ishandle(handle,type)
+    if (isstr(handle))
+      b = false;
+      return;
+    end
     if (strcmp(type,'figure') && (handle<=100))
         b = logical(1);
         return;
