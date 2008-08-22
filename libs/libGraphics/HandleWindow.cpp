@@ -670,6 +670,6 @@ void HandleWindow::UpdateState() {
            child->updateGeometry();
 	   //UpdateState();
        }
-    repaint();
   }
+  repaint();
 }

@@ -248,11 +248,11 @@ void GLRenderEngine::setupDirectDraw() {
 
 void GLRenderEngine::releaseDirectDraw() {
   glEnable(GL_DEPTH_TEST);
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();    
   glViewport(viewp[0],viewp[1],viewp[2],viewp[3]);
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
 }
   
 void GLRenderEngine::getModelviewMatrix(double amodel[16]) {
