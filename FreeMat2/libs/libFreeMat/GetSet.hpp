@@ -53,18 +53,52 @@ void Set(T& arg, const IndexArrayVector& index, const T& data) {
     arg.del(index);
     return;
   }
-  if (isSliceIndexCase(index)) {
+  if (!arg.isEmpty() && isSliceIndexCase(index)) {
     SetSlice(arg,index,data);
     return;
   }
   IndexArrayVector ndx;
   NTuple secdims;
   NTuple maxsze;
-  for (int i=0;i<index.size();i++) {
-    ndx.push_back(ExpandColons(index[i],arg.dimensions()[i]));
-    secdims[i] = ndx[i].length();
-    maxsze[i] = MaxValue(ndx[i]);
+  if (arg.isEmpty()) {
+    // Special case when A(NDX) = B, and A is empty
+    if (data.isVector()) {
+      bool firstcolon = true;
+      for (int i=0;i<index.size();i++)
+	if (IsColonOp(index[i])) {
+	  if (firstcolon) {
+	    ndx.push_back(ExpandColons(index[i],data.length()));
+	    firstcolon = false;
+	  } else
+	    ndx.push_back(ScalarToIndex(1));
+	} else {
+	  ndx.push_back(index[i]);
+	}
+    } else {
+      // Correction - 
+      // In the assignment of the form:
+      //  g(2,:,4,:) = fs;
+      // we fill in the colons with the first and second dimensional sizes of fs
+      int colonDim = 0;
+      for (int i=0;i<index.size();i++) {
+	if (IsColonOp(index[i]))
+	  ndx.push_back(ExpandColons(index[i],data.dimensions()[colonDim++]));
+	else
+	  ndx.push_back(index[i]);
+      }
+    }
+    for (int i=0;i<ndx.size();i++) {
+      secdims[i] = ndx[i].length();
+      maxsze[i] = MaxValue(ndx[i]);
+    }
+  } else {
+    for (int i=0;i<index.size();i++) {
+      ndx.push_back(ExpandColons(index[i],arg.dimensions()[i]));
+      secdims[i] = ndx[i].length();
+      maxsze[i] = MaxValue(ndx[i]);
+    }
   }
+  
   if (secdims.count() != data.length())
     throw Exception("mismatch in size for assignment A(I1,I2,...) = B");
   if (arg.dimensions() <= maxsze)

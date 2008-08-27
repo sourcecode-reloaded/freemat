@@ -39,7 +39,7 @@
 
 #define MacroGetDataClass(ctype,cls)		\
   template <>					\
-  static inline DataClass GetDataClass(ctype) { \
+  inline DataClass GetDataClass(ctype) { \
     return cls;					\
   } 
 

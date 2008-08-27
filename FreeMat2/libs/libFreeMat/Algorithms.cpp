@@ -5,7 +5,7 @@
 
 void WarningMessage(QString msg) {
 #warning FIXME
-  std::cout << "Warning:" << qPrintable(msg);
+  //  std::cout << "Warning:" << qPrintable(msg);
 }
 
 const Array StringArrayFromStringVector(const StringVector& arg) {
@@ -13,10 +13,10 @@ const Array StringArrayFromStringVector(const StringVector& arg) {
   for (int i=0;i<arg.size();i++)
     maxlen = qMax(maxlen,arg[i].size());
   Array ret(StringArray,NTuple(arg.size(),maxlen));
-  BasicArray<uint16> &sp(ret.real<uint16>());
+  BasicArray<QChar> &sp(ret.real<QChar>());
   for (int i=0;i<arg.size();i++) 
     for (int j=0;j<arg[i].size();j++)
-      sp.set(NTuple(index_t(i+1),index_t(j+1)),arg[i][j].unicode());
+      sp.set(NTuple(index_t(i+1),index_t(j+1)),arg[i][j]);
   return ret;
 }
 
@@ -150,6 +150,14 @@ const ArrayVector ArrayVectorFromCellArray(const Array &arg) {
   return ret;
 }
 
+Array ArrayFromCellArray(const Array &arg) {
+  if (arg.dataClass() != CellArray)
+    throw Exception("Unsupported type for call to ArrayFromCellArray");
+  if (arg.length() != 1)
+    throw Exception("ArrayFromCellArray called with non-scalar argument");
+  return arg.constReal<Array>().get(1);
+}
+
 const Array CellArrayFromArray(const Array & arg) {
   Array ret(CellArray,NTuple(1,1));
   ret.real<Array>().set(1,arg);
@@ -192,8 +200,12 @@ StringVector StringVectorFromArray(const Array &arg) {
 
 void SetCellContents(Array &cell, const Array& index, 
 		     ArrayVector& data) {
-  if (cell.dataClass() != CellArray)
-    throw Exception("A{B} = C only supported for cell arrays.");
+  if (cell.dataClass() != CellArray) {
+    if (!cell.isEmpty())
+      throw Exception("A{B} = C only supported for cell arrays.");
+    else
+      cell = cell.toClass(CellArray);
+  }
   if (IsColonOp(index)) {
     if (cell.length() > data.size())
       throw Exception("Not enough right hand side values to satisfy left hand side expression.");
@@ -880,7 +892,7 @@ Array StructConstructor(const StringVector& fnames, const ArrayVector& values) {
     else {
       if (rval.dataClass() == CellArray) {
 	if (rval.isScalar())
-	  rp.fill(rval.get(1));
+	  rp.fill(ArrayFromCellArray(rval));
 	else
 	  rp = rval.constReal<Array>();
       } else

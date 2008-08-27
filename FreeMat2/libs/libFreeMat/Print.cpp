@@ -119,7 +119,7 @@ template <typename T>
 static ArrayFormatInfo GetArrayFormatComplex(T x = 0);
 
 template <>
-static ArrayFormatInfo GetArrayFormatReal(float) {
+ArrayFormatInfo GetArrayFormatReal(float) {
   if (formatMode == format_short) 
     return ArrayFormatInfo(9,false,4);
   else if (formatMode == format_long)
@@ -132,7 +132,7 @@ static ArrayFormatInfo GetArrayFormatReal(float) {
 }
 
 template <>
-static ArrayFormatInfo GetArrayFormatReal(double) {
+ArrayFormatInfo GetArrayFormatReal(double) {
   if (formatMode == format_short)
     return ArrayFormatInfo(9,false,4);
   else if (formatMode == format_long)
@@ -145,7 +145,7 @@ static ArrayFormatInfo GetArrayFormatReal(double) {
 }
 
 template <>
-static ArrayFormatInfo GetArrayFormatComplex(float) {
+ArrayFormatInfo GetArrayFormatComplex(float) {
   if (formatMode == format_short)
     return ArrayFormatInfo(19,false,4);
   else if (formatMode == format_long)
@@ -158,7 +158,7 @@ static ArrayFormatInfo GetArrayFormatComplex(float) {
 }
 
 template <>
-static ArrayFormatInfo GetArrayFormatComplex(double) {
+ArrayFormatInfo GetArrayFormatComplex(double) {
   if (formatMode == format_short)
     return ArrayFormatInfo(19,false,4);
   else if (formatMode == format_long)
@@ -370,6 +370,8 @@ static inline void PrintSheet(Interpreter *io, const ArrayFormatInfo &format,
 template <class T>
 static void PrintSparse(const SparseMatrix<T> &A, Interpreter* io, const ArrayFormatInfo &format) {
   ConstSparseIterator<T> i(&A);
+  if (!i.isValid())
+    io->outputMessage("  <empty>\n");
   while (i.isValid()) {
     io->outputMessage(QString(" %1 %2 %3\n").arg(i.row()).arg(i.col()).arg(i.value()));
     i.next();
@@ -379,6 +381,8 @@ static void PrintSparse(const SparseMatrix<T> &A, Interpreter* io, const ArrayFo
 template <class T>
 static void PrintSparse(const SparseMatrix<T> &Areal, const SparseMatrix<T> &Aimag, Interpreter* io, const ArrayFormatInfo &format) {
   ConstComplexSparseIterator<T> i(&Areal,&Aimag);
+  if (!i.isValid())
+    io->outputMessage("  <empty>\n");
   while (i.isValid()) {
     if (i.imagValue() >= 0)
       io->outputMessage(QString(" %1 %2 %3+%4").arg(i.row()).arg(i.col()).

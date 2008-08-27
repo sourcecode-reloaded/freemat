@@ -399,7 +399,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("IsInf",IsInfFunction,1,1,"x",NULL);
   context->addFunction("isreal",IsRealFunction,1,1,"x",NULL);
   context->addFunction("isempty",IsEmptyFunction,1,1,"x",NULL);
-  context->addFunction("lu",LUFunction,1,3,"x",NULL);
+  context->addFunction("lu",LUFunction,1,5,"x",NULL);
   context->addFunction("inv",InvFunction,1,1,"x",NULL);
   context->addFunction("max",MaxFunction,3,2,"x","z","dim",NULL);
   context->addFunction("mean",MeanFunction,2,1,"x","dim",NULL);
@@ -441,7 +441,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("imag",ImagFunction,1,1,"x",NULL);
   context->addFunction("reshape",ReshapeFunction,-1,1,NULL);
   context->addFunction("round",RoundFunction,1,1,"x",NULL);
-  context->addFunction("size",SizeFunction,2,1,"x","dim",NULL);
+  context->addFunction("size",SizeFunction,2,-1,"x","dim",NULL);
   context->addFunction("sort",SortFunction,3,2,"A","dim","mode",NULL);
   context->addFunction("spones",SponesFunction,1,1,"x",NULL);
   context->addSpecialFunction("sparse",SparseFunction,5,1,"i","j","v","m","n",NULL);
@@ -489,7 +489,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("erf",ErfFunction,1,1,"x",NULL);
   context->addFunction("gamma",GammaFunction,1,1,"x",NULL);
   context->addFunction("gammaln",GammaLnFunction,1,1,"x",NULL);
-  context->addFunction("interplin1",Interplin1Function,3,1,"x1","y1","xi",NULL);
+  context->addFunction("interplin1",Interplin1Function,4,1,"x1","y1","xi","mode",NULL);
   context->addSpecialFunction("fitfun",FitFunFunction,-1,2,NULL);
   context->addSpecialFunction("@anonfunction:display",AnonFuncDispFunction,1,0,"x",NULL);
   context->addSpecialFunction("@anonfunction:subsref",AnonFuncSubsrefFunction,2,-1,"x","s",NULL);

@@ -26,9 +26,9 @@
 
 function y = teps(x)
 switch(typeof(x))
-  case {'float','complex'}
+  case {'single'}
     y = feps;
-  case {'double','dcomplex','int8','uint8','int16','uint16','int32','uint32','int64','uint64'}
+  case {'double','int8','uint8','int16','uint16','int32','uint32','int64','uint64'}
     y = eps;
   otherwise
     error('teps only applies to numerical arrays');

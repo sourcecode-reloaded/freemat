@@ -47,6 +47,7 @@ HandleList<Interpreter*> m_threadHandles;
 #include <qsocketnotifier.h>
 #include <signal.h>
 #include <unistd.h>
+#include <iostream>
 
 sig_t signal_suspend_default;
 sig_t signal_resume_default;
@@ -298,8 +299,8 @@ void MainApp::Crashed() {
   TerminalReset();
   if (guimode)
     QMessageBox::critical(NULL,"FreeMat Crash","Interpreter thread crashed unexpectedly!\n  This is likely a FreeMat bug of some kind.  \nPlease file a bug report at http://freemat.sf.net.",QMessageBox::Ok,QMessageBox::NoButton,QMessageBox::NoButton);
-  else
-    cout << "Interpreter thread crashed unexpectedly!  This is likely a FreeMat bug of some kind.  Please file a bug report at http://freemat.sf.net.";
+  //  else
+    //    cout << "Interpreter thread crashed unexpectedly!  This is likely a FreeMat bug of some kind.  Please file a bug report at http://freemat.sf.net.";
   qApp->quit();
 }
 
@@ -893,14 +894,14 @@ static double m_profiler_ticks = 0;
 
 static void DumpProfileDB() {
   double profiler_ticks = m_profiler_ticks;
-  std::cout << "Total ticks " << m_profiler_ticks << "\r\n";
+  //  std::cout << "Total ticks " << m_profiler_ticks << "\r\n";
   for (ProfileDB::const_iterator i=m_profileDB.begin();i!=m_profileDB.end();i++) {
     //    std::cout << "Module " << i->first << "\r\n";
     const ProfileVector &p(i->second);
     double ticks_this_module = 0;
     for (int j=0;j<p.size();j++) {
-      if (p[j] > 0)
-	std::cout << "Line " << j << " " << p[j] << " counts " << p[j]/profiler_ticks*100.0 << "%\r\n";
+      //      if (p[j] > 0)
+	//	std::cout << "Line " << j << " " << p[j] << " counts " << p[j]/profiler_ticks*100.0 << "%\r\n";
       ticks_this_module += p[j];
     }
     //    std::cout << "Total time in " << i->first << " " << ticks_this_module << " counts "  

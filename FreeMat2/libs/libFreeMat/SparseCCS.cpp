@@ -131,5 +131,5 @@ Array IJVToSparse(const BasicArray<index_t> &ip,
 Array IJVToSparse(const BasicArray<index_t> &ip,
 		  const BasicArray<index_t> &jp,
 		  const Array &dat) {
-  return IJVToSparse(ip,jp,dat,MaxValue(ip),MaxValue(jp));
+  return IJVToSparse(ip,jp,dat.asDenseArray(),MaxValue(ip),MaxValue(jp));
 }

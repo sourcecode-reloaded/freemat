@@ -78,7 +78,7 @@
 //@@Signature
 //function size SizeFunction
 //inputs x dim
-//outputs y
+//outputs varargout
 //!
 ArrayVector SizeFunction(int nargout, const ArrayVector& arg) {
   ArrayVector retval;

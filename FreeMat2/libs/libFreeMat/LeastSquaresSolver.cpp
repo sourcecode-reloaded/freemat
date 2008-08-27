@@ -31,7 +31,7 @@ static void Tgelsy(int* M, int *N, int *NRHS, T* A, int *LDA,
 	    int *RANK, T *WORK, int* LWORK, int* INFO);
 
 template <>
-static void Tgelsy(int* M, int *N, int *NRHS, double* A, int *LDA,
+void Tgelsy(int* M, int *N, int *NRHS, double* A, int *LDA,
 		   double *B, int *LDB, int *JPVT, double* RCOND,
 		   int *RANK, double *WORK, int* LWORK, int* INFO) {
   return dgelsy_(M,N,NRHS,A,LDA,B,LDB,JPVT,RCOND,
@@ -39,7 +39,7 @@ static void Tgelsy(int* M, int *N, int *NRHS, double* A, int *LDA,
 }
 
 template <>
-static void Tgelsy(int* M, int *N, int *NRHS, float* A, int *LDA,
+void Tgelsy(int* M, int *N, int *NRHS, float* A, int *LDA,
 		   float *B, int *LDB, int *JPVT, float* RCOND,
 		   int *RANK, float *WORK, int* LWORK, int* INFO) {
   return sgelsy_(M,N,NRHS,A,LDA,B,LDB,JPVT,RCOND,
@@ -53,7 +53,7 @@ static void Tgelsy(int* M, int *N, int *NRHS, T* A, int *LDA,
 		   int* INFO);
 
 template <>
-static void Tgelsy(int* M, int *N, int *NRHS, float* A, int *LDA,
+void Tgelsy(int* M, int *N, int *NRHS, float* A, int *LDA,
 		   float *B, int *LDB, int *JPVT, float* RCOND,
 		   int *RANK, float *WORK, int* LWORK, float* RWORK,
 		   int* INFO) {
@@ -62,7 +62,7 @@ static void Tgelsy(int* M, int *N, int *NRHS, float* A, int *LDA,
 }
 
 template <>
-static void Tgelsy(int* M, int *N, int *NRHS, double* A, int *LDA,
+void Tgelsy(int* M, int *N, int *NRHS, double* A, int *LDA,
 		   double *B, int *LDB, int *JPVT, double* RCOND,
 		   int *RANK, double *WORK, int* LWORK, double* RWORK,
 		   int* INFO) {

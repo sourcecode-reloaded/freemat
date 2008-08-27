@@ -583,19 +583,19 @@ void Interpreter::clearStacks() {
 //% Check the type promotion for the matrix cat function
 //function test_val = test_matcat4
 //a = [1,2;3.0f,4f+i];
-//test_val = test(strcmp(typeof(a),'complex'));
+//test_val = test(strcmp(typeof(a),'single'));
 //@}
 //@{ test_matcat5.m
 //% Check the type promotion for the matrix cat function
 //function test_val = test_matcat5
-//a = [1,2;3.0f,4.0+i];
-//test_val = test(strcmp(typeof(a),'dcomplex'));
+//a = [1,2;3.0,4.0+i];
+//test_val = test(strcmp(typeof(a),'double'));
 //@}
 //@{ test_matcat6.m
 //% Check the type promotion for the matrix cat function
 //function test_val = test_matcat6
 //a = [1,2;3.0f,4.0f+i];
-//test_val = test(strcmp(typeof(a),'complex'));
+//test_val = test(strcmp(typeof(a),'single'));
 //@}
 //@{ test_matcat7.m
 //% Check that matrix cat works properly with spaces before the continuation
@@ -619,7 +619,7 @@ void Interpreter::clearStacks() {
 //@{ test_matcat8.m
 //% Check that [1:0] is sane
 //function test_val = test_matcat8
-//test_val = isa([1:0],'int32');
+//test_val = isa([1:0],'double');
 //@}
 //!
 //Works
@@ -4754,9 +4754,9 @@ void Interpreter::deref(Array &r, Tree *s) {
     }
     subsindex(m);
     if (m.size() == 1)
-      r = ArrayVectorFromCellArray(r.get(m[0])).front();
+      r = ArrayFromCellArray(r.get(m[0]));
     else
-      r = ArrayVectorFromCellArray(r.get(m)).front();
+      r = ArrayFromCellArray(r.get(m));
   } else if (s->is('.')) {
     r = r.get(s->first()->text()).front();
   } else if (s->is(TOK_DYN)) {

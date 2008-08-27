@@ -4,153 +4,86 @@ Here is the current list of tests failed by FreeMat 4.0 (array-rework branch):
 *  Test Summary                        *
 ****************************************
 
-Number of tests: 996
-Failed tests: 146
-   Test bbtest_contour3.m failed -- fixed
-   Test bbtest_eig.m failed -- fixed
+
+Number of tests: 985
+Failed tests: 80
    Test bbtest_eigs.m failed
-   Test bbtest_eval.m failed -- fixed
-   Test bbtest_expm.m failed -- fixed
+   Test bbtest_error.m failed
    Test bbtest_feval.m failed
-   Test bbtest_fft.m failed
    Test bbtest_fgetline.m failed
-   Test bbtest_indexing.m failed
    Test bbtest_inline.m failed
-   Test bbtest_interplin1.m failed
-   Test bbtest_ipermute.m failed
+   Test bbtest_keywords.m failed
    Test bbtest_lu.m failed
-   Test bbtest_num2hex.m failed
+   Test bbtest_nargin.m failed
+   Test bbtest_nargout.m failed
    Test bbtest_ode45.m failed
-   Test bbtest_permute.m failed
-   Test bbtest_pinv.m failed
-   Test bbtest_poly.m failed
+   Test bbtest_persistent.m failed
    Test bbtest_polyder.m failed
-   Test bbtest_power.m failed
    Test bbtest_printf.m failed
-   Test bbtest_roots.m failed
-   Test bbtest_shiftdim.m failed
-   Test bbtest_speye.m failed
-   Test bbtest_spy.m failed
-   Test bbtest_struct.m failed
-   Test bbtest_subplot.m failed
-   Test bbtest_surf.m failed
+   Test bbtest_script.m failed
+   Test bbtest_special.m failed
    Test bbtest_symvar.m failed
-   Test bbtest_teps.m failed
    Test bbtest_threadstart.m failed
    Test bbtest_threadvalue.m failed
    Test bbtest_try.m failed
    Test bbtest_unique.m failed
    Test bbtest_varargin.m failed
-   Test bbtest_view.m failed
-   Test bbtest_zlabel.m failed
-   Test bbtest_zoom.m failed
    Test wbtest_abs_1.m failed
-   Test wbtest_acosd_2.m failed
-   Test wbtest_acosh_5.m failed
-   Test wbtest_acotd_3.m failed
-   Test wbtest_acoth_2.m failed
-   Test wbtest_acoth_4.m failed
-   Test wbtest_acsc_4.m failed
-   Test wbtest_acscd_3.m failed
-   Test wbtest_acsch_4.m failed
-   Test wbtest_asec_4.m failed
-   Test wbtest_asecd_3.m failed
-   Test wbtest_asech_4.m failed
-   Test wbtest_asind_4.m failed
-   Test wbtest_asinh_5.m failed
-   Test wbtest_atand_3.m failed
-   Test wbtest_atanh_2.m failed
-   Test wbtest_atanh_4.m failed
-   Test wbtest_cosh_4.m failed
-   Test wbtest_cotd_4.m failed
-   Test wbtest_coth_4.m failed
-   Test wbtest_csch_4.m failed
+   Test wbtest_cosh_3.m failed
+   Test wbtest_coth_3.m failed
+   Test wbtest_csch_3.m failed
    Test wbtest_etime_1.m failed
    Test wbtest_feval_1.m failed
    Test wbtest_feval_3.m failed
-   Test wbtest_ipermute_1.m failed
-   Test wbtest_ipermute_2.m failed
-   Test wbtest_num2hex_1.m failed
-   Test wbtest_num2hex_2.m failed
-   Test wbtest_permute_1.m failed
-   Test wbtest_permute_2.m failed
    Test wbtest_polyder_1.m failed
    Test wbtest_polyder_2.m failed
-   Test wbtest_roots_1.m failed
-   Test wbtest_sech_4.m failed
-   Test wbtest_sinh_4.m failed
-   Test wbtest_speye_1.m failed
+   Test wbtest_sech_3.m failed
+   Test wbtest_sinh_3.m failed
    Test wbtest_symvar_1.m failed
    Test wbtest_symvar_2.m failed
    Test wbtest_symvar_3.m failed
-   Test wbtest_tand_4.m failed
-   Test wbtest_tanh_4.m failed
-   Test test_assign10.m failed
-   Test test_assign11.m failed
-   Test test_assign14.m failed
-   Test test_call2.m failed
+   Test wbtest_tanh_3.m failed
    Test test_eig1.m failed
    Test test_eig2.m failed
-   Test test_eig3.m failed
    Test test_eig4.m failed
    Test test_eig5.m failed
    Test test_fitfun1.m failed
-   Test test_matcat2.m failed
-   Test test_matcat3.m failed
-   Test test_matcat4.m failed
-   Test test_matcat5.m failed
-   Test test_matcat6.m failed
-   Test test_matcat8.m failed
-   Test test_permute1.m failed
+   Test test_qr10.m failed
    Test test_qr11.m failed
+   Test test_qr12.m failed
+   Test test_qr9.m failed
    Test test_range3.m failed
    Test test_range6.m failed
    Test test_range8.m failed
    Test test_save1.m failed
-   Test test_size2.m failed
-   Test test_size4.m failed
-   Test test_sparse10.m failed
-   Test test_sparse13.m failed
-   Test test_sparse21.m failed
-   Test test_sparse27.m failed
    Test test_sparse29.m failed
-   Test test_sparse30.m failed
    Test test_sparse32.m failed
    Test test_sparse33.m failed
    Test test_sparse45.m failed
-   Test test_sparse57.m failed
-   Test test_sparse58.m failed
    Test test_sparse59.m failed
    Test test_sparse60.m failed
    Test test_sparse61.m failed
-   Test test_sparse62.m failed
-   Test test_sparse63.m failed
-   Test test_sparse64.m failed
    Test test_sparse65.m failed
    Test test_sparse66.m failed
-   Test test_sparse67.m failed
    Test test_sparse68.m failed
-   Test test_sparse69.m failed
-   Test test_sparse70.m failed
    Test test_sparse71.m failed
    Test test_sparse72.m failed
    Test test_sparse73.m failed
-   Test test_sparse74.m failed
-   Test test_sparse76.m failed
-   Test test_sparse77.m failed
-   Test test_sparse78.m failed
-   Test test_sparse79.m failed
    Test test_sparse80.m failed
    Test test_sparse82.m failed
-   Test test_struct3.m failed
-   Test test_struct4.m failed
+   Test test_struct4.m failed - fixed
    Test test_subset19.m failed
-   Test test_subset20.m failed
+   Test test_svd10.m failed
+   Test test_svd11.m failed
+   Test test_svd12.m failed
+   Test test_svd5.m failed
+   Test test_svd6.m failed
+   Test test_svd7.m failed
+   Test test_svd8.m failed
+   Test test_svd9.m failed
    Test test_switch3.m failed
    Test test_switch8.m failed
-   Test test_typeof1.m failed
-   Test test_typeof3.m failed
-   Test test_typeof4.m failed
-   Test test_typeof5.m failed
---> 
-
+   Test test_typeof1.m failed - fixed
+   Test test_typeof3.m failed - fixed
+   Test test_typeof4.m failed - fixed
+   Test test_typeof5.m failed - fixed

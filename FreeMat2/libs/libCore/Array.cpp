@@ -45,6 +45,13 @@
 //sizey = size(y);
 //test_val = all(sizey == sizez(perm));
 //@}
+//@{ test_permute2.m
+//function test_val = test_permute2
+//z = rand(3,5,2,4,7);
+//perm = [3,5,1,4,2];
+//y = ipermute(permute(z,perm),perm);
+//test_val = all(y == z);
+//@}
 //@@Signature
 //function permute PermuteFunction
 //inputs x p
@@ -61,7 +68,7 @@ ArrayVector PermuteFunction(int nargout, const ArrayVector& arg) {
   bool *d = &p;
   for (int i=0;i<Adims;i++) d[i] = false;
   const BasicArray<uint32> &dp = permutation.constReal<uint32>();
-  for (int i=1;i!=Adims;i++) {
+  for (int i=1;i<=Adims;i++) {
     if ((dp[i] < 1) || (dp[i] > ((uint32)Adims)))
       throw Exception("permutation vector elements are limited to 1..ndims(A), where A is the array to permute");
     d[dp[i]-1] = true;
@@ -69,7 +76,12 @@ ArrayVector PermuteFunction(int nargout, const ArrayVector& arg) {
   // Check that all are covered
   for (int i=0;i<Adims;i++)
     if (!d[i]) throw Exception("second argument to permute function is not a permutation (no duplicates allowed)");
-  return ArrayVector(Permute(arg[0],ConvertArrayToNTuple(dp)));
+  // Convert to an N-Tuple
+  NTuple perm(ConvertArrayToNTuple(dp));
+  // Post-fill the N-Tuple so that the permutation covers all of the dimensions
+  for (int i=Adims;i<NDims;i++)
+    perm[i] = (i+1);
+  return ArrayVector(Permute(arg[0],perm));
 }
 
 //!

@@ -121,11 +121,10 @@ function merge_mfile(filename)
 function read_section_descriptors
   global sourcepath section_descriptors
   fp = fopen([sourcepath,'/src/toolbox/help/section_descriptors.txt'],'r');
-  line = fgetline(fp);
   while (~feof(fp))
+    line = fgetline(fp);
     p = regexp(line,'(\w*)\s*([^\n]*)','tokens');
     section_descriptors.(p{1}{1}) = p{1}{2};
-    line = fgetline(fp);
   end
   fclose(fp);
   
@@ -151,7 +150,6 @@ function helpgen_processfile(filename,&writers)
   end
   while (1)
     line = getline(fp);
-    keyboard
     if (feof(fp))
       fclose(fp);
       return;
@@ -352,7 +350,7 @@ function handle_exec(&line,fp,pset,&writers,exec_id)
     for (i=1:numel(cmdlist))
       printf('%s\n',cmdlist{i});
     end
-    error('Failed!');
+%    error('Failed!');
   end
   cd([sourcepath,'/help/tmp']);
   line = getline(fp);

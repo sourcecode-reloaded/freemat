@@ -27,7 +27,7 @@ bool isSliceIndexCase(const IndexArrayVector& index) {
   if (IsColonOp(index[0])) {
     bool allScalars = true;
     for (int i=1;i<index.size();i++)
-      allScalars = allScalars && index[i].isScalar();
+      allScalars = allScalars && !IsColonOp(index[i]) && index[i].isScalar();
     return allScalars;
   }
   return false;

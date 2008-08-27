@@ -126,6 +126,10 @@ static void complex_fft_backward(int Narg, double *dp) {
 #endif
 }
 
+void trapme() {
+  int a = 232;
+}
+
 struct OpVecFFT {
   template <typename T>
   static inline void func(const ConstSparseIterator<T> & src, SparseSlice<T>& dest) {
@@ -147,15 +151,16 @@ struct OpVecFFT {
 			  BasicArray<T>& dest_real,
 			  BasicArray<T>& dest_imag) {
     if (src_real.length() == 0) return;
+    trapme();
     QVector<T> tbuf(int(dest_real.length()*2));
     for (index_t i=1;i<=src_real.length();i++) {
-      tbuf[int(2*i-1)] = src_real[i];
-      tbuf[int(2*i)] = src_imag[i];
+      tbuf[int(2*i-1)-1] = src_real[i];
+      tbuf[int(2*i)-1] = src_imag[i];
     }
-    complex_fft_forward(tbuf.size(),tbuf.data());
+    complex_fft_forward(tbuf.size()/2,tbuf.data());
     for (index_t i=1;i<=dest_real.length();i++) {
-      dest_real[i] = tbuf[int(2*i-1)];
-      dest_imag[i] = tbuf[int(2*i)];
+      dest_real[i] = tbuf[int(2*i-1)-1];
+      dest_imag[i] = tbuf[int(2*i)-1];
     }
   }  
 };
@@ -183,13 +188,13 @@ struct OpVecIFFT {
     if (src_real.length() == 0) return;
     QVector<T> tbuf(int(dest_real.length()*2));
     for (index_t i=1;i<=src_real.length();i++) {
-      tbuf[int(2*i-1)] = src_real[i];
-      tbuf[int(2*i)] = src_imag[i];
+      tbuf[int(2*i-1)-1] = src_real[i];
+      tbuf[int(2*i)-1] = src_imag[i];
     }
-    complex_fft_backward(tbuf.size(),tbuf.data());
+    complex_fft_backward(tbuf.size()/2,tbuf.data());
     for (index_t i=1;i<=dest_real.length();i++) {
-      dest_real[i] = tbuf[int(2*i-1)];
-      dest_imag[i] = tbuf[int(2*i)];
+      dest_real[i] = tbuf[int(2*i-1)-1];
+      dest_imag[i] = tbuf[int(2*i)-1];
     }
   }
 };

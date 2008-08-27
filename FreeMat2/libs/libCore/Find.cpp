@@ -120,8 +120,7 @@ static ArrayVector RCVFindModeFull(Array x) {
   if (x.allReal())
     return RCVFindModeFullReal<T>(x);
   else
-    return RCVFindModeFullComplex<T>
-(x);
+    return RCVFindModeFullComplex<T>(x);
 }
 
 #define MacroFindFull(ctype,cls) \

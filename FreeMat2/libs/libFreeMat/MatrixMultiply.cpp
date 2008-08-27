@@ -41,14 +41,14 @@ static void Trealgemm(char * ta, char* tb, int* m, int* n, int* k, T *alp,
 
 
 template <>
-static void Trealgemm(char * ta, char* tb, int* m, int* n, int* k, float *alp,
+void Trealgemm(char * ta, char* tb, int* m, int* n, int* k, float *alp,
 	       const float*A, int* LDA, const float* B, int* LDB, 
 	       float* BETA, float *C, int*LDC) {
   return sgemm_(ta,tb,m,n,k,alp,A,LDA,B,LDB,BETA,C,LDC);
 }
 
 template <>
-static void Trealgemm(char * ta, char* tb, int* m, int* n, int* k, double *alp,
+void Trealgemm(char * ta, char* tb, int* m, int* n, int* k, double *alp,
 	       const double*A, int* LDA, const double* B, int* LDB, 
 	       double* BETA, double *C, int*LDC) {
   return dgemm_(ta,tb,m,n,k,alp,A,LDA,B,LDB,BETA,C,LDC);
@@ -61,7 +61,7 @@ static void Tcomplexgemm(char * ta, char* tb, int* m, int* n, int* k, T *alp,
 		  T* BETA, T *C, int*LDC);
 
 template <>
-static void Tcomplexgemm(char * ta, char* tb, int* m, int* n, int* k, float *alp,
+void Tcomplexgemm(char * ta, char* tb, int* m, int* n, int* k, float *alp,
 		  const float*A, int* LDA, const float* B, int* LDB, 
 		  float* BETA, float *C, int*LDC) {
   return cgemm_(ta,tb,m,n,k,alp,A,LDA,B,LDB,BETA,C,LDC);

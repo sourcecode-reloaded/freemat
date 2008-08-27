@@ -138,7 +138,7 @@
 //@@Signature
 //function lu LUFunction
 //inputs x
-//outputs l u p
+//outputs l u p q r
 //!
 ArrayVector LUFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)

@@ -168,7 +168,7 @@ function varargout = wavread(varargin);
     if (data_type == 1)
       datafmt = 'int32';
     elseif (data_type == 3)
-      datafmt = 'float';
+      datafmt = 'single';
     end
   else
     fclose(fpi);

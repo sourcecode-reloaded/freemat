@@ -14,7 +14,7 @@ static bool RealLess(const XNEntryReal<T>& a, const XNEntryReal<T>& b) {
 }
 
 template <>
-static bool RealLess(const XNEntryReal<Array>& a, const XNEntryReal<Array>& b) {
+bool RealLess(const XNEntryReal<Array>& a, const XNEntryReal<Array>& b) {
   return a.x.asString() < b.x.asString();
 }
 
@@ -24,7 +24,7 @@ static bool RealGreater(const XNEntryReal<T>& a, const XNEntryReal<T>& b) {
 }
 
 template <>
-static bool RealGreater(const XNEntryReal<Array>& a, const XNEntryReal<Array>& b) {
+bool RealGreater(const XNEntryReal<Array>& a, const XNEntryReal<Array>& b) {
   return a.x.asString() > b.x.asString();
 }
 

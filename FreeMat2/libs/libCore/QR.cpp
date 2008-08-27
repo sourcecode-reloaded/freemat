@@ -9,12 +9,12 @@ template <typename T>
 static void Rgeqrf(int *M, int *N, T *A, int *LDA, T *TAU, T *WORK, int *LWORK, int *INFO);
 
 template <>
-static void Rgeqrf(int *M, int *N, float *A, int *LDA, float *TAU, float *WORK, int *LWORK, int *INFO) {
+void Rgeqrf(int *M, int *N, float *A, int *LDA, float *TAU, float *WORK, int *LWORK, int *INFO) {
   sgeqrf_(M,N,A,LDA,TAU,WORK,LWORK,INFO);
 }
 
 template <>
-static void Rgeqrf(int *M, int *N, double *A, int *LDA, double *TAU, double *WORK, int *LWORK, int *INFO) {
+void Rgeqrf(int *M, int *N, double *A, int *LDA, double *TAU, double *WORK, int *LWORK, int *INFO) {
   dgeqrf_(M,N,A,LDA,TAU,WORK,LWORK,INFO);
 }
 
@@ -22,12 +22,12 @@ template <typename T>
 static void Rorgqr(int *M, int *N, int *K, T *A, int *LDA, T *TAU, T *WORK, int *LWORK, int *INFO);
 
 template <>
-static void Rorgqr(int *M, int *N, int *K, float *A, int *LDA, float *TAU, float *WORK, int *LWORK, int *INFO) {
+void Rorgqr(int *M, int *N, int *K, float *A, int *LDA, float *TAU, float *WORK, int *LWORK, int *INFO) {
   sorgqr_(M,N,K,A,LDA,TAU,WORK,LWORK,INFO);
 }
 
 template <>
-static void Rorgqr(int *M, int *N, int *K, double *A, int *LDA, double *TAU, double *WORK, int *LWORK, int *INFO) {
+void Rorgqr(int *M, int *N, int *K, double *A, int *LDA, double *TAU, double *WORK, int *LWORK, int *INFO) {
   dorgqr_(M,N,K,A,LDA,TAU,WORK,LWORK,INFO);
 }
 
@@ -35,12 +35,12 @@ template <typename T>
 static void Cgeqrf(int *M, int *N, T *A, int *LDA, T *TAU, T *WORK, int *LWORK, int *INFO);
 
 template <>
-static void Cgeqrf(int *M, int *N, float *A, int *LDA, float *TAU, float *WORK, int *LWORK, int *INFO) {
+void Cgeqrf(int *M, int *N, float *A, int *LDA, float *TAU, float *WORK, int *LWORK, int *INFO) {
   cgeqrf_(M,N,A,LDA,TAU,WORK,LWORK,INFO);
 }
 
 template <>
-static void Cgeqrf(int *M, int *N, double *A, int *LDA, double *TAU, double *WORK, int *LWORK, int *INFO) {
+void Cgeqrf(int *M, int *N, double *A, int *LDA, double *TAU, double *WORK, int *LWORK, int *INFO) {
   zgeqrf_(M,N,A,LDA,TAU,WORK,LWORK,INFO);
 }
 
@@ -48,12 +48,12 @@ template <typename T>
 static void Cungqr(int *M, int *N, int *K, T *A, int *LDA, T *TAU, T *WORK, int *LWORK, int *INFO);
 
 template <>
-static void Cungqr(int *M, int *N, int *K, float *A, int *LDA, float *TAU, float *WORK, int *LWORK, int *INFO) {
+void Cungqr(int *M, int *N, int *K, float *A, int *LDA, float *TAU, float *WORK, int *LWORK, int *INFO) {
   cungqr_(M,N,K,A,LDA,TAU,WORK,LWORK,INFO);
 }
 
 template <>
-static void Cungqr(int *M, int *N, int *K, double *A, int *LDA, double *TAU, double *WORK, int *LWORK, int *INFO) {
+void Cungqr(int *M, int *N, int *K, double *A, int *LDA, double *TAU, double *WORK, int *LWORK, int *INFO) {
   zungqr_(M,N,K,A,LDA,TAU,WORK,LWORK,INFO);
 }
 
@@ -61,12 +61,12 @@ template <typename T>
 static void Rgeqp3(int *M, int *N, T *A, int *LDA, int *JPVT, T *TAU, T *WORK, int *LWORK, int *INFO);
 
 template <>
-static void Rgeqp3(int *M, int *N, float *A, int *LDA, int *JPVT, float *TAU, float *WORK, int *LWORK, int *INFO) {
+void Rgeqp3(int *M, int *N, float *A, int *LDA, int *JPVT, float *TAU, float *WORK, int *LWORK, int *INFO) {
   sgeqp3_(M,N,A,LDA,JPVT,TAU,WORK,LWORK,INFO);
 }
 
 template <>
-static void Rgeqp3(int *M, int *N, double *A, int *LDA, int *JPVT, double *TAU, double *WORK, int *LWORK, int *INFO) {
+void Rgeqp3(int *M, int *N, double *A, int *LDA, int *JPVT, double *TAU, double *WORK, int *LWORK, int *INFO) {
   dgeqp3_(M,N,A,LDA,JPVT,TAU,WORK,LWORK,INFO);
 }
 
@@ -74,12 +74,12 @@ template <typename T>
 static void Cgeqp3(int *M, int *N, T *A, int *LDA, int *JPVT, T *TAU, T *WORK, int *LWORK, T *RWORK, int *INFO);
 
 template <>
-static void Cgeqp3(int *M, int *N, float *A, int *LDA, int *JPVT, float *TAU, float *WORK, int *LWORK, float *RWORK, int *INFO) {
+void Cgeqp3(int *M, int *N, float *A, int *LDA, int *JPVT, float *TAU, float *WORK, int *LWORK, float *RWORK, int *INFO) {
   cgeqp3_(M,N,A,LDA,JPVT,TAU,WORK,LWORK,RWORK,INFO);
 }
 
 template <>
-static void Cgeqp3(int *M, int *N, double *A, int *LDA, int *JPVT, double *TAU, double *WORK, int *LWORK, double *RWORK, int *INFO) {
+void Cgeqp3(int *M, int *N, double *A, int *LDA, int *JPVT, double *TAU, double *WORK, int *LWORK, double *RWORK, int *INFO) {
   zgeqp3_(M,N,A,LDA,JPVT,TAU,WORK,LWORK,RWORK,INFO);
 }
 

@@ -132,13 +132,6 @@ public:
     retvec.m_data = m_data;
     return retvec;
   }
-  BasicArray<T>& slice(const NTuple& pos) {
-    m_offset = dimensions().map(pos)-1;
-    return *this;
-  }
-  void unslice() {
-    m_offset = 0;
-  }
   void del(const IndexArrayVector& index) {
     // The strategy for dealing with deletions is simplified relative
     // to 3.x code.  An NDim deletion is only valid if there is one
@@ -449,11 +442,12 @@ BasicArray<T> Permute(const BasicArray<T>& arg, NTuple perm) {
   ConstBasicIterator<T> iter(&arg,0);
   while (iter.isValid()) {
     for (index_t i=1;i<=iter.size();i++) {
-      retval[iter.pos().permute(perm)] = iter.get();
+      retval[iter.pos().replace(0,i).permute(perm)] = iter.get();
       iter.next();
     }
     iter.nextSlice();
   }
+  return retval;
 }
 
 template <typename T>

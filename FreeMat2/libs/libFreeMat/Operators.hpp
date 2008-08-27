@@ -423,16 +423,14 @@ static inline Array CmpOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
 
 template <class Op>
 static inline Array CmpOp(const Array &Ain, const Array &Bin) {
-  if ((Ain.dataClass() != Bin.dataClass()) && 
-      (!Ain.isDouble() && !Bin.isDouble()))
-    throw Exception("Unsupported type combinations to binary operator");
-  DataClass out_type;
-  Array F;
-  if (Ain.isDouble()) 
-    out_type = Bin.dataClass();
+  DataClass via_type = Double;
+
+  if (Ain.dataClass() == Float || Bin.dataClass() == Float) 
+    via_type = Float;
   else
-    out_type = Ain.dataClass();
-  if (out_type == Float) 
+    via_type = Double;
+  Array F;
+  if (via_type == Float) 
     F = CmpOp<float,Op>(Ain,Bin,Float);
   else
     F = CmpOp<double,Op>(Ain,Bin,Double);
@@ -557,46 +555,29 @@ static inline Array VectorOp(const BasicArray<T> &real,
   NTuple outdims(real.dimensions()); outdims[dim] = out;
   BasicArray<T> F_real(outdims); 
   BasicArray<T> F_imag(outdims);
-  if (dim == 0) {
-    ConstBasicIterator<T> source_real(&real,dim);
-    ConstBasicIterator<T> source_imag(&imag,dim);
-    BasicIterator<T> dest_real(&F_real,dim);
-    BasicIterator<T> dest_imag(&F_imag,dim);
-    while (source_real.isValid() && dest_real.isValid()) {
-      Op::func(real.slice(source_real.pos()),
-	       imag.slice(source_imag.pos()),
-	       F_real.slice(dest_real.pos()),
-	       F_imag.slice(dest_imag.pos()));
-      source_real.nextSlice(); source_imag.nextSlice();
-      dest_real.nextSlice(); dest_imag.nextSlice();
+  ConstBasicIterator<T> source_real(&real,dim);
+  ConstBasicIterator<T> source_imag(&imag,dim);
+  BasicIterator<T> dest_real(&F_real,dim);
+  BasicIterator<T> dest_imag(&F_imag,dim);
+  BasicArray<T> in_buffer_real(NTuple(real.dimensions()[dim],1));
+  BasicArray<T> in_buffer_imag(NTuple(imag.dimensions()[dim],1));
+  BasicArray<T> out_buffer_real(NTuple(out,1));
+  BasicArray<T> out_buffer_imag(NTuple(out,1));
+  while (source_real.isValid() && dest_real.isValid()) {
+    for (index_t i=1;i<=source_real.size();i++) {
+      in_buffer_real[i] = source_real.get();
+      in_buffer_imag[i] = source_imag.get();
+      source_real.next(); source_imag.next();
     }
-    F_real.unslice();
-    F_imag.unslice();
-  } else {
-    ConstBasicIterator<T> source_real(&real,dim);
-    ConstBasicIterator<T> source_imag(&imag,dim);
-    BasicIterator<T> dest_real(&F_real,dim);
-    BasicIterator<T> dest_imag(&F_imag,dim);
-    BasicArray<T> in_buffer_real(NTuple(real.dimensions()[dim],1));
-    BasicArray<T> in_buffer_imag(NTuple(imag.dimensions()[dim],1));
-    BasicArray<T> out_buffer_real(NTuple(out,1));
-    BasicArray<T> out_buffer_imag(NTuple(out,1));
-    while (source_real.isValid() && dest_real.isValid()) {
-      for (index_t i=1;i<=source_real.size();i++) {
-	in_buffer_real[i] = source_real.get();
-	in_buffer_imag[i] = source_imag.get();
-	source_real.next(); source_imag.next();
-      }
-      Op::func(in_buffer_real,in_buffer_imag,
-	       out_buffer_real,out_buffer_imag);
-      for (index_t i=1;i<=out;i++) {
-	dest_real.set(out_buffer_real[i]);
-	dest_imag.set(out_buffer_imag[i]);
-	dest_real.next(); dest_imag.next();
-      }
-      source_real.nextSlice(); source_imag.nextSlice();
-      dest_real.nextSlice(); dest_imag.nextSlice();
+    Op::func(in_buffer_real,in_buffer_imag,
+	     out_buffer_real,out_buffer_imag);
+    for (index_t i=1;i<=out;i++) {
+      dest_real.set(out_buffer_real[i]);
+      dest_imag.set(out_buffer_imag[i]);
+      dest_real.next(); dest_imag.next();
     }
+    source_real.nextSlice(); source_imag.nextSlice();
+    dest_real.nextSlice(); dest_imag.nextSlice();
   }
   return Array(F_real,F_imag);
 }
@@ -645,31 +626,21 @@ template <typename T, class Op>
 static inline Array VectorOp(const BasicArray<T> &real, index_t out, int dim) {
   NTuple outdims(real.dimensions()); outdims[dim] = out;
   BasicArray<T> F(outdims); 
-  if (dim == 0) {
-    ConstBasicIterator<T> source(&real,dim);
-    BasicIterator<T> dest(&F,dim);
-    while (source.isValid() && dest.isValid()) {
-      Op::func(real.slice(source.pos()),F.slice(dest.pos()));
-      source.nextSlice(); dest.nextSlice();
+  ConstBasicIterator<T> source(&real,dim);
+  BasicIterator<T> dest(&F,dim);
+  BasicArray<T> in_buffer(NTuple(real.dimensions()[dim],1));
+  BasicArray<T> out_buffer(NTuple(out,1));
+  while (source.isValid() && dest.isValid()) {
+    for (index_t i=1;i<=source.size();i++) {
+      in_buffer[i] = source.get();
+      source.next();
     }
-    F.unslice();
-  } else {
-    ConstBasicIterator<T> source(&real,dim);
-    BasicIterator<T> dest(&F,dim);
-    BasicArray<T> in_buffer(NTuple(real.dimensions()[dim],1));
-    BasicArray<T> out_buffer(NTuple(out,1));
-    while (source.isValid() && dest.isValid()) {
-      for (index_t i=1;i<=source.size();i++) {
-	in_buffer[i] = source.get();
-	source.next();
-      }
-      Op::func(in_buffer,out_buffer);
-      for (index_t i=1;i<=out;i++) {
-	dest.set(out_buffer[i]);
-	dest.next();
-      }
-      source.nextSlice(); dest.nextSlice();
+    Op::func(in_buffer,out_buffer);
+    for (index_t i=1;i<=out;i++) {
+      dest.set(out_buffer[i]);
+      dest.next();
     }
+    source.nextSlice(); dest.nextSlice();
   }
   return Array(F);
 }
@@ -711,54 +682,35 @@ static inline Array BiVectorOp(const BasicArray<T> &real,
   BasicArray<T> F_real(outdims); 
   BasicArray<T> F_imag(outdims);
   BasicArray<index_t> Ddata(outdims);
-  if (dim == 0) {
-    ConstBasicIterator<T> source_real(&real,dim);
-    ConstBasicIterator<T> source_imag(&imag,dim);
-    BasicIterator<T> dest_real(&F_real,dim);
-    BasicIterator<T> dest_imag(&F_imag,dim);
-    BasicIterator<index_t> D_iter(&Ddata,dim);
-    while (source_real.isValid() && dest_real.isValid()) {
-      Op::func(real.slice(source_real.pos()),
-	       imag.slice(source_imag.pos()),
-	       F_real.slice(dest_real.pos()),
-	       F_imag.slice(dest_imag.pos()),
-	       Ddata.slice(D_iter.pos()));
-      source_real.nextSlice(); source_imag.nextSlice();
-      dest_real.nextSlice(); dest_imag.nextSlice();
-      D_iter.nextSlice();
+  ConstBasicIterator<T> source_real(&real,dim);
+  ConstBasicIterator<T> source_imag(&imag,dim);
+  BasicIterator<T> dest_real(&F_real,dim);
+  BasicIterator<T> dest_imag(&F_imag,dim);
+  BasicArray<T> in_buffer_real(NTuple(real.dimensions()[dim],1));
+  BasicArray<T> in_buffer_imag(NTuple(imag.dimensions()[dim],1));
+  BasicArray<T> out_buffer_real(NTuple(out,1));
+  BasicArray<T> out_buffer_imag(NTuple(out,1));
+  BasicArray<index_t> out_buffer_index(NTuple(out,1));
+  BasicIterator<index_t> D_iter(&Ddata,dim);
+  while (source_real.isValid() && dest_real.isValid()) {
+    for (index_t i=1;i<=source_real.size();i++) {
+      in_buffer_real[i] = source_real.get();
+      in_buffer_imag[i] = source_imag.get();
+      source_real.next(); source_imag.next();
     }
-    F_real.unslice(); F_imag.unslice(); Ddata.unslice();
-  } else {
-    ConstBasicIterator<T> source_real(&real,dim);
-    ConstBasicIterator<T> source_imag(&imag,dim);
-    BasicIterator<T> dest_real(&F_real,dim);
-    BasicIterator<T> dest_imag(&F_imag,dim);
-    BasicArray<T> in_buffer_real(NTuple(real.dimensions()[dim],1));
-    BasicArray<T> in_buffer_imag(NTuple(imag.dimensions()[dim],1));
-    BasicArray<T> out_buffer_real(NTuple(out,1));
-    BasicArray<T> out_buffer_imag(NTuple(out,1));
-    BasicArray<index_t> out_buffer_index(NTuple(out,1));
-    BasicIterator<index_t> D_iter(&Ddata,dim);
-    while (source_real.isValid() && dest_real.isValid()) {
-      for (index_t i=1;i<=source_real.size();i++) {
-	in_buffer_real[i] = source_real.get();
-	in_buffer_imag[i] = source_imag.get();
-	source_real.next(); source_imag.next();
-      }
-      Op::func(in_buffer_real,in_buffer_imag,
-	       out_buffer_real,out_buffer_imag,
-	       out_buffer_index);
-      for (index_t i=1;i<=out;i++) {
-	dest_real.set(out_buffer_real[i]);
-	dest_imag.set(out_buffer_imag[i]);
-	D_iter.set(out_buffer_index[i]);
-	dest_real.next(); dest_imag.next();
-	D_iter.next();
-      }
-      source_real.nextSlice(); source_imag.nextSlice();
-      dest_real.nextSlice(); dest_imag.nextSlice();
-      D_iter.nextSlice();
+    Op::func(in_buffer_real,in_buffer_imag,
+	     out_buffer_real,out_buffer_imag,
+	     out_buffer_index);
+    for (index_t i=1;i<=out;i++) {
+      dest_real.set(out_buffer_real[i]);
+      dest_imag.set(out_buffer_imag[i]);
+      D_iter.set(out_buffer_index[i]);
+      dest_real.next(); dest_imag.next();
+      D_iter.next();
     }
+    source_real.nextSlice(); source_imag.nextSlice();
+    dest_real.nextSlice(); dest_imag.nextSlice();
+    D_iter.nextSlice();
   }
   D = Array(Ddata);
   return Array(F_real,F_imag);
@@ -825,36 +777,25 @@ static inline Array BiVectorOp(const BasicArray<T> &real, index_t out, int dim,
   NTuple outdims(real.dimensions()); outdims[dim] = out;
   BasicArray<T> F(outdims); 
   BasicArray<index_t> Ddata(outdims);
-  if (dim == 0) {
-    ConstBasicIterator<T> source(&real,dim);
-    BasicIterator<T> dest(&F,dim);
-    BasicIterator<index_t> destD(&Ddata,dim);
-    while (source.isValid() && dest.isValid() && destD.isValid()) {
-      Op::func(real.slice(source.pos()),F.slice(dest.pos()),Ddata.slice(destD.pos()));
-      source.nextSlice(); dest.nextSlice(); destD.nextSlice();
+  ConstBasicIterator<T> source(&real,dim);
+  BasicIterator<T> dest(&F,dim);
+  BasicIterator<index_t> destD(&Ddata,dim);
+  BasicArray<T> in_buffer(NTuple(real.dimensions()[dim],1));
+  BasicArray<T> out_buffer1(NTuple(out,1));
+  BasicArray<index_t> out_buffer2(NTuple(out,1));
+  while (source.isValid() && dest.isValid() && destD.isValid()) {
+    for (index_t i=1;i<=source.size();i++) {
+      in_buffer[i] = source.get();
+      source.next();
     }
-    F.unslice(); Ddata.unslice();
-  } else {
-    ConstBasicIterator<T> source(&real,dim);
-    BasicIterator<T> dest(&F,dim);
-    BasicIterator<index_t> destD(&Ddata,dim);
-    BasicArray<T> in_buffer(NTuple(real.dimensions()[dim],1));
-    BasicArray<T> out_buffer1(NTuple(out,1));
-    BasicArray<index_t> out_buffer2(NTuple(out,1));
-    while (source.isValid() && dest.isValid() && destD.isValid()) {
-      for (index_t i=1;i<=source.size();i++) {
-	in_buffer[i] = source.get();
-	source.next();
-      }
-      Op::func(in_buffer,out_buffer1,out_buffer2);
-      for (index_t i=1;i<=out;i++) {
-	dest.set(out_buffer1[i]);
-	destD.set(out_buffer2[i]);
-	dest.next();
-	destD.next();
-      }
-      source.nextSlice(); dest.nextSlice(); destD.nextSlice();
+    Op::func(in_buffer,out_buffer1,out_buffer2);
+    for (index_t i=1;i<=out;i++) {
+      dest.set(out_buffer1[i]);
+      destD.set(out_buffer2[i]);
+      dest.next();
+      destD.next();
     }
+    source.nextSlice(); dest.nextSlice(); destD.nextSlice();
   }
   D = Array(Ddata);
   return Array(F);

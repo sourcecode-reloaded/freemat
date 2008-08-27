@@ -29,48 +29,48 @@
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 template <typename T>
-static void Tsyev(char *JOBZ, char *UPLO, int *N, T *A, int *LDA, 
-		  T *W, T *WORK, int *LWORK, int *INFO);
+void Tsyev(char *JOBZ, char *UPLO, int *N, T *A, int *LDA, 
+	   T *W, T *WORK, int *LWORK, int *INFO);
 
 template <>
-static void Tsyev(char *JOBZ, char *UPLO, int *N, float *A, int *LDA, 
-		  float *W, float *WORK, int *LWORK, int *INFO) {
+void Tsyev(char *JOBZ, char *UPLO, int *N, float *A, int *LDA, 
+	   float *W, float *WORK, int *LWORK, int *INFO) {
   return ssyev_(JOBZ,UPLO,N,A,LDA,W,WORK,LWORK,INFO);
 }
 
 template <>
-static void Tsyev(char *JOBZ, char *UPLO, int *N, double *A, int *LDA, 
-		  double *W, double *WORK, int *LWORK, int *INFO) {
+void Tsyev(char *JOBZ, char *UPLO, int *N, double *A, int *LDA, 
+	   double *W, double *WORK, int *LWORK, int *INFO) {
   return dsyev_(JOBZ,UPLO,N,A,LDA,W,WORK,LWORK,INFO);
 }
 
 template <typename T>
 static void Tgeevx(char * BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
-	       int* N, T* A, int* LDA, T* W, T* VL, 
-	       int *LDVL, T* VR, int *LDVR, int *ILO,
-	       int *IHI, T* SCALE, T* ABNRM, T* RCONDE,
-	       T* RCONDV, T *WORK, int *LWORK, T *RWORK,
-	       int *INFO);
+		   int* N, T* A, int* LDA, T* W, T* VL, 
+		   int *LDVL, T* VR, int *LDVR, int *ILO,
+		   int *IHI, T* SCALE, T* ABNRM, T* RCONDE,
+		   T* RCONDV, T *WORK, int *LWORK, T *RWORK,
+		   int *INFO);
 
 template <>
-static void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
-		   int* N, float* A, int* LDA, float* W, float* VL, 
-		   int *LDVL, float* VR, int *LDVR, int *ILO,
-		   int *IHI, float* SCALE, float* ABNRM, float* RCONDE,
-		   float* RCONDV, float *WORK, int *LWORK, float *RWORK,
-		   int *INFO) {
+void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
+	    int* N, float* A, int* LDA, float* W, float* VL, 
+	    int *LDVL, float* VR, int *LDVR, int *ILO,
+	    int *IHI, float* SCALE, float* ABNRM, float* RCONDE,
+	    float* RCONDV, float *WORK, int *LWORK, float *RWORK,
+	    int *INFO) {
   return cgeevx_( BALANC, JOBVL, JOBVR, SENSE, N, A, LDA, W,
 		  VL, LDVL, VR, LDVR, ILO, IHI, SCALE, ABNRM,
 		  RCONDE, RCONDV, WORK, LWORK, RWORK, INFO );
 }
 
 template <>
-static void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
-		   int* N, double* A, int* LDA, double* W, double* VL, 
-		   int *LDVL, double* VR, int *LDVR, int *ILO,
-		   int *IHI, double* SCALE, double* ABNRM, double* RCONDE,
-		   double* RCONDV, double *WORK, int *LWORK, double *RWORK,
-		   int *INFO) {
+void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
+	    int* N, double* A, int* LDA, double* W, double* VL, 
+	    int *LDVL, double* VR, int *LDVR, int *ILO,
+	    int *IHI, double* SCALE, double* ABNRM, double* RCONDE,
+	    double* RCONDV, double *WORK, int *LWORK, double *RWORK,
+	    int *INFO) {
   return zgeevx_( BALANC, JOBVL, JOBVR, SENSE, N, A, LDA, W,
 		  VL, LDVL, VR, LDVR, ILO, IHI, SCALE, ABNRM,
 		  RCONDE, RCONDV, WORK, LWORK, RWORK, INFO );
@@ -85,73 +85,73 @@ static void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE,
 		   int *INFO);
 
 template <>
-static void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
-		   int* N, float* A, int* LDA, float* WR, float* WI,
-		   float* VL, int *LDVL, float* VR, int *LDVR, int *ILO,
-		   int *IHI, float* SCALE, float* ABNRM, float* RCONDE,
-		   float* RCONDV, float *WORK, int *LWORK, int *IWORK,
-		   int *INFO) {
+void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
+	    int* N, float* A, int* LDA, float* WR, float* WI,
+	    float* VL, int *LDVL, float* VR, int *LDVR, int *ILO,
+	    int *IHI, float* SCALE, float* ABNRM, float* RCONDE,
+	    float* RCONDV, float *WORK, int *LWORK, int *IWORK,
+	    int *INFO) {
   return sgeevx_(BALANC,JOBVL,JOBVR,SENSE,N,A,LDA,WR,WI,
 		 VL,LDVL,VR,LDVR,ILO,IHI,SCALE,ABNRM,RCONDE,
 		 RCONDV,WORK,LWORK,IWORK,INFO);
 }
 
 template <>
-static void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
-		   int* N, double* A, int* LDA, double* WR, double* WI,
-		   double* VL, int *LDVL, double* VR, int *LDVR, int *ILO,
-		   int *IHI, double* SCALE, double* ABNRM, double* RCONDE,
-		   double* RCONDV, double *WORK, int *LWORK, int *IWORK,
-		   int *INFO) {
+void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
+	    int* N, double* A, int* LDA, double* WR, double* WI,
+	    double* VL, int *LDVL, double* VR, int *LDVR, int *ILO,
+	    int *IHI, double* SCALE, double* ABNRM, double* RCONDE,
+	    double* RCONDV, double *WORK, int *LWORK, int *IWORK,
+	    int *INFO) {
   return dgeevx_(BALANC,JOBVL,JOBVR,SENSE,N,A,LDA,WR,WI,
 		 VL,LDVL,VR,LDVR,ILO,IHI,SCALE,ABNRM,RCONDE,
 		 RCONDV,WORK,LWORK,IWORK,INFO);
 }
 
 template <typename T>
-static void Tggev(char *JOBVL, char *JOBVR, int *N, T *A, int *LDA, 
-		  T *B, int *LDB, T *ALPHAR, T *ALPHAI,
-		  T *BETA, T *VL, int *LDVL, T *VR, 
-		  int *LDVR, T *WORK, int *LWORK, int *INFO );
+void Tggev(char *JOBVL, char *JOBVR, int *N, T *A, int *LDA, 
+	   T *B, int *LDB, T *ALPHAR, T *ALPHAI,
+	   T *BETA, T *VL, int *LDVL, T *VR, 
+	   int *LDVR, T *WORK, int *LWORK, int *INFO );
 
 template <>
-static void Tggev(char *JOBVL, char *JOBVR, int *N, float *A, int *LDA, 
-		  float *B, int *LDB, float *ALPHAR, float *ALPHAI,
-		  float *BETA, float *VL, int *LDVL, float *VR, 
-		  int *LDVR, float *WORK, int *LWORK, int *INFO ) {
+void Tggev(char *JOBVL, char *JOBVR, int *N, float *A, int *LDA, 
+	   float *B, int *LDB, float *ALPHAR, float *ALPHAI,
+	   float *BETA, float *VL, int *LDVL, float *VR, 
+	   int *LDVR, float *WORK, int *LWORK, int *INFO ) {
   return sggev_(JOBVL,JOBVR,N,A,LDA,B,LDB,ALPHAR,ALPHAI,
 		BETA,VL,LDVL,VR,LDVR,WORK,LWORK,INFO);
 }
 
 template <>
-static void Tggev(char *JOBVL, char *JOBVR, int *N, double *A, int *LDA, 
-		  double *B, int *LDB, double *ALPHAR, double *ALPHAI,
-		  double *BETA, double *VL, int *LDVL, double *VR, 
-		  int *LDVR, double *WORK, int *LWORK, int *INFO ) {
+void Tggev(char *JOBVL, char *JOBVR, int *N, double *A, int *LDA, 
+	   double *B, int *LDB, double *ALPHAR, double *ALPHAI,
+	   double *BETA, double *VL, int *LDVL, double *VR, 
+	   int *LDVR, double *WORK, int *LWORK, int *INFO ) {
   return dggev_(JOBVL,JOBVR,N,A,LDA,B,LDB,ALPHAR,ALPHAI,
 		BETA,VL,LDVL,VR,LDVR,WORK,LWORK,INFO);
 }
 
 template <typename T>
-static void Tggev(char *JOBVL, char *JOBVR, int *N, T *A, int *LDA, 
-	      T *B, int *LDB, T *ALPHA, T *BETA, 
-	      T *VL, int *LDVL, T *VR, int *LDVR, 
-	      T *WORK, int *LWORK, T *RWORK, int *INFO );
+void Tggev(char *JOBVL, char *JOBVR, int *N, T *A, int *LDA, 
+	   T *B, int *LDB, T *ALPHA, T *BETA, 
+	   T *VL, int *LDVL, T *VR, int *LDVR, 
+	   T *WORK, int *LWORK, T *RWORK, int *INFO );
 
 template <>
-static void Tggev(char *JOBVL, char *JOBVR, int *N, float *A, int *LDA, 
-		  float *B, int *LDB, float *ALPHA, float *BETA, 
-		  float *VL, int *LDVL, float *VR, int *LDVR, 
-		  float *WORK, int *LWORK, float *RWORK, int *INFO ) {
+void Tggev(char *JOBVL, char *JOBVR, int *N, float *A, int *LDA, 
+	   float *B, int *LDB, float *ALPHA, float *BETA, 
+	   float *VL, int *LDVL, float *VR, int *LDVR, 
+	   float *WORK, int *LWORK, float *RWORK, int *INFO ) {
   return cggev_(JOBVL,JOBVR,N,A,LDA,B,LDB,ALPHA,BETA,VL,LDVL,VR,LDVR,
 		WORK,LWORK,RWORK,INFO);
 }
 
 template <>
-static void Tggev(char *JOBVL, char *JOBVR, int *N, double *A, int *LDA, 
-		  double *B, int *LDB, double *ALPHA, double *BETA, 
-		  double *VL, int *LDVL, double *VR, int *LDVR, 
-		  double *WORK, int *LWORK, double *RWORK, int *INFO ) {
+void Tggev(char *JOBVL, char *JOBVR, int *N, double *A, int *LDA, 
+	   double *B, int *LDB, double *ALPHA, double *BETA, 
+	   double *VL, int *LDVL, double *VR, int *LDVR, 
+	   double *WORK, int *LWORK, double *RWORK, int *INFO ) {
   return zggev_(JOBVL,JOBVR,N,A,LDA,B,LDB,ALPHA,BETA,VL,LDVL,VR,LDVR,
 		WORK,LWORK,RWORK,INFO);  
 }
@@ -162,15 +162,15 @@ static void Tsygv(int *ITYPE, char *JOBZ, char *UPLO, int *N, T *A,
 		  int *LWORK, int *INFO );
 
 template <>
-static void Tsygv(int *ITYPE, char *JOBZ, char *UPLO, int *N, float *A, 
-		  int *LDA, float *B, int *LDB, float *W, float *WORK,
-		  int *LWORK, int *INFO ) {
+void Tsygv(int *ITYPE, char *JOBZ, char *UPLO, int *N, float *A, 
+	   int *LDA, float *B, int *LDB, float *W, float *WORK,
+	   int *LWORK, int *INFO ) {
   return ssygv_(ITYPE,JOBZ,UPLO,N,A,LDA,B,LDB,W,WORK,LWORK,INFO);
 }
 
 template <>
-static void Tsygv(int *ITYPE, char *JOBZ, char *UPLO, int *N, double *A, 
-		  int *LDA, double *B, int *LDB, double *W, double *WORK,
+void Tsygv(int *ITYPE, char *JOBZ, char *UPLO, int *N, double *A, 
+	   int *LDA, double *B, int *LDB, double *W, double *WORK,
 	   int *LWORK, int *INFO ) {
   return dsygv_(ITYPE,JOBZ,UPLO,N,A,LDA,B,LDB,W,WORK,LWORK,INFO);
 }
@@ -180,13 +180,13 @@ static void Theev(char *JOBZ, char *UPLO, int *N, T *A, int *LDA,
 		  T *W, T *WORK, int *LWORK, T *RWORK, int *INFO);
 
 template <>
-static void Theev(char *JOBZ, char *UPLO, int *N, float *A, int *LDA, 
+void Theev(char *JOBZ, char *UPLO, int *N, float *A, int *LDA, 
 		  float *W, float *WORK, int *LWORK, float *RWORK, int *INFO) {
   return cheev_(JOBZ,UPLO,N,A,LDA,W,WORK,LWORK,RWORK,INFO);
 }
 
 template <>
-static void Theev(char *JOBZ, char *UPLO, int *N, double *A, int *LDA, 
+void Theev(char *JOBZ, char *UPLO, int *N, double *A, int *LDA, 
 		  double *W, double *WORK, int *LWORK, double *RWORK, int *INFO) {
   return zheev_(JOBZ,UPLO,N,A,LDA,W,WORK,LWORK,RWORK,INFO);
 }
@@ -197,14 +197,14 @@ static void Thegv(int *ITYPE, char *JOBZ, char *UPLO, int *N, T *A,
 	   int *LWORK, T *RWORK, int *INFO );
 
 template <>
-static void Thegv(int *ITYPE, char *JOBZ, char *UPLO, int *N, float *A, 
+void Thegv(int *ITYPE, char *JOBZ, char *UPLO, int *N, float *A, 
 		  int *LDA, float *B, int *LDB, float *W, float *WORK,
 	   int *LWORK, float *RWORK, int *INFO ) {
   return chegv_(ITYPE,JOBZ,UPLO,N,A,LDA,B,LDB,W,WORK,LWORK,RWORK,INFO);
 }
 
 template <>
-static void Thegv(int *ITYPE, char *JOBZ, char *UPLO, int *N, double *A, 
+void Thegv(int *ITYPE, char *JOBZ, char *UPLO, int *N, double *A, 
 		  int *LDA, double *B, int *LDB, double *W, double *WORK,
 	   int *LWORK, double *RWORK, int *INFO ) {
   return zhegv_(ITYPE,JOBZ,UPLO,N,A,LDA,B,LDB,W,WORK,LWORK,RWORK,INFO);

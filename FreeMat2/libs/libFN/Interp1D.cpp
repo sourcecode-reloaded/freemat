@@ -296,7 +296,7 @@ static BasicArray<T> Lint(const BasicArray<T> &x1, const BasicArray<T> &y1, cons
 //@figure interplin1_2
 //@@Signature
 //function interplin1 Interplin1Function
-//inputs x1 y1 xi
+//inputs x1 y1 xi extrapflag
 //outputs yi
 //!
 ArrayVector Interplin1Function(int nargout, const ArrayVector& arg) {

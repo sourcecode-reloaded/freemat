@@ -23,7 +23,7 @@
 % Licensed under the GPL
 
 function y = deg2rad(x)
-  if (isa(x,'float') || isa(x,'complex'))
+  if (isa(x,'single'))
     y = x*float(pi/180);
   else
     y = x*pi/180;

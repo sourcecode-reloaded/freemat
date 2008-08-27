@@ -11,14 +11,14 @@ static void Tgesdd(char* JOBS, int* M, int *N, T* A, int *LDA, T *S,
 		   int *LWORK, int *IWORK, int *INFO);
 
 template <>
-static void Tgesdd(char* JOBS, int* M, int *N, float* A, int *LDA, float *S, 
+void Tgesdd(char* JOBS, int* M, int *N, float* A, int *LDA, float *S, 
 		   float *U, int *LDU, float *VT, int *LDVT, float *WORK,
 		   int *LWORK, int *IWORK, int *INFO) {
   sgesdd_(JOBS,M,N,A,LDA,S,U,LDU,VT,LDVT,WORK,LWORK,IWORK,INFO);
 }
 
 template <>
-static void Tgesdd(char* JOBS, int* M, int *N, double* A, int *LDA, double *S, 
+void Tgesdd(char* JOBS, int* M, int *N, double* A, int *LDA, double *S, 
 		   double *U, int *LDU, double *VT, int *LDVT, double *WORK,
 		   int *LWORK, int *IWORK, int *INFO) {
   dgesdd_(JOBS,M,N,A,LDA,S,U,LDU,VT,LDVT,WORK,LWORK,IWORK,INFO);
@@ -30,14 +30,14 @@ static void Tgesdd(char* JOBS, int* M, int *N, T* A, int *LDA, T *S,
 		   int *LWORK, T *RWORK, int *IWORK, int *INFO);
 
 template <>
-static void Tgesdd(char* JOBS, int* M, int *N, float* A, int *LDA, float *S, 
+void Tgesdd(char* JOBS, int* M, int *N, float* A, int *LDA, float *S, 
 		   float *U, int *LDU, float *VT, int *LDVT, float *WORK,
 		   int *LWORK, float *RWORK, int *IWORK, int *INFO) {
   cgesdd_(JOBS,M,N,A,LDA,S,U,LDU,VT,LDVT,WORK,LWORK,RWORK,IWORK,INFO);
 }
 
 template <>
-static void Tgesdd(char* JOBS, int* M, int *N, double* A, int *LDA, double *S, 
+void Tgesdd(char* JOBS, int* M, int *N, double* A, int *LDA, double *S, 
 		   double *U, int *LDU, double *VT, int *LDVT, double *WORK,
 		   int *LWORK, double *RWORK, int *IWORK, int *INFO) {
   zgesdd_(JOBS,M,N,A,LDA,S,U,LDU,VT,LDVT,WORK,LWORK,RWORK,IWORK,INFO);

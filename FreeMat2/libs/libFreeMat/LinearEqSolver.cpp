@@ -45,7 +45,7 @@ static void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS,
 		   T * WORK, int * IWORK, int * INFO);
 
 template <>
-static void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS, 
+void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS, 
 		   float *A, int * LDA, float * AF, int * LDAF, 
 		   int * IPIV, char * EQUED, float * R, float * C, 
 		   float * B, int * LDB, float * X, int * LDX, 
@@ -56,7 +56,7 @@ static void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS,
 }
 
 template <>
-static void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS, 
+void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS, 
 		   double *A, int * LDA, double * AF, int * LDAF, 
 		   int * IPIV, char * EQUED, double * R, double * C, 
 		   double * B, int * LDB, double * X, int * LDX, 
@@ -75,7 +75,7 @@ static void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS,
 		   T * WORK, T * RWORK, int * INFO);
 
 template <>
-static void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS, 
+void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS, 
 		   float *A, int * LDA, float * AF, int * LDAF, 
 		   int * IPIV, char * EQUED, float * R, float * C, 
 		   float * B, int * LDB, float * X, int * LDX, 
@@ -86,7 +86,7 @@ static void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS,
 }
 
 template <>
-static void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS, 
+void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS, 
 		   double *A, int * LDA, double * AF, int * LDAF, 
 		   int * IPIV, char * EQUED, double * R, double * C, 
 		   double * B, int * LDB, double * X, int * LDX, 

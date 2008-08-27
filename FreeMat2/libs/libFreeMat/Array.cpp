@@ -4,10 +4,11 @@
 #include "Struct.hpp"
 #include "Algorithms.hpp"
 #include "Cast.hpp"
+#include "Math.hpp"
 
 static void Warn(const char *msg) {
 #warning FIXME
-  std::cout << "Warning:" << msg;
+  //  std::cout << "Warning:" << msg;
 }
 
 template <typename T>
@@ -278,21 +279,27 @@ void Array::set(const NTuple& index, const Array& data) {
 // and A is a basic array of simple types (excludes strings, cell arrays, and structs).
 template <typename S, typename T>
 static inline void Tset(Array* ptr, S ndx, const Array& data) {
-  if (ptr->isSparse()) {
-    Set(ptr->realSparse<T>(),ndx,ToRealSparse<T>(data));
-    if (!data.allReal())
-      Set(ptr->imagSparse<T>(),ndx,ToImagSparse<T>(data));
-    return;
-  }
   Array dataTyped(data.toClass(ptr->dataClass()));
   if (dataTyped.isScalar()) {
-    Set(ptr->real<T>(),ndx,dataTyped.constRealScalar<T>());
+    if (ptr->isSparse())
+      Set(ptr->realSparse<T>(),ndx,dataTyped.constRealScalar<T>());
+    else
+      Set(ptr->real<T>(),ndx,dataTyped.constRealScalar<T>());
     if (!dataTyped.allReal()) 
-      Set(ptr->imag<T>(),ndx,dataTyped.constImagScalar<T>());
+      if (ptr->isSparse())
+	Set(ptr->imagSparse<T>(),ndx,dataTyped.constImagScalar<T>());
+      else
+	Set(ptr->imag<T>(),ndx,dataTyped.constImagScalar<T>());
   } else {
-    Set(ptr->real<T>(),ndx,dataTyped.constReal<T>());
+    if (ptr->isSparse())
+      Set(ptr->realSparse<T>(),ndx,ToRealSparse<T>(data));
+    else
+      Set(ptr->real<T>(),ndx,dataTyped.constReal<T>());
     if (!dataTyped.allReal()) 
-      Set(ptr->imag<T>(),ndx,dataTyped.constImag<T>());
+      if (ptr->isSparse())
+	Set(ptr->imagSparse<T>(),ndx,ToImagSparse<T>(data));
+      else
+	Set(ptr->imag<T>(),ndx,dataTyped.constImag<T>());
   }
 }
 
@@ -570,6 +577,26 @@ bool Array::isUserClass() const {
   return ((dataClass() == Struct) && constStructPtr().isUserClass());;
 }
 
+template <typename T>
+inline static const Array BcastComplex(const Array *ptr) {
+  Array real(Real(*ptr).toClass(Bool));
+  Array imag(Imag(*ptr).toClass(Bool));
+  return Or(real,imag);
+}
+
+#define MacroBCastComplex(ctype,cls) \
+  case cls: return BcastComplex<ctype>(ptr);
+
+// Special case the complex-to-bool cast, as it has special rules
+static Array BoolCastComplex(const Array *ptr) {
+  switch (ptr->dataClass()) {
+  default: Exception("Cannot convert given array to logical type");
+  MacroExpandCasesNoCell(MacroBCastComplex);
+  }
+}
+
+#undef MacroBCastComplex
+
 #define MacroTcast(ctype,cls) \
   case cls: return Tcast<T,ctype>(t,ptr);
 
@@ -578,7 +605,7 @@ inline static const Array TcastCase(DataClass t, const Array *ptr) {
   switch (ptr->dataClass()) {
   default:
     throw Exception("Cannot perform type conversions with this type");
-    MacroExpandCasesSimple(MacroTcast);
+    MacroExpandCases(MacroTcast);
     MacroTcast(QChar,StringArray);
   }
 }
@@ -591,6 +618,7 @@ inline static const Array TcastCase(DataClass t, const Array *ptr) {
 const Array Array::toClass(DataClass t) const {
   if (dataClass() == t) return *this;
   if (isEmpty()) return Array(t,dimensions());
+  if ((t == Bool) && (!allReal())) return BoolCastComplex(this);
   switch (t) {
   default:
     throw Exception("unhandled case for type conversion");
@@ -703,6 +731,8 @@ const Array Array::get(const ArrayVector& index) const {
 }
 
 void Array::set(const Array& index, const Array& data) {
+  if (isEmpty() && dataClass() != data.dataClass())
+    *this = toClass(data.dataClass());
   if (index.isScalar() && (index.dataClass() != Bool)
       && (index.dataClass() != StringArray)) {
     if (!index.allReal())
@@ -714,6 +744,8 @@ void Array::set(const Array& index, const Array& data) {
 }
 
 void Array::set(const ArrayVector& index, const Array& data) {
+  if (isEmpty() && dataClass() != data.dataClass())
+    *this = toClass(data.dataClass());
   if (AllNonBoolScalars(index)) {
     NTuple addr(1,1);
     for (int i=0;i<index.size();i++)

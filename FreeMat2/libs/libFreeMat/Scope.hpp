@@ -26,6 +26,7 @@
 #include <string>
 #include <QMutex>
 #include <QHash>
+#include <algorithm>
 
 #include "Array.hpp"
 #include "Types.hpp"

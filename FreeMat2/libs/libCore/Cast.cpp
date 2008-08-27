@@ -774,7 +774,7 @@ ArrayVector DcomplexFunction(int nargout, const ArrayVector& arg) {
 //% Check the typeof function for integer types
 //function test_val = test_typeof1
 //a = 2;
-//test_val = test(strcmp(typeof(a),'int32'));
+//test_val = test(strcmp(typeof(a),'double'));
 //@}
 //@{ test_typeof2.m
 //% Check the typeof function for double types
@@ -786,19 +786,19 @@ ArrayVector DcomplexFunction(int nargout, const ArrayVector& arg) {
 //% Check the typeof function for float types
 //function test_val = test_typeof3
 //a = 2.0f;
-//test_val = test(strcmp(typeof(a),'float'));
+//test_val = test(strcmp(typeof(a),'single'));
 //@}
 //@{ test_typeof4.m
 //% Check the typeof function for complex types
 //function test_val = test_typeof4
 //a = 2.0f + i;
-//test_val = test(strcmp(typeof(a),'complex'));
+//test_val = test(strcmp(typeof(a),'single'));
 //@}
 //@{ test_typeof5.m
 //% Check the typeof function for dcomplex types
 //function test_val = test_typeof5
 //a = 2.0 + i;
-//test_val = test(strcmp(typeof(a),'dcomplex'));
+//test_val = test(strcmp(typeof(a),'double'));
 //@}
 //@@Signature
 //function typeof TypeOfFunction

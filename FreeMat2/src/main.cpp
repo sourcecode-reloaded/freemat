@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
     app = new QCoreApplication(argc, argv);
     QSettings settings("FreeMat","FreeMat");
     settings.setValue("root",argv[installMode+1]);
-    std::cout << "FreeMat root path set to '" << argv[installMode+1] << "'\n";
+    //    std::cout << "FreeMat root path set to '" << argv[installMode+1] << "'\n";
     return 0;
   }
 
