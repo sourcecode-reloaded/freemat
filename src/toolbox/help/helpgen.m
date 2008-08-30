@@ -101,9 +101,9 @@ function merge_mfile(filename)
       while (isempty(regexp(text,'^\s*%!')))
         text = getline(h);
       end
-      fprintf(g,'%s',strrep(headertext,'\','\\'));
+      fprintf(g,'%s',headertext);
     else
-      fprintf(g,'%s',strrep(text,'\','\\'));
+      fprintf(g,'%s',text);
     end
     text = getline(h);
   end
@@ -255,7 +255,6 @@ function handle_filedump(&line,fp,pset,&writers)
     fn = [fn mustmatch(line,pset.ccomment)];
     line = getline(fp);
   end
-  fn = strrep(fn,'\','\\');
   genfiles = [genfiles,{fname}];
   zp = fopen(fname,'w');
   fprintf(zp,'%s',fn);

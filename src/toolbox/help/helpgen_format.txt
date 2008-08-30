@@ -1,0 +1,40 @@
+Helpgen is able to parse *.m and *.cpp files and detect "magic" comment format specifiers. The "magic" comments are then converted into documentation, sanity tests and separate regression test scripts. 
+
+Format of the comments that are processed by helpgen.
+
+Documentation block: delimits the start and end of the "magic" comment block.
+The documentation block begins and ends with comment string that starts with exclamation point character "!".
+
+Example:
+Matlab:
+%!
+%@Module INTRODUCTION This is a doc block.
+%!
+
+C/C++:
+//!
+//@Module INTRODUCTION This is a doc block.
+//!
+
+Module Name: subsection name. 
+For a function module name would be the function name. Module name starts with "@Module" followed by module name and description.
+
+Example:
+Matlab:
+%@Module IMAGE Image Display Function
+
+C/C++:
+//@Module IMAGE Image Display Function
+
+Section Name: name of the help section where the module help will be placed. 
+Possible section names are listed in file "section_descriptors.txt" (if you are adding a new section name you have to edit that file). Section name starts with "@@Section" followed by the section name.
+
+Example:
+Matlab:
+%@@Section HANDLE
+
+C/C++:
+//@@Section HANDLE
+
+Usage section: text that you want to go into help document.
+Usage section starts with "@@Usage"

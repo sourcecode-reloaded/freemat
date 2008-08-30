@@ -17,10 +17,6 @@ function endmodule(&p)
       fprintf(fp,'\\[\n');
       g = p.eqnlist{i};
       if (g(end) == 10) g = g(1:(end-1)); end
-      g = strrep(g,'\\','\\\\');
-      g = strrep(g,'\r','\\r');
-      g = strrep(g,'\t','\\t');
-      g = strrep(g,'\n','\\n');
       fprintf(fp,'%s\n',g);
       fprintf(fp,'\\]\n');
       fprintf(fp,'\\pagebreak\n');
