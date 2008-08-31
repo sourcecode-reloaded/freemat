@@ -2360,10 +2360,10 @@ void PrintfHelperFunction(int nargout, const ArrayVector& arg, PrintfStream& out
 //l
 //@>
 //@@Tests
-//@$"s=sprintf('hello %d',5)","'hello 5'","exact"
-//@$"s=sprintf('%d aa %s',5,'bcd')","'5 aa bcd'","exact"
-//@$"s=sprintf('%d %%aa %s %f',5,'bcd',5","'5 %aa bcd 5.000000'","exact"
-//@$"s=sprintf('%d aa ',[5 6; 7 8])","'5 aa 7 aa 6 aa 8 aa '","exact"
+//@$"y=sprintf('hello %d',5)","'hello 5'","exact"
+//@$"y=sprintf('%d aa %s',5,'bcd')","'5 aa bcd'","exact"
+//@$"y=sprintf('%d %%aa %s %f',5,'bcd',5)","'5 %aa bcd 5.000000'","exact"
+//@$"y=sprintf('%d aa ',[5 6; 7 8])","'5 aa 7 aa 6 aa 8 aa '","exact"
 //!
 ArrayVector SprintfFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0)
