@@ -543,9 +543,9 @@ static inline Array UnaryOp(const Array &Ain, DataClass Tclass) {
 template <class Op>
 static inline Array UnaryOp(const Array &Ain) {
   if (Ain.dataClass() == Float)
-    return UnaryOp<float,Op>(Ain,Float).toClass(Ain.dataClass());
+    return UnaryOp<float,Op>(Ain,Float);
   else
-    return UnaryOp<double,Op>(Ain,Double).toClass(Ain.dataClass());
+    return UnaryOp<double,Op>(Ain,Double);
 }
 
 template <typename T, class Op>

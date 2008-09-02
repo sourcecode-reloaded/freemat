@@ -30,7 +30,7 @@ Array Vectorize(const Array& arg);
 
 template <typename T>
 BasicArray<T> ToBasicArray(const QVector<T> &x) {
-  BasicArray<T> retvec(NTuple(1,index_t(x.size())));
+  BasicArray<T> retvec(NTuple(index_t(x.size()),1));
   for (int i=0;i<x.size();i++)
     retvec[index_t(i)+1] = x[i];
   return retvec;

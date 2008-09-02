@@ -1066,6 +1066,7 @@ private:
   friend class ImportedFunctionDef;
   friend class AnonymousFunctionDef;
   friend ArrayVector AnonFuncSubsrefFunction(int, const ArrayVector&, Interpreter*);
+  friend ArrayVector AnonFuncFevalFunction(int, const ArrayVector&, Interpreter*);
 };
 
 void sigInterrupt(int arg);

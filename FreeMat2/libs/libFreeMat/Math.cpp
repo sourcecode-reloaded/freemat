@@ -1942,12 +1942,10 @@ Array Multiply(const Array& A, const Array& B){
   if (A.columns() != B.rows()) 
     throw Exception("Requested matrix multiplication requires arguments to be conformant.");
 
-  if ((A.dataClass() == Float) && (B.dataClass() == Float)) {
-    return Multiply<float>(A,B);
-  } else if ((A.dataClass() == Double) && (B.dataClass() == Double)) {
-    return Multiply<double>(A,B);
-  } else
-    throw Exception("Cannot multiply matrices of different types");
+  if ((A.dataClass() == Float) || (B.dataClass() == Float))
+    return Multiply<float>(A.toClass(Float),B.toClass(Float));
+  else 
+    return Multiply<double>(A.toClass(Double),B.toClass(Double));
 }
     
 /**
@@ -2353,8 +2351,8 @@ Array UnitColon(const Array& A, const Array& B) {
     throw Exception("Both arguments to (:) operator must be scalars.");
   if (A.isComplex() || B.isComplex())
     throw Exception("Both arguments to (:) operator must be real.");
-  if (!((A.dataClass() == Double) && (B.dataClass() == Double)))
-    throw Exception("All arguments to (:) operator must be of class double.");
+  if ((A.dataClass() == Float) || (B.dataClass() == Float))
+    return RangeConstructor(A.asDouble(),1,B.asDouble(),false).toClass(Float);
   return RangeConstructor(A.asDouble(),1,B.asDouble(),false);
 }
 
@@ -2364,7 +2362,7 @@ Array DoubleColon(const Array& A, const Array& B, const Array& C){
     throw Exception("All three arguments to (:) operator must be scalars.");
   if (A.isComplex() || B.isComplex() || C.isComplex())
     throw Exception("All arguments to (:) operator must be real.");
-  if (!((A.dataClass() == Double) && (B.dataClass() == Double) && (C.dataClass() == Double)))
-    throw Exception("All arguments to (:) operator must be of class double.");
+  if ((A.dataClass() == Float) || (B.dataClass() == Float) || (C.dataClass() == Float))
+    return RangeConstructor(A.asDouble(),B.asDouble(),C.asDouble(),false).toClass(Float);
   return RangeConstructor(A.asDouble(),B.asDouble(),C.asDouble(),false);
 }

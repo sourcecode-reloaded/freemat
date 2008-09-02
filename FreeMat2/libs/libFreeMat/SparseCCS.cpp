@@ -9,16 +9,16 @@
 //   3 3
 //   5 3
 
+// In: 1 1 2 2 3 3 3 3 4 5 5
+// out: 
+
 QVector<uint32> CompressCCSCols(const QVector<uint32> &cols, index_t colcount) {
   QVector<uint32> y(int(colcount+1));
-  int xp = 0;
-  for (int i=0;i<int(colcount);i++) {
-    if ((xp >= cols.size()) || (i < cols[xp]))
-      y[i+1] = y[i];
-    else {
-      while ((xp < cols.size()) && (cols[xp] == i)) xp++;
-      y[i+1] = xp-1;
-    }
+  // Scan through the columns
+  int mp=0;
+  for (int col=1;col<=(colcount+1);col++) {
+    while ((mp < cols.size()) && (cols[mp] < col)) mp++;
+    y[col-1] = mp;
   }
   return y;
 }

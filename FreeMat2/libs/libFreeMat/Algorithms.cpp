@@ -972,7 +972,7 @@ bool TestForCaseMatch(const Array &s, const Array &x) {
     throw Exception("Switch argument cannot be a reference type (struct or cell array)");
   // If x is a scalar, we just need to call the scalar version
   if (((x.dataClass() != CellArray) && x.isScalar()) || x.isString())
-    return (s == x);
+    return (s.toClass(Double) == x.toClass(Double));
   const BasicArray<Array> &xp(x.constReal<Array>());
   for (index_t i=1;i<=xp.length();i++) 
     if (s == xp[i]) return true;

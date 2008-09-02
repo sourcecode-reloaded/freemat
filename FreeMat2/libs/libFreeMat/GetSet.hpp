@@ -101,8 +101,8 @@ void Set(T& arg, const IndexArrayVector& index, const T& data) {
   
   if (secdims.count() != data.length())
     throw Exception("mismatch in size for assignment A(I1,I2,...) = B");
-  if (arg.dimensions() <= maxsze)
-    arg.resize(maxsze);
+  if (!(arg.dimensions() <= maxsze))
+    arg.resize(max(arg.dimensions(),maxsze));
   NTuple pos(1,1);
   index_t j=1;
   while (pos <= secdims) {
@@ -117,7 +117,7 @@ void Set(T& arg, const IndexArrayVector& index, const T& data) {
 template <typename T, typename S>
 void Set(T& arg, const IndexArrayVector& index, const S& data) {
   if (index.empty()) return;
-  if (isSliceIndexCase(index)) {
+  if (!arg.isEmpty() && isSliceIndexCase(index)) {
     SetSlice(arg,index,data);
     return;
   }
@@ -125,12 +125,15 @@ void Set(T& arg, const IndexArrayVector& index, const S& data) {
   NTuple secdims;
   NTuple maxsze;
   for (int i=0;i<index.size();i++) {
-    ndx.push_back(ExpandColons(index[i],arg.dimensions()[i]));
+    if (arg.isEmpty())
+      ndx.push_back(ExpandColons(index[i],1));
+    else
+      ndx.push_back(ExpandColons(index[i],arg.dimensions()[i]));
     secdims[i] = ndx[i].length();
     maxsze[i] = MaxValue(ndx[i]);
   }
-  if (arg.dimensions() <= maxsze)
-    arg.resize(maxsze);
+  if (!(arg.dimensions() <= maxsze))
+    arg.resize(max(arg.dimensions(),maxsze));
   NTuple pos(1,1);
   while (pos <= secdims) {
     NTuple qp;
@@ -145,8 +148,11 @@ template <typename T, typename S>
 void Set(T& arg, const IndexArray& index, const S& data) {
   if (index.isEmpty()) return;
   if (IsColonOp(index)) {
-    for (index_t i=1;i<=arg.length();i++) 
-      arg.set(i,data);
+    if (arg.isEmpty())
+      arg.set(1,data);
+    else
+      for (index_t i=1;i<=arg.length();i++) 
+	arg.set(i,data);
     return;
   } 
   index_t max_ndx = MaxValue(index);

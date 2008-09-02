@@ -189,8 +189,8 @@ struct OpExp {
     yi = expf(xr)*sinf(xi);
   }
   static void func(double xr, double xi, double &yr, double &yi) {
-    yr = exp(xr)*cosf(xi);
-    yi = exp(xr)*sinf(xi);
+    yr = exp(xr)*cos(xi);
+    yi = exp(xr)*sin(xi);
   }
 };
 
@@ -225,8 +225,8 @@ struct OpExpM1 {
     yi = expm1f(xr)*sinf(xi);
   }
   static void func(double xr, double xi, double &yr, double &yi) {
-    yr = expm1(xr)*cosf(xi);
-    yi = expm1(xr)*sinf(xi);
+    yr = expm1(xr)*cos(xi);
+    yi = expm1(xr)*sin(xi);
   }
 };
 

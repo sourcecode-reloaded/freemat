@@ -800,17 +800,18 @@ Array SolveLinearEq(const Array & A, const Array &B) {
     throw Exception("Solving Ax=B requires A be square (use least squares solver for rectangular matrices A");
   if (A.dataClass() != B.dataClass())
     throw Exception("Cannot mix arrays of different data classes in solving linear systems of equations");
-  if (A.isSparse() && ((A.dataClass() != Double) || (B.dataClass() != Double) || (B.isSparse())))
+  if (A.isSparse() && ((A.dataClass() != Double) || (B.dataClass() != Double)))
     throw Exception("Sparse matrix support is currently only for arrays of dataclass Double, with dense RHS");
   if (A.isSparse()) {
-    if (A.allReal() && B.allReal())
-      return SparseSolveLinEq(A.constRealSparse<double>(),B.constReal<double>());
+    Array Bdense = B.asDenseArray();
+    if (A.allReal() && Bdense.allReal())
+      return SparseSolveLinEq(A.constRealSparse<double>(),Bdense.constReal<double>());
     else {
       const Array &AComplex(A.asComplex());
-      const Array &BComplex(B.asComplex());
+      const Array &BComplex(Bdense.asComplex());
       return SparseSolveLinEq(A.constRealSparse<double>(),
 			      AComplex.constImagSparse<double>(),
-			      B.constReal<double>(),
+			      BComplex.constReal<double>(),
 			      BComplex.constImag<double>());
     }
   }

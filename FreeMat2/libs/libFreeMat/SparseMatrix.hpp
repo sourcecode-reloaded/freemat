@@ -142,9 +142,12 @@ public:
     SparseData<T> copy;
     index_t deleted_count = 0;
     for (index_t i=1;i<=cols();i++) {
-      if (delete_set.contains(uint64(i))) deleted_count++;
-      if (m_data.contains(i))
-	copy[i-deleted_count] = m_data[i];
+      if (delete_set.contains(uint64(i))) 
+	deleted_count++;
+      else {
+	if (m_data.contains(i))
+	  copy[i-deleted_count] = m_data[i];
+      }
     }
     m_dims = NTuple(m_dims[0],m_dims[1] - delete_set.count());
     m_data = copy;
@@ -219,9 +222,12 @@ public:
     SparseMatrix<T> ret(pos);
     ConstSparseIterator<T> source(this);
     while (source.isValid()) {
-      ret.set(dimensions().map(source.pos()),source.value());
-      source.next();
-    }
+      index_t col_number = source.col();
+      while (source.col() == col_number) {
+	ret.set(NTuple(source.row(),source.col()),source.value());
+	source.next();
+      }
+     }
     *this = ret;
   }
   void resize(index_t len) {

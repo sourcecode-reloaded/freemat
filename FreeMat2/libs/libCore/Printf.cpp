@@ -43,7 +43,29 @@ static char* validateScanFormatSpec(char* cp) {
 }
 
 QString ConvertEscapeSequences(const QString &src) {
-  return QString(src).replace("\\n","\n").replace("\\\\","\\").replace("\\t","\t").replace("\\r","\r");
+  QString dest;
+  int i=0;
+  while (i < src.size()) {
+    if ((src[i] != '\\') || (i == (src.size()-1))) {
+      dest += src[i];
+    } else {
+      if (src[i+1] == 'n') {
+	dest += '\n';
+	i++;
+      } else if (src[i+1] == 't') {
+	dest += '\t';
+	i++;
+      } else if (src[i+1] == 'r') {
+	dest += '\r';
+	i++;
+      } else {
+	dest += src[i+1];
+	i++;
+      }
+    }
+    i++;
+  }
+  return dest;
 }
   
 //Common routine used by sprintf,printf,fprintf.  They all

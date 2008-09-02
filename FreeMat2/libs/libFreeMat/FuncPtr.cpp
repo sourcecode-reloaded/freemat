@@ -118,3 +118,41 @@ ArrayVector FuncPtrSubsrefFunction(int nargout, const ArrayVector& arg, Interpre
   fptr->updateCode(eval);
   return (fptr->evaluateFunction(eval,fevalArgs,nargout));
 }
+
+//@@Signature
+//sfunction @functionpointer:feval FuncPtrFevalFunction
+//input x varargin
+//output varargout
+ArrayVector FuncPtrFevalFunction(int nargout, const ArrayVector& arg, Interpreter *eval) {
+  if (arg.size() == 0) return ArrayVector();
+  FuncPtr fptr = FuncPtrLookup(eval,arg[0]);
+  if (!fptr)
+    throw Exception("Unable to find a definition for function:" + 
+		    LOOKUP(arg[0],"name").asString());
+  ArrayVector fevalArgs;
+  for (int i=1;i<arg.size();i++) 
+    fevalArgs.push_back(arg[i]);
+  fptr->updateCode(eval);
+  return (fptr->evaluateFunction(eval,fevalArgs,nargout));
+  
+}
+
+//@@Signature
+//sfunction @functionpointer:subsasgn FuncPtrSubsasgnFunction
+//input x s y
+//output z
+ArrayVector FuncPtrSubsasgnFunction(int nargout, const ArrayVector &arg, Interpreter* eval) {
+  if (arg.size() < 3) throw Exception("subsasgn requires three input arguments");
+  Array x(arg[0]);
+  Array s(arg[1]);
+  Array y(arg[2]);
+  if (!y.isEmpty() && (!y.isUserClass() || y.className() != "functionpointer"))
+    throw Exception("cannot convert arrays to function pointer type");
+  if (LOOKUP(s,"type").asString() != "()")
+    throw Exception("for function pointers, only p(x) = y is defined");
+  const Array &sub(LOOKUP(s,"subs"));
+  const BasicArray<Array> &rp(sub.constReal<Array>());
+  if (rp.length() != 1) throw Exception("Expression p(x) = y is invalid");
+  x.set(rp.get(1),y);
+  return ArrayVector(x);
+}

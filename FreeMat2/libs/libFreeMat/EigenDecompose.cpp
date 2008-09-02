@@ -534,11 +534,12 @@ static inline void EigenDecomposeFullSymmetric(Array &V, Array &D, Array A) {
     D = DiagonalArray(eigenvals);
   } else {
     BasicArray<T> eigenvals(NTuple(N,1));
-    V = Array(GetDataClass<T>(),Vdims);
-    complexEigenDecomposeSymmetric(int(N), V.real<T>().data(),
+    BasicArray<T> Vr(NTuple(2*N,N));
+    complexEigenDecomposeSymmetric(int(N), Vr.data(),
 				   eigenvals.data(),
 				   A.fortran<T>().data(),
 				   true);
+    V = Array(SplitReal(Vr),SplitImag(Vr));
     D = DiagonalArray(eigenvals);
   }
 }
@@ -579,7 +580,7 @@ static void HandleEigenVectorsRealMatrix(BasicArray<T> &eigenvals,
     V = Array(GetDataClass<T>(),NTuple(N,N));
     index_t i = 1;
     while (i <= N) {
-      if ((i < N) && (eigenvals[2*i-1] != 0)) {
+      if ((i < N) && (eigenvals[2*i] != 0)) {
 	for (index_t j=1;j<=N;j++) {
 	  V.set(NTuple(j,i),Array(Vp.get(NTuple(j,i)),Vp.get(NTuple(j,i+1))));
 	  V.set(NTuple(j,i+1),Array(Vp.get(NTuple(j,i)),-Vp.get(NTuple(j,i+1))));
@@ -775,7 +776,7 @@ static void GeneralizedEigenDecomposeFullGeneral(Array A, Array B, Array &V, Arr
     // columns, corresponding to the real and imaginary parts of
     // the vector.  Successive columns can be used because the 
     // eigenvalues occur in conjugate pairs.
-    BasicArray<T> Vp(NTuple(N*N,1));
+    BasicArray<T> Vp(NTuple(N,N));
     realGenEigenDecompose(int(N), Vp.data(), eigenvals.data(), 
 			  A.real<T>().data(),B.real<T>().data(),true);
     HandleEigenVectorsRealMatrix(eigenvals, Vp, N, D, V);

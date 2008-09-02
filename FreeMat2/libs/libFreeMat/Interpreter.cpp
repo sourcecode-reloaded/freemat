@@ -2608,6 +2608,24 @@ ArrayReference Interpreter::createVariable(QString name) {
 //  p(1,:) = y(:);
 //  test_val = all(vec(z==x)) && all(q(:,1) == y(:)) && all(p(1,:).' == y(:)); 
 //@}
+//@{ test_assign17.m
+//function test_val = test_assign17
+//  x = [];
+//  x(:,1) = 3;
+//  test_val = (x == 3);
+//@}
+//@{ test_assign18.m
+//function test_val = test_assign17
+//  x = [];
+//  x(:) = 4;
+//  test_val = (x == 3);
+//@}
+//@{ test_assign19.m
+//function test_val = test_assign18
+//  g(3).foo = 3;
+//  g(1) = [];
+//  test_val = (g(2).foo == 3);
+//@}
 //@{ test_sparse56.m
 //% Test DeleteSparseMatrix function
 //function x = test_sparse56
@@ -4677,7 +4695,7 @@ bool Interpreter::lookupFunction(QString funcName, FuncPtr& val,
 //A{3}(2).foo(2) = a1;
 //test_val = test(strcmp(typeof(A),'cell')) & ...
 //    test(strcmp(typeof(A{3}),'struct')) & ...
-//    test(strcmp(typeof(A{3}(2).foo),'int32'));
+//    test(strcmp(typeof(A{3}(2).foo),'double'));
 //@}
 //@{ test_subset20.m
 //function x = test_subset20

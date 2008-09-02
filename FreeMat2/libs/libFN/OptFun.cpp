@@ -45,7 +45,7 @@ extern "C" {
     if (int(cval[0].length()) != (*m))
       throw Exception("function output does not match size of vector 'y'");
     Array f(cval[0]);
-    f = f.toClass(Double);
+    f = f.asDenseArray().toClass(Double);
     rp = (double*) f.real<double>().data();
     int i;
     for (i=0;i<(*m);i++) {
@@ -119,15 +119,15 @@ ArrayVector FitFunFunction(int nargout, const ArrayVector& arg, Interpreter* eva
   a_funcDef = funcDef;
   a_eval = eval;
   // Get the initial guess vector
-  Array xinit(arg[1].toClass(Double));
+  Array xinit(arg[1].asDenseArray().toClass(Double));
   int m, n;
   n = int(xinit.length());
   // Get the right hand side vector
-  Array yvec(arg[2].toClass(Double));
+  Array yvec(arg[2].asDenseArray().toClass(Double));
   m = int(yvec.length());
   yval = yvec;
   xval = xinit;
-  wval = arg[3].toClass(Double);
+  wval = arg[3].asDenseArray().toClass(Double);
   if (int(wval.length()) != m)
     throw Exception("weight vector must be the same size as the output vector y");
   // Get the tolerance

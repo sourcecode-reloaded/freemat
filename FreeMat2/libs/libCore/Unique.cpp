@@ -208,6 +208,7 @@ static inline ArrayVector UniqueFunctionAux(const Array &arg) {
   default:
     throw Exception("Unhandled type for unique function");
     MacroExpandCasesSimple(MacroUnique);
+  case CellArray: return UniqueFunctionAux<Array>(arg);
   }
 }
 

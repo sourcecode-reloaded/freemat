@@ -228,13 +228,18 @@ static inline const void Tset_string_scalar(Array*ptr, S ndx, const Array &rhs) 
 
 template <typename S>
 static inline const void Tset_struct_scalar(Array*ptr, S ndx, const Array &rhs) {
-  if (rhs.dataClass() != Struct)
+  if ((rhs.dataClass() != Struct) && !rhs.isEmpty())
     throw Exception("Assignment A(I)=B where A is a structure array implies that B is also a structure array.");
-  // First loop through the elements
-  const StructArray &rp(rhs.constStructPtr());
   StructArray &lp(ptr->structPtr());
-  for (int i=0;i<rp.fieldCount();i++) 
-    lp[rp.fieldName(i)].set(ndx,rp[i].get(1));
+  if (rhs.isEmpty()) {
+    for (int i=0;i<lp.fieldCount();i++)
+      lp[lp.fieldName(i)].del(ScalarToIndex(ndx));
+  } else {
+    // First loop through the elements
+    const StructArray &rp(rhs.constStructPtr());
+    for (int i=0;i<rp.fieldCount();i++) 
+      lp[rp.fieldName(i)].set(ndx,rp[i].get(1));
+  }
   // Loop through the output and force all arrays to be the same size
   NTuple newSize(0,0);
   for (int i=0;i<lp.fieldCount();i++)
@@ -292,12 +297,12 @@ static inline void Tset(Array* ptr, S ndx, const Array& data) {
 	Set(ptr->imag<T>(),ndx,dataTyped.constImagScalar<T>());
   } else {
     if (ptr->isSparse())
-      Set(ptr->realSparse<T>(),ndx,ToRealSparse<T>(data));
+      Set(ptr->realSparse<T>(),ndx,ToRealSparse<T>(dataTyped));
     else
       Set(ptr->real<T>(),ndx,dataTyped.constReal<T>());
     if (!dataTyped.allReal()) 
       if (ptr->isSparse())
-	Set(ptr->imagSparse<T>(),ndx,ToImagSparse<T>(data));
+	Set(ptr->imagSparse<T>(),ndx,ToImagSparse<T>(dataTyped));
       else
 	Set(ptr->imag<T>(),ndx,dataTyped.constImag<T>());
   }
