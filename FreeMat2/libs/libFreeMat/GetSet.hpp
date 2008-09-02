@@ -53,7 +53,7 @@ void Set(T& arg, const IndexArrayVector& index, const T& data) {
     arg.del(index);
     return;
   }
-  if (!arg.isEmpty() && isSliceIndexCase(index)) {
+  if (!arg.isEmpty() && isSliceIndexCase(arg.dimensions(),index)) {
     SetSlice(arg,index,data);
     return;
   }
@@ -117,7 +117,7 @@ void Set(T& arg, const IndexArrayVector& index, const T& data) {
 template <typename T, typename S>
 void Set(T& arg, const IndexArrayVector& index, const S& data) {
   if (index.empty()) return;
-  if (!arg.isEmpty() && isSliceIndexCase(index)) {
+  if (!arg.isEmpty() && isSliceIndexCase(arg.dimensions(),index)) {
     SetSlice(arg,index,data);
     return;
   }
@@ -185,7 +185,7 @@ const T Get(const T& arg, const IndexArray& index) {
 template <typename T>
 const T Get(const T& arg, const IndexArrayVector& index) {
   if (index.empty()) return T(NTuple(0,0));
-  if (isSliceIndexCase(index)) return arg.slice(index);
+  if (isSliceIndexCase(arg.dimensions(),index)) return arg.slice(index);
   IndexArrayVector ndx;
   NTuple outdims;
   for (int i=0;i<index.size();i++) {

@@ -23,11 +23,12 @@ IndexArray ExpandColons(const IndexArray& ndx, index_t len) {
   return retvec;
 }
 
-bool isSliceIndexCase(const IndexArrayVector& index) {
+bool isSliceIndexCase(const NTuple &dims, const IndexArrayVector& index) {
   if (IsColonOp(index[0])) {
     bool allScalars = true;
     for (int i=1;i<index.size();i++)
-      allScalars = allScalars && !IsColonOp(index[i]) && index[i].isScalar();
+      allScalars = allScalars && !IsColonOp(index[i]) && index[i].isScalar()
+	&& (index[i][1] <= dims[1]);
     return allScalars;
   }
   return false;

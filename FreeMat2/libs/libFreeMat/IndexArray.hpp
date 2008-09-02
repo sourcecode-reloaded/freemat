@@ -9,7 +9,7 @@ bool IsColonOp(const IndexArray& ndx);
 
 IndexArray ExpandColons(const IndexArray& ndx, index_t len);
 
-bool isSliceIndexCase(const IndexArrayVector& index);
+bool isSliceIndexCase(const NTuple &dims, const IndexArrayVector& index);
 
 bool DimensionCovered(const IndexArray& ndx, index_t length);
 

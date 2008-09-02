@@ -2615,16 +2615,24 @@ ArrayReference Interpreter::createVariable(QString name) {
 //  test_val = (x == 3);
 //@}
 //@{ test_assign18.m
-//function test_val = test_assign17
+//function test_val = test_assign18
 //  x = [];
 //  x(:) = 4;
 //  test_val = (x == 3);
 //@}
 //@{ test_assign19.m
-//function test_val = test_assign18
+//function test_val = test_assign19
 //  g(3).foo = 3;
 //  g(1) = [];
 //  test_val = (g(2).foo == 3);
+//@}
+//@{ test_assign20.m
+//function test_val = test_assign20
+//  p = [];
+//  p(:,1) = [1;3;5];
+//  p(:,2) = [2;4;6];
+//  q = [1,2;3,4;5,6];
+//  test_val = testeq(p,q);
 //@}
 //@{ test_sparse56.m
 //% Test DeleteSparseMatrix function
@@ -3217,8 +3225,8 @@ void Interpreter::multiFunctionCall(Tree *t, bool printIt) {
       ptr = createVariable(name);
     if (ptr->isUserClass() && 
 	!inMethodCall(ptr->className()) && 
-	!stopoverload) {
-      ClassAssignExpression(ptr,t,m.front(),this);
+	!stopoverload && (var->numChildren() > 1)) {
+      ClassAssignExpression(ptr,var,m.front(),this);
       m.pop_front();
       return;
     }

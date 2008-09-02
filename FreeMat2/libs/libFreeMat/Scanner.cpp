@@ -363,7 +363,7 @@ QString Scanner::context() {
 QString Scanner::snippet(unsigned pos1, unsigned pos2) {
   unsigned ptr1 = pos1 >> 16;
   unsigned ptr2 = pos2 >> 16;
-  return m_text.mid(ptr1,ptr2-ptr1+1);
+  return m_text.mid(ptr1,ptr2-ptr1-1);
 }
 
 QString Scanner::context(unsigned pos) {
