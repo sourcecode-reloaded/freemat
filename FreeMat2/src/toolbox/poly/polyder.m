@@ -51,5 +51,13 @@ function [pder1,pder2] = polyder(p1,p2)
       pder1 = pd1p2-p1pd2;
       pder2 = conv(zp2,zp2);
    end
-   pder1 = pder1(min(find(pder1,1),length(pder1)):end);
-   pder2 = pder2(min(find(pder2,1),length(pder2)):end);
+   pder1 = polyder_trim_zeros(pder1);
+   pder2 = polyder_trim_zeros(pder2);
+
+function y = polyder_trim_zeros(x)
+  if (isempty(x) | isempty(find(x,1)))
+    y = [];
+  else
+    y = x(find(x,1):end);
+  end
+
