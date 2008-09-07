@@ -79,7 +79,7 @@
 %@|x_1 + x_2 = 5|.  The norm of @|x| is @|x_1^ + x_2^2|, which is
 %@|x_1^2 + (5-x_1)^2|, which is minimized for @|x_1 = x_2 = 2.5|:
 %@<
-%pinv(A) * 5.0f
+%pinv(A) * 5.0
 %@>
 %!
 % Copyright (c) 2005 Samit Basu
@@ -90,6 +90,6 @@ if (~isset('tol'))
   tol = max(size(A))*s(1,1)*teps(A);
 end
 sd = diag(s);
-sd(sd > tol) = 1.0f/(sd(sd > tol));
+sd(sd > tol) = 1/(sd(sd > tol));
 s = diag(sd);
 y = v*s*u';

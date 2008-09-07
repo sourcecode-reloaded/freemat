@@ -54,13 +54,13 @@ void HandleText::UpdateState() {
   if (fontweight->Is("demi"))
     fweight = QFont::DemiBold;
   // Lookup the font
-  fnt = QFont(fontname->Data().c_str(),(int)(fontsize->Data()[0]));
+  fnt = QFont(fontname->Data(),(int)(fontsize->Data()[0]));
   fnt.setStyle(fstyle);
   fnt.setWeight(fweight);
   HPString *txt = (HPString*) LookupProperty("string");
   text = txt->Data();
   QFontMetrics fm(fnt);
-  QRect sze(fm.boundingRect(text.c_str()));
+  QRect sze(fm.boundingRect(text));
   SetFourVectorDefault("boundingbox",sze.left(),sze.bottom(),
 		       sze.width(),sze.height());
 }

@@ -33,7 +33,6 @@
 #include <QWaitCondition>
 #include <QThread>
 
-using namespace std;
 
 class InterpreterContinueException : public exception {};
 class InterpreterBreakException : public exception {};
@@ -44,26 +43,26 @@ class InterpreterKillException : public exception {};
 
 class stackentry {
 public:
-  string cname;
-  string detail;
+  QString cname;
+  QString detail;
   int tokid;
   int number;
   int steptrap;
   int stepcurrentline;
     
   // A number of -1 corresponds to a temporary breakpoint 
-  stackentry(string cntxt, string detail, int id, 
+  stackentry(QString cntxt, QString detail, int id, 
 	     int num = 0, int strp = 0, int stcl = 0);
   stackentry();
   ~stackentry();
 };
 
 class Interpreter;
-class UserClass;
+class UserClassTemplate;
 class JIT;
 
-typedef Array (*BinaryFunc)(Array, Array, Interpreter*);
-typedef Array (*UnaryFunc)(Array, Interpreter*);
+typedef Array (*BinaryFunc)(const Array &, const Array &);
+typedef Array (*UnaryFunc)(const Array &);
 
 /**
  * This is the class that implements the interpreter - it generally
@@ -90,7 +89,7 @@ class Interpreter : public QThread {
   int stepcurrentline;
   int tracetrap;
   int tracecurrentline;
-  string stepname;
+  QString stepname;
 
   /**
    * Tracks the number of errors that have occured (used by the documentation
@@ -114,7 +113,7 @@ class Interpreter : public QThread {
   /**
    * The last error that occured.
    */
-  string lasterr;
+  QString lasterr;
   /**
    * autostop storage flag
    */
@@ -154,7 +153,7 @@ class Interpreter : public QThread {
   /**
    * The corresponding exception.
    */
-  string gfxError;
+  QString gfxError;
   /**
    * A synchronization variable to wait on when the command buffer is empty
    */
@@ -167,8 +166,8 @@ class Interpreter : public QThread {
    * This is the equivalent of an "instruction pointer".  It stores the
    * function name and some detailed information on our location.
    */
-  string ip_funcname;
-  string ip_detailname;
+  QString ip_funcname;
+  QString ip_detailname;
   int ip_context;
   /**
    * For technical reasons, the interpreter stores a mirror of the call stack
@@ -187,10 +186,6 @@ class Interpreter : public QThread {
    * The effective location of the next breakpoint (if single stepping)
    */
   stackentry stepTrap;
-  /**
-   * The class records (store information about each user defined class)
-   */
-  SymbolTable<UserClass> classTable;
   /**
    * Set this flag to true to stop overloading of methods
    */
@@ -251,11 +246,11 @@ class Interpreter : public QThread {
   /**
    * The filename for the diary
    */
-  string m_diaryFilename;
+  QString m_diaryFilename;
   /**
    * The capture string
    */
-  string m_capture;
+  QString m_capture;
   /**
    * The capture state
    */
@@ -310,14 +305,14 @@ public:
    */
   inline bool getDiaryState() {return m_diaryState;}
   inline void setDiaryState(bool t) {m_diaryState = t;}
-  inline void setDiaryFilename(string name) {m_diaryFilename = name;}
-  void diaryMessage(string msg);
+  inline void setDiaryFilename(QString name) {m_diaryFilename = name;}
+  void diaryMessage(QString msg);
   /**
    * Manipulate the capture state
    */
   inline void clearCaptureString() {m_capture = "";}
   inline void setCaptureState(bool t) {m_captureState = t;}
-  inline string getCaptureString() {return m_capture;}
+  inline QString getCaptureString() {return m_capture;}
   /**
    * Manipulate the profile state
    */
@@ -347,13 +342,13 @@ public:
   /**
    * Queue a command for execution
    */
-  void ExecuteLine(string txt);
+  void ExecuteLine(QString txt);
   /**
    * Retrieve data about the current location of the instruction pointer
    */
-  string getMFileName();
-  string getInstructionPointerFileName();
-  inline string sampleInstructionPointer(unsigned &context) const {
+  QString getMFileName();
+  QString getInstructionPointerFileName();
+  inline QString sampleInstructionPointer(unsigned &context) const {
     if (!InCLI) {
       context = ip_context & 0x0000FFFF; 
       return ip_funcname;
@@ -373,15 +368,15 @@ public:
   /**
    * Get the current path set for the interface. (user path - legacy interface)
    */
-  string getPath();
+  QString getPath();
   /**
    * Get the current path set for the interface (base path + user path)
    */
-  string getTotalPath();
+  QString getTotalPath();
   /**
    * Set the path for the interface. (user path - legacy interface)
    */
-  void setPath(string);
+  void setPath(QString);
   /**
    * Return the width of the current "terminal" in
    * characters.
@@ -394,16 +389,16 @@ public:
   /**
    * Output the following text message.
    */
-  void outputMessage(string msg);
+  void outputMessage(QString msg);
   void outputMessage(const char* format,...);
   /**
    * Output the following error message.
    */
-  void errorMessage(string msg);
+  void errorMessage(QString msg);
   /**
    * Output the following warning message.
    */
-  void warningMessage(string msg);
+  void warningMessage(QString msg);
   /**
    * Start the interpreter running.
    */
@@ -416,7 +411,7 @@ public:
   /**
    * Retrieve the version string for the interpreter
    */
-  static string getVersionString();
+  static QString getVersionString();
   /**
    * Retrieve the number of errors that occured.  The
    * side effect is that the error count is set to zero.
@@ -425,7 +420,7 @@ public:
   /**
    * True if we are currently in the method of a class
    */
-  bool inMethodCall(string classname);
+  bool inMethodCall(QString classname);
   /**
    * Get the context for the interface.
    */
@@ -438,9 +433,9 @@ public:
   /**
    * Add a new breakpoint
    */
-  MFunctionDef* lookupFullPath(string name);
+  MFunctionDef* lookupFullPath(QString name);
   void addBreakpoint(stackentry bp);
-  void addBreakpoint(string name, int line) ;
+  void addBreakpoint(QString name, int line) ;
   /**
    * Activate a breakpoint in the code.  If the line number for the
    * breakpoint is negative, the breakpoint is set as a step trap.  
@@ -462,25 +457,9 @@ public:
    */
   void stackTrace(bool includeCurrent);
   /**
-   * Returns true if a userclass with the given name is defined
-   */
-  bool isUserClassDefined(string classname);
-  /**
-   * Lookup a user class.
-   */
-  UserClass lookupUserClass(string classname);
-  /**
-   * Register a new user class.
-   */
-  void registerUserClass(string classname, UserClass cdata);
-  /**
-   * Clear the registered class table
-   */
-  void clearUserClasses();
-  /**
    * Push a function name and detail onto the debug stack
    */
-  void pushDebug(string fname, string detail);
+  void pushDebug(QString fname, QString detail);
   /**
    * Pop the debug stack
    */
@@ -518,15 +497,15 @@ public:
    * and execute it.  The flag indicates whether or not exceptions
    * are propogated or printed.
    */
-  void evaluateString(string line, bool propogateExceptions = false);
+  void evaluateString(QString line, bool propogateExceptions = false);
   /**
    * Get the last error that occurred.
    */
-  string getLastErrorString();
+  QString getLastErrorString();
   /**
    * Set the text for the last error.
    */
-  void setLastErrorString(string txt);
+  void setLastErrorString(QString txt);
   /**
    * Set to false to turn off the greeting.
    */
@@ -538,15 +517,15 @@ public:
   /**
    * Register an error that occurs with a gfx call
    */
-  void RegisterGfxError(string msg);
+  void RegisterGfxError(QString msg);
   /**
    * Simplified interface for function lookup.
    */
-  bool lookupFunction(string funcName, FuncPtr& val);
+  bool lookupFunction(QString funcName, FuncPtr& val);
    /**
    * Prompt the user for input, and return the answer.
    */
-  string getLine(string prompt);
+  QString getLine(QString prompt);
   /**
    * Go to sleep for the specified number of milliseconds
    */
@@ -584,7 +563,7 @@ signals:
   /**
    * Send a string of text to a terminal somewhere
    */
-  void outputRawText(string);
+  void outputRawText(QString);
   /**
    * Flush the I/O buffers
    */ 
@@ -596,7 +575,7 @@ signals:
   /**
    * Change the prompt
    */
-  void SetPrompt(string);
+  void SetPrompt(QString);
   /**
    * Dispatch a graphics call
    */
@@ -616,7 +595,7 @@ signals:
   /**
    * Show the current active line
    */
-  void IllegalLineOrCurrentPath(string name, int line);
+  void IllegalLineOrCurrentPath(QString name, int line);
   /**
    * Inform the editor of illegal line or file not on current path
    */
@@ -661,23 +640,19 @@ private:
   /**
    * Create a variable in the correct scope, and return a reference to it
    */
-  ArrayReference createVariable(string name);
+  ArrayReference createVariable(QString name);
   /**
    * Perform a binary operator with the given name
    */
-  Array DoBinaryOperator(Tree *t, BinaryFunc fnc, string fname);
+  Array DoBinaryOperator(Tree *t, BinaryFunc fnc, QString fname);
   /**
    * Perform a unary operator with the given name
    */
-  Array DoUnaryOperator(Tree *t, UnaryFunc fnc, string fname);
+  Array DoUnaryOperator(Tree *t, UnaryFunc fnc, QString fname);
   /**
    * Handle the construction of a function pointer
    */
   Array FunctionPointer(Tree *args);
-  /**
-   * Dispatch a function pointer
-   */
-  ArrayVector FunctionPointerDispatch(Array r, Tree *args, int narg_out);
   /**
    * Set the context of the interpreter.  This is an integer that indicates
    * where in the source file we are.
@@ -721,7 +696,7 @@ private:
   /**
    * Evaluate the expression into a variable-array
    */
-  void multiexpr(Tree *t, ArrayVector& m, int lhsCount = 1);
+  void multiexpr(Tree *t, ArrayVector& m, index_t lhsCount = 1);
 
   /**
    * Evaluate a unit colon expression.  The AST input should look like:
@@ -794,7 +769,7 @@ private:
    * Look up an identifier as a potential function name, using a
    * rescan if the identifier is not found on the first pass.
    */
-  bool lookupFunction(string funcName, FuncPtr& val, 
+  bool lookupFunction(QString funcName, FuncPtr& val, 
 		      ArrayVector& args, bool disableOverload = false);
   /**
    * Special case the single assignment statement 'A = B' for speed.
@@ -805,7 +780,7 @@ private:
    * call.  In particular, logic is used to figure out what to do about
    * undefined variables.
    */
-  int countLeftHandSides(Tree *t);
+  index_t countLeftHandSides(Tree *t);
   /**
    * Evaluate a function and return the results of the function as
    * an ArrayVector.  For scripts, the body of the function is
@@ -1050,8 +1025,8 @@ private:
   /**
    * Mangle a function name to get the private version (if it exists)
    */
-  string getPrivateMangledName(string fname);
-  string getLocalMangledName(string fname);
+  QString getPrivateMangledName(QString fname);
+  QString getLocalMangledName(QString fname);
   /**
    * Convert variables into indexes, calls "subsindex" for user classes.
    */
@@ -1070,19 +1045,19 @@ private:
    * is true, then these functions are marked as temporary (so changing
    * the working directory flushes them).
    */
-  void scanDirectory(string scdir, bool tempfunc, string prefixo);
+  void scanDirectory(QString scdir, bool tempfunc, QString prefixo);
   /**
    * Add the specified .m file to the current context
    */
-  void procFileM(string fname, string fullname, bool tempfunc);
+  void procFileM(QString fname, QString fullname, bool tempfunc);
   /**
    * Add the specified .p file to the current context
    */
-  void procFileP(string fname, string fullname, bool tempfunc);
+  void procFileP(QString fname, QString fullname, bool tempfunc);
   /**
    * Add the specified .mex file to the current context
    */
-  void procFileMex(string fname, string fullname, bool tempfunc);
+  void procFileMex(QString fname, QString fullname, bool tempfunc);
 
   friend Array IndexExpressionToStruct(Interpreter*, Tree*, Array);
   friend ArrayVector ClassRHSExpression(Array, Tree*, Interpreter*);
@@ -1090,12 +1065,14 @@ private:
   friend class MFunctionDef;
   friend class ImportedFunctionDef;
   friend class AnonymousFunctionDef;
+  friend ArrayVector AnonFuncSubsrefFunction(int, const ArrayVector&, Interpreter*);
 };
 
 void sigInterrupt(int arg);
-string TrimFilename(string);
-QString TildeExpand(string);
+QString TrimFilename(QString);
+QString TildeExpand(QString);
 
+void WarningMessage(QString);
 int num_for_loop_iter( double first, double step, double last );
 int num_for_loop_iter_f( float first, float step, float last );
 

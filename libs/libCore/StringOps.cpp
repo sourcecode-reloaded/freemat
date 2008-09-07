@@ -20,7 +20,6 @@
 #include "Core.hpp"
 #include "Exception.hpp"
 #include "Array.hpp"
-#include "Malloc.hpp"
 #include "MemPtr.hpp"
 #if HAVE_PCRE
 #ifdef WIN32
@@ -28,28 +27,35 @@
 #endif
 #include <pcre.h>
 #endif
+#include <QtCore>
+#include "Printf.hpp"
+#include "Algorithms.hpp"
+#include "Utils.hpp"
 
-
+//!
+//@Module STRCMP String Compare Function
+//@@Section STRING
+//@@Usage
+//Compares two string, and returns @|true| if they equal
+//and @|false| if not.
+//@@Signature
+//function strcomp StrCmpFunction
+//inputs string1 string2
+//outputs flag
+//!
 ArrayVector StrCmpFunction(int nargout, const ArrayVector& arg) {
-  Array retval, arg1, arg2;
+  Array retval;
   if (arg.size() != 2)
-    throw Exception("strcomp function requires two arguments");
-  arg1 = arg[0];
-  arg2 = arg[1];
-  if (!(arg1.isString()))
-    return SingleArrayVector(Array::logicalConstructor(false));
-  if (!(arg2.isString()))
-    return SingleArrayVector(Array::logicalConstructor(false));
-  if (!(arg1.dimensions().equals(arg2.dimensions())))
-    retval = Array::logicalConstructor(false);
-  else {
-    string s1 = arg1.getContentsAsString();
-    string s2 = arg2.getContentsAsString();
-    retval = Array::logicalConstructor(s1 == s2);
-  }
-  ArrayVector o;
-  o.push_back(retval);
-  return o;
+    throw Exception("strcmp function requires two arguments");
+  if (!(arg[0].isString()))
+    return ArrayVector(Array(bool(false)));
+  if (!(arg[1].isString()))
+    return ArrayVector(Array(bool(false)));
+  if (!(arg[0].dimensions() == arg[1].dimensions()))
+    return ArrayVector(Array(bool(false)));
+  else
+    return ArrayVector(Array(bool(arg[0].asString() == arg[1].asString())));
+  return ArrayVector(Array(bool(false)));
 }
 
 //!
@@ -72,82 +78,44 @@ ArrayVector StrCmpFunction(int nargout, const ArrayVector& arg) {
 //strstr('quick brown fox','own')
 //strstr('free stuff','lunch')
 //@>
+//@@Signature
+//function strstr StrStrFunction
+//inputs x y
+//outputs flag
 //!
 ArrayVector StrStrFunction(int nargout, const ArrayVector& arg) {
   Array retval, arg1, arg2;
   if (arg.size() != 2)
     throw Exception("strstr function requires two string arguments");
-  arg1 = arg[0];
-  arg2 = arg[1];
-  if (!(arg1.isString()))
+  if (!(arg[0].isString()))
     throw Exception("strstr function requires two string arguments");
-  if (!(arg2.isString()))
+  if (!(arg[1].isString()))
     throw Exception("strstr function requires two string arguments");
-  string s1 = arg1.getContentsAsString();
-  string s2 = arg2.getContentsAsString();
-  size_t pos = s1.find(s2);
-  int retndx;
-  if (pos == string::npos)
-    retndx = 0;
-  else
-    retndx = pos+1;
-  return SingleArrayVector(Array::int32Constructor(retndx));
+  return ArrayVector(Array(double(arg[0].asString().indexOf(arg[1].asString())+1)));
 }
 
-char* strrep(const char* source, const char* pattern, const char* replace) {
-  // Count how many instances of 'pattern' occur
-  int instances = 0;
-  const char *cp = source;
-  while (cp) {
-    cp = strstr(cp,pattern);
-    if (cp) {
-      cp += strlen(pattern);
-      instances++;
-    }
-  }
-  // The output array should be large enough...
-  int outlen = strlen(source) + instances*(strlen(replace) - strlen(pattern)) + 1;
-  char *op = (char*) malloc(sizeof(char)*outlen);
-  char *opt = op;
-  // Retrace through the source array
-  cp = source;
-  const char *lastp = source;
-  while (cp) {
-    cp = strstr(cp,pattern);
-    if (cp) {
-      memcpy(opt,lastp,(cp-lastp));
-      opt += (cp-lastp);
-      memcpy(opt,replace,strlen(replace));
-      opt += strlen(replace);
-      cp += strlen(pattern);
-      lastp = cp;
-      instances++;
-    } else
-      memcpy(opt,lastp,strlen(source)-(lastp-source)+1);
-  }
-  return op;
-}
 
+//!
+//@Module STRREP_STRING String Replace Function
+//@@Section STRING
+//@@Usage
+//Replaces instances of a substring string with another.  This is a lower
+//level function used by @|strrep|.
+//@@Signature
+//function strrep_string StrRepStringFunction
+//inputs mainstring searchstring repstring
+//outputs modifiedstring
+//!
 ArrayVector StrRepStringFunction(int nargout, const ArrayVector& arg) {
-  Array arg1, arg2, arg3;
   if (arg.size() != 3)
     throw Exception("strrep_string function requires three string arguments");
-  arg1 = arg[0];
-  arg2 = arg[1];
-  arg3 = arg[2];
-  if (!(arg1.isString()))
+  if (!(arg[0].isString()))
     throw Exception("strrep_string function requires three string arguments");
-  if (!(arg2.isString()))
+  if (!(arg[1].isString()))
     throw Exception("strrep_string function requires three string arguments");
-  if (!(arg3.isString()))
+  if (!(arg[2].isString()))
     throw Exception("strrep_string function requires three string arguments");
-  string s1 = arg1.getContentsAsString();
-  string s2 = arg2.getContentsAsString();
-  string s3 = arg3.getContentsAsString();
-  char *cp = strrep(s1.c_str(),s2.c_str(),s3.c_str());
-  ArrayVector retval(SingleArrayVector(Array::stringConstructor(cp)));
-  free(cp);
-  return retval;
+  return ArrayVector(Array(arg[0].asString().replace(arg[1].asString(),arg[2].asString())));
 }
 
 //!
@@ -231,9 +199,21 @@ ArrayVector StrRepStringFunction(int nargout, const ArrayVector& arg) {
 //@<
 //[start,stop,tokenExtents,match,tokens,named] = regexp('quick down town zoo','(.)own')
 //@>
+//@@Signature
+//function regexp RegExpFunction
+//inputs string expr varargin
+//outputs start stop tokenExtents match tokens names
+//@@Signature
+//function regexpi RegExpIFunction
+//inputs string expr varargin
+//outputs start stop tokenExtents match tokens names
+//@@Signature
+//function regexprepdriver RegExpRepDriverFunction
+//inputs varargin
+//outputs y
 //!
 #if HAVE_PCRE
-static bool isSlotSpec(string t) {
+static bool isSlotSpec(QString t) {
   return ((t == "start") ||
 	  (t == "end") ||
 	  (t == "tokenExtents") ||
@@ -243,7 +223,7 @@ static bool isSlotSpec(string t) {
 }
 #endif
 
-ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMatchCase) {
+static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMatchCase) {
 #if HAVE_PCRE
   // These are the default options
   bool globalMatch = true;
@@ -266,10 +246,10 @@ ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMatchCase
   QList<uint32> tokenStartList;
   QList<uint32> tokenStopList;
   QList<QList<uint32> > tokenExtentsList;
-  QList<QStringList> tokenList;
-  QStringList matchList;
+  QList<StringVector> tokenList;
+  StringVector matchList;
   StringVector namedTokenNames;
-  QList<QStringList> namedTokenValues;
+  QList<StringVector> namedTokenValues;
 
   pcre *re;
   const char *error;
@@ -299,7 +279,7 @@ ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMatchCase
     count_slots = 0;
     // Process inputs
     for (int i=2;i<stringed_args.size();i++) {
-      string t = stringed_args[i];
+      QString t = stringed_args[i];
       if (t == "start")  start_slot = count_slots++;
       if (t == "end") end_slot = count_slots++;
       if (t == "tokenExtents") tokenExtents_slot = count_slots++;
@@ -310,7 +290,7 @@ ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMatchCase
   }
   
   for (int i=0;i<count_slots;i++)
-    retvec << Array::emptyConstructor();
+    retvec << EmptyConstructor();
   
   for (int j=2;j<stringed_args.size();j++) {
     if (stringed_args[j]=="once")
@@ -333,8 +313,10 @@ ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMatchCase
       literalSpacing = false;
   }
 
-  pattern = stringed_args[1].c_str();
-  subject = stringed_args[0].c_str();
+  QByteArray pattern_ba(stringed_args[1].toAscii());
+  QByteArray subject_ba(stringed_args[0].toAscii());
+  pattern = pattern_ba.constData();
+  subject = subject_ba.constData();
   subject_length = (int)strlen(subject);
   QString qsubject(subject);
 
@@ -360,8 +342,8 @@ ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMatchCase
   /* Compilation failed: print the error message and exit */
   
   if (re == NULL) 
-    throw Exception(string("regular expression compilation failed at offset ") + 
-		    erroffset + ": " + error);
+    throw Exception(QString("regular expression compilation failed at offset ") + 
+		    QString("%1").arg(erroffset) + ": " + error);
   
   /* Determine how many capture expressions there are */
   int captureCount;
@@ -416,7 +398,7 @@ ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMatchCase
      application you might want to do things other than print them. */
 
   QList<uint32> tEList;
-  QStringList   tList;
+  StringVector   tList;
   for (i = 1; i < rc; i++)
     {
       tEList << ovector[2*i]+1;
@@ -462,9 +444,9 @@ ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMatchCase
     tabptr = name_table;
     for (i = 0; i < namecount; i++)
       {
-	namedTokenValues << QStringList();
+	namedTokenValues << StringVector();
 	int n = (tabptr[0] << 8) | tabptr[1];
-	namedTokenNames << QString((char*)(tabptr+2)).left(name_entry_size-3).toStdString();
+	namedTokenNames << QString((char*)(tabptr+2)).left(name_entry_size-3);
 	namedTokenValues[i] << qsubject.mid(ovector[2*n],ovector[2*n+1]-ovector[2*n]);
 	tabptr += name_entry_size;
       }
@@ -556,7 +538,7 @@ ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMatchCase
 	matchList << qsubject.mid(ovector[0],ovector[1]-ovector[0]);
 
 	QList<uint32> tEList;
-	QStringList   tList;
+	StringVector   tList;
 	for (i = 1; i < rc; i++)
 	  {
 	    tEList << ovector[2*i]+1;
@@ -581,24 +563,24 @@ ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMatchCase
   }
 
   // Return this data to the user
-  Array start(Uint32VectorFromQList(startList));
-  Array end(Uint32VectorFromQList(stopList));
-  Array matches(CellArrayFromQStringList(matchList));
+  Array start(DoubleVectorFromQList(startList));
+  Array end(DoubleVectorFromQList(stopList));
+  Array matches(CellArrayFromStringVector(matchList));
   // Now build the tokens array
   ArrayVector tokensArrayContents;
   for (int i=0;i<tokenList.size();i++) 
-    tokensArrayContents << CellArrayFromQStringList(tokenList[i]);
-  Array tokens(Array::cellConstructor(tokensArrayContents));
+    tokensArrayContents << CellArrayFromStringVector(tokenList[i]);
+  Array tokens(CellConstructor(tokensArrayContents));
   // Finally the token extents array
   ArrayVector tokensExtentsContents;
   for (int i=0;i<tokenExtentsList.size();i++)
-    tokensExtentsContents << Uint32VectorFromQList(tokenExtentsList[i]);
-  Array tokenExtents(Array::cellConstructor(tokensExtentsContents));
+    tokensExtentsContents << DoubleVectorFromQList(tokenExtentsList[i]);
+  Array tokenExtents(CellConstructor(tokensExtentsContents));
   // The named token data has to be resliced
   ArrayVector namedTokenValueContents;
   for (int i=0;i<namedTokenValues.size();i++)
-    namedTokenValueContents << CellArrayFromQStringList(namedTokenValues[i]);
-  Array namedTokens(Array::structConstructor(namedTokenNames,namedTokenValueContents));
+    namedTokenValueContents << CellArrayFromStringVector(namedTokenValues[i]);
+  Array namedTokens(StructConstructor(namedTokenNames,namedTokenValueContents));
   // Stuff it all into a return vector
   pcre_free(re);
   if (start_slot >= 0)
@@ -620,35 +602,28 @@ ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMatchCase
 
 }
 
-static bool IsCellStrings(Array t) {
-  if (t.dataClass() != FM_CELL_ARRAY) return false;
-  const Array *dp = (const Array *) t.getDataPointer();
-  for (int j=0;j<t.getLength();j++)
-    if (!dp[j].isString()) return false;
-  return true;
-}
-
 // res is organized like this:
 //  <o1 o2 o3 o4>
 //  <o1 o2 o3 o4>
 // ...
 // We want to perform a transpose
-static ArrayVector CellifyRegexpResults(QList<ArrayVector> res, Dimensions dims) {
+static ArrayVector CellifyRegexpResults(QList<ArrayVector> res, const NTuple &dims) {
   ArrayVector retVec;
   if (res.size() == 0) return ArrayVector();
   for (int i=0;i<res[0].size();i++) {
     ArrayVector slice;
     for (int j=0;j<res.size();j++) 
       slice << res[j][i];
-    Array sliceArray(Array::cellConstructor(slice));
+    int slice_len = slice.size();
+    Array sliceArray(CellArrayFromArrayVector(slice,slice_len));
     sliceArray.reshape(dims);
     retVec << sliceArray;
   }
   return retVec;
 }
 
-ArrayVector RegExpWrapperFunction(int nargout, const ArrayVector& arg, 
-				  bool caseMatch) {
+static ArrayVector RegExpWrapperFunction(int nargout, const ArrayVector& arg, 
+					 bool caseMatch) {
   if (arg.size() < 2) throw Exception("regexp requires at least two arguments to function");
   for (int i=2;i<arg.size();i++) 
     if (!arg[i].isString())
@@ -658,43 +633,43 @@ ArrayVector RegExpWrapperFunction(int nargout, const ArrayVector& arg,
     StringVector stringed_args;
     // Convert the argument array to strings
     for (int i=0;i<arg.size();i++) 
-      stringed_args << ArrayToString(arg[i]);
+      stringed_args << arg[i].asString();
     return RegExpCoreFunction(stringed_args,caseMatch);
-  } else if (IsCellStrings(arg[0]) && arg[1].isString()) {
-    const Array *dp = (const Array *) arg[0].getDataPointer();
+  } else if (IsCellStringArray(arg[0]) && arg[1].isString()) {
+    StringVector arg0(StringVectorFromArray(arg[0]));
     QList<ArrayVector> results;
-    for (int j=0;j<arg[0].getLength();j++) {
+    for (int j=0;j<arg0.size();j++) {
       StringVector stringed_args;
-      stringed_args << ArrayToString(dp[j]);
+      stringed_args << arg0[j];
       for (int i=1;i<arg.size();i++) 
-	stringed_args << ArrayToString(arg[i]);
+	stringed_args << arg[i].asString();
       results << RegExpCoreFunction(stringed_args,caseMatch);
     }
     return CellifyRegexpResults(results,arg[0].dimensions());
-  } else if (arg[0].isString() && IsCellStrings(arg[1])) {
-    const Array *dp = (const Array *) arg[1].getDataPointer();
+  } else if (arg[0].isString() && IsCellStringArray(arg[1])) {
+    StringVector arg1(StringVectorFromArray(arg[1]));
     QList<ArrayVector> results;
-    for (int j=0;j<arg[1].getLength();j++) {
+    for (int j=0;j<arg1.size();j++) {
       StringVector stringed_args;
-      stringed_args << ArrayToString(arg[0]);
-      stringed_args << ArrayToString(dp[j]);
+      stringed_args << arg[0].asString();
+      stringed_args << arg1[j];
       for (int i=2;i<arg.size();i++) 
-	stringed_args << ArrayToString(arg[i]);
+	stringed_args << arg[i].asString();
       results << RegExpCoreFunction(stringed_args,caseMatch);
     }
     return CellifyRegexpResults(results,arg[1].dimensions());
-  } else if (IsCellStrings(arg[0]) && IsCellStrings(arg[1])) {
-    if (arg[0].getLength() != arg[1].getLength())
+  } else if (IsCellStringArray(arg[0]) && IsCellStringArray(arg[1])) {
+    if (arg[0].length() != arg[1].length())
       throw Exception("cell-arrays of strings as the first two arguments to regexp must be the same size");
-    const Array *dp = (const Array *) arg[0].getDataPointer();
-    const Array *sp = (const Array *) arg[1].getDataPointer();
+    StringVector dp(StringVectorFromArray(arg[0]));
+    StringVector sp(StringVectorFromArray(arg[1]));
     QList<ArrayVector> results;
-    for (int j=0;j<arg[0].getLength();j++) {
+    for (int j=0;j<arg[0].length();j++) {
       StringVector stringed_args;
-      stringed_args << ArrayToString(dp[j]);
-      stringed_args << ArrayToString(sp[j]);
+      stringed_args << dp[j];
+      stringed_args << sp[j];
       for (int i=2;i<arg.size();i++) 
-	stringed_args << ArrayToString(arg[i]);
+	stringed_args << arg[i].asString();
       results << RegExpCoreFunction(stringed_args,caseMatch);
     }
     return CellifyRegexpResults(results,arg[0].dimensions());
@@ -713,10 +688,10 @@ ArrayVector RegExpIFunction(int nargout, const ArrayVector& arg) {
 }
 
 // Perform a replace 
-string RegExpRepCoreFunction(string subject,
-			     string pattern,
-			     StringVector modes,
-			     StringVector replacements) {
+QString RegExpRepCoreFunction(QString subject,
+			      QString pattern,
+			      StringVector modes,
+			      StringVector replacements) {
 #if HAVE_PCRE
   // These are the default options
   bool globalMatch = true;
@@ -763,8 +738,9 @@ string RegExpRepCoreFunction(string subject,
    * and errors that are detected.                                          *
    *************************************************************************/
   
+  QByteArray pattern_ba(pattern.toAscii());
   re = pcre_compile(
-		    pattern.c_str(),      /* the pattern */
+		    pattern_ba.constData(),      /* the pattern */
 		    options,              /* default options */
 		    &error,               /* for error message */
 		    &erroffset,           /* for error offset */
@@ -773,7 +749,7 @@ string RegExpRepCoreFunction(string subject,
   /* Compilation failed: print the error message and exit */
   
   if (re == NULL) 
-    throw Exception(string("regular expression compilation failed at offset ") + 
+    throw Exception(QString("regular expression compilation failed at offset ") + 
 		    erroffset + ": " + error);
 
   /* Determine how many capture expressions there are */
@@ -791,11 +767,12 @@ string RegExpRepCoreFunction(string subject,
    * further matching is needed, it will be done below.                     *
    *************************************************************************/
   
+  QByteArray subject_ba(subject.toAscii());
   rc = pcre_exec(
 		 re,                   /* the compiled pattern */
 		 NULL,                 /* no extra data - we didn't study the pattern */
-		 subject.c_str(),      /* the subject string */
-		 subject.size(),       /* the length of the subject */
+		 subject_ba.constData(),      /* the subject string */
+		 subject_ba.size(),       /* the length of the subject */
 		 0,                    /* start at offset 0 in the subject */
 		 0,                    /* default options */
 		 ovector,              /* output vector for substring information */
@@ -808,8 +785,8 @@ string RegExpRepCoreFunction(string subject,
     return subject;
   }
   
-  string outputString;
-  string tokenSelect;
+  QString outputString;
+  QString tokenSelect;
   int nextReplacement = 0;
   int inputPointer = 0;
   int outputPtr = 0;
@@ -824,17 +801,17 @@ string RegExpRepCoreFunction(string subject,
       outputString += replacements[nextReplacement][outputPtr++];
     else
       if ((outputPtr < (replacementLength-1)) &&
-	  isdigit(replacements[nextReplacement][outputPtr+1])) {
+	  replacements[nextReplacement][outputPtr+1].isDigit()) {
 	// Try to collect a token name
 	digitFinder = outputPtr+1;
 	while ((digitFinder < replacementLength) && 
-	       isdigit(replacements[nextReplacement][digitFinder])) {
+	       replacements[nextReplacement][digitFinder].isDigit()) {
 	  // Add this digit to the token name
 	  tokenSelect += replacements[nextReplacement][digitFinder];
 	  digitFinder++;
 	}
 	// try to map this to a token number
-	tokenNumber = atoi(tokenSelect.c_str());
+	tokenNumber = tokenSelect.toInt();
 	// Is this a valid tokenNumber?
 	if (tokenNumber <= captureCount) {
 	  // Yes - skip
@@ -873,11 +850,12 @@ string RegExpRepCoreFunction(string subject,
 	
 	/* Run the next matching operation */
 	
+	QByteArray subject_ba(subject.toAscii());
 	rc = pcre_exec(
 		       re,                   /* the compiled pattern */
 		       NULL,                 /* no extra data - we didn't study the pattern */
-		       subject.c_str(),      /* the subject string */
-		       subject.size(),       /* the length of the subject */
+		       subject_ba.constData(),      /* the subject string */
+		       subject_ba.size(),       /* the length of the subject */
 		       start_offset,         /* starting offset in the subject */
 		       options,              /* options */
 		       ovector,              /* output vector for substring information */
@@ -926,17 +904,17 @@ string RegExpRepCoreFunction(string subject,
 	    outputString += replacements[nextReplacement][outputPtr++];
 	  else
 	    if ((outputPtr < (replacementLength-1)) &&
-		isdigit(replacements[nextReplacement][outputPtr+1])) {
+		replacements[nextReplacement][outputPtr+1].isDigit()) {
 	      // Try to collect a token name
 	      digitFinder = outputPtr+1;
 	      while ((digitFinder < replacementLength) && 
-		     isdigit(replacements[nextReplacement][digitFinder])) {
+		     replacements[nextReplacement][digitFinder].isDigit()) {
 		// Add this digit to the token name
 		tokenSelect += replacements[nextReplacement][digitFinder];
 		digitFinder++;
 	      }
 	      // try to map this to a token number
-	      tokenNumber = atoi(tokenSelect.c_str());
+	      tokenNumber = tokenSelect.toInt();
 	      // Is this a valid tokenNumber?
 	      if (tokenNumber <= captureCount) {
 		// Yes - skip
@@ -976,19 +954,179 @@ ArrayVector RegExpRepDriverFunction(int nargout, const ArrayVector& arg) {
       throw Exception("all arguments to regexprep must be strings");
   StringVector modes;
   for (int i=3;i<arg.size();i++)
-    modes << ArrayToString(arg[i]);
-  string subject = ArrayToString(arg[0]);
-  string pattern = ArrayToString(arg[1]);
+    modes << arg[i].asString();
+  QString subject = arg[0].asString();
+  QString pattern = arg[1].asString();
   StringVector replist;
   if (arg[2].isString())
-    replist << ArrayToString(arg[2]);
-  else if (IsCellStrings(arg[2])) {
-    const Array *dp = (const Array *) arg[2].getDataPointer();
-    for (int i=0;i<arg[2].getLength();i++)
-      replist << ArrayToString(dp[i]);
+    replist << arg[2].asString();
+  else if (IsCellStringArray(arg[2])) {
+    StringVector dp(StringVectorFromArray(arg[2]));
+    for (int i=0;i<dp.size();i++)
+      replist << dp[i];
   }
-  return ArrayVector() << Array::stringConstructor(RegExpRepCoreFunction(subject,
-									 pattern,
-									 modes,
-									 replist));
+  return ArrayVector(Array(RegExpRepCoreFunction(subject,pattern,modes,replist)));
 }				  
+
+//!
+//@Module NUM2STR Convert Numbers To Strings
+//@@Section ARRAY
+//@@Usage
+//Converts an array into its string representation.  The general syntax
+//for this function is
+//@[
+//   s = num2str(X)
+//@]
+//where @|s| is a string (or string matrix) and @|X| is an array.  By
+//default, the @|num2str| function uses 4 digits of precision and an 
+//exponent if required.  If you want more digits of precision, you can 
+//specify the precition via the form
+//@[
+//   s = num2str(X, precision)
+//@]
+//where @|precision| is the number of digits to include in the string
+//representation.  For more control over the format of the output, you 
+//can also specify a format specifier (see @|printf| for more details).
+//@[
+//   s = num2str(X, format)
+//@]
+//where @|format| is the specifier string.
+//@@Signature
+//function num2str Num2StrFunction
+//inputs x format
+//outputs string
+//!
+
+template <class T>
+static Array Num2StrHelperReal(const BasicArray<T> &dp, const char *formatspec) {
+  ConstBasicIterator<T> iter(&dp,1);
+  StringVector all_rows;
+  while (iter.isValid()) {
+    QString row_string;
+    for (index_t i=1;i<=iter.size();i++) {
+      if (i != 1) row_string += " ";
+      row_string += QString().sprintf(formatspec,iter.get());
+      iter.next();
+    }
+    all_rows << row_string;
+    iter.nextSlice();
+  }
+  return StringArrayFromStringVector(all_rows);
+}
+
+template <class T>
+Array Num2StrHelperComplex(const BasicArray<T> &rp, const BasicArray<T> &ip, const char *formatspec) {
+  ConstBasicIterator<T> iter_real(&rp,1);
+  ConstBasicIterator<T> iter_imag(&ip,1);
+  StringVector all_rows;
+  while (iter_real.isValid() && iter_imag.isValid()) {
+    QString row_string;
+    for (index_t i=1;i<=iter_real.size();i++) {
+      if (i != 1) row_string += " ";
+      row_string += QString().sprintf(formatspec,iter_real.get());
+      if (iter_imag.get() >= 0) row_string += "+";
+      row_string += QString().sprintf(formatspec,iter_imag.get());
+      row_string += "i";
+      iter_real.next();
+      iter_imag.next();
+    }
+    all_rows << row_string;
+    iter_real.nextSlice();
+    iter_imag.nextSlice();
+  }
+  return StringArrayFromStringVector(all_rows);
+}
+
+template <typename T>
+static ArrayVector Num2Str(const Array &X, const char *formatspec) {
+  if (X.allReal())
+    return ArrayVector(Num2StrHelperReal(X.constReal<T>(),formatspec));
+  else
+    return ArrayVector(Num2StrHelperComplex(X.constReal<T>(),X.constImag<T>(),formatspec));
+}
+
+#define MacroNum2Str(ctype,cls) \
+  case cls: return Num2Str<ctype>(X,formatspec);
+
+ArrayVector Num2StrFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() == 0)
+    throw Exception("num2str function requires at least one argument");
+  Array X(arg[0]);
+  if (X.isReferenceType())
+    throw Exception("num2str function requires a numeric input");
+  if (X.isSparse())
+    throw Exception("num2str not defined for sparse inputs");
+  X = X.asDenseArray();
+  char formatspec[1024];
+  if ((X.dataClass() != Float) && (X.dataClass() != Double))
+    sprintf(formatspec,"%%d");
+  else
+    sprintf(formatspec,"%%g"); //without preceding space
+  if (arg.size() > 1) {
+    Array format(arg[1]);
+    if (format.isString())
+      strcpy(formatspec,qPrintable(format.asString()));
+  }
+  switch (X.dataClass())  {
+    default: throw Exception("illegal type argument to num2str");
+      MacroExpandCases(MacroNum2Str);
+  }
+}
+
+//!
+//@Module STR2NUM Convert a String to a Number
+//@@Section IO
+//@@Usage
+//Converts a string to a number.  The general syntax for its use
+//is
+//@[
+//  x = str2num(string)
+//@]
+//Here @|string| is the data string, which contains the data to 
+//be converted into a number.  The output is in double precision,
+//and must be typecasted to the appropriate type based on what
+//you need.
+//@@Signature
+//function str2num Str2NumFunction
+//inputs string
+//outputs x
+//!
+ArrayVector Str2NumFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() != 1)
+    throw Exception("str2num takes a single argument, the string to convert into a number");
+  Array data(arg[0]);
+  if (!data.isString())
+    throw Exception("the first argument to str2num must be a string");
+  return ArrayVector(Array(data.asDouble()));
+}
+
+
+//!
+//@Module SSCANF Formated String Input Function (C-Style)
+//@@Section IO
+//@@Usage
+//Reads values from a string.  The general syntax for its use is
+//@[
+//  [a1,...,an] = sscanf(text,format)
+//@]
+//Here @|format| is the format string, which is a string that
+//controls the format of the input.  Each value that is parsed
+//from the @|text| occupies one output slot.  See @|printf|
+//for a description of the format.
+//@@Signature
+//function sscanf SscanfFunction
+//inputs text format
+//outputs varargout
+//!
+ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
+  if ((arg.size() != 2) || (!arg[0].isString()) || (!arg[1].isString()))
+    throw Exception("sscanf takes two arguments, the text and the format string");
+  QTemporaryFile fp;
+  if (!fp.open())
+    throw Exception("sscanf was unable to open a temp file (and so it won't work)");
+  QTextStream out(&fp);
+  out << arg[0].asString();
+  out.seek(0);
+  fp.seek(0);
+  return ScanfFunction(&fp,arg[1].asString());
+}

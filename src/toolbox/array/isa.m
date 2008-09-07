@@ -21,11 +21,9 @@
 %\item @|'int32'| for signed 32-bit integers
 %\item @|'uint64'| for unsigned 64-bit integers
 %\item @|'int64'| for signed 64-bit integers
-%\item @|'float'| for 32-bit floating point numbers
+%\item @|'single'| for 32-bit floating point numbers
 %\item @|'double'| for 64-bit floating point numbers
-%\item @|'complex'| for complex floating point numbers with 32-bits per field
-%\item @|'dcomplex'| for complex floating point numbers with 64-bits per field
-%\item @|'string'| for string arrays
+%\item @|'char'| for string arrays
 %\end{itemize}
 %If the argument is a user-defined type (via the @|class| function), then
 %the name of that class is returned.
@@ -33,14 +31,14 @@
 %Here are some examples of the @|isa| call.
 %@<
 %a = {1}
-%isa(a,'string')
+%isa(a,'char')
 %isa(a,'cell')
 %@>
 %Here we use @|isa| along with shortcut boolean evaluation to 
 %safely determine if a variable contains the string @|'hello'|
 %@<
 %a = 'hello'
-%isa(a,'string') && strcmp(a,'hello')
+%isa(a,'char') && strcmp(a,'hello')
 %@>
 %!
 
@@ -48,7 +46,7 @@
 % Licensed under the GPL
 
 function y = isa(x,type)
-  if (~strcomp(typeof(type),'string'))
+  if (~strcomp(typeof(type),'char'))
     error('type argument to isa must be a string');
   end
   y = strcomp(class(x),type);

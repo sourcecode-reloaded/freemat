@@ -20,22 +20,14 @@
 #ifndef __DynLib_hpp__
 #define __DynLib_hpp__
 
-#include <string>
-
-#ifdef WIN32
-#include <windows.h>
-typedef HMODULE libhandle;
-#else
-#include <dlfcn.h>
-typedef void* libhandle;
-#endif
+#include <QString>
+#include <QLibrary>
 
 class DynLib {
-  libhandle lib;
+  QLibrary lib;
 public:
-  DynLib(std::string filename);
-  void* GetSymbol(const char* symbolName);
-  ~DynLib();
+  DynLib(QString filename);
+  void* GetSymbol(QString symbolName);
 };
 
 #endif

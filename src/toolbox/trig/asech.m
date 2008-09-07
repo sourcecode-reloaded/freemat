@@ -26,7 +26,7 @@
 %@$"y=asech(0.342)","1.73547783917348","close"
 %@$"y=asech(0.342+0.532i)","1.19972722497695-1.07886824988565i","close"
 %@$"y=asech(inf)","pi/2*i","close"
-%@$"y=asech(2.523f)"," 1.1632546fi","close"
+%@$"y=asech(float(2.523))","float(1.1632546i)","close"
 %!
 
 
@@ -37,5 +37,5 @@ function y = asech(x)
   if (nargin == 0 || ~isnumeric(x))
     error('asech expects a single, numeric input');
   end
-  y = acosh(1.f./x);
+  y = acosh(1 ./ x);
   

@@ -1,119 +1,117 @@
 #ifndef __Token_hpp__
 #define __Token_hpp__
 
-#include <string>
 #include "Array.hpp"
+#include <QTextStream>
+#include <QChar>
 
-using namespace std;
+typedef uint16 TokenType;
 
-typedef unsigned char byte;
-const byte TOK_INVALID = 0;
-const byte TOK_IDENT = 130;
-const byte TOK_NUMBER = 131;
-const byte TOK_SPACE = 132;
-const byte TOK_STRING = 133;
-const byte TOK_KEYWORD = 134;
-const byte TOK_BREAK = 135;
-const byte TOK_CASE = 136;
-const byte TOK_CATCH = 137;
-const byte TOK_CONTINUE = 138;
-const byte TOK_DBSTEP = 139;
-const byte TOK_DBTRACE = 140;
-const byte TOK_ELSE = 141;
-const byte TOK_ELSEIF = 142;
-const byte TOK_END = 143;
-const byte TOK_FOR = 144;
-const byte TOK_FUNCTION = 145;
-const byte TOK_GLOBAL = 146;
-const byte TOK_IF = 147;
-const byte TOK_KEYBOARD = 148;
-const byte TOK_OTHERWISE = 149;
-const byte TOK_PERSISTENT = 150;
-const byte TOK_QUIT = 151;
-const byte TOK_RETALL = 152;
-const byte TOK_RETURN = 153;
-const byte TOK_SWITCH = 154;
-const byte TOK_TRY = 155;
-const byte TOK_WHILE = 156;
+const TokenType TOK_INVALID = 0;
+const TokenType TOK_IDENT = 130;
+const TokenType TOK_SPACE = 132;
+const TokenType TOK_STRING = 133;
+const TokenType TOK_KEYWORD = 134;
+const TokenType TOK_BREAK = 135;
+const TokenType TOK_CASE = 136;
+const TokenType TOK_CATCH = 137;
+const TokenType TOK_CONTINUE = 138;
+const TokenType TOK_DBSTEP = 139;
+const TokenType TOK_DBTRACE = 140;
+const TokenType TOK_ELSE = 141;
+const TokenType TOK_ELSEIF = 142;
+const TokenType TOK_END = 143;
+const TokenType TOK_FOR = 144;
+const TokenType TOK_FUNCTION = 145;
+const TokenType TOK_GLOBAL = 146;
+const TokenType TOK_IF = 147;
+const TokenType TOK_KEYBOARD = 148;
+const TokenType TOK_OTHERWISE = 149;
+const TokenType TOK_PERSISTENT = 150;
+const TokenType TOK_QUIT = 151;
+const TokenType TOK_RETALL = 152;
+const TokenType TOK_RETURN = 153;
+const TokenType TOK_SWITCH = 154;
+const TokenType TOK_TRY = 155;
+const TokenType TOK_WHILE = 156;
 // Generated (synthetic) token;
-const byte TOK_MULTI = 157;
-const byte TOK_SPECIAL = 158;
-const byte TOK_VARIABLE = 159;
-const byte TOK_DYN = 160;
-const byte TOK_BLOCK = 161;
-const byte TOK_EOF = 162;
-const byte TOK_MATDEF = 163;
-const byte TOK_CELLDEF = 164;
-const byte TOK_PARENS = 165;
-const byte TOK_BRACES = 166;
-const byte TOK_BRACKETS = 167;
-const byte TOK_ROWDEF = 168;
-const byte TOK_UNARY_MINUS = 169;
-const byte TOK_UNARY_PLUS = 170;
-const byte TOK_EXPR = 171;
-const byte TOK_DOTTIMES = 172;
-const byte TOK_DOTRDIV = 173;
-const byte TOK_DOTLDIV = 174;
-const byte TOK_DOTPOWER = 175;
-const byte TOK_DOTTRANSPOSE = 176;
-const byte TOK_LE = 177;
-const byte TOK_GE = 178;
-const byte TOK_EQ = 179;
-const byte TOK_NE = 180;
-const byte TOK_SOR = 181;
-const byte TOK_SAND = 182;
-const byte TOK_QSTATEMENT = 183;
-const byte TOK_STATEMENT = 184;
-const byte TOK_INTEGER = 185;
-const byte TOK_FLOAT = 186;
-const byte TOK_DOUBLE = 187;
-const byte TOK_COMPLEX = 188;
-const byte TOK_DCOMPLEX = 189;
-const byte TOK_FUNCTION_DEFS = 190;
-const byte TOK_SCRIPT = 191;
-const byte TOK_ANONYMOUS_FUNC = 192;
-const byte TOK_NEST_FUNC = 193;
-const byte TOK_TYPE_DECL = 194;
-typedef byte tok;
+const TokenType TOK_MULTI = 157;
+const TokenType TOK_SPECIAL = 158;
+const TokenType TOK_VARIABLE = 159;
+const TokenType TOK_DYN = 160;
+const TokenType TOK_BLOCK = 161;
+const TokenType TOK_EOF = 162;
+const TokenType TOK_MATDEF = 163;
+const TokenType TOK_CELLDEF = 164;
+const TokenType TOK_PARENS = 165;
+const TokenType TOK_BRACES = 166;
+const TokenType TOK_BRACKETS = 167;
+const TokenType TOK_ROWDEF = 168;
+const TokenType TOK_UNARY_MINUS = 169;
+const TokenType TOK_UNARY_PLUS = 170;
+const TokenType TOK_EXPR = 171;
+const TokenType TOK_DOTTIMES = 172;
+const TokenType TOK_DOTRDIV = 173;
+const TokenType TOK_DOTLDIV = 174;
+const TokenType TOK_DOTPOWER = 175;
+const TokenType TOK_DOTTRANSPOSE = 176;
+const TokenType TOK_LE = 177;
+const TokenType TOK_GE = 178;
+const TokenType TOK_EQ = 179;
+const TokenType TOK_NE = 180;
+const TokenType TOK_SOR = 181;
+const TokenType TOK_SAND = 182;
+const TokenType TOK_QSTATEMENT = 183;
+const TokenType TOK_STATEMENT = 184;
+const TokenType TOK_REALF = 185;
+const TokenType TOK_IMAGF = 186;
+const TokenType TOK_REAL = 187;
+const TokenType TOK_IMAG = 188;
+const TokenType TOK_FUNCTION_DEFS = 190;
+const TokenType TOK_SCRIPT = 191;
+const TokenType TOK_ANONYMOUS_FUNC = 192;
+const TokenType TOK_NEST_FUNC = 193;
+const TokenType TOK_TYPE_DECL = 194;
+
 class Serialize;
 
 class ParseException {
   unsigned m_pos;
-  string m_text;
+  QString m_text;
 public:
-  ParseException(unsigned pos = 0, string text = string()) : m_pos(pos), m_text(text) {}
+  ParseException(unsigned pos = 0, QString text = QString()) : m_pos(pos), m_text(text) {}
   unsigned Position() {return m_pos;}
-  string Text() {return m_text;}
+  QString Text() {return m_text;}
 };
 
 class Token {
-  byte m_tok;
+  TokenType m_tok;
   unsigned m_pos;
-  string m_text;
+  QString m_text;
   Array m_array;
 public:
   Token();
-  Token(byte tok, unsigned pos = 0, string text = string());
+  Token(TokenType tok, unsigned pos = 0, QString text = QString());
   Token(Serialize *s);
   void freeze(Serialize *s) const;
-  bool is(byte tok) const {return m_tok == tok;}
+  bool is(TokenType tok) const {return m_tok == tok;}
   bool isBinaryOperator() const;
   bool isUnaryOperator() const;
   unsigned precedence() const;
   bool isRightAssociative() const;
-  byte value() const {return m_tok;}
-  void setValue(byte a) {m_tok = a;}
+  TokenType value() const {return m_tok;}
+  void setValue(TokenType a) {m_tok = a;}
   unsigned position()  const {return m_pos;}
-  string text()  const {return m_text;}
-  void setText(string txt) {m_text = txt;}
+  QString text()  const {return m_text;}
+  void setText(QString txt) {m_text = txt;}
   Array array() const {return m_array;}
   void fillArray();
-  void print(ostream& o) const;
+  void print(QTextStream& o) const;
 };
 
-string TokenToString(const Token& b);
+QString TokenToString(const Token& b);
 
-ostream& operator<<(ostream& o, const Token& b);
+QTextStream& operator<<(QTextStream& o, const Token& b);
 
 void FreezeToken(const Token& a, Serialize *s);
 

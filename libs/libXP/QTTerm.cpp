@@ -421,9 +421,9 @@ void QTTerm::keyPressEvent(QKeyEvent *e) {
   }
 }
 
-void QTTerm::OutputRawString(string txt) {
+void QTTerm::OutputRawString(QString txt) {
   for (size_t i=0;i<txt.size();i++)
-    setChar(txt[i],true);
+    setChar(txt[i].toAscii(),true);
 }
 
 void QTTerm::calcGeometry() {

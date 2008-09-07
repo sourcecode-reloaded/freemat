@@ -66,6 +66,24 @@ bool IsInfinite(double t) {
 
 }
 
+bool IsInfinite(int8) {return false;}
+bool IsInfinite(int16) {return false;}
+bool IsInfinite(int32) {return false;}
+bool IsInfinite(int64) {return false;}
+bool IsInfinite(uint8) {return false;}
+bool IsInfinite(uint16) {return false;}
+bool IsInfinite(uint32) {return false;}
+bool IsInfinite(uint64) {return false;}
+
+bool IsFinite(int8) {return true;}
+bool IsFinite(int16) {return true;}
+bool IsFinite(int32) {return true;}
+bool IsFinite(int64) {return true;}
+bool IsFinite(uint8) {return true;}
+bool IsFinite(uint16) {return true;}
+bool IsFinite(uint32) {return true;}
+bool IsFinite(uint64) {return true;}
+
 bool IsNaN(int32 t) {
   return true;
 }
@@ -123,16 +141,34 @@ bool IsFinite(double t) {
   return (!(IsNaN(t) || IsInfinite(t)));
 }
 
-void ToHexString(float t, char *ptr) {
+double NaN() {
+  union {
+    float f;
+    unsigned int i;
+  } u;
+  u.i = 0x7fC00000;
+  return u.f;
+}
+
+double Inf() {
+  union {
+    float f;
+    unsigned int i;
+  } u;
+  u.i = 0x7f800000;
+  return u.f;
+}
+
+QString ToHexString(float t) {
   union {
     float f;
     unsigned int i;
   } u;
   u.f = t;
-  sprintf(ptr,"%08x",u.i);
+  return QString("%1").arg(uint(u.i),int(8),int(16),QChar('0'));
 }
 
-void ToHexString(double t, char *ptr) {
+QString ToHexString(double t) {
   union {
     double f;
     unsigned int i[2];
@@ -141,9 +177,9 @@ void ToHexString(double t, char *ptr) {
   if (!endianDetected) 
     CheckBigEndian();
   if (!bigEndian) 
-    sprintf(ptr,"%08x%08x",u.i[1],u.i[0]);
+    return QString("%1%2").arg(uint(u.i[1]),int(8),int(16),QChar('0')).arg(uint(u.i[0]),int(8),int(16),QChar('0'));
   else
-    sprintf(ptr,"%08x%08x",u.i[0],u.i[1]);
+    return QString("%1%2").arg(uint(u.i[0]),int(8),int(16),QChar('0')).arg(uint(u.i[1]),int(8),int(16),QChar('0'));
 }
 
 
@@ -186,7 +222,7 @@ __declspec( dllexport ) double log1p(double x){
 			fnstsw	ax
 			fld        st
 			sahf
-			jc        l3        // in case x is NaN or ±Inf
+			jc        l3        // in case x is NaN or ï¿½Inf
 
 	l4:      
 			fabs
@@ -205,7 +241,7 @@ __declspec( dllexport ) double log1p(double x){
 			jmp l5
 
 	l3:      
-			jp        l4        // in case x is ±Inf
+			jp        l4        // in case x is ï¿½Inf
 			fstp        st(1)
 			fstp        st(1)
 	l5:

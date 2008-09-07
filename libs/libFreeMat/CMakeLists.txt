@@ -5,36 +5,34 @@ QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/Interpreter.hpp ${CMAKE_CURRENT_SO
  
 ADD_LIBRARY( FreeMatlib 
 Array.cpp 
+Algorithms.cpp 
 Interpreter.cpp 
 Context.cpp 
-Data.cpp 
-Dimensions.cpp 
 EigenDecompose.cpp 
 Exception.cpp 
 File.cpp 
 IEEEFP.cpp 
+IndexArray.cpp 
 LAPACK.cpp 
 LeastSquaresSolver.cpp 
 LinearEqSolver.cpp 
 LUDecompose.cpp 
-Malloc.cpp 
 Math.cpp 
 MatrixMultiply.cpp 
 Module.cpp 
-NumericArray.cpp 
-QRDecompose.cpp 
 Scope.cpp 
 Serialize.cpp 
-SingularValueDecompose.cpp 
-Sparse.cpp 
+SparseMatrix.cpp 
 Class.cpp 
 Print.cpp 
 Token.cpp 
 Parser.cpp 
 Scanner.cpp 
 Tree.cpp 
-#JITVM.cpp 
 FunctionDef.cpp 
+FuncPtr.cpp 
+AnonFunc.cpp 
+SparseCCS.cpp 
 ${CMAKE_CURRENT_SOURCE_DIR}/Intrepreter.moc.cpp
 )
 

@@ -259,7 +259,7 @@ private slots:
   void redo();
   void RefreshBPLists();
   void refreshContext();
-  void IllegalLineOrCurrentPath(string name, int line);
+  void IllegalLineOrCurrentPath(QString name, int line);
   void ShowActiveLine();
   void dbstep();
   void dbtrace();

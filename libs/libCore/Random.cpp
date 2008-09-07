@@ -19,10 +19,11 @@
 
 #include "Core.hpp"
 #include "Exception.hpp"
-#include "Malloc.hpp"
 #include <math.h>
 #include <stdio.h>
 #include "RanLib.hpp"
+#include "Operators.hpp"
+#include "Utils.hpp"
 
 static bool initialized = false;
 
@@ -47,16 +48,18 @@ static bool initialized = false;
 //seed(32,41);
 //rand(1,5)
 //@>
+//@@Signature
+//function seed SeedFunction
+//inputs s t
+//outputs none
 //!
 ArrayVector SeedFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 2)
     throw Exception("Seed function requires a two integer arguments");
-  Array tmp1(arg[0]);
   uint32 seedval1;
-  Array tmp2(arg[1]);
   uint32 seedval2;
-  seedval1 = tmp1.getContentsAsIntegerScalar();
-  seedval2 = tmp2.getContentsAsIntegerScalar();
+  seedval1 = (uint32) arg[0].asInteger();
+  seedval2 = (uint32) arg[1].asInteger();
   setall(seedval1,seedval2);
   init_genrand(seedval1);
   initialized = true;
@@ -105,36 +108,27 @@ ArrayVector SeedFunction(int nargout, const ArrayVector& arg) {
 //@<
 //randbeta(3*ones(1,5),7*ones(1,5))
 //@>
+//@@Signature
+//function randbeta RandBetaFunction
+//inputs alpha beta
+//outputs y
 //!
+
+struct OpRandBeta {
+  template <typename T>
+  static inline T func(const T& v1, const T& v2) {
+    return CastConvert<T,float>(genbet(float(v1),float(v2)));
+  }
+  template <typename T>
+  static inline void func(const T& ar, const T& ai, const T& br, const T& bi, T& cr, T& ci) {
+    throw Exception("randbeta is not supported for complex arguments");
+  }
+};
+
 ArrayVector RandBetaFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 2)
     throw Exception("randbeta requires two parameter arguments");
-  Array arg1(arg[0]);
-  Array arg2(arg[1]);
-  if (arg1.isEmpty() || arg2.isEmpty()) 
-    return SingleArrayVector(Array::emptyConstructor());
-  // Check the logic to see if one or both are scalar values
-  if (!(arg1.isScalar() || arg2.isScalar() || (arg1.dimensions().equals(arg2.dimensions()))))
-    throw Exception("randbeta requires either one of the two arguments to be a scalar, or both arguments to be the same size");
-  int arg1_advance;
-  int arg2_advance;
-  arg1_advance = (arg1.isScalar()) ? 0 : 1;
-  arg2_advance = (arg2.isScalar()) ? 0 : 1;
-  // Output dimension is the larger of the two
-  Dimensions outDims;
-  if (arg1.getLength() > arg2.getLength()) {
-    outDims = arg1.dimensions();
-  } else {
-    outDims = arg2.dimensions();
-  }
-  arg1.promoteType(FM_FLOAT);
-  arg2.promoteType(FM_FLOAT);
-  float *dp = (float *) Malloc(sizeof(float)*outDims.getElementCount());
-  float *p1 = (float*) arg1.getDataPointer();
-  float *p2 = (float*) arg2.getDataPointer();
-  for (int i=0;i<outDims.getElementCount();i++) 
-    dp[i] = genbet(p1[i*arg1_advance],p2[i*arg2_advance]);
-  return SingleArrayVector(Array(FM_FLOAT,outDims,dp));
+  return DotOp<OpRandBeta>(arg[0],arg[1]);
 }
 
 //!
@@ -156,36 +150,26 @@ ArrayVector RandBetaFunction(int nargout, const ArrayVector& arg) {
 //@<
 //randi(zeros(1,6),5*ones(1,6))
 //@>
+//@@Signature
+//function randi RandIFunction
+//inputs low high
+//outputs y
 //!
+struct OpRandI {
+  template <typename T>
+  static inline T func(const T& v1, const T& v2) {
+    return CastConvert<T,int32>(ignuin(long(v1),long(v2)));
+  }
+  template <typename T>
+  static inline void func(const T&, const T&, const T&, const T&, T&, T&) {
+    throw Exception("randi is not supported for complex arguments");
+  }
+};
+
 ArrayVector RandIFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 2)
     throw Exception("randi requires two parameter arguments");
-  Array arg1(arg[0]);
-  Array arg2(arg[1]);
-  if (arg1.isEmpty() || arg2.isEmpty()) 
-    return SingleArrayVector(Array::emptyConstructor());
-  // Check the logic to see if one or both are scalar values
-  if (!(arg1.isScalar() || arg2.isScalar() || (arg1.dimensions().equals(arg2.dimensions()))))
-    throw Exception("randbeta requires either one of the two arguments to be a scalar, or both arguments to be the same size");
-  int arg1_advance;
-  int arg2_advance;
-  arg1_advance = (arg1.isScalar()) ? 0 : 1;
-  arg2_advance = (arg2.isScalar()) ? 0 : 1;
-  // Output dimension is the larger of the two
-  Dimensions outDims;
-  if (arg1.getLength() > arg2.getLength()) {
-    outDims = arg1.dimensions();
-  } else {
-    outDims = arg2.dimensions();
-  }
-  arg1.promoteType(FM_INT32);
-  arg2.promoteType(FM_INT32);
-  int32 *dp = (int32 *) Malloc(sizeof(int32)*outDims.getElementCount());
-  int32 *p1 = (int32*) arg1.getDataPointer();
-  int32 *p2 = (int32*) arg2.getDataPointer();
-  for (int i=0;i<outDims.getElementCount();i++) 
-    dp[i] = ignuin(p1[i*arg1_advance],p2[i*arg2_advance]);
-  return SingleArrayVector(Array(FM_INT32,outDims,dp));
+  return DotOp<OpRandI>(arg[0],arg[1]);
 }
   
 //!
@@ -226,24 +210,27 @@ ArrayVector RandIFunction(int nargout, const ArrayVector& arg) {
 //randchi(4*ones(1,6))
 //sum(randn(4,6).^2)
 //@>
+//@@Signature
+//function randchi RandChiFunction
+//inputs n
+//outputs y
 //!
+struct OpRandChi {
+  template <typename T>
+  static inline T func(const T& v1) {
+    if (v1 <= 0) throw Exception("argument to randchi must be positive");
+    return CastConvert<T,float>(genchi(float(v1)));
+  }
+  template <typename T>
+  static inline void func(const T&, const T&, T&, T&) {
+    throw Exception("randchi is not supported for complex arguments");
+  }
+};
+
 ArrayVector RandChiFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("randchi requires exactly one parameter (the vector of degrees of freedom)");
-  Array arg1(arg[0]);
-  if (arg1.isEmpty()) 
-    return SingleArrayVector(Array::emptyConstructor());
-  arg1.promoteType(FM_FLOAT);
-  // Output dimension is the larger of the two
-  Dimensions outDims(arg1.dimensions());
-  float *dp = (float *) Malloc(sizeof(float)*outDims.getElementCount());
-  float *p1 = (float*) arg1.getDataPointer();
-  for (int i=0;i<outDims.getElementCount();i++) {
-    if (p1[i] <= 0)
-      throw Exception("argument to randchi must be positive");
-    dp[i] = genchi(p1[i]);
-  }
-  return SingleArrayVector(Array(FM_FLOAT,outDims,dp));
+  return UnaryOp<OpRandChi>(arg[0]);
 }
 
 //!
@@ -270,21 +257,26 @@ ArrayVector RandChiFunction(int nargout, const ArrayVector& arg) {
 //@<
 //randexp(ones(1,6))
 //@>
+//@@Signature
+//function randexp RandExpFunction
+//inputs lambda
+//outputs y
 //!
+struct OpRandExp {
+  template <typename T>
+  static inline T func(const T& v1) {
+    return CastConvert<T,float>(genexp(float(v1)));
+  }
+  template <typename T>
+  static inline void func(const T&, const T&, T&, T&) {
+    throw Exception("randexp is not supported for complex arguments");
+  }
+};
+
 ArrayVector RandExpFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("randexp requires exactly one parameter (the vector of means)");
-  Array arg1(arg[0]);
-  if (arg1.isEmpty()) 
-    return SingleArrayVector(Array::emptyConstructor());
-  arg1.promoteType(FM_FLOAT);
-  // Output dimension is the larger of the two
-  Dimensions outDims(arg1.dimensions());
-  float *dp = (float *) Malloc(sizeof(float)*outDims.getElementCount());
-  float *p1 = (float*) arg1.getDataPointer();
-  for (int i=0;i<outDims.getElementCount();i++) 
-    dp[i] = genexp(p1[i]);
-  return SingleArrayVector(Array(FM_FLOAT,outDims,dp));
+  return UnaryOp<OpRandExp>(arg[0]);
 }
 
 //!
@@ -315,21 +307,26 @@ ArrayVector RandExpFunction(int nargout, const ArrayVector& arg) {
 //randp(33*ones(1,10))
 //randbin(1000*ones(1,10),33/1000*ones(1,10))
 //@>
+//@@Signature
+//function randp RandPoissonFunction
+//inputs n
+//outputs y
 //!
+struct OpRandPoisson {
+  template <typename T>
+  static inline T func(const T& v1) {
+    return CastConvert<T,int32>(ignpoi(int32(v1)));
+  }
+  template <typename T>
+  static inline void func(const T&, const T&, T&, T&) {
+    throw Exception("randp is not supported for complex arguments");
+  }
+};
+
 ArrayVector RandPoissonFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("randp requires exactly one parameter (the vector of means)");
-  Array arg1(arg[0]);
-  if (arg1.isEmpty()) 
-    return SingleArrayVector(Array::emptyConstructor());
-  arg1.promoteType(FM_FLOAT);
-  // Output dimension is the larger of the two
-  Dimensions outDims(arg1.dimensions());
-  int32 *dp = (int32 *) Malloc(sizeof(int32)*outDims.getElementCount());
-  float *p1 = (float*) arg1.getDataPointer();
-  for (int i=0;i<outDims.getElementCount();i++) 
-    dp[i] = ignpoi(p1[i]);
-  return SingleArrayVector(Array(FM_INT32,outDims,dp));
+  return UnaryOp<OpRandPoisson>(arg[0]);
 }
 
 //!
@@ -360,36 +357,26 @@ ArrayVector RandPoissonFunction(int nargout, const ArrayVector& arg) {
 //randbin(100,.1*ones(1,10))
 //sum(rand(100,10)<0.1)
 //@>
+//@@Signature
+//function randbin RandBinFunction
+//inputs N p
+//outputs y
 //!
+struct OpRandBin {
+  template <typename T>
+  static inline T func(const T& v1, const T& v2) {
+    return CastConvert<T,int32>(ignbin(uint32(v1),float(v2)));
+  }
+  template <typename T>
+  static inline void func(const T&, const T&, const T&, const T&, T&, T&) {
+    throw Exception("randbin is not supported for complex arguments");
+  }
+};
+
 ArrayVector RandBinFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 2)
     throw Exception("randbin requires two parameter arguments");
-  Array arg1(arg[0]);
-  Array arg2(arg[1]);
-  if (arg1.isEmpty() || arg2.isEmpty()) 
-    return SingleArrayVector(Array::emptyConstructor());
-  // Check the logic to see if one or both are scalar values
-  if (!(arg1.isScalar() || arg2.isScalar() || (arg1.dimensions().equals(arg2.dimensions()))))
-    throw Exception("randbin requires either one of the two arguments to be a scalar, or both arguments to be the same size");
-  int arg1_advance;
-  int arg2_advance;
-  arg1_advance = (arg1.isScalar()) ? 0 : 1;
-  arg2_advance = (arg2.isScalar()) ? 0 : 1;
-  // Output dimension is the larger of the two
-  Dimensions outDims;
-  if (arg1.getLength() > arg2.getLength()) {
-    outDims = arg1.dimensions();
-  } else {
-    outDims = arg2.dimensions();
-  }
-  arg1.promoteType(FM_UINT32);
-  arg2.promoteType(FM_FLOAT);
-  uint32 *dp = (uint32 *) Malloc(sizeof(uint32)*outDims.getElementCount());
-  uint32 *p1 = (uint32*) arg1.getDataPointer();
-  float *p2 = (float*) arg2.getDataPointer();
-  for (int i=0;i<outDims.getElementCount();i++) 
-    dp[i] = ignbin(p1[i*arg1_advance],p2[i*arg2_advance]);
-  return SingleArrayVector(Array(FM_UINT32,outDims,dp));
+  return DotOp<OpRandBin>(arg[0],arg[1]);
 }
 
 //!
@@ -416,41 +403,26 @@ ArrayVector RandBinFunction(int nargout, const ArrayVector& arg) {
 //randnbin(3*ones(1,4),.01)
 //randnbin(6*ones(1,4),.01)
 //@>
+//@@Signature
+//function randnbin RandNBinFunction
+//inputs r p
+//outputs y
 //!
+struct OpRandNBin {
+  template <typename T>
+  static inline T func(const T& v1, const T& v2) {
+    return CastConvert<T,int32>(ignnbn(uint32(v1),float(v2)));
+  }
+  template <typename T>
+  static inline void func(const T&, const T&, const T&, const T&, T&, T&) {
+    throw Exception("randnbin is not supported for complex arguments");
+  }
+};
+
 ArrayVector RandNBinFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 2)
     throw Exception("randnbin requires two parameter arguments");
-  Array arg1(arg[0]);
-  Array arg2(arg[1]);
-  if (arg1.isEmpty() || arg2.isEmpty()) 
-    return SingleArrayVector(Array::emptyConstructor());
-  // Check the logic to see if one or both are scalar values
-  if (!(arg1.isScalar() || arg2.isScalar() || (arg1.dimensions().equals(arg2.dimensions()))))
-    throw Exception("randnbin requires either one of the two arguments to be a scalar, or both arguments to be the same size");
-  int arg1_advance;
-  int arg2_advance;
-  arg1_advance = (arg1.isScalar()) ? 0 : 1;
-  arg2_advance = (arg2.isScalar()) ? 0 : 1;
-  // Output dimension is the larger of the two
-  Dimensions outDims;
-  if (arg1.getLength() > arg2.getLength()) {
-    outDims = arg1.dimensions();
-  } else {
-    outDims = arg2.dimensions();
-  }
-  arg1.promoteType(FM_UINT32);
-  arg2.promoteType(FM_FLOAT);
-  uint32 *dp;
-  dp = (uint32 *) Malloc(sizeof(uint32)*outDims.getElementCount());
-  uint32 *p1;
-  p1 = (uint32*) arg1.getDataPointer();
-  float *p2;
-  p2 = (float*) arg2.getDataPointer();
-  int i;
-  for (i=0;i<(int)outDims.getElementCount();i++) {
-    dp[i] = ignnbn(p1[i*arg1_advance],p2[i*arg2_advance]);
-  }
-  return SingleArrayVector(Array(FM_UINT32,outDims,dp));
+  return DotOp<OpRandNBin>(arg[0],arg[1]);
 }
 
 //!
@@ -483,39 +455,27 @@ ArrayVector RandNBinFunction(int nargout, const ArrayVector& arg) {
 //randf(5*ones(1,9),7)
 //randchi(5*ones(1,9))./randchi(7*ones(1,9))
 //@>
+//@@Signature
+//function randf RandFFunction
+//inputs n m
+//outputs y
 //!
+struct OpRandF {
+  template <typename T>
+  static inline T func(const T& v1, const T& v2) {
+    if ((v1 <= 0) || (v2 <= 0)) throw Exception("randf requires positive arguments");
+    return CastConvert<T,float>(genf(float(v1),float(v2)));
+  }
+  template <typename T>
+  static inline void func(const T&, const T&, const T&, const T&, T&, T&) {
+    throw Exception("randf is not supported for complex arguments");
+  }  
+};
+
 ArrayVector RandFFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 2)
     throw Exception("randf requires two parameter arguments");
-  Array arg1(arg[0]);
-  Array arg2(arg[1]);
-  if (arg1.isEmpty() || arg2.isEmpty()) 
-    return SingleArrayVector(Array::emptyConstructor());
-  // Check the logic to see if one or both are scalar values
-  if (!(arg1.isScalar() || arg2.isScalar() || (arg1.dimensions().equals(arg2.dimensions()))))
-    throw Exception("randf requires either one of the two arguments to be a scalar, or both arguments to be the same size");
-  int arg1_advance;
-  int arg2_advance;
-  arg1_advance = (arg1.isScalar()) ? 0 : 1;
-  arg2_advance = (arg2.isScalar()) ? 0 : 1;
-  // Output dimension is the larger of the two
-  Dimensions outDims;
-  if (arg1.getLength() > arg2.getLength()) {
-    outDims = arg1.dimensions();
-  } else {
-    outDims = arg2.dimensions();
-  }
-  arg1.promoteType(FM_FLOAT);
-  arg2.promoteType(FM_FLOAT);
-  float *dp = (float *) Malloc(sizeof(float)*outDims.getElementCount());
-  float *p1 = (float*) arg1.getDataPointer();
-  float *p2 = (float*) arg2.getDataPointer();
-  for (int i=0;i<outDims.getElementCount();i++) {
-    if ((p1[i*arg1_advance] <= 0) || (p2[i*arg2_advance]) <= 0)
-      throw Exception("randf requires positive arguments");
-    dp[i] = genf(p1[i*arg1_advance],p2[i*arg2_advance]);
-  }
-  return SingleArrayVector(Array(FM_FLOAT,outDims,dp));
+  return DotOp<OpRandF>(arg[0],arg[1]);
 }
 
 //!
@@ -551,37 +511,26 @@ ArrayVector RandFFunction(int nargout, const ArrayVector& arg) {
 //randgamma(1,15*ones(1,9))
 //sum(randexp(ones(15,9)))
 //@>
+//@@Signature
+//function randgamma RandGammaFunction
+//inputs a r
+//outputs y
 //!
+struct OpRandGamma {
+  template <typename T>
+  static inline T func(const T& v1, const T& v2) {
+    return CastConvert<T,float>(gengam(float(v1),float(v2)));
+  }
+  template <typename T>
+  static inline void func(const T&, const T&, const T&, const T&, T&, T&) {
+    throw Exception("randgamma is not supported for complex arguments");
+  }  
+};
+
 ArrayVector RandGammaFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 2)
     throw Exception("randgamma requires two parameter arguments");
-  Array arg1(arg[0]);
-  Array arg2(arg[1]);
-  if (arg1.isEmpty() || arg2.isEmpty()) 
-    return SingleArrayVector(Array::emptyConstructor());
-  // Check the logic to see if one or both are scalar values
-  if (!(arg1.isScalar() || arg2.isScalar() || (arg1.dimensions().equals(arg2.dimensions()))))
-    throw Exception("randgamma requires either one of the two arguments to be a scalar, or both arguments to be the same size");
-  int arg1_advance;
-  int arg2_advance;
-  arg1_advance = (arg1.isScalar()) ? 0 : 1;
-  arg2_advance = (arg2.isScalar()) ? 0 : 1;
-  // Output dimension is the larger of the two
-  Dimensions outDims;
-  if (arg1.getLength() > arg2.getLength()) {
-    outDims = arg1.dimensions();
-  } else {
-    outDims = arg2.dimensions();
-  }
-  arg1.promoteType(FM_FLOAT);
-  arg2.promoteType(FM_FLOAT);
-  float *dp = (float *) Malloc(sizeof(float)*outDims.getElementCount());
-  float *p1 = (float*) arg1.getDataPointer();
-  float *p2 = (float*) arg2.getDataPointer();
-  for (int i=0;i<outDims.getElementCount();i++) {
-    dp[i] = gengam(p1[i*arg1_advance],p2[i*arg2_advance]);
-  }
-  return SingleArrayVector(Array(FM_FLOAT,outDims,dp));
+  return DotOp<OpRandGamma>(arg[0],arg[1]);
 }
 
 //!
@@ -618,35 +567,34 @@ ArrayVector RandGammaFunction(int nargout, const ArrayVector& arg) {
 //@<
 //randmulti(10000,[0.4999,0.4999,0.0002])
 //@>
+//@@Signature
+//function randmulti RandMultiFunction
+//inputs N pvec
+//outputs y
 //!
 ArrayVector RandMultiFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 2)
     throw Exception("randmulti requires two parameter arguments");
-  Array arg1(arg[0]);
-  Array arg2(arg[1]);
-  if (arg1.isEmpty() || arg2.isEmpty()) 
-    return SingleArrayVector(Array::emptyConstructor());
-  int N = arg1.getContentsAsIntegerScalar();
+  if (arg[0].isEmpty() || arg[1].isEmpty())
+    return ArrayVector(EmptyConstructor());
+  int N = arg[0].asInteger();
   if (N<0) 
     throw Exception("number of events to generate for randmulti must be a nonnegative integer");
-  arg2.promoteType(FM_FLOAT);
-  // Verify the correctness of the probability argument
-  float *dp;
-  dp = (float*) arg2.getReadWriteDataPointer();
-  float Psum = 0.0;
-  for (int i=0;i<arg2.getLength();i++) {
-    if ((dp[i] < 0) || (dp[i] > 1)) 
-      throw Exception("probabiliy vector argument to randmulti must have all elements between 0 and 1");
+  Array arg2 = arg[1].toClass(Float);
+  if (arg2.isSparse()) throw Exception("randmulti does not work with sparse arguments");
+  BasicArray<float> &dp(arg2.real<float>());
+  float Psum = 0;
+  for (index_t i=1;i<=arg2.length();i++) {
+    if ((dp[i] < 0) || (dp[i] > 1))
+      throw Exception("probability vector argument to randmulti must have all elements between 0 and 1");
     Psum += dp[i];
   }
-  for (int i=0;i<arg2.getLength();i++) {
+  for (index_t i=1;i<=arg2.length();i++) 
     dp[i] /= Psum;
-  }
-  Dimensions outDims;
-  outDims = arg2.dimensions();
-  int32 *ip = (int32*) Malloc(sizeof(int32)*arg2.getLength());
-  genmul(N,dp,arg2.getLength(),(long int*) ip);
-  return SingleArrayVector(Array(FM_INT32,outDims,ip));
+  NTuple outDims(arg2.dimensions());
+  BasicArray<int32> rp(outDims);
+  genmul(N,dp.data(),int(arg2.length()),(long*)rp.data());
+  return ArrayVector(Array(rp).toClass(Double));
 }
   
 //!
@@ -671,41 +619,28 @@ ArrayVector RandMultiFunction(int nargout, const ArrayVector& arg) {
 //@<
 //randnchi(5*ones(1,9),0.3)
 //@>
+//@@Signature
+//function randnchi RandNChiFunction
+//inputs n mu
+//outputs y
 //!
+struct OpRandNChi {
+  template <typename T>
+  static inline T func(const T& v1, const T& v2) {
+    if (v1 <= 1) throw Exception("degrees of freedom argument must be > 1");
+    if (v2 < 0) throw Exception("noncentrality parameter must be positive");
+    return CastConvert<T,float>(gennch(float(v1),float(v2)));
+  }
+  template <typename T>
+  static inline void func(const T&, const T&, const T&, const T&, T&, T&) {
+    throw Exception("randnchi is not supported for complex arguments");
+  }  
+};
+
 ArrayVector RandNChiFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 2)
     throw Exception("randnchi requires two parameter arguments");
-  Array arg1(arg[0]);
-  Array arg2(arg[1]);
-  if (arg1.isEmpty() || arg2.isEmpty()) 
-    return SingleArrayVector(Array::emptyConstructor());
-  // Check the logic to see if one or both are scalar values
-  if (!(arg1.isScalar() || arg2.isScalar() || (arg1.dimensions().equals(arg2.dimensions()))))
-    throw Exception("randnchi requires either one of the two arguments to be a scalar, or both arguments to be the same size");
-  int arg1_advance;
-  int arg2_advance;
-  arg1_advance = (arg1.isScalar()) ? 0 : 1;
-  arg2_advance = (arg2.isScalar()) ? 0 : 1;
-  // Output dimension is the larger of the two
-  Dimensions outDims;
-  if (arg1.getLength() > arg2.getLength()) {
-    outDims = arg1.dimensions();
-  } else {
-    outDims = arg2.dimensions();
-  }
-  arg1.promoteType(FM_FLOAT);
-  arg2.promoteType(FM_FLOAT);
-  float *dp = (float *) Malloc(sizeof(float)*outDims.getElementCount());
-  float *p1 = (float*) arg1.getDataPointer();
-  float *p2 = (float*) arg2.getDataPointer();
-  for (int i=0;i<outDims.getElementCount();i++) {
-    if (p1[i*arg1_advance] <= 1.0)
-      throw Exception("degrees of freedom argument must be > 1.0");
-    if (p2[i*arg2_advance] < 0.0)
-      throw Exception("noncentrality parameter must be positive");
-    dp[i] = gennch(p1[i*arg1_advance],p2[i*arg2_advance]);
-  }
-  return SingleArrayVector(Array(FM_FLOAT,outDims,dp));
+  return DotOp<OpRandNChi>(arg[0],arg[1]);
 }
 
 //!
@@ -733,79 +668,76 @@ ArrayVector RandNChiFunction(int nargout, const ArrayVector& arg) {
 //@<
 //randnf(5*ones(1,9),7,1.34)
 //@>
+//@@Signature
+//function randnf RandNFFunction
+//inputs n m c
+//outputs y
 //!
 ArrayVector RandNFFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 3)
     throw Exception("randnf requires three parameter arguments");
-  Array arg1(arg[0]);
-  Array arg2(arg[1]);
-  Array arg3(arg[2]);
+  Array arg1(arg[0].asDenseArray().toClass(Float));
+  Array arg2(arg[1].asDenseArray().toClass(Float));
+  Array arg3(arg[2].asDenseArray().toClass(Float));
   if (arg1.isEmpty() || arg2.isEmpty() || arg3.isEmpty()) 
-    return SingleArrayVector(Array::emptyConstructor());
-  int arg1_advance;
-  int arg2_advance;
-  int arg3_advance;
-  arg1_advance = (arg1.isScalar()) ? 0 : 1;
-  arg2_advance = (arg2.isScalar()) ? 0 : 1;
-  arg3_advance = (arg3.isScalar()) ? 0 : 1;
-  if (arg1_advance && arg2_advance && (!arg1.dimensions().equals(arg2.dimensions())))
+    return ArrayVector(EmptyConstructor());
+  int arg1_advance = (arg1.isScalar()) ? 0 : 1;
+  int arg2_advance = (arg2.isScalar()) ? 0 : 1;
+  int arg3_advance = (arg3.isScalar()) ? 0 : 1;
+  if (arg1_advance && arg2_advance && (arg1.dimensions() != arg2.dimensions()))
     throw Exception("vector arguments to randnf must be the same size");
-  if (arg1_advance && arg3_advance && (!arg1.dimensions().equals(arg3.dimensions())))
+  if (arg1_advance && arg3_advance && (arg1.dimensions() != arg3.dimensions()))
     throw Exception("vector arguments to randnf must be the same size");
-  if (arg2_advance && arg3_advance && (!arg2.dimensions().equals(arg3.dimensions())))
+  if (arg2_advance && arg3_advance && (arg2.dimensions() != arg3.dimensions()))
     throw Exception("vector arguments to randnf must be the same size");
   // Output dimension is the larger of the two
-  Dimensions outDims;
-  if ((arg1.getLength() > arg2.getLength()) && (arg1.getLength() > arg3.getLength()))
+  NTuple outDims;
+  if ((arg1.length() > arg2.length()) && (arg1.length() > arg3.length()))
     outDims = arg1.dimensions();
-  else if ((arg2.getLength() > arg1.getLength()) && (arg2.getLength() > arg3.getLength()))
+  else if ((arg2.length() > arg1.length()) && (arg2.length() > arg3.length()))
     outDims = arg2.dimensions();
-  else if ((arg3.getLength() > arg1.getLength()) && (arg3.getLength() > arg2.getLength()))
+  else if ((arg3.length() > arg1.length()) && (arg3.length() > arg2.length()))
     outDims = arg3.dimensions();
-  arg1.promoteType(FM_FLOAT);
-  arg2.promoteType(FM_FLOAT);
-  arg3.promoteType(FM_FLOAT);
-  float *dp;
-  dp = (float *) Malloc(sizeof(float)*outDims.getElementCount());
-  float *p1 = (float*) arg1.getDataPointer();
-  float *p2 = (float*) arg2.getDataPointer();
-  float *p3 = (float*) arg3.getDataPointer();
-  for (int i=0;i<outDims.getElementCount();i++) {
-    if (p1[i*arg1_advance] <= 1.0)
-      throw Exception("numerator degrees of freedom argument must be > 1.0");
-    if (p2[i*arg2_advance] <= 0.0)
-      throw Exception("denominator degrees of freedom must be positive");
-    if (p3[i*arg2_advance] < 0.0)
-      throw Exception("noncentrality parameter must be non-negative");
-    dp[i] = gennf(p1[i*arg1_advance],p2[i*arg2_advance],p3[i*arg3_advance]);
+  if (arg1.isScalar()) arg1 = Uniform(outDims,arg1.constRealScalar<float>());
+  if (arg2.isScalar()) arg2 = Uniform(outDims,arg2.constRealScalar<float>());
+  if (arg3.isScalar()) arg3 = Uniform(outDims,arg3.constRealScalar<float>());
+  BasicArray<float> dp(outDims);
+  const BasicArray<float> &p1(arg1.constReal<float>());
+  const BasicArray<float> &p2(arg2.constReal<float>());
+  const BasicArray<float> &p3(arg3.constReal<float>());
+  for (index_t i=1;i<=dp.length();i++) {
+    if (p1[i] <= 1.0) throw Exception("numerator degrees of freedom must be > 1.0");
+    if (p2[i] <= 0.0) throw Exception("denominator degrees of freedom must be positive");
+    if (p3[i] < 0.0) throw Exception("noncentrality parameter must be non-negative");
+    dp[i] = gennf(p1[i],p2[i],p3[i]);
   }
-  return SingleArrayVector(Array(FM_FLOAT,outDims,dp));
+  return ArrayVector(Array(dp));
 }
 
-void InitializeRandGen() {
+static void InitializeRandGen() {
   unsigned long init[4]={0x923, 0x234, 0x405, 0x456}, length=4;
   init_by_array(init, length);
   initialized = true;
 }
 
-ArrayVector RandStateControl(const ArrayVector& arg) {
-  string key = arg[0].getContentsAsStringUpper();
+static ArrayVector RandStateControl(const ArrayVector& arg) {
+  QString key = arg[0].asString().toUpper();
   if (!(key=="STATE"))
     throw Exception("expecting string 'state' as first argument");
   if (arg.size() == 1) {
-    uint32 *mt = (uint32*) Malloc(sizeof(uint32)*625);
-    GetRandStateVect(mt);
-    return SingleArrayVector(Array(FM_UINT32,Dimensions(625,1),mt));
+    BasicArray<uint32> mp(NTuple(625,1));
+    GetRandStateVect(mp.data());
+    return ArrayVector(Array(mp).toClass(Double));
   } else {
     Array statevec(arg[1]);
-    if ((statevec.isScalar()) && (statevec.getContentsAsIntegerScalar() == 0)) {
+    if ((statevec.isScalar()) && (statevec.asInteger() == 0)) {
       InitializeRandGen();
       return ArrayVector();
     } else {
-      statevec.promoteType(FM_UINT32);
-      if (statevec.getLength() != 625)
+      statevec = statevec.toClass(UInt32);
+      if (statevec.length() != 625)
 	throw Exception("illegal state vector - must be of length 625");
-      SetRandStateVect((uint32*)statevec.getDataPointer());
+      SetRandStateVect(statevec.real<uint32>().data());
       return ArrayVector();
     }
   }
@@ -884,59 +816,20 @@ ArrayVector RandStateControl(const ArrayVector& arg) {
 //randn('state',b);   % restart the random generator so...
 //c = randn(1,3)      % we get random sequence 2 again
 //@>
+//@@Signature
+//function randn RandnFunction
+//inputs varargin
+//outputs y
 //!
 ArrayVector RandnFunction(int nargout, const ArrayVector& arg) {
   if (!initialized) 
     InitializeRandGen();
-  int i;
-  Array t;
-  Dimensions dims;
-  int32 *dp;
-  if (arg.size() == 0)
-    dims.makeScalar();
-  else {
-    if (arg[0].isString())
-      return RandStateControl(arg);
-    // Case 1 - all of the entries are scalar
-    bool allScalars;
-    allScalars = true;
-    for (i=0;i<arg.size();i++)
-      allScalars &= arg[i].isScalar();
-    if (allScalars) {
-      t = arg[0];
-      if (arg.size() == 1) {
-	// If all scalars and only one argument - we want a square zero matrix
-	dims.set(0,t.getContentsAsIntegerScalar());
-	dims.set(1,dims.get(0));
-      } else {
-	// If all scalars and and multiple arguments, we count dimensions
-	for (i=0;i<arg.size();i++) {
-	  t = arg[i];
-	  dims.set(i,t.getContentsAsIntegerScalar());
-	}
-      }
-    } else {
-      if (arg.size() > 1)
-	throw Exception("Arguments to randn function must be either all scalars or a single vector");
-      t = arg[0];
-      t.promoteType(FM_UINT32);
-      dp = (int*) t.getDataPointer();
-      for (i=0;i<(int)t.getLength();i++)
-	dims.set(i,dp[i]);
-    }
-    bool allPositive;
-    allPositive = true;
-    for (i=0;i<(int)dims.getLength();i++)
-      allPositive &= (dims.get(i) >= 0);
-    if (!allPositive)
-      throw Exception("Randn function requires positive arguments");
-  }
-  double *qp;
-  qp = (double*) Malloc(sizeof(double)*dims.getElementCount());
-  int len;
-  int j;
-  len = dims.getElementCount();
-  for (j=0;j<len;j+=2) {
+  if ((arg.size() > 0) && (arg[0].isString()))
+    return RandStateControl(arg);
+  NTuple dim(ArrayVectorAsDimensions(arg));
+  BasicArray<double> qp(dim);
+  index_t len = dim.count();
+  for (index_t j=1;j<=len;j+=2) {
     double x1, x2, w, y1, y2;
     do {
       x1 = 2.0*genrand_res53()-1.0;
@@ -947,10 +840,10 @@ ArrayVector RandnFunction(int nargout, const ArrayVector& arg) {
     y1 = x1 * w;
     y2 = x2 * w;
     qp[j] = y1;
-    if (j<len-1)
+    if (j<=(len-1))
       qp[j+1] = y2;
   }
-  return SingleArrayVector(Array(FM_DOUBLE,dims,qp));
+  return ArrayVector(Array(qp));
 }
 
 //!
@@ -1018,60 +911,19 @@ ArrayVector RandnFunction(int nargout, const ArrayVector& arg) {
 //rand('state',b);   % restart the random generator so...
 //c = rand(1,3)      % we get random sequence 2 again
 //@>
+//@@Signature
+//function rand RandFunction
+//inputs varargin
+//outputs y
 //!
 ArrayVector RandFunction(int nargout, const ArrayVector& arg) {
   if (!initialized)
     InitializeRandGen();
-  int i;
-  Array t;
-  Dimensions dims;
-  int32 *dp;
-  if (arg.size() == 0)
-    dims.makeScalar();
-  else {
-    // Check for state assignment
-    if (arg[0].isString())
-      return RandStateControl(arg);
-    // Case 1 - all of the entries are scalar
-    bool allScalars;
-    allScalars = true;
-    for (i=0;i<arg.size();i++)
-      allScalars &= arg[i].isScalar();
-    if (allScalars) {
-      t = arg[0];
-      if (arg.size() == 1) {
-	// If all scalars and only one argument - we want a square zero matrix
-	dims.set(0,t.getContentsAsIntegerScalar());
-	dims.set(1,dims.get(0));
-      } else {
-	// If all scalars and and multiple arguments, we count dimensions
-	for (i=0;i<arg.size();i++) {
-	  t = arg[i];
-	  dims.set(i,t.getContentsAsIntegerScalar());
-	}	  
-      }
-    } else {
-      if (arg.size() > 1)
-	throw Exception("Arguments to rand function must be either all scalars or a single vector");
-      t = arg[0];
-      t.promoteType(FM_UINT32);
-      dp = (int*) t.getDataPointer();
-      for (i=0;i<(int)t.getLength();i++)
-	dims.set(i,dp[i]);
-    }
-    bool allPositive;
-    allPositive = true;
-    for (i=0;i<(int)dims.getLength();i++)
-      allPositive &= (dims.get(i) >= 0);
-    if (!allPositive)
-      throw Exception("Rand function requires posItive arguments");
-  }
-  double *qp;
-  qp = (double*) Malloc(sizeof(double)*dims.getElementCount());
-  int len;
-  int j;
-  len = dims.getElementCount();
-  for (j=0;j<len;j++)
+  if ((arg.size() > 0) && (arg[0].isString()))
+    return RandStateControl(arg);
+  NTuple dim(ArrayVectorAsDimensions(arg));
+  BasicArray<double> qp(dim);
+  for (index_t j=1;j<=qp.length();j++) 
     qp[j] = genrand_res53();
-  return SingleArrayVector(Array(FM_DOUBLE,dims,qp));
+  return ArrayVector(Array(qp));
 }

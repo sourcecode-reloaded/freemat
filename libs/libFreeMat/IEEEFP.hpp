@@ -23,6 +23,14 @@
 
 bool IsInfinite(float t);
 bool IsInfinite(double t);
+bool IsInfinite(int8);
+bool IsInfinite(int16);
+bool IsInfinite(int32);
+bool IsInfinite(int64);
+bool IsInfinite(uint8);
+bool IsInfinite(uint16);
+bool IsInfinite(uint32);
+bool IsInfinite(uint64);
 bool IsNaN(int32 t);
 bool IsNaN(int64 t);
 bool IsNaN(uint32 t);
@@ -30,8 +38,20 @@ bool IsNaN(uint64 t);
 bool IsNaN(double t);
 bool IsFinite(float t);
 bool IsFinite(double t);
-void ToHexString(float t, char *ptr);
-void ToHexString(double t, char *ptr);
+bool IsFinite(int8);
+bool IsFinite(int16);
+bool IsFinite(int32);
+bool IsFinite(int64);
+bool IsFinite(uint8);
+bool IsFinite(uint16);
+bool IsFinite(uint32);
+bool IsFinite(uint64);
+
+QString ToHexString(float t);
+QString ToHexString(double t);
+double NaN(void);
+double Inf(void);
+
 #ifndef M_PI
 #define M_PI 3.141592653589793
 #endif

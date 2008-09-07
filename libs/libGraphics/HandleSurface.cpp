@@ -226,10 +226,10 @@ void HandleSurface::SetupDefaults() {
 
 void HandleSurface::DoAutoXMode() {
   Array zdata(ArrayPropertyLookup("zdata"));
-  Array xdata(Array::doubleMatrixConstructor(zdata.rows(),zdata.columns()));
-  double *dp = (double*) xdata.getReadWriteDataPointer();
-  int cols(zdata.columns());
-  int rows(zdata.rows());
+  Array xdata(Double,NTuple(zdata.rows(),zdata.columns()));
+  double *dp = xdata.real<double>().data();
+  int cols = int(zdata.columns());
+  int rows = int(zdata.rows());
   for (int j=0;j<cols;j++)
     for (int i=0;i<rows;i++)
       dp[i+j*rows] = j+1;
@@ -239,10 +239,10 @@ void HandleSurface::DoAutoXMode() {
 
 void HandleSurface::DoAutoYMode() {
   Array zdata(ArrayPropertyLookup("zdata"));
-  Array ydata(Array::doubleMatrixConstructor(zdata.rows(),zdata.columns()));
-  double *dp = (double*) ydata.getReadWriteDataPointer();
-  int cols(zdata.columns());
-  int rows(zdata.rows());
+  Array ydata(Double,NTuple(zdata.rows(),zdata.columns()));
+  double *dp = ydata.real<double>().data();
+  int cols = int(zdata.columns());
+  int rows = int(zdata.rows());
   for (int j=0;j<cols;j++)
     for (int i=0;i<rows;i++)
       dp[i+j*rows] = i+1;
@@ -280,21 +280,21 @@ void HandleSurface::UpdateState() {
   2
 */
 
-Array HandleSurface::GetCoordinateMatrix(std::string name, bool isXcoord) {
+Array HandleSurface::GetCoordinateMatrix(QString name, bool isXcoord) {
   // Get the elevation data from the object
   Array zdata(ArrayPropertyLookup("zdata"));
-  int zrows(zdata.rows());
-  int zcols(zdata.columns());
+  int zrows = int(zdata.rows());
+  int zcols = int(zdata.columns());
   if (StringCheck(name+"mode","manual")) {
     // not auto mode...
     Array cdata(ArrayPropertyLookup(name));
     if (cdata.isVector() && 
-	((isXcoord && (cdata.getLength() == zcols)) ||
-	 (!isXcoord && (cdata.getLength() == zrows)))) {
-      cdata.promoteType(FM_DOUBLE);
-      const double *qp = (const double*) cdata.getDataPointer();
-      Array mat(Array::doubleMatrixConstructor(zrows,zcols));
-      double *dp = (double*) mat.getReadWriteDataPointer();
+	((isXcoord && (cdata.length() == int(zcols))) ||
+	 (!isXcoord && (cdata.length() == int(zrows))))) {
+      cdata = cdata.toClass(Double);
+      const double *qp = cdata.constReal<double>().constData();
+      Array mat(Double,NTuple(zrows,zcols));
+      double *dp = mat.real<double>().data();
       for (int i=0;i<zcols;i++)
 	for (int j=0;j<zrows;j++) {
 	  if (isXcoord)
@@ -310,8 +310,8 @@ Array HandleSurface::GetCoordinateMatrix(std::string name, bool isXcoord) {
     } 
   }
   // In auto mode, or the given data is bogus...
-  Array mat(Array::doubleMatrixConstructor(zrows,zcols));
-  double *dp = (double*) mat.getReadWriteDataPointer();
+  Array mat(Double,NTuple(zrows,zcols));
+  double *dp = mat.real<double>().data();
   for (int i=0;i<zcols;i++)
     for (int j=0;j<zrows;j++) {
       if (isXcoord)
@@ -329,18 +329,18 @@ QVector<QVector<cpoint> > HandleSurface::BuildQuadsNoTexMap(HPConstrainedStringC
   // Get the x,y,z & color data points
   QVector<QVector<cpoint> > retval;
   Array xdata(GetCoordinateMatrix("xdata",true));
-  xdata.promoteType(FM_DOUBLE);
+  xdata = xdata.toClass(Double);
   Array ydata(GetCoordinateMatrix("ydata",false));
-  ydata.promoteType(FM_DOUBLE);
+  ydata = ydata.toClass(Double);
   Array zdata(ArrayPropertyLookup("zdata"));
-  zdata.promoteType(FM_DOUBLE);
-  if ((xdata.getLength() != zdata.getLength()) ||
-      (xdata.getLength() != ydata.getLength())) return retval;
+  zdata = zdata.toClass(Double);
+  if ((xdata.length() != zdata.length()) ||
+      (xdata.length() != ydata.length())) return retval;
   if (zdata.isEmpty()) return retval;
-  double *xdp = (double*) xdata.getDataPointer();
-  double *ydp = (double*) ydata.getDataPointer();
-  double *zdp = (double*) zdata.getDataPointer();
-  int rows = zdata.rows();   int cols = zdata.columns();
+  double *xdp = xdata.real<double>().data();
+  double *ydp = ydata.real<double>().data();
+  double *zdp = zdata.real<double>().data();
+  int rows = int(zdata.rows());   int cols = int(zdata.columns());
   if (cp->Is("interp") && ((img.height() < rows) || (img.width() < cols))) return retval;
   if (ap->Is("interp") && ((img.height() < rows) || (img.width() < cols))) return retval;
   if (cp->Is("flat") && ((img.height() < rows-1) || (img.width() < cols-1))) return retval;

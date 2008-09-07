@@ -7,7 +7,7 @@
 %   x = isfloat(y)
 %@]
 %and it returns a logical 1 if the argument is a floating 
-%point array (i.e., a @|float| or @|double|), and a logical
+%point array (i.e., a @|single| or @|double|), and a logical
 %0 otherwise.
 %!
 
@@ -15,6 +15,6 @@
 % Licensed under the GPL
 
 function x = isfloat(y)
-  x = any(strcmp({'float','double'},class(y)));
+  x = any(strcmp({'single','double'},class(y)));
   
   

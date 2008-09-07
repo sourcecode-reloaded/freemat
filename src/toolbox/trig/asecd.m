@@ -20,7 +20,7 @@
 %@@Tests
 %@$"y=asecd(0.342)","0-99.43555562312426i","close"
 %@$"y=asecd(2)","60","close"
-%@$"y=asecd(2.523f)","66.6495819f","close"
+%@$"y=asecd(float(2.523))","float(66.6495819)","close"
 %@$"y=asecd(inf)","90","close"
 %!
 

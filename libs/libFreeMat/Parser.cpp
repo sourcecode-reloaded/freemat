@@ -186,9 +186,8 @@ Tree* Parser::functionDefinition() {
 }
 
 bool Parser::matchNumber() {
-  return (match(TOK_INTEGER) || match(TOK_FLOAT) ||
-	  match(TOK_DOUBLE) || match(TOK_COMPLEX) || 
-	  match(TOK_DCOMPLEX));
+  return (match(TOK_REAL) || match(TOK_IMAG) || 
+	  match(TOK_REALF) || match(TOK_IMAGF));
 }
 
 Tree* Parser::specialFunctionCall() {
@@ -531,7 +530,7 @@ const Token& Parser::next() {
   return m_lex.next();
 }
 
-void Parser::serror(string errmsg) {
+void Parser::serror(QString errmsg) {
   if (m_lex.contextNum() > lastpos) {
     lasterr = errmsg;
     lastpos = m_lex.contextNum();
@@ -539,13 +538,13 @@ void Parser::serror(string errmsg) {
   throw ParseException(m_lex.contextNum(),errmsg);
 }
 
-const Token & Parser::expect(byte a) {
+const Token & Parser::expect(TokenType a) {
   const Token & ret(next());
   if (!m_lex.next().is(a)) {
     if (a != TOK_EOF)
-      serror(string("Expecting ") + TokenToString(Token(a,0)));
+      serror(QString("Expecting ") + TokenToString(Token(a,0)));
     else
-      serror(string("Unexpected input"));
+      serror(QString("Unexpected input"));
   }  else {
     consume();
   }
@@ -582,7 +581,7 @@ static unsigned precedence(const Token& t) {
   return 1;
 }
 
-Tree* Parser::matDef(byte basetok, byte closebracket) {
+Tree* Parser::matDef(TokenType basetok, TokenType closebracket) {
   m_lex.pushWSFlag(false);
   Tree* matdef(new Tree(basetok));
   if (match(TOK_SPACE)) consume();
@@ -628,9 +627,10 @@ Tree* Parser::anonymousFunction() {
   }
   expect(')');
   root->addChild(args);
+  pos1 = m_lex.contextNum();
   root->addChild(expression());
   pos2 = m_lex.contextNum();
-  root->setText("(" + m_lex.snippet(pos1,pos2));
+  root->setText(m_lex.snippet(pos1,pos2));
   root->validate();
   return root;
 }
@@ -706,7 +706,7 @@ Tree* Parser::exp(unsigned p) {
   return t;
 }
 
-bool Parser::match(byte a) {
+bool Parser::match(TokenType a) {
   return m_lex.next().is(a);
 }
 
@@ -769,13 +769,13 @@ CodeBlock Parser::processStatementList() {
   return CodeBlock(statementList());
 }
 
-CodeBlock ParseString(string arg) {
+CodeBlock ParseString(QString arg) {
   Scanner S(arg,"");
   Parser P(S);
   return P.processStatementList();
 }
 
-CodeBlock ParseExpressionString(string arg) {
+CodeBlock ParseExpressionString(QString arg) {
   Scanner S(arg,"");
   Parser P(S);
   try {

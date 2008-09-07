@@ -23,11 +23,10 @@
 #include "Array.hpp"
 #include "Tree.hpp"
 #include "DynLib.hpp"
-#include "Serialize.hpp"
 #include "mex.h"
 #include <QSharedData>
+#include <QDateTime>
 #include "Scope.hpp"
-#include <string>
 
 using namespace std;
 
@@ -44,6 +43,9 @@ class Interpreter;
 
 typedef ArrayVector (*BuiltInFuncPtr) (int,const ArrayVector&);
 typedef ArrayVector (*SpecialFuncPtr) (int,const ArrayVector&,Interpreter*);
+
+void VariableReferencesList(Tree *t, StringVector& idents);
+StringVector IdentifierList(Tree *t);
 
 /** Base class for the function types
  * A FunctionDef class is a base class for the different types
@@ -67,7 +69,7 @@ public:
   /**
    * The name of the function - must follow identifier rules.
    */
-  std::string name;
+  QString name;
   /**
    * The reference count for this functiondef
    */
@@ -194,11 +196,11 @@ public:
   /**
    * Location of the function's defining file in the current filesystem.
    */
-  std::string fileName;
+  QString fileName;
   /**
    * Time function was last modified.
    */
-  time_t timeStamp;
+  QDateTime timeStamp;
   /**
    * Set to true for all of the localFunctions.  
    */
@@ -269,16 +271,6 @@ public:
   unsigned ClosestLine(unsigned line);
 };
 
-/**
- * Routine to freeze an M-function to a serializing
- * stream.
- */
-void FreezeMFunction(MFunctionDef *fptr, Serialize *s);
-
-/**
- * Routine to thaw an M-function from a stream.
- */
-MFunctionDef* ThawMFunction(Serialize *s);
 
 class BuiltInFunctionDef : public FunctionDef {
 public:
@@ -390,7 +382,7 @@ public:
   /**
    * The return type of the function
    */
-  std::string retType;
+  QString retType;
   /**
    * Default constructor
    */
@@ -398,7 +390,7 @@ public:
 		      StringVector types_arg,
 		      StringVector arguments_arg,
 		      CodeList sizeChecks,
-		      std::string retType_arg);
+		      QString retType_arg);
   /**
    * Default destructor
    */
@@ -431,7 +423,7 @@ public:
   /**
    * The full name of the library to link to
    */
-  std::string fullname;
+  QString fullname;
   /**
    * The dynamic library object
    */
@@ -448,7 +440,7 @@ public:
   /**
    * Default constructor
    */
-  MexFunctionDef(std::string fullpathname);
+  MexFunctionDef(QString fullpathname);
   /**
    * Default destructor
    */

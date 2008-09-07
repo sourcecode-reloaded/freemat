@@ -20,7 +20,6 @@
 #ifndef __KeyManager_hpp__
 #define __KeyManager_hpp__
 
-#include <string>
 #include <list>
 #include "Scope.hpp"
 #include <QEventLoop>
@@ -56,16 +55,16 @@ public:
   virtual ~KeyManager();
   void Redisplay();
   void setTerminalWidth(int w);
-  void AddCharToLine(char c);
-  void ReplacePrompt(string prmt);
+  void AddCharToLine(QChar c);
+  void ReplacePrompt(QString prmt);
   int DisplayPrompt();
-  void OutputChar(char c, char pad);
-  void OutputString(string msg, char c);
+  void OutputChar(QChar c, QChar pad);
+  void OutputString(QString msg, QChar c);
   void TerminalMove(int n);
   void SetTermCurpos(int n);
   void PlaceCursor(int n);
-  int DisplayedCharWidth(char c, int aterm_curpos);
-  int DisplayedStringWidth(string s, int nc, int offset);
+  int DisplayedCharWidth(QChar c, int aterm_curpos);
+  int DisplayedStringWidth(QString s, int nc, int offset);
   int BuffCurposToTermCurpos(int n);
   void DeleteChars(int nc, int cut);
   void TruncateDisplay();
@@ -78,8 +77,8 @@ public:
   void getKeyPress();
  private:
   Context *context;
-  StringVector GetCompletions(string line, int word_end, 
-			      string &matchString);
+  StringVector GetCompletions(QString line, int word_end, 
+			      QString &matchString);
   void CursorLeft();
   void CursorRight();
   void BeginningOfLine();
@@ -88,36 +87,36 @@ public:
 
   void HistorySearchBackward();
   void HistorySearchForward();
-  void AddHistory(string line);
+  void AddHistory(QString line);
   void HistoryFindForwards();
   void HistoryFindBackwards();
-  void AddStringToLine(string s);
-  void SearchPrefix(string aline, int alen);
+  void AddStringToLine(QString s);
+  void SearchPrefix(QString aline, int alen);
   void Yank();
   void ClearCurrentLine();
   void ListCompletions(StringVector completions);
   void CompleteWord();
  protected:
   void EraseCharacters(int pos, int count);
-  void InsertCharacter(int pos, char c);
-  void SetCharacter(int pos, char c);
-  void InsertString(int pos, string s);
+  void InsertCharacter(int pos, QChar c);
+  void SetCharacter(int pos, QChar c);
+  void InsertString(int pos, QString s);
   
   void NewLine();
   void ResetLineBuffer();
-  list<string> enteredLines;  
+  StringVector enteredLines;  
   bool enteredLinesEmpty;  
   // the size (in text coords) of the window
   int nline;
   int ncolumn;
   // the text
-  QList<string> history;
+  StringVector history;
   // The new line buffer
-  string lineData;
+  QString lineData;
   // The maximum allowed line length
   int linelen;
   // The cut buffer
-  string cutbuf;
+  QString cutbuf;
   // number of characters in line
   int ntotal;
   // Current position in the buffer
@@ -132,13 +131,13 @@ public:
   int insert_curpos;
   int keyseq_count;
   int last_search;
-  string prefix;
+  QString prefix;
   int prefix_len;
   // True in insert mode
   bool insert;
   int startsearch;
   // The prompt
-  string prompt;
+  QString prompt;
   // length of the prompt string
   int prompt_len;
   // Are we waiting for input?
@@ -156,11 +155,11 @@ signals:
   void ClearEOD();
   void MoveBOL();
   void ClearDisplay();
-  void OutputRawString(string txt);
+  void OutputRawString(QString txt);
   void SendCommand(QString);
   void Interrupt();
   void UpdateVariables();
-  void ExecuteLine(string txt);
+  void ExecuteLine(QString txt);
 public slots:
   void Ready();
   void ClearHistory();
@@ -175,7 +174,7 @@ public slots:
   void StopAction();
   void DbStepAction();
   void DbTraceAction();
-  void SetPrompt(string);
+  void SetPrompt(QString);
   void ClearDisplayCommand();
   void ChangeDir(const QString& dir);
 signals:

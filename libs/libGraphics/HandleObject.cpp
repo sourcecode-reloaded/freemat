@@ -24,12 +24,12 @@
 #include "Core.hpp"
 #include "IEEEFP.hpp"
 
-bool HandleObject::IsType(std::string name) {
+bool HandleObject::IsType(QString name) {
   HPString* sp = (HPString*) LookupProperty("type");
   return (sp->Is(name));
 }
 
-void HandleObject::ToManual(std::string name) {
+void HandleObject::ToManual(QString name) {
   HPAutoManual *qp = (HPAutoManual*) LookupProperty(name);
   qp->Data("manual");
 }
@@ -43,7 +43,7 @@ bool HandleObject::HasChanged(StringVector names) {
   return false;
 }
 
-bool HandleObject::HasChanged(std::string name) {
+bool HandleObject::HasChanged(QString name) {
   StringVector names;
   names.push_back(name);
   return HasChanged(names);
@@ -62,7 +62,7 @@ void HandleObject::ClearChanged(StringVector names) {
   }    
 }
 
-void HandleObject::ClearChanged(std::string name) {
+void HandleObject::ClearChanged(QString name) {
   HandleProperty *hp;
   hp = LookupProperty(name);
   hp->ClearModified();
@@ -97,9 +97,8 @@ HandleObject::~HandleObject() {
   }
 }
 
-HandleProperty* HandleObject::LookupProperty(std::string name) {
-  std::transform(name.begin(),name.end(),name.begin(),
-		 (int(*)(int))tolower);
+HandleProperty* HandleObject::LookupProperty(QString name) {
+  name = name.toLower();
   // First look for the property to match (avoids the problem
   // with prefix names)
   HandleProperty** hp = m_properties.findSymbol(name);
@@ -114,7 +113,7 @@ HandleProperty* HandleObject::LookupProperty(std::string name) {
   return *hp;
 }
 
-void HandleObject::SetPropertyHandle(std::string name, unsigned value) {
+void HandleObject::SetPropertyHandle(QString name, unsigned value) {
   HPHandles* hp = (HPHandles*) LookupProperty(name);
   QVector<unsigned> newval;
   newval.push_back(value);
@@ -153,27 +152,27 @@ void HandleObject::MarkDirty() {
     fp->UpdateState();
 }
 
-std::string HandleObject::StringPropertyLookup(std::string name) {
+QString HandleObject::StringPropertyLookup(QString name) {
   HPString* sp = (HPString*) LookupProperty(name);
   return (sp->Data());
 }
 
-QVector<double> HandleObject::VectorPropertyLookup(std::string name) {
+QVector<double> HandleObject::VectorPropertyLookup(QString name) {
   HPVector* sp = (HPVector*) LookupProperty(name);
   return (sp->Data());
 }
 
-Array HandleObject::ArrayPropertyLookup(std::string name) {
+Array HandleObject::ArrayPropertyLookup(QString name) {
   HPArray* hp = (HPArray*) LookupProperty(name);
   return (hp->Data());
 }
   
-double HandleObject::ScalarPropertyLookup(std::string name) {
+double HandleObject::ScalarPropertyLookup(QString name) {
   HPScalar* sp = (HPScalar*) LookupProperty(name);
   return (sp->Data()[0]);
 }
 
-unsigned HandleObject::HandlePropertyLookup(std::string name) {
+unsigned HandleObject::HandlePropertyLookup(QString name) {
   HPHandles* sp = (HPHandles*) LookupProperty(name);
   if (sp->Data().empty())
     return 0;
@@ -181,12 +180,12 @@ unsigned HandleObject::HandlePropertyLookup(std::string name) {
     return (sp->Data()[0]);
 }
 
-void HandleObject::AddProperty(HandleProperty* hp, std::string name) {
+void HandleObject::AddProperty(HandleProperty* hp, QString name) {
   m_properties.insertSymbol(name,hp);
 }
 
-void HandleObject::SetConstrainedStringScalarDefault(std::string name,
-						     std::string value,
+void HandleObject::SetConstrainedStringScalarDefault(QString name,
+						     QString value,
 						     double sval) {
   HPConstrainedStringScalar *hp = 
     (HPConstrainedStringScalar*) LookupProperty(name);
@@ -197,8 +196,8 @@ void HandleObject::SetConstrainedStringScalarDefault(std::string name,
   hp->Scalar(sval);
 }
 
-void HandleObject::SetConstrainedStringColorDefault(std::string name,
-						    std::string value,
+void HandleObject::SetConstrainedStringColorDefault(QString name,
+						    QString value,
 						    double red, 
 						    double green,
 						    double blue) {
@@ -212,52 +211,51 @@ void HandleObject::SetConstrainedStringColorDefault(std::string name,
 }
 						     
 
-void HandleObject::SetConstrainedStringDefault(std::string name, std::string value) {
+void HandleObject::SetConstrainedStringDefault(QString name, QString value) {
   HPConstrainedString *hp = (HPConstrainedString*) LookupProperty(name);
   if (!hp)
     throw Exception("set constrained string default failed lookup of <" + name + ">");
   hp->Value(value);
 }
 
-void HandleObject::SetConstrainedStringSetDefault(std::string name, std::string values) {
+void HandleObject::SetConstrainedStringSetDefault(QString name, QString values) {
   HPConstrainedStringSet *hp = (HPConstrainedStringSet*) LookupProperty(name);
-  StringVector data;
-  Tokenize(values,data,"|");
+  StringVector data(values.split("|"));
   ((HPStringSet*)hp)->Data(data);
 }
 
-void HandleObject::SetThreeVectorDefault(std::string name, double x, double y, double z) {
+void HandleObject::SetThreeVectorDefault(QString name, double x, double y, double z) {
   HPThreeVector *hp = (HPThreeVector*) LookupProperty(name);
   hp->Value(x,y,z);
 }
 
-void HandleObject::SetFourVectorDefault(std::string name, double x, double y,
+void HandleObject::SetFourVectorDefault(QString name, double x, double y,
 					double z, double w) {
   HPFourVector *hp = (HPFourVector*) LookupProperty(name);
   hp->Value(x,y,z,w);
 }
 
-void HandleObject::SetTwoVectorDefault(std::string name, double x, double y) {
+void HandleObject::SetTwoVectorDefault(QString name, double x, double y) {
   HPTwoVector *hp = (HPTwoVector*) LookupProperty(name);
   hp->Value(x,y);
 }
 
-void HandleObject::SetStringDefault(std::string name, std::string value) {
+void HandleObject::SetStringDefault(QString name, QString value) {
   HPString *hp = (HPString*) LookupProperty(name);
   hp->Value(value);
 }
 
-void HandleObject::SetScalarDefault(std::string name, double value) {
+void HandleObject::SetScalarDefault(QString name, double value) {
   HPScalar *hp = (HPScalar*) LookupProperty(name);
   hp->Value(value);
 }
 
-bool HandleObject::IsAuto(std::string mode) {
+bool HandleObject::IsAuto(QString mode) {
   HPAutoManual *hp = (HPAutoManual*) LookupProperty(mode);
   return hp->Is("auto");
 }
   
-bool HandleObject::StringCheck(std::string name, std::string value) {
+bool HandleObject::StringCheck(QString name, QString value) {
   HPString *hp = (HPString*) LookupProperty(name);
   return hp->Is(value);
 }
@@ -294,9 +292,9 @@ double VecMax(QVector<double> &v) {
 
 double ArrayMin(Array a) {
   if (a.isEmpty()) return 0;
-  a.promoteType(FM_DOUBLE);
-  const double* v = (const double *) a.getDataPointer();
-  int len = a.getLength();
+  a = a.toClass(Double);
+  const double* v = a.constReal<double>().constData();
+  int len = int(a.length());
   double min = 0;
   bool first = true;
   for (int i=0;i<len;i++) {
@@ -313,9 +311,9 @@ double ArrayMin(Array a) {
 
 double ArrayMax(Array a) {
   if (a.isEmpty()) return 0;
-  a.promoteType(FM_DOUBLE);
-  const double* v = (const double *) a.getDataPointer();
-  int len = a.getLength();
+  a = a.toClass(Double);
+  const double* v = a.constReal<double>().constData();
+  int len = int(a.length());
   double max = 0;
   bool first = true;
   for (int i=0;i<len;i++) {

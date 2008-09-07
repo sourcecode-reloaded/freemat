@@ -9,6 +9,7 @@
 #include "llvm/PassManager.h"
 #include "llvm/LinkAllPasses.h"
 #include "llvm/Target/TargetData.h"
+#include "llvm/Support/Debug.h"
 #include <fstream>
 #include <iostream>
 #include "DebugStream.hpp"
@@ -20,6 +21,7 @@
 using namespace llvm;
 
 JIT::JIT() {
+  //  llvm::DebugFlag = true;
   m = new Module("test");
   #if defined(_MSC_VER)  
     m->setDataLayout("e-p:32:32-f64:32:64-i64:32:64");

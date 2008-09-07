@@ -26,7 +26,7 @@
 % Licensed under the GPL
 
 function y = rad2deg(x)
-  if (isa(x,'float') || isa(x,'complex'))
+  if (isa(x,'single'))
     y = x*float(180/pi);
   else
     y = x*180/pi;

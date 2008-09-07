@@ -26,7 +26,7 @@ class HandleSurface : public HandleImage {
   void DoAutoXMode();
   void DoAutoYMode();
   void DoAutoCMode();
-  Array GetCoordinateMatrix(std::string name, bool isXcoord);
+  Array GetCoordinateMatrix(QString name, bool isXcoord);
   QVector<QVector<cpoint> > BuildQuadsNoTexMap(HPConstrainedStringColor* cp,
 						       HPConstrainedStringScalar* ap);
 public:

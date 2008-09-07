@@ -20,14 +20,15 @@
 #ifndef __Types_hpp__
 #define __Types_hpp__
 
-#include <string>
+#include <QStringList>
 #include <QVector>
 #include <QtGlobal>
 #include <QList>
 #include <QRegExp>
-#include "List.hpp"
+#include <cmath>
+#include "FastList.hpp"
 
-typedef quint8    logical;
+typedef bool      logical;
 typedef qint8     int8;
 typedef quint8    uint8;
 typedef qint16    int16;
@@ -36,79 +37,32 @@ typedef qint32    int32;
 typedef quint32   uint32;
 typedef qint64    int64;
 typedef quint64   uint64;
-typedef int   indexType;
-typedef const indexType * constIndexPtr;
+typedef double index_t;
+const int NDims = 6;
 
-typedef enum {
-  FM_FUNCPTR_ARRAY,
-  FM_CELL_ARRAY,
-  FM_STRUCT_ARRAY,
-  FM_LOGICAL,
-  FM_UINT8,
-  FM_INT8,
-  FM_UINT16,
-  FM_INT16,
-  FM_UINT32,
-  FM_INT32,
-  FM_UINT64,
-  FM_INT64,
-  FM_FLOAT,
-  FM_DOUBLE,
-  FM_COMPLEX,
-  FM_DCOMPLEX,
-  FM_STRING,
-} Class;
+typedef QStringList StringVector;
 
-
-//CommonType is a helper function for binary and ternary operations (e.g. a:b, a:b:c)
-//When variable types are different the output type is the "least" of the input types.
-//(e.g. double:int8:float result is int8)
-inline Class CommonType( Class a, Class b ){
-    return ( a < b )? a : b;
-}
-inline Class CommonType( Class a, Class b, Class c ) {
-    return CommonType( a, CommonType( b, c ) );
+inline bool IsInteger(float x) {
+  return rintf(x) == x;
 }
 
-typedef PList<std::string> StringVector;
+inline bool IsInteger(double x) {
+  return rint(x) == x;
+}
 
-inline size_t ByteSize(Class t) {
-  switch(t) {
-  default:
-    throw Exception("Illegal argument to ByteSize function");
-  case FM_CELL_ARRAY:
-    return sizeof(void*);
-  case FM_STRUCT_ARRAY:
-    return sizeof(void*);
-  case FM_LOGICAL:
-    return sizeof(logical);
-  case   FM_UINT8:
-    return sizeof(uint8);
-  case   FM_INT8:
-    return sizeof(int8);
-  case   FM_UINT16:
-    return sizeof(uint16);
-  case   FM_INT16:
-    return sizeof(int16);
-  case   FM_UINT32:
-    return sizeof(uint32);
-  case   FM_INT32:
-    return sizeof(int32);
-  case   FM_UINT64:
-    return sizeof(uint64);
-  case   FM_INT64:
-    return sizeof(int64);
-  case   FM_FLOAT:
-    return sizeof(float);
-  case   FM_DOUBLE:
-    return sizeof(double);
-  case   FM_COMPLEX:
-    return sizeof(float)*2;
-  case   FM_DCOMPLEX:
-    return sizeof(double)*2;
-  case   FM_STRING:
-    return sizeof(char);
-  }
+inline bool IsInteger(int8 x) { return true; }
+inline bool IsInteger(uint8 x) { return true;}
+inline bool IsInteger(int16 x) { return true; }
+inline bool IsInteger(uint16 x) { return true;}
+inline bool IsInteger(int32 x) { return true; }
+inline bool IsInteger(uint32 x) { return true;}
+inline bool IsInteger(int64 x) { return true; }
+inline bool IsInteger(uint64 x) { return true;}
+inline bool IsInteger(bool x) { return true; }
+
+template <typename T>
+inline bool IsNonNegative(T x) {
+  return (x >= 0);
 }
 
 #endif

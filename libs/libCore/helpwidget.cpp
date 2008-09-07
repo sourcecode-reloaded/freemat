@@ -133,7 +133,7 @@ HelpWidget::HelpWidget(QString url, HelpWindow *mgr) {
 	  mgr,SLOT(activateModule(QTreeWidgetItem*,int)));
 
   m_tindex->setColumnCount(1);
-  m_tindex->setHeaderLabels(QStringList() << Interpreter::getVersionString().c_str());
+  m_tindex->setHeaderLabels(QStringList() << Interpreter::getVersionString());
   file = new QFile(url + "/sectable.txt");
   QRegExp reg("\\+\\s*\\((\\b\\w+\\b)\\)\\s*(\\b.*)");
   if (!file->open(QFile::ReadOnly | QIODevice::Text))
@@ -157,7 +157,7 @@ HelpWidget::HelpWidget(QString url, HelpWindow *mgr) {
 
 HelpWindow::HelpWindow(QString url) {
   setWindowIcon(QPixmap(":/images/freemat_small_mod_64.png"));
-  setWindowTitle(QString(Interpreter::getVersionString().c_str()) + " Online Help");
+  setWindowTitle(QString(Interpreter::getVersionString()) + " Online Help");
   m_initial = url;
   tb = new QTextBrowser(this);
   tb->setSource(QUrl::fromLocalFile(m_initial+"/index.html"));
@@ -241,4 +241,5 @@ void HelpWindow::createToolBars() {
 void HelpWindow::createStatusBar() {
   statusBar()->showMessage("Ready");
 }
+
 

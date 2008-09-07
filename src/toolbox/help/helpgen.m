@@ -1,8 +1,8 @@
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL
 
-function helpgen(source_path)
-  global sourcepath section_descriptors genfiles
+function helpgen(source_path,test_only)
+  global sourcepath section_descriptors genfiles skipexec
 
   diary([source_path,'/help_diary.txt']);
 
@@ -19,8 +19,14 @@ function helpgen(source_path)
 
   sourcepath = source_path;
   read_section_descriptors;
-  p = groupwriter({htmlwriter,latexwriter,bbtestwriter,textwriter, ...
-                   testwriter});
+  if (exist('test_only'))
+    p = groupwriter({testwriter,bbtestwriter});
+    skipexec = true;
+  else
+    p = groupwriter({htmlwriter,latexwriter,bbtestwriter,textwriter, ...
+                     testwriter});
+    skipexec = false;
+  end
   file_list = {};
   file_list = [file_list;helpgen_rdir([source_path,'/libs'])];
   file_list = [file_list;helpgen_rdir([source_path,'/src'])];
@@ -32,6 +38,7 @@ function helpgen(source_path)
     end
   end
 
+  if (skipexec) return; end;
   file_list = helpgen_rdir([source_path,'/src/toolbox']);
   for i=1:numel(file_list)
     merge_mfile(file_list{i});
@@ -72,6 +79,7 @@ function helpgen(source_path)
   end
   fprintf(fp,'\n');
   fclose(fp);
+  diary off
   
 function merge_mfile(filename)
   global sourcepath
@@ -113,30 +121,13 @@ function merge_mfile(filename)
 function read_section_descriptors
   global sourcepath section_descriptors
   fp = fopen([sourcepath,'/src/toolbox/help/section_descriptors.txt'],'r');
-  line = fgetline(fp);
   while (~feof(fp))
+    line = fgetline(fp);
     p = regexp(line,'(\w*)\s*([^\n]*)','tokens');
     section_descriptors.(p{1}{1}) = p{1}{2};
-    line = fgetline(fp);
   end
   fclose(fp);
   
-function file_list = helpgen_rdir(basedir)
-  file_list = {};
-  avec = dir(basedir);
-  for (i=1:numel(avec))
-    if (~(strcmp(avec(i).name,'.')  || (strcmp(avec(i).name,'..'))))
-      cpath = [basedir dirsep avec(i).name];
-      if (avec(i).isdir)
-        if (~strcmp(avec(i).name,'.svn'))
-          subdir_list = helpgen_rdir(cpath);
-          file_list = [file_list;subdir_list];
-        end
-      else
-        file_list = [file_list;{cpath}];
-      end
-    end
-  end
 
 function helpgen_processfile(filename,&writers)
   global sourcepath section_descriptors
@@ -154,6 +145,7 @@ function helpgen_processfile(filename,&writers)
   try
     fp = fopen(filename,'r');
   catch
+    printf('Error %s...\n',lasterr);
     return;
   end
   while (1)
@@ -243,9 +235,6 @@ function tok = mustmatch(line,pattern)
   if (isempty(toks)) error(sprintf('Error on line: %s',line)); end;
   tok = toks{1}{1};
 
-function res = testmatch(line,pattern)
-  res = ~isempty(regexp(line,pattern));
-
 function handle_filedump(&line,fp,pset,&writers)
   global genfiles
   fname = mustmatch(line,pset.fnin);
@@ -333,7 +322,7 @@ function handle_output(&line,fp,pset,&writers)
   line = getline(fp);
 
 function handle_exec(&line,fp,pset,&writers,exec_id)
-  global sourcepath
+  global sourcepath skipexec
   line = mustmatch(line,pset.execin);
   errors_expected = str2num(line);
   cmdlist = {};
@@ -347,6 +336,7 @@ function handle_exec(&line,fp,pset,&writers,exec_id)
 %  cmdlist = strrep(cmdlist,'\r','\\r');
 %  cmdlist = strrep(cmdlist,'\n','\\n');
   docomputeblock(writers,cmdlist,errors_expected);
+  if (skipexec) return; end;
   cd([sourcepath,'/help/tmp']);
   beginverbatim(writers);
   etext = threadcall(exec_id,100000,'simkeys',cmdlist);
@@ -359,7 +349,7 @@ function handle_exec(&line,fp,pset,&writers,exec_id)
     for (i=1:numel(cmdlist))
       printf('%s\n',cmdlist{i});
     end
-    error('Failed!');
+%    error('Failed!');
   end
   cd([sourcepath,'/help/tmp']);
   line = getline(fp);

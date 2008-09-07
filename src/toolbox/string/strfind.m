@@ -36,23 +36,20 @@
 
 
 function y = strfind(source,pattern)
-   patlen = length(pattern);
-   if( isempty( source ) )
-      y=[];
-      elseif (isa(source,'string'))
-         y = strfind_string(source,pattern);
-      elseif (iscellstr(source))
-         y = cell(size(source));
-         for (i=1:numel(source))
-            y{i} = strfind_string(source{i},pattern);
-         end
-      else
-         error('strfind expects string arguments or a cell array of strings');
-      end
-   end
+  patlen = length(pattern);
+  if (isa(source,'char'))
+    y = strfind_string(source,pattern);
+  elseif (iscellstr(source))
+    y = cell(size(source));
+    for (i=1:numel(source))
+      y{i} = strfind_string(source{i},pattern);
+    end
+  else
+    error('strfind expects string arguments or a cell array of strings');
+  end
 
 function y = strfind_string(source,pattern)
-  if (~isa(source,'string') | ~isa(pattern,'string'))
+  if (~isa(source,'char') | ~isa(pattern,'char'))
     error('strfind expects string arguments or a cell array of strings');
   end
   patlen = length(pattern);

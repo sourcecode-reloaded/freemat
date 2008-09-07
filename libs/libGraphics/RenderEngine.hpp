@@ -114,7 +114,7 @@ public:
 		       double x2, double y2, double z2,
 		       double x3, double y3, double z3) = 0;
   virtual void color(QVector<double>) = 0;
-  virtual void setLineStyle(std::string style) = 0;
+  virtual void setLineStyle(QString style) = 0;
   void color(double r, double g, double b) {QVector<double> t; t.push_back(r); t.push_back(g); t.push_back(b); color(t);}
   virtual void lineWidth(double n) = 0;
   virtual void line(double x1, double y1, double z1,
@@ -129,11 +129,11 @@ public:
   virtual void getViewport(int viewp[4]) = 0;
   virtual void getProjectionMatrix(double proj[16]) = 0;
   virtual void getModelviewMatrix(double model[16]) = 0;
-  virtual void putText(double x, double y, std::string txt, 
+  virtual void putText(double x, double y, QString txt, 
 		       QVector<double> color, 
 		       AlignmentFlag xflag, AlignmentFlag yflag,
 		       QFont fnt, double rotation) = 0;
-  virtual void measureText(std::string txt, QFont fnt, AlignmentFlag xflag, 
+  virtual void measureText(QString txt, QFont fnt, AlignmentFlag xflag, 
 			   AlignmentFlag yflag,int &width, int &height,
 			   int &xoffset, int &yoffset) = 0;
   virtual void depth(bool) = 0;
@@ -158,6 +158,6 @@ void DrawSymbol(RenderEngine& gc, RenderEngine::SymbolType symb,
 		QVector<double> fillcolor, 
 		double width);
 
-RenderEngine::SymbolType StringToSymbol(std::string);
+RenderEngine::SymbolType StringToSymbol(QString);
 
 #endif

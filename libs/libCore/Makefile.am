@@ -8,36 +8,83 @@ BUILT_SOURCES = $(libCore_a_MOC)
 
 libCore_a_HFILES = Core.hpp \
 helpwidget.hpp \
-LoadCore.hpp \
 MPIWrap.hpp \
 RanLib.hpp \
 Utils.hpp \
 MatIO.hpp \
 XML.hpp \
-RPC.hpp 
+Printf.hpp 
 
-libCore_a_SOURCES = Analyze.cpp \
+libCore_a_SOURCES = Abs.cpp \
+Binary.cpp \
+Ceil.cpp \
+Conj.cpp \
+CumProd.cpp \
+CumSum.cpp \
+Floor.cpp \
+Max.cpp \
+Min.cpp \
+Prod.cpp \
+RCond.cpp \
+Round.cpp \
+Sum.cpp \
+Time.cpp \
+Variance.cpp \
+RealImag.cpp \
+Sort.cpp \
+Unique.cpp \
+XNorm.cpp \
+Analyze.cpp \
 Cast.cpp \
 Constants.cpp \
-Constructors.cpp \
+Reshape.cpp \
+Zeros.cpp \
+Ones.cpp \
+Cell.cpp \
+Struct.cpp \
 Directory.cpp \
 FFT.cpp \
 helpwidget.cpp \
+Help.cpp \
+Hex.cpp \
+Clear.cpp \
+Exist.cpp \
+Find.cpp \
+Is.cpp \
+Size.cpp \
+Path.cpp \
 Inspect.cpp \
-IO.cpp \
-LoadCore.cpp \
-Misc.cpp \
-MPIWrap.cpp \
+Audio.cpp \
 Random.cpp \
 RanLib.cpp \
+Image.cpp \
+File.cpp \
+Printf.cpp \
+IO.cpp \
+Conv.cpp \
+Eval.cpp \
+Debug.cpp \
+LU.cpp \
+QR.cpp \
+Eigen.cpp \
+SVD.cpp \
+Array.cpp \
+Version.cpp \
+Error.cpp \
+Misc.cpp \
+Mean.cpp \
+MPIWrap.cpp \
 StringOps.cpp \
 Transcendental.cpp \
 Trigonometric.cpp \
 Utils.cpp \
 MatIO.cpp \
 XML.cpp \
-RPC.cpp \
 Cstruct.cpp \
+Loader.cpp \
+Control.cpp \
+Sparse.cpp \
+Matrix.cpp \
 $(libCore_a_HFILES)
 
 nodist_libCore_a_SOURCES = $(libCore_a_MOC) 

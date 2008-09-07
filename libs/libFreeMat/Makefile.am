@@ -7,14 +7,16 @@ libFreeMat_a_MOC = Interpreter.moc.cpp
 BUILT_SOURCES = $(libFreeMat_a_MOC)
 
 libFreeMat_a_HFILES = Array.hpp \
+ArrayPrivate.hpp \
+Algorithms.hpp \
 Class.hpp \
 Context.hpp \
-Data.hpp \
-Dimensions.hpp \
+CommonIterator.hpp \
 EigenDecompose.hpp \
 Exception.hpp \
 File.hpp \
 FunctionDef.hpp \
+GetSet.hpp \
 HandleList.hpp \
 IEEEFP.hpp \
 LAPACK.hpp \
@@ -22,17 +24,14 @@ LeastSquaresSolver.hpp \
 LinearEqSolver.hpp \
 List.hpp \
 LUDecompose.hpp \
-Malloc.hpp \
 Math.hpp \
 MatrixMultiply.hpp \
 MemPtr.hpp \
 Module.hpp \
-NumericArray.hpp \
-QRDecompose.hpp \
+Operators.hpp \
 Scope.hpp \
 Serialize.hpp \
-SingularValueDecompose.hpp \
-Sparse.hpp \
+SparseMatrix.hpp \
 Stream.hpp \
 SymbolTable.hpp \
 Types.hpp \
@@ -42,32 +41,30 @@ Token.hpp \
 Parser.hpp \
 Scanner.hpp \
 Tree.hpp \
-List.hpp \
-fftw_cycle.h
+FastList.hpp \
+AnonFunc.hpp \
+FuncPtr.hpp \
+SparseCCS.hpp
 
 libFreeMat_a_SOURCES = Array.cpp \
+Algorithms.cpp \
 Interpreter.cpp \
 Context.cpp \
-Data.cpp \
-Dimensions.cpp \
 EigenDecompose.cpp \
 Exception.cpp \
 File.cpp \
 IEEEFP.cpp \
+IndexArray.cpp \
 LAPACK.cpp \
 LeastSquaresSolver.cpp \
 LinearEqSolver.cpp \
 LUDecompose.cpp \
-Malloc.cpp \
 Math.cpp \
 MatrixMultiply.cpp \
 Module.cpp \
-NumericArray.cpp \
-QRDecompose.cpp \
 Scope.cpp \
 Serialize.cpp \
-SingularValueDecompose.cpp \
-Sparse.cpp \
+SparseMatrix.cpp \
 Class.cpp \
 Print.cpp \
 Token.cpp \
@@ -75,6 +72,9 @@ Parser.cpp \
 Scanner.cpp \
 Tree.cpp \
 FunctionDef.cpp \
+FuncPtr.cpp \
+AnonFunc.cpp \
+SparseCCS.cpp \
 $(libFreeMat_a_HFILES) 
 
 nodist_libFreeMat_a_SOURCES = $(libFreeMat_a_MOC)

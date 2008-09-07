@@ -206,6 +206,14 @@ extern "C" {
   
   void zgetrf_(int *M, int *N, double *A, int *LDA, int *IPIV, int *INFO);
 
+  void sgetri_(int *N, float *A, int *LDA, int *IPIV, float *WORK, int *LWORK, int *INFO);
+
+  void cgetri_(int *N, float *A, int *LDA, int *IPIV, float *WORK, int *LWORK, int *INFO);
+
+  void dgetri_(int *N, double *A, int *LDA, int *IPIV, double *WORK, int *LWORK, int *INFO);
+  
+  void zgetri_(int *N, double *A, int *LDA, int *IPIV, double *WORK, int *LWORK, int *INFO);
+
   int xerbla_(char *srname, int *info);
 
   float snrm2_(int *N, float *X, int *INCX);
@@ -252,19 +260,21 @@ double getEPS();
  * a double-precision floating point number.
  */
 float getFloatEPS();
+
+template <typename T>
+T lamch();
+
 /**
  * This function effectively pads each column in the source matrix by a
  * number of zeros.  It actually allows us to change the stride of the
  * matrix (amount that must be added to an index to move from one column
  * to the next).  
  */
-void changeStrideDouble(double*dst, int dstStride, double*src, int srcStride, int rowCount, int colCount);
-/**
- * This function effectively pads each column in the source matrix by a
- * number of zeros.  It actually allows us to change the stride of the
- * matrix (amount that must be added to an index to move from one column
- * to the next).  
- */
-void changeStrideFloat(float*dst, int dstStride, float*src, int srcStride, int rowCount, int colCount);
+template <typename T>
+void changeStride(T*dst, int dstStride, T*src, int srcStride, 
+		  int rowCount, int colCount) {
+  for (int i=0;i<colCount;i++)
+    memcpy(dst + i*dstStride, src + i*srcStride, rowCount*sizeof(T));
+}
 
 #endif

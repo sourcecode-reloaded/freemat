@@ -26,7 +26,7 @@
 %@$"y=acsc(0.342)","1.57079632679490+1.73547783917348i","close"
 %@$"y=acsc(0.342+0.532i)","0.49192807690924-1.19972722497695i","close"
 %@$"y=acsc(2.0)","0.52359877559830","close"
-%@$"y=acsc(0.523f)","1.5707964f+1.2646196fi","close"
+%@$"y=acsc(float(0.523))","float(1.5707964+1.2646196i)","close"
 %!
 
 
@@ -37,5 +37,5 @@ function y = acsc(x)
   if (nargin == 0 || ~isnumeric(x))
     error('acsc expects a single, numeric input');
   end
-  y = asin(1.f./x);
+  y = asin(1 ./ x);
   

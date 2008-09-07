@@ -14,5 +14,5 @@
 % Licensed under the GPL
 
 function x = ischar(y)
-  x = isa(y,'string');
+  x = isa(y,'char');
 

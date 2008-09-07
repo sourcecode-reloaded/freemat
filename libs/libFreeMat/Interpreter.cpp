@@ -17,20 +17,18 @@
  *
  */
 
-#include "JIT.hpp"
 #include "Interpreter.hpp"
 #include <math.h>
 #include <stdio.h>
 #include "Exception.hpp"
 #include "Math.hpp"
 #include "Array.hpp"
-#include "Malloc.hpp"
+#include "Struct.hpp"
 #include "Parser.hpp"
 #include "Scanner.hpp"
 #include "Token.hpp"
 #include "Module.hpp"
 #include "File.hpp"
-#include "Serialize.hpp"
 #include <signal.h>
 #include "Class.hpp"
 #include "Print.hpp"
@@ -40,9 +38,13 @@
 #include <QtCore>
 #include <fstream>
 #include <stdarg.h>
+#include "JIT.hpp"
 #include "JITFunc.hpp"
 #include "IEEEFP.hpp"
-
+#include "Algorithms.hpp"
+#include "GetSet.hpp"
+#include "FuncPtr.hpp"
+#include "AnonFunc.hpp"
 
 #ifdef WIN32
 #define PATHSEP ";"
@@ -62,43 +64,43 @@ const int max_line_count = 1000000;
   endCount = oldEndCount; \
   endTotal = oldEndTotal;  \
 
-QString TildeExpand(string path) {
+QString TildeExpand(QString path) {
   if ((path.size() > 0) && (path[0] == '~')) {
-    path.erase(path.begin());
-    return QDir::homePath() + QString::fromStdString(path);
+    path.remove(0,1);
+    return QDir::homePath() + path;
   }
-  return QString::fromStdString(path);
+  return path;
 }
 
-void Interpreter::setPath(std::string path) {
-  QString pathdata(QString::fromStdString(path));
+void Interpreter::setPath(QString path) {
+  QString pathdata(path);
   QStringList pathset(pathdata.split(PATHSEP,QString::SkipEmptyParts));
   m_userPath.clear();
   for (int i=0;i<pathset.size();i++) 
     if (pathset[i] != ".") {
-      QDir tpath(TildeExpand(pathset[i].toStdString()));
+      QDir tpath(TildeExpand(pathset[i]));
       m_userPath << tpath.absolutePath();
     }
   rescanPath();
 }
 
-std::string Interpreter::getTotalPath() {
-  std::string retpath;
+QString Interpreter::getTotalPath() {
+  QString retpath;
   QStringList totalPath(QStringList() << m_basePath << m_userPath);
   for (int i=0;i<totalPath.size()-1;i++) 
-    retpath = retpath + totalPath[i].toStdString() + PATHSEP;
+    retpath = retpath + totalPath[i] + PATHSEP;
   if (totalPath.size() > 0) 
-    retpath = retpath + totalPath[totalPath.size()-1].toStdString();
+    retpath = retpath + totalPath[totalPath.size()-1];
   return retpath;
 }
   
-std::string Interpreter::getPath() {
-  std::string retpath;
+QString Interpreter::getPath() {
+  QString retpath;
   QStringList totalPath(m_userPath);
   for (int i=0;i<totalPath.size()-1;i++) 
-    retpath = retpath + totalPath[i].toStdString() + PATHSEP;
+    retpath = retpath + totalPath[i] + PATHSEP;
   if (totalPath.size() > 0) 
-    retpath = retpath + totalPath[totalPath.size()-1].toStdString();
+    retpath = retpath + totalPath[totalPath.size()-1];
   return retpath;
 }
   
@@ -106,11 +108,11 @@ void Interpreter::rescanPath() {
   if (!context) return;
   context->flushTemporaryGlobalFunctions();
   for (int i=0;i<m_basePath.size();i++)
-    scanDirectory(m_basePath[i].toStdString(),false,"");
+    scanDirectory(m_basePath[i],false,"");
   for (int i=0;i<m_userPath.size();i++)
-    scanDirectory(m_userPath[i].toStdString(),false,"");
+    scanDirectory(m_userPath[i],false,"");
   // Scan the current working directory.
-  scanDirectory(QDir::currentPath().toStdString(),true,"");
+  scanDirectory(QDir::currentPath(),true,"");
   emit CWDChanged();
 }
   
@@ -136,25 +138,25 @@ static QString mexExtension() {
   return "fmx";
 }
   
-void Interpreter::scanDirectory(std::string scdir, bool tempfunc,
-				std::string prefix) {
-  QDir dir(QString::fromStdString(scdir));
+void Interpreter::scanDirectory(QString scdir, bool tempfunc,
+				QString prefix) {
+  QDir dir(scdir);
   dir.setFilter(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot);
   dir.setNameFilters(QStringList() << "*.m" << "*.p" 
 		     << "@*" << "private" << "*."+mexExtension());
   QFileInfoList list(dir.entryInfoList());
   for (int i=0;i<((int)list.size());i++) {
     QFileInfo fileInfo(list.at(i));
-    std::string fileSuffix(fileInfo.suffix().toStdString());
-    std::string fileBaseName(fileInfo.baseName().toStdString());
-    std::string fileAbsoluteFilePath(fileInfo.absoluteFilePath().toStdString());
+    QString fileSuffix(fileInfo.suffix());
+    QString fileBaseName(fileInfo.baseName());
+    QString fileAbsoluteFilePath(fileInfo.absoluteFilePath());
     if (fileSuffix == "m" || fileSuffix == "M") 
-      if (prefix.empty())
+      if (prefix.isEmpty())
 	procFileM(fileBaseName,fileAbsoluteFilePath,tempfunc);
       else
 	procFileM(prefix + ":" + fileBaseName,fileAbsoluteFilePath,tempfunc);
     else if (fileSuffix == "p" || fileSuffix == "P")
-      if (prefix.empty())
+      if (prefix.isEmpty())
 	procFileP(fileBaseName,fileAbsoluteFilePath,tempfunc);
       else
 	procFileP(prefix + ":" + fileBaseName,fileAbsoluteFilePath,tempfunc);
@@ -167,7 +169,7 @@ void Interpreter::scanDirectory(std::string scdir, bool tempfunc,
   }
 }
   
-void Interpreter::procFileM(std::string fname, std::string fullname, bool tempfunc) {
+void Interpreter::procFileM(QString fname, QString fullname, bool tempfunc) {
   MFunctionDef *adef;
   adef = new MFunctionDef();
   adef->name = fname;
@@ -176,23 +178,11 @@ void Interpreter::procFileM(std::string fname, std::string fullname, bool tempfu
   context->insertFunction(adef, tempfunc);
 }
   
-void Interpreter::procFileP(std::string fname, std::string fullname, bool tempfunc) {
-  MFunctionDef *adef;
-  // Open the file
-  try {
-    File *f = new File(fullname.c_str(),"rb");
-    Serialize *s = new Serialize(f);
-    s->handshakeClient();
-    s->checkSignature('p',2);
-    adef = ThawMFunction(s);
-    adef->pcodeFunction = true;
-    delete f;
-    context->insertFunction(adef, tempfunc);
-  } catch (Exception &e) {
-  }
+void Interpreter::procFileP(QString fname, QString fullname, bool tempfunc) {
+  throw Exception("P-files are not supported in this version of FreeMat");
 }
 
-void Interpreter::procFileMex(std::string fname, std::string fullname, bool tempfunc) {
+void Interpreter::procFileMex(QString fname, QString fullname, bool tempfunc) {
   MexFunctionDef *adef;
   adef = new MexFunctionDef(fullname);
   adef->name = fname;
@@ -209,7 +199,7 @@ void Interpreter::RegisterGfxResults(ArrayVector m) {
   mutex.unlock();
 }
 
-void Interpreter::RegisterGfxError(string msg) {
+void Interpreter::RegisterGfxError(QString msg) {
   mutex.lock();
   gfxError = msg;
   gfxErrorOccured = true;
@@ -246,25 +236,20 @@ int Interpreter::getTerminalWidth() {
   return m_ncols;
 }
 
-std::string TranslateString(std::string x) {
-  std::string y(x);
-  unsigned int n;
-  n = 0;
-  while (n<y.size()) {
-    if (y[n] == '\n') 
-      y.insert(n++,"\r");
-    n++;
+QString TranslateString(QString x) {
+  return x.replace("\n","\r\n");
+}
+
+void Interpreter::diaryMessage(QString msg) {
+  QFile file(m_diaryFilename);
+  if (file.open(QIODevice::WriteOnly | QIODevice::Append)) {
+    QTextStream os(&file);
+    os << msg;
   }
-  return y;
-}
-
-void Interpreter::diaryMessage(std::string msg) {
-  ofstream diaryFile(m_diaryFilename.c_str(), ios::app);
-  diaryFile << msg;
 }
 
 
-void Interpreter::outputMessage(std::string msg) {
+void Interpreter::outputMessage(QString msg) {
   if (m_diaryState) diaryMessage(msg);
   if (m_captureState) 
     m_capture += msg;
@@ -279,10 +264,10 @@ void Interpreter::outputMessage(const char* format,...) {
   va_start(ap,format);
   vsnprintf(buffer,4096,format,ap);
   va_end(ap);
-  outputMessage(string(buffer));
+  outputMessage(QString(buffer));
 }
 
-void Interpreter::errorMessage(std::string msg) {
+void Interpreter::errorMessage(QString msg) {
   if (m_diaryState) diaryMessage("Error: " + msg + "\n");
   if (m_captureState) 
     m_capture += "Error: " + msg + "\n";
@@ -291,7 +276,7 @@ void Interpreter::errorMessage(std::string msg) {
       emit outputRawText(TranslateString("Error: " + msg + "\r\n"));
 }
 
-void Interpreter::warningMessage(std::string msg) {
+void Interpreter::warningMessage(QString msg) {
   if (m_diaryState) diaryMessage("Warning: " + msg + "\n");
   if (m_captureState) 
     m_capture += "Warning: " + msg + "\n";
@@ -300,7 +285,7 @@ void Interpreter::warningMessage(std::string msg) {
       emit outputRawText(TranslateString("Warning: " +msg + "\r\n"));
 }
 
-static bool isMFile(std::string arg) {
+static bool isMFile(QString arg) {
   // Not completely right...
   return (((arg[arg.size()-1] == 'm') ||
 	   (arg[arg.size()-1] == 'p')) && 
@@ -314,53 +299,51 @@ void Interpreter::SetContext(int a) {
   ip_context = a;
 }
 
-std::string TrimFilename(std::string arg) {
-  int ndx = arg.rfind(QString(QDir::separator()).toStdString());
+QString TrimFilename(QString arg) {
+  int ndx = arg.lastIndexOf(QDir::separator());
   if (ndx>=0)
-    arg.erase(0,ndx+1);
+    arg.remove(0,ndx+1);
   return arg;
 }
 
-std::string TrimExtension(std::string arg) {
+QString TrimExtension(QString arg) {
   if (arg.size() > 2 && arg[arg.size()-2] == '.')
-    arg.erase(arg.size()-2,arg.size());
+    arg.remove(arg.size()-2,arg.size());
   return arg;
 }
 
-static std::string PrivateMangleName(std::string currentFunctionPath, std::string fname) {
-  if (currentFunctionPath.empty()) return "";
+static QString PrivateMangleName(QString currentFunctionPath, QString fname) {
+  if (currentFunctionPath.isEmpty()) return "";
   // First look to see if we are already a private function
-  string separator("/");
-  int ndx1 = currentFunctionPath.rfind(separator + "private" + separator);
+  QString separator("/");
+  int ndx1 = currentFunctionPath.lastIndexOf(separator + "private" + separator);
   if (ndx1>=0) {
     // The current function is already in a private directory
     // In that case, try to find a private function in the same directory
-    currentFunctionPath.erase(ndx1+1,currentFunctionPath.size());
+    currentFunctionPath.remove(ndx1+1,currentFunctionPath.size());
     return currentFunctionPath + "private:" + fname;
   }
   int ndx;
-  ndx = currentFunctionPath.rfind(separator);
+  ndx = currentFunctionPath.lastIndexOf(separator);
   if (ndx>=0)
-    currentFunctionPath.erase(ndx+1,currentFunctionPath.size());
+    currentFunctionPath.remove(ndx+1,currentFunctionPath.size());
   return currentFunctionPath + "private:" + fname;
 }
 
-static std::string LocalMangleName(std::string currentFunctionPath, std::string fname) {
-  int ndx = currentFunctionPath.rfind("/");
+static QString LocalMangleName(QString currentFunctionPath, QString fname) {
+  int ndx = currentFunctionPath.lastIndexOf("/");
   if (ndx >= 0)
-    currentFunctionPath.erase(ndx,currentFunctionPath.size());
-  std::string tmp = currentFunctionPath + "/" + fname;
-  //  qDebug() << "Lookup " << QString::fromStdString(tmp);
+    currentFunctionPath.remove(ndx,currentFunctionPath.size());
+  QString tmp = currentFunctionPath + "/" + fname;
   return currentFunctionPath + "/" + fname;
 }
 
-static std::string NestedMangleName(std::string cfunc, std::string fname) {
+static QString NestedMangleName(QString cfunc, QString fname) {
   return cfunc + "/" + fname;
 }
 
-std::string Interpreter::getVersionString() {
-  //TODO: Fix VERSION 
-  return std::string("FreeMat v" VERSION);
+QString Interpreter::getVersionString() {
+  return QString("FreeMat v" VERSION);
 }
 
 // Run the thread function
@@ -370,7 +353,7 @@ void Interpreter::run() {
       m_threadFuncRets = m_threadFunc->evaluateFunction(this,m_threadFuncArgs,m_threadNargout);
     } catch (Exception &e) {
       m_threadErrorState = true;      
-      lasterr = e.getMessageCopy();
+      lasterr = e.msg();
     } catch (InterpreterQuitException &e) {
       m_threadErrorState = true;      
       lasterr = "'quit' called in non-main thread";
@@ -420,8 +403,8 @@ void Interpreter::sendGreeting() {
   outputMessage(" Use ctrl-b to stop execution of a function/script\n");
 }
 
-std::string Interpreter::getLocalMangledName(std::string fname) {
-  std::string ret;
+QString Interpreter::getLocalMangledName(QString fname) {
+  QString ret;
   if (isMFile(ip_funcname))
     ret = LocalMangleName(ip_detailname,fname);
   else
@@ -429,34 +412,34 @@ std::string Interpreter::getLocalMangledName(std::string fname) {
   return ret;
 }
 
-std::string Interpreter::getPrivateMangledName(std::string fname) {
-  std::string ret;
+QString Interpreter::getPrivateMangledName(QString fname) {
+  QString ret;
   if (isMFile(ip_funcname)) 
     ret = PrivateMangleName(ip_funcname,fname);
   else {
-    ret = QDir::currentPath().toStdString() + 
-      QString(QDir::separator()).toStdString() + 
-      std::string("private:" + fname);
+    ret = QDir::currentPath() + 
+      QString(QDir::separator()) + 
+      QString("private:" + fname);
   }
   return ret; 
 }
 
-std::string Interpreter::getMFileName() {
+QString Interpreter::getMFileName() {
   if (isMFile(ip_funcname)) 
     return TrimFilename(TrimExtension(ip_funcname));
   for (int i=cstack.size()-1;i>=0;i--)
     if (isMFile(cstack[i].cname)) 
       return TrimFilename(TrimExtension(cstack[i].cname));
-  return std::string("");
+  return QString("");
 }
 
-std::string Interpreter::getInstructionPointerFileName() {
+QString Interpreter::getInstructionPointerFileName() {
   if (isMFile(ip_funcname)) 
     return ip_funcname;
-  return string("");
+  return QString("");
 }
 
-stackentry::stackentry(std::string cntxt, std::string det, 
+stackentry::stackentry(QString cntxt, QString det, 
 		       int id, int num, int strp, int stcl) :
   cname(cntxt), detail(det), tokid(id), number(num),
   steptrap(strp), stepcurrentline(stcl)
@@ -470,19 +453,19 @@ stackentry::~stackentry() {
 }
 
 Array Interpreter::DoBinaryOperator(Tree *t, BinaryFunc fnc, 
-				    std::string funcname) {
+				    QString funcname) {
   Array a(expression(t->first()));
   Array b(expression(t->second()));
   if (!(a.isUserClass() || b.isUserClass())) 
-    return fnc(a,b,this);
+    return fnc(a,b);
   return ClassBinaryOperator(a,b,funcname,this);
 }
 
 Array Interpreter::DoUnaryOperator(Tree *t, UnaryFunc fnc, 
-				   std::string funcname) {
+				   QString funcname) {
   Array a(expression(t->first()));
   if (!a.isUserClass())
-    return fnc(a,this);
+    return fnc(a);
   return ClassUnaryOperator(a,funcname,this);
 }
 
@@ -601,19 +584,19 @@ void Interpreter::clearStacks() {
 //% Check the type promotion for the matrix cat function
 //function test_val = test_matcat4
 //a = [1,2;3.0f,4f+i];
-//test_val = test(strcmp(typeof(a),'complex'));
+//test_val = test(strcmp(typeof(a),'single'));
 //@}
 //@{ test_matcat5.m
 //% Check the type promotion for the matrix cat function
 //function test_val = test_matcat5
-//a = [1,2;3.0f,4.0+i];
-//test_val = test(strcmp(typeof(a),'dcomplex'));
+//a = [1,2;3.0,4.0+i];
+//test_val = test(strcmp(typeof(a),'double'));
 //@}
 //@{ test_matcat6.m
 //% Check the type promotion for the matrix cat function
 //function test_val = test_matcat6
 //a = [1,2;3.0f,4.0f+i];
-//test_val = test(strcmp(typeof(a),'complex'));
+//test_val = test(strcmp(typeof(a),'single'));
 //@}
 //@{ test_matcat7.m
 //% Check that matrix cat works properly with spaces before the continuation
@@ -637,14 +620,14 @@ void Interpreter::clearStacks() {
 //@{ test_matcat8.m
 //% Check that [1:0] is sane
 //function test_val = test_matcat8
-//test_val = isa([1:0],'int32');
+//test_val = isa([1:0],'double');
 //@}
 //!
 //Works
 Array Interpreter::matrixDefinition(Tree *t) {
   ArrayMatrix m;
   if (t->numChildren() == 0) 
-    return Array::emptyConstructor();
+    return EmptyConstructor();
   for (int i=0;i<t->numChildren();i++) {
     Tree *s(t->child(i));
     ArrayVector n;
@@ -659,7 +642,7 @@ Array Interpreter::matrixDefinition(Tree *t) {
       if (m[i][j].isUserClass()) 
 	anyuser = true;
   if (!anyuser)
-    return Array::matrixConstructor(m);
+    return MatrixConstructor(m);
   else
     return ClassMatrixConstructor(m,this);
 }
@@ -708,11 +691,8 @@ Array Interpreter::matrixDefinition(Tree *t) {
 //Works
 Array Interpreter::cellDefinition(Tree *t) {
   ArrayMatrix m;
-  if (t->numChildren() == 0) {
-    Array a(Array::emptyConstructor());
-    a.promoteType(FM_CELL_ARRAY);
-    return a;
-  }
+  if (t->numChildren() == 0)
+    return Array(CellArray);
   for (int i=0;i<t->numChildren();i++) {
     Tree *s(t->child(i));
     ArrayVector n;
@@ -720,7 +700,7 @@ Array Interpreter::cellDefinition(Tree *t) {
       multiexpr(s->child(j),n);
     m.push_back(n);
   }
-  return Array::cellConstructor(m);
+  return CellConstructor(m);
 }
 
 Array Interpreter::ShortCutOr(Tree * t) {
@@ -730,8 +710,7 @@ Array Interpreter::ShortCutOr(Tree * t) {
     retval = DoBinaryOperator(t,Or,"or");
   else {
     // A is a scalar - is it true?
-    a.promoteType(FM_LOGICAL);
-    if (*((const logical*)a.getDataPointer()))
+    if (a.toClass(Bool).constRealScalar<bool>())
       retval = a;
     else 
       retval = DoBinaryOperator(t,Or,"or");
@@ -748,8 +727,7 @@ Array Interpreter::ShortCutAnd(Tree *t) {
     retval = DoBinaryOperator(t,And,"and");
   } else {
     // A is a scalar - is it false?
-    a.promoteType(FM_LOGICAL);
-    if (!*((const logical*)a.getDataPointer()))
+    if (!a.toClass(Bool).constRealScalar<bool>())
       retval = a;
     else 
       retval = DoBinaryOperator(t,And,"and");
@@ -769,7 +747,7 @@ ArrayVector Interpreter::handleReindexing(Tree *t, const ArrayVector &p) {
       if (p.size() == 1)
 	r = p[0];
       else
-	r = Array::emptyConstructor();
+	r = EmptyConstructor();
       for (int index = 2;index < t->numChildren();index++) 
 	deref(r,t->child(index));
       return ArrayVector() << r;
@@ -778,18 +756,12 @@ ArrayVector Interpreter::handleReindexing(Tree *t, const ArrayVector &p) {
     return p;
 }
 
-void Interpreter::multiexpr(Tree *t, ArrayVector &q, int lhsCount) {
+void Interpreter::multiexpr(Tree *t, ArrayVector &q, index_t lhsCount) {
   if (t->is(TOK_VARIABLE)) {
     ArrayReference ptr(context->lookupVariable(t->first()->text()));
     if (!ptr.valid()) {
       ArrayVector p;
-      functionExpression(t,lhsCount,false,p);
-      q += handleReindexing(t,p);
-      return;
-    }
-    if ((ptr->dataClass() == FM_FUNCPTR_ARRAY &&
-	 ptr->isScalar()) && (t->numChildren() > 1)) {
-      ArrayVector p = FunctionPointerDispatch(*ptr,t->second(),1);
+      functionExpression(t,int(lhsCount),false,p);
       q += handleReindexing(t,p);
       return;
     }
@@ -797,7 +769,8 @@ void Interpreter::multiexpr(Tree *t, ArrayVector &q, int lhsCount) {
       q.push_back(*ptr);
       return;
     }
-    if (ptr->isUserClass() && !stopoverload && !inMethodCall(ptr->className().back())) {
+    if (ptr->isUserClass() && !stopoverload && 
+	!inMethodCall(ptr->className())) {
       q += ClassRHSExpression(*ptr,t,this);
       return;
     }
@@ -819,9 +792,9 @@ void Interpreter::multiexpr(Tree *t, ArrayVector &q, int lhsCount) {
 	}
 	subsindex(m);
 	if (m.size() == 1)
-	  q.push_back(r.getVectorSubset(m.front(),this));
+	  q.push_back(r.get(m.front()));
 	else
-	  q.push_back(r.getNDimSubset(m,this));
+	  q.push_back(r.get(m));
       }
     } else if (s->is(TOK_BRACES)) {
       ArrayVector m;
@@ -832,20 +805,20 @@ void Interpreter::multiexpr(Tree *t, ArrayVector &q, int lhsCount) {
       }
       subsindex(m);
       if (m.size() == 1)
-	q += r.getVectorContentsAsList(m.front(),this);
+	q += ArrayVectorFromCellArray(r.get(m.front()));
       else
-	q += r.getNDimContentsAsList(m,this);
+	q += ArrayVectorFromCellArray(r.get(m));
     } else if (s->is('.')) {
-      q += r.getFieldAsList(s->first()->text());
+      q += r.get(s->first()->text());
     } else if (s->is(TOK_DYN)) {
-      string field;
+      QString field;
       try {
 	Array fname(expression(s->first()));
-	field = fname.getContentsAsString();
+	field = fname.asString();
       } catch (Exception &e) {
 	throw Exception("dynamic field reference to structure requires a string argument");
       }
-      q += r.getFieldAsList(field);
+      q += r.get(field);
     }
     RestoreEndInfo;
   } else if (!t->is(TOK_KEYWORD))
@@ -856,23 +829,22 @@ Array Interpreter::expression(Tree *t) {
   switch(t->token()) {
   case TOK_VARIABLE: 
     return rhs(t);
-  case TOK_INTEGER:
-  case TOK_FLOAT:
-  case TOK_DOUBLE:
-  case TOK_COMPLEX:
-  case TOK_DCOMPLEX:
+  case TOK_REAL:
+  case TOK_IMAG:
+  case TOK_REALF:
+  case TOK_IMAGF:
   case TOK_STRING:
     return t->array();
   case TOK_END:
     if (!endRef.valid()) 
       throw Exception("END keyword not allowed for undefined variables");
     if (endTotal == 1)
-      return Array::int32Constructor(endRef->getLength());
+      return Array(double(endRef->length()));
     else
-      return Array::int32Constructor(endRef->getDimensionLength(endCount));
+      return Array(double(endRef->dimensions()[endCount]));
   case ':':
     if (t->numChildren() == 0) {
-      return Array::stringConstructor(":");
+      return Array(QString(":"));
     } else if (t->first()->is(':')) {
       return doubleColon(t);
     } else {
@@ -951,10 +923,10 @@ Array Interpreter::expression(Tree *t) {
     return DoBinaryOperator(t,DotPower,"power"); 
     break;
   case '\'': 
-    return DoUnaryOperator(t,Transpose,"ctranspose"); 
+    return DoUnaryOperator(t,Hermitian,"ctranspose"); 
     break;
   case TOK_DOTTRANSPOSE: 
-    return DoUnaryOperator(t,DotTranspose,"transpose"); 
+    return DoUnaryOperator(t,Transpose,"transpose"); 
     break;
   case '@':
     return FunctionPointer(t);
@@ -964,17 +936,19 @@ Array Interpreter::expression(Tree *t) {
 }
 
 Array Interpreter::FunctionPointer(Tree *t) {
-  if (t->first()->is(TOK_ANONYMOUS_FUNC)) {
-    AnonymousFunctionDef *q = new AnonymousFunctionDef;
-    q->initialize(t->first(),this);
-    return Array::funcPtrConstructor(FuncPtr(q));
-  } else {
-    FuncPtr val;
-    if (!lookupFunction(t->first()->text(),val))
-      throw Exception("unable to resolve " + t->first()->text() + 
-		      " to a function call");
-    return Array::funcPtrConstructor(val);
-  }
+   if (t->first()->is(TOK_ANONYMOUS_FUNC)) {
+     return AnonFuncConstructor(this,t->first());
+     // AnonymousFunctionDef *q = new AnonymousFunctionDef;
+     // q->initialize(t->first(),this);
+     //     return Array::funcPtrConstructor(FuncPtr(q));
+     // FIXME
+   } else {
+     FuncPtr val;
+     if (!lookupFunction(t->first()->text(),val))
+       throw Exception("unable to resolve " + t->first()->text() + 
+		       " to a function call");
+     return FuncPtrConstructor(this,val);
+   }
 }
 
 //!
@@ -1184,7 +1158,7 @@ Array Interpreter::doubleColon(Tree *t) {
  */
 bool Interpreter::testCaseStatement(Tree *t, Array s) {
   Array r(expression(t->first()));
-  bool caseMatched = s.testForCaseMatch(r);
+  bool caseMatched = TestForCaseMatch(s,r);
   if (caseMatched)
     block(t->second());
   return caseMatched;
@@ -1550,14 +1524,14 @@ void Interpreter::switchStatement(Tree *t) {
 //!
 //Works
 void Interpreter::ifStatement(Tree *t) {
-  bool condtest = !(expression(t->first()).isRealAllZeros());
+  bool condtest = !(RealAllZeros(expression(t->first())));
   if (condtest) {
     block(t->second());
     return;
   } else {
     int n=2;
     while (n < t->numChildren() && t->child(n)->is(TOK_ELSEIF)) {
-      if (!(expression(t->child(n)->first()).isRealAllZeros())) {
+      if (!(RealAllZeros(expression(t->child(n)->first())))) {
 	block(t->child(n)->second());
 	return;
       }
@@ -1650,7 +1624,7 @@ void Interpreter::whileStatement(Tree *t) {
   Tree* codeBlock(t->second());
   bool breakEncountered = false;
   Array condVar(expression(testCondition));
-  bool conditionTrue = !condVar.isRealAllZeros();
+  bool conditionTrue = !RealAllZeros(condVar);
   context->enterLoop();
   breakEncountered = false;
   while (conditionTrue && !breakEncountered) {
@@ -1668,7 +1642,7 @@ void Interpreter::whileStatement(Tree *t) {
     }
     if (!breakEncountered) {
       condVar = expression(testCondition);
-      conditionTrue = !condVar.isRealAllZeros();
+      conditionTrue = !RealAllZeros(condVar);
     } 
   }
   context->exitLoop();
@@ -1782,46 +1756,6 @@ void ForLoopIterator( Tree* codeBlock, string indexName,
 	default:
 	    eval->errorMessage("Incorrect for loop parameters");
     }
-}
-
-template <class T>
-void ForLoopHelper(Tree *codeBlock, Class indexClass, const T *indexSet, 
-		   int count, string indexName, Interpreter *eval) {
-  for (int m=0;m<count;m++) {
-    Array *vp = eval->getContext()->lookupVariableLocally(indexName);
-    if ((!vp) || (vp->dataClass() != indexClass) || (!vp->isScalar())) {
-      eval->getContext()->insertVariableLocally(indexName,Array(indexClass,Dimensions(1,1)));
-      vp = eval->getContext()->lookupVariableLocally(indexName);
-    }
-    ((T*) vp->getReadWriteDataPointer())[0] = indexSet[m];
-    try {
-      eval->block(codeBlock);
-    } catch (InterpreterContinueException &e) {
-    } catch (InterpreterBreakException &e) {
-      break;
-    } 
-  }
-}
-
-template <class T>
-void ForLoopHelperComplex(Tree *codeBlock, Class indexClass, 
-			  const T *indexSet, int count, 
-			  string indexName, Interpreter *eval) {
-  for (int m=0;m<count;m++) {
-    Array *vp = eval->getContext()->lookupVariableLocally(indexName);
-    if ((!vp) || (vp->dataClass() != indexClass) || (!vp->isScalar())) {
-      eval->getContext()->insertVariableLocally(indexName,Array(indexClass,Dimensions(1,1)));
-      vp = eval->getContext()->lookupVariableLocally(indexName);
-    }
-    ((T*) vp->getReadWriteDataPointer())[0] = indexSet[2*m];
-    ((T*) vp->getReadWriteDataPointer())[1] = indexSet[2*m+1];
-    try {
-      eval->block(codeBlock);
-    } catch (InterpreterContinueException &e) {
-    } catch (InterpreterBreakException &e) {
-      break;
-    } 
-  }
 }
 
 template <class T>
@@ -1979,7 +1913,7 @@ static bool compileJITBlock(Interpreter *interp, Tree *t) {
     t->setJITState(Tree::SUCCEEDED);
     t->setJITFunction(cg);
   } catch (Exception &e) {
-    dbout << e.getMessageCopy() << "\r\n";
+    std::cout << e.msg() << "\r\n";
     delete cg;
     success = false;
     t->setJITState(Tree::FAILED);
@@ -1993,7 +1927,7 @@ static bool prepJITBlock(Tree *t) {
     t->JITFunction()->prep();
     success = true;
   } catch (Exception &e) {
-    std::cout << e.getMessageCopy() << "\r\n";
+    std::cout << e.msg() << "\r\n";
     success = false;
   }
   return success;
@@ -2001,7 +1935,8 @@ static bool prepJITBlock(Tree *t) {
 #endif
 
 void Interpreter::forStatement(Tree *t) {
-    // Try to compile this block to an instruction stream  
+  // Try to compile this block to an instruction stream  
+#ifdef HAVE_LLVM
     if (jitcontrol) {
 	if (t->JITState() == Tree::UNTRIED) {
 	    bool success = compileJITBlock(this,t);
@@ -2018,14 +1953,15 @@ void Interpreter::forStatement(Tree *t) {
 		if (success)
 		    success = prepJITBlock(t);
 	    }
-	    if (success) {
-		t->JITFunction()->run();
-		return;
-	    }
-	}
+      if (success) {
+	t->JITFunction()->run();
+	return;
+      }
     }
-    Array indexSet;
-    string indexVarName;
+  }
+#endif
+  Array indexSet;
+  QString indexVarName;
     /* Get the name of the indexing variable */
     if( !t->first()->is('=') )
 	throw Exception( "Incorrect format of for operator" );
@@ -2504,7 +2440,7 @@ void Interpreter::displayArray(Array b) {
   FuncPtr val;
   if (b.isUserClass() && ClassResolveFunction(this,b,"display",val)) {
     if (val->updateCode(this)) refreshBreakpoints();
-    ArrayVector args(SingleArrayVector(b));
+    ArrayVector args(b);
     ArrayVector retvec(val->evaluateFunction(this,args,1));
   } else
     PrintArrayClassic(b,printLimit,this);
@@ -2527,27 +2463,27 @@ void Interpreter::expressionStatement(Tree *s, bool printIt) {
       m = handleReindexing(t,m);
       bool emptyOutput = false;
       if (m.size() == 0) {
-	b = Array::emptyConstructor();
+	b = EmptyConstructor();
 	emptyOutput = true;
       } else 
 	b = m[0];
       if (printIt && (!emptyOutput)) {
-	outputMessage(std::string("\nans = \n"));
+	outputMessage(QString("\nans = \n"));
 	displayArray(b);
       }
     } else {
       multiexpr(t,m);
       if (m.size() == 0)
-	b = Array::emptyConstructor();
+	b = EmptyConstructor();
       else {
 	b = m[0];
 	if (printIt) {
-	  outputMessage(std::string("\nans = \n"));
+	  outputMessage(QString("\nans = \n"));
 	  for (int j=0;j<m.size();j++) {
 	    char buffer[1000];
 	    if (m.size() > 1) {
 	      sprintf(buffer,"\n%d of %d:\n",j+1,m.size());
-	      outputMessage(std::string(buffer));
+	      outputMessage(QString(buffer));
 	    }
 	    displayArray(m[j]);
 	  }
@@ -2557,7 +2493,7 @@ void Interpreter::expressionStatement(Tree *s, bool printIt) {
   } else {
     b = expression(t);
     if (printIt) {
-      outputMessage(std::string("\nans = \n"));
+      outputMessage(QString("\nans = \n"));
       displayArray(b);
     } 
   }
@@ -2578,9 +2514,9 @@ void Interpreter::multiassign(ArrayReference r, Tree *s, ArrayVector &data) {
     }
     subsindex(m);
     if (m.size() == 1)
-      r->setVectorSubset(m[0],data[0],this);
+      r->set(m[0],data[0]);
     else
-      r->setNDimSubset(m,data[0],this);
+      r->set(m,data[0]);
     data.pop_front();
   } else if (s->is(TOK_BRACES)) {
     ArrayVector m;
@@ -2591,20 +2527,20 @@ void Interpreter::multiassign(ArrayReference r, Tree *s, ArrayVector &data) {
     }
     subsindex(m);
     if (m.size() == 1)
-      r->setVectorContentsAsList(m[0],data,this);
+      SetCellContents(*r,m[0],data);
     else
-      r->setNDimContentsAsList(m,data,this);
+      SetCellContents(*r,m,data);
   } else if (s->is('.')) {
-    r->setFieldAsList(s->first()->text(),data);
+    r->set(s->first()->text(),data);
   } else if (s->is(TOK_DYN)) {
-    string field;
+    QString field;
     try {
       Array fname(expression(s->first()));
-      field = fname.getContentsAsString();
+      field = fname.asString();
     } catch (Exception &e) {
       throw Exception("dynamic field reference to structure requires a string argument");
     }
-    r->setFieldAsList(field,data);
+    r->set(field,data);
   }
   RestoreEndInfo;
 }
@@ -2623,11 +2559,11 @@ void Interpreter::assign(ArrayReference r, Tree *s, Array &data) {
     }
     subsindex(m);
     if (m.size() == 1)
-      r->setVectorSubset(m[0],data,this);
+      r->set(m[0],data);
     else
-      r->setNDimSubset(m,data,this);
+      r->set(m,data);
   } else if (s->is(TOK_BRACES)) {
-    ArrayVector datav(SingleArrayVector(data));
+    ArrayVector datav(data);
     ArrayVector m;
     endTotal = s->numChildren();
     for (int p = 0; p < s->numChildren(); p++) {
@@ -2636,35 +2572,35 @@ void Interpreter::assign(ArrayReference r, Tree *s, Array &data) {
     }
     subsindex(m);
     if (m.size() == 1)
-      r->setVectorContentsAsList(m[0],datav,this);
+      SetCellContents(*r,m[0],datav);
     else
-      r->setNDimContentsAsList(m,datav,this);
+      SetCellContents(*r,m,datav);
   } else if (s->is('.')) {
-    ArrayVector datav(SingleArrayVector(data));
-    r->setFieldAsList(s->first()->text(),datav);
+    ArrayVector datav(data);
+    r->set(s->first()->text(),datav);
   } else if (s->is(TOK_DYN)) {
-    string field;
+    QString field;
     try {
       Array fname(expression(s->first()));
-      field = fname.getContentsAsString();
+      field = fname.asString();
     } catch (Exception &e) {
       throw Exception("dynamic field reference to structure requires a string argument");
     }
-    ArrayVector datav(SingleArrayVector(data));
-    r->setFieldAsList(field,datav);
+    ArrayVector datav(data);
+    r->set(field,datav);
   }
   RestoreEndInfo;
 }
 
 
-ArrayReference Interpreter::createVariable(string name) {
+ArrayReference Interpreter::createVariable(QString name) {
   // Are we in a nested scope?
   if (!context->isCurrentScopeNested() || context->variableLocalToCurrentScope(name)) {
     // if not, just create a local variable in the current scope, and move on.
-    context->insertVariable(name,Array::emptyConstructor());
+    context->insertVariable(name,EmptyConstructor());
   } else {
     // if so - walk up the scope chain until we are no longer nested
-    string localScopeName = context->scopeName();
+    QString localScopeName = context->scopeName();
     context->bypassScope(1);
     while (context->currentScopeNests(localScopeName))
       context->bypassScope(1);
@@ -2678,7 +2614,7 @@ ArrayReference Interpreter::createVariable(string name) {
     // Either we are back in the local scope, or we are pointing to
     // a scope that (at least theoretically) accesses a variable with 
     // the given name.
-    context->insertVariable(name,Array::emptyConstructor());
+    context->insertVariable(name,EmptyConstructor());
     context->restoreBypassedScopes();
   } 
   ArrayReference np(context->lookupVariable(name));
@@ -3109,14 +3045,14 @@ ArrayReference Interpreter::createVariable(string name) {
 //@}
 //!
 void Interpreter::assignment(Tree *var, bool printIt, Array &b) {
-  string name(var->first()->text());
+  QString name(var->first()->text());
   ArrayReference ptr(context->lookupVariable(name));
   if (!ptr.valid()) 
     ptr = createVariable(name);
   if (var->numChildren() == 1) {
-    ptr->setValue(b);
+    (*ptr) = b;
   } else if (ptr->isUserClass() && 
-	     !inMethodCall(ptr->className().back()) && 
+	     !inMethodCall(ptr->className()) && 
 	     !stopoverload) {
     ClassAssignExpression(ptr,var,b,this);
   } else if (var->numChildren() == 2)
@@ -3130,7 +3066,7 @@ void Interpreter::assignment(Tree *var, bool printIt, Array &b) {
 	try {
 	  deref(data,var->child(index));
 	} catch (Exception &e) {
-	  data = Array::emptyConstructor();
+	  data = EmptyConstructor();
 	}
       }
       stack.push_back(data);
@@ -3321,18 +3257,18 @@ void Interpreter::block(Tree *t) {
 	statement(*i);
     }
   } catch (Exception &e) {
-    lasterr = e.getMessageCopy();
+    lasterr = e.msg();
     throw;
   }
 }
 
 // I think this is too complicated.... there should be an easier way
 // Works
-int Interpreter::countLeftHandSides(Tree *t) {
+index_t Interpreter::countLeftHandSides(Tree *t) {
   Array lhs;
   ArrayReference ptr(context->lookupVariable(t->first()->text()));
   if (!ptr.valid())
-    lhs = Array::emptyConstructor();
+    lhs = EmptyConstructor();
   else
     lhs = *ptr;
   if (t->numChildren() == 1) return 1;
@@ -3341,7 +3277,7 @@ int Interpreter::countLeftHandSides(Tree *t) {
     try {
       deref(lhs,t->child(index));
     } catch (Exception& e) {
-      lhs = Array::emptyConstructor();
+      lhs = EmptyConstructor();
     }
   }
   if (t->last()->is(TOK_BRACES)) {
@@ -3354,19 +3290,17 @@ int Interpreter::countLeftHandSides(Tree *t) {
       throw Exception("Expected indexing expression!");
     if (m.size() == 1) {
       // m[0] should have only one element...
-      if (isColonOperator(m[0]))
-	return (lhs.getLength());
-      m[0].toOrdinalType(this);
-      return (m[0].getLength());
+      if (IsColonOp(m[0]))
+	return (lhs.length());
+      return (IndexArrayFromArray(m[0]).length());
     } else {
       int i=0;
-      int outputCount=1;
+      index_t outputCount=1;
       while (i<m.size()) {
-	if (isColonOperator(m[i])) 
-	  outputCount *= lhs.getDimensionLength(i);
+	if (IsColonOp(m[i])) 
+	  outputCount *= lhs.dimensions()[i];
 	else {
-	  m[i].toOrdinalType(this);
-	  outputCount *= m[i].getLength();
+	  outputCount *= IndexArrayFromArray(m[i]).length();
 	}
 	i++;
       }
@@ -3374,13 +3308,13 @@ int Interpreter::countLeftHandSides(Tree *t) {
     }
   }
   if (t->last()->is('.')) 
-    return std::max((int)1,lhs.getLength());
+    return std::max((index_t)1,lhs.length());
   return 1;
 }
 
 Array Interpreter::AllColonReference(Array v, int index, int count) {
-  if (v.isUserClass()) return Array::emptyConstructor();
-  return Array::stringConstructor(":");
+  if (v.isUserClass()) return EmptyConstructor();
+  return Array(QString(":"));
 }
   
 //test
@@ -3392,7 +3326,7 @@ void Interpreter::specialFunctionCall(Tree *t, bool printIt) {
   if (args.empty()) return;
   ArrayVector n;
   for (int i=1;i<args.size();i++)
-    n.push_back(Array::stringConstructor(args[i].c_str()));
+    n.push_back(Array(args[i]));
   FuncPtr val;
   if (!lookupFunction(args[0],val,n))
     throw Exception("unable to resolve " + args[0] + " to a function call");
@@ -3415,7 +3349,7 @@ void Interpreter::setBreakpoint(stackentry bp, bool enableFlag) {
   FuncPtr val;
   bool isFun = lookupFunction(bp.detail,val);
   if (!isFun) {
-    warningMessage(string("unable to find function ") + 
+    warningMessage(QString("unable to find function ") + 
 		   bp.detail + " to set breakpoint");
     return;
   }
@@ -3464,7 +3398,7 @@ void Interpreter::multiFunctionCall(Tree *t, bool printIt) {
   ArrayVector m;
   TreeList s;
   Array c;
-  int lhsCount;
+  index_t lhsCount;
 
   if (!t->first()->is(TOK_BRACKETS))
     throw Exception("Illegal left hand side in multifunction expression");
@@ -3482,19 +3416,19 @@ void Interpreter::multiFunctionCall(Tree *t, bool printIt) {
   int index;
   for (index=0;(index<s.size()) && (m.size() > 0);index++) {
     Tree *var(s[index]);
-    string name(var->first()->text());
+    QString name(var->first()->text());
     ArrayReference ptr(context->lookupVariable(name));
     if (!ptr.valid()) 
       ptr = createVariable(name);
     if (ptr->isUserClass() && 
-	!inMethodCall(ptr->className().back()) && 
+	!inMethodCall(ptr->className()) && 
 	!stopoverload) {
       ClassAssignExpression(ptr,t,m.front(),this);
       m.pop_front();
       return;
     }
     if (var->numChildren() == 1) {
-      ptr->setValue(m.front());
+      (*ptr) = m.front();
       m.pop_front();
     } else if (var->numChildren() == 2)
       multiassign(ptr,var->second(),m);
@@ -3507,7 +3441,7 @@ void Interpreter::multiFunctionCall(Tree *t, bool printIt) {
 	  try {
 	    deref(data,var->child(index));
 	  } catch (Exception &e) {
-	    data = Array::emptyConstructor();
+	    data = EmptyConstructor();
 	  }
 	}
 	stack.push_back(data);
@@ -3537,14 +3471,14 @@ void Interpreter::multiFunctionCall(Tree *t, bool printIt) {
     warningMessage("one or more outputs not assigned in call.");
 }
 
-int getArgumentIndex(StringVector list, std::string t) {
+int getArgumentIndex(StringVector list, QString t) {
   bool foundArg = false;
-  std::string q;
+  QString q;
   int i = 0;
   while (i<list.size() && !foundArg) {
     q = list[i];
     if (q[0] == '&')
-      q.erase(0,1);
+      q.remove(0,1);
     foundArg = (q == t);
     if (!foundArg) i++;
   }
@@ -4115,7 +4049,7 @@ void Interpreter::collectKeywords(Tree *q, ArrayVector &keyvals,
 	keyvals.push_back(expression(q->child(index)->second()));
 	keyexpr.push_back(q->child(index)->second());
       } else {
-	keyvals.push_back(Array::logicalConstructor(true));
+	keyvals.push_back(Array(bool(true)));
 	keyexpr.push_back(new Tree);
       }
     }
@@ -4185,7 +4119,7 @@ int* Interpreter::sortKeywords(ArrayVector &m, StringVector &keywords,
   // remaining arguments
   for (int i=0;i<totalCount;i++)
     if (!filled[i])
-      toFill[i] = Array::emptyConstructor();
+      toFill[i] = EmptyConstructor();
   // Clean up
   delete[] filled;
   delete[] keywordNdx;
@@ -4217,9 +4151,9 @@ void Interpreter::handlePassByReference(Tree *q, StringVector arguments,
       if (qindx >= q->second()->numChildren())
 	qindx = q->second()->numChildren()-1;
     }
-    std::string args(arguments[i]);
+    QString args(arguments[i]);
     if (args[0] == '&') {
-      args.erase(0,1);
+      args.remove(0,1);
       // This argument was passed by reference
       if (!p->valid() || !(p->is(TOK_VARIABLE)))
 	throw Exception("Must have lvalue in argument passed by reference");
@@ -4272,9 +4206,9 @@ void Interpreter::functionExpression(Tree *t,
     if (funcDef->updateCode(this)) refreshBreakpoints();
     if (funcDef->scriptFlag) {
       if (t->numChildren()>=2)
-	throw Exception(std::string("Cannot use arguments in a call to a script."));
+	throw Exception(QString("Cannot use arguments in a call to a script."));
       if ((narg_out > 0) && !outputOptional)
-	throw Exception(std::string("Cannot assign outputs in a call to a script."));
+	throw Exception(QString("Cannot assign outputs in a call to a script."));
       CLIFlagsave = InCLI;
       InCLI = false;
       pushDebug(((MFunctionDef*)funcDef)->fileName,
@@ -4300,10 +4234,10 @@ void Interpreter::functionExpression(Tree *t,
 	argTypeMap = NULL;
       if ((funcDef->inputArgCount() >= 0) && 
 	  (m.size() > funcDef->inputArgCount()))
-	throw Exception(std::string("Too many inputs to function ")+t->first()->text());
+	throw Exception(QString("Too many inputs to function ")+t->first()->text());
       if ((funcDef->outputArgCount() >= 0) && 
 	  (narg_out > funcDef->outputArgCount() && !outputOptional))
-	throw Exception(std::string("Too many outputs to function ")+t->first()->text());
+	throw Exception(QString("Too many outputs to function ")+t->first()->text());
       CLIFlagsave = InCLI;
       InCLI = false;
       if (!funcDef->graphicsFunction)
@@ -4342,7 +4276,7 @@ void Interpreter::functionExpression(Tree *t,
 
 void Interpreter::toggleBP(QString fname, int lineNumber) {
   if (isBPSet(fname,lineNumber)) {
-    string fname_string(fname.toStdString());
+    QString fname_string(fname);
     for (int i=0;i<bpStack.size();i++) 
       if ((bpStack[i].cname == fname_string) &&
 	  ((bpStack[i].tokid & 0xffff) == lineNumber)) {
@@ -4351,11 +4285,11 @@ void Interpreter::toggleBP(QString fname, int lineNumber) {
 	return;
       }
   } else {
-    addBreakpoint(fname.toStdString(),lineNumber);
+    addBreakpoint(fname,lineNumber);
   }    
 }
 
-MFunctionDef* Interpreter::lookupFullPath(string fname) {
+MFunctionDef* Interpreter::lookupFullPath(QString fname) {
   StringVector allFuncs(context->listAllFunctions());
   FuncPtr val;
   for (int i=0;i<allFuncs.size();i++) {
@@ -4372,11 +4306,11 @@ MFunctionDef* Interpreter::lookupFullPath(string fname) {
 
 static int bpList = 1;
 // Add a breakpoint - name is used to track to a full filename
-void Interpreter::addBreakpoint(string name, int line) {
-  //  qDebug() << "Add bp " << QString::fromStdString(name) << " : " << line << "";
+void Interpreter::addBreakpoint(QString name, int line) {
+  //  qDebug() << "Add bp " << QString::fromStdQString(name) << " : " << line << "";
   FuncPtr val;
   // Map the name argument to a full file name.
-  string fullFileName;
+  QString fullFileName;
   if (context->lookupFunction(name,val) && (val->type() == FM_M_FUNCTION))
     fullFileName = ((MFunctionDef*) val)->fileName;
   else
@@ -4426,7 +4360,7 @@ void Interpreter::addBreakpoint(string name, int line) {
     }
   }
   if (best_dist > max_line_count)
-//    warningMessage(std::string("Cannot set breakpoint at line ")+line+" of file "+name + ".  \r\nThis can be caused by an illegal line number, or a function that is not on the path or in the current directory.");
+//    warningMessage(QString("Cannot set breakpoint at line ")+line+" of file "+name + ".  \r\nThis can be caused by an illegal line number, or a function that is not on the path or in the current directory.");
     emit IllegalLineOrCurrentPath(name, line);
   else {
     addBreakpoint(stackentry(fullFileName,allFuncs[best_func],best_dist+line,bpList++));
@@ -4434,7 +4368,7 @@ void Interpreter::addBreakpoint(string name, int line) {
 }
 
 bool Interpreter::isBPSet(QString fname, int lineNumber) {
-  string fname_string(fname.toStdString());
+  QString fname_string(fname);
   for (int i=0;i<bpStack.size();i++) 
     if ((bpStack[i].cname == fname_string) &&
 	((bpStack[i].tokid & 0xffff) == lineNumber)) return true;
@@ -4442,25 +4376,21 @@ bool Interpreter::isBPSet(QString fname, int lineNumber) {
 }
 
 bool Interpreter::isInstructionPointer(QString fname, int lineNumber) {
-  return ((fname.toStdString() == ip_funcname) && ((lineNumber == (ip_context & 0xffff)) || ((lineNumber == 1) && ((ip_context & 0xffff) == 0))));
+  return ((fname == ip_funcname) && ((lineNumber == (ip_context & 0xffff)) || ((lineNumber == 1) && ((ip_context & 0xffff) == 0))));
 }
 
 void Interpreter::listBreakpoints() {
   for (int i=0;i<bpStack.size();i++) {
-    //    if (bpStack[i].number > 0) {
-    char buffer[2048];
-    snprintf(buffer,2048,"%d   %s line %d\n",bpStack[i].number,
-	     bpStack[i].cname.c_str(),bpStack[i].tokid & 0xffff);
+    QString buffer = QString("%1   %2 line %3\n").arg(bpStack[i].number)
+      .arg(bpStack[i].cname).arg(bpStack[i].tokid & 0xffff);
     outputMessage(buffer);
-    //    }
   }
 }
 
 void Interpreter::deleteBreakpoint(int number) {
   for (int i=0;i<bpStack.size();i++) 
     if (bpStack[i].number == number) {
-      //      setBreakpoint(bpStack[i],false);
-      bpStack.erase(bpStack.begin()+i);
+      bpStack.remove(i);
       emit RefreshBPLists();
       return;
     } 
@@ -4471,26 +4401,26 @@ void Interpreter::deleteBreakpoint(int number) {
 
 void Interpreter::stackTrace(bool includeCurrent) {
   for (int i=0;i<cstack.size();i++) {
-    std::string cname_trim(TrimExtension(TrimFilename(cstack[i].cname)));
-    outputMessage(string("In ") + cname_trim + "("
+    QString cname_trim(TrimExtension(TrimFilename(cstack[i].cname)));
+    outputMessage(QString("In ") + cname_trim + "("
 		  + cstack[i].detail + ") on line " +
-		  (cstack[i].tokid & 0x0000FFFF) + "\r\n");
+		  QString().setNum(int(cstack[i].tokid & 0x0000FFFF)) + "\r\n");
   }
   if (includeCurrent) {
-    std::string ip_trim(TrimExtension(TrimFilename(ip_funcname)));
-    outputMessage(string("In ") + ip_trim + "("
+    QString ip_trim(TrimExtension(TrimFilename(ip_funcname)));
+    outputMessage(QString("In ") + ip_trim + "("
 		  + ip_detailname + ") on line " +
-		  (ip_context & 0x0000FFFF) + "\r\n");
+		  QString().setNum(int(ip_context & 0x0000FFFF)) + "\r\n");
   }
 }
 
-bool Interpreter::inMethodCall(std::string classname) {
-  if (ip_detailname.empty()) return false;
+bool Interpreter::inMethodCall(QString classname) {
+  if (ip_detailname.isEmpty()) return false;
   if (ip_detailname[0] != '@') return false;
-  return (ip_detailname.compare(1,classname.size(),classname)==0);
+  return (ip_detailname.mid(1,classname.size()) == classname);
 }
 
-void Interpreter::pushDebug(std::string fname, std::string detail) {
+void Interpreter::pushDebug(QString fname, QString detail) {
   cstack.push_back(stackentry(ip_funcname,ip_detailname,
 			      ip_context,0,steptrap,
 			      stepcurrentline));
@@ -4504,7 +4434,7 @@ void Interpreter::pushDebug(std::string fname, std::string detail) {
 }
 
 void Interpreter::popDebug() {
-  if (!cstack.empty()) {
+  if (!cstack.isEmpty()) {
     //    qDebug() << "Pop Debug";
     ip_funcname = cstack.back().cname;
     ip_detailname = cstack.back().detail;
@@ -4516,35 +4446,19 @@ void Interpreter::popDebug() {
     outputMessage("IDERROR\n");
 }
 
-bool Interpreter::isUserClassDefined(std::string classname) {
-  return (classTable.findSymbol(classname)!=NULL);
-}
-  
-UserClass Interpreter::lookupUserClass(std::string classname) {
-  return(*(classTable.findSymbol(classname)));
-}
-
-void Interpreter::registerUserClass(std::string classname, UserClass cdata) {
-  classTable.insertSymbol(classname,cdata);
-}
-
-void Interpreter::clearUserClasses() {
-  classTable = SymbolTable<UserClass>();
-}
-
-bool Interpreter::lookupFunction(std::string funcName, FuncPtr& val) {
+bool Interpreter::lookupFunction(QString funcName, FuncPtr& val) {
   ArrayVector dummy;
   return(lookupFunction(funcName,val,dummy));
 }
 
-bool IsNestedName(std::string basename) {
-  return (basename.rfind("/") >= 0);
+bool IsNestedName(QString basename) {
+  return (basename.lastIndexOf("/") >= 0);
 }
 
-std::string StripNestLevel(std::string basename) {
-  int ndx = basename.rfind("/");
+QString StripNestLevel(QString basename) {
+  int ndx = basename.lastIndexOf("/");
   if (ndx >= 0)
-    basename.erase(ndx,basename.size());
+    basename.remove(ndx,basename.size());
   else
     basename = "";
   return basename;
@@ -4552,7 +4466,7 @@ std::string StripNestLevel(std::string basename) {
 
 // Look up a function by name.  Use the arguments (if available) to assist
 // in resolving method calls for objects
-bool Interpreter::lookupFunction(std::string funcName, FuncPtr& val, 
+bool Interpreter::lookupFunction(QString funcName, FuncPtr& val, 
 				 ArrayVector &args, bool disableOverload) {
   int passcount = 0;
   while(passcount < 2) {
@@ -4565,8 +4479,8 @@ bool Interpreter::lookupFunction(std::string funcName, FuncPtr& val,
     // Not a nested function of the current scope.  We have to look for nested
     // functions of all parent scopes. Sigh.
     if (context->isCurrentScopeNested()) {
-      std::string basename = ip_detailname;
-      while (!basename.empty()) {
+      QString basename = ip_detailname;
+      while (!basename.isEmpty()) {
 	if (context->lookupFunction(NestedMangleName(basename,funcName),val))
 	  return true;
 	basename = StripNestLevel(basename);
@@ -4631,44 +4545,6 @@ bool Interpreter::lookupFunction(std::string funcName, FuncPtr& val,
 //   [x,y] = handle(arg1,arg2)
 //@]
 //!
-//Works
-ArrayVector Interpreter::FunctionPointerDispatch(Array r, Tree *args, 
-						 int narg_out) {
-  const FunctionDef** dp;
-  bool CLIFlagsave;
-  dp = (const FunctionDef**) r.getDataPointer();
-  FunctionDef* fun = (FunctionDef*) dp[0];
-  if (!fun) return ArrayVector();
-  if (!args->is(TOK_PARENS))
-    throw Exception("Expected either '()' or function arguments inside parenthesis");
-  ArrayVector m;
-  for (int p = 0; p< args->numChildren(); p++)
-    multiexpr(args->child(p),m);
-  ArrayVector n;
-  if (fun->updateCode(this)) refreshBreakpoints();
-  if (fun->scriptFlag) {
-    if (!m.empty())
-      throw Exception(std::string("Cannot use arguments in a call to a script."));
-    CLIFlagsave = InCLI;
-    InCLI = false;
-    pushDebug(((MFunctionDef*)fun)->fileName,
-	      ((MFunctionDef*)fun)->name);
-    try {
-      block(((MFunctionDef*)fun)->code.tree());
-    } catch (InterpreterReturnException& e) {
-    }
-    popDebug();
-    InCLI = CLIFlagsave;
-  } else {
-    CLIFlagsave = InCLI;
-    InCLI = false;
-    //HACK!
-    int narg_out = 1;
-    n = fun->evaluateFunction(this,m,narg_out);
-    InCLI = CLIFlagsave;
-  }
-  return n;
-}
 
 //!
 //@Module INDEXING Indexing Expressions
@@ -5088,9 +4964,9 @@ void Interpreter::deref(Array &r, Tree *s) {
       }
       subsindex(m);
       if (m.size() == 1)
-	r = r.getVectorSubset(m[0],this);
+	r = r.get(m[0]);
       else
-	r = r.getNDimSubset(m,this);
+	r = r.get(m);
     }
   } else if (s->is(TOK_BRACES)) {
     ArrayVector m;
@@ -5101,20 +4977,20 @@ void Interpreter::deref(Array &r, Tree *s) {
     }
     subsindex(m);
     if (m.size() == 1)
-      r = r.getVectorContents(m[0],this);
+      r = ArrayFromCellArray(r.get(m[0]));
     else
-      r = r.getNDimContents(m,this);
+      r = ArrayFromCellArray(r.get(m));
   } else if (s->is('.')) {
-    r = r.getField(s->first()->text());
+    r = r.get(s->first()->text()).front();
   } else if (s->is(TOK_DYN)) {
-    string field;
+    QString field;
     try {
       Array fname(expression(s->first()));
-      field = fname.getContentsAsString();
+      field = fname.asString();
     } catch (Exception &e) {
       throw Exception("dynamic field reference to structure requires a string argument");
     }
-    r = r.getField(field);
+    r = r.get(field).front();
   }
   RestoreEndInfo;
 }
@@ -5128,26 +5004,17 @@ void Interpreter::deref(Array &r, Tree *s) {
      if (m.size() >= 1)
        return m[0];
      else
-       return Array::emptyConstructor();
-   }
-   if ((ptr->dataClass() == FM_FUNCPTR_ARRAY &&
-	ptr->isScalar()) && (t->numChildren() > 1)) {
-     ArrayVector m(FunctionPointerDispatch(*ptr,t->second(),1));
-     m = handleReindexing(t,m);
-     if (m.size() >= 1)
-       return m[0];
-     else
-       return Array::emptyConstructor();
+       return EmptyConstructor();
    }
    if (t->numChildren() == 1)
      return *ptr;
-   if (ptr->isUserClass() && !stopoverload && !inMethodCall(ptr->className().back())) {
+   if (ptr->isUserClass() && !stopoverload && !inMethodCall(ptr->className())) {
      ArrayVector m(ClassRHSExpression(*ptr,t,this));
      m = handleReindexing(t,m);
      if (m.size() >= 1)
        return m[0];
      else
-       return Array::emptyConstructor();
+       return EmptyConstructor();
    }
    Array r(*ptr);
    for (int index = 1;index < t->numChildren();index++) 
@@ -5164,7 +5031,7 @@ int Interpreter::getErrorCount() {
 
 Interpreter::Interpreter(Context* aContext) {
   errorCount = 0;
-  lasterr = string("");
+  lasterr = QString("");
   context = aContext;
   depth = 0;
   printLimit = 1000;
@@ -5221,7 +5088,7 @@ void Interpreter::dbstepStatement(Tree *t) {
   int lines = 1;
   if (t->hasChildren()) {
     Array lval(expression(t->first()));
-    lines = lval.getContentsAsIntegerScalar();
+    lines = lval.asInteger();
   }
   // Get the current function
   if (cstack.size() < 1) throw Exception("cannot dbstep unless inside an M-function");
@@ -5229,7 +5096,7 @@ void Interpreter::dbstepStatement(Tree *t) {
   FuncPtr val;
   if (bp.detail == "base") return;
   if (!lookupFunction(bp.detail,val)) {
-    warningMessage(string("unable to find function ") + bp.detail + " to single step");
+    warningMessage(QString("unable to find function ") + bp.detail + " to single step");
     return;
   }
   cstack[cstack.size()-1].steptrap = lines;
@@ -5243,7 +5110,7 @@ void Interpreter::dbtraceStatement(Tree *t) {
   int lines = 1;
   if (t->hasChildren()) {
     Array lval(expression(t->first()));
-    lines = lval.getContentsAsIntegerScalar();
+    lines = lval.asInteger();
   }
   // Get the current function
   if (cstack.size() < 1) throw Exception("cannot dbtrace unless inside an M-function");
@@ -5251,7 +5118,7 @@ void Interpreter::dbtraceStatement(Tree *t) {
   FuncPtr val;
   if (bp.detail == "base") return;
   if (!lookupFunction(bp.detail,val)) {
-    warningMessage(string("unable to find function ") + bp.detail + " to single step");
+    warningMessage(QString("unable to find function ") + bp.detail + " to single step");
     return;
   }
   tracetrap = lines;
@@ -5260,18 +5127,18 @@ void Interpreter::dbtraceStatement(Tree *t) {
 //     tracecurrentline << " with wait of " << lines << " lines";
 }
 
-static string EvalPrep(string line) {
-  string buf1 = line;
-  if (buf1.size()>0 && buf1[buf1.size()-1] == '\n')
-    buf1.erase(buf1.end()-1);
-  if (buf1.size()>0 && buf1[buf1.size()-1] == '\r')
-    buf1.erase(buf1.end()-1);
+static QString EvalPrep(QString line) {
+  QString buf1 = line;
+  if (buf1.endsWith('\n'))
+    buf1.chop(1);
+  if (buf1.endsWith('\r'))
+    buf1.chop(1);
   if (buf1.size() > 20)
-    buf1 = string(buf1,0,20) + "...";
+    buf1 = buf1.left(20) + "...";
   return buf1;
 }
 
-void Interpreter::ExecuteLine(std::string txt) {
+void Interpreter::ExecuteLine(QString txt) {
   mutex.lock();
   cmd_buffer.push_back(txt);
   bufferNotEmpty.wakeAll();
@@ -5280,7 +5147,7 @@ void Interpreter::ExecuteLine(std::string txt) {
 }
 
 //PORT
-void Interpreter::evaluateString(string line, bool propogateExceptions) {
+void Interpreter::evaluateString(QString line, bool propogateExceptions) {
   CodeBlock b;
   Tree *t;
   m_interrupt = false;
@@ -5326,11 +5193,11 @@ void Interpreter::evaluateString(string line, bool propogateExceptions) {
   popDebug();
 }
   
-string Interpreter::getLastErrorString() {
+QString Interpreter::getLastErrorString() {
   return lasterr;
 }
 
-void Interpreter::setLastErrorString(string txt) {
+void Interpreter::setLastErrorString(QString txt) {
   lasterr = txt;
 }
 
@@ -5338,7 +5205,7 @@ void Interpreter::setGreetingFlag(bool skip) {
   m_skipflag = skip;
 }
 
-bool NeedsMoreInput(Interpreter *eval, string txt) {
+bool NeedsMoreInput(Interpreter *eval, QString txt) {
   // Check for ... or an open []
   try {
     Scanner S(txt,"");
@@ -5353,7 +5220,7 @@ bool NeedsMoreInput(Interpreter *eval, string txt) {
     CodeBlock root(P.process());
     return false;
   } catch (Exception &e) {
-    if (e.getMessageCopy().substr(0,13) == "Expecting end") {
+    if (e.msg().left(13) == "Expecting end") {
       return true;
     }
   }
@@ -5364,13 +5231,13 @@ void Interpreter::sleepMilliseconds(unsigned long msecs) {
   QThread::msleep(msecs);
 }
 
-string Interpreter::getLine(string prompt) {
+QString Interpreter::getLine(QString prompt) {
   emit SetPrompt(prompt);
   if (m_diaryState) diaryMessage(prompt);
-  string retstring;
+  QString retstring;
   emit EnableRepaint();
   mutex.lock();
-  if (cmd_buffer.empty())
+  if (cmd_buffer.isEmpty())
     bufferNotEmpty.wait(&mutex);
   retstring = cmd_buffer.front();
   cmd_buffer.erase(cmd_buffer.begin());
@@ -5382,15 +5249,14 @@ string Interpreter::getLine(string prompt) {
 // This is a "generic" CLI routine.  The user interface (non-debug)
 // version of this is "docli"
 void Interpreter::evalCLI() {
-  char prompt[150];
+  QString prompt;
   bool rootCLI;
 
   if ((depth == 0) || (cstack.size() == 0)) {
-    snprintf(prompt,150,"--> ");
+    prompt = "--> ";
     rootCLI = true;
   } else {
-    snprintf(prompt,150,"[%s,%d]--> ",ip_detailname.c_str(),
-	     ip_context & 0xffff);
+    prompt = QString("[%1,%2]--> ").arg(ip_detailname).arg(ip_context & 0xffff);
     rootCLI = false;
   }
   while(1) {
@@ -5404,15 +5270,14 @@ void Interpreter::evalCLI() {
       emit SetPrompt(prompt);
       if (m_diaryState) diaryMessage(prompt);
     }
-    //     qDebug() << "IP: " << QString::fromStdString(ip_detailname) << ", " << (ip_context & 0xffff) << "";
     emit ShowActiveLine();
-    string cmdset;
-    std::string cmdline;
+    QString cmdset;
+    QString cmdline;
     emit EnableRepaint();
     mutex.lock();
-    while ((cmdset.empty() || 
+    while ((cmdset.isEmpty() || 
 	    NeedsMoreInput(this,cmdset)) && (!m_interrupt)) {
-      if (cmd_buffer.empty())
+      if (cmd_buffer.isEmpty())
 	bufferNotEmpty.wait(&mutex);
       cmdline = cmd_buffer.front();
       cmd_buffer.erase(cmd_buffer.begin());
@@ -5441,8 +5306,7 @@ void Interpreter::evalCLI() {
 Array Interpreter::subsindex(const Array &m) {
   if (m.isUserClass() && !stopoverload) {
     Array t(ClassUnaryOperator(m,"subsindex",this));
-    t.promoteType(FM_UINT32);
-    return Add(t,Array::uint32Constructor(1),this);
+    return Add(t.toClass(Double),Array(index_t(1)));
   }
   return m;
 }

@@ -60,7 +60,7 @@ class HandleAxis : public HandleObject {
 		 double dx, double dy, 
 		 double x2, double y2, 
 		 QVector<double> color,
-		 std::string txt);
+		 QString txt);
   void SetupAxis(RenderEngine& gc);
   void RecalculateTicks();
   int GetTickCount(RenderEngine& gc, double x1, double y1, 
@@ -87,7 +87,7 @@ public:
   virtual void PaintMe(RenderEngine &gc);
   HandleFigure* GetParentFigure();
   QVector<double> UnitsReinterpret(QVector<double> a);
-  QVector<double> GetPropertyVectorAsPixels(std::string name);
+  QVector<double> GetPropertyVectorAsPixels(QString name);
   QVector<double> GetAxisLimits();
   void SetAxisLimits(QVector<double>);
   double MapX(double x);
@@ -115,7 +115,7 @@ public:
 		      QVector<double>  maptics,
 		      QVector<double>  minortics,
 		      StringVector labels,
-		      std::string labelname,
+		      QString labelname,
 		      int ticlen, double ticdir);
   void DrawAxisLabels(RenderEngine& gc);
   void DrawChildren(RenderEngine& gc);

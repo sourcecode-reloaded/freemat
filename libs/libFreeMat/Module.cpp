@@ -65,35 +65,40 @@ void ClearLibs(Interpreter* eval) {
 //(defaults to 0), and @|nargout| is the number of output arguments (defaults
 //to 0).  If the number of (input or output) arguments is variable then
 //set the corresponding argument to @|-1|.
+//@@Signature
+//sfunction loadlib LoadLibFunction
+//inputs libfile symbolname functionname nargin nargout
+//outputs none
 //!
+
 ArrayVector LoadLibFunction(int c_nargout,const ArrayVector& narg,
 			    Interpreter* eval) {
-  string libfile;
-  string symbolName;
-  string funcName;
+  QString libfile;
+  QString symbolName;
+  QString funcName;
   int nargin;
   int nargout;
   ArrayVector arg(narg);
 
   if (arg.size() < 2) 
     throw Exception("Must supply at least the library file and symbol name");
-  libfile = arg[0].getContentsAsString();
-  symbolName = arg[1].getContentsAsString();
+  libfile = arg[0].asString();
+  symbolName = arg[1].asString();
   if (arg.size() < 5)
     nargout = 0;
   else
-    nargout = (int) arg[4].getContentsAsIntegerScalar();
+    nargout = (int) arg[4].asInteger();
   if (arg.size() < 4)
     nargin = 0;
   else
-    nargin = (int) arg[3].getContentsAsIntegerScalar();
+    nargin = (int) arg[3].asInteger();
   if (arg.size() < 3)
     funcName = symbolName;
   else
-    funcName = arg[2].getContentsAsString();
+    funcName = arg[2].asString();
   void *func;
   DynLib *lib = new DynLib(libfile);
-  func = lib->GetSymbol(symbolName.c_str());
+  func = lib->GetSymbol(symbolName);
   BuiltInFunctionDef *fdef = new BuiltInFunctionDef;
   fdef->retCount = nargout;
   fdef->argCount = nargin;
@@ -158,7 +163,7 @@ char* parseArgumentName(const char* &cp) {
   }
   skipWS(cp);
   if (!isalpha(*cp))
-    throw Exception(std::string("malformed import function prototype") + 
+    throw Exception(QString("malformed import function prototype") + 
 		    " - error starting at " + cp);
   rp = cp;
   cp++;
@@ -191,7 +196,7 @@ char* parseBoundsCheck(const char* &cp) {
     cp++;
   }
   if (bracketDepth > 0)
-    throw Exception(std::string("malformed bounds check - error starting at ") + 
+    throw Exception(QString("malformed bounds check - error starting at ") + 
 		    cp);
   char *op;
   int bcLength;
@@ -354,31 +359,36 @@ char* parseBoundsCheck(const char* &cp) {
 //addArrays(length(a),a,b,c)
 //c
 //@>
+//@@Signature
+//sfunction import ImportFunction
+//inputs libraryname symbol function returntype arguments
+//outputs none 
 //!
 
-static inline bool issep(char t) {
+static inline bool issep(QChar t) {
   return ((t=='/') || (t=='\\'));
 }
+
 ArrayVector ImportFunction(int nargout, const ArrayVector& arg, 
 			   Interpreter* eval)  {
 #ifdef HAVE_AVCALL
-  string libfile;
-  string symbolname;
-  string funcname;
-  string rettype;
-  string arglist;
+  QString libfile;
+  QString symbolname;
+  QString funcname;
+  QString rettype;
+  QString arglist;
 
   PathSearcher psearch(eval->getPath());
 
-  std::string libfullpath;
+  QString libfullpath;
 
   if (arg.size() < 5)
-    throw Exception(std::string("import requires 5 arguments:") + 
+    throw Exception(QString("import requires 5 arguments:") + 
 		    "library name, symbol name, imported function name" +
 		    "return type, argument list");
-  libfile = arg[0].getContentsAsString();
+  libfile = arg[0].asString();
   libfullpath = psearch.ResolvePath(libfile);
-  string current(QDir::currentPath().toStdString());
+  QString current(QDir::currentPath());
   // Prepend the current working directory... ugly, but necessary
 #ifdef WIN32
   if (!(issep(libfullpath[0]) || ((libfullpath[1] == ':') && 
@@ -388,10 +398,10 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
   if (!issep(libfullpath[0]))
     libfullpath = current + "/" + libfullpath;
 #endif
-  symbolname = arg[1].getContentsAsString();
-  funcname = arg[2].getContentsAsString();
-  rettype = arg[3].getContentsAsString();
-  arglist = arg[4].getContentsAsString();
+  symbolname = arg[1].asString();
+  funcname = arg[2].asString();
+  rettype = arg[3].asString();
+  arglist = arg[4].asString();
   void *func;
   DynLib *lib, **ptr;
   ptr = libPointers.findSymbol(libfullpath);
@@ -400,7 +410,7 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
     libPointers.insertSymbol(libfullpath,lib);
   } else
     lib = *ptr;
-  func = lib->GetSymbol(symbolname.c_str());
+  func = lib->GetSymbol(symbolname);
   StringVector types;
   StringVector arguments;
   CodeList checks;
@@ -408,7 +418,7 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
    * Parse the arglist...
    */
   const char *cp;
-  cp = arglist.c_str();
+  cp = qPrintable(arglist);
 
   while (*cp != 0) {
     /**
@@ -417,9 +427,9 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
     const char *tn;
     tn = parseTypeName(cp);
     if (tn == NULL) 
-      throw Exception(std::string("illegal syntax in function") + 
-		      std::string(" prototype (argument list) - ") + 
-		      std::string("expecting a valid type name"));
+      throw Exception(QString("illegal syntax in function") + 
+		      QString(" prototype (argument list) - ") + 
+		      QString("expecting a valid type name"));
     types.push_back(tn);
     char *bc = parseBoundsCheck(cp);
     if (bc != NULL) {
@@ -450,18 +460,3 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
 #endif
 }
   
-void LoadModuleFunctions(Context* context) {
-  SpecialFunctionDef *sfdef = new SpecialFunctionDef;
-  sfdef->retCount = 0;
-  sfdef->argCount = 5;
-  sfdef->name = "loadlib";
-  sfdef->fptr = LoadLibFunction;
-  context->insertFunction(sfdef,false);
-    
-  sfdef = new SpecialFunctionDef;
-  sfdef->retCount = 0;
-  sfdef->argCount = 5;
-  sfdef->name = "import";
-  sfdef->fptr = ImportFunction;
-  context->insertFunction(sfdef,false);
-}

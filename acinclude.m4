@@ -378,6 +378,14 @@ if test x"$found_amdh" == xno; then
    CXXFLAGS="$CXXFLAGS -I/usr/include/ufsparse"
  fi
 fi
+if test x"$found_amdh" == xno; then
+  AC_CHECK_HEADER(suitesparse/amd.h,found_amdh="yes",found_amdh="no")
+  if test x"$found_amdh" == xyes; then
+   CFLAGS="$CFLAGS -I/usr/include/suitesparse"
+   CXXFLAGS="$CXXFLAGS -I/usr/include/suitesparse"
+ fi
+fi
+
 
 if (test x"$found_amdh" == xyes) && (test x"$found_amd" == xyes); then
     LIBS="-lamd $LIBS"
@@ -399,6 +407,14 @@ if test x"$found_umfpackh" == xno; then
     CXXFLAGS="$CXXFLAGS -I/usr/include/ufsparse"
   fi
 fi
+if test x"$found_umfpackh" == xno; then
+  AC_CHECK_HEADER(suitesparse/umfpack.h,found_umfpackh="yes",found_umfpackh="no")
+  if test x"$found_umfpackh" == xyes; then
+    CFLAGS="$CFLAGS -I/usr/include/suitesparse"
+    CXXFLAGS="$CXXFLAGS -I/usr/include/suitesparse"
+  fi
+fi
+
 if (test x"$found_umfpackh" == xyes) && (test x"$found_umfpack" == xyes); then
     LIBS="-lumfpack $LIBS"
 fi
@@ -449,8 +465,12 @@ fi
 
 AC_MSG_CHECKING(for LLVM)
 found_llvm=no
-if test -z "$LLVM_CONFIG"; then
-  AC_PATH_PROG(LLVM_CONFIG, llvm-config, no)
+if test x"$USEJIT" == xyes; then
+   if test -z "$LLVM_CONFIG"; then
+      AC_PATH_PROG(LLVM_CONFIG, llvm-config, no)
+   fi
+else
+   AC_MSG_RESULT(skipped)
 fi
 
 if test "$LLVM_CONFIG" = "no" ; then

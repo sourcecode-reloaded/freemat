@@ -23,4 +23,4 @@
 % Licensed under the GPL
 
 function y = sqrt(x)
-  y = x.^(0.5f);
+  y = x.^(0.5);

@@ -24,14 +24,16 @@
  * A Scope is a combination of a variable hashtable and a function hashtable.
  */
 #include <string>
-#include <algorithm>
 #include <QMutex>
+#include <QHash>
+#include <algorithm>
 
 #include "Array.hpp"
+#include "Types.hpp"
 #include "SymbolTable.hpp"
 
 typedef SymbolTable<Array> VariableTable;
-class Serialize;
+
 
 /**
  * A Scope is a collection of functions and variables all visible
@@ -61,7 +63,7 @@ class Scope {
   /**
    * The name of the scope.
    */
-  std::string name;
+  QString name;
   /**
    * The loop level.  This is used to track the depth of nested
    * loops.
@@ -103,18 +105,18 @@ public:
   /**
    * Construct a scope with the given name.
    */
-  Scope(std::string scopeName, bool nested) : mutex(NULL),
-					      refcount(0),
-					      name(scopeName), 
-					      loopLevel(0), 
-					      anyPersistents(false), 
-					      anyGlobals(false),
-					      isNested(nested)  {}
+  Scope(QString scopeName, bool nested) : mutex(NULL),
+					  refcount(0),
+					  name(scopeName), 
+					  loopLevel(0), 
+					  anyPersistents(false), 
+					  anyGlobals(false),
+					  isNested(nested)  {}
 
   inline void setVariablesAccessed(StringVector varList) {
     variablesAccessed = varList;
   }
-  inline bool variableAccessed(string varName) {
+  inline bool variableAccessed(QString varName) {
     for (unsigned int i=0;i<variablesAccessed.size();i++)
       if (variablesAccessed[i] == varName) return true;
     return false;
@@ -128,7 +130,7 @@ public:
   inline StringVector getLocalVariablesList() {
     return localVariables;
   }
-  inline bool variableLocal(string varName) {
+  inline bool variableLocal(QString varName) {
     for (unsigned int i=0;i<localVariables.size();i++) 
       if (localVariables[i] == varName) return true;
     return false;
@@ -136,19 +138,19 @@ public:
   inline bool isnested() {
     return isNested; 
   }
-  inline bool nests(string peerName) {
+  inline bool nests(QString peerName) {
     // Nesting requires that our peer have a strictly more 
     // qualified (longer) name, and that our name is a prefix
     // of that name.
     return ((name.size() < peerName.size()) && 
-	    (string(peerName,0,name.size()) == name));
+	    (peerName.left(name.size()) == name));
   }
-  static bool nests(string name, string peerName) {
+  static bool nests(QString name, QString peerName) {
     // Nesting requires that our peer have a strictly more 
     // qualified (longer) name, and that our name is a prefix
     // of that name.
     return ((name.size() < peerName.size()) && 
-	    (string(peerName,0,name.size()) == name));
+	    (peerName.left(name.size()) == name));
   }
   /**
    * Lock the scope's mutex
@@ -176,7 +178,7 @@ public:
    * already exists in the Scope, then the previous definition
    * is replaced with the given one.
    */
-  inline void insertVariable(const std::string& varName, const Array& val) {
+  inline void insertVariable(const QString& varName, const Array& val) {
     symTab.insertSymbol(varName,val);
   }
   /**
@@ -185,13 +187,13 @@ public:
    * because in write-back assignments (e.g., A(:,346) = b) it is critical 
    * to manage the number of copies.
    */
-  inline Array* lookupVariable(const std::string& varName) {
-    return(symTab.findSymbol(varName));
+  inline Array* lookupVariable(const QString& varName) {
+    return symTab.findSymbol(varName);
   }
   /**
    * Add a variable name to the global variables list.
    */
-  inline void addGlobalVariablePointer(std::string varName) {
+  inline void addGlobalVariablePointer(QString varName) {
     if (!isVariableGlobal(varName)) {
       globalVars.push_back(varName);
       anyGlobals = true;
@@ -203,7 +205,7 @@ public:
   /**
    * Delete a variable name from the global variables list.
    */
-  inline void deleteGlobalVariablePointer(std::string varName) {
+  inline void deleteGlobalVariablePointer(QString varName) {
     StringVector::iterator i = std::find(globalVars.begin(),
 					 globalVars.end(),
 					 varName);
@@ -214,7 +216,7 @@ public:
   /**
    * Check to see if a variable is globally defined.
    */
-  inline bool isVariableGlobal(const std::string& varName) {
+  inline bool isVariableGlobal(const QString& varName) {
     if (!anyGlobals) return false;
     bool foundName = false;
     unsigned int i = 0;
@@ -228,7 +230,7 @@ public:
   /**
    * Add a variable name to the persistent variables list.
    */
-  inline void addPersistentVariablePointer(std::string varName) {
+  inline void addPersistentVariablePointer(QString varName) {
     if (!isVariablePersistent(varName)) {
       persistentVars.push_back(varName);
       anyPersistents = true;
@@ -240,7 +242,7 @@ public:
   /**
    * Delete a variable name from the persistent variables list.
    */
-  inline void deletePersistentVariablePointer(std::string varName) {
+  inline void deletePersistentVariablePointer(QString varName) {
     StringVector::iterator i = std::find(persistentVars.begin(),
 					 persistentVars.end(),
 					 varName);
@@ -252,7 +254,7 @@ public:
    * Check to see if a variable is defined in the persistent
    * list.
    */
-  inline bool isVariablePersistent(const std::string& varName) {
+  inline bool isVariablePersistent(const QString& varName) {
     if (!anyPersistents) return false;
     bool foundName = false;
     unsigned int i = 0;
@@ -267,13 +269,13 @@ public:
    * Mangle the name of a variable by prepending
    * a "_scopename_" to the name of the variable.
    */
-  inline std::string getMangledName(std::string varName) {
-    return (std::string("_") + name + std::string("_") + varName);
+  inline QString getMangledName(QString varName) {
+    return (QString("_") + name + QString("_") + varName);
   }
   /**
    * Get the name of the scope.
    */
-  inline std::string getName() {
+  inline QString getName() {
     return name;
   }
   /**
@@ -298,9 +300,9 @@ public:
    * Get a list of all possible completions of the given
    * string.
    */
-   inline StringVector getCompletions(const std::string& prefix) {
+   inline StringVector getCompletions(const QString& prefix) {
      return symTab.getCompletions(prefix);
-  }
+   }
   /**
    * Returns a list of all currently defined variables
    * in the active scope.
@@ -318,7 +320,7 @@ public:
    * replace the variable with an empty variable, but deletes
    * the variable from the symbol table completely.
    */
-  inline void deleteVariable(std::string var) {
+  inline void deleteVariable(QString var) {
     symTab.deleteSymbol(var);
   }
   /**
@@ -386,8 +388,5 @@ public:
   operator Scope* () const {return d;}
 };
 #endif
-
-void FreezeScope(ScopePtr scope, Serialize *s);
-ScopePtr ThawScope(Serialize *s);
 
 #endif

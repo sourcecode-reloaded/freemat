@@ -819,9 +819,9 @@ void JITFunc::compile(Tree* t) {
   jit->Jump(main_body);
   jit->SetCurrentBlock(epilog);
   jit->Return(jit->Load(retcode));
-  jit->Dump("unoptimized.bc.txt",func);
+  //  jit->Dump("unoptimized.bc.txt",func);
   jit->OptimizeCode(func);
-  jit->Dump("optimized.bc.txt",func);
+  //  jit->Dump("optimized.bc.txt",func);
   if (failed) throw exception_store;
 }
 

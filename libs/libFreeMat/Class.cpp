@@ -18,6 +18,20 @@
  */
 #include "Class.hpp"
 #include "Context.hpp"
+#include "Struct.hpp"
+#include "Array.hpp"
+#include "Algorithms.hpp"
+
+// The meta-info for a class
+struct UserClassMetaInfo {
+  StringVector fieldNames;
+  StringVector parentClasses;
+};
+
+// Class information is mapped to a class template through an ID number
+static int classID = 1;
+static QMutex classMutex;
+static QMap<QString,UserClassMetaInfo> classTable;
 
 // some behavioral observations on classes.
 //  The first call to "class" is the definitive one.
@@ -109,121 +123,42 @@
 // 3.  A inf B <--> B sup A
 // Precedence is then a simple question of testing interactions.
 
-UserClass::UserClass() {
-}
-
-UserClass::UserClass(StringVector fields, StringVector parents) :
-  fieldNames(fields), parentClasses(parents) {
-}
-
-bool UserClass::matchClass(UserClass test) {
-  return (((fieldNames) == (test.fieldNames)) &&
-	  ((parentClasses) == (test.parentClasses)));
-}
-
-UserClass::~UserClass() {
-}
-
-StringVector UserClass::getParentClasses() {
-  return parentClasses;
-}
-
-Array ClassAux(Array s, std::string classname, StringVector parentNames, 
-	       ArrayVector parents, Interpreter* eval) {
-  UserClass newclass(s.fieldNames(),parentNames);
-  if (s.dataClass() != FM_STRUCT_ARRAY) 
+static Array ClassAux(const Array &s, QString classname, const StringVector &parentNames, 
+		      const ArrayVector &parents) {
+  QMutexLocker lock(&classMutex);
+  if (s.dataClass() != Struct)
     throw Exception("first argument to 'class' function must be a structure");
-  // Check to see if this class has already been registered
-  if (!eval->isUserClassDefined(classname)) {
-    // new class... register it
-    eval->registerUserClass(classname,newclass);
-  } else {
-    // existing class...  make sure we match it
-    UserClass eclass(eval->lookupUserClass(classname));
-    if (!eclass.matchClass(newclass))
-      throw Exception("fieldnames, and parent objects must match registered class.  Use 'clear classes' to reset this information.");
-  }
-  // Set up the new structure array.  We do this by constructing a set of fieldnames
-  // that includes fields for the parent classes...  To resolve - what happens
-  // if the parent arrays are different sizes than the current class.
-  StringVector newfields(s.fieldNames());
-  // We should check for duplicates!
-  for (int i=0;i<parentNames.size();i++)
-    newfields.push_back(parentNames.at(i));
-  // Now check to make sure all of the parent objects are the same size
-  // as the source object
+  // First look up the class ID
+  UserClassMetaInfo meta;
+  if (!classTable.contains(classname)) {
+    meta.fieldNames = FieldNames(s);
+    for (int i=0;i<parentNames.size();i++) {
+      if (!classTable.contains(parentNames[i]))
+	throw Exception("parent object types must be defined at time of class creation");
+      meta.parentClasses.push_back(parentNames[i]);
+    }
+    classTable[classname] = meta;
+  } else
+    meta = classTable.value(classname);
+  StringVector s_fields(FieldNames(s));
+  if (meta.fieldNames != s_fields)
+    throw Exception("fieldnames of structure provided must match the fieldnames for the registered class");
+  // Now check to make sure all of the parent objects are the same size as the source object
   for (int i=0;i<parents.size();i++) 
-    if (!s.dimensions().equals(parents[i].dimensions()))
+    if (s.dimensions() != parents[i].dimensions())
       throw Exception("parent object much match dimensions of the structure used to make the object");
-  // Finally, we can construct the new structure object.
-  Array* dp = (Array *) Array::allocateArray(FM_STRUCT_ARRAY,s.getLength(),newfields);
-  const Array* sp = (const Array*) s.getDataPointer();
-  // Now we copy in the data from the original structure
-  int oldFieldCount(s.fieldNames().size());
-  int newFieldCount(newfields.size());
-  int arrayLength(s.getLength());
-  for (int i=0;i<arrayLength;i++)
-    for (int j=0;j<oldFieldCount;j++) {
-      dp[i*newFieldCount+j] = sp[i*oldFieldCount+j];
-    }
-  // Now we copy in the data from the parent objects
-  for (int j=0;j<parents.size();j++) 
-    for (int i=0;i<arrayLength;i++) {
-      Array ndx(Array::int32Constructor(i+1));
-      dp[i*newFieldCount+oldFieldCount+j] = parents[j].getVectorSubset(ndx,eval);
-    }
-  // return a new object with the specified properties
-  Array retval(FM_STRUCT_ARRAY,s.dimensions(),dp,false,newfields);
-  StringVector cp;
-  cp.push_back(classname);
-  retval.setClassName(cp);
+  Array retval(Struct);
+  StructArray &rp(retval.structPtr());
+  const StructArray &sp(s.constStructPtr());
+  // First append the old fields
+  for (int i=0;i<s_fields.size();i++)
+    rp[s_fields.at(i)] = sp[s_fields.at(i)];
+  // Now the parent members
+  for (int i=0;i<parentNames.size();i++)
+    rp[parentNames[i]] = BasicArray<Array>(parents[i]);
+  rp.setClassPath(StringVector() << classname);
+  rp.updateDims();
   return retval;
-}
-
-Array ClassOneArgFunction(Array x) {
-  if (x.isUserClass()) {
-    std::string p(x.className().back());
-    return Array::stringConstructor(x.className().back());
-  } else {
-    switch (x.dataClass()) {
-    case FM_CELL_ARRAY:
-      return Array::stringConstructor("cell");
-    case FM_STRUCT_ARRAY:
-      return Array::stringConstructor("struct");
-    case FM_LOGICAL:
-      return Array::stringConstructor("logical");
-    case FM_UINT8:
-      return Array::stringConstructor("uint8");
-    case FM_INT8:
-      return Array::stringConstructor("int8");
-    case FM_UINT16:
-      return Array::stringConstructor("uint16");
-    case FM_INT16:
-      return Array::stringConstructor("int16");
-    case FM_UINT32:
-      return Array::stringConstructor("uint32");
-    case FM_INT32:
-      return Array::stringConstructor("int32");
-    case FM_UINT64:
-      return Array::stringConstructor("uint64");
-    case FM_INT64:
-      return Array::stringConstructor("int64");
-    case FM_FLOAT:
-      return Array::stringConstructor("float");
-    case FM_DOUBLE:
-      return Array::stringConstructor("double");
-    case FM_COMPLEX:
-      return Array::stringConstructor("complex");
-    case FM_DCOMPLEX:
-      return Array::stringConstructor("dcomplex");
-    case FM_STRING:
-      return Array::stringConstructor("string");
-    case FM_FUNCPTR_ARRAY:
-      return Array::stringConstructor("function handle");
-    default:
-      throw Exception("Unrecognized class!");
-    }
-  }
 }
 
 //!
@@ -784,56 +719,44 @@ Array ClassOneArgFunction(Array x) {
 //in which case @|subsindex(a)| must return a vector containing
 //integers between @|0| and @|N-1| where @|N| is the number
 //of elements in the vector @|b|.
+//@@Signature
+//function class ClassFunction
+//input varargin
+//output classname
 //!
-
-ArrayVector ClassFunction(int nargout, const ArrayVector& arg,
-			  Interpreter* eval) {
+ArrayVector ClassFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0)
     throw Exception("class function requires at least one argument");
   if (arg.size() == 1) 
-    return SingleArrayVector(ClassOneArgFunction(arg[0]));
+    return ArrayVector(Array(arg[0].className()));
   ArrayVector parents;
   StringVector parentNames;
   for (int i=2;i<arg.size();i++) {
-    Array parent(arg[i]);
-    if (!parent.isUserClass())
+    if (!arg[i].isUserClass())
       throw Exception("parent objects must be user defined classes");
-    parents.push_back(parent);
-    parentNames.push_back(parent.className().back());
+    parents.push_back(arg[i]);
+    parentNames.push_back(arg[i].className());
   }
-  Array sval(arg[0]);
-  Array classname(arg[1]);
-  return SingleArrayVector(ClassAux(sval,classname.getContentsAsString(),
-				    parentNames,parents,eval));
+  return ArrayVector(ClassAux(arg[0],arg[1].asString(),parentNames,parents));
 }
 
-void LoadClassFunction(Context* context) {
-  SpecialFunctionDef *sfdef = new SpecialFunctionDef;
-  sfdef->retCount = 1;
-  sfdef->argCount = -1;
-  sfdef->name = "class";
-  sfdef->fptr = ClassFunction;
-  context->insertFunction(sfdef,false);
-}
-
-QVector<int> MarkUserClasses(ArrayVector t) {
+static QVector<int> MarkUserClasses(ArrayVector t) {
   QVector<int> set;
   for (int j=0;j<t.size();j++) 
     if (t[j].isUserClass()) set.push_back(j);
   return set;
 }
  
-bool ClassSearchOverload(Interpreter* eval, ArrayVector t, 
-			 QVector<int> userset, FuncPtr &val,
-			 std::string name) {
+static bool ClassSearchOverload(Interpreter* eval, ArrayVector t, 
+				QVector<int> userset, FuncPtr &val,
+				QString name) {
   bool overload = false;
   int k = 0;
   while (k<userset.size() && !overload) {
-    overload = eval->getContext()->lookupFunction(ClassMangleName(t[userset[k]].className().back(),name),val);
+    overload = 
+      eval->getContext()->lookupFunction(ClassMangleName(t[userset[k]].className(),name),val);
     if (!overload) k++;
   }
-  if (!overload)
-    throw Exception(std::string("Unable to find overloaded '") + name + "' for user defined classes");
   return overload;
 }
 
@@ -849,11 +772,10 @@ Array ClassMatrixConstructor(ArrayMatrix m, Interpreter* eval) {
     if (userset.empty()) {
       ArrayMatrix n;
       n.push_back(m[i]);
-      rows.push_back(Array::matrixConstructor(n));
+      rows.push_back(MatrixConstructor(n));
     } else {
       FuncPtr val;
-      bool horzcat_overload = ClassSearchOverload(eval,m[i],userset,
-						  val,"horzcat");
+      bool horzcat_overload = ClassSearchOverload(eval,m[i],userset,val,"horzcat");
       if (!horzcat_overload)
 	throw Exception("no overloaded version of horzcat found");
       // scan through the list of user defined classes - look
@@ -865,7 +787,7 @@ Array ClassMatrixConstructor(ArrayMatrix m, Interpreter* eval) {
 	rows.push_back(p[0]);
       else {
 	eval->warningMessage("'horzcat' called for user defined class and it returned nothing.  Substituting empty array for result.");
-	rows.push_back(Array::emptyConstructor());
+	rows.push_back(EmptyConstructor());
       }
     }
   }
@@ -882,56 +804,56 @@ Array ClassMatrixConstructor(ArrayMatrix m, Interpreter* eval) {
     // an ArrayMatrix instead of an ArrayVector.
     ArrayMatrix ref;
     for (int i=0;i<rows.size();i++)
-      ref.push_back(SingleArrayVector(rows[i]));
-    return Array::matrixConstructor(ref);
+      ref.push_back(ArrayVector(rows[i]));
+    return MatrixConstructor(ref);
   } else {
     // We do have a user defined class - look for a vertcat defined
     FuncPtr val;
-    bool vertcat_overload = ClassSearchOverload(eval,rows,userset,
-						val,"vertcat");
+    bool vertcat_overload = ClassSearchOverload(eval,rows,userset,val,"vertcat");
     if (!vertcat_overload)
-	throw Exception("no overloaded version of vertcat found");
+      throw Exception("no overloaded version of vertcat found");
     val->updateCode(eval);
     ArrayVector p;
     p = val->evaluateFunction(eval,rows,1);
     if (!p.empty())
       return p[0];
     else
-      return Array::emptyConstructor();
+      return EmptyConstructor();
   }
-  return Array::emptyConstructor();
+  return EmptyConstructor();
 }
 
-Array ClassUnaryOperator(Array a, std::string funcname,
-			 Interpreter* eval) {
+Array ClassUnaryOperator(Array a, QString funcname, Interpreter* eval) {
   FuncPtr val;
   ArrayVector m, n;
-  if (eval->getContext()->lookupFunction(ClassMangleName(a.className().back(),funcname),val)) {
+  if (eval->getContext()->lookupFunction(ClassMangleName(a.className(),funcname),val)) {
     val->updateCode(eval);
     m.push_back(a);
     n = val->evaluateFunction(eval,m,1);
     if (!n.empty())
       return n[0];
     else
-      return Array::emptyConstructor();
+      return EmptyConstructor();
   }
-  throw Exception("Unable to find a definition of " + funcname + " for arguments of class " + a.className().back());
+  throw Exception("Unable to find a definition of " + 
+		  funcname + " for arguments of class " + a.className());
 }
 
-bool ClassResolveFunction(Interpreter* eval, Array& args, std::string funcName, FuncPtr& val) {
+bool ClassResolveFunction(Interpreter* eval, Array& args, QString funcName, FuncPtr& val) {
   Context *context = eval->getContext();
   // First try to resolve to a method of the base class
-  if (context->lookupFunction(ClassMangleName(args.className().back(),funcName),val)) {
+  if (context->lookupFunction(ClassMangleName(args.className(),funcName),val)) {
     return true;
   } 
-  UserClass eclass(eval->lookupUserClass(args.className().back()));
-  StringVector parentClasses(eclass.getParentClasses());
+  if (!args.isUserClass()) 
+    throw Exception("class resolve called with non user class");
+  UserClassMetaInfo einfo = classTable[args.className()];
   // Now check the parent classes
-  for (int i=0;i<parentClasses.size();i++) {
-    if (context->lookupFunction(ClassMangleName(parentClasses.at(i),funcName),val)) {
+  for (int i=0;i<einfo.parentClasses.size();i++) {
+    if (context->lookupFunction(ClassMangleName(einfo.parentClasses.at(i),funcName),val)) {
       StringVector argClass(args.className());
-      argClass.push_back(parentClasses.at(i));
-      args.setClassName(argClass);
+      argClass.push_back(einfo.parentClasses.at(i));
+      args.structPtr().setClassPath(argClass);
       return true;
     }
   }
@@ -939,16 +861,10 @@ bool ClassResolveFunction(Interpreter* eval, Array& args, std::string funcName, 
   return false;
 }
 
-void printClassNames(Array a) {
-  StringVector classname(a.className());
-  for (int i=0;i<classname.size();i++)
-    dbout << "class " << classname.at(i) << "\r\n";
-}
-
 
 // TODO - add "inferiorto", etc and class precedence
 
-Array ClassBiOp(Array a, Array b, FuncPtr val, Interpreter *eval) {
+static Array ClassBiOp(Array a, Array b, FuncPtr val, Interpreter *eval) {
   val->updateCode(eval);
   ArrayVector m, n;
   m.push_back(a); m.push_back(b);
@@ -956,10 +872,10 @@ Array ClassBiOp(Array a, Array b, FuncPtr val, Interpreter *eval) {
   if (!n.empty())
     return n[0];
   else
-    return Array::emptyConstructor();
+    return EmptyConstructor();
 }
 
-Array ClassTriOp(Array a, Array b, Array c, FuncPtr val, Interpreter *eval) {
+static Array ClassTriOp(Array a, Array b, Array c, FuncPtr val, Interpreter *eval) {
   val->updateCode(eval);
   ArrayVector m, n;
   m.push_back(a); m.push_back(b); m.push_back(c);
@@ -967,39 +883,44 @@ Array ClassTriOp(Array a, Array b, Array c, FuncPtr val, Interpreter *eval) {
   if (!n.empty())
     return n[0];
   else
-    return Array::emptyConstructor();
+    return EmptyConstructor();
 }
 
-Array ClassTrinaryOperator(Array a, Array b, Array c, std::string funcname,
+Array ClassTrinaryOperator(Array a, Array b, Array c, QString funcname,
 			   Interpreter* eval) {
   FuncPtr val;
   if (a.isUserClass()) {
-    if (eval->getContext()->lookupFunction(ClassMangleName(a.className().back(),funcname),val)) 
+    if (eval->getContext()->lookupFunction(ClassMangleName(a.className(),funcname),val)) 
       return ClassTriOp(a,b,c,val,eval);
-    throw Exception("Unable to find a definition of " + funcname + " for arguments of class " + a.className().back());
+    throw Exception(QString("Unable to find a definition of ") + funcname + 
+		    " for arguments of class " + a.className());
   } else if (b.isUserClass()) {
-    if (eval->getContext()->lookupFunction(ClassMangleName(b.className().back(),funcname),val)) 
+    if (eval->getContext()->lookupFunction(ClassMangleName(b.className(),funcname),val)) 
       return ClassTriOp(a,b,c,val,eval);
-    throw Exception("Unable to find a definition of " + funcname + " for arguments of class " + b.className().back());
+    throw Exception(QString("Unable to find a definition of ") + funcname + 
+		    " for arguments of class " + b.className());
   } else if (c.isUserClass()) {
-    if (eval->getContext()->lookupFunction(ClassMangleName(c.className().back(),funcname),val)) 
+    if (eval->getContext()->lookupFunction(ClassMangleName(c.className(),funcname),val)) 
       return ClassTriOp(a,b,c,val,eval);
-    throw Exception("Unable to find a definition of " + funcname + " for arguments of class " + b.className().back());
+    throw Exception(QString("Unable to find a definition of ") + funcname + 
+		    " for arguments of class " + c.className());
   }
   throw Exception("unexpected argument types for classtrinaryoperator");
 }
 
-Array ClassBinaryOperator(Array a, Array b, std::string funcname,
+Array ClassBinaryOperator(Array a, Array b, QString funcname,
 			  Interpreter* eval) {
   FuncPtr val;
   if (a.isUserClass()) {
-    if (eval->getContext()->lookupFunction(ClassMangleName(a.className().back(),funcname),val)) 
+    if (eval->getContext()->lookupFunction(ClassMangleName(a.className(),funcname),val)) 
       return ClassBiOp(a,b,val,eval);
-    throw Exception("Unable to find a definition of " + funcname + " for arguments of class " + a.className().back());
+    throw Exception(QString("Unable to find a definition of ") + funcname + 
+		    " for arguments of class " + a.className());
   } else if (b.isUserClass()) {
-    if (eval->getContext()->lookupFunction(ClassMangleName(b.className().back(),funcname),val)) 
+    if (eval->getContext()->lookupFunction(ClassMangleName(b.className(),funcname),val)) 
       return ClassBiOp(a,b,val,eval);
-    throw Exception("Unable to find a definition of " + funcname + " for arguments of class " + b.className().back());
+    throw Exception(QString("Unable to find a definition of ") + funcname + 
+		    " for arguments of class " + b.className());
   }
   throw Exception("unexpected argument types for classbinaryoperator");
 }
@@ -1011,56 +932,54 @@ Array ClassBinaryOperator(Array a, Array b, std::string funcname,
 // }
 
 Array IndexExpressionToStruct(Interpreter* eval, Tree *t, Array r) {
-   ArrayVector struct_args;
-   ArrayVector rv;
-   Array rsave(r);
-   StringVector fNames;
-   fNames.push_back("type");
-   fNames.push_back("subs");
-   for (int index=1;index < t->numChildren();index++) {
-     if (!rv.empty()) 
-       throw Exception("Cannot reindex an expression that returns multiple values.");
-     if (t->child(index)->is(TOK_PARENS)) {
-       ArrayVector m;
-       Tree *s(t->child(index));
-       for (int p=0;p<s->numChildren();p++)
-	 eval->multiexpr(s->child(p),m);
-       eval->subsindex(m);
-       //        m = eval->varExpressionList(t[index].children(),r);
-       //        // Scan through the expressions... adjust for "colon" calls
-       //        AdjustColonCalls(m,t[index].children());
-       if (m.size() == 0) 
-	 throw Exception("Expected indexing expression!");
-       // Take the arguments and push them into a cell array...
-       ArrayMatrix q;	q.push_back(m);
-       struct_args.push_back(Array::stringConstructor("()"));
-       struct_args.push_back(Array::cellConstructor(q));
-     }
-     if (t->child(index)->is(TOK_BRACES)) {
-       ArrayVector m;
-       Tree *s(t->child(index));
-       for (int p=0;p<s->numChildren();p++)
-	 eval->multiexpr(s->child(p),m);
-       eval->subsindex(m);
-       //        m = eval->varExpressionList(t[index].children(),r);
-       //        AdjustColonCalls(m,t[index].children());
-       if (m.size() == 0) 
-	 throw Exception("Expected indexing expression!");
-       // Take the arguments and push them into a cell array...
-       ArrayMatrix q;	q.push_back(m);
-       struct_args.push_back(Array::stringConstructor("{}"));
-       struct_args.push_back(Array::cellConstructor(q));
-     }
-     if (t->child(index)->is('.')) {
-       struct_args.push_back(Array::stringConstructor("."));
-       struct_args.push_back(Array::stringConstructor(t->child(index)->first()->text()));
-     }
-   }
-   int cnt = struct_args.size()/2;
-   Array *cp = (Array*) Array::allocateArray(FM_STRUCT_ARRAY,cnt,fNames);
-   for (int i=0;i<2*cnt;i++) 
-     cp[i] = struct_args[i];
-   return Array(FM_STRUCT_ARRAY,Dimensions(cnt,1),cp,false,fNames);
+  StringVector fNames;
+  fNames.push_back("type");
+  fNames.push_back("subs");
+  ArrayVector type_args;
+  ArrayVector subs_args;
+  for (int index=1;index < t->numChildren();index++) {
+    if (t->child(index)->is(TOK_PARENS)) {
+      ArrayVector m;
+      Tree *s(t->child(index));
+      for (int p=0;p<s->numChildren();p++)
+	eval->multiexpr(s->child(p),m);
+      eval->subsindex(m);
+      //        m = eval->varExpressionList(t[index].children(),r);
+      //        // Scan through the expressions... adjust for "colon" calls
+      //        AdjustColonCalls(m,t[index].children());
+      if (m.size() == 0) 
+	throw Exception("Expected indexing expression!");
+      // Take the arguments and push them into a cell array...
+      ArrayMatrix q;	q.push_back(m);
+      type_args.push_back(Array(QString("()")));
+      subs_args.push_back(CellConstructor(q));
+    }
+    if (t->child(index)->is(TOK_BRACES)) {
+      ArrayVector m;
+      Tree *s(t->child(index));
+      for (int p=0;p<s->numChildren();p++)
+	eval->multiexpr(s->child(p),m);
+      eval->subsindex(m);
+      //        m = eval->varExpressionList(t[index].children(),r);
+      //        AdjustColonCalls(m,t[index].children());
+      if (m.size() == 0) 
+	throw Exception("Expected indexing expression!");
+      // Take the arguments and push them into a cell array...
+      ArrayMatrix q;	q.push_back(m);
+      type_args.push_back(Array(QString("{}")));
+      subs_args.push_back(CellConstructor(q));
+    }
+    if (t->child(index)->is('.')) {
+      type_args.push_back(Array(QString(".")));
+      subs_args.push_back(Array(t->child(index)->first()->text()));
+    }
+  }
+  Array retval(Struct);
+  StructArray& rp(retval.structPtr());
+  rp["type"] = ArrayVectorToBasicArray(type_args);
+  rp["subs"] = ArrayVectorToBasicArray(subs_args);
+  rp.updateDims();
+  return retval;
 }
   
 ArrayVector ClassSubsrefCall(Interpreter* eval, Tree *t, Array r, FuncPtr val) {
@@ -1075,97 +994,97 @@ ArrayVector ClassSubsrefCall(Interpreter* eval, Tree *t, Array r, FuncPtr val) {
 // What is special here...  Need to be able to do field indexing
 // 
 ArrayVector ClassRHSExpression(Array r, Tree *t, Interpreter* eval) {
- Array q;
- Array n, p;
- FuncPtr val;
+  Array q;
+  Array n, p;
+  FuncPtr val;
     
- // Try and look up subsref, _unless_ we are already in a method 
- // of this class
- if (!eval->inMethodCall(r.className().back()))
-   if (ClassResolveFunction(eval,r,"subsref",val)) {
-     // Overloaded subsref case
-     return ClassSubsrefCall(eval,t,r,val);
-   }
- ArrayVector rv;
- for (int index=1;index < t->numChildren();index++) {
-   if (!rv.empty()) 
-     throw Exception("Cannot reindex an expression that returns multiple values.");
-   if (t->child(index)->is(TOK_PARENS)) {
-     ArrayVector m;
-     Tree *s(t->child(index));
-     for (int p=0;p<s->numChildren();p++)
-       eval->multiexpr(s->child(p),m);
-     eval->subsindex(m);
-     //     m = eval->varExpressionList(t->child(index).children(),r);
-     if (m.size() == 0) 
+  // Try and look up subsref, _unless_ we are already in a method 
+  // of this class
+  if (!eval->inMethodCall(r.className()))
+    if (ClassResolveFunction(eval,r,"subsref",val)) {
+      // Overloaded subsref case
+      return ClassSubsrefCall(eval,t,r,val);
+    }
+  ArrayVector rv;
+  for (int index=1;index < t->numChildren();index++) {
+    if (!rv.empty()) 
+      throw Exception("Cannot reindex an expression that returns multiple values.");
+    if (t->child(index)->is(TOK_PARENS)) {
+      ArrayVector m;
+      Tree *s(t->child(index));
+      for (int p=0;p<s->numChildren();p++)
+	eval->multiexpr(s->child(p),m);
+      eval->subsindex(m);
+      //     m = eval->varExpressionList(t->child(index).children(),r);
+      if (m.size() == 0) 
 	throw Exception("Expected indexing expression!");
-     else if (m.size() == 1) {
-       q = r.getVectorSubset(m[0],eval);
-       r = q;
-     } else {
-       q = r.getNDimSubset(m,eval);
+      else if (m.size() == 1) {
+	q = r.get(m.front());
 	r = q;
-     }
-   }
-   if (t->child(index)->is(TOK_BRACES)) {
-     ArrayVector m;
-     Tree *s(t->child(index));
-     for (int p=0;p<s->numChildren();p++)
-       eval->multiexpr(s->child(p),m);
-     eval->subsindex(m);
-     //     m = eval->varExpressionList(t->child(index).children(),r);
-     if (m.size() == 0) 
+      } else {
+	q = r.get(m);
+	r = q;
+      }
+    }
+    if (t->child(index)->is(TOK_BRACES)) {
+      ArrayVector m;
+      Tree *s(t->child(index));
+      for (int p=0;p<s->numChildren();p++)
+	eval->multiexpr(s->child(p),m);
+      eval->subsindex(m);
+      //     m = eval->varExpressionList(t->child(index).children(),r);
+      if (m.size() == 0) 
 	throw Exception("Expected indexing expression!");
-     else if (m.size() == 1)
-	rv = r.getVectorContentsAsList(m[0],eval);
-     else
-	rv = r.getNDimContentsAsList(m,eval);
-     if (rv.size() == 1) {
+      else if (m.size() == 1)
+	rv = ArrayVectorFromCellArray(r.get(m.front()));
+      else
+	rv = ArrayVectorFromCellArray(r.get(m));
+      if (rv.size() == 1) {
 	r = rv[0];
 	rv = ArrayVector();
-     } else if (rv.size() == 0) {
+      } else if (rv.size() == 0) {
 	throw Exception("Empty expression!");
-	r = Array::emptyConstructor();
-     }
-   }
-   if (t->child(index)->is('.')) {
-     // This is where the classname chain comes into being.
-     StringVector className(r.className());
-     for (int i=1;i<className.size();i++) {
-	rv = r.getFieldAsList(className.at(i));
+	r = EmptyConstructor();
+      }
+    }
+    if (t->child(index)->is('.')) {
+      // This is where the classname chain comes into being.
+      StringVector classPath(r.constStructPtr().classPath());
+      for (int i=1;i<classPath.size();i++) {
+	rv = r.get(classPath.at(i));
 	r = rv[0];
-     }
-     rv = r.getFieldAsList(t->child(index)->first()->text());
-     if (rv.size() <= 1) {
+      }
+      rv = r.get(t->child(index)->first()->text());
+      if (rv.size() <= 1) {
 	r = rv[0];
 	rv = ArrayVector();
-     }
-   }
-   if (t->child(index)->is(TOK_DYN)) {
-     string field;
-     try {
+      }
+    }
+    if (t->child(index)->is(TOK_DYN)) {
+      QString field;
+      try {
 	Array fname(eval->expression(t->child(index)->first()));
-	field = fname.getContentsAsString();
-     } catch (Exception &e) {
+	field = fname.asString();
+      } catch (Exception &e) {
 	throw Exception("dynamic field reference to structure requires a string argument");
-     }
-     rv = r.getFieldAsList(field);
-     if (rv.size() <= 1) {
+      }
+      rv = r.get(field);
+      if (rv.size() <= 1) {
 	r = rv[0];
 	rv = ArrayVector();
-     }      
-   }
- }
- if (rv.empty())
-   rv.push_back(r);
- return rv;
+      }      
+    }
+  }
+  if (rv.empty())
+    rv.push_back(r);
+  return rv;
 }
 
 void ClassAssignExpression(ArrayReference dst, Tree *t, const Array& value, Interpreter* eval) {
   FuncPtr val;
   if (!ClassResolveFunction(eval,*dst,"subsasgn",val))
-    throw Exception("The method 'subsasgn' is not defined for objects of class " + 
-		    dst->className().back());
+    throw Exception(QString("The method 'subsasgn' is not defined for objects of class ") + 
+		    dst->className());
   ArrayVector p;
   p.push_back(*dst);
   p.push_back(IndexExpressionToStruct(eval,t, *dst));
@@ -1178,13 +1097,17 @@ void ClassAssignExpression(ArrayReference dst, Tree *t, const Array& value, Inte
   if (!n.empty())
     *dst = n[0];
   else
-    eval->warningMessage(std::string("'subsasgn' for class ") + dst->className().back() + std::string(" did not return a value... operation has no effect."));
+    eval->warningMessage(QString("'subsasgn' for class ") + dst->className() + 
+			 QString(" did not return a value... operation has no effect."));
 }
 
 // Ideally, this would be the only place where the class name is mangled.
 // However, currently, the same op is repeated in the Interface implementation
 // code.
-std::string ClassMangleName(std::string className, std::string funcName) {
+QString ClassMangleName(QString className, QString funcName) {
   return "@" + className + ":" + funcName;
 }
 
+void clearUserClasses() {
+  classTable.clear();
+}

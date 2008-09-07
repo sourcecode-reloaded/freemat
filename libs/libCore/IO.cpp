@@ -19,40 +19,18 @@
  */
 
 #include "Array.hpp"
-#include <stdio.h>
-#include <errno.h>
-#include <math.h>
 #include <string>
-#include "Malloc.hpp"
 #include "HandleList.hpp"
 #include "Interpreter.hpp"
-#include "File.hpp"
 #include "Serialize.hpp"
-#include "IEEEFP.hpp"
-#include "Sparse.hpp"
-#include "Core.hpp"
-#include <QThread>
-#include <QImage>
+#include "Print.hpp"
 #include <QImageWriter>
-#include <QColor>
-#include <QFile>
-//#include <QTextStream>
-#include <QFileInfo>
 #include <QString>
 #include "Utils.hpp"
-#include "PathSearch.hpp"
+#include "MatIO.hpp"
+#include <QtCore>
+#include "Algorithms.hpp"
 
-#if HAVE_PORTAUDIO19 || HAVE_PORTAUDIO18
-#include "portaudio.h"
-#endif
-#include "Print.hpp"
-
-class FilePtr {
-public:
-  FILE *fp;
-  bool swapflag;
-  bool is64bit;
-};
 
 class PrintfStream{
 public:
@@ -79,470 +57,6 @@ public:
 	*str += std::string( data );
 	return *this;
     };
-};
-
-HandleList<FilePtr*> fileHandles;
-
-static bool init = false;
-
-void InitializeFileSubsystem() {
-  if (init) 
-    return;
-  FilePtr *fptr = new FilePtr();
-  fptr->fp = stdin;
-  fptr->swapflag = false;
-  fileHandles.assignHandle(fptr);
-  fptr = new FilePtr();
-  fptr->fp = stdout;
-  fptr->swapflag = false;
-  fileHandles.assignHandle(fptr);
-  fptr = new FilePtr();
-  fptr->fp = stderr;
-  fptr->swapflag = false;
-  fileHandles.assignHandle(fptr);
-  init = true;
-}
-
-
-const int FRAMES_PER_BUFFER = 64;
-
-class PlayBack {
-public:
-  char *data;
-  int length;
-  int channels;
-  int framesToGo;
-  int ptr;
-  int elementSize;
-  Array x;
-};
-
-#if HAVE_PORTAUDIO19 || HAVE_PORTAUDIO18
-
-#if HAVE_PORTAUDIO19
-static int DoPlayBackCallback(const void *, void *output,
-			      unsigned long framesPerBuffer,
-			      const PaStreamCallbackTimeInfo*,
-			      PaStreamCallbackFlags,
-			      void *userData) {
-#endif
-
-#if HAVE_PORTAUDIO18
-static int DoPlayBackCallback(void *, void *output,
-			      unsigned long framesPerBuffer,
-			      PaTimestamp,
-			      void *userData) {
-#endif
-
-  PlayBack *pb = (PlayBack*) userData;
-  char *out = (char*) output;
-  const char *dp = pb->data;
-  int framesToCalc;
-  int finished = 0;
-  int i;
-  if( (unsigned long) pb->framesToGo < framesPerBuffer )
-    {
-      framesToCalc = pb->framesToGo;
-      pb->framesToGo = 0;
-      finished = 1;
-    }
-  else
-    {
-      framesToCalc = framesPerBuffer;
-      pb->framesToGo -= framesPerBuffer;
-    }
-  
-  for( i=0; i<framesToCalc; i++ )
-    {
-      if (pb->channels == 1) {
-	for (int j=0;j<pb->elementSize;j++)
-	  *out++ = dp[pb->ptr*pb->elementSize + j];
-	pb->ptr++;
-      } else {
-	for (int j=0;j<pb->elementSize;j++) 
-	  *out++ = dp[pb->ptr*pb->elementSize + j];
-	for (int j=0;j<pb->elementSize;j++)
-	  *out++ = dp[(pb->ptr+pb->length)*pb->elementSize + j];
-	pb->ptr++;
-      }
-    }
-  /* zero remainder of final buffer */
-  for( ; i<(int)framesPerBuffer; i++ )
-    {
-      if (pb->channels == 1)
-	for (int j=0;j<pb->elementSize;j++)
-	  *out++ = 0;
-      else {
-	for (int j=0;j<pb->elementSize;j++) {
-	  *out++ = 0; /* left */
-	  *out++ = 0; /* right */
-	}
-      }
-    }
-  return finished;
-}
-
-#if HAVE_PORTAUDIO19
-static int DoRecordCallback(const void *input, void *,
-			    unsigned long framesPerBuffer,
-			    const PaStreamCallbackTimeInfo*,
-			    PaStreamCallbackFlags,
-			    void *userData) {
-#endif
-
-#if HAVE_PORTAUDIO18
-static int DoRecordCallback(void *input, void *,
-			    unsigned long framesPerBuffer,
-			    PaTimestamp,
-			    void *userData) {
-#endif
-
-  PlayBack *pb = (PlayBack*) userData;
-  char *in = (char*) input;
-  char *dp = pb->data;
-  int framesToCalc;
-  int finished = 0;
-  int i;
-  if( (unsigned long) pb->framesToGo < framesPerBuffer )
-    {
-      framesToCalc = pb->framesToGo;
-      pb->framesToGo = 0;
-      finished = 1;
-    }
-  else
-    {
-      framesToCalc = framesPerBuffer;
-      pb->framesToGo -= framesPerBuffer;
-    }
-  
-  for( i=0; i<framesToCalc; i++ )
-    {
-      if (pb->channels == 1) {
-	for (int j=0;j<pb->elementSize;j++)
-	  dp[pb->ptr*pb->elementSize + j] = *in++;
-	pb->ptr++;
-      } else {
-	for (int j=0;j<pb->elementSize;j++) 
-	  dp[pb->ptr*pb->elementSize + j] = *in++;
-	for (int j=0;j<pb->elementSize;j++)
-	  dp[(pb->ptr+pb->length)*pb->elementSize + j] = *in++;
-	pb->ptr++;
-      }
-    }
-  return finished;
-}
-
-static PaError err;
-static bool RunningStream = false;
-static PaStream *stream;
-static PlayBack *pb_obj;
-
-void PAInit() {
-  err = Pa_Initialize();
-  if (err != paNoError) 
-    throw Exception(string("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
-}
-
-void PAShutdown() {
-#ifdef HAVE_PORTAUDIO19
-  while ( ( err = Pa_IsStreamActive( stream ) ) == 1 )
-    Pa_Sleep(100);
-#endif
-
-#ifdef HAVE_PORTAUDIO18
-  while ( ( err = Pa_StreamActive( stream ) ) == 1 )
-    Pa_Sleep(100);
-#endif
-
-  err = Pa_CloseStream(stream);
-  if (err != paNoError) 
-    throw Exception(string("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
-  Pa_Terminate();
-  delete pb_obj;
-  RunningStream = false;
-}
-
-void DoPlayBack(const void *data, int count, int channels, 
-		int elementSize, unsigned long SampleFormat,
-		int Rate, bool asyncMode, Array x) {
-  if (RunningStream) 
-    PAShutdown();
-  PAInit();
-  pb_obj = new PlayBack;
-  pb_obj->x = x;
-  pb_obj->data = (char *)data;
-  pb_obj->length = count;
-  pb_obj->channels = channels;
-  pb_obj->ptr = 0;
-  pb_obj->framesToGo = count;
-  pb_obj->elementSize = elementSize;
-#ifdef HAVE_PORTAUDIO19
-  PaStreamParameters outputParameters;
-  outputParameters.device = Pa_GetDefaultOutputDevice();
-  outputParameters.channelCount = channels;
-  outputParameters.sampleFormat = SampleFormat;
-  outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
-  outputParameters.hostApiSpecificStreamInfo = NULL;
-  err = Pa_OpenStream(&stream,
-		      NULL, /* no input */
-		      &outputParameters,
-		      Rate,
-		      FRAMES_PER_BUFFER,
-		      paNoFlag,
-		      DoPlayBackCallback,
-		      pb_obj);
-#endif
-#ifdef HAVE_PORTAUDIO18
-  err = Pa_OpenStream(&stream,
-		      paNoDevice, // No input device
-		      0,          // No input
-		      SampleFormat,
-		      NULL,
-		      Pa_GetDefaultOutputDeviceID(),
-		      channels,
-		      SampleFormat,
-		      NULL,
-		      Rate,
-		      FRAMES_PER_BUFFER,
-		      0,
-		      paClipOff,
-		      DoPlayBackCallback,
-		      pb_obj);
-#endif
-  if (err != paNoError) 
-    throw Exception(string("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
-  err = Pa_StartStream(stream);
-  if (err != paNoError) 
-    throw Exception(string("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
-  if (!asyncMode)
-    PAShutdown();
-  else
-    RunningStream = true;
-}
-
-void DoRecord(void *data, int count, int channels, 
-	      int elementSize, unsigned long SampleFormat,
-	      int Rate) {
-  if (RunningStream) 
-    PAShutdown();
-  PAInit();
-  pb_obj = new PlayBack;
-  pb_obj->data = (char *)data;
-  pb_obj->length = count;
-  pb_obj->channels = channels;
-  pb_obj->ptr = 0;
-  pb_obj->framesToGo = count;
-  pb_obj->elementSize = elementSize;
-#if HAVE_PORTAUDIO19
-  PaStreamParameters inputParameters;
-  inputParameters.device = Pa_GetDefaultInputDevice();
-  inputParameters.channelCount = channels;
-  inputParameters.sampleFormat = SampleFormat;
-  inputParameters.suggestedLatency = Pa_GetDeviceInfo(inputParameters.device)->defaultLowInputLatency;
-  inputParameters.hostApiSpecificStreamInfo = NULL;
-  err = Pa_OpenStream(&stream,
-		      &inputParameters,
-		      NULL,
-		      Rate,
-		      FRAMES_PER_BUFFER,
-		      paNoFlag,
-		      DoRecordCallback,
-		      pb_obj);
-#endif
-#if HAVE_PORTAUDIO18
-  err = Pa_OpenStream(&stream,
-		      Pa_GetDefaultInputDeviceID(),
-		      channels,
-		      SampleFormat,
-		      NULL,
-		      paNoDevice,
-		      0,
-		      SampleFormat,
-		      NULL,
-		      Rate,
-		      FRAMES_PER_BUFFER,
-		      0,
-		      0,
-		      DoRecordCallback,
-		      pb_obj);
-#endif
-  if (err != paNoError) 
-    throw Exception(string("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
-  err = Pa_StartStream(stream);
-  if (err != paNoError) 
-    throw Exception(string("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
-  PAShutdown();
-}
-#endif
-
-
-//!
-//@Module WAVPLAY
-//@@Section IO
-//@@Usage
-//Plays a linear PCM set of samples through the audio system.  This
-//function is only available if the @|portaudio| library was available
-//when FreeMat was built.  The syntax for the command is one of:
-//@[
-//   wavplay(y)
-//   wavplay(y,sampling_rate)
-//   wavplay(...,mode)
-//@]
-//where @|y| is a matrix of audio samples.  If @|y| has two columns, then
-//the audio playback is in stereo.  The @|y| input can be of types 
-//@|float, double, int32, int16, int8, uint8|.  For @|float| and 
-//@|double| types, the sample values in @|y| must be between @|-1| and
-//@|1|.  The @|sampling_rate| specifies the rate at which the data is 
-//recorded.  If not specified, the @|sampling_rate| defaults to @|11025Hz|.
-//Finally, you can specify a playback mode of @|'sync'| which is synchronous
-//playback or a playback mode of @|'async'| which is asynchronous playback.
-//For @|'sync'| playback, the wavplay function returns when the playback is
-//complete.  For @|'async'| playback, the function returns immediately (unless
-//a former playback is still issuing).
-//!
-ArrayVector WavPlayFunction(int nargout, const ArrayVector& argv) {
-#if HAVE_PORTAUDIO18 || HAVE_PORTAUDIO19
-  if(argv.size() == 0)
-    throw Exception("wavplay requires at least one argument (the audio data to playback)");
-  Array y(argv[0]);
-  int SampleRate = 11025;
-  string mode = "SYNC";
-  if (argv.size() > 1)
-    SampleRate = ArrayToInt32(argv[1]);
-  if (argv.size() > 2)
-    mode = argv[2].getContentsAsStringUpper();
-  // Validate that the data is reasonable
-  if ((!y.is2D())  || (!y.isVector() && (y.columns() > 2)) || 
-      y.isReferenceType() || y.isComplex())
-    throw Exception("wavplay only supports playback of 1 or 2 channel signals, which means a 1 or 2 column matrix");
-  if (y.dataClass() == FM_DOUBLE)
-    y.promoteType(FM_FLOAT);
-  if ((y.dataClass() == FM_INT64) || (y.dataClass() == FM_UINT64))
-    throw Exception("wavplay does not support 64 bit data types.");
-  if (y.dataClass() == FM_UINT32)
-    throw Exception("wavplay does not support unsigned 32-bit data types.");
-  if (y.dataClass() == FM_UINT16)
-    throw Exception("wavplay does not support unsigned 16-bit data types.");
-  int samples;
-  int channels;
-  if (!y.isVector()) {
-    channels = y.columns();
-    samples = y.rows();
-  } else {
-    channels = 1;
-    samples = y.getLength();
-  }
-  if (y.dataClass() == FM_FLOAT)
-    DoPlayBack(y.getDataPointer(),samples,channels,sizeof(float),
-	       paFloat32,SampleRate,mode != "SYNC",y);
-  else if (y.dataClass() == FM_INT32)
-    DoPlayBack(y.getDataPointer(),samples,channels,sizeof(int32),
-	       paInt32,SampleRate,mode != "SYNC",y);
-  else if (y.dataClass() == FM_INT16)
-    DoPlayBack(y.getDataPointer(),samples,channels,sizeof(int16),
-	       paInt16,SampleRate,mode != "SYNC",y);
-  else if (y.dataClass() == FM_INT8)
-    DoPlayBack(y.getDataPointer(),samples,channels,sizeof(int8),
-	       paInt8,SampleRate,mode != "SYNC",y);
-  else if (y.dataClass() == FM_UINT8)
-    DoPlayBack(y.getDataPointer(),samples,channels,sizeof(uint8),
-	       paUInt8,SampleRate,mode != "SYNC",y);
-  else
-    throw Exception("wavplay does not support this data types.");
-#else
-  throw Exception("Audio read/write support not available.  Please build the PortAudio library and rebuild FreeMat to enable this functionality.");
-#endif
-  return ArrayVector();
-}
-
-//!
-//@Module WAVRECORD
-//@@Section IO
-//@@Usage
-//Records linear PCM sound from the audio system.  This function is
-//only available if the @|portaudio| library was available when FreeMat
-//was built.  The syntax for this command is one of:
-//@[
-//  y = wavrecord(samples,rate)
-//  y = wavrecord(...,channels)
-//  y = wavrecord(...,'datatype')
-//@]
-//where @|samples| is the number of samples to record, and @|rate| is the
-//sampling rate.  If not specified, the @|rate| defaults to @|11025Hz|.
-//If you want to record in stero, specify @|channels = 2|.  Finally, you
-//can specify the type of the recorded data (defaults to @|FM_DOUBLE|).
-//Valid choices are @|float, double, int32, int16, int8, uint8|.
-//!
-ArrayVector WavRecordFunction(int nargout, const ArrayVector& argv) {
-#if HAVE_PORTAUDIO18 || HAVE_PORTAUDIO19
-  if (argv.size() < 1)
-    throw Exception("wavrecord requires at least 1 argument (the number of samples to record)");
-  int samples = ArrayToInt32(argv[0]);
-  int rate = 11025;
-  int channels = 1;
-  Class datatype = FM_DOUBLE;
-  ArrayVector argvCopy(argv);
-  if ((argvCopy.size() > 1) && (argvCopy.back().isString())) {
-    string typestring = argvCopy.back().getContentsAsStringUpper();
-    if ((typestring == "FLOAT") || (typestring == "SINGLE"))
-      datatype = FM_FLOAT;
-    else if (typestring == "DOUBLE")
-      datatype = FM_DOUBLE;
-    else if (typestring == "INT32")
-      datatype = FM_INT32;
-    else if (typestring == "INT16")
-      datatype = FM_INT16;
-    else if (typestring == "INT8")
-      datatype = FM_INT8;
-    else if (typestring == "UINT8")
-      datatype = FM_UINT8;
-    else
-      throw Exception("unrecognized data type - expecting one of: double, float, single, int32, int16, int8, uint8");
-    argvCopy.pop_back();
-  }
-  // Check for a channel spec and a sampling rate
-  while (argvCopy.size() > 1) {
-    int ival = ArrayToInt32(argvCopy.back());
-    if (ival > 2)
-      rate = ival;
-    else
-      channels = ival;
-    argvCopy.pop_back();
-  }
-  Class rdatatype(datatype);
-  Array retvec;
-  if (rdatatype == FM_DOUBLE) rdatatype = FM_FLOAT;
-  void *dp = Array::allocateArray(rdatatype,samples*channels);
-  switch(rdatatype) {
-  default: throw Exception("Illegal data type argument for wavrecord");
-  case FM_FLOAT:
-    DoRecord(dp,samples,channels,sizeof(float),paFloat32,rate);
-    retvec = Array(FM_FLOAT,Dimensions(samples,channels),dp);
-    break;
-  case FM_INT32:
-    DoRecord(dp,samples,channels,sizeof(int32),paInt32,rate);
-    retvec = Array(FM_INT32,Dimensions(samples,channels),dp);
-    break;
-  case FM_INT16:
-    DoRecord(dp,samples,channels,sizeof(int16),paInt16,rate);
-    retvec = Array(FM_INT16,Dimensions(samples,channels),dp);
-    break;
-  case FM_INT8:
-    DoRecord(dp,samples,channels,sizeof(int8),paInt8,rate);
-    retvec = Array(FM_INT8,Dimensions(samples,channels),dp);
-    break;
-  case FM_UINT8:
-    DoRecord(dp,samples,channels,sizeof(uint8),paUInt8,rate);
-    retvec = Array(FM_UINT8,Dimensions(samples,channels),dp);
-    break;
-  }
-  retvec.promoteType(datatype);
-  return ArrayVector() << retvec;
-#else
-  throw Exception("Audio read/write support not available.  Please build the PortAudio library and rebuild FreeMat to enable this functionality.");
-#endif
-  return ArrayVector();
-}
 
 //!
 //@Module FORMAT Control the Format of Matrix Display
@@ -615,11 +129,15 @@ ArrayVector WavRecordFunction(int nargout, const ArrayVector& argv) {
 //format short
 //t = format
 //@>
+//@@Signature
+//function format FormatFunction
+//inputs format exptype
+//outputs format
 //!
 ArrayVector FormatFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() > 0) {
-    string argtxt;
-    for (int i=0;i<arg.size();i++) argtxt += arg[i].getContentsAsStringUpper();
+    QString argtxt;
+    for (int i=0;i<arg.size();i++) argtxt += arg[i].asString().toUpper();
     if (argtxt == "NATIVE") SetPrintFormatMode(format_native);
     else if (argtxt == "SHORT") SetPrintFormatMode(format_short);
     else if (argtxt == "LONG") SetPrintFormatMode(format_long);
@@ -630,437 +148,21 @@ ArrayVector FormatFunction(int nargout, const ArrayVector& arg) {
   if (nargout > 0) {
     switch(GetPrintFormatMode()) {
     case format_native:
-      return ArrayVector() << Array::stringConstructor("native");
+      return ArrayVector(Array(QString("native")));
     case format_short:
-      return ArrayVector() << Array::stringConstructor("short");
+      return ArrayVector(Array(QString("short")));
     case format_long:
-      return ArrayVector() << Array::stringConstructor("long");
+      return ArrayVector(Array(QString("long")));
     case format_short_e:
-      return ArrayVector() << Array::stringConstructor("short e");
+      return ArrayVector(Array(QString("short e")));
     case format_long_e:
-      return ArrayVector() << Array::stringConstructor("long e");
+      return ArrayVector(Array(QString("long e")));
     }
-    return ArrayVector() << Array::stringConstructor("unknown?");
+    return ArrayVector(Array(QString("unknown?")));
   }
   return ArrayVector();
 }
 
-//!
-//@Module IMREAD Read Image File To Matrix
-//@@Section IO
-//@@Usage
-//Reads the image data from the given file into a matrix.  Note that
-//FreeMat's support for @|imread| is not complete.  Only some of the
-//formats specified in the MATLAB API are implemented.  The syntax
-//for its use is
-//@[
-//  [A,map,alpha] = imread(filename)
-//@]
-//where @|filename| is the name of the file to read from.  The returned
-//arrays @|A| contain the image data, @|map| contains the colormap information
-//(for indexed images), and @|alpha| contains the alphamap (transparency).
-//The returned values will depend on the type of the original image.  Generally
-//you can read images in the @|jpg,png,xpm,ppm| and some other formats.
-//!
-static ArrayVector imreadHelperIndexed(QImage img) {
-  QVector<QRgb> colorTable(img.colorTable());
-  double *ctable_dp = (double*) 
-    Array::allocateArray(FM_DOUBLE,colorTable.size()*3);
-  int numcol = colorTable.size();
-  for (int i=0;i<numcol;i++) {
-    QColor c(colorTable[i]);
-    ctable_dp[i] = (double) c.redF();
-    ctable_dp[i+numcol] = (double) c.greenF();
-    ctable_dp[i+2*numcol] = (double) c.blueF();
-  }
-  Array ctable(FM_DOUBLE,Dimensions(numcol,3),ctable_dp);
-  uint8 *img_data_dp = (uint8*) 
-    Array::allocateArray(FM_UINT8,img.width()*img.height());
-  for (int row=0;row<img.height();row++) {
-    uchar *p = img.scanLine(row);
-    for (int col=0;col<img.width();col++) 
-      img_data_dp[row+col*img.height()] = p[col];
-  }
-  Array A(FM_UINT8,Dimensions(img.height(),img.width()),img_data_dp);
-  QImage alpha(img.alphaChannel());
-  uint8 *img_alpha_dp = (uint8*)
-    Array::allocateArray(FM_UINT8,img.width()*img.height());
-  for (int row=0;row<alpha.height();row++) {
-    uchar *p = alpha.scanLine(row);
-    for (int col=0;col<alpha.width();col++)
-      img_alpha_dp[row+col*img.height()] = p[col];
-  }
-  Array trans(FM_UINT8,Dimensions(img.height(),img.width()),img_alpha_dp);
-  return ArrayVector() << A << ctable << trans;
-}
-
-static ArrayVector imreadHelperRGB32(QImage img) {
-  if (img.allGray()) {
-	  uint8 *img_data_dp = (uint8*) 
-		Array::allocateArray(FM_UINT8,img.width()*img.height());
-	  int imgcnt = img.height()*img.width();
-	  for (int row=0;row<img.height();row++) {
-		QRgb *p = (QRgb*) img.scanLine(row);
-		for (int col=0;col<img.width();col++) {
-		  int ndx = row+col*img.height();
-		  img_data_dp[ndx] = qGray(p[col]);
-		}
-	  }
-	  return ArrayVector() << 
-		Array(FM_UINT8,Dimensions(img.height(),img.width()),img_data_dp)
-				   << Array::emptyConstructor() 
-				   << Array::emptyConstructor();
-  }
-  else {
-	  uint8 *img_data_dp = (uint8*) 
-		Array::allocateArray(FM_UINT8,img.width()*img.height()*3);
-	  int imgcnt = img.height()*img.width();
-	  for (int row=0;row<img.height();row++) {
-		QRgb *p = (QRgb*) img.scanLine(row);
-		for (int col=0;col<img.width();col++) {
-		  int ndx = row+col*img.height();
-		  img_data_dp[ndx] = qRed(p[col]);
-		  img_data_dp[ndx+1*imgcnt] = qGreen(p[col]);
-		  img_data_dp[ndx+2*imgcnt] = qBlue(p[col]);
-		}
-	  }
-	  return ArrayVector() << 
-		Array(FM_UINT8,Dimensions(img.height(),img.width(),3),img_data_dp)
-				   << Array::emptyConstructor() 
-				   << Array::emptyConstructor();
-  }
-}
-
-static ArrayVector imreadHelperARGB32(QImage img) {
-   uint8 *img_alpha_dp = (uint8*) 
-     Array::allocateArray(FM_UINT8,img.width()*img.height());
-  if (img.allGray()) {
-	  uint8 *img_data_dp = (uint8*)
-		Array::allocateArray(FM_UINT8,img.width()*img.height());
-	  int imgcnt = img.height()*img.width();
-	  for (int row=0;row<img.height();row++) {
-		QRgb *p = (QRgb*) img.scanLine(row);
-		for (int col=0;col<img.width();col++) {
-		  int ndx = row+col*img.height();
-		  img_data_dp[ndx] = qGray(p[col]);
-		  img_alpha_dp[ndx] = qAlpha(p[col]);
-		}
-	  }
-	  return ArrayVector() << 
-		Array(FM_UINT8,Dimensions(img.height(),img.width()),img_data_dp)
-				   << Array::emptyConstructor() 
-				   << 
-		Array(FM_UINT8,Dimensions(img.height(),img.width()),img_alpha_dp);
-  }
-  else
-  {
-	  uint8 *img_data_dp = (uint8*)
-		Array::allocateArray(FM_UINT8,img.width()*img.height()*3);
-	  int imgcnt = img.height()*img.width();
-	  for (int row=0;row<img.height();row++) {
-		QRgb *p = (QRgb*) img.scanLine(row);
-		for (int col=0;col<img.width();col++) {
-		  int ndx = row+col*img.height();
-		  img_data_dp[ndx] = qRed(p[col]);
-		  img_data_dp[ndx+1*imgcnt] = qGreen(p[col]);
-		  img_data_dp[ndx+2*imgcnt] = qBlue(p[col]);
-		  img_alpha_dp[ndx] = qAlpha(p[col]);
-		}
-	  }
-	  return ArrayVector() << 
-		Array(FM_UINT8,Dimensions(img.height(),img.width(),3),img_data_dp)
-				   << Array::emptyConstructor() 
-				   << 
-		Array(FM_UINT8,Dimensions(img.height(),img.width()),img_alpha_dp);
-  }
-}
-
-ArrayVector ImReadFunction(int nargout, const ArrayVector& arg, 
-			   Interpreter* eval) {
-  PathSearcher psearch(eval->getTotalPath());
-  if (arg.size() == 0)
-    throw Exception("imread requires a filename to read.");
-  string filename(ArrayToString(arg[0]));
-  string completename;
-  try {
-    completename = psearch.ResolvePath(filename);
-  } catch (Exception& e) {
-    throw Exception("unable to find file " + completename);
-  }
-  // Construct the QImage object
-  QImage img(QString::fromStdString(completename));
-  if (img.isNull())
-    throw Exception("unable to read file " + completename);
-  if (img.format() == QImage::Format_Invalid)
-    throw Exception("file " + completename + " is invalid");
-  if (img.format() == QImage::Format_Indexed8) return imreadHelperIndexed(img);
-  if (img.format() == QImage::Format_RGB32) return imreadHelperRGB32(img);
-  if (img.format() == QImage::Format_ARGB32) return imreadHelperARGB32(img);
-  throw Exception("unsupported image format - only 8 bit indexed and 24 bit RGB and 32 bit ARGB images are supported");
-  return ArrayVector();
-}
-
-//!
-//@Module IMWRITE Write Matrix to Image File
-//@@Section IO
-//@@Usage
-//Write the image data from the matrix into a given file.  Note that
-//FreeMat's support for @|imwrite| is not complete.
-//You can write images in the @|jpg,png,xpm,ppm| and some other formats.
-//The syntax for its use is
-//@[
-//  imwrite(filename, A)
-//  imwrite(filename, A, map)
-//  imwrite(filename, A, map, alpha)
-//@]
-//where @|filename| is the name of the file to write to.  The input array 
-//@|A| contains the image data (2D for gray or indexed, and 3D for color).  
-//If @|A| is an integer array (int8, uint8, int16, uint16, int32, uint32), 
-//the values of its elements should be within 0-255.  If @|A| is a 
-//floating-point array (float or double), the value of its elements should be 
-//within 0-1.  @|map| contains the colormap information (for indexed images),
-//and @|alpha| the alphamap (transparency).
-//!
-QImage imwriteHelperIndexed(Array A, Array ctable, Array trans) {
-  QImage img(A.columns(), A.rows(), QImage::Format_Indexed8);
-  uint8 *img_data_dp = (uint8*) A.getDataPointer();
-  uint8 *ctable_dp = (uint8*) ctable.getDataPointer();
-  uint8 *img_alpha_dp = (uint8*) trans.getDataPointer();
-
-  for (int row=0;row<img.height();row++) {
-    uchar *p = img.scanLine(row);
-    for (int col=0;col<img.width();col++) 
-      p[col] = img_data_dp[row+col*img.height()];
-  }
-  
-  if (ctable_dp) {
-	  QVector<QRgb> colorTable(ctable.getLength()/3);
-	  int numcol = colorTable.size();
-	  for (int i=0;i<numcol;i++)
-		colorTable[i] = qRgb(int(ctable_dp[i]),
-		                     int(ctable_dp[i+numcol]),
-		                     int(ctable_dp[i+2*numcol]));
-	  img.setColorTable(colorTable);
-  }
-  else {
-	  int numrow = 256;
-	  QVector<QRgb> colorTable(numrow);
-	  for (int i=0;i<numrow;i++)
-		colorTable[i] = qRgb(i, i, i);
-	  img.setColorTable(colorTable);
-  }
-  
-  if (img_alpha_dp) {
-	  QImage alpha(A.columns(), A.rows(), QImage::Format_Indexed8);
-	  for (int row=0;row<alpha.height();row++) {
-		uchar *p = alpha.scanLine(row);
-		for (int col=0;col<alpha.width();col++)
-		  p[col] = img_alpha_dp[row+col*img.height()];
-	  }
-	  img.setAlphaChannel(alpha);
-  }
-  return img;
-}
-
-QImage imwriteHelperRGB32(Array A) {
-  uint8 *img_data_dp = (uint8*) A.getDataPointer();
-  QImage img(A.columns(), A.rows(), QImage::Format_RGB32);
-  int imgcnt = img.height()*img.width();
-  for (int row=0;row<img.height();row++) {
-	QRgb *p = (QRgb*) img.scanLine(row);
-	for (int col=0;col<img.width();col++) {
-	  int ndx = row+col*img.height();
-	  p[col] = qRgb(img_data_dp[ndx], 
-	                img_data_dp[ndx+1*imgcnt], 
-	                img_data_dp[ndx+2*imgcnt]);
-	}
-  }
-  return img;
-}
-
-QImage imwriteHelperARGB32(Array A, Array trans) {
-  QImage img(A.columns(), A.rows(), QImage::Format_ARGB32);
-  uint8 *img_data_dp = (uint8*) A.getDataPointer();
-  uint8 *img_alpha_dp = (uint8*) trans.getDataPointer();
-  int imgcnt = img.height()*img.width();
-  for (int row=0;row<img.height();row++) {
-	QRgb *p = (QRgb*) img.scanLine(row);
-	for (int col=0;col<img.width();col++) {
-	  int ndx = row+col*img.height();
-	  p[col] = qRgba(img_data_dp[ndx], 
-	                 img_data_dp[ndx+1*imgcnt], 
-	                 img_data_dp[ndx+2*imgcnt], 
-	                 img_alpha_dp[ndx]);
-	}
-  }
-  return img;
-}
-
-Array convert2uint8(Array A) {
-  if (A.dataClass() ==  FM_UINT8) {
-    return A;
-  }
-  //convert other data types to uint8
-  uint8 *img_data_dp1 = (uint8*) 
-	Array::allocateArray(FM_UINT8,A.getLength());
-  
-  if (A.dataClass() ==  FM_LOGICAL) {
-    uint8 *img_data_dp = (uint8*) A.getDataPointer();
-    int scale = 255;
-    for (int i = 0; i< A.getLength(); i++)
-      if (img_data_dp[i])
-        img_data_dp1[i] = 255;
-      else
-        img_data_dp1[i] = 0;
-  }
-  else if (A.dataClass() ==  FM_INT8) {
-    int8 *img_data_dp = (int8*) A.getDataPointer();
-    for (int i = 0; i< A.getLength(); i++)
-      img_data_dp1[i] = uint8(img_data_dp[i]);
-  }
-  else if (A.dataClass() ==  FM_UINT16) {
-    uint16 *img_data_dp = (uint16*) A.getDataPointer();
-    for (int i = 0; i< A.getLength(); i++)
-      img_data_dp1[i] = uint8(img_data_dp[i]);
-  }
-  else if (A.dataClass() ==  FM_INT16) {
-    int16 *img_data_dp = (int16*) A.getDataPointer();
-    for (int i = 0; i< A.getLength(); i++)
-      img_data_dp1[i] = uint8(img_data_dp[i]);
-  }
-  else if (A.dataClass() ==  FM_UINT32) {
-    uint32 *img_data_dp = (uint32*) A.getDataPointer();
-    for (int i = 0; i< A.getLength(); i++)
-      img_data_dp1[i] = uint8(img_data_dp[i]);
-  }
-  else if (A.dataClass() ==  FM_INT32) {
-    int32 *img_data_dp = (int32*) A.getDataPointer();
-    for (int i = 0; i< A.getLength(); i++)
-      img_data_dp1[i] = uint8(img_data_dp[i]);
-  }
-  else if (A.dataClass() ==  FM_UINT64) {
-    uint64 *img_data_dp = (uint64*) A.getDataPointer();
-    for (int i = 0; i< A.getLength(); i++)
-      img_data_dp1[i] = uint8(img_data_dp[i]);
-  }
-  else if (A.dataClass() ==  FM_INT64) {
-    int64 *img_data_dp = (int64*) A.getDataPointer();
-    for (int i = 0; i< A.getLength(); i++)
-      img_data_dp1[i] = uint8(img_data_dp[i]);
-  }
-  else if (A.dataClass() ==  FM_FLOAT) {
-    float *img_data_dp = (float*) A.getDataPointer();
-    float scale = 255;
-    for (int i = 0; i< A.getLength(); i++)
-      img_data_dp1[i] = uint8(scale*img_data_dp[i]);
-  }
-  else if (A.dataClass() ==  FM_DOUBLE) {
-    double *img_data_dp = (double*) A.getDataPointer();
-    double scale = 255;
-    for (int i = 0; i< A.getLength(); i++)
-      img_data_dp1[i] = uint8(scale*img_data_dp[i]);
-  }
-  else
-    throw Exception("invalid data type");
-    
-  return Array(FM_UINT8,A.dimensions(),img_data_dp1);
-}  
-
-ArrayVector ImWriteFunction(int nargout, const ArrayVector& arg, 
-			   Interpreter* eval) {
-  PathSearcher psearch(eval->getTotalPath());
-  if (arg.size() < 2)
-    throw Exception("imwrite requires at least a filename and a matrix");
-  string filename(ArrayToString(arg[0]));
-  QString FileName = QString::fromStdString(filename);
-  QByteArray ImageFormat;
-  ImageFormat.append(QFileInfo(FileName).suffix());
-  // Construct the QImageWriter object
-  QImageWriter imgWriter(FileName,ImageFormat);
-  if (!imgWriter.canWrite()) {
-     throw Exception("unable to write image file " + filename);
-  }
-
-  Array A(arg[1]);
-  if (A.dimensions().getLength() == 2) { // choose QImage::Format_Indexed8
-    if (arg.size() == 2) { // 8-bit grayscale image
-        Array ctable(FM_UINT8, Dimensions(255,1),NULL);
-        Array trans(FM_UINT8, A.dimensions(),NULL);
-        QImage img = imwriteHelperIndexed(convert2uint8(A), ctable, trans);
-	    if (!imgWriter.write(QImage(img)))
-	       throw Exception("cannot create image file" + filename);
-    }
-    else if (arg.size() == 3) { // 8-bit indexed color image
-		Array ctable(arg[2]);
-		if (ctable.getLength() != 0 && ctable.dimensions().getColumns() != 3)
-			throw Exception("color map should be a 3 columns matrix");
-		Array trans(FM_UINT8,A.dimensions(),NULL);
-		QImage img = imwriteHelperIndexed(convert2uint8(A), convert2uint8(ctable), trans);
-		if (!imgWriter.write(img))
-			throw Exception("cannot create image file" + filename);
-	}
-	else if (arg.size() == 4) { // 8-bit indexed color image with alpha channel
-		Array ctable(arg[2]);
-		if (ctable.getLength() != 0 && ctable.dimensions().getColumns() != 3)
-			throw Exception("color map should be a 3 columns matrix");
-		Array trans(arg[3]);
-		eval->warningMessage("saving alpha/transparent channel will increase file size");
-		QImage img = imwriteHelperIndexed(convert2uint8(A), convert2uint8(ctable), convert2uint8(trans));
-		if (!imgWriter.write(img))
-		  throw Exception("cannot create image file" + filename);
-	}
-	else
-		throw Exception("invalide input number of arguments");
-  }
-  else if (A.dimensions().getLength() == 3) { // choose QImage::Format_RGB32 or Format_ARGB32
-    if (arg.size() == 2) {
-        QImage img = imwriteHelperRGB32(convert2uint8(A));
-	    if (!imgWriter.write(QImage(img)))
-	       throw Exception("cannot create image file" + filename);
-	}
-	else if (arg.size() == 3) {
-		Array trans(arg[2]);
-		if (A.rows() == trans.rows() && A.columns() == trans.columns() ) {
-		    // the third argument is alpha channel
-		    QImage img = imwriteHelperARGB32(convert2uint8(A), convert2uint8(trans));
-			if (!imgWriter.write(QImage(img)))
-			   throw Exception("cannot create image file" + filename);
-		}
-		else {
-			if (trans.getLength() != 0)
-		  		eval->warningMessage("ignore colormap argument");
-		    QImage img = imwriteHelperRGB32(convert2uint8(A));
-			if (!imgWriter.write(QImage(img)))
-			   throw Exception("cannot create image file" + filename);
-	    }
-	}
-	else if (arg.size() == 4) {
-		Array ctable(arg[2]);
-		if (ctable.getLength() != 0)
-	  		eval->warningMessage("ignore colormap argument");
-		Array trans(arg[3]);
-		if (A.rows() == trans.rows() && A.columns() == trans.columns() ) {
-		    // the third argument is alpha/transparent channel
-		    QImage img = imwriteHelperARGB32(convert2uint8(A), convert2uint8(trans));
-			if (!imgWriter.write(QImage(img)))
-			   throw Exception("cannot create image file" + filename);
-		}
-		else {
-			if (trans.getLength() != 0)
-		  		eval->warningMessage("ignore invalid transparent argument");
-		    QImage img = imwriteHelperRGB32(convert2uint8(A));
-			if (!imgWriter.write(QImage(img)))
-			   throw Exception("cannot create image file" + filename);
-	    }
-	}
-	else
-		throw Exception("invalide input number of arguments");
-  }
-  else
-    throw Exception("invalid matrix dimension");
-
-  return ArrayVector();
-}
 
 //!
 //@Module SETPRINTLIMIT Set Limit For Printing Of Arrays
@@ -1083,12 +185,15 @@ ArrayVector ImWriteFunction(int nargout, const ArrayVector& arg,
 //A
 //setprintlimit(1000)
 //@>
+//@@Signature
+//sfunction setprintlimit SetPrintLimitFunction
+//inputs linecount
+//outputs none
 //!
 ArrayVector SetPrintLimitFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   if (arg.size() != 1)
     throw Exception("setprintlimit requires one, scalar integer argument");
-  Array tmp(arg[0]);
-  eval->setPrintLimit(tmp.getContentsAsIntegerScalar());
+  eval->setPrintLimit(arg[0].asInteger());
   return ArrayVector();
 }
 
@@ -1116,1044 +221,13 @@ ArrayVector SetPrintLimitFunction(int nargout, const ArrayVector& arg, Interpret
 //A
 //setprintlimit(n)
 //@>
+//@@Signature
+//sfunction getprintlimit GetPrintLimitFunction
+//inputs none
+//outputs linecount
 //!
 ArrayVector GetPrintLimitFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  Array tmp(Array::uint32Constructor(eval->getPrintLimit()));
-  ArrayVector retval;
-  retval.push_back(tmp);
-  return retval;
-}
-
-void SwapBuffer(char* cp, int count, int elsize) {
-  char tmp;
-  for (int i=0;i<count;i++)
-    for (int j=0;j<elsize/2;j++) {
-      tmp = cp[i*elsize+j];
-      cp[i*elsize+j] = cp[i*elsize+elsize-1-j];
-      cp[i*elsize+elsize-1-j] = tmp;
-    }    
-}
-
-#define MATCH(x) (prec==x)
-void processPrecisionString(string prec, Class &dataClass, int& elementSize, int& swapSize) {
-  if (MATCH("uint8") || MATCH("uchar") || MATCH("unsigned char")) {
-    dataClass = FM_UINT8;
-    elementSize = 1;
-    swapSize = 1;
-    return;
-  }
-  if (MATCH("int8") || MATCH("char") || MATCH("integer*1")) {
-    dataClass = FM_INT8;
-    elementSize = 1;
-    swapSize = 1;
-    return;
-  }
-  if (MATCH("uint16") || MATCH("unsigned short")) {
-    dataClass = FM_UINT16;
-    elementSize = 2;
-    swapSize = 2;
-    return;
-  }
-  if (MATCH("int16") || MATCH("short") || MATCH("integer*2")) {
-    dataClass = FM_INT16;
-    elementSize = 2;
-    swapSize = 2;
-    return;
-  }
-  if (MATCH("uint32") || MATCH("unsigned int")) {
-    dataClass = FM_UINT32;
-    elementSize = 4;
-    swapSize = 4;
-    return;
-  }
-  if (MATCH("int32") || MATCH("int") || MATCH("integer*4")) {
-    dataClass = FM_INT32;
-    elementSize = 4;
-    swapSize = 4;
-    return;
-  }
-  if (MATCH("uint64")) {
-    dataClass = FM_UINT64;
-    elementSize = 8;
-    swapSize = 8;
-    return;
-  }
-  if (MATCH("int64") || MATCH("integer*8")) {
-    dataClass = FM_INT64;
-    elementSize = 8;
-    swapSize = 8;
-    return;
-  }
-  if (MATCH("single") || MATCH("float32") || MATCH("float") || MATCH("real*4")) {
-    dataClass = FM_FLOAT;
-    elementSize = 4;
-    swapSize = 4;
-    return;
-  }
-  if (MATCH("double") || MATCH("float64") || MATCH("real*8")) {
-    dataClass = FM_DOUBLE;
-    elementSize = 8;
-    swapSize = 8;
-    return;
-  }
-  if (MATCH("complex") || MATCH("complex*8")) {
-    dataClass = FM_COMPLEX;
-    elementSize = 8;
-    swapSize = 4;
-    return;
-  }
-  if (MATCH("dcomplex") || MATCH("complex*16")) {
-    dataClass = FM_DCOMPLEX;
-    elementSize = 16;
-    swapSize = 8;
-    return;
-  }
-  throw Exception("invalid precision type");
-}
-#undef MATCH
-
-//!
-//@Module FOPEN File Open Function
-//@@Section IO
-//@@Usage
-//Opens a file and returns a handle which can be used for subsequent
-//file manipulations.  The general syntax for its use is
-//@[
-//  fp = fopen(fname,mode,byteorder)
-//@]
-//Here @|fname| is a string containing the name of the file to be 
-//opened.  @|mode| is the mode string for the file open command.
-//The first character of the mode string is one of the following:
-//\begin{itemize}
-//  \item @|'r'|  Open  file  for  reading.  The file pointer is placed at
-//          the beginning of the file.  The file can be read from, but
-//	  not written to.
-//  \item @|'r+'|   Open for reading and writing.  The file pointer is
-//          placed at the beginning of the file.  The file can be read
-//	  from and written to, but must exist at the outset.
-//  \item @|'w'|    Open file for writing.  If the file already exists, it is
-//          truncated to zero length.  Otherwise, a new file is
-//	  created.  The file pointer is placed at the beginning of
-//	  the file.
-//  \item @|'w+'|   Open for reading and writing.  The file is created  if  
-//          it  does not  exist, otherwise it is truncated to zero
-//	  length.  The file pointer placed at the beginning of the file.
-//  \item @|'a'|    Open for appending (writing at end of file).  The file  is  
-//          created  if it does not exist.  The file pointer is placed at
-//	  the end of the file.
-//  \item @|'a+'|   Open for reading and appending (writing at end of file).   The
-//          file  is created if it does not exist.  The file pointer is
-//	  placed at the end of the file.
-//\end{itemize}
-//On some platforms (e.g. Win32) it is necessary to add a 'b' for 
-//binary files to avoid the operating system's 'CR/LF<->CR' translation.
-//
-//Finally, FreeMat has the ability to read and write files of any
-//byte-sex (endian).  The third (optional) input indicates the 
-//byte-endianness of the file.  If it is omitted, the native endian-ness
-//of the machine running FreeMat is used.  Otherwise, the third
-//argument should be one of the following strings:
-//\begin{itemize}
-//   \item @|'le','ieee-le','little-endian','littleEndian','little'|
-//   \item @|'be','ieee-be','big-endian','bigEndian','big'|
-//\end{itemize}
-//	
-//If the file cannot be opened, or the file mode is illegal, then
-//an error occurs. Otherwise, a file handle is returned (which is
-//an integer).  This file handle can then be used with @|fread|,
-//@|fwrite|, or @|fclose| for file access.
-//
-//Note that three handles are assigned at initialization time:
-//\begin{itemize}
-//   \item Handle 0 - is assigned to standard input
-//   \item Handle 1 - is assigned to standard output
-//   \item Handle 2 - is assigned to standard error
-//\end{itemize}
-//These handles cannot be closed, so that user created file handles start at @|3|.
-//
-//@@Examples
-//Here are some examples of how to use @|fopen|.  First, we create a new 
-//file, which we want to be little-endian, regardless of the type of the machine.
-//We also use the @|fwrite| function to write some floating point data to
-//the file.
-//@<
-//fp = fopen('test.dat','wb','ieee-le')
-//fwrite(fp,float([1.2,4.3,2.1]))
-//fclose(fp)
-//@>
-//Next, we open the file and read the data back
-//@<
-//fp = fopen('test.dat','rb','ieee-le')
-//fread(fp,[1,3],'float')
-//fclose(fp)
-//@>
-//Now, we re-open the file in append mode and add two additional @|float|s to the
-//file.
-//@<
-//fp = fopen('test.dat','a+','le')
-//fwrite(fp,float([pi,e]))
-//fclose(fp)
-//@>
-//Finally, we read all 5 @|float| values from the file
-//@<
-//fp = fopen('test.dat','rb','ieee-le')
-//fread(fp,[1,5],'float')
-//fclose(fp)
-//@>
-//!
-void process_machprecision_flag( const string& flag, bool& swapendian, bool& Arch64 )
-{
-  uint32 testEndian = 0xFEEDFACE;
-  uint8 *dp;
-  bool bigEndian;
-  swapendian = false;
-
-  Arch64 = false;
-  dp = (uint8*) &testEndian;
-  bigEndian = (dp[0] == 0xFE);
-
-    if (flag=="swap") { /*non-standard flag*/
-      swapendian = true;
-    } else if ((flag=="le") || /*non-standard flag*/
-	   (flag=="ieee-le") ||
-	   (flag=="ieee-le.l64") ||
-	   (flag=="little-endian") || /*non-standard flag*/
-	   (flag=="littleEndian") || /*non-standard flag*/
-	   (flag=="l") ||
-	   (flag=="a") ||
-	   (flag=="little")) { /*non-standard flag*/
-      swapendian = bigEndian;
-    } else 
-	if ((flag=="be") || /*non-standard flag*/
-	   (flag=="ieee-be") || 
-	   (flag=="ieee-be.l64") ||
-	   (flag=="big-endian") || /*non-standard flag*/
-	   (flag=="b") ||
-	   (flag=="s") ||
-	   (flag=="bigEndian") || /*non-standard flag*/
-	   (flag=="big")) { /*non-standard flag*/
-      swapendian = !bigEndian;
-    }
-
-    if( (flag=="ieee-be.l64") || (flag=="ieee.le.l64")){
-	    Arch64 = true;
-    }
-    //assumes fallthrough for flag 'native'
-    //missing flags 'vaxg' 'vaxd' 'cray'
-}
-
-ArrayVector FopenFunction(int nargout, const ArrayVector& arg) {
-
-  if (arg.size() > 3)
-    throw Exception("too many arguments to fopen");
-  if (arg.size() < 1)
-    throw Exception("fopen requires at least one argument (a filename)");
-  if (!(arg[0].isString()))
-    throw Exception("First argument to fopen must be a filename");
-  string fname = arg[0].getContentsAsString();
-  string mode = "rb";
-  if (arg.size() > 1) {
-    if (!arg[1].isString())
-      throw Exception("Access mode to fopen must be a string");
-    mode = arg[1].getContentsAsString();
-  }
-  bool swapendian = false;
-  bool is64bit = false;
-  if (arg.size() > 2) {
-    if (arg[2].isEmpty())
-      throw Exception("swap flag must be 'swap' or an endian spec ('le','ieee-le','little-endian','littleEndian','little','be','ieee-be','big-endian','bigEndian','big')");
-
-    string swapflag = arg[2].getContentsAsString();
-    process_machprecision_flag( swapflag, swapendian, is64bit );
-  }
-  FILE *fp = fopen(fname.c_str(),mode.c_str());
-  if (!fp)
-    throw Exception(strerror(errno) + string(" for fopen argument ") + fname);
-  FilePtr *fptr = new FilePtr();
-  fptr->fp = fp;
-  fptr->swapflag = swapendian;
-  fptr->is64bit = is64bit;
-  unsigned int rethan = fileHandles.assignHandle(fptr);
-  ArrayVector retval;
-  retval.push_back(Array::uint32Constructor(rethan-1));
-  return retval;
-}
-
-//!
-//@Module FCLOSE File Close Function
-//@@Section IO
-//@@Usage
-//Closes a file handle, or all open file handles.  The general syntax
-//for its use is either
-//@[
-//  fclose(handle)
-//@]
-//or
-//@[
-//  fclose('all')
-//@]
-//In the first case a specific file is closed,  In the second, all open
-//files are closed.  Note that until a file is closed the file buffers
-//are not flushed.  Returns a '0' if the close was successful and a '-1' if
-//the close failed for some reason.
-//@@Example
-//A simple example of a file being opened with @|fopen| and then closed with @|fclose|.
-//@<
-//fp = fopen('test.dat','wb','ieee-le')
-//fclose(fp)
-//@>
-//!
-ArrayVector FcloseFunction(int nargout, const ArrayVector& arg) {
-  if (arg.size() != 1)
-    throw Exception("Fclose must have one argument, either 'all' or a file handle");
-  bool closingAll = false;
-  int retval = 0;
-  if (arg[0].isString()) {
-    string allflag = arg[0].getContentsAsString();
-    if (allflag == "all") {
-      closingAll = true;
-      int maxHandle(fileHandles.maxHandle());
-      for (int i=3;i<maxHandle;i++) {
-	try {
-	  FilePtr* fptr = fileHandles.lookupHandle(i+1);
-	  fclose(fptr->fp);
-	  fileHandles.deleteHandle(i+1);
-	  delete fptr;
-	} catch (Exception & e) {
-	}
-      }
-    } else
-      throw Exception("Fclose must have one argument, either 'all' or a file handle");
-  } else {
-    Array tmp(arg[0]);
-    int handle = tmp.getContentsAsIntegerScalar();
-    if (handle <= 2)
-      throw Exception("Cannot close handles 0-2, the standard in/out/error file handles");
-    FilePtr* fptr = (fileHandles.lookupHandle(handle+1));
-    if (fclose(fptr->fp))
-      retval = -1;
-    fileHandles.deleteHandle(handle+1);
-    delete fptr;
-  }
-  return SingleArrayVector(Array::int32Constructor(retval));
-}
-
-//!
-//@Module FREAD File Read Function
-//@@Section IO
-//@@Usage
-//Reads a block of binary data from the given file handle into a variable
-//of a given shape and precision.  The general use of the function is
-//@[
-//  A = fread(handle,size,precision)
-//@]
-//The @|handle| argument must be a valid value returned by the fopen 
-//function, and accessable for reading.  The @|size| argument determines
-//the number of values read from the file.  The @|size| argument is simply
-//a vector indicating the size of the array @|A|.  The @|size| argument
-//can also contain a single @|inf| dimension, indicating that FreeMat should
-//calculate the size of the array along that dimension so as to read as
-//much data as possible from the file (see the examples listed below for
-//more details).  The data is stored as columns in the file, not 
-//rows.
-//    
-//Alternately, you can specify two return values to the @|fread| function,
-//in which case the second value contains the number of elements read
-//@[
-//   [A,count] = fread(...)
-//@]
-//where @|count| is the number of elements in @|A|.
-//
-//The third argument determines the type of the data.  Legal values for this
-//argument are listed below:
-//\begin{itemize}
-//   \item 'uint8','uchar','unsigned char' for an unsigned, 8-bit integer.
-//   \item 'int8','char','integer*1' for a signed, 8-bit integer.
-//   \item 'uint16','unsigned short' for an unsigned, 16-bit  integer.
-//   \item 'int16','short','integer*2' for a signed, 16-bit integer.
-//   \item 'uint32','unsigned int' for an unsigned, 32-bit integer.
-//   \item 'int32','int','integer*4' for a signed, 32-bit integer.
-//   \item 'single','float32','float','real*4' for a 32-bit floating point.
-//   \item 'double','float64','real*8' for a 64-bit floating point.
-//   \item 'complex','complex*8' for a 64-bit complex floating point (32 bits for the real and imaginary part).
-//   \item 'dcomplex','complex*16' for a 128-bit complex floating point (64 bits for the real and imaginary part).
-//\end{itemize}
-//@@Example
-//First, we create an array of @|512 x 512| Gaussian-distributed @|float| random variables, and then writing them to a file called @|test.dat|.
-//@<
-//A = float(randn(512));
-//fp = fopen('test.dat','wb');
-//fwrite(fp,A);
-//fclose(fp);
-//@>
-//Read as many floats as possible into a row vector
-//@<
-//fp = fopen('test.dat','rb');
-//x = fread(fp,[1,inf],'float');
-//who x
-//@>
-//Read the same floats into a 2-D float array.
-//@<
-//fp = fopen('test.dat','rb');
-//x = fread(fp,[512,inf],'float');
-//who x
-//@>
-//!
-ArrayVector FreadFunction(int nargout, const ArrayVector& arg) {
-  int argindex = 0;
-  int skip;
-  bool is64bit, needs_byte_swap;
-
-  if (arg.size() < 1)
-    throw Exception("fread requires at least the file handle");
-  Array tmp(arg[argindex++]);
-  
-  int handle = tmp.getContentsAsIntegerScalar();
-  FilePtr *fptr=(fileHandles.lookupHandle(handle+1));
-  bool infinityFound;
-  int infiniteDim;
-  float *dp;
-  int dimCount;
-  int elementCount;
-  Array sze( FM_FLOAT, Dimensions(1) );
-  
-  if( ( argindex > arg.size() ) || arg[argindex].isString() ){
-      //this is fread( fid, precision, ... ) case.
-      //load all the values from the file.
-      infinityFound = true;
-      infiniteDim = 0;
-      elementCount = 1;
-      dimCount = sze.getLength();
-      dp = ((float *) sze.getReadWriteDataPointer());
-  }
-  else{
-      // Get the size argument
-      sze = arg[argindex++];
-      // Promote sze to a float argument
-      sze.promoteType(FM_FLOAT);
-      // Check for a single infinity
-      dimCount = sze.getLength();
-      dp = ((float *) sze.getReadWriteDataPointer());
-      infinityFound = false;
-      elementCount = 1;
-      infiniteDim = 0;
-      for (int i=0;i<dimCount;i++) {
-	if (IsNaN(dp[i])) throw Exception("nan not allowed in size argument");
-	if (IsInfinite(dp[i])) {
-	  if (infinityFound) throw Exception("only a single inf is allowed in size argument");
-	  infinityFound = true;
-	  infiniteDim = i;
-	} else {
-	  if (dp[i] < 0) throw Exception("illegal negative size argument");
-	  elementCount *= (int) dp[i];
-	}
-      }
-  }
-  
-  QString prec;
-  if( argindex < arg.size() ){
-      if (!arg[argindex].isString())
-	throw Exception("precision argument is required for fread");
-      prec = QString(arg[argindex].getContentsAsString().c_str());
-  }
-  else{
-      //precision argument is missing. Default: uint8.
-      prec = QString("uint8");
-  }
-  ++argindex;
-
-  if( (argindex >= arg.size()) || arg[argindex].isString() ){
-      //skip argument is omitted.
-      skip = 0;
-  }
-  else{
-    Array skiparr(arg[argindex]);
-    skiparr.promoteType(FM_INT32);
-    skip = *((int32*)(skiparr.getDataPointer()));
-  }
-  ++argindex;
-
-  if( argindex >= arg.size() ){
-      needs_byte_swap = fptr->swapflag;
-      is64bit = fptr->is64bit;
-  }
-  else{ 
-      if( arg[argindex].isString() ){
-	  process_machprecision_flag( arg[argindex].getContentsAsString(), needs_byte_swap, is64bit );
-      }
-      else
-	  throw Exception( "Invalid machine precision format" );
-  }  
-    
-
-  // Map the precision string to a data class
-  Class dataClass, outDataClass;
-  int elementSize, outElementSize;
-  int swapSize, outSwapSize;
-
-  QString outputprec(prec);
-  int iConv = prec.indexOf( QString("=>") );
-  if( iConv != -1 ){
-      //case of type1=>type2
-      prec.remove( iConv, prec.length() - iConv );
-      outputprec.remove(0, iConv+2);
-  }
-
-  processPrecisionString( prec.toStdString(), dataClass, elementSize, swapSize);
-  processPrecisionString( outputprec.toStdString(), outDataClass, outElementSize, outSwapSize);
-  // If there is an infinity in the dimensions, we have to calculate the
-  // appropriate value
-  if (infinityFound) {
-    long fsize;
-    long fcpos;
-    fcpos = ftell(fptr->fp);
-    fseek(fptr->fp,0L,SEEK_END);
-    fsize = ftell(fptr->fp) - fcpos;
-    fseek(fptr->fp,fcpos,SEEK_SET);
-    dp[infiniteDim] = ceil((double)(fsize/elementSize/elementCount));
-    elementCount *= (int) dp[infiniteDim];
-  }
-  // Next, we allocate space for the result
-  void *qp = Malloc(elementCount*elementSize);
-  // Read in the requested number of data points...
-  int g = fread(qp,elementSize,elementCount,fptr->fp);
-  if (g != elementCount) {
-    for (int i=0;i<dimCount;i++)
-      dp[i] = 1;
-    dp[0] = g;
-    elementCount = g;
-  }
-  if (ferror(fptr->fp)) 
-    throw Exception(strerror(errno));
-  if (fptr->swapflag)
-    SwapBuffer((char *)qp,elementCount*elementSize/swapSize,swapSize);
-  // Convert dp to a Dimensions
-  Dimensions dims(dimCount);
-  for (int j=0;j<dimCount;j++)
-    dims.set(j,(int) dp[j]);
-  if (dimCount == 1)
-    dims.set(1,1);
-
-  ArrayVector retval;
-  Array retData(dataClass,dims,qp);
-  if( dataClass != outDataClass ){
-    retData.promoteType( outDataClass );
-  }
-
-  retval.push_back(retData);
-  if (nargout == 2)
-    retval.push_back(Array::uint32Constructor(retval[0].getLength()));
-  return retval;
-}
-
-//!
-//@Module FWRITE File Write Function
-//@@Section IO
-//@@Usage
-//Writes an array to a given file handle as a block of binary (raw) data.
-//The general use of the function is
-//@[
-//  n = fwrite(handle,A)
-//@]
-//The @|handle| argument must be a valid value returned by the fopen 
-//function, and accessable for writing. The array @|A| is written to
-//the file a column at a time.  The form of the output data depends
-//on (and is inferred from) the precision of the array @|A|.  If the 
-//write fails (because we ran out of disk space, etc.) then an error
-//is returned.  The output @|n| indicates the number of elements
-//successfully written.
-//@@Example
-//Heres an example of writing an array of @|512 x 512| Gaussian-distributed @|float| random variables, and then writing them to a file called @|test.dat|.
-//@<
-//A = float(randn(512));
-//fp = fopen('test.dat','wb');
-//fwrite(fp,A);
-//fclose(fp);
-//@>
-//!
-ArrayVector FwriteFunction(int nargout, const ArrayVector& arg) {
-  if (arg.size() < 2)
-    throw Exception("fwrite requires two arguments, the file handle, and the variable to be written");
-  Array tmp(arg[0]);
-  int handle = tmp.getContentsAsIntegerScalar();
-  FilePtr *fptr=(fileHandles.lookupHandle(handle+1));
-  if (arg[1].isReferenceType())
-    throw Exception("cannot write reference data types with fwrite");
-  Array toWrite(arg[1]);
-  unsigned int written;
-  unsigned int count(toWrite.getLength());
-  unsigned int elsize(toWrite.getElementSize());
-  if (!fptr->swapflag || (elsize == 1)) {
-    const void *dp=(toWrite.getDataPointer());
-    written = fwrite(dp,elsize,count,fptr->fp);      
-  } else {
-    void *dp=(toWrite.getReadWriteDataPointer());
-    SwapBuffer((char*) dp, count, elsize);
-    written = fwrite(dp,elsize,count,fptr->fp);
-  }
-  ArrayVector retval;
-  retval.push_back(Array::uint32Constructor(written));
-  return retval;    
-}
-
-//!
-//@Module FFLUSH Force File Flush
-//@@Section IO
-//@@Usage
-//Flushes any pending output to a given file.  The general use of
-//this function is
-//@[
-//   fflush(handle)
-//@]
-//where @|handle| is an active file handle (as returned by @|fopen|).
-//!
- ArrayVector FflushFunction(int nargout, const ArrayVector& arg) {
-   if (arg.size() != 1)
-     throw Exception("fflush requires an argument, the file handle.");
-   int handle = ArrayToInt32(arg[0]);
-   FilePtr *fptr = (fileHandles.lookupHandle(handle+1));
-   fflush(fptr->fp);
-   return ArrayVector();
- }
-
-//!
-//@Module FTELL File Position Function
-//@@Section IO
-//@@Usage
-//Returns the current file position for a valid file handle.
-//The general use of this function is
-//@[
-//  n = ftell(handle)
-//@]
-//The @|handle| argument must be a valid and active file handle.  The
-//return is the offset into the file relative to the start of the
-//file (in bytes).
-//@@Example
-//Here is an example of using @|ftell| to determine the current file 
-//position.  We read 512 4-byte floats, which results in the file 
-//pointer being at position 512*4 = 2048.
-//@<
-//fp = fopen('test.dat','wb');
-//fwrite(fp,randn(512,1));
-//fclose(fp);
-//fp = fopen('test.dat','rb');
-//x = fread(fp,[512,1],'float');
-//ftell(fp)
-//@>
-//!
-ArrayVector FtellFunction(int nargout, const ArrayVector& arg) {
-  if (arg.size() != 1)
-    throw Exception("ftell requires an argument, the file handle.");
-  Array tmp(arg[0]);
-  int handle = tmp.getContentsAsIntegerScalar();
-  FilePtr *fptr=(fileHandles.lookupHandle(handle+1));
-  unsigned int fpos;
-  fpos = ftell(fptr->fp);
-  ArrayVector retval;
-  retval.push_back(Array::uint32Constructor(fpos));
-  return retval;
-}
-
-//!
-//@Module FEOF End Of File Function
-//@@Section IO
-//@@Usage
-//Check to see if we are at the end of the file.  The usage is
-//@[
-//  b = feof(handle)
-//@]
-//The @|handle| argument must be a valid and active file handle.  The
-//return is true (logical 1) if the current position is at the end of
-//the file, and false (logical 0) otherwise.  Note that simply reading
-//to the end of a file will not cause @|feof| to return @|true|.  
-//You must read past the end of the file (which will cause an error 
-//anyway).  See the example for more details.
-//@@Example
-//Here, we read to the end of the file to demonstrate how @|feof| works.
-//At first pass, we force a read of the contents of the file by specifying
-//@|inf| for the dimension of the array to read.  We then test the
-//end of file, and somewhat counter-intuitively, the answer is @|false|.
-//We then attempt to read past the end of the file, which causes an
-//error.  An @|feof| test now returns the expected value of @|true|.
-//@<
-//fp = fopen('test.dat','rb');
-//x = fread(fp,[512,inf],'float');
-//feof(fp)
-//x = fread(fp,[1,1],'float');
-//feof(fp)
-//@>
-//!
-ArrayVector FeofFunction(int nargout, const ArrayVector& arg) {
-  if (arg.size() != 1)
-    throw Exception("feof requires an argument, the file handle.");
-  Array tmp(arg[0]);
-  int handle = tmp.getContentsAsIntegerScalar();
-  FilePtr *fptr=(fileHandles.lookupHandle(handle+1));
-  int ateof;
-  ateof = feof(fptr->fp);
-  ArrayVector retval;
-  retval.push_back(Array::logicalConstructor(ateof));
-  return retval;
-}
-  
-//!
-//@Module FSEEK Seek File To A Given Position
-//@@Section IO
-//@@Usage
-//Moves the file pointer associated with the given file handle to 
-//the specified offset (in bytes).  The usage is
-//@[
-//  fseek(handle,offset,style)
-//@]
-//The @|handle| argument must be a value and active file handle.  The
-//@|offset| parameter indicates the desired seek offset (how much the
-//file pointer is moved in bytes).  The @|style| parameter determines
-//how the offset is treated.  Three values for the @|style| parameter
-//are understood:
-//\begin{itemize}
-//\item string @|'bof'| or the value -1, which indicate the seek is relative
-//to the beginning of the file.  This is equivalent to @|SEEK_SET| in
-//ANSI C.
-//\item string @|'cof'| or the value 0, which indicates the seek is relative
-//to the current position of the file.  This is equivalent to 
-//@|SEEK_CUR| in ANSI C.
-//\item string @|'eof'| or the value 1, which indicates the seek is relative
-//to the end of the file.  This is equivalent to @|SEEK_END| in ANSI
-//C.
-//\end{itemize}
-//The offset can be positive or negative.
-//@@Example
-//The first example reads a file and then ``rewinds'' the file pointer by seeking to the beginning.
-//The next example seeks forward by 2048 bytes from the files current position, and then reads a line of 512 floats.
-//@<
-//% First we create the file
-//fp = fopen('test.dat','wb');
-//fwrite(fp,float(rand(4096,1)));
-//fclose(fp);
-//% Now we open it
-//fp = fopen('test.dat','rb');
-//% Read the whole thing
-//x = fread(fp,[1,inf],'float');
-//% Rewind to the beginning
-//fseek(fp,0,'bof');
-//% Read part of the file
-//y = fread(fp,[1,1024],'float');
-//who x y
-//% Seek 2048 bytes into the file
-//fseek(fp,2048,'cof');
-//% Read 512 floats from the file
-//x = fread(fp,[512,1],'float');
-//% Close the file
-//fclose(fp);
-//@>
-//!
-ArrayVector FseekFunction(int nargout, const ArrayVector& arg) {
-  if (arg.size() != 3)
-    throw Exception("fseek requires three arguments, the file handle, the offset, and style");
-  Array tmp1(arg[0]);
-  int handle = tmp1.getContentsAsIntegerScalar();
-  FilePtr *fptr=(fileHandles.lookupHandle(handle+1));
-  Array tmp2(arg[1]);
-  int offset = tmp2.getContentsAsIntegerScalar();
-  Array tmp3(arg[2]);
-  int style;
-  if (tmp3.isString()) {
-    string styleflag = arg[2].getContentsAsString();
-    if (styleflag=="bof" || styleflag=="BOF")
-      style = -1;
-    else if (styleflag=="cof" || styleflag=="COF")
-      style = 0;
-    else if (styleflag=="eof" || styleflag=="EOF")
-      style = 1;
-    else
-      throw Exception("unrecognized style format for fseek");
-  } else {
-    style = tmp3.getContentsAsIntegerScalar();
-    if ((style != -1) && (style != 0) && (style != 1))
-      throw Exception("unrecognized style format for fseek");	
-  }
-  switch (style) {
-  case -1:
-    if (fseek(fptr->fp,offset,SEEK_SET))
-      throw Exception(strerror(errno));
-    break;
-  case 0:
-    if (fseek(fptr->fp,offset,SEEK_CUR))
-      throw Exception(strerror(errno));
-    break;
-  case 1:
-    if (fseek(fptr->fp,offset,SEEK_END))
-      throw Exception(strerror(errno));
-    break;
-  }
-  return ArrayVector();
-}
-
-int flagChar(char c) {
-  return ((c == '#') ||  (c == '0') || (c == '-') ||  
-	  (c == ' ') ||  (c == '+'));
-}
-  
-int convspec(char c) {
-  return ((c == 'd') || (c == 'i') || (c == 'o') || 
-	  (c == 'u') || (c == 'x') || (c == 'X') ||
-	  (c == 'e') || (c == 'E') || (c == 'f') || 
-	  (c == 'F') || (c == 'g') || (c == 'G') ||
-	  (c == 'a') || (c == 'A') || (c == 'c') || 
-	  (c == 's'));
-}
-    
-char* validateFormatSpec(char* cp) {
-  if (*cp == '%') return cp+1;
-  while ((*cp) && flagChar(*cp)) cp++;
-  while ((*cp) && isdigit(*cp)) cp++;
-  while ((*cp) && (*cp == '.')) cp++;
-  while ((*cp) && isdigit(*cp)) cp++;
-  if ((*cp) && convspec(*cp)) 
-    return cp+1;
-  else
-    return 0;
-}
-
-char* validateScanFormatSpec(char* cp) {
-  if (*cp == '%') return cp+1;
-  while ((*cp) && flagChar(*cp)) cp++;
-  while ((*cp) && isdigit(*cp)) cp++;
-  while ((*cp) && (*cp == '.')) cp++;
-  while ((*cp) && isdigit(*cp)) cp++;
-  if ((*cp) && (convspec(*cp) || (*cp == 'h') || (*cp == 'l')))
-    return cp+1;
-  else
-    return 0;
-}
-    
-bool isEscape(char *dp) {
-  return ((dp[0] == '\\') &&
-	  ((dp[1] == 'n') ||
-	   (dp[1] == 't') ||
-	   (dp[1] == 'r') ||
-	   (dp[1] == '\\')));
-}
-  
-void convertEscapeSequences(char *dst, char* src) {
-  char *sp;
-  char *dp;
-  sp = src;
-  dp = dst;
-  while (*sp) {
-    // Is this an escape sequence?
-    if (isEscape(sp)) {
-      switch (sp[1]) {
-      case '\\':
-	*(dp++) = '\\';
-	break;
-      case 'n':
-	*(dp++) = '\n';
-	break;
-      case 't':
-	*(dp++) = '\t';
-	break;
-      case 'r':
-	*(dp++) = '\r';
-	break;
-      }
-      sp += 2;
-    } else
-      *(dp++) = *(sp++);
-  }
-  // Null terminate
-  *dp = 0;
-}
-  
-
-//!
-//@Module NUM2STR Convert Numbers To Strings
-//@@Section ARRAY
-//@@Usage
-//Converts an array into its string representation.  The general syntax
-//for this function is
-//@[
-//   s = num2str(X)
-//@]
-//where @|s| is a string (or string matrix) and @|X| is an array.  By
-//default, the @|num2str| function uses 4 digits of precision and an 
-//exponent if required.  If you want more digits of precision, you can 
-//specify the precition via the form
-//@[
-//   s = num2str(X, precision)
-//@]
-//where @|precision| is the number of digits to include in the string
-//representation.  For more control over the format of the output, you 
-//can also specify a format specifier (see @|printf| for more details).
-//@[
-//   s = num2str(X, format)
-//@]
-//where @|format| is the specifier string.
-//!
-template <class T>
-Array Num2StrHelperReal(const T*dp, Dimensions Xdims, const char *formatspec) {
-  int rows(Xdims.getRows());
-  int cols(Xdims.getColumns());
-  StringVector row_string;
-  if (Xdims.getLength() == 2)
-    Xdims.set(3,1);
-  Dimensions Wdims(Xdims.getLength());
-  int offset = 0;
-  while (Wdims.inside(Xdims)) {
-    for (int i=0;i<rows;i++) {
-      string colbuffer;
-      for (int j=0;j<cols;j++) {
-	char elbuffer[1024];
-	sprintf(elbuffer,formatspec,dp[i+j*rows+offset]);
-	char elbuffer2[1024];
-	convertEscapeSequences(elbuffer2,elbuffer);
-	if (j > 0)
-	  colbuffer += " ";
-	colbuffer += string(elbuffer2);
-      }
-      row_string.push_back(colbuffer);
-    }
-    offset += rows*cols;
-    Wdims.incrementModulo(Xdims,2);
-  }
-  // Next we compute the length of the largest string
-  int maxlen = 0;
-  for (int n=0;n<(int)row_string.size();n++)
-    if ((int)row_string[n].size() > maxlen)
-      maxlen = row_string[n].size();
-  // Next we allocate a character array large enough to
-  // hold the string array.
-  char *sp = (char*) Array::allocateArray(FM_STRING,maxlen*row_string.size());
-  // Now we copy 
-  int slices = row_string.size() / rows;
-  for (int i=0;i<slices;i++)
-    for (int j=0;j<rows;j++) {
-      string line(row_string[j+i*rows]);
-      for (int k=0;k<(int)line.size();k++)
-	sp[j+i*rows*maxlen+k*rows] = line[k];
-    }
-  Dimensions odims(Xdims);
-  odims.set(1,maxlen);
-  odims.simplify();
-  return Array(FM_STRING,odims,sp);
-}
-
-template <class T>
-Array Num2StrHelperComplex(const T*dp, Dimensions Xdims, const char *formatspec) {
-  int rows(Xdims.getRows());
-  int cols(Xdims.getColumns());
-  StringVector row_string;
-  if (Xdims.getLength() == 2)
-    Xdims.set(3,1);
-  Dimensions Wdims(Xdims.getLength());
-  int offset = 0;
-  while (Wdims.inside(Xdims)) {
-    for (int i=0;i<rows;i++) {
-      string colbuffer;
-      for (int j=0;j<cols;j++) {
-	char elbuffer[1024];
-	char elbuffer2[1024];
-	sprintf(elbuffer,formatspec,dp[2*(i+j*rows+offset)]);
-	convertEscapeSequences(elbuffer2,elbuffer);
-	if (j > 0)
-	  colbuffer += " ";
-	colbuffer += string(elbuffer2);
-	sprintf(elbuffer,formatspec,dp[2*(i+j*rows+offset)+1]);
-	convertEscapeSequences(elbuffer2,elbuffer);
-	if (dp[2*(i+j*rows+offset)+1]>=0) 
-	  colbuffer += "+";
-	colbuffer += string(elbuffer2) + "i";
-      }
-      row_string.push_back(colbuffer);
-    }
-    offset += rows*cols;
-    Wdims.incrementModulo(Xdims,2);
-  }
-  // Next we compute the length of the largest string
-  int maxlen = 0;
-  for (int n=0;n<(int)row_string.size();n++)
-    if ((int)row_string[n].size() > maxlen)
-      maxlen = row_string[n].size();
-  // Next we allocate a character array large enough to
-  // hold the string array.
-  char *sp = (char*) Array::allocateArray(FM_STRING,maxlen*row_string.size());
-  // Now we copy 
-  int slices = row_string.size() / rows;
-  for (int i=0;i<slices;i++)
-    for (int j=0;j<rows;j++) {
-      string line(row_string[j+i*rows]);
-      for (int k=0;k<(int)line.size();k++)
-	sp[j+i*rows*maxlen+k*rows] = line[k];
-    }
-  Dimensions odims(Xdims);
-  odims.set(1,maxlen);
-  odims.simplify();
-  return Array(FM_STRING,odims,sp);
-}
-
-
-ArrayVector Num2StrFunction(int nargout, const ArrayVector& arg) {
-  if (arg.size() == 0)
-    throw Exception("num2str function requires at least one argument");
-  Array X(arg[0]);
-  if (X.isReferenceType())
-    throw Exception("num2str function requires a numeric input");
-  char formatspec[1024];
-  if (X.isIntegerClass())
-    sprintf(formatspec,"%%d");
-  else
-//    sprintf(formatspec,"%%11.4g");
-    sprintf(formatspec,"%%g"); //without preceding space
-  if (arg.size() > 1) {
-    Array format(arg[1]);
-    if (format.isString())
-      strcpy(formatspec,ArrayToString(format).c_str());
-  }
-  switch (X.dataClass()) 
-    {
-    default: throw Exception("illegal type argument to num2str");
-    case FM_UINT8:
-      return ArrayVector() << Num2StrHelperReal((const uint8*) X.getDataPointer(),
-						X.dimensions(),formatspec);
-    case FM_INT8:
-      return ArrayVector() << Num2StrHelperReal((const int8*) X.getDataPointer(),
-						X.dimensions(),formatspec);
-    case FM_UINT16:
-      return ArrayVector() << Num2StrHelperReal((const uint16*) X.getDataPointer(),
-						X.dimensions(),formatspec);
-    case FM_INT16:
-      return ArrayVector() << Num2StrHelperReal((const int16*) X.getDataPointer(),
-						X.dimensions(),formatspec);
-    case FM_UINT32:
-      return ArrayVector() << Num2StrHelperReal((const uint32*) X.getDataPointer(),
-						X.dimensions(),formatspec);
-    case FM_INT32:
-      return ArrayVector() << Num2StrHelperReal((const int32*) X.getDataPointer(),
-						X.dimensions(),formatspec);
-    case FM_UINT64:
-      return ArrayVector() << Num2StrHelperReal((const uint64*) X.getDataPointer(),
-						X.dimensions(),formatspec);
-    case FM_INT64:
-      return ArrayVector() << Num2StrHelperReal((const int64*) X.getDataPointer(),
-						X.dimensions(),formatspec);
-    case FM_FLOAT:
-      return ArrayVector() << Num2StrHelperReal((const float*) X.getDataPointer(),
-						X.dimensions(),formatspec);
-    case FM_DOUBLE:
-      return ArrayVector() << Num2StrHelperReal((const double*) X.getDataPointer(),
-						X.dimensions(),formatspec);
-    case FM_COMPLEX:
-      return ArrayVector() << Num2StrHelperComplex((const float*) X.getDataPointer(),
-						   X.dimensions(),formatspec);
-    case FM_DCOMPLEX:
-      return ArrayVector() << Num2StrHelperComplex((const double*) X.getDataPointer(),
-						   X.dimensions(),formatspec);
-    case FM_STRING:
-      throw Exception("argument to num2str must be numeric type");
-    }
-  return ArrayVector();
-}
-
+  return ArrayVector(Array(double(eval->getPrintLimit())));
 
 class PrintfDataServer{
 private:
@@ -2979,10 +1053,11 @@ ArrayVector SaveNativeFunction(string filename, StringVector names, Interpreter*
   return ArrayVector();
 }
   
-ArrayVector SaveASCIIFunction(string filename, StringVector names, bool tabsMode,
-			      bool doubleMode, Interpreter* eval) {
-  FILE *fp = fopen(filename.c_str(),"w");
-  if (!fp) throw Exception("unable to open file " + filename + " for writing.");
+static ArrayVector SaveASCIIFunction(QString filename, StringVector names, bool tabsMode,
+				     bool doubleMode, Interpreter* eval) {
+  QFile fp(filename);
+  if (!fp.open(QIODevice::WriteOnly))
+    throw Exception("unable to open file " + filename + " for writing.");
   Context *cntxt = eval->getContext();
   for (int i=0;i<names.size();i++) {
     if (!(names[i] == "ans")) {
@@ -3000,27 +1075,27 @@ ArrayVector SaveASCIIFunction(string filename, StringVector names, bool tabsMode
       }
       if (toWrite->isComplex()) 
 	eval->warningMessage("variable " + names[i] + " is complex valued - only real part will be written to ASCII file");
-      Array A(*toWrite);
-      A.promoteType(FM_DOUBLE);
-      int rows = A.rows();
-      int cols = A.columns();
-      double *dp = (double*) A.getDataPointer();
+      Array A(*toWrite); A = A.toClass(Double).asDenseArray();
+      int rows = int(A.rows());
+      int cols = int(A.columns());
+      const BasicArray<double> &dp(A.constReal<double>());
+      QTextStream out(&fp);
+      if (doubleMode)
+	out.setRealNumberPrecision(15);
+      else
+	out.setRealNumberPrecision(7);
       for (int i=0;i<rows;i++) {
 	for (int j=0;j<cols;j++) {
-	  if (doubleMode)
-	    fprintf(fp,"%.15e",dp[j*rows+i]);
-	  else
-	    fprintf(fp,"%.7e",dp[j*rows+i]);
+	  out << dp[j*rows+i+1];
 	  if (tabsMode && (j < (cols-1)))
-	    fprintf(fp,"\t");
+	    out << "\t";
 	  else
-	    fprintf(fp," ");
+	    out << " ";
 	}
-	fprintf(fp,"\n");
+	out << "\n";
       }
     }
   }
-  fclose(fp);
   return ArrayVector();
 }
 
@@ -3122,6 +1197,10 @@ ArrayVector SaveASCIIFunction(string filename, StringVector names, bool tabsMode
 //   load tmp.mat
 //   test_val = strcomp(a{1},b{1});
 //@}
+//@@Signature
+//sfunction save SaveFunction
+//inputs varargin
+//outputs none
 //!
 ArrayVector SaveFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   ArrayVector argCopy;
@@ -3133,15 +1212,15 @@ ArrayVector SaveFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
   bool regexpMode = false;
   for (int i=0;i<arg.size();i++) {
     if (arg[i].isString()) {
-      if (arg[i].getContentsAsStringUpper() == "-MAT")
+      if (arg[i].asString().toUpper() == "-MAT")
 	matMode = true;
-      else if (arg[i].getContentsAsStringUpper() == "-ASCII")
+      else if (arg[i].asString().toUpper() == "-ASCII")
 	asciiMode = true;
-      else if (arg[i].getContentsAsStringUpper() == "-REGEXP")
+      else if (arg[i].asString().toUpper() == "-REGEXP")
 	regexpMode = true;
-      else if (arg[i].getContentsAsStringUpper() == "-DOUBLE")
+      else if (arg[i].asString().toUpper() == "-DOUBLE")
 	doubleMode = true;
-      else if (arg[i].getContentsAsStringUpper() == "-TABS")
+      else if (arg[i].asString().toUpper() == "-TABS")
 	tabsMode = true;
       else
 	argCopy << arg[i];
@@ -3149,25 +1228,18 @@ ArrayVector SaveFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
       argCopy << arg[i];
   }
   if (argCopy.size() < 1) throw Exception("save requires a filename argument");
-  string fname(ArrayToString(argCopy[0]));
+  QString fname(argCopy[0].asString());
   if (!asciiMode && !matMode) {
-    int len = fname.size();
-    if ((len >= 4) && (fname[len-4] == '.') &&
-	((fname[len-3] == 'M') || (fname[len-3] == 'm')) &&
-	((fname[len-2] == 'A') || (fname[len-2] == 'a')) &&
-	((fname[len-1] == 'T') || (fname[len-1] == 't'))) 
+    if (fname.endsWith(".mat",Qt::CaseInsensitive))
       matMode = true;
-    if ((len >= 4) && (fname[len-4] == '.') &&
-	((fname[len-3] == 'T') || (fname[len-3] == 't')) &&
-	((fname[len-2] == 'X') || (fname[len-2] == 'x')) &&
-	((fname[len-1] == 'T') || (fname[len-1] == 't'))) 
-      matMode = true;    
+    if (fname.endsWith(".txt",Qt::CaseInsensitive))
+      asciiMode = true;
   }
   StringVector names;
   for (int i=1;i<argCopy.size();i++) {
     if (!arg[i].isString())
       throw Exception("unexpected non-string argument to save command");
-    names << ArrayToString(argCopy[i]);
+    names << argCopy[i].asString();
   }
   Context *cntxt = eval->getContext();
   StringVector toSave;
@@ -3186,53 +1258,6 @@ ArrayVector SaveFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
     return SaveNativeFunction(fname,toSave,eval);
 }
 
-//!
-//@Module DLMREAD Read ASCII-delimited File
-//@@Section IO
-//@@Usage
-//Loads a matrix from an ASCII-formatted text file with a delimiter
-//between the entries.  This function is similar to the @|load -ascii|
-//command, except that it can handle complex data, and it allows you
-//to specify the delimiter.  Also, you can read only a subset of the
-//data from the file.  The general syntax for the @|dlmread| function
-//is
-//@[
-//    y = dlmread(filename)
-//@]
-//where @|filename| is a string containing the name of the file to read.
-//In this form, FreeMat will guess at the type of the delimiter in the 
-//file.  The guess is made by examining the input for common delimiter
-//characters, which are @|,;:| or a whitespace (e.g., tab).  The text
-//in the file is preprocessed to replace these characters with whitespace
-//and the file is then read in using a whitespace for the delimiter.
-//
-//If you know the delimiter in the file, you can specify it using
-//this form of the function:
-//@[
-//    y = dlmread(filename, delimiter)
-//@]
-//where @|delimiter| is a string containing the delimiter.  If @|delimiter|
-//is the empty string, then the delimiter is guessed from the file.
-//
-//You can also read only a portion of the file by specifying a start row
-//and start column:
-//@[
-//    y = dlmread(filename, delimiter, startrow, startcol)
-//@]
-//where @|startrow| and @|startcol| are zero-based.  You can also specify
-//the data to read using a range argument:
-//@[
-//    y = dlmread(filename, delimiter, range)
-//@]
-//where @|range| is either a vector @|[startrow,startcol,stoprow,stopcol]|
-//or is specified in spreadsheet notation as @|B4..ZA5|.
-//
-//Note that complex numbers can be present in the file if they are encoded
-//without whitespaces inside the number, and use either @|i| or @|j| as 
-//the indicator.  Note also that when the delimiter is given, each incidence
-//of the delimiter counts as a separator.  Multiple separators generate
-//zeros in the matrix.
-//!
 static int ParseNumber(QString tx) {
   int lookahead = 0;
   int len = 0;
@@ -3281,7 +1306,7 @@ static void ParseComplexValue(QString tx, double &real, double &imag) {
   }
 }
 
-int DecodeSpreadsheetColumn(QString tx) {
+static int DecodeSpreadsheetColumn(QString tx) {
   tx.toUpper();
   QByteArray txb(tx.toLatin1());
   for (int i=0;i<txb.count();i++) 
@@ -3292,7 +1317,7 @@ int DecodeSpreadsheetColumn(QString tx) {
   return ret;
 }
 
-void DecodeSpreadsheetRange(QString tx, int &startrow, int &startcol,
+static void DecodeSpreadsheetRange(QString tx, int &startrow, int &startcol,
 			    int &stoprow, int &stopcol) {
   QString colstart;
   QString rowstart;
@@ -3322,17 +1347,67 @@ void DecodeSpreadsheetRange(QString tx, int &startrow, int &startcol,
   stopcol = DecodeSpreadsheetColumn(colstop);
 }
 
+//!
+//@Module DLMREAD Read ASCII-delimited File
+//@@Section IO
+//@@Usage
+//Loads a matrix from an ASCII-formatted text file with a delimiter
+//between the entries.  This function is similar to the @|load -ascii|
+//command, except that it can handle complex data, and it allows you
+//to specify the delimiter.  Also, you can read only a subset of the
+//data from the file.  The general syntax for the @|dlmread| function
+//is
+//@[
+//    y = dlmread(filename)
+//@]
+//where @|filename| is a string containing the name of the file to read.
+//In this form, FreeMat will guess at the type of the delimiter in the 
+//file.  The guess is made by examining the input for common delimiter
+//characters, which are @|,;:| or a whitespace (e.g., tab).  The text
+//in the file is preprocessed to replace these characters with whitespace
+//and the file is then read in using a whitespace for the delimiter.
+//
+//If you know the delimiter in the file, you can specify it using
+//this form of the function:
+//@[
+//    y = dlmread(filename, delimiter)
+//@]
+//where @|delimiter| is a string containing the delimiter.  If @|delimiter|
+//is the empty string, then the delimiter is guessed from the file.
+//
+//You can also read only a portion of the file by specifying a start row
+//and start column:
+//@[
+//    y = dlmread(filename, delimiter, startrow, startcol)
+//@]
+//where @|startrow| and @|startcol| are zero-based.  You can also specify
+//the data to read using a range argument:
+//@[
+//    y = dlmread(filename, delimiter, range)
+//@]
+//where @|range| is either a vector @|[startrow,startcol,stoprow,stopcol]|
+//or is specified in spreadsheet notation as @|B4..ZA5|.
+//
+//Note that complex numbers can be present in the file if they are encoded
+//without whitespaces inside the number, and use either @|i| or @|j| as 
+//the indicator.  Note also that when the delimiter is given, each incidence
+//of the delimiter counts as a separator.  Multiple separators generate
+//zeros in the matrix.
+//@@Signature
+//function dlmread DlmReadFunction
+//inputs filename delimiter startrow startcol
+//outputs y
+//!
 ArrayVector DlmReadFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0) 
     throw Exception("dlmread expects a filename");
-  string filename(ArrayToString(arg[0]));
-  QFile ifile(QString::fromStdString(filename));
+  QFile ifile(arg[0].asString());
   if (!ifile.open(QFile::ReadOnly))
-    throw Exception("filename " + filename + " could not be opened");
+    throw Exception("filename " + arg[0].asString() + " could not be opened");
   bool no_delimiter = true;
-  string delimiter;
+  QString delimiter;
   if (arg.size() >= 2) {
-    delimiter = ArrayToString(arg[1]);
+    delimiter = arg[1].asString();
     no_delimiter = (delimiter.size() == 0);
   }
   int col_count = 0;
@@ -3354,7 +1429,7 @@ ArrayVector DlmReadFunction(int nargout, const ArrayVector& arg) {
 	  elements = line.split(' ');
 	}
       } else {
-	elements = line.split(QString::fromStdString(delimiter)[0]);
+	elements = line.split(QString(delimiter)[0]);
       }
       QList<double> row_data_real;
       QList<double> row_data_imag;
@@ -3383,57 +1458,58 @@ ArrayVector DlmReadFunction(int nargout, const ArrayVector& arg) {
   int stoprow = row_count-1;
   int stopcol = col_count-1;
   if (arg.size() == 4) {
-    startrow = ArrayToInt32(arg[2]);
-    startcol = ArrayToInt32(arg[3]);
+    startrow = arg[2].asInteger();
+    startcol = arg[3].asInteger();
   } else if (arg.size() == 3) {
-    if (arg[2].isVector() && (arg[2].getLength() == 4)) {
-      Array range(arg[2]);
-      range.promoteType(FM_INT32);
-      const int32*dp = (const int32*) range.getDataPointer();
-      startrow = dp[0];
-      startcol = dp[1];
-      stoprow = dp[2];
-      stopcol = dp[3];
+    if (arg[2].isVector() && (arg[2].length() == 4)) {
+      Array range(arg[2].asDenseArray().toClass(Int32));
+      const BasicArray<int32> &dp(range.constReal<int32>());
+      startrow = dp[1];
+      startcol = dp[2];
+      stoprow = dp[3];
+      stopcol = dp[4];
     } else if (arg[2].isString()) 
-      DecodeSpreadsheetRange(QString::fromStdString(ArrayToString(arg[2])),
-			     startrow,startcol,stoprow,stopcol);
+      DecodeSpreadsheetRange(arg[2].asString(),startrow,startcol,stoprow,stopcol);
     else
       throw Exception("Unable to decode the range arguments to the dlmread function");
   }
+  Array A;
   startrow = qMax(0,qMin(row_count-1,startrow));
   startcol = qMax(0,qMin(col_count-1,startcol));
   stoprow = qMax(0,qMin(row_count-1,stoprow));
   stopcol = qMax(0,qMin(col_count-1,stopcol));
   int numrows = stoprow-startrow+1;
   int numcols = stopcol-startcol+1;
-  bool anyNonzeroImaginary = false;
-  for (int i=startrow;i<=stoprow;i++) 
-    for (int j=0;j<=qMin(data_real[i].size()-1,stopcol);j++) 
-      if (data_imag[i][j] != 0) anyNonzeroImaginary = true;
-  Array A;
-  if (!anyNonzeroImaginary) {
-    A = Array::doubleMatrixConstructor(numrows,numcols);
-    double *dp = (double*) A.getReadWriteDataPointer();
-    for (int i=startrow;i<=stoprow;i++)
-      for (int j=startcol;j<=stopcol;j++)
-	if (j <= (data_real[i].size()-1))
-	  dp[i-startrow+(j-startcol)*numrows] = data_real[i][j];
-  } else {
-    A = Array::dcomplexMatrixConstructor(numrows,numcols);
-    double *dp = (double*) A.getReadWriteDataPointer();
-    for (int i=startrow;i<=stoprow;i++)
-      for (int j=startcol;j<=stopcol;j++)
-	if (j <= (data_real[i].size()-1)) {
-	  dp[2*(i-startrow+(j-startcol)*numrows)] = data_real[i][j];
-	  dp[2*(i-startrow+(j-startcol)*numrows)+1] = data_imag[i][j];
-	}
+  if ((numrows > 0) && (numcols > 0) && (row_count > 0) && (col_count > 0)) {
+    bool anyNonzeroImaginary = false;
+    for (int i=startrow;i<=stoprow;i++) 
+      for (int j=0;j<=qMin(data_real[i].size()-1,stopcol);j++) 
+	if (data_imag[i][j] != 0) anyNonzeroImaginary = true;
+    if (!anyNonzeroImaginary) {
+      A = Array(Double,NTuple(numrows,numcols));
+      BasicArray<double> &dp(A.real<double>());
+      for (int i=startrow;i<=stoprow;i++)
+	for (int j=startcol;j<=stopcol;j++)
+	  if (j <= (data_real[i].size()-1))
+	    dp[i-startrow+(j-startcol)*numrows+1] = data_real[i][j];
+    } else {
+      A = Array(Double,NTuple(numrows,numcols));
+      BasicArray<double> &dp(A.real<double>());
+      BasicArray<double> &ip(A.imag<double>());
+      for (int i=startrow;i<=stoprow;i++)
+	for (int j=startcol;j<=stopcol;j++)
+	  if (j <= (data_real[i].size()-1)) {
+	    dp[i-startrow+(j-startcol)*numrows+1] = data_real[i][j];
+	    ip[i-startrow+(j-startcol)*numrows+1] = data_imag[i][j];
+	  }
+    }
   }
-  return ArrayVector() << A;
+  return ArrayVector(A);
 }
 
-ArrayVector LoadASCIIFunction(int nargout, string filename, Interpreter* eval) {
+static ArrayVector LoadASCIIFunction(int nargout, QString filename, Interpreter* eval) {
   // Hmmm...
-  QFile ifile(QString::fromStdString(filename));
+  QFile ifile(filename);
   if (!ifile.open(QFile::ReadOnly))
     throw Exception("filename " + filename + " could not be opened");
   QTextStream str(&ifile);
@@ -3461,27 +1537,29 @@ ArrayVector LoadASCIIFunction(int nargout, string filename, Interpreter* eval) {
   // Now construct the matrix
   Array A;
   if ((row_count > 0) && (col_count > 0)) {
-    A = Array::doubleMatrixConstructor(row_count,col_count);
-    double *dp = (double *) A.getDataPointer();
+    A = Array(Double,NTuple(row_count,col_count));
+    BasicArray<double> &dp(A.real<double>());
     for (int r=0;r<row_count;r++) 
       for (int c=0;c<col_count;c++) 
-	dp[r+c*row_count] = data.at(r*col_count+c);
+	dp[r+c*row_count+1] = data.at(r*col_count+c);
   }
   if (nargout == 1)
-    return ArrayVector() << A;
+    return ArrayVector(A);
   else {
-    QFileInfo fi(QString::fromStdString(filename));
-    eval->getContext()->insertVariable(fi.baseName().toStdString(),A);
+    QFileInfo fi(filename);
+    eval->getContext()->insertVariable(fi.baseName(),A);
   }
   return ArrayVector();
 }
 
-ArrayVector LoadNativeFunction(int nargout, string filename,
-			       StringVector names, bool regexpmode, Interpreter* eval) {
-  File ofile(filename,"rb");
+static ArrayVector LoadNativeFunction(int nargout, QString filename,
+				      StringVector names, bool regexpmode, Interpreter* eval) {
+  QFile ofile(filename);
+  if (!ofile.open(QIODevice::ReadOnly))
+    throw Exception("Unable to open " + filename + " to read data");
   Serialize input(&ofile);
   input.handshakeClient();
-  string arrayName = input.getString();
+  QString arrayName = input.getString();
   StringVector fieldnames;
   ArrayVector fieldvalues;
   while (arrayName != "__eof") {
@@ -3501,8 +1579,8 @@ ArrayVector LoadNativeFunction(int nargout, string filename,
 	eval->getContext()->addPersistentVariable(arrayName);
 	break;
       default:
-	throw Exception(std::string("unrecognized variable flag ") + flag + 
-			std::string(" on variable ") + arrayName);
+	throw Exception(QString("unrecognized variable flag ") + flag + 
+			QString(" on variable ") + arrayName);
       }
       eval->getContext()->insertVariable(arrayName,toRead);
     } else {
@@ -3514,8 +1592,7 @@ ArrayVector LoadNativeFunction(int nargout, string filename,
   if (nargout == 0)
     return ArrayVector();
   else
-    return ArrayVector() <<
-      Array::structConstructor(fieldnames,fieldvalues);
+    return ArrayVector(StructConstructor(fieldnames,fieldvalues));
 }
 
 //!
@@ -3602,6 +1679,10 @@ ArrayVector LoadNativeFunction(int nargout, string filename,
 //load loadsave.dat
 //who
 //@>
+//@@Signature
+//sfunction load LoadFunction
+//inputs varargin
+//outputs y
 //!
 ArrayVector LoadFunction(int nargout, const ArrayVector& arg, 
 			 Interpreter* eval) {
@@ -3614,11 +1695,11 @@ ArrayVector LoadFunction(int nargout, const ArrayVector& arg,
   bool regexpMode = false;
   for (int i=0;i<arg.size();i++) {
     if (arg[i].isString()) {
-      if (arg[i].getContentsAsStringUpper() == "-MAT")
+      if (arg[i].asString().toUpper() == "-MAT")
 	matMode = true;
-      else if (arg[i].getContentsAsStringUpper() == "-ASCII")
+      else if (arg[i].asString().toUpper() == "-ASCII")
 	asciiMode = true;
-      else if (arg[i].getContentsAsStringUpper() == "-REGEXP")
+      else if (arg[i].asString().toUpper() == "-REGEXP")
 	regexpMode = true;
       else
 	argCopy << arg[i];
@@ -3626,25 +1707,20 @@ ArrayVector LoadFunction(int nargout, const ArrayVector& arg,
       argCopy << arg[i];
   }
   if (argCopy.size() < 1)  throw Exception("load requries a filename argument");
-  string fname(ArrayToString(argCopy[0]));
+  QString fname(argCopy[0].asString());
   // If one of the filemode flags has not been specified, try to 
   // guess if it is an ASCII file or a MAT file
   if (!matMode && !asciiMode) {
-    int len = fname.size();
-    if ((len >= 4) && (fname[len-4] == '.') &&
-	((fname[len-3] == 'M') || (fname[len-3] == 'm')) &&
-	((fname[len-2] == 'A') || (fname[len-2] == 'a')) &&
-	((fname[len-1] == 'T') || (fname[len-1] == 't'))) {
+    if (fname.endsWith(".mat",Qt::CaseInsensitive))
       matMode = true;
-    } else  if ((len >= 4) && (fname[len-4] == '.') &&
-		((fname[len-3] == 'T') || (fname[len-3] == 't')) &&
-		((fname[len-2] == 'X') || (fname[len-2] == 'x')) &&
-		((fname[len-1] == 'T') || (fname[len-1] == 't'))) {
+    if (fname.endsWith(".txt",Qt::CaseInsensitive)) {
       asciiMode = true;
     } else {
       // Could be an ASCII file - try to open it native
       try {
-	File of(fname,"rb");
+	QFile of(fname);
+	if (!of.open(QIODevice::ReadOnly))
+	  throw Exception("nope");
 	Serialize input(&of);
 	input.handshakeClient();
       } catch(Exception& e) {
@@ -3656,7 +1732,7 @@ ArrayVector LoadFunction(int nargout, const ArrayVector& arg,
   for (int i=1;i<argCopy.size();i++) {
     if (!arg[i].isString())
       throw Exception("unexpected non-string argument to load command");
-    names << ArrayToString(argCopy[i]);
+    names << argCopy[i].asString();
   }
   // Read the data file using the appropriate handler
   try {
@@ -3667,106 +1743,44 @@ ArrayVector LoadFunction(int nargout, const ArrayVector& arg,
     else
       return LoadNativeFunction(nargout,fname,names,regexpMode,eval);
   } catch (Exception& e) {
-    throw Exception("unable to read data from file " + fname + " - it may be corrupt, or FreeMat may not understand the format.  See help load for more information.  The specific error was: " + e.getMessageCopy());
+    throw Exception("unable to read data from file " + fname + " - it may be corrupt, or FreeMat may not understand the format.  See help load for more information.  The specific error was: " + e.msg());
   }
   return ArrayVector();
 }
 
-//////Common routine used by sprintf,printf,fprintf.  They all
-//////take the same inputs, and output either to a string, the
-//////console or a file.  For output to a console or a file, 
-//////we want escape-translation on.  For output to a string, we
-//////want escape-translation off.  So this common routine prints
-//////the contents to a string, which is then processed by each 
-//////subroutine.
-////char* xprintfFunction(int nargout, const ArrayVector& arg) {
-////  Array format(arg[0]);
-////  string frmt = format.getContentsAsString();
-////
-////  char *buff = new char[ frmt.length() + 1 ];
-////  strcpy(buff, frmt.c_str());
-////
-////  // Search for the start of a format subspec
-////  char *dp = buff;
-////  char *np;
-////  char sv;
-////  // Buffer to hold each sprintf result
-////#define BUFSIZE 65536
-////  char nbuff[BUFSIZE];
-////  // Buffer to hold the output
-////  char *op;
-////  op = (char*) malloc(sizeof(char));
-////  *op = 0;
-////  int nextArg = 1;
-////  // Scan the string
-////  while (*dp) {
-////    np = dp;
-////    while ((*dp) && (*dp != '%')) dp++;
-////    // Print out the formatless segment
-////    sv = *dp;
-////    *dp = 0;
-////    snprintf(nbuff,BUFSIZE,np);
-////    op = (char*) realloc(op,strlen(op)+strlen(nbuff)+1);
-////    strcat(op,nbuff);
-////    *dp = sv;
-////    // Process the format spec
-////    if (*dp) {
-////      np = validateFormatSpec(dp+1);
-////      if (!np)
-////	throw Exception("erroneous format specification " + std::string(dp));
-////      else {
-////	if (*(np-1) == '%') {
-////	  snprintf(nbuff,BUFSIZE,"%%");
-////	  op = (char*) realloc(op,strlen(op)+strlen(nbuff)+1);
-////	  strcat(op,nbuff);
-////	  dp+=2;
-////	} else {
-////	  sv = *np;
-////	  *np = 0;
-////	  if (arg.size() <= nextArg)
-////	    throw Exception("not enough arguments to satisfy format specification");
-////	  Array nextVal(arg[nextArg++]);
-////	  if ((*(np-1) != 's') && (nextVal.isEmpty())) {
-////	    op = (char*) realloc(op,strlen(op)+strlen("[]")+1);
-////	    strcat(op,"[]");
-////	  } else {
-////	    switch (*(np-1)) {
-////	    case 'd':
-////	    case 'i':
-////	    case 'o':
-////	    case 'u':
-////	    case 'x':
-////	    case 'X':
-////	    case 'c':
-////	      nextVal.promoteType(FM_INT32);
-////	      snprintf(nbuff,BUFSIZE,dp,*((int32*)nextVal.getDataPointer()));
-////	      op = (char*) realloc(op,strlen(op)+strlen(nbuff)+1);
-////	      strcat(op,nbuff);
-////	      break;
-////	    case 'e':
-////	    case 'E':
-////	    case 'f':
-////	    case 'F':
-////	    case 'g':
-////	    case 'G':
-////	      nextVal.promoteType(FM_DOUBLE);
-////	      snprintf(nbuff,BUFSIZE,dp,*((double*)nextVal.getDataPointer()));
-////	      op = (char*) realloc(op,strlen(op)+strlen(nbuff)+1);
-////	      strcat(op,nbuff);
-////	      break;
-////	    case 's':
-////	      snprintf(nbuff,BUFSIZE,dp,nextVal.getContentsAsString().c_str());
-////	      op = (char*) realloc(op,strlen(op)+strlen(nbuff)+1);
-////	      strcat(op,nbuff);
-////	    }
-////	  }
-////	  *np = sv;
-////	  dp = np;
-////	}
-////      }
-////    }
-////  }
-////  delete[] buff;
-////  return op;
-////}
-////
+//!
+//@Module GETLINE Get a Line of Input from User
+//@@Section IO
+//@@Usage
+//Reads a line (as a string) from the user.  This function has
+//two syntaxes.  The first is 
+//@[
+//  a = getline(prompt)
+//@]
+//where @|prompt| is a prompt supplied to the user for the query.
+//The second syntax omits the @|prompt| argument:
+//@[
+//  a = getline
+//@]
+//Note that this function requires command line input, i.e., it 
+//will only operate correctly for programs or scripts written
+//to run inside the FreeMat GUI environment or from the X11 terminal.
+//If you build a stand-alone application and expect it to operate 
+//cross-platform, do not use this function (unless you include
+//the FreeMat console in the final application).
+//@@Signature
+//sfunction getline GetLineFunction
+//inputs prompt
+//outputs string
+//!
+ArrayVector GetLineFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
+  QString prompt;
+  if (arg.size() < 1)
+    prompt = "";
+  else {
+    if (!arg[0].isString())
+      throw Exception("getline requires a string prompt");
+    prompt = arg[0].asString();
+  }
+  return ArrayVector(Array(eval->getLine(prompt)));
+}

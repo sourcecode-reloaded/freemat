@@ -1,38 +1,9 @@
 #include "Token.hpp"
 #include "Serialize.hpp"
-#include <iostream>
 #include <errno.h>
 #include <limits.h>
 
-// These must appear as sequential token numbers
-string fm_reserved[22] = {
-  "break",
-  "case",
-  "catch",
-  "continue",
-  "dbstep",
-  "dbtrace",
-  "else",
-  "elseif",
-  "end",
-  "for",
-  "function",
-  "global",
-  "if",
-  "keyboard",
-  "otherwise",
-  "persistent",
-  "quit",
-  "retall",
-  "return",
-  "switch",
-  "try",
-  "while"
-};
-
-int fm_reserved_count = sizeof(fm_reserved)/sizeof(fm_reserved[0]);
-
-Token::Token(byte tok, unsigned pos, string text) :
+Token::Token(TokenType tok, unsigned pos, QString text) :
   m_tok(tok), m_pos(pos), m_text(text) {
 }
 
@@ -65,16 +36,15 @@ bool Token::isRightAssociative() const {
   return (m_tok == '^');
 }
 
-ostream& operator<<(ostream& o, const Token& b) {
+QTextStream& operator<<(QTextStream& o, const Token& b) {
   o << TokenToString(b) << " (" << (b.position() >> 16)
     << "," << (b.position() & 0xffff) << ")\r\n";
   return o;
 }
 
-string TokenToString(const Token& b) {
+QString TokenToString(const Token& b) {
   switch(b.value()) {
   case TOK_IDENT: return "(ident)"+b.text();
-  case TOK_NUMBER: return b.text();
   case TOK_SPACE: return "space";
   case TOK_STRING: return "(string)"+b.text();
   case TOK_KEYWORD: return "keyword";
@@ -128,11 +98,10 @@ string TokenToString(const Token& b) {
   case TOK_SAND: return "&&";
   case TOK_QSTATEMENT: return "qstmnt";
   case TOK_STATEMENT: return "stmnt";
-  case TOK_INTEGER: return "(int)" + b.text();
-  case TOK_FLOAT: return "(float)" + b.text();
-  case TOK_DOUBLE: return "(double)" + b.text();
-  case TOK_COMPLEX: return "(complex)" + b.text();
-  case TOK_DCOMPLEX: return "(dcomplex)" + b.text();
+  case TOK_REALF: return "(real single)" + b.text();
+  case TOK_IMAGF: return "(imag single)" + b.text();
+  case TOK_REAL: return "(real)" + b.text();
+  case TOK_IMAG: return "(imag)" + b.text();
   case TOK_FUNCTION_DEFS: return "functions:";
   case TOK_SCRIPT: return "script:";
   case TOK_DBTRACE: return "dbtrace";
@@ -140,17 +109,17 @@ string TokenToString(const Token& b) {
   case TOK_NEST_FUNC: return "nest func";
   case TOK_TYPE_DECL: return "type decl";
   }
-  return string(1,(char) b.value());
+  return QString(1,QChar(b.value()))+QString(" val = %1").arg(b.value());
 }
 
 void Token::freeze(Serialize *s) const {
-  s->putByte(m_tok);
+  s->putShort(m_tok);
   s->putInt(m_pos);
   s->putString(m_text);
 }
 
 Token::Token(Serialize *s) {
-  m_tok = s->getByte();
+  m_tok = s->getShort();
   m_pos = s->getInt();
   m_text = s->getString();
   fillArray();
@@ -161,31 +130,36 @@ void Token::fillArray() {
   switch(m_tok) {
   default:
     return;
-  case TOK_INTEGER:
-    long iv;
-    double fv;
-    iv = strtol(m_text.c_str(),NULL,10);
-    if ((errno == ERANGE) && ((iv == LONG_MAX) || (iv == LONG_MIN))) {
-      fv = strtod(m_text.c_str(),NULL);
-      retval = Array::doubleConstructor(fv);
-    } else {
-      retval = Array::int32Constructor((int32)iv);
+  case TOK_REAL:
+    {
+      QString mt(m_text);
+      if (mt.toUpper().endsWith("D")) mt.chop(1);
+      retval = Array(double(mt.toDouble()));
+      break;
     }
-    break;
-  case TOK_FLOAT:
-    retval = Array::floatConstructor(atof(m_text.c_str()));
-    break;
-  case TOK_DOUBLE:
-    retval = Array::doubleConstructor(atof(m_text.c_str()));
-    break;
-  case TOK_COMPLEX:
-    retval = Array::complexConstructor(0,atof(m_text.c_str()));
-    break;
-  case TOK_DCOMPLEX:
-    retval = Array::dcomplexConstructor(0,atof(m_text.c_str()));
-    break;
+  case TOK_IMAG:
+    {
+      QString mt(m_text);
+      if (mt.toUpper().endsWith("D")) mt.chop(1);
+      retval = Array(double(0),double(mt.toDouble()));
+      break;
+    }
+  case TOK_REALF:
+    {
+      QString mt(m_text);
+      if (mt.toUpper().endsWith("F")) mt.chop(1);
+      retval = Array(float(mt.toFloat()));
+      break;
+    }
+  case TOK_IMAGF:
+    {
+      QString mt(m_text);
+      if (mt.toUpper().endsWith("F")) mt.chop(1);
+      retval = Array(float(0),float(mt.toFloat()));
+      break;
+    }
   case TOK_STRING:
-    retval = Array::stringConstructor(m_text);
+    retval = Array(m_text);
     break;
   }
   m_array = retval;

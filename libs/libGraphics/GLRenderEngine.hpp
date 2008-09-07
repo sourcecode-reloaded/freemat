@@ -62,7 +62,7 @@ public:
 		       double x2, double y2, double z2,
 		       double x3, double y3, double z3);
   virtual void color(QVector<double>);
-  virtual void setLineStyle(std::string style);
+  virtual void setLineStyle(QString style);
   virtual void lineWidth(double n);
   virtual void line(double x1, double y1, double z1,
 		    double x2, double y2, double z2);
@@ -76,11 +76,11 @@ public:
   virtual void getModelviewMatrix(double amodel[16]);
   virtual void getProjectionMatrix(double aproj[16]);
   virtual void getViewport(int aviewp[4]);
-  virtual void putText(double x, double y, std::string txt, 
+  virtual void putText(double x, double y, QString txt, 
 		       QVector<double> color, 
 		       AlignmentFlag xflag, AlignmentFlag yflag,
 		       QFont fnt, double rotation);
-  virtual void measureText(std::string txt, QFont fnt, AlignmentFlag xflag, 
+  virtual void measureText(QString txt, QFont fnt, AlignmentFlag xflag, 
 			   AlignmentFlag yflag,int &width, int &height,
 			   int &xoffset, int &yoffset);
   virtual void depth(bool);

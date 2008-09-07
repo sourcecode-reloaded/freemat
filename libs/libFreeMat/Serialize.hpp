@@ -22,14 +22,15 @@
 
 #include "Stream.hpp"
 #include "Array.hpp"
+#include <QIODevice>
 
 // This is the cross-platform serialization object...
 
 class Serialize {
-  Stream *s;
+  QIODevice *s;
   bool endianSwap;
 public:
-  Serialize(Stream*);
+  Serialize(QIODevice*);
   ~Serialize();
   // Handshake between two serialize objects
   void handshakeServer();
@@ -46,7 +47,7 @@ public:
   void putFloats(const float* ptr, int count);
   void putDoubles(const double* ptr, int count);
   // Send a scalar object
-  void putString(string t);
+  void putString(QString t);
   void putByte(char t);
   void putShort(short t);
   void putInt(int t);
@@ -62,7 +63,7 @@ public:
   void getFloats(float* ptr, int count);
   void getDoubles(double* ptr, int count);
   // Get a scalar object
-  string  getString();
+  QString  getString();
   char   getByte();
   short  getShort();
   int    getInt();
@@ -71,14 +72,13 @@ public:
   bool   getBool();
   StringVector getStringVector();
   // Put an array
-  void putDataClass(Class cls, bool sparseflag, 
-		    bool isuserclass, StringVector className);
+  void putDataClass(DataClass cls, bool sparseflag, bool isuserclass, StringVector className, bool complexflag);
   void putArray(const Array& dat);
-  void putDimensions(const Dimensions& dim);
+  void putDimensions(const NTuple& dim);
   // Get an array
-  Class getDataClass(bool& sparseflag, StringVector& className);
+  DataClass getDataClass(bool& sparseflag, StringVector& className, bool& complexflag);
   void getArray(Array& dat);
-  Dimensions getDimensions();
+  NTuple getDimensions();
 };
 
 #endif

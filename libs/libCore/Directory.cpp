@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include "System.hpp"
 #include <QtCore>
+#include "Algorithms.hpp"
 
 //!
 //@Module CD Change Working Directory Function
@@ -67,13 +68,16 @@
 //cd(a)
 //pwd
 //@>
+//@@Signature
+//sfunction cd ChangeDirFunction
+//inputs path
+//outputs none
 //!
 ArrayVector ChangeDirFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   if (arg.size() != 1)
     throw Exception("cd function requires exactly one argument");
-  if (!QDir::setCurrent(TildeExpand(ArrayToString(arg[0]))))
-    throw Exception(std::string("Unable to change to specified directory:") + 
-		    ArrayToString(arg[0]));
+  if (!QDir::setCurrent(TildeExpand(arg[0].asString())))
+    throw Exception("Unable to change to specified directory:" + arg[0].asString());
   eval->rescanPath();
   return ArrayVector();
 }
@@ -94,7 +98,7 @@ static void TabledOutput(StringVector sysresult, Interpreter* eval) {
   int entryCount = 0;
   while (entryCount < (int)sysresult.size()) {
     char buffer[4096];
-    sprintf(buffer,"%s",sysresult[entryCount].c_str());
+    sprintf(buffer,"%s",qPrintable(sysresult[entryCount]));
     int wlen;
     wlen = strlen(buffer);
     for (int j=wlen;j<colwidth;j++)
@@ -143,12 +147,16 @@ static void TabledOutput(StringVector sysresult, Interpreter* eval) {
 //\end{itemize}
 //Note that @|'name'| can also contain wildcards (e.g., @|dir *.m| to get a listing of
 //all FreeMat scripts in the current directory.
+//@@Signature
+//sfunction dir DirFunction
+//inputs name
+//outputs array
 //!
 ArrayVector DirFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   // Check for the case that the given name 
   QString dirarg;
   if (arg.size() > 0)
-    dirarg = QString::fromStdString(ArrayToString(arg[0]));
+    dirarg = arg[0].asString();
   QDir pdir(QDir::current());
   QFileInfoList foo;
   if (pdir.cd(dirarg))
@@ -168,33 +176,31 @@ ArrayVector DirFunction(int nargout, const ArrayVector& arg, Interpreter* eval) 
   if (nargout == 0) {
     StringVector filelist;
     for (int i=0;i<foo.size();i++)
-      filelist.push_back(foo[i].fileName().toStdString());
+      filelist.push_back(foo[i].fileName());
     TabledOutput(filelist,eval);
   } else {
     // Output is a structure array
-    QStringList fileNames;
-    QStringList dates;
+    StringVector fileNames;
+    StringVector dates;
     ArrayVector bytes;
     ArrayVector isdirs;
     for (int i=0;i<foo.size();i++) {
       fileNames << foo[i].fileName();
       dates << foo[i].lastModified().toString();
-      bytes << Array::uint64Constructor(foo[i].size());
-      isdirs << Array::logicalConstructor(foo[i].isDir());
+      bytes << Array(double(foo[i].size()));
+      isdirs << Array(bool(foo[i].isDir()));
     }
-    return ArrayVector() << Array::structConstructor(StringVector() 
-						     << "name"
-						     << "date"
-						     << "bytes"
-						     << "isdir",
-						     ArrayVector() 
-						     << CellArrayFromQStringList(fileNames)
-						     << CellArrayFromQStringList(dates)
-						     << Array::cellConstructor(bytes)
-						     << Array::cellConstructor(isdirs));
+    return ArrayVector() << StructConstructor(StringVector() 
+					      << "name"
+					      << "date"
+					      << "bytes"
+					      << "isdir",
+					      ArrayVector() 
+					      << CellArrayFromStringVector(fileNames)
+					      << CellArrayFromStringVector(dates)
+					      << CellConstructor(bytes)
+					      << CellConstructor(isdirs));
   }
-  //  for (int i=0;i<foo.size();i++)
-  //    qDebug() << foo[i];
   return ArrayVector();
 }
 
@@ -234,16 +240,20 @@ ArrayVector DirFunction(int nargout, const ArrayVector& arg, Interpreter* eval) 
 //@<
 //ls 'm*.m'
 //@>
+//@@Signature
+//sfunction ls ListFilesFunction
+//inputs varargin
+//outputs none
 //!
 ArrayVector ListFilesFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   StringVector sysresult;
-  string buffer;
+  QString buffer;
   int i;
 
 #ifdef WIN32
   buffer = "dir ";
   for (i=0;i<arg.size();i++)
-    buffer += arg[i].getContentsAsString();
+    buffer += arg[i].asString();
   sysresult = DoSystemCallCaptured(buffer);
   for (i=0;i<sysresult.size();i++) {
     eval->outputMessage(sysresult[i]);
@@ -252,8 +262,8 @@ ArrayVector ListFilesFunction(int nargout, const ArrayVector& arg, Interpreter* 
 #else
   buffer = "ls ";
   for (i=0;i<arg.size();i++) {
-    QString fipath(TildeExpand(ArrayToString(arg[i])));
-    buffer += fipath.toStdString();
+    QString fipath(TildeExpand(arg[i].asString()));
+    buffer += fipath;
   }
   sysresult = DoSystemCallCaptured(buffer);
   TabledOutput(sysresult,eval);
@@ -272,10 +282,13 @@ ArrayVector ListFilesFunction(int nargout, const ArrayVector& arg, Interpreter* 
 //@]
 //This function can be used to build up paths (or see @|fullfile| for another
 //way to do this.
+//@@Signature
+//function dirsep DirSepFunction
+//inputs none
+//outputs y
 //!
 ArrayVector DirSepFunction(int nargout, const ArrayVector& arg) {
-  QString psep(QDir::separator());
-  return SingleArrayVector(Array::stringConstructor(psep.toStdString()));
+  return ArrayVector(Array(QString(QDir::separator())));
 }
 
 //!
@@ -292,63 +305,15 @@ ArrayVector DirSepFunction(int nargout, const ArrayVector& arg) {
 //@<
 //pwd
 //@>
+//@@Signature
+//function pwd PrintWorkingDirectoryFunction
+//inputs none
+//outputs y
 //!
 ArrayVector PrintWorkingDirectoryFunction(int nargout, const ArrayVector& arg) {
-  return ArrayVector() << Array::stringConstructor(QDir::currentPath().toStdString());
+  return ArrayVector(Array(QDir::currentPath()));
 }
 
-//!
-//@Module GETPATH Get Current Search Path
-//@@Section OS
-//@@Usage
-//Returns a @|string| containing the current FreeMat search path.  The general syntax for
-//its use is
-//@[
-//  y = getpath
-//@]
-//The delimiter between the paths depends on the system being used.  For Win32, the
-//delimiter is a semicolon.  For all other systems, the delimiter is a colon.
-//
-//@@Example
-//The @|getpath| function is straightforward.
-//@<
-//getpath
-//@>
-//!
-ArrayVector GetPathFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  ArrayVector retval;
-  retval.push_back(Array::stringConstructor(eval->getPath()));
-  return retval;
-}
-
-//!
-//@Module SETPATH Set Current Search Path
-//@@Section OS
-//@@Usage
-//Changes the current FreeMat search path.  The general syntax for
-//its use is
-//@[
-//  setpath(y)
-//@]
-//where @|y| is a @|string| containing a delimited list of directories
-//to be searched for M files and libraries.  
-//The delimiter between the paths depends on the system being used.  For Win32, the
-//delimiter is a semicolon.  For all other systems, the delimiter is a colon.
-//
-//@Example
-//The @|setpath| function is straightforward.
-//@<
-//getpath
-//setpath('/usr/local/FreeMat/MFiles:/localhome/basu/MFiles')
-//getpath
-//@>
-//!
-ArrayVector SetPathFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  if (arg.size() != 1)
-    throw Exception("setpath function requires exactly one string argument");
-  eval->setPath(arg[0].getContentsAsString());
-  return ArrayVector();
-}
 
 //!
 //@Module RMDIR Remove Directory
@@ -364,34 +329,38 @@ ArrayVector SetPathFunction(int nargout, const ArrayVector& arg, Interpreter* ev
 //@[
 //  rmdir('dirname','s')
 //@]
+//@@Signature
+//function rmdir RMDirFunction
+//inputs dirname flag
+//outputs none
 //!
-void RemoveDirectory(string dirname) {
-  QDir::current().rmdir(QString::fromStdString(dirname));
+inline void RemoveDirectory(QString dirname) {
+  QDir::current().rmdir(dirname);
 }
 
-void RemoveDirectoryRecursive(string dirname) {
-  QDir dir(QString::fromStdString(dirname));
+inline void RemoveDirectoryRecursive(QString dirname) {
+  QDir dir(dirname);
   dir.setFilter(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
   QFileInfoList list = dir.entryInfoList();
   for (int i=0;i<list.size();i++) {
     QFileInfo fileInfo = list.at(i);
     if (fileInfo.isDir())
-      RemoveDirectoryRecursive(fileInfo.absoluteFilePath().toStdString());
+      RemoveDirectoryRecursive(fileInfo.absoluteFilePath());
     else
       dir.remove(fileInfo.absoluteFilePath());
   }
-  QDir::current().rmdir(QString::fromStdString(dirname));
+  QDir::current().rmdir(dirname);
 }
 
 ArrayVector RMDirFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0)
     throw Exception("rmdir requires at least one argument (the directory to remove)");
   if (arg.size() == 1)
-    RemoveDirectory(ArrayToString(arg[0]));
+    RemoveDirectory(arg[0].asString());
   else if (arg.size() == 2) {
-    string arg1 = ArrayToString(arg[1]);
+    QString arg1 = arg[1].asString();
     if ((arg1 == "s") || (arg1 == "S"))
-      RemoveDirectoryRecursive(ArrayToString(arg[0]));
+      RemoveDirectoryRecursive(arg[0].asString());
     else
       throw Exception("rmdir second argment must be a 's' to do a recursive delete");
   }
@@ -399,13 +368,17 @@ ArrayVector RMDirFunction(int nargout, const ArrayVector& arg) {
 }
 
 // See mkdir.m for documentation
+//@@Signature
+//function mkdir_core MKDirCoreFunction
+//inputs dir
+//outputs flag
 ArrayVector MKDirCoreFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0)
     throw Exception("mkdir requires at least one argument (the directory to create)");
-  if (QDir::current().mkpath(QString::fromStdString(ArrayToString(arg[0]))))
-    return ArrayVector() << Array::logicalConstructor(1);
+  if (QDir::current().mkpath(arg[0].asString()))
+    return ArrayVector(Array(bool(true)));
   else
-    return ArrayVector() << Array::logicalConstructor(0);
+    return ArrayVector(Array(bool(false)));
 }
 
 //!
@@ -419,22 +392,26 @@ ArrayVector MKDirCoreFunction(int nargout, const ArrayVector& arg) {
 //@]
 //where @|filename| is a string containing the description of the file, and @|path|
 //is the @|path| to the file, 
+//@@Signature
+//function fileparts FilePartsFunction
+//inputs filename
+//outputs path name extension version
 //!
 ArrayVector FilePartsFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0)
     throw Exception("fileparts requires a filename");
-  QFileInfo fi(QString::fromStdString(ArrayToString(arg[0])));
-  Array path(Array::stringConstructor(fi.path().toStdString()));
-  Array name(Array::stringConstructor(fi.completeBaseName().toStdString()));
+  QFileInfo fi(arg[0].asString());
+  Array path(fi.path());
+  Array name(fi.completeBaseName());
   Array suffix;
   if (fi.suffix().size() > 0)
-    suffix = Array::stringConstructor("." + fi.suffix().toStdString());
+    suffix = Array("." + fi.suffix());
   else
-    suffix = Array::stringConstructor("");
+    suffix = Array(QString(""));
   return ArrayVector() << path
 		       << name
 		       << suffix
-		       << Array::stringConstructor("");
+		       << Array(QString(""));
 }
 
 //!
@@ -451,11 +428,15 @@ ArrayVector FilePartsFunction(int nargout, const ArrayVector& arg) {
 //@]
 //which removes the file described by @|filename| which must
 //be relative to the current path.
+//@@Signature
+//function delete DeleteFunction
+//inputs filename
+//outputs none
 //!
 ArrayVector DeleteFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0)
     throw Exception("delete requires at least one argument");
-  QString filename(QString::fromStdString(ArrayToString(arg[0])));
+  QString filename(arg[0].asString());
   QFileInfo fname(filename);
   if (fname.exists())
     fname.dir().remove(fname.fileName());
@@ -466,7 +447,6 @@ ArrayVector DeleteFunction(int nargout, const ArrayVector& arg) {
   }
   return ArrayVector();
 }
-
 
 //!
 //@Module COPYFILE Copy Files
@@ -506,6 +486,10 @@ ArrayVector DeleteFunction(int nargout, const ArrayVector& arg) {
 //@[
 //   copyfile arg1 arg2 f
 //@]
+//@@Signature
+//function copyfile CopyFileFunction
+//inputs pattern directory_out forceflag
+//outputs none
 //!
 static void CopyFile(QString source, QString dest, bool override) {
   QFileInfo destInfo(dest);
@@ -534,9 +518,9 @@ static void CopyDirectoryRecursive(QString srcdir, QString destdir, bool overrid
 ArrayVector CopyFileFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 2)
     throw Exception("copyfile requires two arguments - source and destination");
-  bool override = ((arg.size() == 3) && (arg[2].getContentsAsStringUpper() == "F"));
-  QString source(QString::fromStdString(ArrayToString(arg[0])));
-  QString dest(QString::fromStdString(ArrayToString(arg[1])));
+  bool override = ((arg.size() == 3) && (arg[2].asString().toUpper() == "F"));
+  QString source(arg[0].asString());
+  QString dest(arg[1].asString());
   QFileInfo source_info(source);
   QFileInfo dest_info(dest);
   // Case 1 - source is a file, and dest is a file

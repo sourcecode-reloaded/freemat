@@ -19,124 +19,37 @@
 
 #ifndef __SYMBOLTABLE_HPP__
 #define __SYMBOLTABLE_HPP__
+#include <QHash>
 #include "Types.hpp"
 
-typedef std::string key_type;
-
-#define SYMTAB 512
-
-template<class T>
+template <class T>
 class SymbolTable {
-  typedef T value_type;
-  class Entry {
-  public:
-    key_type key;
-    value_type val;
-    Entry* next;
-    Entry(key_type k, value_type v, Entry *n) :
-      key(k), val(v), next(n) { }
-  };
-    
-  Entry* hashTable[SYMTAB];
-    
-  size_t hashKey(const key_type& key) {
-    size_t res = 0;
-    const char *p = key.c_str();
-    while (*p) res = (res << 1) ^ (*p++);
-    return res;
-  }
-    
+  QHash<QString,T> map;
 public:
-  SymbolTable() {
-    memset(hashTable,0,sizeof(Entry*)*SYMTAB);
+  SymbolTable() { }
+  ~SymbolTable() { }
+  T* findSymbol(const QString& key) {
+    if (map.contains(key)) {
+      return &(map[key]);
+    } 
+    return 0;
   }
-
-  ~SymbolTable() {
-    for (int i=0;i<SYMTAB;i++) {
-      if (hashTable[i] != NULL) {
-	Entry *ptr, *nxt;
-	ptr = hashTable[i];
-	while (ptr) {
-	  nxt = ptr;
-	  ptr = ptr->next;
-	  delete nxt;
-	}
-      }
-    }
+  void deleteSymbol(const QString& key) {
+    map.remove(key);
   }
-
-  value_type* findSymbol(const key_type& key) {
-    size_t i = hashKey(key)%SYMTAB; // Hash
-    Entry* ptr;
-    ptr = hashTable[i];
-    while (ptr) {
-      if (ptr->key == key) 
-	return (&ptr->val);
-      ptr = ptr->next;
-    }
-    return NULL;
+  void insertSymbol(const QString& key, const T& val) {
+    map.insert(key,val);
   }
-
-  void deleteSymbol(const key_type& key) {
-    size_t i = hashKey(key)%SYMTAB; // Hash
-    Entry *ptr;
-    ptr = hashTable[i];
-    if (!ptr) return;
-    // Check for the first element in the table matching
-    // the key.
-    if (ptr->key == key) {
-      hashTable[i] = ptr->next;
-      delete ptr;
-      return;
+  StringVector getCompletions(const QString& prefix) {
+    StringVector retvec;
+    for (typename QHash<QString,T>::const_iterator i=map.constBegin();i != map.constEnd();++i) {
+      if ((i.key().size() > prefix.size()) &&
+	  (i.key().left(prefix.size()) == prefix))
+	retvec << i.key();
     }
-    // No - its not, set a next pointer
-    Entry *nxt;
-    nxt = ptr->next;
-    while (nxt != NULL) {
-      if (nxt->key == key) {
-	ptr->next = nxt->next;
-	delete nxt;
-	return;
-      }
-      nxt = nxt->next;
-      ptr = ptr->next;
-    }
-  }
-
-  void insertSymbol(const key_type& key, const value_type& val) {
-    size_t hash_value = hashKey(key)%SYMTAB; // Hash
-    Entry *ptr = hashTable[hash_value];
-    if (!ptr) {
-      hashTable[hash_value] = new Entry(key,val,NULL);
-      return;
-    }
-    while (ptr) {
-      if (ptr->key == key) {
-	ptr->val = val;
-	return;
-      }
-      ptr = ptr->next;
-    }
-    hashTable[hash_value] = new Entry(key,val,hashTable[hash_value]);
-  }
-    
-  StringVector getCompletions(const std::string& prefix) {
-    StringVector retlist;
-    // Search through the symbol table...
-    for (int i=0;i<SYMTAB;i++) {
-      if (hashTable[i] != NULL) {
-	Entry *ptr;
-	ptr = hashTable[i];
-	while (ptr != NULL) {
-	  if ((ptr->key.length() >= prefix.length()) &&
-	      (ptr->key.compare(0,prefix.length(),prefix) == 0))
-	    retlist.push_back(ptr->key);
-	  ptr = ptr->next;
-	}
-      }
-    }
-    return retlist;
+    return retvec;
   }
 };
+
 
 #endif

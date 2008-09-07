@@ -60,7 +60,7 @@ ArrayVector ZerosFunction(int, const ArrayVector& arg);
 ArrayVector DispFunction(int, const ArrayVector& arg, Interpreter* eval);
 ArrayVector LengthFunction(int, const ArrayVector& arg);
 ArrayVector QRDFunction(int, const ArrayVector& arg);
-ArrayVector EigFunction(int, const ArrayVector& arg, Interpreter* eval);
+ArrayVector EigFunction(int, const ArrayVector& arg);
 ArrayVector EigsFunction(int, const ArrayVector& arg);
 ArrayVector SVDFunction(int, const ArrayVector& arg);
 ArrayVector DiagFunction(int, const ArrayVector& arg);
@@ -114,7 +114,7 @@ ArrayVector VarFunction(int, const ArrayVector& arg);
 ArrayVector ProdFunction(int, const ArrayVector& arg);
 ArrayVector ReshapeFunction(int, const ArrayVector& arg);
 ArrayVector PrintfFunction(int, const ArrayVector& arg, Interpreter* eval);
-ArrayVector VerStringFunction(int, const ArrayVector& arg, Interpreter* eval);
+ArrayVector VerStringFunction(int, const ArrayVector& arg);
 ArrayVector VersionFunction(int, const ArrayVector& arg);
 ArrayVector SprintfFunction(int, const ArrayVector& arg);
 ArrayVector FprintfFunction(int, const ArrayVector& arg, Interpreter* eval);
@@ -173,7 +173,7 @@ ArrayVector Hex2DecFunction(int, const ArrayVector& arg);
 ArrayVector Dec2HexFunction(int, const ArrayVector& arg);
 ArrayVector BitShiftFunction(int, const ArrayVector& arg);
 ArrayVector Num2HexFunction(int, const ArrayVector& arg);
-ArrayVector FindFunction(int, const ArrayVector& arg, Interpreter* eval);
+ArrayVector FindFunction(int, const ArrayVector& arg);
 ArrayVector HelpFunction(int, const ArrayVector& arg, Interpreter* eval);
 ArrayVector HelpWinFunction(int, const ArrayVector& arg, Interpreter* eval);
 ArrayVector PathToolFunction(int, const ArrayVector& arg, Interpreter* eval);
@@ -228,7 +228,7 @@ ArrayVector CellFunction(int nargout, const ArrayVector& arg);
 ArrayVector StrRepStringFunction(int nargout, const ArrayVector& arg);
 ArrayVector PermuteFunction(int nargout, const ArrayVector& arg);
 ArrayVector Conv2Function(int nargout, const ArrayVector& arg);
-ArrayVector InvFunction(int nargout, const ArrayVector& arg, Interpreter* eval);
+ArrayVector InvFunction(int nargout, const ArrayVector& arg);
 ArrayVector RcondFunction(int nargout, const ArrayVector& arg);
 ArrayVector EndFunction(int nargout, const  ArrayVector& arg);
 ArrayVector XMLReadFunction(int nargout, const ArrayVector& arg);
@@ -245,12 +245,10 @@ ArrayVector FalseFunction(int nargout, const ArrayVector& arg);
 ArrayVector RegExpRepDriverFunction(int nargout, const ArrayVector& arg);
 ArrayVector RegExpFunction(int nargout, const ArrayVector& arg);
 ArrayVector RegExpIFunction(int nargout, const ArrayVector& arg);
-void Tokenize(const std::string& str, StringVector& tokens,
-	      const std::string& delimiters = " \n");
 bool inBundleMode();
-ArrayVector MatLoadFunction(int nargout, string filename, StringVector varnames, 
+ArrayVector MatLoadFunction(int nargout, QString filename, StringVector varnames, 
 			    bool regexp, Interpreter *eval);
-ArrayVector MatSaveFunction(string filename, StringVector varnames,
+ArrayVector MatSaveFunction(QString filename, StringVector varnames,
 			    Interpreter *eval);
 ArrayVector ImReadFunction(int nargout, const ArrayVector& arg, Interpreter* eval);
 ArrayVector ImWriteFunction(int nargout, const ArrayVector& arg, Interpreter* eval);
@@ -261,5 +259,4 @@ ArrayVector CtypeFreezeFunction(int nargout, const ArrayVector& arg, Interpreter
 ArrayVector CtypeThawFunction(int nargout, const ArrayVector& arg, Interpreter* eval);
 ArrayVector CenumFunction(int nargout, const ArrayVector& arg);
 ArrayVector BlasLibraryFunction(int nargout, const ArrayVector& arg, Interpreter *m_eval);
-void SwapBuffer(char* cp, int count, int elsize);
 #endif

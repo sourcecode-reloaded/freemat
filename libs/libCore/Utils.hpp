@@ -21,17 +21,28 @@
 #define __Utils_hpp__
 
 #include "Types.hpp"
+#include "Array.hpp"
+#include <QString>
+#include <QFile>
 
-float complex_abs(float, float);
-double complex_abs(double, double);
-void c_log(float real, float imag, float *re, float *im);
-void c_exp(float real, float imag, float *re, float *im);
-void c_sqrt(float real, float imag, float *re, float *im);
-void c_sqr(float real, float imag, float *re, float *im);
-void z_log(double real, double imag, double *re, double *im);
-void z_exp(double real, double imag, double *re, double *im);
-void z_sqrt(double real, double imag, double *re, double *im);
-void z_sqr(double real, double imag, double *re, double *im);
+bool contains(StringVector& list, QString s, bool regexpmode);
 
-bool contains(StringVector& list, std::string s, bool regexpmode);
+NTuple ArrayVectorAsDimensions(const ArrayVector &arg);
+
+double ArrayRange(const Array& dp);
+
+Array DoubleVectorFromQList(QList<uint32> &ref);
+
+void SwapBuffer(char* cp, int count, int elsize);
+
+QString ReadQStringFromFile(QFile *fp);
+
+void WriteQStringToFile(QFile *fp, QString txt);
+
+double QFileReadInteger(QFile *fp, int base);
+
+double QFileReadFloat(QFile *fp);
+
+QString QFileReadString(QFile *fp);
+
 #endif

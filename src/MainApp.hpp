@@ -63,7 +63,7 @@ public slots:
   void DbgWin();
   void PathTool();
   void Editor();
-  void ExecuteLine(string txt);
+  void ExecuteLine(QString txt);
   void UpdateTermWidth(int);
   void DoGraphicsCall(Interpreter*, FuncPtr f, ArrayVector m, int narg);
   void Quit();
