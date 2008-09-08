@@ -20,10 +20,10 @@
 #include "Core.hpp"
 #include "Exception.hpp"
 #include "Array.hpp"
-#include "Malloc.hpp"
-#include "Utils.hpp"
 #include <math.h>
-#include "IEEEFP.hpp"
+#include "Math.hpp"
+#include "Operators.hpp"
+#include "Complex.hpp"
 
 //!
 //@Module LOG1P Natural Logarithm of 1+P Function
@@ -35,93 +35,31 @@
 //  y = log1p(x)
 //@]
 //where @|x| is an @|n|-dimensional array of numerical type.
+//@@Signature
+//function log1p Log1PFunction
+//inputs x
+//output y
 //!
+
+struct OpLog1P {
+  static inline float func(float x) {return log1pf(x);}
+  static inline double func(double x) {return log1p(x);}
+  static inline void func(float xr, float xi, float &yr, float &yi) {
+    yr = log1pf(complex_abs<float>(xr,xi));
+    yi = atan2f(xi,xr);
+  }
+  static inline void func(double xr, double xi, double &yr, double &yi) {
+    yr = log1p(complex_abs<double>(xr,xi));
+    yi = atan2(xi,xr);
+  }
+};
+
 ArrayVector Log1PFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("Log1p function takes exactly one argument");
   Array input(arg[0]);
-  Array output;
-  Class argType(input.dataClass());
-  if (argType < FM_FLOAT) {
-    input.promoteType(FM_DOUBLE);
-    argType = FM_DOUBLE;
-  }
-  if (argType > FM_DCOMPLEX)
-    throw Exception("argument to log must be numeric");
-  switch (argType) {
-  default: throw Exception("illegal type of argument to log1p");
-  case FM_FLOAT: {
-    if (input.isPositive()) {
-      const float *dp=((const float *)input.getDataPointer());
-      int len(input.getLength());
-      float *op = (float *)Malloc(len*sizeof(float));
-      for (int i=0;i<len;i++)
-	op[i] = log1p(dp[i]);
-      output = Array(FM_FLOAT,input.dimensions(),op);
-    } else {
-      const float *dp=((const float *)input.getDataPointer());
-      int len(input.getLength());
-      float *op = (float *)Malloc(2*len*sizeof(float));
-      for (int i=0;i<len;i++)
-	if (dp[i] >= -1.0)
-	  op[2*i] = log1p(dp[i]); 
-	else {
-	  op[2*i] = log1p(fabs(dp[i]));
-	  op[2*i+1] = M_PI;
-	}
-      output = Array(FM_COMPLEX,input.dimensions(),op);
-    }
-    break;
-  }
-  case FM_DOUBLE: {
-    if (input.isPositive()) {
-      const double *dp=((const double *)input.getDataPointer());
-      int len(input.getLength());
-      double *op = (double *)Malloc(len*sizeof(double));
-      for (int i=0;i<len;i++)
-	op[i] = log1p(dp[i]);
-      output = Array(FM_DOUBLE,input.dimensions(),op);
-    } else {
-      const double *dp=((const double *)input.getDataPointer());
-      int len(input.getLength());
-      double *op = (double *)Malloc(2*len*sizeof(double));
-      for (int i=0;i<len;i++)
-	if (dp[i] >= -1.0)
-	  op[2*i] = log1p(dp[i]); 
-	else {
-	  op[2*i] = log1p(fabs(dp[i]));
-	  op[2*i+1] = M_PI;
-	}
-      output = Array(FM_DCOMPLEX,input.dimensions(),op);
-    }
-    break;
-  }
-  case FM_COMPLEX: {
-    const float *dp=((const float *)input.getDataPointer());
-    int len(input.getLength());
-    float *op = (float *)Malloc(len*sizeof(float)*2);
-    for (int i=0;i<2*len;i+=2) {
-      op[i] = log1p(complex_abs(dp[i],dp[i+1]));
-      op[i+1] = atan2(dp[i+1],dp[i]);
-    }
-    output = Array(FM_COMPLEX,input.dimensions(),op);
-    break;      
-  }
-  case FM_DCOMPLEX: {
-    const double *dp=((const double *)input.getDataPointer());
-    int len(input.getLength());
-    double *op = (double *)Malloc(len*sizeof(double)*2);
-    for (int i=0;i<2*len;i+=2) {
-      op[i] = log1p(complex_abs(dp[i],dp[i+1]));
-      op[i+1] = atan2(dp[i+1],dp[i]);
-    }
-    output = Array(FM_DCOMPLEX,input.dimensions(),op);
-    break;      
-  }
-  }
-  ArrayVector retval;
-  retval.push_back(output);
-  return retval;
+  if (!IsPositive(input)) input.forceComplex();
+  return ArrayVector(UnaryOp<OpLog1P>(input));
 }
 
 //!
@@ -162,93 +100,31 @@ ArrayVector Log1PFunction(int nargout, const ArrayVector& arg) {
 //mprint('logplot');
 //@>
 //@figure logplot
+//@@Signature
+//function log LogFunction
+//inputs x
+//outputs y
 //!
+
+struct OpLog {
+  static inline float func(float x) {return logf(x);}
+  static inline double func(double x) {return log(x);}
+  static inline void func(float xr, float xi, float &yr, float &yi) {
+    yr = logf(complex_abs<float>(xr,xi));
+    yi = atan2f(xi,xr);
+  }
+  static inline void func(double xr, double xi, double &yr, double &yi) {
+    yr = log(complex_abs<double>(xr,xi));
+    yi = atan2(xi,xr);
+  }
+};
+
 ArrayVector LogFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("Log function takes exactly one argument");
   Array input(arg[0]);
-  Array output;
-  Class argType(input.dataClass());
-  if (argType < FM_FLOAT) {
-    input.promoteType(FM_DOUBLE);
-    argType = FM_DOUBLE;
-  }
-  if (argType > FM_DCOMPLEX)
-    throw Exception("argument to log must be numeric");
-  switch (argType) {
-  default: throw Exception("illegal type of argument to log");
-  case FM_FLOAT: {
-    if (input.isPositive()) {
-      const float *dp=((const float *)input.getDataPointer());
-      int len(input.getLength());
-      float *op = (float *)Malloc(len*sizeof(float));
-      for (int i=0;i<len;i++)
-	op[i] = log(dp[i]);
-      output = Array(FM_FLOAT,input.dimensions(),op);
-    } else {
-      const float *dp=((const float *)input.getDataPointer());
-      int len(input.getLength());
-      float *op = (float *)Malloc(2*len*sizeof(float));
-      for (int i=0;i<len;i++)
-	if (dp[i] >= 0.0)
-	  op[2*i] = log(dp[i]); 
-	else {
-	  op[2*i] = log(fabs(dp[i]));
-	  op[2*i+1] = M_PI;
-	}
-      output = Array(FM_COMPLEX,input.dimensions(),op);
-    }
-    break;
-  }
-  case FM_DOUBLE: {
-    if (input.isPositive()) {
-      const double *dp=((const double *)input.getDataPointer());
-      int len(input.getLength());
-      double *op = (double *)Malloc(len*sizeof(double));
-      for (int i=0;i<len;i++)
-	op[i] = log(dp[i]);
-      output = Array(FM_DOUBLE,input.dimensions(),op);
-    } else {
-      const double *dp=((const double *)input.getDataPointer());
-      int len(input.getLength());
-      double *op = (double *)Malloc(2*len*sizeof(double));
-      for (int i=0;i<len;i++)
-	if (dp[i] >= 0.0)
-	  op[2*i] = log(dp[i]); 
-	else {
-	  op[2*i] = log(fabs(dp[i]));
-	  op[2*i+1] = M_PI;
-	}
-      output = Array(FM_DCOMPLEX,input.dimensions(),op);
-    }
-    break;
-  }
-  case FM_COMPLEX: {
-    const float *dp=((const float *)input.getDataPointer());
-    int len(input.getLength());
-    float *op = (float *)Malloc(len*sizeof(float)*2);
-    for (int i=0;i<2*len;i+=2) {
-      op[i] = log(complex_abs(dp[i],dp[i+1]));
-      op[i+1] = atan2(dp[i+1],dp[i]);
-    }
-    output = Array(FM_COMPLEX,input.dimensions(),op);
-    break;      
-  }
-  case FM_DCOMPLEX: {
-    const double *dp=((const double *)input.getDataPointer());
-    int len(input.getLength());
-    double *op = (double *)Malloc(len*sizeof(double)*2);
-    for (int i=0;i<2*len;i+=2) {
-      op[i] = log(complex_abs(dp[i],dp[i+1]));
-      op[i+1] = atan2(dp[i+1],dp[i]);
-    }
-    output = Array(FM_DCOMPLEX,input.dimensions(),op);
-    break;      
-  }
-  }
-  ArrayVector retval;
-  retval.push_back(output);
-  return retval;
+  if (!IsPositive(input)) input.forceComplex();
+  return ArrayVector(UnaryOp<OpLog>(input));
 }
 
 //!
@@ -299,67 +175,29 @@ ArrayVector LogFunction(int nargout, const ArrayVector& arg) {
 //mprint('expplot2');
 //@>
 //@figure expplot2
+//@@Signature
+//function exp ExpFunction
+//inputs x
+//outputs y
 //!
+
+struct OpExp {
+  static inline float func(float x) {return expf(x);}
+  static inline double func(double x) {return exp(x);}
+  static void func(float xr, float xi, float &yr, float &yi) {
+    yr = expf(xr)*cosf(xi);
+    yi = expf(xr)*sinf(xi);
+  }
+  static void func(double xr, double xi, double &yr, double &yi) {
+    yr = exp(xr)*cos(xi);
+    yi = exp(xr)*sin(xi);
+  }
+};
+
 ArrayVector ExpFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("Exp function takes exactly one argument");
-  Array input(arg[0]);
-  Array output;
-  Class argType(input.dataClass());
-  if (argType < FM_FLOAT) {
-    input.promoteType(FM_DOUBLE);
-    argType = FM_DOUBLE;
-  }
-  if (argType > FM_DCOMPLEX)
-    throw Exception("argument to exp must be numeric");
-  switch (argType) {
-  default: throw Exception("illegal type of argument to exp");
-  case FM_FLOAT: {
-    const float *dp=((const float *)input.getDataPointer());
-    int len(input.getLength());
-    float *op = (float *)Malloc(len*sizeof(float));
-    for (int i=0;i<len;i++)
-      op[i] = exp(dp[i]);
-    output = Array(FM_FLOAT,input.dimensions(),op);
-    break;
-  }
-  case FM_DOUBLE: {
-    const double *dp=((const double *)input.getDataPointer());
-    int len(input.getLength());
-    double *op = (double *)Malloc(len*sizeof(double));
-    for (int i=0;i<len;i++)
-      op[i] = exp(dp[i]);
-    output = Array(FM_DOUBLE,input.dimensions(),op);
-    break;
-  }
-  case FM_COMPLEX: {
-    const float *dp=((const float *)input.getDataPointer());
-    int len(input.getLength());
-    float *op = (float *)Malloc(len*sizeof(float)*2);
-    for (int i=0;i<2*len;i+=2) {
-      double t = exp(dp[i]);
-      op[i] = t*cos(dp[i+1]);
-      op[i+1] = t*sin(dp[i+1]);
-    }
-    output = Array(FM_COMPLEX,input.dimensions(),op);
-    break;      
-  }
-  case FM_DCOMPLEX: {
-    const double *dp=((const double *)input.getDataPointer());
-    int len(input.getLength());
-    double *op = (double *)Malloc(len*sizeof(double)*2);
-    for (int i=0;i<2*len;i+=2) {
-      double t = exp(dp[i]);
-      op[i] = t*cos(dp[i+1]);
-      op[i+1] = t*sin(dp[i+1]);
-    }
-    output = Array(FM_DCOMPLEX,input.dimensions(),op);
-    break;      
-  }
-  }
-  ArrayVector retval;
-  retval.push_back(output);
-  return retval;
+  return ArrayVector(UnaryOp<OpExp>(arg[0]));
 }
 
 
@@ -373,67 +211,29 @@ ArrayVector ExpFunction(int nargout, const ArrayVector& arg) {
 //   y = expm1(x)
 //@]
 //where @|x| is an @|n|-dimensional array of numerical type.
+//@@Signature
+//function expm1 ExpM1Function
+//inputs x
+//outputs y
 //!
+
+struct OpExpM1 {
+  static inline float func(float x) {return expm1f(x);}
+  static inline double func(double x) {return expm1(x);}
+  static void func(float xr, float xi, float &yr, float &yi) {
+    yr = expm1f(xr)*cosf(xi);
+    yi = expm1f(xr)*sinf(xi);
+  }
+  static void func(double xr, double xi, double &yr, double &yi) {
+    yr = expm1(xr)*cos(xi);
+    yi = expm1(xr)*sin(xi);
+  }
+};
+
 ArrayVector ExpM1Function(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("ExpM1 function takes exactly one argument");
-  Array input(arg[0]);
-  Array output;
-  Class argType(input.dataClass());
-  if (argType < FM_FLOAT) {
-    input.promoteType(FM_DOUBLE);
-    argType = FM_DOUBLE;
-  }
-  if (argType > FM_DCOMPLEX)
-    throw Exception("argument to expm1 must be numeric");
-  switch (argType) {
-  default: throw Exception("illegal type of argument to expm1");
-  case FM_FLOAT: {
-    const float *dp=((const float *)input.getDataPointer());
-    int len(input.getLength());
-    float *op = (float *)Malloc(len*sizeof(float));
-    for (int i=0;i<len;i++)
-      op[i] = expm1(dp[i]);
-    output = Array(FM_FLOAT,input.dimensions(),op);
-    break;
-  }
-  case FM_DOUBLE: {
-    const double *dp=((const double *)input.getDataPointer());
-    int len(input.getLength());
-    double *op = (double *)Malloc(len*sizeof(double));
-    for (int i=0;i<len;i++)
-      op[i] = expm1(dp[i]);
-    output = Array(FM_DOUBLE,input.dimensions(),op);
-    break;
-  }
-  case FM_COMPLEX: {
-    const float *dp=((const float *)input.getDataPointer());
-    int len(input.getLength());
-    float *op = (float *)Malloc(len*sizeof(float)*2);
-    for (int i=0;i<2*len;i+=2) {
-      double t = expm1(dp[i]);
-      op[i] = t*cos(dp[i+1]);
-      op[i+1] = t*sin(dp[i+1]);
-    }
-    output = Array(FM_COMPLEX,input.dimensions(),op);
-    break;      
-  }
-  case FM_DCOMPLEX: {
-    const double *dp=((const double *)input.getDataPointer());
-    int len(input.getLength());
-    double *op = (double *)Malloc(len*sizeof(double)*2);
-    for (int i=0;i<2*len;i+=2) {
-      double t = expm1(dp[i]);
-      op[i] = t*cos(dp[i+1]);
-      op[i+1] = t*sin(dp[i+1]);
-    }
-    output = Array(FM_DCOMPLEX,input.dimensions(),op);
-    break;      
-  }
-  }
-  ArrayVector retval;
-  retval.push_back(output);
-  return retval;
+  return ArrayVector(UnaryOp<OpExpM1>(arg[0]));
 }
 
 

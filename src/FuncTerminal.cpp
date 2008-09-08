@@ -70,12 +70,12 @@ void FuncTerminal::MoveBOL() {
 void FuncTerminal::ClearDisplay() {
 }
 
-void FuncTerminal::OutputRawString(string txt) {
-  printf("%s",txt.c_str());
+void FuncTerminal::OutputRawString(QString txt) {
+  printf("%s",qPrintable(txt));
   fflush(stdout);
 }
   
-char* FuncTerminal::getLine(string prompt) {
+char* FuncTerminal::getLine(QString prompt) {
   if (!line_sent) {
     line_sent = true;
     return strdup(m_buffer);

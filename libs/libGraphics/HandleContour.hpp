@@ -39,7 +39,7 @@ class HandleContour : public HandleObject {
   void SelectColor(RenderEngine& gc, double zval);
   lineset ContourCDriver(Array m, double val, Array x, Array y);
   void RebuildContourMatrix();
-  Array GetCoordinateMatrix(std::string name, bool isXcoord);
+  Array GetCoordinateMatrix(QString name, bool isXcoord);
 public:
   HandleContour();
   virtual ~HandleContour();

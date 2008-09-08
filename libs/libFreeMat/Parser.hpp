@@ -1,20 +1,18 @@
 #ifndef __Parser_hpp__
 #define __Parser_hpp__
 
-#include <string>
+#include <QString>
 #include "Scanner.hpp"
 #include "Tree.hpp"
-
-using namespace std;
 
 class Parser {
   Scanner &m_lex;
   unsigned lastpos;
-  string lasterr;
-  void serror(string);
-  bool match(byte t);
+  QString lasterr;
+  void serror(QString);
+  bool match(TokenType t);
   void consume();
-  const Token& expect(byte t);
+  const Token& expect(TokenType t);
   const Token& next();
   bool matchNumber();
   void flushSeperators();
@@ -37,7 +35,7 @@ private:
   Tree* assignmentStatement();
   Tree* variableDereference(bool blankRefOK = true);
   Tree* multiFunctionCall();
-  Tree* matDef(byte basetok, byte closebracket);
+  Tree* matDef(TokenType basetok, TokenType closebracket);
   Tree* matrixDefinition();
   Tree* rowVectorDefinition();
   Tree* specialFunctionCall();
@@ -50,14 +48,14 @@ public:
   Parser(Scanner& lex);
   CodeBlock process();
   CodeBlock processStatementList();
-  string lastErr() {return lasterr;}
+  QString lastErr() {return lasterr;}
   unsigned lastPos() {return lastpos;}
   void dump(); 
 
-  friend CodeBlock ParseExpressionString(string);
+  friend CodeBlock ParseExpressionString(QString);
 };
 
-CodeBlock ParseString(string arg);
-CodeBlock ParseExpressionString(string arg);
+CodeBlock ParseString(QString arg);
+CodeBlock ParseExpressionString(QString arg);
 
 #endif

@@ -304,8 +304,7 @@ ArrayVector EpsFunction(int nargout, const ArrayVector& arg) {
 //outputs y
 //!
 ArrayVector FepsFunction(int nargout, const ArrayVector& arg) {
-  ArrayVector retval;
-  return retval << Array::floatConstructor(nextafterf(1.,2.)-(float)1.);
+  return ArrayVector(Array(float(nextafterf(1.0,2.0)-1.0f)));
 }
 
 //!

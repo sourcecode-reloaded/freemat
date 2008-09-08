@@ -27,19 +27,18 @@
 #define PATHSEP ":"
 #endif
 
-PathSearcher::PathSearcher(std::string mpath) {
-  path = QString::fromStdString(mpath);
+PathSearcher::PathSearcher(QString mpath) {
+  path = mpath;
   pathList = path.split(PATHSEP,QString::SkipEmptyParts);
 }
 
-std::string PathSearcher::ResolvePath(std::string fname) {
-  QString qfname(QString::fromStdString(fname));
-  if (QDir::current().exists(qfname))
+QString PathSearcher::ResolvePath(QString fname) {
+  if (QDir::current().exists(fname))
     return fname;
   for (int i=0;i<pathList.size();i++) {
     QDir pdir(pathList[i]);
-    if (pdir.exists(qfname))
-      return pdir.absoluteFilePath(qfname).toStdString();
+    if (pdir.exists(fname))
+      return pdir.absoluteFilePath(fname);
   }
   throw Exception("Unable to find file " + fname + " on the current path!");
 }

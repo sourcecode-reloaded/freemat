@@ -279,7 +279,14 @@ void MatIO::putDataElement(const Array &x) {
   uint32 ByteCount(uint32(x.length()*ElementSize(fmClass)));
   putUint32((uint32)DataType);
   putUint32(ByteCount);
-  WriteData(x.getConstVoidPointer(),ByteCount);
+  if (x.isString()) {
+    const BasicArray<QChar> &xdat(x.constReal<QChar>());
+    for (index_t i=1;i<=xdat.length();i++) {
+      unsigned short code = xdat.get(i).unicode();
+      WriteData(&code,2);
+    }
+  } else
+    WriteData(x.getConstVoidPointer(),ByteCount);
   Align64Bit();
 }
 
@@ -532,7 +539,7 @@ void MatIO::putArray(const Array &x, QString name, bool isGlobal) {
 void MatIO::putArraySpecific(const Array &x, Array aFlags, 
 			     QString name, mxArrayTypes arrayType) {
   putDataElement(aFlags);
-  putDataElement(ConvertNTupleToArray(x.dimensions()));
+  putDataElement(ConvertNTupleToArray(x.dimensions()).toClass(Int32));
   putDataElement(Array(name));
   if (isNormalClass(arrayType))
     putNumericArray(x);
@@ -557,12 +564,12 @@ void MatIO::putNumericArray(const Array &x) {
 }
 
 Array MatIO::getArray(bool &atEof, QString &name, bool &match, bool &isGlobal) {
-  uint32 tag1 = getUint32();
-  atEof = false;
   if (m_fp->atEnd()) {
     atEof = true;
     return Array();
   }
+  uint32 tag1 = getUint32();
+  atEof = false;
   uint32 DataType, ByteCount;
   // Is the upper word of tag1 zero?
   if (UpperWord(tag1) == 0) {
@@ -599,7 +606,7 @@ Array MatIO::getArray(bool &atEof, QString &name, bool &match, bool &isGlobal) {
   if (dims.dataClass() != Int32)
     throw Exception("Corrupted MAT file - dimensions array");
   NTuple dm(ConvertArrayToNTuple(dims));
-  Array namearray(getDataElement());
+  Array namearray(getDataElement().toClass(StringArray));
   QString tname = namearray.asString();
   match = true;
   name = tname;

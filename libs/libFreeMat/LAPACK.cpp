@@ -36,6 +36,16 @@ float getFloatEPS() {
   return slamch_(&CMACH);
 }
 
+template <>
+float lamch() {
+  return getFloatEPS();
+}
+
+template <>
+double lamch() {
+  return getEPS();
+}
+
 // Utility function used to handle stride changes between columns
 void changeStrideDouble(double*dst, int dstStride, double*src, int srcStride, int rowCount, int colCount){
   int i;

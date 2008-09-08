@@ -94,8 +94,8 @@ HPHandles::HPHandles() {
 }
   
 Array HPHandles::Get() {
-  Array ret(Array::uint32VectorConstructor(data.size()));
-  unsigned *dp = (unsigned*) ret.getReadWriteDataPointer();
+  Array ret(UInt32,NTuple(1,data.size()));
+  uint32 *dp = ret.real<uint32>().data();
   for (int i=0;i<data.size();i++)
     dp[i] = data[i];
   return ret;
@@ -107,33 +107,31 @@ void HPHandles::Set(Array arg) {
     HandleProperty::Set(arg);
     return;
   }
-  if (!arg.isReal())
-    throw Exception("expecting handle for property");
-  arg.promoteType(FM_UINT32);
-  const unsigned *dp = (const unsigned*) arg.getDataPointer();
+  arg = arg.asDenseArray().toClass(UInt32);
+  const uint32 *dp = arg.constReal<uint32>().constData();
   // make sure they are all valid handles
-  for (int i=0;i<arg.getLength();i++) 
+  for (int i=0;i<int(arg.length());i++) 
     ValidateHandle(dp[i]);
   data.clear();
-  for (int i=0;i<arg.getLength();i++) 
+  for (int i=0;i<int(arg.length());i++) 
     data.push_back(dp[i]);
   HandleProperty::Set(arg); 
 }
 
 Array HPString::Get() {
-  return Array::stringConstructor(data);
+  return Array(data);
 }
 
 void HPString::Set(Array arg) {
   HandleProperty::Set(arg);
   if (!arg.isString())
     throw Exception("Expecting a string for property ");
-  data = ArrayToString(arg);
+  data = arg.asString();
 }
   
 Array HPVector::Get() {
-  Array ret(Array::doubleVectorConstructor(data.size()));    
-  double *dp = (double*) ret.getReadWriteDataPointer();
+  Array ret(Double,NTuple(1,data.size()));
+  double *dp = ret.real<double>().data();
   for (int i=0;i<data.size();i++)
     dp[i] = data[i];
   return ret;
@@ -141,19 +139,19 @@ Array HPVector::Get() {
   
 void HPVector::Set(Array num) {
   HandleProperty::Set(num);
-  num.promoteType(FM_DOUBLE);
-  const double *dp = (const double*) num.getDataPointer();
+  num = num.asDenseArray().toClass(Double);
+  const double *dp = num.constReal<double>().constData();
   data.clear();
-  for (int i=0;i<num.getLength();i++)
+  for (int i=0;i<int(num.length());i++)
     data.push_back(dp[i]);
 }
   
 void HPFixedVector::Set(Array num) {
   HandleProperty::Set(num);
-  num.promoteType(FM_DOUBLE);
-  const double *dp = (const double*) num.getDataPointer();
+  num = num.asDenseArray().toClass(Double);
+  const double *dp = num.constReal<double>().constData();
   data.clear();
-  for (int i=0;i<qMin(m_len,(int)num.getLength());i++)
+  for (int i=0;i<qMin(m_len,int(num.length()));i++)
     data.push_back(dp[i]);
 }
 
@@ -167,11 +165,11 @@ double& HPVector::operator[](int ndx) {
 
 void HPColorVector::Set(Array arg) {
   HandleProperty::Set(arg);
-  arg.promoteType(FM_DOUBLE);
-  if ((!arg.is2D()) || (arg.getDimensionLength(1) != 3))
+  arg = arg.asDenseArray().toClass(Double);
+  if ((!arg.is2D()) || (arg.cols() != 3))
     throw Exception("Expect an m x 3 matrix for color orders");
-  const double *dp = (const double *) arg.getDataPointer();
-  int n = arg.getLength();
+  const double *dp = arg.constReal<double>().constData();
+  int n = int(arg.length());
   for (int i=0;i<n;i++) 
     if ((dp[i] < 0) || (dp[i] > 1.0))
       throw Exception("Color vector must be between 0 and 1");
@@ -185,11 +183,12 @@ void HPColorVector::Set(Array arg) {
 Array HPColorVector::Get() {
   int count = data.size();
   int rows = count/3;
-  double *rp = (double*) Array::allocateArray(FM_DOUBLE,count);
+  Array ret(Double,NTuple(rows,3));
+  double *rp = ret.real<double>().data();
   for (int i=0;i<rows;i++)
     for (int j=0;j<3;j++)
       rp[i+j*rows] = data[3*i+j];
-  return Array::Array(FM_DOUBLE,Dimensions(rows,3),rp);
+  return ret;
 }
 
 //!
@@ -219,7 +218,7 @@ Array HPColorVector::Get() {
 //!
 bool ParseColorSpec(Array arg, QVector<double> &data) {
   if (arg.isString()) {
-    string cp = arg.getContentsAsString();
+    QString cp = arg.asString();
     if (cp=="none") {
       data.clear(); data.push_back(-1); 
       data.push_back(-1); data.push_back(-1);
@@ -250,10 +249,10 @@ bool ParseColorSpec(Array arg, QVector<double> &data) {
     } else
       return false;
   } else {
-    if (arg.getLength() != 3)
+    if (arg.length() != 3)
       return false;
-    arg.promoteType(FM_DOUBLE);
-    const double *dp = (const double*) arg.getDataPointer();
+    arg = arg.asDenseArray().toClass(Double);
+    const double *dp = arg.constReal<double>().constData();
     if (((dp[0] < 0) || (dp[0] > 1)) ||
 	((dp[1] < 0) || (dp[1] > 1)) ||
 	((dp[2] < 0) || (dp[2] > 1)))
@@ -274,30 +273,30 @@ void HPColor::Set(Array arg) {
   
 Array HPColor::Get() {
   if (data[0] == -1)
-    return Array::stringConstructor("none");
+    return Array(QString("none"));
   else
     return HPVector::Get();
 }
   
 Array HPStringSet::Get() {
   if (data.size() == 0)
-    return Array::stringConstructor("");
-  std::string retval;
+    return Array(QString(""));
+  QString retval;
   for (int i=0;i<data.size()-1;i++) {
     retval.append(data[i]);
     retval.append("|");
   }
   retval.append(data.back());
-  return Array::stringConstructor(retval);
+  return Array(retval);
 }
 
 void HPStringSet::Set(Array arg) {
   HandleProperty::Set(arg);
   if (!arg.isString()) 
     throw Exception("expecting a '|'-delimited list of strings for property argument");
-  std::string args(ArrayToString(arg));
+  QString args(arg.asString());
   data.clear();
-  Tokenize(args,data,"|");
+  data = args.split("|");
 }
 
 double HPConstrainedStringScalar::Scalar() {
@@ -313,7 +312,7 @@ void HPConstrainedStringScalar::Set(Array arg) {
   if (arg.isString())
     HPConstrainedString::Set(arg);
   else
-    scalar = ArrayToDouble(arg);
+    scalar = arg.asDouble();
 }
 
 QVector<double> HPConstrainedStringColor::ColorSpec() {
@@ -346,8 +345,8 @@ void HPConstrainedStringColor::Set(Array arg) {
 Array HPConstrainedStringColor::Get() {
   if (!Is("colorspec"))
     return HPConstrainedString::Get();
-  Array ret(Array::doubleVectorConstructor(3));
-  double *dp = (double*) ret.getReadWriteDataPointer();
+  Array ret(Double,NTuple(1,3));
+  double *dp = ret.real<double>().data();
   dp[0] = colorspec[0];
   dp[1] = colorspec[1];
   dp[2] = colorspec[2];
@@ -357,15 +356,15 @@ Array HPConstrainedStringColor::Get() {
 Array HPConstrainedStringScalar::Get() {
   if (!Is("scalar"))
     return HPConstrainedString::Get();
-  return Array::doubleConstructor(scalar);
+  return Array(double(scalar));
 }
 
 void HPConstrainedString::Set(Array arg) {
   HandleProperty::Set(arg);
   if (!arg.isString())
     throw Exception("expecting a string for property");
-  std::string tst(ArrayToString(arg));
-  if (find(m_dictionary.begin(),m_dictionary.end(),tst) == m_dictionary.end())
+  QString tst(arg.asString());
+  if (!m_dictionary.contains(tst))
     throw Exception("illegal selection for property");
   HPString::Set(arg);
 }
@@ -375,7 +374,7 @@ void HPConstrainedStringSet::Set(Array arg) {
   HPStringSet::Set(arg);
   // Validate the result
   for (int i=0;i<data.size();i++)
-    if (find(m_dictionary.begin(),m_dictionary.end(),data[i]) == m_dictionary.end())
+    if (!m_dictionary.contains(data[i]))
       throw Exception("illegal selection for property");
 }
 

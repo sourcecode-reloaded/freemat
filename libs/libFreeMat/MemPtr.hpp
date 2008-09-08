@@ -23,10 +23,11 @@
 template <class T> class MemBlock {
   T* ptr;
 public:
-  MemBlock(int count) {ptr = new T[count]; memset(ptr,0,sizeof(T)*count);}
+  MemBlock(size_t count) {ptr = new T[count]; memset(ptr,0,sizeof(T)*count);}
   ~MemBlock() {delete [] ptr;}
   T* Pointer() {return ptr;}
   T* operator&() {return ptr;}
+  T operator[](size_t n) {return ptr[n];}
 };
 
 #endif

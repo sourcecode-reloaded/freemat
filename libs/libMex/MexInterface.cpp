@@ -21,265 +21,115 @@
 #include "mex.h"
 #include "MexInterface.hpp"
 
-template <class T, class S>
-void ArrayComplexToMexComplex(T*src, S*dst_real, S*dst_imag, int count) {
-  for (int i=0;i<count;i++) {
-    dst_real[i] = (S) src[2*i];
-    dst_imag[i] = (S) src[2*i+1];
-  }
+static NTuple GetDimensions(const mxArray *dp) {
+  NTuple dim;
+  for (int i=0;i<dp->number_of_dims;i++)
+    dim[i] = dp->dims[i];
+  return dim;
 }
 
-template <class T, class S>
-void MexComplexToArrayComplex(T*src_real, T*src_imag, S*dst, int count) {
-  for (int i=0;i<count;i++) {
-    dst[2*i] = (S) src_real[i];
-    dst[2*i+1] = (S) src_imag[i];
-  }
+static int* GetDimensions(const Array& dp, int &numdims) {
+  numdims = dp.dimensions().lastNotOne();
+  int *dim_vec = (int*) malloc(sizeof(int)*numdims);
+  for (int i=0;i<numdims;i++)
+    dim_vec[i] = int(dp.dimensions()[i]);
+  return dim_vec;
 }
 
-template <class T, class S>
-void ArrayRealToMexReal(T*src, S*dst, int count) {
-  for (int i=0;i<count;i++)
-    dst[i] = (S) src[i];
+template <typename T>
+static BasicArray<T> BasicArrayFromMexArray(const mxArray *dp, const void *qp) {
+  BasicArray<T> rp(GetDimensions(dp));
+  memcpy(rp.data(),qp,size_t(sizeof(T)*rp.length()));
 }
 
-template <class T, class S>
-void MexRealToArrayReal(T*src, S*dst, int count) {
-  for (int i=0;i<count;i++)
-    dst[i] = (S) src[i];
+template <typename T>
+static Array TNumericArrayFromMexArray(const mxArray *dp) {
+  if (dp->issparse) 
+    throw Exception("mex interface does not support sparse matrices");
+  if (dp->iscomplex)
+    return Array(BasicArrayFromMexArray<T>(dp,dp->realdata),
+		 BasicArrayFromMexArray<T>(dp,dp->imagdata));
+  else
+    return Array(BasicArrayFromMexArray<T>(dp,dp->realdata));
 }
 
-Array ArrayFromMexArrayReal(mxArray *array_ptr) {
-  Class cls;
-  Dimensions dim;
-  void *dp;
-  for (int i=0;i<array_ptr->number_of_dims;i++)
-    dim.set(i,array_ptr->dims[i]);
-  int count = mxGetNumberOfElements(array_ptr);
-  switch (array_ptr->classID) {
+static Array NumericArrayFromMexArray(const mxArray *dp) {
+  switch (dp->classID) {
   default:
     throw Exception("Unhandled type for mex array conversion");
-  case mxUINT32_CLASS:
-    cls = FM_UINT32;
-    dp = Array::allocateArray(cls,count);
-    MexRealToArrayReal<uint32,uint32>((uint32*)array_ptr->realdata,
-				      (uint32*)dp,count);
-    break;
-  case mxINT32_CLASS:
-    cls = FM_INT32;
-    dp = Array::allocateArray(cls,count);
-    MexRealToArrayReal<int32,int32>((int32*)array_ptr->realdata,
-				    (int32*)dp,count);
-    break;
-  case mxUINT16_CLASS:
-    cls = FM_UINT16;
-    dp = Array::allocateArray(cls,count);
-    MexRealToArrayReal<uint16,uint16>((uint16*)array_ptr->realdata,
-				      (uint16*)dp,count);
-    break;
-  case mxINT16_CLASS:
-    cls = FM_INT16;
-    dp = Array::allocateArray(cls,count);
-    MexRealToArrayReal<int16,int16>((int16*)array_ptr->realdata,
-				    (int16*)dp,count);
-    break;
-  case mxUINT8_CLASS:
-    cls = FM_UINT8;
-    dp = Array::allocateArray(cls,count);
-    MexRealToArrayReal<uint8,uint8>((uint8*)array_ptr->realdata,
-				    (uint8*)dp,count);
-    break;
-  case mxINT8_CLASS:
-    cls = FM_INT8;
-    dp = Array::allocateArray(cls,count);
-    MexRealToArrayReal<int8,int8>((int8*)array_ptr->realdata,
-				  (int8*)dp,count);
-    break;
-  case mxSINGLE_CLASS:
-    cls = FM_FLOAT;
-    dp = Array::allocateArray(cls,count);
-    MexRealToArrayReal<float,float>((float*)array_ptr->realdata,
-				    (float*)dp,count);
-    break;
-  case mxDOUBLE_CLASS:
-    cls = FM_DOUBLE;
-    dp = Array::allocateArray(cls,count);
-    MexRealToArrayReal<double,double>((double*)array_ptr->realdata,
-				      (double*)dp,count);
+  case mxUINT32_CLASS: return TNumericArrayFromMexArray<uint32>(dp);
+  case mxINT32_CLASS:  return TNumericArrayFromMexArray<int32>(dp);
+  case mxUINT16_CLASS: return TNumericArrayFromMexArray<uint16>(dp);
+  case mxINT16_CLASS:  return TNumericArrayFromMexArray<int16>(dp);
+  case mxUINT8_CLASS:  return TNumericArrayFromMexArray<uint8>(dp);
+  case mxINT8_CLASS:   return TNumericArrayFromMexArray<int8>(dp);
+  case mxSINGLE_CLASS: return TNumericArrayFromMexArray<float>(dp);
+  case mxDOUBLE_CLASS: return TNumericArrayFromMexArray<double>(dp);
+  case mxCHAR_CLASS:   return TNumericArrayFromMexArray<int16>(dp);
   }
-  return Array::Array(cls,dim,dp);
-}
-
-Array ArrayFromMexArrayComplex(mxArray *array_ptr) {
-  Class cls;
-  Dimensions dim;
-  void *dp;
-  for (int i=0;i<array_ptr->number_of_dims;i++)
-    dim.set(i,array_ptr->dims[i]);
-  int count = mxGetNumberOfElements(array_ptr);
-  if (array_ptr->classID != mxDOUBLE_CLASS) {
-    cls = FM_COMPLEX;
-    switch(array_ptr->classID) {
-    default:
-      throw Exception("Unhandled type for mex array conversion");
-    case mxUINT32_CLASS:
-      dp = Array::allocateArray(FM_COMPLEX,count);
-      MexComplexToArrayComplex<uint32,float>((uint32*)array_ptr->realdata,
-					     (uint32*)array_ptr->imagdata,
-					     (float*)dp,count);
-      break;
-    case mxINT32_CLASS:
-      dp = Array::allocateArray(FM_COMPLEX,count);
-      MexComplexToArrayComplex<int32,float>((int32*)array_ptr->realdata,
-					    (int32*)array_ptr->imagdata,
-					    (float*)dp,count);
-    case mxUINT16_CLASS:
-      dp = Array::allocateArray(FM_COMPLEX,count);
-      MexComplexToArrayComplex<uint16,float>((uint16*)array_ptr->realdata,
-					     (uint16*)array_ptr->imagdata,
-					     (float*)dp,count);
-      break;
-    case mxINT16_CLASS:
-      dp = Array::allocateArray(FM_COMPLEX,count);
-      MexComplexToArrayComplex<int16,float>((int16*)array_ptr->realdata,
-					    (int16*)array_ptr->imagdata,
-					    (float*)dp,count);
-    case mxUINT8_CLASS:
-      dp = Array::allocateArray(FM_COMPLEX,count);
-      MexComplexToArrayComplex<uint8,float>((uint8*)array_ptr->realdata,
-					    (uint8*)array_ptr->imagdata,
-					    (float*)dp,count);
-      break;
-    case mxINT8_CLASS:
-      dp = Array::allocateArray(FM_COMPLEX,count);
-      MexComplexToArrayComplex<int8,float>((int8*)array_ptr->realdata,
-					   (int8*)array_ptr->imagdata,
-					   (float*)dp,count);
-      break;
-    case mxSINGLE_CLASS:
-      dp = Array::allocateArray(FM_COMPLEX,count);
-      MexComplexToArrayComplex<float,float>((float*)array_ptr->realdata,
-					    (float*)array_ptr->imagdata,
-					    (float*)dp,count);
-    }
-  } else {
-    cls = FM_DCOMPLEX;
-    dp = Array::allocateArray(FM_DCOMPLEX,count);
-    MexComplexToArrayComplex<double,double>((double*)array_ptr->realdata,
-					    (double*)array_ptr->imagdata,
-					    (double*)dp,count);
-  }
-  return Array::Array(cls,dim,dp);
 }
 
 Array ArrayFromMexArray(mxArray *array_ptr) {
   if (array_ptr->classID == mxCELL_CLASS) {
-    Dimensions dim;
-    for (int i=0;i<array_ptr->number_of_dims;i++)
-      dim.set(i,array_ptr->dims[i]);
-    int N = mxGetNumberOfElements(array_ptr);
+    NTuple dim = GetDimensions(array_ptr);
     mxArray** dp = (mxArray**) array_ptr->realdata;
-    Array* cp = new Array[N];
-    for (int i=0;i<N;i++)
-      cp[i] = ArrayFromMexArray(dp[i]);
-    return Array(FM_CELL_ARRAY,dim,cp);
-  } else {
-    if (array_ptr->iscomplex) {
-      return ArrayFromMexArrayComplex(array_ptr);
-    } else {
-      return ArrayFromMexArrayReal(array_ptr);
-    }
-  }
+    BasicArray<Array> rp(dim);
+    for (index_t i=1;i<=rp.length();i++)
+      rp[i] = ArrayFromMexArray(dp[int(i-1)]);
+    return Array(rp);
+  } else 
+    return NumericArrayFromMexArray(array_ptr);
 }
 
-template <class mxType, class fmType>
-mxArray* MexArrayFromRealArray(Array array, mxClassID classID) {
+static mxArray* MexArrayFromCellArray(Array array) {
   // Convert array dimensions into a simple integer array
-  int num_dim = array.dimensions().getLength();
+  int num_dim = array.dimensions().lastNotOne();
   int *dim_vec = (int*) malloc(sizeof(int)*num_dim);
   for (int i=0;i<num_dim;i++)
-    dim_vec[i] = array.dimensions().get(i);
-  mxArray *ret = mxCreateNumericArray(num_dim,dim_vec,classID,mxREAL);
-  fmType *sp = (fmType*) array.getDataPointer();
-  mxType *dp = (mxType*) ret->realdata;
-  int N = mxGetNumberOfElements(ret);
-  for (int i=0;i<N;i++)
-    dp[i] = (mxType) sp[i];
-  free(dim_vec);
-  return ret;
-}
-
-template <class mxType, class fmType>
-mxArray* MexArrayFromComplexArray(Array array, mxClassID classID) {
-  // Convert array dimensions into a simple integer array
-  int num_dim = array.dimensions().getLength();
-  int *dim_vec = (int*) malloc(sizeof(int)*num_dim);
-  for (int i=0;i<num_dim;i++)
-    dim_vec[i] = array.dimensions().get(i);
-  mxArray *ret = mxCreateNumericArray(num_dim,dim_vec,classID,mxCOMPLEX);
-  fmType *sp = (fmType*) array.getDataPointer();
-  mxType *dp_r = (mxType*) ret->realdata;
-  mxType *dp_i = (mxType*) ret->imagdata;
-  int N = mxGetNumberOfElements(ret);
-  for (int i=0;i<N;i++) {
-    dp_r[i] = (mxType) sp[2*i];
-    dp_i[i] = (mxType) sp[2*i+1];
-  }
-  free(dim_vec);
-  return ret;
-}
-
-mxArray* MexArrayFromCellArray(Array array) {
-  // Convert array dimensions into a simple integer array
-  int num_dim = array.dimensions().getLength();
-  int *dim_vec = (int*) malloc(sizeof(int)*num_dim);
-  for (int i=0;i<num_dim;i++)
-    dim_vec[i] = array.dimensions().get(i);
+    dim_vec[i] = int(array.dimensions()[i]);
   mxArray *ret = mxCreateCellArray(num_dim,dim_vec);
-  Array *sp = (Array*) array.getDataPointer();
+  const BasicArray<Array> &rp(array.constReal<Array>());
   mxArray **dp = (mxArray **) ret->realdata;
-  int N = mxGetNumberOfElements(ret);
-  for (int i=0;i<N;i++) 
-    dp[i] = MexArrayFromArray(sp[i]);
+  for (index_t i=1;i<=array.length();i++)
+    dp[int(i-1)] = MexArrayFromArray(rp[i]);
   free(dim_vec);
   return ret;
+}
+
+template <typename T>
+static mxArray* TMexArrayFromNumericArray(mxClassID classID, Array array) {
+  if (array.isSparse()) throw Exception("sparse case not handled");
+  mxComplexity flag;
+  if (array.allReal())
+    flag = mxREAL;
+  else
+    flag = mxCOMPLEX;
+  int numdims;
+  int* dims = GetDimensions(array,numdims);
+  mxArray* ret = mxCreateNumericArray(numdims,dims,classID,flag);
+  memcpy(ret->realdata,array.constReal<T>().constData(),size_t(array.length()*sizeof(T)));
+  memcpy(ret->imagdata,array.constImag<T>().constData(),size_t(array.length()*sizeof(T)));
+}
+
+mxArray* MexArrayFromNumericArray(Array array) {
+  switch (array.dataClass()) {
+  default: throw Exception("unhandled case for numeric array");
+  case UInt32: return TMexArrayFromNumericArray<uint32>(mxUINT32_CLASS,array);
+  case Int32: return TMexArrayFromNumericArray<int32>(mxINT32_CLASS,array);
+  case UInt16: return TMexArrayFromNumericArray<uint16>(mxUINT16_CLASS,array);
+  case Int16: return TMexArrayFromNumericArray<int16>(mxINT16_CLASS,array);
+  case UInt8: return TMexArrayFromNumericArray<uint8>(mxUINT8_CLASS,array);
+  case Int8: return TMexArrayFromNumericArray<int8>(mxINT8_CLASS,array);
+  case Float: return TMexArrayFromNumericArray<float>(mxSINGLE_CLASS,array);
+  case Double: return TMexArrayFromNumericArray<double>(mxDOUBLE_CLASS,array);
+  case StringArray: return TMexArrayFromNumericArray<uint16>(mxCHAR_CLASS,array);
+  }
 }
 
 mxArray* MexArrayFromArray(Array array) {
-  switch(array.dataClass()) {
-  default:
-    throw Exception("Unhandled type for mex array conversion");
-  case FM_FUNCPTR_ARRAY:
-    return NULL;
-  case FM_CELL_ARRAY:
+  if (array.dataClass() == CellArray)
     return MexArrayFromCellArray(array);
-  case FM_STRUCT_ARRAY:
-    return NULL;
-  case FM_LOGICAL:
-    return MexArrayFromRealArray<mxLogical,logical>(array,mxLOGICAL_CLASS);
-  case FM_UINT8:
-    return MexArrayFromRealArray<uint8,uint8>(array,mxUINT8_CLASS);
-  case FM_INT8:
-    return MexArrayFromRealArray<int8,int8>(array,mxINT8_CLASS);
-  case FM_UINT16:
-    return MexArrayFromRealArray<uint16,uint16>(array,mxUINT16_CLASS);
-  case FM_INT16:
-    return MexArrayFromRealArray<int16,int16>(array,mxINT16_CLASS);
-  case FM_UINT32:
-    return MexArrayFromRealArray<uint32,uint32>(array,mxUINT32_CLASS);
-  case FM_INT32:
-    return MexArrayFromRealArray<int32,int32>(array,mxINT32_CLASS);
-  case FM_FLOAT:
-    return MexArrayFromRealArray<float,float>(array,mxSINGLE_CLASS);
-  case FM_DOUBLE:
-    return MexArrayFromRealArray<double,double>(array,mxDOUBLE_CLASS);
-  case FM_COMPLEX:
-    return MexArrayFromComplexArray<float,float>(array,mxSINGLE_CLASS);
-  case FM_DCOMPLEX:
-    return MexArrayFromComplexArray<double,double>(array,mxDOUBLE_CLASS);
-  case FM_STRING:
-    return MexArrayFromRealArray<mxChar,char>(array,mxCHAR_CLASS);
-  }
-  return NULL;
+  else
+    return MexArrayFromNumericArray(array);
 }
 

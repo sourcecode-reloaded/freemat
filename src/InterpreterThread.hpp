@@ -14,7 +14,7 @@ class InterpreterThread : public QThread
   Q_OBJECT
   Context *context;
   Interpreter *eval;
-  std::vector<std::string> cmd_buffer;
+  QVector<QString> cmd_buffer;
   bool guimode;
   QMutex mutex;
   QWaitCondition condition;
@@ -22,7 +22,7 @@ class InterpreterThread : public QThread
 protected:
   void run();
 public:
-  void ExecuteLine(std::string cmd);
+  void ExecuteLine(QString cmd);
   void SetGuiMode(bool t) {guimode = t;}
   Interpreter* GetInterpreter() {return eval;}
   void Setup();

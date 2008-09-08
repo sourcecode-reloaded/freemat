@@ -20,7 +20,6 @@
 #include "Interpreter.hpp"
 #include "FunctionDef.hpp"
 #include "Exception.hpp"
-#include "Malloc.hpp"
 
 static ArrayVector params;
 static Array xval;
@@ -34,20 +33,20 @@ static double *ybuffer;
 extern "C" { 
   void fcnstub(int* m, int *n, double *x, double *fvec, int *iflag) {
     double *xp, *yp, *rp, *wp;
-    xp = (double*) xval.getReadWriteDataPointer();
-    yp = (double*) yval.getDataPointer();
-    wp = (double*) wval.getDataPointer();
+    xp = xval.real<double>().data();
+    yp = yval.real<double>().data();
+    wp = wval.real<double>().data();
     memcpy(xp,x,sizeof(double)*(*n));
     ArrayVector tocall(params);
     tocall.push_front(xval);
     ArrayVector cval(a_funcDef->evaluateFunction(a_eval,tocall,1));
     if (cval.size() == 0)
       throw Exception("function to be optimized does not return any outputs!");
-    if ((int) cval[0].getLength() != (*m))
+    if (int(cval[0].length()) != (*m))
       throw Exception("function output does not match size of vector 'y'");
     Array f(cval[0]);
-    f.promoteType(FM_DOUBLE);
-    rp = (double*) f.getDataPointer();
+    f = f.asDenseArray().toClass(Double);
+    rp = (double*) f.real<double>().data();
     int i;
     for (i=0;i<(*m);i++) {
       fvec[i] = wp[i]*(yp[i] - rp[i]);
@@ -98,41 +97,41 @@ void lmdif1_(fcnptr, int*m, int*n, double*x, double*fvec, double*tol,
 //[x y] = fitfun('cos',3.5/4*pi,y0,1,0.01);
 //test_val = abs((x-O)/O*100)<.1;
 //@}
+//@@Signature
+//sfunction fitfun FitFunFunction
+//inputs fcn xinit y weights tol varargin
+//outputs xopt yopt
 //!
 ArrayVector FitFunFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   if (arg.size()<4) 
     throw Exception("fitfun requires at least four arguments");
   if (!(arg[0].isString()))
     throw Exception("first argument to fitfun must be the name of a function (i.e., a string)");
-  string fname = arg[0].getContentsAsString();
+  QString fname = arg[0].asString();
   eval->rescanPath();
   Context *context = eval->getContext();
   FuncPtr funcDef;
   if (!context->lookupFunction(fname,funcDef))
-    throw Exception(std::string("function ") + fname + " undefined!");
+    throw Exception(QString("function ") + fname + " undefined!");
   funcDef->updateCode(eval);
   if (funcDef->scriptFlag)
     throw Exception("cannot use feval on a script");
   a_funcDef = funcDef;
   a_eval = eval;
   // Get the initial guess vector
-  Array xinit(arg[1]);
-  xinit.promoteType(FM_DOUBLE);
+  Array xinit(arg[1].asDenseArray().toClass(Double));
   int m, n;
-  n = xinit.getLength();
+  n = int(xinit.length());
   // Get the right hand side vector
-  Array yvec(arg[2]);
-  m = yvec.getLength();
-  yvec.promoteType(FM_DOUBLE);
+  Array yvec(arg[2].asDenseArray().toClass(Double));
+  m = int(yvec.length());
   yval = yvec;
   xval = xinit;
-  wval = arg[3];
-  wval.promoteType(FM_DOUBLE);
-  if ((int) wval.getLength() != m)
+  wval = arg[3].asDenseArray().toClass(Double);
+  if (int(wval.length()) != m)
     throw Exception("weight vector must be the same size as the output vector y");
   // Get the tolerance
-  Array tolc(arg[4]);
-  double tol = tolc.getContentsAsDoubleScalar();
+  double tol = arg[4].asDouble();
   // Copy the arg array
   params = arg;
   params.pop_front();
@@ -146,19 +145,19 @@ ArrayVector FitFunFunction(int nargout, const ArrayVector& arg, Interpreter* eva
   ArrayVector cval(funcDef->evaluateFunction(eval,tocall,1));
   if (cval.size() == 0)
     throw Exception("function to be optimized does not return any outputs!");
-  if ((int) cval[0].getLength() != m)
+  if (int(cval[0].length()) != m)
     throw Exception("function output does not match size of vector 'y'");
   // Call the lmdif1
   int *iwa;
-  iwa = (int*) Malloc(sizeof(int)*n);
+  iwa = new int[n];
   int lwa;
   lwa = m*n+5*n+m;
   double *wa;
   int info;
-  wa = (double*) Malloc(sizeof(double)*lwa); 
-  xbuffer = (double*) Malloc(sizeof(double)*n);
-  ybuffer = (double*) Malloc(sizeof(double)*m);
-  memcpy(xbuffer,xinit.getDataPointer(),sizeof(double)*n);
+  wa = new double[lwa];
+  xbuffer = new double[n];
+  ybuffer = new double[m];
+  memcpy(xbuffer,xinit.real<double>().data(),sizeof(double)*n);
   memset(ybuffer,0,sizeof(double)*m);
   lmdif1_(fcnstub,&m,&n,xbuffer,ybuffer,&tol,&info,iwa,wa,&lwa);
   if (info == 0)
@@ -169,11 +168,11 @@ ArrayVector FitFunFunction(int nargout, const ArrayVector& arg, Interpreter* eva
     eval->warningMessage("tolerance is too small - no further reduction in the sum of squares is possible");
   if (info == 7)
     eval->warningMessage("tolerance is too small - no further improvement in the approximate solution x is possible");
-  Free(wa);
-  Free(iwa);
-  memcpy(xval.getReadWriteDataPointer(),xbuffer,sizeof(double)*n);
-  Free(xbuffer);
-  Free(ybuffer);
+  delete[] wa;
+  delete[] iwa;
+  memcpy(xval.real<double>().data(),xbuffer,sizeof(double)*n);
+  delete[] xbuffer;
+  delete[] ybuffer;
   tocall = params;
   tocall.push_front(xval);
   cval = funcDef->evaluateFunction(eval,tocall,1);

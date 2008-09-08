@@ -23,7 +23,7 @@
 
 class HandleText : public HandleObject {
   QFont fnt;
-  std::string text;
+  QString text;
 public:
   HandleText();
   virtual ~HandleText();

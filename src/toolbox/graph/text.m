@@ -53,7 +53,7 @@ if (length(xvec) ~= length(yvec))
   error 'vectors x and y must be the same length'
 end
 
-if (isa(labels,'string'))
+if (isa(labels,'char'))
   labelarray = repmat({labels},[length(xvec),1]);
 elseif (iscellstr(labels))
   labelarray = labels;

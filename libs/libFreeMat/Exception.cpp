@@ -22,23 +22,18 @@
 #include <stdio.h>
 #include <iostream>
 #include "Exception.hpp"
-#include "Malloc.hpp"
 #include "Interpreter.hpp"
 
-Exception::Exception(std::string msg_in) {
-  msg = msg_in; 
+Exception::Exception(QString msg_in) {
+  m_msg = msg_in; 
   handled = false;
 }
 
 void Exception::printMe(Interpreter *eval) {
-  eval->errorMessage(msg);
+  eval->errorMessage(m_msg);
 }
 
-bool Exception::matches(string tst_msg) {
-  return (tst_msg == msg);
-}
-
-string Exception::getMessageCopy() {
-  return msg;
+bool Exception::matches(QString tst_msg) {
+  return (tst_msg == m_msg);
 }
 

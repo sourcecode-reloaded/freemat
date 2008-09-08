@@ -1317,6 +1317,5 @@ ArrayVector ContourCFunction(int nargout, const ArrayVector& arg) {
 #endif 
 
 void LoadHandleGraphicsFunctions(Context* context) {
-  context->addGfxFunction("hpatch",HPatchFunction,-1,1,NULL);
   InitializeHandleGraphics();
 };

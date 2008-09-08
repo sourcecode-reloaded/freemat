@@ -21,7 +21,7 @@
 #include "Interpreter.hpp"
 #include <QtCore>
 #include "Algorithms.hpp"
-static HelpWindow *m_helpwin=0;
+
 
 //!
 //@Module END End Function
@@ -31,7 +31,6 @@ static HelpWindow *m_helpwin=0;
 //for its use is 
 //@[
 //   y = end(x,dim,subindexes)
-//  helpwin FunctionName
 //@]
 //where @|x| is the array to be analyzed, @|dim| is the dimension along
 //which to compute the end, and @|subindexes| indicates how many dimensions
@@ -41,15 +40,6 @@ static HelpWindow *m_helpwin=0;
 //inputs x dim subindexes
 //outputs y
 //!
-    m_helpwin = new HelpWindow(dir.canonicalPath());
-  if (arg.size() == 0)
-    m_helpwin->show();
-  else if (arg.size() == 1) {
-    string fulltext = arg[0].getContentsAsString();
-    m_helpwin->helpText(QString::fromStdString(fulltext));
-  }
-  else
-    throw Exception("helpwin function accepts at most 1 argument.");
 ArrayVector EndFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 3)
     throw Exception("End function requires 3 arguments, the array, the end index, and the number of subindexes");

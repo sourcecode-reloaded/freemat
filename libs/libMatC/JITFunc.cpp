@@ -867,6 +867,8 @@ void JITFunc::compile_for_block(Tree* t) {
     failed = true;
   }
 
+  JITScalar next_loop_value = jit->Add(loop_index_value,loop_step);
+  jit->Store(next_loop_value,loop_index_address);
   jit->Jump(looptest);
   jit->SetCurrentBlock(looptest);
 

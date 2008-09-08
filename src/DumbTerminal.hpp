@@ -20,9 +20,7 @@
 #define __DumbTerminal_hpp__
 
 #include <QObject>
-#include <string>
-
-using namespace std;
+#include <QString>
 
 class DumbTerminal : public QObject {
   Q_OBJECT
@@ -37,7 +35,7 @@ public slots:
   void ClearEOL();
   void ClearEOD();
   void MoveBOL();
-  void OutputRawString(string txt);
+  void OutputRawString(QString txt);
   void DoRead();
   void ClearDisplay();
 signals:

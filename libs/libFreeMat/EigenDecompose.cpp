@@ -21,1007 +21,266 @@
 #include "LAPACK.hpp"
 #include <stdlib.h>
 #include <stdio.h>
-#include "Malloc.hpp"
+#include "MemPtr.hpp"
+#include "Complex.hpp"
+#include "Math.hpp"
+#include "Algorithms.hpp"
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
+template <typename T>
+void Tsyev(char *JOBZ, char *UPLO, int *N, T *A, int *LDA, 
+	   T *W, T *WORK, int *LWORK, int *INFO);
 
-void floatEigenDecomposeSymmetric(int n, float *v, float *d, float *a,
-				  bool eigenvectors) {
-  //      SUBROUTINE SSYEV( JOBZ, UPLO, N, A, LDA, W, WORK, LWORK, INFO )
-  //*  Purpose
-  //*  =======
-  //*
-  //*  SSYEV computes all eigenvalues and, optionally, eigenvectors of a
-  //*  real symmetric matrix A.
-  //*
-  //*  Arguments
-  //*  =========
-  //*
-  //*  JOBZ    (input) CHARACTER*1
-  //*          = 'N':  Compute eigenvalues only;
-  //*          = 'V':  Compute eigenvalues and eigenvectors.
+template <>
+void Tsyev(char *JOBZ, char *UPLO, int *N, float *A, int *LDA, 
+	   float *W, float *WORK, int *LWORK, int *INFO) {
+  return ssyev_(JOBZ,UPLO,N,A,LDA,W,WORK,LWORK,INFO);
+}
+
+template <>
+void Tsyev(char *JOBZ, char *UPLO, int *N, double *A, int *LDA, 
+	   double *W, double *WORK, int *LWORK, int *INFO) {
+  return dsyev_(JOBZ,UPLO,N,A,LDA,W,WORK,LWORK,INFO);
+}
+
+template <typename T>
+static void Tgeevx(char * BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
+		   int* N, T* A, int* LDA, T* W, T* VL, 
+		   int *LDVL, T* VR, int *LDVR, int *ILO,
+		   int *IHI, T* SCALE, T* ABNRM, T* RCONDE,
+		   T* RCONDV, T *WORK, int *LWORK, T *RWORK,
+		   int *INFO);
+
+template <>
+void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
+	    int* N, float* A, int* LDA, float* W, float* VL, 
+	    int *LDVL, float* VR, int *LDVR, int *ILO,
+	    int *IHI, float* SCALE, float* ABNRM, float* RCONDE,
+	    float* RCONDV, float *WORK, int *LWORK, float *RWORK,
+	    int *INFO) {
+  return cgeevx_( BALANC, JOBVL, JOBVR, SENSE, N, A, LDA, W,
+		  VL, LDVL, VR, LDVR, ILO, IHI, SCALE, ABNRM,
+		  RCONDE, RCONDV, WORK, LWORK, RWORK, INFO );
+}
+
+template <>
+void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
+	    int* N, double* A, int* LDA, double* W, double* VL, 
+	    int *LDVL, double* VR, int *LDVR, int *ILO,
+	    int *IHI, double* SCALE, double* ABNRM, double* RCONDE,
+	    double* RCONDV, double *WORK, int *LWORK, double *RWORK,
+	    int *INFO) {
+  return zgeevx_( BALANC, JOBVL, JOBVR, SENSE, N, A, LDA, W,
+		  VL, LDVL, VR, LDVR, ILO, IHI, SCALE, ABNRM,
+		  RCONDE, RCONDV, WORK, LWORK, RWORK, INFO );
+}
+
+template <typename T>
+static void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
+		   int* N, T* A, int* LDA, T* WR, T* WI,
+		   T* VL, int *LDVL, T* VR, int *LDVR, int *ILO,
+		   int *IHI, T* SCALE, T* ABNRM, T* RCONDE,
+		   T* RCONDV, T *WORK, int *LWORK, int *IWORK,
+		   int *INFO);
+
+template <>
+void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
+	    int* N, float* A, int* LDA, float* WR, float* WI,
+	    float* VL, int *LDVL, float* VR, int *LDVR, int *ILO,
+	    int *IHI, float* SCALE, float* ABNRM, float* RCONDE,
+	    float* RCONDV, float *WORK, int *LWORK, int *IWORK,
+	    int *INFO) {
+  return sgeevx_(BALANC,JOBVL,JOBVR,SENSE,N,A,LDA,WR,WI,
+		 VL,LDVL,VR,LDVR,ILO,IHI,SCALE,ABNRM,RCONDE,
+		 RCONDV,WORK,LWORK,IWORK,INFO);
+}
+
+template <>
+void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
+	    int* N, double* A, int* LDA, double* WR, double* WI,
+	    double* VL, int *LDVL, double* VR, int *LDVR, int *ILO,
+	    int *IHI, double* SCALE, double* ABNRM, double* RCONDE,
+	    double* RCONDV, double *WORK, int *LWORK, int *IWORK,
+	    int *INFO) {
+  return dgeevx_(BALANC,JOBVL,JOBVR,SENSE,N,A,LDA,WR,WI,
+		 VL,LDVL,VR,LDVR,ILO,IHI,SCALE,ABNRM,RCONDE,
+		 RCONDV,WORK,LWORK,IWORK,INFO);
+}
+
+template <typename T>
+void Tggev(char *JOBVL, char *JOBVR, int *N, T *A, int *LDA, 
+	   T *B, int *LDB, T *ALPHAR, T *ALPHAI,
+	   T *BETA, T *VL, int *LDVL, T *VR, 
+	   int *LDVR, T *WORK, int *LWORK, int *INFO );
+
+template <>
+void Tggev(char *JOBVL, char *JOBVR, int *N, float *A, int *LDA, 
+	   float *B, int *LDB, float *ALPHAR, float *ALPHAI,
+	   float *BETA, float *VL, int *LDVL, float *VR, 
+	   int *LDVR, float *WORK, int *LWORK, int *INFO ) {
+  return sggev_(JOBVL,JOBVR,N,A,LDA,B,LDB,ALPHAR,ALPHAI,
+		BETA,VL,LDVL,VR,LDVR,WORK,LWORK,INFO);
+}
+
+template <>
+void Tggev(char *JOBVL, char *JOBVR, int *N, double *A, int *LDA, 
+	   double *B, int *LDB, double *ALPHAR, double *ALPHAI,
+	   double *BETA, double *VL, int *LDVL, double *VR, 
+	   int *LDVR, double *WORK, int *LWORK, int *INFO ) {
+  return dggev_(JOBVL,JOBVR,N,A,LDA,B,LDB,ALPHAR,ALPHAI,
+		BETA,VL,LDVL,VR,LDVR,WORK,LWORK,INFO);
+}
+
+template <typename T>
+void Tggev(char *JOBVL, char *JOBVR, int *N, T *A, int *LDA, 
+	   T *B, int *LDB, T *ALPHA, T *BETA, 
+	   T *VL, int *LDVL, T *VR, int *LDVR, 
+	   T *WORK, int *LWORK, T *RWORK, int *INFO );
+
+template <>
+void Tggev(char *JOBVL, char *JOBVR, int *N, float *A, int *LDA, 
+	   float *B, int *LDB, float *ALPHA, float *BETA, 
+	   float *VL, int *LDVL, float *VR, int *LDVR, 
+	   float *WORK, int *LWORK, float *RWORK, int *INFO ) {
+  return cggev_(JOBVL,JOBVR,N,A,LDA,B,LDB,ALPHA,BETA,VL,LDVL,VR,LDVR,
+		WORK,LWORK,RWORK,INFO);
+}
+
+template <>
+void Tggev(char *JOBVL, char *JOBVR, int *N, double *A, int *LDA, 
+	   double *B, int *LDB, double *ALPHA, double *BETA, 
+	   double *VL, int *LDVL, double *VR, int *LDVR, 
+	   double *WORK, int *LWORK, double *RWORK, int *INFO ) {
+  return zggev_(JOBVL,JOBVR,N,A,LDA,B,LDB,ALPHA,BETA,VL,LDVL,VR,LDVR,
+		WORK,LWORK,RWORK,INFO);  
+}
+
+template <typename T>
+static void Tsygv(int *ITYPE, char *JOBZ, char *UPLO, int *N, T *A, 
+		  int *LDA, T *B, int *LDB, T *W, T *WORK,
+		  int *LWORK, int *INFO );
+
+template <>
+void Tsygv(int *ITYPE, char *JOBZ, char *UPLO, int *N, float *A, 
+	   int *LDA, float *B, int *LDB, float *W, float *WORK,
+	   int *LWORK, int *INFO ) {
+  return ssygv_(ITYPE,JOBZ,UPLO,N,A,LDA,B,LDB,W,WORK,LWORK,INFO);
+}
+
+template <>
+void Tsygv(int *ITYPE, char *JOBZ, char *UPLO, int *N, double *A, 
+	   int *LDA, double *B, int *LDB, double *W, double *WORK,
+	   int *LWORK, int *INFO ) {
+  return dsygv_(ITYPE,JOBZ,UPLO,N,A,LDA,B,LDB,W,WORK,LWORK,INFO);
+}
+
+template <typename T>
+static void Theev(char *JOBZ, char *UPLO, int *N, T *A, int *LDA, 
+		  T *W, T *WORK, int *LWORK, T *RWORK, int *INFO);
+
+template <>
+void Theev(char *JOBZ, char *UPLO, int *N, float *A, int *LDA, 
+		  float *W, float *WORK, int *LWORK, float *RWORK, int *INFO) {
+  return cheev_(JOBZ,UPLO,N,A,LDA,W,WORK,LWORK,RWORK,INFO);
+}
+
+template <>
+void Theev(char *JOBZ, char *UPLO, int *N, double *A, int *LDA, 
+		  double *W, double *WORK, int *LWORK, double *RWORK, int *INFO) {
+  return zheev_(JOBZ,UPLO,N,A,LDA,W,WORK,LWORK,RWORK,INFO);
+}
+
+template <typename T>
+static void Thegv(int *ITYPE, char *JOBZ, char *UPLO, int *N, T *A, 
+		  int *LDA, T *B, int *LDB, T *W, T *WORK,
+	   int *LWORK, T *RWORK, int *INFO );
+
+template <>
+void Thegv(int *ITYPE, char *JOBZ, char *UPLO, int *N, float *A, 
+		  int *LDA, float *B, int *LDB, float *W, float *WORK,
+	   int *LWORK, float *RWORK, int *INFO ) {
+  return chegv_(ITYPE,JOBZ,UPLO,N,A,LDA,B,LDB,W,WORK,LWORK,RWORK,INFO);
+}
+
+template <>
+void Thegv(int *ITYPE, char *JOBZ, char *UPLO, int *N, double *A, 
+		  int *LDA, double *B, int *LDB, double *W, double *WORK,
+	   int *LWORK, double *RWORK, int *INFO ) {
+  return zhegv_(ITYPE,JOBZ,UPLO,N,A,LDA,B,LDB,W,WORK,LWORK,RWORK,INFO);
+}
+
+template <typename T>
+static void realEigenDecomposeSymmetric(int n, T *v, T *d, T *a,
+					bool eigenvectors) {
   char JOBZ;
   if (eigenvectors)
     JOBZ = 'V';
   else
     JOBZ = 'N';
-
-  //*
-  //*  UPLO    (input) CHARACTER*1
-  //*          = 'U':  Upper triangle of A is stored;
-  //*          = 'L':  Lower triangle of A is stored.
-  //*
   char UPLO = 'U';
-
-  //*  N       (input) INTEGER
-  //*          The order of the matrix A.  N >= 0.
-  //*
   int N = n;
-
-  //*  A       (input/output) REAL array, dimension (LDA, N)
-  //*          On entry, the symmetric matrix A.  If UPLO = 'U', the
-  //*          leading N-by-N upper triangular part of A contains the
-  //*          upper triangular part of the matrix A.  If UPLO = 'L',
-  //*          the leading N-by-N lower triangular part of A contains
-  //*          the lower triangular part of the matrix A.
-  //*          On exit, if JOBZ = 'V', then if INFO = 0, A contains the
-  //*          orthonormal eigenvectors of the matrix A.
-  //*          If JOBZ = 'N', then on exit the lower triangle (if UPLO='L')
-  //*          or the upper triangle (if UPLO='U') of A, including the
-  //*          diagonal, is destroyed.
-  //*
-
-  float *Ain = a;
-    
-  //*  LDA     (input) INTEGER
-  //*          The leading dimension of the array A.  LDA >= max(1,N).
-  //*
-    
+  T *Ain = a;
   int LDA = n;
-    
-  //*  W       (output) REAL array, dimension (N)
-  //*          If INFO = 0, the eigenvalues in ascending order.
-  //*
-    
-  //*  WORK    (workspace/output) REAL array, dimension (LWORK)
-  //*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
-  //*
-    
-  //*  LWORK   (input) INTEGER
-  //*          The length of the array WORK.  LWORK >= max(1,3*N-1).
-  //*          For optimal efficiency, LWORK >= (NB+2)*N,
-  //*          where NB is the blocksize for SSYTRD returned by ILAENV.
-  //*
-  //*          If LWORK = -1, then a workspace query is assumed; the routine
-  //*          only calculates the optimal size of the WORK array, returns
-  //*          this value as the first entry of the WORK array, and no error
-  //*          message related to LWORK is issued by XERBLA.
-  //*
-  //*  INFO    (output) INTEGER
-  //*          = 0:  successful exit
-  //*          < 0:  if INFO = -i, the i-th argument had an illegal value
-  //*          > 0:  if INFO = i, the algorithm failed to converge; i
-  //*                off-diagonal elements of an intermediate tridiagonal
-  //*                form did not converge to zero.
-  //    
   int INFO;
-  float WORKSZE;
+  T WORKSZE;
   int LWORK;
-
   LWORK = -1;
-  ssyev_(&JOBZ, &UPLO, &N, Ain, &LDA, d, &WORKSZE, &LWORK, &INFO);
+  Tsyev(&JOBZ, &UPLO, &N, Ain, &LDA, d, &WORKSZE, &LWORK, &INFO);
   LWORK = (int) WORKSZE;
-  float *WORK = (float*) Malloc(LWORK*sizeof(float));
-  ssyev_(&JOBZ, &UPLO, &N, Ain, &LDA, d, WORK, &LWORK, &INFO);
-  Free(WORK);
+  MemBlock<T> WORK(LWORK);
+  Tsyev(&JOBZ, &UPLO, &N, Ain, &LDA, d, &WORK, &LWORK, &INFO);
   if (eigenvectors)
-    memcpy(v,a,n*n*sizeof(float));
+    memcpy(v,a,n*n*sizeof(T));
 }
 
-void floatEigenDecompose(int n, float *v, float *d, float *a,
-			 bool eigenvectors, bool balance) {
-  //	SUBROUTINE SGEEVX( BALANC, JOBVL, JOBVR, SENSE, N, A, LDA, WR, WI,
-  //     $                   VL, LDVL, VR, LDVR, ILO, IHI, SCALE, ABNRM,
-  //     $                   RCONDE, RCONDV, WORK, LWORK, IWORK, INFO )
-  //*  Purpose
-  //*  =======
-  //*
-  //*  SGEEVX computes for an N-by-N real nonsymmetric matrix A, the
-  //*  eigenvalues and, optionally, the left and/or right eigenvectors.
-  //*
-  //*  Optionally also, it computes a balancing transformation to improve
-  //*  the conditioning of the eigenvalues and eigenvectors (ILO, IHI,
-  //*  SCALE, and ABNRM), reciprocal condition numbers for the eigenvalues
-  //*  (RCONDE), and reciprocal condition numbers for the right
-  //*  eigenvectors (RCONDV).
-  //*
-  //*  The right eigenvector v(j) of A satisfies
-  //*                   A * v(j) = lambda(j) * v(j)
-  //*  where lambda(j) is its eigenvalue.
-  //*  The left eigenvector u(j) of A satisfies
-  //*                u(j)**H * A = lambda(j) * u(j)**H
-  //*  where u(j)**H denotes the conjugate transpose of u(j).
-  //*
-  //*  The computed eigenvectors are normalized to have Euclidean norm
-  //*  equal to 1 and largest component real.
-  //*
-  //*  Balancing a matrix means permuting the rows and columns to make it
-  //*  more nearly upper triangular, and applying a diagonal similarity
-  //*  transformation D * A * D**(-1), where D is a diagonal matrix, to
-  //*  make its rows and columns closer in norm and the condition numbers
-  //*  of its eigenvalues and eigenvectors smaller.  The computed
-  //*  reciprocal condition numbers correspond to the balanced matrix.
-  //*  Permuting rows and columns will not change the condition numbers
-  //*  (in exact arithmetic) but diagonal scaling will.  For further
-  //*  explanation of balancing, see section 4.10.2 of the LAPACK
-  //*  Users' Guide.
-  //*
-  //*  Arguments
-  //*  =========
-  //*
-  //*  BALANC  (input) CHARACTER*1
-  //*          Indicates how the input matrix should be diagonally scaled
-  //*          and/or permuted to improve the conditioning of its
-  //*          eigenvalues.
-  //*          = 'N': Do not diagonally scale or permute;
-  //*          = 'P': Perform permutations to make the matrix more nearly
-  //*                 upper triangular. Do not diagonally scale;
-  //*          = 'S': Diagonally scale the matrix, i.e. replace A by
-  //*                 D*A*D**(-1), where D is a diagonal matrix chosen
-  //*                 to make the rows and columns of A more equal in
-  //*                 norm. Do not permute;
-  //*          = 'B': Both diagonally scale and permute A.
-  //*
-  //*          Computed reciprocal condition numbers will be for the matrix
-  //*          after balancing and/or permuting. Permuting does not change
-  //*          condition numbers (in exact arithmetic), but balancing does.
-  //*
-
+template <typename T>
+static void realEigenDecompose(int n, T *v, T *d, T *a, 
+			       bool eigenvectors, bool balance) {
   char BALANC;
   if (balance)
     BALANC = 'B';
   else
     BALANC = 'N';
-
-  //*  JOBVL   (input) CHARACTER*1
-  //*          = 'N': left eigenvectors of A are not computed;
-  //*          = 'V': left eigenvectors of A are computed.
-  //*          If SENSE = 'E' or 'B', JOBVL must = 'V'.
-  
   char JOBVL = 'N';
-  
-  //*  JOBVR   (input) CHARACTER*1
-  //*          = 'N': right eigenvectors of A are not computed;
-  //*          = 'V': right eigenvectors of A are computed.
-  //*          If SENSE = 'E' or 'B', JOBVR must = 'V'.
-
   char JOBVR;
   if (eigenvectors)
     JOBVR = 'V';
   else
     JOBVR = 'N';
-
-  //*  SENSE   (input) CHARACTER*1
-  //*          Determines which reciprocal condition numbers are computed.
-  //*          = 'N': None are computed;
-  //*          = 'E': Computed for eigenvalues only;
-  //*          = 'V': Computed for right eigenvectors only;
-  //*          = 'B': Computed for eigenvalues and right eigenvectors.
-  //*
-  //*          If SENSE = 'E' or 'B', both left and right eigenvectors
-  //*          must also be computed (JOBVL = 'V' and JOBVR = 'V').
-
   char SENSE = 'N';
-
-  //*  N       (input) INTEGER
-  //*          The order of the matrix A. N >= 0.
-
   int N = n;
-  
-  //*  A       (input/output) REAL array, dimension (LDA,N)
-  //*          On entry, the N-by-N matrix A.
-  //*          On exit, A has been overwritten.  If JOBVL = 'V' or
-  //*          JOBVR = 'V', A contains the real Schur form of the balanced
-  //*          version of the input matrix A.
-
-  float *Ain = a;
-
-  //*  LDA     (input) INTEGER
-  //*          The leading dimension of the array A.  LDA >= max(1,N).
-
+  T *Ain = a;
   int LDA = n;
-
-  //*  WR      (output) REAL array, dimension (N)
-  //*  WI      (output) REAL array, dimension (N)
-  //*          WR and WI contain the real and imaginary parts,
-  //*          respectively, of the computed eigenvalues.  Complex
-  //*          conjugate pairs of eigenvalues will appear consecutively
-  //*          with the eigenvalue having the positive imaginary part
-  //*          first.
-  
-  float *WR = (float*) Malloc(n*sizeof(float));
-  float *WI = (float*) Malloc(n*sizeof(float));
-
-  //*  VL      (output) REAL array, dimension (LDVL,N)
-  //*          If JOBVL = 'V', the left eigenvectors u(j) are stored one
-  //*          after another in the columns of VL, in the same order
-  //*          as their eigenvalues.
-  //*          If JOBVL = 'N', VL is not referenced.
-  //*          If the j-th eigenvalue is real, then u(j) = VL(:,j),
-  //*          the j-th column of VL.
-  //*          If the j-th and (j+1)-st eigenvalues form a complex
-  //*          conjugate pair, then u(j) = VL(:,j) + i*VL(:,j+1) and
-  //*          u(j+1) = VL(:,j) - i*VL(:,j+1).
-
-  float *VL = NULL;
-
-  //*  LDVL    (input) INTEGER
-  //*          The leading dimension of the array VL.  LDVL >= 1; if
-  //*          JOBVL = 'V', LDVL >= N.
-
+  MemBlock<T> WR(n);
+  MemBlock<T> WI(n);
+  T *VL = NULL;
   int LDVL = 1;
-
-  //*  VR      (output) REAL array, dimension (LDVR,N)
-  //*          If JOBVR = 'V', the right eigenvectors v(j) are stored one
-  //*          after another in the columns of VR, in the same order
-  //*          as their eigenvalues.
-  //*          If JOBVR = 'N', VR is not referenced.
-  //*          If the j-th eigenvalue is real, then v(j) = VR(:,j),
-  //*          the j-th column of VR.
-  //*          If the j-th and (j+1)-st eigenvalues form a complex
-  //*          conjugate pair, then v(j) = VR(:,j) + i*VR(:,j+1) and
-  //*          v(j+1) = VR(:,j) - i*VR(:,j+1).
-
-  float *VR = v;
-
-  //*  LDVR    (input) INTEGER
-  //*          The leading dimension of the array VR.  LDVR >= 1, and if
-  //*          JOBVR = 'V', LDVR >= N.
-
+  T *VR = v;
   int LDVR = n;
-
-  //*  ILO,IHI (output) INTEGER
-  //*          ILO and IHI are integer values determined when A was
-  //*          balanced.  The balanced A(i,j) = 0 if I > J and
-  //*          J = 1,...,ILO-1 or I = IHI+1,...,N.
-
   int ILO;
   int IHI;
-
-  //*  SCALE   (output) REAL array, dimension (N)
-  //*          Details of the permutations and scaling factors applied
-  //*          when balancing A.  If P(j) is the index of the row and column
-  //*          interchanged with row and column j, and D(j) is the scaling
-  //*          factor applied to row and column j, then
-  //*          SCALE(J) = P(J),    for J = 1,...,ILO-1
-  //*                   = D(J),    for J = ILO,...,IHI
-  //*                   = P(J)     for J = IHI+1,...,N.
-  //*          The order in which the interchanges are made is N to IHI+1,
-  //*          then 1 to ILO-1.
-
-  float *SCALE = (float*) Malloc(n*sizeof(float));
-
-  //*  ABNRM   (output) REAL
-  //*          The one-norm of the balanced matrix (the maximum
-  //*          of the sum of absolute values of elements of any column).
-
-  float ABNRM;
-
-  //*  RCONDE  (output) REAL array, dimension (N)
-  //*          RCONDE(j) is the reciprocal condition number of the j-th
-  //*          eigenvalue.
-
-  float *RCONDE = (float*) Malloc(n*sizeof(float));
-
-  //*  RCONDV  (output) REAL array, dimension (N)
-  //*          RCONDV(j) is the reciprocal condition number of the j-th
-  //*          right eigenvector.
-
-  float *RCONDV = (float*) Malloc(n*sizeof(float));
-
-  //*  WORK    (workspace/output) REAL array, dimension (LWORK)
-  //*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
-
-  //    double *WORK = (double*) Malloc(250*sizeof(double));
-
-  //*
-  //*  LWORK   (input) INTEGER
-  //*          The dimension of the array WORK.   If SENSE = 'N' or 'E',
-  //*          LWORK >= max(1,2*N), and if JOBVL = 'V' or JOBVR = 'V',
-  //*          LWORK >= 3*N.  If SENSE = 'V' or 'B', LWORK >= N*(N+6).
-  //*          For good performance, LWORK must generally be larger.
-  //*
-  //*          If LWORK = -1, a workspace query is assumed.  The optimal
-  //*          size for the WORK array is calculated and stored in WORK(1),
-  //*          and no other work except argument checking is performed.
-  
-  int LWORK;
-
-  //*  IWORK   (workspace) INTEGER array, dimension (2*N-2)
-  //*          If SENSE = 'N' or 'E', not referenced.
-
-  int *IWORK = (int*) Malloc((2*n-2)*sizeof(int));
-
-  //*  INFO    (output) INTEGER
-  //*          = 0:  successful exit
-  //*          < 0:  if INFO = -i, the i-th argument had an illegal value.
-  //*          > 0:  if INFO = i, the QR algorithm failed to compute all the
-  //*                eigenvalues, and no eigenvectors or condition numbers
-  //*                have been computed; elements 1:ILO-1 and i+1:N of WR
-  //*                and WI contain eigenvalues which have converged.
-
-  int INFO;
-  float WORKSZE;
-
-  LWORK = -1;
-  sgeevx_( &BALANC, &JOBVL, &JOBVR, &SENSE, &N, Ain, &LDA, WR, WI,
-	   VL, &LDVL, VR, &LDVR, &ILO, &IHI, SCALE, &ABNRM,
-	   RCONDE, RCONDV, &WORKSZE, &LWORK, IWORK, &INFO );
-
-  LWORK = (int) WORKSZE;
-  float *WORK = (float*) Malloc(LWORK*sizeof(float));
-
-  sgeevx_( &BALANC, &JOBVL, &JOBVR, &SENSE, &N, Ain, &LDA, WR, WI,
-	   VL, &LDVL, VR, &LDVR, &ILO, &IHI, SCALE, &ABNRM,
-	   RCONDE, RCONDV, WORK, &LWORK, IWORK, &INFO );
-
-  for (int i=0;i<N;i++) {
-    d[2*i] = WR[i];
-    d[2*i+1] = WI[i];
-  }
-
-  Free(WORK);
-  Free(WR);
-  Free(WI);
-  Free(SCALE);
-  Free(RCONDE);
-  Free(RCONDV);
-  Free(IWORK);
-}
-
-void floatGenEigenDecompose(int n, float *v, float *d, float *a,
-			    float *b, bool eigenvectors) {
-  //    SUBROUTINE SGGEV( JOBVL, JOBVR, N, A, LDA, B, LDB, ALPHAR, ALPHAI,
-  //     $                  BETA, VL, LDVL, VR, LDVR, WORK, LWORK, INFO )
-  //*  Purpose
-  //*  =======
-  //*
-  //*  SGGEV computes for a pair of N-by-N real nonsymmetric matrices (A,B)
-  //*  the generalized eigenvalues, and optionally, the left and/or right
-  //*  generalized eigenvectors.
-  //*
-  //*  A generalized eigenvalue for a pair of matrices (A,B) is a scalar
-  //*  lambda or a ratio alpha/beta = lambda, such that A - lambda*B is
-  //*  singular. It is usually represented as the pair (alpha,beta), as
-  //*  there is a reasonable interpretation for beta=0, and even for both
-  //*  being zero.
-  //*
-  //*  The right eigenvector v(j) corresponding to the eigenvalue lambda(j)
-  //*  of (A,B) satisfies
-  //*
-  //*                   A * v(j) = lambda(j) * B * v(j).
-  //*
-  //*  The left eigenvector u(j) corresponding to the eigenvalue lambda(j)
-  //*  of (A,B) satisfies
-  //*
-  //*                   u(j)**H * A  = lambda(j) * u(j)**H * B .
-  //*
-  //*  where u(j)**H is the conjugate-transpose of u(j).
-  //*
-  //*
-  //*  Arguments
-  //*  =========
-  //*
-  //*  JOBVL   (input) CHARACTER*1
-  //*          = 'N':  do not compute the left generalized eigenvectors;
-  //*          = 'V':  compute the left generalized eigenvectors.
-  //*
-  char JOBVL = 'N';
-  //*  JOBVR   (input) CHARACTER*1
-  //*          = 'N':  do not compute the right generalized eigenvectors;
-  //*          = 'V':  compute the right generalized eigenvectors.
-  //*
-  char JOBVR;
-  if (eigenvectors)
-    JOBVR = 'V';
-  else
-    JOBVR = 'N';
-  //*  N       (input) INTEGER
-  //*          The order of the matrices A, B, VL, and VR.  N >= 0.
-  //*
-  int N = n;
-  //*  A       (input/output) REAL array, dimension (LDA, N)
-  //*          On entry, the matrix A in the pair (A,B).
-  //*          On exit, A has been overwritten.
-  //*
-  float *A = a;
-  //*  LDA     (input) INTEGER
-  //*          The leading dimension of A.  LDA >= max(1,N).
-  //*
-  int LDA = n;
-  //*  B       (input/output) REAL array, dimension (LDB, N)
-  //*          On entry, the matrix B in the pair (A,B).
-  //*          On exit, B has been overwritten.
-  //*
-  float *B = b;
-  //*  LDB     (input) INTEGER
-  //*          The leading dimension of B.  LDB >= max(1,N).
-  //*
-  int LDB = n;
-  //*  ALPHAR  (output) REAL array, dimension (N)
-  //*  ALPHAI  (output) REAL array, dimension (N)
-  //*  BETA    (output) REAL array, dimension (N)
-  //*          On exit, (ALPHAR(j) + ALPHAI(j)*i)/BETA(j), j=1,...,N, will
-  //*          be the generalized eigenvalues.  If ALPHAI(j) is zero, then
-  //*          the j-th eigenvalue is real; if positive, then the j-th and
-  //*          (j+1)-st eigenvalues are a complex conjugate pair, with
-  //*          ALPHAI(j+1) negative.
-  //*
-  float *ALPHAR = (float*) Malloc(n*sizeof(float));
-  float *ALPHAI = (float*) Malloc(n*sizeof(float));
-  float *BETA = (float*) Malloc(n*sizeof(float));
-  //*          Note: the quotients ALPHAR(j)/BETA(j) and ALPHAI(j)/BETA(j)
-  //*          may easily over- or underflow, and BETA(j) may even be zero.
-  //*          Thus, the user should avoid naively computing the ratio
-  //*          alpha/beta.  However, ALPHAR and ALPHAI will be always less
-  //*          than and usually comparable with norm(A) in magnitude, and
-  //*          BETA always less than and usually comparable with norm(B).
-  //*
-  //*  VL      (output) REAL array, dimension (LDVL,N)
-  //*          If JOBVL = 'V', the left eigenvectors u(j) are stored one
-  //*          after another in the columns of VL, in the same order as
-  //*          their eigenvalues. If the j-th eigenvalue is real, then
-  //*          u(j) = VL(:,j), the j-th column of VL. If the j-th and
-  //*          (j+1)-th eigenvalues form a complex conjugate pair, then
-  //*          u(j) = VL(:,j)+i*VL(:,j+1) and u(j+1) = VL(:,j)-i*VL(:,j+1).
-  //*          Each eigenvector will be scaled so the largest component have
-  //*          abs(real part)+abs(imag. part)=1.
-  //*          Not referenced if JOBVL = 'N'.
-  //*
-  float *VL = NULL;
-  //*  LDVL    (input) INTEGER
-  //*          The leading dimension of the matrix VL. LDVL >= 1, and
-  //*          if JOBVL = 'V', LDVL >= N.
-  //*
-  int LDVL = 1;
-  //*  VR      (output) REAL array, dimension (LDVR,N)
-  //*          If JOBVR = 'V', the right eigenvectors v(j) are stored one
-  //*          after another in the columns of VR, in the same order as
-  //*          their eigenvalues. If the j-th eigenvalue is real, then
-  //*          v(j) = VR(:,j), the j-th column of VR. If the j-th and
-  //*          (j+1)-th eigenvalues form a complex conjugate pair, then
-  //*          v(j) = VR(:,j)+i*VR(:,j+1) and v(j+1) = VR(:,j)-i*VR(:,j+1).
-  //*          Each eigenvector will be scaled so the largest component have
-  //*          abs(real part)+abs(imag. part)=1.
-  //*          Not referenced if JOBVR = 'N'.
-  //*
-  float *VR = v;
-  //*  LDVR    (input) INTEGER
-  //*          The leading dimension of the matrix VR. LDVR >= 1, and
-  //*          if JOBVR = 'V', LDVR >= N.
-  //*
-  int LDVR = n;
-  //*  WORK    (workspace/output) REAL array, dimension (LWORK)
-  //*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
-  //*
-  //*  LWORK   (input) INTEGER
-  //*          The dimension of the array WORK.  LWORK >= max(1,8*N).
-  //*          For good performance, LWORK must generally be larger.
-  //*
-  //*          If LWORK = -1, then a workspace query is assumed; the routine
-  //*          only calculates the optimal size of the WORK array, returns
-  //*          this value as the first entry of the WORK array, and no error
-  //*          message related to LWORK is issued by XERBLA.
-  //*
-  //*  INFO    (output) INTEGER
-  //*          = 0:  successful exit
-  //*          < 0:  if INFO = -i, the i-th argument had an illegal value.
-  //*          = 1,...,N:
-  //*                The QZ iteration failed.  No eigenvectors have been
-  //*                calculated, but ALPHAR(j), ALPHAI(j), and BETA(j)
-  //*                should be correct for j=INFO+1,...,N.
-  //*          > N:  =N+1: other than QZ iteration failed in SHGEQZ.
-  //*                =N+2: error return from STGEVC.
-  //  
-  float WORKSZE;
-  int LWORK = -1;
-  int INFO;
-  sggev_( &JOBVL, &JOBVR, &N, A, &LDA, B, &LDB, ALPHAR, ALPHAI,
-	  BETA, VL, &LDVL, VR, &LDVR, &WORKSZE, &LWORK, &INFO );
-  LWORK = (int) WORKSZE;
-  float *WORK = (float*) Malloc(LWORK*sizeof(float));
-  sggev_( &JOBVL, &JOBVR, &N, A, &LDA, B, &LDB, ALPHAR, ALPHAI,
-	  BETA, VL, &LDVL, VR, &LDVR, WORK, &LWORK, &INFO );
-  int i;
-  for (i=0;i<n;i++) {
-    d[2*i] = ALPHAR[i]/BETA[i];
-    d[2*i+1] = ALPHAI[i]/BETA[i];
-  }
-  Free(ALPHAR);
-  Free(BETA);
-  Free(ALPHAI);
-  Free(WORK);
-}
-  
-bool floatGenEigenDecomposeSymmetric(int n, float *v, float *d,
-				     float *a, float *b, bool eigenvectors) {
-  //          SUBROUTINE SSYGV( ITYPE, JOBZ, UPLO, N, A, LDA, B, LDB, W, WORK,
-  //     $                  LWORK, INFO )
-  //*  Purpose
-  //*  =======
-  //*
-  //*  SSYGV computes all the eigenvalues, and optionally, the eigenvectors
-  //*  of a real generalized symmetric-definite eigenproblem, of the form
-  //*  A*x=(lambda)*B*x,  A*Bx=(lambda)*x,  or B*A*x=(lambda)*x.
-  //*  Here A and B are assumed to be symmetric and B is also
-  //*  positive definite.
-  //*
-  //*  Arguments
-  //*  =========
-  //*
-  //*  ITYPE   (input) INTEGER
-  //*          Specifies the problem type to be solved:
-  //*          = 1:  A*x = (lambda)*B*x
-  //*          = 2:  A*B*x = (lambda)*x
-  //*          = 3:  B*A*x = (lambda)*x
-  //*
-  int ITYPE = 1;
-  //*  JOBZ    (input) CHARACTER*1
-  //*          = 'N':  Compute eigenvalues only;
-  //*          = 'V':  Compute eigenvalues and eigenvectors.
-  //*
-  char JOBZ;
-  if (eigenvectors)
-    JOBZ = 'V';
-  else
-    JOBZ = 'N';
-  //*  UPLO    (input) CHARACTER*1
-  //*          = 'U':  Upper triangles of A and B are stored;
-  //*          = 'L':  Lower triangles of A and B are stored.
-  //*
-  char UPLO = 'U';
-  //*  N       (input) INTEGER
-  //*          The order of the matrices A and B.  N >= 0.
-  //*
-  int N = n;
-  //*  A       (input/output) REAL array, dimension (LDA, N)
-  //*          On entry, the symmetric matrix A.  If UPLO = 'U', the
-  //*          leading N-by-N upper triangular part of A contains the
-  //*          upper triangular part of the matrix A.  If UPLO = 'L',
-  //*          the leading N-by-N lower triangular part of A contains
-  //*          the lower triangular part of the matrix A.
-  //*
-  //*          On exit, if JOBZ = 'V', then if INFO = 0, A contains the
-  //*          matrix Z of eigenvectors.  The eigenvectors are normalized
-  //*          as follows:
-  //*          if ITYPE = 1 or 2, Z**T*B*Z = I;
-  //*          if ITYPE = 3, Z**T*inv(B)*Z = I.
-  //*          If JOBZ = 'N', then on exit the upper triangle (if UPLO='U')
-  //*          or the lower triangle (if UPLO='L') of A, including the
-  //*          diagonal, is destroyed.
-  //*
-  float *A = a;
-  //*  LDA     (input) INTEGER
-  //*          The leading dimension of the array A.  LDA >= max(1,N).
-  //*
-  int LDA = n;
-  //*  B       (input/output) REAL array, dimension (LDB, N)
-  //*          On entry, the symmetric positive definite matrix B.
-  //*          If UPLO = 'U', the leading N-by-N upper triangular part of B
-  //*          contains the upper triangular part of the matrix B.
-  //*          If UPLO = 'L', the leading N-by-N lower triangular part of B
-  //*          contains the lower triangular part of the matrix B.
-  //*
-  //*          On exit, if INFO <= N, the part of B containing the matrix is
-  //*          overwritten by the triangular factor U or L from the Cholesky
-  //*          factorization B = U**T*U or B = L*L**T.
-  //*
-  float *B = b;
-  //*  LDB     (input) INTEGER
-  //*          The leading dimension of the array B.  LDB >= max(1,N).
-  //*
-  int LDB = n;
-  //*  W       (output) REAL array, dimension (N)
-  //*          If INFO = 0, the eigenvalues in ascending order.
-  //*
-  float *W = d;
-  //*  WORK    (workspace/output) REAL array, dimension (LWORK)
-  //*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
-  //*
-  //*  LWORK   (input) INTEGER
-  //*          The length of the array WORK.  LWORK >= max(1,3*N-1).
-  //*          For optimal efficiency, LWORK >= (NB+2)*N,
-  //*          where NB is the blocksize for SSYTRD returned by ILAENV.
-  //*
-  //*          If LWORK = -1, then a workspace query is assumed; the routine
-  //*          only calculates the optimal size of the WORK array, returns
-  //*          this value as the first entry of the WORK array, and no error
-  //*          message related to LWORK is issued by XERBLA.
-  //*
-  //*  INFO    (output) INTEGER
-  //*          = 0:  successful exit
-  //*          < 0:  if INFO = -i, the i-th argument had an illegal value
-  //*          > 0:  SPOTRF or SSYEV returned an error code:
-  //*             <= N:  if INFO = i, SSYEV failed to converge;
-  //*                    i off-diagonal elements of an intermediate
-  //*                    tridiagonal form did not converge to zero;
-  //*             > N:   if INFO = N + i, for 1 <= i <= N, then the leading
-  //*                    minor of order i of B is not positive definite.
-  //*                    The factorization of B could not be completed and
-  //*                    no eigenvalues or eigenvectors were computed.
-  float WORKSIZE;
-  int LWORK = -1;
-  int INFO;
-  ssygv_( &ITYPE, &JOBZ, &UPLO, &N, A, &LDA, B, &LDB, W, &WORKSIZE, 
-	  &LWORK, &INFO );
-  LWORK = (int) WORKSIZE;
-  float *WORK = (float*) Malloc(LWORK*sizeof(float));
-  ssygv_( &ITYPE, &JOBZ, &UPLO, &N, A, &LDA, B, &LDB, W, WORK, 
-	  &LWORK, &INFO );
-  Free(WORK);
-  if (INFO>N) return false;
-  if (eigenvectors)
-    memcpy(v,a,n*n*sizeof(float));
-  return true;
-}
-
-void doubleEigenDecomposeSymmetric(int n, double *v, double *d, 
-				   double *a, bool eigenvectors) {
-  //      SUBROUTINE DSYEV( JOBZ, UPLO, N, A, LDA, W, WORK, LWORK, INFO )
-  //*  Purpose
-  //*  =======
-  //*
-  //*  DSYEV computes all eigenvalues and, optionally, eigenvectors of a
-  //*  real symmetric matrix A.
-  //*
-  //*  Arguments
-  //*  =========
-  //*
-  //*  JOBZ    (input) CHARACTER*1
-  //*          = 'N':  Compute eigenvalues only;
-  //*          = 'V':  Compute eigenvalues and eigenvectors.
-  char JOBZ;
-  if (eigenvectors)
-    JOBZ = 'V';
-  else
-    JOBZ = 'N';
-
-  //*
-  //*  UPLO    (input) CHARACTER*1
-  //*          = 'U':  Upper triangle of A is stored;
-  //*          = 'L':  Lower triangle of A is stored.
-  //*
-  char UPLO = 'U';
-
-  //*  N       (input) INTEGER
-  //*          The order of the matrix A.  N >= 0.
-  //*
-  int N = n;
-
-  //*  A       (input/output) DOUBLE PRECISION array, dimension (LDA, N)
-  //*          On entry, the symmetric matrix A.  If UPLO = 'U', the
-  //*          leading N-by-N upper triangular part of A contains the
-  //*          upper triangular part of the matrix A.  If UPLO = 'L',
-  //*          the leading N-by-N lower triangular part of A contains
-  //*          the lower triangular part of the matrix A.
-  //*          On exit, if JOBZ = 'V', then if INFO = 0, A contains the
-  //*          orthonormal eigenvectors of the matrix A.
-  //*          If JOBZ = 'N', then on exit the lower triangle (if UPLO='L')
-  //*          or the upper triangle (if UPLO='U') of A, including the
-  //*          diagonal, is destroyed.
-  //*
-
-  double *Ain = a;
-    
-  //*  LDA     (input) INTEGER
-  //*          The leading dimension of the array A.  LDA >= max(1,N).
-  //*
-    
-  int LDA = n;
-    
-  //*  W       (output) DOUBLE PRECISION array, dimension (N)
-  //*          If INFO = 0, the eigenvalues in ascending order.
-  //*
-    
-  //*  WORK    (workspace/output) DOUBLE PRECISION array, dimension (LWORK)
-  //*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
-  //*
-    
-  //*  LWORK   (input) INTEGER
-  //*          The length of the array WORK.  LWORK >= max(1,3*N-1).
-  //*          For optimal efficiency, LWORK >= (NB+2)*N,
-  //*          where NB is the blocksize for SSYTRD returned by ILAENV.
-  //*
-  //*          If LWORK = -1, then a workspace query is assumed; the routine
-  //*          only calculates the optimal size of the WORK array, returns
-  //*          this value as the first entry of the WORK array, and no error
-  //*          message related to LWORK is issued by XERBLA.
-  //*
-  //*  INFO    (output) INTEGER
-  //*          = 0:  successful exit
-  //*          < 0:  if INFO = -i, the i-th argument had an illegal value
-  //*          > 0:  if INFO = i, the algorithm failed to converge; i
-  //*                off-diagonal elements of an intermediate tridiagonal
-  //*                form did not converge to zero.
-  //    
-  int INFO;
-  double WORKSZE;
-  int LWORK;
-
-  LWORK = -1;
-  dsyev_(&JOBZ, &UPLO, &N, Ain, &LDA, d, &WORKSZE, &LWORK, &INFO);
-  LWORK = (int) WORKSZE;
-  double *WORK = (double*) Malloc(LWORK*sizeof(double));
-  dsyev_(&JOBZ, &UPLO, &N, Ain, &LDA, d, WORK, &LWORK, &INFO);
-  Free(WORK);
-  if (eigenvectors)
-    memcpy(v,a,n*n*sizeof(double));
-}
-
-void doubleEigenDecompose(int n, double *v, double *d, double *a,
-			  bool eigenvectors, bool balance) {
-  //	SUBROUTINE DGEEVX( BALANC, JOBVL, JOBVR, SENSE, N, A, LDA, WR, WI,
-  //     $                   VL, LDVL, VR, LDVR, ILO, IHI, SCALE, ABNRM,
-  //     $                   RCONDE, RCONDV, WORK, LWORK, IWORK, INFO )
-  //*  Purpose
-  //*  =======
-  //*
-  //*  DGEEVX computes for an N-by-N real nonsymmetric matrix A, the
-  //*  eigenvalues and, optionally, the left and/or right eigenvectors.
-  //*
-  //*  Optionally also, it computes a balancing transformation to improve
-  //*  the conditioning of the eigenvalues and eigenvectors (ILO, IHI,
-  //*  SCALE, and ABNRM), reciprocal condition numbers for the eigenvalues
-  //*  (RCONDE), and reciprocal condition numbers for the right
-  //*  eigenvectors (RCONDV).
-  //*
-  //*  The right eigenvector v(j) of A satisfies
-  //*                   A * v(j) = lambda(j) * v(j)
-  //*  where lambda(j) is its eigenvalue.
-  //*  The left eigenvector u(j) of A satisfies
-  //*                u(j)**H * A = lambda(j) * u(j)**H
-  //*  where u(j)**H denotes the conjugate transpose of u(j).
-  //*
-  //*  The computed eigenvectors are normalized to have Euclidean norm
-  //*  equal to 1 and largest component real.
-  //*
-  //*  Balancing a matrix means permuting the rows and columns to make it
-  //*  more nearly upper triangular, and applying a diagonal similarity
-  //*  transformation D * A * D**(-1), where D is a diagonal matrix, to
-  //*  make its rows and columns closer in norm and the condition numbers
-  //*  of its eigenvalues and eigenvectors smaller.  The computed
-  //*  reciprocal condition numbers correspond to the balanced matrix.
-  //*  Permuting rows and columns will not change the condition numbers
-  //*  (in exact arithmetic) but diagonal scaling will.  For further
-  //*  explanation of balancing, see section 4.10.2 of the LAPACK
-  //*  Users' Guide.
-  //*
-  //*  Arguments
-  //*  =========
-  //*
-  //*  BALANC  (input) CHARACTER*1
-  //*          Indicates how the input matrix should be diagonally scaled
-  //*          and/or permuted to improve the conditioning of its
-  //*          eigenvalues.
-  //*          = 'N': Do not diagonally scale or permute;
-  //*          = 'P': Perform permutations to make the matrix more nearly
-  //*                 upper triangular. Do not diagonally scale;
-  //*          = 'S': Diagonally scale the matrix, i.e. replace A by
-  //*                 D*A*D**(-1), where D is a diagonal matrix chosen
-  //*                 to make the rows and columns of A more equal in
-  //*                 norm. Do not permute;
-  //*          = 'B': Both diagonally scale and permute A.
-  //*
-  //*          Computed reciprocal condition numbers will be for the matrix
-  //*          after balancing and/or permuting. Permuting does not change
-  //*          condition numbers (in exact arithmetic), but balancing does.
-  //*
-
-  char BALANC;
-  if (balance)
-    BALANC = 'B';
-  else
-    BALANC = 'N';
-
-  //*  JOBVL   (input) CHARACTER*1
-  //*          = 'N': left eigenvectors of A are not computed;
-  //*          = 'V': left eigenvectors of A are computed.
-  //*          If SENSE = 'E' or 'B', JOBVL must = 'V'.
-  
-  char JOBVL = 'N';
-  
-  //*  JOBVR   (input) CHARACTER*1
-  //*          = 'N': right eigenvectors of A are not computed;
-  //*          = 'V': right eigenvectors of A are computed.
-  //*          If SENSE = 'E' or 'B', JOBVR must = 'V'.
-
-  char JOBVR;
-  if (eigenvectors)
-    JOBVR = 'V';
-  else
-    JOBVR = 'N';
-
-  //*  SENSE   (input) CHARACTER*1
-  //*          Determines which reciprocal condition numbers are computed.
-  //*          = 'N': None are computed;
-  //*          = 'E': Computed for eigenvalues only;
-  //*          = 'V': Computed for right eigenvectors only;
-  //*          = 'B': Computed for eigenvalues and right eigenvectors.
-  //*
-  //*          If SENSE = 'E' or 'B', both left and right eigenvectors
-  //*          must also be computed (JOBVL = 'V' and JOBVR = 'V').
-
-  char SENSE = 'N';
-
-  //*  N       (input) INTEGER
-  //*          The order of the matrix A. N >= 0.
-
-  int N = n;
-  
-  //*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
-  //*          On entry, the N-by-N matrix A.
-  //*          On exit, A has been overwritten.  If JOBVL = 'V' or
-  //*          JOBVR = 'V', A contains the real Schur form of the balanced
-  //*          version of the input matrix A.
-
-  double *Ain = a;
-
-  //*  LDA     (input) INTEGER
-  //*          The leading dimension of the array A.  LDA >= max(1,N).
-
-  int LDA = n;
-
-  //*  WR      (output) DOUBLE PRECISION array, dimension (N)
-  //*  WI      (output) DOUBLE PRECISION array, dimension (N)
-  //*          WR and WI contain the real and imaginary parts,
-  //*          respectively, of the computed eigenvalues.  Complex
-  //*          conjugate pairs of eigenvalues will appear consecutively
-  //*          with the eigenvalue having the positive imaginary part
-  //*          first.
-  
-  double *WR = (double*) Malloc(n*sizeof(double));
-  double *WI = (double*) Malloc(n*sizeof(double));
-
-  //*  VL      (output) DOUBLE PRECISION array, dimension (LDVL,N)
-  //*          If JOBVL = 'V', the left eigenvectors u(j) are stored one
-  //*          after another in the columns of VL, in the same order
-  //*          as their eigenvalues.
-  //*          If JOBVL = 'N', VL is not referenced.
-  //*          If the j-th eigenvalue is real, then u(j) = VL(:,j),
-  //*          the j-th column of VL.
-  //*          If the j-th and (j+1)-st eigenvalues form a complex
-  //*          conjugate pair, then u(j) = VL(:,j) + i*VL(:,j+1) and
-  //*          u(j+1) = VL(:,j) - i*VL(:,j+1).
-
-  double *VL = NULL;
-
-  //*  LDVL    (input) INTEGER
-  //*          The leading dimension of the array VL.  LDVL >= 1; if
-  //*          JOBVL = 'V', LDVL >= N.
-
-  int LDVL = 1;
-
-  //*  VR      (output) DOUBLE PRECISION array, dimension (LDVR,N)
-  //*          If JOBVR = 'V', the right eigenvectors v(j) are stored one
-  //*          after another in the columns of VR, in the same order
-  //*          as their eigenvalues.
-  //*          If JOBVR = 'N', VR is not referenced.
-  //*          If the j-th eigenvalue is real, then v(j) = VR(:,j),
-  //*          the j-th column of VR.
-  //*          If the j-th and (j+1)-st eigenvalues form a complex
-  //*          conjugate pair, then v(j) = VR(:,j) + i*VR(:,j+1) and
-  //*          v(j+1) = VR(:,j) - i*VR(:,j+1).
-
-  double *VR = v;
-
-  //*  LDVR    (input) INTEGER
-  //*          The leading dimension of the array VR.  LDVR >= 1, and if
-  //*          JOBVR = 'V', LDVR >= N.
-
-  int LDVR = n;
-
-  //*  ILO,IHI (output) INTEGER
-  //*          ILO and IHI are integer values determined when A was
-  //*          balanced.  The balanced A(i,j) = 0 if I > J and
-  //*          J = 1,...,ILO-1 or I = IHI+1,...,N.
-
-  int ILO;
-  int IHI;
-
-  //*  SCALE   (output) DOUBLE PRECISION array, dimension (N)
-  //*          Details of the permutations and scaling factors applied
-  //*          when balancing A.  If P(j) is the index of the row and column
-  //*          interchanged with row and column j, and D(j) is the scaling
-  //*          factor applied to row and column j, then
-  //*          SCALE(J) = P(J),    for J = 1,...,ILO-1
-  //*                   = D(J),    for J = ILO,...,IHI
-  //*                   = P(J)     for J = IHI+1,...,N.
-  //*          The order in which the interchanges are made is N to IHI+1,
-  //*          then 1 to ILO-1.
-
-  double *SCALE = (double*) Malloc(n*sizeof(double));
-
-  //*  ABNRM   (output) DOUBLE PRECISION
-  //*          The one-norm of the balanced matrix (the maximum
-  //*          of the sum of absolute values of elements of any column).
-
-  double ABNRM;
-
-  //*  RCONDE  (output) DOUBLE PRECISION array, dimension (N)
-  //*          RCONDE(j) is the reciprocal condition number of the j-th
-  //*          eigenvalue.
-
-  double *RCONDE = (double*) Malloc(n*sizeof(double));
-
-  //*  RCONDV  (output) DOUBLE PRECISION array, dimension (N)
-  //*          RCONDV(j) is the reciprocal condition number of the j-th
-  //*          right eigenvector.
-
-  double *RCONDV = (double*) Malloc(n*sizeof(double));
-
-  //*  WORK    (workspace/output) DOUBLE PRECISION array, dimension (LWORK)
-  //*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
-
-  //    double *WORK = (double*) Malloc(250*sizeof(double));
-
-  //*
-  //*  LWORK   (input) INTEGER
-  //*          The dimension of the array WORK.   If SENSE = 'N' or 'E',
-  //*          LWORK >= max(1,2*N), and if JOBVL = 'V' or JOBVR = 'V',
-  //*          LWORK >= 3*N.  If SENSE = 'V' or 'B', LWORK >= N*(N+6).
-  //*          For good performance, LWORK must generally be larger.
-  //*
-  //*          If LWORK = -1, a workspace query is assumed.  The optimal
-  //*          size for the WORK array is calculated and stored in WORK(1),
-  //*          and no other work except argument checking is performed.
-  
+  MemBlock<T> SCALE(n);
+  T ABNRM;
+  MemBlock<T> RCONDE(n);
+  MemBlock<T> RCONDV(n);
   int maxN = (N < 6) ? 6 : N;
   int LWORK = maxN*maxN*2;
-
-  //*  IWORK   (workspace) INTEGER array, dimension (2*N-2)
-  //*          If SENSE = 'N' or 'E', not referenced.
-
-  int *IWORK = (int*) Malloc((2*n-2)*sizeof(int));
-
-  //*  INFO    (output) INTEGER
-  //*          = 0:  successful exit
-  //*          < 0:  if INFO = -i, the i-th argument had an illegal value.
-  //*          > 0:  if INFO = i, the QR algorithm failed to compute all the
-  //*                eigenvalues, and no eigenvectors or condition numbers
-  //*                have been computed; elements 1:ILO-1 and i+1:N of WR
-  //*                and WI contain eigenvalues which have converged.
-
+  MemBlock<int> IWORK(2*n-2);
   int INFO;
-
-  //     LWORK = -1;
-  //     dgeevx_( &BALANC, &JOBVL, &JOBVR, &SENSE, &N, Ain, &LDA, WR, WI,
-  // 	     VL, &LDVL, VR, &LDVR, &ILO, &IHI, SCALE, &ABNRM,
-  // 	     RCONDE, RCONDV, &WORKSZE, &LWORK, IWORK, &INFO );
-    
-  //     LWORK = (int) WORKSZE;
-  double *WORK = (double*) Malloc(LWORK*sizeof(double));
-
-  dgeevx_( &BALANC, &JOBVL, &JOBVR, &SENSE, &N, Ain, &LDA, WR, WI,
-	   VL, &LDVL, VR, &LDVR, &ILO, &IHI, SCALE, &ABNRM,
-	   RCONDE, RCONDV, WORK, &LWORK, IWORK, &INFO );
-
+  MemBlock<T> WORK(LWORK);
+  Tgeevx<T>( &BALANC, &JOBVL, &JOBVR, &SENSE, &N, Ain, &LDA, &WR, &WI,
+	     VL, &LDVL, VR, &LDVR, &ILO, &IHI, &SCALE, &ABNRM,
+	     &RCONDE, &RCONDV, &WORK, &LWORK, &IWORK, &INFO );
   for (int i=0;i<N;i++) {
     d[2*i] = WR[i];
     d[2*i+1] = WI[i];
   }
-
-  Free(WORK);
-  Free(WR);
-  Free(WI);
-  Free(SCALE);
-  Free(RCONDE);
-  Free(RCONDV);
-  Free(IWORK);
 }
 
-void doubleGenEigenDecompose(int n, double *v, double *d, double *a,
-			     double *b, bool eigenvectors) {
+template <typename T>
+static void realGenEigenDecompose(int n, T *v, T *d, T *a,
+				  T *b, bool eigenvectors) {
   char JOBVL = 'N';
   char JOBVR;
   if (eigenvectors)
@@ -1029,39 +288,36 @@ void doubleGenEigenDecompose(int n, double *v, double *d, double *a,
   else
     JOBVR = 'N';
   int N = n;
-  double *A = a;
+  T *A = a;
   int LDA = n;
-  double *B = b;
+  T *B = b;
   int LDB = n;
-  double *ALPHAR = (double*) Malloc(n*sizeof(double));
-  double *ALPHAI = (double*) Malloc(n*sizeof(double));
-  double *BETA = (double*) Malloc(n*sizeof(double));
-  double *VL = NULL;
+  MemBlock<T> ALPHAR(n);
+  MemBlock<T> ALPHAI(n);
+  MemBlock<T> BETA(n);
+  T *VL = NULL;
   int LDVL = 1;
-  double *VR = v;
+  T *VR = v;
   int LDVR = n;
-  double WORKSZE;
+  T WORKSZE;
   int LWORK = -1;
   int INFO;
-  dggev_( &JOBVL, &JOBVR, &N, A, &LDA, B, &LDB, ALPHAR, ALPHAI,
-	  BETA, VL, &LDVL, VR, &LDVR, &WORKSZE, &LWORK, &INFO );
+  Tggev( &JOBVL, &JOBVR, &N, A, &LDA, B, &LDB, &ALPHAR, &ALPHAI,
+	 &BETA, VL, &LDVL, VR, &LDVR, &WORKSZE, &LWORK, &INFO );
   LWORK = (int) WORKSZE;
-  double *WORK = (double*) Malloc(LWORK*sizeof(double));
-  dggev_( &JOBVL, &JOBVR, &N, A, &LDA, B, &LDB, ALPHAR, ALPHAI,
-	  BETA, VL, &LDVL, VR, &LDVR, WORK, &LWORK, &INFO );
+  MemBlock<T> WORK(LWORK);
+  Tggev( &JOBVL, &JOBVR, &N, A, &LDA, B, &LDB, &ALPHAR, &ALPHAI,
+	 &BETA, VL, &LDVL, VR, &LDVR, &WORK, &LWORK, &INFO );
   int i;
   for (i=0;i<n;i++) {
     d[2*i] = ALPHAR[i]/BETA[i];
     d[2*i+1] = ALPHAI[i]/BETA[i];
   }
-  Free(ALPHAR);
-  Free(BETA);
-  Free(ALPHAI);
-  Free(WORK);
 }
-  
-bool doubleGenEigenDecomposeSymmetric(int n, double *v, double *d,
-				      double *a, double *b, bool eigenvectors) {
+
+template <typename T>  
+static bool realGenEigenDecomposeSymmetric(int n, T *v, T *d,
+					   T *a, T *b, bool eigenvectors) {
   int ITYPE = 1;
   char JOBZ;
   if (eigenvectors)
@@ -1070,1029 +326,134 @@ bool doubleGenEigenDecomposeSymmetric(int n, double *v, double *d,
     JOBZ = 'N';
   char UPLO = 'U';
   int N = n;
-  double *A = a;
+  T *A = a;
   int LDA = n;
-  double *B = b;
+  T *B = b;
   int LDB = n;
-  double *W = d;
-  double WORKSIZE;
+  T *W = d;
+  T WORKSIZE;
   int LWORK = -1;
   int INFO;
-  dsygv_( &ITYPE, &JOBZ, &UPLO, &N, A, &LDA, B, &LDB, W, &WORKSIZE, 
-	  &LWORK, &INFO );
+  Tsygv( &ITYPE, &JOBZ, &UPLO, &N, A, &LDA, B, &LDB, W, &WORKSIZE, 
+	 &LWORK, &INFO );
   LWORK = (int) WORKSIZE;
-  double *WORK = (double*) Malloc(LWORK*sizeof(double));
-  dsygv_( &ITYPE, &JOBZ, &UPLO, &N, A, &LDA, B, &LDB, W, WORK, 
-	  &LWORK, &INFO );
-  Free(WORK);
+  MemBlock<T> WORK(LWORK);
+  Tsygv( &ITYPE, &JOBZ, &UPLO, &N, A, &LDA, B, &LDB, W, &WORK, 
+	 &LWORK, &INFO );
   if (INFO>N) return false;
   if (eigenvectors)
-    memcpy(v,a,n*n*sizeof(double));
+    memcpy(v,a,n*n*sizeof(T));
   return true;
 }
 
-void complexEigenDecomposeSymmetric(int n, float *v, float *d,
-				    float *a, bool eigenvectors) {
-  //        SUBROUTINE CHEEV( JOBZ, UPLO, N, A, LDA, W, WORK, LWORK, RWORK,
-  //     $                  INFO )
-  //*  Purpose
-  //*  =======
-  //*
-  //*  CHEEV computes all eigenvalues and, optionally, eigenvectors of a
-  //*  complex Hermitian matrix A.
-  //*
-  //*  Arguments
-  //*  =========
-  //*
-  //*  JOBZ    (input) CHARACTER*1
-  //*          = 'N':  Compute eigenvalues only;
-  //*          = 'V':  Compute eigenvalues and eigenvectors.
-  //*
-
+template <typename T>
+static void complexEigenDecomposeSymmetric(int n, T *v, T *d, T *a, 
+					   bool eigenvectors) {
   char JOBZ;
   if (eigenvectors)
     JOBZ = 'V';
   else
     JOBZ = 'N';
-
-  //*  UPLO    (input) CHARACTER*1
-  //*          = 'U':  Upper triangle of A is stored;
-  //*          = 'L':  Lower triangle of A is stored.
-  //*
   char UPLO = 'U';
-
-  //*  N       (input) INTEGER
-  //*          The order of the matrix A.  N >= 0.
-  //*
   int N = n;
-
-  //*  A       (input/output) COMPLEX array, dimension (LDA, N)
-  //*          On entry, the Hermitian matrix A.  If UPLO = 'U', the
-  //*          leading N-by-N upper triangular part of A contains the
-  //*          upper triangular part of the matrix A.  If UPLO = 'L',
-  //*          the leading N-by-N lower triangular part of A contains
-  //*          the lower triangular part of the matrix A.
-  //*          On exit, if JOBZ = 'V', then if INFO = 0, A contains the
-  //*          orthonormal eigenvectors of the matrix A.
-  //*          If JOBZ = 'N', then on exit the lower triangle (if UPLO='L')
-  //*          or the upper triangle (if UPLO='U') of A, including the
-  //*          diagonal, is destroyed.
-  //*
-  //*  LDA     (input) INTEGER
-  //*          The leading dimension of the array A.  LDA >= max(1,N).
-  //*
-    
   int LDA = n;
-    
-  //*  W       (output) REAL array, dimension (N)
-  //*          If INFO = 0, the eigenvalues in ascending order.
-  //*
-
-  //*  WORK    (workspace/output) COMPLEX array, dimension (LWORK)
-  //*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
-  //*
-
-  //*  LWORK   (input) INTEGER
-  //*          The length of the array WORK.  LWORK >= max(1,2*N-1).
-  //*          For optimal efficiency, LWORK >= (NB+1)*N,
-  //*          where NB is the blocksize for CHETRD returned by ILAENV.
-  //*
-  //*          If LWORK = -1, then a workspace query is assumed; the routine
-  //*          only calculates the optimal size of the WORK array, returns
-  //*          this value as the first entry of the WORK array, and no error
-  //*          message related to LWORK is issued by XERBLA.
-  //*
-
-  //*  RWORK   (workspace) REAL array, dimension (max(1, 3*N-2))
-  //*
-  float *RWORK = (float*) Malloc(MAX(1,3*N-2)*sizeof(float));
-
-  //*  INFO    (output) INTEGER
-  //*          = 0:  successful exit
-  //*          < 0:  if INFO = -i, the i-th argument had an illegal value
-  //*          > 0:  if INFO = i, the algorithm failed to converge; i
-  //*                off-diagonal elements of an intermediate tridiagonal
-  //*                form did not converge to zero.
-  //*
+  MemBlock<T> RWORK(MAX(1,3*N-2));
   int LWORK;
   int INFO;
-  float WORKSZE[2];
+  T WORKSZE[2];
   LWORK = -1;
-  cheev_(&JOBZ,&UPLO,&N,a,&LDA,d,WORKSZE,&LWORK,RWORK,&INFO);
+  Theev(&JOBZ,&UPLO,&N,a,&LDA,d,WORKSZE,&LWORK,&RWORK,&INFO);
   LWORK = (int) WORKSZE[0];
-  float *WORK = (float*) Malloc(2*LWORK*sizeof(float));
-  cheev_(&JOBZ,&UPLO,&N,a,&LDA,d,WORK,&LWORK,RWORK,&INFO);
-  Free(WORK);
-  Free(RWORK);
+  MemBlock<T> WORK(2*LWORK);
+  Theev(&JOBZ,&UPLO,&N,a,&LDA,d,&WORK,&LWORK,&RWORK,&INFO);
   if (eigenvectors)
-    memcpy(v,a,2*n*n*sizeof(float));
+    memcpy(v,a,2*n*n*sizeof(T));
 }
 
-void complexEigenDecompose(int n, float *v, float *d, float *a,
-			   bool eigenvectors, bool balance) {
-  //	SUBROUTINE CGEEVX( BALANC, JOBVL, JOBVR, SENSE, N, A, LDA, W, VL,
-  //     $                   LDVL, VR, LDVR, ILO, IHI, SCALE, ABNRM, RCONDE,
-  //     $                   RCONDV, WORK, LWORK, RWORK, INFO )
-  //*  Purpose
-  //*  =======
-  //*
-  //*  ZGEEVX computes for an N-by-N complex nonsymmetric matrix A, the
-  //*  eigenvalues and, optionally, the left and/or right eigenvectors.
-  //*
-  //*  Optionally also, it computes a balancing transformation to improve
-  //*  the conditioning of the eigenvalues and eigenvectors (ILO, IHI,
-  //*  SCALE, and ABNRM), reciprocal condition numbers for the eigenvalues
-  //*  (RCONDE), and reciprocal condition numbers for the right
-  //*  eigenvectors (RCONDV).
-  //*
-  //*  The right eigenvector v(j) of A satisfies
-  //*                   A * v(j) = lambda(j) * v(j)
-  //*  where lambda(j) is its eigenvalue.
-  //*  The left eigenvector u(j) of A satisfies
-  //*                u(j)**H * A = lambda(j) * u(j)**H
-  //*  where u(j)**H denotes the conjugate transpose of u(j).
-  //*
-  //*  The computed eigenvectors are normalized to have Euclidean norm
-  //*  equal to 1 and largest component real.
-  //*
-  //*  Balancing a matrix means permuting the rows and columns to make it
-  //*  more nearly upper triangular, and applying a diagonal similarity
-  //*  transformation D * A * D**(-1), where D is a diagonal matrix, to
-  //*  make its rows and columns closer in norm and the condition numbers
-  //*  of its eigenvalues and eigenvectors smaller.  The computed
-  //*  reciprocal condition numbers correspond to the balanced matrix.
-  //*  Permuting rows and columns will not change the condition numbers
-  //*  (in exact arithmetic) but diagonal scaling will.  For further
-  //*  explanation of balancing, see section 4.10.2 of the LAPACK
-  //*  Users' Guide.
-  //*
-  //*  Arguments
-  //*  =========
-  //*
-  //*  BALANC  (input) CHARACTER*1
-  //*          Indicates how the input matrix should be diagonally scaled
-  //*          and/or permuted to improve the conditioning of its
-  //*          eigenvalues.
-  //*          = 'N': Do not diagonally scale or permute;
-  //*          = 'P': Perform permutations to make the matrix more nearly
-  //*                 upper triangular. Do not diagonally scale;
-  //*          = 'S': Diagonally scale the matrix, ie. replace A by
-  //*                 D*A*D**(-1), where D is a diagonal matrix chosen
-  //*                 to make the rows and columns of A more equal in
-  //*                 norm. Do not permute;
-  //*          = 'B': Both diagonally scale and permute A.
-  //*
-  //*          Computed reciprocal condition numbers will be for the matrix
-  //*          after balancing and/or permuting. Permuting does not change
-  //*          condition numbers (in exact arithmetic), but balancing does.
-  
+template <typename T>
+static void complexEigenDecompose(int n, T *v, T *d, T *a,
+				  bool eigenvectors, bool balance) {
   char BALANC;
   if (balance)
     BALANC = 'B';
   else
     BALANC = 'N';
-
-  //*  JOBVL   (input) CHARACTER*1
-  //*          = 'N': left eigenvectors of A are not computed;
-  //*          = 'V': left eigenvectors of A are computed.
-  //*          If SENSE = 'E' or 'B', JOBVL must = 'V'.
-  
   char JOBVL = 'N';
-  
-  //*  JOBVR   (input) CHARACTER*1
-  //*          = 'N': right eigenvectors of A are not computed;
-  //*          = 'V': right eigenvectors of A are computed.
-  //*          If SENSE = 'E' or 'B', JOBVR must = 'V'.
-
   char JOBVR;
   if (eigenvectors)
     JOBVR = 'V';
   else
     JOBVR = 'N';
-
-  //*  SENSE   (input) CHARACTER*1
-  //*          Determines which reciprocal condition numbers are computed.
-  //*          = 'N': None are computed;
-  //*          = 'E': Computed for eigenvalues only;
-  //*          = 'V': Computed for right eigenvectors only;
-  //*          = 'B': Computed for eigenvalues and right eigenvectors.
-  //*
-  //*          If SENSE = 'E' or 'B', both left and right eigenvectors
-  //*          must also be computed (JOBVL = 'V' and JOBVR = 'V').
-
   char SENSE = 'N';
-
-  //*  N       (input) INTEGER
-  //*          The order of the matrix A. N >= 0.
-
   int N = n;
-  
-  //*  A       (input/output) REAL array, dimension (LDA,N)
-  //*          On entry, the N-by-N matrix A.
-  //*          On exit, A has been overwritten.  If JOBVL = 'V' or
-  //*          JOBVR = 'V', A contains the real Schur form of the balanced
-  //*          version of the input matrix A.
-
-  float *Ain = a;
-
-  //*  LDA     (input) INTEGER
-  //*          The leading dimension of the array A.  LDA >= max(1,N).
-
+  T *Ain = a;
   int LDA = n;
-
-  //*  W       (output) COMPLEX array, dimension (N)
-  //*          W contains the computed eigenvalues.
-
-  float *W = d;
-
-  //*  VL      (output) COMPLEX array, dimension (LDVL,N)
-  //*          If JOBVL = 'V', the left eigenvectors u(j) are stored one
-  //*          after another in the columns of VL, in the same order
-  //*          as their eigenvalues.
-  //*          If JOBVL = 'N', VL is not referenced.
-  //*          u(j) = VL(:,j), the j-th column of VL.
-  //
-  float *VL = NULL;
-
-  //*  LDVL    (input) INTEGER
-  //*          The leading dimension of the array VL.  LDVL >= 1; if
-  //*          JOBVL = 'V', LDVL >= N.
-
+  T *W = d;
+  T *VL = NULL;
   int LDVL = 1;
-
-  //*  VR      (output) COMPLEX array, dimension (LDVR,N)
-  //*          If JOBVR = 'V', the right eigenvectors v(j) are stored one
-  //*          after another in the columns of VR, in the same order
-  //*          as their eigenvalues.
-  //*          If JOBVR = 'N', VR is not referenced.
-  //*          v(j) = VR(:,j), the j-th column of VR.
-
-  float *VR = v;
-
-  //*  LDVR    (input) INTEGER
-  //*          The leading dimension of the array VR.  LDVR >= 1, and if
-  //*          JOBVR = 'V', LDVR >= N.
-
+  T *VR = v;
   int LDVR = n;
-
-  //*  ILO,IHI (output) INTEGER
-  //*          ILO and IHI are integer values determined when A was
-  //*          balanced.  The balanced A(i,j) = 0 if I > J and
-  //*          J = 1,...,ILO-1 or I = IHI+1,...,N.
-
   int ILO;
   int IHI;
-
-  //*  SCALE   (output) REAL array, dimension (N)
-  //*          Details of the permutations and scaling factors applied
-  //*          when balancing A.  If P(j) is the index of the row and column
-  //*          interchanged with row and column j, and D(j) is the scaling
-  //*          factor applied to row and column j, then
-  //*          SCALE(J) = P(J),    for J = 1,...,ILO-1
-  //*                   = D(J),    for J = ILO,...,IHI
-  //*                   = P(J)     for J = IHI+1,...,N.
-  //*          The order in which the interchanges are made is N to IHI+1,
-  //*          then 1 to ILO-1.
-
-  float *SCALE = (float*) Malloc(n*sizeof(float));
-
-  //*  ABNRM   (output) REAL
-  //*          The one-norm of the balanced matrix (the maximum
-  //*          of the sum of absolute values of elements of any column).
-
-  float ABNRM;
-
-  //*  RCONDE  (output) REAL array, dimension (N)
-  //*          RCONDE(j) is the reciprocal condition number of the j-th
-  //*          eigenvalue.
-
-  float *RCONDE = (float*) Malloc(n*sizeof(float));
-
-  //*  RCONDV  (output) REAL array, dimension (N)
-  //*          RCONDV(j) is the reciprocal condition number of the j-th
-  //*          right eigenvector.
-
-  float *RCONDV = (float*) Malloc(n*sizeof(float));
-
-  //*  WORK    (workspace/output) COMPLEX array, dimension (LWORK)
-  //*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
-
-  //*  LWORK   (input) INTEGER
-  //*          The dimension of the array WORK.  If SENSE = 'N' or 'E',
-  //*          LWORK >= max(1,2*N), and if SENSE = 'V' or 'B',
-  //*          LWORK >= N*N+2*N.
-  //*          For good performance, LWORK must generally be larger.
-  //*
-  //*          If LWORK = -1, then a workspace query is assumed; the routine
-  //*          only calculates the optimal size of the WORK array, returns
-  //*          this value as the first entry of the WORK array, and no error
-  //*          message related to LWORK is issued by XERBLA.
-
+  MemBlock<T> SCALE(n);
+  T ABNRM;
+  MemBlock<T> RCONDE(n);
+  MemBlock<T> RCONDV(n);
   int LWORK;
-
-  //*  RWORK   (workspace) REAL array, dimension (2*N)
-  float *RWORK = (float*) Malloc(2*n*sizeof(float));
-
-  //*  INFO    (output) INTEGER
-  //*          = 0:  successful exit
-  //*          < 0:  if INFO = -i, the i-th argument had an illegal value.
-  //*          > 0:  if INFO = i, the QR algorithm failed to compute all the
-  //*                eigenvalues, and no eigenvectors or condition numbers
-  //*                have been computed; elements 1:ILO-1 and i+1:N of W
-  //*                contain eigenvalues which have converged.
-
+  MemBlock<T> RWORK(2*n);
   int INFO;
-
-  float WORKSZE[2];
-
+  T WORKSZE[2];
   LWORK = -1;
-  cgeevx_( &BALANC, &JOBVL, &JOBVR, &SENSE, &N, Ain, &LDA, W,
-	   VL, &LDVL, VR, &LDVR, &ILO, &IHI, SCALE, &ABNRM,
-	   RCONDE, RCONDV, WORKSZE, &LWORK, RWORK, &INFO );
-
+  Tgeevx<T>( &BALANC, &JOBVL, &JOBVR, &SENSE, &N, Ain, &LDA, W,
+	     VL, &LDVL, VR, &LDVR, &ILO, &IHI, &SCALE, &ABNRM,
+	     &RCONDE, &RCONDV, WORKSZE, &LWORK, &RWORK, &INFO );
   LWORK = (int) WORKSZE[0];
-  float *WORK = (float*) Malloc(2*LWORK*sizeof(float));
-
-  cgeevx_( &BALANC, &JOBVL, &JOBVR, &SENSE, &N, Ain, &LDA, W,
-	   VL, &LDVL, VR, &LDVR, &ILO, &IHI, SCALE, &ABNRM,
-	   RCONDE, RCONDV, WORK, &LWORK, RWORK, &INFO );
-
-  Free(WORK);
-  Free(SCALE);
-  Free(RCONDE);
-  Free(RCONDV);
-  Free(RWORK);
+  MemBlock<T> WORK(2*LWORK);
+  Tgeevx<T>( &BALANC, &JOBVL, &JOBVR, &SENSE, &N, Ain, &LDA, W,
+	     VL, &LDVL, VR, &LDVR, &ILO, &IHI, &SCALE, &ABNRM,
+	     &RCONDE, &RCONDV, &WORK, &LWORK, &RWORK, &INFO );
 }
 
-void local_c_div(float *c, float *a, float *b) {
-  double ratio, den;
-  double abr, abi, cr;
-
-  if( (abr = b[0]) < 0.)
-    abr = - abr;
-  if( (abi = b[1]) < 0.)
-    abi = - abi;
-  if( abr <= abi ) {
-    if(abi == 0) {
-      float af, bf;
-      af = bf = abr;
-      if (a[1] != 0 || a[0] != 0)
-	af = 1.;
-      c[1] = c[0] = af / bf;
-      return;
-    }
-    ratio = (double)b[0] / b[1] ;
-    den = b[1] * (1 + ratio*ratio);
-    cr = (a[0]*ratio + a[1]) / den;
-    c[1] = (a[1]*ratio - a[0]) / den;
-  } else {
-    ratio = (double)b[1] / b[0] ;
-    den = b[0] * (1 + ratio*ratio);
-    cr = (a[0] + a[1]*ratio) / den;
-    c[1] = (a[1] - a[0]*ratio) / den;
-  }
-  c[0] = cr;
-}
-
-void complexGenEigenDecompose(int n, float *v, float *d, float *a,
-			      float *b, bool eigenvectors) {
-  //      SUBROUTINE CGGEV( JOBVL, JOBVR, N, A, LDA, B, LDB, ALPHA, BETA,
-  //     $                  VL, LDVL, VR, LDVR, WORK, LWORK, RWORK, INFO )
-  //*  Purpose
-  //*  =======
-  //*
-  //*  CGGEV computes for a pair of N-by-N complex nonsymmetric matrices
-  //*  (A,B), the generalized eigenvalues, and optionally, the left and/or
-  //*  right generalized eigenvectors.
-  //*
-  //*  A generalized eigenvalue for a pair of matrices (A,B) is a scalar
-  //*  lambda or a ratio alpha/beta = lambda, such that A - lambda*B is
-  //*  singular. It is usually represented as the pair (alpha,beta), as
-  //*  there is a reasonable interpretation for beta=0, and even for both
-  //*  being zero.
-  //*
-  //*  The right generalized eigenvector v(j) corresponding to the
-  //*  generalized eigenvalue lambda(j) of (A,B) satisfies
-  //*
-  //*               A * v(j) = lambda(j) * B * v(j).
-  //*
-  //*  The left generalized eigenvector u(j) corresponding to the
-  //*  generalized eigenvalues lambda(j) of (A,B) satisfies
-  //*
-  //*               u(j)**H * A = lambda(j) * u(j)**H * B
-  //*
-  //*  where u(j)**H is the conjugate-transpose of u(j).
-  //*
-  //*  Arguments
-  //*  =========
-  //*
-  //*  JOBVL   (input) CHARACTER*1
-  //*          = 'N':  do not compute the left generalized eigenvectors;
-  //*          = 'V':  compute the left generalized eigenvectors.
+template <typename T>
+static void complexGenEigenDecompose(int n, T *v, T *d, T *a, T *b, 
+				     bool eigenvectors) {
   char JOBVL = 'N';
-  //*
-  //*  JOBVR   (input) CHARACTER*1
-  //*          = 'N':  do not compute the right generalized eigenvectors;
-  //*          = 'V':  compute the right generalized eigenvectors.
-  //*
   char JOBVR;
   if (eigenvectors)
     JOBVR = 'V';
   else
     JOBVR = 'N';
-  //*  N       (input) INTEGER
-  //*          The order of the matrices A, B, VL, and VR.  N >= 0.
-  //*
   int N = n;
-  //*  A       (input/output) COMPLEX array, dimension (LDA, N)
-  //*          On entry, the matrix A in the pair (A,B).
-  //*          On exit, A has been overwritten.
-  //*
-  float *A = a;
-  //*  LDA     (input) INTEGER
-  //*          The leading dimension of A.  LDA >= max(1,N).
-  //*
+  T *A = a;
   int LDA = n;
-  //*  B       (input/output) COMPLEX array, dimension (LDB, N)
-  //*          On entry, the matrix B in the pair (A,B).
-  //*          On exit, B has been overwritten.
-  //*
-  float *B = b;
-  //*  LDB     (input) INTEGER
-  //*          The leading dimension of B.  LDB >= max(1,N).
-  //*
+  T *B = b;
   int LDB = N;
-  //*  ALPHA   (output) COMPLEX array, dimension (N)
-  //*  BETA    (output) COMPLEX array, dimension (N)
-  //*          On exit, ALPHA(j)/BETA(j), j=1,...,N, will be the
-  //*          generalized eigenvalues.
-  //*
-  //*          Note: the quotients ALPHA(j)/BETA(j) may easily over- or
-  //*          underflow, and BETA(j) may even be zero.  Thus, the user
-  //*          should avoid naively computing the ratio alpha/beta.
-  //*          However, ALPHA will be always less than and usually
-  //*          comparable with norm(A) in magnitude, and BETA always less
-  //*          than and usually comparable with norm(B).
-  //*
-  float *ALPHA = (float*) Malloc(2*n*sizeof(float));
-  float *BETA = (float*) Malloc(2*n*sizeof(float));
-  //*  VL      (output) COMPLEX array, dimension (LDVL,N)
-  //*          If JOBVL = 'V', the left generalized eigenvectors u(j) are
-  //*          stored one after another in the columns of VL, in the same
-  //*          order as their eigenvalues.
-  //*          Each eigenvector will be scaled so the largest component
-  //*          will have abs(real part) + abs(imag. part) = 1.
-  //*          Not referenced if JOBVL = 'N'.
-  //*
-  float *VL = NULL;
-  //*  LDVL    (input) INTEGER
-  //*          The leading dimension of the matrix VL. LDVL >= 1, and
-  //*          if JOBVL = 'V', LDVL >= N.
-  //*
+  MemBlock<T> ALPHA(2*n);
+  MemBlock<T> BETA(2*n);
+  T *VL = NULL;
   int LDVL = n;
-  //*  VR      (output) COMPLEX array, dimension (LDVR,N)
-  //*          If JOBVR = 'V', the right generalized eigenvectors v(j) are
-  //*          stored one after another in the columns of VR, in the same
-  //*          order as their eigenvalues.
-  //*          Each eigenvector will be scaled so the largest component
-  //*          will have abs(real part) + abs(imag. part) = 1.
-  //*          Not referenced if JOBVR = 'N'.
-  //*
-  float *VR = v;
-  //*  LDVR    (input) INTEGER
-  //*          The leading dimension of the matrix VR. LDVR >= 1, and
-  //*          if JOBVR = 'V', LDVR >= N.
-  //*
+  T *VR = v;
   int LDVR = n;
-  //*  WORK    (workspace/output) COMPLEX array, dimension (LWORK)
-  //*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
-  //*
-  //*  LWORK   (input) INTEGER
-  //*          The dimension of the array WORK.  LWORK >= max(1,2*N).
-  //*          For good performance, LWORK must generally be larger.
-  //*
-  //*          If LWORK = -1, then a workspace query is assumed; the routine
-  //*          only calculates the optimal size of the WORK array, returns
-  //*          this value as the first entry of the WORK array, and no error
-  //*          message related to LWORK is issued by XERBLA.
-  //*
-  //*  RWORK   (workspace/output) REAL array, dimension (8*N)
-  //*
-  float *RWORK = (float*) Malloc(8*n*sizeof(float));
-  //*  INFO    (output) INTEGER
-  //*          = 0:  successful exit
-  //*          < 0:  if INFO = -i, the i-th argument had an illegal value.
-  //*          =1,...,N:
-  //*                The QZ iteration failed.  No eigenvectors have been
-  //*                calculated, but ALPHA(j) and BETA(j) should be
-  //*                correct for j=INFO+1,...,N.
-  //*          > N:  =N+1: other then QZ iteration failed in SHGEQZ,
-  //*                =N+2: error return from STGEVC.
-  //
-  float WORKSIZE[2];
+  MemBlock<T> RWORK(8*n);
+  T WORKSIZE[2];
   int LWORK = -1;
   int INFO;
-  cggev_( &JOBVL, &JOBVR, &N, A, &LDA, B, &LDB, ALPHA, BETA,
-	  VL, &LDVL, VR, &LDVR, &WORKSIZE[0], &LWORK, RWORK, &INFO );
+  Tggev( &JOBVL, &JOBVR, &N, A, &LDA, B, &LDB, &ALPHA, &BETA,
+	 VL, &LDVL, VR, &LDVR, &WORKSIZE[0], &LWORK, &RWORK, &INFO );
   LWORK = (int) WORKSIZE[0];
-  float *WORK = (float*) Malloc(LWORK*2*sizeof(float));
-  cggev_( &JOBVL, &JOBVR, &N, A, &LDA, B, &LDB, ALPHA, BETA,
-	  VL, &LDVL, VR, &LDVR, WORK, &LWORK, RWORK, &INFO );
+  MemBlock<T> WORK(LWORK*2);
+  Tggev( &JOBVL, &JOBVR, &N, A, &LDA, B, &LDB, &ALPHA, &BETA,
+	 VL, &LDVL, VR, &LDVR, &WORK, &LWORK, &RWORK, &INFO );
   int i;
-  for (i=0;i<n;i++)
-    local_c_div(d+2*i,ALPHA+2*i,BETA+2*i);
-  Free(ALPHA);
-  Free(BETA);
-  Free(RWORK);
-  Free(WORK);
+  for (i=0;i<n;i++) 
+    complex_divide<T>(ALPHA[2*i],ALPHA[2*i+1],
+		      BETA[2*i],BETA[2*i+1],
+		      d[2*i],d[2*i+1]);
 }
 
-bool complexGenEigenDecomposeSymmetric(int n, float *v, float *d,
-				       float *a, float *b, 
-				       bool eigenvectors) {
-  //      SUBROUTINE CHEGV( ITYPE, JOBZ, UPLO, N, A, LDA, B, LDB, W, WORK,
-  //     $                  LWORK, RWORK, INFO )
-  //*  Purpose
-  //*  =======
-  //*
-  //*  CHEGV computes all the eigenvalues, and optionally, the eigenvectors
-  //*  of a complex generalized Hermitian-definite eigenproblem, of the form
-  //*  A*x=(lambda)*B*x,  A*Bx=(lambda)*x,  or B*A*x=(lambda)*x.
-  //*  Here A and B are assumed to be Hermitian and B is also
-  //*  positive definite.
-  //*
-  //*  Arguments
-  //*  =========
-  //*
-  //*  ITYPE   (input) INTEGER
-  //*          Specifies the problem type to be solved:
-  //*          = 1:  A*x = (lambda)*B*x
-  //*          = 2:  A*B*x = (lambda)*x
-  //*          = 3:  B*A*x = (lambda)*x
-  //*
-  int ITYPE = 1;
-  //*  JOBZ    (input) CHARACTER*1
-  //*          = 'N':  Compute eigenvalues only;
-  //*          = 'V':  Compute eigenvalues and eigenvectors.
-  //*
-  char JOBZ;
-  if (eigenvectors)
-    JOBZ = 'V';
-  else
-    JOBZ = 'N';
-  //*  UPLO    (input) CHARACTER*1
-  //*          = 'U':  Upper triangles of A and B are stored;
-  //*          = 'L':  Lower triangles of A and B are stored.
-  //*
-  char UPLO = 'U';
-  //*  N       (input) INTEGER
-  //*          The order of the matrices A and B.  N >= 0.
-  //*
-  int N = n;
-  //*  A       (input/output) COMPLEX array, dimension (LDA, N)
-  //*          On entry, the Hermitian matrix A.  If UPLO = 'U', the
-  //*          leading N-by-N upper triangular part of A contains the
-  //*          upper triangular part of the matrix A.  If UPLO = 'L',
-  //*          the leading N-by-N lower triangular part of A contains
-  //*          the lower triangular part of the matrix A.
-  //*
-  //*          On exit, if JOBZ = 'V', then if INFO = 0, A contains the
-  //*          matrix Z of eigenvectors.  The eigenvectors are normalized
-  //*          as follows:
-  //*          if ITYPE = 1 or 2, Z**H*B*Z = I;
-  //*          if ITYPE = 3, Z**H*inv(B)*Z = I.
-  //*          If JOBZ = 'N', then on exit the upper triangle (if UPLO='U')
-  //*          or the lower triangle (if UPLO='L') of A, including the
-  //*          diagonal, is destroyed.
-  //*
-  float *A = a;
-  //*  LDA     (input) INTEGER
-  //*          The leading dimension of the array A.  LDA >= max(1,N).
-  //*
-  int LDA = n;
-  //*  B       (input/output) COMPLEX array, dimension (LDB, N)
-  //*          On entry, the Hermitian positive definite matrix B.
-  //*          If UPLO = 'U', the leading N-by-N upper triangular part of B
-  //*          contains the upper triangular part of the matrix B.
-  //*          If UPLO = 'L', the leading N-by-N lower triangular part of B
-  //*          contains the lower triangular part of the matrix B.
-  //*
-  //*          On exit, if INFO <= N, the part of B containing the matrix is
-  //*          overwritten by the triangular factor U or L from the Cholesky
-  //*          factorization B = U**H*U or B = L*L**H.
-  //*
-  float *B = b;
-  //*  LDB     (input) INTEGER
-  //*          The leading dimension of the array B.  LDB >= max(1,N).
-  //*
-  int LDB = n;
-  //*  W       (output) REAL array, dimension (N)
-  //*          If INFO = 0, the eigenvalues in ascending order.
-  //*
-  float *W = d;
-  //*  WORK    (workspace/output) COMPLEX array, dimension (LWORK)
-  //*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
-  //*
-  //*  LWORK   (input) INTEGER
-  //*          The length of the array WORK.  LWORK >= max(1,2*N-1).
-  //*          For optimal efficiency, LWORK >= (NB+1)*N,
-  //*          where NB is the blocksize for CHETRD returned by ILAENV.
-  //*
-  //*          If LWORK = -1, then a workspace query is assumed; the routine
-  //*          only calculates the optimal size of the WORK array, returns
-  //*          this value as the first entry of the WORK array, and no error
-  //*          message related to LWORK is issued by XERBLA.
-  //*
-  //*  RWORK   (workspace) REAL array, dimension (max(1, 3*N-2))
-  float *RWORK = (float*) Malloc(MAX(1,3*N-2)*sizeof(float));
-  //*
-  //*  INFO    (output) INTEGER
-  //*          = 0:  successful exit
-  //*          < 0:  if INFO = -i, the i-th argument had an illegal value
-  //*          > 0:  CPOTRF or CHEEV returned an error code:
-  //*             <= N:  if INFO = i, CHEEV failed to converge;
-  //*                    i off-diagonal elements of an intermediate
-  //*                    tridiagonal form did not converge to zero;
-  //*             > N:   if INFO = N + i, for 1 <= i <= N, then the leading
-  //*                    minor of order i of B is not positive definite.
-  //*                    The factorization of B could not be completed and
-  //*                    no eigenvalues or eigenvectors were computed.
-  int INFO;
-  int LWORK;
-  LWORK = MAX(1,2*N-1);
-  float *WORK = (float*) Malloc(2*LWORK*sizeof(float));
-  chegv_(&ITYPE, &JOBZ, &UPLO, &N, A, &LDA, B, &LDB, W, WORK,
-	 &LWORK, RWORK, &INFO );    
-  if (INFO>N) return false;
-  if (eigenvectors)
-    memcpy(v,a,2*n*n*sizeof(float));
-  return true;
-}
-
-void dcomplexEigenDecomposeSymmetric(int n, double *v, double *d,
-				     double *a, bool eigenvectors) {
-  //        SUBROUTINE ZHEEV( JOBZ, UPLO, N, A, LDA, W, WORK, LWORK, RWORK,
-  //     $                  INFO )
-  //*  Purpose
-  //*  =======
-  //*
-  //*  ZHEEV computes all eigenvalues and, optionally, eigenvectors of a
-  //*  complex Hermitian matrix A.
-  //*
-  //*  Arguments
-  //*  =========
-  //*
-  //*  JOBZ    (input) CHARACTER*1
-  //*          = 'N':  Compute eigenvalues only;
-  //*          = 'V':  Compute eigenvalues and eigenvectors.
-  //*
-
-  char JOBZ;
-  if (eigenvectors)
-    JOBZ = 'V';
-  else
-    JOBZ = 'N';
-
-  //*  UPLO    (input) CHARACTER*1
-  //*          = 'U':  Upper triangle of A is stored;
-  //*          = 'L':  Lower triangle of A is stored.
-  //*
-  char UPLO = 'U';
-
-  //*  N       (input) INTEGER
-  //*          The order of the matrix A.  N >= 0.
-  //*
-  int N = n;
-
-  //*  A       (input/output) COMPLEX array, dimension (LDA, N)
-  //*          On entry, the Hermitian matrix A.  If UPLO = 'U', the
-  //*          leading N-by-N upper triangular part of A contains the
-  //*          upper triangular part of the matrix A.  If UPLO = 'L',
-  //*          the leading N-by-N lower triangular part of A contains
-  //*          the lower triangular part of the matrix A.
-  //*          On exit, if JOBZ = 'V', then if INFO = 0, A contains the
-  //*          orthonormal eigenvectors of the matrix A.
-  //*          If JOBZ = 'N', then on exit the lower triangle (if UPLO='L')
-  //*          or the upper triangle (if UPLO='U') of A, including the
-  //*          diagonal, is destroyed.
-  //*
-  //*  LDA     (input) INTEGER
-  //*          The leading dimension of the array A.  LDA >= max(1,N).
-  //*
-    
-  int LDA = n;
-    
-  //*  W       (output) REAL array, dimension (N)
-  //*          If INFO = 0, the eigenvalues in ascending order.
-  //*
-
-  //*  WORK    (workspace/output) COMPLEX array, dimension (LWORK)
-  //*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
-  //*
-
-  //*  LWORK   (input) INTEGER
-  //*          The length of the array WORK.  LWORK >= max(1,2*N-1).
-  //*          For optimal efficiency, LWORK >= (NB+1)*N,
-  //*          where NB is the blocksize for CHETRD returned by ILAENV.
-  //*
-  //*          If LWORK = -1, then a workspace query is assumed; the routine
-  //*          only calculates the optimal size of the WORK array, returns
-  //*          this value as the first entry of the WORK array, and no error
-  //*          message related to LWORK is issued by XERBLA.
-  //*
-
-  //*  RWORK   (workspace) REAL array, dimension (max(1, 3*N-2))
-  //*
-  double *RWORK = (double*) Malloc(MAX(1,3*N-2)*sizeof(double));
-
-  //*  INFO    (output) INTEGER
-  //*          = 0:  successful exit
-  //*          < 0:  if INFO = -i, the i-th argument had an illegal value
-  //*          > 0:  if INFO = i, the algorithm failed to converge; i
-  //*                off-diagonal elements of an intermediate tridiagonal
-  //*                form did not converge to zero.
-  //*
-  int LWORK;
-  int INFO;
-  double WORKSZE[2];
-  LWORK = -1;
-  zheev_(&JOBZ,&UPLO,&N,a,&LDA,d,WORKSZE,&LWORK,RWORK,&INFO);
-  LWORK = (int) WORKSZE[0];
-  double *WORK = (double*) Malloc(2*LWORK*sizeof(double));
-  zheev_(&JOBZ,&UPLO,&N,a,&LDA,d,WORK,&LWORK,RWORK,&INFO);
-  Free(WORK);
-  Free(RWORK);
-  if (eigenvectors)
-    memcpy(v,a,2*n*n*sizeof(double));
-}
-
-void dcomplexEigenDecompose(int n, double *v, double *d, 
-			    double *a, bool eigenvectors, bool balance) {
-  //	SUBROUTINE ZGEEVX( BALANC, JOBVL, JOBVR, SENSE, N, A, LDA, W, VL,
-  //     $                   LDVL, VR, LDVR, ILO, IHI, SCALE, ABNRM, RCONDE,
-  //     $                   RCONDV, WORK, LWORK, RWORK, INFO )
-  //*  Purpose
-  //*  =======
-  //*
-  //*  ZGEEVX computes for an N-by-N complex nonsymmetric matrix A, the
-  //*  eigenvalues and, optionally, the left and/or right eigenvectors.
-  //*
-  //*  Optionally also, it computes a balancing transformation to improve
-  //*  the conditioning of the eigenvalues and eigenvectors (ILO, IHI,
-  //*  SCALE, and ABNRM), reciprocal condition numbers for the eigenvalues
-  //*  (RCONDE), and reciprocal condition numbers for the right
-  //*  eigenvectors (RCONDV).
-  //*
-  //*  The right eigenvector v(j) of A satisfies
-  //*                   A * v(j) = lambda(j) * v(j)
-  //*  where lambda(j) is its eigenvalue.
-  //*  The left eigenvector u(j) of A satisfies
-  //*                u(j)**H * A = lambda(j) * u(j)**H
-  //*  where u(j)**H denotes the conjugate transpose of u(j).
-  //*
-  //*  The computed eigenvectors are normalized to have Euclidean norm
-  //*  equal to 1 and largest component real.
-  //*
-  //*  Balancing a matrix means permuting the rows and columns to make it
-  //*  more nearly upper triangular, and applying a diagonal similarity
-  //*  transformation D * A * D**(-1), where D is a diagonal matrix, to
-  //*  make its rows and columns closer in norm and the condition numbers
-  //*  of its eigenvalues and eigenvectors smaller.  The computed
-  //*  reciprocal condition numbers correspond to the balanced matrix.
-  //*  Permuting rows and columns will not change the condition numbers
-  //*  (in exact arithmetic) but diagonal scaling will.  For further
-  //*  explanation of balancing, see section 4.10.2 of the LAPACK
-  //*  Users' Guide.
-  //*
-  //*  Arguments
-  //*  =========
-  //*
-  //*  BALANC  (input) CHARACTER*1
-  //*          Indicates how the input matrix should be diagonally scaled
-  //*          and/or permuted to improve the conditioning of its
-  //*          eigenvalues.
-  //*          = 'N': Do not diagonally scale or permute;
-  //*          = 'P': Perform permutations to make the matrix more nearly
-  //*                 upper triangular. Do not diagonally scale;
-  //*          = 'S': Diagonally scale the matrix, ie. replace A by
-  //*                 D*A*D**(-1), where D is a diagonal matrix chosen
-  //*                 to make the rows and columns of A more equal in
-  //*                 norm. Do not permute;
-  //*          = 'B': Both diagonally scale and permute A.
-  //*
-  //*          Computed reciprocal condition numbers will be for the matrix
-  //*          after balancing and/or permuting. Permuting does not change
-  //*          condition numbers (in exact arithmetic), but balancing does.
-  
-  char BALANC;
-  if (balance)
-    BALANC = 'B';
-  else
-    BALANC = 'N';
-
-  //*  JOBVL   (input) CHARACTER*1
-  //*          = 'N': left eigenvectors of A are not computed;
-  //*          = 'V': left eigenvectors of A are computed.
-  //*          If SENSE = 'E' or 'B', JOBVL must = 'V'.
-  
-  char JOBVL = 'N';
-  
-  //*  JOBVR   (input) CHARACTER*1
-  //*          = 'N': right eigenvectors of A are not computed;
-  //*          = 'V': right eigenvectors of A are computed.
-  //*          If SENSE = 'E' or 'B', JOBVR must = 'V'.
-
-  char JOBVR;
-  if (eigenvectors)
-    JOBVR = 'V';
-  else
-    JOBVR = 'N';
-
-  //*  SENSE   (input) CHARACTER*1
-  //*          Determines which reciprocal condition numbers are computed.
-  //*          = 'N': None are computed;
-  //*          = 'E': Computed for eigenvalues only;
-  //*          = 'V': Computed for right eigenvectors only;
-  //*          = 'B': Computed for eigenvalues and right eigenvectors.
-  //*
-  //*          If SENSE = 'E' or 'B', both left and right eigenvectors
-  //*          must also be computed (JOBVL = 'V' and JOBVR = 'V').
-
-  char SENSE = 'N';
-
-  //*  N       (input) INTEGER
-  //*          The order of the matrix A. N >= 0.
-
-  int N = n;
-  
-  //*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
-  //*          On entry, the N-by-N matrix A.
-  //*          On exit, A has been overwritten.  If JOBVL = 'V' or
-  //*          JOBVR = 'V', A contains the real Schur form of the balanced
-  //*          version of the input matrix A.
-
-  double *Ain = a;
-
-  //*  LDA     (input) INTEGER
-  //*          The leading dimension of the array A.  LDA >= max(1,N).
-
-  int LDA = n;
-
-  //*  W       (output) COMPLEX*16 array, dimension (N)
-  //*          W contains the computed eigenvalues.
-
-  double *W = d;
-
-  //*  VL      (output) COMPLEX*16 array, dimension (LDVL,N)
-  //*          If JOBVL = 'V', the left eigenvectors u(j) are stored one
-  //*          after another in the columns of VL, in the same order
-  //*          as their eigenvalues.
-  //*          If JOBVL = 'N', VL is not referenced.
-  //*          u(j) = VL(:,j), the j-th column of VL.
-  //
-  double *VL = NULL;
-
-  //*  LDVL    (input) INTEGER
-  //*          The leading dimension of the array VL.  LDVL >= 1; if
-  //*          JOBVL = 'V', LDVL >= N.
-
-  int LDVL = 1;
-
-  //*  VR      (output) COMPLEX*16 array, dimension (LDVR,N)
-  //*          If JOBVR = 'V', the right eigenvectors v(j) are stored one
-  //*          after another in the columns of VR, in the same order
-  //*          as their eigenvalues.
-  //*          If JOBVR = 'N', VR is not referenced.
-  //*          v(j) = VR(:,j), the j-th column of VR.
-
-  double *VR = v;
-
-  //*  LDVR    (input) INTEGER
-  //*          The leading dimension of the array VR.  LDVR >= 1, and if
-  //*          JOBVR = 'V', LDVR >= N.
-
-  int LDVR = n;
-
-  //*  ILO,IHI (output) INTEGER
-  //*          ILO and IHI are integer values determined when A was
-  //*          balanced.  The balanced A(i,j) = 0 if I > J and
-  //*          J = 1,...,ILO-1 or I = IHI+1,...,N.
-
-  int ILO;
-  int IHI;
-
-  //*  SCALE   (output) DOUBLE PRECISION array, dimension (N)
-  //*          Details of the permutations and scaling factors applied
-  //*          when balancing A.  If P(j) is the index of the row and column
-  //*          interchanged with row and column j, and D(j) is the scaling
-  //*          factor applied to row and column j, then
-  //*          SCALE(J) = P(J),    for J = 1,...,ILO-1
-  //*                   = D(J),    for J = ILO,...,IHI
-  //*                   = P(J)     for J = IHI+1,...,N.
-  //*          The order in which the interchanges are made is N to IHI+1,
-  //*          then 1 to ILO-1.
-
-  double *SCALE = (double*) Malloc(n*sizeof(double));
-
-  //*  ABNRM   (output) DOUBLE PRECISION
-  //*          The one-norm of the balanced matrix (the maximum
-  //*          of the sum of absolute values of elements of any column).
-
-  double ABNRM;
-
-  //*  RCONDE  (output) DOUBLE PRECISION array, dimension (N)
-  //*          RCONDE(j) is the reciprocal condition number of the j-th
-  //*          eigenvalue.
-
-  double *RCONDE = (double*) Malloc(n*sizeof(double));
-
-  //*  RCONDV  (output) DOUBLE PRECISION array, dimension (N)
-  //*          RCONDV(j) is the reciprocal condition number of the j-th
-  //*          right eigenvector.
-
-  double *RCONDV = (double*) Malloc(n*sizeof(double));
-
-  //*  WORK    (workspace/output) COMPLEX*16 array, dimension (LWORK)
-  //*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
-
-  //*  LWORK   (input) INTEGER
-  //*          The dimension of the array WORK.  If SENSE = 'N' or 'E',
-  //*          LWORK >= max(1,2*N), and if SENSE = 'V' or 'B',
-  //*          LWORK >= N*N+2*N.
-  //*          For good performance, LWORK must generally be larger.
-  //*
-  //*          If LWORK = -1, then a workspace query is assumed; the routine
-  //*          only calculates the optimal size of the WORK array, returns
-  //*          this value as the first entry of the WORK array, and no error
-  //*          message related to LWORK is issued by XERBLA.
-
-  int LWORK;
-
-  //*  RWORK   (workspace) DOUBLE PRECISION array, dimension (2*N)
-  double *RWORK = (double*) Malloc(2*n*sizeof(double));
-
-  //*  INFO    (output) INTEGER
-  //*          = 0:  successful exit
-  //*          < 0:  if INFO = -i, the i-th argument had an illegal value.
-  //*          > 0:  if INFO = i, the QR algorithm failed to compute all the
-  //*                eigenvalues, and no eigenvectors or condition numbers
-  //*                have been computed; elements 1:ILO-1 and i+1:N of W
-  //*                contain eigenvalues which have converged.
-
-  int INFO;
-
-  double WORKSZE[2];
-
-  LWORK = -1;
-  zgeevx_( &BALANC, &JOBVL, &JOBVR, &SENSE, &N, Ain, &LDA, W,
-	   VL, &LDVL, VR, &LDVR, &ILO, &IHI, SCALE, &ABNRM,
-	   RCONDE, RCONDV, WORKSZE, &LWORK, RWORK, &INFO );
-
-  LWORK = (int) WORKSZE[0];
-  double *WORK = (double*) Malloc(2*LWORK*sizeof(double));
-
-  zgeevx_( &BALANC, &JOBVL, &JOBVR, &SENSE, &N, Ain, &LDA, W,
-	   VL, &LDVL, VR, &LDVR, &ILO, &IHI, SCALE, &ABNRM,
-	   RCONDE, RCONDV, WORK, &LWORK, RWORK, &INFO );
-
-  Free(WORK);
-  Free(SCALE);
-  Free(RCONDE);
-  Free(RCONDV);
-  Free(RWORK);
-}
-
-void local_z_div(double *c, double *a, double *b) {
-  double ratio, den;
-  double abr, abi, cr;
-
-  if( (abr = b[0]) < 0.)
-    abr = - abr;
-  if( (abi = b[1]) < 0.)
-    abi = - abi;
-  if( abr <= abi ) {
-    if(abi == 0) {
-      if (a[1] != 0 || a[0] != 0)
-	abi = 1.;
-      c[1] = c[0] = abi / abr;
-      return;
-    }
-    ratio = b[0] / b[1] ;
-    den = b[1] * (1 + ratio*ratio);
-    cr = (a[0]*ratio + a[1]) / den;
-    c[1] = (a[1]*ratio - a[0]) / den;
-  } else {
-    ratio = b[1] / b[0] ;
-    den = b[0] * (1 + ratio*ratio);
-    cr = (a[0] + a[1]*ratio) / den;
-    c[1] = (a[1] - a[0]*ratio) / den;
-  }
-  c[0] = cr;
-}
-
-bool dcomplexGenEigenDecomposeSymmetric(int n, double *v, double *d,
-					double *a, double *b, 
-					bool eigenvectors) {
+template <typename T>
+static bool complexGenEigenDecomposeSymmetric(int n, T *v, T *d, T *a, T *b, 
+					      bool eigenvectors) {
   int ITYPE = 1;
   char JOBZ;
   if (eigenvectors)
@@ -2101,62 +462,1223 @@ bool dcomplexGenEigenDecomposeSymmetric(int n, double *v, double *d,
     JOBZ = 'N';
   char UPLO = 'U';
   int N = n;
-  double *A = a;
+  T *A = a;
   int LDA = n;
-  double *B = b;
+  T *B = b;
   int LDB = n;
-  double *W = d;
-  double *RWORK = (double*) Malloc(MAX(1,3*N-2)*sizeof(double));
+  T *W = d;
+  MemBlock<T> RWORK(MAX(1,3*N-2));
   int INFO;
   int LWORK;
   LWORK = MAX(1,2*N-1);
-  double *WORK = (double*) Malloc(LWORK*sizeof(double)*2);
-  zhegv_(&ITYPE, &JOBZ, &UPLO, &N, A, &LDA, B, &LDB, W, WORK,
-	 &LWORK, RWORK, &INFO );    
-  Free(WORK);
-  Free(RWORK);
+  MemBlock<T> WORK(2*LWORK);
+  Thegv(&ITYPE, &JOBZ, &UPLO, &N, A, &LDA, B, &LDB, W, &WORK,
+	&LWORK, &RWORK, &INFO );    
   if (INFO>N) return false;
   if (eigenvectors)
-    memcpy(v,a,2*n*n*sizeof(double));
+    memcpy(v,a,2*n*n*sizeof(T));
+  return true;
+
+}
+
+/**
+ * Eigen decomposition, symmetric matrix, compact decomposition case
+ */
+template <typename T>
+static void EigenDecomposeCompactSymmetric(Array &D, Array A) {
+  index_t N = A.rows();
+  NTuple Vdims(N,1);
+  if (A.allReal()) {
+    D = Array(GetDataClass<T>(),Vdims);
+    realEigenDecomposeSymmetric(int(N), (T*) NULL, D.real<T>().data(), 
+				A.real<T>().data(),false);
+  } else {
+    D = Array(GetDataClass<T>(),Vdims);
+    complexEigenDecomposeSymmetric(int(N), (T*) NULL, D.real<T>().data(),
+				   A.fortran<T>().data(),false);
+  }
+}
+
+void EigenDecomposeCompactSymmetric(Array A, Array& D) {
+  if (!A.is2D())
+    throw Exception("Cannot apply eigendecomposition to N-Dimensional arrays.");
+  if (A.rows() != A.columns())
+    throw Exception("Cannot eigendecompose a non-square matrix.");
+  // Create one square matrix to store the eigenvectors
+  switch (A.dataClass()) {
+  default: 
+    throw Exception("Unhandled type for symmetric eigendecomposition");
+  case Float:
+    EigenDecomposeCompactSymmetric<float>(D,A);
+    break;
+  case Double:
+    EigenDecomposeCompactSymmetric<double>(D,A);
+    break;
+  }
+}
+
+/**
+ * Eigen decomposition, symmetric matrix, full decomposition case
+ */
+template <typename T>
+static inline void EigenDecomposeFullSymmetric(Array &V, Array &D, Array A) {
+  index_t N = A.rows();
+  NTuple Vdims(N,N);
+  if (A.allReal()) {
+    BasicArray<T> eigenvals(NTuple(N,1));
+    V = Array(GetDataClass<T>(),Vdims);
+    realEigenDecomposeSymmetric(int(N), V.real<T>().data(), 
+				eigenvals.data(), 
+				A.real<T>().data(),
+				true);
+    D = DiagonalArray(eigenvals);
+  } else {
+    BasicArray<T> eigenvals(NTuple(N,1));
+    BasicArray<T> Vr(NTuple(2*N,N));
+    complexEigenDecomposeSymmetric(int(N), Vr.data(),
+				   eigenvals.data(),
+				   A.fortran<T>().data(),
+				   true);
+    V = Array(SplitReal(Vr),SplitImag(Vr));
+    D = DiagonalArray(eigenvals);
+  }
+}
+
+void EigenDecomposeFullSymmetric(const Array &A, Array& V, Array& D) {
+  if (!A.is2D())
+    throw Exception("Cannot apply eigendecomposition to N-Dimensional arrays.");
+  if (A.rows() != A.columns())
+    throw Exception("Cannot eigendecompose a non-square matrix.");
+  // Select the eigenvector decomposition routine based on A's type
+  switch (A.dataClass()) {
+  default: throw Exception("Unhandled type for eigendecomposition");
+  case Float:
+    EigenDecomposeFullSymmetric<float>(V,D,A);
+    break;
+  case Double:
+    EigenDecomposeFullSymmetric<double>(V,D,A);
+    break;
+  }
+}
+
+/**
+ * Perform an eigen decomposition of the matrix A - This version computes the 
+ * eigenvectors, and returns the eigenvalues in a diagonal matrix
+ */
+
+template <typename T>
+static void HandleEigenVectorsRealMatrix(BasicArray<T> &eigenvals,
+					 BasicArray<T> &Vp, 
+					 index_t N, Array &D, Array &V) {
+  // Make a pass through the eigenvals, and look for complex eigenvalues.
+  bool complexEigenvalues = MergedArrayHasComplexComponents(eigenvals);
+  if (!complexEigenvalues) {
+    D = DiagonalArray(SplitReal<T>(eigenvals));
+    V = Array(Vp);
+  } else {
+    D = DiagonalArray(SplitReal<T>(eigenvals),SplitImag<T>(eigenvals));
+    V = Array(GetDataClass<T>(),NTuple(N,N));
+    index_t i = 1;
+    while (i <= N) {
+      if ((i < N) && (eigenvals[2*i] != 0)) {
+	for (index_t j=1;j<=N;j++) {
+	  V.set(NTuple(j,i),Array(Vp.get(NTuple(j,i)),Vp.get(NTuple(j,i+1))));
+	  V.set(NTuple(j,i+1),Array(Vp.get(NTuple(j,i)),-Vp.get(NTuple(j,i+1))));
+	}
+	i += 2;
+      } else {
+	for (index_t j=1;j<=N;j++) 
+	  V.set(NTuple(j,i),Array(Vp.get(NTuple(j,i))));
+	i++;
+      }
+    }
+  }
+}
+
+template <typename T>
+static void EigenDecomposeFullGeneral(Array A, Array &V, Array &D,
+				      bool balanceFlag) {
+  index_t N = A.rows();
+  if (A.allReal()) {
+    BasicArray<T> eigenvals(NTuple(2*N,1));
+    // A temporary vector to store the eigenvalues
+    // For a real matrix, the eigenvectors are stored in a packed
+    // format - complex eigenvectors are stored as two successive 
+    // columns, corresponding to the real and imaginary parts of
+    // the vector.  Successive columns can be used because the 
+    // eigenvalues occur in conjugate pairs.
+    BasicArray<T> Vp(NTuple(N,N));
+    realEigenDecompose(int(N), Vp.data(), eigenvals.data(), 
+		       A.real<T>().data(), true, balanceFlag);
+    HandleEigenVectorsRealMatrix(eigenvals, Vp, N, D, V);
+  } else {
+    BasicArray<T> eigenvals(NTuple(2*N,1));
+    BasicArray<T> Vp(NTuple(2*N,N));
+    complexEigenDecompose(int(N), Vp.data(), eigenvals.data(), 
+			  A.fortran<T>().data(), true, balanceFlag);
+    D = DiagonalArray(SplitReal<T>(eigenvals),SplitImag<T>(eigenvals));
+    V = Array(SplitReal<T>(Vp),SplitImag<T>(Vp));
+  }
+}
+
+void EigenDecomposeFullGeneral(const Array &A, Array& V, Array& D, bool balanceFlag) {
+  if (!A.is2D())
+    throw Exception("Cannot apply eigendecomposition to N-Dimensional arrays.");
+  if (A.rows() != A.columns())
+    throw Exception("Cannot eigendecompose a non-square matrix.");
+  // Select the eigenvector decomposition routine based on A's type
+  switch (A.dataClass()) {
+  default: throw Exception("Unhandled type for eigendecomposition");
+  case Float: 
+    EigenDecomposeFullGeneral<float>(A,V,D,balanceFlag);
+    return;
+  case Double:
+    EigenDecomposeFullGeneral<double>(A,V,D,balanceFlag);
+    return;
+  }
+}
+
+/**
+ * Perform an eigen decomposition of the matrix A - This version computes the 
+ * eigenvalues only in a vector
+ */
+template <typename T>
+static void EigenDecomposeCompactGeneral(Array A, Array& D, 
+					 bool balanceFlag) {
+  index_t N = A.rows();
+  if (A.allReal()) {
+    BasicArray<T> eigenvals(NTuple(2*N,1));
+    realEigenDecompose(int(N), (T*) NULL, eigenvals.data(), 
+		       A.real<T>().data(),
+		       false, balanceFlag);
+    bool complexEigenvalues = MergedArrayHasComplexComponents(eigenvals);
+    if (!complexEigenvalues) {
+      D = Array(SplitReal<T>(eigenvals));
+    } else {
+      D = Array(SplitReal<T>(eigenvals),SplitImag<T>(eigenvals));
+    }
+  } else {
+    BasicArray<T> eigenvals(NTuple(2*N,1));
+    complexEigenDecompose(int(N), (T*) NULL, eigenvals.data(), 
+			  A.fortran<T>().data(),
+			  false, balanceFlag);
+    D = Array(SplitReal<T>(eigenvals),SplitImag<T>(eigenvals));
+  }
+}
+
+void EigenDecomposeCompactGeneral(Array A, Array& D, bool balanceFlag) {
+  if (!A.is2D())
+    throw Exception("Cannot apply eigendecomposition to N-Dimensional arrays.");
+  if (A.rows() != A.columns())
+    throw Exception("Cannot eigendecompose a non-square matrix.");
+  switch (A.dataClass()) {
+  default: throw Exception("Unhandled type for eigendecomposition");
+  case Float:
+    EigenDecomposeCompactGeneral<float>(A,D,balanceFlag);
+    return;
+  case Double:
+    EigenDecomposeCompactGeneral<double>(A,D,balanceFlag);
+    return;
+  }
+}
+
+template <typename T>
+static bool GeneralizedEigenDecomposeCompactSymmetric(Array A, Array B, 
+						      Array& D) {
+  index_t N = A.rows();
+  if (A.allReal()) {
+    BasicArray<T> eigenvals(NTuple(N,1));
+    if (!realGenEigenDecomposeSymmetric(int(N), (T*) NULL, eigenvals.data(), 
+					A.real<T>().data(),
+					B.real<T>().data(),false)) {
+      return false;
+    }
+    D = Array(eigenvals);
+  } else {
+    BasicArray<T> eigenvals(NTuple(N,1));
+    if (!complexGenEigenDecomposeSymmetric(int(N), (T*) NULL, eigenvals.data(), 
+					   A.fortran<T>().data(),
+					   B.fortran<T>().data(),
+					   false)) {
+      return false;
+    }
+    D = Array(eigenvals);
+  }
   return true;
 }
 
-void dcomplexGenEigenDecompose(int n, double *v, double *d,
-			       double *a, double *b, 
-			       bool eigenvectors) {
-  char JOBVL = 'N';
-  char JOBVR;
-  if (eigenvectors)
-    JOBVR = 'V';
-  else
-    JOBVR = 'N';
-  int N = n;
-  double *A = a;
-  int LDA = n;
-  double *B = b;
-  int LDB = N;
-  double *ALPHA = (double*) Malloc(2*n*sizeof(double));
-  double *BETA = (double*) Malloc(2*n*sizeof(double));
-  double *VL = NULL;
-  int LDVL = n;
-  double *VR = v;
-  int LDVR = n;
-  double *RWORK = (double*) Malloc(8*n*sizeof(double));
-  double WORKSIZE[2];
-  int LWORK = -1;
-  int INFO;
-  zggev_( &JOBVL, &JOBVR, &N, A, &LDA, B, &LDB, ALPHA, BETA,
-	  VL, &LDVL, VR, &LDVR, &WORKSIZE[0], &LWORK, RWORK, &INFO );
-  LWORK = (int) WORKSIZE[0];
-  double *WORK = (double*) Malloc(LWORK*2*sizeof(double));
-  zggev_( &JOBVL, &JOBVR, &N, A, &LDA, B, &LDB, ALPHA, BETA,
-	  VL, &LDVL, VR, &LDVR, WORK, &LWORK, RWORK, &INFO );
-  int i;
-  for (i=0;i<n;i++)
-    local_z_div(d+2*i,ALPHA+2*i,BETA+2*i);
-  Free(ALPHA);
-  Free(BETA);
-  Free(RWORK);
-  Free(WORK);
+bool GeneralizedEigenDecomposeCompactSymmetric(Array A, Array B, Array& D) {
+  switch (A.dataClass()) {
+  default: throw Exception("Unhandled type for eigendecomposition");
+  case Float:
+    return GeneralizedEigenDecomposeCompactSymmetric<float>(A,B,D);
+  case Double:
+    return GeneralizedEigenDecomposeCompactSymmetric<double>(A,B,D);
+  }
+  return false;
 }
 
+/**
+ * Eigen decomposition, symmetric matrix, full decomposition case
+ */
+
+template <typename T>
+static bool GeneralizedEigenDecomposeFullSymmetric(Array A, Array B, Array &V, Array &D) {
+  index_t N = A.rows();
+  if (A.allReal()) {
+      // A temporary vector to store the eigenvalues
+    BasicArray<T> eigenvals(NTuple(N,1));
+    BasicArray<T> Vp(NTuple(N,N));
+    if (!realGenEigenDecomposeSymmetric(int(N), Vp.data(), eigenvals.data(), 
+					A.real<T>().data(),
+					B.real<T>().data(),true))
+      return false;
+    D = DiagonalArray(eigenvals);
+    V = Array(Vp);
+  } else {
+    BasicArray<T> eigenvals(NTuple(N,1));
+    BasicArray<T> Vp(NTuple(2*N,N));
+    if (!complexGenEigenDecomposeSymmetric(int(N), Vp.data(), eigenvals.data(), 
+					   A.fortran<T>().data(),
+					   B.fortran<T>().data(),true))
+      return false;
+    D = DiagonalArray(eigenvals);
+    V = Array(SplitReal<T>(Vp),SplitImag<T>(Vp));
+  }
+  return true;
+}
+
+bool GeneralizedEigenDecomposeFullSymmetric(Array A, Array B, Array& V, Array& D) {
+  switch (A.dataClass()) {
+  default:
+    throw Exception("Unsupported type for eigendecomposition");
+  case Float:
+    return GeneralizedEigenDecomposeFullSymmetric<float>(A,B,V,D);
+  case Double:
+    return GeneralizedEigenDecomposeFullSymmetric<double>(A,B,V,D);
+  }
+  return false;
+}
+
+/**
+ * Perform an eigen decomposition of the matrix A - This version computes the 
+ * eigenvectors, and returns the eigenvalues in a diagonal matrix
+ */
+
+template <typename T>
+static void GeneralizedEigenDecomposeFullGeneral(Array A, Array B, Array &V, Array &D) {
+  index_t N = A.rows();
+  if (A.allReal()) {
+    // A temporary vector to store the eigenvalues
+    BasicArray<T> eigenvals(NTuple(2*N,1));
+    // For a real matrix, the eigenvectors are stored in a packed
+    // format - complex eigenvectors are stored as two successive 
+    // columns, corresponding to the real and imaginary parts of
+    // the vector.  Successive columns can be used because the 
+    // eigenvalues occur in conjugate pairs.
+    BasicArray<T> Vp(NTuple(N,N));
+    realGenEigenDecompose(int(N), Vp.data(), eigenvals.data(), 
+			  A.real<T>().data(),B.real<T>().data(),true);
+    HandleEigenVectorsRealMatrix(eigenvals, Vp, N, D, V);
+  } else {
+    BasicArray<T> eigenvals(NTuple(2*N,1));
+    BasicArray<T> Vp(NTuple(2*N,N));
+    complexGenEigenDecompose(int(N), Vp.data(), eigenvals.data(), 
+			     A.fortran<T>().data(),
+			     B.fortran<T>().data(),true);
+    D = DiagonalArray(SplitReal<T>(eigenvals),SplitImag<T>(eigenvals));
+    V = Array(SplitReal<T>(Vp),SplitImag<T>(Vp));
+  }
+}
+
+void GeneralizedEigenDecomposeFullGeneral(Array A, Array B, Array& V, Array& D) {
+  // Select the eigenvector decomposition routine based on A's type
+  switch (A.dataClass()) {
+  default: throw Exception("Unhandled type for eigendecomposition");
+  case Float:
+    return GeneralizedEigenDecomposeFullGeneral<float>(A,B,V,D);
+  case Double:
+    return GeneralizedEigenDecomposeFullGeneral<double>(A,B,V,D);
+  }
+}
+
+/**
+ * Perform an eigen decomposition of the matrix A - This version computes the 
+ * eigenvalues only in a vector
+ */
+template <typename T>
+static void GeneralizedEigenDecomposeCompactGeneral(Array A, Array B, Array& D) {
+  index_t N = A.rows();
+  if (A.allReal()) {
+    // A temporary vector to store the eigenvalues
+    BasicArray<T> eigenvals(NTuple(2*N,1));
+    realGenEigenDecompose(int(N), (T*) NULL, eigenvals.data(),
+			  A.real<T>().data(),
+			  B.real<T>().data(),false);
+    // Make a pass through the eigenvals, and look for complex eigenvalues.
+    bool complexEigenvalues = MergedArrayHasComplexComponents(eigenvals);
+    if (!complexEigenvalues) {
+      D = Array(SplitReal<T>(eigenvals));
+    } else {
+      // Copy the eigenvalues into a complex vector
+      D = Array(SplitReal<T>(eigenvals),SplitImag<T>(eigenvals));
+    }
+  } else {
+    BasicArray<T> eigenvals(NTuple(2*N,1));
+    complexGenEigenDecompose(int(N), (T*) NULL, eigenvals.data(), 
+			     A.fortran<T>().data(), 
+			     B.fortran<T>().data(),
+			     false);
+    D = Array(SplitReal(eigenvals),SplitImag(eigenvals));
+  }
+}
+
+void GeneralizedEigenDecomposeCompactGeneral(Array A, Array B, Array& D) {
+  // Select the eigenvector decomposition routine based on A's type
+  switch (A.dataClass()) {
+  default: 
+    throw Exception("Unhandled type for eigendecomposition");
+  case Float: 
+    GeneralizedEigenDecomposeCompactGeneral<float>(A,B,D);
+    break;
+  case Double:
+    GeneralizedEigenDecomposeCompactGeneral<double>(A,B,D);
+    break;
+  }
+}
+
+static void DNEUPARPACKError(int info) {
+  if (info == 1) 
+    throw Exception("ARPACK Error: The Schur form computed by LAPACK routine dlahqr could not be reordered by LAPACK routine dtrsen.  Please file a bug report with the matrix and arguments that caused this error.");
+  if (info == -1)
+    throw Exception("N must be positive.");
+  if (info == -2)
+    throw Exception("NEV must be positive.");
+  if (info == -3)
+    throw Exception("Too many eigenvalues/eigenvectors requested.");
+  if (info == -5)
+    throw Exception("WHICH must be one of 'LM', 'SM', 'LR', 'SR', 'LI', 'SI'");
+  if (info == -6)
+    throw Exception("BMAT must be one of 'I' or 'G'.");
+  if (info == -7)
+    throw Exception("Length of private work WORKL array is not sufficient.");
+  if (info == -8)
+    throw Exception("Error return from calculation of a real Schur form.  Informational error from LAPACK routine dlahqr.");
+  if (info == -9)
+    throw Exception("Error return from calculation of eigenvectors. Onformational error from LAPACK routine dtrevc.");
+  if (info == -10)
+    throw Exception("IPARAM(7) must be 1,2,3,4.");
+  if (info == -11)
+    throw Exception("IPARAM(7) = 1 and BMAT = 'G' are incompatible.");
+  if (info == -12)
+    throw Exception("HOWMNY = 'S' not yet implemented");
+  if (info == -13)
+    throw Exception("HOWMNY must be one of 'A' or 'P' if RVEC = .true.");
+  if (info == -14)
+    throw Exception("DNAUPD did not find any eigenvalues to sufficient accuracy.");
+  throw Exception("Generic ARPACK error occured in call to dneupd.");
+}
+
+static void DNAUPARPACKError(int info) {
+  if (info == 1)
+    throw Exception("Maximum number of iterations taken.  All possible eigenvalues of OP has been found.");
+  if (info == 3)
+    throw Exception("No shifts could be applied during a cycle of the implicitly restarted Arnoldi iteration. One possibility is to increase the size of NCV relative to NEV.");
+  if (info == -1)
+    throw Exception("Problem size must be positive.");
+  if (info == -2)
+    throw Exception("Number of requested eigenvalues must be positive.");
+  if (info == -3)
+    throw Exception("Illegal value for number of spanning vectors (ncv) - ARPACK cannot solve for all of the eigenvalues of a matrix (use eig for that).");
+  if (info == -4)
+    throw Exception("The maximum number of Arnoldi update iteration must be greater than zero.");
+  if (info == -5)
+    throw Exception("WHICH must be one of 'LM', 'SM', 'LR', 'SR', 'LI', 'SI'");
+  if (info == -6)
+    throw Exception("BMAT must be one of 'I' or 'G'");
+  if (info == -7)
+    throw Exception("Length of private work array is not sufficient.");
+  if (info == -8)
+    throw Exception("Error return from LAPACK eigenvalue calculation;");
+  if (info == -9)
+    throw Exception("Starting vector is zero.");
+  if (info == -10)
+    throw Exception("Illegal mode selection for ARPACK dnaup");
+  if (info == -11)
+    throw Exception("IPARAM(7) = 1 and BMAT = 'G' are incompatible.");
+  if (info == -12)
+    throw Exception("IPARAM(1) must be equal to 0 or 1.");
+  throw Exception("Could not build an Arnoldi factorization.");
+}
+
+#if HAVE_ARPACK
+extern "C" {
+  int znaupd_(int *ido, char *bmat, int *n, const char*
+	      which, int *nev, double *tol, double *resid, int *ncv,
+	      double *v, int *ldv, int *iparam, int *ipntr, 
+	      double *workd, double *workl, int *lworkl, double *rwork, 
+	      int *info);
+  int zneupd_(int *rvec, char *howmny, int *select, 
+	      double *d, double *z, int *ldz, 
+	      double *sigma, double *workev, char *bmat, 
+	      int *n, const char *which, int *nev, double *tol, 
+	      double *resid, int *ncv, double *v, int *ldv, int 
+	      *iparam, int *ipntr, double *workd, double *workl, 
+	      int *lworkl, double *rwork, int *info);
+  int dnaupd_(int *ido, char *bmat, int *n, const char*
+	      which, int *nev, double *tol, double *resid, int *ncv,
+	      double *v, int *ldv, int *iparam, int *ipntr, 
+	      double *workd, double *workl, int *lworkl, int *info, int len1, int len2);
+  int dneupd_(int *rvec, char *howmny, int *select, 
+	      double *dr, double *di, double *z__, int *ldz, 
+	      double *sigmar, double *sigmai, double *workev, char *
+	      bmat, int *n, const char *which, int *nev, double *tol, 
+	      double *resid, int *ncv, double *v, int *ldv, int 
+	      *iparam, int *ipntr, double *workd, double *workl, 
+	      int *lworkl, int *info);
+  int dsaupd_(int *ido, char *bmat, int *n, const char*
+	      which, int *nev, double *tol, double *resid, int *ncv,
+	      double *v, int *ldv, int *iparam, int *ipntr, 
+	      double *workd, double *workl, int *lworkl, int *info);
+  int dseupd_(int *rvec, char *howmny, int *select, 
+	      double *d, double *z__, int *ldz, 
+	      double *sigma, char *bmat, int *n, const char *which, int *nev, double *tol, 
+	      double *resid, int *ncv, double *v, int *ldv, int 
+	      *iparam, int *ipntr, double *workd, double *workl, 
+	      int *lworkl, int *info);
+}
+#endif
+
+
+#define min(a,b) ((a) < (b) ? (a) : (b))
+#define swap(a,b) {double tmp; tmp = a; a = b; b = tmp;}
+
+static void LoadARPACKParams(int iparam[11]) {
+  iparam[0] = 1;
+  iparam[1] = 0;
+  iparam[2] = 300;
+  iparam[3] = 1;
+  iparam[4] = 0;
+  iparam[5] = 0;
+  iparam[6] = 1;
+  iparam[7] = 0;
+  iparam[8] = 0;
+  iparam[9] = 0;
+  iparam[10] = 0;
+}
+
+#define MacroBlockAlloc(ctype,csize,tmpname,name)	\
+  MemBlock<ctype> tmpname(csize); ctype *name = &tmpname;
+
+template <typename T>
+static inline BasicArray<T> BasicArrayFromNative(const T* data, NTuple dims) {
+  BasicArray<T> rp(dims);
+  for (int i=0;i<dims.count();i++)
+    rp.set(i+1,data[i]);
+  return rp;
+}
+
+template <typename T>
+static void SparseDenseMatrixMultiply(const SparseMatrix<T> &A, const T* B, int Bcols, T* C) {
+  for (index_t col = 1;col <= Bcols;col++) {
+    T* c_slice = C + int((col-1)*A.rows());
+    memset(c_slice,0,int(sizeof(T)*A.rows()));
+    ConstSparseIterator<T> A_iter(&A);
+    while (A_iter.isValid()) {
+      c_slice[int(A_iter.row())] += A_iter.value() * B[int(A_iter.col()+col*A.rows()-1)];
+      A_iter.next();
+    }
+  }
+}
+
+template <typename T>
+static void SparseDenseMatrixMultiply(const SparseMatrix<T> &A_real,
+				      const SparseMatrix<T> &A_imag,
+				      const T*B, int Bcols, T* C) {
+  int rows = int(A_real.rows());
+  for (index_t col = 1;col <= Bcols;col++) {
+    T* c_slice = C + int(2*(col-1)*rows);
+    memset(c_slice,0,int(2*sizeof(T)*rows));
+    ConstComplexSparseIterator<T> A_iter(&A_real,&A_imag);
+    while (A_iter.isValid()) {
+      complex_multiply(A_iter.realValue(),A_iter.imagValue(),
+		       B[2*(int(A_iter.col()+col*rows-1))],
+		       B[2*(int(A_iter.col()+col*rows-1))+1],
+		       c_slice[int(2*A_iter.row())],c_slice[int(2*A_iter.row()+1)]);
+      A_iter.next();
+    }
+  }
+}
+
+
+static ArrayVector SparseEigDecomposeNonsymmetricReal(const SparseMatrix<double> &a,
+						      int nev, int nargout, QString which) {
+#if HAVE_ARPACK
+  // Initialization call
+  int ido = 0;
+  char bmat = 'I';
+  int n = int(a.rows());
+  // How many eigenvalues to compute
+  char cmach = 'E';
+  double tol = dlamch_(&cmach);
+  MacroBlockAlloc(double,n,residBlock,resid);
+  int ncv = 2*nev+1;
+  if (ncv > n) ncv = n;
+  MacroBlockAlloc(double,n*ncv,vBlock,v);
+  int ldv = n;
+  int iparam[11];
+  LoadARPACKParams(iparam);
+  MacroBlockAlloc(double,3*n,workdBlock,workd);
+  int lworkl = 3*ncv*ncv+6*ncv;
+  MacroBlockAlloc(double,lworkl,worklBlock,workl);
+  int info = 0;
+  MacroBlockAlloc(int,14,ipntrBlock,ipntr);
+  while (1) {
+    dnaupd_(&ido, &bmat, &n , qPrintable(which), &nev, &tol, resid, 
+	    &ncv, v, &ldv, iparam, ipntr, workd, workl, &lworkl, 
+	    &info,1,which.size());
+    if ((ido == -1) || (ido == 1)) 
+      SparseDenseMatrixMultiply(a, workd+ipntr[0]-1, 1, workd+ipntr[1]-1);
+    else
+      break;
+  }
+  if (info < 0)
+    DNAUPARPACKError(info);
+  // Compute vectors and values
+  int rvec;
+  if (nargout <= 1)
+    rvec = 0;
+  else
+    rvec = 1;
+  char howmny = 'A';
+  MacroBlockAlloc(int,ncv,selectBlock,select);
+  MacroBlockAlloc(double,nev+1,drb,dr);
+  MacroBlockAlloc(double,nev+1,dib,di);
+  double *z;
+  if (nargout <= 1)
+    z = NULL;
+  else
+    z = (double*) malloc(sizeof(double)*(n*(nev+1)));
+  double sigmar;
+  double sigmai;
+  MacroBlockAlloc(double,3*ncv,workevBlock,workev);
+  int ierr;
+  dneupd_(&rvec, &howmny, select, dr, di, z, &ldv, 
+	  &sigmar, &sigmai, workev, &bmat, &n, qPrintable(which), &nev, &tol, 
+	  resid, &ncv, v, &ldv, iparam, ipntr, workd, workl,
+	  &lworkl, &ierr);
+  int nconv = iparam[4];
+  if (ierr != 0)
+    DNEUPARPACKError(ierr);
+  // Reverse the vectors dr and di
+  if (rvec == 0) {
+    for (int i=0;i<(nconv)/2;i++) {
+      swap(dr[i],dr[nconv-1-i]);
+      swap(di[i],di[nconv-1-i]);
+    }
+  }
+  // Check for complex eigenvalues
+  bool anycomplex = false;
+  for (int i=0;(!anycomplex) && (i<nconv);i++,anycomplex = (di[i] != 0));
+  if (anycomplex) {
+    BasicArray<double> eigvals_real(NTuple(nev,1));
+    BasicArray<double> eigvals_imag(NTuple(nev,1));
+    for (int i=0;i<min(nev,nconv);i++) {
+      eigvals_real[i+1] = dr[i];
+      eigvals_imag[i+1] = di[i];
+    }
+    BasicArray<double> eigvecs_real;
+    BasicArray<double> eigvecs_imag;
+    if (nargout > 1) {
+      eigvecs_real = BasicArray<double>(NTuple(n,nev));
+      eigvecs_imag = BasicArray<double>(NTuple(n,nev));
+      // if eigenvalue i is complex, then the corresponding eigenvector
+      // should be constructed from columns i and i+1 of z if i is even
+      // and columns i-1 and i of z if i is odd
+      int vcol = 0;
+      while (vcol < min(nconv,nev)) {
+	if (di[vcol] != 0) {
+	  for (int j=0;j<n;j++) {
+	    eigvecs_real[NTuple(j+1,vcol+1)] = z[vcol*n+j];
+	    eigvecs_imag[NTuple(j+1,vcol+1)] = z[(vcol+1)*n+j];
+	    if ((vcol+1) < nev) {
+	      eigvecs_real[NTuple(j+1,vcol+2)] = z[vcol*n+j];
+	      eigvecs_imag[NTuple(j+1,vcol+2)] = -z[(vcol+1)*n+j];
+	    }
+	  }
+	  vcol += 2;
+	} else {
+	  for (int j=0;j<n;j++) {
+	    eigvecs_real[NTuple(j+1,vcol+1)] = z[vcol*n+j];
+	  }
+	  vcol++;
+	}
+      }
+    }
+    ArrayVector retval;
+    if (nargout <= 1)
+      retval.push_back(Array(eigvals_real,eigvals_imag));
+    else {
+      retval.push_back(Array(eigvecs_real,eigvecs_imag));
+      retval.push_back(DiagonalArray(eigvals_real,eigvals_imag));
+    }
+    free(z);
+    return retval;
+  } else {
+    ArrayVector retval;
+    if (nargout <= 1) {
+      retval.push_back(Array(BasicArrayFromNative(dr,NTuple(nev,1))));
+    }
+    else {
+      // I know that technically this is a bad thing... dr and z are larger than
+      // they need to be, but I don't think this will cause any problems.
+      retval.push_back(Array(BasicArrayFromNative(z,NTuple(n,nev))));
+      retval.push_back(DiagonalArray(BasicArrayFromNative(dr,NTuple(nev,1))));
+    }
+    return retval;
+  }
+#else
+  throw Exception("Eigenvalue decomposition problems for sparse matrices requires the ARPACK support library, which was not available at compile time.  You must have ARPACK installed at compile time for FreeMat to enable this functionality.");
+#endif
+
+} 
+
+
+static ArrayVector SparseEigDecomposeSymmetricReal(const SparseMatrix<double> &a,
+						   int nev, int nargout, QString which) {
+#if HAVE_ARPACK
+  // Initialization call
+  int ido = 0;
+  char bmat = 'I';
+  int n = int(a.rows());
+  // How many eigenvalues to compute
+  char cmach = 'E';
+  double tol = dlamch_(&cmach);
+  MacroBlockAlloc(double,n,residBlock,resid);
+  int ncv = 2*nev+1;
+  if (ncv > n) ncv = n;
+  MacroBlockAlloc(double,n*ncv,vBlock,v);
+  int ldv = n;
+  int iparam[11];
+  LoadARPACKParams(iparam);
+  MacroBlockAlloc(double,3*n,workdBlock,workd);
+  int lworkl = ncv*ncv+8*ncv;
+  MacroBlockAlloc(double,lworkl,worklBlock,workl);
+  int info = 0;
+  int ipntr[11];
+  while (1) {
+    dsaupd_(&ido, &bmat, &n , qPrintable(which), &nev, &tol, resid, 
+	    &ncv, v, &ldv, iparam, ipntr, workd, workl, &lworkl, 
+	    &info);
+    if ((ido == -1) || (ido == 1)) 
+      SparseDenseMatrixMultiply(a, workd+ipntr[0]-1, 1, workd+ipntr[1]-1);
+    else
+      break;
+  }
+  if (info < 0)
+    DNAUPARPACKError(info);
+  // Compute vectors and values
+  int rvec;
+  if (nargout <= 1)
+    rvec = 0;
+  else
+    rvec = 1;
+  char howmny = 'A';
+  MacroBlockAlloc(int,ncv,selectBlock,select);
+  BasicArray<double> db(NTuple(nev,1));
+  double *d = db.data();
+  BasicArray<double> zb;
+  double *z;
+  if (nargout <= 1)
+    z = NULL;
+  else {
+    zb = BasicArray<double>(NTuple(n,nev));
+    z = zb.data();
+  }
+  double sigma;
+  int ierr;
+  dseupd_(&rvec, &howmny, select, d ,z, &ldv, 
+	  &sigma,&bmat, &n, qPrintable(which), &nev, &tol, 
+	  resid, &ncv, v, &ldv, iparam, ipntr, workd, workl,
+	  &lworkl, &ierr);
+  int nconv = iparam[4];
+  if (ierr != 0)
+    DNEUPARPACKError(ierr);
+  // Reverse the vectors dr and di
+  for (int i=0;i<(nconv)/2;i++) 
+    swap(d[i],d[nconv-1-i]);
+  if (rvec == 1) {
+    for (int i=0;i<(nconv)/2;i++)
+      for (int j=0;j<n;j++)
+	swap(z[i*n+j],z[(nconv-1-i)*n+j]);
+  }
+  ArrayVector retval;
+  // I know that technically this is a bad thing... dr and z are larger than
+  // they need to be, but I don't think this will cause any problems.
+  if (nargout <= 1) {
+    retval.push_back(Array(db));
+  } else {
+    retval.push_back(Array(zb));
+    retval.push_back(DiagonalArray(db));
+  }
+  return retval;
+#else
+  throw Exception("Eigenvalue decomposition problems for sparse matrices requires the ARPACK support library, which was not available at compile time.  You must have ARPACK installed at compile time for FreeMat to enable this functionality.");
+#endif
+} 
+
+ArrayVector SparseEigDecomposeNonsymmetricComplex(const SparseMatrix<double> &a_real,
+						  const SparseMatrix<double> &a_imag,
+						  int nev, int nargout, QString which) {
+#if HAVE_ARPACK
+  // Initialization call
+  int ido = 0;
+  char bmat = 'I';
+  int n = int(a_real.rows());
+  // How many eigenvalues to compute
+  char cmach = 'E';
+  double tol = dlamch_(&cmach);
+  MacroBlockAlloc(double,2*n,residBlock,resid);
+  int ncv = 2*nev+1;
+  if (ncv > n) ncv = n;
+  MacroBlockAlloc(double,2*n*ncv,vBlock,v);
+  int ldv = n;
+  int iparam[11];
+  LoadARPACKParams(iparam);
+  MacroBlockAlloc(double,2*3*n,workdBlock,workd);
+  int lworkl = 3*ncv*ncv+5*ncv;
+  MacroBlockAlloc(double,2*lworkl,worklBlock,workl);
+  MacroBlockAlloc(double,ncv,rworkBlock,rwork);
+  int info = 0;
+  int ipntr[14];
+  while (1) {
+    znaupd_(&ido, &bmat, &n , qPrintable(which), &nev, &tol, resid, 
+	    &ncv, v, &ldv, iparam, ipntr, workd, workl, &lworkl, 
+	    rwork, &info);
+    if ((ido == -1) || (ido == 1)) 
+      SparseDenseMatrixMultiply(a_real, a_imag, workd+2*(ipntr[0]-1), 1, workd+2*(ipntr[1]-1));
+    else
+      break;
+  }
+  if (info < 0)
+    DNAUPARPACKError(info);
+  // Compute vectors and values
+  int rvec;
+  if (nargout <= 1)
+    rvec = 0;
+  else
+    rvec = 1;
+  char howmny = 'A';
+  MacroBlockAlloc(int,ncv,selectBlock,select);
+  MacroBlockAlloc(double,2*(nev+1),dblock,d);
+  double *z;
+  if (nargout <= 1)
+    z = NULL;
+  else
+    z = (double*) malloc(2*sizeof(double)*(n*(nev+1)));
+  double sigma[2];
+  MacroBlockAlloc(double,2*2*ncv,workevBlock,workev);
+  int ierr;
+  zneupd_(&rvec, &howmny, select, d, z, &ldv, 
+	  sigma, workev, &bmat, &n, qPrintable(which), &nev, &tol, 
+	  resid, &ncv, v, &ldv, iparam, ipntr, workd, workl,
+	  &lworkl, rwork, &ierr);
+  int nconv = iparam[4];
+  if (ierr != 0)
+    DNEUPARPACKError(ierr);
+  // Reverse the vectors dr and di
+  if (rvec == 0) {
+    for (int i=0;i<(nconv)/2;i++) {
+      swap(d[2*i],d[2*(nconv-1-i)]);
+      swap(d[2*i+1],d[2*(nconv-1-i)+1]);
+    }
+  }
+  BasicArray<double> eigvals_real(NTuple(nev,1));
+  BasicArray<double> eigvals_imag(NTuple(nev,1));
+  for (int i=0;i<min(nev,nconv);i++) {
+    eigvals_real[i+1] = d[2*i];
+    eigvals_imag[i+1] = d[2*i+1];
+  }
+  BasicArray<double> eigvecs_real;
+  BasicArray<double> eigvecs_imag;
+  if (nargout > 1) {
+    eigvecs_real = BasicArray<double>(NTuple(n,nev));
+    eigvecs_imag = BasicArray<double>(NTuple(n,nev));
+    for (int i=0;i<min(nev,nconv);i++)
+      for (int j=0;j<n;j++) {
+	eigvecs_real[NTuple(j+1,i+1)] = d[i*2*n+2*j];
+	eigvecs_imag[NTuple(j+1,i+1)] = d[i*2*n+2*j+1];
+      }
+  }
+  ArrayVector retval;
+  if (nargout <= 1)
+    retval.push_back(Array(eigvals_real,eigvals_imag));
+  else {
+    retval.push_back(Array(eigvecs_real,eigvecs_imag));
+    retval.push_back(DiagonalArray(eigvals_real,eigvals_imag));
+  }
+  free(z);
+  return retval;
+#else
+  throw Exception("Eigenvalue decomposition problems for sparse matrices requires the ARPACK support library, which was not available at compile time.  You must have ARPACK installed at compile time for FreeMat to enable this functionality.");
+#endif
+} 
+
+// For shifted eigendecomposition problems, we have to change the behavior of the
+// reverse communication interface.  This is done by changing the operation mode
+// to 3, and by solving (A-shift*I)x = b.  Because this equation has to be solved
+// multiple times, we calculate a C matrix as A-shift*I, decompose it using the
+// UMFPack routines, and then use the result in repeated solutions.
+ArrayVector SparseEigDecomposeNonsymmetricRealShifted(const SparseMatrix<double> &A,
+						      int nev, int nargout, double shift) {
+#if 0
+#warning FIXME
+  //#if (HAVE_UMFPACK & HAVE_ARPACK)
+  // Set up the scaled identity matrix
+  double** scI = (double**) MakeSparseScaledIdentityReal<double>(shift, rows);
+  // Compute A - scI
+  double** C = (double**) SparseSubtractReal(rows,cols,(const double**) ap,(const double**) scI);
+  // Factor it...
+  // Convert C into CCS form
+  int *Ccolstart;
+  int *Crowindx;
+  double *Cdata;
+  int nnz;
+  nnz = ConvertSparseCCSReal(rows, cols, (const double**) C, Ccolstart, Crowindx, Cdata);
+  double *null = (double *) NULL ;
+  void *Symbolic, *Numeric ;
+  int res;
+  res = umfpack_di_symbolic (cols, cols, Ccolstart, Crowindx, Cdata, &Symbolic, null, null);
+  res = umfpack_di_numeric (Ccolstart, Crowindx, Cdata, Symbolic, &Numeric, null, null);
+  umfpack_di_free_symbolic (&Symbolic);    
+  // Initialization call
+  int ido = 0;
+  char bmat = 'I';
+  int n = rows;
+  string which = "LM";
+  // How many eigenvalues to compute
+  char cmach = 'E';
+  double tol = dlamch_(&cmach);
+  MemBlock<double> residBlock(n);
+  double *resid = &residBlock;
+  int ncv = 2*nev+1;
+  if (ncv > n) ncv = n;
+  MemBlock<double> vBlock(n*ncv);
+  double *v = &vBlock;
+  int ldv = n;
+  int iparam[11];
+  LoadARPACKParams(iparam);
+  iparam[6] = 3;
+  MemBlock<double> workdBlock(3*n);
+  double *workd = &workdBlock;
+  int lworkl = 3*ncv*ncv+6*ncv;
+  MemBlock<double> worklBlock(lworkl);
+  double *workl = &worklBlock;
+  int info = 0;
+  int ipntr[14];
+  while (1) {
+    dnaupd_(&ido, &bmat, &n , qPrintable(which), &nev, &tol, resid, 
+	    &ncv, v, &ldv, iparam, ipntr, workd, workl, &lworkl, 
+	    &info,1,which.size());
+    if ((ido == -1) || (ido == 1)) {
+      res = umfpack_di_solve(UMFPACK_A, Ccolstart, Crowindx, Cdata, workd+ipntr[1]-1,workd+ipntr[0]-1,Numeric, null, null);
+      // Check the result
+      MemBlock<double> g(cols);
+      double *gp = &g;
+      MemBlock<double> r(rows);
+      double *rp = &r;
+      memcpy(rp,workd+ipntr[1]-1,sizeof(double)*rows);
+      memcpy(gp,workd+ipntr[0]-1,sizeof(double)*cols);
+      MemBlock<double> c(rows);
+      SparseDenseRealMultiply(C,rows,cols,rp,1,&c);
+    }
+    else if (ido == 2)
+      memcpy( workd+ipntr[1]-1, workd+ipntr[0]-1, sizeof(double)*rows);
+    else
+      break;
+  }
+
+  // Free the numeric component
+  umfpack_di_free_numeric(&Numeric);
+  if (info < 0)
+    DNAUPARPACKError(info);
+  // Compute vectors and values
+  int rvec;
+  if (nargout <= 1)
+    rvec = 0;
+  else
+    rvec = 1;
+  char howmny = 'A';
+  MemBlock<int> selectBlock(ncv);
+  int *select = &selectBlock;
+  //lambda_a = 1/lambda_c + sigma
+  double *dr = (double*) Malloc(sizeof(double)*(nev+1));
+  double *di = (double*) Malloc(sizeof(double)*(nev+1));
+  double *z;
+  if (nargout <= 1)
+    z = NULL;
+  else
+    z = (double*) Malloc(sizeof(double)*(n*(nev+1)));
+  double sigmar;
+  double sigmai;
+  sigmar = shift;
+  sigmai = 0.0;
+  MemBlock<double> workevBlock(3*ncv);
+  double *workev = &workevBlock;
+  int ierr;
+  dneupd_(&rvec, &howmny, select, dr, di, z, &ldv, 
+	  &sigmar, &sigmai, workev, &bmat, &n, qPrintable(which), &nev, &tol, 
+	  resid, &ncv, v, &ldv, iparam, ipntr, workd, workl,
+	  &lworkl, &ierr);
+  int nconv = iparam[4];
+  if (ierr != 0)
+    DNEUPARPACKError(ierr);
+  // Reverse the vectors dr and di
+  if (rvec == 0) {
+    for (int i=0;i<(nconv)/2;i++) {
+      swap(dr[i],dr[nconv-1-i]);
+      swap(di[i],di[nconv-1-i]);
+    }
+  }
+  // Check for complex eigenvalues
+  bool anycomplex = false;
+  for (int i=0;(!anycomplex) && (i<nconv);i++,anycomplex = (di[i] != 0));
+  if (anycomplex) {
+    double *eigvals = (double*) Malloc(nev*sizeof(double)*2);
+    for (int i=0;i<min(nev,nconv);i++) {
+      eigvals[2*i] = dr[i];
+      eigvals[2*i+1] = di[i];
+    }
+    double *eigvecs = NULL;
+    if (nargout > 1) {
+      eigvecs = (double*) Malloc(nev*n*sizeof(double)*2);
+      // if eigenvalue i is complex, then the corresponding eigenvector
+      // should be constructed from columns i and i+1 of z if i is even
+      // and columns i-1 and i of z if i is odd
+      int vcol = 0;
+      while (vcol < min(nconv,nev)) {
+	if (di[vcol] != 0) {
+	  for (int j=0;j<n;j++) {
+	    eigvecs[vcol*n*2+2*j] = z[vcol*n+j];
+	    eigvecs[vcol*n*2+2*j+1] = z[(vcol+1)*n+j];
+	    if ((vcol+1) < nev) {
+	      eigvecs[(vcol+1)*n*2+2*j] = z[vcol*n+j];
+	      eigvecs[(vcol+1)*n*2+2*j+1] = -z[(vcol+1)*n+j];
+	    }
+	  }
+	  vcol += 2;
+	} else {
+	  for (int j=0;j<n;j++)
+	    eigvecs[vcol*n*2+2*j] = z[vcol*n+j];
+	  vcol++;
+	}
+      }
+    }
+    ArrayVector retval;
+    if (nargout <= 1)
+      retval.push_back(Array(FM_DCOMPLEX,Dimensions(nev,1),eigvals));
+    else {
+      retval.push_back(Array(FM_DCOMPLEX,Dimensions(n,nev),eigvecs));
+      retval.push_back(Array::diagonalConstructor(Array(FM_DCOMPLEX,Dimensions(nev,1),eigvals),0));
+    }
+    Free(z);
+    return retval;
+  } else {
+    ArrayVector retval;
+    if (nargout <= 1)
+      retval.push_back(Array(FM_DOUBLE,Dimensions(nev,1),dr));
+    else {
+      // I know that technically this is a bad thing... dr and z are larger than
+      // they need to be, but I don't think this will cause any problems.
+      retval.push_back(Array(FM_DOUBLE,Dimensions(n,nev),z));
+      retval.push_back(Array::diagonalConstructor(Array(FM_DOUBLE,Dimensions(nev,1),dr),0));
+    }
+    Free(di);
+    return retval;
+  }
+#else
+  throw Exception("Shifted eigendecomposition problems for sparse matrices requires UMFPACK and ARPACK support libraries, which were not available at compile time.  You must have UMFPACK and ARPACK installed at compile time for FreeMat to enable this functionality.");
+#endif
+} 
+
+// For shifted eigendecomposition problems, we have to change the behavior of the
+// reverse communication interface.  This is done by changing the operation mode
+// to 3, and by solving (A-shift*I)x = b.  Because this equation has to be solved
+// multiple times, we calculate a C matrix as A-shift*I, decompose it using the
+// UMFPack routines, and then use the result in repeated solutions.
+ArrayVector SparseEigDecomposeNonsymmetricComplexShifted(const SparseMatrix<double> &Areal,
+							 const SparseMatrix<double> &Aimag,
+							 int nev, int nargout, double *shift) {
+#if 0
+  //#if (HAVE_UMFPACK & HAVE_ARPACK)
+#warning FINISHME
+  // Set up the scaled identity matrix
+  double** scI = (double**) MakeSparseScaledIdentityComplex<double>(shift[0], shift[1], rows);
+  // Compute A - scI
+  double** C = (double**) SparseSubtractComplex(rows,cols,(const double**) ap,(const double**) scI);
+  // Factor it...
+  // Convert C into CCS form
+  int *Ccolstart;
+  int *Crowindx;
+  double *Cdata;
+  double *Cimag;
+  int nnz;
+  nnz = ConvertSparseCCSComplex(rows, cols, (const double**) C, Ccolstart, Crowindx, Cdata, Cimag);
+  double *null = (double *) NULL ;
+  void *Symbolic, *Numeric ;
+  int res;
+  res = umfpack_zi_symbolic (cols, cols, Ccolstart, Crowindx, Cdata, Cimag, &Symbolic, null, null);
+  res = umfpack_zi_numeric (Ccolstart, Crowindx, Cdata, Cimag, Symbolic, &Numeric, null, null);
+  umfpack_zi_free_symbolic (&Symbolic);    
+  // Initialization call
+  int ido = 0;
+  char bmat = 'I';
+  int n = rows;
+  string which = "LM";
+  // How many eigenvalues to compute
+  char cmach = 'E';
+  double tol = dlamch_(&cmach);
+  MemBlock<double> residBlock(2*n);
+  double *resid = &residBlock;
+  int ncv = 2*nev+1;
+  if (ncv > n) ncv = n;
+  MemBlock<double> vBlock(2*n*ncv);
+  double *v = &vBlock;
+  int ldv = n;
+  int iparam[11];
+  LoadARPACKParams(iparam);
+  iparam[6] = 3;
+  MemBlock<double> workdBlock(2*3*n);
+  double *workd = &workdBlock;
+  int lworkl = 3*ncv*ncv+5*ncv;
+  MemBlock<double> worklBlock(2*lworkl);
+  double *workl = &worklBlock;
+  MemBlock<double> rworkBlock(ncv);
+  double *rwork = &rworkBlock;
+  MemBlock<double> xrBlock(rows);
+  double *xr = &xrBlock;
+  MemBlock<double> xiBlock(rows);
+  double *xi = &xiBlock;
+  MemBlock<double> yrBlock(rows);
+  double *yr = &yrBlock;
+  MemBlock<double> yiBlock(rows);
+  double *yi = &yiBlock;
+  int info = 0;
+  int ipntr[14];
+  while (1) {
+    znaupd_(&ido, &bmat, &n , qPrintable(which), &nev, &tol, resid, 
+	    &ncv, v, &ldv, iparam, ipntr, workd, workl, &lworkl, 
+	    rwork, &info);
+    if ((ido == -1) || (ido == 1)) {
+      for (int i=0;i<rows;i++) {
+	yr[i] = workd[2*(ipntr[0]-1)+2*i];
+	yi[i] = workd[2*(ipntr[0]-1)+2*i+1];
+      }
+      memset(xr,0,sizeof(double)*rows);
+      memset(xi,0,sizeof(double)*rows);
+      res = umfpack_zi_solve(UMFPACK_A, Ccolstart, Crowindx, Cdata, Cimag, xr, xi, yr, yi,Numeric, null, null);
+      for (int i=0;i<rows;i++) {
+	workd[2*(ipntr[1]-1)+2*i] = xr[i];
+	workd[2*(ipntr[1]-1)+2*i+1] = xi[i];
+      }	
+    }
+    else if (ido == 2)
+      memcpy( workd+2*(ipntr[1]-1), workd+2*(ipntr[0]-1), sizeof(double)*rows*2);
+    else
+      break;
+  }
+  // Free the numeric component
+  umfpack_zi_free_numeric(&Numeric);
+  if (info < 0)
+    DNAUPARPACKError(info);
+  // Compute vectors and values
+  int rvec;
+  if (nargout <= 1)
+    rvec = 0;
+  else
+    rvec = 1;
+  char howmny = 'A';
+  MemBlock<int> selectBlock(ncv);
+  int *select = &selectBlock;
+  //lambda_a = 1/lambda_c + sigma
+  double *d = (double*) Malloc(2*sizeof(double)*(nev+1));
+  double *z;
+  if (nargout <= 1)
+    z = NULL;
+  else
+    z = (double*) Malloc(2*sizeof(double)*(n*(nev+1)));
+  double sigma[2];
+  sigma[0] = shift[0];
+  sigma[1] = shift[1];
+  MemBlock<double> workevBlock(2*2*ncv);
+  double *workev = &workevBlock;
+  int ierr;
+  zneupd_(&rvec, &howmny, select, d, z, &ldv, 
+	  sigma, workev, &bmat, &n, qPrintable(which), &nev, &tol, 
+	  resid, &ncv, v, &ldv, iparam, ipntr, workd, workl,
+	  &lworkl, rwork, &ierr);
+  int nconv = iparam[4];
+  if (ierr != 0)
+    DNEUPARPACKError(ierr);
+  // Reverse the vectors dr and di
+  if (rvec == 0) {
+    for (int i=0;i<(nconv)/2;i++) {
+      swap(d[2*i],d[2*(nconv-1-i)]);
+      swap(d[2*i+1],d[2*(nconv-1-i)+1]);
+    }
+  }
+  double *eigvals = (double*) Malloc(nev*sizeof(double)*2);
+  for (int i=0;i<min(nev,nconv);i++) {
+    eigvals[2*i] = d[2*i];
+    eigvals[2*i+1] = d[2*i+1];
+  }
+  double *eigvecs = NULL;
+  if (nargout > 1) {
+    eigvecs = (double*) Malloc(nev*n*sizeof(double)*2);
+    for (int i=0;i<min(nev,nconv);i++) {
+      for (int j=0;j<2*n;j++) 
+	eigvecs[i*2*n+j] = d[i*2*n+j];
+    }
+  }
+  ArrayVector retval;
+  if (nargout <= 1)
+    retval.push_back(Array(FM_DCOMPLEX,Dimensions(nev,1),eigvals));
+  else {
+    retval.push_back(Array(FM_DCOMPLEX,Dimensions(n,nev),eigvecs));
+    retval.push_back(Array::diagonalConstructor(Array(FM_DCOMPLEX,Dimensions(nev,1),eigvals),0));
+  }
+  Free(z);
+  return retval;
+#else
+  throw Exception("Shifted eigendecomposition problems for sparse matrices requires UMFPACK and ARPACK support libraries, which were not available at compile time.  You must have UMFPACK and ARPACK installed at compile time for FreeMat to enable this functionality.");
+#endif
+} 
+
+ArrayVector SparseEigDecompose(int nargout, Array A, int k, QString whichFlag) {
+  if (A.isComplex()) {
+    return SparseEigDecomposeNonsymmetricComplex(A.constRealSparse<double>(),
+						 A.constImagSparse<double>(),
+						 k, nargout, whichFlag);
+  } else {
+    bool symDetect = IsSymmetric(A.constRealSparse<double>());
+    if (symDetect)
+      return SparseEigDecomposeSymmetricReal(A.constRealSparse<double>(),
+					     k, nargout, whichFlag);
+    else
+      return SparseEigDecomposeNonsymmetricReal(A.constRealSparse<double>(),
+						k, nargout, whichFlag);
+  }
+}
+
+ArrayVector SparseEigDecomposeShifted(int nargout, Array A, int k, double shift[2]) {
+  if (shift[1] != 0)
+    A.forceComplex();
+  if (A.isComplex()) {
+    return SparseEigDecomposeNonsymmetricComplexShifted(A.constRealSparse<double>(),
+							A.constImagSparse<double>(),
+							k, nargout, shift);
+  } else {
+    return SparseEigDecomposeNonsymmetricRealShifted(A.constRealSparse<double>(),
+						     k, nargout, shift[0]);
+  }
+}

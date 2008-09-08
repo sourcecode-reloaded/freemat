@@ -18,7 +18,7 @@
  */
 #include "RenderEngine.hpp"
 
-RenderEngine::SymbolType StringToSymbol(std::string name) {
+RenderEngine::SymbolType StringToSymbol(QString name) {
   if (name == "+")
     return RenderEngine::Plus;
   if (name == "o")

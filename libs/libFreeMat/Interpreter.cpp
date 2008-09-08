@@ -1761,22 +1761,7 @@ void ForLoopIterator( Tree* codeBlock, string indexName,
 template <class T>
 void ScalarForLoopHelper(Tree *codeBlock, Class indexClass, const T *indexSet, 
 		   int count, string indexName, Interpreter *eval) {
-  for (int m=0;m<count;m++) {
-    Array *vp = eval->getContext()->lookupVariableLocally(indexName);
-    if ((!vp) || (vp->dataClass() != indexClass) || (!vp->isScalar())) {
-      eval->getContext()->insertVariableLocally(indexName,Array(indexClass,Dimensions(1,1)));
-      vp = eval->getContext()->lookupVariableLocally(indexName);
-    }
     ((T*) vp->getReadWriteDataPointer())[0] = indexSet[m];
-    try {
-      eval->block(codeBlock);
-    } catch (InterpreterContinueException &e) {
-    } catch (InterpreterBreakException &e) {
-      break;
-    } 
-  }
-}
-
 
 int num_for_loop_iter_f( float first, float step, float last )
 {
@@ -2831,6 +2816,32 @@ ArrayReference Interpreter::createVariable(QString name) {
 //  p(1,:) = y(:);
 //  test_val = all(vec(z==x)) && all(q(:,1) == y(:)) && all(p(1,:).' == y(:)); 
 //@}
+//@{ test_assign17.m
+//function test_val = test_assign17
+//  x = [];
+//  x(:,1) = 3;
+//  test_val = (x == 3);
+//@}
+//@{ test_assign18.m
+//function test_val = test_assign18
+//  x = [];
+//  x(:) = 4;
+//  test_val = (x == 3);
+//@}
+//@{ test_assign19.m
+//function test_val = test_assign19
+//  g(3).foo = 3;
+//  g(1) = [];
+//  test_val = (g(2).foo == 3);
+//@}
+//@{ test_assign20.m
+//function test_val = test_assign20
+//  p = [];
+//  p(:,1) = [1;3;5];
+//  p(:,2) = [2;4;6];
+//  q = [1,2;3,4;5,6];
+//  test_val = testeq(p,q);
+//@}
 //@{ test_sparse56.m
 //% Test DeleteSparseMatrix function
 //function x = test_sparse56
@@ -3422,8 +3433,8 @@ void Interpreter::multiFunctionCall(Tree *t, bool printIt) {
       ptr = createVariable(name);
     if (ptr->isUserClass() && 
 	!inMethodCall(ptr->className()) && 
-	!stopoverload) {
-      ClassAssignExpression(ptr,t,m.front(),this);
+	!stopoverload && (var->numChildren() > 1)) {
+      ClassAssignExpression(ptr,var,m.front(),this);
       m.pop_front();
       return;
     }
@@ -4900,7 +4911,7 @@ bool Interpreter::lookupFunction(QString funcName, FuncPtr& val,
 //A{3}(2).foo(2) = a1;
 //test_val = test(strcmp(typeof(A),'cell')) & ...
 //    test(strcmp(typeof(A{3}),'struct')) & ...
-//    test(strcmp(typeof(A{3}(2).foo),'int32'));
+//    test(strcmp(typeof(A{3}(2).foo),'double'));
 //@}
 //@{ test_subset20.m
 //function x = test_subset20

@@ -40,8 +40,8 @@ void LoadCoreFunctions(Context* context) {
   // context->addSpecialFunction("dbstep",DbStepFunction,1,0,"line",NULL);
   //context->addFunction("demo",DemoFunction,2,0,"x","string",NULL);
 //   InitializeFileSubsystem();
-  context->addFunction("eps",EpsFunction,1,1,"x",NULL);
-  context->addSpecialFunction("blaslib",BlasLibraryFunction,1,0,"name",NULL);
+//  context->addFunction("eps",EpsFunction,1,1,"x",NULL);
+//  context->addSpecialFunction("blaslib",BlasLibraryFunction,1,0,"name",NULL);
 #ifdef USE_MPI
   LoadMPIFunctions(context);
 #endif
