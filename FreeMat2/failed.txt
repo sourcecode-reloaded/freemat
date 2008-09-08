@@ -7,4 +7,3 @@ Here is the current list of tests failed by FreeMat 4.0 (array-rework branch):
 Number of tests: 985
 Failed tests: 41
    Test bbtest_lu.m failed
-   Test test_sparse45.m failed
