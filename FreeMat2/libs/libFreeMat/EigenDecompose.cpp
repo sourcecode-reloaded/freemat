@@ -941,7 +941,8 @@ extern "C" {
   int dnaupd_(int *ido, char *bmat, int *n, const char*
 	      which, int *nev, double *tol, double *resid, int *ncv,
 	      double *v, int *ldv, int *iparam, int *ipntr, 
-	      double *workd, double *workl, int *lworkl, int *info);
+	      double *workd, double *workl, int *lworkl, int *info,
+	      int len1, int len2);
   int dneupd_(int *rvec, char *howmny, int *select, 
 	      double *dr, double *di, double *z__, int *ldz, 
 	      double *sigmar, double *sigmai, double *workev, char *
@@ -1058,7 +1059,7 @@ ArrayVector DNAUPFunction(int nargout, const ArrayVector& arg) {
 
   dnaupd_(&ido, &bmat, &n , which_cstr, &nev, &tol, resid, 
 	  &ncv, v, &ldv, iparam, ipntr, workd, workl, &lworkl, 
-	  &info);
+	  &info, 1, 2);
 
   ArrayVector retvec;
   retvec << Array(double(ido))
@@ -1220,11 +1221,6 @@ static void SparseDenseMatrixVectorMultiply(const SparseMatrix<T> &A_real,
 
 static ArrayVector SparseDecodeResults(int rvec, int nconv, double *dr, double *di, int nev, double *z,
 				       int n, int nargout) {
-  ArrayVector retvec2;
-  retvec2 << EmptyConstructor();
-  retvec2 << EmptyConstructor();
-  return retvec2;
-
   // Reverse the vectors dr and di
   if (rvec == 0) {
     for (int i=0;i<(nconv)/2;i++) {
@@ -1235,7 +1231,6 @@ static ArrayVector SparseDecodeResults(int rvec, int nconv, double *dr, double *
   // Check for complex eigenvalues
   bool anycomplex = false;
   for (int i=0;(!anycomplex) && (i<nconv);i++,anycomplex = (di[i] != 0));
-  qDebug() << "any complex " << anycomplex;
   if (anycomplex) {
     BasicArray<double> eigvals_real(NTuple(nev,1));
     BasicArray<double> eigvals_imag(NTuple(nev,1));
@@ -1310,7 +1305,7 @@ static ArrayVector SparseEigDecomposeNonsymmetricReal(const SparseMatrix<double>
   int ncv = 2*nev+2;
   if (ncv > n) 
     throw Exception("Cannot compute the requested number of eigenvalues (it is too many)");
-  MacroBlockAlloc(double,n*ncv,vBlock,v);
+  MacroBlockAlloc(double,2*n*ncv,vBlock,v);
   int ldv = n;
   int iparam[11];
   LoadARPACKParams(iparam);
@@ -1322,7 +1317,7 @@ static ArrayVector SparseEigDecomposeNonsymmetricReal(const SparseMatrix<double>
   while (1) {
     dnaupd_(&ido, &bmat, &n , which_cstr, &nev, &tol, resid, 
 	    &ncv, v, &ldv, iparam, ipntr, workd, workl, &lworkl, 
-	    &info);
+	    &info,1,2);
     if ((ido == -1) || (ido == 1)) 
       SparseDenseMatrixVectorMultiply(a, workd+ipntr[0]-1, workd+ipntr[1]-1);
     else
@@ -1330,8 +1325,6 @@ static ArrayVector SparseEigDecomposeNonsymmetricReal(const SparseMatrix<double>
   }
   if (info < 0)
     DNAUPARPACKError(info);
-  return ArrayVector();
-
   // Compute vectors and values
   int rvec;
   if (nargout <= 1)
@@ -1592,7 +1585,7 @@ ArrayVector SparseEigDecomposeNonsymmetricRealShifted(const SparseMatrix<double>
   MacroBlockAlloc(double,n,residBlock,resid);
   int ncv = 2*nev+1;
   if (ncv > n) ncv = n;
-  MacroBlockAlloc(double,n*ncv,vBlock,v);
+  MacroBlockAlloc(double,2*n*ncv,vBlock,v);
   int ldv = n;
   int iparam[11];
   LoadARPACKParams(iparam);
@@ -1605,7 +1598,7 @@ ArrayVector SparseEigDecomposeNonsymmetricRealShifted(const SparseMatrix<double>
   while (1) {
     dnaupd_(&ido, &bmat, &n , which, &nev, &tol, resid, 
 	    &ncv, v, &ldv, iparam, ipntr, workd, workl, &lworkl, 
-	    &info);
+	    &info, 1, 2);
     if ((ido == -1) || (ido == 1)) {
       int res = umfpack_di_solve(UMFPACK_A, (const int*) colstart.data(), 
 				 (const int*) rowindx.data(), accsdata.data(), 
