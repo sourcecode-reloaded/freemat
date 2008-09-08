@@ -219,16 +219,7 @@ public:
       throw Exception("Unsupported deletion for sparse matrices.");
   }
   void resize(const NTuple& pos) {
-    SparseMatrix<T> ret(pos);
-    ConstSparseIterator<T> source(this);
-    while (source.isValid()) {
-      index_t col_number = source.col();
-      while (source.col() == col_number) {
-	ret.set(NTuple(source.row(),source.col()),source.value());
-	source.next();
-      }
-     }
-    *this = ret;
+    m_dims = pos;
   }
   void resize(index_t len) {
     if (len > length()) {
@@ -241,16 +232,34 @@ public:
 	else 
 	  newDim = NTuple(1,len);
       } else {
-	m_dims = NTuple(1,length());
 	newDim = NTuple(1,len);
       }
-      resize(newDim);
+      SparseMatrix<T> ret(newDim);
+      ConstSparseIterator<T> source(this);
+      while (source.isValid()) {
+	index_t ndx = source.row() + (source.col()-1)*rows();
+	if (newDim[0] == 1)
+	  ret.set(NTuple(1,ndx),source.value());
+	else
+	  ret.set(NTuple(ndx,1),source.value());
+	source.next();
+      }
+      *this = ret;
     }
   }
-  void reshape(const NTuple& pos) {
-    if (length() != pos.count()) 
+  void reshape(const NTuple& sze) {
+    if (length() != sze.count()) 
       throw Exception("Illegal reshape");
-    resize(pos);
+     SparseMatrix<T> ret(sze);
+     ConstSparseIterator<T> source(this);
+     while (source.isValid()) {
+       index_t ndx = source.row() + (source.col()-1)*rows();
+       NTuple pos;
+       sze.map(ndx,pos);
+       ret.set(pos,source.value());
+       source.next();
+     }
+     *this = ret;
   }
   const BasicArray<T> asDense() const {
     ConstSparseIterator<T> source(this);

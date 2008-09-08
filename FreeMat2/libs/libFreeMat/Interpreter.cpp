@@ -2617,7 +2617,7 @@ ArrayReference Interpreter::createVariable(QString name) {
 //@{ test_assign18.m
 //function test_val = test_assign18
 //  x = [];
-//  x(:) = 4;
+//  x(:) = 3;
 //  test_val = (x == 3);
 //@}
 //@{ test_assign19.m
@@ -2830,7 +2830,7 @@ ArrayReference Interpreter::createVariable(QString name) {
 //zd1(ndxr) = [];
 //zc1(ndxr) = [];
 //zz1(ndxr) = [];
-//x = testeq(yi1,zi1.') & testeq(yf1,zf1.') & testeq(yd1,zd1.') & testeq(yc1,zc1.') & testeq(yz1,zz1.');
+//x = testeq(yi1,zi1) & testeq(yf1,zf1) & testeq(yd1,zd1) & testeq(yc1,zc1) & testeq(yz1,zz1);
 //@}
 //@{ test_sparse81.m
 //function x = test_sparse81
@@ -2845,6 +2845,15 @@ ArrayReference Interpreter::createVariable(QString name) {
 //  B = sparse([]);
 //  C = [B,B,B;B,B,B,A,B];
 //  x = testeq(C,A);
+//@}
+//@{ test_sparse116.m
+//function x = test_sparse116
+//  a = [1,0,3,4,5;6,2,3,5,0;0,0,0,0,2];
+//  A = sparse(a);
+//  p = [3;4;5;9;10;20];
+//  a(p) = 1;
+//  A(p) = 1;
+//  x = testeq(a,A);
 //@}
 //!
 void Interpreter::assignment(Tree *var, bool printIt, Array &b) {
