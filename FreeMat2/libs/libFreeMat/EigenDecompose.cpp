@@ -964,9 +964,6 @@ extern "C" {
 #endif
 
 
-#define MacroBlockAlloc(ctype,csize,tmpname,name)	\
-  MemBlock<ctype> tmpname(csize); ctype *name = &tmpname;
-
 // Wrap the interface to ARPACK so we can do eigs in FreeMat instead
 //!
 //@Module DNAUPD ARPACK callback interface
@@ -1184,14 +1181,6 @@ static void LoadARPACKParams(int iparam[11]) {
 
 
 template <typename T>
-static inline BasicArray<T> BasicArrayFromNative(const T* data, NTuple dims) {
-  BasicArray<T> rp(dims);
-  for (int i=0;i<dims.count();i++)
-    rp.set(i+1,data[i]);
-  return rp;
-}
-
-template <typename T>
 static void SparseDenseMatrixVectorMultiply(const SparseMatrix<T> &A, const T* B, T* C) {
   memset(C,0,int(sizeof(T)*A.rows()));
   ConstSparseIterator<T> A_iter(&A);
@@ -1355,8 +1344,10 @@ static ArrayVector SparseEigDecomposeNonsymmetricReal(const SparseMatrix<double>
 	    &info,1,2);
     if ((ido == -1) || (ido == 1)) 
       SparseDenseMatrixVectorMultiply(a, workd+ipntr[0]-1, workd+ipntr[1]-1);
-    else
+    else {
+      qDebug() << "IDO = " << ido;
       break;
+    }
   }
   if (info < 0)
     DNAUPARPACKError(info);
@@ -1571,11 +1562,11 @@ ArrayVector SparseEigDecomposeNonsymmetricRealShifted(const SparseMatrix<double>
   double *null = (double *) NULL;
   void *Symbolic, *Numeric;
   (void) umfpack_di_symbolic (int(A.cols()), int(A.cols()), (const int*) colstart.data(), 
-			       (const int*) rowindx.data(), accsdata.data(), 
+			      (const int*) rowindx.data(), accsdata.data(), 
 			      &Symbolic, null, null);
   (void) umfpack_di_numeric ( (const int*) colstart.data(),  (const int*) rowindx.data(), 
 			      accsdata.data(), Symbolic, 
-			     &Numeric, null, null) ;
+			      &Numeric, null, null) ;
   umfpack_di_free_symbolic (&Symbolic) ;
   // Initialization call
   int ido = 0;

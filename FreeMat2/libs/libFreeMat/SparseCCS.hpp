@@ -6,6 +6,7 @@
 #include "Array.hpp"
 
 QVector<uint32> CompressCCSCols(const QVector<uint32> &cols, index_t colcount);
+QVector<uint32> DecompressCCSCols(const QVector<uint32> &ccols, index_t colcount);
 
 template <typename T>
 void SparseToCCS(const SparseMatrix<T>&A,
@@ -22,6 +23,31 @@ void SparseToCCS(const SparseMatrix<T>&A,
   }
   colstart = CompressCCSCols(cols,A.cols());
 }
+
+template <typename T>
+void CCSToSparse(SparseMatrix<T> &A,
+		 const QVector<uint32> &rowstart,
+		 const QVector<uint32> &colstart,
+		 const QVector<T> &Adata) {
+  QVector<uint32> cols = DecompressCCSCols(colstart,A.cols());
+  for (int i=0;i<cols.size();i++) 
+    A.set(NTuple(rowstart[i]+1,cols[i]),Adata[i]);
+}
+
+template <typename T>
+void CCSToSparse(SparseMatrix<T> &Areal,
+		 SparseMatrix<T> &Aimag,
+		 const QVector<uint32> &rowstart,
+		 const QVector<uint32> &colstart,
+		 const QVector<T> &Areal_part,
+		 const QVector<T> &Aimag_part) {
+  QVector<uint32> cols = DecompressCCSCols(colstart,Areal.cols());
+  for (int i=0;i<cols.size();i++) {
+    Areal.set(NTuple(rowstart[i]+1,cols[i]),Areal_part[i]);
+    Aimag.set(NTuple(rowstart[i]+1,cols[i]),Aimag_part[i]);
+  }
+}
+		 
 
 template <typename T>
 void SparseToCCS(const SparseMatrix<T> &Areal, 

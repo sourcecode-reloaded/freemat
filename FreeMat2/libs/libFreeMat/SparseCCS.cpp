@@ -23,6 +23,15 @@ QVector<uint32> CompressCCSCols(const QVector<uint32> &cols, index_t colcount) {
   return y;
 }
 
+QVector<uint32> DecompressCCSCols(const QVector<uint32> &colstart, index_t colcount) {
+  QVector<uint32> x;
+  for (int p=1;p<colstart.size();p++) {
+    for (int n=0;n<(colstart[p] - colstart[p-1]);n++)
+      x << p;
+  }
+  return x;
+}
+
 template <typename T>
 static void TSparseMatToIJV(const SparseMatrix<T>&A, QVector<index_t> &rows,
 			    QVector<index_t> &cols, QVector<T> &Adata) {
