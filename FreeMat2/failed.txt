@@ -1,9 +1,7 @@
-Here is the current list of tests failed by FreeMat 4.0 (array-rework branch):
+Remaining issues in the array-rework branch:
 
-****************************************
-*  Test Summary                        *
-****************************************
-
-Number of tests: 985
-Failed tests: 41
-   Test bbtest_lu.m failed
+1. captured function pointers
+2. JIT
+3. KeyManager - cut?
+4. Warn (Array.cpp)
+5. Warn (Algorithms.cpp)

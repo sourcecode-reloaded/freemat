@@ -937,10 +937,6 @@ Array Interpreter::expression(Tree *t) {
 Array Interpreter::FunctionPointer(Tree *t) {
    if (t->first()->is(TOK_ANONYMOUS_FUNC)) {
      return AnonFuncConstructor(this,t->first());
-     // AnonymousFunctionDef *q = new AnonymousFunctionDef;
-     // q->initialize(t->first(),this);
-     //     return Array::funcPtrConstructor(FuncPtr(q));
-     // FIXME
    } else {
      FuncPtr val;
      if (!lookupFunction(t->first()->text(),val))

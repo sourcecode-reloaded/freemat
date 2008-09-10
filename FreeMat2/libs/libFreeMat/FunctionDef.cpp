@@ -210,7 +210,7 @@ static void CaptureFunctionPointer(FuncPtr &val, Interpreter *walker,
 }
 
 static void CaptureFunctionPointers(ArrayVector& outputs, Interpreter *walker, 
-			     MFunctionDef *parent) {
+				    MFunctionDef *parent) {
 // FIXME
 //   ScopePtr workspace = NULL;
 //   // First check for any 
