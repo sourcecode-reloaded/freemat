@@ -538,7 +538,7 @@ void Parser::serror(QString errmsg) {
   throw ParseException(m_lex.contextNum(),errmsg);
 }
 
-const Token & Parser::expect(TokenType a) {
+const Token & Parser::expect(TokenValueType a) {
   const Token & ret(next());
   if (!m_lex.next().is(a)) {
     if (a != TOK_EOF)
@@ -581,7 +581,7 @@ static unsigned precedence(const Token& t) {
   return 1;
 }
 
-Tree* Parser::matDef(TokenType basetok, TokenType closebracket) {
+Tree* Parser::matDef(TokenValueType basetok, TokenValueType closebracket) {
   m_lex.pushWSFlag(false);
   Tree* matdef(new Tree(basetok));
   if (match(TOK_SPACE)) consume();
@@ -706,7 +706,7 @@ Tree* Parser::exp(unsigned p) {
   return t;
 }
 
-bool Parser::match(TokenType a) {
+bool Parser::match(TokenValueType a) {
   return m_lex.next().is(a);
 }
 

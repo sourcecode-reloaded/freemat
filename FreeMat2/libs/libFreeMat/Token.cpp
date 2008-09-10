@@ -2,7 +2,7 @@
 #include "Serialize.hpp"
 #include <errno.h>
 
-Token::Token(TokenType tok, unsigned pos, QString text) :
+Token::Token(TokenValueType tok, unsigned pos, QString text) :
   m_tok(tok), m_pos(pos), m_text(text) {
 }
 

@@ -5,7 +5,7 @@
 #include <ctype.h>
 #include "Exception.hpp"
 
-static QHash<QString, TokenType> fm_reserved;
+static QHash<QString, TokenValueType> fm_reserved;
 
 static bool fm_reserved_initialized = false;
 
@@ -36,11 +36,11 @@ void InitializeReservedTable() {
   fm_reserved_initialized = true;
 }
 
-static bool isalnumus(TokenType a) {
+static bool isalnumus(TokenValueType a) {
   return (isalnum(a) || (a=='_'));
 }
 
-static bool isablank(TokenType a) {
+static bool isablank(TokenValueType a) {
   return (a==' ' || a=='\t' || a=='\r');
 }
 
@@ -48,7 +48,7 @@ unsigned Scanner::contextNum() {
   return (m_ptr << 16 | m_linenumber);
 }
 
-void Scanner::setToken(TokenType tok, QString text) {
+void Scanner::setToken(TokenValueType tok, QString text) {
   m_tok = Token(tok,m_ptr << 16 | m_linenumber,text);
 }
 
@@ -56,7 +56,7 @@ bool Scanner::done() {
   return (m_ptr >= (int)(m_text.size()));
 }
 
-bool Scanner::peek(int chars, TokenType tok) {
+bool Scanner::peek(int chars, TokenValueType tok) {
   return (ahead(chars) == tok);
 }
 
@@ -120,7 +120,7 @@ void Scanner::fetch() {
   m_tokValid = true;
 }
 
-bool Scanner::tryFetchBinary(const char* op, TokenType tok) {
+bool Scanner::tryFetchBinary(const char* op, TokenValueType tok) {
   if ((current() == op[0]) && (ahead(1) == op[1])) {
     setToken(tok);
     m_ptr += 2;
@@ -327,14 +327,14 @@ void Scanner::consume() {
   m_tokValid = false;
 }
 
-TokenType Scanner::current() {
+TokenValueType Scanner::current() {
   if (m_ptr < m_strlen)
     return m_text.at(m_ptr).unicode();
   else
     return 0;
 }
 
-TokenType Scanner::previous() {
+TokenValueType Scanner::previous() {
   if (m_ptr)
     return m_text.at(m_ptr-1).unicode();
   else
@@ -349,7 +349,7 @@ void Scanner::popWSFlag() {
   m_ignorews.pop();
 }
 
-TokenType Scanner::ahead(int n) {
+TokenValueType Scanner::ahead(int n) {
   if ((m_ptr+n) >= (int)(m_text.size()))
     return 0;
   else

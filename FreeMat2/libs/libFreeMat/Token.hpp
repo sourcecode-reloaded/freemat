@@ -5,73 +5,73 @@
 #include <QTextStream>
 #include <QChar>
 
-typedef uint16 TokenType;
+typedef uint16 TokenValueType;
 
-const TokenType TOK_INVALID = 0;
-const TokenType TOK_IDENT = 130;
-const TokenType TOK_SPACE = 132;
-const TokenType TOK_STRING = 133;
-const TokenType TOK_KEYWORD = 134;
-const TokenType TOK_BREAK = 135;
-const TokenType TOK_CASE = 136;
-const TokenType TOK_CATCH = 137;
-const TokenType TOK_CONTINUE = 138;
-const TokenType TOK_DBSTEP = 139;
-const TokenType TOK_DBTRACE = 140;
-const TokenType TOK_ELSE = 141;
-const TokenType TOK_ELSEIF = 142;
-const TokenType TOK_END = 143;
-const TokenType TOK_FOR = 144;
-const TokenType TOK_FUNCTION = 145;
-const TokenType TOK_GLOBAL = 146;
-const TokenType TOK_IF = 147;
-const TokenType TOK_KEYBOARD = 148;
-const TokenType TOK_OTHERWISE = 149;
-const TokenType TOK_PERSISTENT = 150;
-const TokenType TOK_QUIT = 151;
-const TokenType TOK_RETALL = 152;
-const TokenType TOK_RETURN = 153;
-const TokenType TOK_SWITCH = 154;
-const TokenType TOK_TRY = 155;
-const TokenType TOK_WHILE = 156;
+const TokenValueType TOK_INVALID = 0;
+const TokenValueType TOK_IDENT = 130;
+const TokenValueType TOK_SPACE = 132;
+const TokenValueType TOK_STRING = 133;
+const TokenValueType TOK_KEYWORD = 134;
+const TokenValueType TOK_BREAK = 135;
+const TokenValueType TOK_CASE = 136;
+const TokenValueType TOK_CATCH = 137;
+const TokenValueType TOK_CONTINUE = 138;
+const TokenValueType TOK_DBSTEP = 139;
+const TokenValueType TOK_DBTRACE = 140;
+const TokenValueType TOK_ELSE = 141;
+const TokenValueType TOK_ELSEIF = 142;
+const TokenValueType TOK_END = 143;
+const TokenValueType TOK_FOR = 144;
+const TokenValueType TOK_FUNCTION = 145;
+const TokenValueType TOK_GLOBAL = 146;
+const TokenValueType TOK_IF = 147;
+const TokenValueType TOK_KEYBOARD = 148;
+const TokenValueType TOK_OTHERWISE = 149;
+const TokenValueType TOK_PERSISTENT = 150;
+const TokenValueType TOK_QUIT = 151;
+const TokenValueType TOK_RETALL = 152;
+const TokenValueType TOK_RETURN = 153;
+const TokenValueType TOK_SWITCH = 154;
+const TokenValueType TOK_TRY = 155;
+const TokenValueType TOK_WHILE = 156;
 // Generated (synthetic) token;
-const TokenType TOK_MULTI = 157;
-const TokenType TOK_SPECIAL = 158;
-const TokenType TOK_VARIABLE = 159;
-const TokenType TOK_DYN = 160;
-const TokenType TOK_BLOCK = 161;
-const TokenType TOK_EOF = 162;
-const TokenType TOK_MATDEF = 163;
-const TokenType TOK_CELLDEF = 164;
-const TokenType TOK_PARENS = 165;
-const TokenType TOK_BRACES = 166;
-const TokenType TOK_BRACKETS = 167;
-const TokenType TOK_ROWDEF = 168;
-const TokenType TOK_UNARY_MINUS = 169;
-const TokenType TOK_UNARY_PLUS = 170;
-const TokenType TOK_EXPR = 171;
-const TokenType TOK_DOTTIMES = 172;
-const TokenType TOK_DOTRDIV = 173;
-const TokenType TOK_DOTLDIV = 174;
-const TokenType TOK_DOTPOWER = 175;
-const TokenType TOK_DOTTRANSPOSE = 176;
-const TokenType TOK_LE = 177;
-const TokenType TOK_GE = 178;
-const TokenType TOK_EQ = 179;
-const TokenType TOK_NE = 180;
-const TokenType TOK_SOR = 181;
-const TokenType TOK_SAND = 182;
-const TokenType TOK_QSTATEMENT = 183;
-const TokenType TOK_STATEMENT = 184;
-const TokenType TOK_REALF = 185;
-const TokenType TOK_IMAGF = 186;
-const TokenType TOK_REAL = 187;
-const TokenType TOK_IMAG = 188;
-const TokenType TOK_FUNCTION_DEFS = 190;
-const TokenType TOK_SCRIPT = 191;
-const TokenType TOK_ANONYMOUS_FUNC = 192;
-const TokenType TOK_NEST_FUNC = 193;
-const TokenType TOK_TYPE_DECL = 194;
+const TokenValueType TOK_MULTI = 157;
+const TokenValueType TOK_SPECIAL = 158;
+const TokenValueType TOK_VARIABLE = 159;
+const TokenValueType TOK_DYN = 160;
+const TokenValueType TOK_BLOCK = 161;
+const TokenValueType TOK_EOF = 162;
+const TokenValueType TOK_MATDEF = 163;
+const TokenValueType TOK_CELLDEF = 164;
+const TokenValueType TOK_PARENS = 165;
+const TokenValueType TOK_BRACES = 166;
+const TokenValueType TOK_BRACKETS = 167;
+const TokenValueType TOK_ROWDEF = 168;
+const TokenValueType TOK_UNARY_MINUS = 169;
+const TokenValueType TOK_UNARY_PLUS = 170;
+const TokenValueType TOK_EXPR = 171;
+const TokenValueType TOK_DOTTIMES = 172;
+const TokenValueType TOK_DOTRDIV = 173;
+const TokenValueType TOK_DOTLDIV = 174;
+const TokenValueType TOK_DOTPOWER = 175;
+const TokenValueType TOK_DOTTRANSPOSE = 176;
+const TokenValueType TOK_LE = 177;
+const TokenValueType TOK_GE = 178;
+const TokenValueType TOK_EQ = 179;
+const TokenValueType TOK_NE = 180;
+const TokenValueType TOK_SOR = 181;
+const TokenValueType TOK_SAND = 182;
+const TokenValueType TOK_QSTATEMENT = 183;
+const TokenValueType TOK_STATEMENT = 184;
+const TokenValueType TOK_REALF = 185;
+const TokenValueType TOK_IMAGF = 186;
+const TokenValueType TOK_REAL = 187;
+const TokenValueType TOK_IMAG = 188;
+const TokenValueType TOK_FUNCTION_DEFS = 190;
+const TokenValueType TOK_SCRIPT = 191;
+const TokenValueType TOK_ANONYMOUS_FUNC = 192;
+const TokenValueType TOK_NEST_FUNC = 193;
+const TokenValueType TOK_TYPE_DECL = 194;
 
 class Serialize;
 
@@ -85,22 +85,22 @@ public:
 };
 
 class Token {
-  TokenType m_tok;
+  TokenValueType m_tok;
   unsigned m_pos;
   QString m_text;
   Array m_array;
 public:
   Token();
-  Token(TokenType tok, unsigned pos = 0, QString text = QString());
+  Token(TokenValueType tok, unsigned pos = 0, QString text = QString());
   Token(Serialize *s);
   void freeze(Serialize *s) const;
-  bool is(TokenType tok) const {return m_tok == tok;}
+  bool is(TokenValueType tok) const {return m_tok == tok;}
   bool isBinaryOperator() const;
   bool isUnaryOperator() const;
   unsigned precedence() const;
   bool isRightAssociative() const;
-  TokenType value() const {return m_tok;}
-  void setValue(TokenType a) {m_tok = a;}
+  TokenValueType value() const {return m_tok;}
+  void setValue(TokenValueType a) {m_tok = a;}
   unsigned position()  const {return m_pos;}
   QString text()  const {return m_text;}
   void setText(QString txt) {m_text = txt;}
