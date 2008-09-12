@@ -33,6 +33,7 @@ public:
     updateDims();
   }
   NTuple dimensions() const {return m_dims;}
+  const index_t length() const {return m_dims.count();}
   void setDimensions(const NTuple &x) {m_dims = x;}
   void updateDims() {
     if (m_data.size() == 0)

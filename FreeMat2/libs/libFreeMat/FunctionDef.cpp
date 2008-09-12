@@ -32,6 +32,7 @@
 #include <sys/stat.h>
 #include "MemPtr.hpp"
 #include "Algorithms.hpp"
+#include "FuncPtr.hpp"
 
 #if HAVE_AVCALL
 #include "avcall.h"
@@ -178,50 +179,6 @@ void MFunctionDef::printMe(Interpreter*eval) {
   code.tree()->print();
 }
 
-
-static void CaptureFunctionPointer(FuncPtr &val, Interpreter *walker, 
-				   MFunctionDef *parent, ScopePtr &workspace) {
-  if (val->type() == FM_M_FUNCTION) {
-    MFunctionDef* mptr = (MFunctionDef*) val;
-    if (mptr->nestedFunction && !mptr->capturedFunction) {
-      MFunctionDef* optr = new MFunctionDef;
-      (*optr) = (*mptr);
-      Context* context = walker->getContext();
-      QString myScope = context->scopeName();
-      context->bypassScope(1);
-      QString parentScope = context->scopeName();
-      context->restoreScope(1);
-      if (!Scope::nests(parentScope,myScope)) {
-	// Now capture the variables in our current scope
-	for (int i=0;i<optr->variablesAccessed.size();i++) {
-	  ArrayReference ptr(context->lookupVariable(optr->variablesAccessed[i]));
-	  if (ptr.valid()) {
-	    if (!workspace)
-	      workspace = new Scope("captured",false);
-	    workspace->insertVariable(optr->variablesAccessed[i],*ptr);
-	  }
-	}
-	optr->workspace = workspace;
-	optr->capturedFunction = true;
-      }
-      val = optr;
-    }
-  }
-}
-
-static void CaptureFunctionPointers(ArrayVector& outputs, Interpreter *walker, 
-				    MFunctionDef *parent) {
-// FIXME
-//   ScopePtr workspace = NULL;
-//   // First check for any 
-//   for (int i=0;i<((int)outputs.size());i++) {
-//     if (outputs[i].dataClass() == FM_FUNCPTR_ARRAY) {
-//       FuncPtr *dp = (FuncPtr*) outputs[i].getReadWriteDataPointer();
-//       for (int j=0;j<outputs[i].getLength();j++)
-// 	CaptureFunctionPointer(dp[j],walker,parent,workspace);
-//     }
-//   }
-}
 
 ArrayVector MFunctionDef::evaluateFunction(Interpreter *walker, 
 					   ArrayVector& inputs, 

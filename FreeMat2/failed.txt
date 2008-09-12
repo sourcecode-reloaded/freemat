@@ -5,3 +5,4 @@ Remaining issues in the array-rework branch:
 3. KeyManager - cut?
 4. Warn (Array.cpp)
 5. Warn (Algorithms.cpp)
+6. matrix concatenation of classes?
