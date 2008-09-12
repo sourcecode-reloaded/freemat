@@ -925,12 +925,6 @@ Array ClassBinaryOperator(Array a, Array b, QString funcname,
   throw Exception("unexpected argument types for classbinaryoperator");
 }
 
-// void AdjustColonCalls(ArrayVector& m, treeVector t) {
-//   for (unsigned index=0;index < t.size();index++) 
-//     if (t[index].is(':'))
-//       m[index] = Array::stringConstructor(":");
-// }
-
 Array IndexExpressionToStruct(Interpreter* eval, Tree *t, Array r) {
   StringVector fNames;
   fNames.push_back("type");
@@ -982,7 +976,7 @@ Array IndexExpressionToStruct(Interpreter* eval, Tree *t, Array r) {
   return retval;
 }
   
-ArrayVector ClassSubsrefCall(Interpreter* eval, Tree *t, Array r, FuncPtr val) {
+static ArrayVector ClassSubsrefCall(Interpreter* eval, Tree *t, Array r, FuncPtr val) {
   ArrayVector p;
   p.push_back(r);
   p.push_back(IndexExpressionToStruct(eval,t, r));

@@ -6,3 +6,18 @@ Remaining issues in the array-rework branch:
 4. Warn (Array.cpp)
 5. Warn (Algorithms.cpp)
 6. matrix concatenation of classes?
+
+
+Workspace IDs?
+If we have a function pointer class that contains a workspace, there is a problem with it's 
+implementation at the moment.  When the function pointer is dereferenced:
+
+t = @func;
+
+t(3)
+
+By right, t should not be changed by the call to "functionpointer:subsref".  However, t contains 
+the workspace for the variables that are stored in it.  The only way to fix this problem is to 
+either special case the functionpointer:subsref call (ugly), or have the functionpointer store 
+a reference to a workspace (instead of the workspace itself).  I will have to use the later 
+approach, although it introduces an additional level of complexity to the functionpointer class.
