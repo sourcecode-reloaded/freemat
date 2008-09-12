@@ -30,4 +30,7 @@ public:
   T operator[](size_t n) {return ptr[n];}
 };
 
+#define MacroBlockAlloc(ctype,csize,tmpname,name)	\
+  MemBlock<ctype> tmpname(csize); ctype *name = &tmpname;
+
 #endif

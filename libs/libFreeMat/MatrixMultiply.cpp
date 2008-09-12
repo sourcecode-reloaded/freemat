@@ -44,14 +44,14 @@ template <>
 void Trealgemm(char * ta, char* tb, int* m, int* n, int* k, float *alp,
 	       const float*A, int* LDA, const float* B, int* LDB, 
 	       float* BETA, float *C, int*LDC) {
-  return sgemm_(ta,tb,m,n,k,alp,A,LDA,B,LDB,BETA,C,LDC);
+  return sgemm_(ta,tb,m,n,k,alp,A,LDA,B,LDB,BETA,C,LDC, 1, 1);
 }
 
 template <>
 void Trealgemm(char * ta, char* tb, int* m, int* n, int* k, double *alp,
 	       const double*A, int* LDA, const double* B, int* LDB, 
 	       double* BETA, double *C, int*LDC) {
-  return dgemm_(ta,tb,m,n,k,alp,A,LDA,B,LDB,BETA,C,LDC);
+  return dgemm_(ta,tb,m,n,k,alp,A,LDA,B,LDB,BETA,C,LDC, 1, 1);
 }
 
 
@@ -64,14 +64,14 @@ template <>
 void Tcomplexgemm(char * ta, char* tb, int* m, int* n, int* k, float *alp,
 		  const float*A, int* LDA, const float* B, int* LDB, 
 		  float* BETA, float *C, int*LDC) {
-  return cgemm_(ta,tb,m,n,k,alp,A,LDA,B,LDB,BETA,C,LDC);
+  return cgemm_(ta,tb,m,n,k,alp,A,LDA,B,LDB,BETA,C,LDC, 1, 1);
 }
 
 template <>
 void Tcomplexgemm(char * ta, char* tb, int* m, int* n, int* k, double *alp,
 		  const double*A, int* LDA, const double* B, int* LDB, 
 		  double* BETA, double *C, int*LDC) {
-  return zgemm_(ta,tb,m,n,k,alp,A,LDA,B,LDB,BETA,C,LDC);
+  return zgemm_(ta,tb,m,n,k,alp,A,LDA,B,LDB,BETA,C,LDC, 1, 1);
 }
 
 /***************************************************************************
@@ -240,7 +240,7 @@ static void realMatrixMatrixMultiply(int m, int n, int k,
   int LDC = m;
 
   Trealgemm( &TRANSA, &TRANSB, &M, &N, &K, &ALPHA, a, &LDA, b, &LDB,
-	  &BETA, C, &LDC, 1, 1 );
+	  &BETA, C, &LDC );
 }
 
 
@@ -417,7 +417,7 @@ static void complexMatrixMatrixMultiply(int m, int n, int k,
   int LDC = m;
 
   Tcomplexgemm( &TRANSA, &TRANSB, &M, &N, &K, ALPHA, a, &LDA, b, &LDB,
-	  BETA, C, &LDC, 1, 1 );
+	  BETA, C, &LDC);
 }
 
 

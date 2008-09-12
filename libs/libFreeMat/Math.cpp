@@ -2044,22 +2044,6 @@ Array LeftDivide(const Array& A, const Array& B) {
   if (A.isScalar() || B.isScalar())
     // Its really a vector product, pass...
     return DotLeftDivide(A,B);
-  // Check for sparse case...
-  if (A.isSparse()) {
-//     // Make sure B is _not_ sparse
-//     B.makeDense();
-//     // Make sure A is square
-//     if (Arows != Acols)
-//       throw Exception("FreeMat currently only supports A\\b for square matrices A");
-//     // Make sure A is either double or dcomplex
-//     if ((A.dataClass() == FM_FLOAT) || (A.dataClass() == FM_COMPLEX))
-//       throw Exception("FreeMat currently only supports A\\b for double and dcomplex matrices A");
-//     Dimensions outDim(Arows,Bcols);
-//     return Array(A.dataClass(),outDim,
-// 		 SparseSolveLinEq(A.dataClass(),Arows,Acols,A.getSparseDataPointer(),
-// 				  Brows,Bcols,B.getDataPointer()),false);
-#warning FINISHME
-  }
   if (A.isSquare())
     return SolveLinearEq(A,B);
   else

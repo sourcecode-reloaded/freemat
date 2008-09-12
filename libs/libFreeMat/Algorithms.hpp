@@ -112,4 +112,14 @@ void SparseToIJVMat(const Array &x, Array &rows, Array &cols, Array &vals);
 Array ToSparse(const Array& data);
 
 bool Equals(const StringVector& a, const StringVector& b);
+
+template <typename T>
+static inline BasicArray<T> BasicArrayFromNative(const T* data, NTuple dims) {
+  BasicArray<T> rp(dims);
+  for (int i=0;i<dims.count();i++)
+    rp.set(i+1,data[i]);
+  return rp;
+}
+
+
 #endif

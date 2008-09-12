@@ -3,7 +3,7 @@
 #include <errno.h>
 #include <limits.h>
 
-Token::Token(TokenType tok, unsigned pos, QString text) :
+Token::Token(TokenValueType tok, unsigned pos, QString text) :
   m_tok(tok), m_pos(pos), m_text(text) {
 }
 

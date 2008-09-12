@@ -198,6 +198,8 @@ __declspec( dllexport ) double rint (double x)
   return x;
 }
 
+__declspec( dllexport ) float rintf( float x ) { return rint(x); }
+
 //VC doesn't define log1p so we borrow the definition from libm (mingw)
 __declspec( dllexport ) double log1p(double x){
 

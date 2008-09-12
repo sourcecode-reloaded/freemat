@@ -676,9 +676,13 @@ ArrayVector HSurfaceFunction(int nargout, const ArrayVector& arg) {
 //where @|property| and @|value| are set.  The handle ID for the
 //resulting object is returned.  It is automatically added to
 //the children of the current axis.
+//@@Signature
+//gfunction hpatch HPatchFunction
+//input varargin
+//output handle
 //!
 ArrayVector HPatchFunction(int nargout, const ArrayVector& arg) {
-  return SingleArrayVector(Array::uint32Constructor(GenericConstructor(new HandlePatch,arg)));
+  return ArrayVector(Array(double(GenericConstructor(new HandlePatch,arg))));
 }
 
 

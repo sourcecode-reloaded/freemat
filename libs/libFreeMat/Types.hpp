@@ -42,8 +42,15 @@ const int NDims = 6;
 
 typedef QStringList StringVector;
 
+#if defined(_MSC_VER )
+extern "C"{
+	__declspec( dllexport ) double rint (double x);
+	__declspec( dllexport ) float rintf (float x);
+};
+#endif
+
 inline bool IsInteger(float x) {
-  return rintf(x) == x;
+    return rintf(x) == x;
 }
 
 inline bool IsInteger(double x) {

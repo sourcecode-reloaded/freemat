@@ -1659,109 +1659,66 @@ public:
   ~ContextLoopLocker() {m_context->exitLoop();}
 };
 
-void ForLoopIterator( Tree* codeBlock, string indexName, 
+void ForLoopIterator( Tree* codeBlock, QString indexName, 
 		     Array& first, Array& last, Array& step, Interpreter *eval)
 {
     int nsteps;
 
-    Class indexClass = CommonType( first.dataClass(), last.dataClass(), step.dataClass() );
-    switch( indexClass ){
-	case FM_UINT8:
-	case FM_INT8:
-	case FM_UINT16:
-	case FM_INT16:
-	case FM_UINT32:
-	case FM_INT32:
-	    {
-		int f = first.getContentsAsIntegerScalar();
-		int l = last.getContentsAsIntegerScalar();
-		int s = step.getContentsAsIntegerScalar();
-		int signum = (s > 0) - (s < 0);
-		nsteps = ( ( l - f ) / s ) + 1;  
-		if( nsteps < 0 ) return;
-		for (int m=0;m<nsteps;m++) {
-		    Array *vp = eval->getContext()->lookupVariableLocally(indexName);
-		    if ((!vp) || (vp->dataClass() != indexClass) || (!vp->isScalar())) {
-			eval->getContext()->insertVariableLocally(indexName,Array(indexClass,Dimensions(1,1)));
-			vp = eval->getContext()->lookupVariableLocally(indexName);
-		    }
-		    Array tmp = Array::int32Constructor( f+s*m );
-		    tmp.promoteType( indexClass );
-		    *vp = tmp;
-		    try {
-			eval->block(codeBlock);
-		    } catch (InterpreterContinueException &e) {
-		    } catch (InterpreterBreakException &e) {
-			break;
-		    } 
-		}
-		break;
-	    }
+    if( !( first.isScalar() && last.isScalar() && step.isScalar() ) )
+	throw Exception("Loop parameters must be scalar.");
 
-	case FM_COMPLEX:
-	    eval->warningMessage("Colon operands must be real.");
-	    //intentional fall through.
-	case FM_FLOAT:
-	    {
-		float f = first.getContentsAsDoubleScalar();
-		float l = last.getContentsAsDoubleScalar();
-		float s = step.getContentsAsDoubleScalar();
-		nsteps = num_for_loop_iter_f(f, s, l);  
-		for (int m=0;m<nsteps;m++) {
-		    Array *vp = eval->getContext()->lookupVariableLocally(indexName);
-		    if ((!vp) || (vp->dataClass() != FM_FLOAT) || (!vp->isScalar())) {
-			eval->getContext()->insertVariableLocally(indexName,Array(FM_FLOAT,Dimensions(1,1)));
-			vp = eval->getContext()->lookupVariableLocally(indexName);
-		    }
-		    Array tmp = Array::floatConstructor( f+s*m );
-		    tmp.promoteType( FM_FLOAT );
-		    *vp = tmp; 
-		    try {
-			eval->block(codeBlock);
-		    } catch (InterpreterContinueException &e) {
-		    } catch (InterpreterBreakException &e) {
-			break;
-		    } 
-		}
-		break;
-	    }
+    Array *vp = eval->getContext()->lookupVariableLocally( indexName );
+    if ((!vp) || (!vp->isScalar())) {
+	eval->getContext()->insertVariableLocally(indexName,Array());
+	vp = eval->getContext()->lookupVariableLocally(indexName);
+    }
 
-	case FM_DCOMPLEX:
-	    eval->warningMessage("Colon operands must be real.");
-	    //intentional fall through.
-	case FM_DOUBLE:
-	    {
-		double f = first.getContentsAsDoubleScalar();
-		double l = last.getContentsAsDoubleScalar();
-		double s = step.getContentsAsDoubleScalar();
-		nsteps = num_for_loop_iter(f, s, l);  
-		for (int m=0;m<nsteps;m++) {
-		    Array *vp = eval->getContext()->lookupVariableLocally(indexName);
-		    if ((!vp) || (vp->dataClass() != FM_DOUBLE) || (!vp->isScalar())) {
-			eval->getContext()->insertVariableLocally(indexName,Array(FM_DOUBLE,Dimensions(1,1)));
-			vp = eval->getContext()->lookupVariableLocally(indexName);
-		    }
-		    Array tmp = Array::floatConstructor( f+s*m );
-		    tmp.promoteType( FM_DOUBLE );
-		    *vp = tmp; 
-		    try {
-			eval->block(codeBlock);
-		    } catch (InterpreterContinueException &e) {
-		    } catch (InterpreterBreakException &e) {
-			break;
-		    } 
-		}
+    bool bIntLoop = (IsIntegerDataClass(first) || IsIntegerDataClass(last) || IsIntegerDataClass(step));
+
+    if( bIntLoop ){
+	//integer loop path
+	Array temp1;
+
+	temp1 = DotRightDivide( Subtract( last, first ), step );    //( ( l - f ) / s )
+	nsteps = temp1.getContentsAsIntegerScalar() + 1;	    //( ( l - f ) / s )+1
+	if( nsteps < 0 ) return;
+
+	for (int m=0;m<nsteps;m++) {
+	    Array stepInd(BasicArray<double>(m));
+	    *vp = Add( first, DotMultiply( stepInd, step ) );
+	    try {
+		eval->block(codeBlock);
+	    } 
+	    catch (InterpreterContinueException &e) {
+	    } 
+	    catch (InterpreterBreakException &e) {
 		break;
-	    }
-	default:
-	    eval->errorMessage("Incorrect for loop parameters");
+	    } 
+	}
+    }
+    else{
+	//floating point loop path
+	bool bFloatLoop = ( first.dataClass() == Float || last.dataClass() == Float || step.dataClass() == Float );
+	float f = first.getContentsAsDoubleScalar();
+	float l = last.getContentsAsDoubleScalar();
+	float s = step.getContentsAsDoubleScalar();
+
+	if( bFloatLoop )
+	    nsteps = num_for_loop_iter_f(f, s, l);  
+	else
+	    nsteps = num_for_loop_iter(f, s, l);
+
+        Array stepInd(BasicArray<double>(m));
+	*vp = Add( first, DotMultiply( stepInd, step ) );
+	try {
+	    eval->block(codeBlock);
+	} 
+	catch (InterpreterContinueException &e) {} 
+	catch (InterpreterBreakException &e) {
+	    break;
+	} 
     }
 }
-
-template <class T>
-void ScalarForLoopHelper(Tree *codeBlock, Class indexClass, const T *indexSet, 
-		   int count, string indexName, Interpreter *eval) {
-    ((T*) vp->getReadWriteDataPointer())[0] = indexSet[m];
 
 int num_for_loop_iter_f( float first, float step, float last )
 {
@@ -2047,7 +2004,7 @@ void Interpreter::forStatement(Tree *t) {
 	else {
 	  first = expression(t->first()->second()->first());
 	  last = expression(t->first()->second()->second());
-	  Array tmp = Array::doubleConstructor( 1 );
+	  Array tmp(BasicArray<double>(1));
 	  ForLoopIterator( codeBlock, indexVarName, first, last, tmp, this);
 	    //return unitColon(t);
 	}
@@ -2825,7 +2782,7 @@ ArrayReference Interpreter::createVariable(QString name) {
 //@{ test_assign18.m
 //function test_val = test_assign18
 //  x = [];
-//  x(:) = 4;
+//  x(:) = 3;
 //  test_val = (x == 3);
 //@}
 //@{ test_assign19.m
@@ -3038,7 +2995,7 @@ ArrayReference Interpreter::createVariable(QString name) {
 //zd1(ndxr) = [];
 //zc1(ndxr) = [];
 //zz1(ndxr) = [];
-//x = testeq(yi1,zi1.') & testeq(yf1,zf1.') & testeq(yd1,zd1.') & testeq(yc1,zc1.') & testeq(yz1,zz1.');
+//x = testeq(yi1,zi1) & testeq(yf1,zf1) & testeq(yd1,zd1) & testeq(yc1,zc1) & testeq(yz1,zz1);
 //@}
 //@{ test_sparse81.m
 //function x = test_sparse81
@@ -3053,6 +3010,15 @@ ArrayReference Interpreter::createVariable(QString name) {
 //  B = sparse([]);
 //  C = [B,B,B;B,B,B,A,B];
 //  x = testeq(C,A);
+//@}
+//@{ test_sparse116.m
+//function x = test_sparse116
+//  a = [1,0,3,4,5;6,2,3,5,0;0,0,0,0,2];
+//  A = sparse(a);
+//  p = [3;4;5;9;10;20];
+//  a(p) = 1;
+//  A(p) = 1;
+//  x = testeq(a,A);
 //@}
 //!
 void Interpreter::assignment(Tree *var, bool printIt, Array &b) {

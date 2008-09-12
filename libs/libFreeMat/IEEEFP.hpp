@@ -63,6 +63,7 @@ double Inf(void);
 
 extern "C"{
 	__declspec( dllexport ) double rint (double x);
+	__declspec( dllexport ) float rintf (float x);
 	__declspec( dllexport ) double log1p(double x);
 	__declspec( dllexport ) double expm1 (double x);
 //        __declspec( dllexport ) double nextafter( double x, double y )  { return _nextafter( x, y ); }

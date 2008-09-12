@@ -4,7 +4,7 @@
 #include "SparseCCS.hpp"
 
 void WarningMessage(QString msg) {
-#warning FIXME
+//TODO: #warning FIXME
   //  std::cout << "Warning:" << qPrintable(msg);
 }
 

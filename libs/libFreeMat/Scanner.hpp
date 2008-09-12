@@ -18,9 +18,9 @@ class Scanner {
   bool m_inContinuationState;
   int  m_bracketDepth;
   bool m_blobFlag;
-  TokenType current();
-  TokenType previous();
-  TokenType ahead(int n);
+  TokenValueType current();
+  TokenValueType previous();
+  TokenValueType ahead(int n);
   void fetch();
   void fetchWhitespace();
   void fetchIdentifier();
@@ -30,8 +30,8 @@ class Scanner {
   void fetchString();
   void fetchBlob();
   void fetchOther();
-  bool tryFetchBinary(const char* op, TokenType tok);
-  void setToken(TokenType tok, QString text = QString());
+  bool tryFetchBinary(const char* op, TokenValueType tok);
+  void setToken(TokenValueType tok, QString text = QString());
   bool isBreakpointLine(int num);
   void deleteBreakpoint(int num);
 public:
@@ -39,7 +39,7 @@ public:
   // Methods accessed by the parser
   const Token& next();
   void consume();
-  bool match(TokenType tok);
+  bool match(TokenValueType tok);
   void setDebug(bool debugFlag) {m_debugFlag = debugFlag;}
   // Warning: Ugly Hack.  When in Special Call mode, the
   // rules for what constitutes a string change completely.
@@ -47,7 +47,7 @@ public:
   void pushWSFlag(bool ignoreWS);
   void popWSFlag();
   bool done();
-  bool peek(int chars, TokenType tok);
+  bool peek(int chars, TokenValueType tok);
   unsigned position() {return m_ptr;}
   unsigned contextNum();
   QString context(unsigned pos);

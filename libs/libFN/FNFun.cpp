@@ -23,6 +23,17 @@
 #include <math.h>
 #include "Operators.hpp"
 
+#if defined(_MSC_VER )
+    float erff(float x);
+    float erfcf(float x);
+    double erf(double x);
+    double erfc(double x);
+    double tgamma(double x);
+    float tgammaf(float x);
+    double lgamma(double x);
+    float lgammaf(float x);
+#endif 
+
 //!
 //@Module ERFC Complimentary Error Function
 //@@Section MATHFUNCTIONS

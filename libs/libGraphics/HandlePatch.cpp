@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
+#include "Types.hpp"
 #include "HandlePatch.hpp"
 #include "HandleAxis.hpp"
 #include "IEEEFP.hpp"
@@ -34,13 +35,13 @@ QVector<double> HandlePatch::GetLimits() {
   UpdateState();
 
   Array vertexdata(ArrayPropertyLookup("vertices"));
-  vertexdata.promoteType(FM_DOUBLE);
+  vertexdata = vertexdata.toClass(Double);
   int nrows = vertexdata.rows();
   int ncols = vertexdata.columns();
 
-  double *pVertDataX = (double*)vertexdata.getDataPointer();
-  double *pVertDataY = pVertDataX+nrows;
-  double *pVertDataZ = pVertDataY+nrows;
+  const double *pVertDataX = vertexdata.constReal<double>().constData();
+  const double *pVertDataY = pVertDataX+nrows;
+  const double *pVertDataZ = pVertDataY+nrows;
 
   double max_x = *pVertDataX;
   double min_x = max_x;
@@ -60,7 +61,7 @@ QVector<double> HandlePatch::GetLimits() {
   }
 
   Array fvcdata( ArrayPropertyLookup("facevertexcdata") );
-  fvcdata.promoteType(FM_DOUBLE);
+  fvcdata=fvcdata.toClass(Double);
 
   limits.push_back(min_x);
   limits.push_back(max_x);
@@ -270,11 +271,11 @@ void HandlePatch::SetupDefaults() {
 void HandlePatch::BuildPolygons( FaceList& faces )
 {
     Array facedata(ArrayPropertyLookup("faces"));
-    facedata.promoteType(FM_DOUBLE);
+    facedata = facedata.toClass(Double);
     Array vertexdata(ArrayPropertyLookup("vertices"));
-    vertexdata.promoteType(FM_DOUBLE);
+    vertexdata = vertexdata.toClass(Double);
     Array fvcdata( ArrayPropertyLookup("facevertexcdata") );
-    fvcdata.promoteType(FM_DOUBLE);
+    fvcdata = fvcdata.toClass(Double);
 
     enum ColorMode::ColorMode FaceColorMode, EdgeColorMode;
 
@@ -291,9 +292,9 @@ void HandlePatch::BuildPolygons( FaceList& faces )
     
     if (vertexdata.isEmpty() || facedata.isEmpty()) return;
 
-    double *pVertOrder = (double*)facedata.getDataPointer();
-    double *pVertData = (double*)vertexdata.getDataPointer();
-    double *pVertColor = (double*)fvcdata.getDataPointer();
+    const double *pVertOrder = facedata.constReal<double>().constData();
+    const double *pVertData = vertexdata.constReal<double>().constData();
+    const double *pVertColor = fvcdata.constReal<double>().constData();
 
     if( vertexdata.columns() != 3 ) throw Exception("Vertex Data should be Nx3 dimensional matrix.");
     
@@ -345,7 +346,7 @@ void HandlePatch::BuildPolygons( FaceList& faces )
 	    throw Exception("Incorrect number of FaceVertexCData parameters");
 
 #define pVertD( i, j ) ((i<vertexdata.rows() && j<vertexdata.columns())?(pVertData+i+nVertices*j):(throw Exception("Out of bounds"), pVertData))
-#define pVertC( i, j ) ((i<fvcdata.rows() && j<fvcdata.columns())?(pVertColor+i+fvcdata.rows()*j):(throw Exception("Out of bounds"), pVertColor))
+#define pVertC( i, j ) ((i<fvcdata.rows() && j<fvcdata.columns())?(pVertColor+i+(int)fvcdata.rows()*j):(throw Exception("Out of bounds"), pVertColor))
 
 	for( int k = 0; k < maxVertsPerFace; k++ ){
 	    if( !IsNaN( *(pVertOrder+j+k*nFaces) ) ){ //ignore vertices set to NaN

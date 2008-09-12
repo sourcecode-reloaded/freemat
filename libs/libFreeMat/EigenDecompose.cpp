@@ -25,6 +25,13 @@
 #include "Complex.hpp"
 #include "Math.hpp"
 #include "Algorithms.hpp"
+#include "SparseCCS.hpp"
+
+#if HAVE_UMFPACK
+extern "C" {
+#include "umfpack.h"
+}
+#endif
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
@@ -847,6 +854,12 @@ void GeneralizedEigenDecomposeCompactGeneral(Array A, Array B, Array& D) {
   }
 }
 
+
+//@Module DNEUPD 
+//inputs  iparam
+//outputs d z ierr
+//computed howmny select ldv ipntr workd workl 
+
 static void DNEUPARPACKError(int info) {
   if (info == 1) 
     throw Exception("ARPACK Error: The Schur form computed by LAPACK routine dlahqr could not be reordered by LAPACK routine dtrsen.  Please file a bug report with the matrix and arguments that caused this error.");
@@ -928,7 +941,8 @@ extern "C" {
   int dnaupd_(int *ido, char *bmat, int *n, const char*
 	      which, int *nev, double *tol, double *resid, int *ncv,
 	      double *v, int *ldv, int *iparam, int *ipntr, 
-	      double *workd, double *workl, int *lworkl, int *info, int len1, int len2);
+	      double *workd, double *workl, int *lworkl, int *info,
+	      int len1, int len2);
   int dneupd_(int *rvec, char *howmny, int *select, 
 	      double *dr, double *di, double *z__, int *ldz, 
 	      double *sigmar, double *sigmai, double *workev, char *
@@ -950,6 +964,204 @@ extern "C" {
 #endif
 
 
+// Wrap the interface to ARPACK so we can do eigs in FreeMat instead
+//!
+//@Module DNAUPD ARPACK callback interface
+//@@Signature
+//function dnaup DNAUPFunction
+//inputs mode nev tol resid v iparam ipntr workd workl ido
+//outputs ido info resid v ipntr workd workl
+
+//@Module ZNAUPD ARPACK callback interface
+//@@Signature
+//function znaup ZNAUPFunction
+//inputs mode nev tol resid v iparam ipntr workd workl ido rwork
+//outputs ido info resid v ipntr workd workl
+
+#define MacroARG(indx,class,ctype,name,tmp)	\
+  Array tmp(arg[indx].asDenseArray().toClass(class)); \
+  ctype *name = tmp.real<ctype>().data();
+
+#define MacroARGFortran(indx,class,ctype,name,tmp1,tmp2)	\
+  Array tmp1(arg[indx].asDenseArray().toClass(class));		\
+  BasicArray<ctype> tmp2(tmp1.fortran<ctype>());		\
+  ctype *name = tmp2.data();
+
+ArrayVector ZNAUPFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 12) throw Exception("znaupd requires 12 arguments");
+  QString mode = arg[0].asString();
+  int nev = arg[1].asInteger();
+  int n = arg[2].asInteger();
+  double tol = arg[3].asDouble();
+  MacroARGFortran(4,Double,double,resid,rArray,residBA);
+  MacroARGFortran(5,Double,double,v,vArray,vBA);
+  MacroARG(6,Int32,int32,iparam,iparamArray);
+  MacroARG(7,Int32,int32,ipntr,ipntrArray);
+  MacroARGFortran(8,Double,double,workd,workdArray,workdBA);
+  MacroARGFortran(9,Double,double,workl,worklArray,worklBA);
+  int ido = arg[10].asInteger();
+  MacroARG(11,Double,double,rwork,rworkArray);
+  
+  char bmat = 'I';
+  char *which_cstr = strdup(qPrintable(mode));
+  int ncv = 2*nev+1;
+  if (ncv > n) ncv = n;
+  int ldv = n;
+  int lworkl = worklBA.length()/2;
+  int info = 0;
+
+  // Add validation code here...
+
+  znaupd_(&ido, &bmat, &n , which_cstr, &nev, &tol, resid, 
+	  &ncv, v, &ldv, iparam, ipntr, workd, workl, &lworkl, 
+	  rwork, &info);
+
+  ArrayVector retvec;
+  retvec << Array(double(ido))
+	 << Array(double(info))
+	 << Array(SplitReal(residBA),SplitImag(residBA))
+	 << Array(SplitReal(vBA),SplitImag(vBA))
+	 << iparamArray
+	 << ipntrArray
+	 << Array(SplitReal(workdBA),SplitImag(workdBA))
+	 << Array(SplitReal(worklBA),SplitImag(worklBA))
+	 << rworkArray;
+  return retvec;
+}
+
+
+ArrayVector DNAUPFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 11) throw Exception("dnaupd requires 9 arguments");
+  QString mode = arg[0].asString();
+  int nev = arg[1].asInteger();
+  int n = arg[2].asInteger();
+  double tol = arg[3].asDouble();
+  MacroARG(4,Double,double,resid,rArray);
+  MacroARG(5,Double,double,v,vArray);
+  MacroARG(6,Int32,int32,iparam,iparamArray);
+  MacroARG(7,Int32,int32,ipntr,ipntrArray);
+  MacroARG(8,Double,double,workd,workdArray);
+  MacroARG(9,Double,double,workl,worklArray);
+  int ido = arg[10].asInteger();
+  
+  char bmat = 'I';
+  char *which_cstr = strdup(qPrintable(mode));
+  int ncv = 2*nev+1;
+  if (ncv > n) ncv = n;
+  int ldv = n;
+  int lworkl = worklArray.length();
+  int info = 0;
+
+  // Add validation code here...
+
+  dnaupd_(&ido, &bmat, &n , which_cstr, &nev, &tol, resid, 
+	  &ncv, v, &ldv, iparam, ipntr, workd, workl, &lworkl, 
+	  &info, 1, 2);
+
+  ArrayVector retvec;
+  retvec << Array(double(ido))
+	 << Array(double(info))
+	 << rArray
+	 << vArray
+	 << iparamArray
+	 << ipntrArray
+	 << workdArray
+	 << worklArray;
+  return retvec;
+}
+
+
+//inputs rvec n mode nev tol resid v iparam ipntr workd workl sigma rwork
+//outputs ierr dr di z
+ArrayVector ZNEUPFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 13) throw Exception("zneup requires 12 arguments");
+  int rvec = arg[0].asInteger();
+  int n = arg[1].asInteger();
+  QString mode = arg[2].asString();
+  int nev = arg[3].asInteger();
+  double tol = arg[4].asDouble();
+  MacroARGFortran(5,Double,double,resid,rArray,residBA);
+  MacroARGFortran(6,Double,double,v,vArray,vBA);
+  MacroARG(7,Int32,int32,iparam,iparamArray);
+  MacroARG(8,Int32,int32,ipntr,ipntrArray);
+  MacroARGFortran(9,Double,double,workd,workdArray,workdBA);
+  MacroARGFortran(10,Double,double,workl,worklArray,worklBA);
+  Array shift(arg[11].toClass(Double));
+  MacroARG(12,Double,double,rwork,rworkArray);
+  double sigma[2];
+  sigma[0] = shift.constRealScalar<double>();
+  sigma[1] = shift.constImagScalar<double>();
+  int ierr;
+  char howmny = 'A';
+  int ncv = 2*nev+1;
+  if (ncv > n) ncv = n;
+  MacroBlockAlloc(int,ncv,selectBlock,select);
+  BasicArray<double> d(NTuple(2*(nev+1),1));
+  BasicArray<double> z(NTuple(2*n,nev+1));
+  int ldv = n;
+  MacroBlockAlloc(double,4*ncv,workevBlock,workev);
+  char bmat = 'I';
+  char *which_cstr = strdup(qPrintable(mode));
+  int lworkl = worklBA.length()/2;
+  zneupd_(&rvec, &howmny, select, d.data(), z.data(), &ldv, 
+	  sigma, workev, &bmat, &n, which_cstr, &nev, &tol, 
+	  resid, &ncv, v, &ldv, iparam, ipntr, workd, workl,
+	  &lworkl, rwork, &ierr);
+  ArrayVector retvec;
+  retvec << Array(double(ierr))
+	 << Array(SplitReal(d),SplitImag(d))
+	 << Array(SplitReal(z),SplitImag(z))
+	 << iparamArray;
+  return retvec;
+}
+
+
+//inputs rvec n mode nev tol resid v iparam ipntr workd workl sigma
+//outputs ierr dr di z
+ArrayVector DNEUPFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 12) throw Exception("dneup requires 12 arguments");
+  int rvec = arg[0].asInteger();
+  int n = arg[1].asInteger();
+  QString mode = arg[2].asString();
+  int nev = arg[3].asInteger();
+  double tol = arg[4].asDouble();
+  MacroARG(5,Double,double,resid,rArray);
+  MacroARG(6,Double,double,v,vArray);
+  MacroARG(7,Int32,int32,iparam,iparamArray);
+  MacroARG(8,Int32,int32,ipntr,ipntrArray);
+  MacroARG(9,Double,double,workd,workdArray);
+  MacroARG(10,Double,double,workl,worklArray);
+  Array shift(arg[11].toClass(Double));
+  double sigmar = shift.constRealScalar<double>();
+  double sigmai = shift.constImagScalar<double>();
+  int ierr;
+  char howmny = 'A';
+  int ncv = 2*nev+1;
+  if (ncv > n) ncv = n;
+  MacroBlockAlloc(int,ncv,selectBlock,select);
+  BasicArray<double> dr(NTuple(nev+1,1));
+  BasicArray<double> di(NTuple(nev+1,1));
+  BasicArray<double> z(NTuple(n,nev+1));
+  int ldv = n;
+  MacroBlockAlloc(double,3*ncv,workevBlock,workev);
+  char bmat = 'I';
+  char *which_cstr = strdup(qPrintable(mode));
+  int lworkl = worklArray.length();
+  dneupd_(&rvec, &howmny, select, dr.data(), di.data(), z.data(), &ldv, 
+	  &sigmar, &sigmai, workev, &bmat, &n, which_cstr, &nev, &tol, 
+	  resid, &ncv, v, &ldv, iparam, ipntr, workd, workl,
+	  &lworkl, &ierr);
+  ArrayVector retvec;
+  retvec << Array(double(ierr))
+	 << Array(dr)
+	 << Array(di)
+	 << Array(z)
+	 << iparamArray;
+  return retvec;
+}
+
+
+
 #define min(a,b) ((a) < (b) ? (a) : (b))
 #define swap(a,b) {double tmp; tmp = a; a = b; b = tmp;}
 
@@ -967,109 +1179,73 @@ static void LoadARPACKParams(int iparam[11]) {
   iparam[10] = 0;
 }
 
-#define MacroBlockAlloc(ctype,csize,tmpname,name)	\
-  MemBlock<ctype> tmpname(csize); ctype *name = &tmpname;
 
 template <typename T>
-static inline BasicArray<T> BasicArrayFromNative(const T* data, NTuple dims) {
-  BasicArray<T> rp(dims);
-  for (int i=0;i<dims.count();i++)
-    rp.set(i+1,data[i]);
-  return rp;
-}
-
-template <typename T>
-static void SparseDenseMatrixMultiply(const SparseMatrix<T> &A, const T* B, int Bcols, T* C) {
-  for (index_t col = 1;col <= Bcols;col++) {
-    T* c_slice = C + int((col-1)*A.rows());
-    memset(c_slice,0,int(sizeof(T)*A.rows()));
-    ConstSparseIterator<T> A_iter(&A);
-    while (A_iter.isValid()) {
-      c_slice[int(A_iter.row())] += A_iter.value() * B[int(A_iter.col()+col*A.rows()-1)];
-      A_iter.next();
-    }
+static void SparseDenseMatrixVectorMultiply(const SparseMatrix<T> &A, const T* B, T* C) {
+  memset(C,0,int(sizeof(T)*A.rows()));
+  ConstSparseIterator<T> A_iter(&A);
+  while (A_iter.isValid()) {
+    C[int(A_iter.row()-1)] += A_iter.value() * B[int(A_iter.col()-1)];
+    A_iter.next();
   }
 }
 
 template <typename T>
-static void SparseDenseMatrixMultiply(const SparseMatrix<T> &A_real,
-				      const SparseMatrix<T> &A_imag,
-				      const T*B, int Bcols, T* C) {
+static void SparseDenseMatrixVectorMultiply(const SparseMatrix<T> &A_real,
+					    const SparseMatrix<T> &A_imag,
+					    const T* B, T* C) {
   int rows = int(A_real.rows());
-  for (index_t col = 1;col <= Bcols;col++) {
-    T* c_slice = C + int(2*(col-1)*rows);
-    memset(c_slice,0,int(2*sizeof(T)*rows));
-    ConstComplexSparseIterator<T> A_iter(&A_real,&A_imag);
-    while (A_iter.isValid()) {
-      complex_multiply(A_iter.realValue(),A_iter.imagValue(),
-		       B[2*(int(A_iter.col()+col*rows-1))],
-		       B[2*(int(A_iter.col()+col*rows-1))+1],
-		       c_slice[int(2*A_iter.row())],c_slice[int(2*A_iter.row()+1)]);
-      A_iter.next();
-    }
+  memset(C,0,int(sizeof(T)*rows*2));
+  ConstComplexSparseIterator<T> A_iter(&A_real,&A_imag);
+  while (A_iter.isValid()) {
+    T cr, ci;
+    complex_multiply(A_iter.realValue(),A_iter.imagValue(),
+		     B[2*(int(A_iter.col()-1))],
+		     B[2*(int(A_iter.col()-1))+1],cr,ci);
+    C[int(2*(A_iter.row()-1))] += cr;
+    C[int(2*(A_iter.row()-1))+1] += ci;
+    A_iter.next();
   }
 }
 
-
-static ArrayVector SparseEigDecomposeNonsymmetricReal(const SparseMatrix<double> &a,
-						      int nev, int nargout, QString which) {
-#if HAVE_ARPACK
-  // Initialization call
-  int ido = 0;
-  char bmat = 'I';
-  int n = int(a.rows());
-  // How many eigenvalues to compute
-  char cmach = 'E';
-  double tol = dlamch_(&cmach);
-  MacroBlockAlloc(double,n,residBlock,resid);
-  int ncv = 2*nev+1;
-  if (ncv > n) ncv = n;
-  MacroBlockAlloc(double,n*ncv,vBlock,v);
-  int ldv = n;
-  int iparam[11];
-  LoadARPACKParams(iparam);
-  MacroBlockAlloc(double,3*n,workdBlock,workd);
-  int lworkl = 3*ncv*ncv+6*ncv;
-  MacroBlockAlloc(double,lworkl,worklBlock,workl);
-  int info = 0;
-  MacroBlockAlloc(int,14,ipntrBlock,ipntr);
-  while (1) {
-    dnaupd_(&ido, &bmat, &n , qPrintable(which), &nev, &tol, resid, 
-	    &ncv, v, &ldv, iparam, ipntr, workd, workl, &lworkl, 
-	    &info,1,which.size());
-    if ((ido == -1) || (ido == 1)) 
-      SparseDenseMatrixMultiply(a, workd+ipntr[0]-1, 1, workd+ipntr[1]-1);
-    else
-      break;
+static ArrayVector SparseDecodeComplexResults(int rvec, int nconv, double *d, double *z, int nev, 
+					      int n, int nargout) {
+  if (rvec == 0) {
+    for (int i=0;i<(nconv)/2;i++) {
+      swap(d[2*i],d[2*(nconv-1-i)]);
+      swap(d[2*i+1],d[2*(nconv-1-i)+1]);
+    }
   }
-  if (info < 0)
-    DNAUPARPACKError(info);
-  // Compute vectors and values
-  int rvec;
+  BasicArray<double> eigvals_real(NTuple(nev,1));
+  BasicArray<double> eigvals_imag(NTuple(nev,1));
+  for (int i=0;i<min(nev,nconv);i++) {
+    eigvals_real[i+1] = d[2*i];
+    eigvals_imag[i+1] = d[2*i+1];
+  }
+  BasicArray<double> eigvecs_real;
+  BasicArray<double> eigvecs_imag;
+  if (nargout > 1) {
+    eigvecs_real = BasicArray<double>(NTuple(n,nev));
+    eigvecs_imag = BasicArray<double>(NTuple(n,nev));
+    for (int i=0;i<min(nev,nconv);i++)
+      for (int j=0;j<n;j++) {
+	eigvecs_real[NTuple(j+1,i+1)] = z[i*2*n+2*j];
+	eigvecs_imag[NTuple(j+1,i+1)] = z[i*2*n+2*j+1];
+      }
+  }
+  ArrayVector retval;
   if (nargout <= 1)
-    rvec = 0;
-  else
-    rvec = 1;
-  char howmny = 'A';
-  MacroBlockAlloc(int,ncv,selectBlock,select);
-  MacroBlockAlloc(double,nev+1,drb,dr);
-  MacroBlockAlloc(double,nev+1,dib,di);
-  double *z;
-  if (nargout <= 1)
-    z = NULL;
-  else
-    z = (double*) malloc(sizeof(double)*(n*(nev+1)));
-  double sigmar;
-  double sigmai;
-  MacroBlockAlloc(double,3*ncv,workevBlock,workev);
-  int ierr;
-  dneupd_(&rvec, &howmny, select, dr, di, z, &ldv, 
-	  &sigmar, &sigmai, workev, &bmat, &n, qPrintable(which), &nev, &tol, 
-	  resid, &ncv, v, &ldv, iparam, ipntr, workd, workl,
-	  &lworkl, &ierr);
-  int nconv = iparam[4];
-  if (ierr != 0)
-    DNEUPARPACKError(ierr);
+    retval.push_back(Array(eigvals_real,eigvals_imag));
+  else {
+    retval.push_back(Array(eigvecs_real,eigvecs_imag));
+    retval.push_back(DiagonalArray(eigvals_real,eigvals_imag));
+  }
+  free(z);
+  return retval;
+}
+
+static ArrayVector SparseDecodeResults(int rvec, int nconv, double *dr, double *di, int nev, double *z,
+				       int n, int nargout) {
   // Reverse the vectors dr and di
   if (rvec == 0) {
     for (int i=0;i<(nconv)/2;i++) {
@@ -1136,11 +1312,75 @@ static ArrayVector SparseEigDecomposeNonsymmetricReal(const SparseMatrix<double>
       retval.push_back(DiagonalArray(BasicArrayFromNative(dr,NTuple(nev,1))));
     }
     return retval;
+  }  
+}
+
+static ArrayVector SparseEigDecomposeNonsymmetricReal(const SparseMatrix<double> &a,
+						      int nev, int nargout, QString which) {
+#if HAVE_ARPACK
+  // Initialization call
+  int ido = 0;
+  char bmat = 'I';
+  int n = int(a.rows());
+  // How many eigenvalues to compute
+  char cmach = 'E';
+  char *which_cstr = strdup(qPrintable(which));
+  double tol = dlamch_(&cmach);
+  MacroBlockAlloc(double,n,residBlock,resid);
+  int ncv = 2*nev+1;
+  if (ncv > n) ncv = n;
+  MacroBlockAlloc(double,2*n*ncv,vBlock,v);
+  int ldv = n;
+  int iparam[11];
+  LoadARPACKParams(iparam);
+  MacroBlockAlloc(double,3*n,workdBlock,workd);
+  int lworkl = 3*ncv*ncv+6*ncv;
+  MacroBlockAlloc(double,lworkl,worklBlock,workl);
+  int info = 0;
+  MacroBlockAlloc(int,14,ipntrBlock,ipntr);
+  while (1) {
+    dnaupd_(&ido, &bmat, &n , which_cstr, &nev, &tol, resid, 
+	    &ncv, v, &ldv, iparam, ipntr, workd, workl, &lworkl, 
+	    &info,1,2);
+    if ((ido == -1) || (ido == 1)) 
+      SparseDenseMatrixVectorMultiply(a, workd+ipntr[0]-1, workd+ipntr[1]-1);
+    else {
+      qDebug() << "IDO = " << ido;
+      break;
+    }
   }
+  if (info < 0)
+    DNAUPARPACKError(info);
+  // Compute vectors and values
+  int rvec;
+  if (nargout <= 1)
+    rvec = 0;
+  else
+    rvec = 1;
+  char howmny = 'A';
+  MacroBlockAlloc(int,ncv,selectBlock,select);
+  MacroBlockAlloc(double,nev+1,drb,dr);
+  MacroBlockAlloc(double,nev+1,dib,di);
+  double *z;
+  if (nargout <= 1)
+    z = NULL;
+  else
+    z = (double*) malloc(sizeof(double)*(n*(nev+1)));
+  double sigmar;
+  double sigmai;
+  MacroBlockAlloc(double,3*ncv,workevBlock,workev);
+  int ierr;
+  dneupd_(&rvec, &howmny, select, dr, di, z, &ldv, 
+	  &sigmar, &sigmai, workev, &bmat, &n, which_cstr, &nev, &tol, 
+	  resid, &ncv, v, &ldv, iparam, ipntr, workd, workl,
+	  &lworkl, &ierr);
+  int nconv = iparam[4];
+  if (ierr != 0)
+    DNEUPARPACKError(ierr);
+  return SparseDecodeResults(rvec,nconv,dr,di,nev,z,n,nargout);
 #else
   throw Exception("Eigenvalue decomposition problems for sparse matrices requires the ARPACK support library, which was not available at compile time.  You must have ARPACK installed at compile time for FreeMat to enable this functionality.");
 #endif
-
 } 
 
 
@@ -1148,6 +1388,7 @@ static ArrayVector SparseEigDecomposeSymmetricReal(const SparseMatrix<double> &a
 						   int nev, int nargout, QString which) {
 #if HAVE_ARPACK
   // Initialization call
+  char *which_cstr = strdup(qPrintable(which));
   int ido = 0;
   char bmat = 'I';
   int n = int(a.rows());
@@ -1167,11 +1408,11 @@ static ArrayVector SparseEigDecomposeSymmetricReal(const SparseMatrix<double> &a
   int info = 0;
   int ipntr[11];
   while (1) {
-    dsaupd_(&ido, &bmat, &n , qPrintable(which), &nev, &tol, resid, 
+    dsaupd_(&ido, &bmat, &n , which_cstr, &nev, &tol, resid, 
 	    &ncv, v, &ldv, iparam, ipntr, workd, workl, &lworkl, 
 	    &info);
     if ((ido == -1) || (ido == 1)) 
-      SparseDenseMatrixMultiply(a, workd+ipntr[0]-1, 1, workd+ipntr[1]-1);
+      SparseDenseMatrixVectorMultiply(a, workd+ipntr[0]-1, workd+ipntr[1]-1);
     else
       break;
   }
@@ -1198,7 +1439,7 @@ static ArrayVector SparseEigDecomposeSymmetricReal(const SparseMatrix<double> &a
   double sigma;
   int ierr;
   dseupd_(&rvec, &howmny, select, d ,z, &ldv, 
-	  &sigma,&bmat, &n, qPrintable(which), &nev, &tol, 
+	  &sigma,&bmat, &n, which_cstr, &nev, &tol, 
 	  resid, &ncv, v, &ldv, iparam, ipntr, workd, workl,
 	  &lworkl, &ierr);
   int nconv = iparam[4];
@@ -1234,6 +1475,7 @@ ArrayVector SparseEigDecomposeNonsymmetricComplex(const SparseMatrix<double> &a_
   // Initialization call
   int ido = 0;
   char bmat = 'I';
+  char *which_cstr = strdup(qPrintable(which));
   int n = int(a_real.rows());
   // How many eigenvalues to compute
   char cmach = 'E';
@@ -1252,11 +1494,11 @@ ArrayVector SparseEigDecomposeNonsymmetricComplex(const SparseMatrix<double> &a_
   int info = 0;
   int ipntr[14];
   while (1) {
-    znaupd_(&ido, &bmat, &n , qPrintable(which), &nev, &tol, resid, 
+    znaupd_(&ido, &bmat, &n , which_cstr, &nev, &tol, resid, 
 	    &ncv, v, &ldv, iparam, ipntr, workd, workl, &lworkl, 
 	    rwork, &info);
     if ((ido == -1) || (ido == 1)) 
-      SparseDenseMatrixMultiply(a_real, a_imag, workd+2*(ipntr[0]-1), 1, workd+2*(ipntr[1]-1));
+      SparseDenseMatrixVectorMultiply(a_real, a_imag, workd+2*(ipntr[0]-1), workd+2*(ipntr[1]-1));
     else
       break;
   }
@@ -1277,52 +1519,29 @@ ArrayVector SparseEigDecomposeNonsymmetricComplex(const SparseMatrix<double> &a_
   else
     z = (double*) malloc(2*sizeof(double)*(n*(nev+1)));
   double sigma[2];
+  sigma[0] = 0;
+  sigma[1] = 0;
   MacroBlockAlloc(double,2*2*ncv,workevBlock,workev);
   int ierr;
   zneupd_(&rvec, &howmny, select, d, z, &ldv, 
-	  sigma, workev, &bmat, &n, qPrintable(which), &nev, &tol, 
+	  sigma, workev, &bmat, &n, which_cstr, &nev, &tol, 
 	  resid, &ncv, v, &ldv, iparam, ipntr, workd, workl,
 	  &lworkl, rwork, &ierr);
   int nconv = iparam[4];
   if (ierr != 0)
     DNEUPARPACKError(ierr);
-  // Reverse the vectors dr and di
-  if (rvec == 0) {
-    for (int i=0;i<(nconv)/2;i++) {
-      swap(d[2*i],d[2*(nconv-1-i)]);
-      swap(d[2*i+1],d[2*(nconv-1-i)+1]);
-    }
-  }
-  BasicArray<double> eigvals_real(NTuple(nev,1));
-  BasicArray<double> eigvals_imag(NTuple(nev,1));
-  for (int i=0;i<min(nev,nconv);i++) {
-    eigvals_real[i+1] = d[2*i];
-    eigvals_imag[i+1] = d[2*i+1];
-  }
-  BasicArray<double> eigvecs_real;
-  BasicArray<double> eigvecs_imag;
-  if (nargout > 1) {
-    eigvecs_real = BasicArray<double>(NTuple(n,nev));
-    eigvecs_imag = BasicArray<double>(NTuple(n,nev));
-    for (int i=0;i<min(nev,nconv);i++)
-      for (int j=0;j<n;j++) {
-	eigvecs_real[NTuple(j+1,i+1)] = d[i*2*n+2*j];
-	eigvecs_imag[NTuple(j+1,i+1)] = d[i*2*n+2*j+1];
-      }
-  }
-  ArrayVector retval;
-  if (nargout <= 1)
-    retval.push_back(Array(eigvals_real,eigvals_imag));
-  else {
-    retval.push_back(Array(eigvecs_real,eigvecs_imag));
-    retval.push_back(DiagonalArray(eigvals_real,eigvals_imag));
-  }
-  free(z);
-  return retval;
+  return SparseDecodeComplexResults(rvec,nconv,d,z,nev,n,nargout);
 #else
   throw Exception("Eigenvalue decomposition problems for sparse matrices requires the ARPACK support library, which was not available at compile time.  You must have ARPACK installed at compile time for FreeMat to enable this functionality.");
 #endif
 } 
+
+static SparseMatrix<double> MakeSparseScaledIdentityReal(double shift, int size) {
+  SparseMatrix<double> ret(NTuple(size,size));
+  for (index_t i=1;i<=size;i++)
+    ret.set(NTuple(i,i),shift);
+  return ret;
+}
 
 // For shifted eigendecomposition problems, we have to change the behavior of the
 // reverse communication interface.  This is done by changing the operation mode
@@ -1331,73 +1550,59 @@ ArrayVector SparseEigDecomposeNonsymmetricComplex(const SparseMatrix<double> &a_
 // UMFPack routines, and then use the result in repeated solutions.
 ArrayVector SparseEigDecomposeNonsymmetricRealShifted(const SparseMatrix<double> &A,
 						      int nev, int nargout, double shift) {
-#if 0
-#warning FIXME
-  //#if (HAVE_UMFPACK & HAVE_ARPACK)
+#if HAVE_UMFPACK & HAVE_ARPACK
   // Set up the scaled identity matrix
-  double** scI = (double**) MakeSparseScaledIdentityReal<double>(shift, rows);
-  // Compute A - scI
-  double** C = (double**) SparseSubtractReal(rows,cols,(const double**) ap,(const double**) scI);
+  int rows = int(A.rows());
+  Array scI(MakeSparseScaledIdentityReal(shift, rows));
+  Array C(Subtract(Array(A),scI));
+  QVector<uint32> rowindx, colstart;
+  QVector<double> accsdata;
+  SparseToCCS(C.constRealSparse<double>(),rowindx,colstart,accsdata);
   // Factor it...
-  // Convert C into CCS form
-  int *Ccolstart;
-  int *Crowindx;
-  double *Cdata;
-  int nnz;
-  nnz = ConvertSparseCCSReal(rows, cols, (const double**) C, Ccolstart, Crowindx, Cdata);
-  double *null = (double *) NULL ;
-  void *Symbolic, *Numeric ;
-  int res;
-  res = umfpack_di_symbolic (cols, cols, Ccolstart, Crowindx, Cdata, &Symbolic, null, null);
-  res = umfpack_di_numeric (Ccolstart, Crowindx, Cdata, Symbolic, &Numeric, null, null);
-  umfpack_di_free_symbolic (&Symbolic);    
+  double *null = (double *) NULL;
+  void *Symbolic, *Numeric;
+  (void) umfpack_di_symbolic (int(A.cols()), int(A.cols()), (const int*) colstart.data(), 
+			      (const int*) rowindx.data(), accsdata.data(), 
+			      &Symbolic, null, null);
+  (void) umfpack_di_numeric ( (const int*) colstart.data(),  (const int*) rowindx.data(), 
+			      accsdata.data(), Symbolic, 
+			      &Numeric, null, null) ;
+  umfpack_di_free_symbolic (&Symbolic) ;
   // Initialization call
   int ido = 0;
   char bmat = 'I';
   int n = rows;
-  string which = "LM";
+  const char *which = "LM";
   // How many eigenvalues to compute
   char cmach = 'E';
   double tol = dlamch_(&cmach);
-  MemBlock<double> residBlock(n);
-  double *resid = &residBlock;
+  MacroBlockAlloc(double,n,residBlock,resid);
   int ncv = 2*nev+1;
   if (ncv > n) ncv = n;
-  MemBlock<double> vBlock(n*ncv);
-  double *v = &vBlock;
+  MacroBlockAlloc(double,2*n*ncv,vBlock,v);
   int ldv = n;
   int iparam[11];
   LoadARPACKParams(iparam);
   iparam[6] = 3;
-  MemBlock<double> workdBlock(3*n);
-  double *workd = &workdBlock;
+  MacroBlockAlloc(double,3*n,workdBlock,workd);
   int lworkl = 3*ncv*ncv+6*ncv;
-  MemBlock<double> worklBlock(lworkl);
-  double *workl = &worklBlock;
+  MacroBlockAlloc(double,lworkl,worklBlock,workl);
   int info = 0;
   int ipntr[14];
   while (1) {
-    dnaupd_(&ido, &bmat, &n , qPrintable(which), &nev, &tol, resid, 
+    dnaupd_(&ido, &bmat, &n , which, &nev, &tol, resid, 
 	    &ncv, v, &ldv, iparam, ipntr, workd, workl, &lworkl, 
-	    &info,1,which.size());
+	    &info, 1, 2);
     if ((ido == -1) || (ido == 1)) {
-      res = umfpack_di_solve(UMFPACK_A, Ccolstart, Crowindx, Cdata, workd+ipntr[1]-1,workd+ipntr[0]-1,Numeric, null, null);
-      // Check the result
-      MemBlock<double> g(cols);
-      double *gp = &g;
-      MemBlock<double> r(rows);
-      double *rp = &r;
-      memcpy(rp,workd+ipntr[1]-1,sizeof(double)*rows);
-      memcpy(gp,workd+ipntr[0]-1,sizeof(double)*cols);
-      MemBlock<double> c(rows);
-      SparseDenseRealMultiply(C,rows,cols,rp,1,&c);
+      int res = umfpack_di_solve(UMFPACK_A, (const int*) colstart.data(), 
+				 (const int*) rowindx.data(), accsdata.data(), 
+				 workd+ipntr[1]-1,workd+ipntr[0]-1,Numeric, null, null);
     }
     else if (ido == 2)
       memcpy( workd+ipntr[1]-1, workd+ipntr[0]-1, sizeof(double)*rows);
     else
       break;
   }
-
   // Free the numeric component
   umfpack_di_free_numeric(&Numeric);
   if (info < 0)
@@ -1409,93 +1614,29 @@ ArrayVector SparseEigDecomposeNonsymmetricRealShifted(const SparseMatrix<double>
   else
     rvec = 1;
   char howmny = 'A';
-  MemBlock<int> selectBlock(ncv);
-  int *select = &selectBlock;
+  MacroBlockAlloc(int,ncv,selectBlock,select);
   //lambda_a = 1/lambda_c + sigma
-  double *dr = (double*) Malloc(sizeof(double)*(nev+1));
-  double *di = (double*) Malloc(sizeof(double)*(nev+1));
+  MacroBlockAlloc(double,nev+1,drb,dr);
+  MacroBlockAlloc(double,nev+1,dib,di);
   double *z;
   if (nargout <= 1)
     z = NULL;
   else
-    z = (double*) Malloc(sizeof(double)*(n*(nev+1)));
+    z = (double*) malloc(sizeof(double)*(n*(nev+1)));
   double sigmar;
   double sigmai;
   sigmar = shift;
   sigmai = 0.0;
-  MemBlock<double> workevBlock(3*ncv);
-  double *workev = &workevBlock;
+  MacroBlockAlloc(double,3*ncv,workevBlock,workev);
   int ierr;
   dneupd_(&rvec, &howmny, select, dr, di, z, &ldv, 
-	  &sigmar, &sigmai, workev, &bmat, &n, qPrintable(which), &nev, &tol, 
+	  &sigmar, &sigmai, workev, &bmat, &n, which, &nev, &tol, 
 	  resid, &ncv, v, &ldv, iparam, ipntr, workd, workl,
 	  &lworkl, &ierr);
   int nconv = iparam[4];
   if (ierr != 0)
     DNEUPARPACKError(ierr);
-  // Reverse the vectors dr and di
-  if (rvec == 0) {
-    for (int i=0;i<(nconv)/2;i++) {
-      swap(dr[i],dr[nconv-1-i]);
-      swap(di[i],di[nconv-1-i]);
-    }
-  }
-  // Check for complex eigenvalues
-  bool anycomplex = false;
-  for (int i=0;(!anycomplex) && (i<nconv);i++,anycomplex = (di[i] != 0));
-  if (anycomplex) {
-    double *eigvals = (double*) Malloc(nev*sizeof(double)*2);
-    for (int i=0;i<min(nev,nconv);i++) {
-      eigvals[2*i] = dr[i];
-      eigvals[2*i+1] = di[i];
-    }
-    double *eigvecs = NULL;
-    if (nargout > 1) {
-      eigvecs = (double*) Malloc(nev*n*sizeof(double)*2);
-      // if eigenvalue i is complex, then the corresponding eigenvector
-      // should be constructed from columns i and i+1 of z if i is even
-      // and columns i-1 and i of z if i is odd
-      int vcol = 0;
-      while (vcol < min(nconv,nev)) {
-	if (di[vcol] != 0) {
-	  for (int j=0;j<n;j++) {
-	    eigvecs[vcol*n*2+2*j] = z[vcol*n+j];
-	    eigvecs[vcol*n*2+2*j+1] = z[(vcol+1)*n+j];
-	    if ((vcol+1) < nev) {
-	      eigvecs[(vcol+1)*n*2+2*j] = z[vcol*n+j];
-	      eigvecs[(vcol+1)*n*2+2*j+1] = -z[(vcol+1)*n+j];
-	    }
-	  }
-	  vcol += 2;
-	} else {
-	  for (int j=0;j<n;j++)
-	    eigvecs[vcol*n*2+2*j] = z[vcol*n+j];
-	  vcol++;
-	}
-      }
-    }
-    ArrayVector retval;
-    if (nargout <= 1)
-      retval.push_back(Array(FM_DCOMPLEX,Dimensions(nev,1),eigvals));
-    else {
-      retval.push_back(Array(FM_DCOMPLEX,Dimensions(n,nev),eigvecs));
-      retval.push_back(Array::diagonalConstructor(Array(FM_DCOMPLEX,Dimensions(nev,1),eigvals),0));
-    }
-    Free(z);
-    return retval;
-  } else {
-    ArrayVector retval;
-    if (nargout <= 1)
-      retval.push_back(Array(FM_DOUBLE,Dimensions(nev,1),dr));
-    else {
-      // I know that technically this is a bad thing... dr and z are larger than
-      // they need to be, but I don't think this will cause any problems.
-      retval.push_back(Array(FM_DOUBLE,Dimensions(n,nev),z));
-      retval.push_back(Array::diagonalConstructor(Array(FM_DOUBLE,Dimensions(nev,1),dr),0));
-    }
-    Free(di);
-    return retval;
-  }
+  return SparseDecodeResults(rvec,nconv,dr,di,nev,z,n,nargout);
 #else
   throw Exception("Shifted eigendecomposition problems for sparse matrices requires UMFPACK and ARPACK support libraries, which were not available at compile time.  You must have UMFPACK and ARPACK installed at compile time for FreeMat to enable this functionality.");
 #endif
@@ -1509,64 +1650,54 @@ ArrayVector SparseEigDecomposeNonsymmetricRealShifted(const SparseMatrix<double>
 ArrayVector SparseEigDecomposeNonsymmetricComplexShifted(const SparseMatrix<double> &Areal,
 							 const SparseMatrix<double> &Aimag,
 							 int nev, int nargout, double *shift) {
-#if 0
-  //#if (HAVE_UMFPACK & HAVE_ARPACK)
-#warning FINISHME
+#if HAVE_UMFPACK & HAVE_ARPACK
   // Set up the scaled identity matrix
-  double** scI = (double**) MakeSparseScaledIdentityComplex<double>(shift[0], shift[1], rows);
-  // Compute A - scI
-  double** C = (double**) SparseSubtractComplex(rows,cols,(const double**) ap,(const double**) scI);
+  int rows = int(Areal.rows());
+  Array scI(MakeSparseScaledIdentityReal(shift[0],rows),
+	    MakeSparseScaledIdentityReal(shift[1],rows));
+  Array C(Subtract(Array(Areal,Aimag),scI));
+  QVector<uint32> rowindx, colstart;
+  QVector<double> accsreal, accsimag;
+  SparseToCCS(C.constRealSparse<double>(),C.constImagSparse<double>(),
+	      rowindx,colstart,accsreal,accsimag);
   // Factor it...
-  // Convert C into CCS form
-  int *Ccolstart;
-  int *Crowindx;
-  double *Cdata;
-  double *Cimag;
-  int nnz;
-  nnz = ConvertSparseCCSComplex(rows, cols, (const double**) C, Ccolstart, Crowindx, Cdata, Cimag);
   double *null = (double *) NULL ;
   void *Symbolic, *Numeric ;
   int res;
-  res = umfpack_zi_symbolic (cols, cols, Ccolstart, Crowindx, Cdata, Cimag, &Symbolic, null, null);
-  res = umfpack_zi_numeric (Ccolstart, Crowindx, Cdata, Cimag, Symbolic, &Numeric, null, null);
+  res = umfpack_zi_symbolic (int(Areal.cols()), int(Areal.cols()), (const int*) colstart.data(),
+			     (const int*) rowindx.data(), accsreal.data(), accsimag.data(),
+			     &Symbolic, null, null);
+  res = umfpack_zi_numeric ((const int*) colstart.data(), (const int*) rowindx.data(),
+			    accsreal.data(), accsimag.data(), Symbolic, &Numeric, null, null);
   umfpack_zi_free_symbolic (&Symbolic);    
   // Initialization call
   int ido = 0;
   char bmat = 'I';
   int n = rows;
-  string which = "LM";
+  const char *which = "LM";
   // How many eigenvalues to compute
   char cmach = 'E';
   double tol = dlamch_(&cmach);
-  MemBlock<double> residBlock(2*n);
-  double *resid = &residBlock;
+  MacroBlockAlloc(double,2*n,residBlock,resid);
   int ncv = 2*nev+1;
   if (ncv > n) ncv = n;
-  MemBlock<double> vBlock(2*n*ncv);
-  double *v = &vBlock;
+  MacroBlockAlloc(double,2*n*ncv,vBlock,v);
   int ldv = n;
   int iparam[11];
   LoadARPACKParams(iparam);
   iparam[6] = 3;
-  MemBlock<double> workdBlock(2*3*n);
-  double *workd = &workdBlock;
+  MacroBlockAlloc(double,2*3*n,workdBlock,workd);
   int lworkl = 3*ncv*ncv+5*ncv;
-  MemBlock<double> worklBlock(2*lworkl);
-  double *workl = &worklBlock;
-  MemBlock<double> rworkBlock(ncv);
-  double *rwork = &rworkBlock;
-  MemBlock<double> xrBlock(rows);
-  double *xr = &xrBlock;
-  MemBlock<double> xiBlock(rows);
-  double *xi = &xiBlock;
-  MemBlock<double> yrBlock(rows);
-  double *yr = &yrBlock;
-  MemBlock<double> yiBlock(rows);
-  double *yi = &yiBlock;
+  MacroBlockAlloc(double,2*lworkl,worklBlock,workl);
+  MacroBlockAlloc(double,ncv,rworkBlock,rwork);
+  MacroBlockAlloc(double,rows,xrBlock,xr);
+  MacroBlockAlloc(double,rows,xiBlock,xi);
+  MacroBlockAlloc(double,rows,yrBlock,yr);
+  MacroBlockAlloc(double,rows,yiBlock,yi);
   int info = 0;
   int ipntr[14];
   while (1) {
-    znaupd_(&ido, &bmat, &n , qPrintable(which), &nev, &tol, resid, 
+    znaupd_(&ido, &bmat, &n , which, &nev, &tol, resid, 
 	    &ncv, v, &ldv, iparam, ipntr, workd, workl, &lworkl, 
 	    rwork, &info);
     if ((ido == -1) || (ido == 1)) {
@@ -1576,7 +1707,9 @@ ArrayVector SparseEigDecomposeNonsymmetricComplexShifted(const SparseMatrix<doub
       }
       memset(xr,0,sizeof(double)*rows);
       memset(xi,0,sizeof(double)*rows);
-      res = umfpack_zi_solve(UMFPACK_A, Ccolstart, Crowindx, Cdata, Cimag, xr, xi, yr, yi,Numeric, null, null);
+      res = umfpack_zi_solve(UMFPACK_A, (const int*) colstart.data(),
+			     (const int*) rowindx.data(), 
+			     accsreal.data(), accsimag.data(), xr, xi, yr, yi,Numeric, null, null);
       for (int i=0;i<rows;i++) {
 	workd[2*(ipntr[1]-1)+2*i] = xr[i];
 	workd[2*(ipntr[1]-1)+2*i+1] = xi[i];
@@ -1598,57 +1731,27 @@ ArrayVector SparseEigDecomposeNonsymmetricComplexShifted(const SparseMatrix<doub
   else
     rvec = 1;
   char howmny = 'A';
-  MemBlock<int> selectBlock(ncv);
-  int *select = &selectBlock;
+  MacroBlockAlloc(int,ncv,selectBlock,select);
   //lambda_a = 1/lambda_c + sigma
-  double *d = (double*) Malloc(2*sizeof(double)*(nev+1));
+  MacroBlockAlloc(double,2*(nev+1),dblock,d);
   double *z;
   if (nargout <= 1)
     z = NULL;
   else
-    z = (double*) Malloc(2*sizeof(double)*(n*(nev+1)));
+    z = (double*) malloc(2*sizeof(double)*(n*(nev+1)));
   double sigma[2];
   sigma[0] = shift[0];
   sigma[1] = shift[1];
-  MemBlock<double> workevBlock(2*2*ncv);
-  double *workev = &workevBlock;
+  MacroBlockAlloc(double,2*2*ncv,workevBlock,workev);
   int ierr;
   zneupd_(&rvec, &howmny, select, d, z, &ldv, 
-	  sigma, workev, &bmat, &n, qPrintable(which), &nev, &tol, 
+	  sigma, workev, &bmat, &n, which, &nev, &tol, 
 	  resid, &ncv, v, &ldv, iparam, ipntr, workd, workl,
 	  &lworkl, rwork, &ierr);
   int nconv = iparam[4];
   if (ierr != 0)
     DNEUPARPACKError(ierr);
-  // Reverse the vectors dr and di
-  if (rvec == 0) {
-    for (int i=0;i<(nconv)/2;i++) {
-      swap(d[2*i],d[2*(nconv-1-i)]);
-      swap(d[2*i+1],d[2*(nconv-1-i)+1]);
-    }
-  }
-  double *eigvals = (double*) Malloc(nev*sizeof(double)*2);
-  for (int i=0;i<min(nev,nconv);i++) {
-    eigvals[2*i] = d[2*i];
-    eigvals[2*i+1] = d[2*i+1];
-  }
-  double *eigvecs = NULL;
-  if (nargout > 1) {
-    eigvecs = (double*) Malloc(nev*n*sizeof(double)*2);
-    for (int i=0;i<min(nev,nconv);i++) {
-      for (int j=0;j<2*n;j++) 
-	eigvecs[i*2*n+j] = d[i*2*n+j];
-    }
-  }
-  ArrayVector retval;
-  if (nargout <= 1)
-    retval.push_back(Array(FM_DCOMPLEX,Dimensions(nev,1),eigvals));
-  else {
-    retval.push_back(Array(FM_DCOMPLEX,Dimensions(n,nev),eigvecs));
-    retval.push_back(Array::diagonalConstructor(Array(FM_DCOMPLEX,Dimensions(nev,1),eigvals),0));
-  }
-  Free(z);
-  return retval;
+  return SparseDecodeComplexResults(rvec,nconv,d,z,nev,n,nargout);
 #else
   throw Exception("Shifted eigendecomposition problems for sparse matrices requires UMFPACK and ARPACK support libraries, which were not available at compile time.  You must have UMFPACK and ARPACK installed at compile time for FreeMat to enable this functionality.");
 #endif

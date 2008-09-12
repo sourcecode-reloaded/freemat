@@ -41,8 +41,8 @@ enum DataClass {
   Index = 14  
 };
 
-template <typename T>
-static inline DataClass GetDataClass(T = T());
+template <typename V>
+static inline DataClass GetDataClass(V c);
 
 size_t ByteSizeOfDataClass(DataClass);
 
@@ -90,7 +90,7 @@ public:
   template <typename T> inline explicit Array(T real, T imag); 
   template <typename T> 
   inline Array(const BasicArray<T> &r) {
-    m_type.Class = GetDataClass<T>();
+    m_type.Class = GetDataClass<T>(T(0));
     m_type.Complex = 0;
     m_type.Sparse = 0;
     m_type.Scalar = 0;
@@ -98,7 +98,7 @@ public:
   }
   template <typename T> 
   inline Array(const BasicArray<T> &r, const BasicArray<T> &i) {
-    m_type.Class = GetDataClass<T>();
+    m_type.Class = GetDataClass<T>(T(0));
     m_type.Complex = 1;
     m_type.Sparse = 0;
     m_type.Scalar = 0;
@@ -107,7 +107,7 @@ public:
   }
   template <typename T>
   inline Array(BasicArray<T> *r) {
-    m_type.Class = GetDataClass<T>();
+    m_type.Class = GetDataClass<T>(T(0));
     m_type.Complex = 0;
     m_type.Sparse = 0;
     m_type.Scalar = 0;
@@ -115,7 +115,7 @@ public:
   }
   template <typename T>
   inline Array(BasicArray<T> *r, BasicArray<T> *i) {
-    m_type.Class = GetDataClass<T>();
+    m_type.Class = GetDataClass<T>(T(0));
     m_type.Complex = 1;
     m_type.Sparse = 0;
     m_type.Scalar = 0;
@@ -128,7 +128,7 @@ public:
   explicit Array(const QString &text);
   template <typename T>
   inline Array(const SparseMatrix<T>& real) {
-    m_type.Class = GetDataClass<T>();
+    m_type.Class = GetDataClass<T>(T(0));
     m_type.Complex = 0;
     m_type.Sparse = 1;
     m_type.Scalar = 0;
@@ -136,7 +136,7 @@ public:
   }
   template <typename T>
   Array(const SparseMatrix<T>& real, const SparseMatrix<T>& imag) {
-    m_type.Class = GetDataClass<T>();
+    m_type.Class = GetDataClass<T>(T(0));
     m_type.Complex = 1;
     m_type.Sparse = 1;
     m_type.Scalar = 0;

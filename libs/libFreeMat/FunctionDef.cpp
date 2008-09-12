@@ -424,7 +424,9 @@ inline QString ReadFileIntoString(QString filename) {
   if (!fp.open(QIODevice::ReadOnly)) 
     throw Exception(QString("Unable to open file :") + filename);
   QTextStream io(&fp);
-  return io.readAll();
+  QString txt(io.readAll());
+  if (!txt.endsWith("\n")) txt += "\n";
+  return txt;
 }
 
 //MFunctionDef* ConvertParseTreeToMFunctionDef(tree t, string fileName) {

@@ -20,7 +20,7 @@
 
 #define MacroExpandCasesNoBool(func)		\
   MacroExpandCasesSigned(func)			\
-  MacroExpandCasesIntUnsigned(func);		\
+  MacroExpandCasesIntUnsigned(func);		
 
 #define MacroExpandCases(func)			\
   MacroExpandCasesNoBool(func);			\
@@ -39,7 +39,7 @@
 
 #define MacroGetDataClass(ctype,cls)		\
   template <>					\
-  inline DataClass GetDataClass(ctype) { \
+  inline DataClass GetDataClass(ctype c) { \
     return cls;					\
   } 
 
@@ -92,6 +92,8 @@
       throw Exception("imaginary part not defined for logical types");	\
     if (dataClass() != cls)						\
       throw Exception("type mismatch");					\
+    if (m_type.Complex == 0)						\
+      return 0;								\
     if (m_type.Scalar == 1)						\
       return m_imag.cls;						\
     else if (m_type.Sparse == 1)					\
@@ -110,12 +112,12 @@
     m_type.Sparse = 0; m_type.Scalar = 1;		     \
   };
 
-#define MacroArrayRealConstructor(ctype,cls)		     \
-  template <>						     \
-  inline Array::Array(ctype real) {			     \
-    m_real.cls = real; m_type.Class = cls;		     \
-    m_type.Complex = 0; m_type.Sparse = 0;		     \
-    m_type.Scalar = 1;					     \
+#define MacroArrayRealConstructor(ctype,cls)				\
+  template <>								\
+  inline Array::Array(ctype real) {					\
+    m_real.cls = real; m_imag.cls = 0;					\
+    m_type.Class = cls;  m_type.Complex = 0;				\
+    m_type.Sparse = 0;   m_type.Scalar = 1;				\
   };
 
 #define MacroArrayRealScalarArrayEncodedOnly(ctype,cls) \

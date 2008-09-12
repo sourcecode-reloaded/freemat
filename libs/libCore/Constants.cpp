@@ -243,29 +243,29 @@ ArrayVector EpsFunction(int nargout, const ArrayVector& arg) {
     if( arg.size()==1 ){
 	Array a( arg[0] );
 	if( a.isString() ){
-	    std::string str = a.getContentsAsString();
-	    if( str == std::string( "double" ) ){
-		retval << Array::doubleConstructor( feps( 1. ) );
+	    QString str = a.asString();
+	    if( str == QString( "double" ) ){
+		retval << Array( feps( 1. ) ); 
 	    }
-	    else if( str == std::string( "single" ) ){
-		retval << Array::floatConstructor( fepsf( 1. ) );
+	    else if( str == QString( "single" ) ){
+		retval << Array( fepsf( 1. ) );
 	    }
 	    else{
 		throw Exception("Class must be 'double' or 'single'");
 	    }
 	}
 	else { //numeric argument
-	    switch( a.dataClass() ){
-		case FM_DOUBLE: 
+	    switch( a.dataClass() ){ 
+		case Double: 
 		    {
-			double x = fabs(*(double*)a.data());
-			retval << Array::doubleConstructor( feps( x ) );
+			double x = fabs( a.asDouble() );
+			retval << Array( feps( x ) );
 			break;
 		    }
-		case FM_FLOAT: 
+		case Float: 
 		    {
-			float x = fabsf(*(float*)a.data());
-			retval << Array::floatConstructor( fepsf( x ) );
+			float x = fabsf( a.asDouble() );
+			retval << Array( fepsf( x ) );
 			break;
 		    }
 		default:
@@ -274,7 +274,7 @@ ArrayVector EpsFunction(int nargout, const ArrayVector& arg) {
 	}
     }
     else{
-	retval << Array::doubleConstructor( feps( 1. ) );
+	retval << Array( feps( 1. ) );
     }
   return retval;
 }

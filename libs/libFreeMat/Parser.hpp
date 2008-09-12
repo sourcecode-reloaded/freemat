@@ -10,9 +10,9 @@ class Parser {
   unsigned lastpos;
   QString lasterr;
   void serror(QString);
-  bool match(TokenType t);
+  bool match(TokenValueType t);
   void consume();
-  const Token& expect(TokenType t);
+  const Token& expect(TokenValueType t);
   const Token& next();
   bool matchNumber();
   void flushSeperators();
@@ -35,7 +35,7 @@ private:
   Tree* assignmentStatement();
   Tree* variableDereference(bool blankRefOK = true);
   Tree* multiFunctionCall();
-  Tree* matDef(TokenType basetok, TokenType closebracket);
+  Tree* matDef(TokenValueType basetok, TokenValueType closebracket);
   Tree* matrixDefinition();
   Tree* rowVectorDefinition();
   Tree* specialFunctionCall();
