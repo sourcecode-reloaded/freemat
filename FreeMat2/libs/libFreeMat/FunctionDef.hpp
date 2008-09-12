@@ -35,8 +35,7 @@ typedef enum {
   FM_BUILT_IN_FUNCTION,
   FM_SPECIAL_FUNCTION,
   FM_IMPORTED_FUNCTION,
-  FM_MEX_FUNCTION,
-  FM_ANONYMOUS_FUNCTION
+  FM_MEX_FUNCTION
 } FunctionType;
 
 class Interpreter;
@@ -134,7 +133,8 @@ public:
   /**
    * Evaluate the function and return its output.
    */
-  virtual ArrayVector evaluateFunction(Interpreter *, ArrayVector& , int) = 0;
+  virtual ArrayVector evaluateFunction(Interpreter *, ArrayVector& , int, 
+				       VariableTable * Workspace = 0) = 0;
   /**
    * Compile the function (if it is required).  We guarantee that this
    * function will be called at least once before evaluateFunction is called.
@@ -143,27 +143,6 @@ public:
   virtual bool updateCode(Interpreter *) {return false;}
 };
 
-//!
-//@Module ANONYMOUS Anonymous Functions
-//@Section Functions
-//@@Usage
-//Anonymous functions are a means of quickly defining small functions dynamically.
-//The general syntax for an anonymous function is
-//@
-//!
-class AnonymousFunctionDef : public FunctionDef {
-  VariableTable workspace;
-public:
-  CodeBlock code;
-  AnonymousFunctionDef();
-  ~AnonymousFunctionDef();
-  virtual const FunctionType type() {return FM_ANONYMOUS_FUNCTION;}
-  void printMe(Interpreter*) {}
-  virtual int inputArgCount();
-  virtual int outputArgCount();
-  virtual ArrayVector evaluateFunction(Interpreter *, ArrayVector&, int);
-  void initialize(Tree *t, Interpreter *);
-};
 
 /**
  * An MFunctionDef is a FunctionDef for an interpreted function.  The
@@ -207,7 +186,6 @@ public:
   bool localFunction;
   bool pcodeFunction;
   bool nestedFunction;
-  bool capturedFunction;
   /**
    * The help text.
    */
@@ -217,11 +195,6 @@ public:
    * resolve scope rules for nested functions.
    */
   StringVector variablesAccessed;
-  /**
-   * The workspace for this function - used for capturing variables
-   * when functions are used out of scope.
-   */
-  ScopePtr workspace;
   /**
    * The constructor.
    */
@@ -257,7 +230,7 @@ public:
    *     number of return values in the call
    *   - the variable 'varargout' is the wrong type.
    */
-  virtual ArrayVector evaluateFunction(Interpreter *, ArrayVector &, int);
+  virtual ArrayVector evaluateFunction(Interpreter *, ArrayVector &, int, VariableTable *);
   /**
    * Check the timestamp on the file, and if necessary, recompile the 
    * function.  Throws an exception if a syntax error occurs in the
@@ -310,7 +283,7 @@ public:
   /** 
    * Evaluate the function and return the values.
    */
-  virtual ArrayVector evaluateFunction(Interpreter *, ArrayVector &, int);
+  virtual ArrayVector evaluateFunction(Interpreter *, ArrayVector &, int, VariableTable *);
 };
 
 class SpecialFunctionDef : public FunctionDef {
@@ -352,7 +325,7 @@ public:
   /** 
    * Evaluate the function and return the values.
    */
-  virtual ArrayVector evaluateFunction(Interpreter *, ArrayVector& , int);
+  virtual ArrayVector evaluateFunction(Interpreter *, ArrayVector& , int, VariableTable *);
 };
 
 typedef void (*GenericFuncPointer)();
@@ -413,7 +386,7 @@ public:
   /** 
    * Evaluate the function and return the values.
    */
-  virtual ArrayVector evaluateFunction(Interpreter *, ArrayVector& , int);    
+  virtual ArrayVector evaluateFunction(Interpreter *, ArrayVector& , int, VariableTable *);    
 };
 
 typedef void (*mexFuncPtr)(int, mxArray**, int, const mxArray**);
@@ -464,7 +437,7 @@ public:
   /** 
    * Evaluate the function and return the values.
    */
-  virtual ArrayVector evaluateFunction(Interpreter *, ArrayVector& , int);    
+  virtual ArrayVector evaluateFunction(Interpreter *, ArrayVector& , int, VariableTable*);    
 };
 
 // This used to be a simple typedef to a pointer of a functiondef
@@ -479,11 +452,6 @@ public:
       d->unlock();
       if (!d->referenced()) delete d;
     }
-  }
-  FuncPtr(AnonymousFunctionDef* ptr) {
-    d = ptr;
-    if (d)
-      d->lock();
   }
   FuncPtr(SpecialFunctionDef* ptr) {
     d = ptr;

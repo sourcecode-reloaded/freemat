@@ -100,16 +100,37 @@ ArrayVector FuncPtrHorzCatFunction(int nargout, const ArrayVector& arg) {
   return MatrixConstructor(t);
 }
 
+static ArrayVector FuncPtrCall(int nargout, ArrayVector& args, 
+			       FuncPtr fptr, Interpreter* eval, 
+			       Array& optr) {
+  fptr->updateCode(eval);
+  StructArray &rp(optr.structPtr());
+  Array workspace(rp["workspace"].get(1));
+  StructArray &qp(workspace.structPtr());
+  StringVector fieldNames(qp.fieldNames());
+  Context* context = eval->getContext();
+  VariableTable ws;
+  for (int i=0;i<fieldNames.size();i++)
+    ws.insertSymbol(fieldNames[i],qp[fieldNames[i]].get(1));
+  ArrayVector ret(fptr->evaluateFunction(eval,args,nargout,&ws));
+//   for (int i=0;i<fieldNames.size();i++) {
+//     Array *ptr = context->lookupVariableLocally(fieldNames[i]);
+//     qp["workspace"].set(1,*ptr);
+//   }
+  return ret;
+}
+
 //@@Signature
 //sfunction @functionpointer:subsref FuncPtrSubsrefFunction
 //input x s
 //output varargout
 ArrayVector FuncPtrSubsrefFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   if (arg.size() == 0) return ArrayVector();
-  FuncPtr fptr = FuncPtrLookup(eval,arg[0]);
+  Array mp(arg[0]);
+  FuncPtr fptr = FuncPtrLookup(eval,mp);
   if (!fptr)
     throw Exception("Unable to find a definition for function:" + 
-		    LOOKUP(arg[0],"name").asString());
+		    LOOKUP(mp,"name").asString());
   ArrayVector fevalArgs;
   if (arg.size() == 2) {
     if (LOOKUP(arg[1],"type").asString() != "()")
@@ -119,8 +140,7 @@ ArrayVector FuncPtrSubsrefFunction(int nargout, const ArrayVector& arg, Interpre
     for (index_t i=1;i<=rp.length();i++)
       fevalArgs.push_back(rp[i]);
   }
-  fptr->updateCode(eval);
-  return (fptr->evaluateFunction(eval,fevalArgs,nargout));
+  return FuncPtrCall(nargout,fevalArgs,fptr,eval,mp);
 }
 
 //@@Signature
@@ -129,16 +149,15 @@ ArrayVector FuncPtrSubsrefFunction(int nargout, const ArrayVector& arg, Interpre
 //output varargout
 ArrayVector FuncPtrFevalFunction(int nargout, const ArrayVector& arg, Interpreter *eval) {
   if (arg.size() == 0) return ArrayVector();
-  FuncPtr fptr = FuncPtrLookup(eval,arg[0]);
+  Array mp(arg[0]);
+  FuncPtr fptr = FuncPtrLookup(eval,mp);
   if (!fptr)
     throw Exception("Unable to find a definition for function:" + 
-		    LOOKUP(arg[0],"name").asString());
+		    LOOKUP(mp,"name").asString());
   ArrayVector fevalArgs;
   for (int i=1;i<arg.size();i++) 
     fevalArgs.push_back(arg[i]);
-  fptr->updateCode(eval);
-  return (fptr->evaluateFunction(eval,fevalArgs,nargout));
-  
+  return FuncPtrCall(nargout,fevalArgs,fptr,eval,mp);
 }
 
 //@@Signature
@@ -201,14 +220,4 @@ void CaptureFunctionPointers(ArrayVector& outputs, Interpreter *walker,
       }
     }
   }
-// FIXME
-//   ScopePtr workspace = NULL;
-//   // First check for any 
-//   for (int i=0;i<((int)outputs.size());i++) {
-//     if (outputs[i].dataClass() == FM_FUNCPTR_ARRAY) {
-//       FuncPtr *dp = (FuncPtr*) outputs[i].getReadWriteDataPointer();
-//       for (int j=0;j<outputs[i].getLength();j++)
-// 	CaptureFunctionPointer(dp[j],walker,parent,workspace);
-//     }
-//   }
 }

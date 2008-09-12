@@ -444,9 +444,9 @@ if test x"$znaupd" == x"unknown"; then
   znaupd="znaupd_"
 fi
 
-AC_CHECK_LIB(arpackg,$znaupd,found_arpack="yes",found_arpack="no",[$FLIBS])
+AC_CHECK_LIB(arpack,$znaupd,found_arpack="yes",found_arpack="no",[$FLIBS])
 if test x"$found_arpack" == xyes; then
-	LIBS="-larpackg $LIBS"
+	LIBS="-larpack $LIBS"
 	AC_DEFINE(HAVE_ARPACK, 1, [Set to 1 if you have ARPACK installed])
 fi
 
