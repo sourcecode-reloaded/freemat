@@ -501,18 +501,20 @@ static ArrayVector SparseLUDecomposeReal(const SparseMatrix<double> &A) {
 }
 
 static ArrayVector SparseLUDecomposeComplex(const SparseMatrix<double> &Ar, const SparseMatrix<double> &Ai) {
-#if 0
-  //HAVE_UMFPACK
+#if HAVE_UMFPACK
   // Convert A into CCS form
-
-  CCSForm Accs;
-  ConvertSparseToCCS(Ar,Ai,Accs);
+  int32 Arows = int32(Ar.rows());
+  int32 Acols = int32(Ar.cols());
+  QVector<uint32> rowindx, colstart;
+  QVector<double> accsreal, accsimag;
+  SparseToCCS(Ar,Ai,rowindx,colstart,accsreal,accsimag);
   double *null = (double *) NULL ;
   void *Symbolic, *Numeric ;
-  (void) umfpack_zi_symbolic (int(Ar.cols()), int(Ar.cols()), Accs.colstart(), Accs.rowindx(), 
-			      Accs.data(), Accs.imag(), &Symbolic, null, null);
-  (void) umfpack_zi_numeric (Accs.colstart(), Accs.rowindx(), Accs.data(), Accs.imag(), 
-			     Symbolic, &Numeric, null, null);
+  (void) umfpack_zi_symbolic (Acols, Acols, (const int*) colstart.data(),
+			      (const int*) rowindx.data(), accsreal.data(),
+			      accsimag.data(), &Symbolic, null, null);
+  (void) umfpack_zi_numeric ((const int*) colstart.data(), (const int*) rowindx.data(),
+			     accsreal.data(), accsimag.data(), Symbolic, &Numeric, null, null);
   // Set up the output arrays for the LU Decomposition.
   // The first matrix is L, which is stored in comprssed row form.
   int lnz;
@@ -523,75 +525,49 @@ static ArrayVector SparseLUDecomposeComplex(const SparseMatrix<double> &Ar, cons
 
   (void) umfpack_zi_get_lunz(&lnz,&unz,&n_row,&n_col,&nz_udiag,Numeric);
 
-  MemBlock<int> Lpb(Arows+1); int *Lp = &Lpb;
-  MemBlock<int> Ljb(lnz); int *Lj = &Ljb;
-  MemBlock<double> Lxb(lnz); double *Lx = &Lxb;
-  MemBlock<double> Lyb(lnz); double *Ly = &Lyb;
-  MemBlock<int> Upb(Acols+1); int *Up = &Upb;
-  MemBlock<int> Uib(unz); double *Ui = &Uib;
-  MemBlock<double> Uxb(unz); double *Ux = &Uxb;
-  MemBlock<double> Uyb(unz); double *Uy = &Uyb;
-  MemBlock<int> Pb(Arows); int *P = &Pb;
-  MemBlock<int> Qb(Acols); int *Q = &Qb;
-  MemBlock<double> Rsb(Arows); double *Rs = &Rsb;
-    
+  QVector<uint32> Lp(Arows+1);
+  QVector<uint32> Lj(lnz);
+  QVector<double> Lx(lnz);
+  QVector<double> Ly(lnz);
+  QVector<uint32> Up(Acols+1);
+  QVector<uint32> Uj(unz);
+  QVector<double> Ux(unz);
+  QVector<double> Uy(unz);
+  BasicArray<int32> P(NTuple(Arows,1));
+  BasicArray<int32> Q(NTuple(Acols,1));
+  MacroBlockAlloc(double,Arows,Rsb,Rs);
+  
   int do_recip;
-  umfpack_zi_get_numeric(Lp, Lj, Lx, Ly, Up, Ui, Ux, Uy, P, Q, NULL, NULL, &do_recip, Rs, Numeric);
-
-#error FinishMe
-  for (int i=0;i<Arows;i++)
-    P[i]++;
-
-  for (int i=0;i<Acols;i++)
-    Q[i]++;
-
-  IJVEntry<double>* llist = ConvertCCSToIJVListComplex(Lp,Lj,Lx,Ly,Arows,lnz);
-  for (int j=0;j<lnz;j++) {
-    int tmp;
-    tmp = llist[j].I;
-    llist[j].I = llist[j].J;
-    llist[j].J = tmp;
-  }
-  IJVEntry<double>* ulist = ConvertCCSToIJVListComplex(Up,Ui,Ux,Uy,Acols,unz);
-  IJVEntry<double>* rlist = new IJVEntry<double>[Arows];
-  std::sort(llist,llist+lnz);
-  for (int i=0;i<Arows;i++) {
-    rlist[i].I = i;
-    rlist[i].J = i;
+  umfpack_zi_get_numeric((int*)Lp.data(), (int*)Lj.data(), Lx.data(), Ly.data(), 
+			 (int*)Up.data(), (int*)Uj.data(), Ux.data(), Uy.data(), 
+			 P.data(), Q.data(), NULL, NULL, &do_recip, Rs, Numeric);
+  SparseMatrix<double> RMat(NTuple(Arows,Arows));
+  for (index_t i=1;i<=Arows;i++) {
     if (do_recip)
-      rlist[i].Vreal = Rs[i];
+      RMat.set(NTuple(i,i),Rs[int(i-1)]);
     else
-      rlist[i].Vreal = 1.0/Rs[i];
+      RMat.set(NTuple(i,i),1.0/Rs[int(i-1)]);
   }
+  Array Pc(Add(Array(P).toClass(Double),Array(double(1))));
+  Array Qc(Add(Array(Q).toClass(Double),Array(double(1))));
+
   ArrayVector retval;
   // Push L, U, P, Q, R
   int Amid;
   Amid = (Arows < Acols) ? Arows : Acols;
-  retval.push_back(Array(FM_DCOMPLEX,Dimensions(Arows,Amid),
-			 ConvertIJVtoRLEComplex<double>(llist,lnz,Arows,Amid),true));
-  retval.push_back(Array(FM_DCOMPLEX,Dimensions(Amid,Acols),
-			 ConvertIJVtoRLEComplex<double>(ulist,unz,Amid,Acols),true));
-  retval.push_back(Array(FM_INT32,Dimensions(1,Arows),P,false));
-  retval.push_back(Array(FM_INT32,Dimensions(1,Acols),Q,false));
-  retval.push_back(Array(FM_DOUBLE,Dimensions(Arows,Arows),
-			 ConvertIJVtoRLEReal<double>(rlist,Arows,Arows,Arows),true));
+  SparseMatrix<double> LMat_real(NTuple(Arows,Amid));
+  SparseMatrix<double> LMat_imag(NTuple(Arows,Amid));
+  CCSToSparse(LMat_real,LMat_imag,Lj,Lp,Lx,Ly);
+  SparseMatrix<double> UMat_real(NTuple(Amid,Acols));
+  SparseMatrix<double> UMat_imag(NTuple(Amid,Acols));
+  CCSToSparse(UMat_real,UMat_imag,Uj,Up,Ux,Uy);
+  retval << Transpose(Array(LMat_real,LMat_imag));
+  retval << Array(UMat_real,UMat_imag);
+  retval << Pc;
+  retval << Qc;
+  retval << Array(RMat);
   umfpack_di_free_symbolic(&Symbolic);
   umfpack_di_free_numeric(&Numeric);
-  delete[] rlist;
-  delete[] ulist;
-  delete[] llist;
-  delete[] Rs;
-  delete[] Uy;
-  delete[] Ux;
-  delete[] Ui;
-  delete[] Up;
-  delete[] Ly;
-  delete[] Lx;
-  delete[] Lj;
-  delete[] Lp;
-  delete[] Acolstart;
-  delete[] Arowindx;
-  delete[] Adata;
   return retval;
 #else
   throw Exception("LU Decompositions of sparse matrices requires UMFPACK support, which was not available at compile time.  You must have UMFPACK installed at compile time for FreeMat to enable this functionality.");

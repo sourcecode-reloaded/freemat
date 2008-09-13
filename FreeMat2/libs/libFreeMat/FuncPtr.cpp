@@ -2,6 +2,7 @@
 #include "Struct.hpp"
 #include "Interpreter.hpp"
 #include "Algorithms.hpp"
+#include "HandleList.hpp"
 
 #define LOOKUP(x,field) x.constStructPtr()[field].get(1)
 
@@ -12,6 +13,8 @@
 // the function in question.  But we cannot resurrect the function.  This
 // is because if we execute the function in question, it will overwrite
 // functions that are locally defined. 
+
+static HandleList<VariableTable*> scopeHandles;
 
 static FuncPtr FuncPtrLookup(Interpreter *eval, Array ptr) {
   if ((!ptr.isUserClass()) || (ptr.className() != "functionpointer"))
@@ -105,18 +108,14 @@ static ArrayVector FuncPtrCall(int nargout, ArrayVector& args,
 			       Array& optr) {
   fptr->updateCode(eval);
   StructArray &rp(optr.structPtr());
-  Array workspace(rp["workspace"].get(1));
-  StructArray &qp(workspace.structPtr());
-  StringVector fieldNames(qp.fieldNames());
+  Array wsHandle(rp["workspace"].get(1));
+  VariableTable *vtable = NULL;
+  if (!wsHandle.isEmpty()) {
+    int workspaceHandle = wsHandle.asInteger();
+    vtable = scopeHandles.lookupHandle(workspaceHandle);
+  }
   Context* context = eval->getContext();
-  VariableTable ws;
-  for (int i=0;i<fieldNames.size();i++)
-    ws.insertSymbol(fieldNames[i],qp[fieldNames[i]].get(1));
-  ArrayVector ret(fptr->evaluateFunction(eval,args,nargout,&ws));
-//   for (int i=0;i<fieldNames.size();i++) {
-//     Array *ptr = context->lookupVariableLocally(fieldNames[i]);
-//     qp["workspace"].set(1,*ptr);
-//   }
+  ArrayVector ret(fptr->evaluateFunction(eval,args,nargout,vtable));
   return ret;
 }
 
@@ -194,17 +193,15 @@ static void CaptureFunctionPointer(Array &inp, Interpreter *walker,
   if (!Scope::nests(parentScope,myScope)) {
     // We need to capture the variables referenced by the
     // function into the workspace
-    StringVector names;
-    ArrayVector values;
+    VariableTable* vptr = new VariableTable;
     for (int i=0;i<mptr->variablesAccessed.size();i++) {
       ArrayReference ptr(context->lookupVariable(mptr->variablesAccessed[i]));
-      if (ptr.valid()) {
-	names.push_back(mptr->variablesAccessed[i]);
-	values.push_back(*ptr);
-      }
+      if (ptr.valid())
+	vptr->insertSymbol(mptr->variablesAccessed[i],*ptr);
     }
-    inp.structPtr()["workspace"].set(1,StructConstructor(names,values));
+    inp.structPtr()["workspace"].set(1,Array(double(scopeHandles.assignHandle(vptr))));
   }
+  inp.structPtr()["captured"].set(1,Array(bool(true)));
 }
 
 void CaptureFunctionPointers(ArrayVector& outputs, Interpreter *walker, 
