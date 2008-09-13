@@ -372,7 +372,7 @@ QString Scanner::context(unsigned pos) {
   int linenumber = 1;
   int line_stop = m_text.indexOf("\n");
   QString prevline;
-  while (pos > line_stop) {
+  while (int(pos) > line_stop) {
     prevline = m_text.mid(line_start,line_stop-line_start);
     line_start = line_stop+1;
     line_stop = m_text.indexOf("\n",line_start);

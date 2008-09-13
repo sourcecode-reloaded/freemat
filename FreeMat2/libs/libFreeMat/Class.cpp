@@ -29,7 +29,6 @@ struct UserClassMetaInfo {
 };
 
 // Class information is mapped to a class template through an ID number
-static int classID = 1;
 static QMutex classMutex;
 static QMap<QString,UserClassMetaInfo> classTable;
 

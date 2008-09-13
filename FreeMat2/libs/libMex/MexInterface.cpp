@@ -40,6 +40,7 @@ template <typename T>
 static BasicArray<T> BasicArrayFromMexArray(const mxArray *dp, const void *qp) {
   BasicArray<T> rp(GetDimensions(dp));
   memcpy(rp.data(),qp,size_t(sizeof(T)*rp.length()));
+  return rp;
 }
 
 template <typename T>
@@ -109,6 +110,7 @@ static mxArray* TMexArrayFromNumericArray(mxClassID classID, Array array) {
   mxArray* ret = mxCreateNumericArray(numdims,dims,classID,flag);
   memcpy(ret->realdata,array.constReal<T>().constData(),size_t(array.length()*sizeof(T)));
   memcpy(ret->imagdata,array.constImag<T>().constData(),size_t(array.length()*sizeof(T)));
+  return ret;
 }
 
 mxArray* MexArrayFromNumericArray(Array array) {

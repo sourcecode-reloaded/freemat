@@ -19,7 +19,6 @@ static HandleList<VariableTable*> scopeHandles;
 static FuncPtr FuncPtrLookup(Interpreter *eval, Array ptr) {
   if ((!ptr.isUserClass()) || (ptr.className() != "functionpointer"))
     throw Exception("expected function pointer here");
-  const StructArray &rp(ptr.constStructPtr());
   QString name = LOOKUP(ptr,"name").asString();
   QString type = LOOKUP(ptr,"type").asString();
   if (type == "builtin") 
@@ -114,9 +113,7 @@ static ArrayVector FuncPtrCall(int nargout, ArrayVector& args,
     int workspaceHandle = wsHandle.asInteger();
     vtable = scopeHandles.lookupHandle(workspaceHandle);
   }
-  Context* context = eval->getContext();
-  ArrayVector ret(fptr->evaluateFunction(eval,args,nargout,vtable));
-  return ret;
+  return (fptr->evaluateFunction(eval,args,nargout,vtable));
 }
 
 //@@Signature

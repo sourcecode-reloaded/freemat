@@ -228,13 +228,13 @@ ArrayVector Interplin1Function(int, const ArrayVector&);
 ArrayVector FitFunFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector AnonFuncDispFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector AnonFuncSubsrefFunction(int, const ArrayVector&, Interpreter*);
-ArrayVector AnonFuncFevalFunction(int nargout, const ArrayVector& arg, Interpreter *eval);
+ArrayVector AnonFuncFevalFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector ClassFunction(int, const ArrayVector&);
-ArrayVector FuncPtrSubsasgnFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector FuncPtrDispFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector FuncPtrHorzCatFunction(int, const ArrayVector&);
 ArrayVector FuncPtrSubsrefFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector FuncPtrFevalFunction(int, const ArrayVector&, Interpreter*);
+ArrayVector FuncPtrSubsasgnFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector LoadLibFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector ImportFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector DrawNowFunction(int, const ArrayVector&);
@@ -271,19 +271,11 @@ ArrayVector ThreadKillFunction(int, const ArrayVector&);
 ArrayVector ThreadFreeFunction(int, const ArrayVector&);
 ArrayVector ClcFunction(int, const ArrayVector&);
 ArrayVector ProfilerFunction(int, const ArrayVector&);
-ArrayVector DNAUPFunction(int nargout, const ArrayVector& arg);
-ArrayVector DNEUPFunction(int nargout, const ArrayVector& arg);
-ArrayVector ZNAUPFunction(int nargout, const ArrayVector& arg);
-ArrayVector ZNEUPFunction(int nargout, const ArrayVector& arg);
 
 
 void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("abs",AbsFunction,1,1,"x",NULL);
   context->addSpecialFunction("pcode",PCodeFunction,-1,0,NULL);
-  context->addFunction("dnaup",DNAUPFunction,-1,-1,NULL);
-  context->addFunction("dneup",DNEUPFunction,-1,-1,NULL);
-  context->addFunction("znaup",ZNAUPFunction,-1,-1,NULL);
-  context->addFunction("zneup",ZNEUPFunction,-1,-1,NULL);
   context->addFunction("permute",PermuteFunction,2,1,"x","p",NULL);
   context->addFunction("repmat",RepMatFunction,3,1,"x","rows","cols",NULL);
   context->addFunction("diag",DiagFunction,2,1,"x","n",NULL);
@@ -507,10 +499,10 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addSpecialFunction("@anonfunction:feval",AnonFuncFevalFunction,-1,-1,NULL);
   context->addFunction("class",ClassFunction,-1,1,NULL);
   context->addSpecialFunction("@functionpointer:display",FuncPtrDispFunction,1,0,"x",NULL);
-  context->addSpecialFunction("@functionpointer:subsasgn",FuncPtrSubsasgnFunction,3,1,"x","s","y",NULL);
   context->addFunction("@functionpointer:horzcat",FuncPtrHorzCatFunction,-1,1,NULL);
   context->addSpecialFunction("@functionpointer:subsref",FuncPtrSubsrefFunction,2,-1,"x","s",NULL);
   context->addSpecialFunction("@functionpointer:feval",FuncPtrFevalFunction,-1,-1,NULL);
+  context->addSpecialFunction("@functionpointer:subsasgn",FuncPtrSubsasgnFunction,3,1,"x","s","y",NULL);
   context->addSpecialFunction("loadlib",LoadLibFunction,5,0,"libfile","symbolname","functionname","nargin","nargout",NULL);
   context->addSpecialFunction("import",ImportFunction,5,0,"libraryname","symbol","function","returntype","arguments",NULL);
    if (guiflag)

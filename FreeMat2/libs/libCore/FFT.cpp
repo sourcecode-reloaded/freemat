@@ -126,10 +126,6 @@ static void complex_fft_backward(int Narg, double *dp) {
 #endif
 }
 
-void trapme() {
-  int a = 232;
-}
-
 struct OpVecFFT {
   template <typename T>
   static inline void func(const ConstSparseIterator<T> & src, SparseSlice<T>& dest) {
@@ -151,7 +147,6 @@ struct OpVecFFT {
 			  BasicArray<T>& dest_real,
 			  BasicArray<T>& dest_imag) {
     if (src_real.length() == 0) return;
-    trapme();
     QVector<T> tbuf(int(dest_real.length()*2));
     for (index_t i=1;i<=src_real.length();i++) {
       tbuf[int(2*i-1)-1] = src_real[i];

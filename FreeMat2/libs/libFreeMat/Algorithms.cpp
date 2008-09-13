@@ -3,11 +3,6 @@
 #include "IEEEFP.hpp"
 #include "SparseCCS.hpp"
 
-void WarningMessage(QString msg) {
-#warning FIXME
-  //  std::cout << "Warning:" << qPrintable(msg);
-}
-
 const Array StringArrayFromStringVector(const StringVector& arg) {
   int maxlen = 0;
   for (int i=0;i<arg.size();i++)
@@ -327,11 +322,12 @@ Array Transpose(const Array &A) {
 
 template <typename T>
 static inline Array T_Hermitian(const Array &x) {
-  if (x.isScalar())
+  if (x.isScalar()) {
     if (x.allReal())
       return x;
     else 
       return Array(x.constRealScalar<T>(),(T)-x.constImagScalar<T>());
+  }
   if (x.isSparse()) {
     if (x.allReal())
       return Array(Transpose(x.constRealSparse<T>()));
@@ -790,6 +786,15 @@ Array NCat(const ArrayVector& pdata, int catdim) {
   DataClass cls(data[0].dataClass());
   for (int i=1;i<data.size();i++)
     cls = qMin(cls,data[i].dataClass());
+  bool userClassCase = false;
+  QString classname;
+  if ((cls == Struct) && data[0].isUserClass()) {
+    classname = data[0].className();
+    for (int i=1;i<data.size();i++)
+      if (!data[i].isUserClass() || data[i].className() != classname)
+	throw Exception("Cannot concatenate user defined classes of different type");
+    userClassCase = true;
+  }
   NTuple outdims(data[0].dimensions());
   // Compute the output dimensions and validate each of the elements
   for (int i=1;i<data.size();i++) {
@@ -815,6 +820,8 @@ Array NCat(const ArrayVector& pdata, int catdim) {
     }
     iter.nextSlice();
   }
+  if (userClassCase)
+    retval.structPtr().setClassPath(StringVector(classname));
   return retval;
 }
 

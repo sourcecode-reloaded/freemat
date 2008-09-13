@@ -60,7 +60,6 @@ static ArrayVector imreadHelperIndexed(QImage img) {
 static ArrayVector imreadHelperRGB32(QImage img) {
   if (img.allGray()) {
     BasicArray<uint8> img_data_dp(NTuple(img.height(),img.width()));
-    int imgcnt = img.height()*img.width();
     for (int row=0;row<img.height();row++) {
       QRgb *p = (QRgb*) img.scanLine(row);
       for (int col=0;col<img.width();col++) {
@@ -94,7 +93,6 @@ static ArrayVector imreadHelperARGB32(QImage img) {
   BasicArray<uint8> img_alpha_dp(NTuple(img.height(),img.width()));
   if (img.allGray()) {
     BasicArray<uint8> img_data_dp(NTuple(img.height(),img.width()));
-    int imgcnt = img.height()*img.width();
     for (int row=0;row<img.height();row++) {
       QRgb *p = (QRgb*) img.scanLine(row);
       for (int col=0;col<img.width();col++) {

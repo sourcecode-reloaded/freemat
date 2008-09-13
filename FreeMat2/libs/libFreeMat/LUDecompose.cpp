@@ -578,8 +578,6 @@ static ArrayVector SparseLUDecomposeComplex(const SparseMatrix<double> &Ar, cons
 ArrayVector SparseLUDecompose(int nargout, Array A) {
   if (A.dataClass() != Double)
     throw Exception("FreeMat currently only supports the LU decomposition for double and dcomplex matrices");
-  int Arows = int(A.rows());
-  int Acols = int(A.cols());
   if (!A.isSquare())
     throw Exception("FreeMat currently only supports LU decompositions for square matrices");
   if (A.allReal())

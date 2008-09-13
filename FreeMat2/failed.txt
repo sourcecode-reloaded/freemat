@@ -1,12 +1,13 @@
 Remaining issues in the array-rework branch:
 
-1. captured function pointers
+1. captured function pointers -- Fixed (sort of)
 2. JIT
 3. KeyManager - cut?
-4. Warn (Array.cpp)
-5. Warn (Algorithms.cpp)
-6. matrix concatenation of classes?
-
+4. Warn (Array.cpp) -- Fixed
+5. Warn (Algorithms.cpp) -- Fixed
+6. matrix concatenation of classes? -- Fixed
+7. improved test cases
+8  text output fine tuning -- Fixed
 
 Workspace IDs?
 If we have a function pointer class that contains a workspace, there is a problem with it's 
@@ -21,3 +22,4 @@ the workspace for the variables that are stored in it.  The only way to fix this
 either special case the functionpointer:subsref call (ugly), or have the functionpointer store 
 a reference to a workspace (instead of the workspace itself).  I will have to use the later 
 approach, although it introduces an additional level of complexity to the functionpointer class.
+
