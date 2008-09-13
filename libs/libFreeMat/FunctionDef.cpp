@@ -181,7 +181,6 @@ void MFunctionDef::printMe(Interpreter*eval) {
   code.tree()->print();
 }
 
-#if !defined(_MSC_VER)
 static void CaptureFunctionPointer(FuncPtr &val, Interpreter *walker, 
 				   MFunctionDef *parent, ScopePtr &workspace) {
   if (val->type() == FM_M_FUNCTION) {
@@ -988,4 +987,3 @@ ArrayVector MexFunctionDef::evaluateFunction(Interpreter *walker,
   delete[] rets;
   return retvec;
 }
-

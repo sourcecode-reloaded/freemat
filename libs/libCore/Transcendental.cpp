@@ -24,6 +24,8 @@
 #include "Math.hpp"
 #include "Operators.hpp"
 #include "Complex.hpp"
+#include "IEEEFP.hpp"
+
 
 //!
 //@Module LOG1P Natural Logarithm of 1+P Function

@@ -966,10 +966,6 @@ Array DotPower(const Array& A, const Array& B) {
   return DotOp<OpPower>(A,B);
 }
 
-  // Special case -- kludge to fix bug 1804267
-  B = ScreenIntegerScalars(B);
-}
-
 /**
  * Element-wise less than.
  */

@@ -1122,8 +1122,6 @@ void KeyManager::ChangeDir(const QString& dir) {
   emit ExecuteLine("cd " + dir + "\n");
 }
 
-}
-
 StringVector KeyManager::GetCompletions(QString line, 
 					int word_end, 
 					QString &matchString) {

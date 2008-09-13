@@ -1659,6 +1659,31 @@ public:
   ~ContextLoopLocker() {m_context->exitLoop();}
 };
 
+inline bool IsIntegerDataClass( const Array& a )
+{
+    return (a.dataClass() >= Int8) && (a.dataClass() <= UInt64);
+}
+
+template <class T>
+void ForLoopHelper(Tree *codeBlock, const Array& indexSet, 
+		   int count, const QString& indexName, Interpreter *eval) {
+  for (int m=0;m<count;m++) {
+    Array *vp = eval->getContext()->lookupVariableLocally( indexName );
+    if ((!vp) || (!vp->isScalar())) {
+	eval->getContext()->insertVariableLocally(indexName,Array());
+	vp = eval->getContext()->lookupVariableLocally(indexName);
+    }
+
+    *vp = indexSet.get(m);
+    try {
+      eval->block(codeBlock);
+    } catch (InterpreterContinueException &) {
+    } catch (InterpreterBreakException &) {
+      break;
+    } 
+  }
+}
+
 void ForLoopIterator( Tree* codeBlock, QString indexName, 
 		     Array& first, Array& last, Array& step, Interpreter *eval)
 {
@@ -1680,12 +1705,11 @@ void ForLoopIterator( Tree* codeBlock, QString indexName,
 	Array temp1;
 
 	temp1 = DotRightDivide( Subtract( last, first ), step );    //( ( l - f ) / s )
-	nsteps = temp1.getContentsAsIntegerScalar() + 1;	    //( ( l - f ) / s )+1
+	nsteps = temp1.asInteger() + 1;	    //( ( l - f ) / s )+1
 	if( nsteps < 0 ) return;
 
 	for (int m=0;m<nsteps;m++) {
-	    Array stepInd(BasicArray<double>(m));
-	    *vp = Add( first, DotMultiply( stepInd, step ) );
+	    *vp = Add( first, DotMultiply( Array(m), step ) );
 	    try {
 		eval->block(codeBlock);
 	    } 
@@ -1699,24 +1723,25 @@ void ForLoopIterator( Tree* codeBlock, QString indexName,
     else{
 	//floating point loop path
 	bool bFloatLoop = ( first.dataClass() == Float || last.dataClass() == Float || step.dataClass() == Float );
-	float f = first.getContentsAsDoubleScalar();
-	float l = last.getContentsAsDoubleScalar();
-	float s = step.getContentsAsDoubleScalar();
+	float f = first.asDouble();
+	float l = last.asDouble();
+	float s = step.asDouble();
 
 	if( bFloatLoop )
 	    nsteps = num_for_loop_iter_f(f, s, l);  
 	else
 	    nsteps = num_for_loop_iter(f, s, l);
-
-        Array stepInd(BasicArray<double>(m));
-	*vp = Add( first, DotMultiply( stepInd, step ) );
-	try {
-	    eval->block(codeBlock);
-	} 
-	catch (InterpreterContinueException &e) {} 
-	catch (InterpreterBreakException &e) {
-	    break;
-	} 
+        
+	for (int m=0;m<nsteps;m++) {
+	    *vp = Add( first, DotMultiply( Array(m), step ) );
+	    try {
+		eval->block(codeBlock);
+	    } 
+	    catch (InterpreterContinueException &) {} 
+	    catch (InterpreterBreakException &) {
+		break;
+	    } 
+	}
     }
 }
 
@@ -1916,74 +1941,72 @@ void Interpreter::forStatement(Tree *t) {
 
 	/* Get the code block */
 	Tree *codeBlock(t->second());
-	int elementCount = indexSet.getLength();
-	Class loopType(indexSet.dataClass());
+	int elementCount = indexSet.length();
+	DataClass loopType(indexSet.dataClass());
 	ContextLoopLocker lock(context);
 	switch(loopType) {
-      case FM_FUNCPTR_ARRAY:
-	  throw Exception("Function pointer arrays are not supported as for loop index sets");
-      case FM_STRUCT_ARRAY:
-	  throw Exception("Structure arrays are not supported as for loop index sets");
-      case FM_CELL_ARRAY:
-	  ForLoopHelper<Array>(codeBlock,loopType,(const Array*)indexSet.getDataPointer(),
-	      elementCount,indexVarName,this);
-	  break;
-      case FM_LOGICAL:
-	  ForLoopHelper<logical>(codeBlock,loopType,(const logical*)indexSet.getDataPointer(),
-	      elementCount,indexVarName,this);
-	  break;
-      case FM_UINT8:
-	  ForLoopHelper<uint8>(codeBlock,loopType,(const uint8*)indexSet.getDataPointer(),
-	      elementCount,indexVarName,this);
-	  break;
-      case FM_INT8:
-	  ForLoopHelper<int8>(codeBlock,loopType,(const int8*)indexSet.getDataPointer(),
-	      elementCount,indexVarName,this);
-	  break;
-      case FM_UINT16:
-	  ForLoopHelper<uint16>(codeBlock,loopType,(const uint16*)indexSet.getDataPointer(),
-	      elementCount,indexVarName,this);
-	  break;
-      case FM_INT16:
-	  ForLoopHelper<int16>(codeBlock,loopType,(const int16*)indexSet.getDataPointer(),
-	      elementCount,indexVarName,this);
-	  break;
-      case FM_UINT32:
-	  ForLoopHelper<uint32>(codeBlock,loopType,(const uint32*)indexSet.getDataPointer(),
-	      elementCount,indexVarName,this);
-	  break;
-      case FM_INT32:
-	  ForLoopHelper<int32>(codeBlock,loopType,(const int32*)indexSet.getDataPointer(),
-	      elementCount,indexVarName,this);
-	  break;
-      case FM_UINT64:
-	  ForLoopHelper<uint64>(codeBlock,loopType,(const uint64*)indexSet.getDataPointer(),
-	      elementCount,indexVarName,this);
-	  break;
-      case FM_INT64:
-	  ForLoopHelper<int64>(codeBlock,loopType,(const int64*)indexSet.getDataPointer(),
-	      elementCount,indexVarName,this);
-	  break;
-      case FM_FLOAT:
-	  ForLoopHelper<float>(codeBlock,loopType,(const float*)indexSet.getDataPointer(),
-	      elementCount,indexVarName,this);
-	  break;
-      case FM_DOUBLE:
-	  ForLoopHelper<double>(codeBlock,loopType,(const double*)indexSet.getDataPointer(),
-	      elementCount,indexVarName,this);
-	  break;
-      case FM_COMPLEX:
-	  ForLoopHelperComplex<float>(codeBlock,loopType,(const float*)indexSet.getDataPointer(),
-	      elementCount,indexVarName,this);
-	  break;
-      case FM_DCOMPLEX:
-	  ForLoopHelperComplex<double>(codeBlock,loopType,(const double*)indexSet.getDataPointer(),
-	      elementCount,indexVarName,this);
-	  break;
-      case FM_STRING:
-	  ForLoopHelper<uint8>(codeBlock,loopType,(const uint8*)indexSet.getDataPointer(),
-	      elementCount,indexVarName,this);
-	  break;
+	  case Struct:
+	      throw Exception("Structure arrays are not supported as for loop index sets");
+	  case CellArray:
+	      ForLoopHelper<Array>(codeBlock,indexSet,
+		  elementCount,indexVarName,this);
+	      break;
+	  case Bool:
+	      ForLoopHelper<logical>(codeBlock, indexSet,
+		  elementCount,indexVarName,this);
+	      break;
+	  case UInt8:
+	      ForLoopHelper<uint8>(codeBlock,indexSet,
+		  elementCount,indexVarName,this);
+	      break;
+	  case Int8:
+	      ForLoopHelper<int8>(codeBlock,indexSet,
+		  elementCount,indexVarName,this);
+	      break;
+	  case UInt16:
+	      ForLoopHelper<uint16>(codeBlock,indexSet,
+		  elementCount,indexVarName,this);
+	      break;
+	  case Int16:
+	      ForLoopHelper<int16>(codeBlock,indexSet,
+		  elementCount,indexVarName,this);
+	      break;
+	  case UInt32:
+	      ForLoopHelper<uint32>(codeBlock,indexSet,
+		  elementCount,indexVarName,this);
+	      break;
+	  case Int32:
+	      ForLoopHelper<int32>(codeBlock,indexSet,
+		  elementCount,indexVarName,this);
+	      break;
+	  case UInt64:
+	      ForLoopHelper<uint64>(codeBlock,indexSet,
+		  elementCount,indexVarName,this);
+	      break;
+	  case Int64:
+	      ForLoopHelper<int64>(codeBlock,indexSet,
+		  elementCount,indexVarName,this);
+	      break;
+	  case Float:
+	      ForLoopHelper<float>(codeBlock,indexSet,
+		  elementCount,indexVarName,this);
+	      break;
+	  case Double:
+	      ForLoopHelper<double>(codeBlock,indexSet,
+		  elementCount,indexVarName,this);
+	      break;
+	  case StringArray:
+	      ForLoopHelper<uint8>(codeBlock,indexSet,
+		  elementCount,indexVarName,this);
+	      break;
+       //   case FM_COMPLEX:
+	      //ForLoopHelperComplex<float>(codeBlock,loopType,(const float*)indexSet.getDataPointer(),
+	      //    elementCount,indexVarName,this);
+	      //break;
+       //   case FM_DCOMPLEX:
+	      //ForLoopHelperComplex<double>(codeBlock,loopType,(const double*)indexSet.getDataPointer(),
+	      //    elementCount,indexVarName,this);
+	      //break;
 	}
     }
     else if( t->first()->second()->token() == ':' ){

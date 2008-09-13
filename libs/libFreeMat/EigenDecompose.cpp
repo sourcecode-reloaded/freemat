@@ -496,11 +496,11 @@ static void EigenDecomposeCompactSymmetric(Array &D, Array A) {
   index_t N = A.rows();
   NTuple Vdims(N,1);
   if (A.allReal()) {
-    D = Array(GetDataClass<T>(),Vdims);
+    D = Array(GetDataClass<T>(T(0)),Vdims);
     realEigenDecomposeSymmetric(int(N), (T*) NULL, D.real<T>().data(), 
 				A.real<T>().data(),false);
   } else {
-    D = Array(GetDataClass<T>(),Vdims);
+    D = Array(GetDataClass<T>(T(0)),Vdims);
     complexEigenDecomposeSymmetric(int(N), (T*) NULL, D.real<T>().data(),
 				   A.fortran<T>().data(),false);
   }
@@ -533,7 +533,7 @@ static inline void EigenDecomposeFullSymmetric(Array &V, Array &D, Array A) {
   NTuple Vdims(N,N);
   if (A.allReal()) {
     BasicArray<T> eigenvals(NTuple(N,1));
-    V = Array(GetDataClass<T>(),Vdims);
+    V = Array(GetDataClass<T>(T(0)),Vdims);
     realEigenDecomposeSymmetric(int(N), V.real<T>().data(), 
 				eigenvals.data(), 
 				A.real<T>().data(),
@@ -584,7 +584,7 @@ static void HandleEigenVectorsRealMatrix(BasicArray<T> &eigenvals,
     V = Array(Vp);
   } else {
     D = DiagonalArray(SplitReal<T>(eigenvals),SplitImag<T>(eigenvals));
-    V = Array(GetDataClass<T>(),NTuple(N,N));
+    V = Array(GetDataClass<T>(T(0)),NTuple(N,N));
     index_t i = 1;
     while (i <= N) {
       if ((i < N) && (eigenvals[2*i] != 0)) {

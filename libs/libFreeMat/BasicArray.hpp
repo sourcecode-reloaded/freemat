@@ -350,7 +350,7 @@ static inline T neg(T v) { return -v;}
 
 template <typename T>
 BasicArray<T> Negate(const BasicArray<T>& arg) {
-  return Apply(arg,neg);
+  return Apply<T>(arg,neg);
 }
 
 template <typename T>

@@ -900,15 +900,15 @@ static void DumpProfileDB() {
   double profiler_ticks = m_profiler_ticks;
   dbout << "Total ticks " << m_profiler_ticks << "\r\n";
   for (ProfileDB::const_iterator i=m_profileDB.begin();i!=m_profileDB.end();i++) {
-    dbout << "Module " << i->first << "\r\n";
+    qDebug() << "Module " << i->first << "\r\n";
     const ProfileVector &p(i->second);
     double ticks_this_module = 0;
     for (int j=0;j<p.size();j++) {
       //      if (p[j] > 0)
-	dbout << "Line " << j << " " << p[j] << " counts " << p[j]/profiler_ticks*100.0 << "%\r\n";
+	qDebug() << "Line " << j << " " << p[j] << " counts " << p[j]/profiler_ticks*100.0 << "%\r\n";
       ticks_this_module += p[j];
     }
-    dbout << "Total time in " << i->first << " " << ticks_this_module << " counts "  
+    //qDebug() << "Total time in " << i->first << " " << ticks_this_module << " counts "  
     //	      << ticks_this_module/profiler_ticks*100.0 << "%\r\n";
   }
 }

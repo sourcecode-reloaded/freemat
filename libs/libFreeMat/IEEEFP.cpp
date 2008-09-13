@@ -300,4 +300,12 @@ __declspec( dllexport ) double expm1 (double x)
       return u.f;
     }
 }
+
+//TODO: implement actual floating point log1pf, expm1f
+__declspec( dllexport ) float log1pf (float x){
+    return log1p( x );
+}
+__declspec( dllexport ) float expm1f (float x){
+    return expm1( x );
+}
 #endif 

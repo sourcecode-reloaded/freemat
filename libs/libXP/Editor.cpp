@@ -1166,7 +1166,7 @@ void FMEditor::IllegalLineOrCurrentPath(QString name, int line) {
 #ifndef WIN32
 	  sleep(1);
 #else
-	  Sleep(1);
+	  //Sleep(1);
 #endif
 	  // make sure the current path is the file path
 	  // before execute toggleBP() 

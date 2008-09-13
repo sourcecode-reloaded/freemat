@@ -68,7 +68,8 @@ extern "C"{
 	__declspec( dllexport ) double expm1 (double x);
 //        __declspec( dllexport ) double nextafter( double x, double y )  { return _nextafter( x, y ); }
 	__declspec( dllexport ) float nextafterf (float x, float y);
-
+	__declspec( dllexport ) float log1pf(float x);
+	__declspec( dllexport ) float expm1f(float x);
 }
 #define nextafter _nextafter
 #endif
