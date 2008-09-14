@@ -4,11 +4,18 @@
 
 function outputtext(&p,text)
   if (p.ignore) return; end
-  v = regexp(text,'@\$"([^"]*)","([^"]*)","([^"]*)"','tokens');
+  v = regexp(text,'@\$(.*)','tokens');
   if (isempty(v))
     error(sprintf('bad line: %s',text));
   end
-  filename = sprintf('%s/toolbox/test/wbtest_%s_%d.m',p.sourcepath,p.modulename,p.num);
+  % Search for inputs
+  vars = symvar(v{1});
+  p = regexp(b,'x.');
+  inputs = 0; for i=1:numel(p); if (~isempty(p{i})) inputs = inputs + 1; end;
+  p = regexp(b,'y.');
+  outputs = 0; for i=1:numel(p); if (~isempty(p{i})) outputs = outputs + 1; end;
+
+  filename = sprintf('%s/toolbox/tests/wbtest_%s_%d.m',p.sourcepath,p.modulename,p.num);
   fp = fopen(filename,'w');
   if (fp < 0)
     error(sprintf('Unable to open %s for writing',filename));

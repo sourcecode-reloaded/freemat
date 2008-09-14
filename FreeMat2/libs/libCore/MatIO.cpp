@@ -540,7 +540,9 @@ void MatIO::putArraySpecific(const Array &x, Array aFlags,
   putDataElement(aFlags);
   putDataElement(ConvertNTupleToArray(x.dimensions()).toClass(Int32));
   putDataElement(Array(name));
-  if (isNormalClass(arrayType))
+  if (x.dataClass() == Bool)
+    putNumericArray(x.toClass(Int32));
+  else if (isNormalClass(arrayType))
     putNumericArray(x);
   else if  (arrayType == mxCELL_CLASS) 
     putCellArray(x);

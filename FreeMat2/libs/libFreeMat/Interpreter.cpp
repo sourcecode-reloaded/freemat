@@ -2630,6 +2630,12 @@ ArrayReference Interpreter::createVariable(QString name) {
 //  q = [1,2;3,4;5,6];
 //  test_val = testeq(p,q);
 //@}
+//@{ test_assign21.m
+//function test_val = test_assign21
+//  p = {'hello'};
+//  q = p{1};
+//  test_val = testeq(q,'hello');
+//@}
 //@{ test_sparse56.m
 //% Test DeleteSparseMatrix function
 //function x = test_sparse56
