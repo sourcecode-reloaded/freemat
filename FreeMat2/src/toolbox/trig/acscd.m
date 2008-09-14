@@ -18,10 +18,7 @@
 %acscd(0.5)
 %@>
 %@@Tests
-%@$"y=acscd(0.342)","90.0+99.43555562312426i","close"
-%@$"y=acscd(2)","30","close"
-%@$"y=acscd(float(0.523))","float(90.0+72.4573669i)","close"
-%@$"y=acscd(0.5)","90.0+75.45612929021689i","close"
+%@$y1=acscd(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

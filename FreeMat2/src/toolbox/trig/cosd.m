@@ -18,8 +18,7 @@
 %cosd(60)
 %@>
 %@@Tests
-%@$"y=cosd(45)","0.70710678118655","close"
-%@$"y=cosd(60)","0.5","close"
+%@$y1=cosd(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

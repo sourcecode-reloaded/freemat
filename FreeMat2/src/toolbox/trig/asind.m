@@ -18,10 +18,7 @@
 %asind(0.5)
 %@>
 %@@Tests
-%@$"y=asind(sqrt(2)/2)","45","close"
-%@$"y=asind(0.5)","30","close"
-%@$"y=asind(2.0)","90.0+75.45612929021689i","close"
-%@$"y=asind(float(-0.9))","float(-64.1580658)","close"
+%@$y1=asind(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

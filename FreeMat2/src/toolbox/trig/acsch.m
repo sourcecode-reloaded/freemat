@@ -23,12 +23,8 @@
 %@>
 %@figure acschplot
 %@@Tests
-%@$"y=acsch(0.342)","1.79412760639059","close"
-%@$"y=acsch(0.342+0.532i)","1.12267740551487-0.89903500983626i","close"
-%@$"y=acsch(inf)","0","exact"
-%@$"y=acsch(float(0.523))","float(1.4035949)","close"
+%@$y1=acsch(x1)
 %!
-
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL

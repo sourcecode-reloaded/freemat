@@ -25,9 +25,7 @@
 %upper({'This','Is','Strange','CAPitalizaTion'})
 %@>
 %@@Tests
-%@$"y=upper('hello')","'HELLO'","exact"
-%@$"y=upper('HELLO')","'HELLO'","exact"
-%@$"y=upper({'Ab','cD','EF'})","{'AB','CD','EF'}","exact"
+%@$y1=upper(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

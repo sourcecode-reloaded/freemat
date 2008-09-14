@@ -14,11 +14,7 @@
 %cotd(45)
 %@>
 %@@Tests
-%@$"y=cotd(0.5)","1.145886501293096e+02","close"
-%@$"y=cotd(2.1324)","26.85674495465909","close"
-%@$"y=cotd(-3)","-19.08113668772821","close"
-%@$"y=cotd(float(2.12))","float(27.0139790)","close"
-%@$"y=cotd(45)","1","close"
+%@$y1=cotd(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

@@ -17,9 +17,8 @@
 %idiv(15,3)
 %@>
 %@@Tests
-%@$"y=idiv(27,6)","4","exact"
-%@$"y=idiv(4,-2)","-2","exact"
-%@$"y=idiv(15,3)","5","exact"
+%@$y1=idiv(x1,6)
+%@$y1=idiv(x1,-2)
 %!
 % Copyright (c) 2005 Samit Basu
 % Licensed under the GPL

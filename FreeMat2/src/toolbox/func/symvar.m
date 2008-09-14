@@ -20,9 +20,7 @@
 %symvar('x + t*alpha')  % x, t and alpha
 %@>
 %@@Tests
-%@$"y=symvar('x^2+sqrt(x)')","{'x'}","exact"
-%@$"y=symvar('pi+3')","{}","exact"
-%@$"y=symvar('x+t*alpha-cos(pi)')","{'alpha','t','x'}","exact"
+%@$y1=symvar(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

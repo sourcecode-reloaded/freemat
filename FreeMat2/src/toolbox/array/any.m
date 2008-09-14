@@ -40,9 +40,9 @@
 %any(A,2)
 %@>
 %@@Tests
-%@$"y=any([1,0,0;1,0,0;0,0,1],2)","[1;1;1]","exact"
-%@$"y=any(eye(3))","[1 1 1]","exact"
-%@$"y=any(ones(0,3),1)","[0 0 0]","exact"
+%@$y1=any(x1,2)
+%@$y1=any(x1)
+%@$y1=any(x1,1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

@@ -25,9 +25,7 @@
 %lower({'This','Is','Strange','CAPitalizaTion'})
 %@>
 %@@Tests
-%@$"y=lower('hello')","'hello'","exact"
-%@$"y=lower('HELLO')","'hello'","exact"
-%@$"y=lower({'Ab','cD','EF'})","{'ab','cd','ef'}","exact"
+%@$y1=lower(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

@@ -73,8 +73,7 @@ struct OpVecCumProd {
 //cumprod(B,3)
 //@>
 //@@Tests
-//@$"y=cumprod([1,2,3,4])","[1,2,6,24]","exact"
-//@$"y=cumprod([1,2,3,4]+i*[4,3,2,1])","[1+4i,-10+11i,-52+13i,-221]","exact"
+//@$y1=cumprod(x1)
 //@@Signature
 //function cumprod CumprodFunction
 //inputs x dimensions

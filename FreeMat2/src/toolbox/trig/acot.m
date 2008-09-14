@@ -22,12 +22,8 @@
 %mprint('acotplot');
 %@>
 %@figure acotplot
-%@$"y=acot(0.342)","1.24126615675785","close"
-%@$"y=acot(0.342+0.532i)","1.14543846762527 - 0.49811525236799i","close"
-%@$"y=acot(inf)","0","exact"
-%@$"y=acot(float(0.523))","1.0889184","close"
+%@$y1=acot(x1)
 %!
-
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL

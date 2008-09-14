@@ -14,11 +14,7 @@
 %tand(45)
 %@>
 %@@Tests
-%@$"y=tand(0.5)","0.00872686779076","close"
-%@$"y=tand(2.1324)","0.03723459420299","close"
-%@$"y=tand(-3)","-0.05240777928304","close"
-%@$"y=tand(float(2.12))","float(0.0370179)","close"
-%@$"y=tand(45)","1","close"
+%@$y1=tand(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

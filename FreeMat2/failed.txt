@@ -23,3 +23,88 @@ either special case the functionpointer:subsref call (ugly), or have the functio
 a reference to a workspace (instead of the workspace itself).  I will have to use the later 
 approach, although it introduces an additional level of complexity to the functionpointer class.
 
+
+
+To improve the test cases, I want to do the following.  First, we generate
+a pool of test cases:
+
+true
+false
+'c'
+[]
+pi
+-e
+3.1-2.3i
+'3ff'
+['0ff';'2de';'123']
+3+4*i
+[-2,3,-4,5]
+[2.0+3.0*i,i]
+'hello'
+[1,2;4,5]
+randn(13,5,7,2)
+[1 2 3 4]
+1
+0
+[1,2,3,4]+i*[4,3,2,1]
+1:18
+zeros(3,0,4)
+2
+[0.5,1]
+[1,2,3]
+'astring'
+'bstring'
+{'ast','bst',43,'astr'}
+'ast'
+{'this','is','a','pickle'}
+{'think','is','to','pickle'}
+{'Peter','piper','hated','pickle'}
+'HELLO'
+'  lot of blank spaces    '
+{'  space','enough ',' for ',''}
+{'hello  ','thre ','  is  ','  sign  '}
+'how now brown cow?'
+'Matlab is great'
+{'time is money';'A stitch in time';'no time for games'}
+['quick';'brown';'fox  ';'is   ']
+'x^2+sqrt(x)'
+'pi+3'
+'x+t*alpha-cos(pi)'
+27
+[1,0]
+[4,3]
+[1,1]
+0.342
+single(0.523)
+0.342+0.532i
+inf
+-inf
+nan
+[single(2.12) single(-0.9) single(5.234)]
+[45 60 90]
+[1 pi/4 2*pi sqrt(2)/2]
+[3 -3.5 1+3i]
+[2,3,4]
+[1,-6,-72,-27]
+[5,1,3;3,2,1;0,3,1]
+[1;2;3;4]
+rand(4,1,1,1)
+rand(3,3,3)
+rand(1,1,3)
+[1,0,0;1,0,0;0,0,1]
+
+
+Then for a test function, we can execute something like:
+
+//@$"x1","y = func(x1)","y"
+
+where x1 is taken as an array from the input pool.  For the sake of 
+automatically parsing the inputs and determing the outputs, a naming 
+convention should be used.  Inputs shall be named x1, x2, x3, and outputs
+shall be named y1, y2, y3.  So the test can be coded as
+
+//@$"y1 = func(x1)"
+
+
+
+

@@ -18,9 +18,7 @@
 %acosd(0.5)
 %@>
 %@@Tests
-%@$"y=acosd(0.342)","70.00122819209012","close"
-%@$"y=acosd(float(0.523))","float(58.4662971)","close"
-%@$"y=acosd(0.5)","60","close"
+%@$y1=acosd(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

@@ -43,9 +43,7 @@
 %all(A,2)
 %@>
 %@@Tests
-%@$"y=all([1,0,0;1,1,1;0,1,1],2)","[0;1;0]","exact"
-%@$"y=all(eye(3))","[0 0 0]","exact"
-%@$"y=all(ones(0,3),1)","[1 1 1]","exact"
+%@$y1=all(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

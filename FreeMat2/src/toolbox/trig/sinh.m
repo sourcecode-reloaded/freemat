@@ -21,10 +21,7 @@
 %@>
 %@figure sinhplot
 %@@Tests
-%@$"y=sinh(0.5)","0.52109530549375","close"
-%@$"y=sinh(2.1324)","4.15826715983928","close"
-%@$"y=sinh(3-4i)","-6.54812004091100+7.61923172032141i","close"
-%@$"y=sinh(float(2.12))","float(4.1055527)","close"
+%@$y1=sinh(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

@@ -17,9 +17,7 @@
 %rad2deg(2*pi) % Note that this is 360 not 0 degrees
 %@>
 %@@Tests
-%@$"y=rad2deg(1)","57.29577951308232","close"
-%@$"y=rad2deg(pi/4)","45","close"
-%@$"y=rad2deg(2*pi)","360","close"
+%@$y1=rad2deg(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

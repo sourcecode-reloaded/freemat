@@ -18,7 +18,7 @@
 %x = linspace(0,1,5)
 %@>
 %@@Tests
-%@$"y=linspace(0,60000,60001)(end)","60000","exact"
+%@$z=linspace(0,60000,60001);y1=z(end)
 %!
 % Copyright (c) 2002, 2003 Samit Basu
 % Licensed under the GPL

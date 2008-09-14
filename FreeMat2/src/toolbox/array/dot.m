@@ -17,10 +17,8 @@
 %@]
 %where @|dim| specifies the dimension to take the dot product along.
 %@@Tests
-%@$"y=dot([1,2,1],[1;2;1])","6","exact"
-%@$"y=dot([1,2;3,2],[2,1;4,5])","[14,12]","exact"
-%@$"y=dot([1,2;3,2],[2,1;4,5],2)","[4;22]","exact"
-%@$"y=dot([1,2;3,2],[2,1;4,5],3)","[2,2;12,10]","exact"
+%@$y1=dot(x1,x2)
+%@$y1=dot(x1,x2,2)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu
