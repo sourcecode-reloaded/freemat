@@ -222,7 +222,8 @@ Array MatIO::getStructArray(NTuple dm) {
   for (int i=0;i<fieldNameCount;i++) {
     QString buffer;
     for (int j=0;j<fieldNameLen;j++)
-      buffer += QChar(dp[i*fieldNameLen+j+1]);
+      if (dp[i*fieldNameLen+j+1])
+	buffer += QChar(dp[i*fieldNameLen+j+1]);
     names.push_back(buffer);
   }
   Array ret(Struct);
@@ -450,7 +451,8 @@ void MatIO::Align64Bit() {
 
 void MatIO::putStructArray(const Array &x) {
   // Calculate the maximum field name length
-  StringVector fnames(x.constStructPtr().fieldNames()); // FIXME - should we truncate to 32 byte fieldnames?
+  // FIXME - should we truncate to 32 byte fieldnames?
+  StringVector fnames(x.constStructPtr().fieldNames()); 
   int fieldNameCount = fnames.size();
   int maxlen = 0;
   for (int i=0;i<fieldNameCount;i++)
@@ -458,7 +460,7 @@ void MatIO::putStructArray(const Array &x) {
   // Write it as an int32 
   Array fieldNameLength = Array(int32(maxlen));
   putDataElement(fieldNameLength);
-  Array fieldNameText(StringArrayFromStringVector(fnames));
+  Array fieldNameText(Transpose(StringArrayFromStringVector(fnames)));
   putDataElement(fieldNameText);
   for (int i=0;i<fieldNameCount;i++) {
     const BasicArray<Array> &rp(x.constStructPtr()[i]);
