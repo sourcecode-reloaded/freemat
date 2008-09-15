@@ -31,6 +31,33 @@
 #include "Printf.hpp"
 #include "Algorithms.hpp"
 #include "Utils.hpp"
+#include "IEEEFP.hpp"
+
+static int flagChar(char c) {
+  return ((c == '#') ||  (c == '0') || (c == '-') ||  
+	  (c == ' ') ||  (c == '+'));
+}
+
+static int convspec(char c) {
+  return ((c == 'd') || (c == 'i') || (c == 'o') || 
+	  (c == 'u') || (c == 'x') || (c == 'X') ||
+	  (c == 'e') || (c == 'E') || (c == 'f') || 
+	  (c == 'F') || (c == 'g') || (c == 'G') ||
+	  (c == 'a') || (c == 'A') || (c == 'c') || 
+	  (c == 's'));
+}
+
+static char* validateScanFormatSpec(char* cp) {
+  if (*cp == '%') return cp+1;
+  while ((*cp) && flagChar(*cp)) cp++;
+  while ((*cp) && isdigit(*cp)) cp++;
+  while ((*cp) && (*cp == '.')) cp++;
+  while ((*cp) && isdigit(*cp)) cp++;
+  if ((*cp) && (convspec(*cp) || (*cp == 'h') || (*cp == 'l')))
+    return cp+1;
+  else
+    return 0;
+}
 
 //!
 //@Module STRCMP String Compare Function
@@ -1101,6 +1128,226 @@ ArrayVector Str2NumFunction(int nargout, const ArrayVector& arg) {
 }
 
 
+
+// How does sscanf work...
+// a whitespace matches any number/type of whitespace
+// a non-whitespace must be matched exactly
+// a %d, %ld, etc.  reads a number... 
+// a %s matches a sequence of characters that does
+// not contain whitespaces...
+// a mismatch - 
+
+ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
+{
+	Array format(arg[0]);
+	Array errormsg = Array( QString("") );
+	NTuple dims;
+	index_t firstdim = -1;
+	index_t nMaxRead = -1, nRead = 0;
+
+	if( arg.size() == 2 ){
+		if( arg[1].isScalar() ){
+			if( IsFinite( arg[1].asDouble() ) ){
+				nMaxRead = arg[1].asIndexScalar();
+				firstdim = arg[1].asIndexScalar();
+				dims.set(1, firstdim);
+			}
+		}
+		else{
+			if( !IsFinite( arg[1].asDouble() ) )
+				throw Exception("Illegal size.");
+			firstdim = arg[1].get(1).asIndexScalar();
+			if( IsFinite( arg[1].get(2).asDouble() ) )
+				nMaxRead = arg[1].get(1).asIndexScalar()*arg[1].get(2).asIndexScalar();
+		}
+	}
+
+	QString frmt = format.asString();
+
+	std::vector<char> buff( frmt.length()+1 ); //vectors are contiguous in memory. we'll use it instead of char[]
+	strncpy(&buff[0], frmt.toStdString().c_str(), frmt.length()+1 );
+
+	// Search for the start of a format subspec
+	char *dp = &buff[0];
+	char *np;
+	char sv;
+	char dum;
+	bool shortarg;
+	bool doublearg;
+	bool stringarg = true;
+	int nNumRead = 0;
+	int nCharRead = 0;
+
+	// Scan the string
+	ArrayVector values;
+	while( !fp->atEnd() && ( nMaxRead < 0 || nRead < nMaxRead ) ){
+		if ( !(*dp) ) //rewind the format
+			dp = &buff[0];
+		np = dp;
+		while ((*dp) && (*dp != '%')) dp++;
+		// Print out the formatless segment
+		sv = *dp;
+		*dp = 0;
+		for (int i=0;i<strlen(np);i++) 
+			fp->getChar(&dum);
+
+		if (fp->atEnd())
+			values.push_back(Array(Double));
+		*dp = sv;
+		// Process the format spec
+		if (*dp) {
+			np = validateScanFormatSpec(dp+1);
+			if (!np)
+				throw Exception("erroneous format specification " + QString(dp));
+			else {
+				if (*(np-1) == '%') {
+					fp->getChar(&dum);
+					dp+=2;
+				} else {
+					shortarg = false;
+					doublearg = false;
+					if (*(np-1) == 'h') {
+						shortarg = true;
+						np++;
+					} else if (*(np-1) == 'l') {
+						doublearg = true;
+						np++;
+					} 
+					sv = *np;
+					*np = 0;
+					switch (*(np-1)) {
+					  case 'd':
+					  case 'i':
+						  if (fp->atEnd())
+							  values.push_back(Array::scalarConstructor(Double));
+						  else {
+							  values.push_back(Array(QFileReadInteger(fp,0)));
+							  stringarg = false; ++nNumRead; ++nRead;
+						  }
+						  break;
+					  case 'o':
+						  if (fp->atEnd())
+							  values.push_back(Array::scalarConstructor(Double));
+						  else {
+							  values.push_back(Array(QFileReadInteger(fp,8)));
+							  stringarg = false; ++nNumRead; ++nRead;
+						  }
+						  break;
+					  case 'u':
+						  if (fp->atEnd())
+							  values.push_back(Array::scalarConstructor(Double));
+						  else {
+							  values.push_back(Array(QFileReadInteger(fp,10)));
+							  stringarg = false; ++nNumRead; ++nRead;
+						  }
+						  break;
+					  case 'x':
+					  case 'X':
+						  if (fp->atEnd())
+							  values.push_back(Array::scalarConstructor(Double));
+						  else {
+							  values.push_back(Array(QFileReadInteger(fp,16)));
+							  stringarg = false; ++nNumRead; ++nRead;
+						  }
+						  break;
+					  case 'c':
+						  if (fp->atEnd())
+							  values.push_back(Array::scalarConstructor(Double));
+						  else {
+							  values.push_back(Array(QFileReadInteger(fp,10)));
+							  stringarg = false; ++nNumRead; ++nRead;
+						  }
+						  break;
+					  case 'e':
+					  case 'E':
+					  case 'f':
+					  case 'F':
+					  case 'g':
+					  case 'G':
+						  if (fp->atEnd())
+							  values.push_back(Array::scalarConstructor(Double));
+						  else {
+							  values.push_back(Array(QFileReadFloat(fp)));
+							  stringarg = false; ++nNumRead; ++nRead;
+						  }
+						  break;
+					  case 's':
+						  if (fp->atEnd())
+							  values.push_back(Array::scalarConstructor(Double));
+						  else {
+
+							  QByteArray r;
+							  char t;
+							  while (fp->getChar(&t) && !isspace(t))
+								  r.push_back(t);
+							  fp->ungetChar(t);
+							  values.push_back(Array(QTextCodec::codecForLocale()->
+								  toUnicode(r)));
+							  break;
+						  }
+					  default:
+						  errormsg = Array(QString("illegal format"));
+						  goto exit;
+					}
+					*np = sv;
+					dp = np;
+				}
+			}
+		}
+	}
+exit:
+	ArrayVector ret; 
+	ret.push_front( Array( static_cast<double>(fp->pos()) ) );
+	ret.push_front( errormsg );
+	ret.push_front( Array( static_cast<double>(nRead) ) );
+
+	int nVecElem; //number of elements in the output vector. Unfortunately may be different from the number of elements we read in.
+	nVecElem = nNumRead + nCharRead;
+	//the tricky case: due to string conversion we actually have more data than we expected. 
+	if( firstdim > 0 && (((int)(nNumRead + nCharRead)) % ((int) firstdim ))){
+		nVecElem = (((int)(nNumRead + nCharRead)) / ((int) firstdim )) * firstdim + firstdim;
+	}
+
+	if( !stringarg ){ //At least one of the read values was numerical. Convert strings to numbers.
+		ret.push_front( Array( nVecElem ) );
+		double *data = (double*) ret[0].getVoidPointer();
+
+		for( int i=0; i<values.size(); i++ ){
+			if( values[i].isString() ){
+				const char* strdata = (const char*) values[i].getConstVoidPointer();
+				for( int j=0; j < values[i].length(); j++ ){
+					*(data++) = strdata[j];
+				}
+			}
+			else{
+				*(data++) = values[i].asDouble();
+			}
+		}
+	}
+	else{ //all string input
+		QString outstring;
+
+		for( int i=0; i<values.size(); i++ ){
+			if( values[i].isString() ){
+				outstring.append( values[i].asString() );
+			}
+			else{
+				throw Exception("Internal Error in sscanf.");
+			}
+		}
+		ret[0] = Array( outstring );
+	}
+	if( firstdim > 0 ){
+		NTuple dim( firstdim, nVecElem / firstdim ); 
+		ret[0].reshape( dim );
+	}
+	else if( !stringarg ){
+		NTuple dim( nNumRead + nCharRead, 1 ); 
+		ret[0].reshape( dim );
+	}
+	return ret;
+}
+
 //!
 //@Module SSCANF Formated String Input Function (C-Style)
 //@@Section IO
@@ -1119,8 +1366,8 @@ ArrayVector Str2NumFunction(int nargout, const ArrayVector& arg) {
 //outputs varargout
 //!
 ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
-  if ((arg.size() != 2) || (!arg[0].isString()) || (!arg[1].isString()))
-    throw Exception("sscanf takes two arguments, the text and the format string");
+  if ((arg.size() > 3) || (arg.size() < 2) || (!arg[0].isString()) || (!arg[1].isString()))
+    throw Exception("incorrect number or types or the parameters");
   QTemporaryFile fp;
   if (!fp.open())
     throw Exception("sscanf was unable to open a temp file (and so it won't work)");
@@ -1128,5 +1375,11 @@ ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
   out << arg[0].asString();
   out.seek(0);
   fp.seek(0);
-  return ScanfFunction(&fp,arg[1].asString());
+
+  ArrayVector helper_arg; 
+  helper_arg << arg[1];
+  if( arg.size() == 3 )
+      helper_arg << arg[2];
+
+  return ScanfHelperFunction(&fp,helper_arg);
 }

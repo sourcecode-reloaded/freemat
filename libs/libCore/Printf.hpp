@@ -7,7 +7,5 @@
 #include <QFile>
 
 QString ConvertEscapeSequences(const QString &src);
-QString XprintfFunction(int nargout, const ArrayVector& arg);
 ArrayVector PrintfFunction(int nargout, const ArrayVector& arg, Interpreter* eval);
-ArrayVector ScanfFunction(QFile *fp, QString format);
 #endif

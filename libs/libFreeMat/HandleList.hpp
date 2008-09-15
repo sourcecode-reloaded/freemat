@@ -23,6 +23,7 @@
 #include <QMutex>
 #include <QMutexLocker>
 #include "Exception.hpp"
+#include <QFile>
 
 template<class T>
 class HandleList {
@@ -67,4 +68,11 @@ public:
     handles.erase(handle-1);
   }
 };
+
+class FilePtr {
+public:
+  QFile *fp;
+  bool swapflag;
+};
+
 #endif

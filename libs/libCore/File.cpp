@@ -7,12 +7,6 @@
 #include "Algorithms.hpp"
 #include "Utils.hpp"
 
-class FilePtr {
-public:
-  QFile *fp;
-  bool swapflag;
-};
-  
 HandleList<FilePtr*> fileHandles;
 
 static bool init = false;
@@ -717,59 +711,7 @@ ArrayVector FgetlineFunction(int nargout, const ArrayVector& arg) {
     return ArrayVector(Array(ReadQStringFromFile(fptr->fp)));
 }
 
-//!
-//@Module FPRINTF Formated File Output Function (C-Style)
-//@@Section IO
-//@@Usage
-//Prints values to a file.  The general syntax for its use is
-//@[
-//  fprintf(fp,format,a1,a2,...).
-//@]
-//or, 
-//@[
-//  fprintf(format,a1,a2,...).
-//@]
-//Here @|format| is the format string, which is a string that
-//controls the format of the output.  The values of the variables
-//@|ai| are substituted into the output as required.  It is
-//an error if there are not enough variables to satisfy the format
-//string.  Note that this @|fprintf| command is not vectorized!  Each
-//variable must be a scalar.  The value @|fp| is the file handle.  If @|fp| is omitted,
-//file handle @|1| is assumed, and the behavior of @|fprintf| is effectively equivalent to @|printf|. For
-//more details on the format string, see @|printf|.
-//@@Examples
-//A number of examples are present in the Examples section of the @|printf| command.
-//@@Signature
-//sfunction fprintf FprintfFunction
-//inputs varargin
-//outputs none
-//!
- ArrayVector FprintfFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  if (arg.size() == 0)
-    throw Exception("fprintf requires at least one (string) argument");
-  ArrayVector argCopy(arg);
-  int handle = 1;
-  if (arg.size() > 1) {
-    Array tmp(arg[0]);
-    if (tmp.isScalar()) {
-      handle = tmp.asInteger();
-      argCopy.pop_front();
-    }
-    else {
-      handle=1;
-    }
-  }
-  Array format(argCopy[0]);
-  if (!format.isString())
-    throw Exception("fprintf format argument must be a string");
-  if (handle == 1)
-    return PrintfFunction(nargout,argCopy,eval);
-  FilePtr *fptr=(fileHandles.lookupHandle(handle+1));
-  WriteQStringToFile(fptr->fp,ConvertEscapeSequences(XprintfFunction(nargout,argCopy)));
-  return ArrayVector();
-}
-
-
+ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg );
 //!
 //@Module FSCANF Formatted File Input Function (C-Style)
 //@@Section IO
@@ -793,5 +735,11 @@ ArrayVector FscanfFunction(int nargout, const ArrayVector& arg) {
     throw Exception("fscanf takes two arguments, the file handle and the format string");
   int handle = arg[0].asInteger();
   FilePtr *fptr=(fileHandles.lookupHandle(handle+1));
-  return ScanfFunction(fptr->fp,arg[1].asString());
+
+  ArrayVector helper_arg; 
+  helper_arg << arg[1];
+  if( arg.size() == 3 )
+      helper_arg << arg[2];
+
+  return ScanfHelperFunction(fptr->fp, helper_arg);
 }
