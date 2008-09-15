@@ -284,6 +284,9 @@ void MatIO::putDataElement(const Array &x) {
       unsigned short code = xdat.get(i).unicode();
       WriteData(&code,2);
     }
+  } else if (x.isScalar()) {
+    Array xt(x.asDenseArray());
+    WriteData(xt.getConstVoidPointer(),ByteCount);
   } else
     WriteData(x.getConstVoidPointer(),ByteCount);
   Align64Bit();
