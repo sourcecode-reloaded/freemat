@@ -27,6 +27,7 @@ function helpgen(source_path,test_only)
                      testwriter});
     skipexec = false;
   end
+
   file_list = {};
   file_list = [file_list;helpgen_rdir([source_path,'/libs'])];
   file_list = [file_list;helpgen_rdir([source_path,'/src'])];
