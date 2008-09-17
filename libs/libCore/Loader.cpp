@@ -271,19 +271,11 @@ ArrayVector ThreadKillFunction(int, const ArrayVector&);
 ArrayVector ThreadFreeFunction(int, const ArrayVector&);
 ArrayVector ClcFunction(int, const ArrayVector&);
 ArrayVector ProfilerFunction(int, const ArrayVector&);
-ArrayVector DNAUPFunction(int nargout, const ArrayVector& arg);
-ArrayVector DNEUPFunction(int nargout, const ArrayVector& arg);
-ArrayVector ZNAUPFunction(int nargout, const ArrayVector& arg);
-ArrayVector ZNEUPFunction(int nargout, const ArrayVector& arg);
 
 
 void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("abs",AbsFunction,1,1,"x",NULL);
   context->addSpecialFunction("pcode",PCodeFunction,-1,0,NULL);
-  context->addFunction("dnaup",DNAUPFunction,-1,-1,NULL);
-  context->addFunction("dneup",DNEUPFunction,-1,-1,NULL);
-  context->addFunction("znaup",ZNAUPFunction,-1,-1,NULL);
-  context->addFunction("zneup",ZNEUPFunction,-1,-1,NULL);
   context->addFunction("permute",PermuteFunction,2,1,"x","p",NULL);
   context->addFunction("repmat",RepMatFunction,3,1,"x","rows","cols",NULL);
   context->addFunction("diag",DiagFunction,2,1,"x","n",NULL);
@@ -323,8 +315,8 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("j",IFunction,0,1,NULL);
   context->addFunction("pi",PiFunction,0,1,NULL);
   context->addFunction("e",EFunction,0,1,NULL);
-  context->addFunction("eps",EpsFunction,0,1,NULL);
-  context->addFunction("feps",FepsFunction,0,1,NULL);
+  context->addFunction("eps",EpsFunction,-1,1,NULL);
+  context->addFunction("feps",FepsFunction,-1,1,NULL);
   context->addFunction("true",TrueFunction,0,1,NULL);
   context->addFunction("false",FalseFunction,0,1,NULL);
   context->addSpecialFunction("jitcontrol",JITControlFunction,1,1,"flag",NULL);

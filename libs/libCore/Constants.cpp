@@ -62,10 +62,6 @@
 //function inf InfFunction
 //inputs none
 //outputs y
-//@@Signature
-//function Inf InfFunction
-//inputs none
-//outputs y
 //!
 ArrayVector InfFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(Array(Inf()));
@@ -224,15 +220,16 @@ ArrayVector EFunction(int nargout, const ArrayVector& arg) {
 //1.0+eps
 //eps(1000.)
 //@>
-//@@Signature
-//function eps EpsFunction
-//inputs none
-//outputs y
+//@{ test_eps1.m
 //b = eps(1.);
 //c = eps('single');
 //d = eps(single(1.));
 //test_val = test(a==b && c==d);
 //@}
+//@@Signature
+//function eps EpsFunction
+//inputs varargin
+//outputs y
 //!
 ArrayVector EpsFunction(int nargout, const ArrayVector& arg) {
     bool isDouble = true;
