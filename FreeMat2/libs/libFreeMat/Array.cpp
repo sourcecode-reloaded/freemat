@@ -115,6 +115,8 @@ SharedObject::~SharedObject() {
 }
 
 Array::Array(DataClass t, const NTuple &dims) {
+  if (!dims.isValid())
+    throw Exception("Illegal size for array " + dims.toString());
   m_type.Class = t;
   m_type.Complex = 0;
   m_type.Sparse = 0;
