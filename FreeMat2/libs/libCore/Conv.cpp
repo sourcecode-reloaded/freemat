@@ -200,6 +200,8 @@ ArrayVector Conv2Function(int nargout, const ArrayVector& arg) {
     throw Exception("conv2 requires at least 2 arguments");
   Array X(arg[0]);
   Array Y(arg[1]);
+  if (X.isEmpty() && Y.isEmpty())
+    return ArrayVector(EmptyConstructor());
   if (((X.dataClass() == Float) && (Y.dataClass() == Float)) ||
       ((X.dataClass() == Float) && (Y.dataClass() == Double)) ||
       ((X.dataClass() == Double) && (Y.dataClass() == Float))) {
