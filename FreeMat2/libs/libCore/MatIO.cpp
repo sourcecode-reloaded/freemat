@@ -81,7 +81,7 @@ MatTypes ToMatType(DataClass x) {
   case UInt64:
     return miUINT64;
   case StringArray:
-    return miINT16;
+    return miUTF16;
   }
 }
 
@@ -461,7 +461,7 @@ void MatIO::putStructArray(const Array &x) {
   Array fieldNameLength = Array(int32(maxlen));
   putDataElement(fieldNameLength);
   Array fieldNameText(Transpose(StringArrayFromStringVector(fnames)));
-  putDataElement(fieldNameText);
+  putDataElement(fieldNameText.toClass(Int8));
   for (int i=0;i<fieldNameCount;i++) {
     const BasicArray<Array> &rp(x.constStructPtr()[i]);
     for (index_t j=1;j<=rp.length();j++)
@@ -544,7 +544,7 @@ void MatIO::putArraySpecific(const Array &x, Array aFlags,
 			     QString name, mxArrayTypes arrayType) {
   putDataElement(aFlags);
   putDataElement(ConvertNTupleToArray(x.dimensions()).toClass(Int32));
-  putDataElement(Array(name));
+  putDataElement(Array(name).toClass(Int8));
   if (x.dataClass() == Bool)
     putNumericArray(x.toClass(Int32));
   else if (isNormalClass(arrayType))
@@ -570,7 +570,7 @@ void MatIO::putNumericArray(const Array &x) {
 }
 
 Array MatIO::getArray(bool &atEof, QString &name, bool &match, bool &isGlobal) {
-  if (m_fp->atEnd()) {
+  if (!m_compressed_data && m_fp->atEnd()) {
     atEof = true;
     return Array();
   }
@@ -612,7 +612,8 @@ Array MatIO::getArray(bool &atEof, QString &name, bool &match, bool &isGlobal) {
   if (dims.dataClass() != Int32)
     throw Exception("Corrupted MAT file - dimensions array");
   NTuple dm(ConvertArrayToNTuple(dims));
-  Array namearray(getDataElement().toClass(StringArray));
+  Array namedata(getDataElement());
+  Array namearray(namedata.toClass(StringArray));
   QString tname = namearray.asString();
   match = true;
   name = tname;
