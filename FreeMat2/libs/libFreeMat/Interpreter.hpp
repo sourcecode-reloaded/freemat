@@ -301,6 +301,11 @@ public:
   inline int getQuietLevel() {return m_quietlevel;}
   inline void setQuietLevel(int t) {m_quietlevel = t;}
   /**
+   * Manipulate the try/catch state
+   */
+  inline bool getTryCatchActive() {return intryblock;}
+  inline void setTryCatchActive(bool t) {intryblock = t;}
+  /**
    * Manipulate the diary state
    */
   inline bool getDiaryState() {return m_diaryState;}

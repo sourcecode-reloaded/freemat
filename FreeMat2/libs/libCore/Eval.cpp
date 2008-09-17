@@ -108,6 +108,8 @@ static ArrayVector EvalTryFunction(int nargout, const ArrayVector& arg, Interpre
     bool autostop;
     autostop = eval->AutoStop();
     eval->setAutoStop(false);
+    bool save_trycatch_flag(eval->getTryCatchActive());
+    eval->setTryCatchActive(true);
     try {
       eval->getContext()->bypassScope(popSpec);
       eval->evaluateString(try_buf,true);
@@ -118,6 +120,7 @@ static ArrayVector EvalTryFunction(int nargout, const ArrayVector& arg, Interpre
       eval->evaluateString(catch_buf,false);
       retval = RetrieveCallVars(eval,nargout);
     }
+    eval->setTryCatchActive(save_trycatch_flag);
     eval->setAutoStop(autostop);
     return retval;
   } else {
@@ -128,6 +131,8 @@ static ArrayVector EvalTryFunction(int nargout, const ArrayVector& arg, Interpre
     bool autostop;
     autostop = eval->AutoStop();
     eval->setAutoStop(false);
+    bool save_trycatch_flag(eval->getTryCatchActive());
+    eval->setTryCatchActive(true);
     try {
       eval->getContext()->bypassScope(popSpec);
       eval->evaluateString(try_buf,true);
@@ -136,6 +141,7 @@ static ArrayVector EvalTryFunction(int nargout, const ArrayVector& arg, Interpre
       eval->getContext()->restoreBypassedScopes();
       eval->evaluateString(catch_buf,false);
     }
+    eval->setTryCatchActive(save_trycatch_flag);
     eval->setAutoStop(autostop);
     return ArrayVector();
   }
