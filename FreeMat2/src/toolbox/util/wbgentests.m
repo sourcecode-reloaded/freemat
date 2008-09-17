@@ -4,7 +4,9 @@ function wbgentests(fname_in,fname_out)
 load(fname_in)
 outputs = {};
 for ndx=1:size(recs,1)
-  printf('Processing test %d of %d...\r',ndx,size(recs,1));
+  if (rem(ndx,1000)==0)
+    fprintf('Processing test %d of %d...\r',ndx,size(recs,1));
+  end
   rec = recs(ndx,:);
   if (rec(1) > 0)
     x1 = inputs{rec(1)};
