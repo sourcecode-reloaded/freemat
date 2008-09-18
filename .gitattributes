@@ -925,4 +925,5 @@ FreeMat2/tests/parse/bad8.m svn_keywords=Author+Date+Id+Revision svn_eol_002dsty
 FreeMat2/tests/parse/bad9.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/timing/timetest2.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/timing/timetest3.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/tests/wb_testmatrix.mat svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/tools/freemat_nsi.in svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
