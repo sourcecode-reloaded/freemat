@@ -883,6 +883,7 @@ FreeMat2/tests/core/testeq.m svn_keywords=Author+Date+Id+Revision svn_eol_002dst
 FreeMat2/tests/core/time01.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/time02.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/tests/core/time03.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+FreeMat2/tests/matcompat/matlab7_wb_test_results.mat svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/tests/matcompat/test_file_v6.mat svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/tests/matcompat/tough.mat svn_mime_002dtype=application%2Foctet-stream
 FreeMat2/tests/matcompat/tough_with_fp.mat svn_mime_002dtype=application%2Foctet-stream
