@@ -31,9 +31,6 @@
 % Licensed under the GPL
 
 function y = atanh(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('atanh expects a single, numeric input');
-  end
   if (isinf(x))
     y = pi/2*i;
   else

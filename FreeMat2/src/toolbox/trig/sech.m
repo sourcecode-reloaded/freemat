@@ -28,8 +28,5 @@
 % Licensed under the GPL
 
 function y = sech(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('sech expects a numeric input');
-  end
   y = 1.0 ./cosh(x);
   

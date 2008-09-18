@@ -25,7 +25,4 @@
 % Licensed under the GPL
 
 function y = acscd(x)
-  if (nargin == 0 || ~isnumeric(x) || ~isreal(x))
-    error('acscd expects a real numeric input');
-  end
   y = rad2deg(acsc(x));

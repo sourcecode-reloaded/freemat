@@ -28,8 +28,5 @@
 % Licensed under the GPL
 
 function y = sinh(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('sinh expects a numeric input');
-  end
   y = (exp(x)-exp(-x))/2;
   

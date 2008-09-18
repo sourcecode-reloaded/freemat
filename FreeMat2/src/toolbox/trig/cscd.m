@@ -16,7 +16,4 @@
 % Licensed under the GPL
 
 function y = cscd(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('cscd expects a numeric input');
-  end
   y = csc(deg2rad(x));

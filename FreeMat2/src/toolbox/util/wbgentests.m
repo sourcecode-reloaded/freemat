@@ -18,7 +18,7 @@ for ndx=1:size(recs,1)
   texpr = exprs{rec(4)};
   texpr(end) = ';';
   eval(texpr,'error_flag = 1;');
-  recs(ndx,5) = error_flag;
+  rec(5) = error_flag;
   if (error_flag == 0)
     if (rec(3) == 1)
       outpod = {y1};

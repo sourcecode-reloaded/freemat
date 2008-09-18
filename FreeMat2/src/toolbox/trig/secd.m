@@ -16,7 +16,4 @@
 % Licensed under the GPL
 
 function y = secd(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('secd expects a numeric input');
-  end
   y = sec(deg2rad(x));

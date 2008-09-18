@@ -28,8 +28,5 @@
 % Licensed under the GPL
 
 function y = cosh(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('cosh expects a numeric input');
-  end
   y = (exp(x)+exp(-x))/2;
   

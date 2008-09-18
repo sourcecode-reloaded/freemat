@@ -21,7 +21,4 @@
 % Licensed under the GPL
 
 function y = cotd(x)
-  if (nargin == 0 || ~isnumeric(x) || ~isreal(x))
-    error('cotd expects a real numeric input');
-  end
   y = cot(deg2rad(x));

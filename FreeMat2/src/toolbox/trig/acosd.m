@@ -25,7 +25,4 @@
 % Licensed under the GPL
 
 function y = acosd(x)
-  if (nargin == 0 || ~isnumeric(x) || ~isreal(x))
-    error('acosd expects a real numeric input');
-  end
   y = rad2deg(acos(x));

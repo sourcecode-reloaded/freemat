@@ -30,8 +30,5 @@
 % Licensed under the GPL
 
 function y = acoth(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('acoth expects a single, numeric input');
-  end
   y = atanh(1 ./ x);
   

@@ -28,9 +28,6 @@
 % Licensed under the GPL
 
 function y = tanh(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('tanh expects a numeric input');
-  end
   y = sinh(x)./cosh(x);
   
   

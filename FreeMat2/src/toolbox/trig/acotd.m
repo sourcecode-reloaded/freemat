@@ -17,9 +17,6 @@
 % Licensed under the GPL
 
 function y = acotd(x)
-  if (nargin == 0 || ~isnumeric(x) || ~isreal(x))
-    error('acot expects a single, real numeric input');
-  end
   y = rad2deg(acot(x));
   
   

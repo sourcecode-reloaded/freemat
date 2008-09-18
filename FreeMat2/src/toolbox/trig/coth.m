@@ -29,8 +29,5 @@
 % Licensed under the GPL
 
 function y = coth(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('coth expects a numeric input');
-  end
   y = 1.0 ./ tanh(x);
   

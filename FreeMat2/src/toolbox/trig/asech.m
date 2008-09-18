@@ -30,8 +30,5 @@
 % Licensed under the GPL
 
 function y = asech(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('asech expects a single, numeric input');
-  end
   y = acosh(1 ./ x);
   

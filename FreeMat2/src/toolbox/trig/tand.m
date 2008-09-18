@@ -21,7 +21,4 @@
 % Licensed under the GPL
 
 function y = tand(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('tand expects a numeric input');
-  end
   y = tan(deg2rad(x));

@@ -31,8 +31,5 @@
 % Licensed under the GPL
 
 function y = acosh(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('acosh expects a single, numeric input');
-  end
   y = log(x+(x.*x-1).^(0.5));
   

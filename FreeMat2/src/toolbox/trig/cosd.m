@@ -25,7 +25,4 @@
 % Licensed under the GPL
 
 function y = cosd(x)
-  if (nargin == 0 || ~isnumeric(x) || ~isreal(x))
-    error('cosd expects a numeric input');
-  end
   y = cos(deg2rad(x));

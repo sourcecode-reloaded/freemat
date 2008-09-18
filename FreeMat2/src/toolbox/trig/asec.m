@@ -31,8 +31,5 @@
 % Licensed under the GPL
 
 function y = asec(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('asec expects a single, numeric input');
-  end
   y = acos(1 ./ x);
   

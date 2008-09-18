@@ -29,8 +29,5 @@
 % Licensed under the GPL
 
 function y = csch(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('csch expects a numeric input');
-  end
   y = 1.0 ./ sinh(x);
   

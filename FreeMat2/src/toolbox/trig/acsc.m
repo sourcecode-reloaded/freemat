@@ -31,8 +31,5 @@
 % Licensed under the GPL
 
 function y = acsc(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('acsc expects a single, numeric input');
-  end
   y = asin(1 ./ x);
   

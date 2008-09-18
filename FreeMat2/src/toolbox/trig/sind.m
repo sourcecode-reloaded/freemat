@@ -25,7 +25,4 @@
 % Licensed under the GPL
 
 function y = sind(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('sind expects a numeric input');
-  end
   y = sin(deg2rad(x));

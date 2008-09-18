@@ -29,8 +29,5 @@
 % Licensed under the GPL
 
 function y = acot(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('acot expects a single, numeric input');
-  end
   y = atan(1.0 ./ x);
   

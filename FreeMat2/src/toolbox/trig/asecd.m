@@ -25,7 +25,4 @@
 % Licensed under the GPL
 
 function y = asecd(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('asecd expects a numeric input');
-  end
   y = rad2deg(asec(x));

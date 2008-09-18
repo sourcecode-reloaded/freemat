@@ -21,7 +21,4 @@
 % Licensed under the GPL
 
 function y = atand(x)
-  if (nargin == 0 || ~isnumeric(x) || ~isreal(x))
-    error('atand expects a real numeric input');
-  end
   y = rad2deg(atan(x));

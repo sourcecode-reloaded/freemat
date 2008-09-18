@@ -31,9 +31,5 @@
 % Licensed under the GPL
 
 function y = asinh(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('asinh expects a single, numeric input');
-  end
-  if (isinttype(x)) x = double(x); end
   y = log(x+(x.*x+1).^(0.5));
   
