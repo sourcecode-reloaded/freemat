@@ -403,7 +403,7 @@ Array Real(const Array &A) {
   if (A.isReferenceType()) return A;
   switch (A.dataClass()) {
   default: throw Exception("unhandled type for real");
-    MacroExpandCasesSimple(MacroReal);
+    MacroExpandCasesNoCell(MacroReal);
   }
 }
 
@@ -427,7 +427,7 @@ Array Imag(const Array &A) {
     throw Exception("unhandled type for imag");
   switch (A.dataClass()) {
   default: throw Exception("unhandled type for imag");
-    MacroExpandCasesSimple(MacroImag);
+    MacroExpandCasesNoCell(MacroImag);
   }
 }
 

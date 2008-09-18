@@ -38,7 +38,9 @@
 ArrayVector RealFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("real function requires 1 argument");
-  return ArrayVector(Real(arg[0]));
+  Array arg0(arg[0]);
+  if (arg0.isString()) arg0 = arg0.toClass(Double);
+  return ArrayVector(Real(arg0));
 }
 
 //!
@@ -79,6 +81,8 @@ ArrayVector RealFunction(int nargout, const ArrayVector& arg) {
 ArrayVector ImagFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("imag function requires 1 argument");
-  Array arg0(arg[0]); arg0.forceComplex();
+  Array arg0(arg[0]); 
+  if (arg0.isString()) arg0 = arg0.toClass(Double);
+  arg0.forceComplex();
   return ArrayVector(Imag(arg0));
 }
