@@ -27,8 +27,10 @@
 
 using namespace std;
 
-#define CURSORBIT 1
-#define SELECTBIT 2
+#define CURSORBIT   0x01
+#define SELECTBIT   0x02
+#define TEXTBIT     0x04 //to mark text region
+
 class tagChar
 {
  public:
@@ -44,6 +46,9 @@ class tagChar
   void clearCursor() {flags &= ~CURSORBIT;};
   void clearSelection() {flags &= ~SELECTBIT;};
   void setSelection() {flags |= SELECTBIT;};
+  void setHasText() {flags |= TEXTBIT;};
+  void clearHasText() {flags &= ~TEXTBIT;};
+  bool hasText() {return(flags & TEXTBIT);};
   char mflags() const {return flags;};
   bool operator == (const tagChar& b) {return (v==b.v) && (flags==b.flags);};
 };
@@ -65,9 +70,13 @@ class QTTerm : public QAbstractScrollArea {
   QTimer *m_timer_blink;
   bool blinkEnable;
   bool m_blink_skip;
+  int preSelectionStart;
+  int preSelectionStop;
   int selectionStart;
   int selectionStop;
   int scrollback;
+  bool isCursorVisible;
+  bool hasSelection;
 public:
   QTTerm();
   QString getSelectionText();
@@ -88,6 +97,7 @@ protected:
   void resizeEvent(QResizeEvent *e);
   void focusOutEvent(QFocusEvent *e);
   void focusInEvent(QFocusEvent *e);
+  void mouseDoubleClickEvent( QMouseEvent *e );
   void mousePressEvent( QMouseEvent *e );
   void mouseMoveEvent( QMouseEvent *e );
   void mouseReleaseEvent( QMouseEvent *e );
@@ -111,6 +121,7 @@ public slots:
 signals:
   void OnChar(int c);
   void SetTextWidth(int);
+  void PlaceCursorDXDY(int dx, int dy);
 };
 
 #endif

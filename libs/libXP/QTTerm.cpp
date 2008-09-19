@@ -37,8 +37,10 @@ QTTerm::QTTerm() {
   QObject::connect(m_timer_blink, SIGNAL(timeout()), this, SLOT(blink()));
   QSettings settings("FreeMat", "FreeMat");
   scrollback = settings.value("console/scrollback",5000).toInt();
+  isCursorVisible = true;
   m_timer_blink->start(settings.value("console/blinkspeed",1000).toInt());
   fnt = QFont("Courier",10);
+  hasSelection = false;
 }
 
 int QTTerm::getScrollbackLimit() {
@@ -72,8 +74,13 @@ void QTTerm::ensureCursorVisible() {
   int cscroll = verticalScrollBar()->value();
   if ((cscroll < cursor_y) && 
       (cursor_y < (cscroll+m_term_height-1))) return;
-  int minval = cursor_y-m_term_height+1;
-  verticalScrollBar()->setValue(minval);
+  // Make it visible only when it was previously visible,
+  // this allows user to scroll upward while 
+  // new texts are being printing
+  if (isCursorVisible) {
+    int minval = cursor_y-m_term_height+1;
+    verticalScrollBar()->setValue(minval);
+  }
 }
 
 void QTTerm::focusOutEvent(QFocusEvent *e) {
@@ -92,25 +99,31 @@ void QTTerm::focusInEvent(QFocusEvent *e) {
 
 void QTTerm::setChar(char t, bool flush) {
   if (t == '\r') {
-    MoveBOL();
+//    MoveBOL();
     return;
   }
   if (t == '\n') {
+    buffer[cursor_y].data[cursor_x].v = t;
     nextLine();
     return;
   }
+
   blinkEnable = false;
   buffer[cursor_y].data[cursor_x].clearCursor();
-  buffer[cursor_y].data[cursor_x++].v = t;
+  buffer[cursor_y].data[cursor_x].v = t;
+  buffer[cursor_y].data[cursor_x].setHasText();
+  cursor_x++;
   buffer[cursor_y].data[cursor_x].setCursor();
-  if (cursor_x >= m_term_width) {
+
+ if (cursor_x >= m_term_width) {
     nextLine(); 
   } else {
     if (flush) {
       ensureCursorVisible();
-      viewport()->update(QRect(((cursor_x)-1)*m_char_w,
-			       (cursor_y-verticalScrollBar()->value())*m_char_h,
-			       m_char_w*2,m_char_h));
+//      viewport()->update(QRect(((cursor_x)-2)*m_char_w,
+//			       (cursor_y-verticalScrollBar()->value())*m_char_h,
+//			       m_char_w*3,m_char_h));
+      viewport()->update();
     }
   }
   blinkEnable = true;
@@ -184,17 +197,18 @@ void QTTerm::MoveRight() {
 }
 
 void QTTerm::ClearEOL() {
-  for (int j=cursor_x;j<m_term_width-1;j++) {
+  for (int j=cursor_x;j<m_term_width;j++) {
     buffer[cursor_y].data[j].v = ' ';
     buffer[cursor_y].data[j].flags = 0;
   }
+  buffer[cursor_y].data[cursor_x].setCursor();
   viewport()->update();
 }
 
 void QTTerm::ClearEOD() {
   ClearEOL();
   for (int i=cursor_y+1;i<buffer.size();i++) {
-    for (int j=0;j<m_term_width-1;j++) {
+    for (int j=0;j<m_term_width;j++) {
       buffer[i].data[j].v = ' ';
       buffer[i].data[j].flags = 0;
     }
@@ -240,10 +254,54 @@ void QTTerm::drawLine(int linenum, QPainter *e, int yval) {
   drawFragment(e,outd,gflags,yval,frag_start);
 }
 
+void QTTerm::mouseDoubleClickEvent( QMouseEvent *e ) {
+  int j;
+  if (e->buttons() == Qt::LeftButton) {
+    // clear previous selection
+    clearSelection();
+    int clickcol = e->x()/m_char_w;
+    int clickrow = e->y()/m_char_h;
+    for (j=clickcol;j>0;j--) {
+      if (!buffer[clickrow].data[j].hasText())
+        break;
+      if ((buffer[clickrow].data[j].v >='A' && buffer[clickrow].data[j].v <='Z') || 
+          (buffer[clickrow].data[j].v >='a' && buffer[clickrow].data[j].v <='z') ||
+          (buffer[clickrow].data[j].v >='0' && buffer[clickrow].data[j].v <='9') )
+        buffer[clickrow].data[j].setSelection();
+      else
+        break;
+    }
+    selectionStart = qMax(0,verticalScrollBar()->value()*m_term_width + j+1 + clickrow*m_term_width);
+    selectionStop = selectionStart;
+    for (j=clickcol;j<m_term_width;j++) {
+      if (!buffer[clickrow].data[j].hasText())
+        break;
+      if ((buffer[clickrow].data[j].v >='A' && buffer[clickrow].data[j].v <='Z') || 
+          (buffer[clickrow].data[j].v >='a' && buffer[clickrow].data[j].v <='z') ||
+          (buffer[clickrow].data[j].v >='0' && buffer[clickrow].data[j].v <='9') ||
+          (buffer[clickrow].data[j].v =='_') )
+        buffer[clickrow].data[j].setSelection();
+      else
+        break;
+    }
+    selectionStop = qMax(0,verticalScrollBar()->value()*m_term_width + j + clickrow*m_term_width);
+    if (selectionStart > selectionStop) 
+      qSwap(selectionStop,selectionStart);
+    if (selectionStart != selectionStop)
+      hasSelection = true;
+    // update to the new one
+    preSelectionStart = selectionStart;
+    preSelectionStop  = selectionStop;
+    viewport()->update();
+    // move cursor to the end of selection
+    emit PlaceCursorDXDY(j-cursor_x, clickrow-cursor_y);
+  }
+}
+
 void QTTerm::mousePressEvent( QMouseEvent *e ) {
   // Get the x and y coordinates of the mouse click - map that
   // to a row and column
-  if (e->buttons() == Qt::MidButton) { //chuong 2008-01-28
+  if (e->buttons() == Qt::MidButton) { 
     QClipboard *cb = QApplication::clipboard();
     QString SelectedText = cb->text(QClipboard::Selection);
     SelectedText.remove("--> "); //remove FreeMat prompts in selected text
@@ -255,19 +313,34 @@ void QTTerm::mousePressEvent( QMouseEvent *e ) {
   else if (e->buttons() == Qt::LeftButton) {
     int clickcol = e->x()/m_char_w;
     int clickrow = e->y()/m_char_h;
-    selectionStart = verticalScrollBar()->value()*m_term_width + clickcol + clickrow*m_term_width;
-    selectionStart = qMax(0,selectionStart);
+    // place cursor at click point, if possible
+    emit PlaceCursorDXDY(clickcol-cursor_x, clickrow-cursor_y);
+    
+    selectionStart = qMax(0,verticalScrollBar()->value()*m_term_width + clickcol + clickrow*m_term_width);
     selectionStop = selectionStart;
   }
 }
 
 void QTTerm::clearSelection() {
+  if (!hasSelection)
+    return;
   // clear the selection bits
-  for (int i=0;i<buffer.size();i++) {
+  int lSelectionStart = preSelectionStart;
+  int lSelectionStop  = preSelectionStop;
+  if (lSelectionStart > lSelectionStop) 
+    qSwap(lSelectionStop,lSelectionStart);
+  int sel_row_start = lSelectionStart/m_term_width;
+  int sel_row_stop = lSelectionStop/m_term_width;
+  sel_row_start = qMin(sel_row_start,buffer.size()-1);
+  sel_row_stop = qMin(sel_row_stop,buffer.size()-1);
+  for (int i=sel_row_start;i<=sel_row_stop;i++) {
     for (int j=0;j<maxlen;j++) {
+      if (buffer[i].data[j].noflags())
+        break;
       buffer[i].data[j].clearSelection();
     }
   }
+  hasSelection = false;
 }
 
 void QTTerm::mouseMoveEvent( QMouseEvent *e ) {
@@ -283,15 +356,23 @@ void QTTerm::mouseMoveEvent( QMouseEvent *e ) {
   // to a row and column
   int clickcol = x/m_char_w;
   int clickrow = y/m_char_h;
-  selectionStop = verticalScrollBar()->value()*m_term_width + clickcol + clickrow*m_term_width;
-  selectionStop = qMax(0,selectionStop);
+  // place cursor at click point, if possible
+  emit PlaceCursorDXDY(clickcol-cursor_x, clickrow-cursor_y);
+    
+  selectionStop = qMax(0,verticalScrollBar()->value()*m_term_width + clickcol + clickrow*m_term_width);
 
+  // clear previous selection
+  // and update it to the new one
   clearSelection();
+  preSelectionStart = selectionStart;
+  preSelectionStop  = selectionStop;
 
   int lSelectionStart = selectionStart;
   int lSelectionStop = selectionStop;
   if (lSelectionStart > lSelectionStop) 
     qSwap(lSelectionStop,lSelectionStart);
+  if (selectionStart != selectionStop)
+    hasSelection = true;
 
   int sel_row_start = lSelectionStart/m_term_width;
   int sel_col_start = lSelectionStart % m_term_width;
@@ -301,28 +382,48 @@ void QTTerm::mouseMoveEvent( QMouseEvent *e ) {
   sel_row_start = qMin(sel_row_start,buffer.size()-1);
   sel_row_stop = qMin(sel_row_stop,buffer.size()-1);
 
+  // Ignore the first line if selected in empty space
+  if (!buffer[sel_row_start].data[sel_col_start].hasText()) { 
+  // move to the beginning of the next line
+    sel_col_start = 0;
+    sel_row_start++;
+    if (sel_row_start > sel_row_stop)
+      return;
+  }
+  
+  // Set selection bit for text within selected region
   if (sel_row_stop == sel_row_start) {
-    for (int j=sel_col_start;j<sel_col_stop;j++)
+    for (int j=sel_col_start;j<sel_col_stop;j++) {
+      if (!buffer[sel_row_start].data[j].hasText())
+        break;
       buffer[sel_row_start].data[j].setSelection();
+    }
   } else {
     for (int j=sel_col_start;j<m_term_width;j++) {
+      if (!buffer[sel_row_start].data[j].hasText())
+        break;
       buffer[sel_row_start].data[j].setSelection();
     }
     for (int i=sel_row_start+1;i<sel_row_stop;i++) 
       for (int j=0;j<m_term_width;j++) {
-	buffer[i].data[j].setSelection();
+        if (!buffer[i].data[j].hasText())
+          break;
+	    buffer[i].data[j].setSelection();
       }
-    for (int j=0;j<sel_col_stop;j++)
+    for (int j=0;j<sel_col_stop;j++) {
+      if (!buffer[sel_row_stop].data[j].hasText())
+        break;
       buffer[sel_row_stop].data[j].setSelection();
+    }
   }
   viewport()->update();
 }
 
 void QTTerm::mouseReleaseEvent( QMouseEvent *e ) {
   QClipboard *cb = QApplication::clipboard();
-  if (!cb->supportsSelection())
-    return;
   if (selectionStart != selectionStop) {
+    if (!cb->supportsSelection())
+      return;
     cb->setText(getSelectionText(), QClipboard::Selection);
   }
   else { //clear selection if left mouse click without moving
@@ -333,24 +434,24 @@ void QTTerm::mouseReleaseEvent( QMouseEvent *e ) {
 
 void QTTerm::drawFragment(QPainter *paint, QString todraw, char flags, int row, int col) {
   if (todraw.size() == 0) return;
-  QRect txtrect(col*m_char_w,row*m_char_h,(col+todraw.size())*m_char_w,m_char_h);
+  QRect txtrect(col*m_char_w,row*m_char_h,todraw.size()*m_char_w,m_char_h);
   QPalette qp(qApp->palette());
-  if (flags == 0) {
-    paint->setPen(qp.color(QPalette::WindowText));
-    paint->setBackground(qp.brush(QPalette::Base));
-    paint->eraseRect(txtrect);
-    paint->drawText(txtrect,Qt::AlignLeft|Qt::AlignTop,todraw);
-  } else if (flags & CURSORBIT) {
+  if (flags & CURSORBIT) {
     paint->setPen(qp.color(QPalette::Base));
     paint->setBackground(Qt::black);
     paint->eraseRect(txtrect);
     paint->drawText(txtrect,Qt::AlignLeft|Qt::AlignTop,todraw);
-  } else {
+  } else if (flags & SELECTBIT) {
     paint->setPen(qp.color(QPalette::HighlightedText));
     paint->setBackground(qp.brush(QPalette::Highlight));
     paint->eraseRect(txtrect);
     paint->drawText(txtrect,Qt::AlignLeft|Qt::AlignTop,todraw);
-  }
+  } else {
+    paint->setPen(qp.color(QPalette::WindowText));
+    paint->setBackground(qp.brush(QPalette::Base));
+    paint->eraseRect(txtrect);
+    paint->drawText(txtrect,Qt::AlignLeft|Qt::AlignTop,todraw);
+   } 
 }
 
 #ifndef __APPLE__
@@ -361,7 +462,19 @@ void QTTerm::drawFragment(QPainter *paint, QString todraw, char flags, int row, 
 
 
 bool QTTerm::event(QEvent *e) {
+  // check if cursor is currently visible 
+  // if so keep visible
+  // otherwise don't scroll the vertical
+  int cscroll = verticalScrollBar()->value();
+  if ((cscroll <= cursor_y) && 
+      (cursor_y <= (cscroll+m_term_height-1)))
+      isCursorVisible = true;
+  else
+      isCursorVisible = false;
+
   if (e->type() == QEvent::KeyPress) {
+    isCursorVisible = true; //always show cursor when key pressed
+    clearSelection(); //clear any selection
     QKeyEvent *ke = static_cast<QKeyEvent*>(e);
     if (ke->key() == Qt::Key_Tab) {
       emit OnChar(KM_TAB);
@@ -430,7 +543,7 @@ void QTTerm::calcGeometry() {
   QFontMetrics fmi(fnt);
   m_char_w = fmi.width("w");
   m_char_h = fmi.height();
-  m_term_width = viewport()->width()/m_char_w - 1;
+  m_term_width = viewport()->width()/m_char_w;// - 1;
   m_term_height = viewport()->height()/m_char_h;
   emit SetTextWidth(m_term_width);
 }
@@ -480,17 +593,27 @@ QString QTTerm::getAllText() {
 }
 
 QString QTTerm::getSelectionText() {
+  int lSelectionStart = selectionStart;
+  int lSelectionStop  = selectionStop;
+  if (lSelectionStart > lSelectionStop) 
+    qSwap(lSelectionStop,lSelectionStart);
+  int sel_row_start = lSelectionStart/m_term_width;
+  int sel_row_stop = lSelectionStop/m_term_width;
+  sel_row_start = qMin(sel_row_start,buffer.size()-1);
+  sel_row_stop = qMin(sel_row_stop,buffer.size()-1);
   QString ret;
-  for (int i=0;i<buffer.size();i++) {
-    bool lineHasSelectedText = false;
+  for (int i=sel_row_start;i<=sel_row_stop;i++) {
     for (int j=0;j<maxlen;j++)
       if (buffer[i].data[j].selected()) {
-	ret += buffer[i].data[j].v;
-	lineHasSelectedText = true;
+        ret += buffer[i].data[j].v;
       }
-//    chuong 2008-01-28, the next 2 lines causing unnecessary/problematic new line, so commented them
-//    if (lineHasSelectedText)
-//      ret += '\n';
+      // include "return" if found at the end of current selected line
+      // and there is 1 or more lines to check
+      else if (i<sel_row_stop && buffer[i].data[j].v == '\n' && 
+               j>0 && buffer[i].data[j-1].selected()) {
+        ret += '\n';
+        break;
+      }
   }
   ret.replace(QRegExp(" +\\n"),"\n");
   return ret;

@@ -42,6 +42,7 @@ private:
   QListWidget *m_results_list;
   QLineEdit *m_search_word;
   QString m_basepath;
+  QString *searchString;
 private slots:
   void updateSearch();
 };
@@ -61,9 +62,15 @@ class HelpWindow : public QMainWindow {
 public:
   HelpWindow(QString baseURL);
   void helpText(QString fulltext);
+  QString searchString;
 private slots:
   void activateModule(QListWidgetItem* item);
   void activateModule(QTreeWidgetItem* item, int);
+  void activateModuleSearch(QListWidgetItem* item);
+  void execSelected();
+  void helpOnSelection();
+signals:
+  void EvaluateText(QString);
 private:
   void createActions();
   void createMenus();
@@ -81,6 +88,7 @@ private:
   QAction *copyAct, *exitAct;
   QAction *backAct, *forwardAct, *homeAct;
   QAction *zoominAct, *zoomoutAct;
+  QAction *executeSelectionAct, *helpOnSelectionAct;
   QString m_initial;
 };
 
