@@ -82,7 +82,7 @@ ArrayVector ImagFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("imag function requires 1 argument");
   Array arg0(arg[0]); 
-  if (arg0.isString()) arg0 = arg0.toClass(Double);
+  if (arg0.isString() || (arg0.dataClass() == Bool)) arg0 = arg0.toClass(Double);
   arg0.forceComplex();
   return ArrayVector(Imag(arg0));
 }

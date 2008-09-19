@@ -2,6 +2,104 @@
 #include "Interpreter.hpp"
 #include "IEEEFP.hpp"
 #include "Operators.hpp"
+#include "Struct.hpp"
+
+//!
+//@Module ISSAME Test If Two Arrays Are Identical
+//@@Section INSPECTION
+//@@Usage
+//Tests for two arrays to be identical.  The syntax
+//for its use is
+//@[
+//   y = issame(a,b)
+//@]
+//where @|a| and @|b| are two arrays to compare.  This
+//comparison succeeds only if @|a| and @|b| are of the
+//same data type, size, and contents.  Unlike numerical
+//equivalence tests, the @|issame| function considers
+//@|NaN| to be equal in both arguments.
+//@@Signature
+//function issame IsSameFunction
+//inputs a  b
+//outputs y
+//!
+
+
+template <typename T>
+static bool IsSame(const T& a, const T& b);
+
+#define MacroDefIsSame(ctype)			       \
+  template <>					       \
+  bool IsSame(const ctype& a, const ctype& b) {	       \
+    return (a == b);				       \
+  }
+
+MacroDefIsSame(bool);
+MacroDefIsSame(int8);
+MacroDefIsSame(uint8);
+MacroDefIsSame(int16);
+MacroDefIsSame(uint16);
+MacroDefIsSame(int32);
+MacroDefIsSame(uint32);
+MacroDefIsSame(int64);
+MacroDefIsSame(uint64);
+MacroDefIsSame(QChar);
+
+template <>
+bool IsSame(const float& a, const float& b) {
+  return ((a == b) || (IsNaN(a) && IsNaN(b)));
+}
+
+template <>
+bool IsSame(const double& a, const double& b) {
+  return ((a == b) || (IsNaN(a) && IsNaN(b)));
+}
+
+template <>
+bool IsSame(const Array&, const Array&);
+
+template <typename T>
+static bool IsSame(const BasicArray<T>& ar, const BasicArray<T>& br) {
+  if (ar.dimensions() != br.dimensions()) return false;
+  for (index_t i=1;i<=ar.length();i++)
+    if (!IsSame(ar[i],br[i])) return false;
+  return true;
+}
+
+static bool IsSameStruct(const Array& a, const Array& b) {
+  const StructArray &ar(a.constStructPtr());
+  const StructArray &br(b.constStructPtr());
+  if (ar.fieldNames() != br.fieldNames()) return false;
+  if (ar.classPath() != br.classPath()) return false;
+  for (int i=0;i<ar.fieldCount();i++)
+    if (!IsSame(ar[i],br[i])) return false;
+  return true;
+}
+
+#define MacroIsSame(ctype,cls) \
+  case cls: return IsSame(ad.constReal<ctype>(),bd.constReal<ctype>());
+
+template <>
+bool IsSame(const Array& a, const Array& b) {
+  if (a.dataClass() != b.dataClass()) return false;
+  if (a.dimensions() != b.dimensions()) return false;
+  Array ad(a.asDenseArray());
+  Array bd(b.asDenseArray());
+  switch (ad.dataClass()) {
+  default:
+    return false;
+  MacroExpandCasesAll(MacroIsSame);
+  case Struct:
+    return IsSameStruct(a,b);
+  }
+}
+
+ArrayVector IsSameFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 2)
+    return ArrayVector(Array(false));
+  return ArrayVector(Array(IsSame(arg[0],arg[1])));
+}
+
 
 //!
 //@Module ISSET Test If Variable Set

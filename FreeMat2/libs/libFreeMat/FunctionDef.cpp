@@ -642,7 +642,7 @@ ArrayVector ImportedFunctionDef::evaluateFunction(Interpreter *walker,
    */
   int i;
   for (i=0;i<inputs.size();i++)
-    inputs[i] = inputs[i].toClass(mapTypeNameToClass(types[i]));
+    inputs[i] = inputs[i].asDenseArray().toClass(mapTypeNameToClass(types[i]));
   /**
    * Next, we count how many of the inputs are to be passed by
    * reference.

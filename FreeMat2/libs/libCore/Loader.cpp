@@ -128,6 +128,7 @@ ArrayVector DlmReadFunction(int, const ArrayVector&);
 ArrayVector LoadFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector GetLineFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector IsSetFunction(int, const ArrayVector&, Interpreter*);
+ArrayVector IsSameFunction(int, const ArrayVector&);
 ArrayVector IsSparseFunction(int, const ArrayVector&);
 ArrayVector IsNaNFunction(int, const ArrayVector&);
 ArrayVector IsNaNFunction(int, const ArrayVector&);
@@ -395,6 +396,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addSpecialFunction("load",LoadFunction,-1,1,NULL);
   context->addSpecialFunction("getline",GetLineFunction,1,1,"prompt",NULL);
   context->addSpecialFunction("isset",IsSetFunction,1,2,"name",NULL);
+  context->addFunction("issame",IsSameFunction,2,1,"x","y",NULL);
   context->addFunction("issparse",IsSparseFunction,1,1,"x",NULL);
   context->addFunction("isnan",IsNaNFunction,1,1,"x",NULL);
   context->addFunction("IsNaN",IsNaNFunction,1,1,"x",NULL);
