@@ -341,7 +341,7 @@ void FMTextEdit::fontUpdate() {
   if (!fi.fixedPitch()) 
     QMessageBox::warning(this,"FreeMat",
 			 "You have selected a font that is not a fixed pitch.\nThe editor really requires a fixed pitch font to work.");
-  setTabStopWidth(fm.width(' ')*indentSize);
+  setTabStopWidth(fm.width('w')*indentSize);
 }
 
 FMIndent::FMIndent() {
@@ -699,25 +699,26 @@ void FMEditor::updateTitles() {
 
 
 void FMEditor::tabChanged(int newslot) {
-  disconnect(cutAct,SIGNAL(triggered()),0,0);
-  disconnect(copyAct,SIGNAL(triggered()),0,0);
-  disconnect(pasteAct,SIGNAL(triggered()),0,0);
-  connect(cutAct,SIGNAL(triggered()),currentEditor(),SLOT(cut()));
-  connect(copyAct,SIGNAL(triggered()),currentEditor(),SLOT(copy()));
-  connect(pasteAct,SIGNAL(triggered()),currentEditor(),SLOT(paste()));
-  // Disconnect each of the contents changed signals
-  if (prevEdit) {
-    disconnect(prevEdit->document(),SIGNAL(contentsChanged()),0,0);
-    disconnect(prevEdit,SIGNAL(showDataTips(QPoint, QString)),0,0);
-  }
-  // NEED TO DISCONNECT...
-  connect(currentEditor()->document(),SIGNAL(contentsChanged()),this,SLOT(documentWasModified()));
-  connect(currentEditor(),SIGNAL(showDataTips(QPoint, QString)),
-          this,SLOT(showDataTips(QPoint, QString)));
-  updateTitles();
-  prevEdit = currentEditor();
+	if( newslot > -1 ){
+		disconnect(cutAct,SIGNAL(triggered()),0,0);
+		disconnect(copyAct,SIGNAL(triggered()),0,0);
+		disconnect(pasteAct,SIGNAL(triggered()),0,0);
+		connect(cutAct,SIGNAL(triggered()),currentEditor(),SLOT(cut()));
+		connect(copyAct,SIGNAL(triggered()),currentEditor(),SLOT(copy()));
+		connect(pasteAct,SIGNAL(triggered()),currentEditor(),SLOT(paste()));
+		// Disconnect each of the contents changed signals
+		if (prevEdit) {
+			disconnect(prevEdit->document(),SIGNAL(contentsChanged()),0,0);
+			disconnect(prevEdit,SIGNAL(showDataTips(QPoint, QString)),0,0);
+		}
+		// NEED TO DISCONNECT...
+		connect(currentEditor()->document(),SIGNAL(contentsChanged()),this,SLOT(documentWasModified()));
+		connect(currentEditor(),SIGNAL(showDataTips(QPoint, QString)),
+			this,SLOT(showDataTips(QPoint, QString)));
+		updateTitles();
+		prevEdit = currentEditor();
+	}
 }
-
 void FMEditor::documentWasModified() {
   setWindowModified(currentEditor()->document()->isModified());
   if (currentEditor()->document()->isModified()) 
