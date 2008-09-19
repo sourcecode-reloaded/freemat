@@ -904,8 +904,7 @@ FMEditor::FMEditor(Interpreter* eval) : QMainWindow() {
  	  this,SLOT(doReplace(QString,QString,bool,bool)));
   connect(m_replace,SIGNAL(doReplaceAll(QString,QString,bool,bool)),
  	  this,SLOT(doReplaceAll(QString,QString,bool,bool)));
-  std::string mpath = m_eval->getTotalPath();
-  QString path = QString::fromStdString(mpath);
+  QString path = m_eval->getTotalPath();
 #ifdef WIN32
 #define PATHSEP ";"
 #else
@@ -1236,7 +1235,7 @@ void FMEditor::helpOnSelection() {
   QString selectText = currentEditor()->textCursor().selectedText();
   selectText = selectText.trimmed();
   if (!selectText.isEmpty())
-    HelpWinFunction(0,SingleArrayVector(Array::stringConstructor(selectText.toStdString())),m_eval);
+    HelpWinFunction(0,ArrayVector(Array(selectText)),m_eval);
 }
 
 void FMEditor::openSelection() {
@@ -1729,15 +1728,13 @@ void FMEditor::closeEvent(QCloseEvent *event) {
 QString FMEditor::getFullFileName(QString fname)
 {
   QFileInfo info(fname);
-  std::string fn = fname.toStdString();
   FuncPtr val;
-  bool isFun = m_eval->getContext()->lookupFunction(fn,val);
+  bool isFun = m_eval->getContext()->lookupFunction(fname,val);
   if (isFun && (val->type() == FM_M_FUNCTION)) {
     //if file is a matlab file get the file name from the interpreter
     MFunctionDef* mfun = (MFunctionDef*)val;
     if( mfun ) {
-      fn = mfun->fileName;
-      return QString::fromStdString(fn);
+      return mfun->fileName;
     }
     else {
 	  return QString();

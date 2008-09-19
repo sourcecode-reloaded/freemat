@@ -150,11 +150,11 @@ void KeyManager::PlaceCursorDXDY(int dx, int dy) {
 int KeyManager::DisplayedCharWidth(QChar c, int aterm_curpos) {
   if(c=='\t')
     return TAB_WIDTH - ((aterm_curpos % ncolumn) % TAB_WIDTH);
-  if(IS_CTRL_CHAR(c))
+  if(IS_CTRL_CHAR(c.toAscii()))
     return 2;
-  if(!isprint((int)(unsigned char) c)) {
+  if(!isprint((int)(unsigned char) c.toAscii())) {
     char string[TAB_WIDTH + 4];
-    sprintf(string, "\\%o", (int)(unsigned char)c);
+	sprintf(string, "\\%o", (int)(unsigned char)c.toAscii());
     return strlen(string);
   };
   return 1;
