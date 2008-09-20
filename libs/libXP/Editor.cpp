@@ -618,51 +618,52 @@ bool FMTextEdit::findmatch()
 }
 
 void FMTextEdit::paintEvent(QPaintEvent *event) {
-  QPainter painter( viewport() );
-  if (matchActive && matchingBegin != -1 && matchingEnd != -1) {
-	const int contentsY = verticalScrollBar()->value();
-	const qreal pageBottom = contentsY + viewport()->height();
-	
-	for ( QTextBlock block = document()->begin(); block.isValid(); block = block.next() )
-	{
-		QTextLayout* layout = block.layout();
-		const QRectF boundingRect = layout->boundingRect();
-		QPointF position = layout->position();
-		
-		if ( position.y() +boundingRect.height() < contentsY )
-			continue;
-		if ( position.y() > pageBottom )
-			break;
-		
-		const QString txt = block.text();
-		const int len = txt.length();
-		
-		for ( int i=0; i<len; i++)
-		{
-			if( block.position() + i == matchingBegin)
-			{
-				QTextCursor cursor = textCursor();
-				cursor.setPosition( block.position() + i, QTextCursor::MoveAnchor);
-				QRect r1 = cursorRect( cursor );
-				cursor.movePosition( QTextCursor::Right, QTextCursor::MoveAnchor, Key.size());
-				QRect r2 = cursorRect( cursor );
-				painter.setPen( matchingColor );
-                painter.drawLine( r1.x()+r1.width()/2, r1.y()+r1.height()-2, r2.x()+r2.width()/2, r2.y()+r2.height()-2);
-			}
-			else if(block.position() + i == matchingEnd)
-			{
-				QTextCursor cursor = textCursor();
-				cursor.setPosition( block.position() + i, QTextCursor::MoveAnchor);
-				QRect r1 = cursorRect( cursor );
-				cursor.movePosition( QTextCursor::Right, QTextCursor::MoveAnchor, matchKey.size());
-				QRect r2 = cursorRect( cursor );
-				painter.setPen( matchingColor );
-                painter.drawLine( r1.x()+r1.width()/2, r1.y()+r1.height()-2, r2.x()+r2.width()/2, r2.y()+r2.height()-2);
-			}
-		}
-	}
-  }
-  QTextEdit::paintEvent( event );
+	//TODO: fix FMTextEdit. ei this code causes assert. 
+	//QPainter painter( viewport() );
+	//if (matchActive && matchingBegin != -1 && matchingEnd != -1) {
+	//	const int contentsY = verticalScrollBar()->value();
+	//	const qreal pageBottom = contentsY + viewport()->height();
+
+	//	for ( QTextBlock block = document()->begin(); block.isValid(); block = block.next() )
+	//	{
+	//		QTextLayout* layout = block.layout();
+	//		const QRectF boundingRect = layout->boundingRect();
+	//		QPointF position = layout->position();
+
+	//		if ( position.y() +boundingRect.height() < contentsY )
+	//			continue;
+	//		if ( position.y() > pageBottom )
+	//			break;
+
+	//		const QString txt = block.text();
+	//		const int len = txt.length();
+
+	//		for ( int i=0; i<len; i++)
+	//		{
+	//			if( block.position() + i == matchingBegin)
+	//			{
+	//				QTextCursor cursor = textCursor();
+	//				cursor.setPosition( block.position() + i, QTextCursor::MoveAnchor);
+	//				QRect r1 = cursorRect( cursor );
+	//				cursor.movePosition( QTextCursor::Right, QTextCursor::MoveAnchor, Key.size());
+	//				QRect r2 = cursorRect( cursor );
+	//				painter.setPen( matchingColor );
+	//				painter.drawLine( r1.x()+r1.width()/2, r1.y()+r1.height()-2, r2.x()+r2.width()/2, r2.y()+r2.height()-2);
+	//			}
+	//			else if(block.position() + i == matchingEnd)
+	//			{
+	//				QTextCursor cursor = textCursor();
+	//				cursor.setPosition( block.position() + i, QTextCursor::MoveAnchor);
+	//				QRect r1 = cursorRect( cursor );
+	//				cursor.movePosition( QTextCursor::Right, QTextCursor::MoveAnchor, matchKey.size());
+	//				QRect r2 = cursorRect( cursor );
+	//				painter.setPen( matchingColor );
+	//				painter.drawLine( r1.x()+r1.width()/2, r1.y()+r1.height()-2, r2.x()+r2.width()/2, r2.y()+r2.height()-2);
+	//			}
+	//		}
+	//	}
+	//}
+	QTextEdit::paintEvent( event );
 }
 
 void FMTextEdit::contextMenuEvent(QContextMenuEvent* e) {
@@ -1050,8 +1051,8 @@ void FMEditor::tabChanged(int newslot) {
 		connect(cutAct,SIGNAL(triggered()),currentEditor(),SLOT(cut()));
 		connect(copyAct,SIGNAL(triggered()),currentEditor(),SLOT(copy()));
 		connect(pasteAct,SIGNAL(triggered()),currentEditor(),SLOT(paste()));
-  connect(this,SIGNAL(setMatchBracket(bool)),
-          currentEditor(),SLOT(setMatchBracket(bool)));
+		connect(this,SIGNAL(setMatchBracket(bool)),
+			currentEditor(),SLOT(setMatchBracket(bool)));
 		// Disconnect each of the contents changed signals
 		if (prevEdit) {
 			disconnect(prevEdit->document(),SIGNAL(contentsChanged()),0,0);
