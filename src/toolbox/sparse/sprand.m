@@ -32,7 +32,7 @@
 %The more generic version with a density of @|0.001|.  On many systems the
 %following is impossible using full matrices
 %@<
-%y = sprand(10000,10000,.001)
+%y = sprand(10000,10000,.001);
 %nnz(y)/10000^2
 %@>
 %!

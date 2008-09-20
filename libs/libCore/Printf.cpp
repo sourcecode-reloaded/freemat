@@ -1,6 +1,6 @@
 #include "Printf.hpp"
 #include "Print.hpp"
-#include "handlelist.hpp"
+#include "HandleList.hpp"
 #include "Algorithms.hpp"
 #include "Utils.hpp"
 #include <QTextCodec>
@@ -241,8 +241,8 @@ void PrintfHelperFunction(int nargout, const ArrayVector& arg, PrintfStream& out
 				throw Exception("erroneous format specification " + QString(dp));
 			else {
 				if (*(np-1) == '%') {
-					nprn = snprintf(nbuff,BUFSIZE,"%%"); nbuff[nprn+1]='\0'; noutput += nbuf_ind;
-					output << nbuff;    
+					nprn = snprintf(nbuff,BUFSIZE,"%%"); nbuff[std::min(nprn+1,BUFSIZE-1)]='\0'; noutput += nbuf_ind;
+					output << nbuff;
 					sv=0;
 				} else 
 					if( *(np-1) == 's') {
@@ -251,7 +251,7 @@ void PrintfHelperFunction(int nargout, const ArrayVector& arg, PrintfStream& out
 						const char* pStr = str.c_str();
 						sv = *np;
 						*np = 0;
-						nprn = snprintf(nbuff,BUFSIZE,dp,pStr); nbuff[nprn+1]='\0'; noutput += nbuf_ind;
+						nprn = snprintf(nbuff,BUFSIZE,dp,pStr); nbuff[std::min(nprn+1,BUFSIZE-1)]='\0'; noutput += nbuf_ind;
 						output << nbuff;
 					} else{
 						sv = *np;
