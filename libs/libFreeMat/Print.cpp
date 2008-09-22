@@ -39,9 +39,9 @@ static QString TSummarizeArrayCellEntryScalar(const Array &dp) {
     return QString("%1").arg(dp.constRealScalar<T>());
   else
     if (dp.constImagScalar<T>() > 0)
-      return QString("%1+%2 i").arg(dp.constRealScalar<T>()).arg(dp.constImagScalar<T>());
+      return QString("%1+%2i").arg(dp.constRealScalar<T>()).arg(dp.constImagScalar<T>());
     else
-      return QString("%1%2 i").arg(dp.constRealScalar<T>()).arg(dp.constImagScalar<T>());
+      return QString("%1%2i").arg(dp.constRealScalar<T>()).arg(dp.constImagScalar<T>());
 }
 
 #define MacroSummarize(ctype,cls) \
@@ -49,7 +49,7 @@ static QString TSummarizeArrayCellEntryScalar(const Array &dp) {
 
 static QString SummarizeArrayCellEntry(const Array &a) {
   // Special cases
-  if (a.isEmpty()) return QString("[]");
+  if (a.isEmpty()) return QString("");
   if (a.isString() && a.rows() == 1) return a.asString();
   if (a.isScalar() && !a.isReferenceType()) {
     switch (a.dataClass()) {
@@ -60,8 +60,8 @@ static QString SummarizeArrayCellEntry(const Array &a) {
   }
   QString sparseFlag;
   if (a.isSparse()) sparseFlag = " sparse";
-  return QString("[") + a.dimensions().toString() + " " + 
-    a.className() + sparseFlag + " array ]";
+  return a.dimensions().toString() + " " + 
+    a.className() + sparseFlag + " array";
 }
 
 template <class T>
@@ -240,12 +240,12 @@ static inline void emitIntegerComplex(Interpreter* io, T real, T imag,
   if (sgned) {
     io->outputMessage("%*lld",format.width,(int64)real);
     if (imag < 0)
-      io->outputMessage(" -%*lld",format.width,(int64)-imag);
+      io->outputMessage("-%*lld",format.width,(int64)-imag);
     else
-      io->outputMessage(" +%*lld",format.width,(int64)imag);
+      io->outputMessage("+%*lld",format.width,(int64)imag);
   } else {
     io->outputMessage("%*lld",format.width,(int64)real);
-    io->outputMessage(" +%*lld",format.width,(int64)imag);  
+    io->outputMessage("+%*lld",format.width,(int64)imag);  
   }
 }
 
@@ -260,14 +260,14 @@ static inline void emitFloatComplex(Interpreter* io, T real, T imag,
       io->outputMessage("%*.*f",width,format.decimals,real/format.scalefact);
     if (imag < 0) {
       if (format.expformat)
-	io->outputMessage(" -%*.*ei",width-1,format.decimals,-imag);
+	io->outputMessage("-%*.*ei",width-1,format.decimals,-imag);
       else
-	io->outputMessage(" -%*.*fi",width-1,format.decimals,-imag/format.scalefact);
+	io->outputMessage("-%*.*fi",width-1,format.decimals,-imag/format.scalefact);
     } else {
       if (format.expformat)
-	io->outputMessage(" +%*.*ei",width-1,format.decimals,imag);
+	io->outputMessage("+%*.*ei",width-1,format.decimals,imag);
       else
-	io->outputMessage(" +%*.*fi",width-1,format.decimals,imag/format.scalefact);
+	io->outputMessage("+%*.*fi",width-1,format.decimals,imag/format.scalefact);
     }
   } else 
     io->outputMessage("%*d%*c",width,0,width+2,' ');
@@ -385,10 +385,10 @@ static void PrintSparse(const SparseMatrix<T> &Areal, const SparseMatrix<T> &Aim
     io->outputMessage("  <empty>\n");
   while (i.isValid()) {
     if (i.imagValue() >= 0)
-      io->outputMessage(QString(" %1 %2 %3+%4").arg(i.row()).arg(i.col()).
+      io->outputMessage(QString(" %1 %2 %3+%4i").arg(i.row()).arg(i.col()).
 			arg(i.realValue()).arg(i.imagValue()));
     else
-      io->outputMessage(QString(" %1 %2 %3%4").arg(i.row()).arg(i.col()).
+      io->outputMessage(QString(" %1 %2 %3%4i").arg(i.row()).arg(i.col()).
 			arg(i.realValue()).arg(i.imagValue()));	
     io->outputMessage("\n");
     i.next();

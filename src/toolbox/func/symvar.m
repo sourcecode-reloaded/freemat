@@ -20,9 +20,7 @@
 %symvar('x + t*alpha')  % x, t and alpha
 %@>
 %@@Tests
-%@$"y=symvar('x^2+sqrt(x)')","{'x'}","exact"
-%@$"y=symvar('pi+3')","{}","exact"
-%@$"y=symvar('x+t*alpha-cos(pi)')","{'alpha','t','x'}","exact"
+%@$y1=symvar(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu
@@ -30,12 +28,12 @@
 
 function syms = symvar(expr)
   ignore = {'pi','inf','nan','eps','i','j'};
-  tsyms = regexp(expr,'(\b[a-zA-Z]\w*\b)(?!\s*\()','tokens');
+  tsyms = regexp(char(expr),'(\b[a-zA-Z]\w*\b)(?!\s*\()','tokens');
   tsyms = unique([tsyms{:}]);
-  syms = {};
+  syms = cell(0,1);
   for i = 1:numel(tsyms)
     if (~any(strcmp(tsyms{i},ignore)))
-      syms = [syms,{tsyms{i}}];
+      syms = [syms;{tsyms{i}}];
     end
   end
   

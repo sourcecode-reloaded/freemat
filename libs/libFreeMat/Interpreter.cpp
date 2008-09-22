@@ -938,10 +938,6 @@ Array Interpreter::expression(Tree *t) {
 Array Interpreter::FunctionPointer(Tree *t) {
    if (t->first()->is(TOK_ANONYMOUS_FUNC)) {
      return AnonFuncConstructor(this,t->first());
-     // AnonymousFunctionDef *q = new AnonymousFunctionDef;
-     // q->initialize(t->first(),this);
-     //     return Array::funcPtrConstructor(FuncPtr(q));
-     // FIXME
    } else {
      FuncPtr val;
      if (!lookupFunction(t->first()->text(),val))
@@ -2821,6 +2817,12 @@ ArrayReference Interpreter::createVariable(QString name) {
 //  p(:,2) = [2;4;6];
 //  q = [1,2;3,4;5,6];
 //  test_val = testeq(p,q);
+//@}
+//@{ test_assign21.m
+//function test_val = test_assign21
+//  p = {'hello'};
+//  q = p{1};
+//  test_val = testeq(q,'hello');
 //@}
 //@{ test_sparse56.m
 //% Test DeleteSparseMatrix function

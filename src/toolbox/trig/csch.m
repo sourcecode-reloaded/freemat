@@ -22,18 +22,12 @@
 %@>
 %@figure cschplot
 %@@Tests
-%@$"y=csch(3)","0.09982156966882","close"
-%@$"y=csch(-3.5)","-0.06044989000916","close"
-%@$"y=csch(1+3*i)","-0.83042813377958-0.15543010515010i","close"
-%@$"y=csch(float(5.234))","float(0.0106646)","close"
+%@$y1=csch(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL
 
 function y = csch(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('csch expects a numeric input');
-  end
   y = 1.0 ./ sinh(x);
   

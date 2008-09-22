@@ -18,15 +18,11 @@
 %sind(30)
 %@>
 %@@Tests
-%@$"y=sind(45)","0.70710678118655","close"
-%@$"y=sind(30)","0.5","close"
+%@$y1=sind(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL
 
 function y = sind(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('sind expects a numeric input');
-  end
   y = sin(deg2rad(x));

@@ -17,9 +17,7 @@
 %fix(a)
 %@>
 %@@Tests
-%@$"y=fix(pi)","3","exact"
-%@$"y=fix(-e)","-2","exact"
-%@$"y=fix(3.1-2.3i)","3-2i","exact"
+%@$y1=fix(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

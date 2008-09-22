@@ -3,11 +3,6 @@
 #include "IEEEFP.hpp"
 #include "SparseCCS.hpp"
 
-void WarningMessage(QString msg) {
-//TODO: #warning FIXME
-  //  std::cout << "Warning:" << qPrintable(msg);
-}
-
 const Array StringArrayFromStringVector(const StringVector& arg) {
   int maxlen = 0;
   for (int i=0;i<arg.size();i++)
@@ -141,7 +136,8 @@ const IndexArray IndexArrayFromArray(const Array &index) {
 }
 
 const ArrayVector ArrayVectorFromCellArray(const Array &arg) {
-  if (arg.dataClass() != CellArray) 
+  if (arg.isEmpty()) return ArrayVector();
+  if (arg.dataClass() != CellArray)
     throw Exception("Unsupported type for call to toArrayVector");
   ArrayVector ret;
   const BasicArray<Array> &rp(arg.constReal<Array>());
@@ -188,8 +184,21 @@ const Array CellArrayFromStringVector(const StringVector& arg) {
 }
 
 StringVector StringVectorFromArray(const Array &arg) {
-  if (arg.isString())
-    return StringVector(arg.asString());
+  if (arg.isString()) {
+    const BasicArray<QChar> &ap(arg.constReal<QChar>());
+    ConstBasicIterator<QChar> iter(&ap,1);
+    StringVector ret;
+    while (iter.isValid()) {
+      QString t;
+      for (index_t i=1;i<=iter.size();i++) {
+	t += iter.get();
+	iter.next();
+      }
+      iter.nextSlice();
+      ret << t;
+    }
+    return ret;
+  }
   if (!IsCellStringArray(arg)) throw Exception("Cannot convert array to a set of a strings");
   StringVector ret;
   const BasicArray<Array> &rp(arg.constReal<Array>());
@@ -327,11 +336,12 @@ Array Transpose(const Array &A) {
 
 template <typename T>
 static inline Array T_Hermitian(const Array &x) {
-  if (x.isScalar())
+  if (x.isScalar()) {
     if (x.allReal())
       return x;
     else 
       return Array(x.constRealScalar<T>(),(T)-x.constImagScalar<T>());
+  }
   if (x.isSparse()) {
     if (x.allReal())
       return Array(Transpose(x.constRealSparse<T>()));
@@ -407,7 +417,7 @@ Array Real(const Array &A) {
   if (A.isReferenceType()) return A;
   switch (A.dataClass()) {
   default: throw Exception("unhandled type for real");
-    MacroExpandCasesSimple(MacroReal);
+    MacroExpandCasesNoCell(MacroReal);
   }
 }
 
@@ -431,7 +441,7 @@ Array Imag(const Array &A) {
     throw Exception("unhandled type for imag");
   switch (A.dataClass()) {
   default: throw Exception("unhandled type for imag");
-    MacroExpandCasesSimple(MacroImag);
+    MacroExpandCasesNoCell(MacroImag);
   }
 }
 
@@ -790,6 +800,15 @@ Array NCat(const ArrayVector& pdata, int catdim) {
   DataClass cls(data[0].dataClass());
   for (int i=1;i<data.size();i++)
     cls = qMin(cls,data[i].dataClass());
+  bool userClassCase = false;
+  QString classname;
+  if ((cls == Struct) && data[0].isUserClass()) {
+    classname = data[0].className();
+    for (int i=1;i<data.size();i++)
+      if (!data[i].isUserClass() || data[i].className() != classname)
+	throw Exception("Cannot concatenate user defined classes of different type");
+    userClassCase = true;
+  }
   NTuple outdims(data[0].dimensions());
   // Compute the output dimensions and validate each of the elements
   for (int i=1;i<data.size();i++) {
@@ -815,6 +834,8 @@ Array NCat(const ArrayVector& pdata, int catdim) {
     }
     iter.nextSlice();
   }
+  if (userClassCase)
+    retval.structPtr().setClassPath(StringVector(classname));
   return retval;
 }
 
@@ -951,7 +972,14 @@ Array Permute(const Array &A, const NTuple &dp) {
   for (int i=0;i<NDims;i++)
     if (dp[i] != (i+1)) id_perm = false;
   if (id_perm) return A;
-  if (A.is2D()) return Transpose(A);
+  if (A.is2D()) {
+    bool isTranspose = true;
+    for (int  i=2;i<NDims;i++)
+      if (dp[i] != (i+1)) isTranspose = false;
+    if (dp[0] != 2) isTranspose = false;
+    if (dp[1] != 1) isTranspose = false;
+    if (isTranspose) return Transpose(A);
+  }
   if (A.isSparse()) throw Exception("illegal permutation for sparse arrays");
   if (A.isScalar()) return A;
   if (A.isEmpty()) return Array(A.dataClass(),outdims);

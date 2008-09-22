@@ -27,6 +27,7 @@ function helpgen(source_path,test_only)
                      testwriter});
     skipexec = false;
   end
+
   file_list = {};
   file_list = [file_list;helpgen_rdir([source_path,'/libs'])];
   file_list = [file_list;helpgen_rdir([source_path,'/src'])];
@@ -333,8 +334,6 @@ function handle_exec(&line,fp,pset,&writers,exec_id)
     end
     line = getline(fp);
   end
-%  cmdlist = strrep(cmdlist,'\r','\\r');
-%  cmdlist = strrep(cmdlist,'\n','\\n');
   docomputeblock(writers,cmdlist,errors_expected);
   if (skipexec) return; end;
   cd([sourcepath,'/help/tmp']);
@@ -349,7 +348,6 @@ function handle_exec(&line,fp,pset,&writers,exec_id)
     for (i=1:numel(cmdlist))
       printf('%s\n',cmdlist{i});
     end
-%    error('Failed!');
   end
   cd([sourcepath,'/help/tmp']);
   line = getline(fp);

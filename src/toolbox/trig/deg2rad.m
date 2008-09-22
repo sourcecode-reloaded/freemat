@@ -15,7 +15,7 @@
 %deg2rad(360) - 2*pi
 %@>
 %@@Tests
-%@$"y=deg2rad(45)","pi/4","close"
+%@$y1=deg2rad(x1)
 %!
 
 
@@ -23,9 +23,5 @@
 % Licensed under the GPL
 
 function y = deg2rad(x)
-  if (isa(x,'single'))
-    y = x*float(pi/180);
-  else
-    y = x*pi/180;
-  end
+  y = x*pi/180;
   

@@ -313,8 +313,7 @@ ArrayVector FepsFunction(int nargout, const ArrayVector& arg) {
 //   y = true
 //@]
 //@@Tests
-//@$"y=logical(1)","true","exact"
-//@$"y=logical(0)","~true","exact"
+//@$y1=logical(x1)
 //@@Signature
 //function true TrueFunction
 //inputs none
@@ -332,9 +331,6 @@ ArrayVector TrueFunction(int nargout, const ArrayVector& arg) {
 //@[
 //   y = false
 //@]
-//@@Tests
-//@$"y=logical(0)","false","exact"
-//@$"y=logical(1)","~false","exact"
 //@@Signature
 //function false FalseFunction
 //inputs none

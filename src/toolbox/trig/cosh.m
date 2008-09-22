@@ -21,18 +21,12 @@
 %@>
 %@figure coshplot
 %@@Tests
-%@$"y=cosh(0.5)","1.12762596520638","close"
-%@$"y=cosh(2.1324)","4.27681958616421","close"
-%@$"y=cosh(3-4i)","-6.58066304055116+7.58155274274654i","close"
-%@$"y=cosh(float(2.12))","float(4.2255840)","close"
+%@$y1=cosh(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL
 
 function y = cosh(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('cosh expects a numeric input');
-  end
   y = (exp(x)+exp(-x))/2;
   

@@ -6,11 +6,6 @@
 #include "Cast.hpp"
 #include "Math.hpp"
 
-static void Warn(const char *msg) {
-//TODO: FIXME
-  //  std::cout << "Warning:" << msg;
-}
-
 template <typename T>
 static inline void* Tconstruct(Type t, const void *copy) {
   if (t.Scalar == 1)
@@ -120,6 +115,8 @@ SharedObject::~SharedObject() {
 }
 
 Array::Array(DataClass t, const NTuple &dims) {
+  if (!dims.isValid())
+    throw Exception("Illegal size for array " + dims.toString());
   m_type.Class = t;
   m_type.Complex = 0;
   m_type.Sparse = 0;
@@ -290,21 +287,23 @@ static inline void Tset(Array* ptr, S ndx, const Array& data) {
       Set(ptr->realSparse<T>(),ndx,dataTyped.constRealScalar<T>());
     else
       Set(ptr->real<T>(),ndx,dataTyped.constRealScalar<T>());
-    if (!dataTyped.allReal()) 
+    if (!dataTyped.allReal()) {
       if (ptr->isSparse())
 	Set(ptr->imagSparse<T>(),ndx,dataTyped.constImagScalar<T>());
       else
 	Set(ptr->imag<T>(),ndx,dataTyped.constImagScalar<T>());
+    }
   } else {
     if (ptr->isSparse())
       Set(ptr->realSparse<T>(),ndx,ToRealSparse<T>(dataTyped));
     else
       Set(ptr->real<T>(),ndx,dataTyped.constReal<T>());
-    if (!dataTyped.allReal()) 
+    if (!dataTyped.allReal()) {
       if (ptr->isSparse())
 	Set(ptr->imagSparse<T>(),ndx,ToImagSparse<T>(dataTyped));
       else
 	Set(ptr->imag<T>(),ndx,dataTyped.constImag<T>());
+    }
   }
 }
 
@@ -478,6 +477,8 @@ static inline Array Tget_struct(const Array*ptr, S ndx) {
   StructArray &lp(ret.structPtr());
   for (int i=0;i<rp.fieldCount();i++)
     lp[rp.fieldName(i)] = Get(rp[i],ndx);
+  lp.setClassPath(rp.classPath());
+  lp.updateDims();
   return ret;
 }
 
@@ -656,6 +657,7 @@ static inline Array Tget_struct_scalar(const Array*ptr, S ndx) {
   StructArray &lp(ret.structPtr());
   for (int i=0;i<rp.fieldCount();i++)
     lp[rp.fieldName(i)].set(1,rp[i].get(ndx));
+  lp.setClassPath(rp.classPath());
   lp.updateDims();
   return ret;
 }
@@ -713,7 +715,7 @@ const Array Array::get(index_t index) const {
 const Array Array::get(const Array& index) const {
   if (index.isScalar() && (index.dataClass() != Bool) && (index.dataClass() != StringArray)) {
     if (!index.allReal())
-     Warn("Complex part of index ignored");
+     WarningMessage("Complex part of index ignored");
     return get(index.asIndexScalar());
   } else
     return get(IndexArrayFromArray(index));
@@ -740,7 +742,7 @@ void Array::set(const Array& index, const Array& data) {
   if (index.isScalar() && (index.dataClass() != Bool)
       && (index.dataClass() != StringArray)) {
     if (!index.allReal())
-      Warn("Complex part of index ignored");
+      WarningMessage("Complex part of index ignored");
     set(index.asIndexScalar(),data);
   }
   else

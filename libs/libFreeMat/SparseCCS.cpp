@@ -16,7 +16,7 @@ QVector<uint32> CompressCCSCols(const QVector<uint32> &cols, index_t colcount) {
   QVector<uint32> y(int(colcount+1));
   // Scan through the columns
   int mp=0;
-  for (int col=1;col<=(colcount+1);col++) {
+  for (unsigned col=1;col<=unsigned(colcount+1);col++) {
     while ((mp < cols.size()) && (cols[mp] < col)) mp++;
     y[col-1] = mp;
   }
@@ -26,7 +26,7 @@ QVector<uint32> CompressCCSCols(const QVector<uint32> &cols, index_t colcount) {
 QVector<uint32> DecompressCCSCols(const QVector<uint32> &colstart, index_t colcount) {
   QVector<uint32> x;
   for (int p=1;p<colstart.size();p++) {
-    for (int n=0;n<(colstart[p] - colstart[p-1]);n++)
+    for (unsigned n=0;n<unsigned(colstart[p] - colstart[p-1]);n++)
       x << p;
   }
   return x;

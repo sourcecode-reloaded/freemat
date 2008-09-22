@@ -2,6 +2,7 @@
 #include "Struct.hpp"
 #include "Interpreter.hpp"
 #include "Algorithms.hpp"
+#include "HandleList.hpp"
 
 #define LOOKUP(x,field) x.constStructPtr()[field].get(1)
 
@@ -13,10 +14,11 @@
 // is because if we execute the function in question, it will overwrite
 // functions that are locally defined. 
 
+static HandleList<VariableTable*> scopeHandles;
+
 static FuncPtr FuncPtrLookup(Interpreter *eval, Array ptr) {
   if ((!ptr.isUserClass()) || (ptr.className() != "functionpointer"))
-    throw Exception("expected function pointer here");
-  const StructArray &rp(ptr.constStructPtr());
+    throw Exception("expected function pointer here, instead got " + ptr.className());
   QString name = LOOKUP(ptr,"name").asString();
   QString type = LOOKUP(ptr,"type").asString();
   if (type == "builtin") 
@@ -37,6 +39,8 @@ Array FuncPtrConstructor(Interpreter *eval, FuncPtr val) {
   fields.push_back("name");
   fields.push_back("type");
   fields.push_back("location");
+  fields.push_back("captured");
+  fields.push_back("workspace");
   ArrayVector values;
   values.push_back(Array(val->name));
   QString typecode;
@@ -65,6 +69,8 @@ Array FuncPtrConstructor(Interpreter *eval, FuncPtr val) {
     location = mptr->fileName;
   }
   values.push_back(Array(location));
+  values.push_back(Array(false));
+  values.push_back(EmptyConstructor());
   Array ret(StructConstructor(fields,values));
   ret.structPtr().setClassPath(StringVector() << "functionpointer");
   return ret;
@@ -96,16 +102,31 @@ ArrayVector FuncPtrHorzCatFunction(int nargout, const ArrayVector& arg) {
   return MatrixConstructor(t);
 }
 
+static ArrayVector FuncPtrCall(int nargout, ArrayVector& args, 
+			       FuncPtr fptr, Interpreter* eval, 
+			       Array& optr) {
+  fptr->updateCode(eval);
+  StructArray &rp(optr.structPtr());
+  Array wsHandle(rp["workspace"].get(1));
+  VariableTable *vtable = NULL;
+  if (!wsHandle.isEmpty()) {
+    int workspaceHandle = wsHandle.asInteger();
+    vtable = scopeHandles.lookupHandle(workspaceHandle);
+  }
+  return (fptr->evaluateFunction(eval,args,nargout,vtable));
+}
+
 //@@Signature
 //sfunction @functionpointer:subsref FuncPtrSubsrefFunction
 //input x s
 //output varargout
 ArrayVector FuncPtrSubsrefFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   if (arg.size() == 0) return ArrayVector();
-  FuncPtr fptr = FuncPtrLookup(eval,arg[0]);
+  Array mp(arg[0]);
+  FuncPtr fptr = FuncPtrLookup(eval,mp);
   if (!fptr)
     throw Exception("Unable to find a definition for function:" + 
-		    LOOKUP(arg[0],"name").asString());
+		    LOOKUP(mp,"name").asString());
   ArrayVector fevalArgs;
   if (arg.size() == 2) {
     if (LOOKUP(arg[1],"type").asString() != "()")
@@ -115,8 +136,7 @@ ArrayVector FuncPtrSubsrefFunction(int nargout, const ArrayVector& arg, Interpre
     for (index_t i=1;i<=rp.length();i++)
       fevalArgs.push_back(rp[i]);
   }
-  fptr->updateCode(eval);
-  return (fptr->evaluateFunction(eval,fevalArgs,nargout));
+  return FuncPtrCall(nargout,fevalArgs,fptr,eval,mp);
 }
 
 //@@Signature
@@ -125,16 +145,15 @@ ArrayVector FuncPtrSubsrefFunction(int nargout, const ArrayVector& arg, Interpre
 //output varargout
 ArrayVector FuncPtrFevalFunction(int nargout, const ArrayVector& arg, Interpreter *eval) {
   if (arg.size() == 0) return ArrayVector();
-  FuncPtr fptr = FuncPtrLookup(eval,arg[0]);
+  Array mp(arg[0]);
+  FuncPtr fptr = FuncPtrLookup(eval,mp);
   if (!fptr)
     throw Exception("Unable to find a definition for function:" + 
-		    LOOKUP(arg[0],"name").asString());
+		    LOOKUP(mp,"name").asString());
   ArrayVector fevalArgs;
   for (int i=1;i<arg.size();i++) 
     fevalArgs.push_back(arg[i]);
-  fptr->updateCode(eval);
-  return (fptr->evaluateFunction(eval,fevalArgs,nargout));
-  
+  return FuncPtrCall(nargout,fevalArgs,fptr,eval,mp);
 }
 
 //@@Signature
@@ -155,4 +174,44 @@ ArrayVector FuncPtrSubsasgnFunction(int nargout, const ArrayVector &arg, Interpr
   if (rp.length() != 1) throw Exception("Expression p(x) = y is invalid");
   x.set(rp.get(1),y);
   return ArrayVector(x);
+}
+
+static void CaptureFunctionPointer(Array &inp, Interpreter *walker,
+				   MFunctionDef *parent) {
+  if (!(LOOKUP(inp,"type").asString() == "mfunction")) return;
+  FuncPtr ptr = FuncPtrLookup(walker,inp);
+  MFunctionDef* mptr = (MFunctionDef*) ptr;
+  if (LOOKUP(inp,"captured").toClass(Bool).constRealScalar<bool>()) return;
+  Context* context = walker->getContext();
+  QString myScope = context->scopeName();
+  context->bypassScope(1);
+  QString parentScope = context->scopeName();
+  context->restoreScope(1);
+  if (!Scope::nests(parentScope,myScope)) {
+    // We need to capture the variables referenced by the
+    // function into the workspace
+    VariableTable* vptr = new VariableTable;
+    for (int i=0;i<mptr->variablesAccessed.size();i++) {
+      ArrayReference ptr(context->lookupVariable(mptr->variablesAccessed[i]));
+      if (ptr.valid())
+	vptr->insertSymbol(mptr->variablesAccessed[i],*ptr);
+    }
+    inp.structPtr()["workspace"].set(1,Array(double(scopeHandles.assignHandle(vptr))));
+  }
+  inp.structPtr()["captured"].set(1,Array(bool(true)));
+}
+
+void CaptureFunctionPointers(ArrayVector& outputs, Interpreter *walker, 
+			     MFunctionDef *parent) {
+  for (int i=0;i<outputs.size();i++) {
+    if (outputs[i].isUserClass() &&
+	(outputs[i].className() == "functionpointer")) {
+      StructArray &rp(outputs[i].structPtr());
+      for (index_t j=1;j<=rp.length();j++) {
+	Array fp(outputs[i].get(j));
+	CaptureFunctionPointer(fp,walker,parent);
+	outputs[i].set(j,fp);
+      }
+    }
+  }
 }

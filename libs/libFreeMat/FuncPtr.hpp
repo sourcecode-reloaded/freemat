@@ -6,5 +6,5 @@
 #include "Interpreter.hpp"
 
 Array FuncPtrConstructor(Interpreter*, FuncPtr);
-
+void CaptureFunctionPointers(ArrayVector &, Interpreter*, MFunctionDef*);
 #endif

@@ -22,18 +22,12 @@
 %@>
 %@figure cothplot
 %@@Tests
-%@$"y=coth(0.5)","2.16395341373865","close"
-%@$"y=coth(2.1324)","1.02851005521481","close"
-%@$"y=coth(3-4i)","0.99926692780590+0.00490118239430i","close"
-%@$"y=coth(float(2.12))","float(1.0292364)","close"
+%@$y1=coth(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL
 
 function y = coth(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('coth expects a numeric input');
-  end
   y = 1.0 ./ tanh(x);
   

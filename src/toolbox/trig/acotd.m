@@ -9,10 +9,7 @@
 %@]
 %where @|x| is an @|n|-dimensional array of numerical type.
 %@@Tests
-%@$"y=acotd(0.342)","71.11931203464857","close"
-%@$"y=acotd(2)","26.56505117707799","close"
-%@$"y=acotd(float(0.523))","float(62.3904343)","close"
-%@$"y=acotd(1)","45","close"
+%@$y1=acotd(x1)
 %!
 
 
@@ -20,9 +17,6 @@
 % Licensed under the GPL
 
 function y = acotd(x)
-  if (nargin == 0 || ~isnumeric(x) || ~isreal(x))
-    error('acot expects a single, real numeric input');
-  end
   y = rad2deg(acot(x));
   
   

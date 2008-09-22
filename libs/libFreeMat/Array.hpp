@@ -47,7 +47,7 @@ static inline DataClass GetDataClass(V c);
 size_t ByteSizeOfDataClass(DataClass);
 
 typedef struct {
-  unsigned Class : 5;
+  int Class : 5;
   unsigned Scalar : 1;
   unsigned Complex : 1;
   unsigned Sparse : 1;

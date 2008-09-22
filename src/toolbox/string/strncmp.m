@@ -46,19 +46,19 @@
 %strncmp({'this','is','a','pickle'},['peter ';'piper ';'hated ';'pickle'],4);
 %@>
 %@@Tests
-%@$"y=strncmp('astring','astring',4)","1","exact"
-%@$"y=strncmp('astring','bstring',4)","0","exact"
-%@$"x={'astring','bstring',43,'astring'};y=strncmp(x,'astring',3)","[1,0,0,1]","exact"
-%@$"y=strncmp({'this','is','a','pickle'},{'what','is','to','pickle'},3)","[0,0,0,1]","exact"
-%@$"y=strncmp({'this','is','a','pickle'},{'think','is','to','pickle'},3)","[1,0,0,1]","exact"
-%@$"y=strncmp({'this','is','a','pickle'},['peter ';'piper ';'hated ';'pickle'],4)","[0,0,0,1]","exact"
+%@$y1=strncmp(x1,x2,4)
+%@$y1=strncmp(x1,x2,3)
 %!
-
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL
 
 function y = strncmp(source,pattern,n)
+  if ((~isstr(source) && ~iscellstr(source)) || ...
+      (~isstr(pattern) && ~iscellstr(pattern)))
+     y = false;
+     return;
+  end
   if (isstr(source) & isstr(pattern))
     y = strncmp_string_string(source,pattern,n);
   else

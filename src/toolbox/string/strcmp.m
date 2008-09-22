@@ -1,3 +1,4 @@
+
 %!
 %@Module STRCMP String Compare Function
 %@@Section STRING
@@ -44,11 +45,7 @@
 %strcmp({'this','is','a','pickle'},['peter ';'piper ';'hated ';'pickle'])
 %@>
 %@@Tests
-%@$"y=strcmp('astring','astring')","1","exact"
-%@$"y=strcmp('astring','bstring')","0","exact"
-%@$"x={'astring','bstring',43,'astring'};y=strcmp(x,'astring')","[1,0,0,1]","exact"
-%@$"y=strcmp({'this','is','a','pickle'},{'what','is','to','pickle'})","[0,1,0,1]","exact"
-%@$"y=strcmp({'this','is','a','pickle'},['peter ';'piper ';'hated ';'pickle'])","[0,0,0,1]","exact"
+%@$y1=strcmp(x1,x2)
 %@{ test_strcmp1.m
 %    % Check the strcmp function for a match
 %function test_val = test_strcmp1
@@ -66,6 +63,11 @@
 % Licensed under the GPL
 
 function y = strcmp(source,pattern)
+  if ((~isstr(source) && ~iscellstr(source)) || ...
+      (~isstr(pattern) && ~iscellstr(pattern)))
+     y = false;
+     return;
+  end
   if (isstr(source) & isstr(pattern))
     y = strcmp_string_string(source,pattern);
   else

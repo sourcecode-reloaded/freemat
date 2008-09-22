@@ -17,7 +17,7 @@
 %cellstr(a)
 %@>
 %@@Tests
-%@$"y=cellstr(['quick';'brown';'fox  ';'is   '])","{'quick';'brown';'fox';'is'}","exact"
+%@$y1=cellstr(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

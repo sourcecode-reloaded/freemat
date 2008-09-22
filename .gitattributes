@@ -898,6 +898,7 @@ tests/core/testeq.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=nativ
 tests/core/time01.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 tests/core/time02.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 tests/core/time03.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+tests/matcompat/matlab7_wb_test_results.mat svn_mime_002dtype=application%2Foctet-stream
 tests/matcompat/test_file_v6.mat svn_mime_002dtype=application%2Foctet-stream
 tests/matcompat/tough.mat svn_mime_002dtype=application%2Foctet-stream
 tests/matcompat/tough_with_fp.mat svn_mime_002dtype=application%2Foctet-stream
@@ -939,4 +940,5 @@ tests/parse/bad8.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 tests/parse/bad9.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 tests/timing/timetest2.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 tests/timing/timetest3.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+tests/wb_testmatrix.mat svn_mime_002dtype=application%2Foctet-stream
 tools/freemat_nsi.in svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native

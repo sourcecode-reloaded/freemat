@@ -1,6 +1,7 @@
 #include "Array.hpp"
 #include "IEEEFP.hpp"
 #include "Algorithms.hpp"
+#include <QString>
 
 //!
 //@Module HEX2DEC Convert Hexadecimal Numbers To Decimal
@@ -21,6 +22,8 @@
 //@<
 //hex2dec(['0ff';'2de';'123'])
 //@>
+//@@Tests
+//@$y1=hex2dec(x1)
 //@@Signature
 //function hex2dec Hex2DecFunction
 //inputs x
@@ -29,6 +32,7 @@
 ArrayVector Hex2DecFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0)
     throw Exception("hex2dec requires an argument");
+  if (arg[0].isEmpty()) return ArrayVector(EmptyConstructor());
   if (!arg[0].isString())
     throw Exception("hex2dec argument must be a string");
   if (arg[0].isVector()) 
@@ -70,8 +74,7 @@ ArrayVector Hex2DecFunction(int nargout, const ArrayVector& arg) {
 //dec2hex(58128493)
 //@>
 //@@Tests
-//@$"y=dec2hex(1023)","'3ff'","exact"
-//@$"y=dec2hex(16,4)","'0010'","exact"
+//@$y1=dec2hex(x1)
 //@@Signature
 //function dec2hex Dec2HexFunction
 //inputs x digits
@@ -80,15 +83,24 @@ ArrayVector Hex2DecFunction(int nargout, const ArrayVector& arg) {
 ArrayVector Dec2HexFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)
     throw Exception("dec2hex requires at least one argument");
-  if (!arg[0].isScalar())
-    throw Exception("dec2hex requires first argument to be a scalar");
-  int64 x = arg[0].toClass(Int64).constRealScalar<int64>();
-  if (arg.size() == 1)
-    return ArrayVector(Array(QString::number(x,16)));
-  int n = arg[1].asInteger();
-  if ((n < 1) || (n > 32)) 
+  Array x = arg[0].toClass(Int64);
+  const BasicArray<int64> &xp(x.constReal<int64>());
+  int n = 0;
+  if (arg.size() > 1) n = arg[1].asInteger();
+  if ((n < 0) || (n > 32)) 
     throw Exception("illegal number of digits requested in dec2hex function");
-  return ArrayVector(Array(QString("%1").arg(x,n,16,QChar('0'))));
+  StringVector ret;
+  int maxlen = 0;
+  for (index_t i=1;i<=xp.length();i++) {
+    QString t = QString("%1").arg(xp[i],n,16,QChar('0'));
+    maxlen = qMax(maxlen,t.size());
+  }
+  if (n == 0) n = maxlen;
+  for (index_t i=1;i<=xp.length();i++) {
+    QString t = QString("%1").arg(xp[i],n,16,QChar('0')).toUpper();
+    ret << t;
+  }
+  return ArrayVector(StringArrayFromStringVector(ret));
 }
 
 
@@ -114,8 +126,7 @@ ArrayVector Dec2HexFunction(int nargout, const ArrayVector& arg) {
 //num2hex(float([1 0 0.1 -pi inf nan]))
 //@>
 //@@Tests
-//@$"y=num2hex(-pi)","'c00921fb54442d18'","exact"
-//@$"y=num2hex(.1f)","'3dcccccd'","exact"
+//@$y1=num2hex(x1)
 //@@Signature
 //function num2hex Num2HexFunction
 //inputs x

@@ -18,17 +18,11 @@
 %asecd(2)
 %@>
 %@@Tests
-%@$"y=asecd(0.342)","0-99.43555562312426i","close"
-%@$"y=asecd(2)","60","close"
-%@$"y=asecd(float(2.523))","float(66.6495819)","close"
-%@$"y=asecd(inf)","90","close"
+%@$y1=asecd(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL
 
 function y = asecd(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('asecd expects a numeric input');
-  end
   y = rad2deg(asec(x));

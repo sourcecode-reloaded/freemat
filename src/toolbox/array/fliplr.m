@@ -20,9 +20,7 @@
 %fliplr(x)
 %@>
 %@@Tests
-%@$"y=fliplr([1,2,3])","[3,2,1]","exact"
-%@$"y=fliplr([1;2;3])","[1;2;3]","exact"
-%@$"y=fliplr([])","[]","exact"
+%@$y1=fliplr(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

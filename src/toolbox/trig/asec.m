@@ -23,10 +23,7 @@
 %@>
 %@figure asecplot
 %@@Tests
-%@$"y=asec(2.342)","1.12963987411802","close"
-%@$"y=asec(0.342+0.532i)","1.07886824988565+1.19972722497695i","close"
-%@$"y=asec(inf)","pi/2","close"
-%@$"y=asec(float(2.523))","float(1.1632546)","close"
+%@$y1=asec(x1)
 %!
 
 
@@ -34,8 +31,5 @@
 % Licensed under the GPL
 
 function y = asec(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('asec expects a single, numeric input');
-  end
   y = acos(1 ./ x);
   

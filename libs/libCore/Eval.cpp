@@ -108,6 +108,8 @@ static ArrayVector EvalTryFunction(int nargout, const ArrayVector& arg, Interpre
     bool autostop;
     autostop = eval->AutoStop();
     eval->setAutoStop(false);
+    bool save_trycatch_flag(eval->getTryCatchActive());
+    eval->setTryCatchActive(true);
     try {
       eval->getContext()->bypassScope(popSpec);
       eval->evaluateString(try_buf,true);
@@ -118,6 +120,7 @@ static ArrayVector EvalTryFunction(int nargout, const ArrayVector& arg, Interpre
       eval->evaluateString(catch_buf,false);
       retval = RetrieveCallVars(eval,nargout);
     }
+    eval->setTryCatchActive(save_trycatch_flag);
     eval->setAutoStop(autostop);
     return retval;
   } else {
@@ -128,6 +131,8 @@ static ArrayVector EvalTryFunction(int nargout, const ArrayVector& arg, Interpre
     bool autostop;
     autostop = eval->AutoStop();
     eval->setAutoStop(false);
+    bool save_trycatch_flag(eval->getTryCatchActive());
+    eval->setTryCatchActive(true);
     try {
       eval->getContext()->bypassScope(popSpec);
       eval->evaluateString(try_buf,true);
@@ -136,6 +141,7 @@ static ArrayVector EvalTryFunction(int nargout, const ArrayVector& arg, Interpre
       eval->getContext()->restoreBypassedScopes();
       eval->evaluateString(catch_buf,false);
     }
+    eval->setTryCatchActive(save_trycatch_flag);
     eval->setAutoStop(autostop);
     return ArrayVector();
   }
@@ -294,9 +300,8 @@ ArrayVector AssignInFunction(int nargout, const ArrayVector& arg, Interpreter* e
 //calls the @|subsref| method of the class, which computes the requested 
 //function.
 //@@Tests
-//@$"y = feval(@cos,pi)","-1","close"
-//@$"y = feval('cos',pi)","-1","close"
-//@$"y = feval(inline('cos(t)'),pi)","-1","close"
+//@$y1 = feval(@cos,x1)
+//@$y1 = feval(inline('cos(t)'),x1)
 //@{ test_feval1.m
 //function test_val = test_feval1
 //y = 0;

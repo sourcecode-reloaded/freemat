@@ -25,9 +25,7 @@
 %lower({'This','Is','Strange','CAPitalizaTion'})
 %@>
 %@@Tests
-%@$"y=lower('hello')","'hello'","exact"
-%@$"y=lower('HELLO')","'hello'","exact"
-%@$"y=lower({'Ab','cD','EF'})","{'ab','cd','ef'}","exact"
+%@$y1=lower(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu
@@ -42,7 +40,7 @@ function y = lower(x)
       y{i} = lower_string(x{i});
     end
   else
-    error('lower expects a string or cell array of strings as an argument');
+    y = x;
   end
 
 function y = lower_string(x)

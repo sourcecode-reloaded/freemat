@@ -41,8 +41,7 @@ struct OpAbs {
 //abs([2.0+3.0*i,i])
 //@>
 //@@Tests
-//@$"y=abs('hello')","[104,101,108,108,111]","exact"
-//@$"y=abs(3+4i)","5","exact"
+//@$y1=abs(x1)
 //@@Signature
 //function abs AbsFunction
 //inputs x

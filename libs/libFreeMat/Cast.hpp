@@ -134,7 +134,7 @@ MacroCastNoLimit(int32,uint8);
 MacroCastNoLimit(int16,uint8);
 MacroCastUpLimit(int8,uint8,int8(127));
 
-MacroCastLimit(uint64,int64,0,Q_UINT64_C(18446744073709551615));	
+MacroCastLimit(uint64,int64,0,Q_INT64_C(9223372036854775807));	
 MacroCastLimit(uint32,int64,0,uint32(4294967295U));			
 MacroCastLimit(uint16,int64,0,uint16(65535));			
 MacroCastLimit(uint8,int64,0,uint8(255));				
@@ -143,7 +143,7 @@ MacroCastLimit(int32,int64,int32(-2147483647),int32(2147483647));
 MacroCastLimit(int16,int64,int16(-32767),int16(32767));		
 MacroCastLimit(int8,int64,int8(-127),int8(127));
 
-MacroCastLimit(uint64,int32,0,Q_UINT64_C(18446744073709551615));	
+MacroCastPosLimit(uint64,int32);	
 MacroCastPosLimit(uint32,int32);
 MacroCastLimit(uint16,int32,0,uint16(65535));			
 MacroCastLimit(uint8,int32,0,uint8(255));				
@@ -152,8 +152,8 @@ MacroCastNoOp(int32,int32);
 MacroCastLimit(int16,int32,int16(-32767),int16(32767));		
 MacroCastLimit(int8,int32,int8(-127),int8(127));
 
-MacroCastLimit(uint64,int16,0,Q_UINT64_C(18446744073709551615));	
-MacroCastLimit(uint32,int16,0,uint32(4294967295U));			
+MacroCastPosLimit(uint64,int16);	
+MacroCastPosLimit(uint32,int16);			
 MacroCastPosLimit(uint16,int16);
 MacroCastLimit(uint8,int16,0,uint8(255));				
 MacroCastNoLimit(int64,int16);

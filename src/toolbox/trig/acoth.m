@@ -22,10 +22,7 @@
 %@>
 %@figure acothplot
 %@@Tests
-%@$"y=acoth(0.342)","0.35635569310316+1.57079632679490i","close"
-%@$"y=acoth(0.342+0.532i)","0.26709380941391-1.04213231279336i","close"
-%@$"y=acoth(inf)","0","exact"
-%@$"y=acoth(float(0.523))","float(0.5804604+1.5707964i)","close"
+%@$y1=acoth(x1)
 %!
 
 
@@ -33,8 +30,5 @@
 % Licensed under the GPL
 
 function y = acoth(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('acoth expects a single, numeric input');
-  end
   y = atanh(1 ./ x);
   

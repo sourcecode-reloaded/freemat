@@ -240,7 +240,6 @@ ArrayVector FcloseFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("Fclose must have one argument, either 'all' or a file handle");
   bool closingAll = false;
-  int retval = 0;
   if (arg[0].isString()) {
     QString allflag = arg[0].asString().toLower();
     if (allflag == "all") {
@@ -343,12 +342,12 @@ Array Tread(QFile* fp, NTuple dim, bool swapflag) {
   }
   if (!swapflag) {
     BasicArray<T> rp(dim);
-    int64 read = fp->read((char*)(rp.data()),bufsize);
+    fp->read((char*)(rp.data()),bufsize);
     return Array(rp);
   } else {
     MemBlock<T> pbuf(size_t(bufsize/sizeof(T)));
     T* pb = &pbuf;
-    int64 read = fp->read((char*)pb,bufsize);
+    fp->read((char*)pb,bufsize);
     SwapBuffer((char*)pb,bufsize/sizeof(T),sizeof(T));
     BasicArray<T> rp(dim);
     memcpy(rp.data(),pb,bufsize);

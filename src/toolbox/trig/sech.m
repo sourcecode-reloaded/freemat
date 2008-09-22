@@ -21,18 +21,12 @@
 %@>
 %@figure sechplot
 %@@Tests
-%@$"y=sech(3)","0.09932792741943","close"
-%@$"y=sech(-3.5)","0.06033974412017","close"
-%@$"y=sech(1+3*i)","-0.64698003387259-0.07023784378464i","close"
-%@$"y=sech(float(5.234))","float(0.0106640)","close"
+%@$y1=sech(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL
 
 function y = sech(x)
-  if (nargin == 0 || ~isnumeric(x))
-    error('sech expects a numeric input');
-  end
   y = 1.0 ./cosh(x);
   

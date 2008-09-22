@@ -34,8 +34,8 @@
 //size(B)
 //@>
 //@@Tests
-//@$"y=permute([1,2;3,4],[2,1])","[1,3;2,4]","exact"
-//@$"y=size(permute(randn(13,5,7,2),[3,4,2,1]))","[7,2,5,13]","exact"
+//@$y1=permute(x1,[2,1])
+//@$y1=size(permute(x1,[3,4,2,1]))
 //@{ test_permute1.m
 //function test_val = test_permute1
 //z = rand(3,5,2,4,7);
@@ -60,26 +60,21 @@
 ArrayVector PermuteFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 2) throw Exception("permute requires 2 inputs, the array to permute, and the permutation vector");
   Array permutation(arg[1].asDenseArray().toClass(UInt32));
-  int Adims = arg[0].dimensions().lastNotOne();
-  if (permutation.length() != Adims)
-    throw Exception("permutation vector must contain as many elements as the array to permute has dimensions");
-  // Check that it is, in fact a permutation
-  MemBlock<bool> p(Adims);
+  const BasicArray<uint32> &perm_dp(permutation.constReal<uint32>());
+  uint32 max_perm_value = MaxValue(perm_dp);
+  uint32 min_perm_value = MinValue(perm_dp);
+  if ((max_perm_value != permutation.length()) || (min_perm_value != 1))
+    throw Exception("second argument is not a valid permutation");
+  MemBlock<bool> p(max_perm_value);
   bool *d = &p;
-  for (int i=0;i<Adims;i++) d[i] = false;
-  const BasicArray<uint32> &dp = permutation.constReal<uint32>();
-  for (int i=1;i<=Adims;i++) {
-    if ((dp[i] < 1) || (dp[i] > ((uint32)Adims)))
-      throw Exception("permutation vector elements are limited to 1..ndims(A), where A is the array to permute");
-    d[dp[i]-1] = true;
-  }
-  // Check that all are covered
-  for (int i=0;i<Adims;i++)
-    if (!d[i]) throw Exception("second argument to permute function is not a permutation (no duplicates allowed)");
+  for (index_t i=1;i<=perm_dp.length();i++) 
+    d[perm_dp[i]-1] = true;
+  for (int i=0;i<max_perm_value;i++)
+    if (!d[i]) throw Exception("second argument is not a valid permutation");
   // Convert to an N-Tuple
-  NTuple perm(ConvertArrayToNTuple(dp));
+  NTuple perm(ConvertArrayToNTuple(permutation));
   // Post-fill the N-Tuple so that the permutation covers all of the dimensions
-  for (int i=Adims;i<NDims;i++)
+  for (int i=permutation.length();i<NDims;i++)
     perm[i] = (i+1);
   return ArrayVector(Permute(arg[0],perm));
 }
@@ -125,6 +120,9 @@ ArrayVector PermuteFunction(int nargout, const ArrayVector& arg) {
 //x = [1 2;3 4]
 //y = repmat(x,[1,1,3])
 //@>
+//@@Tests
+//@$y1 = repmat(x1,[1,1,3])
+//@$y1 = repmat(x1,[5,1])
 //@@Signature
 //function repmat RepMatFunction
 //inputs x rows cols
@@ -230,7 +228,6 @@ ArrayVector RepMatFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 2)
     throw Exception("repmat function requires at least two arguments");
   Array x(arg[0]);
-  if (x.isEmpty()) return ArrayVector(arg[0]);
   NTuple repcount;
   // Case 1, look for a scalar second argument
   if ((arg.size() == 2) && (arg[1].isScalar())) {
@@ -254,6 +251,11 @@ ArrayVector RepMatFunction(int nargout, const ArrayVector& arg) {
   NTuple outdims;
   for (int i=0;i<NDims;i++)
     outdims[i] = x.dimensions()[i]*repcount[i];
+  if (x.isEmpty()) {
+    Array p(arg[0]);
+    p.reshape(outdims);
+    return ArrayVector(p);
+  }
   switch (x.dataClass()) {
   default: throw Exception("Unhandled type for repmat");
     MacroExpandCasesNoCell(MacroRepMat);

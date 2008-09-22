@@ -25,10 +25,8 @@
 %strtrim({'  space','enough ',' for ',''})
 %@>
 %@@Tests
-%@$"y=strtrim('  lot of blank spaces    ')","'lot of blank spaces'","exact"
-%@$"y=strtrim({'  space','enough ',' for ',''})","{'space','enough','for',''}","exact"
+%@$y1=strtrim(x1)
 %!
-
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL

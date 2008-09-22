@@ -25,9 +25,7 @@
 %upper({'This','Is','Strange','CAPitalizaTion'})
 %@>
 %@@Tests
-%@$"y=upper('hello')","'HELLO'","exact"
-%@$"y=upper('HELLO')","'HELLO'","exact"
-%@$"y=upper({'Ab','cD','EF'})","{'AB','CD','EF'}","exact"
+%@$y1=upper(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu
@@ -42,7 +40,7 @@ function y = upper(x)
       y{i} = upper_string(x{i});
     end
   else
-    error('upper expects a string or cell array of strings as an argument');
+    y = x;
   end
 
 function y = upper_string(x)

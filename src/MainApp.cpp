@@ -883,7 +883,7 @@ static bool m_profiler_active = false;
 static double m_profiler_ticks = 0;
 
 static void DumpProfileDB() {
-  double profiler_ticks = m_profiler_ticks;
+  //  double profiler_ticks = m_profiler_ticks;
   dbout << "Total ticks " << m_profiler_ticks << "\r\n";
   for (ProfileDB::const_iterator i=m_profileDB.begin();i!=m_profileDB.end();i++) {
     qDebug() << "Module " << i->first << "\r\n";
@@ -1063,6 +1063,14 @@ void MainApp::UpdatePaths() {
   }
 }
 
+static int m_mainID;
+
+void WarningMessage(QString txt) {
+  Interpreter *m_eval = m_threadHandles.lookupHandle(m_mainID);
+  if (m_eval)
+    m_eval->warningMessage(txt);
+}
+
 int MainApp::StartNewInterpreterThread() {
   Interpreter *p_eval = new Interpreter(NewContext());
   p_eval->setBasePath(basePath);
@@ -1087,8 +1095,6 @@ int MainApp::StartNewInterpreterThread() {
 #endif
   return threadID;
 }
-
-static int m_mainID;
 
 //
 // This method is called to collect information on the IP counter for a 

@@ -32,6 +32,7 @@
 #include <sys/stat.h>
 #include "MemPtr.hpp"
 #include "Algorithms.hpp"
+#include "FuncPtr.hpp"
 
 #if HAVE_AVCALL
 #include "avcall.h"
@@ -67,72 +68,6 @@ void VariableReferencesList(Tree *t, StringVector& idents) {
     VariableReferencesList(t->child(i),idents);
 }
 
-AnonymousFunctionDef::AnonymousFunctionDef() {
-}
-
-AnonymousFunctionDef::~AnonymousFunctionDef() {
-}
-
-int AnonymousFunctionDef::inputArgCount() {
-  return arguments.size();
-}
-
-int AnonymousFunctionDef::outputArgCount() {
-  return -1;
-}
-
-ArrayVector AnonymousFunctionDef::evaluateFunction(Interpreter *eval, ArrayVector& inputs, int nargout) {
-  ArrayVector outputs;
-  if (!code.tree()->valid()) return outputs;
-  Context * context = eval->getContext();
-  context->pushScope("anonymous");
-  eval->pushDebug("anonymous","anonymous");
-  StringVector workspaceVars(workspace.getCompletions(""));
-  for (int i=0;i<workspaceVars.size();i++)
-    context->insertVariableLocally(workspaceVars[i],*workspace.findSymbol(workspaceVars[i]));
-  int minCount = (((int)inputs.size()) < arguments.size()) ? 
-    inputs.size() : arguments.size();
-  for (int i=0;i<minCount;i++)
-    context->insertVariableLocally(arguments[i],inputs[i]);
-  try {
-    try {
-      eval->multiexpr(code.tree(),outputs);
-    } catch (InterpreterBreakException& e) {
-    } catch (InterpreterContinueException& e) {
-    } catch (InterpreterReturnException& e) {
-    }
-    context->popScope();
-    eval->popDebug();
-  } catch (Exception& e) {
-    context->popScope();
-    eval->popDebug();
-    throw;
-  } catch (InterpreterRetallException& e) {
-    context->popScope();
-    eval->popDebug();
-    throw;    
-  }
-  return outputs;
-}
-
-void AnonymousFunctionDef::initialize(Tree *t, Interpreter *eval) {
-  name = t->text();
-  arguments = IdentifierList(t->first());
-  code = CodeBlock(t->second(),true);
-  scriptFlag = false;
-  temporaryFlag = false;
-  graphicsFunction = false;
-  StringVector vars;
-  VariableReferencesList(t->second(),vars);
-  for (int i=0;i<vars.size();i++) {
-    ArrayReference ptr(eval->getContext()->lookupVariable(vars[i]));
-    if (ptr.valid()) {
-      //      dbout << "Captured VAR: " << vars[i] << "\r\n";
-      workspace.insertSymbol(vars[i],*ptr);
-    }
-  }
-}
-
 MFunctionDef::MFunctionDef() {
   functionCompiled = false;
   localFunction = false;
@@ -141,7 +76,6 @@ MFunctionDef::MFunctionDef() {
 #warning - check pcode
 #endif
   nestedFunction = false;
-  capturedFunction = false;
 }
 
 MFunctionDef::~MFunctionDef() {
@@ -181,53 +115,10 @@ void MFunctionDef::printMe(Interpreter*eval) {
   code.tree()->print();
 }
 
-static void CaptureFunctionPointer(FuncPtr &val, Interpreter *walker, 
-				   MFunctionDef *parent, ScopePtr &workspace) {
-  if (val->type() == FM_M_FUNCTION) {
-    MFunctionDef* mptr = (MFunctionDef*) val;
-    if (mptr->nestedFunction && !mptr->capturedFunction) {
-      MFunctionDef* optr = new MFunctionDef;
-      (*optr) = (*mptr);
-      Context* context = walker->getContext();
-      QString myScope = context->scopeName();
-      context->bypassScope(1);
-      QString parentScope = context->scopeName();
-      context->restoreScope(1);
-      if (!Scope::nests(parentScope,myScope)) {
-	// Now capture the variables in our current scope
-	for (int i=0;i<optr->variablesAccessed.size();i++) {
-	  ArrayReference ptr(context->lookupVariable(optr->variablesAccessed[i]));
-	  if (ptr.valid()) {
-	    if (!workspace)
-	      workspace = new Scope("captured",false);
-	    workspace->insertVariable(optr->variablesAccessed[i],*ptr);
-	  }
-	}
-	optr->workspace = workspace;
-	optr->capturedFunction = true;
-      }
-      val = optr;
-    }
-  }
-}
-
-static void CaptureFunctionPointers(ArrayVector& outputs, Interpreter *walker, 
-			     MFunctionDef *parent) {
-// FIXME
-//   ScopePtr workspace = NULL;
-//   // First check for any 
-//   for (int i=0;i<((int)outputs.size());i++) {
-//     if (outputs[i].dataClass() == FM_FUNCPTR_ARRAY) {
-//       FuncPtr *dp = (FuncPtr*) outputs[i].getReadWriteDataPointer();
-//       for (int j=0;j<outputs[i].getLength();j++)
-// 	CaptureFunctionPointer(dp[j],walker,parent,workspace);
-//     }
-//   }
-}
-
 ArrayVector MFunctionDef::evaluateFunction(Interpreter *walker, 
 					   ArrayVector& inputs, 
-					   int nargout) {
+					   int nargout,
+					   VariableTable *workspace) {
   ArrayVector outputs;
   Context* context;
   bool warningIssued;
@@ -238,11 +129,11 @@ ArrayVector MFunctionDef::evaluateFunction(Interpreter *walker,
   context->pushScope(name,nestedFunction);
   context->setVariablesAccessed(variablesAccessed);
   context->setLocalVariablesList(returnVals);
-  if (capturedFunction && workspace) {
+  if (workspace) {
     StringVector workspaceVars(workspace->getCompletions(""));
     for (int i=0;i<workspaceVars.size();i++)
       context->insertVariableLocally(workspaceVars[i],
-				     *workspace->lookupVariable(workspaceVars[i]));
+				     *workspace->findSymbol(workspaceVars[i]));
   }
   walker->pushDebug(fileName,name);
   // When the function is called, the number of inputs is
@@ -382,22 +273,22 @@ ArrayVector MFunctionDef::evaluateFunction(Interpreter *walker,
     }
     // Check the outputs for function pointers
     CaptureFunctionPointers(outputs,walker,this);
-    if (capturedFunction && workspace) {
+    if (workspace) {
       StringVector workspaceVars(workspace->getCompletions(""));
       for (int i=0;i<workspaceVars.size();i++) {
 	Array *ptr = context->lookupVariableLocally(workspaceVars[i]);
-	workspace->insertVariable(workspaceVars[i],*ptr);
+	workspace->insertSymbol(workspaceVars[i],*ptr);
       }
     }
     context->popScope();
     walker->popDebug();
     return outputs;
   } catch (Exception& e) {
-    if (capturedFunction && workspace) {
+    if (workspace) {
       StringVector workspaceVars(workspace->getCompletions(""));
       for (int i=0;i<workspaceVars.size();i++) {
 	Array *ptr = context->lookupVariableLocally(workspaceVars[i]);
-	workspace->insertVariable(workspaceVars[i],*ptr);
+	workspace->insertSymbol(workspaceVars[i],*ptr);
       }
     }
     context->popScope();
@@ -405,11 +296,11 @@ ArrayVector MFunctionDef::evaluateFunction(Interpreter *walker,
     throw;
   }
   catch (InterpreterRetallException& e) {
-    if (capturedFunction && workspace) {
+    if (workspace) {
       StringVector workspaceVars(workspace->getCompletions(""));
       for (int i=0;i<workspaceVars.size();i++) {
 	Array *ptr = context->lookupVariableLocally(workspaceVars[i]);
-	workspace->insertVariable(workspaceVars[i],*ptr);
+	workspace->insertSymbol(workspaceVars[i],*ptr);
       }
     }
     context->popScope();
@@ -623,8 +514,10 @@ void BuiltInFunctionDef::printMe(Interpreter *eval) {
 }
 
 
-ArrayVector BuiltInFunctionDef::evaluateFunction(Interpreter *walker, ArrayVector& inputs, 
-						 int nargout) {
+ArrayVector BuiltInFunctionDef::evaluateFunction(Interpreter *walker,
+						 ArrayVector& inputs, 
+						 int nargout,
+						 VariableTable*) {
   ArrayVector outputs;
   walker->pushDebug(name,"built in");
   try {
@@ -648,7 +541,9 @@ SpecialFunctionDef::~SpecialFunctionDef() {
 }
 
 ArrayVector SpecialFunctionDef::evaluateFunction(Interpreter *walker, 
-						 ArrayVector& inputs, int nargout) {
+						 ArrayVector& inputs, 
+						 int nargout, 
+						 VariableTable*) {
   ArrayVector outputs;
   walker->pushDebug(name,"built in");
   try {
@@ -739,7 +634,8 @@ static DataClass mapTypeNameToClass(QString name) {
 
 ArrayVector ImportedFunctionDef::evaluateFunction(Interpreter *walker,
 						  ArrayVector& inputs,
-						  int nargout) {
+						  int nargout,
+						  VariableTable*) {
 #if HAVE_AVCALL
   walker->pushDebug(name,"imported");
   /**
@@ -748,7 +644,7 @@ ArrayVector ImportedFunctionDef::evaluateFunction(Interpreter *walker,
    */
   int i;
   for (i=0;i<inputs.size();i++)
-    inputs[i] = inputs[i].toClass(mapTypeNameToClass(types[i]));
+    inputs[i] = inputs[i].asDenseArray().toClass(mapTypeNameToClass(types[i]));
   /**
    * Next, we count how many of the inputs are to be passed by
    * reference.
@@ -965,7 +861,8 @@ void MexFunctionDef::printMe(Interpreter *) {
   
 ArrayVector MexFunctionDef::evaluateFunction(Interpreter *walker, 
 					     ArrayVector& inputs, 
-					     int nargout) {
+					     int nargout,
+					     VariableTable*) {
   // Convert arguments to mxArray
   mxArray** args = new mxArray*[inputs.size()];
   for (int i=0;i<inputs.size();i++)
