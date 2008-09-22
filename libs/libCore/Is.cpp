@@ -47,16 +47,6 @@ MacroDefIsSame(int64);
 MacroDefIsSame(uint64);
 MacroDefIsSame(QChar);
 
-//returns distance to the next nearest double value
-static inline double feps( double x ){
-    return nextafter( x , DBL_MAX ) - x;
-}
-
-//returns distance to the next nearest float value
-static inline float fepsf( float x ){
-    return nextafterf( x , FLT_MAX ) - x;
-}
-
 template <>
 bool IsSame(const float& a, const float& b) {
   return ((a == b) || (IsNaN(a) && IsNaN(b)) || 

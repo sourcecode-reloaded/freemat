@@ -891,7 +891,7 @@ static void DumpProfileDB() {
     double ticks_this_module = 0;
     for (int j=0;j<p.size();j++) {
       //      if (p[j] > 0)
-	qDebug() << "Line " << j << " " << p[j] << " counts " << p[j]/profiler_ticks*100.0 << "%\r\n";
+	qDebug() << "Line " << j << " " << p[j] << " counts " << p[j]/m_profiler_ticks*100.0 << "%\r\n";
       ticks_this_module += p[j];
     }
     //qDebug() << "Total time in " << i->first << " " << ticks_this_module << " counts "  
