@@ -25,11 +25,11 @@
 % Licensed under the GPL
 
 function y = dot(x,z,dim)
-  if (isvector(x) && isvector(z))
+   if (isvector(x) && isvector(z) && ~exist('dim'))
     if (numel(x) ~= numel(z))
       error('dot requires its arguments to be equal length');
     end
-    y = x(:)'*z(:);
+    y = x(:).'*z(:);
   else
     try
       q = x.*z;

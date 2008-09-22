@@ -3,7 +3,8 @@ function wbgentests(fname_in,fname_out)
 % Load the test inputs
 load(fname_in)
 outputs = {};
-for ndx=1:size(recs,1)
+for ndx=1:18000
+%for ndx=1:size(recs,1)
   if (rem(ndx,1000)==0)
     fprintf('Processing test %d of %d...\r',ndx,size(recs,1));
   end

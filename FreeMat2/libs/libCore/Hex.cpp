@@ -1,6 +1,7 @@
 #include "Array.hpp"
 #include "IEEEFP.hpp"
 #include "Algorithms.hpp"
+#include <QString>
 
 //!
 //@Module HEX2DEC Convert Hexadecimal Numbers To Decimal
@@ -31,6 +32,7 @@
 ArrayVector Hex2DecFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0)
     throw Exception("hex2dec requires an argument");
+  if (arg[0].isEmpty()) return ArrayVector(EmptyConstructor());
   if (!arg[0].isString())
     throw Exception("hex2dec argument must be a string");
   if (arg[0].isVector()) 
@@ -81,15 +83,24 @@ ArrayVector Hex2DecFunction(int nargout, const ArrayVector& arg) {
 ArrayVector Dec2HexFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)
     throw Exception("dec2hex requires at least one argument");
-  if (!arg[0].isScalar())
-    throw Exception("dec2hex requires first argument to be a scalar");
-  int64 x = arg[0].toClass(Int64).constRealScalar<int64>();
-  if (arg.size() == 1)
-    return ArrayVector(Array(QString::number(x,16)));
-  int n = arg[1].asInteger();
-  if ((n < 1) || (n > 32)) 
+  Array x = arg[0].toClass(Int64);
+  const BasicArray<int64> &xp(x.constReal<int64>());
+  int n = 0;
+  if (arg.size() > 1) n = arg[1].asInteger();
+  if ((n < 0) || (n > 32)) 
     throw Exception("illegal number of digits requested in dec2hex function");
-  return ArrayVector(Array(QString("%1").arg(x,n,16,QChar('0'))));
+  StringVector ret;
+  int maxlen = 0;
+  for (index_t i=1;i<=xp.length();i++) {
+    QString t = QString("%1").arg(xp[i],n,16,QChar('0'));
+    maxlen = qMax(maxlen,t.size());
+  }
+  if (n == 0) n = maxlen;
+  for (index_t i=1;i<=xp.length();i++) {
+    QString t = QString("%1").arg(xp[i],n,16,QChar('0')).toUpper();
+    ret << t;
+  }
+  return ArrayVector(StringArrayFromStringVector(ret));
 }
 
 

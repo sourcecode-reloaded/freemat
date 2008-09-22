@@ -63,6 +63,11 @@
 % Licensed under the GPL
 
 function y = strcmp(source,pattern)
+  if ((~isstr(source) && ~iscellstr(source)) || ...
+      (~isstr(pattern) && ~iscellstr(pattern)))
+     y = false;
+     return;
+  end
   if (isstr(source) & isstr(pattern))
     y = strcmp_string_string(source,pattern);
   else

@@ -136,7 +136,8 @@ const IndexArray IndexArrayFromArray(const Array &index) {
 }
 
 const ArrayVector ArrayVectorFromCellArray(const Array &arg) {
-  if (arg.dataClass() != CellArray) 
+  if (arg.isEmpty()) return ArrayVector();
+  if (arg.dataClass() != CellArray)
     throw Exception("Unsupported type for call to toArrayVector");
   ArrayVector ret;
   const BasicArray<Array> &rp(arg.constReal<Array>());
@@ -183,8 +184,21 @@ const Array CellArrayFromStringVector(const StringVector& arg) {
 }
 
 StringVector StringVectorFromArray(const Array &arg) {
-  if (arg.isString())
-    return StringVector(arg.asString());
+  if (arg.isString()) {
+    const BasicArray<QChar> &ap(arg.constReal<QChar>());
+    ConstBasicIterator<QChar> iter(&ap,1);
+    StringVector ret;
+    while (iter.isValid()) {
+      QString t;
+      for (index_t i=1;i<=iter.size();i++) {
+	t += iter.get();
+	iter.next();
+      }
+      iter.nextSlice();
+      ret << t;
+    }
+    return ret;
+  }
   if (!IsCellStringArray(arg)) throw Exception("Cannot convert array to a set of a strings");
   StringVector ret;
   const BasicArray<Array> &rp(arg.constReal<Array>());
@@ -958,7 +972,14 @@ Array Permute(const Array &A, const NTuple &dp) {
   for (int i=0;i<NDims;i++)
     if (dp[i] != (i+1)) id_perm = false;
   if (id_perm) return A;
-  if (A.is2D()) return Transpose(A);
+  if (A.is2D()) {
+    bool isTranspose = true;
+    for (int  i=2;i<NDims;i++)
+      if (dp[i] != (i+1)) isTranspose = false;
+    if (dp[0] != 2) isTranspose = false;
+    if (dp[1] != 1) isTranspose = false;
+    if (isTranspose) return Transpose(A);
+  }
   if (A.isSparse()) throw Exception("illegal permutation for sparse arrays");
   if (A.isScalar()) return A;
   if (A.isEmpty()) return Array(A.dataClass(),outdims);

@@ -40,7 +40,7 @@ function y = upper(x)
       y{i} = upper_string(x{i});
     end
   else
-    error('upper expects a string or cell array of strings as an argument');
+    y = x;
   end
 
 function y = upper_string(x)

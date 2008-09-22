@@ -656,7 +656,7 @@ static inline Array VectorOp(const Array &Ain, index_t out, int dim, DataClass T
       F = VectorOp<T,Op>(Acast.constRealSparse<T>(),
 			 Acast.constImagSparse<T>(),out,dim);
   }
-  if (!Acast.isScalar()) Acast = Acast.asDenseArray();
+  if (Acast.isScalar()) Acast = Acast.asDenseArray();
   if (Acast.allReal()) {
     F = VectorOp<T,Op>(Acast.constReal<T>(),out,dim);
   } else {

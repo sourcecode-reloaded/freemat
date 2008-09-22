@@ -40,7 +40,7 @@ function y = lower(x)
       y{i} = lower_string(x{i});
     end
   else
-    error('lower expects a string or cell array of strings as an argument');
+    y = x;
   end
 
 function y = lower_string(x)

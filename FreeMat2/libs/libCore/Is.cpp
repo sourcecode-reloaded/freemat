@@ -3,6 +3,8 @@
 #include "IEEEFP.hpp"
 #include "Operators.hpp"
 #include "Struct.hpp"
+#include <math.h>
+#include <float.h>
 
 //!
 //@Module ISSAME Test If Two Arrays Are Identical
@@ -45,14 +47,26 @@ MacroDefIsSame(int64);
 MacroDefIsSame(uint64);
 MacroDefIsSame(QChar);
 
+//returns distance to the next nearest double value
+static inline double feps( double x ){
+    return nextafter( x , DBL_MAX ) - x;
+}
+
+//returns distance to the next nearest float value
+static inline float fepsf( float x ){
+    return nextafterf( x , FLT_MAX ) - x;
+}
+
 template <>
 bool IsSame(const float& a, const float& b) {
-  return ((a == b) || (IsNaN(a) && IsNaN(b)));
+  return ((a == b) || (IsNaN(a) && IsNaN(b)) || 
+	  (fabsf(b-a) <= fepsf(qMax(fabsf(a),fabsf(b)))));
 }
 
 template <>
 bool IsSame(const double& a, const double& b) {
-  return ((a == b) || (IsNaN(a) && IsNaN(b)));
+  return ((a == b) || (IsNaN(a) && IsNaN(b)) || 
+	  (fabs(b-a) <= feps(qMax(fabs(a),fabs(b)))));
 }
 
 template <>
@@ -77,7 +91,9 @@ static bool IsSameStruct(const Array& a, const Array& b) {
 }
 
 #define MacroIsSame(ctype,cls) \
-  case cls: return IsSame(ad.constReal<ctype>(),bd.constReal<ctype>());
+  case cls: { \
+  if (ad.allReal())
+  return IsSame(ad.constReal<ctype>(),bd.constReal<ctype>());
 
 template <>
 bool IsSame(const Array& a, const Array& b) {

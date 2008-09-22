@@ -28,12 +28,12 @@
 
 function syms = symvar(expr)
   ignore = {'pi','inf','nan','eps','i','j'};
-  tsyms = regexp(expr,'(\b[a-zA-Z]\w*\b)(?!\s*\()','tokens');
+  tsyms = regexp(char(expr),'(\b[a-zA-Z]\w*\b)(?!\s*\()','tokens');
   tsyms = unique([tsyms{:}]);
-  syms = {};
+  syms = cell(0,1);
   for i = 1:numel(tsyms)
     if (~any(strcmp(tsyms{i},ignore)))
-      syms = [syms,{tsyms{i}}];
+      syms = [syms;{tsyms{i}}];
     end
   end
   

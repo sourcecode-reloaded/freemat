@@ -465,6 +465,17 @@ bool AnyNotFinite(const BasicArray<T>& arg) {
 }
 
 template <typename T>
+T MinValue(const BasicArray<T>& arg) {
+  if (arg.isEmpty())
+    throw Exception("Cannot use this min function on empty arrays.");
+  T retval = arg[1];
+  for (int i=2;i<=arg.length();i++)
+    if (retval > arg[i])
+      retval = arg[i];
+  return retval;
+}
+
+template <typename T>
 T MaxValue(const BasicArray<T>& arg) {
   if (arg.isEmpty()) 
     throw Exception("Cannot use this max function on empty arrays.");
