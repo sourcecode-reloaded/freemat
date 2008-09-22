@@ -90,10 +90,18 @@ static bool IsSameStruct(const Array& a, const Array& b) {
   return true;
 }
 
-#define MacroIsSame(ctype,cls) \
-  case cls: { \
-  if (ad.allReal())
-  return IsSame(ad.constReal<ctype>(),bd.constReal<ctype>());
+#define MacroIsSame(ctype,cls)						\
+  case cls:								\
+  { 									\
+  if (ad.allReal() && bd.allReal())					\
+    return IsSame(ad.constReal<ctype>(),bd.constReal<ctype>());		\
+  else {								\
+    Array ac(a); ac.forceComplex();					\
+    Array bc(b); bc.forceComplex();					\
+    return (IsSame(ac.constReal<ctype>(),bc.constReal<ctype>()) &&	\
+	    IsSame(ac.constImag<ctype>(),bc.constImag<ctype>()));	\
+  }									\
+  }									
 
 template <>
 bool IsSame(const Array& a, const Array& b) {
