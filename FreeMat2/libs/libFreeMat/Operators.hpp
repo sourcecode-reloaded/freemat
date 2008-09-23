@@ -668,9 +668,9 @@ static inline Array VectorOp(const Array &Ain, index_t out, int dim, DataClass T
 template <class Op>
   static inline Array VectorOp(const Array &Ain, int out, int dim) {
   if (Ain.dataClass() == Float)
-    return VectorOp<float,Op>(Ain,out,dim,Float).toClass(Ain.dataClass());
+    return VectorOp<float,Op>(Ain,out,dim,Float);
   else
-    return VectorOp<double,Op>(Ain,out,dim,Double).toClass(Ain.dataClass());
+    return VectorOp<double,Op>(Ain,out,dim,Double);
 }
 
 template <typename T, class Op>

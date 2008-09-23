@@ -28,6 +28,7 @@ Prod.cpp \
 RCond.cpp \
 Round.cpp \
 Sum.cpp \
+Dot.cpp \
 Time.cpp \
 Variance.cpp \
 RealImag.cpp \

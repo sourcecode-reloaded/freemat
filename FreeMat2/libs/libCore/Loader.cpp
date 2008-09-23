@@ -193,6 +193,7 @@ ArrayVector Str2NumFunction(int, const ArrayVector&);
 ArrayVector SscanfFunction(int, const ArrayVector&);
 ArrayVector StructFunction(int, const ArrayVector&);
 ArrayVector SumFunction(int, const ArrayVector&);
+ArrayVector DotFunction(int, const ArrayVector&);
 ArrayVector SVDFunction(int, const ArrayVector&);
 ArrayVector TicFunction(int, const ArrayVector&);
 ArrayVector ClockFunction(int, const ArrayVector&);
@@ -462,6 +463,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("sscanf",SscanfFunction,2,-1,"text","format",NULL);
   context->addFunction("struct",StructFunction,-1,1,NULL);
   context->addFunction("sum",SumFunction,2,1,"x","dim",NULL);
+  context->addFunction("dot",DotFunction,3,1,"x","y","dim",NULL);
   context->addFunction("svd",SVDFunction,2,3,"A","flag",NULL);
   context->addFunction("tic",TicFunction,0,0,NULL);
   context->addFunction("clock",ClockFunction,0,1,NULL);

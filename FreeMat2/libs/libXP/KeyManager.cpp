@@ -1146,7 +1146,8 @@ StringVector KeyManager::GetCompletions(QString line,
    * do a command expansion, otherwise, do a filename expansion.
    */
   if (!context) return completions;
-  if ((startOfPath > 0) && (line[startOfPath-1] != '\'')) {
+  if ((startOfPath == 0) || 
+      ((startOfPath > 0) && (line[startOfPath-1] != '\''))) {
     StringVector local_completions(context->getCompletions(matchString));
     for (int i=0;i<local_completions.size();i++) 
       if (local_completions[i].indexOf("private:") == -1)
