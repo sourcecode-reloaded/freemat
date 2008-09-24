@@ -1,4 +1,5 @@
 #include "Array.hpp"
+#include "Math.hpp"
 
 //!
 //@Module DOT Dot Product Function
@@ -27,12 +28,13 @@
 //outputs y
 //!
 
+
 template <typename T>
-static Array DotFunction(const BasicArray<T> &xreal,
-			 const BasicArray<T> &ximag,
-			 const BasicArray<T> &yreal,
-			 const BasicArray<T> &yimag,
-			 int DotDim) {
+static ArrayVector DotFunction(const BasicArray<T> &xreal,
+			       const BasicArray<T> &ximag,
+			       const BasicArray<T> &yreal,
+			       const BasicArray<T> &yimag,
+			       int DotDim) {
   BasicArray<T> rvec_real(xreal.dimensions().forceOne(DotDim));
   BasicArray<T> rvec_imag(ximag.dimensions().forceOne(DotDim));
   ConstBasicIterator<T> xsource_real(&xreal,DotDim);
@@ -68,9 +70,9 @@ static Array DotFunction(const BasicArray<T> &xreal,
 }
 
 template <typename T>
-static Array DotFunction(const BasicArray<T> &xreal,
-			 const BasicArray<T> &yreal,
-			 int DotDim) {
+static ArrayVector DotFunction(const BasicArray<T> &xreal,
+			       const BasicArray<T> &yreal,
+			       int DotDim) {
   BasicArray<T> rvec(xreal.dimensions().forceOne(DotDim));
   ConstBasicIterator<T> xsource(&xreal,DotDim);
   ConstBasicIterator<T> ysource(&yreal,DotDim);
@@ -89,14 +91,16 @@ static Array DotFunction(const BasicArray<T> &xreal,
   return Array(rvec);
 }
 
+ArrayVector SumFunction(int, const ArrayVector&);
+
 template <typename T>
-static Array DotFunction(const Array &x, const Array &y, int DotDim) {
+static ArrayVector DotFunction(const Array &x, const Array &y, int DotDim) {
   if (x.isSparse()) {
-    if (x.allReal())
-      return DotFunction(x.constRealSparse<T>(),y.constRealSparse<T>(),DotDim);
-    else
-      return DotFunction(x.constRealSparse<T>(),x.constImagSparse<T>(),
-			 y.constRealSparse<T>(),y.constImagSparse<T>(),DotDim);
+    Array z(DotMultiply(x,y));
+    ArrayVector v;
+    v.push_back(z);
+    v.push_back(Array(DotDim+1));
+    return SumFunction(1,v);
   } else {
     if (x.allReal()) 
       return DotFunction(x.constReal<T>(),y.constReal<T>(),DotDim);

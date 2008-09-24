@@ -452,7 +452,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("spones",SponesFunction,1,1,"x",NULL);
   context->addSpecialFunction("sparse",SparseFunction,5,1,"i","j","v","m","n",NULL);
   context->addFunction("full",FullFunction,1,1,"x",NULL);
-  context->addFunction("strcomp",StrCmpFunction,2,1,"string1","string2",NULL);
+  context->addFunction("strcmp",StrCmpFunction,2,1,"string1","string2",NULL);
   context->addFunction("strstr",StrStrFunction,2,1,"x","y",NULL);
   context->addFunction("strrep_string",StrRepStringFunction,3,1,"mainstring","searchstring","repstring",NULL);
   context->addFunction("regexp",RegExpFunction,-1,6,NULL);

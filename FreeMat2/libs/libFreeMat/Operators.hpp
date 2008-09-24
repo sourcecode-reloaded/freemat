@@ -648,21 +648,20 @@ static inline Array VectorOp(const BasicArray<T> &real, index_t out, int dim) {
 template <typename T, class Op>
 static inline Array VectorOp(const Array &Ain, index_t out, int dim, DataClass Tclass) {
   Array Acast(Ain.toClass(Tclass));
-  Array F;
   if (Acast.isSparse()) {
     if (Acast.allReal())
-      F = VectorOp<T,Op>(Acast.constRealSparse<T>(),out,dim);
+      return VectorOp<T,Op>(Acast.constRealSparse<T>(),out,dim);
     else
-      F = VectorOp<T,Op>(Acast.constRealSparse<T>(),
-			 Acast.constImagSparse<T>(),out,dim);
-  }
-  if (Acast.isScalar()) Acast = Acast.asDenseArray();
-  if (Acast.allReal()) {
-    F = VectorOp<T,Op>(Acast.constReal<T>(),out,dim);
+      return VectorOp<T,Op>(Acast.constRealSparse<T>(),
+			    Acast.constImagSparse<T>(),out,dim);
   } else {
-    F = VectorOp<T,Op>(Acast.constReal<T>(),Acast.constImag<T>(),out,dim);
+    if (Acast.isScalar()) Acast = Acast.asDenseArray();
+    if (Acast.allReal()) {
+      return VectorOp<T,Op>(Acast.constReal<T>(),out,dim);
+    } else {
+      return VectorOp<T,Op>(Acast.constReal<T>(),Acast.constImag<T>(),out,dim);
+    }
   }
-  return F.toClass(Ain.dataClass());
 }
 
 template <class Op>
@@ -836,6 +835,52 @@ template <class Op>
     ArrayVector Ret(BiVectorOp<double,Op>(Ain,out,dim,Double));
     Ret[0] = Ret[0].toClass(Ain.dataClass());
     return Ret;
+  }
+}
+
+template <typename T, class XIter, class YIter, class Op>
+static inline Array StringOp(XIter xi, YIter yi, const NTuple &dims, const ArrayVector &eargs) {
+  BasicArray<T> retvec(dims);
+  for (index_t i=1;i<dims.count();i++) {
+    ArrayVector t;
+    t.push_back(xi.get());
+    t.push_back(yi.get());
+    for (int j=0;j<eargs.size();j++)
+      t.push_back(eargs[j]);
+    retvec.set(i,Op::func(t));
+    xi.next();
+    yi.next();
+  }
+  return retvec;
+}
+
+template <typename T, class Op>
+static inline Array StringOp(const ArrayVector& arg) {
+  if ((arg[0].dataClass() != CellArray) && (arg[1].dataClass() != CellArray))
+    return Array(Op::func(arg));
+  Array ax(arg[0]);
+  Array ay(arg[1]);
+  if (ax.dataClass() != CellArray) ax = CellArrayFromArray(ax);
+  if (ay.dataClass() != CellArray) ay = CellArrayFromArray(ay);
+  const BasicArray<Array> &x(ax.constReal<Array>());
+  const BasicArray<Array> &y(ay.constReal<Array>());
+  ArrayVector eargs(arg);
+  eargs.pop_front();
+  eargs.pop_front();
+  if (x.isScalar() && !y.isScalar()) {
+    ConstSpinIterator<Array> ix(&x);
+    ConstBasicIterator<Array> iy(&y,0);
+    return StringOp<T,ConstSpinIterator<Array>,ConstBasicIterator<Array>,Op>(ix,iy,y.dimensions(),eargs);
+  } else if (!x.isScalar() && y.isScalar()) {
+    ConstBasicIterator<Array> ix(&x,0);
+    ConstSpinIterator<Array> iy(&y);
+    return StringOp<T,ConstBasicIterator<Array>,ConstSpinIterator<Array>,Op>(ix,iy,x.dimensions(),eargs);
+  } else {
+    if (x.dimensions() != y.dimensions())
+      throw Exception("cell array arguments to string functions must be the same size");
+    ConstBasicIterator<Array> ix(&x,0);
+    ConstBasicIterator<Array> iy(&y,0);
+    return StringOp<T,ConstBasicIterator<Array>,ConstBasicIterator<Array>,Op>(ix,iy,x.dimensions(),eargs);
   }
 }
 
