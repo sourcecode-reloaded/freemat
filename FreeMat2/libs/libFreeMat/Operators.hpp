@@ -841,7 +841,7 @@ template <class Op>
 template <typename T, class XIter, class YIter, class Op>
 static inline Array StringOp(XIter xi, YIter yi, const NTuple &dims, const ArrayVector &eargs) {
   BasicArray<T> retvec(dims);
-  for (index_t i=1;i<dims.count();i++) {
+  for (index_t i=1;i<=dims.count();i++) {
     ArrayVector t;
     t.push_back(xi.get());
     t.push_back(yi.get());
