@@ -137,6 +137,107 @@ ArrayVector StrCmpFunction(int nargout, const ArrayVector& arg) {
 }
 
 //!
+//@Module STRCMPI String Compare Case Insensitive Function
+//@@Section STRING
+//@@Usage
+//Compares two strings for equality ignoring case.  The general
+//syntax for its use is 
+//@[
+//   p = strcmpi(x,y)
+//@]
+//where @|x| and @|y| are two strings, or cell arrays of strings.
+//See @|strcmp| for more help.
+//@@Tests
+//@$y1=strcmpi(x1,x2)
+//@@Signature
+//function strcmpi StrCmpiFunction
+//inputs string1 string2
+//outputs flag
+//!
+struct OpStrCmpi {
+  static inline bool func(const ArrayVector& arg) {
+    Array x(arg[0]);
+    Array y(arg[1]);
+    if (!x.isString() || !y.isString()) return false;
+    if (x.dimensions() != y.dimensions()) return false;
+    return (x.asString().toUpper() == y.asString().toUpper());    
+  }
+};
+ArrayVector StrCmpiFunction(int nargout, const ArrayVector& arg) {
+  return ArrayVector(StringOp<bool,OpStrCmpi>(arg));
+}
+
+//!
+//@Module STRNCMP String Compare Function To Length N 
+//@@Section STRING
+//@@USAGE
+//Compares two strings for equality, but only looks at the
+//first N characters from each string.  The general syntax 
+//for its use is
+//@[
+//  p = strncmp(x,y,n)
+//@]
+//where @|x| and @|y| are two strings.  Returns @|true| if @|x|
+//and @|y| are each at least @|n| characters long, and if the
+//first @|n| characters from each string are the same.  Otherwise,
+//it returns @|false|.
+//In the second form, @|strncmp| can be applied to a cell array of
+//strings.  The syntax for this form is
+//@[
+//  p = strncmp(cellstra,cellstrb,n)
+//@]
+//where @|cellstra| and @|cellstrb| are cell arrays of a strings
+//to compare.  Also, you can also supply a character matrix as
+//an argument to @|strcmp|, in which case it will be converted
+//via @|cellstr| (so that trailing spaces are removed), before being
+//compared.
+//@@Example
+//The following piece of code compares two strings:
+//@<
+//x1 = 'astring';
+//x2 = 'bstring';
+//x3 = 'astring';
+//strncmp(x1,x2,4)
+//strncmp(x1,x3,4)
+//@>
+//Here we use a cell array strings
+//@<
+//x = {'ast','bst',43,'astr'}
+//p = strncmp(x,'ast',3)
+//@>
+//Here we compare two cell arrays of strings
+//@<
+//strncmp({'this','is','a','pickle'},{'think','is','to','pickle'},3)
+//@>
+//Finally, the case where one of the arguments is a matrix
+//string
+//@<
+//strncmp({'this','is','a','pickle'},['peter ';'piper ';'hated ';'pickle'],4);
+//@>
+//@@Tests
+//@$y1=strncmp(x1,x2,4)
+//@$y1=strncmp(x1,x2,3)
+//@@Signature
+//function strncmp StrnCmpFunction
+//inputs string1 string2 len
+//outputs flag
+//!
+struct OpStrnCmp {
+  static inline bool func(const ArrayVector& arg) {
+    Array x(arg[0]);
+    Array y(arg[1]);
+    Array n(arg[2]);
+    int m = n.asInteger();
+    if (!x.isString() || !y.isString()) return false;
+    if ((x.length() < m) || (y.length() < m)) return false;
+    return (x.asString().left(m) == y.asString().left(m));
+  }
+};
+
+ArrayVector StrnCmpFunction(int nargout, const ArrayVector& arg) {
+  return ArrayVector(StringOp<bool,OpStrnCmp>(arg));
+}
+//!
 //@Module STRSTR String Search Function
 //@@Section STRING
 //@@Usage

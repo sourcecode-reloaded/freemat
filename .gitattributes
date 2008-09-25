@@ -573,7 +573,6 @@ src/toolbox/sparse/sprandn.m svn_keywords=Author+Date+Id+Revision svn_eol_002dst
 src/toolbox/sparse/spy.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/toolbox/stat/std.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/toolbox/string/strfind.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-src/toolbox/string/strncmp.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/toolbox/time/etime.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/toolbox/trig/deg2rad.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/toolbox/trig/rad2deg.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native

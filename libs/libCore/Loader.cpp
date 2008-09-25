@@ -183,6 +183,8 @@ ArrayVector SponesFunction(int, const ArrayVector&);
 ArrayVector SparseFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector FullFunction(int, const ArrayVector&);
 ArrayVector StrCmpFunction(int, const ArrayVector&);
+ArrayVector StrCmpiFunction(int, const ArrayVector&);
+ArrayVector StrnCmpFunction(int, const ArrayVector&);
 ArrayVector StrStrFunction(int, const ArrayVector&);
 ArrayVector StrRepStringFunction(int, const ArrayVector&);
 ArrayVector RegExpFunction(int, const ArrayVector&);
@@ -453,6 +455,8 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addSpecialFunction("sparse",SparseFunction,5,1,"i","j","v","m","n",NULL);
   context->addFunction("full",FullFunction,1,1,"x",NULL);
   context->addFunction("strcmp",StrCmpFunction,2,1,"string1","string2",NULL);
+  context->addFunction("strcmpi",StrCmpiFunction,2,1,"string1","string2",NULL);
+  context->addFunction("strncmp",StrnCmpFunction,3,1,"string1","string2","count",NULL);
   context->addFunction("strstr",StrStrFunction,2,1,"x","y",NULL);
   context->addFunction("strrep_string",StrRepStringFunction,3,1,"mainstring","searchstring","repstring",NULL);
   context->addFunction("regexp",RegExpFunction,-1,6,NULL);
