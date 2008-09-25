@@ -46,7 +46,7 @@
 % Licensed under the GPL
 
 function y = isa(x,type)
-  if (~strcomp(typeof(type),'char'))
+  if (~strcmp(typeof(type),'char'))
     error('type argument to isa must be a string');
   end
-  y = strcomp(class(x),type);
+  y = strcmp(class(x),type);

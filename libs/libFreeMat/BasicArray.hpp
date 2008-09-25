@@ -533,13 +533,10 @@ public:
 template <typename T>
 class ConstSpinIterator {
   const BasicArray<T> *m_ptr;
-  int m_indx;
 public:
-  ConstSpinIterator(const BasicArray<T> *ptr) : m_ptr(ptr), m_indx(1) {}
-  inline T get() const {return m_ptr->get(m_indx);}
-  inline void next() {
-    m_indx++; m_indx = ((m_indx - 1) % m_ptr->length()) + 1;
-  }
+  ConstSpinIterator(const BasicArray<T> *ptr) : m_ptr(ptr) {}
+  inline T get() const {return m_ptr->get(1);}
+  inline void next() {}
 };
 
 #endif

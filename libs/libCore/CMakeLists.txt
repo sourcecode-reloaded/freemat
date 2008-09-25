@@ -11,6 +11,7 @@ Ceil.cpp
 Conj.cpp 
 CumProd.cpp 
 CumSum.cpp 
+Dot.cpp
 Floor.cpp 
 Max.cpp 
 Min.cpp 

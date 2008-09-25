@@ -18,6 +18,7 @@
  */
 
 #include "Core.hpp"
+#include "Operators.hpp"
 #include "Exception.hpp"
 #include "Array.hpp"
 #include "MemPtr.hpp"
@@ -62,27 +63,77 @@ static char* validateScanFormatSpec(char* cp) {
 //!
 //@Module STRCMP String Compare Function
 //@@Section STRING
-//@@Usage
-//Compares two string, and returns @|true| if they equal
-//and @|false| if not.
+//@@USAGE
+//Compares two strings for equality.  The general
+//syntax for its use is
+//@[
+//  p = strcmp(x,y)
+//@]
+//where @|x| and @|y| are two strings.  Returns @|true| if @|x|
+//and @|y| are the same size, and are equal (as strings).  Otherwise,
+//it returns @|false|.
+//In the second form, @|strcmp| can be applied to a cell array of
+//strings.  The syntax for this form is
+//@[
+//  p = strcmp(cellstra,cellstrb)
+//@]
+//where @|cellstra| and @|cellstrb| are cell arrays of a strings
+//to compare.  Also, you can also supply a character matrix as
+//an argument to @|strcmp|, in which case it will be converted
+//via @|cellstr| (so that trailing spaces are removed), before being
+//compared.
+//@@Example
+//The following piece of code compares two strings:
+//@<
+//x1 = 'astring';
+//x2 = 'bstring';
+//x3 = 'astring';
+//strcmp(x1,x2)
+//strcmp(x1,x3)
+//@>
+//Here we use a cell array strings
+//@<
+//x = {'astring','bstring',43,'astring'}
+//p = strcmp(x,'astring')
+//@>
+//Here we compare two cell arrays of strings
+//@<
+//strcmp({'this','is','a','pickle'},{'what','is','to','pickle'})
+//@>
+//Finally, the case where one of the arguments is a matrix
+//string
+//@<
+//strcmp({'this','is','a','pickle'},['peter ';'piper ';'hated ';'pickle'])
+//@>
+//@@Tests
+//@$y1=strcmp(x1,x2)
+//@{ test_strcmp1.m
+//    % Check the strcmp function for a match
+//function test_val = test_strcmp1
+//test_val = test(strcmp('complex','complex'));
+//@}
+//@{ test_strcmp2.m
+//    % Check the strcmp function for a match
+//function test_val = test_strcmp2
+//test_val = test(~strcmp('dasdfas','complex'));
+//@}
 //@@Signature
-//function strcomp StrCmpFunction
+//function strcmp StrCmpFunction
 //inputs string1 string2
 //outputs flag
 //!
+struct OpStrCmp {
+  static inline bool func(const ArrayVector& arg) {
+    Array x(arg[0]);
+    Array y(arg[1]);
+    if (!x.isString() || !y.isString()) return false;
+    if (x.dimensions() != y.dimensions()) return false;
+    return (x.asString() == y.asString());
+  }
+};
+
 ArrayVector StrCmpFunction(int nargout, const ArrayVector& arg) {
-  Array retval;
-  if (arg.size() != 2)
-    throw Exception("strcmp function requires two arguments");
-  if (!(arg[0].isString()))
-    return ArrayVector(Array(bool(false)));
-  if (!(arg[1].isString()))
-    return ArrayVector(Array(bool(false)));
-  if (!(arg[0].dimensions() == arg[1].dimensions()))
-    return ArrayVector(Array(bool(false)));
-  else
-    return ArrayVector(Array(bool(arg[0].asString() == arg[1].asString())));
-  return ArrayVector(Array(bool(false)));
+  return ArrayVector(StringOp<bool,OpStrCmp>(arg));
 }
 
 //!

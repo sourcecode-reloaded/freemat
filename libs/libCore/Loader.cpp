@@ -193,6 +193,7 @@ ArrayVector Str2NumFunction(int, const ArrayVector&);
 ArrayVector SscanfFunction(int, const ArrayVector&);
 ArrayVector StructFunction(int, const ArrayVector&);
 ArrayVector SumFunction(int, const ArrayVector&);
+ArrayVector DotFunction(int, const ArrayVector&);
 ArrayVector SVDFunction(int, const ArrayVector&);
 ArrayVector TicFunction(int, const ArrayVector&);
 ArrayVector ClockFunction(int, const ArrayVector&);
@@ -451,7 +452,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("spones",SponesFunction,1,1,"x",NULL);
   context->addSpecialFunction("sparse",SparseFunction,5,1,"i","j","v","m","n",NULL);
   context->addFunction("full",FullFunction,1,1,"x",NULL);
-  context->addFunction("strcomp",StrCmpFunction,2,1,"string1","string2",NULL);
+  context->addFunction("strcmp",StrCmpFunction,2,1,"string1","string2",NULL);
   context->addFunction("strstr",StrStrFunction,2,1,"x","y",NULL);
   context->addFunction("strrep_string",StrRepStringFunction,3,1,"mainstring","searchstring","repstring",NULL);
   context->addFunction("regexp",RegExpFunction,-1,6,NULL);
@@ -462,6 +463,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("sscanf",SscanfFunction,2,-1,"text","format",NULL);
   context->addFunction("struct",StructFunction,-1,1,NULL);
   context->addFunction("sum",SumFunction,2,1,"x","dim",NULL);
+  context->addFunction("dot",DotFunction,3,1,"x","y","dim",NULL);
   context->addFunction("svd",SVDFunction,2,3,"A","flag",NULL);
   context->addFunction("tic",TicFunction,0,0,NULL);
   context->addFunction("clock",ClockFunction,0,1,NULL);
