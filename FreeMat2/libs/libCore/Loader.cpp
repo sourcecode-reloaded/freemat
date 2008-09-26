@@ -186,7 +186,7 @@ ArrayVector StrCmpFunction(int, const ArrayVector&);
 ArrayVector StrCmpiFunction(int, const ArrayVector&);
 ArrayVector StrnCmpFunction(int, const ArrayVector&);
 ArrayVector StrStrFunction(int, const ArrayVector&);
-ArrayVector StrRepStringFunction(int, const ArrayVector&);
+ArrayVector StrRepFunction(int, const ArrayVector&);
 ArrayVector RegExpFunction(int, const ArrayVector&);
 ArrayVector RegExpIFunction(int, const ArrayVector&);
 ArrayVector RegExpRepDriverFunction(int, const ArrayVector&);
@@ -458,7 +458,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("strcmpi",StrCmpiFunction,2,1,"string1","string2",NULL);
   context->addFunction("strncmp",StrnCmpFunction,3,1,"string1","string2","count",NULL);
   context->addFunction("strstr",StrStrFunction,2,1,"x","y",NULL);
-  context->addFunction("strrep_string",StrRepStringFunction,3,1,"mainstring","searchstring","repstring",NULL);
+  context->addFunction("strrep",StrRepFunction,3,1,"mainstring","searchstring","repstring",NULL);
   context->addFunction("regexp",RegExpFunction,-1,6,NULL);
   context->addFunction("regexpi",RegExpIFunction,-1,6,NULL);
   context->addFunction("regexprepdriver",RegExpRepDriverFunction,-1,1,NULL);

@@ -101,7 +101,7 @@ void Set(T& arg, const IndexArrayVector& index, const T& data) {
   
   if (secdims.count() != data.length())
     throw Exception("mismatch in size for assignment A(I1,I2,...) = B");
-  if (!(arg.dimensions() <= maxsze))
+  if (!(maxsze <= arg.dimensions()))
     arg.resize(max(arg.dimensions(),maxsze));
   NTuple pos(1,1);
   index_t j=1;
@@ -132,7 +132,7 @@ void Set(T& arg, const IndexArrayVector& index, const S& data) {
     secdims[i] = ndx[i].length();
     maxsze[i] = MaxValue(ndx[i]);
   }
-  if (!(arg.dimensions() <= maxsze))
+  if (!(maxsze <= arg.dimensions()))
     arg.resize(max(arg.dimensions(),maxsze));
   NTuple pos(1,1);
   while (pos <= secdims) {
