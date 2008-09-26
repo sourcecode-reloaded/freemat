@@ -434,7 +434,7 @@ bool MFunctionDef::updateCode(Interpreter *m_eval) {
 	  // clutter in the name space, but solves the troublesome
 	  // issue of local functions being flushed by the CD command.
 	  m_eval->getContext()->insertFunction(fp,false);
-	  //	  qDebug() << "Registering " << QString::fromStdString(fp->name);
+	  //	  dbout << "Registering " << QString::fromStdString(fp->name);
 	  RegisterNested(fp->code.tree(),m_eval,this);
 	}
 	functionCompiled = true;
@@ -773,7 +773,7 @@ ArrayVector ImportedFunctionDef::evaluateFunction(Interpreter *walker,
     throw Exception("Unsupported return type " + retType + " in imported function call");
     
   // Second pass - Loop through the arguments
-  for (int i=0;i<types.size();i++) {
+  for (i=0;i<types.size();i++) {
     if (arguments[i][0] == '&' || types[i] == "string" ||
 	sizeCheckExpressions[i].tree()->valid())
       av_ptr(alist,void*,*((void**)values[i]));

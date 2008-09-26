@@ -15,4 +15,4 @@
 % Licensed under the GPL
 
 function k = ishold
-k = strcomp(get(gca,'nextplot'),'add');
+k = strcmp(get(gca,'nextplot'),'add');

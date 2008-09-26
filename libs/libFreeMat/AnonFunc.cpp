@@ -86,9 +86,9 @@ ArrayVector AnonFuncSubsrefFunction(int nargout, const ArrayVector& arg, Interpr
   ArrayVector outputs;
   try {
     eval->multiexpr(expTree.tree(),outputs);
-  } catch (InterpreterBreakException& e) {
-  } catch (InterpreterContinueException& e) {
-  } catch (InterpreterReturnException& e) {
+  } catch (InterpreterBreakException& ) {
+  } catch (InterpreterContinueException& ) {
+  } catch (InterpreterReturnException& ) {
   }
   context->popScope();
   return outputs;

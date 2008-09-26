@@ -26,6 +26,7 @@
 #include "Math.hpp"
 #include "Algorithms.hpp"
 #include "SparseCCS.hpp"
+#include "DebugStream.hpp"
 
 #if HAVE_UMFPACK
 extern "C" {
@@ -1142,7 +1143,7 @@ static ArrayVector SparseEigDecomposeNonsymmetricReal(const SparseMatrix<double>
     if ((ido == -1) || (ido == 1)) 
       SparseDenseMatrixVectorMultiply(a, workd+ipntr[0]-1, workd+ipntr[1]-1);
     else {
-      qDebug() << "IDO = " << ido;
+      dbout << "IDO = " << ido;
       break;
     }
   }

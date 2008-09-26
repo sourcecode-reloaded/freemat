@@ -56,7 +56,7 @@ void HandleObject::ClearAllChanged() {
 
 void HandleObject::ClearChanged(StringVector names) {
   HandleProperty *hp;
-  for (unsigned int i=0;i<names.size();i++) {
+  for (int i=0;i<names.size();i++) {
     hp = LookupProperty(names[i]);
     hp->ClearModified();
   }    

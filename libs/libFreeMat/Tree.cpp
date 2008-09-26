@@ -22,8 +22,8 @@ void Tree::print() const {
   QTextStream out(stdout);
 //FIXME: next 3 lines
 //  for (int i=0;i<indentlevel;i++)
-//    qDebug() << " ";
-//  qDebug() << m_node;
+//    dbout << " ";
+//  dbout << m_node;
   indentlevel+=3;
   for (int i=0;i<m_children.size();i++)
     m_children[i]->print();

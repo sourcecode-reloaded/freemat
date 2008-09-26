@@ -447,8 +447,8 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
 
   // Check for output specifiers
   bool slot_specs_present = false;
-  for (int i=2;i<stringed_args.size();i++) 
-    if (isSlotSpec(stringed_args[i])) {
+  for (int i3=2;i3<stringed_args.size();i3++) 
+    if (isSlotSpec(stringed_args[i3])) {
       slot_specs_present = true;
       break;
     }
@@ -457,8 +457,8 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
     start_slot = end_slot = tokenExtents_slot = match_slot = tokens_slot = names_slot = -1;
     count_slots = 0;
     // Process inputs
-    for (int i=2;i<stringed_args.size();i++) {
-      QString t = stringed_args[i];
+    for (int i2=2;i2<stringed_args.size();i2++) {
+      QString t = stringed_args[i2];
       if (t == "start")  start_slot = count_slots++;
       if (t == "end") end_slot = count_slots++;
       if (t == "tokenExtents") tokenExtents_slot = count_slots++;
@@ -468,7 +468,7 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
     }
   }
   
-  for (int i=0;i<count_slots;i++)
+  for (int i1=0;i1<count_slots;i1++)
     retvec << EmptyConstructor();
   
   for (int j=2;j<stringed_args.size();j++) {

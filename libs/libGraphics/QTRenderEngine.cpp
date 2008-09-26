@@ -294,7 +294,7 @@ void QTRenderEngine::project(double left, double right,
 void QTRenderEngine::viewport(double x0, double y0, double width, double height) {
   viewp[0] = (int)x0; viewp[1] = (int)y0; viewp[2] = (int)width; viewp[3] = (int)height;
   pnt->setClipRect((int)x0,(int)(m_height-(y0+height)),(int)width,(int)height);
-  //  qDebug() << "clip " << x0 << "," << (int)(m_height-(y0+height)) << "," << (int)width << "," << (int)height;
+  //  dbout << "clip " << x0 << "," << (int)(m_height-(y0+height)) << "," << (int)width << "," << (int)height;
 }
 
 void QTRenderEngine::quad(double x1, double y1, double z1,
@@ -644,8 +644,8 @@ void QTRenderEngine::setClipBox(QVector<double> limits) {
 
 void QTRenderEngine::quadStrips(QVector<QVector<cpoint> > faces, bool flatfaces,
 				QVector<QVector<cpoint> > edges, bool flatedges) {
-  //  qDebug() << "Faces " << faces.size();
-  //  qDebug() << "Edges " << edges.size();
+  //  dbout << "Faces " << faces.size();
+  //  dbout << "Edges " << edges.size();
   QVector<quad3d> mapqds(MapQuads(faces,edges));
   qSort(mapqds.begin(),mapqds.end());
   for (int i=0;i<mapqds.size();i++) {
@@ -655,18 +655,18 @@ void QTRenderEngine::quadStrips(QVector<QVector<cpoint> > faces, bool flatfaces,
     poly.push_back(QPointF(mapqds[i].pts[3].x,mapqds[i].pts[3].y));
     poly.push_back(QPointF(mapqds[i].pts[2].x,mapqds[i].pts[2].y));
     
-//     qDebug() << "Brush " << (int)(mapqds[i].r*255) << "," 
+//     dbout << "Brush " << (int)(mapqds[i].r*255) << "," 
 // 	     << (int)(mapqds[i].g*255)
 // 	     << (int)(mapqds[i].b*255)
 // 	     << (int)(mapqds[i].a*255);
-//     qDebug() << "Pen " << (int)(mapqds[i].er*255) << "," 
+//     dbout << "Pen " << (int)(mapqds[i].er*255) << "," 
 // 	     << (int)(mapqds[i].eg*255)
 // 	     << (int)(mapqds[i].eb*255)
 // 	     << (int)(mapqds[i].ea*255);
-//     qDebug() << "Point " << mapqds[i].pts[0].x << "," << mapqds[i].pts[0].y;
-//     qDebug() << "Point " << mapqds[i].pts[1].x << "," << mapqds[i].pts[1].y;
-//     qDebug() << "Point " << mapqds[i].pts[2].x << "," << mapqds[i].pts[2].y;
-//     qDebug() << "Point " << mapqds[i].pts[3].x << "," << mapqds[i].pts[3].y;
+//     dbout << "Point " << mapqds[i].pts[0].x << "," << mapqds[i].pts[0].y;
+//     dbout << "Point " << mapqds[i].pts[1].x << "," << mapqds[i].pts[1].y;
+//     dbout << "Point " << mapqds[i].pts[2].x << "," << mapqds[i].pts[2].y;
+//     dbout << "Point " << mapqds[i].pts[3].x << "," << mapqds[i].pts[3].y;
 
     pnt->setBrush(QColor((int)(mapqds[i].r*255),
 			 (int)(mapqds[i].g*255),

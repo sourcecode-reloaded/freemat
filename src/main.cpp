@@ -138,6 +138,7 @@ int main(int argc, char *argv[]) {
 
   if (scriptMode) nogui = 1;
   m_app = new MainApp;
+  m_app->debugwin = debugWindow;
   if (!nogui)
     m_app->SetupGUICase();
   else if (!scriptMode) 
@@ -155,6 +156,5 @@ int main(int argc, char *argv[]) {
  		     m_app->GetKeyManager(),SLOT(QueueSilent(QString)));
     QTimer::singleShot(0,m_func,SLOT(Fire()));
   }
-  m_app->debugwin = debugWindow;
   return app->exec();
 }

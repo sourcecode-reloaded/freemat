@@ -41,14 +41,14 @@ public:
 
   QSize BaseFigureQt::sizeHint() const {
     HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
-    //qDebug() << "Size hint " << (htv->Data()[0]) << "," << (htv->Data()[1]) << "\r\n";
+    //dbout << "Size hint " << (htv->Data()[0]) << "," << (htv->Data()[1]) << "\r\n";
     return QSize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
    //  return QSize(10000,10000);
   }
 
 void BaseFigureQt::resizeEvent(QResizeEvent *e) {
   QWidget::resizeEvent(e);
-  //  qDebug() << "resize " << width() << " " << height() << "\r\n";
+  //  dbout << "resize " << width() << " " << height() << "\r\n";
   backStore = QPixmap(qMax(8,width()),
 		      qMax(8,height()));
   hfig->resizeGL(qMax(8,width()),
@@ -67,12 +67,12 @@ void GfxDisableRepaint() {
 }
 
 void BaseFigureQt::paintEvent(QPaintEvent *e) {
-  //  qDebug() << "Paint\r";
+  //  dbout << "Paint\r";
   if (enableRepaint && hfig->ParentWindow()->isDirty()) {
     {
       // enableRepaint is true, and the background is dirty - update
       // the backing store, and then redraw it.
-      //      qDebug() << "Redraw\r";
+      //      dbout << "Redraw\r";
       QPainter pnt(&backStore);
       QTRenderEngine gc(&pnt,0,0,width(),height());
       hfig->PaintMe(gc);
@@ -81,7 +81,7 @@ void BaseFigureQt::paintEvent(QPaintEvent *e) {
     QPainter pnt2(this);
     pnt2.drawPixmap(0,0,backStore);
   } else {
-    //    qDebug() << "Refresh\r";
+    //    dbout << "Refresh\r";
     QPainter pnt(this);
     pnt.drawPixmap(e->rect(),backStore);
   }
@@ -136,7 +136,7 @@ void BaseFigureGL::resizeGL(int width, int height) {
 
 QSize BaseFigureGL::sizeHint() const {
     HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
-    //qDebug() << "Size hint " << (htv->Data()[0]) << "," << (htv->Data()[1]) << "\r\n";
+    //dbout << "Size hint " << (htv->Data()[0]) << "," << (htv->Data()[1]) << "\r\n";
     return QSize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
    //  return QSize(10000,10000);
   }
@@ -177,7 +177,7 @@ void HandleWindow::closeEvent(QCloseEvent* e) {
 bool HandleWindow::event(QEvent* e) {
   if (e->type() == QEvent::WindowActivate) {
     NotifyFigureActive(handle);
-    //    qDebug() << "focus event " << handle << "\n";
+    //    dbout << "focus event " << handle << "\n";
   }
   return QWidget::event(e);
 }
@@ -342,16 +342,16 @@ void HandleWindow::GetClick(int &x, int &y) {
 
 
 HandleAxis* GetContainingAxis(HandleFigure *fig, int x, int y) {
-  //  qDebug() << "Click " << x << "," << y;
+  //  dbout << "Click " << x << "," << y;
   HPHandles *cp = (HPHandles*) fig->LookupProperty("children");
   QVector<unsigned> children(cp->Data());
-  //  qDebug() << "Click " << x << "," << y;
+  //  dbout << "Click " << x << "," << y;
   for (int i=0;i<children.size();i++) {
     HandleObject* hp = LookupHandleObject(children[i]);
     if (hp->IsType("axes")) {
       // Get the axis extents
       QVector<double> position(((HandleAxis*) hp)->GetPropertyVectorAsPixels("position"));
-      //      qDebug() << "Axis: " << position[0] << "," << position[1] << "," << position[2] << "," << position[3];
+      //      dbout << "Axis: " << position[0] << "," << position[1] << "," << position[2] << "," << position[3];
       if ((x >= position[0]) && (x < (position[0]+position[2])) &&
 	  (y >= position[1]) && (y < (position[1]+position[3])))
 	return (HandleAxis*)hp;

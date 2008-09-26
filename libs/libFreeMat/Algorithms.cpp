@@ -2,6 +2,7 @@
 #include "Struct.hpp"
 #include "IEEEFP.hpp"
 #include "SparseCCS.hpp"
+#include "DebugStream.hpp"
 
 const Array StringArrayFromStringVector(const StringVector& arg) {
   int maxlen = 0;
@@ -1126,13 +1127,13 @@ Array ToSparse(const Array& data) {
 #undef MacroToSparse
 
 bool Equals(const StringVector& a, const StringVector& b) {
-  qDebug() << "Equals test\n";
-  qDebug() << "a = ";
+  dbout << "Equals test\n";
+  dbout << "a = ";
   for (int i=0;i<a.size();i++)
-    qDebug() << a[i];
-  qDebug() << "b = ";
+    dbout << a[i];
+  dbout << "b = ";
   for (int i=0;i<b.size();i++)
-    qDebug() << b[i];
+    dbout << b[i];
   if (a.size() != b.size()) return false;
   for (int i=0;i<a.size();i++)
     if (a[i] != b[i]) return false;

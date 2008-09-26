@@ -28,18 +28,6 @@ class DebugWin : public QDialog {
   QTextEdit* dbwin;
 public:
   DebugWin();
-//private slots:
-//  void add();
-//  void addsub();
-//  void remove();
-//  void alldone();
-//  void save();
-//  void up();
-//  void down();
-//protected:
-//  void readSettings();
-//  void writeSettings();
 };
 
-//extern DebugWin dbwin;
 #endif /*__DEBUGWIN_H__*/

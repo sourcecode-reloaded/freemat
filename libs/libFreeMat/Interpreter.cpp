@@ -214,13 +214,13 @@ ArrayVector Interpreter::doGraphicsFunction(FuncPtr f, ArrayVector m, int narg_o
   if (!gfxErrorOccured && gfx_buffer.empty()) {
     gfxBufferNotEmpty.wait(&mutex);
   } else {
-    qDebug() << "Wha??\r";
+    dbout << "Wha??\r";
   }
   if (gfxErrorOccured) {
     throw Exception(gfxError);
   }
   if (gfx_buffer.empty())
-    qDebug() << "Warning! graphics empty on return\r";
+    dbout << "Warning! graphics empty on return\r";
   ArrayVector ret(gfx_buffer.front());
   gfx_buffer.erase(gfx_buffer.begin());
   return ret;
@@ -294,8 +294,8 @@ static bool isMFile(QString arg) {
 
 void Interpreter::SetContext(int a) {
   if (((a & 0xffff) == 0) && isMFile(ip_funcname))
-    qDebug() << "Warning: zero context!";
-//   qDebug() << "setting context to line " << (a & 0xffff);
+    dbout << "Warning: zero context!";
+//   dbout << "setting context to line " << (a & 0xffff);
   ip_context = a;
 }
 
@@ -3155,13 +3155,13 @@ void Interpreter::statementType(Tree *t, bool printIt) {
       throw InterpreterContinueException();
     break;
   case TOK_DBSTEP:
-    //    qDebug() << "**********************DBStep";
+    //    dbout << "**********************DBStep";
     dbstepStatement(t);
     emit RefreshBPLists();
     throw InterpreterReturnException();
     break;
   case TOK_DBTRACE:
-    //    qDebug() << "**********************DBTrace";
+    //    dbout << "**********************DBTrace";
     dbtraceStatement(t);
     emit RefreshBPLists();
     throw InterpreterReturnException();
@@ -3410,8 +3410,8 @@ void Interpreter::multiFunctionCall(Tree *t, bool printIt) {
   // being requested. 
   // Calculate how many lhs objects there are
   lhsCount = 0;
-  for (int index=0;index<s.size();index++) 
-    lhsCount += countLeftHandSides(s[index]);
+  for (int ind=0;ind<s.size();ind++) 
+    lhsCount += countLeftHandSides(s[ind]);
 
   multiexpr(t->second(),m,lhsCount);
 
@@ -4282,7 +4282,7 @@ void Interpreter::toggleBP(QString fname, int lineNumber) {
     for (int i=0;i<bpStack.size();i++) 
       if ((bpStack[i].cname == fname_string) &&
 	  ((bpStack[i].tokid & 0xffff) == lineNumber)) {
-	//	qDebug() << "Deleting bp " << i << " w/number " << bpStack[i].number << "";
+	//	dbout << "Deleting bp " << i << " w/number " << bpStack[i].number << "";
 	deleteBreakpoint(bpStack[i].number);
 	return;
       }
@@ -4309,7 +4309,7 @@ MFunctionDef* Interpreter::lookupFullPath(QString fname) {
 static int bpList = 1;
 // Add a breakpoint - name is used to track to a full filename
 void Interpreter::addBreakpoint(QString name, int line) {
-  //  qDebug() << "Add bp " << QString::fromStdQString(name) << " : " << line << "";
+  //  dbout << "Add bp " << QString::fromStdQString(name) << " : " << line << "";
   FuncPtr val;
   // Map the name argument to a full file name.
   QString fullFileName;
@@ -4426,8 +4426,8 @@ void Interpreter::pushDebug(QString fname, QString detail) {
   cstack.push_back(stackentry(ip_funcname,ip_detailname,
 			      ip_context,0,steptrap,
 			      stepcurrentline));
-  //  qDebug() << "Push Debug: " << QString::fromStdString(fname) << ",";
-  //  qDebug() << QString::fromStdString(detail) << "";
+  //  dbout << "Push Debug: " << QString::fromStdString(fname) << ",";
+  //  dbout << QString::fromStdString(detail) << "";
   ip_funcname = fname;
   ip_detailname = detail;
   ip_context = 0;
@@ -4437,7 +4437,7 @@ void Interpreter::pushDebug(QString fname, QString detail) {
 
 void Interpreter::popDebug() {
   if (!cstack.isEmpty()) {
-    //    qDebug() << "Pop Debug";
+    //    dbout << "Pop Debug";
     ip_funcname = cstack.back().cname;
     ip_detailname = cstack.back().detail;
     ip_context = cstack.back().tokid;
@@ -4514,7 +4514,7 @@ bool Interpreter::lookupFunction(QString funcName, FuncPtr& val,
 	return true;
     }
     if (context->lookupFunction(funcName,val)) {
-      //      qDebug() << "Lookup " << QString::fromStdString(funcName);
+      //      dbout << "Lookup " << QString::fromStdString(funcName);
       return true;
     }
     if (passcount == 0)
@@ -5103,7 +5103,7 @@ void Interpreter::dbstepStatement(Tree *t) {
   }
   cstack[cstack.size()-1].steptrap = lines;
   cstack[cstack.size()-1].stepcurrentline = bp.tokid & 0xffff;
-//   qDebug() << "setting dbstep trap to current line " << 
+//   dbout << "setting dbstep trap to current line " << 
 //     cstack[cstack.size()-1].stepcurrentline << 
 //     " with wait of " << lines << " lines";
 }
@@ -5125,7 +5125,7 @@ void Interpreter::dbtraceStatement(Tree *t) {
   }
   tracetrap = lines;
   tracecurrentline = bp.tokid & 0xffff;
-//   qDebug() << "setting dbtrace trap to current line " << 
+//   dbout << "setting dbtrace trap to current line " << 
 //     tracecurrentline << " with wait of " << lines << " lines";
 }
 

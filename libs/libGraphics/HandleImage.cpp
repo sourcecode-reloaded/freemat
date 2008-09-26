@@ -320,6 +320,7 @@ void HandleImage::UpdateState() {
 void HandleImage::PaintMe(RenderEngine& gc) {
   if (StringCheck("visible","off"))
     return;
+  dbout << "Paint Me"; 
   HPTwoVector *xp = (HPTwoVector *) LookupProperty("xdata");
   HPTwoVector *yp = (HPTwoVector *) LookupProperty("ydata");
   HandleAxis *ax = GetParentAxis();

@@ -50,16 +50,16 @@
 function h = grid(varargin)
 if (nargin == 0)
      grid_toggle(gca);
-elseif (strcomp(varargin{1},'on'))
+elseif (strcmp(varargin{1},'on'))
      grid_on(gca);
-elseif (strcomp(varargin{1},'off'))
+elseif (strcmp(varargin{1},'off'))
      grid_off(gca);
 elseif (ishandle(varargin{1}))
    if (nargin == 1)
      grid_toggle(varargin{1})
-   elseif (strcomp(varargin{2},'on'))
+   elseif (strcmp(varargin{2},'on'))
      grid_on(varargin{1});
-   elseif (strcomp(varargin{2},'off'))
+   elseif (strcmp(varargin{2},'off'))
      grid_off(varargin{1});
    else
      error('Unrecognized form of grid');
@@ -70,9 +70,9 @@ end
 
 
 function grid_toggle(handle);
-  if (strcomp(get(gca,'xgrid'),'on') | ...
-      strcomp(get(gca,'ygrid'),'on') | ...
-      strcomp(get(gca,'zgrid'),'on'))
+  if (strcmp(get(gca,'xgrid'),'on') | ...
+      strcmp(get(gca,'ygrid'),'on') | ...
+      strcmp(get(gca,'zgrid'),'on'))
      grid_off(handle);
   else
      grid_on(handle);

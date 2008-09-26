@@ -161,10 +161,10 @@ void HandleFigure::SetupDefaults() {
 void HandleFigure::PaintMe(RenderEngine &gc) {
   try {
     // draw the children...
-    //    qDebug() << "paint!\r";
+    //    dbout << "paint!\r";
     HPColor *color = (HPColor*) LookupProperty("color");
     if (color->Data()[0] >= 0) {
-      //      qDebug() << "clear!\r";
+      //      dbout << "clear!\r";
       gc.clear(color->Data());
     }
     HPHandles *children = (HPHandles*) LookupProperty("children");
@@ -175,7 +175,7 @@ void HandleFigure::PaintMe(RenderEngine &gc) {
     }
     resized = false;
   } catch (Exception& e) {
-      qDebug() << "Warning: Graphics subsystem reports: " << e.msg() << "\n";
+      dbout << "Warning: Graphics subsystem reports: " << e.msg() << "\n";
 	//throw;
   }
 }

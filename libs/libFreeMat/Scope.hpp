@@ -117,7 +117,7 @@ public:
     variablesAccessed = varList;
   }
   inline bool variableAccessed(QString varName) {
-    for (unsigned int i=0;i<variablesAccessed.size();i++)
+    for (int i=0;i<variablesAccessed.size();i++)
       if (variablesAccessed[i] == varName) return true;
     return false;
   }
@@ -131,7 +131,7 @@ public:
     return localVariables;
   }
   inline bool variableLocal(QString varName) {
-    for (unsigned int i=0;i<localVariables.size();i++) 
+    for (int i=0;i<localVariables.size();i++) 
       if (localVariables[i] == varName) return true;
     return false;
   }
@@ -219,7 +219,7 @@ public:
   inline bool isVariableGlobal(const QString& varName) {
     if (!anyGlobals) return false;
     bool foundName = false;
-    unsigned int i = 0;
+    int i = 0;
     if (globalVars.empty()) return false;
     while (i<globalVars.size() && !foundName) {
       foundName = (globalVars[i] == varName);
@@ -257,7 +257,7 @@ public:
   inline bool isVariablePersistent(const QString& varName) {
     if (!anyPersistents) return false;
     bool foundName = false;
-    unsigned int i = 0;
+    int i = 0;
     if (persistentVars.empty()) return false;
     while (i<persistentVars.size() && !foundName) {
       foundName = (persistentVars[i] == varName);
@@ -309,9 +309,9 @@ public:
    */
   inline StringVector listAllVariables() {
     StringVector names(symTab.getCompletions(""));
-    for (unsigned int i=0;i<globalVars.size();i++)
+    for (int i=0;i<globalVars.size();i++)
       names.push_back(globalVars[i]);
-    for (unsigned int i=0;i<persistentVars.size();i++)
+    for (int i=0;i<persistentVars.size();i++)
       names.push_back(persistentVars[i]);
     return names;
   }

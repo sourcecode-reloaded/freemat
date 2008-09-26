@@ -33,11 +33,11 @@ VariablesTool::VariablesTool(QWidget *parent) : QWidget(parent) {
 }
 
 void VariablesTool::refresh() {
-  //   qDebug() << "**********Variables refresh called...";
+  //   dbout << "**********Variables refresh called...";
   if (!context) return;
-  //   qDebug() << "**********Variables refresh legit...";
+  //   dbout << "**********Variables refresh legit...";
   //   if (!context->getMutex()->tryLock()) return;
-  //   qDebug() << "**********Variables refresh...";
+  //   dbout << "**********Variables refresh...";
   //   QMutexLocker lock(context->getMutex());
   //   context->getMutex()->unlock();
   m_flist->clear();
