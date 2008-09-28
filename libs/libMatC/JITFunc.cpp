@@ -4,6 +4,7 @@
 #include "JITFunc.hpp"
 #include "Context.hpp"
 #include "Interpreter.hpp"
+#include "Array.hpp"
 #include <sstream>
 #include <math.h>
 
@@ -28,7 +29,7 @@ SymbolInfo* JITFunc::add_argument_array(QString name) {
   if (symbol_prefix.size() > 0)
     return NULL;
   ArrayReference ptr(eval->getContext()->lookupVariable(name));
-  DataClass aclass = DataClass::Invalid;
+  DataClass aclass = Invalid;
   if (!ptr.valid())
     return NULL;
   if (!ptr->is2D())
@@ -47,29 +48,29 @@ SymbolInfo* JITFunc::add_argument_array(QString name) {
 
 DataClass JITFunc::map_dataclass(JITScalar val) {
   if (jit->IsFloat(val))
-    return DataClass::Float;
+    return Float;
   else if (jit->IsDouble(val))
-    return DataClass::Double;
-  return DataClass::Int32;
+    return Double;
+  return Int32;
 }
 
 DataClass JITFunc::map_dataclass(JITType type) {
   if (jit->IsFloat(type))
-	  return DataClass::Float;
+	  return Float;
   else if (jit->IsDouble(type))
-	  return DataClass::Double;
-  return DataClass::Int32;
+	  return Double;
+  return Int32;
 }
 
 JITType JITFunc::map_dataclass(DataClass aclass) {
   switch (aclass) {
   default:
     throw Exception("JIT does not support");
-  case DataClass::Int32:
+  case Int32:
     return jit->Int32Type();
-  case DataClass::Float:
+  case Float:
     return jit->FloatType();
-  case DataClass::Double:
+  case Double:
     return jit->DoubleType();
   }
   return NULL;
@@ -93,7 +94,7 @@ SymbolInfo* JITFunc::add_argument_scalar(QString name, JITScalar val, bool overr
   if (symbol_prefix.size() > 0) 
     return define_local_symbol(name,val);
   ArrayReference ptr(eval->getContext()->lookupVariable(name));
-  aclass = DataClass::Invalid;
+  aclass = Invalid;
   if (!val && !ptr.valid()) return NULL;
   if (!ptr.valid() || override) {
     aclass = map_dataclass(val);
@@ -374,11 +375,11 @@ JITScalar JITFunc::compile_expression(Tree* t) {
   case TOK_REALF:
 	  if( t->array().isScalar() ){
 		  switch( t->array().dataClass() ){
-			case DataClass::Int32:
+			case Int32:
 				return jit->Int32Value( t->array().asInteger() );
-			case DataClass::Float:
+			case Float:
 				return jit->FloatValue( t->array().asDouble() );
-			case DataClass::Double:
+			case Double:
 				return jit->DoubleValue( t->array().asDouble() );
 			default:
 				throw Exception("Unsupported scalar type.");

@@ -477,13 +477,13 @@ void JIT::Return() {
 void JIT::Dump(JITFunction f) {
 	std::stringstream str;
 	str << (*f);
-	dbout << str;
+	dbout << str.str();
 }
 
 void JIT::Dump() {
 	std::stringstream str;
 	str << (*m);
-	dbout << str;
+	dbout << str.str();
 }
 
 void JIT::Dump( const QString& fname ) {
