@@ -1876,7 +1876,7 @@ static bool compileJITBlock(Interpreter *interp, Tree *t) {
     t->setJITState(Tree::SUCCEEDED);
     t->setJITFunction(cg);
   } catch (Exception &e) {
-    std::cout << e.msg() << "\r\n";
+    dbout << e.msg() << "\r\n";
     delete cg;
     success = false;
     t->setJITState(Tree::FAILED);
@@ -1890,7 +1890,7 @@ static bool prepJITBlock(Tree *t) {
     t->JITFunction()->prep();
     success = true;
   } catch (Exception &e) {
-    std::cout << e.msg() << "\r\n";
+    dbout << e.msg() << "\r\n";
     success = false;
   }
   return success;

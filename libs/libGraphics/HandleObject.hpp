@@ -34,7 +34,7 @@ double ArrayMin(Array x);
 double ArrayMax(Array x);
 
 class HandleObject {
-  SymbolTable<HandleProperty*> m_properties;
+  FM::SymbolTable<HandleProperty*> m_properties;
   unsigned ref_count;
 public:
   HandleObject();

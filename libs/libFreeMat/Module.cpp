@@ -27,7 +27,7 @@
 #include "PathSearch.hpp"
 #include <QDir>
 
-SymbolTable<DynLib*> libPointers;
+FM::SymbolTable<DynLib*> libPointers;
 StringVector DynamicFunctions;
 
 void ClearLibs(Interpreter* eval) {

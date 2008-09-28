@@ -74,7 +74,7 @@ class HandleAxis : public HandleObject {
   double flipX(double t);
   double flipY(double t);
   double flipZ(double t);
-  SymbolTable<HandleProperty*> properties;
+  FM::SymbolTable<HandleProperty*> properties;
   void RePackFigure();
   void UpdateLimits(bool x, bool y, bool z, bool a, bool c);
 public:

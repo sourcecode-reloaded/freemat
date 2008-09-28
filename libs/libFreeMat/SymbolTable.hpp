@@ -22,34 +22,36 @@
 #include <QHash>
 #include "Types.hpp"
 
-template <class T>
-class SymbolTable {
-  QHash<QString,T> map;
-public:
-  SymbolTable() { }
-  ~SymbolTable() { }
-  T* findSymbol(const QString& key) {
-    if (map.contains(key)) {
-      return &(map[key]);
-    } 
-    return 0;
-  }
-  void deleteSymbol(const QString& key) {
-    map.remove(key);
-  }
-  void insertSymbol(const QString& key, const T& val) {
-    map.insert(key,val);
-  }
-  StringVector getCompletions(const QString& prefix) {
-    StringVector retvec;
-    for (typename QHash<QString,T>::const_iterator i=map.constBegin();i != map.constEnd();++i) {
-      if ((i.key().size() > prefix.size()) &&
-	  (i.key().left(prefix.size()) == prefix))
-	retvec << i.key();
-    }
-    return retvec;
-  }
-};
+namespace FM { //have to use namespace to avoid conflict with llvm::SymbolTable
 
+	template <class T>
+	class SymbolTable {
+	  QHash<QString,T> map;
+	public:
+	  SymbolTable() { }
+	  ~SymbolTable() { }
+	  T* findSymbol(const QString& key) {
+		if (map.contains(key)) {
+		  return &(map[key]);
+		} 
+		return 0;
+	  }
+	  void deleteSymbol(const QString& key) {
+		map.remove(key);
+	  }
+	  void insertSymbol(const QString& key, const T& val) {
+		map.insert(key,val);
+	  }
+	  StringVector getCompletions(const QString& prefix) {
+		StringVector retvec;
+		for (typename QHash<QString,T>::const_iterator i=map.constBegin();i != map.constEnd();++i) {
+		  if ((i.key().size() > prefix.size()) &&
+		  (i.key().left(prefix.size()) == prefix))
+		retvec << i.key();
+		}
+		return retvec;
+	  }
+	};
+}
 
 #endif

@@ -32,7 +32,7 @@
 #include "Types.hpp"
 #include "SymbolTable.hpp"
 
-typedef SymbolTable<Array> VariableTable;
+typedef FM::SymbolTable<Array> VariableTable;
 
 
 /**

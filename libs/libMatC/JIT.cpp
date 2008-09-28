@@ -29,8 +29,8 @@ JIT::JIT() {
   m->setTargetTriple("i686-pc-linux-gnu");
 
   mp = new ExistingModuleProvider(m);
-  std::string errorstring;
-  ee = ExecutionEngine::create(mp,false,&errorstring);
+  QString errorstring;
+  ee = ExecutionEngine::create(mp,false,&errorstring.toStdString());
   dbout << "Execution engine: " << errorstring << "\n";
   initialized = false;
   // Create the optimizer thingy
@@ -90,7 +90,7 @@ JITFunctionType JIT::FunctionType(JITType rettype, std::vector<JITType> args) {
   return llvm::FunctionType::get(rettype,args,false,(ParamAttrsList*) 0);
 }
 
-JITFunctionType JIT::FunctionType(std::string rettype, std::string args) {
+JITFunctionType JIT::FunctionType(QString rettype, QString args) {
   std::vector<JITType> argv;
   for (int i=0;i<args.size();i++)
     argv.push_back(MapTypeCode(args[i]));
@@ -153,8 +153,8 @@ JITScalar JIT::Zero(JITType t) {
   return Constant::getNullValue(t);
 }
 
-JITBlock JIT::NewBlock(std::string name) {
-  return new BasicBlock(name,func,0);
+JITBlock JIT::NewBlock(QString name) {
+	return new BasicBlock(name.toStdString(),func,0);
 }
 
 JITScalar JIT::Mul(JITScalar A, JITScalar B) {
@@ -204,8 +204,8 @@ JITScalar JIT::Xor(JITScalar A, JITScalar B) {
   return BinaryOperator::create(Instruction::Xor,A,B,"",ip);
 }
 
-JITScalar JIT::Alloc(JITType T, std::string name) {
-  return new AllocaInst(T,name,ip);
+JITScalar JIT::Alloc(JITType T, QString name) {
+	return new AllocaInst(T,name.toStdString(),ip);
 }
 
 JITScalar JIT::Cast(JITScalar A, JITType T) {
@@ -282,12 +282,12 @@ void JIT::Store(JITScalar Value, JITScalar Address) {
   new StoreInst(Value, Address, ip);
 }
 
-JITScalar JIT::String(string text) {
+JITScalar JIT::String(QString text) {
   dbout << "Allocate string :" << text << ":\n";
   ArrayType* ty = ArrayType::get(IntegerType::get(8),text.size()+1);
   GlobalVariable* gv = new GlobalVariable(ty,true,
 					  GlobalValue::InternalLinkage,0,".str",m);
-  Constant* t_str = ConstantArray::get(text.c_str(),true);
+  Constant* t_str = ConstantArray::get(text.toStdString(),true);
   std::vector<Constant*> const_ptr_8_indices;
   Constant* const_int32_9 = Constant::getNullValue(IntegerType::get(32));
   const_ptr_8_indices.push_back(const_int32_9);
@@ -368,43 +368,43 @@ JITScalar JIT::GetElement(JITScalar BaseAddress, JITScalar Offset) {
   return new GetElementPtrInst(BaseAddress,Offset,"",ip);
 }
 
-JITFunction JIT::DefineFunction(JITFunctionType functype, std::string name) {
-  JITFunction func = (JITFunction) m->getOrInsertFunction(name, functype);
+JITFunction JIT::DefineFunction(JITFunctionType functype, QString name) {
+	JITFunction func = (JITFunction) m->getOrInsertFunction(name.toStdString(), functype);
   //  JITFunction func = new Function(functype,GlobalValue::ExternalLinkage,name,m);
   //  func->setLinkage(GlobalValue::ExternalLinkage);
   //  func->setCallingConv(CallingConv::C);
   return func;
 }
 
-JITType JIT::MapTypeCode(char c) {
-  switch (c) {
-  case 'v':
-    return VoidType();
-  case 'i':
-    return Int32Type();
-  case 'f':
-    return FloatType();
-  case 'd':
-    return DoubleType();
-  case 'c':
-    return Int8Type();
-  case 'I':
-    return PointerType(Int32Type());
-  case 'F':
-    return PointerType(FloatType());
-  case 'D':
-    return PointerType(DoubleType());
-  case 'C':
-    return PointerType(Int8Type());
-  default:
-    throw Exception("Invalid type map code");
-  }
+JITType JIT::MapTypeCode(QChar c) {
+	switch (c.toAscii()) {
+	  case 'v':
+		  return VoidType();
+	  case 'i':
+		  return Int32Type();
+	  case 'f':
+		  return FloatType();
+	  case 'd':
+		  return DoubleType();
+	  case 'c':
+		  return Int8Type();
+	  case 'I':
+		  return PointerType(Int32Type());
+	  case 'F':
+		  return PointerType(FloatType());
+	  case 'D':
+		  return PointerType(DoubleType());
+	  case 'C':
+		  return PointerType(Int8Type());
+	  default:
+		  throw Exception("Invalid type map code");
+	}
 }
 
 
 static std::vector<JITFunctionType> bank;
 
-JITFunction JIT::DefineLinkFunction(std::string name, std::string rettype, std::string args) {
+JITFunction JIT::DefineLinkFunction(QString name, QString rettype, QString args) {
   std::vector<JITType> argv;
   for (int i=0;i<args.size();i++)
     argv.push_back(MapTypeCode(args[i]));
@@ -422,12 +422,12 @@ JITFunction JIT::CurrentFunction() {
   return func;
 }
 
-JITScalar JIT::FunctionArgument(int n, std::string name) {
+JITScalar JIT::FunctionArgument(int n, QString name) {
   Function::arg_iterator args = func->arg_begin();
   for (int i=0;i<n;i++)
     args++;
   JITScalar ret = args;
-  ret->setName(name);
+  ret->setName(name.toStdString());
   return ret;
 }
 
@@ -475,20 +475,24 @@ void JIT::Return() {
 }
 
 void JIT::Dump(JITFunction f) {
-  dbout << (*f);
+	std::stringstream str;
+	str << (*f);
+	dbout << str;
 }
 
 void JIT::Dump() {
-  dbout << (*m);
+	std::stringstream str;
+	str << (*m);
+	dbout << str;
 }
 
-void JIT::Dump( const std::string& fname ) {
-    std::ofstream fout( fname.c_str() );
+void JIT::Dump( const QString& fname ) {
+	std::ofstream fout( fname.toAscii() );
     fout << (*m);
 }
 
-void JIT::Dump( const std::string& fname, JITFunction f ) {
-    std::ofstream fout( fname.c_str() );
+void JIT::Dump( const QString& fname, JITFunction f ) {
+    std::ofstream fout( fname.toAscii() );
     fout << (*f);
 }
 

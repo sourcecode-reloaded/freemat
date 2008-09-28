@@ -1,5 +1,6 @@
 #ifdef HAVE_LLVM
 
+#include <QString>
 #include "JITFunc.hpp"
 #include "Context.hpp"
 #include "Interpreter.hpp"
@@ -23,11 +24,11 @@ static JITFunction func_matrix_load_double, func_matrix_load_float, func_matrix_
 static JITFunction func_matrix_store_double, func_matrix_store_float, func_matrix_store_int32;
 static JITFunction func_niter_for_loop, func_debug_out_i, func_debug_out_d;
 
-SymbolInfo* JITFunc::add_argument_array(string name) {
+SymbolInfo* JITFunc::add_argument_array(QString name) {
   if (symbol_prefix.size() > 0)
     return NULL;
   ArrayReference ptr(eval->getContext()->lookupVariable(name));
-  Class aclass = FM_FUNCPTR_ARRAY;
+  DataClass aclass = DataClass::Invalid;
   if (!ptr.valid())
     return NULL;
   if (!ptr->is2D())
@@ -44,37 +45,37 @@ SymbolInfo* JITFunc::add_argument_array(string name) {
   return symbols.findSymbol(name);
 }
 
-Class JITFunc::map_dataclass(JITScalar val) {
+DataClass JITFunc::map_dataclass(JITScalar val) {
   if (jit->IsFloat(val))
-    return FM_FLOAT;
+    return DataClass::Float;
   else if (jit->IsDouble(val))
-    return FM_DOUBLE;
-  return FM_INT32;
+    return DataClass::Double;
+  return DataClass::Int32;
 }
 
-Class JITFunc::map_dataclass(JITType type) {
+DataClass JITFunc::map_dataclass(JITType type) {
   if (jit->IsFloat(type))
-    return FM_FLOAT;
+	  return DataClass::Float;
   else if (jit->IsDouble(type))
-    return FM_DOUBLE;
-  return FM_INT32;
+	  return DataClass::Double;
+  return DataClass::Int32;
 }
 
-JITType JITFunc::map_dataclass(Class aclass) {
+JITType JITFunc::map_dataclass(DataClass aclass) {
   switch (aclass) {
   default:
     throw Exception("JIT does not support");
-  case FM_INT32:
+  case DataClass::Int32:
     return jit->Int32Type();
-  case FM_FLOAT:
+  case DataClass::Float:
     return jit->FloatType();
-  case FM_DOUBLE:
+  case DataClass::Double:
     return jit->DoubleType();
   }
   return NULL;
 }
 
-SymbolInfo* JITFunc::define_local_symbol(string name, JITScalar val) {
+SymbolInfo* JITFunc::define_local_symbol(QString name, JITScalar val) {
   if (!val) throw Exception("undefined variable or argument " + name);
   JITBlock ip(jit->CurrentBlock());
   jit->SetCurrentBlock(prolog);
@@ -87,12 +88,12 @@ SymbolInfo* JITFunc::define_local_symbol(string name, JITScalar val) {
 }
 
 // FIXME - Simplify
-SymbolInfo* JITFunc::add_argument_scalar(string name, JITScalar val, bool override) {
-  Class aclass;
+SymbolInfo* JITFunc::add_argument_scalar(QString name, JITScalar val, bool override) {
+  DataClass aclass;
   if (symbol_prefix.size() > 0) 
     return define_local_symbol(name,val);
   ArrayReference ptr(eval->getContext()->lookupVariable(name));
-  aclass = FM_FUNCPTR_ARRAY;
+  aclass = DataClass::Invalid;
   if (!val && !ptr.valid()) return NULL;
   if (!ptr.valid() || override) {
     aclass = map_dataclass(val);
@@ -186,7 +187,7 @@ void JITFunc::compile_statement(Tree* t) {
   compile_statement_type(t->first());
 }
 
-JITScalar JITFunc::compile_scalar_function(string symname) {
+JITScalar JITFunc::compile_scalar_function(QString symname) {
   JITScalar *val;
   val = constants.findSymbol(symname);
   if (!val) throw Exception("constant not defined");
@@ -195,10 +196,10 @@ JITScalar JITFunc::compile_scalar_function(string symname) {
 
 JITScalar JITFunc::compile_built_in_function_call(Tree* t) {
   // First, make sure it is a function
-  string symname(t->first()->text());
+  QString symname(t->first()->text());
   FuncPtr funcval;
   if (!eval->lookupFunction(symname,funcval)) 
-    throw Exception("Couldn't find function " + symname);
+    throw Exception(QString("Couldn't find function ") + symname);
   if (t->numChildren() != 2) 
     return compile_scalar_function(symname);
   // Evaluate the argument
@@ -227,15 +228,13 @@ JITScalar JITFunc::compile_built_in_function_call(Tree* t) {
   }
 }
 
-static string uid_string(int uid) {
-  char buffer[100];
-  sprintf(buffer,"%d",uid);
-  return string(buffer);
+static QString uid_string(int uid) {
+  return QString("%d").arg(uid);
 }
 
 JITScalar JITFunc::compile_m_function_call(Tree* t) {
   // First, make sure it is a function
-  string symname(t->first()->text());
+  QString symname(t->first()->text());
   FuncPtr funcval;
   if (!eval->lookupFunction(symname,funcval)) 
     throw Exception("Couldn't find function " + symname);
@@ -244,12 +243,12 @@ JITScalar JITFunc::compile_m_function_call(Tree* t) {
   MFunctionDef *fptr = (MFunctionDef*) funcval;
   if ((fptr->inputArgCount() < 0) || (fptr->outputArgCount() < 0))
     throw Exception("Variable argument functions not handled");
-  if (fptr->nestedFunction || fptr->capturedFunction)
+  if (fptr->nestedFunction /*ei || fptr->capturedFunction*/)
     throw Exception("Nested and/or captured functions not handled");
   if (fptr->scriptFlag) 
     throw Exception("scripts not handled");
   // Set up the prefix
-  string new_symbol_prefix = symbol_prefix + "$" + symname + "_" + uid_string(uid);
+  QString new_symbol_prefix = symbol_prefix + "$" + symname + "_" + uid_string(uid);
   uid++;
   // Loop through the arguments to the function,
   // and map them from the defined arguments of the tree
@@ -267,7 +266,7 @@ JITScalar JITFunc::compile_m_function_call(Tree* t) {
   define_local_symbol(new_symbol_prefix+"nargin",jit->DoubleValue(args_defed));
   // compile the code for the function
   fptr->code.tree()->print();
-  string save_prefix = symbol_prefix;
+  QString save_prefix = symbol_prefix;
   symbol_prefix = new_symbol_prefix;
   compile_block(fptr->code.tree());
   // Lookup the result and return it
@@ -279,7 +278,7 @@ JITScalar JITFunc::compile_m_function_call(Tree* t) {
 
 JITScalar JITFunc::compile_function_call(Tree* t) {
   // First, make sure it is a function
-  string symname(t->first()->text());
+  QString symname(t->first()->text());
   FuncPtr funcval;
   if (!eval->lookupFunction(symname,funcval)) 
     throw Exception("Couldn't find function " + symname);
@@ -305,7 +304,7 @@ void JITFunc::handle_success_code(JITScalar success_code) {
 }
 
 JITScalar JITFunc::compile_rhs(Tree* t) {
-  string symname(symbol_prefix+t->first()->text());
+  QString symname(symbol_prefix+t->first()->text());
   SymbolInfo *v = symbols.findSymbol(symname);
   if (!v) {
     if (t->numChildren() == 1)
@@ -370,11 +369,24 @@ JITScalar JITFunc::compile_rhs(Tree* t) {
 JITScalar JITFunc::compile_expression(Tree* t) {
   switch(t->token()) {
   case TOK_VARIABLE:     return compile_rhs(t);
-  case TOK_INTEGER:      return jit->Int32Value(ArrayToInt32(t->array()));
-  case TOK_FLOAT:        return jit->FloatValue(ArrayToDouble(t->array()));
-  case TOK_DOUBLE:       return jit->DoubleValue(ArrayToDouble(t->array()));
-  case TOK_COMPLEX:
-  case TOK_DCOMPLEX:
+
+  case TOK_REAL:
+  case TOK_REALF:
+	  if( t->array().isScalar() ){
+		  switch( t->array().dataClass() ){
+			case DataClass::Int32:
+				return jit->Int32Value( t->array().asInteger() );
+			case DataClass::Float:
+				return jit->FloatValue( t->array().asDouble() );
+			case DataClass::Double:
+				return jit->DoubleValue( t->array().asDouble() );
+			default:
+				throw Exception("Unsupported scalar type.");
+		  }
+	  }
+	  else
+		throw Exception("Unsupported type.");
+	  
   case TOK_STRING:
   case TOK_END:
   case ':':
@@ -435,7 +447,7 @@ JITScalar JITFunc::compile_expression(Tree* t) {
 
 void JITFunc::compile_assignment(Tree* t) {
   Tree* s(t->first());
-  string symname(symbol_prefix+s->first()->text());
+  QString symname(symbol_prefix+s->first()->text());
   JITScalar rhs(compile_expression(t->second()));
   SymbolInfo *v = symbols.findSymbol(symname);
   if (!v) {
@@ -553,14 +565,17 @@ template<class T>
 inline T scalar_load(void* base, int argnum) {
   JITFunc *tptr = static_cast<JITFunc*>(base);
   Array* a = tptr->array_inputs[argnum];
-  return ((T*)(a->getDataPointer()))[0];
+  return a->constRealScalar<T>();
 }
 
 template<class T>
 inline void scalar_store(void* base, int argnum, T value) {
   JITFunc *tptr = static_cast<JITFunc*>(base);
   Array* a = tptr->array_inputs[argnum];
-  ((T*)(a->getReadWriteDataPointer()))[0] = value;
+  if( a->isArray() )
+	a->set(1,Array(value));
+  else
+	a->realScalar<T>() = value;
 }
 
 template<class T>
@@ -572,11 +587,11 @@ inline int32 vector_load(void* base, int argnum, int32 ndx, T* address) {
       tptr->exception_store = Exception("Array index < 1 not allowed");
       return -1;
     }
-    if (ndx > a->getLength()) {
+	if (ndx > a->length()) {
       tptr->exception_store = Exception("Array bounds exceeded in A(n) expression");
       return -1;
     }
-    address[0] = ((T*)(a->getDataPointer()))[ndx-1];
+	address[0] = a->get(ndx).constRealScalar<T>();
     return 0;
   } catch (Exception &e) {
     JITFunc *tptr = static_cast<JITFunc*>(base);
@@ -595,10 +610,10 @@ inline int32 vector_store(void* base, int argnum, int32 ndx, T value) {
       tptr->exception_store = Exception("Array index < 1 not allowed");
       return -1;      
     }
-    if (ndx >= a->getLength()) {
-      a->vectorResize(ndx);
+    if (ndx >= a->length()) {
+      a->resize(ndx);
     }
-    ((T*)(a->getReadWriteDataPointer()))[ndx-1] = value;
+	a->set(ndx, Array( value ));
     return 0;
   } catch (Exception &e) {
     JITFunc *tptr = static_cast<JITFunc*>(base);
@@ -621,7 +636,8 @@ inline int32 matrix_load(void* base, int argnum, int32 row, int32 col, T* addres
       tptr->exception_store = Exception("Array index exceed bounds");
       return -1;
     }
-    address[0] = ((T*)(a->getDataPointer()))[row-1+(col-1)*a->rows()];
+    
+	address[0] = a->get(NTuple( row, col ) ).constRealScalar<T>();
     return 0;
   } catch (Exception &e) {
     JITFunc *tptr = static_cast<JITFunc*>(base);
@@ -640,13 +656,8 @@ inline int32 matrix_store(void* base, int argnum, int32 row, int32 col, T value)
       tptr->exception_store = Exception("Array index < 1 not allowed");
       return -1;      
     }
-    if ((row > a->rows()) || (col > a->columns())) {
-      int n_row = (row > a->rows()) ? row : a->rows();
-      int n_col = (col > a->columns()) ? col : a->columns();
-      Dimensions dim(n_row,n_col);
-      a->resize(dim);
-    }
-    ((T*)(a->getReadWriteDataPointer()))[row-1+(col-1)*a->rows()] = value;
+    
+	a->set(NTuple( row, col ), Array(value));
     return 0;
   } catch (Exception &e) {
     JITFunc *tptr = static_cast<JITFunc*>(base);
@@ -743,7 +754,7 @@ extern "C" {
 
 }
 
-void JITFunc::register_std_function(std::string name) {
+void JITFunc::register_std_function(QString name) {
   double_funcs.insertSymbol(name,jit->DefineLinkFunction(name,"d","d"));
   float_funcs.insertSymbol(name,jit->DefineLinkFunction(name+"f","f","f"));
 }
@@ -795,7 +806,7 @@ void JITFunc::compile(Tree* t) {
   countm++;
   initialize();
   argument_count = 0;
-  func = jit->DefineFunction(jit->FunctionType("i","I"),std::string("main") + countm);
+  func = jit->DefineFunction(jit->FunctionType("i","I"),QString("main") + countm);
   jit->SetCurrentFunction(func);
   prolog = jit->NewBlock("prolog");
   main_body = jit->NewBlock("main_body");
@@ -842,7 +853,7 @@ void JITFunc::compile_for_block(Tree* t) {
       loop_step = jit->DoubleValue( 1 );
       loop_stop = jit->Cast( compile_expression(t->first()->second()->second()), jit->DoubleType() );
   }
-  string loop_index_name(t->first()->first()->text());
+  QString loop_index_name(t->first()->first()->text());
   SymbolInfo* v = add_argument_scalar(loop_index_name,loop_start,true);
   JITScalar loop_index_address = v->address;
   jit->Store(loop_start,loop_index_address);
@@ -867,8 +878,6 @@ void JITFunc::compile_for_block(Tree* t) {
     failed = true;
   }
 
-  JITScalar next_loop_value = jit->Add(loop_index_value,loop_step);
-  jit->Store(next_loop_value,loop_index_address);
   jit->Jump(looptest);
   jit->SetCurrentBlock(looptest);
 
@@ -905,8 +914,7 @@ void JITFunc::prep() {
 	if (!v->isScalar) throw Exception("cannot create array types in the loop");
 	eval->getContext()->insertVariable(argumentList[i],
 					   Array(map_dataclass(v->type),
-						 Dimensions(1,1),
-						 Array::allocateArray(map_dataclass(v->type),1)));
+						 NTuple(1,1)));
 	ptr = eval->getContext()->lookupVariable(argumentList[i]);
 	if (!ptr.valid()) throw Exception("unable to create variable " + argumentList[i]);
       } 

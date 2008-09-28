@@ -42,7 +42,14 @@ public:
     ~DebugStream() { };
     void setOutWindow( QTextCursor* _dbwin ) { dbwin = _dbwin; };
 
-	inline DebugStream &sync(void) { ts.flush(); dbwin->insertText( stream ); stream.clear(); return *this; }
+	inline DebugStream &sync(void) { 
+		if( dbwin ){
+			ts.flush(); 
+			dbwin->insertText( stream ); 
+		}
+		stream.clear(); 
+		return *this; 
+	}
 
 	inline DebugStream &operator<<(QChar t) { ts << "\'" << t << "\'"; return sync(); }
     inline DebugStream &operator<<(bool t) { ts << (t ? "true" : "false"); return sync(); }
@@ -61,6 +68,7 @@ public:
     inline DebugStream &operator<<(double t) { ts << t; return sync(); }
     inline DebugStream &operator<<(const char* t) { ts << QString::fromAscii(t); return sync(); }
     inline DebugStream &operator<<(const QString & t) { ts << "\"" << t  << "\""; return sync(); }
+	inline DebugStream &operator<<(const std::string & t) { ts << "\"" << t.c_str()  << "\""; return sync(); }
     inline DebugStream &operator<<(const QLatin1String &t) { ts << "\""  << t.latin1() << "\""; return sync(); }
     inline DebugStream &operator<<(const QByteArray & t) { ts  << "\"" << t << "\""; return sync(); }
     inline DebugStream &operator<<(const void * t) { ts << t; return sync(); }

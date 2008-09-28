@@ -104,7 +104,7 @@ public:
  * objects.
  */
 
-typedef SymbolTable<FuncPtr> CodeTable;
+typedef FM::SymbolTable<FuncPtr> CodeTable;
 
 class Context {
   /**
