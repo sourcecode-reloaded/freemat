@@ -457,6 +457,7 @@ ArrayVector ArccosFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(UnaryOp<OpAcos>(input));
 }
 
+
 //!
 //@Module ASIN Inverse Trigonometric Arcsine Function
 //@@Section MATHFUNCTIONS

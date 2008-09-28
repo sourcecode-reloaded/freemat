@@ -128,6 +128,61 @@ ArrayVector LogFunction(int nargout, const ArrayVector& arg) {
 }
 
 //!
+//@Module COSH Hyperbolic Cosine Function
+//@@Section MATHFUNCTIONS
+//@@Usage
+//Computes the hyperbolic cosine of the argument.
+//The syntax for its use is
+//@[
+//   y = cosh(x)
+//@]
+//@@Function Internals
+//The @|cosh| function is computed from the formula
+//\[
+//   \cosh(x) = \frac{e^x+e^{-x}}{2}
+//\]
+//For @|x| complex, it follows that
+//\[
+//   \cosh(a+i*b) = \frac{e^a(\cos(b)+i*\sin(b)) + e^{-a}(\cos(-b)+i*\sin(-b))}{2}
+//\]
+//@@Examples
+//Here is a simple plot of the hyperbolic cosine function
+//@<
+//x = linspace(-5,5);
+//plot(x,cosh(x)); grid('on');
+//mprint('coshplot');
+//@>
+//@figure coshplot
+//@@Tests
+//@$y1=cosh(x1)
+//@@Signature
+//function cosh CoshFunction
+//inputs x
+//outputs y
+//!
+
+struct OpCosh {
+  static inline float func(float x) {return coshf(x);}
+  static inline double func(double x) {return cosh(x);}
+  static void func(float xr, float xi, float &yr, float &yi) {
+    yr = (expf(xr)*cosf(xi)+expf(-xr)*cosf(-xi))/2;
+    yi = (expf(xr)*sinf(xi)+expf(-xr)*sinf(-xi))/2;
+  }
+  static void func(double xr, double xi, double &yr, double &yi) {
+    yr = (exp(xr)*cos(xi)+exp(-xr)*cos(-xi))/2;
+    yi = (exp(xr)*sin(xi)+exp(-xr)*sin(-xi))/2;    
+  }
+};
+
+ArrayVector CoshFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() != 1)
+    throw Exception("Cosh function takes exactly one argument");
+  return ArrayVector(UnaryOp<OpCosh>(arg[0]));
+}
+
+
+
+//!
 //@Module EXP Exponential Function
 //@@Section MATHFUNCTIONS
 //@@Usage

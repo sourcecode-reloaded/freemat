@@ -23,10 +23,12 @@ struct OpVecVar {
       accum += src[i];
     T mean = accum/src.length();
     accum = 0;
-    T normalizer = 1.0/(src.length()-1.0);
-    for (index_t i=1;i<=src.length();i++) {
-      T tmp = src[i] - mean;
-      accum += tmp*tmp*normalizer;
+    if (src.length() > 1) {
+      T normalizer = 1.0/(src.length()-1.0);
+      for (index_t i=1;i<=src.length();i++) {
+	T tmp = src[i] - mean;
+	accum += tmp*tmp*normalizer;
+      }
     }
     dest[1] = accum;
   }
@@ -43,13 +45,15 @@ struct OpVecVar {
     }
     T mean_real = accum_real/src_real.length();
     T mean_imag = accum_imag/src_imag.length();
-    T normalizer = 1.0/(src_real.length()-1.0);
     T accum = 0;
-    for (index_t i=1;i<=src_real.length();i++) {
-      T tmp_real = src_real[i] - mean_real;
-      T tmp_imag = src_imag[i] - mean_imag;
-      T tmp_val = complex_abs(tmp_real,tmp_imag);
-      accum += tmp_val*tmp_val*normalizer;
+    if (src_real.length() > 1) {
+      T normalizer = 1.0/(src_real.length()-1.0);
+      for (index_t i=1;i<=src_real.length();i++) {
+	T tmp_real = src_real[i] - mean_real;
+	T tmp_imag = src_imag[i] - mean_imag;
+	T tmp_val = complex_abs(tmp_real,tmp_imag);
+	accum += tmp_val*tmp_val*normalizer;
+      }
     }
     dest_real[1] = accum;
     dest_imag[1] = 0;

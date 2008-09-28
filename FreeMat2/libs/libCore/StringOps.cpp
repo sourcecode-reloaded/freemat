@@ -32,6 +32,7 @@
 #include "Printf.hpp"
 #include "Algorithms.hpp"
 #include "Utils.hpp"
+#include <QChar>
 
 //!
 //@Module STRCMP String Compare Function
@@ -1185,6 +1186,125 @@ ArrayVector RegExpRepDriverFunction(int nargout, const ArrayVector& arg) {
   }
   return ArrayVector(Array(RegExpRepCoreFunction(subject,pattern,modes,replist)));
 }				  
+
+
+
+//!
+//@Module DEBLANK Remove trailing blanks from a string
+//@@Section String
+//@@Usage
+//The @|deblank| function removes spaces at the end of a string
+//when used with the syntax
+//@[
+//   y = deblank(x)
+//@]
+//where @|x| is a string, in which case, all of the extra spaces
+//in @|x| are stripped from the end of the string.  Alternately,
+//you can call @|deblank| with a cell array of strings
+//@[
+//   y = deblank(c)
+//@]
+//in which case each string in the cell array is deblanked.
+//@@Example
+//A simple example
+//@<
+//deblank('hello   ')
+//@>
+//and a more complex example with a cell array of strings
+//@<
+//deblank({'hello  ','there ','  is  ','  sign  '})
+//@>
+//@@Tests
+//@$y1=deblank(x1)
+//@@Signature
+//function deblank DeblankFunction
+//inputs x
+//outputs y
+//!
+struct OpDeblank {
+  static inline Array func(const Array& arg) {
+    if (!arg.isString()) return arg;
+    QString txt(arg.asString());
+    while ((txt.length() > 1) && (txt.right(1).at(0).isSpace()))
+      txt.chop(1);
+    return Array(txt);
+  }
+};
+
+ArrayVector DeblankFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() == 0)
+    throw Exception("deblank requires at least one argument");
+  return ArrayVector(StringOp<OpDeblank>(arg[0]));
+}
+
+//!
+//@Module STRFIND Find Substring in a String
+//@@Section STRING
+//@@Usage
+//Searches through a string for a pattern, and returns the starting
+//positions of the pattern in an array.  There are two forms for 
+//the @|strfind| function.  The first is for single strings
+//@[
+//   ndx = strfind(string, pattern)
+//@]
+//the resulting array @|ndx| contains the starting indices in @|string|
+//for the pattern @|pattern|.  The second form takes a cell array of 
+//strings
+//@[
+//   ndx = strfind(cells, pattern)
+//@]
+//and applies the search operation to each string in the cell array.
+//@@Example
+//Here we apply @|strfind| to a simple string
+//@<
+//a = 'how now brown cow?'
+//b = strfind(a,'ow')
+//@>
+//Here we search over multiple strings contained in a cell array.
+//@<
+//a = {'how now brown cow','quick brown fox','coffee anyone?'}
+//b = strfind(a,'ow')
+//@>
+//@@Tests
+//@$y1 = strfind(x1,'ow')
+//@$y1 = strfind(x1,'er')
+//@@Signature
+//function strfind StrFindFunction
+//inputs x pattern
+//outputs y
+//!
+static Array StrFindFunc(const Array &r, const QString &pattern) {
+  if (!r.isString()) return EmptyConstructor();
+  QString x = r.asString();
+  QVector<double> v;
+  int from = 0;
+  while (x.indexOf(pattern,from) >= 0) {
+    from = x.indexOf(pattern,from) + 1;
+    v.push_back(from);
+  }
+  if (v.size() == 0) return EmptyConstructor();
+  BasicArray<double> vr(ToBasicArray(v));
+  vr.reshape(NTuple(1,vr.length()));
+  return Array(vr);
+}
+
+ArrayVector StrFindFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 2)
+    throw Exception("strfind requires at least two arguments");
+  Array y(arg[0]);
+  if (!arg[1].isString()) throw Exception("second argument to strfind must be a string");
+  QString pattern(arg[1].asString());
+  if (y.dataClass() != CellArray)
+    y = CellArrayFromArray(y);
+  const BasicArray<Array> &rp(y.constReal<Array>());
+  BasicArray<Array> sp(y.dimensions());
+  for (index_t i=1;i<=rp.length();i++)
+    sp[i] = StrFindFunc(rp[i],pattern);
+  Array ret(sp);
+  if (ret.isScalar()) return ArrayVector(ArrayFromCellArray(ret));
+  return ArrayVector(ret);
+}
+
 
 //!
 //@Module NUM2STR Convert Numbers To Strings
