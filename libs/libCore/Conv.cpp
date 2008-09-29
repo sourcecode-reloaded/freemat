@@ -9,7 +9,7 @@ static void Conv2MainReal(T* C, const T* A, const T*B,
 			  int Cm, int Cn, int Cm_offset, int Cn_offset) {
   for (int n=0;n<Cn;n++)
     for (int m=0;m<Cm;m++) {
-      T accum = 0;
+      double accum = 0;
       int iMin, iMax;
       int jMin, jMax;
       iMin = std::max(0,m+Cm_offset-Bm+1);
@@ -33,8 +33,8 @@ static void Conv2MainComplex(T* Cr, T* Ci,
 			     int Cm_offset, int Cn_offset) {
   for (int n=0;n<Cn;n++)
     for (int m=0;m<Cm;m++) {
-      T accum_r = 0;
-      T accum_i = 0;
+      double accum_r = 0;
+      double accum_i = 0;
       int iMin, iMax;
       int jMin, jMax;
       iMin = std::max(0,m+Cm_offset-Bm+1);
@@ -66,6 +66,8 @@ static Array Conv2FunctionDispatch(Array X, Array Y, int Cm, int Cn,
     return C;
   } else {
     Array C(dclass,NTuple(Cm,Cn));
+    X.forceComplex();
+    Y.forceComplex();
     Conv2MainComplex<T>(C.real<T>().data(),C.imag<T>().data(),
 			X.constReal<T>().constData(),X.constImag<T>().constData(),
 			Y.constReal<T>().constData(),Y.constImag<T>().constData(),
@@ -202,9 +204,7 @@ ArrayVector Conv2Function(int nargout, const ArrayVector& arg) {
   Array Y(arg[1]);
   if (X.isEmpty() && Y.isEmpty())
     return ArrayVector(EmptyConstructor());
-  if (((X.dataClass() == Float) && (Y.dataClass() == Float)) ||
-      ((X.dataClass() == Float) && (Y.dataClass() == Double)) ||
-      ((X.dataClass() == Double) && (Y.dataClass() == Float))) {
+  if ((X.dataClass() == Float) || (Y.dataClass() == Float)) {
     X = X.asDenseArray().toClass(Float);
     Y = Y.asDenseArray().toClass(Float);
   } else {

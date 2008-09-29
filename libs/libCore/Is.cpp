@@ -50,13 +50,13 @@ MacroDefIsSame(QChar);
 template <>
 bool IsSame(const float& a, const float& b) {
   return ((a == b) || (IsNaN(a) && IsNaN(b)) || 
-	  (fabsf(b-a) <= fepsf(qMax(fabsf(a),fabsf(b)))));
+	  (fabsf(b-a) <= 2*fepsf(qMax(fabsf(a),fabsf(b)))));
 }
 
 template <>
 bool IsSame(const double& a, const double& b) {
   return ((a == b) || (IsNaN(a) && IsNaN(b)) || 
-	  (fabs(b-a) <= feps(qMax(fabs(a),fabs(b)))));
+	  (fabs(b-a) <= 2*feps(qMax(fabs(a),fabs(b)))));
 }
 
 template <>

@@ -884,4 +884,18 @@ static inline Array StringOp(const ArrayVector& arg) {
   }
 }
 
+template <class Op>
+static inline Array StringOp(const Array &arg) {
+  if (arg.dataClass() != CellArray)
+    return Array(Op::func(arg));
+  if (arg.isScalar())
+    return Array(Op::func(ArrayFromCellArray(arg)));
+  Array ax(arg);
+  const BasicArray<Array> &x(ax.constReal<Array>());
+  BasicArray<Array> y(ax.dimensions());
+  for (index_t i=1;i<=ax.length();i++)
+    y[i] = Op::func(x[i]);
+  return Array(y);
+}
+
 #endif

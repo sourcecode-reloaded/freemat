@@ -130,13 +130,16 @@ ArrayVector DotFunction(int nargout, const ArrayVector& arg) {
     x = x.asDenseArray();
     y = y.asDenseArray();
   }
-  if (!x.allReal() || !y.allReal()) {
-    x.forceComplex();
-    y.forceComplex();
-  }
   if ((x.dataClass() == Float) || (y.dataClass() == Float)) {
     x = x.toClass(Float);
     y = y.toClass(Float);
+  } else {
+    x = x.toClass(Double);
+    y = y.toClass(Double);
+  }
+  if (!x.allReal() || !y.allReal()) {
+    x.forceComplex();
+    y.forceComplex();
   }
   if (x.dataClass() == Float)
     return DotFunction<float>(x,y,DotDim);

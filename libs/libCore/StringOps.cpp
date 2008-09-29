@@ -33,6 +33,7 @@
 #include "Algorithms.hpp"
 #include "Utils.hpp"
 #include "IEEEFP.hpp"
+#include <QChar>
 
 static int flagChar(char c) {
   return ((c == '#') ||  (c == '0') || (c == '-') ||  
@@ -275,26 +276,90 @@ ArrayVector StrStrFunction(int nargout, const ArrayVector& arg) {
 
 
 //!
-//@Module STRREP_STRING String Replace Function
+//@Module STRREP String Replace Function
 //@@Section STRING
 //@@Usage
-//Replaces instances of a substring string with another.  This is a lower
-//level function used by @|strrep|.
+//Replace every occurance of one string with another.  The
+//general syntax for its use is
+//@[
+//  p = strrep(source,find,replace)
+//@]
+//Every instance of the string @|find| in the string @|source| is
+//replaced with the string @|replace|.  Any of @|source|, @|find|
+//and @|replace| can be a cell array of strings, in which case
+//each entry has the replace operation applied.
+//@@Example
+//Here are some examples of the use of @|strrep|.  First the case
+//where are the arguments are simple strings
+//@<
+//strrep('Matlab is great','Matlab','FreeMat')
+//@>
+//And here we have the replace operation for a number of strings:
+//@<
+//strrep({'time is money';'A stitch in time';'No time for games'},'time','money')
+//@>
+//@@Tests
+//@$y1=strrep(x1,'Matlab','FreeMat')
+//@$y1=strrep(x1,'time','money')
 //@@Signature
-//function strrep_string StrRepStringFunction
-//inputs mainstring searchstring repstring
-//outputs modifiedstring
+//function strrep StrRepFunction
+//inputs source pattern replace
+//outputs y
 //!
-ArrayVector StrRepStringFunction(int nargout, const ArrayVector& arg) {
+static Array StrRepFunc(const Array &source, const Array &pattern, const Array &replace) {
+  if (!source.isString() || !pattern.isString() || !replace.isString()) 
+    return source;
+  return Array(source.asString().replace(pattern.asString(),replace.asString()));
+}
+
+ArrayVector StrRepFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 3)
-    throw Exception("strrep_string function requires three string arguments");
-  if (!(arg[0].isString()))
-    throw Exception("strrep_string function requires three string arguments");
-  if (!(arg[1].isString()))
-    throw Exception("strrep_string function requires three string arguments");
-  if (!(arg[2].isString()))
-    throw Exception("strrep_string function requires three string arguments");
-  return ArrayVector(Array(arg[0].asString().replace(arg[1].asString(),arg[2].asString())));
+    throw Exception("strrep function requires arguments");
+  Array source(arg[0]);
+  Array pattern(arg[1]);
+  Array replace(arg[2]);
+  // Force everything to be a cell array
+  if (source.dataClass() != CellArray) source = CellArrayFromArray(source);
+  if (pattern.dataClass() != CellArray) pattern = CellArrayFromArray(pattern);
+  if (replace.dataClass() != CellArray) replace = CellArrayFromArray(replace);
+  NTuple dims;
+  if (source.isScalar() && pattern.isScalar()) {
+    dims = replace.dimensions();
+  } else if (source.isScalar() && replace.isScalar()) {
+    dims = pattern.dimensions();
+  } else if (pattern.isScalar() && replace.isScalar()) {
+    dims = source.dimensions();
+  } else if (source.isScalar()) {
+    if (pattern.dimensions() != replace.dimensions())
+      throw Exception("All cell-array arguments must be the same size (or scalars)");
+    dims = pattern.dimensions();
+  } else if (pattern.isScalar()) {
+    if (source.dimensions() != replace.dimensions()) 
+      throw Exception("All cell-array arguments must be the same size (or scalars)");
+    dims = source.dimensions();
+  } else if (replace.isScalar()) {
+    if (source.dimensions() != pattern.dimensions())
+      throw Exception("All cell-array arguments must be the same size (or scalars)");
+    dims = source.dimensions();
+  } else {
+    if ((source.dimensions() != pattern.dimensions()) || 
+	(source.dimensions() != replace.dimensions()))
+      throw Exception("All cell-array arguments must be the same size (or scalars)");
+    dims = source.dimensions();
+  }
+  int source_incr = (source.isScalar() ? 0 : 1);
+  int pattern_incr = (pattern.isScalar() ? 0 : 1);
+  int replace_incr = (replace.isScalar() ? 0 : 1);
+  const BasicArray<Array> &sp(source.constReal<Array>());
+  const BasicArray<Array> &pp(pattern.constReal<Array>());
+  const BasicArray<Array> &rp(replace.constReal<Array>());
+  BasicArray<Array> retvec(dims);
+  for (index_t i=1;i<=dims.count();i++) 
+    retvec.set(i,StrRepFunc(sp[1+(i-1)*source_incr],pp[1+(i-1)*pattern_incr],rp[1+(i-1)*replace_incr]));
+  if (retvec.isScalar())
+    return ArrayVector(ArrayFromCellArray(retvec));
+  else
+    return ArrayVector(retvec);
 }
 
 //!
@@ -1146,6 +1211,125 @@ ArrayVector RegExpRepDriverFunction(int nargout, const ArrayVector& arg) {
   }
   return ArrayVector(Array(RegExpRepCoreFunction(subject,pattern,modes,replist)));
 }				  
+
+
+
+//!
+//@Module DEBLANK Remove trailing blanks from a string
+//@@Section String
+//@@Usage
+//The @|deblank| function removes spaces at the end of a string
+//when used with the syntax
+//@[
+//   y = deblank(x)
+//@]
+//where @|x| is a string, in which case, all of the extra spaces
+//in @|x| are stripped from the end of the string.  Alternately,
+//you can call @|deblank| with a cell array of strings
+//@[
+//   y = deblank(c)
+//@]
+//in which case each string in the cell array is deblanked.
+//@@Example
+//A simple example
+//@<
+//deblank('hello   ')
+//@>
+//and a more complex example with a cell array of strings
+//@<
+//deblank({'hello  ','there ','  is  ','  sign  '})
+//@>
+//@@Tests
+//@$y1=deblank(x1)
+//@@Signature
+//function deblank DeblankFunction
+//inputs x
+//outputs y
+//!
+struct OpDeblank {
+  static inline Array func(const Array& arg) {
+    if (!arg.isString()) return arg;
+    QString txt(arg.asString());
+    while ((txt.length() > 1) && (txt.right(1).at(0).isSpace()))
+      txt.chop(1);
+    return Array(txt);
+  }
+};
+
+ArrayVector DeblankFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() == 0)
+    throw Exception("deblank requires at least one argument");
+  return ArrayVector(StringOp<OpDeblank>(arg[0]));
+}
+
+//!
+//@Module STRFIND Find Substring in a String
+//@@Section STRING
+//@@Usage
+//Searches through a string for a pattern, and returns the starting
+//positions of the pattern in an array.  There are two forms for 
+//the @|strfind| function.  The first is for single strings
+//@[
+//   ndx = strfind(string, pattern)
+//@]
+//the resulting array @|ndx| contains the starting indices in @|string|
+//for the pattern @|pattern|.  The second form takes a cell array of 
+//strings
+//@[
+//   ndx = strfind(cells, pattern)
+//@]
+//and applies the search operation to each string in the cell array.
+//@@Example
+//Here we apply @|strfind| to a simple string
+//@<
+//a = 'how now brown cow?'
+//b = strfind(a,'ow')
+//@>
+//Here we search over multiple strings contained in a cell array.
+//@<
+//a = {'how now brown cow','quick brown fox','coffee anyone?'}
+//b = strfind(a,'ow')
+//@>
+//@@Tests
+//@$y1 = strfind(x1,'ow')
+//@$y1 = strfind(x1,'er')
+//@@Signature
+//function strfind StrFindFunction
+//inputs x pattern
+//outputs y
+//!
+static Array StrFindFunc(const Array &r, const QString &pattern) {
+  if (!r.isString()) return EmptyConstructor();
+  QString x = r.asString();
+  QVector<double> v;
+  int from = 0;
+  while (x.indexOf(pattern,from) >= 0) {
+    from = x.indexOf(pattern,from) + 1;
+    v.push_back(from);
+  }
+  if (v.size() == 0) return EmptyConstructor();
+  BasicArray<double> vr(ToBasicArray(v));
+  vr.reshape(NTuple(1,vr.length()));
+  return Array(vr);
+}
+
+ArrayVector StrFindFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 2)
+    throw Exception("strfind requires at least two arguments");
+  Array y(arg[0]);
+  if (!arg[1].isString()) throw Exception("second argument to strfind must be a string");
+  QString pattern(arg[1].asString());
+  if (y.dataClass() != CellArray)
+    y = CellArrayFromArray(y);
+  const BasicArray<Array> &rp(y.constReal<Array>());
+  BasicArray<Array> sp(y.dimensions());
+  for (index_t i=1;i<=rp.length();i++)
+    sp[i] = StrFindFunc(rp[i],pattern);
+  Array ret(sp);
+  if (ret.isScalar()) return ArrayVector(ArrayFromCellArray(ret));
+  return ArrayVector(ret);
+}
+
 
 //!
 //@Module NUM2STR Convert Numbers To Strings

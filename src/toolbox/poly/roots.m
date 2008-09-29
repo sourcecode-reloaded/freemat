@@ -43,13 +43,24 @@ function z = roots(p)
   if(any(isnan(p) | isinf(p)))
      error('Input to ROOTS must not contain NaN or Inf.');
   end
-  while(any(isinf(p./p(1))))
-     p=p(2:end);
+  if (isempty(p))
+    z = zeros(0,1);
+    return;
   end
-   
+  while(any(isinf(p./p(1))))
+    p=p(2:end);
+  end
+  if (numel(p) <= 1) 
+    z = zeros(0,1);
+    return;
+  end
   p = vec(p);
   n = numel(p)-1;
-  A = diag(ones(n-1,1),-1);
+  o = ones(n-1,1);
+  if (isa(p,'single'))
+    o = single(o);
+  end
+  A = diag(o,-1);
   A(1,:) = -p(2:n+1)./p(1);
   z = eig(A);
   
