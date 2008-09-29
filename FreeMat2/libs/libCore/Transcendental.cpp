@@ -128,6 +128,61 @@ ArrayVector LogFunction(int nargout, const ArrayVector& arg) {
 }
 
 //!
+//@Module TANH Hyperbolic Tangent Function
+//@@Section MATHFUNCTIONS
+//@@Usage
+//Computes the hyperbolic tangent of the argument.
+//The syntax for its use is
+//@[
+//   y = tanh(x)
+//@]
+//@@Function Internals
+//The @|tanh| function is computed from the formula
+//\[
+//   \tanh(x) = \frac{\sinh(x)}{\cosh(x)}
+//\]
+//@@Examples
+//Here is a simple plot of the hyperbolic tangent function
+//@<
+//x = linspace(-5,5);
+//plot(x,tanh(x)); grid('on');
+//mprint('tanhplot');
+//@>
+//@figure tanhplot
+//@@Tests
+//@$y1=tanh(x1)
+//@@Signature
+//function tanh TanhFunction
+//inputs x
+//outputs y
+//!
+
+struct OpTanh {
+  static inline float func(float x) {return tanhf(x);}
+  static inline double func(double x) {return tanh(x);}
+  static void func(float xr, float xi, float &yr, float &yi) {
+    float cr = (expf(xr)*cosf(xi)+expf(-xr)*cosf(-xi))/2;
+    float ci = (expf(xr)*sinf(xi)+expf(-xr)*sinf(-xi))/2;
+    float sr = (expf(xr)*cosf(xi)-expf(-xr)*cosf(-xi))/2;
+    float si = (expf(xr)*sinf(xi)-expf(-xr)*sinf(-xi))/2;
+    complex_divide(sr,si,cr,ci,yr,yi);
+  }
+  static void func(double xr, double xi, double &yr, double &yi) {
+    double cr = (exp(xr)*cos(xi)+exp(-xr)*cos(-xi))/2;
+    double ci = (exp(xr)*sin(xi)+exp(-xr)*sin(-xi))/2;
+    double sr = (exp(xr)*cos(xi)-exp(-xr)*cos(-xi))/2;
+    double si = (exp(xr)*sin(xi)-exp(-xr)*sin(-xi))/2;
+    complex_divide(sr,si,cr,ci,yr,yi);
+  }
+};
+
+ArrayVector TanhFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() != 1)
+    throw Exception("Tanh function takes exactly one argument");
+  return ArrayVector(UnaryOp<OpTanh>(arg[0]));
+}
+
+//!
 //@Module COSH Hyperbolic Cosine Function
 //@@Section MATHFUNCTIONS
 //@@Usage
@@ -164,11 +219,11 @@ ArrayVector LogFunction(int nargout, const ArrayVector& arg) {
 struct OpCosh {
   static inline float func(float x) {return coshf(x);}
   static inline double func(double x) {return cosh(x);}
-  static void func(float xr, float xi, float &yr, float &yi) {
+  static inline void func(float xr, float xi, float &yr, float &yi) {
     yr = (expf(xr)*cosf(xi)+expf(-xr)*cosf(-xi))/2;
     yi = (expf(xr)*sinf(xi)+expf(-xr)*sinf(-xi))/2;
   }
-  static void func(double xr, double xi, double &yr, double &yi) {
+  static inline void func(double xr, double xi, double &yr, double &yi) {
     yr = (exp(xr)*cos(xi)+exp(-xr)*cos(-xi))/2;
     yi = (exp(xr)*sin(xi)+exp(-xr)*sin(-xi))/2;    
   }
@@ -180,6 +235,54 @@ ArrayVector CoshFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(UnaryOp<OpCosh>(arg[0]));
 }
 
+//!
+//@Module SINH Hyperbolic Sine Function
+//@@Section MATHFUNCTIONS
+//@@Usage
+//Computes the hyperbolic sine of the argument.
+//The syntax for its use is
+//@[
+//   y = sinh(x)
+//@]
+//@@Function Internals
+//The @|sinh| function is computed from the formula
+//\[
+//   \sinh(x) = \frac{e^x-e^{-x}}{2}
+//\]
+//@@Examples
+//Here is a simple plot of the hyperbolic sine function
+//@<
+//x = linspace(-5,5);
+//plot(x,sinh(x)); grid('on');
+//mprint('sinhplot');
+//@>
+//@figure sinhplot
+//@@Tests
+//@$y1=sinh(x1)
+//@@Signature
+//function sinh SinhFunction
+//inputs x
+//outputs y
+//!
+
+struct OpSinh {
+  static inline float func(float x) {return sinhf(x);}
+  static inline double func(double x) {return sinh(x);}
+  static inline void func(float xr, float xi, float &yr, float &yi) {
+    yr = (expf(xr)*cosf(xi)-expf(-xr)*cosf(-xi))/2;
+    yi = (expf(xr)*sinf(xi)-expf(-xr)*sinf(-xi))/2;    
+  }
+  static inline void func(double xr, double xi, double &yr, double &yi) {
+    yr = (exp(xr)*cos(xi)-exp(-xr)*cos(-xi))/2;
+    yi = (exp(xr)*sin(xi)-exp(-xr)*sin(-xi))/2; 
+  }
+};
+
+ArrayVector SinhFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() != 1)
+    throw Exception("Sinh function takes exactly one argument");
+  return ArrayVector(UnaryOp<OpSinh>(arg[0]));
+}
 
 
 //!
