@@ -60,13 +60,13 @@ static inline float fepsf( float x ){
 template <>
 bool IsSame(const float& a, const float& b) {
   return ((a == b) || (IsNaN(a) && IsNaN(b)) || 
-	  (fabsf(b-a) <= 2*fepsf(qMax(fabsf(a),fabsf(b)))));
+	  (fabsf(b-a) <= 100*fepsf(qMax(fabsf(a),fabsf(b)))));
 }
 
 template <>
 bool IsSame(const double& a, const double& b) {
   return ((a == b) || (IsNaN(a) && IsNaN(b)) || 
-	  (fabs(b-a) <= 2*feps(qMax(fabs(a),fabs(b)))));
+	  (fabs(b-a) <= 100*feps(qMax(fabs(a),fabs(b)))));
 }
 
 template <>
@@ -76,7 +76,8 @@ template <typename T>
 static bool IsSame(const BasicArray<T>& ar, const BasicArray<T>& br) {
   if (ar.dimensions() != br.dimensions()) return false;
   for (index_t i=1;i<=ar.length();i++)
-    if (!IsSame(ar[i],br[i])) return false;
+    if (!IsSame(ar[i],br[i])) 
+      return false;
   return true;
 }
 
@@ -96,8 +97,8 @@ static bool IsSameStruct(const Array& a, const Array& b) {
   if (ad.allReal() && bd.allReal())					\
     return IsSame(ad.constReal<ctype>(),bd.constReal<ctype>());		\
   else {								\
-    Array ac(a); ac.forceComplex();					\
-    Array bc(b); bc.forceComplex();					\
+    Array ac(ad); ac.forceComplex();					\
+    Array bc(bd); bc.forceComplex();					\
     return (IsSame(ac.constReal<ctype>(),bc.constReal<ctype>()) &&	\
 	    IsSame(ac.constImag<ctype>(),bc.constImag<ctype>()));	\
   }									\
@@ -123,7 +124,6 @@ ArrayVector IsSameFunction(int nargout, const ArrayVector& arg) {
     return ArrayVector(Array(false));
   return ArrayVector(Array(IsSame(arg[0],arg[1])));
 }
-
 
 //!
 //@Module ISSET Test If Variable Set

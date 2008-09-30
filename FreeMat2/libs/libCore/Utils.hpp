@@ -30,6 +30,7 @@ bool contains(StringVector& list, QString s, bool regexpmode);
 NTuple ArrayVectorAsDimensions(const ArrayVector &arg);
 
 double ArrayRange(const Array& dp);
+double ArrayMin(const Array& dp);
 
 Array DoubleVectorFromQList(QList<uint32> &ref);
 

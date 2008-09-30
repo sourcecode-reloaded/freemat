@@ -94,6 +94,29 @@ double ArrayRange(const Array& dp) {
   return result;
 }
 
+double ArrayMin(const Array& dp) {
+  if ((dp.dataClass() != Float) && (dp.dataClass() != Double))
+    throw Exception("Unsupported type for function");
+  const Array &tmp(dp.asDenseArray().toClass(Double));
+  const BasicArray<double> &rp(tmp.constReal<double>());
+  if (rp.length() == 0) return 0;
+  double result;
+  bool init = false;
+  for (index_t i=1;i<=rp.length();i++) {
+    if (!IsNaN(rp[i])) {
+      if (!init) {
+	init = true;
+	result = rp[i];
+      } else {
+	if (rp[i] < result) 
+	  result = rp[i];
+      }
+    }
+  }
+  if (!init) return NaN();
+  return result;
+}
+
 Array DoubleVectorFromQList(QList<uint32> &ref) {
   BasicArray<double> retvec(NTuple(1,ref.size()));
   for (int i=0;i<ref.size();i++)

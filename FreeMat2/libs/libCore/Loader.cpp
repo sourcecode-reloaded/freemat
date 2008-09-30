@@ -208,6 +208,7 @@ ArrayVector ExpFunction(int, const ArrayVector&);
 ArrayVector ExpM1Function(int, const ArrayVector&);
 ArrayVector CosFunction(int, const ArrayVector&);
 ArrayVector CoshFunction(int, const ArrayVector&);
+ArrayVector ArccoshFunction(int, const ArrayVector&);
 ArrayVector SinFunction(int, const ArrayVector&);
 ArrayVector SinhFunction(int, const ArrayVector&);
 ArrayVector TanFunction(int, const ArrayVector&);
@@ -488,6 +489,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("expm1",ExpM1Function,1,1,"x",NULL);
   context->addFunction("cos",CosFunction,1,1,"x",NULL);
   context->addFunction("cosh",CoshFunction,1,1,"x",NULL);
+  context->addFunction("acosh",ArccoshFunction,1,1,"x",NULL);
   context->addFunction("sin",SinFunction,1,1,"x",NULL);
   context->addFunction("sinh",SinhFunction,1,1,"x",NULL);
   context->addFunction("tan",TanFunction,1,1,"x",NULL);
