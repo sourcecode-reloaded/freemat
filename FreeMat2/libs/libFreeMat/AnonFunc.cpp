@@ -19,8 +19,9 @@ Array AnonFuncConstructor(Interpreter* eval, Tree *t) {
     if (ptr.valid()) {
       fields << variables[i];
       vals << *ptr;
-    } else if (!arguments.contains(variables[i]))
-      throw Exception("variable " + variables[i] + " which is not an argument, must be defined when the anonymous function is declared.");
+    }
+    //    } else if (!arguments.contains(variables[i]))
+    //      throw Exception("variable " + variables[i] + " which is not an argument, must be defined when the anonymous function is declared.");
   }
   Array workspace(StructConstructor(fields,vals));
   Array args(CellArrayFromArray(CellArrayFromStringVector(arguments)));
@@ -85,7 +86,7 @@ ArrayVector AnonFuncSubsrefFunction(int nargout, const ArrayVector& arg, Interpr
   // Excecute the tree
   ArrayVector outputs;
   try {
-    eval->multiexpr(expTree.tree(),outputs);
+    eval->multiexpr(expTree.tree(),outputs,1,true);
   } catch (InterpreterBreakException& e) {
   } catch (InterpreterContinueException& e) {
   } catch (InterpreterReturnException& e) {

@@ -171,6 +171,21 @@ ArrayVector IsSetFunction(int nargout, const ArrayVector& arg, Interpreter* eval
 }
 
 //!
+//@Module ISEQUAL Test For Matrix Equality
+//@@Section INSPECTION
+//@@Usage
+//Test two arrays for equality.  The general format
+//for its use is
+//@[
+//   y = isequal(a,b)
+//@]
+//This function returns true if the two arrays are
+//equal (compared element-wise).  Unlike @|issame|
+//the @|isequal| function will type convert where
+//possible to do the comparison.
+//!
+
+//!
 //@Module ISSPARSE Test for Sparse Matrix
 //@@Section INSPECTION
 //@@Usage

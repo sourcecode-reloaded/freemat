@@ -157,6 +157,8 @@ ArrayVector LogFunction(int nargout, const ArrayVector& arg) {
 //outputs y
 //!
 
+//  e^r*c(i)+e^(-r)*c(-i)/2 + i
+
 struct OpTanh {
   static inline float func(float x) {return tanhf(x);}
   static inline double func(double x) {return tanh(x);}
@@ -172,6 +174,10 @@ struct OpTanh {
     double ci = (exp(xr)*sin(xi)+exp(-xr)*sin(-xi))/2;
     double sr = (exp(xr)*cos(xi)-exp(-xr)*cos(-xi))/2;
     double si = (exp(xr)*sin(xi)-exp(-xr)*sin(-xi))/2;
+    //     double cr = (exp(xr)*cos(xi)+exp(-xr)*cos(-xi))/2;
+    //     double ci = (exp(xr)*sin(xi)+exp(-xr)*sin(-xi))/2;
+    //     double sr = (exp(xr)*cos(xi)-exp(-xr)*cos(-xi))/2;
+    //     double si = (exp(xr)*sin(xi)-exp(-xr)*sin(-xi))/2;
     complex_divide(sr,si,cr,ci,yr,yi);
   }
 };

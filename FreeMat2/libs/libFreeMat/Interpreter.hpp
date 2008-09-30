@@ -701,7 +701,7 @@ private:
   /**
    * Evaluate the expression into a variable-array
    */
-  void multiexpr(Tree *t, ArrayVector& m, index_t lhsCount = 1);
+  void multiexpr(Tree *t, ArrayVector& m, index_t lhsCount = 1, bool output_optional = false);
 
   /**
    * Evaluate a unit colon expression.  The AST input should look like:
