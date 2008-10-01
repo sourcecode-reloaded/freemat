@@ -25,6 +25,7 @@
 #include "Math.hpp"
 #include "Operators.hpp"
 #include "Complex.hpp"
+#include "IEEEFP.hpp"
 
 //!
 //@Module LOG1P Natural Logarithm of 1+P Function
@@ -59,7 +60,11 @@ ArrayVector Log1PFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("Log1p function takes exactly one argument");
   Array input(arg[0]);
-  if (!IsPositive(input)) input.forceComplex();
+  if (!IsPositive(input)) {
+    if (input.dataClass() != Float) 
+      input = input.toClass(Double);
+    input.forceComplex();
+  }
   return ArrayVector(UnaryOp<OpLog1P>(input));
 }
 
@@ -124,7 +129,11 @@ ArrayVector LogFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("Log function takes exactly one argument");
   Array input(arg[0]);
-  if (!IsPositive(input)) input.forceComplex();
+  if (!IsPositive(input)) {
+    if (input.dataClass() != Float) 
+      input = input.toClass(Double);
+    input.forceComplex();
+  }
   return ArrayVector(UnaryOp<OpLog>(input));
 }
 
@@ -190,6 +199,127 @@ ArrayVector TanhFunction(int nargout, const ArrayVector& arg) {
 }
 
 //!
+//@Module ASINH Inverse Hyperbolic Sine Function
+//@@Section MATHFUNCTIONS
+//@@Usage
+//Computes the inverse hyperbolic sine of its argument.  The general
+//syntax for its use is
+//@[
+//  y = asinh(x)
+//@]
+//where @|x| is an @|n|-dimensional array of numerical type.
+//@@Function Internals
+//The @|asinh| function is computed from the formula
+//\[
+//   \sinh^{-1}(x) = \log\left(x + (x^2 + 1)^0.5\right)
+//\]
+//where the @|log| (and square root) is taken in its most general sense.
+//@@Examples
+//Here is a simple plot of the inverse hyperbolic sine function
+//@<
+//x = -5:.01:5;
+//plot(x,asinh(x)); grid('on');
+//mprint('asinhplot');
+//@>
+//@figure asinhplot
+//@@Tests
+//@$y1=asinh(x1)
+//@@Signature
+//function asinh AsinhFunction
+//inputs x
+//outputs y
+//!
+
+// log(x+sqrt(x^2-1))
+struct OpArcsinh {
+  static inline float func(float x) {return asinhf(x);}
+  static inline double func(double x) {return asinh(x);}
+  template <typename T>
+  static inline void func(T xr, T xi, T &yr, T &yi) {
+    T xsq_real, xsq_imag;
+    complex_square(xr,xi,xsq_real,xsq_imag);
+    xsq_real += 1;
+    T xrt_real, xrt_imag;
+    complex_sqrt(xsq_real,xsq_imag,xrt_real,xrt_imag);
+    xrt_real += xr;
+    xrt_imag += xi;
+    complex_log(xrt_real,xrt_imag,yr,yi);
+  }
+};
+
+ArrayVector ArcsinhFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() != 1)
+    throw Exception("acosh function takes exactly one argument");
+  return ArrayVector(UnaryOp<OpArcsinh>(arg[0]));
+}
+
+
+//!
+//@Module ASECH Inverse Hyperbolic Secant Function
+//@@Section MATHFUNCTIONS
+//@@Usage
+//Computes the inverse hyperbolic secant of its argument.  The general
+//syntax for its use is
+//@[
+//  y = asech(x)
+//@]
+//where @|x| is an @|n|-dimensional array of numerical type.
+//@@Function Internals
+//The @|asech| function is computed from the formula
+//\[
+//   \mathrm{sech}^{-1}(x) = \cosh^{-1}\left(\frac{1}{x}\right)
+//\]
+//@@Examples
+//Here is a simple plot of the inverse hyperbolic secant function
+//@<
+//x1 = -20:.01:-1;
+//x2 = 1:.01:20;
+//plot(x1,imag(asech(x1)),x2,imag(asech(x2))); grid('on');
+//mprint('asechplot');
+//@>
+//@figure asechplot
+//@@Tests
+//@$y1=asech(x1)
+//@@Signature
+//function asech ArcsechFunction
+//inputs x
+//outputs y
+//!
+struct OpArcsech {
+  template <typename T>
+  static inline T func(T x) {return log(sqrt(1/x-1)*sqrt(1/x+1)+1/x);}
+  template <typename T>
+  static inline void func(T xr, T xi, T &yr, T &yi) {
+    T xrp_real, xrp_imag;
+    complex_recip(xr,xi,xrp_real,xrp_imag);
+    T xrt_real1, xrt_imag1;
+    T xrt_real2, xrt_imag2;
+    complex_sqrt(xrp_real+1,xrp_imag,xrt_real1,xrt_imag1);
+    complex_sqrt(xrp_real-1,xrp_imag,xrt_real2,xrt_imag2);
+    T y_real, y_imag;
+    complex_multiply(xrt_real1,xrt_imag1,
+		     xrt_real2,xrt_imag2,
+		     y_real,y_imag);
+    y_real += xrp_real;
+    y_imag += xrp_imag;
+    complex_log(y_real,y_imag,yr,yi);
+  }
+};
+
+ArrayVector ArcsechFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() != 1)
+    throw Exception("asech function takes exactly one argument");
+  Array input(arg[0]);
+  if (input.allReal() && ((ArrayMin(input) <= 0) || (ArrayMax(input) > 1))) {
+    if (input.dataClass() != Float) 
+      input = input.toClass(Double);
+    input.forceComplex();
+  }
+  return ArrayVector(UnaryOp<OpArcsech>(input));
+}
+
+
+//!
 //@Module ACOSH Inverse Hyperbolic Cosine Function
 //@@Section MATHFUNCTIONS
 //@@Usage
@@ -221,7 +351,6 @@ ArrayVector TanhFunction(int nargout, const ArrayVector& arg) {
 //outputs y
 //!
 
-
 // log(x+sqrt(x^2-1))
 struct OpArccosh {
   static inline float func(float x) {return acoshf(x);}
@@ -246,9 +375,74 @@ ArrayVector ArccoshFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("acosh function takes exactly one argument");
   Array input(arg[0]);
-  if (input.allReal() && (ArrayMin(input) <= 1))
+  if (input.allReal() && (ArrayMin(input) <= 1)) {
+    if (input.dataClass() != Float) 
+      input = input.toClass(Double);
     input.forceComplex();
+  }
   return ArrayVector(UnaryOp<OpArccosh>(input));
+}
+
+//!
+//@Module ATANH Inverse Hyperbolic Tangent Function
+//@@Section MATHFUNCTIONS
+//@@Usage
+//Computes the inverse hyperbolic tangent of its argument.  The general
+//syntax for its use is
+//@[
+//  y = atanh(x)
+//@]
+//where @|x| is an @|n|-dimensional array of numerical type.
+//@@Function Internals
+//The @|atanh| function is computed from the formula
+//\[
+//   \tanh^{-1}(x) = \frac{1}{2}\log\left(\frac{1+x}{1-x}\right)
+//\]
+//where the @|log| (and square root) is taken in its most general sense.
+//@@Examples
+//Here is a simple plot of the inverse hyperbolic tangent function
+//@<
+//x = -0.99:.01:0.99;
+//plot(x,atanh(x)); grid('on');
+//mprint('atanhplot');
+//@>
+//@figure atanhplot
+//@@Tests
+//@$y1=atanh(x1)
+//@@Signature
+//function atanh ArctanhFunction
+//inputs x
+//outputs y
+//!
+struct OpArctanh {
+  static inline float func(float x) {return atanhf(x);}
+  static inline double func(double x) {return atanh(x);}
+  template <typename T>
+  static inline void func(T xr, T xi, T &yr, T &yi) {
+//     if ((xr == 1) && (xi == 0)) {
+//       yr = Inf();
+//       yi = 0;
+//       return;
+//     }
+    T xa, xb;
+    T ya, yb;
+    complex_log(xr+1,xi,xa,xb);
+    complex_log(1-xr,-xi,ya,yb);
+    yr = (xa-ya)/2;
+    yi = (xb-yb)/2;
+  }
+};
+
+ArrayVector ArctanhFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() != 1)
+    throw Exception("atanh function takes exactly one argument");
+  Array input(arg[0]);
+  if (input.allReal() && (ArrayRange(input) >= 1)) {
+    if (input.dataClass() != Float) 
+      input = input.toClass(Double);
+    input.forceComplex();
+  }
+  return ArrayVector(UnaryOp<OpArctanh>(input));
 }
 
 //!
