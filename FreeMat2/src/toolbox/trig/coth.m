@@ -22,7 +22,7 @@
 %@>
 %@figure cothplot
 %@@Tests
-%@$y1=coth(x1)
+%@$y1=coth(x1)|near
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

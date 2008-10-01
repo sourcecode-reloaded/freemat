@@ -31,8 +31,8 @@
 %std(A,2)
 %@>
 %@@Tests
-%@$y1=std(x1)
-%@$y1=std(x1,2)
+%@$y1=std(x1)|near
+%@$y1=std(x1,2)|near
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

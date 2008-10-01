@@ -160,7 +160,7 @@ ArrayVector LogFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure tanhplot
 //@@Tests
-//@$y1=tanh(x1)
+//@$y1=tanh(x1)|near
 //@@Signature
 //function tanh TanhFunction
 //inputs x
@@ -199,6 +199,70 @@ ArrayVector TanhFunction(int nargout, const ArrayVector& arg) {
 }
 
 //!
+//@Module ACOSH Inverse Hyperbolic Cosine Function
+//@@Section MATHFUNCTIONS
+//@@Usage
+//Computes the inverse hyperbolic cosine of its argument.  The general
+//syntax for its use is
+//@[
+//  y = acosh(x)
+//@]
+//where @|x| is an @|n|-dimensional array of numerical type.
+//@@Function Internals
+//The @|acosh| function is computed from the formula
+//\[
+//   \cosh^{-1}(x) = \log\left(x + (x^2 - 1)^0.5\right)
+//\]
+//where the @|log| (and square root) is taken in its most general sense.
+//@@Examples
+//Here is a simple plot of the inverse hyperbolic cosine function
+//@<
+//x = linspace(1,pi);
+//plot(x,acosh(x)); grid('on');
+//mprint('acoshplot');
+//@>
+//@figure acoshplot
+//@@Tests
+//@$y1=acosh(x1)|near
+//@@Signature
+//function acosh AcoshFunction
+//inputs x
+//outputs y
+//!
+
+// log(x+sqrt(x^2-1))
+struct OpArccosh {
+  static inline float func(float x) {return acoshf(x);}
+  static inline double func(double x) {return acosh(x);}
+  template <typename T>
+  static inline void func(T xr, T xi, T &yr, T &yi) {
+    T xrt_real1, xrt_imag1;
+    T xrt_real2, xrt_imag2;
+    complex_sqrt(xr+1,xi,xrt_real1,xrt_imag1);
+    complex_sqrt(xr-1,xi,xrt_real2,xrt_imag2);
+    T y_real, y_imag;
+    complex_multiply(xrt_real1,xrt_imag1,
+		     xrt_real2,xrt_imag2,
+		     y_real,y_imag);
+    y_real += xr;
+    y_imag += xi;
+    complex_log(y_real,y_imag,yr,yi);
+  }
+};
+
+ArrayVector ArccoshFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() != 1)
+    throw Exception("acosh function takes exactly one argument");
+  Array input(arg[0]);
+  if (input.allReal() && (ArrayMin(input) <= 1)) {
+    if (input.dataClass() != Float) 
+      input = input.toClass(Double);
+    input.forceComplex();
+  }
+  return ArrayVector(UnaryOp<OpArccosh>(input));
+}
+
+//!
 //@Module ASINH Inverse Hyperbolic Sine Function
 //@@Section MATHFUNCTIONS
 //@@Usage
@@ -223,7 +287,7 @@ ArrayVector TanhFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure asinhplot
 //@@Tests
-//@$y1=asinh(x1)
+//@$y1=asinh(x1)|near
 //@@Signature
 //function asinh AsinhFunction
 //inputs x
@@ -279,7 +343,7 @@ ArrayVector ArcsinhFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure asechplot
 //@@Tests
-//@$y1=asech(x1)
+//@$y1=asech(x1)|near
 //@@Signature
 //function asech ArcsechFunction
 //inputs x
@@ -292,17 +356,8 @@ struct OpArcsech {
   static inline void func(T xr, T xi, T &yr, T &yi) {
     T xrp_real, xrp_imag;
     complex_recip(xr,xi,xrp_real,xrp_imag);
-    T xrt_real1, xrt_imag1;
-    T xrt_real2, xrt_imag2;
-    complex_sqrt(xrp_real+1,xrp_imag,xrt_real1,xrt_imag1);
-    complex_sqrt(xrp_real-1,xrp_imag,xrt_real2,xrt_imag2);
-    T y_real, y_imag;
-    complex_multiply(xrt_real1,xrt_imag1,
-		     xrt_real2,xrt_imag2,
-		     y_real,y_imag);
-    y_real += xrp_real;
-    y_imag += xrp_imag;
-    complex_log(y_real,y_imag,yr,yi);
+    if (xi == 0) xrp_imag = 0;
+    OpArccosh::func(xrp_real,xrp_imag,yr,yi);
   }
 };
 
@@ -319,69 +374,6 @@ ArrayVector ArcsechFunction(int nargout, const ArrayVector& arg) {
 }
 
 
-//!
-//@Module ACOSH Inverse Hyperbolic Cosine Function
-//@@Section MATHFUNCTIONS
-//@@Usage
-//Computes the inverse hyperbolic cosine of its argument.  The general
-//syntax for its use is
-//@[
-//  y = acosh(x)
-//@]
-//where @|x| is an @|n|-dimensional array of numerical type.
-//@@Function Internals
-//The @|acosh| function is computed from the formula
-//\[
-//   \cosh^{-1}(x) = \log\left(x + (x^2 - 1)^0.5\right)
-//\]
-//where the @|log| (and square root) is taken in its most general sense.
-//@@Examples
-//Here is a simple plot of the inverse hyperbolic cosine function
-//@<
-//x = linspace(1,pi);
-//plot(x,acosh(x)); grid('on');
-//mprint('acoshplot');
-//@>
-//@figure acoshplot
-//@@Tests
-//@$y1=acosh(x1)
-//@@Signature
-//function acosh AcoshFunction
-//inputs x
-//outputs y
-//!
-
-// log(x+sqrt(x^2-1))
-struct OpArccosh {
-  static inline float func(float x) {return acoshf(x);}
-  static inline double func(double x) {return acosh(x);}
-  template <typename T>
-  static inline void func(T xr, T xi, T &yr, T &yi) {
-    T xrt_real1, xrt_imag1;
-    T xrt_real2, xrt_imag2;
-    complex_sqrt(xr+1,xi,xrt_real1,xrt_imag1);
-    complex_sqrt(xr-1,xi,xrt_real2,xrt_imag2);
-    T y_real, y_imag;
-    complex_multiply(xrt_real1,xrt_imag1,
-		     xrt_real2,xrt_imag2,
-		     y_real,y_imag);
-    y_real += xr;
-    y_imag += xi;
-    complex_log(y_real,y_imag,yr,yi);
-  }
-};
-
-ArrayVector ArccoshFunction(int nargout, const ArrayVector& arg) {
-  if (arg.size() != 1)
-    throw Exception("acosh function takes exactly one argument");
-  Array input(arg[0]);
-  if (input.allReal() && (ArrayMin(input) <= 1)) {
-    if (input.dataClass() != Float) 
-      input = input.toClass(Double);
-    input.forceComplex();
-  }
-  return ArrayVector(UnaryOp<OpArccosh>(input));
-}
 
 //!
 //@Module ATANH Inverse Hyperbolic Tangent Function
@@ -408,7 +400,7 @@ ArrayVector ArccoshFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure atanhplot
 //@@Tests
-//@$y1=atanh(x1)
+//@$y1=atanh(x1)|near
 //@@Signature
 //function atanh ArctanhFunction
 //inputs x
@@ -472,7 +464,7 @@ ArrayVector ArctanhFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure coshplot
 //@@Tests
-//@$y1=cosh(x1)
+//@$y1=cosh(x1)|near
 //@@Signature
 //function cosh CoshFunction
 //inputs x
@@ -521,7 +513,7 @@ ArrayVector CoshFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure sinhplot
 //@@Tests
-//@$y1=sinh(x1)
+//@$y1=sinh(x1)|near
 //@@Signature
 //function sinh SinhFunction
 //inputs x

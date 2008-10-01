@@ -40,9 +40,9 @@
 %any(A,2)
 %@>
 %@@Tests
-%@$y1=any(x1,2)
-%@$y1=any(x1)
-%@$y1=any(x1,1)
+%@$y1=any(x1|2)|exact
+%@$y1=any(x1)|exact
+%@$y1=any(x1,1)|exact
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

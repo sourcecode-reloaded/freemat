@@ -18,7 +18,7 @@
 %acscd(0.5)
 %@>
 %@@Tests
-%@$y1=acscd(x1)
+%@$y1=acscd(x1)|near
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

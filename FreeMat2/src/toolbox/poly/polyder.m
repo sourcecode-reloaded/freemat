@@ -31,8 +31,8 @@
 %[n,d] = polyder([2,3,4],5)
 %@>
 %@@Tests
-%@$y1=polyder(polyint(x1))
-%@$y1=polyder(x1,4)
+%@$y1=polyder(polyint(x1))|exact
+%@$y1=polyder(x1,4)|exact
 %!
 function [pder1,pder2] = polyder(p1,p2)
    if nargin < 1 | nargout > nargin

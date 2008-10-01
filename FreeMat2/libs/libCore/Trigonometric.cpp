@@ -46,7 +46,7 @@
 //cosd(60)
 //@>
 //@@Tests
-//@$y1=cosd(x1)
+//@$y1=cosd(x1)|near
 //@@Signature
 //function cosd CosdFunction
 //inputs x
@@ -151,7 +151,7 @@ ArrayVector CosFunction(int nargout, const ArrayVector& arg) {
 //sind(30)
 //@>
 //@@Tests
-//@$y1=sind(x1)
+//@$y1=sind(x1)|near
 //@@Signature
 //function sind SindFunction
 //inputs x
@@ -315,7 +315,7 @@ ArrayVector TanFunction(int nargout, const ArrayVector& arg) {
 //tand(45)
 //@>
 //@@Tests
-//@$y1=tand(x1)
+//@$y1=tand(x1)|near
 //@@Signature
 //function tand TandFunction
 //inputs x
@@ -408,7 +408,7 @@ ArrayVector CscFunction(int nargout, const ArrayVector& arg) {
 //   y = cscd(x)
 //@]
 //@@Tests
-//@$y1=cscd(x1)
+//@$y1=cscd(x1)|near
 //@@Signature
 //function cscd CscdFunction
 //inputs x
@@ -505,7 +505,7 @@ ArrayVector SecFunction(int nargout, const ArrayVector& arg) {
 //   y = secd(x)
 //@]
 //@@Tests
-//@$y1=secd(x1)
+//@$y1=secd(x1)|near
 //!
 
 struct OpSecd {
@@ -604,7 +604,7 @@ ArrayVector CotFunction(int nargout, const ArrayVector& arg) {
 //cotd(45)
 //@>
 //@@Tests
-//@$y1=cotd(x1)
+//@$y1=cotd(x1)|near
 //!
 
 struct OpCotd {

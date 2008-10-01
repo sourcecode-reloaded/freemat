@@ -23,7 +23,7 @@
 //hex2dec(['0ff';'2de';'123'])
 //@>
 //@@Tests
-//@$y1=hex2dec(x1)
+//@$y1=hex2dec(x1)|exact
 //@@Signature
 //function hex2dec Hex2DecFunction
 //inputs x
@@ -74,7 +74,7 @@ ArrayVector Hex2DecFunction(int nargout, const ArrayVector& arg) {
 //dec2hex(58128493)
 //@>
 //@@Tests
-//@$y1=dec2hex(x1)
+//@$y1=dec2hex(x1)|exact
 //@@Signature
 //function dec2hex Dec2HexFunction
 //inputs x digits
@@ -126,7 +126,7 @@ ArrayVector Dec2HexFunction(int nargout, const ArrayVector& arg) {
 //num2hex(float([1 0 0.1 -pi inf nan]))
 //@>
 //@@Tests
-//@$y1=num2hex(x1)
+//@$y1=num2hex(x1)|exact
 //@@Signature
 //function num2hex Num2HexFunction
 //inputs x

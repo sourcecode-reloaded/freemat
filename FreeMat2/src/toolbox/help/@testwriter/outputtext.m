@@ -11,7 +11,7 @@ function outputtext(&p,text)
     inputs = wbtestinputs;
     save(fname,'recs','inputs','exprs');
   end
-  v = regexp(text,'@\$(.*)','tokens');
+  v = regexp(text,'@\$([|].*)','tokens');
   if (isempty(v))
     error(sprintf('bad line: %s',text));
   end

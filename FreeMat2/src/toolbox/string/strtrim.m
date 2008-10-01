@@ -25,7 +25,7 @@
 %strtrim({'  space','enough ',' for ',''})
 %@>
 %@@Tests
-%@$y1=strtrim(x1)
+%@$y1=strtrim(x1)|exact
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

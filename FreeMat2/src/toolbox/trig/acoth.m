@@ -22,7 +22,7 @@
 %@>
 %@figure acothplot
 %@@Tests
-%@$y1=acoth(x1)
+%@$y1=acoth(x1)|near
 %!
 
 

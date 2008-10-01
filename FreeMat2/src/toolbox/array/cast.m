@@ -39,8 +39,8 @@
 %cast([1 0 3 0],'logical')
 %@>
 %@@Tests
-%@$y1=cast(x1,'uint8')
-%@$y1=cast(x1,'logical')
+%@$y1=cast(x1,'uint8')|exact
+%@$y1=cast(x1,'logical')|exact
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

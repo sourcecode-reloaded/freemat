@@ -14,7 +14,7 @@
 %atand(1)
 %@>
 %@@Tests
-%@$y1=atand(x1)
+%@$y1=atand(x1)|near
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

@@ -17,7 +17,7 @@
 %cellstr(a)
 %@>
 %@@Tests
-%@$y1=cellstr(x1)
+%@$y1=cellstr(x1)|exact
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

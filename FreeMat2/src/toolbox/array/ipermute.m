@@ -26,8 +26,8 @@
 %any(A~=C)
 %@>
 %@@Tests
-%@$y1=ipermute(x1,[2,1])
-%@$y1=size(ipermute(permute(x1),[3,4,2,1]),[3,4,2,1])
+%@$y1=ipermute(x1,[2,1])|exact
+%@$y1=size(ipermute(permute(x1),[3,4,2,1]),[3,4,2,1])|exact
 %!
 
 % Copyright (c) 2002-2006 Samit Basu

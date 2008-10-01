@@ -43,7 +43,7 @@
 %all(A,2)
 %@>
 %@@Tests
-%@$y1=all(x1)
+%@$y1=all(x1)|exact
 %!
 
 % Copyright (c) 2002-2007 Samit Basu
