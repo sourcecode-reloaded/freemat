@@ -275,30 +275,29 @@ __declspec( dllexport ) double expm1 (double x)
     return exp(x) - 1.0;
 }
 
-    __declspec( dllexport ) float nextafterf (float x, float y)
-    {
-      union
-      {
-	float f;
-	unsigned int i;
-      } u;
-      if (_isnan (y) || _isnan (x))
-	return x + y;
-      if (x == y )
-	 /* nextafter (0.0, -O.0) should return -0.0.  */
-	 return y;
-      u.f = x; 
-      if (x == 0.0F)
+__declspec( dllexport ) float nextafterf (float x, float y)
+{
+	union
 	{
-	  u.i = 1;
-	  return y > 0.0F ? u.f : -u.f;
+		float f;
+		unsigned int i;
+	} u;
+	if (_isnan (y) || _isnan (x))
+		return x + y;
+	if (x == y )
+		/* nextafter (0.0, -O.0) should return -0.0.  */
+		return y;
+	u.f = x; 
+	if (x == 0.0F)
+	{
+		u.i = 1;
+		return y > 0.0F ? u.f : -u.f;
 	}
-      if (((x > 0.0F) ^ (y > x)) == 0)
-	u.i++;
-      else
-	u.i--;
-      return u.f;
-    }
+	if (((x > 0.0F) ^ (y > x)) == 0)
+		u.i++;
+	else
+		u.i--;
+	return u.f;
 }
 
 //TODO: implement actual floating point log1pf, expm1f
@@ -308,4 +307,150 @@ __declspec( dllexport ) float log1pf (float x){
 __declspec( dllexport ) float expm1f (float x){
     return expm1( x );
 }
+
+//Based on asinhf routine  from cygwin
+/* asinh(x) = copysign(log(fabs(x) + sqrt(x * x + 1.0)), x) */
+__declspec( dllexport ) float asinhf(float x)
+{
+  float z;
+  if (!_finite (x))
+    return x;
+  z = fabsf (x);
+
+  /* Use log1p to avoid cancellation with small x. Put
+     x * x in denom, so overflow is harmless. 
+     asinh(x) = log1p (x + sqrt (x * x + 1.0) - 1.0)
+              = log1p (x + x * x / (sqrt (x * x + 1.0) + 1.0))  */
+
+  z = log1p (z + z * z / (sqrt (z * z + 1.0) + 1.0));
+
+  return ( x > 0.0 ? z : -z);
+}
+
+//Based on asinh routine  from cygwin
+/* asinh(x) = copysign(log(fabs(x) + sqrt(x * x + 1.0)), x) */
+__declspec( dllexport ) double asinh(double x)
+{
+  double z;
+  if (!_finite (x))
+    return x;
+  z = fabs (x);
+
+  /* Use log1p to avoid cancellation with small x. Put
+     x * x in denom, so overflow is harmless. 
+     asinh(x) = log1p (x + sqrt (x * x + 1.0) - 1.0)
+              = log1p (x + x * x / (sqrt (x * x + 1.0) + 1.0))  */
+
+  z = log1p (z + z * z / (sqrt (z * z + 1.0) + 1.0));
+
+  return ( x > 0.0 ? z : -z);
+}
+
+//Based on routine  from cygwin
+/* acosh(x) = log (x + sqrt(x * x - 1)) */
+__declspec( dllexport ) double acosh (double x)
+{
+  if (_isnan (x)) 
+    return x;
+
+  if (x < 1.0)
+    {
+      errno = EDOM;
+      return NaN();
+    }
+
+  if (x > 4294967296.f)
+    /*  Avoid overflow (and unnecessary calculation when
+        sqrt (x * x - 1) == x). GCC optimizes by replacing
+        the long double M_LN2 const with a fldln2 insn.  */ 
+    return log (x) + 6.9314718055994530941723E-1L;
+
+  /* Since  x >= 1, the arg to log will always be greater than
+     the fyl2xp1 limit (approx 0.29) so just use logl. */ 
+  return log (x + sqrt((x + 1.0) * (x - 1.0)));
+}
+
+//Based on routine  from cygwin
+/* acosh(x) = log (x + sqrt(x * x - 1)) */
+__declspec( dllexport ) float acoshf (float x)
+{
+  if (_isnan (x)) 
+    return x;
+  if (x < 1.0f)
+    {
+      errno = EDOM;
+      return NaN();
+    }
+
+ if (x > 4294967296.f)
+    /*  Avoid overflow (and unnecessary calculation when
+        sqrt (x * x - 1) == x). GCC optimizes by replacing
+        the long double M_LN2 const with a fldln2 insn.  */ 
+    return log (x) + 6.9314718055994530941723E-1L;
+
+  /* Since  x >= 1, the arg to log will always be greater than
+     the fyl2xp1 limit (approx 0.29) so just use logl. */ 
+  return log (x + sqrt((x + 1.0) * (x - 1.0)));
+}
+
+//Based on routine  from cygwin
+/* atanh (x) = 0.5 * log ((1.0 + x)/(1.0 - x)) */
+__declspec( dllexport ) double atanh(double x)
+{
+  double z;
+  if( _isnan (x))
+    return x;
+  z = fabs (x);
+  if (z == 1.0)
+    {
+      errno  = ERANGE;
+      return (x > 0 ? Inf() : -Inf());
+    }
+  if (z > 1.0)
+    {
+      errno = EDOM;
+      return NaN();
+    }
+  /* Rearrange formula to avoid precision loss for small x.
+
+  atanh(x) = 0.5 * log ((1.0 + x)/(1.0 - x))
+           = 0.5 * log1p ((1.0 + x)/(1.0 - x) - 1.0)
+           = 0.5 * log1p ((1.0 + x - 1.0 + x) /(1.0 - x)) 
+           = 0.5 * log1p ((2.0 * x ) / (1.0 - x))  */
+  z = 0.5 * log1p ((z + z) / (1.0 - z));
+  return x >= 0 ? z : -z;
+}
+
+//Based on routine  from cygwin
+/* atanh (x) = 0.5 * log ((1.0 + x)/(1.0 - x)) */
+__declspec( dllexport ) float atanhf (float x)
+{
+  float z;
+  if( _isnan (x))
+    return x;
+  z = fabsf (x);
+  if (z == 1.0)
+    {
+      errno  = ERANGE;
+      return (x > 0 ? Inf() : -Inf());
+    }
+  if ( z > 1.0)
+    {
+      errno = EDOM;
+      return NaN();
+    }
+  /* Rearrange formula to avoid precision loss for small x.
+
+  atanh(x) = 0.5 * log ((1.0 + x)/(1.0 - x))
+           = 0.5 * log1p ((1.0 + x)/(1.0 - x) - 1.0)
+           = 0.5 * log1p ((1.0 + x - 1.0 + x) /(1.0 - x)) 
+           = 0.5 * log1p ((2.0 * x ) / (1.0 - x))  */
+  z = 0.5 * log1p ((z + z) / (1.0 - z));
+  return x >= 0 ? z : -z;
+}
+
+
+}
+
+
 #endif 

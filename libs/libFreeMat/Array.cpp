@@ -853,9 +853,11 @@ const Array Array::asComplex() const {
 static inline bool Tequals_struct(const Array *pA, const Array *pB) {
   const StructArray &ap(pA->constStructPtr());
   const StructArray &bp(pB->constStructPtr());
-  if (ap.fieldNames() != bp.fieldNames()) return false;
-  for (int i=0;i<ap.fieldCount();i++)
-    if (!(ap[i] == bp[i])) return false;
+  if (ap.fieldCount() != bp.fieldCount()) return false;
+  for (int i=0;i<ap.fieldCount();i++) {
+    if (!bp.contains(ap.fieldName(i))) return false;
+    if (!(ap[i] == bp[ap.fieldName(i)])) return false;
+  }
   return true;
 }
 

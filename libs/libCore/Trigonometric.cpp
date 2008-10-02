@@ -27,6 +27,52 @@
 #include "Complex.hpp"
 
 //!
+//@Module COSD Cosine Degrees Function
+//@@Section MATHFUNCTIONS
+//@@Usage
+//Computes the cosine of the argument, but takes
+//the argument in degrees instead of radians (as is the case
+//for @|cos|). The syntax for its use is
+//@[
+//   y = cosd(x)
+//@]
+//@@Examples
+//The cosine of 45 degrees should be @|sqrt(2)/2|
+//@<
+//cosd(45)
+//@>
+//and the cosine of @|60| degrees should be 0.5:
+//@<
+//cosd(60)
+//@>
+//@@Tests
+//@$y1=cosd(x1)
+//@@Signature
+//function cosd CosdFunction
+//inputs x
+//outputs y
+//!
+struct OpCosd {
+  static inline float func(float x) {return cosf(x*M_PI/180.0);}
+  static inline double func(double x) {return cos(x*M_PI/180.0);}
+  static inline void func(float xr, float xi, float &yr, float &yi) {
+    yr = cosf(xr*M_PI/180.0)*coshf(xi*M_PI/180.0);
+    yi = -sinf(xr*M_PI/180.0)*sinhf(xi*M_PI/180.0);
+  }
+  static inline void func(double xr, double xi, double &yr, double &yi) {
+    yr = cos(xr*M_PI/180.0)*cosh(xi*M_PI/180.0);
+    yi = -sin(xr*M_PI/180.0)*sinh(xi*M_PI/180.0);
+  }
+};
+
+ArrayVector CosdFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() != 1)
+    throw Exception("Cosd Function takes exactly one argument");
+  return ArrayVector(UnaryOp<OpCosd>(arg[0]));
+}
+
+
+//!
 //@Module COS Trigonometric Cosine Function
 //@@Section MATHFUNCTIONS
 //@@Usage
@@ -83,6 +129,52 @@ ArrayVector CosFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("Cosine Function takes exactly one argument");
   return ArrayVector(UnaryOp<OpCos>(arg[0]));
+}
+
+//!
+//@Module SIND Sine Degrees Function
+//@@Section MATHFUNCTIONS
+//@@Usage
+//Computes the sine of the argument, but takes
+//the argument in degrees instead of radians (as is the case
+//for @|cos|). The syntax for its use is
+//@[
+//   y = sind(x)
+//@]
+//@@Examples
+//The sine of 45 degrees should be @|sqrt(2)/2|
+//@<
+//sind(45)
+//@>
+//and the sine of @|30| degrees should be 0.5:
+//@<
+//sind(30)
+//@>
+//@@Tests
+//@$y1=sind(x1)
+//@@Signature
+//function sind SindFunction
+//inputs x
+//outputs y
+//!
+
+struct OpSind {
+  static inline float func(float x) {return sinf(x*M_PI/180.0);}
+  static inline double func(double x) {return sin(x*M_PI/180.0);}
+  static inline void func(float xr, float xi, float &yr, float &yi) {
+    yr = sinf(xr*M_PI/180.0)*coshf(xi*M_PI/180.0);
+    yi = cosf(xr*M_PI/180.0)*sinhf(xi*M_PI/180.0);
+  }
+  static inline void func(double xr, double xi, double &yr, double &yi) {
+    yr = sin(xr*M_PI/180.0)*cosh(xi*M_PI/180.0);
+    yi = cosf(xr*M_PI/180.0)*sinh(xi*M_PI/180.0);
+  }
+};
+
+ArrayVector SindFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() != 1)
+    throw Exception("Sind Function takes exactly one argument");
+  return ArrayVector(UnaryOp<OpSind>(arg[0]));
 }
 
 //!
@@ -208,6 +300,47 @@ ArrayVector TanFunction(int nargout, const ArrayVector& arg) {
 }
 
 //!
+//@Module TAND Tangent Degrees Function
+//@@Section MATHFUNCTIONS
+//@@Usage
+//Computes the tangent of the argument, but takes
+//the argument in degrees instead of radians (as is the case
+//for @|cos|). The syntax for its use is
+//@[
+//   y = tand(x)
+//@]
+//@@Examples
+//The tangent of 45 degrees should be @|1|
+//@<
+//tand(45)
+//@>
+//@@Tests
+//@$y1=tand(x1)
+//@@Signature
+//function tand TandFunction
+//inputs x
+//outputs y
+//!
+struct OpTand {
+  static inline float func(float x) {return tanf(x*M_PI/180.0);}
+  static inline double func(double x) {return tan(x*M_PI/180.0);}
+  static inline void func(float xr, float xi, float &yr, float &yi) {
+    yr = sinf(xr*M_PI/180.0)/(cosf(xr*M_PI/180.0)+coshf(xi*M_PI/180.0));
+    yi = sinhf(xi*M_PI/180.0)/(cosf(xr*M_PI/180.0)+coshf(xi*M_PI/180.0));
+  }
+  static inline void func(double xr, double xi, double &yr, double &yi) {
+    yr = sin(xr*M_PI/180.0)/(cos(xr*M_PI/180.0)+cosh(xi*M_PI/180.0));
+    yi = sinh(xi*M_PI/180.0)/(cos(xr*M_PI/180.0)+cosh(xi*M_PI/180.0));
+  }
+};
+
+ArrayVector TandFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() != 1)
+    throw Exception("Tand Function takes exactly one argument");
+  return ArrayVector(UnaryOp<OpTand>(arg[0]));
+}
+
+//!
 //@Module CSC Trigonometric Cosecant Function
 //@@Section MATHFUNCTIONS
 //@@Usage
@@ -265,6 +398,46 @@ ArrayVector CscFunction(int nargout, const ArrayVector& arg) {
 }
 
 //!
+//@Module CSCD Cosecant Degrees Function
+//@@Section MATHFUNCTIONS
+//@@Usage
+//Computes the cosecant of the argument, but takes
+//the argument in degrees instead of radians (as is the case
+//for @|csc|). The syntax for its use is
+//@[
+//   y = cscd(x)
+//@]
+//@@Tests
+//@$y1=cscd(x1)
+//@@Signature
+//function cscd CscdFunction
+//inputs x
+//outputs y
+//!
+
+struct OpCscd {
+  static inline float func(float x) {return 1.0f/sinf(x*M_PI/180.0);}
+  static inline double func(double x) {return 1.0/sin(x*M_PI/180.0);}
+  static inline void func(float xr, float xi, float &yr, float &yi) {
+    float zr, zi;
+    OpSin::func(xr*M_PI/180.0,xi*M_PI/180.0,zr,zi);
+    complex_recip(zr,zi,yr,yi);
+  }
+  static inline void func(double xr, double xi, double &yr, double &yi) {
+    double zr, zi;
+    OpSin::func(xr*M_PI/180.0,xi*M_PI/180.0,zr,zi);
+    complex_recip(zr,zi,yr,yi);
+  }
+};
+
+ArrayVector CscdFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() != 1)
+    throw Exception("cscd Function takes exactly one argument");
+  return ArrayVector(UnaryOp<OpCscd>(arg[0]));
+}
+
+
+//!
 //@Module SEC Trigonometric Secant Function
 //@@Section MATHFUNCTIONS
 //@@Usage
@@ -319,6 +492,41 @@ ArrayVector SecFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("Secant Function takes exactly one argument");
   return ArrayVector(UnaryOp<OpSec>(arg[0]));
+}
+
+//!
+//@Module SECD Secant Degrees Function
+//@@Section MATHFUNCTIONS
+//@@Usage
+//Computes the secant of the argument, but takes
+//the argument in degrees instead of radians (as is the case
+//for @|sec|). The syntax for its use is
+//@[
+//   y = secd(x)
+//@]
+//@@Tests
+//@$y1=secd(x1)
+//!
+
+struct OpSecd {
+  static inline float func(float x) {return 1.0f/cosf(x*M_PI/180.0);}
+  static inline double func(double x) {return 1.0/cos(x*M_PI/180.0);}
+  static inline void func(float xr, float xi, float &yr, float &yi) {
+    float zr, zi;
+    OpCos::func(xr*M_PI/180.0,xi*M_PI/180.0,zr,zi);
+    complex_recip(zr,zi,yr,yi);
+  }
+  static inline void func(double xr, double xi, double &yr, double &yi) {
+    double zr, zi;
+    OpCos::func(xr*M_PI/180.0,xi*M_PI/180.0,zr,zi);
+    complex_recip(zr,zi,yr,yi);
+  }
+};
+
+ArrayVector SecdFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() != 1)
+    throw Exception("Secd Function takes exactly one argument");
+  return ArrayVector(UnaryOp<OpSecd>(arg[0]));
 }
 
 //!
@@ -381,6 +589,44 @@ ArrayVector CotFunction(int nargout, const ArrayVector& arg) {
 }
 
 //!
+//@Module COTD Cotangent Degrees Function
+//@@Section MATHFUNCTIONS
+//@@Usage
+//Computes the cotangent of the argument, but takes
+//the argument in degrees instead of radians (as is the case
+//for @|cot|). The syntax for its use is
+//@[
+//   y = cotd(x)
+//@]
+//@@Examples
+//The cotangent of 45 degrees should be 1.
+//@<
+//cotd(45)
+//@>
+//@@Tests
+//@$y1=cotd(x1)
+//!
+
+struct OpCotd {
+  static inline float func(float x) {return 1.0f/tanf(x*M_PI/180.0);}
+  static inline double func(double x) {return 1.0/tan(x*M_PI/180.0);}
+  static inline void func(float xr, float xi, float &yr, float &yi) {
+    yr = sinf(xr*M_PI/180.0)/(-cosf(xr*M_PI/180.0)+coshf(xi*M_PI/180.0));
+    yi = -sinhf(xi*M_PI/180.0)/(-cosf(xr*M_PI/180.0)+coshf(xi*M_PI/180.0));
+  }
+  static inline void func(double xr, double xi, double &yr, double &yi) {
+    yr = sin(xr*M_PI/180.0)/(-cos(xr*M_PI/180.0)+cosh(xi*M_PI/180.0));
+    yi = -sinh(xi*M_PI/180.0)/(-cos(xr*M_PI/180.0)+cosh(xi*M_PI/180.0));
+  }
+};
+
+ArrayVector CotdFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() != 1)
+    throw Exception("cotd function takes exactly one argument");
+  return ArrayVector(UnaryOp<OpCotd>(arg[0]));
+}
+
+//!
 //@Module ACOS Inverse Trigonometric Arccosine Function
 //@@Section MATHFUNCTIONS
 //@@Usage
@@ -433,6 +679,7 @@ struct OpAcos {
     // Compute 1-x^2
     xsq_real = 1.0 - xsq_real;
     xsq_imag = -xsq_imag;
+    if (xi == 0) xsq_imag = 0;
     T xrt_real, xrt_imag;
     // Compute sqrt(1-x^2)
     complex_sqrt(xsq_real,xsq_imag,xrt_real,xrt_imag);

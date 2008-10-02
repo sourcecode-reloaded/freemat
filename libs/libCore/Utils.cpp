@@ -72,8 +72,6 @@ NTuple ArrayVectorAsDimensions(const ArrayVector &arg) {
 
 
 double ArrayRange(const Array& dp) {
-  if ((dp.dataClass() != Float) && (dp.dataClass() != Double))
-    throw Exception("Unsupported type for function");
   const Array &tmp(dp.asDenseArray().toClass(Double));
   const BasicArray<double> &rp(tmp.constReal<double>());
   if (rp.length() == 0) return 0;
@@ -87,6 +85,48 @@ double ArrayRange(const Array& dp) {
       } else {
 	if (fabs(rp[i]) > result) 
 	  result = fabs(rp[i]);
+      }
+    }
+  }
+  if (!init) return NaN();
+  return result;
+}
+
+double ArrayMin(const Array& dp) {
+  const Array &tmp(dp.asDenseArray().toClass(Double));
+  const BasicArray<double> &rp(tmp.constReal<double>());
+  if (rp.length() == 0) return 0;
+  double result;
+  bool init = false;
+  for (index_t i=1;i<=rp.length();i++) {
+    if (!IsNaN(rp[i])) {
+      if (!init) {
+	init = true;
+	result = rp[i];
+      } else {
+	if (rp[i] < result) 
+	  result = rp[i];
+      }
+    }
+  }
+  if (!init) return NaN();
+  return result;
+}
+
+double ArrayMax(const Array& dp) {
+  const Array &tmp(dp.asDenseArray().toClass(Double));
+  const BasicArray<double> &rp(tmp.constReal<double>());
+  if (rp.length() == 0) return 0;
+  double result;
+  bool init = false;
+  for (index_t i=1;i<=rp.length();i++) {
+    if (!IsNaN(rp[i])) {
+      if (!init) {
+	init = true;
+	result = rp[i];
+      } else {
+	if (rp[i] > result) 
+	  result = rp[i];
       }
     }
   }

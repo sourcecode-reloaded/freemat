@@ -42,7 +42,7 @@ function ohandle = patch(varargin)
   propstart = 0;
   if (nargin > 2)
     propstart = nargin-1;
-    while ((propstart >= 1) & isa(varargin{propstart},'string') & ...
+    while ((propstart >= 1) & isa(varargin{propstart},'char') & ...
     pvalid('patch',varargin{propstart}))
       propstart = propstart - 2;
     end

@@ -70,6 +70,12 @@ extern "C"{
 	__declspec( dllexport ) float nextafterf (float x, float y);
 	__declspec( dllexport ) float log1pf(float x);
 	__declspec( dllexport ) float expm1f(float x);
+	__declspec( dllexport ) float asinhf(float x);
+	__declspec( dllexport ) double asinh(double x);
+	__declspec( dllexport ) double acosh (double x);
+	__declspec( dllexport ) float acoshf (float x);
+	__declspec( dllexport ) double atanh(double x);
+	__declspec( dllexport ) float atanhf (float x);
 }
 #define nextafter _nextafter
 #endif

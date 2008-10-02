@@ -756,12 +756,12 @@ ArrayVector Interpreter::handleReindexing(Tree *t, const ArrayVector &p) {
     return p;
 }
 
-void Interpreter::multiexpr(Tree *t, ArrayVector &q, index_t lhsCount) {
+void Interpreter::multiexpr(Tree *t, ArrayVector &q, index_t lhsCount, bool output_optional) {
   if (t->is(TOK_VARIABLE)) {
     ArrayReference ptr(context->lookupVariable(t->first()->text()));
     if (!ptr.valid()) {
       ArrayVector p;
-      functionExpression(t,int(lhsCount),false,p);
+      functionExpression(t,int(lhsCount),output_optional,p);
       q += handleReindexing(t,p);
       return;
     }
