@@ -1,5 +1,5 @@
-function tjit1
-A = zeros(512,512,'int32');
+function A=tjit1
+A = zeros(512,512);
 for i=1:512;
   for j=1:512
     k = i-j;

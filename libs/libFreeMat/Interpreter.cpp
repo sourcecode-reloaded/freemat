@@ -1719,16 +1719,16 @@ void ForLoopIterator( Tree* codeBlock, QString indexName,
     else{
 	//floating point loop path
 	bool bFloatLoop = ( first.dataClass() == Float || last.dataClass() == Float || step.dataClass() == Float );
-	float f = first.asDouble();
-	float l = last.asDouble();
-	float s = step.asDouble();
+	double f = first.asDouble();
+	double l = last.asDouble();
+	double s = step.asDouble();
 
 	if( bFloatLoop )
 	    nsteps = num_for_loop_iter_f(f, s, l);  
 	else
 	    nsteps = num_for_loop_iter(f, s, l);
         
-	for (int m=0;m<nsteps;m++) {
+	for (double m=0;m<nsteps;m++) { //array variable should be of type double for correct typing of DotMultiply
 	    *vp = Add( first, DotMultiply( Array(m), step ) );
 	    try {
 		eval->block(codeBlock);
@@ -1768,6 +1768,38 @@ int num_for_loop_iter( double first, double step, double last )
 
     return nsteps;
 }
+
+#ifdef HAVE_LLVM
+static bool compileJITBlock(Interpreter *interp, Tree *t) {
+  delete t->JITFunction();
+  JITFunc *cg = new JITFunc(interp);
+  bool success = false;
+  try {
+    cg->compile(t);
+    success = true;
+    t->setJITState(Tree::SUCCEEDED);
+    t->setJITFunction(cg);
+  } catch (Exception &e) {
+    dbout << e.msg() << "\r\n";
+    delete cg;
+    success = false;
+    t->setJITState(Tree::FAILED);
+  }
+  return success;
+}
+
+static bool prepJITBlock(Tree *t) {
+  bool success;
+  try {
+    t->JITFunction()->prep();
+    success = true;
+  } catch (Exception &e) {
+    dbout << e.msg() << "\r\n";
+    success = false;
+  }
+  return success;
+}
+#endif
 
 //!
 //@Module FOR For Loop
@@ -1864,38 +1896,6 @@ int num_for_loop_iter( double first, double step, double last )
 //@}
 //!
 //Works
-
-#ifdef HAVE_LLVM
-static bool compileJITBlock(Interpreter *interp, Tree *t) {
-  delete t->JITFunction();
-  JITFunc *cg = new JITFunc(interp);
-  bool success = false;
-  try {
-    cg->compile(t);
-    success = true;
-    t->setJITState(Tree::SUCCEEDED);
-    t->setJITFunction(cg);
-  } catch (Exception &e) {
-    dbout << e.msg() << "\r\n";
-    delete cg;
-    success = false;
-    t->setJITState(Tree::FAILED);
-  }
-  return success;
-}
-
-static bool prepJITBlock(Tree *t) {
-  bool success;
-  try {
-    t->JITFunction()->prep();
-    success = true;
-  } catch (Exception &e) {
-    dbout << e.msg() << "\r\n";
-    success = false;
-  }
-  return success;
-}
-#endif
 
 void Interpreter::forStatement(Tree *t) {
   // Try to compile this block to an instruction stream  
