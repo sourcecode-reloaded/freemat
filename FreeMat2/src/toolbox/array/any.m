@@ -40,7 +40,7 @@
 %any(A,2)
 %@>
 %@@Tests
-%@$y1=any(x1|2)|exact
+%@$y1=any(x1,2)|exact
 %@$y1=any(x1)|exact
 %@$y1=any(x1,1)|exact
 %!

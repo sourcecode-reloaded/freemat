@@ -32,6 +32,8 @@ function helpgen(source_path,test_only)
   file_list = [file_list;helpgen_rdir([source_path,'/libs'])];
   file_list = [file_list;helpgen_rdir([source_path,'/src'])];
 
+  cd([sourcepath,'/help/tmp']);
+
   for i=1:numel(file_list)
     [path,name,suffix] = fileparts(file_list{i});
     if (~strcmp(name,'MPIWrap'))
@@ -39,12 +41,14 @@ function helpgen(source_path,test_only)
     end
   end
 
-  if (skipexec) return; end;
-  file_list = helpgen_rdir([source_path,'/src/toolbox']);
-  for i=1:numel(file_list)
-    merge_mfile(file_list{i});
+  if (~skipexec)
+    file_list = helpgen_rdir([source_path,'/src/toolbox']);
+    for i=1:numel(file_list)
+      merge_mfile(file_list{i});
+    end
   end
   writeindex(p);
+  if (skipexec), return; end
   copyfile([source_path,'/help/tmp/*.jpg'],[source_path,'/help/latex'])
   copyfile([source_path,'/help/tmp/*.png'],[source_path,'/help/html'])
   copyfile([source_path,'/src/toolbox/help/match_close.m'],[source_path,'/toolbox/test'])
