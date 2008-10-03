@@ -36,7 +36,6 @@ function outputtext(&p,text)
     rec.inputs = [];
     rec.out_count = out_count;
     rec.expr = expr;
-    rec.success = 0;
     rec.test = ttype;
     recp = {rec};
   elseif (in_count == 1)
@@ -46,7 +45,6 @@ function outputtext(&p,text)
       rec.inputs = [i];
       rec.out_count = out_count;
       rec.expr = expr;
-      rec.success = 0;
       rec.test = ttype;
       recp{i} = rec;
     end
@@ -59,7 +57,6 @@ function outputtext(&p,text)
 	rec.inputs = [i,j];
         rec.out_count = out_count;
         rec.expr = expr;
-        rec.success = 0;
         rec.test = ttype;
         recp{q} = rec; 
         q = q + 1;

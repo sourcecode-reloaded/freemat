@@ -24,7 +24,7 @@ for ndx=1:size(recs,1)
       x2 = inputs{rec.inputs(2)};
     end
     eval([rec.expr,';'],'error_flag = 1;');
-    rec.success = error_flag;
+    evt.success = error_flag;
     if (error_flag == 0)
       if (rec.out_count == 1)
         outpod = {y1};
@@ -39,8 +39,9 @@ for ndx=1:size(recs,1)
       else
         outpod = {};
       end
-      rec.(fieldname) = outpod;
+      evt.result = outpod;
     end
+    rec.(fieldname) = evt;
     recs{ndx} = rec;
   else
     recs{ndx} = rec;
