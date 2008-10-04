@@ -24,76 +24,82 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <QObject>
 #include <QTextCursor>
 #include <QString>
 #include <QTextStream>
 #include "DebugWin.hpp"
 
 #ifdef _DEBUG
-class DebugStream 
+#define ENABLEDBSTREAM (true)
+#else
+#define ENABLEDBSTREAM (flase)
+#endif
+
+class DebugStream : public QObject 
 {
+	Q_OBJECT
 private:
-    QTextCursor* dbwin;   
+    QTextEdit* dbwin;   
 	QString stream;
 	QTextStream ts;
+	bool bEnabled;
+signals:
+	void SendMessage( const QString& msg );
 
 public:
-	DebugStream(){ ts.setString( &stream, QIODevice::Unbuffered ); };
-    ~DebugStream() { };
-    void setOutWindow( QTextCursor* _dbwin ) { dbwin = _dbwin; };
+	DebugStream(){ dbwin=0; bEnabled = true; ts.setString( &stream, QIODevice::Unbuffered ); };
+	~DebugStream() { QObject::disconnect( this, 0, 0, 0 ); };
+
+	inline void setEnabled( void ) { bEnabled=true; }
+	inline void setDisabled( void ) { bEnabled=false; }
+	inline bool isEnabled( void ) { return bEnabled && ENABLEDBSTREAM; }
+
+    void setWin( QTextEdit* _dbwin ) { 
+		dbwin = _dbwin; 
+		QObject::connect( this, SIGNAL( SendMessage( const QString& ) ), dbwin, SLOT( insertPlainText( const QString& ) ) );
+	};
 
 	inline DebugStream &sync(void) { 
-		if( dbwin ){
-			ts.flush(); 
-			dbwin->insertText( stream ); 
+		if( isEnabled() ){
+			if( dbwin ){
+				ts.flush(); 
+				emit SendMessage( stream );
+			}
+			stream.clear(); 
 		}
-		stream.clear(); 
 		return *this; 
 	}
 
-	inline DebugStream &operator<<(QChar t) { ts << "\'" << t << "\'"; return sync(); }
-    inline DebugStream &operator<<(bool t) { ts << (t ? "true" : "false"); return sync(); }
-    inline DebugStream &operator<<(char t) { ts << t; return sync(); }
-    inline DebugStream &operator<<(signed short t) { ts << t; return sync(); }
-    inline DebugStream &operator<<(unsigned short t) { ts << t; return sync(); }
-    inline DebugStream &operator<<(signed int t) { ts << t; return sync(); }
-    inline DebugStream &operator<<(unsigned int t) { ts << t; return sync(); }
-    inline DebugStream &operator<<(signed long t) { ts << t; return sync(); }
-    inline DebugStream &operator<<(unsigned long t) { ts << t; return sync(); }
+	inline DebugStream &operator<<(QChar t) { if( isEnabled() ) ts << "\'" << t << "\'"; return sync(); }
+    inline DebugStream &operator<<(bool t) { if( isEnabled() ) ts << (t ? "true" : "false"); return sync(); }
+    inline DebugStream &operator<<(char t) { if( isEnabled() ) ts << t; return sync(); }
+    inline DebugStream &operator<<(signed short t) { if( isEnabled() ) ts << t; return sync(); }
+    inline DebugStream &operator<<(unsigned short t) { if( isEnabled() ) ts << t; return sync(); }
+    inline DebugStream &operator<<(signed int t) { if( isEnabled() ) ts << t; return sync(); }
+    inline DebugStream &operator<<(unsigned int t) { if( isEnabled() ) ts << t; return sync(); }
+    inline DebugStream &operator<<(signed long t) { if( isEnabled() ) ts << t; return sync(); }
+    inline DebugStream &operator<<(unsigned long t) { if( isEnabled() ) ts << t; return sync(); }
     inline DebugStream &operator<<(qint64 t)
-        { ts << QString::number(t); return sync(); }
+        { if( isEnabled() ) ts << QString::number(t); return sync(); }
     inline DebugStream &operator<<(quint64 t)
-        { ts << QString::number(t); return sync(); }
-    inline DebugStream &operator<<(float t) { ts << t; return sync(); }
-    inline DebugStream &operator<<(double t) { ts << t; return sync(); }
-    inline DebugStream &operator<<(const char* t) { ts << QString::fromAscii(t); return sync(); }
-    inline DebugStream &operator<<(const QString & t) { ts << "\"" << t  << "\""; return sync(); }
-	inline DebugStream &operator<<(const std::string & t) { ts << "\"" << t.c_str()  << "\""; return sync(); }
-    inline DebugStream &operator<<(const QLatin1String &t) { ts << "\""  << t.latin1() << "\""; return sync(); }
-    inline DebugStream &operator<<(const QByteArray & t) { ts  << "\"" << t << "\""; return sync(); }
-    inline DebugStream &operator<<(const void * t) { ts << t; return sync(); }
+        { if( isEnabled() ) ts << QString::number(t); return sync(); }
+    inline DebugStream &operator<<(float t) { if( isEnabled() ) ts << t; return sync(); }
+    inline DebugStream &operator<<(double t) { if( isEnabled() ) ts << t; return sync(); }
+    inline DebugStream &operator<<(const char* t) { if( isEnabled() ) ts << QString::fromAscii(t); return sync(); }
+    inline DebugStream &operator<<(const QString & t) { if( isEnabled() ) ts << "\"" << t  << "\""; return sync(); }
+	inline DebugStream &operator<<(const std::string & t) { if( isEnabled() ) ts << "\"" << t.c_str()  << "\""; return sync(); }
+    inline DebugStream &operator<<(const QLatin1String &t) { if( isEnabled() ) ts << "\""  << t.latin1() << "\""; return sync(); }
+    inline DebugStream &operator<<(const QByteArray & t) { if( isEnabled() ) ts  << "\"" << t << "\""; return sync(); }
+    inline DebugStream &operator<<(const void * t) { if( isEnabled() ) ts << t; return sync(); }
     inline DebugStream &operator<<(QTextStreamFunction f) {
-        ts << f;
+        if( isEnabled() ) ts << f;
         return *this;
     }
     inline DebugStream &operator<<(QTextStreamManipulator m)
-    { ts << m; return *this; }
+    { if( isEnabled() ) ts << m; return *this; }
 
 };
-#else
-//in release version we disable debug output.
-class DebugStream 
-{
-
-public:
-	DebugStream(){ };
-    ~DebugStream() { };
-    void setOutWindow( QTextCursor* _dbwin ) {  };
-
-	template<typename T> DebugStream &operator<<(T t) { return *this; }
-
-};
-#endif
 
 extern DebugStream dbout;
 #endif /* __DEBUGSTREAM_HPP__ */

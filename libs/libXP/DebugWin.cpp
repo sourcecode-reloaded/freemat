@@ -32,11 +32,12 @@ DebugWin::DebugWin()
   dbwin->setReadOnly(true);
   layout->addWidget( dbwin );
 
-  QTextDocument* textdoc = new QTextDocument( dbwin );
-  QTextCursor* textcursor = new QTextCursor( textdoc );
-  dbwin->setDocument( textdoc );
-  dbout.setOutWindow( textcursor );
+  //textdoc = new QTextDocument( dbwin );
+  //textcursor = new QTextCursor( textdoc );
+  //dbwin->setDocument( textdoc );
+  dbout.setWin( dbwin );
 
   this->show();
 //  dbwin->show();
 }
+
