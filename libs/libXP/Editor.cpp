@@ -1753,6 +1753,7 @@ QString FMEditor::getFullFileName(QString fname)
 	  return QString();
 	}
   }
+  return QString();
 }
 
 void FMEditor::loadFile(const QString &fileName)
