@@ -33,7 +33,7 @@
 #ifdef _DEBUG
 #define ENABLEDBSTREAM (true)
 #else
-#define ENABLEDBSTREAM (flase)
+#define ENABLEDBSTREAM (false)
 #endif
 
 class DebugStream : public QObject 

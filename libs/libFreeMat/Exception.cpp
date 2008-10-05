@@ -27,7 +27,7 @@
 
 Exception::Exception(QString msg_in) {
   m_msg = msg_in; 
-  dbout << "E--> " << msg_in << "\n";
+  //dbout << "E--> " << msg_in << "\n";
   handled = false;
 }
 
