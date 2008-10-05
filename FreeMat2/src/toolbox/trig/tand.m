@@ -14,7 +14,7 @@
 %tand(45)
 %@>
 %@@Tests
-%@$y1=tand(x1)|near
+%@$near|y1=tand(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

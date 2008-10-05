@@ -513,7 +513,7 @@ ArrayVector CoshFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure sinhplot
 //@@Tests
-//@$y1=sinh(x1)|near
+//@$near|y1=sinh(x1)
 //@@Signature
 //function sinh SinhFunction
 //inputs x

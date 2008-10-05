@@ -12,6 +12,9 @@ function outputtext(&p,text)
   inputs = wbtestinputs;
   % Search for inputs
   ttype = v{1}{1};
+  if (~any(strcmp(ttype,{'near','exact'})))
+    error(sprintf('bad test type in line: %s',text));
+  end
   expr = v{1}{2};
   vars = symvar(expr);
   pnt = regexp(vars,'x.');
