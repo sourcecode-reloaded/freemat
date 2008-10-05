@@ -9,7 +9,7 @@
 %   y = secd(x)
 %@]
 %@@Tests
-%@$y1=secd(x1)|near
+%@$near|y1=secd(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

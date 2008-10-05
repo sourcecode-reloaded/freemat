@@ -18,7 +18,7 @@
 %asecd(2)
 %@>
 %@@Tests
-%@$y1=asecd(x1)|near
+%@$near|y1=asecd(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

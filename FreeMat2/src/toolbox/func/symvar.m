@@ -20,7 +20,7 @@
 %symvar('x + t*alpha')  % x, t and alpha
 %@>
 %@@Tests
-%@$y1=symvar(x1)|exact
+%@$exact|y1=symvar(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

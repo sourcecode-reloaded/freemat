@@ -11,8 +11,8 @@ function outputtext(&p,text)
   end
   inputs = wbtestinputs;
   % Search for inputs
-  expr = v{1}{1};
-  ttype = v{1}{2};
+  ttype = v{1}{1};
+  expr = v{1}{2};
   vars = symvar(expr);
   pnt = regexp(vars,'x.');
   in_count = 0; 

@@ -23,7 +23,7 @@
 %@>
 %@figure asecplot
 %@@Tests
-%@$y1=asec(x1)|near
+%@$near|y1=asec(x1)
 %!
 
 

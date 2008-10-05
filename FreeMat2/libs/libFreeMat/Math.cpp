@@ -322,10 +322,10 @@ struct OpPower {
 //done in double precision in almost all cases.  When single precision
 //values are involved, the computations take place in single precision.
 //@@Tests
-//@$y1=x1+2|exact
-//@$y1=1*i|exact
-//@$y1=pi+i|exact
-//@$y1=1/2|exact
+//@$exact|y1=x1+2
+//@$exact|y1=1*i
+//@$exact|y1=pi+i
+//@$exact|y1=1/2
 //!
 
 /**
@@ -452,7 +452,7 @@ struct OpPower {
 //x = testeq(yi1+yi2,zi1+zi2) & testeq(yf1+yf2,zf1+zf2) & testeq(yd1+yd2,zd1+zd2) & testeq(yc1+yc2,zc1+zc2) & testeq(yz1+yz2,zz1+zz2);
 //@}
 //@@Tests
-//@$y1=x1+x2|exact
+//@$exact|y1=x1+x2
 //!
 
 Array Add(const Array& A, const Array& B) {
@@ -933,7 +933,7 @@ Array DotLeftDivide(const Array& A, const Array& B) {
 //C = A.^B
 //@>
 //@@Tests
-//@$y=x1.^x2|near
+//@$near|y=x1.^x2
 //@{ test_power1.m
 //function x = test_power1
 //invD_11 = [0.3529    0.4028    0.5812    0.3333];

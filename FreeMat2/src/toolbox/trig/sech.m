@@ -21,7 +21,7 @@
 %@>
 %@figure sechplot
 %@@Tests
-%@$y1=sech(x1)|near
+%@$near|y1=sech(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

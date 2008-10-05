@@ -100,7 +100,7 @@ struct OpFix {
 //fix(a)
 //@>
 //@@Tests
-//@$y1=fix(x1)|exact
+//@$exact|y1=fix(x1)
 //@@Signature
 //function fix FixFunction
 //input x

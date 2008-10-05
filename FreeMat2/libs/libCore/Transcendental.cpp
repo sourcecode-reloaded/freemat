@@ -160,7 +160,7 @@ ArrayVector LogFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure tanhplot
 //@@Tests
-//@$y1=tanh(x1)|near
+//@$near|y1=tanh(x1)
 //@@Signature
 //function tanh TanhFunction
 //inputs x
@@ -223,7 +223,7 @@ ArrayVector TanhFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure acoshplot
 //@@Tests
-//@$y1=acosh(x1)|near
+//@$near|y1=acosh(x1)
 //@@Signature
 //function acosh AcoshFunction
 //inputs x
@@ -287,7 +287,7 @@ ArrayVector ArccoshFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure asinhplot
 //@@Tests
-//@$y1=asinh(x1)|near
+//@$near|y1=asinh(x1)
 //@@Signature
 //function asinh AsinhFunction
 //inputs x
@@ -343,7 +343,7 @@ ArrayVector ArcsinhFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure asechplot
 //@@Tests
-//@$y1=asech(x1)|near
+//@$near|y1=asech(x1)
 //@@Signature
 //function asech ArcsechFunction
 //inputs x
@@ -400,7 +400,7 @@ ArrayVector ArcsechFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure atanhplot
 //@@Tests
-//@$y1=atanh(x1)|near
+//@$near|y1=atanh(x1)
 //@@Signature
 //function atanh ArctanhFunction
 //inputs x
@@ -464,7 +464,7 @@ ArrayVector ArctanhFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure coshplot
 //@@Tests
-//@$y1=cosh(x1)|near
+//@$near|y1=cosh(x1)
 //@@Signature
 //function cosh CoshFunction
 //inputs x

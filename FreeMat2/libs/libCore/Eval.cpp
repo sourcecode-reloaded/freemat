@@ -300,8 +300,8 @@ ArrayVector AssignInFunction(int nargout, const ArrayVector& arg, Interpreter* e
 //calls the @|subsref| method of the class, which computes the requested 
 //function.
 //@@Tests
-//@$y1=feval(@cos,x1)|exact
-//@$y1=feval(inline('cos(t)'),x1)|exact
+//@$exact|y1=feval(@cos,x1)
+//@$exact|y1=feval(inline('cos(t)'),x1)
 //@{ test_feval1.m
 //function test_val = test_feval1
 //y = 0;

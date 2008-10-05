@@ -15,7 +15,7 @@
 %deg2rad(360) - 2*pi
 %@>
 %@@Tests
-%@$y1=deg2rad(x1)|near
+%@$near|y1=deg2rad(x1)
 %!
 
 

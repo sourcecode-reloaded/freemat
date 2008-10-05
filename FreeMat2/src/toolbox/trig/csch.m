@@ -22,7 +22,7 @@
 %@>
 %@figure cschplot
 %@@Tests
-%@$y1=csch(x1)|near
+%@$near|y1=csch(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

@@ -18,7 +18,7 @@
 %cosd(60)
 %@>
 %@@Tests
-%@$y1=cosd(x1)|near
+%@$near|y1=cosd(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu
