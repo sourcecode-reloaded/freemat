@@ -9,7 +9,7 @@
 %   y = cscd(x)
 %@]
 %@@Tests
-%@$y1=cscd(x1)
+%@$near|y1=cscd(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

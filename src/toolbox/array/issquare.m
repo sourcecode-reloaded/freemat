@@ -10,11 +10,11 @@
 %and it returns a logical 1 if the argument is size @|N x N|
 %logical 0 otherwise.
 %@@Tests
-%@$"y=issquare(rand(4,4))","true","exact"
-%@$"y=issquare(rand(4,1,1,1))","false","exact"
-%@$"y=issquare(rand(4,3))","false","exact"
-%@$"y=issquare(rand(3,3,3))","false","exact"
-%@$"y=issquare(rand(1,1,3))","false","exact"
+%@$exact|y1=issquare(rand(4,4))
+%@$exact|y1=issquare(rand(4,1,1,1))
+%@$exact|y1=issquare(rand(4,3))
+%@$exact|y1=issquare(rand(3,3,3))
+%@$exact|y1=issquare(rand(1,1,3))
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

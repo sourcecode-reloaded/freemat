@@ -458,10 +458,12 @@ void MatIO::putStructArray(const Array &x) {
   int maxlen = 0;
   for (int i=0;i<fieldNameCount;i++)
     maxlen = max(maxlen,(int)fnames.at(i).size());
+  maxlen++;
   // Write it as an int32 
   Array fieldNameLength = Array(int32(maxlen));
   putDataElement(fieldNameLength);
   Array fieldNameText(Transpose(StringArrayFromStringVector(fnames)));
+  fieldNameText.resize(NTuple(fieldNameText.rows()+1,fieldNameText.cols()));
   putDataElement(fieldNameText.toClass(Int8));
   for (int i=0;i<fieldNameCount;i++) {
     const BasicArray<Array> &rp(x.constStructPtr()[i]);

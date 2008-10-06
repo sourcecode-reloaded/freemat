@@ -23,7 +23,7 @@
 %@>
 %@figure acschplot
 %@@Tests
-%@$y1=acsc(x1)
+%@$near|y1=acsc(x1)
 %!
 
 

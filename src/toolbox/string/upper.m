@@ -25,7 +25,7 @@
 %upper({'This','Is','Strange','CAPitalizaTion'})
 %@>
 %@@Tests
-%@$y1=upper(x1)
+%@$exact|y1=upper(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

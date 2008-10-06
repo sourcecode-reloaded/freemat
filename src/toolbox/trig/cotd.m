@@ -14,7 +14,7 @@
 %cotd(45)
 %@>
 %@@Tests
-%@$y1=cotd(x1)
+%@$near|y1=cotd(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

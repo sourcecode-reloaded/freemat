@@ -899,6 +899,8 @@ tests/matcompat/matlab7_wb_test_results.mat svn_mime_002dtype=application%2Focte
 tests/matcompat/test_file_v6.mat svn_mime_002dtype=application%2Foctet-stream
 tests/matcompat/tough.mat svn_mime_002dtype=application%2Foctet-stream
 tests/matcompat/tough_with_fp.mat svn_mime_002dtype=application%2Foctet-stream
+tests/matcompat/wb_testmatrix.mat svn_mime_002dtype=application%2Foctet-stream
+tests/matcompat/wb_testmatrix.mat.gz svn_mime_002dtype=application%2Foctet-stream
 tests/matcompat/west.mat svn_mime_002dtype=application%2Foctet-stream
 tests/math/test_add1.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 tests/math/test_add2.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native

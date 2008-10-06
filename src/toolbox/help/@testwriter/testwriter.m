@@ -13,6 +13,7 @@ function p = testwriter(a)
     p.ignore = false;
     p.section_descriptors = [];
     p.sourcepath = '';
+    p.recs = {};
     p.num = 1;
     p = class(p,'testwriter');
   elseif isa(a,'testwriter');

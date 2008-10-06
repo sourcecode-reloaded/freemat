@@ -17,7 +17,7 @@
 %rad2deg(2*pi) % Note that this is 360 not 0 degrees
 %@>
 %@@Tests
-%@$y1=rad2deg(x1)
+%@$near|y1=rad2deg(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

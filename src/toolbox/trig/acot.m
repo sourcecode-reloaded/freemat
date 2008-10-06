@@ -22,7 +22,7 @@
 %mprint('acotplot');
 %@>
 %@figure acotplot
-%@$y1=acot(x1)
+%@$near|y1=acot(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

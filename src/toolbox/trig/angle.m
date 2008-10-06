@@ -29,7 +29,7 @@
 %@>
 %   M version contributor: M.W. Vogel 01-30-06
 %@@Tests
-%@$y1=angle(x1)
+%@$near|y1=angle(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

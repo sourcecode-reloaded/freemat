@@ -1,8 +1,10 @@
-% Generate a test matrix based on an input matrix
-function wbgentests(fname_in,fname_out,funcname)
+% update a testmatrix with a fieldname
+function wbgentests(fname,fieldname,funcname)
 % Load the test inputs
-load(fname_in)
-outputs = {};
+fprintf('loading %s..\n',fname);
+load(fname)
+fprintf('done\n');
+inputs = wbtestinputs;
 if (exist('funcname'))
   func_only = true;
 else
@@ -10,41 +12,41 @@ else
 end
 for ndx=1:size(recs,1)
   if (rem(ndx,1000)==0)
-    fprintf('Processing test %d of %d...\r',ndx,size(recs,1));
+    fprintf('Processing test record %d of %d...\r',ndx,size(recs,1));
   end
-  rec = recs(ndx,:);
+  rec = recs{ndx};
   error_flag = 0;
-  texpr = exprs{rec(4)};
-  texpr(end) = ';';
-  if (~func_only || strstr(texpr,funcname))
-    if (rec(1) > 0)
-      x1 = inputs{rec(1)};
+  if (~func_only || strstr(rec.expr,funcname))
+    if (numel(rec.inputs) > 0)
+      x1 = inputs{rec.inputs(1)};
     end
-    if (rec(2) > 0)
-      x2 = inputs{rec(2)};
+    if (numel(rec.inputs) > 1)
+      x2 = inputs{rec.inputs(2)};
     end
-    eval(texpr,'error_flag = 1;');
-    rec(5) = error_flag;
+    eval([rec.expr,';'],'error_flag = 1;');
+    evt.success = error_flag;
     if (error_flag == 0)
-      if (rec(3) == 1)
+      if (rec.out_count == 1)
         outpod = {y1};
-      elseif (rec(3) == 2)
+      elseif (rec.out_count == 2)
         outpod = {y1,y2};
-      elseif (rec(3) == 3)
+      elseif (rec.out_count == 3)
         outpod = {y1,y2,y3};
-      elseif (rec(4) == 4)
+      elseif (rec.out_count == 4)
         outpod = {y1,y2,y3,y4};
-      elseif (rec(5) == 5)
+      elseif (rec.out_count == 5)
         outpod = {y1,y2,y3,y4,y5};
       else
         outpod = {};
       end
-      outputs = [outputs;outpod];
-      rec(6) = numel(outputs);
+      evt.result = outpod;
     end
+    rec.(fieldname) = evt;
+    recs{ndx} = rec;
   else
-    rec(5) = -1;
+    recs{ndx} = rec;
   end
-  recs(ndx,:) = rec;
 end
-save(fname_out,'outputs','recs');
+fprintf('\nsaving %s...\n',fname);
+save(fname,'recs');
+fprintf('done\n');

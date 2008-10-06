@@ -12,7 +12,7 @@
 %fprintf(['x0123456789y\n','x',blanks(10),'y\n'])
 %@>
 %@@Tests
-%@$"str=['x',blanks(5),'y']","'x     y'","exact"
+%@$exact|y1=['x',blanks(5),'y']
 %!
 
 function str = blanks(n)

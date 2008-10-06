@@ -107,7 +107,7 @@ static char* validateScanFormatSpec(char* cp) {
 //strcmp({'this','is','a','pickle'},['peter ';'piper ';'hated ';'pickle'])
 //@>
 //@@Tests
-//@$y1=strcmp(x1,x2)
+//@$exact|y1=strcmp(x1,x2)
 //@{ test_strcmp1.m
 //    % Check the strcmp function for a match
 //function test_val = test_strcmp1
@@ -149,7 +149,7 @@ ArrayVector StrCmpFunction(int nargout, const ArrayVector& arg) {
 //where @|x| and @|y| are two strings, or cell arrays of strings.
 //See @|strcmp| for more help.
 //@@Tests
-//@$y1=strcmpi(x1,x2)
+//@$exact|y1=strcmpi(x1,x2)
 //@@Signature
 //function strcmpi StrCmpiFunction
 //inputs string1 string2
@@ -216,8 +216,8 @@ ArrayVector StrCmpiFunction(int nargout, const ArrayVector& arg) {
 //strncmp({'this','is','a','pickle'},['peter ';'piper ';'hated ';'pickle'],4);
 //@>
 //@@Tests
-//@$y1=strncmp(x1,x2,4)
-//@$y1=strncmp(x1,x2,3)
+//@$exact|y1=strncmp(x1,x2,4)
+//@$exact|y1=strncmp(x1,x2,3)
 //@@Signature
 //function strncmp StrnCmpFunction
 //inputs string1 string2 len
@@ -299,8 +299,8 @@ ArrayVector StrStrFunction(int nargout, const ArrayVector& arg) {
 //strrep({'time is money';'A stitch in time';'No time for games'},'time','money')
 //@>
 //@@Tests
-//@$y1=strrep(x1,'Matlab','FreeMat')
-//@$y1=strrep(x1,'time','money')
+//@$exact|y1=strrep(x1,'Matlab','FreeMat')
+//@$exact|y1=strrep(x1,'time','money')
 //@@Signature
 //function strrep StrRepFunction
 //inputs source pattern replace
@@ -1240,7 +1240,7 @@ ArrayVector RegExpRepDriverFunction(int nargout, const ArrayVector& arg) {
 //deblank({'hello  ','there ','  is  ','  sign  '})
 //@>
 //@@Tests
-//@$y1=deblank(x1)
+//@$exact|y1=deblank(x1)
 //@@Signature
 //function deblank DeblankFunction
 //inputs x
@@ -1291,8 +1291,8 @@ ArrayVector DeblankFunction(int nargout, const ArrayVector& arg) {
 //b = strfind(a,'ow')
 //@>
 //@@Tests
-//@$y1 = strfind(x1,'ow')
-//@$y1 = strfind(x1,'er')
+//@$exact|y1 = strfind(x1,'ow')
+//@$exact|y1 = strfind(x1,'er')
 //@@Signature
 //function strfind StrFindFunction
 //inputs x pattern
