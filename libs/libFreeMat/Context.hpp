@@ -27,10 +27,10 @@
 #include "Exception.hpp"
 #include "Types.hpp"
 #include <vector>
-#include <QDebug>
 #include <QList>
 #include <QMutex>
 #include <stdarg.h>
+#include "DebugStream.hpp"
 
 /**
  * This class represents a reference to an array in a scope
@@ -367,14 +367,14 @@ public:
       for (int i=0;i<argc_in;i++) {
 	const char *t = va_arg(argp, const char *);
 	if (!t) {
-	  qDebug() << "addFunction for function " << 
+	  dbout << "addFunction for function " << 
 	    name << " is wrong!\n";
 	  exit(1);
 	}
 	args.push_back(t);
       }
       if (va_arg(argp,const char *) != NULL) {
-	qDebug() << "addFunction for function " << 
+	dbout << "addFunction for function " << 
 	  name << " is wrong!\n";
 	exit(1);
       }
@@ -401,14 +401,14 @@ public:
       for (int i=0;i<argc_in;i++) {
 	const char *t = va_arg(argp, const char *);
 	if (!t) {
-	  qDebug() << "addSpecialFunction for function " << 
+	  dbout << "addSpecialFunction for function " << 
 	    (name) << " is wrong!\n";
 	  exit(1);
 	}
 	args.push_back(t);
       }
       if (va_arg(argp,const char *) != NULL) {
-	qDebug() << "addSpecialFunction for function " << 
+	dbout << "addSpecialFunction for function " << 
 	  (name) << " is wrong!\n";
 	exit(1);
       }
@@ -436,14 +436,14 @@ public:
       for (int i=0;i<argc_in;i++) {
 	const char *t = va_arg(argp, const char *);
 	if (!t) {
-	  qDebug() << "addGfxFunction for function " << 
+	  dbout << "addGfxFunction for function " << 
 	    (name) << " is wrong!\n";
 	  exit(1);
 	}
 	args.push_back(t);
       }
       if (va_arg(argp,const char *) != NULL) {
-	qDebug() << "addGfxFunction for function " << 
+	dbout << "addGfxFunction for function " << 
 	  (name) << " is wrong!\n";
 	exit(1);
       }
@@ -472,14 +472,14 @@ public:
       for (int i=0;i<argc_in;i++) {
 	const char *t = va_arg(argp, const char *);
 	if (!t) {
-	  qDebug() << "addGfxSpecialFunction for function " << 
+	  dbout << "addGfxSpecialFunction for function " << 
 	    (name) << " is wrong!\n";
 	  exit(1);
 	}
 	args.push_back(t);
       }
       if (va_arg(argp,const char *) != NULL) {
-	qDebug() << "addGfxSpecialFunction for function " << 
+	dbout << "addGfxSpecialFunction for function " << 
 	  (name) << " is wrong!\n";
 	exit(1);
       }

@@ -130,11 +130,11 @@ ArrayVector ImReadFunction(int nargout, const ArrayVector& arg,
     throw Exception("imread requires a filename to read.");
   QString filename(arg[0].asString());
   QString completename;
-  try {
-    completename = psearch.ResolvePath(filename);
-  } catch (Exception& e) {
-    throw Exception("unable to find file " + completename);
-  }
+
+  completename = psearch.ResolvePath(filename);
+  if( completename.isNull() )
+	throw Exception("unable to find file " + completename);
+
   // Construct the QImage object
   QImage img(completename);
   if (img.isNull())

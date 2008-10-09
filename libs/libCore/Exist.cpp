@@ -29,11 +29,10 @@ static int ExistDirFunction(QString fname, Interpreter* eval) {
 
 static int ExistFileFunction(QString fname, Interpreter* eval) {
   PathSearcher src(eval->getPath());
-  try {
-    src.ResolvePath(fname);
-    return 2;
-  } catch (Exception &e) {
-  }
+  QString path = src.ResolvePath(fname);
+  if( !path.isNull() )
+	return 2;
+
   bool isDefed;
   FuncPtr d;
   isDefed = eval->getContext()->lookupFunction(fname,d);

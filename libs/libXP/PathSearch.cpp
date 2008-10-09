@@ -40,6 +40,6 @@ QString PathSearcher::ResolvePath(QString fname) {
     if (pdir.exists(fname))
       return pdir.absoluteFilePath(fname);
   }
-  throw Exception("Unable to find file " + fname + " on the current path!");
+  return QString();
 }
 

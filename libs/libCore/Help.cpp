@@ -46,12 +46,11 @@ ArrayVector HelpFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
   } else {
     // Check for a mdc file with the given name
     QString mdcname = fname + ".mdc";
-    try {
-      mdcname = psearch.ResolvePath(mdcname);
-    } catch (Exception& e) {
-      throw Exception("no help available on " + fname);
-    }
-    QFile fp(mdcname);
+    mdcname = psearch.ResolvePath(mdcname);
+	if( mdcname.isNull() )
+		throw Exception("no help available on " + fname);
+
+	QFile fp(mdcname);
     if (!fp.open(QIODevice::ReadOnly))
       throw Exception(QString("No help available on ") + fname);
     QTextStream io(&fp);

@@ -388,6 +388,10 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
 		    "return type, argument list");
   libfile = arg[0].asString();
   libfullpath = psearch.ResolvePath(libfile);
+  
+  if( libfullpath.isNull() )
+	  throw Exception( "unable to find file " + libfile );
+
   QString current(QDir::currentPath());
   // Prepend the current working directory... ugly, but necessary
 #ifdef WIN32
