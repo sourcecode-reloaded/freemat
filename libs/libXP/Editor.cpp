@@ -132,7 +132,7 @@ FMTextEdit::FMTextEdit() : QTextEdit() {
   matchingBegin = -1;
   matchingEnd = -1;
   setLineWrapMode(QTextEdit::NoWrap);
-  connect( this, SIGNAL( cursorPositionChanged() ), this, SLOT( slotCursorPositionChanged()));
+  connect( this, SIGNAL( cursorPositionChanged() ), this, SLOT( slotCursorOrTextChanged()));
 }
 
 FMTextEdit::~FMTextEdit() {
@@ -303,10 +303,16 @@ void FMTextEdit::decreaseIndent() {
   pos.endEditBlock();
 }
 
+void FMTextEdit::smartIndent() {
+    emit smart_Indent();
+}
+
 void FMTextEdit::keyPressEvent(QKeyEvent*e) {
   bool tab = false;
   int keycode = e->key();
   bool delayedIndent = false;
+  
+  // catch any possible key event for indent
   if (keycode) {
     QByteArray p(e->text().toAscii());
     char key;
@@ -321,17 +327,33 @@ void FMTextEdit::keyPressEvent(QKeyEvent*e) {
     }
     if (key == 13) {
       delayedIndent = true;
-      if (indentActive)
-	emit indent();
     }
   }
-  if (!tab || !indentActive)
+  
+  // let QTextEdit receive the input
+  if (!tab || !indentActive) {
     QTextEdit::keyPressEvent(e);
+    slotCursorOrTextChanged();
+  }
   else
     e->accept();
+    
+  // apply indent when for new line  
   if (indentActive)
     if (delayedIndent) 
       emit indent();
+      
+  // call autoindent when find a matching
+  if (keycode) {
+    QByteArray p(e->text().toAscii());
+    char key;
+    if (!e->text().isEmpty()) {
+      key = p[0];
+      if (key >='a' && key <= 'z' &&
+          matchActive && matchingBegin != -1 && matchingEnd != -1)
+        emit indent();
+    }
+  }
 }
 
 bool FMTextEdit::event(QEvent *event){ 
@@ -345,24 +367,7 @@ bool FMTextEdit::event(QEvent *event){
   return QTextEdit::event(event);
 }
 
-void FMTextEdit::slotCursorPositionChanged()
-{
-    if ( matchActive ) {
-      plainText = toPlainText();
-      bool matchbefore = (matchingBegin !=-1 && matchingEnd != -1);
-      bool matchnow = findmatch();
-      if ( matchnow || (!matchnow && matchbefore) )
-        viewport()->update();
-   }
-}
-
-void FMTextEdit::setMatchBracket(bool flag)
-{
-    matchActive  = flag;
-    viewport()->update();
-}
-
-QString simplifiedMCode(const QString Str)
+QString simplifyMCode(const QString Str)
 {
     enum
     {
@@ -464,18 +469,44 @@ QString simplifiedMCode(const QString Str)
     return SimplifiedString;
 }
 
+void FMTextEdit::slotCursorOrTextChanged()
+{
+    if ( matchActive ) {
+      plainText = toPlainText();
+      simpleCodes = simplifyMCode( plainText );
+      bool isMatchBefore = (matchingBegin !=-1 && matchingEnd != -1);
+      bool isMatchNow = findmatch();
+      if ( isMatchNow || (!isMatchNow && isMatchBefore) )
+        viewport()->update();
+    }
+}
+
+void FMTextEdit::setMatchBracket(bool flag)
+{
+    matchActive  = flag;
+    viewport()->update();
+}
+
 bool FMTextEdit::findmatch()
 {
-	QString simpleCodes =  simplifiedMCode( plainText );
     QTextCursor cursor = textCursor();
     int pos = cursor.position();
    	matchingBegin = -1;
    	matchingEnd = -1;
     Key = "";
     matchKey = "";
-    if ( pos==-1  || cursor.atEnd() || simpleCodes.at(pos) == '_')
-    	return false;
     
+    if ( plainText.size()<2 || pos==-1 || cursor.block().text().isEmpty())
+    	return false;
+
+    if (cursor.atEnd()) {
+        cursor.movePosition(QTextCursor::Left,QTextCursor::MoveAnchor);
+        pos = cursor.position();
+    }
+
+    if (simpleCodes.at(pos) == '_' || (pos>1 && simpleCodes.at(pos-1) == '_') )
+        return false;
+
     QChar ch = simpleCodes.at(pos);
     if (QString("({[]})").contains(simpleCodes.at(pos)))
        ch = simpleCodes.at(pos);
@@ -487,7 +518,7 @@ bool FMTextEdit::findmatch()
         cursor.select(QTextCursor::WordUnderCursor);
         Key = cursor.selectedText();
         if (Key.isEmpty() || 
-           !QString("if elseif else switch case otherwise for while try catch end").contains(Key))
+           !QString("if:elseif:else:switch:case:otherwise:for:while:try:catch:end").contains(Key))
             return false;
         else
             pos = cursor.selectionStart(); //readjust to the position of first letter
@@ -521,9 +552,7 @@ bool FMTextEdit::findmatch()
     	matchCh = '[';
     	inc = -1;
    	}
-    else if (Key.isEmpty())
-    	return false;
-    	
+    
     matchingBegin = pos;
     int nb = 0;
     if (Key.isEmpty()) {
@@ -566,7 +595,11 @@ bool FMTextEdit::findmatch()
         }
         else
             return false;
+            
+        int codeLength = simpleCodes.size();
         do {
+            if (pos < 0 || pos > codeLength-1)
+                break;
             QChar chr = simpleCodes.at(pos);
             if (chr < 'a' || chr > 'z' ) { //ignore if not a small alphabet character
                 pos += inc;
@@ -611,10 +644,23 @@ bool FMTextEdit::findmatch()
        	} while(pos >= 0 && pos < simpleCodes.length());
     }
 
-    if(matchingEnd !=-1) //found match
-      return true;
+    if ((matchingEnd ==-1) ||
+       ((Key == "else" || Key == "elseif") && matchKey != "if") ||
+       (Key == "catch" && matchKey != "try") ||
+       (Key == "case" && matchKey != "switch") ) {
+        matchingEnd =-1;
+       return false;
+    }
     else
-      return false;
+      return true;
+}
+
+int  FMTextEdit::priorMatchedKeyWordPosition() {
+  if (matchActive && matchingBegin != -1 && matchingEnd != -1 &&
+     (matchingBegin > matchingEnd)  )
+    return matchingEnd;
+  else
+    return -1;
 }
 
 void FMTextEdit::paintEvent(QPaintEvent *event) {
@@ -723,14 +769,6 @@ QString setIndentSpace(QString toIndent, int leading_space) {
   return toIndent;
 }
 
-bool allWhiteSpace(QString a) {
-  QRegExp whitespace("^\\s*");
-  int k;
-  if ((k = a.indexOf(whitespace,0)) != -1)
-    a.remove(0,whitespace.matchedLength());
-  return (a.isEmpty());
-}
-
 QString stripLine(QString a) {
   // 2.  Replace string literals in <a> with dummy characters to avoid confusion,
   //     i.e., 'blahbla' --> xxxxxxxx
@@ -771,7 +809,8 @@ QString indentLine(QString toIndent, QStringList priorText, int indentSize) {
   QString a;
   // 1.  Let <a> be the line of non-blank text prior to the current one.  If
   //     no such line exists, then we are done (no change).
-  while (!priorText.empty() && allWhiteSpace(priorText.last())) 
+  while (!priorText.empty() && 
+        (priorText.last().trimmed().isEmpty() || priorText.last().trimmed().at(0)=='%') )
     priorText.removeLast();
   if (priorText.empty())
     return setIndentSpace(toIndent,0);
@@ -788,6 +827,17 @@ QString indentLine(QString toIndent, QStringList priorText, int indentSize) {
   if (a.indexOf(keyword_adjust) >= 0) {
     indent_increment++;
   }
+  // Adjustment of "switch,case,otherwise,end" runs differently
+  QRegExp keyword_case("^\\s*\\b(case|otherwise)\\b");
+  QRegExp keyword_switch("^\\s*\\b(switch)\\b");
+  QRegExp keyword_end("^\\s*\\b(end)\\b");
+  if (b.indexOf(keyword_case) >= 0 && a.indexOf(keyword_switch) < 0) {
+    indent_increment--;
+  }
+  if (a.indexOf(keyword_case) >= 0 && b.indexOf(keyword_end) < 0) {
+    indent_increment++;
+  }
+  
   QRegExp function_det("^\\s*\\b(function)\\b");
   if (b.indexOf(function_det) >= 0) {
     return setIndentSpace(toIndent,0);
@@ -819,10 +869,18 @@ void FMIndent::update() {
   cursor.movePosition(QTextCursor::StartOfLine);
   cursor.movePosition(QTextCursor::EndOfLine,QTextCursor::KeepAnchor);
   QString toIndent(cursor.selectedText());
-  cursor.movePosition(QTextCursor::StartOfLine);
-  cursor.movePosition(QTextCursor::Start,QTextCursor::KeepAnchor);
+  QString indented;
+  if (m_te->priorMatchedKeyWordPosition()>=0) { // indent with a previous matched keyword
+    cursor.setPosition(m_te->priorMatchedKeyWordPosition());
+    cursor.movePosition(QTextCursor::StartOfLine);
+    cursor.movePosition(QTextCursor::EndOfLine,QTextCursor::KeepAnchor);
+  }
+  else { // indent with a previous line
+    cursor.movePosition(QTextCursor::StartOfLine);
+    cursor.movePosition(QTextCursor::Start,QTextCursor::KeepAnchor);
+  }
   QStringList priorlines(cursor.selection().toPlainText().split("\n"));
-  QString indented(indentLine(toIndent,priorlines,indentSize));
+  indented = indentLine(toIndent,priorlines,indentSize);
   save.movePosition(QTextCursor::StartOfLine);
   save.movePosition(QTextCursor::EndOfLine,QTextCursor::KeepAnchor);
   save.insertText(indented);
@@ -834,6 +892,51 @@ void FMIndent::update() {
   final.movePosition(QTextCursor::StartOfLine,QTextCursor::MoveAnchor);
   final.movePosition(QTextCursor::Right,QTextCursor::MoveAnchor,new_pos);
   m_te->setTextCursor(final);
+}
+
+void FMIndent::updateSelection() {
+  QTextCursor cursor(m_te->textCursor());
+  QTextCursor line1(cursor);
+  QTextCursor line2(cursor);
+  int startPos;
+  if (cursor.position() < cursor.anchor()) {
+    line2.setPosition(cursor.anchor());
+    startPos = cursor.position();
+  } else {
+    line1.setPosition(cursor.anchor());
+    startPos = cursor.anchor();
+  }
+  line1.movePosition(QTextCursor::StartOfLine,QTextCursor::MoveAnchor);
+  QTextCursor line2Copy(line2);
+  line2.movePosition(QTextCursor::StartOfLine,QTextCursor::MoveAnchor);
+  if (line2.position() == line2Copy.position()) //at beginning of line, ignore this line
+    line2.movePosition(QTextCursor::Up,QTextCursor::MoveAnchor);
+  QTextCursor pos(line1);
+  pos.beginEditBlock();
+  while (pos.position() < line2.position()) { 
+
+    QTextCursor cursor(pos);
+    QTextCursor save(cursor);
+    QTextCursor final(cursor);
+    // Get the current cursor position relative to the start of the line
+    final.movePosition(QTextCursor::StartOfLine,QTextCursor::KeepAnchor);
+    int curpos = final.selectedText().length();
+    cursor.movePosition(QTextCursor::StartOfLine);
+    cursor.movePosition(QTextCursor::EndOfLine,QTextCursor::KeepAnchor);
+    QString toIndent(cursor.selectedText());
+    QString indented;
+    cursor.movePosition(QTextCursor::StartOfLine);
+    cursor.setPosition(startPos,QTextCursor::KeepAnchor);
+    QStringList priorlines(cursor.selection().toPlainText().split("\n"));
+    indented = indentLine(toIndent,priorlines,indentSize);
+    save.movePosition(QTextCursor::StartOfLine);
+    save.movePosition(QTextCursor::EndOfLine,QTextCursor::KeepAnchor);
+    save.insertText(indented);
+
+    pos.movePosition(QTextCursor::StartOfLine,QTextCursor::MoveAnchor);
+    pos.movePosition(QTextCursor::Down,QTextCursor::MoveAnchor);
+  }
+  pos.endEditBlock();
 }
 
 Interpreter* FMEditPane::getInterpreter() {
@@ -853,6 +956,7 @@ FMEditPane::FMEditPane(Interpreter* eval) : QWidget() {
   FMIndent *ind = new FMIndent;
 
   connect(tEditor,SIGNAL(indent()),ind,SLOT(update()));
+  connect(tEditor,SIGNAL(smart_Indent()),ind,SLOT(updateSelection()));
   Highlighter *highlight = new Highlighter(tEditor->document());
   ind->setDocument(tEditor);
 }
@@ -1111,25 +1215,28 @@ void FMEditor::createActions() {
   findAct = new QAction(QIcon(":/images/find.png"),"&Find",this);
   findAct->setShortcut(Qt::Key_F | Qt::CTRL);
   connect(findAct,SIGNAL(triggered()),this,SLOT(find()));
-  commentAct = new QAction("Comment Region",this);
+  commentAct = new QAction("&Comment Region",this);
   commentAct->setShortcut(Qt::Key_R | Qt::CTRL); 
   connect(commentAct,SIGNAL(triggered()),this,SLOT(comment()));
-  uncommentAct = new QAction("Uncomment Region",this);
+  uncommentAct = new QAction("&Uncomment Region",this);
   uncommentAct->setShortcut(Qt::Key_T | Qt::CTRL); 
   connect(uncommentAct,SIGNAL(triggered()),this,SLOT(uncomment()));
-  increaseIndentAct = new QAction("Increase Indent",this);
+  increaseIndentAct = new QAction("&Increase Indent",this);
   increaseIndentAct->setShortcut(Qt::Key_Tab); 
   connect(increaseIndentAct,SIGNAL(triggered()),this,SLOT(increaseIndent()));
-  decreaseIndentAct = new QAction("Decrease Indent",this);
+  decreaseIndentAct = new QAction("&Decrease Indent",this);
   decreaseIndentAct->setShortcut(Qt::Key_Tab | Qt::SHIFT); 
   connect(decreaseIndentAct,SIGNAL(triggered()),this,SLOT(decreaseIndent()));
+  smartIndentAct = new QAction("&Smart Indent",this);
+  smartIndentAct->setShortcut(Qt::Key_I | Qt::CTRL); 
+  connect(smartIndentAct,SIGNAL(triggered()),this,SLOT(smartIndent()));
   undoAct = new QAction("Undo Edits",this);
   undoAct->setShortcut(Qt::Key_Z | Qt::CTRL);
   connect(undoAct,SIGNAL(triggered()),this,SLOT(undo()));
   redoAct = new QAction("Redo Edits",this);
   redoAct->setShortcut(Qt::Key_Y | Qt::CTRL);
   connect(redoAct,SIGNAL(triggered()),this,SLOT(redo()));
-  replaceAct = new QAction("Find and Replace",this);
+  replaceAct = new QAction("Find and &Replace",this);
   replaceAct->setShortcut(Qt::Key_H | Qt::CTRL); 
   connect(replaceAct,SIGNAL(triggered()),this,SLOT(replace()));
   helpWinAct = new QAction("Online &Manual",this);
@@ -1216,6 +1323,10 @@ void FMEditor::decreaseIndent() {
   currentEditor()->decreaseIndent();
 }
 
+void FMEditor::smartIndent() {
+  currentEditor()->smartIndent();
+}
+
 void FMEditor::find() {
   m_find->setFindText(currentEditor()->textCursor().selectedText());
   m_find->show();
@@ -1280,6 +1391,7 @@ void FMEditor::createMenus() {
   toolsMenu->addAction(uncommentAct);
   toolsMenu->addAction(increaseIndentAct);
   toolsMenu->addAction(decreaseIndentAct);
+  toolsMenu->addAction(smartIndentAct);
   debugMenu = menuBar()->addMenu("&Debug");
   debugMenu->addAction(executeCurrentAct);
   debugMenu->addAction(executeSelectionAct);

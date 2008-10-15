@@ -84,29 +84,32 @@ class FMTextEdit : public QTextEdit {
   bool matchActive;
   long matchingBegin, matchingEnd;
   QColor matchingColor;
-  QString plainText;
+  QString plainText, simpleCodes;
   QString Key, matchKey;
 public:
   FMTextEdit();
   virtual ~FMTextEdit();
   void keyPressEvent(QKeyEvent *e);
   bool findmatch();
+  int  priorMatchedKeyWordPosition();
   void paintEvent(QPaintEvent *event);
   void contextMenuEvent(QContextMenuEvent *e);
   void comment();
   void uncomment();
   void increaseIndent();
   void decreaseIndent();
+  void smartIndent();
   bool replace(QString text, QString replace, QTextDocument::FindFlags flags);
   int replaceAll(QString text, QString replace, QTextDocument::FindFlags flags);
   void fontUpdate();
 protected:
   bool event(QEvent *event);
 private slots:
-  void slotCursorPositionChanged();
+  void slotCursorOrTextChanged();
   void setMatchBracket(bool flag);
 signals:
   void indent();
+  void smart_Indent();
   void showDataTips(QPoint pos, QString textSelected);
 };
 
@@ -121,6 +124,7 @@ public:
   FMTextEdit *document() const;
 private slots:
   void update();
+  void updateSelection();
 };
 
 class FMEditPane;
@@ -198,7 +202,7 @@ class FMEditor : public QMainWindow {
   QAction *newAct, *saveAct, *quitAct, *copyAct, *pasteAct;
   QAction *cutAct, *fontAct, *openAct, *saveAsAct, *closeAct;
   QAction *openNewAct, *findAct, *replaceAct, *commentAct, *uncommentAct;
-  QAction *increaseIndentAct, *decreaseIndentAct;
+  QAction *increaseIndentAct, *decreaseIndentAct, *smartIndentAct;
   QAction *helpWinAct, *helpOnSelectionAct, *openSelectionAct;
   QAction *dbStepAct, *dbTraceAct, *dbContinueAct;
   QAction *dbSetClearBPAct, *dbStopAct;
@@ -270,6 +274,7 @@ private slots:
   void uncomment();
   void increaseIndent();
   void decreaseIndent();
+  void smartIndent();
   void undo();
   void redo();
   void RefreshBPLists();
