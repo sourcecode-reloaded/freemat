@@ -914,6 +914,8 @@ void FMIndent::updateSelection() {
   QTextCursor pos(line1);
   pos.beginEditBlock();
   while (pos.position() < line2.position()) { 
+    pos.movePosition(QTextCursor::StartOfLine,QTextCursor::MoveAnchor);
+    pos.movePosition(QTextCursor::Down,QTextCursor::MoveAnchor);
 
     QTextCursor cursor(pos);
     QTextCursor save(cursor);
@@ -932,9 +934,6 @@ void FMIndent::updateSelection() {
     save.movePosition(QTextCursor::StartOfLine);
     save.movePosition(QTextCursor::EndOfLine,QTextCursor::KeepAnchor);
     save.insertText(indented);
-
-    pos.movePosition(QTextCursor::StartOfLine,QTextCursor::MoveAnchor);
-    pos.movePosition(QTextCursor::Down,QTextCursor::MoveAnchor);
   }
   pos.endEditBlock();
 }
