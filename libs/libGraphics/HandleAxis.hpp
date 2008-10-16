@@ -85,6 +85,7 @@ public:
   virtual void UpdateState();
   void SetupDefaults();
   virtual void PaintMe(RenderEngine &gc);
+  virtual void PaintBoundingBox(RenderEngine& gc);
   HandleFigure* GetParentFigure();
   QVector<double> UnitsReinterpret(QVector<double> a);
   QVector<double> GetPropertyVectorAsPixels(QString name);

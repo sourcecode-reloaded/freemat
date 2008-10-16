@@ -2533,3 +2533,10 @@ void HandleAxis::PaintMe(RenderEngine& gc) {
     DrawAxisLabels(gc);
   }
 }
+
+void HandleAxis::PaintBoundingBox(RenderEngine& gc) {
+  if (GetParentFigure() == NULL) return;
+  SetupProjection(gc);
+  SetupAxis(gc);
+  DrawBox(gc);
+}

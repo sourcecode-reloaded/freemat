@@ -37,7 +37,12 @@ DebugWin::DebugWin()
   //dbwin->setDocument( textdoc );
   dbout.setWin( dbwin );
 
+  QObject::connect( dbwin, SIGNAL( textChanged() ), this, SLOT( updateCursor() ) );
   this->show();
 //  dbwin->show();
 }
 
+void DebugWin::updateCursor( void )
+{
+    dbwin->ensureCursorVisible();
+}

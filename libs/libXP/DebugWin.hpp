@@ -28,6 +28,8 @@ class DebugWin : public QDialog {
   QTextEdit* dbwin;
 public:
   DebugWin();
+public slots:
+  void updateCursor( void );
 };
 
 #endif /*__DEBUGWIN_H__*/

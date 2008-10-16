@@ -21,6 +21,7 @@ main.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/DumbTerminal.moc.cpp
 DumbTerminal.cpp 
 ${CMAKE_CURRENT_SOURCE_DIR}/Terminal.moc.cpp
+DebugStream.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/DebugStream.moc.cpp
 Terminal.cpp 
 ${FreeMat_qrc}
