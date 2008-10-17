@@ -196,6 +196,7 @@ ApplicationWindow::ApplicationWindow() : QMainWindow() {
   initializeTools();
   createToolBox();
   setObjectName("appwindow");
+  isEditorExist = false;
 }
 
 void ApplicationWindow::createToolBox() {
@@ -218,10 +219,14 @@ void ApplicationWindow::CWDChanged() {
 }
 
 void ApplicationWindow::closeEvent(QCloseEvent* ce) {
+  emit shutdown();
+  if (isEditorExist) {
+    ce->ignore();
+    return;
+  }
   writeSettings();
   delete m_tool;
   ce->accept();
-  emit shutdown();
   qApp->exit(0);
 }
 
@@ -252,6 +257,9 @@ void ApplicationWindow::writeSettings() {
   settings.sync();
 }
 
+void ApplicationWindow::checkEditorExist(bool isExist){
+  isEditorExist = isExist;
+}
 void ApplicationWindow::tclose() {
   close();
 }

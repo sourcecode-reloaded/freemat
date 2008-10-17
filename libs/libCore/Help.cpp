@@ -112,12 +112,15 @@ ArrayVector HelpWinFunction(int nargout, const ArrayVector& arg, Interpreter* ev
     m_helpwin = new HelpWindow(dir.canonicalPath());
     QObject::connect(m_helpwin,SIGNAL(EvaluateText(QString)),m_app->GetKeyManager(),SLOT(QueueMultiString(QString)));
   }
-  if (arg.size() == 0)
+  if (arg.size() == 0) {
     m_helpwin->show();
+    m_helpwin->raise();
+  }
   else if (arg.size() == 1) {
     QString fulltext = arg[0].asString();
     m_helpwin->helpText(fulltext);
     m_helpwin->show();
+    m_helpwin->raise();
   }
   else
     throw Exception("helpwin function accepts at most 1 argument.");

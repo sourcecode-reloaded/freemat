@@ -48,6 +48,7 @@ class ApplicationWindow : public QMainWindow {
   QHttp *m_http;
   QBuffer m_buffer;
   int httpGetId;
+  bool isEditorExist;
 public:
   ApplicationWindow();
   ~ApplicationWindow();
@@ -71,6 +72,7 @@ signals:
   void shutdown();
 public slots:
   void writeSettings();
+  void checkEditorExist(bool isExist);
 private slots:
   void httpRequestFinished(int requestId, bool error);
   void checkForUpdates();

@@ -213,6 +213,7 @@ class FMEditor : public QMainWindow {
   QAction *recentFileActs[MaxRecentFiles]; 
   QAction *dataTipConfigAct;
   QAction *bracketMatchConfigAct;
+  QAction *saveBeforeRunConfigAct;
   QTabWidget *tab;
   FMTextEdit *prevEdit;
   QFont m_font;
@@ -224,6 +225,7 @@ class FMEditor : public QMainWindow {
   Context *context;
   bool isShowToolTip;
   bool isMatchBracket;
+  bool isSaveBeforeRun;
   QStringList pathList;
 public:
   FMEditor(Interpreter* eval);
@@ -252,6 +254,7 @@ private:
 signals:
   void EvaluateText(QString);
   void setMatchBracket(bool flag);
+  void checkEditorExist(bool isExist);
 protected:
   void contextMenuEvent(QContextMenuEvent *e);
 private slots:
@@ -294,6 +297,7 @@ private slots:
   void showDataTips(QPoint pos, QString textSelected);
   void configDataTip();
   void configBracketMatch();
+  void configSaveBeforeRun();
   void helpWin();
   void helpOnSelection();
   void openSelection();

@@ -209,6 +209,7 @@ ArrayVector EditorFunction(int nargout, const ArrayVector& arg, Interpreter* eva
     QObject::connect(eval,SIGNAL(ShowActiveLine()),edit,SLOT(ShowActiveLine()));
     ApplicationWindow *m_win = m_app->getApplicationWindow();
     QObject::connect(m_win,SIGNAL(shutdown()),edit,SLOT(close()));
+    QObject::connect(edit,SIGNAL(checkEditorExist(bool)),m_win,SLOT(checkEditorExist(bool)));
     // Because of the threading setup, we need the keymanager to relay commands
     // from the editor to the interpreter.  
     QObject::connect(edit,SIGNAL(EvaluateText(QString)),m_app->GetKeyManager(),SLOT(QueueMultiString(QString)));
@@ -249,6 +250,7 @@ ArrayVector EditFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
         SLOT(ShowActiveLine()));
     ApplicationWindow *m_win = m_app->getApplicationWindow();
     QObject::connect(m_win,SIGNAL(shutdown()),edit,SLOT(close()));
+    QObject::connect(edit,SIGNAL(checkEditorExist(bool)),m_win,SLOT(checkEditorExist(bool)));
     // Because of the threading setup, we need the keymanager to relay commands
     // from the editor to the interpreter.  
     QObject::connect(edit, SIGNAL(EvaluateText(QString)),

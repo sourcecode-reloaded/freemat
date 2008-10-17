@@ -517,7 +517,7 @@ bool FMTextEdit::findmatch()
     else {
         cursor.select(QTextCursor::WordUnderCursor);
         Key = cursor.selectedText();
-        if (Key.isEmpty() || 
+        if (Key.isEmpty() || pos < cursor.selectionStart() || pos > cursor.selectionEnd() ||
            !QString("if:elseif:else:switch:case:otherwise:for:while:try:catch:end").contains(Key))
             return false;
         else
@@ -597,9 +597,8 @@ bool FMTextEdit::findmatch()
             return false;
             
         int codeLength = simpleCodes.size();
-        do {
-            if (pos < 0 || pos > codeLength-1)
-                break;
+        while(pos >= 0 && pos < simpleCodes.length())
+        {
             QChar chr = simpleCodes.at(pos);
             if (chr < 'a' || chr > 'z' ) { //ignore if not a small alphabet character
                 pos += inc;
@@ -641,7 +640,7 @@ bool FMTextEdit::findmatch()
                     }
                 }
             }
-       	} while(pos >= 0 && pos < simpleCodes.length());
+       	} 
     }
 
     if ((matchingEnd ==-1) ||
@@ -1015,6 +1014,7 @@ FMEditor::FMEditor(Interpreter* eval) : QMainWindow() {
 #define PATHSEP ":"
 #endif
   pathList = path.split(PATHSEP,QString::SkipEmptyParts);
+  emit checkEditorExist(true);
 }
 
 void FMEditor::doFind(QString text, bool backwards, bool sensitive) {
@@ -1067,6 +1067,8 @@ void FMEditor::readSettings() {
   dataTipConfigAct->setChecked(isShowToolTip); 
   isMatchBracket = settings.value("editor/match_enable", true).toBool();
   bracketMatchConfigAct->setChecked(isMatchBracket); 
+  isSaveBeforeRun = settings.value("editor/save_n_execute_enable", true).toBool();
+  saveBeforeRunConfigAct->setChecked(isSaveBeforeRun); 
 }
 
 void FMEditor::updateFont() {
@@ -1085,6 +1087,7 @@ void FMEditor::writeSettings() {
   settings.setValue("editor/font", m_font.toString());
   settings.setValue("editor/tooltip_enable", isShowToolTip);
   settings.setValue("editor/match_enable", isMatchBracket);
+  settings.setValue("editor/save_n_execute_enable", isSaveBeforeRun);
   settings.sync();
 }
 
@@ -1273,6 +1276,11 @@ void FMEditor::createActions() {
   bracketMatchConfigAct->setCheckable(true);
   bracketMatchConfigAct->setShortcut(Qt::Key_F2 | Qt::SHIFT);
   connect(bracketMatchConfigAct,SIGNAL(triggered()),this,SLOT(configBracketMatch()));
+  saveBeforeRunConfigAct = new QAction("Save before run",this);
+  saveBeforeRunConfigAct->setCheckable(true);
+  saveBeforeRunConfigAct->setShortcut(Qt::Key_F3 | Qt::SHIFT);
+  connect(saveBeforeRunConfigAct,SIGNAL(triggered()),this,SLOT(configSaveBeforeRun()));
+
   executeSelectionAct = new QAction(QIcon(":/images/player_playselection.png"),"Execute Selection",this);
   executeSelectionAct->setShortcut(Qt::Key_F9); 
   connect(executeSelectionAct,SIGNAL(triggered()),this,SLOT(execSelected()));
@@ -1292,8 +1300,22 @@ void FMEditor::execCurrent() {
   if (currentFilename().isEmpty())
     QMessageBox::information(this,"Cannot execute unnamed buffer","You must save the current buffer into a file before it can be executed.");
   else {
-    if (!maybeSave())
-      return;
+    if (currentEditor()->document()->isModified()) {
+      if (isSaveBeforeRun) 
+        save();
+      else {
+        int ret = QMessageBox::warning(this, tr("FreeMat"),
+				   "The document " + shownName() + " has been modified.\n"
+				   "Do you want to save your changes?",
+				   QMessageBox::Yes | QMessageBox::Default,
+				   QMessageBox::No,
+				   QMessageBox::Cancel | QMessageBox::Escape);
+        if (ret == QMessageBox::Yes)
+          save();
+        else if (ret == QMessageBox::Cancel)
+          return;
+      }
+    }
     emit EvaluateText("source '" + currentFilename() + "'\n");
   }
 }
@@ -1383,6 +1405,7 @@ void FMEditor::createMenus() {
   configMenu->addAction(indentConfigAct);
   configMenu->addAction(dataTipConfigAct);
   configMenu->addAction(bracketMatchConfigAct);
+  configMenu->addAction(saveBeforeRunConfigAct);
   toolsMenu = menuBar()->addMenu("&Tools");
   toolsMenu->addAction(findAct);
   toolsMenu->addAction(replaceAct);
@@ -1473,6 +1496,7 @@ void FMEditor::configDataTip() {
      isShowToolTip = false;
      statusBar()->showMessage("Datatips off", 2000);
   }
+  dataTipConfigAct->setChecked(isShowToolTip);
 }
 
 void FMEditor::configBracketMatch() {
@@ -1484,7 +1508,20 @@ void FMEditor::configBracketMatch() {
      isMatchBracket = false;
      statusBar()->showMessage("Brackets & keywords matching off", 2000);
   }
+  bracketMatchConfigAct->setChecked(isMatchBracket); 
   emit setMatchBracket(isMatchBracket);
+}
+
+void FMEditor::configSaveBeforeRun() {
+  if (saveBeforeRunConfigAct->isChecked()) {
+     isSaveBeforeRun = true;
+     statusBar()->showMessage("Save buffer before run on", 2000);
+  }
+  else {
+     isSaveBeforeRun = false;
+     statusBar()->showMessage("Save buffer before run off", 2000);
+  }
+  saveBeforeRunConfigAct->setChecked(isSaveBeforeRun); 
 }
 
 void FMEditor::dbstep() {
@@ -1786,6 +1823,7 @@ void FMEditor::closeTab() {
 
 bool FMEditor::maybeSave() {
   if (currentEditor()->document()->isModified()) {
+    raise();
     int ret = QMessageBox::warning(this, tr("FreeMat"),
 				   "The document " + shownName() + " has been modified.\n"
 				   "Do you want to save your changes?",
@@ -1825,6 +1863,7 @@ void FMEditor::closeEvent(QCloseEvent *event) {
   while (tab->count() > 0) {
     if (!maybeSave()) {
       event->ignore();
+      emit checkEditorExist(true);
       return;
     } else {
       QWidget *p = tab->currentWidget();
@@ -1835,6 +1874,8 @@ void FMEditor::closeEvent(QCloseEvent *event) {
   }
   writeSettings();
   event->accept();
+  emit checkEditorExist(false);
+
 }
 
 QString FMEditor::getFullFileName(QString fname)
