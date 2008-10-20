@@ -102,7 +102,7 @@ public:
     m_data[(int64)(m_dims.map(pos)+m_offset-1)] = val;
   }
   inline void set(index_t pos, const T& val) {
-    if (dimensions().count() <= pos) resize(pos);
+    if (dimensions().count() < pos) resize(pos);
     m_data[(int64)(pos+m_offset-1)] = val;
   }
   inline const T get(index_t pos) const {
@@ -248,6 +248,12 @@ public:
       m_dims = pos;
     else
       throw Exception("Illegal reshape");
+  }
+  inline index_t bytes() const {
+    index_t total = 0;
+    for (index_t i=1;i<=length();i++)
+      total += TSizeOf<T>(get(i));
+    return total;
   }
 };
 

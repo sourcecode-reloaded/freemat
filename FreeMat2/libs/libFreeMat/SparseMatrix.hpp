@@ -281,6 +281,15 @@ public:
     }
     return true;
   }
+  index_t bytes() const {
+    index_t total = 0;
+    ConstSparseIterator<T> source(this);
+    while (source.isValid()) {
+      total += TSizeOf<T>(source.value())+sizeof(index_t)*2;
+      source.next();
+    }
+    return total;
+  }
 };
 
 template <typename T>

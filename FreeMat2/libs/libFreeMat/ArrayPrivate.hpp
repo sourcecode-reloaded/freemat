@@ -194,4 +194,28 @@ inline size_t ByteSizeOfDataClass(DataClass x) {
   }
 }
 
+#define MacroSizeSimple(type)			\
+  template <>					\
+  inline index_t TSizeOf(type x) {		\
+    return (index_t)(sizeof(x));		\
+  }
+
+MacroSizeSimple(bool);
+MacroSizeSimple(int8);
+MacroSizeSimple(int16);
+MacroSizeSimple(int32);
+MacroSizeSimple(int64);
+MacroSizeSimple(uint8);
+MacroSizeSimple(uint16);
+MacroSizeSimple(uint32);
+MacroSizeSimple(uint64);
+MacroSizeSimple(float);
+MacroSizeSimple(double);
+MacroSizeSimple(QChar);
+
+template <>
+inline index_t TSizeOf(Array x) { 
+  return x.bytes();
+}
+
 #endif

@@ -207,7 +207,8 @@ Array MatIO::getNumericArray(mxArrayTypes arrayType, NTuple dm, bool complexFlag
 Array MatIO::getClassArray(NTuple dm) {
   Array className(getDataElement());
   Array structBase(getStructArray(dm));
-  structBase.structPtr().setClassPath(StringVector() << className.asString());
+  StructArray& rp(structBase.structPtr());
+  rp.setClassPath(StringVector() << className.asString());
   return structBase;
 }
 
@@ -220,22 +221,26 @@ Array MatIO::getStructArray(NTuple dm) {
   const BasicArray<uint16> &dp(fieldNames.constReal<uint16>());
   StringVector names;
   for (int i=0;i<fieldNameCount;i++) {
-    QString buffer;
+    // Measure the length of this string
+    int namelen = 0;
     for (int j=0;j<fieldNameLen;j++)
       if (dp[i*fieldNameLen+j+1])
-	buffer += QChar(dp[i*fieldNameLen+j+1]);
+	namelen++;
+    QString buffer(namelen,QChar(0));
+    for (int j=0;j<namelen;j++)
+      buffer[j] = QChar(dp[i*fieldNameLen+j+1]);
     names.push_back(buffer);
   }
-  Array ret(Struct);
+  StructArray ret_sp;
   for (int j=0;j<fieldNameCount;j++) {
     BasicArray<Array> dp(dm);
     for (index_t i=1;i<=dm.count();i++) {
       bool atEof; QString name; bool match; bool global;
       dp[i] = getArray(atEof,name,match,global);
     }
-    ret.structPtr().insert(names[j],dp);
+    ret_sp.insert(names[j],dp);
   }
-  return ret;
+  return Array(ret_sp);
 }
 
 Array MatIO::getCellArray(NTuple dm) {

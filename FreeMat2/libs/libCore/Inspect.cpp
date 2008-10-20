@@ -103,17 +103,17 @@ ArrayVector WhoFunction(int nargout, const ArrayVector& arg, Interpreter* eval) 
     for (int i=0;i<arg.size();i++)
       names.push_back(arg[i].asString());
   qSort(names.begin(),names.end());
-  eval->outputMessage("  Variable Name      Type   Flags             Size\n");
+  eval->outputMessage("  Variable Name       Type   Flags             Size\n");
   for (int i=0;i<names.size();i++) {
     Array lookup;
     ArrayReference ptr;
-    eval->outputMessage(names[i].leftJustified(15,' ',false));
+    eval->outputMessage(names[i].rightJustified(15,' ',false));
     ptr = eval->getContext()->lookupVariable(names[i]);
     if (!ptr.valid())
       eval->outputMessage("   <undefined>");
     else {
       lookup = *ptr;
-      eval->outputMessage(lookup.className().leftJustified(15,' ',false));
+      eval->outputMessage(lookup.className().rightJustified(10,' ',false));
       if (lookup.isSparse())
 	eval->outputMessage("   sparse");
       else
@@ -133,6 +133,80 @@ ArrayVector WhoFunction(int nargout, const ArrayVector& arg, Interpreter* eval) 
   }
   return ArrayVector();
 }
+
+//!
+//@Module WHOS Describe Currently Defined Variables With Memory Usage
+//@@Section INSPECTION
+//@@Usage
+//Reports information on either all variables in the current context
+//or on a specified set of variables.  For each variable, the @|who|
+//function indicates the size and type of the variable as well as 
+//if it is a global or persistent.  There are two formats for the 
+//function call.  The first is the explicit form, in which a list
+//of variables are provided:
+//@[
+//  whos a1 a2 ...
+//@]
+//In the second form
+//@[
+//  whos
+//@]
+//the @|whos| function lists all variables defined in the current 
+//context (as well as global and persistent variables). Note that
+//there are two alternate forms for calling the @|whos| function:
+//@[
+//  whos 'a1' 'a2' ...
+//@]
+//and
+//@[
+//  whos('a1','a2',...)
+//@]
+//@@Signature
+//sfunction whos WhosFunction
+//inputs varargin
+//outputs none
+//!
+ArrayVector WhosFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
+  StringVector names;
+  if (arg.size() == 0)
+    names = eval->getContext()->listAllVariables();
+  else
+    for (int i=0;i<arg.size();i++)
+      names.push_back(arg[i].asString());
+  qSort(names.begin(),names.end());
+  eval->outputMessage("  Variable Name       Type   Flags             Size       Bytes\n");
+  for (int i=0;i<names.size();i++) {
+    Array lookup;
+    ArrayReference ptr;
+    eval->outputMessage(names[i].rightJustified(15,' ',false));
+    ptr = eval->getContext()->lookupVariable(names[i]);
+    if (!ptr.valid())
+      eval->outputMessage("   <undefined>");
+    else {
+      lookup = *ptr;
+      eval->outputMessage(lookup.className().rightJustified(10,' ',false));
+      if (lookup.isSparse())
+	eval->outputMessage("   sparse");
+      else
+	eval->outputMessage("         ");	  
+      if (eval->getContext()->isVariableGlobal(names[i])) {
+	eval->outputMessage("  global ");
+      } else if (eval->getContext()->isVariablePersistent(names[i])) {
+	eval->outputMessage(" persist ");
+      } else {
+	eval->outputMessage("         ");
+      }
+      QString txt(QString("  [") + 
+		  lookup.dimensions().toString() + 
+		  QString("]"));
+      eval->outputMessage(txt.leftJustified(15,' ',false));
+      eval->outputMessage(QString("   %1").arg(lookup.bytes()));
+    }
+    eval->outputMessage("\n");
+  }
+  return ArrayVector();
+}
+
 
 //!
 //@Module FIELDNAMES Fieldnames of a Structure

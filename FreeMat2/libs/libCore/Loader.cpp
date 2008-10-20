@@ -117,6 +117,7 @@ ArrayVector ImReadFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector ImWriteFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector EndFunction(int, const ArrayVector&);
 ArrayVector WhoFunction(int, const ArrayVector&, Interpreter*);
+ArrayVector WhosFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector FieldNamesFunction(int, const ArrayVector&);
 ArrayVector WhereFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector WhichFunction(int, const ArrayVector&, Interpreter*);
@@ -402,6 +403,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
      context->addGfxSpecialFunction("imwrite",ImWriteFunction,4,0,"filename","A","map","alpha",NULL);
   context->addFunction("p_end",EndFunction,3,1,"x","dim","subindexes",NULL);
   context->addSpecialFunction("who",WhoFunction,-1,0,NULL);
+  context->addSpecialFunction("whos",WhosFunction,-1,0,NULL);
   context->addFunction("fieldnames",FieldNamesFunction,1,1,"y",NULL);
   context->addSpecialFunction("where",WhereFunction,0,0,NULL);
   context->addSpecialFunction("which",WhichFunction,1,1,"functionname",NULL);

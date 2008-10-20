@@ -313,6 +313,9 @@ public:
   void addField(QString name);
   void* getVoidPointer();
   const void* getConstVoidPointer() const;
+
+  index_t bytes() const;
+  index_t address() const;
 private:
   Data m_real;
   Data m_imag;
