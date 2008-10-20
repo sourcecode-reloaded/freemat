@@ -120,6 +120,7 @@ ArrayVector WhoFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector WhosFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector FieldNamesFunction(int, const ArrayVector&);
 ArrayVector WhereFunction(int, const ArrayVector&, Interpreter*);
+ArrayVector AddrFunction(int, const ArrayVector&);
 ArrayVector WhichFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector MFilenameFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector ComputerFunction(int, const ArrayVector&);
@@ -405,6 +406,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addSpecialFunction("who",WhoFunction,-1,0,NULL);
   context->addSpecialFunction("whos",WhosFunction,-1,0,NULL);
   context->addFunction("fieldnames",FieldNamesFunction,1,1,"y",NULL);
+  context->addFunction("addr",AddrFunction,1,0,"x",NULL);
   context->addSpecialFunction("where",WhereFunction,0,0,NULL);
   context->addSpecialFunction("which",WhichFunction,1,1,"functionname",NULL);
   context->addSpecialFunction("mfilename",MFilenameFunction,0,1,NULL);

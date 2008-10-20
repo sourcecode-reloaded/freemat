@@ -840,7 +840,12 @@ index_t Array::address() const {
   if (m_type.Scalar == 1)
     return 0;
   else {
-    return (index_t)(m_real.p->ptr());
+    union l {
+      void *p;
+      uint32 y;
+    } u;
+    u.p = m_real.p->ptr();
+    return (index_t)(u.y);
   }
 }
 

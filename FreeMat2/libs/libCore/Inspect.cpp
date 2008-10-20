@@ -288,6 +288,10 @@ ArrayVector WhereFunction(int nargout, const ArrayVector& arg, Interpreter* eval
   return ArrayVector();
 }
 
+ArrayVector AddrFunction(int nargout, const ArrayVector& arg) {
+  return ArrayVector(Array(arg[0].address()));
+}
+
 //!
 //@Module WHICH Get Information on Function
 //@@Section INSPECTION
