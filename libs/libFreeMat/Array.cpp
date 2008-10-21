@@ -83,7 +83,8 @@ static inline void destruct(Type t, void *todelete) {
     throw Exception("Unsupported construct");
     MacroExpandCasesAll(MacroTDestruct);
   case Struct:
-    return Tdestruct<StructArray>(t,todelete);
+    delete reinterpret_cast<StructArray*>(todelete);
+    return;
   }
 }
 
@@ -213,6 +214,8 @@ static inline void Tset_scalar(Array *ptr, S ndx, const Array& data) {
   ptr->real<T>().set(ndx,data.constRealScalar<T>());
   if (!data.allReal())
     ptr->imag<T>().set(ndx,data.constImagScalar<T>());
+  else if (!ptr->allReal())
+    ptr->imag<T>().set(ndx,T(0));
 }
 
 template <typename S>
@@ -282,6 +285,8 @@ void Array::set(const NTuple& index, const Array& data) {
 template <typename S, typename T>
 static inline void Tset(Array* ptr, S ndx, const Array& data) {
   Array dataTyped(data.toClass(ptr->dataClass()));
+  if (!ptr->allReal())
+    dataTyped.forceComplex();
   if (dataTyped.isScalar()) {
     if (ptr->isSparse())
       Set(ptr->realSparse<T>(),ndx,dataTyped.constRealScalar<T>());
@@ -794,6 +799,52 @@ const void* Array::getConstVoidPointer() const {
   default:
     throw Exception("Unsupported type called for getConstVoidPointer");
     MacroExpandCasesSimple(MacroGetConstVoidPointer);
+  }
+}
+
+template <typename T>
+static inline index_t Tbytes(const Array *ptr) {
+  index_t count = 0;
+  if (ptr->type().Sparse == 1)
+    count = ptr->constRealSparse<T>().bytes();
+  else if (ptr->type().Scalar == 1) 
+    count = TSizeOf<T>(ptr->constRealScalar<T>());
+  else
+    count = ptr->constReal<T>().bytes();
+  if (!ptr->allReal()) {
+    if (ptr->type().Sparse == 1)
+      count += ptr->constImagSparse<T>().bytes();
+    else if (ptr->type().Scalar == 1) 
+      count += TSizeOf<T>(ptr->constImagScalar<T>());
+    else
+      count += ptr->constImag<T>().bytes();
+  }
+  return count;
+}
+
+#define MacroTbytes(ctype,cls)			\
+  case cls: return Tbytes<ctype>(this);
+
+index_t Array::bytes() const {
+  switch (dataClass()) {
+  default:
+    return 0;
+    MacroExpandCasesAll(MacroTbytes);
+  case Struct:
+    return constStructPtr().bytes();
+  }
+}
+
+index_t Array::address() const {
+  if (m_type.Scalar == 1)
+    return 0;
+  else {
+    union l {
+      void *p;
+      uint32 y;
+    } u;
+    u.p = m_real.p->ptr();
+    return (index_t)(u.y);
   }
 }
 

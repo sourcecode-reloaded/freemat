@@ -72,4 +72,7 @@ inline bool IsNonNegative(T x) {
   return (x >= 0);
 }
 
+template <typename T>
+inline index_t TSizeOf(T x);
+
 #endif

@@ -21,15 +21,27 @@ public:
   StringVector fieldNames() const {return m_fields;}
   int fieldCount() const {return m_fields.size();}
   QString fieldName(int i) const {return m_fields[i];}
+  index_t bytes() const {
+    index_t count = 0;
+    for (int i=0;i<m_fields.size();i++) {
+      count += m_fields[i].size()*sizeof(QChar);
+      count += m_data[i].bytes();
+    }
+    return count;
+  }
   int fieldIndex(QString name) const {
     if (m_fields.contains(name)) 
       return m_fields.indexOf(name);
     throw Exception("Fieldname " + name + " not defined");
   }
   bool contains(QString name) const { return m_fields.contains(name); }
-  void insert(QString name, BasicArray<Array> t) {
-    if (!contains(name)) m_fields += name;
-    m_data.push_back(t);
+  void insert(QString name, const BasicArray<Array> &t) {
+    if (!contains(name)) {
+      m_fields += name;
+      m_data.push_back(t);
+    } else {
+      m_data[fieldIndex(name)] = t;
+    }
     updateDims();
   }
   NTuple dimensions() const {return m_dims;}

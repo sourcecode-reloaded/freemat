@@ -673,6 +673,11 @@ struct OpAcos {
   static inline double func(double x) {return acos(x);}
   template <typename T>
   static inline void func(T xr, T xi, T &yr, T &yi) {
+    if (IsInfinite(xr) && (xi == 0)) {
+      yr = 0;
+      yi = Inf();
+      return;
+    }
     T xsq_real, xsq_imag;
     // Compute x^2
     complex_square(xr,xi,xsq_real,xsq_imag);
@@ -753,12 +758,18 @@ struct OpAsin {
   static inline double func(double x) {return asin(x);}
   template <typename T>
   static inline void func(T xr, T xi, T &yr, T &yi) {
+    if (IsInfinite(xr) && (xi == 0)) {
+      yr = NaN();
+      yi = -Inf();
+      return;
+    }
     T xsq_real, xsq_imag;
     // Compute x^2
     complex_square(xr,xi,xsq_real,xsq_imag);
     // Compute 1-x^2
     xsq_real = 1.0 - xsq_real;
     xsq_imag = -xsq_imag;
+    if (xi == 0) xsq_imag = 0;
     T xrt_real, xrt_imag;
     // Compute sqrt(1-x^2)
     complex_sqrt(xsq_real,xsq_imag,xrt_real,xrt_imag);
