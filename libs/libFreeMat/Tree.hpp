@@ -96,6 +96,8 @@ public:
   static Tree* deepTreeCopy(Tree *t);
 };
 
+DebugStream& operator<<(DebugStream& o, const Tree& b);
+
 class CodeBlock {
   Tree* m_tree;
 public:

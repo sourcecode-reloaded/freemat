@@ -4,6 +4,7 @@
 #include "Array.hpp"
 #include <QTextStream>
 #include <QChar>
+#include "DebugStream.hpp"
 
 typedef uint16 TokenValueType;
 
@@ -111,7 +112,9 @@ public:
 
 QString TokenToString(const Token& b);
 
-QTextStream& operator<<(QTextStream& o, const Token& b);
+//QTextStream& operator<<(QTextStream& o, const Token& b);
+
+DebugStream& operator<<(DebugStream& o, const Token& b);
 
 void FreezeToken(const Token& a, Serialize *s);
 

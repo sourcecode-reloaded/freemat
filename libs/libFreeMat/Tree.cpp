@@ -42,3 +42,16 @@ Tree::Tree(Serialize *s) {
   for (int i=0;i<numchildren;i++)
     m_children.push_back(new Tree(s));
 }
+
+static int indentlvl = 0;
+DebugStream& operator<<(DebugStream& o, const Tree& b) {
+    for( int i=0; i<indentlvl; i++ )
+	o << "  ";
+    o << b.node();
+    indentlvl += 1;
+    for (int i=0;i< b.children().size();i++){
+	o << *(b.child(i));
+    }
+    indentlvl -= 1;
+    return o;
+}
