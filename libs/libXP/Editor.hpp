@@ -245,6 +245,7 @@ private:
   void setCurrentFilename(QString filename);
   QString currentFilename();
   QString shownName();
+  QString shownPath();
   void updateTitles();
   void readSettings();
   void writeSettings();

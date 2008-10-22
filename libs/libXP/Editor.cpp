@@ -1142,9 +1142,22 @@ QString FMEditor::shownName() {
   return sName;
 }
 
+QString FMEditor::shownPath() {
+  QString sPath;
+  if (currentFilename().isEmpty())
+    sPath = "";
+  else {
+    QString sName(strippedName(currentFilename()));
+    sPath = QFileInfo(currentFilename()).filePath();
+    sPath.chop(sName.length());
+    sPath = " (" + sPath + ")";
+  }
+  return sPath;
+}
+
 void FMEditor::updateTitles() {
   tab->setTabText(tab->currentIndex(),shownName());
-  setWindowTitle(QString("%1[*]").arg(shownName()) + " - " + Interpreter::getVersionString() + " Editor");
+  setWindowTitle(QString("%1[*]").arg(shownName()) + shownPath() + " - " + Interpreter::getVersionString() + " Editor");
   documentWasModified();
 }
 
