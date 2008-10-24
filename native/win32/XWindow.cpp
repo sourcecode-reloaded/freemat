@@ -193,7 +193,7 @@ void InitializeXWindowSystem(HINSTANCE hInstance) {
   wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
   wndclass.hbrBackground = (HBRUSH) GetStockObject(WHITE_BRUSH);
   wndclass.lpszMenuName = NULL;
-  wndclass.lpszClassName = "Freemat Window";
+  wndclass.lpszClassName = "FreeMat Window";
   if (!RegisterClass(&wndclass)) {
     MessageBox(NULL, TEXT("This program requires Windows NT!"),
 	       "FreeMat",MB_ICONERROR);

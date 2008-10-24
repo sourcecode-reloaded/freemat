@@ -256,6 +256,15 @@ ADD_SUBDIRECTORY( dependencies )
 ADD_SUBDIRECTORY( libs )
 ADD_SUBDIRECTORY( src )
 
+#FILE( GLOB_RECURSE TOOLBOX_M_FILES ${PROJECT_SOURCE_DIR}/src/toolbox/*.m )
+#ADD_CUSTOM_COMMAND( OUTPUT toolbox/help/helpgen.m
+#  MAIN_DEPENDENCY FreeMat
+#  DEPENDS TOOLBOX_M_FILES
+#  COMMAND ${FreeMat} -f run_helpgen
+#  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+#  COMMENT "Build toolboxes"
+#  )
+  
 ##ADD_SUBDIRECTORY( images )
 ##ADD_SUBDIRECTORY( tools )
 
@@ -265,22 +274,28 @@ ADD_SUBDIRECTORY( src )
 IF( MSVC )
 	FILE(GLOB INST_DLL "dependencies/bin/*.dll" )
 	INSTALL(FILES ${INST_DLL} DESTINATION bin )
-
+ENDIF( MSVC )
+        
 ####################################################################################
 #Setup section
 
 INCLUDE(InstallRequiredSystemLibraries)
 
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Freemat")
-SET(CPACK_PACKAGE_VERSION_MAJOR "3")
-SET(CPACK_PACKAGE_VERSION_MINOR "5")
+GET_TARGET_PROPERTY(FreeMat_Loc FreeMat LOCATION)
+INSTALL( CODE "EXECUTE_PROCESS( COMMAND ${FreeMat_Loc} -f run_helpgen WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})" )
+INSTALL(DIRECTORY toolbox DESTINATION . PATTERN "*.m" PATTERN ".svn" EXCLUDE PERMISSIONS WORLD_READ )
+INSTALL(DIRECTORY help DESTINATION . PATTERN "*" PERMISSIONS WORLD_READ )
+
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "FreeMat")
+SET(CPACK_PACKAGE_VERSION_MAJOR "4")
+SET(CPACK_PACKAGE_VERSION_MINOR "0")
 SET(CPACK_PACKAGE_INSTALL_DIRECTORY "CMake ${CMake_VERSION_MAJOR}.${CMake_VERSION_MINOR}")
 IF(WIN32 AND NOT UNIX)
   # There is a bug in NSI that does not handle full unix paths properly. Make
   # sure there is at least one set of four (4) backlasshes.
   #SET(CPACK_PACKAGE_ICON "${CMake_SOURCE_DIR}/Utilities/Release\\\\InstallIcon.bmp")
   #SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\MyExecutable.exe")
-  SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} Freemat")
+  SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} FreeMat")
   SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\freemat.sf.net")
   SET(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\freemat.sf.net")
   #SET(CPACK_NSIS_CONTACT "me@my-personal-home-page.com")
@@ -291,7 +306,6 @@ ELSE(WIN32 AND NOT UNIX)
 ENDIF(WIN32 AND NOT UNIX)
 SET(CPACK_PACKAGE_EXECUTABLES "Freemat" "Freemat")
 INCLUDE(CPack)
-ENDIF( MSVC )
 
 #TODO Handle gfortran vs g77 issue: libgfortran vs libg2c
 WRITE_OUT_ALL_VARIABLES()

@@ -9,7 +9,7 @@
 %@@Example
 %A simple example:
 %@<
-%fprintf(['x0123456789y\n','x',blanks(10),'y\n'])
+%sprintf(['x0123456789y\n','x',blanks(10),'y\n'])
 %@>
 %@@Tests
 %@$exact|y1=['x',blanks(5),'y']
