@@ -11,8 +11,7 @@ else
 end
 for ndx=1:size(recs,1)
   if (rem(ndx,1000)==0)
-    fprintf('Processing test record %d of %d...\n',ndx,size(recs,1));
-    disp(size(recs{21}.freemat4.result{1}));
+    fprintf('Processing test record %d of %d...\r',ndx,size(recs,1));
   end
   rec = recs{ndx};
   error_flag = 0;
@@ -48,5 +47,5 @@ for ndx=1:size(recs,1)
   end
 end
 fprintf('\nsaving %s...\n',fname);
-save(fname,'recs');
+save(fname,'recs','inputs');
 fprintf('done\n');
