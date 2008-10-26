@@ -4,8 +4,6 @@ function wbgentests(fname,fieldname,funcname)
 fprintf('loading %s..\n',fname);
 load(fname)
 fprintf('done\n');
-%inputs = wbtestinputs;
-load wbinputs.mat
 if (exist('funcname'))
   func_only = true;
 else

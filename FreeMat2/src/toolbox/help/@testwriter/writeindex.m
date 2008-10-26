@@ -5,4 +5,5 @@
 function writeindex(&p)
   fname = sprintf('%s/toolbox/test/wb_testmatrix.mat',p.sourcepath);
   recs = p.recs;
-  save(fname,'recs');
+  inputs = wbtestinputs;
+  save(fname,'recs','inputs');
