@@ -68,7 +68,10 @@ template <typename T>
 inline void complex_multiply(const T &ar, const T &ai, 
 			     const T &br, const T &bi, 
 			     T &cr, T &ci) {
-  if ((ai == 0) && (br == 0)) {  
+  if ((ar == br) && (ai == -bi)) {
+    cr = ar * br - ai * bi;
+    ci = 0;
+  } else if ((ai == 0) && (br == 0)) {  
     cr = 0;
     ci = ar*bi;
   } else if ((ar == 0) && (bi == 0)) {

@@ -184,6 +184,8 @@ const Array CellArrayFromStringVector(const StringVector& arg) {
 }
 
 StringVector StringVectorFromArray(const Array &arg) {
+  if (arg.dataClass() == Double) 
+    return StringVectorFromArray(arg.toClass(StringArray));
   if (arg.isString()) {
     const BasicArray<QChar> &ap(arg.constReal<QChar>());
     ConstBasicIterator<QChar> iter(&ap,1);
@@ -191,7 +193,7 @@ StringVector StringVectorFromArray(const Array &arg) {
     while (iter.isValid()) {
       QString t(iter.size(),QChar(0));
       for (index_t i=1;i<=iter.size();i++) {
-	t[int(i)] = iter.get();
+	t[int(i-1)] = iter.get();
 	iter.next();
       }
       iter.nextSlice();

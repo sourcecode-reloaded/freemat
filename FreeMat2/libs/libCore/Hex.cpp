@@ -33,12 +33,14 @@ ArrayVector Hex2DecFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0)
     throw Exception("hex2dec requires an argument");
   if (arg[0].isEmpty()) return ArrayVector(EmptyConstructor());
-  if (!arg[0].isString())
+  if (!arg[0].isString() && (arg[0].dataClass() != Double))
     throw Exception("hex2dec argument must be a string");
-  if (arg[0].isVector()) 
-    return ArrayVector(Array(double(arg[0].asString().toInt(0,16))));
+  Array arg0(arg[0]);
+  if (arg.dataClass() == Double) arg = arg.toClass(StringArray);
+  if (arg0.isVector()) 
+    return ArrayVector(Array(double(arg0.asString().toInt(0,16))));
   else {
-    StringVector sv(StringVectorFromArray(arg[0]));
+    StringVector sv(StringVectorFromArray(arg0));
     Array rp(Double,NTuple(sv.size(),1));
     BasicArray<double> &qp(rp.real<double>());
     for (int i=0;i<sv.size();i++)
@@ -135,6 +137,8 @@ ArrayVector Dec2HexFunction(int nargout, const ArrayVector& arg) {
 
 template <typename T>
 static inline Array Num2HexFunction(const BasicArray<T> &data) {
+  if (data.isEmpty())
+    return Array(StringArray,NTuple(0,16));
   StringVector st;
   for (index_t i=1;i<=data.length();i++)
     st.push_back(ToHexString(data[i]));
