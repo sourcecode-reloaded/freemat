@@ -35,12 +35,12 @@ ArrayVector Hex2DecFunction(int nargout, const ArrayVector& arg) {
   if (arg[0].isEmpty()) return ArrayVector(EmptyConstructor());
   if (!arg[0].isString() && (arg[0].dataClass() != Double))
     throw Exception("hex2dec argument must be a string");
-  Array arg0(arg[0]);
-  if (arg.dataClass() == Double) arg = arg.toClass(StringArray);
-  if (arg0.isVector()) 
-    return ArrayVector(Array(double(arg0.asString().toInt(0,16))));
+  Array x(arg[0]);
+  if (x.dataClass() == Double) x = x.toClass(StringArray);
+  if (x.isVector()) 
+    return ArrayVector(Array(double(x.asString().toInt(0,16))));
   else {
-    StringVector sv(StringVectorFromArray(arg0));
+    StringVector sv(StringVectorFromArray(x));
     Array rp(Double,NTuple(sv.size(),1));
     BasicArray<double> &qp(rp.real<double>());
     for (int i=0;i<sv.size();i++)

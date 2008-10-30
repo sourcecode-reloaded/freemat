@@ -886,6 +886,16 @@ static inline Array StringOp(const ArrayVector& arg) {
 
 template <class Op>
 static inline Array StringOp(const Array &arg) {
+  if (arg.isString() && !arg.isVector()) {
+    StringVector p(StringVectorFromArray(arg));
+    StringVector q;
+    for (int i=0;i<p.size();i++) {
+      QString x(p[i]);
+      Array y(Op::func(Array(x)));
+      q.push_back(y.asString());
+    }
+    return StringArrayFromStringVector(q);
+  }
   if (arg.dataClass() != CellArray)
     return Array(Op::func(arg));
   if (arg.isScalar())

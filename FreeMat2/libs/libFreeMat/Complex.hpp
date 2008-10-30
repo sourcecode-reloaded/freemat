@@ -7,7 +7,11 @@ static inline void complex_divide(const T& ar, const T& ai,
 				  T& c0, T& c1) {
   double ratio, den;
   double abr, abi, cr;
-  
+  if ((ai == 0) && (bi == 0)) {
+    c1 = 0;
+    c0 = ar/br;
+    return;
+  }
   if( (abr = br) < 0.)
     abr = - abr;
   if( (abi = bi) < 0.)
@@ -37,6 +41,11 @@ static inline void complex_divide(const T& ar, const T& ai,
 
 template <typename T>
 static inline void complex_recip(const T& ar, const T& ai, T& cr, T& ci) {
+  if (ai == 0) {
+    ci = 0;
+    cr = 1/ar;
+    return;
+  }
   complex_divide<T>(1,0,ar,ai,cr,ci);
 }
 

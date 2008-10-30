@@ -1223,11 +1223,15 @@ ArrayVector RegExpRepDriverFunction(int nargout, const ArrayVector& arg) {
 //!
 struct OpDeblank {
   static inline Array func(const Array& arg) {
-    if (!arg.isString()) return arg;
-    QString txt(arg.asString());
-    while ((txt.length() > 1) && (txt.right(1).at(0).isSpace()))
+    Array x(arg.toClass(StringArray));
+    QString txt(x.asString());
+    while ((txt.length() >= 1) && (txt.right(1).at(0).isSpace() ||
+				  txt.right(1).at(0).isNull()))
       txt.chop(1);
-    return Array(txt);
+    Array z(Array(txt).toClass(arg.dataClass()));
+    if (z.isEmpty() && z.is2D())
+      z = EmptyConstructor().toClass(arg.dataClass());
+    return z;
   }
 };
 

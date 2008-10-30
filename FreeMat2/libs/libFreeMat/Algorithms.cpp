@@ -9,9 +9,12 @@ const Array StringArrayFromStringVector(const StringVector& arg) {
     maxlen = qMax(maxlen,arg[i].size());
   Array ret(StringArray,NTuple(arg.size(),maxlen));
   BasicArray<QChar> &sp(ret.real<QChar>());
-  for (int i=0;i<arg.size();i++) 
+  for (int i=0;i<arg.size();i++) {
     for (int j=0;j<arg[i].size();j++)
       sp.set(NTuple(index_t(i+1),index_t(j+1)),arg[i][j]);
+    for (int j=arg[i].size();j<maxlen;j++)
+      sp.set(NTuple(index_t(i+1),index_t(j+1)),QChar(' '));
+  }
   return ret;
 }
 
