@@ -157,6 +157,16 @@ inline void complex_exp(T xr, T xi, T &yr, T &yi) {
 template <typename T>
 inline void complex_sqrt(T xr, T xi, T &yr, T &yi) {
   T tr, ti;
+  if ((xr >= 0) && (xi == 0)) {
+    yr = sqrt(xr);
+    yi = 0;
+    return;
+  }
+  if ((xr < 0) && (xi == 0)) {
+    yi = sqrt(-xr);
+    yr = 0;
+    return;
+  }
   complex_log(xr,xi,tr,ti);
   tr /= 2.0;
   ti /= 2.0;
