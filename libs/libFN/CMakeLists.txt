@@ -45,9 +45,13 @@ qrsolv.f
 #rybesl.f 
 )
 
-IF( MSVC )
-  CONVERT_F2C( FN c_src ${F_FILES} )
+IF ( NOFORTRAN )
+  FILE( GLOB c_src f2c/*.c )
   SET(F_FILES ${c_src} )
+ENDIF ( NOFORTRAN )
+
+IF( MSVC )
+#  CONVERT_F2C( FN c_src ${F_FILES} )
   SET(LIBM_FILES 
 	 mathfunc.cpp
 	 mathfunc2.cpp
