@@ -1,9 +1,9 @@
 
 FILE( GLOB f_src SRC/*.f UTIL/*.f )
-IF( MSVC )
-	CONVERT_F2C( arpack c_src ${f_src} )
+FILE( GLOB c_src f2c/*.c )
+IF( NOFORTRAN )
 	ADD_LIBRARY( arpack ${c_src} )
-ELSE( MSVC )
+ELSE( NOFORTRAN )
 	ADD_LIBRARY( arpack ${f_src} )
-ENDIF( MSVC )
+ENDIF( NOFORTRAN )
 #WRITE_OUT_ALL_VARIABLES()
