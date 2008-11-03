@@ -26,3 +26,5 @@
 
 function y = acosd(x)
   y = rad2deg(acos(x));
+  y(x == inf) = complex(0,inf);
+  y(x == -inf) = complex(180,-inf);

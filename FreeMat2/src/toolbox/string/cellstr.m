@@ -33,7 +33,7 @@ function A = cellstr(x)
   end
   n = size(x,1);
   if (n == 1)
-      A = {x};
+      A = {deblank(x)};
   else
       A = cell(n,1);
       for i=1:n

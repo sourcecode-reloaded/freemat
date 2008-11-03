@@ -469,7 +469,7 @@ void MatIO::putStructArray(const Array &x) {
   // Write it as an int32 
   Array fieldNameLength = Array(int32(maxlen));
   putDataElement(fieldNameLength);
-  Array fieldNameText(Transpose(StringArrayFromStringVector(fnames)));
+  Array fieldNameText(Transpose(StringArrayFromStringVector(fnames,QChar(0))));
   fieldNameText.resize(NTuple(fieldNameText.rows()+1,fieldNameText.cols()));
   putDataElement(fieldNameText.toClass(Int8));
   for (int i=0;i<fieldNameCount;i++) {

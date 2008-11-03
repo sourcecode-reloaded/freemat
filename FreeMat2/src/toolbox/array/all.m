@@ -57,7 +57,7 @@ function y = all(A,dim)
      if  ~isempty(A) 
         y = min(logical(A));
      else
-        y = 1;
+        y = true;
      end
      else
        if ~isempty(A)

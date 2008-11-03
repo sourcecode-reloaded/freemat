@@ -102,7 +102,7 @@ ArrayVector Dec2HexFunction(int nargout, const ArrayVector& arg) {
     QString t = QString("%1").arg(xp[i],n,16,QChar('0')).toUpper();
     ret << t;
   }
-  return ArrayVector(StringArrayFromStringVector(ret));
+  return ArrayVector(StringArrayFromStringVector(ret,QChar(' ')));
 }
 
 
@@ -142,14 +142,14 @@ static inline Array Num2HexFunction(const BasicArray<T> &data) {
   StringVector st;
   for (index_t i=1;i<=data.length();i++)
     st.push_back(ToHexString(data[i]));
-  return StringArrayFromStringVector(st);
+  return StringArrayFromStringVector(st,QChar(' '));
 }
 
 ArrayVector Num2HexFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("num2hex fucntion requires a single argument");
   if ((arg[0].dataClass() != Float) && (arg[0].dataClass() != Double))
-    throw Exception("num2hex only works on float and double arrays");
+    throw Exception("num2hex only works on single and double arrays");
   Array x = arg[0].asDenseArray();
   if (x.dataClass() == Float) 
     return ArrayVector(Num2HexFunction(x.constReal<float>()));

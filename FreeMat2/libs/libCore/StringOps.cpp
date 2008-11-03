@@ -1223,22 +1223,159 @@ ArrayVector RegExpRepDriverFunction(int nargout, const ArrayVector& arg) {
 //!
 struct OpDeblank {
   static inline Array func(const Array& arg) {
-    Array x(arg.toClass(StringArray));
-    QString txt(x.asString());
+    QString txt(arg.asString());
     while ((txt.length() >= 1) && (txt.right(1).at(0).isSpace() ||
 				  txt.right(1).at(0).isNull()))
       txt.chop(1);
-    Array z(Array(txt).toClass(arg.dataClass()));
+    Array z(txt);
     if (z.isEmpty() && z.is2D())
-      z = EmptyConstructor().toClass(arg.dataClass());
+      z = EmptyConstructor();
     return z;
   }
 };
 
+template <typename T>
+static BasicArray<T> DeBlankDouble(const BasicArray<T> &rp, 
+					index_t trim_count) {
+  if (trim_count == 0) return rp;
+  index_t p_len = rp.dimensions()[1];
+  BasicArray<T> sp(rp.dimensions().replace(1,p_len-trim_count));
+  ConstBasicIterator<T> iter2(&rp,1);
+  BasicIterator<T> dest(&sp,1);
+  while (iter2.isValid()) {
+    for (index_t i=1;i<=(p_len-trim_count);i++) {
+      dest.set(iter2.get());
+      iter2.next();
+      dest.next();
+    }
+    iter2.nextSlice();
+    dest.nextSlice();
+  }
+  return sp;
+}
+
+template <typename T>
+static index_t GetTrimCount(const BasicArray<T> &rp) {
+  index_t p_len = rp.dimensions()[1];
+  ConstBasicIterator<T> iter(&rp,1);
+  index_t trim_count = p_len;
+  while (iter.isValid()) {
+    index_t trim_this_slice = 0;
+    for (index_t i=1;i<p_len;i++)
+      iter.next();
+    for (index_t i=iter.size();i>=1;i--) {
+      if ((iter.get() == 0) && (iter.size()-i+1 > trim_this_slice))
+	trim_this_slice = iter.size() - i + 1;
+      else if (iter.get() != 0)	break;
+      iter.prev();
+    }
+    iter.nextSlice();
+    trim_count = qMin(trim_count,trim_this_slice);
+  }
+  return trim_count;
+}
+
+template <typename T>
+static Array DeblankDouble(Array arg) {
+  arg.ensureNotScalarEncoded();
+  index_t real_trim = GetTrimCount(arg.constReal<T>());
+  Array z;
+  if (arg.allReal())
+    z = Array(DeBlankDouble(arg.constReal<T>(),real_trim));
+  else {
+    index_t imag_trim = GetTrimCount(arg.constImag<T>());
+    real_trim = qMin(real_trim,imag_trim);
+    z = Array(DeBlankDouble(arg.constReal<T>(),real_trim),
+	      DeBlankDouble(arg.constImag<T>(),real_trim));
+  }
+  if (z.isEmpty() && z.is2D())
+    z = EmptyConstructor();
+  return z;
+}
+
+#define MacroDeblank(ctype,cls) \
+  case cls: return DeblankDouble<ctype>(x);
+
+static Array DeBlank(const Array &x) {
+  if (x.isEmpty())
+    return EmptyConstructor().toClass(StringArray);
+  if (x.isString())
+    return StringOp<OpDeblank>(x);
+  else if (x.dataClass() == CellArray) {
+    BasicArray<Array> qp(x.dimensions());
+    const BasicArray<Array> &sp(x.constReal<Array>());
+    for (index_t i=1;i<=sp.length();i++)
+      qp[i] = DeBlank(sp[i]);
+    return Array(qp);
+  } else {
+    switch (x.dataClass()) {
+    default:
+      throw Exception("Unhandled case for deblank");
+      MacroExpandCases(MacroDeblank);
+    }
+  }
+}
+
 ArrayVector DeblankFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0)
     throw Exception("deblank requires at least one argument");
-  return ArrayVector(StringOp<OpDeblank>(arg[0]));
+  return ArrayVector(DeBlank(arg[0]));
+}
+
+//!
+//@Module STRTRIM Trim Spaces from a String
+//@@Section STRING
+//@@Usage
+//Removes the white-spaces at the beginning and end of a string (or a 
+//cell array of strings). See @|isspace| for a definition of a white-space.
+//There are two forms for the @|strtrim| function.  The first is for
+//single strings
+//@[
+//   y = strtrim(strng)
+//@]
+//where @|strng| is a string.  The second form operates on a cell array
+//of strings
+//@[
+//   y = strtrim(cellstr)
+//@]
+//and trims each string in the cell array.
+//@@Example
+//Here we apply @|strtrim| to a simple string
+//@<
+//strtrim('  lot of blank spaces    ');
+//@>
+//and here we apply it to a cell array
+//@<
+//strtrim({'  space','enough ',' for ',''})
+//@>
+//@@Tests
+//@$exact|y1=strtrim(x1)
+//@@Signature
+//function strtrim StrTrimFunction
+//inputs x
+//outputs y
+//!
+
+struct OpStrTrim {
+  static inline Array func(const Array& arg) {
+    QString txt(arg.asString());
+    while ((txt.length() >= 1) && (txt.right(1).at(0).isSpace() ||
+				  txt.right(1).at(0).isNull()))
+      txt.chop(1);
+    while ((txt.length() >= 1) && (txt.left(1).at(0).isSpace() ||
+				  txt.left(1).at(0).isNull()))
+      txt.remove(0,1);
+    Array z(txt);
+    if (z.isEmpty() && z.is2D())
+      z = EmptyConstructor();
+    return z;
+  }
+};
+
+ArrayVector StrTrimFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() == 0)
+    throw Exception("strtrim requires at least one argument");
+  return ArrayVector(StringOp<OpStrTrim>(arg[0]));
 }
 
 //!
@@ -1353,7 +1490,7 @@ static Array Num2StrHelperReal(const BasicArray<T> &dp, const char *formatspec) 
     all_rows << row_string;
     iter.nextSlice();
   }
-  return StringArrayFromStringVector(all_rows);
+  return StringArrayFromStringVector(all_rows,QChar(' '));
 }
 
 template <class T>
@@ -1376,7 +1513,7 @@ Array Num2StrHelperComplex(const BasicArray<T> &rp, const BasicArray<T> &ip, con
     iter_real.nextSlice();
     iter_imag.nextSlice();
   }
-  return StringArrayFromStringVector(all_rows);
+  return StringArrayFromStringVector(all_rows,QChar(' '));
 }
 
 template <typename T>

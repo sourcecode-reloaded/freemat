@@ -52,15 +52,19 @@ function y = any(A,dim)
   if (nargin == 0)
     error 'any function requires at least one argument'
   end
-  A(find(isnan(A)))=0;
+  A(isnan(A))=0;
   if (nargin == 1)
-    y = max(logical(A));
+    if (isempty(A))
+      y = false;
+    else
+      y = max(logical(A));
+    end
  else
     if ~isempty( A )
        y = max(logical(A),[],dim);
     else
        v=size(A);
        v(dim)=1;
-       y=zeros(v);
+       y=zeros(v,'logical');
     end
   end

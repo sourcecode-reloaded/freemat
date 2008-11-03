@@ -318,21 +318,17 @@ static inline bool IsIntegerDataClass(const Array &Ain) {
 
 template <class Op>
 static inline Array DotOp(const Array &Ain, const Array &Bin) {
-  DataClass via_type = Double;
-  DataClass out_type = Double;
-
-  if (Ain.dataClass() == Float || Bin.dataClass() == Float) {
-    if (IsIntegerDataClass(Ain) || IsIntegerDataClass(Bin))
+  DataClass via_type;
+  DataClass out_type;
+  ComputeTypes(Ain,Bin,via_type,out_type);
+  if ((out_type == Float) && (IsIntegerDataClass(Ain) || 
+			      IsIntegerDataClass(Bin)))
       throw Exception("Cannot combine single precision and integer class data");
-    via_type = Float;
-    out_type = Float;
-  } else {
-    if (IsIntegerDataClass(Ain) && IsIntegerDataClass(Bin) &&
-	Ain.dataClass() != Bin.dataClass()) 
-      throw Exception("Cannot combine data of different integer data classes");
-    if (IsIntegerDataClass(Ain)) out_type = Ain.dataClass();
-    if (IsIntegerDataClass(Bin)) out_type = Bin.dataClass();
-  }
+  if (IsIntegerDataClass(Ain) && IsIntegerDataClass(Bin) &&
+      Ain.dataClass() != Bin.dataClass()) 
+    throw Exception("Cannot combine data of different integer data classes");
+  if (IsIntegerDataClass(Ain)) out_type = Ain.dataClass();
+  if (IsIntegerDataClass(Bin)) out_type = Bin.dataClass();
   Array F;
   if (via_type == Float)
     F = DotOp<float,Op>(Ain,Bin,Float);
@@ -423,12 +419,9 @@ static inline Array CmpOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
 
 template <class Op>
 static inline Array CmpOp(const Array &Ain, const Array &Bin) {
-  DataClass via_type = Double;
-
-  if (Ain.dataClass() == Float || Bin.dataClass() == Float) 
-    via_type = Float;
-  else
-    via_type = Double;
+  DataClass via_type;
+  DataClass out_type;
+  ComputeTypes(Ain,Bin,via_type,out_type);
   Array F;
   if (via_type == Float) 
     F = CmpOp<float,Op>(Ain,Bin,Float);
@@ -894,7 +887,7 @@ static inline Array StringOp(const Array &arg) {
       Array y(Op::func(Array(x)));
       q.push_back(y.asString());
     }
-    return StringArrayFromStringVector(q);
+    return StringArrayFromStringVector(q,QChar(' '));
   }
   if (arg.dataClass() != CellArray)
     return Array(Op::func(arg));

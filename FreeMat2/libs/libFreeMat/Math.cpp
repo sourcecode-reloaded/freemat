@@ -1941,10 +1941,12 @@ Array Multiply(const Array& A, const Array& B){
   if (A.columns() != B.rows()) 
     throw Exception("Requested matrix multiplication requires arguments to be conformant.");
 
-  if ((A.dataClass() == Float) || (B.dataClass() == Float))
-    return Multiply<float>(A.toClass(Float),B.toClass(Float));
+  DataClass via, out;
+  ComputeTypes(A,B,via,out);
+  if (via == Float)
+    return Multiply<float>(A.toClass(Float),B.toClass(Float)).toClass(out);
   else 
-    return Multiply<double>(A.toClass(Double),B.toClass(Double));
+    return Multiply<double>(A.toClass(Double),B.toClass(Double)).toClass(out);
 }
     
 /**

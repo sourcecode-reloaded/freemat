@@ -545,7 +545,6 @@ FreeMat2/src/toolbox/numerical/idiv.m svn_keywords=Author+Date+Id+Revision svn_e
 FreeMat2/src/toolbox/numerical/log10.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/toolbox/numerical/log2.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/toolbox/numerical/mod.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat2/src/toolbox/numerical/sqrt.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/toolbox/numerical/teps.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/toolbox/poly/polyfit.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat2/src/toolbox/poly/polyval.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native

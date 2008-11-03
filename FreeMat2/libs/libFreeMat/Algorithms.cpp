@@ -3,7 +3,7 @@
 #include "IEEEFP.hpp"
 #include "SparseCCS.hpp"
 
-const Array StringArrayFromStringVector(const StringVector& arg) {
+const Array StringArrayFromStringVector(const StringVector& arg, QChar pad) {
   int maxlen = 0;
   for (int i=0;i<arg.size();i++)
     maxlen = qMax(maxlen,arg[i].size());
@@ -13,7 +13,7 @@ const Array StringArrayFromStringVector(const StringVector& arg) {
     for (int j=0;j<arg[i].size();j++)
       sp.set(NTuple(index_t(i+1),index_t(j+1)),arg[i][j]);
     for (int j=arg[i].size();j<maxlen;j++)
-      sp.set(NTuple(index_t(i+1),index_t(j+1)),QChar(' '));
+      sp.set(NTuple(index_t(i+1),index_t(j+1)),pad);
   }
   return ret;
 }
@@ -539,9 +539,35 @@ bool IsPositive(const Array &A) {
 #undef MacroIsPositive
 
 template <typename T>
+static inline bool Tispositiveornan(const Array *ptr) {
+  if (ptr->isScalar()) {
+    if (ptr->allReal())
+      return (IsNaN(ptr->constRealScalar<T>()) || (ptr->constRealScalar<T>() >= 0));
+    else
+      return false;
+  } else if (ptr->isSparse())
+    return IsPositiveOrNaN(ptr->constRealSparse<T>());
+  else
+    return IsPositiveOrNaN(ptr->constReal<T>());
+}
+
+#define MacroIsPositiveOrNaN(ctype,cls)		\
+  case cls: return Tispositiveornan<ctype>(&A);
+
+bool IsPositiveOrNaN(const Array &A) {
+  switch (A.dataClass()) {
+  default: return true;
+    MacroExpandCasesSigned(MacroIsPositiveOrNaN);
+  }
+}
+
+#undef MacroIsPositive
+
+
+template <typename T>
 static inline bool Tissymmetric(const Array *ptr) {
-  if (ptr->isScalar()) 
-    return true;
+  if (ptr->isScalar())
+    return (ptr->constImagScalar<T>() == 0);
   else if (ptr->isSparse())
     if (ptr->allReal())
       return IsSymmetric(ptr->constRealSparse<T>());

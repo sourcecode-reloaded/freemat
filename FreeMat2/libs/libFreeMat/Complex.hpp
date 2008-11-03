@@ -1,6 +1,8 @@
 #ifndef __Complex_hpp__
 #define __Complex_hpp__
 
+#include "IEEEFP.hpp"
+
 template <typename T>
 static inline void complex_divide(const T& ar, const T& ai,
 				  const T& br, const T& bi,
@@ -77,6 +79,12 @@ template <typename T>
 inline void complex_multiply(const T &ar, const T &ai, 
 			     const T &br, const T &bi, 
 			     T &cr, T &ci) {
+  if (!IsFinite(ar) || !IsFinite(ai) ||
+      !IsFinite(br) || !IsFinite(bi)) {
+    cr = ar * br - ai * bi;
+    ci = ar * bi + ai * br;
+    return;
+  }
   if ((ar == br) && (ai == -bi)) {
     cr = ar * br - ai * bi;
     ci = 0;

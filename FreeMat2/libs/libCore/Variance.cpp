@@ -18,6 +18,10 @@ struct OpVecVar {
   template <typename T>
   static inline void func(const BasicArray<T> & src, 
 			  BasicArray<T>& dest) {
+    if ((src.length() == 1) && (!IsFinite(src[1]))) {
+      dest[1] = NaN();
+      return;
+    }
     T accum = 0;
     for (index_t i=1;i<=src.length();i++)
       accum += src[i];
@@ -37,6 +41,12 @@ struct OpVecVar {
 			  const BasicArray<T> & src_imag,
 			  BasicArray<T>& dest_real,
 			  BasicArray<T>& dest_imag) {
+    if ((src_real.length() == 1) && 
+	(!IsFinite(src_real[1]) || !IsFinite(src_imag[1]))) {
+      dest_real[1] = NaN();
+      dest_imag[1] = 0;
+      return;
+    }
     T accum_real = 0;
     T accum_imag = 0;
     for (index_t i=1;i<=src_real.length();i++) {
