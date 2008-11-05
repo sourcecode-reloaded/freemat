@@ -1,3 +1,5 @@
-
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6 FATAL_ERROR)
 INCLUDE_DIRECTORIES( Include ../UFconfig )
 INCLUDE( make_rules.cmake )
+INSTALL( TARGETS amd ARCHIVE DESTINATION lib)
+INSTALL( FILES Include/amd.h Include/amd_internal.h DESTINATION include)

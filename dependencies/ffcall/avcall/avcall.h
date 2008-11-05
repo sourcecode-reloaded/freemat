@@ -23,7 +23,7 @@
 
 /* CPU */
 #ifndef __i386__
-/* #undef __i386__ */
+#define __i386__ 1
 #endif
 #ifndef __m68k__
 /* #undef __m68k__ */
@@ -68,7 +68,7 @@
 /* #undef __ia64__ */
 #endif
 #ifndef __x86_64__
-#define __x86_64__ 1
+/* #undef __x86_64__ */
 #endif
 
 /* Calling convention */
