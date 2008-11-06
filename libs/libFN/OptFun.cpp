@@ -21,44 +21,43 @@
 #include "FunctionDef.hpp"
 #include "Exception.hpp"
 
-static ArrayVector params;
-static Array xval;
-static Array yval;
-static Array wval;
-static Interpreter *a_eval;
-static FunctionDef *a_funcDef;
-static double *xbuffer;
-static double *ybuffer;
+#if HAVE_LEVMAR
 
-extern "C" { 
-  void fcnstub(int* m, int *n, double *x, double *fvec, int *iflag) {
-    double *xp, *yp, *rp, *wp;
-    xp = xval.real<double>().data();
-    yp = yval.real<double>().data();
-    wp = wval.real<double>().data();
-    memcpy(xp,x,sizeof(double)*(*n));
-    ArrayVector tocall(params);
-    tocall.push_front(xval);
-    ArrayVector cval(a_funcDef->evaluateFunction(a_eval,tocall,1));
-    if (cval.size() == 0)
-      throw Exception("function to be optimized does not return any outputs!");
-    if (int(cval[0].length()) != (*m))
-      throw Exception("function output does not match size of vector 'y'");
-    Array f(cval[0]);
-    f = f.asDenseArray().toClass(Double);
-    rp = (double*) f.real<double>().data();
-    int i;
-    for (i=0;i<(*m);i++) {
-      fvec[i] = wp[i]*(yp[i] - rp[i]);
-    }
+#include "lm.h"
+
+typedef struct {
+  ArrayVector params;
+  Array xval;
+  Array yval;
+  Array wval;
+  Interpreter *a_eval;
+  FunctionDef *a_funcDef;
+} FncBlock;
+
+void fcnstub(double *p, double *hx, int m, int n, void *adata) {
+  FncBlock *q = (FncBlock*) adata;
+  double *xp, *yp, *rp, *wp;
+  xp = q->xval.real<double>().data();
+  yp = q->yval.real<double>().data();
+  wp = q->wval.real<double>().data();
+  memcpy(xp,p,sizeof(double)*m);
+  ArrayVector tocall(q->params);
+  tocall.push_front(q->xval);
+  ArrayVector cval(q->a_funcDef->evaluateFunction(q->a_eval,tocall,1));
+  if (cval.size() == 0)
+    throw Exception("function to be optimized does not return any outputs!");
+  if (int(cval[0].length()) != n)
+    throw Exception("function output does not match size of vector 'y'");
+  Array f(cval[0]);
+  f = f.asDenseArray().toClass(Double);
+  rp = (double*) f.real<double>().data();
+  int i;
+  for (i=0;i<n;i++) {
+    hx[i] = wp[i]*(yp[i] - rp[i]);
   }
 }
 
-typedef void (*fcnptr)(int*, int*, double*, double*, int*);
-
-extern "C"
-void lmdif1_(fcnptr, int*m, int*n, double*x, double*fvec, double*tol,
-	     int*info, int*iwa, double*wa, int*lwa);
+#endif
 
 //!
 //@Module FITFUN Fit a Function
@@ -103,6 +102,7 @@ void lmdif1_(fcnptr, int*m, int*n, double*x, double*fvec, double*tol,
 //outputs xopt yopt
 //!
 ArrayVector FitFunFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
+#if HAVE_LEVMAR
   if (arg.size()<4) 
     throw Exception("fitfun requires at least four arguments");
   if (!(arg[0].isString()))
@@ -116,68 +116,47 @@ ArrayVector FitFunFunction(int nargout, const ArrayVector& arg, Interpreter* eva
   funcDef->updateCode(eval);
   if (funcDef->scriptFlag)
     throw Exception("cannot use feval on a script");
-  a_funcDef = funcDef;
-  a_eval = eval;
+  FncBlock q;
+  q.a_funcDef = funcDef;
+  q.a_eval = eval;
   // Get the initial guess vector
   Array xinit(arg[1].asDenseArray().toClass(Double));
   int m, n;
-  n = int(xinit.length());
+  m = int(xinit.length());
   // Get the right hand side vector
   Array yvec(arg[2].asDenseArray().toClass(Double));
-  m = int(yvec.length());
-  yval = yvec;
-  xval = xinit;
-  wval = arg[3].asDenseArray().toClass(Double);
-  if (int(wval.length()) != m)
+  n = int(yvec.length());
+  q.yval = yvec;
+  q.xval = xinit;
+  q.wval = arg[3].asDenseArray().toClass(Double);
+  if (int(q.wval.length()) != n)
     throw Exception("weight vector must be the same size as the output vector y");
   // Get the tolerance
   double tol = arg[4].asDouble();
   // Copy the arg array
-  params = arg;
-  params.pop_front();
-  params.pop_front();
-  params.pop_front();
-  params.pop_front();
-  params.pop_front();
+  q.params = arg;
+  q.params.pop_front();
+  q.params.pop_front();
+  q.params.pop_front();
+  q.params.pop_front();
+  q.params.pop_front();
   // Test to make sure the function works....
-  ArrayVector tocall(params);
+  ArrayVector tocall(q.params);
   tocall.push_front(xinit);
   ArrayVector cval(funcDef->evaluateFunction(eval,tocall,1));
   if (cval.size() == 0)
     throw Exception("function to be optimized does not return any outputs!");
-  if (int(cval[0].length()) != m)
+  if (int(cval[0].length()) != n)
     throw Exception("function output does not match size of vector 'y'");
-  // Call the lmdif1
-  int *iwa;
-  iwa = new int[n];
-  int lwa;
-  lwa = m*n+5*n+m;
-  double *wa;
-  int info;
-  wa = new double[lwa];
-  xbuffer = new double[n];
-  ybuffer = new double[m];
-  memcpy(xbuffer,xinit.real<double>().data(),sizeof(double)*n);
-  memset(ybuffer,0,sizeof(double)*m);
-  lmdif1_(fcnstub,&m,&n,xbuffer,ybuffer,&tol,&info,iwa,wa,&lwa);
-  if (info == 0)
-    throw Exception("Illegal input parameters to lmdif (most likely more variables than functions?)");
-  if (info == 5)
-    eval->warningMessage("number of calls to the supplied function has reached or exceeded the limit (200*(number of variables + 1)");
-  if (info == 6)
-    eval->warningMessage("tolerance is too small - no further reduction in the sum of squares is possible");
-  if (info == 7)
-    eval->warningMessage("tolerance is too small - no further improvement in the approximate solution x is possible");
-  delete[] wa;
-  delete[] iwa;
-  memcpy(xval.real<double>().data(),xbuffer,sizeof(double)*n);
-  delete[] xbuffer;
-  delete[] ybuffer;
-  tocall = params;
-  tocall.push_front(xval);
+  dlevmar_dif(fcnstub,&(q.xval.real<double>()[1]),&(q.yval.real<double>()[1]),m,n,200*(m+1),NULL,NULL,NULL,NULL,&q);
+  tocall = q.params;
+  tocall.push_front(q.xval);
   cval = funcDef->evaluateFunction(eval,tocall,1);
   ArrayVector retval;
-  retval.push_back(xval);
+  retval.push_back(q.xval);
   retval.push_back(cval[0]);
   return retval;
+#else
+  throw Exception("The fitfun function requires the lemvar support library, which was not available at compile time.  You must have lemvar installed at compile time for FreeMat to enable this functionality.");
+#endif
 }

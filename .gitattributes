@@ -71,14 +71,6 @@ libs/libFN/Interp1D.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=n
 libs/libFN/LoadFN.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libFN/LoadFN.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libFN/OptFun.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-libs/libFN/dpmpar.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-libs/libFN/enorm.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-libs/libFN/fdjac2.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-libs/libFN/lmdif.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-libs/libFN/lmdif1.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-libs/libFN/lmpar.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-libs/libFN/qrfac.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-libs/libFN/qrsolv.f svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libFreeMat/Array.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libFreeMat/Array.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libFreeMat/Class.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
