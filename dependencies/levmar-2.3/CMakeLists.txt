@@ -1,12 +1,12 @@
 # levmar CMake file; see http://www.cmake.org and 
 #                        http://www.insightsoftwareconsortium.org/wiki/index.php/CMake_Tutorial
 
-PROJECT(LEVMAR)
-#CMAKE_MINIMUM_REQUIRED(VERSION 1.4)
+PROJECT(LEVMAR C)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6 FATAL_ERROR)
 
 # compiler flags
-ADD_DEFINITIONS(-DLINSOLVERS_RETAIN_MEMORY) # do not free memory between linear solvers calls
-#REMOVE_DEFINITIONS(-DLINSOLVERS_RETAIN_MEMORY)
+#ADD_DEFINITIONS(-DLINSOLVERS_RETAIN_MEMORY) # do not free memory between linear solvers calls
+REMOVE_DEFINITIONS(-DLINSOLVERS_RETAIN_MEMORY)
 
 # f2c is sometimes equivalent to libF77 & libI77; in that case, set HAVE_F2C to 0
 SET(HAVE_F2C 1 CACHE BOOL "Do we have f2c or F77/I77?" )
@@ -50,3 +50,6 @@ ADD_DEPENDENCIES(lmdemo levmar)
 #SUBDIRS(matlab)
 
 #ADD_TEST(levmar_tst lmdemo)
+
+INSTALL(TARGETS levmar ARCHIVE DESTINATION lib)
+INSTALL(FILES lm.h DESTINATION include)
