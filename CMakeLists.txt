@@ -194,6 +194,15 @@ IF( PCRE_LIBRARY AND PCRE_INCLUDE_DIR )
         SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PCRE_LIBRARY} )
 ENDIF( PCRE_LIBRARY AND PCRE_INCLUDE_DIR )	
 
+##############################################################################
+#LEVMAR library
+FIND_LIBRARY(LEVMAR_LIBRARY NAMES levmar DOC "Location of levmar library" PATHS ${LOCAL_PATH})
+FIND_PATH(LEVMAR_INCLUDE_DIR NAMES lm.h DOC "Location of lm.h" PATHS ${LOCAL_PATH})
+IF (LEVMAR_LIBRARY AND LEVMAR_INCLUDE_DIR)
+   INCLUDE_DIRECTORIES(${LEVMAR_INCLUDE_DIR})
+   ADD_DEFINITIONS( -DHAVE_LEVMAR )
+   SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${LEVMAR_LIBRARY} )
+ENDIF(LEVMAR_LIBRARY AND LEVMAR_INCLUDE_DIR)
 
 ##############################################################################
 #Extra libraries
@@ -211,17 +220,15 @@ ENDIF(NOT MSVC)
 
 ###########################################################################
 # F2C setup
-IF( MSVC )
+IF( NOFORTRAN )
 	FIND_PROGRAM( F2C_PROG NAMES f2c.exe f2c PATHS ${LOCAL_PATH} DOC "Fortran to C translator" )
 	FIND_LIBRARY( F2C_LIBRARY NAMES vcf2c f2c PATHS ${LOCAL_PATH} DOC "Fortran to C Library" )
 	FIND_PATH( F2C_INCLUDE_DIR f2c.h PATHS ${LOCAL_PATH} DOC "Path to f2c.h" )
 	INCLUDE_DIRECTORIES(${F2C_INCLUDE_DIR}) 
-	#SET( F2C_FLAGS STRING " -g -c " INTERNAL )
-ELSE( MSVC )
-  IF (NOT APPLE)
+	SET( EXTRA_LIBRARIES ${EXTRA_LIBRARIES} ${F2C_LIBRARY} )
+ELSE( NOFORTRAN )
   	FIND_LIBRARY( F2C_LIBRARY NAMES gfortran DOC "Fortran to C Library" )
-  ENDIF (NOT APPLE)
-ENDIF( MSVC )
+ENDIF( NOFORTRAN )
 
 ###########################################################################
 # Macro for f2c conversion
