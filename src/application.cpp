@@ -423,6 +423,20 @@ void ApplicationWindow::init() {
     new_font.fromString(font);
     m_term->setFont(new_font);
   }
+  else {
+  /* Set to the most common monospace font on Windows, Mac and Unix shown at
+    http://www.codestyle.org/css/font-family/sampler-Monospace.shtml */
+  #ifdef Q_WS_WIN
+    QFont new_font("Courier New", 10, QFont::Normal);
+  #else 
+      #ifdef Q_WS_MAC
+        QFont new_font("Monaco", 10, QFont::Normal);
+      #else
+        QFont new_font("DejaVu Sans Mono", 10, QFont::Normal);
+      #endif
+  #endif
+    m_term->setFont(new_font);
+  }
 }
 
 void ApplicationWindow::dirButtonClicked() {
