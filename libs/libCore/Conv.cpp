@@ -90,36 +90,36 @@ Array Conv2FunctionDispatch(Array X, Array Y, int Cm, int Cn,
 
 #undef MacroConv
 
-static ArrayVector Conv2FunctionFullXY(Array X, Array Y) {
+static Array Conv2FunctionFullXY(Array X, Array Y) {
   int Cm, Cn, Cm_offset, Cn_offset;
   Cm = int(X.rows() + Y.rows() - 1);
   Cn = int(X.cols() + Y.cols() - 1);
   Cm_offset = 0;
   Cn_offset = 0;
-  return ArrayVector(Conv2FunctionDispatch(X,Y,Cm,Cn,Cm_offset,Cn_offset));
+  return Conv2FunctionDispatch(X,Y,Cm,Cn,Cm_offset,Cn_offset);
 }
 
-static ArrayVector Conv2FunctionSameXY(Array X, Array Y) {
+static Array Conv2FunctionSameXY(Array X, Array Y) {
   int Cm, Cn, Cm_offset, Cn_offset;
   Cm = int(X.rows());
   Cn = int(X.cols());
   Cm_offset = (int) floor((double)((Y.rows()-1)/2));
   Cn_offset = (int) floor((double)((Y.cols()-1)/2));
-  return ArrayVector(Conv2FunctionDispatch(X,Y,Cm,Cn,Cm_offset,Cn_offset));
+  return Conv2FunctionDispatch(X,Y,Cm,Cn,Cm_offset,Cn_offset);
 }
 
-static ArrayVector Conv2FunctionValidXY(Array X, Array Y) {
+static Array Conv2FunctionValidXY(Array X, Array Y) {
   int Cm, Cn, Cm_offset, Cn_offset;
   Cm = int(X.rows()-Y.rows()+1);
   Cn = int(X.cols()-Y.cols()+1);
   if ((Cm <= 0) || (Cn <= 0))
-    return ArrayVector(EmptyConstructor());
+    return EmptyConstructor();
   Cm_offset = int(Y.rows()-1);
   Cn_offset = int(Y.cols()-1);
-  return ArrayVector(Conv2FunctionDispatch(X,Y,Cm,Cn,Cm_offset,Cn_offset));    
+  return Conv2FunctionDispatch(X,Y,Cm,Cn,Cm_offset,Cn_offset);    
 }
 
-static ArrayVector Conv2FunctionXY(Array X, Array Y, QString type) {
+static Array Conv2FunctionXY(Array X, Array Y, QString type) {
   // Check the arguments
   if (X.isReferenceType() || Y.isReferenceType())
     throw Exception("cannot apply conv2 to reference types.");
@@ -134,7 +134,7 @@ static ArrayVector Conv2FunctionXY(Array X, Array Y, QString type) {
   throw Exception("could not recognize the arguments to conv2");
 }
 
-static ArrayVector Conv2FunctionRCX(Array hcol, Array hrow, Array X, QString type) {
+static Array Conv2FunctionRCX(Array hcol, Array hrow, Array X, QString type) {
   if (hcol.isReferenceType() || hrow.isReferenceType() ||
       X.isReferenceType())
     throw Exception("cannot apply conv2 to reference types.");
@@ -142,9 +142,9 @@ static ArrayVector Conv2FunctionRCX(Array hcol, Array hrow, Array X, QString typ
     throw Exception("arguments must be matrices, not n-dimensional arrays.");
   hcol.reshape(NTuple(hcol.length(),1));
   hrow.reshape(NTuple(1,hrow.length()));
-  ArrayVector rvec;
+  Array rvec;
   rvec = Conv2FunctionXY(X,hcol,type);
-  rvec = Conv2FunctionXY(rvec.back(),hrow,type);
+  rvec = Conv2FunctionXY(rvec,hrow,type);
   return rvec;
 }
 
@@ -204,21 +204,21 @@ ArrayVector Conv2Function(int nargout, const ArrayVector& arg) {
   Array Y(arg[1]);
   if (X.isEmpty() && Y.isEmpty())
     return ArrayVector(EmptyConstructor());
-  if ((X.dataClass() == Float) || (Y.dataClass() == Float)) {
-    X = X.asDenseArray().toClass(Float);
-    Y = Y.asDenseArray().toClass(Float);
-  } else {
-    X = X.asDenseArray().toClass(Double);
-    Y = Y.asDenseArray().toClass(Double);
-  }
+  DataClass via, out;
+  ComputeTypes(X,Y,via,out);
+  X = X.asDenseArray().toClass(via);
+  Y = Y.asDenseArray().toClass(via);
+  Array Z;
   if (arg.size() == 2)
-    return Conv2FunctionXY(X,Y,"FULL");
-  if ((arg.size() == 3) && (arg[2].isString()))
-    return Conv2FunctionXY(X,Y,arg[2].asString().toUpper());
-  if (arg.size() == 3)
-    return Conv2FunctionRCX(X,Y,arg[2],"FULL");
-  if ((arg.size() == 4) && (arg[3].isString()))
-    return Conv2FunctionRCX(X,Y,arg[2],
-			    arg[3].asString().toUpper());
-  throw Exception("could not recognize which form of conv2 was requested - check help conv2 for details");
+    Z = Conv2FunctionXY(X,Y,"FULL").toClass(out);
+  else if ((arg.size() == 3) && (arg[2].isString()))
+    Z = Conv2FunctionXY(X,Y,arg[2].asString().toUpper()).toClass(out);
+  else if (arg.size() == 3)
+    Z = Conv2FunctionRCX(X,Y,arg[2],"FULL").toClass(out);
+  else if ((arg.size() == 4) && (arg[3].isString()))
+    Z = Conv2FunctionRCX(X,Y,arg[2],
+			    arg[3].asString().toUpper()).toClass(out);
+  else
+    throw Exception("could not recognize which form of conv2 was requested - check help conv2 for details");
+  return ArrayVector(Z);
 }

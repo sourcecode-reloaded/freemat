@@ -139,6 +139,55 @@ ArrayVector LogFunction(int nargout, const ArrayVector& arg) {
 }
 
 //!
+//@Module SQRT Square Root of an Array
+//@@Section MATHFUNCTIONS
+//@@Usage
+//Computes the square root of the argument matrix.  The general
+//syntax for its use is
+//@[
+//   y = sqrt(x)
+//@]
+//where @|x| is an N-dimensional numerical array.
+//@@Example
+//Here are some examples of using @|sqrt|
+//@<
+//sqrt(9)
+//sqrt(i)
+//sqrt(-1)
+//x = rand(4)
+//sqrt(x)
+//@>
+//@@Signature
+//function sqrt SqrtFunction
+//inputs x
+//outputs y
+//!
+
+struct OpSqrt {
+  static inline float func(float x) {return sqrtf(x);}
+  static inline double func(double x) {return sqrt(x);}
+  static inline void func(float xr, float xi, float &yr, float &yi) {
+    complex_sqrt<float>(xr,xi,yr,yi);
+  }
+  static inline void func(double xr, double xi, double &yr, double &yi) {
+    complex_sqrt<double>(xr,xi,yr,yi);
+  }
+};
+
+ArrayVector SqrtFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() != 1)
+    throw Exception("Sqrt function takes exactly one argument");
+  Array input(arg[0]);
+  if (!IsPositiveOrNaN(input)) {
+    if (input.dataClass() != Float) 
+      input = input.toClass(Double);
+    input.forceComplex();
+  }
+  return ArrayVector(UnaryOp<OpSqrt>(input));
+}
+
+
+//!
 //@Module TANH Hyperbolic Tangent Function
 //@@Section MATHFUNCTIONS
 //@@Usage
@@ -226,7 +275,7 @@ ArrayVector TanhFunction(int nargout, const ArrayVector& arg) {
 //@@Tests
 //@$near|y1=acosh(x1)
 //@@Signature
-//function acosh AcoshFunction
+//function acosh ArccoshFunction
 //inputs x
 //outputs y
 //!
@@ -237,6 +286,11 @@ struct OpArccosh {
   static inline double func(double x) {return acosh(x);}
   template <typename T>
   static inline void func(T xr, T xi, T &yr, T &yi) {
+    if (xr == -Inf() && xi == 0) {
+      yr = Inf();
+      yi = M_PI;
+      return;
+    }
     T xrt_real1, xrt_imag1;
     T xrt_real2, xrt_imag2;
     complex_sqrt(xr+1,xi,xrt_real1,xrt_imag1);
@@ -290,7 +344,7 @@ ArrayVector ArccoshFunction(int nargout, const ArrayVector& arg) {
 //@@Tests
 //@$near|y1=asinh(x1)
 //@@Signature
-//function asinh AsinhFunction
+//function asinh ArcsinhFunction
 //inputs x
 //outputs y
 //!
@@ -352,12 +406,20 @@ ArrayVector ArcsinhFunction(int nargout, const ArrayVector& arg) {
 //!
 struct OpArcsech {
   template <typename T>
-  static inline T func(T x) {return log(sqrt(1/x-1)*sqrt(1/x+1)+1/x);}
+  static inline T func(T x) {
+    if (x == 0)
+      return Inf();
+    return log(sqrt(1/x-1)*sqrt(1/x+1)+1/x);
+  }
   template <typename T>
   static inline void func(T xr, T xi, T &yr, T &yi) {
+    if ((xr == 0) && (xi == 0)) {
+      yr = Inf();
+      yi = 0;
+      return;
+    }
     T xrp_real, xrp_imag;
     complex_recip(xr,xi,xrp_real,xrp_imag);
-    if (xi == 0) xrp_imag = 0;
     OpArccosh::func(xrp_real,xrp_imag,yr,yi);
   }
 };
@@ -366,7 +428,7 @@ ArrayVector ArcsechFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("asech function takes exactly one argument");
   Array input(arg[0]);
-  if (input.allReal() && ((ArrayMin(input) <= 0) || (ArrayMax(input) > 1))) {
+  if (input.allReal() && ((ArrayMin(input) < 0) || (ArrayMax(input) > 1))) {
     if (input.dataClass() != Float) 
       input = input.toClass(Double);
     input.forceComplex();
@@ -417,6 +479,16 @@ struct OpArctanh {
 //       yi = 0;
 //       return;
 //     }
+    if ((xr == Inf()) && (xi == 0)) {
+      yr = 0;
+      yi = M_PI/2.0;
+      return;
+    }
+    if ((xr == -Inf()) && (xi == 0)) {
+      yr = 0;
+      yi = -M_PI/2.0;
+      return;
+    }
     T xa, xb;
     T ya, yb;
     complex_log(xr+1,xi,xa,xb);

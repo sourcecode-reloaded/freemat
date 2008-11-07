@@ -1,7 +1,6 @@
 function wbtestcompare(fname_input,fieldname_base,fieldname_test)
   diary wbtest.txt
   load(fname_input);
-  inputs = wbtestinputs;
   for ndx=1:size(recs,1)
     if (~recs{ndx}.(fieldname_base).success && recs{ndx}.(fieldname_test).success)
       inputs = recs{ndx}.inputs; 

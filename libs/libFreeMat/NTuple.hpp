@@ -10,7 +10,9 @@ class NTuple {
   index_t m_data[NDims];
 public:
   inline bool is2D() const {
-    return (m_data[0]*m_data[1] == count());
+    for (int i=2;i<NDims;i++)
+      if (m_data[i] != 1) return false;
+    return true;
   }
   inline bool isValid() const {
     for (int i=0;i<NDims;i++)

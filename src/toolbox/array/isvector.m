@@ -18,6 +18,6 @@
 
 function y = isvector(x)
   s = size(x);
-  y = isempty(x) || (prod(s) == (s(1)*s(2))) && ((s(1) == 1) || (s(2) == 1));
+  y = (prod(s) == (s(1)*s(2))) && ((s(1) == 1) || (s(2) == 1));
   
   

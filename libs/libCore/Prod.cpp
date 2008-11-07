@@ -54,9 +54,14 @@ struct OpVecProd {
 			  BasicArray<T>& dest_imag) {
     T result_real = 1;
     T result_imag = 0;
-    for (index_t i=1;i<=src_real.length();i++)
-      complex_multiply(result_real,result_imag,src_real[i],src_imag[i],
-		       result_real,result_imag);
+    for (index_t i=1;i<=src_real.length();i++) {
+      T temp_real, temp_imag;
+      complex_multiply(result_real,result_imag,
+		       src_real[i],src_imag[i],
+		       temp_real,temp_imag);
+      result_real = temp_real;
+      result_imag = temp_imag;
+    }
     dest_real[1] = result_real;
     dest_imag[1] = result_imag;
   }
@@ -109,10 +114,11 @@ ArrayVector ProdFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)
     throw Exception("prod requires at least one argument");
   Array input(arg[0]);
-    int dim;
+  int dim;
   if (arg.size() > 1)
     dim = arg[1].asInteger()-1;
   else
     dim = input.dimensions().firstNonsingular();
+  if (input.isEmpty() && input.is2D()) return ArrayVector(Array(1.0));
   return ArrayVector(VectorOp<OpVecProd>(input,1,dim));
 }

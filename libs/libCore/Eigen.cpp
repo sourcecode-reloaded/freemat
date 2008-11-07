@@ -499,6 +499,7 @@ ArrayVector EigFunction(int nargout, const ArrayVector& arg) {
       return GenEigFunction(nargout, arg);
   }
   Array A(arg[0]);
+  A.ensureNotScalarEncoded();
   if (!A.is2D())
     throw Exception("Cannot apply matrix operations to N-Dimensional arrays.");
   if (AnyNotFinite(A))

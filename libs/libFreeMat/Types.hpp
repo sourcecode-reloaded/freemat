@@ -75,4 +75,5 @@ inline bool IsNonNegative(T x) {
 template <typename T>
 inline index_t TSizeOf(T x);
 
+
 #endif

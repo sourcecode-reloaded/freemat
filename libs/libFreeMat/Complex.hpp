@@ -1,13 +1,19 @@
 #ifndef __Complex_hpp__
 #define __Complex_hpp__
 
+#include "IEEEFP.hpp"
+
 template <typename T>
 static inline void complex_divide(const T& ar, const T& ai,
 				  const T& br, const T& bi,
 				  T& c0, T& c1) {
   double ratio, den;
   double abr, abi, cr;
-  
+  if ((ai == 0) && (bi == 0)) {
+    c1 = 0;
+    c0 = ar/br;
+    return;
+  }
   if( (abr = br) < 0.)
     abr = - abr;
   if( (abi = bi) < 0.)
@@ -37,6 +43,11 @@ static inline void complex_divide(const T& ar, const T& ai,
 
 template <typename T>
 static inline void complex_recip(const T& ar, const T& ai, T& cr, T& ci) {
+  if (ai == 0) {
+    ci = 0;
+    cr = 1/ar;
+    return;
+  }
   complex_divide<T>(1,0,ar,ai,cr,ci);
 }
 
@@ -68,7 +79,16 @@ template <typename T>
 inline void complex_multiply(const T &ar, const T &ai, 
 			     const T &br, const T &bi, 
 			     T &cr, T &ci) {
-  if ((ai == 0) && (br == 0)) {  
+  if (!IsFinite(ar) || !IsFinite(ai) ||
+      !IsFinite(br) || !IsFinite(bi)) {
+    cr = ar * br - ai * bi;
+    ci = ar * bi + ai * br;
+    return;
+  }
+  if ((ar == br) && (ai == -bi)) {
+    cr = ar * br - ai * bi;
+    ci = 0;
+  } else if ((ai == 0) && (br == 0)) {  
     cr = 0;
     ci = ar*bi;
   } else if ((ar == 0) && (bi == 0)) {
@@ -145,6 +165,16 @@ inline void complex_exp(T xr, T xi, T &yr, T &yi) {
 template <typename T>
 inline void complex_sqrt(T xr, T xi, T &yr, T &yi) {
   T tr, ti;
+  if ((xr >= 0) && (xi == 0)) {
+    yr = sqrt(xr);
+    yi = 0;
+    return;
+  }
+  if ((xr < 0) && (xi == 0)) {
+    yi = sqrt(-xr);
+    yr = 0;
+    return;
+  }
   complex_log(xr,xi,tr,ti);
   tr /= 2.0;
   ti /= 2.0;

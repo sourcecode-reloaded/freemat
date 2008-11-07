@@ -232,15 +232,18 @@ Array MatIO::getStructArray(NTuple dm) {
       buffer[j] = QChar(dp[i*fieldNameLen+j+1]);
     names.push_back(buffer);
   }
-  StructArray ret_sp;
+  QVector<BasicArray<Array> > data;
+  data.resize(fieldNameCount);
   for (int j=0;j<fieldNameCount;j++) {
     BasicArray<Array> dp(dm);
     for (index_t i=1;i<=dm.count();i++) {
       bool atEof; QString name; bool match; bool global;
       dp[i] = getArray(atEof,name,match,global);
     }
-    ret_sp.insert(names[j],dp);
+    data[j] = dp;
   }
+  StructArray ret_sp;
+  ret_sp.setFieldNamesAndData(names,data);
   return Array(ret_sp);
 }
 
@@ -467,7 +470,7 @@ void MatIO::putStructArray(const Array &x) {
   // Write it as an int32 
   Array fieldNameLength = Array(int32(maxlen));
   putDataElement(fieldNameLength);
-  Array fieldNameText(Transpose(StringArrayFromStringVector(fnames)));
+  Array fieldNameText(Transpose(StringArrayFromStringVector(fnames,QChar(0))));
   fieldNameText.resize(NTuple(fieldNameText.rows()+1,fieldNameText.cols()));
   putDataElement(fieldNameText.toClass(Int8));
   for (int i=0;i<fieldNameCount;i++) {

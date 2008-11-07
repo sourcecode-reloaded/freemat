@@ -8,6 +8,7 @@
 #include "Types.hpp"
 #include "FastList.hpp"
 #include "Cast.hpp"
+#include "IEEEFP.hpp"
 
 template <typename T>
 class BasicArray;
@@ -367,6 +368,13 @@ bool IsPositive(const BasicArray<T>& arg) {
 }
 
 template <typename T>
+bool IsPositiveOrNaN(const BasicArray<T>& arg) {
+  for (index_t i=1;i<=arg.length();i++) 
+    if (!IsNaN(i) && (arg.get(i) <= 0)) return false;
+  return true;
+}
+
+template <typename T>
 bool IsNonNegative(const BasicArray<T> &arg) {
   for (index_t i=1;i<=arg.length();i++)
     if (!IsNonNegative(arg.get(i))) return false;
@@ -398,7 +406,7 @@ bool IsSymmetric(const BasicArray<T>& arg, const BasicArray<T>& img) {
   if (arg.dimensions() != img.dimensions())
     throw Exception("Symmetry check requires both arrays must be the same size");
   for (index_t i=1;i<=arg.cols();i++) 
-    for (index_t j=i+1;j<=arg.rows();j++) 
+    for (index_t j=i;j<=arg.rows();j++) 
       if ((arg[NTuple(i,j)] != arg[NTuple(j,i)]) ||
 	  (img[NTuple(i,j)] != -img[NTuple(j,i)]))
 	return false;

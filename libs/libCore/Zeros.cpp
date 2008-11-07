@@ -91,6 +91,7 @@ ArrayVector ZerosFunction(int nargout, const ArrayVector& arg) {
       // Get the classname as a string
       QString cp = trim_arg.back().asString().toLower();
       MacroExpandCasesSimple(MacroZeros);
+      if (cp == "single") dataclass = Float;
       if (cp == "logical") dataclass = Bool;
       if (dataclass == Invalid)
 	throw Exception("unrecognized type for argument to zeros function");

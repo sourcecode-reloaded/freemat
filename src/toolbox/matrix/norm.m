@@ -50,7 +50,10 @@ function y = norm(A,p)
 if (~isset('p'))
   p = 2;
 end
-
+if (isempty(A))
+  y = 0;
+  return;
+end
 if (min(size(A)) == 1)
   y = vector_norm(A,p);
 else

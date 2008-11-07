@@ -334,6 +334,22 @@ public:
     ConstBaseIterator<Array,Array>(ptr,dim) {}
 };
 
+
+inline void ComputeTypes(const Array & A, const Array & B,
+			 DataClass &via, DataClass &out) {
+  via = Double;
+  out = Double;
+  DataClass Ain(A.dataClass());
+  DataClass Bin(B.dataClass());
+  if (Ain == Float && Bin == Float) {
+    via = Float;
+    out = Float;
+  } else if (Ain == Float || Bin == Float) {
+    out = Float;
+  }
+}
+
+
 #include "ArrayPrivate.hpp"
 
 #endif

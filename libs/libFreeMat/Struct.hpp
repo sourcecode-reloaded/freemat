@@ -7,7 +7,7 @@
 class Array;
 
 class StructArray {
-  QStringList m_fields;
+  StringVector m_fields;
   QVector<BasicArray<Array> > m_data;
   StringVector m_classPath;
   NTuple m_dims;
@@ -19,6 +19,12 @@ public:
   const StringVector & classPath() const {return m_classPath;}
   void setClassPath(const StringVector & classPath) {m_classPath = classPath;}
   StringVector fieldNames() const {return m_fields;}
+  void setFieldNamesAndData(const StringVector& fields,
+			    const QVector<BasicArray<Array> > data) {
+    m_fields = fields;
+    m_data = data;
+    updateDims();
+  }
   int fieldCount() const {return m_fields.size();}
   QString fieldName(int i) const {return m_fields[i];}
   index_t bytes() const {

@@ -1,5 +1,6 @@
 #include "Array.hpp"
 #include "Math.hpp"
+#include "Complex.hpp"
 
 //!
 //@Module DOT Dot Product Function
@@ -53,10 +54,12 @@ static ArrayVector DotFunction(const BasicArray<T> &xreal,
     double accum_real = 0;
     double accum_imag = 0;
     for (index_t i=1;i<=dimLen;i++) {
-      accum_real += xsource_real.get()*ysource_real.get() +
-	xsource_imag.get()*ysource_imag.get();
-      accum_imag += xsource_real.get()*ysource_imag.get() - 
-	xsource_imag.get()*ysource_real.get();
+      T dot_real, dot_imag;
+      complex_multiply<T>(xsource_real.get(),-xsource_imag.get(),
+			  ysource_real.get(),ysource_imag.get(),
+			  dot_real, dot_imag);
+      accum_real += dot_real;
+      accum_imag += dot_imag;
       xsource_real.next(); ysource_real.next();
       xsource_imag.next(); ysource_imag.next();
     }
@@ -73,6 +76,9 @@ template <typename T>
 static ArrayVector DotFunction(const BasicArray<T> &xreal,
 			       const BasicArray<T> &yreal,
 			       int DotDim) {
+  if (xreal.isEmpty() && yreal.isEmpty() &&
+      xreal.is2D() && yreal.is2D())
+    return ArrayVector(Array(T(0)));
   BasicArray<T> rvec(xreal.dimensions().forceOne(DotDim));
   ConstBasicIterator<T> xsource(&xreal,DotDim);
   ConstBasicIterator<T> ysource(&yreal,DotDim);

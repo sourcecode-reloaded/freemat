@@ -552,7 +552,6 @@ src/toolbox/numerical/idiv.m svn_keywords=Author+Date+Id+Revision svn_eol_002dst
 src/toolbox/numerical/log10.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/toolbox/numerical/log2.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/toolbox/numerical/mod.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-src/toolbox/numerical/sqrt.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/toolbox/numerical/teps.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/toolbox/poly/polyfit.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/toolbox/poly/polyval.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -892,7 +891,6 @@ tests/matcompat/test_file_v6.mat svn_mime_002dtype=application%2Foctet-stream
 tests/matcompat/tough.mat svn_mime_002dtype=application%2Foctet-stream
 tests/matcompat/tough_with_fp.mat svn_mime_002dtype=application%2Foctet-stream
 tests/matcompat/wb_testmatrix.mat svn_mime_002dtype=application%2Foctet-stream
-tests/matcompat/wb_testmatrix.mat.gz svn_mime_002dtype=application%2Foctet-stream
 tests/matcompat/west.mat svn_mime_002dtype=application%2Foctet-stream
 tests/math/test_add1.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 tests/math/test_add2.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native

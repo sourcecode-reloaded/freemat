@@ -33,12 +33,14 @@ ArrayVector Hex2DecFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0)
     throw Exception("hex2dec requires an argument");
   if (arg[0].isEmpty()) return ArrayVector(EmptyConstructor());
-  if (!arg[0].isString())
+  if (!arg[0].isString() && (arg[0].dataClass() != Double))
     throw Exception("hex2dec argument must be a string");
-  if (arg[0].isVector()) 
-    return ArrayVector(Array(double(arg[0].asString().toInt(0,16))));
+  Array x(arg[0]);
+  if (x.dataClass() == Double) x = x.toClass(StringArray);
+  if (x.isVector()) 
+    return ArrayVector(Array(double(x.asString().toInt(0,16))));
   else {
-    StringVector sv(StringVectorFromArray(arg[0]));
+    StringVector sv(StringVectorFromArray(x));
     Array rp(Double,NTuple(sv.size(),1));
     BasicArray<double> &qp(rp.real<double>());
     for (int i=0;i<sv.size();i++)
@@ -100,7 +102,7 @@ ArrayVector Dec2HexFunction(int nargout, const ArrayVector& arg) {
     QString t = QString("%1").arg(xp[i],n,16,QChar('0')).toUpper();
     ret << t;
   }
-  return ArrayVector(StringArrayFromStringVector(ret));
+  return ArrayVector(StringArrayFromStringVector(ret,QChar(' ')));
 }
 
 
@@ -135,17 +137,19 @@ ArrayVector Dec2HexFunction(int nargout, const ArrayVector& arg) {
 
 template <typename T>
 static inline Array Num2HexFunction(const BasicArray<T> &data) {
+  if (data.isEmpty())
+    return Array(StringArray,NTuple(0,16));
   StringVector st;
   for (index_t i=1;i<=data.length();i++)
     st.push_back(ToHexString(data[i]));
-  return StringArrayFromStringVector(st);
+  return StringArrayFromStringVector(st,QChar(' '));
 }
 
 ArrayVector Num2HexFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("num2hex fucntion requires a single argument");
   if ((arg[0].dataClass() != Float) && (arg[0].dataClass() != Double))
-    throw Exception("num2hex only works on float and double arrays");
+    throw Exception("num2hex only works on single and double arrays");
   Array x = arg[0].asDenseArray();
   if (x.dataClass() == Float) 
     return ArrayVector(Num2HexFunction(x.constReal<float>()));

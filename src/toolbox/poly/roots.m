@@ -33,7 +33,7 @@
 %roots([1 -6 -72 -27])
 %@>
 %@@Tests
-%@$exact|y1=roots(x1)
+%@$near_permute|y1=roots(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu
@@ -44,14 +44,14 @@ function z = roots(p)
      error('Input to ROOTS must not contain NaN or Inf.');
   end
   if (isempty(p))
-    z = zeros(0,1);
+    z = zeros(0,1,class(p));
     return;
   end
   while(any(isinf(p./p(1))))
     p=p(2:end);
   end
   if (numel(p) <= 1) 
-    z = zeros(0,1);
+    z = zeros(0,1,class(p));
     return;
   end
   p = vec(p);
@@ -62,5 +62,7 @@ function z = roots(p)
   end
   A = diag(o,-1);
   A(1,:) = -p(2:n+1)./p(1);
-  z = eig(A);
+  s = eig(A);
+  [n,m] = sort(-abs(s));
+  z = s(m);
   

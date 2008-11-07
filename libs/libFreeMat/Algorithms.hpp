@@ -17,7 +17,7 @@ Array ArrayFromCellArray(const Array &arg);
 const Array CellArrayFromArrayVector(ArrayVector &arg, index_t cnt);
 const Array CellArrayFromArray(const Array &arg);
 const Array CellArrayFromStringVector(const StringVector& arg);
-const Array StringArrayFromStringVector(const StringVector& arg);
+const Array StringArrayFromStringVector(const StringVector& arg, QChar pad);
 StringVector StringVectorFromArray(const Array &arg);
 
 void SetCellContents(Array &cell, const Array& index, ArrayVector& data);
@@ -93,6 +93,7 @@ Array GetDiagonal(const Array &a, int diagonal = 0);
 Array DiagonalArray(const Array &f, int diagonal = 0);
 bool IsSymmetric(const Array &a);
 bool IsPositive(const Array &a);
+bool IsPositiveOrNaN(const Array &a);
 
 Array RangeConstructor(double start, double step, double stop, bool vertical);
 Array Transpose(const Array &A);

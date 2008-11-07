@@ -11,7 +11,7 @@ static inline index_t CountNonZeros(const BasicArray<bool> &dp) {
 }
 
 static ArrayVector SingleFindModeFull(const Array &arg) {
-  Array x(arg.toClass(Bool));
+  Array x(arg.toClass(Bool).asDenseArray());
   const BasicArray<bool> &dp(x.constReal<bool>());
   index_t nonZero = CountNonZeros(dp);
   NTuple retdims;
@@ -28,7 +28,7 @@ static ArrayVector SingleFindModeFull(const Array &arg) {
 }
   
 static ArrayVector RCFindModeFull(const Array &arg) {
-  Array x(arg.toClass(Bool));
+  Array x(arg.toClass(Bool).asDenseArray());
   const BasicArray<bool> &dp(x.constReal<bool>());
   index_t nonZero = CountNonZeros(dp);
   NTuple retdims;
@@ -54,7 +54,7 @@ static ArrayVector RCFindModeFull(const Array &arg) {
 
 template <class T>
 static ArrayVector RCVFindModeFullReal(Array arg) {
-  Array x(arg.toClass(Bool));
+  Array x(arg.toClass(Bool).asDenseArray());
   const BasicArray<bool> &dp(x.constReal<bool>());
   const BasicArray<T> &vp(arg.constReal<T>());
   index_t nonZero = CountNonZeros(dp);
@@ -84,7 +84,7 @@ static ArrayVector RCVFindModeFullReal(Array arg) {
 
 template <class T>
 static ArrayVector RCVFindModeFullComplex(Array arg) {
-  Array x(arg.toClass(Bool));
+  Array x(arg.toClass(Bool).asDenseArray());
   const BasicArray<bool> &dp(x.constReal<bool>());
   const BasicArray<T> &vp(arg.constReal<T>());
   const BasicArray<T> &zp(arg.constImag<T>());
