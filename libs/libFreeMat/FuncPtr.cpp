@@ -16,7 +16,7 @@
 
 static HandleList<VariableTable*> scopeHandles;
 
-static FuncPtr FuncPtrLookup(Interpreter *eval, Array ptr) {
+FuncPtr FuncPtrLookup(Interpreter *eval, Array ptr) {
   if ((!ptr.isUserClass()) || (ptr.className() != "functionpointer"))
     throw Exception("expected function pointer here, instead got " + ptr.className());
   QString name = LOOKUP(ptr,"name").asString();

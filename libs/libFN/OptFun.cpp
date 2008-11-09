@@ -20,8 +20,7 @@
 #include "Interpreter.hpp"
 #include "FunctionDef.hpp"
 #include "Exception.hpp"
-
-#if HAVE_LEVMAR
+#include "FuncPtr.hpp"
 
 #include "lm.h"
 
@@ -53,11 +52,9 @@ void fcnstub(double *p, double *hx, int m, int n, void *adata) {
   rp = (double*) f.real<double>().data();
   int i;
   for (i=0;i<n;i++) {
-    hx[i] = wp[i]*(yp[i] - rp[i]);
+    hx[i] = wp[i] * rp[i];//wp[i]*(yp[i] - rp[i]);
   }
 }
-
-#endif
 
 //!
 //@Module FITFUN Fit a Function
@@ -102,20 +99,25 @@ void fcnstub(double *p, double *hx, int m, int n, void *adata) {
 //outputs xopt yopt
 //!
 ArrayVector FitFunFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-#if HAVE_LEVMAR
   if (arg.size()<4) 
     throw Exception("fitfun requires at least four arguments");
-  if (!(arg[0].isString()))
-    throw Exception("first argument to fitfun must be the name of a function (i.e., a string)");
-  QString fname = arg[0].asString();
-  eval->rescanPath();
-  Context *context = eval->getContext();
   FuncPtr funcDef;
-  if (!context->lookupFunction(fname,funcDef))
-    throw Exception(QString("function ") + fname + " undefined!");
-  funcDef->updateCode(eval);
-  if (funcDef->scriptFlag)
-    throw Exception("cannot use feval on a script");
+  Array fptr(arg[0]);
+  if (fptr.isString())  {
+    QString fname = fptr.asString();
+    Context *context = eval->getContext();
+    eval->rescanPath();
+    if (!context->lookupFunction(fname,funcDef))
+      throw Exception(QString("function ") + fname + " undefined!");
+    funcDef->updateCode(eval);
+    if (funcDef->scriptFlag)
+      throw Exception("cannot use feval on a script");
+  } else {
+    if (fptr.isUserClass() && (fptr.className() == "functionpointer")) 
+      funcDef = FuncPtrLookup(eval,fptr);
+    else
+      throw Exception("first argument to fitfun must be the name of a function (i.e., a string) or a function pointer");
+  }
   FncBlock q;
   q.a_funcDef = funcDef;
   q.a_eval = eval;
@@ -131,8 +133,17 @@ ArrayVector FitFunFunction(int nargout, const ArrayVector& arg, Interpreter* eva
   q.wval = arg[3].asDenseArray().toClass(Double);
   if (int(q.wval.length()) != n)
     throw Exception("weight vector must be the same size as the output vector y");
+  // Multiply the weights time the RHS
+  for (index_t i=1;i<=n;i++) {
+    q.yval.real<double>()[i] = q.yval.constReal<double>()[i] * 
+      q.wval.constReal<double>()[i];
+  }
   // Get the tolerance
-  double tol = arg[4].asDouble();
+  double tol;
+  if (arg.size() > 4)
+    tol = arg[4].asDouble();
+  else
+    tol = LM_STOP_THRESH;
   // Copy the arg array
   q.params = arg;
   q.params.pop_front();
@@ -148,7 +159,13 @@ ArrayVector FitFunFunction(int nargout, const ArrayVector& arg, Interpreter* eva
     throw Exception("function to be optimized does not return any outputs!");
   if (int(cval[0].length()) != n)
     throw Exception("function output does not match size of vector 'y'");
-  dlevmar_dif(fcnstub,&(q.xval.real<double>()[1]),&(q.yval.real<double>()[1]),m,n,200*(m+1),NULL,NULL,NULL,NULL,&q);
+  double opts[5];
+  opts[0] = LM_INIT_MU;
+  opts[1] = tol;
+  opts[2] = tol;
+  opts[3] = tol;
+  opts[4] = LM_DIFF_DELTA;
+  dlevmar_dif(fcnstub,&(q.xval.real<double>()[1]),&(q.yval.real<double>()[1]),m,n,200*(m+1),opts,NULL,NULL,NULL,&q);
   tocall = q.params;
   tocall.push_front(q.xval);
   cval = funcDef->evaluateFunction(eval,tocall,1);
@@ -156,7 +173,4 @@ ArrayVector FitFunFunction(int nargout, const ArrayVector& arg, Interpreter* eva
   retval.push_back(q.xval);
   retval.push_back(cval[0]);
   return retval;
-#else
-  throw Exception("The fitfun function requires the lemvar support library, which was not available at compile time.  You must have lemvar installed at compile time for FreeMat to enable this functionality.");
-#endif
 }

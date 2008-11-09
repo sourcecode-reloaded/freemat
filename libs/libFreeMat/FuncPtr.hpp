@@ -7,4 +7,5 @@
 
 Array FuncPtrConstructor(Interpreter*, FuncPtr);
 void CaptureFunctionPointers(ArrayVector &, Interpreter*, MFunctionDef*);
+FuncPtr FuncPtrLookup(Interpreter *eval, Array ptr);
 #endif

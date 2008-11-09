@@ -68,11 +68,8 @@ ENDMACRO (QT4_GENERATE_UI)
 SET(OPTIONAL_LIBS "")
 
 ###########################################################################################
- IF( NOT MSVC )
- 	FIND_LIBRARY(BLAS_LIBRARY NAMES blas atlas DOC "Location of BLAS or
-ATLAS library" PATHS  ${LOCAL_PATH} /usr/lib/atlas)
- 	FIND_LIBRARY(LAPACK_LIBRARY NAMES lapack clapack DOC "Location of LAPACK library" PATHS ${LOCAL_PATH} )
- ENDIF( NOT MSVC )
+
+LINK_DIRECTORIES(/usr/lib/atlas)
 
 #Find AVCALL Library
 FIND_LIBRARY(AVCALL_LIBRARY NAMES avcall DOC "Location of the AVCALL library" PATHS ${LOCAL_PATH})
@@ -184,6 +181,8 @@ ELSE( MSVC )
 ENDIF( MSVC )
 ENDIF( USE_LLVM )
 
+FIND_LIBRARY(LAPACK_LIBRARY NAMES lapack clapack DOC "Location of LAPACK library" PATHS ${LOCAL_PATH}  )
+
 ##############################################################################
 #PCRE library
 FIND_LIBRARY(PCRE_LIBRARY NAMES pcre DOC "Location of PCRE library" PATHS ${LOCAL_PATH})
@@ -195,14 +194,14 @@ IF( PCRE_LIBRARY AND PCRE_INCLUDE_DIR )
 ENDIF( PCRE_LIBRARY AND PCRE_INCLUDE_DIR )	
 
 ##############################################################################
-#LEVMAR library
-FIND_LIBRARY(LEVMAR_LIBRARY NAMES levmar DOC "Location of levmar library" PATHS ${LOCAL_PATH})
-FIND_PATH(LEVMAR_INCLUDE_DIR NAMES lm.h DOC "Location of lm.h" PATHS ${LOCAL_PATH})
-IF (LEVMAR_LIBRARY AND LEVMAR_INCLUDE_DIR)
-   INCLUDE_DIRECTORIES(${LEVMAR_INCLUDE_DIR})
-   ADD_DEFINITIONS( -DHAVE_LEVMAR )
-   SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${LEVMAR_LIBRARY} )
-ENDIF(LEVMAR_LIBRARY AND LEVMAR_INCLUDE_DIR)
+##LEVMAR library
+#FIND_LIBRARY(LEVMAR_LIBRARY NAMES levmar DOC "Location of levmar library" PATHS ${LOCAL_PATH})
+#FIND_PATH(LEVMAR_INCLUDE_DIR NAMES lm.h DOC "Location of lm.h" PATHS ${LOCAL_PATH})
+#IF (LEVMAR_LIBRARY AND LEVMAR_INCLUDE_DIR)
+#   INCLUDE_DIRECTORIES(${LEVMAR_INCLUDE_DIR})
+#   ADD_DEFINITIONS( -DHAVE_LEVMAR )
+#   SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${LEVMAR_LIBRARY} )
+#ENDIF(LEVMAR_LIBRARY AND LEVMAR_INCLUDE_DIR)
 
 ##############################################################################
 #Extra libraries
@@ -220,16 +219,17 @@ ENDIF(NOT MSVC)
 
 ###########################################################################
 # F2C setup
-IF( NOFORTRAN )
-	FIND_PROGRAM( F2C_PROG NAMES f2c.exe f2c PATHS ${LOCAL_PATH} DOC "Fortran to C translator" )
-	FIND_LIBRARY( F2C_LIBRARY NAMES vcf2c f2c PATHS ${LOCAL_PATH} DOC "Fortran to C Library" )
-	FIND_PATH( F2C_INCLUDE_DIR f2c.h PATHS ${LOCAL_PATH} DOC "Path to f2c.h" )
-	INCLUDE_DIRECTORIES(${F2C_INCLUDE_DIR}) 
-	SET( EXTRA_LIBRARIES ${EXTRA_LIBRARIES} ${F2C_LIBRARY} )
-ELSE( NOFORTRAN )
-  	FIND_LIBRARY( F2C_LIBRARY NAMES gfortran DOC "Fortran to C Library" )
-ENDIF( NOFORTRAN )
 
+#IF( NOFORTRAN )
+#	FIND_PROGRAM( F2C_PROG NAMES f2c.exe f2c PATHS ${LOCAL_PATH} DOC "Fortran to C translator" )
+#	FIND_LIBRARY( F2C_LIBRARY NAMES vcf2c f2c PATHS ${LOCAL_PATH} DOC "Fortran to C Library" )
+#	FIND_PATH( F2C_INCLUDE_DIR f2c.h PATHS ${LOCAL_PATH} DOC "Path to f2c.h" )
+#	INCLUDE_DIRECTORIES(${F2C_INCLUDE_DIR}) 
+#	SET( EXTRA_LIBRARIES ${EXTRA_LIBRARIES} ${F2C_LIBRARY} )
+#ELSE( NOFORTRAN )
+#  	FIND_LIBRARY( F2C_LIBRARY NAMES gfortran DOC "Fortran to C Library" )
+#ENDIF( NOFORTRAN )
+#
 ###########################################################################
 # Macro for f2c conversion
 MACRO( CONVERT_F2C dep C_FILES )
@@ -253,17 +253,14 @@ ENDMACRO( CONVERT_F2C dep C_FILES )
 INCLUDE_DIRECTORIES( libs/libFreeMat libs/libGraphics 
 libs/libMex libs/libXP libs/libCore libs/libFN libs/libMatC ${QT_LIBRARIES} src)   
 
+
 OPTION(USE_DYNLINK "Link BLAS dynamically" OFF)
 IF( USE_DYNLINK )
 	INCLUDE_DIRECTORIES( libs/libMath )
 	ADD_DEFINITIONS( -DDYN_BLAS )
 	INSTALL( FILES ${PROJECT_SOURCE_DIR}/blas.ini DESTINATION bin )
 ELSE( USE_DYNLINK )
- IF( NOT MSVC )
- 	FIND_LIBRARY(BLAS_LIBRARY NAMES blas atlas DOC "Location of BLAS or ATLAS library" PATHS  ${LOCAL_PATH} )
-#  	FIND_LIBRARY(LAPACK_LIBRARY NAMES lapack clapack DOC "Location of LAPACK library" PATHS ${LOCAL_PATH} )
- ENDIF( NOT MSVC )
-
+	FIND_LIBRARY(BLAS_LIBRARY NAMES blas atlas DOC "Location of BLAS or ATLAS library" PATHS  ${LOCAL_PATH}  )
 ENDIF( USE_DYNLINK )
 
 #ADD_SUBDIRECTORY( dependencies )
