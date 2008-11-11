@@ -509,6 +509,8 @@ ArrayVector FprintfFunction(int nargout, const ArrayVector& arg,
 										handle=1;
 									}
 								}
+								if (handle == 1)
+								  return PrintfFunction(nargout,argCopy,eval);
 								Array format(argCopy[0]);
 								if (!format.isString())
 									throw Exception("fprintf format argument must be a string");
