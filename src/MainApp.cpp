@@ -136,6 +136,7 @@ void MainApp::SetupInteractiveTerminalCase() {
 #ifdef Q_WS_X11
   GUIHack = true;
   Terminal *myterm = new Terminal;
+  m_win = NULL;
   gterm = myterm;
   m_keys->RegisterTerm(myterm);
   fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL) | O_NONBLOCK);
@@ -208,18 +209,20 @@ ArrayVector EditorFunction(int nargout, const ArrayVector& arg, Interpreter* eva
     QObject::connect(eval,SIGNAL(RefreshBPLists()),edit,SLOT(RefreshBPLists()));
     QObject::connect(eval,SIGNAL(ShowActiveLine()),edit,SLOT(ShowActiveLine()));
     ApplicationWindow *m_win = m_app->getApplicationWindow();
-    QObject::connect(m_win,SIGNAL(shutdown()),edit,SLOT(close()));
-    QObject::connect(edit,SIGNAL(checkEditorExist(bool)),m_win,SLOT(checkEditorExist(bool)));
+    if (m_win) {
+      QObject::connect(m_win,SIGNAL(shutdown()),edit,SLOT(close()));
+      QObject::connect(edit,SIGNAL(checkEditorExist(bool)),m_win,SLOT(checkEditorExist(bool)));
+    }
     // Because of the threading setup, we need the keymanager to relay commands
     // from the editor to the interpreter.  
     QObject::connect(edit,SIGNAL(EvaluateText(QString)),m_app->GetKeyManager(),SLOT(QueueMultiString(QString)));
     //Allow Editor to see the Context and refresh the content at the right time
     edit->setContext(m_app->GetKeyManager()->GetCompletionContext());
     QObject::connect(m_app->GetKeyManager(),SIGNAL(UpdateVariables()), 
-	    edit,SLOT(refreshContext()));
+		     edit,SLOT(refreshContext()));
     //Ask to change current path when setting breakpoint
     QObject::connect(eval, SIGNAL(IllegalLineOrCurrentPath(QString, int)), edit,
-        SLOT(IllegalLineOrCurrentPath(QString, int)));
+		     SLOT(IllegalLineOrCurrentPath(QString, int)));
   }
   edit->showNormal();
   edit->raise();
