@@ -1007,6 +1007,18 @@ FMEditor::FMEditor(Interpreter* eval) : QMainWindow() {
  	  this,SLOT(doReplace(QString,QString,bool,bool)));
   connect(m_replace,SIGNAL(doReplaceAll(QString,QString,bool,bool)),
  	  this,SLOT(doReplaceAll(QString,QString,bool,bool)));
+  // Create the shortcut tab creation/deletion buttons
+  QToolButton *tab_shortcut;
+  tab_shortcut = new QToolButton(this);
+  tab_shortcut->setAutoRaise(true);
+  tab_shortcut->setIcon(QPixmap(":/images/addtab.png"));
+  connect(tab_shortcut,SIGNAL(clicked()),newAct,SIGNAL(triggered()));
+  tab->setCornerWidget(tab_shortcut,Qt::TopLeftCorner);
+  tab_shortcut = new QToolButton(this);
+  tab_shortcut->setAutoRaise(true);
+  tab_shortcut->setIcon(QPixmap(":/images/closetab.png"));
+  connect(tab_shortcut,SIGNAL(clicked()),closeAct,SIGNAL(triggered()));
+  tab->setCornerWidget(tab_shortcut,Qt::TopRightCorner);
   QString path = m_eval->getTotalPath();
 #ifdef WIN32
 #define PATHSEP ";"
