@@ -44,7 +44,6 @@ ArrayVector CellFunction(int, const ArrayVector&);
 ArrayVector ClearFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector ConjFunction(int, const ArrayVector&);
 ArrayVector InfFunction(int, const ArrayVector&);
-ArrayVector InfFunction(int, const ArrayVector&);
 ArrayVector NaNFunction(int, const ArrayVector&);
 ArrayVector NaNFunction(int, const ArrayVector&);
 ArrayVector IFunction(int, const ArrayVector&);
@@ -103,7 +102,6 @@ ArrayVector FtellFunction(int, const ArrayVector&);
 ArrayVector FeofFunction(int, const ArrayVector&);
 ArrayVector FseekFunction(int, const ArrayVector&);
 ArrayVector FgetlineFunction(int, const ArrayVector&);
-ArrayVector FprintfFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector FscanfFunction(int, const ArrayVector&);
 ArrayVector FindFunction(int, const ArrayVector&);
 ArrayVector FloorFunction(int, const ArrayVector&);
@@ -157,6 +155,7 @@ ArrayVector SetPathFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector PathToolFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector SprintfFunction(int, const ArrayVector&);
 ArrayVector PrintfFunction(int, const ArrayVector&, Interpreter*);
+ArrayVector FprintfFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector DispFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector ProdFunction(int, const ArrayVector&);
 ArrayVector QRDFunction(int, const ArrayVector&);
@@ -269,6 +268,7 @@ ArrayVector HUIControlFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector HImageFunction(int, const ArrayVector&);
 ArrayVector HTextFunction(int, const ArrayVector&);
 ArrayVector HSurfaceFunction(int, const ArrayVector&);
+ArrayVector HPatchFunction(int, const ArrayVector&);
 ArrayVector FigRaiseFunction(int, const ArrayVector&);
 ArrayVector FigLowerFunction(int, const ArrayVector&);
 ArrayVector HGCFFunction(int, const ArrayVector&);
@@ -329,7 +329,6 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addSpecialFunction("clear",ClearFunction,-1,0,NULL);
   context->addFunction("conj",ConjFunction,1,1,"x",NULL);
   context->addFunction("inf",InfFunction,0,1,NULL);
-  context->addFunction("Inf",InfFunction,0,1,NULL);
   context->addFunction("nan",NaNFunction,0,1,NULL);
   context->addFunction("NaN",NaNFunction,0,1,NULL);
   context->addFunction("i",IFunction,0,1,NULL);
@@ -337,7 +336,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("pi",PiFunction,0,1,NULL);
   context->addFunction("e",EFunction,0,1,NULL);
   context->addFunction("eps",EpsFunction,-1,1,NULL);
-  context->addFunction("feps",FepsFunction,-1,1,NULL);
+  context->addFunction("feps",FepsFunction,0,1,NULL);
   context->addFunction("true",TrueFunction,0,1,NULL);
   context->addFunction("false",FalseFunction,0,1,NULL);
   context->addSpecialFunction("jitcontrol",JITControlFunction,1,1,"flag",NULL);
@@ -388,7 +387,6 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("feof",FeofFunction,1,1,"handle",NULL);
   context->addFunction("fseek",FseekFunction,3,0,"handle","offset","style",NULL);
   context->addFunction("fgetline",FgetlineFunction,1,1,"handle",NULL);
-  context->addSpecialFunction("fprintf",FprintfFunction,-1,0,NULL);
   context->addFunction("fscanf",FscanfFunction,2,-1,"handle","format",NULL);
   context->addFunction("find",FindFunction,3,3,"x","keep","flag",NULL);
   context->addFunction("floor",FloorFunction,1,1,"x",NULL);
@@ -446,6 +444,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
      context->addGfxSpecialFunction("pathtool",PathToolFunction,0,0,NULL);
   context->addFunction("sprintf",SprintfFunction,-1,1,NULL);
   context->addSpecialFunction("printf",PrintfFunction,-1,2,NULL);
+  context->addSpecialFunction("fprintf",FprintfFunction,-1,-1,NULL);
   context->addSpecialFunction("disp",DispFunction,-1,0,NULL);
   context->addFunction("prod",ProdFunction,2,1,"x","dimension",NULL);
   context->addFunction("qr",QRDFunction,2,-1,"x","n",NULL);
@@ -569,6 +568,8 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
      context->addGfxFunction("htext",HTextFunction,-1,1,NULL);
    if (guiflag)
      context->addGfxFunction("surface",HSurfaceFunction,-1,1,NULL);
+   if (guiflag)
+     context->addGfxFunction("hpatch",HPatchFunction,-1,1,NULL);
    if (guiflag)
      context->addGfxFunction("figraise",FigRaiseFunction,1,0,"handle",NULL);
    if (guiflag)

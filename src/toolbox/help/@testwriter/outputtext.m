@@ -7,13 +7,15 @@ function outputtext(&p,text)
   text(end) = [];
   v = regexp(text,'@\$([^\|].*)\|(.*)','tokens');
   if (isempty(v))
-    error(sprintf('bad line: %s',text));
+    printf(sprintf('bad line: %s',text));
+    return;
   end
   inputs = wbtestinputs;
   % Search for inputs
   ttype = v{1}{1};
-  if (~any(strcmp(ttype,{'near','exact'})))
-    error(sprintf('bad test type in line: %s',text));
+if (~any(strcmp(ttype,{'near','exact','near_permute'})))
+    printf(sprintf('bad test type in line: %s',text));
+    return;
   end
   expr = v{1}{2};
   vars = symvar(expr);

@@ -10,7 +10,7 @@ function wbtestcompare(fname_input,fieldname_base,fieldname_test)
         if (~issame(recs{ndx}.(fieldname_base).result{1},recs{ndx}.(fieldname_test).result{1}))
           printf('Mismatch: %d expr: %s\n',ndx,recs{ndx}.expr);
         end       
-      else
+      elseif (strcmp(recs{ndx}.test,'near'))
         a = recs{ndx}.(fieldname_base).result;
 	b = recs{ndx}.(fieldname_test).result;
 	if (~isempty(a) && ~isempty(b))
@@ -20,6 +20,16 @@ function wbtestcompare(fname_input,fieldname_base,fieldname_test)
             printf('Mismatch (norm): %d expr: %s\n',ndx,recs{ndx}.expr);
           end
         end
+      elseif (strcmp(recs{ndx}.test,'near_permute'))
+        a = recs{ndx}.(fieldname_base).result;
+	b = recs{ndx}.(fieldname_test).result;
+	if (~isempty(a) && ~isempty(b))
+	  a = sort(a{1}(:));
+          b = sort(b{1}(:));
+          if (~test_near(a,b))
+            printf('Mismatch (near permute): %d expr: %s\n',ndx,recs{ndx}.expr);
+          end
+        end       
       end
     end
   end

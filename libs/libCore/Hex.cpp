@@ -85,7 +85,7 @@ ArrayVector Hex2DecFunction(int nargout, const ArrayVector& arg) {
 ArrayVector Dec2HexFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)
     throw Exception("dec2hex requires at least one argument");
-  Array x = arg[0].toClass(Int64);
+  Array x = arg[0].asDenseArray().toClass(Int64);
   const BasicArray<int64> &xp(x.constReal<int64>());
   int n = 0;
   if (arg.size() > 1) n = arg[1].asInteger();

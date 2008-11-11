@@ -349,7 +349,7 @@ ArrayVector DoCLIFunction(int nargout, const ArrayVector& arg, Interpreter* eval
 //Here is an example of calling the @|ls| function (the
 //list files function under Un*x-like operating system).
 //@<
-//y = system('ls m*.m')
+//y = system('ls')
 //y{1}
 //@>
 //@@Signature
