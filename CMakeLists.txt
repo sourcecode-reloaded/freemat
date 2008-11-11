@@ -69,8 +69,6 @@ SET(OPTIONAL_LIBS "")
 
 ###########################################################################################
 
-LINK_DIRECTORIES(/usr/lib/atlas)
-
 #Find AVCALL Library
 FIND_LIBRARY(AVCALL_LIBRARY NAMES avcall DOC "Location of the AVCALL library" PATHS ${LOCAL_PATH})
 FIND_PATH(AVCALL_INCLUDE_DIR NAMES avcall.h DOC "Location of avcall.h" PATHS ${LOCAL_PATH} /mingw/include)
@@ -219,17 +217,16 @@ ENDIF(NOT MSVC)
 
 ###########################################################################
 # F2C setup
+IF( NOFORTRAN )
+	FIND_PROGRAM( F2C_PROG NAMES f2c.exe f2c PATHS ${LOCAL_PATH} DOC "Fortran to C translator" )
+	FIND_LIBRARY( F2C_LIBRARY NAMES vcf2c f2c PATHS ${LOCAL_PATH} DOC "Fortran to C Library" )
+	FIND_PATH( F2C_INCLUDE_DIR f2c.h PATHS ${LOCAL_PATH} DOC "Path to f2c.h" )
+	INCLUDE_DIRECTORIES(${F2C_INCLUDE_DIR}) 
+	SET( EXTRA_LIBRARIES ${EXTRA_LIBRARIES} ${F2C_LIBRARY} )
+ELSE( NOFORTRAN )
+  	FIND_LIBRARY( F2C_LIBRARY NAMES gfortran DOC "Fortran to C Library" )
+ENDIF( NOFORTRAN )
 
-#IF( NOFORTRAN )
-#	FIND_PROGRAM( F2C_PROG NAMES f2c.exe f2c PATHS ${LOCAL_PATH} DOC "Fortran to C translator" )
-#	FIND_LIBRARY( F2C_LIBRARY NAMES vcf2c f2c PATHS ${LOCAL_PATH} DOC "Fortran to C Library" )
-#	FIND_PATH( F2C_INCLUDE_DIR f2c.h PATHS ${LOCAL_PATH} DOC "Path to f2c.h" )
-#	INCLUDE_DIRECTORIES(${F2C_INCLUDE_DIR}) 
-#	SET( EXTRA_LIBRARIES ${EXTRA_LIBRARIES} ${F2C_LIBRARY} )
-#ELSE( NOFORTRAN )
-#  	FIND_LIBRARY( F2C_LIBRARY NAMES gfortran DOC "Fortran to C Library" )
-#ENDIF( NOFORTRAN )
-#
 ###########################################################################
 # Macro for f2c conversion
 MACRO( CONVERT_F2C dep C_FILES )
@@ -260,7 +257,11 @@ IF( USE_DYNLINK )
 	ADD_DEFINITIONS( -DDYN_BLAS )
 	INSTALL( FILES ${PROJECT_SOURCE_DIR}/blas.ini DESTINATION bin )
 ELSE( USE_DYNLINK )
-	FIND_LIBRARY(BLAS_LIBRARY NAMES blas atlas DOC "Location of BLAS or ATLAS library" PATHS  ${LOCAL_PATH}  )
+ IF( NOT MSVC )
+ 	FIND_LIBRARY(BLAS_LIBRARY NAMES blas atlas DOC "Location of BLAS or ATLAS library" PATHS  ${LOCAL_PATH} )
+#  	FIND_LIBRARY(LAPACK_LIBRARY NAMES lapack clapack DOC "Location of LAPACK library" PATHS ${LOCAL_PATH} )
+ ENDIF( NOT MSVC )
+
 ENDIF( USE_DYNLINK )
 
 #ADD_SUBDIRECTORY( dependencies )
