@@ -479,8 +479,9 @@ static integer c__1 = 1;
     integer v_dim1, v_offset, i__1, i__2;
 
     /* Builtin functions */
-    integer s_cmp(char *, char *, ftnlen, ftnlen), s_wsfe(cilist *), e_wsfe(
-	    void), do_fio(integer *, char *, ftnlen);
+    integer s_cmp(char *, char *, ftnlen, ftnlen);
+/* , s_wsfe(cilist *), e_wsfe( */
+/* 	    void), do_fio(integer *, char *, ftnlen); */
 
     /* Local variables */
     static integer j;
@@ -774,28 +775,28 @@ static integer c__1 = 1;
 /*        | Version Number & Version Date are defined in version.h | */
 /*        %--------------------------------------------------------% */
 
-	s_wsfe(&io___23);
-	e_wsfe();
-	s_wsfe(&io___24);
-	do_fio(&c__1, (char *)&mxiter, (ftnlen)sizeof(integer));
-	do_fio(&c__1, (char *)&timing_1.nopx, (ftnlen)sizeof(integer));
-	do_fio(&c__1, (char *)&timing_1.nbx, (ftnlen)sizeof(integer));
-	do_fio(&c__1, (char *)&timing_1.nrorth, (ftnlen)sizeof(integer));
-	do_fio(&c__1, (char *)&timing_1.nitref, (ftnlen)sizeof(integer));
-	do_fio(&c__1, (char *)&timing_1.nrstrt, (ftnlen)sizeof(integer));
-	do_fio(&c__1, (char *)&timing_1.tmvopx, (ftnlen)sizeof(real));
-	do_fio(&c__1, (char *)&timing_1.tmvbx, (ftnlen)sizeof(real));
-	do_fio(&c__1, (char *)&timing_1.tnaupd, (ftnlen)sizeof(real));
-	do_fio(&c__1, (char *)&timing_1.tnaup2, (ftnlen)sizeof(real));
-	do_fio(&c__1, (char *)&timing_1.tnaitr, (ftnlen)sizeof(real));
-	do_fio(&c__1, (char *)&timing_1.titref, (ftnlen)sizeof(real));
-	do_fio(&c__1, (char *)&timing_1.tgetv0, (ftnlen)sizeof(real));
-	do_fio(&c__1, (char *)&timing_1.tneigh, (ftnlen)sizeof(real));
-	do_fio(&c__1, (char *)&timing_1.tngets, (ftnlen)sizeof(real));
-	do_fio(&c__1, (char *)&timing_1.tnapps, (ftnlen)sizeof(real));
-	do_fio(&c__1, (char *)&timing_1.tnconv, (ftnlen)sizeof(real));
-	do_fio(&c__1, (char *)&timing_1.trvec, (ftnlen)sizeof(real));
-	e_wsfe();
+/* 	s_wsfe(&io___23); */
+/* 	e_wsfe(); */
+/* 	s_wsfe(&io___24); */
+/* 	do_fio(&c__1, (char *)&mxiter, (ftnlen)sizeof(integer)); */
+/* 	do_fio(&c__1, (char *)&timing_1.nopx, (ftnlen)sizeof(integer)); */
+/* 	do_fio(&c__1, (char *)&timing_1.nbx, (ftnlen)sizeof(integer)); */
+/* 	do_fio(&c__1, (char *)&timing_1.nrorth, (ftnlen)sizeof(integer)); */
+/* 	do_fio(&c__1, (char *)&timing_1.nitref, (ftnlen)sizeof(integer)); */
+/* 	do_fio(&c__1, (char *)&timing_1.nrstrt, (ftnlen)sizeof(integer)); */
+/* 	do_fio(&c__1, (char *)&timing_1.tmvopx, (ftnlen)sizeof(real)); */
+/* 	do_fio(&c__1, (char *)&timing_1.tmvbx, (ftnlen)sizeof(real)); */
+/* 	do_fio(&c__1, (char *)&timing_1.tnaupd, (ftnlen)sizeof(real)); */
+/* 	do_fio(&c__1, (char *)&timing_1.tnaup2, (ftnlen)sizeof(real)); */
+/* 	do_fio(&c__1, (char *)&timing_1.tnaitr, (ftnlen)sizeof(real)); */
+/* 	do_fio(&c__1, (char *)&timing_1.titref, (ftnlen)sizeof(real)); */
+/* 	do_fio(&c__1, (char *)&timing_1.tgetv0, (ftnlen)sizeof(real)); */
+/* 	do_fio(&c__1, (char *)&timing_1.tneigh, (ftnlen)sizeof(real)); */
+/* 	do_fio(&c__1, (char *)&timing_1.tngets, (ftnlen)sizeof(real)); */
+/* 	do_fio(&c__1, (char *)&timing_1.tnapps, (ftnlen)sizeof(real)); */
+/* 	do_fio(&c__1, (char *)&timing_1.tnconv, (ftnlen)sizeof(real)); */
+/* 	do_fio(&c__1, (char *)&timing_1.trvec, (ftnlen)sizeof(real)); */
+/* 	e_wsfe(); */
     }
 
 L9000:

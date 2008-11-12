@@ -40,6 +40,7 @@ static integer c__3 = 3;
 /* Subroutine */ int dmout_(integer *lout, integer *m, integer *n, doublereal 
 	*a, integer *lda, integer *idigit, char *ifmt, ftnlen ifmt_len)
 {
+#if 0
     /* Initialized data */
 
     static char icol[1*3] = "C" "o" "l";
@@ -400,6 +401,7 @@ static integer c__3 = 3;
     s_wsfe(&io___26);
     e_wsfe();
 
+#endif
 
     return 0;
 } /* dmout_ */

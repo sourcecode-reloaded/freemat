@@ -45,6 +45,8 @@ static integer c__2 = 2;
 	doublecomplex *a, integer *lda, integer *idigit, char *ifmt, ftnlen 
 	ifmt_len)
 {
+
+#if 0
     /* Initialized data */
 
     static char icol[1*3] = "C" "o" "l";
@@ -590,7 +592,7 @@ static integer c__2 = 2;
 
 
 
-
+#endif
 
     return 0;
 } /* zmout_ */

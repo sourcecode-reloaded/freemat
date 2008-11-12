@@ -36,6 +36,8 @@ static integer c__1 = 1;
 /* Subroutine */ int ivout_(integer *lout, integer *n, integer *ix, integer *
 	idigit, char *ifmt, ftnlen ifmt_len)
 {
+
+#if 0
     /* Format strings */
     static char fmt_2000[] = "(/1x,a/1x,a)";
     static char fmt_1000[] = "(1x,i4,\002 - \002,i4,\002:\002,20(1x,i5))";
@@ -272,7 +274,7 @@ static integer c__1 = 1;
     s_wsfe(&io___16);
     e_wsfe();
 
-
+#endif
     return 0;
 } /* ivout_ */
 

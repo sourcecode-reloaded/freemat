@@ -36,6 +36,7 @@ static integer c__1 = 1;
 /* Subroutine */ int dvout_(integer *lout, integer *n, doublereal *sx, 
 	integer *idigit, char *ifmt, ftnlen ifmt_len)
 {
+#if 0
     /* Format strings */
     static char fmt_9999[] = "(/1x,a,/1x,a)";
     static char fmt_9998[] = "(1x,i4,\002 - \002,i4,\002:\002,1p,10d12.3)";
@@ -280,6 +281,8 @@ static integer c__1 = 1;
     io___16.ciunit = *lout;
     s_wsfe(&io___16);
     e_wsfe();
+#endif
+
     return 0;
 } /* dvout_ */
 

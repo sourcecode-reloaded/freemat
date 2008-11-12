@@ -42,6 +42,7 @@ static integer c__2 = 2;
 /* Subroutine */ int zvout_(integer *lout, integer *n, doublecomplex *cx, 
 	integer *idigit, char *ifmt, ftnlen ifmt_len)
 {
+#if 0
     /* Format strings */
     static char fmt_9999[] = "(/1x,a/1x,a)";
     static char fmt_9998[] = "(1x,i4,\002 - \002,i4,\002:\002,1x,1p,2(\002"
@@ -450,6 +451,9 @@ static integer c__2 = 2;
     io___27.ciunit = *lout;
     s_wsfe(&io___27);
     e_wsfe();
+
+#endif
+
     return 0;
 
 /* ======================================================================= */
