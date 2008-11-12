@@ -24,6 +24,7 @@
 #include "Array.hpp"
 #include "Print.hpp"
 #include "Core.hpp"
+#include "FMFontDialog.hpp"
 
 FMFindDialog::FMFindDialog(QWidget *parent) : QDialog(parent) {
   ui.setupUi(this);
@@ -2071,9 +2072,9 @@ QString FMEditor::strippedName(const QString &fullFileName)
 }
 
 void FMEditor::font() {
-  bool ok;
-  QFont new_font = QFontDialog::getFont(&ok, m_font, this);
-  m_font = new_font;
+  FMFontDialog g(m_font, this);
+  if (g.exec() == QDialog::Accepted)
+    m_font = g.font();
   updateFont();
 }
 

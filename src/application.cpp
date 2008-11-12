@@ -24,7 +24,7 @@
 #include <qfiledialog.h>
 #include <qclipboard.h>
 #include <iostream>
-#include <qfontdialog.h>
+#include "FMFontDialog.hpp"
 #include <qsettings.h>
 #include "Interpreter.hpp"
 #include "highlighter.hpp"
@@ -358,9 +358,9 @@ void ApplicationWindow::scrollback() {
 
 void ApplicationWindow::font() {
   QFont old_font = m_term->getFont();
-  bool ok;
-  QFont new_font = QFontDialog::getFont(&ok, old_font, this);
-  if (ok) {
+  FMFontDialog g(old_font,this);
+  if (g.exec() == QDialog::Accepted) {
+    QFont new_font = g.font();
     QSettings settings("FreeMat","FreeMat");
     settings.setValue("terminal/font",new_font.toString());
     m_term->setFont(new_font);

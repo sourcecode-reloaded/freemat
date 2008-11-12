@@ -195,6 +195,7 @@ private:
   Ui::FMSynLightConf ui;
 };
 
+
 class FMEditor : public QMainWindow {
   Q_OBJECT
   QMenu *fileMenu, *editMenu, *toolsMenu, *debugMenu, *helpMenu;
