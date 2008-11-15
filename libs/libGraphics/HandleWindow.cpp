@@ -256,8 +256,26 @@ void HandleWindow::camRotate(bool active) {
 }
 
 void HandleWindow::save() {
-  QString fn = QFileDialog::getSaveFileName();
+  QString Filters, SelectedFilter;
+  
+  /* Find all supported bitmap formats */
+  QList<QByteArray> formats(QImageWriter::supportedImageFormats());
+  for (int i=0;i<formats.count();i++) {
+    Filters = Filters + QString(formats.at(i).data()).toUpper() + " (*." + QString(formats.at(i).data()) + ");;";
+  }
+  
+  /* Add vector formats */
+  Filters = Filters + "PDF (*.pdf);;PS (*.ps);;EPS (*.eps);;SVG (*.svg);;All files (*)";
+   
+  QString fn = QFileDialog::getSaveFileName (0, "Save Figure As", QString(), Filters, &SelectedFilter);
   if (fn.isEmpty()) return;
+
+  /* Add an extension to file name if not provided*/
+  if (!fn.contains('.')) { 
+    int pos = SelectedFilter.indexOf('*');
+    fn = fn + SelectedFilter.mid(pos+1,SelectedFilter.size()-pos-2);
+  }
+
   try {
     HPrintFunction(0,ArrayVector(Array(fn)));
   } catch(Exception &e) {

@@ -1621,16 +1621,23 @@ static QStringList GetOpenFileNames(QWidget *w, const QString &filePath = QStrin
 }
 
 static QString GetSaveFileName(QWidget *w, const QString &filePath = QString()) { 
-  QString retfile;
+  QString retfile, SelectedFilter;
   if (!filePath.isEmpty())
     retfile = QFileDialog::getSaveFileName(w,"Save File",filePath,
-					   "M files (*.m);;Text files (*.txt);;All files (*)");
+					   "M files (*.m);;Text files (*.txt);;All files (*)",&SelectedFilter);
   else if (lastfile_set)
     retfile = QFileDialog::getSaveFileName(w,"Save File",lastfile,
-					   "M files (*.m);;Text files (*.txt);;All files (*)");
+					   "M files (*.m);;Text files (*.txt);;All files (*)",&SelectedFilter);
   else
     retfile = QFileDialog::getSaveFileName(w,"Save File",QString(),
-					   "M files (*.m);;Text files (*.txt);;All files (*)");
+					   "M files (*.m);;Text files (*.txt);;All files (*)",&SelectedFilter);
+  /* Add an extension to file name if not provided*/
+  if (!retfile.contains('.')) { 
+    if (SelectedFilter.contains("*.m"))
+        retfile = retfile + ".m";
+    else if (SelectedFilter.contains("*.txt"))
+        retfile = retfile + ".txt";
+  }
   return retfile;  
 }
 
