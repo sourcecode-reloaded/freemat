@@ -54,7 +54,69 @@ ENDMACRO (QT4_GENERATE_UI)
 
 SET(OPTIONAL_LIBS "")
 
-###########################################################################################
+######################################################################
+# BLAS Package
+######################################################################
+
+FIND_LIBRARY(BLAS_SYS_LIBRARY NAMES blas cblas DOC "Location of systems BLAS library" PATHS ${LOCAL_PATH}   /usr/lib/atlas )
+
+IF (BLAS_SYS_LIBRARY)
+  SET (SYSTEM_BLAS_AVAILABLE TRUE)
+ELSE (BLAS_SYS_LIBRARY)
+  SET (SYSTEM_BLAS_AVAILABLE FALSE)
+ENDIF (BLAS_SYS_LIBRARY)
+
+OPTION(FORCE_BUNDLED_BLAS "Force use of bundled BLAS" OFF)
+
+IF (FORCE_BUNDLED_BLAS OR NOT SYSTEM_BLAS_AVAILABLE)
+  ADD_SUBDIRECTORY(libs/libMath/libBLAS_C)
+  SET (BLAS_LIBRARY blas_c )
+ELSE (FORCE_BUNDLED_BLAS OR NOT SYSTEM_BLAS_AVAILABLE)
+  SET (BLAS_LIBRARY ${BLAS_SYS_LIBRARY})
+ENDIF (FORCE_BUNDLED_BLAS OR NOT SYSTEM_BLAS_AVAILABLE)
+
+######################################################################
+# LAPACK Package
+######################################################################
+
+FIND_LIBRARY(LAPACK_SYS_LIBRARY NAMES lapack clapack DOC "Location of systems LAPACK library" PATHS ${LOCAL_PATH}  )
+
+IF (LAPACK_SYS_LIBRARY)
+  SET (SYSTEM_LAPACK_AVAILABLE TRUE)
+ELSE (LAPACK_SYS_LIBRARY)
+  SET (SYSTEM_LAPACK_AVAILABLE FALSE)
+ENDIF (LAPACK_SYS_LIBRARY)
+
+OPTION(FORCE_BUNDLED_LAPACK "Force use of bundled LAPACK" OFF)
+
+IF (FORCE_BUNDLED_LAPACK OR NOT SYSTEM_LAPACK_AVAILABLE)
+  ADD_SUBDIRECTORY(libs/libMath/libLAPACK_C)
+  SET (LAPACK_LIBRARY lapack_c )
+ELSE (FORCE_BUNDLED_LAPACK OR NOT SYSTEM_LAPACK_AVAILABLE)
+  SET (LAPACK_LIBRARY ${LAPACK_SYS_LIBRARY})
+ENDIF (FORCE_BUNDLED_LAPACK OR NOT SYSTEM_LAPACK_AVAILABLE)
+
+######################################################################
+# ARPACK Package
+######################################################################
+
+FIND_LIBRARY(ARPACK_SYS_LIBRARY NAMES arpack arpack DOC "Location of systems ARPACK library" PATHS ${LOCAL_PATH}  )
+
+IF (ARPACK_SYS_LIBRARY)
+  SET (SYSTEM_ARPACK_AVAILABLE TRUE)
+ELSE (ARPACK_SYS_LIBRARY)
+  SET (SYSTEM_ARPACK_AVAILABLE FALSE)
+ENDIF (ARPACK_SYS_LIBRARY)
+
+OPTION(FORCE_BUNDLED_ARPACK "Force use of bundled ARPACK" OFF)
+
+IF (FORCE_BUNDLED_ARPACK OR NOT SYSTEM_ARPACK_AVAILABLE)
+  ADD_SUBDIRECTORY(libs/libMath/libARPACK_C)
+  SET (ARPACK_LIBRARY arpack_c )
+ELSE (FORCE_BUNDLED_ARPACK OR NOT SYSTEM_ARPACK_AVAILABLE)
+  SET (ARPACK_LIBRARY ${ARPACK_SYS_LIBRARY})
+ENDIF (FORCE_BUNDLED_ARPACK OR NOT SYSTEM_ARPACK_AVAILABLE)
+
 
 #Find AVCALL Library
 FIND_LIBRARY(AVCALL_LIBRARY NAMES avcall DOC "Location of the AVCALL library" PATHS ${LOCAL_PATH})
@@ -99,12 +161,19 @@ IF( UMFPACK_LIBRARY AND UMFPACK_INCLUDE_DIR AND AMD_LIBRARY AND AMD_INCLUDE_DIR)
         SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${UMFPACK_LIBRARY} ${AMD_LIBRARY})
 ENDIF( UMFPACK_LIBRARY AND UMFPACK_INCLUDE_DIR AND AMD_LIBRARY AND AMD_INCLUDE_DIR )	
 
-FIND_LIBRARY(ARPACK_LIBRARY NAMES arpack DOC "Location of ARPACK library" PATHS ${LOCAL_PATH})
-   IF( ARPACK_LIBRARY ) 
-     ADD_DEFINITIONS( -DHAVE_ARPACK )
-     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${ARPACK_LIBRARY})
-   ENDIF( ARPACK_LIBRARY )	
 
+###
+###ADD_SUBDIRECTORY(libs/libMath/libARPACK_C)
+###SET ( ARPACK_LIBRARY arpack_c )
+###ADD_SUBDIRECTORY(libs/libMath/libBLAS_C)
+###SET ( BLAS_LIBRARY blas_c )
+###
+####FIND_LIBRARY(ARPACK_LIBRARY NAMES arpack DOC "Location of ARPACK library" PATHS ${LOCAL_PATH})
+###   IF( ARPACK_LIBRARY ) 
+###     ADD_DEFINITIONS( -DHAVE_ARPACK )
+###     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${ARPACK_LIBRARY})
+###   ENDIF( ARPACK_LIBRARY )	
+###
 #############################################################################
 #Find LLVM
 OPTION(USE_LLVM "Build with LLVM support?" ON)
@@ -166,7 +235,7 @@ ELSE( MSVC )
 ENDIF( MSVC )
 ENDIF( USE_LLVM )
 
-FIND_LIBRARY(LAPACK_LIBRARY NAMES lapack clapack DOC "Location of LAPACK library" PATHS ${LOCAL_PATH}  )
+#FIND_LIBRARY(LAPACK_LIBRARY NAMES lapack clapack DOC "Location of LAPACK library" PATHS ${LOCAL_PATH}  )
 
 ##############################################################################
 #PCRE library
@@ -243,8 +312,8 @@ IF( USE_DYNLINK )
 	INSTALL( FILES ${PROJECT_SOURCE_DIR}/blas.ini DESTINATION bin )
 ELSE( USE_DYNLINK )
  IF( NOT MSVC )
-        LINK_DIRECTORIES(/usr/lib/atlas)
- 	FIND_LIBRARY(BLAS_LIBRARY NAMES blas atlas DOC "Location of BLAS or ATLAS library" PATHS  ${LOCAL_PATH} /usr/lib/atlas )
+#        LINK_DIRECTORIES(/usr/lib/atlas)
+# 	FIND_LIBRARY(BLAS_LIBRARY NAMES blas atlas DOC "Location of BLAS or ATLAS library" PATHS  ${LOCAL_PATH} /usr/lib/atlas )
  ENDIF( NOT MSVC )
 ENDIF( USE_DYNLINK )
 
