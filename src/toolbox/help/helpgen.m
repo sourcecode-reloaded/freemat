@@ -94,10 +94,9 @@ function merge_mfile(filename)
   headertext = [];
   try 
     fp = fopen([sourcepath,'/help/text/',name,'.mdc'],'r');
-    text = getline(fp);
     while (~feof(fp))
-      headertext = [headertext,'% ',text];
       text = getline(fp);
+      headertext = [headertext,'% ',text];
     end
     fclose(fp);
   catch
@@ -107,8 +106,8 @@ function merge_mfile(filename)
   [path,name,suffix] = fileparts(newname);
   mkdir(path);
   g = fopen(newname,'w');
-  text = getline(h);
   while (~feof(h))
+    text = getline(h);
     if (~isempty(regexp(text,'^\s*%!')))
       text = getline(h);
       while (isempty(regexp(text,'^\s*%!')))
@@ -118,7 +117,6 @@ function merge_mfile(filename)
     else
       fprintf(g,'%s',text);
     end
-    text = getline(h);
   end
   fclose(h);
   fclose(g);
@@ -154,11 +152,11 @@ function helpgen_processfile(filename,&writers)
     return;
   end
   while (1)
-    line = getline(fp);
     if (feof(fp))
       fclose(fp);
       return;
     end
+    line = getline(fp);
     if (testmatch(line,pset.docblock))
       line = getline(fp);
       modname = mustmatch(line,pset.modulename);

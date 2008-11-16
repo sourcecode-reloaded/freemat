@@ -3,7 +3,12 @@ Annoyances:
  LS?
  complex number display
  repmat
-
+ minimum for lapack/blas/arpack?
+ apple support for fft
+ packaging
+ main window rework
+ completion stuff?
+ fopen/fread/compat w/ ML!!!
 
 
 
