@@ -9,6 +9,8 @@ Annoyances:
  main window rework
  completion stuff?
  fopen/fread/compat w/ ML!!!
+ quit, signatures in help output
+ PDF gen is broken.
 
 
 
