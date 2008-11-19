@@ -36,6 +36,7 @@ void InitializeFileSubsystem() {
 #define MATCH(x) (prec==x)
 
 static DataClass processPrecisionString(QString prec) {
+  prec = prec.trimmed().toLower();
   if (MATCH("uint8") || MATCH("uchar") || MATCH("unsigned char"))
     return UInt8;
   if (MATCH("int8") || MATCH("char") || MATCH("integer*1"))
@@ -59,6 +60,27 @@ static DataClass processPrecisionString(QString prec) {
   throw Exception("invalid precision type");
 }
 #undef MATCH
+
+void ComputePrecisionString(QString cmd, DataClass &in, DataClass &out) {
+  // Check for type => type
+  QRegExp rxlen("(.*)=>(.*)");
+  int pos = rxlen.indexIn(cmd);
+  if (pos > -1) {
+    in = processPrecisionString(rxlen.cap(1));
+    out = processPrecisionString(rxlen.cap(2));
+    if (rxlen.cap(2).trimmed().toLower() == "char") out = StringArray;
+    return;
+  }
+  if (cmd.startsWith("*")) {
+    cmd.remove(0,1);
+    in = processPrecisionString(cmd);
+    out = in;
+    if (cmd.trimmed().toLower() == "char") out = StringArray;
+    return;
+  }
+  in = processPrecisionString(cmd);
+  out = Double;
+}
 
 //!
 //@Module FOPEN File Open Function
@@ -93,8 +115,15 @@ static DataClass processPrecisionString(QString prec) {
 //          file  is created if it does not exist.  The file pointer is
 //	  placed at the end of the file.
 //\end{itemize}
-//On some platforms (e.g. Win32) it is necessary to add a 'b' for 
-//binary files to avoid the operating system's 'CR/LF<->CR' translation.
+//Starting with FreeMat 4, all files are treated as binary files by default.
+//To invoke the operating systems 'CR/LF <-> CR' translation (on Win32)
+//add a 't' to the mode string, as in 'rt+'.
+//
+//Also, you can supply a second argument to @|fopen| to retrieve error
+//messages if the @|fopen| fails.
+//@[
+//  [fp,messages] = fopen(fname,mode,byteorder)
+//@]
 //
 //Finally, FreeMat has the ability to read and write files of any
 //byte-sex (endian).  The third (optional) input indicates the 
@@ -102,8 +131,8 @@ static DataClass processPrecisionString(QString prec) {
 //of the machine running FreeMat is used.  Otherwise, the third
 //argument should be one of the following strings:
 //\begin{itemize}
-//   \item @|'le','ieee-le','little-endian','littleEndian','little'|
-//   \item @|'be','ieee-be','big-endian','bigEndian','big'|
+//   \item @|'le','ieee-le','little-endian','littleEndian','little','l','ieee-le.l64','s'|
+//   \item @|'be','ieee-be','big-endian','bigEndian','big','b','ieee-be.l64','a'|
 //\end{itemize}
 //	
 //If the file cannot be opened, or the file mode is illegal, then
@@ -125,13 +154,13 @@ static DataClass processPrecisionString(QString prec) {
 //We also use the @|fwrite| function to write some floating point data to
 //the file.
 //@<
-//fp = fopen('test.dat','wb','ieee-le')
+//fp = fopen('test.dat','w','ieee-le')
 //fwrite(fp,float([1.2,4.3,2.1]))
 //fclose(fp)
 //@>
 //Next, we open the file and read the data back
 //@<
-//fp = fopen('test.dat','rb','ieee-le')
+//fp = fopen('test.dat','r','ieee-le')
 //fread(fp,[1,3],'float')
 //fclose(fp)
 //@>
@@ -144,68 +173,107 @@ static DataClass processPrecisionString(QString prec) {
 //@>
 //Finally, we read all 5 @|float| values from the file
 //@<
-//fp = fopen('test.dat','rb','ieee-le')
+//fp = fopen('test.dat','r','ieee-le')
 //fread(fp,[1,5],'float')
 //fclose(fp)
 //@>
 //@@Signature
 //function fopen FopenFunction
 //inputs fname mode byteorder
-//outputs handle
+//outputs handle message
 //!
 ArrayVector FopenFunction(int nargout, const ArrayVector& arg) {
-  uint32 testEndian = 0xFEEDFACE;
-  uint8 *dp;
-  bool bigEndian;
-
-  dp = (uint8*) &testEndian;
-  bigEndian = (dp[0] == 0xFE);
-
-  if (arg.size() > 3)
-    throw Exception("too many arguments to fopen");
-  if (arg.size() < 1)
-    throw Exception("fopen requires at least one argument (a filename)");
-  if (!(arg[0].isString()))
-    throw Exception("First argument to fopen must be a filename");
-  QString fname = arg[0].asString();
-  QString mode = "rb";
-  if (arg.size() > 1) {
-    if (!arg[1].isString())
-      throw Exception("Access mode to fopen must be a string");
-    mode = arg[1].asString();
+  try {
+    uint32 testEndian = 0xFEEDFACE;
+    uint8 *dp;
+    bool bigEndian;
+    
+    dp = (uint8*) &testEndian;
+    bigEndian = (dp[0] == 0xFE);
+    
+    if (arg.size() > 3)
+      throw Exception("too many arguments to fopen");
+    if (arg.size() < 1)
+      throw Exception("fopen requires at least one argument (a filename)");
+    if (!(arg[0].isString()))
+      throw Exception("First argument to fopen must be a filename");
+    QString fname = arg[0].asString();
+    QString mode = "r";
+    if (arg.size() > 1) {
+      if (!arg[1].isString())
+	throw Exception("Access mode to fopen must be a string");
+      mode = arg[1].asString();
+    }
+    bool swapendian = false;
+    if (arg.size() > 2) {
+      QString swapflag = arg[2].asString();
+      if (swapflag=="swap") {
+	swapendian = true;
+      } else if ((swapflag=="le") ||
+		 (swapflag=="ieee-le") ||
+		 (swapflag=="little-endian") ||
+		 (swapflag=="littleEndian") ||
+		 (swapflag=="little") ||
+		 (swapflag == "l") ||
+		 (swapflag == "ieee-le.l64") ||
+		 (swapflag == "s")) {
+	swapendian = bigEndian;
+      } else if ((swapflag=="be") ||
+		 (swapflag=="ieee-be") ||
+		 (swapflag=="big-endian") ||
+		 (swapflag=="bigEndian") ||
+		 (swapflag=="big") ||
+		 (swapflag=="b") ||
+		 (swapflag=="ieee-be.l64") ||
+		 (swapflag=="a")) {
+	swapendian = !bigEndian;
+      } else if (!arg[2].isEmpty())
+	throw Exception("swap flag must be 'swap' or an endian spec (see help fopen for the complete list)");
+    }
+    QFlags<QIODevice::OpenModeFlag> modeFlag;
+    mode = mode.toLower();
+    // r  means ReadOnly && MustExist
+    // r+ means ReadOnly | WriteOnly && MustExist
+    // w  means Writeonly | Truncate
+    // w+ means ReadOnly | WriteOnly | Truncate
+    // a  means Append | WriteOnly
+    // a+ means Append | WriteOnly | ReadOnly
+    // t  means * | Text 
+    bool mustExist = false;
+    bool has_r = mode.contains("r");
+    bool has_p = mode.contains("+");
+    bool has_w = mode.contains("w");
+    bool has_a = mode.contains("a");
+    bool has_t = mode.contains("t");
+    if (has_r) {
+      modeFlag |= QIODevice::ReadOnly;
+      mustExist = true;
+    }
+    if (has_w) modeFlag |= QIODevice::WriteOnly;
+    if (has_p) modeFlag |= QIODevice::ReadOnly;
+    if (has_p && has_r)  modeFlag |= QIODevice::WriteOnly;
+    if (has_w) modeFlag |= QIODevice::Truncate;
+    if (has_a) modeFlag |= QIODevice::Append | QIODevice::WriteOnly;
+    if (has_t) modeFlag |= QIODevice::Text;
+    
+    FilePtr *fptr = new FilePtr();
+    fptr->fp = new QFile(fname);
+    if (mustExist && !fptr->fp->exists())
+      throw Exception("Access mode " + mode + " requires file to exist ");
+    if (!fptr->fp->open(modeFlag))
+      throw Exception(fptr->fp->errorString() + QString(" for fopen argument ") + fname);
+    fptr->swapflag = swapendian;
+    unsigned int rethan = fileHandles.assignHandle(fptr);
+    return ArrayVector(Array(double(rethan-1)));
+  } catch (Exception& e) {
+    if (nargout > 1) {
+      ArrayVector ret;
+      ret.push_back(Array(double(-1)));
+      ret.push_back(Array(e.msg()));
+      return ret;
+    }
+    throw;
   }
-  bool swapendian = false;
-  if (arg.size() > 2) {
-    QString swapflag = arg[2].asString();
-    if (swapflag=="swap") {
-      swapendian = true;
-    } else if ((swapflag=="le") ||
-	       (swapflag=="ieee-le") ||
-	       (swapflag=="little-endian") ||
-	       (swapflag=="littleEndian") ||
-	       (swapflag=="little")) {
-      swapendian = bigEndian;
-    } else if ((swapflag=="be") ||
-	       (swapflag=="ieee-be") ||
-	       (swapflag=="big-endian") ||
-	       (swapflag=="bigEndian") ||
-	       (swapflag=="big")) {
-      swapendian = !bigEndian;
-    } else if (!arg[2].isEmpty())
-      throw Exception("swap flag must be 'swap' or an endian spec ('le','ieee-le','little-endian','littleEndian','little','be','ieee-be','big-endian','bigEndian','big')");
-  }
-  QFlags<QIODevice::OpenModeFlag> modeFlag;
-  mode = mode.toLower();
-  if (mode.contains("r")) modeFlag |= QIODevice::ReadOnly;
-  if (mode.contains("w")) modeFlag |= QIODevice::WriteOnly;
-  if (mode.contains("a")) modeFlag |= QIODevice::Append;
-  FilePtr *fptr = new FilePtr();
-  fptr->fp = new QFile(fname);
-  if (!fptr->fp->open(modeFlag))
-    throw Exception(fptr->fp->errorString() + QString(" for fopen argument ") + fname);
-  fptr->swapflag = swapendian;
-  unsigned int rethan = fileHandles.assignHandle(fptr);
-  return ArrayVector(Array(double(rethan-1)));
 }
 
 //!
@@ -307,26 +375,55 @@ ArrayVector FcloseFunction(int nargout, const ArrayVector& arg) {
 //   \item 'single','float32','float','real*4' for a 32-bit floating point.
 //   \item 'double','float64','real*8' for a 64-bit floating point.
 //\end{itemize}
+//
+//Starting with FreeMat 4, the format for the third argument has changed.
+//If you specify only a type, such as @|'float'|, the data is read in as
+//single precision, but the output type is always @|'double'|.  This behavior
+//is consistent with Matlab.  If you want the output type to match the input
+//type (as was previous behavior in FreeMat), you must preface the precision
+//string with a @|'*'|.  Thus, the precision string @|'*float'| implies
+//that data is read in as single precision, and the output is also single
+//precision.
+//
+//The third option is to specify the input and output types explicitly.
+//You can do this by specifiying a precision string of the form 
+//@|'type1 => type2'|, where @|'type1'| is the input type and 
+//@|'type2'| is the output type.  For example, if the input type is
+//@|'double'| and the output type is to be a @|'float'|, then a type spec
+//of @|'double => float'| should be used.
+//
 //@@Example
 //First, we create an array of @|512 x 512| Gaussian-distributed @|float| random variables, and then writing them to a file called @|test.dat|.
 //@<
 //A = float(randn(512));
-//fp = fopen('test.dat','wb');
+//fp = fopen('test.dat','w');
 //fwrite(fp,A);
 //fclose(fp);
 //@>
 //Read as many floats as possible into a row vector
 //@<
-//fp = fopen('test.dat','rb');
+//fp = fopen('test.dat','r');
 //x = fread(fp,[1,inf],'float');
+//fclose(fp);
 //who x
 //@>
+//Note that @|x| is a @|double| array.  This behavior is new to FreeMat 4.
 //Read the same floats into a 2-D float array.
 //@<
-//fp = fopen('test.dat','rb');
+//fp = fopen('test.dat','r');
 //x = fread(fp,[512,inf],'float');
+//fclose(fp);
 //who x
 //@>
+//To read them as a single precision float array, we can use the
+//following form:
+//@<
+//fp = fopen('test.dat','r');
+//x = fread(fp,[512,inf],'*float');
+//fclose(fp);
+//who x
+//@>
+//
 //@@Signature
 //function fread FreadFunction
 //inputs handle size precision
@@ -356,7 +453,7 @@ Array Tread(QFile* fp, NTuple dim, bool swapflag) {
 }
 
 #define MacroRead(ctype,cls)			\
-  case cls: { A = Tread<ctype>(fptr->fp,dims,fptr->swapflag); break; }
+  case cls: { A = Tread<ctype>(fptr->fp,dims,fptr->swapflag).toClass(dcOut); break; }
 
 ArrayVector FreadFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 3)
@@ -386,19 +483,20 @@ ArrayVector FreadFunction(int nargout, const ArrayVector& arg) {
     }
   }
   // Map the precision string to a data class
-  DataClass dataClass = processPrecisionString(prec);
+  DataClass dcIn, dcOut;
+  ComputePrecisionString(prec,dcIn,dcOut);
   // If there is an infinity in the dimensions, we have to calculate the
   // appropriate value
   if (infinityFound) {
     int64 bytes_left = fptr->fp->size() - fptr->fp->pos();
-    dp[infiniteDim] = ceil(double(bytes_left)/ByteSizeOfDataClass(dataClass)/elementCount);
+    dp[infiniteDim] = ceil(double(bytes_left)/ByteSizeOfDataClass(dcIn)/elementCount);
     elementCount *= dp[infiniteDim];
   }
-  NTuple dims;
+  NTuple dims(1,1);
   for (index_t j=1;j<=qMin(NDims,int(dp.length()));j++) 
     dims[int(j-1)] = dp[j];
   Array A;
-  switch (dataClass) {
+  switch (dcIn) {
   default: throw Exception("data type not supported for fread");
     MacroExpandCasesSimple(MacroRead);
   }
@@ -425,17 +523,36 @@ ArrayVector FreadFunction(int nargout, const ArrayVector& arg) {
 //write fails (because we ran out of disk space, etc.) then an error
 //is returned.  The output @|n| indicates the number of elements
 //successfully written.
+//
+//Note that unlike MATLAB, FreeMat 4 does not default to @|uint8| for
+//writing arrays to files.  Alternately, the type of the data to be
+//written to the file can be specified with the syntax
+//@[
+//  n = fwrite(handle,A,type)
+//@]
+//where @|type| is one of the following legal values:
+//\begin{itemize}
+//   \item 'uint8','uchar','unsigned char' for an unsigned, 8-bit integer.
+//   \item 'int8','char','integer*1' for a signed, 8-bit integer.
+//   \item 'uint16','unsigned short' for an unsigned, 16-bit  integer.
+//   \item 'int16','short','integer*2' for a signed, 16-bit integer.
+//   \item 'uint32','unsigned int' for an unsigned, 32-bit integer.
+//   \item 'int32','int','integer*4' for a signed, 32-bit integer.
+//   \item 'single','float32','float','real*4' for a 32-bit floating point.
+//   \item 'double','float64','real*8' for a 64-bit floating point.
+//\end{itemize}
+//
 //@@Example
 //Heres an example of writing an array of @|512 x 512| Gaussian-distributed @|float| random variables, and then writing them to a file called @|test.dat|.
 //@<
 //A = float(randn(512));
-//fp = fopen('test.dat','wb');
-//fwrite(fp,A);
+//fp = fopen('test.dat','w');
+//fwrite(fp,A,'single');
 //fclose(fp);
 //@>
 //@@Signature
 //function fwrite FwriteFunction
-//inputs handle A
+//inputs handle A type
 //outputs count
 //!
 
@@ -454,15 +571,22 @@ int64 Twrite(QFile* fp, const Array &A, bool swapflag) {
 }
 
 #define MacroWrite(ctype,cls)						\
-  case cls: return ArrayVector(Array(double(Twrite<ctype>(fptr->fp,arg[1],fptr->swapflag))));
+  case cls: return ArrayVector(Array(double(Twrite<ctype>(fptr->fp,x,fptr->swapflag))));
 
 ArrayVector FwriteFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 2)
-    throw Exception("fwrite requires two arguments, the file handle, and the variable to be written");
+    throw Exception("fwrite requires at least two arguments, the file handle, and the variable to be written");
   FilePtr *fptr=(fileHandles.lookupHandle(arg[0].asInteger()+1));
   if (arg[1].isReferenceType())
     throw Exception("cannot write reference data types with fwrite");
-  switch (arg[1].dataClass()) {
+  Array x(arg[1]);
+  if (arg.size() >= 3) {
+    if (!arg[2].isString())
+      throw Exception("type argument must be a string");
+    QString prec = arg[2].asString();
+    x = x.toClass(processPrecisionString(prec));
+  }
+  switch (x.dataClass()) {
   default: throw Exception("data type not supported for fwrite");
     MacroExpandCasesSimple(MacroWrite);
   }

@@ -13,7 +13,6 @@ Annoyances:
  PDF gen is broken.
 
 
-
 Consider the vector versus scalar issue.  An assignment like:
 
 LHS = RHS

@@ -378,10 +378,10 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addSpecialFunction("exist",ExistFunction,2,1,"item","kind",NULL);
   context->addFunction("fft",FFTFunction,3,1,"x","len","dim",NULL);
   context->addFunction("ifft",IFFTFunction,3,1,"x","len","dim",NULL);
-  context->addFunction("fopen",FopenFunction,3,1,"fname","mode","byteorder",NULL);
+  context->addFunction("fopen",FopenFunction,3,2,"fname","mode","byteorder",NULL);
   context->addFunction("fclose",FcloseFunction,1,0,"handle",NULL);
   context->addFunction("fread",FreadFunction,3,2,"handle","size","precision",NULL);
-  context->addFunction("fwrite",FwriteFunction,2,1,"handle","A",NULL);
+  context->addFunction("fwrite",FwriteFunction,3,1,"handle","A","type",NULL);
   context->addFunction("fflush",FflushFunction,1,0,"handle",NULL);
   context->addFunction("ftell",FtellFunction,1,1,"handle",NULL);
   context->addFunction("feof",FeofFunction,1,1,"handle",NULL);
