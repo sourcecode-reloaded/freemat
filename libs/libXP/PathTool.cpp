@@ -19,6 +19,7 @@
 #include "PathTool.hpp"
 #include "Common.hpp"
 #include <QtGui>
+#include "Interpreter.hpp"
 
 PathTool::PathTool() {
   QHBoxLayout *lay = new QHBoxLayout(this);
@@ -66,7 +67,7 @@ PathTool::PathTool() {
   connect(save,SIGNAL(clicked()),this,SLOT(save()));
   connect(done,SIGNAL(clicked()),this,SLOT(alldone()));
   // Populate the list based on the current path...
-  QSettings settings("FreeMat","FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
   QStringList path = settings.value("interpreter/path").toStringList();
   for (int i=0;i<path.size();i++)
     new QListWidgetItem(path[i],m_flist);
@@ -75,7 +76,7 @@ PathTool::PathTool() {
 }
 
 void PathTool::readSettings() {
-  QSettings settings("FreeMat", "FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
   QPoint gpos = settings.value("pathtool/pos", QPoint(200, 200)).toPoint();
   QSize gsize = settings.value("pathtool/size", QSize(650, 400)).toSize();
   int size0 = settings.value("pathtool/splitter/left", 250).toInt();
@@ -88,7 +89,7 @@ void PathTool::readSettings() {
 }
 
 void PathTool::writeSettings() {
-  QSettings settings("FreeMat", "FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
   settings.setValue("pathtool/pos", pos());
   settings.setValue("pathtool/size", size());
   settings.setValue("pathtool/splitter/left", splitter->sizes()[0]);
@@ -143,7 +144,7 @@ void PathTool::down() {
 }
 
 void PathTool::save() {
-  QSettings settings("FreeMat","FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
   QStringList pathList;
   for (int i=0;i<m_flist->count();i++) {
     QListWidgetItem *item = m_flist->item(i);

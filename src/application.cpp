@@ -231,7 +231,7 @@ void ApplicationWindow::closeEvent(QCloseEvent* ce) {
 }
 
 void ApplicationWindow::readSettings() {
-  QSettings settings("FreeMat", "FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
   QPoint pos = settings.value("mainwindow/pos", QPoint(200, 200)).toPoint();
   QSize size = settings.value("mainwindow/size", QSize(600, 400)).toSize();
   if ((pos.x() < 0) || (pos.y() < 0))
@@ -246,7 +246,7 @@ void ApplicationWindow::readSettings() {
 }
 
 void ApplicationWindow::writeSettings() {
-  QSettings settings("FreeMat", "FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
   settings.setValue("mainwindow/state",saveState());
   settings.setValue("mainwindow/pos", pos());
   settings.setValue("mainwindow/size", size());
@@ -350,7 +350,7 @@ void ApplicationWindow::scrollback() {
 					   "Lines:",scroll_limit,100,10000,
 					   1,&ok);
   if (ok) {
-    QSettings settings("FreeMat","FreeMat");
+    QSettings settings("FreeMat", Interpreter::getVersionString());
     settings.setValue("console/scrollback",new_limit);
     m_term->setScrollbackLimit(new_limit);
   }
@@ -361,7 +361,7 @@ void ApplicationWindow::font() {
   FMFontDialog g(old_font,this);
   if (g.exec() == QDialog::Accepted) {
     QFont new_font = g.font();
-    QSettings settings("FreeMat","FreeMat");
+    QSettings settings("FreeMat", Interpreter::getVersionString());
     settings.setValue("terminal/font",new_font.toString());
     m_term->setFont(new_font);
   }
@@ -412,8 +412,8 @@ void ApplicationWindow::about() {
 void ApplicationWindow::init() {
   m_tool->getVariablesTool()->setContext(m_keys->GetCompletionContext());
   // Check for the latest version?
-  QSettings settings("FreeMat","FreeMat");
-  QDate lastCheck = settings.value("lastcheckdate").toDate();
+  QSettings settings("FreeMat", Interpreter::getVersionString());
+  QDate lastCheck = settings.value("mainwindow/lastcheckdate").toDate();
   if (QDate::currentDate().daysTo(lastCheck) > 7) {
     checkForUpdates();
   }
@@ -456,8 +456,8 @@ void ApplicationWindow::checkForUpdates() {
   m_buffer.open(QBuffer::ReadWrite);
   m_http->setHost(url.host(), url.port() != -1 ? url.port() : 80);
   httpGetId = m_http->get(url.path(), &m_buffer);
-  QSettings settings("FreeMat","FreeMat");
-  settings.setValue("lastcheckdate",QDate::currentDate());
+  QSettings settings("FreeMat", Interpreter::getVersionString());
+  settings.setValue("mainwindow/lastcheckdate",QDate::currentDate());
 }
 
 void ApplicationWindow::httpRequestFinished(int requestId, bool error) {

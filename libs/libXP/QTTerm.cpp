@@ -23,6 +23,7 @@
 #include <math.h>
 #include <QtGui>
 #include <QEvent>
+#include "Interpreter.hpp"
 
 QTTerm::QTTerm() {
   setMinimumSize(50,50);
@@ -35,7 +36,7 @@ QTTerm::QTTerm() {
   m_blink_skip = false;
   m_timer_blink = new QTimer;
   QObject::connect(m_timer_blink, SIGNAL(timeout()), this, SLOT(blink()));
-  QSettings settings("FreeMat", "FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
   scrollback = settings.value("console/scrollback",5000).toInt();
   isCursorVisible = true;
   m_timer_blink->start(settings.value("console/blinkspeed",1000).toInt());

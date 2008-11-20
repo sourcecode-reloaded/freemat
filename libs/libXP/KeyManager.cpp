@@ -72,7 +72,7 @@ KeyManager::KeyManager()  {
   lineData = "";
   ResetLineBuffer();
   context = NULL;
-  QSettings settings("FreeMat", "FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
   QStringList historyList = settings.value("interpreter/history").toStringList();
   if (!historyList.size())
     history.push_back("");
@@ -1190,7 +1190,7 @@ StringVector KeyManager::GetCompletions(QString line,
 }
 
 void KeyManager::WriteHistory() {
-  QSettings settings("FreeMat","FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
   QStringList historyList;
   for (int i=0;i<history.size();i++) 
     historyList << history[i];

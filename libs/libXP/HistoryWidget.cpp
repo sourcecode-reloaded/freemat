@@ -19,6 +19,7 @@
 #include <QtGui>
 #include <QDebug>
 #include "HistoryWidget.hpp"
+#include "Interpreter.hpp"
 
 HistoryWidget::HistoryWidget(QWidget *parent) : QWidget(parent) {
   QVBoxLayout *layout = new QVBoxLayout;
@@ -74,7 +75,7 @@ void HistoryWidget::addCommand(QString t) {
 }
 
 void HistoryWidget::readSettings() {
-  QSettings settings("FreeMat", "FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
   QStringList historyList = settings.value("interpreter/history").toStringList();
   for (int i=0;i<historyList.size();i++) 
     new QListWidgetItem(historyList[i],m_flist);

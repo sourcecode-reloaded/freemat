@@ -125,7 +125,7 @@ void FMReplaceDialog::showrepcount(int cnt) {
 }
 
 FMTextEdit::FMTextEdit() : QTextEdit() {
-  QSettings settings("FreeMat","FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
   indentSize = settings.value("editor/tab_size",4).toInt();
   indentActive = settings.value("editor/indent_enable",true).toBool();
   matchActive = settings.value("editor/match_enable",true).toBool();
@@ -726,7 +726,7 @@ void FMTextEdit::fontUpdate() {
 }
 
 FMIndent::FMIndent() {
-  QSettings settings("FreeMat","FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
   indentSize = settings.value("editor/tab_size",4).toInt();
 }
 
@@ -1064,7 +1064,7 @@ void FMEditor::doReplaceAll(QString text, QString reptxt,
 }
 
 void FMEditor::readSettings() {
-  QSettings settings("FreeMat", "FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
   QPoint pos = settings.value("editor/pos", QPoint(200, 200)).toPoint();
   QSize size = settings.value("editor/size", QSize(400, 400)).toSize();
   resize(size);
@@ -1108,7 +1108,7 @@ void FMEditor::updateFont() {
 }
 
 void FMEditor::writeSettings() {
-  QSettings settings("FreeMat", "FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
   settings.setValue("editor/pos", pos());
   settings.setValue("editor/size", size());
   settings.setValue("editor/font", m_font.toString());
@@ -2037,14 +2037,14 @@ void FMEditor::setCurrentFile(const QString &fileName)
   updateTitles();
   
 
-  QSettings settings("FreeMat", "Recent Files");
-  QStringList files = settings.value("recentFileList").toStringList();
+  QSettings settings("FreeMat", Interpreter::getVersionString());
+  QStringList files = settings.value("editor/recentFileList").toStringList();
   files.removeAll(fileName);
   files.prepend(fileName);
   while (files.size() > MaxRecentFiles)
     files.removeLast();
 
-  settings.setValue("recentFileList", files);
+  settings.setValue("editor/recentFileList", files);
 
   foreach (QWidget *widget, QApplication::topLevelWidgets()) {
     FMEditor *tEditor = qobject_cast<FMEditor *>(widget);
@@ -2055,8 +2055,8 @@ void FMEditor::setCurrentFile(const QString &fileName)
 
 void FMEditor::updateRecentFileActions() 
 {
- QSettings settings("FreeMat", "Recent Files");
- QStringList files = settings.value("recentFileList").toStringList();
+ QSettings settings("FreeMat", Interpreter::getVersionString());
+ QStringList files = settings.value("editor/recentFileList").toStringList();
 
  int numRecentFiles = qMin(files.size(), (int)MaxRecentFiles);
 
@@ -2184,7 +2184,7 @@ void LineNumber::paintEvent(QPaintEvent *)
 
 FMSynLightConf::FMSynLightConf(QWidget *parent) : QDialog(parent) {
   ui.setupUi(this);
-  QSettings settings("FreeMat","FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
   connect(ui.enableCB,SIGNAL(toggled(bool)),ui.keywordButton,SLOT(setEnabled(bool)));
   connect(ui.enableCB,SIGNAL(toggled(bool)),ui.commentsButton,SLOT(setEnabled(bool)));
   connect(ui.enableCB,SIGNAL(toggled(bool)),ui.stringsButton,SLOT(setEnabled(bool)));
@@ -2206,7 +2206,7 @@ FMSynLightConf::FMSynLightConf(QWidget *parent) : QDialog(parent) {
 }
 
 void FMSynLightConf::save() {
-  QSettings settings("FreeMat", "FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
   settings.setValue("editor/syntax_enable",ui.enableCB->isChecked());
   settings.setValue("editor/syntax_colors/keyword",getColor(ui.keywordLabel));
   settings.setValue("editor/syntax_colors/comments",getColor(ui.commentsLabel));
@@ -2249,14 +2249,14 @@ void FMSynLightConf::setUntermStringColor() {
 
 FMIndentConf::FMIndentConf(QWidget *parent) : QDialog(parent) {
   ui.setupUi(this);
-  QSettings settings("FreeMat","FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
   ui.indentEnable->setChecked(settings.value("editor/indent_enable",true).toBool());
   ui.tabsize->setText(settings.value("editor/tab_size",4).toString());
   connect(this,SIGNAL(accepted()),this,SLOT(save()));
 }
 
 void FMIndentConf::save() {
-  QSettings settings("FreeMat","FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
   settings.setValue("editor/indent_enable",ui.indentEnable->isChecked());
   settings.setValue("editor/tab_size",ui.tabsize->text().toInt());
   QMessageBox::information(this,"Updated settings","The settings will apply to new files you open in the editor.");

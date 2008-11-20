@@ -105,7 +105,7 @@ ArrayVector HelpWinFunction(int nargout, const ArrayVector& arg, Interpreter* ev
   if (inBundleMode()) {
     dir = QDir(QString(qApp->applicationDirPath() + "/../Resources/help/html"));
   } else {
-    QSettings settings("FreeMat","FreeMat");
+    QSettings settings("FreeMat", Interpreter::getVersionString());
     dir = QDir(QString(settings.value("root", RESOURCEDIR).toString())+"/help/html");
   }
   if (!m_helpwin){

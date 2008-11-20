@@ -18,11 +18,12 @@
  */
 #include <QtGui>
 #include "highlighter.hpp"
+#include "Interpreter.hpp"
 
 Highlighter::Highlighter(QTextDocument *parent)
   : QSyntaxHighlighter(parent)
 {
-  QSettings settings("FreeMat","FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
 
   keywordColor = settings.value("editor/syntax_colors/keyword",Qt::darkBlue).value<QColor>();
   commentColor = settings.value("editor/syntax_colors/comments",Qt::darkRed).value<QColor>();

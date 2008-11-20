@@ -113,7 +113,7 @@ int main(int argc, char *argv[]) {
   
   if (installMode) {
     app = new QCoreApplication(argc, argv);
-    QSettings settings("FreeMat","FreeMat");
+    QSettings settings("FreeMat", Interpreter::getVersionString());
     settings.setValue("root",argv[installMode+1]);
     dbout << "FreeMat root path set to '" << argv[installMode+1] << "'\n";
     return 0;
@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
   }
   
   if (pathMode) {
-    QSettings settings("FreeMat","FreeMat");
+    QSettings settings("FreeMat", Interpreter::getVersionString());
     settings.setValue("interpreter/path",QString::fromStdString(argv[pathMode+1]).split(":"));
   }
 

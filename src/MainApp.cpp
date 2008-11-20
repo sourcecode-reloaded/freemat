@@ -1050,7 +1050,7 @@ void MainApp::UpdatePaths() {
 	basePath += GetRecursiveDirList(path2);
       }
     } else {
-      QSettings settings("FreeMat","FreeMat");
+      QSettings settings("FreeMat", Interpreter::getVersionString());
       QDir dir1(QString(settings.value("root", RESOURCEDIR).toString())+"/toolbox");   
       if (dir1.exists()) {
 	QString path1(dir1.canonicalPath());
@@ -1062,7 +1062,7 @@ void MainApp::UpdatePaths() {
 	basePath += GetRecursiveDirList(path2);
       }
     }
-    QSettings settings("FreeMat","FreeMat");
+    QSettings settings("FreeMat", Interpreter::getVersionString());
     userPath = settings.value("interpreter/path").toStringList();
     paths_set = true;
   }

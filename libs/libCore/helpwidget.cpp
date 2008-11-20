@@ -217,14 +217,14 @@ void HelpWindow::closeEvent(QCloseEvent* ce) {
 }
 
 void HelpWindow::writeSettings() {
-  QSettings settings("FreeMat", "FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
   settings.setValue("helpwindow/state",saveState());
   settings.setValue("helpwindow/pos", pos());
   settings.setValue("helpwindow/size", size());
 }
 
 void HelpWindow::readSettings() {
-  QSettings settings("FreeMat", "FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
   QPoint pos = settings.value("helpwindow/pos", QPoint(200, 200)).toPoint();
   QSize size = settings.value("helpwindow/size", QSize(500, 300)).toSize();
   resize(size);

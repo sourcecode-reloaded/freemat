@@ -70,7 +70,7 @@ void InterpreterThread::Setup() {
       basePath += GetRecursiveDirList(path2);
     }
   }
-  QSettings settings("FreeMat","FreeMat");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
   QStringList userPath = settings.value("interpreter/path").toStringList();
   eval = new Interpreter(context);
   eval->setBasePath(basePath);
