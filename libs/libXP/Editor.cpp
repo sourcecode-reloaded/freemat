@@ -1272,10 +1272,10 @@ void FMEditor::createActions() {
   smartIndentAct = new QAction("&Smart Indent",this);
   smartIndentAct->setShortcut(Qt::Key_I | Qt::CTRL); 
   connect(smartIndentAct,SIGNAL(triggered()),this,SLOT(smartIndent()));
-  undoAct = new QAction("Undo Edits",this);
+  undoAct = new QAction(QIcon(":/images/undo.png"),"&Undo Edits",this);
   undoAct->setShortcut(Qt::Key_Z | Qt::CTRL);
   connect(undoAct,SIGNAL(triggered()),this,SLOT(undo()));
-  redoAct = new QAction("Redo Edits",this);
+  redoAct = new QAction(QIcon(":/images/redo.png"),"&Redo Edits",this);
   redoAct->setShortcut(Qt::Key_Y | Qt::CTRL);
   connect(redoAct,SIGNAL(triggered()),this,SLOT(redo()));
   replaceAct = new QAction("Find and &Replace",this);
@@ -1501,8 +1501,10 @@ void FMEditor::createToolBars() {
   fileToolBar->addAction(newAct);
   fileToolBar->addAction(openAct);
   fileToolBar->addAction(saveAct);
-  fileToolBar->addAction(closeAct);
+//  fileToolBar->addAction(closeAct);
   editToolBar = addToolBar("Edit");
+  editToolBar->addAction(undoAct);
+  editToolBar->addAction(redoAct);
   editToolBar->addAction(copyAct);
   editToolBar->addAction(cutAct);
   editToolBar->addAction(pasteAct);
