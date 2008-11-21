@@ -266,6 +266,7 @@ ArrayVector HLineFunction(int, const ArrayVector&);
 ArrayVector HContourFunction(int, const ArrayVector&);
 ArrayVector HUIControlFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector HImageFunction(int, const ArrayVector&);
+ArrayVector HPatchFunction(int, const ArrayVector&);
 ArrayVector HTextFunction(int, const ArrayVector&);
 ArrayVector HSurfaceFunction(int, const ArrayVector&);
 ArrayVector HPatchFunction(int, const ArrayVector&);
@@ -564,6 +565,8 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
      context->addGfxSpecialFunction("uicontrol",HUIControlFunction,-1,1,NULL);
    if (guiflag)
      context->addGfxFunction("himage",HImageFunction,-1,1,NULL);
+   if (guiflag)
+     context->addGfxFunction("hpatch",HPatchFunction,-1,1,NULL);
    if (guiflag)
      context->addGfxFunction("htext",HTextFunction,-1,1,NULL);
    if (guiflag)

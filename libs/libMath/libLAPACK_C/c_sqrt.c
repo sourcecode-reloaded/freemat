@@ -7,12 +7,13 @@ VOID c_sqrt(r, z) complex *r, *z;
 #else
 #undef abs
 #include "math.h"
+#undef complex
 #ifdef __cplusplus
 extern "C" {
 #endif
 extern double f__cabs(double, double);
 
-void c_sqrt(complex *r, complex *z)
+void c_sqrt(complex *r, complex* z)
 #endif
 {
 	double mag, t;
