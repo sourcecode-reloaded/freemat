@@ -37,8 +37,12 @@
 #include "PathSearch.hpp"
 #include "DebugWin.hpp"
 #include "DebugStream.hpp"
+#include "Platform.hpp"
 
 HandleList<Interpreter*> m_threadHandles;
+
+
+
 
 #ifdef Q_WS_X11 
 #include "FuncTerminal.hpp"
