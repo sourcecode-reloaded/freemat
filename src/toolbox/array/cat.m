@@ -34,12 +34,16 @@ function ret = cat(varargin)
         elseif dim == 2
             ret = horzcat(varargin{2:end});
         else % dim>=3
-            ret = [];
-            jj = 2;
-            while isempty(varargin{jj})
-                jj = jj+1;
+            for jj = 2:nargin
+                if ~isempty(varargin{jj})
+                    break
+                end
             end
             ret = varargin{jj};
+            if isempty(ret)
+                % All input arrays are empty
+                return
+            end
             for ii = jj+1:nargin
                 if isempty(varargin{ii})
                     continue
