@@ -88,8 +88,6 @@ void signal_resize(int a) {
 
 #endif
 
-static FMEditor *edit = NULL;
-
 MainApp::MainApp() {
   guimode = true;
   GUIHack = false;
@@ -191,6 +189,7 @@ void MainApp::PathTool() {
 }
 
 extern MainApp *m_app;
+static FMEditor *edit = NULL;
 
 
 //!
@@ -228,6 +227,7 @@ ArrayVector EditorFunction(int nargout, const ArrayVector& arg, Interpreter* eva
     QObject::connect(eval, SIGNAL(IllegalLineOrCurrentPath(QString, int)), edit,
 		     SLOT(IllegalLineOrCurrentPath(QString, int)));
   }
+  edit->loadLastSession();
   edit->showNormal();
   edit->raise();
   return ArrayVector();
@@ -262,9 +262,10 @@ ArrayVector EditFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
     // from the editor to the interpreter.  
     QObject::connect(edit, SIGNAL(EvaluateText(QString)),
         m_app->GetKeyManager(), SLOT(QueueMultiString(QString)));
+    edit->loadLastSession();
   }
-  
-  if (edit ) {
+  else {
+    edit->loadLastSession();
     //Load files listed in the command line
     for (int i=0; i<arg.size(); ++i ) {
       if (arg[i].isString()) {

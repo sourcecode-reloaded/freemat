@@ -1030,6 +1030,9 @@ FMEditor::FMEditor(Interpreter* eval) : QMainWindow() {
   emit checkEditorExist(true);
 }
 
+FMEditor::~FMEditor() {
+}
+
 void FMEditor::doFind(QString text, bool backwards, bool sensitive) {
   QTextDocument::FindFlags flags;
   if (backwards) flags = QTextDocument::FindBackward;
@@ -1096,6 +1099,9 @@ void FMEditor::readSettings() {
   bracketMatchConfigAct->setChecked(isMatchBracket); 
   isSaveBeforeRun = settings.value("editor/save_n_execute_enable", true).toBool();
   saveBeforeRunConfigAct->setChecked(isSaveBeforeRun); 
+  isSaveLastSession = settings.value("editor/save_last_session_enable", true).toBool();
+  saveLastSessionConfigAct->setChecked(isSaveLastSession); 
+  lastSessionList = settings.value("editor/last_session_list").toStringList();
 }
 
 void FMEditor::updateFont() {
@@ -1115,7 +1121,23 @@ void FMEditor::writeSettings() {
   settings.setValue("editor/tooltip_enable", isShowToolTip);
   settings.setValue("editor/match_enable", isMatchBracket);
   settings.setValue("editor/save_n_execute_enable", isSaveBeforeRun);
+  settings.setValue("editor/save_last_session_enable", isSaveLastSession);
+  settings.setValue("editor/last_session_list", lastSessionList);
   settings.sync();
+}
+
+void FMEditor::loadLastSession() {
+  if (isSaveLastSession && !lastSessionList.empty()) {
+    QStringList::Iterator it = lastSessionList.begin();
+    while(it != lastSessionList.end()) {
+      QString fileName = *it;
+      loadFile(fileName);
+      ++it;
+    }
+  }
+  lastSessionList.clear();
+  if (tab->count() == 0)
+    setWindowTitle(Interpreter::getVersionString() + " Editor");  
 }
 
 QString FMEditor::currentFilename() {
@@ -1155,9 +1177,6 @@ void FMEditor::addTab() {
   tab->addTab(new FMEditPane(m_eval),"untitled.m");
   tab->setCurrentIndex(tab->count()-1);
   updateFont();
-}
-
-FMEditor::~FMEditor() {
 }
 
 QString FMEditor::shownName() {
@@ -1320,6 +1339,10 @@ void FMEditor::createActions() {
   saveBeforeRunConfigAct->setCheckable(true);
   saveBeforeRunConfigAct->setShortcut(Qt::Key_F3 | Qt::SHIFT);
   connect(saveBeforeRunConfigAct,SIGNAL(triggered()),this,SLOT(configSaveBeforeRun()));
+  saveLastSessionConfigAct = new QAction("Save last session",this);
+  saveLastSessionConfigAct->setCheckable(true);
+  saveLastSessionConfigAct->setShortcut(Qt::Key_F4 | Qt::SHIFT);
+  connect(saveLastSessionConfigAct,SIGNAL(triggered()),this,SLOT(configSaveLastSession()));
 
   executeSelectionAct = new QAction(QIcon(":/images/player_playselection.png"),"Execute Selection",this);
   executeSelectionAct->setShortcut(Qt::Key_F9); 
@@ -1446,6 +1469,7 @@ void FMEditor::createMenus() {
   configMenu->addAction(dataTipConfigAct);
   configMenu->addAction(bracketMatchConfigAct);
   configMenu->addAction(saveBeforeRunConfigAct);
+  configMenu->addAction(saveLastSessionConfigAct);
   toolsMenu = menuBar()->addMenu("&Tools");
   toolsMenu->addAction(findAct);
   toolsMenu->addAction(replaceAct);
@@ -1564,6 +1588,18 @@ void FMEditor::configSaveBeforeRun() {
      statusBar()->showMessage("Save buffer before run off", 2000);
   }
   saveBeforeRunConfigAct->setChecked(isSaveBeforeRun); 
+}
+
+void FMEditor::configSaveLastSession() {
+  if (saveLastSessionConfigAct->isChecked()) {
+     isSaveLastSession = true;
+     statusBar()->showMessage("Save last session on", 2000);
+  }
+  else {
+     isSaveLastSession = false;
+     statusBar()->showMessage("Save last session off", 2000);
+  }
+  saveLastSessionConfigAct->setChecked(isSaveLastSession); 
 }
 
 void FMEditor::dbstep() {
@@ -1868,6 +1904,8 @@ void FMEditor::closeTab() {
     prevEdit = NULL;
     delete p;
   }
+  if (tab->count() == 0)
+    setWindowTitle(Interpreter::getVersionString() + " Editor");  
 }
 
 bool FMEditor::maybeSave() {
@@ -1909,22 +1947,38 @@ bool FMEditor::saveFile(const QString &fileName)
 }
 
 void FMEditor::closeEvent(QCloseEvent *event) {
-  while (tab->count() > 0) {
+  if (!isVisible())
+     return;
+     
+  lastSessionList.clear();
+  /* save modified files and session */
+  for (int i=0;i<tab->count();i++) {
+    QWidget *w = tab->widget(i);
+    tab->setCurrentIndex(i);
     if (!maybeSave()) {
       event->ignore();
       emit checkEditorExist(true);
       return;
-    } else {
+    } 
+    else {
+      QWidget *w = tab->currentWidget();
+      FMEditPane *te = qobject_cast<FMEditPane*>(w);
+      lastSessionList << te->getFileName();
+    }
+  }
+  
+  /* close all tabs */
+  while (tab->count() > 0) {
       QWidget *p = tab->currentWidget();
       tab->removeTab(tab->currentIndex());
       prevEdit = NULL;
       delete p;
-    }
   }
+  
+  /* save settings, close and notify non-existent */
   writeSettings();
   event->accept();
   emit checkEditorExist(false);
-
 }
 
 QString FMEditor::getFullFileName(QString fname)

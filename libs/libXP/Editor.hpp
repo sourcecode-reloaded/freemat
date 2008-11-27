@@ -215,6 +215,7 @@ class FMEditor : public QMainWindow {
   QAction *dataTipConfigAct;
   QAction *bracketMatchConfigAct;
   QAction *saveBeforeRunConfigAct;
+  QAction *saveLastSessionConfigAct;
   QTabWidget *tab;
   FMTextEdit *prevEdit;
   QFont m_font;
@@ -227,12 +228,15 @@ class FMEditor : public QMainWindow {
   bool isShowToolTip;
   bool isMatchBracket;
   bool isSaveBeforeRun;
+  bool isSaveLastSession;
+  QStringList lastSessionList;
   QStringList pathList;
 public:
   FMEditor(Interpreter* eval);
   virtual ~FMEditor();
   void loadFile(const QString& filename);
   QString getFullFileName(QString fname);
+  void loadLastSession();
 private:
   void createActions();
   void createMenus();
@@ -300,6 +304,7 @@ private slots:
   void configDataTip();
   void configBracketMatch();
   void configSaveBeforeRun();
+  void configSaveLastSession();
   void helpWin();
   void helpOnSelection();
   void openSelection();
