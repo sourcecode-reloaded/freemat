@@ -579,7 +579,7 @@ ArrayVector EigFunction(int nargout, const ArrayVector& arg) {
 //Here is an example of using @|eigs| to calculate eigenvalues
 //of a matrix, and a comparison of the results with @|eig|
 //@<
-//a = sparse(rand(9))
+//a = sparse(rand(9));
 //eigs(a)
 //eig(full(a))
 //@>

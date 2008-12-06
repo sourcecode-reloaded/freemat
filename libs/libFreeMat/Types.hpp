@@ -50,11 +50,11 @@ extern "C"{
 #endif
 
 inline bool IsInteger(float x) {
-    return rintf(x) == x;
+  return ((fabsf(x) < 8388608) && (rintf(x) == x));
 }
 
 inline bool IsInteger(double x) {
-  return rint(x) == x;
+  return ((fabs(x) < Q_UINT64_C(4503599627370496)) && (rint(x) == x));
 }
 
 inline bool IsInteger(int8 x) { return true; }

@@ -11,7 +11,9 @@
 % 
 % If @|x| is a vector of length n, @|diff (x)| is the
 % vector of first differences
+% \[
 %  [x_2 - x_1, ..., x_n - x_{n-1}].
+% \]
 %
 % If @|x| is a matrix, @|diff (x)| is the matrix of column
 % differences along the first non-singleton dimension.

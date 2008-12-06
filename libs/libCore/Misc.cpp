@@ -58,10 +58,10 @@ ArrayVector SimKeysFunction(int nargout, const ArrayVector& arg,
       txt.push_back('\n');
     eval->ExecuteLine(txt);
   }
-  eval->ExecuteLine("\nquit\n");
+  eval->ExecuteLine("quit\n");
   try {
     while(1) 
-      eval->evalCLI();
+      eval->evalCLI(false);
   } catch (InterpreterContinueException& e) {
   } catch (InterpreterBreakException& e) {
   } catch (InterpreterReturnException& e) {
@@ -285,7 +285,7 @@ ArrayVector BuiltinFunction(int nargout, const ArrayVector& arg,Interpreter* eva
   newarg.pop_front();
   bool flagsave = eval->getStopOverload();
   eval->setStopOverload(true);
-  ArrayVector tmp(funcDef->evaluateFunction(eval,newarg,nargout));
+  ArrayVector tmp(eval->doFunction(funcDef,newarg,nargout));
   eval->setStopOverload(flagsave);
   return tmp;
 }

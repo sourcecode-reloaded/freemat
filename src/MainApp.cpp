@@ -348,7 +348,7 @@ void MainApp::CheckNonClosable() {
 void MainApp::DoGraphicsCall(Interpreter* interp, FuncPtr f, ArrayVector m, int narg) { 
   CheckNonClosable();
   try {
-    ArrayVector n(f->evaluateFunction(interp,m,narg));
+    ArrayVector n(f->evaluateFunc(interp,m,narg));
     interp->RegisterGfxResults(n);
   } catch (Exception& e) {
     interp->RegisterGfxError(e.msg());
@@ -1145,13 +1145,14 @@ int MainApp::Run() {
   qRegisterMetaType<FuncPtr>("FuncPtr");
   qRegisterMetaType<ArrayVector>("ArrayVector");
   qRegisterMetaType<Interpreter*>("Interpreter*");
+  qRegisterMetaType<StringVector>("StringVector");
   connect(m_keys,SIGNAL(ExecuteLine(QString)),this,SLOT(ExecuteLine(QString)));
   connect(m_keys,SIGNAL(UpdateTermWidth(int)),this,SLOT(UpdateTermWidth(int)));
   connect(m_keys,SIGNAL(RegisterInterrupt()),this,SLOT(RegisterInterrupt()));
   // Set up the profile timer (but don't start it)
   profilerTimer = new QTimer(this);
   profilerTimer->setSingleShot(false);
-  // Start out with a sampling frequency of 1/100msec
+  // Start out with a sampling frequency of 1/100 sec
   profilerTimer->setInterval(10); 
   connect(profilerTimer,SIGNAL(timeout()),this,SLOT(CollectProfileSample()));
   // Get a new thread
@@ -1163,7 +1164,7 @@ int MainApp::Run() {
   FuncPtr doCLI;
   if (!m_eval->lookupFunction("docli",doCLI))
     return 0;
-  m_eval->setThreadFunc(doCLI,0,ArrayVector());
+  m_eval->setThreadFunc(doCLI,0,ArrayVector() );
   m_eval->start();
   emit Initialize();
   return 0;

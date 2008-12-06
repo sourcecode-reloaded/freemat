@@ -3,13 +3,13 @@
 #include <cmath>
 
 struct OpRound {
-  static inline float func(float t) { return rintf(t); }
-  static inline double func(double t) {return rint(t); }
+  static inline float func(float t) { return roundf(t); }
+  static inline double func(double t) {return round(t); }
   static inline void func(float x, float y, float &rx, float &ry) {
-    rx = rintf(x); ry = rintf(y);
+    rx = roundf(x); ry = roundf(y);
   }
   static inline void func(double x, double y, double &rx, double &ry) {
-    rx = rint(x); ry = rint(y);
+    rx = round(x); ry = round(y);
   }
 };
 
@@ -46,6 +46,8 @@ struct OpRound {
 //round(4.312)
 //round(-5.32)
 //@>
+//@@Tests
+//@$exact|y1=round(x1)
 //@@Signature
 //function round RoundFunction
 //input x

@@ -1,3 +1,27 @@
+// New plans for the JIT:
+// 
+// Type complexity has been greatly reduced in FreeMat4.  Consider the classic example
+// of the Toeplitz matrix creation loop in FreeMat4:
+//
+//  A = zeros(512);
+//  for i=1:512;
+//    for j=1:512;
+//      A(j,i) = j-i+1;
+//    end
+//  end
+//
+// In FreeMat3, this loop would have required the handling of at least 3 seperate types
+// (int32, float, double), and would not even have JIT compiled due to the polymorphic
+// assignments to the A matrix.
+//
+// In FreeMat4, the loop is much simpler.  Everything is a double type.  If we start
+// with a JIT that only processes double types, I think we will cover a significant
+// portion of MATLAB-style code.  We also avoid the issues around saturation arithmetic
+// that plague the handling of integer types.  
+//
+// Do we handle float types too?
+//
+//
 #ifdef HAVE_LLVM
 
 #include <QString>
@@ -17,12 +41,13 @@
 JITFunc *save_this;
 
 
-static JITFunction func_scalar_load_double, func_scalar_load_float, func_scalar_load_int32;
-static JITFunction func_scalar_store_double, func_scalar_store_float, func_scalar_store_int32;
-static JITFunction func_vector_load_double, func_vector_load_float, func_vector_load_int32;
-static JITFunction func_vector_store_double, func_vector_store_float, func_vector_store_int32;
-static JITFunction func_matrix_load_double, func_matrix_load_float, func_matrix_load_int32;
-static JITFunction func_matrix_store_double, func_matrix_store_float, func_matrix_store_int32;
+static JITFunction func_scalar_load_double, func_scalar_load_float, func_scalar_load_bool;
+static JITFunction func_scalar_store_double, func_scalar_store_float, func_scalar_store_bool;
+static JITFunction func_vector_load_double, func_vector_load_float, func_vector_load_bool;
+static JITFunction func_vector_store_double, func_vector_store_float, func_vector_store_bool;
+static JITFunction func_matrix_load_double, func_matrix_load_float, func_matrix_load_bool;
+static JITFunction func_matrix_store_double, func_matrix_store_float, func_matrix_store_bool;
+static JITFunction func_check_for_interrupt;
 static JITFunction func_niter_for_loop, func_debug_out_i, func_debug_out_d;
 
 SymbolInfo* JITFunc::add_argument_array(QString name) {
@@ -42,32 +67,35 @@ SymbolInfo* JITFunc::add_argument_array(QString name) {
   // Map the array class to an llvm type
   JITType type(map_dataclass(aclass));
   symbols.insertSymbol(name,SymbolInfo(false,argument_count++,NULL,type));
-  dbout << "Define array " << name << " array " << argument_count-1 << "\n";
   return symbols.findSymbol(name);
 }
 
 DataClass JITFunc::map_dataclass(JITScalar val) {
-  if (jit->IsFloat(val))
-    return Float;
-  else if (jit->IsDouble(val))
+  if (jit->IsDouble(val))
     return Double;
-  return Int32;
+  else if (jit->IsFloat(val))
+    return Float;
+  else if (jit->IsBool(val))
+    return Bool;
+  throw Exception("Unhandled type in map_dataclass for JIT");
 }
 
 DataClass JITFunc::map_dataclass(JITType type) {
-  if (jit->IsFloat(type))
-	  return Float;
-  else if (jit->IsDouble(type))
-	  return Double;
-  return Int32;
+  if (jit->IsDouble(type))
+    return Double;
+  else if (jit->IsFloat(type))
+    return Float;
+  else if (jit->IsBool(type))
+    return Bool;
+  throw Exception("Unhandled type in map_dataclass for JIT");  
 }
 
 JITType JITFunc::map_dataclass(DataClass aclass) {
   switch (aclass) {
   default:
     throw Exception("JIT does not support");
-  case Int32:
-    return jit->Int32Type();
+  case Bool:
+    return jit->BoolType();
   case Float:
     return jit->FloatType();
   case Double:
@@ -82,7 +110,6 @@ SymbolInfo* JITFunc::define_local_symbol(QString name, JITScalar val) {
   jit->SetCurrentBlock(prolog);
   JITScalar address = jit->Alloc(jit->TypeOf(val),name);
   symbols.insertSymbol(name,SymbolInfo(true,-1,address,jit->TypeOf(val)));
-  dbout << "Define scalar " << name << " argument " << -1 << "\n";
   jit->SetCurrentBlock(ip);
   jit->Store(val,address);
   return symbols.findSymbol(name);
@@ -112,20 +139,19 @@ SymbolInfo* JITFunc::add_argument_scalar(QString name, JITScalar val, bool overr
   jit->SetCurrentBlock(prolog);
   JITScalar address = jit->Alloc(type,name);
   symbols.insertSymbol(name,SymbolInfo(true,argument_count++,address,type));
-  dbout << "Define scalar " << name << " argument " << argument_count-1 << "\n";
   if (jit->IsDouble(type))
-    jit->Store(jit->Call(func_scalar_load_double, this_ptr, jit->Int32Value(argument_count-1)), address);
+    jit->Store(jit->Call(func_scalar_load_double, this_ptr, jit->DoubleValue(argument_count-1)), address);
   else if (jit->IsFloat(type))
-    jit->Store(jit->Call(func_scalar_load_float, this_ptr, jit->Int32Value(argument_count-1)), address);
-  else if (jit->IsInteger(type))
-    jit->Store(jit->Call(func_scalar_load_int32, this_ptr, jit->Int32Value(argument_count-1)), address);
+    jit->Store(jit->Call(func_scalar_load_float, this_ptr, jit->DoubleValue(argument_count-1)), address);
+  else if (jit->IsBool(type))
+    jit->Store(jit->Call(func_scalar_load_bool, this_ptr, jit->DoubleValue(argument_count-1)), address);
   jit->SetCurrentBlock(epilog);
   if (jit->IsDouble(type))
-    jit->Call(func_scalar_store_double, this_ptr, jit->Int32Value(argument_count-1), jit->Load(address));
+    jit->Call(func_scalar_store_double, this_ptr, jit->DoubleValue(argument_count-1), jit->Load(address));
   else if (jit->IsFloat(type))
-    jit->Call(func_scalar_store_float, this_ptr, jit->Int32Value(argument_count-1), jit->Load(address));
-  else if (jit->IsInteger(type))
-    jit->Call(func_scalar_store_int32, this_ptr, jit->Int32Value(argument_count-1), jit->Load(address));
+    jit->Call(func_scalar_store_float, this_ptr, jit->DoubleValue(argument_count-1), jit->Load(address));
+  else if (jit->IsBool(type))
+    jit->Call(func_scalar_store_bool, this_ptr, jit->DoubleValue(argument_count-1), jit->Load(address));
   jit->SetCurrentBlock(ip);
   return symbols.findSymbol(name);
 }
@@ -188,7 +214,7 @@ void JITFunc::compile_statement(Tree* t) {
   compile_statement_type(t->first());
 }
 
-JITScalar JITFunc::compile_scalar_function(QString symname) {
+JITScalar JITFunc::compile_constant_function(QString symname) {
   JITScalar *val;
   val = constants.findSymbol(symname);
   if (!val) throw Exception("constant not defined");
@@ -202,7 +228,7 @@ JITScalar JITFunc::compile_built_in_function_call(Tree* t) {
   if (!eval->lookupFunction(symname,funcval)) 
     throw Exception(QString("Couldn't find function ") + symname);
   if (t->numChildren() != 2) 
-    return compile_scalar_function(symname);
+    return compile_constant_function(symname);
   // Evaluate the argument
   Tree* s(t->second());
   if (!s->is(TOK_PARENS))
@@ -210,7 +236,7 @@ JITScalar JITFunc::compile_built_in_function_call(Tree* t) {
   if (s->numChildren() > 1)
     throw Exception("Cannot JIT functions that take more than one argument");
   if (s->numChildren() == 0) 
-    return compile_scalar_function(symname);
+    return compile_constant_function(symname);
   else {
     JITScalar arg = compile_expression(s->first());
     JITFunction *func = NULL;
@@ -220,17 +246,14 @@ JITScalar JITFunc::compile_built_in_function_call(Tree* t) {
     } else if (jit->IsDouble(arg)) {
       func = double_funcs.findSymbol(symname);
       if (!func) throw Exception("Cannot find function " + symname);
-    } else if (jit->IsInteger(arg)) {
-      func = int_funcs.findSymbol(symname);
-      if (!func) throw Exception("Cannot find function " + symname);
-    }
+    } 
     if (!func) throw Exception("No JIT version of function " + symname);
     return jit->Call(*func,arg);
   }
 }
 
 static QString uid_string(int uid) {
-  return QString("%d").arg(uid);
+  return QString("%1").arg(uid);
 }
 
 JITScalar JITFunc::compile_m_function_call(Tree* t) {
@@ -289,7 +312,7 @@ JITScalar JITFunc::compile_function_call(Tree* t) {
   if (funcval->type() == FM_M_FUNCTION)
     return compile_m_function_call(t);
   if (t->numChildren() != 2) 
-    return compile_scalar_function(symname);
+    return compile_constant_function(symname);
   throw Exception("Unsupported function type");
 }
 
@@ -297,7 +320,7 @@ void JITFunc::handle_success_code(JITScalar success_code) {
   JITBlock if_failed = jit->NewBlock("exported_call_failed");
   JITBlock if_success = jit->NewBlock("exported_call_sucess");
   // Add the branch logic
-  jit->Branch(if_success,if_failed,jit->Equals(success_code,jit->Zero(jit->Int32Type())));
+  jit->Branch(if_success,if_failed,success_code);
   jit->SetCurrentBlock(if_failed);
   jit->Store(success_code,retcode);
   jit->Jump(epilog);
@@ -332,37 +355,32 @@ JITScalar JITFunc::compile_rhs(Tree* t) {
   if (s->numChildren() > 2)
     throw Exception("Expecting at most 2 array references for dereference...");
   if (s->numChildren() == 1) {
-    JITScalar arg1 = jit->Cast(compile_expression(s->first()),jit->Int32Type()); 
-    JITScalar ret = jit->Alloc(v->type, "vector_load_of_" + symname);
-    JITScalar success_code;
+    JITScalar arg1 = jit->ToDouble(compile_expression(s->first()));
+    JITScalar ret;
     if (jit->IsDouble(v->type))
-      success_code = jit->Call(func_vector_load_double, this_ptr, jit->Int32Value(v->argument_num), arg1, ret);
+      ret = jit->Call(func_vector_load_double, this_ptr, jit->DoubleValue(v->argument_num), arg1, retcode);
     else if (jit->IsFloat(v->type))
-      success_code = jit->Call(func_vector_load_float, this_ptr, jit->Int32Value(v->argument_num), arg1, ret);
-    else if (jit->IsInteger(v->type))
-      success_code = jit->Call(func_vector_load_int32, this_ptr, jit->Int32Value(v->argument_num), arg1, ret);
+      ret = jit->Call(func_vector_load_float, this_ptr, jit->DoubleValue(v->argument_num), arg1, retcode);
+    else if (jit->IsBool(v->type))
+      ret = jit->Call(func_vector_load_bool, this_ptr, jit->DoubleValue(v->argument_num), arg1, retcode);
     else
       throw Exception("Unsupported JIT type in Load");
-    handle_success_code(success_code);
-    return jit->Load(ret);
+    handle_success_code(jit->Load(retcode));
+    return ret;
   } else if (s->numChildren() == 2) {
-    JITScalar arg1 = jit->Cast(compile_expression(s->first()),jit->Int32Type());
-    JITScalar arg2 = jit->Cast(compile_expression(s->second()),jit->Int32Type());
-    JITScalar ret = jit->Alloc(v->type, "matrix_load_of_" + symname);
-    JITScalar success_code;
+    JITScalar arg1 = jit->ToDouble(compile_expression(s->first()));
+    JITScalar arg2 = jit->ToDouble(compile_expression(s->second()));
+    JITScalar ret;
     if (jit->IsDouble(v->type))
-      success_code = jit->Call(func_matrix_load_double, this_ptr, jit->Int32Value(v->argument_num), 
-			       arg1, arg2, ret);
+      ret = jit->Call(func_matrix_load_double, this_ptr, jit->DoubleValue(v->argument_num), arg1, arg2, retcode);
     else if (jit->IsFloat(v->type))
-      success_code = jit->Call(func_matrix_load_float, this_ptr, jit->Int32Value(v->argument_num), 
-			       arg1, arg2, ret);
-    else if (jit->IsInteger(v->type))
-      success_code = jit->Call(func_matrix_load_int32, this_ptr, jit->Int32Value(v->argument_num), 
-			       arg1, arg2, ret);
+      ret = jit->Call(func_matrix_load_float, this_ptr, jit->DoubleValue(v->argument_num), arg1, arg2, retcode);
+    else if (jit->IsBool(v->type))
+      ret = jit->Call(func_matrix_load_bool, this_ptr, jit->DoubleValue(v->argument_num), arg1, arg2, retcode);
     else
       throw Exception("Unsupported JIT type in Load");
-    handle_success_code(success_code);
-    return jit->Load(ret);
+    handle_success_code(jit->Load(retcode));
+    return ret;
   }
   throw Exception("dereference not handled yet...");
 }
@@ -370,24 +388,22 @@ JITScalar JITFunc::compile_rhs(Tree* t) {
 JITScalar JITFunc::compile_expression(Tree* t) {
   switch(t->token()) {
   case TOK_VARIABLE:     return compile_rhs(t);
-
   case TOK_REAL:
   case TOK_REALF:
-	  if( t->array().isScalar() ){
-		  switch( t->array().dataClass() ){
-			case Int32:
-				return jit->Int32Value( t->array().asInteger() );
-			case Float:
-				return jit->FloatValue( t->array().asDouble() );
-			case Double:
-				return jit->DoubleValue( t->array().asDouble() );
-			default:
-				throw Exception("Unsupported scalar type.");
-		  }
-	  }
-	  else
-		throw Exception("Unsupported type.");
-	  
+    if( t->array().isScalar() ){
+      switch( t->array().dataClass() ){
+      case Bool:
+	return jit->BoolValue( t->array().constRealScalar<bool>() );
+      case Float:
+	return jit->FloatValue( t->array().constRealScalar<float>() );
+      case Double:
+	return jit->DoubleValue( t->array().constRealScalar<double>() );
+      default:
+	throw Exception("Unsupported scalar type.");
+      }
+    }
+    else
+      throw Exception("Unsupported type.");
   case TOK_STRING:
   case TOK_END:
   case ':':
@@ -406,13 +422,12 @@ JITScalar JITFunc::compile_expression(Tree* t) {
   case '\\': 
   case TOK_DOTLDIV: 
     return jit->Div(compile_expression(t->second()),compile_expression(t->first()));
-    // FIXME: Are shortcuts handled correctly here?
   case TOK_SOR: 
   case '|':
-    return jit->Or(compile_expression(t->first()),compile_expression(t->second()));
+    return compile_or_statement(t);
   case TOK_SAND: 
   case '&': 
-    return jit->And(compile_expression(t->first()),compile_expression(t->second()));
+    return compile_and_statement(t);
   case '<': 
     return jit->LessThan(compile_expression(t->first()),compile_expression(t->second()));
   case TOK_LE: 
@@ -426,17 +441,11 @@ JITScalar JITFunc::compile_expression(Tree* t) {
   case TOK_NE: 
     return jit->NotEqual(compile_expression(t->first()),compile_expression(t->second()));
   case TOK_UNARY_MINUS: 
-    {
-      JITScalar val(compile_expression(t->first()));
-      return jit->Sub(jit->Zero(jit->TypeOf(val)),val);
-    }
+    return jit->Negate(compile_expression(t->first()));
   case TOK_UNARY_PLUS: 
     return compile_expression(t->first());
   case '~': 
-    {
-      JITScalar val(compile_expression(t->first()));
-      return jit->Xor(val, jit->BoolValue(true));
-    }
+    return jit->Not(compile_expression(t->first()));
   case '^':               throw Exception("^ is not currently handled by the JIT compiler");
   case TOK_DOTPOWER:      throw Exception(".^ is not currently handled by the JIT compiler");
   case '\'':              throw Exception("' is not currently handled by the JIT compiler");
@@ -478,34 +487,34 @@ void JITFunc::compile_assignment(Tree* t) {
   if (q->numChildren() > 2)
     throw Exception("Expecting at most 2 array references for dereference...");
   if (q->numChildren() == 1) {
-    JITScalar arg1 = jit->Cast(compile_expression(q->first()),jit->Int32Type());
+    JITScalar arg1 = jit->ToDouble(compile_expression(q->first()));
     JITScalar success_code;
     if (jit->IsDouble(v->type))
-      success_code = jit->Call(func_vector_store_double, this_ptr, jit->Int32Value(v->argument_num), arg1, 
-			       jit->Cast(rhs,v->type));
+      success_code = jit->Call(func_vector_store_double, this_ptr, jit->DoubleValue(v->argument_num), arg1, 
+			       jit->ToType(rhs,v->type));
     else if (jit->IsFloat(v->type))
-      success_code = jit->Call(func_vector_store_float, this_ptr, jit->Int32Value(v->argument_num), arg1, 
-			       jit->Cast(rhs,v->type));
-    else if (jit->IsInteger(v->type))
-      success_code = jit->Call(func_vector_store_int32, this_ptr, jit->Int32Value(v->argument_num), arg1, 
-			       jit->Cast(rhs,v->type));
+      success_code = jit->Call(func_vector_store_float, this_ptr, jit->DoubleValue(v->argument_num), arg1, 
+			       jit->ToType(rhs,v->type));
+    else if (jit->IsBool(v->type))
+      success_code = jit->Call(func_vector_store_bool, this_ptr, jit->DoubleValue(v->argument_num), arg1, 
+			       jit->ToType(rhs,v->type));
     else
       throw Exception("unhandled type for vector store");
     handle_success_code(success_code);
     return;
   } else if (q->numChildren() == 2) {
-    JITScalar arg1 = jit->Cast(compile_expression(q->first()),jit->Int32Type());
-    JITScalar arg2 = jit->Cast(compile_expression(q->second()),jit->Int32Type());
+    JITScalar arg1 = jit->ToDouble(compile_expression(q->first()));
+    JITScalar arg2 = jit->ToDouble(compile_expression(q->second()));
     JITScalar success_code;
     if (jit->IsDouble(v->type))
-      success_code = jit->Call(func_matrix_store_double, this_ptr, jit->Int32Value(v->argument_num), 
-			       arg1, arg2, jit->Cast(rhs,v->type));
+      success_code = jit->Call(func_matrix_store_double, this_ptr, jit->DoubleValue(v->argument_num), 
+			       arg1, arg2, jit->ToType(rhs,v->type));
     else if (jit->IsFloat(v->type))
-      success_code = jit->Call(func_matrix_store_float, this_ptr, jit->Int32Value(v->argument_num), 
-			       arg1, arg2, jit->Cast(rhs,v->type));
-    else if (jit->IsInteger(v->type))
-      success_code = jit->Call(func_matrix_store_int32, this_ptr, jit->Int32Value(v->argument_num), 
-			       arg1, arg2, jit->Cast(rhs,v->type));
+      success_code = jit->Call(func_matrix_store_float, this_ptr, jit->DoubleValue(v->argument_num), 
+			       arg1, arg2, jit->ToType(rhs,v->type));
+    else if (jit->IsBool(v->type))
+      success_code = jit->Call(func_matrix_store_bool, this_ptr, jit->DoubleValue(v->argument_num), 
+			       arg1, arg2, jit->ToType(rhs,v->type));
     else
       throw Exception("unhandled type for matrix store");
     handle_success_code(success_code);
@@ -513,8 +522,76 @@ void JITFunc::compile_assignment(Tree* t) {
   }
 }
 
+// x = a || b
+//
+// if (a)
+//   x = true;
+// else if (b)
+//   x = true;
+// else
+//   x = false;
+// end
+
+JITScalar JITFunc::compile_or_statement(Tree* t) {
+  JITBlock ip(jit->CurrentBlock());
+  jit->SetCurrentBlock(prolog);
+  JITScalar address = jit->Alloc(jit->BoolType(),"or_result");
+  jit->SetCurrentBlock(ip);
+  JITBlock or_true = jit->NewBlock("or_true");
+  JITBlock or_first_false = jit->NewBlock("or_first_false");
+  JITBlock or_false = jit->NewBlock("or_false");
+  JITBlock or_exit = jit->NewBlock("or_exit");
+  JITScalar first_value(compile_expression(t->first()));
+  jit->Branch(or_true,or_first_false,first_value);
+  jit->SetCurrentBlock(or_first_false);
+  JITScalar second_value(compile_expression(t->second()));
+  jit->Branch(or_true,or_false,second_value);
+  jit->SetCurrentBlock(or_true);
+  jit->Store(jit->BoolValue(true),address);
+  jit->Jump(or_exit);
+  jit->SetCurrentBlock(or_false);
+  jit->Store(jit->BoolValue(false),address);
+  jit->Jump(or_exit);
+  jit->SetCurrentBlock(or_exit);
+  return jit->Load(address);
+}
+
+// x = a && b
+//
+// if (!a)
+//   x = false;
+// else if (!b)
+//   x = false;
+// else
+//   x = true;
+// end
+
+JITScalar JITFunc::compile_and_statement(Tree* t) {
+  JITBlock ip(jit->CurrentBlock());
+  jit->SetCurrentBlock(prolog);
+  JITScalar address = jit->Alloc(jit->BoolType(),"and_result");
+  jit->SetCurrentBlock(ip);
+  JITBlock and_true = jit->NewBlock("and_true");
+  JITBlock and_first_true = jit->NewBlock("and_first_true");
+  JITBlock and_false = jit->NewBlock("and_false");
+  JITBlock and_exit = jit->NewBlock("and_exit");
+  JITScalar first_value(compile_expression(t->first()));
+  jit->Branch(and_first_true,and_false,first_value);
+  jit->SetCurrentBlock(and_first_true);
+  JITScalar second_value(compile_expression(t->second()));
+  jit->Branch(and_true,and_false,second_value);
+  jit->SetCurrentBlock(and_true);
+  jit->Store(jit->BoolValue(true),address);
+  jit->Jump(and_exit);
+  jit->SetCurrentBlock(and_false);
+  jit->Store(jit->BoolValue(false),address);
+  jit->Jump(and_exit);
+  jit->SetCurrentBlock(and_exit);
+  return jit->Load(address);
+}
+
 void JITFunc::compile_if_statement(Tree* t) {
-  JITScalar main_cond(jit->Cast(compile_expression(t->first()),jit->BoolType()));
+  JITScalar main_cond(jit->ToBool(compile_expression(t->first())));
   JITBlock if_true = jit->NewBlock("if_true");
   JITBlock if_continue = jit->NewBlock("if_continue");
   JITBlock if_exit = jit->NewBlock("if_exit");
@@ -531,7 +608,7 @@ void JITFunc::compile_if_statement(Tree* t) {
   int n=2;
   while (n < t->numChildren() && t->child(n)->is(TOK_ELSEIF)) {
     jit->SetCurrentBlock(if_continue);
-    JITScalar ttest(jit->Cast(compile_expression(t->child(n)->first()),jit->BoolType()));
+    JITScalar ttest(jit->ToBool(compile_expression(t->child(n)->first())));
     if_true = jit->NewBlock("elseif_true");
     if_continue = jit->NewBlock("elseif_continue");
     jit->Branch(if_true,if_continue,ttest);
@@ -563,165 +640,188 @@ void JITFunc::compile_if_statement(Tree* t) {
 }
 
 template<class T> 
-inline T scalar_load(void* base, int argnum) {
+inline T scalar_load(void* base, double argnum) {
   JITFunc *tptr = static_cast<JITFunc*>(base);
-  Array* a = tptr->array_inputs[argnum];
+  Array* a = tptr->array_inputs[(int)(argnum)];
   return a->constRealScalar<T>();
 }
 
 template<class T>
-inline void scalar_store(void* base, int argnum, T value) {
+inline void scalar_store(void* base, double argnum, T value) {
   JITFunc *tptr = static_cast<JITFunc*>(base);
-  Array* a = tptr->array_inputs[argnum];
+  Array* a = tptr->array_inputs[(int)(argnum)];
   if( a->isArray() )
-	a->set(1,Array(value));
+    a->set(1,Array(value));
   else
-	a->realScalar<T>() = value;
+    a->realScalar<T>() = value;
 }
 
 template<class T>
-inline int32 vector_load(void* base, int argnum, int32 ndx, T* address) {
+inline T vector_load(void* base, double argnum, double ndx, bool *success) {
+  int iargnum = argnum;
   try {
     JITFunc *tptr = static_cast<JITFunc*>(base);
-    Array* a = tptr->array_inputs[argnum];
     if (ndx < 1) {
       tptr->exception_store = Exception("Array index < 1 not allowed");
-      return -1;
+      success[0] = false;
+      return 0;
     }
-	if (ndx > a->length()) {
+    if (ndx > tptr->cache_array_rows[iargnum]*tptr->cache_array_cols[iargnum]) {
       tptr->exception_store = Exception("Array bounds exceeded in A(n) expression");
-      return -1;
+      success[0] = false;
+      return 0;
     }
-	address[0] = a->get(ndx).constRealScalar<T>();
-    return 0;
+    success[0] = true;
+    return (((T*)(tptr->cache_array_bases[iargnum]))[(int64)(ndx-1)]);
   } catch (Exception &e) {
     JITFunc *tptr = static_cast<JITFunc*>(base);
     tptr->exception_store = e;
-    return -1;
+    success[0] = false;
+    return 0;
   }
+  success[0] = false;
   return 0;
 }
 
 template<class T>
-inline int32 vector_store(void* base, int argnum, int32 ndx, T value) {
+inline bool vector_store(void* base, double argnum, double ndx, T value) {
+  int iargnum = argnum;
   try {
     JITFunc *tptr = static_cast<JITFunc*>(base);
-    Array* a = tptr->array_inputs[argnum];
     if (ndx < 1) {
       tptr->exception_store = Exception("Array index < 1 not allowed");
-      return -1;      
+      return false;      
     }
-    if (ndx >= a->length()) {
-      a->resize(ndx);
-    }
-	a->set(ndx, Array( value ));
-    return 0;
+    if (ndx > tptr->cache_array_rows[iargnum]*tptr->cache_array_cols[iargnum]) {
+      Array* a = tptr->array_inputs[(int)argnum];
+      a->set(ndx, Array( value ));
+      tptr->cache_array_bases[iargnum] = (void*)(a->real<T>().data());
+      tptr->cache_array_rows[iargnum] = a->rows();
+      tptr->cache_array_cols[iargnum] = a->cols();
+    } else
+      ((T*)(tptr->cache_array_bases[iargnum]))[(int64)(ndx-1)] = value;
+    return true;
   } catch (Exception &e) {
     JITFunc *tptr = static_cast<JITFunc*>(base);
     tptr->exception_store = e;
-    return -1;
+    return false;
   }
-  return 0;
+  return true;
 }
 
 template<class T>
-inline int32 matrix_load(void* base, int argnum, int32 row, int32 col, T* address) {
+inline T matrix_load(void* base, double argnum, double row, double col, bool* success) {
+  int iargnum = argnum;
   try {
     JITFunc *tptr = static_cast<JITFunc*>(base);
-    Array* a = tptr->array_inputs[argnum];
     if ((row < 1) || (col < 1)) {
       tptr->exception_store = Exception("Array index < 1 not allowed");
-      return -1;      
+      success[0] = false;
+      return 0;      
     }
-    if ((row > a->rows()) || (col > a->columns())) {
+    if ((row > tptr->cache_array_rows[iargnum]) || 
+	(col > tptr->cache_array_cols[iargnum])) {
       tptr->exception_store = Exception("Array index exceed bounds");
-      return -1;
+      success[0] = false;
+      return 0;
     }
-    
-	address[0] = a->get(NTuple( row, col ) ).constRealScalar<T>();
-    return 0;
+    success[0] = true;
+    return (((T*)(tptr->cache_array_bases[iargnum]))
+	    [(int64)(row-1+(col-1)*tptr->cache_array_rows[iargnum])]);
   } catch (Exception &e) {
     JITFunc *tptr = static_cast<JITFunc*>(base);
     tptr->exception_store = e;
-    return -1;
+    success[0] = false;
+    return 0;
   }
+  success[0] = false;
   return 0;
 }
 
+// Nominal time 280 ms
+// 
 template<class T>
-inline int32 matrix_store(void* base, int argnum, int32 row, int32 col, T value) {
+inline bool matrix_store(void* base, double argnum, double row, double col, T value) {
+  int iargnum = argnum;
   try {
     JITFunc *tptr = static_cast<JITFunc*>(base);
-    Array *a = tptr->array_inputs[argnum];
     if ((row < 1) || (col < 1)) {
       tptr->exception_store = Exception("Array index < 1 not allowed");
-      return -1;      
+      return false;      
     }
-    
-	a->set(NTuple( row, col ), Array(value));
-    return 0;
+    if ((row > tptr->cache_array_rows[iargnum]) || 
+	(col > tptr->cache_array_cols[iargnum])) {
+      Array *a = tptr->array_inputs[iargnum];
+      a->set(NTuple(row,col),Array(value));
+      tptr->cache_array_bases[iargnum] = (void*)(a->real<T>().data());
+      tptr->cache_array_rows[iargnum] = a->rows();
+      tptr->cache_array_cols[iargnum] = a->cols();
+    } else
+      ((T*)(tptr->cache_array_bases[iargnum]))
+	[(int64)(row-1+(col-1)*tptr->cache_array_rows[iargnum])] = value;
+    return true;
   } catch (Exception &e) {
     JITFunc *tptr = static_cast<JITFunc*>(base);
     tptr->exception_store = e;
-    return -1;
+    return false;
   }
-  return 0;
+  return true;
 }
 
 extern "C" {
-  JIT_EXPORT double scalar_load_double(void* base, int argnum) {
+  JIT_EXPORT double scalar_load_double(void* base, double argnum) {
     return scalar_load<double>(base,argnum);
   }
-  JIT_EXPORT float scalar_load_float(void* base, int argnum) {
+  JIT_EXPORT float scalar_load_float(void* base, double argnum) {
     return scalar_load<float>(base,argnum);
   }
-  JIT_EXPORT int32 scalar_load_int32(void* base, int argnum) {
-    return scalar_load<int32>(base,argnum);
+  JIT_EXPORT bool scalar_load_bool(void* base, double argnum) {
+    return scalar_load<bool>(base,argnum);
   }
-  JIT_EXPORT void scalar_store_double(void* base, int argnum, double val) {
+  JIT_EXPORT void scalar_store_double(void* base, double argnum, double val) {
     scalar_store<double>(base,argnum,val);
   }
-  JIT_EXPORT void scalar_store_float(void* base, int argnum, float val) {
+  JIT_EXPORT void scalar_store_float(void* base, double argnum, float val) {
     scalar_store<float>(base,argnum,val);
   }
-  JIT_EXPORT void scalar_store_int32(void* base, int argnum, int32 val) {
-    scalar_store<int32>(base,argnum,val);
+  JIT_EXPORT void scalar_store_bool(void* base, double argnum, bool val) {
+    scalar_store<bool>(base,argnum,val);
   }
-  JIT_EXPORT int32 vector_load_double(void* base, int argnum, int32 ndx, double* address) {
-    return vector_load<double>(base,argnum,ndx,address);
+  JIT_EXPORT double vector_load_double(void* base, double argnum, double ndx, bool* success) {
+    return vector_load<double>(base,argnum,ndx,success);
   }
-  JIT_EXPORT int32 vector_load_float(void* base, int argnum, int32 ndx, float* address) {
-    return vector_load<float>(base,argnum,ndx,address);
+  JIT_EXPORT float vector_load_float(void* base, double argnum, double ndx, bool* success) {
+    return vector_load<float>(base,argnum,ndx,success);
   }
-  JIT_EXPORT int32 vector_load_int32(void* base, int argnum, int32 ndx, int32* address) {
-    return vector_load<int32>(base,argnum,ndx,address);
+  JIT_EXPORT bool vector_load_bool(void* base, double argnum, double ndx, bool* success) {
+    return vector_load<bool>(base,argnum,ndx,success);
   }
-  JIT_EXPORT int32 vector_store_double(void* base, int argnum, int32 ndx, double val) {
+  JIT_EXPORT bool vector_store_double(void* base, double argnum, double ndx, double val) {
     return vector_store<double>(base,argnum,ndx,val);
   }
-  JIT_EXPORT int32 vector_store_float(void* base, int argnum, int32 ndx, float val) {
+  JIT_EXPORT bool vector_store_float(void* base, double argnum, double ndx, float val) {
     return vector_store<float>(base,argnum,ndx,val);
   }
-  JIT_EXPORT int32 vector_store_int32(void* base, int argnum, int32 ndx, int32 val) {
-    return vector_store<int32>(base,argnum,ndx,val);
+  JIT_EXPORT bool vector_store_bool(void* base, double argnum, double ndx, bool val) {
+    return vector_store<bool>(base,argnum,ndx,val);
   }
-  JIT_EXPORT int32 matrix_load_double(void* base, int argnum, int32 row, int32 col, double* address) {
-    return matrix_load<double>(base,argnum,row,col,address);
+  JIT_EXPORT double matrix_load_double(void* base, double argnum, double row, double col, bool* success) {
+    return matrix_load<double>(base,argnum,row,col,success);
   }
-  JIT_EXPORT int32 matrix_load_float(void* base, int argnum, int32 row, int32 col, float* address) {
-    return matrix_load<float>(base,argnum,row,col,address);
+  JIT_EXPORT float matrix_load_float(void* base, double argnum, double row, double col, bool* success) {
+    return matrix_load<float>(base,argnum,row,col,success);
   }
-  JIT_EXPORT int32 matrix_load_int32(void* base, int argnum, int32 row, int32 col, int32* address) {
-    return matrix_load<int32>(base,argnum,row,col,address);
+  JIT_EXPORT bool matrix_load_bool(void* base, double argnum, double row, double col, bool* success) {
+    return matrix_load<bool>(base,argnum,row,col,success);
   }
-  JIT_EXPORT int32 matrix_store_double(void* base, int argnum, int32 row, int32 col, double val) {
+  JIT_EXPORT bool matrix_store_double(void* base, double argnum, double row, double col, double val) {
     return matrix_store<double>(base,argnum,row,col,val);
   }
-  JIT_EXPORT int32 matrix_store_float(void* base, int argnum, int32 row, int32 col, float val) {
+  JIT_EXPORT bool matrix_store_float(void* base, double argnum, double row, double col, float val) {
     return matrix_store<float>(base,argnum,row,col,val);
   }
-  JIT_EXPORT int32 matrix_store_int32(void* base, int argnum, int32 row, int32 col, int32 val) {
-    return matrix_store<int32>(base,argnum,row,col,val);
+  JIT_EXPORT bool matrix_store_bool(void* base, double argnum, double row, double col, bool val) {
+    return matrix_store<bool>(base,argnum,row,col,val);
   }
   JIT_EXPORT double csc(double t) {
     return 1.0/sin(t);
@@ -741,9 +841,15 @@ extern "C" {
   JIT_EXPORT float cotf(float t) {
     return 1.0f/tanf(t);
   }
-
-  JIT_EXPORT int niter_for_loop( double first, double step, double last ){
-      return num_for_loop_iter( first, step, last );
+  JIT_EXPORT bool check_for_interrupt(void *base) {
+    JITFunc *tptr = static_cast<JITFunc*>(base);
+    if (!tptr->eval->interrupt()) return false;
+    tptr->eval->outputMessage("Interrupt (ctrl-b) encountered in JIT code\n");
+    tptr->eval->stackTrace(true);
+    return true;
+  }
+  JIT_EXPORT double niter_for_loop( double first, double step, double last ){
+    return (double)(num_for_loop_iter( first, step, last ));
   }
 
   JIT_EXPORT void debug_out_i( int32 t ){
@@ -773,29 +879,29 @@ void JITFunc::initialize() {
   double_funcs.insertSymbol("rint",jit->DefineLinkFunction("rint","d","d"));
   double_funcs.insertSymbol("abs",jit->DefineLinkFunction("fabs","d","d"));
   float_funcs.insertSymbol("abs",jit->DefineLinkFunction("fabsf","f","f"));
-  int_funcs.insertSymbol("abs",jit->DefineLinkFunction("abs","i","i"));
   constants.insertSymbol("pi",jit->DoubleValue(4.0*atan(1.0)));
   constants.insertSymbol("e",jit->DoubleValue(exp(1.0)));
-  func_scalar_load_int32 = jit->DefineLinkFunction("scalar_load_int32","i","Ii");
-  func_scalar_load_double = jit->DefineLinkFunction("scalar_load_double","d","Ii");
-  func_scalar_load_float = jit->DefineLinkFunction("scalar_load_float","f","Ii");
-  func_scalar_store_int32 = jit->DefineLinkFunction("scalar_store_int32","i","Iii");
-  func_scalar_store_double = jit->DefineLinkFunction("scalar_store_double","i","Iid");
-  func_scalar_store_float = jit->DefineLinkFunction("scalar_store_float","i","Iif");
-  func_vector_load_int32 = jit->DefineLinkFunction("vector_load_int32","i","IiiI");
-  func_vector_load_double = jit->DefineLinkFunction("vector_load_double","i","IiiD");
-  func_vector_load_float = jit->DefineLinkFunction("vector_load_float","i","IiiF");
-  func_vector_store_int32 = jit->DefineLinkFunction("vector_store_int32","i","Iiii");
-  func_vector_store_double = jit->DefineLinkFunction("vector_store_double","i","Iiid");
-  func_vector_store_float = jit->DefineLinkFunction("vector_store_float","i","Iiif");
-  func_matrix_load_int32 = jit->DefineLinkFunction("matrix_load_int32","i","IiiiI");
-  func_matrix_load_double = jit->DefineLinkFunction("matrix_load_double","i","IiiiD");
-  func_matrix_load_float = jit->DefineLinkFunction("matrix_load_float","i","IiiiF");
-  func_matrix_store_int32 = jit->DefineLinkFunction("matrix_store_int32","i","Iiiii");
-  func_matrix_store_double = jit->DefineLinkFunction("matrix_store_double","i","Iiiid");
-  func_matrix_store_float = jit->DefineLinkFunction("matrix_store_float","i","Iiiif");
-  func_niter_for_loop = jit->DefineLinkFunction("niter_for_loop","i","ddd");
-  func_debug_out_i = jit->DefineLinkFunction("debug_out_i","v","i");
+  func_scalar_load_bool = jit->DefineLinkFunction("scalar_load_bool","b","Vd");
+  func_scalar_load_double = jit->DefineLinkFunction("scalar_load_double","d","Vd");
+  func_scalar_load_float = jit->DefineLinkFunction("scalar_load_float","f","Vd");
+  func_scalar_store_bool = jit->DefineLinkFunction("scalar_store_bool","v","Vdb");
+  func_scalar_store_double = jit->DefineLinkFunction("scalar_store_double","v","Vdd");
+  func_scalar_store_float = jit->DefineLinkFunction("scalar_store_float","v","Vdf");
+  func_vector_load_bool = jit->DefineLinkFunction("vector_load_bool","b","VddB");
+  func_vector_load_double = jit->DefineLinkFunction("vector_load_double","d","VddB");
+  func_vector_load_float = jit->DefineLinkFunction("vector_load_float","f","VddB");
+  func_vector_store_bool = jit->DefineLinkFunction("vector_store_bool","b","Vddb");
+  func_vector_store_double = jit->DefineLinkFunction("vector_store_double","b","Vddd");
+  func_vector_store_float = jit->DefineLinkFunction("vector_store_float","b","Vddf");
+  func_matrix_load_bool = jit->DefineLinkFunction("matrix_load_bool","b","VdddB");
+  func_matrix_load_double = jit->DefineLinkFunction("matrix_load_double","d","VdddB");
+  func_matrix_load_float = jit->DefineLinkFunction("matrix_load_float","f","VdddB");
+  func_matrix_store_bool = jit->DefineLinkFunction("matrix_store_bool","b","Vdddb");
+  func_matrix_store_double = jit->DefineLinkFunction("matrix_store_double","b","Vdddd");
+  func_matrix_store_float = jit->DefineLinkFunction("matrix_store_float","b","Vdddf");
+  func_check_for_interrupt = jit->DefineLinkFunction("check_for_interrupt","b","V");
+  func_niter_for_loop = jit->DefineLinkFunction("niter_for_loop","d","ddd");
+  //  func_debug_out_i = jit->DefineLinkFunction("debug_out_i","v","i");
   func_debug_out_d = jit->DefineLinkFunction("debug_out_d","v","d");
 }
 
@@ -803,18 +909,18 @@ static int countm = 0;
 
 void JITFunc::compile(Tree* t) {
   // The signature for the compiled function should be:
-  // int func(void** inputs);
+  // bool func(void** inputs);
   countm++;
   initialize();
   argument_count = 0;
-  func = jit->DefineFunction(jit->FunctionType("i","I"),QString("main") + countm);
+  func = jit->DefineFunction(jit->FunctionType("b","V"),QString("main_%1").arg(countm));
   jit->SetCurrentFunction(func);
   prolog = jit->NewBlock("prolog");
   main_body = jit->NewBlock("main_body");
   epilog = jit->NewBlock("epilog");
   jit->SetCurrentBlock(prolog);
-  retcode = jit->Alloc(jit->Int32Type(),"_retcode");
-  jit->Store(jit->Zero(jit->Int32Type()),retcode);
+  retcode = jit->Alloc(jit->BoolType(),"_retcode");
+  jit->Store(jit->BoolValue(true),retcode);
   jit->SetCurrentBlock(main_body);
   llvm::Function::arg_iterator args = func->arg_begin();
   this_ptr = args;
@@ -831,11 +937,11 @@ void JITFunc::compile(Tree* t) {
   jit->Jump(main_body);
   jit->SetCurrentBlock(epilog);
   jit->Return(jit->Load(retcode));
-#ifdef _DEBUG
+#ifndef NDEBUG
   jit->Dump("unoptimized.bc.txt",func);
 #endif
-  jit->OptimizeCode(func);
-#ifdef _DEBUG
+  jit->OptimizeCode();
+#ifndef NDEBUG
   jit->Dump("optimized.bc.txt",func);
 #endif
   if (failed) throw exception_store;
@@ -847,16 +953,16 @@ void JITFunc::compile_for_block(Tree* t) {
 
   if (!(t->first()->is('=') && t->first()->second()->is(':'))) 
     throw Exception("For loop cannot be compiled - need scalar bounds");
-
+  
   if (t->first()->second()->first()->is(':')){ //triple format 
-      loop_start = jit->Cast( compile_expression(t->first()->second()->first()->first()), jit->DoubleType() );
-      loop_step = jit->Cast( compile_expression(t->first()->second()->first()->second()), jit->DoubleType() );
-      loop_stop = jit->Cast( compile_expression(t->first()->second()->second()), jit->DoubleType() );
+    loop_start = jit->ToDouble( compile_expression(t->first()->second()->first()->first()) );
+    loop_step = jit->ToDouble( compile_expression(t->first()->second()->first()->second()) );
+    loop_stop = jit->ToDouble( compile_expression(t->first()->second()->second()) );
   }
   else{ //double format
-      loop_start = jit->Cast( compile_expression(t->first()->second()->first()), jit->DoubleType() );
-      loop_step = jit->DoubleValue( 1 );
-      loop_stop = jit->Cast( compile_expression(t->first()->second()->second()), jit->DoubleType() );
+    loop_start = jit->ToDouble( compile_expression(t->first()->second()->first()) );
+    loop_step = jit->DoubleValue( 1 );
+    loop_stop = jit->ToDouble( compile_expression(t->first()->second()->second()) );
   }
   QString loop_index_name(t->first()->first()->text());
   SymbolInfo* v = add_argument_scalar(loop_index_name,loop_start,true);
@@ -865,10 +971,14 @@ void JITFunc::compile_for_block(Tree* t) {
 
   JITScalar loop_nsteps = jit->Call( func_niter_for_loop, loop_start, loop_step, loop_stop );
 
-  JITScalar loop_ind = jit->Alloc(jit->Int32Type(),"loop_ind"); 
-  jit->Store(jit->Zero(jit->Int32Type()),loop_ind); 
+  JITBlock ip(jit->CurrentBlock());
+  jit->SetCurrentBlock(prolog);
+  JITScalar loop_ind = jit->Alloc(jit->DoubleType(),"loop_ind_"+loop_index_name); 
+  jit->Store(jit->DoubleValue(0),loop_ind); 
+  jit->SetCurrentBlock(ip);
 
   JITBlock loopbody = jit->NewBlock("for_body");
+  JITBlock loopcheck = jit->NewBlock("for_check");
   JITBlock looptest = jit->NewBlock("for_test");
   JITBlock loopincr = jit->NewBlock("for_increment");
   JITBlock loopexit = jit->NewBlock("for_exit");
@@ -882,24 +992,19 @@ void JITFunc::compile_for_block(Tree* t) {
     exception_store = e;
     failed = true;
   }
-
-  jit->Jump(looptest);
+  jit->Jump(loopcheck);
+  jit->SetCurrentBlock(loopcheck);
+  JITScalar abort_called = jit->Call(func_check_for_interrupt, this_ptr);
+  jit->Branch(epilog,looptest,abort_called);
   jit->SetCurrentBlock(looptest);
-
   JITScalar loop_comparison = jit->LessThan( jit->Load( loop_ind ), loop_nsteps);
   jit->Branch(loopincr,loopexit,loop_comparison);
-
   jit->SetCurrentBlock(loopincr);
-
   //loop variable equal: loop_start+loop_ind*loop_step
-  JITScalar next_loop_value = jit->Add(loop_start,
-      jit->Mul( jit->Cast( jit->Load( loop_ind ), jit->DoubleType() ), loop_step ) );
+  JITScalar next_loop_value = jit->Add(loop_start, jit->Mul( jit->Load( loop_ind ), loop_step ) );
   jit->Store(next_loop_value,loop_index_address);
-
-  jit->Store( jit->Add( jit->Load( loop_ind ), jit->Int32Value( 1 ) ), loop_ind );
-
+  jit->Store( jit->Add( jit->Load( loop_ind ), jit->DoubleValue( 1 ) ), loop_ind );
   jit->Jump( loopbody );
-
   jit->SetCurrentBlock(loopexit);
   if (failed) throw exception_store;
 }
@@ -910,6 +1015,9 @@ void JITFunc::prep() {
   // Allocate the argument array
   // For each argument in the array, retrieve it from the interpreter
   array_inputs = new Array*[argument_count];
+  cache_array_bases = new void*[argument_count];
+  cache_array_rows = new double[argument_count];
+  cache_array_cols = new double[argument_count];
   //  array_inputs.resize(argumentList.size());
   for (int i=0;i<argumentList.size();i++) {
     SymbolInfo* v = symbols.findSymbol(argumentList[i]);
@@ -928,6 +1036,23 @@ void JITFunc::prep() {
       array_inputs[v->argument_num] = ptr.pointer();
       if (v->type != map_dataclass(array_inputs[v->argument_num]->dataClass()))
 	throw Exception("DATA mismatch!");
+      if (!v->isScalar) {
+	if ((array_inputs[v->argument_num]->dataClass() == Float))
+	  cache_array_bases[v->argument_num] = 
+	    (void*)(array_inputs[v->argument_num]->real<float>().data());
+	if ((array_inputs[v->argument_num]->dataClass() == Double))
+	  cache_array_bases[v->argument_num] = 
+	    (void*)(array_inputs[v->argument_num]->real<double>().data());
+	if ((array_inputs[v->argument_num]->dataClass() == Bool))
+	  cache_array_bases[v->argument_num] = 
+	    (void*)(array_inputs[v->argument_num]->real<bool>().data());
+	cache_array_rows[v->argument_num] = array_inputs[v->argument_num]->rows();
+	cache_array_cols[v->argument_num] = array_inputs[v->argument_num]->cols();
+      } else {
+	cache_array_bases[v->argument_num] = NULL;
+	cache_array_rows[v->argument_num] = 1;
+	cache_array_cols[v->argument_num] = 1;
+      }
     } 
   }
 }
@@ -935,7 +1060,7 @@ void JITFunc::prep() {
 void JITFunc::run() {
   save_this = this;
   JITGeneric gv = jit->Invoke(func,JITGeneric((void*) this));
-  if (gv.IntVal != 0)
+  if (gv.IntVal == 0)
     throw exception_store;
 }
 

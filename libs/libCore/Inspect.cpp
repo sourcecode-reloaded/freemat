@@ -337,7 +337,9 @@ ArrayVector WhichFunction(int nargout, const ArrayVector& arg,
     if (val->type() == FM_M_FUNCTION) {
       MFunctionDef *mptr;
       mptr = (MFunctionDef *) val;
-      mptr->updateCode(eval);
+      try {
+	mptr->updateCode(eval);
+      } catch (Exception &e) {}
       if (mptr->pcodeFunction) {
 	if (mptr->scriptFlag) {
 	  if (nargout == 0) {

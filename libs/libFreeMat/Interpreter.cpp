@@ -207,23 +207,32 @@ void Interpreter::RegisterGfxError(QString msg) {
   mutex.unlock();
 }
 
-ArrayVector Interpreter::doGraphicsFunction(FuncPtr f, ArrayVector m, int narg_out) {
-  gfxErrorOccured = false;
-  QMutexLocker lock(&mutex);
-  emit doGraphicsCall(this,f,m,narg_out);
-  if (!gfxErrorOccured && gfx_buffer.empty()) {
-    gfxBufferNotEmpty.wait(&mutex);
+ArrayVector Interpreter::doFunction(FuncPtr f, ArrayVector m, 
+				    int narg_out, VariableTable *vtable) {
+  pushDebug(f->functionName(),f->detailedName());
+  if (f->graphicsFunction) {
+    gfxErrorOccured = false;
+    QMutexLocker lock(&mutex);
+    emit doGraphicsCall(this,f,m,narg_out);
+    if (!gfxErrorOccured && gfx_buffer.empty()) {
+      gfxBufferNotEmpty.wait(&mutex);
+    } else {
+      dbout << "Wha??\r";
+    }
+    if (gfxErrorOccured) {
+      throw Exception(gfxError);
+    }
+    if (gfx_buffer.empty())
+      dbout << "Warning! graphics empty on return\r";
+    ArrayVector ret(gfx_buffer.front());
+    gfx_buffer.erase(gfx_buffer.begin());
+    popDebug();
+    return ret;
   } else {
-    dbout << "Wha??\r";
+    ArrayVector ret(f->evaluateFunc(this,m,narg_out,vtable));
+    popDebug();
+    return ret;
   }
-  if (gfxErrorOccured) {
-    throw Exception(gfxError);
-  }
-  if (gfx_buffer.empty())
-    dbout << "Warning! graphics empty on return\r";
-  ArrayVector ret(gfx_buffer.front());
-  gfx_buffer.erase(gfx_buffer.begin());
-  return ret;
 }
 
 void Interpreter::setTerminalWidth(int ncols) {
@@ -350,7 +359,7 @@ QString Interpreter::getVersionString() {
 void Interpreter::run() {
   if (m_threadFunc) {
     try {
-      m_threadFuncRets = m_threadFunc->evaluateFunction(this,m_threadFuncArgs,m_threadNargout);
+      m_threadFuncRets = doFunction(m_threadFunc,m_threadFuncArgs,m_threadNargout);
     } catch (Exception &e) {
       m_threadErrorState = true;      
       lasterr = e.msg();
@@ -377,7 +386,7 @@ void Interpreter::doCLI() {
   try {
     while (1) {
       try {
-	evalCLI();
+	evalCLI(false);
       } catch (InterpreterRetallException) {
 	clearStacks();
       } catch (InterpreterReturnException &e) {
@@ -1663,7 +1672,7 @@ inline bool IsIntegerDataClass( const Array& a )
 template <class T>
 void ForLoopHelper(Tree *codeBlock, const Array& indexSet, 
 		   int count, const QString& indexName, Interpreter *eval) {
-  for (int m=0;m<count;m++) {
+  for (index_t m=1;m<=count;m++) {
     Array *vp = eval->getContext()->lookupVariableLocally( indexName );
     if ((!vp) || (!vp->isScalar())) {
 	eval->getContext()->insertVariableLocally(indexName,Array());
@@ -1931,7 +1940,10 @@ void Interpreter::forStatement(Tree *t) {
 
     indexVarName = t->first()->first()->text();
 
-    if( t->first()->second()->token() == TOK_MATDEF ){ //case "for j=[1:10]"
+    if( t->first()->second()->is(TOK_MATDEF) ||
+	t->first()->second()->is(TOK_VARIABLE) )   { 
+	  //case "for j=[1:10]"
+	  //case "for j=K" skb
     	/* Evaluate the index set */
 	indexSet = expression(t->first()->second());
 
@@ -1995,14 +2007,6 @@ void Interpreter::forStatement(Tree *t) {
 	      ForLoopHelper<uint8>(codeBlock,indexSet,
 		  elementCount,indexVarName,this);
 	      break;
-       //   case FM_COMPLEX:
-	      //ForLoopHelperComplex<float>(codeBlock,loopType,(const float*)indexSet.getDataPointer(),
-	      //    elementCount,indexVarName,this);
-	      //break;
-       //   case FM_DCOMPLEX:
-	      //ForLoopHelperComplex<double>(codeBlock,loopType,(const double*)indexSet.getDataPointer(),
-	      //    elementCount,indexVarName,this);
-	      //break;
 	}
     }
     else if( t->first()->second()->token() == ':' ){
@@ -2387,12 +2391,14 @@ void Interpreter::persistentStatement(Tree *t) {
 
 void Interpreter::doDebugCycle() {
   depth++;
+  pushDebug("debug","debug");
   try {
-    evalCLI();
+    evalCLI(true);
   } catch (InterpreterContinueException& e) {
   } catch (InterpreterBreakException& e) {
   } catch (InterpreterReturnException& e) {
   }
+  popDebug();
   depth--;
 }
 
@@ -2402,7 +2408,7 @@ void Interpreter::displayArray(Array b) {
   if (b.isUserClass() && ClassResolveFunction(this,b,"display",val)) {
     if (val->updateCode(this)) refreshBreakpoints();
     ArrayVector args(b);
-    ArrayVector retvec(val->evaluateFunction(this,args,1));
+    ArrayVector retvec(doFunction(val,args,1));
   } else
     PrintArrayClassic(b,printLimit,this);
 }
@@ -2823,6 +2829,12 @@ ArrayReference Interpreter::createVariable(QString name) {
 //  p = {'hello'};
 //  q = p{1};
 //  test_val = testeq(q,'hello');
+//@}
+//@{ test_assign22.m
+//function test_val = test_assign22
+//  A = [1,2,3];
+//  A(0) = 2;
+//  test_val = 1;
 //@}
 //@{ test_sparse56.m
 //% Test DeleteSparseMatrix function
@@ -3336,10 +3348,7 @@ void Interpreter::specialFunctionCall(Tree *t, bool printIt) {
   bool CLIFlagsave = InCLI;
   InCLI = false;
   try {
-    if (!val->graphicsFunction)
-      m = val->evaluateFunction(this,n,0);
-    else
-      m = doGraphicsFunction(val,n,0);
+    m = doFunction(val,n,0);
   } catch(Exception& e) {
     InCLI = CLIFlagsave;
     throw;
@@ -4242,10 +4251,7 @@ void Interpreter::functionExpression(Tree *t,
 	throw Exception(QString("Too many outputs to function ")+t->first()->text());
       CLIFlagsave = InCLI;
       InCLI = false;
-      if (!funcDef->graphicsFunction)
-	n = funcDef->evaluateFunction(this,m,narg_out);
-      else
-	n = doGraphicsFunction(funcDef,m,narg_out);
+      n = doFunction(funcDef,m,narg_out);
       if ((steptrap >= 1) && (funcDef->name == stepname)) {
 	if ((cstack.size() > 0) && (ip_funcname != "Eval")) {
 	  warningMessage("dbstep beyond end of function " + stepname +
@@ -4275,6 +4281,7 @@ void Interpreter::functionExpression(Tree *t,
     throw;
   }
 }
+
 
 void Interpreter::toggleBP(QString fname, int lineNumber) {
   if (isBPSet(fname,lineNumber)) {
@@ -4426,8 +4433,7 @@ void Interpreter::pushDebug(QString fname, QString detail) {
   cstack.push_back(stackentry(ip_funcname,ip_detailname,
 			      ip_context,0,steptrap,
 			      stepcurrentline));
-  //  dbout << "Push Debug: " << QString::fromStdString(fname) << ",";
-  //  dbout << QString::fromStdString(detail) << "";
+  outputMessage(QString("Push Debug: ") + fname + QString(",") + detail + QString("\n"));
   ip_funcname = fname;
   ip_detailname = detail;
   ip_context = 0;
@@ -4436,8 +4442,8 @@ void Interpreter::pushDebug(QString fname, QString detail) {
 }
 
 void Interpreter::popDebug() {
+  outputMessage(QString("Pop Debug\n"));
   if (!cstack.isEmpty()) {
-    //    dbout << "Pop Debug";
     ip_funcname = cstack.back().cname;
     ip_detailname = cstack.back().detail;
     ip_context = cstack.back().tokid;
@@ -5169,30 +5175,12 @@ void Interpreter::evaluateString(QString line, bool propogateExceptions) {
     return;
   }
   try {
-    pushDebug("Eval",EvalPrep(line));
-    try {
-      block(t);
-    } catch (InterpreterReturnException& e) {
-      if (depth > 0) {
-	popDebug();
-	throw;
-      }
-    } catch (InterpreterQuitException& e) {
-      popDebug();
-      throw;
-    } catch (InterpreterRetallException& e) {
-      popDebug();
-      throw;
-    }
+    block(t);
   } catch(Exception &e) {
-    if (propogateExceptions) {
-      popDebug();
-      throw;
-    }
+    if (propogateExceptions) throw;
     errorCount++;
     e.printMe(this);
   }
-  popDebug();
 }
   
 QString Interpreter::getLastErrorString() {
@@ -5250,7 +5238,7 @@ QString Interpreter::getLine(QString prompt) {
 
 // This is a "generic" CLI routine.  The user interface (non-debug)
 // version of this is "docli"
-void Interpreter::evalCLI() {
+void Interpreter::evalCLI(bool propogateExceptions) {
   QString prompt;
   bool rootCLI;
 
@@ -5293,10 +5281,12 @@ void Interpreter::evalCLI() {
       m_interrupt = false;
       continue;
     }
-    int stackdepth = cstack.size();
+    int debug_stackdepth = cstack.size();
+    int scope_stackdepth = context->scopeDepth(); 
     InCLI = true;
-    evaluateString(cmdset);
-    while (cstack.size() > stackdepth) cstack.pop_back();
+    evaluateString(cmdset,propogateExceptions);
+    while (cstack.size() > debug_stackdepth) popDebug();
+    while (context->scopeDepth() > scope_stackdepth) context->popScope();
   }
 }
 

@@ -24,6 +24,7 @@
 #include <QKeyEvent>
 #include <QPaintEvent>
 #include <string>
+#include <QDockWidget>
 
 using namespace std;
 

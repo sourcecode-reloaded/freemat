@@ -115,10 +115,10 @@ void MFunctionDef::printMe(Interpreter*eval) {
   code.tree()->print();
 }
 
-ArrayVector MFunctionDef::evaluateFunction(Interpreter *walker, 
-					   ArrayVector& inputs, 
-					   int nargout,
-					   VariableTable *workspace) {
+ArrayVector MFunctionDef::evaluateFunc(Interpreter *walker, 
+				       ArrayVector& inputs, 
+				       int nargout,
+				       VariableTable *workspace) {
   ArrayVector outputs;
   Context* context;
   bool warningIssued;
@@ -135,7 +135,6 @@ ArrayVector MFunctionDef::evaluateFunction(Interpreter *walker,
       context->insertVariableLocally(workspaceVars[i],
 				     *workspace->findSymbol(workspaceVars[i]));
   }
-  walker->pushDebug(fileName,name);
   // When the function is called, the number of inputs is
   // at sometimes less than the number of arguments requested.
   // Check the argument count.  If this is a non-varargin
@@ -281,7 +280,6 @@ ArrayVector MFunctionDef::evaluateFunction(Interpreter *walker,
       }
     }
     context->popScope();
-    walker->popDebug();
     return outputs;
   } catch (Exception& e) {
     if (workspace) {
@@ -292,7 +290,6 @@ ArrayVector MFunctionDef::evaluateFunction(Interpreter *walker,
       }
     }
     context->popScope();
-    walker->popDebug();
     throw;
   }
   catch (InterpreterRetallException& e) {
@@ -304,7 +301,6 @@ ArrayVector MFunctionDef::evaluateFunction(Interpreter *walker,
       }
     }
     context->popScope();
-    walker->popDebug();
     throw;
   }
 }
@@ -514,24 +510,11 @@ void BuiltInFunctionDef::printMe(Interpreter *eval) {
 }
 
 
-ArrayVector BuiltInFunctionDef::evaluateFunction(Interpreter *walker,
-						 ArrayVector& inputs, 
-						 int nargout,
-						 VariableTable*) {
-  ArrayVector outputs;
-  walker->pushDebug(name,"built in");
-  try {
-    outputs = fptr(nargout,inputs);
-    walker->popDebug();
-    return outputs;
-  } catch(Exception& e) {
-    walker->popDebug();
-    throw;
-  }
-  catch (InterpreterRetallException& e) {
-    walker->popDebug();
-    throw;
-  }
+ArrayVector BuiltInFunctionDef::evaluateFunc(Interpreter *walker,
+					     ArrayVector& inputs, 
+					     int nargout,
+					     VariableTable*) {
+  return fptr(nargout,inputs);
 }
 
 SpecialFunctionDef::SpecialFunctionDef() {
@@ -540,24 +523,11 @@ SpecialFunctionDef::SpecialFunctionDef() {
 SpecialFunctionDef::~SpecialFunctionDef() {
 }
 
-ArrayVector SpecialFunctionDef::evaluateFunction(Interpreter *walker, 
-						 ArrayVector& inputs, 
-						 int nargout, 
-						 VariableTable*) {
-  ArrayVector outputs;
-  walker->pushDebug(name,"built in");
-  try {
-    outputs = fptr(nargout,inputs,walker);
-    walker->popDebug();
-    return outputs;
-  } catch(Exception& e) {
-    walker->popDebug();
-    throw;
-  }
-  catch (InterpreterRetallException& e) {
-    walker->popDebug();
-    throw;
-  }
+ArrayVector SpecialFunctionDef::evaluateFunc(Interpreter *walker, 
+					     ArrayVector& inputs, 
+					     int nargout, 
+					     VariableTable*) {
+  return fptr(nargout,inputs,walker);
 }
 
 void SpecialFunctionDef::printMe(Interpreter *eval) {
@@ -632,12 +602,11 @@ static DataClass mapTypeNameToClass(QString name) {
 }
 #endif
 
-ArrayVector ImportedFunctionDef::evaluateFunction(Interpreter *walker,
-						  ArrayVector& inputs,
-						  int nargout,
-						  VariableTable*) {
+ArrayVector ImportedFunctionDef::evaluateFunc(Interpreter *walker,
+					      ArrayVector& inputs,
+					      int nargout,
+					      VariableTable*) {
 #if HAVE_AVCALL
-  walker->pushDebug(name,"imported");
   /**
    * To actually evaluate the function, we have to process each of
    * the arguments and get them into the right form.
@@ -671,7 +640,6 @@ ArrayVector ImportedFunctionDef::evaluateFunction(Interpreter *walker,
     Context* context;
     context = walker->getContext();
     context->pushScope("temp");
-    walker->pushDebug(name,"bounds check");
     try {
       for (i=0;i<inputs.size();i++) {
 	if (arguments[i][0] != '&') {
@@ -705,7 +673,6 @@ ArrayVector ImportedFunctionDef::evaluateFunction(Interpreter *walker,
       throw;
     }
     context->popScope();
-    walker->popDebug();
   }
       
   /**
@@ -831,7 +798,6 @@ ArrayVector ImportedFunctionDef::evaluateFunction(Interpreter *walker,
       ptr++;
     }
   }
-  walker->popDebug();
   return ArrayVector(retArray);
 #else
   throw Exception("Support for the import command requires that the avcall library be installed.  FreeMat was compiled without this library being available, and hence imported functions are unavailable. To enable imported commands, please install avcall and recompile FreeMat.");
@@ -859,10 +825,10 @@ MexFunctionDef::~MexFunctionDef() {
 void MexFunctionDef::printMe(Interpreter *) {
 }
   
-ArrayVector MexFunctionDef::evaluateFunction(Interpreter *walker, 
-					     ArrayVector& inputs, 
-					     int nargout,
-					     VariableTable*) {
+ArrayVector MexFunctionDef::evaluateFunc(Interpreter *walker, 
+					 ArrayVector& inputs, 
+					 int nargout,
+					 VariableTable*) {
   // Convert arguments to mxArray
   mxArray** args = new mxArray*[inputs.size()];
   for (int i=0;i<inputs.size();i++)

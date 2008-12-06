@@ -787,6 +787,7 @@ void KeyManager::ListCompletions(StringVector completions) {
   int nrow;      /* The number of rows needed to list all of the matches */
   int row,col;   /* The row and column being written to */
   int i;
+
   /*
    * Not enough space to list anything?
    */
@@ -1147,7 +1148,7 @@ void KeyManager::SetPrompt(QString txt) {
 }
 
 void KeyManager::ChangeDir(const QString& dir) {
-  emit ExecuteLine("cd " + dir + "\n");
+  emit ExecuteLine("cd '" + dir + "'\n");
 }
 
 StringVector KeyManager::GetCompletions(QString line, 

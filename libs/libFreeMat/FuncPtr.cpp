@@ -113,7 +113,7 @@ static ArrayVector FuncPtrCall(int nargout, ArrayVector& args,
     int workspaceHandle = wsHandle.asInteger();
     vtable = scopeHandles.lookupHandle(workspaceHandle);
   }
-  return (fptr->evaluateFunction(eval,args,nargout,vtable));
+  return (eval->doFunction(fptr,args,nargout,vtable));
 }
 
 //@@Signature

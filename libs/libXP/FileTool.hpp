@@ -22,8 +22,9 @@
 #include <QDialog>
 #include <QDirModel>
 #include <QTreeView>
+#include <QDockWidget>
 
-class FileTool : public QWidget {
+class FileTool : public QDockWidget {
   Q_OBJECT
   QDirModel *model;
   QTreeView *tree;

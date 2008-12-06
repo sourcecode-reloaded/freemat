@@ -848,9 +848,16 @@ index_t Array::address() const {
   }
 }
 
+template <typename T>
+static inline index_t T_index_scalar(const Array *ptr) {
+  index_t a = ptr->constRealScalar<T>();
+  if (a < 1) throw Exception("index values must be >= 1");
+  return a;
+}
+
 #define MacroAsIndexScalar(ctype,cls) \
   case cls:			      \
-  return index_t(constRealScalar<ctype>());
+  return T_index_scalar<ctype>(this);
 
 const index_t Array::asIndexScalar() const {
   switch (dataClass()) {

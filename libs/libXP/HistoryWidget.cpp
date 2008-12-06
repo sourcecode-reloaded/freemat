@@ -21,11 +21,9 @@
 #include "HistoryWidget.hpp"
 #include "Interpreter.hpp"
 
-HistoryWidget::HistoryWidget(QWidget *parent) : QWidget(parent) {
-  QVBoxLayout *layout = new QVBoxLayout;
-  m_flist = new QListWidget;
-  layout->addWidget(m_flist);
-  setLayout(layout);
+HistoryWidget::HistoryWidget(QWidget *parent) : QDockWidget("History",parent) {
+  m_flist = new QListWidget(this);
+  setWidget(m_flist);
   readSettings();
   new QListWidgetItem("% " + QDateTime::currentDateTime().toString(),m_flist);
   connect(m_flist,SIGNAL(itemDoubleClicked(QListWidgetItem*)),

@@ -112,6 +112,12 @@ bool IsInteger(const Array &x) {
   }
 }
 
+static void ValidateIndex(const Array &d) {
+  const BasicArray<index_t> &dp(d.constReal<index_t>());
+  for (index_t n=1;n<=dp.length();n++) 
+    if (dp[n] < 1) throw Exception("index values must be >= 1");
+}
+
 const IndexArray IndexArrayFromArray(const Array &index) {
   if ((index.dataClass() == Bool) && (index.type().Scalar == 1)) {
     const Array &index_dense(index.asDenseArray());
@@ -123,6 +129,7 @@ const IndexArray IndexArrayFromArray(const Array &index) {
     WarningMessage("Complex part of index ignored");
   if (index.dataClass() == Double) {
     const Array &index_dense(index.asDenseArray());
+    ValidateIndex(index_dense);
     return IndexArray(index_dense.constReal<index_t>());
   }
   if (index.dataClass() == Bool) {
@@ -135,8 +142,8 @@ const IndexArray IndexArrayFromArray(const Array &index) {
   if (!index_converted.allReal())
     WarningMessage("Complex part of index ignored");
   index_converted = index_converted.asDenseArray();
+  ValidateIndex(index_converted);
   return index_converted.constReal<index_t>();
-  throw Exception("Unsupported index type");
 }
 
 const ArrayVector ArrayVectorFromCellArray(const Array &arg) {

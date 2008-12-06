@@ -26,6 +26,45 @@
 #include "Core.hpp"
 #include "FMFontDialog.hpp"
 
+static QString lastfile;
+static bool lastfile_set = false;
+
+static QStringList GetOpenFileNames(QWidget *w, const QString &filePath = QString()) { 
+  QStringList retfiles;
+  if (!filePath.isEmpty())
+    retfiles = QFileDialog::getOpenFileNames(w,"Open File in Editor",filePath,
+					   "M files (*.m);;Text files (*.txt);;All files (*)");  
+  else if (lastfile_set)
+    retfiles = QFileDialog::getOpenFileNames(w,"Open File in Editor",lastfile,
+					   "M files (*.m);;Text files (*.txt);;All files (*)");
+  else
+    retfiles = QFileDialog::getOpenFileNames(w,"Open File in Editor",QString(),
+					   "M files (*.m);;Text files (*.txt);;All files (*)");
+  return retfiles;
+}
+
+static QString GetSaveFileName(QWidget *w, const QString &filePath = QString()) { 
+  QString retfile, SelectedFilter;
+  if (!filePath.isEmpty())
+    retfile = QFileDialog::getSaveFileName(w,"Save File",filePath,
+					   "M files (*.m);;Text files (*.txt);;All files (*)",&SelectedFilter);
+  else if (lastfile_set)
+    retfile = QFileDialog::getSaveFileName(w,"Save File",lastfile,
+					   "M files (*.m);;Text files (*.txt);;All files (*)",&SelectedFilter);
+  else
+    retfile = QFileDialog::getSaveFileName(w,"Save File",QString(),
+					   "M files (*.m);;Text files (*.txt);;All files (*)",&SelectedFilter);
+  /* Add an extension to file name if not provided*/
+  if (!retfile.contains('.')) { 
+    if (SelectedFilter.contains("*.m"))
+        retfile = retfile + ".m";
+    else if (SelectedFilter.contains("*.txt"))
+        retfile = retfile + ".txt";
+  }
+  return retfile;  
+}
+
+
 FMFindDialog::FMFindDialog(QWidget *parent) : QDialog(parent) {
   ui.setupUi(this);
   connect(ui.btFind,SIGNAL(clicked()),this,SLOT(find()));
@@ -719,9 +758,9 @@ void FMTextEdit::contextMenuEvent(QContextMenuEvent* e) {
 void FMTextEdit::fontUpdate() {
   QFontMetrics fm(font());
   QFontInfo fi(font());
-  if (!fi.fixedPitch()) 
-    QMessageBox::warning(this,"FreeMat",
-			 "You have selected a font that is not a fixed pitch.\nThe editor really requires a fixed pitch font to work.");
+  //  if (!fi.fixedPitch()) 
+  //    QMessageBox::warning(this,"FreeMat",
+  //			 "You have selected a font that is not a fixed pitch.\nThe editor really requires a fixed pitch font to work.");
   setTabStopWidth(fm.width(' ')*indentSize);
 }
 
@@ -973,6 +1012,7 @@ QString FMEditPane::getFileName() {
   return curFile;
 }
 
+
 int FMEditPane::getLineNumber() {
   QTextCursor tc(tEditor->textCursor());
   tc.movePosition(QTextCursor::StartOfLine);
@@ -983,6 +1023,911 @@ int FMEditPane::getLineNumber() {
   }
   return linenumber;
 }
+
+void FMTabbedEditor::setInterpreter(Interpreter* eval) {
+  m_eval = eval;
+  QString path = m_eval->getTotalPath();
+#ifdef WIN32
+#define PATHSEP ";"
+#else
+#define PATHSEP ":"
+#endif
+  pathList = path.split(PATHSEP,QString::SkipEmptyParts);
+  emit checkEditorExist(true);
+  addTab();
+  tabChanged(0);
+}
+
+FMTabbedEditor::FMTabbedEditor(QWidget *parent) : QWidget(parent) {
+  m_eval = NULL;
+  setWindowIcon(QPixmap(":/images/freemat_small_mod_64.png"));
+  prevEdit = NULL;
+  tab = new QTabWidget;
+  QVBoxLayout *layout = new QVBoxLayout;
+  layout->addWidget(tab);
+  setLayout(layout);
+  createActions();
+  createMenus();
+  readSettings();
+  connect(tab,SIGNAL(currentChanged(int)),this,SLOT(tabChanged(int)));
+  m_find = new FMFindDialog;
+  connect(m_find,SIGNAL(doFind(QString,bool,bool)),
+ 	  this,SLOT(doFind(QString,bool,bool)));
+  m_replace = new FMReplaceDialog;
+  connect(m_replace,SIGNAL(doFind(QString,bool,bool)),
+ 	  this,SLOT(doFind(QString,bool,bool)));
+  connect(m_replace,SIGNAL(doReplace(QString,QString,bool,bool)),
+ 	  this,SLOT(doReplace(QString,QString,bool,bool)));
+  connect(m_replace,SIGNAL(doReplaceAll(QString,QString,bool,bool)),
+ 	  this,SLOT(doReplaceAll(QString,QString,bool,bool)));
+  // Create the shortcut tab creation/deletion buttons
+  QToolButton *tab_shortcut;
+  tab_shortcut = new QToolButton(this);
+  tab_shortcut->setAutoRaise(true);
+  tab_shortcut->setIcon(QPixmap(":/images/addtab.png"));
+  connect(tab_shortcut,SIGNAL(clicked()),this,SLOT(addTab()));
+  tab->setCornerWidget(tab_shortcut,Qt::TopLeftCorner);
+  tab_shortcut = new QToolButton(this);
+  tab_shortcut->setAutoRaise(true);
+  tab_shortcut->setIcon(QPixmap(":/images/closetab.png"));
+  connect(tab_shortcut,SIGNAL(clicked()),this,SLOT(closeTab()));
+  tab->setCornerWidget(tab_shortcut,Qt::TopRightCorner);
+}
+
+void FMTabbedEditor::createActions() {
+  openSelectionAct = new QAction("Open Selection",this);
+  connect(openSelectionAct,SIGNAL(triggered()),this,SLOT(openSelection()));
+  helpOnSelectionAct = new QAction(QIcon(":/images/help_onselection.png"),"Help on Selection",this);
+  helpOnSelectionAct->setShortcut(Qt::Key_F2);
+  connect(helpOnSelectionAct,SIGNAL(triggered()),this,SLOT(helpOnSelection()));
+  copyAct = new QAction(QIcon(":/images/copy.png"),"&Copy",this);
+  copyAct->setShortcut(Qt::Key_C | Qt::CTRL);
+  connect(copyAct,SIGNAL(triggered()),this,SLOT(copy()));
+  cutAct = new QAction(QIcon(":/images/cut.png"),"Cu&t",this);
+  cutAct->setShortcut(Qt::Key_X | Qt::CTRL);
+  connect(cutAct,SIGNAL(triggered()),this,SLOT(cut()));
+  pasteAct = new QAction(QIcon(":/images/paste.png"),"&Paste",this);
+  pasteAct->setShortcut(Qt::Key_V | Qt::CTRL);
+  connect(pasteAct,SIGNAL(triggered()),this,SLOT(paste()));
+  undoAct = new QAction("Undo Edits",this);
+  undoAct->setShortcut(Qt::Key_Z | Qt::CTRL);
+  connect(undoAct,SIGNAL(triggered()),this,SLOT(undo()));
+  redoAct = new QAction("Redo Edits",this);
+  redoAct->setShortcut(Qt::Key_Y | Qt::CTRL);
+  connect(redoAct,SIGNAL(triggered()),this,SLOT(redo()));
+  replaceAct = new QAction("Find and &Replace",this);
+  replaceAct->setShortcut(Qt::Key_H | Qt::CTRL); 
+  connect(replaceAct,SIGNAL(triggered()),this,SLOT(replace()));
+  findAct = new QAction(QIcon(":/images/find.png"),"&Find",this);
+  findAct->setShortcut(Qt::Key_F | Qt::CTRL);
+  connect(findAct,SIGNAL(triggered()),this,SLOT(find()));
+  commentAct = new QAction("&Comment Region",this);
+  commentAct->setShortcut(Qt::Key_R | Qt::CTRL); 
+  connect(commentAct,SIGNAL(triggered()),this,SLOT(comment()));
+  uncommentAct = new QAction("&Uncomment Region",this);
+  uncommentAct->setShortcut(Qt::Key_T | Qt::CTRL); 
+  connect(uncommentAct,SIGNAL(triggered()),this,SLOT(uncomment()));
+  executeSelectionAct = new QAction(QIcon(":/images/player_playselection.png"),"Execute Selection",this);
+  executeSelectionAct->setShortcut(Qt::Key_F9); 
+  connect(executeSelectionAct,SIGNAL(triggered()),this,SLOT(execSelected()));
+  executeCurrentAct = new QAction(QIcon(":/images/player_play.png"),"Execute Current Buffer",this);
+  executeCurrentAct->setShortcut(Qt::Key_F5); 
+  connect(executeCurrentAct,SIGNAL(triggered()),this,SLOT(execCurrent()));
+  dbStepAct = new QAction(QIcon(":/images/dbgnext.png"),"&Step Over",this);
+  dbStepAct->setShortcut(Qt::Key_F10); 
+  connect(dbStepAct,SIGNAL(triggered()),this,SLOT(dbstep()));
+  dbTraceAct = new QAction(QIcon(":/images/dbgstep.png"),"&Step Into",this);
+  dbTraceAct->setShortcut(Qt::Key_F11); 
+  connect(dbTraceAct,SIGNAL(triggered()),this,SLOT(dbtrace()));
+  dbContinueAct = new QAction(QIcon(":/images/dbgrun.png"),"&Continue",this);
+  dbContinueAct->setShortcut(Qt::Key_Down | Qt::CTRL); 
+  connect(dbContinueAct,SIGNAL(triggered()),this,SLOT(dbcontinue()));
+  dbSetClearBPAct = new QAction(QIcon(":/images/stop.png"),"Set/Clear Breakpoint",this);
+  dbSetClearBPAct->setShortcut(Qt::Key_F12); 
+  connect(dbSetClearBPAct,SIGNAL(triggered()),this,SLOT(dbsetclearbp()));
+  dbStopAct = new QAction(QIcon(":/images/player_stop.png"),"Stop Debugging",this);
+  dbStopAct->setShortcut(Qt::Key_Escape | Qt::CTRL); 
+  connect(dbStopAct,SIGNAL(triggered()),this,SLOT(dbstop()));
+}
+
+void FMTabbedEditor::createMenus() {
+  m_popup = new QMenu;
+  m_popup->addAction(openSelectionAct);
+  m_popup->addAction(helpOnSelectionAct);
+  m_popup->addAction(copyAct);
+  m_popup->addAction(cutAct);
+  m_popup->addAction(pasteAct);
+  m_popup->addSeparator();
+  m_popup->addAction(undoAct);
+  m_popup->addAction(redoAct);
+  m_popup->addSeparator();
+  m_popup->addAction(findAct);
+  m_popup->addAction(replaceAct);
+  m_popup->addSeparator();
+  m_popup->addAction(commentAct);
+  m_popup->addAction(uncommentAct);
+  m_popup->addSeparator();
+  m_popup->addAction(executeCurrentAct);
+  m_popup->addAction(executeSelectionAct);
+  m_popup->addSeparator();
+  m_popup->addAction(dbStepAct);
+  m_popup->addAction(dbTraceAct);
+  m_popup->addAction(dbContinueAct);
+  m_popup->addAction(dbSetClearBPAct);
+  m_popup->addAction(dbStopAct);
+}
+
+void FMTabbedEditor::doFind(QString text, bool backwards, bool sensitive) {
+  QTextDocument::FindFlags flags;
+  if (backwards) flags = QTextDocument::FindBackward;
+  if (sensitive) flags = flags | QTextDocument::FindCaseSensitively;
+  if (!currentEditor()->find(text,flags)) {
+    m_find->notfound();
+    m_replace->notfound();
+  }  else {
+    m_find->found();
+    m_replace->found();
+  }
+}
+
+void FMTabbedEditor::doReplace(QString text, QString replace, 
+			       bool backwards, bool sensitive) {
+  QTextDocument::FindFlags flags;
+  if (backwards) flags = QTextDocument::FindBackward;
+  if (sensitive) flags = flags | QTextDocument::FindCaseSensitively;
+  if (!currentEditor()->replace(text,replace,flags)) 
+    m_replace->notfound();
+  else
+    m_replace->found();
+}
+
+void FMTabbedEditor::doReplaceAll(QString text, QString reptxt, 
+				  bool backwards, bool sensitive) {
+  QTextDocument::FindFlags flags;
+  if (backwards) flags = QTextDocument::FindBackward;
+  if (sensitive) flags = flags | QTextDocument::FindCaseSensitively;
+  int repcount = currentEditor()->replaceAll(text,reptxt,flags);
+  m_replace->showrepcount(repcount);
+}
+
+void FMTabbedEditor::readSettings() {
+  QSettings settings("FreeMat", "FreeMat");
+  QPoint pos = settings.value("editor/pos", QPoint(200, 200)).toPoint();
+  QSize size = settings.value("editor/size", QSize(400, 400)).toSize();
+  resize(size);
+  move(pos);
+  QString font = settings.value("editor/font").toString();
+  if (!font.isNull()) {
+    QFont new_font;
+    new_font.fromString(font);
+    m_font = new_font;
+  }
+  else {
+  /* Set to the most common monospace font on Windows, Mac and Unix shown at
+    http://www.codestyle.org/css/font-family/sampler-Monospace.shtml */
+#ifdef Q_WS_WIN
+    QFont new_font("Courier New", 10, QFont::Normal);
+#else 
+#ifdef Q_WS_MAC
+        QFont new_font("Monaco", 10, QFont::Normal);
+#else
+        QFont new_font("DejaVu Sans Mono", 10, QFont::Normal);
+#endif
+#endif
+	m_font = new_font;
+  }
+  updateFont();
+  isShowToolTip = settings.value("editor/tooltip_enable", true).toBool();
+  //  dataTipConfigAct->setChecked(isShowToolTip); 
+  isMatchBracket = settings.value("editor/match_enable", true).toBool();
+  //  bracketMatchConfigAct->setChecked(isMatchBracket); 
+  isSaveBeforeRun = settings.value("editor/save_n_execute_enable", true).toBool();
+  //  saveBeforeRunConfigAct->setChecked(isSaveBeforeRun); 
+}
+
+void FMTabbedEditor::updateFont() {
+  for (int i=0;i<tab->count();i++) {
+    QWidget *p = tab->widget(i);
+    FMEditPane *te = qobject_cast<FMEditPane*>(p);
+    te->setFont(m_font);
+    te->getEditor()->fontUpdate();
+  }
+}
+
+void FMTabbedEditor::writeSettings() {
+  QSettings settings("FreeMat", "FreeMat");
+  settings.setValue("editor/pos", pos());
+  settings.setValue("editor/size", size());
+  settings.setValue("editor/font", m_font.toString());
+  settings.setValue("editor/tooltip_enable", isShowToolTip);
+  settings.setValue("editor/match_enable", isMatchBracket);
+  settings.setValue("editor/save_n_execute_enable", isSaveBeforeRun);
+  settings.sync();
+}
+
+QString FMTabbedEditor::currentFilename() {
+  QWidget *p = tab->currentWidget();
+  FMEditPane *te = qobject_cast<FMEditPane*>(p);
+  if (!te) {
+    addTab();
+    p = tab->currentWidget();
+    te = qobject_cast<FMEditPane*>(p);
+  }
+  if (te) 
+    return te->getFileName();
+  else
+    return QString();
+}
+
+void FMTabbedEditor::setCurrentFilename(QString filename) {
+  QWidget *p = tab->currentWidget();
+  FMEditPane *te = qobject_cast<FMEditPane*>(p);
+  if (!te) {
+    addTab();
+    p = tab->currentWidget();
+    te = qobject_cast<FMEditPane*>(p);
+  }
+  if (te) te->setFileName(filename);
+}
+
+FMTextEdit* FMTabbedEditor::currentEditor() {
+  QWidget *p = tab->currentWidget();
+  FMEditPane *te = qobject_cast<FMEditPane*>(p);
+  if (!te) {
+    addTab();
+    p = tab->currentWidget();
+    te = qobject_cast<FMEditPane*>(p);
+  }
+  if (te)
+    return te->getEditor();
+  else
+    return NULL;
+}
+
+void FMTabbedEditor::addTab() {
+  if (!m_eval) return;
+  tab->addTab(new FMEditPane(m_eval),"untitled.m");
+  tab->setCurrentIndex(tab->count()-1);
+  updateFont();
+}
+
+FMTabbedEditor::~FMTabbedEditor() {
+}
+
+QString FMTabbedEditor::shownName() {
+  QString sName;
+  if (currentFilename().isEmpty())
+    sName = "untitled.m";
+  else
+    sName = strippedName(currentFilename());
+  return sName;
+}
+
+QString FMTabbedEditor::shownPath() {
+  QString sPath;
+  if (currentFilename().isEmpty())
+    sPath = "";
+  else {
+    QString sName(strippedName(currentFilename()));
+    sPath = QFileInfo(currentFilename()).filePath();
+    sPath.chop(sName.length());
+    sPath = " (" + sPath + ")";
+  }
+  return sPath;
+}
+
+void FMTabbedEditor::updateTitles() {
+  tab->setTabText(tab->currentIndex(),shownName());
+  setWindowTitle(QString("%1[*]").arg(shownName()) + shownPath() + " - " + Interpreter::getVersionString() + " Editor");
+  documentWasModified();
+}
+
+
+void FMTabbedEditor::tabChanged(int newslot) {
+  if( newslot > -1 ){
+    //     connect(this,SIGNAL(setMatchBracket(bool)),
+    // 	    currentEditor(),SLOT(setMatchBracket(bool)));
+    //     // Disconnect each of the contents changed signals
+    //     if (prevEdit) {
+    //       disconnect(prevEdit->document(),SIGNAL(contentsChanged()),0,0);
+    //       disconnect(prevEdit,SIGNAL(showDataTips(QPoint, QString)),0,0);
+    //     }
+    //     // NEED TO DISCONNECT...
+    //     connect(currentEditor()->document(),SIGNAL(contentsChanged()),this,SLOT(documentWasModified()));
+    //     connect(currentEditor(),SIGNAL(showDataTips(QPoint, QString)),
+    // 	    this,SLOT(showDataTips(QPoint, QString)));
+    updateTitles();
+    prevEdit = currentEditor();
+  }
+}
+
+void FMTabbedEditor::documentWasModified() {
+  setWindowModified(currentEditor()->document()->isModified());
+  if (currentEditor()->document()->isModified()) 
+    tab->setTabText(tab->currentIndex(),shownName()+"*");
+  else
+    tab->setTabText(tab->currentIndex(),shownName());
+}
+
+void FMTabbedEditor::execSelected() {
+  QString executeText = currentEditor()->textCursor().selectedText();
+  executeText = executeText.trimmed();
+  if (!executeText.isEmpty())
+    emit EvaluateText(executeText + "\n");
+}
+
+void FMTabbedEditor::execCurrent() {
+  if (currentFilename().isEmpty())
+    QMessageBox::information(this,"Cannot execute unnamed buffer","You must save the current buffer into a file before it can be executed.");
+  else {
+    if (currentEditor()->document()->isModified()) {
+      if (isSaveBeforeRun) 
+        save();
+      else {
+        int ret = QMessageBox::warning(this, tr("FreeMat"),
+				       "The document " + shownName() + " has been modified.\n"
+				       "Do you want to save your changes?",
+				       QMessageBox::Yes | QMessageBox::Default,
+				       QMessageBox::No,
+				       QMessageBox::Cancel | QMessageBox::Escape);
+        if (ret == QMessageBox::Yes)
+          save();
+        else if (ret == QMessageBox::Cancel)
+          return;
+      }
+    }
+    emit EvaluateText("source '" + currentFilename() + "'\n");
+  }
+}
+
+void FMTabbedEditor::copy() {
+  currentEditor()->copy();
+}
+
+void FMTabbedEditor::paste() {
+  currentEditor()->paste();
+}
+
+void FMTabbedEditor::cut() {
+  currentEditor()->cut();
+}
+
+void FMTabbedEditor::undo() {
+  currentEditor()->undo();
+}
+
+void FMTabbedEditor::redo() {
+  currentEditor()->redo();
+}
+
+void FMTabbedEditor::comment() {
+  currentEditor()->comment();
+}
+
+void FMTabbedEditor::uncomment() {
+  currentEditor()->uncomment();
+}
+
+void FMTabbedEditor::increaseIndent() {
+  currentEditor()->increaseIndent();
+}
+
+void FMTabbedEditor::decreaseIndent() {
+  currentEditor()->decreaseIndent();
+}
+
+void FMTabbedEditor::smartIndent() {
+  currentEditor()->smartIndent();
+}
+
+void FMTabbedEditor::find() {
+  m_find->setFindText(currentEditor()->textCursor().selectedText());
+  m_find->show();
+  m_find->raise();
+}
+
+void FMTabbedEditor::replace() {
+  m_replace->setReplaceText(currentEditor()->textCursor().selectedText());
+  m_replace->show();
+  m_replace->raise();
+}
+
+
+void FMTabbedEditor::helpOnSelection() {
+  QString selectText = currentEditor()->textCursor().selectedText();
+  selectText = selectText.trimmed();
+  if (!selectText.isEmpty() && m_eval)
+    HelpWinFunction(0,ArrayVector(Array(selectText)),m_eval);
+}
+
+void FMTabbedEditor::openSelection() {
+  QString selectText = currentEditor()->textCursor().selectedText();
+  selectText = selectText.trimmed();
+  if (!selectText.isEmpty())
+    loadFile(selectText);
+}
+
+void FMTabbedEditor::contextMenuEvent(QContextMenuEvent *e) {
+  m_popup->exec(e->globalPos());
+}
+
+void FMTabbedEditor::configcolors() {
+  FMSynLightConf t(this);
+  t.exec();
+}
+
+void FMTabbedEditor::configindent() {
+  FMIndentConf t(this);
+  t.exec();
+}
+ 
+void FMTabbedEditor::configDataTip() {
+  //  if (dataTipConfigAct->isChecked()) {
+  //    isShowToolTip = true;
+    //    statusBar()->showMessage("Datatips on", 2000);
+  //  }
+  //  else {
+  //    isShowToolTip = false;
+    //    statusBar()->showMessage("Datatips off", 2000);
+  //  }
+  //  dataTipConfigAct->setChecked(isShowToolTip);
+}
+
+void FMTabbedEditor::configBracketMatch() {
+  //  if (bracketMatchConfigAct->isChecked()) {
+  //    isMatchBracket = true;
+    //    statusBar()->showMessage("Brackets & keywords matching on", 2000);
+  //  }
+  //  else {
+  //    isMatchBracket = false;
+    //    statusBar()->showMessage("Brackets & keywords matching off", 2000);
+  //  }
+  //  bracketMatchConfigAct->setChecked(isMatchBracket); 
+  //  emit setMatchBracket(isMatchBracket);
+}
+
+void FMTabbedEditor::configSaveBeforeRun() {
+  //  if (saveBeforeRunConfigAct->isChecked()) {
+  //    isSaveBeforeRun = true;
+    //    statusBar()->showMessage("Save buffer before run on", 2000);
+  //  }
+  //  else {
+  //    isSaveBeforeRun = false;
+    //    statusBar()->showMessage("Save buffer before run off", 2000);
+  //  }
+  //  saveBeforeRunConfigAct->setChecked(isSaveBeforeRun); 
+}
+
+
+void FMTabbedEditor::dbsetclearbp() {
+  QWidget *p = tab->currentWidget();
+  FMEditPane *te = qobject_cast<FMEditPane*>(p);
+  //   // DEMO
+  //   QList<QTextEdit::ExtraSelection> selections;
+  //   QTextCursor cursor(te->getEditor()->textCursor());
+  //   cursor.movePosition(QTextCursor::StartOfLine,QTextCursor::MoveAnchor);
+  //   cursor.movePosition(QTextCursor::Down,QTextCursor::KeepAnchor);
+  //   QTextCharFormat format(te->getEditor()->currentCharFormat());
+  //   format.setBackground(QBrush(Qt::red));
+  //   QTextEdit::ExtraSelection sel;
+  //   sel.format = format;
+  //   sel.cursor = cursor;
+  //   selections.push_back(sel);
+  //   te->getEditor()->dsetExtraSelections(selections);
+  if (m_eval) m_eval->toggleBP(te->getFileName(),te->getLineNumber());
+}
+
+bool FMTabbedEditor::isFileOpened(const QString &fileName) 
+{
+  // Check for one of the editors that might be editing this file already
+  // if opened, set it as current
+  for (int i=0;i<tab->count();i++) {
+    QWidget *w = tab->widget(i);
+    FMEditPane *te = qobject_cast<FMEditPane*>(w);
+    if (te) {
+      if (te->getFileName() == fileName) {
+	tab->setCurrentIndex(i);
+	return true;
+      }
+    }
+  }
+  return false;
+}
+
+void FMTabbedEditor::open() {
+  QFileInfo fileInfo(currentFilename()); 
+  QString filePath = fileInfo.absolutePath(); 
+  QStringList fileNames = GetOpenFileNames(this, filePath);
+  QStringList::Iterator it = fileNames.begin();
+  while(it != fileNames.end()) {
+    QString fileName = *it;
+    loadFile(fileName);
+    ++it;
+  }
+}
+
+void FMTabbedEditor::openRecentFile() 
+{
+  QAction *action = qobject_cast<QAction *>(sender());
+  QString fileName = action->data().toString();
+  loadFile(fileName);
+}
+
+bool FMTabbedEditor::save() {
+  if (currentFilename().isEmpty()) {
+    return saveAs();
+  } else {
+    return saveFile(currentFilename());
+  }
+}
+
+bool FMTabbedEditor::saveAs() {
+  QString fileName;
+  if (currentFilename().isEmpty()) 
+    fileName = GetSaveFileName(this);
+  else { //initial save path name are the same as current
+    fileName = GetSaveFileName(this, currentFilename()); 
+  }
+  if (fileName.isEmpty())
+    return false;
+  // Check for a conflict
+  for (int i=0;i<tab->count();i++) {
+    QWidget *w = tab->widget(i);
+    FMEditPane *te = qobject_cast<FMEditPane*>(w);
+    if (te) {
+      if ((te->getFileName() == fileName) 
+	  && (i != tab->currentIndex())) {
+	QMessageBox::critical(this,"FreeMat","Cannot save to filename\n " + fileName + "\n as this file is open in another tab.\n  Please close the other tab and\n then repeat the save operation.");
+	tab->setCurrentIndex(i);
+	return false;
+      }
+    }
+  }
+  return saveFile(fileName);
+}
+
+void FMTabbedEditor::RefreshBPLists() {
+  update();
+}
+
+void FMTabbedEditor::IllegalLineOrCurrentPath(QString name, int line) {
+  QString fullname = name;
+  QFileInfo fileInfo(fullname);
+  QString filePath = QFileInfo(fullname).absolutePath();
+  QString currentPath = QDir::currentPath();
+  if (filePath !=currentPath) {
+    int ret = QMessageBox::warning(this, tr("FreeMat"),
+				   "File " + fullname + " is not on the current path."
+				   " To set breakpoint, do you want to change current "
+				   " path to the path of this file?",
+				   QMessageBox::Yes | QMessageBox::Default,
+				   QMessageBox::No,
+				   QMessageBox::Cancel | QMessageBox::Escape);
+    if (ret == QMessageBox::Yes) {
+      emit EvaluateText("cd " + filePath + "\n");
+      // leave some time to finish the above command
+#ifndef WIN32
+      sleep(1);
+#else
+      //Sleep(1);
+#endif
+      // make sure the current path is the file path
+      // before execute toggleBP() 
+      currentPath = QDir::currentPath();
+      if (filePath == currentPath)
+	if (m_eval) m_eval->toggleBP(fullname, line);
+      //      else
+      //	statusBar()->showMessage("Try again", 2000);
+    }
+  }
+  //  else 
+  //    statusBar()->showMessage("Illegal line number", 2000);
+}
+
+void FMTabbedEditor::ShowActiveLine() {
+  // Find the tab with this matching filename
+  if (!m_eval) return;
+  QString tname(m_eval->getInstructionPointerFileName());
+  if (tname == "") return;
+  // Check for one of the editors that might be editing this file already
+  for (int i=0;i<tab->count();i++) {
+    QWidget *w = tab->widget(i);
+    FMEditPane *te = qobject_cast<FMEditPane*>(w);
+    if (te) {
+      if (te->getFileName() == tname) {
+	tab->setCurrentIndex(i);
+	update();
+	return;
+      }
+    }
+  }
+  if (currentEditor()->document()->isModified() ||
+      (tab->tabText(tab->currentIndex()) != "untitled.m")) {
+    tab->addTab(new FMEditPane(m_eval),"untitled.m");
+    tab->setCurrentIndex(tab->count()-1);
+    updateFont();
+  }
+  loadFile(tname);
+  update();
+}
+
+void FMTabbedEditor::refreshContext() {
+  if (!context) return;
+  
+  //Reset all the values
+  varNameList = QStringList();
+  varTypeList = QStringList();
+  varFlagsList = QStringList();
+  varSizeList = QStringList();
+  varValueList = QStringList();
+
+  StringVector varnames = StringVector(context->listAllVariables());
+  qSort(varnames.begin(),varnames.end());
+  for (int i=0;i<varnames.size();i++) {
+    QString name(varnames[i]);
+    QString type;
+    QString flags;
+    QString size;
+    QString value;
+    Array lookup;
+    ArrayReference ptr;
+    ptr = context->lookupVariable(varnames[i]);
+    if (!ptr.valid()) {
+      type = "undefined";
+    } else {
+      lookup = *ptr;
+      type = lookup.className();
+      if (lookup.isSparse())
+	flags = "Sparse ";
+      if (context->isVariableGlobal(varnames[i])) {
+	flags += "Global ";
+      } else if (context->isVariablePersistent(varnames[i])) {
+	flags += "Persistent ";
+      }
+      size = lookup.dimensions().toString();
+      try {
+	value = ArrayToPrintableString(lookup);
+      } catch (Exception& e) {
+      }
+    }
+    varNameList << name;
+    varTypeList << type;
+    varFlagsList << flags;
+    varSizeList << size;
+    varValueList << value;	    
+  }
+}
+
+void FMTabbedEditor::setContext(Context *watch) {
+  context = watch;
+  refreshContext();
+}
+
+void FMTabbedEditor::showDataTips(QPoint pos, QString textSelected) {
+
+  if (!isShowToolTip)
+     return;
+     
+  bool foundTip = false;
+  if (!textSelected.isEmpty()) {
+    //split selected text into smaller parts and match with existing variable names
+    QStringList list = textSelected.split(QRegExp("\\W+"), QString::SkipEmptyParts);
+    for (int j = 0; j < list.size(); j++)
+      for (int i = 0; i < varNameList.size(); i++)
+	if (list.at(j) == varNameList.at(i)) {
+	  foundTip = true;
+	  if (varValueList.at(i).isEmpty())
+	    QToolTip::showText(pos, varNameList.at(i) + ": " + 
+			       varSizeList.at(i) + " " + 
+			       varTypeList.at(i));
+	  else
+	    QToolTip::showText(pos, varNameList.at(i) + ": " + 
+			       varSizeList.at(i) + " " + 
+			       varTypeList.at(i) + " =\n    " + 
+			       varValueList.at(i) );
+	  break;
+	}
+    if (!foundTip)
+      QToolTip::hideText();
+  }
+  else
+    QToolTip::hideText();
+}
+
+void FMTabbedEditor::closeTab() {
+  if (maybeSave()) {
+    QWidget *p = tab->currentWidget();
+    tab->removeTab(tab->currentIndex());
+    prevEdit = NULL;
+    delete p;
+  }
+}
+
+bool FMTabbedEditor::maybeSave() {
+  if (currentEditor()->document()->isModified()) {
+    raise();
+    int ret = QMessageBox::warning(this, tr("FreeMat"),
+				   "The document " + shownName() + " has been modified.\n"
+				   "Do you want to save your changes?",
+				   QMessageBox::Yes | QMessageBox::Default,
+				   QMessageBox::No,
+				   QMessageBox::Cancel | QMessageBox::Escape);
+    if (ret == QMessageBox::Yes)
+      return save();
+    else if (ret == QMessageBox::Cancel)
+      return false;
+  }
+  return true;  
+}
+
+bool FMTabbedEditor::saveFile(const QString &fileName)
+{
+  QFile file(fileName);
+  if (!file.open(QFile::WriteOnly | QFile::Text)) {
+    QMessageBox::warning(this, tr("FreeMat"),
+			 tr("Cannot write file %1:\n%2.")
+			 .arg(fileName)
+			 .arg(file.errorString()));
+    return false;
+  }
+  
+  QTextStream out(&file);
+  QApplication::setOverrideCursor(Qt::WaitCursor);
+  out << currentEditor()->toPlainText();
+  QApplication::restoreOverrideCursor();
+  
+  setCurrentFile(fileName);
+  //  statusBar()->showMessage(tr("File saved"), 2000);
+  return true;
+}
+
+void FMTabbedEditor::closeEvent(QCloseEvent *event) {
+  while (tab->count() > 0) {
+    if (!maybeSave()) {
+      event->ignore();
+      emit checkEditorExist(true);
+      return;
+    } else {
+      QWidget *p = tab->currentWidget();
+      tab->removeTab(tab->currentIndex());
+      prevEdit = NULL;
+      delete p;
+    }
+  }
+  writeSettings();
+  event->accept();
+  emit checkEditorExist(false);
+}
+
+QString FMTabbedEditor::getFullFileName(QString fname)
+{
+  QFileInfo info(fname);
+  if (info.exists())
+    return info.filePath();
+  FuncPtr val;
+  bool isFun = m_eval && m_eval->getContext()->lookupFunction(fname,val);
+  if (isFun && (val->type() == FM_M_FUNCTION)) {
+    //if file is a matlab file get the file name from the interpreter
+    MFunctionDef* mfun = (MFunctionDef*)val;
+    if( mfun ) {
+      return mfun->fileName;
+    }
+    else {
+	  return QString();
+    }
+  }
+  else {
+    bool isFound = false;
+    for (int i=0;i<pathList.size();i++) {
+      QDir pdir(pathList[i]);
+      if (pdir.exists(fname)) {
+        return pdir.absoluteFilePath(fname);
+      }
+    }
+    if (!isFound) {
+	  return QString();
+	}
+  }
+  return QString();
+}
+
+void FMTabbedEditor::loadFile(const QString &fileName)
+{
+  // ignore if empty filename
+  if (fileName.isEmpty())
+    return;
+    
+  // check if filename contains line number
+  QString fname = fileName;
+  /*    
+	int lineNum = 0;
+	int posPlusSign = fname.indexOf('+');
+	if (posPlusSign > 0) {
+	QString lineNumeSt = fname.mid(posPlusSign);
+	lineNum = lineNumeSt.toInt();
+	fname.remove(posPlusSign, fname.size()-posPlusSign);
+	}
+  */
+  
+  QString fn = getFullFileName(fname);
+  if (fn.isEmpty()) {
+    QMessageBox::warning(this, tr("FreeMat"),
+			 tr("Cannot read file %1. No such file found on path list.")
+			 .arg(fname));
+    return;
+  }
+  else
+    fname = fn;
+  
+  // Check for one of the editors that might be editing this file already
+  // if found, show its tab
+  for (int i=0;i<tab->count();i++) {
+    QWidget *w = tab->widget(i);
+    FMEditPane *te = qobject_cast<FMEditPane*>(w);
+    if (te) {
+      if (te->getFileName() == fname) {
+	tab->setCurrentIndex(i);
+	return;
+      }
+    }
+  }
+  
+  // check if there's already an unmodified "untitled.m" tab
+  // if not create a new tab
+  if ((tab->tabText(tab->currentIndex()) != "untitled.m") && m_eval) {
+    tab->addTab(new FMEditPane(m_eval),"untitled.m");
+    tab->setCurrentIndex(tab->count()-1);
+    updateFont();
+  }
+  
+  // open file and load into editor
+  QFile file(fname);
+  if (!file.open(QFile::ReadOnly | QFile::Text)) {
+    QMessageBox::warning(this, tr("FreeMat"),
+			 tr("Cannot read file %1:\n%2.")
+			 .arg(fname)
+			 .arg(file.errorString()));
+    return;
+  }
+  QTextStream in(&file);
+  QApplication::setOverrideCursor(Qt::WaitCursor);
+  currentEditor()->setPlainText(in.readAll());
+  QApplication::restoreOverrideCursor();
+  
+  // remember filename and update recent file list
+  QFileInfo tokeep(fname);
+  lastfile = tokeep.absolutePath();
+  lastfile_set = true;
+  setCurrentFile(fname);
+  //  statusBar()->showMessage(tr("File loaded"), 2000);
+  
+  //  if (lineNum>0)
+  //    emit gotoLineNumber(lineNum);
+}
+
+void FMTabbedEditor::setCurrentFile(const QString &fileName)
+{
+  setCurrentFilename(fileName);
+  currentEditor()->document()->setModified(false);
+  setWindowModified(false);
+  updateTitles();
+}
+
+
+QString FMTabbedEditor::strippedName(const QString &fullFileName)
+{
+    return QFileInfo(fullFileName).fileName();
+}
+
+void FMTabbedEditor::font() {
+  FMFontDialog g(m_font, this);
+  if (g.exec() == QDialog::Accepted)
+    m_font = g.font();
+  updateFont();
+}
+
+/**********************************************************************/
+
 
 FMEditor::FMEditor(Interpreter* eval) : QMainWindow() {
   m_eval = eval;
@@ -1250,19 +2195,17 @@ void FMEditor::createActions() {
   saveAct->setShortcut(Qt::Key_S | Qt::CTRL);
   connect(saveAct,SIGNAL(triggered()),this,SLOT(save()));
   saveAsAct = new QAction("Save &As",this);
-  
   for (int i = 0; i < MaxRecentFiles; ++i) {
     recentFileActs[i] = new QAction(this);
 	recentFileActs[i]->setVisible(false);
 	connect(recentFileActs[i], SIGNAL(triggered()),
 		     this, SLOT(openRecentFile()));
   }
-
   connect(saveAsAct,SIGNAL(triggered()),this,SLOT(saveAs()));
   quitAct = new QAction(QIcon(":/images/quit.png"),"&Quit Editor",this);
   quitAct->setShortcut(Qt::Key_Q | Qt::CTRL);
   connect(quitAct,SIGNAL(triggered()),this,SLOT(close()));
-  closeAct = new QAction(QIcon(":/images/close.png"),"&Close Tab",this);
+  closeAct = new QAction(QIcon(":/images/closetab.png"),"&Close Tab",this);
   closeAct->setShortcut(Qt::Key_W | Qt::CTRL);
   connect(closeAct,SIGNAL(triggered()),this,SLOT(closeTab()));
   copyAct = new QAction(QIcon(":/images/copy.png"),"&Copy",this);
@@ -1641,44 +2584,6 @@ void FMEditor::createStatusBar() {
   statusBar()->showMessage("Ready");
 }
 
-static QString lastfile;
-static bool lastfile_set = false;
-
-static QStringList GetOpenFileNames(QWidget *w, const QString &filePath = QString()) { 
-  QStringList retfiles;
-  if (!filePath.isEmpty())
-    retfiles = QFileDialog::getOpenFileNames(w,"Open File in Editor",filePath,
-					   "M files (*.m);;Text files (*.txt);;All files (*)");  
-  else if (lastfile_set)
-    retfiles = QFileDialog::getOpenFileNames(w,"Open File in Editor",lastfile,
-					   "M files (*.m);;Text files (*.txt);;All files (*)");
-  else
-    retfiles = QFileDialog::getOpenFileNames(w,"Open File in Editor",QString(),
-					   "M files (*.m);;Text files (*.txt);;All files (*)");
-  return retfiles;
-}
-
-static QString GetSaveFileName(QWidget *w, const QString &filePath = QString()) { 
-  QString retfile, SelectedFilter;
-  if (!filePath.isEmpty())
-    retfile = QFileDialog::getSaveFileName(w,"Save File",filePath,
-					   "M files (*.m);;Text files (*.txt);;All files (*)",&SelectedFilter);
-  else if (lastfile_set)
-    retfile = QFileDialog::getSaveFileName(w,"Save File",lastfile,
-					   "M files (*.m);;Text files (*.txt);;All files (*)",&SelectedFilter);
-  else
-    retfile = QFileDialog::getSaveFileName(w,"Save File",QString(),
-					   "M files (*.m);;Text files (*.txt);;All files (*)",&SelectedFilter);
-  /* Add an extension to file name if not provided*/
-  if (!retfile.contains('.')) { 
-    if (SelectedFilter.contains("*.m"))
-        retfile = retfile + ".m";
-    else if (SelectedFilter.contains("*.txt"))
-        retfile = retfile + ".txt";
-  }
-  return retfile;  
-}
-
 bool FMEditor::isFileOpened(const QString &fileName) 
 {
   // Check for one of the editors that might be editing this file already
@@ -1984,6 +2889,8 @@ void FMEditor::closeEvent(QCloseEvent *event) {
 QString FMEditor::getFullFileName(QString fname)
 {
   QFileInfo info(fname);
+  if (info.exists())
+    return info.filePath();
   FuncPtr val;
   bool isFun = m_eval->getContext()->lookupFunction(fname,val);
   if (isFun && (val->type() == FM_M_FUNCTION)) {

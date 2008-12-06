@@ -29,9 +29,9 @@ JIT::JIT() {
   m->setTargetTriple("i686-pc-linux-gnu");
 
   mp = new ExistingModuleProvider(m);
-  QString errorstring;
-  ee = ExecutionEngine::create(mp,false,&errorstring.toStdString());
-  dbout << "Execution engine: " << errorstring << "\n";
+  std::string errorstring;
+  ee = ExecutionEngine::create(mp,false,&errorstring);
+  dbout << "Execution engine: " << QString::fromStdString(errorstring) << "\n";
   initialized = false;
   // Create the optimizer thingy
   opt = new FunctionPassManager(mp);
@@ -74,20 +74,12 @@ JIT::~JIT() {
   delete ee;
 }
 
-bool JIT::Initialized() {
-  return initialized;
-}
-
-void JIT::SetInitialized(bool t) {
-  initialized = t;
-}
-
-void JIT::OptimizeCode(JITFunction func) {
+void JIT::OptimizeCode() {
   opt->run(*func);
 }
 
 JITFunctionType JIT::FunctionType(JITType rettype, std::vector<JITType> args) {
-  return llvm::FunctionType::get(rettype,args,false,(ParamAttrsList*) 0);
+  return llvm::FunctionType::get(rettype,args,false);
 }
 
 JITFunctionType JIT::FunctionType(QString rettype, QString args) {
@@ -106,20 +98,12 @@ JITType JIT::FloatType() {
   return Type::getPrimitiveType(Type::FloatTyID);
 }
 
-JITType JIT::Int8Type() {
-  return IntegerType::get(8);
-}
-
-JITType JIT::Int32Type() {
-  return IntegerType::get(32);
-}
-
 JITType JIT::BoolType() {
   return IntegerType::get(1);
 }
 
 JITType JIT::PointerType(JITType t) {
-  return PointerType::get(t);
+  return PointerType::getUnqual(t);
 }
 
 JITType JIT::VoidType() {
@@ -130,156 +114,171 @@ JITType JIT::TypeOf(JITScalar x) {
   return x->getType();
 }
 
-JITScalar JIT::Int32Value(int32 x) {
-  return ConstantInt::get(Type::Int32Ty,x);
-}
-
 JITScalar JIT::DoubleValue(double x) {
-  return ConstantFP::get(Type::DoubleTy,x);
+  return ConstantFP::get(Type::DoubleTy,APFloat(x));
 }
 
 JITScalar JIT::FloatValue(float x) {
-  return ConstantFP::get(Type::FloatTy,x);
+  return ConstantFP::get(Type::FloatTy,APFloat(x));
 }
 
-JITScalar JIT::BoolValue(bool t) {
-  if (t)
+JITScalar JIT::BoolValue(bool x) {
+  if (x)
     return ConstantInt::get(Type::Int1Ty,1);
   else
     return ConstantInt::get(Type::Int1Ty,0);
 }
 
-JITScalar JIT::Zero(JITType t) {
-  return Constant::getNullValue(t);
+JITScalar JIT::ToBool(JITScalar x) {
+  if (IsBool(x)) return x;
+  return new FCmpInst(FCmpInst::FCMP_ONE,x,DoubleValue(0),"",ip);
+}
+
+JITScalar JIT::ToDouble(JITScalar x) {
+  if (IsDouble(x)) return x;
+  return CastInst::create(CastInst::getCastOpcode(x,true,BoolType(),true),
+			  x,BoolType(),"",ip);
+}
+
+JITScalar JIT::ToFloat(JITScalar x) {
+  if (IsFloat(x)) return x;
+  return CastInst::create(CastInst::getCastOpcode(x,true,FloatType(),true),
+			  x,FloatType(),"",ip);
+}
+
+JITScalar JIT::ToType(JITScalar x, JITType t) {
+  if (IsBool(t))
+    return ToBool(x);
+  else
+    return CastInst::create(CastInst::getCastOpcode(x,true,t,true),x,t,"",ip);
+}
+
+bool JIT::IsBool(JITScalar x) {
+  return (IsBool(TypeOf(x)));
+}
+
+bool JIT::IsDouble(JITScalar x) {
+  return (IsDouble(TypeOf(x)));
+}
+
+bool JIT::IsFloat(JITScalar x) {
+  return (IsFloat(TypeOf(x)));
+}
+
+bool JIT::IsBool(JITType x) {
+  return (x->isInteger());
+}
+
+bool JIT::IsDouble(JITType x) {
+  return (x->getTypeID() == Type::DoubleTyID);
+}
+
+bool JIT::IsFloat(JITType x) {
+  return (x->getTypeID() == Type::FloatTyID);
+}
+
+JITType JIT::MapTypeCode(QChar c) {
+  switch (c.toAscii()) {
+  case 'v':
+    return VoidType();
+  case 'b':
+    return BoolType();
+  case 'f':
+    return FloatType();
+  case 'd':
+    return DoubleType();
+  case 'B':
+    return PointerType(BoolType());
+  case 'F':
+    return PointerType(FloatType());
+  case 'D':
+    return PointerType(DoubleType());
+  case 'V':
+    return PointerType(IntegerType::get(8));
+  default:
+    throw Exception(QString("Invalid type map code '") + c + QString("'") );
+  }
 }
 
 JITBlock JIT::NewBlock(QString name) {
-	return new BasicBlock(name.toStdString(),func,0);
+  return new BasicBlock(name.toStdString(),func,0);
+}
+
+JITScalar JIT::JITBinOp(Instruction::BinaryOps op, JITScalar A, JITScalar B) {
+  // Mimics ComputeTypes
+  if (IsFloat(A) && IsFloat(B))
+    return BinaryOperator::create(op,A,B,"",ip);
+  if (IsFloat(A) || IsFloat(B))
+    return ToFloat(BinaryOperator::create(op,ToDouble(A),ToDouble(B),"",ip));
+  return BinaryOperator::create(op,ToDouble(A),ToDouble(B),"",ip);  
 }
 
 JITScalar JIT::Mul(JITScalar A, JITScalar B) {
-  if (TypeOf(A) != TypeOf(B))
-    throw Exception("Type mismatch on multiply");
-  return BinaryOperator::create(Instruction::Mul,A,B,"",ip);
+  return JITBinOp(Instruction::Mul,A,B);
 }
 
 JITScalar JIT::Div(JITScalar A, JITScalar B) {
-  if (TypeOf(A) != TypeOf(B))
-    throw Exception("Type mismatch on division");
-  if (A->getType()->isInteger() && B->getType()->isInteger()) 
-    return BinaryOperator::create(Instruction::SDiv,A,B,"",ip);
-  else if (A->getType()->isFloatingPoint() && B->getType()->isFloatingPoint())
-    return BinaryOperator::create(Instruction::FDiv,A,B,"",ip);
-  else
-    throw Exception("Unsupported type combinations to divide instruction");
+  return JITBinOp(Instruction::FDiv,A,B);
 }
 
 JITScalar JIT::Sub(JITScalar A, JITScalar B) {
-  if (TypeOf(A) != TypeOf(B))
-    throw Exception("Type mismatch on subtraction");
-  return BinaryOperator::create(Instruction::Sub,A,B,"",ip);
+  return JITBinOp(Instruction::Sub,A,B);
 }
 
 JITScalar JIT::Add(JITScalar A, JITScalar B) {
-  if (TypeOf(A) != TypeOf(B))
-    throw Exception("Type mismatch on addition");
-  return BinaryOperator::create(Instruction::Add,A,B,"",ip);
+  return JITBinOp(Instruction::Add,A,B);
 }
 
 JITScalar JIT::And(JITScalar A, JITScalar B) {
-  if (TypeOf(A) != TypeOf(B))
-    throw Exception("Type mismatch on AND");
-  return BinaryOperator::create(Instruction::And,A,B,"",ip);
+  return BinaryOperator::create(Instruction::And,ToBool(A),ToBool(B),"",ip);
 }
 
 JITScalar JIT::Or(JITScalar A, JITScalar B) {
-  if (TypeOf(A) != TypeOf(B))
-    throw Exception("Type mismatch on OR");
-  return BinaryOperator::create(Instruction::Or,A,B,"",ip);
+  return BinaryOperator::create(Instruction::Or,ToBool(A),ToBool(B),"",ip);
 }
 
 JITScalar JIT::Xor(JITScalar A, JITScalar B) {
-  if (TypeOf(A) != TypeOf(B))
-    throw Exception("Type mismatch on XOR");
-  return BinaryOperator::create(Instruction::Xor,A,B,"",ip);
-}
-
-JITScalar JIT::Alloc(JITType T, QString name) {
-	return new AllocaInst(T,name.toStdString(),ip);
-}
-
-JITScalar JIT::Cast(JITScalar A, JITType T) {
-  return CastInst::create(CastInst::getCastOpcode(A,true,T,true),A,T,"",ip);
+  return BinaryOperator::create(Instruction::Xor,ToBool(A),ToBool(B),"",ip);
 }
 
 JITScalar JIT::LessThan(JITScalar A, JITScalar B) {
-  if (TypeOf(A) != TypeOf(B))
-    throw Exception("Type mismatch on <");
-  if (A->getType()->isInteger() && B->getType()->isInteger()) 
-    return new ICmpInst(ICmpInst::ICMP_SLT,A,B,"",ip);
-  else if (A->getType()->isFloatingPoint() && B->getType()->isFloatingPoint())
-    return new FCmpInst(FCmpInst::FCMP_OLT,A,B,"",ip);
-  else
-    throw Exception("Unsupported type combinations to less than instruction");
+  return new FCmpInst(FCmpInst::FCMP_OLT,ToDouble(A),ToDouble(B),"",ip);
 }
 
 JITScalar JIT::LessEquals(JITScalar A, JITScalar B) {
-  if (TypeOf(A) != TypeOf(B))
-    throw Exception("Type mismatch on <=");
-  if (A->getType()->isInteger() && B->getType()->isInteger()) 
-    return new ICmpInst(ICmpInst::ICMP_SLE,A,B,"",ip);
-  else if (A->getType()->isFloatingPoint() && B->getType()->isFloatingPoint())
-    return new FCmpInst(FCmpInst::FCMP_OLE,A,B,"",ip);
-  else
-    throw Exception("Unsupported type combinations to less-equal instruction");  
+  return new FCmpInst(FCmpInst::FCMP_OLE,ToDouble(A),ToDouble(B),"",ip);
 }
 
 JITScalar JIT::Equals(JITScalar A, JITScalar B) {
-  if (TypeOf(A) != TypeOf(B))
-    throw Exception("Type mismatch on ==");
-  if (A->getType()->isInteger() && B->getType()->isInteger()) 
-    return new ICmpInst(ICmpInst::ICMP_EQ,A,B,"",ip);
-  else if (A->getType()->isFloatingPoint() && B->getType()->isFloatingPoint())
-    return new FCmpInst(FCmpInst::FCMP_OEQ,A,B,"",ip);
-  else
-    throw Exception("Unsupported type combinations to equal instruction");  
+  return new FCmpInst(FCmpInst::FCMP_OEQ,ToDouble(A),ToDouble(B),"",ip);
 }
 
 JITScalar JIT::NotEqual(JITScalar A, JITScalar B) {
-  if (TypeOf(A) != TypeOf(B))
-    throw Exception("Type mismatch on !=");
-  if (A->getType()->isInteger() && B->getType()->isInteger()) 
-    return new ICmpInst(ICmpInst::ICMP_NE,A,B,"",ip);
-  else if (A->getType()->isFloatingPoint() && B->getType()->isFloatingPoint())
-    return new FCmpInst(FCmpInst::FCMP_ONE,A,B,"",ip);
-  else
-    throw Exception("Unsupported type combinations to not-equal instruction");  
+  return new FCmpInst(FCmpInst::FCMP_ONE,ToDouble(A),ToDouble(B),"",ip);
 }
 
 JITScalar JIT::GreaterThan(JITScalar A, JITScalar B) {
-  if (TypeOf(A) != TypeOf(B))
-    throw Exception("Type mismatch on >");
-  if (A->getType()->isInteger() && B->getType()->isInteger()) 
-    return new ICmpInst(ICmpInst::ICMP_SGT,A,B,"",ip);
-  else if (A->getType()->isFloatingPoint() && B->getType()->isFloatingPoint())
-    return new FCmpInst(FCmpInst::FCMP_OGT,A,B,"",ip);
-  else
-    throw Exception("Unsupported type combinations to greater than instruction");
+  return new FCmpInst(FCmpInst::FCMP_OGT,ToDouble(A),ToDouble(B),"",ip);
 }
 
 JITScalar JIT::GreaterEquals(JITScalar A, JITScalar B) {
-  if (TypeOf(A) != TypeOf(B))
-    throw Exception("Type mismatch on >=");
-  if (A->getType()->isInteger() && B->getType()->isInteger()) 
-    return new ICmpInst(ICmpInst::ICMP_SGE,A,B,"",ip);
-  else if (A->getType()->isFloatingPoint() && B->getType()->isFloatingPoint())
-    return new FCmpInst(FCmpInst::FCMP_OGE,A,B,"",ip);
-  else
-    throw Exception("Unsupported type combinations to greater-equal instruction");  
+  return new FCmpInst(FCmpInst::FCMP_OGE,ToDouble(A),ToDouble(B),"",ip);
+}
+
+JITScalar JIT::Negate(JITScalar A) {
+  return BinaryOperator::createNeg(A,"",ip);
+}
+
+JITScalar JIT::Not(JITScalar A) {
+  return BinaryOperator::createNot(A,"",ip);
 }
 
 void JIT::Store(JITScalar Value, JITScalar Address) {
   new StoreInst(Value, Address, ip);
+}
+
+JITScalar JIT::Alloc(JITType T, QString name) {
+  return new AllocaInst(T,name.toStdString(),ip);
 }
 
 JITScalar JIT::String(QString text) {
@@ -318,8 +317,7 @@ JITBlock JIT::CurrentBlock() {
 }
 
 JITScalar JIT::Call(JITFunction F, std::vector<JITScalar> args) {
-  CallInst *t = new CallInst(F,args.begin(),args.end(),"",ip);
-  return t;
+  return new CallInst(F,args.begin(),args.end(),"",ip);
 }
 
 JITScalar JIT::Call(JITFunction F, JITScalar arg1) {
@@ -369,38 +367,8 @@ JITScalar JIT::GetElement(JITScalar BaseAddress, JITScalar Offset) {
 }
 
 JITFunction JIT::DefineFunction(JITFunctionType functype, QString name) {
-	JITFunction func = (JITFunction) m->getOrInsertFunction(name.toStdString(), functype);
-  //  JITFunction func = new Function(functype,GlobalValue::ExternalLinkage,name,m);
-  //  func->setLinkage(GlobalValue::ExternalLinkage);
-  //  func->setCallingConv(CallingConv::C);
-  return func;
+  return ((JITFunction) m->getOrInsertFunction(name.toStdString(), functype));
 }
-
-JITType JIT::MapTypeCode(QChar c) {
-	switch (c.toAscii()) {
-	  case 'v':
-		  return VoidType();
-	  case 'i':
-		  return Int32Type();
-	  case 'f':
-		  return FloatType();
-	  case 'd':
-		  return DoubleType();
-	  case 'c':
-		  return Int8Type();
-	  case 'I':
-		  return PointerType(Int32Type());
-	  case 'F':
-		  return PointerType(FloatType());
-	  case 'D':
-		  return PointerType(DoubleType());
-	  case 'C':
-		  return PointerType(Int8Type());
-	  default:
-		  throw Exception("Invalid type map code");
-	}
-}
-
 
 static std::vector<JITFunctionType> bank;
 
@@ -434,38 +402,6 @@ JITScalar JIT::FunctionArgument(int n, QString name) {
 void JIT::CloseFunction() {
 }
 
-bool JIT::IsDouble(JITType t) {
-  return t->getTypeID() == Type::DoubleTyID;
-}
-
-bool JIT::IsFloat(JITType t) {
-  return t->getTypeID() == Type::FloatTyID;
-}
-
-bool JIT::IsFP(JITType t) {
-  return t->isFloatingPoint();
-}
-
-bool JIT::IsInteger(JITType t) {
-  return t->isInteger();
-}
-
-bool JIT::IsDouble(JITScalar t) {
-  return IsDouble(TypeOf(t));
-}
-
-bool JIT::IsFloat(JITScalar t) {
-  return IsFloat(TypeOf(t));
-}
-
-bool JIT::IsFP(JITScalar t) {
-  return IsFP(TypeOf(t));
-}
-
-bool JIT::IsInteger(JITScalar t) {
-  return IsInteger(TypeOf(t));
-}
-
 void JIT::Return(JITScalar t) {
   new ReturnInst(t,ip);
 }
@@ -475,25 +411,25 @@ void JIT::Return() {
 }
 
 void JIT::Dump(JITFunction f) {
-	std::stringstream str;
-	str << (*f);
-	dbout << str.str();
+  std::stringstream str;
+  str << (*f);
+  dbout << str.str();
 }
 
 void JIT::Dump() {
-	std::stringstream str;
-	str << (*m);
-	dbout << str.str();
+  std::stringstream str;
+  str << (*m);
+  dbout << str.str();
 }
 
 void JIT::Dump( const QString& fname ) {
-	std::ofstream fout( fname.toAscii() );
-    fout << (*m);
+  std::ofstream fout( fname.toAscii() );
+  fout << (*m);
 }
 
 void JIT::Dump( const QString& fname, JITFunction f ) {
-    std::ofstream fout( fname.toAscii() );
-    fout << (*f);
+  std::ofstream fout( fname.toAscii() );
+  fout << (*f);
 }
 
 JITGeneric JIT::Invoke(JITFunction f, JITGeneric arg) {

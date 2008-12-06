@@ -138,7 +138,7 @@ ArrayVector BitxorFunction(int nargout, const ArrayVector& arg) {
 }
 
 //!
-//@Module BITCMP_CPP Bitwise Boolean Complement Operation
+//@Module BITCMPCPP Bitwise Boolean Complement Operation
 //@@Section BINARY
 //@@Usage
 //Performs a bitwise binary complement operation on the argument and

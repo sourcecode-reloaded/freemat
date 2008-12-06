@@ -14,7 +14,7 @@
 %@@Example
 %First, an example of a random sparse matrix.
 %@<
-%y = sprand(1000,1000,.001)
+%y = sprand(1000,1000,.001);
 %spy(y,'ro')
 %mprint spy1
 %@>

@@ -62,7 +62,7 @@
 %The source code build is a little more complicated than previous versions of FreeMat.  Here
 %are the current build instructions for all platforms.
 %\begin{enumerate}
-%\item Build and install Qt 4.2 or later - @|http://www.trolltech.com/download/opensource.html|
+%\item Build and install Qt 4.3 or later - @|http://trolltech.com/developer/downloads/opensource|
 %\item Install g77 or gfortran (use fink for Mac OS X, use @|gcc-g77| package for MinGW)
 %\item Download the source code @|FreeMat-<VERSION_NUMBER>-src.tar.gz|.
 %\item Unpack the source code: @|tar xvfz FreeMat-<VERSION_NUMBER>-src.tar.gz|.

@@ -219,6 +219,9 @@ public:
     delete bottomScope;
     bottomScope = scopestack.back();
   }
+  inline int scopeDepth() {
+    return scopestack.size();
+  }
   /**
    * Insert the given variable into the right scope - the global
    * scope if the array is in the global list, and mangled in
@@ -532,6 +535,7 @@ public:
   }
 
   inline bool lookupFunction(QString funcName, FuncPtr& val) {
+    qDebug() << "Looking up " << funcName;
     FuncPtr* ret = codeTab.findSymbol(funcName);
     if (ret) {
       val = *ret;

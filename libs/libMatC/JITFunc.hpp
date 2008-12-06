@@ -27,12 +27,16 @@ public:
 
 class JITFunc {
 public:
-	FM::SymbolTable<SymbolInfo> symbols;
-	FM::SymbolTable<JITFunction> double_funcs, float_funcs, int_funcs;
-	FM::SymbolTable<JITScalar> constants;
+  FM::SymbolTable<SymbolInfo> symbols;
+  FM::SymbolTable<JITFunction> double_funcs;
+  FM::SymbolTable<JITFunction> float_funcs;
+  FM::SymbolTable<JITScalar> constants;
   JIT *jit;
   Interpreter *eval;
   Array** array_inputs;
+  void** cache_array_bases;
+  double* cache_array_rows;
+  double* cache_array_cols;
   int argument_count;
   JITFunction func;
   JITBlock prolog, main_body, epilog;
@@ -55,7 +59,9 @@ public:
   JITScalar compile_function_call(Tree* t);
   JITScalar compile_m_function_call(Tree* t);
   JITScalar compile_built_in_function_call(Tree* t);
-  JITScalar compile_scalar_function(QString symname);
+  JITScalar compile_constant_function(QString symname);
+  JITScalar compile_or_statement(Tree* t);
+  JITScalar compile_and_statement(Tree* t);
   void compile_if_statement(Tree* t);
   void compile_for_block(Tree* t);
   void compile_assignment(Tree* t);
@@ -68,5 +74,6 @@ public:
 };
 
 #endif
+
 
 #endif

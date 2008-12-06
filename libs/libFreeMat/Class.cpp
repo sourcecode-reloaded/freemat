@@ -781,7 +781,7 @@ Array ClassMatrixConstructor(ArrayMatrix m, Interpreter* eval) {
       // for one that has "horzcat" overloaded
       val->updateCode(eval);
       ArrayVector p;
-      p = val->evaluateFunction(eval,m[i],1);
+      p = eval->doFunction(val,m[i],1);
       if (!p.empty())
 	rows.push_back(p[0]);
       else {
@@ -813,7 +813,7 @@ Array ClassMatrixConstructor(ArrayMatrix m, Interpreter* eval) {
       throw Exception("no overloaded version of vertcat found");
     val->updateCode(eval);
     ArrayVector p;
-    p = val->evaluateFunction(eval,rows,1);
+    p = eval->doFunction(val,rows,1);
     if (!p.empty())
       return p[0];
     else
@@ -828,7 +828,7 @@ Array ClassUnaryOperator(Array a, QString funcname, Interpreter* eval) {
   if (eval->getContext()->lookupFunction(ClassMangleName(a.className(),funcname),val)) {
     val->updateCode(eval);
     m.push_back(a);
-    n = val->evaluateFunction(eval,m,1);
+    n = eval->doFunction(val,m,1);
     if (!n.empty())
       return n[0];
     else
@@ -867,7 +867,7 @@ static Array ClassBiOp(Array a, Array b, FuncPtr val, Interpreter *eval) {
   val->updateCode(eval);
   ArrayVector m, n;
   m.push_back(a); m.push_back(b);
-  n = val->evaluateFunction(eval,m,1);
+  n = eval->doFunction(val,m,1);
   if (!n.empty())
     return n[0];
   else
@@ -878,7 +878,7 @@ static Array ClassTriOp(Array a, Array b, Array c, FuncPtr val, Interpreter *eva
   val->updateCode(eval);
   ArrayVector m, n;
   m.push_back(a); m.push_back(b); m.push_back(c);
-  n = val->evaluateFunction(eval,m,1);
+  n = eval->doFunction(val,m,1);
   if (!n.empty())
     return n[0];
   else
@@ -980,7 +980,7 @@ static ArrayVector ClassSubsrefCall(Interpreter* eval, Tree *t, Array r, FuncPtr
   p.push_back(r);
   p.push_back(IndexExpressionToStruct(eval,t, r));
   val->updateCode(eval);
-  ArrayVector n = val->evaluateFunction(eval,p,1);
+  ArrayVector n = eval->doFunction(val,p,1);
   return n;
 }
 
@@ -1085,7 +1085,7 @@ void ClassAssignExpression(ArrayReference dst, Tree *t, const Array& value, Inte
   val->updateCode(eval);
   bool overload(eval->getStopOverload());
   eval->setStopOverload(true);
-  ArrayVector n = val->evaluateFunction(eval,p,1);
+  ArrayVector n = eval->doFunction(val,p,1);
   eval->setStopOverload(overload);
   if (!n.empty())
     *dst = n[0];

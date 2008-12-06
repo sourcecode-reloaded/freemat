@@ -195,6 +195,103 @@ private:
   Ui::FMSynLightConf ui;
 };
 
+class FMTabbedEditor : public QWidget {
+  Q_OBJECT
+
+  QTabWidget *tab;
+  QAction *openSelectionAct, *helpOnSelectionAct, *copyAct, *cutAct;
+  QAction *pasteAct, *undoAct, *redoAct, *replaceAct, *findAct;
+  QAction *commentAct, *uncommentAct, *executeSelectionAct, *executeCurrentAct;
+  QAction *dbStepAct, *dbTraceAct, *dbContinueAct, *dbSetClearBPAct, *dbStopAct;
+   
+  FMTextEdit *prevEdit;
+  QFont m_font;
+  FMFindDialog *m_find;
+  FMReplaceDialog *m_replace;
+  QMenu *m_popup;
+  Interpreter *m_eval;
+  QStringList varNameList, varTypeList, varFlagsList, varSizeList, varValueList;
+  Context *context;
+  bool isShowToolTip;
+  bool isMatchBracket;
+  bool isSaveBeforeRun;
+  QStringList pathList;
+  enum { MaxRecentFiles = 5 }; 
+public:
+  FMTabbedEditor(QWidget *parent);
+  virtual ~FMTabbedEditor();
+  void loadFile(const QString& filename);
+  QString getFullFileName(QString fname);
+  void setInterpreter(Interpreter *eval);
+private:
+  void createActions();
+  void createMenus();
+  bool maybeSave();
+  bool saveFile(const QString& filename);
+  void setCurrentFile(const QString& filename);
+  QString strippedName(const QString& fullfilename);
+  FMTextEdit *currentEditor();
+  void setCurrentFilename(QString filename);
+  QString currentFilename();
+  QString shownName();
+  QString shownPath();
+  void updateTitles();
+  void readSettings();
+  void writeSettings();
+  void updateFont();
+  bool isFileOpened(const QString &fileName); 
+signals:
+  void EvaluateText(QString);
+  void setMatchBracket(bool flag);
+  void checkEditorExist(bool isExist);
+protected:
+  void contextMenuEvent(QContextMenuEvent *e);
+private slots:
+  bool save();
+  bool saveAs();
+  void open();
+  void copy();
+  void paste();
+  void cut();
+  void font();
+  void addTab();
+  void closeTab();
+  void tabChanged(int);
+  void documentWasModified();
+  void find();
+  void replace();
+  void doFind(QString text, bool backwards, bool sensitive);
+  void doReplace(QString text, QString replace, 
+		 bool backwards, bool sensitive);
+  void doReplaceAll(QString text, QString replace, 
+		    bool backwards, bool sensitive);
+  void comment();
+  void uncomment();
+  void increaseIndent();
+  void decreaseIndent();
+  void smartIndent();
+  void undo();
+  void redo();
+  void RefreshBPLists();
+  void refreshContext();
+  void IllegalLineOrCurrentPath(QString name, int line);
+  void ShowActiveLine();
+  void configcolors();
+  void configindent();
+  void execSelected();
+  void execCurrent();
+  void openRecentFile(); 
+  void showDataTips(QPoint pos, QString textSelected);
+  void configDataTip();
+  void configBracketMatch();
+  void configSaveBeforeRun();
+  void helpOnSelection();
+  void openSelection();
+  void dbsetclearbp();
+public:
+  void closeEvent(QCloseEvent *event);
+  void setContext(Context *watch);
+};
 
 class FMEditor : public QMainWindow {
   Q_OBJECT

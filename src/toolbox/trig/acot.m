@@ -22,11 +22,9 @@
 %mprint('acotplot');
 %@>
 %@figure acotplot
+%@@Tests
 %@$near|y1=acot(x1)
 %!
-
-% Copyright (c) 2002-2007 Samit Basu
-% Licensed under the GPL
 
 function y = acot(x)
   y = atan(1.0 ./ x);

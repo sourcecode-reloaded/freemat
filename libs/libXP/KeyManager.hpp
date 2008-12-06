@@ -160,6 +160,7 @@ signals:
   void Interrupt();
   void UpdateVariables();
   void ExecuteLine(QString txt);
+  void PopCompletions(QStringList txt);
 public slots:
   void Ready();
   void ClearHistory();

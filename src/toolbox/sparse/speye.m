@@ -19,7 +19,8 @@
 %difficult to do using @|sparse(eye(5000))| because of the large amount
 %of intermediate storage required.
 %@<
-%I = speye(5000)
+%I = speye(5000);
+%which I
 %full(I(1:10,1:10))
 %@>
 %@@Tests

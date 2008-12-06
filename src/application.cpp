@@ -65,12 +65,12 @@ ApplicationWindow::~ApplicationWindow() {
 }
 
 void ApplicationWindow::createActions() {
-  filetoolAct = new QAction("&File Browser",this);
-  connect(filetoolAct,SIGNAL(triggered()),this,SLOT(filetool()));
-  workAct = new QAction("&Workspace Tool",this);
-  connect(workAct,SIGNAL(triggered()),this,SLOT(workspacetool()));
-  historyAct = new QAction("Show &History Tool",this);
-  connect(historyAct,SIGNAL(triggered()),this,SLOT(history()));
+  //  filetoolAct = new QAction("&File Browser",this);
+  //  connect(filetoolAct,SIGNAL(triggered()),this,SLOT(filetool()));
+  //  workAct = new QAction("&Workspace Tool",this);
+  //  connect(workAct,SIGNAL(triggered()),this,SLOT(workspacetool()));
+  //  historyAct = new QAction("Show &History Tool",this);
+  //  connect(historyAct,SIGNAL(triggered()),this,SLOT(history()));
   cleanHistoryAct = new QAction("&Clear History Tool",this);
   connect(cleanHistoryAct,SIGNAL(triggered()),this,SLOT(cleanhistory()));
   editorAct = new QAction("&Editor",this);
@@ -136,11 +136,12 @@ void ApplicationWindow::createMenus() {
   toolsMenu = menuBar()->addMenu("&Tools");
   toolsMenu->addAction(editorAct);
   toolsMenu->addAction(pathAct);
-  toolsMenu->addAction(filetoolAct);
-  toolsMenu->addAction(workAct);
-  historyMenu = toolsMenu->addMenu("&History");
-  historyMenu->addAction(historyAct);
-  historyMenu->addAction(cleanHistoryAct);
+  //  toolsMenu->addAction(filetoolAct);
+  //  toolsMenu->addAction(workAct);
+  //  historyMenu = toolsMenu->addMenu("&History");
+  //  historyMenu->addAction(historyAct);
+  toolsMenu->addAction(cleanHistoryAct);
+  
   helpMenu = menuBar()->addMenu("&Help");
   helpMenu->addAction(aboutAct);
   helpMenu->addAction(manualAct);
@@ -200,8 +201,17 @@ ApplicationWindow::ApplicationWindow() : QMainWindow() {
 }
 
 void ApplicationWindow::createToolBox() {
-  m_tool = new ToolDock(this);
-  addDockWidget(Qt::LeftDockWidgetArea, m_tool);
+  //  m_tool = new ToolDock(this);
+  //  addDockWidget(Qt::LeftDockWidgetArea, m_tool);
+  m_filetool = new FileTool(this);
+  addDockWidget(Qt::LeftDockWidgetArea, m_filetool);
+  toolsMenu->addAction(m_filetool->toggleViewAction());
+  m_history = new HistoryWidget(this);
+  addDockWidget(Qt::LeftDockWidgetArea, m_history);
+  toolsMenu->addAction(m_history->toggleViewAction());
+  m_variables = new VariablesTool(this);
+  addDockWidget(Qt::LeftDockWidgetArea, m_variables);
+  toolsMenu->addAction(m_variables->toggleViewAction());
 }
 
 void ApplicationWindow::initializeTools() {
@@ -225,7 +235,10 @@ void ApplicationWindow::closeEvent(QCloseEvent* ce) {
     return;
   }
   writeSettings();
-  delete m_tool;
+  //  delete m_tool;
+  delete m_filetool;
+  delete m_history;
+  delete m_variables;
   ce->accept();
   qApp->exit(0);
 }
@@ -267,7 +280,6 @@ void ApplicationWindow::tclose() {
 void ApplicationWindow::SetGUITerminal(QTTerm* term) {
   m_term = term;
   setCentralWidget(term);
-  term->show();
 }
 
 void ApplicationWindow::clearconsole() {
@@ -277,21 +289,21 @@ void ApplicationWindow::clearconsole() {
 void ApplicationWindow::SetKeyManager(KeyManager *keys) {
   m_keys = keys;
   connect(keys,SIGNAL(SendCommand(QString)),
- 	  m_tool->getHistoryWidget(),SLOT(addCommand(QString)));
-  connect(m_tool->getHistoryWidget(),SIGNAL(clearHistory()),
+ 	  m_history,SLOT(addCommand(QString)));
+  connect(m_history,SIGNAL(clearHistory()),
 	  keys,SLOT(ClearHistory()));
-  connect(m_tool->getHistoryWidget(),SIGNAL(writeHistory()),
+  connect(m_history,SIGNAL(writeHistory()),
 	  keys,SLOT(WriteHistory()));
-  connect(m_tool->getHistoryWidget(),SIGNAL(sendCommand(QString)),
+  connect(m_history,SIGNAL(sendCommand(QString)),
  	  keys,SLOT(QueueCommand(QString)));
-  connect(m_tool->getFileTool(),SIGNAL(sendCommand(QString)),
+  connect(m_filetool,SIGNAL(sendCommand(QString)),
  	  keys,SLOT(QueueMultiString(QString)));
   connect(keys,SIGNAL(UpdateCWD()),
-	  m_tool->getFileTool(),SLOT(updateCWD()));
+	  m_filetool,SLOT(updateCWD()));
   connect(keys,SIGNAL(UpdateCWD()),
 	  this,SLOT(CWDChanged()));
   connect(keys,SIGNAL(UpdateVariables()),
-	  m_tool->getVariablesTool(),SLOT(refresh()));
+	  m_variables,SLOT(refresh()));
   connect(pauseAct,SIGNAL(triggered()),m_keys,SIGNAL(RegisterInterrupt()));
   connect(continueAct,SIGNAL(triggered()),m_keys,SLOT(ContinueAction()));
   connect(stopAct,SIGNAL(triggered()),m_keys,SLOT(StopAction()));
@@ -380,22 +392,22 @@ void ApplicationWindow::path() {
 }
 
 void ApplicationWindow::workspacetool() {
-  m_tool->show();
-  m_tool->raiseVariables();
+  //  m_tool->show();
+  //  m_tool->raiseVariables();
 }
 
 void ApplicationWindow::filetool() {
-  m_tool->show();
-  m_tool->raiseFileTool();
+  //  m_tool->show();
+  //  m_tool->raiseFileTool();
 }
 
 void ApplicationWindow::history() {
-  m_tool->show();
-  m_tool->raiseHistoryTool();
+  //  m_tool->show();
+  //  m_tool->raiseHistoryTool();
 }
 
 void ApplicationWindow::cleanhistory() {
-  m_tool->getHistoryWidget()->clear();
+  m_history->clear();
 }
 
 void ApplicationWindow::about() {
@@ -410,7 +422,7 @@ void ApplicationWindow::about() {
 }
 
 void ApplicationWindow::init() {
-  m_tool->getVariablesTool()->setContext(m_keys->GetCompletionContext());
+  m_variables->setContext(m_keys->GetCompletionContext());
   // Check for the latest version?
   QSettings settings("FreeMat", Interpreter::getVersionString());
   QDate lastCheck = settings.value("mainwindow/lastcheckdate").toDate();

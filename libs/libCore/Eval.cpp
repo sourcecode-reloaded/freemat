@@ -323,12 +323,9 @@ ArrayVector FevalFunction(int nargout, const ArrayVector& arg,Interpreter* eval)
   FuncPtr funcDef;
   if (arg[0].isString()) {
     QString fname = arg[0].asString();
-    eval->popDebug();
     if (!eval->lookupFunction(fname,funcDef)) {
-      eval->pushDebug("feval","feval");
       throw Exception(QString("function ") + fname + " undefined!");
     }
-    eval->pushDebug("feval","feval");
   } else 
     throw Exception("argument to feval must be a string");
   funcDef->updateCode(eval);
@@ -336,5 +333,5 @@ ArrayVector FevalFunction(int nargout, const ArrayVector& arg,Interpreter* eval)
     throw Exception("cannot use feval on a script");
   ArrayVector newarg(arg);
   newarg.pop_front();
-  return(funcDef->evaluateFunction(eval,newarg,nargout));
+  return(eval->doFunction(funcDef,newarg,nargout));
 }

@@ -82,7 +82,8 @@ static int GetNominalWidthInteger(const BasicArray<T> &qp) {
 }
  
 template <class T>
-static void ComputeScaleFactor(const BasicArray<T> &qp, ArrayFormatInfo& format) {
+static void ComputeScaleFactor(const BasicArray<T> &qp, ArrayFormatInfo& format,
+			       bool complex = false) {
   int count = int(qp.length());
   const T* array = qp.constData();
   T max_amplitude = 0;
@@ -99,9 +100,10 @@ static void ComputeScaleFactor(const BasicArray<T> &qp, ArrayFormatInfo& format)
       max_amplitude = array[i];
   }
   if (!finiteElementFound) return;
-  if (max_amplitude >= 100)
+  T maxval = complex ? 100 : 1000;
+  if (max_amplitude >= maxval)
     format.scalefact = pow(double(10.0),double(floor(log10(max_amplitude))));
-  else if (max_amplitude <= -100)
+  else if (max_amplitude <= -maxval)
     format.scalefact = pow(double(10.0),double(floor(log10(-max_amplitude))));
   else if ((max_amplitude <= .1) && (max_amplitude>0))
     format.scalefact = pow(double(10.0),double(floor(log10(max_amplitude))));
@@ -118,6 +120,7 @@ static ArrayFormatInfo GetArrayFormatReal(T x = 0);
 template <typename T>
 static ArrayFormatInfo GetArrayFormatComplex(T x = 0);
 
+//Visually Tuned
 template <>
 ArrayFormatInfo GetArrayFormatReal(float) {
   if (formatMode == format_short) 
@@ -131,6 +134,7 @@ ArrayFormatInfo GetArrayFormatReal(float) {
   throw Exception("Unhandled format type");
 }
 
+//Visually Tuned
 template <>
 ArrayFormatInfo GetArrayFormatReal(double) {
   if (formatMode == format_short)
@@ -144,29 +148,31 @@ ArrayFormatInfo GetArrayFormatReal(double) {
   throw Exception("Unhandled format type");
 }
 
+//Visually Tuned
 template <>
 ArrayFormatInfo GetArrayFormatComplex(float) {
   if (formatMode == format_short)
-    return ArrayFormatInfo(19,false,4);
+    return ArrayFormatInfo(20,false,4);
   else if (formatMode == format_long)
-    return ArrayFormatInfo(23,false,7);
+    return ArrayFormatInfo(24,false,7);
   else if (formatMode == format_short_e)
-    return ArrayFormatInfo(19,false,4,true);
+    return ArrayFormatInfo(26,false,4,true);
   else if (formatMode == format_long_e)
-    return ArrayFormatInfo(23,false,7,true);
+    return ArrayFormatInfo(32,false,7,true);
   throw Exception("Unhandled format type");
 }
 
+//Visually Tuned
 template <>
 ArrayFormatInfo GetArrayFormatComplex(double) {
   if (formatMode == format_short)
-    return ArrayFormatInfo(19,false,4);
+    return ArrayFormatInfo(20,false,4);
   else if (formatMode == format_long)
-    return ArrayFormatInfo(37,false,14);
+    return ArrayFormatInfo(40,false,14);
   else if (formatMode == format_short_e)
-    return ArrayFormatInfo(19,false,4,true);
+    return ArrayFormatInfo(26,false,4,true);
   else if (formatMode == format_long_e)
-    return ArrayFormatInfo(37,false,14,true);
+    return ArrayFormatInfo(46,false,14,true);
   throw Exception("Unhandled format type");
 }
 
@@ -180,10 +186,8 @@ static ArrayFormatInfo ComputeArrayFormatInfo(const Array &rp) {
     return ret;
   }
   BasicArray<T> combined(rp.fortran<T>());
-  if (IsInteger(combined))
-    return ArrayFormatInfo(GetNominalWidthInteger(combined));
   ArrayFormatInfo ret = GetArrayFormatComplex(T(0));
-  ComputeScaleFactor(combined,ret);
+  ComputeScaleFactor(combined,ret,true);
   return ret;
 }
 
@@ -234,25 +238,9 @@ static inline void emitFloatReal(Interpreter*io, T val, const ArrayFormatInfo &f
 }
 
 template <class T>
-static inline void emitIntegerComplex(Interpreter* io, T real, T imag, 
-			       const ArrayFormatInfo &format,
-			       bool sgned) {
-  if (sgned) {
-    io->outputMessage("%*lld",format.width,(int64)real);
-    if (imag < 0)
-      io->outputMessage("-%*lld",format.width,(int64)-imag);
-    else
-      io->outputMessage("+%*lld",format.width,(int64)imag);
-  } else {
-    io->outputMessage("%*lld",format.width,(int64)real);
-    io->outputMessage("+%*lld",format.width,(int64)imag);  
-  }
-}
-
-template <class T>
 static inline void emitFloatComplex(Interpreter* io, T real, T imag, 
 			     const ArrayFormatInfo &format) {
-  int width = format.width/2;
+  int width = format.width/2-2;
   if ((real != 0) || (imag != 0)) {
     if (format.expformat)
       io->outputMessage("%*.*e",width,format.decimals,real);
@@ -260,14 +248,14 @@ static inline void emitFloatComplex(Interpreter* io, T real, T imag,
       io->outputMessage("%*.*f",width,format.decimals,real/format.scalefact);
     if (imag < 0) {
       if (format.expformat)
-	io->outputMessage("-%*.*ei",width-1,format.decimals,-imag);
+	io->outputMessage(" -%*.*ei",width,format.decimals,-imag);
       else
-	io->outputMessage("-%*.*fi",width-1,format.decimals,-imag/format.scalefact);
+	io->outputMessage(" -%*.*fi",width,format.decimals,-imag/format.scalefact);
     } else {
       if (format.expformat)
-	io->outputMessage("+%*.*ei",width-1,format.decimals,imag);
+	io->outputMessage(" +%*.*ei",width,format.decimals,imag);
       else
-	io->outputMessage("+%*.*fi",width-1,format.decimals,imag/format.scalefact);
+	io->outputMessage(" +%*.*fi",width,format.decimals,imag/format.scalefact);
     }
   } else 
     io->outputMessage("%*d%*c",width,0,width+2,' ');
@@ -277,11 +265,7 @@ template <typename T>
 static inline void EmitInteger(Interpreter* io, const Array &rp,
 			       const ArrayFormatInfo &format, 
 			       bool complex, bool sgned) {
-  if (complex)
-    emitIntegerComplex(io,rp.constRealScalar<T>(),		
-		       rp.constImagScalar<T>(),format,sgned);	
-  else									
-    emitIntegerReal(io,rp.constRealScalar<T>(),format,sgned); 
+  emitIntegerReal(io,rp.constRealScalar<T>(),format,sgned); 
 }
 
 template <typename T>
@@ -426,6 +410,8 @@ static void PrintStructArray(const Array& A, Interpreter* io) {
 #define MacroSparse(ctype,cls) \
   case cls: return PrintSparseMatrix<ctype>(A,io,format);
 
+// width=3, fai = false, decimals=0 expformat = false, scalefact = 1
+
 void PrintArrayClassic(Array A, int printlimit, Interpreter* io) {
   if (printlimit == 0) return;
   int termWidth = io->getTerminalWidth();
@@ -454,8 +440,13 @@ void PrintArrayClassic(Array A, int printlimit, Interpreter* io) {
   ArrayFormatInfo format(ComputeArrayFormatInfo(A));
   if (!A.isScalar() && (format.scalefact != 1))
     io->outputMessage("\n   %.1e * \n",format.scalefact);
-  if (A.isScalar() && (format.scalefact != 1) && !format.floatasint)
-    format.expformat = true;
+  if (A.isScalar() && !format.floatasint) {
+    if (fabs(log10(format.scalefact)) > 3) {
+      format.expformat = true;
+    } else {
+      format.scalefact = 1;
+    }
+  }
   if (A.isSparse()) {
     switch (A.dataClass()) {
     default:

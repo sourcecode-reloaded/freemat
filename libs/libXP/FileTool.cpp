@@ -19,17 +19,15 @@
 #include "FileTool.hpp"
 #include <QtGui>
 
-FileTool::FileTool(QWidget *parent) : QWidget(parent) {
-  QVBoxLayout *layout = new QVBoxLayout;
+FileTool::FileTool(QWidget *parent) : QDockWidget("File Browser",parent) {
   model = new QDirModel;
-  tree = new QTreeView; 
-  layout->addWidget(tree);
-  setLayout(layout);
+  tree = new QTreeView(this);
   tree->setModel(model);
+  setWidget(tree);
   connect(tree,SIGNAL(doubleClicked(const QModelIndex&)), 
 	  this,SLOT(doubleClicked(const QModelIndex&)));
   setObjectName("filetool");
-  setMinimumSize(50,50);
+  //  setMinimumSize(50,50);
 }
 
 void FileTool::updateCWD() {

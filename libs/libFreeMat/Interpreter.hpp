@@ -336,6 +336,10 @@ public:
    * Activate the interrupt for the thread - so that it stops.
    */
   inline void setInterrupt() {m_interrupt = true;}
+  /**
+   * Retrieve the interrupt state for the thread
+   */
+  inline bool interrupt() {return m_interrupt;}
    /**
    * Activate the kill for the thread - so that it dies.
    */
@@ -551,7 +555,7 @@ public:
    * from the console, and executed sequentially until a "return"
    * statement is executed or the user presses 'CTRL-D'.
    */
-  void evalCLI();
+  void evalCLI(bool propogateExceptions);
 
   bool isBPSet(QString fname, int lineNumber);
   bool isInstructionPointer(QString fname, int lineNumber);
@@ -561,6 +565,15 @@ public:
    * new function files.
    */
   void rescanPath();
+  /**
+   * Execute a function.  
+   * For functions that accesses the graphics subsystem,  All such
+   * accesses must be made through the main thread.  So the interpreter
+   * sends a signal out that a graphics call needs to be made, and then
+   * waits for the result.  For non-graphics functions, the function is 
+   * called directly.
+   */
+  ArrayVector doFunction(FuncPtr f, ArrayVector m, int narg_out, VariableTable *vtable = 0);
   /******************************************
    *  Signals for the Interpreter           *
    ******************************************/
@@ -618,13 +631,6 @@ signals:
    *  Private Methods for the Interpreter   *
    ******************************************/
 private:
-  /**
-   * Execute a function that accesses the graphics subsystem.  All such
-   * accesses must be made through the main thread.  So the interpreter
-   * sends a signal out that a graphics call needs to be made, and then
-   * waits for the result.
-   */
-  ArrayVector doGraphicsFunction(FuncPtr f, ArrayVector m, int narg_out);
   /**
    * Collect information about keyword usage and the relevant 
    * expressions from a function call

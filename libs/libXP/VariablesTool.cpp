@@ -22,11 +22,10 @@
 #include "Array.hpp"
 #include "Print.hpp"
 
-VariablesTool::VariablesTool(QWidget *parent) : QWidget(parent) {
-  QVBoxLayout *layout = new QVBoxLayout;
-  m_flist = new QTableWidget;
-  layout->addWidget(m_flist);
-  setLayout(layout);
+VariablesTool::VariablesTool(QWidget *parent) : 
+  QDockWidget("Variables",parent) {
+  m_flist = new QTableWidget(this);
+  setWidget(m_flist);
   setObjectName("variables");
   context = NULL;
   setMinimumSize(50,50);

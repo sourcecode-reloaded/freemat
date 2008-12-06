@@ -1,17 +1,38 @@
 Annoyances:
 
- LS?
- complex number display
- repmat
- minimum for lapack/blas/arpack?
  apple support for fft
  packaging
- main window rework
  completion stuff?
- fopen/fread/compat w/ ML!!!
- quit, signatures in help output
- PDF gen is broken.
 
+*******************************************************************************
+
+The issue around the debug stuff:
+
+- Debug info should change only when the interpreter starts a new function
+- Upon exit from that function, the debug stack should be cleared
+- Why is the debug info manipulated in the function methods?  Can't it all
+be done in the interpreter itself?
+
+- OK - all function invocations now go through a single point
+this is the doFunction method of the interpreter.  What do we want to happen?
+Generally:
+
+pushDebug()
+doFunction()
+popDebug()
+
+For this to work, pushDebug will need some information from the function
+
+pushDebug(f->fullname,f->shortname)
+doFunction()
+popDebug()
+
+What about exceptions?  So if an error occurs the debug stack will be intact
+
+
+
+
+*******************************************************************************
 
 Consider the vector versus scalar issue.  An assignment like:
 

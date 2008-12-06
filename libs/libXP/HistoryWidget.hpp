@@ -21,7 +21,9 @@
 
 #include <QWidget>
 #include <QListWidget>
-class HistoryWidget : public QWidget {
+#include <QDockWidget>
+
+class HistoryWidget : public QDockWidget {
   Q_OBJECT
 public:
   HistoryWidget(QWidget *parent);

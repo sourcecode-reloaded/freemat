@@ -60,30 +60,9 @@ function helpgen(source_path,test_only)
   for i=1:numel(genfiles)
     copyfile([source_path,'/help/tmp/',genfiles{i}],[source_path,'/toolbox/test']);
   end
-  printf('Latexing...\n');
-  cd([source_path,'/help/latex']);
-  printf('Pass 1\n');
-  system('pdflatex main.tex');
-  printf('Pass 2\n');
-  system('pdflatex main.tex');
-  printf('Pass 3\n');
-  system('pdflatex main.tex');
-%  rmdir([source_path,'/help/tmp'],'s');
-
-  printf('Writing installation manifest...\n');
-  install_list = helpgen_rdir([source_path,'/help/html']);
-  install_list = [install_list;helpgen_rdir([source_path,'/help/text'])];
-  install_list = [install_list;{[source_path,'/help/latex/main.pdf']}];
-  install_list = [install_list;helpgen_rdir([source_path,'/toolbox'])];
-  qlen = numel(source_path)+2;
-  delete([source_path,'/manifest.am']);
-  fp = fopen([source_path,'/manifest.am'],'w');
-  fprintf(fp,'nobase_resource_DATA = ');
-  for i=1:numel(install_list)
-     fprintf(fp,'%s ',install_list{i}(qlen:end));
-  end
-  fprintf(fp,'\n');
-  fclose(fp);
+  printf('To complete documentation generation -- run pdflatex on main.tex\n');
+  printf('in help/latex directory -- several runs are required to get index\n');
+  printf('and table of content generation.\n');
   diary off
   
 function merge_mfile(filename)
@@ -169,29 +148,37 @@ function helpgen_processfile(filename,&writers)
       exec_id = threadnew;
       while (~feof(fp) && ~testmatch(line,pset.docblock))
          groupname = mustmatch(line,pset.groupname);
-	 begingroup(writers,groupname);	 
-         line = getline(fp);
-	 while (~feof(fp) && ~testmatch(line,pset.groupname) ...
-	       		  && ~testmatch(line,pset.docblock))
-           if (testmatch(line,pset.execin))
-	     handle_exec(line,fp,pset,writers,exec_id);
-           elseif (testmatch(line,pset.verbatimin)) 
-	     handle_verbatim(line,fp,pset,writers);
-           elseif (testmatch(line,pset.figure))
-	     handle_figure(line,fp,pset,writers);
-           elseif (testmatch(line,pset.eqnin))
-	     handle_equation(line,fp,pset,writers);
-	   elseif (testmatch(line,pset.fnin))
-             handle_filedump(line,fp,pset,writers);
-	   elseif (testmatch(line,pset.enumeratein))
-	     handle_enumerate(line,fp,pset,writers);
-	   elseif (testmatch(line,pset.itemizein))
-	     handle_itemize(line,fp,pset,writers);
-	   elseif (testmatch(line,pset.ccomment))
-	     handle_output(line,fp,pset,writers);
-           else
-	     error('Unprocessed line:%s',line);
-           end
+         if (testmatch(groupname,'Signature'))
+             line = getline(fp);
+             while (~feof(fp) && ~testmatch(line,pset.groupname) ...
+                 && ~testmatch(line,pset.docblock))
+                 line = getline(fp);
+             end
+         else
+             begingroup(writers,groupname);	 
+             line = getline(fp);
+             while (~feof(fp) && ~testmatch(line,pset.groupname) ...
+                 && ~testmatch(line,pset.docblock))
+                 if (testmatch(line,pset.execin))
+                     handle_exec(line,fp,pset,writers,exec_id);
+                 elseif (testmatch(line,pset.verbatimin)) 
+                     handle_verbatim(line,fp,pset,writers);
+                 elseif (testmatch(line,pset.figure))
+                     handle_figure(line,fp,pset,writers);
+                 elseif (testmatch(line,pset.eqnin))
+                     handle_equation(line,fp,pset,writers);
+                 elseif (testmatch(line,pset.fnin))
+                     handle_filedump(line,fp,pset,writers);
+                 elseif (testmatch(line,pset.enumeratein))
+                     handle_enumerate(line,fp,pset,writers);
+                 elseif (testmatch(line,pset.itemizein))
+                     handle_itemize(line,fp,pset,writers);
+                 elseif (testmatch(line,pset.ccomment))
+                     handle_output(line,fp,pset,writers);
+                 else
+                     error('Unprocessed line:%s',line);
+                 end
+             end
          end
       end
       threadfree(exec_id);
@@ -229,9 +216,7 @@ function line = getline(fp)
     version = b{:}{1};
   end;
   line = fgetline(fp);
-  if (~feof(fp))
-    line = strrep(line,'<VERSION_NUMBER>',version);
-  end
+  line = strrep(line,'<VERSION_NUMBER>',version);
 
 function tok = mustmatch(line,pattern)
   toks = regexpi(line,pattern,'tokens');
@@ -342,7 +327,7 @@ function handle_exec(&line,fp,pset,&writers,exec_id)
   beginverbatim(writers);
   etext = threadcall(exec_id,100000,'simkeys',cmdlist);
   etext = regexprep(etext,'(--> mprint[^\n]*\n)','');
-  etext = strrep(etext,'--> quit','');
+  etext = regexprep(etext,'[\n]*--> quit\n',sprintf('\n'));
   outputtext(writers,etext);
   endverbatim(writers);
   if (threadcall(exec_id,100000,'errorcount') ~= errors_expected)

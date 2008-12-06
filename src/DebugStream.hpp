@@ -30,7 +30,7 @@
 #include <QTextStream>
 #include "DebugWin.hpp"
 
-#ifdef _DEBUG
+#ifndef NDEBUG
 #define ENABLEDBSTREAM (true)
 #else
 #define ENABLEDBSTREAM (false)

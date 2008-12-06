@@ -42,7 +42,7 @@ void fcnstub(double *p, double *hx, int m, int n, void *adata) {
   memcpy(xp,p,sizeof(double)*m);
   ArrayVector tocall(q->params);
   tocall.push_front(q->xval);
-  ArrayVector cval(q->a_funcDef->evaluateFunction(q->a_eval,tocall,1));
+  ArrayVector cval(q->a_eval->doFunction(q->a_funcDef,tocall,1));
   if (cval.size() == 0)
     throw Exception("function to be optimized does not return any outputs!");
   if (int(cval[0].length()) != n)
@@ -92,6 +92,41 @@ void fcnstub(double *p, double *hx, int m, int n, void *adata) {
 //y0 = cos(O);
 //[x y] = fitfun('cos',3.5/4*pi,y0,1,0.01);
 //test_val = abs((x-O)/O*100)<.1;
+//@}
+//@{ test_fitfun2.m
+//% Test the nested fitfun bug (bug 1741350)
+//function test_val = test_fitfun2
+//a = 2;
+//b = 0;
+//init = [a,b];
+//y = [1:100];
+//weights = y*0+1;
+//tol = 1.e-08;
+//junk = rand(100);
+//[xopt,yopt] = fitfun('fitfunc_func1',init,y,weights,tol,junk);
+//test_val = fabs(xopt(1)-1) < 1e-6;
+//@}
+//@{ fitfunc_func1.m
+//function y = fitfunc_func1(init,junk)
+// c = 2;
+// d = 0;
+// init2 = [c,d];
+// y2 = [1:100]*3;
+// weights2 = y2*0+1;
+// tol2 = 1.e-08;
+// junk2 = rand(100);
+// [xopt2,yopt2] = fitfun('fitfunc_func2',init2,y2,weights2,tol2,junk2);
+// a = init(1);
+// b = init(2);
+// x = [1:100];
+// y = a*x + b;
+//@}
+//@{ fitfunc_func2.m
+//function y = fitfunc_func2(init,junk);
+// a = init(1);
+// b = init(2);
+// x = [1:100];
+// y = a*x+b;
 //@}
 //@@Signature
 //sfunction fitfun FitFunFunction
@@ -154,7 +189,7 @@ ArrayVector FitFunFunction(int nargout, const ArrayVector& arg, Interpreter* eva
   // Test to make sure the function works....
   ArrayVector tocall(q.params);
   tocall.push_front(xinit);
-  ArrayVector cval(funcDef->evaluateFunction(eval,tocall,1));
+  ArrayVector cval(eval->doFunction(funcDef,tocall,1));
   if (cval.size() == 0)
     throw Exception("function to be optimized does not return any outputs!");
   if (int(cval[0].length()) != n)
@@ -168,7 +203,7 @@ ArrayVector FitFunFunction(int nargout, const ArrayVector& arg, Interpreter* eva
   dlevmar_dif(fcnstub,&(q.xval.real<double>()[1]),&(q.yval.real<double>()[1]),m,n,200*(m+1),opts,NULL,NULL,NULL,&q);
   tocall = q.params;
   tocall.push_front(q.xval);
-  cval = funcDef->evaluateFunction(eval,tocall,1);
+  cval = eval->doFunction(funcDef,tocall,1);
   ArrayVector retval;
   retval.push_back(q.xval);
   retval.push_back(cval[0]);

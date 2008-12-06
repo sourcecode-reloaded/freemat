@@ -119,6 +119,14 @@ public:
    */
   virtual const FunctionType type() = 0;
   /**
+   * Returns the name of the function
+   */
+  virtual QString functionName() = 0;
+  /**
+   * Returns the "detailed" name of the function -- a full path for example
+   */
+  virtual QString detailedName() = 0;
+  /**
    * Print a description of the function
    */
   virtual void printMe(Interpreter* io) = 0;
@@ -133,8 +141,8 @@ public:
   /**
    * Evaluate the function and return its output.
    */
-  virtual ArrayVector evaluateFunction(Interpreter *, ArrayVector& , int, 
-				       VariableTable * Workspace = 0) = 0;
+  virtual ArrayVector evaluateFunc(Interpreter *, ArrayVector& , int, 
+				   VariableTable * Workspace = 0) = 0;
   /**
    * Compile the function (if it is required).  We guarantee that this
    * function will be called at least once before evaluateFunction is called.
@@ -206,6 +214,8 @@ public:
   /** The type of the function
    */
   virtual const FunctionType type() {return FM_M_FUNCTION;}
+  virtual QString functionName() {return fileName;}
+  virtual QString detailedName() {return name;}
   /** Print a description of the function
    */
   virtual void printMe(Interpreter* io);
@@ -230,7 +240,7 @@ public:
    *     number of return values in the call
    *   - the variable 'varargout' is the wrong type.
    */
-  virtual ArrayVector evaluateFunction(Interpreter *, ArrayVector &, int, VariableTable *);
+  virtual ArrayVector evaluateFunc(Interpreter *, ArrayVector &, int, VariableTable *);
   /**
    * Check the timestamp on the file, and if necessary, recompile the 
    * function.  Throws an exception if a syntax error occurs in the
@@ -269,6 +279,8 @@ public:
    * The type of the function is FM_BUILT_IN_FUNCTION.
    */
   virtual const FunctionType type() {return FM_BUILT_IN_FUNCTION;}
+  virtual QString functionName() {return name;}
+  virtual QString detailedName() {return "builtin";}
   /** Print a description of the function
    */
   virtual void printMe(Interpreter *io);
@@ -283,7 +295,7 @@ public:
   /** 
    * Evaluate the function and return the values.
    */
-  virtual ArrayVector evaluateFunction(Interpreter *, ArrayVector &, int, VariableTable *);
+  virtual ArrayVector evaluateFunc(Interpreter *, ArrayVector &, int, VariableTable *);
 };
 
 class SpecialFunctionDef : public FunctionDef {
@@ -311,6 +323,8 @@ public:
    * The type of the function is FM_SPECIAL_FUNCTION.
    */
   virtual const FunctionType type() {return FM_SPECIAL_FUNCTION;}
+  virtual QString functionName() {return name;}
+  virtual QString detailedName() {return "builtin";}
   /** Print a description of the function
    */
   virtual void printMe(Interpreter *);
@@ -325,7 +339,7 @@ public:
   /** 
    * Evaluate the function and return the values.
    */
-  virtual ArrayVector evaluateFunction(Interpreter *, ArrayVector& , int, VariableTable *);
+  virtual ArrayVector evaluateFunc(Interpreter *, ArrayVector& , int, VariableTable *);
 };
 
 typedef void (*GenericFuncPointer)();
@@ -372,6 +386,8 @@ public:
    * The type of the function is FM_IMPORTED_FUNCTION.
    */
   virtual const FunctionType type() {return FM_IMPORTED_FUNCTION;}
+  virtual QString functionName() {return name;}
+  virtual QString detailedName() {return "imported";}
   /** Print a description of the function
    */
   virtual void printMe(Interpreter *);
@@ -386,7 +402,7 @@ public:
   /** 
    * Evaluate the function and return the values.
    */
-  virtual ArrayVector evaluateFunction(Interpreter *, ArrayVector& , int, VariableTable *);    
+  virtual ArrayVector evaluateFunc(Interpreter *, ArrayVector& , int, VariableTable *);    
 };
 
 typedef void (*mexFuncPtr)(int, mxArray**, int, const mxArray**);
@@ -423,6 +439,9 @@ public:
    * The type of the function is FM_MEX_FUNCTION.
    */
   virtual const FunctionType type() {return FM_MEX_FUNCTION;}
+  virtual QString functionName() {return name;}
+  virtual QString detailedName() {return "mex";}
+
   /** Print a description of the function
    */
   virtual void printMe(Interpreter *);
@@ -437,7 +456,7 @@ public:
   /** 
    * Evaluate the function and return the values.
    */
-  virtual ArrayVector evaluateFunction(Interpreter *, ArrayVector& , int, VariableTable*);    
+  virtual ArrayVector evaluateFunc(Interpreter *, ArrayVector& , int, VariableTable*);    
 };
 
 // This used to be a simple typedef to a pointer of a functiondef

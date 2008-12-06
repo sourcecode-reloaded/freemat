@@ -20,10 +20,10 @@
 #define __VariablesTool_hpp__
 
 #include <QTableWidget>
-#include <QWidget>
+#include <QDockWidget>
 #include "Context.hpp"
 
-class VariablesTool : public QWidget {
+class VariablesTool : public QDockWidget {
   Q_OBJECT
 public:
   VariablesTool(QWidget *parent);

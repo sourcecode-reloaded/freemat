@@ -23,7 +23,9 @@
 #include <QMainWindow>
 #include "QTTerm.hpp"
 #include "Editor.hpp"
-#include "ToolDock.hpp"
+#include "HistoryWidget.hpp"
+#include "VariablesTool.hpp"
+#include "FileTool.hpp"
 #include "KeyManager.hpp"
 #include <QLabel>
 #include <QHttp>
@@ -39,12 +41,15 @@ class ApplicationWindow : public QMainWindow {
   QAction *saveAct, *quitAct, *copyAct, *pasteAct, *fontAct;
   QAction *scrollbackAct;
   QAction *aboutAct, *manualAct, *aboutQt, *editorAct;
-  QAction *pathAct, *filetoolAct, *historyAct, *cleanHistoryAct;
+  QAction *pathAct, /**filetoolAct, *historyAct,*/ *cleanHistoryAct;
   QAction *pauseAct, *continueAct, *stopAct, *clearAct;
-  QAction *dbStepAct, *dbTraceAct, *checkUpdates, *workAct;
+  QAction *dbStepAct, *dbTraceAct, *checkUpdates /*, *workAct */;
   QComboBox *cdCombo;
   QPushButton *cdButton;
-  ToolDock *m_tool;
+  FileTool *m_filetool;
+  HistoryWidget *m_history;
+  VariablesTool *m_variables;
+  //  ToolDock *m_tool;
   QHttp *m_http;
   QBuffer m_buffer;
   int httpGetId;
