@@ -58,8 +58,8 @@ JIT::JIT() {
   opt->add((Pass*)createIndVarSimplifyPass());       // Canonicalize indvars
   opt->add((Pass*)createLoopUnrollPass());           // Unroll small loops
   opt->add((Pass*)createInstructionCombiningPass()); // Clean up after the unroller
-  opt->add((Pass*)createLoadValueNumberingPass());   // GVN for load instructions
-  opt->add((Pass*)createGCSEPass());                 // Remove common subexprs
+  //  opt->add((Pass*)createLoadValueNumberingPass());   // GVN for load instructions
+  //  opt->add((Pass*)createGCSEPass());                 // Remove common subexprs
   opt->add((Pass*)createSCCPPass());                 // Constant prop with SCCP
   opt->add((Pass*)createInstructionCombiningPass());
   opt->add((Pass*)createCondPropagationPass());      // Propagate conditionals
@@ -115,11 +115,11 @@ JITType JIT::TypeOf(JITScalar x) {
 }
 
 JITScalar JIT::DoubleValue(double x) {
-  return ConstantFP::get(Type::DoubleTy,APFloat(x));
+  return ConstantFP::get(Type::DoubleTy,x);
 }
 
 JITScalar JIT::FloatValue(float x) {
-  return ConstantFP::get(Type::FloatTy,APFloat(x));
+  return ConstantFP::get(Type::FloatTy,x);
 }
 
 JITScalar JIT::BoolValue(bool x) {
@@ -201,7 +201,7 @@ JITType JIT::MapTypeCode(QChar c) {
 }
 
 JITBlock JIT::NewBlock(QString name) {
-  return new BasicBlock(name.toStdString(),func,0);
+  return BasicBlock::Create(name.toStdString(),func,0);
 }
 
 JITScalar JIT::JITBinOp(Instruction::BinaryOps op, JITScalar A, JITScalar B) {
@@ -301,11 +301,11 @@ JITScalar JIT::Load(JITScalar Address) {
 }
 
 void JIT::Jump(JITBlock B) {
-  new BranchInst(B,ip);
+  BranchInst::Create(B,ip);
 }
 
 void JIT::Branch(JITBlock IfTrue, JITBlock IfFalse, JITScalar TestValue) {
-  new BranchInst(IfTrue,IfFalse,TestValue,ip);
+  BranchInst::Create(IfTrue,IfFalse,TestValue,ip);
 }
 
 void JIT::SetCurrentBlock(JITBlock B) {
@@ -317,7 +317,7 @@ JITBlock JIT::CurrentBlock() {
 }
 
 JITScalar JIT::Call(JITFunction F, std::vector<JITScalar> args) {
-  return new CallInst(F,args.begin(),args.end(),"",ip);
+  return CallInst::Create(F,args.begin(),args.end(),"",ip);
 }
 
 JITScalar JIT::Call(JITFunction F, JITScalar arg1) {
@@ -363,7 +363,7 @@ JITScalar JIT::Call(JITFunction F, JITScalar arg1, JITScalar arg2,
 }
 
 JITScalar JIT::GetElement(JITScalar BaseAddress, JITScalar Offset) {
-  return new GetElementPtrInst(BaseAddress,Offset,"",ip);
+  return GetElementPtrInst::Create(BaseAddress,Offset,"",ip);
 }
 
 JITFunction JIT::DefineFunction(JITFunctionType functype, QString name) {
@@ -403,11 +403,11 @@ void JIT::CloseFunction() {
 }
 
 void JIT::Return(JITScalar t) {
-  new ReturnInst(t,ip);
+  ReturnInst::Create(t,ip);
 }
 
 void JIT::Return() {
-  new ReturnInst(NULL,ip);
+  ReturnInst::Create(NULL,ip);
 }
 
 void JIT::Dump(JITFunction f) {
