@@ -101,14 +101,6 @@ JITType JIT::FloatType() {
   return Type::getPrimitiveType(Type::FloatTyID);
 }
 
-JITType JIT::Int8Type() {
-  return IntegerType::get(8);
-}
-
-JITType JIT::Int32Type() {
-  return IntegerType::get(32);
-}
-
 JITType JIT::BoolType() {
   return IntegerType::get(1);
 }
@@ -123,10 +115,6 @@ JITType JIT::VoidType() {
 
 JITType JIT::TypeOf(JITScalar x) {
   return x->getType();
-}
-
-JITScalar JIT::Int32Value(int32 x) {
-  return ConstantInt::get(Type::Int32Ty,x);
 }
 
 JITScalar JIT::DoubleValue(double x) {
