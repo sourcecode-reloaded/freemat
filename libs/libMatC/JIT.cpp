@@ -58,11 +58,11 @@ JIT::JIT() {
   opt->add((Pass*)createLoopUnswitchPass());         // Unswitch loops.
   opt->add((Pass*)createInstructionCombiningPass()); // Clean up after LICM/reassoc
   opt->add((Pass*)createIndVarSimplifyPass());       // Canonicalize indvars
-  opt->add((Pass*) createLoopDeletionPass());         // Delete dead loops
+  //  opt->add((Pass*) createLoopDeletionPass());         // Delete dead loops
   opt->add((Pass*)createLoopUnrollPass());           // Unroll small loops
   opt->add((Pass*)createInstructionCombiningPass()); // Clean up after the unroller
-  opt->add((Pass*)createGVNPass());   // GVN for load instructions
-  opt->add((Pass*)createMemCpyOptPass());                 // Remove memcpy / form memset
+  //  opt->add((Pass*)createGVNPass());   // GVN for load instructions
+  //  opt->add((Pass*)createMemCpyOptPass());                 // Remove memcpy / form memset
   opt->add((Pass*)createSCCPPass());                 // Constant prop with SCCP
   opt->add((Pass*)createInstructionCombiningPass());
   opt->add((Pass*)createCondPropagationPass());      // Propagate conditionals
@@ -78,7 +78,7 @@ JIT::~JIT() {
 }
 
 void JIT::OptimizeCode() {
-  opt->run(*func);
+  //  opt->run(*func);
 }
 
 JITFunctionType JIT::FunctionType(JITType rettype, std::vector<JITType> args) {
