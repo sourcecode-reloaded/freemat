@@ -5,6 +5,11 @@
 #define USE_CLOCK
 #endif
 
+#if defined(_MSC_VER)
+#undef USE_CLOCK
+#define USE_CLOCK
+#endif
+
 #ifndef REAL
 #define REAL double
 #endif

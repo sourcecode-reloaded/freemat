@@ -12,6 +12,7 @@
 #include "llvm/Support/Debug.h"
 #include <fstream>
 #include <iostream>
+#include <string>
 #include "DebugStream.hpp"
 
 // We want some basic functions to be available to the JIT
@@ -37,7 +38,8 @@ JIT::JIT() {
   opt = new FunctionPassManager(mp);
   opt->add(new TargetData(*ee->getTargetData()));
   //  opt->add(new TargetData(m));
-  opt->add(createVerifierPass());                  // Verify that input is correct
+  opt->add((Pass*)createVerifierPass());                  // Verify that input is correct
+  opt->add((Pass*)createLowerSetJmpPass());          // Lower llvm.setjmp/.longjmp
   opt->add((Pass*)createCFGSimplificationPass());    // Clean up disgusting code
   opt->add((Pass*)createPromoteMemoryToRegisterPass());// Kill useless allocas
   opt->add((Pass*)createInstructionCombiningPass()); // Clean up after IPCP & DAE
@@ -56,10 +58,11 @@ JIT::JIT() {
   opt->add((Pass*)createLoopUnswitchPass());         // Unswitch loops.
   opt->add((Pass*)createInstructionCombiningPass()); // Clean up after LICM/reassoc
   opt->add((Pass*)createIndVarSimplifyPass());       // Canonicalize indvars
+  opt->add((Pass*) createLoopDeletionPass());         // Delete dead loops
   opt->add((Pass*)createLoopUnrollPass());           // Unroll small loops
   opt->add((Pass*)createInstructionCombiningPass()); // Clean up after the unroller
-  //  opt->add((Pass*)createLoadValueNumberingPass());   // GVN for load instructions
-  //  opt->add((Pass*)createGCSEPass());                 // Remove common subexprs
+  opt->add((Pass*)createGVNPass());   // GVN for load instructions
+  opt->add((Pass*)createMemCpyOptPass());                 // Remove memcpy / form memset
   opt->add((Pass*)createSCCPPass());                 // Constant prop with SCCP
   opt->add((Pass*)createInstructionCombiningPass());
   opt->add((Pass*)createCondPropagationPass());      // Propagate conditionals
@@ -98,6 +101,14 @@ JITType JIT::FloatType() {
   return Type::getPrimitiveType(Type::FloatTyID);
 }
 
+JITType JIT::Int8Type() {
+  return IntegerType::get(8);
+}
+
+JITType JIT::Int32Type() {
+  return IntegerType::get(32);
+}
+
 JITType JIT::BoolType() {
   return IntegerType::get(1);
 }
@@ -112,6 +123,10 @@ JITType JIT::VoidType() {
 
 JITType JIT::TypeOf(JITScalar x) {
   return x->getType();
+}
+
+JITScalar JIT::Int32Value(int32 x) {
+  return ConstantInt::get(Type::Int32Ty,x);
 }
 
 JITScalar JIT::DoubleValue(double x) {
