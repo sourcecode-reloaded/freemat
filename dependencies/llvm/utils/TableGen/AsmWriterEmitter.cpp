@@ -45,6 +45,9 @@ namespace llvm {
     /// an operand, specified with syntax like ${opname:modifier}.
     std::string MiModifier;
 
+    AsmWriterOperand()
+      : OperandType(isLiteralTextOperand), Str("") {}
+
     AsmWriterOperand(const std::string &LitStr)
       : OperandType(isLiteralTextOperand), Str(LitStr) {}
 
