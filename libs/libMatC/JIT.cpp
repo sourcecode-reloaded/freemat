@@ -39,7 +39,6 @@ JIT::JIT() {
   opt->add(new TargetData(*ee->getTargetData()));
   //  opt->add(new TargetData(m));
   opt->add((Pass*)createVerifierPass());                  // Verify that input is correct
-  opt->add((Pass*)createLowerSetJmpPass());          // Lower llvm.setjmp/.longjmp
   opt->add((Pass*)createCFGSimplificationPass());    // Clean up disgusting code
   opt->add((Pass*)createPromoteMemoryToRegisterPass());// Kill useless allocas
   opt->add((Pass*)createInstructionCombiningPass()); // Clean up after IPCP & DAE
@@ -61,8 +60,8 @@ JIT::JIT() {
   //  opt->add((Pass*) createLoopDeletionPass());         // Delete dead loops
   opt->add((Pass*)createLoopUnrollPass());           // Unroll small loops
   opt->add((Pass*)createInstructionCombiningPass()); // Clean up after the unroller
-  //  opt->add((Pass*)createGVNPass());   // GVN for load instructions
-  //  opt->add((Pass*)createMemCpyOptPass());                 // Remove memcpy / form memset
+  opt->add((Pass*)createGVNPass());   // GVN for load instructions
+  opt->add((Pass*)createMemCpyOptPass());                 // Remove memcpy / form memset
   opt->add((Pass*)createSCCPPass());                 // Constant prop with SCCP
   opt->add((Pass*)createInstructionCombiningPass());
   opt->add((Pass*)createCondPropagationPass());      // Propagate conditionals
@@ -78,7 +77,7 @@ JIT::~JIT() {
 }
 
 void JIT::OptimizeCode() {
-  //  opt->run(*func);
+  opt->run(*func);
 }
 
 JITFunctionType JIT::FunctionType(JITType rettype, std::vector<JITType> args) {

@@ -815,6 +815,7 @@ extern "C" {
     return matrix_load<bool>(base,argnum,row,col,success);
   }
   JIT_EXPORT bool matrix_store_double(void* base, double argnum, double row, double col, double val) {
+    qDebug() << "Store " << argnum << " row " << row << " col " << col << " val " << val;
     return matrix_store<double>(base,argnum,row,col,val);
   }
   JIT_EXPORT bool matrix_store_float(void* base, double argnum, double row, double col, float val) {
@@ -849,6 +850,8 @@ extern "C" {
     return true;
   }
   JIT_EXPORT double niter_for_loop( double first, double step, double last ){
+    double x = num_for_loop_iter( first, step, last );
+    qDebug() << " Loop count = " << x << " first = " << first << " step " << step << " last " << last;
     return (double)(num_for_loop_iter( first, step, last ));
   }
 
@@ -856,7 +859,7 @@ extern "C" {
       dbout << t << "\n";
   }
   JIT_EXPORT void debug_out_d( double t ){
-      dbout << t << "\n";
+    qDebug() << t;
   }
 
 }
@@ -902,7 +905,7 @@ void JITFunc::initialize() {
   func_check_for_interrupt = jit->DefineLinkFunction("check_for_interrupt","b","V");
   func_niter_for_loop = jit->DefineLinkFunction("niter_for_loop","d","ddd");
   //  func_debug_out_i = jit->DefineLinkFunction("debug_out_i","v","i");
-  func_debug_out_d = jit->DefineLinkFunction("debug_out_d","v","d");
+  func_debug_out_d = jit->DefineLinkFunction("debug_out_d","d","d");
 }
 
 static int countm = 0;
@@ -937,13 +940,13 @@ void JITFunc::compile(Tree* t) {
   jit->Jump(main_body);
   jit->SetCurrentBlock(epilog);
   jit->Return(jit->Load(retcode));
-#ifndef NDEBUG
+  //#ifndef NDEBUG
   jit->Dump("unoptimized.bc.txt",func);
-#endif
+  //#endif
   jit->OptimizeCode();
-#ifndef NDEBUG
+  //#ifndef NDEBUG
   jit->Dump("optimized.bc.txt",func);
-#endif
+  //#endif
   if (failed) throw exception_store;
 }
 
@@ -974,8 +977,8 @@ void JITFunc::compile_for_block(Tree* t) {
   JITBlock ip(jit->CurrentBlock());
   jit->SetCurrentBlock(prolog);
   JITScalar loop_ind = jit->Alloc(jit->DoubleType(),"loop_ind_"+loop_index_name); 
-  jit->Store(jit->DoubleValue(0),loop_ind); 
   jit->SetCurrentBlock(ip);
+  jit->Store(jit->DoubleValue(0),loop_ind); 
 
   JITBlock loopbody = jit->NewBlock("for_body");
   JITBlock loopcheck = jit->NewBlock("for_check");
@@ -987,6 +990,7 @@ void JITFunc::compile_for_block(Tree* t) {
   jit->SetCurrentBlock(loopbody);
   bool failed = false;
   try {
+    jit->Call(func_debug_out_d,jit->Load(loop_ind));
     compile_block(t->second());
   } catch(Exception &e) {
     exception_store = e;
