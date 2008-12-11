@@ -1671,7 +1671,7 @@ inline bool IsIntegerDataClass( const Array& a )
 
 template <class T>
 void ForLoopHelper(Tree *codeBlock, const Array& indexSet, 
-		   int count, const QString& indexName, Interpreter *eval) {
+		   index_t count, const QString& indexName, Interpreter *eval) {
   for (index_t m=1;m<=count;m++) {
     Array *vp = eval->getContext()->lookupVariableLocally( indexName );
     if ((!vp) || (!vp->isScalar())) {
@@ -1753,7 +1753,7 @@ void ForLoopIterator( Tree* codeBlock, QString indexName,
 int num_for_loop_iter_f( float first, float step, float last )
 {
     int signum = (step > 0) - (step < 0);
-    int nsteps = floor( ( last - first ) / step ) + 1;  
+    int nsteps = (int) floor( ( last - first ) / step ) + 1;  
     if( nsteps < 0 ) 
 	return 0;
 
@@ -1767,7 +1767,7 @@ int num_for_loop_iter_f( float first, float step, float last )
 int num_for_loop_iter( double first, double step, double last )
 {
     int signum = (step > 0) - (step < 0);
-    int nsteps = floor( ( last - first ) / step ) + 1;  
+    int nsteps = (int) floor( ( last - first ) / step ) + 1;  
     if( nsteps < 0 ) 
 	return 0;
 
@@ -1949,7 +1949,7 @@ void Interpreter::forStatement(Tree *t) {
 
 	/* Get the code block */
 	Tree *codeBlock(t->second());
-	int elementCount = indexSet.length();
+	index_t elementCount = indexSet.length();
 	DataClass loopType(indexSet.dataClass());
 	ContextLoopLocker lock(context);
 	switch(loopType) {
@@ -2391,7 +2391,9 @@ void Interpreter::persistentStatement(Tree *t) {
 
 void Interpreter::doDebugCycle() {
   depth++;
-  pushDebug("debug","debug");
+  cstack.push_back(stackentry(ip_funcname,ip_detailname,
+			      ip_context,0,steptrap,
+			      stepcurrentline));
   try {
     evalCLI(true);
   } catch (InterpreterContinueException& e) {
@@ -3239,13 +3241,13 @@ void Interpreter::statement(Tree *t) {
     else
       throw Exception("Unexpected statement type!\n");
   } catch (Exception& e) {
-    if (autostop && !InCLI) {
+    if (autostop) {
       errorCount++;
       e.printMe(this);
       stackTrace(true);
       doDebugCycle();
     } else  {
-      if (!e.wasHandled() && !InCLI && !intryblock) {
+      if (!e.wasHandled() && !intryblock) {
 	stackTrace(true);
 	e.markAsHandled();
       }
@@ -3345,15 +3347,7 @@ void Interpreter::specialFunctionCall(Tree *t, bool printIt) {
   if (!lookupFunction(args[0],val,n))
     throw Exception("unable to resolve " + args[0] + " to a function call");
   if (val->updateCode(this)) refreshBreakpoints();
-  bool CLIFlagsave = InCLI;
-  InCLI = false;
-  try {
-    m = doFunction(val,n,0);
-  } catch(Exception& e) {
-    InCLI = CLIFlagsave;
-    throw;
-  }
-  InCLI = CLIFlagsave;
+  m = doFunction(val,n,0);
 }
  
 void Interpreter::setBreakpoint(stackentry bp, bool enableFlag) {
@@ -4184,102 +4178,87 @@ void Interpreter::functionExpression(Tree *t,
   TreeList keyexpr;
   FuncPtr funcDef;
   int* argTypeMap;
-  bool CLIFlagsave;
-  CLIFlagsave = InCLI;
-  try {
-    // Because of the introduction of user-defined classes, we have to 
-    // first evaluate the keywords and the arguments, before we know
-    // which function to call.
-    // First, check for arguments
-    if ((t->numChildren()>=2) && t->second()->is(TOK_PARENS)) {
-      // Collect keywords
-      collectKeywords(t->second(),keyvals,keyexpr,keywords);
-      // Evaluate function arguments
-      try {
-	Tree *s(t->second());
-	for (int p=0;p<s->numChildren();p++)
-	  multiexpr(s->child(p),m);
-      } catch (Exception &e) {
-	// Transmute the error message about illegal use of ':'
-	// into one about undefined variables.  Its crufty,
-	// but it works.
-	if (e.matches("Illegal use of the ':' operator"))
-	  throw Exception("Undefined variable " + t->text());
-	else
-	  throw;
-      }
-    } 
-    // Now that the arguments have been evaluated, we have to 
-    // find the dominant class
-    if (!lookupFunction(t->first()->text(),funcDef,m))
-      throw Exception("Undefined function or variable " + 
-		      t->first()->text());
-    if (funcDef->updateCode(this)) refreshBreakpoints();
-    if (funcDef->scriptFlag) {
-      if (t->numChildren()>=2)
-	throw Exception(QString("Cannot use arguments in a call to a script."));
-      if ((narg_out > 0) && !outputOptional)
-	throw Exception(QString("Cannot assign outputs in a call to a script."));
-      CLIFlagsave = InCLI;
-      InCLI = false;
-      pushDebug(((MFunctionDef*)funcDef)->fileName,
-		((MFunctionDef*)funcDef)->name);
-      block(((MFunctionDef*)funcDef)->code.tree());
-      if ((steptrap >= 1) && (ip_detailname == stepname)) {
-	if ((cstack.size() > 0) && (cstack.back().cname != "Eval")) {
-	  warningMessage("dbstep beyond end of script " + stepname +
-			 ".\n Setting single step mode for " + 
-			 cstack.back().detail);
-	  stepname = cstack.back().detail;
-	} else
-	  steptrap = 0;
-      }
-      popDebug();
-      InCLI = CLIFlagsave;
-    } else {
-      // We can now adjust the keywords (because we know the argument list)
-      // Apply keyword mapping
-      if (!keywords.empty()) 
-	argTypeMap = sortKeywords(m,keywords,funcDef->arguments,keyvals);
+  // Because of the introduction of user-defined classes, we have to 
+  // first evaluate the keywords and the arguments, before we know
+  // which function to call.
+  // First, check for arguments
+  if ((t->numChildren()>=2) && t->second()->is(TOK_PARENS)) {
+    // Collect keywords
+    collectKeywords(t->second(),keyvals,keyexpr,keywords);
+    // Evaluate function arguments
+    try {
+      Tree *s(t->second());
+      for (int p=0;p<s->numChildren();p++)
+	multiexpr(s->child(p),m);
+    } catch (Exception &e) {
+      // Transmute the error message about illegal use of ':'
+      // into one about undefined variables.  Its crufty,
+      // but it works.
+      if (e.matches("Illegal use of the ':' operator"))
+	throw Exception("Undefined variable " + t->text());
       else
-	argTypeMap = NULL;
-      if ((funcDef->inputArgCount() >= 0) && 
-	  (m.size() > funcDef->inputArgCount()))
-	throw Exception(QString("Too many inputs to function ")+t->first()->text());
-      if ((funcDef->outputArgCount() >= 0) && 
-	  (narg_out > funcDef->outputArgCount() && !outputOptional))
-	throw Exception(QString("Too many outputs to function ")+t->first()->text());
-      CLIFlagsave = InCLI;
-      InCLI = false;
-      n = doFunction(funcDef,m,narg_out);
-      if ((steptrap >= 1) && (funcDef->name == stepname)) {
-	if ((cstack.size() > 0) && (ip_funcname != "Eval")) {
-	  warningMessage("dbstep beyond end of function " + stepname +
-			 ".\n Setting single step mode for " + 
-			 ip_detailname);
-	  stepname = ip_detailname;
-	} else
-	  steptrap = 0;
-      }
-      InCLI = CLIFlagsave;
-      // Check for any pass by reference
-      if (t->hasChildren() && (funcDef->arguments.size() > 0)) 
-	handlePassByReference(t,funcDef->arguments,m,keywords,keyexpr,argTypeMap);
+	throw;
     }
-    // Some routines (e.g., min and max) will return more outputs
-    // than were actually requested... so here we have to trim 
-    // any elements received that we didn't ask for.
-    // preserve one output if we were called as an expression (for ans)
-    if (outputOptional) narg_out = (narg_out == 0) ? 1 : narg_out;
-    while (n.size() > narg_out)
-      n.pop_back();
-    output += n;
-  } catch (Exception& e) {
-    InCLI = CLIFlagsave;
-    throw;
-  } catch (InterpreterRetallException& e) {
-    throw;
+  } 
+  // Now that the arguments have been evaluated, we have to 
+  // find the dominant class
+  if (!lookupFunction(t->first()->text(),funcDef,m))
+    throw Exception("Undefined function or variable " + 
+		    t->first()->text());
+  if (funcDef->updateCode(this)) refreshBreakpoints();
+  if (funcDef->scriptFlag) {
+    if (t->numChildren()>=2)
+      throw Exception(QString("Cannot use arguments in a call to a script."));
+    if ((narg_out > 0) && !outputOptional)
+      throw Exception(QString("Cannot assign outputs in a call to a script."));
+    pushDebug(((MFunctionDef*)funcDef)->fileName,
+	      ((MFunctionDef*)funcDef)->name);
+    block(((MFunctionDef*)funcDef)->code.tree());
+    if ((steptrap >= 1) && (ip_detailname == stepname)) {
+      if ((cstack.size() > 0) && (cstack.back().cname != "Eval")) {
+	warningMessage("dbstep beyond end of script " + stepname +
+		       ".\n Setting single step mode for " + 
+		       cstack.back().detail);
+	stepname = cstack.back().detail;
+      } else
+	steptrap = 0;
+    }
+    popDebug();
+  } else {
+    // We can now adjust the keywords (because we know the argument list)
+    // Apply keyword mapping
+    if (!keywords.empty()) 
+      argTypeMap = sortKeywords(m,keywords,funcDef->arguments,keyvals);
+    else
+      argTypeMap = NULL;
+    if ((funcDef->inputArgCount() >= 0) && 
+	(m.size() > funcDef->inputArgCount()))
+      throw Exception(QString("Too many inputs to function ")+t->first()->text());
+    if ((funcDef->outputArgCount() >= 0) && 
+	(narg_out > funcDef->outputArgCount() && !outputOptional))
+      throw Exception(QString("Too many outputs to function ")+t->first()->text());
+    n = doFunction(funcDef,m,narg_out);
+    if ((steptrap >= 1) && (funcDef->name == stepname)) {
+      if ((cstack.size() > 0) && (ip_funcname != "Eval")) {
+	warningMessage("dbstep beyond end of function " + stepname +
+		       ".\n Setting single step mode for " + 
+		       ip_detailname);
+	stepname = ip_detailname;
+      } else
+	steptrap = 0;
+    }
+    // Check for any pass by reference
+    if (t->hasChildren() && (funcDef->arguments.size() > 0)) 
+      handlePassByReference(t,funcDef->arguments,m,keywords,keyexpr,argTypeMap);
   }
+  // Some routines (e.g., min and max) will return more outputs
+  // than were actually requested... so here we have to trim 
+  // any elements received that we didn't ask for.
+  // preserve one output if we were called as an expression (for ans)
+  if (outputOptional) narg_out = (narg_out == 0) ? 1 : narg_out;
+  while (n.size() > narg_out)
+    n.pop_back();
+  output += n;
 }
 
 
@@ -4412,14 +4391,22 @@ void Interpreter::stackTrace(bool includeCurrent) {
   for (int i=0;i<cstack.size();i++) {
     QString cname_trim(TrimExtension(TrimFilename(cstack[i].cname)));
     outputMessage(QString("In ") + cname_trim + "("
-		  + cstack[i].detail + ") on line " +
-		  QString().setNum(int(cstack[i].tokid & 0x0000FFFF)) + "\r\n");
+		  + cstack[i].detail + ")");
+    int line = int(cstack[i].tokid & 0x0000FFFF);
+    if (line > 0)
+      outputMessage(QString(" on line " +
+			    QString().setNum(int(cstack[i].tokid & 0x0000FFFF))));
+    outputMessage("\r\n");
   }
   if (includeCurrent) {
     QString ip_trim(TrimExtension(TrimFilename(ip_funcname)));
     outputMessage(QString("In ") + ip_trim + "("
-		  + ip_detailname + ") on line " +
-		  QString().setNum(int(ip_context & 0x0000FFFF)) + "\r\n");
+		  + ip_detailname + ")");
+    int line = int(ip_context & 0x0000FFFF);
+    if (line > 0)
+      outputMessage(QString(" on line " +
+			    QString().setNum(int(ip_context & 0x0000FFFF))));
+    outputMessage("\r\n");
   }
 }
 
@@ -4433,7 +4420,7 @@ void Interpreter::pushDebug(QString fname, QString detail) {
   cstack.push_back(stackentry(ip_funcname,ip_detailname,
 			      ip_context,0,steptrap,
 			      stepcurrentline));
-  outputMessage(QString("Push Debug: ") + fname + QString(",") + detail + QString("\n"));
+  //  outputMessage(QString("Push Debug: ") + fname + QString(",") + detail + QString("\n"));
   ip_funcname = fname;
   ip_detailname = detail;
   ip_context = 0;
@@ -4442,7 +4429,7 @@ void Interpreter::pushDebug(QString fname, QString detail) {
 }
 
 void Interpreter::popDebug() {
-  outputMessage(QString("Pop Debug\n"));
+  //  outputMessage(QString("Pop Debug\n"));
   if (!cstack.isEmpty()) {
     ip_funcname = cstack.back().cname;
     ip_detailname = cstack.back().detail;
@@ -5046,7 +5033,6 @@ Interpreter::Interpreter(Context* aContext) {
   autostop = false;
   intryblock = false;
   jitcontrol = false;
-  InCLI = false;
   stopoverload = false;
   m_skipflag = false;
   clearStacks();
@@ -5246,7 +5232,7 @@ void Interpreter::evalCLI(bool propogateExceptions) {
     prompt = "--> ";
     rootCLI = true;
   } else {
-    prompt = QString("[%1,%2]--> ").arg(ip_detailname).arg(ip_context & 0xffff);
+    prompt = QString("[%1,%2]--> ").arg(cstack.back().detail).arg(cstack.back().tokid & 0xffff);
     rootCLI = false;
   }
   while(1) {
@@ -5283,7 +5269,6 @@ void Interpreter::evalCLI(bool propogateExceptions) {
     }
     int debug_stackdepth = cstack.size();
     int scope_stackdepth = context->scopeDepth(); 
-    InCLI = true;
     evaluateString(cmdset,propogateExceptions);
     while (cstack.size() > debug_stackdepth) popDebug();
     while (context->scopeDepth() > scope_stackdepth) context->popScope();
