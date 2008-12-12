@@ -19,6 +19,11 @@ be done in the interpreter itself? -- done
 - feval & debug
 - debug & synt error on CLI --> need to fix
 - stack walking (dbup, dbdown)
+- docli shows up in stack trace
+
+- InCLI used for disabling dbauto, turning off stacktrace on error
+
+-- Should get rid of the notion of ip vs stack -- just merge them together.
 
 - OK - all function invocations now go through a single point
 this is the doFunction method of the interpreter.  What do we want to happen?

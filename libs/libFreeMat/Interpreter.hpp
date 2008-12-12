@@ -163,13 +163,6 @@ class Interpreter : public QThread {
    */
   QWaitCondition gfxBufferNotEmpty;
   /**
-   * This is the equivalent of an "instruction pointer".  It stores the
-   * function name and some detailed information on our location.
-   */
-  QString ip_funcname;
-  QString ip_detailname;
-  int ip_context;
-  /**
    * For technical reasons, the interpreter stores a mirror of the call stack
    * in this member.
    */
@@ -357,6 +350,12 @@ public:
    */
   QString getMFileName();
   QString getInstructionPointerFileName();
+  inline QString ipName() const {return cstack.back().cname;}
+  inline QString ipDetail() const {return cstack.back().detail;}
+  inline int ipContext() const {return cstack.back().tokid;}
+  inline void setIPName(QString x) {cstack.back().cname = x;}
+  inline void setIPDetail(QString x) {cstack.back().detail = x;}
+  inline void setIPContext(int x) {cstack.back().tokid = x;}
   inline QString sampleInstructionPointer(unsigned &context) const {
     if (!InCLI) {
       context = ip_context & 0x0000FFFF; 
@@ -664,11 +663,6 @@ private:
    * Handle the construction of a function pointer
    */
   Array FunctionPointer(Tree *args);
-  /**
-   * Set the context of the interpreter.  This is an integer that indicates
-   * where in the source file we are.
-   */
-  inline void SetContext(int id);
   /**
    * Clear the context stacks.
    */

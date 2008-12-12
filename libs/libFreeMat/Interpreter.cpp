@@ -301,13 +301,6 @@ static bool isMFile(QString arg) {
 	  (arg[arg.size()-2] == '.'));
 }
 
-void Interpreter::SetContext(int a) {
-  if (((a & 0xffff) == 0) && isMFile(ip_funcname))
-    dbout << "Warning: zero context!";
-//   dbout << "setting context to line " << (a & 0xffff);
-  ip_context = a;
-}
-
 QString TrimFilename(QString arg) {
   int ndx = arg.lastIndexOf(QDir::separator());
   if (ndx>=0)
@@ -417,8 +410,8 @@ void Interpreter::sendGreeting() {
 
 QString Interpreter::getLocalMangledName(QString fname) {
   QString ret;
-  if (isMFile(ip_funcname))
-    ret = LocalMangleName(ip_detailname,fname);
+  if (isMFile(ipName()))
+    ret = LocalMangleName(ipDetail(),fname);
   else
     ret = fname;
   return ret;
@@ -426,8 +419,8 @@ QString Interpreter::getLocalMangledName(QString fname) {
 
 QString Interpreter::getPrivateMangledName(QString fname) {
   QString ret;
-  if (isMFile(ip_funcname)) 
-    ret = PrivateMangleName(ip_funcname,fname);
+  if (isMFile(ipName())) 
+    ret = PrivateMangleName(ipName(),fname);
   else {
     ret = QDir::currentPath() + 
       QString(QDir::separator()) + 
@@ -437,8 +430,8 @@ QString Interpreter::getPrivateMangledName(QString fname) {
 }
 
 QString Interpreter::getMFileName() {
-  if (isMFile(ip_funcname)) 
-    return TrimFilename(TrimExtension(ip_funcname));
+  if (isMFile(ipName())) 
+    return TrimFilename(TrimExtension(ipName()));
   for (int i=cstack.size()-1;i>=0;i--)
     if (isMFile(cstack[i].cname)) 
       return TrimFilename(TrimExtension(cstack[i].cname));
@@ -3118,21 +3111,21 @@ void Interpreter::assignment(Tree *var, bool printIt, Array &b) {
 
 void Interpreter::processBreakpoints(Tree *t) {
   for (int i=0;i<bpStack.size();i++) {
-    if ((bpStack[i].cname == ip_funcname) && 
-	((ip_context & 0xffff) == bpStack[i].tokid)) {
+    if ((bpStack[i].cname == ipName()) && 
+	((ipContext() & 0xffff) == bpStack[i].tokid)) {
       doDebugCycle();
       SetContext(t->context());
     }
   }
   if (tracetrap > 0) {
-    if (((ip_context) & 0xffff) != tracecurrentline) {
+    if ((ipContext() & 0xffff) != tracecurrentline) {
       tracetrap--;
       if (tracetrap == 0)
 	doDebugCycle();
     }
   }
   if (steptrap > 0) {
-    if (((ip_context) & 0xffff) != stepcurrentline) {
+    if (((ipContext()) & 0xffff) != stepcurrentline) {
       steptrap--;
       if (steptrap == 0)
 	doDebugCycle();
@@ -4220,7 +4213,7 @@ void Interpreter::functionExpression(Tree *t,
     pushDebug(((MFunctionDef*)funcDef)->fileName,
 	      ((MFunctionDef*)funcDef)->name);
     block(((MFunctionDef*)funcDef)->code.tree());
-    if ((steptrap >= 1) && (ip_detailname == stepname)) {
+    if ((steptrap >= 1) && (ipDetail() == stepname)) {
       if ((cstack.size() > 0) && (cstack.back().cname != "Eval")) {
 	warningMessage("dbstep beyond end of script " + stepname +
 		       ".\n Setting single step mode for " + 
@@ -4245,11 +4238,11 @@ void Interpreter::functionExpression(Tree *t,
       throw Exception(QString("Too many outputs to function ")+t->first()->text());
     n = doFunction(funcDef,m,narg_out);
     if ((steptrap >= 1) && (funcDef->name == stepname)) {
-      if ((cstack.size() > 0) && (ip_funcname != "Eval")) {
+      if ((cstack.size() > 0) && (ipName() != "Eval")) {
 	warningMessage("dbstep beyond end of function " + stepname +
 		       ".\n Setting single step mode for " + 
-		       ip_detailname);
-	stepname = ip_detailname;
+		       ipDetail());
+	stepname = ipDetail();
       } else
 	steptrap = 0;
     }
@@ -4398,12 +4391,12 @@ void Interpreter::deleteBreakpoint(int number) {
 
 void Interpreter::stackTrace(bool includeCurrent, int skiplevels) {
   if (includeCurrent) {
-    outputMessage(QString("In ") + ip_funcname + "("
-		  + ip_detailname + ")");
-    int line = int(ip_context & 0x0000FFFF);
+    outputMessage(QString("In ") + ipName() + "("
+		  + ipDetail() + ")");
+    int line = int(ipContext() & 0x0000FFFF);
     if (line > 0)
       outputMessage(QString(" at line " +
-			    QString().setNum(int(ip_context & 0x0000FFFF))));
+			    QString().setNum(int(ipContext() & 0x0000FFFF))));
     outputMessage("\r\n");
   }
   for (int i=cstack.size()-1-skiplevels;i>=0;i--) {
@@ -4423,13 +4416,13 @@ void Interpreter::stackTrace(bool includeCurrent, int skiplevels) {
 }
 
 bool Interpreter::inMethodCall(QString classname) {
-  if (ip_detailname.isEmpty()) return false;
-  if (ip_detailname[0] != '@') return false;
-  return (ip_detailname.mid(1,classname.size()) == classname);
+  if (ipDetail().isEmpty()) return false;
+  if (ipDetail()[0] != '@') return false;
+  return (ipDetail().mid(1,classname.size()) == classname);
 }
 
 void Interpreter::pushDebug(QString fname, QString detail) {
-  cstack.push_back(stackentry(ip_funcname,ip_detailname,
+  cstack.push_back(stackentry(ip_funcname,ipDetail(),
 			      ip_context,0,steptrap,
 			      stepcurrentline));
   //  outputMessage(QString("Push Debug: ") + fname + QString(",") + detail + QString("\n"));
@@ -4480,13 +4473,13 @@ bool Interpreter::lookupFunction(QString funcName, FuncPtr& val,
     // This is the order for function dispatch according to the Matlab manual
     // Nested functions - not explicitly listed in the Matlab manual, but 
     // I figure they have the highest priority in the current scope.
-    if (isMFile(ip_funcname) &&
-	(context->lookupFunction(NestedMangleName(ip_detailname,funcName),val)))
+    if (isMFile(ipName()) &&
+	(context->lookupFunction(NestedMangleName(ipDetail(),funcName),val)))
       return true;
     // Not a nested function of the current scope.  We have to look for nested
     // functions of all parent scopes. Sigh.
     if (context->isCurrentScopeNested()) {
-      QString basename = ip_detailname;
+      QString basename = ipDetail();
       while (!basename.isEmpty()) {
 	if (context->lookupFunction(NestedMangleName(basename,funcName),val))
 	  return true;
@@ -4494,7 +4487,7 @@ bool Interpreter::lookupFunction(QString funcName, FuncPtr& val,
       }
     }
     // Subfunctions
-    if (isMFile(ip_funcname) && 
+    if (isMFile(ipName()) && 
 	(context->lookupFunction(getLocalMangledName(funcName),val)))
       return true;
     // Private functions
