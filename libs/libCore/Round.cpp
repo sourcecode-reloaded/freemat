@@ -2,6 +2,18 @@
 #include "Array.hpp"
 #include <cmath>
 
+#if defined(_MSC_VER)  
+double round( double x ){
+    double sign = (x>0)?1:-1;
+    return sign*std::floor(fabs(x)+.5);
+}
+
+float roundf( float x ){
+    float sign = (x>0)?1:-1;
+    return sign*std::floorf(fabsf(x)+.5);
+}
+#endif
+
 struct OpRound {
   static inline float func(float t) { return roundf(t); }
   static inline double func(double t) {return round(t); }
