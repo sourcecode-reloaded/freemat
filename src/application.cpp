@@ -302,7 +302,7 @@ void ApplicationWindow::SetKeyManager(KeyManager *keys) {
 	  m_filetool,SLOT(updateCWD()));
   connect(keys,SIGNAL(UpdateCWD()),
 	  this,SLOT(CWDChanged()));
-  connect(keys,SIGNAL(UpdateVariables()),
+  connect(keys,SIGNAL(UpdateInfoViews()),
 	  m_variables,SLOT(refresh()));
   connect(pauseAct,SIGNAL(triggered()),m_keys,SIGNAL(RegisterInterrupt()));
   connect(continueAct,SIGNAL(triggered()),m_keys,SLOT(ContinueAction()));

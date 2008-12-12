@@ -4,14 +4,21 @@ Annoyances:
  packaging
  completion stuff?
 
+
+
 *******************************************************************************
 
 The issue around the debug stuff:
 
-- Debug info should change only when the interpreter starts a new function
-- Upon exit from that function, the debug stack should be cleared
+- Debug info should change only when the interpreter starts a new function -- done
+- Upon exit from that function, the debug stack should be cleared -- done
 - Why is the debug info manipulated in the function methods?  Can't it all
-be done in the interpreter itself?
+be done in the interpreter itself? -- done
+
+- t1 --> keyboard --> error -->?? -- fixed
+- feval & debug
+- debug & synt error on CLI --> need to fix
+- stack walking (dbup, dbdown)
 
 - OK - all function invocations now go through a single point
 this is the doFunction method of the interpreter.  What do we want to happen?

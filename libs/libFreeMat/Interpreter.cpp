@@ -385,12 +385,15 @@ void Interpreter::doCLI() {
     sendGreeting();
   try {
     while (1) {
+      int debug_stackdepth = cstack.size();
+      int scope_stackdepth = context->scopeDepth(); 
       try {
 	evalCLI(false);
       } catch (InterpreterRetallException) {
-	clearStacks();
       } catch (InterpreterReturnException &e) {
       }
+      while (cstack.size() > debug_stackdepth) popDebug();
+      while (context->scopeDepth() > scope_stackdepth) context->popScope();
     }
   } catch (InterpreterQuitException &e) {
     emit QuitSignal();
@@ -442,9 +445,10 @@ QString Interpreter::getMFileName() {
   return QString("");
 }
 
+// called by editor
 QString Interpreter::getInstructionPointerFileName() {
-  if (isMFile(ip_funcname)) 
-    return ip_funcname;
+  if (isMFile(cstack.back().cname)) 
+    return cstack.back().cname;
   return QString("");
 }
 
@@ -1220,8 +1224,7 @@ void Interpreter::tryStatement(Tree *t) {
   intryblock = true;
   // Get the state of the IDnum stack and the
   // contextStack and the cnameStack
-  int stackdepth;
-  stackdepth = cstack.size();
+  int stackdepth = cstack.size();
   try {
     block(t->first());
   } catch (Exception &e) {
@@ -2395,10 +2398,13 @@ void Interpreter::doDebugCycle() {
 			      ip_context,0,steptrap,
 			      stepcurrentline));
   try {
-    evalCLI(true);
+    evalCLI(false);
   } catch (InterpreterContinueException& e) {
   } catch (InterpreterBreakException& e) {
   } catch (InterpreterReturnException& e) {
+  } catch (InterpreterRetallException& e) {
+    depth--;
+    throw;
   }
   popDebug();
   depth--;
@@ -4363,8 +4369,11 @@ bool Interpreter::isBPSet(QString fname, int lineNumber) {
   return false;
 }
 
+// called by editor
 bool Interpreter::isInstructionPointer(QString fname, int lineNumber) {
-  return ((fname == ip_funcname) && ((lineNumber == (ip_context & 0xffff)) || ((lineNumber == 1) && ((ip_context & 0xffff) == 0))));
+  return ((fname == cstack.back().cname) &&
+	  ((lineNumber == (cstack.back().tokid & 0xffff)) || 
+	   ((lineNumber == 1) && ((cstack.back().tokid & 0xffff) == 0))));
 }
 
 void Interpreter::listBreakpoints() {
@@ -4387,25 +4396,28 @@ void Interpreter::deleteBreakpoint(int number) {
   return;
 }
 
-void Interpreter::stackTrace(bool includeCurrent) {
-  for (int i=0;i<cstack.size();i++) {
-    QString cname_trim(TrimExtension(TrimFilename(cstack[i].cname)));
-    outputMessage(QString("In ") + cname_trim + "("
-		  + cstack[i].detail + ")");
-    int line = int(cstack[i].tokid & 0x0000FFFF);
-    if (line > 0)
-      outputMessage(QString(" on line " +
-			    QString().setNum(int(cstack[i].tokid & 0x0000FFFF))));
-    outputMessage("\r\n");
-  }
+void Interpreter::stackTrace(bool includeCurrent, int skiplevels) {
   if (includeCurrent) {
-    QString ip_trim(TrimExtension(TrimFilename(ip_funcname)));
-    outputMessage(QString("In ") + ip_trim + "("
+    outputMessage(QString("In ") + ip_funcname + "("
 		  + ip_detailname + ")");
     int line = int(ip_context & 0x0000FFFF);
     if (line > 0)
-      outputMessage(QString(" on line " +
+      outputMessage(QString(" at line " +
 			    QString().setNum(int(ip_context & 0x0000FFFF))));
+    outputMessage("\r\n");
+  }
+  for (int i=cstack.size()-1-skiplevels;i>=0;i--) {
+    QString cname_trim(TrimExtension(TrimFilename(cstack[i].cname)));
+    if (includeCurrent || (i < (cstack.size() - 1 - skiplevels)))
+      outputMessage(QString("    In ") + cname_trim + "("
+		    + cstack[i].detail + ")");
+    else
+      outputMessage(QString("In ") + cstack[i].cname + "("
+		    + cstack[i].detail + ")");
+    int line = int(cstack[i].tokid & 0x0000FFFF);
+    if (line > 0)
+      outputMessage(QString(" at line " +
+			    QString().setNum(int(cstack[i].tokid & 0x0000FFFF))));
     outputMessage("\r\n");
   }
 }
@@ -5086,15 +5098,15 @@ void Interpreter::dbstepStatement(Tree *t) {
   }
   // Get the current function
   if (cstack.size() < 1) throw Exception("cannot dbstep unless inside an M-function");
-  stackentry bp(cstack[cstack.size()-1]);
+  stackentry bp(cstack.back());
   FuncPtr val;
   if (bp.detail == "base") return;
   if (!lookupFunction(bp.detail,val)) {
     warningMessage(QString("unable to find function ") + bp.detail + " to single step");
     return;
   }
-  cstack[cstack.size()-1].steptrap = lines;
-  cstack[cstack.size()-1].stepcurrentline = bp.tokid & 0xffff;
+  cstack.back().steptrap = lines;
+  cstack.back().stepcurrentline = bp.tokid & 0xffff;
 //   dbout << "setting dbstep trap to current line " << 
 //     cstack[cstack.size()-1].stepcurrentline << 
 //     " with wait of " << lines << " lines";
@@ -5108,7 +5120,7 @@ void Interpreter::dbtraceStatement(Tree *t) {
   }
   // Get the current function
   if (cstack.size() < 1) throw Exception("cannot dbtrace unless inside an M-function");
-  stackentry bp(cstack[cstack.size()-1]);
+  stackentry bp(cstack.back());
   FuncPtr val;
   if (bp.detail == "base") return;
   if (!lookupFunction(bp.detail,val)) {
@@ -5232,7 +5244,7 @@ void Interpreter::evalCLI(bool propogateExceptions) {
     prompt = "--> ";
     rootCLI = true;
   } else {
-    prompt = QString("[%1,%2]--> ").arg(cstack.back().detail).arg(cstack.back().tokid & 0xffff);
+    prompt = QString("[%1,%2,%3]--> ").arg(cstack.back().detail).arg(cstack.back().tokid & 0xffff).arg(depth);
     rootCLI = false;
   }
   while(1) {

@@ -285,7 +285,7 @@ ArrayVector FieldNamesFunction(int nargout, const ArrayVector& arg) {
 //outputs none
 //!
 ArrayVector WhereFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  eval->stackTrace(false);
+  eval->stackTrace(false,1);
   return ArrayVector();
 }
 

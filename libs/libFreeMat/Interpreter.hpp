@@ -464,7 +464,7 @@ public:
   /**
    * Generate a stacktrace
    */
-  void stackTrace(bool includeCurrent);
+  void stackTrace(bool includeCurrent, int skiplevels=0);
   /**
    * Push a function name and detail onto the debug stack
    */

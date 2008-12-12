@@ -1144,7 +1144,7 @@ void KeyManager::DbTraceAction() {
 void KeyManager::SetPrompt(QString txt) {
   ReplacePrompt(txt);
   Redisplay();
-  emit UpdateVariables();
+  emit UpdateInfoViews();
 }
 
 void KeyManager::ChangeDir(const QString& dir) {

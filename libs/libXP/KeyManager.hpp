@@ -158,7 +158,7 @@ signals:
   void OutputRawString(QString txt);
   void SendCommand(QString);
   void Interrupt();
-  void UpdateVariables();
+  void UpdateInfoViews();
   void ExecuteLine(QString txt);
   void PopCompletions(QStringList txt);
 public slots:
