@@ -61,7 +61,7 @@ ArrayVector SimKeysFunction(int nargout, const ArrayVector& arg,
   eval->ExecuteLine("quit\n");
   try {
     while(1) 
-      eval->evalCLI(false);
+      eval->evalCLI();
   } catch (InterpreterContinueException& e) {
   } catch (InterpreterBreakException& e) {
   } catch (InterpreterReturnException& e) {

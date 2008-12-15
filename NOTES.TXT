@@ -16,14 +16,12 @@ The issue around the debug stuff:
 be done in the interpreter itself? -- done
 
 - t1 --> keyboard --> error -->?? -- fixed
-- feval & debug
-- debug & synt error on CLI --> need to fix
-- stack walking (dbup, dbdown)
-- docli shows up in stack trace
+- feval & debug -- done
+- debug & synt error on CLI --> need to fix -- done
+- InCLI used for disabling dbauto, turning off stacktrace on error -- done
 
-- InCLI used for disabling dbauto, turning off stacktrace on error
+-- Should get rid of the notion of ip vs stack -- just merge them together -- done
 
--- Should get rid of the notion of ip vs stack -- just merge them together.
 
 - OK - all function invocations now go through a single point
 this is the doFunction method of the interpreter.  What do we want to happen?
@@ -41,7 +39,11 @@ popDebug()
 
 What about exceptions?  So if an error occurs the debug stack will be intact
 
-
+- stack walking (dbup, dbdown)
+- stack selection widget
+- docli shows up in stack trace -- ignored
+- t1 --> keyboard --> t2 -- fixed
+- db ops (step, trace, etc) -- fixed
 
 
 *******************************************************************************

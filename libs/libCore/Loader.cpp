@@ -68,6 +68,8 @@ ArrayVector CumsumFunction(int, const ArrayVector&);
 ArrayVector DbDeleteFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector DbListFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector DbStopFunction(int, const ArrayVector&, Interpreter*);
+ArrayVector DbUpFunction(int, const ArrayVector&, Interpreter*);
+ArrayVector DbDownFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector FdumpFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector ChangeDirFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector DirFunction(int, const ArrayVector&, Interpreter*);
@@ -354,6 +356,8 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addSpecialFunction("dbdelete",DbDeleteFunction,1,0,"num",NULL);
   context->addSpecialFunction("dblist",DbListFunction,0,0,NULL);
   context->addSpecialFunction("dbstop",DbStopFunction,2,0,"funcname","linenumber",NULL);
+  context->addSpecialFunction("dbup",DbUpFunction,0,0,NULL);
+  context->addSpecialFunction("dbdown",DbDownFunction,0,0,NULL);
   context->addSpecialFunction("fdump",FdumpFunction,1,0,"fname",NULL);
   context->addSpecialFunction("cd",ChangeDirFunction,1,0,"path",NULL);
   context->addSpecialFunction("dir",DirFunction,1,1,"name",NULL);

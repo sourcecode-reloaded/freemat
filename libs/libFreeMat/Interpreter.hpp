@@ -49,12 +49,16 @@ public:
   int number;
   int steptrap;
   int stepcurrentline;
+  int contextnumber;
     
   // A number of -1 corresponds to a temporary breakpoint 
-  stackentry(QString cntxt, QString detail, int id, 
-	     int num = 0, int strp = 0, int stcl = 0);
-  stackentry();
-  ~stackentry();
+  stackentry(QString cntxt, QString det, int id,
+	     int num = 0, int strp = 0, int stcl = 0,
+	     int ctxt = -1) :
+    cname(cntxt), detail(det), tokid(id), number(num),
+    steptrap(strp), stepcurrentline(stcl), contextnumber(ctxt) {}
+  stackentry() {}
+  ~stackentry() {}
 };
 
 class Interpreter;
@@ -85,12 +89,9 @@ class Interpreter : public QThread {
   /**
    * Debugger related values
    */
-  int steptrap;
-  int stepcurrentline;
   int tracetrap;
   int tracecurrentline;
-  QString stepname;
-
+  bool dbdown_executed;
   /**
    * Tracks the number of errors that have occured (used by the documentation
    * compiler helpgen)
@@ -163,10 +164,13 @@ class Interpreter : public QThread {
    */
   QWaitCondition gfxBufferNotEmpty;
   /**
-   * For technical reasons, the interpreter stores a mirror of the call stack
-   * in this member.
+   * This is the debug stack -- it records the history of the call stack.
    */
   QVector<stackentry> cstack;
+  /**
+   * This is where bypassed entries in the debug stack go.
+   */
+  QVector<stackentry> bypassed_cstack;
   /**
    * A list of breakpoints
    */
@@ -175,10 +179,6 @@ class Interpreter : public QThread {
    * True if the interpreter is in single-step mode
    */
   bool inStepMode;
-  /**
-   * The effective location of the next breakpoint (if single stepping)
-   */
-  stackentry stepTrap;
   /**
    * Set this flag to true to stop overloading of methods
    */
@@ -350,16 +350,36 @@ public:
    */
   QString getMFileName();
   QString getInstructionPointerFileName();
+  /**
+   * SET/GET for the instruction pointer
+   */
   inline QString ipName() const {return cstack.back().cname;}
   inline QString ipDetail() const {return cstack.back().detail;}
   inline int ipContext() const {return cstack.back().tokid;}
+  inline int stepTrap() const {return cstack.back().steptrap;}
+  inline int stepCurrentLine() const {return cstack.back().stepcurrentline;}
   inline void setIPName(QString x) {cstack.back().cname = x;}
   inline void setIPDetail(QString x) {cstack.back().detail = x;}
   inline void setIPContext(int x) {cstack.back().tokid = x;}
+  inline void setStepTrap(int x) {cstack.back().steptrap = x;}
+  inline void setStepCurrentLine(int x) {cstack.back().stepcurrentline = x;}
+  bool inMFile() const;
+  stackentry& activeDebugStack();
+  const stackentry& activeDebugStack() const;
+  void dbup();
+  void dbdown();
+  /**
+   * SET/GET for the in CLI flag
+   */
+  inline void setInCLI(bool p) {InCLI = p;}
+  inline bool inCLI() const {return InCLI;}
+  /**
+   * Sample the instruction pointer
+   */
   inline QString sampleInstructionPointer(unsigned &context) const {
     if (!InCLI) {
-      context = ip_context & 0x0000FFFF; 
-      return ip_funcname;
+      context = ipContext() & 0x0000FFFF; 
+      return ipName();
     } else {
       context = 0;
       return "CLI";
@@ -463,15 +483,17 @@ public:
   /**
    * Generate a stacktrace
    */
-  void stackTrace(bool includeCurrent, int skiplevels=0);
+  void stackTrace(int skiplevels=0);
   /**
    * Push a function name and detail onto the debug stack
    */
-  void pushDebug(QString fname, QString detail);
+  inline void pushDebug(QString fname, QString detail) {
+    cstack.push_back(stackentry(fname,detail,0,0,0,0,context->scopeDepth()));
+  }
   /**
    * Pop the debug stack
    */
-  void popDebug();
+  inline void popDebug() {if (!cstack.isEmpty()) cstack.pop_back();}
   /**
    * Step the given number of lines
    */
@@ -554,7 +576,7 @@ public:
    * from the console, and executed sequentially until a "return"
    * statement is executed or the user presses 'CTRL-D'.
    */
-  void evalCLI(bool propogateExceptions);
+  void evalCLI();
 
   bool isBPSet(QString fname, int lineNumber);
   bool isInstructionPointer(QString fname, int lineNumber);
@@ -663,10 +685,6 @@ private:
    * Handle the construction of a function pointer
    */
   Array FunctionPointer(Tree *args);
-  /**
-   * Clear the context stacks.
-   */
-  void clearStacks();
   /**
    * Convert a matrix definition of the form: [expr1,expr2;expr3;expr4] into
    * a vector of row definitions.  The first row is the vector [expr1,expr2], and

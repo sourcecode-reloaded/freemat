@@ -815,7 +815,6 @@ extern "C" {
     return matrix_load<bool>(base,argnum,row,col,success);
   }
   JIT_EXPORT bool matrix_store_double(void* base, double argnum, double row, double col, double val) {
-    qDebug() << "Store " << argnum << " row " << row << " col " << col << " val " << val;
     return matrix_store<double>(base,argnum,row,col,val);
   }
   JIT_EXPORT bool matrix_store_float(void* base, double argnum, double row, double col, float val) {
@@ -846,15 +845,13 @@ extern "C" {
     JITFunc *tptr = static_cast<JITFunc*>(base);
     if (!tptr->eval->interrupt()) return false;
     tptr->eval->outputMessage("Interrupt (ctrl-b) encountered in JIT code\n");
-    tptr->eval->stackTrace(true);
+    tptr->eval->stackTrace(0);
     return true;
   }
   JIT_EXPORT double niter_for_loop( double first, double step, double last ){
     double x = num_for_loop_iter( first, step, last );
-    qDebug() << " Loop count = " << x << " first = " << first << " step " << step << " last " << last;
     return (double)(num_for_loop_iter( first, step, last ));
   }
-
   JIT_EXPORT void debug_out_i( int32 t ){
       dbout << t << "\n";
   }
@@ -990,7 +987,6 @@ void JITFunc::compile_for_block(Tree* t) {
   jit->SetCurrentBlock(loopbody);
   bool failed = false;
   try {
-    jit->Call(func_debug_out_d,jit->Load(loop_ind));
     compile_block(t->second());
   } catch(Exception &e) {
     exception_store = e;

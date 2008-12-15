@@ -262,6 +262,7 @@ void QTTerm::mouseDoubleClickEvent( QMouseEvent *e ) {
     clearSelection();
     int clickcol = e->x()/m_char_w;
     int clickrow = e->y()/m_char_h;
+    if (clickrow >= buffer.size()) return;
     for (j=clickcol;j>0;j--) {
       if (!buffer[clickrow].data[j].hasText())
         break;

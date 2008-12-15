@@ -72,6 +72,19 @@ QString TildeExpand(QString path) {
   return path;
 }
 
+class CLIDisabler {
+  Interpreter *p;
+  bool CLIFlagSave;
+public:
+  CLIDisabler(Interpreter *q) : p(q) {
+    CLIFlagSave = p->inCLI();
+    p->setInCLI(false);
+  }
+  ~CLIDisabler() {
+    p->setInCLI(CLIFlagSave);
+  }
+};
+
 void Interpreter::setPath(QString path) {
   QString pathdata(path);
   QStringList pathset(pathdata.split(PATHSEP,QString::SkipEmptyParts));
@@ -209,6 +222,7 @@ void Interpreter::RegisterGfxError(QString msg) {
 
 ArrayVector Interpreter::doFunction(FuncPtr f, ArrayVector m, 
 				    int narg_out, VariableTable *vtable) {
+  CLIDisabler dis(this);
   pushDebug(f->functionName(),f->detailedName());
   if (f->graphicsFunction) {
     gfxErrorOccured = false;
@@ -230,6 +244,13 @@ ArrayVector Interpreter::doFunction(FuncPtr f, ArrayVector m,
     return ret;
   } else {
     ArrayVector ret(f->evaluateFunc(this,m,narg_out,vtable));
+    if (stepTrap() >= 1) {
+      tracetrap = 1;
+      tracecurrentline = 0;
+      warningMessage("dbstep beyond end of function " + ipDetail() +
+		     " -- setting single step mode\n");
+      setStepTrap(0);
+    }
     popDebug();
     return ret;
   }
@@ -380,11 +401,17 @@ void Interpreter::doCLI() {
     while (1) {
       int debug_stackdepth = cstack.size();
       int scope_stackdepth = context->scopeDepth(); 
+      outputMessage(QString("DI***********************************************************\n"));
+      stackTrace(0);
+      outputMessage(QString("DI***********************************************************\n"));
       try {
-	evalCLI(false);
+	evalCLI();
       } catch (InterpreterRetallException) {
       } catch (InterpreterReturnException &e) {
       }
+      outputMessage(QString("DO***********************************************************\n"));
+      stackTrace(0);
+      outputMessage(QString("DO***********************************************************\n"));
       while (cstack.size() > debug_stackdepth) popDebug();
       while (context->scopeDepth() > scope_stackdepth) context->popScope();
     }
@@ -408,10 +435,54 @@ void Interpreter::sendGreeting() {
   outputMessage(" Use ctrl-b to stop execution of a function/script\n");
 }
 
+bool Interpreter::inMFile() const {
+  return (isMFile(ipName()) || (InCLI && isMFile(activeDebugStack().cname)));
+}
+
+void Interpreter::dbup() {
+  // The stack should look like -- 
+  // base, foo, keyboard, dbup
+  // so to do a dbup, we have to save the top two of the
+  // stack, move foo to the backup stack, and then restore
+  // keyboard and dbup (which gets popped again).
+  //
+  // One problem is to determine when the context stack needs
+  // to be popped as well.  This is a nontrivial problem
+  // Suppose we archive the context stack depth with each
+  // entry of the debug stack.  Then, we have a mechanism to
+  // trace back the context stack depth.  As each debug
+  // record is pushed onto the bypassed stack, we bypass
+  // enough records on the context stack so as to make it
+  // match.
+  //
+  if (cstack.size() < 4) return;
+  stackentry save_1(cstack.back()); cstack.pop_back();
+  stackentry save_2(cstack.back()); cstack.pop_back();
+  while (context->scopeDepth() > cstack.back().contextnumber)
+    context->bypassScope(1);
+  bypassed_cstack.push_back(cstack.back()); cstack.pop_back();
+  cstack.push_back(save_2);
+  cstack.push_back(save_1);
+}
+
+void Interpreter::dbdown() {
+  if (bypassed_cstack.isEmpty()) return;
+  stackentry save_1(cstack.back()); cstack.pop_back();
+  stackentry save_2(cstack.back()); cstack.pop_back();
+  while (context->scopeDepth() < bypassed_cstack.back().contextnumber)
+    context->restoreScope(1);
+  cstack.push_back(bypassed_cstack.back()); bypassed_cstack.pop_back();
+  cstack.push_back(save_2);
+  cstack.push_back(save_1);
+  dbdown_executed = true;
+}
+
 QString Interpreter::getLocalMangledName(QString fname) {
   QString ret;
   if (isMFile(ipName()))
     ret = LocalMangleName(ipDetail(),fname);
+  else if (InCLI && isMFile(activeDebugStack().cname))
+    ret = LocalMangleName(activeDebugStack().detail,fname);
   else
     ret = fname;
   return ret;
@@ -445,19 +516,6 @@ QString Interpreter::getInstructionPointerFileName() {
   return QString("");
 }
 
-stackentry::stackentry(QString cntxt, QString det, 
-		       int id, int num, int strp, int stcl) :
-  cname(cntxt), detail(det), tokid(id), number(num),
-  steptrap(strp), stepcurrentline(stcl)
-{
-}
-
-stackentry::stackentry() {
-}
-
-stackentry::~stackentry() {
-}
-
 Array Interpreter::DoBinaryOperator(Tree *t, BinaryFunc fnc, 
 				    QString funcname) {
   Array a(expression(t->first()));
@@ -483,14 +541,6 @@ int Interpreter::getPrintLimit() {
   return(printLimit);
 }
  
-void Interpreter::clearStacks() {
-  //    cname = "base";
-  cstack.clear();
-  ip_funcname = "base";
-  ip_detailname = "base";
-  ip_context = 0;
-}
-
 //!
 //@Module MATRIX Matrix Definitions
 //@@Section VARIABLES
@@ -725,9 +775,9 @@ Array Interpreter::ShortCutOr(Tree * t) {
 }
 
 Array Interpreter::ShortCutAnd(Tree *t) {
-  SetContext(t->context());
+  setIPContext(t->context());
   Array a(expression(t->first()));
-  SetContext(t->context());
+  setIPContext(t->context());
   Array retval;
   if (!a.isScalar()) {
     retval = DoBinaryOperator(t,And,"and");
@@ -2384,14 +2434,12 @@ void Interpreter::persistentStatement(Tree *t) {
 //@>
 //!
 
-
 void Interpreter::doDebugCycle() {
   depth++;
-  cstack.push_back(stackentry(ip_funcname,ip_detailname,
-			      ip_context,0,steptrap,
-			      stepcurrentline));
+  pushDebug("keyboard","keyboard");
+  int debug_stackdepth = cstack.size();
   try {
-    evalCLI(false);
+    evalCLI();
   } catch (InterpreterContinueException& e) {
   } catch (InterpreterBreakException& e) {
   } catch (InterpreterReturnException& e) {
@@ -2399,6 +2447,8 @@ void Interpreter::doDebugCycle() {
     depth--;
     throw;
   }
+  // Reset the debug stack
+  while (cstack.size() < debug_stackdepth) dbdown();
   popDebug();
   depth--;
 }
@@ -3114,7 +3164,7 @@ void Interpreter::processBreakpoints(Tree *t) {
     if ((bpStack[i].cname == ipName()) && 
 	((ipContext() & 0xffff) == bpStack[i].tokid)) {
       doDebugCycle();
-      SetContext(t->context());
+      setIPContext(t->context());
     }
   }
   if (tracetrap > 0) {
@@ -3124,10 +3174,10 @@ void Interpreter::processBreakpoints(Tree *t) {
 	doDebugCycle();
     }
   }
-  if (steptrap > 0) {
-    if (((ipContext()) & 0xffff) != stepcurrentline) {
-      steptrap--;
-      if (steptrap == 0)
+  if (stepTrap() > 0) {
+    if (((ipContext()) & 0xffff) != stepCurrentLine()) {
+      setStepTrap(stepTrap()-1);
+      if (stepTrap() == 0)
 	doDebugCycle();
     }
   }
@@ -3135,7 +3185,7 @@ void Interpreter::processBreakpoints(Tree *t) {
 
 void Interpreter::statementType(Tree *t, bool printIt) {
   // check the debug flag
-  SetContext(t->context());
+  setIPContext(t->context());
   processBreakpoints(t);
   switch(t->token()) {
   case '=': 
@@ -3240,14 +3290,14 @@ void Interpreter::statement(Tree *t) {
     else
       throw Exception("Unexpected statement type!\n");
   } catch (Exception& e) {
-    if (autostop) {
+    if (autostop && !InCLI) {
       errorCount++;
       e.printMe(this);
-      stackTrace(true);
+      stackTrace();
       doDebugCycle();
     } else  {
-      if (!e.wasHandled() && !intryblock) {
-	stackTrace(true);
+      if (!e.wasHandled() && !InCLI && !intryblock) {
+	stackTrace();
 	e.markAsHandled();
       }
       throw;
@@ -3265,7 +3315,7 @@ void Interpreter::block(Tree *t) {
 	throw InterpreterKillException();
       if (m_interrupt) {
 	outputMessage("Interrupt (ctrl-b) encountered\n");
-	stackTrace(true);
+	stackTrace();
 	m_interrupt = false;
 	doDebugCycle();
       } else 
@@ -4213,14 +4263,12 @@ void Interpreter::functionExpression(Tree *t,
     pushDebug(((MFunctionDef*)funcDef)->fileName,
 	      ((MFunctionDef*)funcDef)->name);
     block(((MFunctionDef*)funcDef)->code.tree());
-    if ((steptrap >= 1) && (ipDetail() == stepname)) {
-      if ((cstack.size() > 0) && (cstack.back().cname != "Eval")) {
-	warningMessage("dbstep beyond end of script " + stepname +
-		       ".\n Setting single step mode for " + 
-		       cstack.back().detail);
-	stepname = cstack.back().detail;
-      } else
-	steptrap = 0;
+    if (stepTrap() >= 1) {
+      tracetrap = 1;
+      tracecurrentline = 0;
+      warningMessage("dbstep beyond end of script " + ipDetail() +
+		     " -- setting single step mode\n");
+      setStepTrap(0);
     }
     popDebug();
   } else {
@@ -4237,15 +4285,6 @@ void Interpreter::functionExpression(Tree *t,
 	(narg_out > funcDef->outputArgCount() && !outputOptional))
       throw Exception(QString("Too many outputs to function ")+t->first()->text());
     n = doFunction(funcDef,m,narg_out);
-    if ((steptrap >= 1) && (funcDef->name == stepname)) {
-      if ((cstack.size() > 0) && (ipName() != "Eval")) {
-	warningMessage("dbstep beyond end of function " + stepname +
-		       ".\n Setting single step mode for " + 
-		       ipDetail());
-	stepname = ipDetail();
-      } else
-	steptrap = 0;
-    }
     // Check for any pass by reference
     if (t->hasChildren() && (funcDef->arguments.size() > 0)) 
       handlePassByReference(t,funcDef->arguments,m,keywords,keyexpr,argTypeMap);
@@ -4355,18 +4394,18 @@ void Interpreter::addBreakpoint(QString name, int line) {
 }
 
 bool Interpreter::isBPSet(QString fname, int lineNumber) {
-  QString fname_string(fname);
   for (int i=0;i<bpStack.size();i++) 
-    if ((bpStack[i].cname == fname_string) &&
+    if ((bpStack[i].cname == fname) &&
 	((bpStack[i].tokid & 0xffff) == lineNumber)) return true;
   return false;
 }
 
 // called by editor
 bool Interpreter::isInstructionPointer(QString fname, int lineNumber) {
-  return ((fname == cstack.back().cname) &&
-	  ((lineNumber == (cstack.back().tokid & 0xffff)) || 
-	   ((lineNumber == 1) && ((cstack.back().tokid & 0xffff) == 0))));
+  stackentry bp(activeDebugStack());
+  return ((fname == bp.cname) &&
+	  ((lineNumber == (bp.tokid & 0xffff)) || 
+	   ((lineNumber == 1) && ((bp.tokid & 0xffff) == 0))));
 }
 
 void Interpreter::listBreakpoints() {
@@ -4389,24 +4428,22 @@ void Interpreter::deleteBreakpoint(int number) {
   return;
 }
 
-void Interpreter::stackTrace(bool includeCurrent, int skiplevels) {
-  if (includeCurrent) {
-    outputMessage(QString("In ") + ipName() + "("
-		  + ipDetail() + ")");
-    int line = int(ipContext() & 0x0000FFFF);
-    if (line > 0)
-      outputMessage(QString(" at line " +
-			    QString().setNum(int(ipContext() & 0x0000FFFF))));
-    outputMessage("\r\n");
-  }
+static inline bool InKeyboard(const stackentry& p) {
+  return ((p.cname == "keyboard") && (p.detail == "keyboard"));
+}
+
+void Interpreter::stackTrace(int skiplevels) {
+  bool firstline = true;
   for (int i=cstack.size()-1-skiplevels;i>=0;i--) {
     QString cname_trim(TrimExtension(TrimFilename(cstack[i].cname)));
-    if (includeCurrent || (i < (cstack.size() - 1 - skiplevels)))
-      outputMessage(QString("    In ") + cname_trim + "("
-		    + cstack[i].detail + ")");
-    else
-      outputMessage(QString("In ") + cstack[i].cname + "("
-		    + cstack[i].detail + ")");
+    //    if (InKeyboard(cstack[i]))
+    //      continue;
+    if (firstline) {
+      firstline = false;
+    } else 
+      outputMessage(QString("    "));
+    outputMessage(QString("In ") + cstack[i].cname + "("
+		  + cstack[i].detail + ")");
     int line = int(cstack[i].tokid & 0x0000FFFF);
     if (line > 0)
       outputMessage(QString(" at line " +
@@ -4419,31 +4456,6 @@ bool Interpreter::inMethodCall(QString classname) {
   if (ipDetail().isEmpty()) return false;
   if (ipDetail()[0] != '@') return false;
   return (ipDetail().mid(1,classname.size()) == classname);
-}
-
-void Interpreter::pushDebug(QString fname, QString detail) {
-  cstack.push_back(stackentry(ip_funcname,ipDetail(),
-			      ip_context,0,steptrap,
-			      stepcurrentline));
-  //  outputMessage(QString("Push Debug: ") + fname + QString(",") + detail + QString("\n"));
-  ip_funcname = fname;
-  ip_detailname = detail;
-  ip_context = 0;
-  steptrap = 0;
-  stepcurrentline = 0;
-}
-
-void Interpreter::popDebug() {
-  //  outputMessage(QString("Pop Debug\n"));
-  if (!cstack.isEmpty()) {
-    ip_funcname = cstack.back().cname;
-    ip_detailname = cstack.back().detail;
-    ip_context = cstack.back().tokid;
-    steptrap = cstack.back().steptrap;
-    stepcurrentline = cstack.back().stepcurrentline;
-    cstack.pop_back();
-  } else
-    outputMessage("IDERROR\n");
 }
 
 bool Interpreter::lookupFunction(QString funcName, FuncPtr& val) {
@@ -4476,6 +4488,9 @@ bool Interpreter::lookupFunction(QString funcName, FuncPtr& val,
     if (isMFile(ipName()) &&
 	(context->lookupFunction(NestedMangleName(ipDetail(),funcName),val)))
       return true;
+    if (InCLI && isMFile(activeDebugStack().cname) &&
+	(context->lookupFunction(NestedMangleName(activeDebugStack().cname,funcName),val)))
+      return true;
     // Not a nested function of the current scope.  We have to look for nested
     // functions of all parent scopes. Sigh.
     if (context->isCurrentScopeNested()) {
@@ -4487,7 +4502,7 @@ bool Interpreter::lookupFunction(QString funcName, FuncPtr& val,
       }
     }
     // Subfunctions
-    if (isMFile(ipName()) && 
+    if (inMFile() && 
 	(context->lookupFunction(getLocalMangledName(funcName),val)))
       return true;
     // Private functions
@@ -5040,9 +5055,6 @@ Interpreter::Interpreter(Context* aContext) {
   jitcontrol = false;
   stopoverload = false;
   m_skipflag = false;
-  clearStacks();
-  steptrap = 0;
-  stepcurrentline = 0;
   tracetrap = 0;
   tracecurrentline = 0;
   endRef = NULL;
@@ -5055,6 +5067,7 @@ Interpreter::Interpreter(Context* aContext) {
   m_profile = false;
   m_quietlevel = 0;
   m_jit = NULL;
+  pushDebug("base","base");
 }
 
 JIT* Interpreter::JITPointer() {
@@ -5080,9 +5093,20 @@ void Interpreter::setStopOverload(bool flag) {
   stopoverload = flag;
 }
 
+stackentry& Interpreter::activeDebugStack() {
+  if (cstack.isEmpty()) throw Exception("Debug stack is corrupted -- please file a bug report that reproduces this problem!");
+  if (cstack.size() < 2) return cstack[0];
+  return cstack[cstack.size()-2];
+}
+
+const stackentry& Interpreter::activeDebugStack() const {
+  if (cstack.isEmpty()) throw Exception("Debug stack is corrupted -- please file a bug report that reproduces this problem!");
+  if (cstack.size() < 2) return cstack[0];
+  return cstack[cstack.size()-2];
+}
+
 // We want dbstep(n) to cause us to advance n statements and then
 // stop.  we execute statement-->set step trap,
-
 void Interpreter::dbstepStatement(Tree *t) {
   int lines = 1;
   if (t->hasChildren()) {
@@ -5090,19 +5114,15 @@ void Interpreter::dbstepStatement(Tree *t) {
     lines = lval.asInteger();
   }
   // Get the current function
-  if (cstack.size() < 1) throw Exception("cannot dbstep unless inside an M-function");
-  stackentry bp(cstack.back());
+  stackentry &bp(activeDebugStack());
   FuncPtr val;
   if (bp.detail == "base") return;
   if (!lookupFunction(bp.detail,val)) {
     warningMessage(QString("unable to find function ") + bp.detail + " to single step");
     return;
   }
-  cstack.back().steptrap = lines;
-  cstack.back().stepcurrentline = bp.tokid & 0xffff;
-//   dbout << "setting dbstep trap to current line " << 
-//     cstack[cstack.size()-1].stepcurrentline << 
-//     " with wait of " << lines << " lines";
+  bp.steptrap = lines;
+  bp.stepcurrentline = bp.tokid & 0xffff;
 }
 
 void Interpreter::dbtraceStatement(Tree *t) {
@@ -5112,8 +5132,7 @@ void Interpreter::dbtraceStatement(Tree *t) {
     lines = lval.asInteger();
   }
   // Get the current function
-  if (cstack.size() < 1) throw Exception("cannot dbtrace unless inside an M-function");
-  stackentry bp(cstack.back());
+  stackentry &bp(activeDebugStack());
   FuncPtr val;
   if (bp.detail == "base") return;
   if (!lookupFunction(bp.detail,val)) {
@@ -5122,8 +5141,6 @@ void Interpreter::dbtraceStatement(Tree *t) {
   }
   tracetrap = lines;
   tracecurrentline = bp.tokid & 0xffff;
-//   dbout << "setting dbtrace trap to current line " << 
-//     tracecurrentline << " with wait of " << lines << " lines";
 }
 
 static QString EvalPrep(QString line) {
@@ -5229,21 +5246,22 @@ QString Interpreter::getLine(QString prompt) {
 
 // This is a "generic" CLI routine.  The user interface (non-debug)
 // version of this is "docli"
-void Interpreter::evalCLI(bool propogateExceptions) {
+void Interpreter::evalCLI() {
   QString prompt;
   bool rootCLI;
 
-  if ((depth == 0) || (cstack.size() == 0)) {
-    prompt = "--> ";
-    rootCLI = true;
-  } else {
-    prompt = QString("[%1,%2,%3]--> ").arg(cstack.back().detail).arg(cstack.back().tokid & 0xffff).arg(depth);
-    rootCLI = false;
-  }
   while(1) {
+    if ((depth == 0) || (cstack.size() < 2)) {
+      prompt = "--> ";
+      rootCLI = true;
+    } else {
+      stackentry cp(activeDebugStack());
+      prompt = QString("[%1,%2]--> ").arg(cp.detail).arg(cp.tokid & 0xffff);
+      rootCLI = false;
+    }
     if (rootCLI) {
       tracetrap = 0;
-      steptrap = 0;
+      setStepTrap(0);
     }
     if (m_captureState) 
       m_capture += prompt;
@@ -5274,9 +5292,13 @@ void Interpreter::evalCLI(bool propogateExceptions) {
     }
     int debug_stackdepth = cstack.size();
     int scope_stackdepth = context->scopeDepth(); 
-    evaluateString(cmdset,propogateExceptions);
-    while (cstack.size() > debug_stackdepth) popDebug();
-    while (context->scopeDepth() > scope_stackdepth) context->popScope();
+    setInCLI(true);
+    dbdown_executed = false;
+    evaluateString(cmdset,false);
+    if (!dbdown_executed) {
+      while (cstack.size() > debug_stackdepth) popDebug();
+      while (context->scopeDepth() > scope_stackdepth) context->popScope();
+    }
   }
 }
 

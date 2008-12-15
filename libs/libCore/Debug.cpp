@@ -2,6 +2,44 @@
 #include "Interpreter.hpp"
 
 //!
+//@Module DBUP Move Up One Debug Level
+//@@Section DEBUG
+//@@Usage
+//The @|dbup| function moves up one level in the debug
+//hierarchy.  The syntax for the @|dbup| function is
+//@[
+// dbup
+//@]
+//@@Signature
+//sfunction dbup DbUpFunction
+//inputs none
+//outputs none
+//!
+ArrayVector DbUpFunction(int nargout, const ArrayVector& arg, Interpreter *eval) {
+  eval->dbup();
+  return ArrayVector();
+}
+
+//!
+//@Module DBDown Move Down One Debug Level
+//@@Section DEBUG
+//@@Usage
+//The @|dbup| function moves up one level in the debug
+//hierarchy.  The syntax for the @|dbup| function is
+//@[
+// dbup
+//@]
+//@@Signature
+//sfunction dbup DbUpFunction
+//inputs none
+//outputs none
+//!
+ArrayVector DbDownFunction(int nargout, const ArrayVector& arg, Interpreter *eval) {
+  eval->dbdown();
+  return ArrayVector();
+}
+
+//!
 //@Module DBDELETE Delete a Breakpoint
 //@@Section DEBUG
 //@@Usage
