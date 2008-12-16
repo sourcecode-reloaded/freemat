@@ -401,17 +401,11 @@ void Interpreter::doCLI() {
     while (1) {
       int debug_stackdepth = cstack.size();
       int scope_stackdepth = context->scopeDepth(); 
-      outputMessage(QString("DI***********************************************************\n"));
-      stackTrace(0);
-      outputMessage(QString("DI***********************************************************\n"));
       try {
 	evalCLI();
       } catch (InterpreterRetallException) {
       } catch (InterpreterReturnException &e) {
       }
-      outputMessage(QString("DO***********************************************************\n"));
-      stackTrace(0);
-      outputMessage(QString("DO***********************************************************\n"));
       while (cstack.size() > debug_stackdepth) popDebug();
       while (context->scopeDepth() > scope_stackdepth) context->popScope();
     }
@@ -439,6 +433,12 @@ bool Interpreter::inMFile() const {
   return (isMFile(ipName()) || (InCLI && isMFile(activeDebugStack().cname)));
 }
 
+void Interpreter::debugDump() {
+  for (int i=0;i<cstack.size();i++) {
+    qDebug() << "Debug " << i << " " << cstack[i].cname << " " << cstack[i].detail;
+  }
+}
+
 void Interpreter::dbup() {
   // The stack should look like -- 
   // base, foo, keyboard, dbup
@@ -458,9 +458,9 @@ void Interpreter::dbup() {
   if (cstack.size() < 4) return;
   stackentry save_1(cstack.back()); cstack.pop_back();
   stackentry save_2(cstack.back()); cstack.pop_back();
+  bypassed_cstack.push_back(cstack.back()); cstack.pop_back();
   while (context->scopeDepth() > cstack.back().contextnumber)
     context->bypassScope(1);
-  bypassed_cstack.push_back(cstack.back()); cstack.pop_back();
   cstack.push_back(save_2);
   cstack.push_back(save_1);
 }
@@ -469,9 +469,9 @@ void Interpreter::dbdown() {
   if (bypassed_cstack.isEmpty()) return;
   stackentry save_1(cstack.back()); cstack.pop_back();
   stackentry save_2(cstack.back()); cstack.pop_back();
-  while (context->scopeDepth() < bypassed_cstack.back().contextnumber)
-    context->restoreScope(1);
   cstack.push_back(bypassed_cstack.back()); bypassed_cstack.pop_back();
+  while (context->scopeDepth() < cstack.back().contextnumber)
+    context->restoreScope(1);
   cstack.push_back(save_2);
   cstack.push_back(save_1);
   dbdown_executed = true;
@@ -4436,8 +4436,8 @@ void Interpreter::stackTrace(int skiplevels) {
   bool firstline = true;
   for (int i=cstack.size()-1-skiplevels;i>=0;i--) {
     QString cname_trim(TrimExtension(TrimFilename(cstack[i].cname)));
-    //    if (InKeyboard(cstack[i]))
-    //      continue;
+    if (InKeyboard(cstack[i]))
+      continue;
     if (firstline) {
       firstline = false;
     } else 
@@ -4526,10 +4526,7 @@ bool Interpreter::lookupFunction(QString funcName, FuncPtr& val,
       if (anyClasses && ClassResolveFunction(this,args[i],funcName,val))
 	return true;
     }
-    if (context->lookupFunction(funcName,val)) {
-      //      dbout << "Lookup " << QString::fromStdString(funcName);
-      return true;
-    }
+    if (context->lookupFunction(funcName,val)) return true;
     if (passcount == 0)
       rescanPath();
     passcount++;

@@ -154,7 +154,11 @@ public:
     topScope = scopestack.front();
     bottomScope = scopestack.back();
   }
-
+  void debugDump() {
+    for (int i=0;i<scopestack.size();i++) {
+      qDebug() << "Scope " << i << " " << scopestack[i]->getName();
+    }
+  }
   /**
    * Get the pointer to the mutex that protects this context.
    * This mutex only needs to be used when the GUI thread wants
@@ -535,7 +539,6 @@ public:
   }
 
   inline bool lookupFunction(QString funcName, FuncPtr& val) {
-    qDebug() << "Looking up " << funcName;
     FuncPtr* ret = codeTab.findSymbol(funcName);
     if (ret) {
       val = *ret;

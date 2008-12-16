@@ -126,7 +126,7 @@ ArrayVector MFunctionDef::evaluateFunc(Interpreter *walker,
     
   if (!code.tree()->valid()) return outputs;
   context = walker->getContext();
-  context->pushScope(name,nestedFunction);
+  walker->pushScope(name,nestedFunction);
   context->setVariablesAccessed(variablesAccessed);
   context->setLocalVariablesList(returnVals);
   if (workspace) {
@@ -279,7 +279,7 @@ ArrayVector MFunctionDef::evaluateFunc(Interpreter *walker,
 	workspace->insertSymbol(workspaceVars[i],*ptr);
       }
     }
-    context->popScope();
+    walker->popScope();
     return outputs;
   } catch (Exception& e) {
     if (workspace) {
@@ -289,7 +289,6 @@ ArrayVector MFunctionDef::evaluateFunc(Interpreter *walker,
 	workspace->insertSymbol(workspaceVars[i],*ptr);
       }
     }
-    context->popScope();
     throw;
   }
   catch (InterpreterRetallException& e) {
@@ -300,7 +299,6 @@ ArrayVector MFunctionDef::evaluateFunc(Interpreter *walker,
 	workspace->insertSymbol(workspaceVars[i],*ptr);
       }
     }
-    context->popScope();
     throw;
   }
 }
@@ -639,40 +637,32 @@ ArrayVector ImportedFunctionDef::evaluateFunc(Interpreter *walker,
      */
     Context* context;
     context = walker->getContext();
-    context->pushScope("temp");
-    try {
-      for (i=0;i<inputs.size();i++) {
-	if (arguments[i][0] != '&') {
-	  context->insertVariableLocally(arguments[i],inputs[i]);
-	} else {
-	  QString nme(arguments[i]);
-	  nme.remove(0,1);
-	  context->insertVariableLocally(nme,inputs[i]);
-	}
+    walker->pushScope("temp");
+    for (i=0;i<inputs.size();i++) {
+      if (arguments[i][0] != '&') {
+	context->insertVariableLocally(arguments[i],inputs[i]);
+      } else {
+	QString nme(arguments[i]);
+	nme.remove(0,1);
+	context->insertVariableLocally(nme,inputs[i]);
       }
-      /*
-       * Next, evaluate each size check expression
-       */
-      for (i=0;i<inputs.size();i++) {
-	if (sizeCheckExpressions[i].tree()->valid()) {
-	  Array ret(walker->expression(sizeCheckExpressions[i].tree()));
-	  ret = ret.toClass(Int32);
-	  int len = ret.asInteger();
-	  if (len != (int)(inputs[i].length())) {
-	    throw Exception("array input " + arguments[i] + 
-			    " length different from computed bounds" + 
-			    " check length");
-	  }
-	}
-      }
-    } catch (Exception& e) {
-      context->popScope();
-      throw;
-    } catch (InterpreterRetallException& e) {
-      context->popScope();
-      throw;
     }
-    context->popScope();
+    /*
+     * Next, evaluate each size check expression
+     */
+    for (i=0;i<inputs.size();i++) {
+      if (sizeCheckExpressions[i].tree()->valid()) {
+	Array ret(walker->expression(sizeCheckExpressions[i].tree()));
+	ret = ret.toClass(Int32);
+	int len = ret.asInteger();
+	if (len != (int)(inputs[i].length())) {
+	  throw Exception("array input " + arguments[i] + 
+			  " length different from computed bounds" + 
+			  " check length");
+	}
+      }
+    }
+    walker->popScope();
   }
       
   /**

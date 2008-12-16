@@ -358,16 +358,19 @@ public:
   inline int ipContext() const {return cstack.back().tokid;}
   inline int stepTrap() const {return cstack.back().steptrap;}
   inline int stepCurrentLine() const {return cstack.back().stepcurrentline;}
+  inline int contextNumber() const {return cstack.back().contextnumber;}
   inline void setIPName(QString x) {cstack.back().cname = x;}
   inline void setIPDetail(QString x) {cstack.back().detail = x;}
   inline void setIPContext(int x) {cstack.back().tokid = x;}
   inline void setStepTrap(int x) {cstack.back().steptrap = x;}
   inline void setStepCurrentLine(int x) {cstack.back().stepcurrentline = x;}
+  inline void setContextNumber(int x) {cstack.back().contextnumber = x;}
   bool inMFile() const;
   stackentry& activeDebugStack();
   const stackentry& activeDebugStack() const;
   void dbup();
   void dbdown();
+  void debugDump();
   /**
    * SET/GET for the in CLI flag
    */
@@ -494,6 +497,20 @@ public:
    * Pop the debug stack
    */
   inline void popDebug() {if (!cstack.isEmpty()) cstack.pop_back();}
+  /**
+   * Create a new workspace on the scope stack
+   */
+  inline void pushScope(QString name, bool nestflag = false) {
+    context->pushScope(name,nestflag);
+    setContextNumber(context->scopeDepth());
+  }
+  /**
+   * Remove a workspace from the scope stack
+   */
+  inline void popScope() {
+    context->popScope();
+    setContextNumber(context->scopeDepth());
+  }
   /**
    * Step the given number of lines
    */

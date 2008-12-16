@@ -39,12 +39,12 @@ popDebug()
 
 What about exceptions?  So if an error occurs the debug stack will be intact
 
-- stack walking (dbup, dbdown)
+- stack walking (dbup, dbdown) -- fixed
 - stack selection widget
 - docli shows up in stack trace -- ignored
 - t1 --> keyboard --> t2 -- fixed
 - db ops (step, trace, etc) -- fixed
-
+- nargin/nargout --> functions
 
 *******************************************************************************
 
