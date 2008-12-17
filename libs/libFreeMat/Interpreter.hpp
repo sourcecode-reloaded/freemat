@@ -164,14 +164,6 @@ class Interpreter : public QThread {
    */
   QWaitCondition gfxBufferNotEmpty;
   /**
-   * This is the debug stack -- it records the history of the call stack.
-   */
-  QVector<stackentry> cstack;
-  /**
-   * This is where bypassed entries in the debug stack go.
-   */
-  QVector<stackentry> bypassed_cstack;
-  /**
    * A list of breakpoints
    */
   QVector<stackentry> bpStack;
@@ -353,21 +345,7 @@ public:
   /**
    * SET/GET for the instruction pointer
    */
-  inline QString ipName() const {return cstack.back().cname;}
-  inline QString ipDetail() const {return cstack.back().detail;}
-  inline int ipContext() const {return cstack.back().tokid;}
-  inline int stepTrap() const {return cstack.back().steptrap;}
-  inline int stepCurrentLine() const {return cstack.back().stepcurrentline;}
-  inline int contextNumber() const {return cstack.back().contextnumber;}
-  inline void setIPName(QString x) {cstack.back().cname = x;}
-  inline void setIPDetail(QString x) {cstack.back().detail = x;}
-  inline void setIPContext(int x) {cstack.back().tokid = x;}
-  inline void setStepTrap(int x) {cstack.back().steptrap = x;}
-  inline void setStepCurrentLine(int x) {cstack.back().stepcurrentline = x;}
-  inline void setContextNumber(int x) {cstack.back().contextnumber = x;}
   bool inMFile() const;
-  stackentry& activeDebugStack();
-  const stackentry& activeDebugStack() const;
   void dbup();
   void dbdown();
   void debugDump();
@@ -379,12 +357,12 @@ public:
   /**
    * Sample the instruction pointer
    */
-  inline QString sampleInstructionPointer(unsigned &context) const {
+  inline QString sampleInstructionPointer(unsigned &ctxt) const {
     if (!InCLI) {
-      context = ipContext() & 0x0000FFFF; 
-      return ipName();
+      ctxt = context->scopeTokenID() & 0x0000FFFF; 
+      return context->scopeName();
     } else {
-      context = 0;
+      ctxt = 0;
       return "CLI";
     }
   }
@@ -487,30 +465,6 @@ public:
    * Generate a stacktrace
    */
   void stackTrace(int skiplevels=0);
-  /**
-   * Push a function name and detail onto the debug stack
-   */
-  inline void pushDebug(QString fname, QString detail) {
-    cstack.push_back(stackentry(fname,detail,0,0,0,0,context->scopeDepth()));
-  }
-  /**
-   * Pop the debug stack
-   */
-  inline void popDebug() {if (!cstack.isEmpty()) cstack.pop_back();}
-  /**
-   * Create a new workspace on the scope stack
-   */
-  inline void pushScope(QString name, bool nestflag = false) {
-    context->pushScope(name,nestflag);
-    setContextNumber(context->scopeDepth());
-  }
-  /**
-   * Remove a workspace from the scope stack
-   */
-  inline void popScope() {
-    context->popScope();
-    setContextNumber(context->scopeDepth());
-  }
   /**
    * Step the given number of lines
    */

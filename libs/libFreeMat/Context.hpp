@@ -153,6 +153,7 @@ public:
     pushScope("base");
     topScope = scopestack.front();
     bottomScope = scopestack.back();
+    bottomScope->setScopeActive(true);
   }
   void debugDump() {
     for (int i=0;i<scopestack.size();i++) {
@@ -168,7 +169,36 @@ public:
   inline QMutex* getMutex() {
     return &mutex;
   }
-
+  inline bool isScopeActive() const {
+    return bottomScope->isActive();
+  }
+  inline void setScopeActive(bool x) {
+    bottomScope->setActive(x);
+  }
+  inline int scopeStepTrap() const {
+    return bottomScope->stepTrap();
+  }
+  inline void setScopeStepTrap(int x) {
+    bottomScope->setStepTrap(x);
+  }
+  inline int scopeStepCurrentLine() const {
+    return bottomScope->stepCurrentLine();
+  }
+  inline void setScopeStepCurrentLine(int x) {
+    bottomScope->setStepCurrentLine(x);
+  }
+  inline int scopeTokenID() const {
+    return bottomScope->tokenID();
+  }
+  inline void setScopeTokenID(int x) {
+    bottomScope->setTokenID(x);
+  }
+  inline QString scopeDetailString() {
+    return bottomScope->detailString();
+  }
+  inline void setScopeDetailString(QString x) {
+    bottomScope->setDetailString(x);
+  }
   /**
    * Bypass the prescribed number of scopes.  These scopes are
    * placed on the bypassstack.  This effectively makes a different
@@ -205,11 +235,12 @@ public:
   /**
    * Push the given scope onto the bottom of the scope stack.
    */
-  inline void pushScope(QString name, bool nestflag = false) {
+  inline void pushScope(QString name, QString detail = QString(), bool nestflag = false) {
     if (scopestack.size() > 100)
       throw Exception("Allowable stack depth exceeded...");
     scopestack.push_back(new Scope(name,nestflag));
     bottomScope = scopestack.back();
+    bottomScope->setDetailString(detail);
   }
   /**
    * Pop the bottom scope off of the scope stack.  The scope is

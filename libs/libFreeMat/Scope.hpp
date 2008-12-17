@@ -65,6 +65,28 @@ class Scope {
    */
   QString name;
   /**
+   * Detailed information that indicates where the scope is from.
+   */
+  QString detail;
+  /**
+   * The context information (currently executed token ID)
+   */
+  int tokid;
+  /**
+   * The line number for the current step trap (from dbstep)
+   */
+  int steptrap;
+  /**
+   * The current line number from which we are stepping
+   */
+  int stepcurrentline;
+  /**
+   * Flag that indicates if this scope is active (if it is actually
+   * used to store local variables -- for scripts, the corresponding 
+   * scope is not active).
+   */
+  bool active;
+  /**
    * The loop level.  This is used to track the depth of nested
    * loops.
    */
@@ -105,14 +127,42 @@ public:
   /**
    * Construct a scope with the given name.
    */
-  Scope(QString scopeName, bool nested) : mutex(NULL),
-					  refcount(0),
-					  name(scopeName), 
-					  loopLevel(0), 
-					  anyPersistents(false), 
-					  anyGlobals(false),
-					  isNested(nested)  {}
+  Scope(QString scopeName, bool nested) : mutex(NULL), refcount(0),
+					  name(scopeName), loopLevel(0), 
+					  anyPersistents(false), anyGlobals(false),
+					  isNested(nested), tokid(0), steptrap(0), 
+					  stepcurrentline(0), active(true) {}
 
+  inline bool isActive() const {
+    return active;
+  }
+  inline void setActive(bool x) {
+    active = x;
+  }
+  inline int stepTrap() const {
+    return steptrap;
+  }
+  inline void setStepTrap(int x) {
+    steptrap = x;
+  }
+  inline int stepCurrentLine() const {
+    return stepcurrentline;
+  }
+  inline void setStepCurrentLine(int x) {
+    stepcurrentline = x;
+  }
+  inline int tokenID() const {
+    return tokid;
+  }
+  inline void setTokenID(int x) {
+    tokid = x;
+  }
+  inline QString detailString() {
+    return detail;
+  }
+  inline void setDetailString(QString x) {
+    detail = x;
+  }
   inline void setVariablesAccessed(StringVector varList) {
     variablesAccessed = varList;
   }
@@ -340,53 +390,5 @@ public:
 };
 
 typedef Scope* ScopePtr;
-
-#if 0
-class ScopePtr {
-private:
-  Scope* d;
-public:
-  ScopePtr() : d(NULL) {}
-  ~ScopePtr() {
-    if (d) {
-      d->countunlock();
-      if (!d->referenced())
-	delete d;
-    }
-  }
-  ScopePtr(Scope* ptr) {
-    d = ptr;
-    if (d)
-      d->countlock();
-  }
-  ScopePtr(const ScopePtr &copy) {
-    d = copy.d;
-    if (d)
-      d->countlock();
-  }
-  ScopePtr& operator=(const ScopePtr &copy) {
-    if (copy.d == d)
-      return *this;
-    if (d) {
-      d->countunlock();
-      if (!d->referenced()) delete d;
-    }
-    d = copy.d;
-    if (d)
-      d->countlock();
-    return *this;
-  }
-  Scope* operator->() const {
-    return d;
-  }
-  Scope& operator*() const {
-    return *d;
-  }
-  bool operator!() const {
-    return (d == NULL);
-  }
-  operator Scope* () const {return d;}
-};
-#endif
 
 #endif

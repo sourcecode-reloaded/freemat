@@ -126,7 +126,7 @@ ArrayVector MFunctionDef::evaluateFunc(Interpreter *walker,
     
   if (!code.tree()->valid()) return outputs;
   context = walker->getContext();
-  walker->pushScope(name,nestedFunction);
+  context->pushScope(name,fileName,nestedFunction);
   context->setVariablesAccessed(variablesAccessed);
   context->setLocalVariablesList(returnVals);
   if (workspace) {
@@ -279,7 +279,7 @@ ArrayVector MFunctionDef::evaluateFunc(Interpreter *walker,
 	workspace->insertSymbol(workspaceVars[i],*ptr);
       }
     }
-    walker->popScope();
+    //    walker->popScope();
     return outputs;
   } catch (Exception& e) {
     if (workspace) {
@@ -635,9 +635,8 @@ ArrayVector ImportedFunctionDef::evaluateFunc(Interpreter *walker,
      * new context, and insert the defined arguments into the
      * context (much as for an M-function call).
      */
-    Context* context;
-    context = walker->getContext();
-    walker->pushScope("temp");
+    Context* context = walker->getContext();
+    context->pushScope("bounds_check",name);
     for (i=0;i<inputs.size();i++) {
       if (arguments[i][0] != '&') {
 	context->insertVariableLocally(arguments[i],inputs[i]);
@@ -662,7 +661,7 @@ ArrayVector ImportedFunctionDef::evaluateFunc(Interpreter *walker,
 	}
       }
     }
-    walker->popScope();
+    context->popScope();
   }
       
   /**

@@ -223,7 +223,7 @@ void Interpreter::RegisterGfxError(QString msg) {
 ArrayVector Interpreter::doFunction(FuncPtr f, ArrayVector m, 
 				    int narg_out, VariableTable *vtable) {
   CLIDisabler dis(this);
-  pushDebug(f->functionName(),f->detailedName());
+  context->pushScope(f->functionName(),f->detailedName(),false);
   if (f->graphicsFunction) {
     gfxErrorOccured = false;
     QMutexLocker lock(&mutex);
@@ -240,18 +240,18 @@ ArrayVector Interpreter::doFunction(FuncPtr f, ArrayVector m,
       dbout << "Warning! graphics empty on return\r";
     ArrayVector ret(gfx_buffer.front());
     gfx_buffer.erase(gfx_buffer.begin());
-    popDebug();
+    context->popScope();
     return ret;
   } else {
     ArrayVector ret(f->evaluateFunc(this,m,narg_out,vtable));
-    if (stepTrap() >= 1) {
+    if (context->scopeStepTrap() >= 1) {
       tracetrap = 1;
       tracecurrentline = 0;
-      warningMessage("dbstep beyond end of function " + ipDetail() +
+      warningMessage("dbstep beyond end of function " + context->scopeDetailString() +
 		     " -- setting single step mode\n");
-      setStepTrap(0);
+      context->setScopeStepTrap(0);
     }
-    popDebug();
+    context->popScope();
     return ret;
   }
 }
@@ -399,14 +399,12 @@ void Interpreter::doCLI() {
     sendGreeting();
   try {
     while (1) {
-      int debug_stackdepth = cstack.size();
       int scope_stackdepth = context->scopeDepth(); 
       try {
 	evalCLI();
       } catch (InterpreterRetallException) {
       } catch (InterpreterReturnException &e) {
       }
-      while (cstack.size() > debug_stackdepth) popDebug();
       while (context->scopeDepth() > scope_stackdepth) context->popScope();
     }
   } catch (InterpreterQuitException &e) {
@@ -430,13 +428,10 @@ void Interpreter::sendGreeting() {
 }
 
 bool Interpreter::inMFile() const {
-  return (isMFile(ipName()) || (InCLI && isMFile(activeDebugStack().cname)));
+  return (isMFile(context->scopeName()));
 }
 
 void Interpreter::debugDump() {
-  for (int i=0;i<cstack.size();i++) {
-    qDebug() << "Debug " << i << " " << cstack[i].cname << " " << cstack[i].detail;
-  }
 }
 
 void Interpreter::dbup() {
@@ -455,34 +450,18 @@ void Interpreter::dbup() {
   // enough records on the context stack so as to make it
   // match.
   //
-  if (cstack.size() < 4) return;
-  stackentry save_1(cstack.back()); cstack.pop_back();
-  stackentry save_2(cstack.back()); cstack.pop_back();
-  bypassed_cstack.push_back(cstack.back()); cstack.pop_back();
-  while (context->scopeDepth() > cstack.back().contextnumber)
-    context->bypassScope(1);
-  cstack.push_back(save_2);
-  cstack.push_back(save_1);
+  context->bypassScope(1);
 }
 
 void Interpreter::dbdown() {
-  if (bypassed_cstack.isEmpty()) return;
-  stackentry save_1(cstack.back()); cstack.pop_back();
-  stackentry save_2(cstack.back()); cstack.pop_back();
-  cstack.push_back(bypassed_cstack.back()); bypassed_cstack.pop_back();
-  while (context->scopeDepth() < cstack.back().contextnumber)
-    context->restoreScope(1);
-  cstack.push_back(save_2);
-  cstack.push_back(save_1);
+  context->restoreScope(1);
   dbdown_executed = true;
 }
 
 QString Interpreter::getLocalMangledName(QString fname) {
   QString ret;
-  if (isMFile(ipName()))
-    ret = LocalMangleName(ipDetail(),fname);
-  else if (InCLI && isMFile(activeDebugStack().cname))
-    ret = LocalMangleName(activeDebugStack().detail,fname);
+  if (isMFile(context->scopeName()))
+    ret = LocalMangleName(context->scopeDetailString(),fname);
   else
     ret = fname;
   return ret;
@@ -490,8 +469,8 @@ QString Interpreter::getLocalMangledName(QString fname) {
 
 QString Interpreter::getPrivateMangledName(QString fname) {
   QString ret;
-  if (isMFile(ipName())) 
-    ret = PrivateMangleName(ipName(),fname);
+  if (isMFile(context->scopeName())) 
+    ret = PrivateMangleName(context->scopeName(),fname);
   else {
     ret = QDir::currentPath() + 
       QString(QDir::separator()) + 
@@ -501,18 +480,19 @@ QString Interpreter::getPrivateMangledName(QString fname) {
 }
 
 QString Interpreter::getMFileName() {
-  if (isMFile(ipName())) 
-    return TrimFilename(TrimExtension(ipName()));
-  for (int i=cstack.size()-1;i>=0;i--)
-    if (isMFile(cstack[i].cname)) 
-      return TrimFilename(TrimExtension(cstack[i].cname));
+  if (isMFile(context->scopeName())) 
+    return TrimFilename(TrimExtension(context->scopeName()));
+  // TESTME
+  //   for (int i=cstack.size()-1;i>=0;i--)
+  //     if (isMFile(cstack[i].cname)) 
+  //       return TrimFilename(TrimExtension(cstack[i].cname));
   return QString("");
 }
 
 // called by editor
 QString Interpreter::getInstructionPointerFileName() {
-  if (isMFile(cstack.back().cname)) 
-    return cstack.back().cname;
+  if (isMFile(context->scopeName())) 
+    return context->scopeName();
   return QString("");
 }
 
@@ -775,9 +755,9 @@ Array Interpreter::ShortCutOr(Tree * t) {
 }
 
 Array Interpreter::ShortCutAnd(Tree *t) {
-  setIPContext(t->context());
+  context->setScopeTokenID(t->context());
   Array a(expression(t->first()));
-  setIPContext(t->context());
+  context->setScopeTokenID(t->context());
   Array retval;
   if (!a.isScalar()) {
     retval = DoBinaryOperator(t,And,"and");
@@ -1267,11 +1247,11 @@ void Interpreter::tryStatement(Tree *t) {
   intryblock = true;
   // Get the state of the IDnum stack and the
   // contextStack and the cnameStack
-  int stackdepth = cstack.size();
+  int stackdepth = context->scopeDepth();
   try {
     block(t->first());
   } catch (Exception &e) {
-    while (cstack.size() > stackdepth) popDebug();
+    while (context->scopeDepth() > stackdepth) context->popScope();
     if (t->numChildren()>1) {
       autostop = autostop_save;
       block(t->second()->first());
@@ -2436,8 +2416,9 @@ void Interpreter::persistentStatement(Tree *t) {
 
 void Interpreter::doDebugCycle() {
   depth++;
-  pushDebug("keyboard","keyboard");
-  int debug_stackdepth = cstack.size();
+  int debug_stackdepth = context->scopeDepth();
+  context->pushScope("keyboard","keyboard");
+  context->setScopeActive(false);
   try {
     evalCLI();
   } catch (InterpreterContinueException& e) {
@@ -2448,8 +2429,7 @@ void Interpreter::doDebugCycle() {
     throw;
   }
   // Reset the debug stack
-  while (cstack.size() < debug_stackdepth) dbdown();
-  popDebug();
+  while (context->scopeDepth() < debug_stackdepth) context->popScope();
   depth--;
 }
 
@@ -3161,23 +3141,23 @@ void Interpreter::assignment(Tree *var, bool printIt, Array &b) {
 
 void Interpreter::processBreakpoints(Tree *t) {
   for (int i=0;i<bpStack.size();i++) {
-    if ((bpStack[i].cname == ipName()) && 
-	((ipContext() & 0xffff) == bpStack[i].tokid)) {
+    if ((bpStack[i].cname == context->scopeName()) && 
+	((context->scopeTokenID() & 0xffff) == bpStack[i].tokid)) {
       doDebugCycle();
-      setIPContext(t->context());
+      context->setScopeTokenID(t->context());
     }
   }
   if (tracetrap > 0) {
-    if ((ipContext() & 0xffff) != tracecurrentline) {
+    if ((context->scopeTokenID() & 0xffff) != tracecurrentline) {
       tracetrap--;
       if (tracetrap == 0)
 	doDebugCycle();
     }
   }
-  if (stepTrap() > 0) {
-    if (((ipContext()) & 0xffff) != stepCurrentLine()) {
-      setStepTrap(stepTrap()-1);
-      if (stepTrap() == 0)
+  if (context->scopeStepTrap() > 0) {
+    if (((context->scopeTokenID()) & 0xffff) != context->scopeStepCurrentLine()) {
+      context->setScopeStepTrap(context->scopeStepTrap()-1);
+      if (context->scopeStepTrap() == 0)
 	doDebugCycle();
     }
   }
@@ -3185,7 +3165,7 @@ void Interpreter::processBreakpoints(Tree *t) {
 
 void Interpreter::statementType(Tree *t, bool printIt) {
   // check the debug flag
-  setIPContext(t->context());
+  context->setScopeTokenID(t->context());
   processBreakpoints(t);
   switch(t->token()) {
   case '=': 
@@ -4260,17 +4240,18 @@ void Interpreter::functionExpression(Tree *t,
       throw Exception(QString("Cannot use arguments in a call to a script."));
     if ((narg_out > 0) && !outputOptional)
       throw Exception(QString("Cannot assign outputs in a call to a script."));
-    pushDebug(((MFunctionDef*)funcDef)->fileName,
-	      ((MFunctionDef*)funcDef)->name);
+    context->pushScope(((MFunctionDef*)funcDef)->name,
+		       ((MFunctionDef*)funcDef)->fileName,false);
+    context->setScopeActive(false);
     block(((MFunctionDef*)funcDef)->code.tree());
-    if (stepTrap() >= 1) {
+    if (context->scopeStepTrap() >= 1) {
       tracetrap = 1;
       tracecurrentline = 0;
-      warningMessage("dbstep beyond end of script " + ipDetail() +
+      warningMessage("dbstep beyond end of script " + context->scopeDetailString() +
 		     " -- setting single step mode\n");
-      setStepTrap(0);
+      context->setScopeStepTrap(0);
     }
-    popDebug();
+    context->popScope();
   } else {
     // We can now adjust the keywords (because we know the argument list)
     // Apply keyword mapping
@@ -4402,10 +4383,9 @@ bool Interpreter::isBPSet(QString fname, int lineNumber) {
 
 // called by editor
 bool Interpreter::isInstructionPointer(QString fname, int lineNumber) {
-  stackentry bp(activeDebugStack());
-  return ((fname == bp.cname) &&
-	  ((lineNumber == (bp.tokid & 0xffff)) || 
-	   ((lineNumber == 1) && ((bp.tokid & 0xffff) == 0))));
+  return ((fname == context->scopeName()) &&
+	  ((lineNumber == (context->scopeTokenID() & 0xffff)) || 
+	   ((lineNumber == 1) && ((context->scopeTokenID() & 0xffff) == 0))));
 }
 
 void Interpreter::listBreakpoints() {
@@ -4434,28 +4414,29 @@ static inline bool InKeyboard(const stackentry& p) {
 
 void Interpreter::stackTrace(int skiplevels) {
   bool firstline = true;
-  for (int i=cstack.size()-1-skiplevels;i>=0;i--) {
-    QString cname_trim(TrimExtension(TrimFilename(cstack[i].cname)));
-    if (InKeyboard(cstack[i]))
-      continue;
+  int depth = context->scopeDepth();
+  for (int i=0;i<depth;i++) {
+    //    if (InKeyboard(cstack[i]))   continue;
     if (firstline) {
       firstline = false;
     } else 
       outputMessage(QString("    "));
-    outputMessage(QString("In ") + cstack[i].cname + "("
-		  + cstack[i].detail + ")");
-    int line = int(cstack[i].tokid & 0x0000FFFF);
+    outputMessage(QString("In ") + context->scopeName() + "("
+		  + context->scopeDetailString() + ")");
+    int line = int(context->scopeTokenID() & 0x0000FFFF);
     if (line > 0)
       outputMessage(QString(" at line " +
-			    QString().setNum(int(cstack[i].tokid & 0x0000FFFF))));
+			    QString().setNum(int(context->scopeTokenID() & 0x0000FFFF))));
     outputMessage("\r\n");
+    context->bypassScope(1);
   }
+  context->restoreScope(depth);
 }
 
 bool Interpreter::inMethodCall(QString classname) {
-  if (ipDetail().isEmpty()) return false;
-  if (ipDetail()[0] != '@') return false;
-  return (ipDetail().mid(1,classname.size()) == classname);
+  if (context->scopeDetailString().isEmpty()) return false;
+  if (context->scopeDetailString()[0] != '@') return false;
+  return (context->scopeDetailString().mid(1,classname.size()) == classname);
 }
 
 bool Interpreter::lookupFunction(QString funcName, FuncPtr& val) {
@@ -4485,16 +4466,16 @@ bool Interpreter::lookupFunction(QString funcName, FuncPtr& val,
     // This is the order for function dispatch according to the Matlab manual
     // Nested functions - not explicitly listed in the Matlab manual, but 
     // I figure they have the highest priority in the current scope.
-    if (isMFile(ipName()) &&
-	(context->lookupFunction(NestedMangleName(ipDetail(),funcName),val)))
+    if (isMFile(context->scopeName()) &&
+	(context->lookupFunction(NestedMangleName(context->scopeDetailString(),funcName),val)))
       return true;
-    if (InCLI && isMFile(activeDebugStack().cname) &&
-	(context->lookupFunction(NestedMangleName(activeDebugStack().cname,funcName),val)))
+    //    if (InCLI && isMFile(activeDebugStack().cname) &&
+    //	(context->lookupFunction(NestedMangleName(activeDebugStack().cname,funcName),val)))
       return true;
     // Not a nested function of the current scope.  We have to look for nested
     // functions of all parent scopes. Sigh.
     if (context->isCurrentScopeNested()) {
-      QString basename = ipDetail();
+      QString basename = context->scopeDetailString();
       while (!basename.isEmpty()) {
 	if (context->lookupFunction(NestedMangleName(basename,funcName),val))
 	  return true;
@@ -5064,7 +5045,7 @@ Interpreter::Interpreter(Context* aContext) {
   m_profile = false;
   m_quietlevel = 0;
   m_jit = NULL;
-  pushDebug("base","base");
+  context->pushScope("base","base",false);
 }
 
 JIT* Interpreter::JITPointer() {
@@ -5090,17 +5071,17 @@ void Interpreter::setStopOverload(bool flag) {
   stopoverload = flag;
 }
 
-stackentry& Interpreter::activeDebugStack() {
-  if (cstack.isEmpty()) throw Exception("Debug stack is corrupted -- please file a bug report that reproduces this problem!");
-  if (cstack.size() < 2) return cstack[0];
-  return cstack[cstack.size()-2];
-}
+// stackentry& Interpreter::activeDebugStack() {
+//   if (cstack.isEmpty()) throw Exception("Debug stack is corrupted -- please file a bug report that reproduces this problem!");
+//   if (cstack.size() < 2) return cstack[0];
+//   return cstack[cstack.size()-2];
+// }
 
-const stackentry& Interpreter::activeDebugStack() const {
-  if (cstack.isEmpty()) throw Exception("Debug stack is corrupted -- please file a bug report that reproduces this problem!");
-  if (cstack.size() < 2) return cstack[0];
-  return cstack[cstack.size()-2];
-}
+// const stackentry& Interpreter::activeDebugStack() const {
+//   if (cstack.isEmpty()) throw Exception("Debug stack is corrupted -- please file a bug report that reproduces this problem!");
+//   if (cstack.size() < 2) return cstack[0];
+//   return cstack[cstack.size()-2];
+// }
 
 // We want dbstep(n) to cause us to advance n statements and then
 // stop.  we execute statement-->set step trap,
@@ -5111,15 +5092,14 @@ void Interpreter::dbstepStatement(Tree *t) {
     lines = lval.asInteger();
   }
   // Get the current function
-  stackentry &bp(activeDebugStack());
   FuncPtr val;
-  if (bp.detail == "base") return;
-  if (!lookupFunction(bp.detail,val)) {
-    warningMessage(QString("unable to find function ") + bp.detail + " to single step");
+  if (context->scopeName() == "base") return;
+  if (!lookupFunction(context->scopeDetailString(),val)) {
+    warningMessage(QString("unable to find function ") + context->scopeDetailString() + " to single step");
     return;
   }
-  bp.steptrap = lines;
-  bp.stepcurrentline = bp.tokid & 0xffff;
+  context->setScopeStepTrap(lines);
+  context->setScopeStepCurrentLine(context->scopeTokenID() & 0xffff);
 }
 
 void Interpreter::dbtraceStatement(Tree *t) {
@@ -5129,15 +5109,14 @@ void Interpreter::dbtraceStatement(Tree *t) {
     lines = lval.asInteger();
   }
   // Get the current function
-  stackentry &bp(activeDebugStack());
   FuncPtr val;
-  if (bp.detail == "base") return;
-  if (!lookupFunction(bp.detail,val)) {
-    warningMessage(QString("unable to find function ") + bp.detail + " to single step");
+  if (context->scopeDetailString() == "base") return;
+  if (!lookupFunction(context->scopeDetailString(),val)) {
+    warningMessage(QString("unable to find function ") + context->scopeDetailString() + " to single step");
     return;
   }
   tracetrap = lines;
-  tracecurrentline = bp.tokid & 0xffff;
+  tracecurrentline = context->scopeTokenID() & 0xffff;
 }
 
 static QString EvalPrep(QString line) {
@@ -5248,17 +5227,16 @@ void Interpreter::evalCLI() {
   bool rootCLI;
 
   while(1) {
-    if ((depth == 0) || (cstack.size() < 2)) {
+    if ((depth == 0) || (context->scopeDepth() < 2)) {
       prompt = "--> ";
       rootCLI = true;
     } else {
-      stackentry cp(activeDebugStack());
-      prompt = QString("[%1,%2]--> ").arg(cp.detail).arg(cp.tokid & 0xffff);
+      prompt = QString("[%1,%2]--> ").arg(context->scopeName()).arg(context->scopeTokenID() & 0xffff);
       rootCLI = false;
     }
     if (rootCLI) {
       tracetrap = 0;
-      setStepTrap(0);
+      context->setScopeStepTrap(0);
     }
     if (m_captureState) 
       m_capture += prompt;
@@ -5287,13 +5265,11 @@ void Interpreter::evalCLI() {
       m_interrupt = false;
       continue;
     }
-    int debug_stackdepth = cstack.size();
     int scope_stackdepth = context->scopeDepth(); 
     setInCLI(true);
     dbdown_executed = false;
     evaluateString(cmdset,false);
     if (!dbdown_executed) {
-      while (cstack.size() > debug_stackdepth) popDebug();
       while (context->scopeDepth() > scope_stackdepth) context->popScope();
     }
   }

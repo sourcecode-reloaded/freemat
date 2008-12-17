@@ -64,7 +64,7 @@ ArrayVector AnonFuncSubsrefFunction(int nargout, const ArrayVector& arg, Interpr
   const Array &var(LOOKUP(arg[0],"workspace"));
   const StructArray &sp(var.constStructPtr());
   Context *context = eval->getContext();
-  eval->pushScope("anonymous");
+  context->pushScope("anonymous");
   for (int i=0;i<sp.fieldCount();i++)
     context->insertVariableLocally(sp.fieldName(i),sp[i].get(1));
   // Retrieve the arguments...
@@ -91,7 +91,7 @@ ArrayVector AnonFuncSubsrefFunction(int nargout, const ArrayVector& arg, Interpr
   } catch (InterpreterContinueException& ) {
   } catch (InterpreterReturnException& ) {
   }
-  eval->popScope();
+  context->popScope();
   return outputs;
 }
 
@@ -105,7 +105,8 @@ ArrayVector AnonFuncFevalFunction(int nargout, const ArrayVector& arg, Interpret
   const Array &var(LOOKUP(arg[0],"workspace"));
   const StructArray &sp(var.constStructPtr());
   Context *context = eval->getContext();
-  eval->pushScope("anonymous");
+  context->pushScope("anonymous");
+  context->setScopeDetailString(LOOKUP(arg[0],"expr").asString());
   for (int i=0;i<sp.fieldCount();i++)
     context->insertVariableLocally(sp.fieldName(i),sp[i].get(1));
   // Assign the arguments to internal variables.
@@ -122,7 +123,7 @@ ArrayVector AnonFuncFevalFunction(int nargout, const ArrayVector& arg, Interpret
   } catch (InterpreterContinueException& e) {
   } catch (InterpreterReturnException& e) {
   }
-  eval->popScope();
+  context->popScope();
   return outputs;
 }
 
