@@ -19,7 +19,7 @@ be done in the interpreter itself? -- done
 - feval & debug -- done
 - debug & synt error on CLI --> need to fix -- done
 - InCLI used for disabling dbauto, turning off stacktrace on error -- done
-
+- t1 --> keyboard --> t2
 -- Should get rid of the notion of ip vs stack -- just merge them together -- done
 
 

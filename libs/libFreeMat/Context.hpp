@@ -153,7 +153,7 @@ public:
     pushScope("base");
     topScope = scopestack.front();
     bottomScope = scopestack.back();
-    bottomScope->setScopeActive(true);
+    bottomScope->setActive(true);
   }
   void debugDump() {
     for (int i=0;i<scopestack.size();i++) {
@@ -206,21 +206,27 @@ public:
    * a count of -1 means all scopes are bypassed (except the base scope)
    */
   inline void bypassScope(int count) {
-    if (count < 0)
-      count = scopestack.size();
-    while ((count > 0) && (scopestack.back()->getName() != "base")) {
+    if (count < 0) count = scopestack.size();
+    for (int i=0;i<count;i++) {
       bypassstack.push_back(scopestack.back());
       scopestack.pop_back();
-      count--;
     }
-    bottomScope = scopestack.back();
+    if (!scopestack.isEmpty()) {
+      topScope = scopestack.front();
+      bottomScope = scopestack.back();
+    } else {
+      topScope = bottomScope = NULL;
+    }
   }
   inline void restoreScope(int count) {
     for (int i=0;i<count;i++) {
       scopestack.push_back(bypassstack.back());
       bypassstack.pop_back();
     }
-    bottomScope = scopestack.back();
+    if (!scopestack.isEmpty()) {
+      topScope = scopestack.front();
+      bottomScope = scopestack.back();
+    }
   }
   /**
    * Every call to bypassScope should be matched by a call to 
@@ -350,6 +356,7 @@ public:
    * Insert a function definition into the code table.
    */
   inline void insertFunction(FuncPtr f, bool temporary) {
+    qDebug() << "Insert Function " << f->name << " temp " << temporary;
     codeTab.insertSymbol(f->name,f);
     if (temporary)
       tempFunctions.push_back(f->name);
@@ -570,6 +577,7 @@ public:
   }
 
   inline bool lookupFunction(QString funcName, FuncPtr& val) {
+    qDebug() << "Lookup Function " << funcName;
     FuncPtr* ret = codeTab.findSymbol(funcName);
     if (ret) {
       val = *ret;

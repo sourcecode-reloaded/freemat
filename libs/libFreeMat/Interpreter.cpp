@@ -4471,7 +4471,7 @@ bool Interpreter::lookupFunction(QString funcName, FuncPtr& val,
       return true;
     //    if (InCLI && isMFile(activeDebugStack().cname) &&
     //	(context->lookupFunction(NestedMangleName(activeDebugStack().cname,funcName),val)))
-      return true;
+    //      return true;
     // Not a nested function of the current scope.  We have to look for nested
     // functions of all parent scopes. Sigh.
     if (context->isCurrentScopeNested()) {
