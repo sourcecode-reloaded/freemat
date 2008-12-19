@@ -188,6 +188,9 @@ public:
   inline bool isnested() {
     return isNested; 
   }
+  inline void setNestingFlag(bool x) {
+    isNested = x;
+  }
   inline bool nests(QString peerName) {
     // Nesting requires that our peer have a strictly more 
     // qualified (longer) name, and that our name is a prefix

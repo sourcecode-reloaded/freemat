@@ -126,7 +126,7 @@ ArrayVector MFunctionDef::evaluateFunc(Interpreter *walker,
     
   if (!code.tree()->valid()) return outputs;
   context = walker->getContext();
-  context->pushScope(name,fileName,nestedFunction);
+  context->setScopeNesting(nestedFunction);
   context->setVariablesAccessed(variablesAccessed);
   context->setLocalVariablesList(returnVals);
   if (workspace) {

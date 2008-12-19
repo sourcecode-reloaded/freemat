@@ -428,7 +428,7 @@ void Interpreter::sendGreeting() {
 }
 
 bool Interpreter::inMFile() const {
-  return (isMFile(context->scopeName()));
+  return (isMFile(context->scopeName()) || (InCLI && isMFile(context->activeScopeName())));
 }
 
 void Interpreter::debugDump() {
@@ -462,6 +462,8 @@ QString Interpreter::getLocalMangledName(QString fname) {
   QString ret;
   if (isMFile(context->scopeName()))
     ret = LocalMangleName(context->scopeDetailString(),fname);
+  else if (InCLI && isMFile(context->activeScopeName()))
+    ret = LocalMangleName(context->activeScopeDetailString(),fname);
   else
     ret = fname;
   return ret;
@@ -4240,8 +4242,8 @@ void Interpreter::functionExpression(Tree *t,
       throw Exception(QString("Cannot use arguments in a call to a script."));
     if ((narg_out > 0) && !outputOptional)
       throw Exception(QString("Cannot assign outputs in a call to a script."));
-    context->pushScope(((MFunctionDef*)funcDef)->name,
-		       ((MFunctionDef*)funcDef)->fileName,false);
+    context->pushScope(((MFunctionDef*)funcDef)->fileName,
+		       ((MFunctionDef*)funcDef)->name,false);
     context->setScopeActive(false);
     block(((MFunctionDef*)funcDef)->code.tree());
     if (context->scopeStepTrap() >= 1) {
@@ -4469,9 +4471,9 @@ bool Interpreter::lookupFunction(QString funcName, FuncPtr& val,
     if (isMFile(context->scopeName()) &&
 	(context->lookupFunction(NestedMangleName(context->scopeDetailString(),funcName),val)))
       return true;
-    //    if (InCLI && isMFile(activeDebugStack().cname) &&
-    //	(context->lookupFunction(NestedMangleName(activeDebugStack().cname,funcName),val)))
-    //      return true;
+    if (InCLI && isMFile(context->activeScopeName()) &&
+    	(context->lookupFunction(NestedMangleName(context->activeScopeDetailString(),funcName),val)))
+      return true;
     // Not a nested function of the current scope.  We have to look for nested
     // functions of all parent scopes. Sigh.
     if (context->isCurrentScopeNested()) {

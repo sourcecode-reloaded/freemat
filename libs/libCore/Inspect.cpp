@@ -98,6 +98,15 @@ ArrayVector EndFunction(int nargout, const ArrayVector& arg) {
 //!
 ArrayVector WhoFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   StringVector names;
+  Context *context = eval->getContext();
+  // Bypass our context (the who(who) one)
+  context->bypassScope(1);
+  // Search upwards until we find an active scope
+  int bypasscount = 0;
+  while (!context->isScopeActive()) {
+    bypasscount++;
+    context->bypassScope(1);
+  }
   if (arg.size() == 0)
     names = eval->getContext()->listAllVariables();
   else
@@ -132,6 +141,7 @@ ArrayVector WhoFunction(int nargout, const ArrayVector& arg, Interpreter* eval) 
     }
     eval->outputMessage("\n");
   }
+  context->restoreScope(bypasscount+1);
   return ArrayVector();
 }
 
@@ -169,6 +179,15 @@ ArrayVector WhoFunction(int nargout, const ArrayVector& arg, Interpreter* eval) 
 //!
 ArrayVector WhosFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   StringVector names;
+  Context *context = eval->getContext();
+  // Bypass our context (the who(who) one)
+  context->bypassScope(1);
+  // Search upwards until we find an active scope
+  int bypasscount = 0;
+  while (!context->isScopeActive()) {
+    bypasscount++;
+    context->bypassScope(1);
+  }
   if (arg.size() == 0)
     names = eval->getContext()->listAllVariables();
   else
@@ -205,6 +224,7 @@ ArrayVector WhosFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
     }
     eval->outputMessage("\n");
   }
+  context->restoreScope(bypasscount+1);
   return ArrayVector();
 }
 

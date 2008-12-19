@@ -136,7 +136,12 @@ class Context {
    */
   QMutex mutex;
   /**
-   * Pointer to current scope
+   * Pointer to current scope - must be an active scope -- 
+   * inactive scopes are used for debug tracking only
+   */
+  ScopePtr activeScope;
+  /**
+   * Pointer to the bottom scope
    */
   ScopePtr bottomScope;
   /**
@@ -154,6 +159,7 @@ public:
     topScope = scopestack.front();
     bottomScope = scopestack.back();
     bottomScope->setActive(true);
+    activeScope = lastActiveScope();
   }
   void debugDump() {
     for (int i=0;i<scopestack.size();i++) {
@@ -174,6 +180,7 @@ public:
   }
   inline void setScopeActive(bool x) {
     bottomScope->setActive(x);
+    activeScope = lastActiveScope();    
   }
   inline int scopeStepTrap() const {
     return bottomScope->stepTrap();
@@ -214,8 +221,9 @@ public:
     if (!scopestack.isEmpty()) {
       topScope = scopestack.front();
       bottomScope = scopestack.back();
+      activeScope = lastActiveScope();
     } else {
-      topScope = bottomScope = NULL;
+      topScope = bottomScope = activeScope = NULL;
     }
   }
   inline void restoreScope(int count) {
@@ -226,6 +234,7 @@ public:
     if (!scopestack.isEmpty()) {
       topScope = scopestack.front();
       bottomScope = scopestack.back();
+      activeScope = lastActiveScope();
     }
   }
   /**
@@ -237,6 +246,12 @@ public:
       scopestack.push_back(bypassstack[bypassstack.size()-1-i]);
     bypassstack.clear();
     bottomScope = scopestack.back();
+    activeScope = lastActiveScope();
+  }
+  inline ScopePtr lastActiveScope() {
+    for (int i=scopestack.size()-1;i>=0;i--)
+      if (scopestack[i]->isActive()) return scopestack[i];
+    return scopestack.front();
   }
   /**
    * Push the given scope onto the bottom of the scope stack.
@@ -244,9 +259,11 @@ public:
   inline void pushScope(QString name, QString detail = QString(), bool nestflag = false) {
     if (scopestack.size() > 100)
       throw Exception("Allowable stack depth exceeded...");
-    scopestack.push_back(new Scope(name,nestflag));
-    bottomScope = scopestack.back();
-    bottomScope->setDetailString(detail);
+    Scope *t = new Scope(name,nestflag);
+    t->setDetailString(detail);
+    scopestack.push_back(t);
+    bottomScope = t;
+    activeScope = lastActiveScope();
   }
   /**
    * Pop the bottom scope off of the scope stack.  The scope is
@@ -259,6 +276,7 @@ public:
     scopestack.pop_back();
     delete bottomScope;
     bottomScope = scopestack.back();
+    activeScope = lastActiveScope();    
   }
   inline int scopeDepth() {
     return scopestack.size();
@@ -279,7 +297,7 @@ public:
       mapName = varName;
       active = topScope;
     } else {
-      bottomScope->insertVariable(varName,var);
+      activeScope->insertVariable(varName,var);
       return;
     }
     active->insertVariable(mapName,var);
@@ -290,7 +308,7 @@ public:
    * global list.
    */
   inline void insertVariableLocally(QString varName, const Array& var) {
-    bottomScope->insertVariable(varName,var);
+    activeScope->insertVariable(varName,var);
   }
   /**
    * Return a pointer to the given variable.  The search
@@ -318,11 +336,14 @@ public:
       active = topScope;
       global = true;
     } else {
-      Array *dp = bottomScope->lookupVariable(varName);
-      if (!dp && bottomScope->isnested()) {
+      Array *dp = activeScope->lookupVariable(varName);
+      if (!dp && activeScope->isnested()) {
 	// If the variable is not defined in the current scope,
 	// loop up through the scope stack, checking for nested
 	// scopes that may have the variable defined.
+	//
+	// FIXME
+	//
 	int i=scopestack.size()-2;
 	while ((!dp) && (i>=0) && scopestack[i]->nests(scopestack[i+1]->getName())) {
 	  dp = scopestack[i]->lookupVariable(varName);
@@ -331,26 +352,26 @@ public:
 	if (dp) 
 	  return (ArrayReference(dp,false,scopestack[i]));
 	else 
-	  return (ArrayReference(dp,false,bottomScope));
+	  return (ArrayReference(dp,false,activeScope));
       } else 
-	return (ArrayReference(dp,false,bottomScope));
+	return (ArrayReference(dp,false,activeScope));
     }
     return (ArrayReference(active->lookupVariable(mapName),global,active));
   }
   inline bool variableLocalToCurrentScope(QString varName) {
-    return bottomScope->variableLocal(varName);
+    return activeScope->variableLocal(varName);
   }
   inline void setVariablesAccessed(StringVector va) {
-    bottomScope->setVariablesAccessed(va);
+    activeScope->setVariablesAccessed(va);
   }
   inline void setLocalVariablesList(StringVector rv) {
-    bottomScope->setLocalVariables(rv);
+    activeScope->setLocalVariables(rv);
   }
   /**
    * Look for a variable, but only locally.
    */
   inline Array* lookupVariableLocally(QString varName) {
-    return bottomScope->lookupVariable(varName);
+    return activeScope->lookupVariable(varName);
   }
   /**
    * Insert a function definition into the code table.
@@ -551,21 +572,21 @@ public:
   }
 
   inline StringVector listAllVariables() {
-    return bottomScope->listAllVariables();
+    return activeScope->listAllVariables();
   }
 
   inline void clearGlobalVariableList() {
     topScope->clearGlobalVariableList();
-    bottomScope->clearGlobalVariableList();
+    activeScope->clearGlobalVariableList();
   }
 
   inline void clearPersistentVariableList() {
     topScope->clearPersistentVariableList();
-    bottomScope->clearPersistentVariableList();
+    activeScope->clearPersistentVariableList();
   }
 
   inline StringVector getCompletions(const QString& prefix) {
-    StringVector local_completions = bottomScope->getCompletions(prefix);
+    StringVector local_completions = activeScope->getCompletions(prefix);
     StringVector global_completions = topScope->getCompletions(prefix);
     StringVector code_completions = codeTab.getCompletions(prefix);
     StringVector completions(local_completions);
@@ -597,10 +618,10 @@ public:
    */
   inline void addPersistentVariable(QString var) {
     // Delete local variables with this name
-    bottomScope->deleteVariable(var);
+    activeScope->deleteVariable(var);
     // Delete global variables with this name
     //  topScope->deleteVariable(var);
-    bottomScope->addPersistentVariablePointer(var);
+    activeScope->addPersistentVariablePointer(var);
   }
   /**
    * Add a variable name into the global variable list of the current
@@ -609,11 +630,11 @@ public:
    */
   inline void addGlobalVariable(QString var) {
     // Delete local variables with this name
-    bottomScope->deleteVariable(var);
+    activeScope->deleteVariable(var);
     // Delete global persistent variables with this name
-    topScope->deleteVariable(bottomScope->getMangledName(var));
+    topScope->deleteVariable(activeScope->getMangledName(var));
     // Add a point in the local scope to the global variable
-    bottomScope->addGlobalVariablePointer(var);
+    activeScope->addGlobalVariablePointer(var);
   }
   inline void deleteGlobalVariable(QString var) {
     topScope->deleteVariable(var);
@@ -625,58 +646,67 @@ public:
   inline void deleteVariable(QString var) {
     if (isVariableGlobal(var)) {
       topScope->deleteVariable(var);
-      bottomScope->deleteGlobalVariablePointer(var);
+      activeScope->deleteGlobalVariablePointer(var);
       return;
     }
     if (isVariablePersistent(var)) {
-      topScope->deleteVariable(bottomScope->getMangledName(var));
-      bottomScope->deletePersistentVariablePointer(var);
+      topScope->deleteVariable(activeScope->getMangledName(var));
+      activeScope->deletePersistentVariablePointer(var);
       return;
     }
-    bottomScope->deleteVariable(var);
+    activeScope->deleteVariable(var);
   }
   /**
    * Increment the loop depth counter in the local scope.
    */
   inline void enterLoop() {
-    bottomScope->enterLoop();
+    activeScope->enterLoop();
   }
   /**
    * Decrement the loop depth counter in the local scope.
    */
   inline void exitLoop() {
-    bottomScope->exitLoop();
+    activeScope->exitLoop();
   }
   inline bool isCurrentScopeNested() {
     return bottomScope->isnested();
+  }
+  inline void setScopeNesting(bool x) {
+    bottomScope->setNestingFlag(x);
+  }
+  inline QString activeScopeName() {
+    return activeScope->getName();
+  }
+  inline QString activeScopeDetailString() {
+    return activeScope->detailString();
   }
   inline QString scopeName() {
     return bottomScope->getName();
   }
   inline bool currentScopeNests(QString name) {
-    return bottomScope->nests(name);
+    return activeScope->nests(name);
   }
   inline bool currentScopeVariableAccessed(QString name) {
-    return bottomScope->variableAccessed(name);
+    return activeScope->variableAccessed(name);
   }
   /**
    * Returns true if the current (local) scope indicates a
    * non-zero loop depth.
    */
   inline bool inLoop() {
-    return bottomScope->inLoop();
+    return activeScope->inLoop();
   }
   /**
    * Returns true if the given variable is global.
    */
   inline bool isVariableGlobal(const QString& varName) {
-    return bottomScope->isVariableGlobal(varName);
+    return activeScope->isVariableGlobal(varName);
   }
   /**
    * Returns true if the given variable is persistent
    */
   inline bool isVariablePersistent(const QString& varName) {
-    return bottomScope->isVariablePersistent(varName);
+    return activeScope->isVariablePersistent(varName);
   }
 };
 
