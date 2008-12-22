@@ -142,10 +142,10 @@ private:
   FMEditPane *tPane;
 };
 
-class LineNumber : public QWidget {
+class FMLineNumber : public QWidget {
   Q_OBJECT
 public:
-  LineNumber(FMTextEdit *editor);
+  FMLineNumber(FMTextEdit *editor);
 protected:
   virtual void paintEvent(QPaintEvent *);
 private:

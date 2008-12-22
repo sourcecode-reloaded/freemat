@@ -165,6 +165,9 @@ public:
     for (int i=0;i<scopestack.size();i++) {
       qDebug() << "Scope " << i << " " << scopestack[i]->getName();
     }
+    for (int i=0;i<bypassstack.size();i++) {
+      qDebug() << "bypass " << i << " " << bypassstack[i]->getName();
+    }
   }
   /**
    * Get the pointer to the mutex that protects this context.
@@ -212,11 +215,21 @@ public:
    * scope active, and then allows us to restore the bypass scopes.
    * a count of -1 means all scopes are bypassed (except the base scope)
    */
-  inline void bypassScope(int count) {
+  inline void bypassScope(int count, int reservecount = 0) {
+    QVector<ScopePtr> reserve_stack;
     if (count < 0) count = scopestack.size();
+    if ((count+reservecount) > scopestack.size()) return;
+    for (int i=0;i<reservecount;i++) {
+      reserve_stack.push_back(scopestack.back());
+      scopestack.pop_back();
+    }
     for (int i=0;i<count;i++) {
       bypassstack.push_back(scopestack.back());
       scopestack.pop_back();
+    }
+    for (int i=0;i<reservecount;i++) {
+      scopestack.push_back(reserve_stack.back());
+      reserve_stack.pop_back();
     }
     if (!scopestack.isEmpty()) {
       topScope = scopestack.front();
@@ -226,11 +239,22 @@ public:
       topScope = bottomScope = activeScope = NULL;
     }
   }
-  inline void restoreScope(int count) {
+  inline void restoreScope(int count, int reservecount = 0) {
+    QVector<ScopePtr> reserve_stack;
+    if (reservecount > scopestack.size()) return;
+    if (count > bypassstack.size()) return;
+    for (int i=0;i<reservecount;i++) {
+      reserve_stack.push_back(scopestack.back());
+      scopestack.pop_back();
+    }    
     for (int i=0;i<count;i++) {
       scopestack.push_back(bypassstack.back());
       bypassstack.pop_back();
     }
+    for (int i=0;i<reservecount;i++) {
+      scopestack.push_back(reserve_stack.back());
+      reserve_stack.pop_back();
+    }    
     if (!scopestack.isEmpty()) {
       topScope = scopestack.front();
       bottomScope = scopestack.back();

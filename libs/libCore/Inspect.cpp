@@ -305,8 +305,7 @@ ArrayVector FieldNamesFunction(int nargout, const ArrayVector& arg) {
 //outputs none
 //!
 ArrayVector WhereFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  //  eval->stackTrace(2);
-  eval->stackTrace(0);
+  eval->stackTrace(1);
   return ArrayVector();
 }
 

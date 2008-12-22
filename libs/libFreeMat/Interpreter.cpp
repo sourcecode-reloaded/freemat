@@ -450,11 +450,11 @@ void Interpreter::dbup() {
   // enough records on the context stack so as to make it
   // match.
   //
-  context->bypassScope(1);
+  context->bypassScope(1,2);
 }
 
 void Interpreter::dbdown() {
-  context->restoreScope(1);
+  context->restoreScope(1,2);
   dbdown_executed = true;
 }
 
@@ -493,8 +493,12 @@ QString Interpreter::getMFileName() {
 
 // called by editor
 QString Interpreter::getInstructionPointerFileName() {
-  if (isMFile(context->scopeName())) 
-    return context->scopeName();
+  if (!InCLI) return QString("");
+  context->bypassScope(1);
+  QString filename(context->scopeName());
+  context->restoreScope(1);
+  if (isMFile(filename)) 
+    return filename;
   return QString("");
 }
 
@@ -2431,7 +2435,7 @@ void Interpreter::doDebugCycle() {
     throw;
   }
   // Reset the debug stack
-  while (context->scopeDepth() < debug_stackdepth) context->popScope();
+  while (context->scopeDepth() > debug_stackdepth) context->popScope();
   depth--;
 }
 
@@ -3144,20 +3148,21 @@ void Interpreter::assignment(Tree *var, bool printIt, Array &b) {
 void Interpreter::processBreakpoints(Tree *t) {
   for (int i=0;i<bpStack.size();i++) {
     if ((bpStack[i].cname == context->scopeName()) && 
-	((context->scopeTokenID() & 0xffff) == bpStack[i].tokid)) {
+	((LineNumber(context->scopeTokenID()) == bpStack[i].tokid))) {
       doDebugCycle();
       context->setScopeTokenID(t->context());
     }
   }
   if (tracetrap > 0) {
-    if ((context->scopeTokenID() & 0xffff) != tracecurrentline) {
+    if ((LineNumber(context->scopeTokenID()) != tracecurrentline)) {
       tracetrap--;
       if (tracetrap == 0)
 	doDebugCycle();
     }
   }
   if (context->scopeStepTrap() > 0) {
-    if (((context->scopeTokenID()) & 0xffff) != context->scopeStepCurrentLine()) {
+    if ((LineNumber(context->scopeTokenID())) != 
+	context->scopeStepCurrentLine()) {
       context->setScopeStepTrap(context->scopeStepTrap()-1);
       if (context->scopeStepTrap() == 0)
 	doDebugCycle();
@@ -3200,13 +3205,11 @@ void Interpreter::statementType(Tree *t, bool printIt) {
       throw InterpreterContinueException();
     break;
   case TOK_DBSTEP:
-    //    dbout << "**********************DBStep";
     dbstepStatement(t);
     emit RefreshBPLists();
     throw InterpreterReturnException();
     break;
   case TOK_DBTRACE:
-    //    dbout << "**********************DBTrace";
     dbtraceStatement(t);
     emit RefreshBPLists();
     throw InterpreterReturnException();
@@ -4288,8 +4291,7 @@ void Interpreter::toggleBP(QString fname, int lineNumber) {
     QString fname_string(fname);
     for (int i=0;i<bpStack.size();i++) 
       if ((bpStack[i].cname == fname_string) &&
-	  ((bpStack[i].tokid & 0xffff) == lineNumber)) {
-	//	dbout << "Deleting bp " << i << " w/number " << bpStack[i].number << "";
+	  (LineNumber(bpStack[i].tokid) == lineNumber)) {
 	deleteBreakpoint(bpStack[i].number);
 	return;
       }
@@ -4379,21 +4381,25 @@ void Interpreter::addBreakpoint(QString name, int line) {
 bool Interpreter::isBPSet(QString fname, int lineNumber) {
   for (int i=0;i<bpStack.size();i++) 
     if ((bpStack[i].cname == fname) &&
-	((bpStack[i].tokid & 0xffff) == lineNumber)) return true;
+	(LineNumber(bpStack[i].tokid) == lineNumber)) return true;
   return false;
 }
 
 // called by editor
 bool Interpreter::isInstructionPointer(QString fname, int lineNumber) {
-  return ((fname == context->scopeName()) &&
-	  ((lineNumber == (context->scopeTokenID() & 0xffff)) || 
-	   ((lineNumber == 1) && ((context->scopeTokenID() & 0xffff) == 0))));
+  if (!InCLI) return false;
+  context->bypassScope(1);
+  QString filename(context->scopeName());
+  int token(context->scopeTokenID());
+  context->restoreScope(1);
+  return ((fname == filename) && ((lineNumber == LineNumber(token)) ||
+				  ((lineNumber == 1) && (LineNumber(token) == 0))));
 }
 
 void Interpreter::listBreakpoints() {
   for (int i=0;i<bpStack.size();i++) {
     QString buffer = QString("%1   %2 line %3\n").arg(bpStack[i].number)
-      .arg(bpStack[i].cname).arg(bpStack[i].tokid & 0xffff);
+      .arg(bpStack[i].cname).arg(LineNumber(bpStack[i].tokid));
     outputMessage(buffer);
   }
 }
@@ -4410,15 +4416,16 @@ void Interpreter::deleteBreakpoint(int number) {
   return;
 }
 
-static inline bool InKeyboard(const stackentry& p) {
-  return ((p.cname == "keyboard") && (p.detail == "keyboard"));
-}
-
 void Interpreter::stackTrace(int skiplevels) {
   bool firstline = true;
   int depth = context->scopeDepth();
-  for (int i=0;i<depth;i++) {
-    //    if (InKeyboard(cstack[i]))   continue;
+  context->bypassScope(skiplevels);
+  for (int i=0;i<(depth-skiplevels);i++) {
+    if ((context->scopeName() == "keyboard") &&
+	(context->scopeDetailString() == "keyboard")) {
+      context->bypassScope(1);
+      continue;
+    }
     if (firstline) {
       firstline = false;
     } else 
@@ -5096,12 +5103,14 @@ void Interpreter::dbstepStatement(Tree *t) {
   // Get the current function
   FuncPtr val;
   if (context->scopeName() == "base") return;
+  context->bypassScope(1);
   if (!lookupFunction(context->scopeDetailString(),val)) {
     warningMessage(QString("unable to find function ") + context->scopeDetailString() + " to single step");
     return;
   }
   context->setScopeStepTrap(lines);
-  context->setScopeStepCurrentLine(context->scopeTokenID() & 0xffff);
+  context->setScopeStepCurrentLine(LineNumber(context->scopeTokenID()));
+  context->restoreScope(1);
 }
 
 void Interpreter::dbtraceStatement(Tree *t) {
@@ -5118,7 +5127,7 @@ void Interpreter::dbtraceStatement(Tree *t) {
     return;
   }
   tracetrap = lines;
-  tracecurrentline = context->scopeTokenID() & 0xffff;
+  tracecurrentline = LineNumber(context->scopeTokenID());
 }
 
 static QString EvalPrep(QString line) {
@@ -5233,7 +5242,9 @@ void Interpreter::evalCLI() {
       prompt = "--> ";
       rootCLI = true;
     } else {
-      prompt = QString("[%1,%2]--> ").arg(context->scopeName()).arg(context->scopeTokenID() & 0xffff);
+      context->bypassScope(1);
+      prompt = QString("[%1,%2]--> ").arg(context->scopeDetailString()).arg(LineNumber(context->scopeTokenID()));
+      context->restoreScope(1);
       rootCLI = false;
     }
     if (rootCLI) {

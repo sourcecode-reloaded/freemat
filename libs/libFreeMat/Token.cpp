@@ -44,7 +44,7 @@ bool Token::isRightAssociative() const {
 
 DebugStream& operator<<(DebugStream& o, const Token& b) {
   o << TokenToString(b) << " (" << (b.position() >> 16)
-      << "," << (b.position() & 0xffff) << ")\n";
+    << "," << (LineNumber(b.position())) << ")\n";
   return o;
 }
 

@@ -120,4 +120,6 @@ void FreezeToken(const Token& a, Serialize *s);
 
 Token ThawToken(Serialize *s);
 
+inline int LineNumber(int x) {return (x & 0xffff);}
+
 #endif

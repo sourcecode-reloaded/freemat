@@ -464,7 +464,7 @@ static void TreeLine(Tree* t, unsigned &bestLine, unsigned lineTarget) {
   // check them for line numbers
   if (t->is(TOK_NEST_FUNC)) return;
   if (StatementTypeNode(t)) {
-    unsigned myLine = (t->context() & 0xffff);
+    unsigned myLine = (LineNumber(t->context()));
     if ((myLine >= lineTarget) && (myLine < bestLine))
       bestLine = myLine;
   }

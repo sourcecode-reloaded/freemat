@@ -984,7 +984,7 @@ Interpreter* FMEditPane::getInterpreter() {
 FMEditPane::FMEditPane(Interpreter* eval) : QWidget() {
   m_eval = eval;
   tEditor = new FMTextEdit;
-  LineNumber *tLN = new LineNumber(tEditor);
+  FMLineNumber *tLN = new FMLineNumber(tEditor);
   BreakPointIndicator *tBP = new BreakPointIndicator(tEditor,this);
   QHBoxLayout *layout = new QHBoxLayout;
   layout->addWidget(tLN);
@@ -2696,7 +2696,10 @@ void FMEditor::IllegalLineOrCurrentPath(QString name, int line) {
 void FMEditor::ShowActiveLine() {
   // Find the tab with this matching filename
   QString tname(m_eval->getInstructionPointerFileName());
-  if (tname == "") return;
+  if (tname == "") {
+    update();
+    return;
+  }
   // Check for one of the editors that might be editing this file already
   for (int i=0;i<tab->count();i++) {
     QWidget *w = tab->widget(i);
@@ -3110,7 +3113,7 @@ void BreakPointIndicator::paintEvent(QPaintEvent *) {
   }
 }
 
-LineNumber::LineNumber(FMTextEdit *editor) : QWidget(), tEditor(editor) {
+FMLineNumber::FMLineNumber(FMTextEdit *editor) : QWidget(), tEditor(editor) {
   setFixedWidth(fontMetrics().width(QLatin1String("0000")+5));
   connect(tEditor->document()->documentLayout(), 
 	  SIGNAL(update(const QRectF &)),
@@ -3119,7 +3122,7 @@ LineNumber::LineNumber(FMTextEdit *editor) : QWidget(), tEditor(editor) {
 	  this, SLOT(update()));
 }
 
-void LineNumber::paintEvent(QPaintEvent *)
+void FMLineNumber::paintEvent(QPaintEvent *)
 {
   int contentsY = tEditor->verticalScrollBar()->value();
   qreal pageBottom = contentsY + tEditor->viewport()->height();
