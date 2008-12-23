@@ -55,6 +55,8 @@ ArrayVector FepsFunction(int, const ArrayVector&);
 ArrayVector TrueFunction(int, const ArrayVector&);
 ArrayVector FalseFunction(int, const ArrayVector&);
 ArrayVector JITControlFunction(int, const ArrayVector&, Interpreter*);
+ArrayVector NargoutFunction(int, const ArrayVector&, Interpreter*);
+ArrayVector NarginFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector DbAutoFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector Conv2Function(int, const ArrayVector&);
 ArrayVector CenumFunction(int, const ArrayVector&);
@@ -343,6 +345,8 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("true",TrueFunction,0,1,NULL);
   context->addFunction("false",FalseFunction,0,1,NULL);
   context->addSpecialFunction("jitcontrol",JITControlFunction,1,1,"flag",NULL);
+  context->addSpecialFunction("nargin",NarginFunction,0,1,NULL);
+  context->addSpecialFunction("nargout",NargoutFunction,0,1,NULL);
   context->addSpecialFunction("dbauto",DbAutoFunction,1,1,"flag",NULL);
   context->addFunction("conv2",Conv2Function,4,1,"hcol","hrow","X","shape",NULL);
   context->addFunction("cenum",CenumFunction,2,1,"enumtype","enumint",NULL);

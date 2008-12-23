@@ -314,6 +314,89 @@ ArrayVector AddrFunction(int nargout, const ArrayVector& arg) {
 }
 
 //!
+//@Module NARGIN Number of Input Arguments
+//@@Section FUNCTIONS
+//@@Usage
+//The @|nargin| function returns the number of arguments passed
+//to a function when it was called.  The general syntax for its
+//use is
+//@[
+//  y = nargin
+//@]
+//FreeMat allows for
+//fewer arguments to be passed to a function than were declared,
+//and @|nargin|, along with @|isset| can be used to determine
+//exactly what subset of the arguments were defined.
+//@@Example
+//Here is a function that is declared to take five 
+//arguments, and that simply prints the value of @|nargin|
+//each time it is called.
+//@{ nargintest.m
+//function nargintest(a1,a2,a3,a4,a5)
+//  printf('nargin = %d\n',nargin);
+//@}
+//@<
+//nargintest(3);
+//nargintest(3,'h');
+//nargintest(3,'h',1.34);
+//nargintest(3,'h',1.34,pi,e);
+//@>
+//@@Signature
+//sfunction nargin NarginFunction
+//inputs none
+//outputs count
+//!
+ArrayVector NarginFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
+  Context *ctxt = eval->getContext();
+  ctxt->bypassScope(1);
+  int nargin = ctxt->scopeNargin();
+  ctxt->restoreScope(1);
+  return ArrayVector() << Array(double(nargin));
+}
+
+//!
+//@Module NARGOUT Number of Output Arguments
+//@@Section FUNCTIONS
+//@@Usage
+//The @|nargout| function computes the number of return values requested from
+//a function when it was called.  The general syntax for its use
+//@[
+//   y = nargout
+//@]
+//FreeMat allows for
+//fewer return values to be requested from a function than were declared,
+//and @|nargout| can be used to determine exactly what subset of 
+//the functions outputs are required.  
+//@@Example
+//Here is a function that is declared to return five 
+//values, and that simply prints the value of @|nargout|
+//each time it is called.
+//@{ nargouttest.m
+//function [a1,a2,a3,a4,a5] = nargouttest
+//  printf('nargout = %d\n',nargout);
+//  a1 = 1; a2 = 2; a3 = 3; a4 = 4; a5 = 5;
+//@}
+//@<
+//a1 = nargouttest
+//[a1,a2] = nargouttest
+//[a1,a2,a3] = nargouttest
+//[a1,a2,a3,a4,a5] = nargouttest
+//@>
+//@@Signature
+//sfunction nargout NargoutFunction
+//inputs none
+//outputs count
+//!
+ArrayVector NargoutFunction(int, const ArrayVector&arg, Interpreter* eval) {
+  Context *ctxt = eval->getContext();
+  ctxt->bypassScope(1);
+  int nargout = ctxt->scopeNargout();
+  ctxt->restoreScope(1);
+  return ArrayVector() << Array(double(nargout));
+}
+
+
+//!
 //@Module WHICH Get Information on Function
 //@@Section INSPECTION
 //@@Usage

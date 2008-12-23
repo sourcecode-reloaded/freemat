@@ -149,11 +149,11 @@ ArrayVector MFunctionDef::evaluateFunc(Interpreter *walker,
 	arg.remove(0,1);
       context->insertVariableLocally(arg,inputs[i]);
     }
-    context->insertVariableLocally("nargin",Array(double(minCount)));
+    context->setScopeNargin(minCount);
   } else {
     // Count the number of supplied arguments
     int inputCount = inputs.size();
-    context->insertVariableLocally("nargin",Array(double(inputCount)));
+    context->setScopeNargin(inputCount);
     // Get the number of explicit arguments
     int explicitCount = arguments.size() - 1;
     // For each explicit argument (that we have an input for),
@@ -172,7 +172,7 @@ ArrayVector MFunctionDef::evaluateFunc(Interpreter *walker,
     context->insertVariableLocally(QString("varargin"),
 				   CellArrayFromArrayVector(varargin,varargin.size()));
   }
-  context->insertVariableLocally(QString("nargout"),Array(double(nargout)));
+  context->setScopeNargout(nargout);
   try {
     try {
       walker->block(code.tree());

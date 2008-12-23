@@ -3975,63 +3975,6 @@ int getArgumentIndex(StringVector list, QString t) {
 //!
 
 //!
-//@Module NARGIN Number of Input Arguments
-//@@Section FUNCTIONS
-//@@Usage
-//The special variable @|nargin| is defined inside of all
-//functions.  It indicates how many arguments were passed
-//to the function when it was called.  FreeMat allows for
-//fewer arguments to be passed to a function than were declared,
-//and @|nargin|, along with @|isset| can be used to determine
-//exactly what subset of the arguments were defined.
-//There is no syntax for the use of @|nargin| - it is 
-//automatically defined inside the function body.
-//@@Example
-//Here is a function that is declared to take five 
-//arguments, and that simply prints the value of @|nargin|
-//each time it is called.
-//@{ nargintest.m
-//function nargintest(a1,a2,a3,a4,a5)
-//  printf('nargin = %d\n',nargin);
-//@}
-//@<
-//nargintest(3);
-//nargintest(3,'h');
-//nargintest(3,'h',1.34);
-//nargintest(3,'h',1.34,pi,e);
-//@>
-//!
-
-//!
-//@Module NARGOUT Number of Output Arguments
-//@@Section FUNCTIONS
-//@@Usage
-//The special variable @|nargout| is defined inside of all
-//functions.  It indicates how many return values were requested from
-//the function when it was called.  FreeMat allows for
-//fewer return values to be requested from a function than were declared,
-//and @|nargout| can be used to determine exactly what subset of 
-//the functions outputs are required.  There is no syntax for 
-//the use of @|nargout| - it is automatically defined inside 
-//the function body.
-//@@Example
-//Here is a function that is declared to return five 
-//values, and that simply prints the value of @|nargout|
-//each time it is called.
-//@{ nargouttest.m
-//function [a1,a2,a3,a4,a5] = nargouttest
-//  printf('nargout = %d\n',nargout);
-//  a1 = 1; a2 = 2; a3 = 3; a4 = 4; a5 = 5;
-//@}
-//@<
-//a1 = nargouttest
-//[a1,a2] = nargouttest
-//[a1,a2,a3] = nargouttest
-//[a1,a2,a3,a4,a5] = nargouttest
-//@>
-//!
-  
-//!
 //@Module SPECIAL Special Calling Syntax
 //@@Section FUNCTIONS
 //@@Usage

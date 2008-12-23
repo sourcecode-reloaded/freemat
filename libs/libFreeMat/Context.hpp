@@ -209,6 +209,18 @@ public:
   inline void setScopeDetailString(QString x) {
     bottomScope->setDetailString(x);
   }
+  inline int scopeNargin() {
+    return bottomScope->nargin();
+  }
+  inline void setScopeNargin(int x) {
+    bottomScope->setNargin(x);
+  }
+  inline int scopeNargout() {
+    return bottomScope->nargout();
+  }
+  inline void setScopeNargout(int x) {
+    bottomScope->setNargout(x);
+  }
   /**
    * Bypass the prescribed number of scopes.  These scopes are
    * placed on the bypassstack.  This effectively makes a different
@@ -622,7 +634,6 @@ public:
   }
 
   inline bool lookupFunction(QString funcName, FuncPtr& val) {
-    qDebug() << "Lookup Function " << funcName;
     FuncPtr* ret = codeTab.findSymbol(funcName);
     if (ret) {
       val = *ret;

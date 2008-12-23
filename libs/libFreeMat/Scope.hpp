@@ -123,6 +123,11 @@ class Scope {
   bool anyPersistents;
   bool anyGlobals;
   bool isNested;
+  /**
+   * The number of input/output arguments - used by M-functions that need to know
+   */
+  int numargin;
+  int numargout;
 public:
   /**
    * Construct a scope with the given name.
@@ -156,6 +161,18 @@ public:
   }
   inline void setTokenID(int x) {
     tokid = x;
+  }
+  inline int nargin() const {
+    return numargin;
+  }
+  inline void setNargin(int x) {
+    numargin = x;
+  }
+  inline int nargout() const {
+    return numargout;
+  }
+  inline void setNargout(int x) {
+    numargout = x;
   }
   inline QString detailString() {
     return detail;
