@@ -4,7 +4,72 @@ Annoyances:
  packaging
  completion stuff?
 
+*******************************************************************************
+Variables Tool:
 
+Sort by name on variables (up/down)
+Field selection:
+Value Size
+Bytes
+Class
+Min
+Max
+Range
+Mean
+Median
+Mode
+Var
+Std
+Toolbar:
+import data
+save data
+create variable
+plot
+delete
+stack widget
+
+For a variable:
+Open in Editor
+Save As
+Copy
+Duplicate
+Delete
+Rename
+Edit Value
+plot
+bar
+stem
+stairs
+area
+pie
+hist
+
+
+*******************************************************************************
+Directory Tool
+
+Move up
+Create Dir
+Find files
+Run M-Lint
+Double clicking a file opens in the editor
+Options:
+Open
+Run
+View Help
+Import Data
+New M-File, Folder, Model
+Rename
+Delete
+Compare Selected
+Compare Against
+Source Control
+Cut
+Copy
+Paste
+File Filter -- folders, MATLAB files
+Add to Path (current dir, selected dir, selected + subdirs)
+Refresh
 
 *******************************************************************************
 
