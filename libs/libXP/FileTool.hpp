@@ -20,19 +20,20 @@
 #define __FileTool_hpp__
 
 #include <QDialog>
-#include <QDirModel>
-#include <QTreeView>
 #include <QDockWidget>
+#include "DataTable.hpp"
 
 class FileTool : public QDockWidget {
   Q_OBJECT
-  QDirModel *model;
-  QTreeView *tree;
+  DataTable *model;
+  DataView *view;
 public:
   FileTool(QWidget *parent);
 protected slots:
-  void doubleClicked(const QModelIndex& index);
-  void updateCWD();
+  void updateDirView(QVariant);
+  // protected slots:
+  //   void doubleClicked(const QModelIndex& index);
+  //   void updateCWD();
 signals:
   void sendCommand(QString t);
 };

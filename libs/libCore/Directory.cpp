@@ -76,9 +76,7 @@
 ArrayVector ChangeDirFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   if (arg.size() != 1)
     throw Exception("cd function requires exactly one argument");
-  if (!QDir::setCurrent(TildeExpand(arg[0].asString())))
-    throw Exception("Unable to change to specified directory:" + arg[0].asString());
-  eval->rescanPath();
+  eval->changeDir(TildeExpand(arg[0].asString()));
   return ArrayVector();
 }
 

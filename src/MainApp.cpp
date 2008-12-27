@@ -1091,6 +1091,8 @@ int MainApp::StartNewInterpreterThread() {
   connect(p_eval,SIGNAL(doGraphicsCall(Interpreter*,FuncPtr,ArrayVector,int)),
 	  this,SLOT(DoGraphicsCall(Interpreter*,FuncPtr,ArrayVector,int)));
   connect(p_eval,SIGNAL(CWDChanged()),m_keys,SIGNAL(UpdateCWD()));
+  connect(p_eval,SIGNAL(updateDirView(QVariant)),m_keys,SIGNAL(updateDirView(QVariant)));
+  connect(p_eval,SIGNAL(updateVarView(QVariant)),m_keys,SIGNAL(updateVarView(QVariant)));
   connect(p_eval,SIGNAL(QuitSignal()),this,SLOT(Quit()));
   connect(p_eval,SIGNAL(CrashedSignal()),this,SLOT(Crashed()));
   connect(p_eval,SIGNAL(EnableRepaint()),this,SLOT(EnableRepaint()));
@@ -1146,6 +1148,7 @@ int MainApp::Run() {
   qRegisterMetaType<ArrayVector>("ArrayVector");
   qRegisterMetaType<Interpreter*>("Interpreter*");
   qRegisterMetaType<StringVector>("StringVector");
+  qRegisterMetaType<QVariant>("QVariant");
   connect(m_keys,SIGNAL(ExecuteLine(QString)),this,SLOT(ExecuteLine(QString)));
   connect(m_keys,SIGNAL(UpdateTermWidth(int)),this,SLOT(UpdateTermWidth(int)));
   connect(m_keys,SIGNAL(RegisterInterrupt()),this,SLOT(RegisterInterrupt()));

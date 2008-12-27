@@ -32,7 +32,7 @@
 #include <QMutex>
 #include <QWaitCondition>
 #include <QThread>
-
+#include <QFileSystemWatcher>
 
 class InterpreterContinueException : public exception {};
 class InterpreterBreakException : public exception {};
@@ -248,6 +248,10 @@ class Interpreter : public QThread {
    * The quiet level
    */
   int m_quietlevel;
+  /**
+   * The file system watcher -- watches for changes to the file system
+   */
+  QFileSystemWatcher *m_watch;
   /******************************************
    *  Public Methods for the Interpreter    *
    ******************************************/
@@ -553,6 +557,10 @@ public:
   bool isInstructionPointer(QString fname, int lineNumber);
   void toggleBP(QString fname, int lineNumber);
   /**
+   * Change the current working directory
+   */
+  void changeDir(QString path);
+  /**
    * Force a rescan of the current path to look for 
    * new function files.
    */
@@ -566,6 +574,14 @@ public:
    * called directly.
    */
   ArrayVector doFunction(FuncPtr f, ArrayVector m, int narg_out, VariableTable *vtable = 0);
+public slots:
+  /**
+   * Send file info to the file tool
+   */
+  void updateFileTool();
+  void updateFileTool(const QString & m);
+  void updateVariablesTool();
+
   /******************************************
    *  Signals for the Interpreter           *
    ******************************************/
@@ -578,6 +594,14 @@ signals:
    * Flush the I/O buffers
    */ 
   void Flush();
+  /**
+   * Send info on the current working directory
+   */
+  void updateDirView(QVariant);
+  /**
+   * Send variable info to the variable viewer
+   */
+  void updateVarView(QVariant);
   /**
    * User has changed the current working directory
    */
@@ -618,11 +642,18 @@ signals:
    * Disable repainting
    */
   void DisableRepaint();
-
+  /**
+   * Update the stack trace
+   */
+  void UpdateStackTrace(QStringList trace);
   /******************************************
    *  Private Methods for the Interpreter   *
    ******************************************/
 private:
+  /**
+   * Setup the file system watcher -- looks for changes to directories or files
+   */
+  void setupWatcher();
   /**
    * Collect information about keyword usage and the relevant 
    * expressions from a function call

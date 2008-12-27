@@ -21,19 +21,21 @@
 
 #include <QTableWidget>
 #include <QDockWidget>
-#include "Context.hpp"
+#include "DataTable.hpp"
 
 class VariablesTool : public QDockWidget {
   Q_OBJECT
+  DataTable *model;
+  DataView *view;
 public:
   VariablesTool(QWidget *parent);
 protected slots:
-  void refresh();
-public:
-  void setContext(Context *watch);
-private:
-  Context *context;
-  QTableWidget *m_flist;
+  void updateVariableView(QVariant);
+// public:
+//   void setContext(Context *watch);
+// private:
+//   Context *context;
+//   QTableWidget *m_flist;
 };
 
 #endif

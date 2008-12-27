@@ -298,12 +298,12 @@ void ApplicationWindow::SetKeyManager(KeyManager *keys) {
  	  keys,SLOT(QueueCommand(QString)));
   connect(m_filetool,SIGNAL(sendCommand(QString)),
  	  keys,SLOT(QueueMultiString(QString)));
-  connect(keys,SIGNAL(UpdateCWD()),
-	  m_filetool,SLOT(updateCWD()));
-  connect(keys,SIGNAL(UpdateCWD()),
-	  this,SLOT(CWDChanged()));
-  connect(keys,SIGNAL(UpdateInfoViews()),
-	  m_variables,SLOT(refresh()));
+  connect(keys,SIGNAL(UpdateCWD()),m_filetool,SLOT(updateCWD()));
+  connect(keys,SIGNAL(UpdateCWD()),this,SLOT(CWDChanged()));
+  connect(keys,SIGNAL(updateDirView(QVariant)),m_filetool,SLOT(updateDirView(QVariant)));
+  connect(keys,SIGNAL(updateVarView(QVariant)),m_variables,SLOT(updateVariableView(QVariant)));
+  //  connect(keys,SIGNAL(UpdateInfoViews()),
+  //	  m_variables,SLOT(refresh()));
   connect(pauseAct,SIGNAL(triggered()),m_keys,SIGNAL(RegisterInterrupt()));
   connect(continueAct,SIGNAL(triggered()),m_keys,SLOT(ContinueAction()));
   connect(stopAct,SIGNAL(triggered()),m_keys,SLOT(StopAction()));
@@ -422,7 +422,7 @@ void ApplicationWindow::about() {
 }
 
 void ApplicationWindow::init() {
-  m_variables->setContext(m_keys->GetCompletionContext());
+  //  m_variables->setContext(m_keys->GetCompletionContext());
   // Check for the latest version?
   QSettings settings("FreeMat", Interpreter::getVersionString());
   QDate lastCheck = settings.value("mainwindow/lastcheckdate").toDate();

@@ -147,6 +147,8 @@ public:
 signals:
   void CWDChanged();
   void UpdateCWD();
+  void updateDirView(QVariant);
+  void updateVarView(QVariant);
   void MoveDown();
   void MoveUp();
   void MoveRight();

@@ -9,7 +9,9 @@ Variables Tool:
 
 Sort by name on variables (up/down)
 Field selection:
-Value Size
+Name
+Value
+Size
 Bytes
 Class
 Min
@@ -20,6 +22,7 @@ Median
 Mode
 Var
 Std
+
 Toolbar:
 import data
 save data

@@ -45,6 +45,7 @@
 #include "GetSet.hpp"
 #include "FuncPtr.hpp"
 #include "AnonFunc.hpp"
+#include <QtGui>
 
 #ifdef WIN32
 #define PATHSEP ";"
@@ -94,6 +95,7 @@ void Interpreter::setPath(QString path) {
       QDir tpath(TildeExpand(pathset[i]));
       m_userPath << tpath.absolutePath();
     }
+  setupWatcher();
   rescanPath();
 }
 
@@ -117,6 +119,134 @@ QString Interpreter::getPath() {
   return retpath;
 }
   
+void Interpreter::setupWatcher() {
+  //  if (m_watch) delete m_watch;
+  //  m_watch = new QFileSystemWatcher();
+  QStringList pathLists(m_watch->directories());
+  if (!pathLists.isEmpty())
+    m_watch->removePaths(pathLists);
+  if (!m_userPath.isEmpty())
+    m_watch->addPaths(m_userPath);
+  if (!m_basePath.isEmpty())
+    m_watch->addPaths(m_basePath);
+  m_watch->addPath(QDir::currentPath());
+}
+
+void Interpreter::changeDir(QString path) {
+  if (!QDir::setCurrent(path))
+    throw Exception("Unable to change to specified directory: " + path);
+  emit CWDChanged();
+  setupWatcher();
+  rescanPath();
+}
+
+//FIXME -- 500000 should not be hard-coded
+// Computes min, max, range, mean, std, var
+static QVariant VariantizeAnswer(const ArrayVector &v) {
+  Array p = v[0];
+  p = p.toClass(Double);
+  if (p.allReal())
+    return QVariant(p.constRealScalar<double>());
+  else
+    return QVariant(SummarizeArrayCellEntry(p));
+}
+
+ArrayVector MinFunction(int nargout, const ArrayVector& arg);
+ArrayVector MaxFunction(int nargout, const ArrayVector& arg);
+ArrayVector MeanFunction(int nargout, const ArrayVector& arg);
+ArrayVector VarFunction(int nargout, const ArrayVector& arg);
+
+static QList<QVariant> ComputeVariableStats(Array* x) {
+  if (x->isSparse() || x->isString() || 
+      x->isReferenceType() || x->isUserClass() ||
+      x->isEmpty() || x->length() > 500000) 
+    // Return all empties (no information)
+    return QList<QVariant>() << QVariant()  // min
+			     << QVariant()  // max
+			     << QVariant()  // range
+			     << QVariant()  // mean
+			     << QVariant()  // std
+			     << QVariant(); // var
+  else {
+    Array xp(*x);
+    xp.reshape(NTuple(x->length(),1));
+    QList<QVariant> retvec;
+    ArrayVector xpvec; 
+    xpvec.push_back(xp);
+    retvec << VariantizeAnswer(MinFunction(1,xpvec));
+    retvec << VariantizeAnswer(MaxFunction(1,xpvec));
+    retvec << QVariant(QString("TBD"));
+    retvec << VariantizeAnswer(MeanFunction(1,xpvec));
+    retvec << QVariant(QString("TBD"));
+    retvec << VariantizeAnswer(VarFunction(1,xpvec));
+    return retvec;
+  }
+}
+				 
+void Interpreter::updateVariablesTool() {
+  qDebug() << "Update variabletool!";
+  StringVector varList(context->listAllVariables());
+  QList<QVariant> vars;
+  for (int i=0;i<varList.size();i++) {
+    QList<QVariant> entry;
+    qDebug() << "Variable " << varList[i];
+    // Icon
+    entry << QVariant();
+    entry << QVariant(varList[i]);
+    Array *dp = context->lookupVariableLocally(varList[i]);
+    if (dp) {
+      // class
+      if (dp->allReal())
+	entry << QVariant(dp->className());
+      else
+	entry << QVariant(dp->className() + " (complex)");
+      // value
+      entry << QVariant(SummarizeArrayCellEntry(*dp));
+      // size
+      entry << QVariant(dp->dimensions().toString());
+      // bytes min, max, range, mean, var, std
+      entry << QVariant(double(dp->bytes()));
+      entry += ComputeVariableStats(dp);
+    } 
+    for (int i=entry.size();i<10;i++)
+      entry << QVariant();
+    vars << QVariant(entry); 
+  }
+  emit updateVarView(QVariant(vars));
+}
+
+void Interpreter::updateFileTool(const QString &) {
+  updateFileTool();
+}
+
+void Interpreter::updateFileTool() {
+  qDebug() << "Update filetool!";
+  // Build the info to send to the file tool
+  QDir dir(QDir::currentPath());
+  dir.setFilter(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot);
+  QFileInfoList list(dir.entryInfoList());
+  QList<QVariant> files;
+  for (int i=0;i<((int)list.size());i++) {
+    QList<QVariant> entry;
+    QFileInfo fileInfo(list.at(i));
+    if (fileInfo.isDir())
+      entry << QVariant(qApp->style()->standardIcon(QStyle::SP_DirIcon));
+    else
+      entry << QVariant(qApp->style()->standardIcon(QStyle::SP_FileIcon));
+    entry << QVariant(fileInfo.fileName());
+    entry << QVariant(fileInfo.size());
+    entry << QVariant(fileInfo.lastModified());
+    if (fileInfo.isDir())
+      entry << QVariant(QString("Folder"));
+    else if (fileInfo.suffix().isEmpty())
+      entry << QVariant("File");
+    else
+      entry << QVariant(QString(fileInfo.suffix() + " File"));
+    files << QVariant(entry);
+  }
+  emit updateDirView(QVariant(files));
+}
+
 void Interpreter::rescanPath() {
   if (!context) return;
   context->flushTemporaryGlobalFunctions();
@@ -126,7 +256,7 @@ void Interpreter::rescanPath() {
     scanDirectory(m_userPath[i],false,"");
   // Scan the current working directory.
   scanDirectory(QDir::currentPath(),true,"");
-  emit CWDChanged();
+  updateFileTool();
 }
   
 
@@ -394,7 +524,7 @@ void Interpreter::run() {
 }
 
 void Interpreter::doCLI() {
-  emit CWDChanged();
+  rescanPath();
   if (!m_skipflag)
     sendGreeting();
   try {
@@ -4998,6 +5128,10 @@ Interpreter::Interpreter(Context* aContext) {
   m_quietlevel = 0;
   m_jit = NULL;
   context->pushScope("base","base",false);
+  m_watch = new QFileSystemWatcher;
+  //  m_watch->setObjectName(QLatin1String("_qt_autotest_force_engine_poller"));
+  connect(m_watch,SIGNAL(directoryChanged(const QString &)),
+	  this,SLOT(updateFileTool(const QString &)));
 }
 
 JIT* Interpreter::JITPointer() {
@@ -5179,7 +5313,7 @@ QString Interpreter::getLine(QString prompt) {
 void Interpreter::evalCLI() {
   QString prompt;
   bool rootCLI;
-
+  setupWatcher();
   while(1) {
     if ((depth == 0) || (context->scopeDepth() < 2)) {
       prompt = "--> ";
@@ -5200,6 +5334,7 @@ void Interpreter::evalCLI() {
       emit SetPrompt(prompt);
       if (m_diaryState) diaryMessage(prompt);
     }
+    updateVariablesTool();
     emit ShowActiveLine();
     QString cmdset;
     QString cmdline;

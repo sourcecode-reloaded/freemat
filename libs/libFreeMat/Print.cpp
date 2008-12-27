@@ -47,7 +47,7 @@ static QString TSummarizeArrayCellEntryScalar(const Array &dp) {
 #define MacroSummarize(ctype,cls) \
   case cls: return TSummarizeArrayCellEntryScalar<ctype>(a);
 
-static QString SummarizeArrayCellEntry(const Array &a) {
+QString SummarizeArrayCellEntry(const Array &a) {
   // Special cases
   if (a.isEmpty()) return QString("");
   if (a.isString() && a.rows() == 1) return a.asString();

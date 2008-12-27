@@ -53,7 +53,7 @@ void DataTable::sort(int column, Qt::SortOrder order) {
   case QVariant::Int:
   case QVariant::Double:
     {
-      QMap<double,QVariant> map;
+      QMultiMap<double,QVariant> map;
       for (int i=0;i<m_data.size();i++) 
 	map.insert(m_data[i].toList()[column].toDouble(),m_data[i]);
       m_data = map.values();
@@ -61,9 +61,17 @@ void DataTable::sort(int column, Qt::SortOrder order) {
     }
   case QVariant::String:
     {
-      QMap<QString,QVariant> map;
+      QMultiMap<QString,QVariant> map;
       for (int i=0;i<m_data.size();i++)
 	map.insert(m_data[i].toList()[column].toString(),m_data[i]);
+      m_data = map.values();
+      break;
+    }
+  case QVariant::DateTime:
+    {
+      QMultiMap<QDateTime,QVariant> map;
+      for (int i=0;i<m_data.size();i++)
+	map.insert(m_data[i].toList()[column].toDateTime(),m_data[i]);
       m_data = map.values();
       break;
     }
