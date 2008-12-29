@@ -581,6 +581,7 @@ public slots:
   void updateFileTool();
   void updateFileTool(const QString & m);
   void updateVariablesTool();
+  void updateStackTool();
 
   /******************************************
    *  Signals for the Interpreter           *
@@ -602,6 +603,10 @@ signals:
    * Send variable info to the variable viewer
    */
   void updateVarView(QVariant);
+  /**
+   * Send the workspace info
+   */
+  void updateStackView(QStringList);
   /**
    * User has changed the current working directory
    */

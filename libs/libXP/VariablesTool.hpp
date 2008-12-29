@@ -21,16 +21,21 @@
 
 #include <QTableWidget>
 #include <QDockWidget>
+#include <QComboBox>
 #include "DataTable.hpp"
 
 class VariablesTool : public QDockWidget {
   Q_OBJECT
   DataTable *model;
   DataView *view;
+  QAction *import, *save, *clear;
+  QAction *edit, *plot;
+  QComboBox *cb;
 public:
   VariablesTool(QWidget *parent);
 protected slots:
   void updateVariableView(QVariant);
+  void updateStackView(QStringList);
 // public:
 //   void setContext(Context *watch);
 // private:

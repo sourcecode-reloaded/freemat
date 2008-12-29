@@ -25,82 +25,50 @@
 
 VariablesTool::VariablesTool(QWidget *parent) : 
   QDockWidget("Variables",parent) {
-  view = new DataView(this);
+  import = new QAction(QIcon(":/images/open.png"),"&Import Data",this);
+  connect(import,SIGNAL(triggered()),this,SLOT(import()));
+  save = new QAction(QIcon(":/images/save.png"),"&Save Data", this);
+  connect(save,SIGNAL(triggered()),this,SLOT(save()));
+  clear = new QAction("&Delete Variable",this);
+  connect(clear,SIGNAL(clear()),this,SLOT(clear()));
+  QWidget *widget = new QWidget;
+  cb = new QComboBox;
+  QToolBar *toolbar = new QToolBar("vartoolbar");
+  toolbar->addAction(import);
+  toolbar->addAction(save);
+  toolbar->addSeparator();
+  toolbar->addWidget(new QLabel("Stack:"));
+  toolbar->addWidget(cb);
+  QVBoxLayout *vlayout = new QVBoxLayout;
+  vlayout->setSpacing(1);
+  //  QWidget *top_widget = new QWidget;
+  //  QHBoxLayout *hlayout = new QHBoxLayout;
+  //  QPushButton *pb = new QPushButton;
+  //  pb->setText("**");
+  //  hlayout->addWidget(pb);
+  //  hlayout->addWidget(cb);
+  //  top_widget->setLayout(hlayout);
+  vlayout->addWidget(toolbar);
+  //  vlayout->addWidget(top_widget);
+  view = new DataView(NULL);
   model = new DataTable(QStringList() << "Flag" << "Name" << "Class" << "Value" << 
 			"Size" << "Bytes" << "Min" << "Max" << 
 			"Range" << "Mean" << "Std" << "Var");
   view->setModel(model);
-  setWidget(view);
+  vlayout->addWidget(view);
+  widget->setLayout(vlayout);
   QSettings settings("FreeMat", Interpreter::getVersionString());
   view->loadSettings(&settings,"variablestool/browser",QVector<int>() 
 		     << 1 << 2 << 3 << 6 << 7 << 9);
-  //  m_flist = new QTableWidget(this);
-  //  setWidget(m_flist);
+  setWidget(widget);
   setObjectName("variables");
-  //  context = NULL;
-  //  setMinimumSize(50,50);
 }
 
-//void VariablesTool::refresh() {
-//   //   dbout << "**********Variables refresh called...";
-//   if (!context) return;
-//   //   dbout << "**********Variables refresh legit...";
-//   //   if (!context->getMutex()->tryLock()) return;
-//   //   dbout << "**********Variables refresh...";
-//   //   QMutexLocker lock(context->getMutex());
-//   //   context->getMutex()->unlock();
-//   m_flist->clear();
-//   StringVector varnames(context->listAllVariables());
-//   std::sort(varnames.begin(),varnames.end());
-//   m_flist->setRowCount(varnames.size());
-//   m_flist->setColumnCount(5);
-//   m_flist->setHorizontalHeaderLabels(QStringList() << "Name" << "Type" << "Flags" << "Size" << "Value");
-//   for (int i=0;i<varnames.size();i++) {
-//     QString varname(varnames[i]);
-//     QString type;
-//     QString flags;
-//     QString size;
-//     QString value;
-//     Array lookup;
-//     ArrayReference ptr;
-//     ptr = context->lookupVariable(varnames[i]);
-//     if (!ptr.valid()) {
-//       type = "undefined";
-//     } else {
-//       lookup = *ptr;
-//       try {
-// 	type = lookup.className();
-//       } catch (Exception& e) {}
-//       try {
-// 	if (lookup.isSparse())
-// 	  flags = "Sparse ";
-// 	if (context->isVariableGlobal(varnames[i])) {
-// 	  flags += "Global ";
-// 	} else if (context->isVariablePersistent(varnames[i])) {
-// 	  flags += "Persistent ";
-// 	}
-//       } catch (Exception& e) {}
-//       try {
-// 	size = lookup.dimensions().toString();
-//       } catch (Exception& e) {}
-//       try {
-// 	value = ArrayToPrintableString(lookup);
-//       } catch (Exception& e) {}
-//     }
-//     m_flist->setItem(i,0,new QTableWidgetItem(varname));
-//     m_flist->setItem(i,1,new QTableWidgetItem(type));
-//     m_flist->setItem(i,2,new QTableWidgetItem(flags));
-//     m_flist->setItem(i,3,new QTableWidgetItem(size));
-//     m_flist->setItem(i,4,new QTableWidgetItem(value));
-//   }
-//   m_flist->resizeColumnsToContents();
-//   m_flist->verticalHeader()->hide();
-//}
 
-//void VariablesTool::setContext(Context *watch) {
-//   context = watch;
-//   refresh();
-//}
+void VariablesTool::updateStackView(QStringList p) {
+  cb->clear();
+  cb->addItems(p);
+}
 
 void VariablesTool::updateVariableView(QVariant vars) {
   qDebug() << "updated!";

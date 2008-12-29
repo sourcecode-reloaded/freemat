@@ -74,6 +74,10 @@ File Filter -- folders, MATLAB files
 Add to Path (current dir, selected dir, selected + subdirs)
 Refresh
 
+Complete file and variable tools
+Fix directory changing tool
+Figure out save/restore of window configs.
+
 *******************************************************************************
 
 The issue around the debug stuff:

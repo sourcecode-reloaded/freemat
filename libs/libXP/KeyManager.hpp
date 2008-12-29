@@ -149,6 +149,7 @@ signals:
   void UpdateCWD();
   void updateDirView(QVariant);
   void updateVarView(QVariant);
+  void updateStackView(QStringList);
   void MoveDown();
   void MoveUp();
   void MoveRight();

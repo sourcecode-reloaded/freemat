@@ -215,6 +215,31 @@ void Interpreter::updateVariablesTool() {
   emit updateVarView(QVariant(vars));
 }
 
+void Interpreter::updateStackTool() {
+  QStringList stackInfo;
+  bool firstline = true;
+  int depth = context->scopeDepth();
+  for (int i=0;i<depth;i++) {
+    if ((context->scopeName() == "keyboard") &&
+	(context->scopeDetailString() == "keyboard")) {
+      context->bypassScope(1);
+      continue;
+    }
+    if (firstline) firstline = false;
+    int line = int(LineNumber(context->scopeTokenID()));
+    if (line > 0)
+      stackInfo.push_back(context->scopeDetailString() + 
+			  QString("(%1)").
+			  arg(LineNumber(context->scopeTokenID())));
+    else
+      stackInfo.push_back(context->scopeDetailString());
+    context->bypassScope(1);
+  }
+  context->restoreScope(depth);
+  qDebug() << "Stackview set to " << stackInfo;
+  emit updateStackView(stackInfo);
+}
+
 void Interpreter::updateFileTool(const QString &) {
   updateFileTool();
 }
@@ -2555,6 +2580,7 @@ void Interpreter::doDebugCycle() {
   int debug_stackdepth = context->scopeDepth();
   context->pushScope("keyboard","keyboard");
   context->setScopeActive(false);
+  updateStackTool();
   try {
     evalCLI();
   } catch (InterpreterContinueException& e) {
@@ -4505,10 +4531,10 @@ void Interpreter::stackTrace(int skiplevels) {
       outputMessage(QString("    "));
     outputMessage(QString("In ") + context->scopeName() + "("
 		  + context->scopeDetailString() + ")");
-    int line = int(context->scopeTokenID() & 0x0000FFFF);
+    int line = int(LineNumber(context->scopeTokenID()));
     if (line > 0)
       outputMessage(QString(" at line " +
-			    QString().setNum(int(context->scopeTokenID() & 0x0000FFFF))));
+			    QString().setNum(LineNumber(context->scopeTokenID()))));
     outputMessage("\r\n");
     context->bypassScope(1);
   }
