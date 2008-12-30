@@ -41,6 +41,7 @@ VariablesTool::VariablesTool(QWidget *parent) :
   toolbar->addWidget(cb);
   QVBoxLayout *vlayout = new QVBoxLayout;
   vlayout->setSpacing(1);
+  vlayout->setContentsMargins(1,1,1,1);
   //  QWidget *top_widget = new QWidget;
   //  QHBoxLayout *hlayout = new QHBoxLayout;
   //  QPushButton *pb = new QPushButton;

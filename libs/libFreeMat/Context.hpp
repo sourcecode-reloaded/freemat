@@ -116,6 +116,11 @@ class Context {
    */
   QList<ScopePtr> bypassstack;
   /**
+   * The stack of scopes that have been "reserved" -- need it
+   * because we need to move scopes out of sequence.
+   */
+  QList<ScopePtr> reserveStack;
+  /**
    * The table of functions
    */
   CodeTable codeTab;
@@ -221,57 +226,49 @@ public:
   inline void setScopeNargout(int x) {
     bottomScope->setNargout(x);
   }
-  /**
-   * Bypass the prescribed number of scopes.  These scopes are
-   * placed on the bypassstack.  This effectively makes a different
-   * scope active, and then allows us to restore the bypass scopes.
-   * a count of -1 means all scopes are bypassed (except the base scope)
-   */
-  inline void bypassScope(int count, int reservecount = 0) {
-    QVector<ScopePtr> reserve_stack;
-    if (count < 0) count = scopestack.size();
-    if ((count+reservecount) > scopestack.size()) return;
-    for (int i=0;i<reservecount;i++) {
-      reserve_stack.push_back(scopestack.back());
-      scopestack.pop_back();
-    }
-    for (int i=0;i<count;i++) {
-      bypassstack.push_back(scopestack.back());
-      scopestack.pop_back();
-    }
-    for (int i=0;i<reservecount;i++) {
-      scopestack.push_back(reserve_stack.back());
-      reserve_stack.pop_back();
-    }
+  inline void updateScopePointers() {
     if (!scopestack.isEmpty()) {
       topScope = scopestack.front();
       bottomScope = scopestack.back();
       activeScope = lastActiveScope();
     } else {
       topScope = bottomScope = activeScope = NULL;
-    }
-  }
-  inline void restoreScope(int count, int reservecount = 0) {
-    QVector<ScopePtr> reserve_stack;
-    if (reservecount > scopestack.size()) return;
-    if (count > bypassstack.size()) return;
-    for (int i=0;i<reservecount;i++) {
-      reserve_stack.push_back(scopestack.back());
-      scopestack.pop_back();
     }    
+  }
+  inline void reserveScope() {
+    reserveStack.push_back(scopestack.back());
+    scopestack.pop_back();
+    updateScopePointers();
+  }
+  inline void unreserveScope() {
+    if (reserveStack.size()>0) {
+      scopestack.push_back(reserveStack.back());
+      reserveStack.pop_back();
+    }
+    updateScopePointers();
+  }
+  /**
+   * Bypass the prescribed number of scopes.  These scopes are
+   * placed on the bypassstack.  This effectively makes a different
+   * scope active, and then allows us to restore the bypass scopes.
+   * a count of -1 means all scopes are bypassed (except the base scope)
+   */
+  inline void bypassScope(int count) {
+    if (count < 0) count = scopestack.size();
+    if (count > scopestack.size()) return;
+    for (int i=0;i<count;i++) {
+      bypassstack.push_back(scopestack.back());
+      scopestack.pop_back();
+    }
+    updateScopePointers();
+  }
+  inline void restoreScope(int count) {
+    if (count > bypassstack.size()) return;
     for (int i=0;i<count;i++) {
       scopestack.push_back(bypassstack.back());
       bypassstack.pop_back();
     }
-    for (int i=0;i<reservecount;i++) {
-      scopestack.push_back(reserve_stack.back());
-      reserve_stack.pop_back();
-    }    
-    if (!scopestack.isEmpty()) {
-      topScope = scopestack.front();
-      bottomScope = scopestack.back();
-      activeScope = lastActiveScope();
-    }
+    updateScopePointers();
   }
   /**
    * Every call to bypassScope should be matched by a call to 
@@ -281,8 +278,7 @@ public:
     for (int i=0;i<bypassstack.size();i++)
       scopestack.push_back(bypassstack[bypassstack.size()-1-i]);
     bypassstack.clear();
-    bottomScope = scopestack.back();
-    activeScope = lastActiveScope();
+    updateScopePointers();
   }
   inline ScopePtr lastActiveScope() {
     for (int i=scopestack.size()-1;i>=0;i--)

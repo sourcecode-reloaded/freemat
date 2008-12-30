@@ -215,13 +215,19 @@ void Interpreter::updateVariablesTool() {
   emit updateVarView(QVariant(vars));
 }
 
+static bool InKeyboardScope(Context *context) {
+  return ((context->scopeName() == "keyboard") &&
+	  (context->scopeDetailString() == "keyboard"));
+}
+
 void Interpreter::updateStackTool() {
   QStringList stackInfo;
   bool firstline = true;
   int depth = context->scopeDepth();
   for (int i=0;i<depth;i++) {
-    if ((context->scopeName() == "keyboard") &&
-	(context->scopeDetailString() == "keyboard")) {
+    if (((context->scopeName() == "keyboard") &&
+	 (context->scopeDetailString() == "keyboard")) ||
+	(context->scopeDetailString().isEmpty())) {
       context->bypassScope(1);
       continue;
     }
@@ -594,22 +600,49 @@ void Interpreter::dbup() {
   // base, foo, keyboard, dbup
   // so to do a dbup, we have to save the top two of the
   // stack, move foo to the backup stack, and then restore
-  // keyboard and dbup (which gets popped again).
   //
-  // One problem is to determine when the context stack needs
-  // to be popped as well.  This is a nontrivial problem
-  // Suppose we archive the context stack depth with each
-  // entry of the debug stack.  Then, we have a mechanism to
-  // trace back the context stack depth.  As each debug
-  // record is pushed onto the bypassed stack, we bypass
-  // enough records on the context stack so as to make it
-  // match.
+  // Consider the following.  The stack looks like this:
+  // main: base foo1 keyboard foo2 keyboard dbup
+  // bypass: <empty>
   //
-  context->bypassScope(1,2);
+  // Now we do a dbup
+  // main: base foo1 keyboard keyboard dbup
+  // bypass foo2
+  //
+  // Suppose we 
+  // We need the "keyboard" states on the stack because they
+  // capture the context updates for the command line routines.
+  // 
+
+  // Save the one for the "dbup" command
+  context->reserveScope();
+  // Save the one for the "keyboard" command that we are currently in
+  context->reserveScope();
+  // Bypass any keyboards
+  while (InKeyboardScope(context))
+    context->bypassScope(1);
+  // Bypass a single non-keyboard context
+  context->bypassScope(1);
+  // Bypass any keyboards after it
+  while (InKeyboardScope(context))
+    context->bypassScope(1);
+  // Restore the "keyboard" scope that belongs to us
+  context->unreserveScope();
+  // Restore the "dbup" scope that belongs to us
+  context->unreserveScope();
 }
 
 void Interpreter::dbdown() {
-  context->restoreScope(1,2);
+  // Save the one for the "dbdown" command
+  context->reserveScope();
+  // Save the one for the "keyboard" command that we are currently in
+  context->reserveScope();
+  // Restore until we get a non-"keyboard" scope
+  context->restoreScope(1);
+  while (InKeyboardScope(context))
+    context->restoreScope(1);
+  context->unreserveScope();
+  context->unreserveScope();
   dbdown_executed = true;
 }
 
@@ -2591,6 +2624,8 @@ void Interpreter::doDebugCycle() {
     throw;
   }
   // Reset the debug stack
+  // FIXME
+  context->restoreBypassedScopes();
   while (context->scopeDepth() > debug_stackdepth) context->popScope();
   depth--;
 }
@@ -4516,6 +4551,17 @@ void Interpreter::deleteBreakpoint(int number) {
 }
 
 void Interpreter::stackTrace(int skiplevels) {
+  // Do a complete dump...
+  int f_depth = context->scopeDepth();
+  context->restoreBypassedScopes();
+  int t_depth = context->scopeDepth();
+  for (int i=0;i<t_depth;i++) {
+    qDebug() << context->scopeName() << " " << context->scopeDetailString() << " " << QString().setNum(LineNumber(context->scopeTokenID()));
+    context->bypassScope(1);
+  }
+  context->restoreBypassedScopes();
+  while (context->scopeDepth() > f_depth) context->bypassScope(1);
+
   bool firstline = true;
   int depth = context->scopeDepth();
   context->bypassScope(skiplevels);
@@ -5345,9 +5391,13 @@ void Interpreter::evalCLI() {
       prompt = "--> ";
       rootCLI = true;
     } else {
-      context->bypassScope(1);
+      int bypasscount = 0;
+      while (InKeyboardScope(context)) {
+	bypasscount++;
+	context->bypassScope(1);
+      }
       prompt = QString("[%1,%2]--> ").arg(context->scopeDetailString()).arg(LineNumber(context->scopeTokenID()));
-      context->restoreScope(1);
+      context->restoreScope(bypasscount);
       rootCLI = false;
     }
     if (rootCLI) {
