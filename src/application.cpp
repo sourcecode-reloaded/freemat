@@ -302,6 +302,7 @@ void ApplicationWindow::SetKeyManager(KeyManager *keys) {
   connect(keys,SIGNAL(UpdateCWD()),this,SLOT(CWDChanged()));
   connect(keys,SIGNAL(updateDirView(QVariant)),m_filetool,SLOT(updateDirView(QVariant)));
   connect(keys,SIGNAL(updateVarView(QVariant)),m_variables,SLOT(updateVariableView(QVariant)));
+  connect(m_variables,SIGNAL(updateStackDepth(int)),keys,SLOT(updateStackDepth(int)));
   connect(keys,SIGNAL(updateStackView(QStringList)),
 	  m_variables,SLOT(updateStackView(QStringList)));
   //  connect(keys,SIGNAL(UpdateInfoViews()),

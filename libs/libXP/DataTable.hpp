@@ -7,11 +7,13 @@
 #include <QAction>
 #include <QHeaderView>
 #include <QSettings>
+#include <QMap>
+#include <QIcon>
 
 class DataTable : public QAbstractTableModel {
   Q_OBJECT
 public:
-  DataTable(const QStringList &column_names) : QAbstractTableModel(), m_colnames(column_names) {}
+  DataTable(const QStringList &column_names);
   virtual ~DataTable() {}
   void loadData(const QList<QVariant> &);
   int rowCount(const QModelIndex&) const;
@@ -23,6 +25,7 @@ private:
   int m_columns;
   QList<QVariant> m_data;
   QStringList m_colnames;
+  QMap<QString,QIcon> m_icons;
 };
 
 class DataHeaderView;

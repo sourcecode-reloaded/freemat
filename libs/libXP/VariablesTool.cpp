@@ -33,6 +33,7 @@ VariablesTool::VariablesTool(QWidget *parent) :
   connect(clear,SIGNAL(clear()),this,SLOT(clear()));
   QWidget *widget = new QWidget;
   cb = new QComboBox;
+  connect(cb,SIGNAL(activated(int)),this,SLOT(cbActivated(int)));
   QToolBar *toolbar = new QToolBar("vartoolbar");
   toolbar->addAction(import);
   toolbar->addAction(save);
@@ -63,12 +64,27 @@ VariablesTool::VariablesTool(QWidget *parent) :
 		     << 1 << 2 << 3 << 6 << 7 << 9);
   setWidget(widget);
   setObjectName("variables");
+  m_activeDepth = 0;
 }
 
+void VariablesTool::cbActivated(int x) {
+  qDebug() << "activated " << x << "  " << m_activeDepth;
+  emit updateStackDepth(x-m_activeDepth);
+  m_activeDepth = x;
+}
 
 void VariablesTool::updateStackView(QStringList p) {
   cb->clear();
-  cb->addItems(p);
+  int m_activeDepth = 0;
+  for (int i=0;i<p.size();i++) {
+    QString entry = p[i];
+    if (entry.startsWith(QChar('*'))) {
+      cb->addItem(entry.remove(0,1));
+      m_activeDepth = i;
+    } else
+      cb->addItem(entry);
+  }
+  cb->setCurrentIndex(m_activeDepth);
 }
 
 void VariablesTool::updateVariableView(QVariant vars) {

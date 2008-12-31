@@ -33,7 +33,6 @@
 #include "Class.hpp"
 #include "Print.hpp"
 #include "MemPtr.hpp"
-#include <qapplication.h>
 #include <qeventloop.h>
 #include <QtCore>
 #include <fstream>
@@ -220,28 +219,39 @@ static bool InKeyboardScope(Context *context) {
 	  (context->scopeDetailString() == "keyboard"));
 }
 
+static QString GetStackToolDescription(Context *context) {
+  int line = int(LineNumber(context->scopeTokenID()));
+  if (line > 0)
+    return QString(context->scopeDetailString() + QString("(%1)").arg(line));
+  else
+    return context->scopeDetailString();
+}
+
 void Interpreter::updateStackTool() {
   QStringList stackInfo;
-  bool firstline = true;
-  int depth = context->scopeDepth();
-  for (int i=0;i<depth;i++) {
-    if (((context->scopeName() == "keyboard") &&
-	 (context->scopeDetailString() == "keyboard")) ||
-	(context->scopeDetailString().isEmpty())) {
-      context->bypassScope(1);
-      continue;
-    }
-    if (firstline) firstline = false;
-    int line = int(LineNumber(context->scopeTokenID()));
-    if (line > 0)
-      stackInfo.push_back(context->scopeDetailString() + 
-			  QString("(%1)").
-			  arg(LineNumber(context->scopeTokenID())));
-    else
-      stackInfo.push_back(context->scopeDetailString());
+  // Do a complete dump...
+  // Suppose we start with 
+  int f_depth = context->scopeDepth();
+  context->restoreBypassedScopes();
+  int t_depth = context->scopeDepth();
+  for (int i=f_depth;i<t_depth;i++) {
+    if (!InKeyboardScope(context) && !context->scopeDetailString().isEmpty())
+      stackInfo << GetStackToolDescription(context);
     context->bypassScope(1);
   }
-  context->restoreScope(depth);
+  bool firstline = true;
+  for (int i=0;i<f_depth;i++) {
+    if (!InKeyboardScope(context) && !context->scopeDetailString().isEmpty()) {
+      if (firstline) {
+	stackInfo << QString("*") + GetStackToolDescription(context);
+	firstline = false;
+      } else 
+	stackInfo << GetStackToolDescription(context);
+    }
+    context->bypassScope(1);
+  }
+  context->restoreBypassedScopes();
+  while (context->scopeDepth() > f_depth) context->bypassScope(1);
   qDebug() << "Stackview set to " << stackInfo;
   emit updateStackView(stackInfo);
 }
@@ -261,9 +271,9 @@ void Interpreter::updateFileTool() {
     QList<QVariant> entry;
     QFileInfo fileInfo(list.at(i));
     if (fileInfo.isDir())
-      entry << QVariant(qApp->style()->standardIcon(QStyle::SP_DirIcon));
+      entry << QVariant(QString("dir"));
     else
-      entry << QVariant(qApp->style()->standardIcon(QStyle::SP_FileIcon));
+      entry << QVariant(QString("file"));
     entry << QVariant(fileInfo.fileName());
     entry << QVariant(fileInfo.size());
     entry << QVariant(fileInfo.lastModified());
@@ -614,15 +624,18 @@ void Interpreter::dbup() {
   // capture the context updates for the command line routines.
   // 
 
-  // Save the one for the "dbup" command
   context->reserveScope();
   // Save the one for the "keyboard" command that we are currently in
   context->reserveScope();
   // Bypass any keyboards
   while (InKeyboardScope(context))
     context->bypassScope(1);
-  // Bypass a single non-keyboard context
-  context->bypassScope(1);
+   // Save the one for the "dbup" command
+  if ((context->scopeName() != "base") ||
+      (context->scopeDetailString() != "base")) {
+    // Bypass a single non-keyboard context
+    context->bypassScope(1);
+  }
   // Bypass any keyboards after it
   while (InKeyboardScope(context))
     context->bypassScope(1);
@@ -2613,7 +2626,6 @@ void Interpreter::doDebugCycle() {
   int debug_stackdepth = context->scopeDepth();
   context->pushScope("keyboard","keyboard");
   context->setScopeActive(false);
-  updateStackTool();
   try {
     evalCLI();
   } catch (InterpreterContinueException& e) {
@@ -4551,17 +4563,6 @@ void Interpreter::deleteBreakpoint(int number) {
 }
 
 void Interpreter::stackTrace(int skiplevels) {
-  // Do a complete dump...
-  int f_depth = context->scopeDepth();
-  context->restoreBypassedScopes();
-  int t_depth = context->scopeDepth();
-  for (int i=0;i<t_depth;i++) {
-    qDebug() << context->scopeName() << " " << context->scopeDetailString() << " " << QString().setNum(LineNumber(context->scopeTokenID()));
-    context->bypassScope(1);
-  }
-  context->restoreBypassedScopes();
-  while (context->scopeDepth() > f_depth) context->bypassScope(1);
-
   bool firstline = true;
   int depth = context->scopeDepth();
   context->bypassScope(skiplevels);
@@ -5411,6 +5412,7 @@ void Interpreter::evalCLI() {
       if (m_diaryState) diaryMessage(prompt);
     }
     updateVariablesTool();
+    updateStackTool();
     emit ShowActiveLine();
     QString cmdset;
     QString cmdline;

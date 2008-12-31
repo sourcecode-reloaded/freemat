@@ -1141,6 +1141,25 @@ void KeyManager::DbTraceAction() {
   emit ExecuteLine("dbtrace\n");
 }
 
+void KeyManager::updateStackDepth(int x) {
+  if (x == 0) return;
+  if (x > 0) {
+    QString cmd;
+    for (int i=0;i<x;i++)
+      cmd += "dbup;";
+    cmd += "\n";
+    qDebug() << cmd;
+    emit ExecuteLine(cmd);
+  } else {
+    QString cmd;
+    for (int i=0;i<-x;i++)
+      cmd += "dbdown;";
+    cmd += "\n";
+    qDebug() << cmd;
+    emit ExecuteLine(cmd);
+  }
+}
+
 void KeyManager::SetPrompt(QString txt) {
   ReplacePrompt(txt);
   Redisplay();

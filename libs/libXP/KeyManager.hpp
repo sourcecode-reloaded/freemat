@@ -182,6 +182,7 @@ public slots:
   void ClearDisplayCommand();
   void ChangeDir(const QString& dir);
   void PlaceCursorDXDY(int dx, int dy);
+  void updateStackDepth(int);
 signals:
   void UpdateTermWidth(int);
   void RegisterInterrupt();

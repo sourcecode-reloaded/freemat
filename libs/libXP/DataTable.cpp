@@ -1,6 +1,12 @@
 #include <QtGui>
 #include "DataTable.hpp"
 
+DataTable::DataTable(const QStringList &column_names) :
+  QAbstractTableModel(), m_colnames(column_names) {
+  m_icons["dir"] = qApp->style()->standardIcon(QStyle::SP_DirIcon);
+  m_icons["file"] = qApp->style()->standardIcon(QStyle::SP_FileIcon);
+}
+
 int DataTable::rowCount(const QModelIndex&) const {
   return m_data.size();
 }
@@ -27,7 +33,7 @@ QVariant DataTable::data(const QModelIndex &index, int role) const {
     int row = index.row();
     QList<QVariant> md(m_data[row].toList());
     if (md.size() > 0) 
-      return md[0];
+      return QVariant(m_icons[md[0].toString()]);
     else
       return QVariant();
   }

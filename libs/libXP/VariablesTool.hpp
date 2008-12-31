@@ -31,16 +31,15 @@ class VariablesTool : public QDockWidget {
   QAction *import, *save, *clear;
   QAction *edit, *plot;
   QComboBox *cb;
+  int m_activeDepth;
 public:
   VariablesTool(QWidget *parent);
+signals:
+  void updateStackDepth(int);
 protected slots:
   void updateVariableView(QVariant);
   void updateStackView(QStringList);
-// public:
-//   void setContext(Context *watch);
-// private:
-//   Context *context;
-//   QTableWidget *m_flist;
+  void cbActivated(int);
 };
 
 #endif
