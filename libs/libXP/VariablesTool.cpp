@@ -25,24 +25,22 @@
 
 VariablesTool::VariablesTool(QWidget *parent) : 
   QDockWidget("Variables",parent) {
-  import = new QAction(QIcon(":/images/open.png"),"&Import Data",this);
-  connect(import,SIGNAL(triggered()),this,SLOT(import()));
-  save = new QAction(QIcon(":/images/save.png"),"&Save Data", this);
-  connect(save,SIGNAL(triggered()),this,SLOT(save()));
-  clear = new QAction("&Delete Variable",this);
-  connect(clear,SIGNAL(clear()),this,SLOT(clear()));
-  QWidget *widget = new QWidget;
-  cb = new QComboBox;
-  connect(cb,SIGNAL(activated(int)),this,SLOT(cbActivated(int)));
-  QToolBar *toolbar = new QToolBar("vartoolbar");
-  toolbar->addAction(import);
-  toolbar->addAction(save);
-  toolbar->addSeparator();
-  toolbar->addWidget(new QLabel("Stack:"));
-  toolbar->addWidget(cb);
-  QVBoxLayout *vlayout = new QVBoxLayout;
-  vlayout->setSpacing(1);
-  vlayout->setContentsMargins(1,1,1,1);
+  //  import = new QAction(QIcon(":/images/open.png"),"&Import Data",this);
+  //  connect(import,SIGNAL(triggered()),this,SLOT(import()));
+  //  save = new QAction(QIcon(":/images/save.png"),"&Save Data", this);
+  //  connect(save,SIGNAL(triggered()),this,SLOT(save()));
+  //  clear = new QAction("&Delete Variable",this);
+  //  connect(clear,SIGNAL(clear()),this,SLOT(clear()));
+  //  QWidget *widget = new QWidget;
+  //  QToolBar *toolbar = new QToolBar("vartoolbar");
+  //  toolbar->addAction(import);
+  //  toolbar->addAction(save);
+  //  toolbar->addSeparator();
+  //  toolbar->addWidget(new QLabel("Stack:"));
+  //  toolbar->addWidget(cb);
+  //  QVBoxLayout *vlayout = new QVBoxLayout;
+  //  vlayout->setSpacing(1);
+  //  vlayout->setContentsMargins(1,1,1,1);
   //  QWidget *top_widget = new QWidget;
   //  QHBoxLayout *hlayout = new QHBoxLayout;
   //  QPushButton *pb = new QPushButton;
@@ -50,45 +48,22 @@ VariablesTool::VariablesTool(QWidget *parent) :
   //  hlayout->addWidget(pb);
   //  hlayout->addWidget(cb);
   //  top_widget->setLayout(hlayout);
-  vlayout->addWidget(toolbar);
+  //  vlayout->addWidget(toolbar);
   //  vlayout->addWidget(top_widget);
-  view = new DataView(NULL);
+  view = new DataView(this);
   model = new DataTable(QStringList() << "Flag" << "Name" << "Class" << "Value" << 
 			"Size" << "Bytes" << "Min" << "Max" << 
 			"Range" << "Mean" << "Std" << "Var");
   view->setModel(model);
-  vlayout->addWidget(view);
-  widget->setLayout(vlayout);
+  //  vlayout->addWidget(view);
+  //  widget->setLayout(vlayout);
   QSettings settings("FreeMat", Interpreter::getVersionString());
   view->loadSettings(&settings,"variablestool/browser",QVector<int>() 
 		     << 1 << 2 << 3 << 6 << 7 << 9);
-  setWidget(widget);
+  setWidget(view);
   setObjectName("variables");
-  m_activeDepth = 0;
-}
-
-void VariablesTool::cbActivated(int x) {
-  qDebug() << "activated " << x << "  " << m_activeDepth;
-  emit updateStackDepth(x-m_activeDepth);
-  m_activeDepth = x;
-}
-
-void VariablesTool::updateStackView(QStringList p) {
-  cb->clear();
-  int m_activeDepth = 0;
-  for (int i=0;i<p.size();i++) {
-    QString entry = p[i];
-    if (entry.startsWith(QChar('*'))) {
-      cb->addItem(entry.remove(0,1));
-      m_activeDepth = i;
-    } else
-      cb->addItem(entry);
-  }
-  cb->setCurrentIndex(m_activeDepth);
 }
 
 void VariablesTool::updateVariableView(QVariant vars) {
-  qDebug() << "updated!";
-  qDebug() << vars;
   model->loadData(vars.toList());
 }

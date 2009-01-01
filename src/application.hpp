@@ -26,6 +26,7 @@
 #include "HistoryWidget.hpp"
 #include "VariablesTool.hpp"
 #include "FileTool.hpp"
+#include "StackTool.hpp"
 #include "KeyManager.hpp"
 #include <QLabel>
 #include <QHttp>
@@ -44,6 +45,7 @@ class ApplicationWindow : public QMainWindow {
   QAction *pathAct, /**filetoolAct, *historyAct,*/ *cleanHistoryAct;
   QAction *pauseAct, *continueAct, *stopAct, *clearAct;
   QAction *dbStepAct, *dbTraceAct, *checkUpdates /*, *workAct */;
+  StackTool *m_stacktool;
   QComboBox *cdCombo;
   QPushButton *cdButton;
   FileTool *m_filetool;

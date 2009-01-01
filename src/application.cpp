@@ -168,6 +168,8 @@ void ApplicationWindow::createToolBars() {
   debugToolBar->addAction(stopAct);
   debugToolBar->addAction(dbStepAct);
   debugToolBar->addAction(dbTraceAct);
+  m_stacktool = new StackTool;
+  debugToolBar->addWidget(m_stacktool);
   debugToolBar->setObjectName("debugtoolbar");
   dirToolBar = addToolBar("Current directory");
   dirToolBar->setObjectName("dirtoolbar");
@@ -302,9 +304,9 @@ void ApplicationWindow::SetKeyManager(KeyManager *keys) {
   connect(keys,SIGNAL(UpdateCWD()),this,SLOT(CWDChanged()));
   connect(keys,SIGNAL(updateDirView(QVariant)),m_filetool,SLOT(updateDirView(QVariant)));
   connect(keys,SIGNAL(updateVarView(QVariant)),m_variables,SLOT(updateVariableView(QVariant)));
-  connect(m_variables,SIGNAL(updateStackDepth(int)),keys,SLOT(updateStackDepth(int)));
+  connect(m_stacktool,SIGNAL(updateStackDepth(int)),keys,SLOT(updateStackDepth(int)));
   connect(keys,SIGNAL(updateStackView(QStringList)),
-	  m_variables,SLOT(updateStackView(QStringList)));
+	  m_stacktool,SLOT(updateStackView(QStringList)));
   //  connect(keys,SIGNAL(UpdateInfoViews()),
   //	  m_variables,SLOT(refresh()));
   connect(pauseAct,SIGNAL(triggered()),m_keys,SIGNAL(RegisterInterrupt()));

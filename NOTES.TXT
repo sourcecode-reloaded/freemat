@@ -4,6 +4,13 @@ Annoyances:
  packaging
  completion stuff?
 
+ -- Need to make ip set on editor an active thing (push from interpreter, not pull from editor).
+ -- Activate the file tool, add Move Up
+ -- Clean up history tool with tree
+ -- Create Variable Editor.
+ -- Fix cdcombo on application bar
+ -- Add move up to the cdcombo
+
 *******************************************************************************
 Variables Tool:
 

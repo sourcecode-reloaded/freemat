@@ -4538,6 +4538,7 @@ bool Interpreter::isInstructionPointer(QString fname, int lineNumber) {
   QString filename(context->scopeName());
   int token(context->scopeTokenID());
   context->restoreScope(1);
+  qDebug() << "isIP " << fname << " " << QString().setNum(lineNumber) << " vs " << filename << " " << QString().setNum(token);
   return ((fname == filename) && ((lineNumber == LineNumber(token)) ||
 				  ((lineNumber == 1) && (LineNumber(token) == 0))));
 }

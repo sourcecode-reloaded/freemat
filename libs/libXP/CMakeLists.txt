@@ -19,6 +19,7 @@ VariablesTool.cpp
 HistoryWidget.cpp 
 DebugWin.cpp
 DataTable.cpp
+StackTool.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/fontform.ui.h
 ${CMAKE_CURRENT_SOURCE_DIR}/findform.ui.h
 ${CMAKE_CURRENT_SOURCE_DIR}/replaceform.ui.h 
@@ -36,6 +37,7 @@ ${CMAKE_CURRENT_SOURCE_DIR}/HistoryWidget.moc.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/ToolDock.moc.cpp 
 ${CMAKE_CURRENT_SOURCE_DIR}/DebugWin.moc.cpp 
 ${CMAKE_CURRENT_SOURCE_DIR}/DataTable.moc.cpp 
+${CMAKE_CURRENT_SOURCE_DIR}/StackTool.moc.cpp
 )
 
 QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/KeyManager.hpp ${CMAKE_CURRENT_SOURCE_DIR}/KeyManager.moc.cpp )
@@ -51,6 +53,7 @@ QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/ToolDock.hpp ${CMAKE_CURRENT_SOURC
 QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/VariablesTool.hpp ${CMAKE_CURRENT_SOURCE_DIR}/VariablesTool.moc.cpp )
 QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/DebugWin.hpp ${CMAKE_CURRENT_SOURCE_DIR}/DebugWin.moc.cpp )
 QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/DataTable.hpp ${CMAKE_CURRENT_SOURCE_DIR}/DataTable.moc.cpp )
+QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/StackTool.hpp ${CMAKE_CURRENT_SOURCE_DIR}/StackTool.moc.cpp )
 
 QT4_GENERATE_UI( ${CMAKE_CURRENT_SOURCE_DIR}/findform.ui ${CMAKE_CURRENT_SOURCE_DIR}/findform.ui.h )
 QT4_GENERATE_UI( ${CMAKE_CURRENT_SOURCE_DIR}/replaceform.ui ${CMAKE_CURRENT_SOURCE_DIR}/replaceform.ui.h )
