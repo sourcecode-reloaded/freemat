@@ -610,7 +610,7 @@ signals:
   /**
    * User has changed the current working directory
    */
-  void CWDChanged();
+  void CWDChanged(QString);
   /**
    * Change the prompt
    */
@@ -638,7 +638,7 @@ signals:
   /**
    * Inform the editor of illegal line or file not on current path
    */
-  void ShowActiveLine();
+  void ShowActiveLine(QString name, int line);
   /**
    * Enable repainting
    */

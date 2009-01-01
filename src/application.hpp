@@ -99,8 +99,7 @@ private slots:
   void cleanhistory();
   void init();
   void clearconsole();
-  void CWDChanged();
-  //  void UpdateCWD();
+  void CWDChanged(QString);
   void dirButtonClicked();
 }; 
 

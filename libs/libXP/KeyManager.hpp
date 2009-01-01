@@ -146,7 +146,7 @@ public:
   bool keypresswait;
 signals:
   void CWDChanged();
-  void UpdateCWD();
+  void UpdateCWD(QString);
   void updateDirView(QVariant);
   void updateVarView(QVariant);
   void updateStackView(QStringList);

@@ -210,7 +210,8 @@ ArrayVector EditorFunction(int nargout, const ArrayVector& arg, Interpreter* eva
   if (edit == NULL) {
     edit = new FMEditor(eval);
     QObject::connect(eval,SIGNAL(RefreshBPLists()),edit,SLOT(RefreshBPLists()));
-    QObject::connect(eval,SIGNAL(ShowActiveLine()),edit,SLOT(ShowActiveLine()));
+    QObject::connect(eval,SIGNAL(ShowActiveLine(QString,int)),
+		     edit,SLOT(ShowActiveLine(QString,int)));
     ApplicationWindow *m_win = m_app->getApplicationWindow();
     if (m_win) {
       QObject::connect(m_win,SIGNAL(shutdown()),edit,SLOT(close()));
@@ -253,8 +254,8 @@ ArrayVector EditFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
     edit = new FMEditor(eval);
     QObject::connect(eval, SIGNAL(RefreshBPLists()), edit,
         SLOT(RefreshBPLists()));
-    QObject::connect(eval, SIGNAL(ShowActiveLine()), edit,
-        SLOT(ShowActiveLine()));
+    QObject::connect(eval, SIGNAL(ShowActiveLine(QString,int)), 
+		     edit, SLOT(ShowActiveLine(QString,int)));
     ApplicationWindow *m_win = m_app->getApplicationWindow();
     QObject::connect(m_win,SIGNAL(shutdown()),edit,SLOT(close()));
     QObject::connect(edit,SIGNAL(checkEditorExist(bool)),m_win,SLOT(checkEditorExist(bool)));
@@ -1090,7 +1091,7 @@ int MainApp::StartNewInterpreterThread() {
   connect(p_eval,SIGNAL(SetPrompt(QString)),m_keys,SLOT(SetPrompt(QString)));
   connect(p_eval,SIGNAL(doGraphicsCall(Interpreter*,FuncPtr,ArrayVector,int)),
 	  this,SLOT(DoGraphicsCall(Interpreter*,FuncPtr,ArrayVector,int)));
-  connect(p_eval,SIGNAL(CWDChanged()),m_keys,SIGNAL(UpdateCWD()));
+  connect(p_eval,SIGNAL(CWDChanged(QString)),m_keys,SIGNAL(UpdateCWD(QString)));
   connect(p_eval,SIGNAL(updateDirView(QVariant)),m_keys,SIGNAL(updateDirView(QVariant)));
   connect(p_eval,SIGNAL(updateVarView(QVariant)),m_keys,SIGNAL(updateVarView(QVariant)));
   connect(p_eval,SIGNAL(updateStackView(QStringList)),

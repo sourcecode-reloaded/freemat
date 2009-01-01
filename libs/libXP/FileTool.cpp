@@ -29,20 +29,29 @@ FileTool::FileTool(QWidget *parent) :
   setWidget(view);
   QSettings settings("FreeMat", Interpreter::getVersionString());  
   view->loadSettings(&settings,"filetool/browser",QVector<int>() << 1 << 2 << 3 << 4);
-  //   connect(tree,SIGNAL(doubleClicked(const QModelIndex&)), 
-  // 	  this,SLOT(doubleClicked(const QModelIndex&)));
+  connect(view,SIGNAL(doubleClicked(const QModelIndex&)), 
+   	  this,SLOT(doubleClicked(const QModelIndex&)));
   setObjectName("filetool");
   //  setMinimumSize(50,50);
 }
 
-// void FileTool::updateCWD() {
-//   tree->setRootIndex(model->index(QDir::currentPath()));
-// }
 void FileTool::updateDirView(QVariant files) {
   model->loadData(files.toList());
 }
 
-// void FileTool::doubleClicked(const QModelIndex& index) {
+void FileTool::doubleClicked(const QModelIndex& index) {
+  QModelIndex p = index.sibling(index.row(),0);
+  QString rowType = model->data(p).toString();
+  p = index.sibling(index.row(),1);
+  QString rowName = model->data(p).toString();
+  if (rowType == "dir") {
+    if (rowName == " .. (Parent Folder)")
+      emit sendCommand("cd ..");
+    else
+      emit sendCommand("cd '" + rowName + "'\n");
+  } else
+    emit sendCommand("edit '" + rowName + "'\n");
+}
 //   QString filePath(model->filePath(index));
 //   QFileInfo fileInfo(filePath);
 //   if ((fileInfo.suffix() == "dat") || (fileInfo.suffix() == "mat"))

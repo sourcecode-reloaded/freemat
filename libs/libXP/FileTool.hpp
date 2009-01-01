@@ -31,9 +31,7 @@ public:
   FileTool(QWidget *parent);
 protected slots:
   void updateDirView(QVariant);
-  // protected slots:
-  //   void doubleClicked(const QModelIndex& index);
-  //   void updateCWD();
+  void doubleClicked(const QModelIndex & index);
 signals:
   void sendCommand(QString t);
 };

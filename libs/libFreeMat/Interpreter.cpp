@@ -134,7 +134,7 @@ void Interpreter::setupWatcher() {
 void Interpreter::changeDir(QString path) {
   if (!QDir::setCurrent(path))
     throw Exception("Unable to change to specified directory: " + path);
-  emit CWDChanged();
+  emit CWDChanged(QDir::currentPath());
   setupWatcher();
   rescanPath();
 }
@@ -214,9 +214,13 @@ void Interpreter::updateVariablesTool() {
   emit updateVarView(QVariant(vars));
 }
 
+static bool InSpecificScope(Context *context, QString name, QString detail) {
+  return ((context->scopeName() == name) &&
+	  (context->scopeDetailString() == detail));
+}
+
 static bool InKeyboardScope(Context *context) {
-  return ((context->scopeName() == "keyboard") &&
-	  (context->scopeDetailString() == "keyboard"));
+  return InSpecificScope(context,"keyboard","keyboard");
 }
 
 static QString GetStackToolDescription(Context *context) {
@@ -241,7 +245,9 @@ void Interpreter::updateStackTool() {
   }
   bool firstline = true;
   for (int i=0;i<f_depth;i++) {
-    if (!InKeyboardScope(context) && !context->scopeDetailString().isEmpty()) {
+    if (!InKeyboardScope(context) && 
+	!InSpecificScope(context,"docli","builtin") &&
+	!context->scopeDetailString().isEmpty()) {
       if (firstline) {
 	stackInfo << QString("*") + GetStackToolDescription(context);
 	firstline = false;
@@ -267,6 +273,13 @@ void Interpreter::updateFileTool() {
   dir.setFilter(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot);
   QFileInfoList list(dir.entryInfoList());
   QList<QVariant> files;
+  QList<QVariant> entry;
+  entry << QVariant(QString("dir"));
+  entry << QVariant(" .. (Parent Folder)");
+  entry << QVariant();
+  entry << QVariant();
+  entry << QVariant("Folder");
+  files << QVariant(entry);
   for (int i=0;i<((int)list.size());i++) {
     QList<QVariant> entry;
     QFileInfo fileInfo(list.at(i));
@@ -566,6 +579,7 @@ void Interpreter::run() {
 
 void Interpreter::doCLI() {
   rescanPath();
+  emit CWDChanged(QDir::currentPath());
   if (!m_skipflag)
     sendGreeting();
   try {
@@ -631,8 +645,8 @@ void Interpreter::dbup() {
   while (InKeyboardScope(context))
     context->bypassScope(1);
    // Save the one for the "dbup" command
-  if ((context->scopeName() != "base") ||
-      (context->scopeDetailString() != "base")) {
+  if (!InSpecificScope(context,"base","base") &&
+      !InSpecificScope(context,"docli","builtin")) {
     // Bypass a single non-keyboard context
     context->bypassScope(1);
   }
@@ -5389,6 +5403,8 @@ void Interpreter::evalCLI() {
   bool rootCLI;
   setupWatcher();
   while(1) {
+    QString fname;
+    int line;
     if ((depth == 0) || (context->scopeDepth() < 2)) {
       prompt = "--> ";
       rootCLI = true;
@@ -5398,7 +5414,9 @@ void Interpreter::evalCLI() {
 	bypasscount++;
 	context->bypassScope(1);
       }
-      prompt = QString("[%1,%2]--> ").arg(context->scopeDetailString()).arg(LineNumber(context->scopeTokenID()));
+      fname = context->scopeName();
+      line = LineNumber(context->scopeTokenID());
+      prompt = QString("[%1,%2]--> ").arg(context->scopeDetailString()).arg(line);
       context->restoreScope(bypasscount);
       rootCLI = false;
     }
@@ -5414,7 +5432,7 @@ void Interpreter::evalCLI() {
     }
     updateVariablesTool();
     updateStackTool();
-    emit ShowActiveLine();
+    emit ShowActiveLine(fname,line);
     QString cmdset;
     QString cmdline;
     emit EnableRepaint();

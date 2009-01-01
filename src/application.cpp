@@ -219,8 +219,7 @@ void ApplicationWindow::createToolBox() {
 void ApplicationWindow::initializeTools() {
 }
 
-void ApplicationWindow::CWDChanged() {
-  QString curdir=QDir::currentPath();
+void ApplicationWindow::CWDChanged(QString curdir) {
   int ind = cdCombo->findText(curdir);
   if (ind>=0)
     cdCombo->removeItem(ind);
@@ -299,9 +298,8 @@ void ApplicationWindow::SetKeyManager(KeyManager *keys) {
   connect(m_history,SIGNAL(sendCommand(QString)),
  	  keys,SLOT(QueueCommand(QString)));
   connect(m_filetool,SIGNAL(sendCommand(QString)),
- 	  keys,SLOT(QueueMultiString(QString)));
-  connect(keys,SIGNAL(UpdateCWD()),m_filetool,SLOT(updateCWD()));
-  connect(keys,SIGNAL(UpdateCWD()),this,SLOT(CWDChanged()));
+ 	  keys,SLOT(QueueSilent(QString)));
+  connect(keys,SIGNAL(UpdateCWD(QString)),this,SLOT(CWDChanged(QString)));
   connect(keys,SIGNAL(updateDirView(QVariant)),m_filetool,SLOT(updateDirView(QVariant)));
   connect(keys,SIGNAL(updateVarView(QVariant)),m_variables,SLOT(updateVariableView(QVariant)));
   connect(m_stacktool,SIGNAL(updateStackDepth(int)),keys,SLOT(updateStackDepth(int)));

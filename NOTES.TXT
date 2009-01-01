@@ -1,5 +1,19 @@
 Annoyances:
 
+a  e
+b  d
+c
+
+after restore
+
+a
+b
+c
+d
+e
+
+
+
  apple support for fft
  packaging
  completion stuff?
@@ -10,6 +24,9 @@ Annoyances:
  -- Create Variable Editor.
  -- Fix cdcombo on application bar
  -- Add move up to the cdcombo
+ -- Sort by file type --> auto subsort by filename
+ -- Moving to "base" seems to mess up "return"
+
 
 *******************************************************************************
 Variables Tool:
