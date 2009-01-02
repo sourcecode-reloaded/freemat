@@ -22,35 +22,39 @@
 #include "Interpreter.hpp"
 
 HistoryWidget::HistoryWidget(QWidget *parent) : QDockWidget("History",parent) {
-  m_flist = new QListWidget(this);
+  m_flist = new QTreeWidget(this);
+  m_parent = 0;
   setWidget(m_flist);
   readSettings();
-  new QListWidgetItem("% " + QDateTime::currentDateTime().toString(),m_flist);
-  connect(m_flist,SIGNAL(itemDoubleClicked(QListWidgetItem*)),
-	  this,SLOT(doubleClicked(QListWidgetItem*)));
+  m_parent = new QTreeWidgetItem((QTreeWidget*)0,
+				 QStringList("%% " + QDateTime::currentDateTime().toString()));
+  m_flist->addTopLevelItem(m_parent);
+  connect(m_flist,SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),
+	  this,SLOT(doubleClicked(QTreeWidgetItem*,int)));
   setObjectName("history");
   m_popup = new QMenu;
   m_popup->addAction("Execute");
   m_popup->addAction("Clear All");
   m_flist->setSelectionMode(QAbstractItemView::ExtendedSelection);
   m_flist->scrollToBottom();
+  m_last_added = m_parent;
 }
 
 void HistoryWidget::contextMenuEvent(QContextMenuEvent *e) {
   QAction *p = m_popup->exec(e->globalPos());
   if (!p) return;
   if (p->text() == "Execute") {
-    QList<QListWidgetItem *>items = m_flist->selectedItems();
+    QList<QTreeWidgetItem *>items = m_flist->selectedItems();
     if (items.size() > 0)
       for (int i=0;i<items.size();i++)
-	emit sendCommand(items[i]->text());
+	emit sendCommand(items[i]->text(0));
   } else if (p->text() == "Clear All")
     clear();
   
 }
 
-void HistoryWidget::doubleClicked(QListWidgetItem* item) {
-  emit sendCommand(item->text());
+void HistoryWidget::doubleClicked(QTreeWidgetItem* item, int) {
+  emit sendCommand(item->text(0));
 }
 
 void HistoryWidget::closeEvent(QCloseEvent *ce) {
@@ -61,28 +65,36 @@ void HistoryWidget::closeEvent(QCloseEvent *ce) {
 
 void HistoryWidget::addCommand(QString t) {
   if (!t.isEmpty()) {
-    if ((m_flist->count() > 0) && (t == m_flist->item(m_flist->count()-1)->text()))
-      return;
-    if (m_flist->count() >= 1000) {
-      QListWidgetItem *p = m_flist->takeItem(0);
-      delete p;
-    }
-    new QListWidgetItem(t,m_flist);
-    m_flist->scrollToBottom();
+    if (m_last_added->text(0) == t) return;
+    //     if (m_flist->count() >= 1000) {
+    //       QTreeWidgetItem *p = m_flist->takeItem(0);
+    //       delete p;
+    //     }
+    m_last_added = new QTreeWidgetItem(m_parent,QStringList(t));
+    m_flist->scrollToItem(m_last_added);
+    update();
   }
 }
 
 void HistoryWidget::readSettings() {
   QSettings settings("FreeMat", Interpreter::getVersionString());
   QStringList historyList = settings.value("interpreter/history").toStringList();
-  for (int i=0;i<historyList.size();i++) 
-    new QListWidgetItem(historyList[i],m_flist);
+  for (int i=0;i<historyList.size();i++) {
+    if (historyList[i].startsWith("%%")) {
+      m_parent = new QTreeWidgetItem((QTreeWidget*)0,QStringList(historyList[i]));
+      m_flist->addTopLevelItem(m_parent);
+    } else {
+      new QTreeWidgetItem(m_parent,QStringList(historyList[i]));
+    }
+  }
 }
 
 void HistoryWidget::clear() {
   if (QMessageBox::warning(this,"Clear History","Are you sure you want to clear the history?  There is no undo operation",QMessageBox::Yes,QMessageBox::No | QMessageBox::Default) == QMessageBox::Yes) {
     m_flist->clear();
-    new QListWidgetItem("% " + QDateTime::currentDateTime().toString(),m_flist);
+    m_parent = new QTreeWidgetItem((QTreeWidget*)0,QStringList("%% " + QDateTime::currentDateTime().toString()));
+    m_flist->addTopLevelItem(m_parent);
+    m_last_added = m_parent;
     emit clearHistory();
   }
 }

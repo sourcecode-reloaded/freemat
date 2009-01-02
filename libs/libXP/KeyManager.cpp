@@ -78,7 +78,7 @@ KeyManager::KeyManager()  {
     history.push_back("");
   for (int i=0;i<historyList.size();i++) 
     history.push_back(historyList[i]);
-  history.push_back(QString("% ") + QDateTime::currentDateTime().toString());
+  history.push_back(QString("%% ") + QDateTime::currentDateTime().toString());
 }
 
 Context* KeyManager::GetCompletionContext() {
@@ -95,7 +95,7 @@ int KeyManager::getTerminalWidth() {
 
 void KeyManager::ClearHistory() {
   history.clear();
-  history.push_back(QString("% ") + QDateTime::currentDateTime().toString());
+  history.push_back(QString("%% ") + QDateTime::currentDateTime().toString());
 }
 
 void KeyManager::SetTermWidth(int w) {

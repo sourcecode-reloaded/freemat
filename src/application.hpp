@@ -45,6 +45,7 @@ class ApplicationWindow : public QMainWindow {
   QAction *pathAct, /**filetoolAct, *historyAct,*/ *cleanHistoryAct;
   QAction *pauseAct, *continueAct, *stopAct, *clearAct;
   QAction *dbStepAct, *dbTraceAct, *checkUpdates /*, *workAct */;
+  QAction *dirChooseAct, *dirUpAct;
   StackTool *m_stacktool;
   QComboBox *cdCombo;
   QPushButton *cdButton;
@@ -101,6 +102,7 @@ private slots:
   void clearconsole();
   void CWDChanged(QString);
   void dirButtonClicked();
+  void dirUp();
 }; 
 
 #endif

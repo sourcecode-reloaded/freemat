@@ -20,7 +20,7 @@
 #define __HistoryWidget_hpp__
 
 #include <QWidget>
-#include <QListWidget>
+#include <QTreeWidget>
 #include <QDockWidget>
 
 class HistoryWidget : public QDockWidget {
@@ -29,7 +29,9 @@ public:
   HistoryWidget(QWidget *parent);
   void clear();
 private:
-  QListWidget *m_flist;
+  QTreeWidget *m_flist;
+  QTreeWidgetItem *m_parent;
+  QTreeWidgetItem *m_last_added;
   QMenu *m_popup;
   void readSettings();
 protected:
@@ -37,7 +39,7 @@ protected:
   void closeEvent(QCloseEvent*);
 protected slots:
   void addCommand(QString t);
-  void doubleClicked(QListWidgetItem* item);
+  void doubleClicked(QTreeWidgetItem* item, int column);
 signals:
   void sendCommand(QString t);
   void clearHistory();

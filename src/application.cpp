@@ -113,6 +113,8 @@ void ApplicationWindow::createActions() {
   dbTraceAct = new QAction(QIcon(":/images/dbgstep.png"),"&Step Into",this);
   dbTraceAct->setShortcut(Qt::Key_F11); 
   checkUpdates = new QAction("Check for Updated Software",this);
+  dirChooseAct = new QAction(qApp->style()->standardIcon(QStyle::SP_DirIcon),"Choose Dir",this);
+  dirUpAct = new QAction(qApp->style()->standardIcon(QStyle::SP_FileDialogToParent),"...",this);
 }
 
 
@@ -178,11 +180,13 @@ void ApplicationWindow::createToolBars() {
   dirToolBar->addWidget(cdCombo);
   cdCombo->setVisible(true);
   cdCombo->setObjectName("cdCombo");
-  cdButton = new QPushButton("...");
-  cdButton->setMaximumWidth(25);
-  cdButton->setObjectName("cdButton");
-  dirToolBar->addWidget(cdButton);
-  cdButton->setVisible(true);
+  //  cdButton = new QPushButton("...");
+  //  cdButton->setMaximumWidth(25);
+  //  cdButton->setObjectName("cdButton");
+  //  dirToolBar->addWidget(cdButton);
+  //  cdButton->setVisible(true);
+  dirToolBar->addAction(dirChooseAct);
+  dirToolBar->addAction(dirUpAct);
 }
 
 void ApplicationWindow::createStatusBar() {
@@ -315,7 +319,8 @@ void ApplicationWindow::SetKeyManager(KeyManager *keys) {
   connect(checkUpdates,SIGNAL(triggered()),this,SLOT(checkForUpdates()));
   connect(cdCombo,SIGNAL(activated(const QString&)),
 	  m_keys,SLOT(ChangeDir(const QString&)));
-  connect(cdButton,SIGNAL(clicked()),this,SLOT(dirButtonClicked()));
+  connect(dirChooseAct,SIGNAL(triggered()),this,SLOT(dirButtonClicked()));
+  connect(dirUpAct,SIGNAL(triggered()),this,SLOT(dirUp()));
 }
 
 void ApplicationWindow::save() {
@@ -461,6 +466,10 @@ void ApplicationWindow::dirButtonClicked() {
 						  QFileDialog::ShowDirsOnly);
   if (!dir.isEmpty()) 
     m_keys->ChangeDir(dir);
+}
+
+void ApplicationWindow::dirUp() {
+  m_keys->ChangeDir("..");
 }
 
 void ApplicationWindow::checkForUpdates() {

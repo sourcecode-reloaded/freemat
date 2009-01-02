@@ -18,15 +18,15 @@ e
  packaging
  completion stuff?
 
- -- Need to make ip set on editor an active thing (push from interpreter, not pull from editor).
- -- Activate the file tool, add Move Up
- -- Clean up history tool with tree
- -- Create Variable Editor.
- -- Fix cdcombo on application bar
- -- Add move up to the cdcombo
+ -- Need to make ip set on editor an active thing (push from interpreter, not pull from editor) - DONE
+ -- Activate the file tool, add Move Up - DONE
+ -- Clean up history tool with tree - DONE
+ -- Create Variable Editor
+ -- Fix cdcombo on application bar - DONE
+ -- Add move up to the cdcombo - DONE
  -- Sort by file type --> auto subsort by filename
  -- Moving to "base" seems to mess up "return"
-
+ -- Centralized config dialog
 
 *******************************************************************************
 Variables Tool:
