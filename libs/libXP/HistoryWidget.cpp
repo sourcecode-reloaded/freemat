@@ -23,6 +23,7 @@
 
 HistoryWidget::HistoryWidget(QWidget *parent) : QDockWidget("History",parent) {
   m_flist = new QTreeWidget(this);
+  m_flist->header()->hide();
   m_parent = 0;
   setWidget(m_flist);
   readSettings();
