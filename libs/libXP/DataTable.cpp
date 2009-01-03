@@ -50,6 +50,24 @@ QVariant DataTable::data(const QModelIndex &index, int role) const {
   return QVariant();
 }
 
+template <typename T>
+QList<QVariant> SubsortByFirstColumn(const QMultiMap<T,QVariant> &map) {
+  // Get the list of all keys
+  QList<T> keys = map.uniqueKeys();
+  QList<QVariant> result;
+  // Loop over the keys..
+  for (int i=0;i<keys.size();i++) {
+    // Get a list of the values for this key
+    QList<QVariant> valset = map.values(keys[i]);
+    // Resort this list by the entry of the first column
+    QMultiMap<QString,QVariant> submap;
+    for (int i=0;i<valset.size();i++)
+      submap.insert(valset[i].toList()[1].toString().toUpper(),valset[i]);
+    result += submap.values();
+  }
+  return result;
+}
+
 void DataTable::sort(int column, Qt::SortOrder order) {
   if (m_data.size() == 0) return;
   // Determine the type of the data for this column
@@ -62,7 +80,9 @@ void DataTable::sort(int column, Qt::SortOrder order) {
       QMultiMap<double,QVariant> map;
       for (int i=0;i<m_data.size();i++) 
 	map.insert(m_data[i].toList()[column].toDouble(),m_data[i]);
-      m_data = map.values();
+      // We want to subsort by the contents of column 1 (which must be 
+      // a string
+      m_data = SubsortByFirstColumn(map);
       break;
     }
   case QVariant::String:
@@ -70,7 +90,7 @@ void DataTable::sort(int column, Qt::SortOrder order) {
       QMultiMap<QString,QVariant> map;
       for (int i=0;i<m_data.size();i++)
 	map.insert(m_data[i].toList()[column].toString(),m_data[i]);
-      m_data = map.values();
+      m_data = SubsortByFirstColumn(map);
       break;
     }
   case QVariant::DateTime:
@@ -78,7 +98,7 @@ void DataTable::sort(int column, Qt::SortOrder order) {
       QMultiMap<QDateTime,QVariant> map;
       for (int i=0;i<m_data.size();i++)
 	map.insert(m_data[i].toList()[column].toDateTime(),m_data[i]);
-      m_data = map.values();
+      m_data = SubsortByFirstColumn(map);
       break;
     }
   default:

@@ -44,6 +44,7 @@
 #include "GetSet.hpp"
 #include "FuncPtr.hpp"
 #include "AnonFunc.hpp"
+#include "Stats.hpp"
 #include <QtGui>
 
 #ifdef WIN32
@@ -137,49 +138,6 @@ void Interpreter::changeDir(QString path) {
   emit CWDChanged(QDir::currentPath());
   setupWatcher();
   rescanPath();
-}
-
-//FIXME -- 500000 should not be hard-coded
-// Computes min, max, range, mean, std, var
-static QVariant VariantizeAnswer(const ArrayVector &v) {
-  Array p = v[0];
-  p = p.toClass(Double);
-  if (p.allReal())
-    return QVariant(p.constRealScalar<double>());
-  else
-    return QVariant(SummarizeArrayCellEntry(p));
-}
-
-ArrayVector MinFunction(int nargout, const ArrayVector& arg);
-ArrayVector MaxFunction(int nargout, const ArrayVector& arg);
-ArrayVector MeanFunction(int nargout, const ArrayVector& arg);
-ArrayVector VarFunction(int nargout, const ArrayVector& arg);
-
-static QList<QVariant> ComputeVariableStats(Array* x) {
-  if (x->isSparse() || x->isString() || 
-      x->isReferenceType() || x->isUserClass() ||
-      x->isEmpty() || x->length() > 500000) 
-    // Return all empties (no information)
-    return QList<QVariant>() << QVariant()  // min
-			     << QVariant()  // max
-			     << QVariant()  // range
-			     << QVariant()  // mean
-			     << QVariant()  // std
-			     << QVariant(); // var
-  else {
-    Array xp(*x);
-    xp.reshape(NTuple(x->length(),1));
-    QList<QVariant> retvec;
-    ArrayVector xpvec; 
-    xpvec.push_back(xp);
-    retvec << VariantizeAnswer(MinFunction(1,xpvec));
-    retvec << VariantizeAnswer(MaxFunction(1,xpvec));
-    retvec << QVariant(QString("TBD"));
-    retvec << VariantizeAnswer(MeanFunction(1,xpvec));
-    retvec << QVariant(QString("TBD"));
-    retvec << VariantizeAnswer(VarFunction(1,xpvec));
-    return retvec;
-  }
 }
 				 
 void Interpreter::updateVariablesTool() {

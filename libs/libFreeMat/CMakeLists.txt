@@ -33,6 +33,7 @@ FunctionDef.cpp
 FuncPtr.cpp 
 AnonFunc.cpp 
 SparseCCS.cpp 
+Stats.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/Intrepreter.moc.cpp
 )
 
