@@ -49,6 +49,29 @@
 //clear a
 //a
 //@>
+//@@Tests
+//@{ test_clear1.m
+//function test_val = test_clear1
+//  A = 1;
+//  clear('A');
+//  test_val = 0;
+//  try
+//    B = A;
+//  catch
+//    test_val = 1;
+//  end;
+//@}
+//@{ test_clear2.m
+//function test_val = test_clear2
+//  A = 1;
+//  clear('all');
+//  test_val = 0;
+//  try
+//    B = A;
+//  catch
+//    test_val = 1;
+//  end;
+//@}
 //@@Signature
 //sfunction clear ClearFunction
 //inputs varargin

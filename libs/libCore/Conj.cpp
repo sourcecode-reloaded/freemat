@@ -38,6 +38,19 @@ struct OpConj {
 //@<
 //conj([2.0+3.0*i,i])
 //@>
+//@@Tests
+//@{ test_conj1.m
+//function test_val = test_conj1
+//  A = [3+4i,i,3,-i];
+//  B = [3-4i,-i,3,i];
+//  test_val = issame(conj(A),B) && issame(A,conj(B));
+//@}
+//@{ test_conj2.m
+//function test_val = test_conj2
+//  A = single([3+4i,i,3,-i]);
+//  B = single([3-4i,-i,3,i]);
+//  test_val = issame(conj(A),B) && issame(A,conj(B));
+//@}
 //@@Signature
 //function conj ConjFunction
 //inputs x
