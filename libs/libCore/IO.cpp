@@ -723,6 +723,7 @@ static ArrayVector LoadASCIIFunction(int nargout, QString filename, Interpreter*
     return ArrayVector(A);
   else {
     QFileInfo fi(filename);
+    ParentScopeLocker lock(eval->getContext());
     eval->getContext()->insertVariable(fi.baseName(),A);
   }
   return ArrayVector();
@@ -738,6 +739,7 @@ static ArrayVector LoadNativeFunction(int nargout, QString filename,
   QString arrayName = input.getString();
   StringVector fieldnames;
   ArrayVector fieldvalues;
+  ParentScopeLocker lock(eval->getContext());
   while (arrayName != "__eof") {
     Array toRead;
     char flag;

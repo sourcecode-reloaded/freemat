@@ -49,15 +49,12 @@ void FileTool::doubleClicked(const QModelIndex& index) {
       emit sendCommand("cd ..");
     else
       emit sendCommand("cd '" + rowName + "'\n");
-  } else
-    emit sendCommand("edit '" + rowName + "'\n");
+  } else {
+    QFileInfo fileInfo(rowName);
+    if (fileInfo.suffix().toLower() == "dat" ||
+	fileInfo.suffix().toLower() == "mat")
+      emit sendCommand("load '" + rowName + "'\n");
+    else
+      emit sendCommand("edit '" + rowName + "'\n");
+  }
 }
-//   QString filePath(model->filePath(index));
-//   QFileInfo fileInfo(filePath);
-//   if ((fileInfo.suffix() == "dat") || (fileInfo.suffix() == "mat"))
-//     emit sendCommand("load " + filePath + "\n");
-//   else if (fileInfo.suffix() == "m")
-//     emit sendCommand("cd " + fileInfo.path() + "; " + fileInfo.baseName() + "\n");
-//   else
-//     emit sendCommand("'" + filePath + "'");
-// }

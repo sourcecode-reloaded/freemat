@@ -1148,14 +1148,12 @@ void KeyManager::updateStackDepth(int x) {
     for (int i=0;i<x;i++)
       cmd += "dbup;";
     cmd += "\n";
-    qDebug() << cmd;
     emit ExecuteLine(cmd);
   } else {
     QString cmd;
     for (int i=0;i<-x;i++)
       cmd += "dbdown;";
     cmd += "\n";
-    qDebug() << cmd;
     emit ExecuteLine(cmd);
   }
 }

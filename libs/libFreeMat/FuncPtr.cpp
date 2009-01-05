@@ -184,9 +184,11 @@ static void CaptureFunctionPointer(Array &inp, Interpreter *walker,
   if (LOOKUP(inp,"captured").toClass(Bool).constRealScalar<bool>()) return;
   Context* context = walker->getContext();
   QString myScope = context->scopeName();
-  context->bypassScope(1);
-  QString parentScope = context->scopeName();
-  context->restoreScope(1);
+  QString parentScope;
+  {
+    ParentScopeLocker lock(context);
+    parentScope = context->scopeName();
+  }
   if (!Scope::nests(parentScope,myScope)) {
     // We need to capture the variables referenced by the
     // function into the workspace

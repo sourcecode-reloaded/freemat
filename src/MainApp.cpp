@@ -125,7 +125,6 @@ void MainApp::SetupGUICase() {
   QObject::connect(m_win,SIGNAL(startHelp()),this,SLOT(HelpWin()));
   QObject::connect(m_win,SIGNAL(startEditor()),this,SLOT(Editor()));
   QObject::connect(m_win,SIGNAL(startPathTool()),this,SLOT(PathTool()));
-  QObject::connect(qApp,SIGNAL(aboutToQuit()),m_win,SLOT(writeSettings()));
   QObject::connect(qApp,SIGNAL(lastWindowClosed()),qApp,SLOT(quit()));
   QObject::connect(this,SIGNAL(Shutdown()),m_win,SLOT(close()));
   QObject::connect(this,SIGNAL(Initialize()),m_win,SLOT(init()));

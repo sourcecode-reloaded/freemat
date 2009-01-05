@@ -42,6 +42,7 @@ static int ExistFileFunction(QString fname, Interpreter* eval) {
 }
 
 static int ExistVariableFunction(QString fname, Interpreter* eval) {
+  ParentScopeLocker lock(eval->getContext());
   bool isDefed = (eval->getContext()->lookupVariable(fname).valid());
   if (isDefed)
     return 1;

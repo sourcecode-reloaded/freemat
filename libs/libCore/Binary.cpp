@@ -45,8 +45,6 @@ struct OpBitCmp {
   static inline void func(const T &Ar, const T &Ai, T& Cr, T& Ci) {
     Cr = T(~uint32(Ar));
     Ci = T(~uint32(Ai));
-
-
   }
 };
 
@@ -68,6 +66,11 @@ struct OpBitCmp {
 //bitand(uint16([1,16,255]),uint16([3,17,128]))
 //bitand(uint16([1,16,255]),uint16(3))
 //@>
+//@@Tests
+//@{ test_bitand1.m
+//function test_val = test_bitand1
+// test_val = all(bitand([1,5,42],3) == [1 1 2]);
+//@}
 //@@Signature
 //function bitand BitandFunction
 //inputs a b
@@ -97,6 +100,11 @@ ArrayVector BitandFunction(int nargout, const ArrayVector& arg) {
 //bitand(uint16([1,16,255]),uint16([3,17,128]))
 //bitand(uint16([1,16,255]),uint16(3))
 //@>
+//@@Tests
+//@{ test_bitor1.m
+//function test_val = test_bitor1
+//  test_val = all(bitor([1,5,42],3) == [3 7 43]);
+//@}
 //@@Signature
 //function bitor BitorFunction
 //inputs a b
@@ -126,6 +134,11 @@ ArrayVector BitorFunction(int nargout, const ArrayVector& arg) {
 //bitand(uint16([1,16,255]),uint16([3,17,128]))
 //bitand(uint16([1,16,255]),uint16(3))
 //@>
+//@@Tests
+//@{ test_bitxor1.m
+//function test_val = test_bitxor1
+//  test_val = all(bitxor([1,5,42],3) == [2 6 41]);
+//@}
 //@@Signature
 //function bitxor BitxorFunction
 //inputs a b
@@ -137,30 +150,15 @@ ArrayVector BitxorFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(DotOp<OpBitXor>(arg[0],arg[1]));
 }
 
-//!
-//@Module BITCMPCPP Bitwise Boolean Complement Operation
-//@@Section BINARY
-//@@Usage
-//Performs a bitwise binary complement operation on the argument and
-//returns the result.  The syntax for its use is
-//@[
-//   y = bitcmp_cpp(a)
-//@]
-//where @|a| is a  multi-dimensional unsigned integer arrays.  This version of the command
-//uses as many bits as required by the type of a.  For example, if 
-//a is an uint8 type, then the complement is formed using 8 bits.
-//
-//@<
-//bitcmp_cpp(uint16(2^14-2))
-//@>
+// FIXME
 //@@Signature
 //function bitcmp_cpp BitcmpFunction
 //inputs a
 //outputs y
-//!
 ArrayVector BitcmpFunction(int nargout, const ArrayVector& arg) {
-  return ArrayVector(UnaryOp<OpBitCmp>(arg[0]));
+  return ArrayVector(UnaryOp<OpBitCmp>(arg[0]).toClass(arg[0].dataClass()));
 }
+
 //!
 //@Module INT2BIN Convert Integer Arrays to Binary
 //@@Section TYPECAST
@@ -182,12 +180,16 @@ ArrayVector BitcmpFunction(int nargout, const ArrayVector& arg) {
 //A = [1;2;-5;2]
 //int2bin(A,8)
 //@>
+//@@Tests
+//@{ test_int2bin1.m
+//function test_val = test_int2bin1
+//  test_val = all(int2bin([4;3;2;1],3)==[1,0,0;0,1,1;0,1,0;0,0,1]);
+//@}
 //@@Signature
 //function int2bin Int2BinFunction
 //inputs x bits
 //outputs y
 //!
-
 
 struct OpInt2Bin {
   template <typename T>
@@ -221,7 +223,7 @@ ArrayVector Int2BinFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 2)
     throw Exception("int2bin requires at least two arguments");
   return ArrayVector(VectorOp<OpInt2Bin>(arg[0],arg[1].asInteger(),
-					 arg[0].dimensions().lastNotOne()+1).toClass(Bool));
+					 qMax(1,arg[0].dimensions().lastSingular())).toClass(Bool));
 }
 
 //!
@@ -254,6 +256,14 @@ ArrayVector Int2BinFunction(int nargout, const ArrayVector& arg) {
 //bin2int(B)
 //int32(bin2int(B))
 //@>
+//@@Tets
+//@{ test_bin2int1.m
+//function test_val = bin2int1
+//   A = floor(rand(4,4,3)*10);
+//   B = int2bin(A,4);
+//   C = bin2int(B);
+//   test_val = issame(A,C);
+//@}
 //@@Signature
 //function bin2int Bin2IntFunction
 //inputs x flag
@@ -290,11 +300,11 @@ struct OpBin2Int {
 ArrayVector Bin2IntFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)
     throw Exception("bin2int requires at least one arguments");
-  if ((arg.size() == 2) && (arg[1].asString().toUpper() == "signed"))
+  if ((arg.size() == 2) && (arg[1].asString().toUpper() == "SIGNED"))
     return ArrayVector(VectorOp<OpBin2Int>(arg[0].toClass(Int32),1,
-					   arg[0].dimensions().lastNotOne()));
+					   arg[0].dimensions().lastNotOne()-1));
   else
     return ArrayVector(VectorOp<OpBin2Int>(arg[0].toClass(UInt32),1,
-					   arg[0].dimensions().lastNotOne()));
+					   arg[0].dimensions().lastNotOne()-1));
 }
 

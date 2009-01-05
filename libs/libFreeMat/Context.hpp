@@ -741,4 +741,18 @@ public:
   }
 };
 
+// Use this class to get access to a parent scope.  It automatically
+// bypasses the current scope, and restores on destruction
+class ParentScopeLocker {
+  Context *contxt;
+public:
+  ParentScopeLocker(Context *m) {
+    contxt = m;
+    contxt->bypassScope(1);
+  }
+  ~ParentScopeLocker() {
+    contxt->restoreScope(1);
+  }
+};
+
 #endif

@@ -34,6 +34,13 @@
 //cell([2,6])
 //cell([1,3])
 //@>
+//@@Tests
+//@{ test_cell1.m
+//function test_val = test_cell1
+//  A = cell(1,3);
+//  B = [1 2 4];
+//  test_val = issame(size(A),B);
+//@}
 //@@Signature
 //function cell CellFunction
 //inputs varargin

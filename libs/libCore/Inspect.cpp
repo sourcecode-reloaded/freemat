@@ -100,7 +100,7 @@ ArrayVector WhoFunction(int nargout, const ArrayVector& arg, Interpreter* eval) 
   StringVector names;
   Context *context = eval->getContext();
   // Bypass our context (the who(who) one)
-  context->bypassScope(1);
+  ParentScopeLocker lock(context);
   // Search upwards until we find an active scope
   int bypasscount = 0;
   while (!context->isScopeActive()) {
@@ -141,7 +141,7 @@ ArrayVector WhoFunction(int nargout, const ArrayVector& arg, Interpreter* eval) 
     }
     eval->outputMessage("\n");
   }
-  context->restoreScope(bypasscount+1);
+  context->restoreScope(bypasscount);
   return ArrayVector();
 }
 
@@ -181,7 +181,7 @@ ArrayVector WhosFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
   StringVector names;
   Context *context = eval->getContext();
   // Bypass our context (the who(who) one)
-  context->bypassScope(1);
+  ParentScopeLocker lock(context);
   // Search upwards until we find an active scope
   int bypasscount = 0;
   while (!context->isScopeActive()) {
@@ -224,7 +224,7 @@ ArrayVector WhosFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
     }
     eval->outputMessage("\n");
   }
-  context->restoreScope(bypasscount+1);
+  context->restoreScope(bypasscount);
   return ArrayVector();
 }
 
@@ -348,9 +348,8 @@ ArrayVector AddrFunction(int nargout, const ArrayVector& arg) {
 //!
 ArrayVector NarginFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   Context *ctxt = eval->getContext();
-  ctxt->bypassScope(1);
+  ParentScopeLocker lock(ctxt);
   int nargin = ctxt->scopeNargin();
-  ctxt->restoreScope(1);
   return ArrayVector() << Array(double(nargin));
 }
 
@@ -389,9 +388,8 @@ ArrayVector NarginFunction(int nargout, const ArrayVector& arg, Interpreter* eva
 //!
 ArrayVector NargoutFunction(int, const ArrayVector&arg, Interpreter* eval) {
   Context *ctxt = eval->getContext();
-  ctxt->bypassScope(1);
+  ParentScopeLocker lock(ctxt);
   int nargout = ctxt->scopeNargout();
-  ctxt->restoreScope(1);
   return ArrayVector() << Array(double(nargout));
 }
 

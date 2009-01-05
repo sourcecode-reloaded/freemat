@@ -152,6 +152,7 @@ ArrayVector IsSetFunction(int nargout, const ArrayVector& arg, Interpreter* eval
     throw Exception("isset function takes at least one argument - the name of the variable to check for");
   QString fname = arg[0].asString();
   bool isDefed;
+  ParentScopeLocker lock(eval->getContext());
   ArrayReference d = eval->getContext()->lookupVariable(fname);
   isDefed = (d.valid());
   if (isDefed && !d->isEmpty())

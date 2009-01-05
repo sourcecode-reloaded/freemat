@@ -194,6 +194,12 @@ public:
       return 0;
     return non_singular;
   }
+  inline int lastSingular() const {
+    int last_singular = NDims;
+    while ((m_data[last_singular-1] == 1) &&
+	   (last_singular > 0)) last_singular--;
+    return last_singular;
+  }
   inline QString toString() const {
     int last_not_one = lastNotOne();
     QString ret = QString("%1").arg(m_data[0]);

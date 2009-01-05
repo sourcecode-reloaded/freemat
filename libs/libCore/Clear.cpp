@@ -56,17 +56,25 @@
 //!
 
 static void ClearVariable(Interpreter* eval, QString name) {
-  eval->getContext()->deleteVariable(name);
+  Context *context = eval->getContext();
+  ParentScopeLocker lock(context);
+  context->deleteVariable(name);
 }
 
 static void ClearAllFunction(Interpreter* eval) {
   ClearLibs(eval);
-  StringVector names = eval->getContext()->listAllVariables();
+  Context *context = eval->getContext();
+  StringVector names;
+  {
+    ParentScopeLocker lock(context);
+    names = context->listAllVariables();
+  }
   for (int i=0;i<(int)names.size();i++)
     ClearVariable(eval,names[i]);
 }
 
 static void ClearPersistent(Interpreter* eval) {
+  ParentScopeLocker lock(eval->getContext());
   StringVector names = eval->getContext()->listGlobalVariables();
   for (int i=0;i<(int)names.size();i++) {
     if ((names[i].size() >= 1) && (names[i][0] == '_'))
@@ -76,6 +84,7 @@ static void ClearPersistent(Interpreter* eval) {
 }
 
 static void ClearGlobal(Interpreter* eval) {
+  ParentScopeLocker lock(eval->getContext());
   StringVector names = eval->getContext()->listGlobalVariables();
   for (int i=0;i<(int)names.size();i++) {
     if ((names[i].size() >= 1) && (names[i][0] != '_')) {

@@ -701,6 +701,7 @@ ArrayVector MatLoadFunction(int nargout, QString filename,
   MatIO m(filename,MatIO::readMode);
   m.getHeader();
   bool ateof = false;
+  ParentScopeLocker lock(eval->getContext());
   while(!ateof) {
     QString name;
     bool globalFlag = false;
@@ -728,6 +729,7 @@ ArrayVector MatLoadFunction(int nargout, QString filename,
 ArrayVector MatSaveFunction(QString filename, StringVector names, Interpreter *eval) {
   MatIO m(filename,MatIO::writeMode);
   Context *cntxt = eval->getContext();
+  ParentScopeLocker lock(cntxt);
   char header[116];
   time_t t = time(NULL);
   snprintf(header, 116, "MATLAB 5.0 MAT-file, Created on: %s by %s",

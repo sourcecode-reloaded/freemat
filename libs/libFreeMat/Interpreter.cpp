@@ -141,12 +141,10 @@ void Interpreter::changeDir(QString path) {
 }
 				 
 void Interpreter::updateVariablesTool() {
-  qDebug() << "Update variabletool!";
   StringVector varList(context->listAllVariables());
   QList<QVariant> vars;
   for (int i=0;i<varList.size();i++) {
     QList<QVariant> entry;
-    qDebug() << "Variable " << varList[i];
     // Icon
     entry << QVariant();
     entry << QVariant(varList[i]);
@@ -216,7 +214,6 @@ void Interpreter::updateStackTool() {
   }
   context->restoreBypassedScopes();
   while (context->scopeDepth() > f_depth) context->bypassScope(1);
-  qDebug() << "Stackview set to " << stackInfo;
   emit updateStackView(stackInfo);
 }
 
@@ -225,7 +222,6 @@ void Interpreter::updateFileTool(const QString &) {
 }
 
 void Interpreter::updateFileTool() {
-  qDebug() << "Update filetool!";
   // Build the info to send to the file tool
   QDir dir(QDir::currentPath());
   dir.setFilter(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot);
@@ -667,9 +663,8 @@ QString Interpreter::getMFileName() {
 // called by editor
 QString Interpreter::getInstructionPointerFileName() {
   if (!InCLI) return QString("");
-  context->bypassScope(1);
+  ParentScopeLocker lock(context);
   QString filename(context->scopeName());
-  context->restoreScope(1);
   if (isMFile(filename)) 
     return filename;
   return QString("");
@@ -4506,11 +4501,9 @@ bool Interpreter::isBPSet(QString fname, int lineNumber) {
 // called by editor
 bool Interpreter::isInstructionPointer(QString fname, int lineNumber) {
   if (!InCLI) return false;
-  context->bypassScope(1);
+  ParentScopeLocker lock(context);
   QString filename(context->scopeName());
   int token(context->scopeTokenID());
-  context->restoreScope(1);
-  qDebug() << "isIP " << fname << " " << QString().setNum(lineNumber) << " vs " << filename << " " << QString().setNum(token);
   return ((fname == filename) && ((lineNumber == LineNumber(token)) ||
 				  ((lineNumber == 1) && (LineNumber(token) == 0))));
 }
@@ -5226,14 +5219,13 @@ void Interpreter::dbstepStatement(Tree *t) {
   // Get the current function
   FuncPtr val;
   if (context->scopeName() == "base") return;
-  context->bypassScope(1);
+  ParentScopeLocker lock(context);
   if (!lookupFunction(context->scopeDetailString(),val)) {
     warningMessage(QString("unable to find function ") + context->scopeDetailString() + " to single step");
     return;
   }
   context->setScopeStepTrap(lines);
   context->setScopeStepCurrentLine(LineNumber(context->scopeTokenID()));
-  context->restoreScope(1);
 }
 
 void Interpreter::dbtraceStatement(Tree *t) {

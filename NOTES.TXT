@@ -5,14 +5,19 @@
  -- Need to make ip set on editor an active thing (push from interpreter, not pull from editor) - DONE
  -- Activate the file tool, add Move Up - DONE
  -- Clean up history tool with tree - DONE
- -- Create Variable Editor
+ -- Create Variable Editor - POSTPONE
  -- Fix cdcombo on application bar - DONE
  -- Add move up to the cdcombo - DONE
  -- Sort by file type --> auto subsort by filename - DONE
  -- Moving to "base" seems to mess up "return"
- -- Centralized config dialog
+ -- Centralized config dialog - POSTPONE
  -- Finish stats - DONE
- -- Restore of geometry on save/load
+ -- Restore of geometry on save/load - DONE
+ -- Finish File browser (.m --> editor, .mat --> load) - DONE
+ -- fix Save, Clear, Evalin, import, - DONE
+ -- Write test suite - need a bunch more tests...
+ -- -WAll
+ -- Packaging
 
 *******************************************************************************
 Variables Tool:

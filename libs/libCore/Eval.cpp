@@ -170,8 +170,8 @@ ArrayVector EvalFunction(int nargout, const ArrayVector& arg,Interpreter* eval){
   if (arg.size() == 0)
     throw Exception("eval function takes at least one argument - the string to execute");
   if (arg.size() == 2)
-    return EvalTryFunction(nargout, arg, eval, 0);
-  return EvalNoTryFunction(nargout, arg, eval, 0);
+    return EvalTryFunction(nargout, arg, eval, 1);
+  return EvalNoTryFunction(nargout, arg, eval, 1);
 }
 
 //!
@@ -208,7 +208,7 @@ ArrayVector EvalInFunction(int nargout, const ArrayVector& arg, Interpreter* eva
   if (spec_str=="base")
     popspec = -1;
   else if (spec_str=="caller")
-    popspec = 1;
+    popspec = 2;
   else
     throw Exception("evalin function requires the first argument to be either 'caller' or 'base'");
   ArrayVector argcopy(arg);
