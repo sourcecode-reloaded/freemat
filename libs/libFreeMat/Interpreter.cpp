@@ -1990,6 +1990,7 @@ static bool compileJITBlock(Interpreter *interp, Tree *t) {
     t->setJITFunction(cg);
   } catch (Exception &e) {
     dbout << e.msg() << "\r\n";
+    interp->warningMessage(QString("Can't compile code. Using interpreter. Reason: ")+e.msg());
     delete cg;
     success = false;
     t->setJITState(Tree::FAILED);
@@ -2004,6 +2005,7 @@ static bool prepJITBlock(Tree *t) {
     success = true;
   } catch (Exception &e) {
     dbout << e.msg() << "\r\n";
+    t->JITFunction()->eval->warningMessage(QString("Can not compile code. Using interpreter. Reason: ")+e.msg());
     success = false;
   }
   return success;
@@ -5354,7 +5356,7 @@ void Interpreter::evalCLI() {
   setupWatcher();
   while(1) {
     QString fname;
-    int line;
+    int line = 0;
     if ((depth == 0) || (context->scopeDepth() < 2)) {
       prompt = "--> ";
       rootCLI = true;
