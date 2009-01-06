@@ -28,6 +28,15 @@
 //lasterr('Test message');
 //lasterr
 //@>
+//@@Tests
+//@{ test_lasterr1.m
+//function test_val = test_lasterr1
+//  try
+//    error('Hulabaloo');
+//  catch;
+//  end;
+//  test_val = strcmp(lasterr,'Hulabaloo');
+//@}
 //@@Signature
 //sfunction lasterr LasterrFunction
 //inputs msg
@@ -122,6 +131,16 @@ ArrayVector WarningFunction(int nargout, const ArrayVector& arg, Interpreter* ev
 //evenoddtest(0)
 //evenoddtest(pi)
 //@>
+//@@Tests
+//@{ test_error1.m
+//function test_val = test_error1
+//  test_val = false;
+//  try
+//     error('test')
+//  catch
+//     test_val = true;
+//  end
+//@}
 //@@Signature
 //function error ErrorFunction
 //inputs string

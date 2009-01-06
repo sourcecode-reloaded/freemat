@@ -23,7 +23,6 @@
 #include "Scope.hpp"
 #include "Array.hpp"
 #include "Print.hpp"
-#include "Core.hpp"
 #include "FMFontDialog.hpp"
 
 static QString lastfile;
@@ -1464,6 +1463,8 @@ void FMEditor::replace() {
   m_replace->show();
   m_replace->raise();
 }
+
+ArrayVector HelpWinFunction(int, const ArrayVector &, Interpreter *);
 
 void FMEditor::helpWin() {
   HelpWinFunction(0,ArrayVector(),m_eval);

@@ -191,6 +191,10 @@ static Array Conv2FunctionRCX(Array hcol, Array hrow, Array X, QString type) {
 //and @|n| ranges over @|0 <= n < xn+yn-1|.  For the case where @|shape|
 //is @|'same'|, the output ranges over @|(ym-1)/2 <= m < xm + (ym-1)/2|
 //and @|(yn-1)/2 <= n < xn + (yn-1)/2|.
+//@@Tests
+//@$near|y1=conv2(x1,x2)
+//@$near|y1=conv2(x1,x2,'same')
+//@$near|y1=conv2(x1,x2,'valid')
 //@@Signature
 //function conv2 Conv2Function
 //inputs hcol hrow X shape

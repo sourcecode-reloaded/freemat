@@ -17,7 +17,6 @@
  *
  */
 
-#include "Core.hpp"
 #include "Operators.hpp"
 #include "Exception.hpp"
 #include "Array.hpp"

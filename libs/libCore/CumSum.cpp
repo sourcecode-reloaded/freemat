@@ -76,6 +76,8 @@ struct OpVecCumSum {
 //B(:,:,2) = [1,0;3,0]
 //cumsum(B,3)
 //@>
+//@@Tests
+//@$exact|y1=cumsum(x1)
 //@@Signature
 //function cumsum CumsumFunction
 //inputs x dimension

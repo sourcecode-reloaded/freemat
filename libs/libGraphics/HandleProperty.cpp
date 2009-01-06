@@ -20,7 +20,6 @@
 #include "HandleList.hpp"
 #include "HandleObject.hpp"
 #include "HandleCommands.hpp"
-#include "Core.hpp"
 
 static const char *auto_manual_dict[3] = {"auto","manual",0};
 static const char *on_off_dict[3] = {"on","off",0};

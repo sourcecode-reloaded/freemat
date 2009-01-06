@@ -19,7 +19,6 @@ HandleSurface.cpp
 HandlePatch.cpp
 HandleText.cpp 
 HandleWindow.cpp 
-LoadGraphicsCore.cpp 
 QTRenderEngine.cpp 
 RenderEngine.cpp 
 HandleUIControl.cpp 

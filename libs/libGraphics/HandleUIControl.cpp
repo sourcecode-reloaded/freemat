@@ -2,7 +2,6 @@
 #include "HandleMultiEdit.hpp"
 #include "HandleWindow.hpp"
 #include "Interpreter.hpp"
-#include "Core.hpp"
 #include <QtGui>
 
 HandleUIControl::HandleUIControl() {

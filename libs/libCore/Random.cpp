@@ -17,7 +17,6 @@
  *
  */
 
-#include "Core.hpp"
 #include "Exception.hpp"
 #include <math.h>
 #include <stdio.h>

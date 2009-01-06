@@ -64,8 +64,6 @@ images/zoomout.png svn_mime_002dtype=application%2Foctet-stream
 libs/libCore/Analyze.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libCore/Cast.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libCore/Constants.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-libs/libCore/Constructors.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-libs/libCore/Core.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libCore/Directory.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libCore/FFT.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libCore/IO.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -164,7 +162,6 @@ libs/libGraphics/HandleWindow.cpp svn_keywords=Author+Date+Id+Revision svn_eol_0
 libs/libGraphics/HandleWindow.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libGraphics/Label.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libGraphics/Label.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-libs/libGraphics/LoadGraphicsCore.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libGraphics/QTRenderEngine.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libGraphics/QTRenderEngine.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libGraphics/RenderEngine.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native

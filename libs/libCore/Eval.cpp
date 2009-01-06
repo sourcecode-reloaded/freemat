@@ -63,6 +63,23 @@
 //Note that in the second case, @|b| takes the value of 33, indicating
 //that the evaluation of the first expression failed (because @|z| is
 //not defined).
+//@@Tests
+//@{ test_eval1.m
+//function test_val = test_eval1
+//  eval('test_val = true');
+//@}
+//@{ test_eval2.m
+//function test_val = test_eval2
+//  a = rand(10);
+//  [s1,v1,d1] = svd(a);
+//  [s2,v2,d2] = eval('svd(a)');
+//  test_val = issame(s1,s2) && issame(v1,v2) && issame(d1,d2);
+//@}
+//@{ test_eval3.m
+//function test_val = test_eval3
+//  test_val = false;
+//  eval('b=a','test_val=true');
+//@}
 //@@Signature
 //sfunction eval EvalFunction
 //inputs try_clause catch_clause
@@ -195,6 +212,26 @@ ArrayVector EvalFunction(int nargout, const ArrayVector& arg,Interpreter* eval){
 //function or script.  On the other hand if the argument is 'base', then
 //the expression is evaluated in the base work space.   See @|eval| for
 //details on the use of each variation.
+//@@Tests
+//@{ test_evalin1.m
+//function test_val = test_evalin1
+//   test_val = false;
+//   do_test_evalin1_subfunc;
+//end
+//
+//function do_test_evalin1_subfunc
+//   evalin('caller','test_val = true');
+//end
+//@}
+//@{ test_evalin2.m
+//function test_val = test_evalin2
+//   evalin('base','qv32 = true;');
+//   if (exist('qv32'))
+//     test_val = false;
+//     return;
+//   end;
+//   test_val = evalin('base','qv32');
+//@}
 //@@Signature
 //sfunction evalin EvalInFunction
 //inputs workspace expression
@@ -235,6 +272,22 @@ ArrayVector EvalInFunction(int nargout, const ArrayVector& arg, Interpreter* eva
 //current function or script.  On the other hand if the argument is 'base',
 //then the assignment is done in the base work space.  Note that the
 //variable is created if it does not already exist.
+//@@Tests
+//@{ test_assignin1.m
+//function test_val = test_assignin1
+//  test_val = false;
+//  do_test_assignin1_subfunc;
+//end
+//
+//function do_test_assignin1_subfunc
+//  assignin('caller','test_val',true);
+//end
+//@}
+//@{ test_assignin2.m
+//function test_val = test_assignin2
+//  assignin('base','qv43',true);
+//  test_val = evalin('base','qv43');
+//@}
 //@@Signature
 //sfunction assignin AssignInFunction
 //inputs workspace variablename value

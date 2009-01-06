@@ -41,13 +41,7 @@
 //logical([pi,pi,0,e,0,-1])
 //@>
 //@@Tests
-//@{ test_logical1.m
-//function test_val = test_logical1
-// A = [pi,-pi,0,e,0,1];
-// B = logical(A);
-// C = (A ~= 0);
-// test_val = issame(B,C);
-//@}
+//@$exact|y1=logical(x1)
 //@@Signature
 //function logical LogicalFunction
 //inputs x
@@ -77,13 +71,7 @@ ArrayVector LogicalFunction(int nargout, const ArrayVector& arg) {
 //string(a)
 //@>
 //@@Tests
-//@{ test_string1.m
-//function test_val = test_string1
-//  A = [104,101,108,108,111];
-//  B = string(A);
-//  C = 'hello';
-//  test_val = issame(B,C);
-//@}
+//@$exact|y1=string(x1)
 //@@Signature
 //function string StringFunction
 //inputs x
@@ -145,12 +133,7 @@ ArrayVector StringFunction(int nargout, const ArrayVector& arg) {
 //uint8({4})
 //@>
 //@@Tests
-//@{ test_uint8_1.m
-//function test_val = test_uint8_1
-//   A = uint8([-10,0,300]);
-//   B = uint8([0,0,255]);
-//  test_val = issame(A,B);
-//@}
+//@$exact|y1=uint8(x1)
 //@@Signature
 //function uint8 UInt8Function
 //inputs x
@@ -210,12 +193,7 @@ ArrayVector UInt8Function(int nargout, const ArrayVector& arg) {
 //uint16({4})
 //@>
 //@@Tests
-//@{ test_uint16_1.m
-//function test_val = test_uint16_1
-//  A = uint16([-10,0,300,70000]);
-//  B = uint16([0,0,300,65535]);
-//  C = issame(A,B);
-//@}
+//@$exact|y1=uint16(x1)
 //@@Signature
 //function uint16 UInt16Function
 //inputs x
@@ -276,12 +254,7 @@ ArrayVector UInt16Function(int nargout, const ArrayVector& arg) {
 //uint32({4})
 //@>
 //@@Tests
-//@{ test_uint32_1.m
-//function test_val = test_uint32_1
-//   A = uint32([-10,0,5000000000]);
-//   B = uint32([0,0,4294967295]);
-//   test_val = issame(A,B);
-//@}
+//@$exact|y1=uint32(x1)
 //@@Signature
 //function uint32 UInt32Function
 //inputs x
@@ -341,12 +314,7 @@ ArrayVector UInt32Function(int nargout, const ArrayVector& arg) {
 //uint64({4})
 //@>
 //@@Tests
-//@{ test_uint64_1.m
-//function test_val = test_uint64_1
-//  A = uint64([-10,0,5e9]);
-//  B = uint64([-10,0,5e9]);
-//  test_val = issame(A,B);
-//@}
+//@$exact|y1=uint64(x1)
 //@@Signature
 //function uint64 UInt64Function
 //inputs x
@@ -404,12 +372,7 @@ ArrayVector UInt64Function(int nargout, const ArrayVector& arg) {
 //int8({4})
 //@>
 //@@Tests
-//@{ test_int8_1.m
-//function test_val = test_int8_1
-//   A = int8([-200,-10,0,300]);
-//   B = int8([-127,-10,0,127]);
-//  test_val = issame(A,B);
-//@}
+//@$exact|y1=int8(x1)
 //@@Signature
 //function int8 Int8Function
 //inputs x
@@ -466,12 +429,7 @@ ArrayVector Int8Function(int nargout, const ArrayVector& arg) {
 //int16({4})
 //@>
 //@@Tests
-//@{ test_int16_1.m
-//function test_val = test_int16_1
-//  A = int16([-70000,-10,0,300,70000]);
-//  B = int16([-32767,-10,0,300,32767]);
-//  C = issame(A,B);
-//@}
+//@$exact|y1=int16(x1)
 //@@Signature
 //function int16 Int16Function
 //inputs x
@@ -528,12 +486,7 @@ ArrayVector Int16Function(int nargout, const ArrayVector& arg) {
 //int32({4})
 //@>
 //@@Tests
-//@{ test_int32_1.m
-//function test_val = test_int32_1
-//   A = int32([-5000000000,-10,0,5000000000]);
-//   B = int32([-2147483647,-10,0,2147483647]);
-//   test_val = issame(A,B);
-//@}
+//@$exact|y1=int32(x1)
 //@@Signature
 //function int32 Int32Function
 //inputs x
@@ -590,12 +543,7 @@ ArrayVector Int32Function(int nargout, const ArrayVector& arg) {
 //int64({4})
 //@>
 //@@Tests
-//@{ test_int64_1.m
-//function test_val = test_int64_1
-//   A = int64([-5000000000,-10,0,5000000000]);
-//   B = int64([-5000000000,-10,0,5000000000]);
-//   test_val = issame(A,B);
-//@}
+//@$exact|y1=int64(x1)
 //@@Signature
 //function int64 Int64Function
 //inputs x
@@ -662,6 +610,7 @@ ArrayVector Int64Function(int nargout, const ArrayVector& arg) {
 //float({4})
 //@>
 //@@Tests
+//@$exact|y1=float(x1)
 //@{ test_sparse58.m
 //% Test type conversion functions
 //function x = test_sparse58
@@ -751,12 +700,7 @@ ArrayVector FloatFunction(int nargout, const ArrayVector& arg) {
 //double({4})
 //@>
 //@@Tests
-//@{ test_double1.m
-//function test_val = test_double1
-//  A = double(2+3i);
-//  B = 2+3i;
-//  test_val = issame(A,B);
-//@}
+//@$exact|y1=double(x1)
 //@@Signature
 //function double DoubleFunction
 //inputs x
@@ -779,6 +723,8 @@ ArrayVector DoubleFunction(int nargout, const ArrayVector& arg) {
 //   y = complex(x,z)
 //@]
 //where @|x| and @|z| are @|n|-dimensional numerical arrays of the same size and type.  
+//@@Tests
+//@$exact|y1=complex(x1,x2)
 //@@Signature
 //function complex ComplexFunction
 //inputs x z
@@ -912,6 +858,8 @@ ArrayVector DcomplexFunction(int nargout, const ArrayVector& arg) {
 //a = 'hello';
 //test_val = test(strcmp(typeof(a),'char'));
 //@}
+//@@Tests
+//@$exact|y1=typeof(x1)
 //@@Signature
 //function typeof TypeOfFunction
 //inputs x

@@ -20,7 +20,6 @@
 #include "HandleList.hpp"
 #include "HandleFigure.hpp"
 #include "HandleText.hpp"
-#include "Core.hpp"
 #include <qapplication.h>
 #include <math.h>
 #include <qpainter.h>

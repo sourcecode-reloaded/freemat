@@ -30,7 +30,6 @@
 #include "Class.hpp"
 #include "LoadFN.hpp"
 #include "HandleCommands.hpp"
-#include "Core.hpp"
 #include "HandleList.hpp"
 #include "Interpreter.hpp"
 #include "HandleWindow.hpp"
@@ -40,8 +39,6 @@
 #include "Platform.hpp"
 
 HandleList<Interpreter*> m_threadHandles;
-
-
 
 
 #ifdef Q_WS_X11 
@@ -101,10 +98,14 @@ MainApp::MainApp() {
 MainApp::~MainApp() {
 }
 
+ArrayVector HelpWinFunction(int, const ArrayVector &, Interpreter *);
+
 void MainApp::HelpWin() {
   ArrayVector dummy;
   HelpWinFunction(0,dummy,m_eval);
 }
+
+bool inBundleMode();
 
 void MainApp::SetupGUICase() {
   if (inBundleMode()) {
@@ -181,6 +182,8 @@ void MainApp::SetupDumbTerminalCase() {
   QObject::connect(this,SIGNAL(Shutdown()),qApp,SLOT(quit()));
 #endif
 }
+
+ArrayVector PathToolFunction(int, const ArrayVector&, Interpreter*);
 
 void MainApp::PathTool() {
   ArrayVector dummy;
@@ -1017,6 +1020,8 @@ void MainApp::DisableRepaint() {
 }
 			 
 void LoadBuiltinFunctions(Context *context, bool guimode);
+
+void InitializeFileSubsystem();
 
 static bool first_time = true;
 

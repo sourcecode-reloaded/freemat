@@ -58,6 +58,8 @@
 //uint32(inf)
 //complex(inf)
 //@>
+//@@Tests
+//@$exact|y1=inf
 //@@Signature
 //function inf InfFunction
 //inputs none
@@ -90,6 +92,8 @@ ArrayVector InfFunction(int nargout, const ArrayVector& arg) {
 //uint32(nan)
 //complex(nan)
 //@>
+//@@Tests
+//@$exact|y1=nan
 //@@Signature
 //function nan NaNFunction
 //inputs none
@@ -135,6 +139,9 @@ ArrayVector NaNFunction(int nargout, const ArrayVector& arg) {
 //clear i
 //i
 //@>
+//@@Tests
+//@$exact|y1=i
+//@$exact|y1=j
 //@@Signature
 //function i IFunction
 //inputs none
@@ -163,6 +170,8 @@ ArrayVector IFunction(int nargout, const ArrayVector& arg) {
 //pi
 //cos(pi)
 //@>
+//@@Tests
+//@$exact|y1=pi
 //@@Signature
 //function pi PiFunction
 //inputs none
@@ -187,6 +196,8 @@ ArrayVector PiFunction(int nargout, const ArrayVector& arg) {
 //e
 //log(e)
 //@>
+//@@Tests
+//@$exact|y1=e
 //@@Signature
 //function e EFunction
 //inputs none
@@ -226,6 +237,11 @@ ArrayVector EFunction(int nargout, const ArrayVector& arg) {
 //d = eps(single(1.));
 //test_val = test(a==b && c==d);
 //@}
+//@@Tests
+//@$exact|y1=eps
+//@$exact|y1=eps('double')
+//@$exact|y1=eps('single')
+//@$exact|y1=eps(x1)
 //@@Signature
 //function eps EpsFunction
 //inputs varargin
@@ -240,40 +256,40 @@ ArrayVector EpsFunction(int nargout, const ArrayVector& arg) {
     if( arg.size()==1 ){
 	Array a( arg[0] );
 	if( a.isString() ){
-	    QString str = a.asString();
-	    if( str == QString( "double" ) ){
-		retval << Array( feps( 1. ) ); 
-	    }
-	    else if( str == QString( "single" ) ){
-		retval << Array( fepsf( 1. ) );
-	    }
-	    else{
-		throw Exception("Class must be 'double' or 'single'");
-	    }
+	  QString str = a.asString().toLower();
+	  if( str == QString( "double" ) ){
+	    retval << Array( feps( 1. ) ); 
+	  }
+	  else if( str == QString( "single" ) ){
+	    retval << Array( fepsf( 1. ) );
+	  }
+	  else{
+	    throw Exception("Class must be 'double' or 'single'");
+	  }
 	}
 	else { //numeric argument
-	    switch( a.dataClass() ){ 
-		case Double: 
-		    {
-			double x = fabs( a.asDouble() );
-			retval << Array( feps( x ) );
-			break;
-		    }
-		case Float: 
-		    {
-			float x = fabsf( a.asDouble() );
-			retval << Array( fepsf( x ) );
-			break;
-		    }
-		default:
-		    throw Exception("Class must be 'double' or 'single'");
+	  switch( a.dataClass() ){ 
+	  case Double: 
+	    {
+	      double x = fabs( a.asDouble() );
+	      retval << Array( feps( x ) );
+	      break;
 	    }
+	  case Float: 
+	    {
+	      float x = fabsf( a.asDouble() );
+	      retval << Array( fepsf( x ) );
+	      break;
+	    }
+	  default:
+	    throw Exception("Class must be 'double' or 'single'");
+	  }
 	}
     }
     else{
-	retval << Array( feps( 1. ) );
+      retval << Array( feps( 1. ) );
     }
-  return retval;
+    return retval;
 }
 
 //!
@@ -313,7 +329,7 @@ ArrayVector FepsFunction(int nargout, const ArrayVector& arg) {
 //   y = true
 //@]
 //@@Tests
-//@$exact|y1=logical(x1)
+//@$exact|y1=true
 //@@Signature
 //function true TrueFunction
 //inputs none
@@ -331,6 +347,8 @@ ArrayVector TrueFunction(int nargout, const ArrayVector& arg) {
 //@[
 //   y = false
 //@]
+//@@Tests
+//@$exact|y1=false
 //@@Signature
 //function false FalseFunction
 //inputs none

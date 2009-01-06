@@ -21,7 +21,6 @@
 #include "HandleList.hpp"
 #include "HandleFigure.hpp"
 #include "HandleCommands.hpp"
-#include "Core.hpp"
 #include "IEEEFP.hpp"
 
 bool HandleObject::IsType(QString name) {

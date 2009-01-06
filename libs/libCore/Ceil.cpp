@@ -49,14 +49,7 @@ struct OpCeil {
 //ceil(-5.32)
 //@>
 //@@Tests
-//@{ test_ceil1.m
-//function test_val = test_ceil1
-//  test_val = issame(ceil(4.32),5);
-//@}
-//@{ test_ceil2.m
-//function test_val = test_ceil2
-//  test_val = issame(ceil(-2.3),-2);
-//@}
+//@$exact|y1=ceil(x1)
 //@@Signature
 //function ceil CeilFunction
 //input x
