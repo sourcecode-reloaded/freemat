@@ -263,7 +263,18 @@ ArrayVector SourceFunction(int nargout, const ArrayVector& arg, Interpreter* eva
 //@|feval|.  Note that unlike MATLAB, @|builtin| does not force
 //evaluation to an actual compiled function.  It simply subverts
 //the activation of overloaded method calls.
-///@@Signature
+//@@Tests
+//@{ test_builtin1.m
+//function test_val = test_builtin1
+//  a = -1;
+//  b = builtin('abs',a);
+//  test_val = (b == 1);
+//end 
+//function y = abs(x)
+//  y = x;
+//end
+//@}
+//@@Signature
 //sfunction builtin BuiltinFunction
 //inputs fname varargin
 //outputs varargout

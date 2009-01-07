@@ -257,6 +257,8 @@ ArrayVector StrnCmpFunction(int nargout, const ArrayVector& arg) {
 //strstr('quick brown fox','own')
 //strstr('free stuff','lunch')
 //@>
+//@@Tests
+//@$exact|y1=strstr(x1,x2)
 //@@Signature
 //function strstr StrStrFunction
 //inputs x y
@@ -1494,6 +1496,8 @@ ArrayVector StrFindFunction(int nargout, const ArrayVector& arg) {
 //   s = num2str(X, format)
 //@]
 //where @|format| is the specifier string.
+//@@Tests
+//@$exact|y1=num2str(x1)
 //@@Signature
 //function num2str Num2StrFunction
 //inputs x format
@@ -1589,6 +1593,8 @@ ArrayVector Num2StrFunction(int nargout, const ArrayVector& arg) {
 //be converted into a number.  The output is in double precision,
 //and must be typecasted to the appropriate type based on what
 //you need.
+//@@Tests
+//@$exact|y1=str2num(x1)
 //@@Signature
 //function str2num Str2NumFunction
 //inputs string
@@ -1836,6 +1842,12 @@ exit:
 //controls the format of the input.  Each value that is parsed
 //from the @|text| occupies one output slot.  See @|printf|
 //for a description of the format.
+//@@Tests
+//@{ test_sscanf1.m
+//function test_val = test_sscanf1
+//[a,b,c] = sscanf('1.34 54 hello','%g %d %s');
+//test_val = (a == 1.34) && (b == 54) && (c == 'hello');
+//@}
 //@@Signature
 //function sscanf SscanfFunction
 //inputs text format

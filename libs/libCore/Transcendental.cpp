@@ -37,6 +37,8 @@
 //  y = log1p(x)
 //@]
 //where @|x| is an @|n|-dimensional array of numerical type.
+//@@Tests
+//@$near|y1=log1p(x1)
 //@@Signature
 //function log1p Log1PFunction
 //inputs x
@@ -106,6 +108,8 @@ ArrayVector Log1PFunction(int nargout, const ArrayVector& arg) {
 //mprint('logplot');
 //@>
 //@figure logplot
+//@@Tests
+//@$near|y1=log(x1)
 //@@Signature
 //function log LogFunction
 //inputs x
@@ -156,6 +160,8 @@ ArrayVector LogFunction(int nargout, const ArrayVector& arg) {
 //x = rand(4)
 //sqrt(x)
 //@>
+//@@Tests
+//@$near|y1=sqrt(x1)
 //@@Signature
 //function sqrt SqrtFunction
 //inputs x
@@ -660,6 +666,8 @@ ArrayVector SinhFunction(int nargout, const ArrayVector& arg) {
 //mprint('expplot2');
 //@>
 //@figure expplot2
+//@@Tests
+//@$near|y1=exp(x1)
 //@@Signature
 //function exp ExpFunction
 //inputs x
@@ -696,6 +704,8 @@ ArrayVector ExpFunction(int nargout, const ArrayVector& arg) {
 //   y = expm1(x)
 //@]
 //where @|x| is an @|n|-dimensional array of numerical type.
+//@@Tests
+//@$near|y1=expm1(x1)
 //@@Signature
 //function expm1 ExpM1Function
 //inputs x

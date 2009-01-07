@@ -92,6 +92,9 @@ struct OpVecMean {
 //@<
 //mean(A,2)
 //@>
+//@@Tests
+//@$near|y1=mean(x1)
+//@$near|y1=mean(x1,2)
 //@@Signature
 //function mean MeanFunction
 //inputs x dim

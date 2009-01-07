@@ -256,6 +256,13 @@ struct OpVecMin {
 //a = randn(2)
 //min(a,0)
 //@>
+//@@Tests
+//@$exact|y1=min(x1)
+//@$exact|y1=min(x1,[],2)
+//@$exact|y1=min(x1,x2)
+//@$exact|[y1,y2]=min(x1)
+//@$exact|[y1,y2]=min(x1,[],2)
+//@$exact|[y1,y2]=min(x1,x2)
 //@@Signature
 //function min MinFunction
 //input x z dim

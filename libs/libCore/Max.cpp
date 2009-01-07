@@ -255,6 +255,13 @@ struct OpVecMax {
 //a = randn(2)
 //max(a,0)
 //@>
+//@@Tests
+//@$exact|y1=max(x1)
+//@$exact|y1=max(x1,[],2)
+//@$exact|y1=max(x1,x2)
+//@$exact|[y1,y2]=max(x1)
+//@$exact|[y1,y2]=max(x1,[],2)
+//@$exact|[y1,y2]=max(x1,x2)
 //@@Signature
 //function max MaxFunction
 //input x z dim

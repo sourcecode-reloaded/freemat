@@ -246,6 +246,14 @@ ArrayVector WhosFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
 //y.foo = 3; y.goo = 'hello';
 //x = fieldnames(y)
 //@>
+//@@Tests
+//@{ test_fieldnames1.m
+//function test_val = test_fieldnames1
+//  x.foo = 3; x.goo = 'hello';
+//  y = fieldnames(x);
+//  z = {'foo','goo'};
+//  test_val = issame(z);
+//@}
 //@@Signature
 //function fieldnames FieldNamesFunction
 //inputs y
@@ -341,6 +349,16 @@ ArrayVector AddrFunction(int nargout, const ArrayVector& arg) {
 //nargintest(3,'h',1.34);
 //nargintest(3,'h',1.34,pi,e);
 //@>
+//@@Tests
+//@{ test_nargin1.m
+//function test_val = test_nargin1
+//  test_val = (sub_test_nargin1(3) == 3) && (sub_test_nargin1(3,'h',1.34,pi,e) == 5);
+//end
+//
+//function x = sub_test_nargin1(a1,a2,a3,a4,a5)
+//  x = nargin;
+//end
+//@}
 //@@Signature
 //sfunction nargin NarginFunction
 //inputs none

@@ -40,6 +40,11 @@
 //@<
 //uint16(ones(3))
 //@>
+//@@Tests
+//@{ test_ones1.m
+//function test_val = test_ones1
+//  test_val = issame(ones(3),zeros(3)+1);
+//@}
 //@@Signature
 //function ones OnesFunction
 //inputs varargin

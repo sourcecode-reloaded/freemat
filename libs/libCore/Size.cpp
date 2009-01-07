@@ -75,6 +75,7 @@
 //[c,d] = size(a,2);
 //test_val = (c == 3);
 //@}
+//@$exact|y1=size(x1)
 //@@Signature
 //function size SizeFunction
 //inputs x dim

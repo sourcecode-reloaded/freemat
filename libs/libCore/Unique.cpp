@@ -53,6 +53,11 @@
 //A = {'hi','bye','good','tell','hi','bye'}
 //unique(A)
 //@>
+//@@Tests
+//@$exact|y1=unique(x1)
+//@$exact|[y1,y2,y3]=unique(x1)
+//@$exact|y1=unique(x1,'rows')
+//@$exact|[y1,y2,y3]=unique(x1,'rows')
 //@@Signature
 //function unique UniqueFunction
 //inputs A mode

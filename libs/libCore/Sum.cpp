@@ -92,6 +92,9 @@ struct OpVecSum {
 //@<
 //sum(A,2)
 //@>
+//@@Tests
+//@$near|y1=sum(x1)
+//@$near|y1=sum(x1,2)
 //@@Signature
 //function sum SumFunction
 //inputs x dim

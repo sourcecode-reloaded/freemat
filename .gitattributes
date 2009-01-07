@@ -68,8 +68,6 @@ libs/libCore/Directory.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyl
 libs/libCore/FFT.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libCore/IO.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libCore/Inspect.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-libs/libCore/LoadCore.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-libs/libCore/LoadCore.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libCore/MPIWrap.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libCore/MPIWrap.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libCore/Misc.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native

@@ -200,6 +200,12 @@ struct OpVecSortDescend {
 //function x = test_sort
 //  x = sort(1);
 //@}
+//@$exact|y1=sort(x1)
+//@$exact|y1=sort(x1,2)
+//@$exact|y1=sort(x1,2,'descend')
+//@$exact|[y1,y2]=sort(x1)
+//@$exact|[y1,y2]=sort(x1,2)
+//@$exact|[y1,y2]=sort(x1,2,'descend')
 //@@Signature
 //function sort SortFunction
 //inputs A dim mode

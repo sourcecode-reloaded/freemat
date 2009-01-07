@@ -180,11 +180,6 @@ void ApplicationWindow::createToolBars() {
   dirToolBar->addWidget(cdCombo);
   cdCombo->setVisible(true);
   cdCombo->setObjectName("cdCombo");
-  //  cdButton = new QPushButton("...");
-  //  cdButton->setMaximumWidth(25);
-  //  cdButton->setObjectName("cdButton");
-  //  dirToolBar->addWidget(cdButton);
-  //  cdButton->setVisible(true);
   dirToolBar->addAction(dirChooseAct);
   dirToolBar->addAction(dirUpAct);
 }

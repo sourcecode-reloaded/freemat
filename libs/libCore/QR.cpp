@@ -940,9 +940,8 @@ static ArrayVector QRDPivotFunction(bool compactDec, Array A) {
 //size @|L x N| and @|L = min(N,M)|, and @|q*r = a|.  The QR decomposition is
 //such that the columns of @|Q| are orthonormal, and @|R| is upper
 //triangular.  The decomposition is computed using the LAPACK 
-//routine @|xgeqrf|, where @|x| is the precision of the matrix.  Unlike
-//MATLAB (and other MATLAB-compatibles), FreeMat supports decompositions
-//of all four floating point types, @|float, complex, double, dcomplex|.
+//routine @|xgeqrf|, where @|x| is the precision of the matrix.  
+//FreeMat supports decompositions of @|single| and @|double| types.
 //
 //The second form of the non-pivot decomposition omits the second @|0|
 //argument:
@@ -1325,6 +1324,10 @@ static ArrayVector QRDPivotFunction(bool compactDec, Array A) {
 //  end
 //  test_val = t1all & t2all & t3all & t4all;
 //@}
+//@@Tests
+//near|[y1,y2] = qr(x1,0)
+//near|[y1,y2] = qr(x1)
+//near|[y1,y2,y3] = qr(x1)
 //@@Signature
 //function qr QRDFunction
 //inputs x n

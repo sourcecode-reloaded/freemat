@@ -71,6 +71,11 @@
 //yz = dcomplex(zeros(100,200));
 //x = testeq(xi,yi) & testeq(xf,yf) & testeq(xd,yd) & testeq(xc,yc) & testeq(xz,yz);
 //@}
+//@{ test_zeros1.m
+//function test_val = test_zeros1
+//  a = zeros(2,3,'single');
+//  test_val = (size(a) == [2,3]) && strcmp(typeof(a),'single');
+//@}
 //@@Signature
 //function zeros ZerosFunction
 //inputs varargin

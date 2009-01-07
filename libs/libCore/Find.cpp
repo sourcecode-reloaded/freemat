@@ -228,6 +228,14 @@ static ArrayVector FindModeSparse(Array x, int nargout) {
 //[r,c,v] = find(A)
 //@>
 //@@Tests
+//@$exact|y1=find(x1)
+//@$exact|y1=find(x1,2)
+//@$exact|y1=find(x1,2,'first')
+//@$exact|y1=find(x1,2,'last')
+//@$exact|[y1,y2]=find(x1)
+//@$exact|[y1,y2]=find(x1,2)
+//@$exact|[y1,y2,y3]=find(x1)
+//@$exact|[y1,y2,y3]=find(x1,2)
 //@{ test_sparse20.m
 //function x = test_sparse20
 //a = [0,0,3,1,3;1,0,0,0,2;4,3,0,2,0];

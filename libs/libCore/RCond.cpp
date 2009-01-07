@@ -137,6 +137,8 @@ static double doubleRecipCond(int m, int n, double *a) {
 //Note that the values are very similar.  LAPACKs @|rcond|
 //function is far more efficient than the explicit calculation
 //(which is also used by the @|cond| function.
+//@@Tests
+//@$near|y1=rcond(x1)
 //@@Signature
 //function rcond RcondFunction
 //inputs A

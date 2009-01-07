@@ -42,6 +42,8 @@ struct OpFloor {
 //floor(3.023)
 //floor(-2.341)
 //@>
+//@@Tests
+//@$exact|y1=floor(x1)
 //@@Signature
 //function floor FloorFunction
 //input x

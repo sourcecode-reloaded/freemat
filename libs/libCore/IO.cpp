@@ -367,11 +367,11 @@ static ArrayVector SaveASCIIFunction(QString filename, StringVector names, bool 
 //@{ test_save1.m
 //% Test the save and load capability with cell arrays (bug 1581481)
 //function test_val = test_save1
-//   a{1} = 'bert';
+//   a{1} = 'bert'; a{2} = pi; a{3} = 12; a{4} = 4+5i;
 //   save tmp.mat a
 //   b = a;
 //   load tmp.mat
-//   test_val = strcomp(a{1},b{1});
+//   test_val = issame(a,b);
 //@}
 //@@Signature
 //sfunction save SaveFunction
@@ -569,6 +569,18 @@ static void DecodeSpreadsheetRange(QString tx, int &startrow, int &startcol,
 //the indicator.  Note also that when the delimiter is given, each incidence
 //of the delimiter counts as a separator.  Multiple separators generate
 //zeros in the matrix.
+//@@Tests
+//@{ test_dlmread1.m
+//function test_val = test_dlmread1
+//  fp = fopen('test.csv','w');
+//  fwrite(fp,'1;2;3;4;5\n');
+//  fwrite(fp,'6;7;8;9;0\n');
+//  fwrite(fp,'4;3;2;4;1\n');
+//  fclose(fp);
+//  y = dlmread('test.csv',';');
+//  A = [1,2,3,4,5;6,7,8,9,0;4,3,2,4,1];
+//  test_val = issame(y,A);
+//@}
 //@@Signature
 //function dlmread DlmReadFunction
 //inputs filename delimiter startrow startcol
@@ -857,6 +869,14 @@ static ArrayVector LoadNativeFunction(int nargout, QString filename,
 //load loadsave.dat
 //who
 //@>
+//@@Tests
+//@{ test_load1.m
+//function test_val = test_load1
+//  v = [1,2,3,4;5,6,7,8;9,6,2,3];
+//  save('test_load1.txt','-ascii',v);
+//  u = load('test_load1.txt','-ascii');
+//  test_val = issame(v,u);
+//@}
 //@@Signature
 //sfunction load LoadFunction
 //inputs varargin
