@@ -50,13 +50,23 @@ static JITFunction func_matrix_store_double, func_matrix_store_float, func_matri
 static JITFunction func_check_for_interrupt;
 static JITFunction func_niter_for_loop, func_debug_out_i, func_debug_out_d;
 
-SymbolInfo* JITFunc::add_argument_array(QString name) {
+SymbolInfo* JITFunc::add_argument_array(QString name, bool createIfMissing=false) {
   if (symbol_prefix.size() > 0)
     return NULL;
   ArrayReference ptr(eval->getContext()->lookupVariable(name));
   DataClass aclass = Invalid;
-  if (!ptr.valid())
-    return NULL;
+
+  if (!ptr.valid()){
+      if( createIfMissing ){
+	JITType type(map_dataclass(Double));
+	symbols.insertSymbol(name,SymbolInfo(false,argument_count++,NULL,type));
+	return symbols.findSymbol(name);
+      }
+      else{
+	  return NULL;
+      }
+  }
+
   if (!ptr->is2D())
     throw Exception("Cannot JIT multi-dimensional array:" + name);
   if (ptr->isString() || ptr->isReferenceType())
@@ -464,7 +474,7 @@ void JITFunc::compile_assignment(Tree* t) {
     if (s->numChildren() == 1)
       v = add_argument_scalar(symname,rhs,false);
     else
-      v = add_argument_array(symname);
+      v = add_argument_array(symname, true /*createIfMissing*/ );
     if (!v) throw Exception("Undefined variable reference:" + symname);
   }
   if (s->numChildren() == 1) {
@@ -1024,7 +1034,7 @@ void JITFunc::prep() {
     if (v && (v->argument_num>=0)) {
       ArrayReference ptr(eval->getContext()->lookupVariable(argumentList[i]));
       if (!ptr.valid()) {
-	if (!v->isScalar) throw Exception("cannot create array types in the loop");
+	//if (!v->isScalar) throw Exception("cannot create array types in the loop");
 	eval->getContext()->insertVariable(argumentList[i],
 					   Array(map_dataclass(v->type),
 						 NTuple(1,1)));
@@ -1037,17 +1047,32 @@ void JITFunc::prep() {
       if (v->type != map_dataclass(array_inputs[v->argument_num]->dataClass()))
 	throw Exception("DATA mismatch!");
       if (!v->isScalar) {
-	if ((array_inputs[v->argument_num]->dataClass() == Float))
-	  cache_array_bases[v->argument_num] = 
-	    (void*)(array_inputs[v->argument_num]->real<float>().data());
-	if ((array_inputs[v->argument_num]->dataClass() == Double))
-	  cache_array_bases[v->argument_num] = 
-	    (void*)(array_inputs[v->argument_num]->real<double>().data());
-	if ((array_inputs[v->argument_num]->dataClass() == Bool))
-	  cache_array_bases[v->argument_num] = 
-	    (void*)(array_inputs[v->argument_num]->real<bool>().data());
-	cache_array_rows[v->argument_num] = array_inputs[v->argument_num]->rows();
-	cache_array_cols[v->argument_num] = array_inputs[v->argument_num]->cols();
+	  if( !ptr.pointer()->isScalar() ){
+	    if ((array_inputs[v->argument_num]->dataClass() == Float))
+	      cache_array_bases[v->argument_num] = 
+		(void*)(array_inputs[v->argument_num]->real<float>().data());
+	    if ((array_inputs[v->argument_num]->dataClass() == Double))
+	      cache_array_bases[v->argument_num] = 
+		(void*)(array_inputs[v->argument_num]->real<double>().data());
+	    if ((array_inputs[v->argument_num]->dataClass() == Bool))
+	      cache_array_bases[v->argument_num] = 
+		(void*)(array_inputs[v->argument_num]->real<bool>().data());
+	    cache_array_rows[v->argument_num] = array_inputs[v->argument_num]->rows();
+	    cache_array_cols[v->argument_num] = array_inputs[v->argument_num]->cols();
+	  }
+	  else{
+	    if ((array_inputs[v->argument_num]->dataClass() == Float))
+	      cache_array_bases[v->argument_num] = 
+	      (void*)(&(array_inputs[v->argument_num]->realScalar<float>()));
+	    if ((array_inputs[v->argument_num]->dataClass() == Double))
+	      cache_array_bases[v->argument_num] = 
+		(void*)(&(array_inputs[v->argument_num]->realScalar<double>()));
+	    if ((array_inputs[v->argument_num]->dataClass() == Bool))
+	      cache_array_bases[v->argument_num] = 
+		(void*)(&(array_inputs[v->argument_num]->realScalar<bool>()));
+	    cache_array_rows[v->argument_num] = 1;
+	    cache_array_cols[v->argument_num] = 1;
+	  }
       } else {
 	cache_array_bases[v->argument_num] = NULL;
 	cache_array_rows[v->argument_num] = 1;

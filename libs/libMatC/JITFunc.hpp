@@ -28,6 +28,7 @@ public:
 class JITFunc {
 public:
   FM::SymbolTable<SymbolInfo> symbols;
+  FM::SymbolTable<SymbolInfo> deferred_symbols;
   FM::SymbolTable<JITFunction> double_funcs;
   FM::SymbolTable<JITFunction> float_funcs;
   FM::SymbolTable<JITScalar> constants;
@@ -45,7 +46,7 @@ public:
   QString symbol_prefix;
   int uid;
   void register_std_function(QString name);
-  SymbolInfo* add_argument_array(QString name);
+  SymbolInfo* add_argument_array(QString name, bool createIfMissing);
   SymbolInfo* add_argument_scalar(QString name, JITScalar val = NULL, bool override = false);
   JITType map_dataclass(DataClass aclass);
   DataClass map_dataclass(JITType type);
