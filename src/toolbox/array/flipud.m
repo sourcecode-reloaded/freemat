@@ -19,6 +19,8 @@
 %x = int32(rand(4,4,3)*10)
 %flipud(x)
 %@>
+%@@Tests
+%@$exact|y1=flipud(x1)
 %!
 % Copyright (c) 2002, 2003 Samit Basu
 % Licensed under the GPL

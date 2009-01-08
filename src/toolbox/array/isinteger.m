@@ -2,13 +2,18 @@
 %@Module ISINTEGER Test for Integer Array
 %@@Section ARRAY
 %@@Usage
-%The syntax for @|isnumeric| is
+%The syntax for @|isinteger| is
 %@[
-%  x = isnumeric(y)
+%  x = isinteger(y)
 %@]
 %and it returns a logical 1 if the argument is an integer.
 %The decision of whether the argument is an integer or not
 %is made based on the class of @|y|, not on its value.
+%@@Tests
+%@{ test_isinteger1.m
+%function test_val = test_isinteger1
+%  test_val = ~isinteger(single(3)) && isinteger(uint8(3));
+%@}
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

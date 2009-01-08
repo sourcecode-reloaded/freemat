@@ -8,6 +8,8 @@
 %@]
 %and it returns a logical 1 if the argument is a string
 %and a logical 0 otherwise.
+%@@Tests
+%@$exact|y1=ischar(x1)
 %!
 
 % Copyright (c) 2002-2006 Samit Basu

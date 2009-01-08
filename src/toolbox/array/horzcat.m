@@ -8,6 +8,9 @@
 %   d = horzcat(a,b,c)
 %@]
 %which is equivalent to the statement @|d = [a,b,c]|.
+%@@Tests
+%@$exact|y1=horzcat(x1,x2)
+%@$exact|y1=horzcat(x1)
 %!
 
 % Copyright (c) 2002-2006 Samit Basu

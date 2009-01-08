@@ -20,6 +20,9 @@
 %Other expressions which are multivalued are structure arrays with
 %multiple entries (non-scalar), where field dereferencing has been
 %applied.
+%@@Tests
+%@$exact|y1=deal(x1{:})
+%@$exact|[y1,y2]=deal(x1{:})
 %!
 
 % Copyright (c) 2002-2006 Samit Basu

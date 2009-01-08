@@ -40,6 +40,10 @@
 %a = 'hello'
 %isa(a,'char') && strcmp(a,'hello')
 %@>
+%@@Tests
+%@$exact|y1=isa(x1,'single')
+%@$exact|y1=isa(x1,'uint8')
+%@$exact|y1=isa(x1,'char')
 %!
 
 % Copyright (c) 2002-2006 Samit Basu

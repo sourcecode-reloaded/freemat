@@ -25,8 +25,6 @@
 %\item @|'float'| for 32-bit floating point numbers
 %\item @|'single'| is a synonym for @|'float'|
 %\item @|'double'| for 64-bit floating point numbers
-%\item @|'complex'| for complex floating point numbers with 32-bits per field
-%\item @|'dcomplex'| for complex floating point numbers with 64-bits per field
 %\item @|'char'| for string arrays
 %\end{itemize}
 %@@Example
@@ -39,8 +37,19 @@
 %cast([1 0 3 0],'logical')
 %@>
 %@@Tests
+%@$exact|y1=cast(x1,'cell')
+%@$exact|y1=cast(x1,'struct')
 %@$exact|y1=cast(x1,'uint8')
-%@$exact|y1=cast(x1,'logical')
+%@$exact|y1=cast(x1,'int8')
+%@$exact|y1=cast(x1,'uint16')
+%@$exact|y1=cast(x1,'int16')
+%@$exact|y1=cast(x1,'uint32')
+%@$exact|y1=cast(x1,'int32')
+%@$exact|y1=cast(x1,'uint64')
+%@$exact|y1=cast(x1,'int64')
+%@$exact|y1=cast(x1,'single')
+%@$exact|y1=cast(x1,'double')
+%@$exact|y1=cast(x1,'char')
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

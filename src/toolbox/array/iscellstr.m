@@ -15,6 +15,17 @@
 %A = {'Hello','Yellow';'Mellow','Othello'}
 %iscellstr(A)
 %@>
+%@@Tests
+%@{ test_iscellstr1.m
+%function test_val = test_iscellstr1
+%  A = {'Hello','Yelloe'};
+%  test_val = iscellstr(A);
+%@}
+%@{ test_iscellstr2.m
+%function test_val = test_iscellstr2
+%  A = {'Hello',2};
+%  test_val = ~iscellstr(A);
+%@}
 %!
 
 % Copyright (c) 2002-2006 Samit Basu

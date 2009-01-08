@@ -21,6 +21,13 @@
 %isfield(a,'got')
 %isfield(pi,'round')
 %@>
+%@@Tests
+%@{ test_isfield1.m
+%function test_val = test_isfield1.m
+%  a.foo = 53;
+%  a.goo = 43;
+%  test_val = isfield(a,'foo') && isfield(a,'goo') && ~isfield(a,'round');
+%@}
 %!
 
 % Copyright (c) 2002-2006 Samit Basu
