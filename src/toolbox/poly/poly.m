@@ -24,6 +24,8 @@
 %p = poly(A)
 %r = roots(p)
 %@>
+%@@Tests
+%@$exact|y1=poly(x1)
 %!
 function p = poly(r)
    if (nargin < 1) | (nargout > 1)

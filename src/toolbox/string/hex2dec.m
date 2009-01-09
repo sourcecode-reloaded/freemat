@@ -17,6 +17,8 @@
 %@<
 %hex2dec(['0ff';'2de';'123'])
 %@>
+%@@Tests
+%@$exact|y1=hex2dec(x1)
 %!
 
 function y=hex2dec( s )

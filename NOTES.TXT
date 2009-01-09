@@ -18,6 +18,7 @@
  -- Write test suite - need a bunch more tests...
  -- -WAll
  -- Packaging
+ -- Installation instructions need to be rewritten
 
 *******************************************************************************
 Variables Tool:

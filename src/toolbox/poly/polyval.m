@@ -31,6 +31,8 @@
 %@>
 %Here is the resulting plot
 %@figure polyval1
+%@@Tests
+%@$near|y1=polyval([1,0,0,0],linspace(-1,1))
 %!
 
 % Copyright (c) 2002-2006 Samit Basu

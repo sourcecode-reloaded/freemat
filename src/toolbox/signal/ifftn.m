@@ -16,6 +16,10 @@
 %or truncated as necessary in each dimension so that the output
 %is of size @|dims|. The @|ifftn| function is implemented by a sequence
 %of calls to @|ifft|.
+%@@Tests
+%@$near|y1=ifftn(x1)
+%@$near|y1=ifftn(x1,2)
+%@$near|y1=ifftn(x1,3)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

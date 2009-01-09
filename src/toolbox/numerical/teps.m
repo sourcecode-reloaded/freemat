@@ -16,8 +16,6 @@
 %@<
 %teps(float(3.4))
 %teps(complex(3.4+i*2))
-%teps(double(3.4))
-%teps(dcomplex(3.4+i*2))
 %@>
 %!
 

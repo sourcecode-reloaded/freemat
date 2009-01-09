@@ -23,6 +23,10 @@
 %This implementation of @|rref| is based on the one from 
 %the matcompat lib for octave.  It is copyright Paul Kienzle,
 %and distributed under the GNU GPL. 
+%@@Tests
+%@$near|y1=rref(x1)
+%@$near|[y1,y2]=rref(x1)
+%@$near|[y1,y2]=rref(x1,.0001)
 %!
 function [A,k] = rref(A, tolerance)
 % Original notice for rref from 

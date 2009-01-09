@@ -25,6 +25,9 @@
 %bitcmp(uint16(2^14-2))
 %bitcmp(uint16(2^14-2),14)
 %@>
+%@@Tests
+%@$exact|y1=bitcmp(x1)
+%@$exact|y1=bitcmp(x1,14)
 %!
 function Out = bitcmp(In, N)
 Out = bitcmp_cpp(In);

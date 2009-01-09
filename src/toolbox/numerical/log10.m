@@ -24,6 +24,8 @@
 %mprint('log10plot');
 %@>
 %@figure log10plot
+%@@Tests
+%@$near|y1=log10(x1)
 %!
 
 % Copyright (c) 2002-2006 Samit Basu

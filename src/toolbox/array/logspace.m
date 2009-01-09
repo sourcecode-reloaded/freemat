@@ -24,6 +24,10 @@
 %@<
 %logspace(1,2,3)
 %@>
+%@@Tests
+%@$near|y1=logspace(1,2)
+%@$near|y1=logspace(1,2,3)
+%@$near|y1=logspace(0,pi,3)
 %!
 function y = logspace(a,b,count)
    if (nargin < 2) | (nargout > 1)

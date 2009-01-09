@@ -12,7 +12,16 @@
 %  y = hilbert(x)
 %@]
 %where @|x| is real vector or matrix.  If @|x| is a matrix, then he
-%Hilbert transform is computed along the columns of @|x|.
+%Hilbert transform is computed along the columns of @|x|.  The
+%second syntax provides a dimension along which to take the
+%transform.
+%@[
+%  y = hilbert(x,n)
+%@]
+%where @|n| is the dimension along which to apply the transformation.
+%@@Tests
+%@$near|y1=hilbert(x1)
+%@$near|y1=hilbert(x1,2)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

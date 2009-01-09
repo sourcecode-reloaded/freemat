@@ -31,6 +31,10 @@
 % In the case where @|k| exceeds @|size (x, dim)|
 % then an empty matrix is returned.
 %
+%@@Tests
+%@$exact|y1=diff(x1)
+%@$exact|y1=diff(x1,2)
+%@$exact|y1=diff(x1,2,2)
 %!
 
 % Copyright (C) 1995, 1996, 1999, 2000, 2002, 2004, 2005, 2006, 2007

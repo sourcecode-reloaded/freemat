@@ -16,6 +16,8 @@
 %A = [1 1 0; 0 0 2; 0 0 -1]
 %expm(A)
 %@>
+%@@Tests
+%@$near|y1=expm(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

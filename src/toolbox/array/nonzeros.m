@@ -16,6 +16,8 @@
 %A = sparse(a)
 %nonzeros(A)
 %@>
+%@@Tests
+%@$exact|y1=nonzeros(x1)
 %!
 
 % Copyright (c) 2002-2006 Samit Basu

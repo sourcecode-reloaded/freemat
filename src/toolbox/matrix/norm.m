@@ -43,6 +43,11 @@
 %@>
 %@@Tests
 %@$near|y1=norm(x1)
+%@$near|y1=norm(x1,1)
+%@$near|y1=norm(x1,2)
+%@$near|y1=norm(x1,7)
+%@$near|y1=norm(x1,inf)
+%@$near|y1=norm(x1,-inf)
 %!
 % Copyright (c) 2005 Samit Basu
 % Licensed under the GPL

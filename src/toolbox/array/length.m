@@ -17,6 +17,8 @@
 %x = rand(4,4,3);
 %length(x)
 %@>
+%@@Tests
+%@$exact|y1=length(x1)
 %!
 
 % Copyright (c) 2002-2006 Samit Basu

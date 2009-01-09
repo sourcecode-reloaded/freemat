@@ -14,6 +14,9 @@
 %@<
 %eye(3)
 %@>
+%@@Tests
+%@$exact|y1=eye(3)
+%@$exact|y1=eye(300)
 %!
 % Copyright (c) 2002-2005 Samit Basu
 % Licensed under the GPL

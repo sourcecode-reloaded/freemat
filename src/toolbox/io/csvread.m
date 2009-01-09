@@ -54,6 +54,17 @@
 %@<
 %csvread('sample_data.csv',1,2,[1,2,3,4])
 %@>
+%@@Tests
+%@{  sample_data.csv
+%10, 12, 13, 00, 45, 16
+%09, 11, 52, 93, 05, 06
+%01, 03, 04, 04, 90, -3
+%14, 17, 13, 67, 30, 43
+%21, 33, 14, 44, 01, 00
+%@}
+%@$exact|y1=csvread('sample_data.csv')
+%@$exact|y1=csvread('sample_data.csv',1,2)
+%@$exact|y1=csvread('sample_data.csv',1,2,[1,2,3,4])
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

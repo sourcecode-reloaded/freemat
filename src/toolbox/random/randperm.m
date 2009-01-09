@@ -6,7 +6,7 @@
 %   y = randperm(n)
 %@]
 %@|y| is a random permutation of integers from 1 to @|n|.
-%RANDPERM calls RAND and changes its state.
+%@|randperm| calls @|rand| and changes its state.
 %@@Example
 %@<
 %y = randperm(10)
