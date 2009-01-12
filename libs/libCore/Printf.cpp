@@ -160,7 +160,7 @@ public:
 				str.push_back((data + elem_ind++)->toAscii());
 			}
 		}else{
-			str.push_back(d.get(elem_ind).asInteger());
+			str.push_back(d.get(elem_ind+1).asInteger());
 		}
 		IncDataPtr();
 	};

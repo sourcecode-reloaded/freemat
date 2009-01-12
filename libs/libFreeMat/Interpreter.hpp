@@ -251,7 +251,7 @@ class Interpreter : public QThread {
   /**
    * The file system watcher -- watches for changes to the file system
    */
-  QFileSystemWatcher *m_watch;
+  QFileSystemWatcher m_watch;
   /******************************************
    *  Public Methods for the Interpreter    *
    ******************************************/
@@ -551,7 +551,7 @@ public:
    * from the console, and executed sequentially until a "return"
    * statement is executed or the user presses 'CTRL-D'.
    */
-  void evalCLI();
+  void evalCLI(bool liveUpdates = false);
 
   bool isBPSet(QString fname, int lineNumber);
   bool isInstructionPointer(QString fname, int lineNumber);
@@ -573,7 +573,7 @@ public:
    * waits for the result.  For non-graphics functions, the function is 
    * called directly.
    */
-  ArrayVector doFunction(FuncPtr f, ArrayVector m, int narg_out, VariableTable *vtable = 0);
+  ArrayVector doFunction(FuncPtr f, ArrayVector& m, int narg_out, VariableTable *vtable = 0);
 public slots:
   /**
    * Send file info to the file tool

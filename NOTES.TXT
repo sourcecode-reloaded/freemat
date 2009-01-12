@@ -20,6 +20,36 @@
  -- Packaging
  -- Installation instructions need to be rewritten
 
+-- How do we want the tests to look:
+
+Something like:
+
+function test_val = wbtest_abs_1
+  % Load the set of input test matrices
+  load wbinputs.mat
+  % Load the reference vector for this test
+  load wbtest_abs_1_ref.mat
+  fail_count = 0;
+  for i=1:numel(wbinputs)
+    x1 = wbinputs{i};
+    error_flag = 0;
+    try
+      y1=abs(x1);
+    catch 
+      error_flag = 1;
+    end
+    if (~test_near(y1,y1_refs{i}))
+      printf('Mismatch (norm): %d y1=abs(x1)\n',i);
+      fail_count = fail_count+1;
+    end
+  end
+  test_val = (fail_count == 0);
+end
+
+
+Also we would need a script that generates the reference matrix
+
+
 *******************************************************************************
 Variables Tool:
 

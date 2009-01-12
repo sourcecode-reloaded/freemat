@@ -3,7 +3,7 @@
 % Licensed under the GPL
 
 function writeindex(&p)
-  fname = sprintf('%s/toolbox/test/wb_testmatrix.mat',p.sourcepath);
-  recs = p.recs;
-  inputs = wbtestinputs;
-  save(fname,'recs','inputs');
+%  fname = sprintf('%s/toolbox/test/wb_testmatrix.mat',p.sourcepath);
+%  recs = p.recs;
+%  inputs = wbtestinputs;
+%  save(fname,'recs','inputs');

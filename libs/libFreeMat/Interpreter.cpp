@@ -122,14 +122,14 @@ QString Interpreter::getPath() {
 void Interpreter::setupWatcher() {
   //  if (m_watch) delete m_watch;
   //  m_watch = new QFileSystemWatcher();
-  QStringList pathLists(m_watch->directories());
+  QStringList pathLists(m_watch.directories());
   if (!pathLists.isEmpty())
-    m_watch->removePaths(pathLists);
+    m_watch.removePaths(pathLists);
   if (!m_userPath.isEmpty())
-    m_watch->addPaths(m_userPath);
+    m_watch.addPaths(m_userPath);
   if (!m_basePath.isEmpty())
-    m_watch->addPaths(m_basePath);
-  m_watch->addPath(QDir::currentPath());
+    m_watch.addPaths(m_basePath);
+  m_watch.addPath(QDir::currentPath());
 }
 
 void Interpreter::changeDir(QString path) {
@@ -358,7 +358,7 @@ void Interpreter::RegisterGfxError(QString msg) {
   mutex.unlock();
 }
 
-ArrayVector Interpreter::doFunction(FuncPtr f, ArrayVector m, 
+ArrayVector Interpreter::doFunction(FuncPtr f, ArrayVector& m, 
 				    int narg_out, VariableTable *vtable) {
   CLIDisabler dis(this);
   context->pushScope(f->functionName(),f->detailedName(),false);
@@ -540,7 +540,7 @@ void Interpreter::doCLI() {
     while (1) {
       int scope_stackdepth = context->scopeDepth(); 
       try {
-	evalCLI();
+	evalCLI(true);
       } catch (InterpreterRetallException) {
       } catch (InterpreterReturnException &e) {
       }
@@ -2596,7 +2596,7 @@ void Interpreter::doDebugCycle() {
   context->pushScope("keyboard","keyboard");
   context->setScopeActive(false);
   try {
-    evalCLI();
+    evalCLI(true);
   } catch (InterpreterContinueException& e) {
   } catch (InterpreterBreakException& e) {
   } catch (InterpreterReturnException& e) {
@@ -5169,9 +5169,7 @@ Interpreter::Interpreter(Context* aContext) {
   m_quietlevel = 0;
   m_jit = NULL;
   context->pushScope("base","base",false);
-  m_watch = new QFileSystemWatcher;
-  //  m_watch->setObjectName(QLatin1String("_qt_autotest_force_engine_poller"));
-  connect(m_watch,SIGNAL(directoryChanged(const QString &)),
+  connect(&m_watch,SIGNAL(directoryChanged(const QString &)),
 	  this,SLOT(updateFileTool(const QString &)));
 }
 
@@ -5350,7 +5348,7 @@ QString Interpreter::getLine(QString prompt) {
 
 // This is a "generic" CLI routine.  The user interface (non-debug)
 // version of this is "docli"
-void Interpreter::evalCLI() {
+void Interpreter::evalCLI(bool liveUpdates) {
   QString prompt;
   bool rootCLI;
   setupWatcher();
@@ -5382,9 +5380,11 @@ void Interpreter::evalCLI() {
       emit SetPrompt(prompt);
       if (m_diaryState) diaryMessage(prompt);
     }
-    updateVariablesTool();
-    updateStackTool();
-    emit ShowActiveLine(fname,line);
+    if (liveUpdates) {
+      updateVariablesTool();
+      updateStackTool();
+      emit ShowActiveLine(fname,line);
+    }
     QString cmdset;
     QString cmdline;
     emit EnableRepaint();

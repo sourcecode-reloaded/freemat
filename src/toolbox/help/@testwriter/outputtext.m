@@ -10,10 +10,9 @@ function outputtext(&p,text)
     printf(sprintf('bad line: %s',text));
     return;
   end
-  inputs = wbtestinputs;
   % Search for inputs
   ttype = v{1}{1};
-if (~any(strcmp(ttype,{'near','exact','near_permute'})))
+  if (~any(strcmp(ttype,{'near','exact','near_permute'})))
     printf(sprintf('bad test type in line: %s',text));
     return;
   end
@@ -33,39 +32,74 @@ if (~any(strcmp(ttype,{'near','exact','near_permute'})))
       out_count = out_count + 1;
     end;
   end
-  % Generate the test record
-  % The columns of the test record are:
-  % in_count_1 in_count_2 output_counts expr_index success_flag output_index
+  funcname = sprintf('wbtest_%s_%d',p.modulename,p.num);
+  mkdir(sprintf('%s/toolbox/test',p.sourcepath));
+  mkdir(sprintf('%s/toolbox/test/reference',p.sourcepath));
+  filename = sprintf('%s/toolbox/test/%s.m',p.sourcepath,funcname);
+  fp = fopen(filename,'w');
+  if (fp < 0)
+    error(sprintf('unable to open %s for output',filename));
+  end
+  fprintf(fp,'function test_val = %s(verbose)\n',funcname);
+  fprintf(fp,'  load wbinputs.mat\n');
+  fprintf(fp,'  load reference/%s_ref.mat\n',funcname);
+  fprintf(fp,'  fail_count = 0;\n');
   if (in_count == 0)
-    rec = [];
-    rec.inputs = [];
-    rec.out_count = out_count;
-    rec.expr = expr;
-    rec.test = ttype;
-    recp = {rec};
+    fprintf(fp,'  error_flag = 0;\n');
+    fprintf(fp,'  try\n');
+    fprintf(fp,'    %s;\n',expr);
+    fprintf(fp,'  catch\n');
+    fprintf(fp,'    error_flag = 1;\n');
+    fprintf(fp,'  end\n'); 
+    for k=1:out_count
+      fprintf(fp,'  if (~wbtest_%s(y%d,y%d_refs{1}))\n',ttype,k,k);
+      fprintf(fp,'    printf(''Mismatch (%s): output %d %s\n'');\n',ttype,k,expr);
+      fprintf(fp,'    fail_count = fail_count + 1;\n');
+      fprintf(fp,'  end\n');
+    end
   elseif (in_count == 1)
-    recp = cell(numel(inputs),1);
-    for i=1:numel(inputs)
-      rec = [];
-      rec.inputs = [i];
-      rec.out_count = out_count;
-      rec.expr = expr;
-      rec.test = ttype;
-      recp{i} = rec;
+    fprintf(fp,'  for loopi=1:numel(wbinputs)\n');
+    fprintf(fp,'    x1 = wbinputs{loopi};\n');
+    fprintf(fp,'    error_flag = 0;\n');
+    fprintf(fp,'    try\n');
+    fprintf(fp,'      %s;\n',expr);
+    fprintf(fp,'    catch\n');
+    fprintf(fp,'      error_flag = 1;\n');
+    fprintf(fp,'    end\n');
+    for k=1:out_count
+      fprintf(fp,'  if (~wbtest_%s(y%d,y%d_refs{1}))\n',ttype,k,k);
+      fprintf(fp,'    printf(''Mismatch (%s): input %%d output %d %s\n'',loopi);\n',ttype,k,expr);
+      fprintf(fp,'    fail_count = fail_count + 1;\n');
+      fprintf(fp,'  end\n');
     end
   elseif (in_count == 2)
-    recp = cell(numel(inputs)^2,1);
-    q = 1;
-    for j=1:numel(inputs)
-      for i=1:numel(inputs)
-        rec = [];
-	rec.inputs = [i,j];
-        rec.out_count = out_count;
-        rec.expr = expr;
-        rec.test = ttype;
-        recp{q} = rec; 
-        q = q + 1;
-      end
+    fprintf(fp,'  for loopi=1:numel(wbinputs)\n');
+    fprintf(fp,'    for loopj=1:numel(wbinputs)\n');
+    fprintf(fp,'      x1 = wbinputs{loopi};\n');
+    fprintf(fp,'      x2 = wbinputs{loopj};\n');
+    fprintf(fp,'      error_flag = 0;\n');
+    fprintf(fp,'      try\n');
+    fprintf(fp,'        %s;\n',expr);
+    fprintf(fp,'      catch\n');
+    fprintf(fp,'        error_flag = 1;\n');
+    fprintf(fp,'      end\n');
+    for k=1:out_count
+      fprintf(fp,'  if (~wbtest_%s(y%d,y%d_refs{1}))\n',ttype,k,k);
+      fprintf(fp,'    printf(''Mismatch (%s): input %%d,%%d output %d %s\n'',loopi,loopj);\n',ttype,k,expr);
+      fprintf(fp,'    fail_count = fail_count + 1;\n');
+      fprintf(fp,'  end\n');
     end
+    fprintf(fp,'    end\n');
+    fprintf(fp,'  end\n');
   end
-  p.recs = [p.recs;recp];
+  fprintf(fp,'  test_val = (fail_count == 0);\n');
+  fprintf(fp,'end\n');
+  fclose(fp);
+%  filename = sprintf('%s/toolbox/test/matlab/wbgen_%s_d.m',p.sourcepath,p.module,p.num);
+%  fp = fopen(filename,'w');
+%  if (fp < 0)
+%    error(sprintf('unable to open %s for output',filename));
+%  end
+%  fprintf(fp,'function ');
+  
+  p.num = p.num + 1;
