@@ -409,7 +409,6 @@ public:
    * Insert a function definition into the code table.
    */
   inline void insertFunction(FuncPtr f, bool temporary) {
-    qDebug() << "Insert Function " << f->name << " temp " << temporary;
     codeTab.insertSymbol(f->name,f);
     if (temporary)
       tempFunctions.push_back(f->name);

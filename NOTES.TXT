@@ -28,7 +28,7 @@ function test_val = wbtest_abs_1
   % Load the set of input test matrices
   load wbinputs.mat
   % Load the reference vector for this test
-  load wbtest_abs_1_ref.mat
+  load reference/wbtest_abs_1_ref.mat
   fail_count = 0;
   for i=1:numel(wbinputs)
     x1 = wbinputs{i};
@@ -47,8 +47,25 @@ function test_val = wbtest_abs_1
 end
 
 
-Also we would need a script that generates the reference matrix
+Also we would need a script that generates the reference matrix.  For example:
 
+function wbgen_abs_1
+  % Load the set of input test matrices
+  load wbinputs.mat
+  n = numel(wbinputs);
+  error_refs = zeros(n,1);
+  y1_refs = cell(n,1);
+  np = 1;
+  for i=1:numel(wbinputs)
+    x1 = wbinputs{i};
+    try
+      y1_refs{np} = abs(x1);
+    catch
+      error_refs(np) = 1;
+    end
+    np = np + 1;
+  end
+  save wbtest_abs_1_ref.mat y1_refs error_refs
 
 *******************************************************************************
 Variables Tool:

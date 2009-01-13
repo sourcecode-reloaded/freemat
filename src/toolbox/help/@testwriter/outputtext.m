@@ -35,6 +35,10 @@ function outputtext(&p,text)
   funcname = sprintf('wbtest_%s_%d',p.modulename,p.num);
   mkdir(sprintf('%s/toolbox/test',p.sourcepath));
   mkdir(sprintf('%s/toolbox/test/reference',p.sourcepath));
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+  % Write the test file
   filename = sprintf('%s/toolbox/test/%s.m',p.sourcepath,funcname);
   fp = fopen(filename,'w');
   if (fp < 0)
@@ -53,7 +57,7 @@ function outputtext(&p,text)
     fprintf(fp,'  end\n'); 
     for k=1:out_count
       fprintf(fp,'  if (~wbtest_%s(y%d,y%d_refs{1}))\n',ttype,k,k);
-      fprintf(fp,'    printf(''Mismatch (%s): output %d %s\n'');\n',ttype,k,expr);
+      fprintf(fp,'    printf(''Mismatch (%s): output %d %s\\n'');\n',ttype,k,expr);
       fprintf(fp,'    fail_count = fail_count + 1;\n');
       fprintf(fp,'  end\n');
     end
@@ -66,9 +70,12 @@ function outputtext(&p,text)
     fprintf(fp,'    catch\n');
     fprintf(fp,'      error_flag = 1;\n');
     fprintf(fp,'    end\n');
+    fprintf(fp,'    if (error_flag && ~error_refs(loopi))\n');
+    fprintf(fp,'       printf(''Mismatch Errors: input %%d %s\\n'',loopi);\n',expr);
+    fprintf(fp,'        fail_count = fail_count + 1;\n');
     for k=1:out_count
-      fprintf(fp,'  if (~wbtest_%s(y%d,y%d_refs{1}))\n',ttype,k,k);
-      fprintf(fp,'    printf(''Mismatch (%s): input %%d output %d %s\n'',loopi);\n',ttype,k,expr);
+      fprintf(fp,'  elseif (~wbtest_%s(y%d,y%d_refs{loopi}))\n',ttype,k,k);
+      fprintf(fp,'    printf(''Mismatch (%s): input %%d output %d %s\\n'',loopi);\n',ttype,k,expr);
       fprintf(fp,'    fail_count = fail_count + 1;\n');
       fprintf(fp,'  end\n');
     end
@@ -83,9 +90,12 @@ function outputtext(&p,text)
     fprintf(fp,'      catch\n');
     fprintf(fp,'        error_flag = 1;\n');
     fprintf(fp,'      end\n');
+    fprintf(fp,'    if (error_flag && ~error_refs(loopi,loopj))\n');
+    fprintf(fp,'       printf(''Mismatch Errors: input %%d, %%d %s\\n'',loopi,loopj);\n',expr);
+    fprintf(fp,'        fail_count = fail_count + 1;\n');
     for k=1:out_count
-      fprintf(fp,'  if (~wbtest_%s(y%d,y%d_refs{1}))\n',ttype,k,k);
-      fprintf(fp,'    printf(''Mismatch (%s): input %%d,%%d output %d %s\n'',loopi,loopj);\n',ttype,k,expr);
+      fprintf(fp,'  if (~wbtest_%s(y%d,y%d_refs{loopi,loopj}))\n',ttype,k,k);
+      fprintf(fp,'    printf(''Mismatch (%s): input %%d,%%d output %d %s\\n'',loopi,loopj);\n',ttype,k,expr);
       fprintf(fp,'    fail_count = fail_count + 1;\n');
       fprintf(fp,'  end\n');
     end
@@ -95,6 +105,81 @@ function outputtext(&p,text)
   fprintf(fp,'  test_val = (fail_count == 0);\n');
   fprintf(fp,'end\n');
   fclose(fp);
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+  % Write the reference file
+  filename = sprintf('%s/toolbox/test/reference/gen_%s.m',p.sourcepath,funcname);
+  fp = fopen(filename,'w');
+  if (fp < 0)
+    error(sprintf('unable to open %s for output',filename));
+  end
+  fprintf(fp,'function gen_%s(verbose)\n',funcname);
+  fprintf(fp,'  load wbinputs.mat\n');
+  if (in_count == 0)
+    fprintf(fp,'  error_refs = 0;\n');
+    fprintf(fp,'  try\n');
+    fprintf(fp,'    %s;\n',expr);
+    fprintf(fp,'  catch\n');
+    fprintf(fp,'    error_refs = 1;\n');
+    fprintf(fp,'  end\n'); 
+    fprintf(fp,'  if (~error_refs)\n');
+    for k=1:out_count
+      fprintf(fp,'  y%d_refs = y%d;\n',k,k);
+    end
+    fprintf(fp,'  end\n');
+  elseif (in_count == 1)
+    fprintf(fp,'  n_ = numel(wbinputs);\n');
+    fprintf(fp,'  error_refs = zeros(n_,1);\n');
+    for k=1:out_count
+      fprintf(fp,'  y%d_refs = cell(n_,1);\n',k);
+    end
+    fprintf(fp,'  for loopi=1:n_\n');
+    fprintf(fp,'    x1 = wbinputs{loopi};\n');
+    fprintf(fp,'    error_refs(loopi) = 0;\n');
+    fprintf(fp,'    try\n');
+    fprintf(fp,'      %s;\n',expr);
+    fprintf(fp,'    catch\n');
+    fprintf(fp,'      error_refs(loopi) = 1;\n');
+    fprintf(fp,'    end\n');
+    fprintf(fp,'    if (~error_refs(loopi)\n');
+    for k=1:out_count
+      fprintf(fp,'     y%d_refs(loopi) = y%d;\n',k,k);
+    end;
+    fprintf(fp,'    end\n');
+    fprintf(fp,'  end\n');
+  elseif (in_count == 2)
+    fprintf(fp,'  n_ = numel(wbinputs);\n');
+    fprintf(fp,'  error_refs = zeros(n_,n_);\n');
+    for k=1:out_count
+      fprintf(fp,'  y%d_refs = cell(n_,n_);\n',k);
+    end
+    fprintf(fp,'  for loopi=1:n_\n');
+    fprintf(fp,'    for loopj=1:n_\n');
+    fprintf(fp,'      x1 = wbinputs{loopi};\n');
+    fprintf(fp,'      x2 = wbinputs{loopj};\n');
+    fprintf(fp,'      try\n');
+    fprintf(fp,'        %s;\n',expr);
+    fprintf(fp,'      catch\n');
+    fprintf(fp,'        error_refs(loopi,loopj) = 1;\n');
+    fprintf(fp,'      end\n');
+    fprintf(fp,'      if (~error_refs(loopi,loopj))\n');
+    for k=1:out_count
+      fprintf(fp,'       y%d_refs(loopi,loopj) = y%d;\n',k,k);
+    end
+    fprintf(fp,'      end\n');
+    fprintf(fp,'    end\n');
+    fprintf(fp,'  end\n');
+  end
+  fprintf(fp,'  save %s_ref.mat error_refs',funcname);
+  for k=1:out_count
+    fprintf(fp,'  y%d_refs ',k);
+  end
+  fprintf(fp,'\nend\n');
+  fclose(fp);
+  
+  
+  
 %  filename = sprintf('%s/toolbox/test/matlab/wbgen_%s_d.m',p.sourcepath,p.module,p.num);
 %  fp = fopen(filename,'w');
 %  if (fp < 0)
