@@ -273,9 +273,17 @@ static void realEigenDecompose(int n, T *v, T *d, T *a,
   MemBlock<T> RCONDE(n);
   MemBlock<T> RCONDV(n);
   int maxN = (N < 6) ? 6 : N;
-  int LWORK = maxN*maxN*2;
+  int LWORK;
+  T WORKSZE;
   MemBlock<int> IWORK(2*n-2);
   int INFO;
+
+  LWORK = -1;
+  Tgeevx<T>( &BALANC, &JOBVL, &JOBVR, &SENSE, &N, Ain, &LDA, &WR, &WI,
+	     VL, &LDVL, VR, &LDVR, &ILO, &IHI, &SCALE, &ABNRM,
+	     &RCONDE, &RCONDV, &WORKSZE, &LWORK, &IWORK, &INFO );
+
+  LWORK = (int) WORKSZE;
   MemBlock<T> WORK(LWORK);
   Tgeevx<T>( &BALANC, &JOBVL, &JOBVR, &SENSE, &N, Ain, &LDA, &WR, &WI,
 	     VL, &LDVL, VR, &LDVR, &ILO, &IHI, &SCALE, &ABNRM,
