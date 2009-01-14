@@ -1170,6 +1170,7 @@ int MainApp::Run() {
   m_mainID = StartNewInterpreterThread();
   // Assign this to the main thread
   m_eval = m_threadHandles.lookupHandle(m_mainID);
+  m_eval->setLiveUpdateFlag(true);
   m_keys->SetCompletionContext(m_eval->getContext());
   FuncPtr doCLI;
   if (!m_eval->lookupFunction("docli",doCLI))
