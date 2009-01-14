@@ -55,6 +55,13 @@
 
 const int max_line_count = 1000000;
 
+/**
+ * The file system watcher -- watches for changes to the file system
+ * Only one interpreter thread should use this watcher at a time.
+ */
+QFileSystemWatcher m_watch;
+
+
 #define SaveEndInfo  \
   ArrayReference oldEndRef = endRef; \
   int oldEndCount = endCount; \
@@ -119,9 +126,16 @@ QString Interpreter::getPath() {
   return retpath;
 }
   
+void Interpreter::setLiveUpdateFlag(bool t) {
+  m_liveUpdateFlag = t;
+  if (t) {
+    connect(&m_watch,SIGNAL(directoryChanged(const QString &)),
+	    this,SLOT(updateFileTool(const QString &)));
+  }
+}
+
 void Interpreter::setupWatcher() {
-  //  if (m_watch) delete m_watch;
-  //  m_watch = new QFileSystemWatcher();
+  if (!m_liveUpdateFlag) return;
   QStringList pathLists(m_watch.directories());
   if (!pathLists.isEmpty())
     m_watch.removePaths(pathLists);
@@ -135,12 +149,14 @@ void Interpreter::setupWatcher() {
 void Interpreter::changeDir(QString path) {
   if (!QDir::setCurrent(path))
     throw Exception("Unable to change to specified directory: " + path);
-  emit CWDChanged(QDir::currentPath());
+  if (m_liveUpdateFlag)
+    emit CWDChanged(QDir::currentPath());
   setupWatcher();
   rescanPath();
 }
 				 
 void Interpreter::updateVariablesTool() {
+  if (!m_liveUpdateFlag) return;
   StringVector varList(context->listAllVariables());
   QList<QVariant> vars;
   for (int i=0;i<varList.size();i++) {
@@ -540,7 +556,7 @@ void Interpreter::doCLI() {
     while (1) {
       int scope_stackdepth = context->scopeDepth(); 
       try {
-	evalCLI(true);
+	evalCLI();
       } catch (InterpreterRetallException) {
       } catch (InterpreterReturnException &e) {
       }
@@ -2596,7 +2612,7 @@ void Interpreter::doDebugCycle() {
   context->pushScope("keyboard","keyboard");
   context->setScopeActive(false);
   try {
-    evalCLI(true);
+    evalCLI();
   } catch (InterpreterContinueException& e) {
   } catch (InterpreterBreakException& e) {
   } catch (InterpreterReturnException& e) {
@@ -5156,6 +5172,7 @@ Interpreter::Interpreter(Context* aContext) {
   jitcontrol = false;
   stopoverload = false;
   m_skipflag = false;
+  m_liveUpdateFlag = false;
   tracetrap = 0;
   tracecurrentline = 0;
   endRef = NULL;
@@ -5169,8 +5186,6 @@ Interpreter::Interpreter(Context* aContext) {
   m_quietlevel = 0;
   m_jit = NULL;
   context->pushScope("base","base",false);
-  connect(&m_watch,SIGNAL(directoryChanged(const QString &)),
-	  this,SLOT(updateFileTool(const QString &)));
 }
 
 JIT* Interpreter::JITPointer() {
@@ -5348,7 +5363,7 @@ QString Interpreter::getLine(QString prompt) {
 
 // This is a "generic" CLI routine.  The user interface (non-debug)
 // version of this is "docli"
-void Interpreter::evalCLI(bool liveUpdates) {
+void Interpreter::evalCLI() {
   QString prompt;
   bool rootCLI;
   setupWatcher();
@@ -5380,7 +5395,7 @@ void Interpreter::evalCLI(bool liveUpdates) {
       emit SetPrompt(prompt);
       if (m_diaryState) diaryMessage(prompt);
     }
-    if (liveUpdates) {
+    if (m_liveUpdateFlag) {
       updateVariablesTool();
       updateStackTool();
       emit ShowActiveLine(fname,line);

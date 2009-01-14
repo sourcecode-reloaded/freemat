@@ -249,9 +249,10 @@ class Interpreter : public QThread {
    */
   int m_quietlevel;
   /**
-   * The file system watcher -- watches for changes to the file system
+   * Live updates flag -- determines if this interpreter connects
+   * to the GUI.
    */
-  QFileSystemWatcher m_watch;
+  bool m_liveUpdateFlag;
   /******************************************
    *  Public Methods for the Interpreter    *
    ******************************************/
@@ -312,6 +313,11 @@ public:
    */
   inline void setProfileState(bool t) {m_profile = t;}
   inline bool profileState() {return m_profile;}
+  /**
+   * Manipulate the live update flag
+   */
+  void setLiveUpdateFlag(bool t);
+  inline bool liveUpdateFlag() {return m_liveUpdateFlag;}
   /**
    * Get the result of the thread function evaluation
    */
@@ -551,7 +557,7 @@ public:
    * from the console, and executed sequentially until a "return"
    * statement is executed or the user presses 'CTRL-D'.
    */
-  void evalCLI(bool liveUpdates = false);
+  void evalCLI();
 
   bool isBPSet(QString fname, int lineNumber);
   bool isInstructionPointer(QString fname, int lineNumber);
