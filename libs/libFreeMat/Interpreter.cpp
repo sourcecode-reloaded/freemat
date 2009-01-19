@@ -686,18 +686,18 @@ QString Interpreter::getInstructionPointerFileName() {
   return QString("");
 }
 
-Array Interpreter::DoBinaryOperator(Tree *t, BinaryFunc fnc, 
+Array Interpreter::DoBinaryOperator(Tree t, BinaryFunc fnc, 
 				    QString funcname) {
-  Array a(expression(t->first()));
-  Array b(expression(t->second()));
+  Array a(expression(t.first()));
+  Array b(expression(t.second()));
   if (!(a.isUserClass() || b.isUserClass())) 
     return fnc(a,b);
   return ClassBinaryOperator(a,b,funcname,this);
 }
 
-Array Interpreter::DoUnaryOperator(Tree *t, UnaryFunc fnc, 
+Array Interpreter::DoUnaryOperator(Tree t, UnaryFunc fnc, 
 				   QString funcname) {
-  Array a(expression(t->first()));
+  Array a(expression(t.first()));
   if (!a.isUserClass())
     return fnc(a);
   return ClassUnaryOperator(a,funcname,this);
@@ -850,15 +850,15 @@ int Interpreter::getPrintLimit() {
 //@}
 //!
 //Works
-Array Interpreter::matrixDefinition(Tree *t) {
+Array Interpreter::matrixDefinition(Tree t) {
   ArrayMatrix m;
-  if (t->numChildren() == 0) 
+  if (t.numChildren() == 0) 
     return EmptyConstructor();
-  for (int i=0;i<t->numChildren();i++) {
-    Tree *s(t->child(i));
+  for (int i=0;i<t.numChildren();i++) {
+    Tree s(t.child(i));
     ArrayVector n;
-    for (int j=0;j<s->numChildren();j++)
-      multiexpr(s->child(j),n);
+    for (int j=0;j<s.numChildren();j++)
+      multiexpr(s.child(j),n);
     m.push_back(n);
   }
   // Check if any of the elements are user defined classes
@@ -915,22 +915,22 @@ Array Interpreter::matrixDefinition(Tree *t) {
 //@>
 //!
 //Works
-Array Interpreter::cellDefinition(Tree *t) {
+Array Interpreter::cellDefinition(Tree t) {
   ArrayMatrix m;
-  if (t->numChildren() == 0)
+  if (t.numChildren() == 0)
     return Array(CellArray);
-  for (int i=0;i<t->numChildren();i++) {
-    Tree *s(t->child(i));
+  for (int i=0;i<t.numChildren();i++) {
+    Tree s(t.child(i));
     ArrayVector n;
-    for (int j=0;j<s->numChildren();j++) 
-      multiexpr(s->child(j),n);
+    for (int j=0;j<s.numChildren();j++) 
+      multiexpr(s.child(j),n);
     m.push_back(n);
   }
   return CellConstructor(m);
 }
 
-Array Interpreter::ShortCutOr(Tree * t) {
-  Array a(expression(t->first()));
+Array Interpreter::ShortCutOr(Tree  t) {
+  Array a(expression(t.first()));
   Array retval;
   if (!a.isScalar())
     retval = DoBinaryOperator(t,Or,"or");
@@ -944,10 +944,10 @@ Array Interpreter::ShortCutOr(Tree * t) {
   return retval;
 }
 
-Array Interpreter::ShortCutAnd(Tree *t) {
-  context->setScopeTokenID(t->context());
-  Array a(expression(t->first()));
-  context->setScopeTokenID(t->context());
+Array Interpreter::ShortCutAnd(Tree t) {
+  context->setScopeTokenID(t.context());
+  Array a(expression(t.first()));
+  context->setScopeTokenID(t.context());
   Array retval;
   if (!a.isScalar()) {
     retval = DoBinaryOperator(t,And,"and");
@@ -964,8 +964,8 @@ Array Interpreter::ShortCutAnd(Tree *t) {
 //Works
 // Need to take care
 
-ArrayVector Interpreter::handleReindexing(Tree *t, const ArrayVector &p) {
-  if (t->numChildren() > 2)
+ArrayVector Interpreter::handleReindexing(Tree t, const ArrayVector &p) {
+  if (t.numChildren() > 2)
     if (p.size() > 1)
       throw Exception("reindexing of function expressions not allowed when multiple values are returned by the function");
     else {
@@ -974,24 +974,24 @@ ArrayVector Interpreter::handleReindexing(Tree *t, const ArrayVector &p) {
 	r = p[0];
       else
 	r = EmptyConstructor();
-      for (int index = 2;index < t->numChildren();index++) 
-	deref(r,t->child(index));
+      for (int index = 2;index < t.numChildren();index++) 
+	deref(r,t.child(index));
       return ArrayVector() << r;
     }
   else
     return p;
 }
 
-void Interpreter::multiexpr(Tree *t, ArrayVector &q, index_t lhsCount, bool output_optional) {
-  if (t->is(TOK_VARIABLE)) {
-    ArrayReference ptr(context->lookupVariable(t->first()->text()));
+void Interpreter::multiexpr(Tree t, ArrayVector &q, index_t lhsCount, bool output_optional) {
+  if (t.is(TOK_VARIABLE)) {
+    ArrayReference ptr(context->lookupVariable(t.first().text()));
     if (!ptr.valid()) {
       ArrayVector p;
       functionExpression(t,int(lhsCount),output_optional,p);
       q += handleReindexing(t,p);
       return;
     }
-    if (t->numChildren() == 1) {
+    if (t.numChildren() == 1) {
       q.push_back(*ptr);
       return;
     }
@@ -1001,20 +1001,20 @@ void Interpreter::multiexpr(Tree *t, ArrayVector &q, index_t lhsCount, bool outp
       return;
     }
     Array r(*ptr);
-    for (int index = 1;index < t->numChildren()-1;index++) 
-      deref(r,t->child(index));
+    for (int index = 1;index < t.numChildren()-1;index++) 
+      deref(r,t.child(index));
     SaveEndInfo;
     endRef = &r;
-    Tree *s(t->last());
-    if (s->is(TOK_PARENS)) {
+    Tree s(t.last());
+    if (s.is(TOK_PARENS)) {
       ArrayVector m;
-      endTotal = s->numChildren();
-      if (s->numChildren() == 0)
+      endTotal = s.numChildren();
+      if (s.numChildren() == 0)
 	q.push_back(r);
       else {
-	for (int p = 0;p < s->numChildren(); p++) {
+	for (int p = 0;p < s.numChildren(); p++) {
 	  endCount = m.size();
-	  multiexpr(s->child(p),m);
+	  multiexpr(s.child(p),m);
 	}
 	subsindex(m);
 	if (m.size() == 1)
@@ -1022,24 +1022,24 @@ void Interpreter::multiexpr(Tree *t, ArrayVector &q, index_t lhsCount, bool outp
 	else
 	  q.push_back(r.get(m));
       }
-    } else if (s->is(TOK_BRACES)) {
+    } else if (s.is(TOK_BRACES)) {
       ArrayVector m;
-      endTotal = s->numChildren();
-      for (int p = 0;p < s->numChildren(); p++) {
+      endTotal = s.numChildren();
+      for (int p = 0;p < s.numChildren(); p++) {
 	endCount = m.size();
-	multiexpr(s->child(p),m);
+	multiexpr(s.child(p),m);
       }
       subsindex(m);
       if (m.size() == 1)
 	q += ArrayVectorFromCellArray(r.get(m.front()));
       else
 	q += ArrayVectorFromCellArray(r.get(m));
-    } else if (s->is('.')) {
-      q += r.get(s->first()->text());
-    } else if (s->is(TOK_DYN)) {
+    } else if (s.is('.')) {
+      q += r.get(s.first().text());
+    } else if (s.is(TOK_DYN)) {
       QString field;
       try {
-	Array fname(expression(s->first()));
+	Array fname(expression(s.first()));
 	field = fname.asString();
       } catch (Exception &e) {
 	throw Exception("dynamic field reference to structure requires a string argument");
@@ -1047,12 +1047,12 @@ void Interpreter::multiexpr(Tree *t, ArrayVector &q, index_t lhsCount, bool outp
       q += r.get(field);
     }
     RestoreEndInfo;
-  } else if (!t->is(TOK_KEYWORD))
+  } else if (!t.is(TOK_KEYWORD))
     q.push_back(expression(t));
 }
 
-Array Interpreter::expression(Tree *t) {
-  switch(t->token()) {
+Array Interpreter::expression(Tree t) {
+  switch(t.token()) {
   case TOK_VARIABLE: 
     return rhs(t);
   case TOK_REAL:
@@ -1060,7 +1060,7 @@ Array Interpreter::expression(Tree *t) {
   case TOK_REALF:
   case TOK_IMAGF:
   case TOK_STRING:
-    return t->array();
+    return t.array();
   case TOK_END:
     if (!endRef.valid()) 
       throw Exception("END keyword not allowed for undefined variables");
@@ -1069,9 +1069,9 @@ Array Interpreter::expression(Tree *t) {
     else
       return Array(double(endRef->dimensions()[endCount]));
   case ':':
-    if (t->numChildren() == 0) {
+    if (t.numChildren() == 0) {
       return Array(QString(":"));
-    } else if (t->first()->is(':')) {
+    } else if (t.first().is(':')) {
       return doubleColon(t);
     } else {
       return unitColon(t);
@@ -1161,13 +1161,13 @@ Array Interpreter::expression(Tree *t) {
   }
 }
 
-Array Interpreter::FunctionPointer(Tree *t) {
-   if (t->first()->is(TOK_ANONYMOUS_FUNC)) {
-     return AnonFuncConstructor(this,t->first());
+Array Interpreter::FunctionPointer(Tree t) {
+   if (t.first().is(TOK_ANONYMOUS_FUNC)) {
+     return AnonFuncConstructor(this,t.first());
    } else {
      FuncPtr val;
-     if (!lookupFunction(t->first()->text(),val))
-       throw Exception("unable to resolve " + t->first()->text() + 
+     if (!lookupFunction(t.first().text(),val))
+       throw Exception("unable to resolve " + t.first().text() + 
 		       " to a function call");
      return FuncPtrConstructor(this,val);
    }
@@ -1347,10 +1347,10 @@ Array Interpreter::FunctionPointer(Tree *t) {
 //@}
 //!
 //Works
-Array Interpreter::unitColon(Tree *t) {
+Array Interpreter::unitColon(Tree t) {
   Array a, b;
-  a = expression(t->first());
-  b = expression(t->second());
+  a = expression(t.first());
+  b = expression(t.second());
   if (!(a.isUserClass() || b.isUserClass()))
     return UnitColon(a,b);
   else
@@ -1358,11 +1358,11 @@ Array Interpreter::unitColon(Tree *t) {
 }
 
 //Works
-Array Interpreter::doubleColon(Tree *t) {
+Array Interpreter::doubleColon(Tree t) {
   Array a, b, c;
-  a = expression(t->first()->first());
-  b = expression(t->first()->second());
-  c = expression(t->second());
+  a = expression(t.first().first());
+  b = expression(t.first().second());
+  c = expression(t.second());
   if (!(a.isUserClass() || b.isUserClass() || c.isUserClass()))
     return DoubleColon(a,b,c);
   else
@@ -1378,11 +1378,11 @@ Array Interpreter::doubleColon(Tree *t) {
  * any matches.  If x is a string and we are a cell-array, then
  * this is applied on an element-by-element basis also.
  */
-bool Interpreter::testCaseStatement(Tree *t, Array s) {
-  Array r(expression(t->first()));
+bool Interpreter::testCaseStatement(Tree t, Array s) {
+  Array r(expression(t.first()));
   bool caseMatched = TestForCaseMatch(s,r);
   if (caseMatched)
-    block(t->second());
+    block(t.second());
   return caseMatched;
 }
 
@@ -1429,7 +1429,7 @@ bool Interpreter::testCaseStatement(Tree *t, Array s) {
 //@>
 //!
 //Works
-void Interpreter::tryStatement(Tree *t) {
+void Interpreter::tryStatement(Tree t) {
   // Turn off autostop for this statement block
   bool autostop_save = autostop;
   autostop = false;
@@ -1439,12 +1439,12 @@ void Interpreter::tryStatement(Tree *t) {
   // contextStack and the cnameStack
   int stackdepth = context->scopeDepth();
   try {
-    block(t->first());
+    block(t.first());
   } catch (Exception &e) {
     while (context->scopeDepth() > stackdepth) context->popScope();
-    if (t->numChildren()>1) {
+    if (t.numChildren()>1) {
       autostop = autostop_save;
-      block(t->second()->first());
+      block(t.second().first());
     }
   } 
   autostop = autostop_save;
@@ -1643,22 +1643,22 @@ void Interpreter::tryStatement(Tree *t) {
 //@}
 //!
 //Works
-void Interpreter::switchStatement(Tree *t) {
+void Interpreter::switchStatement(Tree t) {
   Array switchVal;
   // First, extract the value to perform the switch on.
-  switchVal = expression(t->first());
+  switchVal = expression(t.first());
   // Assess its type to determine if this is a scalar switch
   // or a string switch.
   if (!switchVal.isScalar() && !switchVal.isString())
     throw Exception("Switch statements support scalar and string arguments only.");
   int n=1;
-  while (n < t->numChildren() && t->child(n)->is(TOK_CASE)) {
-    if (testCaseStatement(t->child(n),switchVal))
+  while (n < t.numChildren() && t.child(n).is(TOK_CASE)) {
+    if (testCaseStatement(t.child(n),switchVal))
       return;
     n++;
   }
-  if (t->last()->is(TOK_OTHERWISE))
-    block(t->last()->first());
+  if (t.last().is(TOK_OTHERWISE))
+    block(t.last().first());
 }
 
 //!
@@ -1744,23 +1744,23 @@ void Interpreter::switchStatement(Tree *t) {
 //@}
 //!
 //Works
-void Interpreter::ifStatement(Tree *t) {
-  bool condtest = !(RealAllZeros(expression(t->first())));
+void Interpreter::ifStatement(Tree t) {
+  bool condtest = !(RealAllZeros(expression(t.first())));
   if (condtest) {
-    block(t->second());
+    block(t.second());
     return;
   } else {
     int n=2;
-    while (n < t->numChildren() && t->child(n)->is(TOK_ELSEIF)) {
-      if (!(RealAllZeros(expression(t->child(n)->first())))) {
-	block(t->child(n)->second());
+    while (n < t.numChildren() && t.child(n).is(TOK_ELSEIF)) {
+      if (!(RealAllZeros(expression(t.child(n).first())))) {
+	block(t.child(n).second());
 	return;
       }
       n++;
     }
   }
-  if (t->last()->is(TOK_ELSE))
-    block(t->last()->first());
+  if (t.last().is(TOK_ELSE))
+    block(t.last().first());
 }
 
 //!
@@ -1840,9 +1840,9 @@ void Interpreter::ifStatement(Tree *t) {
 //@}
 //!
 //Works
-void Interpreter::whileStatement(Tree *t) {
-  Tree* testCondition(t->first());
-  Tree* codeBlock(t->second());
+void Interpreter::whileStatement(Tree t) {
+  Tree testCondition(t.first());
+  Tree codeBlock(t.second());
   bool breakEncountered = false;
   Array condVar(expression(testCondition));
   bool conditionTrue = !RealAllZeros(condVar);
@@ -1886,7 +1886,7 @@ inline bool IsIntegerDataClass( const Array& a )
 }
 
 template <class T>
-void ForLoopHelper(Tree *codeBlock, const Array& indexSet, 
+void ForLoopHelper(Tree codeBlock, const Array& indexSet, 
 		   index_t count, const QString& indexName, Interpreter *eval) {
   for (index_t m=1;m<=count;m++) {
     Array *vp = eval->getContext()->lookupVariableLocally( indexName );
@@ -1905,7 +1905,7 @@ void ForLoopHelper(Tree *codeBlock, const Array& indexSet,
   }
 }
 
-void ForLoopIterator( Tree* codeBlock, QString indexName, 
+void ForLoopIterator( Tree codeBlock, QString indexName, 
 		     Array& first, Array& last, Array& step, Interpreter *eval)
 {
     int nsteps;
@@ -1995,33 +1995,33 @@ int num_for_loop_iter( double first, double step, double last )
 }
 
 #ifdef HAVE_LLVM
-static bool compileJITBlock(Interpreter *interp, Tree *t) {
-  delete t->JITFunction();
+static bool compileJITBlock(Interpreter *interp, Tree t) {
+  delete t.JITFunction();
   JITFunc *cg = new JITFunc(interp);
   bool success = false;
   try {
     cg->compile(t);
     success = true;
-    t->setJITState(Tree::SUCCEEDED);
-    t->setJITFunction(cg);
+    t.setJITState(SUCCEEDED);
+    t.setJITFunction(cg);
   } catch (Exception &e) {
     dbout << e.msg() << "\r\n";
     interp->warningMessage(QString("Can't compile code. Using interpreter. Reason: ")+e.msg());
     delete cg;
     success = false;
-    t->setJITState(Tree::FAILED);
+    t.setJITState(FAILED);
   }
   return success;
 }
 
-static bool prepJITBlock(Tree *t) {
+static bool prepJITBlock(Tree t) {
   bool success;
   try {
-    t->JITFunction()->prep();
+    t.JITFunction()->prep();
     success = true;
   } catch (Exception &e) {
     dbout << e.msg() << "\r\n";
-    t->JITFunction()->eval->warningMessage(QString("Can not compile code. Using interpreter. Reason: ")+e.msg());
+    t.JITFunction()->eval->warningMessage(QString("Can not compile code. Using interpreter. Reason: ")+e.msg());
     success = false;
   }
   return success;
@@ -2124,19 +2124,19 @@ static bool prepJITBlock(Tree *t) {
 //!
 //Works
 
-void Interpreter::forStatement(Tree *t) {
+void Interpreter::forStatement(Tree t) {
   // Try to compile this block to an instruction stream  
 #ifdef HAVE_LLVM
     if (jitcontrol) {
-	if (t->JITState() == Tree::UNTRIED) {
+	if (t.JITState() == UNTRIED) {
 	    bool success = compileJITBlock(this,t);
 	    if (success)
 		success = prepJITBlock(t);
 	    if (success) {
-		t->JITFunction()->run();
+		t.JITFunction()->run();
 		return;
 	    } 
-	} else if (t->JITState() == Tree::SUCCEEDED) {
+	} else if (t.JITState() == SUCCEEDED) {
 	    bool success = prepJITBlock(t);
 	    if (!success) {
 		success = compileJITBlock(this,t);
@@ -2144,7 +2144,7 @@ void Interpreter::forStatement(Tree *t) {
 		    success = prepJITBlock(t);
 	    }
       if (success) {
-	t->JITFunction()->run();
+	t.JITFunction()->run();
 	return;
       }
     }
@@ -2153,20 +2153,20 @@ void Interpreter::forStatement(Tree *t) {
   Array indexSet;
   QString indexVarName;
     /* Get the name of the indexing variable */
-    if( !t->first()->is('=') )
+    if( !t.first().is('=') )
 	throw Exception( "Incorrect format of for operator" );
 
-    indexVarName = t->first()->first()->text();
+    indexVarName = t.first().first().text();
 
-    if( t->first()->second()->is(TOK_MATDEF) ||
-	t->first()->second()->is(TOK_VARIABLE) )   { 
+    if( t.first().second().is(TOK_MATDEF) ||
+	t.first().second().is(TOK_VARIABLE) )   { 
 	  //case "for j=[1:10]"
 	  //case "for j=K" skb
     	/* Evaluate the index set */
-	indexSet = expression(t->first()->second());
+	indexSet = expression(t.first().second());
 
 	/* Get the code block */
-	Tree *codeBlock(t->second());
+	Tree codeBlock(t.second());
 	index_t elementCount = indexSet.length();
 	DataClass loopType(indexSet.dataClass());
 	ContextLoopLocker lock(context);
@@ -2227,24 +2227,24 @@ void Interpreter::forStatement(Tree *t) {
 	      break;
 	}
     }
-    else if( t->first()->second()->token() == ':' ){
-	if (t->first()->second()->numChildren() == 0) 
+    else if( t.first().second().token() == ':' ){
+	if (t.first().second().numChildren() == 0) 
 	    throw Exception( "Incorrect format of loop operator parameters" );
   
 	Array first, step, last;
-	Tree *codeBlock(t->second());
+	Tree codeBlock(t.second());
 	ContextLoopLocker lock(context);
 
-	if (t->first()->second()->first()->is(':')) {
-	  first = expression(t->first()->second()->first()->first());
-	  step = expression(t->first()->second()->first()->second());
-	  last = expression(t->first()->second()->second());
+	if (t.first().second().first().is(':')) {
+	  first = expression(t.first().second().first().first());
+	  step = expression(t.first().second().first().second());
+	  last = expression(t.first().second().second());
 	  ForLoopIterator( codeBlock, indexVarName, first, last, step, this);
 	    //return doubleColon(t);
 	} 
 	else {
-	  first = expression(t->first()->second()->first());
-	  last = expression(t->first()->second()->second());
+	  first = expression(t.first().second().first());
+	  last = expression(t.first().second().second());
 	  Array tmp(BasicArray<double>(1));
 	  ForLoopIterator( codeBlock, indexVarName, first, last, tmp, this);
 	    //return unitColon(t);
@@ -2287,9 +2287,9 @@ void Interpreter::forStatement(Tree *t) {
 //get_global
 //@>
 //!
-void Interpreter::globalStatement(Tree *t) {
-  for (int i=0;i<t->numChildren();i++)
-    context->addGlobalVariable(t->child(i)->text());
+void Interpreter::globalStatement(Tree t) {
+  for (int i=0;i<t.numChildren();i++)
+    context->addGlobalVariable(t.child(i).text());
 }
 
 //!
@@ -2340,9 +2340,9 @@ void Interpreter::globalStatement(Tree *t) {
 //y = 1;
 //@}
 //!
-void Interpreter::persistentStatement(Tree *t) {
-  for (int i=0;i<t->numChildren();i++)
-    context->addPersistentVariable(t->child(i)->text());
+void Interpreter::persistentStatement(Tree t) {
+  for (int i=0;i<t.numChildren();i++)
+    context->addPersistentVariable(t.child(i).text());
 }
 
 //!
@@ -2639,17 +2639,17 @@ void Interpreter::displayArray(Array b) {
 }
 
 //Works
-void Interpreter::expressionStatement(Tree *s, bool printIt) {
+void Interpreter::expressionStatement(Tree s, bool printIt) {
   ArrayVector m;
-  if (!s->is(TOK_EXPR)) throw Exception("Unexpected statement type!");
-  Tree *t(s->first());
+  if (!s.is(TOK_EXPR)) throw Exception("Unexpected statement type!");
+  Tree t(s.first());
   // There is a special case to consider here - when a 
   // function call is made as a statement, we do not require
   // that the function have an output.
   Array b;
   ArrayReference ptr;
-  if (t->is(TOK_VARIABLE)) {
-    ptr = context->lookupVariable(t->first()->text());
+  if (t.is(TOK_VARIABLE)) {
+    ptr = context->lookupVariable(t.first().text());
     if (!ptr.valid()) {
       functionExpression(t,0,true,m);
       m = handleReindexing(t,m);
@@ -2692,17 +2692,17 @@ void Interpreter::expressionStatement(Tree *s, bool printIt) {
   context->insertVariable("ans",b);
 }
 
-void Interpreter::multiassign(ArrayReference r, Tree *s, ArrayVector &data) {
+void Interpreter::multiassign(ArrayReference r, Tree s, ArrayVector &data) {
   SaveEndInfo;
   endRef = r;
-  if (s->is(TOK_PARENS)) {
+  if (s.is(TOK_PARENS)) {
     ArrayVector m;
-    endTotal = s->numChildren();
-    if (s->numChildren() == 0) 
+    endTotal = s.numChildren();
+    if (s.numChildren() == 0) 
       throw Exception("The expression A() is not legal unless A is a function");
-    for (int p = 0; p < s->numChildren(); p++) {
+    for (int p = 0; p < s.numChildren(); p++) {
       endCount = m.size();
-      multiexpr(s->child(p),m);
+      multiexpr(s.child(p),m);
     }
     subsindex(m);
     if (m.size() == 1)
@@ -2710,24 +2710,24 @@ void Interpreter::multiassign(ArrayReference r, Tree *s, ArrayVector &data) {
     else
       r->set(m,data[0]);
     data.pop_front();
-  } else if (s->is(TOK_BRACES)) {
+  } else if (s.is(TOK_BRACES)) {
     ArrayVector m;
-    endTotal = s->numChildren();
-    for (int p = 0; p < s->numChildren(); p++) {
+    endTotal = s.numChildren();
+    for (int p = 0; p < s.numChildren(); p++) {
       endCount = m.size();
-      multiexpr(s->child(p),m);
+      multiexpr(s.child(p),m);
     }
     subsindex(m);
     if (m.size() == 1)
       SetCellContents(*r,m[0],data);
     else
       SetCellContents(*r,m,data);
-  } else if (s->is('.')) {
-    r->set(s->first()->text(),data);
-  } else if (s->is(TOK_DYN)) {
+  } else if (s.is('.')) {
+    r->set(s.first().text(),data);
+  } else if (s.is(TOK_DYN)) {
     QString field;
     try {
-      Array fname(expression(s->first()));
+      Array fname(expression(s.first()));
       field = fname.asString();
     } catch (Exception &e) {
       throw Exception("dynamic field reference to structure requires a string argument");
@@ -2737,43 +2737,43 @@ void Interpreter::multiassign(ArrayReference r, Tree *s, ArrayVector &data) {
   RestoreEndInfo;
 }
 
-void Interpreter::assign(ArrayReference r, Tree *s, Array &data) {
+void Interpreter::assign(ArrayReference r, Tree s, Array &data) {
   SaveEndInfo;
   endRef = r;  
-  if (s->is(TOK_PARENS)) {
+  if (s.is(TOK_PARENS)) {
     ArrayVector m;
-    endTotal = s->numChildren();
-    if (s->numChildren() == 0)
+    endTotal = s.numChildren();
+    if (s.numChildren() == 0)
       throw Exception("The expression A() is not legal unless A is a function");
-    for (int p = 0; p < s->numChildren(); p++) {
+    for (int p = 0; p < s.numChildren(); p++) {
       endCount = m.size();
-      multiexpr(s->child(p),m);
+      multiexpr(s.child(p),m);
     }
     subsindex(m);
     if (m.size() == 1)
       r->set(m[0],data);
     else
       r->set(m,data);
-  } else if (s->is(TOK_BRACES)) {
+  } else if (s.is(TOK_BRACES)) {
     ArrayVector datav(data);
     ArrayVector m;
-    endTotal = s->numChildren();
-    for (int p = 0; p < s->numChildren(); p++) {
+    endTotal = s.numChildren();
+    for (int p = 0; p < s.numChildren(); p++) {
       endCount = m.size();
-      multiexpr(s->child(p),m);
+      multiexpr(s.child(p),m);
     }
     subsindex(m);
     if (m.size() == 1)
       SetCellContents(*r,m[0],datav);
     else
       SetCellContents(*r,m,datav);
-  } else if (s->is('.')) {
+  } else if (s.is('.')) {
     ArrayVector datav(data);
-    r->set(s->first()->text(),datav);
-  } else if (s->is(TOK_DYN)) {
+    r->set(s.first().text(),datav);
+  } else if (s.is(TOK_DYN)) {
     QString field;
     try {
-      Array fname(expression(s->first()));
+      Array fname(expression(s.first()));
       field = fname.asString();
     } catch (Exception &e) {
       throw Exception("dynamic field reference to structure requires a string argument");
@@ -3283,47 +3283,47 @@ ArrayReference Interpreter::createVariable(QString name) {
 //  x = testeq(a,A);
 //@}
 //!
-void Interpreter::assignment(Tree *var, bool printIt, Array &b) {
-  QString name(var->first()->text());
+void Interpreter::assignment(Tree var, bool printIt, Array &b) {
+  QString name(var.first().text());
   ArrayReference ptr(context->lookupVariable(name));
   if (!ptr.valid()) 
     ptr = createVariable(name);
-  if (var->numChildren() == 1) {
+  if (var.numChildren() == 1) {
     (*ptr) = b;
   } else if (ptr->isUserClass() && 
 	     !inMethodCall(ptr->className()) && 
 	     !stopoverload) {
     ClassAssignExpression(ptr,var,b,this);
-  } else if (var->numChildren() == 2)
-    assign(ptr,var->second(),b);
+  } else if (var.numChildren() == 2)
+    assign(ptr,var.second(),b);
   else {
     ArrayVector stack;
     Array data(*ptr);
-    int varCount = var->numChildren();
+    int varCount = var.numChildren();
     for (int index=1;index<varCount-1;index++) {
       if (!data.isEmpty()) {
 	try {
-	  deref(data,var->child(index));
+	  deref(data,var.child(index));
 	} catch (Exception &e) {
 	  data = EmptyConstructor();
 	}
       }
       stack.push_back(data);
     }
-    assign(&data,var->child(varCount-1),b);
+    assign(&data,var.child(varCount-1),b);
     Array rhs(data);
     if (stack.size() > 0) {
       stack.pop_back();
       int ptr = 0;
       while (stack.size() > 0) {
 	data = stack.back();
-	assign(&data,var->child(varCount-2-ptr),rhs);
+	assign(&data,var.child(varCount-2-ptr),rhs);
 	rhs = data;
 	stack.pop_back();
 	ptr++;
       }
     }
-    assign(ptr,var->child(1),rhs);
+    assign(ptr,var.child(1),rhs);
   }
   if (printIt) {
     outputMessage("\n");
@@ -3333,12 +3333,12 @@ void Interpreter::assignment(Tree *var, bool printIt, Array &b) {
   }
 }
 
-void Interpreter::processBreakpoints(Tree *t) {
+void Interpreter::processBreakpoints(Tree t) {
   for (int i=0;i<bpStack.size();i++) {
     if ((bpStack[i].cname == context->scopeName()) && 
 	((LineNumber(context->scopeTokenID()) == bpStack[i].tokid))) {
       doDebugCycle();
-      context->setScopeTokenID(t->context());
+      context->setScopeTokenID(t.context());
     }
   }
   if (tracetrap > 0) {
@@ -3358,15 +3358,15 @@ void Interpreter::processBreakpoints(Tree *t) {
   }
 }
 
-void Interpreter::statementType(Tree *t, bool printIt) {
+void Interpreter::statementType(Tree t, bool printIt) {
   // check the debug flag
-  context->setScopeTokenID(t->context());
+  context->setScopeTokenID(t.context());
   processBreakpoints(t);
-  switch(t->token()) {
+  switch(t.token()) {
   case '=': 
     {
-      Array b(expression(t->second()));
-      assignment(t->first(),printIt,b);
+      Array b(expression(t.second()));
+      assignment(t.first(),printIt,b);
     }
     break;
   case TOK_MULTI:
@@ -3454,12 +3454,12 @@ void Interpreter::statementType(Tree *t, bool printIt) {
 
 // 
 //Works
-void Interpreter::statement(Tree *t) {
+void Interpreter::statement(Tree t) {
   try {
-    if (t->is(TOK_QSTATEMENT))
-      statementType(t->first(),false);
-    else if (t->is(TOK_STATEMENT))
-      statementType(t->first(),m_quietlevel == 0);
+    if (t.is(TOK_QSTATEMENT))
+      statementType(t.first(),false);
+    else if (t.is(TOK_STATEMENT))
+      statementType(t.first(),m_quietlevel == 0);
     else
       throw Exception("Unexpected statement type!\n");
   } catch (Exception& e) {
@@ -3479,9 +3479,9 @@ void Interpreter::statement(Tree *t) {
 }
 
 //Works
-void Interpreter::block(Tree *t) {
+void Interpreter::block(Tree t) {
   try {
-    const TreeList statements(t->children());
+    const TreeList statements(t.children());
     for (TreeList::const_iterator i=statements.begin();
 	 i!=statements.end();i++) {
       if (m_kill)
@@ -3502,27 +3502,27 @@ void Interpreter::block(Tree *t) {
 
 // I think this is too complicated.... there should be an easier way
 // Works
-index_t Interpreter::countLeftHandSides(Tree *t) {
+index_t Interpreter::countLeftHandSides(Tree t) {
   Array lhs;
-  ArrayReference ptr(context->lookupVariable(t->first()->text()));
+  ArrayReference ptr(context->lookupVariable(t.first().text()));
   if (!ptr.valid())
     lhs = EmptyConstructor();
   else
     lhs = *ptr;
-  if (t->numChildren() == 1) return 1;
-  if (t->last()->is(TOK_PARENS)) return 1;
-  for (int index = 1;index < t->numChildren()-1;index++) {
+  if (t.numChildren() == 1) return 1;
+  if (t.last().is(TOK_PARENS)) return 1;
+  for (int index = 1;index < t.numChildren()-1;index++) {
     try {
-      deref(lhs,t->child(index));
+      deref(lhs,t.child(index));
     } catch (Exception& e) {
       lhs = EmptyConstructor();
     }
   }
-  if (t->last()->is(TOK_BRACES)) {
-    Tree *s(t->last());
+  if (t.last().is(TOK_BRACES)) {
+    Tree s(t.last());
     ArrayVector m;
-    for (int p = 0; p < s->numChildren(); p++) 
-      multiexpr(s->child(p),m);
+    for (int p = 0; p < s.numChildren(); p++) 
+      multiexpr(s.child(p),m);
     subsindex(m);
     if (m.size() == 0)
       throw Exception("Expected indexing expression!");
@@ -3545,7 +3545,7 @@ index_t Interpreter::countLeftHandSides(Tree *t) {
       return (outputCount);
     }
   }
-  if (t->last()->is('.')) 
+  if (t.last().is('.')) 
     return std::max((index_t)1,lhs.length());
   return 1;
 }
@@ -3556,11 +3556,11 @@ Array Interpreter::AllColonReference(Array v, int index, int count) {
 }
   
 //test
-void Interpreter::specialFunctionCall(Tree *t, bool printIt) {
+void Interpreter::specialFunctionCall(Tree t, bool printIt) {
   ArrayVector m;
   StringVector args;
-  for (int index=0;index < t->numChildren();index++) 
-    args.push_back(t->child(index)->text());
+  for (int index=0;index < t.numChildren();index++) 
+    args.push_back(t.child(index).text());
   if (args.empty()) return;
   ArrayVector n;
   for (int i=1;i<args.size();i++)
@@ -3621,15 +3621,15 @@ void Interpreter::refreshBreakpoints() {
 //[eg{1:3}]
 //in which case the lhscount += 3, even though eg does not exist. 
 // WORKS
-void Interpreter::multiFunctionCall(Tree *t, bool printIt) {
+void Interpreter::multiFunctionCall(Tree t, bool printIt) {
   ArrayVector m;
   TreeList s;
   Array c;
   index_t lhsCount;
 
-  if (!t->first()->is(TOK_BRACKETS))
+  if (!t.first().is(TOK_BRACKETS))
     throw Exception("Illegal left hand side in multifunction expression");
-  s = t->first()->children();
+  s = t.first().children();
   // We have to make multiple passes through the LHS part of the AST.
   // The first pass is to count how many function outputs are actually
   // being requested. 
@@ -3638,55 +3638,55 @@ void Interpreter::multiFunctionCall(Tree *t, bool printIt) {
   for (int ind=0;ind<s.size();ind++) 
     lhsCount += countLeftHandSides(s[ind]);
 
-  multiexpr(t->second(),m,lhsCount);
+  multiexpr(t.second(),m,lhsCount);
 
   int index;
   for (index=0;(index<s.size()) && (m.size() > 0);index++) {
-    Tree *var(s[index]);
-    QString name(var->first()->text());
+    Tree var(s[index]);
+    QString name(var.first().text());
     ArrayReference ptr(context->lookupVariable(name));
     if (!ptr.valid()) 
       ptr = createVariable(name);
     if (ptr->isUserClass() && 
 	!inMethodCall(ptr->className()) && 
-	!stopoverload && (var->numChildren() > 1)) {
+	!stopoverload && (var.numChildren() > 1)) {
       ClassAssignExpression(ptr,var,m.front(),this);
       m.pop_front();
       return;
     }
-    if (var->numChildren() == 1) {
+    if (var.numChildren() == 1) {
       (*ptr) = m.front();
       m.pop_front();
-    } else if (var->numChildren() == 2)
-      multiassign(ptr,var->second(),m);
+    } else if (var.numChildren() == 2)
+      multiassign(ptr,var.second(),m);
     else {
       ArrayVector stack;
       Array data(*ptr);
-      int varCount = var->numChildren();
+      int varCount = var.numChildren();
       for (int index=1;index<varCount-1;index++) {
 	if (!data.isEmpty()) {
 	  try {
-	    deref(data,var->child(index));
+	    deref(data,var.child(index));
 	  } catch (Exception &e) {
 	    data = EmptyConstructor();
 	  }
 	}
 	stack.push_back(data);
       }
-      multiassign(&data,var->child(varCount-1),m);
+      multiassign(&data,var.child(varCount-1),m);
       Array rhs(data);
       if (stack.size() > 0) {
 	stack.pop_back();
 	int ptr = 0;
 	while (stack.size() > 0) {
 	  data = stack.back();
-	  assign(&data,var->child(varCount-2-ptr),rhs);
+	  assign(&data,var.child(varCount-2-ptr),rhs);
 	  rhs = data;
 	  stack.pop_back();
 	  ptr++;
 	}
       }
-      assign(ptr,var->child(1),rhs);
+      assign(ptr,var.child(1),rhs);
     }
     if (printIt) {
       outputMessage(name);
@@ -4206,21 +4206,21 @@ int getArgumentIndex(StringVector list, QString t) {
 //strcattest hi ho
 //@>
 //!
-void Interpreter::collectKeywords(Tree *q, ArrayVector &keyvals,
+void Interpreter::collectKeywords(Tree q, ArrayVector &keyvals,
 				  TreeList &keyexpr, StringVector &keywords) {
   // Search for the keyword uses - 
   // To handle keywords, we make one pass through the arguments,
   // recording a list of keywords used and using ::expression to
   // evaluate their values. 
-  for (int index=0;index < q->numChildren();index++) {
-    if (q->child(index)->is(TOK_KEYWORD)) {
-      keywords.push_back(q->child(index)->first()->text());
-      if (q->child(index)->numChildren() > 1) {
-	keyvals.push_back(expression(q->child(index)->second()));
-	keyexpr.push_back(q->child(index)->second());
+  for (int index=0;index < q.numChildren();index++) {
+    if (q.child(index).is(TOK_KEYWORD)) {
+      keywords.push_back(q.child(index).first().text());
+      if (q.child(index).numChildren() > 1) {
+	keyvals.push_back(expression(q.child(index).second()));
+	keyexpr.push_back(q.child(index).second());
       } else {
 	keyvals.push_back(Array(bool(true)));
-	keyexpr.push_back(new Tree);
+	keyexpr.push_back(Tree());
       }
     }
   }
@@ -4302,10 +4302,10 @@ int* Interpreter::sortKeywords(ArrayVector &m, StringVector &keywords,
 // m is vector of argument values
 // keywords is the list of values passed as keywords
 // keyexpr is the   
-void Interpreter::handlePassByReference(Tree *q, StringVector arguments,
+void Interpreter::handlePassByReference(Tree q, StringVector arguments,
 					ArrayVector m,StringVector keywords, 
 					TreeList keyexpr, int* argTypeMap) {
-  Tree *p;
+  Tree p;
   // M functions can modify their arguments
   int maxsearch = m.size(); 
   if (maxsearch > arguments.size()) maxsearch = arguments.size();
@@ -4316,16 +4316,16 @@ void Interpreter::handlePassByReference(Tree *q, StringVector arguments,
     if ((keywords.size() > 0) && (argTypeMap[i] >=0)) {
       p = keyexpr[argTypeMap[i]];
     } else {
-      p = q->second()->child(qindx);
+      p = q.second().child(qindx);
       qindx++;
-      if (qindx >= q->second()->numChildren())
-	qindx = q->second()->numChildren()-1;
+      if (qindx >= q.second().numChildren())
+	qindx = q.second().numChildren()-1;
     }
     QString args(arguments[i]);
     if (args[0] == '&') {
       args.remove(0,1);
       // This argument was passed by reference
-      if (!p->valid() || !(p->is(TOK_VARIABLE)))
+      if (!p.valid() || !(p.is(TOK_VARIABLE)))
 	throw Exception("Must have lvalue in argument passed by reference");
       assignment(p,false,m[i]);
     }
@@ -4333,7 +4333,7 @@ void Interpreter::handlePassByReference(Tree *q, StringVector arguments,
 }
 
 //Test
-void Interpreter::functionExpression(Tree *t, 
+void Interpreter::functionExpression(Tree t, 
 				     int narg_out, 
 				     bool outputOptional,
 				     ArrayVector &output) {
@@ -4347,39 +4347,39 @@ void Interpreter::functionExpression(Tree *t,
   // first evaluate the keywords and the arguments, before we know
   // which function to call.
   // First, check for arguments
-  if ((t->numChildren()>=2) && t->second()->is(TOK_PARENS)) {
+  if ((t.numChildren()>=2) && t.second().is(TOK_PARENS)) {
     // Collect keywords
-    collectKeywords(t->second(),keyvals,keyexpr,keywords);
+    collectKeywords(t.second(),keyvals,keyexpr,keywords);
     // Evaluate function arguments
     try {
-      Tree *s(t->second());
-      for (int p=0;p<s->numChildren();p++)
-	multiexpr(s->child(p),m);
+      Tree s(t.second());
+      for (int p=0;p<s.numChildren();p++)
+	multiexpr(s.child(p),m);
     } catch (Exception &e) {
       // Transmute the error message about illegal use of ':'
       // into one about undefined variables.  Its crufty,
       // but it works.
       if (e.matches("Illegal use of the ':' operator"))
-	throw Exception("Undefined variable " + t->text());
+	throw Exception("Undefined variable " + t.text());
       else
 	throw;
     }
   } 
   // Now that the arguments have been evaluated, we have to 
   // find the dominant class
-  if (!lookupFunction(t->first()->text(),funcDef,m))
+  if (!lookupFunction(t.first().text(),funcDef,m))
     throw Exception("Undefined function or variable " + 
-		    t->first()->text());
+		    t.first().text());
   if (funcDef->updateCode(this)) refreshBreakpoints();
   if (funcDef->scriptFlag) {
-    if (t->numChildren()>=2)
+    if (t.numChildren()>=2)
       throw Exception(QString("Cannot use arguments in a call to a script."));
     if ((narg_out > 0) && !outputOptional)
       throw Exception(QString("Cannot assign outputs in a call to a script."));
     context->pushScope(((MFunctionDef*)funcDef)->fileName,
 		       ((MFunctionDef*)funcDef)->name,false);
     context->setScopeActive(false);
-    block(((MFunctionDef*)funcDef)->code.tree());
+    block(((MFunctionDef*)funcDef)->code);
     if (context->scopeStepTrap() >= 1) {
       tracetrap = 1;
       tracecurrentline = 0;
@@ -4397,13 +4397,13 @@ void Interpreter::functionExpression(Tree *t,
       argTypeMap = NULL;
     if ((funcDef->inputArgCount() >= 0) && 
 	(m.size() > funcDef->inputArgCount()))
-      throw Exception(QString("Too many inputs to function ")+t->first()->text());
+      throw Exception(QString("Too many inputs to function ")+t.first().text());
     if ((funcDef->outputArgCount() >= 0) && 
 	(narg_out > funcDef->outputArgCount() && !outputOptional))
-      throw Exception(QString("Too many outputs to function ")+t->first()->text());
+      throw Exception(QString("Too many outputs to function ")+t.first().text());
     n = doFunction(funcDef,m,narg_out);
     // Check for any pass by reference
-    if (t->hasChildren() && (funcDef->arguments.size() > 0)) 
+    if (t.hasChildren() && (funcDef->arguments.size() > 0)) 
       handlePassByReference(t,funcDef->arguments,m,keywords,keyexpr,argTypeMap);
   }
   // Some routines (e.g., min and max) will return more outputs
@@ -5081,18 +5081,18 @@ bool Interpreter::lookupFunction(QString funcName, FuncPtr& val,
  
 //
 // 
-void Interpreter::deref(Array &r, Tree *s) {
+void Interpreter::deref(Array &r, Tree s) {
   SaveEndInfo;
   endRef = &r;
-  if (s->is(TOK_PARENS)) {
+  if (s.is(TOK_PARENS)) {
     ArrayVector m;
-    endTotal = s->numChildren();
-    if (s->numChildren() == 0) {
+    endTotal = s.numChildren();
+    if (s.numChildren() == 0) {
       r = r;
     } else {
-      for (int p = 0; p < s->numChildren(); p++) {
+      for (int p = 0; p < s.numChildren(); p++) {
 	endCount = m.size();
-	multiexpr(s->child(p),m);
+	multiexpr(s.child(p),m);
       }
       subsindex(m);
       if (m.size() == 1)
@@ -5100,24 +5100,24 @@ void Interpreter::deref(Array &r, Tree *s) {
       else
 	r = r.get(m);
     }
-  } else if (s->is(TOK_BRACES)) {
+  } else if (s.is(TOK_BRACES)) {
     ArrayVector m;
-    endTotal = s->numChildren();
-    for (int p = 0; p < s->numChildren(); p++) {
+    endTotal = s.numChildren();
+    for (int p = 0; p < s.numChildren(); p++) {
       endCount = m.size();
-      multiexpr(s->child(p),m);
+      multiexpr(s.child(p),m);
     }
     subsindex(m);
     if (m.size() == 1)
       r = ArrayFromCellArray(r.get(m[0]));
     else
       r = ArrayFromCellArray(r.get(m));
-  } else if (s->is('.')) {
-    r = r.get(s->first()->text()).front();
-  } else if (s->is(TOK_DYN)) {
+  } else if (s.is('.')) {
+    r = r.get(s.first().text()).front();
+  } else if (s.is(TOK_DYN)) {
     QString field;
     try {
-      Array fname(expression(s->first()));
+      Array fname(expression(s.first()));
       field = fname.asString();
     } catch (Exception &e) {
       throw Exception("dynamic field reference to structure requires a string argument");
@@ -5127,8 +5127,8 @@ void Interpreter::deref(Array &r, Tree *s) {
   RestoreEndInfo;
 }
  
- Array Interpreter::rhs(Tree *t) {
-   ArrayReference ptr(context->lookupVariable(t->first()->text()));
+ Array Interpreter::rhs(Tree t) {
+   ArrayReference ptr(context->lookupVariable(t.first().text()));
    if (!ptr.valid()) {
      ArrayVector m;
      functionExpression(t,1,false,m);
@@ -5138,7 +5138,7 @@ void Interpreter::deref(Array &r, Tree *s) {
      else
        return EmptyConstructor();
    }
-   if (t->numChildren() == 1)
+   if (t.numChildren() == 1)
      return *ptr;
    if (ptr->isUserClass() && !stopoverload && !inMethodCall(ptr->className())) {
      ArrayVector m(ClassRHSExpression(*ptr,t,this));
@@ -5149,8 +5149,8 @@ void Interpreter::deref(Array &r, Tree *s) {
        return EmptyConstructor();
    }
    Array r(*ptr);
-   for (int index = 1;index < t->numChildren();index++) 
-     deref(r,t->child(index));
+   for (int index = 1;index < t.numChildren();index++) 
+     deref(r,t.child(index));
    return r;
  }
 
@@ -5225,10 +5225,10 @@ void Interpreter::setStopOverload(bool flag) {
 
 // We want dbstep(n) to cause us to advance n statements and then
 // stop.  we execute statement-->set step trap,
-void Interpreter::dbstepStatement(Tree *t) {
+void Interpreter::dbstepStatement(Tree t) {
   int lines = 1;
-  if (t->hasChildren()) {
-    Array lval(expression(t->first()));
+  if (t.hasChildren()) {
+    Array lval(expression(t.first()));
     lines = lval.asInteger();
   }
   // Get the current function
@@ -5243,10 +5243,10 @@ void Interpreter::dbstepStatement(Tree *t) {
   context->setScopeStepCurrentLine(LineNumber(context->scopeTokenID()));
 }
 
-void Interpreter::dbtraceStatement(Tree *t) {
+void Interpreter::dbtraceStatement(Tree t) {
   int lines = 1;
-  if (t->hasChildren()) {
-    Array lval(expression(t->first()));
+  if (t.hasChildren()) {
+    Array lval(expression(t.first()));
     lines = lval.asInteger();
   }
   // Get the current function
@@ -5281,17 +5281,17 @@ void Interpreter::ExecuteLine(QString txt) {
 
 //PORT
 void Interpreter::evaluateString(QString line, bool propogateExceptions) {
-  CodeBlock b;
-  Tree *t;
+  Tree b;
+  Tree t;
   m_interrupt = false;
   Scanner S(line,"");
   Parser P(S);
   try{
     b = P.process();
-    t = b.tree();
-    if (!t->is(TOK_SCRIPT))
+    t = b;
+    if (!t.is(TOK_SCRIPT))
       throw Exception("Function definition unexpected!");
-    t = t->first();
+    t = t.first();
   } catch(Exception &e) {
     if (propogateExceptions)
       throw;
@@ -5332,7 +5332,7 @@ bool NeedsMoreInput(Interpreter *eval, QString txt) {
   try {
     Scanner S(txt,"");
     Parser P(S);
-    CodeBlock root(P.process());
+    Tree root(P.process());
     return false;
   } catch (Exception &e) {
     if (e.msg().left(13) == "Expecting end") {
@@ -5404,6 +5404,7 @@ void Interpreter::evalCLI() {
     QString cmdline;
     emit EnableRepaint();
     mutex.lock();
+    
     while ((cmdset.isEmpty() || 
 	    NeedsMoreInput(this,cmdset)) && (!m_interrupt)) {
       if (cmd_buffer.isEmpty())

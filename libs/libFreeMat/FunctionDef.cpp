@@ -42,30 +42,30 @@
 
 QMutex functiondefmutex;
 
-StringVector IdentifierList(Tree *t) {
+StringVector IdentifierList(Tree t) {
   StringVector retval;
-  for (int index=0;index<t->numChildren();index++) {
-    if (t->child(index)->is('&'))
-      retval.push_back("&" + t->child(index)->first()->text());
+  for (int index=0;index<t.numChildren();index++) {
+    if (t.child(index).is('&'))
+      retval.push_back("&" + t.child(index).first().text());
     else
-      retval.push_back(t->child(index)->text());
+      retval.push_back(t.child(index).text());
   }
   return retval;
 }
 
-void VariableReferencesList(Tree *t, StringVector& idents) {
-  if (t->is(TOK_NEST_FUNC)) return;
-  if (t->is(TOK_VARIABLE)) {
+void VariableReferencesList(Tree t, StringVector& idents) {
+  if (t.is(TOK_NEST_FUNC)) return;
+  if (t.is(TOK_VARIABLE)) {
     bool exists = false;
     for (int i=0;(i<idents.size());i++) {
-      exists = (idents[i] == t->first()->text());
+      exists = (idents[i] == t.first().text());
       if (exists) break;
     }
     if (!exists)
-      idents.push_back(t->first()->text());
+      idents.push_back(t.first().text());
   }
-  for (int i=0;i<t->numChildren();i++)
-    VariableReferencesList(t->child(i),idents);
+  for (int i=0;i<t.numChildren();i++)
+    VariableReferencesList(t.child(i),idents);
 }
 
 MFunctionDef::MFunctionDef() {
@@ -112,7 +112,7 @@ void MFunctionDef::printMe(Interpreter*eval) {
   for (i=0;i<tmp.size();i++) 
     eval->outputMessage(tmp[i] + " ");
   eval->outputMessage("\ncode: \n");
-  code.tree()->print();
+  code.print();
 }
 
 ArrayVector MFunctionDef::evaluateFunc(Interpreter *walker, 
@@ -124,7 +124,7 @@ ArrayVector MFunctionDef::evaluateFunc(Interpreter *walker,
   bool warningIssued;
   int minCount;
     
-  if (!code.tree()->valid()) return outputs;
+  if (!code.valid()) return outputs;
   context = walker->getContext();
   context->setScopeNesting(nestedFunction);
   context->setVariablesAccessed(variablesAccessed);
@@ -175,7 +175,7 @@ ArrayVector MFunctionDef::evaluateFunc(Interpreter *walker,
   context->setScopeNargout(nargout);
   try {
     try {
-      walker->block(code.tree());
+      walker->block(code);
     } catch (InterpreterBreakException& e) {
     } catch (InterpreterContinueException& e) {
     } catch (InterpreterReturnException& e) {
@@ -340,23 +340,23 @@ inline QString ReadFileIntoString(QString filename) {
 //  return last;
 //}
 
-static void RegisterNested(Tree *t, Interpreter *m_eval, MFunctionDef *parent) {
-  if (t->is(TOK_NEST_FUNC)) {
+static void RegisterNested(Tree t, Interpreter *m_eval, MFunctionDef *parent) {
+  if (t.is(TOK_NEST_FUNC)) {
     MFunctionDef *fp = new MFunctionDef;
     fp->localFunction = parent->localFunction;
     fp->nestedFunction = true;
-    fp->returnVals = IdentifierList(t->first());
-    fp->name = parent->name + "/" + t->second()->text();
-    fp->arguments = IdentifierList(t->child(2));
-    fp->code = CodeBlock(t->child(3),true); 
-    VariableReferencesList(fp->code.tree(),fp->variablesAccessed);
+    fp->returnVals = IdentifierList(t.first());
+    fp->name = parent->name + "/" + t.second().text();
+    fp->arguments = IdentifierList(t.child(2));
+    fp->code = t.child(3); 
+    VariableReferencesList(fp->code,fp->variablesAccessed);
     fp->fileName = parent->fileName;
     // Register any nested functions for the local functions
     m_eval->getContext()->insertFunction(fp,false);
-    RegisterNested(fp->code.tree(),m_eval,fp);
+    RegisterNested(fp->code,m_eval,fp);
   } else
-    for (int i=0;i<t->numChildren();i++)
-      RegisterNested(t->child(i),m_eval,parent);
+    for (int i=0;i<t.numChildren();i++)
+      RegisterNested(t.child(i),m_eval,parent);
 }
 
 // Compile the function...
@@ -397,31 +397,31 @@ bool MFunctionDef::updateCode(Interpreter *m_eval) {
       QString fileText = ReadFileIntoString(fileName);
       Scanner S(fileText,fileName);
       Parser P(S);
-      CodeBlock pcode(P.process());
-      if (pcode.tree()->is(TOK_FUNCTION_DEFS)) {
+      Tree pcode(P.process());
+      if (pcode.is(TOK_FUNCTION_DEFS)) {
 	scriptFlag = false;
 	// Get the main function..
-	Tree *MainFuncCode = pcode.tree()->first();
-	returnVals = IdentifierList(MainFuncCode->first());
+	Tree MainFuncCode = pcode.first();
+	returnVals = IdentifierList(MainFuncCode.first());
 	// The name is mangled by the interpreter...  We ignore the
 	// name as parsed in the function.
 	//	name = MainFuncCode.second().text();
-	arguments = IdentifierList(MainFuncCode->child(2));
-	code = CodeBlock(MainFuncCode->child(3),true);
-	VariableReferencesList(code.tree(),variablesAccessed);
+	arguments = IdentifierList(MainFuncCode.child(2));
+	code = MainFuncCode.child(3);
+	VariableReferencesList(code,variablesAccessed);
 	// Register any nested functions
-	RegisterNested(code.tree(),m_eval,this);
+	RegisterNested(code,m_eval,this);
 	localFunction = false;
 	// Process the local functions
-	for (int index = 1;index < pcode.tree()->numChildren();index++) {
-	  Tree* LocalFuncCode = pcode.tree()->child(index);
+	for (int index = 1;index < pcode.numChildren();index++) {
+	  Tree LocalFuncCode = pcode.child(index);
 	  MFunctionDef *fp = new MFunctionDef;
 	  fp->localFunction = true;
-	  fp->returnVals = IdentifierList(LocalFuncCode->first());
-	  fp->name = name + "/" + LocalFuncCode->second()->text();
-	  fp->arguments = IdentifierList(LocalFuncCode->child(2));
-	  fp->code = CodeBlock(LocalFuncCode->child(3),true); 
-	  VariableReferencesList(fp->code.tree(),fp->variablesAccessed);
+	  fp->returnVals = IdentifierList(LocalFuncCode.first());
+	  fp->name = name + "/" + LocalFuncCode.second().text();
+	  fp->arguments = IdentifierList(LocalFuncCode.child(2));
+	  fp->code = LocalFuncCode.child(3); 
+	  VariableReferencesList(fp->code,fp->variablesAccessed);
 	  fp->fileName = fileName;
 	  // Register any nested functions for the local functions
 	  // local functions are not marked as temporary.  This yields
@@ -429,13 +429,13 @@ bool MFunctionDef::updateCode(Interpreter *m_eval) {
 	  // issue of local functions being flushed by the CD command.
 	  m_eval->getContext()->insertFunction(fp,false);
 	  //	  dbout << "Registering " << QString::fromStdString(fp->name);
-	  RegisterNested(fp->code.tree(),m_eval,this);
+	  RegisterNested(fp->code,m_eval,this);
 	}
 	functionCompiled = true;
       } else {
 	scriptFlag = true;
 	functionCompiled = true;
-	code = CodeBlock(pcode.tree()->first(),true);
+	code = pcode.first();
       }
     } catch (Exception &e) {
       functionCompiled = false;
@@ -446,30 +446,30 @@ bool MFunctionDef::updateCode(Interpreter *m_eval) {
   return false;
 }
 
-static bool StatementTypeNode(Tree* t) {
-  return (t->is('=') || t->is(TOK_MULTI) || t->is(TOK_SPECIAL) ||
-	  t->is(TOK_FOR) || t->is(TOK_WHILE) || t->is(TOK_IF) ||
-	  t->is(TOK_BREAK) || t->is(TOK_CONTINUE) || t->is(TOK_DBSTEP) ||
-	  t->is(TOK_RETURN) || t->is(TOK_SWITCH) || t->is(TOK_TRY) || 
-	  t->is(TOK_QUIT) || t->is(TOK_RETALL) || t->is(TOK_KEYBOARD) ||
-	  t->is(TOK_GLOBAL) || t->is(TOK_PERSISTENT) || t->is(TOK_EXPR));
+static bool StatementTypeNode(Tree t) {
+  return (t.is('=') || t.is(TOK_MULTI) || t.is(TOK_SPECIAL) ||
+	  t.is(TOK_FOR) || t.is(TOK_WHILE) || t.is(TOK_IF) ||
+	  t.is(TOK_BREAK) || t.is(TOK_CONTINUE) || t.is(TOK_DBSTEP) ||
+	  t.is(TOK_RETURN) || t.is(TOK_SWITCH) || t.is(TOK_TRY) || 
+	  t.is(TOK_QUIT) || t.is(TOK_RETALL) || t.is(TOK_KEYBOARD) ||
+	  t.is(TOK_GLOBAL) || t.is(TOK_PERSISTENT) || t.is(TOK_EXPR));
 }
 
 // Find the smallest line number larger than the argument
 // if our line number is larger than the target, then we
 // 
-static void TreeLine(Tree* t, unsigned &bestLine, unsigned lineTarget) {
-  if (!t->valid()) return;
+static void TreeLine(Tree t, unsigned &bestLine, unsigned lineTarget) {
+  if (!t.valid()) return;
   // Nested functions are tracked separately - so that we do not
   // check them for line numbers
-  if (t->is(TOK_NEST_FUNC)) return;
+  if (t.is(TOK_NEST_FUNC)) return;
   if (StatementTypeNode(t)) {
-    unsigned myLine = (LineNumber(t->context()));
+    unsigned myLine = (LineNumber(t.context()));
     if ((myLine >= lineTarget) && (myLine < bestLine))
       bestLine = myLine;
   }
-  for (int i=0;i<t->numChildren();i++)
-    TreeLine(t->child(i),bestLine,lineTarget);
+  for (int i=0;i<t.numChildren();i++)
+    TreeLine(t.child(i),bestLine,lineTarget);
 }
 
 
@@ -477,7 +477,7 @@ static void TreeLine(Tree* t, unsigned &bestLine, unsigned lineTarget) {
 unsigned MFunctionDef::ClosestLine(unsigned line) {
   unsigned bestline;
   bestline = 1000000000;
-  TreeLine(code.tree(),bestline,line);
+  TreeLine(code,bestline,line);
   if (bestline == 1000000000)
     throw Exception(QString("Unable to find a line close to ") + 
 		    QString::number(line) + 
@@ -560,7 +560,7 @@ FunctionDef::~FunctionDef() {
 ImportedFunctionDef::ImportedFunctionDef(GenericFuncPointer address_arg,
 					 StringVector types_arg,
 					 StringVector arguments_arg,
-					 CodeList sizeChecks,
+					 TreeList sizeChecks,
 					 QString retType_arg) {
   address = address_arg;
   types = types_arg;
@@ -619,7 +619,7 @@ ArrayVector ImportedFunctionDef::evaluateFunc(Interpreter *walker,
   int passByReference = 0;
   for (int j=0;j<inputs.size();j++)
     if ((arguments[j][0] == '&') || (types[j] == "string") ||
-	(sizeCheckExpressions[j].tree()->valid()))
+	(sizeCheckExpressions[j].valid()))
       passByReference++;
   /**
    * Next, we check to see if any bounds-checking expressions are
@@ -628,7 +628,7 @@ ArrayVector ImportedFunctionDef::evaluateFunc(Interpreter *walker,
   bool boundsCheckActive = false;
   int m=0;
   while (m < inputs.size() && !boundsCheckActive)
-    boundsCheckActive = (sizeCheckExpressions[m++].tree()->valid());
+    boundsCheckActive = (sizeCheckExpressions[m++].valid());
   if (boundsCheckActive) {
     /**
      * If the bounds-checking is active, we have to create a 
@@ -650,8 +650,8 @@ ArrayVector ImportedFunctionDef::evaluateFunc(Interpreter *walker,
      * Next, evaluate each size check expression
      */
     for (i=0;i<inputs.size();i++) {
-      if (sizeCheckExpressions[i].tree()->valid()) {
-	Array ret(walker->expression(sizeCheckExpressions[i].tree()));
+      if (sizeCheckExpressions[i].valid()) {
+	Array ret(walker->expression(sizeCheckExpressions[i]));
 	ret = ret.toClass(Int32);
 	int len = ret.asInteger();
 	if (len != (int)(inputs[i].length())) {
@@ -678,7 +678,7 @@ ArrayVector ImportedFunctionDef::evaluateFunc(Interpreter *walker,
   int ptr = 0;
   for (i=0;i<inputs.size();i++) {
     if (types[i] != "string") {
-      if ((arguments[i][0] == '&') || (sizeCheckExpressions[i].tree()->valid())) {
+      if ((arguments[i][0] == '&') || (sizeCheckExpressions[i].valid())) {
 	refPointers[ptr] = inputs[i].getVoidPointer();
 	values[i] = &refPointers[ptr];
 	ptr++;
@@ -731,7 +731,7 @@ ArrayVector ImportedFunctionDef::evaluateFunc(Interpreter *walker,
   // Second pass - Loop through the arguments
   for (i=0;i<types.size();i++) {
     if (arguments[i][0] == '&' || types[i] == "string" ||
-	sizeCheckExpressions[i].tree()->valid())
+	sizeCheckExpressions[i].valid())
       av_ptr(alist,void*,*((void**)values[i]));
     else {
       if (types[i] == "uint8")

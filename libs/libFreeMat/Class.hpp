@@ -36,9 +36,9 @@ Array ClassMatrixConstructor(ArrayMatrix m, Interpreter* eval);
 
 ArrayVector ClassFunction(int nargout, const ArrayVector& arg);
 
-ArrayVector ClassRHSExpression(Array a, Tree *t, Interpreter* eval);
+ArrayVector ClassRHSExpression(Array a, Tree t, Interpreter* eval);
 
-void ClassAssignExpression(ArrayReference r, Tree *t, const Array& value, Interpreter* eval);
+void ClassAssignExpression(ArrayReference r, Tree t, const Array& value, Interpreter* eval);
   
 bool ClassResolveFunction(Interpreter* eval, Array &args, QString funcName, FuncPtr& val);
   

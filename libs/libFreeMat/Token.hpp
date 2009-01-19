@@ -5,6 +5,7 @@
 #include <QTextStream>
 #include <QChar>
 #include "DebugStream.hpp"
+#include <QSharedData>
 
 typedef uint16 TokenValueType;
 

@@ -8,10 +8,10 @@
 #define LOOKUP(x,field) x.constStructPtr()[field].get(1)
 
 
-Array AnonFuncConstructor(Interpreter* eval, Tree *t) {
+Array AnonFuncConstructor(Interpreter* eval, Tree t) {
   StringVector variables;
-  VariableReferencesList(t->second(),variables);
-  StringVector arguments = IdentifierList(t->first());
+  VariableReferencesList(t.second(),variables);
+  StringVector arguments = IdentifierList(t.first());
   ArrayVector vals;
   StringVector fields;
   for (int i=0;i<variables.size();i++) {
@@ -25,7 +25,7 @@ Array AnonFuncConstructor(Interpreter* eval, Tree *t) {
   }
   Array workspace(StructConstructor(fields,vals));
   Array args(CellArrayFromArray(CellArrayFromStringVector(arguments)));
-  Array expr(Array(QString(t->text())));
+  Array expr(Array(QString(t.text())));
   StringVector fieldnames;
   fieldnames << "args" << "workspace" << "expr";
   ArrayVector values;
@@ -82,11 +82,11 @@ ArrayVector AnonFuncSubsrefFunction(int nargout, const ArrayVector& arg, Interpr
   for (int i=0;i<qMin(argSet.size(),args.size());i++) 
     context->insertVariableLocally(args[i],argSet[i]);
   // We need to build a parse tree
-  CodeBlock expTree(ParseExpressionString(LOOKUP(arg[0],"expr").asString()));
+  Tree expTree(ParseExpressionString(LOOKUP(arg[0],"expr").asString()));
   // Excecute the tree
   ArrayVector outputs;
   try {
-    eval->multiexpr(expTree.tree(),outputs,1,true);
+    eval->multiexpr(expTree,outputs,1,true);
   } catch (InterpreterBreakException& ) {
   } catch (InterpreterContinueException& ) {
   } catch (InterpreterReturnException& ) {
@@ -114,11 +114,11 @@ ArrayVector AnonFuncFevalFunction(int nargout, const ArrayVector& arg, Interpret
   for (int i=0;i<qMin(arg.size()-1,argnames.size());i++) 
     context->insertVariableLocally(argnames[i],arg[i+1]);
   // We need to build a parse tree
-  CodeBlock expTree(ParseExpressionString(LOOKUP(arg[0],"expr").asString()));
+  Tree expTree(ParseExpressionString(LOOKUP(arg[0],"expr").asString()));
   // Excecute the tree
   ArrayVector outputs;
   try {
-    eval->multiexpr(expTree.tree(),outputs);
+    eval->multiexpr(expTree,outputs);
   } catch (InterpreterBreakException& e) {
   } catch (InterpreterContinueException& e) {
   } catch (InterpreterReturnException& e) {

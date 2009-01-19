@@ -43,8 +43,8 @@ class Interpreter;
 typedef ArrayVector (*BuiltInFuncPtr) (int,const ArrayVector&);
 typedef ArrayVector (*SpecialFuncPtr) (int,const ArrayVector&,Interpreter*);
 
-void VariableReferencesList(Tree *t, StringVector& idents);
-StringVector IdentifierList(Tree *t);
+void VariableReferencesList(Tree t, StringVector& idents);
+StringVector IdentifierList(Tree t);
 
 /** Base class for the function types
  * A FunctionDef class is a base class for the different types
@@ -175,7 +175,7 @@ public:
    * The AST for the code that defines the function (only the body of the
    * function is contained in this AST, not the function declaration itself).
    */
-  CodeBlock code;
+  Tree code;
   /**
    * Flag to indicate if the function has been compiled.
    */
@@ -365,7 +365,7 @@ public:
   /**
    * The guard expressions associated with each argument
    */
-  CodeList sizeCheckExpressions;
+  TreeList sizeCheckExpressions;
   /**
    * The return type of the function
    */
@@ -376,7 +376,7 @@ public:
   ImportedFunctionDef(GenericFuncPointer address_arg,
 		      StringVector types_arg,
 		      StringVector arguments_arg,
-		      CodeList sizeChecks,
+		      TreeList sizeChecks,
 		      QString retType_arg);
   /**
    * Default destructor

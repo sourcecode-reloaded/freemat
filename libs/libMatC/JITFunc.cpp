@@ -171,14 +171,14 @@ JITFunc::JITFunc(Interpreter *p_eval) {
   eval = p_eval;
 }
 
-void JITFunc::compile_block(Tree* t) {
-  const TreeList &statements(t->children());
+void JITFunc::compile_block(Tree t) {
+  const TreeList &statements(t.children());
   for (TreeList::const_iterator i=statements.begin();i!=statements.end();i++) 
     compile_statement(*i);
 }
 
-void JITFunc::compile_statement_type(Tree* t) {
-  switch(t->token()) {
+void JITFunc::compile_statement_type(Tree t) {
+  switch(t.token()) {
   case '=': 
     compile_assignment(t);
     break;
@@ -207,7 +207,7 @@ void JITFunc::compile_statement_type(Tree* t) {
   case TOK_GLOBAL:      throw Exception("global is not currently handled by the JIT compiler");
   case TOK_PERSISTENT:  throw Exception("persistent is not currently handled by the JIT compiler");
   case TOK_EXPR:
-    compile_expression(t->first());
+    compile_expression(t.first());
     break;
   case TOK_NEST_FUNC:
     break;
@@ -216,12 +216,12 @@ void JITFunc::compile_statement_type(Tree* t) {
   }
 }
 
-void JITFunc::compile_statement(Tree* t) {
-  if (t->is(TOK_STATEMENT) && 
-      (t->first()->is(TOK_EXPR) || t->first()->is(TOK_SPECIAL) ||
-       t->first()->is(TOK_MULTI) || t->first()->is('=')))
+void JITFunc::compile_statement(Tree t) {
+  if (t.is(TOK_STATEMENT) && 
+      (t.first().is(TOK_EXPR) || t.first().is(TOK_SPECIAL) ||
+       t.first().is(TOK_MULTI) || t.first().is('=')))
     throw Exception("JIT compiler doesn't work with verbose statements");
-  compile_statement_type(t->first());
+  compile_statement_type(t.first());
 }
 
 JITScalar JITFunc::compile_constant_function(QString symname) {
@@ -231,24 +231,24 @@ JITScalar JITFunc::compile_constant_function(QString symname) {
   return (*val);
 }
 
-JITScalar JITFunc::compile_built_in_function_call(Tree* t) {
+JITScalar JITFunc::compile_built_in_function_call(Tree t) {
   // First, make sure it is a function
-  QString symname(t->first()->text());
+  QString symname(t.first().text());
   FuncPtr funcval;
   if (!eval->lookupFunction(symname,funcval)) 
     throw Exception(QString("Couldn't find function ") + symname);
-  if (t->numChildren() != 2) 
+  if (t.numChildren() != 2) 
     return compile_constant_function(symname);
   // Evaluate the argument
-  Tree* s(t->second());
-  if (!s->is(TOK_PARENS))
+  Tree s(t.second());
+  if (!s.is(TOK_PARENS))
     throw Exception("Expecting function arguments.");
-  if (s->numChildren() > 1)
+  if (s.numChildren() > 1)
     throw Exception("Cannot JIT functions that take more than one argument");
-  if (s->numChildren() == 0) 
+  if (s.numChildren() == 0) 
     return compile_constant_function(symname);
   else {
-    JITScalar arg = compile_expression(s->first());
+    JITScalar arg = compile_expression(s.first());
     JITFunction *func = NULL;
     if (jit->IsFloat(arg)) {
       func = float_funcs.findSymbol(symname);
@@ -266,9 +266,9 @@ static QString uid_string(int uid) {
   return QString("%1").arg(uid);
 }
 
-JITScalar JITFunc::compile_m_function_call(Tree* t) {
+JITScalar JITFunc::compile_m_function_call(Tree t) {
   // First, make sure it is a function
-  QString symname(t->first()->text());
+  QString symname(t.first().text());
   FuncPtr funcval;
   if (!eval->lookupFunction(symname,funcval)) 
     throw Exception("Couldn't find function " + symname);
@@ -286,23 +286,23 @@ JITScalar JITFunc::compile_m_function_call(Tree* t) {
   uid++;
   // Loop through the arguments to the function,
   // and map them from the defined arguments of the tree
-  if (t->numChildren() < 2) 
+  if (t.numChildren() < 2) 
     throw Exception("function takes no arguments - not currently supported");
-  Tree* s(t->second());
+  Tree s(t.second());
   int args_defed = fptr->arguments.size();
-  if (args_defed > s->numChildren())
-    args_defed = s->numChildren();
+  if (args_defed > s.numChildren())
+    args_defed = s.numChildren();
   for (int i=0;i<args_defed;i++) {
-    JITScalar arg = compile_expression(s->child(i));
+    JITScalar arg = compile_expression(s.child(i));
     define_local_symbol(new_symbol_prefix + fptr->arguments[i],arg);
   }
   define_local_symbol(new_symbol_prefix+"nargout",jit->DoubleValue(1));
   define_local_symbol(new_symbol_prefix+"nargin",jit->DoubleValue(args_defed));
   // compile the code for the function
-  fptr->code.tree()->print();
+  fptr->code.print();
   QString save_prefix = symbol_prefix;
   symbol_prefix = new_symbol_prefix;
-  compile_block(fptr->code.tree());
+  compile_block(fptr->code);
   // Lookup the result and return it
   SymbolInfo *v = symbols.findSymbol(new_symbol_prefix+fptr->returnVals[0]);
   if (!v) throw Exception("function failed to define return value");
@@ -310,9 +310,9 @@ JITScalar JITFunc::compile_m_function_call(Tree* t) {
   return jit->Load(v->address);
 }
 
-JITScalar JITFunc::compile_function_call(Tree* t) {
+JITScalar JITFunc::compile_function_call(Tree t) {
   // First, make sure it is a function
-  QString symname(t->first()->text());
+  QString symname(t.first().text());
   FuncPtr funcval;
   if (!eval->lookupFunction(symname,funcval)) 
     throw Exception("Couldn't find function " + symname);
@@ -321,7 +321,7 @@ JITScalar JITFunc::compile_function_call(Tree* t) {
     return compile_built_in_function_call(t);
   if (funcval->type() == FM_M_FUNCTION)
     return compile_m_function_call(t);
-  if (t->numChildren() != 2) 
+  if (t.numChildren() != 2) 
     return compile_constant_function(symname);
   throw Exception("Unsupported function type");
 }
@@ -337,35 +337,35 @@ void JITFunc::handle_success_code(JITScalar success_code) {
   jit->SetCurrentBlock(if_success);
 }
 
-JITScalar JITFunc::compile_rhs(Tree* t) {
-  QString symname(symbol_prefix+t->first()->text());
+JITScalar JITFunc::compile_rhs(Tree t) {
+  QString symname(symbol_prefix+t.first().text());
   SymbolInfo *v = symbols.findSymbol(symname);
   if (!v) {
-    if (t->numChildren() == 1)
+    if (t.numChildren() == 1)
       v = add_argument_scalar(symname);
     else
       v = add_argument_array(symname);
     if (!v)
       return compile_function_call(t);
   }
-  if (t->numChildren() == 1) {
+  if (t.numChildren() == 1) {
     if (!v->isScalar)
       throw Exception("non-scalar reference returned in scalar context!");
     return jit->Load(v->address);
   }
-  if (t->numChildren() > 2)
+  if (t.numChildren() > 2)
     throw Exception("multiple levels of dereference not handled yet...");
   if (v->isScalar)
     throw Exception("array indexing of scalar values...");
-  Tree* s(t->second());
-  if (!s->is(TOK_PARENS))
+  Tree s(t.second());
+  if (!s.is(TOK_PARENS))
     throw Exception("non parenthetical dereferences not handled yet...");
-  if (s->numChildren() == 0)
+  if (s.numChildren() == 0)
     throw Exception("Expecting at least 1 array reference for dereference...");
-  if (s->numChildren() > 2)
+  if (s.numChildren() > 2)
     throw Exception("Expecting at most 2 array references for dereference...");
-  if (s->numChildren() == 1) {
-    JITScalar arg1 = jit->ToDouble(compile_expression(s->first()));
+  if (s.numChildren() == 1) {
+    JITScalar arg1 = jit->ToDouble(compile_expression(s.first()));
     JITScalar ret;
     if (jit->IsDouble(v->type))
       ret = jit->Call(func_vector_load_double, this_ptr, jit->DoubleValue(v->argument_num), arg1, retcode);
@@ -377,9 +377,9 @@ JITScalar JITFunc::compile_rhs(Tree* t) {
       throw Exception("Unsupported JIT type in Load");
     handle_success_code(jit->Load(retcode));
     return ret;
-  } else if (s->numChildren() == 2) {
-    JITScalar arg1 = jit->ToDouble(compile_expression(s->first()));
-    JITScalar arg2 = jit->ToDouble(compile_expression(s->second()));
+  } else if (s.numChildren() == 2) {
+    JITScalar arg1 = jit->ToDouble(compile_expression(s.first()));
+    JITScalar arg2 = jit->ToDouble(compile_expression(s.second()));
     JITScalar ret;
     if (jit->IsDouble(v->type))
       ret = jit->Call(func_matrix_load_double, this_ptr, jit->DoubleValue(v->argument_num), arg1, arg2, retcode);
@@ -395,19 +395,19 @@ JITScalar JITFunc::compile_rhs(Tree* t) {
   throw Exception("dereference not handled yet...");
 }
 
-JITScalar JITFunc::compile_expression(Tree* t) {
-  switch(t->token()) {
+JITScalar JITFunc::compile_expression(Tree t) {
+  switch(t.token()) {
   case TOK_VARIABLE:     return compile_rhs(t);
   case TOK_REAL:
   case TOK_REALF:
-    if( t->array().isScalar() ){
-      switch( t->array().dataClass() ){
+    if( t.array().isScalar() ){
+      switch( t.array().dataClass() ){
       case Bool:
-	return jit->BoolValue( t->array().constRealScalar<bool>() );
+	return jit->BoolValue( t.array().constRealScalar<bool>() );
       case Float:
-	return jit->FloatValue( t->array().constRealScalar<float>() );
+	return jit->FloatValue( t.array().constRealScalar<float>() );
       case Double:
-	return jit->DoubleValue( t->array().constRealScalar<double>() );
+	return jit->DoubleValue( t.array().constRealScalar<double>() );
       default:
 	throw Exception("Unsupported scalar type.");
       }
@@ -420,18 +420,18 @@ JITScalar JITFunc::compile_expression(Tree* t) {
   case TOK_MATDEF: 
   case TOK_CELLDEF:      throw Exception("JIT compiler does not support complex, string, END, matrix or cell defs");
   case '+':
-    return jit->Add(compile_expression(t->first()),compile_expression(t->second()));
+    return jit->Add(compile_expression(t.first()),compile_expression(t.second()));
   case '-': 
-    return jit->Sub(compile_expression(t->first()),compile_expression(t->second()));
+    return jit->Sub(compile_expression(t.first()),compile_expression(t.second()));
   case '*': 
   case TOK_DOTTIMES: 
-    return jit->Mul(compile_expression(t->first()),compile_expression(t->second()));
+    return jit->Mul(compile_expression(t.first()),compile_expression(t.second()));
   case '/': 
   case TOK_DOTRDIV:
-    return jit->Div(compile_expression(t->first()),compile_expression(t->second()));
+    return jit->Div(compile_expression(t.first()),compile_expression(t.second()));
   case '\\': 
   case TOK_DOTLDIV: 
-    return jit->Div(compile_expression(t->second()),compile_expression(t->first()));
+    return jit->Div(compile_expression(t.second()),compile_expression(t.first()));
   case TOK_SOR: 
   case '|':
     return compile_or_statement(t);
@@ -439,23 +439,23 @@ JITScalar JITFunc::compile_expression(Tree* t) {
   case '&': 
     return compile_and_statement(t);
   case '<': 
-    return jit->LessThan(compile_expression(t->first()),compile_expression(t->second()));
+    return jit->LessThan(compile_expression(t.first()),compile_expression(t.second()));
   case TOK_LE: 
-    return jit->LessEquals(compile_expression(t->first()),compile_expression(t->second()));
+    return jit->LessEquals(compile_expression(t.first()),compile_expression(t.second()));
   case '>': 
-    return jit->GreaterThan(compile_expression(t->first()),compile_expression(t->second()));
+    return jit->GreaterThan(compile_expression(t.first()),compile_expression(t.second()));
   case TOK_GE: 
-    return jit->GreaterEquals(compile_expression(t->first()),compile_expression(t->second()));
+    return jit->GreaterEquals(compile_expression(t.first()),compile_expression(t.second()));
   case TOK_EQ: 
-    return jit->Equals(compile_expression(t->first()),compile_expression(t->second()));
+    return jit->Equals(compile_expression(t.first()),compile_expression(t.second()));
   case TOK_NE: 
-    return jit->NotEqual(compile_expression(t->first()),compile_expression(t->second()));
+    return jit->NotEqual(compile_expression(t.first()),compile_expression(t.second()));
   case TOK_UNARY_MINUS: 
-    return jit->Negate(compile_expression(t->first()));
+    return jit->Negate(compile_expression(t.first()));
   case TOK_UNARY_PLUS: 
-    return compile_expression(t->first());
+    return compile_expression(t.first());
   case '~': 
-    return jit->Not(compile_expression(t->first()));
+    return jit->Not(compile_expression(t.first()));
   case '^':               throw Exception("^ is not currently handled by the JIT compiler");
   case TOK_DOTPOWER:      throw Exception(".^ is not currently handled by the JIT compiler");
   case '\'':              throw Exception("' is not currently handled by the JIT compiler");
@@ -465,19 +465,19 @@ JITScalar JITFunc::compile_expression(Tree* t) {
   }  
 }
 
-void JITFunc::compile_assignment(Tree* t) {
-  Tree* s(t->first());
-  QString symname(symbol_prefix+s->first()->text());
-  JITScalar rhs(compile_expression(t->second()));
+void JITFunc::compile_assignment(Tree t) {
+  Tree s(t.first());
+  QString symname(symbol_prefix+s.first().text());
+  JITScalar rhs(compile_expression(t.second()));
   SymbolInfo *v = symbols.findSymbol(symname);
   if (!v) {
-    if (s->numChildren() == 1)
+    if (s.numChildren() == 1)
       v = add_argument_scalar(symname,rhs,false);
     else
       v = add_argument_array(symname, true /*createIfMissing*/ );
     if (!v) throw Exception("Undefined variable reference:" + symname);
   }
-  if (s->numChildren() == 1) {
+  if (s.numChildren() == 1) {
     if (v->type != jit->TypeOf(rhs))
       throw Exception("polymorphic assignment to scalar detected.");
     if (!v->isScalar)
@@ -485,19 +485,19 @@ void JITFunc::compile_assignment(Tree* t) {
     jit->Store(rhs, v->address);
     return;
   }
-  if (s->numChildren() > 2)
+  if (s.numChildren() > 2)
     throw Exception("multiple levels of dereference not handled yet...");
   if (v->isScalar)
     throw Exception("array indexing of scalar values...");
-  Tree* q(s->second());
-  if (!q->is(TOK_PARENS))
+  Tree q(s.second());
+  if (!q.is(TOK_PARENS))
     throw Exception("non parenthetical dereferences not handled yet...");
-  if (q->numChildren() == 0)
+  if (q.numChildren() == 0)
     throw Exception("Expecting at least 1 array reference for dereference...");
-  if (q->numChildren() > 2)
+  if (q.numChildren() > 2)
     throw Exception("Expecting at most 2 array references for dereference...");
-  if (q->numChildren() == 1) {
-    JITScalar arg1 = jit->ToDouble(compile_expression(q->first()));
+  if (q.numChildren() == 1) {
+    JITScalar arg1 = jit->ToDouble(compile_expression(q.first()));
     JITScalar success_code;
     if (jit->IsDouble(v->type))
       success_code = jit->Call(func_vector_store_double, this_ptr, jit->DoubleValue(v->argument_num), arg1, 
@@ -512,9 +512,9 @@ void JITFunc::compile_assignment(Tree* t) {
       throw Exception("unhandled type for vector store");
     handle_success_code(success_code);
     return;
-  } else if (q->numChildren() == 2) {
-    JITScalar arg1 = jit->ToDouble(compile_expression(q->first()));
-    JITScalar arg2 = jit->ToDouble(compile_expression(q->second()));
+  } else if (q.numChildren() == 2) {
+    JITScalar arg1 = jit->ToDouble(compile_expression(q.first()));
+    JITScalar arg2 = jit->ToDouble(compile_expression(q.second()));
     JITScalar success_code;
     if (jit->IsDouble(v->type))
       success_code = jit->Call(func_matrix_store_double, this_ptr, jit->DoubleValue(v->argument_num), 
@@ -542,7 +542,7 @@ void JITFunc::compile_assignment(Tree* t) {
 //   x = false;
 // end
 
-JITScalar JITFunc::compile_or_statement(Tree* t) {
+JITScalar JITFunc::compile_or_statement(Tree t) {
   JITBlock ip(jit->CurrentBlock());
   jit->SetCurrentBlock(prolog);
   JITScalar address = jit->Alloc(jit->BoolType(),"or_result");
@@ -551,10 +551,10 @@ JITScalar JITFunc::compile_or_statement(Tree* t) {
   JITBlock or_first_false = jit->NewBlock("or_first_false");
   JITBlock or_false = jit->NewBlock("or_false");
   JITBlock or_exit = jit->NewBlock("or_exit");
-  JITScalar first_value(compile_expression(t->first()));
+  JITScalar first_value(compile_expression(t.first()));
   jit->Branch(or_true,or_first_false,first_value);
   jit->SetCurrentBlock(or_first_false);
-  JITScalar second_value(compile_expression(t->second()));
+  JITScalar second_value(compile_expression(t.second()));
   jit->Branch(or_true,or_false,second_value);
   jit->SetCurrentBlock(or_true);
   jit->Store(jit->BoolValue(true),address);
@@ -576,7 +576,7 @@ JITScalar JITFunc::compile_or_statement(Tree* t) {
 //   x = true;
 // end
 
-JITScalar JITFunc::compile_and_statement(Tree* t) {
+JITScalar JITFunc::compile_and_statement(Tree t) {
   JITBlock ip(jit->CurrentBlock());
   jit->SetCurrentBlock(prolog);
   JITScalar address = jit->Alloc(jit->BoolType(),"and_result");
@@ -585,10 +585,10 @@ JITScalar JITFunc::compile_and_statement(Tree* t) {
   JITBlock and_first_true = jit->NewBlock("and_first_true");
   JITBlock and_false = jit->NewBlock("and_false");
   JITBlock and_exit = jit->NewBlock("and_exit");
-  JITScalar first_value(compile_expression(t->first()));
+  JITScalar first_value(compile_expression(t.first()));
   jit->Branch(and_first_true,and_false,first_value);
   jit->SetCurrentBlock(and_first_true);
-  JITScalar second_value(compile_expression(t->second()));
+  JITScalar second_value(compile_expression(t.second()));
   jit->Branch(and_true,and_false,second_value);
   jit->SetCurrentBlock(and_true);
   jit->Store(jit->BoolValue(true),address);
@@ -600,8 +600,8 @@ JITScalar JITFunc::compile_and_statement(Tree* t) {
   return jit->Load(address);
 }
 
-void JITFunc::compile_if_statement(Tree* t) {
-  JITScalar main_cond(jit->ToBool(compile_expression(t->first())));
+void JITFunc::compile_if_statement(Tree t) {
+  JITScalar main_cond(jit->ToBool(compile_expression(t.first())));
   JITBlock if_true = jit->NewBlock("if_true");
   JITBlock if_continue = jit->NewBlock("if_continue");
   JITBlock if_exit = jit->NewBlock("if_exit");
@@ -609,22 +609,22 @@ void JITFunc::compile_if_statement(Tree* t) {
   jit->SetCurrentBlock(if_true);
   bool failed = false;
   try {
-    compile_block(t->second());
+    compile_block(t.second());
   } catch(Exception &e) {
     exception_store = e;
     failed = true;
   }
   jit->Jump(if_exit);
   int n=2;
-  while (n < t->numChildren() && t->child(n)->is(TOK_ELSEIF)) {
+  while (n < t.numChildren() && t.child(n).is(TOK_ELSEIF)) {
     jit->SetCurrentBlock(if_continue);
-    JITScalar ttest(jit->ToBool(compile_expression(t->child(n)->first())));
+    JITScalar ttest(jit->ToBool(compile_expression(t.child(n).first())));
     if_true = jit->NewBlock("elseif_true");
     if_continue = jit->NewBlock("elseif_continue");
     jit->Branch(if_true,if_continue,ttest);
     jit->SetCurrentBlock(if_true);
     try {
-      compile_block(t->child(n)->second());
+      compile_block(t.child(n).second());
     } catch(Exception &e) {
       exception_store = e;
       failed = true;
@@ -632,10 +632,10 @@ void JITFunc::compile_if_statement(Tree* t) {
     jit->Jump(if_exit);
     n++;
   }
-  if (t->last()->is(TOK_ELSE)) {
+  if (t.last().is(TOK_ELSE)) {
     jit->SetCurrentBlock(if_continue);
     try {
-      compile_block(t->last()->first());
+      compile_block(t.last().first());
     } catch(Exception &e) {
       exception_store = e;
       failed = true;
@@ -917,7 +917,7 @@ void JITFunc::initialize() {
 
 static int countm = 0;
 
-void JITFunc::compile(Tree* t) {
+void JITFunc::compile(Tree t) {
   // The signature for the compiled function should be:
   // bool func(void** inputs);
   countm++;
@@ -958,23 +958,23 @@ void JITFunc::compile(Tree* t) {
 }
 
 //TODO: handle other types for loop variables
-void JITFunc::compile_for_block(Tree* t) {
+void JITFunc::compile_for_block(Tree t) {
   JITScalar loop_start, loop_stop, loop_step;
 
-  if (!(t->first()->is('=') && t->first()->second()->is(':'))) 
+  if (!(t.first().is('=') && t.first().second().is(':'))) 
     throw Exception("For loop cannot be compiled - need scalar bounds");
   
-  if (t->first()->second()->first()->is(':')){ //triple format 
-    loop_start = jit->ToDouble( compile_expression(t->first()->second()->first()->first()) );
-    loop_step = jit->ToDouble( compile_expression(t->first()->second()->first()->second()) );
-    loop_stop = jit->ToDouble( compile_expression(t->first()->second()->second()) );
+  if (t.first().second().first().is(':')){ //triple format 
+    loop_start = jit->ToDouble( compile_expression(t.first().second().first().first()) );
+    loop_step = jit->ToDouble( compile_expression(t.first().second().first().second()) );
+    loop_stop = jit->ToDouble( compile_expression(t.first().second().second()) );
   }
   else{ //double format
-    loop_start = jit->ToDouble( compile_expression(t->first()->second()->first()) );
+    loop_start = jit->ToDouble( compile_expression(t.first().second().first()) );
     loop_step = jit->DoubleValue( 1 );
-    loop_stop = jit->ToDouble( compile_expression(t->first()->second()->second()) );
+    loop_stop = jit->ToDouble( compile_expression(t.first().second().second()) );
   }
-  QString loop_index_name(t->first()->first()->text());
+  QString loop_index_name(t.first().first().text());
   SymbolInfo* v = add_argument_scalar(loop_index_name,loop_start,true);
   JITScalar loop_index_address = v->address;
   jit->Store(loop_start,loop_index_address);
@@ -997,7 +997,7 @@ void JITFunc::compile_for_block(Tree* t) {
   jit->SetCurrentBlock(loopbody);
   bool failed = false;
   try {
-    compile_block(t->second());
+    compile_block(t.second());
   } catch(Exception &e) {
     exception_store = e;
     failed = true;

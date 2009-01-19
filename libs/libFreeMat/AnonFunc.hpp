@@ -4,7 +4,8 @@
 #include "Array.hpp"
 #include "FunctionDef.hpp"
 #include "Interpreter.hpp"
+#include "Tree.hpp"
 
-Array AnonFuncConstructor(Interpreter*, Tree *);
+Array AnonFuncConstructor(Interpreter*, Tree);
 
 #endif
