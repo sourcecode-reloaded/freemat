@@ -8,7 +8,7 @@
 #define LOOKUP(x,field) x.constStructPtr()[field].get(1)
 
 
-Array AnonFuncConstructor(Interpreter* eval, Tree t) {
+Array AnonFuncConstructor(Interpreter* eval, const Tree & t) {
   StringVector variables;
   VariableReferencesList(t.second(),variables);
   StringVector arguments = IdentifierList(t.first());
@@ -82,7 +82,7 @@ ArrayVector AnonFuncSubsrefFunction(int nargout, const ArrayVector& arg, Interpr
   for (int i=0;i<qMin(argSet.size(),args.size());i++) 
     context->insertVariableLocally(args[i],argSet[i]);
   // We need to build a parse tree
-  Tree expTree(ParseExpressionString(LOOKUP(arg[0],"expr").asString()));
+  const Tree & expTree(ParseExpressionString(LOOKUP(arg[0],"expr").asString()));
   // Excecute the tree
   ArrayVector outputs;
   try {
@@ -114,7 +114,7 @@ ArrayVector AnonFuncFevalFunction(int nargout, const ArrayVector& arg, Interpret
   for (int i=0;i<qMin(arg.size()-1,argnames.size());i++) 
     context->insertVariableLocally(argnames[i],arg[i+1]);
   // We need to build a parse tree
-  Tree expTree(ParseExpressionString(LOOKUP(arg[0],"expr").asString()));
+  const Tree & expTree(ParseExpressionString(LOOKUP(arg[0],"expr").asString()));
   // Excecute the tree
   ArrayVector outputs;
   try {

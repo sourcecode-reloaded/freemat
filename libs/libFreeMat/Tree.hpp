@@ -6,26 +6,14 @@
 #include "Array.hpp"
 #include "DebugStream.hpp"
 
-// A rewrite of the tree class (yet again).  The lesson learned this time is that we want the
-// tree class to be as fast as possible.  And that we want to be able to tag the tree with profile
-// information.
 class Tree;
-class JITFunc;
 
 typedef QList<Tree> TreeList;
-
-typedef enum {
-  UNTRIED,
-  FAILED,
-  SUCCEEDED
-} JITState_t;
 
 class TreeNode : public QSharedData {
 public:
   Token m_node;
   TreeList m_children;
-  JITState_t m_jitstate;
-  JITFunc *m_jitfunc;
 };
 
 class Tree {
@@ -41,10 +29,6 @@ public:
   ~Tree();
   inline const Token& node() const {return d->m_node;}
   void print() const;
-  inline JITState_t JITState() const {return d->m_jitstate;}
-  inline void setJITState(JITState_t t) {d->m_jitstate = t;}
-  inline JITFunc* JITFunction() const {return d->m_jitfunc;}
-  inline void setJITFunction(JITFunc *t) {d->m_jitfunc = t;}
   inline void rename(TokenValueType newtok) {d->m_node.setValue(newtok);}
   inline unsigned context() const {return d->m_node.position();}
   inline bool valid() const {return !(d->m_node.is(TOK_INVALID));}

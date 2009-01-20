@@ -924,7 +924,7 @@ Array ClassBinaryOperator(Array a, Array b, QString funcname,
   throw Exception("unexpected argument types for classbinaryoperator");
 }
 
-Array IndexExpressionToStruct(Interpreter* eval, Tree t, Array r) {
+Array IndexExpressionToStruct(Interpreter* eval, const Tree & t, Array r) {
   StringVector fNames;
   fNames.push_back("type");
   fNames.push_back("subs");
@@ -933,7 +933,7 @@ Array IndexExpressionToStruct(Interpreter* eval, Tree t, Array r) {
   for (int index=1;index < t.numChildren();index++) {
     if (t.child(index).is(TOK_PARENS)) {
       ArrayVector m;
-      Tree s(t.child(index));
+      const Tree & s(t.child(index));
       for (int p=0;p<s.numChildren();p++)
 	eval->multiexpr(s.child(p),m);
       eval->subsindex(m);
@@ -949,7 +949,7 @@ Array IndexExpressionToStruct(Interpreter* eval, Tree t, Array r) {
     }
     if (t.child(index).is(TOK_BRACES)) {
       ArrayVector m;
-      Tree s(t.child(index));
+      const Tree & s(t.child(index));
       for (int p=0;p<s.numChildren();p++)
 	eval->multiexpr(s.child(p),m);
       eval->subsindex(m);
@@ -975,7 +975,7 @@ Array IndexExpressionToStruct(Interpreter* eval, Tree t, Array r) {
   return retval;
 }
   
-static ArrayVector ClassSubsrefCall(Interpreter* eval, Tree t, Array r, FuncPtr val) {
+static ArrayVector ClassSubsrefCall(Interpreter* eval, const Tree & t, Array r, FuncPtr val) {
   ArrayVector p;
   p.push_back(r);
   p.push_back(IndexExpressionToStruct(eval,t, r));
@@ -986,7 +986,7 @@ static ArrayVector ClassSubsrefCall(Interpreter* eval, Tree t, Array r, FuncPtr 
 
 // What is special here...  Need to be able to do field indexing
 // 
-ArrayVector ClassRHSExpression(Array r, Tree t, Interpreter* eval) {
+ArrayVector ClassRHSExpression(Array r, const Tree & t, Interpreter* eval) {
   Array q;
   Array n, p;
   FuncPtr val;
@@ -1004,7 +1004,7 @@ ArrayVector ClassRHSExpression(Array r, Tree t, Interpreter* eval) {
       throw Exception("Cannot reindex an expression that returns multiple values.");
     if (t.child(index).is(TOK_PARENS)) {
       ArrayVector m;
-      Tree s(t.child(index));
+      const Tree & s(t.child(index));
       for (int p=0;p<s.numChildren();p++)
 	eval->multiexpr(s.child(p),m);
       eval->subsindex(m);
@@ -1021,7 +1021,7 @@ ArrayVector ClassRHSExpression(Array r, Tree t, Interpreter* eval) {
     }
     if (t.child(index).is(TOK_BRACES)) {
       ArrayVector m;
-      Tree s(t.child(index));
+      const Tree & s(t.child(index));
       for (int p=0;p<s.numChildren();p++)
 	eval->multiexpr(s.child(p),m);
       eval->subsindex(m);
@@ -1073,7 +1073,7 @@ ArrayVector ClassRHSExpression(Array r, Tree t, Interpreter* eval) {
   return rv;
 }
 
-void ClassAssignExpression(ArrayReference dst, Tree t, const Array& value, Interpreter* eval) {
+void ClassAssignExpression(ArrayReference dst, const Tree & t, const Array& value, Interpreter* eval) {
   FuncPtr val;
   if (!ClassResolveFunction(eval,*dst,"subsasgn",val))
     throw Exception(QString("The method 'subsasgn' is not defined for objects of class ") + 

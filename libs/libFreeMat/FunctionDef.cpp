@@ -42,7 +42,7 @@
 
 QMutex functiondefmutex;
 
-StringVector IdentifierList(Tree t) {
+StringVector IdentifierList(const Tree & t) {
   StringVector retval;
   for (int index=0;index<t.numChildren();index++) {
     if (t.child(index).is('&'))
@@ -53,7 +53,7 @@ StringVector IdentifierList(Tree t) {
   return retval;
 }
 
-void VariableReferencesList(Tree t, StringVector& idents) {
+void VariableReferencesList(const Tree & t, StringVector& idents) {
   if (t.is(TOK_NEST_FUNC)) return;
   if (t.is(TOK_VARIABLE)) {
     bool exists = false;
@@ -340,7 +340,7 @@ inline QString ReadFileIntoString(QString filename) {
 //  return last;
 //}
 
-static void RegisterNested(Tree t, Interpreter *m_eval, MFunctionDef *parent) {
+static void RegisterNested(const Tree & t, Interpreter *m_eval, MFunctionDef *parent) {
   if (t.is(TOK_NEST_FUNC)) {
     MFunctionDef *fp = new MFunctionDef;
     fp->localFunction = parent->localFunction;
@@ -397,11 +397,11 @@ bool MFunctionDef::updateCode(Interpreter *m_eval) {
       QString fileText = ReadFileIntoString(fileName);
       Scanner S(fileText,fileName);
       Parser P(S);
-      Tree pcode(P.process());
+      const Tree & pcode(P.process());
       if (pcode.is(TOK_FUNCTION_DEFS)) {
 	scriptFlag = false;
 	// Get the main function..
-	Tree MainFuncCode = pcode.first();
+	const Tree & MainFuncCode = pcode.first();
 	returnVals = IdentifierList(MainFuncCode.first());
 	// The name is mangled by the interpreter...  We ignore the
 	// name as parsed in the function.
@@ -414,7 +414,7 @@ bool MFunctionDef::updateCode(Interpreter *m_eval) {
 	localFunction = false;
 	// Process the local functions
 	for (int index = 1;index < pcode.numChildren();index++) {
-	  Tree LocalFuncCode = pcode.child(index);
+	  const Tree & LocalFuncCode = pcode.child(index);
 	  MFunctionDef *fp = new MFunctionDef;
 	  fp->localFunction = true;
 	  fp->returnVals = IdentifierList(LocalFuncCode.first());
@@ -446,7 +446,7 @@ bool MFunctionDef::updateCode(Interpreter *m_eval) {
   return false;
 }
 
-static bool StatementTypeNode(Tree t) {
+static bool StatementTypeNode(const Tree & t) {
   return (t.is('=') || t.is(TOK_MULTI) || t.is(TOK_SPECIAL) ||
 	  t.is(TOK_FOR) || t.is(TOK_WHILE) || t.is(TOK_IF) ||
 	  t.is(TOK_BREAK) || t.is(TOK_CONTINUE) || t.is(TOK_DBSTEP) ||
@@ -458,7 +458,7 @@ static bool StatementTypeNode(Tree t) {
 // Find the smallest line number larger than the argument
 // if our line number is larger than the target, then we
 // 
-static void TreeLine(Tree t, unsigned &bestLine, unsigned lineTarget) {
+static void TreeLine(const Tree & t, unsigned &bestLine, unsigned lineTarget) {
   if (!t.valid()) return;
   // Nested functions are tracked separately - so that we do not
   // check them for line numbers

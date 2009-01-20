@@ -8,30 +8,22 @@
 Tree::Tree() {
   d = new TreeNode;
   d->m_node = Token(TOK_INVALID);
-  d->m_jitstate = UNTRIED;
-  d->m_jitfunc = NULL;
 }
 
 Tree::Tree(const Token& tok) {
   d = new TreeNode;
   d->m_node = tok;
-  d->m_jitstate = UNTRIED;
-  d->m_jitfunc = NULL;
   d->m_node.fillArray();
 }
 
 Tree::Tree(TokenValueType token, unsigned position) {
   d = new TreeNode;
   d->m_node = Token(token,position);
-  d->m_jitstate = UNTRIED;
-  d->m_jitfunc = NULL;
 }
 
 Tree::Tree(const Token& tok, Tree child1, Tree child2) {
   d = new TreeNode;
   d->m_node = tok;
-  d->m_jitstate = UNTRIED;
-  d->m_jitfunc = NULL;
   d->m_children.push_back(child1);
   d->m_children.push_back(child2);
 }
@@ -39,8 +31,6 @@ Tree::Tree(const Token& tok, Tree child1, Tree child2) {
 Tree::Tree(const Token& tok, Tree child1) {
   d = new TreeNode;
   d->m_node = tok;
-  d->m_jitstate = UNTRIED;
-  d->m_jitfunc = NULL;
   d->m_children.push_back(child1);
 }
 

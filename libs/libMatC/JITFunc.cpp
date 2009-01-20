@@ -171,13 +171,13 @@ JITFunc::JITFunc(Interpreter *p_eval) {
   eval = p_eval;
 }
 
-void JITFunc::compile_block(Tree t) {
+void JITFunc::compile_block(const Tree & t) {
   const TreeList &statements(t.children());
   for (TreeList::const_iterator i=statements.begin();i!=statements.end();i++) 
     compile_statement(*i);
 }
 
-void JITFunc::compile_statement_type(Tree t) {
+void JITFunc::compile_statement_type(const Tree & t) {
   switch(t.token()) {
   case '=': 
     compile_assignment(t);
@@ -216,7 +216,7 @@ void JITFunc::compile_statement_type(Tree t) {
   }
 }
 
-void JITFunc::compile_statement(Tree t) {
+void JITFunc::compile_statement(const Tree & t) {
   if (t.is(TOK_STATEMENT) && 
       (t.first().is(TOK_EXPR) || t.first().is(TOK_SPECIAL) ||
        t.first().is(TOK_MULTI) || t.first().is('=')))
@@ -231,7 +231,7 @@ JITScalar JITFunc::compile_constant_function(QString symname) {
   return (*val);
 }
 
-JITScalar JITFunc::compile_built_in_function_call(Tree t) {
+JITScalar JITFunc::compile_built_in_function_call(const Tree & t) {
   // First, make sure it is a function
   QString symname(t.first().text());
   FuncPtr funcval;
@@ -240,7 +240,7 @@ JITScalar JITFunc::compile_built_in_function_call(Tree t) {
   if (t.numChildren() != 2) 
     return compile_constant_function(symname);
   // Evaluate the argument
-  Tree s(t.second());
+  const Tree & s(t.second());
   if (!s.is(TOK_PARENS))
     throw Exception("Expecting function arguments.");
   if (s.numChildren() > 1)
@@ -266,7 +266,7 @@ static QString uid_string(int uid) {
   return QString("%1").arg(uid);
 }
 
-JITScalar JITFunc::compile_m_function_call(Tree t) {
+JITScalar JITFunc::compile_m_function_call(const Tree & t) {
   // First, make sure it is a function
   QString symname(t.first().text());
   FuncPtr funcval;
@@ -288,7 +288,7 @@ JITScalar JITFunc::compile_m_function_call(Tree t) {
   // and map them from the defined arguments of the tree
   if (t.numChildren() < 2) 
     throw Exception("function takes no arguments - not currently supported");
-  Tree s(t.second());
+  const Tree & s(t.second());
   int args_defed = fptr->arguments.size();
   if (args_defed > s.numChildren())
     args_defed = s.numChildren();
@@ -310,7 +310,7 @@ JITScalar JITFunc::compile_m_function_call(Tree t) {
   return jit->Load(v->address);
 }
 
-JITScalar JITFunc::compile_function_call(Tree t) {
+JITScalar JITFunc::compile_function_call(const Tree & t) {
   // First, make sure it is a function
   QString symname(t.first().text());
   FuncPtr funcval;
@@ -337,7 +337,7 @@ void JITFunc::handle_success_code(JITScalar success_code) {
   jit->SetCurrentBlock(if_success);
 }
 
-JITScalar JITFunc::compile_rhs(Tree t) {
+JITScalar JITFunc::compile_rhs(const Tree & t) {
   QString symname(symbol_prefix+t.first().text());
   SymbolInfo *v = symbols.findSymbol(symname);
   if (!v) {
@@ -357,7 +357,7 @@ JITScalar JITFunc::compile_rhs(Tree t) {
     throw Exception("multiple levels of dereference not handled yet...");
   if (v->isScalar)
     throw Exception("array indexing of scalar values...");
-  Tree s(t.second());
+  const Tree & s(t.second());
   if (!s.is(TOK_PARENS))
     throw Exception("non parenthetical dereferences not handled yet...");
   if (s.numChildren() == 0)
@@ -395,7 +395,7 @@ JITScalar JITFunc::compile_rhs(Tree t) {
   throw Exception("dereference not handled yet...");
 }
 
-JITScalar JITFunc::compile_expression(Tree t) {
+JITScalar JITFunc::compile_expression(const Tree & t) {
   switch(t.token()) {
   case TOK_VARIABLE:     return compile_rhs(t);
   case TOK_REAL:
@@ -465,8 +465,8 @@ JITScalar JITFunc::compile_expression(Tree t) {
   }  
 }
 
-void JITFunc::compile_assignment(Tree t) {
-  Tree s(t.first());
+void JITFunc::compile_assignment(const Tree & t) {
+  const Tree & s(t.first());
   QString symname(symbol_prefix+s.first().text());
   JITScalar rhs(compile_expression(t.second()));
   SymbolInfo *v = symbols.findSymbol(symname);
@@ -489,7 +489,7 @@ void JITFunc::compile_assignment(Tree t) {
     throw Exception("multiple levels of dereference not handled yet...");
   if (v->isScalar)
     throw Exception("array indexing of scalar values...");
-  Tree q(s.second());
+  const Tree & q(s.second());
   if (!q.is(TOK_PARENS))
     throw Exception("non parenthetical dereferences not handled yet...");
   if (q.numChildren() == 0)
@@ -542,7 +542,7 @@ void JITFunc::compile_assignment(Tree t) {
 //   x = false;
 // end
 
-JITScalar JITFunc::compile_or_statement(Tree t) {
+JITScalar JITFunc::compile_or_statement(const Tree & t) {
   JITBlock ip(jit->CurrentBlock());
   jit->SetCurrentBlock(prolog);
   JITScalar address = jit->Alloc(jit->BoolType(),"or_result");
@@ -576,7 +576,7 @@ JITScalar JITFunc::compile_or_statement(Tree t) {
 //   x = true;
 // end
 
-JITScalar JITFunc::compile_and_statement(Tree t) {
+JITScalar JITFunc::compile_and_statement(const Tree & t) {
   JITBlock ip(jit->CurrentBlock());
   jit->SetCurrentBlock(prolog);
   JITScalar address = jit->Alloc(jit->BoolType(),"and_result");
@@ -600,7 +600,7 @@ JITScalar JITFunc::compile_and_statement(Tree t) {
   return jit->Load(address);
 }
 
-void JITFunc::compile_if_statement(Tree t) {
+void JITFunc::compile_if_statement(const Tree & t) {
   JITScalar main_cond(jit->ToBool(compile_expression(t.first())));
   JITBlock if_true = jit->NewBlock("if_true");
   JITBlock if_continue = jit->NewBlock("if_continue");
@@ -917,7 +917,7 @@ void JITFunc::initialize() {
 
 static int countm = 0;
 
-void JITFunc::compile(Tree t) {
+void JITFunc::compile(const Tree & t) {
   // The signature for the compiled function should be:
   // bool func(void** inputs);
   countm++;
@@ -958,7 +958,7 @@ void JITFunc::compile(Tree t) {
 }
 
 //TODO: handle other types for loop variables
-void JITFunc::compile_for_block(Tree t) {
+void JITFunc::compile_for_block(const Tree & t) {
   JITScalar loop_start, loop_stop, loop_step;
 
   if (!(t.first().is('=') && t.first().second().is(':'))) 

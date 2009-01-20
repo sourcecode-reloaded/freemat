@@ -91,6 +91,7 @@ class Token {
   unsigned m_pos;
   QString m_text;
   Array m_array;
+  int m_UID;
 public:
   Token();
   Token(TokenValueType tok, unsigned pos = 0, QString text = QString());
@@ -101,6 +102,8 @@ public:
   bool isUnaryOperator() const;
   unsigned precedence() const;
   bool isRightAssociative() const;
+  void setUID(int uid) {m_UID = uid;}
+  int UID() const {return m_UID;}
   TokenValueType value() const {return m_tok;}
   void setValue(TokenValueType a) {m_tok = a;}
   unsigned position()  const {return m_pos;}
@@ -112,8 +115,6 @@ public:
 };
 
 QString TokenToString(const Token& b);
-
-//QTextStream& operator<<(QTextStream& o, const Token& b);
 
 DebugStream& operator<<(DebugStream& o, const Token& b);
 

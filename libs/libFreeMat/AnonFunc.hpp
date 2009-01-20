@@ -6,6 +6,6 @@
 #include "Interpreter.hpp"
 #include "Tree.hpp"
 
-Array AnonFuncConstructor(Interpreter*, Tree);
+Array AnonFuncConstructor(Interpreter*, const Tree &);
 
 #endif

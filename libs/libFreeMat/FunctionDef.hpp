@@ -43,8 +43,8 @@ class Interpreter;
 typedef ArrayVector (*BuiltInFuncPtr) (int,const ArrayVector&);
 typedef ArrayVector (*SpecialFuncPtr) (int,const ArrayVector&,Interpreter*);
 
-void VariableReferencesList(Tree t, StringVector& idents);
-StringVector IdentifierList(Tree t);
+void VariableReferencesList(const Tree & t, StringVector& idents);
+StringVector IdentifierList(const Tree & t);
 
 /** Base class for the function types
  * A FunctionDef class is a base class for the different types

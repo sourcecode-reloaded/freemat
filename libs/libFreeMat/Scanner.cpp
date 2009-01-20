@@ -6,10 +6,15 @@
 #include "Exception.hpp"
 #include <algorithm>
 #include "DebugStream.hpp"
+#include <QMutexLocker>
+#include <QMutex>
 
 static QHash<QString, TokenValueType> fm_reserved;
 
 static bool fm_reserved_initialized = false;
+
+QMutex lock;
+static int TokenID = 1;
 
 void InitializeReservedTable() {
   if (fm_reserved_initialized) return;
@@ -52,6 +57,8 @@ unsigned Scanner::contextNum() {
 
 void Scanner::setToken(TokenValueType tok, QString text) {
   m_tok = Token(tok,m_ptr << 16 | m_linenumber,text);
+  QMutexLocker locker(&lock);
+  m_tok.setUID(TokenID++);
 }
 
 bool Scanner::done() {

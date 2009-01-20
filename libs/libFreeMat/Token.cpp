@@ -4,8 +4,7 @@
 #include <limits.h>
 
 Token::Token(TokenValueType tok, unsigned pos, QString text) :
-  m_tok(tok), m_pos(pos), m_text(text) {
-}
+  m_tok(tok), m_pos(pos), m_text(text) { }
 
 Token::Token() {
   m_tok = TOK_INVALID;
