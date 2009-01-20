@@ -88,6 +88,7 @@ void HistoryWidget::readSettings() {
       new QTreeWidgetItem(m_parent,QStringList(historyList[i]));
     }
   }
+  m_flist->expandItem(m_parent);
 }
 
 void HistoryWidget::clear() {
