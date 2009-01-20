@@ -251,6 +251,16 @@ ELSE( MSVC )
 	ENDMACRO(ADD_LLVM_LINK_LIBS executable libs)
 
 ENDIF( MSVC )
+
+ELSE( USE_LLVM)
+
+	MACRO(ADD_LLVM_LINK_LIBS executable libs)
+		FOREACH(c ${libs})
+			TARGET_LINK_LIBRARIES(${executable} ${c})
+		ENDFOREACH(c)
+	ENDMACRO(ADD_LLVM_LINK_LIBS executable libs)
+
+
 ENDIF( USE_LLVM )
 
 #FIND_LIBRARY(LAPACK_LIBRARY NAMES lapack clapack DOC "Location of LAPACK library" PATHS ${LOCAL_PATH}  )
