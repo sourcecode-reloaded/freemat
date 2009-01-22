@@ -131,9 +131,9 @@ static ArrayVector EvalTryFunction(int nargout, const ArrayVector& arg, Interpre
       eval->getContext()->bypassScope(popSpec);
       eval->evaluateString(try_buf,true);
       retval = RetrieveCallVars(eval,nargout);
-      eval->getContext()->restoreBypassedScopes();
+      eval->getContext()->restoreScope(popSpec);
     } catch (Exception &e) {
-      eval->getContext()->restoreBypassedScopes();
+      eval->getContext()->restoreScope(popSpec);
       eval->evaluateString(catch_buf,false);
       retval = RetrieveCallVars(eval,nargout);
     }
@@ -153,9 +153,9 @@ static ArrayVector EvalTryFunction(int nargout, const ArrayVector& arg, Interpre
     try {
       eval->getContext()->bypassScope(popSpec);
       eval->evaluateString(try_buf,true);
-      eval->getContext()->restoreBypassedScopes();
+      eval->getContext()->restoreScope(popSpec);
     } catch (Exception &e) {
-      eval->getContext()->restoreBypassedScopes();
+      eval->getContext()->restoreScope(popSpec);
       eval->evaluateString(catch_buf,false);
     }
     eval->setTryCatchActive(save_trycatch_flag);
@@ -171,14 +171,14 @@ static ArrayVector EvalNoTryFunction(int nargout, const ArrayVector& arg, Interp
     eval->getContext()->bypassScope(popSpec);
     eval->evaluateString(buf);
     ArrayVector retval(RetrieveCallVars(eval,nargout));
-    eval->getContext()->restoreBypassedScopes();
+    eval->getContext()->restoreScope(popSpec);
     return retval;
   } else {
     QString line = arg[0].asString();
     QString buf = line + "\n";
     eval->getContext()->bypassScope(popSpec);
     eval->evaluateString(buf);
-    eval->getContext()->restoreBypassedScopes();
+    eval->getContext()->restoreScope(popSpec);
     return ArrayVector();
   }
 }
@@ -308,7 +308,7 @@ ArrayVector AssignInFunction(int nargout, const ArrayVector& arg, Interpreter* e
   Array varvalue = arg[2];
   eval->getContext()->bypassScope(popspec);
   eval->getContext()->insertVariable(varname,varvalue);
-  eval->getContext()->restoreBypassedScopes();
+  eval->getContext()->restoreScope(popspec);
   return ArrayVector();
 }
 

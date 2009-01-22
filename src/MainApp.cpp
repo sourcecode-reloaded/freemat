@@ -504,6 +504,8 @@ ArrayVector ThreadNewFunction(int nargout, const ArrayVector& arg, Interpreter* 
   int threadID = m_app->StartNewInterpreterThread();
   // Translate the path from the starter thread to the new thread
   Interpreter* thread = m_threadHandles.lookupHandle(threadID);
+  // Create a context for it
+  thread->getContext()->pushScope("scratch");
   thread->setPath(eval->getPath());
   return ArrayVector(Array(double(threadID)));
 }

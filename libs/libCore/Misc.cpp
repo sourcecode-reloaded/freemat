@@ -47,6 +47,7 @@ ArrayVector SimKeysFunction(int nargout, const ArrayVector& arg,
 			    Interpreter* eval) {
   if (arg.size() == 0)
     throw Exception("simkeys requires at least one argument (the cell array of strings to simulate)");
+  ParentScopeLocker lock(eval->getContext());
   eval->clearCaptureString();
   eval->setCaptureState(true);
   if (arg[0].dataClass() != CellArray)
