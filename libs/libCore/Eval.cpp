@@ -115,52 +115,47 @@ static ArrayVector RetrieveCallVars(Interpreter *eval, int nargout) {
   return retval;
 }
 
+static ArrayVector EvalTryFunction(int nargout, Interpreter* eval, QString try_buf, 
+				   QString catch_buf, bool retrieveVars, int popSpec) {
+  ArrayVector retval;
+  bool autostop;
+  autostop = eval->AutoStop();
+  eval->setAutoStop(false);
+  bool save_trycatch_flag(eval->getTryCatchActive());
+  eval->setTryCatchActive(true);
+  Context *context = eval->getContext();
+  int original_depth = context->scopeDepth();
+  context->bypassScope(popSpec);
+  int eval_depth = context->scopeDepth();
+  try {
+    eval->evaluateString(try_buf,true);
+    if (retrieveVars)
+      retval = RetrieveCallVars(eval,nargout);
+  } catch (Exception &e) {
+    while (context->scopeDepth() < eval_depth) context->restoreScope(1);
+    eval->evaluateString(catch_buf,false);
+    if (retrieveVars)
+      retval = RetrieveCallVars(eval,nargout);
+  }
+  while (context->scopeDepth() < original_depth) context->restoreScope(1);
+  eval->setTryCatchActive(save_trycatch_flag);
+  eval->setAutoStop(autostop);
+  return retval;
+}
+
 static ArrayVector EvalTryFunction(int nargout, const ArrayVector& arg, Interpreter* eval, int popSpec) {
   if (nargout > 0) {
     QString try_line = arg[0].asString();
     QString try_buf = PrePendCallVars(try_line,nargout);
     QString catch_line = arg[1].asString();
     QString catch_buf = PrePendCallVars(catch_line,nargout);
-    ArrayVector retval;
-    bool autostop;
-    autostop = eval->AutoStop();
-    eval->setAutoStop(false);
-    bool save_trycatch_flag(eval->getTryCatchActive());
-    eval->setTryCatchActive(true);
-    try {
-      eval->getContext()->bypassScope(popSpec);
-      eval->evaluateString(try_buf,true);
-      retval = RetrieveCallVars(eval,nargout);
-      eval->getContext()->restoreScope(popSpec);
-    } catch (Exception &e) {
-      eval->getContext()->restoreScope(popSpec);
-      eval->evaluateString(catch_buf,false);
-      retval = RetrieveCallVars(eval,nargout);
-    }
-    eval->setTryCatchActive(save_trycatch_flag);
-    eval->setAutoStop(autostop);
-    return retval;
-  } else {
+    return EvalTryFunction(nargout,eval,try_buf,catch_buf,true,popSpec);
+   } else {
     QString try_line = arg[0].asString();
     QString catch_line = arg[1].asString();
     QString try_buf = try_line + "\n";
     QString catch_buf = catch_line + "\n";
-    bool autostop;
-    autostop = eval->AutoStop();
-    eval->setAutoStop(false);
-    bool save_trycatch_flag(eval->getTryCatchActive());
-    eval->setTryCatchActive(true);
-    try {
-      eval->getContext()->bypassScope(popSpec);
-      eval->evaluateString(try_buf,true);
-      eval->getContext()->restoreScope(popSpec);
-    } catch (Exception &e) {
-      eval->getContext()->restoreScope(popSpec);
-      eval->evaluateString(catch_buf,false);
-    }
-    eval->setTryCatchActive(save_trycatch_flag);
-    eval->setAutoStop(autostop);
-    return ArrayVector();
+    return EvalTryFunction(nargout,eval,try_buf,catch_buf,false,popSpec);
   }
 }
 
