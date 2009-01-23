@@ -142,7 +142,7 @@ function outputtext(&p,text)
     fprintf(fp,'    catch\n');
     fprintf(fp,'      error_refs(loopi) = 1;\n');
     fprintf(fp,'    end\n');
-    fprintf(fp,'    if (~error_refs(loopi)\n');
+    fprintf(fp,'    if (~error_refs(loopi))\n');
     for k=1:out_count
       fprintf(fp,'     y%d_refs(loopi) = y%d;\n',k,k);
     end;

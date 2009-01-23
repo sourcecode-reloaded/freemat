@@ -84,7 +84,14 @@ typedef struct {
 
 class Array {
 public:
-  inline Array() {m_type.Class = Invalid;}
+  inline Array() {
+    m_real.Double = 0; 
+    m_imag.Double = 0; 
+    m_type.Class = Double; 
+    m_type.Complex = 0;
+    m_type.Sparse = 0;
+    m_type.Scalar = 1;
+  }
   // Defined in ArrayPrivate
   template <typename T> inline explicit Array(T real); 
   template <typename T> inline explicit Array(T real, T imag); 
