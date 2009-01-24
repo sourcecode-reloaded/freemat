@@ -1,3 +1,7 @@
+bitrock installer
+edit <filename> doesn't work
+p.<blah> = pwd --> seg fault!
+
  apple support for fft
  packaging
  completion stuff?

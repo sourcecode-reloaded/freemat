@@ -301,7 +301,7 @@ ArrayVector LUDecompose(int nargout, Array A) {
 	  retval.push_back(Array(l));
 	  retval.push_back(Array(u));
 	} else if (nargout == 3) {
-	  BasicArray<float> piv(NTuple(nrows,ncols));
+	  BasicArray<float> piv(NTuple(nrows,nrows));
 	  RealLUP<float>(nrows,ncols,l.data(),u.data(),piv.data(),A.real<float>().data(),sgetrf_);
 	  retval.push_back(Array(l));
 	  retval.push_back(Array(u));
@@ -336,7 +336,7 @@ ArrayVector LUDecompose(int nargout, Array A) {
 	  retval.push_back(Array(l));
 	  retval.push_back(Array(u));
 	} else if (nargout == 3) {
-	  BasicArray<double> piv(NTuple(nrows,ncols));
+	  BasicArray<double> piv(NTuple(nrows,nrows));
 	  RealLUP<double>(nrows,ncols,l.data(),u.data(),piv.data(),
 			  A.real<double>().data(),dgetrf_);
 	  retval.push_back(Array(l));
@@ -413,6 +413,7 @@ static Array InvertMatrixComplex(const BasicArray<T> &A,
 Array Invert(const Array &A) {
   if (A.isSparse()) 
     throw Exception("Sparse matrix inverse not currently supported");
+  if (A.isEmpty()) return A;
   switch (A.dataClass()) {
   default: throw Exception("Invert does not support this data class");
   case Float:

@@ -1325,9 +1325,9 @@ static ArrayVector QRDPivotFunction(bool compactDec, Array A) {
 //  test_val = t1all & t2all & t3all & t4all;
 //@}
 //@@Tests
-//near|[y1,y2] = qr(x1,0)
-//near|[y1,y2] = qr(x1)
-//near|[y1,y2,y3] = qr(x1)
+//@$near|[y1,y2] = qr(x1,0)
+//@$near|[y1,y2] = qr(x1)
+//@$near|[y1,y2,y3] = qr(x1)
 //@@Signature
 //function qr QRDFunction
 //inputs x n

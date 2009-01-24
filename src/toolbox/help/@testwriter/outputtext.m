@@ -45,7 +45,7 @@ function outputtext(&p,text)
     error(sprintf('unable to open %s for output',filename));
   end
   fprintf(fp,'function test_val = %s(verbose)\n',funcname);
-  fprintf(fp,'  load wbinputs.mat\n');
+  fprintf(fp,'  load reference/wbinputs.mat\n');
   fprintf(fp,'  load reference/%s_ref.mat\n',funcname);
   fprintf(fp,'  fail_count = 0;\n');
   if (in_count == 0)
@@ -55,8 +55,11 @@ function outputtext(&p,text)
     fprintf(fp,'  catch\n');
     fprintf(fp,'    error_flag = 1;\n');
     fprintf(fp,'  end\n'); 
+    fprintf(fp,'  if (error_flag && ~error_refs)\n');
+    fprintf(fp,'     printf(''Mismatch Errors: %s\\n'');\n',expr);
+    fprintf(fp,'     fail_count = fail_count + 1;\n');
     for k=1:out_count
-      fprintf(fp,'  if (~wbtest_%s(y%d,y%d_refs{1}))\n',ttype,k,k);
+      fprintf(fp,'  elseif (~error_flag && ~error_refs && ~wbtest_%s(y%d,y%d_refs{1}))\n',ttype,k,k);
       fprintf(fp,'    printf(''Mismatch (%s): output %d %s\\n'');\n',ttype,k,expr);
       fprintf(fp,'    fail_count = fail_count + 1;\n');
       fprintf(fp,'  end\n');
@@ -74,7 +77,7 @@ function outputtext(&p,text)
     fprintf(fp,'       printf(''Mismatch Errors: input %%d %s\\n'',loopi);\n',expr);
     fprintf(fp,'        fail_count = fail_count + 1;\n');
     for k=1:out_count
-      fprintf(fp,'  elseif (~wbtest_%s(y%d,y%d_refs{loopi}))\n',ttype,k,k);
+      fprintf(fp,'  elseif (~error_flag && ~error_refs && ~wbtest_%s(y%d,y%d_refs{loopi}))\n',ttype,k,k);
       fprintf(fp,'    printf(''Mismatch (%s): input %%d output %d %s\\n'',loopi);\n',ttype,k,expr);
       fprintf(fp,'    fail_count = fail_count + 1;\n');
       fprintf(fp,'  end\n');
@@ -94,7 +97,7 @@ function outputtext(&p,text)
     fprintf(fp,'       printf(''Mismatch Errors: input %%d, %%d %s\\n'',loopi,loopj);\n',expr);
     fprintf(fp,'        fail_count = fail_count + 1;\n');
     for k=1:out_count
-      fprintf(fp,'  if (~wbtest_%s(y%d,y%d_refs{loopi,loopj}))\n',ttype,k,k);
+      fprintf(fp,'  elseif (~error_flag && ~error_refs && ~wbtest_%s(y%d,y%d_refs{loopi,loopj}))\n',ttype,k,k);
       fprintf(fp,'    printf(''Mismatch (%s): input %%d,%%d output %d %s\\n'',loopi,loopj);\n',ttype,k,expr);
       fprintf(fp,'    fail_count = fail_count + 1;\n');
       fprintf(fp,'  end\n');
@@ -125,7 +128,7 @@ function outputtext(&p,text)
     fprintf(fp,'  end\n'); 
     fprintf(fp,'  if (~error_refs)\n');
     for k=1:out_count
-      fprintf(fp,'  y%d_refs = y%d;\n',k,k);
+      fprintf(fp,'  y%d_refs = {y%d};\n',k,k);
     end
     fprintf(fp,'  end\n');
   elseif (in_count == 1)
@@ -144,7 +147,7 @@ function outputtext(&p,text)
     fprintf(fp,'    end\n');
     fprintf(fp,'    if (~error_refs(loopi))\n');
     for k=1:out_count
-      fprintf(fp,'     y%d_refs(loopi) = y%d;\n',k,k);
+      fprintf(fp,'     y%d_refs(loopi) = {y%d};\n',k,k);
     end;
     fprintf(fp,'    end\n');
     fprintf(fp,'  end\n');
@@ -165,7 +168,7 @@ function outputtext(&p,text)
     fprintf(fp,'      end\n');
     fprintf(fp,'      if (~error_refs(loopi,loopj))\n');
     for k=1:out_count
-      fprintf(fp,'       y%d_refs(loopi,loopj) = y%d;\n',k,k);
+      fprintf(fp,'       y%d_refs(loopi,loopj) = {y%d};\n',k,k);
     end
     fprintf(fp,'      end\n');
     fprintf(fp,'    end\n');

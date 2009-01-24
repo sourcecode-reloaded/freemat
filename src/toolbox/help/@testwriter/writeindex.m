@@ -3,7 +3,16 @@
 % Licensed under the GPL
 
 function writeindex(&p)
-%  fname = sprintf('%s/toolbox/test/wb_testmatrix.mat',p.sourcepath);
-%  recs = p.recs;
-%  inputs = wbtestinputs;
-%  save(fname,'recs','inputs');
+fname = sprintf('%s/toolbox/test/reference/run_gen_all.m', ...
+                p.sourcepath);
+fp = fopen(fname,'w');
+if (fp < 0)
+  error(sprintf('unable to open %s for output',filename));
+end
+fprintf(fp,'tlist = dir(''gen_*.m'');\n');
+fprintf(fp,'for i=1:numel(tlist)\n');
+fprintf(fp,'  [m,n,o,p] = fileparts(tlist(i).name);\n');
+fprintf(fp,'  fprintf(''Running %%s...\\n'',n);\n');
+fprintf(fp,'  feval(n);\n');
+fprintf(fp,'end\n');
+fclose(fp);

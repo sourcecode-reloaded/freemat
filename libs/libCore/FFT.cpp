@@ -146,7 +146,8 @@ struct OpVecFFT {
 			  BasicArray<T>& dest_real,
 			  BasicArray<T>& dest_imag) {
     if (src_real.length() == 0) return;
-    QVector<T> tbuf(int(dest_real.length()*2));
+    int N = qMax(dest_real.length(),src_real.length());
+    QVector<T> tbuf(N*2);
     for (index_t i=1;i<=src_real.length();i++) {
       tbuf[int(2*i-1)-1] = src_real[i];
       tbuf[int(2*i)-1] = src_imag[i];
@@ -180,7 +181,8 @@ struct OpVecIFFT {
 			  BasicArray<T>& dest_real,
 			  BasicArray<T>& dest_imag) {
     if (src_real.length() == 0) return;
-    QVector<T> tbuf(int(dest_real.length()*2));
+    int N = qMax(dest_real.length(),src_real.length());
+    QVector<T> tbuf(N*2);
     for (index_t i=1;i<=src_real.length();i++) {
       tbuf[int(2*i-1)-1] = src_real[i];
       tbuf[int(2*i)-1] = src_imag[i];

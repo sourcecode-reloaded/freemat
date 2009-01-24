@@ -29,8 +29,9 @@ function helpgen(source_path,test_only)
   end
 
   file_list = {};
-  file_list = [file_list;helpgen_rdir([source_path,'/libs'])];
-  file_list = [file_list;helpgen_rdir([source_path,'/src'])];
+%  file_list = [file_list;helpgen_rdir([source_path,'/libs'])];
+%  file_list = [file_list;helpgen_rdir([source_path,'/src'])];
+  file_list = helpgen_rdir([source_path,'/libs/libCore']);
 
   cd([sourcepath,'/help/tmp']);
 
