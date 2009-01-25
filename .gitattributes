@@ -753,4 +753,5 @@ tests/parse/bad6.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 tests/parse/bad7.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 tests/parse/bad8.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 tests/parse/bad9.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+toolbox/test/reference/wbinputs.mat svn_mime_002dtype=application%2Foctet-stream
 tools/freemat_nsi.in svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
