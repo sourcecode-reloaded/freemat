@@ -140,11 +140,14 @@ public:
 	void GetNextAsDouble(double& data){
 		if( !hasMoreData )
 			throw Exception("Error: no more data");
-
-		if( arg[ vec_ind ].isScalar() )
-			data = arg[ vec_ind ].asDouble();
-		else
-			data = arg[ vec_ind ].get( elem_ind+1 ).asDouble();
+		if( arg[vec_ind].isEmpty()) {
+		  data = 0;
+		} else {
+		  if( arg[ vec_ind ].isScalar() )
+		    data = arg[ vec_ind ].asDouble();
+		  else
+		    data = arg[ vec_ind ].get( elem_ind+1 ).asDouble();
+		}
 		IncDataPtr();
 	};
 
@@ -152,15 +155,16 @@ public:
 		if( !hasMoreData )
 			throw Exception("Error: no more data");
 		Array d(arg[ vec_ind ]);
-
-		if( d.isString() ){
-			QString s = d.asString();
-			QChar* data = s.data();
-			while( elem_ind < s.length() ){
-				str.push_back((data + elem_ind++)->toAscii());
-			}
-		}else{
-			str.push_back(d.get(elem_ind+1).asInteger());
+		if (!d.isEmpty()) {
+		  if( d.isString() ){
+		    QString s = d.asString();
+		    QChar* data = s.data();
+		    while( elem_ind < s.length() ){
+		      str.push_back((data + elem_ind++)->toAscii());
+		    }
+		  }else{
+		    str.push_back(d.get(elem_ind+1).asInteger());
+		  }
 		}
 		IncDataPtr();
 	};

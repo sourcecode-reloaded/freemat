@@ -1,0 +1,13 @@
+\section{FSCANF Formatted File Input Function (C-Style)}
+
+\subsection{Usage}
+
+Reads values from a file.  The general syntax for its use is
+\begin{verbatim}
+  [a1,...,an] = fscanf(handle,format)
+\end{verbatim}
+Here \verb|format| is the format string, which is a string that
+controls the format of the input.  Each value that is parsed from
+the file described by \verb|handle| occupies one output slot.
+See \verb|printf| for a description of the format.  Note that if
+the file is at the end-of-file, the fscanf will return 

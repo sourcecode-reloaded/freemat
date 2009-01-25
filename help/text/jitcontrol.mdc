@@ -1,0 +1,6 @@
+JITCONTROL JITCONTROL Control the Just In Time Compiler
+
+Usage
+
+The jitcontrol functionality in FreeMat allows you to control
+the use of the Just In Time (JIT) compiler.  

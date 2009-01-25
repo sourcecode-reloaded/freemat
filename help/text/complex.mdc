@@ -1,0 +1,11 @@
+COMPLEX COMPLEX Create a Complex Number
+
+Usage
+
+Converts the two real input arguments into the real and imaginary part
+(respectively) of a complex number.  The syntax
+for its use is
+
+   y = complex(x,z)
+
+where x and z are n-dimensional numerical arrays of the same size and type.  

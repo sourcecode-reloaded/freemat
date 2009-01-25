@@ -1,0 +1,75 @@
+\section{INF Infinity Constant}
+
+\subsection{Usage}
+
+Returns a value that represents positive infinity 
+for both 32 and 64-bit floating point values.
+\begin{verbatim}
+   y = inf
+\end{verbatim}
+The returned type is a 64-bit float, but demotion to
+64 bits preserves the infinity.
+\subsection{Function Internals}
+
+The infinity constant has
+several interesting properties.  In particular:
+\[
+\begin{array}{ll}
+   \infty \times 0 & = \mathrm{NaN} \\                                             \infty \times a & = \infty \, \mathrm{for all} \, a > 0 \\   \infty \times a & = -\infty \, \mathrm{for all} \, a < 0 \\   \infty / \infty & = \mathrm{NaN} \\   \infty / 0 & = \infty 
+\end{array}
+\]
+Note that infinities are not preserved under type conversion to integer types (see the examples below).
+\subsection{Example}
+
+The following examples demonstrate the various properties of the infinity constant.
+\begin{verbatim}
+--> inf*0
+
+ans = 
+
+       nan 
+
+--> inf*2
+
+ans = 
+
+       inf 
+
+--> inf*-2
+
+ans = 
+
+      -inf 
+
+--> inf/inf
+
+ans = 
+
+       nan 
+
+--> inf/0
+
+ans = 
+
+       inf 
+
+--> inf/nan
+
+ans = 
+
+       nan 
+\end{verbatim}
+Note that infinities are preserved under type conversion to floating point types (i.e., \verb|float|, \verb|double|, \verb|complex| and \verb|dcomplex| types), but not integer  types.
+\begin{verbatim}
+--> uint32(inf)
+
+ans = 
+
+ 4294967295 
+
+--> complex(inf)
+
+ans = 
+
+       inf 
+\end{verbatim}

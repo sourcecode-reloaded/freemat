@@ -1,0 +1,11 @@
+INF INF Infinity Constant
+
+Usage
+
+Returns a value that represents positive infinity 
+for both 32 and 64-bit floating point values.
+
+   y = inf
+
+The returned type is a 64-bit float, but demotion to
+64 bits preserves the infinity.
