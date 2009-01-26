@@ -7,8 +7,9 @@ function helpgen(source_path,test_only)
   diary([source_path,'/help_diary.txt']);
 
   genfiles = {};
-  rmdir([source_path,'/help'],'s');
-  rmdir([source_path,'/toolbox'],'s');
+  % These are not SVN friendly
+  %  rmdir([source_path,'/help'],'s');
+  %  rmdir([source_path,'/toolbox'],'s');
   
   mkdir([source_path,'/help/html']);
   mkdir([source_path,'/help/tmp']);

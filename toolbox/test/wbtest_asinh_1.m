@@ -14,7 +14,7 @@ function test_val = wbtest_asinh_1(verbose)
     if (error_flag && ~error_refs(loopi))
        printf('Mismatch Errors: input %d y1=asinh(x1)\n',loopi);
         fail_count = fail_count + 1;
-  elseif (~error_flag && ~error_refs && ~wbtest_near(y1,y1_refs{loopi}))
+  elseif (~error_flag && ~error_refs(loopi) && ~wbtest_near(y1,y1_refs{loopi}))
     printf('Mismatch (near): input %d output 1 y1=asinh(x1)\n',loopi);
     fail_count = fail_count + 1;
   end

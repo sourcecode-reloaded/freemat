@@ -14,7 +14,7 @@ function test_val = wbtest_numel_2(verbose)
     if (error_flag && ~error_refs(loopi))
        printf('Mismatch Errors: input %d y1=numel(x1,1:3,1:2,2)\n',loopi);
         fail_count = fail_count + 1;
-  elseif (~error_flag && ~error_refs && ~wbtest_exact(y1,y1_refs{loopi}))
+  elseif (~error_flag && ~error_refs(loopi) && ~wbtest_exact(y1,y1_refs{loopi}))
     printf('Mismatch (exact): input %d output 1 y1=numel(x1,1:3,1:2,2)\n',loopi);
     fail_count = fail_count + 1;
   end

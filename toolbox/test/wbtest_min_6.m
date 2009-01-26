@@ -17,11 +17,11 @@ function test_val = wbtest_min_6(verbose)
     if (error_flag && ~error_refs(loopi,loopj))
        printf('Mismatch Errors: input %d, %d [y1,y2]=min(x1,x2)\n',loopi,loopj);
         fail_count = fail_count + 1;
-  elseif (~error_flag && ~error_refs && ~wbtest_exact(y1,y1_refs{loopi,loopj}))
+  elseif (~error_flag && ~error_refs(loopi,loopj) && ~wbtest_exact(y1,y1_refs{loopi,loopj}))
     printf('Mismatch (exact): input %d,%d output 1 [y1,y2]=min(x1,x2)\n',loopi,loopj);
     fail_count = fail_count + 1;
   end
-  elseif (~error_flag && ~error_refs && ~wbtest_exact(y2,y2_refs{loopi,loopj}))
+  elseif (~error_flag && ~error_refs(loopi,loopj) && ~wbtest_exact(y2,y2_refs{loopi,loopj}))
     printf('Mismatch (exact): input %d,%d output 2 [y1,y2]=min(x1,x2)\n',loopi,loopj);
     fail_count = fail_count + 1;
   end

@@ -606,9 +606,11 @@ Array MatIO::getArray(bool &atEof, QString &name, bool &match, bool &isGlobal) {
     Array ret(getArray(atEof,name,match,isGlobal));
     CloseDecompressor();
     return ret;
-  } 
+  }
   if (DataType != miMATRIX) 
     throw Exception("Unexpected data tag when looking for an array");
+  if (ByteCount == 0)
+    return Array();
   Array aFlags(getDataElement());
   if ((aFlags.dataClass() != UInt32) || (aFlags.length() != 2))
     throw Exception("Corrupted MAT file - array flags");
@@ -729,7 +731,6 @@ ArrayVector MatLoadFunction(int nargout, QString filename,
 ArrayVector MatSaveFunction(QString filename, StringVector names, Interpreter *eval) {
   MatIO m(filename,MatIO::writeMode);
   Context *cntxt = eval->getContext();
-  ParentScopeLocker lock(cntxt);
   char header[116];
   time_t t = time(NULL);
   snprintf(header, 116, "MATLAB 5.0 MAT-file, Created on: %s by %s",

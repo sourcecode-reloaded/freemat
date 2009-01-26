@@ -14,7 +14,7 @@ function test_val = wbtest_dec2hex_1(verbose)
     if (error_flag && ~error_refs(loopi))
        printf('Mismatch Errors: input %d y1=dec2hex(x1)\n',loopi);
         fail_count = fail_count + 1;
-  elseif (~error_flag && ~error_refs && ~wbtest_exact(y1,y1_refs{loopi}))
+  elseif (~error_flag && ~error_refs(loopi) && ~wbtest_exact(y1,y1_refs{loopi}))
     printf('Mismatch (exact): input %d output 1 y1=dec2hex(x1)\n',loopi);
     fail_count = fail_count + 1;
   end

@@ -14,7 +14,7 @@ function test_val = wbtest_transpose_1(verbose)
     if (error_flag && ~error_refs(loopi))
        printf('Mismatch Errors: input %d y1=transpose(x1)\n',loopi);
         fail_count = fail_count + 1;
-  elseif (~error_flag && ~error_refs && ~wbtest_exact(y1,y1_refs{loopi}))
+  elseif (~error_flag && ~error_refs(loopi) && ~wbtest_exact(y1,y1_refs{loopi}))
     printf('Mismatch (exact): input %d output 1 y1=transpose(x1)\n',loopi);
     fail_count = fail_count + 1;
   end

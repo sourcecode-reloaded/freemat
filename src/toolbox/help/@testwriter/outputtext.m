@@ -17,6 +17,7 @@ function outputtext(&p,text)
     return;
   end
   expr = v{1}{2};
+  sexpr = strrep(expr,'''','''''');
   vars = symvar(expr);
   pnt = regexp(vars,'x.');
   in_count = 0; 
@@ -59,11 +60,11 @@ function outputtext(&p,text)
     fprintf(fp,'    error_flag = 1;\n');
     fprintf(fp,'  end\n'); 
     fprintf(fp,'  if (error_flag && ~error_refs)\n');
-    fprintf(fp,'     printf(''Mismatch Errors: %s\\n'');\n',expr);
+    fprintf(fp,'     printf(''Mismatch Errors: %s\\n'');\n',sexpr);
     fprintf(fp,'     fail_count = fail_count + 1;\n');
     for k=1:out_count
       fprintf(fp,'  elseif (~error_flag && ~error_refs && ~wbtest_%s(y%d,y%d_refs{1}))\n',ttype,k,k);
-      fprintf(fp,'    printf(''Mismatch (%s): output %d %s\\n'');\n',ttype,k,expr);
+      fprintf(fp,'    printf(''Mismatch (%s): output %d %s\\n'');\n',ttype,k,sexpr);
       fprintf(fp,'    fail_count = fail_count + 1;\n');
       fprintf(fp,'  end\n');
     end
@@ -80,11 +81,11 @@ function outputtext(&p,text)
     fprintf(fp,'      error_flag = 1;\n');
     fprintf(fp,'    end\n');
     fprintf(fp,'    if (error_flag && ~error_refs(loopi))\n');
-    fprintf(fp,'       printf(''Mismatch Errors: input %%d %s\\n'',loopi);\n',expr);
+    fprintf(fp,'       printf(''Mismatch Errors: input %%d %s\\n'',loopi);\n',sexpr);
     fprintf(fp,'        fail_count = fail_count + 1;\n');
     for k=1:out_count
-      fprintf(fp,'  elseif (~error_flag && ~error_refs && ~wbtest_%s(y%d,y%d_refs{loopi}))\n',ttype,k,k);
-      fprintf(fp,'    printf(''Mismatch (%s): input %%d output %d %s\\n'',loopi);\n',ttype,k,expr);
+      fprintf(fp,'  elseif (~error_flag && ~error_refs(loopi) && ~wbtest_%s(y%d,y%d_refs{loopi}))\n',ttype,k,k);
+      fprintf(fp,'    printf(''Mismatch (%s): input %%d output %d %s\\n'',loopi);\n',ttype,k,sexpr);
       fprintf(fp,'    fail_count = fail_count + 1;\n');
       fprintf(fp,'  end\n');
     end
@@ -103,11 +104,11 @@ function outputtext(&p,text)
     fprintf(fp,'        error_flag = 1;\n');
     fprintf(fp,'      end\n');
     fprintf(fp,'    if (error_flag && ~error_refs(loopi,loopj))\n');
-    fprintf(fp,'       printf(''Mismatch Errors: input %%d, %%d %s\\n'',loopi,loopj);\n',expr);
+    fprintf(fp,'       printf(''Mismatch Errors: input %%d, %%d %s\\n'',loopi,loopj);\n',sexpr);
     fprintf(fp,'        fail_count = fail_count + 1;\n');
     for k=1:out_count
-      fprintf(fp,'  elseif (~error_flag && ~error_refs && ~wbtest_%s(y%d,y%d_refs{loopi,loopj}))\n',ttype,k,k);
-      fprintf(fp,'    printf(''Mismatch (%s): input %%d,%%d output %d %s\\n'',loopi,loopj);\n',ttype,k,expr);
+      fprintf(fp,'  elseif (~error_flag && ~error_refs(loopi,loopj) && ~wbtest_%s(y%d,y%d_refs{loopi,loopj}))\n',ttype,k,k);
+      fprintf(fp,'    printf(''Mismatch (%s): input %%d,%%d output %d %s\\n'',loopi,loopj);\n',ttype,k,sexpr);
       fprintf(fp,'    fail_count = fail_count + 1;\n');
       fprintf(fp,'  end\n');
     end

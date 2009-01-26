@@ -418,6 +418,7 @@ ArrayVector SaveFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
     names << argCopy[i].asString();
   }
   Context *cntxt = eval->getContext();
+  ParentScopeLocker lock(cntxt);
   StringVector toSave;
   if (regexpMode || (names.size() == 0)) {
     StringVector allNames = cntxt->listAllVariables();

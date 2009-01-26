@@ -139,15 +139,26 @@ void Interpreter::setLiveUpdateFlag(bool t) {
   }
 }
 
+static bool DirExists(const QString & path) {
+  QDir tmp(path);
+  return tmp.exists();
+}
+
 void Interpreter::setupWatcher() {
   if (!m_liveUpdateFlag) return;
   QStringList pathLists(m_watch.directories());
   if (!pathLists.isEmpty())
     m_watch.removePaths(pathLists);
-  if (!m_userPath.isEmpty())
-    m_watch.addPaths(m_userPath);
-  if (!m_basePath.isEmpty())
-    m_watch.addPaths(m_basePath);
+  if (!m_userPath.isEmpty()) {
+    for (int i=0;i<m_userPath.size();i++)
+      if (DirExists(m_userPath[i]))
+	m_watch.addPath(m_userPath[i]);
+  }
+  if (!m_basePath.isEmpty()) {
+    for (int i=0;i<m_basePath.size();i++)
+      if (DirExists(m_basePath[i]))
+	m_watch.addPath(m_basePath[i]);
+  }
   m_watch.addPath(QDir::currentPath());
 }
 

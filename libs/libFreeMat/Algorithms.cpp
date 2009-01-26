@@ -831,23 +831,25 @@ Array DiagonalArray(const Array &A, int diagonal) {
 
 
 Array NCat(const ArrayVector& pdata, int catdim) {
+  // Compute the output dataclass -- include empty arrays in the computation
+  if (pdata.size() == 0) return EmptyConstructor();
+  DataClass cls(pdata[0].dataClass());
+  for (int i=1;i<pdata.size();i++)
+    cls = qMax(cls,pdata[i].dataClass());
+  bool userClassCase = false;
+  QString classname;
+  if ((cls == Struct) && pdata[0].isUserClass()) {
+    classname = pdata[0].className();
+    for (int i=1;i<pdata.size();i++)
+      if (!pdata[i].isUserClass() || pdata[i].className() != classname)
+	throw Exception("Cannot concatenate user defined classes of different type");
+    userClassCase = true;
+  }
   ArrayVector data;
   for (int i=0;i<pdata.size();i++)
     if (!pdata[i].isEmpty()) data.push_back(pdata[i]);
   // Compute the output dataclass
-  if (data.size() == 0) return EmptyConstructor();
-  DataClass cls(data[0].dataClass());
-  for (int i=1;i<data.size();i++)
-    cls = qMin(cls,data[i].dataClass());
-  bool userClassCase = false;
-  QString classname;
-  if ((cls == Struct) && data[0].isUserClass()) {
-    classname = data[0].className();
-    for (int i=1;i<data.size();i++)
-      if (!data[i].isUserClass() || data[i].className() != classname)
-	throw Exception("Cannot concatenate user defined classes of different type");
-    userClassCase = true;
-  }
+  if (data.size() == 0) return EmptyConstructor().toClass(cls);
   NTuple outdims(data[0].dimensions());
   // Compute the output dimensions and validate each of the elements
   for (int i=1;i<data.size();i++) {
