@@ -14,10 +14,12 @@ function test_val = wbtest_cat_2(verbose)
         error_flag = 1;
       end
     if (error_flag && ~error_refs(loopi,loopj))
-       printf('Mismatch Errors: input %d, %d y1=cat(2,x1,x2)\n',loopi,loopj);
+       printf('Mismatch Errors: input %d, %d y1=cat(2,x1,x2)\n', ...
+              loopi,loopj);
         fail_count = fail_count + 1;
   elseif (~error_flag && ~error_refs(loopi,loopj) && ~wbtest_exact(y1,y1_refs{loopi,loopj}))
     printf('Mismatch (exact): input %d,%d output 1 y1=cat(2,x1,x2)\n',loopi,loopj);
+       keyboard
     fail_count = fail_count + 1;
   end
     end

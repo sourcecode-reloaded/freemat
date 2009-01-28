@@ -234,28 +234,47 @@ MacroCastFromQChar(uint64);
 MacroCastFromQChar(float);
 MacroCastFromQChar(double);
 
-#define MacroCastToQChar(intype)		\
-  template <>					\
-  inline QChar CastConvert(intype val) {	\
-    return QChar(val);				\
+#define MacroCastToQChar(intype)			\
+  template <>						\
+  inline QChar CastConvert(intype val) {		\
+    return QChar(uint32(val));				\
   }
 
-MacroCastToQChar(int8);
-MacroCastToQChar(int16);
-MacroCastToQChar(int32);
 MacroCastToQChar(uint8);
-MacroCastToQChar(uint16);
-MacroCastToQChar(uint32);
 
-#define MacroCastToQCharViaInt(intype)		\
-  template <>					\
-  inline QChar CastConvert(intype val) {	\
-    return QChar(uint32(val));			\
+#define MacroCastToQCharLower(intype)			\
+  template <>						\
+  inline QChar CastConvert(intype val) {		\
+    if (val < 0) val = 0;				\
+    return QChar(uint32(val));				\
   }
 
+MacroCastToQCharLower(int8);
+MacroCastToQCharLower(int16);
+
+#define MacroCastToQCharUpper(intype)			\
+  template <>						\
+  inline QChar CastConvert(intype val) {		\
+    if (val > 16367) val = 16367;			\
+    return QChar(uint32(val));				\
+  }
+
+MacroCastToQCharUpper(uint16);
+MacroCastToQCharUpper(uint32);
+MacroCastToQCharUpper(uint64);
+
+
+#define MacroCastToQCharViaInt(intype)			\
+  template <>						\
+  inline QChar CastConvert(intype val) {		\
+    if (val < 0) val = 0;				\
+    if (val > 16367) val = 16367;			\
+    return QChar(uint32(val));				\
+  }
+
+MacroCastToQCharViaInt(int32);
+MacroCastToQCharViaInt(int64);
 MacroCastToQCharViaInt(float);
 MacroCastToQCharViaInt(double);
-MacroCastToQCharViaInt(int64);
-MacroCastToQCharViaInt(uint64);
 
 #endif

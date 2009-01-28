@@ -202,7 +202,7 @@ StringVector StringVectorFromArray(const Array &arg) {
     ConstBasicIterator<QChar> iter(&ap,1);
     StringVector ret;
     while (iter.isValid()) {
-      QString t(iter.size(),QChar(0));
+      QString t(int(iter.size()),QChar(0));
       for (index_t i=1;i<=iter.size();i++) {
 	t[int(i-1)] = iter.get();
 	iter.next();
@@ -828,14 +828,63 @@ Array DiagonalArray(const Array &A, int diagonal) {
 // ans =
 //    double
 
+static bool AnyOfType(const ArrayVector& pdata, DataClass t) {
+  for (int i=0;i<pdata.size();i++)
+    if (pdata[i].dataClass() == t) return true;
+  return false;
+}
+
+static DataClass ComputeCatType(const ArrayVector& pdata) {
+  if (AnyOfType(pdata,CellArray))
+    return CellArray;
+  if (AnyOfType(pdata,Struct))
+    return Struct;
+  if (AnyOfType(pdata,StringArray))
+    return StringArray;
+  // Check for an integer type - choose the first one found.
+  for (int i=0;i<pdata.size();i++) {
+    if (pdata[i].dataClass() == Int8 ||
+	pdata[i].dataClass() == UInt8 ||
+	pdata[i].dataClass() == Int16 ||
+	pdata[i].dataClass() == UInt16 ||
+	pdata[i].dataClass() == Int32 ||
+	pdata[i].dataClass() == UInt32 ||
+	pdata[i].dataClass() == Int64 ||
+	pdata[i].dataClass() == UInt64)
+      return pdata[i].dataClass();
+  }
+  // So there are no integers, no cell, struct, strings
+  // All that is left is logical, float, double.  Next we 
+  // look for floats, then doubles, and last, bools
+  if (AnyOfType(pdata,Float)) return Float;
+  if (AnyOfType(pdata,Double)) return Double;
+  return Bool;
+}
 
 
+// FIX it here... [0 0] [3 0 4] --> [3 0 4]
 Array NCat(const ArrayVector& pdata, int catdim) {
   // Compute the output dataclass -- include empty arrays in the computation
   if (pdata.size() == 0) return EmptyConstructor();
-  DataClass cls(pdata[0].dataClass());
-  for (int i=1;i<pdata.size();i++)
-    cls = qMax(cls,pdata[i].dataClass());
+  NTuple outdims;
+  // Compute the output dimensions and validate each of the elements
+  bool foundNonzero = false;
+  for (int i=0;i<pdata.size();i++) {
+    NTuple eldims(pdata[i].dimensions());
+    if (eldims != NTuple(0,0)) {
+      if (!foundNonzero) {
+	foundNonzero = true;
+	outdims = eldims;
+      } else {
+	for (int j=0;j<NDims;j++)
+	  if ((eldims[j] != outdims[j]) && (j != catdim))
+	    throw Exception(QString("Mismatch in dimension %1 for elements being concatenated along dimension %2").arg(j+1).arg(catdim+1));
+	outdims[catdim] += eldims[catdim];
+      }
+    }
+  }
+  if (!foundNonzero) outdims = NTuple(0,0);
+  DataClass cls = ComputeCatType(pdata);
   bool userClassCase = false;
   QString classname;
   if ((cls == Struct) && pdata[0].isUserClass()) {
@@ -846,19 +895,20 @@ Array NCat(const ArrayVector& pdata, int catdim) {
     userClassCase = true;
   }
   ArrayVector data;
-  for (int i=0;i<pdata.size();i++)
-    if (!pdata[i].isEmpty()) data.push_back(pdata[i]);
-  // Compute the output dataclass
-  if (data.size() == 0) return EmptyConstructor().toClass(cls);
-  NTuple outdims(data[0].dimensions());
-  // Compute the output dimensions and validate each of the elements
-  for (int i=1;i<data.size();i++) {
-    NTuple eldims(data[i].dimensions());
-    for (int j=0;j<NDims;j++)
-      if ((eldims[j] != outdims[j]) && (j != catdim))
-	throw Exception(QString("Mismatch in dimension %1 for elements being concatenated along dimension %2").arg(j+1).arg(catdim+1));
-    outdims[catdim] += eldims[catdim];
+  for (int i=0;i<pdata.size();i++) {
+    if (!pdata[i].isEmpty()) {
+      if (cls != CellArray)
+	data.push_back(pdata[i]);
+      else {
+	if (pdata[i].dataClass() == CellArray)
+	  data.push_back(pdata[i]);
+	else
+	  data.push_back(CellArrayFromArray(pdata[i]));
+      }
+    }
   }
+  // Compute the output dataclass
+  if (data.size() == 0) return Array(cls,outdims);
   Array retval(cls,outdims);
   ArrayIterator iter(&retval,catdim);
   while (iter.isValid()) {
