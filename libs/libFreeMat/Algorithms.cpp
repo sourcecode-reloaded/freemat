@@ -864,13 +864,40 @@ static DataClass ComputeCatType(const ArrayVector& pdata) {
 
 // FIX it here... [0 0] [3 0 4] --> [3 0 4]
 Array NCat(const ArrayVector& pdata, int catdim) {
-  // Compute the output dataclass -- include empty arrays in the computation
+  // Must have something to work with
   if (pdata.size() == 0) return EmptyConstructor();
+  // First pass, compute the output class
+  DataClass cls = ComputeCatType(pdata);
+  // Check for the case of concatenation of user defined classes
+  bool userClassCase = false;
+  QString classname;
+  if ((cls == Struct) && pdata[0].isUserClass()) {
+    classname = pdata[0].className();
+    for (int i=1;i<pdata.size();i++)
+      if (!pdata[i].isUserClass() || pdata[i].className() != classname)
+	throw Exception("Cannot concatenate user defined classes of different type");
+    userClassCase = true;
+  }
+  // Next pass, if we are in the case of a cell array, we convert the arrays to cells
+  // We also strip the empties
+  ArrayVector data;
+  for (int i=0;i<pdata.size();i++) {
+    if (pdata[i].dimensions() != NTuple(0,0)) {
+      if (cls == CellArray) {
+	if (pdata[i].dataClass() == CellArray)
+	  data.push_back(pdata[i]);
+	else
+	  data.push_back(CellArrayFromArray(pdata[i]));
+      } else 
+	data.push_back(pdata[i]);
+    }
+  }
+  // Next step, we compute the output dimensions
   NTuple outdims;
   // Compute the output dimensions and validate each of the elements
   bool foundNonzero = false;
-  for (int i=0;i<pdata.size();i++) {
-    NTuple eldims(pdata[i].dimensions());
+  for (int i=0;i<data.size();i++) {
+    NTuple eldims(data[i].dimensions());
     if (eldims != NTuple(0,0)) {
       if (!foundNonzero) {
 	foundNonzero = true;
@@ -884,29 +911,6 @@ Array NCat(const ArrayVector& pdata, int catdim) {
     }
   }
   if (!foundNonzero) outdims = NTuple(0,0);
-  DataClass cls = ComputeCatType(pdata);
-  bool userClassCase = false;
-  QString classname;
-  if ((cls == Struct) && pdata[0].isUserClass()) {
-    classname = pdata[0].className();
-    for (int i=1;i<pdata.size();i++)
-      if (!pdata[i].isUserClass() || pdata[i].className() != classname)
-	throw Exception("Cannot concatenate user defined classes of different type");
-    userClassCase = true;
-  }
-  ArrayVector data;
-  for (int i=0;i<pdata.size();i++) {
-    if (!pdata[i].isEmpty()) {
-      if (cls != CellArray)
-	data.push_back(pdata[i]);
-      else {
-	if (pdata[i].dataClass() == CellArray)
-	  data.push_back(pdata[i]);
-	else
-	  data.push_back(CellArrayFromArray(pdata[i]));
-      }
-    }
-  }
   // Compute the output dataclass
   if (data.size() == 0) return Array(cls,outdims);
   Array retval(cls,outdims);
