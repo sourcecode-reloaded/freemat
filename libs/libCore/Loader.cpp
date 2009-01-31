@@ -297,6 +297,7 @@ ArrayVector ThreadKillFunction(int, const ArrayVector&);
 ArrayVector ThreadFreeFunction(int, const ArrayVector&);
 ArrayVector ClcFunction(int, const ArrayVector&);
 ArrayVector ProfilerFunction(int, const ArrayVector&);
+ArrayVector BlaslibFunction(int, const ArrayVector&);
 
 
 void LoadBuiltinFunctions(Context *context, bool guiflag) {
@@ -619,5 +620,6 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
    if (guiflag)
      context->addGfxFunction("clc",ClcFunction,0,0,NULL);
   context->addFunction("profiler",ProfilerFunction,-1,0,NULL);
+  context->addFunction("blaslib",BlaslibFunction,-1,0,NULL);
 }
 

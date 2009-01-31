@@ -334,8 +334,8 @@ libs/libMex libs/libXP libs/libCore libs/libFN libs/libMatC ${QT_LIBRARIES} src)
 
 
 OPTION(USE_DYNLINK "Link BLAS dynamically" OFF)
+INCLUDE_DIRECTORIES( libs/libMath )
 IF( USE_DYNLINK )
-	INCLUDE_DIRECTORIES( libs/libMath )
 	ADD_DEFINITIONS( -DDYN_BLAS )
 	INSTALL( FILES ${PROJECT_SOURCE_DIR}/blas.ini DESTINATION bin )
 ELSE( USE_DYNLINK )

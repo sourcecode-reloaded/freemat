@@ -1,4 +1,5 @@
 //This is a generated file. Do not edit!
+#ifdef DYN_BLAS
 #include "blas_wrap.h"
 #include "blas_dyn_link.h"
 #include <iostream>
@@ -1269,3 +1270,4 @@ void ztrsv_(char *uplo, char *trans, char *diag, int *n, doublecomplex *a, int *
 #ifdef __cplusplus 
 }
 #endif /* __cplusplus */
+#endif

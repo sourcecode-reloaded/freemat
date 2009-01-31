@@ -20,6 +20,7 @@
 #ifndef __BLAS_DYN_LINK_H
 #define __BLAS_DYN_LINK_H
 
+#ifdef DYN_BLAS
 #include <QString>
 #include <QLibrary> 
 #include <vector>
@@ -49,7 +50,7 @@ class BlasWrapper{
     QLibrary* blasLib;
 public:
     BlasWrapper();
-    ~BlasWrapper() { delete blasLib; };
+    ~BlasWrapper() { if(blasLib && blasLib->isLoaded()) blasLib->unload(); delete blasLib; blasLib = NULL;};
     void Init( void );
     bool LoadLibByName( const std::string& name, std::string& msg );
     void* Resolve( const char* function_name );
@@ -66,4 +67,5 @@ private:
 public:
     std::vector<void*> fn;
 };
+#endif
 #endif 
