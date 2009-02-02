@@ -56,25 +56,21 @@ function y = char(varargin)
   else
     y = char_block(varargin);
   end
-  
+
+      
 function y = char_block(x)
-  if (~iscellstr(x))
-    error('char_block requires a cell-array of strings as an argument');
-  end
-  allstrings = 1;
-  maxlen = 0;
-  i = 1;
-  while (allstrings && i<=numel(x))
-    allstrings = isstr(x{i}) || isempty(x{i});
-    maxlen = max(maxlen,numel(x{i}));
-    i = i+1;
-  end
-  if (~allstrings)
-    error('expecting all string arguments to char');
-  end
+  maxwidth = 0;
+  for (i=1:numel(x))
+    p = char_flatten(string(x{i}));
+    x{i} = p;
+    maxwidth = max(maxwidth,size(p,2));
+  end;
   y = [];
   for (i=1:numel(x))
-    k = string(x{i}(:)'); p = numel(k);
-    y = [y;[k,' '+zeros(1,maxlen-p)]];
+    k = x{i}; p = size(k,2);
+    y = [y;[k,' '+zeros(max(1,size(k,1)),maxwidth-p)]];
   end
+  
+function y = char_flatten(x)
+  y = reshape(x,size(x,1),numel(x)/max(1,size(x,1)));
   

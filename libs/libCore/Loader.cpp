@@ -55,8 +55,6 @@ ArrayVector FepsFunction(int, const ArrayVector&);
 ArrayVector TrueFunction(int, const ArrayVector&);
 ArrayVector FalseFunction(int, const ArrayVector&);
 ArrayVector JITControlFunction(int, const ArrayVector&, Interpreter*);
-ArrayVector NargoutFunction(int, const ArrayVector&, Interpreter*);
-ArrayVector NarginFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector DbAutoFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector Conv2Function(int, const ArrayVector&);
 ArrayVector CenumFunction(int, const ArrayVector&);
@@ -67,11 +65,11 @@ ArrayVector CtypeSizeFunction(int, const ArrayVector&);
 ArrayVector CtypeThawFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector CumprodFunction(int, const ArrayVector&);
 ArrayVector CumsumFunction(int, const ArrayVector&);
+ArrayVector DbUpFunction(int, const ArrayVector&, Interpreter*);
+ArrayVector DbUpFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector DbDeleteFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector DbListFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector DbStopFunction(int, const ArrayVector&, Interpreter*);
-ArrayVector DbUpFunction(int, const ArrayVector&, Interpreter*);
-ArrayVector DbDownFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector FdumpFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector ChangeDirFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector DirFunction(int, const ArrayVector&, Interpreter*);
@@ -122,6 +120,8 @@ ArrayVector WhoFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector WhosFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector FieldNamesFunction(int, const ArrayVector&);
 ArrayVector WhereFunction(int, const ArrayVector&, Interpreter*);
+ArrayVector NarginFunction(int, const ArrayVector&, Interpreter*);
+ArrayVector NargoutFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector WhichFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector MFilenameFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector ComputerFunction(int, const ArrayVector&);
@@ -230,6 +230,7 @@ ArrayVector TandFunction(int, const ArrayVector&);
 ArrayVector CscFunction(int, const ArrayVector&);
 ArrayVector CscdFunction(int, const ArrayVector&);
 ArrayVector SecFunction(int, const ArrayVector&);
+ArrayVector SecdFunction(int, const ArrayVector&);
 ArrayVector CotFunction(int, const ArrayVector&);
 ArrayVector ArccosFunction(int, const ArrayVector&);
 ArrayVector ArcsinFunction(int, const ArrayVector&);
@@ -270,7 +271,6 @@ ArrayVector HLineFunction(int, const ArrayVector&);
 ArrayVector HContourFunction(int, const ArrayVector&);
 ArrayVector HUIControlFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector HImageFunction(int, const ArrayVector&);
-ArrayVector HPatchFunction(int, const ArrayVector&);
 ArrayVector HTextFunction(int, const ArrayVector&);
 ArrayVector HSurfaceFunction(int, const ArrayVector&);
 ArrayVector HPatchFunction(int, const ArrayVector&);
@@ -311,7 +311,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("bitand",BitandFunction,2,1,"a","b",NULL);
   context->addFunction("bitor",BitorFunction,2,1,"a","b",NULL);
   context->addFunction("bitxor",BitxorFunction,2,1,"a","b",NULL);
-  context->addFunction("bitcmp_cpp",BitcmpFunction,1,1,"a",NULL);
+  context->addFunction("bitcmp",BitcmpFunction,2,1,"a","n",NULL);
   context->addFunction("int2bin",Int2BinFunction,2,1,"x","bits",NULL);
   context->addFunction("bin2int",Bin2IntFunction,2,1,"x","flag",NULL);
   context->addFunction("logical",LogicalFunction,1,1,"x",NULL);
@@ -346,8 +346,6 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("true",TrueFunction,0,1,NULL);
   context->addFunction("false",FalseFunction,0,1,NULL);
   context->addSpecialFunction("jitcontrol",JITControlFunction,1,1,"flag",NULL);
-  context->addSpecialFunction("nargin",NarginFunction,0,1,NULL);
-  context->addSpecialFunction("nargout",NargoutFunction,0,1,NULL);
   context->addSpecialFunction("dbauto",DbAutoFunction,1,1,"flag",NULL);
   context->addFunction("conv2",Conv2Function,4,1,"hcol","hrow","X","shape",NULL);
   context->addFunction("cenum",CenumFunction,2,1,"enumtype","enumint",NULL);
@@ -358,11 +356,11 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addSpecialFunction("ctypethaw",CtypeThawFunction,3,2,"x","type","count",NULL);
   context->addFunction("cumprod",CumprodFunction,2,1,"x","dimensions",NULL);
   context->addFunction("cumsum",CumsumFunction,2,1,"x","dimension",NULL);
+  context->addSpecialFunction("dbup",DbUpFunction,0,0,NULL);
+  context->addSpecialFunction("dbup",DbUpFunction,0,0,NULL);
   context->addSpecialFunction("dbdelete",DbDeleteFunction,1,0,"num",NULL);
   context->addSpecialFunction("dblist",DbListFunction,0,0,NULL);
   context->addSpecialFunction("dbstop",DbStopFunction,2,0,"funcname","linenumber",NULL);
-  context->addSpecialFunction("dbup",DbUpFunction,0,0,NULL);
-  context->addSpecialFunction("dbdown",DbDownFunction,0,0,NULL);
   context->addSpecialFunction("fdump",FdumpFunction,1,0,"fname",NULL);
   context->addSpecialFunction("cd",ChangeDirFunction,1,0,"path",NULL);
   context->addSpecialFunction("dir",DirFunction,1,1,"name",NULL);
@@ -416,6 +414,8 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addSpecialFunction("whos",WhosFunction,-1,0,NULL);
   context->addFunction("fieldnames",FieldNamesFunction,1,1,"y",NULL);
   context->addSpecialFunction("where",WhereFunction,0,0,NULL);
+  context->addSpecialFunction("nargin",NarginFunction,0,1,NULL);
+  context->addSpecialFunction("nargout",NargoutFunction,0,1,NULL);
   context->addSpecialFunction("which",WhichFunction,1,1,"functionname",NULL);
   context->addSpecialFunction("mfilename",MFilenameFunction,0,1,NULL);
   context->addFunction("computer",ComputerFunction,0,1,NULL);
@@ -525,6 +525,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("csc",CscFunction,1,1,"x",NULL);
   context->addFunction("cscd",CscdFunction,1,1,"x",NULL);
   context->addFunction("sec",SecFunction,1,1,"x",NULL);
+  context->addFunction("secd",SecdFunction,1,1,"x",NULL);
   context->addFunction("cot",CotFunction,1,1,"x",NULL);
   context->addFunction("acos",ArccosFunction,1,1,"x",NULL);
   context->addFunction("asin",ArcsinFunction,1,1,"x",NULL);
@@ -574,8 +575,6 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
      context->addGfxSpecialFunction("uicontrol",HUIControlFunction,-1,1,NULL);
    if (guiflag)
      context->addGfxFunction("himage",HImageFunction,-1,1,NULL);
-   if (guiflag)
-     context->addGfxFunction("hpatch",HPatchFunction,-1,1,NULL);
    if (guiflag)
      context->addGfxFunction("htext",HTextFunction,-1,1,NULL);
    if (guiflag)

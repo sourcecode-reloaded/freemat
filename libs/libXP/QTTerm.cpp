@@ -100,11 +100,11 @@ void QTTerm::focusInEvent(QFocusEvent *e) {
 
 void QTTerm::setChar(char t, bool flush) {
   if (t == '\r') {
-//    MoveBOL();
+    MoveBOL();
     return;
   }
   if (t == '\n') {
-    buffer[cursor_y].data[cursor_x].v = t;
+    //    buffer[cursor_y].data[cursor_x].v = t;
     nextLine();
     return;
   }
@@ -121,9 +121,9 @@ void QTTerm::setChar(char t, bool flush) {
   } else {
     if (flush) {
       ensureCursorVisible();
-//      viewport()->update(QRect(((cursor_x)-2)*m_char_w,
-//			       (cursor_y-verticalScrollBar()->value())*m_char_h,
-//			       m_char_w*3,m_char_h));
+//       viewport()->update(QRect(((cursor_x)-2)*m_char_w,
+// 			       (cursor_y-verticalScrollBar()->value())*m_char_h,
+// 			       m_char_w*3,m_char_h));
       viewport()->update();
     }
   }

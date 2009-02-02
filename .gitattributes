@@ -617,7 +617,6 @@ src/toolbox/array/ishandle.m svn_keywords=Author+Date+Id+Revision svn_eol_002dst
 src/toolbox/array/ishold.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/toolbox/array/islogical.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/toolbox/array/isnumeric.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-src/toolbox/array/isreal.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/toolbox/array/isstr.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/toolbox/array/isstruct.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/toolbox/array/length.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native

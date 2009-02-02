@@ -358,6 +358,10 @@ void Interpreter::procFileM(QString fname, QString fullname, bool tempfunc) {
   adef->name = fname;
   adef->fileName = fullname;
   adef->temporaryFlag = tempfunc;
+  FuncPtr val;
+  if (context->lookupFunction(fname,val)) 
+    if (val->type() == FM_BUILT_IN_FUNCTION) 
+      warningMessage("built in function " + fname + " will be shadowed by the script " + fullname);
   context->insertFunction(adef, tempfunc);
 }
   

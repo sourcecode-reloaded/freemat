@@ -40,7 +40,7 @@ struct OpBitXor {
   
 struct OpBitCmp {
   template <typename T>
-  static inline T func(T A) {return T(~uint32(A));}
+  static inline T func(T A) {return T(~A);}
   template <typename T>
   static inline void func(const T &Ar, const T &Ai, T& Cr, T& Ci) {
     Cr = T(~uint32(Ar));
@@ -150,13 +150,78 @@ ArrayVector BitxorFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(DotOp<OpBitXor>(arg[0],arg[1]));
 }
 
-// FIXME
+//!
+//@Module BITCMP Bitwise Boolean Complement Operation
+//@@Section BINARY
+//@@Usage
+// Usage
+// 
+// Performs a bitwise binary complement operation on the argument and
+// returns the result.  The syntax for its use is
+//@[
+//    y = bitcmp(a)
+//@]
+// where a is an unsigned integer arrays.  This version of the command
+// uses as many bits as required by the type of a.  For example, if 
+// a is an uint8 type, then the complement is formed using 8 bits.
+// The second form of bitcmp allows you to specify the number of bits
+// to use, 
+//@[
+//    y = bitcmp(a,n)
+//@]
+// in which case the complement is taken with respect to n bits, where n must be 
+// less than the length of the integer type.
+//
+//@@Example
+//@<
+//bitcmp(uint16(2^14-2))
+//bitcmp(uint16(2^14-2),14)
+//@>
 //@@Signature
-//function bitcmp_cpp BitcmpFunction
-//inputs a
+//function bitcmp BitcmpFunction
+//inputs a n
 //outputs y
+//!
+
+template <typename T>
+static Array TBitCmpFunc(const BasicArray<T> &x, double maxval) {
+  BasicArray<T> y(x.dimensions());
+  for (index_t i=1;i<=y.length();i++) {
+    y[i] = maxval - 1 - x[i];
+  }
+  return Array(y);
+}
+
+#define MacroBitCmp(ctype,cls) \
+  case cls: return ArrayVector(TBitCmpFunc<ctype>(y.constReal<ctype>(),maxval));
+
 ArrayVector BitcmpFunction(int nargout, const ArrayVector& arg) {
-  return ArrayVector(UnaryOp<OpBitCmp>(arg[0]).toClass(arg[0].dataClass()));
+  if (arg.size() < 1)
+    return ArrayVector(Array());
+  if (arg.size() == 1) {
+    switch (arg[0].dataClass()) {
+    case UInt8: return ArrayVector(UnaryOp<uint8,OpBitCmp>(arg[0],UInt8));
+    case UInt16: return ArrayVector(UnaryOp<uint16,OpBitCmp>(arg[0],UInt16));
+    case UInt32: return ArrayVector(UnaryOp<uint32,OpBitCmp>(arg[0],UInt32));
+    case UInt64: return ArrayVector(UnaryOp<uint64,OpBitCmp>(arg[0],UInt64));
+    default:
+      throw Exception("bitcmp is only defiled for unsigned integer types.");
+    }
+  }
+  int bits = arg[1].asInteger();
+  if (bits <= 0) throw Exception("bitcmp bits must be positive");
+  double maxval = pow(2.0,double(bits));
+  if (!IsInteger(arg[0])) throw Exception("bitcmp can only be applied to integer arguments");
+  if (!IsNonNegative(arg[0])) throw Exception("bitcmp argument must be nonnegative");
+  if (arg[0].isComplex()) throw Exception("bitcmp argument must be real valued");
+  if (arg[0].isSparse()) throw Exception("bitcmp is not defined for sparse matrices");
+  Array y(arg[0]);
+  y.ensureNotScalarEncoded();
+  switch (arg[0].dataClass()) {
+  default:
+    throw Exception("type not supported by bitcmp");
+    MacroExpandCasesNoBool(MacroBitCmp);
+  }
 }
 
 //!
