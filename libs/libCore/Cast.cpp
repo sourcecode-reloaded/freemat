@@ -19,6 +19,7 @@
 
 #include "Array.hpp"
 #include "Algorithms.hpp"
+#include "Operators.hpp"
 
 //!
 //@Module LOGICAL Convert to Logical
@@ -722,7 +723,9 @@ ArrayVector DoubleFunction(int nargout, const ArrayVector& arg) {
 //@[
 //   y = complex(x,z)
 //@]
-//where @|x| and @|z| are @|n|-dimensional numerical arrays of the same size and type.  
+//where @|x| and @|z| are @|n|-dimensional numerical arrays.  The usual rules
+//for binary operators apply (i.e., one of the arguments can be a scalar,
+//if either is of type @|single| the output is single, etc.).
 //@@Tests
 //@$exact|y1=complex(x1,x2)
 //@@Signature
@@ -730,13 +733,30 @@ ArrayVector DoubleFunction(int nargout, const ArrayVector& arg) {
 //inputs x z
 //outputs y
 //!
+
+struct OpComplex {
+  template <typename T>
+  static inline T func(const T& v1, const T& v2) {
+  }
+  template <typename T>
+  static inline void func(const T& ar, const T& ai,
+			  const T& br, const T& bi,
+			  T& cr, T& ci) {
+    cr = ar;
+    ci = br;
+  }
+};
+
 ArrayVector ComplexFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1) 
     throw Exception("type conversion function requires at least one argument");
   if (arg.size() == 1)
     return ArrayVector(arg[0]);
-  else
-    return ArrayVector(MergeToComplex(arg[0],arg[1]));
+  else {
+    Array x(arg[0].asComplex()); 
+    Array y(arg[1].asComplex());
+    return ArrayVector(DotOp<OpComplex>(x,y));
+  }
 }
 
 //!
