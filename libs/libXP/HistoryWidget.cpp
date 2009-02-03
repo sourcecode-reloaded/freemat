@@ -84,11 +84,11 @@ void HistoryWidget::readSettings() {
     if (historyList[i].startsWith("%%")) {
       m_parent = new QTreeWidgetItem((QTreeWidget*)0,QStringList(historyList[i]));
       m_flist->addTopLevelItem(m_parent);
+      m_flist->expandItem(m_parent);
     } else {
       new QTreeWidgetItem(m_parent,QStringList(historyList[i]));
     }
   }
-  m_flist->expandItem(m_parent);
 }
 
 void HistoryWidget::clear() {
