@@ -1,4 +1,8 @@
 function c = wbtest_near(a,b)
+  if (~issame(size(a),size(b))) 
+    c = false;
+    return;
+  end
   % screen out the nans
   p = (isnan(a));
   q = (isnan(b));
