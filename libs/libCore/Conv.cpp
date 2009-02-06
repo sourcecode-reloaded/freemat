@@ -206,7 +206,7 @@ ArrayVector Conv2Function(int nargout, const ArrayVector& arg) {
     throw Exception("conv2 requires at least 2 arguments");
   Array X(arg[0]);
   Array Y(arg[1]);
-  if (X.isEmpty() && Y.isEmpty())
+  if (X.isEmpty() || Y.isEmpty())
     return ArrayVector(EmptyConstructor());
   DataClass via, out;
   ComputeTypes(X,Y,via,out);
