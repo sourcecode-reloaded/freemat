@@ -1,3 +1,9 @@
+
+inf * (0+i) = 0 + inf*i
+
+inf * (1+i) = inf + inf*i
+
+
 bitrock installer
 edit <filename> doesn't work
 p.<blah> = pwd --> seg fault!
