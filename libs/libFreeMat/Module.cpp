@@ -464,3 +464,49 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
 #endif
 }
   
+//!
+//@Module BLASLIB Control Profiling
+//@@Section FREEMAT
+//@@Usage
+//The @|blaslib| function allows you to select the FreeMat blas library, 
+//when dynamic linking is enabled.
+//It has two modes of operation.  The first is to select blas library:
+//@[
+//  blaslib LIB_NAME
+//@]
+//If you want to see current blas library selected
+//issue a @|blaslib| command with no arguments.
+//@[
+//   blaslib
+//@]
+//@@Signature
+//function blaslib BlaslibFunction
+//inputs varargin
+//outputs none
+//!
+#ifdef DYN_BLAS
+#include "blas_dyn_link.h"
+ArrayVector BlaslibFunction(int nargout, const ArrayVector& arg) {
+extern BlasWrapper wrapper;
+if (arg.size() < 1) {
+ArrayVector liblist;
+std::string list;
+wrapper.ListLibraries( list );
+return ArrayVector(Array(QString(list.c_str())));
+} else {
+if (!arg[0].isString())
+throw Exception("argument to blaslib function must be a string");
+QString txt = arg[0].asString();
+std::string msg;
+if( !wrapper.LoadLibByName( txt.toStdString(), msg ) ){
+throw Exception("Library by this name does not exist.");
+}
+}
+return ArrayVector();
+}
+#else
+ArrayVector BlaslibFunction(int nargout, const ArrayVector& arg) {
+throw Exception("BLAS library is loaded statically.");
+return ArrayVector();
+}
+#endif
