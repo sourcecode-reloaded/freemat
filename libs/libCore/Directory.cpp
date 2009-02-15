@@ -412,7 +412,7 @@ ArrayVector FilePartsFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector() << path
 		       << name
 		       << suffix
-		       << Array(QString(""));
+		       << Array(StringArray);
 }
 
 //!

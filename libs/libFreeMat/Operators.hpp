@@ -659,6 +659,7 @@ static inline Array VectorOp(const Array &Ain, index_t out, int dim, DataClass T
 
 template <class Op>
   static inline Array VectorOp(const Array &Ain, int out, int dim) {
+  out = qMax(0,out);
   if (Ain.dataClass() == Float)
     return VectorOp<float,Op>(Ain,out,dim,Float);
   else
@@ -820,13 +821,15 @@ static inline ArrayVector BiVectorOp(const Array &Ain, index_t out,
 
 template <class Op>
   static inline ArrayVector BiVectorOp(const Array &Ain, int out, int dim) {
+  out = qMax(0,out);
   if (Ain.dataClass() == Float) {
     ArrayVector Ret(BiVectorOp<float,Op>(Ain,out,dim,Float));
     Ret[0] = Ret[0].toClass(Ain.dataClass());
     return Ret;
   } else {
     ArrayVector Ret(BiVectorOp<double,Op>(Ain,out,dim,Double));
-    Ret[0] = Ret[0].toClass(Ain.dataClass());
+    if (Ain.dataClass() != StringArray)
+      Ret[0] = Ret[0].toClass(Ain.dataClass());
     return Ret;
   }
 }

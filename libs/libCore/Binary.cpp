@@ -287,7 +287,9 @@ struct OpInt2Bin {
 ArrayVector Int2BinFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 2)
     throw Exception("int2bin requires at least two arguments");
-  return ArrayVector(VectorOp<OpInt2Bin>(arg[0],arg[1].asInteger(),
+  int n = arg[1].asInteger();
+  n = qMax(0,qMin(64,n));
+  return ArrayVector(VectorOp<OpInt2Bin>(arg[0],n,
 					 qMax(1,arg[0].dimensions().lastSingular())).toClass(Bool));
 }
 

@@ -18,6 +18,7 @@ function test_val = wbtest_max_3(verbose)
         fail_count = fail_count + 1;
   elseif (~error_flag && ~error_refs(loopi,loopj) && ~wbtest_exact(y1,y1_refs{loopi,loopj}))
     printf('Mismatch (exact): input %d,%d output 1 y1=max(x1,x2)\n',loopi,loopj);
+    keyboard
     fail_count = fail_count + 1;
   end
     end

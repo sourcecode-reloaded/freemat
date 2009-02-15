@@ -110,5 +110,14 @@ ArrayVector MeanFunction(int nargout, const ArrayVector& arg) {
     dim = arg[1].asInteger()-1;
   else
     dim = input.dimensions().firstNonsingular();
+  if (input.dimensions() == NTuple(0,0))
+    return ArrayVector(Array(NaN()));
+  if (input.isEmpty()) {
+    NTuple dims(input.dimensions());
+    if (dims == NTuple(0,0)) return ArrayVector(Array(NaN()));
+    if (dims[dim] != 0) 
+      dims[dim] = 1;
+    return ArrayVector(Array(input.dataClass(),dims));
+  }
   return ArrayVector(VectorOp<OpVecMean>(input,1,dim));
 }

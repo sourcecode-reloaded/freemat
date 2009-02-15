@@ -32,13 +32,18 @@
 
 function t = dec2bin(x,n)
   x = x(:); 
+  if (size(x) == [0,0])
+      t = string([]);
+      return;
+  end
   if (~exist('n') && max(x) > 0)
     n = ceil(log2(max(x)));
   elseif (~exist('n'))
-    t = zeros(size(x));
+  t = string(zeros(size(x))+'0');
     return;
   elseif (max(x) == 0)
-    t = zeros(size(x));
+  t = string(zeros(size(x))+'0');
     return;
   end
+  n = max(1,n);
   t = string(int2bin(x,n)+'0');

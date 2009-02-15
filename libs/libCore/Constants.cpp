@@ -22,6 +22,7 @@
 #include "IEEEFP.hpp"
 #include <math.h>
 #include <float.h>
+#include "Operators.hpp"
 
 //!
 //@Module INF Infinity Constant
@@ -207,6 +208,25 @@ ArrayVector EFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(Array(exp(1.0)));
 }  
 
+struct OpEps {
+  static inline float func(float t) {
+    if (IsInfinite(t)) return NaN();
+    return fepsf(t);
+  }
+  static inline double func(double t) {
+    if (IsInfinite(t)) return NaN();
+    return feps(t);
+  }
+  static inline void func(float x, float y, float &rx, float &ry) {
+    rx = qMax(fepsf(x),fepsf(y)); 
+    ry = 0;
+  }
+  static inline void func(double x, double y, double &rx, double &ry) {
+    rx = qMax(feps(x),feps(y)); 
+    ry = 0;
+  }
+};
+
 //!
 //@Module EPS Double Precision Floating Point Relative Machine Precision Epsilon
 //@@Section CONSTANTS
@@ -248,48 +268,32 @@ ArrayVector EFunction(int nargout, const ArrayVector& arg) {
 //outputs y
 //!
 ArrayVector EpsFunction(int nargout, const ArrayVector& arg) {
-    bool isDouble = true;
-    ArrayVector retval;
-    
-    if( arg.size()> 1 )
-	throw Exception("eps takes no more than 1 argument");
-    if( arg.size()==1 ){
-	Array a( arg[0] );
-	if( a.isString() ){
-	  QString str = a.asString().toLower();
-	  if( str == QString( "double" ) ){
-	    retval << Array( feps( 1. ) ); 
-	  }
-	  else if( str == QString( "single" ) ){
-	    retval << Array( fepsf( 1. ) );
-	  }
-	  else{
-	    throw Exception("Class must be 'double' or 'single'");
-	  }
-	}
-	else { //numeric argument
-	  switch( a.dataClass() ){ 
-	  case Double: 
-	    {
-	      double x = fabs( a.asDouble() );
-	      retval << Array( feps( x ) );
-	      break;
-	    }
-	  case Float: 
-	    {
-	      float x = fabsf( a.asDouble() );
-	      retval << Array( fepsf( x ) );
-	      break;
-	    }
-	  default:
-	    throw Exception("Class must be 'double' or 'single'");
-	  }
-	}
+  bool isDouble = true;
+  ArrayVector retval;
+  
+  if( arg.size()> 1 )
+    throw Exception("eps takes no more than 1 argument");
+  if( arg.size()==1 ){
+    Array a( arg[0] );
+    if( a.isString() ){
+      QString str = a.asString().toLower();
+      if( str == QString( "double" ) ){
+	retval << Array( feps( 1. ) ); 
+      }
+      else if( str == QString( "single" ) ){
+	retval << Array( fepsf( 1. ) );
+      }
+      else{
+	throw Exception("Class must be 'double' or 'single'");
+      }
     }
-    else{
-      retval << Array( feps( 1. ) );
+    else { //numeric argument
+      return ArrayVector(Real(UnaryOp<OpEps>(a)));
     }
-    return retval;
+  } else{
+    retval << Array( feps( 1. ) );
+  }
+  return retval;
 }
 
 //!

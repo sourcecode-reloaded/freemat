@@ -77,8 +77,12 @@ static ArrayVector DotFunction(const BasicArray<T> &xreal,
 			       const BasicArray<T> &yreal,
 			       int DotDim) {
   if (xreal.isEmpty() && yreal.isEmpty() &&
-      xreal.is2D() && yreal.is2D())
-    return ArrayVector(Array(T(0)));
+      xreal.is2D() && yreal.is2D()) {
+    if (DotDim == 0)
+      return ArrayVector(Array(T(0)));
+    else
+      return ArrayVector(Array(GetDataClass(T(0)),NTuple(0,1)));
+  }
   BasicArray<T> rvec(xreal.dimensions().forceOne(DotDim));
   ConstBasicIterator<T> xsource(&xreal,DotDim);
   ConstBasicIterator<T> ysource(&yreal,DotDim);

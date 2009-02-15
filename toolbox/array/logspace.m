@@ -8,7 +8,7 @@
 % 
 %     y = logspace(a,b,count)
 % 
-%  or, for a default count = 100,
+%  or, for a default count = 50,
 % 
 %     y = logspace(a,b)
 % 
@@ -23,7 +23,7 @@ function y = logspace(a,b,count)
    if (nargin < 2) | (nargout > 1)
       error('wrong use (see help logspace)')
    elseif (nargin < 3)
-      count = 100;
+      count = 50;
    end
    if (b == pi)
       b = log10(b);

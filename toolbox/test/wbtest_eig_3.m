@@ -12,10 +12,10 @@ function test_val = wbtest_eig_3(verbose)
       error_flag = 1;
     end
     if (error_flag && ~error_refs(loopi))
-       printf('Mismatch Errors: input %d y1=eig(x1,'nobalance')\n',loopi);
+       printf('Mismatch Errors: input %d y1=eig(x1,''nobalance'')\n',loopi);
         fail_count = fail_count + 1;
   elseif (~error_flag && ~error_refs(loopi) && ~wbtest_near(y1,y1_refs{loopi}))
-    printf('Mismatch (near): input %d output 1 y1=eig(x1,'nobalance')\n',loopi);
+    printf('Mismatch (near): input %d output 1 y1=eig(x1,''nobalance'')\n',loopi);
     fail_count = fail_count + 1;
   end
   test_val = (fail_count == 0);

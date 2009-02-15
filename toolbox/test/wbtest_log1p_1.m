@@ -16,6 +16,7 @@ function test_val = wbtest_log1p_1(verbose)
         fail_count = fail_count + 1;
   elseif (~error_flag && ~error_refs(loopi) && ~wbtest_near(y1,y1_refs{loopi}))
     printf('Mismatch (near): input %d output 1 y1=log1p(x1)\n',loopi);
+    keyboard
     fail_count = fail_count + 1;
   end
   test_val = (fail_count == 0);

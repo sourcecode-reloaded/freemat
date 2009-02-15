@@ -82,12 +82,18 @@ extern "C"{
 
 //returns distance to the next nearest double value
 inline double feps( double x ){
+  if (x >= 0)
     return nextafter( x , DBL_MAX ) - x;
+  else
+    return x - nextafter( x, -DBL_MAX);
 }
 
 //returns distance to the next nearest float value
 inline float fepsf( float x ){
+  if (x >= 0)
     return nextafterf( x , FLT_MAX ) - x;
+  else
+    return x - nextafterf(x, -FLT_MAX);
 }
 
 #endif

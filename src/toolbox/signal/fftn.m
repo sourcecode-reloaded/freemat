@@ -35,6 +35,8 @@ function y = fftn(x,dims)
     dims = [dims,pnts((numel(dims)+1):end)];
   end
   y = x;
+  if (~isa(y,'single')) y = double(y); end;
+  if (numel(y) == 0) return; end;
   for n=1:numel(dims)
     y = fft(y,dims(n),n);
   end

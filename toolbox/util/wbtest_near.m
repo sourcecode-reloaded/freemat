@@ -3,9 +3,17 @@ function c = wbtest_near(a,b)
     c = false;
     return;
   end
+  if (isa(a,'cell') || isa(b,'cell'))
+    c = issame(a,b);
+    return;
+  end;
   % screen out the nans
   p = (isnan(a));
   q = (isnan(b));
+  if (numel(find(q)) ~= numel(find(p)))
+     c = false;
+     return;
+  end;
   if (any(p~=q)) 
      c = false; 
      return; 
@@ -15,6 +23,10 @@ function c = wbtest_near(a,b)
   % screen out the infs
   p = (isinf(a));
   q = (isinf(b));
+  if (numel(find(q)) ~= numel(find(p)))
+     c = false;
+     return;
+  end;
   if (any(a(p) ~= b(q)))
      c = false; 
     return; 

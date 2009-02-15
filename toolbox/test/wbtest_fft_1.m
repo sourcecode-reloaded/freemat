@@ -13,6 +13,7 @@ function test_val = wbtest_fft_1(verbose)
     end
     if (error_flag && ~error_refs(loopi))
        printf('Mismatch Errors: input %d y1=fft(x1)\n',loopi);
+       keyboard
         fail_count = fail_count + 1;
   elseif (~error_flag && ~error_refs(loopi) && ~wbtest_near(y1,y1_refs{loopi}))
     printf('Mismatch (near): input %d output 1 y1=fft(x1)\n',loopi);

@@ -25,6 +25,10 @@ function y = det(A)
     if (size(A,1) ~= size(A,2))
         error('argument to det must be square');
     end
+    if (isscalar(A)) 
+      y = A;
+      return;
+    end
     N = size(A,1);
     [L,U,P] = lu(A);
     o = (1:N)';

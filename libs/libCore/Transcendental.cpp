@@ -712,16 +712,19 @@ ArrayVector ExpFunction(int nargout, const ArrayVector& arg) {
 //outputs y
 //!
 
+// exp(x)-1 for x = xr+i*xi
+// exp(xr+i*xi) - 1 = exp(xr)*cos(xi) + i*exp(xr)*sin(xi) - 1
+
 struct OpExpM1 {
   static inline float func(float x) {return expm1f(x);}
   static inline double func(double x) {return expm1(x);}
   static void func(float xr, float xi, float &yr, float &yi) {
-    yr = expm1f(xr)*cosf(xi);
-    yi = expm1f(xr)*sinf(xi);
+    yr = expf(xr)*cosf(xi) - 1;
+    yi = expf(xr)*sinf(xi);
   }
   static void func(double xr, double xi, double &yr, double &yi) {
-    yr = expm1(xr)*cos(xi);
-    yi = expm1(xr)*sin(xi);
+    yr = exp(xr)*cos(xi) - 1;
+    yi = exp(xr)*sin(xi);
   }
 };
 

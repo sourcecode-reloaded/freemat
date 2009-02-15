@@ -66,8 +66,8 @@ function outputtext(&p,text)
       fprintf(fp,'  elseif (~error_flag && ~error_refs && ~wbtest_%s(y%d,y%d_refs{1}))\n',ttype,k,k);
       fprintf(fp,'    printf(''Mismatch (%s): output %d %s\\n'');\n',ttype,k,sexpr);
       fprintf(fp,'    fail_count = fail_count + 1;\n');
-      fprintf(fp,'  end\n');
     end
+    fprintf(fp,'  end\n');
   elseif (in_count == 1)
     fprintf(fp,'  for loopi=1:numel(wbinputs)\n');
     fprintf(fp,'    x1 = wbinputs{loopi};\n');
@@ -87,8 +87,8 @@ function outputtext(&p,text)
       fprintf(fp,'  elseif (~error_flag && ~error_refs(loopi) && ~wbtest_%s(y%d,y%d_refs{loopi}))\n',ttype,k,k);
       fprintf(fp,'    printf(''Mismatch (%s): input %%d output %d %s\\n'',loopi);\n',ttype,k,sexpr);
       fprintf(fp,'    fail_count = fail_count + 1;\n');
-      fprintf(fp,'  end\n');
     end
+    fprintf(fp,'  end\n');
   elseif (in_count == 2)
     fprintf(fp,'  for loopi=1:numel(wbinputs)\n');
     fprintf(fp,'    for loopj=1:numel(wbinputs)\n');
@@ -110,7 +110,6 @@ function outputtext(&p,text)
       fprintf(fp,'  elseif (~error_flag && ~error_refs(loopi,loopj) && ~wbtest_%s(y%d,y%d_refs{loopi,loopj}))\n',ttype,k,k);
       fprintf(fp,'    printf(''Mismatch (%s): input %%d,%%d output %d %s\\n'',loopi,loopj);\n',ttype,k,sexpr);
       fprintf(fp,'    fail_count = fail_count + 1;\n');
-      fprintf(fp,'  end\n');
     end
     fprintf(fp,'    end\n');
     fprintf(fp,'  end\n');

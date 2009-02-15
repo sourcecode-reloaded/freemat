@@ -7,12 +7,22 @@
 struct OpGreaterThan {
   template <typename T>
   static inline T func(const T& v1, const T& v2) {
+    if (IsNaN(v1)) return v2;
+    if (IsNaN(v2)) return v1;
     return (v1 > v2) ? v1 : v2;
   }
   template <typename T>
   static inline void func(const T& ar, const T& ai,
 			  const T& br, const T& bi,
 			  T& cr, T& ci) {
+    if (IsNaN(ar) || IsNaN(ai)) {
+      cr = br; ci = bi;
+      return;
+    }
+    if (IsNaN(br) || IsNaN(bi)) {
+      cr = ar; ci = ai;
+      return;
+    }
     if (complex_gt(ar,ai,br,bi)) {
       cr = ar; ci = ai;
     } else {
@@ -73,7 +83,7 @@ struct OpVecMax {
     T result_imag = 0;
     index_t count = 0;
     index_t zero_index = 0;
-    index_t index = 0;;
+    index_t index = 0;
     index_t col = src.col();
     while (src.col() == col) {
       count++;
@@ -109,7 +119,7 @@ struct OpVecMax {
 			  BasicArray<index_t>& dest_index) {
     bool init = false;
     T result = 0;
-    double index = 0;
+    index_t index = 0;
     for (index_t i=1;i<=src.length();i++) {
       if (!IsNaN(src[i])) {
 	if (!init) {
@@ -126,7 +136,7 @@ struct OpVecMax {
     }
     if (!init) {
       result = NaN();
-      index = 0;
+      index = 1;
     }
     dest[1] = result;
     dest_index[1] = index;
@@ -140,7 +150,7 @@ struct OpVecMax {
     bool init = false;
     T result_real = 0;
     T result_imag = 0;
-    double index = 0;
+    index_t index = 0;
     for (index_t i=1;i<=src_real.length();i++) {
       if (!IsNaN(src_real[i]) && !IsNaN(src_imag[i])) {
 	if (!init) {
@@ -161,7 +171,7 @@ struct OpVecMax {
     if (!init) {
       result_real = NaN();
       result_imag = NaN();
-      index = 0;
+      index = 1;
     }
     dest_real[1] = result_real;
     dest_imag[1] = result_imag;
@@ -273,13 +283,23 @@ ArrayVector MaxFunction(int nargout, const ArrayVector& arg) {
     throw Exception("max requires at least one argument, and at most three arguments");
   // Determine if this is a call to the Max function or the LessThan function
   // (the internal version of the two array min function)
-  if (arg.size() == 2)
-    return ArrayVector(DotOp<OpGreaterThan>(arg[0],arg[1]));
-  if (arg[0].isEmpty()) return ArrayVector(arg[0]);
+  if (arg.size() == 2) {
+    Array ret(DotOp<OpGreaterThan>(arg[0],arg[1]));
+    if ((arg[0].dataClass() == Bool) && (arg[1].dataClass() == Bool))
+      return ArrayVector(ret.toClass(Bool));
+    return ArrayVector(ret);
+  }
   int dim;
   if (arg.size() > 2)
     dim = arg[2].asInteger()-1;
   else
     dim = arg[0].dimensions().firstNonsingular();
+  if (arg[0].isEmpty()) {
+    NTuple dims(arg[0].dimensions());
+    if (dims == NTuple(0,0)) return ArrayVector(arg[0]);
+    if (dims[dim] != 0)
+      dims[dim] = 1;
+    return ArrayVector(Array(arg[0].dataClass(),dims));
+  }
   return BiVectorOp<OpVecMax>(arg[0],1,dim);
 }

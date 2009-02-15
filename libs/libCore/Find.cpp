@@ -14,6 +14,8 @@ static ArrayVector SingleFindModeFull(const Array &arg) {
   Array x(arg.toClass(Bool).asDenseArray());
   const BasicArray<bool> &dp(x.constReal<bool>());
   index_t nonZero = CountNonZeros(dp);
+  if ((nonZero == 0) && (x.is2D()))
+    return ArrayVector(Array(Double));
   NTuple retdims;
   if (x.isRowVector())
     retdims = NTuple(1,nonZero);
@@ -31,6 +33,12 @@ static ArrayVector RCFindModeFull(const Array &arg) {
   Array x(arg.toClass(Bool).asDenseArray());
   const BasicArray<bool> &dp(x.constReal<bool>());
   index_t nonZero = CountNonZeros(dp);
+  if ((nonZero == 0) && (x.is2D())) {
+    ArrayVector retval;
+    retval.push_back(Array(Double));
+    retval.push_back(Array(Double));
+    return retval;
+  }
   NTuple retdims;
   if (x.isRowVector())
     retdims = NTuple(1,nonZero);
@@ -58,6 +66,17 @@ static ArrayVector RCVFindModeFullReal(Array arg) {
   const BasicArray<bool> &dp(x.constReal<bool>());
   const BasicArray<T> &vp(arg.constReal<T>());
   index_t nonZero = CountNonZeros(dp);
+  if ((nonZero == 0) && (x.is2D())) {
+    ArrayVector retval;
+    retval.push_back(Array(Double));
+    retval.push_back(Array(Double));
+    Array wp(GetDataClass(T(0)));
+    if ((wp.dataClass() != Bool) && (wp.dataClass() != Float)
+	&& (wp.dataClass() != Double))
+      wp = wp.toClass(Double);
+    retval.push_back(wp);
+    return retval;
+  }
   NTuple retdims;
   if (x.isRowVector())
     retdims = NTuple(1,nonZero);
@@ -78,7 +97,11 @@ static ArrayVector RCVFindModeFullReal(Array arg) {
   ArrayVector retval;
   retval.push_back(Array(rp));
   retval.push_back(Array(cp));
-  retval.push_back(Array(qp));
+  Array zp(qp);
+  if ((zp.dataClass() != Bool) && (zp.dataClass() != Float)
+      && (zp.dataClass() != Double))
+    zp = zp.toClass(Double);
+  retval.push_back(zp);
   return retval;
 }  
 
@@ -89,6 +112,17 @@ static ArrayVector RCVFindModeFullComplex(Array arg) {
   const BasicArray<T> &vp(arg.constReal<T>());
   const BasicArray<T> &zp(arg.constImag<T>());
   index_t nonZero = CountNonZeros(dp);
+  if ((nonZero == 0) && (x.is2D())) {
+    ArrayVector retval;
+    retval.push_back(Array(Double));
+    retval.push_back(Array(Double));
+    Array wp(GetDataClass(T(0)));
+    if ((wp.dataClass() != Bool) && (wp.dataClass() != Float)
+	&& (wp.dataClass() != Double))
+      wp = wp.toClass(Double);
+    retval.push_back(wp);
+    return retval;
+  }
   NTuple retdims;
   if (x.isRowVector())
     retdims = NTuple(1,nonZero);
@@ -111,7 +145,11 @@ static ArrayVector RCVFindModeFullComplex(Array arg) {
   ArrayVector retval;
   retval.push_back(Array(rp));
   retval.push_back(Array(cp));
-  retval.push_back(Array(qp,ip));
+  Array wp(qp,ip);
+  if ((wp.dataClass() != Bool) && (wp.dataClass() != Float)
+      && (wp.dataClass() != Double))
+    wp = wp.toClass(Double);
+  retval.push_back(wp);
   return retval;
 }
 
@@ -305,6 +343,7 @@ static ArrayVector FindTrim(ArrayVector a, int cnt, bool first_flag) {
   if (cnt < 0) return a;
   if (a.size() == 0) return a;
   int N = int(a[0].length());
+  if (N == 0) return a;
   if (cnt > N) return a;
   ArrayVector ret;
   Array ndx;

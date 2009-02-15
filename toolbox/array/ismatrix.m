@@ -16,4 +16,3 @@
 function y = ismatrix(x)
   y = (ndims(x)==2);
   
-  

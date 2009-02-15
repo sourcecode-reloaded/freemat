@@ -140,15 +140,24 @@ struct OpVecFFT {
   static inline void func(const BasicArray<T> & src, BasicArray<T>& dest) {
     throw Exception("fft not defined for real arrays");
   }
+  // We want to take a length N FFT.  N is the length of the output
+  // P is the length of the input.
+  //
+  //  if P>N, we take only the first N values from the input, into a 
+  //     buffer of size N
+  //  if P<N, we take all P values from the input into a buffer of size
+  //     N
   template <typename T>
   static inline void func(const BasicArray<T> & src_real,
 			  const BasicArray<T> & src_imag,
 			  BasicArray<T>& dest_real,
 			  BasicArray<T>& dest_imag) {
     if (src_real.length() == 0) return;
-    int N = qMax(dest_real.length(),src_real.length());
+    int N = dest_real.length();
+    int P = src_real.length();
     QVector<T> tbuf(N*2);
-    for (index_t i=1;i<=src_real.length();i++) {
+    int L = qMin(P,N);
+    for (index_t i=1;i<=L;i++) {
       tbuf[int(2*i-1)-1] = src_real[i];
       tbuf[int(2*i)-1] = src_imag[i];
     }
@@ -181,9 +190,11 @@ struct OpVecIFFT {
 			  BasicArray<T>& dest_real,
 			  BasicArray<T>& dest_imag) {
     if (src_real.length() == 0) return;
-    int N = qMax(dest_real.length(),src_real.length());
+    int N = dest_real.length();
+    int P = src_real.length();
     QVector<T> tbuf(N*2);
-    for (index_t i=1;i<=src_real.length();i++) {
+    int L = qMin(P,N);
+    for (index_t i=1;i<=L;i++) {
       tbuf[int(2*i-1)-1] = src_real[i];
       tbuf[int(2*i)-1] = src_imag[i];
     }
@@ -318,11 +329,19 @@ ArrayVector FFTFunction(int nargout, const ArrayVector& arg) {
     FFTDim = arg[2].asInteger() - 1;
     if (FFTDim < 0)
       throw Exception("Dimension argument to FFT should be positive");
-  } else
-    FFTDim = arg[0].dimensions().firstNonsingular();
+  } else {
+    if (arg[0].isScalar())
+      FFTDim = 1;
+    else
+      FFTDim = arg[0].dimensions().firstNonsingular();
+  }
   if (FFTLength == -1)
     FFTLength = int(arg[0].dimensions()[FFTDim]);
   Array arg0(arg[0]);
+  if (arg0.dataClass() != Float)
+    arg0 = arg0.toClass(Double);
+  if (arg0.dimensions() == NTuple(0,0))
+    return arg0;
   arg0.forceComplex();
   return ArrayVector(VectorOp<OpVecFFT>(arg0,FFTLength,FFTDim));
 }
@@ -344,11 +363,19 @@ ArrayVector IFFTFunction(int nargout, const ArrayVector& arg) {
     FFTDim = arg[2].asInteger() - 1;
     if (FFTDim < 0)
       throw Exception("Dimension argument to FFT should be positive");
-  } else
-    FFTDim = arg[0].dimensions().firstNonsingular();
+  } else {
+    if (arg[0].isScalar())
+      FFTDim = 1;
+    else
+      FFTDim = arg[0].dimensions().firstNonsingular();
+  }
   if (FFTLength == -1)
     FFTLength = int(arg[0].dimensions()[FFTDim]);
   Array arg0(arg[0]);
+  if (arg0.dataClass() != Float)
+    arg0 = arg0.toClass(Double);
+  if (arg0.dimensions() == NTuple(0,0))
+    return arg0;
   arg0.forceComplex();
   return ArrayVector(VectorOp<OpVecIFFT>(arg0,FFTLength,FFTDim));
 }

@@ -333,7 +333,8 @@ ArrayVector IsInfFunction(int nargout, const ArrayVector& arg) {
 ArrayVector IsRealFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("isreal function takes one argument - the array to test");
-  return ArrayVector(Array(arg[0].allReal()));
+  return ArrayVector(Array((arg[0].dataClass() != CellArray) && 
+			   (arg[0].allReal())));
 }
 
 //!

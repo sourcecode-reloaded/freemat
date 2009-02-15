@@ -97,15 +97,19 @@ function x = diff (x, k, dim)
     end
   end
 
-  if (ischar (x))
-    error ('diff: symbolic differentiation not (yet) supported');
-  end
+%  if (ischar (x))
+%    error ('diff: symbolic differentiation not (yet) supported');
+%  end
 
 
   if (nargin == 3)
     if (sz (dim) <= k)
       sz(dim) = 0;
-      x = zeros (sz);
+      if (isa(x,'single'))
+        x = zeros (sz,'single');
+      else
+        x = zeros(sz);
+      end
     else
       n = sz (dim);
       idx1 = cell ();
@@ -121,7 +125,11 @@ function x = diff (x, k, dim)
     end
   else
     if (sum (sz - 1) < k)
-      x = [];
+      if (isa(x,'single'))
+        x = single([]);
+      else
+        x = [];
+      end;
     else
       idx1 = cell ();
       for i = 1:nd

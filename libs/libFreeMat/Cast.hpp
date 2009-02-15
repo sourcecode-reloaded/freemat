@@ -61,8 +61,8 @@ MacroBoolOut(double);
   MacroCastLimitXform(int16,source,int16(-32767),int16(32767),round);	\
   MacroCastLimitXform(int8,source,int8(-127),int8(127),round);		
 
-MacroCastLimitXformAll(double,rint);
-MacroCastLimitXformAll(float,rintf);
+MacroCastLimitXformAll(double,round);
+MacroCastLimitXformAll(float,roundf);
 
 #define MacroCastLimit(outtype,intype,lowlimit,hilimit)			\
   template <>								\

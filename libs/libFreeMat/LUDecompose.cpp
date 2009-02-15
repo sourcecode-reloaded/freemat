@@ -385,6 +385,7 @@ static Array InvertMatrixReal(const BasicArray<T> &A,
   IWORKSIZE = int(WORKSIZE);
   BasicArray<T> WORK(NTuple(IWORKSIZE,1));
   getri(&N,Acopy.data(),&LDA,IPIV.data(),WORK.data(),&IWORKSIZE,&INFO);
+  if (INFO > 0) Acopy.fill(Inf());
   return Array(Acopy);
 }
 
@@ -407,7 +408,13 @@ static Array InvertMatrixComplex(const BasicArray<T> &A,
   IWORKSIZE = int(WORKSIZE[0]);
   BasicArray<T> WORK(NTuple(IWORKSIZE*2,1));
   getri(&N,Acopy.data(),&LDA,IPIV.data(),WORK.data(),&IWORKSIZE,&INFO);
-  return Array(SplitReal<T>(Acopy),SplitImag<T>(Acopy));
+  BasicArray<T> Acopy_real(SplitReal<T>(Acopy));
+  BasicArray<T> Acopy_imag(SplitImag<T>(Acopy));
+  if (INFO > 0) {
+    Acopy_real.fill(Inf());
+    Acopy_imag.fill(0);
+  }
+  return Array(Acopy_real,Acopy_imag);
 }
 
 Array Invert(const Array &A) {

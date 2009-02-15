@@ -14,6 +14,7 @@ function test_val = wbtest_logspace_1(verbose)
      fail_count = fail_count + 1;
   elseif (~error_flag && ~error_refs && ~wbtest_near(y1,y1_refs{1}))
     printf('Mismatch (near): output 1 y1=logspace(1,2)\n');
+keyboard
     fail_count = fail_count + 1;
   end
   test_val = (fail_count == 0);

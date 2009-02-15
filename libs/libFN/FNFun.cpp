@@ -175,8 +175,14 @@ ArrayVector ErfFunction(int nargout, const ArrayVector& arg) {
 //!
 
 struct OpGamma {
-  static inline float func(float x) {return tgammaf(x);}
-  static inline double func(double x) {return tgamma(x);}
+  static inline float func(float x) {
+    if ((x < 0) && (x == truncf(x))) return Inf();
+    return tgammaf(x);
+  }
+  static inline double func(double x) {
+    if ((x < 0) && (x == trunc(x))) return Inf();
+    return tgamma(x);
+  }
   static inline void func(float, float, float&, float&) 
   { throw Exception("gamma not defined for complex types");}
   static inline void func(float, float, double&, double&) 
@@ -219,8 +225,14 @@ ArrayVector GammaFunction(int nargout, const ArrayVector& arg) {
 //!
 
 struct OpGammaLn {
-  static inline float func(float x) {return lgammaf(x);}
-  static inline double func(double x) {return lgamma(x);}
+  static inline float func(float x) {
+    if (x < 0) return Inf();
+    return lgammaf(x);
+  }
+  static inline double func(double x) {
+    if (x < 0) return Inf();
+    return lgamma(x);
+  }
   static inline void func(float, float, float&, float&) 
   { throw Exception("gammaln not defined for complex types");}
   static inline void func(float, float, double&, double&) 
