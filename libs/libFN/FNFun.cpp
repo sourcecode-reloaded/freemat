@@ -32,6 +32,8 @@
     float tgammaf(float x);
     double lgamma(double x);
     float lgammaf(float x);
+	double trunc( double x );
+	float truncf( float x );
 #endif 
 
 //!

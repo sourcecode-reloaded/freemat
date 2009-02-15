@@ -20,7 +20,6 @@
 #ifndef __BLAS_DYN_LINK_H
 #define __BLAS_DYN_LINK_H
 
-#ifdef DYN_BLAS
 #include <QString>
 #include <QLibrary> 
 #include <vector>
@@ -68,4 +67,4 @@ public:
     std::vector<void*> fn;
 };
 #endif
-#endif 
+

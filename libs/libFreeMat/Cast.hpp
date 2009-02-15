@@ -2,6 +2,11 @@
 #define __Cast_hpp__
 #include "Types.hpp"
 
+#if defined(_MSC_VER)  
+double round( double x );
+float roundf( float x );
+#endif
+
 template <typename T, typename S>
 inline T CastConvert(S val);
 

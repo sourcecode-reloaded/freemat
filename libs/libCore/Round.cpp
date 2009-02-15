@@ -12,6 +12,15 @@ float roundf( float x ){
     float sign = (x>0)?1:-1;
     return sign*std::floorf(fabsf(x)+.5);
 }
+
+double trunc( double x ){
+	return ( x >= 0 )? floor( x ) : ceil( x );
+}
+
+float truncf( float x ){
+	return ( x >= 0 )? floorf( x ) : ceilf( x );
+}
+
 #endif
 
 struct OpRound {
