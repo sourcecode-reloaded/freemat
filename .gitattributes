@@ -728,6 +728,7 @@ tests/class/@mat/times.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=
 tests/class/@mat/transpose.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 tests/class/@mat/uminus.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 tests/class/@mat/vertcat.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+tests/matcompat/complex_prods.mat svn_mime_002dtype=application%2Foctet-stream
 tests/matcompat/matlab7_wb_test_results.mat svn_mime_002dtype=application%2Foctet-stream
 tests/matcompat/test_file_v6.mat svn_mime_002dtype=application%2Foctet-stream
 tests/matcompat/tough.mat svn_mime_002dtype=application%2Foctet-stream
