@@ -737,6 +737,7 @@ ArrayVector DoubleFunction(int nargout, const ArrayVector& arg) {
 struct OpComplex {
   template <typename T>
   static inline T func(const T& v1, const T& v2) {
+	  throw Exception("invalid type conversion");
 	  return v1;
   }
   template <typename T>
