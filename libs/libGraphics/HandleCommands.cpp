@@ -1109,6 +1109,53 @@ ArrayVector HPrintFunction(int nargout, const ArrayVector& arg) {
 }
 
 //!
+//@Module HTEXTBITMAP Get Text Rendered as a Bitmap
+//@@Section HANDLE
+//@@Usage
+//This function takes a fontname, a size, and a text string
+//and returns a bitmap containing the text.  The generic syntax
+//for its use is
+//@[
+//  bitmap = htextbitmap(fontname,size,text)
+//@]
+//where the output bitmap contains the text rendered into a matrix.
+//@@Signature
+//gfunction htextbitmap HTextBitmapFunction
+//input fontname size text
+//output bitmap
+//!
+const int m_pad = 10;
+ArrayVector HTextBitmapFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 3) throw Exception("htextbitmap requires three arguments");
+  QString fontname(arg[0].asString());
+  int fontsize(arg[1].asInteger());
+  QString fonttext(arg[2].asString());
+  QFont fnt(fontname,fontsize);
+  QFontMetrics fmet(fnt);
+  int ascent = fmet.ascent();
+  int descent = fmet.descent();
+  int height = ascent + descent + 1;
+  int width = fmet.width(fonttext);
+  QImage img(width,height,QImage::Format_RGB32);
+  QPainter pnt(&img);
+  pnt.setPen(QColor(Qt::black));
+  pnt.setBrush(QColor(Qt::black));
+  pnt.drawRect(0,0,width,height);
+  pnt.setPen(QColor(Qt::white));
+  pnt.setBrush(QColor(Qt::white));
+  pnt.setFont(fnt);
+  pnt.drawText(0,height-descent-1,fonttext);
+  Array M(UInt8,NTuple(height,width));
+  BasicArray<uint8> &val(M.real<uint8>());
+  for (int i=0;i<width;i++)
+    for (int j=0;j<height;j++) {
+      QRgb p = img.pixel(i,j);
+      val[NTuple(j+1,i+1)] = qGray(p);
+    }
+  return ArrayVector(M);
+}
+
+//!
 //@Module HPOINT Get Point From Window
 //@@Section HANDLE
 //@@Usage
