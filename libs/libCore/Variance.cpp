@@ -129,6 +129,8 @@ ArrayVector VarFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)
     throw Exception("mean requires at least one argument");
   Array input(arg[0]);
+  if (input.dimensions() == NTuple(0,0)) 
+    return ArrayVector(Array(NaN()));
   int dim;
   if (arg.size() > 1)
     dim = arg[1].asInteger()-1;

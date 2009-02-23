@@ -283,6 +283,7 @@ ArrayVector HCloseFunction(int, const ArrayVector&);
 ArrayVector HCopyFunction(int, const ArrayVector&);
 ArrayVector HPrintFunction(int, const ArrayVector&);
 ArrayVector HPointFunction(int, const ArrayVector&);
+ArrayVector HTextBitmapFunction(int, const ArrayVector&);
 ArrayVector HIs2DViewFunction(int, const ArrayVector&);
 ArrayVector EditorFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector EditFunction(int, const ArrayVector&, Interpreter*);
@@ -334,9 +335,9 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("cell",CellFunction,-1,1,NULL);
   context->addSpecialFunction("clear",ClearFunction,-1,0,NULL);
   context->addFunction("conj",ConjFunction,1,1,"x",NULL);
-  context->addFunction("inf",InfFunction,0,1,NULL);
-  context->addFunction("nan",NaNFunction,0,1,NULL);
-  context->addFunction("NaN",NaNFunction,0,1,NULL);
+  context->addFunction("inf",InfFunction,-1,1,NULL);
+  context->addFunction("nan",NaNFunction,-1,1,NULL);
+  context->addFunction("NaN",NaNFunction,-1,1,NULL);
   context->addFunction("i",IFunction,0,1,NULL);
   context->addFunction("j",IFunction,0,1,NULL);
   context->addFunction("pi",PiFunction,0,1,NULL);
@@ -600,6 +601,8 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
    if (guiflag)
      context->addGfxFunction("hpoint",HPointFunction,0,1,NULL);
    if (guiflag)
+     context->addGfxFunction("htextbitmap",HTextBitmapFunction,3,1,"font","size","text",NULL);
+   if (guiflag)
      context->addGfxFunction("is2dview",HIs2DViewFunction,1,1,"handle",NULL);
    if (guiflag)
      context->addGfxSpecialFunction("editor",EditorFunction,0,0,NULL);
@@ -619,6 +622,6 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
    if (guiflag)
      context->addGfxFunction("clc",ClcFunction,0,0,NULL);
   context->addFunction("profiler",ProfilerFunction,-1,0,NULL);
-  context->addFunction("blaslib",BlaslibFunction,-1,0,NULL);
+  //  context->addFunction("blaslib",BlaslibFunction,-1,0,NULL);
 }
 

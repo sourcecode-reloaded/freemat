@@ -105,6 +105,8 @@ ArrayVector SumFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)
     throw Exception("sum requires at least one argument");
   Array input(arg[0]);
+  if ((input.dimensions() == NTuple(0,0)) && (arg.size() == 1))
+    return ArrayVector(Array(double(0)));
   int dim;
   if (arg.size() > 1)
     dim = arg[1].asInteger()-1;

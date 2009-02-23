@@ -299,7 +299,10 @@ ArrayVector MaxFunction(int nargout, const ArrayVector& arg) {
     if (dims == NTuple(0,0)) return ArrayVector(arg[0]);
     if (dims[dim] != 0)
       dims[dim] = 1;
-    return ArrayVector(Array(arg[0].dataClass(),dims));
+    Array ret(arg[0].dataClass(),dims);
+    ArrayVector p;
+    p.push_back(ret); p.push_back(ret);
+    return p;
   }
   return BiVectorOp<OpVecMax>(arg[0],1,dim);
 }

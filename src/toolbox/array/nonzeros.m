@@ -25,3 +25,4 @@
 
 function x = nonzeros(y)
 [i,j,x] = find(y);
+x = cast(reshape(x,[numel(x),1]),class(y));

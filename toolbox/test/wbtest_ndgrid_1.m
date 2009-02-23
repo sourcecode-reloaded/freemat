@@ -16,7 +16,6 @@ function test_val = wbtest_ndgrid_1(verbose)
   elseif (~error_flag && ~error_refs && ~wbtest_exact(y1,y1_refs{1}))
     printf('Mismatch (exact): output 1 [y1,y2] = ndgrid(1:2,3:5)\n');
     fail_count = fail_count + 1;
-  end
   elseif (~error_flag && ~error_refs && ~wbtest_exact(y2,y2_refs{1}))
     printf('Mismatch (exact): output 2 [y1,y2] = ndgrid(1:2,3:5)\n');
     fail_count = fail_count + 1;

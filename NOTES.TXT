@@ -1,7 +1,16 @@
 
+
+
+
 inf * (0+i) = 0 + inf*i
 
 inf * (1+i) = inf + inf*i
+
+
+(1+inf*i) * (1)   = 1 + inf*i
+(1+inf*i) * (inf) = inf + inf*i
+(1+inf*i) * (0)   = 0 + nan*i
+
 
 
 bitrock installer

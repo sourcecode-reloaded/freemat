@@ -15,7 +15,9 @@ function test_val = wbtest_num2hex_1(verbose)
        printf('Mismatch Errors: input %d y1=num2hex(x1)\n',loopi);
         fail_count = fail_count + 1;
   elseif (~error_flag && ~error_refs(loopi) && ~wbtest_exact(y1,y1_refs{loopi}))
-    printf('Mismatch (exact): input %d output 1 y1=num2hex(x1)\n',loopi);
+    printf('Mismatch (exact): input %d output 1 y1=num2hex(x1)\n', ...
+           loopi);
+    keyboard
     fail_count = fail_count + 1;
   end
   test_val = (fail_count == 0);

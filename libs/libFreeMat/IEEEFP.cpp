@@ -164,6 +164,8 @@ QString ToHexString(float t) {
     float f;
     unsigned int i;
   } u;
+  if (IsNaN(t))
+    return QString("fff80000");
   u.f = t;
   return QString("%1").arg(uint(u.i),int(8),int(16),QChar('0'));
 }
@@ -173,6 +175,8 @@ QString ToHexString(double t) {
     double f;
     unsigned int i[2];
   } u;
+  if (IsNaN(t))
+    return QString("fff8000000000000");
   u.f = t;
   if (!endianDetected) 
     CheckBigEndian();

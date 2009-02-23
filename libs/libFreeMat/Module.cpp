@@ -422,7 +422,7 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
    * Parse the arglist...
    */
   const char *cp;
-  cp = qPrintable(arglist);
+  cp = strdup(qPrintable(arglist));
 
   while (*cp != 0) {
     /**

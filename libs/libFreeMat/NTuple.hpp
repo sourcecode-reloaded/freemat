@@ -51,7 +51,7 @@ public:
     index_t retval = 1;
     index_t nextCoeff = 1;
     for (int i=0;i<NDims;i++) {
-      retval += nextCoeff*(pos[i]-1);
+      retval += nextCoeff*(round(pos[i])-1);
       nextCoeff *= m_data[i];
     }
     return retval;

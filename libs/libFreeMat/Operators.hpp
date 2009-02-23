@@ -820,7 +820,7 @@ static inline ArrayVector BiVectorOp(const Array &Ain, index_t out,
 }
 
 template <class Op>
-  static inline ArrayVector BiVectorOp(const Array &Ain, int out, int dim) {
+static inline ArrayVector BiVectorOp(const Array &Ain, int out, int dim) {
   out = qMax(0,out);
   if (Ain.dataClass() == Float) {
     ArrayVector Ret(BiVectorOp<float,Op>(Ain,out,dim,Float));

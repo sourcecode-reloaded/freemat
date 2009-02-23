@@ -253,13 +253,18 @@ ArrayVector SortFunction(int nargout, const ArrayVector& arg) {
     ret.push_back(indx);
     return ret;
   } else {
+    ArrayVector ret;
     if (ascendSort)
-      return BiVectorOp<OpVecSortAscend>(input,
-					 int(input.dimensions()[workDim]),
-					 workDim);
+      ret = BiVectorOp<OpVecSortAscend>(input,
+					int(input.dimensions()[workDim]),
+					workDim);
     else
-      return BiVectorOp<OpVecSortDescend>(input,
+      ret =  BiVectorOp<OpVecSortDescend>(input,
 					  int(input.dimensions()[workDim]),
 					  workDim);
+    if (input.dataClass() == StringArray) {
+      ret[0] = ret[0].toClass(StringArray);
+    }
+    return ret;
   }
 }

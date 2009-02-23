@@ -1,6 +1,189 @@
 #include "Array.hpp"
 #include "Utils.hpp"
 
+
+//!
+//@Module INF Infinity Constant
+//@@Section CONSTANTS
+//@@Usage
+//Returns a value that represents positive infinity 
+//for both 32 and 64-bit floating point values. 
+//There are several forms for the @|Inf| function.
+//The first form returns a double precision @|Inf|.
+//@[
+//   y = inf
+//@]
+//The next form takes a class name that can be either @|'double'| 
+//@[
+//   y = inf('double')
+//@]
+//or @|'single'|:
+//@[
+//   y = inf('single')
+//@]
+//With a single parameter it generates a square matrix of @|inf|s.
+//@[
+//   y = inf(n)
+//@]
+//Alternatively, you can specify the dimensions of the array via
+//@[
+//   y = inf(m,n,p,...)
+//@]
+//or
+//@[
+//   y = inf([m,n,p,...])
+//@]
+//Finally, you can add a classname of either @|'single'| or @|'double'|.
+//@@Function Internals
+//The infinity constant has
+//several interesting properties.  In particular:
+//\[
+//\begin{array}{ll}
+//   \infty \times 0 & = \mathrm{NaN} \\                                             \infty \times a & = \infty \, \mathrm{for all} \, a > 0 \\   \infty \times a & = -\infty \, \mathrm{for all} \, a < 0 \\   \infty / \infty & = \mathrm{NaN} \\   \infty / 0 & = \infty 
+//\end{array}
+//\]
+//Note that infinities are not preserved under type conversion to integer types (see the examples below).
+//@@Example
+//The following examples demonstrate the various properties of the infinity constant.
+//@<
+//inf*0
+//inf*2
+//inf*-2
+//inf/inf
+//inf/0
+//inf/nan
+//@>
+//Note that infinities are preserved under type conversion to floating point types (i.e., @|float|, @|double|, @|complex| and @|dcomplex| types), but not integer  types.
+//@<
+//uint32(inf)
+//complex(inf)
+//@>
+//@@Tests
+//@$exact|y1=inf
+//@@Signature
+//function inf InfFunction
+//inputs varargin
+//outputs y
+//@@Signature
+//function Inf InfFunction
+//inputs varargin
+//outputs y
+//!
+ArrayVector InfFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() == 0)
+    return ArrayVector(Array(Inf()));
+  // Trim out the classname if it was specified
+  DataClass dataclass = Double;
+  ArrayVector trim_arg(arg);
+  if (trim_arg.size() > 0) {
+    if (trim_arg.back().isString()) {
+      // Check for the classname
+      dataclass = Invalid;
+      // Get the classname as a string
+      QString cp = trim_arg.back().asString().toLower();
+      if (cp == "single") dataclass = Float;
+      if (cp == "double") dataclass = Double;
+      if (cp == "float") dataclass = Float;
+      if (dataclass == Invalid)
+	throw Exception("unrecognized type for argument to nan function");
+      // Remove the classspec
+      trim_arg.pop_back();
+    }
+  }
+  NTuple dims = ArrayVectorAsDimensions(trim_arg);
+  Array p(dataclass,dims);
+  if (dataclass == Float)
+    p.real<float>().fill(float(Inf()));
+  else
+    p.real<double>().fill(Inf());
+  return ArrayVector(p);
+}
+
+//!
+//@Module NAN Not-a-Number Constant
+//@@Section ARRAY
+//@@Usage
+//Returns a value that represents ``not-a-number'' for both 32 and 64-bit 
+//floating point values.  This constant is meant to represent the result of
+//arithmetic operations whose output cannot be meaningfully defined (like 
+//zero divided by zero).  There are several forms for the @|NaN| function.
+//The first form returns a double precision @|NaN|.
+//@[
+//   y = nan
+//@]
+//The next form takes a class name that can be either @|'double'| 
+//@[
+//   y = nan('double')
+//@]
+//or @|'single'|:
+//@[
+//   y = nan('single')
+//@]
+//With a single parameter it generates a square matrix of @|nan|s.
+//@[
+//   y = nan(n)
+//@]
+//Alternatively, you can specify the dimensions of the array via
+//@[
+//   y = nan(m,n,p,...)
+//@]
+//or
+//@[
+//   y = nan([m,n,p,...])
+//@]
+//Finally, you can add a classname of either @|'single'| or @|'double'|.
+//@@Example
+//The following examples demonstrate a few calculations with the not-a-number constant.
+//@<
+//nan*0
+//nan-nan
+//@>
+//Note that @|NaN|s are preserved under type conversion to floating point types (i.e., @|float|, @|double|, @|complex| and @|dcomplex| types), but not integer  types.
+//@<
+//uint32(nan)
+//complex(nan)
+//@>
+//@@Tests
+//@$exact|y1=nan
+//@@Signature
+//function nan NaNFunction
+//inputs varargin
+//outputs y
+//@@Signature
+//function NaN NaNFunction
+//inputs varargin
+//outputs y
+//!
+ArrayVector NaNFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() == 0)
+    return ArrayVector(Array(NaN()));
+  // Trim out the classname if it was specified
+  DataClass dataclass = Double;
+  ArrayVector trim_arg(arg);
+  if (trim_arg.size() > 0) {
+    if (trim_arg.back().isString()) {
+      // Check for the classname
+      dataclass = Invalid;
+      // Get the classname as a string
+      QString cp = trim_arg.back().asString().toLower();
+      if (cp == "single") dataclass = Float;
+      if (cp == "double") dataclass = Double;
+      if (cp == "float") dataclass = Float;
+      if (dataclass == Invalid)
+	throw Exception("unrecognized type for argument to nan function");
+      // Remove the classspec
+      trim_arg.pop_back();
+    }
+  }
+  NTuple dims = ArrayVectorAsDimensions(trim_arg);
+  Array p(dataclass,dims);
+  if (dataclass == Float)
+    p.real<float>().fill(float(NaN()));
+  else
+    p.real<double>().fill(NaN());
+  return ArrayVector(p);
+}
+
 //!
 //@Module ZEROS Array of Zeros
 //@@Section ARRAY
