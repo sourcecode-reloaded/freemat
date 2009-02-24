@@ -1185,20 +1185,10 @@ ArrayVector HTextBitmapFunction(int nargout, const ArrayVector& arg) {
 //input filename width height commands
 //output none
 //!
-ArrayVector HRawPlotFunction(int nargout, const ArrayVector& arg) {
-  if (arg.size() < 4) throw Exception("hrawplot requires 4 arguments");
-  QString filename(arg[0].asString());
-  int width(arg[1].asInteger());
-  int height(arg[2].asInteger());
-  if (arg[3].dataClass() != CellArray) throw Exception("Expect a cell array of commands.");
-  QSvgGenerator gen;
-  gen.setFileName(filename);
-  gen.setSize(QSize(width,height));
-  QPainter pnt(&gen);
-  pnt.setBrush(QColor(Qt::white));
-  pnt.setPen(QColor(Qt::black));
-  pnt.drawRect(0,0,width,height);
-  const BasicArray<Array>& dp(arg[3].constReal<Array>());
+static void HRawPlotPainter(QPainter *pnt, int width, int height, const BasicArray<Array>& dp) {
+  pnt->setBrush(QColor(Qt::white));
+  pnt->setPen(QColor(Qt::black));
+  pnt->drawRect(0,0,width,height);
   for (index_t i=1;i<=dp.length();i++) {
     ArrayVector cmdp(ArrayVectorFromCellArray(dp[i]));
     QString cmd = QString("%1 %2").arg(cmdp[0].asString()).arg(int(i));
@@ -1210,29 +1200,50 @@ ArrayVector HRawPlotFunction(int nargout, const ArrayVector& arg) {
       int y1 = cmdp[2].asInteger();
       int x2 = cmdp[3].asInteger();
       int y2 = cmdp[4].asInteger();
-      pnt.drawLine(x1,y1,x2,y2);
+      pnt->drawLine(x1,y1,x2,y2);
     } else if (cmdp[0].asString().toUpper() == "FONT") {
       if (cmdp.size() != 3) throw Exception("malformed line: " + cmd);
       QString name = cmdp[1].asString();
       int size = cmdp[2].asInteger();
-      pnt.setFont(QFont(name,size));
+      pnt->setFont(QFont(name,size));
     } else if (cmdp[0].asString().toUpper() == "TEXT") {
       if (cmdp.size() != 4) throw Exception("malformed line: " + cmd);
       int x1 = cmdp[1].asInteger();
       int y1 = cmdp[2].asInteger();
       QString txt = cmdp[3].asString();
-      pnt.drawText(x1,y1,txt);
+      pnt->drawText(x1,y1,txt);
     } else if (cmdp[0].asString().toUpper() == "STYLE") {
       if (cmdp.size() != 2) throw Exception("malformed line: " + cmd);
       QString style = cmdp[1].asString();
       if (style.toUpper() == "SOLID")
-	pnt.setPen(Qt::SolidLine);
+	pnt->setPen(Qt::SolidLine);
       else if (style.toUpper() == "DOTTED")
-	pnt.setPen(Qt::DotLine);
+	pnt->setPen(Qt::DotLine);
       else
 	throw Exception("malformed line: " + cmd);
     } else
       throw Exception("malformed line: " + cmd);
+  }
+}
+
+ArrayVector HRawPlotFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 4) throw Exception("hrawplot requires 4 arguments");
+  QString filename(arg[0].asString());
+  int width(arg[1].asInteger());
+  int height(arg[2].asInteger());
+  if (arg[3].dataClass() != CellArray) throw Exception("Expect a cell array of commands.");
+  if (filename.endsWith(".svg")) {
+    QSvgGenerator gen;
+    gen.setFileName(filename);
+    gen.setSize(QSize(width,height));
+    QPainter pnt(&gen);
+    HRawPlotPainter(&pnt,width,height,arg[3].constReal<Array>());
+  } else if (filename.endsWith(".pdf")) {
+    QPrinter prnt;
+    prnt.setOutputFormat(QPrinter::PdfFormat);
+    prnt.setOutputFileName(filename);
+    QPainter pnt(&prnt);
+    HRawPlotPainter(&pnt,width,height,arg[3].constReal<Array>());
   }
   return ArrayVector();
 }
