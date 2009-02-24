@@ -284,6 +284,7 @@ ArrayVector HCopyFunction(int, const ArrayVector&);
 ArrayVector HPrintFunction(int, const ArrayVector&);
 ArrayVector HPointFunction(int, const ArrayVector&);
 ArrayVector HTextBitmapFunction(int, const ArrayVector&);
+ArrayVector HRawPlotFunction(int, const ArrayVector&);
 ArrayVector HIs2DViewFunction(int, const ArrayVector&);
 ArrayVector EditorFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector EditFunction(int, const ArrayVector&, Interpreter*);
@@ -602,6 +603,8 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
      context->addGfxFunction("hpoint",HPointFunction,0,1,NULL);
    if (guiflag)
      context->addGfxFunction("htextbitmap",HTextBitmapFunction,3,1,"font","size","text",NULL);
+   if (guiflag)
+     context->addGfxFunction("hrawplot",HRawPlotFunction,4,0,"filename","width","height","commands",NULL);
    if (guiflag)
      context->addGfxFunction("is2dview",HIs2DViewFunction,1,1,"handle",NULL);
    if (guiflag)

@@ -1155,6 +1155,89 @@ ArrayVector HTextBitmapFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(M);
 }
 
+
+//!
+//@Module HRAWPLOT Generate a Raw Plot File
+//@@Section HANDLE
+//@@Usage
+//This function takes a sequence of commands, and generates
+//a raw plot (to a file) that renders the commands.  It is 
+//a useful tool for creating high quality fully customized 
+//plots from within FreeMat scripts that are portable.  The
+//syntax for its use 
+//@[
+//  hrawplot(filename,width,height,commands)
+//@]
+//where @|filename| is the name of the file to plot to, 
+//@|width| and @|height| are the dimensions of the output and
+//@|commands| is a cell array of strings.  Each entry in the 
+//cell array contains a string with a command text.  The
+//commands describe a simple mini-language for describing
+//plots.  The complete dictionary of commands is given
+//\begin{itemize}
+//\item @|LINE x1 y1 x2 y2| -- draw a line
+//\item @|FONT name size| -- select a font of the given name and size
+//\item @|TEXT x1 y1 string| -- draw the given text string at the given location
+//\item @|STYLE style| -- select line style ('solid' or 'dotted')
+//\end{itemize}
+//@@Signature
+//gfunction hrawplot HRawPlotFunction
+//input filename width height commands
+//output none
+//!
+ArrayVector HRawPlotFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 4) throw Exception("hrawplot requires 4 arguments");
+  QString filename(arg[0].asString());
+  int width(arg[1].asInteger());
+  int height(arg[2].asInteger());
+  if (arg[3].dataClass() != CellArray) throw Exception("Expect a cell array of commands.");
+  QSvgGenerator gen;
+  gen.setFileName(filename);
+  gen.setSize(QSize(width,height));
+  QPainter pnt(&gen);
+  pnt.setBrush(QColor(Qt::white));
+  pnt.setPen(QColor(Qt::black));
+  pnt.drawRect(0,0,width,height);
+  const BasicArray<Array>& dp(arg[3].constReal<Array>());
+  for (index_t i=1;i<=dp.length();i++) {
+    ArrayVector cmdp(ArrayVectorFromCellArray(dp[i]));
+    QString cmd = QString("%1 %2").arg(cmdp[0].asString()).arg(int(i));
+    //    for (int j=0;j<cmdp.size();j++) cmd += cmdp[j].asString() + " ";
+    if (cmdp.size() < 2) throw Exception("malformed line: " + cmd);
+    if (cmdp[0].asString().toUpper() == "LINE") {
+      if (cmdp.size() != 5) throw Exception("malformed line: " + cmd);
+      int x1 = cmdp[1].asInteger();
+      int y1 = cmdp[2].asInteger();
+      int x2 = cmdp[3].asInteger();
+      int y2 = cmdp[4].asInteger();
+      pnt.drawLine(x1,y1,x2,y2);
+    } else if (cmdp[0].asString().toUpper() == "FONT") {
+      if (cmdp.size() != 3) throw Exception("malformed line: " + cmd);
+      QString name = cmdp[1].asString();
+      int size = cmdp[2].asInteger();
+      pnt.setFont(QFont(name,size));
+    } else if (cmdp[0].asString().toUpper() == "TEXT") {
+      if (cmdp.size() != 4) throw Exception("malformed line: " + cmd);
+      int x1 = cmdp[1].asInteger();
+      int y1 = cmdp[2].asInteger();
+      QString txt = cmdp[3].asString();
+      pnt.drawText(x1,y1,txt);
+    } else if (cmdp[0].asString().toUpper() == "STYLE") {
+      if (cmdp.size() != 2) throw Exception("malformed line: " + cmd);
+      QString style = cmdp[1].asString();
+      if (style.toUpper() == "SOLID")
+	pnt.setPen(Qt::SolidLine);
+      else if (style.toUpper() == "DOTTED")
+	pnt.setPen(Qt::DotLine);
+      else
+	throw Exception("malformed line: " + cmd);
+    } else
+      throw Exception("malformed line: " + cmd);
+  }
+  return ArrayVector();
+}
+
+
 //!
 //@Module HPOINT Get Point From Window
 //@@Section HANDLE
