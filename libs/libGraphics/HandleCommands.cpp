@@ -1197,6 +1197,7 @@ ArrayVector HRawPlotFunction(int nargout, const ArrayVector& arg) {
   prnt.setOutputFileName(filename);
   prnt.setPageSize(QPrinter::Ledger);
   QPainter pnt(&prnt);
+  QRect rect = pnt.viewport();
   const BasicArray<Array>& dp(arg[1].constReal<Array>());
   int descent = 0;
   for (index_t i=1;i<=dp.length();i++) {
@@ -1238,7 +1239,6 @@ ArrayVector HRawPlotFunction(int nargout, const ArrayVector& arg) {
       if (cmdp.size() != 3) throw Exception("malformed line: " + cmd);
       int width = cmdp[1].asInteger();
       int height = cmdp[2].asInteger();
-      QRect rect = pnt.viewport();
       QSize size(width,height);
       size.scale(rect.size(),Qt::KeepAspectRatio);
       pnt.setViewport(rect.x() + (rect.width()-size.width())/2,
