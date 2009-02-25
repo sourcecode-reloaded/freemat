@@ -1186,9 +1186,13 @@ ArrayVector HTextBitmapFunction(int nargout, const ArrayVector& arg) {
 //output none
 //!
 static void HRawPlotPainter(QPainter *pnt, int width, int height, const BasicArray<Array>& dp) {
-  pnt->setBrush(QColor(Qt::white));
-  pnt->setPen(QColor(Qt::black));
-  pnt->drawRect(0,0,width,height);
+  QRect rect = pnt->viewport();
+  QSize size(width,height);
+  size.scale(rect.size(),Qt::KeepAspectRatio);
+  pnt->setViewport(rect.x() + (rect.width()-size.width())/2,
+		   rect.y() + (rect.height()-size.height())/2,
+		   size.width(),size.height());
+  pnt->setWindow(QRect(0,0,width,height));
   for (index_t i=1;i<=dp.length();i++) {
     ArrayVector cmdp(ArrayVectorFromCellArray(dp[i]));
     QString cmd = QString("%1 %2").arg(cmdp[0].asString()).arg(int(i));
@@ -1242,6 +1246,8 @@ ArrayVector HRawPlotFunction(int nargout, const ArrayVector& arg) {
     QPrinter prnt;
     prnt.setOutputFormat(QPrinter::PdfFormat);
     prnt.setOutputFileName(filename);
+    //    prnt.setOrientation(QPrinter::Landscape);
+    prnt.setPageSize(QPrinter::Ledger);
     QPainter pnt(&prnt);
     HRawPlotPainter(&pnt,width,height,arg[3].constReal<Array>());
   }
