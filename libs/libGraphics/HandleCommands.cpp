@@ -1163,14 +1163,13 @@ ArrayVector HTextBitmapFunction(int nargout, const ArrayVector& arg) {
 //This function takes a sequence of commands, and generates
 //a raw plot (to a file) that renders the commands.  It is 
 //a useful tool for creating high quality fully customized 
-//plots from within FreeMat scripts that are portable.  The
+//PDF plots from within FreeMat scripts that are portable.  The
 //syntax for its use 
 //@[
-//  hrawplot(filename,width,height,commands)
+//  hrawplot(filename,commands)
 //@]
 //where @|filename| is the name of the file to plot to, 
-//@|width| and @|height| are the dimensions of the output and
-//@|commands| is a cell array of strings.  Each entry in the 
+//and @|commands| is a cell array of strings.  Each entry in the 
 //cell array contains a string with a command text.  The
 //commands describe a simple mini-language for describing
 //plots.  The complete dictionary of commands is given
@@ -1179,77 +1178,76 @@ ArrayVector HTextBitmapFunction(int nargout, const ArrayVector& arg) {
 //\item @|FONT name size| -- select a font of the given name and size
 //\item @|TEXT x1 y1 string| -- draw the given text string at the given location
 //\item @|STYLE style| -- select line style ('solid' or 'dotted')
+//\item @|PAGE| -- force a new page
+//\item @|SIZE x1 y1| -- Set the page mapping
 //\end{itemize}
 //@@Signature
 //gfunction hrawplot HRawPlotFunction
-//input filename width height commands
+//input filename commands
 //output none
 //!
-static void HRawPlotPainter(QPainter *pnt, int width, int height, const BasicArray<Array>& dp) {
-  QRect rect = pnt->viewport();
-  QSize size(width,height);
-  size.scale(rect.size(),Qt::KeepAspectRatio);
-  pnt->setViewport(rect.x() + (rect.width()-size.width())/2,
-		   rect.y() + (rect.height()-size.height())/2,
-		   size.width(),size.height());
-  pnt->setWindow(QRect(0,0,width,height));
+
+ArrayVector HRawPlotFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 2) throw Exception("hrawplot requires 4 arguments");
+  QString filename(arg[0].asString());
+  if (arg[1].dataClass() != CellArray) throw Exception("Expect a cell array of commands.");
+  if (!filename.endsWith(".pdf")) throw Exception("filename must end with PDF");
+  QPrinter prnt;
+  prnt.setOutputFormat(QPrinter::PdfFormat);
+  prnt.setOutputFileName(filename);
+  prnt.setPageSize(QPrinter::Ledger);
+  QPainter pnt(&prnt);
+  const BasicArray<Array>& dp(arg[1].constReal<Array>());
+  int descent = 0;
   for (index_t i=1;i<=dp.length();i++) {
     ArrayVector cmdp(ArrayVectorFromCellArray(dp[i]));
     QString cmd = QString("%1 %2").arg(cmdp[0].asString()).arg(int(i));
-    //    for (int j=0;j<cmdp.size();j++) cmd += cmdp[j].asString() + " ";
-    if (cmdp.size() < 2) throw Exception("malformed line: " + cmd);
     if (cmdp[0].asString().toUpper() == "LINE") {
       if (cmdp.size() != 5) throw Exception("malformed line: " + cmd);
       int x1 = cmdp[1].asInteger();
       int y1 = cmdp[2].asInteger();
       int x2 = cmdp[3].asInteger();
       int y2 = cmdp[4].asInteger();
-      pnt->drawLine(x1,y1,x2,y2);
+      pnt.drawLine(x1,y1,x2,y2);
     } else if (cmdp[0].asString().toUpper() == "FONT") {
       if (cmdp.size() != 3) throw Exception("malformed line: " + cmd);
       QString name = cmdp[1].asString();
       int size = cmdp[2].asInteger();
-      pnt->setFont(QFont(name,size));
+      QFont fnt(name,size);
+      QFontMetrics metrics(fnt);
+      descent = metrics.descent();
+      pnt.setFont(QFont(name,size));
     } else if (cmdp[0].asString().toUpper() == "TEXT") {
       if (cmdp.size() != 4) throw Exception("malformed line: " + cmd);
       int x1 = cmdp[1].asInteger();
       int y1 = cmdp[2].asInteger();
       QString txt = cmdp[3].asString();
-      pnt->drawText(x1,y1,txt);
+      pnt.drawText(x1,y1-descent,txt);
     } else if (cmdp[0].asString().toUpper() == "STYLE") {
       if (cmdp.size() != 2) throw Exception("malformed line: " + cmd);
       QString style = cmdp[1].asString();
       if (style.toUpper() == "SOLID")
-	pnt->setPen(Qt::SolidLine);
+	pnt.setPen(Qt::SolidLine);
       else if (style.toUpper() == "DOTTED")
-	pnt->setPen(Qt::DotLine);
+	pnt.setPen(Qt::DotLine);
       else
 	throw Exception("malformed line: " + cmd);
+    } else if (cmdp[0].asString().toUpper() == "PAGE") {
+      prnt.newPage();
+    } else if (cmdp[0].asString().toUpper() == "SIZE") {
+      if (cmdp.size() != 3) throw Exception("malformed line: " + cmd);
+      int width = cmdp[1].asInteger();
+      int height = cmdp[2].asInteger();
+      QRect rect = pnt.viewport();
+      QSize size(width,height);
+      size.scale(rect.size(),Qt::KeepAspectRatio);
+      pnt.setViewport(rect.x() + (rect.width()-size.width())/2,
+		      rect.y() + (rect.height()-size.height())/2,
+		      size.width(),size.height());
+      pnt.setWindow(QRect(0,0,width,height));
+      pnt.eraseRect(0,0,width,height);
     } else
       throw Exception("malformed line: " + cmd);
-  }
-}
-
-ArrayVector HRawPlotFunction(int nargout, const ArrayVector& arg) {
-  if (arg.size() < 4) throw Exception("hrawplot requires 4 arguments");
-  QString filename(arg[0].asString());
-  int width(arg[1].asInteger());
-  int height(arg[2].asInteger());
-  if (arg[3].dataClass() != CellArray) throw Exception("Expect a cell array of commands.");
-  if (filename.endsWith(".svg")) {
-    QSvgGenerator gen;
-    gen.setFileName(filename);
-    gen.setSize(QSize(width,height));
-    QPainter pnt(&gen);
-    HRawPlotPainter(&pnt,width,height,arg[3].constReal<Array>());
-  } else if (filename.endsWith(".pdf")) {
-    QPrinter prnt;
-    prnt.setOutputFormat(QPrinter::PdfFormat);
-    prnt.setOutputFileName(filename);
-    //    prnt.setOrientation(QPrinter::Landscape);
-    prnt.setPageSize(QPrinter::Ledger);
-    QPainter pnt(&prnt);
-    HRawPlotPainter(&pnt,width,height,arg[3].constReal<Array>());
   }
   return ArrayVector();
 }
