@@ -47,5 +47,10 @@
 //outputs y
 //!
 ArrayVector CellFunction(int nargout, const ArrayVector& arg) {
-  return ArrayVector(Array(CellArray,ArrayVectorAsDimensions(arg)));
+  Array p(CellArray,ArrayVectorAsDimensions(arg));
+  BasicArray<Array> &dp(p.real<Array>());
+  for (index_t i=1;i<=dp.length();i++) {
+    dp[i] = Array(Double);
+  }
+  return ArrayVector(p);
 }
