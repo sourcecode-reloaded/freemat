@@ -123,6 +123,8 @@ ArrayVector PermuteFunction(int nargout, const ArrayVector& arg) {
 //@@Tests
 //@$exact|y1=repmat(x1,[1,1,3])
 //@$exact|y1=repmat(x1,[5,1])
+//@$exact|y1=repmat(x1,1,2)
+//@$exact|y1=repmat(x1,2,1)
 //@@Signature
 //function repmat RepMatFunction
 //inputs x rows cols
@@ -238,7 +240,7 @@ ArrayVector RepMatFunction(int nargout, const ArrayVector& arg) {
   // Case 2, look for two scalar arguments
   else if ((arg.size() == 3) && (arg[1].isScalar()) && (arg[2].isScalar())) {
     repcount[0] = arg[1].asInteger();
-    repcount[1] = arg[1].asInteger();
+    repcount[1] = arg[2].asInteger();
   }
   // Case 3, look for a vector second argument
   else {
