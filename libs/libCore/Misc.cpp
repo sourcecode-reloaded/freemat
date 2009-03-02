@@ -244,6 +244,7 @@ ArrayVector SourceFunction(int nargout, const ArrayVector& arg, Interpreter* eva
   if (pcode.is(TOK_FUNCTION_DEFS))
     throw Exception("only scripts can be source-ed, not functions");
   Tree code = pcode.first();
+  ParentScopeLocker lock(eval->getContext());
   eval->block(code);
   return ArrayVector();
 }
