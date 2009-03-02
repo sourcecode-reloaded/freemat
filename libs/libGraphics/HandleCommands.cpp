@@ -1155,7 +1155,6 @@ ArrayVector HTextBitmapFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(M);
 }
 
-
 //!
 //@Module HRAWPLOT Generate a Raw Plot File
 //@@Section HANDLE
