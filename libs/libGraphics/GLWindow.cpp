@@ -7,6 +7,332 @@
 #include "Array.hpp"
 #include "HandleList.hpp"
 
+/*
+ * (c) Copyright 1993, 1994, Silicon Graphics, Inc.
+ * ALL RIGHTS RESERVED
+ * Permission to use, copy, modify, and distribute this software for
+ * any purpose and without fee is hereby granted, provided that the above
+ * copyright notice appear in all copies and that both the copyright notice
+ * and this permission notice appear in supporting documentation, and that
+ * the name of Silicon Graphics, Inc. not be used in advertising
+ * or publicity pertaining to distribution of the software without specific,
+ * written prior permission.
+ *
+ * THE MATERIAL EMBODIED ON THIS SOFTWARE IS PROVIDED TO YOU "AS-IS"
+ * AND WITHOUT WARRANTY OF ANY KIND, EXPRESS, IMPLIED OR OTHERWISE,
+ * INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY OR
+ * FITNESS FOR A PARTICULAR PURPOSE.  IN NO EVENT SHALL SILICON
+ * GRAPHICS, INC.  BE LIABLE TO YOU OR ANYONE ELSE FOR ANY DIRECT,
+ * SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY
+ * KIND, OR ANY DAMAGES WHATSOEVER, INCLUDING WITHOUT LIMITATION,
+ * LOSS OF PROFIT, LOSS OF USE, SAVINGS OR REVENUE, OR THE CLAIMS OF
+ * THIRD PARTIES, WHETHER OR NOT SILICON GRAPHICS, INC.  HAS BEEN
+ * ADVISED OF THE POSSIBILITY OF SUCH LOSS, HOWEVER CAUSED AND ON
+ * ANY THEORY OF LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE
+ * POSSESSION, USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ * US Government Users Restricted Rights
+ * Use, duplication, or disclosure by the Government is subject to
+ * restrictions set forth in FAR 52.227.19(c)(2) or subparagraph
+ * (c)(1)(ii) of the Rights in Technical Data and Computer Software
+ * clause at DFARS 252.227-7013 and/or in similar or successor
+ * clauses in the FAR or the DOD or NASA FAR Supplement.
+ * Unpublished-- rights reserved under the copyright laws of the
+ * United States.  Contractor/manufacturer is Silicon Graphics,
+ * Inc., 2011 N.  Shoreline Blvd., Mountain View, CA 94039-7311.
+ *
+ * OpenGL(TM) is a trademark of Silicon Graphics, Inc.
+ */
+/*
+ * Trackball code:
+ *
+ * Implementation of a virtual trackball.
+ * Implemented by Gavin Bell, lots of ideas from Thant Tessman and
+ *   the August '88 issue of Siggraph's "Computer Graphics," pp. 121-129.
+ *
+ * Vector manip code:
+ *
+ * Original code from:
+ * David M. Ciemiewicz, Mark Grossman, Henry Moreton, and Paul Haeberli
+ *
+ * Much mucking with by:
+ * Gavin Bell
+ */
+#include <math.h>
+//#include "trackball.h"
+
+/*
+ * This size should really be based on the distance from the center of
+ * rotation to the point on the object underneath the mouse.  That
+ * point would then track the mouse as closely as possible.  This is a
+ * simple example, though, so that is left as an Exercise for the
+ * Programmer.
+ */
+#define TRACKBALLSIZE  (0.8f)
+
+/*
+ * Local function prototypes (not defined in trackball.h)
+ */
+static float tb_project_to_sphere(float, float, float);
+static void normalize_quat(float [4]);
+
+void
+vzero(float *v)
+{
+    v[0] = 0.0;
+    v[1] = 0.0;
+    v[2] = 0.0;
+}
+
+void
+vset(float *v, float x, float y, float z)
+{
+    v[0] = x;
+    v[1] = y;
+    v[2] = z;
+}
+
+void
+vsub(const float *src1, const float *src2, float *dst)
+{
+    dst[0] = src1[0] - src2[0];
+    dst[1] = src1[1] - src2[1];
+    dst[2] = src1[2] - src2[2];
+}
+
+void
+vcopy(const float *v1, float *v2)
+{
+    register int i;
+    for (i = 0 ; i < 3 ; i++)
+        v2[i] = v1[i];
+}
+
+void
+vcross(const float *v1, const float *v2, float *cross)
+{
+    float temp[3];
+
+    temp[0] = (v1[1] * v2[2]) - (v1[2] * v2[1]);
+    temp[1] = (v1[2] * v2[0]) - (v1[0] * v2[2]);
+    temp[2] = (v1[0] * v2[1]) - (v1[1] * v2[0]);
+    vcopy(temp, cross);
+}
+
+float
+vlength(const float *v)
+{
+    return (float) sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+}
+
+void
+vscale(float *v, float div)
+{
+    v[0] *= div;
+    v[1] *= div;
+    v[2] *= div;
+}
+
+void
+vnormal(float *v)
+{
+    vscale(v, 1.0f/vlength(v));
+}
+
+float
+vdot(const float *v1, const float *v2)
+{
+    return v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
+}
+
+void
+vadd(const float *src1, const float *src2, float *dst)
+{
+    dst[0] = src1[0] + src2[0];
+    dst[1] = src1[1] + src2[1];
+    dst[2] = src1[2] + src2[2];
+}
+
+/*
+ *  Given an axis and angle, compute quaternion.
+ */
+void
+axis_to_quat(float a[3], float phi, float q[4])
+{
+    vnormal(a);
+    vcopy(a, q);
+    vscale(q, (float) sin(phi/2.0));
+    q[3] = (float) cos(phi/2.0);
+}
+
+/*
+ * Ok, simulate a track-ball.  Project the points onto the virtual
+ * trackball, then figure out the axis of rotation, which is the cross
+ * product of P1 P2 and O P1 (O is the center of the ball, 0,0,0)
+ * Note:  This is a deformed trackball-- is a trackball in the center,
+ * but is deformed into a hyperbolic sheet of rotation away from the
+ * center.  This particular function was chosen after trying out
+ * several variations.
+ *
+ * It is assumed that the arguments to this routine are in the range
+ * (-1.0 ... 1.0)
+ */
+void
+trackball(float q[4], float p1x, float p1y, float p2x, float p2y)
+{
+    float a[3]; /* Axis of rotation */
+    float phi;  /* how much to rotate about axis */
+    float p1[3], p2[3], d[3];
+    float t;
+
+    if (p1x == p2x && p1y == p2y) {
+        /* Zero rotation */
+        vzero(q);
+        q[3] = 1.0;
+        return;
+    }
+
+    /*
+     * First, figure out z-coordinates for projection of P1 and P2 to
+     * deformed sphere
+     */
+    vset(p1, p1x, p1y, tb_project_to_sphere(TRACKBALLSIZE, p1x, p1y));
+    vset(p2, p2x, p2y, tb_project_to_sphere(TRACKBALLSIZE, p2x, p2y));
+
+    /*
+     *  Now, we want the cross product of P1 and P2
+     */
+    vcross(p2,p1,a);
+
+    /*
+     *  Figure out how much to rotate around that axis.
+     */
+    vsub(p1, p2, d);
+    t = vlength(d) / (2.0f*TRACKBALLSIZE);
+
+    /*
+     * Avoid problems with out-of-control values...
+     */
+    if (t > 1.0) t = 1.0;
+    if (t < -1.0) t = -1.0;
+    phi = 2.0f * (float) asin(t);
+
+    axis_to_quat(a,phi,q);
+}
+
+
+/*
+ * Project an x,y pair onto a sphere of radius r OR a hyperbolic sheet
+ * if we are away from the center of the sphere.
+ */
+static float
+tb_project_to_sphere(float r, float x, float y)
+{
+    float d, t, z;
+
+    d = (float) sqrt(x*x + y*y);
+    if (d < r * 0.70710678118654752440) {    /* Inside sphere */
+        z = (float) sqrt(r*r - d*d);
+    } else {           /* On hyperbola */
+        t = r / 1.41421356237309504880f;
+        z = t*t / d;
+    }
+    return z;
+}
+
+/*
+ * Given two rotations, e1 and e2, expressed as quaternion rotations,
+ * figure out the equivalent single rotation and stuff it into dest.
+ *
+ * This routine also normalizes the result every RENORMCOUNT times it is
+ * called, to keep error from creeping in.
+ *
+ * NOTE: This routine is written so that q1 or q2 may be the same
+ * as dest (or each other).
+ */
+
+#define RENORMCOUNT 97
+
+void
+add_quats(float q1[4], float q2[4], float dest[4])
+{
+    static int count=0;
+    float t1[4], t2[4], t3[4];
+    float tf[4];
+
+    vcopy(q1,t1);
+    vscale(t1,q2[3]);
+
+    vcopy(q2,t2);
+    vscale(t2,q1[3]);
+
+    vcross(q2,q1,t3);
+    vadd(t1,t2,tf);
+    vadd(t3,tf,tf);
+    tf[3] = q1[3] * q2[3] - vdot(q1,q2);
+
+    dest[0] = tf[0];
+    dest[1] = tf[1];
+    dest[2] = tf[2];
+    dest[3] = tf[3];
+
+    if (++count > RENORMCOUNT) {
+        count = 0;
+        normalize_quat(dest);
+    }
+}
+
+/*
+ * Quaternions always obey:  a^2 + b^2 + c^2 + d^2 = 1.0
+ * If they don't add up to 1.0, dividing by their magnitued will
+ * renormalize them.
+ *
+ * Note: See the following for more information on quaternions:
+ *
+ * - Shoemake, K., Animating rotation with quaternion curves, Computer
+ *   Graphics 19, No 3 (Proc. SIGGRAPH'85), 245-254, 1985.
+ * - Pletinckx, D., Quaternion calculus as a basic tool in computer
+ *   graphics, The Visual Computer 5, 2-13, 1989.
+ */
+static void
+normalize_quat(float q[4])
+{
+    int i;
+    float mag;
+
+    mag = (q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3]);
+    for (i = 0; i < 4; i++) q[i] /= mag;
+}
+
+/*
+ * Build a rotation matrix, given a quaternion rotation.
+ *
+ */
+void
+build_rotmatrix(float m[4][4], float q[4])
+{
+    m[0][0] = 1.0f - 2.0f * (q[1] * q[1] + q[2] * q[2]);
+    m[0][1] = 2.0f * (q[0] * q[1] - q[2] * q[3]);
+    m[0][2] = 2.0f * (q[2] * q[0] + q[1] * q[3]);
+    m[0][3] = 0.0f;
+
+    m[1][0] = 2.0f * (q[0] * q[1] + q[2] * q[3]);
+    m[1][1]= 1.0f - 2.0f * (q[2] * q[2] + q[0] * q[0]);
+    m[1][2] = 2.0f * (q[1] * q[2] - q[0] * q[3]);
+    m[1][3] = 0.0f;
+
+    m[2][0] = 2.0f * (q[2] * q[0] - q[1] * q[3]);
+    m[2][1] = 2.0f * (q[1] * q[2] + q[0] * q[3]);
+    m[2][2] = 1.0f - 2.0f * (q[1] * q[1] + q[0] * q[0]);
+    m[2][3] = 0.0f;
+
+    m[3][0] = 0.0f;
+    m[3][1] = 0.0f;
+    m[3][2] = 0.0f;
+    m[3][3] = 1.0f;
+}
+
+
 class GLMaterial {
 public:
   float ambient[4];
@@ -19,18 +345,9 @@ QMap<QString,GLMaterial> material_dictionary;
   
 
 GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent) {
-  object = 0;
-  xRot = 0;
-  yRot = 0;
-  zRot = 0;
-  
-  trolltechGreen = QColor::fromCmykF(0.40, 0.0, 1.0, 0.0);
-  trolltechPurple = QColor::fromCmykF(0.39, 0.39, 0.0, 0.0);
 }
 
 GLWidget::~GLWidget()  {
-  makeCurrent();
-  glDeleteLists(object, 1);
 }
 
 QSize GLWidget::minimumSizeHint() const {
@@ -41,46 +358,18 @@ QSize GLWidget::sizeHint() const {
   return QSize(400, 400);
 }
 
-void GLWidget::setXRotation(int angle) {
-  normalizeAngle(&angle);
-  if (angle != xRot) {
-    xRot = angle;
-    emit xRotationChanged(angle);
-    updateGL();
-  }
-}
-
-void GLWidget::setYRotation(int angle) {
-  normalizeAngle(&angle);
-  if (angle != yRot) {
-    yRot = angle;
-    emit yRotationChanged(angle);
-    updateGL();
-  }
-}
-
-void GLWidget::setZRotation(int angle) {
-  normalizeAngle(&angle);
-  if (angle != zRot) {
-    zRot = angle;
-    emit zRotationChanged(angle);
-    updateGL();
-  }
-}
-
 GLfloat LightAmbient[] = {0,0,0,1};
 GLfloat LightDiffuse[] = {1,1,1,1};
 GLfloat LightSpecular[] = {1,1,1,1};
 GLfloat LightPosition[] = {2,2,0,1};
 
 void GLWidget::initializeGL() {
-  //  qglClearColor(trolltechPurple.dark());
   qglClearColor(Qt::black);
-  object = makeObject();
   glShadeModel(GL_SMOOTH);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_LIGHTING);
   //  glEnable(GL_CULL_FACE);
+  trackball(curquat, 0, 0, 0, 0);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glLightfv(GL_LIGHT1, GL_AMBIENT, LightAmbient);
@@ -89,8 +378,6 @@ void GLWidget::initializeGL() {
   glLightfv(GL_LIGHT1, GL_POSITION, LightPosition);
   glEnable(GL_LIGHT1);
 }
-
-
 
 void getNormal(double p1[3], double p2[3], double p3[3], double pn[3]) {
   double a[3];
@@ -113,10 +400,10 @@ void getNormal(double p1[3], double p2[3], double p3[3], double pn[3]) {
 void GLWidget::paintGL() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
+  GLfloat m[4][4];
+  build_rotmatrix(m,curquat);
   glTranslated(0.0, 0.0, -10.0);
-  glRotated(xRot / 16.0, 1.0, 0.0, 0.0);
-  glRotated(yRot / 16.0, 0.0, 1.0, 0.0);
-  glRotated(zRot / 16.0, 0.0, 0.0, 1.0);
+  glMultMatrixf(&m[0][0]);
   glBegin(GL_TRIANGLES);
   double p1[3];
   double p2[3];
@@ -146,117 +433,33 @@ void GLWidget::paintGL() {
 
 }
 
- void GLWidget::resizeGL(int width, int height) {
-   int side = qMin(width, height);
-   glViewport((width - side) / 2, (height - side) / 2, side, side);
-   
-   glMatrixMode(GL_PROJECTION);
-   glLoadIdentity();
-   glOrtho(-0.5, +0.5, +0.5, -0.5, 4.0, 15.0);
-   glMatrixMode(GL_MODELVIEW);
- }
-
- void GLWidget::mousePressEvent(QMouseEvent *event) {
-   lastPos = event->pos();
- }
-
-void GLWidget::mouseMoveEvent(QMouseEvent *event) {
-  int dx = event->x() - lastPos.x();
-  int dy = event->y() - lastPos.y();
+void GLWidget::resizeGL(int width, int height) {
+  W = width;
+  H = height;
+  int side = qMin(width, height);
+  glViewport((width - side) / 2, (height - side) / 2, side, side);
   
-  if (event->buttons() & Qt::LeftButton) {
-    setXRotation(xRot + 8 * dy);
-    setYRotation(yRot + 8 * dx);
-  } else if (event->buttons() & Qt::RightButton) {
-    setXRotation(xRot + 8 * dy);
-    setZRotation(zRot + 8 * dx);
-  }
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glOrtho(-0.5, +0.5, +0.5, -0.5, 4.0, 15.0);
+  glMatrixMode(GL_MODELVIEW);
+}
+
+void GLWidget::mousePressEvent(QMouseEvent *event) {
   lastPos = event->pos();
 }
 
-GLuint GLWidget::makeObject() {
-  GLuint list = glGenLists(1);
-  glNewList(list, GL_COMPILE);
+void GLWidget::mouseMoveEvent(QMouseEvent *event) {
+  trackball(lastquat,
+	    (2.0*lastPos.x() - W)/W,
+	    (2.0*lastPos.y() - H)/H,
+	    (2.0*event->x() - W)/W,
+	    (2.0*event->y() - H)/H);
   
-  glBegin(GL_QUADS);
+  add_quats(lastquat, curquat, curquat);
+  updateGL();
   
-  GLdouble x1 = +0.06;
-  GLdouble y1 = -0.14;
-  GLdouble x2 = +0.14;
-  GLdouble y2 = -0.06;
-  GLdouble x3 = +0.08;
-  GLdouble y3 = +0.00;
-  GLdouble x4 = +0.30;
-  GLdouble y4 = +0.22;
-  
-  quad(x1, y1, x2, y2, y2, x2, y1, x1);
-  quad(x3, y3, x4, y4, y4, x4, y3, x3);
-  
-  extrude(x1, y1, x2, y2);
-  extrude(x2, y2, y2, x2);
-  extrude(y2, x2, y1, x1);
-  extrude(y1, x1, x1, y1);
-  extrude(x3, y3, x4, y4);
-  extrude(x4, y4, y4, x4);
-  extrude(y4, x4, y3, x3);
-  
-  const double Pi = 3.14159265358979323846;
-  const int NumSectors = 200;
-  
-  for (int i = 0; i < NumSectors; ++i) {
-    double angle1 = (i * 2 * Pi) / NumSectors;
-    GLdouble x5 = 0.30 * sin(angle1);
-    GLdouble y5 = 0.30 * cos(angle1);
-    GLdouble x6 = 0.20 * sin(angle1);
-    GLdouble y6 = 0.20 * cos(angle1);
-    
-    double angle2 = ((i + 1) * 2 * Pi) / NumSectors;
-    GLdouble x7 = 0.20 * sin(angle2);
-    GLdouble y7 = 0.20 * cos(angle2);
-    GLdouble x8 = 0.30 * sin(angle2);
-    GLdouble y8 = 0.30 * cos(angle2);
-    
-    quad(x5, y5, x6, y6, x7, y7, x8, y8);
-    
-    extrude(x6, y6, x7, y7);
-    extrude(x8, y8, x5, y5);
-  }
-  
-  glEnd();
-  
-  glEndList();
-  return list;
-}
-
-void GLWidget::quad(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2,
-		    GLdouble x3, GLdouble y3, GLdouble x4, GLdouble y4) {
-  qglColor(trolltechGreen);
-  
-  glVertex3d(x1, y1, -0.05);
-  glVertex3d(x2, y2, -0.05);
-  glVertex3d(x3, y3, -0.05);
-  glVertex3d(x4, y4, -0.05);
-  
-  glVertex3d(x4, y4, +0.05);
-  glVertex3d(x3, y3, +0.05);
-  glVertex3d(x2, y2, +0.05);
-  glVertex3d(x1, y1, +0.05);
-}
-
- void GLWidget::extrude(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2) {
-   qglColor(trolltechGreen.dark(250 + int(100 * x1)));
-   
-   glVertex3d(x1, y1, +0.05);
-   glVertex3d(x2, y2, +0.05);
-   glVertex3d(x2, y2, -0.05);
-   glVertex3d(x1, y1, -0.05);
- }
-
-void GLWidget::normalizeAngle(int *angle) {
-  while (*angle < 0)
-    *angle += 360 * 16;
-  while (*angle > 360 * 16)
-    *angle -= 360 * 16;
+  lastPos = event->pos();
 }
 
 HandleList<GLWidget*> glHandles;
