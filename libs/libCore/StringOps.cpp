@@ -28,11 +28,12 @@
 #include <pcre.h>
 #endif
 #include <QtCore>
+#include <QChar>
+#include <QString>
 #include "Printf.hpp"
 #include "Algorithms.hpp"
 #include "Utils.hpp"
 #include "IEEEFP.hpp"
-#include <QChar>
 
 static int flagChar(char c) {
   return ((c == '#') ||  (c == '0') || (c == '-') ||  
@@ -1760,9 +1761,11 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 
 							  QByteArray r;
 							  char t;
-							  while (fp->getChar(&t) && !isspace(t))
+							  while (fp->getChar(&t) && !isspace(t)){
 								  r.push_back(t);
-							  fp->ungetChar(t);
+								  ++nCharRead; ++nRead;
+							  }
+							  //fp->ungetChar(t);
 							  values.push_back(Array(QTextCodec::codecForLocale()->
 								  toUnicode(r)));
 							  break;
@@ -1791,20 +1794,23 @@ exit:
 	}
 
 	if( !stringarg ){ //At least one of the read values was numerical. Convert strings to numbers.
-		ret.push_front( Array( nVecElem ) );
-		double *data = (double*) ret[0].getVoidPointer();
+		Array out( nVecElem );
+		
+		//double *data = (double*) ret[0].getVoidPointer();
+		int ind = 1;
 
 		for( int i=0; i<values.size(); i++ ){
 			if( values[i].isString() ){
-				const char* strdata = (const char*) values[i].getConstVoidPointer();
-				for( int j=0; j < values[i].length(); j++ ){
-					*(data++) = strdata[j];
-				}
+			    QString str( values[i].asString() );
+			    for( int j=0; j < str.length(); j++ ){
+				    out.set(ind++, Array(QChar(str[j])));
+			    }
 			}
 			else{
-				*(data++) = values[i].asDouble();
+				out.set(ind++, values[i]);
 			}
 		}
+		ret.push_front( out );
 	}
 	else{ //all string input
 		QString outstring;
