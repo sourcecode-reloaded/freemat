@@ -1663,123 +1663,127 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 
 	// Scan the string
 	ArrayVector values;
-	while( !fp->atEnd() && ( nMaxRead < 0 || nRead < nMaxRead ) ){
-		if ( !(*dp) ) //rewind the format
-			dp = &buff[0];
-		np = dp;
-		while ((*dp) && (*dp != '%')) dp++;
-		// Print out the formatless segment
-		sv = *dp;
-		*dp = 0;
-		for (int i=0;i<strlen(np);i++) 
-			fp->getChar(&dum);
+	try{
+	    while( !fp->atEnd() && ( nMaxRead < 0 || nRead < nMaxRead ) ){
+		    if ( !(*dp) ) //rewind the format
+			    dp = &buff[0];
+		    np = dp;
+		    while ((*dp) && (*dp != '%')) dp++;
+		    // Print out the formatless segment
+		    sv = *dp;
+		    *dp = 0;
+		    for (int i=0;i<strlen(np);i++) 
+			    fp->getChar(&dum);
 
-		if (fp->atEnd())
-			values.push_back(Array(Double));
-		*dp = sv;
-		// Process the format spec
-		if (*dp) {
-			np = validateScanFormatSpec(dp+1);
-			if (!np)
-				throw Exception("erroneous format specification " + QString(dp));
-			else {
-				if (*(np-1) == '%') {
-					fp->getChar(&dum);
-					dp+=2;
-				} else {
-					shortarg = false;
-					doublearg = false;
-					if (*(np-1) == 'h') {
-						shortarg = true;
-						np++;
-					} else if (*(np-1) == 'l') {
-						doublearg = true;
-						np++;
-					} 
-					sv = *np;
-					*np = 0;
-					switch (*(np-1)) {
-					  case 'd':
-					  case 'i':
-						  if (fp->atEnd())
-							  values.push_back(Array::scalarConstructor(Double));
-						  else {
-							  values.push_back(Array(QFileReadInteger(fp,0)));
-							  stringarg = false; ++nNumRead; ++nRead;
-						  }
-						  break;
-					  case 'o':
-						  if (fp->atEnd())
-							  values.push_back(Array::scalarConstructor(Double));
-						  else {
-							  values.push_back(Array(QFileReadInteger(fp,8)));
-							  stringarg = false; ++nNumRead; ++nRead;
-						  }
-						  break;
-					  case 'u':
-						  if (fp->atEnd())
-							  values.push_back(Array::scalarConstructor(Double));
-						  else {
-							  values.push_back(Array(QFileReadInteger(fp,10)));
-							  stringarg = false; ++nNumRead; ++nRead;
-						  }
-						  break;
-					  case 'x':
-					  case 'X':
-						  if (fp->atEnd())
-							  values.push_back(Array::scalarConstructor(Double));
-						  else {
-							  values.push_back(Array(QFileReadInteger(fp,16)));
-							  stringarg = false; ++nNumRead; ++nRead;
-						  }
-						  break;
-					  case 'c':
-						  if (fp->atEnd())
-							  values.push_back(Array::scalarConstructor(Double));
-						  else {
-							  values.push_back(Array(QFileReadInteger(fp,10)));
-							  stringarg = false; ++nNumRead; ++nRead;
-						  }
-						  break;
-					  case 'e':
-					  case 'E':
-					  case 'f':
-					  case 'F':
-					  case 'g':
-					  case 'G':
-						  if (fp->atEnd())
-							  values.push_back(Array::scalarConstructor(Double));
-						  else {
-							  values.push_back(Array(QFileReadFloat(fp)));
-							  stringarg = false; ++nNumRead; ++nRead;
-						  }
-						  break;
-					  case 's':
-						  if (fp->atEnd())
-							  values.push_back(Array::scalarConstructor(Double));
-						  else {
+		    if (fp->atEnd())
+			    values.push_back(Array(Double));
+		    *dp = sv;
+    		
+		    // Process the format spec
+		    if (*dp) {
+			    np = validateScanFormatSpec(dp+1);
+			    if (!np)
+				    throw Exception("erroneous format specification " + QString(dp));
+			    else {
+				    if (*(np-1) == '%') {
+					    fp->getChar(&dum);
+					    dp+=2;
+				    } else {
+					    shortarg = false;
+					    doublearg = false;
+					    if (*(np-1) == 'h') {
+						    shortarg = true;
+						    np++;
+					    } else if (*(np-1) == 'l') {
+						    doublearg = true;
+						    np++;
+					    } 
+					    sv = *np;
+					    *np = 0;
+					    switch (*(np-1)) {
+					      case 'd':
+					      case 'i':
+						      if (fp->atEnd())
+							      values.push_back(Array::scalarConstructor(Double));
+						      else {
+							      values.push_back(Array(QFileReadInteger(fp,0)));
+							      stringarg = false; ++nNumRead; ++nRead;
+						      }
+						      break;
+					      case 'o':
+						      if (fp->atEnd())
+							      values.push_back(Array::scalarConstructor(Double));
+						      else {
+							      values.push_back(Array(QFileReadInteger(fp,8)));
+							      stringarg = false; ++nNumRead; ++nRead;
+						      }
+						      break;
+					      case 'u':
+						      if (fp->atEnd())
+							      values.push_back(Array::scalarConstructor(Double));
+						      else {
+							      values.push_back(Array(QFileReadInteger(fp,10)));
+							      stringarg = false; ++nNumRead; ++nRead;
+						      }
+						      break;
+					      case 'x':
+					      case 'X':
+						      if (fp->atEnd())
+							      values.push_back(Array::scalarConstructor(Double));
+						      else {
+							      values.push_back(Array(QFileReadInteger(fp,16)));
+							      stringarg = false; ++nNumRead; ++nRead;
+						      }
+						      break;
+					      case 'c':
+						      if (fp->atEnd())
+							      values.push_back(Array::scalarConstructor(Double));
+						      else {
+							      values.push_back(Array(QFileReadInteger(fp,10)));
+							      stringarg = false; ++nNumRead; ++nRead;
+						      }
+						      break;
+					      case 'e':
+					      case 'E':
+					      case 'f':
+					      case 'F':
+					      case 'g':
+					      case 'G':
+						      if (fp->atEnd())
+							      values.push_back(Array::scalarConstructor(Double));
+						      else {
+							      values.push_back(Array(QFileReadFloat(fp)));
+							      stringarg = false; ++nNumRead; ++nRead;
+						      }
+						      break;
+					      case 's':
+						      if (fp->atEnd())
+							      values.push_back(Array::scalarConstructor(Double));
+						      else {
 
-							  QByteArray r;
-							  char t;
-							  while (fp->getChar(&t) && !isspace(t)){
-								  r.push_back(t);
-								  ++nCharRead; ++nRead;
-							  }
-							  //fp->ungetChar(t);
-							  values.push_back(Array(QTextCodec::codecForLocale()->
-								  toUnicode(r)));
-							  break;
-						  }
-					  default:
-						  errormsg = Array(QString("illegal format"));
-						  goto exit;
-					}
-					*np = sv;
-					dp = np;
-				}
-			}
-		}
+							      QByteArray r;
+							      char t;
+							      while (fp->getChar(&t) && !isspace(t)){
+								      r.push_back(t);
+								      ++nCharRead; ++nRead;
+							      }
+							      //fp->ungetChar(t);
+							      values.push_back(Array(QTextCodec::codecForLocale()->
+								      toUnicode(r)));
+							      break;
+						      }
+					      default:
+						      errormsg = Array(QString("illegal format"));
+						      goto exit;
+					    }
+					    *np = sv;
+					    dp = np;
+				    }
+			    }
+		    }
+	    }
 	}
+	catch( Exception &e ){}
 exit:
 	ArrayVector ret; 
 	ret.push_front( Array( static_cast<double>(fp->pos()) ) );

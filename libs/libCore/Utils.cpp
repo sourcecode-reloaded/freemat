@@ -200,7 +200,8 @@ double QFileReadInteger(QFile *fp, int base) {
     } else if (ch == '-' || ch == '+' || isdigit(ch)) {
       base = 10;
     } else {
-      fp->ungetChar(ch);
+      //fp->ungetChar(ch);
+      throw Exception("Scanf can't interpret numerical value");
       return 0;
     }
     fp->ungetChar(ch);
@@ -324,8 +325,11 @@ double QFileReadInteger(QFile *fp, int base) {
     break;
   }
   default:
-    // Unsupported integerBase
-    return 0;
+      {
+	// Unsupported integerBase
+	throw Exception("Scanf can't interpret numerical value");
+	return 0;
+      }
   }
   return val;
 }
