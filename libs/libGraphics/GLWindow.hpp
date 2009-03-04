@@ -3,22 +3,12 @@
 
 #include <QGLWidget>
 
-class GLObject {
-public:
-  QString name;
-  //  QString type;
-  QString material;
-  //  float transform[4][4];
-  QVector<double> points;
-  //  QVector<GLObject> parts;
-};
-
 class GLWidget : public QGLWidget
 {
   Q_OBJECT
 
 public:
-  QMap<QString,GLObject> map;
+  QString name;
 
   GLWidget(QWidget *parent = 0);
   ~GLWidget();
@@ -29,6 +19,8 @@ public:
 protected:
   void initializeGL();
   void paintGL();
+  void paintAssembly(QString aname);
+  void paintNode(QString aname);
   void resizeGL(int width, int height);
   void mousePressEvent(QMouseEvent *event);
   void mouseMoveEvent(QMouseEvent *event);

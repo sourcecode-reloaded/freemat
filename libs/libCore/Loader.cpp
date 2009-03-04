@@ -286,8 +286,10 @@ ArrayVector HPointFunction(int, const ArrayVector&);
 ArrayVector HTextBitmapFunction(int, const ArrayVector&);
 ArrayVector HRawPlotFunction(int, const ArrayVector&);
 ArrayVector GLNewWinFunction(int, const ArrayVector&);
-ArrayVector GLAddTriMeshFunction(int, const ArrayVector&);
 ArrayVector GLDefMaterialFunction(int, const ArrayVector&);
+ArrayVector GLAssemblyFunction(int, const ArrayVector&);
+ArrayVector GLNodeFunction(int, const ArrayVector&);
+ArrayVector GLShowFunction(int, const ArrayVector&);
 ArrayVector HIs2DViewFunction(int, const ArrayVector&);
 ArrayVector EditorFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector EditFunction(int, const ArrayVector&, Interpreter*);
@@ -609,11 +611,13 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
    if (guiflag)
      context->addGfxFunction("hrawplot",HRawPlotFunction,4,0,"filename","width","height","commands",NULL);
    if (guiflag)
-     context->addGfxFunction("glnewwin",GLNewWinFunction,0,1,NULL);
-   if (guiflag)
-     context->addGfxFunction("gladdtrimesh",GLAddTriMeshFunction,4,0,"winhandle","name","color","pointset",NULL);
-   if (guiflag)
      context->addGfxFunction("gldefmaterial",GLDefMaterialFunction,5,0,"name","ambient","diffuse","specular","shininess",NULL);
+   if (guiflag)
+     context->addGfxFunction("glassembly",GLAssemblyFunction,-1,0,NULL);
+   if (guiflag)
+     context->addGfxFunction("glnode",GLNodeFunction,3,0,"name","material","pointset",NULL);
+   if (guiflag)
+     context->addGfxFunction("glshow",GLShowFunction,1,0,"name",NULL);
    if (guiflag)
      context->addGfxFunction("is2dview",HIs2DViewFunction,1,1,"handle",NULL);
    if (guiflag)

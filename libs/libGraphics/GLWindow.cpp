@@ -7,6 +7,29 @@
 #include "Array.hpp"
 #include "HandleList.hpp"
 
+class GLNode {
+public:
+  QString material;
+  QVector<double> points;
+};
+
+class GLAssembly {
+public:
+  QMap<QString,Array> parts;
+};
+
+class GLMaterial {
+public:
+  float ambient[4];
+  float diffuse[4];
+  float specular[4];
+  float shininess;
+};
+
+QMap<QString,GLMaterial> material_dictionary;
+QMap<QString,GLAssembly> assemblymap;
+QMap<QString,GLNode> nodemap;
+
 /*
  * (c) Copyright 1993, 1994, Silicon Graphics, Inc.
  * ALL RIGHTS RESERVED
@@ -333,15 +356,6 @@ build_rotmatrix(float m[4][4], float q[4])
 }
 
 
-class GLMaterial {
-public:
-  float ambient[4];
-  float diffuse[4];
-  float specular[4];
-  float shininess;
-};
-
-QMap<QString,GLMaterial> material_dictionary;
   
 
 GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent) {
@@ -397,6 +411,55 @@ void getNormal(double p1[3], double p2[3], double p3[3], double pn[3]) {
   }
 }
 
+void GLWidget::paintAssembly(QString aname) {
+  // Render this assembly
+  GLAssembly &asy(assemblymap[aname]);
+  QMapIterator<QString,Array> i(asy.parts);
+  while (i.hasNext()) {
+    i.next();
+    GLfloat m[4][4];
+    Array transform = i.value();
+    for (int j=0;j<4;j++) {
+      for (int k=0;k<4;k++) {
+	m[j][k] = float(transform.get(NTuple(j+1,k+1)).asDouble());
+      }
+    }
+    glPushMatrix();
+    glMultMatrixf(&m[0][0]);
+    if (nodemap.contains(i.key()))
+      paintNode(i.key());
+    else
+      paintAssembly(i.key());
+    glPopMatrix();
+  }
+}
+
+void GLWidget::paintNode(QString aname) {
+  GLNode &node(nodemap[aname]);
+  double p1[3];
+  double p2[3];
+  double p3[3];
+  double pn[3];
+  
+  glBegin(GL_TRIANGLES);
+  GLMaterial mat = material_dictionary.value(node.material);
+  glMaterialfv(GL_FRONT, GL_AMBIENT, mat.ambient);
+  glMaterialfv(GL_FRONT, GL_DIFFUSE, mat.diffuse);
+  glMaterialfv(GL_FRONT, GL_SPECULAR, mat.specular);
+  glMaterialf(GL_FRONT, GL_SHININESS, mat.shininess*128.0);
+  for (int i=0;i<node.points.size();i+=9) {
+    p1[0] = node.points[i]; p1[1] = node.points[i+1]; p1[2] = node.points[i+2];
+    p2[0] = node.points[i+3]; p2[1] = node.points[i+4]; p2[2] = node.points[i+5];
+    p3[0] = node.points[i+6]; p3[1] = node.points[i+7]; p3[2] = node.points[i+8];
+    getNormal(p1,p2,p3,pn);
+    glNormal3d(pn[0],pn[1],pn[2]);
+    glVertex3d(p1[0],p1[1],p1[2]);
+    glVertex3d(p2[0],p2[1],p2[2]);
+    glVertex3d(p3[0],p3[1],p3[2]);
+  }
+  glEnd();
+}
+
 void GLWidget::paintGL() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
@@ -404,33 +467,7 @@ void GLWidget::paintGL() {
   build_rotmatrix(m,curquat);
   glTranslated(0.0, 0.0, -10.0);
   glMultMatrixf(&m[0][0]);
-  glBegin(GL_TRIANGLES);
-  double p1[3];
-  double p2[3];
-  double p3[3];
-  double pn[3];
-  QMapIterator<QString,GLObject> i(map);
-  while (i.hasNext()) {
-    i.next();
-    GLObject obj(i.value());
-    GLMaterial mat = material_dictionary.value(obj.material);
-    glMaterialfv(GL_FRONT, GL_AMBIENT, mat.ambient);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat.diffuse);
-    glMaterialfv(GL_FRONT, GL_SPECULAR, mat.specular);
-    glMaterialf(GL_FRONT, GL_SHININESS, mat.shininess*128.0);
-    for (int i=0;i<obj.points.size();i+=9) {
-      p1[0] = obj.points[i]; p1[1] = obj.points[i+1]; p1[2] = obj.points[i+2];
-      p2[0] = obj.points[i+3]; p2[1] = obj.points[i+4]; p2[2] = obj.points[i+5];
-      p3[0] = obj.points[i+6]; p3[1] = obj.points[i+7]; p3[2] = obj.points[i+8];
-      getNormal(p1,p2,p3,pn);
-      glNormal3d(pn[0],pn[1],pn[2]);
-      glVertex3d(p1[0],p1[1],p1[2]);
-      glVertex3d(p2[0],p2[1],p2[2]);
-      glVertex3d(p3[0],p3[1],p3[2]);
-    }
-  }
-  glEnd();
-
+  paintAssembly(name);
 }
 
 void GLWidget::resizeGL(int width, int height) {
@@ -465,30 +502,8 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event) {
 HandleList<GLWidget*> glHandles;
 
 //!
-//@Module GLNEWWIN Open a New GL Window
-//@@Section HANDLE
-//@@Usage
-//Create a new GL window.  The syntax for its use is
-//@[
-//  handle = glnewwin
-//@]
-//@@Signature
-//gfunction glnewwin GLNewWinFunction
-//input none
-//output handle
-//!
-ArrayVector GLNewWinFunction(int nargout, const ArrayVector& arg) {
-  GLWidget *t  = new GLWidget;
-  t->setWindowIcon(QPixmap(":/images/freemat_small_mod_64.png"));
-  unsigned int rethan = glHandles.assignHandle(t);
-  t->setWindowTitle(QString("GL Figure %1").arg(rethan));
-  t->show();
-  return ArrayVector(Array(double(rethan)));
-}
-
-//!
 //@Module GLDEFMATERIAL Defines a GL Material
-//@@Section HANDLE
+//@@Section GLWIN
 //@@Usage
 //Define a material.  The syntax for its use is
 //@[
@@ -530,32 +545,91 @@ ArrayVector GLDefMaterialFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector();
 }
 
+//!
+//@Module GLASSEMBLY Create a GL Assembly
+//@@Section GLWIN
+//@@Usage
+//Define a GL Assembly.  A GL Assembly consists of one or more
+//GL Nodes or GL Assemblies that are placed relative to the 
+//coordinate system of the assembly.  For example, if we have
+//@|glnode| definitions for @|'bread'| and @|'cheese'|, then
+//a @|glassembly| of sandwich would consist of placements of
+//two @|'bread'| nodes with a @|'cheese'| node in between.
+//Furthermore, a @|'lunch'| assembly could consist of a @|'sandwich'|
+//a @|'chips'| and @|'soda'|.  Hopefully, you get the idea.  The
+//syntax for the @|glassembly| command is
+//@[
+//   glassembly(name,part1,transform1,part2,transform2,...)
+//@]
+//where @|part1| is the name of the first part, and could be
+//either a @|glnode| or itself be another @|glassembly|.  
+//Here @|transform1| is the @|4 x 4 matrix| that transforms
+//the part into the local reference coordinate system.
+//
+//WARNING!! Currently FreeMat does not detect or gracefully handle 
+//self-referential assemblies (i.e, if you try to make a @|sandwich| 
+//contain a @|sandwich|, which you can do by devious methods that I 
+//refuse to explain).  Do not do this!  You have been warned.
+//!
+//@@Signature
+//gfunction glassembly GLAssemblyFunction
+//inputs name varargin
+//outputs none
+//
+ArrayVector GLAssemblyFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() == 0) return ArrayVector();
+  QString name = arg[0].asString();
+  if (arg.size() % 2 == 0)
+    throw Exception("glassembly expects a name followed by object name and transform pairs");
+  GLAssembly assembly;
+  for (int i=1;i<arg.size();i++) {
+    QString objectname = arg[1].asString();
+    if (!assemblymap.contains(objectname) && !nodemap.contains(objectname))
+      throw Exception(QString("Object ") + objectname + " is not defined");
+    Array transform = arg[2].toClass(Double);
+    if ((transform.rows() != 4) || (transform.cols() != 4))
+      throw Exception("transforms must be 4 x 4 matrices");
+    assembly.parts[objectname] = transform;
+  }
+  assemblymap[name] = assembly;
+  return ArrayVector();
+}
 
 //!
-//@Module GLADDTRIMESH Add a Triangle Mesh to a GL Window
-//@@Section HANDLE
+//@Module GLNODE Create a GL Node
+//@@Section GLWIN
 //@@Usage
-//Add a triangle mesh to a GL Window.  The syntax for is
-//use is
+//Define a GL Node.  A GL Node is an object that can be displayed
+//in a GL Window.  It is defined by a triangular mesh of vertices.
+//It must also have a material that defines its appearance (i.e.
+//color, shininess, etc.).  The syntax for the @|glnode| command
+//is 
 //@[
-//  gladdtrimesh(winhandle,name,material,pointset)
+//  glnode(name,material,pointset)  
 //@]
+//where @|material| is the name of a material that has already been
+//defined with @|gldefmaterial|, @|pointset| is a @|3 x N| matrix
+//of points that define the geometry of the object.  Note that the points
+//are assumed to be connected in triangular facts, with the points
+//defined counter clock-wise as seen from the outside of the facet.
+//@|FreeMat| will compute the normals.  The @|name| argument must
+//be unique.  If you want multiple instances of a given @|glnode|
+//in your GLWindow, that is fine, as instances of a @|glnode| are
+//created through a @|glassembly|.  
 //@@Signature
-//gfunction gladdtrimesh GLAddTriMeshFunction
-//input winhandle name material pointset
+//gfunction glnode GLNodeFunction
+//input name material pointset
 //output none
 //!
-ArrayVector GLAddTriMeshFunction(int nargout, const ArrayVector& arg) {
-  if (arg.size() < 4) throw Exception("gladdtrimesh requires four arguments");
-  int winhandle = arg[0].asInteger();
-  GLWidget *t = glHandles.lookupHandle(winhandle);
-  QString name = arg[1].asString();
-  QString material = arg[2].asString();
-  Array pointset = arg[3].toClass(Double);
+ArrayVector GLNodeFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 3) throw Exception("glnode requires four arguments");
+  QString name = arg[0].asString();
+  QString material = arg[1].asString();
+  Array pointset = arg[2].toClass(Double);
   const BasicArray<double> &points_rp(pointset.constReal<double>());
   if (pointset.rows() != 3)
     throw Exception("pointset argument must be a 3 x N matrix");
-  GLObject p;
+  GLNode p;
   if (!material_dictionary.contains(material))
     throw Exception(QString("material '") + material + QString("' is not defined"));
   p.material = material;
@@ -564,6 +638,39 @@ ArrayVector GLAddTriMeshFunction(int nargout, const ArrayVector& arg) {
     p.points.push_back(points_rp[NTuple(2,i)]);
     p.points.push_back(points_rp[NTuple(3,i)]);
   }
-  t->map[name] = p;
+  nodemap[name] = p;
   return ArrayVector();
 }
+
+//!
+//@Module GLSHOW Show a GL Assembly in a GL Window
+//@@Section HANDLE
+//@@Usage
+//Shows a GL Assembly in a GL Window.  The syntax for its
+//use is
+//@[
+//  glshow(name,scale)
+//@]
+//which shows the @|glassembly| named @|name| in a new GL
+//window, with the scale set to @|scale|.  Roughly speaking
+//@|scale should represent the radial size of the object
+//that you want to see in the window.
+//@@Signature
+//gfunction glshow GLShow
+//input name
+//output none
+//!
+ArrayVector GLShowFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 1) return ArrayVector();
+  QString name = arg[0].asString();
+  if (!assemblymap.contains(name))
+    throw Exception(QString("Assembly named ") + name + " could not be found");
+  GLWidget *t = new GLWidget;
+  t->setWindowIcon(QPixmap(":/images/freemat_small_mod_64.png"));
+  t->setWindowTitle(QString("GL Assembly %1").arg(name));
+  t->name = name;
+  t->show();
+  return ArrayVector();
+}
+
+
