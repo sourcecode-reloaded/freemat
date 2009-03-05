@@ -13,9 +13,15 @@ public:
   QVector<double> points;
 };
 
+class GLPart {
+public:
+  QString name;
+  Array transform;
+};
+
 class GLAssembly {
 public:
-  QMap<QString,Array> parts;
+  QVector<GLPart> parts;
 };
 
 class GLMaterial {
@@ -382,6 +388,7 @@ void GLWidget::initializeGL() {
   glShadeModel(GL_SMOOTH);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_LIGHTING);
+  glEnable(GL_NORMALIZE);
   //  glEnable(GL_CULL_FACE);
   trackball(curquat, 0, 0, 0, 0);
   glEnable(GL_BLEND);
@@ -400,9 +407,9 @@ void getNormal(double p1[3], double p2[3], double p3[3], double pn[3]) {
     a[i] = p1[i] - p2[i];
     b[i] = p3[i] - p2[i];
   }
-  pn[0] = a[1] * b[2] - a[2] * b[1];
-  pn[1] = a[2] * b[0] - a[0] * b[2];
-  pn[2] = a[0] * b[1] - a[1] * b[0];
+  pn[0] = -(a[1] * b[2] - a[2] * b[1]);
+  pn[1] = -(a[2] * b[0] - a[0] * b[2]);
+  pn[2] = -(a[0] * b[1] - a[1] * b[0]);
   double len = sqrt(pn[0]*pn[0] + pn[1]*pn[1] + pn[2]*pn[2]);
   if (len) {
     pn[0] /= len;
@@ -412,29 +419,34 @@ void getNormal(double p1[3], double p2[3], double p3[3], double pn[3]) {
 }
 
 void GLWidget::paintAssembly(QString aname) {
+  qDebug() << "drawing assembly " << aname;
   // Render this assembly
   GLAssembly &asy(assemblymap[aname]);
-  QMapIterator<QString,Array> i(asy.parts);
-  while (i.hasNext()) {
-    i.next();
+  for (int i=0;i<asy.parts.size();i++) {
     GLfloat m[4][4];
-    Array transform = i.value();
+    const GLPart &t = asy.parts[i];
+    Array transform = t.transform;
     for (int j=0;j<4;j++) {
       for (int k=0;k<4;k++) {
 	m[j][k] = float(transform.get(NTuple(j+1,k+1)).asDouble());
       }
     }
+    qDebug() << m[0][0] << "," << m[0][1] << "," << m[0][2] << "," << m[0][3];
+    qDebug() << m[1][0] << "," << m[1][1] << "," << m[1][2] << "," << m[1][3];
+    qDebug() << m[2][0] << "," << m[2][1] << "," << m[2][2] << "," << m[2][3];
+    qDebug() << m[3][0] << "," << m[3][1] << "," << m[3][2] << "," << m[3][3];
     glPushMatrix();
     glMultMatrixf(&m[0][0]);
-    if (nodemap.contains(i.key()))
-      paintNode(i.key());
+    if (nodemap.contains(t.name))
+      paintNode(t.name);
     else
-      paintAssembly(i.key());
+      paintAssembly(t.name);
     glPopMatrix();
   }
 }
 
 void GLWidget::paintNode(QString aname) {
+  qDebug() << "drawing node " << aname;
   GLNode &node(nodemap[aname]);
   double p1[3];
   double p2[3];
@@ -582,14 +594,17 @@ ArrayVector GLAssemblyFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() % 2 == 0)
     throw Exception("glassembly expects a name followed by object name and transform pairs");
   GLAssembly assembly;
-  for (int i=1;i<arg.size();i++) {
-    QString objectname = arg[1].asString();
+  for (int i=1;i<arg.size();i+=2) {
+    QString objectname = arg[i].asString();
     if (!assemblymap.contains(objectname) && !nodemap.contains(objectname))
       throw Exception(QString("Object ") + objectname + " is not defined");
-    Array transform = arg[2].toClass(Double);
+    Array transform = arg[i+1].toClass(Double);
     if ((transform.rows() != 4) || (transform.cols() != 4))
       throw Exception("transforms must be 4 x 4 matrices");
-    assembly.parts[objectname] = transform;
+    GLPart part;
+    part.name = objectname;
+    part.transform = transform;
+    assembly.parts.push_back(part);
   }
   assemblymap[name] = assembly;
   return ArrayVector();
