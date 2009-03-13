@@ -1374,6 +1374,7 @@ void FMEditor::createActions() {
   helpOnSelectionAct->setShortcut(Qt::Key_F2);
   connect(helpOnSelectionAct,SIGNAL(triggered()),this,SLOT(helpOnSelection()));
   openSelectionAct = new QAction("Open Selection",this);
+  openSelectionAct->setShortcut(Qt::Key_D | Qt::CTRL);
   connect(openSelectionAct,SIGNAL(triggered()),this,SLOT(openSelection()));
   dbStepAct = new QAction(QIcon(":/images/dbgnext.png"),"&Step Over",this);
   dbStepAct->setShortcut(Qt::Key_F10); 
@@ -1514,6 +1515,7 @@ void FMEditor::createMenus() {
   fileMenu = menuBar()->addMenu("&File");
   fileMenu->addAction(newAct);
   fileMenu->addAction(openAct);
+  fileMenu->addAction(openSelectionAct);
   fileMenu->addAction(saveAct);
   fileMenu->addAction(saveAsAct);
   fileMenu->addAction(closeAct);
