@@ -265,18 +265,15 @@ ArrayVector EditFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
     // from the editor to the interpreter.  
     QObject::connect(edit, SIGNAL(EvaluateText(QString)),
         m_app->GetKeyManager(), SLOT(QueueMultiString(QString)));
-    edit->loadLastSession();
   }
-  else {
-    edit->loadLastSession();
-    //Load files listed in the command line
-    for (int i=0; i<arg.size(); ++i ) {
-      if (arg[i].isString()) {
-        QString fname = arg[i].asString();
-        edit->loadFile(fname);
-      } else {
-        throw Exception("Illegal file name");
-      }
+  edit->loadLastSession();
+  //Load files listed in the command line
+  for (int i=0; i<arg.size(); ++i ) {
+    if (arg[i].isString()) {
+      QString fname = arg[i].asString();
+      edit->loadFile(fname);
+    } else {
+      throw Exception("Illegal file name");
     }
   }
   edit->showNormal();

@@ -1930,7 +1930,12 @@ void FMEditor::closeTab() {
 }
 
 bool FMEditor::maybeSave() {
-  if (currentEditor()->document()->isModified()) {
+  QWidget *p = tab->currentWidget();
+  FMEditPane *te = qobject_cast<FMEditPane*>(p);
+  if (!te) { /* empty tab, no need to save */
+    return true;
+  }
+  else if (te->getEditor()->document()->isModified()) {
     raise();
     int ret = QMessageBox::warning(this, tr("FreeMat"),
 				   "The document " + shownName() + " has been modified.\n"
