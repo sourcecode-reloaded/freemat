@@ -103,6 +103,7 @@ void Highlighter::highlightBlock(const QString &text)
         NORMAL = -1,
         NORMAL_WITH_VAR,
         NORMAL_IN_PAR,
+        NORMAL_IN_PAR_WITH_VAR,
         COMMENT,
         STRING
     };
@@ -152,7 +153,7 @@ void Highlighter::highlightBlock(const QString &text)
                 {
                     state = COMMENT;
                     start = i;
-                     setFormat(start, text.size()-start, singleLineCommentFormat);
+                    setFormat(start, text.size()-start, singleLineCommentFormat);
                     return;
                 }
                 break;
@@ -166,13 +167,33 @@ void Highlighter::highlightBlock(const QString &text)
                 {
                     state = COMMENT;
                     start = i;
-                     setFormat(start, text.size()-start, singleLineCommentFormat);
+                    setFormat(start, text.size()-start, singleLineCommentFormat);
                     return;
                 }
+                else if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || 
+                    (ch >= '0' && ch <= '9') || (ch == ']'))
+                    state = NORMAL_IN_PAR_WITH_VAR;                    
                 else if (ch == '\'' )
                 {
                     state = STRING;
                     start = i;
+                }
+                break;
+            case NORMAL_IN_PAR_WITH_VAR:
+                if (ch == ')') {
+                    nPar--;
+                    if (nPar <= 0)
+                        state = NORMAL_WITH_VAR;
+                }
+                else if (ch == '%') 
+                {
+                    state = COMMENT;
+                    start = i;
+                    setFormat(start, text.size()-start, singleLineCommentFormat);
+                    return;
+                }
+                else if ((ch == ' ')  || (ch == ',')  || (ch == '\'') ) {
+                    state = NORMAL_IN_PAR;
                 }
                 break;
             case STRING:

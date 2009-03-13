@@ -413,6 +413,7 @@ QString simplifyMCode(const QString Str)
         NORMAL = -1,
         NORMAL_WITH_VAR,
         NORMAL_IN_PAR,
+        NORMAL_IN_PAR_WITH_VAR,
         COMMENT,
         STRING
     };
@@ -476,9 +477,34 @@ QString simplifyMCode(const QString Str)
                     state = COMMENT;
                     SimplifiedString[i] = '_';
                 }
+                else if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || 
+                    (ch >= '0' && ch <= '9') || (ch == ']'))
+                    state = NORMAL_IN_PAR_WITH_VAR;                    
                 else if (ch == '\'' )
                 {
                     state = STRING;
+                }
+                break;
+            case NORMAL_IN_PAR_WITH_VAR:
+                if (ch == ')') {
+                    nPar--;
+                    if (nPar <= 0)
+                        state = NORMAL_WITH_VAR;
+                }
+                else if (SimplifiedString.mid(i, 3) == "end") //remove "end" as index of array
+                {
+                    SimplifiedString[i]   = '_';
+                    SimplifiedString[i+1] = '_';
+                    SimplifiedString[i+2] = '_';
+                }
+                else if (ch == '%') // remove comments
+                {
+                    state = COMMENT;
+                    SimplifiedString[i] = '_';
+                }
+                else if ((ch == ' ')  || (ch == ',')  || (ch == '\'') )
+                {
+                    state = NORMAL_IN_PAR;
                 }
                 break;
             case COMMENT:
