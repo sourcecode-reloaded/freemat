@@ -289,6 +289,7 @@ ArrayVector GLNewWinFunction(int, const ArrayVector&);
 ArrayVector GLDefMaterialFunction(int, const ArrayVector&);
 ArrayVector GLAssemblyFunction(int, const ArrayVector&);
 ArrayVector GLNodeFunction(int, const ArrayVector&);
+ArrayVector GLClumpFunction(int, const ArrayVector&);
 ArrayVector GLShowFunction(int, const ArrayVector&);
 ArrayVector HIs2DViewFunction(int, const ArrayVector&);
 ArrayVector EditorFunction(int, const ArrayVector&, Interpreter*);
@@ -616,6 +617,8 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
      context->addGfxFunction("glassembly",GLAssemblyFunction,-1,0,NULL);
    if (guiflag)
      context->addGfxFunction("glnode",GLNodeFunction,3,0,"name","material","pointset",NULL);
+   if (guiflag)
+     context->addGfxFunction("glclump",GLClumpFunction,2,0,"name","clump",NULL);
    if (guiflag)
      context->addGfxFunction("glshow",GLShowFunction,1,0,"name",NULL);
    if (guiflag)

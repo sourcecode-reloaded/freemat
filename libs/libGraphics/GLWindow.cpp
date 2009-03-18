@@ -13,6 +13,11 @@ public:
   QVector<double> points;
 };
 
+class GLClump {
+public:
+  QVector<double> points;
+};
+
 class GLPart {
 public:
   QString name;
@@ -35,6 +40,7 @@ public:
 QMap<QString,GLMaterial> material_dictionary;
 QMap<QString,GLAssembly> assemblymap;
 QMap<QString,GLNode> nodemap;
+QMap<QString,GLClump> clumpmap;
 
 /*
  * (c) Copyright 1993, 1994, Silicon Graphics, Inc.
@@ -378,13 +384,13 @@ QSize GLWidget::sizeHint() const {
   return QSize(400, 400);
 }
 
-GLfloat LightAmbient[] = {0,0,0,1};
+GLfloat LightAmbient[] = {.2,.2,.2,1};
 GLfloat LightDiffuse[] = {1,1,1,1};
 GLfloat LightSpecular[] = {1,1,1,1};
 GLfloat LightPosition[] = {2,2,0,1};
 
 void GLWidget::initializeGL() {
-  qglClearColor(Qt::black);
+  qglClearColor(Qt::lightGray);
   glShadeModel(GL_SMOOTH);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_LIGHTING);
@@ -419,7 +425,7 @@ void getNormal(double p1[3], double p2[3], double p3[3], double pn[3]) {
 }
 
 void GLWidget::paintAssembly(QString aname) {
-  qDebug() << "drawing assembly " << aname;
+  //  qDebug() << "drawing assembly " << aname;
   // Render this assembly
   GLAssembly &asy(assemblymap[aname]);
   for (int i=0;i<asy.parts.size();i++) {
@@ -431,22 +437,49 @@ void GLWidget::paintAssembly(QString aname) {
 	m[j][k] = float(transform.get(NTuple(j+1,k+1)).asDouble());
       }
     }
-    qDebug() << m[0][0] << "," << m[0][1] << "," << m[0][2] << "," << m[0][3];
-    qDebug() << m[1][0] << "," << m[1][1] << "," << m[1][2] << "," << m[1][3];
-    qDebug() << m[2][0] << "," << m[2][1] << "," << m[2][2] << "," << m[2][3];
-    qDebug() << m[3][0] << "," << m[3][1] << "," << m[3][2] << "," << m[3][3];
     glPushMatrix();
     glMultMatrixf(&m[0][0]);
     if (nodemap.contains(t.name))
       paintNode(t.name);
+    else if (clumpmap.contains(t.name))
+      paintClump(t.name);
     else
       paintAssembly(t.name);
     glPopMatrix();
   }
 }
 
+void GLWidget::paintClump(QString aname) {
+  GLClump &node(clumpmap[aname]);
+  int n=0;
+  double p1[3];
+  double p2[3];
+  double p3[3];
+  double pn[3];
+  float color[4];
+  while (n<node.points.size()) {
+    color[0] = node.points[n++];
+    color[1] = node.points[n++];
+    color[2] = node.points[n++];
+    color[3] = 1;
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
+    int pcount = int(node.points[n++]);
+    glBegin(GL_TRIANGLES);
+    for (int i=0;i<pcount;i+=9) {
+      p1[0] = node.points[n++]; p1[1] = node.points[n++]; p1[2] = node.points[n++];
+      p2[0] = node.points[n++]; p2[1] = node.points[n++]; p2[2] = node.points[n++];
+      p3[0] = node.points[n++]; p3[1] = node.points[n++]; p3[2] = node.points[n++];
+      getNormal(p1,p2,p3,pn);
+      glNormal3d(pn[0],pn[1],pn[2]);
+      glVertex3d(p1[0],p1[1],p1[2]);
+      glVertex3d(p2[0],p2[1],p2[2]);
+      glVertex3d(p3[0],p3[1],p3[2]);
+    }
+    glEnd();
+  }
+}
+
 void GLWidget::paintNode(QString aname) {
-  qDebug() << "drawing node " << aname;
   GLNode &node(nodemap[aname]);
   double p1[3];
   double p2[3];
@@ -558,6 +591,42 @@ ArrayVector GLDefMaterialFunction(int nargout, const ArrayVector& arg) {
 }
 
 //!
+//@Module GLCLUMP Create a GL Clump
+//@@Section GLWIN
+//@@Usage
+//Defines an aggregate clump of objects that can be treated
+//as a node.  A GL Clump is defined by a vector consisting
+//of the following elements:
+//@[
+//   [r1 g1 b1 n1 p1 p2 p3 ... r2 g2 b2 n2 p1 p2 p3 ... ]
+//@]
+//i.e., an RGB color spec, followed by a point count @|ni|, followed
+//by a length @|ni| vector of coordinates that are @|x,y,z| triplets.
+//The usage of this function is
+//@[
+//   glclump(name,vector)
+//@]
+//where @|name| is the name of the clump and @|vector| is the aforementioned
+//vector of points.
+//@@Signature
+//gfunction glclump GLClumpFunction
+//inputs name name vector
+//outputs none
+//!
+ArrayVector GLClumpFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 2) throw Exception("glclump requires two arguments: the object name and the clump vector");
+  QString name = arg[0].asString();
+  Array p = arg[1].toClass(Double).asDenseArray();
+  const BasicArray<double> &p_rp(p.constReal<double>());
+  GLClump clump;
+  for (index_t i=1;i<=p.length();i++) {
+    clump.points.push_back(p_rp[NTuple(i,1)]);
+  }
+  clumpmap[name] = clump;
+  return ArrayVector();
+}
+
+//!
 //@Module GLASSEMBLY Create a GL Assembly
 //@@Section GLWIN
 //@@Usage
@@ -596,7 +665,8 @@ ArrayVector GLAssemblyFunction(int nargout, const ArrayVector& arg) {
   GLAssembly assembly;
   for (int i=1;i<arg.size();i+=2) {
     QString objectname = arg[i].asString();
-    if (!assemblymap.contains(objectname) && !nodemap.contains(objectname))
+    if (!assemblymap.contains(objectname) && !nodemap.contains(objectname)
+	&& !clumpmap.contains(objectname))
       throw Exception(QString("Object ") + objectname + " is not defined");
     Array transform = arg[i+1].toClass(Double);
     if ((transform.rows() != 4) || (transform.cols() != 4))
@@ -668,7 +738,7 @@ ArrayVector GLNodeFunction(int nargout, const ArrayVector& arg) {
 //@]
 //which shows the @|glassembly| named @|name| in a new GL
 //window, with the scale set to @|scale|.  Roughly speaking
-//@|scale should represent the radial size of the object
+//@|scale| should represent the radial size of the object
 //that you want to see in the window.
 //@@Signature
 //gfunction glshow GLShow

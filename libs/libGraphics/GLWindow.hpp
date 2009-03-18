@@ -21,6 +21,7 @@ protected:
   void paintGL();
   void paintAssembly(QString aname);
   void paintNode(QString aname);
+  void paintClump(QString aname);
   void resizeGL(int width, int height);
   void mousePressEvent(QMouseEvent *event);
   void mouseMoveEvent(QMouseEvent *event);
