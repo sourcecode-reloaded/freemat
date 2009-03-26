@@ -27,9 +27,13 @@
 % Licensed under the GPL
 function B = squeeze(A)
   sz = size(A);
+  if (length(sz) == 2) 
+    B = A;
+    return;
+  end
   sz(find(sz==1)) = [];
   if length(sz)==1
-    sz = [1, sz];
+    sz = [sz,1];
   end
   if length(sz)==0
     sz = [1,1];

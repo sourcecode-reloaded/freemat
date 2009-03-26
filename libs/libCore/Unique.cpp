@@ -173,33 +173,42 @@ void UniqueFunctionComplex(const BasicArray<T> &data_real,
 }
 
 template <typename T>
+static inline ArrayVector UniqueFunctionAuxReal(const Array &arg) {
+  BasicArray<T> u_data;
+  BasicArray<index_t> m_array;
+  BasicArray<index_t> n_array;
+  UniqueFunctionReal(arg.constReal<T>(),u_data,m_array,n_array);
+  ArrayVector ret;
+  ret.push_back(Array(u_data));
+  ret.push_back(Array(m_array));
+  ret.push_back(Array(n_array));
+  return ret;
+}
+
+template <typename T>
+static inline ArrayVector UniqueFunctionAuxComplex(const Array &arg) {
+  BasicArray<T> u_data_real;
+  BasicArray<T> u_data_imag;
+  BasicArray<index_t> m_array;
+  BasicArray<index_t> n_array;
+  UniqueFunctionComplex(arg.constReal<T>(),
+			arg.constImag<T>(),
+			u_data_real,
+			u_data_imag,
+			m_array,n_array);
+  ArrayVector ret;
+  ret.push_back(Array(u_data_real,u_data_imag));
+  ret.push_back(Array(m_array));
+  ret.push_back(Array(n_array));
+  return ret;    
+}
+
+template <typename T>
 static inline ArrayVector UniqueFunctionAux(const Array &arg) {
-  if (arg.allReal()) {
-    BasicArray<T> u_data;
-    BasicArray<index_t> m_array;
-    BasicArray<index_t> n_array;
-    UniqueFunctionReal(arg.constReal<T>(),u_data,m_array,n_array);
-    ArrayVector ret;
-    ret.push_back(Array(u_data));
-    ret.push_back(Array(m_array));
-    ret.push_back(Array(n_array));
-    return ret;
-  } else {
-    BasicArray<T> u_data_real;
-    BasicArray<T> u_data_imag;
-    BasicArray<index_t> m_array;
-    BasicArray<index_t> n_array;
-    UniqueFunctionComplex(arg.constReal<T>(),
-			  arg.constImag<T>(),
-			  u_data_real,
-			  u_data_imag,
-			  m_array,n_array);
-    ArrayVector ret;
-    ret.push_back(Array(u_data_real,u_data_imag));
-    ret.push_back(Array(m_array));
-    ret.push_back(Array(n_array));
-    return ret;    
-  }
+  if (arg.allReal()) 
+    return UniqueFunctionAuxReal<T>(arg);
+  else
+    return UniqueFunctionAuxComplex<T>(arg);
 }
 
 #define MacroUnique(ctype,cls) \
@@ -213,23 +222,51 @@ static inline ArrayVector UniqueFunctionAux(const Array &arg) {
   default:
     throw Exception("Unhandled type for unique function");
     MacroExpandCasesSimple(MacroUnique);
+  case StringArray: return UniqueFunctionAuxReal<QChar>(arg);
   case CellArray: return UniqueFunctionAux<Array>(arg);
   }
 }
 
 #undef MacroUnique
 
+ArrayVector ToRowVector(const ArrayVector& x) {
+  ArrayVector z;
+  for (int i=0;i<x.size();i++) {
+    Array y(x[i]);
+    y.reshape(NTuple(1,y.length()));
+    z.push_back(y);
+  }
+  return z;
+}
+
+ArrayVector ToEmptyVector(const ArrayVector& x) {
+  ArrayVector z;
+  for (int i=0;i<x.size();i++) {
+    Array y(x[i]);
+    y.reshape(NTuple(0,1));
+    z.push_back(y);
+  }
+  return z;
+}
+
 ArrayVector UniqueFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)
     throw Exception("unique function requires at least one argument");
   if (arg[0].isEmpty()) {
-    if (nargout <= 1)
-      return ArrayVector(arg[0]);
-    else {
+    if (nargout <= 1) {
+      if (arg[0].isEmpty() && !arg[0].is2D()) {
+	Array y(arg[0]);
+	y.reshape(NTuple(0,1));
+	return ArrayVector(y);
+      } else
+	return ArrayVector(arg[0]);
+    } else {
       ArrayVector retval;
       retval.push_back(arg[0]);
       retval.push_back(EmptyConstructor());
       retval.push_back(EmptyConstructor());
+      if (arg[0].isEmpty() && !arg[0].is2D())
+	return ToEmptyVector(retval);
       return retval;
     }
   }
@@ -241,8 +278,14 @@ ArrayVector UniqueFunction(int nargout, const ArrayVector& arg) {
   }
   if (rowmode && !arg[0].is2D())
     throw Exception("'rows' mode only works for matrix (2D) arguments");
-  if (!rowmode)
-    return UniqueFunctionAux(Vectorize(arg[0]));
-  else
-    return UniqueFunctionAux(arg[0]);
+  Array z;
+  if (!rowmode) 
+    z = Vectorize(arg[0]);
+  else 
+    z = arg[0];
+  ArrayVector x(UniqueFunctionAux(z));
+  if (arg[0].isRowVector()) {
+    return ToRowVector(x);
+  }
+  return x;
 }

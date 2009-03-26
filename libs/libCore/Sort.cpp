@@ -224,7 +224,7 @@ ArrayVector SortFunction(int nargout, const ArrayVector& arg) {
   }
   int workDim = 0;
   if ((arg.size() >= 2) && (!arg[1].isEmpty()))
-    workDim = arg[1].asInteger();
+    workDim = arg[1].asInteger()-1;
   else
     workDim = input.dimensions().firstNonsingular();
   bool ascendSort = true;
