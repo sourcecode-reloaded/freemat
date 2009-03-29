@@ -1572,8 +1572,17 @@ ArrayVector Num2StrFunction(int nargout, const ArrayVector& arg) {
     sprintf(formatspec,"%%g"); //without preceding space
   if (arg.size() > 1) {
     Array format(arg[1]);
-    if (format.isString())
+    if (format.isString()) {
       strcpy(formatspec,qPrintable(format.asString()));
+      if (formatspec[0] == '%')
+        for (int i = 1; i<1024; i++)
+          if (formatspec[i] == 'd') {
+              X = X.toClass(Int32); //convert to integer if want print as integer
+              break;
+          }
+          else if ((formatspec[i] <= 'a' && formatspec[i] >= 'z') || (formatspec[i] <= 'A' && formatspec[i] >= 'Z'))
+              break;
+    }
   }
   switch (X.dataClass())  {
     default: throw Exception("illegal type argument to num2str");
