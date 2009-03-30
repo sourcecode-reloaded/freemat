@@ -1394,7 +1394,7 @@ struct OpStrTrim {
       txt.remove(0,1);
     Array z(txt);
     if (z.isEmpty() && z.is2D())
-      z = EmptyConstructor();
+      z = EmptyConstructor().toClass(StringArray);
     return z;
   }
 };

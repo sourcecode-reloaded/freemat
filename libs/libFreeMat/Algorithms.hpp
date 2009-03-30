@@ -105,6 +105,7 @@ Array Permute(const Array &A, const NTuple &dp);
 NTuple ConvertArrayToNTuple(const Array &A);
 Array ConvertNTupleToArray(const NTuple &D);
 bool AnyNotFinite(const Array &A);
+bool AnyNaN(const Array &A);
 
 Array MergeToComplex(const Array &Real, const Array &Imag);
 Array MatIJVToSparse(const Array &ir, const Array &jc, const Array &pr, const Array &pi, bool complexFlag);

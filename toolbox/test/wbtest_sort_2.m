@@ -18,6 +18,7 @@ function test_val = wbtest_sort_2(verbose)
     printf('Mismatch (exact): input %d output 1 y1=sort(x1,2)\n',loopi);
 keyboard
     fail_count = fail_count + 1;
+    keyboard
   end
   test_val = (fail_count == 0);
 end

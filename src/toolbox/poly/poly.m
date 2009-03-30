@@ -25,7 +25,7 @@
 %r = roots(p)
 %@>
 %@@Tests
-%@$exact|y1=poly(x1)
+%@$near|y1=poly(x1)
 %!
 function p = poly(r)
    if (nargin < 1) | (nargout > 1)
@@ -33,13 +33,10 @@ function p = poly(r)
    end
    
    % Identify arguments
-   [l,c] = size(r);
-   if l == c
+   if issquare(r)
       r = eig(r);
-   elseif l*c == max(l,c)
-      r = r(:).';
    else
-      error('wrong argument (see help poly)')
+      r = r(:).';
    end
    
    % Strip out infinities
@@ -53,6 +50,10 @@ function p = poly(r)
    end
 
    % The result should be real if the roots are complex conjugates.
-   if sort(r(imag(r)>0))-sort(conj(r(imag(r)<0)))<teps(r)
-      p = real(p);
+   r_neg_comp_roots = r(imag(r)<0);
+   r_pos_comp_roots = r(imag(r)>0);
+   if (numel(r_neg_comp_roots) == numel(r_pos_comp_roots))
+     if sort(r(imag(r)>0))-sort(conj(r(imag(r)<0)))<teps(r)
+        p = real(p);
+     end
    end

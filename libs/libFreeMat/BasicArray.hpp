@@ -479,6 +479,13 @@ bool AnyNotFinite(const BasicArray<T>& arg) {
 }
 
 template <typename T>
+bool AnyNaN(const BasicArray<T>& arg) {
+  for (index_t i=1;i<=arg.length();i++) 
+    if (IsNaN(arg.get(i))) return true;
+  return false;
+}
+
+template <typename T>
 T MinValue(const BasicArray<T>& arg) {
   if (arg.isEmpty())
     throw Exception("Cannot use this min function on empty arrays.");

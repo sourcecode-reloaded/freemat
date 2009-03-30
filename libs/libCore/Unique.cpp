@@ -276,13 +276,23 @@ ArrayVector UniqueFunction(int nargout, const ArrayVector& arg) {
       throw Exception("second argument to unique must be 'rows'");
     rowmode = true;
   }
-  if (rowmode && !arg[0].is2D())
-    throw Exception("'rows' mode only works for matrix (2D) arguments");
+  if (rowmode) {
+    if (!arg[0].is2D() && (arg[0].dimensions().max() == arg[0].dimensions().count())) {
+      ArrayVector retval;
+      retval.push_back(arg[0]);
+      retval.push_back(Array(double(1)));
+      retval.push_back(Array(double(1)));
+      return retval;
+    } else if (!arg[0].is2D())
+      throw Exception("'rows' mode only works for matrix (2D) arguments");
+  }
+  if (rowmode && IsCellStringArray(arg[0]) && arg[0].isRowVector())
+    rowmode = false;
   Array z;
   if (!rowmode) 
-    z = Vectorize(arg[0]);
+    z = Vectorize(arg[0].asDenseArray());
   else 
-    z = arg[0];
+    z = arg[0].asDenseArray();
   ArrayVector x(UniqueFunctionAux(z));
   if (arg[0].isRowVector()) {
     return ToRowVector(x);

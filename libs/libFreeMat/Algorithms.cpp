@@ -521,6 +521,38 @@ bool AnyNotFinite(const Array &A) {
 
 #undef MacroAnyNotFinite
 
+
+template <typename T>
+static inline bool Tanynan(const Array *ptr) {
+  if (ptr->isScalar())
+    if (ptr->allReal())
+      return (IsNaN(ptr->constRealScalar<T>()));
+    else
+      return (IsNaN(ptr->constRealScalar<T>()) || IsNaN(ptr->constImagScalar<T>()));
+  else if (ptr->isSparse())
+    if (ptr->allReal())
+      return AnyNaN(ptr->constRealSparse<T>());
+    else
+      return (AnyNaN(ptr->constRealSparse<T>()) || AnyNaN(ptr->constImagSparse<T>()));
+  else
+    if (ptr->allReal())
+      return AnyNaN(ptr->constReal<T>());
+    else
+      return (AnyNaN(ptr->constReal<T>()) || AnyNaN(ptr->constImag<T>()));
+}
+
+
+#define MacroAnyNaN(ctype,cls)			\
+  case cls: return Tanynan<ctype>(&A);
+
+bool AnyNaN(const Array &A) {
+  if (A.isReferenceType()) return false;
+  switch (A.dataClass()) {
+  default: return false;
+    MacroExpandCasesSimple(MacroAnyNaN);
+  }
+}
+
 template <typename T>
 static inline bool Tispositive(const Array *ptr) {
   if (ptr->isScalar()) {

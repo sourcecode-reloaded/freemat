@@ -27,6 +27,14 @@
 % Licensed under the GPL
 
 function syms = symvar(expr)
+  if (isempty(expr))
+    syms = cell(0,0);
+    return;
+  end
+  if (~isstr(expr))
+    syms = cell(0,1);
+    return;
+  end
   ignore = {'pi','inf','nan','eps','i','j'};
   tsyms = regexp(char(expr),'(\b[a-zA-Z]\w*\b)(?!\s*\()','tokens');
   tsyms = unique([tsyms{:}]);

@@ -22,6 +22,12 @@ public:
   inline void zero() {
     for (int i=0;i<NDims;i++) m_data[i] = 0;
   }
+  inline index_t max() const {
+    index_t v = m_data[0];
+    for (int i=1;i<NDims;i++)
+      if (m_data[i] > v) v = m_data[i];
+    return v;
+  }
   inline index_t rows() const {
     return m_data[0];
   }

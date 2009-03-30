@@ -40,5 +40,8 @@ function len = numel(x,varargin)
 if (nargin==1)
   len = prod(size(x));
 else
-  len = prod(size(x(varargin{:})));
+  len = 1;
+  for k=1:length(varargin)
+    len = len * numel(varargin{k});
+  end
 end

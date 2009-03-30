@@ -1,6 +1,7 @@
 #include "LAPACK.hpp"
 #include "Array.hpp"
 #include "MemPtr.hpp"
+#include "Algorithms.hpp"
 
 static float complexRecipCond(int m, int n, float *a) {
   // Getting the estimated reciprocal condition number involves
@@ -149,6 +150,10 @@ ArrayVector RcondFunction(int nargout, const ArrayVector& arg) {
     throw Exception("rcond function requires at least one argument - the matrix to compute the condition number for.");
   Array A(arg[0].asDenseArray());
   if (!A.is2D()) throw Exception("Cannot apply matrix operations to N-dimensional arrays.");
+  if (A.isEmpty())
+    return ArrayVector(Array(Inf()));
+  if (AnyNaN(A))
+    return ArrayVector(Array(NaN()));
   switch (A.dataClass()) {
   default: throw Exception("Unsupported type for rcond operation");
   case Float:
