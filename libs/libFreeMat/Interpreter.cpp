@@ -59,7 +59,9 @@ const int max_line_count = 1000000;
 /**
  * The database of compiled code segments
  */
+#ifdef HAVE_LLVM
 QMap<int,JITInfo> m_codesegments;
+#endif
 
 /**
  * The file system watcher -- watches for changes to the file system

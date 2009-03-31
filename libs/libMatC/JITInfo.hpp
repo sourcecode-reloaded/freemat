@@ -1,6 +1,7 @@
 #ifndef __JITInfo_hpp__
 #define __JITInfo_hpp__
 
+#ifdef HAVE_LLVM
 #include <QSharedDataPointer>
 #include "JITFunc.hpp"
 
@@ -21,5 +22,7 @@ public:
   inline JITFunc* JITFunction() const {return m_jitfunc;}
   inline void setJITFunction(JITFunc *t) {m_jitfunc = t;}
 };
+
+#endif
 
 #endif
