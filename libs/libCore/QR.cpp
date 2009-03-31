@@ -859,7 +859,9 @@ static ArrayVector QRDNoPivotFunction(bool compactDec, NTuple odims, Array A) {
 }
 
 template <typename T>
-static ArrayVector QRDPivotFunction(bool compactDec, bool compactSav, NTuple odims, Array A) {
+static ArrayVector QRDPivotFunction(bool compactDec, bool compactSav, 
+				    NTuple odims, Array A, 
+				    index_t permSize) {
   ArrayVector retvec;
   index_t minmn = qMin(A.rows(),A.cols());
   BasicArray<T> p(NTuple(1,A.cols()));
@@ -885,9 +887,10 @@ static ArrayVector QRDPivotFunction(bool compactDec, bool compactSav, NTuple odi
   if (compactSav)
     retvec << Array(p);
   else {
-    BasicArray<T> p2(NTuple(A.cols(),A.cols()));
-    for (index_t i=1;i<=A.cols();i++) 
-      p2.set(NTuple(p.get(i),i),1);
+    BasicArray<T> p2(NTuple(permSize,permSize));
+    for (index_t i=1;i<=permSize;i++)
+      if (p.get(i) <= permSize)
+	p2.set(NTuple(p.get(i),i),1);
     retvec << Array(p2);
   }
   return retvec;  
@@ -895,10 +898,11 @@ static ArrayVector QRDPivotFunction(bool compactDec, bool compactSav, NTuple odi
 
 static ArrayVector QRDNoPivotFunction(bool compactDec, Array A) {
   NTuple odims(A.dimensions());
-  if ((!compactDec) && (A.rows() > A.cols()))
+  if ((!compactDec) && (A.rows() > A.cols())) 
     A.resize(NTuple(A.rows(),A.rows()));
   else 
     compactDec = true;
+  ArrayVector retvec;
   switch (A.dataClass()) {
   default: throw Exception("illegal argument type to qr");
   case Float:
@@ -911,6 +915,7 @@ static ArrayVector QRDNoPivotFunction(bool compactDec, Array A) {
 static ArrayVector QRDPivotFunction(bool compactDec, Array A) {
   NTuple odims(A.dimensions());
   bool compactSav = compactDec;
+  index_t Acols = A.cols();
   if ((!compactDec) && (A.rows() > A.cols())) 
     A.resize(NTuple(A.rows(),A.rows()));
   else 
@@ -918,9 +923,9 @@ static ArrayVector QRDPivotFunction(bool compactDec, Array A) {
   switch (A.dataClass()) {
   default: throw Exception("illegal argument type to qr");
   case Float:
-    return QRDPivotFunction<float>(compactDec,compactSav,odims,A);
+    return QRDPivotFunction<float>(compactDec,compactSav,odims,A,Acols);
   case Double:
-    return QRDPivotFunction<double>(compactDec,compactSav,odims,A);
+    return QRDPivotFunction<double>(compactDec,compactSav,odims,A,Acols);
   }
 }
 
@@ -1336,14 +1341,14 @@ static ArrayVector QRDPivotFunction(bool compactDec, Array A) {
 ArrayVector QRDFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)
     throw Exception("qr function requires at least one argument - the matrix to decompose.");
-  Array A(arg[0]);
+  Array A(arg[0].asDenseArray());
   // Test for numeric
   if (A.isReferenceType())
     throw Exception("Cannot apply qr decomposition to reference types.");
   if (!A.is2D())
     throw Exception("Cannot apply matrix operations to N-Dimensional arrays.");
-  if (AnyNotFinite(A))
-    throw Exception("QR Decomposition only defined for matrices with finite entries.");
+  //  if (AnyNotFinite(A))
+  //    throw Exception("QR Decomposition only defined for matrices with finite entries.");
   bool compactDecomposition = false;
   if ((arg.size() == 2) && (arg[1].asInteger() == 0))
     compactDecomposition = true;
