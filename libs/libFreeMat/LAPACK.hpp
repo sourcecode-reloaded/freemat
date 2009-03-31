@@ -101,18 +101,19 @@ extern "C" {
 	       int *IHI, double* SCALE, double* ABNRM, double* RCONDE,
 	       double* RCONDV, double *WORK, int *LWORK, double *RWORK,
 	       int *INFO);
-  void sgesdd_(char* JOBS, int* M, int *N, float* A, int *LDA, float *S, 
-	       float *U, int *LDU, float *VT, int *LDVT, float *WORK,
-	       int *LWORK, int *IWORK, int *INFO);
-  void dgesdd_(char* JOBS, int* M, int *N, double* A, int *LDA, double *S, 
-	       double *U, int *LDU, double *VT, int *LDVT, double *WORK,
-	       int *LWORK, int *IWORK, int *INFO);
-  void cgesdd_(char* JOBS, int* M, int *N, float* A, int *LDA, float *S, 
-	       float *U, int *LDU, float *VT, int *LDVT, float *WORK,
-	       int *LWORK, float *RWORK, int *IWORK, int *INFO);
-  void zgesdd_(char* JOBS, int* M, int *N, double* A, int *LDA, double *S, 
-	       double *U, int *LDU, double *VT, int *LDVT, double *WORK,
-	       int *LWORK, double *RWORK, int *IWORK, int *INFO);
+
+  void sgesvd_(char* JOBS, char* JOBVT, int* M, int *N, float* A, 
+	       int *LDA, float *S, float *U, int *LDU, float *VT, 
+	       int *LDVT, float *WORK, int *LWORK, int *INFO);
+  void dgesvd_(char* JOBS, char* JOBVT, int* M, int *N, double* A, 
+	       int *LDA, double *S, double *U, int *LDU, double *VT, 
+	       int *LDVT, double *WORK, int *LWORK, int *INFO);
+  void cgesvd_(char* JOBS, char* JOBVT, int* M, int *N, float* A, 
+	       int *LDA, float *S, float *U, int *LDU, float *VT, 
+	       int *LDVT, float *WORK, int *LWORK, float *RWORK, int *INFO);
+  void zgesvd_(char* JOBS, char* JOBVT, int* M, int *N, double* A, 
+	       int *LDA, double *S, double *U, int *LDU, double *VT, 
+	       int *LDVT, double *WORK, int *LWORK, double *RWORK, int *INFO);
 
   void sgeqrf_(int *M, int *N, float *A, int *LDA, float *TAU, float *WORK,
 	       int *LWORK, int *INFO);
