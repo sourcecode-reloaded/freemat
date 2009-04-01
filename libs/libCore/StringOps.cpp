@@ -1505,36 +1505,90 @@ ArrayVector StrFindFunction(int nargout, const ArrayVector& arg) {
 //outputs string
 //!
 
+static void StripLeadingSpaces(StringVector& all_rows) {
+  // Trim out leading spaces
+  int leadspaces = 1000000;
+  for (int i=0;i<all_rows.size();i++) {
+    QString t = all_rows[i];
+    int whitelead = 0;
+    while (whitelead < t.size() && t[whitelead] == QChar(' ')) whitelead++;
+    leadspaces = qMin(leadspaces,whitelead);
+  }
+  for (int i=0;i<all_rows.size();i++)
+    all_rows[i].remove(0,leadspaces);
+}
+
 template <class T>
 static Array Num2StrHelperReal(const BasicArray<T> &dp, const char *formatspec) {
+  // First measure the length of the values
+  ConstBasicIterator<T> iter1(&dp,1);
+  int maxlen = 0;
+  bool allint = true;
+  while (iter1.isValid()) {
+    for (index_t i=1;i<=iter1.size();i++) {
+      allint = allint && (iter1.get() == round(iter1.get()));
+      maxlen = qMax(maxlen,QString().sprintf(formatspec,fabs(iter1.get())).length());
+      iter1.next();
+    }
+    iter1.nextSlice();
+  }
+  if (!allint) maxlen = qMax(maxlen,10);
   ConstBasicIterator<T> iter(&dp,1);
   StringVector all_rows;
   while (iter.isValid()) {
     QString row_string;
     for (index_t i=1;i<=iter.size();i++) {
-      if (i != 1) row_string += " ";
-      row_string += QString().sprintf(formatspec,iter.get());
+      QString d(QString().sprintf(formatspec,iter.get()));
+      d.replace(QString("inf"),QString("Inf"));
+      d.replace(QString("nan"),QString("NaN"));
+      QString pad(maxlen-d.length()+2,QChar(' '));
+      row_string += pad;
+      row_string += d;
       iter.next();
     }
     all_rows << row_string;
     iter.nextSlice();
   }
+  StripLeadingSpaces(all_rows);
   return StringArrayFromStringVector(all_rows,QChar(' '));
 }
 
 template <class T>
 Array Num2StrHelperComplex(const BasicArray<T> &rp, const BasicArray<T> &ip, const char *formatspec) {
+  ConstBasicIterator<T> iter_real1(&rp,1);
+  ConstBasicIterator<T> iter_imag1(&ip,1);
+  int maxlen = 0;
+  bool allint = true;
+  while (iter_real1.isValid() && iter_imag1.isValid()) {
+    for (index_t i=1;i<=iter_real1.size();i++) {
+      allint = allint && (iter_real1.get() == round(iter_real1.get()));
+      allint = allint && (iter_imag1.get() == round(iter_imag1.get()));
+      QString dr = QString().sprintf(formatspec,iter_real1.get());
+      QString di = QString().sprintf(formatspec,iter_imag1.get());
+      maxlen = qMax(maxlen,dr.length()+di.length());
+      iter_real1.next();
+      iter_imag1.next();
+    }
+    iter_real1.nextSlice();
+    iter_imag1.nextSlice();
+  }
+  if (!allint) maxlen = qMax(maxlen,20);
   ConstBasicIterator<T> iter_real(&rp,1);
   ConstBasicIterator<T> iter_imag(&ip,1);
   StringVector all_rows;
   while (iter_real.isValid() && iter_imag.isValid()) {
     QString row_string;
     for (index_t i=1;i<=iter_real.size();i++) {
-      if (i != 1) row_string += " ";
-      row_string += QString().sprintf(formatspec,iter_real.get());
-      if (iter_imag.get() >= 0) row_string += "+";
-      row_string += QString().sprintf(formatspec,iter_imag.get());
-      row_string += "i";
+      QString dr(QString().sprintf(formatspec,iter_real.get()));
+      dr.replace(QString("inf"),QString("Inf"));
+      dr.replace(QString("nan"),QString("NaN"));
+      QString di(QString().sprintf(formatspec,iter_imag.get()));
+      di.replace(QString("inf"),QString("Inf"));
+      di.replace(QString("nan"),QString("NaN"));
+      if (iter_imag.get() >= 0) di = "+" + di;
+      QString d = dr+di;
+      QString pad(maxlen-d.length()+4,QChar(' '));
+      row_string += pad + d + "i";
       iter_real.next();
       iter_imag.next();
     }
@@ -1542,6 +1596,7 @@ Array Num2StrHelperComplex(const BasicArray<T> &rp, const BasicArray<T> &ip, con
     iter_real.nextSlice();
     iter_imag.nextSlice();
   }
+  StripLeadingSpaces(all_rows);
   return StringArrayFromStringVector(all_rows,QChar(' '));
 }
 
@@ -1564,12 +1619,16 @@ ArrayVector Num2StrFunction(int nargout, const ArrayVector& arg) {
     throw Exception("num2str function requires a numeric input");
   if (X.isSparse())
     throw Exception("num2str not defined for sparse inputs");
+  if (X.dataClass() == StringArray)
+    return ArrayVector(X);
   X = X.asDenseArray();
+  if (!X.is2D())
+    X.reshape(NTuple(X.rows(),X.length()/X.rows()));
   char formatspec[1024];
   if ((X.dataClass() != Float) && (X.dataClass() != Double))
     sprintf(formatspec,"%%d");
   else
-    sprintf(formatspec,"%%g"); //without preceding space
+    sprintf(formatspec,"%%.5g"); //without preceding space
   if (arg.size() > 1) {
     Array format(arg[1]);
     if (format.isString()) {
@@ -1615,7 +1674,7 @@ ArrayVector Str2NumFunction(int nargout, const ArrayVector& arg) {
     throw Exception("str2num takes a single argument, the string to convert into a number");
   Array data(arg[0]);
   if (!data.isString())
-    throw Exception("the first argument to str2num must be a string");
+    return ArrayVector(EmptyConstructor());
   return ArrayVector(Array(data.asDouble()));
 }
 

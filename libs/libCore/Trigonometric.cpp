@@ -25,51 +25,7 @@
 #include "Operators.hpp"
 #include "Complex.hpp"
 
-//!
-//@Module COSD Cosine Degrees Function
-//@@Section MATHFUNCTIONS
-//@@Usage
-//Computes the cosine of the argument, but takes
-//the argument in degrees instead of radians (as is the case
-//for @|cos|). The syntax for its use is
-//@[
-//   y = cosd(x)
-//@]
-//@@Examples
-//The cosine of 45 degrees should be @|sqrt(2)/2|
-//@<
-//cosd(45)
-//@>
-//and the cosine of @|60| degrees should be 0.5:
-//@<
-//cosd(60)
-//@>
-//@@Tests
-//@$near|y1=cosd(x1)
-//@@Signature
-//function cosd CosdFunction
-//inputs x
-//outputs y
-//!
-struct OpCosd {
-  static inline float func(float x) {return cosf(x*M_PI/180.0);}
-  static inline double func(double x) {return cos(x*M_PI/180.0);}
-  static inline void func(float xr, float xi, float &yr, float &yi) {
-    yr = cosf(xr*M_PI/180.0)*coshf(xi*M_PI/180.0);
-    yi = -sinf(xr*M_PI/180.0)*sinhf(xi*M_PI/180.0);
-  }
-  static inline void func(double xr, double xi, double &yr, double &yi) {
-    yr = cos(xr*M_PI/180.0)*cosh(xi*M_PI/180.0);
-    yi = -sin(xr*M_PI/180.0)*sinh(xi*M_PI/180.0);
-  }
-};
-
-ArrayVector CosdFunction(int nargout, const ArrayVector& arg) {
-  if (arg.size() != 1)
-    throw Exception("Cosd Function takes exactly one argument");
-  return ArrayVector(UnaryOp<OpCosd>(arg[0]));
-}
-
+#define DEG2RAD M_PI/180.0
 
 //!
 //@Module COS Trigonometric Cosine Function
@@ -114,8 +70,12 @@ ArrayVector CosdFunction(int nargout, const ArrayVector& arg) {
 //!
 
 struct OpCos {
-  static inline float func(float x) {return cosf(x);}
-  static inline double func(double x) {return cos(x);}
+  static inline float func(float x) {
+    return cosf(x);
+  }
+  static inline double func(double x) {
+    return cos(x);
+  }
   static inline void func(float xr, float xi, float &yr, float &yi) {
     yr = cosf(xr)*coshf(xi);
     yi = -sinf(xr)*sinhf(xi);
@@ -133,50 +93,48 @@ ArrayVector CosFunction(int nargout, const ArrayVector& arg) {
 }
 
 //!
-//@Module SIND Sine Degrees Function
+//@Module COSD Cosine Degrees Function
 //@@Section MATHFUNCTIONS
 //@@Usage
-//Computes the sine of the argument, but takes
+//Computes the cosine of the argument, but takes
 //the argument in degrees instead of radians (as is the case
 //for @|cos|). The syntax for its use is
 //@[
-//   y = sind(x)
+//   y = cosd(x)
 //@]
 //@@Examples
-//The sine of 45 degrees should be @|sqrt(2)/2|
+//The cosine of 45 degrees should be @|sqrt(2)/2|
 //@<
-//sind(45)
+//cosd(45)
 //@>
-//and the sine of @|30| degrees should be 0.5:
+//and the cosine of @|60| degrees should be 0.5:
 //@<
-//sind(30)
+//cosd(60)
 //@>
 //@@Tests
-//@$near|y1=sind(x1)
+//@$near|y1=cosd(x1)
 //@@Signature
-//function sind SindFunction
+//function cosd CosdFunction
 //inputs x
 //outputs y
 //!
-
-struct OpSind {
-  static inline float func(float x) {return sinf(x*M_PI/180.0);}
-  static inline double func(double x) {return sin(x*M_PI/180.0);}
-  static inline void func(float xr, float xi, float &yr, float &yi) {
-    yr = sinf(xr*M_PI/180.0)*coshf(xi*M_PI/180.0);
-    yi = cosf(xr*M_PI/180.0)*sinhf(xi*M_PI/180.0);
+struct OpCosd {
+  template <typename T>
+  static inline T func(T x) {
+    return OpCos::func(x*DEG2RAD);
   }
-  static inline void func(double xr, double xi, double &yr, double &yi) {
-    yr = sin(xr*M_PI/180.0)*cosh(xi*M_PI/180.0);
-    yi = cosf(xr*M_PI/180.0)*sinh(xi*M_PI/180.0);
+  template <typename T>
+  static inline void func(T xr, T xi, T &yr, T &yi) {
+    OpCos::func(xr*DEG2RAD,xi*DEG2RAD,yr,yi);
   }
 };
 
-ArrayVector SindFunction(int nargout, const ArrayVector& arg) {
+ArrayVector CosdFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
-    throw Exception("Sind Function takes exactly one argument");
-  return ArrayVector(UnaryOp<OpSind>(arg[0]));
+    throw Exception("Cosd Function takes exactly one argument");
+  return ArrayVector(UnaryOp<OpCosd>(arg[0]));
 }
+
 
 //!
 //@Module SIN Trigonometric Sine Function
@@ -221,15 +179,19 @@ ArrayVector SindFunction(int nargout, const ArrayVector& arg) {
 //!
 
 struct OpSin {
-  static inline float func(float x) {return sinf(x);}
-  static inline double func(double x) {return sin(x);}
+  static inline float func(float x) {
+    return sinf(x);
+  }
+  static inline double func(double x) {
+    return sin(x);
+  }
   static inline void func(float xr, float xi, float &yr, float &yi) {
     yr = sinf(xr)*coshf(xi);
     yi = cosf(xr)*sinhf(xi);
   }
   static inline void func(double xr, double xi, double &yr, double &yi) {
     yr = sin(xr)*cosh(xi);
-    yi = cosf(xr)*sinh(xi);
+    yi = cos(xr)*sinh(xi);
   }
 };
 
@@ -238,6 +200,51 @@ ArrayVector SinFunction(int nargout, const ArrayVector& arg) {
     throw Exception("Sin Function takes exactly one argument");
   return ArrayVector(UnaryOp<OpSin>(arg[0]));
 }
+
+//!
+//@Module SIND Sine Degrees Function
+//@@Section MATHFUNCTIONS
+//@@Usage
+//Computes the sine of the argument, but takes
+//the argument in degrees instead of radians (as is the case
+//for @|cos|). The syntax for its use is
+//@[
+//   y = sind(x)
+//@]
+//@@Examples
+//The sine of 45 degrees should be @|sqrt(2)/2|
+//@<
+//sind(45)
+//@>
+//and the sine of @|30| degrees should be 0.5:
+//@<
+//sind(30)
+//@>
+//@@Tests
+//@$near|y1=sind(x1)
+//@@Signature
+//function sind SindFunction
+//inputs x
+//outputs y
+//!
+
+struct OpSind {
+  template <typename T>
+  static inline T func(T x) {
+    return OpSin::func(x*DEG2RAD);
+  }
+  template <typename T>
+  static inline void func(T xr, T xi, T &yr, T &yi) {
+    OpSin::func(xr*DEG2RAD,xi*DEG2RAD,yr,yi);
+  }
+};
+
+ArrayVector SindFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() != 1)
+    throw Exception("Sind Function takes exactly one argument");
+  return ArrayVector(UnaryOp<OpSind>(arg[0]));
+}
+
 
 //!
 //@Module TAN Trigonometric Tangent Function
@@ -286,15 +293,19 @@ ArrayVector SinFunction(int nargout, const ArrayVector& arg) {
 //!
 
 struct OpTan {
-  static inline float func(float x) {return tanf(x);}
-  static inline double func(double x) {return tan(x);}
-  static inline void func(float xr, float xi, float &yr, float &yi) {
-    yr = sinf(xr)/(cosf(xr)+coshf(xi));
-    yi = sinhf(xi)/(cosf(xr)+coshf(xi));
+  static inline float func(float x) {
+    return tanf(x);
   }
-  static inline void func(double xr, double xi, double &yr, double &yi) {
-    yr = sin(xr)/(cos(xr)+cosh(xi));
-    yi = sinh(xi)/(cos(xr)+cosh(xi));
+  static inline double func(double x) {
+    return tan(x);
+  }
+  template <typename T>
+  static inline void func(T xr, T xi, T &yr, T &yi) {
+    T sinr, sini;
+    T cosr, cosi;
+    OpSin::func(xr,xi,sinr,sini);
+    OpCos::func(xr,xi,cosr,cosi);
+    complex_divide(sinr,sini,cosr,cosi,yr,yi);
   }
 };
 
@@ -327,15 +338,13 @@ ArrayVector TanFunction(int nargout, const ArrayVector& arg) {
 //outputs y
 //!
 struct OpTand {
-  static inline float func(float x) {return tanf(x*M_PI/180.0);}
-  static inline double func(double x) {return tan(x*M_PI/180.0);}
-  static inline void func(float xr, float xi, float &yr, float &yi) {
-    yr = sinf(xr*M_PI/180.0)/(cosf(xr*M_PI/180.0)+coshf(xi*M_PI/180.0));
-    yi = sinhf(xi*M_PI/180.0)/(cosf(xr*M_PI/180.0)+coshf(xi*M_PI/180.0));
+  template <typename T>
+  static inline T func(T x) {
+    return OpTan::func(x*DEG2RAD);
   }
-  static inline void func(double xr, double xi, double &yr, double &yi) {
-    yr = sin(xr*M_PI/180.0)/(cos(xr*M_PI/180.0)+cosh(xi*M_PI/180.0));
-    yi = sinh(xi*M_PI/180.0)/(cos(xr*M_PI/180.0)+cosh(xi*M_PI/180.0));
+  template <typename T>
+  static inline void func(T xr, T xi, T &yr, T &yi) {
+    OpTan::func(T(xr*DEG2RAD),T(xi*DEG2RAD),yr,yi);
   }
 };
 
@@ -384,8 +393,12 @@ ArrayVector TandFunction(int nargout, const ArrayVector& arg) {
 //!
 
 struct OpCsc {
-  static inline float func(float x) {return 1.0f/sinf(x);}
-  static inline double func(double x) {return 1.0/sin(x);}
+  static inline float func(float x) {
+    return 1.0f/OpSin::func(x);
+  }
+  static inline double func(double x) {
+    return 1.0/OpSin::func(x);
+  }
   static inline void func(float xr, float xi, float &yr, float &yi) {
     float zr, zi;
     OpSin::func(xr,xi,zr,zi);
@@ -423,16 +436,20 @@ ArrayVector CscFunction(int nargout, const ArrayVector& arg) {
 //!
 
 struct OpCscd {
-  static inline float func(float x) {return 1.0f/sinf(x*M_PI/180.0);}
-  static inline double func(double x) {return 1.0/sin(x*M_PI/180.0);}
+  static inline float func(float x) {
+    return 1.0f/OpSind::func(x);
+  }
+  static inline double func(double x) {
+    return 1.0/OpSind::func(x);
+  }
   static inline void func(float xr, float xi, float &yr, float &yi) {
     float zr, zi;
-    OpSin::func(xr*M_PI/180.0,xi*M_PI/180.0,zr,zi);
+    OpSind::func(xr,xi,zr,zi);
     complex_recip(zr,zi,yr,yi);
   }
   static inline void func(double xr, double xi, double &yr, double &yi) {
     double zr, zi;
-    OpSin::func(xr*M_PI/180.0,xi*M_PI/180.0,zr,zi);
+    OpSind::func(xr,xi,zr,zi);
     complex_recip(zr,zi,yr,yi);
   }
 };
@@ -483,8 +500,12 @@ ArrayVector CscdFunction(int nargout, const ArrayVector& arg) {
 //!
 
 struct OpSec {
-  static inline float func(float x) {return 1.0f/cosf(x);}
-  static inline double func(double x) {return 1.0/cos(x);}
+  static inline float func(float x) {
+    return 1.0f/OpCos::func(x);
+  }
+  static inline double func(double x) {
+    return 1.0/OpCos::func(x);
+  }
   static inline void func(float xr, float xi, float &yr, float &yi) {
     float zr, zi;
     OpCos::func(xr,xi,zr,zi);
@@ -522,17 +543,17 @@ ArrayVector SecFunction(int nargout, const ArrayVector& arg) {
 //!
 
 struct OpSecd {
-  static inline float func(float x) {return 1.0f/cosf(x*M_PI/180.0);}
-  static inline double func(double x) {return 1.0/cos(x*M_PI/180.0);}
+  static inline float func(float x) {
+    return OpSec::func(x*DEG2RAD);
+  }
+  static inline double func(double x) {
+    return OpSec::func(x*DEG2RAD);
+  }
   static inline void func(float xr, float xi, float &yr, float &yi) {
-    float zr, zi;
-    OpCos::func(xr*M_PI/180.0,xi*M_PI/180.0,zr,zi);
-    complex_recip(zr,zi,yr,yi);
+    OpSec::func(xr*DEG2RAD,xi*DEG2RAD,yr,yi);
   }
   static inline void func(double xr, double xi, double &yr, double &yi) {
-    double zr, zi;
-    OpCos::func(xr*M_PI/180.0,xi*M_PI/180.0,zr,zi);
-    complex_recip(zr,zi,yr,yi);
+    OpSec::func(xr*DEG2RAD,xi*DEG2RAD,yr,yi);
   }
 };
 
@@ -585,15 +606,17 @@ ArrayVector SecdFunction(int nargout, const ArrayVector& arg) {
 //!
 
 struct OpCot {
-  static inline float func(float x) {return 1.0f/tanf(x);}
-  static inline double func(double x) {return 1.0/tan(x);}
-  static inline void func(float xr, float xi, float &yr, float &yi) {
-    yr = sinf(xr)/(-cosf(xr)+coshf(xi));
-    yi = -sinhf(xi)/(-cosf(xr)+coshf(xi));
+  template <typename T>
+  static inline T func(T x) {
+    return 1.0f/OpTan::func(x);
   }
-  static inline void func(double xr, double xi, double &yr, double &yi) {
-    yr = sin(xr)/(-cos(xr)+cosh(xi));
-    yi = -sinh(xi)/(-cos(xr)+cosh(xi));
+  template <typename T>
+  static inline void func(T xr, T xi, T &yr, T &yi) {
+    T sinr, sini;
+    T cosr, cosi;
+    OpSin::func(xr,xi,sinr,sini);
+    OpCos::func(xr,xi,cosr,cosi);
+    complex_divide(cosr,cosi,sinr,sini,yr,yi);
   }
 };
 
@@ -623,15 +646,15 @@ ArrayVector CotFunction(int nargout, const ArrayVector& arg) {
 //!
 
 struct OpCotd {
-  static inline float func(float x) {return 1.0f/tanf(x*M_PI/180.0);}
-  static inline double func(double x) {return 1.0/tan(x*M_PI/180.0);}
+  static inline float func(float x) {return 1.0f/tanf(x*DEG2RAD);}
+  static inline double func(double x) {return 1.0/tan(x*DEG2RAD);}
   static inline void func(float xr, float xi, float &yr, float &yi) {
-    yr = sinf(xr*M_PI/180.0)/(-cosf(xr*M_PI/180.0)+coshf(xi*M_PI/180.0));
-    yi = -sinhf(xi*M_PI/180.0)/(-cosf(xr*M_PI/180.0)+coshf(xi*M_PI/180.0));
+    yr = sinf(xr*DEG2RAD)/(-cosf(xr*DEG2RAD)+coshf(xi*DEG2RAD));
+    yi = -sinhf(xi*DEG2RAD)/(-cosf(xr*DEG2RAD)+coshf(xi*DEG2RAD));
   }
   static inline void func(double xr, double xi, double &yr, double &yi) {
-    yr = sin(xr*M_PI/180.0)/(-cos(xr*M_PI/180.0)+cosh(xi*M_PI/180.0));
-    yi = -sinh(xi*M_PI/180.0)/(-cos(xr*M_PI/180.0)+cosh(xi*M_PI/180.0));
+    yr = sin(xr*DEG2RAD)/(-cos(xr*DEG2RAD)+cosh(xi*DEG2RAD));
+    yi = -sinh(xi*DEG2RAD)/(-cos(xr*DEG2RAD)+cosh(xi*DEG2RAD));
   }
 };
 

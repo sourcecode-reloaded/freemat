@@ -18,6 +18,7 @@ function test_val = wbtest_rref_3(verbose)
   elseif (~error_flag && ~error_refs(loopi) && ~wbtest_near(y1,y1_refs{loopi}))
     printf('Mismatch (near): input %d output 1 [y1,y2]=rref(x1,.0001)\n',loopi);
     fail_count = fail_count + 1;
+    keyboard
   elseif (~error_flag && ~error_refs(loopi) && ~wbtest_near(y2,y2_refs{loopi}))
     printf('Mismatch (near): input %d output 2 [y1,y2]=rref(x1,.0001)\n',loopi);
     fail_count = fail_count + 1;
