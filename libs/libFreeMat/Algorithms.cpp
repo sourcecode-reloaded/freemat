@@ -914,7 +914,9 @@ Array NCat(const ArrayVector& pdata, int catdim) {
   // We also strip the empties
   ArrayVector data;
   for (int i=0;i<pdata.size();i++) {
-    if (pdata[i].dimensions() != NTuple(0,0)) {
+    if ((pdata[i].dimensions() != NTuple(0,0)) &&
+        (pdata[i].dimensions() != NTuple(1,0)) &&
+        (pdata[i].dimensions() != NTuple(0,1))   ) {
       if (cls == CellArray) {
 	if (pdata[i].dataClass() == CellArray)
 	  data.push_back(pdata[i]);
