@@ -48,6 +48,9 @@ function [pder1,pder2] = polyder(p1,p2)
       x1 = (p1(:).').*(n-1:-1:0);
       x1 = x1(1:end-1);
       pder1 = polyder_trim_zeros(x1);
+      if (isa(p1,'single'))
+        pder1 = single(pder1);
+      end
       return;
    end
    f1 = conv(p1,polyder(p2));
@@ -61,7 +64,10 @@ function [pder1,pder2] = polyder(p1,p2)
      pder1 = polyder_trim_zeros(f1-f2);
      pder2 = polyder_trim_zeros(conv(p2,p2));
    end;
-
+   if (isa(p1,'single'))
+     pder1 = single(pder1);
+   end
+   
 function y = polyder_trim_zeros(x)
   if (isempty(x) | isempty(find(x,1)))
     y = 0;

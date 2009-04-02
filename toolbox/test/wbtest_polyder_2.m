@@ -17,6 +17,7 @@ function test_val = wbtest_polyder_2(verbose)
   elseif (~error_flag && ~error_refs(loopi) && ~wbtest_exact(y1,y1_refs{loopi}))
     printf('Mismatch (exact): input %d output 1 y1=polyder(x1,4)\n',loopi);
     fail_count = fail_count + 1;
+    keyboard
   end
   test_val = (fail_count == 0);
 end

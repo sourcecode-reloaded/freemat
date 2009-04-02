@@ -1649,35 +1649,17 @@ ArrayVector Num2StrFunction(int nargout, const ArrayVector& arg) {
   }
 }
 
-//!
-//@Module STR2NUM Convert a String to a Number
-//@@Section IO
-//@@Usage
-//Converts a string to a number.  The general syntax for its use
-//is
-//@[
-//  x = str2num(string)
-//@]
-//Here @|string| is the data string, which contains the data to 
-//be converted into a number.  The output is in double precision,
-//and must be typecasted to the appropriate type based on what
-//you need.
-//@@Tests
-//@$exact|y1=str2num(x1)
-//@@Signature
-//function str2num Str2NumFunction
-//inputs string
-//outputs x
-//!
-ArrayVector Str2NumFunction(int nargout, const ArrayVector& arg) {
-  if (arg.size() != 1)
-    throw Exception("str2num takes a single argument, the string to convert into a number");
-  Array data(arg[0]);
-  if (!data.isString())
-    return ArrayVector(EmptyConstructor());
-  return ArrayVector(Array(data.asDouble()));
-}
-
+//
+//  This should become STR2DOUBLE.
+//
+// ArrayVector Str2NumFunction(int nargout, const ArrayVector& arg) {
+//   if (arg.size() != 1)
+//     throw Exception("str2num takes a single argument, the string to convert into a number");
+//   Array data(arg[0]);
+//   if (!data.isString())
+//     return ArrayVector(EmptyConstructor());
+//   return ArrayVector(Array(data.asDouble()));
+// }
 
 
 // How does sscanf work...

@@ -200,7 +200,7 @@ ArrayVector DeblankFunction(int, const ArrayVector&);
 ArrayVector StrTrimFunction(int, const ArrayVector&);
 ArrayVector StrFindFunction(int, const ArrayVector&);
 ArrayVector Num2StrFunction(int, const ArrayVector&);
-ArrayVector Str2NumFunction(int, const ArrayVector&);
+//ArrayVector Str2NumFunction(int, const ArrayVector&);
 ArrayVector SscanfFunction(int, const ArrayVector&);
 ArrayVector StructFunction(int, const ArrayVector&);
 ArrayVector SumFunction(int, const ArrayVector&);
@@ -503,7 +503,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("strtrim",StrTrimFunction,1,1,"x",NULL);
   context->addFunction("strfind",StrFindFunction,2,1,"x","pattern",NULL);
   context->addFunction("num2str",Num2StrFunction,2,1,"x","format",NULL);
-  context->addFunction("str2num",Str2NumFunction,1,1,"string",NULL);
+  //  context->addFunction("str2num",Str2NumFunction,1,1,"string",NULL);
   context->addFunction("sscanf",SscanfFunction,2,-1,"text","format",NULL);
   context->addFunction("struct",StructFunction,-1,1,NULL);
   context->addFunction("sum",SumFunction,2,1,"x","dim",NULL);

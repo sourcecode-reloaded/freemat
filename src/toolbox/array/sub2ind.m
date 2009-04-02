@@ -55,16 +55,16 @@ function n = sub2ind(sizevec,varargin)
   indvecs = {};
   nomlength = length(varargin{1}(:));
   for i=1:length(varargin)
-    indvecs{i} = int32(varargin{i}(:));
+    indvecs{i} = varargin{i}(:);
     if (length(indvecs{i}) ~= nomlength)
       error 'all indexing arguments to sub2ind must be the same length'
     end
-    if (max(indvecs{i}) > sizevec(i)) | (min(indvecs{i}) < 1)
+    if (min(indvecs{i}) < 1)
       error 'indexing arguments are out of range of an array of the given size'
     end
   end
   % Everything is OK, so combine these into a single indexing vector
-  outvec = int32(zeros(nomlength,1));
+  outvec = zeros(nomlength,1);
   slicesize = 1;
   for i=1:length(varargin)
     outvec = outvec + slicesize*(indvecs{i}-1);
