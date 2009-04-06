@@ -1500,6 +1500,10 @@ void FMEditor::helpWin() {
 void FMEditor::helpOnSelection() {
   QString selectText = currentEditor()->textCursor().selectedText();
   selectText = selectText.trimmed();
+  if (selectText.startsWith('\'') && selectText.endsWith('\'')) {
+    selectText.chop(1); //remove the last character
+    selectText.remove(0,1); //remove the first character
+  }
   if (!selectText.isEmpty())
     HelpWinFunction(0,ArrayVector(Array(selectText)),m_eval);
 }
@@ -1507,6 +1511,10 @@ void FMEditor::helpOnSelection() {
 void FMEditor::openSelection() {
   QString selectText = currentEditor()->textCursor().selectedText();
   selectText = selectText.trimmed();
+  if (selectText.startsWith('\'') && selectText.endsWith('\'')) {
+    selectText.chop(1); //remove the last character
+    selectText.remove(0,1); //remove the first character
+  }
   if (!selectText.isEmpty())
     loadFile(selectText);
 }
