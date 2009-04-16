@@ -290,6 +290,7 @@ ArrayVector GLDefMaterialFunction(int, const ArrayVector&);
 ArrayVector GLAssemblyFunction(int, const ArrayVector&);
 ArrayVector GLNodeFunction(int, const ArrayVector&);
 ArrayVector GLClumpFunction(int, const ArrayVector&);
+ArrayVector GLLinesFunction(int, const ArrayVector&);
 ArrayVector GLShowFunction(int, const ArrayVector&);
 ArrayVector HIs2DViewFunction(int, const ArrayVector&);
 ArrayVector EditorFunction(int, const ArrayVector&, Interpreter*);
@@ -620,7 +621,9 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
    if (guiflag)
      context->addGfxFunction("glclump",GLClumpFunction,2,0,"name","clump",NULL);
    if (guiflag)
-     context->addGfxFunction("glshow",GLShowFunction,1,0,"name",NULL);
+     context->addGfxFunction("gllines",GLLinesFunction,3,0,"name","lines","color",NULL);
+   if (guiflag)
+     context->addGfxFunction("glshow",GLShowFunction,2,0,"name","scale",NULL);
    if (guiflag)
      context->addGfxFunction("is2dview",HIs2DViewFunction,1,1,"handle",NULL);
    if (guiflag)

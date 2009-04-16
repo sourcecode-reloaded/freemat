@@ -381,14 +381,14 @@ QString Scanner::context(unsigned pos) {
   int linenumber = 1;
   int line_stop = m_text.indexOf("\n");
   QString prevline;
-  while (int(pos) > line_stop) {
+  while ((int(pos) > line_stop) && (linenumber < 10000)) {
     prevline = m_text.mid(line_start,line_stop-line_start);
     line_start = line_stop+1;
     line_stop = m_text.indexOf("\n",line_start);
     linenumber++;
   }
   QString retstring;
-  if (m_filename.size() > 0) {
+  if ((m_filename.size() > 0) && (linenumber < 10000)) {
     retstring = " at line number: " + QString::number(linenumber);
     retstring += " of file " + m_filename + "\n";
   }  else

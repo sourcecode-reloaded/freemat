@@ -13,6 +13,12 @@ public:
   QVector<double> points;
 };
 
+class GLLines {
+public:
+  QVector<double> points;
+  double color[3];
+};
+
 class GLClump {
 public:
   QVector<double> points;
@@ -41,6 +47,7 @@ QMap<QString,GLMaterial> material_dictionary;
 QMap<QString,GLAssembly> assemblymap;
 QMap<QString,GLNode> nodemap;
 QMap<QString,GLClump> clumpmap;
+QMap<QString,GLLines> linesmap;
 
 /*
  * (c) Copyright 1993, 1994, Silicon Graphics, Inc.
@@ -443,9 +450,34 @@ void GLWidget::paintAssembly(QString aname) {
       paintNode(t.name);
     else if (clumpmap.contains(t.name))
       paintClump(t.name);
+    else if (linesmap.contains(t.name))
+      paintLines(t.name);
     else
       paintAssembly(t.name);
     glPopMatrix();
+  }
+}
+
+void GLWidget::paintLines(QString aname) {
+  GLLines &node(linesmap[aname]);
+  int n=0;
+  double p1[3];
+  float color[4];
+  color[0] = node.color[0];
+  color[1] = node.color[1];
+  color[2] = node.color[2];
+  color[3] = 1.0f;
+  glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
+  while (n<node.points.size()) {
+    int pcount = int(node.points[n++]);
+    glBegin(GL_LINE_STRIP);
+    for (int i=0;i<pcount;i++) {
+      double x = node.points[n++];
+      double y = node.points[n++];
+      double z = node.points[n++];
+      glVertex3d(x,y,z);
+    }
+    glEnd();
   }
 }
 
@@ -512,6 +544,7 @@ void GLWidget::paintGL() {
   build_rotmatrix(m,curquat);
   glTranslated(0.0, 0.0, -10.0);
   glMultMatrixf(&m[0][0]);
+  glScaled(1.0/scale,1.0/scale,1.0/scale);
   paintAssembly(name);
 }
 
@@ -591,6 +624,46 @@ ArrayVector GLDefMaterialFunction(int nargout, const ArrayVector& arg) {
 }
 
 //!
+//@Module GLLINES Create a GL Lineset
+//@@Section GLWIN
+//@@Usage
+//Defines a set of lines that can be treated as a node.
+//A GL Lines is defined by a vector consisting of the
+//following elements:
+//@[
+//   [m1 x1 y1 z1 ... xn yn zn m2 x1 y1 z1 .... ]
+//@]
+//i.e., a point count followed by that number of triplets.
+//The usage of this function is 
+//@[
+//  gllines(name,vector,color)
+//@]
+//where @|name| is the name of the lineset and @|vector|
+//is the aforementioned vector of points.
+//@@Signature
+//gfunction gllines GLLinesFunction
+//inputs name vector color
+//outputs none
+//!
+ArrayVector GLLinesFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 3) throw Exception("gllines requires three arguments: the object name, the vector and color");
+  QString name = arg[0].asString();
+  Array p = arg[1].toClass(Double).asDenseArray();
+  const BasicArray<double> &p_rp(p.constReal<double>());
+  GLLines lines;
+  for (index_t i=1;i<=p.length();i++) {
+    lines.points.push_back(p_rp[NTuple(i,1)]);
+  }
+  Array color = arg[2].toClass(Double).asDenseArray();
+  const BasicArray<double> &color_rp(color.constReal<double>());
+  lines.color[0] = color_rp[NTuple(1,1)];
+  lines.color[1] = color_rp[NTuple(2,1)];
+  lines.color[2] = color_rp[NTuple(3,1)];
+  linesmap[name] = lines;
+  return ArrayVector();
+}
+
+//!
 //@Module GLCLUMP Create a GL Clump
 //@@Section GLWIN
 //@@Usage
@@ -610,7 +683,7 @@ ArrayVector GLDefMaterialFunction(int nargout, const ArrayVector& arg) {
 //vector of points.
 //@@Signature
 //gfunction glclump GLClumpFunction
-//inputs name name vector
+//inputs name vector
 //outputs none
 //!
 ArrayVector GLClumpFunction(int nargout, const ArrayVector& arg) {
@@ -666,7 +739,7 @@ ArrayVector GLAssemblyFunction(int nargout, const ArrayVector& arg) {
   for (int i=1;i<arg.size();i+=2) {
     QString objectname = arg[i].asString();
     if (!assemblymap.contains(objectname) && !nodemap.contains(objectname)
-	&& !clumpmap.contains(objectname))
+	&& !clumpmap.contains(objectname) && !linesmap.contains(objectname))
       throw Exception(QString("Object ") + objectname + " is not defined");
     Array transform = arg[i+1].toClass(Double);
     if ((transform.rows() != 4) || (transform.cols() != 4))
@@ -742,17 +815,23 @@ ArrayVector GLNodeFunction(int nargout, const ArrayVector& arg) {
 //that you want to see in the window.
 //@@Signature
 //gfunction glshow GLShow
-//input name
+//input name scale
 //output none
 //!
 ArrayVector GLShowFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1) return ArrayVector();
   QString name = arg[0].asString();
+  double scale;
+  if (arg.size() < 2) 
+    scale = 1;
+  else
+    scale = arg[1].asDouble();
   if (!assemblymap.contains(name))
     throw Exception(QString("Assembly named ") + name + " could not be found");
   GLWidget *t = new GLWidget;
   t->setWindowIcon(QPixmap(":/images/freemat_small_mod_64.png"));
   t->setWindowTitle(QString("GL Assembly %1").arg(name));
+  t->scale = scale;
   t->name = name;
   t->show();
   return ArrayVector();

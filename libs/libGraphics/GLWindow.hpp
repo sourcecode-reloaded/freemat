@@ -9,6 +9,7 @@ class GLWidget : public QGLWidget
 
 public:
   QString name;
+  double scale;
 
   GLWidget(QWidget *parent = 0);
   ~GLWidget();
@@ -22,6 +23,7 @@ protected:
   void paintAssembly(QString aname);
   void paintNode(QString aname);
   void paintClump(QString aname);
+  void paintLines(QString aname);
   void resizeGL(int width, int height);
   void mousePressEvent(QMouseEvent *event);
   void mouseMoveEvent(QMouseEvent *event);
