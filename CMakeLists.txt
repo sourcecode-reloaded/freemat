@@ -337,7 +337,8 @@ OPTION(USE_DYNLINK "Link BLAS dynamically" OFF)
 IF( USE_DYNLINK )
         INCLUDE_DIRECTORIES( libs/libMath )
         ADD_DEFINITIONS( -DDYN_BLAS )
-	INSTALL( FILES ${PROJECT_SOURCE_DIR}/blas.ini DESTINATION bin )
+		INSTALL( FILES ${PROJECT_SOURCE_DIR}/blas.ini DESTINATION bin )
+		#INSTALL( FILES ${PROJECT_SOURCE_DIR}/dependencies/bin/blas_generic.dll DESTINATION bin )
 ELSE( USE_DYNLINK )
  IF( NOT MSVC )
 #        LINK_DIRECTORIES(/usr/lib/atlas)
@@ -370,6 +371,19 @@ ADD_SUBDIRECTORY( src )
 ##ADD_SUBDIRECTORY( images )
 ##ADD_SUBDIRECTORY( tools )
 
+####################################################################################
+#Portable Audio section
+IF( MSVC )
+	FIND_LIBRARY(PORTAUDIO_LIBRARY NAMES portaudio_x86.lib DOC "Location of portable audio library" PATHS ${LOCAL_PATH} ${LOCAL_PATH}/Release)
+	FIND_PATH(PORTAUDIO_INCLUDE_DIR NAMES portaudio.h DOC "Location of portaudio.h" PATHS ${LOCAL_PATH})
+	IF( PORTAUDIO_LIBRARY AND PORTAUDIO_INCLUDE_DIR ) 
+		INCLUDE_DIRECTORIES( ${PORTAUDIO_INCLUDE_DIR} )
+		ADD_DEFINITIONS( -DHAVE_PORTAUDIO19 )
+		SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PORTAUDIO_LIBRARY} )
+	ENDIF( PORTAUDIO_LIBRARY AND PORTAUDIO_INCLUDE_DIR )	
+ENDIF( MSVC )
+
+
 
 ####################################################################################
 #Install section
@@ -387,8 +401,8 @@ GET_TARGET_PROPERTY(FreeMat_Loc FreeMat LOCATION)
 # Do not run helpgen automatically -- there are too many things that
 # have to be checked after it is run.
 #INSTALL( CODE "EXECUTE_PROCESS( COMMAND ${FreeMat_Loc} -f run_helpgen WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})" )
-INSTALL(DIRECTORY toolbox DESTINATION share/FreeMat PATTERN "*.m" PATTERN ".svn" EXCLUDE PERMISSIONS WORLD_READ )
-INSTALL(DIRECTORY help DESTINATION share/FreeMat PATTERN "*" PERMISSIONS WORLD_READ )
+#INSTALL(DIRECTORY toolbox DESTINATION share/FreeMat PATTERN "*.m" PATTERN ".svn" EXCLUDE PERMISSIONS WORLD_READ )
+#INSTALL(DIRECTORY help DESTINATION share/FreeMat PATTERN "*" PERMISSIONS WORLD_READ )
 # INSTALL(FILES
 # ${QT_QTCORE_LIBRARY} 
 # ${QT_QTGUI_LIBRARY} 
@@ -412,7 +426,20 @@ IF(WIN32 AND NOT UNIX)
   SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\freemat.sf.net")
   SET(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\freemat.sf.net")
   #SET(CPACK_NSIS_CONTACT "me@my-personal-home-page.com")
-  #SET(CPACK_NSIS_MODIFY_PATH ON)
+  SET(CPACK_NSIS_MODIFY_PATH ON)
+
+	INSTALL(DIRECTORY toolbox DESTINATION toolbox PATTERN "*" PATTERN ".svn" EXCLUDE PERMISSIONS WORLD_READ )
+	INSTALL(DIRECTORY help DESTINATION help PATTERN "*" PATTERN ".svn" EXCLUDE PERMISSIONS WORLD_READ )
+	INSTALL(FILES
+	 ${QT_LIBRARY_DIR}/qtcore4.dll 
+	 ${QT_LIBRARY_DIR}/qtgui4.dll
+	 ${QT_LIBRARY_DIR}/qtnetwork4.dll
+	 ${QT_LIBRARY_DIR}/qtopengl4.dll
+	 ${QT_LIBRARY_DIR}/qtxml4.dll
+	 ${QT_LIBRARY_DIR}/qtsvg4.dll
+	 DESTINATION bin PERMISSIONS WORLD_EXECUTE )
+	 
+
 ELSE(WIN32 AND NOT UNIX)
   #SET(CPACK_STRIP_FILES "bin/MyExecutable")
   #SET(CPACK_SOURCE_STRIP_FILES "")
