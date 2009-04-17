@@ -32,6 +32,8 @@
 #include "Array.hpp"
 #include "Exception.hpp"
 
+#ifdef DYN_BLAS
+
 BlasWrapper::BlasWrapper()
 {  
 }
@@ -163,3 +165,4 @@ void LoadBlasFunctions( void )
 	wrapper.Init();
 }
 
+#endif
