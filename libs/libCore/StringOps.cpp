@@ -1527,7 +1527,7 @@ static Array Num2StrHelperReal(const BasicArray<T> &dp, const char *formatspec) 
   while (iter1.isValid()) {
     for (index_t i=1;i<=iter1.size();i++) {
       allint = allint && (iter1.get() == round(iter1.get()));
-      maxlen = qMax(maxlen,QString().sprintf(formatspec,fabs(iter1.get())).length());
+      maxlen = qMax(maxlen,QString().sprintf(formatspec,fabs(static_cast<double>(iter1.get()))).length());
       iter1.next();
     }
     iter1.nextSlice();
