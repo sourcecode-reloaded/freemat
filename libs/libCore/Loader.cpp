@@ -292,6 +292,7 @@ ArrayVector GLNodeFunction(int, const ArrayVector&);
 ArrayVector GLClumpFunction(int, const ArrayVector&);
 ArrayVector GLLinesFunction(int, const ArrayVector&);
 ArrayVector GLShowFunction(int, const ArrayVector&);
+// ArrayVector VolViewFunction(int, const ArrayVector&);
 ArrayVector HIs2DViewFunction(int, const ArrayVector&);
 ArrayVector EditorFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector EditFunction(int, const ArrayVector&, Interpreter*);
@@ -624,6 +625,8 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
      context->addGfxFunction("gllines",GLLinesFunction,3,0,"name","lines","color",NULL);
    if (guiflag)
      context->addGfxFunction("glshow",GLShowFunction,2,0,"name","scale",NULL);
+//    if (guiflag)
+//      context->addGfxFunction("volview",VolViewFunction,3,0,"vol","scalar","color",NULL);
    if (guiflag)
      context->addGfxFunction("is2dview",HIs2DViewFunction,1,1,"handle",NULL);
    if (guiflag)
