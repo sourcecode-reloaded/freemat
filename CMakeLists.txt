@@ -176,6 +176,21 @@ ENDIF( UMFPACK_LIBRARY AND UMFPACK_INCLUDE_DIR AND AMD_LIBRARY AND AMD_INCLUDE_D
 ###
 
 ######################################################################
+# VOLPACK Support
+######################################################################
+OPTION(USE_VOLPACK "Build with VOLPACK support?" OFF)
+IF( USE_VOLPACK )
+FIND_LIBRARY(VOLPACK_LIBRARY NAMES volpack DOC "Location of VOLPACK library" PATHS ${LOCAL_PATH})
+FIND_PATH(VOLPACK_INCLUDE_DIR NAMES volpack.h DOC "Location of volpack.h" PATHS ${LOCAL_PATH})
+IF( VOLPACK_LIBRARY AND VOLPACK_INCLUDE_DIR ) 
+	INCLUDE_DIRECTORIES( ${VOLPACK_INCLUDE_DIR} )
+	ADD_DEFINITIONS( -DHAVE_VOLPACK )
+        SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${VOLPACK_LIBRARY} )
+ENDIF( VOLPACK_LIBRARY AND VOLPACK_INCLUDE_DIR )	
+ENDIF( USE_VOLPACK)
+
+
+######################################################################
 # LLVM Support
 ######################################################################
 OPTION(USE_LLVM "Build with LLVM support?" ON)
