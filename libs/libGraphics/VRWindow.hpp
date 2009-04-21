@@ -5,6 +5,7 @@
 #include <QMouseEvent>
 #include <QResizeEvent>
 #include "Array.hpp"
+#ifdef HAVE_VOLPACK
 #include "volpack.h"
 
 class VRWidget : public QWidget
@@ -42,5 +43,6 @@ private:
   float *weight_table;
 };
 
+#endif
 
 #endif

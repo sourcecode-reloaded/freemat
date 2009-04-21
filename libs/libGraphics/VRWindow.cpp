@@ -1,4 +1,6 @@
 #include "VRWindow.hpp"
+
+#ifdef HAVE_VOLPACK
 #include "trackball.h"
 #include <QtGui>
 
@@ -13,7 +15,7 @@ typedef struct {
 
 const int NUM_FIELDS = 3;
 const int NUM_SHADE_FIELDS = 2;
-const int NUM_CLASSIFY_FIELDS = 1;
+const int NUM_CLASSIFY_FIELDS = 2;
 const int NORM_FIELD = 0;
 const int NORM_MAX = VP_NORM_MAX;
 const int SCALAR_FIELD = 1;
@@ -21,6 +23,15 @@ const int SCALAR_MAX = 255;
 const int GRAD_FIELD = 2;
 const int GRAD_MAX = VP_GRAD_MAX;
 const int COLOR_CHANNELS = 3;
+#define GRADIENT_PARAM		1
+
+
+#define GRADIENT_RAMP_POINTS 4
+int GradientRampX[] =   {  0,   5,  20, 221};
+float GradientRampY[] = {0.0, 0.0, 1.0, 1.0};
+
+
+float gradient_ramp[GRAD_MAX+1];
 
 VRWidget::VRWidget(QWidget *parent, const Array &dp,
 		   const Array &scalar_ramp, 
@@ -65,6 +76,10 @@ VRWidget::VRWidget(QWidget *parent, const Array &dp,
 			   (float*)(opacity_ramp.getVoidPointer()),
 			   opacity_ramp.length()*sizeof(float)) != VP_OK)
     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
+  vpRamp(gradient_ramp, sizeof(float), GRADIENT_RAMP_POINTS,
+	 GradientRampX, GradientRampY);
+  vpSetClassifierTable(contxt, GRADIENT_PARAM, GRAD_FIELD,
+		       gradient_ramp, sizeof(gradient_ramp));
   if (vpSetd(contxt, VP_MIN_VOXEL_OPACITY, 0.05) != VP_OK)
     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
   if (vpClassifyVolume(contxt) != VP_OK)
@@ -78,22 +93,17 @@ VRWidget::VRWidget(QWidget *parent, const Array &dp,
 			COLOR_CHANNELS*material_count*(NORM_MAX+1)*sizeof(float),
 			0,0,0) != VP_OK)
     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
-  
   if (vpSetMaterial(contxt, VP_MATERIAL0, VP_AMBIENT, VP_BOTH_SIDES,
 		    0.85, 0.0, 0.0) != VP_OK)
     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));    
-
   if (vpSetMaterial(contxt, VP_MATERIAL0, VP_DIFFUSE, VP_BOTH_SIDES,
 		    0.40, 0.0, 0.0) != VP_OK)
     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
-
   if (vpSetMaterial(contxt, VP_MATERIAL0, VP_SPECULAR, VP_BOTH_SIDES,
-		    0.90, 0.0, 0.0) != VP_OK)
+		    0.90, 0.9, 0.9) != VP_OK)
     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
-
-  if (vpSetMaterial(contxt, VP_MATERIAL0, VP_SHINYNESS, VP_BOTH_SIDES,30.0,0.0,0.0) != VP_OK)
+  if (vpSetMaterial(contxt, VP_MATERIAL0, VP_SHINYNESS, VP_BOTH_SIDES,10.0,0.0,0.0) != VP_OK)
     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
-
   if (vpSetLight(contxt, VP_LIGHT0, VP_DIRECTION, 0.3, 0.3, 1.0) != VP_OK)
     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
   if (vpSetLight(contxt, VP_LIGHT0, VP_COLOR, 1.0, 1.0, 1.0) != VP_OK)
@@ -131,7 +141,7 @@ void VRWidget::mousePressEvent(QMouseEvent *event) {
 }
 
 void VRWidget::paintEvent(QPaintEvent *event) {
-  qDebug() << "Paint";
+  rerender();
   QPainter painter(this);
   painter.drawImage(rect(),backImg);
 }
@@ -144,13 +154,11 @@ void VRWidget::mouseMoveEvent(QMouseEvent *event) {
 	    (2.0*event->y() - H)/H);
   
   add_quats(lastquat, curquat, curquat);
-  rerender();
   update();
   lastPos = event->pos();
 }
 
 void VRWidget::rerender() {
-  qDebug() << "render" << curquat[0] << " " << curquat[1] << " " << curquat[2] << " " << curquat[3] << "\n";;
   if (vpCurrentMatrix(contxt, VP_MODEL) != VP_OK)
     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
   vpMatrix4 m;
@@ -161,54 +169,30 @@ void VRWidget::rerender() {
       mtrans[i][k] = m[k][i];
   vpSetMatrix(contxt, mtrans);
   
-  //    if (vpTranslate(contxt,0,0,-10) != VP_OK)
-  //      throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
-  //   if (vpMultMatrix(contxt,m) != VP_OK)
-  //     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
-  //    if (vpScale(contxt,1/500,1/500,1/500) != VP_OK)
-  //      throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
-  
-  //    if (vpCurrentMatrix(contxt, VP_VIEW) != VP_OK)
-  //      throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
-  //    if (vpIdentityMatrix(contxt) != VP_OK)
-  //      throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
-  //    if (vpTranslate(contxt, 0.1, 0.0, 0.0) != VP_OK)
-  //      throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
-  
-  //    if (vpCurrentMatrix(contxt, VP_PROJECT) != VP_OK)
-  //      throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
-  //    if (vpWindow(contxt, VP_PARALLEL, -0.5, 0.5, -0.5, 0.5, -0.5, 0.5) != VP_OK)
-  //      throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
-  
-  //    /* set the initial viewing parameters */
-  //   if (vpSeti(contxt, VP_CONCAT_MODE, VP_CONCAT_LEFT) != VP_OK)
-  //     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
-  //   if (vpRotate(contxt, VP_Y_AXIS, 130.0) != VP_OK)
-  //     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
-  //   if (vpRotate(contxt, VP_X_AXIS, -15.0) != VP_OK)
-  //     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
-  
   if (vpCurrentMatrix(contxt, VP_PROJECT) != VP_OK)
     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
   if (vpIdentityMatrix(contxt) != VP_OK)
     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
   if (vpWindow(contxt, VP_PARALLEL, -0.5, 0.5, -0.5, 0.5, -0.5, 0.5) != VP_OK)
     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
-//   if (vpCurrentMatrix(contxt, VP_MODEL) != VP_OK)
-//     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
-  
   if (vpShadeTable(contxt) != VP_OK)
     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
   if (vpRenderClassifiedVolume(contxt) != VP_OK)
     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
 }
 
-//!
 //@Module VOLVIEW Volume View Function
-//!
 ArrayVector VolViewFunction(int nargout, const ArrayVector& arg) {
   VRWidget *wid = new VRWidget(NULL,arg[0],arg[1],arg[2],1);
   wid->setWindowTitle("Volume Viewer");
   wid->show();
   return ArrayVector();
 }
+#else
+
+ArrayVector VolViewFunction(int nargout, const ArrayVector& arg) {
+  throw Exception("FreeMat was built without volpack (and thus software volume rendering) support.");
+  return ArrayVector();
+}
+
+#endif

@@ -62,7 +62,6 @@ ${OPTIONAL_LIBS}
 ${ARPACK_LIBRARY}
 ${LAPACK_LIBRARY}
 ${BLAS_LIBRARY}
-/home/basu/lib/libvolpack.a
 )
 
 ADD_LLVM_LINK_LIBS(FreeMat "${LLVM_LIBS}" )
