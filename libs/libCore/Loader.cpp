@@ -626,7 +626,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
    if (guiflag)
      context->addGfxFunction("glshow",GLShowFunction,2,0,"name","scale",NULL);
    if (guiflag)
-     context->addGfxFunction("volview",VolViewFunction,3,0,"vol","scalar","color",NULL);
+     context->addGfxFunction("volview",VolViewFunction,4,0,"vol","scalar","map","colors",NULL);
    if (guiflag)
      context->addGfxFunction("is2dview",HIs2DViewFunction,1,1,"handle",NULL);
    if (guiflag)

@@ -14,8 +14,8 @@ class VRWidget : public QWidget
 public:
   VRWidget(QWidget *parent, const Array &dp, 
 	   const Array& scalar_ramp, 
-	   const Array &color_ramp,
-	   int material_count);
+	   const Array &material_ramp,
+	   const Array &material_prop);
   ~VRWidget();
   QSize minimumSizeHint() const;
   QSize sizeHint() const;
@@ -35,6 +35,7 @@ private:
   int W, H;
   QImage backImg;
   Array data;
+  Array mat_map;
   Array color_transfer_ramp;
   Array opacity_ramp;
   Array ones;

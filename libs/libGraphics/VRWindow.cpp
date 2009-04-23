@@ -35,8 +35,8 @@ float gradient_ramp[GRAD_MAX+1];
 
 VRWidget::VRWidget(QWidget *parent, const Array &dp,
 		   const Array &scalar_ramp, 
-		   const Array &color_ramp,
-		   int material_count) 
+		   const Array &material_map,
+		   const Array &material_prop)
   : QWidget(parent) {
   Voxel *dummy_voxel;
   contxt = vpCreateContext();
@@ -45,7 +45,6 @@ VRWidget::VRWidget(QWidget *parent, const Array &dp,
   int slices = dp.dimensions()[2];
   int vcount = rows*cols*slices;
   data = dp.asDenseArray().toClass(UInt8);
-  color_transfer_ramp = color_ramp.asDenseArray().toClass(Float);
   opacity_ramp = scalar_ramp.asDenseArray().toClass(Float);
   if (vpSetVolumeSize(contxt,rows,cols,slices) != VP_OK) 
     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
@@ -87,23 +86,43 @@ VRWidget::VRWidget(QWidget *parent, const Array &dp,
   BasicArray<float> ones_a(NTuple(SCALAR_MAX,1));
   ones_a.fill(1);
   ones = Array(ones_a);
+  int material_count = material_map.cols();
+  if (material_map.rows() != scalar_ramp.length())
+    throw Exception("Material map should have the same number of rows as the opacity transfer function has elements");
+  weight_table = new float[(SCALAR_MAX+1)*material_count];
   shade_table = new float[COLOR_CHANNELS*(NORM_MAX+1)*material_count];
   if (vpSetLookupShader(contxt,COLOR_CHANNELS,material_count,NORM_FIELD,
 			shade_table,
 			COLOR_CHANNELS*material_count*(NORM_MAX+1)*sizeof(float),
-			0,0,0) != VP_OK)
+			SCALAR_FIELD,weight_table,
+			material_count*(SCALAR_MAX+1)*sizeof(float)) != VP_OK)
     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
-  if (vpSetMaterial(contxt, VP_MATERIAL0, VP_AMBIENT, VP_BOTH_SIDES,
-		    0.85, 0.0, 0.0) != VP_OK)
-    throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));    
-  if (vpSetMaterial(contxt, VP_MATERIAL0, VP_DIFFUSE, VP_BOTH_SIDES,
-		    0.40, 0.0, 0.0) != VP_OK)
-    throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
-  if (vpSetMaterial(contxt, VP_MATERIAL0, VP_SPECULAR, VP_BOTH_SIDES,
-		    0.90, 0.9, 0.9) != VP_OK)
-    throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
-  if (vpSetMaterial(contxt, VP_MATERIAL0, VP_SHINYNESS, VP_BOTH_SIDES,10.0,0.0,0.0) != VP_OK)
-    throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
+  mat_map = material_prop;
+  mat_map = mat_map.toClass(Float);
+  const BasicArray<float> &mprop(mat_map.constReal<float>());
+  for (index_t i=1;i<=mat_map.rows();i++) 
+    for (index_t j=1;j<=mat_map.cols();j++) 
+      weight_table[int((i-1)*material_count+(j-1))] = mprop[NTuple(i,j)];
+  if ((material_prop.rows() != material_map.cols()) || 
+      (material_prop.cols() != 10))
+    throw Exception("Expect material property matrix to be N x 10, where N is the number of columns in the material map matrix");
+  Array tmp(material_prop);
+  tmp = tmp.toClass(Float);
+  const BasicArray<float> &tmpa(tmp.constReal<float>());
+  for (index_t i=1;i<=material_prop.rows();i++) {
+    if (vpSetMaterial(contxt, VP_MATERIAL0+i-1,VP_AMBIENT,VP_BOTH_SIDES,
+		      tmpa[NTuple(i,1)],tmpa[NTuple(i,2)],tmpa[NTuple(i,3)]) != VP_OK)
+      throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));    
+    if (vpSetMaterial(contxt, VP_MATERIAL0+i-1,VP_DIFFUSE,VP_BOTH_SIDES,
+		      tmpa[NTuple(i,4)],tmpa[NTuple(i,5)],tmpa[NTuple(i,6)]) != VP_OK)
+      throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));    
+    if (vpSetMaterial(contxt, VP_MATERIAL0+i-1,VP_SPECULAR,VP_BOTH_SIDES,
+		      tmpa[NTuple(i,7)],tmpa[NTuple(i,8)],tmpa[NTuple(i,9)]) != VP_OK)
+      throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));    
+    if (vpSetMaterial(contxt, VP_MATERIAL0+i-1,VP_SHINYNESS,VP_BOTH_SIDES,
+		      tmpa[NTuple(i,10)],0,0) != VP_OK)
+      throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));    
+  }
   if (vpSetLight(contxt, VP_LIGHT0, VP_DIRECTION, 0.3, 0.3, 1.0) != VP_OK)
     throw Exception(QString("VolPack error: ") + vpGetErrorString(vpGetError(contxt)));
   if (vpSetLight(contxt, VP_LIGHT0, VP_COLOR, 1.0, 1.0, 1.0) != VP_OK)
@@ -183,7 +202,7 @@ void VRWidget::rerender() {
 
 //@Module VOLVIEW Volume View Function
 ArrayVector VolViewFunction(int nargout, const ArrayVector& arg) {
-  VRWidget *wid = new VRWidget(NULL,arg[0],arg[1],arg[2],1);
+  VRWidget *wid = new VRWidget(NULL,arg[0],arg[1],arg[2],arg[3]);
   wid->setWindowTitle("Volume Viewer");
   wid->show();
   return ArrayVector();
