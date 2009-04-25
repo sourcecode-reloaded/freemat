@@ -68,7 +68,7 @@ FMFindDialog::FMFindDialog(QWidget *parent) : QDialog(parent) {
   ui.setupUi(this);
   connect(ui.btFind,SIGNAL(clicked()),this,SLOT(find()));
   connect(ui.btClose,SIGNAL(clicked()),this,SLOT(hide()));
-  setWindowIcon(QIcon(QString::fromUtf8(":/images/freemat_small_mod_64.png")));
+  setWindowIcon(QIcon(QString::fromUtf8(":/images/freemat_editor_small_mod_64.png")));
   setWindowTitle("Find - " + Interpreter::getVersionString());
   ui.btFind->setIcon(QIcon(QString::fromUtf8(":/images/find.png")));
   ui.btClose->setIcon(QIcon(QString::fromUtf8(":/images/close.png")));
@@ -105,7 +105,7 @@ FMReplaceDialog::FMReplaceDialog(QWidget *parent) : QDialog(parent) {
   connect(ui.btClose,SIGNAL(clicked()),this,SLOT(hide()));
   connect(ui.btReplace,SIGNAL(clicked()),this,SLOT(replace()));
   connect(ui.btReplaceAll,SIGNAL(clicked()),this,SLOT(replaceAll()));
-  setWindowIcon(QIcon(QString::fromUtf8(":/images/freemat_small_mod_64.png")));
+  setWindowIcon(QIcon(QString::fromUtf8(":/images/freemat_editor_small_mod_64.png")));
   setWindowTitle("Find - " + Interpreter::getVersionString());
   ui.btFind->setIcon(QIcon(QString::fromUtf8(":/images/find.png")));
   ui.btClose->setIcon(QIcon(QString::fromUtf8(":/images/close.png")));
@@ -1062,7 +1062,7 @@ int FMEditPane::getLineNumber() {
 
 FMEditor::FMEditor(Interpreter* eval) : QMainWindow() {
   m_eval = eval;
-  setWindowIcon(QPixmap(":/images/freemat_small_mod_64.png"));
+  setWindowIcon(QPixmap(":/images/freemat_editor_small_mod_64.png"));
   prevEdit = NULL;
   tab = new QTabWidget(this);
   setCentralWidget(tab);

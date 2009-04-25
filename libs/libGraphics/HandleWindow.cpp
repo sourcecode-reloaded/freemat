@@ -184,7 +184,7 @@ bool HandleWindow::event(QEvent* e) {
 
 HandleWindow::HandleWindow(unsigned ahandle) : QMainWindow() {
   initialized = false;
-  setWindowIcon(QPixmap(":/images/freemat_small_mod_64.png"));
+  setWindowIcon(QPixmap(":/images/freemat_figure_small_mod_64.png"));
   handle = ahandle;
   hfig = new HandleFigure(this);
   char buffer[1000];

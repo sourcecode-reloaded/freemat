@@ -196,7 +196,7 @@ HelpWidget::HelpWidget(QString url, HelpWindow *mgr) {
 }
 
 HelpWindow::HelpWindow(QString url) {
-  setWindowIcon(QPixmap(":/images/freemat_small_mod_64.png"));
+  setWindowIcon(QPixmap(":/images/freemat_help_small_mod_64.png"));
   setWindowTitle(QString(Interpreter::getVersionString()) + " Online Help");
   m_initial = url;
   tb = new QTextBrowser(this);
