@@ -503,7 +503,7 @@ ArrayVector GLShowFunction(int nargout, const ArrayVector& arg) {
   if (!assemblymap.contains(name))
     throw Exception(QString("Assembly named ") + name + " could not be found");
   GLWidget *t = new GLWidget;
-  t->setWindowIcon(QPixmap(":/images/freemat_small_mod_64.png"));
+  t->setWindowIcon(QPixmap(":/images/freemat_figure_small_mod_64.png"));
   t->setWindowTitle(QString("GL Assembly %1").arg(name));
   t->scale = scale;
   t->name = name;
