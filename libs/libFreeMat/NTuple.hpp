@@ -6,6 +6,11 @@
 
 #include "Types.hpp"
 
+#if defined(_MSC_VER)  
+double round( double x );
+float roundf( float x );
+#endif
+
 class NTuple {
   index_t m_data[NDims];
 public:
