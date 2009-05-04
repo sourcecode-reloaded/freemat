@@ -95,63 +95,9 @@ static inline SparseMatrix<S> DotOp(const SparseMatrix<T>& A_real,
   return C;
 }
 
-// Complex,Complex --> Real
-template <typename T, typename Atype, typename Btype, class Op>
-static inline void DotOp(const Atype& A_real, const Atype& A_imag, 
-			 const Btype& B_real, const Btype& B_imag,
-			 BasicArray<T> &retvec,
-			 const NTuple& dims) {
-  retvec = BasicArray<T>(dims);
-  for (index_t i=1;i<=dims.count();i++) {
-    retvec.set(i,Op::func(A_real.get(i),A_imag.get(i),
-			  B_real.get(i),B_imag.get(i)));
-  }
-}
-
-// Real,Real --> Real
-template <typename T, typename Atype, typename Btype, class Op>
-static inline void DotOp(const Atype& A, const Btype& B, 
-			 BasicArray<T> &retvec, const NTuple& dims) {
-  retvec = BasicArray<T>(dims);
-  for (index_t i=1;i<=dims.count();i++) {
-    retvec.set(i,Op::func(A.get(i),B.get(i)));
-  }
-}
-
-// Real,Real --> Complex
-template <typename T, typename Atype, typename Btype, class Op>
-static inline void DotOp(const Atype& A, const Btype& B, 
-			 BasicArray<T>& C_real, BasicArray<T>& C_imag,
-			 const NTuple& dims) {
-  C_real = BasicArray<T>(dims);
-  C_imag = BasicArray<T>(dims);
-  for (index_t i=1;i<=dims.count();++i) {
-    T real, imag;
-    Op::func(A.get(i),T(0),B.get(i),T(0),real,imag);
-    C_real.set(i,real);
-    C_imag.set(i,imag);
-  }
-}
-
-// Complex,Complex --> Complex
-template <typename T, typename Atype, typename Btype, class Op>
-static inline void DotOp(const Atype& A_real, const Atype& A_imag,
-			 const Btype& B_real, const Btype& B_imag,
-			 BasicArray<T>& C_real, BasicArray<T>& C_imag, 
-			 const NTuple& dims) {
-  C_real = BasicArray<T>(dims);
-  C_imag = BasicArray<T>(dims);
-  for (index_t i=1;i<=dims.count();++i) {
-    T real, imag;
-    Op::func(A_real.get(i),A_imag.get(i),B_real.get(i),B_imag.get(i),real,imag);
-    C_real.set(i,real);
-    C_imag.set(i,imag);
-  }
-}
-
 // Perform the operation via a typed intermediary
 template <typename T, class Op>
-static inline Array DotOp(const Array &Ain, const Array &Bin, DataClass Tclass) {
+Array DotOp(const Array &Ain, const Array &Bin, DataClass Tclass) {
   Array Acast(Ain.toClass(Tclass));
   Array Bcast(Bin.toClass(Tclass));
   Array F(Tclass,NTuple(0,0));
@@ -191,59 +137,65 @@ static inline Array DotOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
     }
   } else if (Acast.isScalar()) {
     if (Acast.allReal() && Bcast.allReal()) {
-      DotOp<T,SpinIterator<T>,BasicArray<T>,Op>
-	(SpinIterator<T>(Acast.constRealScalar<T>()),
-	 Bcast.constReal<T>(),
-	 F.real<T>(),
-	 Bcast.dimensions());
+      F = Array::Array(Tclass,Bcast.dimensions());
+      T* ret = F.real<T>().data();
+      const T& Ap = Acast.constRealScalar<T>();
+      const T* Bp = Bcast.constReal<T>().constData();
+      uint64 q = uint64(Bcast.length());
+      for (uint64 i=0;i<q;i++) ret[i] = Op::func(Ap,Bp[i]);
     } else {
       Acast.forceComplex(); Bcast.forceComplex();
-      DotOp<T,SpinIterator<T>,BasicArray<T>,Op>
-	(SpinIterator<T>(Acast.constRealScalar<T>()),
-	 SpinIterator<T>(Acast.constImagScalar<T>()),
-	 Bcast.constReal<T>(),
-	 Bcast.constImag<T>(),
-	 F.real<T>(),
-	 F.imag<T>(),
-	 Bcast.dimensions());
+      F = Array::Array(Tclass,Bcast.dimensions());
+      T* Cr = F.real<T>().data();
+      T* Ci = F.imag<T>().data();
+      const T& Ar = Acast.constRealScalar<T>();
+      const T& Ai = Acast.constImagScalar<T>();
+      const T* Br = Bcast.constReal<T>().constData();
+      const T* Bi = Bcast.constImag<T>().constData();
+      uint64 q = uint64(Bcast.length());
+      for (uint64 i=0;i<q;i++) Op::func(Ar,Ai,Br[i],Bi[i],Cr[i],Ci[i]);
     }
   } else if (Bcast.isScalar()) {
     if (Bcast.allReal() && Acast.allReal()) {
-      DotOp<T,BasicArray<T>,SpinIterator<T>,Op>
-	(Acast.constReal<T>(),
-	 SpinIterator<T>(Bcast.constRealScalar<T>()),
-	 F.real<T>(),
-	 Acast.dimensions());
+      F = Array::Array(Tclass,Acast.dimensions());
+      T* ret = F.real<T>().data();
+      const T* Ap = Acast.constReal<T>().constData();
+      const T& Bp = Bcast.constRealScalar<T>();
+      uint64 q = uint64(Acast.length());
+      for (uint64 i=0;i<q;i++) ret[i] = Op::func(Ap[i],Bp);
     } else { 
       Acast.forceComplex(); Bcast.forceComplex();
-      DotOp<T,BasicArray<T>,SpinIterator<T>,Op>
-	(Acast.constReal<T>(),
-	 Acast.constImag<T>(),
-	 SpinIterator<T>(Bcast.constRealScalar<T>()),
-	 SpinIterator<T>(Bcast.constImagScalar<T>()),
-	 F.real<T>(),
-	 F.imag<T>(),
-	 Acast.dimensions());
+      F = Array::Array(Tclass,Acast.dimensions());
+      T* Cr = F.real<T>().data();
+      T* Ci = F.imag<T>().data();
+      const T* Ar = Acast.constReal<T>().constData();
+      const T* Ai = Acast.constImag<T>().constData();
+      const T& Br = Bcast.constRealScalar<T>();
+      const T& Bi = Bcast.constImagScalar<T>();
+      uint64 q = uint64(Acast.length());
+      for (uint64 i=0;i<q;i++) Op::func(Ar[i],Ai[i],Br,Bi,Cr[i],Ci[i]);
     }
   } else {
     if (Acast.dimensions() != Bcast.dimensions())
       throw Exception("size mismatch in arguments to binary operator");
     if (Bcast.allReal() && Acast.allReal()) {
-      DotOp<T,BasicArray<T>,BasicArray<T>,Op>
-	(Acast.constReal<T>(),
-	 Bcast.constReal<T>(),
-	 F.real<T>(),
-	 Acast.dimensions());
+      F = Array::Array(Tclass,Acast.dimensions());
+      T* ret = F.real<T>().data();
+      const T* Ap = Acast.constReal<T>().constData();
+      const T* Bp = Bcast.constReal<T>().constData();
+      uint64 q = uint64(Acast.length());
+      for (uint64 i=0;i<q;i++) ret[i] = Op::func(Ap[i],Bp[i]);
     } else {
       Acast.forceComplex(); Bcast.forceComplex();
-      DotOp<T,BasicArray<T>,BasicArray<T>,Op>
-	(Acast.constReal<T>(),
-	 Acast.constImag<T>(),
-	 Bcast.constReal<T>(),
-	 Bcast.constImag<T>(),
-	 F.real<T>(),
-	 F.imag<T>(),
-	 Acast.dimensions());
+      F = Array::Array(Tclass,Acast.dimensions());
+      T* Cr = F.real<T>().data();
+      T* Ci = F.imag<T>().data();
+      const T* Ar = Acast.constReal<T>().constData();
+      const T* Ai = Acast.constImag<T>().constData();
+      const T* Br = Bcast.constReal<T>().constData();
+      const T* Bi = Bcast.constImag<T>().constData();
+      uint64 q = uint64(Acast.length());
+      for (uint64 i=0;i<q;i++) Op::func(Ar[i],Ai[i],Br[i],Bi[i],Cr[i],Ci[i]);
     }
   }
   return F;
@@ -317,7 +269,7 @@ static inline bool IsIntegerDataClass(const Array &Ain) {
 }
 
 template <class Op>
-static inline Array DotOp(const Array &Ain, const Array &Bin) {
+Array DotOp(const Array &Ain, const Array &Bin) {
   DataClass via_type;
   DataClass out_type;
   ComputeTypes(Ain,Bin,via_type,out_type);
@@ -373,45 +325,62 @@ static inline Array CmpOp(const Array &Ain, const Array &Bin, DataClass Tclass) 
     }
   } else if (Acast.isScalar()) {
     if (Acast.allReal() && Bcast.allReal()) {
-      DotOp<bool,SpinIterator<T>,BasicArray<T>,Op>
-	(SpinIterator<T>(Acast.constRealScalar<T>()),
-	 Bcast.constReal<T>(),F.real<bool>(),
-	 Bcast.dimensions());
+      F = Array::Array(Bool,Bcast.dimensions());
+      bool* ret = F.real<bool>().data();
+      const T& Ap = Acast.constRealScalar<T>();
+      const T* Bp = Bcast.constReal<T>().constData();
+      uint64 q = uint64(Bcast.length());
+      for (uint64 i=0;i<q;i++) ret[i] = Op::func(Ap,Bp[i]);
     } else {
       Acast.forceComplex(); Bcast.forceComplex();
-      DotOp<bool,SpinIterator<T>,BasicArray<T>,Op>
-	(SpinIterator<T>(Acast.constRealScalar<T>()),
-	 SpinIterator<T>(Acast.constImagScalar<T>()),
-	 Bcast.constReal<T>(), Bcast.constImag<T>(),
-	 F.real<bool>(), Bcast.dimensions());
+      F = Array::Array(Bool,Bcast.dimensions());
+      bool* ret = F.real<bool>().data();
+      const T& Ar = Acast.constRealScalar<T>();
+      const T& Ai = Acast.constImagScalar<T>();
+      const T* Br = Bcast.constReal<T>().constData();
+      const T* Bi = Bcast.constImag<T>().constData();
+      uint64 q = uint64(Bcast.length());
+      for (uint64 i=0;i<q;i++) ret[i] = Op::func(Ar,Ai,Br[i],Bi[i]);
     }
   } else if (Bcast.isScalar()) {
     if (Bcast.allReal() && Acast.allReal()) {
-      DotOp<bool,BasicArray<T>,SpinIterator<T>,Op>
-	(Acast.constReal<T>(),
-	 SpinIterator<T>(Bcast.constRealScalar<T>()),
-	 F.real<bool>(), Acast.dimensions());
+      F = Array::Array(Bool,Acast.dimensions());
+      bool* ret = F.real<bool>().data();
+      const T* Ap = Acast.constReal<T>().constData();
+      const T& Bp = Bcast.constRealScalar<T>();
+      uint64 q = uint64(Acast.length());
+      for (uint64 i=0;i<q;i++) ret[i] = Op::func(Ap[i],Bp);
     } else {
       Acast.forceComplex(); Bcast.forceComplex();
-      DotOp<bool,BasicArray<T>,SpinIterator<T>,Op>
-	(Acast.constReal<T>(), Acast.constImag<T>(),
-	 SpinIterator<T>(Bcast.constRealScalar<T>()),
-	 SpinIterator<T>(Bcast.constImagScalar<T>()),
-	 F.real<bool>(), Acast.dimensions());
+      F = Array::Array(Bool,Acast.dimensions());
+      bool* ret = F.real<bool>().data();
+      const T* Ar = Acast.constReal<T>().constData();
+      const T* Ai = Acast.constImag<T>().constData();
+      const T& Br = Bcast.constRealScalar<T>();
+      const T& Bi = Bcast.constImagScalar<T>();
+      uint64 q = uint64(Acast.length());
+      for (uint64 i=0;i<q;i++) ret[i] = Op::func(Ar[i],Ai[i],Br,Bi);
     }
   } else {
     if (Acast.dimensions() != Bcast.dimensions())
       throw Exception("size mismatch in arguments to binary operator");
     if (Bcast.allReal() && Acast.allReal()) {
-      DotOp<bool,BasicArray<T>,BasicArray<T>,Op>
-	(Acast.constReal<T>(), Bcast.constReal<T>(),
-	 F.real<bool>(), Acast.dimensions());
+      F = Array::Array(Bool,Acast.dimensions());
+      bool* ret = F.real<bool>().data();
+      const T* Ap = Acast.constReal<T>().constData();
+      const T* Bp = Bcast.constReal<T>().constData();
+      uint64 q = uint64(Acast.length());
+      for (uint64 i=0;i<q;i++) ret[i] = Op::func(Ap[i],Bp[i]);
     } else {
       Acast.forceComplex(); Bcast.forceComplex();
-      DotOp<bool,BasicArray<T>,BasicArray<T>,Op>
-	(Acast.constReal<T>(), Acast.constImag<T>(),
-	 Bcast.constReal<T>(), Bcast.constImag<T>(),
-	 F.real<bool>(), Acast.dimensions());
+      F = Array::Array(Bool,Acast.dimensions());
+      bool* ret = F.real<bool>().data();
+      const T* Ar = Acast.constReal<T>().constData();
+      const T* Ai = Acast.constImag<T>().constData();
+      const T* Br = Bcast.constReal<T>().constData();
+      const T* Bi = Bcast.constImag<T>().constData();
+      uint64 q = uint64(Acast.length());
+      for (uint64 i=0;i<q;i++) ret[i] = Op::func(Ar[i],Ai[i],Br[i],Bi[i]);
     }
   }
   return F;
@@ -462,31 +431,6 @@ static inline void UnaryOp(const SparseMatrix<T>& A_real,
   }
 }
 
-// Real --> Real
-template <typename T, typename Atype, class Op>
-static inline void UnaryOp(const Atype& A, 
-			   BasicArray<T> &retvec, const NTuple& dims) {
-  retvec = BasicArray<T>(dims);
-  for (index_t i=1;i<=dims.count();i++) {
-    retvec.set(i,Op::func(A.get(i)));
-  }
-}
-
-// Complex --> Complex
-template <typename T, typename Atype, class Op>
-static inline void UnaryOp(const Atype& A_real, const Atype& A_imag,
-			   BasicArray<T>& C_real, BasicArray<T>& C_imag, 
-			   const NTuple& dims) {
-  C_real = BasicArray<T>(dims);
-  C_imag = BasicArray<T>(dims);
-  for (index_t i=1;i<=dims.count();++i) {
-    T real, imag;
-    Op::func(A_real.get(i),A_imag.get(i),real,imag);
-    C_real.set(i,real);
-    C_imag.set(i,imag);
-  }
-}
-
 // Perform the operation via a typed intermediary
 template <typename T, class Op>
 static inline Array UnaryOp(const Array &Ain, DataClass Tclass) {
@@ -517,17 +461,19 @@ static inline Array UnaryOp(const Array &Ain, DataClass Tclass) {
     }
   } else {
     if (Acast.allReal()) {
-      UnaryOp<T,BasicArray<T>,Op>
-	(Acast.constReal<T>(),
-	 F.real<T>(),
-	 Acast.dimensions());
+      F = Array(Tclass,Acast.dimensions());
+      T* ret = F.real<T>().data();
+      const T* Ap = Acast.constReal<T>().constData();
+      uint64 q = uint64(Acast.length());
+      for (uint64 i=0;i<q;i++) ret[i] = Op::func(Ap[i]);
     } else {
-      UnaryOp<T,BasicArray<T>,Op>
-	(Acast.constReal<T>(),
-	 Acast.constImag<T>(),
-	 F.real<T>(),
-	 F.imag<T>(),
-	 Acast.dimensions());
+      F = Array(Tclass,Acast.dimensions());
+      T* Cr = F.real<T>().data();
+      T* Ci = F.imag<T>().data();
+      const T* Ar = Acast.constReal<T>().constData();
+      const T* Ai = Acast.constImag<T>().constData();
+      uint64 q = uint64(Acast.length());
+      for (uint64 i=0;i<q;i++) Op::func(Ar[i],Ai[i],Cr[i],Ci[i]);
     }
   }
   return F;

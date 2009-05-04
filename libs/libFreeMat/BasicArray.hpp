@@ -31,16 +31,18 @@ class BasicArray {
   QVector<T> m_data;
   NTuple m_dims;
   index_t m_offset;
+  index_t m_count;
 public:
-  BasicArray() : m_data(), m_dims(0,0), m_offset(0) {}
+  BasicArray() : m_data(), m_dims(0,0), m_offset(0), m_count(0) {}
   explicit BasicArray(const NTuple& dim) : 
-    m_data(), m_dims(dim), m_offset(0) {
+    m_data(), m_dims(dim), m_offset(0), m_count(dim.count()) {
     m_data.resize((int64)(m_dims.count()));
   }
   explicit BasicArray(T val) {
     m_data << val; 
     m_dims = NTuple(1,1); 
     m_offset = 0;
+    m_count = 1;
   }
   ~BasicArray() {}
   inline index_t offset() const {return m_offset;}
@@ -50,7 +52,7 @@ public:
   inline index_t rows() const {return m_dims.rows();}
   inline index_t columns() const {return m_dims.cols();}
   inline index_t cols() const {return m_dims.cols();}
-  inline index_t length() const {return m_dims.count();}
+  inline index_t length() const {return m_count;}
   inline index_t isScalar() const {return length() == 1;}
   inline bool is2D() const {return m_dims.is2D();}
   inline bool isEmpty() const {return (length() == 0);}
@@ -103,8 +105,11 @@ public:
     m_data[(int64)(m_dims.map(pos)+m_offset-1)] = val;
   }
   inline void set(index_t pos, const T& val) {
-    if (dimensions().count() < pos) resize(pos);
+    if (m_count < pos) resize(pos);
     m_data[(int64)(pos+m_offset-1)] = val;
+  }
+  inline void setNoBoundsCheck(index_t pos, const T& val) {
+    m_data.data()[(int64)(pos+m_offset-1)] = val;
   }
   inline const T get(index_t pos) const {
     if ((pos<1) || (pos>length())) 
@@ -117,12 +122,16 @@ public:
     else
       throw Exception("index is out of bounds");
   }
+  inline const T getNoBoundsCheck(index_t pos) const {
+    return m_data.data()[(int64)(pos+m_offset-1)];    
+  }
   BasicArray<T> slice(const IndexArrayVector& index) const {
     index_t offset = getSliceIndex(dimensions(),index);
     BasicArray<T> retvec;
     retvec.m_dims = NTuple(dimensions()[0],1);
     retvec.m_offset = offset;
     retvec.m_data = m_data;
+    retvec.m_count = retvec.m_dims.count();
     return retvec;
   }
   BasicArray<T> slice(const NTuple& pos) const {
@@ -131,6 +140,7 @@ public:
     retvec.m_dims = NTuple(dimensions()[0],1);
     retvec.m_offset = offset;
     retvec.m_data = m_data;
+    retvec.m_count = retvec.m_dims.count();
     return retvec;
   }
   void del(const IndexArrayVector& index) {
@@ -154,6 +164,7 @@ public:
       m_data.clear();
       m_dims = NTuple(0,0);
       m_offset = 0;
+      m_count = 0;
       return;
     }
     if (uncovered_count > 1)
@@ -183,12 +194,14 @@ public:
     m_data = retvec.m_data;
     m_offset = retvec.m_offset;
     m_dims = retvec.m_dims;
+    m_count = m_dims.count();
   }
   void del(const IndexArray& index) {
     if (IsColonOp(index)) {
       m_data.clear();
       m_dims = NTuple(0,0);
       m_offset = 0;
+      m_count = m_dims.count();
       return;
     }
     BasicArray<bool> map(GetDeletionMap(index,length()));
@@ -208,6 +221,7 @@ public:
     m_data = rdata;
     m_offset = 0;
     m_dims = newDim;
+    m_count = m_dims.count();
   }
   void resize(const NTuple& pos) {
     BasicArray<T> retval(pos);
@@ -237,6 +251,7 @@ public:
       }
       resize(newDim);
     }
+    m_count = m_dims.count();
   }
   void printMe(std::ostream& o) const {
     o << dimensions() << "[";
@@ -279,8 +294,8 @@ BasicArray<T> MergeComplex(const BasicArray<T>& real, const BasicArray<T>& imag)
   retdim[0] = retdim[0]*2;
   BasicArray<T> retval(retdim);
   for (index_t i=1;i<=real.length();i++) {
-    retval.set(2*i-1,real.get(i));
-    retval.set(2*i,imag.get(i));
+    retval.setNoBoundsCheck(2*i-1,real.getNoBoundsCheck(i));
+    retval.setNoBoundsCheck(2*i,imag.getNoBoundsCheck(i));
   }
   return retval;
 }
@@ -291,7 +306,7 @@ BasicArray<T> MergeComplex(const BasicArray<T>& real) {
   retdim[0] = retdim[0]*2;
   BasicArray<T> retval(retdim);
   for (index_t i=1;i<=real.length();i++)
-    retval.set(2*i-1,real.get(i));
+    retval.setNoBoundsCheck(2*i-1,real.getNoBoundsCheck(i));
   return retval;
 }
 
@@ -301,7 +316,7 @@ BasicArray<T> SplitReal(const BasicArray<T>& A) {
   retdim[0] = retdim[0]/2;
   BasicArray<T> retval(retdim);
   for (index_t i=1;i<=retval.length();i++) 
-    retval.set(i,A.get(2*i-1));
+    retval.setNoBoundsCheck(i,A.getNoBoundsCheck(2*i-1));
   return retval;
 }
 
@@ -311,14 +326,14 @@ BasicArray<T> SplitImag(const BasicArray<T>& A) {
   retdim[0] = retdim[0]/2;
   BasicArray<T> retval(retdim);
   for (index_t i=1;i<=retval.length();i++) 
-    retval.set(i,A.get(2*i));
+    retval.setNoBoundsCheck(i,A.getNoBoundsCheck(2*i));
   return retval;
 }
 
 template <typename T>
 bool MergedArrayHasComplexComponents(const BasicArray<T>& arg) {
   for (index_t i=2;i<=arg.length();i+=2) 
-    if (arg.get(i) != 0) return true;
+    if (arg.getNoBoundsCheck(i) != 0) return true;
   return false;
 }
 
@@ -363,28 +378,28 @@ BasicArray<T> Negate(const BasicArray<T>& arg) {
 template <typename T>
 bool IsPositive(const BasicArray<T>& arg) {
   for (index_t i=1;i<=arg.length();i++) 
-    if (arg.get(i) <= 0) return false;
+    if (arg.getNoBoundsCheck(i) <= 0) return false;
   return true;
 }
 
 template <typename T>
 bool IsPositiveOrNaN(const BasicArray<T>& arg) {
   for (index_t i=1;i<=arg.length();i++) 
-    if (!IsNaN(i) && (arg.get(i) <= 0)) return false;
+    if (!IsNaN(i) && (arg.getNoBoundsCheck(i) <= 0)) return false;
   return true;
 }
 
 template <typename T>
 bool IsNonNegative(const BasicArray<T> &arg) {
   for (index_t i=1;i<=arg.length();i++)
-    if (!IsNonNegative(arg.get(i))) return false;
+    if (!IsNonNegative(arg.getNoBoundsCheck(i))) return false;
   return true;
 }
 
 template <typename T>
 bool IsInteger(const BasicArray<T> &arg) {
   for (index_t i=1;i<=arg.length();++i)
-    if (!IsInteger(arg.get(i))) return false;
+    if (!IsInteger(arg.getNoBoundsCheck(i))) return false;
   return true;
 }
 
@@ -467,21 +482,21 @@ BasicArray<T> Permute(const BasicArray<T>& arg, NTuple perm) {
 template <typename T>
 bool AllZeros(const BasicArray<T>& arg) {
   for (index_t i=1;i<=arg.length();i++)
-    if (arg.get(i) != T(0)) return false;
+    if (arg.getNoBoundsCheck(i) != T(0)) return false;
   return true;
 }
 
 template <typename T>
 bool AnyNotFinite(const BasicArray<T>& arg) {
   for (index_t i=1;i<=arg.length();i++) 
-    if (!IsFinite(arg.get(i))) return true;
+    if (!IsFinite(arg.getNoBoundsCheck(i))) return true;
   return false;
 }
 
 template <typename T>
 bool AnyNaN(const BasicArray<T>& arg) {
   for (index_t i=1;i<=arg.length();i++) 
-    if (IsNaN(arg.get(i))) return true;
+    if (IsNaN(arg.getNoBoundsCheck(i))) return true;
   return false;
 }
 
@@ -516,7 +531,7 @@ IndexArray Find(const BasicArray<T>& vec) {
   count = 1;
   for (index_t i=1;i<=vec.length();i++)
     if (vec[i] != T()) {
-      retvec.set(count,i);
+      retvec.setNoBoundsCheck(count,i);
       count++;
     }
   return retvec;
@@ -524,7 +539,7 @@ IndexArray Find(const BasicArray<T>& vec) {
 
 inline bool AllTrue(const BasicArray<bool>& arg) {
   for (int i=1;i<=arg.length();i++)
-    if (!arg.get(i)) return false;
+    if (!arg.getNoBoundsCheck(i)) return false;
   return true;
 }
 
@@ -532,8 +547,11 @@ inline bool AllTrue(const BasicArray<bool>& arg) {
 template <typename T, typename S>
 BasicArray<T> ConvertBasicArray(const BasicArray<S>& source) {
   BasicArray<T> dest(source.dimensions());
-  for (index_t i=1;i<=source.length();i++)
-    dest.set(i,CastConvert<T,S>(source.get(i)));
+  T* ret = dest.data();
+  const S* src = source.constData();
+  uint64 len = uint64(source.length());
+  for (uint64 i=0;i<len;i++)
+    ret[i] = CastConvert<T,S>(src[i]);
   return dest;
 }
 

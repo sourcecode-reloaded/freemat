@@ -82,6 +82,7 @@ class SpinIterator {
 public:
   SpinIterator(const T& value) : m_value(value) {}
   inline T get(index_t) const {return m_value;}
+  inline T getNoBoundsCheck(index_t) const {return m_value;}
 };
 
 #endif
