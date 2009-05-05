@@ -31,24 +31,11 @@ class HandleWindow;
 //     set the transformation & clipping
 //     then draw the children
 class HandleFigure : public HandleObject {
-  int m_width, m_height;
-  bool resized;
-  void LoadDefaultColorMap();
-  HandleWindow *m_win;
 public:
-  HandleFigure(HandleWindow *win);
-  virtual ~HandleFigure() {}
+  HandleFigure();
+  void render(QPainter* paint);
   virtual void ConstructProperties();
-  bool Resized();
-  int GetWidth() {return m_width;}
-  int GetHeight() {return m_height;}
-  virtual void UpdateState();
-  virtual void PaintMe(RenderEngine &gc);
-  virtual void resizeGL(int width, int height);
   void SetupDefaults();
-  void SetSize();
-  void Repaint();
-  HandleWindow* ParentWindow() {return m_win;}
 };
 
 #endif
