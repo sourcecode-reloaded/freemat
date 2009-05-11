@@ -36,14 +36,17 @@ double ArrayMax(Array x);
 class HandleObject {
   FM::SymbolTable<HandleProperty*> m_properties;
   unsigned ref_count;
+  bool m_stateDirty;
 public:
   HandleObject();
   virtual ~HandleObject();
   void Reference() {ref_count++;}
   void Dereference() {if (ref_count > 0) ref_count--;}
   unsigned RefCount() {return ref_count;}
+  bool isStateDirty() {return m_stateDirty;}
+  void setStateDirty(bool t = true) {m_stateDirty = t;}
   virtual void RegisterProperties() {}
-  virtual void UpdateState() {}
+  virtual void Validate() {}
   virtual QVector<double> GetLimits() {return QVector<double>();};
   bool HasChanged(StringVector names);
   bool HasChanged(QString name);
@@ -76,7 +79,6 @@ public:
   virtual void AxisPaintingDone( void ){};
   HandleAxis* GetParentAxis();
   HandleFigure* GetParentFigure();
-  void MarkDirty();
 };
 
 #endif

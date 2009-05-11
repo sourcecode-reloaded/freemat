@@ -49,10 +49,10 @@ public:
 void BaseFigureQt::resizeEvent(QResizeEvent *e) {
   QWidget::resizeEvent(e);
   //  dbout << "resize " << width() << " " << height() << "\r\n";
-  backStore = QPixmap(qMax(8,width()),
-		      qMax(8,height()));
-  hfig->resizeGL(qMax(8,width()),
-  		 qMax(8,height()));
+//   backStore = QPixmap(qMax(8,width()),
+// 		      qMax(8,height()));
+//   hfig->resizeGL(qMax(8,width()),
+//   		 qMax(8,height()));
 }
 
 static bool enableRepaint = false;
@@ -67,23 +67,10 @@ void GfxDisableRepaint() {
 }
 
 void BaseFigureQt::paintEvent(QPaintEvent *e) {
-  //  dbout << "Paint\r";
-  if (enableRepaint && hfig->ParentWindow()->isDirty()) {
-    {
-      // enableRepaint is true, and the background is dirty - update
-      // the backing store, and then redraw it.
-      //      dbout << "Redraw\r";
-      QPainter pnt(&backStore);
-      QTRenderEngine gc(&pnt,0,0,width(),height());
-      hfig->PaintMe(gc);
-      hfig->ParentWindow()->markClean();
-    }
-    QPainter pnt2(this);
-    pnt2.drawPixmap(0,0,backStore);
-  } else {
-    //    dbout << "Refresh\r";
+  if (enableRepaint) {
     QPainter pnt(this);
-    pnt.drawPixmap(e->rect(),backStore);
+    QTRenderEngine gc(&pnt,0,0,width(),height());
+    hfig->PaintMe(gc);
   }
 }
 
@@ -131,7 +118,7 @@ void BaseFigureGL::paintGL() {
 
 void BaseFigureGL::resizeGL(int width, int height) {
   //    qDebug("GLsize");
-  hfig->resizeGL(width,height);
+  //  hfig->resizeGL(width,height);
 }
 
 QSize BaseFigureGL::sizeHint() const {
@@ -186,7 +173,7 @@ HandleWindow::HandleWindow(unsigned ahandle) : QMainWindow() {
   initialized = false;
   setWindowIcon(QPixmap(":/images/freemat_figure_small_mod_64.png"));
   handle = ahandle;
-  hfig = new HandleFigure(this);
+  hfig = new HandleFigure();
   char buffer[1000];
   sprintf(buffer,"Figure %d",ahandle+1);
   setWindowTitle(buffer);
@@ -368,11 +355,11 @@ HandleAxis* GetContainingAxis(HandleFigure *fig, int x, int y) {
     HandleObject* hp = LookupHandleObject(children[i]);
     if (hp->IsType("axes")) {
       // Get the axis extents
-      QVector<double> position(((HandleAxis*) hp)->GetPropertyVectorAsPixels("position"));
+      QVector<double> position(((HandleAxis*) hp)->GetClientAreaInPixels());
       //      dbout << "Axis: " << position[0] << "," << position[1] << "," << position[2] << "," << position[3];
       if ((x >= position[0]) && (x < (position[0]+position[2])) &&
-	  (y >= position[1]) && (y < (position[1]+position[3])))
-	return (HandleAxis*)hp;
+      	  (y >= position[1]) && (y < (position[1]+position[3])))
+      	return (HandleAxis*)hp;
     }
   }
   return NULL;
@@ -448,7 +435,7 @@ void HandleWindow::mouseMoveEvent(QMouseEvent* e) {
       QRect plot_region(child->geometry());
       HandleAxis *h = GetContainingAxis(hfig,remapX(origin.x()),remapY(origin.y()));
       if (h) {
-	QVector<double> position(h->GetPropertyVectorAsPixels("position"));
+	QVector<double> position(h->GetClientAreaInPixels());
 	double delx, dely;
 	if (h->StringCheck("xdir","reverse"))
 	  delx = (e->x() - origin.x())/position[2];
@@ -464,8 +451,7 @@ void HandleWindow::mouseMoveEvent(QMouseEvent* e) {
 	h->SetTwoVectorDefault("ylim",pan_ymean+pan_yrange*dely-pan_yrange/2,
 			       pan_ymean+pan_yrange*dely+pan_yrange/2);
 	h->SetConstrainedStringDefault("ylimmode","manual");
-	h->UpdateState();
-	hfig->Repaint();
+	//	hfig->Repaint();
 	UpdateState();
       }
     }
@@ -503,8 +489,8 @@ void HandleWindow::mouseMoveEvent(QMouseEvent* e) {
 	h->SetThreeVectorDefault("cameraupvector",camera_up[0],
 				 camera_up[1],camera_up[2]);
 	h->SetConstrainedStringDefault("cameraupvectormode","manual");
-	h->UpdateState();
-	hfig->Repaint();
+	//	h->UpdateState();
+	//	hfig->Repaint();
 	UpdateState();
       }
     }
@@ -521,8 +507,8 @@ void HandleWindow::mouseMoveEvent(QMouseEvent* e) {
 	h->SetThreeVectorDefault("cameraupvector",camera_up[0],
 				 camera_up[1],camera_up[2]);
 	h->SetConstrainedStringDefault("cameraupvectormode","manual");
-	h->UpdateState();
-	hfig->Repaint();
+	//	h->UpdateState();
+	//	hfig->Repaint();
 	UpdateState();
       }
     }
@@ -565,14 +551,14 @@ void HandleWindow::mouseReleaseEvent(QMouseEvent * e) {
 	    mean = (hp->Data()[1] + hp->Data()[0])/2;
 	    h->SetTwoVectorDefault("ylim",mean-range/2,mean+range/2);
 	    h->SetConstrainedStringDefault("ylimmode","manual");
-	    h->UpdateState();
-	    hfig->Repaint();
+	    //	    h->UpdateState();
+	    //	    hfig->Repaint();
 	  }
 	} else {       
 	  QRect plot_region(child->geometry());
 	  HandleAxis *h = GetContainingAxis(hfig,remapX(rect.x()),remapY(rect.y()));
 	  if (h) {
-	    QVector<double> position(h->GetPropertyVectorAsPixels("position"));
+	    QVector<double> position(h->GetClientAreaInPixels());
 	    QVector<double> pba(h->VectorPropertyLookup("plotboxaspectratio"));
 	    QVector<double> dar(h->VectorPropertyLookup("dataaspectratio"));
 	    double x = position[0], y = position[1];
@@ -624,8 +610,8 @@ void HandleWindow::mouseReleaseEvent(QMouseEvent * e) {
 	    mean = (hp->Data()[1] + hp->Data()[0])/2;
 	    h->SetTwoVectorDefault("ylim",mean-range/2+yminfrac*range,mean-range/2+ymaxfrac*range);
 	    h->SetConstrainedStringDefault("ylimmode","manual");
-	    h->UpdateState();
-	    hfig->Repaint();
+	    //	    h->UpdateState();
+	    //	    hfig->Repaint();
 	  }
 	}
       } else {
@@ -646,8 +632,8 @@ void HandleWindow::mouseReleaseEvent(QMouseEvent * e) {
 	  mean = (hp->Data()[1] + hp->Data()[0])/2;
 	  h->SetTwoVectorDefault("ylim",mean-range/2,mean+range/2);
 	  h->SetConstrainedStringDefault("ylimmode","manual");
-	  h->UpdateState();
-	  hfig->Repaint();
+	  //	  h->UpdateState();
+	  //	  hfig->Repaint();
 	}
       }
     }

@@ -87,6 +87,8 @@ public:
   RenderEngine() {};
   virtual ~RenderEngine() {};
   virtual void clear(QVector<double>) = 0;
+  virtual double width() = 0;
+  virtual double height() = 0;
   virtual void toPixels(double x, double y, double z, int &a, int &b) = 0;
   virtual void toPixels(double x, double y, double z, double &a, double &b) = 0;
   virtual void toPixels(double x, double y, double z, double &a, double &b, bool &clipped) = 0;

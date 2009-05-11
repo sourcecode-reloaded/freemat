@@ -90,16 +90,12 @@ void HandleFigure::SetupDefaults() {
   SetThreeVectorDefault("color",0.7,0.7,0.7);
   SetStringDefault("nextplot","replace");
   SetTwoVectorDefault("figsize",500,300);
-  resized = false;
 }
 
-void HandleFigure::PaintMe(RenderEngine &gc) {
+void HandleFigure::PaintMe(RenderEngine& gc) {
   try {
-    // draw the children...
-    //    dbout << "paint!\r";
     HPColor *color = (HPColor*) LookupProperty("color");
     if (color->Data()[0] >= 0) {
-      //      dbout << "clear!\r";
       gc.clear(color->Data());
     }
     HPHandles *children = (HPHandles*) LookupProperty("children");
@@ -108,45 +104,8 @@ void HandleFigure::PaintMe(RenderEngine &gc) {
       HandleObject *fp = LookupHandleObject(handles[i]);
       fp->PaintMe(gc);
     }
-    resized = false;
   } catch (Exception& e) {
-      dbout << "Warning: Graphics subsystem reports: " << e.msg() << "\n";
-	//throw;
+    dbout << "Warning: Graphics subsystem reports: " << e.msg() << "\n";
   }
-}
-
-void HandleFigure::resizeGL(int width, int height) {
-  m_width = width;
-  m_height = height;
-  SetTwoVectorDefault("figsize",width,height);
-  resized = true;
-  UpdateState();
-  // Change to be recursive...
-  HPHandles *children = (HPHandles*) LookupProperty("children");
-  QVector<unsigned> handles(children->Data());
-  for (int i=0;i<handles.size();i++) {
-    HandleObject *fp = LookupHandleObject(handles[i]);
-    fp->UpdateState();
-  }
-}
-
-bool HandleFigure::Resized() {
-  return resized;
-}
-
-void HandleFigure::SetSize() {
-  HPTwoVector *htv = (HPTwoVector*) LookupProperty("figsize");
-  // First get the size of the main window
-  QSize main_window_size = m_win->size();
-  // Now get the size of the central widget
-  QSize central_widget_size = m_win->centralWidget()->size();
-  m_win->resize((int)(htv->Data()[0]) + main_window_size.width() - central_widget_size.width(),
-		(int)(htv->Data()[1]) + main_window_size.height() - central_widget_size.height());
-  //   m_win->centralWidget()->resize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
-  //   m_win->centralWidget()->updateGeometry();
-  //   m_win->GetQtWidget()->resize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
-  //   m_win->GetQtWidget()->updateGeometry();
-  //   m_win->updateGeometry();
-  //   resizeGL((int)(htv->Data()[0]),(int)(htv->Data()[1]));
 }
 

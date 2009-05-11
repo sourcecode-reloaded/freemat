@@ -282,7 +282,7 @@ void HandleImage::UpdateCAlphaData() {
 }
 
 void HandleImage::UpdateState() {
-  UpdateCAlphaData();
+  if (HasChanged("cdata")) UpdateCAlphaData();
   Array cdata(ArrayPropertyLookup("cdata"));
   HPTwoVector *xp = (HPTwoVector *) LookupProperty("xdata");
   if (xp->Data().empty()) {

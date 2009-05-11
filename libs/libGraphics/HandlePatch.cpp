@@ -32,7 +32,6 @@ HandlePatch::~HandlePatch() {
 
 QVector<double> HandlePatch::GetLimits() {
   QVector<double> limits;
-  UpdateState();
 
   Array vertexdata(ArrayPropertyLookup("vertices"));
   vertexdata = vertexdata.toClass(Double);
@@ -76,19 +75,6 @@ QVector<double> HandlePatch::GetLimits() {
   limits.push_back(VecMax(alphadata));
   return limits;
 }
-/*
-void HandlePatch::UpdateState() {
-    StringVector tset;
-    tset.push_back( "xdata" ); tset.push_back( "ydata" ); 
-    tset.push_back( "zdata" ); tset.push_back( "cdata" ); 
-
-    if( HasChanged(tset){
-
-	ClearChanged( tset );
-    }
-  HandleImage::UpdateCAlphaData();
-}
-*/
 
 void HandlePatch::ConstructProperties() {
   //!
@@ -396,7 +382,6 @@ void HandlePatch::BuildPolygons( FaceList& faces )
 FaceList Saved_faces;
 
 void HandlePatch::PaintMe(RenderEngine& gc) {
-  UpdateState();
   if (StringCheck("visible","off"))
     return;
 

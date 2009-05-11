@@ -65,6 +65,8 @@ public:
   QTRenderEngine(QPainter *painter, double x1, double y1, 
 		 double width, double height);
   ~QTRenderEngine();
+  virtual double width() {return m_width;} 
+  virtual double height() {return m_height;} 
   virtual void clear(QVector<double>);
   virtual void toPixels(double x, double y, double z, int &a, int &b);
   virtual void toPixels(double x, double y, double z, double &a, double &b);

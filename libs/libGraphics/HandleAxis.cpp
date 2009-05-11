@@ -903,19 +903,9 @@ QVector<double> HandleAxis::GetAxisLimits() {
   return lims;
 }
 
-HandleFigure* HandleAxis::GetParentFigure() {
-  // Get our parent - should be a figure
-  HPHandles *parent = (HPHandles*) LookupProperty("parent");
-  if (parent->Data().empty()) return NULL;
-  unsigned parent_handle = parent->Data()[0];
-  HandleFigure *fig = LookupHandleFigure(parent_handle);
-  return fig;
-}
-
-QVector<double> HandleAxis::UnitsReinterpret(QVector<double> a) {
-  HandleFigure *fig = GetParentFigure();
-  unsigned width = fig->GetWidth();
-  unsigned height = fig->GetHeight();
+QVector<double> HandleAxis::UnitsReinterpret(RenderEngine &gc, QVector<double> a) {
+  unsigned width = gc.width();
+  unsigned height = gc.height();
   HPUnits *hp = (HPUnits*) LookupProperty("units");
   if (hp->Is("normalized")) {
     for (int i=0;i<a.size();i+=2) {
@@ -930,9 +920,9 @@ QVector<double> HandleAxis::UnitsReinterpret(QVector<double> a) {
   }
 }
   
-QVector<double> HandleAxis::GetPropertyVectorAsPixels(QString name) {
+QVector<double> HandleAxis::GetPropertyVectorAsPixels(RenderEngine& gc, QString name) {
   HPFourVector *hp = (HPFourVector*) LookupProperty(name);
-  return (UnitsReinterpret(hp->Data()));
+  return (UnitsReinterpret(gc,hp->Data()));
 }
 
 static void MinMaxVector(double *vals, int len, double &vmin, double &vmax) {
@@ -1067,7 +1057,7 @@ void HandleAxis::SetupProjection(RenderEngine &gc) {
     zmin = zmax-1;
     zmax = zmax+1;
   }
-  QVector<double> position(GetPropertyVectorAsPixels("position"));
+  QVector<double> position(GetPropertyVectorAsPixels(gc,"position"));
   if (StringCheck("plotboxaspectratiomode","manual") ||
       StringCheck("dataaspectratiomode","manual")) {
     // Now we have to deal with the scale-to-fit issue.  If we
@@ -1637,14 +1627,7 @@ int HandleAxis::GetTickCount(RenderEngine &gc,
   return numtics;
 }
 
-void HandleAxis::RecalculateTicks() {
-  QPixmap img(1,1);
-  QPainter pnt(&img);
-  HandleFigure *fig = GetParentFigure();
-  unsigned width = fig->GetWidth();
-  unsigned height = fig->GetHeight();
-  QTRenderEngine gc(&pnt,0,0,width,height);
-  SetupProjection(gc);
+void HandleAxis::RecalculateTicks(RenderEngine& gc) {
   // We have to calculate the tick sets for each axis...
   QVector<double> limits(GetAxisLimits());
   QVector<double> xticks;
@@ -1748,7 +1731,7 @@ void HandleAxis::RecalculateTicks() {
   }
 }
 
-void HandleAxis::RePackFigure() {
+void HandleAxis::RePackFigure(RenderEngine &gc) {
   int titleHeight = 0;
   int xlabelHeight = 0;
   int ylabelHeight = 0;
@@ -1815,11 +1798,10 @@ void HandleAxis::RePackFigure() {
   maxLabelHeight = qMax(maxLabelHeight,zlabelHeight);
   //    qDebug("titleHeight = %d, maxLabelHeight = %d",titleHeight,maxLabelHeight);
   // Get the outer position vector...
-  QVector<double> outerpos(GetPropertyVectorAsPixels("outerposition"));
+  QVector<double> outerpos(GetPropertyVectorAsPixels(gc,"outerposition"));
   // Special case - no labels at all --> super tight packing
-  HandleFigure *fig = GetParentFigure();
-  unsigned width = fig->GetWidth();
-  unsigned height = fig->GetHeight();
+  unsigned width = gc.width();
+  unsigned height = gc.height();
   //    qDebug("maxtickwidth = %d maxtickheight = %d maxlabelheight = %d",
   //	   maxTickWidth,maxTickHeight,maxLabelHeight);
   if ((maxTickWidth == 0) && (maxTickHeight == 0) && (maxLabelHeight == 0)) {
@@ -1986,7 +1968,7 @@ void HandleAxis::HandlePlotBoxFlags() {
   }
 }
   
-void HandleAxis::UpdateState() {
+void HandleAxis::Validate() {
   StringVector tset;
   if (HasChanged("xlim")) ToManual("xlimmode");
   if (HasChanged("ylim")) ToManual("ylimmode");
@@ -2008,20 +1990,6 @@ void HandleAxis::UpdateState() {
   if (HasChanged(tset)) {
     UpdateAxisFont();
     ClearChanged(tset);
-  }
-    
-
-  // Repack the figure...
-  // To repack the figure, we get the heights of the
-  // three labels (title, xlabel and ylabel)
-  //    RePackFigure();
-  // if ticklabels changed --> tickmode = manual
-  // if tickdir set --> tickdirmode = manual
-  // if resize || position chng && tickmode = auto --> recalculate tick marks
-  // if resize || position chng && ticlabelmode = auto --> recalculate tick labels
-  HandleFigure* fig = GetParentFigure();
-  if (fig->Resized() || HasChanged("position")) {
-    //      RecalculateTicks();
   }
   // Limits
   bool xflag, yflag, zflag, aflag, cflag;
@@ -2065,21 +2033,7 @@ void HandleAxis::UpdateState() {
     HPThreeVector *tv = (HPThreeVector*) LookupProperty("cameraupvector");
     tv->Value(0,1,0);
   }
-
-  HPHandles *children = (HPHandles*) LookupProperty("children");
-  QVector<unsigned> handles(children->Data());
-  for (int i=0;i<handles.size();i++) {
-    HandleObject *fp = LookupHandleObject(handles[i]);
-    fp->UpdateState();
-  }    
-
-  RePackFigure();
-  RecalculateTicks();
-  RePackFigure();
-  RecalculateTicks();
-  RePackFigure();
   ClearAllChanged();
-  fig->Repaint();
 }
 
 // The orientation of the label depends on the angle of the
@@ -2145,7 +2099,7 @@ void HandleAxis::DrawTickMarks(RenderEngine &gc) {
   HPColor *yc = (HPColor*) LookupProperty("ycolor");
   HPColor *zc = (HPColor*) LookupProperty("zcolor");
   // Compute the longest 
-  QVector<double> position(GetPropertyVectorAsPixels("position"));
+  QVector<double> position(GetPropertyVectorAsPixels(gc,"position"));
   int maxlen = (int)((position[2] > position[3]) ? position[2] : position[3]);
   HPTwoVector *kp = (HPTwoVector*) LookupProperty("ticklength");
   QVector<double> ticklen(kp->Data());
@@ -2184,7 +2138,7 @@ void HandleAxis::DrawTickMarks(RenderEngine &gc) {
   // n = max(maxx/dx,maxy/dy)
   //
   gc.setLineStyle("-");
-  QVector<double> outerpos(GetPropertyVectorAsPixels("outerposition"));
+  QVector<double> outerpos(GetPropertyVectorAsPixels(gc,"outerposition"));
   if (xvisible) {
     QVector<double> mapticks;
     for (int i=0;i<xticks.size();i++)
@@ -2263,13 +2217,6 @@ void HandleAxis::DrawTickMarks(RenderEngine &gc) {
 		   mapticks,minorticks,zlabeltxt,
 		   "zlabel",ticlen,ticdir);
   }
-  //  HPHandles *lbl = (HPHandles*) LookupProperty("title");
-  //     if (!lbl->Data().empty()) {
-  //       HandleText *fp = handleset.lookupHandle(lbl->Data()[0]);
-  //       HPThreeVector *gp = (HPThreeVector*) fp->LookupProperty("position");
-  //       // Put the title in the right spot
-  //       //      fp->PaintMe(gc);
-  //     }
 }
 
 void HandleAxis::DrawTickLabels(RenderEngine& gc,
@@ -2443,7 +2390,7 @@ void HandleAxis::DrawTickLabels(RenderEngine& gc,
 	// We now have the position of the label in absolute (pixel)
 	// coordinates.  Need to translate this to normalized coordinates
 	// relative to outerposition.
-	QVector<double> outerpos(GetPropertyVectorAsPixels("outerposition"));
+	QVector<double> outerpos(GetPropertyVectorAsPixels(gc,"outerposition"));
 	double xnorm, ynorm;
 	xnorm = (xl1-outerpos[0])/outerpos[2];
 	ynorm = (yl1-outerpos[1])/outerpos[3];
@@ -2456,7 +2403,7 @@ void HandleAxis::DrawAxisLabels(RenderEngine& gc) {
   // Set up the "annotation axis"
   gc.lookAt(0,0,1,0.0,0.0,0,0,1,0);
   gc.project(0,1,0,1,-1,1);
-  QVector<double> outerpos(GetPropertyVectorAsPixels("outerposition"));
+  QVector<double> outerpos(GetPropertyVectorAsPixels(gc,"outerposition"));
   gc.viewport(outerpos[0],outerpos[1],outerpos[2],outerpos[3]);
   HPHandles *lbl;
   QString xdir(StringPropertyLookup("xdir"));
@@ -2516,7 +2463,10 @@ void HandleAxis::DrawChildren(RenderEngine& gc) {
 
 void HandleAxis::PaintMe(RenderEngine& gc) {
   if (GetParentFigure() == NULL) return;
+  Validate();
+  RePackFigure(gc);
   SetupProjection(gc);
+  RecalculateTicks(gc);
   SetupAxis(gc);
   if (StringCheck("visible","on")) {
     DrawBox(gc);
@@ -2531,6 +2481,7 @@ void HandleAxis::PaintMe(RenderEngine& gc) {
     DrawTickMarks(gc);
     DrawAxisLabels(gc);
   }
+  m_box = GetPropertyVectorAsPixels(gc,"position");
 }
 
 void HandleAxis::PaintBoundingBox(RenderEngine& gc) {

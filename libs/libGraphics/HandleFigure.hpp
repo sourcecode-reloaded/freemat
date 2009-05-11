@@ -18,9 +18,9 @@
  */
 #ifndef __HandleFigure_hpp__
 #define __HandleFigure_hpp__
+
 #include "HandleObject.hpp"
 
-class HandleWindow;
 //Figure
 //   contains one or more axes
 //   to redraw the figure, we proxy our draws to the axes
@@ -33,7 +33,7 @@ class HandleWindow;
 class HandleFigure : public HandleObject {
 public:
   HandleFigure();
-  void render(QPainter* paint);
+  void PaintMe(RenderEngine& gc);
   virtual void ConstructProperties();
   void SetupDefaults();
 };
