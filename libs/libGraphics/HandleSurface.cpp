@@ -30,7 +30,6 @@ HandleSurface::~HandleSurface() {
 
 QVector<double> HandleSurface::GetLimits() {
   QVector<double> limits;
-  UpdateState();
   Array xdata(ArrayPropertyLookup("xdata"));
   Array ydata(ArrayPropertyLookup("ydata"));
   Array zdata(ArrayPropertyLookup("zdata"));

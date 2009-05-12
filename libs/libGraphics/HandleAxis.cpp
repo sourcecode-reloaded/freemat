@@ -1526,6 +1526,64 @@ bool HandleAxis::Is2DView() {
   return (!(xvisible && yvisible && zvisible));
 }
 
+void HandleAxis::InitialSetupAxis(RenderEngine &gc) {
+  HPThreeVector *tv1, *tv2, *tv3;
+  tv1 = (HPThreeVector*) LookupProperty("cameraposition");
+  tv2 = (HPThreeVector*) LookupProperty("cameratarget");
+  tv3 = (HPThreeVector*) LookupProperty("cameraupvector");
+  gc.lookAt(tv1->Data()[0],tv1->Data()[1],tv1->Data()[2],
+	    tv2->Data()[0],tv2->Data()[1],tv2->Data()[2],
+	    tv3->Data()[0],tv3->Data()[1],tv3->Data()[2]);
+  // Scale using the data aspect ratio
+  QVector<double> dar(VectorPropertyLookup("dataaspectratio"));
+  gc.scale(1.0/dar[0],1.0/dar[1],1.0/dar[2]);
+  // Get the axis limits
+  QVector<double> limits(GetAxisLimits());
+  // Map the 8 corners of the clipping cube to rotated space
+  double xvals[8];
+  double yvals[8];
+  double zvals[8];
+  gc.mapPoint(limits[0],limits[2],limits[4],xvals[0],yvals[0],zvals[0]);
+  gc.mapPoint(limits[0],limits[2],limits[5],xvals[1],yvals[1],zvals[1]);
+  gc.mapPoint(limits[0],limits[3],limits[4],xvals[2],yvals[2],zvals[2]);
+  gc.mapPoint(limits[0],limits[3],limits[5],xvals[3],yvals[3],zvals[3]);
+  gc.mapPoint(limits[1],limits[2],limits[4],xvals[4],yvals[4],zvals[4]);
+  gc.mapPoint(limits[1],limits[2],limits[5],xvals[5],yvals[5],zvals[5]);
+  gc.mapPoint(limits[1],limits[3],limits[4],xvals[6],yvals[6],zvals[6]);
+  gc.mapPoint(limits[1],limits[3],limits[5],xvals[7],yvals[7],zvals[7]);
+  // Get the min and max x, y and z coordinates
+  double xmin, xmax, ymin, ymax, zmin, zmax;
+  MinMaxVector(xvals,8,xmin,xmax);
+  MinMaxVector(yvals,8,ymin,ymax);
+  MinMaxVector(zvals,8,zmin,zmax);
+  if (zmin == zmax) {
+    zmin = zmax-1;
+    zmax = zmax+1;
+  }
+  QVector<double> position(GetPropertyVectorAsPixels(gc,"outerposition"));
+  if (StringCheck("plotboxaspectratiomode","manual") ||
+      StringCheck("dataaspectratiomode","manual")) {
+    // Now we have to deal with the scale-to-fit issue.  If we
+    // have scale-to-fit disabled, we get a single scale factor
+    // to zoom
+    double xratio = (xmax-xmin)/position[2];
+    double yratio = (ymax-ymin)/position[3];
+    double maxratio = qMax(xratio,yratio);
+    rerange(xmin,xmax,maxratio*position[2]);
+    rerange(ymin,ymax,maxratio*position[3]);
+  }
+  //    qDebug("Limits %f %f %f %f %f %f",
+  //	   xmin,xmax,ymin,ymax,zmin,zmax);
+  gc.project(xmin,xmax,ymin,ymax,-zmax,-zmin);
+  gc.viewport(position[0],position[1],position[2],position[3]);
+
+  gc.getModelviewMatrix(model);
+  gc.getProjectionMatrix(proj);
+  gc.getViewport(viewp);
+  
+
+}
+
 void HandleAxis::DrawAxisLines(RenderEngine &gc) { 
   QVector<double> limits(GetAxisLimits());
   HPColor *xc = (HPColor*) LookupProperty("xcolor");
@@ -1630,6 +1688,8 @@ int HandleAxis::GetTickCount(RenderEngine &gc,
 void HandleAxis::RecalculateTicks(RenderEngine& gc) {
   // We have to calculate the tick sets for each axis...
   QVector<double> limits(GetAxisLimits());
+  qDebug() << "Limits";
+  qDebug() << limits;
   QVector<double> xticks;
   StringVector xlabels;
   QVector<double> yticks;
@@ -1637,12 +1697,26 @@ void HandleAxis::RecalculateTicks(RenderEngine& gc) {
   QVector<double> zticks;
   StringVector zlabels;
   int xcnt, ycnt, zcnt;
+//   // Guesstimate -- Replace more accurate version with 
+//   // this one -- it eliminates a cyclical dependency in
+//   // the rendering of the axis.
+//   QVector<double> outerposition(GetPropertyVectorAsPixels(gc,"outerposition"));
+//   qDebug() << "position";
+//   qDebug() << outerposition;
+//   double plotradius = sqrt(pow(outerposition[2]/2,2.0)+pow(outerposition[3]/2,2.0));
+//   qDebug() << "radius";
+//   qDebug() << plotradius;
+//   qDebug() << "2D view flag = " << Is2DView();
+//   int numtics;
+//   numtics = (int) (qMax(2.0,plotradius/40));
   xcnt = GetTickCount(gc,limits[0],x1pos[1],x1pos[2],
-		      limits[1],x1pos[1],x1pos[2]);
+ 		      limits[1],x1pos[1],x1pos[2]);
   ycnt = GetTickCount(gc,y1pos[0],limits[2],y1pos[2],
-		      y1pos[0],limits[3],y1pos[2]);
+ 		      y1pos[0],limits[3],y1pos[2]);
   zcnt = GetTickCount(gc,z1pos[0],z1pos[1],limits[4],
-		      z1pos[0],z1pos[1],limits[5]);
+ 		      z1pos[0],z1pos[1],limits[5]);
+  qDebug() << "Tick counts" << xcnt << " " << ycnt << " " << zcnt;
+  //  xcnt = ycnt = zcnt = numtics;
   double xStart, xStop;
   double yStart, yStop;
   double zStart, zStop;
@@ -1729,6 +1803,8 @@ void HandleAxis::RecalculateTicks(RenderEngine& gc) {
     qp = (HPStringSet*) LookupProperty("zticklabel");
     qp->Data(zlabels);
   }
+  qDebug() << "xticklabel";
+  qDebug() << ((HPStringSet*) LookupProperty("xticklabel"))->Data();
 }
 
 void HandleAxis::RePackFigure(RenderEngine &gc) {
@@ -2463,10 +2539,12 @@ void HandleAxis::DrawChildren(RenderEngine& gc) {
 
 void HandleAxis::PaintMe(RenderEngine& gc) {
   if (GetParentFigure() == NULL) return;
+  qDebug() << "painting starts";
   Validate();
+  InitialSetupAxis(gc);
+  RecalculateTicks(gc);
   RePackFigure(gc);
   SetupProjection(gc);
-  RecalculateTicks(gc);
   SetupAxis(gc);
   if (StringCheck("visible","on")) {
     DrawBox(gc);
@@ -2482,6 +2560,7 @@ void HandleAxis::PaintMe(RenderEngine& gc) {
     DrawAxisLabels(gc);
   }
   m_box = GetPropertyVectorAsPixels(gc,"position");
+  qDebug() << m_box;
 }
 
 void HandleAxis::PaintBoundingBox(RenderEngine& gc) {

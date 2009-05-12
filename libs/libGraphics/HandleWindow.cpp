@@ -41,7 +41,7 @@ public:
 
   QSize BaseFigureQt::sizeHint() const {
     HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
-    //dbout << "Size hint " << (htv->Data()[0]) << "," << (htv->Data()[1]) << "\r\n";
+    dbout << "Size hint " << (htv->Data()[0]) << "," << (htv->Data()[1]) << "\r\n";
     return QSize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
    //  return QSize(10000,10000);
   }
@@ -51,8 +51,7 @@ void BaseFigureQt::resizeEvent(QResizeEvent *e) {
   //  dbout << "resize " << width() << " " << height() << "\r\n";
 //   backStore = QPixmap(qMax(8,width()),
 // 		      qMax(8,height()));
-//   hfig->resizeGL(qMax(8,width()),
-//   		 qMax(8,height()));
+  hfig->Resize(qMax(8,e->size().width()),qMax(8,e->size().height()));
 }
 
 static bool enableRepaint = false;
@@ -68,6 +67,7 @@ void GfxDisableRepaint() {
 
 void BaseFigureQt::paintEvent(QPaintEvent *e) {
   if (enableRepaint) {
+    qDebug() << "Paint Event";
     QPainter pnt(this);
     QTRenderEngine gc(&pnt,0,0,width(),height());
     hfig->PaintMe(gc);

@@ -28,6 +28,10 @@ HandleFigure::HandleFigure() {
 }
 
 // Missing features -- setsize?
+
+void HandleFigure::Resize(int width, int height) {
+  SetTwoVectorDefault("figsize",width,height);
+}
   
 void HandleFigure::ConstructProperties() {
   //!

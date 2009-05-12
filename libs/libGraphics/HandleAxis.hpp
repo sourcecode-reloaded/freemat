@@ -102,6 +102,7 @@ public:
 	     QVector<double>&,
 	     QVector<double>&);
   void SetupProjection(RenderEngine& gc);
+  void InitialSetupAxis(RenderEngine& gc);
   void DrawBox(RenderEngine& gc);
   void DrawMinorGridLines(RenderEngine& gc);
   void DrawGridLines(RenderEngine& gc);

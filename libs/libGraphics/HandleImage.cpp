@@ -31,8 +31,6 @@ HandleImage::~HandleImage() {
 }
   
 QVector<double> HandleImage::GetLimits() {
-  UpdateState();
-
   HPTwoVector *xp = (HPTwoVector *) LookupProperty("xdata");
   HPTwoVector *yp = (HPTwoVector *) LookupProperty("ydata");
   QVector<double> limits;
@@ -162,6 +160,7 @@ double* HandleImage::RGBExpandImage(const double *dp,
   QVector<double> clim(((HandleObject*)ap)->VectorPropertyLookup("clim"));
   double clim_min(qMin(clim[0],clim[1]));
   double clim_max(qMax(clim[0],clim[1]));
+  if (clim_min == clim_max) return ret;
   // Calculate the colormap length
   int cmaplen(cmap.size()/3);
   if (StringCheck("cdatamapping","direct")) {

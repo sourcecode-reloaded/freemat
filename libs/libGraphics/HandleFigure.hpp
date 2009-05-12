@@ -36,6 +36,7 @@ public:
   void PaintMe(RenderEngine& gc);
   virtual void ConstructProperties();
   void SetupDefaults();
+  void Resize(int width,int height);
 };
 
 #endif
