@@ -22,6 +22,7 @@
 
 #include <iostream>
 #include <vector>
+#include <QtGlobal>
 #include <QCoreApplication>
 #include <QString>
 #include <QStringList>
@@ -55,7 +56,7 @@ std::string BlasWrapper::ComputerType( void )
 		return std::string("Win32");
 	throw Exception("Unsupported Windows version.");
 #endif
-#ifdef Q_WS_WIN
+#ifdef Q_WS_MAC
 	return std::string( "OSX" );
 #endif
 
