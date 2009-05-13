@@ -27,7 +27,7 @@ public:
   virtual ~HandleLineSeries();
   virtual void ConstructProperties();
   virtual void SetupDefaults();
-  virtual void Validate();
+  virtual void UpdateState();
   virtual void PaintMe(RenderEngine& gc);    
   QVector<double> GetLimits();
 };

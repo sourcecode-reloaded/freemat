@@ -46,7 +46,7 @@ public:
   bool isStateDirty() {return m_stateDirty;}
   void setStateDirty(bool t = true) {m_stateDirty = t;}
   virtual void RegisterProperties() {}
-  virtual void Validate() {}
+  virtual void UpdateState() {}
   virtual QVector<double> GetLimits() {return QVector<double>();};
   bool HasChanged(StringVector names);
   bool HasChanged(QString name);

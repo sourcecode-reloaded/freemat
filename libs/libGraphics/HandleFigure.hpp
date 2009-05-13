@@ -21,6 +21,8 @@
 
 #include "HandleObject.hpp"
 
+class HandleWindow;
+
 //Figure
 //   contains one or more axes
 //   to redraw the figure, we proxy our draws to the axes
@@ -31,8 +33,10 @@
 //     set the transformation & clipping
 //     then draw the children
 class HandleFigure : public HandleObject {
+  HandleWindow *m_win;
 public:
-  HandleFigure();
+  HandleFigure(HandleWindow *win);
+  HandleWindow* ParentWindow() {return m_win;}
   void PaintMe(RenderEngine& gc);
   virtual void ConstructProperties();
   void SetupDefaults();

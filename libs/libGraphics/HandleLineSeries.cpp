@@ -51,7 +51,7 @@ QVector<double> HandleLineSeries::GetLimits() {
   return limits;
 }
 
-void HandleLineSeries::Validate() {
+void HandleLineSeries::UpdateState() {
   // Check that x, y and z data are the same size
   // Generate the x coordinates if necessary
   QVector<double> xs(VectorPropertyLookup("xdata"));

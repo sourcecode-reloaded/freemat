@@ -83,7 +83,7 @@ public:
   bool Is2DView(); 
   QVector<double> GetClientAreaInPixels() {return m_box;}
   virtual void ConstructProperties();
-  virtual void Validate();
+  virtual void UpdateState();
   void SetupDefaults();
   virtual void PaintMe(RenderEngine &gc);
   virtual void PaintBoundingBox(RenderEngine& gc);

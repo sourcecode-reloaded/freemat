@@ -71,6 +71,7 @@ void BaseFigureQt::paintEvent(QPaintEvent *e) {
     QPainter pnt(this);
     QTRenderEngine gc(&pnt,0,0,width(),height());
     hfig->PaintMe(gc);
+    hfig->ParentWindow()->markClean();
   }
 }
 
@@ -173,7 +174,7 @@ HandleWindow::HandleWindow(unsigned ahandle) : QMainWindow() {
   initialized = false;
   setWindowIcon(QPixmap(":/images/freemat_figure_small_mod_64.png"));
   handle = ahandle;
-  hfig = new HandleFigure();
+  hfig = new HandleFigure(this);
   char buffer[1000];
   sprintf(buffer,"Figure %d",ahandle+1);
   setWindowTitle(buffer);
@@ -648,32 +649,33 @@ void HandleWindow::markClean() {
 
 void HandleWindow::UpdateState() {
   if (!initialized) return;
+  if (dirty) return;
   dirty = true;
-  HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
-  child->resize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
-  child->updateGeometry();
-  adjustSize();
-  if (hfig->StringCheck("renderer","opengl") && (QGLFormat::hasOpenGL())) {
-      if ( QString("QGLWidget").compare(child->metaObject()->className() ) != 0 ) {
-	  BaseFigureGL* newchild = new BaseFigureGL(this,hfig);
-	  //layout->setCurrentWidget(child);
-	  setCentralWidget(newchild); //deletes old child
-	  child = newchild;
-          //child->show();
-          child->updateGeometry();
-          //repaint();
-          //UpdateState();
-       }
-     } else if (hfig->StringCheck("renderer","painters")) {
-       if (QString("QWidget").compare(child->metaObject()->className()) != 0 ) {
-	   BaseFigureQt* newchild = new BaseFigureQt(this,hfig);
-	   //layout->setCurrentWidget(child);
-	   setCentralWidget(newchild); //deletes old child
-	   child = newchild;
-           //child->show();
-           child->updateGeometry();
-	   //UpdateState();
-       }
-  }
-  repaint();
+//   HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
+//   child->resize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
+//   child->updateGeometry();
+//   adjustSize();
+//   if (hfig->StringCheck("renderer","opengl") && (QGLFormat::hasOpenGL())) {
+//       if ( QString("QGLWidget").compare(child->metaObject()->className() ) != 0 ) {
+// 	  BaseFigureGL* newchild = new BaseFigureGL(this,hfig);
+// 	  //layout->setCurrentWidget(child);
+// 	  setCentralWidget(newchild); //deletes old child
+// 	  child = newchild;
+//           //child->show();
+//           child->updateGeometry();
+//           //repaint();
+//           //UpdateState();
+//        }
+//      } else if (hfig->StringCheck("renderer","painters")) {
+//        if (QString("QWidget").compare(child->metaObject()->className()) != 0 ) {
+// 	   BaseFigureQt* newchild = new BaseFigureQt(this,hfig);
+// 	   //layout->setCurrentWidget(child);
+// 	   setCentralWidget(newchild); //deletes old child
+// 	   child = newchild;
+//            //child->show();
+//            child->updateGeometry();
+// 	   //UpdateState();
+//        }
+//   }
+  update();
 }

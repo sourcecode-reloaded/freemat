@@ -1581,6 +1581,182 @@ void HandleAxis::InitialSetupAxis(RenderEngine &gc) {
   gc.getProjectionMatrix(proj);
   gc.getViewport(viewp);
   
+  // Query the axisproperties to set the z-position of the
+  // x and y axis
+  if (((HPTopBottom*)LookupProperty("xaxislocation"))->Is("bottom")) {
+    x1pos[2] = limits[4];
+  } else
+    x1pos[2] = limits[5];
+  if (((HPLeftRight*)LookupProperty("yaxislocation"))->Is("left")) {
+    y1pos[2] = limits[4];
+  } else
+    y1pos[2] = limits[5];
+
+  if ((model[10] > 0) && (model[6] > 0)) {
+    if (x1pos[2] == limits[4])
+      x1pos[1] = limits[3];
+    else
+      x1pos[1] = limits[2];
+  } else if ((model[10] > 0) && (model[6] <= 0)) {
+    if (x1pos[2] == limits[4])
+      x1pos[1] = limits[2];
+    else
+      x1pos[1] = limits[3];
+  } else if ((model[10] <= 0) && (model[6] > 0)) {
+    if (x1pos[2] == limits[4])
+      x1pos[1] = limits[2];
+    else
+      x1pos[1] = limits[3];
+  } else if ((model[10] <= 0) && (model[6] <= 0)) {
+    if (x1pos[2] == limits[4])
+      x1pos[1] = limits[3];
+    else
+      x1pos[1] = limits[2];
+  } 
+
+  // There are two possibilities for where the opposite x axis is
+  //   - one option is to use the opposite axis in the y direction
+  //   - the other option is to use the opposite position in the z direction
+  //   - we have to decide which one to use.  What we can do is take
+  //   - the longer axis
+  double px0, py0, px1, py1, px2, py2;
+  gc.toPixels(limits[0],x1pos[1],x1pos[2],px0,py0);
+  gc.toPixels(limits[0],flipY(x1pos[1]),x1pos[2],px1,py1);
+  gc.toPixels(limits[0],x1pos[1],flipZ(x1pos[2]),px2,py2);
+  double len1, len2;
+  len1 = ((px1-px0)*(px1-px0) + (py1-py0)*(py1-py0));
+  len2 = ((px2-px0)*(px2-px0) + (py2-py0)*(py2-py0));
+  if ((len1 > len2) && (len1 > 0)) {
+    x2pos[1] = flipY(x1pos[1]);
+    x2pos[2] = x1pos[2];
+  } else {
+    x2pos[1] = x1pos[1];
+    x2pos[2] = flipZ(x1pos[2]);
+  }
+
+  //     if (x1pos[1] == limits[3])
+  //       x2pos[1] = limits[2];
+  //     else if (x1pos[1] == limits[2])
+  //       x2pos[1] = limits[3];
+
+  if ((model[10] > 0) && (model[2] > 0)) {
+    if (y1pos[2] == limits[4])
+      y1pos[0] = limits[1];
+    else
+      y1pos[0] = limits[0];
+  } else if ((model[10] <= 0) && (model[2] > 0)) {
+    if (y1pos[2] == limits[4])
+      y1pos[0] = limits[0];
+    else
+      y1pos[0] = limits[1];
+  } else if ((model[10] > 0) && (model[2] <= 0)) {
+    if (y1pos[2] == limits[4])
+      y1pos[0] = limits[0];
+    else
+      y1pos[0] = limits[1];
+  } else if ((model[10] <= 0) && (model[2] <= 0)) {
+    if (y1pos[2] == limits[4])
+      y1pos[0] = limits[1];
+    else
+      y1pos[0] = limits[0];
+  } 
+  gc.toPixels(y1pos[0],limits[2],y1pos[2],px0,py0);
+  gc.toPixels(flipX(y1pos[0]),limits[2],y1pos[2],px1,py1);
+  gc.toPixels(y1pos[0],limits[2],flipZ(y1pos[2]),px2,py2);
+  len1 = ((px1-px0)*(px1-px0) + (py1-py0)*(py1-py0));
+  len2 = ((px2-px0)*(px2-px0) + (py2-py0)*(py2-py0));
+  if ((len1 > len2) && (len1 > 0)) {
+    y2pos[0] = y1pos[0];
+    y2pos[2] = flipZ(y1pos[2]);
+  } else {
+    y2pos[0] = flipX(y1pos[0]);
+    y2pos[2] = y1pos[2];
+  }
+
+  //     if (y1pos[0] == limits[1])
+  //       y2pos[0] = limits[0];
+  //     else if (y1pos[0] == limits[0])
+  //       y2pos[0] = limits[1];
+    
+  if (model[6] > 0)
+    z1pos[0] = limits[1];
+  else if (model[6] <= 0)
+    z1pos[0] = limits[0];
+  if (model[2] > 0)
+    z1pos[1] = limits[2];
+  else if (model[2] <= 0)
+    z1pos[1] = limits[3];
+
+  //sgn - x - y
+  //111 - H - H
+  //110 - L - H
+  //101 - H - L
+  //100 - L - L
+  //011 - L - L
+  //010 - H - L
+  //001 - L - H
+  //000 - H - H
+  //
+  // so, x=H if (!10 ^ 2), and y = H if (!10 ^ 6)
+  if ((model[10] > 0) && (model[6] > 0) && (model[2] > 0)) {
+    z2pos[0] = limits[1];
+    z2pos[1] = limits[3];
+  } else if ((model[10] > 0) && (model[6] > 0) && (model[2] < 0)) {
+    z2pos[0] = limits[0];
+    z2pos[1] = limits[3];
+  } else if ((model[10] > 0) && (model[6] < 0) && (model[2] > 0)) {
+    z2pos[0] = limits[1];
+    z2pos[1] = limits[2];
+  } else if ((model[10] > 0) && (model[6] < 0) && (model[2] < 0)) {
+    z2pos[0] = limits[0];
+    z2pos[1] = limits[2];
+  } else if ((model[10] < 0) && (model[6] > 0) && (model[2] > 0)) {
+    z2pos[0] = limits[0];
+    z2pos[1] = limits[2];
+  } else if ((model[10] < 0) && (model[6] > 0) && (model[2] < 0)) {
+    z2pos[0] = limits[1];
+    z2pos[1] = limits[2];
+  } else if ((model[10] < 0) && (model[6] < 0) && (model[2] > 0)) {
+    z2pos[0] = limits[0];
+    z2pos[1] = limits[3];
+  } else if ((model[10] < 0) && (model[6] < 0) && (model[2] < 0)) {
+    z2pos[0] = limits[1];
+    z2pos[1] = limits[3];
+  }
+
+  // Check for ordinal views
+  // Z axis isn't visible
+  if ((model[2] == 0) && (model[6] == 0)) {
+    x2pos[1] = flipY(x1pos[1]);
+    x2pos[2] = x1pos[2];
+    y2pos[0] = flipX(y1pos[0]);
+    y2pos[2] = y2pos[2];
+  }
+  // X axis isn't visible
+  if ((model[6] == 0) && (model[10] == 0)) {
+    y2pos[0] = y1pos[0];
+    y2pos[2] = flipZ(y1pos[2]);
+    z2pos[0] = z1pos[0];
+    z2pos[1] = flipY(z1pos[1]);
+  }
+  // Y axis isn't visible
+  if ((model[2] == 0) && (model[10] == 0)) {
+    x2pos[1] = x1pos[1];
+    x2pos[2] = flipZ(x1pos[2]);
+    z2pos[0] = flipX(z1pos[0]);
+    z2pos[1] = z1pos[1];
+  }
+
+  double x1, y1, x2, y2;
+  gc.toPixels(limits[0],x1pos[1],x1pos[2],x1,y1);
+  gc.toPixels(limits[1],x1pos[1],x1pos[2],x2,y2);
+  xvisible = (fabs(x1-x2) > 2) || (fabs(y1-y2) > 2);
+  gc.toPixels(y1pos[0],limits[2],y1pos[2],x1,y1);
+  gc.toPixels(y1pos[0],limits[3],y1pos[2],x2,y2);
+  yvisible = (fabs(x1-x2) > 2) || (fabs(y1-y2) > 2);
+  gc.toPixels(z1pos[0],z1pos[1],limits[4],x1,y1);
+  gc.toPixels(z1pos[0],z1pos[1],limits[5],x2,y2);
+  zvisible = (fabs(x1-x2) > 2) || (fabs(y1-y2) > 2);  
 
 }
 
@@ -1709,6 +1885,10 @@ void HandleAxis::RecalculateTicks(RenderEngine& gc) {
 //   qDebug() << "2D view flag = " << Is2DView();
 //   int numtics;
 //   numtics = (int) (qMax(2.0,plotradius/40));
+  qDebug() << x1pos[0] << " " << x1pos[1] << " " << x1pos[2];
+  qDebug() << y1pos[0] << " " << y1pos[1] << " " << y1pos[2];
+  qDebug() << z1pos[0] << " " << z1pos[1] << " " << z1pos[2];
+  // Cyclic behaviour on xlim and ylim and zlim!
   xcnt = GetTickCount(gc,limits[0],x1pos[1],x1pos[2],
  		      limits[1],x1pos[1],x1pos[2]);
   ycnt = GetTickCount(gc,y1pos[0],limits[2],y1pos[2],
@@ -1805,6 +1985,10 @@ void HandleAxis::RecalculateTicks(RenderEngine& gc) {
   }
   qDebug() << "xticklabel";
   qDebug() << ((HPStringSet*) LookupProperty("xticklabel"))->Data();
+  qDebug() << "yticklabel";
+  qDebug() << ((HPStringSet*) LookupProperty("yticklabel"))->Data();
+  qDebug() << "zticklabel";
+  qDebug() << ((HPStringSet*) LookupProperty("zticklabel"))->Data();
 }
 
 void HandleAxis::RePackFigure(RenderEngine &gc) {
@@ -2044,7 +2228,7 @@ void HandleAxis::HandlePlotBoxFlags() {
   }
 }
   
-void HandleAxis::Validate() {
+void HandleAxis::UpdateState() {
   StringVector tset;
   if (HasChanged("xlim")) ToManual("xlimmode");
   if (HasChanged("ylim")) ToManual("ylimmode");
@@ -2540,7 +2724,6 @@ void HandleAxis::DrawChildren(RenderEngine& gc) {
 void HandleAxis::PaintMe(RenderEngine& gc) {
   if (GetParentFigure() == NULL) return;
   qDebug() << "painting starts";
-  Validate();
   InitialSetupAxis(gc);
   RecalculateTicks(gc);
   RePackFigure(gc);

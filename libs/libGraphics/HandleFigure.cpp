@@ -22,9 +22,10 @@
 #include "HandleWindow.hpp"
 #include <math.h>
 
-HandleFigure::HandleFigure() {
+HandleFigure::HandleFigure(HandleWindow *win) {
   ConstructProperties();
   SetupDefaults();
+  m_win = win;
 }
 
 // Missing features -- setsize?

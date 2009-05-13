@@ -330,7 +330,7 @@ ArrayVector HAxesFunction(int nargout, const ArrayVector& arg) {
     fig->SetPropertyHandle("currentaxes",handle);
     // Add us to the children...
     AddToCurrentFigChildren(handle);
-    fp->Validate();
+    fp->UpdateState();
     return ArrayVector(Array(double(handle)));
   } else {
     unsigned int handle = (unsigned int) arg[0].asInteger();
@@ -340,7 +340,7 @@ ArrayVector HAxesFunction(int nargout, const ArrayVector& arg) {
     AddToCurrentFigChildren(handle);
     // Get the current figure
     CurrentFig()->SetPropertyHandle("currentaxes",handle);     
-    CurrentFig()->Validate();
+    CurrentFig()->UpdateState();
     return ArrayVector();
   }
 }
@@ -440,13 +440,14 @@ ArrayVector HSetFunction(int nargout, const ArrayVector& arg) {
     }
     ptr+=2;
   }
-  fp->Validate();
+  fp->UpdateState();
   if (!fp->IsType("figure") && !fp->IsType("uicontrol")) {
     //FIXME
-    //     HandleFigure *fig = fp->GetParentFigure();
-    //     fig->Validate();
+    HandleFigure *fig = fp->GetParentFigure();
+    fig->UpdateState();
     //     fig->Repaint();
   }
+  CurrentWindow()->markDirty();
   return ArrayVector();
 }
 
@@ -522,9 +523,9 @@ static unsigned GenericConstructor(HandleObject* fp, const ArrayVector& arg,
     QVector<unsigned> parent;
     parent.push_back(current);
     cp->Data(parent);
-    axis->Validate();
+    axis->UpdateState();
   }
-  fp->Validate();
+  fp->UpdateState();
   return handle;
 }
 
