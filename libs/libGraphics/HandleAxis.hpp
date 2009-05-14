@@ -81,6 +81,12 @@ public:
   HandleAxis();
   virtual ~HandleAxis();
   bool Is2DView(); 
+  void SetupCamera(RenderEngine &gc);
+  void MapCorners(RenderEngine &gc, 
+		  double &xmin, double &xmax,
+		  double &ymin, double &ymax,
+		  double &zmin, double &zmax);
+  void UpdateXYZPos(RenderEngine &gc);
   QVector<double> GetClientAreaInPixels() {return m_box;}
   virtual void ConstructProperties();
   virtual void UpdateState();

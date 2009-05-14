@@ -1024,39 +1024,13 @@ void rerange(double& amin, double& amax, double arange) {
 }
 
 void HandleAxis::SetupProjection(RenderEngine &gc) {
-  HPThreeVector *tv1, *tv2, *tv3;
-  tv1 = (HPThreeVector*) LookupProperty("cameraposition");
-  tv2 = (HPThreeVector*) LookupProperty("cameratarget");
-  tv3 = (HPThreeVector*) LookupProperty("cameraupvector");
-  gc.lookAt(tv1->Data()[0],tv1->Data()[1],tv1->Data()[2],
-	    tv2->Data()[0],tv2->Data()[1],tv2->Data()[2],
-	    tv3->Data()[0],tv3->Data()[1],tv3->Data()[2]);
+  SetupCamera(gc);
   // Scale using the data aspect ratio
   QVector<double> dar(VectorPropertyLookup("dataaspectratio"));
   gc.scale(1.0/dar[0],1.0/dar[1],1.0/dar[2]);
   // Get the axis limits
-  QVector<double> limits(GetAxisLimits());
-  // Map the 8 corners of the clipping cube to rotated space
-  double xvals[8];
-  double yvals[8];
-  double zvals[8];
-  gc.mapPoint(limits[0],limits[2],limits[4],xvals[0],yvals[0],zvals[0]);
-  gc.mapPoint(limits[0],limits[2],limits[5],xvals[1],yvals[1],zvals[1]);
-  gc.mapPoint(limits[0],limits[3],limits[4],xvals[2],yvals[2],zvals[2]);
-  gc.mapPoint(limits[0],limits[3],limits[5],xvals[3],yvals[3],zvals[3]);
-  gc.mapPoint(limits[1],limits[2],limits[4],xvals[4],yvals[4],zvals[4]);
-  gc.mapPoint(limits[1],limits[2],limits[5],xvals[5],yvals[5],zvals[5]);
-  gc.mapPoint(limits[1],limits[3],limits[4],xvals[6],yvals[6],zvals[6]);
-  gc.mapPoint(limits[1],limits[3],limits[5],xvals[7],yvals[7],zvals[7]);
-  // Get the min and max x, y and z coordinates
   double xmin, xmax, ymin, ymax, zmin, zmax;
-  MinMaxVector(xvals,8,xmin,xmax);
-  MinMaxVector(yvals,8,ymin,ymax);
-  MinMaxVector(zvals,8,zmin,zmax);
-  if (zmin == zmax) {
-    zmin = zmax-1;
-    zmax = zmax+1;
-  }
+  MapCorners(gc,xmin,xmax,ymin,ymax,zmin,zmax);
   QVector<double> position(GetPropertyVectorAsPixels(gc,"position"));
   if (StringCheck("plotboxaspectratiomode","manual") ||
       StringCheck("dataaspectratiomode","manual")) {
@@ -1343,6 +1317,52 @@ double HandleAxis::flipZ(double t) {
 void HandleAxis::SetupAxis(RenderEngine &gc) {
   double model[16];
   gc.getModelviewMatrix(model);
+  UpdateXYZPos(gc);
+}
+
+bool HandleAxis::Is2DView() {
+  return (!(xvisible && yvisible && zvisible));
+}
+
+void HandleAxis::SetupCamera(RenderEngine &gc) {
+  HPThreeVector *tv1, *tv2, *tv3;
+  tv1 = (HPThreeVector*) LookupProperty("cameraposition");
+  tv2 = (HPThreeVector*) LookupProperty("cameratarget");
+  tv3 = (HPThreeVector*) LookupProperty("cameraupvector");
+  gc.lookAt(tv1->Data()[0],tv1->Data()[1],tv1->Data()[2],
+	    tv2->Data()[0],tv2->Data()[1],tv2->Data()[2],
+	    tv3->Data()[0],tv3->Data()[1],tv3->Data()[2]);
+}
+
+void HandleAxis::MapCorners(RenderEngine &gc, 
+			    double &xmin, double &xmax,
+			    double &ymin, double &ymax,
+			    double &zmin, double &zmax) {
+  // Get the axis limits
+  QVector<double> limits(GetAxisLimits());
+  // Map the 8 corners of the clipping cube to rotated space
+  double xvals[8];
+  double yvals[8];
+  double zvals[8];
+  gc.mapPoint(limits[0],limits[2],limits[4],xvals[0],yvals[0],zvals[0]);
+  gc.mapPoint(limits[0],limits[2],limits[5],xvals[1],yvals[1],zvals[1]);
+  gc.mapPoint(limits[0],limits[3],limits[4],xvals[2],yvals[2],zvals[2]);
+  gc.mapPoint(limits[0],limits[3],limits[5],xvals[3],yvals[3],zvals[3]);
+  gc.mapPoint(limits[1],limits[2],limits[4],xvals[4],yvals[4],zvals[4]);
+  gc.mapPoint(limits[1],limits[2],limits[5],xvals[5],yvals[5],zvals[5]);
+  gc.mapPoint(limits[1],limits[3],limits[4],xvals[6],yvals[6],zvals[6]);
+  gc.mapPoint(limits[1],limits[3],limits[5],xvals[7],yvals[7],zvals[7]);
+  // Get the min and max x, y and z coordinates
+  MinMaxVector(xvals,8,xmin,xmax);
+  MinMaxVector(yvals,8,ymin,ymax);
+  MinMaxVector(zvals,8,zmin,zmax);
+  if (zmin == zmax) {
+    zmin = zmax-1;
+    zmax = zmax+1;
+  }  
+}
+
+void HandleAxis::UpdateXYZPos(RenderEngine &gc) {
   QVector<double> limits(GetAxisLimits());
   // Query the axisproperties to set the z-position of the
   // x and y axis
@@ -1519,47 +1539,17 @@ void HandleAxis::SetupAxis(RenderEngine &gc) {
   yvisible = (fabs(x1-x2) > 2) || (fabs(y1-y2) > 2);
   gc.toPixels(z1pos[0],z1pos[1],limits[4],x1,y1);
   gc.toPixels(z1pos[0],z1pos[1],limits[5],x2,y2);
-  zvisible = (fabs(x1-x2) > 2) || (fabs(y1-y2) > 2);  
-}
-
-bool HandleAxis::Is2DView() {
-  return (!(xvisible && yvisible && zvisible));
+  zvisible = (fabs(x1-x2) > 2) || (fabs(y1-y2) > 2);    
 }
 
 void HandleAxis::InitialSetupAxis(RenderEngine &gc) {
-  HPThreeVector *tv1, *tv2, *tv3;
-  tv1 = (HPThreeVector*) LookupProperty("cameraposition");
-  tv2 = (HPThreeVector*) LookupProperty("cameratarget");
-  tv3 = (HPThreeVector*) LookupProperty("cameraupvector");
-  gc.lookAt(tv1->Data()[0],tv1->Data()[1],tv1->Data()[2],
-	    tv2->Data()[0],tv2->Data()[1],tv2->Data()[2],
-	    tv3->Data()[0],tv3->Data()[1],tv3->Data()[2]);
+  SetupCamera(gc);
   // Scale using the data aspect ratio
   QVector<double> dar(VectorPropertyLookup("dataaspectratio"));
   gc.scale(1.0/dar[0],1.0/dar[1],1.0/dar[2]);
   // Get the axis limits
-  QVector<double> limits(GetAxisLimits());
-  // Map the 8 corners of the clipping cube to rotated space
-  double xvals[8];
-  double yvals[8];
-  double zvals[8];
-  gc.mapPoint(limits[0],limits[2],limits[4],xvals[0],yvals[0],zvals[0]);
-  gc.mapPoint(limits[0],limits[2],limits[5],xvals[1],yvals[1],zvals[1]);
-  gc.mapPoint(limits[0],limits[3],limits[4],xvals[2],yvals[2],zvals[2]);
-  gc.mapPoint(limits[0],limits[3],limits[5],xvals[3],yvals[3],zvals[3]);
-  gc.mapPoint(limits[1],limits[2],limits[4],xvals[4],yvals[4],zvals[4]);
-  gc.mapPoint(limits[1],limits[2],limits[5],xvals[5],yvals[5],zvals[5]);
-  gc.mapPoint(limits[1],limits[3],limits[4],xvals[6],yvals[6],zvals[6]);
-  gc.mapPoint(limits[1],limits[3],limits[5],xvals[7],yvals[7],zvals[7]);
-  // Get the min and max x, y and z coordinates
   double xmin, xmax, ymin, ymax, zmin, zmax;
-  MinMaxVector(xvals,8,xmin,xmax);
-  MinMaxVector(yvals,8,ymin,ymax);
-  MinMaxVector(zvals,8,zmin,zmax);
-  if (zmin == zmax) {
-    zmin = zmax-1;
-    zmax = zmax+1;
-  }
+  MapCorners(gc,xmin,xmax,ymin,ymax,zmin,zmax);
   QVector<double> position(GetPropertyVectorAsPixels(gc,"outerposition"));
   if (StringCheck("plotboxaspectratiomode","manual") ||
       StringCheck("dataaspectratiomode","manual")) {
@@ -1581,183 +1571,7 @@ void HandleAxis::InitialSetupAxis(RenderEngine &gc) {
   gc.getProjectionMatrix(proj);
   gc.getViewport(viewp);
   
-  // Query the axisproperties to set the z-position of the
-  // x and y axis
-  if (((HPTopBottom*)LookupProperty("xaxislocation"))->Is("bottom")) {
-    x1pos[2] = limits[4];
-  } else
-    x1pos[2] = limits[5];
-  if (((HPLeftRight*)LookupProperty("yaxislocation"))->Is("left")) {
-    y1pos[2] = limits[4];
-  } else
-    y1pos[2] = limits[5];
-
-  if ((model[10] > 0) && (model[6] > 0)) {
-    if (x1pos[2] == limits[4])
-      x1pos[1] = limits[3];
-    else
-      x1pos[1] = limits[2];
-  } else if ((model[10] > 0) && (model[6] <= 0)) {
-    if (x1pos[2] == limits[4])
-      x1pos[1] = limits[2];
-    else
-      x1pos[1] = limits[3];
-  } else if ((model[10] <= 0) && (model[6] > 0)) {
-    if (x1pos[2] == limits[4])
-      x1pos[1] = limits[2];
-    else
-      x1pos[1] = limits[3];
-  } else if ((model[10] <= 0) && (model[6] <= 0)) {
-    if (x1pos[2] == limits[4])
-      x1pos[1] = limits[3];
-    else
-      x1pos[1] = limits[2];
-  } 
-
-  // There are two possibilities for where the opposite x axis is
-  //   - one option is to use the opposite axis in the y direction
-  //   - the other option is to use the opposite position in the z direction
-  //   - we have to decide which one to use.  What we can do is take
-  //   - the longer axis
-  double px0, py0, px1, py1, px2, py2;
-  gc.toPixels(limits[0],x1pos[1],x1pos[2],px0,py0);
-  gc.toPixels(limits[0],flipY(x1pos[1]),x1pos[2],px1,py1);
-  gc.toPixels(limits[0],x1pos[1],flipZ(x1pos[2]),px2,py2);
-  double len1, len2;
-  len1 = ((px1-px0)*(px1-px0) + (py1-py0)*(py1-py0));
-  len2 = ((px2-px0)*(px2-px0) + (py2-py0)*(py2-py0));
-  if ((len1 > len2) && (len1 > 0)) {
-    x2pos[1] = flipY(x1pos[1]);
-    x2pos[2] = x1pos[2];
-  } else {
-    x2pos[1] = x1pos[1];
-    x2pos[2] = flipZ(x1pos[2]);
-  }
-
-  //     if (x1pos[1] == limits[3])
-  //       x2pos[1] = limits[2];
-  //     else if (x1pos[1] == limits[2])
-  //       x2pos[1] = limits[3];
-
-  if ((model[10] > 0) && (model[2] > 0)) {
-    if (y1pos[2] == limits[4])
-      y1pos[0] = limits[1];
-    else
-      y1pos[0] = limits[0];
-  } else if ((model[10] <= 0) && (model[2] > 0)) {
-    if (y1pos[2] == limits[4])
-      y1pos[0] = limits[0];
-    else
-      y1pos[0] = limits[1];
-  } else if ((model[10] > 0) && (model[2] <= 0)) {
-    if (y1pos[2] == limits[4])
-      y1pos[0] = limits[0];
-    else
-      y1pos[0] = limits[1];
-  } else if ((model[10] <= 0) && (model[2] <= 0)) {
-    if (y1pos[2] == limits[4])
-      y1pos[0] = limits[1];
-    else
-      y1pos[0] = limits[0];
-  } 
-  gc.toPixels(y1pos[0],limits[2],y1pos[2],px0,py0);
-  gc.toPixels(flipX(y1pos[0]),limits[2],y1pos[2],px1,py1);
-  gc.toPixels(y1pos[0],limits[2],flipZ(y1pos[2]),px2,py2);
-  len1 = ((px1-px0)*(px1-px0) + (py1-py0)*(py1-py0));
-  len2 = ((px2-px0)*(px2-px0) + (py2-py0)*(py2-py0));
-  if ((len1 > len2) && (len1 > 0)) {
-    y2pos[0] = y1pos[0];
-    y2pos[2] = flipZ(y1pos[2]);
-  } else {
-    y2pos[0] = flipX(y1pos[0]);
-    y2pos[2] = y1pos[2];
-  }
-
-  //     if (y1pos[0] == limits[1])
-  //       y2pos[0] = limits[0];
-  //     else if (y1pos[0] == limits[0])
-  //       y2pos[0] = limits[1];
-    
-  if (model[6] > 0)
-    z1pos[0] = limits[1];
-  else if (model[6] <= 0)
-    z1pos[0] = limits[0];
-  if (model[2] > 0)
-    z1pos[1] = limits[2];
-  else if (model[2] <= 0)
-    z1pos[1] = limits[3];
-
-  //sgn - x - y
-  //111 - H - H
-  //110 - L - H
-  //101 - H - L
-  //100 - L - L
-  //011 - L - L
-  //010 - H - L
-  //001 - L - H
-  //000 - H - H
-  //
-  // so, x=H if (!10 ^ 2), and y = H if (!10 ^ 6)
-  if ((model[10] > 0) && (model[6] > 0) && (model[2] > 0)) {
-    z2pos[0] = limits[1];
-    z2pos[1] = limits[3];
-  } else if ((model[10] > 0) && (model[6] > 0) && (model[2] < 0)) {
-    z2pos[0] = limits[0];
-    z2pos[1] = limits[3];
-  } else if ((model[10] > 0) && (model[6] < 0) && (model[2] > 0)) {
-    z2pos[0] = limits[1];
-    z2pos[1] = limits[2];
-  } else if ((model[10] > 0) && (model[6] < 0) && (model[2] < 0)) {
-    z2pos[0] = limits[0];
-    z2pos[1] = limits[2];
-  } else if ((model[10] < 0) && (model[6] > 0) && (model[2] > 0)) {
-    z2pos[0] = limits[0];
-    z2pos[1] = limits[2];
-  } else if ((model[10] < 0) && (model[6] > 0) && (model[2] < 0)) {
-    z2pos[0] = limits[1];
-    z2pos[1] = limits[2];
-  } else if ((model[10] < 0) && (model[6] < 0) && (model[2] > 0)) {
-    z2pos[0] = limits[0];
-    z2pos[1] = limits[3];
-  } else if ((model[10] < 0) && (model[6] < 0) && (model[2] < 0)) {
-    z2pos[0] = limits[1];
-    z2pos[1] = limits[3];
-  }
-
-  // Check for ordinal views
-  // Z axis isn't visible
-  if ((model[2] == 0) && (model[6] == 0)) {
-    x2pos[1] = flipY(x1pos[1]);
-    x2pos[2] = x1pos[2];
-    y2pos[0] = flipX(y1pos[0]);
-    y2pos[2] = y2pos[2];
-  }
-  // X axis isn't visible
-  if ((model[6] == 0) && (model[10] == 0)) {
-    y2pos[0] = y1pos[0];
-    y2pos[2] = flipZ(y1pos[2]);
-    z2pos[0] = z1pos[0];
-    z2pos[1] = flipY(z1pos[1]);
-  }
-  // Y axis isn't visible
-  if ((model[2] == 0) && (model[10] == 0)) {
-    x2pos[1] = x1pos[1];
-    x2pos[2] = flipZ(x1pos[2]);
-    z2pos[0] = flipX(z1pos[0]);
-    z2pos[1] = z1pos[1];
-  }
-
-  double x1, y1, x2, y2;
-  gc.toPixels(limits[0],x1pos[1],x1pos[2],x1,y1);
-  gc.toPixels(limits[1],x1pos[1],x1pos[2],x2,y2);
-  xvisible = (fabs(x1-x2) > 2) || (fabs(y1-y2) > 2);
-  gc.toPixels(y1pos[0],limits[2],y1pos[2],x1,y1);
-  gc.toPixels(y1pos[0],limits[3],y1pos[2],x2,y2);
-  yvisible = (fabs(x1-x2) > 2) || (fabs(y1-y2) > 2);
-  gc.toPixels(z1pos[0],z1pos[1],limits[4],x1,y1);
-  gc.toPixels(z1pos[0],z1pos[1],limits[5],x2,y2);
-  zvisible = (fabs(x1-x2) > 2) || (fabs(y1-y2) > 2);  
-
+  UpdateXYZPos(gc);
 }
 
 void HandleAxis::DrawAxisLines(RenderEngine &gc) { 

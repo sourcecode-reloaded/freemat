@@ -23,6 +23,7 @@
 #include <math.h>
 
 HandleFigure::HandleFigure(HandleWindow *win) {
+  dirty = false;
   ConstructProperties();
   SetupDefaults();
   m_win = win;
@@ -112,5 +113,6 @@ void HandleFigure::PaintMe(RenderEngine& gc) {
   } catch (Exception& e) {
     dbout << "Warning: Graphics subsystem reports: " << e.msg() << "\n";
   }
+  dirty = false;
 }
 

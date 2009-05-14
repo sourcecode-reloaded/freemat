@@ -49,6 +49,6 @@ ArrayVector HCopyFunction(int nargout, const ArrayVector& arg);
 ArrayVector HPrintFunction(int nargout, const ArrayVector& arg);
 ArrayVector DrawNowFunction(int nargout, const ArrayVector& arg);
 
-void DoDrawNow();
+void RefreshFigs();
 
 #endif

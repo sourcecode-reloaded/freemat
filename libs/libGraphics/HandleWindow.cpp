@@ -39,18 +39,18 @@ public:
   //  QSizePolicy sizePolicy() const;
 };
 
-  QSize BaseFigureQt::sizeHint() const {
-    HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
-    dbout << "Size hint " << (htv->Data()[0]) << "," << (htv->Data()[1]) << "\r\n";
-    return QSize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
-   //  return QSize(10000,10000);
-  }
+QSize BaseFigureQt::sizeHint() const {
+  HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
+  dbout << "Size hint " << (htv->Data()[0]) << "," << (htv->Data()[1]) << "\r\n";
+  return QSize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
+  //  return QSize(10000,10000);
+}
 
 void BaseFigureQt::resizeEvent(QResizeEvent *e) {
   QWidget::resizeEvent(e);
   //  dbout << "resize " << width() << " " << height() << "\r\n";
-//   backStore = QPixmap(qMax(8,width()),
-// 		      qMax(8,height()));
+  //   backStore = QPixmap(qMax(8,width()),
+  // 		      qMax(8,height()));
   hfig->Resize(qMax(8,e->size().width()),qMax(8,e->size().height()));
 }
 
@@ -58,11 +58,14 @@ static bool enableRepaint = false;
 
 void GfxEnableRepaint() {
   enableRepaint = true;
-  DoDrawNow();
 }
 
 void GfxDisableRepaint() {
   enableRepaint = false;
+}
+
+bool GfxEnableFlag() {
+  return enableRepaint;
 }
 
 void BaseFigureQt::paintEvent(QPaintEvent *e) {
@@ -71,7 +74,6 @@ void BaseFigureQt::paintEvent(QPaintEvent *e) {
     QPainter pnt(this);
     QTRenderEngine gc(&pnt,0,0,width(),height());
     hfig->PaintMe(gc);
-    hfig->ParentWindow()->markClean();
   }
 }
 
@@ -188,7 +190,6 @@ HandleWindow::HandleWindow(unsigned ahandle) : QMainWindow() {
   resize(600,400);
   initialized = true;
   mode = normal_mode;
-  dirty = false;
 }
 
 // Useful tools:
@@ -453,7 +454,7 @@ void HandleWindow::mouseMoveEvent(QMouseEvent* e) {
 			       pan_ymean+pan_yrange*dely+pan_yrange/2);
 	h->SetConstrainedStringDefault("ylimmode","manual");
 	//	hfig->Repaint();
-	UpdateState();
+	hfig->markDirty();
       }
     }
     if ((mode == rotate_mode) && rotate_active) {
@@ -492,7 +493,8 @@ void HandleWindow::mouseMoveEvent(QMouseEvent* e) {
 	h->SetConstrainedStringDefault("cameraupvectormode","manual");
 	//	h->UpdateState();
 	//	hfig->Repaint();
-	UpdateState();
+	hfig->markDirty();
+	//	UpdateState();
       }
     }
     if ((mode == cam_rotate_mode) && rotate_active) {
@@ -510,7 +512,8 @@ void HandleWindow::mouseMoveEvent(QMouseEvent* e) {
 	h->SetConstrainedStringDefault("cameraupvectormode","manual");
 	//	h->UpdateState();
 	//	hfig->Repaint();
-	UpdateState();
+	//	UpdateState();
+	hfig->markDirty();
       }
     }
   } catch (Exception &e) {
@@ -640,42 +643,37 @@ void HandleWindow::mouseReleaseEvent(QMouseEvent * e) {
     }
   } catch (Exception &e) {
   }
-  dirty = true;
 }
 
-void HandleWindow::markClean() {
-  dirty = false;
-}
-
-void HandleWindow::UpdateState() {
-  if (!initialized) return;
-  if (dirty) return;
-  dirty = true;
-//   HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
-//   child->resize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
-//   child->updateGeometry();
-//   adjustSize();
-//   if (hfig->StringCheck("renderer","opengl") && (QGLFormat::hasOpenGL())) {
-//       if ( QString("QGLWidget").compare(child->metaObject()->className() ) != 0 ) {
-// 	  BaseFigureGL* newchild = new BaseFigureGL(this,hfig);
-// 	  //layout->setCurrentWidget(child);
-// 	  setCentralWidget(newchild); //deletes old child
-// 	  child = newchild;
-//           //child->show();
-//           child->updateGeometry();
-//           //repaint();
-//           //UpdateState();
-//        }
-//      } else if (hfig->StringCheck("renderer","painters")) {
-//        if (QString("QWidget").compare(child->metaObject()->className()) != 0 ) {
-// 	   BaseFigureQt* newchild = new BaseFigureQt(this,hfig);
-// 	   //layout->setCurrentWidget(child);
-// 	   setCentralWidget(newchild); //deletes old child
-// 	   child = newchild;
-//            //child->show();
-//            child->updateGeometry();
-// 	   //UpdateState();
-//        }
-//   }
-  update();
-}
+// void HandleWindow::UpdateState() {
+//   if (!initialized) return;
+//   if (dirty) return;
+//   dirty = true;
+//   //   HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
+//   //   child->resize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
+//   //   child->updateGeometry();
+//   //   adjustSize();
+//   //   if (hfig->StringCheck("renderer","opengl") && (QGLFormat::hasOpenGL())) {
+//   //       if ( QString("QGLWidget").compare(child->metaObject()->className() ) != 0 ) {
+//   // 	  BaseFigureGL* newchild = new BaseFigureGL(this,hfig);
+//   // 	  //layout->setCurrentWidget(child);
+//   // 	  setCentralWidget(newchild); //deletes old child
+//   // 	  child = newchild;
+//   //           //child->show();
+//   //           child->updateGeometry();
+//   //           //repaint();
+//   //           //UpdateState();
+//   //        }
+//   //      } else if (hfig->StringCheck("renderer","painters")) {
+//   //        if (QString("QWidget").compare(child->metaObject()->className()) != 0 ) {
+//   // 	   BaseFigureQt* newchild = new BaseFigureQt(this,hfig);
+//   // 	   //layout->setCurrentWidget(child);
+//   // 	   setCentralWidget(newchild); //deletes old child
+//   // 	   child = newchild;
+//   //            //child->show();
+//   //            child->updateGeometry();
+//   // 	   //UpdateState();
+//   //        }
+//   //   }
+//   //  update();
+// }

@@ -45,7 +45,6 @@ class HandleWindow : public QMainWindow {
   Q_OBJECT
 protected:
   bool initialized;
-  bool dirty;
   unsigned handle;
   bool glActive;
   //QGLWidget *glchild;
@@ -77,12 +76,8 @@ public:
   QWidget *GetQtWidget() {return child;}
   HandleWindow(unsigned ahandle);
   ~HandleWindow() {delete hfig;}
-  bool isDirty() {return dirty;}
-  void markClean();
-  void markDirty() {dirty = true;}
   unsigned Handle();
   HandleFigure *HFig();
-  void UpdateState();
   void closeEvent(QCloseEvent* e);
   bool event(QEvent* e);
   void GetClick(int &x, int &y);
@@ -102,7 +97,7 @@ public slots:
 };
 
 void GfxEnableRepaint();
-
 void GfxDisableRepaint();
+bool GfxEnableFlag();
 
 #endif
