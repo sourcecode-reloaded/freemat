@@ -34,6 +34,56 @@ HandleFigure::HandleFigure(HandleWindow *win) {
 void HandleFigure::Resize(int width, int height) {
   SetTwoVectorDefault("figsize",width,height);
 }
+
+void HSVRAMP(double h, double &r, double &g, double &b) {
+  int i;
+  double f, p, q, t;
+  h *= 6;                        // sector 0 to 5
+  i = (int) floor( h );
+  f = h - i;                    // fractional part of h
+  p = 0;
+  q = 1 - f ;
+  t = f ;
+  switch( i ) {
+  case 0:
+    r = 1;      g = t;      b = p;
+    break;
+  case 1:
+    r = q;      g = 1;      b = p;
+    break;
+  case 2:
+    r = p;      g = 1;      b = t;
+    break;
+  case 3:
+    r = p;      g = q;      b = 1;
+    break;
+  case 4:
+    r = t;      g = p;      b = 1;
+    break;
+  default:                // case 5:
+    r = 1;      g = p;      b = q;
+    break;
+  }
+}
+
+
+void HandleFigure::LoadDefaultColorMap() {
+  QVector<double> cmap;
+  for (int i=0;i<64;i++) {
+    double h = i/(64.0);
+    double r, g, b;
+    HSVRAMP(h,r,g,b);
+    cmap.push_back(r);
+    cmap.push_back(g);
+    cmap.push_back(b);
+  }
+  HPColorVector *hcv = (HPColorVector*) LookupProperty("colormap");
+  hcv->Data(cmap);
+  cmap.clear();
+  cmap.push_back(1.0);
+  HPVector *hv = (HPVector*) LookupProperty("alphamap");
+  hv->Data(cmap);
+}
   
 void HandleFigure::ConstructProperties() {
   //!
@@ -96,6 +146,7 @@ void HandleFigure::SetupDefaults() {
   SetThreeVectorDefault("color",0.7,0.7,0.7);
   SetStringDefault("nextplot","replace");
   SetTwoVectorDefault("figsize",500,300);
+  LoadDefaultColorMap();
 }
 
 void HandleFigure::PaintMe(RenderEngine& gc) {

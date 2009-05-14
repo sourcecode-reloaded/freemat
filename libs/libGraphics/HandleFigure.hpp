@@ -34,6 +34,7 @@ class HandleWindow;
 //     then draw the children
 class HandleFigure : public HandleObject {
   HandleWindow *m_win;
+  void LoadDefaultColorMap();
   bool dirty;
 public:
   HandleFigure(HandleWindow *win);

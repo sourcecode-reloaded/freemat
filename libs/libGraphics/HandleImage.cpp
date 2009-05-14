@@ -151,7 +151,7 @@ void HandleImage::SetupDefaults() {
 double* HandleImage::RGBExpandImage(const double *dp, 
 				    int rows, int cols,
 				    bool floatData) {
-  //    qDebug("RGBExpand");
+  qDebug("RGBExpand");
   // Allocate an output array of the right size
   double *ret = new double[rows*cols*3];
   // Retrieve the colormap
@@ -163,6 +163,7 @@ double* HandleImage::RGBExpandImage(const double *dp,
   if (clim_min == clim_max) return ret;
   // Calculate the colormap length
   int cmaplen(cmap.size()/3);
+  if (cmaplen < 1) return ret;
   if (StringCheck("cdatamapping","direct")) {
     for (int i=0;i<rows*cols;i++) {
       int ndx;
