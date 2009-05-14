@@ -643,6 +643,7 @@ void HandleWindow::mouseReleaseEvent(QMouseEvent * e) {
     }
   } catch (Exception &e) {
   }
+  hfig->markDirty();
 }
 
 // void HandleWindow::UpdateState() {
