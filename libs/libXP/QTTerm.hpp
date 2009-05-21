@@ -71,8 +71,6 @@ class QTTerm : public QAbstractScrollArea {
   QTimer *m_timer_blink;
   bool blinkEnable;
   bool m_blink_skip;
-  int preSelectionStart;
-  int preSelectionStop;
   int selectionStart;
   int selectionStop;
   int scrollback;

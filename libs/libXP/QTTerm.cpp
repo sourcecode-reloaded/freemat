@@ -100,11 +100,11 @@ void QTTerm::focusInEvent(QFocusEvent *e) {
 
 void QTTerm::setChar(char t, bool flush) {
   if (t == '\r') {
-    MoveBOL();
+    //MoveBOL();
     return;
   }
   if (t == '\n') {
-    //    buffer[cursor_y].data[cursor_x].v = t;
+    buffer[cursor_y].data[cursor_x].v = t;
     nextLine();
     return;
   }
@@ -262,48 +262,48 @@ void QTTerm::mouseDoubleClickEvent( QMouseEvent *e ) {
     clearSelection();
     int clickcol = e->x()/m_char_w;
     int clickrow = e->y()/m_char_h;
-    if (clickrow >= buffer.size()) return;
-    for (j=clickcol;j>0;j--) {
-      if (!buffer[clickrow].data[j].hasText())
+    int clickrowbuffer = clickrow + verticalScrollBar()->value();
+    if (clickrowbuffer >= buffer.size()) return;
+    for (j=clickcol;j>=0;j--) {
+      if (!buffer[clickrowbuffer].data[j].hasText())
         break;
-      if ((buffer[clickrow].data[j].v >='A' && buffer[clickrow].data[j].v <='Z') || 
-          (buffer[clickrow].data[j].v >='a' && buffer[clickrow].data[j].v <='z') ||
-          (buffer[clickrow].data[j].v >='0' && buffer[clickrow].data[j].v <='9') )
-        buffer[clickrow].data[j].setSelection();
+      if ((buffer[clickrowbuffer].data[j].v >='A' && buffer[clickrowbuffer].data[j].v <='Z') ||
+          (buffer[clickrowbuffer].data[j].v >='a' && buffer[clickrowbuffer].data[j].v <='z') ||
+          (buffer[clickrowbuffer].data[j].v >='0' && buffer[clickrowbuffer].data[j].v <='9') ||
+          (buffer[clickrowbuffer].data[j].v =='_') )
+        buffer[clickrowbuffer].data[j].setSelection();
       else
         break;
     }
-    selectionStart = qMax(0,verticalScrollBar()->value()*m_term_width + j+1 + clickrow*m_term_width);
+    selectionStart = qMax(0,verticalScrollBar()->value()*m_term_width + j + clickrow*m_term_width);
     selectionStop = selectionStart;
     for (j=clickcol;j<m_term_width;j++) {
-      if (!buffer[clickrow].data[j].hasText())
+      if (!buffer[clickrowbuffer].data[j].hasText())
         break;
-      if ((buffer[clickrow].data[j].v >='A' && buffer[clickrow].data[j].v <='Z') || 
-          (buffer[clickrow].data[j].v >='a' && buffer[clickrow].data[j].v <='z') ||
-          (buffer[clickrow].data[j].v >='0' && buffer[clickrow].data[j].v <='9') ||
-          (buffer[clickrow].data[j].v =='_') )
-        buffer[clickrow].data[j].setSelection();
+      if ((buffer[clickrowbuffer].data[j].v >='A' && buffer[clickrowbuffer].data[j].v <='Z') ||
+          (buffer[clickrowbuffer].data[j].v >='a' && buffer[clickrowbuffer].data[j].v <='z') ||
+          (buffer[clickrowbuffer].data[j].v >='0' && buffer[clickrowbuffer].data[j].v <='9') ||
+          (buffer[clickrowbuffer].data[j].v =='_') )
+        buffer[clickrowbuffer].data[j].setSelection();
       else
         break;
     }
     selectionStop = qMax(0,verticalScrollBar()->value()*m_term_width + j + clickrow*m_term_width);
-    if (selectionStart > selectionStop) 
+    if (selectionStart > selectionStop)
       qSwap(selectionStop,selectionStart);
     if (selectionStart != selectionStop)
       hasSelection = true;
-    // update to the new one
-    preSelectionStart = selectionStart;
-    preSelectionStop  = selectionStop;
-    viewport()->update();
     // move cursor to the end of selection
-    emit PlaceCursorDXDY(j-cursor_x, clickrow-cursor_y);
+    emit PlaceCursorDXDY(j-cursor_x, verticalScrollBar()->value()+clickrow-cursor_y);
+    viewport()->update();
   }
 }
 
 void QTTerm::mousePressEvent( QMouseEvent *e ) {
   // Get the x and y coordinates of the mouse click - map that
   // to a row and column
-  if (e->buttons() == Qt::MidButton) { 
+  clearSelection();
+  if (e->buttons() == Qt::MidButton) {
     QClipboard *cb = QApplication::clipboard();
     QString SelectedText = cb->text(QClipboard::Selection);
     SelectedText.remove("--> "); //remove FreeMat prompts in selected text
@@ -316,19 +316,20 @@ void QTTerm::mousePressEvent( QMouseEvent *e ) {
     int clickcol = e->x()/m_char_w;
     int clickrow = e->y()/m_char_h;
     // place cursor at click point, if possible
-    emit PlaceCursorDXDY(clickcol-cursor_x, clickrow-cursor_y);
+    emit PlaceCursorDXDY(clickcol-cursor_x, verticalScrollBar()->value()+clickrow-cursor_y);
     
     selectionStart = qMax(0,verticalScrollBar()->value()*m_term_width + clickcol + clickrow*m_term_width);
     selectionStop = selectionStart;
   }
+  viewport()->update();
 }
 
 void QTTerm::clearSelection() {
   if (!hasSelection)
     return;
   // clear the selection bits
-  int lSelectionStart = preSelectionStart;
-  int lSelectionStop  = preSelectionStop;
+  int lSelectionStart = selectionStart;
+  int lSelectionStop  = selectionStop;
   if (lSelectionStart > lSelectionStop) 
     qSwap(lSelectionStop,lSelectionStart);
   int sel_row_start = lSelectionStart/m_term_width;
@@ -364,10 +365,7 @@ void QTTerm::mouseMoveEvent( QMouseEvent *e ) {
   selectionStop = qMax(0,verticalScrollBar()->value()*m_term_width + clickcol + clickrow*m_term_width);
 
   // clear previous selection
-  // and update it to the new one
   clearSelection();
-  preSelectionStart = selectionStart;
-  preSelectionStop  = selectionStop;
 
   int lSelectionStart = selectionStart;
   int lSelectionStop = selectionStop;
@@ -423,14 +421,10 @@ void QTTerm::mouseMoveEvent( QMouseEvent *e ) {
 
 void QTTerm::mouseReleaseEvent( QMouseEvent *e ) {
   QClipboard *cb = QApplication::clipboard();
-  if (selectionStart != selectionStop) {
+  if (hasSelection) {
     if (!cb->supportsSelection())
       return;
     cb->setText(getSelectionText(), QClipboard::Selection);
-  }
-  else { //clear selection if left mouse click without moving
-    clearSelection();
-    viewport()->update();
   }
 }
 

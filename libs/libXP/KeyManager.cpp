@@ -1032,6 +1032,7 @@ void KeyManager::OnChar( int c ) {
     Yank();
     break;
   case KM_CTRLW:
+  case KM_ESC:
     ClearCurrentLine();
     break;
   case KM_CTRLK:
