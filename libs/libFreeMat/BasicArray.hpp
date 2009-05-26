@@ -129,7 +129,7 @@ public:
     index_t offset = getSliceIndex(dimensions(),index);
     BasicArray<T> retvec;
     retvec.m_dims = NTuple(dimensions()[0],1);
-    retvec.m_offset = offset;
+    retvec.m_offset = m_offset + offset;
     retvec.m_data = m_data;
     retvec.m_count = retvec.m_dims.count();
     return retvec;
@@ -138,7 +138,7 @@ public:
     index_t offset = dimensions().map(pos)-1;
     BasicArray<T> retvec;
     retvec.m_dims = NTuple(dimensions()[0],1);
-    retvec.m_offset = offset;
+    retvec.m_offset = m_offset + offset;
     retvec.m_data = m_data;
     retvec.m_count = retvec.m_dims.count();
     return retvec;
