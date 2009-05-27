@@ -135,6 +135,7 @@ void MainApp::SetupGUICase() {
   QObject::connect(this,SIGNAL(Shutdown()),m_win,SLOT(close()));
   QObject::connect(this,SIGNAL(Initialize()),m_win,SLOT(init()));
   m_term = gui;
+  QObject::connect(m_term,SIGNAL(showFileAtLine(QString,int)),this,SLOT(showFileAtLine(QString,int)));
   if( debugwin )
       DbgWin();
 }
@@ -153,6 +154,13 @@ void createEditor(Interpreter* eval){
     QObject::connect(edit, SIGNAL(EvaluateText(QString)),
         m_app->GetKeyManager(), SLOT(QueueMultiString(QString)));
   }
+}
+
+void MainApp::showFileAtLine(QString fileName, int lineNumber) {
+  createEditor(m_eval);
+  edit->ShowActiveLine(fileName, lineNumber);
+  edit->showNormal();
+  edit->raise();
 }
 
 void MainApp::NewFile() {

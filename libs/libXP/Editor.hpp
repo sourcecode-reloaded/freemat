@@ -100,13 +100,15 @@ public:
   void decreaseIndent();
   void smartIndent();
   bool replace(QString text, QString replace, QTextDocument::FindFlags flags);
-  int replaceAll(QString text, QString replace, QTextDocument::FindFlags flags);
+  int  replaceAll(QString text, QString replace, QTextDocument::FindFlags flags);
   void fontUpdate();
+  QTextCursor getLineCursor( int lineNumber ) const;
 protected:
   bool event(QEvent *event);
 private slots:
   void slotCursorOrTextChanged();
   void setMatchBracket(bool flag);
+  void gotoLine(int lineNumber);
 signals:
   void indent();
   void smart_Indent();
@@ -167,6 +169,8 @@ public:
   Interpreter* getInterpreter();
   void setCurrentLine(int n);
   int currentLine();
+signals:
+  void gotoLine(int lineNumber);
 };
 
 class FMIndentConf : public QDialog {
@@ -294,7 +298,6 @@ private slots:
   void RefreshBPLists();
   void refreshContext();
   void IllegalLineOrCurrentPath(QString name, int line);
-  void ShowActiveLine(QString name, int line);
   void dbstep();
   void dbtrace();
   void dbcontinue();
@@ -318,6 +321,8 @@ public:
   void setContext(Context *watch);
   void addTabIfEmpty();
   void addTabUntitled();
+public slots:
+  void ShowActiveLine(QString name, int line);
 };
 
 #endif

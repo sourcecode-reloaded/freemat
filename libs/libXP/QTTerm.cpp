@@ -296,6 +296,53 @@ void QTTerm::mouseDoubleClickEvent( QMouseEvent *e ) {
     // move cursor to the end of selection
     emit PlaceCursorDXDY(j-cursor_x, verticalScrollBar()->value()+clickrow-cursor_y);
     viewport()->update();
+
+    if (getSelectionText() == "In") {
+      getErrorAndShow();
+    }
+  }
+}
+
+void QTTerm::getErrorAndShow() {
+  int lSelectionStart = selectionStart;
+  int lSelectionStop  = selectionStop;
+  if (lSelectionStart > lSelectionStop)
+    qSwap(lSelectionStop,lSelectionStart);
+  int sel_row_start = lSelectionStart/m_term_width;
+//  int sel_row_stop = lSelectionStop/m_term_width;
+  sel_row_start = qMin(sel_row_start,buffer.size()-1);
+  int sel_column_start = selectionStart - sel_row_start*m_term_width + 1;
+  int sel_row_stop = sel_row_start + 3;
+//  sel_row_stop = qMin(sel_row_stop,buffer.size()-1);
+  QString ret;
+  int i,j;
+  bool isBreak = false;
+  for (i=sel_row_start;i<=sel_row_stop;i++) {
+    if (i>sel_row_start)
+        sel_column_start = 0;
+    for (j=sel_column_start;j<maxlen;j++) {
+      if (buffer[i].data[j].hasText() && buffer[i].data[j].v != '\n') {
+        ret += buffer[i].data[j].v;
+        buffer[i].data[j].setSelection();
+      }
+      else {
+        break;
+      }
+    }
+    if (buffer[i].data[j].v == '\n')
+        break;
+  }
+  selectionStop = qMax(0,i*m_term_width + j);
+  if (selectionStart > selectionStop)
+    qSwap(selectionStop,selectionStart);
+  if (selectionStart != selectionStop)
+    hasSelection = true;
+  viewport()->update();
+  QString errorText = getSelectionText();
+  if (errorText.indexOf(".m(") > 0 && errorText.indexOf(" line ") > 0) {
+    QString fileName = errorText.mid(3, errorText.indexOf(".m(")-1);
+    int lineNumber = errorText.mid(errorText.indexOf(" line ")+6).toInt();
+    emit showFileAtLine(fileName,lineNumber);
   }
 }
 
@@ -362,11 +409,10 @@ void QTTerm::mouseMoveEvent( QMouseEvent *e ) {
   // place cursor at click point, if possible
   emit PlaceCursorDXDY(clickcol-cursor_x, clickrow-cursor_y);
     
-  selectionStop = qMax(0,verticalScrollBar()->value()*m_term_width + clickcol + clickrow*m_term_width);
-
   // clear previous selection
   clearSelection();
 
+  selectionStop = qMax(0,verticalScrollBar()->value()*m_term_width + clickcol + clickrow*m_term_width);
   int lSelectionStart = selectionStart;
   int lSelectionStop = selectionStop;
   if (lSelectionStart > lSelectionStop) 

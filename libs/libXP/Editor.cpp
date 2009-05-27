@@ -346,6 +346,29 @@ void FMTextEdit::smartIndent() {
     emit smart_Indent();
 }
 
+QTextCursor FMTextEdit::getLineCursor( int lineNumber ) const
+{
+    int count = 1;
+    for ( QTextBlock b = document()->begin(); b.isValid(); b = b.next(), count++ )
+    {
+        if ( count == lineNumber )
+        {
+            return QTextCursor( b );
+            break;
+        }
+    }
+    QTextCursor c = textCursor();
+    c.movePosition( QTextCursor::End );
+    c.movePosition( QTextCursor::StartOfLine );
+    return c;
+}
+
+void FMTextEdit::gotoLine(int lineNumber) {
+    setTextCursor( getLineCursor( lineNumber ) );
+    ensureCursorVisible();
+    setFocus();
+}
+
 void FMTextEdit::keyPressEvent(QKeyEvent*e) {
   bool tab = false;
   int keycode = e->key();
@@ -1009,6 +1032,7 @@ Interpreter* FMEditPane::getInterpreter() {
 void FMEditPane::setCurrentLine(int n) {
   if (curLine != n) {
     curLine = n;
+    emit gotoLine(n);
     update();
   }
 }
@@ -1031,6 +1055,7 @@ FMEditPane::FMEditPane(Interpreter* eval) : QWidget() {
 
   connect(tEditor,SIGNAL(indent()),ind,SLOT(update()));
   connect(tEditor,SIGNAL(smart_Indent()),ind,SLOT(updateSelection()));
+  connect(this,SIGNAL(gotoLine(int)),tEditor,SLOT(gotoLine(int)));
   Highlighter *highlight = new Highlighter(tEditor->document());
   ind->setDocument(tEditor);
 }
@@ -1884,12 +1909,6 @@ void FMEditor::ShowActiveLine(QString tname, int line) {
     }
   }
   if (foundActive) return;
-  if (currentEditor()->document()->isModified() ||
-      (tab->tabText(tab->currentIndex()) != "untitled.m")) {
-    tab->addTab(new FMEditPane(m_eval),"untitled.m");
-    tab->setCurrentIndex(tab->count()-1);
-    updateFont();
-  }
   loadFile(tname);
   currentPane()->setCurrentLine(line);
 }
@@ -2132,18 +2151,7 @@ void FMEditor::loadFile(const QString &fileName)
   if (fileName.isEmpty())
     return;
     
-  // check if filename contains line number
   QString fname = fileName;
-/*    
-  int lineNum = 0;
-  int posPlusSign = fname.indexOf('+');
-  if (posPlusSign > 0) {
-    QString lineNumeSt = fname.mid(posPlusSign);
-    lineNum = lineNumeSt.toInt();
-    fname.remove(posPlusSign, fname.size()-posPlusSign);
-  }
-*/
-
   QString fn = getFullFileName(fname);
   if (fn.isEmpty()) {
     QMessageBox::warning(this, tr("FreeMat"),
@@ -2189,8 +2197,6 @@ void FMEditor::loadFile(const QString &fileName)
   setCurrentFile(fname);
   statusBar()->showMessage(tr("File loaded"), 2000);
   
-//  if (lineNum>0)
-//    emit gotoLineNumber(lineNum);
 }
 
 void FMEditor::loadOrCreateFile(const QString &fileName)
@@ -2199,7 +2205,6 @@ void FMEditor::loadOrCreateFile(const QString &fileName)
   if (fileName.isEmpty())
     return;
 
-  // check if filename contains line number
   QString fname = fileName;
   QString fn = getFullFileName(fname);
   if (fn.isEmpty()) {

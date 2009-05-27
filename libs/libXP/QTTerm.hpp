@@ -100,6 +100,7 @@ protected:
   void mousePressEvent( QMouseEvent *e );
   void mouseMoveEvent( QMouseEvent *e );
   void mouseReleaseEvent( QMouseEvent *e );
+  void getErrorAndShow();
 private:
   void calcGeometry();
   void clearCursor();
@@ -121,6 +122,7 @@ signals:
   void OnChar(int c);
   void SetTextWidth(int);
   void PlaceCursorDXDY(int dx, int dy);
+  void showFileAtLine(QString fileName, int lineNumber);
 };
 
 #endif

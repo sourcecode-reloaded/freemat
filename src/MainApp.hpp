@@ -75,6 +75,7 @@ public slots:
   void EnableRepaint();
   void DisableRepaint();
   void CollectProfileSample();
+  void showFileAtLine(QString fileName, int lineNumber);
 signals:
   void Shutdown();
   void Initialize();
