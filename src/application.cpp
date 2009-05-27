@@ -239,6 +239,7 @@ void ApplicationWindow::closeEvent(QCloseEvent* ce) {
   delete m_filetool;
   delete m_history;
   delete m_variables;
+  m_keys->WriteHistory();
   ce->accept();
   qApp->exit(0);
 }

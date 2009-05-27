@@ -470,7 +470,6 @@ bool QTTerm::event(QEvent *e) {
 
   if (e->type() == QEvent::KeyPress) {
     isCursorVisible = true; //always show cursor when key pressed
-    clearSelection(); //clear any selection
     QKeyEvent *ke = static_cast<QKeyEvent*>(e);
     if (ke->key() == Qt::Key_Tab) {
       emit OnChar(KM_TAB);
@@ -525,6 +524,7 @@ void QTTerm::keyPressEvent(QKeyEvent *e) {
     if (key) {
       emit OnChar(key);
       e->accept();
+      clearSelection();
     } else
       e->ignore();
   }
