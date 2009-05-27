@@ -78,6 +78,12 @@ void ApplicationWindow::createActions() {
   connect(editorAct,SIGNAL(triggered()),this,SLOT(editor()));
   pathAct = new QAction("&Path Tool",this);
   connect(pathAct,SIGNAL(triggered()),this,SLOT(path()));
+  newAct = new QAction(QIcon(":/images/new.png"),"&New File",this);
+  newAct->setShortcut(Qt::Key_N | Qt::CTRL);
+  connect(newAct,SIGNAL(triggered()),this,SLOT(newf()));
+  openAct = new QAction(QIcon(":/images/open.png"),"&Open File",this);
+  openAct->setShortcut(Qt::Key_O | Qt::CTRL);
+  connect(openAct,SIGNAL(triggered()),this,SLOT(open()));
   saveAct = new QAction(QIcon(":/images/save.png"),"&Save Transcript",this);
   saveAct->setShortcut(Qt::Key_S | Qt::CTRL);
   connect(saveAct,SIGNAL(triggered()),this,SLOT(save()));
@@ -120,6 +126,8 @@ void ApplicationWindow::createActions() {
 
 void ApplicationWindow::createMenus() {
   fileMenu = menuBar()->addMenu("&File");
+  fileMenu->addAction(newAct);
+  fileMenu->addAction(openAct);
   fileMenu->addAction(saveAct);
   fileMenu->addAction(clearAct);
   fileMenu->addAction(quitAct);
@@ -160,6 +168,10 @@ bool ApplicationWindow::event(QEvent* e) {
 }
 
 void ApplicationWindow::createToolBars() {
+  fileToolBar = addToolBar("File");
+  fileToolBar->addAction(newAct);
+  fileToolBar->addAction(openAct);
+  fileToolBar->setObjectName("filetoolbar");
   editToolBar = addToolBar("Edit");
   editToolBar->addAction(copyAct);
   editToolBar->addAction(pasteAct);
@@ -317,6 +329,13 @@ void ApplicationWindow::SetKeyManager(KeyManager *keys) {
 	  m_keys,SLOT(ChangeDir(const QString&)));
   connect(dirChooseAct,SIGNAL(triggered()),this,SLOT(dirButtonClicked()));
   connect(dirUpAct,SIGNAL(triggered()),this,SLOT(dirUp()));
+}
+
+void ApplicationWindow::newf() {
+  emit newfile();
+}
+void ApplicationWindow::open() {
+  emit openfile();
 }
 
 void ApplicationWindow::save() {

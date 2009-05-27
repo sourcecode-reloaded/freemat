@@ -38,7 +38,8 @@ class ApplicationWindow : public QMainWindow {
   QTTerm* m_term;
   KeyManager* m_keys;
   QMenu *fileMenu, *editMenu, *toolsMenu, *historyMenu, *helpMenu, *debugMenu;
-  QToolBar *editToolBar, *debugToolBar, *dirToolBar;
+  QToolBar *fileToolBar, *editToolBar, *debugToolBar, *dirToolBar;
+  QAction *newAct, *openAct;
   QAction *saveAct, *quitAct, *copyAct, *pasteAct, *fontAct;
   QAction *scrollbackAct;
   QAction *aboutAct, *manualAct, *aboutQt, *editorAct;
@@ -78,12 +79,16 @@ signals:
   void startEditor();
   void startPathTool();
   void shutdown();
+  void newfile();
+  void openfile();
 public slots:
   void writeSettings();
   void checkEditorExist(bool isExist);
 private slots:
   void httpRequestFinished(int requestId, bool error);
   void checkForUpdates();
+  void newf();
+  void open();
   void save();
   void copy();
   void paste();

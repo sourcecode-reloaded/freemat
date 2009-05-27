@@ -21,6 +21,7 @@
 
 #include <string>
 #include <QObject>
+#include <QFileDialog>
 #include "KeyManager.hpp"
 #include "application.hpp"
 #include "Interpreter.hpp"
@@ -59,6 +60,8 @@ public:
   bool debugwin;
 public slots:
   int Run();
+  void OpenFile();
+  void NewFile();
   void HelpWin();
   void DbgWin();
   void PathTool();

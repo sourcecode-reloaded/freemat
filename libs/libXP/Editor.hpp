@@ -203,7 +203,7 @@ class FMEditor : public QMainWindow {
   QMenu *fileMenu, *editMenu, *toolsMenu, *debugMenu, *helpMenu;
   QToolBar *editToolBar, *fileToolBar, *debugToolBar;
   QAction *newAct, *saveAct, *quitAct, *copyAct, *pasteAct;
-  QAction *cutAct, *fontAct, *openAct, *saveAsAct, *closeAct;
+  QAction *cutAct, *fontAct, *openAct, *saveAsAct, *closeAct, *closeAllAct;
   QAction *openNewAct, *findAct, *replaceAct, *commentAct, *uncommentAct;
   QAction *increaseIndentAct, *decreaseIndentAct, *smartIndentAct;
   QAction *helpWinAct, *helpOnSelectionAct, *openSelectionAct;
@@ -237,6 +237,7 @@ public:
   FMEditor(Interpreter* eval);
   virtual ~FMEditor();
   void loadFile(const QString& filename);
+  void loadOrCreateFile(const QString& filename);
   QString getFullFileName(QString fname);
   void loadLastSession();
 private:
@@ -273,6 +274,7 @@ private slots:
   void font();
   void addTab();
   void closeTab();
+  void closeAllTabs();
   void tabChanged(int);
   void documentWasModified();
   void find();
@@ -314,6 +316,8 @@ private slots:
 public:
   void closeEvent(QCloseEvent *event);
   void setContext(Context *watch);
+  void addTabIfEmpty();
+  void addTabUntitled();
 };
 
 #endif

@@ -1071,9 +1071,8 @@ FMEditor::FMEditor(Interpreter* eval) : QMainWindow() {
   createToolBars();
   createStatusBar();
   readSettings();
-  connect(tab,SIGNAL(currentChanged(int)),this,SLOT(tabChanged(int)));
   addTab();
-  tabChanged(0);
+  connect(tab,SIGNAL(currentChanged(int)),this,SLOT(tabChanged(int)));
   m_find = new FMFindDialog;
   connect(m_find,SIGNAL(doFind(QString,bool,bool)),
  	  this,SLOT(doFind(QString,bool,bool)));
@@ -1244,8 +1243,38 @@ FMTextEdit* FMEditor::currentEditor() {
 
 void FMEditor::addTab() {
   tab->addTab(new FMEditPane(m_eval),"untitled.m");
-  tab->setCurrentIndex(tab->count()-1);
   updateFont();
+  tab->setCurrentIndex(tab->count()-1);
+  tabChanged(tab->count()-1);
+}
+
+void FMEditor::addTabIfEmpty() {
+  QWidget *p = tab->currentWidget();
+  FMEditPane *te = qobject_cast<FMEditPane*>(p);
+  if (!te) {
+    addTab();
+  }
+}
+
+void FMEditor::addTabUntitled() {
+  QWidget *p = tab->currentWidget();
+  FMEditPane *te = qobject_cast<FMEditPane*>(p);
+  if (!te) {
+    addTab();
+  }
+  else {
+    bool foundActive = false;
+    for (int i=0;i<tab->count();i++) {
+      if (tab->tabText(i) == "untitled.m") {
+        foundActive = true;
+        tab->setCurrentIndex(i);
+        break;
+      }
+    }
+    if (!foundActive) {
+      addTab();
+     }
+  }
 }
 
 QString FMEditor::shownName() {
@@ -1332,6 +1361,8 @@ void FMEditor::createActions() {
   closeAct = new QAction(QIcon(":/images/closetab.png"),"&Close Tab",this);
   closeAct->setShortcut(Qt::Key_W | Qt::CTRL);
   connect(closeAct,SIGNAL(triggered()),this,SLOT(closeTab()));
+  closeAllAct = new QAction("Close All Tab",this);
+  connect(closeAllAct,SIGNAL(triggered()),this,SLOT(closeAllTabs()));
   copyAct = new QAction(QIcon(":/images/copy.png"),"&Copy",this);
   copyAct->setShortcut(Qt::Key_C | Qt::CTRL);
   cutAct = new QAction(QIcon(":/images/cut.png"),"Cu&t",this);
@@ -1527,6 +1558,7 @@ void FMEditor::createMenus() {
   fileMenu->addAction(saveAct);
   fileMenu->addAction(saveAsAct);
   fileMenu->addAction(closeAct);
+  fileMenu->addAction(closeAllAct);
 
   separatorAct = fileMenu->addSeparator();
   for (int i = 0; i < MaxRecentFiles; ++i)
@@ -1844,7 +1876,9 @@ void FMEditor::ShowActiveLine(QString tname, int line) {
 	tab->setCurrentIndex(i);
 	te->setCurrentLine(line);
 	foundActive = true;
-      } else {
+        break;
+      } 
+      else {
 	te->setCurrentLine(-1);
       }
     }
@@ -1962,7 +1996,24 @@ void FMEditor::closeTab() {
     delete p;
   }
   if (tab->count() == 0)
-    setWindowTitle(Interpreter::getVersionString() + " Editor");  
+    setWindowTitle(Interpreter::getVersionString() + " Editor");
+}
+
+void FMEditor::closeAllTabs() {
+  /* check for unsaved buffered */
+  for (int i=0;i<tab->count();i++) {
+    QWidget *w = tab->widget(i);
+    tab->setCurrentIndex(i);
+    maybeSave();
+  }
+  /* now close all tabs*/
+  while (tab->count() > 0) {
+      QWidget *p = tab->currentWidget();
+      tab->removeTab(tab->currentIndex());
+      prevEdit = NULL;
+      delete p;
+  }
+  setWindowTitle(Interpreter::getVersionString() + " Editor");
 }
 
 bool FMEditor::maybeSave() {
@@ -2095,9 +2146,9 @@ void FMEditor::loadFile(const QString &fileName)
 
   QString fn = getFullFileName(fname);
   if (fn.isEmpty()) {
-       QMessageBox::warning(this, tr("FreeMat"),
-	        tr("Cannot read file %1. No such file found on path list.")
-	        .arg(fname));
+    QMessageBox::warning(this, tr("FreeMat"),
+            tr("Cannot read file %1. No such file found on path list.")
+            .arg(fname));
     return;
   }
   else
@@ -2116,14 +2167,7 @@ void FMEditor::loadFile(const QString &fileName)
     }
   }
 
-  // check if there's already an unmodified "untitled.m" tab
-  // if not create a new tab
-  if (tab->tabText(tab->currentIndex()) != "untitled.m") { 
-    tab->addTab(new FMEditPane(m_eval),"untitled.m");
-    tab->setCurrentIndex(tab->count()-1);
-    updateFont();
-  }
-
+  addTabUntitled();
   // open file and load into editor
   QFile file(fname);
   if (!file.open(QFile::ReadOnly | QFile::Text)) {
@@ -2147,6 +2191,29 @@ void FMEditor::loadFile(const QString &fileName)
   
 //  if (lineNum>0)
 //    emit gotoLineNumber(lineNum);
+}
+
+void FMEditor::loadOrCreateFile(const QString &fileName)
+{
+  // ignore if empty filename
+  if (fileName.isEmpty())
+    return;
+
+  // check if filename contains line number
+  QString fname = fileName;
+  QString fn = getFullFileName(fname);
+  if (fn.isEmpty()) {
+    if (QMessageBox::question(this, tr("FreeMat"),
+        tr("Cannot read file %1. Do you want to create this file?").arg(fname),
+        QMessageBox::Yes | QMessageBox::Default, QMessageBox::No) == QMessageBox::No)
+      return;
+    else {
+      addTabUntitled();
+      setCurrentFile(fname);
+      return;
+    }
+  }
+  loadFile(fileName);
 }
 
 void FMEditor::setCurrentFile(const QString &fileName)
