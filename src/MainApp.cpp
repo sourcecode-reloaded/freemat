@@ -40,6 +40,8 @@
 
 HandleList<Interpreter*> m_threadHandles;
 
+extern MainApp *m_app;
+static FMEditor *edit = NULL;
 
 #ifdef Q_WS_X11 
 #include "FuncTerminal.hpp"
@@ -56,9 +58,6 @@ sig_t signal_suspend_default;
 sig_t signal_resume_default;
 
 Terminal* gterm;
-
-extern MainApp *m_app;
-static FMEditor *edit = NULL;
 
 void signal_suspend(int a) {
   Terminal *tptr = dynamic_cast<Terminal*>(gterm);
