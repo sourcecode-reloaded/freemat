@@ -152,6 +152,13 @@ void createEditor(Interpreter* eval){
     // from the editor to the interpreter.  
     QObject::connect(edit, SIGNAL(EvaluateText(QString)),
         m_app->GetKeyManager(), SLOT(QueueMultiString(QString)));
+    //Allow Editor to see the Context and refresh the content at the right time
+    edit->setContext(m_app->GetKeyManager()->GetCompletionContext());
+    QObject::connect(m_app->GetKeyManager(),SIGNAL(UpdateInfoViews()),
+            edit,SLOT(refreshContext()));
+    //Ask to change current path when setting breakpoint
+    QObject::connect(eval, SIGNAL(IllegalLineOrCurrentPath(QString, int)), edit,
+        SLOT(IllegalLineOrCurrentPath(QString, int)));
   }
 }
 

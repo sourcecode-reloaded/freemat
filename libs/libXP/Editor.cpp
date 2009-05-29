@@ -1966,7 +1966,7 @@ void FMEditor::refreshContext() {
     varNameList << name;
     varTypeList << type;
     varFlagsList << flags;
-    varSizeList << size;
+    varSizeList << "["+size.replace(' ','x')+"]";
     varValueList << value;	    
   }
 }
