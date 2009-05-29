@@ -178,8 +178,6 @@ void MainApp::NewFile() {
 
 void MainApp::OpenFile() {
   QString currentPath = QDir::currentPath();
-//  QStringList fileNames = QFileDialog::getOpenFileNames(this,"Open File in Editor",currentPath,
-//					   "M files (*.m);;Text files (*.txt);;All files (*)");
   QStringList fileNames = QFileDialog::getOpenFileNames(
                          m_win,
                          "Select one or more files to open",

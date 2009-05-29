@@ -1383,7 +1383,7 @@ void FMEditor::createActions() {
   quitAct = new QAction(QIcon(":/images/quit.png"),"&Quit Editor",this);
   quitAct->setShortcut(Qt::Key_Q | Qt::CTRL);
   connect(quitAct,SIGNAL(triggered()),this,SLOT(close()));
-  closeAct = new QAction(QIcon(":/images/closetab.png"),"&Close Tab",this);
+  closeAct = new QAction(QIcon(":/images/close.png"),"&Close Tab",this);
   closeAct->setShortcut(Qt::Key_W | Qt::CTRL);
   connect(closeAct,SIGNAL(triggered()),this,SLOT(closeTab()));
   closeAllAct = new QAction("Close All Tab",this);
@@ -1661,7 +1661,7 @@ void FMEditor::createToolBars() {
   fileToolBar->addAction(newAct);
   fileToolBar->addAction(openAct);
   fileToolBar->addAction(saveAct);
-//  fileToolBar->addAction(closeAct);
+  fileToolBar->addAction(closeAct);
   editToolBar = addToolBar("Edit");
   editToolBar->addAction(undoAct);
   editToolBar->addAction(redoAct);
@@ -2208,8 +2208,12 @@ void FMEditor::loadOrCreateFile(const QString &fileName)
   QString fname = fileName;
   QString fn = getFullFileName(fname);
   if (fn.isEmpty()) {
+    if (fname.lastIndexOf(QDir::separator ()) < 0)
+       fname = QDir::currentPath() + QDir::separator () + fname;
+    if (!fname.endsWith(".m"))
+       fname = fname + ".m";
     if (QMessageBox::question(this, tr("FreeMat"),
-        tr("Cannot read file %1. Do you want to create this file?").arg(fname),
+        tr("File %1 does not exists. Do you want to create it?").arg(fname),
         QMessageBox::Yes | QMessageBox::Default, QMessageBox::No) == QMessageBox::No)
       return;
     else {

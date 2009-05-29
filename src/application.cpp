@@ -73,7 +73,7 @@ void ApplicationWindow::createActions() {
   //  connect(historyAct,SIGNAL(triggered()),this,SLOT(history()));
   cleanHistoryAct = new QAction("&Clear History Tool",this);
   connect(cleanHistoryAct,SIGNAL(triggered()),this,SLOT(cleanhistory()));
-  editorAct = new QAction("&Editor",this);
+  editorAct = new QAction(QIcon(":/images/freemat_editor_small_mod_64.png"),"&Editor",this);
   editorAct->setShortcut(Qt::Key_E | Qt::CTRL);
   connect(editorAct,SIGNAL(triggered()),this,SLOT(editor()));
   pathAct = new QAction("&Path Tool",this);
@@ -87,8 +87,6 @@ void ApplicationWindow::createActions() {
   saveAct = new QAction(QIcon(":/images/save.png"),"&Save Transcript",this);
   saveAct->setShortcut(Qt::Key_S | Qt::CTRL);
   connect(saveAct,SIGNAL(triggered()),this,SLOT(save()));
-  clearAct = new QAction("&Clear Console",this);
-  connect(clearAct,SIGNAL(triggered()),this,SLOT(clearconsole()));
   quitAct = new QAction(QIcon(":/images/quit.png"),"&Quit",this);
   quitAct->setShortcut(Qt::Key_Q | Qt::CTRL); 
   connect(quitAct,SIGNAL(triggered()),this,SLOT(close()));
@@ -96,6 +94,8 @@ void ApplicationWindow::createActions() {
   copyAct->setShortcut(Qt::Key_C | Qt::CTRL);
   connect(copyAct,SIGNAL(triggered()),this,SLOT(copy()));
   pasteAct = new QAction(QIcon(":/images/paste.png"),"&Paste",this);
+  clearAct = new QAction(QIcon(":/images/clear.png"),"&Clear Console",this);
+  connect(clearAct,SIGNAL(triggered()),this,SLOT(clearconsole()));
   pasteAct->setShortcut(Qt::Key_V | Qt::CTRL);
   connect(pasteAct,SIGNAL(triggered()),this,SLOT(paste()));
   fontAct = new QAction("&Font",this);
@@ -129,11 +129,11 @@ void ApplicationWindow::createMenus() {
   fileMenu->addAction(newAct);
   fileMenu->addAction(openAct);
   fileMenu->addAction(saveAct);
-  fileMenu->addAction(clearAct);
   fileMenu->addAction(quitAct);
   editMenu = menuBar()->addMenu("&Edit");
   editMenu->addAction(copyAct);
   editMenu->addAction(pasteAct);
+  editMenu->addAction(clearAct);
   QMenu* configMenu = editMenu->addMenu("&Preferences");
   configMenu->addAction(fontAct);
   configMenu->addAction(scrollbackAct);
@@ -171,10 +171,12 @@ void ApplicationWindow::createToolBars() {
   fileToolBar = addToolBar("File");
   fileToolBar->addAction(newAct);
   fileToolBar->addAction(openAct);
+  fileToolBar->addAction(editorAct);
   fileToolBar->setObjectName("filetoolbar");
   editToolBar = addToolBar("Edit");
   editToolBar->addAction(copyAct);
   editToolBar->addAction(pasteAct);
+  editToolBar->addAction(clearAct);
   editToolBar->setObjectName("edittoolbar");
   debugToolBar = addToolBar("Debug");
   debugToolBar->addAction(pauseAct);

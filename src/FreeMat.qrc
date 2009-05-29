@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/" >
+        <file>../images/clear.png</file>
         <file>../images/close.png</file>
         <file>../images/undo.png</file>
         <file>../images/redo.png</file>

@@ -1124,6 +1124,7 @@ void KeyManager::RegisterTerm(QObject* term) {
 
 void KeyManager::ClearDisplayCommand() {
   emit ClearDisplay();
+  Ready();
 }
 
 void KeyManager::ContinueAction() {
