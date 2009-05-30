@@ -95,7 +95,7 @@ public:
   virtual void PaintBoundingBox(RenderEngine& gc);
   QVector<double> UnitsReinterpret(RenderEngine& gc, QVector<double> a);
   QVector<double> GetPropertyVectorAsPixels(RenderEngine& gc, QString name);
-  QVector<double> GetAxisLimits();
+  QVector<double> GetAxisLimits(bool rawmode = false);
   void SetAxisLimits(QVector<double>);
   double MapX(double x);
   double MapY(double y);

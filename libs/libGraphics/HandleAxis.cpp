@@ -728,6 +728,9 @@ void HandleAxis::ConstructProperties() {
   AddProperty(new HPTwoVector,"xlim");
   AddProperty(new HPTwoVector,"ylim");
   AddProperty(new HPTwoVector,"zlim");
+  AddProperty(new HPTwoVector,"xlim_raw");
+  AddProperty(new HPTwoVector,"ylim_raw");
+  AddProperty(new HPTwoVector,"zlim_raw");
   AddProperty(new HPAutoManual,"xlimmode");
   AddProperty(new HPAutoManual,"ylimmode");
   AddProperty(new HPAutoManual,"zlimmode");
@@ -867,11 +870,14 @@ void HandleAxis::SetAxisLimits(QVector<double> lims) {
     SetTwoVectorDefault("zlim",pow(10.0,lims[4]),pow(10.0,lims[5]));
 }
 
-QVector<double> HandleAxis::GetAxisLimits() {
+QVector<double> HandleAxis::GetAxisLimits(bool rawmode) {
   HPTwoVector *hp;
   QVector<double> lims;
   HPLinearLog *sp;
-  hp = (HPTwoVector*) LookupProperty("xlim");
+  if (rawmode && IsAuto("xlimmode"))
+    hp = (HPTwoVector*) LookupProperty("xlim_raw");
+  else
+    hp = (HPTwoVector*) LookupProperty("xlim");
   sp = (HPLinearLog*) LookupProperty("xscale");
   if (sp->Is("linear")) {
     lims.push_back(hp->Data()[0]);
@@ -880,7 +886,10 @@ QVector<double> HandleAxis::GetAxisLimits() {
     lims.push_back(tlog(hp->Data()[0]));
     lims.push_back(tlog(hp->Data()[1]));
   }
-  hp = (HPTwoVector*) LookupProperty("ylim");
+  if (rawmode && IsAuto("ylimmode"))
+    hp = (HPTwoVector*) LookupProperty("ylim_raw");
+  else
+    hp = (HPTwoVector*) LookupProperty("ylim");
   sp = (HPLinearLog*) LookupProperty("yscale");
   if (sp->Is("linear")) {
     lims.push_back(hp->Data()[0]);
@@ -889,7 +898,10 @@ QVector<double> HandleAxis::GetAxisLimits() {
     lims.push_back(tlog(hp->Data()[0]));
     lims.push_back(tlog(hp->Data()[1]));
   }
-  hp = (HPTwoVector*) LookupProperty("zlim");
+  if (rawmode && IsAuto("zlimmode"))
+    hp = (HPTwoVector*) LookupProperty("zlim_raw");
+  else
+    hp = (HPTwoVector*) LookupProperty("zlim");
   sp = (HPLinearLog*) LookupProperty("zscale");
   if (sp->Is("linear")) {
     lims.push_back(hp->Data()[0]);
@@ -898,8 +910,6 @@ QVector<double> HandleAxis::GetAxisLimits() {
     lims.push_back(tlog(hp->Data()[0]));
     lims.push_back(tlog(hp->Data()[1]));
   }
-  //     qDebug("Get Limits %f %f %f %f %f %f",
-  // 	   lims[0],lims[1],lims[2],lims[3],lims[4],lims[5]);    
   return lims;
 }
 
@@ -1677,7 +1687,7 @@ int HandleAxis::GetTickCount(RenderEngine &gc,
 
 void HandleAxis::RecalculateTicks(RenderEngine& gc) {
   // We have to calculate the tick sets for each axis...
-  QVector<double> limits(GetAxisLimits());
+  QVector<double> limits(GetAxisLimits(true));
   qDebug() << "Limits";
   qDebug() << limits;
   QVector<double> xticks;
@@ -1960,6 +1970,9 @@ void HandleAxis::UpdateLimits(bool x, bool y, bool z, bool a, bool c) {
   if (x) SetTwoVectorDefault("xlim",limits[0],limits[1]);
   if (y) SetTwoVectorDefault("ylim",limits[2],limits[3]);
   if (z) SetTwoVectorDefault("zlim",limits[4],limits[5]);
+  if (x) SetTwoVectorDefault("xlim_raw",limits[0],limits[1]);
+  if (y) SetTwoVectorDefault("ylim_raw",limits[2],limits[3]);
+  if (z) SetTwoVectorDefault("zlim_raw",limits[4],limits[5]);
   if (c) SetTwoVectorDefault("clim",limits[6],limits[7]);
   if (a) SetTwoVectorDefault("alim",limits[8],limits[9]);
 }
