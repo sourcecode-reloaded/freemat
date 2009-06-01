@@ -447,8 +447,10 @@ void GLRenderEngine::drawImage(double x1, double y1, double x2,
   m_widget->deleteTexture(texid);
 }
 
-void GLRenderEngine::drawImage(HPTwoVector* xp, HPTwoVector* yp, HPTwoVector* xlim, HPTwoVector* ylim,
-			 QImage pic)
+void GLRenderEngine::drawImage(HPTwoVector* xp, HPTwoVector* yp, 
+			       HPTwoVector* xlim, HPTwoVector* ylim,
+			       bool xflip, bool yflip,
+			       QImage pic)
 { 
     float x1 = xp->Data()[0];
     float y1 = yp->Data()[0];

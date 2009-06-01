@@ -92,7 +92,9 @@ public:
   virtual void circleFill(double x1, double y1, double radius); 
   virtual void drawImage(double x1, double y1, double x2, double y2,
 			 QImage pic);
-  virtual void drawImage(HPTwoVector* xp, HPTwoVector* yp, HPTwoVector* xlim, HPTwoVector* ylim,
+  virtual void drawImage(HPTwoVector* xp, HPTwoVector* yp, 
+			 HPTwoVector* xlim, HPTwoVector* ylim,
+			 bool xflip, bool yflip,
 			 QImage pic);
   virtual void quadStrips(QVector<QVector<cpoint> > faces, bool flatfaces,
 			  QVector<QVector<cpoint> > edges, bool flatedges);

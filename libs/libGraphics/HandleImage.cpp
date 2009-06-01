@@ -22,7 +22,6 @@
 #include "DebugStream.hpp" 
 
 HandleImage::HandleImage() {
-  MTr.setMatrix(1,0,0,1,0,0);
   ConstructProperties();
   SetupDefaults();
 }
@@ -298,23 +297,6 @@ void HandleImage::UpdateState() {
     else
       SetTwoVectorDefault("ydata",1,2);
   }
-  // Need to check reverse flags for x and y axis... and flip the image appropriately
-  HandleAxis *ax = GetParentAxis();
-  bool xflip = false;
-  bool yflip = false;
-  xflip = (ax->StringCheck("xdir","reverse"));
-  // Reverse the yflip bit - so that images naturally have the first row at the top
-  yflip = !(ax->StringCheck("ydir","reverse"));
-  double m11, m22;
-  if (xflip)
-    m11 = -1;
-  else
-    m11 = 1;
-  if (yflip)
-    m22 = -1;
-  else
-    m22 = 1;
-  MTr.setMatrix(m11,0,0,m22,0,0);
 }
 
 void HandleImage::PaintMe(RenderEngine& gc) {
@@ -326,6 +308,9 @@ void HandleImage::PaintMe(RenderEngine& gc) {
   HandleAxis *ax = GetParentAxis();
   HPTwoVector *xlim = (HPTwoVector *) ax->LookupProperty("xlim");
   HPTwoVector *ylim = (HPTwoVector *) ax->LookupProperty("ylim");
+  bool xflip = (ax->StringCheck("xdir","reverse"));
+  // Reverse the yflip bit - so that images naturally have the first row at the top
+  bool yflip = (ax->StringCheck("ydir","reverse"));
 
-  gc.drawImage(xp, yp, xlim, ylim, img.transformed(MTr));
+  gc.drawImage(xp, yp, xlim, ylim, xflip, yflip, img);
 }

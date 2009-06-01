@@ -568,30 +568,93 @@ void QTRenderEngine::drawImage(double x1, double y1, double x2, double y2,
   pnt->drawImage(pt,pic);
 }
 
-void QTRenderEngine::drawImage(HPTwoVector* xp, HPTwoVector* yp, HPTwoVector* xlim, HPTwoVector* ylim,
-			 QImage pic)
+// Consider a nominal case
+//
+//   xdata = [0,1]
+//   ydata = [0,1]
+//
+//   xlim = [-.5,1.2]
+//   ylim = [.1,.6]
+//
+//   Compute the intersection of data and lim to get the source
+//   rectangle (in normalized coordinates)
+//
+//   xvis = [.5,1];
+//   yvis = [.1,.6];
+//
+//   Map back to physical pixels
+//
+//   start_col = (xvis(0)-xdata(0))*cols/(xdata[1]-xdata[0]);
+//   width_col = (xvis(1)-xvis(0))*cols/(xdata[1]-xdata[0]);
+//   start_row = (yvis(0)-ydata(0))*cols/(ydata[1]-ydata[0]);
+//   width_row = (yvis(1)-yvis(0))*cols/(ydata[1]-ydata[0]);
+//
+//   Determine where these points map on the screen
+//   QPointF topleft = MAP(xvis(0),yvis(0),0); 
+//   QPointF bottomright = MAP(xvis(1),yvis(1),0); 
+//
+//
+
+void QTRenderEngine::drawImage(HPTwoVector* xp, HPTwoVector* yp, 
+			       HPTwoVector* xlim, HPTwoVector* ylim,
+			       bool xflip, bool yflip,
+			       QImage pic)
 { 
-    float data_x = xp->Data()[0];
-    float data_y = yp->Data()[0];
-    float data_width = xp->Data()[1]-data_x;
-    float data_height = yp->Data()[1]-data_y;
+  // Unpack
+  float data_x1 = xp->Data()[0];
+  float data_y1 = yp->Data()[0];
+  float data_x2 = xp->Data()[1];
+  float data_y2 = yp->Data()[1];
 
-    float viewport_x = xlim->Data()[0];
-    float viewport_y = ylim->Data()[0];
-    float viewport_width = xlim->Data()[1]-viewport_x;
-    float viewport_height = ylim->Data()[1]-viewport_y;
+  float lim_x1 = xlim->Data()[0];
+  float lim_y1 = ylim->Data()[0];
+  float lim_x2 = xlim->Data()[1];
+  float lim_y2 = ylim->Data()[1];
 
+  // Create the intersection of lim and data
+  float vis_x1 = qMax(qMin(lim_x1,data_x2),data_x1);
+  float vis_x2 = qMax(qMin(lim_x2,data_x2),data_x1);
+  float vis_y1 = qMax(qMin(lim_y1,data_y2),data_y1);
+  float vis_y2 = qMax(qMin(lim_y2,data_y2),data_y1);
+  
+  // Map these to physical coordinates
+  float img_x1 = (vis_x1-data_x1)*(pic.width()-1)/(data_x2-data_x1);
+  float img_x2 = (vis_x2-data_x1)*(pic.width()-1)/(data_x2-data_x1);
+  float img_y1 = (vis_y1-data_y1)*(pic.height()-1)/(data_y2-data_y1);
+  float img_y2 = (vis_y2-data_y1)*(pic.height()-1)/(data_y2-data_y1);
+
+  if (yflip) {
+    vis_y1 = lim_y1+lim_y2-vis_y1;
+    vis_y2 = lim_y1+lim_y2-vis_y2;
+  }
+  
+  if (!yflip) {
+    float img_y1_t = pic.height() - img_y2;
+    img_y2 = pic.height() - img_y1;
+    img_y1 = img_y1_t;
+  }
+
+  if (xflip) {
+    vis_x1 = lim_x1+lim_x2-vis_x1;
+    vis_x2 = lim_x1+lim_x2-vis_x2;
+  }
+
+  if (xflip) {
+    float img_x1_t = pic.width() - img_x2;
+    img_x2 = pic.width() - img_x1;
+    img_x1 = img_x1_t;
+  }
+  
+  QPointF topLeft(Map(qMin(vis_x1,vis_x2),qMax(vis_y1,vis_y2),0));
+  QPointF botRight(Map(qMax(vis_x1,vis_x2),qMin(vis_y2,vis_y1),0));
+  QRectF target(topLeft,botRight);
+  QRectF source(QPointF(img_x1,img_y1),QPointF(img_x2,img_y2));
+
+  float xscale = xflip ? -1 : 1;
+  float yscale = (!yflip) ? -1 : 1;
     
-    QPointF topleft( Map(xlim->Data()[0], ylim->Data()[1], 0 ) );
-    QPointF bottomright( Map( xlim->Data()[1], ylim->Data()[0], 0 ));
-    QRectF target( topleft, bottomright );
-
-    float source_x = (viewport_x - data_x)*pic.width()/data_width;
-    float source_y = (viewport_y - data_y)*pic.height()/data_height;
-    float source_width = (pic.width()+1)*viewport_width/data_width;
-    float source_height = (pic.height()+1)*viewport_height/data_height;
-    QRectF source( source_x, source_y, source_width, source_height );
-    pnt->drawImage( target, pic, source );
+  pnt->drawImage( target, pic.transformed(QTransform().scale(xscale,yscale)), 
+		  source );
 }
 
 

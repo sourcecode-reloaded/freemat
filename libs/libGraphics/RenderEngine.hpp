@@ -145,8 +145,9 @@ public:
   virtual void circleFill(double x1, double y1, double radius) = 0;
   virtual void drawImage(double x1, double y1, double x2, double y2,
 			 QImage pic) = 0;
-  virtual void drawImage(HPTwoVector* xp, HPTwoVector* yp, HPTwoVector* xlim, HPTwoVector* ylim,
-			 QImage pic) = 0;
+  virtual void drawImage(HPTwoVector* xp, HPTwoVector* yp, 
+			 HPTwoVector* xlim, HPTwoVector* ylim,
+			 bool xflip, bool yflip, QImage pic) = 0;
   virtual void quadStrips(QVector<QVector<cpoint> > faces, bool flatfaces,
 			  QVector<QVector<cpoint> > edges, bool flatedges) = 0;
   virtual void setClipBox(QVector<double> limits) {};

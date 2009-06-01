@@ -1,5 +1,9 @@
+In this branch, I need to fix:
 
-
+1.  The performance of the "image" and plot commands - done
+2.  The zoom feature - done
+3.  Image zoom and translation behaving strangely.
+4.  Add a measurement tool?
 
 
 inf * (0+i) = 0 + inf*i
