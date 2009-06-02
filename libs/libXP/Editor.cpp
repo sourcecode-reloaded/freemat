@@ -346,6 +346,29 @@ void FMTextEdit::smartIndent() {
     emit smart_Indent();
 }
 
+QTextCursor FMTextEdit::getLineCursor( int lineNumber ) const
+{
+    int count = 1;
+    for ( QTextBlock b = document()->begin(); b.isValid(); b = b.next(), count++ )
+    {
+        if ( count == lineNumber )
+        {
+            return QTextCursor( b );
+            break;
+        }
+    }
+    QTextCursor c = textCursor();
+    c.movePosition( QTextCursor::End );
+    c.movePosition( QTextCursor::StartOfLine );
+    return c;
+}
+
+void FMTextEdit::gotoLine(int lineNumber) {
+    setTextCursor( getLineCursor( lineNumber ) );
+    ensureCursorVisible();
+    setFocus();
+}
+
 void FMTextEdit::keyPressEvent(QKeyEvent*e) {
   bool tab = false;
   int keycode = e->key();
@@ -1009,6 +1032,7 @@ Interpreter* FMEditPane::getInterpreter() {
 void FMEditPane::setCurrentLine(int n) {
   if (curLine != n) {
     curLine = n;
+    emit gotoLine(n);
     update();
   }
 }
@@ -1031,6 +1055,7 @@ FMEditPane::FMEditPane(Interpreter* eval) : QWidget() {
 
   connect(tEditor,SIGNAL(indent()),ind,SLOT(update()));
   connect(tEditor,SIGNAL(smart_Indent()),ind,SLOT(updateSelection()));
+  connect(this,SIGNAL(gotoLine(int)),tEditor,SLOT(gotoLine(int)));
   Highlighter *highlight = new Highlighter(tEditor->document());
   ind->setDocument(tEditor);
 }
@@ -1071,9 +1096,8 @@ FMEditor::FMEditor(Interpreter* eval) : QMainWindow() {
   createToolBars();
   createStatusBar();
   readSettings();
-  connect(tab,SIGNAL(currentChanged(int)),this,SLOT(tabChanged(int)));
   addTab();
-  tabChanged(0);
+  connect(tab,SIGNAL(currentChanged(int)),this,SLOT(tabChanged(int)));
   m_find = new FMFindDialog;
   connect(m_find,SIGNAL(doFind(QString,bool,bool)),
  	  this,SLOT(doFind(QString,bool,bool)));
@@ -1244,8 +1268,38 @@ FMTextEdit* FMEditor::currentEditor() {
 
 void FMEditor::addTab() {
   tab->addTab(new FMEditPane(m_eval),"untitled.m");
-  tab->setCurrentIndex(tab->count()-1);
   updateFont();
+  tab->setCurrentIndex(tab->count()-1);
+  tabChanged(tab->count()-1);
+}
+
+void FMEditor::addTabIfEmpty() {
+  QWidget *p = tab->currentWidget();
+  FMEditPane *te = qobject_cast<FMEditPane*>(p);
+  if (!te) {
+    addTab();
+  }
+}
+
+void FMEditor::addTabUntitled() {
+  QWidget *p = tab->currentWidget();
+  FMEditPane *te = qobject_cast<FMEditPane*>(p);
+  if (!te) {
+    addTab();
+  }
+  else {
+    bool foundActive = false;
+    for (int i=0;i<tab->count();i++) {
+      if (tab->tabText(i) == "untitled.m") {
+        foundActive = true;
+        tab->setCurrentIndex(i);
+        break;
+      }
+    }
+    if (!foundActive) {
+      addTab();
+     }
+  }
 }
 
 QString FMEditor::shownName() {
@@ -1329,9 +1383,11 @@ void FMEditor::createActions() {
   quitAct = new QAction(QIcon(":/images/quit.png"),"&Quit Editor",this);
   quitAct->setShortcut(Qt::Key_Q | Qt::CTRL);
   connect(quitAct,SIGNAL(triggered()),this,SLOT(close()));
-  closeAct = new QAction(QIcon(":/images/closetab.png"),"&Close Tab",this);
+  closeAct = new QAction(QIcon(":/images/close.png"),"&Close Tab",this);
   closeAct->setShortcut(Qt::Key_W | Qt::CTRL);
   connect(closeAct,SIGNAL(triggered()),this,SLOT(closeTab()));
+  closeAllAct = new QAction("Close All Tab",this);
+  connect(closeAllAct,SIGNAL(triggered()),this,SLOT(closeAllTabs()));
   copyAct = new QAction(QIcon(":/images/copy.png"),"&Copy",this);
   copyAct->setShortcut(Qt::Key_C | Qt::CTRL);
   cutAct = new QAction(QIcon(":/images/cut.png"),"Cu&t",this);
@@ -1527,6 +1583,7 @@ void FMEditor::createMenus() {
   fileMenu->addAction(saveAct);
   fileMenu->addAction(saveAsAct);
   fileMenu->addAction(closeAct);
+  fileMenu->addAction(closeAllAct);
 
   separatorAct = fileMenu->addSeparator();
   for (int i = 0; i < MaxRecentFiles; ++i)
@@ -1604,7 +1661,7 @@ void FMEditor::createToolBars() {
   fileToolBar->addAction(newAct);
   fileToolBar->addAction(openAct);
   fileToolBar->addAction(saveAct);
-//  fileToolBar->addAction(closeAct);
+  fileToolBar->addAction(closeAct);
   editToolBar = addToolBar("Edit");
   editToolBar->addAction(undoAct);
   editToolBar->addAction(redoAct);
@@ -1844,18 +1901,14 @@ void FMEditor::ShowActiveLine(QString tname, int line) {
 	tab->setCurrentIndex(i);
 	te->setCurrentLine(line);
 	foundActive = true;
-      } else {
+        break;
+      } 
+      else {
 	te->setCurrentLine(-1);
       }
     }
   }
   if (foundActive) return;
-  if (currentEditor()->document()->isModified() ||
-      (tab->tabText(tab->currentIndex()) != "untitled.m")) {
-    tab->addTab(new FMEditPane(m_eval),"untitled.m");
-    tab->setCurrentIndex(tab->count()-1);
-    updateFont();
-  }
   loadFile(tname);
   currentPane()->setCurrentLine(line);
 }
@@ -1913,7 +1966,7 @@ void FMEditor::refreshContext() {
     varNameList << name;
     varTypeList << type;
     varFlagsList << flags;
-    varSizeList << size;
+    varSizeList << "["+size.replace(' ','x')+"]";
     varValueList << value;	    
   }
 }
@@ -1962,7 +2015,24 @@ void FMEditor::closeTab() {
     delete p;
   }
   if (tab->count() == 0)
-    setWindowTitle(Interpreter::getVersionString() + " Editor");  
+    setWindowTitle(Interpreter::getVersionString() + " Editor");
+}
+
+void FMEditor::closeAllTabs() {
+  /* check for unsaved buffered */
+  for (int i=0;i<tab->count();i++) {
+    QWidget *w = tab->widget(i);
+    tab->setCurrentIndex(i);
+    maybeSave();
+  }
+  /* now close all tabs*/
+  while (tab->count() > 0) {
+      QWidget *p = tab->currentWidget();
+      tab->removeTab(tab->currentIndex());
+      prevEdit = NULL;
+      delete p;
+  }
+  setWindowTitle(Interpreter::getVersionString() + " Editor");
 }
 
 bool FMEditor::maybeSave() {
@@ -2081,23 +2151,12 @@ void FMEditor::loadFile(const QString &fileName)
   if (fileName.isEmpty())
     return;
     
-  // check if filename contains line number
   QString fname = fileName;
-/*    
-  int lineNum = 0;
-  int posPlusSign = fname.indexOf('+');
-  if (posPlusSign > 0) {
-    QString lineNumeSt = fname.mid(posPlusSign);
-    lineNum = lineNumeSt.toInt();
-    fname.remove(posPlusSign, fname.size()-posPlusSign);
-  }
-*/
-
   QString fn = getFullFileName(fname);
   if (fn.isEmpty()) {
-       QMessageBox::warning(this, tr("FreeMat"),
-	        tr("Cannot read file %1. No such file found on path list.")
-	        .arg(fname));
+    QMessageBox::warning(this, tr("FreeMat"),
+            tr("Cannot read file %1. No such file found on path list.")
+            .arg(fname));
     return;
   }
   else
@@ -2116,14 +2175,7 @@ void FMEditor::loadFile(const QString &fileName)
     }
   }
 
-  // check if there's already an unmodified "untitled.m" tab
-  // if not create a new tab
-  if (tab->tabText(tab->currentIndex()) != "untitled.m") { 
-    tab->addTab(new FMEditPane(m_eval),"untitled.m");
-    tab->setCurrentIndex(tab->count()-1);
-    updateFont();
-  }
-
+  addTabUntitled();
   // open file and load into editor
   QFile file(fname);
   if (!file.open(QFile::ReadOnly | QFile::Text)) {
@@ -2145,8 +2197,32 @@ void FMEditor::loadFile(const QString &fileName)
   setCurrentFile(fname);
   statusBar()->showMessage(tr("File loaded"), 2000);
   
-//  if (lineNum>0)
-//    emit gotoLineNumber(lineNum);
+}
+
+void FMEditor::loadOrCreateFile(const QString &fileName)
+{
+  // ignore if empty filename
+  if (fileName.isEmpty())
+    return;
+
+  QString fname = fileName;
+  QString fn = getFullFileName(fname);
+  if (fn.isEmpty()) {
+    if (fname.lastIndexOf(QDir::separator ()) < 0)
+       fname = QDir::currentPath() + QDir::separator () + fname;
+    if (!fname.endsWith(".m"))
+       fname = fname + ".m";
+    if (QMessageBox::question(this, tr("FreeMat"),
+        tr("File %1 does not exists. Do you want to create it?").arg(fname),
+        QMessageBox::Yes | QMessageBox::Default, QMessageBox::No) == QMessageBox::No)
+      return;
+    else {
+      addTabUntitled();
+      setCurrentFile(fname);
+      return;
+    }
+  }
+  loadFile(fileName);
 }
 
 void FMEditor::setCurrentFile(const QString &fileName)

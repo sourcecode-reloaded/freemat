@@ -40,6 +40,8 @@
 
 HandleList<Interpreter*> m_threadHandles;
 
+extern MainApp *m_app;
+static FMEditor *edit = NULL;
 
 #ifdef Q_WS_X11 
 #include "FuncTerminal.hpp"
@@ -123,6 +125,8 @@ void MainApp::SetupGUICase() {
   m_win->readSettings();
   m_win->show();
   gui->setFocus();
+  QObject::connect(m_win,SIGNAL(newfile()),this,SLOT(NewFile()));
+  QObject::connect(m_win,SIGNAL(openfile()),this,SLOT(OpenFile()));
   QObject::connect(m_win,SIGNAL(startHelp()),this,SLOT(HelpWin()));
   QObject::connect(m_win,SIGNAL(startEditor()),this,SLOT(Editor()));
   QObject::connect(m_win,SIGNAL(startPathTool()),this,SLOT(PathTool()));
@@ -130,9 +134,68 @@ void MainApp::SetupGUICase() {
   QObject::connect(this,SIGNAL(Shutdown()),m_win,SLOT(close()));
   QObject::connect(this,SIGNAL(Initialize()),m_win,SLOT(init()));
   m_term = gui;
+  QObject::connect(m_term,SIGNAL(showFileAtLine(QString,int)),this,SLOT(showFileAtLine(QString,int)));
   if( debugwin )
       DbgWin();
 }
+
+void createEditor(Interpreter* eval){
+  if (edit == NULL) {
+    edit = new FMEditor(eval);
+    QObject::connect(eval, SIGNAL(RefreshBPLists()), edit, SLOT(RefreshBPLists()));
+    QObject::connect(eval, SIGNAL(ShowActiveLine(QString,int)),
+		     edit, SLOT(ShowActiveLine(QString,int)));
+    ApplicationWindow *m_win = m_app->getApplicationWindow();
+    QObject::connect(m_win,SIGNAL(shutdown()),edit,SLOT(close()));
+    QObject::connect(edit,SIGNAL(checkEditorExist(bool)),m_win,SLOT(checkEditorExist(bool)));
+    // Because of the threading setup, we need the keymanager to relay commands
+    // from the editor to the interpreter.  
+    QObject::connect(edit, SIGNAL(EvaluateText(QString)),
+        m_app->GetKeyManager(), SLOT(QueueMultiString(QString)));
+    //Allow Editor to see the Context and refresh the content at the right time
+    edit->setContext(m_app->GetKeyManager()->GetCompletionContext());
+    QObject::connect(m_app->GetKeyManager(),SIGNAL(UpdateInfoViews()),
+            edit,SLOT(refreshContext()));
+    //Ask to change current path when setting breakpoint
+    QObject::connect(eval, SIGNAL(IllegalLineOrCurrentPath(QString, int)), edit,
+        SLOT(IllegalLineOrCurrentPath(QString, int)));
+  }
+}
+
+void MainApp::showFileAtLine(QString fileName, int lineNumber) {
+  createEditor(m_eval);
+  edit->ShowActiveLine(fileName, lineNumber);
+  edit->showNormal();
+  edit->raise();
+}
+
+void MainApp::NewFile() {
+  createEditor(m_eval);
+  edit->addTabUntitled();
+  edit->showNormal();
+  edit->raise();
+}
+
+void MainApp::OpenFile() {
+  QString currentPath = QDir::currentPath();
+  QStringList fileNames = QFileDialog::getOpenFileNames(
+                         m_win,
+                         "Select one or more files to open",
+                         currentPath,
+                         "M files (*.m);;Text files (*.txt);;All files (*)");
+  QStringList::Iterator it = fileNames.begin();
+  if (!fileNames.isEmpty()) {
+    createEditor(m_eval);
+    while(it != fileNames.end()) {
+      QString fileName = *it;
+      edit->loadFile(fileName);
+      ++it;
+    }
+    edit->showNormal();
+    edit->raise();
+  }
+}
+
 
 void MainApp::SetupInteractiveTerminalCase() {
 #ifdef Q_WS_X11
@@ -190,10 +253,6 @@ void MainApp::PathTool() {
   PathToolFunction(0,dummy,m_eval);
 }
 
-extern MainApp *m_app;
-static FMEditor *edit = NULL;
-
-
 //!
 //@Module EDITOR Open Editor Window
 //@@Section FREEMAT
@@ -209,28 +268,9 @@ static FMEditor *edit = NULL;
 //outputs none
 //!
 ArrayVector EditorFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  if (edit == NULL) {
-    edit = new FMEditor(eval);
-    QObject::connect(eval,SIGNAL(RefreshBPLists()),edit,SLOT(RefreshBPLists()));
-    QObject::connect(eval,SIGNAL(ShowActiveLine(QString,int)),
-		     edit,SLOT(ShowActiveLine(QString,int)));
-    ApplicationWindow *m_win = m_app->getApplicationWindow();
-    if (m_win) {
-      QObject::connect(m_win,SIGNAL(shutdown()),edit,SLOT(close()));
-      QObject::connect(edit,SIGNAL(checkEditorExist(bool)),m_win,SLOT(checkEditorExist(bool)));
-    }
-    // Because of the threading setup, we need the keymanager to relay commands
-    // from the editor to the interpreter.  
-    QObject::connect(edit,SIGNAL(EvaluateText(QString)),m_app->GetKeyManager(),SLOT(QueueMultiString(QString)));
-    //Allow Editor to see the Context and refresh the content at the right time
-    edit->setContext(m_app->GetKeyManager()->GetCompletionContext());
-    QObject::connect(m_app->GetKeyManager(),SIGNAL(UpdateInfoViews()), 
-		     edit,SLOT(refreshContext()));
-    //Ask to change current path when setting breakpoint
-    QObject::connect(eval, SIGNAL(IllegalLineOrCurrentPath(QString, int)), edit,
-		     SLOT(IllegalLineOrCurrentPath(QString, int)));
-  }
+  createEditor(eval);
   edit->loadLastSession();
+  edit->addTabIfEmpty();
   edit->showNormal();
   edit->raise();
   return ArrayVector();
@@ -252,28 +292,21 @@ ArrayVector EditorFunction(int nargout, const ArrayVector& arg, Interpreter* eva
 //!
 ArrayVector EditFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   //Open the editor
-  if (edit == NULL) {
-    edit = new FMEditor(eval);
-    QObject::connect(eval, SIGNAL(RefreshBPLists()), edit,
-        SLOT(RefreshBPLists()));
-    QObject::connect(eval, SIGNAL(ShowActiveLine(QString,int)), 
-		     edit, SLOT(ShowActiveLine(QString,int)));
-    ApplicationWindow *m_win = m_app->getApplicationWindow();
-    QObject::connect(m_win,SIGNAL(shutdown()),edit,SLOT(close()));
-    QObject::connect(edit,SIGNAL(checkEditorExist(bool)),m_win,SLOT(checkEditorExist(bool)));
-    // Because of the threading setup, we need the keymanager to relay commands
-    // from the editor to the interpreter.  
-    QObject::connect(edit, SIGNAL(EvaluateText(QString)),
-        m_app->GetKeyManager(), SLOT(QueueMultiString(QString)));
-  }
+  createEditor(eval);
   edit->loadLastSession();
-  //Load files listed in the command line
-  for (int i=0; i<arg.size(); ++i ) {
-    if (arg[i].isString()) {
-      QString fname = arg[i].asString();
-      edit->loadFile(fname);
-    } else {
+  if (arg.size() == 0)
+    //Create untitled.m if without argument
+    edit->addTabUntitled();
+  else {
+    //Load files listed in the command argument
+    for (int i=0; i<arg.size(); ++i ) {
+      if (arg[i].isString()) {
+        QString fname = arg[i].asString();
+        edit->loadOrCreateFile(fname);
+      }
+      else {
       throw Exception("Illegal file name");
+      }
     }
   }
   edit->showNormal();

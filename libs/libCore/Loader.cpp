@@ -647,6 +647,6 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
    if (guiflag)
      context->addGfxFunction("clc",ClcFunction,0,0,NULL);
   context->addFunction("profiler",ProfilerFunction,-1,0,NULL);
-  //  context->addFunction("blaslib",BlaslibFunction,-1,0,NULL);
+  context->addFunction("blaslib",BlaslibFunction,-1,0,NULL);
 }
 

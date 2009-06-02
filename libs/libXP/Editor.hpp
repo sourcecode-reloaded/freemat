@@ -100,13 +100,15 @@ public:
   void decreaseIndent();
   void smartIndent();
   bool replace(QString text, QString replace, QTextDocument::FindFlags flags);
-  int replaceAll(QString text, QString replace, QTextDocument::FindFlags flags);
+  int  replaceAll(QString text, QString replace, QTextDocument::FindFlags flags);
   void fontUpdate();
+  QTextCursor getLineCursor( int lineNumber ) const;
 protected:
   bool event(QEvent *event);
 private slots:
   void slotCursorOrTextChanged();
   void setMatchBracket(bool flag);
+  void gotoLine(int lineNumber);
 signals:
   void indent();
   void smart_Indent();
@@ -167,6 +169,8 @@ public:
   Interpreter* getInterpreter();
   void setCurrentLine(int n);
   int currentLine();
+signals:
+  void gotoLine(int lineNumber);
 };
 
 class FMIndentConf : public QDialog {
@@ -203,7 +207,7 @@ class FMEditor : public QMainWindow {
   QMenu *fileMenu, *editMenu, *toolsMenu, *debugMenu, *helpMenu;
   QToolBar *editToolBar, *fileToolBar, *debugToolBar;
   QAction *newAct, *saveAct, *quitAct, *copyAct, *pasteAct;
-  QAction *cutAct, *fontAct, *openAct, *saveAsAct, *closeAct;
+  QAction *cutAct, *fontAct, *openAct, *saveAsAct, *closeAct, *closeAllAct;
   QAction *openNewAct, *findAct, *replaceAct, *commentAct, *uncommentAct;
   QAction *increaseIndentAct, *decreaseIndentAct, *smartIndentAct;
   QAction *helpWinAct, *helpOnSelectionAct, *openSelectionAct;
@@ -237,6 +241,7 @@ public:
   FMEditor(Interpreter* eval);
   virtual ~FMEditor();
   void loadFile(const QString& filename);
+  void loadOrCreateFile(const QString& filename);
   QString getFullFileName(QString fname);
   void loadLastSession();
 private:
@@ -273,6 +278,7 @@ private slots:
   void font();
   void addTab();
   void closeTab();
+  void closeAllTabs();
   void tabChanged(int);
   void documentWasModified();
   void find();
@@ -292,7 +298,6 @@ private slots:
   void RefreshBPLists();
   void refreshContext();
   void IllegalLineOrCurrentPath(QString name, int line);
-  void ShowActiveLine(QString name, int line);
   void dbstep();
   void dbtrace();
   void dbcontinue();
@@ -314,6 +319,10 @@ private slots:
 public:
   void closeEvent(QCloseEvent *event);
   void setContext(Context *watch);
+  void addTabIfEmpty();
+  void addTabUntitled();
+public slots:
+  void ShowActiveLine(QString name, int line);
 };
 
 #endif

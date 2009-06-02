@@ -1032,6 +1032,7 @@ void KeyManager::OnChar( int c ) {
     Yank();
     break;
   case KM_CTRLW:
+  case KM_ESC:
     ClearCurrentLine();
     break;
   case KM_CTRLK:
@@ -1123,6 +1124,7 @@ void KeyManager::RegisterTerm(QObject* term) {
 
 void KeyManager::ClearDisplayCommand() {
   emit ClearDisplay();
+  Ready();
 }
 
 void KeyManager::ContinueAction() {

@@ -73,16 +73,20 @@ void ApplicationWindow::createActions() {
   //  connect(historyAct,SIGNAL(triggered()),this,SLOT(history()));
   cleanHistoryAct = new QAction("&Clear History Tool",this);
   connect(cleanHistoryAct,SIGNAL(triggered()),this,SLOT(cleanhistory()));
-  editorAct = new QAction("&Editor",this);
+  editorAct = new QAction(QIcon(":/images/freemat_editor_small_mod_64.png"),"&Editor",this);
   editorAct->setShortcut(Qt::Key_E | Qt::CTRL);
   connect(editorAct,SIGNAL(triggered()),this,SLOT(editor()));
   pathAct = new QAction("&Path Tool",this);
   connect(pathAct,SIGNAL(triggered()),this,SLOT(path()));
+  newAct = new QAction(QIcon(":/images/new.png"),"&New File",this);
+  newAct->setShortcut(Qt::Key_N | Qt::CTRL);
+  connect(newAct,SIGNAL(triggered()),this,SLOT(newf()));
+  openAct = new QAction(QIcon(":/images/open.png"),"&Open File",this);
+  openAct->setShortcut(Qt::Key_O | Qt::CTRL);
+  connect(openAct,SIGNAL(triggered()),this,SLOT(open()));
   saveAct = new QAction(QIcon(":/images/save.png"),"&Save Transcript",this);
   saveAct->setShortcut(Qt::Key_S | Qt::CTRL);
   connect(saveAct,SIGNAL(triggered()),this,SLOT(save()));
-  clearAct = new QAction("&Clear Console",this);
-  connect(clearAct,SIGNAL(triggered()),this,SLOT(clearconsole()));
   quitAct = new QAction(QIcon(":/images/quit.png"),"&Quit",this);
   quitAct->setShortcut(Qt::Key_Q | Qt::CTRL); 
   connect(quitAct,SIGNAL(triggered()),this,SLOT(close()));
@@ -90,6 +94,8 @@ void ApplicationWindow::createActions() {
   copyAct->setShortcut(Qt::Key_C | Qt::CTRL);
   connect(copyAct,SIGNAL(triggered()),this,SLOT(copy()));
   pasteAct = new QAction(QIcon(":/images/paste.png"),"&Paste",this);
+  clearAct = new QAction(QIcon(":/images/clear.png"),"&Clear Console",this);
+  connect(clearAct,SIGNAL(triggered()),this,SLOT(clearconsole()));
   pasteAct->setShortcut(Qt::Key_V | Qt::CTRL);
   connect(pasteAct,SIGNAL(triggered()),this,SLOT(paste()));
   fontAct = new QAction("&Font",this);
@@ -120,12 +126,14 @@ void ApplicationWindow::createActions() {
 
 void ApplicationWindow::createMenus() {
   fileMenu = menuBar()->addMenu("&File");
+  fileMenu->addAction(newAct);
+  fileMenu->addAction(openAct);
   fileMenu->addAction(saveAct);
-  fileMenu->addAction(clearAct);
   fileMenu->addAction(quitAct);
   editMenu = menuBar()->addMenu("&Edit");
   editMenu->addAction(copyAct);
   editMenu->addAction(pasteAct);
+  editMenu->addAction(clearAct);
   QMenu* configMenu = editMenu->addMenu("&Preferences");
   configMenu->addAction(fontAct);
   configMenu->addAction(scrollbackAct);
@@ -160,9 +168,15 @@ bool ApplicationWindow::event(QEvent* e) {
 }
 
 void ApplicationWindow::createToolBars() {
+  fileToolBar = addToolBar("File");
+  fileToolBar->addAction(newAct);
+  fileToolBar->addAction(openAct);
+  fileToolBar->addAction(editorAct);
+  fileToolBar->setObjectName("filetoolbar");
   editToolBar = addToolBar("Edit");
   editToolBar->addAction(copyAct);
   editToolBar->addAction(pasteAct);
+  editToolBar->addAction(clearAct);
   editToolBar->setObjectName("edittoolbar");
   debugToolBar = addToolBar("Debug");
   debugToolBar->addAction(pauseAct);
@@ -239,6 +253,7 @@ void ApplicationWindow::closeEvent(QCloseEvent* ce) {
   delete m_filetool;
   delete m_history;
   delete m_variables;
+  m_keys->WriteHistory();
   ce->accept();
   qApp->exit(0);
 }
@@ -316,6 +331,13 @@ void ApplicationWindow::SetKeyManager(KeyManager *keys) {
 	  m_keys,SLOT(ChangeDir(const QString&)));
   connect(dirChooseAct,SIGNAL(triggered()),this,SLOT(dirButtonClicked()));
   connect(dirUpAct,SIGNAL(triggered()),this,SLOT(dirUp()));
+}
+
+void ApplicationWindow::newf() {
+  emit newfile();
+}
+void ApplicationWindow::open() {
+  emit openfile();
 }
 
 void ApplicationWindow::save() {
