@@ -70,7 +70,6 @@ bool GfxEnableFlag() {
 
 void BaseFigureQt::paintEvent(QPaintEvent *e) {
   if (enableRepaint) {
-    qDebug() << "Paint Event";
     QPainter pnt(this);
     QTRenderEngine gc(&pnt,0,0,width(),height());
     hfig->PaintMe(gc);
@@ -646,7 +645,6 @@ void HandleWindow::mouseReleaseEvent(QMouseEvent * e) {
     }
   } catch (Exception &e) {
   }
-  std::cout << "Marking dirty\n";
   hfig->markDirty();
 }
 

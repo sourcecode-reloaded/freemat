@@ -160,7 +160,6 @@ void RefreshFigs() {
   if (!HGInitialized) return;
   for (int i=0;i<MAX_FIGS;i++) {
     if (Hfigs[i] && (Hfigs[i]->HFig()->isDirty())) {
-      qDebug() << "Refresh issued to figure " << i;
       Hfigs[i]->update();
     }
   }
@@ -169,7 +168,6 @@ void RefreshFigs() {
 static bool in_DoDrawNow = false;
 
 static void DoDrawNow() {
-  qDebug() << "Draw now";
   if (in_DoDrawNow) return;
   in_DoDrawNow = true;
   while (AnyDirty())

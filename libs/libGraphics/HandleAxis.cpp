@@ -1688,8 +1688,6 @@ int HandleAxis::GetTickCount(RenderEngine &gc,
 void HandleAxis::RecalculateTicks(RenderEngine& gc) {
   // We have to calculate the tick sets for each axis...
   QVector<double> limits(GetAxisLimits(true));
-  qDebug() << "Limits";
-  qDebug() << limits;
   QVector<double> xticks;
   StringVector xlabels;
   QVector<double> yticks;
@@ -1697,21 +1695,6 @@ void HandleAxis::RecalculateTicks(RenderEngine& gc) {
   QVector<double> zticks;
   StringVector zlabels;
   int xcnt, ycnt, zcnt;
-//   // Guesstimate -- Replace more accurate version with 
-//   // this one -- it eliminates a cyclical dependency in
-//   // the rendering of the axis.
-//   QVector<double> outerposition(GetPropertyVectorAsPixels(gc,"outerposition"));
-//   qDebug() << "position";
-//   qDebug() << outerposition;
-//   double plotradius = sqrt(pow(outerposition[2]/2,2.0)+pow(outerposition[3]/2,2.0));
-//   qDebug() << "radius";
-//   qDebug() << plotradius;
-//   qDebug() << "2D view flag = " << Is2DView();
-//   int numtics;
-//   numtics = (int) (qMax(2.0,plotradius/40));
-  qDebug() << x1pos[0] << " " << x1pos[1] << " " << x1pos[2];
-  qDebug() << y1pos[0] << " " << y1pos[1] << " " << y1pos[2];
-  qDebug() << z1pos[0] << " " << z1pos[1] << " " << z1pos[2];
   // Cyclic behaviour on xlim and ylim and zlim!
   xcnt = GetTickCount(gc,limits[0],x1pos[1],x1pos[2],
  		      limits[1],x1pos[1],x1pos[2]);
@@ -1719,7 +1702,6 @@ void HandleAxis::RecalculateTicks(RenderEngine& gc) {
  		      y1pos[0],limits[3],y1pos[2]);
   zcnt = GetTickCount(gc,z1pos[0],z1pos[1],limits[4],
  		      z1pos[0],z1pos[1],limits[5]);
-  qDebug() << "Tick counts" << xcnt << " " << ycnt << " " << zcnt;
   //  xcnt = ycnt = zcnt = numtics;
   double xStart, xStop;
   double yStart, yStop;
@@ -1807,12 +1789,6 @@ void HandleAxis::RecalculateTicks(RenderEngine& gc) {
     qp = (HPStringSet*) LookupProperty("zticklabel");
     qp->Data(zlabels);
   }
-  qDebug() << "xticklabel";
-  qDebug() << ((HPStringSet*) LookupProperty("xticklabel"))->Data();
-  qDebug() << "yticklabel";
-  qDebug() << ((HPStringSet*) LookupProperty("yticklabel"))->Data();
-  qDebug() << "zticklabel";
-  qDebug() << ((HPStringSet*) LookupProperty("zticklabel"))->Data();
 }
 
 void HandleAxis::RePackFigure(RenderEngine &gc) {
@@ -1880,16 +1856,12 @@ void HandleAxis::RePackFigure(RenderEngine &gc) {
   maxLabelHeight = qMax(titleHeight,xlabelHeight);
   maxLabelHeight = qMax(maxLabelHeight,ylabelHeight);
   maxLabelHeight = qMax(maxLabelHeight,zlabelHeight);
-  //    qDebug("titleHeight = %d, maxLabelHeight = %d",titleHeight,maxLabelHeight);
   // Get the outer position vector...
   QVector<double> outerpos(GetPropertyVectorAsPixels(gc,"outerposition"));
   // Special case - no labels at all --> super tight packing
   unsigned width = gc.width();
   unsigned height = gc.height();
-  //    qDebug("maxtickwidth = %d maxtickheight = %d maxlabelheight = %d",
-  //	   maxTickWidth,maxTickHeight,maxLabelHeight);
   if ((maxTickWidth == 0) && (maxTickHeight == 0) && (maxLabelHeight == 0)) {
-    //      qDebug("tight pack...\n");
     HPFourVector *hp = (HPFourVector*) LookupProperty("position");
     hp->Value(outerpos[0]/width,outerpos[1]/height,
 	      outerpos[2]/width,outerpos[3]/height);
@@ -1927,7 +1899,6 @@ void HandleAxis::RePackFigure(RenderEngine &gc) {
   posheight = qMax(0.0,posheight);
   HPFourVector *hp = (HPFourVector*) LookupProperty("position");
   hp->Value(posx0,posy0,poswidth,posheight);
-  //  qDebug("Pack %f %f %f %f",posx0,posy0,poswidth,posheight);
 }
 
 void HandleAxis::UpdateLimits(bool x, bool y, bool z, bool a, bool c) {
@@ -1991,7 +1962,6 @@ void HandleAxis::HandlePlotBoxFlags() {
   bool pbaauto = IsAuto("plotboxaspectratiomode");
   bool onemanual = (!xflag && yflag && zflag) || (xflag && !yflag && zflag) || 
     (xflag && yflag && !zflag);
-  //     qDebug("axesauto = %d darauto = %d pbauto = %d onemanual = %d",
   // 	   axesauto,darauto,pbaauto,onemanual);
   QVector<double> limits(GetAxisLimits());
   double xrange = limits[1] - limits[0];
@@ -2328,7 +2298,6 @@ void HandleAxis::DrawTickLabels(RenderEngine& gc,
   gc.toPixels(limmin*unitx+px2,
 	      limmin*unity+py2,
 	      limmin*unitz+pz2,dx2,dy2);
-  //    qDebug("Axis %s start %f,%f --> %f,%f",labelname.c_str(),dx1,dy1,dx2,dy2);
   double delx, dely;
   delx = dx2-dx1; dely = dy2-dy1;
   // normalize the tick length
@@ -2550,7 +2519,6 @@ void HandleAxis::DrawChildren(RenderEngine& gc) {
 
 void HandleAxis::PaintMe(RenderEngine& gc) {
   if (GetParentFigure() == NULL) return;
-  qDebug() << "painting starts";
   InitialSetupAxis(gc);
   RecalculateTicks(gc);
   RePackFigure(gc);
@@ -2570,7 +2538,6 @@ void HandleAxis::PaintMe(RenderEngine& gc) {
     DrawAxisLabels(gc);
   }
   m_box = GetPropertyVectorAsPixels(gc,"position");
-  qDebug() << m_box;
 }
 
 void HandleAxis::PaintBoundingBox(RenderEngine& gc) {
