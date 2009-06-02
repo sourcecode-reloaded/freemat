@@ -470,14 +470,14 @@ static void complexSolveLeastSq(int m, int n, int k, T *c, T *a, T*b) {
 
 template <typename T>
 static Array SolveLeastSquaresReal(BasicArray<T> A, BasicArray<T> B) {
-  BasicArray<T> C(NTuple(A.rows(),B.cols()));
+  BasicArray<T> C(NTuple(A.cols(),B.cols()));
   realSolveLeastSq(int(A.rows()),int(A.cols()),int(B.cols()),C.data(),A.data(),B.data());
   return Array(C);
 }
 
 template <typename T>
 static Array SolveLeastSquaresComplex(BasicArray<T> A, BasicArray<T> B) {
-  BasicArray<T> C(NTuple(A.rows(),B.cols()));
+  BasicArray<T> C(NTuple(A.cols(),B.cols()));
   complexSolveLeastSq(int(A.rows()/2),int(A.cols()),int(B.cols()),C.data(),A.data(),B.data());
   return Array(SplitReal<T>(C),SplitImag<T>(C));
 }
