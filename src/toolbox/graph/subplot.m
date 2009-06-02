@@ -106,12 +106,12 @@ function hout = subplot(varargin)
       h = varargin{1}(1);
     end
   else
-    if (nargin >= 1), m = int32(varargin{1}(1)); end
-    if (nargin >= 2), n = int32(varargin{2}(1)); end
-    if (nargin >= 3), p = int32(varargin{3}); p = p(:); end
+      if (nargin >= 1), m = round(varargin{1}(1)); end
+      if (nargin >= 2), n = round(varargin{2}(1)); end
+      if (nargin >= 3), p = round(varargin{3}); p = p(:); end
   end
-  row = m+1-int32(idiv(p-1,n)+1);
-  col = int32(mod(p-1,n)+1);
+  row = m+1-round(idiv(p-1,n)+1);
+  col = round(mod(p-1,n)+1);
   width = 1.0/n;
   height = 1.0/m;
   left = (col-1)*width;

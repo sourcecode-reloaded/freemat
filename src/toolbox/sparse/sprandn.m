@@ -46,8 +46,8 @@ if (nargin == 1)
   s = randn(size(i));
   y = sparse(i,j,s);
 else
-  m = int32(x(1));
-  n = int32(n(1));
+  m = round(x(1));
+  n = round(n(1));
   density = max(0.0,min(1.0,density(1)));
   cnt = int32(density*m*n);
   if (cnt == 0)
