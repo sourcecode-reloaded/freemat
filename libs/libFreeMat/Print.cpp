@@ -321,9 +321,19 @@ static inline void PrintSheet(Interpreter *io, const ArrayFormatInfo &format,
   // the terminal width
   int columns = int(rp.cols());
   int rows = int(rp.rows());
+  if (rp.dataClass() == StringArray){
+    for (int i=0;i<rows;i++) {
+      for (int j=0;j<columns;j++) {
+	Emit(io,rp.get(i+j*rows+offset),format,complex);
+	printlimit--;
+	if (printlimit <= 0) return;
+      }
+      io->outputMessage("\n");
+    }
+    return;
+  }
   int colsPerPage = (int) floor((termWidth-1)/((double) format.width + 2));
   colsPerPage = (colsPerPage < 1) ? 1 : colsPerPage;
-  if (rp.dataClass() == StringArray) colsPerPage = termWidth-2;
   int pageCount = (int) ceil(columns/((double)colsPerPage));
   for (int k=0;k<pageCount;k++) {
     int colsInThisPage;
@@ -331,18 +341,18 @@ static inline void PrintSheet(Interpreter *io, const ArrayFormatInfo &format,
     colsInThisPage = (colsInThisPage > colsPerPage) ? 
       colsPerPage : colsInThisPage;
     if ((rows*columns > 1) && (pageCount > 1))
-      io->outputMessage(" \nColumns %d to %d\n\n",
+      io->outputMessage("\n Columns %d to %d\n\n",
 			k*colsPerPage+1,k*colsPerPage+colsInThisPage);
-    else
-      io->outputMessage("\n");
+//    else
+//      io->outputMessage("\n");
     for (int i=0;i<rows;i++) {
-      io->outputMessage(" ");
+      if (rp.dataClass() != StringArray)
+        io->outputMessage(" ");
       for (int j=0;j<colsInThisPage;j++) {
 	Emit(io,rp.get(i+(k*colsPerPage+j)*rows+offset),format,complex);
 	printlimit--;
 	if (printlimit <= 0) return;
-	if (rp.dataClass() != StringArray)
-	  io->outputMessage(" ");
+	io->outputMessage(" ");
       }
       io->outputMessage("\n");
     }

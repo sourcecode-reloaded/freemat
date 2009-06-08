@@ -1866,7 +1866,7 @@ void FMEditor::IllegalLineOrCurrentPath(QString name, int line) {
 				   QMessageBox::No,
 				   QMessageBox::Cancel | QMessageBox::Escape);
 	if (ret == QMessageBox::Yes) {
-	  emit EvaluateText("cd " + filePath + "\n");
+	  emit EvaluateText("cd '" + filePath + "'\n");
 	  // leave some time to finish the above command
 #ifndef WIN32
 	  sleep(1);
