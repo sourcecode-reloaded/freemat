@@ -422,9 +422,33 @@ bool FMTextEdit::event(QEvent *event){
   if (event->type() == QEvent::ToolTip) {
     QHelpEvent *helpEvent = static_cast<QHelpEvent *>(event);
     QTextCursor Cursor = cursorForPosition(helpEvent->pos());
-    Cursor.select(QTextCursor::WordUnderCursor);
-    QString textSelected = Cursor.selectedText();
-    emit showDataTips(helpEvent->globalPos(), textSelected);
+    if (Cursor.atStart () || Cursor.atEnd ())
+      return QTextEdit::event(event);
+    QTextCursor BeginCursor(Cursor);
+    QTextCursor EndCursor(Cursor);
+    BeginCursor.movePosition(QTextCursor::Left,QTextCursor::KeepAnchor);
+    while (BeginCursor.selectedText().at(0).isLetterOrNumber() || 
+           BeginCursor.selectedText().at(0) == '_') {
+       BeginCursor.clearSelection();
+       if (BeginCursor.atStart ())
+	break;
+       BeginCursor.movePosition(QTextCursor::Left,QTextCursor::KeepAnchor);
+    }
+    if (!BeginCursor.atStart ())
+      BeginCursor.movePosition(QTextCursor::Right);
+    EndCursor.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor);
+    while (EndCursor.selectedText().at(0).isLetterOrNumber() || 
+           EndCursor.selectedText().at(0) == '_') {
+       EndCursor.clearSelection();
+       if (EndCursor.atEnd ())
+	break;
+       EndCursor.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor);
+    }
+    int textLength = EndCursor.position() - BeginCursor.position()-1;
+    BeginCursor.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor, textLength);
+    QString textSelected = BeginCursor.selectedText();
+    if (!textSelected.isEmpty() && textSelected.at(0).isLetter())
+      emit showDataTips(helpEvent->globalPos(), textSelected);
   }
   return QTextEdit::event(event);
 }
@@ -1977,7 +2001,6 @@ void FMEditor::setContext(Context *watch) {
 }
 
 void FMEditor::showDataTips(QPoint pos, QString textSelected) {
-
   if (!isShowToolTip)
      return;
      
