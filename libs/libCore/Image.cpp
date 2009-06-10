@@ -157,6 +157,11 @@ ArrayVector ImReadFunction(int nargout, const ArrayVector& arg,
 //You can write images in the @|jpg,png,xpm,ppm| and some other formats.
 //The syntax for its use is
 //@[
+//  imwrite(A, filename)
+//  imwrite(A, map, filename)
+//  imwrite(A, map, filename, 'Alpha', alpha)
+//
+//or Octave-style syntax:
 //  imwrite(filename, A)
 //  imwrite(filename, A, map)
 //  imwrite(filename, A, map, alpha)
@@ -165,9 +170,24 @@ ArrayVector ImReadFunction(int nargout, const ArrayVector& arg,
 //@|A| contains the image data (2D for gray or indexed, and 3D for color).  
 //If @|A| is an integer array (int8, uint8, int16, uint16, int32, uint32), 
 //the values of its elements should be within 0-255.  If @|A| is a 
-//floating-point array (float or double), the value of its elements should be 
-//within 0-1.  @|map| contains the colormap information (for indexed images),
-//and @|alpha| the alphamap (transparency).
+//floating-point array (float or double), the value of its elements should
+//be in the range [0,1].  @|map| contains the colormap information
+//(for indexed images), and @|alpha| the alphamap (transparency).
+//@@Example
+//Here is a simple example of @|imread|/@|imwrite|.  First, we generate
+//an grayscale image and save it to an image file.
+//@<
+//a =  uint8(255*rand(64));
+//figure(1), image(a), colormap(gray)
+//title('original image to save')
+//imwrite(a, 'test.bmp')
+//@>
+//Next, we read image file and show it:
+//@<
+//b = imread('test.bmp');
+//figure(2), image(b), colormap(gray)
+//title('loaded image from file')
+//@>
 //@@Signature
 //sgfunction imwrite ImWriteFunction
 //inputs filename A map alpha
@@ -260,7 +280,25 @@ ArrayVector ImWriteFunction(int nargout, const ArrayVector& arg, Interpreter* ev
   PathSearcher psearch(eval->getTotalPath());
   if (arg.size() < 2)
     throw Exception("imwrite requires at least a filename and a matrix");
-  QString FileName = arg[0].asString();
+  ArrayVector argCopy;
+  if (arg[0].isString())
+    argCopy = arg;
+  else if (arg[arg.size()-1].isString()) {
+    argCopy << arg[arg.size()-1];
+    for (int i = 0; i< arg.size()-1; i++)
+      argCopy << arg[i];
+  }
+  else
+    throw Exception("imwrite requires a filename");
+  int hasAlpha = 0;
+  for (int i = 1; i< arg.size(); i++) {
+    if (argCopy[i].isString() && argCopy[0].asString().toUpper() == "ALPHA") {
+      hasAlpha = 1;
+      break;
+    }
+    i++;
+  }
+  QString FileName = argCopy[0].asString();
   QByteArray ImageFormat;
   ImageFormat.append(QFileInfo(FileName).suffix());
   // Construct the QImageWriter object
@@ -269,29 +307,29 @@ ArrayVector ImWriteFunction(int nargout, const ArrayVector& arg, Interpreter* ev
     throw Exception("unable to write image file " + FileName);
   }
 
-  Array A(arg[1]);
+  Array A(argCopy[1]);
   if (A.dimensions().lastNotOne() == 2) { // choose QImage::Format_Indexed8
-    if (arg.size() == 2) { // 8-bit grayscale image
-      Array ctable(UInt8,NTuple(255,1));
-      Array trans(UInt8, A.dimensions());
+    if (argCopy.size() == 2) { // 8-bit grayscale image
+      Array ctable(UInt8);
+      Array trans(UInt8);
       QImage img = imwriteHelperIndexed(convert2uint8(A), ctable, trans);
       if (!imgWriter.write(QImage(img)))
 	throw Exception("cannot create image file" + FileName);
     }
-    else if (arg.size() == 3) { // 8-bit indexed color image
-      Array ctable(arg[2]);
+    else if (argCopy.size() == 3) { // 8-bit indexed color image
+      Array ctable(argCopy[2]);
       if (ctable.length() != 0 && ctable.cols() != 3)
 	throw Exception("color map should be a 3 columns matrix");
-      Array trans(UInt8,A.dimensions());
+      Array trans(UInt8);
       QImage img = imwriteHelperIndexed(convert2uint8(A), convert2uint8(ctable), trans);
       if (!imgWriter.write(img))
 	throw Exception("cannot create image file" + FileName);
     }
-    else if (arg.size() == 4) { // 8-bit indexed color image with alpha channel
-      Array ctable(arg[2]);
+    else if (argCopy.size() == 4) { // 8-bit indexed color image with alpha channel
+      Array ctable(argCopy[2]);
       if (ctable.length() != 0 && ctable.cols() != 3)
 	throw Exception("color map should be a 3 columns matrix");
-      Array trans(arg[3]);
+      Array trans(argCopy[3]);
       eval->warningMessage("saving alpha/transparent channel will increase file size");
       QImage img = imwriteHelperIndexed(convert2uint8(A), convert2uint8(ctable), convert2uint8(trans));
       if (!imgWriter.write(img))
@@ -301,13 +339,13 @@ ArrayVector ImWriteFunction(int nargout, const ArrayVector& arg, Interpreter* ev
       throw Exception("invalide input number of arguments");
   }
   else if (A.dimensions().lastNotOne() == 3) { // choose QImage::Format_RGB32 or Format_ARGB32
-    if (arg.size() == 2) {
+    if (argCopy.size() == 2) {
       QImage img = imwriteHelperRGB32(convert2uint8(A));
       if (!imgWriter.write(QImage(img)))
 	throw Exception("cannot create image file" + FileName);
     }
-    else if (arg.size() == 3) {
-      Array trans(arg[2]);
+    else if (argCopy.size() == 3) {
+      Array trans(argCopy[2]);
       if (A.rows() == trans.rows() && A.columns() == trans.columns() ) {
 	// the third argument is alpha channel
 	QImage img = imwriteHelperARGB32(convert2uint8(A), convert2uint8(trans));
@@ -322,20 +360,20 @@ ArrayVector ImWriteFunction(int nargout, const ArrayVector& arg, Interpreter* ev
 	  throw Exception("cannot create image file" + FileName);
       }
     }
-    else if (arg.size() == 4) {
+    else if (argCopy.size() == 4 || (argCopy.size() == 5 && hasAlpha == 1)) {
       Array ctable(arg[2]);
       if (ctable.length() != 0)
 	eval->warningMessage("ignore colormap argument");
-      Array trans(arg[3]);
+      Array trans(argCopy[3+hasAlpha]);
       if (A.rows() == trans.rows() && A.columns() == trans.columns() ) {
 	// the third argument is alpha/transparent channel
 	QImage img = imwriteHelperARGB32(convert2uint8(A), convert2uint8(trans));
 	if (!imgWriter.write(QImage(img)))
-	  throw Exception("cannot create image file" + FileName);
+          throw Exception("alpha/transparent size is not the same as image size");
       }
       else {
 	if (trans.length() != 0)
-	  eval->warningMessage("ignore invalid transparent argument");
+          eval->warningMessage("ignore invalid alpha/transparent argument");
 	QImage img = imwriteHelperRGB32(convert2uint8(A));
 	if (!imgWriter.write(QImage(img)))
 	  throw Exception("cannot create image file" + FileName);
