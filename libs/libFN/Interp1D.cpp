@@ -305,6 +305,8 @@ ArrayVector Interplin1Function(int nargout, const ArrayVector& arg) {
   Array x1(arg[0]);
   Array y1(arg[1]);
   Array xi(arg[2]);
+  xi = xi.asDenseArray();
+
   // Verify that x1 are numerical
   if (x1.isReferenceType() || y1.isReferenceType() || xi.isReferenceType())
     throw Exception("arguments to interplin1 must be numerical arrays");
