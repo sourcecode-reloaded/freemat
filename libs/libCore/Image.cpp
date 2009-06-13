@@ -175,19 +175,28 @@ ArrayVector ImReadFunction(int nargout, const ArrayVector& arg,
 //(for indexed images), and @|alpha| the alphamap (transparency).
 //@@Example
 //Here is a simple example of @|imread|/@|imwrite|.  First, we generate
-//an grayscale image and save it to an image file.
+//a grayscale image and save it to an image file.
 //@<
 //a =  uint8(255*rand(64));
 //figure(1), image(a), colormap(gray)
-//title('original image to save')
+//title('image to save')
 //imwrite(a, 'test.bmp')
 //@>
-//Next, we read image file and show it:
+//Then, we read image file and show it:
 //@<
 //b = imread('test.bmp');
 //figure(2), image(b), colormap(gray)
-//title('loaded image from file')
+//title('loaded image')
 //@>
+//@@Tests
+//@{ test_imwrite_imread.m
+//% Test the imwrite and imread capability with random grayscale image
+//function test_val = test_imwrite_imread
+//   a =  uint8(255*rand(64));
+//   imwrite(a, 'test.bmp')
+//   b = imread('test.bmp');
+//   test_val = issame(a,b);
+//@}
 //@@Signature
 //sgfunction imwrite ImWriteFunction
 //inputs filename A map alpha
@@ -282,11 +291,22 @@ ArrayVector ImWriteFunction(int nargout, const ArrayVector& arg, Interpreter* ev
     throw Exception("imwrite requires at least a filename and a matrix");
   ArrayVector argCopy;
   if (arg[0].isString())
-    argCopy = arg;
-  else if (arg[arg.size()-1].isString()) {
-    argCopy << arg[arg.size()-1];
-    for (int i = 0; i< arg.size()-1; i++)
+    argCopy = arg; //Octave-style syntax
+  else if (arg[1].isString()) {
+    argCopy << arg[1];
+    for (int i = 0; i< arg.size()-1; i++){
+      if (i == 1)
+        continue;
       argCopy << arg[i];
+    }
+  }
+  else if (arg[2].isString()) {
+    argCopy << arg[2];
+    for (int i = 0; i< arg.size()-1; i++){
+      if (i == 2)
+        continue;
+      argCopy << arg[i];
+    }
   }
   else
     throw Exception("imwrite requires a filename");
