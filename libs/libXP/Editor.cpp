@@ -244,24 +244,27 @@ void FMTextEdit::uncomment() {
     line2.movePosition(QTextCursor::Up,QTextCursor::MoveAnchor);
   QTextCursor pos(line1);
   pos.beginEditBlock();
-  while (pos.position() < line2.position()) { 
-    pos.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor);
-    if (pos.selectedText() == "%") {
-      pos.deleteChar();
+  while (pos.position() <= line2.position()) {
+    while (!pos.atBlockEnd()) {
       pos.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor);
-      if (pos.selectedText() == " ")  
+      if (pos.selectedText() == " "){
+        pos.clearSelection();
+        continue;
+     }
+      else if (pos.selectedText() == "%") {
         pos.deleteChar();
+        pos.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor);
+        if (pos.selectedText() == " " || pos.selectedText() == "\t")
+          pos.deleteChar();
+        break;
+      }
+      else
+        break;
     }
-    pos.movePosition(QTextCursor::Down,QTextCursor::MoveAnchor);
-    pos.movePosition(QTextCursor::StartOfLine,QTextCursor::MoveAnchor);
-  }
-
-  pos.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor);
-  if (pos.selectedText() == "%") {
-    pos.deleteChar();
-    pos.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor);
-    if (pos.selectedText() == " ")  
-      pos.deleteChar();
+    if (pos.position() < line2.position()) {
+      pos.movePosition(QTextCursor::Down,QTextCursor::MoveAnchor);
+      pos.movePosition(QTextCursor::StartOfLine,QTextCursor::MoveAnchor);
+    }
   }
   pos.endEditBlock();
 }
