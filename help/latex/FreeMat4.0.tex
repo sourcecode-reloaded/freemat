@@ -6,7 +6,7 @@
 \oddsidemargin 0.0in
 \evensidemargin 1.0in
 \textwidth 6.0in
-\title{FreeMat v svn Documentation}
+\title{FreeMat v4.0 Documentation}
 \author{Samit Basu}
 \begin{document}
 \maketitle
@@ -65,6 +65,7 @@
 \chapter{FreeMat Functions}
 \input{freemat_addpath}
 \input{freemat_assignin}
+\input{freemat_blaslib}
 \input{freemat_builtin}
 \input{freemat_clc}
 \input{freemat_clock}
@@ -100,6 +101,7 @@
 \input{freemat_startup}
 \input{freemat_tic}
 \input{freemat_toc}
+\input{freemat_type}
 \input{freemat_version}
 \input{freemat_verstring}
 \chapter{Debugging FreeMat Code}
@@ -143,7 +145,6 @@
 \input{mathfunctions_atanh}
 \input{mathfunctions_cos}
 \input{mathfunctions_cosd}
-\input{mathfunctions_cosd}
 \input{mathfunctions_cosh}
 \input{mathfunctions_cot}
 \input{mathfunctions_cotd}
@@ -151,7 +152,6 @@
 \input{mathfunctions_coth}
 \input{mathfunctions_cross}
 \input{mathfunctions_csc}
-\input{mathfunctions_cscd}
 \input{mathfunctions_cscd}
 \input{mathfunctions_csch}
 \input{mathfunctions_deg2rad}
@@ -172,15 +172,12 @@
 \input{mathfunctions_rem}
 \input{mathfunctions_sec}
 \input{mathfunctions_secd}
-\input{mathfunctions_secd}
 \input{mathfunctions_sech}
 \input{mathfunctions_sin}
-\input{mathfunctions_sind}
 \input{mathfunctions_sind}
 \input{mathfunctions_sinh}
 \input{mathfunctions_sqrt}
 \input{mathfunctions_tan}
-\input{mathfunctions_tand}
 \input{mathfunctions_tand}
 \input{mathfunctions_tanh}
 \chapter{Base Constants}
@@ -190,7 +187,6 @@
 \input{constants_feps}
 \input{constants_i}
 \input{constants_inf}
-\input{constants_nan}
 \input{constants_pi}
 \input{constants_teps}
 \input{constants_true}
@@ -208,7 +204,6 @@
 \input{elementary_dot}
 \input{elementary_floor}
 \input{elementary_getfield}
-\input{elementary_hex2dec}
 \input{elementary_hex2dec}
 \input{elementary_imag}
 \input{elementary_max}
@@ -243,7 +238,6 @@
 \input{inspection_ismatrix}
 \input{inspection_isnan}
 \input{inspection_isnumeric}
-\input{inspection_isreal}
 \input{inspection_isreal}
 \input{inspection_issame}
 \input{inspection_isscalar}
@@ -305,6 +299,7 @@
 \input{array_linspace}
 \input{array_logspace}
 \input{array_meshgrid}
+\input{array_nan}
 \input{array_ndgrid}
 \input{array_nonzeros}
 \input{array_norm}
@@ -466,6 +461,7 @@
 \input{handle_gca}
 \input{handle_gcf}
 \input{handle_get}
+\input{handle_glshow}
 \input{handle_gray}
 \input{handle_grid}
 \input{handle_hcontour}
@@ -475,8 +471,10 @@
 \input{handle_hold}
 \input{handle_hpatch}
 \input{handle_hpoint}
+\input{handle_hrawplot}
 \input{handle_hsurface}
 \input{handle_htext}
+\input{handle_htextbitmap}
 \input{handle_image}
 \input{handle_imageproperties}
 \input{handle_imagesc}
@@ -583,4 +581,10 @@
 \input{external_ctypewrite}
 \input{external_import}
 \input{external_loadlib}
+\chapter{OpenGL Models}
+\input{glwin_glassembly}
+\input{glwin_glclump}
+\input{glwin_gldefmaterial}
+\input{glwin_gllines}
+\input{glwin_glnode}
 \end{document}
