@@ -32,7 +32,6 @@ HandlePatch::~HandlePatch() {
 
 QVector<double> HandlePatch::GetLimits() {
   QVector<double> limits;
-  UpdateState();
 
   Array vertexdata(ArrayPropertyLookup("vertices"));
   vertexdata = vertexdata.toClass(Double);
@@ -76,19 +75,6 @@ QVector<double> HandlePatch::GetLimits() {
   limits.push_back(VecMax(alphadata));
   return limits;
 }
-/*
-void HandlePatch::UpdateState() {
-    StringVector tset;
-    tset.push_back( "xdata" ); tset.push_back( "ydata" ); 
-    tset.push_back( "zdata" ); tset.push_back( "cdata" ); 
-
-    if( HasChanged(tset){
-
-	ClearChanged( tset );
-    }
-  HandleImage::UpdateCAlphaData();
-}
-*/
 
 void HandlePatch::ConstructProperties() {
   //!
@@ -393,27 +379,16 @@ void HandlePatch::BuildPolygons( FaceList& faces )
 #undef pVertD
 }
 
-FaceList Saved_faces;
+void HandlePatch::UpdateState() {
+  m_faces.clear();
+  if (HasChanged("faces") || HasChanged("vertices") || HasChanged("facevertexcdata")
+      || HasChanged("facecolor") || HasChanged("edgecolor")) 
+    BuildPolygons(m_faces);
+}
 
 void HandlePatch::PaintMe(RenderEngine& gc) {
-  UpdateState();
   if (StringCheck("visible","off"))
     return;
-
-  FaceList faces;
-  BuildPolygons( faces );
-
-  HandleAxis *ax = GetParentAxis();
-  if( ax->StringCheck("nextplot","add") ){
-    Saved_faces += faces;
-  }
-  else{
-      Saved_faces = faces;
-  }
-  gc.drawPatch(Saved_faces);
+  gc.drawPatch(m_faces);
 }
 
-void HandlePatch::AxisPaintingDone( void )
-{
-    Saved_faces.clear();
-}

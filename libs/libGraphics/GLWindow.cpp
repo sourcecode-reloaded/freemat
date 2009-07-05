@@ -488,7 +488,7 @@ ArrayVector GLNodeFunction(int nargout, const ArrayVector& arg) {
 //@|scale| should represent the radial size of the object
 //that you want to see in the window.
 //@@Signature
-//gfunction glshow GLShow
+//gfunction glshow GLShowFunction
 //input name scale
 //output none
 //!

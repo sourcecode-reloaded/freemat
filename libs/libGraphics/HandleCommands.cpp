@@ -146,27 +146,32 @@ static void SelectFig(int fignum) {
 }
 
 
-bool AnyDirty(bool issueUpdates) {
+bool AnyDirty() {
   bool retval = false;
   if (!HGInitialized) return false;
-  for (int i=0;i<MAX_FIGS;i++) {
-    if (Hfigs[i] && (Hfigs[i]->isDirty()))  {
+  for (int i=0;i<MAX_FIGS;i++) 
+    if (Hfigs[i] && (Hfigs[i]->HFig()->isDirty()))  
       retval = true;
-      if (issueUpdates)
-	Hfigs[i]->repaint();
+  return retval;
+}
+
+void RefreshFigs() {
+  if (!GfxEnableFlag()) return;
+  if (!HGInitialized) return;
+  for (int i=0;i<MAX_FIGS;i++) {
+    if (Hfigs[i] && (Hfigs[i]->HFig()->isDirty())) {
+      Hfigs[i]->update();
     }
   }
-  return retval;
 }
 
 static bool in_DoDrawNow = false;
 
-void DoDrawNow() {
+static void DoDrawNow() {
   if (in_DoDrawNow) return;
   in_DoDrawNow = true;
-  if (AnyDirty(true))
-    while (AnyDirty(false))
-      qApp->processEvents();
+  while (AnyDirty())
+    qApp->processEvents();
   in_DoDrawNow = false;
 }
 
@@ -390,6 +395,35 @@ void HSetChildrenFunction(HandleObject *fp, Array children) {
 
 
 //!
+//@Module SIZEFIG Set Size of Figure
+//@@Section HANDLE
+//@@Usage
+//The @|sizefig| function changes the size of the currently
+//selected fig window.  The general syntax for its use is
+//@[
+//   sizefig(width,height)
+//@]
+//where @|width| and @|height| are the dimensions of the fig
+//window.
+//@@Signature
+//gfunction sizefig SizeFigFunction
+//input width height
+//output none
+//!
+ArrayVector SizeFigFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 2)
+    throw Exception("sizefig requires width and height");
+  int width = arg[0].asInteger();
+  int height = arg[1].asInteger();
+  QSize main_window_size = CurrentWindow()->size();
+  QSize central_window_size = CurrentWindow()->centralWidget()->size();
+  CurrentWindow()->resize(width + main_window_size.width() - central_window_size.width(),
+			  height + main_window_size.height() - central_window_size.height());
+  CurrentWindow()->HFig()->markDirty();
+  return ArrayVector();
+}
+
+//!
 //@Module SET Set Object Property
 //@@Section HANDLE
 //@@Usage
@@ -429,7 +463,7 @@ ArrayVector HSetFunction(int nargout, const ArrayVector& arg) {
     else if ((handle < HANDLE_OFFSET_OBJECT) && (propname == "figsize")) {
       fp->LookupProperty(propname)->Set(arg[ptr+1]);
       HandleFigure *fig = (HandleFigure*) fp;
-      fig->SetSize();
+      //FIXME      fig->SetSize();
     } else {
       try {
 	fp->LookupProperty(propname)->Set(arg[ptr+1]);
@@ -442,10 +476,12 @@ ArrayVector HSetFunction(int nargout, const ArrayVector& arg) {
   }
   fp->UpdateState();
   if (!fp->IsType("figure") && !fp->IsType("uicontrol")) {
+    //FIXME
     HandleFigure *fig = fp->GetParentFigure();
     fig->UpdateState();
-    fig->Repaint();
+    //     fig->Repaint();
   }
+  CurrentWindow()->HFig()->markDirty();
   return ArrayVector();
 }
 
@@ -522,6 +558,7 @@ static unsigned GenericConstructor(HandleObject* fp, const ArrayVector& arg,
     parent.push_back(current);
     cp->Data(parent);
     axis->UpdateState();
+    fig->markDirty();
   }
   fp->UpdateState();
   return handle;
@@ -877,13 +914,14 @@ ArrayVector HPropertyValidateFunction(int nargout, const ArrayVector& arg) {
 bool PrintBaseFigure(HandleWindow* g, QString filename, 
 		     QString type) {
   bool retval;
-  HPColor *color = (HPColor*) g->HFig()->LookupProperty("color");
+  HandleFigure* h = g->HFig();
+  HPColor *color = (HPColor*) h->LookupProperty("color");
   double cr, cg, cb;
   cr = color->At(0); cg = color->At(1); cb = color->At(2);
-  g->HFig()->SetThreeVectorDefault("color",1,1,1);
+  h->SetThreeVectorDefault("color",1,1,1);
   GfxEnableRepaint();
-  g->UpdateState();
-  while (g->isDirty())
+  h->UpdateState();
+  while (h->isDirty())
     qApp->processEvents();
   if ((type == "PDF") || (type == "PS") || (type == "EPS")){
     QPrinter prnt;
@@ -894,7 +932,8 @@ bool PrintBaseFigure(HandleWindow* g, QString filename,
     prnt.setOutputFileName(filename);
     QPainter pnt(&prnt);
     QTRenderEngine gc(&pnt,0,0,g->width(),g->height());
-    g->HFig()->PaintMe(gc);
+    h->markDirty();
+    h->PaintMe(gc);
     retval = true;
   } else if (type == "SVG") {
     QSvgGenerator gen;
@@ -902,7 +941,7 @@ bool PrintBaseFigure(HandleWindow* g, QString filename,
     gen.setSize(QSize(g->width(),g->height()));
     QPainter pnt(&gen);
     QTRenderEngine gc(&pnt,0,0,g->width(),g->height());
-    g->HFig()->PaintMe(gc);
+    h->PaintMe(gc);
     retval = true;
   } else {
     // Binary print - use grabWidget
@@ -910,9 +949,9 @@ bool PrintBaseFigure(HandleWindow* g, QString filename,
     QImage img(pxmap.toImage());
     retval = img.save(filename,type.toAscii().data());
   }
-  g->HFig()->SetThreeVectorDefault("color",cr,cg,cb);
-  g->UpdateState();
-  while (g->isDirty())
+  h->SetThreeVectorDefault("color",cr,cg,cb);
+  h->markDirty();
+  while (h->isDirty())
     qApp->processEvents();
   GfxDisableRepaint();
   return retval;
@@ -1275,7 +1314,9 @@ ArrayVector HPointFunction(int nargout, const ArrayVector& arg) {
   f->activateWindow();
   f->setFocus(Qt::OtherFocusReason);
   int x, y;
+  GfxEnableRepaint();
   f->GetClick(x,y);
+  GfxDisableRepaint();
   BasicArray<double> retvec(NTuple(2,1));
   retvec.set(1,x);
   retvec.set(2,y);

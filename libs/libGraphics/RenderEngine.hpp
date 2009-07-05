@@ -87,6 +87,8 @@ public:
   RenderEngine() {};
   virtual ~RenderEngine() {};
   virtual void clear(QVector<double>) = 0;
+  virtual double width() = 0;
+  virtual double height() = 0;
   virtual void toPixels(double x, double y, double z, int &a, int &b) = 0;
   virtual void toPixels(double x, double y, double z, double &a, double &b) = 0;
   virtual void toPixels(double x, double y, double z, double &a, double &b, bool &clipped) = 0;
@@ -143,8 +145,9 @@ public:
   virtual void circleFill(double x1, double y1, double radius) = 0;
   virtual void drawImage(double x1, double y1, double x2, double y2,
 			 QImage pic) = 0;
-  virtual void drawImage(HPTwoVector* xp, HPTwoVector* yp, HPTwoVector* xlim, HPTwoVector* ylim,
-			 QImage pic) = 0;
+  virtual void drawImage(HPTwoVector* xp, HPTwoVector* yp, 
+			 HPTwoVector* xlim, HPTwoVector* ylim,
+			 bool xflip, bool yflip, QImage pic) = 0;
   virtual void quadStrips(QVector<QVector<cpoint> > faces, bool flatfaces,
 			  QVector<QVector<cpoint> > edges, bool flatedges) = 0;
   virtual void setClipBox(QVector<double> limits) {};

@@ -1181,6 +1181,10 @@ void MainApp::RegisterInterrupt() {
     m_eval->setInterrupt();
 }
 
+void MainApp::RefreshFigures() {
+  RefreshFigs();
+}
+
 int MainApp::Run() {
   UpdatePaths();
   qRegisterMetaType<FuncPtr>("FuncPtr");
@@ -1197,6 +1201,10 @@ int MainApp::Run() {
   // Start out with a sampling frequency of 1/100 sec
   profilerTimer->setInterval(10); 
   connect(profilerTimer,SIGNAL(timeout()),this,SLOT(CollectProfileSample()));
+  refreshTimer = new QTimer(this);
+  refreshTimer->setSingleShot(false);
+  refreshTimer->setInterval(50);
+  connect(refreshTimer,SIGNAL(timeout()),this,SLOT(RefreshFigures()));
   // Get a new thread
   GfxEnableRepaint();
   m_mainID = StartNewInterpreterThread();
@@ -1209,6 +1217,7 @@ int MainApp::Run() {
     return 0;
   m_eval->setThreadFunc(doCLI,0,ArrayVector() );
   m_eval->start();
+  refreshTimer->start();
   emit Initialize();
   return 0;
 }

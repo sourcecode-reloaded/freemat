@@ -69,6 +69,7 @@ void HandleObject::ClearChanged(QString name) {
 
 HandleObject::HandleObject() {
   ref_count = 1;
+  m_stateDirty = false;
 }
 
 HandleObject::~HandleObject() {
@@ -143,12 +144,6 @@ HandleFigure* HandleObject::GetParentFigure() {
   if (parent->Data().empty()) return NULL;
   unsigned parent_handle = parent->Data()[0];
   return LookupHandleFigure(parent_handle);
-}
-
-void HandleObject::MarkDirty() {
-  HandleFigure *fp = GetParentFigure();
-  if (fp)
-    fp->UpdateState();
 }
 
 QString HandleObject::StringPropertyLookup(QString name) {

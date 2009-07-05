@@ -26,7 +26,6 @@
 #include "Array.hpp"
 #include "SymbolTable.hpp"
 #include "HandleObject.hpp"
-#include "HandleFigure.hpp"
 #include "RenderEngine.hpp"
 #include "Context.hpp"
 #include <QPainterPath>
@@ -50,6 +49,7 @@ class HandleAxis : public HandleObject {
   double model[16];
   double proj[16];
   int viewp[4];
+  QVector<double> m_box;
 
   void UpdateAxisFont();
   void HandlePlotBoxFlags();
@@ -62,7 +62,7 @@ class HandleAxis : public HandleObject {
 		 QVector<double> color,
 		 QString txt);
   void SetupAxis(RenderEngine& gc);
-  void RecalculateTicks();
+  void RecalculateTicks(RenderEngine& gc);
   int GetTickCount(RenderEngine& gc, double x1, double y1, 
 		   double z1, double x2, double y2, double z2);
   void DrawXGridLine(RenderEngine& gc, double t, 
@@ -75,21 +75,27 @@ class HandleAxis : public HandleObject {
   double flipY(double t);
   double flipZ(double t);
   FM::SymbolTable<HandleProperty*> properties;
-  void RePackFigure();
+  void RePackFigure(RenderEngine& gc);
   void UpdateLimits(bool x, bool y, bool z, bool a, bool c);
 public:
   HandleAxis();
   virtual ~HandleAxis();
   bool Is2DView(); 
+  void SetupCamera(RenderEngine &gc);
+  void MapCorners(RenderEngine &gc, 
+		  double &xmin, double &xmax,
+		  double &ymin, double &ymax,
+		  double &zmin, double &zmax);
+  void UpdateXYZPos(RenderEngine &gc);
+  QVector<double> GetClientAreaInPixels() {return m_box;}
   virtual void ConstructProperties();
   virtual void UpdateState();
   void SetupDefaults();
   virtual void PaintMe(RenderEngine &gc);
   virtual void PaintBoundingBox(RenderEngine& gc);
-  HandleFigure* GetParentFigure();
-  QVector<double> UnitsReinterpret(QVector<double> a);
-  QVector<double> GetPropertyVectorAsPixels(QString name);
-  QVector<double> GetAxisLimits();
+  QVector<double> UnitsReinterpret(RenderEngine& gc, QVector<double> a);
+  QVector<double> GetPropertyVectorAsPixels(RenderEngine& gc, QString name);
+  QVector<double> GetAxisLimits(bool rawmode = false);
   void SetAxisLimits(QVector<double>);
   double MapX(double x);
   double MapY(double y);
@@ -102,6 +108,7 @@ public:
 	     QVector<double>&,
 	     QVector<double>&);
   void SetupProjection(RenderEngine& gc);
+  void InitialSetupAxis(RenderEngine& gc);
   void DrawBox(RenderEngine& gc);
   void DrawMinorGridLines(RenderEngine& gc);
   void DrawGridLines(RenderEngine& gc);

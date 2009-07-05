@@ -39,51 +39,40 @@ public:
   //  QSizePolicy sizePolicy() const;
 };
 
-  QSize BaseFigureQt::sizeHint() const {
-    HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
-    //dbout << "Size hint " << (htv->Data()[0]) << "," << (htv->Data()[1]) << "\r\n";
-    return QSize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
-   //  return QSize(10000,10000);
-  }
+QSize BaseFigureQt::sizeHint() const {
+  HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
+  dbout << "Size hint " << (htv->Data()[0]) << "," << (htv->Data()[1]) << "\r\n";
+  return QSize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
+  //  return QSize(10000,10000);
+}
 
 void BaseFigureQt::resizeEvent(QResizeEvent *e) {
   QWidget::resizeEvent(e);
   //  dbout << "resize " << width() << " " << height() << "\r\n";
-  backStore = QPixmap(qMax(8,width()),
-		      qMax(8,height()));
-  hfig->resizeGL(qMax(8,width()),
-  		 qMax(8,height()));
+  //   backStore = QPixmap(qMax(8,width()),
+  // 		      qMax(8,height()));
+  hfig->Resize(qMax(8,e->size().width()),qMax(8,e->size().height()));
 }
 
 static bool enableRepaint = false;
 
 void GfxEnableRepaint() {
   enableRepaint = true;
-  DoDrawNow();
 }
 
 void GfxDisableRepaint() {
   enableRepaint = false;
 }
 
+bool GfxEnableFlag() {
+  return enableRepaint;
+}
+
 void BaseFigureQt::paintEvent(QPaintEvent *e) {
-  //  dbout << "Paint\r";
-  if (enableRepaint && hfig->ParentWindow()->isDirty()) {
-    {
-      // enableRepaint is true, and the background is dirty - update
-      // the backing store, and then redraw it.
-      //      dbout << "Redraw\r";
-      QPainter pnt(&backStore);
-      QTRenderEngine gc(&pnt,0,0,width(),height());
-      hfig->PaintMe(gc);
-      hfig->ParentWindow()->markClean();
-    }
-    QPainter pnt2(this);
-    pnt2.drawPixmap(0,0,backStore);
-  } else {
-    //    dbout << "Refresh\r";
+  if (enableRepaint) {
     QPainter pnt(this);
-    pnt.drawPixmap(e->rect(),backStore);
+    QTRenderEngine gc(&pnt,0,0,width(),height());
+    hfig->PaintMe(gc);
   }
 }
 
@@ -131,7 +120,7 @@ void BaseFigureGL::paintGL() {
 
 void BaseFigureGL::resizeGL(int width, int height) {
   //    qDebug("GLsize");
-  hfig->resizeGL(width,height);
+  //  hfig->resizeGL(width,height);
 }
 
 QSize BaseFigureGL::sizeHint() const {
@@ -200,7 +189,6 @@ HandleWindow::HandleWindow(unsigned ahandle) : QMainWindow() {
   resize(600,400);
   initialized = true;
   mode = normal_mode;
-  dirty = false;
 }
 
 // Useful tools:
@@ -351,6 +339,7 @@ void HandleWindow::GetClick(int &x, int &y) {
   // Run the event loop
   int save_mode = mode;
   mode = click_mode;
+  hfig->markDirty();
   m_loop.exec();
   x = click_x;
   y = click_y;
@@ -368,11 +357,11 @@ HandleAxis* GetContainingAxis(HandleFigure *fig, int x, int y) {
     HandleObject* hp = LookupHandleObject(children[i]);
     if (hp->IsType("axes")) {
       // Get the axis extents
-      QVector<double> position(((HandleAxis*) hp)->GetPropertyVectorAsPixels("position"));
+      QVector<double> position(((HandleAxis*) hp)->GetClientAreaInPixels());
       //      dbout << "Axis: " << position[0] << "," << position[1] << "," << position[2] << "," << position[3];
       if ((x >= position[0]) && (x < (position[0]+position[2])) &&
-	  (y >= position[1]) && (y < (position[1]+position[3])))
-	return (HandleAxis*)hp;
+      	  (y >= position[1]) && (y < (position[1]+position[3])))
+      	return (HandleAxis*)hp;
     }
   }
   return NULL;
@@ -381,8 +370,8 @@ HandleAxis* GetContainingAxis(HandleFigure *fig, int x, int y) {
 void HandleWindow::mousePressEvent(QMouseEvent* e) {
   try {
     if (mode == click_mode) {
-      click_x = e->x();
-      click_y = e->y();
+      click_x = e->x() - centralWidget()->geometry().x();
+      click_y = e->y() - centralWidget()->geometry().y();
       m_loop.exit();
     }
     if ((mode == zoom_mode) && (e->button() == Qt::LeftButton))  {
@@ -448,7 +437,7 @@ void HandleWindow::mouseMoveEvent(QMouseEvent* e) {
       QRect plot_region(child->geometry());
       HandleAxis *h = GetContainingAxis(hfig,remapX(origin.x()),remapY(origin.y()));
       if (h) {
-	QVector<double> position(h->GetPropertyVectorAsPixels("position"));
+	QVector<double> position(h->GetClientAreaInPixels());
 	double delx, dely;
 	if (h->StringCheck("xdir","reverse"))
 	  delx = (e->x() - origin.x())/position[2];
@@ -464,9 +453,8 @@ void HandleWindow::mouseMoveEvent(QMouseEvent* e) {
 	h->SetTwoVectorDefault("ylim",pan_ymean+pan_yrange*dely-pan_yrange/2,
 			       pan_ymean+pan_yrange*dely+pan_yrange/2);
 	h->SetConstrainedStringDefault("ylimmode","manual");
-	h->UpdateState();
-	hfig->Repaint();
-	UpdateState();
+	//	hfig->Repaint();
+	hfig->markDirty();
       }
     }
     if ((mode == rotate_mode) && rotate_active) {
@@ -503,9 +491,10 @@ void HandleWindow::mouseMoveEvent(QMouseEvent* e) {
 	h->SetThreeVectorDefault("cameraupvector",camera_up[0],
 				 camera_up[1],camera_up[2]);
 	h->SetConstrainedStringDefault("cameraupvectormode","manual");
-	h->UpdateState();
-	hfig->Repaint();
-	UpdateState();
+	//	h->UpdateState();
+	//	hfig->Repaint();
+	hfig->markDirty();
+	//	UpdateState();
       }
     }
     if ((mode == cam_rotate_mode) && rotate_active) {
@@ -521,9 +510,10 @@ void HandleWindow::mouseMoveEvent(QMouseEvent* e) {
 	h->SetThreeVectorDefault("cameraupvector",camera_up[0],
 				 camera_up[1],camera_up[2]);
 	h->SetConstrainedStringDefault("cameraupvectormode","manual");
-	h->UpdateState();
-	hfig->Repaint();
-	UpdateState();
+	//	h->UpdateState();
+	//	hfig->Repaint();
+	//	UpdateState();
+	hfig->markDirty();
       }
     }
   } catch (Exception &e) {
@@ -565,39 +555,42 @@ void HandleWindow::mouseReleaseEvent(QMouseEvent * e) {
 	    mean = (hp->Data()[1] + hp->Data()[0])/2;
 	    h->SetTwoVectorDefault("ylim",mean-range/2,mean+range/2);
 	    h->SetConstrainedStringDefault("ylimmode","manual");
-	    h->UpdateState();
-	    hfig->Repaint();
+	    //	    h->UpdateState();
+	    //	    hfig->Repaint();
 	  }
 	} else {       
 	  QRect plot_region(child->geometry());
 	  HandleAxis *h = GetContainingAxis(hfig,remapX(rect.x()),remapY(rect.y()));
 	  if (h) {
-	    QVector<double> position(h->GetPropertyVectorAsPixels("position"));
-	    QVector<double> pba(h->VectorPropertyLookup("plotboxaspectratio"));
-	    QVector<double> dar(h->VectorPropertyLookup("dataaspectratio"));
-	    double x = position[0], y = position[1];
-	    double width = position[2], height = position[3];
-	    double xyratio = 1;
-	    if( h->IsAuto("plotboxaspectratiomode") ) 
-		xyratio *= pba[0]/pba[1];
-	    if( h->IsAuto("dataaspectratiomode") )
-		xyratio *= dar[0]/dar[1];
-	    if( h->IsAuto("plotboxaspectratiomode") || h->IsAuto("dataaspectratiomode") ){
-		if( width > height*xyratio ){
-		    width = height*xyratio;
-		    x += (position[2]-width)/2;
-		}
-		else{
-		    height = width / xyratio;
-		    y += (position[3]-height)/2;
-		}
-	    }
+
+ 	    QVector<double> position(h->GetClientAreaInPixels());
+	    // 	    QVector<double> pba(h->VectorPropertyLookup("plotboxaspectratio"));
+	    // 	    QVector<double> dar(h->VectorPropertyLookup("dataaspectratio"));
+ 	    double x = position[0], y = position[1];
+ 	    double width = position[2], height = position[3];
+	    
+	    // 	    double xyratio = 1;
+	    // 	    if( h->IsAuto("plotboxaspectratiomode") ) 
+	    // 		xyratio *= pba[0]/pba[1];
+	    // 	    if( h->IsAuto("dataaspectratiomode") )
+	    // 		xyratio *= dar[0]/dar[1];
+	    // 	    if( h->IsAuto("plotboxaspectratiomode") || h->IsAuto("dataaspectratiomode") ){
+	    // 		if( width > height*xyratio ){
+	    // 		    width = height*xyratio;
+	    // 		    x += (position[2]-width)/2;
+	    // 		}
+	    // 		else{
+	    // 		    height = width / xyratio;
+	    // 		    y += (position[3]-height)/2;
+	    // 		}
+	    // 	    }
+	    
 	    double xminfrac = (remapX(rect.x()) - x)/width;
 	    double xmaxfrac = (remapX(rect.x()+rect.width()) - x)/width;
 	    double yminfrac = (remapY(rect.y()+rect.height()) - y)/height;
 	    double ymaxfrac = (remapY(rect.y()) - y)/height;
-/* 	    dbout << "xrange " << xminfrac << "," << xmaxfrac;
- 	    dbout << "yrange " << yminfrac << "," << ymaxfrac;*/
+	    // 	    dbout << "xrange " << xminfrac << "," << xmaxfrac;
+	    //	    dbout << "yrange " << yminfrac << "," << ymaxfrac;
 	    xminfrac = qMax(0.,qMin(1.,xminfrac));
 	    xmaxfrac = qMax(0.,qMin(1.,xmaxfrac));
 	    yminfrac = qMax(0.,qMin(1.,yminfrac));
@@ -624,8 +617,8 @@ void HandleWindow::mouseReleaseEvent(QMouseEvent * e) {
 	    mean = (hp->Data()[1] + hp->Data()[0])/2;
 	    h->SetTwoVectorDefault("ylim",mean-range/2+yminfrac*range,mean-range/2+ymaxfrac*range);
 	    h->SetConstrainedStringDefault("ylimmode","manual");
-	    h->UpdateState();
-	    hfig->Repaint();
+	    //	    h->UpdateState();
+	    //	    hfig->Repaint();
 	  }
 	}
       } else {
@@ -646,48 +639,45 @@ void HandleWindow::mouseReleaseEvent(QMouseEvent * e) {
 	  mean = (hp->Data()[1] + hp->Data()[0])/2;
 	  h->SetTwoVectorDefault("ylim",mean-range/2,mean+range/2);
 	  h->SetConstrainedStringDefault("ylimmode","manual");
-	  h->UpdateState();
-	  hfig->Repaint();
+	  //	  h->UpdateState();
+	  //	  hfig->Repaint();
 	}
       }
     }
   } catch (Exception &e) {
   }
-  dirty = true;
+  hfig->markDirty();
 }
 
-void HandleWindow::markClean() {
-  dirty = false;
-}
-
-void HandleWindow::UpdateState() {
-  if (!initialized) return;
-  dirty = true;
-  HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
-  child->resize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
-  child->updateGeometry();
-  adjustSize();
-  if (hfig->StringCheck("renderer","opengl") && (QGLFormat::hasOpenGL())) {
-      if ( QString("QGLWidget").compare(child->metaObject()->className() ) != 0 ) {
-	  BaseFigureGL* newchild = new BaseFigureGL(this,hfig);
-	  //layout->setCurrentWidget(child);
-	  setCentralWidget(newchild); //deletes old child
-	  child = newchild;
-          //child->show();
-          child->updateGeometry();
-          //repaint();
-          //UpdateState();
-       }
-     } else if (hfig->StringCheck("renderer","painters")) {
-       if (QString("QWidget").compare(child->metaObject()->className()) != 0 ) {
-	   BaseFigureQt* newchild = new BaseFigureQt(this,hfig);
-	   //layout->setCurrentWidget(child);
-	   setCentralWidget(newchild); //deletes old child
-	   child = newchild;
-           //child->show();
-           child->updateGeometry();
-	   //UpdateState();
-       }
-  }
-  repaint();
-}
+// void HandleWindow::UpdateState() {
+//   if (!initialized) return;
+//   if (dirty) return;
+//   dirty = true;
+//   //   HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
+//   //   child->resize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
+//   //   child->updateGeometry();
+//   //   adjustSize();
+//   //   if (hfig->StringCheck("renderer","opengl") && (QGLFormat::hasOpenGL())) {
+//   //       if ( QString("QGLWidget").compare(child->metaObject()->className() ) != 0 ) {
+//   // 	  BaseFigureGL* newchild = new BaseFigureGL(this,hfig);
+//   // 	  //layout->setCurrentWidget(child);
+//   // 	  setCentralWidget(newchild); //deletes old child
+//   // 	  child = newchild;
+//   //           //child->show();
+//   //           child->updateGeometry();
+//   //           //repaint();
+//   //           //UpdateState();
+//   //        }
+//   //      } else if (hfig->StringCheck("renderer","painters")) {
+//   //        if (QString("QWidget").compare(child->metaObject()->className()) != 0 ) {
+//   // 	   BaseFigureQt* newchild = new BaseFigureQt(this,hfig);
+//   // 	   //layout->setCurrentWidget(child);
+//   // 	   setCentralWidget(newchild); //deletes old child
+//   // 	   child = newchild;
+//   //            //child->show();
+//   //            child->updateGeometry();
+//   // 	   //UpdateState();
+//   //        }
+//   //   }
+//   //  update();
+// }

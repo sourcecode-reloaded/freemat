@@ -18,9 +18,11 @@
  */
 #ifndef __HandleFigure_hpp__
 #define __HandleFigure_hpp__
+
 #include "HandleObject.hpp"
 
 class HandleWindow;
+
 //Figure
 //   contains one or more axes
 //   to redraw the figure, we proxy our draws to the axes
@@ -31,24 +33,15 @@ class HandleWindow;
 //     set the transformation & clipping
 //     then draw the children
 class HandleFigure : public HandleObject {
-  int m_width, m_height;
-  bool resized;
-  void LoadDefaultColorMap();
   HandleWindow *m_win;
+  void LoadDefaultColorMap();
 public:
   HandleFigure(HandleWindow *win);
-  virtual ~HandleFigure() {}
-  virtual void ConstructProperties();
-  bool Resized();
-  int GetWidth() {return m_width;}
-  int GetHeight() {return m_height;}
-  virtual void UpdateState();
-  virtual void PaintMe(RenderEngine &gc);
-  virtual void resizeGL(int width, int height);
-  void SetupDefaults();
-  void SetSize();
-  void Repaint();
   HandleWindow* ParentWindow() {return m_win;}
+  void PaintMe(RenderEngine& gc);
+  virtual void ConstructProperties();
+  void SetupDefaults();
+  void Resize(int width,int height);
 };
 
 #endif

@@ -116,6 +116,6 @@ function k = tplotvector(handle,x,y,z,lineprops)
   % Get the colororder
   colororder = get(handle,'colororder');
   % select the row using a modulo
-  ndxmod = uint32(mod(ndx-1,size(colororder,1))+1);
+  ndxmod = round(mod(ndx-1,size(colororder,1))+1);
   k = hline('xdata',x,'ydata',y,'zdata',z,'color',colororder(ndxmod,:),lineprops{:});
 

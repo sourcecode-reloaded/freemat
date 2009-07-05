@@ -104,7 +104,7 @@ end
 position = get(ax,'position');
 new_width = newsize(2)/position(3);
 new_height = newsize(1)/position(4);
-set(gcf,'figsize',[new_width,new_height]);
+sizefig(new_width,new_height);
 
 function handle = get_image_child(ax)
 children = get(ax,'children');

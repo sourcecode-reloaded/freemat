@@ -23,4 +23,4 @@
 % Copyright (c) 2005 Samit Basu
 % Licensed under the GPL
 function y = idiv(a,b)
-  y = int32(a./b);
+  y = fix(a./b);

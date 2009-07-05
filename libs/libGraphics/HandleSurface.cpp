@@ -18,6 +18,7 @@
  */
 #include "HandleSurface.hpp"
 #include "HandleAxis.hpp"
+#include "HandleFigure.hpp"
 #include <qgl.h>
 
 HandleSurface::HandleSurface() {
@@ -29,20 +30,40 @@ HandleSurface::~HandleSurface() {
 }
 
 QVector<double> HandleSurface::GetLimits() {
+  if (HasChanged("xdata"))
+    ToManual("xdatamode");
+  if (HasChanged("ydata"))
+    ToManual("ydatamode");
+  if (HasChanged("cdata")) 
+    ToManual("cdatamode");
   QVector<double> limits;
-  UpdateState();
-  Array xdata(ArrayPropertyLookup("xdata"));
-  Array ydata(ArrayPropertyLookup("ydata"));
   Array zdata(ArrayPropertyLookup("zdata"));
-  Array cdata(ArrayPropertyLookup("cdata"));
-  limits.push_back(ArrayMin(xdata));
-  limits.push_back(ArrayMax(xdata));
-  limits.push_back(ArrayMin(ydata));
-  limits.push_back(ArrayMax(ydata));
+  if (IsAuto("xdatamode")) {
+    limits.push_back(1);
+    limits.push_back(zdata.columns());
+  } else {
+    Array xdata(ArrayPropertyLookup("xdata"));
+    limits.push_back(ArrayMin(xdata));
+    limits.push_back(ArrayMax(xdata));
+  }
+  if (IsAuto("ydatamode")) {
+    limits.push_back(1);
+    limits.push_back(zdata.rows());
+  } else {
+    Array ydata(ArrayPropertyLookup("ydata"));
+    limits.push_back(ArrayMin(ydata));
+    limits.push_back(ArrayMax(ydata));
+  }
   limits.push_back(ArrayMin(zdata));
   limits.push_back(ArrayMax(zdata));
-  limits.push_back(ArrayMin(cdata));
-  limits.push_back(ArrayMax(cdata));
+  if (IsAuto("cdatamode")) {
+    limits.push_back(ArrayMin(zdata));
+    limits.push_back(ArrayMax(zdata));
+  } else {
+    Array cdata(ArrayPropertyLookup("cdata"));
+    limits.push_back(ArrayMin(cdata));
+    limits.push_back(ArrayMax(cdata));
+  }
   QVector<double> alphadata(VectorPropertyLookup("alphadata"));
   limits.push_back(VecMin(alphadata));
   limits.push_back(VecMax(alphadata));
@@ -261,7 +282,7 @@ void HandleSurface::UpdateState() {
     ToManual("xdatamode");
   if (HasChanged("ydata"))
     ToManual("ydatamode");
-  if (HasChanged("cdata"))
+  if (HasChanged("cdata")) 
     ToManual("cdatamode");
   if (IsAuto("xdatamode")) 
     DoAutoXMode();
@@ -269,7 +290,31 @@ void HandleSurface::UpdateState() {
     DoAutoYMode();
   if (IsAuto("cdatamode"))
     DoAutoCMode();
-  HandleImage::UpdateCAlphaData();
+  HandleAxis *ax = GetParentAxis();
+  HandleFigure *fig = GetParentFigure();
+  if (HasChanged("cdata") || ax->HasChanged("clim") || 
+      fig->HasChanged("colormap") || HasChanged("cdatamapping")
+      || HasChanged("zdata"))
+    {
+      UpdateCAlphaData();
+      fig->markDirty();
+    }
+  if (HasChanged("xdata") || HasChanged("ydata") || HasChanged("zdata")
+      || HasChanged("facecolor") || HasChanged("facealpha") || HasChanged("cdata")
+      || ax->HasChanged("clim") || fig->HasChanged("colormap") || 
+      HasChanged("cdatamapping") ||  HasChanged("edgecolor") ||
+      HasChanged("edgealpha")) { 
+    m_surfquads = BuildQuadsNoTexMap((HPConstrainedStringColor*) 
+				     LookupProperty("facecolor"),
+				     (HPConstrainedStringScalar*)
+				     LookupProperty("facealpha"));
+    m_edgequads = BuildQuadsNoTexMap((HPConstrainedStringColor*) 
+				     LookupProperty("edgecolor"),
+				     (HPConstrainedStringScalar*)
+				     LookupProperty("edgealpha"));
+    fig->markDirty();
+  }
+  ClearAllChanged();
 }
 
 /*
@@ -416,18 +461,12 @@ QVector<QVector<cpoint> > HandleSurface::BuildQuadsNoTexMap(HPConstrainedStringC
   // 1
   // 2
 
-
-  //    qDebug("retval size is %d",retval.size());
   if (cp->Is("colorspec") || ap->Is("scalar")) 
     delete[] dummyline;
   return retval;
 }
 
-QVector<QVector<cpoint> > Saved_surfquads;
-QVector<QVector<cpoint> > Saved_edgequads;
-
 void HandleSurface::PaintMe(RenderEngine& gc) {
-  UpdateState();
   if (StringCheck("visible","off"))
     return;
 
@@ -438,81 +477,7 @@ void HandleSurface::PaintMe(RenderEngine& gc) {
   if (StringCheck("facecolor","texturemap")) return;
   if (StringCheck("facealpha","texturemap")) return;
   // A quadstrip is defined by its 
-  QVector<QVector<cpoint> > surfquads(BuildQuadsNoTexMap((HPConstrainedStringColor*) 
-								 LookupProperty("facecolor"),
-								 (HPConstrainedStringScalar*)
-								 LookupProperty("facealpha")));
-  QVector<QVector<cpoint> > edgequads(BuildQuadsNoTexMap((HPConstrainedStringColor*) 
-								 LookupProperty("edgecolor"),
-								 (HPConstrainedStringScalar*)
-								 LookupProperty("edgealpha")));
-
-  HandleAxis *ax = GetParentAxis();
-  if( ax->StringCheck("nextplot","add") ){
-      Saved_surfquads += surfquads;
-      Saved_edgequads += edgequads;
-  }
-  else{
-      Saved_surfquads = surfquads;
-      Saved_edgequads = edgequads;
-  }
-  gc.quadStrips(Saved_surfquads,StringCheck("facecolor","flat"),
-		Saved_edgequads,StringCheck("edgecolor","flat"));
-#if 0
-  HPAutoFlatColor *ec = (HPAutoFlatColor*) LookupProperty("markeredgecolor");
-  HPAutoFlatColor *fc = (HPAutoFlatColor*) LookupProperty("markerfacecolor");
-  QVector<double> edgecolor;
-  QVector<double> facecolor;
-  if (ec->Is("colorspec")) 
-    edgecolor = ec->ColorSpec();
-  else
-    edgecolor.push_back(-1);
-  if (fc->Is("colorspec")) 
-    facecolor = fc->ColorSpec();
-  else
-    facecolor.push_back(-1);
-
-  RenderEngine::SymbolType typ = StringToSymbol(StringPropertyLookup("marker"));
-  double sze = ScalarPropertyLookup("markersize")/2.0;
-  // Make sure there's something to draw...
-  if ((typ != RenderEngine::None) || (edgecolor[0] != -1) || (facecolor[0] != -1)) {
-    // Calculate the u/v coordinates (pixels)
-    QVector<double> uc;
-    QVector<double> vc;
-    QVector<double> zc;
-    for (int i=0;i<rows*cols;i++) {
-      double u, v;
-      bool clipped;
-      gc.toPixels(xdp[i],ydp[i],zdp[i],u,v,clipped);
-      if (!clipped) {
-	uc.push_back(u); vc.push_back(v); zc.push_back(zdp[i]);
-      }
-    }
-    //       gc.setupDirectDraw();
-    //       gc.depth(true);
-    //       for (int i=0;i<uc.size();i++) 
-    // 	DrawSymbol(gc,typ,uc[i],vc[i],zc[i],sze,edgecolor,facecolor,width);
-    //       for (int i=0;i<uc.size();i++) 
-    // 	DrawSymbol(gc,typ,xdp[i],ydp[i],zdp[i],sze,edgecolor,facecolor,width);
-    //       gc.releaseDirectDraw();
-  }    
-    
-  //       glColor3f(0,0,0);
-  //       glBegin(GL_LINE_LOOP);
-  //       for (int j=0;j<cols-1;j++) {
-  // 	glVertex3f(xdp[i+j*rows],ydp[i+j*rows],zdp[i+j*rows]);
-  // 	glVertex3f(xdp[i+1+j*rows],ydp[i+1+j*rows],zdp[i+1+j*rows]);
-  // 	glVertex3f(xdp[i+1+(j+1)*rows],ydp[i+1+(j+1)*rows],
-  // 		   zdp[i+1+(j+1)*rows]);
-  // 	glVertex3f(xdp[i+(j+1)*rows],ydp[i+(j+1)*rows],zdp[i+(j+1)*rows]);
-  //       }
-  //       glEnd();
-  //    }
-#endif
+  gc.quadStrips(m_surfquads,StringCheck("facecolor","flat"),
+		m_edgequads,StringCheck("edgecolor","flat"));
 }
 
-void HandleSurface::AxisPaintingDone( void )
-{
-    Saved_surfquads.clear();
-    Saved_edgequads.clear();
-}

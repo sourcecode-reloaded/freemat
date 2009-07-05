@@ -683,7 +683,6 @@ src/toolbox/graph/newplot.m svn_keywords=Author+Date+Id+Revision svn_eol_002dsty
 src/toolbox/graph/plot.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/toolbox/graph/plot3.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/toolbox/graph/point.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-src/toolbox/graph/sizefig.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/toolbox/graph/subplot.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/toolbox/graph/surf.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/toolbox/graph/testtube.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native

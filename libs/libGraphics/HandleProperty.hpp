@@ -22,6 +22,7 @@
 #include "Array.hpp"
 #include "Algorithms.hpp"
 #include <string>
+#include <QColor>
 
 class HandleProperty {
   bool modified;
@@ -185,6 +186,7 @@ public:
   virtual void Set(Array);    
   Array Get();    
   bool IsNone() {return (data[0]<0);}
+  QColor asQColor() {return QColor((int)(data[0]*255),(int)(data[1]*255),(int)(data[2]*255));}
 };
 
 class HPColorVector : public HPVector {

@@ -36,6 +36,7 @@ HistoryWidget::HistoryWidget(QWidget *parent) : QDockWidget("History",parent) {
   m_popup = new QMenu;
   m_popup->addAction("Execute");
   m_popup->addAction("Clear All");
+  m_popup->addAction("Copy");
   m_flist->setSelectionMode(QAbstractItemView::ExtendedSelection);
   m_flist->scrollToBottom();
   m_last_added = m_parent;
@@ -49,8 +50,16 @@ void HistoryWidget::contextMenuEvent(QContextMenuEvent *e) {
     if (items.size() > 0)
       for (int i=0;i<items.size();i++)
 	emit sendCommand(items[i]->text(0));
-  } else if (p->text() == "Clear All")
+  } else if (p->text() == "Clear All") {
     clear();
+  } else if (p->text() == "Copy") {
+    QString txt;
+    QList<QTreeWidgetItem *>items = m_flist->selectedItems();
+    if (items.size() > 0)
+      for (int i=0;i<items.size();i++)
+	txt += items[i]->text(0) + "\n";
+    QApplication::clipboard()->setText(txt,QClipboard::Clipboard);
+  }
   
 }
 

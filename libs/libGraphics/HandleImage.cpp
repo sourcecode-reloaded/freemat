@@ -18,11 +18,11 @@
  */
 #include "HandleImage.hpp"
 #include "HandleAxis.hpp"
+#include "HandleFigure.hpp"
 #include <QMatrix>
 #include "DebugStream.hpp" 
 
 HandleImage::HandleImage() {
-  MTr.setMatrix(1,0,0,1,0,0);
   ConstructProperties();
   SetupDefaults();
 }
@@ -31,8 +31,6 @@ HandleImage::~HandleImage() {
 }
   
 QVector<double> HandleImage::GetLimits() {
-  UpdateState();
-
   HPTwoVector *xp = (HPTwoVector *) LookupProperty("xdata");
   HPTwoVector *yp = (HPTwoVector *) LookupProperty("ydata");
   QVector<double> limits;
@@ -153,7 +151,6 @@ void HandleImage::SetupDefaults() {
 double* HandleImage::RGBExpandImage(const double *dp, 
 				    int rows, int cols,
 				    bool floatData) {
-  //    qDebug("RGBExpand");
   // Allocate an output array of the right size
   double *ret = new double[rows*cols*3];
   // Retrieve the colormap
@@ -162,9 +159,11 @@ double* HandleImage::RGBExpandImage(const double *dp,
   QVector<double> clim(((HandleObject*)ap)->VectorPropertyLookup("clim"));
   double clim_min(qMin(clim[0],clim[1]));
   double clim_max(qMax(clim[0],clim[1]));
+  if (clim_min == clim_max) return ret;
   // Calculate the colormap length
   int cmaplen(cmap.size()/3);
-  if (StringCheck("cdatamapping","direct")) {
+  if (cmaplen < 1) return ret;
+  if (StringCheck("cdatamapping","direct")) { 
     for (int i=0;i<rows*cols;i++) {
       int ndx;
       if (floatData)
@@ -282,7 +281,13 @@ void HandleImage::UpdateCAlphaData() {
 }
 
 void HandleImage::UpdateState() {
-  UpdateCAlphaData();
+  HandleAxis *ax = GetParentAxis();
+  HandleFigure *fig = GetParentFigure();
+  if (HasChanged("cdata") || ax->HasChanged("clim") || 
+      fig->HasChanged("colormap") || HasChanged("cdatamapping")) {
+    UpdateCAlphaData();
+    fig->markDirty();
+  }
   Array cdata(ArrayPropertyLookup("cdata"));
   HPTwoVector *xp = (HPTwoVector *) LookupProperty("xdata");
   if (xp->Data().empty()) {
@@ -298,34 +303,20 @@ void HandleImage::UpdateState() {
     else
       SetTwoVectorDefault("ydata",1,2);
   }
-  // Need to check reverse flags for x and y axis... and flip the image appropriately
-  HandleAxis *ax = GetParentAxis();
-  bool xflip = false;
-  bool yflip = false;
-  xflip = (ax->StringCheck("xdir","reverse"));
-  // Reverse the yflip bit - so that images naturally have the first row at the top
-  yflip = !(ax->StringCheck("ydir","reverse"));
-  double m11, m22;
-  if (xflip)
-    m11 = -1;
-  else
-    m11 = 1;
-  if (yflip)
-    m22 = -1;
-  else
-    m22 = 1;
-  MTr.setMatrix(m11,0,0,m22,0,0);
+  ClearAllChanged();
 }
 
 void HandleImage::PaintMe(RenderEngine& gc) {
   if (StringCheck("visible","off"))
     return;
-  dbout << "Paint Me"; 
   HPTwoVector *xp = (HPTwoVector *) LookupProperty("xdata");
   HPTwoVector *yp = (HPTwoVector *) LookupProperty("ydata");
   HandleAxis *ax = GetParentAxis();
   HPTwoVector *xlim = (HPTwoVector *) ax->LookupProperty("xlim");
   HPTwoVector *ylim = (HPTwoVector *) ax->LookupProperty("ylim");
+  bool xflip = (ax->StringCheck("xdir","reverse"));
+  // Reverse the yflip bit - so that images naturally have the first row at the top
+  bool yflip = (ax->StringCheck("ydir","reverse"));
 
-  gc.drawImage(xp, yp, xlim, ylim, img.transformed(MTr));
+  gc.drawImage(xp, yp, xlim, ylim, xflip, yflip, img);
 }

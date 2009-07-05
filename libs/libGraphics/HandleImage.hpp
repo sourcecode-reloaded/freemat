@@ -37,7 +37,6 @@ public:
   virtual void SetupDefaults();
   virtual void UpdateState();
   virtual void PaintMe(RenderEngine& gc);
-  virtual void AxisPaintingDone( void ){};
   QVector<double> GetLimits();
   void UpdateCAlphaData();
 };

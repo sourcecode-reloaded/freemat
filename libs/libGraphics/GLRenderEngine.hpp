@@ -34,6 +34,8 @@ public:
 		 double width, double height);
   ~GLRenderEngine();
   QGLWidget* widget();
+  virtual double width() {return m_width;} 
+  virtual double height() {return m_height;} 
   virtual void clear(QVector<double>);
   virtual void toPixels(double x, double y, double z, int &a, int &b);
   virtual void toPixels(double x, double y, double z, double &a, double &b);
@@ -90,7 +92,9 @@ public:
   virtual void circleFill(double x1, double y1, double radius); 
   virtual void drawImage(double x1, double y1, double x2, double y2,
 			 QImage pic);
-  virtual void drawImage(HPTwoVector* xp, HPTwoVector* yp, HPTwoVector* xlim, HPTwoVector* ylim,
+  virtual void drawImage(HPTwoVector* xp, HPTwoVector* yp, 
+			 HPTwoVector* xlim, HPTwoVector* ylim,
+			 bool xflip, bool yflip,
 			 QImage pic);
   virtual void quadStrips(QVector<QVector<cpoint> > faces, bool flatfaces,
 			  QVector<QVector<cpoint> > edges, bool flatedges);
