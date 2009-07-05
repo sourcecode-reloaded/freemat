@@ -43,9 +43,6 @@ ArrayVector CeilFunction(int, const ArrayVector&);
 ArrayVector CellFunction(int, const ArrayVector&);
 ArrayVector ClearFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector ConjFunction(int, const ArrayVector&);
-ArrayVector InfFunction(int, const ArrayVector&);
-ArrayVector NaNFunction(int, const ArrayVector&);
-ArrayVector NaNFunction(int, const ArrayVector&);
 ArrayVector IFunction(int, const ArrayVector&);
 ArrayVector IFunction(int, const ArrayVector&);
 ArrayVector PiFunction(int, const ArrayVector&);
@@ -200,7 +197,6 @@ ArrayVector DeblankFunction(int, const ArrayVector&);
 ArrayVector StrTrimFunction(int, const ArrayVector&);
 ArrayVector StrFindFunction(int, const ArrayVector&);
 ArrayVector Num2StrFunction(int, const ArrayVector&);
-//ArrayVector Str2NumFunction(int, const ArrayVector&);
 ArrayVector SscanfFunction(int, const ArrayVector&);
 ArrayVector StructFunction(int, const ArrayVector&);
 ArrayVector SumFunction(int, const ArrayVector&);
@@ -221,10 +217,10 @@ ArrayVector CoshFunction(int, const ArrayVector&);
 ArrayVector SinhFunction(int, const ArrayVector&);
 ArrayVector ExpFunction(int, const ArrayVector&);
 ArrayVector ExpM1Function(int, const ArrayVector&);
-ArrayVector CosdFunction(int, const ArrayVector&);
 ArrayVector CosFunction(int, const ArrayVector&);
-ArrayVector SindFunction(int, const ArrayVector&);
+ArrayVector CosdFunction(int, const ArrayVector&);
 ArrayVector SinFunction(int, const ArrayVector&);
+ArrayVector SindFunction(int, const ArrayVector&);
 ArrayVector TanFunction(int, const ArrayVector&);
 ArrayVector TandFunction(int, const ArrayVector&);
 ArrayVector CscFunction(int, const ArrayVector&);
@@ -244,6 +240,10 @@ ArrayVector XMLReadFunction(int, const ArrayVector&);
 ArrayVector HTMLReadFunction(int, const ArrayVector&);
 ArrayVector URLWriteFunction(int, const ArrayVector&);
 ArrayVector XNrm2Function(int, const ArrayVector&);
+ArrayVector InfFunction(int, const ArrayVector&);
+ArrayVector InfFunction(int, const ArrayVector&);
+ArrayVector NaNFunction(int, const ArrayVector&);
+ArrayVector NaNFunction(int, const ArrayVector&);
 ArrayVector ZerosFunction(int, const ArrayVector&);
 ArrayVector ErfcFunction(int, const ArrayVector&);
 ArrayVector ErfFunction(int, const ArrayVector&);
@@ -262,9 +262,17 @@ ArrayVector FuncPtrFevalFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector FuncPtrSubsasgnFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector LoadLibFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector ImportFunction(int, const ArrayVector&, Interpreter*);
+ArrayVector BlaslibFunction(int, const ArrayVector&);
+ArrayVector GLDefMaterialFunction(int, const ArrayVector&);
+ArrayVector GLLinesFunction(int, const ArrayVector&);
+ArrayVector GLClumpFunction(int, const ArrayVector&);
+ArrayVector GLAssemblyFunction(int, const ArrayVector&);
+ArrayVector GLNodeFunction(int, const ArrayVector&);
+ArrayVector GLShowFunction(int, const ArrayVector&);
 ArrayVector DrawNowFunction(int, const ArrayVector&);
 ArrayVector HFigureFunction(int, const ArrayVector&);
 ArrayVector HAxesFunction(int, const ArrayVector&);
+ArrayVector SizeFigFunction(int, const ArrayVector&);
 ArrayVector HSetFunction(int, const ArrayVector&);
 ArrayVector HGetFunction(int, const ArrayVector&);
 ArrayVector HLineFunction(int, const ArrayVector&);
@@ -282,17 +290,9 @@ ArrayVector HPropertyValidateFunction(int, const ArrayVector&);
 ArrayVector HCloseFunction(int, const ArrayVector&);
 ArrayVector HCopyFunction(int, const ArrayVector&);
 ArrayVector HPrintFunction(int, const ArrayVector&);
-ArrayVector HPointFunction(int, const ArrayVector&);
 ArrayVector HTextBitmapFunction(int, const ArrayVector&);
 ArrayVector HRawPlotFunction(int, const ArrayVector&);
-ArrayVector GLNewWinFunction(int, const ArrayVector&);
-ArrayVector GLDefMaterialFunction(int, const ArrayVector&);
-ArrayVector GLAssemblyFunction(int, const ArrayVector&);
-ArrayVector GLNodeFunction(int, const ArrayVector&);
-ArrayVector GLClumpFunction(int, const ArrayVector&);
-ArrayVector GLLinesFunction(int, const ArrayVector&);
-ArrayVector GLShowFunction(int, const ArrayVector&);
-ArrayVector VolViewFunction(int, const ArrayVector&);
+ArrayVector HPointFunction(int, const ArrayVector&);
 ArrayVector HIs2DViewFunction(int, const ArrayVector&);
 ArrayVector EditorFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector EditFunction(int, const ArrayVector&, Interpreter*);
@@ -307,7 +307,6 @@ ArrayVector ThreadKillFunction(int, const ArrayVector&);
 ArrayVector ThreadFreeFunction(int, const ArrayVector&);
 ArrayVector ClcFunction(int, const ArrayVector&);
 ArrayVector ProfilerFunction(int, const ArrayVector&);
-ArrayVector BlaslibFunction(int, const ArrayVector&);
 
 
 void LoadBuiltinFunctions(Context *context, bool guiflag) {
@@ -344,9 +343,6 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("cell",CellFunction,-1,1,NULL);
   context->addSpecialFunction("clear",ClearFunction,-1,0,NULL);
   context->addFunction("conj",ConjFunction,1,1,"x",NULL);
-  context->addFunction("inf",InfFunction,-1,1,NULL);
-  context->addFunction("nan",NaNFunction,-1,1,NULL);
-  context->addFunction("NaN",NaNFunction,-1,1,NULL);
   context->addFunction("i",IFunction,0,1,NULL);
   context->addFunction("j",IFunction,0,1,NULL);
   context->addFunction("pi",PiFunction,0,1,NULL);
@@ -505,7 +501,6 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("strtrim",StrTrimFunction,1,1,"x",NULL);
   context->addFunction("strfind",StrFindFunction,2,1,"x","pattern",NULL);
   context->addFunction("num2str",Num2StrFunction,2,1,"x","format",NULL);
-  //  context->addFunction("str2num",Str2NumFunction,1,1,"string",NULL);
   context->addFunction("sscanf",SscanfFunction,2,-1,"text","format",NULL);
   context->addFunction("struct",StructFunction,-1,1,NULL);
   context->addFunction("sum",SumFunction,2,1,"x","dim",NULL);
@@ -526,10 +521,10 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("sinh",SinhFunction,1,1,"x",NULL);
   context->addFunction("exp",ExpFunction,1,1,"x",NULL);
   context->addFunction("expm1",ExpM1Function,1,1,"x",NULL);
-  context->addFunction("cosd",CosdFunction,1,1,"x",NULL);
   context->addFunction("cos",CosFunction,1,1,"x",NULL);
-  context->addFunction("sind",SindFunction,1,1,"x",NULL);
+  context->addFunction("cosd",CosdFunction,1,1,"x",NULL);
   context->addFunction("sin",SinFunction,1,1,"x",NULL);
+  context->addFunction("sind",SindFunction,1,1,"x",NULL);
   context->addFunction("tan",TanFunction,1,1,"x",NULL);
   context->addFunction("tand",TandFunction,1,1,"x",NULL);
   context->addFunction("csc",CscFunction,1,1,"x",NULL);
@@ -549,6 +544,10 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("htmlread",HTMLReadFunction,1,1,"filename",NULL);
   context->addFunction("urlwrite",URLWriteFunction,3,2,"url","filename","timeout",NULL);
   context->addFunction("xnrm2",XNrm2Function,1,1,"A",NULL);
+  context->addFunction("inf",InfFunction,-1,1,NULL);
+  context->addFunction("Inf",InfFunction,-1,1,NULL);
+  context->addFunction("nan",NaNFunction,-1,1,NULL);
+  context->addFunction("NaN",NaNFunction,-1,1,NULL);
   context->addFunction("zeros",ZerosFunction,-1,1,NULL);
   context->addFunction("erfc",ErfcFunction,1,1,"x",NULL);
   context->addFunction("erf",ErfFunction,1,1,"x",NULL);
@@ -567,12 +566,27 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addSpecialFunction("@functionpointer:subsasgn",FuncPtrSubsasgnFunction,3,1,"x","s","y",NULL);
   context->addSpecialFunction("loadlib",LoadLibFunction,5,0,"libfile","symbolname","functionname","nargin","nargout",NULL);
   context->addSpecialFunction("import",ImportFunction,5,0,"libraryname","symbol","function","returntype","arguments",NULL);
+  context->addFunction("blaslib",BlaslibFunction,-1,0,NULL);
+   if (guiflag)
+     context->addGfxFunction("gldefmaterial",GLDefMaterialFunction,5,0,"name","ambient","diffuse","specular","shininess",NULL);
+   if (guiflag)
+     context->addGfxFunction("gllines",GLLinesFunction,3,0,"name","vector","color",NULL);
+   if (guiflag)
+     context->addGfxFunction("glclump",GLClumpFunction,2,0,"name","vector",NULL);
+   if (guiflag)
+     context->addGfxFunction("glassembly",GLAssemblyFunction,-1,0,NULL);
+   if (guiflag)
+     context->addGfxFunction("glnode",GLNodeFunction,3,0,"name","material","pointset",NULL);
+   if (guiflag)
+     context->addGfxFunction("glshow",GLShowFunction,2,0,"name","scale",NULL);
    if (guiflag)
      context->addGfxFunction("drawnow",DrawNowFunction,0,0,NULL);
    if (guiflag)
      context->addGfxFunction("figure",HFigureFunction,1,1,"number",NULL);
    if (guiflag)
      context->addGfxFunction("axes",HAxesFunction,-1,1,NULL);
+   if (guiflag)
+     context->addGfxFunction("sizefig",SizeFigFunction,2,0,"width","height",NULL);
    if (guiflag)
      context->addGfxFunction("set",HSetFunction,-1,0,NULL);
    if (guiflag)
@@ -608,25 +622,11 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
    if (guiflag)
      context->addGfxFunction("print",HPrintFunction,-1,0,NULL);
    if (guiflag)
+     context->addGfxFunction("htextbitmap",HTextBitmapFunction,3,1,"fontname","size","text",NULL);
+   if (guiflag)
+     context->addGfxFunction("hrawplot",HRawPlotFunction,2,0,"filename","commands",NULL);
+   if (guiflag)
      context->addGfxFunction("hpoint",HPointFunction,0,1,NULL);
-   if (guiflag)
-     context->addGfxFunction("htextbitmap",HTextBitmapFunction,3,1,"font","size","text",NULL);
-   if (guiflag)
-     context->addGfxFunction("hrawplot",HRawPlotFunction,4,0,"filename","width","height","commands",NULL);
-   if (guiflag)
-     context->addGfxFunction("gldefmaterial",GLDefMaterialFunction,5,0,"name","ambient","diffuse","specular","shininess",NULL);
-   if (guiflag)
-     context->addGfxFunction("glassembly",GLAssemblyFunction,-1,0,NULL);
-   if (guiflag)
-     context->addGfxFunction("glnode",GLNodeFunction,3,0,"name","material","pointset",NULL);
-   if (guiflag)
-     context->addGfxFunction("glclump",GLClumpFunction,2,0,"name","clump",NULL);
-   if (guiflag)
-     context->addGfxFunction("gllines",GLLinesFunction,3,0,"name","lines","color",NULL);
-   if (guiflag)
-     context->addGfxFunction("glshow",GLShowFunction,2,0,"name","scale",NULL);
-   if (guiflag)
-     context->addGfxFunction("volview",VolViewFunction,4,0,"vol","scalar","map","colors",NULL);
    if (guiflag)
      context->addGfxFunction("is2dview",HIs2DViewFunction,1,1,"handle",NULL);
    if (guiflag)
@@ -647,6 +647,5 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
    if (guiflag)
      context->addGfxFunction("clc",ClcFunction,0,0,NULL);
   context->addFunction("profiler",ProfilerFunction,-1,0,NULL);
-  context->addFunction("blaslib",BlaslibFunction,-1,0,NULL);
 }
 

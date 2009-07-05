@@ -39,7 +39,7 @@ end
 cmap = get(gcf,'colormap'); N = size(cmap,1);
 cmap = linspace(0,N,N)';
 cmap = repmat(cmap,[1,4]);
-han = himage('ydata',get(axhan,'clim'),'cdata',flipud(cmap));
+han = himage('ydata',get(axhan,'clim'),'cdata',cmap);
 axis('tight');
 axes(axhan);
 

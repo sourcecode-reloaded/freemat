@@ -2090,6 +2090,12 @@ void HandleAxis::UpdateState() {
     HPThreeVector *tv = (HPThreeVector*) LookupProperty("cameraupvector");
     tv->Value(0,1,0);
   }
+  HPHandles *children = (HPHandles*) LookupProperty("children");
+  QVector<unsigned> handles(children->Data());
+  for (int i=0;i<handles.size();i++) {
+    HandleObject *fp = LookupHandleObject(handles[i]);
+    fp->UpdateState();
+  }  
   ClearAllChanged();
 }
 
@@ -2509,11 +2515,6 @@ void HandleAxis::DrawChildren(RenderEngine& gc) {
   for (int i=0;i<handles.size();i++) {
     HandleObject *fp = LookupHandleObject(handles[i]);
     fp->PaintMe(gc);
-  }
-  //notify all axes that painting is done and it is time to cleanup.
-  for (int i=0;i<handles.size();i++) {
-    HandleObject *fp = LookupHandleObject(handles[i]);
-    fp->AxisPaintingDone();
   }
 }
 

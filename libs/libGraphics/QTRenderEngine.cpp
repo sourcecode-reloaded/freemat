@@ -144,7 +144,7 @@ QVector<quad3d> QTRenderEngine::MapQuadsEdgesOnly(QVector<QVector<cpoint> > &edg
 
 
 QVector<quad3d> QTRenderEngine::MapQuads(QVector<QVector<cpoint> > &faces,
-					     QVector<QVector<cpoint> > &edges) {
+					 QVector<QVector<cpoint> > &edges) {
   QVector<quad3d> retval;
   if (edges.size() == 0) return MapQuadsFacesOnly(faces);
   if (faces.size() == 0) return MapQuadsEdgesOnly(edges);

@@ -339,6 +339,7 @@ void HandleWindow::GetClick(int &x, int &y) {
   // Run the event loop
   int save_mode = mode;
   mode = click_mode;
+  hfig->markDirty();
   m_loop.exec();
   x = click_x;
   y = click_y;
@@ -369,8 +370,8 @@ HandleAxis* GetContainingAxis(HandleFigure *fig, int x, int y) {
 void HandleWindow::mousePressEvent(QMouseEvent* e) {
   try {
     if (mode == click_mode) {
-      click_x = e->x();
-      click_y = e->y();
+      click_x = e->x() - centralWidget()->geometry().x();
+      click_y = e->y() - centralWidget()->geometry().y();
       m_loop.exit();
     }
     if ((mode == zoom_mode) && (e->button() == Qt::LeftButton))  {

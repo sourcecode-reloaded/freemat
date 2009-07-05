@@ -18,6 +18,7 @@
  */
 #include "HandleImage.hpp"
 #include "HandleAxis.hpp"
+#include "HandleFigure.hpp"
 #include <QMatrix>
 #include "DebugStream.hpp" 
 
@@ -150,7 +151,6 @@ void HandleImage::SetupDefaults() {
 double* HandleImage::RGBExpandImage(const double *dp, 
 				    int rows, int cols,
 				    bool floatData) {
-  qDebug("RGBExpand");
   // Allocate an output array of the right size
   double *ret = new double[rows*cols*3];
   // Retrieve the colormap
@@ -163,7 +163,7 @@ double* HandleImage::RGBExpandImage(const double *dp,
   // Calculate the colormap length
   int cmaplen(cmap.size()/3);
   if (cmaplen < 1) return ret;
-  if (StringCheck("cdatamapping","direct")) {
+  if (StringCheck("cdatamapping","direct")) { 
     for (int i=0;i<rows*cols;i++) {
       int ndx;
       if (floatData)
@@ -281,7 +281,13 @@ void HandleImage::UpdateCAlphaData() {
 }
 
 void HandleImage::UpdateState() {
-  if (HasChanged("cdata")) UpdateCAlphaData();
+  HandleAxis *ax = GetParentAxis();
+  HandleFigure *fig = GetParentFigure();
+  if (HasChanged("cdata") || ax->HasChanged("clim") || 
+      fig->HasChanged("colormap") || HasChanged("cdatamapping")) {
+    UpdateCAlphaData();
+    fig->markDirty();
+  }
   Array cdata(ArrayPropertyLookup("cdata"));
   HPTwoVector *xp = (HPTwoVector *) LookupProperty("xdata");
   if (xp->Data().empty()) {
@@ -297,12 +303,12 @@ void HandleImage::UpdateState() {
     else
       SetTwoVectorDefault("ydata",1,2);
   }
+  ClearAllChanged();
 }
 
 void HandleImage::PaintMe(RenderEngine& gc) {
   if (StringCheck("visible","off"))
     return;
-  dbout << "Paint Me"; 
   HPTwoVector *xp = (HPTwoVector *) LookupProperty("xdata");
   HPTwoVector *yp = (HPTwoVector *) LookupProperty("ydata");
   HandleAxis *ax = GetParentAxis();

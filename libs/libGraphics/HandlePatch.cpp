@@ -379,26 +379,16 @@ void HandlePatch::BuildPolygons( FaceList& faces )
 #undef pVertD
 }
 
-FaceList Saved_faces;
+void HandlePatch::UpdateState() {
+  m_faces.clear();
+  if (HasChanged("faces") || HasChanged("vertices") || HasChanged("facevertexcdata")
+      || HasChanged("facecolor") || HasChanged("edgecolor")) 
+    BuildPolygons(m_faces);
+}
 
 void HandlePatch::PaintMe(RenderEngine& gc) {
   if (StringCheck("visible","off"))
     return;
-
-  FaceList faces;
-  BuildPolygons( faces );
-
-  HandleAxis *ax = GetParentAxis();
-  if( ax->StringCheck("nextplot","add") ){
-    Saved_faces += faces;
-  }
-  else{
-      Saved_faces = faces;
-  }
-  gc.drawPatch(Saved_faces);
+  gc.drawPatch(m_faces);
 }
 
-void HandlePatch::AxisPaintingDone( void )
-{
-    Saved_faces.clear();
-}

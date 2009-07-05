@@ -43,8 +43,9 @@ public:
   void Reference() {ref_count++;}
   void Dereference() {if (ref_count > 0) ref_count--;}
   unsigned RefCount() {return ref_count;}
-  bool isStateDirty() {return m_stateDirty;}
-  void setStateDirty(bool t = true) {m_stateDirty = t;}
+  bool isDirty() {return m_stateDirty;}
+  void markDirty() {m_stateDirty = true;}
+  void markClean() {m_stateDirty = false;}
   virtual void RegisterProperties() {}
   virtual void UpdateState() {}
   virtual QVector<double> GetLimits() {return QVector<double>();};
@@ -76,7 +77,6 @@ public:
   void SetPropertyHandle(QString name, unsigned value);
   bool IsAuto(QString mode);
   virtual void PaintMe(RenderEngine &gc) = 0;
-  virtual void AxisPaintingDone( void ){};
   HandleAxis* GetParentAxis();
   HandleFigure* GetParentFigure();
 };

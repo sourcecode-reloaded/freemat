@@ -35,7 +35,6 @@ class HandleWindow;
 class HandleFigure : public HandleObject {
   HandleWindow *m_win;
   void LoadDefaultColorMap();
-  bool dirty;
 public:
   HandleFigure(HandleWindow *win);
   HandleWindow* ParentWindow() {return m_win;}
@@ -43,9 +42,6 @@ public:
   virtual void ConstructProperties();
   void SetupDefaults();
   void Resize(int width,int height);
-  bool isDirty() {return dirty;}
-  void markClean() {dirty = false;}
-  void markDirty() {dirty = true;}
 };
 
 #endif

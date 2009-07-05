@@ -395,6 +395,35 @@ void HSetChildrenFunction(HandleObject *fp, Array children) {
 
 
 //!
+//@Module SIZEFIG Set Size of Figure
+//@@Section HANDLE
+//@@Usage
+//The @|sizefig| function changes the size of the currently
+//selected fig window.  The general syntax for its use is
+//@[
+//   sizefig(width,height)
+//@]
+//where @|width| and @|height| are the dimensions of the fig
+//window.
+//@@Signature
+//gfunction sizefig SizeFigFunction
+//input width height
+//output none
+//!
+ArrayVector SizeFigFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 2)
+    throw Exception("sizefig requires width and height");
+  int width = arg[0].asInteger();
+  int height = arg[1].asInteger();
+  QSize main_window_size = CurrentWindow()->size();
+  QSize central_window_size = CurrentWindow()->centralWidget()->size();
+  CurrentWindow()->resize(width + main_window_size.width() - central_window_size.width(),
+			  height + main_window_size.height() - central_window_size.height());
+  CurrentWindow()->HFig()->markDirty();
+  return ArrayVector();
+}
+
+//!
 //@Module SET Set Object Property
 //@@Section HANDLE
 //@@Usage
@@ -529,6 +558,7 @@ static unsigned GenericConstructor(HandleObject* fp, const ArrayVector& arg,
     parent.push_back(current);
     cp->Data(parent);
     axis->UpdateState();
+    fig->markDirty();
   }
   fp->UpdateState();
   return handle;
@@ -1284,7 +1314,9 @@ ArrayVector HPointFunction(int nargout, const ArrayVector& arg) {
   f->activateWindow();
   f->setFocus(Qt::OtherFocusReason);
   int x, y;
+  GfxEnableRepaint();
   f->GetClick(x,y);
+  GfxDisableRepaint();
   BasicArray<double> retvec(NTuple(2,1));
   retvec.set(1,x);
   retvec.set(2,y);

@@ -24,7 +24,7 @@
 
 class HandlePatch : public HandleObject {
   Array GetCoordinateMatrix(std::string name, bool isXcoord);
-  FaceList faces;
+  FaceList m_faces;
   virtual void BuildPolygons( FaceList& faces );
 
 public:
@@ -33,8 +33,7 @@ public:
   virtual void ConstructProperties();
   virtual void SetupDefaults();
   virtual void PaintMe(RenderEngine& gc);
-  virtual void AxisPaintingDone( void );
-  //virtual void UpdateState( void );
+  virtual void UpdateState( void );
   QVector<double> GetLimits();
 };
 

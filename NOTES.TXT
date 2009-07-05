@@ -1,8 +1,10 @@
+Manual check:
+
 In this branch, I need to fix:
 
 1.  The performance of the "image" and plot commands - done
 2.  The zoom feature - done
-3.  Image zoom and translation behaving strangely.
+3.  Image zoom and translation behaving strangely. - done
 4.  Add a measurement tool?
 
 

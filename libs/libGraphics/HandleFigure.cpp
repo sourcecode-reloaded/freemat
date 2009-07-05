@@ -23,7 +23,6 @@
 #include <math.h>
 
 HandleFigure::HandleFigure(HandleWindow *win) {
-  dirty = false;
   ConstructProperties();
   SetupDefaults();
   m_win = win;
@@ -150,6 +149,7 @@ void HandleFigure::SetupDefaults() {
 }
 
 void HandleFigure::PaintMe(RenderEngine& gc) {
+  ClearAllChanged();
   try {
     HPColor *color = (HPColor*) LookupProperty("color");
     if (color->Data()[0] >= 0) {
@@ -164,6 +164,6 @@ void HandleFigure::PaintMe(RenderEngine& gc) {
   } catch (Exception& e) {
     dbout << "Warning: Graphics subsystem reports: " << e.msg() << "\n";
   }
-  dirty = false;
+  markClean();
 }
 
