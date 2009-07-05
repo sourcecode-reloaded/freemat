@@ -28,7 +28,6 @@ elements
 --> A = randi(ones(3,4),10*ones(3,4))
 
 A = 
-
   2  1  4  2 
   8 10  4  7 
  10  7  4 10 
@@ -40,12 +39,10 @@ To calculate which elements of \verb|A| this corresponds to, we can use
 --> n = sub2ind(size(A),1:3,2:4)
 
 n = 
-
   4  8 12 
 
 --> A(n)
 
 ans = 
-
   1  4 10 
 \end{verbatim}

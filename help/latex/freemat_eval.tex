@@ -44,13 +44,11 @@ Here are some examples of \verb|eval| being used.
 --> eval('a = 32')
 
 a = 
-
  32 
 
 --> b = eval('a')
 
 b = 
-
  32 
 \end{verbatim}
 The primary use of the \verb|eval| statement is to enable construction
@@ -59,13 +57,10 @@ of expressions at run time.
 --> s = ['b = a' ' + 2']
 
 s = 
-
- b = a + 2
-
+b = a + 2
 --> eval(s)
 
 b = 
-
  34 
 \end{verbatim}
 Here we demonstrate the use of the catch-clause to provide a 
@@ -74,19 +69,16 @@ default value
 --> a = 32
 
 a = 
-
  32 
 
 --> b = eval('a','1')
 
 b = 
-
  32 
 
 --> b = eval('z','a+1')
 
 b = 
-
  33 
 \end{verbatim}
 Note that in the second case, \verb|b| takes the value of 33, indicating

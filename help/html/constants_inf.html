@@ -12,13 +12,39 @@
 Section: <A HREF=sec_constants.html> Base Constants </A>
 <H3>Usage</H3>
 Returns a value that represents positive infinity 
-for both 32 and 64-bit floating point values.
+for both 32 and 64-bit floating point values. 
+There are several forms for the <code>Inf</code> function.
+The first form returns a double precision <code>Inf</code>.
 <PRE>
    y = inf
 </PRE>
 <P>
-The returned type is a 64-bit float, but demotion to
-64 bits preserves the infinity.
+The next form takes a class name that can be either <code>'double'</code> 
+<PRE>
+   y = inf('double')
+</PRE>
+<P>
+or <code>'single'</code>:
+<PRE>
+   y = inf('single')
+</PRE>
+<P>
+With a single parameter it generates a square matrix of <code>inf</code>s.
+<PRE>
+   y = inf(n)
+</PRE>
+<P>
+Alternatively, you can specify the dimensions of the array via
+<PRE>
+   y = inf(m,n,p,...)
+</PRE>
+<P>
+or
+<PRE>
+   y = inf([m,n,p,...])
+</PRE>
+<P>
+Finally, you can add a classname of either <code>'single'</code> or <code>'double'</code>.
 <H3>Function Internals</H3>
 The infinity constant has
 several interesting properties.  In particular:
@@ -34,37 +60,31 @@ The following examples demonstrate the various properties of the infinity consta
 --&gt; inf*0
 
 ans = 
-
        nan 
 
 --&gt; inf*2
 
 ans = 
-
        inf 
 
 --&gt; inf*-2
 
 ans = 
-
       -inf 
 
 --&gt; inf/inf
 
 ans = 
-
        nan 
 
 --&gt; inf/0
 
 ans = 
-
        inf 
 
 --&gt; inf/nan
 
 ans = 
-
        nan 
 </PRE>
 <P>
@@ -73,13 +93,11 @@ Note that infinities are preserved under type conversion to floating point types
 --&gt; uint32(inf)
 
 ans = 
-
  4294967295 
 
 --&gt; complex(inf)
 
 ans = 
-
        inf 
 </PRE>
 <P>

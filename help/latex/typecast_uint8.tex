@@ -19,7 +19,6 @@ The following piece of code demonstrates several uses of \verb|uint8|.
 --> uint8(200)
 
 ans = 
-
  200 
 \end{verbatim}
 In the next example, an integer outside the range  of the type is passed in.  
@@ -28,7 +27,6 @@ The result is truncated to the maximum value of the data type.
 --> uint8(400)
 
 ans = 
-
  255 
 \end{verbatim}
 In the next example, a negative integer is passed in.  The result is 
@@ -37,7 +35,6 @@ trunated to zero.
 --> uint8(-100)
 
 ans = 
-
  0 
 \end{verbatim}
 In the next example, a positive double precision argument is passed in.  
@@ -46,7 +43,6 @@ The result is the unsigned integer that is closest to the argument.
 --> uint8(pi)
 
 ans = 
-
  3 
 \end{verbatim}
 In the next example, a complex argument is passed in.  The result is 
@@ -55,7 +51,6 @@ complex unsigned integer that is closest to the argument.
 --> uint8(5+2*i)
 
 ans = 
-
    5.0000 +  2.0000i 
 \end{verbatim}
 In the next example, a string argument is passed in.  The string argument 
@@ -64,7 +59,6 @@ is converted into an integer array corresponding to the ASCII values of each cha
 --> uint8('helo')
 
 ans = 
-
  104 101 108 111 
 \end{verbatim}
 In the last example, a cell-array is passed in.  For cell-arrays and 

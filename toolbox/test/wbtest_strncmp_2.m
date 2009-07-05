@@ -19,7 +19,6 @@ function test_val = wbtest_strncmp_2(verbose)
   elseif (~error_flag && ~error_refs(loopi,loopj) && ~wbtest_exact(y1,y1_refs{loopi,loopj}))
     printf('Mismatch (exact): input %d,%d output 1 y1=strncmp(x1,x2,3)\n',loopi,loopj);
     fail_count = fail_count + 1;
-  end
     end
   end
   test_val = (fail_count == 0);

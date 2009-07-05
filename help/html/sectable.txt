@@ -52,6 +52,7 @@ Flow Control
 FreeMat Functions
 +(freemat) ADDPATH Add 
 +(freemat) ASSIGNIN Assign Variable in Workspace
++(freemat) BLASLIB Control Profiling
 +(freemat) BUILTIN Evaulate Builtin Function
 +(freemat) CLC Clear Dislplay
 +(freemat) CLOCK Get Current Time
@@ -87,6 +88,7 @@ FreeMat Functions
 +(freemat) STARTUP Startup Script
 +(freemat) TIC Start Stopwatch Timer
 +(freemat) TOC Stop Stopwatch Timer
++(freemat) TYPE Type
 +(freemat) VERSION The Current Version Number
 +(freemat) VERSTRING The Current Version String
 Debugging FreeMat Code
@@ -130,7 +132,6 @@ Mathematical Functions
 +(mathfunctions) ATANH Inverse Hyperbolic Tangent Function
 +(mathfunctions) COS Trigonometric Cosine Function
 +(mathfunctions) COSD Cosine Degrees Function
-+(mathfunctions) COSD Cosine Degrees Function
 +(mathfunctions) COSH Hyperbolic Cosine Function
 +(mathfunctions) COT Trigonometric Cotangent Function
 +(mathfunctions) COTD Cotangent Degrees Function
@@ -138,7 +139,6 @@ Mathematical Functions
 +(mathfunctions) COTH Hyperbolic Cotangent Function
 +(mathfunctions) CROSS Cross Product of Two Vectors
 +(mathfunctions) CSC Trigonometric Cosecant Function
-+(mathfunctions) CSCD Cosecant Degrees Function
 +(mathfunctions) CSCD Cosecant Degrees Function
 +(mathfunctions) CSCH Hyperbolic Cosecant Function
 +(mathfunctions) DEG2RAD Convert From Degrees To Radians
@@ -159,15 +159,12 @@ Mathematical Functions
 +(mathfunctions) REM Remainder After Division
 +(mathfunctions) SEC Trigonometric Secant Function
 +(mathfunctions) SECD Secant Degrees Function
-+(mathfunctions) SECD Secant Degrees Function
 +(mathfunctions) SECH Hyperbolic Secant Function
 +(mathfunctions) SIN Trigonometric Sine Function
-+(mathfunctions) SIND Sine Degrees Function
 +(mathfunctions) SIND Sine Degrees Function
 +(mathfunctions) SINH Hyperbolic Sine Function
 +(mathfunctions) SQRT Square Root of an Array
 +(mathfunctions) TAN Trigonometric Tangent Function
-+(mathfunctions) TAND Tangent Degrees Function
 +(mathfunctions) TAND Tangent Degrees Function
 +(mathfunctions) TANH Hyperbolic Tangent Function
 Base Constants
@@ -177,7 +174,6 @@ Base Constants
 +(constants) FEPS Single Precision Floating Point Relative Machine Precision Epsilon
 +(constants) I-J Square Root of Negative One
 +(constants) INF Infinity Constant
-+(constants) NAN Not-a-Number Constant
 +(constants) PI Constant Pi
 +(constants) TEPS Type-based Epsilon Calculation
 +(constants) TRUE Logical TRUE
@@ -195,7 +191,6 @@ Elementary Functions
 +(elementary) DOT Dot Product Function
 +(elementary) FLOOR Floor Function
 +(elementary) GETFIELD Get Field Contents
-+(elementary) HEX2DEC Convert Hexadecimal Numbers To Decimal
 +(elementary) HEX2DEC Convert Hexadecimal Numbers To Decimal
 +(elementary) IMAG Imaginary Function
 +(elementary) MAX Maximum Function
@@ -230,7 +225,6 @@ Inspection Functions
 +(inspection) ISMATRIX Test For a 2D Matrix
 +(inspection) ISNAN Test for Not-a-Numbers
 +(inspection) ISNUMERIC Test for Numeric Array
-+(inspection) ISREAL Test For Real Array
 +(inspection) ISREAL Test For Real Array
 +(inspection) ISSAME Test If Two Arrays Are Identical
 +(inspection) ISSCALAR Test For Scalar
@@ -292,6 +286,7 @@ Array Generation and Manipulations
 +(array) LINSPACE Linearly Spaced Vector
 +(array) LOGSPACE Logarithmically Spaced Vector
 +(array) MESHGRID Generate Grid Mesh For Plots
++(array) NAN Not-a-Number Constant
 +(array) NDGRID Generate N-Dimensional Grid
 +(array) NONZEROS Retrieve Nonzero Matrix Entries
 +(array) NORM Norm Calculation
@@ -453,6 +448,7 @@ Handle-Based Graphics
 +(handle) GCA Get Current Axis
 +(handle) GCF Get Current Figure
 +(handle) GET Get Object Property
++(handle) GLSHOW Show a GL Assembly in a GL Window
 +(handle) GRAY Gray Colormap
 +(handle) GRID Plot Grid Toggle Function
 +(handle) HCONTOUR Create a contour object
@@ -462,8 +458,10 @@ Handle-Based Graphics
 +(handle) HOLD Plot Hold Toggle Function
 +(handle) HPATCH Create a patch object
 +(handle) HPOINT Get Point From Window
++(handle) HRAWPLOT Generate a Raw Plot File
 +(handle) HSURFACE Create a surface object
 +(handle) HTEXT Create a text object
++(handle) HTEXTBITMAP Get Text Rendered as a Bitmap
 +(handle) IMAGE Image Display Function
 +(handle) IMAGEPROPERTIES Image Object Properties
 +(handle) IMAGESC Image Display Function
@@ -484,7 +482,7 @@ Handle-Based Graphics
 +(handle) SEMILOGX Semilog X Axis Plot Function
 +(handle) SEMILOGY Semilog Y Axis Plot Function
 +(handle) SET Set Object Property
-+(handle) SIZEFIG Set Size of an Fig Window
++(handle) SIZEFIG Set Size of Figure
 +(handle) SUBPLOT Subplot Function
 +(handle) SURF Surface Plot Function
 +(handle) SURFACEPROPERTIES Surface Object Properties
@@ -570,3 +568,9 @@ FreeMat External Interface
 +(external) CTYPEWRITE Write a C Typedef To File
 +(external) IMPORT Foreign Function Import
 +(external) LOADLIB Load Library Function
+OpenGL Models
++(glwin) GLASSEMBLY Create a GL Assembly
++(glwin) GLCLUMP Create a GL Clump
++(glwin) GLDEFMATERIAL Defines a GL Material
++(glwin) GLLINES Create a GL Lineset
++(glwin) GLNODE Create a GL Node

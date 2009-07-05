@@ -32,6 +32,40 @@
 %    subplot('position',[left bottom width height])
 % 
 % 
+% SUBPLOT SUBPLOT Subplot Function
+% 
+% Usage
+% 
+% This function divides the current figure into a 2-dimensional
+% grid, each of which can contain a plot of some kind.  The function
+% has a number of syntaxes.  The first version 
+% 
+%    subplot(row,col,num)
+% 
+% which either activates subplot number num, or 
+% sets up a subplot grid of size row x col, and then
+% activates num. You can also set up subplots that cover multiple
+% grid elements
+% 
+%    subplot(row,col,[vec])
+% 
+% where vec is a set of indexes covered by the new subplot.
+% Finally, as a shortcut, you can specify a string with three
+% components
+% 
+%    subplot('mnp')
+% 
+% or using the alternate notation
+% 
+%    subplot mnp
+% 
+% where m is the number of rows, n is the number of columns
+% and p is the index.  You can also specify the location of the
+% subplot explicitly using the syntax
+% 
+%    subplot('position',[left bottom width height])
+% 
+% 
 
 % Copyright (c) 2002-2006 Samit Basu
 % Licensed under the GPL
@@ -57,12 +91,12 @@ function hout = subplot(varargin)
       h = varargin{1}(1);
     end
   else
-    if (nargin >= 1), m = int32(varargin{1}(1)); end
-    if (nargin >= 2), n = int32(varargin{2}(1)); end
-    if (nargin >= 3), p = int32(varargin{3}); p = p(:); end
+      if (nargin >= 1), m = round(varargin{1}(1)); end
+      if (nargin >= 2), n = round(varargin{2}(1)); end
+      if (nargin >= 3), p = round(varargin{3}); p = p(:); end
   end
-  row = m+1-int32(idiv(p-1,n)+1);
-  col = int32(mod(p-1,n)+1);
+  row = m+1-round(idiv(p-1,n)+1);
+  col = round(mod(p-1,n)+1);
   width = 1.0/n;
   height = 1.0/m;
   left = (col-1)*width;

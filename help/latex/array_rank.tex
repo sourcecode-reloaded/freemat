@@ -25,13 +25,11 @@ Some examples of matrix rank calculations
 --> rank([1,3,2;4,5,6])
 
 ans = 
-
  2 
 
 --> rank([1,2,3;2,4,6])
 
 ans = 
-
  1 
 \end{verbatim}
 Here we construct an ill-conditioned matrix, and show the use 
@@ -40,19 +38,16 @@ of the \verb|tol| argument.
 --> A = [1,0;0,eps/2]
 
 A = 
-
     1.0000         0 
          0    0.0000 
 
 --> rank(A)
 
 ans = 
-
  1 
 
 --> rank(A,eps/8)
 
 ans = 
-
  2 
 \end{verbatim}

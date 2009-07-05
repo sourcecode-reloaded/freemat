@@ -7,6 +7,15 @@
 % 
 % y is a random permutation of integers from 1 to n.
 % randperm calls rand and changes its state.
+% RANDPERM RANDPERM Random permutation
+% 
+% Usage
+% 
+% 
+%    y = randperm(n)
+% 
+% y is a random permutation of integers from 1 to n.
+% randperm calls rand and changes its state.
 
 % Copyright (c) 2008 Samit Basu
 % Licensed under the GPL

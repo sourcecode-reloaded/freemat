@@ -23,7 +23,6 @@ function test_val = wbtest_max_6(verbose)
   elseif (~error_flag && ~error_refs(loopi,loopj) && ~wbtest_exact(y2,y2_refs{loopi,loopj}))
     printf('Mismatch (exact): input %d,%d output 2 [y1,y2]=max(x1,x2)\n',loopi,loopj);
     fail_count = fail_count + 1;
-  end
     end
   end
   test_val = (fail_count == 0);

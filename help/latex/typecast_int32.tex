@@ -18,13 +18,11 @@ The following piece of code demonstrates several uses of \verb|int32|.  First, t
 --> int32(100)
 
 ans = 
-
  100 
 
 --> int32(-100)
 
 ans = 
-
  -100 
 \end{verbatim}
 In the next example, an integer outside the range  of the type is passed in.  The 
@@ -33,7 +31,6 @@ result is truncated to the range of the data type.
 --> int32(40e9)
 
 ans = 
-
  2147483647 
 \end{verbatim}
 In the next example, a positive double precision argument is passed in.  The 
@@ -42,7 +39,6 @@ result is the signed integer that is closest to the argument.
 --> int32(pi)
 
 ans = 
-
  3 
 \end{verbatim}
 In the next example, a complex argument is passed in.  The result is the signed 
@@ -51,7 +47,6 @@ complex integer that is closest to the argument.
 --> int32(5+2*i)
 
 ans = 
-
    5.0000 +  2.0000i 
 \end{verbatim}
 In the next example, a string argument is passed in.  The string argument is 
@@ -60,7 +55,6 @@ converted into an integer array corresponding to the ASCII values of each charac
 --> int32('helo')
 
 ans = 
-
  104 101 108 111 
 \end{verbatim}
 In the last example, a cell-array is passed in.  For cell-arrays and structure 

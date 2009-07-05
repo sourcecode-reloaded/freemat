@@ -17,6 +17,25 @@
 % 
 %   plot3(handle,...)
 % 
+% PLOT3 PLOT3 Plot 3D Function
+% 
+% Usage
+% 
+% This is the 3D plot command.  The general syntax for its use is
+% 
+%   plot3(X,Y,Z,{linespec 1},X,Y,Z,{linespec 2},...,properties...)
+% 
+% where X Y and Z are the coordinates of the points on the
+% 3D line.  Note that in general, all three should be vectors.  If
+% some or all of the quantities are matrices, then FreeMat will attempt
+% to expand the vector arguments to the same size, and then generate
+% multiple plots, one for each column of the matrices.  The linespec
+% is optional, see plot for details.  You can specify properties
+% for the generated line plots.  You can also specify a handle as an
+% axes to target
+% 
+%   plot3(handle,...)
+% 
 
 % Copyright (c) 2002-2006 Samit Basu
 % Licensed under the GPL
@@ -104,6 +123,6 @@ function k = tplotvector(handle,x,y,z,lineprops)
   % Get the colororder
   colororder = get(handle,'colororder');
   % select the row using a modulo
-  ndxmod = uint32(mod(ndx-1,size(colororder,1))+1);
+  ndxmod = round(mod(ndx-1,size(colororder,1))+1);
   k = hline('xdata',x,'ydata',y,'zdata',z,'color',colororder(ndxmod,:),lineprops{:});
 

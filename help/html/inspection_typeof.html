@@ -50,8 +50,7 @@ command for each possible type.  The first example is with a simple cell array.
 --&gt; typeof({1})
 
 ans = 
-
- cell
+cell
 </PRE>
 <P>
 The next example uses the <code>struct</code> constructor to make a simple scalar struct.
@@ -59,8 +58,7 @@ The next example uses the <code>struct</code> constructor to make a simple scala
 --&gt; typeof(struct('foo',3))
 
 ans = 
-
- struct
+struct
 </PRE>
 <P>
 The next example uses a comparison between two scalar integers to generate 
@@ -69,8 +67,7 @@ a scalar logical type.
 --&gt; typeof(3&gt;5)
 
 ans = 
-
- logical
+logical
 </PRE>
 <P>
 For the integers, the typecast operations are used to generate the arguments.
@@ -78,50 +75,35 @@ For the integers, the typecast operations are used to generate the arguments.
 --&gt; typeof(uint8(3))
 
 ans = 
-
- uint8
-
+uint8
 --&gt; typeof(int8(8))
 
 ans = 
-
- int8
-
+int8
 --&gt; typeof(uint16(3))
 
 ans = 
-
- uint16
-
+uint16
 --&gt; typeof(int16(8))
 
 ans = 
-
- int16
-
+int16
 --&gt; typeof(uint32(3))
 
 ans = 
-
- uint32
-
+uint32
 --&gt; typeof(int32(3))
 
 ans = 
-
- int32
-
+int32
 --&gt; typeof(uint64(3))
 
 ans = 
-
- uint64
-
+uint64
 --&gt; typeof(int64(3))
 
 ans = 
-
- int64
+int64
 </PRE>
 <P>
 Float, and double can be created using the suffixes.
@@ -129,26 +111,19 @@ Float, and double can be created using the suffixes.
 --&gt; typeof(1.0f)
 
 ans = 
-
- single
-
+single
 --&gt; typeof(1.0D)
 
 ans = 
-
- double
-
+double
 --&gt; typeof(1.0f+i)
 
 ans = 
-
- single
-
+single
 --&gt; typeof(1.0D+2.0D*i)
 
 ans = 
-
- double
+double
 </PRE>
 <P>
 </BODY>

@@ -14,11 +14,9 @@ function test_val = wbtest_poly_1(verbose)
     if (error_flag && ~error_refs(loopi))
        printf('Mismatch Errors: input %d y1=poly(x1)\n',loopi);
         fail_count = fail_count + 1;
-        keyboard
   elseif (~error_flag && ~error_refs(loopi) && ~wbtest_near(y1,y1_refs{loopi}))
-    printf('Mismatch (exact): input %d output 1 y1=poly(x1)\n',loopi);
+    printf('Mismatch (near): input %d output 1 y1=poly(x1)\n',loopi);
     fail_count = fail_count + 1;
-    keyboard
   end
   test_val = (fail_count == 0);
 end

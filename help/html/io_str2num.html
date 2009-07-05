@@ -20,6 +20,9 @@ is
 Here <code>string</code> is the data string, which contains the data to 
 be converted into a number.  The output is in double precision,
 and must be typecasted to the appropriate type based on what
-you need.
+you need.  Note that by definition, <code>str2num</code> is entirely 
+equivalent to <code>eval(['[' string ']'],[])</code> with all of the 
+associated problems where <code>string</code> contains text that causes
+side effects.
 </BODY>
 </HTML>

@@ -13,9 +13,7 @@ function test_val = wbtest_qr_1(verbose)
       error_flag = 1;
     end
     if (error_flag && ~error_refs(loopi))
-       printf('Mismatch Errors: input %d [y1,y2] = qr(x1,0)\n', ...
-              loopi);
-       keyboard
+       printf('Mismatch Errors: input %d [y1,y2] = qr(x1,0)\n',loopi);
         fail_count = fail_count + 1;
   elseif (~error_flag && ~error_refs(loopi) && ~wbtest_near(y1,y1_refs{loopi}))
     printf('Mismatch (near): input %d output 1 [y1,y2] = qr(x1,0)\n',loopi);

@@ -44,14 +44,12 @@ y =
 --> y(2)             % evaluate it for x = 2
 
 ans = 
-
  8 
 
 --> a = 5; b = 7;    % change a and b
 --> y(2)             % the value did not change!  because a=2,b=4 are captured in y
 
 ans = 
-
  8 
 
 --> y = @(x) a*x+b   % recreate the function
@@ -61,6 +59,5 @@ y =
 --> y(2)             % now the new values are used
 
 ans = 
-
  17 
 \end{verbatim}

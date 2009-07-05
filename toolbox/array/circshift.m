@@ -10,6 +10,18 @@
 % where x is an n-dimensional array, and shiftvec is a vector of
 % integers, each of which specify how much to shift x along the
 % corresponding dimension.  
+% CIRCSHIFT CIRCSHIFT Circularly Shift an Array
+% 
+% Usage
+% 
+% Applies a circular shift along each dimension of a given array.  The
+% syntax for its use is
+% 
+%    y = circshift(x,shiftvec)
+% 
+% where x is an n-dimensional array, and shiftvec is a vector of
+% integers, each of which specify how much to shift x along the
+% corresponding dimension.  
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL

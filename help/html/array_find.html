@@ -64,7 +64,6 @@ Some simple examples of its usage, and some common uses of <code>find</code> in 
 --&gt; find(a==2)
 
 ans = 
-
  2 4 
 </PRE>
 <P>
@@ -73,7 +72,6 @@ Here is an example of using find to replace elements of <code>A</code> that are 
 --&gt; A = [1,0,3;0,2,1;3,0,0]
 
 A = 
-
  1 0 3 
  0 2 1 
  3 0 0 
@@ -81,7 +79,6 @@ A =
 --&gt; n = find(A==0)
 
 n = 
-
  2 
  4 
  6 
@@ -90,7 +87,6 @@ n =
 --&gt; A(n) = 5
 
 A = 
-
  1 5 3 
  5 2 1 
  3 5 5 
@@ -101,7 +97,6 @@ Incidentally, a better way to achieve the same concept is:
 --&gt; A = [1,0,3;0,2,1;3,0,0]
 
 A = 
-
  1 0 3 
  0 2 1 
  3 0 0 
@@ -109,7 +104,6 @@ A =
 --&gt; A(A==0) = 5
 
 A = 
-
  1 5 3 
  5 2 1 
  3 5 5 
@@ -121,14 +115,12 @@ form of <code>find</code>:
 --&gt; A = [1,0,3;0,2,1;3,0,0]
 
 A = 
-
  1 0 3 
  0 2 1 
  3 0 0 
 
 --&gt; [r,c] = find(A)
 r = 
-
  1 
  3 
  2 
@@ -136,7 +128,6 @@ r =
  2 
 
 c = 
-
  1 
  1 
  2 
@@ -148,7 +139,6 @@ Or the three argument form of <code>find</code>, which returns the value also:
 <PRE>
 --&gt; [r,c,v] = find(A)
 r = 
-
  1 
  3 
  2 
@@ -156,7 +146,6 @@ r =
  2 
 
 c = 
-
  1 
  1 
  2 
@@ -164,7 +153,6 @@ c =
  3 
 
 v = 
-
  1 
  3 
  2 

@@ -3,12 +3,33 @@
 \subsection{Usage}
 
 Returns a value that represents positive infinity 
-for both 32 and 64-bit floating point values.
+for both 32 and 64-bit floating point values. 
+There are several forms for the \verb|Inf| function.
+The first form returns a double precision \verb|Inf|.
 \begin{verbatim}
    y = inf
 \end{verbatim}
-The returned type is a 64-bit float, but demotion to
-64 bits preserves the infinity.
+The next form takes a class name that can be either \verb|'double'| 
+\begin{verbatim}
+   y = inf('double')
+\end{verbatim}
+or \verb|'single'|:
+\begin{verbatim}
+   y = inf('single')
+\end{verbatim}
+With a single parameter it generates a square matrix of \verb|inf|s.
+\begin{verbatim}
+   y = inf(n)
+\end{verbatim}
+Alternatively, you can specify the dimensions of the array via
+\begin{verbatim}
+   y = inf(m,n,p,...)
+\end{verbatim}
+or
+\begin{verbatim}
+   y = inf([m,n,p,...])
+\end{verbatim}
+Finally, you can add a classname of either \verb|'single'| or \verb|'double'|.
 \subsection{Function Internals}
 
 The infinity constant has
@@ -26,37 +47,31 @@ The following examples demonstrate the various properties of the infinity consta
 --> inf*0
 
 ans = 
-
        nan 
 
 --> inf*2
 
 ans = 
-
        inf 
 
 --> inf*-2
 
 ans = 
-
       -inf 
 
 --> inf/inf
 
 ans = 
-
        nan 
 
 --> inf/0
 
 ans = 
-
        inf 
 
 --> inf/nan
 
 ans = 
-
        nan 
 \end{verbatim}
 Note that infinities are preserved under type conversion to floating point types (i.e., \verb|float|, \verb|double|, \verb|complex| and \verb|dcomplex| types), but not integer  types.
@@ -64,12 +79,10 @@ Note that infinities are preserved under type conversion to floating point types
 --> uint32(inf)
 
 ans = 
-
  4294967295 
 
 --> complex(inf)
 
 ans = 
-
        inf 
 \end{verbatim}

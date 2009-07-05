@@ -14,34 +14,34 @@ which brings up the path setup tool.  More documentation on the GUI elements
 For Linux, FreeMat is now provided as a binary installation.  To install it
 simply download the binary using your web browser, and then unpack it
 \begin{verbatim}
-  tar xvfz FreeMat- svn-Linux-Binary.tar.gz
+  tar xvfz FreeMat-4.0-Linux-Binary.tar.gz
 \end{verbatim}
 You can then run FreeMat directly without any additional effort
 \begin{verbatim}
-  FreeMat- svn-Linux-Binary/Contents/bin/FreeMat
+  FreeMat-4.0-Linux-Binary/Contents/bin/FreeMat
 \end{verbatim}
 will start up FreeMat as an X application.  If you want to run it
 as a command line application (to run from within an xterm), use
 the \verb|nogui| flag
 \begin{verbatim}
-  FreeMat- svn-Linux-Binary/Contents/bin/FreeMat -nogui
+  FreeMat-4.0-Linux-Binary/Contents/bin/FreeMat -nogui
 \end{verbatim}
 If you do not want FreeMat to use X at all (no graphics at all), use
 the \verb|noX| flag
 \begin{verbatim}
-  FreeMat- svn-Linux-Binary/Contents/bin/FreeMat -noX
+  FreeMat-4.0-Linux-Binary/Contents/bin/FreeMat -noX
 \end{verbatim}
 For convenience, you may want to add FreeMat to your path.  The exact
 mechanism for doing this depends on your shell.  Assume that you have
-unpacked \verb|FreeMat- svn-Linux-Binary.tar.gz| into the directory
+unpacked \verb|FreeMat-4.0-Linux-Binary.tar.gz| into the directory
 \verb|/home/myname|.  Then if you use \verb|csh| or its derivatives (like \verb|tcsh|)
 you should add the following line to your \verb|.cshrc| file:
 \begin{verbatim}
-  set path=($path /home/myname/FreeMat- svn-Linux/Binary/Contents/bin)
+  set path=($path /home/myname/FreeMat-4.0-Linux/Binary/Contents/bin)
 \end{verbatim}
 If you use \verb|bash|, then add the following line to your \verb|.bash_profile|
 \begin{verbatim}
-  PATH=$PATH:/home/myname/FreeMat- svn-Linux/Binary/Contents/bin
+  PATH=$PATH:/home/myname/FreeMat-4.0-Linux/Binary/Contents/bin
 \end{verbatim}
 If the prebuilt binary package does not work for your Linux distribution, you
 will need to build FreeMat from source (see the source section below).  When
@@ -51,14 +51,14 @@ to adjust the path.
 \subsection{Windows}
 
 For Windows, FreeMat is installed via a binary installer program.  To use it,
-simply download the setup program \verb|FreeMat- svn-Setup.exe|, and double
+simply download the setup program \verb|FreeMat-4.0-Setup.exe|, and double
 click it.  Follow the instructions to do the installation, then setup your path
 using \verb|pathtool|.
 \subsection{Mac OS X}
 
 For Mac OS X, FreeMat is distributed as an application bundle.  To install it,
-simply download the compressed disk image file \verb|FreeMat- svn.dmg|, double
-click to mount the disk image, and then copy the application \verb|FreeMat- svn| to
+simply download the compressed disk image file \verb|FreeMat-4.0.dmg|, double
+click to mount the disk image, and then copy the application \verb|FreeMat-4.0| to
 some convenient place.  To run FreeMat, simply double click on the application.  Run
 \verb|pathtool| to setup your FreeMat path.
 \subsection{Source Code}
@@ -70,9 +70,9 @@ are the current build instructions for all platforms.
 
 \item  Install g77 or gfortran (use fink for Mac OS X, use \verb|gcc-g77| package for MinGW)
 
-\item  Download the source code \verb|FreeMat- svn-src.tar.gz|.
+\item  Download the source code \verb|FreeMat-4.0-src.tar.gz|.
 
-\item  Unpack the source code: \verb|tar xvfz FreeMat- svn-src.tar.gz|.
+\item  Unpack the source code: \verb|tar xvfz FreeMat-4.0-src.tar.gz|.
 
 \item  For Windows, you will need to install MSYS as well as MINGW to
 build FreeMat.  You will also need unzip to unpack the enclosed

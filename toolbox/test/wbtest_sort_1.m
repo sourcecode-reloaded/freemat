@@ -17,7 +17,6 @@ function test_val = wbtest_sort_1(verbose)
   elseif (~error_flag && ~error_refs(loopi) && ~wbtest_exact(y1,y1_refs{loopi}))
     printf('Mismatch (exact): input %d output 1 y1=sort(x1)\n',loopi);
     fail_count = fail_count + 1;
-    disp(class(x1))
   end
   test_val = (fail_count == 0);
 end

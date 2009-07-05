@@ -21,19 +21,15 @@ function test_val = wbtest_lu_4(verbose)
   elseif (~error_flag && ~error_refs(loopi) && ~wbtest_near(y1,y1_refs{loopi}))
     printf('Mismatch (near): input %d output 1 [y1,y2,y3,y4,y5]=lu(x1)\n',loopi);
     fail_count = fail_count + 1;
-  end
   elseif (~error_flag && ~error_refs(loopi) && ~wbtest_near(y2,y2_refs{loopi}))
     printf('Mismatch (near): input %d output 2 [y1,y2,y3,y4,y5]=lu(x1)\n',loopi);
     fail_count = fail_count + 1;
-  end
   elseif (~error_flag && ~error_refs(loopi) && ~wbtest_near(y3,y3_refs{loopi}))
     printf('Mismatch (near): input %d output 3 [y1,y2,y3,y4,y5]=lu(x1)\n',loopi);
     fail_count = fail_count + 1;
-  end
   elseif (~error_flag && ~error_refs(loopi) && ~wbtest_near(y4,y4_refs{loopi}))
     printf('Mismatch (near): input %d output 4 [y1,y2,y3,y4,y5]=lu(x1)\n',loopi);
     fail_count = fail_count + 1;
-  end
   elseif (~error_flag && ~error_refs(loopi) && ~wbtest_near(y5,y5_refs{loopi}))
     printf('Mismatch (near): input %d output 5 [y1,y2,y3,y4,y5]=lu(x1)\n',loopi);
     fail_count = fail_count + 1;

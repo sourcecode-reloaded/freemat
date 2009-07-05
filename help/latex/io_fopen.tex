@@ -85,13 +85,11 @@ the file.
 --> fp = fopen('test.dat','w','ieee-le')
 
 fp = 
-
- 8 
+ 12 
 
 --> fwrite(fp,float([1.2,4.3,2.1]))
 
 ans = 
-
  12 
 
 --> fclose(fp)
@@ -101,13 +99,11 @@ Next, we open the file and read the data back
 --> fp = fopen('test.dat','r','ieee-le')
 
 fp = 
-
- 8 
+ 12 
 
 --> fread(fp,[1,3],'float')
 
 ans = 
-
     1.2000    4.3000    2.1000 
 
 --> fclose(fp)
@@ -118,13 +114,11 @@ file.
 --> fp = fopen('test.dat','a+','le')
 
 fp = 
-
- 8 
+ 12 
 
 --> fwrite(fp,float([pi,e]))
 
 ans = 
-
  8 
 
 --> fclose(fp)
@@ -134,13 +128,11 @@ Finally, we read all 5 \verb|float| values from the file
 --> fp = fopen('test.dat','r','ieee-le')
 
 fp = 
-
- 8 
+ 12 
 
 --> fread(fp,[1,5],'float')
 
 ans = 
-
     1.2000    4.3000    2.1000    3.1416    2.7183 
 
 --> fclose(fp)

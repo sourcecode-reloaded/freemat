@@ -22,13 +22,10 @@ Here we apply \verb|strfind| to a simple string
 --> a = 'how now brown cow?'
 
 a = 
-
- how now brown cow?
-
+how now brown cow?
 --> b = strfind(a,'ow')
 
 b = 
-
   2  6 11 16 
 \end{verbatim}
 Here we search over multiple strings contained in a cell array.
@@ -36,12 +33,10 @@ Here we search over multiple strings contained in a cell array.
 --> a = {'how now brown cow','quick brown fox','coffee anyone?'}
 
 a = 
-
  [how now brown cow] [quick brown fox] [coffee anyone?] 
 
 --> b = strfind(a,'ow')
 
 b = 
-
  [1 4 double array] [9] [] 
 \end{verbatim}

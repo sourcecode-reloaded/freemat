@@ -49,7 +49,6 @@ Some simple examples of its usage, and some common uses of \verb|find| in FreeMa
 --> find(a==2)
 
 ans = 
-
  2 4 
 \end{verbatim}
 Here is an example of using find to replace elements of \verb|A| that are \verb|0| with the number \verb|5|.
@@ -57,7 +56,6 @@ Here is an example of using find to replace elements of \verb|A| that are \verb|
 --> A = [1,0,3;0,2,1;3,0,0]
 
 A = 
-
  1 0 3 
  0 2 1 
  3 0 0 
@@ -65,7 +63,6 @@ A =
 --> n = find(A==0)
 
 n = 
-
  2 
  4 
  6 
@@ -74,7 +71,6 @@ n =
 --> A(n) = 5
 
 A = 
-
  1 5 3 
  5 2 1 
  3 5 5 
@@ -84,7 +80,6 @@ Incidentally, a better way to achieve the same concept is:
 --> A = [1,0,3;0,2,1;3,0,0]
 
 A = 
-
  1 0 3 
  0 2 1 
  3 0 0 
@@ -92,7 +87,6 @@ A =
 --> A(A==0) = 5
 
 A = 
-
  1 5 3 
  5 2 1 
  3 5 5 
@@ -103,14 +97,12 @@ form of \verb|find|:
 --> A = [1,0,3;0,2,1;3,0,0]
 
 A = 
-
  1 0 3 
  0 2 1 
  3 0 0 
 
 --> [r,c] = find(A)
 r = 
-
  1 
  3 
  2 
@@ -118,7 +110,6 @@ r =
  2 
 
 c = 
-
  1 
  1 
  2 
@@ -129,7 +120,6 @@ Or the three argument form of \verb|find|, which returns the value also:
 \begin{verbatim}
 --> [r,c,v] = find(A)
 r = 
-
  1 
  3 
  2 
@@ -137,7 +127,6 @@ r =
  2 
 
 c = 
-
  1 
  1 
  2 
@@ -145,7 +134,6 @@ c =
  3 
 
 v = 
-
  1 
  3 
  2 

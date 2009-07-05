@@ -59,12 +59,10 @@ The following example demonstrates an example of using the first form of the <co
 ans = 
 
 (:,:,1) = 
-
     0.3478    0.5313 
     0.0276    0.9958 
 
 (:,:,2) = 
-
     0.2079    0.7597 
     0.4921    0.3365 
 </PRE>
@@ -76,12 +74,10 @@ The second example demonstrates the second form of the <code>rand</code> functio
 ans = 
 
 (:,:,1) = 
-
     0.8670    0.2174 
     0.2714    0.6897 
 
 (:,:,2) = 
-
     0.2305    0.3898 
     0.1721    0.9545 
 </PRE>
@@ -92,13 +88,11 @@ The third example computes the mean and variance of a large number of uniform ra
 --&gt; mean(x)
 
 ans = 
-
     0.5023 
 
 --&gt; var(x)
 
 ans = 
-
     0.0840 
 </PRE>
 <P>
@@ -110,21 +104,18 @@ the random number generator starts by saving the state.
 --&gt; a = rand(1,3)      % random sequence 1
 
 a = 
-
     0.3759    0.0183    0.9134 
 
 --&gt; b = rand('state'); % capture the state vector
 --&gt; c = rand(1,3)      % random sequence 2  
 
 c = 
-
     0.3580    0.7604    0.8077 
 
 --&gt; rand('state',b);   % restart the random generator so...
 --&gt; c = rand(1,3)      % we get random sequence 2 again
 
 c = 
-
     0.3580    0.7604    0.8077 
 </PRE>
 <P>

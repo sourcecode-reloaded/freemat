@@ -9,6 +9,17 @@
 % 
 % and it returns a logical 1 if the argument is size N x N
 % logical 0 otherwise.
+% ISSQUARE ISSQUARE Test For a Square matrix
+% 
+% Usage
+% 
+% This function tests to see if the argument is a square matrix.  The 
+% syntax for issquare is
+% 
+%    x = issquare(y)
+% 
+% and it returns a logical 1 if the argument is size N x N
+% logical 0 otherwise.
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL

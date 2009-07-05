@@ -43,7 +43,6 @@ untyped integer constants default to type <code>int32</code>).
 --&gt; A = [1,2;5,8]
 
 A = 
-
  1 2 
  5 8 
 </PRE>
@@ -54,7 +53,6 @@ Now we define a new matrix by adding a column to the right of
 --&gt; B = [A,[3.2f;5.1f]]
 
 B = 
-
     1.0000    2.0000    3.2000 
     5.0000    8.0000    5.1000 
 </PRE>
@@ -66,7 +64,6 @@ result to be of type <code>double</code>
 --&gt; C = [B;5.2,1.0,0.0]
 
 C = 
-
     1.0000    2.0000    3.2000 
     5.0000    8.0000    5.1000 
     5.2000    1.0000         0 
@@ -78,7 +75,6 @@ a <code>complex</code> constant, not a <code>dcomplex</code> constant)
 --&gt; D = [B;2.0f+3.0f*i,i,0.0f]
 
 D = 
-
    1.0000 +  0.0000i   2.0000 +  0.0000i   3.2000 +  0.0000i 
    5.0000 +  0.0000i   8.0000 +  0.0000i   5.1000 +  0.0000i 
    2.0000 +  3.0000i   0.0000 +  1.0000i        0           
@@ -89,7 +85,6 @@ Likewise, but using <code>dcomplex</code> constants
 --&gt; E = [B;2.0+3.0*i,i,0.0]
 
 E = 
-
    1.0000 +  0.0000i   2.0000 +  0.0000i   3.2000 +  0.0000i 
    5.0000 +  0.0000i   8.0000 +  0.0000i   5.1000 +  0.0000i 
    2.0000 +  3.0000i   0.0000 +  1.0000i        0           
@@ -102,9 +97,8 @@ more than one row, that all the strings have the same length.
 --&gt; F = ['hello';'there']
 
 F = 
-
- hello
- there
+hello
+there
 </PRE>
 <P>
 </BODY>

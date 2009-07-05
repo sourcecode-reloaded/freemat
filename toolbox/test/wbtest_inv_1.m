@@ -15,7 +15,6 @@ function test_val = wbtest_inv_1(verbose)
        printf('Mismatch Errors: input %d y1=inv(x1)\n',loopi);
         fail_count = fail_count + 1;
   elseif (~error_flag && ~error_refs(loopi) && ~wbtest_near(y1,y1_refs{loopi}))
-keyboard
     printf('Mismatch (near): input %d output 1 y1=inv(x1)\n',loopi);
     fail_count = fail_count + 1;
   end

@@ -14,11 +14,8 @@ function test_val = wbtest_sub2ind_1(verbose)
     if (error_flag && ~error_refs(loopi))
        printf('Mismatch Errors: input %d y1=sub2ind(size(x1),1:3,2:4)\n',loopi);
         fail_count = fail_count + 1;
-        keyboard
   elseif (~error_flag && ~error_refs(loopi) && ~wbtest_exact(y1,y1_refs{loopi}))
-    printf(['Mismatch (exact): input %d output 1 y1=' ...
-            'sub2ind(size(x1),1:3,2:4)\n'],loopi);
-    keyboard
+    printf('Mismatch (exact): input %d output 1 y1=sub2ind(size(x1),1:3,2:4)\n',loopi);
     fail_count = fail_count + 1;
   end
   test_val = (fail_count == 0);

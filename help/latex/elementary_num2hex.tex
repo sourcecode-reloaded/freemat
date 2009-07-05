@@ -17,24 +17,22 @@ Some interesting numbers
 --> num2hex([1 0 0.1 -pi inf nan])
 
 ans = 
-
- 3ff0000000000000
- 0000000000000000
- 3fb999999999999a
- c00921fb54442d18
- 7ff0000000000000
- 7ff8000000000000
+3ff0000000000000
+0000000000000000
+3fb999999999999a
+c00921fb54442d18
+7ff0000000000000
+fff8000000000000
 \end{verbatim}
 The same in single precision
 \begin{verbatim}
 --> num2hex(float([1 0 0.1 -pi inf nan]))
 
 ans = 
-
- 3f800000
- 00000000
- 3dcccccd
- c0490fdb
- 7f800000
- 7fc00000
+3f800000
+00000000
+3dcccccd
+c0490fdb
+7f800000
+fff80000
 \end{verbatim}

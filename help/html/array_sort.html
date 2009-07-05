@@ -57,7 +57,6 @@ Here are some examples of sorting on numerical arrays.
 --&gt; A = int32(10*rand(4,3))
 
 A = 
-
   8  9  3 
   7  2  1 
   3  0  3 
@@ -65,14 +64,12 @@ A =
 
 --&gt; [B,IX] = sort(A)
 B = 
-
   3  0  1 
   3  2  3 
   7  9  3 
   8 10  5 
 
 IX = 
-
  3 3 2 
  4 2 1 
  2 1 3 
@@ -80,33 +77,29 @@ IX =
 
 --&gt; [B,IX] = sort(A,2)
 B = 
-
-  8  9  3 
-  7  2  1 
-  3  0  3 
-  3 10  5 
+  3  8  9 
+  1  2  7 
+  0  3  3 
+  3  5 10 
 
 IX = 
-
- 1 1 1 
- 1 1 1 
- 1 1 1 
- 1 1 1 
+ 3 1 2 
+ 3 2 1 
+ 2 1 3 
+ 1 3 2 
 
 --&gt; [B,IX] = sort(A,1,'descend')
 B = 
-
-  9  8  3 
-  7  2  1 
-  3  3  0 
- 10  5  3 
+  8 10  5 
+  7  9  3 
+  3  2  3 
+  3  0  1 
 
 IX = 
-
- 2 1 3 
- 1 2 3 
- 1 3 2 
- 2 3 1 
+ 1 4 4 
+ 2 1 1 
+ 3 2 3 
+ 4 3 2 
 </PRE>
 <P>
 Here we sort a cell array of strings.
@@ -114,13 +107,11 @@ Here we sort a cell array of strings.
 --&gt; a = {'hello','abba','goodbye','jockey','cake'}
 
 a = 
-
  [hello] [abba] [goodbye] [jockey] [cake] 
 
 --&gt; b = sort(a)
 
 b = 
-
  [abba] [cake] [goodbye] [hello] [jockey] 
 </PRE>
 <P>

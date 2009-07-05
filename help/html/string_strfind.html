@@ -32,13 +32,10 @@ Here we apply <code>strfind</code> to a simple string
 --&gt; a = 'how now brown cow?'
 
 a = 
-
- how now brown cow?
-
+how now brown cow?
 --&gt; b = strfind(a,'ow')
 
 b = 
-
   2  6 11 16 
 </PRE>
 <P>
@@ -47,13 +44,11 @@ Here we search over multiple strings contained in a cell array.
 --&gt; a = {'how now brown cow','quick brown fox','coffee anyone?'}
 
 a = 
-
  [how now brown cow] [quick brown fox] [coffee anyone?] 
 
 --&gt; b = strfind(a,'ow')
 
 b = 
-
  [1 4 double array] [9] [] 
 </PRE>
 <P>

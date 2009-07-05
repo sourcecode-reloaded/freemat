@@ -30,13 +30,11 @@ The following piece of code compares two strings:
 --> strcmp(x1,x2)
 
 ans = 
-
  0 
 
 --> strcmp(x1,x3)
 
 ans = 
-
  1 
 \end{verbatim}
 Here we use a cell array strings
@@ -44,13 +42,11 @@ Here we use a cell array strings
 --> x = {'astring','bstring',43,'astring'}
 
 x = 
-
  [astring] [bstring] [43] [astring] 
 
 --> p = strcmp(x,'astring')
 
 p = 
-
  1 0 0 1 
 \end{verbatim}
 Here we compare two cell arrays of strings
@@ -58,7 +54,6 @@ Here we compare two cell arrays of strings
 --> strcmp({'this','is','a','pickle'},{'what','is','to','pickle'})
 
 ans = 
-
  0 1 0 1 
 \end{verbatim}
 Finally, the case where one of the arguments is a matrix
@@ -67,6 +62,5 @@ string
 --> strcmp({'this','is','a','pickle'},['peter ';'piper ';'hated ';'pickle'])
 
 ans = 
-
  0 0 0 0 
 \end{verbatim}

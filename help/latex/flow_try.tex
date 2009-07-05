@@ -38,20 +38,15 @@ and then on one that we create (so that we know it exists).
 --> read_file('this_filename_is_invalid')
 
 c = 
-
- could not open file because of error :Access mode r requires file to exist 
-
+could not open file because of error :Access mode r requires file to exist 
 
 ans = 
-
- could not open file because of error :Access mode r requires file to exist 
-
+could not open file because of error :Access mode r requires file to exist 
 --> fp = fopen('test_text.txt','w');
 --> fprintf(fp,'a line of text\n');
 --> fclose(fp);
 --> read_file('test_text.txt')
 
 ans = 
-
- a line of text
+a line of text
 \end{verbatim}

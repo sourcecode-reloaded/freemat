@@ -62,39 +62,33 @@ Moore-Penrose conditions:
 --> A = float(rand(1,2))
 
 A = 
-
     0.9526    0.4847 
 
 --> B = pinv(A)
 
 B = 
-
     0.8338 
     0.4243 
 
 --> A*B*A
 
 ans = 
-
     0.9526    0.4847 
 
 --> B*A*B
 
 ans = 
-
     0.8338 
     0.4243 
 
 --> A*B
 
 ans = 
-
     1.0000 
 
 --> B*A
 
 ans = 
-
     0.7943    0.4042 
     0.4042    0.2057 
 \end{verbatim}
@@ -104,7 +98,6 @@ consider the following very simple case
 --> A = float([1;1;1;1])
 
 A = 
-
  1 
  1 
  1 
@@ -116,7 +109,6 @@ and computing the \verb|pinv| of \verb|A| demonstrates this
 --> pinv(A)
 
 ans = 
-
     0.2500    0.2500    0.2500    0.2500 
 \end{verbatim}
 Similarly, we can demonstrate the minimum norm solution with
@@ -125,7 +117,6 @@ the following simple case
 --> A = float([1,1])
 
 A = 
-
  1 1 
 \end{verbatim}
 The solutions of \verb|A x = 5| are those \verb|x_1| and \verb|x_2| such that
@@ -135,7 +126,6 @@ The solutions of \verb|A x = 5| are those \verb|x_1| and \verb|x_2| such that
 --> pinv(A) * 5.0
 
 ans = 
-
     2.5000 
     2.5000 
 \end{verbatim}

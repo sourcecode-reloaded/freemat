@@ -45,7 +45,6 @@ Here are some examples of sorting on numerical arrays.
 --> A = int32(10*rand(4,3))
 
 A = 
-
   8  9  3 
   7  2  1 
   3  0  3 
@@ -53,14 +52,12 @@ A =
 
 --> [B,IX] = sort(A)
 B = 
-
   3  0  1 
   3  2  3 
   7  9  3 
   8 10  5 
 
 IX = 
-
  3 3 2 
  4 2 1 
  2 1 3 
@@ -68,45 +65,39 @@ IX =
 
 --> [B,IX] = sort(A,2)
 B = 
-
-  8  9  3 
-  7  2  1 
-  3  0  3 
-  3 10  5 
+  3  8  9 
+  1  2  7 
+  0  3  3 
+  3  5 10 
 
 IX = 
-
- 1 1 1 
- 1 1 1 
- 1 1 1 
- 1 1 1 
+ 3 1 2 
+ 3 2 1 
+ 2 1 3 
+ 1 3 2 
 
 --> [B,IX] = sort(A,1,'descend')
 B = 
-
-  9  8  3 
-  7  2  1 
-  3  3  0 
- 10  5  3 
+  8 10  5 
+  7  9  3 
+  3  2  3 
+  3  0  1 
 
 IX = 
-
- 2 1 3 
- 1 2 3 
- 1 3 2 
- 2 3 1 
+ 1 4 4 
+ 2 1 1 
+ 3 2 3 
+ 4 3 2 
 \end{verbatim}
 Here we sort a cell array of strings.
 \begin{verbatim}
 --> a = {'hello','abba','goodbye','jockey','cake'}
 
 a = 
-
  [hello] [abba] [goodbye] [jockey] [cake] 
 
 --> b = sort(a)
 
 b = 
-
  [abba] [cake] [goodbye] [hello] [jockey] 
 \end{verbatim}

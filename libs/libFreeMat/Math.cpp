@@ -1564,7 +1564,6 @@ Array NotEquals(const Array& A, const Array& B) {
 //x = x | testeq(c,C);
 //@}
 //@$exact|y1=x1&&x2
-//@$exact|y1=x1||x2
 //@$exact|y1=~x1
 //!
 Array And(const Array& A, const Array& B) {

@@ -57,13 +57,11 @@ Some simple examples of logical operators.  Suppose we want to calculate the exc
 --&gt; a = (randn(1,6)&gt;0)
 
 a = 
-
  0 1 1 1 0 1 
 
 --&gt; b = (randn(1,6)&gt;0)
 
 b = 
-
  0 1 0 0 1 0 
 </PRE>
 <P>
@@ -72,7 +70,6 @@ Next, we can compute the OR of <code>a</code> and <code>b</code>:
 --&gt; c = a | b
 
 c = 
-
  0 1 1 1 1 1 
 </PRE>
 <P>
@@ -81,7 +78,6 @@ However, the XOR and OR operations differ on the fifth entry - the XOR would be 
 --&gt; d = a &amp; b
 
 d = 
-
  0 1 0 0 0 0 
 </PRE>
 <P>
@@ -90,7 +86,6 @@ At this point, we can modify the contents of <code>c</code> in two ways -- the B
 --&gt; xor = c &amp; (~d)
 
 xor = 
-
  0 0 1 1 1 1 
 </PRE>
 <P>
@@ -99,7 +94,6 @@ The other way to do this is simply force <code>c(d) = 0</code>, which uses the l
 --&gt; c(d) = 0
 
 c = 
-
  0 0 1 1 1 1 
 </PRE>
 <P>

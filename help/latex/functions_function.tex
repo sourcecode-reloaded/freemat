@@ -99,13 +99,11 @@ function c = addtest(a,b)
 --> addtest(1,3)
 
 ans = 
-
  7 
 
 --> addtest(3,0)
 
 ans = 
-
  3 
 \end{verbatim}
 Suppose, however, we want to replace the value of the first 
@@ -120,26 +118,22 @@ function addtest2(a,b)
 --> arg1 = 1
 
 arg1 = 
-
  1 
 
 --> arg2 = 3
 
 arg2 = 
-
  3 
 
 --> addtest2(arg1,arg2)
 --> arg1
 
 ans = 
-
  1 
 
 --> arg2
 
 ans = 
-
  3 
 \end{verbatim}
 The values of \verb|arg1| and \verb|arg2| are unchanged, because they are
@@ -157,26 +151,22 @@ calling \verb|addtest3|:
 --> addtest3(3,4)
 
 a = 
-
  11 
 
 Error: Must have lvalue in argument passed by reference
 --> addtest3(arg1,arg2)
 
 a = 
-
  7 
 
 --> arg1
 
 ans = 
-
  7 
 
 --> arg2
 
 ans = 
-
  3 
 \end{verbatim}
 The first example fails because we cannot pass a literal like the
@@ -203,12 +193,10 @@ function square_me(&t)
 --> euclidlength(3,4)
 
 ans = 
-
  5 
 
 --> euclidlength(2,0)
 
 ans = 
-
  2 
 \end{verbatim}

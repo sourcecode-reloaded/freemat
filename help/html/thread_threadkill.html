@@ -53,35 +53,30 @@ stop it:
 --&gt; count                          % it is counting
 
 ans = 
-
- 3745 
+ 1303 
 
 --&gt; sleep(1)                       % Wait a bit
 --&gt; count                          % it is still counting
 
 ans = 
-
- 114900 
+ 114009 
 
 --&gt; threadkill(a)                  % kill the counter
 --&gt; threadwait(a,1000)             % wait for it to finish
 
 ans = 
-
  1 
 
 --&gt; count                          % The count will no longer increase
 
 ans = 
-
- 114901 
+ 114010 
 
 --&gt; sleep(1)
 --&gt; count
 
 ans = 
-
- 114901 
+ 114010 
 
 --&gt; threadfree(a)
 </PRE>

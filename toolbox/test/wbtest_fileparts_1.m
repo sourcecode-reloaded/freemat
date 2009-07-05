@@ -25,7 +25,6 @@ function test_val = wbtest_fileparts_1(verbose)
     printf('Mismatch (exact): output 3 [y1,y2,y3,y4]=fileparts(''/home/basu/testfile.mgz'')\n');
     fail_count = fail_count + 1;
   elseif (~error_flag && ~error_refs && ~wbtest_exact(y4,y4_refs{1}))
-keyboard
     printf('Mismatch (exact): output 4 [y1,y2,y3,y4]=fileparts(''/home/basu/testfile.mgz'')\n');
     fail_count = fail_count + 1;
   end

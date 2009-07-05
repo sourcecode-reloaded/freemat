@@ -9,3 +9,14 @@ is
 
 where handle is the handle of the active axis.  All object
 creation functions will be children of this axis.
+GCA GCA Get Current Axis
+
+Usage
+
+Returns the handle for the current axis.  The syntax for its use
+is
+
+  handle = gca
+
+where handle is the handle of the active axis.  All object
+creation functions will be children of this axis.

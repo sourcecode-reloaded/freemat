@@ -10,3 +10,27 @@ Here format is the format string, which is a string that
 controls the format of the input.  Each value that is parsed
 from the text occupies one output slot.  See printf
 for a description of the format.
+SSCANF SSCANF Formated String Input Function (C-Style)
+
+Usage
+
+Reads values from a string.  The general syntax for its use is
+
+  [a1,...,an] = sscanf(text,format)
+
+Here format is the format string, which is a string that
+controls the format of the input.  Each value that is parsed
+from the text occupies one output slot.  See printf
+for a description of the format.
+SSCANF SSCANF Formated String Input Function (C-Style)
+
+Usage
+
+Reads values from a string.  The general syntax for its use is
+
+  [a1,...,an] = sscanf(text,format)
+
+Here format is the format string, which is a string that
+controls the format of the input.  Each value that is parsed
+from the text occupies one output slot.  See printf
+for a description of the format.
