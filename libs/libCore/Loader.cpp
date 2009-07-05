@@ -147,6 +147,7 @@ ArrayVector SimKeysFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector DiaryFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector QuietFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector SourceFunction(int, const ArrayVector&, Interpreter*);
+ArrayVector TypeFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector BuiltinFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector DoCLIFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector SystemFunction(int, const ArrayVector&);
@@ -450,6 +451,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addSpecialFunction("diary",DiaryFunction,1,1,"x",NULL);
   context->addSpecialFunction("quiet",QuietFunction,1,1,"mode",NULL);
   context->addSpecialFunction("source",SourceFunction,1,0,"filename",NULL);
+  context->addSpecialFunction("type",TypeFunction,1,0,"filename",NULL);
   context->addSpecialFunction("builtin",BuiltinFunction,-1,-1,NULL);
   context->addSpecialFunction("docli",DoCLIFunction,0,0,NULL);
   context->addFunction("system",SystemFunction,1,1,"cmd",NULL);
@@ -647,5 +649,6 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
    if (guiflag)
      context->addGfxFunction("clc",ClcFunction,0,0,NULL);
   context->addFunction("profiler",ProfilerFunction,-1,0,NULL);
+  context->addFunction("blaslib",BlaslibFunction,-1,0,NULL);
 }
 

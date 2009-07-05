@@ -244,24 +244,27 @@ void FMTextEdit::uncomment() {
     line2.movePosition(QTextCursor::Up,QTextCursor::MoveAnchor);
   QTextCursor pos(line1);
   pos.beginEditBlock();
-  while (pos.position() < line2.position()) { 
-    pos.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor);
-    if (pos.selectedText() == "%") {
-      pos.deleteChar();
+  while (pos.position() <= line2.position()) {
+    while (!pos.atBlockEnd()) {
       pos.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor);
-      if (pos.selectedText() == " ")  
+      if (pos.selectedText() == " "){
+        pos.clearSelection();
+        continue;
+     }
+      else if (pos.selectedText() == "%") {
         pos.deleteChar();
+        pos.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor);
+        if (pos.selectedText() == " " || pos.selectedText() == "\t")
+          pos.deleteChar();
+        break;
+      }
+      else
+        break;
     }
-    pos.movePosition(QTextCursor::Down,QTextCursor::MoveAnchor);
-    pos.movePosition(QTextCursor::StartOfLine,QTextCursor::MoveAnchor);
-  }
-
-  pos.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor);
-  if (pos.selectedText() == "%") {
-    pos.deleteChar();
-    pos.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor);
-    if (pos.selectedText() == " ")  
-      pos.deleteChar();
+    if (pos.position() < line2.position()) {
+      pos.movePosition(QTextCursor::Down,QTextCursor::MoveAnchor);
+      pos.movePosition(QTextCursor::StartOfLine,QTextCursor::MoveAnchor);
+    }
   }
   pos.endEditBlock();
 }
@@ -422,9 +425,33 @@ bool FMTextEdit::event(QEvent *event){
   if (event->type() == QEvent::ToolTip) {
     QHelpEvent *helpEvent = static_cast<QHelpEvent *>(event);
     QTextCursor Cursor = cursorForPosition(helpEvent->pos());
-    Cursor.select(QTextCursor::WordUnderCursor);
-    QString textSelected = Cursor.selectedText();
-    emit showDataTips(helpEvent->globalPos(), textSelected);
+    if (Cursor.atStart () || Cursor.atEnd ())
+      return QTextEdit::event(event);
+    QTextCursor BeginCursor(Cursor);
+    QTextCursor EndCursor(Cursor);
+    BeginCursor.movePosition(QTextCursor::Left,QTextCursor::KeepAnchor);
+    while (BeginCursor.selectedText().at(0).isLetterOrNumber() || 
+           BeginCursor.selectedText().at(0) == '_') {
+       BeginCursor.clearSelection();
+       if (BeginCursor.atStart ())
+	break;
+       BeginCursor.movePosition(QTextCursor::Left,QTextCursor::KeepAnchor);
+    }
+    if (!BeginCursor.atStart ())
+      BeginCursor.movePosition(QTextCursor::Right);
+    EndCursor.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor);
+    while (EndCursor.selectedText().at(0).isLetterOrNumber() || 
+           EndCursor.selectedText().at(0) == '_') {
+       EndCursor.clearSelection();
+       if (EndCursor.atEnd ())
+	break;
+       EndCursor.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor);
+    }
+    int textLength = EndCursor.position() - BeginCursor.position()-1;
+    BeginCursor.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor, textLength);
+    QString textSelected = BeginCursor.selectedText();
+    if (!textSelected.isEmpty() && textSelected.at(0).isLetter())
+      emit showDataTips(helpEvent->globalPos(), textSelected);
   }
   return QTextEdit::event(event);
 }
@@ -1866,7 +1893,7 @@ void FMEditor::IllegalLineOrCurrentPath(QString name, int line) {
 				   QMessageBox::No,
 				   QMessageBox::Cancel | QMessageBox::Escape);
 	if (ret == QMessageBox::Yes) {
-	  emit EvaluateText("cd " + filePath + "\n");
+	  emit EvaluateText("cd '" + filePath + "'\n");
 	  // leave some time to finish the above command
 #ifndef WIN32
 	  sleep(1);
@@ -1977,7 +2004,6 @@ void FMEditor::setContext(Context *watch) {
 }
 
 void FMEditor::showDataTips(QPoint pos, QString textSelected) {
-
   if (!isShowToolTip)
      return;
      
