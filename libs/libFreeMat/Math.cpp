@@ -810,6 +810,7 @@ Array DotMultiply(const Array& A, const Array &B) {
 //c = a ./ 3
 //c = 3 ./ a
 //@>
+//@@Tests
 //@$exact|y1=x1./x2
 //!
 Array DotRightDivide(const Array& A, const Array& B) {
@@ -880,6 +881,7 @@ Array DotRightDivide(const Array& A, const Array& B) {
 //c = a .\ 3
 //c = 3 .\ a
 //@>
+//@@Tests
 //@$exact|y1=x1.\x2
 //!
 Array DotLeftDivide(const Array& A, const Array& B) {
