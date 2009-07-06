@@ -515,7 +515,6 @@ libs/libFreeMat/Class.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle
 libs/libFreeMat/Class.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libFreeMat/Context.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libFreeMat/Context.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-libs/libFreeMat/Dimensions.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libFreeMat/EigenDecompose.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libFreeMat/EigenDecompose.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libFreeMat/Exception.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
