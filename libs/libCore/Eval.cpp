@@ -133,6 +133,7 @@ static ArrayVector EvalTryFunction(int nargout, Interpreter* eval, QString try_b
       retval = RetrieveCallVars(eval,nargout);
   } catch (Exception &e) {
     while (context->scopeDepth() < eval_depth) context->restoreScope(1);
+    while (context->scopeDepth() > eval_depth) context->popScope();
     eval->evaluateString(catch_buf,false);
     if (retrieveVars)
       retval = RetrieveCallVars(eval,nargout);

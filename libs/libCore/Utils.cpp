@@ -25,6 +25,7 @@
 #include "IEEEFP.hpp"
 #include <math.h>
 #include <QTextCodec>
+#include "Algorithms.hpp"
 
 bool contains(StringVector& list, QString s, bool regexpmode) {
   QRegExp t;
@@ -44,6 +45,9 @@ NTuple ArrayVectorAsDimensions(const ArrayVector &arg) {
   NTuple dims;
   if (arg.size() == 0)
     return NTuple(1,1);
+  for (int i=0;i<arg.size();i++)
+    if (arg[i].isString())
+      throw Exception("Cannot use strings as arguments where dimensions are expected");
   // Case 1 - all of the entries are scalar
   bool allScalars;
   allScalars = true;
@@ -52,21 +56,31 @@ NTuple ArrayVectorAsDimensions(const ArrayVector &arg) {
   if (allScalars) {
     if (arg.size() == 1) {
       // If all scalars and only one argument - we want a square matrix
+      if (!IsFinite(arg[0].asDouble()))
+	throw Exception("Expecting finite arguments for dimensions");
       dims.set(0,arg[0].asInteger());
       dims.set(1,arg[0].asInteger());
     } else {
       // If all scalars and and multiple arguments, we count dimensions
-      for (int i=0;i<arg.size();i++) 
+      for (int i=0;i<arg.size();i++)  {
+	if (!IsFinite(arg[i].asDouble()))
+	  throw Exception("Expecting finite arguments for dimensions");
 	dims.set(i,arg[i].asInteger());
+      }
     }
   } else {
     if (arg.size() > 1)
       throw Exception("Dimension arguments must be either all scalars or a single vector");
+    if (AnyNotFinite(arg[0]))
+      throw Exception("Dimension arguments must be finite");
     Array t = arg[0].toClass(UInt32);
     const BasicArray<uint32> &td(t.constReal<uint32>());
     for (index_t i=1;i<=t.length();i++)
       dims.set(int(i-1),td.get(i));
   }
+  for (int i=0;i<NDims;i++) 
+    if (!IsFinite(dims[i]))
+      throw Exception("Dimension arguments must be finite");
   return dims;
 }
 
