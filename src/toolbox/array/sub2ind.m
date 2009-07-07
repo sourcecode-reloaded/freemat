@@ -34,7 +34,7 @@
 %A(n)
 %@>
 %@@Tests
-%@$exact|y1=sub2ind(size(x1),1:3,2:4)
+%@$exact#y1=sub2ind(size(x1),1:3,2:4)
 %!
 
 % Copyright (c) 2002-2006 Samit Basu

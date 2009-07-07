@@ -24,8 +24,8 @@
 %full(I(1:10,1:10))
 %@>
 %@@Tests
-%@$exact|y1=speye(5000)
-%@$exact|z=speye(5000);y1=full(z(1:10,1:10))
+%@$exact#y1=speye(5000)
+%@$exact#z=speye(5000);y1=full(z(1:10,1:10))
 %!
 
 % Copyright (c) 2002-2006 Samit Basu

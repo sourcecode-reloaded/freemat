@@ -25,13 +25,13 @@
 %circshift(x,[2,-3,1])
 %@>
 %@@Tests
-%@$exact|y1=circshift(x1,[1,0])
-%@$exact|y1=circshift(x1,[0,-1])
-%@$exact|y1=circshift(x1,[2,2])
-%@$exact|y1=circshift(x1,[1,0,0])
-%@$exact|y1=circshift(x1,[0,-1,0])
-%@$exact|y1=circshift(x1,[0,0,-1])
-%@$exact|y1=circshift(x1,[2,-3,1])
+%@$exact#y1=circshift(x1,[1,0])
+%@$exact#y1=circshift(x1,[0,-1])
+%@$exact#y1=circshift(x1,[2,2])
+%@$exact#y1=circshift(x1,[1,0,0])
+%@$exact#y1=circshift(x1,[0,-1,0])
+%@$exact#y1=circshift(x1,[0,0,-1])
+%@$exact#y1=circshift(x1,[2,-3,1])
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

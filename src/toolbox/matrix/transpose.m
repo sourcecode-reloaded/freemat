@@ -16,7 +16,7 @@
 %transpose(A)
 %@>
 %@@Tests
-%@$exact|y1=transpose(x1)
+%@$exact#y1=transpose(x1)
 %!
 
 

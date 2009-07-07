@@ -20,7 +20,7 @@
 %flipud(x)
 %@>
 %@@Tests
-%@$exact|y1=flipud(x1)
+%@$exact#y1=flipud(x1)
 %!
 % Copyright (c) 2002, 2003 Samit Basu
 % Licensed under the GPL

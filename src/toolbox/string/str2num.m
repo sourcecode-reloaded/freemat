@@ -15,7 +15,7 @@
 %associated problems where @|string| contains text that causes
 %side effects.
 %@@Tests
-%@$exact|y1=str2num(x1)
+%@$exact#y1=str2num(x1)
 %@@Signature
 %function str2num Str2NumFunction
 %inputs string

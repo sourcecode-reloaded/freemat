@@ -47,7 +47,7 @@
 %       3 4];
 %test_val = (det(A) == -2)
 %@}
-%@$near|y1=det(x1)
+%@$near#y1=det(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

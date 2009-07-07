@@ -31,9 +31,9 @@
 %[a,b,c] = ndgrid(1:3)
 %@>
 %@@Tests
-%@$exact|[y1,y2] = ndgrid(1:2,3:5)
-%@$exact|[y1,y2,y3] = ndgrid(1:2,3:5,0:1)
-%@$exact|[y1,y2,y3] = ndgrid(1:3)
+%@$exact#[y1,y2] = ndgrid(1:2,3:5)
+%@$exact#[y1,y2,y3] = ndgrid(1:2,3:5,0:1)
+%@$exact#[y1,y2,y3] = ndgrid(1:3)
 %!
 
 % Copyright (c) 2002-2006 Samit Basu

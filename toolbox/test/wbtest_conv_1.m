@@ -13,10 +13,10 @@ function test_val = wbtest_conv_1(verbose)
       catch
         error_flag = 1;
       end
-    if (error_flag && ~error_refs(loopi,loopj))
+    if (error_flag && ~error_refs(loopi,loopj) && ~(false))
        printf('Mismatch Errors: input %d, %d y1=conv(x1,x2)\n',loopi,loopj);
         fail_count = fail_count + 1;
-  elseif (~error_flag && ~error_refs(loopi,loopj) && ~wbtest_near(y1,y1_refs{loopi,loopj}))
+  elseif (~error_flag && ~error_refs(loopi,loopj) && ~wbtest_near(y1,y1_refs{loopi,loopj}) && ~(false))
     printf('Mismatch (near): input %d,%d output 1 y1=conv(x1,x2)\n',loopi,loopj);
     fail_count = fail_count + 1;
     end

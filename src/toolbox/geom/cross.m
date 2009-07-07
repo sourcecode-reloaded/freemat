@@ -9,7 +9,7 @@
 %@]
 %where @|a| and @|b| are 3-element vectors.
 %@@Tests
-%@$exact|y1=cross([1,2,3],[7,5,2])
+%@$exact#y1=cross([1,2,3],[7,5,2])
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

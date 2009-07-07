@@ -23,7 +23,7 @@
 %@>
 %@figure acotplot
 %@@Tests
-%@$near|y1=acot(x1)
+%@$near#y1=acot(x1)
 %!
 
 function y = acot(x)

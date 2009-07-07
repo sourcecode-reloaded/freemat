@@ -44,9 +44,9 @@
 %squeeze(z)
 %@>
 %@@Tests
-%@$exact|y1=shiftdim(x1,1)
-%@$exact|y1=shiftdim(x1,-1)
-%@$exact|[y1,y2]=shiftdim(x1)
+%@$exact#y1=shiftdim(x1,1)
+%@$exact#y1=shiftdim(x1,-1)
+%@$exact#[y1,y2]=shiftdim(x1)
 %!
 
 % Copyright (c) 2007 Samit Basu

@@ -12,8 +12,8 @@
 %@|cat(1, A, B, C)| is the same as @|[A; B; C]| or @|vertcat(A, B, C)|.
 %@|cat(2, A, B, C)| is the same as @|[A, B, C]| or @|horzcat(A, B, C)|.
 %@@Tests
-%@$exact|y1=cat(1,x1,x2)
-%@$exact|y1=cat(2,x1,x2)
+%@$exact#y1=cat(1,x1,x2)
+%@$exact#y1=cat(2,x1,x2)
 %!
 
 function ret = cat(varargin)

@@ -15,9 +15,9 @@
 %     y = fftshift(x,dim).
 %@]
 %@@Tests
-%@$near|y1=fftshift(x1)
-%@$near|y1=fftshift(x1,2)
-%@$near|y1=fftshift(x1,3)
+%@$near#y1=fftshift(x1)
+%@$near#y1=fftshift(x1,2)
+%@$near#y1=fftshift(x1,3)
 %!
 
 % Copyright (c) 2002-2006 Samit Basu

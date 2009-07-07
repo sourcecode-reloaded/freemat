@@ -18,8 +18,8 @@
 %x = linspace(0,1,5)
 %@>
 %@@Tests
-%@$exact|z=linspace(0,60000,60001);y1=z(end)
-%@$exact|y1=linspace(0,1)
+%@$exact#z=linspace(0,60000,60001);y1=z(end)
+%@$exact#y1=linspace(0,1)
 %!
 % Copyright (c) 2002, 2003 Samit Basu
 % Licensed under the GPL

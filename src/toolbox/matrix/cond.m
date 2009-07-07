@@ -43,7 +43,7 @@
 %1/rcond(A)
 %@>
 %@@Tests
-%@$near|y1=cond(x1)
+%@$near#y1=cond(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

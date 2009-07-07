@@ -82,7 +82,7 @@
 %pinv(A) * 5.0
 %@>
 %@@Tests
-%@$near|y1=pinv(x1)
+%@$near#y1=pinv(x1)
 %!
 % Copyright (c) 2005 Samit Basu
 % Licensed under the GPL

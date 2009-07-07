@@ -12,15 +12,15 @@ function test_val = wbtest_rref_2(verbose)
     catch
       error_flag = 1;
     end
-    if (error_flag && ~error_refs(loopi))
+    if (error_flag && ~error_refs(loopi) && ~(false))
        printf('Mismatch Errors: input %d [y1,y2]=rref(x1)\n',loopi);
-        fail_count = fail_count + 1;
-  elseif (~error_flag && ~error_refs(loopi) && ~wbtest_near(y1,y1_refs{loopi}))
-    printf('Mismatch (near): input %d output 1 [y1,y2]=rref(x1)\n',loopi);
-    fail_count = fail_count + 1;
-  elseif (~error_flag && ~error_refs(loopi) && ~wbtest_near(y2,y2_refs{loopi}))
-    printf('Mismatch (near): input %d output 2 [y1,y2]=rref(x1)\n',loopi);
-    fail_count = fail_count + 1;
-  end
+       fail_count = fail_count + 1;
+    elseif (~error_flag && ~error_refs(loopi) && ~wbtest_near(y1,y1_refs{loopi}) && ~(false))
+      printf('Mismatch (near): input %d output 1 [y1,y2]=rref(x1)\n',loopi);
+      fail_count = fail_count + 1;
+    elseif (~error_flag && ~error_refs(loopi) && ~wbtest_near(y2,y2_refs{loopi}) && ~(false))
+      printf('Mismatch (near): input %d output 2 [y1,y2]=rref(x1)\n',loopi);
+      fail_count = fail_count + 1;
+    end
   test_val = (fail_count == 0);
 end

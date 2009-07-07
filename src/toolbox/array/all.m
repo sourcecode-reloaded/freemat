@@ -43,9 +43,9 @@
 %all(A,2)
 %@>
 %@@Tests
-%@$exact|y1=all(x1)
-%@$exact|y1=all(x1,1)
-%@$exact|y1=all(x1,2)
+%@$exact#y1=all(x1)
+%@$exact#y1=all(x1,1)
+%@$exact#y1=all(x1,2)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

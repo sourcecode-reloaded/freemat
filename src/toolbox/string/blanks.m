@@ -12,7 +12,7 @@
 %sprintf(['x0123456789y\n','x',blanks(10),'y\n'])
 %@>
 %@@Tests
-%@$exact|y1=['x',blanks(5),'y']
+%@$exact#y1=['x',blanks(5),'y']
 %!
 
 function str = blanks(n)

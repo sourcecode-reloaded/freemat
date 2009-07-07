@@ -41,11 +41,11 @@
 %rem([9 3 2 0],[1 0 2 2])
 %@>
 %@@Tests
-%@$exact|y1=rem(18,12)
-%@$exact|y1=rem(6,5)
-%@$exact|y1=rem(2*pi,pi)
-%@$exact|y1=rem([1,3,5,2],2)
-%@$exact|y1=rem([9 3 2 0],[1 0 2 2])
+%@$exact#y1=rem(18,12)
+%@$exact#y1=rem(6,5)
+%@$exact#y1=rem(2*pi,pi)
+%@$exact#y1=rem([1,3,5,2],2)
+%@$exact#y1=rem([9 3 2 0],[1 0 2 2])
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

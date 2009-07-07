@@ -10,7 +10,7 @@
 %@]
 %and is equivalent to @|length(size(x))|.
 %@@Tests
-%@$exact|y1=ndims(x1)
+%@$exact#y1=ndims(x1)
 %!
 
 % Copyright (c) 2002-2006 Samit Basu

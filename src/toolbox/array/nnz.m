@@ -18,7 +18,7 @@
 %nnz(A)
 %@>
 %@@Tests
-%@$exact|y1=nnz(x1)
+%@$exact#y1=nnz(x1)
 %!
 function y = nnz(x)
    p = find(x);

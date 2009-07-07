@@ -33,7 +33,7 @@
 %roots([1 -6 -72 -27])
 %@>
 %@@Tests
-%@$near_permute|y1=roots(x1)
+%@$near_permute#y1=roots(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

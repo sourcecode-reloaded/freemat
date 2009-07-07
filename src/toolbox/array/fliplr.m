@@ -20,7 +20,7 @@
 %fliplr(x)
 %@>
 %@@Tests
-%@$exact|y1=fliplr(x1)
+%@$exact#y1=fliplr(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

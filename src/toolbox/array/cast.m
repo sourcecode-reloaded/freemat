@@ -37,19 +37,19 @@
 %cast([1 0 3 0],'logical')
 %@>
 %@@Tests
-%@$exact|y1=cast(x1,'cell')
-%@$exact|y1=cast(x1,'struct')
-%@$exact|y1=cast(x1,'uint8')
-%@$exact|y1=cast(x1,'int8')
-%@$exact|y1=cast(x1,'uint16')
-%@$exact|y1=cast(x1,'int16')
-%@$exact|y1=cast(x1,'uint32')
-%@$exact|y1=cast(x1,'int32')
-%@$exact|y1=cast(x1,'uint64')
-%@$exact|y1=cast(x1,'int64')
-%@$exact|y1=cast(x1,'single')
-%@$exact|y1=cast(x1,'double')
-%@$exact|y1=cast(x1,'char')
+%@$exact#y1=cast(x1,'cell')
+%@$exact#y1=cast(x1,'struct')
+%@$exact#y1=cast(x1,'uint8')
+%@$exact#y1=cast(x1,'int8')
+%@$exact#y1=cast(x1,'uint16')
+%@$exact#y1=cast(x1,'int16')
+%@$exact#y1=cast(x1,'uint32')
+%@$exact#y1=cast(x1,'int32')
+%@$exact#y1=cast(x1,'uint64')
+%@$exact#y1=cast(x1,'int64')
+%@$exact#y1=cast(x1,'single')
+%@$exact#y1=cast(x1,'double')
+%@$exact#y1=cast(x1,'char')
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

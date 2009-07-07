@@ -10,11 +10,11 @@
 %and it returns a logical 1 if the argument is size @|N x M| or
 %@|M x N| and a logical 0 otherwise.
 %@@Tests
-%@$exact|y1=ismatrix(rand(3,4))
-%@$exact|y1=ismatrix(rand(4,2))
-%@$exact|y1=ismatrix(rand(4,4,2))
-%@$exact|y1=ismatrix(rand(3,3,3))
-%@$exact|y1=ismatrix(rand(1,1,3))
+%@$exact#y1=ismatrix(rand(3,4))
+%@$exact#y1=ismatrix(rand(4,2))
+%@$exact#y1=ismatrix(rand(4,4,2))
+%@$exact#y1=ismatrix(rand(3,3,3))
+%@$exact#y1=ismatrix(rand(1,1,3))
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

@@ -24,8 +24,8 @@
 %polyint([2,3,4],5)
 %@>
 %@@Tests
-%@$exact|y1=polyint(x1)
-%@$exact|y1=polyint(x1,5)
+%@$exact#y1=polyint(x1)
+%@$exact#y1=polyint(x1,5)
 %!
 function pint = polyint(p,k)
    if nargin < 1

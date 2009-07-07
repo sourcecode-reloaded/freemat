@@ -25,7 +25,7 @@
 %r = roots(p)
 %@>
 %@@Tests
-%@$near|y1=poly(x1)
+%@$near#y1=poly(x1)
 %!
 function p = poly(r)
    if (nargin < 1) | (nargout > 1)

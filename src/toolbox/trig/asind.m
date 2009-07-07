@@ -18,7 +18,7 @@
 %asind(0.5)
 %@>
 %@@Tests
-%@$near|y1=asind(x1)
+%@$near#y1=asind(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

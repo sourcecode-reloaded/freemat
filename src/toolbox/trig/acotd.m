@@ -9,7 +9,7 @@
 %@]
 %where @|x| is an @|n|-dimensional array of numerical type.
 %@@Tests
-%@$near|y1=acotd(x1)
+%@$near#y1=acotd(x1)
 %!
 
 function y = acotd(x)

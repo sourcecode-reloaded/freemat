@@ -21,7 +21,7 @@
 %size(y)
 %@>
 %@@Tests
-%@$exact|y1=squeeze(x1)
+%@$exact#y1=squeeze(x1)
 %!
 % Copyright 2004-2005, 2006 Brian Yanoff, Dirk Beque
 % Licensed under the GPL

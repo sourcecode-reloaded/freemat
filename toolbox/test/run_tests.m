@@ -9,13 +9,15 @@
 % Licensed under the GPL
 
 function run_tests
+   diary('test_diary.txt');
    run_path = pwd;
    myloc = which('run_tests');
    [pth,name,sfx] = fileparts(myloc);
    cd(pth);
-   testlist = filelist('bbtest_*.m');
+%   testlist = filelist('bbtest_*.m');
+testlist = {};
    testlist = [testlist;filelist('wbtest_*.m')];
-   testlist = [testlist;filelist('test_*.m')];
+%   testlist = [testlist;filelist('test_*.m')];
    exclude_list = {'bbtest_csvread','bbtest_source','bbtest_import'};
    spath = getpath;
    failed = {};
@@ -24,7 +26,7 @@ function run_tests
      cd(run_path);
      save run_tests.dat run_path testlist failed spath
      if (~any(strcmp(testlist{i}(1:end-2),exclude_list)))
-       success = eval(testlist{i}(1:end-2));
+       success = eval(testlist{i}(1:end-2),'false');
      else
        success = 1;
      end

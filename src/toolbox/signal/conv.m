@@ -11,7 +11,7 @@
 %The @|conv| function calls @|conv2| to do the calculation.  See its
 %help for more details.
 %@@Tests
-%@$near|y1=conv(x1,x2)
+%@$near#y1=conv(x1,x2)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

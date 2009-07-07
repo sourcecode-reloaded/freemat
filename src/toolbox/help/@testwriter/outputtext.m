@@ -5,7 +5,7 @@
 function outputtext(&p,text)
   if (p.ignore) return; end
   text(end) = [];
-  v = regexp(text,'@\$([^\|].*)\|(.*)','tokens');
+  v = regexp(text,'@\$([^#].*)#([^#].*)#?(.*)','tokens');
   if (isempty(v))
     printf(sprintf('bad line: %s',text));
     return;
@@ -17,6 +17,8 @@ function outputtext(&p,text)
     return;
   end
   expr = v{1}{2};
+  exclude = v{1}{3};
+  if (isempty(exclude)) exclude = 'false'; end
   sexpr = strrep(expr,'''','''''');
   vars = symvar(expr);
   pnt = regexp(vars,'x.');
@@ -80,15 +82,15 @@ function outputtext(&p,text)
     fprintf(fp,'    catch\n');
     fprintf(fp,'      error_flag = 1;\n');
     fprintf(fp,'    end\n');
-    fprintf(fp,'    if (error_flag && ~error_refs(loopi))\n');
+    fprintf(fp,'    if (error_flag && ~error_refs(loopi) && ~(%s))\n',exclude);
     fprintf(fp,'       printf(''Mismatch Errors: input %%d %s\\n'',loopi);\n',sexpr);
-    fprintf(fp,'        fail_count = fail_count + 1;\n');
+    fprintf(fp,'       fail_count = fail_count + 1;\n');
     for k=1:out_count
-      fprintf(fp,'  elseif (~error_flag && ~error_refs(loopi) && ~wbtest_%s(y%d,y%d_refs{loopi}))\n',ttype,k,k);
-      fprintf(fp,'    printf(''Mismatch (%s): input %%d output %d %s\\n'',loopi);\n',ttype,k,sexpr);
-      fprintf(fp,'    fail_count = fail_count + 1;\n');
+      fprintf(fp,'    elseif (~error_flag && ~error_refs(loopi) && ~wbtest_%s(y%d,y%d_refs{loopi}) && ~(%s))\n',ttype,k,k,exclude);
+      fprintf(fp,'      printf(''Mismatch (%s): input %%d output %d %s\\n'',loopi);\n',ttype,k,sexpr);
+      fprintf(fp,'      fail_count = fail_count + 1;\n');
     end
-    fprintf(fp,'  end\n');
+    fprintf(fp,'    end\n');
   elseif (in_count == 2)
     fprintf(fp,'  for loopi=1:numel(wbinputs)\n');
     fprintf(fp,'    for loopj=1:numel(wbinputs)\n');
@@ -103,11 +105,11 @@ function outputtext(&p,text)
     fprintf(fp,'      catch\n');
     fprintf(fp,'        error_flag = 1;\n');
     fprintf(fp,'      end\n');
-    fprintf(fp,'    if (error_flag && ~error_refs(loopi,loopj))\n');
+    fprintf(fp,'    if (error_flag && ~error_refs(loopi,loopj) && ~(%s))\n',exclude);
     fprintf(fp,'       printf(''Mismatch Errors: input %%d, %%d %s\\n'',loopi,loopj);\n',sexpr);
     fprintf(fp,'        fail_count = fail_count + 1;\n');
     for k=1:out_count
-      fprintf(fp,'  elseif (~error_flag && ~error_refs(loopi,loopj) && ~wbtest_%s(y%d,y%d_refs{loopi,loopj}))\n',ttype,k,k);
+      fprintf(fp,'  elseif (~error_flag && ~error_refs(loopi,loopj) && ~wbtest_%s(y%d,y%d_refs{loopi,loopj}) && ~(%s))\n',ttype,k,k,exclude);
       fprintf(fp,'    printf(''Mismatch (%s): input %%d,%%d output %d %s\\n'',loopi,loopj);\n',ttype,k,sexpr);
       fprintf(fp,'    fail_count = fail_count + 1;\n');
     end
@@ -121,17 +123,17 @@ function outputtext(&p,text)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   % Write the reference file
-  filename = sprintf('%s/toolbox/test/reference/gen_%s.m',p.sourcepath,funcname);
+  filename = sprintf('%s/toolbox/test/gen_%s.m',p.sourcepath,funcname);
   fp = fopen(filename,'w');
   if (fp < 0)
     error(sprintf('unable to open %s for output',filename));
   end
   fprintf(fp,'function gen_%s(verbose)\n',funcname);
-  fprintf(fp,'  load wbinputs.mat\n');
+  fprintf(fp,'  load reference/wbinputs.mat\n');
   if (in_count == 0)
     fprintf(fp,'  error_refs = 0;\n');
     for k=1:out_count
-      fprintf(fp,'  y%d = [];\n',k);
+      fprintf(fp,'  y%d = []; y%d_refs = {};\n',k,k);
     end
     fprintf(fp,'  try\n');
     fprintf(fp,'    %s;\n',expr);
@@ -192,7 +194,7 @@ function outputtext(&p,text)
     fprintf(fp,'    end\n');
     fprintf(fp,'  end\n');
   end
-  fprintf(fp,'  save %s_ref.mat error_refs',funcname);
+  fprintf(fp,'  save reference/%s_ref.mat error_refs',funcname);
   for k=1:out_count
     fprintf(fp,'  y%d_refs ',k);
   end

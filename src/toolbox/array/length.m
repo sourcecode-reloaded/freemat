@@ -18,7 +18,7 @@
 %length(x)
 %@>
 %@@Tests
-%@$exact|y1=length(x1)
+%@$exact#y1=length(x1)
 %!
 
 % Copyright (c) 2002-2006 Samit Basu

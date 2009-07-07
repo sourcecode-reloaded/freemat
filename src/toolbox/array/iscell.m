@@ -16,7 +16,7 @@
 %iscell({1,2,3})
 %@>
 %@@Tests
-%@$exact|y1=iscell(x1)
+%@$exact#y1=iscell(x1)
 %!
 
 % Copyright (c) 2002-2006 Samit Basu

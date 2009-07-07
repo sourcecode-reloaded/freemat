@@ -32,8 +32,8 @@
 %rank(A,eps/8)
 %@>
 %@@Tests
-%@$near|y1=rank(x1)
-%@$near|y1=rank(x1,.0001)
+%@$near#y1=rank(x1)
+%@$near#y1=rank(x1,.0001)
 %!
 % Copyright (c) 2005 Samit Basu
 % Licensed under the GPL

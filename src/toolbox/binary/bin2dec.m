@@ -16,7 +16,7 @@
 %bin2dec('010')
 %@>
 %@@Tests
-%@$exact|y1=bin2dec(x1)
+%@$exact#y1=bin2dec(x1)
 %!
 
 % Copyright (c) 2002-2006 Samit Basu

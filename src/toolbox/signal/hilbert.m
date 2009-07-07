@@ -20,8 +20,8 @@
 %@]
 %where @|n| is the dimension along which to apply the transformation.
 %@@Tests
-%@$near|y1=hilbert(x1)
-%@$near|y1=hilbert(x1,2)
+%@$near#y1=hilbert(x1)
+%@$near#y1=hilbert(x1,2)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

@@ -10,7 +10,7 @@
 %and it returns a logical 1 if the argument is size @|N x 1| or
 %@|1 x N| and a logical 0 otherwise.
 %@@Tests
-%@$exact|y1=isvector(x1)
+%@$exact#y1=isvector(x1)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

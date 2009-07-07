@@ -24,7 +24,7 @@
 %dec2bin([63,73,32],5)
 %@>
 %@@Tests
-%@$exact|y1=dec2bin(x1)
+%@$exact#y1=dec2bin(x1)
 %!
 
 % Copyright (c) 2002-2006 Samit Basu

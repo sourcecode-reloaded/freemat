@@ -12,7 +12,7 @@ function test_val = wbtest_dotpower_1(verbose)
       catch
         error_flag = 1;
       end
-    if (error_flag && ~error_refs(loopi,loopj))
+    if (error_flag && ~error_refs(loopi,loopj) && ~(false))
        printf('Mismatch Errors: input %d, %d y=x1.^x2\n',loopi,loopj);
         fail_count = fail_count + 1;
     end

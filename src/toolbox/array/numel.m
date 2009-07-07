@@ -29,8 +29,8 @@
 %numel(x,1:3,1:2,2)
 %@>
 %@@Tests
-%@$exact|y1=numel(x1)
-%@$exact|y1=numel(x1,1:3,1:2,2)
+%@$exact#y1=numel(x1)
+%@$exact#y1=numel(x1,1:3,1:2,2)
 %!
 
 % Copyright (c) 2002-2006 Samit Basu

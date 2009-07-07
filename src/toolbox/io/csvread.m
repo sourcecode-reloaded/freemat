@@ -62,9 +62,9 @@
 %14, 17, 13, 67, 30, 43
 %21, 33, 14, 44, 01, 00
 %@}
-%@$exact|y1=csvread('sample_data.csv')
-%@$exact|y1=csvread('sample_data.csv',1,2)
-%@$exact|y1=csvread('sample_data.csv',1,2,[1,2,3,4])
+%@$exact#y1=csvread('sample_data.csv')
+%@$exact#y1=csvread('sample_data.csv',1,2)
+%@$exact#y1=csvread('sample_data.csv',1,2,[1,2,3,4])
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

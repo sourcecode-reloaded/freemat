@@ -17,9 +17,9 @@
 %is of size @|dims|. The @|fftn| function is implemented by a sequence
 %of calls to @|fft|.
 %@@Tests
-%@$near|y1=fftn(x1)
-%@$near|y1=fftn(x1,2)
-%@$near|y1=fftn(x1,3)
+%@$near#y1=fftn(x1)
+%@$near#y1=fftn(x1,2)
+%@$near#y1=fftn(x1,3)
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

@@ -10,7 +10,7 @@
 %@]
 %and is equivalent to min(find(size(x) == max(size(x)))).
 %@@Tests
-%@$exact|y1=maxdim(x1)
+%@$exact#y1=maxdim(x1)
 %!
 
 function n = maxdim(x);
