@@ -31,7 +31,7 @@
 //real([2.0+3.0*i,i])
 //@>
 //@@Tests
-//@$exact|y1=real(x1)
+//@$exact#y1=real(x1)
 //@@Signature
 //function real RealFunction
 //inputs x
@@ -77,7 +77,7 @@ ArrayVector RealFunction(int nargout, const ArrayVector& arg) {
 //imag([2.0+3.0*i,i])
 //@>
 //@@Tests
-//@$exact|y1=imag(x1)
+//@$exact#y1=imag(x1)
 //@@Signature
 //function imag ImagFunction
 //inputs x

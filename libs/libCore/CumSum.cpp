@@ -77,7 +77,7 @@ struct OpVecCumSum {
 //cumsum(B,3)
 //@>
 //@@Tests
-//@$exact|y1=cumsum(x1)
+//@$exact#y1=cumsum(x1)
 //@@Signature
 //function cumsum CumsumFunction
 //inputs x dimension

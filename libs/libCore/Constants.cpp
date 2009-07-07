@@ -57,8 +57,8 @@
 //i
 //@>
 //@@Tests
-//@$exact|y1=i
-//@$exact|y1=j
+//@$exact#y1=i
+//@$exact#y1=j
 //@@Signature
 //function i IFunction
 //inputs none
@@ -88,7 +88,7 @@ ArrayVector IFunction(int nargout, const ArrayVector& arg) {
 //cos(pi)
 //@>
 //@@Tests
-//@$exact|y1=pi
+//@$exact#y1=pi
 //@@Signature
 //function pi PiFunction
 //inputs none
@@ -114,7 +114,7 @@ ArrayVector PiFunction(int nargout, const ArrayVector& arg) {
 //log(e)
 //@>
 //@@Tests
-//@$exact|y1=e
+//@$exact#y1=e
 //@@Signature
 //function e EFunction
 //inputs none
@@ -174,10 +174,10 @@ struct OpEps {
 //test_val = test(a==b && c==d);
 //@}
 //@@Tests
-//@$exact|y1=eps
-//@$exact|y1=eps('double')
-//@$exact|y1=eps('single')
-//@$exact|y1=eps(x1)
+//@$exact#y1=eps
+//@$exact#y1=eps('double')
+//@$exact#y1=eps('single')
+//@$exact#y1=eps(x1)
 //@@Signature
 //function eps EpsFunction
 //inputs varargin
@@ -249,7 +249,7 @@ ArrayVector FepsFunction(int nargout, const ArrayVector& arg) {
 //   y = true
 //@]
 //@@Tests
-//@$exact|y1=true
+//@$exact#y1=true
 //@@Signature
 //function true TrueFunction
 //inputs none
@@ -268,7 +268,7 @@ ArrayVector TrueFunction(int nargout, const ArrayVector& arg) {
 //   y = false
 //@]
 //@@Tests
-//@$exact|y1=false
+//@$exact#y1=false
 //@@Signature
 //function false FalseFunction
 //inputs none

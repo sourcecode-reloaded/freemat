@@ -20,7 +20,7 @@
 //b*a
 //@>
 //@@Tests
-//@$near|y1=inv(x1)
+//@$near#y1=inv(x1)
 //@@Signature
 //function inv InvFunction
 //inputs x

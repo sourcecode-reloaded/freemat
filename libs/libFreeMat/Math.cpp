@@ -323,10 +323,10 @@ struct OpPower {
 //done in double precision in almost all cases.  When single precision
 //values are involved, the computations take place in single precision.
 //@@Tests
-//@$exact|y1=x1+2
-//@$exact|y1=1*i
-//@$exact|y1=pi+i
-//@$exact|y1=1/2
+//@$exact#y1=x1+2
+//@$exact#y1=1*i
+//@$exact#y1=pi+i
+//@$exact#y1=1/2
 //!
 
 /**
@@ -453,7 +453,7 @@ struct OpPower {
 //x = testeq(yi1+yi2,zi1+zi2) & testeq(yf1+yf2,zf1+zf2) & testeq(yd1+yd2,zd1+zd2) & testeq(yc1+yc2,zc1+zc2) & testeq(yz1+yz2,zz1+zz2);
 //@}
 //@@Tests
-//@$exact|y1=x1+x2
+//@$exact#y1=x1+x2
 //!
 
 Array Add(const Array& A, const Array& B) {
@@ -587,7 +587,7 @@ Array Add(const Array& A, const Array& B) {
 //[yz2,zz2] = sparse_test_mat('dcomplex',300,400);
 //x = testeq(yi1-yi2,zi1-zi2) & testeq(yf1-yf2,zf1-zf2) & testeq(yd1-yd2,zd1-zd2) & testeq(yc1-yc2,zc1-zc2) & testeq(yz1-yz2,zz1-zz2);
 //@}
-//@$exact|y1=x1-x2
+//@$exact#y1=x1-x2
 //!
 Array Subtract(const Array& A, const Array &B) {
   return DotOp<OpSubtract>(A,B);
@@ -741,7 +741,7 @@ Array Subtract(const Array& A, const Array &B) {
 //c = a .* b;
 //x = testeq(c,C);
 //@}
-//@$exact|y1=x1.*x2
+//@$exact#y1=x1.*x2
 //!
 Array DotMultiply(const Array& A, const Array &B) {
   return DotOp<OpMultiply>(A,B);
@@ -811,7 +811,7 @@ Array DotMultiply(const Array& A, const Array &B) {
 //c = 3 ./ a
 //@>
 //@@Tests
-//@$exact|y1=x1./x2
+//@$exact#y1=x1./x2
 //!
 Array DotRightDivide(const Array& A, const Array& B) {
   return DotOp<OpDivide>(A,B);
@@ -882,7 +882,7 @@ Array DotRightDivide(const Array& A, const Array& B) {
 //c = 3 .\ a
 //@>
 //@@Tests
-//@$exact|y1=x1.\x2
+//@$exact#y1=x1.\x2
 //!
 Array DotLeftDivide(const Array& A, const Array& B) {
   return DotOp<OpDivide>(B,A);
@@ -940,7 +940,7 @@ Array DotLeftDivide(const Array& A, const Array& B) {
 //C = A.^B
 //@>
 //@@Tests
-//@$near|y=x1.^x2
+//@$near#y=x1.^x2
 //@{ test_power1.m
 //function x = test_power1
 //invD_11 = [0.3529    0.4028    0.5812    0.3333];
@@ -958,7 +958,7 @@ Array DotLeftDivide(const Array& A, const Array& B) {
 //[value, pos4] = max(vec_max);
 //x = (pos1 == 4) && (pos2 == 4) && (pos3 == 4) && (pos4 == 4);
 //@}
-//@$exact|y1=x1.^x2
+//@$exact#y1=x1.^x2
 //!
 
 // Simplified test -- if A & B are both real
@@ -1428,12 +1428,12 @@ Array DotPower(const Array& A, const Array& B) {
 //c = 2 ~= full(A);
 //x = x & testeq(c,C);
 //@}
-//@$exact|y1=x1<x2
-//@$exact|y1=x1<=x2
-//@$exact|y1=x1>x2
-//@$exact|y1=x1>=x2
-//@$exact|y1=x1==x2
-//@$exact|y1=x1~=x2
+//@$exact#y1=x1<x2
+//@$exact#y1=x1<=x2
+//@$exact#y1=x1>x2
+//@$exact#y1=x1>=x2
+//@$exact#y1=x1==x2
+//@$exact#y1=x1~=x2
 //!
 Array LessThan(const Array& A, const Array& B) {
   return CmpOp<OpLessThan>(A,B);
@@ -1565,8 +1565,11 @@ Array NotEquals(const Array& A, const Array& B) {
 //c = 1 | full(A);
 //x = x | testeq(c,C);
 //@}
-//@$exact|y1=x1&&x2
-//@$exact|y1=~x1
+//@$exact#y1=x1&&x2
+//@$exact#y1=x1||x2
+//@$exact#y1=x1&x2
+//@$exact#y1=x1|x2
+//@$exact#y1=~x1
 //!
 Array And(const Array& A, const Array& B) {
   return DotOp<bool,OpAnd>(A,B,Bool);
@@ -1892,7 +1895,7 @@ Array MatrixPowerSparse(Array a, Array b) {
 //[yz2,zz2] = sparse_test_mat('dcomplex',400,600);
 //x = testeq(yi1*yi2,zi1*zi2) & testeq(yf1*yf2,zf1*zf2) & testeq(yd1*yd2,zd1*zd2) & testeq(yc1*yc2,zc1*zc2) & testeq(yz1*yz2,zz1*zz2);
 //@}
-//@$exact|y1=x1*x2
+//@$exact#y1=x1*x2
 //!
 
 template <typename T>
@@ -2052,7 +2055,7 @@ Array Multiply(const Array& A, const Array& B){
 //@>
 //which is the same solution.
 //@@Tests
-//@$exact|y1=x1\x2
+//@$exact#y1=x1\x2
 //!
 Array LeftDivide(const Array& A, const Array& B) {
   // Process our arguments
@@ -2122,7 +2125,7 @@ Array LeftDivide(const Array& A, const Array& B) {
 //  k = abs(a-b);
 //  x = max(k(:)) < (size(a,2)*size(a,1)*eps*4);
 //@}
-//@$exact|y1=x1/x2
+//@$exact#y1=x1/x2
 //!
 Array RightDivide(const Array& A, const Array& B) {
   Array C;
@@ -2217,7 +2220,7 @@ Array RightDivide(const Array& A, const Array& B) {
 //[yz1,zz1] = sparse_test_mat('dcomplex',300,400);
 //x = testeq(yi1.',zi1.') & testeq(yf1.',zf1.') & testeq(yd1.',zd1.') & testeq(yc1.',zc1.') & testeq(yz1.',zz1.');
 //@}
-//@$exact|y1=x1.'
+//@$exact#y1=x1.'
 //!
 
 
@@ -2290,7 +2293,7 @@ Array RightDivide(const Array& A, const Array& B) {
 //C = A^B
 //@>
 //@@Tests
-//@$exact|y1=x1^x2
+//@$exact#y1=x1^x2
 //!
 
 // Raises Scalar^Matrix

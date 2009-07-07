@@ -68,7 +68,7 @@ struct OpRound {
 //round(-5.32)
 //@>
 //@@Tests
-//@$exact|y1=round(x1)
+//@$exact#y1=round(x1)
 //@@Signature
 //function round RoundFunction
 //input x

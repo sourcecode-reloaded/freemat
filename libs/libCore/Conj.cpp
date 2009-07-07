@@ -39,7 +39,7 @@ struct OpConj {
 //conj([2.0+3.0*i,i])
 //@>
 //@@Tests
-//@$exact|y1=conj(x1)
+//@$exact#y1=conj(x1)
 //@@Signature
 //function conj ConjFunction
 //inputs x

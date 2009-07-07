@@ -43,7 +43,7 @@ struct OpFloor {
 //floor(-2.341)
 //@>
 //@@Tests
-//@$exact|y1=floor(x1)
+//@$exact#y1=floor(x1)
 //@@Signature
 //function floor FloorFunction
 //input x
@@ -102,7 +102,7 @@ struct OpFix {
 //fix(a)
 //@>
 //@@Tests
-//@$exact|y1=fix(x1)
+//@$exact#y1=fix(x1)
 //@@Signature
 //function fix FixFunction
 //input x

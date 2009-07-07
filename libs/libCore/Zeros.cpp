@@ -59,7 +59,7 @@
 //complex(inf)
 //@>
 //@@Tests
-//@$exact|y1=inf
+//@$exact#y1=inf
 //@@Signature
 //function inf InfFunction
 //inputs varargin
@@ -144,7 +144,7 @@ ArrayVector InfFunction(int nargout, const ArrayVector& arg) {
 //complex(nan)
 //@>
 //@@Tests
-//@$exact|y1=nan
+//@$exact#y1=nan
 //@@Signature
 //function nan NaNFunction
 //inputs varargin

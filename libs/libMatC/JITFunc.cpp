@@ -948,11 +948,11 @@ void JITFunc::compile(const Tree & t) {
   jit->SetCurrentBlock(epilog);
   jit->Return(jit->Load(retcode));
   //#ifndef NDEBUG
-  jit->Dump("unoptimized.bc.txt",func);
+  //  jit->Dump("unoptimized.bc.txt",func);
   //#endif
   jit->OptimizeCode();
   //#ifndef NDEBUG
-  jit->Dump("optimized.bc.txt",func);
+  //  jit->Dump("optimized.bc.txt",func);
   //#endif
   if (failed) throw exception_store;
 }

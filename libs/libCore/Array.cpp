@@ -34,8 +34,8 @@
 //size(B)
 //@>
 //@@Tests
-//@$exact|y1=permute(x1,[2,1])
-//@$exact|y1=size(permute(x1,[3,4,2,1]))
+//@$exact#y1=permute(x1,[2,1])
+//@$exact#y1=size(permute(x1,[3,4,2,1]))
 //@{ test_permute1.m
 //function test_val = test_permute1
 //z = rand(3,5,2,4,7);
@@ -121,10 +121,10 @@ ArrayVector PermuteFunction(int nargout, const ArrayVector& arg) {
 //y = repmat(x,[1,1,3])
 //@>
 //@@Tests
-//@$exact|y1=repmat(x1,[1,1,3])
-//@$exact|y1=repmat(x1,[5,1])
-//@$exact|y1=repmat(x1,1,2)
-//@$exact|y1=repmat(x1,2,1)
+//@$exact#y1=repmat(x1,[1,1,3])
+//@$exact#y1=repmat(x1,[5,1])
+//@$exact#y1=repmat(x1,1,2)
+//@$exact#y1=repmat(x1,2,1)
 //@@Signature
 //function repmat RepMatFunction
 //inputs x rows cols

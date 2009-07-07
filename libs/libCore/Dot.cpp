@@ -21,8 +21,8 @@
 //@]
 //where @|dim| specifies the dimension to take the dot product along.
 //@@Tests
-//@$exact|y1=dot(x1,x2)
-//@$exact|y1=dot(x1,x2,2)
+//@$exact#y1=dot(x1,x2)
+//@$exact#y1=dot(x1,x2,2)
 //@@Signature
 //function dot DotFunction
 //inputs x1 x2 dim

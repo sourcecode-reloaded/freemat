@@ -64,7 +64,7 @@
 //which results in the following plot.
 //@figure erfc1
 //@@Tests
-//@$near|y1=erfc(x1)
+//@$near#y1=erfc(x1)
 //@@Signature
 //function erfc ErfcFunction
 //inputs x
@@ -114,7 +114,7 @@ ArrayVector ErfcFunction(int nargout, const ArrayVector& arg) {
 //which results in the following plot.
 //@figure erf1
 //@@Tests
-//@$near|y1=erf(x1)
+//@$near#y1=erf(x1)
 //@@Signature
 //function erf ErfFunction
 //inputs x
@@ -169,7 +169,7 @@ ArrayVector ErfFunction(int nargout, const ArrayVector& arg) {
 //which results in the following plot.
 //@figure gamma1
 //@@Tests
-//@$near|y1=gamma(x1)
+//@$near#y1=gamma(x1)
 //@@Signature
 //function gamma GammaFunction
 //inputs x
@@ -219,7 +219,7 @@ ArrayVector GammaFunction(int nargout, const ArrayVector& arg) {
 //which results in the following plot.
 //@figure gammaln1
 //@@Tests
-//@$near|y1=gammaln(x1)
+//@$near#y1=gammaln(x1)
 //@@Signature
 //function gammaln GammaLnFunction
 //inputs x

@@ -53,7 +53,7 @@
 //  \sinh \Im z.
 //\]
 //@@Tests
-//@$near|y1=cos(x1)
+//@$near#y1=cos(x1)
 //@@Example
 //The following piece of code plots the real-valued @|cos(2 pi x)|
 //function over one period of @|[0,1]|:
@@ -112,7 +112,7 @@ ArrayVector CosFunction(int nargout, const ArrayVector& arg) {
 //cosd(60)
 //@>
 //@@Tests
-//@$near|y1=cosd(x1)
+//@$near#y1=cosd(x1)
 //@@Signature
 //function cosd CosdFunction
 //inputs x
@@ -171,7 +171,7 @@ ArrayVector CosdFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure sinplot
 //@@Tests
-//@$near|y1=sin(x1)
+//@$near#y1=sin(x1)
 //@@Signature 
 //function sin SinFunction
 //inputs x
@@ -221,7 +221,7 @@ ArrayVector SinFunction(int nargout, const ArrayVector& arg) {
 //sind(30)
 //@>
 //@@Tests
-//@$near|y1=sind(x1)
+//@$near#y1=sind(x1)
 //@@Signature
 //function sind SindFunction
 //inputs x
@@ -285,7 +285,7 @@ ArrayVector SindFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure tanplot
 //@@Tests
-//@$near|y1=tan(x1)
+//@$near#y1=tan(x1)
 //@@Signature
 //function tan TanFunction
 //inputs x
@@ -331,7 +331,7 @@ ArrayVector TanFunction(int nargout, const ArrayVector& arg) {
 //tand(45)
 //@>
 //@@Tests
-//@$near|y1=tand(x1)
+//@$near#y1=tand(x1)
 //@@Signature
 //function tand TandFunction
 //inputs x
@@ -385,7 +385,7 @@ ArrayVector TandFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure cscplot
 //@@Tests
-//@$near|y1=csc(x1)
+//@$near#y1=csc(x1)
 //@@Signature
 //function csc CscFunction
 //inputs x
@@ -428,7 +428,7 @@ ArrayVector CscFunction(int nargout, const ArrayVector& arg) {
 //   y = cscd(x)
 //@]
 //@@Tests
-//@$near|y1=cscd(x1)
+//@$near#y1=cscd(x1)
 //@@Signature
 //function cscd CscdFunction
 //inputs x
@@ -492,7 +492,7 @@ ArrayVector CscdFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure secplot
 //@@Tests
-//@$near|y1=sec(x1)
+//@$near#y1=sec(x1)
 //@@Signature
 //function sec SecFunction
 //inputs x
@@ -535,7 +535,7 @@ ArrayVector SecFunction(int nargout, const ArrayVector& arg) {
 //   y = secd(x)
 //@]
 //@@Tests
-//@$near|y1=secd(x1)
+//@$near#y1=secd(x1)
 //@@Signature
 //function secd SecdFunction
 //inputs x
@@ -598,7 +598,7 @@ ArrayVector SecdFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure cotplot
 //@@Tests
-//@$near|y1=cot(x1)
+//@$near#y1=cot(x1)
 //@@Signature
 //function cot CotFunction
 //inputs x
@@ -642,7 +642,7 @@ ArrayVector CotFunction(int nargout, const ArrayVector& arg) {
 //cotd(45)
 //@>
 //@@Tests
-//@$near|y1=cotd(x1)
+//@$near#y1=cotd(x1)
 //!
 
 struct OpCotd {
@@ -701,7 +701,7 @@ ArrayVector CotdFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure acosplot
 //@@Tests
-//@$near|y1=acos(x1)
+//@$near#y1=acos(x1)
 //@@Signature
 //function acos ArccosFunction
 //inputs x
@@ -788,7 +788,7 @@ ArrayVector ArccosFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure asinplot
 //@@Tests
-//@$near|y1=asin(x1)
+//@$near#y1=asin(x1)
 //@@Signature
 //function asin ArcsinFunction
 //inputs x
@@ -874,7 +874,7 @@ ArrayVector ArcsinFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure atanplot
 //@@Tests
-//@$near|y1=atan(x1)
+//@$near#y1=atan(x1)
 //@@Signature
 //function atan ArcTanFunction
 //inputs x
@@ -946,7 +946,7 @@ ArrayVector ArcTanFunction(int nargout, const ArrayVector& arg) {
 //correctly ``unwraps'' the phase of the angle, while the @|atan| 
 //function (red line) wraps the angle to the interval @|[-\pi/2,\pi/2]|.
 //@@Tests
-//@$near|y1=atan(x1,x2)
+//@$near#y1=atan(x1,x2)
 //@@Signature
 //function atan2 Arctan2Function
 //inputs y x

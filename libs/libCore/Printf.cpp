@@ -320,10 +320,10 @@ void PrintfHelperFunction(int nargout, const ArrayVector& arg, PrintfStream& out
 //l
 //@>
 //@@Tests
-//@$exact|y1=sprintf('hello %d',5)
-//@$exact|y1=sprintf('%d aa %s',5,'bcd')
-//@$exact|y1=sprintf('%d %%aa %s %f',5,'bcd',5)
-//@$exact|y1=sprintf('%d aa ',[5 6; 7 8])
+//@$exact#y1=sprintf('hello %d',5)
+//@$exact#y1=sprintf('%d aa %s',5,'bcd')
+//@$exact#y1=sprintf('%d %%aa %s %f',5,'bcd',5)
+//@$exact#y1=sprintf('%d aa ',[5 6; 7 8])
 //@@Signature
 //function sprintf SprintfFunction
 //inputs varargin

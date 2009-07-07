@@ -103,7 +103,7 @@ struct OpVecProd {
 //prod(A,2)
 //@>
 //@@Tests
-//@$exact|y1=prod(x1)
+//@$exact#y1=prod(x1)
 //@@Signature
 //function prod ProdFunction
 //inputs x dimension

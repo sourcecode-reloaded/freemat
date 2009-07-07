@@ -38,7 +38,7 @@
 //@]
 //where @|x| is an @|n|-dimensional array of numerical type.
 //@@Tests
-//@$near|y1=log1p(x1)
+//@$near#y1=log1p(x1)
 //@@Signature
 //function log1p Log1PFunction
 //inputs x
@@ -109,7 +109,7 @@ ArrayVector Log1PFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure logplot
 //@@Tests
-//@$near|y1=log(x1)
+//@$near#y1=log(x1)
 //@@Signature
 //function log LogFunction
 //inputs x
@@ -161,7 +161,7 @@ ArrayVector LogFunction(int nargout, const ArrayVector& arg) {
 //sqrt(x)
 //@>
 //@@Tests
-//@$near|y1=sqrt(x1)
+//@$near#y1=sqrt(x1)
 //@@Signature
 //function sqrt SqrtFunction
 //inputs x
@@ -215,7 +215,7 @@ ArrayVector SqrtFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure tanhplot
 //@@Tests
-//@$near|y1=tanh(x1)
+//@$near#y1=tanh(x1)
 //@@Signature
 //function tanh TanhFunction
 //inputs x
@@ -278,7 +278,7 @@ ArrayVector TanhFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure acoshplot
 //@@Tests
-//@$near|y1=acosh(x1)
+//@$near#y1=acosh(x1)
 //@@Signature
 //function acosh ArccoshFunction
 //inputs x
@@ -347,7 +347,7 @@ ArrayVector ArccoshFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure asinhplot
 //@@Tests
-//@$near|y1=asinh(x1)
+//@$near#y1=asinh(x1)
 //@@Signature
 //function asinh ArcsinhFunction
 //inputs x
@@ -403,7 +403,7 @@ ArrayVector ArcsinhFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure asechplot
 //@@Tests
-//@$near|y1=asech(x1)
+//@$near#y1=asech(x1)
 //@@Signature
 //function asech ArcsechFunction
 //inputs x
@@ -468,7 +468,7 @@ ArrayVector ArcsechFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure atanhplot
 //@@Tests
-//@$near|y1=atanh(x1)
+//@$near#y1=atanh(x1)
 //@@Signature
 //function atanh ArctanhFunction
 //inputs x
@@ -542,7 +542,7 @@ ArrayVector ArctanhFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure coshplot
 //@@Tests
-//@$near|y1=cosh(x1)
+//@$near#y1=cosh(x1)
 //@@Signature
 //function cosh CoshFunction
 //inputs x
@@ -591,7 +591,7 @@ ArrayVector CoshFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure sinhplot
 //@@Tests
-//@$near|y1=sinh(x1)
+//@$near#y1=sinh(x1)
 //@@Signature
 //function sinh SinhFunction
 //inputs x
@@ -667,7 +667,7 @@ ArrayVector SinhFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure expplot2
 //@@Tests
-//@$near|y1=exp(x1)
+//@$near#y1=exp(x1)
 //@@Signature
 //function exp ExpFunction
 //inputs x
@@ -705,7 +705,7 @@ ArrayVector ExpFunction(int nargout, const ArrayVector& arg) {
 //@]
 //where @|x| is an @|n|-dimensional array of numerical type.
 //@@Tests
-//@$near|y1=expm1(x1)
+//@$near#y1=expm1(x1)
 //@@Signature
 //function expm1 ExpM1Function
 //inputs x

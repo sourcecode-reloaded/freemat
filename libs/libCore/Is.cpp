@@ -246,7 +246,7 @@ struct OpIsNaN {
 //isnan(a)
 //@>
 //@@Tests
-//@$exact|y1=isnan(x1)
+//@$exact#y1=isnan(x1)
 //@@Signature
 //function isnan IsNaNFunction
 //inputs x
@@ -297,7 +297,7 @@ struct OpIsInf {
 //b = 3./[2 5 0 3 1]
 //@>
 //@@Tests
-//@$exact|y1=isinf(x1)
+//@$exact#y1=isinf(x1)
 //@@Signature
 //function isinf IsInfFunction
 //inputs x
@@ -324,7 +324,7 @@ ArrayVector IsInfFunction(int nargout, const ArrayVector& arg) {
 //and it returns a logical 1 if the argument is real valued
 //and a logical 0 otherwise.
 //@@Tests
-//@$exact|y1=isreal(x1)
+//@$exact#y1=isreal(x1)
 //@@Signature
 //function isreal IsRealFunction
 //inputs x
@@ -362,7 +362,7 @@ ArrayVector IsRealFunction(int nargout, const ArrayVector& arg) {
 //isempty(x)
 //@>
 //@@Tests
-//@$exact|y1=isempty(x1)
+//@$exact#y1=isempty(x1)
 //@{ test_empty.m
 //% Test the arithmetic operators with empty arguments
 //function test_val = test_empty

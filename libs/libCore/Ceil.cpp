@@ -49,7 +49,7 @@ struct OpCeil {
 //ceil(-5.32)
 //@>
 //@@Tests
-//@$exact|y1=ceil(x1)
+//@$exact#y1=ceil(x1)
 //@@Signature
 //function ceil CeilFunction
 //input x

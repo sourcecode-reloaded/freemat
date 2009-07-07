@@ -117,8 +117,8 @@ struct OpVecVar {
 //var(A,2)
 //@>
 //@@Tests
-//@$near|y1=var(x1)
-//@$near|y1=var(x1,2)
+//@$near#y1=var(x1)
+//@$near#y1=var(x1,2)
 //@@Signature
 //function var VarFunction
 //inputs x dim

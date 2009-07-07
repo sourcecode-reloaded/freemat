@@ -42,7 +42,7 @@
 //logical([pi,pi,0,e,0,-1])
 //@>
 //@@Tests
-//@$exact|y1=logical(x1)
+//@$exact#y1=logical(x1)
 //@@Signature
 //function logical LogicalFunction
 //inputs x
@@ -72,7 +72,7 @@ ArrayVector LogicalFunction(int nargout, const ArrayVector& arg) {
 //string(a)
 //@>
 //@@Tests
-//@$exact|y1=string(x1)
+//@$exact#y1=string(x1)
 //@@Signature
 //function string StringFunction
 //inputs x
@@ -134,7 +134,7 @@ ArrayVector StringFunction(int nargout, const ArrayVector& arg) {
 //uint8({4})
 //@>
 //@@Tests
-//@$exact|y1=uint8(x1)
+//@$exact#y1=uint8(x1)
 //@@Signature
 //function uint8 UInt8Function
 //inputs x
@@ -194,7 +194,7 @@ ArrayVector UInt8Function(int nargout, const ArrayVector& arg) {
 //uint16({4})
 //@>
 //@@Tests
-//@$exact|y1=uint16(x1)
+//@$exact#y1=uint16(x1)
 //@@Signature
 //function uint16 UInt16Function
 //inputs x
@@ -255,7 +255,7 @@ ArrayVector UInt16Function(int nargout, const ArrayVector& arg) {
 //uint32({4})
 //@>
 //@@Tests
-//@$exact|y1=uint32(x1)
+//@$exact#y1=uint32(x1)
 //@@Signature
 //function uint32 UInt32Function
 //inputs x
@@ -315,7 +315,7 @@ ArrayVector UInt32Function(int nargout, const ArrayVector& arg) {
 //uint64({4})
 //@>
 //@@Tests
-//@$exact|y1=uint64(x1)
+//@$exact#y1=uint64(x1)
 //@@Signature
 //function uint64 UInt64Function
 //inputs x
@@ -373,7 +373,7 @@ ArrayVector UInt64Function(int nargout, const ArrayVector& arg) {
 //int8({4})
 //@>
 //@@Tests
-//@$exact|y1=int8(x1)
+//@$exact#y1=int8(x1)
 //@@Signature
 //function int8 Int8Function
 //inputs x
@@ -430,7 +430,7 @@ ArrayVector Int8Function(int nargout, const ArrayVector& arg) {
 //int16({4})
 //@>
 //@@Tests
-//@$exact|y1=int16(x1)
+//@$exact#y1=int16(x1)
 //@@Signature
 //function int16 Int16Function
 //inputs x
@@ -487,7 +487,7 @@ ArrayVector Int16Function(int nargout, const ArrayVector& arg) {
 //int32({4})
 //@>
 //@@Tests
-//@$exact|y1=int32(x1)
+//@$exact#y1=int32(x1)
 //@@Signature
 //function int32 Int32Function
 //inputs x
@@ -544,7 +544,7 @@ ArrayVector Int32Function(int nargout, const ArrayVector& arg) {
 //int64({4})
 //@>
 //@@Tests
-//@$exact|y1=int64(x1)
+//@$exact#y1=int64(x1)
 //@@Signature
 //function int64 Int64Function
 //inputs x
@@ -611,7 +611,7 @@ ArrayVector Int64Function(int nargout, const ArrayVector& arg) {
 //float({4})
 //@>
 //@@Tests
-//@$exact|y1=float(x1)
+//@$exact#y1=float(x1)
 //@{ test_sparse58.m
 //% Test type conversion functions
 //function x = test_sparse58
@@ -701,7 +701,7 @@ ArrayVector FloatFunction(int nargout, const ArrayVector& arg) {
 //double({4})
 //@>
 //@@Tests
-//@$exact|y1=double(x1)
+//@$exact#y1=double(x1)
 //@@Signature
 //function double DoubleFunction
 //inputs x
@@ -727,7 +727,7 @@ ArrayVector DoubleFunction(int nargout, const ArrayVector& arg) {
 //for binary operators apply (i.e., one of the arguments can be a scalar,
 //if either is of type @|single| the output is single, etc.).
 //@@Tests
-//@$exact|y1=complex(x1,x2)
+//@$exact#y1=complex(x1,x2)
 //@@Signature
 //function complex ComplexFunction
 //inputs x z
@@ -881,7 +881,7 @@ ArrayVector DcomplexFunction(int nargout, const ArrayVector& arg) {
 //test_val = test(strcmp(typeof(a),'char'));
 //@}
 //@@Tests
-//@$exact|y1=typeof(x1)
+//@$exact#y1=typeof(x1)
 //@@Signature
 //function typeof TypeOfFunction
 //inputs x

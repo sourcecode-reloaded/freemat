@@ -297,12 +297,12 @@ struct OpVecIFFT {
 //The resulting plot is:
 //@figure fft2
 //@@Tests
-//@$near|y1=fft(x1)
-//@$near|y1=fft(x1,2)
-//@$near|y1=fft(x1,3)
-//@$near|y1=ifft(x1)
-//@$near|y1=ifft(x1,2)
-//@$near|y1=ifft(x1,3)
+//@$near#y1=fft(x1)
+//@$near#y1=fft(x1,2)
+//@$near#y1=fft(x1,3)
+//@$near#y1=ifft(x1)
+//@$near#y1=ifft(x1,2)
+//@$near#y1=ifft(x1,3)
 //@@Signature
 //function fft FFTFunction
 //inputs x len dim
