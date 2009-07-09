@@ -3,7 +3,7 @@
 % Licensed under the GPL
 
 function writeindex(&p)
-fname = sprintf('%s/toolbox/test/reference/run_gen_all.m', ...
+fname = sprintf('%s/toolbox/test/run_gen_all.m', ...
                 p.sourcepath);
 fp = fopen(fname,'w');
 if (fp < 0)

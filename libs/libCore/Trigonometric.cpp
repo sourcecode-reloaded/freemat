@@ -714,8 +714,13 @@ struct OpAcos {
   template <typename T>
   static inline void func(T xr, T xi, T &yr, T &yi) {
     if (IsInfinite(xr) && (xi == 0)) {
-      yr = 0;
-      yi = Inf();
+      if (xr > 0) {
+	  yr = 0;
+	  yi = Inf();
+      } else {
+	yr = 4.0*atan(1.0);
+	yi = -Inf();
+      }
       return;
     }
     T xsq_real, xsq_imag;

@@ -115,7 +115,7 @@ function y = cast(a,toclass)
       case 'double'
         y = double(a);
       case 'char'
-        y = string(a);
+        y = char(a);
       otherwise
         error(['Unsupported class ' toclass ' requested in typecast'])
     end

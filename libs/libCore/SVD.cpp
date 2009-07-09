@@ -983,7 +983,7 @@ ArrayVector SVDFunction(int nargout, const ArrayVector& arg) {
     throw Exception("svd function takes at most two arguments");
   if (arg.size() < 1)
     throw Exception("svd function requries at least one argument - the matrix to decompose");
-  Array A(arg[0]);
+  Array A(arg[0].asDenseArray());
   bool compactform = false;
   if (arg.size() > 1) {
     Array flag(arg[1]);

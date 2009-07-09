@@ -477,7 +477,7 @@ static Array SolveLeastSquaresReal(BasicArray<T> A, BasicArray<T> B) {
 
 template <typename T>
 static Array SolveLeastSquaresComplex(BasicArray<T> A, BasicArray<T> B) {
-  BasicArray<T> C(NTuple(A.cols(),B.cols()));
+  BasicArray<T> C(NTuple(2*A.cols(),B.cols()));
   complexSolveLeastSq(int(A.rows()/2),int(A.cols()),int(B.cols()),C.data(),A.data(),B.data());
   return Array(SplitReal<T>(C),SplitImag<T>(C));
 }

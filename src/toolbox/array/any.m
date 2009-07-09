@@ -55,7 +55,13 @@ function y = any(A,dim)
   A(isnan(A))=0;
   if (nargin == 1)
     if (isempty(A))
-      y = false;
+      if (ndims(A) < 3)
+        y = false;
+      else
+        v = size(A);
+        v(min(find(v > 1))) = 1;
+        y = logical(ones(v));
+      end
     else
       y = max(logical(A));
     end
