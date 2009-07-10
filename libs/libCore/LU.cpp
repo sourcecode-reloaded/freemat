@@ -46,7 +46,7 @@
 //full(b(p,q))
 //@>
 //@@Tests
-//@$near#y1=lu(x1)
+//@$near#y1=lu(x1)#(true)
 //@$near#[y1,y2]=lu(x1)#(any(loopi==[50:52]))
 //@$near#[y1,y2,y3]=lu(x1)#(any(loopi==[50:52]))
 //@$near#[y1,y2,y3,y4,y5]=lu(x1)
