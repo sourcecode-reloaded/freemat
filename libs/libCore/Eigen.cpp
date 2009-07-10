@@ -480,7 +480,7 @@ static ArrayVector GenEigFunction(int nargout, const ArrayVector &arg) {
 //@$near#y1=eig(x1)
 //@$near#[y1,y2]=eig(x1)
 //@$near#y1=eig(x1,'nobalance')
-//@$near#[y1,y2]=eig(x1,'nobalance')
+//@$near#[y1,y2]=eig(x1,'nobalance')#(any(loopi==[14,59,64]))
 //@@Signature
 //function eig EigFunction
 //inputs A flag

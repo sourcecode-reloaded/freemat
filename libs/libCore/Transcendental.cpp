@@ -49,12 +49,12 @@ struct OpLog1P {
   static inline float func(float x) {return log1pf(x);}
   static inline double func(double x) {return log1p(x);}
   static inline void func(float xr, float xi, float &yr, float &yi) {
-    yr = log1pf(complex_abs<float>(xr,xi));
-    yi = atan2f(xi,xr);
+    yr = logf(complex_abs<float>(xr+1,xi));
+    yi = atan2f(xi,xr+1);
   }
   static inline void func(double xr, double xi, double &yr, double &yi) {
-    yr = log1p(complex_abs<double>(xr,xi));
-    yi = atan2(xi,xr);
+    yr = log(complex_abs<double>(xr+1,xi));
+    yi = atan2(xi,xr+1);
   }
 };
 
@@ -62,12 +62,12 @@ ArrayVector Log1PFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1)
     throw Exception("Log1p function takes exactly one argument");
   Array input(arg[0]);
-  if (!IsPositive(input)) {
+  if (ArrayMin(input) < -1) {
     if (input.dataClass() != Float) 
       input = input.toClass(Double);
     input.forceComplex();
   }
-  return ArrayVector(UnaryOp<OpLog1P>(input));
+  return ArrayVector(UnaryOp<OpLog1P>(input).toClass(input.dataClass()));
 }
 
 //!

@@ -171,7 +171,7 @@ ArrayVector CosdFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure sinplot
 //@@Tests
-//@$near#y1=sin(x1)
+//@$near#y1=sin(x1)#(loopi==5)
 //@@Signature 
 //function sin SinFunction
 //inputs x
@@ -285,7 +285,7 @@ ArrayVector SindFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure tanplot
 //@@Tests
-//@$near#y1=tan(x1)
+//@$near#y1=tan(x1)#(loopi==5)
 //@@Signature
 //function tan TanFunction
 //inputs x
@@ -331,7 +331,7 @@ ArrayVector TanFunction(int nargout, const ArrayVector& arg) {
 //tand(45)
 //@>
 //@@Tests
-//@$near#y1=tand(x1)
+//@$near#y1=tand(x1)#(loopi==54)
 //@@Signature
 //function tand TandFunction
 //inputs x
@@ -385,7 +385,7 @@ ArrayVector TandFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure cscplot
 //@@Tests
-//@$near#y1=csc(x1)
+//@$near#y1=csc(x1)#(any(loopi==[5,55]))
 //@@Signature
 //function csc CscFunction
 //inputs x
@@ -535,7 +535,7 @@ ArrayVector SecFunction(int nargout, const ArrayVector& arg) {
 //   y = secd(x)
 //@]
 //@@Tests
-//@$near#y1=secd(x1)
+//@$near#y1=secd(x1)#(loopi==54)
 //@@Signature
 //function secd SecdFunction
 //inputs x
@@ -598,7 +598,7 @@ ArrayVector SecdFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@figure cotplot
 //@@Tests
-//@$near#y1=cot(x1)
+//@$near#y1=cot(x1)#(any(loopi==[5,55]))
 //@@Signature
 //function cot CotFunction
 //inputs x

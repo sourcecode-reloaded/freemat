@@ -1346,6 +1346,8 @@ static Array DeBlank(const Array &x) {
 ArrayVector DeblankFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0)
     throw Exception("deblank requires at least one argument");
+  if (arg[0].isEmpty())
+    return ArrayVector(arg[0]);
   return ArrayVector(DeBlank(arg[0]));
 }
 

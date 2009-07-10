@@ -2,7 +2,15 @@
 #include "Math.hpp"
 #include "Complex.hpp"
 #include "Algorithms.hpp"
+#include "IEEEFP.hpp"
   
+template <class T>
+static T NonIEEEMult(const T & A, const T & B) {
+  if (A == 0) return 0;
+  return A*B;
+}
+
+
 template <class T>
 static void Conv2MainReal(T* C, const T* A, const T*B,
 			  int Am, int An, int Bm, int Bn, 
@@ -18,7 +26,7 @@ static void Conv2MainReal(T* C, const T* A, const T*B,
       jMax = std::min(An-1,n+Cn_offset);
       for (int j=jMin;j<=jMax;j++)
 	for (int i=iMin;i<=iMax;i++)
-	  accum += A[i+j*Am]*B[(m+Cm_offset-i)+(n+Cn_offset-j)*Bm];
+	  accum += NonIEEEMult(A[i+j*Am],B[(m+Cm_offset-i)+(n+Cn_offset-j)*Bm]);
       C[m+n*Cm] = accum;
     }
 }
@@ -44,10 +52,12 @@ static void Conv2MainComplex(T* Cr, T* Ci,
       for (int j=jMin;j<=jMax;j++)
 	for (int i=iMin;i<=iMax;i++) {
 	  T p_r, p_i;
-	  complex_multiply(Ar[i+j*Am],Ai[i+j*Am],
+	  complex_multiply(Ar[i+j*Am],
+			   Ai[i+j*Am],
 			   Br[(m+Cm_offset-i)+(n+Cn_offset-j)*Bm],
 			   Bi[(m+Cm_offset-i)+(n+Cn_offset-j)*Bm],
-			   p_r,p_i);
+			   p_r,
+			   p_i);
 	  accum_r += p_r;
 	  accum_i += p_i;
 	}
@@ -103,8 +113,8 @@ static Array Conv2FunctionSameXY(Array X, Array Y) {
   int Cm, Cn, Cm_offset, Cn_offset;
   Cm = int(X.rows());
   Cn = int(X.cols());
-  Cm_offset = (int) floor((double)((Y.rows()-1)/2));
-  Cn_offset = (int) floor((double)((Y.cols()-1)/2));
+  Cm_offset = (int) round((double)((Y.rows()-1)/2));
+  Cn_offset = (int) round((double)((Y.cols()-1)/2));
   return Conv2FunctionDispatch(X,Y,Cm,Cn,Cm_offset,Cn_offset);
 }
 
@@ -112,8 +122,10 @@ static Array Conv2FunctionValidXY(Array X, Array Y) {
   int Cm, Cn, Cm_offset, Cn_offset;
   Cm = int(X.rows()-Y.rows()+1);
   Cn = int(X.cols()-Y.cols()+1);
-  if ((Cm <= 0) || (Cn <= 0))
+  if ((Cm < 0) || (Cn < 0))
     return EmptyConstructor();
+  if ((Cm == 0) || (Cn == 0))
+    return Array(X.dataClass(),NTuple(Cm,Cn));
   Cm_offset = int(Y.rows()-1);
   Cn_offset = int(Y.cols()-1);
   return Conv2FunctionDispatch(X,Y,Cm,Cn,Cm_offset,Cn_offset);    
@@ -192,9 +204,9 @@ static Array Conv2FunctionRCX(Array hcol, Array hrow, Array X, QString type) {
 //is @|'same'|, the output ranges over @|(ym-1)/2 <= m < xm + (ym-1)/2|
 //and @|(yn-1)/2 <= n < xn + (yn-1)/2|.
 //@@Tests
-//@$near#y1=conv2(x1,x2)
-//@$near#y1=conv2(x1,x2,'same')
-//@$near#y1=conv2(x1,x2,'valid')
+//@$near#y1=conv2(x1,x2)#(any(loopi==[50:52])||any(loopj==[50:52]))
+//@$near#y1=conv2(x1,x2,'same')#(any(loopi==[50:52])||any(loopj==[50:52]))
+//@$near#y1=conv2(x1,x2,'valid')#(any(loopi==[50:52])||any(loopj==[50:52]))
 //@@Signature
 //function conv2 Conv2Function
 //inputs hcol hrow X shape
