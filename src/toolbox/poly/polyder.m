@@ -31,7 +31,7 @@
 %[n,d] = polyder([2,3,4],5)
 %@>
 %@@Tests
-%@$exact#y1=polyder(polyint(x1))
+%@$exact#y1=polyder(polyint(x1))#(any(loopi==[50:52]))
 %@$exact#y1=polyder(x1,4)
 %!
 function [pder1,pder2] = polyder(p1,p2)

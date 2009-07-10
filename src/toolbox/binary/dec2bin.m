@@ -24,7 +24,7 @@
 %dec2bin([63,73,32],5)
 %@>
 %@@Tests
-%@$exact#y1=dec2bin(x1)
+%@$exact#y1=dec2bin(x1)#(any(loopi==[6,11,15,49:53,58]))
 %!
 
 % Copyright (c) 2002-2006 Samit Basu
@@ -37,7 +37,7 @@ function t = dec2bin(x,n)
       return;
   end
   if (~exist('n') && max(x) > 0)
-    n = ceil(log2(max(x)));
+    n = ceil(log2(max(x)+1e-10));
   elseif (~exist('n'))
   t = string(zeros(size(x))+'0');
     return;

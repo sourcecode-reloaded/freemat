@@ -17,7 +17,7 @@
 %expm(A)
 %@>
 %@@Tests
-%@$near#y1=expm(x1)
+%@$near#y1=expm(x1)#(any(loopi==[50:51]))
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

@@ -1,4 +1,8 @@
 function c = wbtest_near(a,b)
+  if (issame(a,b)) 
+    c = true;
+    return;
+  end
   if (~issame(size(a),size(b))) 
     c = false;
     return;

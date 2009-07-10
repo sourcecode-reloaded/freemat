@@ -42,9 +42,9 @@
 %norm(A,-inf)
 %@>
 %@@Tests
-%@$near#y1=norm(x1)
+%@$near#y1=norm(x1)#(any(loopi==[50:51]))
 %@$near#y1=norm(x1,1)
-%@$near#y1=norm(x1,2)
+%@$near#y1=norm(x1,2)#(any(loopi==[50:51]))
 %@$near#y1=norm(x1,7)
 %@$near#y1=norm(x1,inf)
 %@$near#y1=norm(x1,-inf)
