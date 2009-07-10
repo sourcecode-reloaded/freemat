@@ -9,6 +9,11 @@ static inline void complex_divide(const T& ar, const T& ai,
 				  T& c0, T& c1) {
   double ratio, den;
   double abr, abi, cr;
+  if (bi == 0) {
+    c0 = ar/br;
+    c1 = ai/br;
+    return;
+  }
   if ((ai == 0) && (bi == 0)) {
     c1 = 0;
     c0 = ar/br;
@@ -99,8 +104,8 @@ inline bool complex_lt(const T &ar, const T &ai,
 		const T &br, const T &bi) {
   T mag_a = complex_abs(ar,ai);
   T mag_b = complex_abs(br,bi);
-  if (mag_a < mag_b) return true;
-  if (mag_b < mag_a) return false;
+  if ((mag_b-mag_a) > feps(mag_a)*4) return true;
+  if ((mag_a-mag_b) > feps(mag_b)*4) return false;
   return (complex_phase(ar,ai) < complex_phase(br,bi));
 }
 
@@ -109,8 +114,8 @@ inline bool complex_gt(const T &ar, const T &ai,
 		const T &br, const T &bi) {
   T mag_a = complex_abs(ar,ai);
   T mag_b = complex_abs(br,bi);
-  if (mag_a > mag_b) return true;
-  if (mag_b > mag_a) return false;
+  if ((mag_b-mag_a) > feps(mag_a)*4) return false;
+  if ((mag_a-mag_b) > feps(mag_b)*4) return true;
   return (complex_phase(ar,ai) > complex_phase(br,bi));
 }
 
