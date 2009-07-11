@@ -45,7 +45,7 @@ function t = dec2bin(x,n)
       return;
   end
   if (~exist('n') && max(x) > 0)
-    n = ceil(log2(max(x)));
+    n = ceil(log2(max(x)+1e-10));
   elseif (~exist('n'))
   t = string(zeros(size(x))+'0');
     return;

@@ -795,11 +795,14 @@ Array SparseSolveLinEq(const SparseMatrix<double> &Ar, const SparseMatrix<double
 #endif
 }
 
-Array SolveLinearEq(const Array & A, const Array &B) {
-  if (!A.isSquare() || (A.rows() != B.rows())) 
+Array SolveLinearEq(const Array & Ain, const Array &Bin) {
+  if (!Ain.isSquare() || (Ain.rows() != Bin.rows())) 
     throw Exception("Solving Ax=B requires A be square (use least squares solver for rectangular matrices A");
-  if (A.dataClass() != B.dataClass())
-    throw Exception("Cannot mix arrays of different data classes in solving linear systems of equations");
+  DataClass via_type;
+  DataClass out_type;
+  ComputeTypes(Ain,Bin,via_type,out_type);
+  Array A = Ain.toClass(via_type);
+  Array B = Bin.toClass(via_type);
   if (A.isSparse() && ((A.dataClass() != Double) || (B.dataClass() != Double)))
     throw Exception("Sparse matrix support is currently only for arrays of dataclass Double, with dense RHS");
   if (A.isSparse()) {

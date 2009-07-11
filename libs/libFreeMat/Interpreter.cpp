@@ -959,7 +959,7 @@ Array Interpreter::ShortCutOr(const Tree &  t) {
   else {
     // A is a scalar - is it true?
     if (a.toClass(Bool).constRealScalar<bool>())
-      retval = a;
+      retval = a.toClass(Bool);
     else 
       retval = DoBinaryOperator(t,Or,"or");
   }
@@ -976,7 +976,7 @@ Array Interpreter::ShortCutAnd(const Tree & t) {
   } else {
     // A is a scalar - is it false?
     if (!a.toClass(Bool).constRealScalar<bool>())
-      retval = a;
+      retval = a.toClass(Bool);
     else 
       retval = DoBinaryOperator(t,And,"and");
   }
@@ -1121,13 +1121,16 @@ Array Interpreter::expression(const Tree & t) {
     return DoBinaryOperator(t,LeftDivide,"mldivide"); 
     break;
   case TOK_SOR: 
-  case '|': 
     return ShortCutOr(t); 
     break;
+  case '|': 
+    return DoBinaryOperator(t,Or,"or");
+    break;
   case TOK_SAND: 
-  case '&': 
     return ShortCutAnd(t); 
     break;
+  case '&': 
+    return DoBinaryOperator(t,And,"and");
   case '<': 
     return DoBinaryOperator(t,LessThan,"lt"); 
     break;

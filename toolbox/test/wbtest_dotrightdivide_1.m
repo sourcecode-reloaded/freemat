@@ -1,6 +1,6 @@
-function test_val = wbtest_logicalops_1(verbose)
+function test_val = wbtest_dotrightdivide_1(verbose)
   load reference/wbinputs.mat
-  load reference/wbtest_logicalops_1_ref.mat
+  load reference/wbtest_dotrightdivide_1_ref.mat
   fail_count = 0;
   for loopi=1:numel(wbinputs)
     for loopj=1:numel(wbinputs)
@@ -9,17 +9,15 @@ function test_val = wbtest_logicalops_1(verbose)
       error_flag = 0;
      y1 = [];
       try
-        y1=x1&&x2;
+        y1=x1./x2;
       catch
         error_flag = 1;
       end
     if (error_flag && ~error_refs(loopi,loopj) && ~(false))
-       printf('Mismatch Errors: input %d, %d y1=x1&&x2\n',loopi,loopj);
+       printf('Mismatch Errors: input %d, %d y1=x1./x2\n',loopi,loopj);
         fail_count = fail_count + 1;
-    elseif (~error_flag && ~error_refs(loopi,loopj) && ~ ...
-            wbtest_exact(y1,y1_refs{loopi,loopj}) && ~(false))
-      keyboard
-    printf('Mismatch (exact): input %d,%d output 1 y1=x1&&x2\n',loopi,loopj);
+  elseif (~error_flag && ~error_refs(loopi,loopj) && ~wbtest_exact(y1,y1_refs{loopi,loopj}) && ~(false))
+    printf('Mismatch (exact): input %d,%d output 1 y1=x1./x2\n',loopi,loopj);
     fail_count = fail_count + 1;
     end
   end

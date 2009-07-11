@@ -11,10 +11,10 @@ function test_val = wbtest_polyder_1(verbose)
     catch
       error_flag = 1;
     end
-    if (error_flag && ~error_refs(loopi) && ~(false))
+    if (error_flag && ~error_refs(loopi) && ~((any(loopi==[50:52]))))
        printf('Mismatch Errors: input %d y1=polyder(polyint(x1))\n',loopi);
        fail_count = fail_count + 1;
-    elseif (~error_flag && ~error_refs(loopi) && ~wbtest_exact(y1,y1_refs{loopi}) && ~(false))
+    elseif (~error_flag && ~error_refs(loopi) && ~wbtest_exact(y1,y1_refs{loopi}) && ~((any(loopi==[50:52]))))
       printf('Mismatch (exact): input %d output 1 y1=polyder(polyint(x1))\n',loopi);
       fail_count = fail_count + 1;
     end

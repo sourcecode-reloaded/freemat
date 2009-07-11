@@ -5,7 +5,7 @@
 function outputtext(&p,text)
   if (p.ignore) return; end
   text(end) = [];
-  v = regexp(text,'@\$([^#].*)#([^#].*)#?(.*)','tokens');
+  v = regexp(text,'@\$([^#]*)#([^#]*)#?(.*)','tokens');
   if (isempty(v))
     printf(sprintf('bad line: %s',text));
     return;
@@ -13,6 +13,7 @@ function outputtext(&p,text)
   % Search for inputs
   ttype = v{1}{1};
   if (~any(strcmp(ttype,{'near','exact','near_permute'})))
+    keyboard
     printf(sprintf('bad test type in line: %s',text));
     return;
   end

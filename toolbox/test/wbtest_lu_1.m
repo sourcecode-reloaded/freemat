@@ -11,10 +11,10 @@ function test_val = wbtest_lu_1(verbose)
     catch
       error_flag = 1;
     end
-    if (error_flag && ~error_refs(loopi) && ~(false))
+    if (error_flag && ~error_refs(loopi) && ~((true)))
        printf('Mismatch Errors: input %d y1=lu(x1)\n',loopi);
        fail_count = fail_count + 1;
-    elseif (~error_flag && ~error_refs(loopi) && ~wbtest_near(y1,y1_refs{loopi}) && ~(false))
+    elseif (~error_flag && ~error_refs(loopi) && ~wbtest_near(y1,y1_refs{loopi}) && ~((true)))
       printf('Mismatch (near): input %d output 1 y1=lu(x1)\n',loopi);
       fail_count = fail_count + 1;
     end

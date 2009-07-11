@@ -9,14 +9,34 @@ static inline void complex_divide(const T& ar, const T& ai,
 				  T& c0, T& c1) {
   double ratio, den;
   double abr, abi, cr;
+  if ((ai == 0) && (bi == 0)) {
+    c1 = 0;
+    c0 = ar/br;
+    return;
+  }
   if (bi == 0) {
     c0 = ar/br;
     c1 = ai/br;
     return;
   }
-  if ((ai == 0) && (bi == 0)) {
-    c1 = 0;
-    c0 = ar/br;
+  if ((ar == 0) && (bi == 0)) {
+    c0 = 0;
+    c1 = ai/br;
+    return;
+  }
+  if ((ai == 0) && (br == 0)) {
+    c0 = 0;
+    c1 = -ar/bi;
+    return;
+  }
+    
+//   if (ar == 0) {
+//     c0 = (ai*bi)/(br*br + bi*bi);
+//     c1 = (ai*br)/(br*br + bi*bi);
+//     return;
+//   }
+  if ((ar == br) && (ai == bi)) {
+    c0 = 1; c1 = 0;
     return;
   }
   if( (abr = br) < 0.)

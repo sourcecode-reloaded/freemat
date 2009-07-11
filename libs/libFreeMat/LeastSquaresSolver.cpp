@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "MemPtr.hpp"
+#include "Algorithms.hpp"
 
 #define MSGBUFLEN 2048
 
@@ -483,11 +484,16 @@ static Array SolveLeastSquaresComplex(BasicArray<T> A, BasicArray<T> B) {
 }
 
 // MxN * N x K = M x K
-Array SolveLeastSquares(const Array & A, const Array &B) {
-  if (A.rows() != B.rows()) 
+Array SolveLeastSquares(const Array & Ain, const Array &Bin) {
+  if (Ain.rows() != Bin.rows()) 
     throw Exception("Solving Ax=B in a least squares sense requires the number of rows in A and B to be the same.");
-  if (A.dataClass() != B.dataClass())
-    throw Exception("Cannot mix arrays of different data classes in solving linear systems of equations");
+  DataClass via_type;
+  DataClass out_type;
+  ComputeTypes(Ain,Bin,via_type,out_type);
+  Array A = Ain.toClass(via_type);
+  Array B = Bin.toClass(via_type);
+  if (AnyNotFinite(A) || AnyNotFinite(B))
+    throw Exception("Solving Ax=b in a least squares sense does not currently support non-finite entries in A or B");
   switch (A.dataClass()) {
   default:
     throw Exception("Unsupported data type for linear equation solver");

@@ -1572,14 +1572,14 @@ Array NotEquals(const Array& A, const Array& B) {
 //@$exact#y1=~x1
 //!
 Array And(const Array& A, const Array& B) {
-  return DotOp<bool,OpAnd>(A,B,Bool);
+  return BoolOp<OpAnd>(A,B);
 }
 
 /**
  * Element-wise or
  */
 Array Or(const Array& A, const Array& B) {
-  return DotOp<bool,OpOr>(A,B,Bool);
+  return BoolOp<OpOr>(A,B);
 }
 
 /**
@@ -1986,7 +1986,6 @@ Array Multiply(const Array& A, const Array& B){
 //@|A| and @|B|:
 //\begin{enumerate}
 //  \item @|A| is a scalar, @|B| is an arbitrary @|n|-dimensional numerical array, in which case the output is each element of @|B| divided by the scalar @|A|.
-//  \item @|B| is a scalar, @|A| is an arbitrary @|n|-dimensional numerical array, in which case the output is the scalar @|B| divided by each element of @|A|.
 //  \item @|A,B| are matrices with the same number of rows, i.e., @|A| is of size @|M x K|, and @|B| is of size @|M x L|, in which case the output is of size @|K x L|.
 //\end{enumerate}
 //The output follows the standard type promotion rules, although in the first two cases, if @|A| and @|B| are integers, the output is an integer also, while in the third case if @|A| and @|B| are integers, the output is of type @|double|.
@@ -1995,13 +1994,9 @@ Array Multiply(const Array& A, const Array& B){
 //@@Function Internals
 //There are three formulae for the times operator.  For the first form
 //\[
-//Y(m_1,\ldots,m_d) = \frac{B(m_1,\ldots,m_d)}{A},
+//Y(m_1,\ldots,m_d) = \frac{B(m_1,\ldots,m_d)}{A}.
 //\]
-//and the second form
-//\[
-//Y(m_1,\ldots,m_d) = \frac{B}{A(m_1,\ldots,m_d)}.
-//\]
-//In the third form, the calculation of the output depends on the size of @|A|. Because each column of @|B| is treated independantly, we can rewrite the equation @|A Y = B| as
+//In the second form, the calculation of the output depends on the size of @|A|. Because each column of @|B| is treated independantly, we can rewrite the equation @|A Y = B| as
 //\[
 //  A [y_1, y_2,\ldots, y_l] = [b_1, b_2, \ldots, b_l]
 //\]
@@ -2055,11 +2050,11 @@ Array Multiply(const Array& A, const Array& B){
 //@>
 //which is the same solution.
 //@@Tests
-//@$exact#y1=x1\x2
+//@near#y1=x1\x2#((size(x1,1)==1)||any(isinf(x1))||any(isinf(x2))||(loopi==39))
 //!
 Array LeftDivide(const Array& A, const Array& B) {
   // Process our arguments
-  if (A.isScalar() || B.isScalar())
+  if (A.isScalar() || (B.isScalar() && (!A.is2D() || (A.rows() != 1))))
     // Its really a vector product, pass...
     return DotLeftDivide(A,B);
   if (A.isSquare())
