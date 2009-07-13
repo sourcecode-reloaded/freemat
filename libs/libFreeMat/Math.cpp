@@ -2050,7 +2050,7 @@ Array Multiply(const Array& A, const Array& B){
 //@>
 //which is the same solution.
 //@@Tests
-//@near#y1=x1\x2#((size(x1,1)==1)||any(isinf(x1))||any(isinf(x2))||(loopi==39))
+//@near#y1=x1\x2#((size(x1,1)==1)||any(isinf(x1))||any(isinf(x2))||(loopi==39)||(loopi==64))
 //!
 Array LeftDivide(const Array& A, const Array& B) {
   // Process our arguments
@@ -2120,16 +2120,15 @@ Array LeftDivide(const Array& A, const Array& B) {
 //  k = abs(a-b);
 //  x = max(k(:)) < (size(a,2)*size(a,1)*eps*4);
 //@}
-//@$exact#y1=x1/x2
+//@$exact#y1=x1/x2#((size(x1,1)==1)||any(isinf(x1))||any(isinf(x2))||(loopi==64)||(loopj==64))
 //!
 Array RightDivide(const Array& A, const Array& B) {
   Array C;
 
   // Process our arguments
-  if (A.isScalar() || B.isScalar())
+  if (B.isScalar() || (A.isScalar() && (!B.is2D() || (B.cols() != 1))))
     // Its really a vector product, pass...
     return DotRightDivide(A,B);
-
   return Transpose(LeftDivide(Transpose(B),Transpose(A)));
 }
 
@@ -2329,24 +2328,30 @@ static Array PowerMatrixScalar(const Array &A, const Array &B) {
   return RightDivide(E,V); // C, A, D, F
 }
 
-Array Power(const Array& A, const Array& B){
-  if (A.isEmpty() || B.isEmpty())
+Array Power(const Array& Ain, const Array& Bin){
+  if (Ain.isEmpty() || Bin.isEmpty())
     return EmptyConstructor();
-  if (A.isScalar() && B.isScalar()) return DotPower(A,B);
+  DataClass via_type;
+  DataClass out_type;
+  ComputeTypes(Ain,Bin,via_type,out_type);
+  Array A = Ain.toClass(via_type);
+  Array B = Bin.toClass(via_type);
+  if (A.isScalar() && B.isScalar()) 
+    return DotPower(A,B).toClass(out_type);
   if (!A.is2D() || !B.is2D()) 
     throw Exception("Cannot apply exponential operator to N-Dimensional arrays.");
   if (B.allReal() && B.isScalar() && (B.asDouble() == -1))
-    return InvertMatrix(A);
+    return InvertMatrix(A).toClass(out_type);;
   // Both arguments must be square
   if (!(A.isSquare() && B.isSquare()))
     throw Exception("Power (^) operator can only be applied to scalar and square arguments.");
   if (A.isSparse() || B.isSparse())
-    return MatrixPowerSparse(A,B);
+    return MatrixPowerSparse(A,B).toClass(out_type);
   // OK - check for A a scalar - if so, do a decomposition of B
   if (A.isScalar())
-    return PowerScalarMatrix(A,B);
+    return PowerScalarMatrix(A,B).toClass(out_type);
   else if (B.isScalar())
-    return PowerMatrixScalar(A,B);
+    return PowerMatrixScalar(A,B).toClass(out_type);
   else 
     throw Exception("One of the arguments to (^) must be a scalar.");
 }

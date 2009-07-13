@@ -499,14 +499,14 @@ Array SolveLeastSquares(const Array & Ain, const Array &Bin) {
     throw Exception("Unsupported data type for linear equation solver");
   case Float:
     if (A.allReal() && B.allReal())
-      return SolveLeastSquaresReal<float>(A.constReal<float>(),B.constReal<float>());
+      return SolveLeastSquaresReal<float>(A.constReal<float>(),B.constReal<float>()).toClass(out_type);
     else
-      return SolveLeastSquaresComplex<float>(A.fortran<float>(),B.fortran<float>());
+      return SolveLeastSquaresComplex<float>(A.fortran<float>(),B.fortran<float>()).toClass(out_type);
   case Double:
     if (A.allReal() && B.allReal())
-      return SolveLeastSquaresReal<double>(A.constReal<double>(),B.constReal<double>());
+      return SolveLeastSquaresReal<double>(A.constReal<double>(),B.constReal<double>()).toClass(out_type);
     else
-      return SolveLeastSquaresComplex<double>(A.fortran<double>(),B.fortran<double>());
+      return SolveLeastSquaresComplex<double>(A.fortran<double>(),B.fortran<double>()).toClass(out_type);
   }
   return Array();
 }

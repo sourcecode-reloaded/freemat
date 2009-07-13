@@ -823,14 +823,14 @@ Array SolveLinearEq(const Array & Ain, const Array &Bin) {
     throw Exception("Unsupported data type for linear equation solver");
   case Float:
     if (A.allReal() && B.allReal())
-      return SolveLinearEqReal<float>(A.constReal<float>(),B.constReal<float>());
+      return SolveLinearEqReal<float>(A.constReal<float>(),B.constReal<float>()).toClass(out_type);
     else
-      return SolveLinearEqComplex<float>(A.fortran<float>(),B.fortran<float>());
+      return SolveLinearEqComplex<float>(A.fortran<float>(),B.fortran<float>()).toClass(out_type);
   case Double:
     if (A.allReal() && B.allReal())
-      return SolveLinearEqReal<double>(A.constReal<double>(),B.constReal<double>());
+      return SolveLinearEqReal<double>(A.constReal<double>(),B.constReal<double>()).toClass(out_type);
     else
-      return SolveLinearEqComplex<double>(A.fortran<double>(),B.fortran<double>());
+      return SolveLinearEqComplex<double>(A.fortran<double>(),B.fortran<double>()).toClass(out_type);
   }
   return Array();
 }
