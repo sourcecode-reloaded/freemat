@@ -20,6 +20,28 @@
 % and it returns a logical 1 if the argument is a cell array
 % in which every cell is a character array (or is empty), and
 % a logical 0 otherwise.
+% ISCELLSTR ISCELLSTR Test For Cell Array of Strings
+% 
+% Usage
+% 
+% The syntax for iscellstr is 
+% 
+%    x = iscellstr(y)
+% 
+% and it returns a logical 1 if the argument is a cell array
+% in which every cell is a character array (or is empty), and
+% a logical 0 otherwise.
+% ISCELLSTR ISCELLSTR Test For Cell Array of Strings
+% 
+% Usage
+% 
+% The syntax for iscellstr is 
+% 
+%    x = iscellstr(y)
+% 
+% and it returns a logical 1 if the argument is a cell array
+% in which every cell is a character array (or is empty), and
+% a logical 0 otherwise.
 
 % Copyright (c) 2002-2006 Samit Basu
 % Licensed under the GPL

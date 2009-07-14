@@ -144,6 +144,152 @@
 % This implementation of legend is incomplete relative to the 
 % MATLAB API.  The functionality will be improved in future versions
 % of FreeMat.
+% LEGEND LEGEND Add Legent to Plot
+% 
+% Usage
+% 
+% This command adds a legend to the current plot.  Currently, the
+% following forms of the legend command are supported.  The
+% first form creates a legend with the given labels for the data
+% series:
+% 
+%   legend('label1','label2',...)
+% 
+% where 'label1' is the text label associated with data plot 1
+% and so on.  You can also use the legend command to control
+% the appearance of the legend in the current plot.  To remove the
+% legend from the current plot, use
+% 
+%   legend('off')
+% 
+% To hide the legend for the current plot (but do not remove it)
+% 
+%   legend('hide')
+% 
+% And to show the legend that has been hidden, use
+% 
+%   legend('show')
+% 
+% You can also toggle the display of the box surrounding the legend.
+% Use
+% 
+%   legend('boxoff')
+% 
+% or 
+% 
+%   legend('boxon')
+% 
+% to turn the legend box off or on, respectively.  To toggle the
+% visible state of the current legend, use
+% 
+%   legend('toggle')
+% 
+% Specifying no arguments at all (apart from an optional location 
+% argument as specified below) results in the legend being rebuilt.
+% This form is useful for picking up font changes or relocating the
+% legend.
+% 
+%   legend
+% 
+% By default, the legend command places the new legend in the 
+% upper right corner of the current plot.  To change this behavior,
+% use the 'location' specifier (must be the last two options to the command)
+% 
+%   legend(...,'location',option)
+% 
+% where option takes on the following possible values
+%   -  north,N - top center of plot 
+% 
+%   -  south,S - bottom center of plot
+% 
+%   -  east,E - middle right of plot
+% 
+%   -  west,W - middle left of plot
+% 
+%   -  northeast,NE - top right of plot (default behavior)
+% 
+%   -  northwest,NW - top left of plot
+% 
+%   -  southeast,SE - bottom right of plot
+% 
+%   -  southwest,SW - bottom left of plot
+% 
+% This implementation of legend is incomplete relative to the 
+% MATLAB API.  The functionality will be improved in future versions
+% of FreeMat.
+% LEGEND LEGEND Add Legent to Plot
+% 
+% Usage
+% 
+% This command adds a legend to the current plot.  Currently, the
+% following forms of the legend command are supported.  The
+% first form creates a legend with the given labels for the data
+% series:
+% 
+%   legend('label1','label2',...)
+% 
+% where 'label1' is the text label associated with data plot 1
+% and so on.  You can also use the legend command to control
+% the appearance of the legend in the current plot.  To remove the
+% legend from the current plot, use
+% 
+%   legend('off')
+% 
+% To hide the legend for the current plot (but do not remove it)
+% 
+%   legend('hide')
+% 
+% And to show the legend that has been hidden, use
+% 
+%   legend('show')
+% 
+% You can also toggle the display of the box surrounding the legend.
+% Use
+% 
+%   legend('boxoff')
+% 
+% or 
+% 
+%   legend('boxon')
+% 
+% to turn the legend box off or on, respectively.  To toggle the
+% visible state of the current legend, use
+% 
+%   legend('toggle')
+% 
+% Specifying no arguments at all (apart from an optional location 
+% argument as specified below) results in the legend being rebuilt.
+% This form is useful for picking up font changes or relocating the
+% legend.
+% 
+%   legend
+% 
+% By default, the legend command places the new legend in the 
+% upper right corner of the current plot.  To change this behavior,
+% use the 'location' specifier (must be the last two options to the command)
+% 
+%   legend(...,'location',option)
+% 
+% where option takes on the following possible values
+%   -  north,N - top center of plot 
+% 
+%   -  south,S - bottom center of plot
+% 
+%   -  east,E - middle right of plot
+% 
+%   -  west,W - middle left of plot
+% 
+%   -  northeast,NE - top right of plot (default behavior)
+% 
+%   -  northwest,NW - top left of plot
+% 
+%   -  southeast,SE - bottom right of plot
+% 
+%   -  southwest,SW - bottom left of plot
+% 
+% This implementation of legend is incomplete relative to the 
+% MATLAB API.  The functionality will be improved in future versions
+% of FreeMat.
 
 % Copyright (c) 2002-2006 Samit Basu
 % Licensed under the GPL
@@ -151,15 +297,15 @@
 function handle = legend(varargin)
   axhan = gca;
   % Check the form of the command
-  if (nargin == 1 & strcmp(varargin{1},'off')), legend_off(axhan); return; end
-  if (nargin == 1 & strcmp(varargin{1},'hide')), legend_hide(axhan); return; end
-  if (nargin == 1 & strcmp(varargin{1},'show')), legend_show(axhan); return; end
-  if (nargin == 1 & strcmp(varargin{1},'toggle')), legend_toggle(axhan); return; end
-  if (nargin == 1 & strcmp(varargin{1},'boxon')), legend_boxon(axhan); return; end
-  if (nargin == 1 & strcmp(varargin{1},'boxoff')), legend_boxoff(axhan); return; end
+  if (nargin == 1 && strcmp(varargin{1},'off')), legend_off(axhan); return; end
+  if (nargin == 1 && strcmp(varargin{1},'hide')), legend_hide(axhan); return; end
+  if (nargin == 1 && strcmp(varargin{1},'show')), legend_show(axhan); return; end
+  if (nargin == 1 && strcmp(varargin{1},'toggle')), legend_toggle(axhan); return; end
+  if (nargin == 1 && strcmp(varargin{1},'boxon')), legend_boxon(axhan); return; end
+  if (nargin == 1 && strcmp(varargin{1},'boxoff')), legend_boxoff(axhan); return; end
   % Check for a location specifier
   legend_position = 'ne';
-  if (nargin >= 2 & strcmp(varargin{nargin-1},'location'))
+  if (nargin >= 2 && strcmp(varargin{nargin-1},'location'))
     legend_position = parse_location_spec(varargin{nargin});
     varargin((nargin-1):nargin) = [];
     nargin = nargin - 2;	

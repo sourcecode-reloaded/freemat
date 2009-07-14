@@ -20,6 +20,28 @@
 % 
 % and it returns a logical 1 if the argument is size N x 1 or
 % 1 x N and a logical 0 otherwise.
+% ISVECTOR ISVECTOR Test For a Vector
+% 
+% Usage
+% 
+% This function tests to see if the argument is a vector.  The 
+% syntax for isvector is
+% 
+%    x = isvector(y)
+% 
+% and it returns a logical 1 if the argument is size N x 1 or
+% 1 x N and a logical 0 otherwise.
+% ISVECTOR ISVECTOR Test For a Vector
+% 
+% Usage
+% 
+% This function tests to see if the argument is a vector.  The 
+% syntax for isvector is
+% 
+%    x = isvector(y)
+% 
+% and it returns a logical 1 if the argument is size N x 1 or
+% 1 x N and a logical 0 otherwise.
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL

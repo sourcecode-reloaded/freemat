@@ -52,6 +52,8 @@ public:
     return (count() == 1);
   }
   inline index_t stride(int dim) const {
+    if ((dim<0) || (dim >= NDims))
+      throw Exception("Illegal range in stride");
     index_t nextCoeff = 1;
     for (int i=1;i<=dim;i++) {
       nextCoeff *= m_data[i-1];
@@ -90,6 +92,8 @@ public:
     }
   }
   inline void ripplePinned(NTuple &pos, int pin_dim) const {
+    if ((pin_dim<0) || (pin_dim >= NDims))
+      throw Exception("Illegal range in stride");
     for (int i=0;i<(NDims-1);i++) {
       int64 dim = (int64) m_data[i];
       if (i == pin_dim) dim = 1;
@@ -104,11 +108,15 @@ public:
     ripple(pos);
   }
   inline NTuple forceOne(int pin_dim) const {
+    if ((pin_dim<0) || (pin_dim >= NDims))
+      throw Exception("Illegal range in forceOne");
     NTuple copy(*this);
     copy[pin_dim] = 1;
     return copy;
   }
   inline void increment(NTuple &pos, int pin_dim) const {
+    if ((pin_dim<0) || (pin_dim >= NDims))
+      throw Exception("Illegal range in increment");
     if (pin_dim == 0) 
       pos[1]++;
     else
@@ -116,6 +124,8 @@ public:
     ripplePinned(pos,pin_dim);
   }
   inline NTuple replace(int dim, index_t val) const {
+    if ((dim<0) || (dim >= NDims))
+      throw Exception("Illegal range in replace");
     NTuple copy(*this);
     copy[dim] = val;
     return copy;
@@ -138,22 +148,23 @@ public:
   }
   inline void set(int dim, index_t len) {
     if (len < 0) throw Exception("Negative dimensions are not allowed");
+    if ((dim<0) || (dim >= NDims)) throw Exception("Illegal range in set");
     m_data[dim] = len;
   }
   inline index_t& get(int dim) {
-    if ((dim<0) || (dim >= NDims))
-      throw Exception("Illegal range in get");
+    if ((dim<0) || (dim >= NDims)) throw Exception("Illegal range in get");
     return m_data[dim];
   }
   inline const index_t get(int dim) const {
-    if ((dim<0) || (dim >= NDims))
-      throw Exception("Illegal range in get");
+    if ((dim<0) || (dim >= NDims)) throw Exception("Illegal range in get");
     return m_data[dim];
   }
   inline const index_t operator[](int dim) const {
+    if ((dim<0) || (dim >= NDims)) throw Exception("Illegal range in get");
     return get(dim);
   }
   inline index_t& operator[](int dim) {
+    if ((dim<0) || (dim >= NDims)) throw Exception("Illegal range in get");
     return get(dim);
   }
   inline bool operator>=(const NTuple& alt) const {

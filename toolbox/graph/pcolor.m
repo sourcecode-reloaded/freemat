@@ -28,6 +28,36 @@
 % 
 %    pcolor(X,Y,C)
 % 
+% PCOLOR PCOLOR Pseudocolor Plot
+% 
+% Usage
+% 
+% This routine is used to create a pseudocolor plot of the data.
+% A pseudocolor plot is a essentially a surface plot seen from 
+% above.  There are two forms for the pcolor command:
+% 
+%    pcolor(C)
+% 
+% which uses a rectangular grid.  Alternately, you can specify
+% X,Y matrices or vectors.
+% 
+%    pcolor(X,Y,C)
+% 
+% PCOLOR PCOLOR Pseudocolor Plot
+% 
+% Usage
+% 
+% This routine is used to create a pseudocolor plot of the data.
+% A pseudocolor plot is a essentially a surface plot seen from 
+% above.  There are two forms for the pcolor command:
+% 
+%    pcolor(C)
+% 
+% which uses a rectangular grid.  Alternately, you can specify
+% X,Y matrices or vectors.
+% 
+%    pcolor(X,Y,C)
+% 
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL
@@ -35,7 +65,7 @@
 function ohandle = pcolor(varargin)
    % Check for an axes handle
    if (nargin>=2)
-      if (isnumeric(varargin{1}) & (length(varargin{1})==1) & ...
+      if (isnumeric(varargin{1}) && (length(varargin{1})==1) && ...
          ishandle(varargin{1},'axes'))
          handle = varargin{1}(1);
          varargin(1) = [];

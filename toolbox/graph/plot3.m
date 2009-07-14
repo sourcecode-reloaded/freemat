@@ -36,6 +36,44 @@
 % 
 %   plot3(handle,...)
 % 
+% PLOT3 PLOT3 Plot 3D Function
+% 
+% Usage
+% 
+% This is the 3D plot command.  The general syntax for its use is
+% 
+%   plot3(X,Y,Z,{linespec 1},X,Y,Z,{linespec 2},...,properties...)
+% 
+% where X Y and Z are the coordinates of the points on the
+% 3D line.  Note that in general, all three should be vectors.  If
+% some or all of the quantities are matrices, then FreeMat will attempt
+% to expand the vector arguments to the same size, and then generate
+% multiple plots, one for each column of the matrices.  The linespec
+% is optional, see plot for details.  You can specify properties
+% for the generated line plots.  You can also specify a handle as an
+% axes to target
+% 
+%   plot3(handle,...)
+% 
+% PLOT3 PLOT3 Plot 3D Function
+% 
+% Usage
+% 
+% This is the 3D plot command.  The general syntax for its use is
+% 
+%   plot3(X,Y,Z,{linespec 1},X,Y,Z,{linespec 2},...,properties...)
+% 
+% where X Y and Z are the coordinates of the points on the
+% 3D line.  Note that in general, all three should be vectors.  If
+% some or all of the quantities are matrices, then FreeMat will attempt
+% to expand the vector arguments to the same size, and then generate
+% multiple plots, one for each column of the matrices.  The linespec
+% is optional, see plot for details.  You can specify properties
+% for the generated line plots.  You can also specify a handle as an
+% axes to target
+% 
+%   plot3(handle,...)
+% 
 
 % Copyright (c) 2002-2006 Samit Basu
 % Licensed under the GPL
@@ -43,7 +81,7 @@
 function hout = plot3(varargin)
   % Check for an axes handle
   if (nargin>=2)
-    if (isnumeric(varargin{1}) & (length(varargin{1})==1) & ...
+    if (isnumeric(varargin{1}) && (length(varargin{1})==1) && ...
     ishandle(varargin{1},'axes'))
        handle = varargin{1}(1);
        varargin(1) = [];
@@ -58,14 +96,14 @@ function hout = plot3(varargin)
   propstart = 0;
   if (nargin > 2)
     propstart = nargin-1;
-    while ((propstart >= 1) & isa(varargin{propstart},'char') & ...
+    while ((propstart >= 1) && isa(varargin{propstart},'char') && ...
     pvalid('line',varargin{propstart}))
       propstart = propstart - 2;
     end
     propstart = propstart + 2;
   end
   propset = {};
-  if ((propstart > 0) & (propstart < nargin))
+  if ((propstart > 0) && (propstart < nargin))
      propset = varargin(propstart:end);
 	varargin(propstart:end) = [];
   end
@@ -75,10 +113,10 @@ function hout = plot3(varargin)
     if (length(varargin) < 3)
       error('plot3 requires triplets of x, y, z coordinates');
     end;
-    if (length(varargin) == 3 | (length(varargin) > 3) & ~islinespec(varargin{4},cs,ms,ps))
+    if (length(varargin) == 3 | (length(varargin) > 3) && ~islinespec(varargin{4},cs,ms,ps))
       h = [h,plot_triplet(varargin{1},varargin{2},varargin{3},handle,propset)];
       varargin(1:3) = [];
-    elseif ((length(varargin) >= 4) & islinespec(varargin{4},cs,ms,ps))
+    elseif ((length(varargin) >= 4) && islinespec(varargin{4},cs,ms,ps))
       h = [h,plot_triplet(varargin{1},varargin{2},varargin{3},handle,completeprops(cs,ms,ps,propset))];
       varargin(1:4) = [];
     end;
@@ -94,7 +132,7 @@ end
     
 function h = plot_triplet(X,Y,Z,handle,lineprops)
     h = [];
-    if ((isvector(X) | isvector(Y) | isvector(Z)) & (~isvector(X) | ~isvector(Y) | ~isvector(Z)))
+    if ((isvector(X) | isvector(Y) | isvector(Z)) && (~isvector(X) | ~isvector(Y) | ~isvector(Z)))
       rows = max([size(X,1),size(Y,1),size(Z,1)]);
       cols = max([size(X,2),size(Y,2),size(Z,2)]);
       X = expandmat(X,rows,cols);

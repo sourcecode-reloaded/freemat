@@ -16,11 +16,9 @@ function test_val = wbtest_power_1(verbose)
     if (error_flag && ~error_refs(loopi,loopj) && ~(false))
        printf('Mismatch Errors: input %d, %d y1=x1^x2\n',loopi,loopj);
         fail_count = fail_count + 1;
-        keyboard
-  elseif (~error_flag && ~error_refs(loopi,loopj) && ~wbtest_near(y1,y1_refs{loopi,loopj}) && ~(false))
+  elseif (~error_flag && ~error_refs(loopi,loopj) && ~wbtest_exact(y1,y1_refs{loopi,loopj}) && ~(false))
     printf('Mismatch (exact): input %d,%d output 1 y1=x1^x2\n',loopi,loopj);
     fail_count = fail_count + 1;
-    keyboard
     end
   end
   test_val = (fail_count == 0);

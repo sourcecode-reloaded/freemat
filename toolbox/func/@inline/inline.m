@@ -34,6 +34,42 @@
 % are only partially supported in FreeMat.  If you need features of the
 % inline function that are not currently implemented, please file a
 % feature request at the FreeMat website.
+% INLINE INLINE Construct Inline Function
+% 
+% Usage
+% 
+% Constructs an inline function object.  The syntax for its use is
+% either
+% 
+%    y = inline(expr)
+% 
+% which uses the symvar function to identify the variables in the
+% expression, or the explicit form
+% 
+%    y = inline(expr,var1,var2,...,varn)
+% 
+% where the variables are explicitly given.  Note that inline functions
+% are only partially supported in FreeMat.  If you need features of the
+% inline function that are not currently implemented, please file a
+% feature request at the FreeMat website.
+% INLINE INLINE Construct Inline Function
+% 
+% Usage
+% 
+% Constructs an inline function object.  The syntax for its use is
+% either
+% 
+%    y = inline(expr)
+% 
+% which uses the symvar function to identify the variables in the
+% expression, or the explicit form
+% 
+%    y = inline(expr,var1,var2,...,varn)
+% 
+% where the variables are explicitly given.  Note that inline functions
+% are only partially supported in FreeMat.  If you need features of the
+% inline function that are not currently implemented, please file a
+% feature request at the FreeMat website.
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL

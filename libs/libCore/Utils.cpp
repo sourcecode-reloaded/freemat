@@ -76,7 +76,7 @@ NTuple ArrayVectorAsDimensions(const ArrayVector &arg) {
     Array t = arg[0].toClass(UInt32);
     const BasicArray<uint32> &td(t.constReal<uint32>());
     for (index_t i=1;i<=t.length();i++)
-      dims.set(int(i-1),td.get(i));
+      dims.set(qMax(0,int(i-1)),td.get(i));
   }
   for (int i=0;i<NDims;i++) 
     if (!IsFinite(dims[i]))

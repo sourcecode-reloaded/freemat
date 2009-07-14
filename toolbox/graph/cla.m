@@ -14,6 +14,22 @@
 % 
 %   cla
 % 
+% CLA CLA Clear Current Axis
+% 
+% Usage
+% 
+% Clears the current axes.  The syntax for its use is
+% 
+%   cla
+% 
+% CLA CLA Clear Current Axis
+% 
+% Usage
+% 
+% Clears the current axes.  The syntax for its use is
+% 
+%   cla
+% 
 
 % Copyright (c) 2002-2006 Samit Basu
 % Licensed under the GPL

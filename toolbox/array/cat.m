@@ -24,6 +24,32 @@
 % to return the concatenation along the dimension DIM of all arguments. 
 % cat(1, A, B, C) is the same as [A; B; C] or vertcat(A, B, C).
 % cat(2, A, B, C) is the same as [A, B, C] or horzcat(A, B, C).
+% CAT CAT Concatenation of Arrays
+% 
+% Usage
+% 
+% This function concatenates arrays in a given
+% dimension.  The syntax for its use is
+% 
+%    cat (DIM, A, B)
+%    cat (DIM, A, B, C ...)
+% 
+% to return the concatenation along the dimension DIM of all arguments. 
+% cat(1, A, B, C) is the same as [A; B; C] or vertcat(A, B, C).
+% cat(2, A, B, C) is the same as [A, B, C] or horzcat(A, B, C).
+% CAT CAT Concatenation of Arrays
+% 
+% Usage
+% 
+% This function concatenates arrays in a given
+% dimension.  The syntax for its use is
+% 
+%    cat (DIM, A, B)
+%    cat (DIM, A, B, C ...)
+% 
+% to return the concatenation along the dimension DIM of all arguments. 
+% cat(1, A, B, C) is the same as [A; B; C] or vertcat(A, B, C).
+% cat(2, A, B, C) is the same as [A, B, C] or horzcat(A, B, C).
 
 function ret = cat(varargin)
     if nargin < 2

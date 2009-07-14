@@ -15,7 +15,7 @@ colorspec = 'none';
 markerspec = 'none';
 linespec = 'none';
 orig_t = t;
-while (~giveup & length(t)>0)
+while (~giveup && length(t)>0)
   giveup = 1;
   if (matchit(t,colorset))
     colorspec = parseit(t,colorset);

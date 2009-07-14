@@ -43,6 +43,13 @@ QTRenderEngine::QTRenderEngine(QPainter *painter, double x1, double y1,
   pnt->setPen(QColor(0,0,0));
   pnt->setBrush(QColor(0,0,0));
   debugFlag = false;
+  QRect rect = pnt->viewport();
+  QSize size(width,height);
+  size.scale(rect.size(),Qt::KeepAspectRatio);
+  pnt->setViewport(rect.x() + (rect.width()-size.width())/2,
+		  rect.y() + (rect.height()-size.height())/2,
+		  size.width(),size.height());
+  pnt->setWindow(QRect(0,0,width,height));
 }
 
 QTRenderEngine::~QTRenderEngine() {
@@ -476,12 +483,7 @@ void QTRenderEngine::putText(double x, double y, QString txt,
   if (yflag == Max)
     ydelta = -height;
   // I don't understand this...
-#ifdef WIN32 
   ydelta += fm.descent();
-#endif
-#ifdef __APPLE__
-  ydelta += fm.descent();
-#endif
   double costhet, sinthet;
   costhet = cos(rotation*M_PI/180.0);
   sinthet = sin(rotation*M_PI/180.0);

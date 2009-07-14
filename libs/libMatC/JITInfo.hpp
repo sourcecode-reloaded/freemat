@@ -5,6 +5,10 @@
 #include <QSharedDataPointer>
 #include "JITFunc.hpp"
 
+#ifndef HAVE_LLVM
+class JITFunc {};
+#endif
+
 class JITInfo {
 public:
   typedef enum {

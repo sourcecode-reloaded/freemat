@@ -215,16 +215,16 @@ public:
     bottomScope->setDetailString(x);
   }
   inline int scopeNargin() {
-    return bottomScope->nargin();
+    return activeScope->nargin();
   }
   inline void setScopeNargin(int x) {
-    bottomScope->setNargin(x);
+    activeScope->setNargin(x);
   }
   inline int scopeNargout() {
-    return bottomScope->nargout();
+    return activeScope->nargout();
   }
   inline void setScopeNargout(int x) {
-    bottomScope->setNargout(x);
+    activeScope->setNargout(x);
   }
   inline void updateScopePointers() {
     if (!scopestack.isEmpty()) {

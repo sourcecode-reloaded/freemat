@@ -22,6 +22,30 @@
 % where x and y are vectors.  The output is of length nx + ny -1.
 % The conv function calls conv2 to do the calculation.  See its
 % help for more details.
+% CONV CONV Convolution Function
+% 
+% Usage
+% 
+% The conv function performs a one-dimensional convolution of two
+% vector arguments.  The syntax for its use is
+% 
+%      z = conv(x,y)
+% 
+% where x and y are vectors.  The output is of length nx + ny -1.
+% The conv function calls conv2 to do the calculation.  See its
+% help for more details.
+% CONV CONV Convolution Function
+% 
+% Usage
+% 
+% The conv function performs a one-dimensional convolution of two
+% vector arguments.  The syntax for its use is
+% 
+%      z = conv(x,y)
+% 
+% where x and y are vectors.  The output is of length nx + ny -1.
+% The conv function calls conv2 to do the calculation.  See its
+% help for more details.
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL

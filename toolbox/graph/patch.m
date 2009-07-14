@@ -32,6 +32,40 @@
 % Where X, Y and Z are matrices or vectors of x, y or z coordinates
 % and C is a matrix or vector of color values (the colormap
 % for the current fig is applied).  
+% PATCH PATCH Patch Graphics Function
+% 
+% Usage
+% 
+% This routine is used to create a patch object that can be plotting 2D and 3D surfaces.  A 
+% patch is a polygon defined by the xyz coordinates
+% of its vertices and optionally by the color at the vertices.
+% There are several forms for the patch function:
+% 
+%   h = patch(X,Y,C,properties...)
+%   h = patch(X,Y,Z,C,properties...)
+%   h = patch(properties...)
+%   h = patch(V)
+% 
+% Where X, Y and Z are matrices or vectors of x, y or z coordinates
+% and C is a matrix or vector of color values (the colormap
+% for the current fig is applied).  
+% PATCH PATCH Patch Graphics Function
+% 
+% Usage
+% 
+% This routine is used to create a patch object that can be plotting 2D and 3D surfaces.  A 
+% patch is a polygon defined by the xyz coordinates
+% of its vertices and optionally by the color at the vertices.
+% There are several forms for the patch function:
+% 
+%   h = patch(X,Y,C,properties...)
+%   h = patch(X,Y,Z,C,properties...)
+%   h = patch(properties...)
+%   h = patch(V)
+% 
+% Where X, Y and Z are matrices or vectors of x, y or z coordinates
+% and C is a matrix or vector of color values (the colormap
+% for the current fig is applied).  
 
 % Copyright (c) 2002-2008 Samit Basu, Eugene Ingerman
 % Licensed under the GPL
@@ -46,14 +80,14 @@ function ohandle = patch(varargin)
   propstart = 0;
   if (nargin > 2)
     propstart = nargin-1;
-    while ((propstart >= 1) & isa(varargin{propstart},'char') & ...
+    while ((propstart >= 1) && isa(varargin{propstart},'char') && ...
     pvalid('patch',varargin{propstart}))
       propstart = propstart - 2;
     end
     propstart = propstart + 2;
   end
   propset = {};
-  if ((propstart > 0) & (propstart < nargin))
+  if ((propstart > 0) && (propstart < nargin))
      propset = varargin(propstart:end);
      varargin(propstart:end) = [];
   end
