@@ -85,19 +85,19 @@ bool IsFinite(uint32) {return true;}
 bool IsFinite(uint64) {return true;}
 
 bool IsNaN(int32 t) {
-  return true;
+  return false;
 }
 
 bool IsNaN(int64 t) {
-  return true;
+  return false;
 }
 
 bool IsNaN(uint32 t) {
-  return true;
+  return false;
 }
 
 bool IsNaN(uint64 t) {
-  return true;
+  return false;
 }
 
 bool IsNaN(float t) {
