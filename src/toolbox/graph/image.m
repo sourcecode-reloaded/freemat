@@ -89,7 +89,7 @@ function ohandle = image(varargin)
   % check for formal syntax
   if (isstr(varargin{1}))
     handle = himage(varargin{:});
-  elseif ((length(varargin) == 1) | ((length(varargin) > 1) & (isstr(varargin{2}))))
+  elseif ((length(varargin) == 1) || ((length(varargin) > 1) && (isstr(varargin{2}))))
     C = varargin{1}; varargin(1) = [];
     cols = max(2,size(C,2));
     rows = max(2,size(C,1));
