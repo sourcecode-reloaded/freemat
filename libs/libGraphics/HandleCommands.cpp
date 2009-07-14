@@ -442,16 +442,33 @@ ArrayVector SizeFigFunction(int nargout, const ArrayVector& arg) {
 //input varargin
 //output none
 //!
+
+static HandleObject* LookupObject(int handle) {
+  if (handle <= 0)
+    throw Exception("Illegal handle used for handle graphics operation");
+  if (handle >= HANDLE_OFFSET_OBJECT)
+    return LookupHandleObject(handle);
+  else
+    return ((HandleObject*) LookupHandleFigure(handle));
+}
+
+static void RecursiveUpdateState(int handle) {
+  HandleObject *fp = LookupObject(handle);
+  fp->UpdateState();
+  HPHandles *children = (HPHandles*) fp->LookupProperty("children");
+  QVector<unsigned> handles(children->Data());
+  for (int i=0;i<handles.size();i++) {
+    HandleObject *fp = LookupObject(handles[i]);
+    fp->UpdateState();
+  }  
+}
+
 ArrayVector HSetFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 3)
     throw Exception("set doesn't handle all cases yet!");
   int handle = arg[0].asInteger();
   // Lookup the handle
-  HandleObject *fp;
-  if (handle >= HANDLE_OFFSET_OBJECT)
-    fp = LookupHandleObject(handle);
-  else
-    fp = (HandleObject*) LookupHandleFigure(handle);
+  HandleObject *fp = LookupObject(handle);
   int ptr = 1;
   while (arg.size() >= (ptr+2)) {
     // Use the address and property name to lookup the Get/Set handler
@@ -474,7 +491,8 @@ ArrayVector HSetFunction(int nargout, const ArrayVector& arg) {
     }
     ptr+=2;
   }
-  fp->UpdateState();
+  RecursiveUpdateState(handle);
+  //  fp->UpdateState();
   if (!fp->IsType("figure") && !fp->IsType("uicontrol")) {
     //FIXME
     HandleFigure *fig = fp->GetParentFigure();
@@ -511,11 +529,7 @@ ArrayVector HGetFunction(int nargout, const ArrayVector& arg) {
   int handle = arg[0].asInteger();
   QString propname = arg[1].asString();
   // Lookup the handle
-  HandleObject *fp;
-  if (handle >= HANDLE_OFFSET_OBJECT)
-    fp = LookupHandleObject(handle);
-  else
-    fp = (HandleObject*) LookupHandleFigure(handle);
+  HandleObject *fp = LookupObject(handle);
   // Use the address and property name to lookup the Get/Set handler
   return ArrayVector(fp->LookupProperty(propname)->Get());
 }
