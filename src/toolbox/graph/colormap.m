@@ -115,12 +115,3 @@ if (nargin == 0)
 else
   set(gcf,'colormap',A);
 end
-% Force a refresh of children
-force_refresh(get(gcf,'children'));
-
-function force_refresh(children)
-for i = 1:numel(children)
-  set(children(i),'tag',get(children(i),'tag'));
-  force_refresh(get(children(i),'children'));
-end
-
