@@ -47,7 +47,7 @@ function cba = findColorBar(axhan)
 fig = get(axhan,'parent');
 peers = get(fig,'children');
 for i = 1:numel(peers)
-  if (ishandle(peers(i),'axes') & (strcmp(get(peers(i),'tag'),'colorbar')) & (get(peers(i),'userdata') == axhan))
+  if (ishandle(peers(i),'axes') && (strcmp(get(peers(i),'tag'),'colorbar')) && (get(peers(i),'userdata') == axhan))
     cba = peers(i);
     return;
   end

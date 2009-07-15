@@ -164,7 +164,7 @@
 function ohandle = plot(varargin)
    % Check for an axes handle
    if (nargin>=2)
-      if (isnumeric(varargin{1}) & (length(varargin{1})==1) & ...
+      if (isnumeric(varargin{1}) && (length(varargin{1})==1) && ...
          ishandle(varargin{1},'axes'))
          handle = varargin{1}(1);
          varargin(1) = [];
@@ -181,14 +181,14 @@ function ohandle = plot(varargin)
    propstart = 0;
    if (nargin > 2)
       propstart = nargin-1;
-      while ((propstart >= 1) & isa(varargin{propstart},'char') & ...
+      while ((propstart >= 1) && isa(varargin{propstart},'char') && ...
          pvalid('line',varargin{propstart}))
          propstart = propstart - 2;
       end
       propstart = propstart + 2;
    end
    propset = {};
-   if ((propstart > 0) & (propstart < nargin))
+   if ((propstart > 0) && (propstart < nargin))
 	propset = varargin(propstart:end);
 	varargin(propstart:end) = [];
    end
@@ -242,7 +242,7 @@ function h = plot_double(X,Y,handle,lineprops)
    end
    
 function [a,b] = matchmat(a,b)
-   if (isvector(a) & ~isvector(b))
+   if (isvector(a) && ~isvector(b))
       if (length(a)==size(b,1))
          a = repmat(a(:),[1,size(b,2)]);
          return
@@ -257,7 +257,7 @@ function [a,b] = matchmat(a,b)
       end
    end
       
-   if (~isvector(a) & isvector(b))
+   if (~isvector(a) && isvector(b))
       if (length(b) == size(a,1))
          b = repmat(b(:),[1,size(a,2)]);
       else

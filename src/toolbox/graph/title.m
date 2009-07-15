@@ -47,7 +47,7 @@
 function o = title(varargin)
   % Check for an axes handle
   if (nargin>=2)
-    if (isnumeric(varargin{1}) & (length(varargin{1})==1) & ...
+    if (isnumeric(varargin{1}) && (length(varargin{1})==1) && ...
     ishandle(varargin{1},'axes'))
        handle = varargin{1}(1);
        varargin(1) = [];

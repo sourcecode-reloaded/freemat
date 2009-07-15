@@ -320,6 +320,7 @@ function handle_exec(&line,fp,pset,&writers,exec_id)
   end
   docomputeblock(writers,cmdlist,errors_expected);
   if (skipexec) return; end;
+  return;
   cd([sourcepath,'/help/tmp']);
   beginverbatim(writers);
   etext = threadcall(exec_id,100000,'simkeys',cmdlist);

@@ -87,7 +87,7 @@
 function ohandle = contour(varargin)
   % Check for an axes handle 
     if (nargin>=2)
-      if (isnumeric(varargin{1}) & (length(varargin{1})==1) & ...
+      if (isnumeric(varargin{1}) && (length(varargin{1})==1) && ...
           ishandle(varargin{1},'axes'))
         handle = varargin{1}(1);
         varargin(1) = [];
@@ -162,7 +162,7 @@ function b = islinespec(t,&colorspec,&markerspec,&linespec)
    markerspec = 'none';
    linespec = 'none';
    orig_t = t;
-   while (~giveup & length(t)>0)
+   while (~giveup && length(t)>0)
       giveup = 1;
       if (matchit(t,colorset))
          colorspec = parseit(t,colorset);

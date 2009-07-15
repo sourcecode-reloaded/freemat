@@ -63,7 +63,7 @@
 function ohandle = surf(varargin)
    % Check for an axes handle
    if (nargin>=2)
-      if (isnumeric(varargin{1}) & (length(varargin{1})==1) & ...
+      if (isnumeric(varargin{1}) && (length(varargin{1})==1) && ...
          ishandle(varargin{1},'axes'))
          handle = varargin{1}(1);
          varargin(1) = [];
@@ -80,14 +80,14 @@ end
   propstart = 0;
   if (nargin > 2)
     propstart = nargin-1;
-    while ((propstart >= 1) & isa(varargin{propstart},'char') & ...
+    while ((propstart >= 1) && isa(varargin{propstart},'char') && ...
     pvalid('line',varargin{propstart}))
       propstart = propstart - 2;
     end
     propstart = propstart + 2;
   end
   propset = {};
-  if ((propstart > 0) & (propstart < nargin))
+  if ((propstart > 0) && (propstart < nargin))
      propset = varargin(propstart:end);
      varargin(propstart:end) = [];
   end

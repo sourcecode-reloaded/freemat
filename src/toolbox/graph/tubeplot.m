@@ -78,7 +78,7 @@ function [varargout]=tubeplot(x,y,z,varargin)
     r=x*0+1;
   else
     r=varargin{1};
-    if (size(r,1)==1 & size(r,2)==1)
+    if (size(r,1)==1 && size(r,2)==1)
       r=r*ones(N,1);
     end
   end

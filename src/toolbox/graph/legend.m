@@ -73,15 +73,15 @@
 function handle = legend(varargin)
   axhan = gca;
   % Check the form of the command
-  if (nargin == 1 & strcmp(varargin{1},'off')), legend_off(axhan); return; end
-  if (nargin == 1 & strcmp(varargin{1},'hide')), legend_hide(axhan); return; end
-  if (nargin == 1 & strcmp(varargin{1},'show')), legend_show(axhan); return; end
-  if (nargin == 1 & strcmp(varargin{1},'toggle')), legend_toggle(axhan); return; end
-  if (nargin == 1 & strcmp(varargin{1},'boxon')), legend_boxon(axhan); return; end
-  if (nargin == 1 & strcmp(varargin{1},'boxoff')), legend_boxoff(axhan); return; end
+  if (nargin == 1 && strcmp(varargin{1},'off')), legend_off(axhan); return; end
+  if (nargin == 1 && strcmp(varargin{1},'hide')), legend_hide(axhan); return; end
+  if (nargin == 1 && strcmp(varargin{1},'show')), legend_show(axhan); return; end
+  if (nargin == 1 && strcmp(varargin{1},'toggle')), legend_toggle(axhan); return; end
+  if (nargin == 1 && strcmp(varargin{1},'boxon')), legend_boxon(axhan); return; end
+  if (nargin == 1 && strcmp(varargin{1},'boxoff')), legend_boxoff(axhan); return; end
   % Check for a location specifier
   legend_position = 'ne';
-  if (nargin >= 2 & strcmp(varargin{nargin-1},'location'))
+  if (nargin >= 2 && strcmp(varargin{nargin-1},'location'))
     legend_position = parse_location_spec(varargin{nargin});
     varargin((nargin-1):nargin) = [];
     nargin = nargin - 2;	

@@ -23,7 +23,7 @@ function t = point
 p = hpoint;
 % Convert p to a fractional coordinate
 s = get(gcf,'figsize'); s = s(:);
-p = p./s;
+p = p(:)./s(:);
 p(2) = 1-p(2);
 % Get the list ofchildren
 children = get(gcf,'children');

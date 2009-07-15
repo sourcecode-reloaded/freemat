@@ -42,14 +42,14 @@ function ohandle = patch(varargin)
   propstart = 0;
   if (nargin > 2)
     propstart = nargin-1;
-    while ((propstart >= 1) & isa(varargin{propstart},'char') & ...
+    while ((propstart >= 1) && isa(varargin{propstart},'char') && ...
     pvalid('patch',varargin{propstart}))
       propstart = propstart - 2;
     end
     propstart = propstart + 2;
   end
   propset = {};
-  if ((propstart > 0) & (propstart < nargin))
+  if ((propstart > 0) && (propstart < nargin))
      propset = varargin(propstart:end);
      varargin(propstart:end) = [];
   end
