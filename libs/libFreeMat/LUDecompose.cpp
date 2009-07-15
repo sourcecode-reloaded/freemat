@@ -297,12 +297,14 @@ ArrayVector LUDecompose(int nargout, Array A) {
 	BasicArray<float> l(NTuple(nrows,p));
 	BasicArray<float> u(NTuple(p,ncols));
 	if (nargout <= 2) {
-	  RealLU<float>(nrows,ncols,l.data(),u.data(),A.real<float>().data(),sgetrf_);
+	  if (p != 0)
+	    RealLU<float>(nrows,ncols,l.data(),u.data(),A.real<float>().data(),sgetrf_);
 	  retval.push_back(Array(l));
 	  retval.push_back(Array(u));
 	} else if (nargout == 3) {
 	  BasicArray<float> piv(NTuple(nrows,nrows));
-	  RealLUP<float>(nrows,ncols,l.data(),u.data(),piv.data(),A.real<float>().data(),sgetrf_);
+	  if (p != 0)
+	    RealLUP<float>(nrows,ncols,l.data(),u.data(),piv.data(),A.real<float>().data(),sgetrf_);
 	  retval.push_back(Array(l));
 	  retval.push_back(Array(u));
 	  retval.push_back(Array(piv));
@@ -312,14 +314,16 @@ ArrayVector LUDecompose(int nargout, Array A) {
 	BasicArray<float> l(NTuple(2*nrows,p));
 	BasicArray<float> u(NTuple(2*p,ncols));
 	if (nargout <= 2) {
-	  ComplexLU<float>(nrows,ncols,l.data(),u.data(),
-			   A.fortran<float>().data(),cgetrf_);
+	  if (p != 0)
+	    ComplexLU<float>(nrows,ncols,l.data(),u.data(),
+			     A.fortran<float>().data(),cgetrf_);
 	  retval.push_back(Array(SplitReal(l),SplitImag(l)));
 	  retval.push_back(Array(SplitReal(u),SplitImag(u)));
 	} else if (nargout == 3) {
 	  BasicArray<float> piv(NTuple(nrows,nrows));
-	  ComplexLUP<float>(nrows,ncols,l.data(),u.data(),piv.data(),
-			    A.fortran<float>().data(),cgetrf_);
+	  if (p != 0)
+	    ComplexLUP<float>(nrows,ncols,l.data(),u.data(),piv.data(),
+			      A.fortran<float>().data(),cgetrf_);
 	  retval.push_back(Array(SplitReal(l),SplitImag(l)));
 	  retval.push_back(Array(SplitReal(u),SplitImag(u)));
 	  retval.push_back(Array(piv));
@@ -332,13 +336,15 @@ ArrayVector LUDecompose(int nargout, Array A) {
 	BasicArray<double> l(NTuple(nrows,p));
 	BasicArray<double> u(NTuple(p,ncols));
 	if (nargout <= 2) {
-	  RealLU<double>(nrows,ncols,l.data(),u.data(),A.real<double>().data(),dgetrf_);
+	  if (p != 0)
+	    RealLU<double>(nrows,ncols,l.data(),u.data(),A.real<double>().data(),dgetrf_);
 	  retval.push_back(Array(l));
 	  retval.push_back(Array(u));
 	} else if (nargout == 3) {
 	  BasicArray<double> piv(NTuple(nrows,nrows));
-	  RealLUP<double>(nrows,ncols,l.data(),u.data(),piv.data(),
-			  A.real<double>().data(),dgetrf_);
+	  if (p != 0)
+	    RealLUP<double>(nrows,ncols,l.data(),u.data(),piv.data(),
+			    A.real<double>().data(),dgetrf_);
 	  retval.push_back(Array(l));
 	  retval.push_back(Array(u));
 	  retval.push_back(Array(piv));
@@ -348,14 +354,16 @@ ArrayVector LUDecompose(int nargout, Array A) {
 	BasicArray<double> l(NTuple(2*nrows,p));
 	BasicArray<double> u(NTuple(2*p,ncols));
 	if (nargout <= 2) {
-	  ComplexLU<double>(nrows,ncols,l.data(),u.data(),
-			    A.fortran<double>().data(),zgetrf_);
+	  if (p != 0)
+	    ComplexLU<double>(nrows,ncols,l.data(),u.data(),
+			      A.fortran<double>().data(),zgetrf_);
 	  retval.push_back(Array(SplitReal(l),SplitImag(l)));
 	  retval.push_back(Array(SplitReal(u),SplitImag(u)));
 	} else if (nargout == 3) {
 	  BasicArray<double> piv(NTuple(nrows,nrows));
-	  ComplexLUP<double>(nrows,ncols,l.data(),u.data(),piv.data(),
-			     A.fortran<double>().data(),zgetrf_);
+	  if (p != 0)
+	    ComplexLUP<double>(nrows,ncols,l.data(),u.data(),piv.data(),
+			       A.fortran<double>().data(),zgetrf_);
 	  retval.push_back(Array(SplitReal(l),SplitImag(l)));
 	  retval.push_back(Array(SplitReal(u),SplitImag(u)));
 	  retval.push_back(Array(piv));
