@@ -839,7 +839,7 @@ static ArrayVector QRDNoPivotFunction(bool compactDec, NTuple odims, Array A) {
   if (A.allReal()) {
     BasicArray<T> q(NTuple(A.rows(),minmn));
     BasicArray<T> r(NTuple(minmn,A.cols()));
-    RealQRD(q,r,A.real<T>());
+    if (minmn != 0) RealQRD(q,r,A.real<T>());
     retvec << Array(q);
     if (compactDec)
       retvec << Array(r);
@@ -848,7 +848,7 @@ static ArrayVector QRDNoPivotFunction(bool compactDec, NTuple odims, Array A) {
   } else {
     BasicArray<T> q(NTuple(2*A.rows(),minmn));
     BasicArray<T> r(NTuple(2*minmn,A.cols()));
-    ComplexQRD(q,r,A.fortran<T>());
+    if (minmn != 0)  ComplexQRD(q,r,A.fortran<T>());
     retvec << Array(SplitReal(q),SplitImag(q));
     if (compactDec)
       retvec << Array(SplitReal(r),SplitImag(r));
@@ -868,7 +868,7 @@ static ArrayVector QRDPivotFunction(bool compactDec, bool compactSav,
   if (A.allReal()) {
     BasicArray<T> q(NTuple(A.rows(),minmn));
     BasicArray<T> r(NTuple(minmn,A.cols()));
-    RealQRDP(q,r,p,A.real<T>());
+    if (minmn != 0)  RealQRDP(q,r,p,A.real<T>());
     retvec << Array(q);
     if (compactDec)
       retvec << Array(r);
@@ -877,7 +877,7 @@ static ArrayVector QRDPivotFunction(bool compactDec, bool compactSav,
   } else {
     BasicArray<T> q(NTuple(2*A.rows(),minmn));
     BasicArray<T> r(NTuple(2*minmn,A.cols()));
-    ComplexQRDP(q,r,p,A.fortran<T>());
+    if (minmn != 0)  ComplexQRDP(q,r,p,A.fortran<T>());
     retvec << Array(SplitReal(q),SplitImag(q));
     if (compactDec)
       retvec << Array(SplitReal(r),SplitImag(r));

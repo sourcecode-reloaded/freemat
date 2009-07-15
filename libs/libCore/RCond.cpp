@@ -150,6 +150,7 @@ ArrayVector RcondFunction(int nargout, const ArrayVector& arg) {
     throw Exception("rcond function requires at least one argument - the matrix to compute the condition number for.");
   Array A(arg[0].asDenseArray());
   if (!A.is2D()) throw Exception("Cannot apply matrix operations to N-dimensional arrays.");
+  if (!A.isSquare()) throw Exception("rcond only applies to square matrices");
   if (A.isEmpty())
     return ArrayVector(Array(Inf()));
   if (AnyNaN(A))
