@@ -509,6 +509,16 @@ ArrayVector EigFunction(int nargout, const ArrayVector& arg) {
   if (AnyNotFinite(A))
     throw Exception("eig only defined for matrices with finite entries.");
   ArrayVector retval;
+  if (A.isEmpty()) {
+    if (nargout > 1) {
+      retval.push_back(A);
+      retval.push_back(A);
+    } else {
+      retval.push_back(Array(Double,NTuple(0,1)));
+    }
+    return retval;
+  }
+  
   Array V, D;
   if (nargout > 1) {
     if (IsSymmetric(A))

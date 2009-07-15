@@ -1633,6 +1633,8 @@ Array Negate(const Array& A){
 Array InvertMatrix(const Array &a) {
   if (!a.is2D())
     throw Exception("Cannot invert N-dimensional arrays.");
+  if (!a.isSquare())
+    throw Exception("Cannot invert non-square matrices");
   if (a.isScalar())
     return DotRightDivide(Array(1.0),a);
   return Invert(a);
