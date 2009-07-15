@@ -101,8 +101,8 @@ public:
 };
 
 void Interpreter::setPath(QString path) {
-  QString pathdata(path);
-  QStringList pathset(pathdata.split(PATHSEP,QString::SkipEmptyParts));
+  if (path == m_userCachePath) return;
+  QStringList pathset(path.split(PATHSEP,QString::SkipEmptyParts));
   m_userPath.clear();
   for (int i=0;i<pathset.size();i++) 
     if (pathset[i] != ".") {
@@ -111,6 +111,7 @@ void Interpreter::setPath(QString path) {
     }
   setupWatcher();
   rescanPath();
+  m_userCachePath = path;
 }
 
 QString Interpreter::getTotalPath() {
@@ -165,6 +166,8 @@ void Interpreter::setupWatcher() {
 }
 
 void Interpreter::changeDir(QString path) {
+  if (QDir(path) == QDir::currentPath())
+    return;
   if (!QDir::setCurrent(path))
     throw Exception("Unable to change to specified directory: " + path);
   if (m_liveUpdateFlag)

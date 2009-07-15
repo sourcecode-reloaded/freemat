@@ -184,6 +184,11 @@ class Interpreter : public QThread {
    */
   QStringList m_userPath;
   /**
+   * The user path as a string -- used for the path cache (to avoid rescanning)
+   * This could be derived from m_userPath theoretically.
+   */
+  QString m_userCachePath;
+  /**
    * The width of the output in characters
    */
   int m_ncols;

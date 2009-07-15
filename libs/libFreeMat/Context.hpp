@@ -254,7 +254,8 @@ public:
    * a count of -1 means all scopes are bypassed (except the base scope)
    */
   inline void bypassScope(int count) {
-    if (count < 0) count = scopestack.size();
+    if (count < 0) 
+      count = (scopestack.size()-2);
     if (count > scopestack.size()) return;
     for (int i=0;i<count;i++) {
       bypassstack.push_back(scopestack.back());
