@@ -167,6 +167,8 @@ static ArrayVector EvalTryFunction(int nargout, const ArrayVector& arg, Interpre
   }
 }
 
+ArrayVector TraceFunction(int nargout, const ArrayVector& arg, Interpreter* eval);
+
 static ArrayVector EvalNoTryFunction(int nargout, const ArrayVector& arg, Interpreter* eval, int popSpec) {
   if (nargout > 0) {
     QString line = arg[0].asString();
@@ -187,11 +189,12 @@ static ArrayVector EvalNoTryFunction(int nargout, const ArrayVector& arg, Interp
 }
 
 ArrayVector EvalFunction(int nargout, const ArrayVector& arg,Interpreter* eval){
+  eval->getContext()->deactivateCurrentScope(); // Make us invisible
   if (arg.size() == 0)
     throw Exception("eval function takes at least one argument - the string to execute");
   if (arg.size() == 2)
-    return EvalTryFunction(nargout, arg, eval, 1);
-  return EvalNoTryFunction(nargout, arg, eval, 1);
+    return EvalTryFunction(nargout, arg, eval, 0);
+  return EvalNoTryFunction(nargout, arg, eval, 0);
 }
 
 //!
@@ -317,6 +320,7 @@ ArrayVector AssignInFunction(int nargout, const ArrayVector& arg, Interpreter* e
 
 
 ArrayVector TraceFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
+  qDebug() << "**********************************************************************\n";
   // walk the trace of 
   while (eval->getContext()->activeScopeName() != "base") {
     qDebug() << "Scope is " << eval->getContext()->activeScopeName();
@@ -325,6 +329,7 @@ ArrayVector TraceFunction(int nargout, const ArrayVector& arg, Interpreter* eval
   }
   qDebug() << "Scope is " << eval->getContext()->activeScopeName();
   qDebug() << "Variables " << eval->getContext()->listAllVariables();
+  qDebug() << "**********************************************************************\n";
   eval->getContext()->restoreBypassedScopes();
   return ArrayVector();
 }
