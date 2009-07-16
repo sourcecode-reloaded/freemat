@@ -30,7 +30,7 @@ ArrayVector DbUpFunction(int nargout, const ArrayVector& arg, Interpreter *eval)
 // dbup
 //@]
 //@@Signature
-//sfunction dbup DbUpFunction
+//sfunction dbdown DbDownFunction
 //inputs none
 //outputs none
 //!

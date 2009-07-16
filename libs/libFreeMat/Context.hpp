@@ -720,6 +720,10 @@ public:
   inline bool currentScopeVariableAccessed(QString name) {
     return activeScope->variableAccessed(name);
   }
+  inline void deactivateCurrentScope() {
+    bottomScope->setActive(false);
+    updateScopePointers();
+  }
   /**
    * Returns true if the current (local) scope indicates a
    * non-zero loop depth.

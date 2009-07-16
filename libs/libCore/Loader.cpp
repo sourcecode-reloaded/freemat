@@ -63,7 +63,7 @@ ArrayVector CtypeThawFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector CumprodFunction(int, const ArrayVector&);
 ArrayVector CumsumFunction(int, const ArrayVector&);
 ArrayVector DbUpFunction(int, const ArrayVector&, Interpreter*);
-ArrayVector DbUpFunction(int, const ArrayVector&, Interpreter*);
+ArrayVector DbDownFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector DbDeleteFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector DbListFunction(int, const ArrayVector&, Interpreter*);
 ArrayVector DbStopFunction(int, const ArrayVector&, Interpreter*);
@@ -308,7 +308,7 @@ ArrayVector ThreadKillFunction(int, const ArrayVector&);
 ArrayVector ThreadFreeFunction(int, const ArrayVector&);
 ArrayVector ClcFunction(int, const ArrayVector&);
 ArrayVector ProfilerFunction(int, const ArrayVector&);
-
+ArrayVector TraceFunction(int, const ArrayVector&, Interpreter*);
 
 void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("abs",AbsFunction,1,1,"x",NULL);
@@ -364,7 +364,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("cumprod",CumprodFunction,2,1,"x","dimensions",NULL);
   context->addFunction("cumsum",CumsumFunction,2,1,"x","dimension",NULL);
   context->addSpecialFunction("dbup",DbUpFunction,0,0,NULL);
-  context->addSpecialFunction("dbup",DbUpFunction,0,0,NULL);
+  context->addSpecialFunction("dbdown",DbDownFunction,0,0,NULL);
   context->addSpecialFunction("dbdelete",DbDeleteFunction,1,0,"num",NULL);
   context->addSpecialFunction("dblist",DbListFunction,0,0,NULL);
   context->addSpecialFunction("dbstop",DbStopFunction,2,0,"funcname","linenumber",NULL);
@@ -389,6 +389,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addSpecialFunction("eval",EvalFunction,2,-1,"try_clause","catch_clause",NULL);
   context->addSpecialFunction("evalin",EvalInFunction,2,3,"workspace","expression",NULL);
   context->addSpecialFunction("assignin",AssignInFunction,3,0,"workspace","variablename","value",NULL);
+  context->addSpecialFunction("trace",TraceFunction,0,0,NULL);
   context->addSpecialFunction("feval",FevalFunction,-1,-1,NULL);
   context->addSpecialFunction("exist",ExistFunction,2,1,"item","kind",NULL);
   context->addFunction("fft",FFTFunction,3,1,"x","len","dim",NULL);

@@ -115,6 +115,13 @@ static ArrayVector RetrieveCallVars(Interpreter *eval, int nargout) {
   return retval;
 }
 
+static void PopContext(Context* context, int popSpec) {
+  if (popSpec == -1)
+    while (context->activeScopeName() != "base") context->bypassScope(1);
+  else
+    context->bypassScope(popSpec);
+}
+
 static ArrayVector EvalTryFunction(int nargout, Interpreter* eval, QString try_buf, 
 				   QString catch_buf, bool retrieveVars, int popSpec) {
   ArrayVector retval;
@@ -125,7 +132,7 @@ static ArrayVector EvalTryFunction(int nargout, Interpreter* eval, QString try_b
   eval->setTryCatchActive(true);
   Context *context = eval->getContext();
   int original_depth = context->scopeDepth();
-  context->bypassScope(popSpec);
+  PopContext(context,popSpec);
   int eval_depth = context->scopeDepth();
   try {
     eval->evaluateString(try_buf,true);
@@ -164,17 +171,17 @@ static ArrayVector EvalNoTryFunction(int nargout, const ArrayVector& arg, Interp
   if (nargout > 0) {
     QString line = arg[0].asString();
     QString buf = PrePendCallVars(line,nargout);
-    eval->getContext()->bypassScope(popSpec);
+    PopContext(eval->getContext(),popSpec);
     eval->evaluateString(buf);
     ArrayVector retval(RetrieveCallVars(eval,nargout));
-    eval->getContext()->restoreScope(popSpec);
+    eval->getContext()->restoreBypassedScopes();
     return retval;
   } else {
     QString line = arg[0].asString();
     QString buf = line + "\n";
-    eval->getContext()->bypassScope(popSpec);
+    PopContext(eval->getContext(),popSpec);
     eval->evaluateString(buf);
-    eval->getContext()->restoreScope(popSpec);
+    eval->getContext()->restoreBypassedScopes();
     return ArrayVector();
   }
 }
@@ -297,14 +304,28 @@ ArrayVector AssignInFunction(int nargout, const ArrayVector& arg, Interpreter* e
   if (spec_str=="base")
     popspec = -1;
   else if (spec_str=="caller") 
-    popspec = 1;
+    popspec = 2;
   else
-    throw Exception("evalin function requires the first argument to be either 'caller' or 'base'");
+    throw Exception("assignin function requires the first argument to be either 'caller' or 'base'");
   QString varname = arg[1].asString();
   Array varvalue = arg[2];
-  eval->getContext()->bypassScope(popspec);
+  PopContext(eval->getContext(),popspec);
   eval->getContext()->insertVariable(varname,varvalue);
-  eval->getContext()->restoreScope(popspec);
+  eval->getContext()->restoreBypassedScopes();
+  return ArrayVector();
+}
+
+
+ArrayVector TraceFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
+  // walk the trace of 
+  while (eval->getContext()->activeScopeName() != "base") {
+    qDebug() << "Scope is " << eval->getContext()->activeScopeName();
+    qDebug() << "Variables " << eval->getContext()->listAllVariables();
+    eval->getContext()->bypassScope(1);
+  }
+  qDebug() << "Scope is " << eval->getContext()->activeScopeName();
+  qDebug() << "Variables " << eval->getContext()->listAllVariables();
+  eval->getContext()->restoreBypassedScopes();
   return ArrayVector();
 }
 

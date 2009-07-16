@@ -383,6 +383,7 @@ ArrayVector BuiltinFunction(int nargout, const ArrayVector& arg,Interpreter* eva
 //!
 ArrayVector DoCLIFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   Context *context = eval->getContext();
+  context->deactivateCurrentScope();
   FuncPtr funcDef;
   if (context->lookupFunction("startup",funcDef)) {
     funcDef->updateCode(eval);
