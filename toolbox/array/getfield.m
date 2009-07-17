@@ -58,26 +58,6 @@
 % 
 % and is equivalent to y = x(m,n).fieldname.  You can chain multiple
 % references together using this syntax.
-% GETFIELD GETFIELD Get Field Contents
-% 
-% Usage
-% 
-% Given a structure or structure array, returns the contents of the
-% specified field.  The first version is for scalar structures, and
-% has the following syntax
-% 
-%    y = getfield(x,'fieldname')
-% 
-% and is equivalent to y = x.fieldname where x is a scalar (1 x 1)
-% structure.  If x is not a scalar structure, then y is the 
-% first value, i.e., it is equivalent to y = x(1).fieldname.  
-% The second form allows you to specify a subindex into a
-% structure array, and has the following syntax
-% 
-%     y = getfield(x, {m,n}, 'fieldname')
-% 
-% and is equivalent to y = x(m,n).fieldname.  You can chain multiple
-% references together using this syntax.
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL

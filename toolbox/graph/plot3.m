@@ -55,25 +55,6 @@
 % 
 %   plot3(handle,...)
 % 
-% PLOT3 PLOT3 Plot 3D Function
-% 
-% Usage
-% 
-% This is the 3D plot command.  The general syntax for its use is
-% 
-%   plot3(X,Y,Z,{linespec 1},X,Y,Z,{linespec 2},...,properties...)
-% 
-% where X Y and Z are the coordinates of the points on the
-% 3D line.  Note that in general, all three should be vectors.  If
-% some or all of the quantities are matrices, then FreeMat will attempt
-% to expand the vector arguments to the same size, and then generate
-% multiple plots, one for each column of the matrices.  The linespec
-% is optional, see plot for details.  You can specify properties
-% for the generated line plots.  You can also specify a handle as an
-% axes to target
-% 
-%   plot3(handle,...)
-% 
 
 % Copyright (c) 2002-2006 Samit Basu
 % Licensed under the GPL
@@ -113,7 +94,7 @@ function hout = plot3(varargin)
     if (length(varargin) < 3)
       error('plot3 requires triplets of x, y, z coordinates');
     end;
-    if (length(varargin) == 3 | (length(varargin) > 3) && ~islinespec(varargin{4},cs,ms,ps))
+    if (length(varargin) == 3 || (length(varargin) > 3) && ~islinespec(varargin{4},cs,ms,ps))
       h = [h,plot_triplet(varargin{1},varargin{2},varargin{3},handle,propset)];
       varargin(1:3) = [];
     elseif ((length(varargin) >= 4) && islinespec(varargin{4},cs,ms,ps))

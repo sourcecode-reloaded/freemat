@@ -1122,7 +1122,6 @@ int MainApp::StartNewInterpreterThread() {
   Interpreter *p_eval = new Interpreter(NewContext());
   p_eval->setBasePath(basePath);
   p_eval->setUserPath(userPath);
-  p_eval->rescanPath();
   connect(p_eval,SIGNAL(outputRawText(QString)),m_term,SLOT(OutputRawString(QString)));
   connect(p_eval,SIGNAL(SetPrompt(QString)),m_keys,SLOT(SetPrompt(QString)));
   connect(p_eval,SIGNAL(doGraphicsCall(Interpreter*,FuncPtr,ArrayVector,int)),

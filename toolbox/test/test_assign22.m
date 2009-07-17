@@ -1,4 +1,8 @@
 function test_val = test_assign22
   A = [1,2,3];
-  A(0) = 2;
-  test_val = 1;
+  test_val = 0;
+  try
+    A(0) = 2;
+  catch
+    test_val = 1;
+  end

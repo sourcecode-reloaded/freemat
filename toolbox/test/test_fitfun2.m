@@ -8,4 +8,4 @@ weights = y*0+1;
 tol = 1.e-08;
 junk = rand(100);
 [xopt,yopt] = fitfun('fitfunc_func1',init,y,weights,tol,junk);
-test_val = fabs(xopt(1)-1) < 1e-6;
+test_val = abs(xopt(1)-1) < 1e-6;

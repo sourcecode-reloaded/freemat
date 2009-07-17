@@ -76,32 +76,6 @@
 % 
 %  Extreme values are lumped in the first and last bins.
 % 
-% HIST HIST Histogram Function
-% 
-% Usage
-% 
-% 
-% 	n=hist (y)
-% 	n=hist (y,x)
-% 	n=hist (y,x,norm)
-% 
-%  Produce histogram counts or plots.
-% 
-%  With one vector input argument, plot a histogram of the values with
-%  10 bins.  The range of the histogram bins is determined by the range
-%  of the data.
-% 
-%  Given a second scalar argument, use that as the number of bins.
-% 
-%  Given a second vector argument, use that as the centers of the bins,
-%  with the width of the bins determined from the adjacent values in
-%  the vector.
-% 
-%  If third argument is provided, the histogram is normalised such that
-%  the sum of the bars is equal to norm.
-% 
-%  Extreme values are lumped in the first and last bins.
-% 
 
 %% Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2002, 2003,
 %%               2004, 2005, 2006, 2007 John W. Eaton

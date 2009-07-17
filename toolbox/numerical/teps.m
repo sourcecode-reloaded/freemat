@@ -34,18 +34,6 @@
 % 
 % The teps function is most useful if you need to
 % compute epsilon based on the type of the array.
-% TEPS TEPS Type-based Epsilon Calculation
-% 
-% Usage
-% 
-% Returns eps for double precision arguments and
-% feps for single precision arguments.  The syntax for
-% teps is
-% 
-%    y = teps(x)
-% 
-% The teps function is most useful if you need to
-% compute epsilon based on the type of the array.
 
 % Copyright (c) 2002-2006 Samit Basu
 % Licensed under the GPL

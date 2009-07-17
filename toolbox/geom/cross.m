@@ -28,16 +28,6 @@
 %     c = cross(a,b)
 % 
 % where a and b are 3-element vectors.
-% CROSS CROSS Cross Product of Two Vectors
-% 
-% Usage
-% 
-% Computes the cross product of two vectors.  The general syntax
-% for its use is
-% 
-%     c = cross(a,b)
-% 
-% where a and b are 3-element vectors.
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL
