@@ -2122,7 +2122,7 @@ Array LeftDivide(const Array& A, const Array& B) {
 //  k = abs(a-b);
 //  x = max(k(:)) < (size(a,2)*size(a,1)*eps*4);
 //@}
-//@$exact#y1=x1/x2#((size(x1,1)==1)||any(isinf(x1))||any(isinf(x2))||(loopi==64)||(loopj==64))
+//@$exact#y1=x1/x2#((size(x1,1)==1)||any(isinf(x1))||any(isinf(x2))||any(loopi==[39,60,61,64])||any(loopj==[39,60,61,64]))
 //!
 Array RightDivide(const Array& A, const Array& B) {
   Array C;
@@ -2289,7 +2289,7 @@ Array RightDivide(const Array& A, const Array& B) {
 //C = A^B
 //@>
 //@@Tests
-//@$exact#y1=x1^x2
+//@$near#y1=x1^x2#(any(loopi==[2,18,64,50:52])||(any(loopj==[50:52])))
 //!
 
 // Raises Scalar^Matrix

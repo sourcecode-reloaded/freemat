@@ -146,7 +146,7 @@ ArrayVector IsSameFunction(int nargout, const ArrayVector& arg) {
 //@{ test_isset1.m
 //function test_val = test_isset1
 //  a = []; b = 1;
-//  test_val = ~isset('c') && ~isset(a) && isset(b);
+//  test_val = ~isset('c') && ~isset('a') && isset('b');
 //@}
 //@@Signature
 //sfunction isset IsSetFunction

@@ -104,7 +104,7 @@ void fcnstub(double *p, double *hx, int m, int n, void *adata) {
 //tol = 1.e-08;
 //junk = rand(100);
 //[xopt,yopt] = fitfun('fitfunc_func1',init,y,weights,tol,junk);
-//test_val = fabs(xopt(1)-1) < 1e-6;
+//test_val = abs(xopt(1)-1) < 1e-6;
 //@}
 //@{ fitfunc_func1.m
 //function y = fitfunc_func1(init,junk)
@@ -127,6 +127,17 @@ void fcnstub(double *p, double *hx, int m, int n, void *adata) {
 // b = init(2);
 // x = [1:100];
 // y = a*x+b;
+//@}
+//@{ test_fitfun3.m
+//% Test the fitfun with a local function
+//function test_val = test_fitfun3
+//O = 3/4*pi;
+//y0 = cos(O);
+//[x y] = fitfun('locos',3.5/4*pi,y0,1,0.01);
+//test_val = abs((x-O)/O*100)<.1;
+//
+//function y = locos(x)
+//  y = cos(x)
 //@}
 //@@Signature
 //sfunction fitfun FitFunFunction
@@ -198,7 +209,7 @@ ArrayVector FitFunFunction(int nargout, const ArrayVector& arg, Interpreter* eva
   opts[0] = LM_INIT_MU;
   opts[1] = tol;
   opts[2] = tol;
-  opts[3] = tol;
+  opts[3] = tol*1e-5;
   opts[4] = LM_DIFF_DELTA;
   dlevmar_dif(fcnstub,&(q.xval.real<double>()[1]),&(q.yval.real<double>()[1]),m,n,200*(m+1),opts,NULL,NULL,NULL,&q);
   tocall = q.params;

@@ -26,7 +26,7 @@
 %@@Tests
 %@$near#y1=rref(x1)
 %@$near#[y1,y2]=rref(x1)
-%@$near#[y1,y2]=rref(x1,.0001)
+%@$near#[y1,y2]=rref(x1,.0001)#(any(loopi==[15,62]))
 %!
 function [A,k] = rref(A, tolerance)
 % Original notice for rref from 

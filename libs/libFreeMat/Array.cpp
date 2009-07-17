@@ -1002,6 +1002,7 @@ double Array::asDouble() const {
 }
 
 QString Array::asString() const {
+  if (isEmpty()) return QString();
   if (m_type.Class != StringArray) throw Exception("Cannot convert array to string");
   const BasicArray<QChar> &p(constReal<QChar>());
   QString ret;

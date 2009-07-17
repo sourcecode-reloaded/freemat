@@ -608,7 +608,7 @@ void Interpreter::sendGreeting() {
 }
 
 bool Interpreter::inMFile() const {
-  return (isMFile(context->scopeName()) || (InCLI && isMFile(context->activeScopeName())));
+  return (isMFile(context->activeScopeName()));
 }
 
 void Interpreter::debugDump() {
@@ -670,9 +670,7 @@ void Interpreter::dbdown() {
 
 QString Interpreter::getLocalMangledName(QString fname) {
   QString ret;
-  if (isMFile(context->scopeName()))
-    ret = LocalMangleName(context->scopeDetailString(),fname);
-  else if (InCLI && isMFile(context->activeScopeName()))
+  if (isMFile(context->activeScopeName()))
     ret = LocalMangleName(context->activeScopeDetailString(),fname);
   else
     ret = fname;
