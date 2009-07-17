@@ -1464,14 +1464,14 @@ Array GreaterEquals(const Array& A, const Array& B) {
  * Element-wise equals.
  */
 Array Equals(const Array& A, const Array& B) {
-  return CmpOp<OpEquals>(A,B);
+  return EqOp<OpEquals>(A,B);
 }
 
 /**
  * Element-wise notEquals.
  */
 Array NotEquals(const Array& A, const Array& B) {
-  return CmpOp<OpNotEquals>(A,B);
+  return EqOp<OpNotEquals>(A,B);
 }
 
 /**

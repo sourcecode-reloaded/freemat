@@ -294,6 +294,7 @@ Array BoolOp(const Array &Ain, const Array &Bin) {
   return DotOp<bool,Op>(Ain,Bin,Bool).toClass(Bool);
 }
 
+// Comparison op -- uses real part only (used by ordinal operators)
 template <typename T, class Op>
 static inline Array CmpOp(const Array &Ain, const Array &Bin, DataClass Tclass) {
   Array Acast(Ain.toClass(Tclass));
@@ -348,6 +349,116 @@ static inline Array CmpOp(const Array &Ain, const Array &Bin) {
     F = CmpOp<float,Op>(Ain,Bin,Float);
   else
     F = CmpOp<double,Op>(Ain,Bin,Double);
+  return F.toClass(Bool);
+}
+
+// Comparison operator -- uses real and imaginary parts
+template <typename T, class Op>
+static inline Array EqOp(const Array &Ain, const Array &Bin, DataClass Tclass) {
+  Array Acast(Ain.toClass(Tclass));
+  Array Bcast(Bin.toClass(Tclass));
+  Array F(Bool,NTuple(0,0));
+  if (Acast.isSparse() && Bcast.isSparse()) {
+    if (Acast.dimensions() != Bcast.dimensions())
+      throw Exception("size mismatch in arguments to binary operator");
+    if (Bcast.allReal() && Acast.allReal()) {
+      F = DotOp<bool,T,Op>(Acast.constRealSparse<T>(),
+			   Bcast.constRealSparse<T>());
+    } else {
+      Acast.forceComplex(); Bcast.forceComplex();
+      F = DotOp<bool,T,Op>(Acast.constRealSparse<T>(),
+			   Acast.constImagSparse<T>(),
+			   Bcast.constRealSparse<T>(),
+			   Bcast.constImagSparse<T>());
+    }
+    return F;
+  }
+  if (!Acast.isScalar()) Acast = Acast.asDenseArray();
+  if (!Bcast.isScalar()) Bcast = Bcast.asDenseArray();
+  if (Acast.isScalar() && Bcast.isScalar()) {
+    if (Acast.allReal() && Bcast.allReal()) {
+      F = Array::Array(Op::func(Acast.constRealScalar<T>(),
+				Bcast.constRealScalar<T>()));
+    } else {
+      Acast.forceComplex(); Bcast.forceComplex();
+      F = Array::Array(Op::func(Acast.constRealScalar<T>(),
+				Acast.constImagScalar<T>(),
+				Bcast.constRealScalar<T>(),
+				Bcast.constImagScalar<T>()));
+    }
+  } else if (Acast.isScalar()) {
+    if (Acast.allReal() && Bcast.allReal()) {
+      F = Array::Array(Bool,Bcast.dimensions());
+      bool* ret = F.real<bool>().data();
+      const T& Ap = Acast.constRealScalar<T>();
+      const T* Bp = Bcast.constReal<T>().constData();
+      uint64 q = uint64(Bcast.length());
+      for (uint64 i=0;i<q;i++) ret[i] = Op::func(Ap,Bp[i]);
+    } else {
+      Acast.forceComplex(); Bcast.forceComplex();
+      F = Array::Array(Bool,Bcast.dimensions());
+      bool* ret = F.real<bool>().data();
+      const T& Ar = Acast.constRealScalar<T>();
+      const T& Ai = Acast.constImagScalar<T>();
+      const T* Br = Bcast.constReal<T>().constData();
+      const T* Bi = Bcast.constImag<T>().constData();
+      uint64 q = uint64(Bcast.length());
+      for (uint64 i=0;i<q;i++) ret[i] = Op::func(Ar,Ai,Br[i],Bi[i]);
+    }
+  } else if (Bcast.isScalar()) {
+    if (Bcast.allReal() && Acast.allReal()) {
+      F = Array::Array(Bool,Acast.dimensions());
+      bool* ret = F.real<bool>().data();
+      const T* Ap = Acast.constReal<T>().constData();
+      const T& Bp = Bcast.constRealScalar<T>();
+      uint64 q = uint64(Acast.length());
+      for (uint64 i=0;i<q;i++) ret[i] = Op::func(Ap[i],Bp);
+    } else {
+      Acast.forceComplex(); Bcast.forceComplex();
+      F = Array::Array(Bool,Acast.dimensions());
+      bool* ret = F.real<bool>().data();
+      const T* Ar = Acast.constReal<T>().constData();
+      const T* Ai = Acast.constImag<T>().constData();
+      const T& Br = Bcast.constRealScalar<T>();
+      const T& Bi = Bcast.constImagScalar<T>();
+      uint64 q = uint64(Acast.length());
+      for (uint64 i=0;i<q;i++) ret[i] = Op::func(Ar[i],Ai[i],Br,Bi);
+    }
+  } else {
+    if (Acast.dimensions() != Bcast.dimensions())
+      throw Exception("size mismatch in arguments to binary operator");
+    if (Bcast.allReal() && Acast.allReal()) {
+      F = Array::Array(Bool,Acast.dimensions());
+      bool* ret = F.real<bool>().data();
+      const T* Ap = Acast.constReal<T>().constData();
+      const T* Bp = Bcast.constReal<T>().constData();
+      uint64 q = uint64(Acast.length());
+      for (uint64 i=0;i<q;i++) ret[i] = Op::func(Ap[i],Bp[i]);
+    } else {
+      Acast.forceComplex(); Bcast.forceComplex();
+      F = Array::Array(Bool,Acast.dimensions());
+      bool* ret = F.real<bool>().data();
+      const T* Ar = Acast.constReal<T>().constData();
+      const T* Ai = Acast.constImag<T>().constData();
+      const T* Br = Bcast.constReal<T>().constData();
+      const T* Bi = Bcast.constImag<T>().constData();
+      uint64 q = uint64(Acast.length());
+      for (uint64 i=0;i<q;i++) ret[i] = Op::func(Ar[i],Ai[i],Br[i],Bi[i]);
+    }
+  }
+  return F;
+}
+
+template <class Op>
+static inline Array EqOp(const Array &Ain, const Array &Bin) {
+  DataClass via_type;
+  DataClass out_type;
+  ComputeTypes(Ain,Bin,via_type,out_type);
+  Array F;
+  if (via_type == Float) 
+    F = EqOp<float,Op>(Ain,Bin,Float);
+  else
+    F = EqOp<double,Op>(Ain,Bin,Double);
   return F.toClass(Bool);
 }
 
