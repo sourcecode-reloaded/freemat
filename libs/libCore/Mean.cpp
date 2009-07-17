@@ -94,7 +94,7 @@ struct OpVecMean {
 //@>
 //@@Tests
 //@$near#y1=mean(x1)
-//@$near#y1=mean(x1,2)
+//@$near#y1=mean(x1,2)#(any(loopi==[4,21]))
 //@@Signature
 //function mean MeanFunction
 //inputs x dim

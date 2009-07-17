@@ -30,9 +30,9 @@ ArrayVector XNrm2Function(int nargout, const ArrayVector& arg) {
     throw Exception("xnrm2 does not support arguments of type " + A.className());
   case Float:
     if (A.allReal())
-      return ArrayVector(Array(snrm2_(&len,A.real<float>().data(),&one)));
+      return ArrayVector(Array(snrm2_(&len,A.real<float>().data(),&one)).toClass(Float));
     else
-      return ArrayVector(Array(scnrm2_(&len,A.fortran<float>().data(),&one)));
+      return ArrayVector(Array(scnrm2_(&len,A.fortran<float>().data(),&one)).toClass(Float));
   case Double:
     if (A.allReal())
       return ArrayVector(Array(dnrm2_(&len,A.real<double>().data(),&one)));

@@ -190,10 +190,12 @@ void ApplicationWindow::createToolBars() {
   dirToolBar = addToolBar("Current directory");
   dirToolBar->setObjectName("dirtoolbar");
   cdCombo = new QComboBox;
+  //  cdCombo->setFixedWidth(100);
   cdCombo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
-  dirToolBar->addWidget(cdCombo);
+  //  cdCombo->setSizeAdjustPolicy(QComboBox::AdjustToContentsOnFirstShow);
   cdCombo->setVisible(true);
   cdCombo->setObjectName("cdCombo");
+  dirToolBar->addWidget(cdCombo);
   dirToolBar->addAction(dirChooseAct);
   dirToolBar->addAction(dirUpAct);
 }

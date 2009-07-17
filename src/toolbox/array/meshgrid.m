@@ -26,7 +26,7 @@
 %[X,Y] = meshgrid([1,2,3,4],[6,7,8])
 %@>
 %@@Tests
-%@$exact#[y1,y2] = meshgrid(-2:.4:2)
+%@$near#[y1,y2] = meshgrid(-2:.4:2)
 %@$exact#[y1,y2] = meshgrid([1,2,3,4],[6,7,8])
 %!
 

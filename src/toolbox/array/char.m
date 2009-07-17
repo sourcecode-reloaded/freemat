@@ -42,7 +42,7 @@
 %char('hello','to','the','world')
 %@>
 %@@Tests
-%@$exact#y1=char(x1,x2)
+%@$exact#y1=char(x1,x2)#(any(loopi==[4,21]))
 %!
 
 % Copyright (c) 2002-2007 Samit Basu

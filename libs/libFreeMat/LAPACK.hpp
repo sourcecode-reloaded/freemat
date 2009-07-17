@@ -217,11 +217,11 @@ extern "C" {
 
   int xerbla_(char *srname, int *info);
 
-  float snrm2_(int *N, float *X, int *INCX);
+  double snrm2_(int *N, float *X, int *INCX);
   
   double dnrm2_(int *N, double *X, int *INCX);
 
-  float scnrm2_(int *N, float *X, int *INCX);
+  double scnrm2_(int *N, float *X, int *INCX);
   
   double dznrm2_(int *N, double *X, int *INCX);
 
