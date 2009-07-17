@@ -3089,8 +3089,12 @@ ArrayReference Interpreter::createVariable(QString name) {
 //@{ test_assign22.m
 //function test_val = test_assign22
 //  A = [1,2,3];
-//  A(0) = 2;
-//  test_val = 1;
+//  test_val = 0;
+//  try
+//    A(0) = 2;
+//  catch
+//    test_val = 1;
+//  end
 //@}
 //@{ test_sparse56.m
 //% Test DeleteSparseMatrix function
