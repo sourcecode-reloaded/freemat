@@ -96,6 +96,6 @@ if (~isset('tol'))
   tol = max(size(A))*s(1,1)*teps(A);
 end
 sd = diag(s);
-sd(sd > tol) = 1/(sd(sd > tol));
+sd(sd > tol) = 1./(sd(sd > tol));
 s = diag(sd);
 y = v*s*u';

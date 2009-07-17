@@ -24,7 +24,7 @@ function run_tests
      cd(run_path);
      save run_tests.dat run_path testlist failed spath
      if (~any(strcmp(testlist{i}(1:end-2),exclude_list)))
-       success = eval(testlist{i}(1:end-2));
+       success = eval(testlist{i}(1:end-2),'0');
      else
        success = 1;
      end

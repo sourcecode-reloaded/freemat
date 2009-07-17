@@ -68,7 +68,7 @@ function hout = plot3(varargin)
     if (length(varargin) < 3)
       error('plot3 requires triplets of x, y, z coordinates');
     end;
-    if (length(varargin) == 3 | (length(varargin) > 3) && ~islinespec(varargin{4},cs,ms,ps))
+    if (length(varargin) == 3 || (length(varargin) > 3) && ~islinespec(varargin{4},cs,ms,ps))
       h = [h,plot_triplet(varargin{1},varargin{2},varargin{3},handle,propset)];
       varargin(1:3) = [];
     elseif ((length(varargin) >= 4) && islinespec(varargin{4},cs,ms,ps))
