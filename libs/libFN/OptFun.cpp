@@ -90,7 +90,7 @@ void fcnstub(double *p, double *hx, int m, int n, void *adata) {
 //function test_val = test_fitfun1
 //O = 3/4*pi;
 //y0 = cos(O);
-//[x y] = fitfun('cos',3.5/4*pi,y0,1,0.01);
+//[x y] = fitfun('cos',3.5/4*pi,y0,1,0.0001);
 //test_val = abs((x-O)/O*100)<.1;
 //@}
 //@{ test_fitfun2.m
@@ -133,11 +133,11 @@ void fcnstub(double *p, double *hx, int m, int n, void *adata) {
 //function test_val = test_fitfun3
 //O = 3/4*pi;
 //y0 = cos(O);
-//[x y] = fitfun('locos',3.5/4*pi,y0,1,0.01);
+//[x y] = fitfun(@locos,3.5/4*pi,y0,1,0.0001);
 //test_val = abs((x-O)/O*100)<.1;
 //
 //function y = locos(x)
-//  y = cos(x)
+//  y = cos(x);
 //@}
 //@@Signature
 //sfunction fitfun FitFunFunction
