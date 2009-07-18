@@ -392,7 +392,7 @@ ArrayVector MKDirCoreFunction(int nargout, const ArrayVector& arg) {
 //is the @|path| to the file, 
 //@@Tests
 //@$exact#[y1,y2,y3,y4]=fileparts('/home/basu/testfile.mgz')
-//@$exact#[y1,y2,y3,y4]=fileparts('c:\home\basu\testfile.mgz')
+//@$exact#[y1,y2,y3,y4]=fileparts('c:\home\basu\testfile.mgz')#true
 //@@Signature
 //function fileparts FilePartsFunction
 //inputs filename

@@ -958,7 +958,6 @@ Array DotLeftDivide(const Array& A, const Array& B) {
 //[value, pos4] = max(vec_max);
 //x = (pos1 == 4) && (pos2 == 4) && (pos3 == 4) && (pos4 == 4);
 //@}
-//@$exact#y1=x1.^x2
 //!
 
 // Simplified test -- if A & B are both real

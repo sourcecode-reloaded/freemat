@@ -1850,7 +1850,7 @@ exit:
 	}
 
 	if( !stringarg ){ //At least one of the read values was numerical. Convert strings to numbers.
-		Array out( nVecElem );
+	  Array out( Double, NTuple(nVecElem,1) );
 		
 		//double *data = (double*) ret[0].getVoidPointer();
 		int ind = 1;
@@ -1907,8 +1907,9 @@ exit:
 //@@Tests
 //@{ test_sscanf1.m
 //function test_val = test_sscanf1
-//[a,b,c] = sscanf('1.34 54 hello','%g %d %s');
-//test_val = (a == 1.34) && (b == 54) && (c == 'hello');
+//A = sscanf('1.34 54 5.67','%g');
+//B = [1.34;54;5.67];
+//test_val = issame(A,B);
 //@}
 //@@Signature
 //function sscanf SscanfFunction
