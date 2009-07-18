@@ -5,6 +5,7 @@ StackTool::StackTool(QWidget *parent) :
   QWidget(parent) {
   QHBoxLayout *layout = new QHBoxLayout;
   cb = new QComboBox;
+  cb->setSizeAdjustPolicy(QComboBox::AdjustToContents);
   layout->addWidget(new QLabel("Stack:"));
   layout->addWidget(cb);
   setLayout(layout);
