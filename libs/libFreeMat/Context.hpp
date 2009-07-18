@@ -323,10 +323,10 @@ public:
     ScopePtr active;
     QString mapName;
 
-    if (bottomScope->isVariablePersistent(varName)) {
-      mapName = bottomScope->getMangledName(varName);
+    if (activeScope->isVariablePersistent(varName)) {
+      mapName = activeScope->getMangledName(varName);
       active = topScope;
-    } else if (bottomScope->isVariableGlobal(varName)) {
+    } else if (activeScope->isVariableGlobal(varName)) {
       mapName = varName;
       active = topScope;
     } else {
@@ -361,10 +361,10 @@ public:
     ScopePtr active;
     QString mapName;
     bool global = false;
-    if (bottomScope->isVariablePersistent(varName)) {
-      mapName = bottomScope->getMangledName(varName);
+    if (activeScope->isVariablePersistent(varName)) {
+      mapName = activeScope->getMangledName(varName);
       active = topScope;
-    } else if (bottomScope->isVariableGlobal(varName)) {
+    } else if (activeScope->isVariableGlobal(varName)) {
       mapName = varName;
       active = topScope;
       global = true;

@@ -110,7 +110,8 @@ void Interpreter::setPath(QString path) {
       m_userPath << tpath.absolutePath();
     }
   setupWatcher();
-  rescanPath();
+  //  rescanPath();
+  updateFileTool();
   m_userCachePath = path;
 }
 
@@ -174,6 +175,7 @@ void Interpreter::changeDir(QString path) {
     emit CWDChanged(QDir::currentPath());
   setupWatcher();
   rescanPath();
+  //  updateFileTool();
 }
 				 
 void Interpreter::updateVariablesTool() {
@@ -294,6 +296,7 @@ void Interpreter::updateFileTool() {
 
 void Interpreter::rescanPath() {
   if (!context) return;
+  qDebug() << "rescanning";
   context->flushTemporaryGlobalFunctions();
   for (int i=0;i<m_basePath.size();i++)
     scanDirectory(m_basePath[i],false,"");
@@ -573,8 +576,9 @@ void Interpreter::run() {
 }
 
 void Interpreter::doCLI() {
-  rescanPath();
+  //  rescanPath();
   emit CWDChanged(QDir::currentPath());
+  updateFileTool();
   if (!m_skipflag)
     sendGreeting();
   try {
@@ -2315,10 +2319,26 @@ void Interpreter::forStatement(const Tree & t) {
 //set_global('Hello')
 //get_global
 //@>
+//@@Tests
+//@{ test_global1.m
+//function test_val = test_global1
+//accum = 0;
+//for (i=1:10)
+//  accum = accum + test_global1_assist;
+//end
+//test_val = test(accum == 55);
+//
+//function tick = test_global1_assist
+//global count_test_global1_assist
+//count_test_global1_assist = count_test_global1_assist + 1;
+//tick = count_test_global1_assist;
+//@}
 //!
 void Interpreter::globalStatement(const Tree & t) {
-  for (int i=0;i<t.numChildren();i++)
+  for (int i=0;i<t.numChildren();i++) {
     context->addGlobalVariable(t.child(i).text());
+    context->insertVariable(t.child(i).text(),EmptyConstructor());
+  }
 }
 
 //!
@@ -2332,7 +2352,9 @@ void Interpreter::globalStatement(const Tree & t) {
 //   persistent variable1 variable2 ... variableN
 //@]
 //The @|persistent| statement must occur before the variable
-//is the tagged as persistent.
+//is the tagged as persistent.  Per the MATLAB API documentation
+//an empty variable is created when the @|persistent| statement
+//is called.
 //@@Example
 //Here is an example of a function that counts how many
 //times it has been called.
@@ -2353,7 +2375,7 @@ void Interpreter::globalStatement(const Tree & t) {
 //function test_val = test_persistent1
 //accum = 0;
 //for (i=1:10)
-//  accum = accum + i;
+//  accum = accum + test_persistent1_assist;
 //end
 //test_val = test(accum == 55);
 //
@@ -2370,8 +2392,10 @@ void Interpreter::globalStatement(const Tree & t) {
 //@}
 //!
 void Interpreter::persistentStatement(const Tree & t) {
-  for (int i=0;i<t.numChildren();i++)
+  for (int i=0;i<t.numChildren();i++) {
     context->addPersistentVariable(t.child(i).text());
+    context->insertVariable(t.child(i).text(),EmptyConstructor());
+  }
 }
 
 //!
