@@ -586,6 +586,7 @@ ArrayVector FwriteFunction(int nargout, const ArrayVector& arg) {
     QString prec = arg[2].asString();
     x = x.toClass(processPrecisionString(prec));
   }
+  if (x.isString()) x = x.toClass(UInt8);
   switch (x.dataClass()) {
   default: throw Exception("data type not supported for fwrite");
     MacroExpandCasesSimple(MacroWrite);
