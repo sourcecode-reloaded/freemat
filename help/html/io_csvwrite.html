@@ -34,32 +34,9 @@ where <code>startrow</code> and <code>startcol</code> are the offsets in zero-ba
 indexing.  
 <H3>Example</H3>
 Here we create a simple matrix, and write it to a CSV file
-<PRE>
---&gt; x = [1,2,3;5,6,7]
-
-x = 
- 1 2 3 
- 5 6 7 
-
---&gt; csvwrite('csvwrite.csv',x)
---&gt; csvread('csvwrite.csv')
-
-ans = 
- 1 2 3 
- 5 6 7 
-</PRE>
-<P>
+@&gt;
 Next, we do the same with an offset.
-<PRE>
---&gt; csvwrite('csvwrite.csv',x,1,2)
---&gt; csvread('csvwrite.csv')
-
-ans = 
- 0 0 0 0 
- 0 1 2 3 
- 0 5 6 7 
-</PRE>
-<P>
+@&gt;
 Note the extra zeros.
 </BODY>
 </HTML>

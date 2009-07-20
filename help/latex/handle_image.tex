@@ -40,17 +40,7 @@ figure window adjusted to achieve the desired zoom factor using the
 In this example, we create an image that is \verb|512 x 512| pixels
 square, and set the background to a noise pattern.  We set the central
 \verb|128 x 256| pixels to be white.
-\begin{verbatim}
---> x = rand(512);
---> x((-64:63)+256,(-128:127)+256) = 1.0;
---> figure
-
-ans = 
- 1 
-
---> image(x)
---> colormap(gray)
-\end{verbatim}
+@>
 
 The resulting image looks like:
 
@@ -58,16 +48,7 @@ The resulting image looks like:
 \centerline{\includegraphics[width=8cm]{image1}}
 
 Here is an example of an RGB image 
-\begin{verbatim}
---> t = linspace(0,1);
---> red = t'*t;
---> green = t'*(t.^2);
---> blue = t'*(0*t+1);
---> A(:,:,1) = red; 
---> A(:,:,2) = green; 
---> A(:,:,3) = blue;
---> image(A);
-\end{verbatim}
+@>
 The resulting image looks like:
 
 

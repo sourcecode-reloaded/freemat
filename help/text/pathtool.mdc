@@ -25,3 +25,12 @@ no arguments:
 
   pathtool
 
+PATHTOOL PATHTOOL Open Path Setting Tool
+
+Usage
+
+Brings up the pathtool dialog.  The pathtool function takes
+no arguments:
+
+  pathtool
+

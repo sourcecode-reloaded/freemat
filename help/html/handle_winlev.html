@@ -52,44 +52,15 @@ is mapped to <code>[0,1]</code> via:
 The window level function is fairly easy to demonstrate.  Consider
 the following image, which is a Gaussian pulse image that is very 
 narrow:
-<PRE>
---&gt; t = linspace(-1,1,256);
---&gt; xmat = ones(256,1)*t; ymat = xmat';
---&gt; A = exp(-(xmat.^2 + ymat.^2)*100);
---&gt; image(A);
-</PRE>
-<P>
+@&gt;
 The data range of <code>A</code> is <code>[0,1]</code>, as we can verify numerically:
-<PRE>
---&gt; min(A(:))
-
-ans = 
- 1.3839e-87 
-
---&gt; max(A(:))
-
-ans = 
-    0.9969 
-</PRE>
-<P>
+@&gt;
 To see the tail behavior, we use the <code>winlev</code> command to force FreeMat
 to map a smaller range of <code>A</code> to the colormap.
-<PRE>
---&gt; image(A);
---&gt; winlev(1e-4,0.5e-4)
-</PRE>
-<P>
+@&gt;
 The result is a look at more of the tail behavior of <code>A</code>.
 We can also use the winlev function to find out what the
 window and level are once set, as in the following example.
-<PRE>
---&gt; image(A);
---&gt; winlev(1e-4,0.5e-4)
---&gt; winlev
-
-ans = 
- 1.0000e-04 
-</PRE>
-<P>
+@&gt;
 </BODY>
 </HTML>

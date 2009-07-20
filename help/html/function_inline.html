@@ -30,62 +30,13 @@ feature request at the FreeMat website.
 <H3>Example</H3>
 Here we construct an inline expression using the autodetection 
 of <code>symvar</code>
-<PRE>
---&gt; a = inline('x^2')
-
-a = 
-  inline function object
-  f(x) = x^2
---&gt; a(3)
-
-ans = 
- 9 
-
---&gt; a(i)
-
-ans = 
-  -1.0000 +  0.0000i 
-</PRE>
-<P>
+@&gt;
 In this case, we have multiple arguments (again, autodetected)
-<PRE>
---&gt; a = inline('x+y-cos(x+y)')
-
-a = 
-  inline function object
-  f(x,y) = x+y-cos(x+y)
---&gt; a(pi,-pi)
-
-ans = 
- -1 
-</PRE>
-<P>
+@&gt;
 In this form, we specify which arguments we want to use (thereby
 also specifying the order of the arguments
-<PRE>
---&gt; a = inline('x+t-sin(x)','x','t')
-
-a = 
-  inline function object
-  f(x,t) = x+t-sin(x)
---&gt; a(0.5,1)
-
-ans = 
-    1.0206 
-</PRE>
-<P>
+@&gt;
 Inline objects can also be used with <code>feval</code>
-<PRE>
---&gt; a = inline('cos(t)')
-
-a = 
-  inline function object
-  f(t) = cos(t)
---&gt; feval(a,pi/2)
-
-ans = 
- 6.1230e-17 
-</PRE>
-<P>
+@&gt;
 </BODY>
 </HTML>

@@ -13,8 +13,6 @@ on which of the following three situations applies to the arguments
 \begin{enumerate}
 \item  \verb|A| is a scalar, \verb|B| is an arbitrary \verb|n|-dimensional numerical array, in which case the output is each element of \verb|B| divided by the scalar \verb|A|.
 
-\item  \verb|B| is a scalar, \verb|A| is an arbitrary \verb|n|-dimensional numerical array, in which case the output is the scalar \verb|B| divided by each element of \verb|A|.
-
 \item  \verb|A,B| are matrices with the same number of rows, i.e., \verb|A| is of size \verb|M x K|, and \verb|B| is of size \verb|M x L|, in which case the output is of size \verb|K x L|.
 
 \end{enumerate}
@@ -25,13 +23,9 @@ A few additional words about the third version, in which \verb|A| and \verb|B| a
 
 There are three formulae for the times operator.  For the first form
 \[
-Y(m_1,\ldots,m_d) = \frac{B(m_1,\ldots,m_d)}{A},
+Y(m_1,\ldots,m_d) = \frac{B(m_1,\ldots,m_d)}{A}.
 \]
-and the second form
-\[
-Y(m_1,\ldots,m_d) = \frac{B}{A(m_1,\ldots,m_d)}.
-\]
-In the third form, the calculation of the output depends on the size of \verb|A|. Because each column of \verb|B| is treated independantly, we can rewrite the equation \verb|A Y = B| as
+In the second form, the calculation of the output depends on the size of \verb|A|. Because each column of \verb|B| is treated independantly, we can rewrite the equation \verb|A Y = B| as
 \[
   A [y_1, y_2,\ldots, y_l] = [b_1, b_2, \ldots, b_l]
 \]
@@ -50,13 +44,7 @@ In the event that the matrix \verb|A| is neither full row rank nor full column r
 \subsection{Examples}
 
 Here are some simple examples of the divide operator.  We start with a simple example of a full rank, square matrix:
-\begin{verbatim}
---> A = [1,1;0,1]
-
-A = 
- 1 1 
- 0 1 
-\end{verbatim}
+@>
 Suppose we wish to solve
 \[
   \begin{bmatrix} 1 & 1 \\ 0 & 1 \end{bmatrix}
@@ -65,19 +53,7 @@ Suppose we wish to solve
   \begin{bmatrix} 3 \\ 2 \end{bmatrix}
 \]
 (which by inspection has the solution \verb|y_1 = 1|, \verb|y_2 = 2|).  Thus we compute:
-\begin{verbatim}
---> B = [3;2]
-
-B = 
- 3 
- 2 
-
---> Y = A\B
-
-Y = 
- 1 
- 2 
-\end{verbatim}
+@>
 
 Suppose we wish to solve a trivial Least Squares (LS) problem.  We want to find a simple scaling of the vector \verb|[1;1]| that is closest to the point \verb|[2,1]|.  This is equivalent to solving
 \[
@@ -92,22 +68,5 @@ Taking a derivative with respect to \verb|y|, and setting to zero (which we must
   2 (y-2) + 2 (y-1) = 0
 \]
 which we can simplify to \verb|4y = 6| or \verb|y = 3/2| (we must, technically, check to make sure this is a minimum, and not a maximum or an inflection point).  Here is the same calculation performed using FreeMat:
-\begin{verbatim}
---> A = [1;1]
-
-A = 
- 1 
- 1 
-
---> B = [2;1]
-
-B = 
- 2 
- 1 
-
---> A\B
-
-ans = 
-    1.5000 
-\end{verbatim}
+@>
 which is the same solution.

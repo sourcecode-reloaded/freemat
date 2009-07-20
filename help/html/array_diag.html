@@ -26,55 +26,9 @@ is a matrix with <code>x</code> set to the <code>n</code>-th diagonal.
 <H3>Examples</H3>
 Here is an example of <code>diag</code> being used to extract
 a diagonal from a matrix.
-<PRE>
---&gt; A = int32(10*rand(4,5))
-
-A = 
-  2  1 10  7  6 
-  4  2  4  9 10 
-  4  4  7  9 10 
-  7  8  0  3  6 
-
---&gt; diag(A)
-
-ans = 
- 2 
- 2 
- 7 
- 3 
-
---&gt; diag(A,1)
-
-ans = 
- 1 
- 4 
- 9 
- 6 
-</PRE>
-<P>
+@&gt;
 Here is an example of the second form of <code>diag</code>, being
 used to construct a diagonal matrix.
-<PRE>
---&gt; x = int32(10*rand(1,3))
-
-x = 
- 3 8 9 
-
---&gt; diag(x)
-
-ans = 
- 3 0 0 
- 0 8 0 
- 0 0 9 
-
---&gt; diag(x,-1)
-
-ans = 
- 0 0 0 0 
- 3 0 0 0 
- 0 8 0 0 
- 0 0 9 0 
-</PRE>
-<P>
+@&gt;
 </BODY>
 </HTML>

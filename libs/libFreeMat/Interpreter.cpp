@@ -2336,8 +2336,10 @@ void Interpreter::forStatement(const Tree & t) {
 //!
 void Interpreter::globalStatement(const Tree & t) {
   for (int i=0;i<t.numChildren();i++) {
-    context->addGlobalVariable(t.child(i).text());
-    context->insertVariable(t.child(i).text(),EmptyConstructor());
+    QString name = t.child(i).text();
+    context->addGlobalVariable(name);
+    if (!context->lookupVariable(name).valid())
+      context->insertVariable(name,EmptyConstructor());
   }
 }
 
@@ -2393,8 +2395,10 @@ void Interpreter::globalStatement(const Tree & t) {
 //!
 void Interpreter::persistentStatement(const Tree & t) {
   for (int i=0;i<t.numChildren();i++) {
-    context->addPersistentVariable(t.child(i).text());
-    context->insertVariable(t.child(i).text(),EmptyConstructor());
+    QString name = t.child(i).text();
+    context->addPersistentVariable(name);
+    if (!context->lookupVariable(name).valid())
+      context->insertVariable(name,EmptyConstructor());
   }
 }
 

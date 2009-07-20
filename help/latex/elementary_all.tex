@@ -28,35 +28,11 @@ If \verb|d| is omitted, then the minimum is taken over all elements of
 
 The following piece of code demonstrates various uses of the \verb|all|
 function
-\begin{verbatim}
---> A = [1,0,0;1,0,0;0,0,1]
-
-A = 
- 1 0 0 
- 1 0 0 
- 0 0 1 
-\end{verbatim}
+@>
 We start by calling \verb|all| without a dimension argument, in which 
 case it defaults to testing all values of \verb|A|
-\begin{verbatim}
---> all(A)
-
-ans = 
- 0 0 0 
-\end{verbatim}
+@>
 The \verb|all| function is useful in expressions also.
-\begin{verbatim}
---> all(A>=0)
-
-ans = 
- 1 1 1 
-\end{verbatim}
+@>
 Next, we apply the \verb|all| operation along the rows.
-\begin{verbatim}
---> all(A,2)
-
-ans = 
- 0 
- 0 
- 0 
-\end{verbatim}
+@>

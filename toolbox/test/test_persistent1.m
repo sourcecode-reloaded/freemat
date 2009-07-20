@@ -2,7 +2,7 @@
 function test_val = test_persistent1
 accum = 0;
 for (i=1:10)
-  accum = accum + i;
+  accum = accum + test_persistent1_assist;
 end
 test_val = test(accum == 55);
 

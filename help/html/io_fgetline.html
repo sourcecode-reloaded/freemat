@@ -25,32 +25,8 @@ return true on this handle), <code>fgetline</code> returns an empty
 string.
 <H3>Example</H3>
 First we write a couple of strings to a test file.
-<PRE>
---&gt; fp = fopen('testtext','w');
---&gt; fprintf(fp,'String 1\n');
---&gt; fprintf(fp,'String 2\n');
---&gt; fclose(fp);
-</PRE>
-<P>
+@&gt;
 Next, we read then back.
-<PRE>
---&gt; fp = fopen('testtext','r')
-
-fp = 
- 14 
-
---&gt; fgetline(fp)
-
-ans = 
-String 1
-
---&gt; fgetline(fp)
-
-ans = 
-String 2
-
---&gt; fclose(fp);
-</PRE>
-<P>
+@&gt;
 </BODY>
 </HTML>

@@ -37,3 +37,16 @@ or for
 
    c = a == b
 
+EQ EQ Overloaded Equals Comparison Operator
+
+Usage
+
+This is a method that is invoked to combine two variables using an
+equals comparison operator, and is invoked when you call
+
+   c = eq(a,b)
+
+or for 
+
+   c = a == b
+

@@ -24,25 +24,8 @@ native, multi-dimensional indexing.
 
 Suppose we have a simple \verb|3 x 4| matrix \verb|A| containing some random integer
 elements
-\begin{verbatim}
---> A = randi(ones(3,4),10*ones(3,4))
-
-A = 
-  2  1  4  2 
-  8 10  4  7 
- 10  7  4 10 
-\end{verbatim}
+@>
 We can extract the elements \verb|(1,3),(2,3),(3,4)| of \verb|A| via \verb|sub2ind|.
 To calculate which elements of \verb|A| this corresponds to, we can use
 \verb|sub2ind| as
-\begin{verbatim}
---> n = sub2ind(size(A),1:3,2:4)
-
-n = 
-  4  8 12 
-
---> A(n)
-
-ans = 
-  1  4 10 
-\end{verbatim}
+@>

@@ -21,35 +21,6 @@ Internally, the <code>inv</code> function uses the matrix divide operators.
 For sparse matrices, a sparse matrix solver is used.
 <H3>Example</H3>
 Here we invert some simple matrices
-<PRE>
---&gt; a = randi(zeros(3),5*ones(3))
-
-a = 
- 5 2 5 
- 3 1 1 
- 1 4 3 
-
---&gt; b = inv(a)
-
-b = 
-   -0.0294    0.4118   -0.0882 
-   -0.2353    0.2941    0.2941 
-    0.3235   -0.5294   -0.0294 
-
---&gt; a*b
-
-ans = 
-    1.0000    0.0000   -0.0000 
-    0.0000    1.0000    0.0000 
-    0.0000    0.0000    1.0000 
-
---&gt; b*a
-
-ans = 
-    1.0000         0    0.0000 
-   -0.0000    1.0000   -0.0000 
-    0.0000    0.0000    1.0000 
-</PRE>
-<P>
+@&gt;
 </BODY>
 </HTML>

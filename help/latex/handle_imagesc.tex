@@ -31,15 +31,5 @@ with only formal arguments
 In this example, we create an image that is \verb|512 x 512| pixels
 square, and set the background to a noise pattern.  We set the central
 \verb|128 x 256| pixels to be white.
-\begin{verbatim}
---> x = rand(512);
---> x((-64:63)+256,(-128:127)+256) = 1.0;
---> figure
-
-ans = 
- 1 
-
---> imagesc(x,[0 .5])
---> colormap(gray)
-\end{verbatim}
+@>
 

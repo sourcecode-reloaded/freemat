@@ -47,13 +47,7 @@ Colormaps are generally used to pseudo color images to enhance
 visibility of features, etc.
 <H3>Examples</H3>
 We start by creating a smoothly varying image of a 2D Gaussian pulse.
-<PRE>
---&gt; x = linspace(-1,1,512)'*ones(1,512);
---&gt; y = x';
---&gt; Z = exp(-(x.^2+y.^2)/0.3);
---&gt; image(Z);
-</PRE>
-<P>
+@&gt;
 which we display with the default (grayscale) colormap here.
 <P>
 <DIV ALIGN="CENTER">
@@ -62,11 +56,7 @@ which we display with the default (grayscale) colormap here.
 <P>
 
 Next we switch to the <code>copper</code> colormap, and redisplay the image.
-<PRE>
---&gt; colormap(copper);
---&gt; image(Z);
-</PRE>
-<P>
+@&gt;
 which results in the following image.
 <P>
 <DIV ALIGN="CENTER">
@@ -76,11 +66,7 @@ which results in the following image.
 
 If we capture the output of the <code>copper</code> command and plot it, we obtain
 the following result:
-<PRE>
---&gt; a = copper;
---&gt; plot(a);
-</PRE>
-<P>
+@&gt;
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="colormap3.png">
@@ -93,12 +79,7 @@ constant as a function of index.  The result is an intensity map with a copper
 tint.  We can similarly construct a colormap of our own by defining the 
 three components seperately.  For example, suppose we take three gaussian
 curves, one for each color, centered on different parts of the index space:
-<PRE>
---&gt; t = linspace(0,1,256);
---&gt; A = [exp(-(t-1.0).^2/0.1);exp(-(t-0.5).^2/0.1);exp(-t.^2/0.1)]';
---&gt; plot(A);
-</PRE>
-<P>
+@&gt;
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="colormap4.png">
@@ -106,11 +87,7 @@ curves, one for each color, centered on different parts of the index space:
 <P>
 
 The resulting image has dark bands in it near the color transitions.
-<PRE>
---&gt; image(Z);
---&gt; colormap(A);
-</PRE>
-<P>
+@&gt;
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="colormap5.png">
@@ -119,12 +96,7 @@ The resulting image has dark bands in it near the color transitions.
 
 These dark bands are a result of the nonuniform color intensity, which 
 we can correct for by renormalizing each color to have the same norm.
-<PRE>
---&gt; w = sqrt(sum(A'.^2));
---&gt; sA = diag(1./w)*A;
---&gt; plot(A);
-</PRE>
-<P>
+@&gt;
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="colormap6.png">
@@ -132,11 +104,7 @@ we can correct for by renormalizing each color to have the same norm.
 <P>
 
 The resulting image has no more dark bands.
-<PRE>
---&gt; image(Z);
---&gt; colormap(A);
-</PRE>
-<P>
+@&gt;
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="colormap7.png">

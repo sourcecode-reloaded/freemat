@@ -20,17 +20,4 @@ At first pass, we force a read of the contents of the file by specifying
 end of file, and somewhat counter-intuitively, the answer is \verb|false|.
 We then attempt to read past the end of the file, which causes an
 error.  An \verb|feof| test now returns the expected value of \verb|true|.
-\begin{verbatim}
---> fp = fopen('test.dat','rb');
---> x = fread(fp,[512,inf],'float');
---> feof(fp)
-
-ans = 
- 1 
-
---> x = fread(fp,[1,1],'float');
---> feof(fp)
-
-ans = 
- 1 
-\end{verbatim}
+@>

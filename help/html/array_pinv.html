@@ -70,81 +70,19 @@ values smaller than <code>tol</code> are treated like zeros.
 <H3>Examples</H3>
 Consider a simple <code>1 x 2</code> matrix example, and note the various
 Moore-Penrose conditions:
-<PRE>
---&gt; A = float(rand(1,2))
-
-A = 
-    0.9526    0.4847 
-
---&gt; B = pinv(A)
-
-B = 
-    0.8338 
-    0.4243 
-
---&gt; A*B*A
-
-ans = 
-    0.9526    0.4847 
-
---&gt; B*A*B
-
-ans = 
-    0.8338 
-    0.4243 
-
---&gt; A*B
-
-ans = 
-    1.0000 
-
---&gt; B*A
-
-ans = 
-    0.7943    0.4042 
-    0.4042    0.2057 
-</PRE>
-<P>
+@&gt;
 To demonstrate that <code>pinv</code> returns the least squares solution,
 consider the following very simple case
-<PRE>
---&gt; A = float([1;1;1;1])
-
-A = 
- 1 
- 1 
- 1 
- 1 
-</PRE>
-<P>
+@&gt;
 The least squares solution to <code>A x = b</code> is just <code>x = mean(b)</code>,
 and computing the <code>pinv</code> of <code>A</code> demonstrates this
-<PRE>
---&gt; pinv(A)
-
-ans = 
-    0.2500    0.2500    0.2500    0.2500 
-</PRE>
-<P>
+@&gt;
 Similarly, we can demonstrate the minimum norm solution with
 the following simple case
-<PRE>
---&gt; A = float([1,1])
-
-A = 
- 1 1 
-</PRE>
-<P>
+@&gt;
 The solutions of <code>A x = 5</code> are those <code>x_1</code> and <code>x_2</code> such that
 <code>x_1 + x_2 = 5</code>.  The norm of <code>x</code> is <code>x_1^ + x_2^2</code>, which is
 <code>x_1^2 + (5-x_1)^2</code>, which is minimized for <code>x_1 = x_2 = 2.5</code>:
-<PRE>
---&gt; pinv(A) * 5.0
-
-ans = 
-    2.5000 
-    2.5000 
-</PRE>
-<P>
+@&gt;
 </BODY>
 </HTML>

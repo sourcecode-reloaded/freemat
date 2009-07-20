@@ -35,12 +35,7 @@ using the \verb|plot| command.
 Here is an example of using both the \verb|hold| command and the
 multiple-argument \verb|plot| command to construct a plot composed
 of three sets of data.  The first is a plot of a modulated Gaussian.
-\begin{verbatim}
---> x = linspace(-5,5,500);
---> t = exp(-x.^2);
---> y = t.*cos(2*pi*x*3);
---> plot(x,y);
-\end{verbatim}
+@>
 
 
 \centerline{\includegraphics[width=8cm]{hold1}}
@@ -52,11 +47,7 @@ the modulated Gaussian.  We add the two envelopes simultaneously
 using a single \verb|plot| command.  The fact that \verb|hold| is
 \verb|'on'| means that these two envelopes are added to (instead of
 replace) the current contents of the plot.
-\begin{verbatim}
---> plot(x,y);
---> hold on
---> plot(x,t,'g-',x,-t,'b-')
-\end{verbatim}
+@>
 
 
 \centerline{\includegraphics[width=8cm]{hold2}}

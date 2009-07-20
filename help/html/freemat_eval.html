@@ -53,50 +53,13 @@ as the equivalent code is
 so that the assignment must make sense in both cases.
 <H3>Example</H3>
 Here are some examples of <code>eval</code> being used.
-<PRE>
---&gt; eval('a = 32')
-
-a = 
- 32 
-
---&gt; b = eval('a')
-
-b = 
- 32 
-</PRE>
-<P>
+@&gt;
 The primary use of the <code>eval</code> statement is to enable construction
 of expressions at run time.
-<PRE>
---&gt; s = ['b = a' ' + 2']
-
-s = 
-b = a + 2
---&gt; eval(s)
-
-b = 
- 34 
-</PRE>
-<P>
+@&gt;
 Here we demonstrate the use of the catch-clause to provide a 
 default value
-<PRE>
---&gt; a = 32
-
-a = 
- 32 
-
---&gt; b = eval('a','1')
-
-b = 
- 32 
-
---&gt; b = eval('z','a+1')
-
-b = 
- 33 
-</PRE>
-<P>
+@&gt;
 Note that in the second case, <code>b</code> takes the value of 33, indicating
 that the evaluation of the first expression failed (because <code>z</code> is
 not defined).

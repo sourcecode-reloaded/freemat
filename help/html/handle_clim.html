@@ -40,21 +40,7 @@ axis to manipulate instead of using the current one.
 Here is an example of using <code>clim</code> to change the effective window and
 level onto an image.  First, the image with default
 limits
-<PRE>
---&gt; x = repmat(linspace(-1,1),[100,1]); y = x';
---&gt; z = exp(-x.^2-y.^2);
---&gt; image(z);
---&gt; min(z(:))
-
-ans = 
-    0.1353 
-
---&gt; max(z(:))
-
-ans = 
-    0.9998 
-</PRE>
-<P>
+@&gt;
 which results in
 <P>
 <DIV ALIGN="CENTER">
@@ -63,11 +49,7 @@ which results in
 <P>
 Next, we change the colorscale of the image using the
  <code>clim</code> function
-<PRE>
---&gt; image(z);
---&gt; clim([0,0.2]);
-</PRE>
-<P>
+@&gt;
 which results in
 <P>
 <DIV ALIGN="CENTER">

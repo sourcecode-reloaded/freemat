@@ -53,35 +53,9 @@ If the argument is a user-defined type (via the <code>class</code> function), th
 the name of that class is returned.
 <H3>Examples</H3>
 Here are some examples of the <code>isa</code> call.
-<PRE>
---&gt; a = {1}
-
-a = 
- [1] 
-
---&gt; isa(a,'char')
-
-ans = 
- 0 
-
---&gt; isa(a,'cell')
-
-ans = 
- 1 
-</PRE>
-<P>
+@&gt;
 Here we use <code>isa</code> along with shortcut boolean evaluation to 
 safely determine if a variable contains the string <code>'hello'</code>
-<PRE>
---&gt; a = 'hello'
-
-a = 
-hello
---&gt; isa(a,'char') &amp;&amp; strcmp(a,'hello')
-
-ans = 
- 1 
-</PRE>
-<P>
+@&gt;
 </BODY>
 </HTML>

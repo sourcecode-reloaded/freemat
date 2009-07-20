@@ -23,23 +23,10 @@ where <code>A</code> is a matrix.
 <H3>Example</H3>
 Here is the reciprocal condition number for a random square
 matrix
-<PRE>
---&gt; A = rand(30);
---&gt; rcond(A)
-
-ans = 
- 3.5040e-04 
-</PRE>
-<P>
+@&gt;
 And here we calculate the same value using the definition of
 (reciprocal) condition number
-<PRE>
---&gt; 1/(norm(A,1)*norm(inv(A),1))
-
-ans = 
- 3.5040e-04 
-</PRE>
-<P>
+@&gt;
 Note that the values are very similar.  LAPACKs <code>rcond</code>
 function is far more efficient than the explicit calculation
 (which is also used by the <code>cond</code> function.

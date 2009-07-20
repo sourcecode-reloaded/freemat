@@ -19,30 +19,6 @@ where \verb|y_ij| is the element in the \verb|i|th row and \verb|j|th column of 
 \subsection{Examples}
 
 A simple transpose example:
-\begin{verbatim}
---> A = [1,2,0;4,1,-1]
-
-A = 
-  1  2  0 
-  4  1 -1 
-
---> A.'
-
-ans = 
-  1  4 
-  2  1 
-  0 -1 
-\end{verbatim}
+@>
 Here, we use a complex matrix to demonstrate how the transpose does \emph{not} conjugate the entries.
-\begin{verbatim}
---> A = [1+i,2-i]
-
-A = 
-   1.0000 +  1.0000i   2.0000 -  1.0000i 
-
---> A.'
-
-ans = 
-   1.0000 +  1.0000i 
-   2.0000 -  1.0000i 
-\end{verbatim}
+@>

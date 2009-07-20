@@ -39,12 +39,7 @@ visibility of features, etc.
 \subsection{Examples}
 
 We start by creating a smoothly varying image of a 2D Gaussian pulse.
-\begin{verbatim}
---> x = linspace(-1,1,512)'*ones(1,512);
---> y = x';
---> Z = exp(-(x.^2+y.^2)/0.3);
---> image(Z);
-\end{verbatim}
+@>
 which we display with the default (grayscale) colormap here.
 
 
@@ -52,10 +47,7 @@ which we display with the default (grayscale) colormap here.
 
 
 Next we switch to the \verb|copper| colormap, and redisplay the image.
-\begin{verbatim}
---> colormap(copper);
---> image(Z);
-\end{verbatim}
+@>
 which results in the following image.
 
 
@@ -64,10 +56,7 @@ which results in the following image.
 
 If we capture the output of the \verb|copper| command and plot it, we obtain
 the following result:
-\begin{verbatim}
---> a = copper;
---> plot(a);
-\end{verbatim}
+@>
 
 
 \centerline{\includegraphics[width=8cm]{colormap3}}
@@ -79,21 +68,14 @@ constant as a function of index.  The result is an intensity map with a copper
 tint.  We can similarly construct a colormap of our own by defining the 
 three components seperately.  For example, suppose we take three gaussian
 curves, one for each color, centered on different parts of the index space:
-\begin{verbatim}
---> t = linspace(0,1,256);
---> A = [exp(-(t-1.0).^2/0.1);exp(-(t-0.5).^2/0.1);exp(-t.^2/0.1)]';
---> plot(A);
-\end{verbatim}
+@>
 
 
 \centerline{\includegraphics[width=8cm]{colormap4}}
 
 
 The resulting image has dark bands in it near the color transitions.
-\begin{verbatim}
---> image(Z);
---> colormap(A);
-\end{verbatim}
+@>
 
 
 \centerline{\includegraphics[width=8cm]{colormap5}}
@@ -101,21 +83,14 @@ The resulting image has dark bands in it near the color transitions.
 
 These dark bands are a result of the nonuniform color intensity, which 
 we can correct for by renormalizing each color to have the same norm.
-\begin{verbatim}
---> w = sqrt(sum(A'.^2));
---> sA = diag(1./w)*A;
---> plot(A);
-\end{verbatim}
+@>
 
 
 \centerline{\includegraphics[width=8cm]{colormap6}}
 
 
 The resulting image has no more dark bands.
-\begin{verbatim}
---> image(Z);
---> colormap(A);
-\end{verbatim}
+@>
 
 
 \centerline{\includegraphics[width=8cm]{colormap7}}

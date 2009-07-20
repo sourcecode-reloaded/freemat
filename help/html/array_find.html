@@ -59,106 +59,15 @@ whether to take the first or last <code>k</code> values:
 in the case of the <code>'last'</code> argument, the last <code>k</code> values are returned.
 <H3>Example</H3>
 Some simple examples of its usage, and some common uses of <code>find</code> in FreeMat programs.
-<PRE>
---&gt; a = [1,2,5,2,4];
---&gt; find(a==2)
-
-ans = 
- 2 4 
-</PRE>
-<P>
+@&gt;
 Here is an example of using find to replace elements of <code>A</code> that are <code>0</code> with the number <code>5</code>.
-<PRE>
---&gt; A = [1,0,3;0,2,1;3,0,0]
-
-A = 
- 1 0 3 
- 0 2 1 
- 3 0 0 
-
---&gt; n = find(A==0)
-
-n = 
- 2 
- 4 
- 6 
- 9 
-
---&gt; A(n) = 5
-
-A = 
- 1 5 3 
- 5 2 1 
- 3 5 5 
-</PRE>
-<P>
+@&gt;
 Incidentally, a better way to achieve the same concept is:
-<PRE>
---&gt; A = [1,0,3;0,2,1;3,0,0]
-
-A = 
- 1 0 3 
- 0 2 1 
- 3 0 0 
-
---&gt; A(A==0) = 5
-
-A = 
- 1 5 3 
- 5 2 1 
- 3 5 5 
-</PRE>
-<P>
+@&gt;
 Now, we can also return the indices as row and column indices using the two argument
 form of <code>find</code>:
-<PRE>
---&gt; A = [1,0,3;0,2,1;3,0,0]
-
-A = 
- 1 0 3 
- 0 2 1 
- 3 0 0 
-
---&gt; [r,c] = find(A)
-r = 
- 1 
- 3 
- 2 
- 1 
- 2 
-
-c = 
- 1 
- 1 
- 2 
- 3 
- 3 
-</PRE>
-<P>
+@&gt;
 Or the three argument form of <code>find</code>, which returns the value also:
-<PRE>
---&gt; [r,c,v] = find(A)
-r = 
- 1 
- 3 
- 2 
- 1 
- 2 
-
-c = 
- 1 
- 1 
- 2 
- 3 
- 3 
-
-v = 
- 1 
- 3 
- 2 
- 3 
- 1 
-</PRE>
-<P>
+@&gt;
 </BODY>
 </HTML>

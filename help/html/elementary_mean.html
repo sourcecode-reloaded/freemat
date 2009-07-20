@@ -36,34 +36,12 @@ first non-singleton dimension of <code>x</code>.
 <H3>Example</H3>
 The following piece of code demonstrates various uses of the mean
 function
-<PRE>
---&gt; A = [5,1,3;3,2,1;0,3,1]
-
-A = 
- 5 1 3 
- 3 2 1 
- 0 3 1 
-</PRE>
-<P>
+@&gt;
 We start by calling <code>mean</code> without a dimension argument, in which 
 case it defaults to the first nonsingular dimension (in this case, 
 along the columns or <code>d = 1</code>).
-<PRE>
---&gt; mean(A)
-
-ans = 
-    2.6667    2.0000    1.6667 
-</PRE>
-<P>
+@&gt;
 Next, we take the mean along the rows.
-<PRE>
---&gt; mean(A,2)
-
-ans = 
-    3.0000 
-    2.0000 
-    1.3333 
-</PRE>
-<P>
+@&gt;
 </BODY>
 </HTML>

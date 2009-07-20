@@ -58,12 +58,7 @@ inverse FFT are identical.
 \subsection{Example}
 
 The following piece of code plots the FFT for a sinusoidal signal:
-\begin{verbatim}
---> t = linspace(0,2*pi,128);
---> x = cos(15*t);
---> y = fft(x);
---> plot(t,abs(y));
-\end{verbatim}
+@>
 The resulting plot is:
 
 
@@ -73,36 +68,13 @@ The resulting plot is:
 The FFT can also be taken along different dimensions, and with padding 
 and/or truncation.  The following example demonstrates the Fourier
 Transform being computed along each column, and then along each row.
-\begin{verbatim}
---> A = [2,5;3,6]
-
-A = 
- 2 5 
- 3 6 
-
---> real(fft(A,[],1))
-
-ans = 
-  5 11 
- -1 -1 
-
---> real(fft(A,[],2))
-
-ans = 
-  7 -3 
-  9 -3 
-\end{verbatim}
+@>
 Fourier transforms can also be padded using the \verb|n| argument.  This
 pads the signal with zeros prior to taking the Fourier transform.  Zero
 padding in the time domain results in frequency interpolation.  The
 following example demonstrates the FFT of a pulse (consisting of 10 ones)
 with (red line) and without (green circles) padding.
-\begin{verbatim}
---> delta(1:10) = 1;
---> plot((0:255)/256*pi*2,real(fft(delta,256)),'r-');
---> hold on
---> plot((0:9)/10*pi*2,real(fft(delta)),'go');
-\end{verbatim}
+@>
 The resulting plot is:
 
 

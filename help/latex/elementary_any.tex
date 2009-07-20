@@ -28,29 +28,10 @@ first non-singleton dimension of \verb|x|.
 
 The following piece of code demonstrates various uses of the summation
 function
-\begin{verbatim}
---> A = [1,0,0;1,0,0;0,0,1]
-
-A = 
- 1 0 0 
- 1 0 0 
- 0 0 1 
-\end{verbatim}
+@>
 We start by calling \verb|any| without a dimension argument, in which 
 case it defaults to the first nonsingular dimension (in this case, 
 along the columns or \verb|d = 1|).
-\begin{verbatim}
---> any(A)
-
-ans = 
- 1 0 1 
-\end{verbatim}
+@>
 Next, we apply the \verb|any| operation along the rows.
-\begin{verbatim}
---> any(A,2)
-
-ans = 
- 1 
- 1 
- 1 
-\end{verbatim}
+@>

@@ -98,22 +98,10 @@ conversion specifiers and their meanings are:
 \subsection{Example}
 
 Here are some examples of the use of \verb|printf| with various arguments.  First we print out an integer and double value.
-\begin{verbatim}
---> printf('intvalue is %d, floatvalue is %f\n',3,1.53);
-intvalue is 3, floatvalue is 1.530000
-\end{verbatim}
+@>
 Next, we print out a string value.
-\begin{verbatim}
---> printf('string value is %s\n','hello');
-string value is hello
-\end{verbatim}
+@>
 Now, we print out an integer using 12 digits, zeros up front.
-\begin{verbatim}
---> printf('integer padded is %012d\n',32);
-integer padded is 000000000032
-\end{verbatim}
+@>
 Print out a double precision value with a sign, a total of 18 characters (zero prepended if necessary), a decimal point, and 12 digit precision.
-\begin{verbatim}
---> printf('float value is %+018.12f\n',pi);
-float value is +0003.141592653590
-\end{verbatim}
+@>

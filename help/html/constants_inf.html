@@ -56,50 +56,8 @@ several interesting properties.  In particular:
 Note that infinities are not preserved under type conversion to integer types (see the examples below).
 <H3>Example</H3>
 The following examples demonstrate the various properties of the infinity constant.
-<PRE>
---&gt; inf*0
-
-ans = 
-       nan 
-
---&gt; inf*2
-
-ans = 
-       inf 
-
---&gt; inf*-2
-
-ans = 
-      -inf 
-
---&gt; inf/inf
-
-ans = 
-       nan 
-
---&gt; inf/0
-
-ans = 
-       inf 
-
---&gt; inf/nan
-
-ans = 
-       nan 
-</PRE>
-<P>
+@&gt;
 Note that infinities are preserved under type conversion to floating point types (i.e., <code>float</code>, <code>double</code>, <code>complex</code> and <code>dcomplex</code> types), but not integer  types.
-<PRE>
---&gt; uint32(inf)
-
-ans = 
- 4294967295 
-
---&gt; complex(inf)
-
-ans = 
-       inf 
-</PRE>
-<P>
+@&gt;
 </BODY>
 </HTML>

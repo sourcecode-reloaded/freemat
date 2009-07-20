@@ -31,3 +31,14 @@ parameters.  The general syntax for its use is
 
 where nu is an array containing the rate parameters
 for the generated random variables.  
+RANDP RANDP Generate Poisson Random Variable
+
+Usage
+
+Generates a vector Poisson random variables with the given
+parameters.  The general syntax for its use is
+
+   y = randp(nu),
+
+where nu is an array containing the rate parameters
+for the generated random variables.  

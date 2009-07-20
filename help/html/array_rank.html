@@ -32,37 +32,9 @@ where <code>s</code> is the vector of singular values of <code>A</code>.  The
 rank is computed using the singular value decomposition <code>svd</code>.
 <H3>Examples</H3>
 Some examples of matrix rank calculations
-<PRE>
---&gt; rank([1,3,2;4,5,6])
-
-ans = 
- 2 
-
---&gt; rank([1,2,3;2,4,6])
-
-ans = 
- 1 
-</PRE>
-<P>
+@&gt;
 Here we construct an ill-conditioned matrix, and show the use 
 of the <code>tol</code> argument.
-<PRE>
---&gt; A = [1,0;0,eps/2]
-
-A = 
-    1.0000         0 
-         0    0.0000 
-
---&gt; rank(A)
-
-ans = 
- 1 
-
---&gt; rank(A,eps/8)
-
-ans = 
- 2 
-</PRE>
-<P>
+@&gt;
 </BODY>
 </HTML>

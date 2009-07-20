@@ -39,67 +39,22 @@ present in the elements).
 <H3>Examples</H3>
 Here is an example of a matrix of <code>int32</code> elements (note that
 untyped integer constants default to type <code>int32</code>).
-<PRE>
---&gt; A = [1,2;5,8]
-
-A = 
- 1 2 
- 5 8 
-</PRE>
-<P>
+@&gt;
 Now we define a new matrix by adding a column to the right of
 <code>A</code>, and using float constants.
-<PRE>
---&gt; B = [A,[3.2f;5.1f]]
-
-B = 
-    1.0000    2.0000    3.2000 
-    5.0000    8.0000    5.1000 
-</PRE>
-<P>
+@&gt;
 Next, we add extend <code>B</code> by adding a row at the bottom.  Note
 how the use of an untyped floating point constant forces the
 result to be of type <code>double</code>
-<PRE>
---&gt; C = [B;5.2,1.0,0.0]
-
-C = 
-    1.0000    2.0000    3.2000 
-    5.0000    8.0000    5.1000 
-    5.2000    1.0000         0 
-</PRE>
-<P>
+@&gt;
 If we instead add a row of <code>complex</code> values (recall that <code>i</code> is
 a <code>complex</code> constant, not a <code>dcomplex</code> constant)
-<PRE>
---&gt; D = [B;2.0f+3.0f*i,i,0.0f]
-
-D = 
-   1.0000 +  0.0000i   2.0000 +  0.0000i   3.2000 +  0.0000i 
-   5.0000 +  0.0000i   8.0000 +  0.0000i   5.1000 +  0.0000i 
-   2.0000 +  3.0000i   0.0000 +  1.0000i        0           
-</PRE>
-<P>
+@&gt;
 Likewise, but using <code>dcomplex</code> constants
-<PRE>
---&gt; E = [B;2.0+3.0*i,i,0.0]
-
-E = 
-   1.0000 +  0.0000i   2.0000 +  0.0000i   3.2000 +  0.0000i 
-   5.0000 +  0.0000i   8.0000 +  0.0000i   5.1000 +  0.0000i 
-   2.0000 +  3.0000i   0.0000 +  1.0000i        0           
-</PRE>
-<P>
+@&gt;
 Finally, in FreeMat, you can construct matrices with strings
 as contents, but you have to make sure that if the matrix has
 more than one row, that all the strings have the same length.
-<PRE>
---&gt; F = ['hello';'there']
-
-F = 
-hello
-there
-</PRE>
-<P>
+@&gt;
 </BODY>
 </HTML>

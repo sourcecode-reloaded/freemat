@@ -74,45 +74,15 @@ of <code>'double =&gt; float'</code> should be used.
 
 <H3>Example</H3>
 First, we create an array of <code>512 x 512</code> Gaussian-distributed <code>float</code> random variables, and then writing them to a file called <code>test.dat</code>.
-<PRE>
---&gt; A = float(randn(512));
---&gt; fp = fopen('test.dat','w');
---&gt; fwrite(fp,A);
---&gt; fclose(fp);
-</PRE>
-<P>
+@&gt;
 Read as many floats as possible into a row vector
-<PRE>
---&gt; fp = fopen('test.dat','r');
---&gt; x = fread(fp,[1,inf],'float');
---&gt; fclose(fp);
---&gt; who x
-  Variable Name       Type   Flags             Size
-              x    double                    [1 262144]
-</PRE>
-<P>
+@&gt;
 Note that <code>x</code> is a <code>double</code> array.  This behavior is new to FreeMat 4.
 Read the same floats into a 2-D float array.
-<PRE>
---&gt; fp = fopen('test.dat','r');
---&gt; x = fread(fp,[512,inf],'float');
---&gt; fclose(fp);
---&gt; who x
-  Variable Name       Type   Flags             Size
-              x    double                    [512 512]
-</PRE>
-<P>
+@&gt;
 To read them as a single precision float array, we can use the
 following form:
-<PRE>
---&gt; fp = fopen('test.dat','r');
---&gt; x = fread(fp,[512,inf],'*float');
---&gt; fclose(fp);
---&gt; who x
-  Variable Name       Type   Flags             Size
-              x    single                    [512 512]
-</PRE>
-<P>
+@&gt;
 
 </BODY>
 </HTML>

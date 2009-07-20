@@ -503,6 +503,12 @@ Handle-Based Graphics
 +(handle) ZLIM Adjust Z Axis limits of plot
 +(handle) ZOOM Image Zoom Function
 +(handle) ZPLANE Zero-pole plot
+OpenGL Models
++(glwin) GLASSEMBLY Create a GL Assembly
++(glwin) GLCLUMP Create a GL Clump
++(glwin) GLDEFMATERIAL Defines a GL Material
++(glwin) GLLINES Create a GL Lineset
++(glwin) GLNODE Create a GL Node
 Object Oriented Programming
 +(class) AND Overloaded Logical And Operator
 +(class) CAT Concatenation of Arrays
@@ -568,9 +574,3 @@ FreeMat External Interface
 +(external) CTYPEWRITE Write a C Typedef To File
 +(external) IMPORT Foreign Function Import
 +(external) LOADLIB Load Library Function
-OpenGL Models
-+(glwin) GLASSEMBLY Create a GL Assembly
-+(glwin) GLCLUMP Create a GL Clump
-+(glwin) GLDEFMATERIAL Defines a GL Material
-+(glwin) GLLINES Create a GL Lineset
-+(glwin) GLNODE Create a GL Node

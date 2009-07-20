@@ -28,3 +28,18 @@ issue a blaslib command with no arguments.
 
    blaslib
 
+BLASLIB BLASLIB Control Profiling
+
+Usage
+
+The blaslib function allows you to select the FreeMat blas library, 
+when dynamic linking is enabled.
+It has two modes of operation.  The first is to select blas library:
+
+  blaslib LIB_NAME
+
+If you want to see current blas library selected
+issue a blaslib command with no arguments.
+
+   blaslib
+

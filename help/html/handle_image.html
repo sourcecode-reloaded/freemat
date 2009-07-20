@@ -52,18 +52,7 @@ figure window adjusted to achieve the desired zoom factor using the
 In this example, we create an image that is <code>512 x 512</code> pixels
 square, and set the background to a noise pattern.  We set the central
 <code>128 x 256</code> pixels to be white.
-<PRE>
---&gt; x = rand(512);
---&gt; x((-64:63)+256,(-128:127)+256) = 1.0;
---&gt; figure
-
-ans = 
- 1 
-
---&gt; image(x)
---&gt; colormap(gray)
-</PRE>
-<P>
+@&gt;
 
 The resulting image looks like:
 <P>
@@ -72,17 +61,7 @@ The resulting image looks like:
 </DIV>
 <P>
 Here is an example of an RGB image 
-<PRE>
---&gt; t = linspace(0,1);
---&gt; red = t'*t;
---&gt; green = t'*(t.^2);
---&gt; blue = t'*(0*t+1);
---&gt; A(:,:,1) = red; 
---&gt; A(:,:,2) = green; 
---&gt; A(:,:,3) = blue;
---&gt; image(A);
-</PRE>
-<P>
+@&gt;
 The resulting image looks like:
 <P>
 <DIV ALIGN="CENTER">

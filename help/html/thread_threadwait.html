@@ -40,21 +40,6 @@ Here we lauch the <code>sleep</code> function in a thread with a time delay of
 until 10 seconds have elapsed.  When we call <code>threadwait</code> on this
 thread with a short timeout, it fails, but not when the timeout
 is long enough to capture the end of the function call.
-<PRE>
---&gt; a = threadnew;
---&gt; threadstart(a,'sleep',0,10);  % start a thread that will sleep for 10
---&gt; threadwait(a,2000)            % 2 second wait is not long enough
-
-ans = 
- 0 
-
---&gt; threadwait(a,10000)           % 10 second wait is long enough
-
-ans = 
- 1 
-
---&gt; threadfree(a)
-</PRE>
-<P>
+@&gt;
 </BODY>
 </HTML>

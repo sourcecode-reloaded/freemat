@@ -38,40 +38,9 @@ y(m,n) = \sum_{k=1}^{K} a(m,k) b(k,n)
 
 Here are some examples of using the matrix multiplication operator.  First,
 the scalar examples (types 1 and 2 from the list above):
-\begin{verbatim}
---> a = [1,3,4;0,2,1]
-
-a = 
- 1 3 4 
- 0 2 1 
-
---> b = a * 2
-
-b = 
- 2 6 8 
- 0 4 2 
-\end{verbatim}
+@>
 The matrix form, where the first argument is \verb|2 x 3|, and the
 second argument is \verb|3 x 1|, so that the product is size 
 \verb|2 x 1|.
-\begin{verbatim}
---> a = [1,2,0;4,2,3]
-
-a = 
- 1 2 0 
- 4 2 3 
-
---> b = [5;3;1]
-
-b = 
- 5 
- 3 
- 1 
-
---> c = a*b
-
-c = 
- 11 
- 29 
-\end{verbatim}
+@>
 Note that the output is double precision.

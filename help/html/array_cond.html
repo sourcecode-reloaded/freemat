@@ -49,32 +49,9 @@ be computed much more efficiently using the ratio of the largest and
 smallest singular values.
 <H3>Example</H3>
 The condition number of this matrix is large
-<PRE>
---&gt; A = [1,1;0,1e-15]
-
-A = 
-    1.0000    1.0000 
-         0    0.0000 
-
---&gt; cond(A)
-
-ans = 
- 2.0000e+15 
-
---&gt; cond(A,1)
-
-ans = 
- 2000000000000002 
-</PRE>
-<P>
+@&gt;
 You can also (for the case <code>p=1</code> use <code>rcond</code> to calculate an estimate
 of the condition number
-<PRE>
---&gt; 1/rcond(A)
-
-ans = 
- 2.0000e+15 
-</PRE>
-<P>
+@&gt;
 </BODY>
 </HTML>

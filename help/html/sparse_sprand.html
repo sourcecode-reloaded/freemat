@@ -35,38 +35,9 @@ entries you do not need.
 <H3>Examples</H3>
 Here we seed <code>sprand</code> with a full matrix (to demonstrate how the structure
 of the output is determined by the input matrix when using the first form).
-<PRE>
---&gt; x = [1,0,0;0,0,1;1,0,0]
-
-x = 
- 1 0 0 
- 0 0 1 
- 1 0 0 
-
---&gt; y = sprand(x)
-
-y = 
- 1 1 0.478912
- 3 1 0.039372
- 2 3 0.806381
---&gt; full(y)
-
-ans = 
-    0.4789         0         0 
-         0         0    0.8064 
-    0.0394         0         0 
-</PRE>
-<P>
+@&gt;
 The more generic version with a density of <code>0.001</code>.  On many systems the
 following is impossible using full matrices
-<PRE>
---&gt; y = sprand(10000,10000,.001);
-Warning: extra arguments to sparse (nnz to reserve) ignored
---&gt; nnz(y)/10000^2
-
-ans = 
- 9.9946e-04 
-</PRE>
-<P>
+@&gt;
 </BODY>
 </HTML>

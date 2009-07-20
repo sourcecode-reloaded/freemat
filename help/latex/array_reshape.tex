@@ -29,50 +29,9 @@ second column, etc.
 Here are several examples of the use of \verb|reshape| applied to
 various arrays.  The first example reshapes a row vector into a 
 matrix.
-\begin{verbatim}
---> a = uint8(1:6)
-
-a = 
- 1 2 3 4 5 6 
-
---> reshape(a,2,3)
-
-ans = 
- 1 3 5 
- 2 4 6 
-\end{verbatim}
+@>
 The second example reshapes a longer row vector into a volume with 
 two planes.
-\begin{verbatim}
---> a = uint8(1:12)
-
-a = 
-  1  2  3  4  5  6  7  8  9 10 11 12 
-
---> reshape(a,[2,3,2])
-
-ans = 
-
-(:,:,1) = 
-  1  3  5 
-  2  4  6 
-
-(:,:,2) = 
-  7  9 11 
-  8 10 12 
-\end{verbatim}
+@>
 The third example reshapes a matrix into another matrix.
-\begin{verbatim}
---> a = [1,6,7;3,4,2]
-
-a = 
- 1 6 7 
- 3 4 2 
-
---> reshape(a,3,2)
-
-ans = 
- 1 4 
- 3 7 
- 6 2 
-\end{verbatim}
+@>

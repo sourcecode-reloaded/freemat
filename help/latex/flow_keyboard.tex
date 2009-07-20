@@ -50,46 +50,4 @@ puts us at depth 2.  We can confirm that we are in the second
 invocation of the function by examining the arguments.  We
 then issue two \verb|return| statements to return to the base
 workspace.
-\begin{verbatim}
---> key_one(1,2)
-[key_one,3]--> key_one(5,7)
-[key_one,3]--> a
-
-ans = 
- 5 
-
-[key_one,3]--> b
-
-ans = 
- 7 
-
-[key_one,3]--> c
-
-ans = 
- 12 
-
-[key_one,3]--> return
-
-ans = 
- 12 
-
-[key_one,3]--> a
-
-ans = 
- 1 
-
-[key_one,3]--> b
-
-ans = 
- 2 
-
-[key_one,3]--> c
-
-ans = 
- 3 
-
-[key_one,3]--> return
-
-ans = 
- 3 
-\end{verbatim}
+@>

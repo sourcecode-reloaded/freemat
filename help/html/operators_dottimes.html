@@ -53,54 +53,12 @@ On the other hand, if <code>b</code> is a scalar, then the output is computed vi
 Here are some examples of using the dottimes operator.  First, a 
 straight-forward usage of the <code>.*</code> operator.  The first example
 is straightforward:
-<PRE>
---&gt; 3 .* 8
-
-ans = 
- 24 
-</PRE>
-<P>
+@&gt;
 Next, we multiply a scalar by a vector of values:
-<PRE>
---&gt; 3.1 .* [2,4,5,6,7]
-
-ans = 
-    6.2000   12.4000   15.5000   18.6000   21.7000 
-</PRE>
-<P>
+@&gt;
 With complex values
-<PRE>
---&gt; a = 3 + 4*i
-
-a = 
-   3.0000 +  4.0000i 
-
---&gt; b = a .* 2
-
-b = 
-   6.0000 +  8.0000i 
-</PRE>
-<P>
+@&gt;
 Finally, the element-wise version:
-<PRE>
---&gt; a = [1,2;3,4]
-
-a = 
- 1 2 
- 3 4 
-
---&gt; b = [2,3;6,7]
-
-b = 
- 2 3 
- 6 7 
-
---&gt; c = a .* b
-
-c = 
-  2  6 
- 18 28 
-</PRE>
-<P>
+@&gt;
 </BODY>
 </HTML>

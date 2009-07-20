@@ -19,7 +19,9 @@ use is
 </PRE>
 <P>
 The <code>persistent</code> statement must occur before the variable
-is the tagged as persistent.
+is the tagged as persistent.  Per the MATLAB API documentation
+an empty variable is created when the <code>persistent</code> statement
+is called.
 <H3>Example</H3>
 Here is an example of a function that counts how many
 times it has been called.
@@ -35,19 +37,6 @@ function count_calls
 </PRE>
 <P>
 We now call the function several times:
-<PRE>
---&gt; for i=1:10; count_calls; end
-Function has been called 11 times
-Function has been called 12 times
-Function has been called 13 times
-Function has been called 14 times
-Function has been called 15 times
-Function has been called 16 times
-Function has been called 17 times
-Function has been called 18 times
-Function has been called 19 times
-Function has been called 20 times
-</PRE>
-<P>
+@&gt;
 </BODY>
 </HTML>

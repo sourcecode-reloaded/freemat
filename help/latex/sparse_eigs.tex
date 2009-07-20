@@ -53,54 +53,6 @@ number of columns (or rows) in the matrix.
 
 Here is an example of using \verb|eigs| to calculate eigenvalues
 of a matrix, and a comparison of the results with \verb|eig|
-\begin{verbatim}
---> a = sparse(rand(9));
---> eigs(a)
-
-ans = 
-   4.3153 +  0.0000i 
-   0.9328 +  0.0000i 
-  -0.6703 +  0.0000i 
-   0.0360 -  0.5162i 
-   0.0360 +  0.5162i 
-   0.3905 -  0.2390i 
-
---> eig(full(a))
-
-ans = 
-   4.3153 +  0.0000i 
-   0.9328 +  0.0000i 
-   0.3905 +  0.2390i 
-   0.3905 -  0.2390i 
-   0.0360 +  0.5162i 
-   0.0360 -  0.5162i 
-  -0.6703 +  0.0000i 
-  -0.2909 +  0.0263i 
-  -0.2909 -  0.0263i 
-\end{verbatim}
+@>
 Next, we exercise some of the variants of \verb|eigs|:
-\begin{verbatim}
---> eigs(a,4,'sm')
-
-ans = 
-  -0.2909 +  0.0263i 
-  -0.2909 -  0.0263i 
-   0.3905 +  0.2390i 
-   0.3905 -  0.2390i 
-
---> eigs(a,4,'lr')
-
-ans = 
-   4.3153 +  0.0000i 
-   0.9328 +  0.0000i 
-   0.3905 +  0.2390i 
-   0.3905 -  0.2390i 
-
---> eigs(a,4,'sr')
-
-ans = 
-  -0.6703 +  0.0000i 
-  -0.2909 +  0.0263i 
-  -0.2909 -  0.0263i 
-   0.0360 -  0.5162i 
-\end{verbatim}
+@>

@@ -38,28 +38,7 @@ smallest singular values.
 \subsection{Example}
 
 The condition number of this matrix is large
-\begin{verbatim}
---> A = [1,1;0,1e-15]
-
-A = 
-    1.0000    1.0000 
-         0    0.0000 
-
---> cond(A)
-
-ans = 
- 2.0000e+15 
-
---> cond(A,1)
-
-ans = 
- 2000000000000002 
-\end{verbatim}
+@>
 You can also (for the case \verb|p=1| use \verb|rcond| to calculate an estimate
 of the condition number
-\begin{verbatim}
---> 1/rcond(A)
-
-ans = 
- 2.0000e+15 
-\end{verbatim}
+@>

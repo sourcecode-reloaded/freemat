@@ -46,32 +46,6 @@ function, you can use it just like any other function handle.  For example,
 are all examples of using the <code>y</code> anonymous function to perform a calculation.
 <H3>Examples</H3>
 Here are some examples of using an anonymous function
-<PRE>
---&gt; a = 2; b = 4;    % define a and b (slope and intercept)
---&gt; y = @(x) a*x+b   % create the anonymous function
-
-y = 
- @(x)   a*x+b   % create the anonymous function
---&gt; y(2)             % evaluate it for x = 2
-
-ans = 
- 8 
-
---&gt; a = 5; b = 7;    % change a and b
---&gt; y(2)             % the value did not change!  because a=2,b=4 are captured in y
-
-ans = 
- 8 
-
---&gt; y = @(x) a*x+b   % recreate the function
-
-y = 
- @(x)   a*x+b   % recreate the function
---&gt; y(2)             % now the new values are used
-
-ans = 
- 17 
-</PRE>
-<P>
+@&gt;
 </BODY>
 </HTML>

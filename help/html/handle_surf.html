@@ -47,17 +47,7 @@ via
 <P>
 <H3>Example</H3>
 Here we generate a surface specifying all four components.
-<PRE>
---&gt; x = repmat(linspace(-1,1),[100,1]);
---&gt; y = x';
---&gt; r = x.^2+y.^2;
---&gt; z = exp(-r*3).*cos(5*r);
---&gt; c = r;
---&gt; surf(x,y,z,c)
---&gt; axis equal
---&gt; view(3)
-</PRE>
-<P>
+@&gt;
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="surf1.png">
@@ -65,12 +55,7 @@ Here we generate a surface specifying all four components.
 <P>
 If we allow FreeMat to specify the color component, we see that
 the colorfield is the same as the height
-<PRE>
---&gt; surf(x,y,z)
---&gt; axis equal
---&gt; view(3)
-</PRE>
-<P>
+@&gt;
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="surf2.png">

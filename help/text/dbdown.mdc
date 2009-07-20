@@ -25,3 +25,12 @@ hierarchy.  The syntax for the dbup function is
 
  dbup
 
+DBDown DBDown Move Down One Debug Level
+
+Usage
+
+The dbup function moves up one level in the debug
+hierarchy.  The syntax for the dbup function is
+
+ dbup
+

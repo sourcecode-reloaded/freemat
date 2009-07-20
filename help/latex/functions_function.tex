@@ -95,17 +95,7 @@ first argument to twice its second argument:
 function c = addtest(a,b)
   c = a + 2*b;
 \end{verbatim}
-\begin{verbatim}
---> addtest(1,3)
-
-ans = 
- 7 
-
---> addtest(3,0)
-
-ans = 
- 3 
-\end{verbatim}
+@>
 Suppose, however, we want to replace the value of the first 
 argument by the computed sum.  A first attempt at doing so
 has no effect:
@@ -114,28 +104,7 @@ has no effect:
 function addtest2(a,b)
   a = a + 2*b;
 \end{verbatim}
-\begin{verbatim}
---> arg1 = 1
-
-arg1 = 
- 1 
-
---> arg2 = 3
-
-arg2 = 
- 3 
-
---> addtest2(arg1,arg2)
---> arg1
-
-ans = 
- 1 
-
---> arg2
-
-ans = 
- 3 
-\end{verbatim}
+@>
 The values of \verb|arg1| and \verb|arg2| are unchanged, because they are
 passed by value, so that any changes to \verb|a| and \verb|b| inside 
 the function do not affect \verb|arg1| and \verb|arg2|.  We can change
@@ -147,28 +116,7 @@ function addtest3(&a,b)
 \end{verbatim}
 Note that it is now illegal to pass a literal value for \verb|a| when
 calling \verb|addtest3|:
-\begin{verbatim}
---> addtest3(3,4)
-
-a = 
- 11 
-
-Error: Must have lvalue in argument passed by reference
---> addtest3(arg1,arg2)
-
-a = 
- 7 
-
---> arg1
-
-ans = 
- 7 
-
---> arg2
-
-ans = 
- 3 
-\end{verbatim}
+@>
 The first example fails because we cannot pass a literal like the
 number \verb|3| by reference.  However, the second call succeeds, and
 note that \verb|arg1| has now changed.  Note: please be careful when
@@ -189,14 +137,4 @@ function y = foo(x,y)
 function square_me(&t)
   t = t^2;
 \end{verbatim}
-\begin{verbatim}
---> euclidlength(3,4)
-
-ans = 
- 5 
-
---> euclidlength(2,0)
-
-ans = 
- 2 
-\end{verbatim}
+@>

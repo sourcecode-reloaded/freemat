@@ -58,74 +58,17 @@ values smaller than \verb|tol| are treated like zeros.
 
 Consider a simple \verb|1 x 2| matrix example, and note the various
 Moore-Penrose conditions:
-\begin{verbatim}
---> A = float(rand(1,2))
-
-A = 
-    0.9526    0.4847 
-
---> B = pinv(A)
-
-B = 
-    0.8338 
-    0.4243 
-
---> A*B*A
-
-ans = 
-    0.9526    0.4847 
-
---> B*A*B
-
-ans = 
-    0.8338 
-    0.4243 
-
---> A*B
-
-ans = 
-    1.0000 
-
---> B*A
-
-ans = 
-    0.7943    0.4042 
-    0.4042    0.2057 
-\end{verbatim}
+@>
 To demonstrate that \verb|pinv| returns the least squares solution,
 consider the following very simple case
-\begin{verbatim}
---> A = float([1;1;1;1])
-
-A = 
- 1 
- 1 
- 1 
- 1 
-\end{verbatim}
+@>
 The least squares solution to \verb|A x = b| is just \verb|x = mean(b)|,
 and computing the \verb|pinv| of \verb|A| demonstrates this
-\begin{verbatim}
---> pinv(A)
-
-ans = 
-    0.2500    0.2500    0.2500    0.2500 
-\end{verbatim}
+@>
 Similarly, we can demonstrate the minimum norm solution with
 the following simple case
-\begin{verbatim}
---> A = float([1,1])
-
-A = 
- 1 1 
-\end{verbatim}
+@>
 The solutions of \verb|A x = 5| are those \verb|x_1| and \verb|x_2| such that
 \verb|x_1 + x_2 = 5|.  The norm of \verb|x| is \verb|x_1^ + x_2^2|, which is
 \verb|x_1^2 + (5-x_1)^2|, which is minimized for \verb|x_1 = x_2 = 2.5|:
-\begin{verbatim}
---> pinv(A) * 5.0
-
-ans = 
-    2.5000 
-    2.5000 
-\end{verbatim}
+@>

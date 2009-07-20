@@ -25,40 +25,8 @@ the matrix transpose operation.
 <H3>Example</H3>
 Here we use <code>permute</code> to transpose a simple matrix (note that permute
 also works for sparse matrices):
-<PRE>
---&gt; A = [1,2;4,5]
-
-A = 
- 1 2 
- 4 5 
-
---&gt; permute(A,[2,1])
-
-ans = 
- 1 4 
- 2 5 
-
---&gt; A'
-
-ans = 
- 1 4 
- 2 5 
-</PRE>
-<P>
+@&gt;
 Now we permute a larger n-dimensional array:
-<PRE>
---&gt; A = randn(13,5,7,2);
---&gt; size(A)
-
-ans = 
- 13  5  7  2 
-
---&gt; B = permute(A,[3,4,2,1]);
---&gt; size(B)
-
-ans = 
-  7  2  5 13 
-</PRE>
-<P>
+@&gt;
 </BODY>
 </HTML>

@@ -37,34 +37,12 @@ first non-singleton dimension of <code>x</code>.
 <H3>Example</H3>
 The following piece of code demonstrates various uses of the summation
 function
-<PRE>
---&gt; A = [1,0,0;1,0,0;0,0,1]
-
-A = 
- 1 0 0 
- 1 0 0 
- 0 0 1 
-</PRE>
-<P>
+@&gt;
 We start by calling <code>any</code> without a dimension argument, in which 
 case it defaults to the first nonsingular dimension (in this case, 
 along the columns or <code>d = 1</code>).
-<PRE>
---&gt; any(A)
-
-ans = 
- 1 0 1 
-</PRE>
-<P>
+@&gt;
 Next, we apply the <code>any</code> operation along the rows.
-<PRE>
---&gt; any(A,2)
-
-ans = 
- 1 
- 1 
- 1 
-</PRE>
-<P>
+@&gt;
 </BODY>
 </HTML>

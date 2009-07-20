@@ -47,13 +47,7 @@ using the <code>plot</code> command.
 Here is an example of using both the <code>hold</code> command and the
 multiple-argument <code>plot</code> command to construct a plot composed
 of three sets of data.  The first is a plot of a modulated Gaussian.
-<PRE>
---&gt; x = linspace(-5,5,500);
---&gt; t = exp(-x.^2);
---&gt; y = t.*cos(2*pi*x*3);
---&gt; plot(x,y);
-</PRE>
-<P>
+@&gt;
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="hold1.png">
@@ -66,12 +60,7 @@ the modulated Gaussian.  We add the two envelopes simultaneously
 using a single <code>plot</code> command.  The fact that <code>hold</code> is
 <code>'on'</code> means that these two envelopes are added to (instead of
 replace) the current contents of the plot.
-<PRE>
---&gt; plot(x,y);
---&gt; hold on
---&gt; plot(x,t,'g-',x,-t,'b-')
-</PRE>
-<P>
+@&gt;
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="hold2.png">

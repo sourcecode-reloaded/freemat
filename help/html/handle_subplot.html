@@ -48,18 +48,7 @@ subplot explicitly using the syntax
 
 <H3>Example</H3>
 Here is the use of <code>subplot</code> to set up a <code>2 x 2</code> grid of plots
-<PRE>
---&gt; t = linspace(-pi,pi);
---&gt; subplot(2,2,1)
---&gt; plot(t,cos(t).*exp(-2*t));
---&gt; subplot(2,2,2);
---&gt; plot(t,cos(t*2).*exp(-2*t));
---&gt; subplot(2,2,3);
---&gt; plot(t,cos(t*3).*exp(-2*t));
---&gt; subplot(2,2,4);
---&gt; plot(t,cos(t*4).*exp(-2*t));
-</PRE>
-<P>
+@&gt;
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="subplot1.png">
@@ -67,16 +56,7 @@ Here is the use of <code>subplot</code> to set up a <code>2 x 2</code> grid of p
 <P>
 Here we use the second form of <code>subplot</code> to generate one subplot
 that is twice as large.
-<PRE>
---&gt; t = linspace(-pi,pi);
---&gt; subplot(2,2,[1,2])
---&gt; plot(t,cos(t).*exp(-2*t));
---&gt; subplot(2,2,3);
---&gt; plot(t,cos(t*3).*exp(-2*t));
---&gt; subplot(2,2,4);
---&gt; plot(t,cos(t*4).*exp(-2*t));
-</PRE>
-<P>
+@&gt;
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="subplot2.png">
@@ -84,23 +64,7 @@ that is twice as large.
 <P>
 Note that the subplots can contain any handle graphics objects,
 not only simple plots.
-<PRE>
---&gt; t=0:(2*pi/100):(2*pi);
---&gt; x=cos(t*2).*(2+sin(t*3)*.3);
---&gt; y=sin(t*2).*(2+sin(t*3)*.3);
---&gt; z=cos(t*3)*.3;
---&gt; subplot(2,2,1)
---&gt; plot(t,x);
---&gt; subplot(2,2,2);
---&gt; plot(t,y);
---&gt; subplot(2,2,3);
---&gt; plot(t,z);
---&gt; subplot(2,2,4);
---&gt; tubeplot(x,y,z,0.14*sin(t*5)+.29,t,10)
---&gt; axis equal
---&gt; view(3)
-</PRE>
-<P>
+@&gt;
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="subplot3.png">

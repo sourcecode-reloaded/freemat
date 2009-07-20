@@ -39,48 +39,10 @@ y(m_1,\ldots,m_d) = a(m_1,\ldots,m_d) \times b.
 Here are some examples of using the dottimes operator.  First, a 
 straight-forward usage of the \verb|.*| operator.  The first example
 is straightforward:
-\begin{verbatim}
---> 3 .* 8
-
-ans = 
- 24 
-\end{verbatim}
+@>
 Next, we multiply a scalar by a vector of values:
-\begin{verbatim}
---> 3.1 .* [2,4,5,6,7]
-
-ans = 
-    6.2000   12.4000   15.5000   18.6000   21.7000 
-\end{verbatim}
+@>
 With complex values
-\begin{verbatim}
---> a = 3 + 4*i
-
-a = 
-   3.0000 +  4.0000i 
-
---> b = a .* 2
-
-b = 
-   6.0000 +  8.0000i 
-\end{verbatim}
+@>
 Finally, the element-wise version:
-\begin{verbatim}
---> a = [1,2;3,4]
-
-a = 
- 1 2 
- 3 4 
-
---> b = [2,3;6,7]
-
-b = 
- 2 3 
- 6 7 
-
---> c = a .* b
-
-c = 
-  2  6 
- 18 28 
-\end{verbatim}
+@>

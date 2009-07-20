@@ -57,41 +57,4 @@ is used in functions to test for keywords.  For example,
   y = a + b + c;
 \end{verbatim}
 An example of \verb|exist| in action.
-\begin{verbatim}
---> a = randn(3,5,2)
-
-a = 
-
-(:,:,1) = 
-    0.7483   -0.2264    0.4619    0.4427    1.0085 
-   -0.1065    0.1731    1.8786   -0.4998   -0.5872 
-    0.4685   -0.6459    0.2231    0.2013    0.4284 
-
-(:,:,2) = 
-   -1.1667   -1.2414    0.9324    0.7564   -0.7158 
-    0.4479   -1.8601   -0.5468    0.2271    1.2271 
-    0.0137   -1.2542    0.1467    1.3321   -0.7465 
-
---> b = []
-
-b = 
-  []
---> who
-  Variable Name       Type   Flags             Size
-              a    double                    [3 5 2]
-              b    double                    [0 0]
---> exist('a')
-
-ans = 
- 1 
-
---> exist('b')
-
-ans = 
- 1 
-
---> exist('c')
-
-ans = 
- 0 
-\end{verbatim}
+@>

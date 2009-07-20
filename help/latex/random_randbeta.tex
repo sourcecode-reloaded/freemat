@@ -27,12 +27,7 @@ that the integral of \verb|f(x)| is 1.
 
 Here is a plot of the PDF of a beta random variable with \verb|a=3|,
 \verb|b=7|.
-\begin{verbatim}
---> a = 3; b = 7;
---> x = (0:100)/100; t = x.^(a-1).*(1-x).^(b-1); 
---> t = t/(sum(t)*.01);
---> plot(x,t);
-\end{verbatim}
+@>
 which is plotted as
 
 
@@ -41,9 +36,4 @@ which is plotted as
 If we generate a few random deviates with these values,
 we see they are distributed around the peak of roughly
 \verb|0.25|.
-\begin{verbatim}
---> randbeta(3*ones(1,5),7*ones(1,5))
-
-ans = 
-    0.2777    0.0642    0.3305    0.5259    0.4003 
-\end{verbatim}
+@>

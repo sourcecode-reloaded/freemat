@@ -213,7 +213,7 @@ function line = getline(fp)
     version = b{:}{1};
   end;
   line = fgetline(fp);
-  line = strrep(line,'4.0',version);
+  line = strrep(line,'<VERSION_NUMBER>',version);
 
 function tok = mustmatch(line,pattern)
   toks = regexpi(line,pattern,'tokens');

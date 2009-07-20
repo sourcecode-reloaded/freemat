@@ -17,18 +17,6 @@ which sets the contents of the last error message.
 Here is an example of using the \verb|error| function to
 set the last error, and then retrieving it using
 lasterr.
-\begin{verbatim}
---> try; error('Test error message'); catch; end;
---> lasterr
-
-ans = 
-Test error message
-\end{verbatim}
+@>
 Or equivalently, using the second form:
-\begin{verbatim}
---> lasterr('Test message');
---> lasterr
-
-ans = 
-Test message
-\end{verbatim}
+@>

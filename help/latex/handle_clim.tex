@@ -31,20 +31,7 @@ axis to manipulate instead of using the current one.
 Here is an example of using \verb|clim| to change the effective window and
 level onto an image.  First, the image with default
 limits
-\begin{verbatim}
---> x = repmat(linspace(-1,1),[100,1]); y = x';
---> z = exp(-x.^2-y.^2);
---> image(z);
---> min(z(:))
-
-ans = 
-    0.1353 
-
---> max(z(:))
-
-ans = 
-    0.9998 
-\end{verbatim}
+@>
 which results in
 
 
@@ -52,10 +39,7 @@ which results in
 
 Next, we change the colorscale of the image using the
  \verb|clim| function
-\begin{verbatim}
---> image(z);
---> clim([0,0.2]);
-\end{verbatim}
+@>
 which results in
 
 
