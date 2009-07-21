@@ -2051,7 +2051,7 @@ Array Multiply(const Array& A, const Array& B){
 //@>
 //which is the same solution.
 //@@Tests
-//@near#y1=x1\x2#((size(x1,1)==1)||any(isinf(x1))||any(isinf(x2))||(loopi==39)||(loopi==64))
+//@$near#y1=x1\x2#((size(x1,1)==1)||any(isinf(x1))||any(isinf(x2))||(loopi==39)||(loopi==64))
 //!
 Array LeftDivide(const Array& A, const Array& B) {
   // Process our arguments
@@ -2121,7 +2121,7 @@ Array LeftDivide(const Array& A, const Array& B) {
 //  k = abs(a-b);
 //  x = max(k(:)) < (size(a,2)*size(a,1)*eps*4);
 //@}
-//@$exact#y1=x1/x2#((size(x1,1)==1)||any(isinf(x1))||any(isinf(x2))||any(loopi==[39,60,61,64])||any(loopj==[39,60,61,64]))
+//@$near#y1=x1/x2#((size(x1,1)==1)||any(isinf(x1))||any(isinf(x2))||any(loopi==[39,60,61,64])||any(loopj==[39,60,61,64]))
 //!
 Array RightDivide(const Array& A, const Array& B) {
   Array C;

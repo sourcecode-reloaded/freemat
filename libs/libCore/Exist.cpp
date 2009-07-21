@@ -138,7 +138,7 @@ static int ExistAllFunction(QString fname, Interpreter* eval) {
 //function x = test_exist2
 //persistent y
 //x = 1;
-//if (exist('y'))
+//if (~exist('y'))
 //  x = 0;
 //end
 //@}

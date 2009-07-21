@@ -3,7 +3,14 @@
 #include "MemPtr.hpp"
 #include "Algorithms.hpp"
 
+template <class T>
+static bool isFiniteNonzero(T a) {
+  return ((a != 0) && IsFinite(a));
+}
+
 static float complexRecipCond(int m, int n, float *a) {
+  if ((m == 1) && (n == 1) && (isFiniteNonzero(a[0]) ||
+			       isFiniteNonzero(a[1]))) return 1;
   // Getting the estimated reciprocal condition number involves
   // three steps:
   //    1. Compute the 1-norm of a
@@ -31,6 +38,7 @@ static float complexRecipCond(int m, int n, float *a) {
 }
 
 static float floatRecipCond(int m, int n, float *a) {
+  if ((m == 1) && (n == 1) && isFiniteNonzero(a[0])) return 1;
   // Getting the estimated reciprocal condition number involves
   // three steps:
   //    1. Compute the 1-norm of a
@@ -58,6 +66,8 @@ static float floatRecipCond(int m, int n, float *a) {
 }
 
 static double dcomplexRecipCond(int m, int n, double *a) {
+  if ((m == 1) && (n == 1) && (isFiniteNonzero(a[0]) || isFiniteNonzero(a[1])))
+    return 1;
   // Getting the estimated reciprocal condition number involves
   // three steps:
   //    1. Compute the 1-norm of a
@@ -85,6 +95,7 @@ static double dcomplexRecipCond(int m, int n, double *a) {
 }
 
 static double doubleRecipCond(int m, int n, double *a) {
+  if ((m == 1) && (n == 1) && isFiniteNonzero(a[0])) return 1;
   // Getting the estimated reciprocal condition number involves
   // three steps:
   //    1. Compute the 1-norm of a
