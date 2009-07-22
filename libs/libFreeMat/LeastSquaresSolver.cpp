@@ -409,7 +409,7 @@ static void complexSolveLeastSq(int m, int n, int k, T *c, T *a, T*b) {
   //*  WORK    (workspace/output) COMPLEX*16 array, dimension (LWORK)
   //*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
 
-  T WORKSIZE;
+  T WORKSIZE[2];
 
   //*  LWORK   (input) INTEGER
   //*          The dimension of the array WORK.
@@ -451,8 +451,8 @@ static void complexSolveLeastSq(int m, int n, int k, T *c, T *a, T*b) {
   //
   LWORK = -1;
   Tgelsy(&M, &N, &NRHS, A, &LDA, &B, &LDB, &JPVT, &RCOND,
-	 &RANK, &WORKSIZE, &LWORK, &RWORK, &INFO);
-  LWORK = (int) WORKSIZE;
+	 &RANK, WORKSIZE, &LWORK, &RWORK, &INFO);
+  LWORK = (int) WORKSIZE[0];
   MemBlock<T> WORK(LWORK);
   Tgelsy(&M, &N, &NRHS, A, &LDA, &B, &LDB, &JPVT, &RCOND,
 	 &RANK, &WORK, &LWORK, &RWORK, &INFO);
