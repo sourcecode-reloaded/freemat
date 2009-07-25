@@ -1,0 +1,11 @@
+INCLUDE_DIRECTORIES( Include ../UFconfig )
+INCLUDE( make_rules.cmake )
+
+IF(NOT MSVC)
+	INSTALL( TARGETS amd ARCHIVE DESTINATION lib)
+	INSTALL( FILES Include/amd.h Include/amd_internal.h DESTINATION include)
+ELSE(NOT MSVC)
+	INSTALL( TARGETS amd ARCHIVE DESTINATION ${PROJECT_SOURCE_DIR}/bin)
+	INSTALL( FILES Include/amd.h Include/amd_internal.h DESTINATION ${PROJECT_SOURCE_DIR}/bin)
+ENDIF(NOT MSVC)
+

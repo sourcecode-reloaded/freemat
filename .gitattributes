@@ -613,6 +613,7 @@ libs/libXP/VariablesTool.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dst
 libs/libXP/VariablesTool.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libXP/highlighter.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libXP/highlighter.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+libs/thirdparty/AMD/Doc/AMD_UserGuide.pdf svn_mime_002dtype=application%2Foctet-stream
 src/DumbTerminal.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/DumbTerminal.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/FreeMat.qrc svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
