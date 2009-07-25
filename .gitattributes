@@ -620,6 +620,14 @@ libs/thirdparty/UMFPACK/MATLAB/lcc_lib/libmwlapack.lib svn_mime_002dtype=applica
 libs/thirdparty/UMFPACK/MATLAB/west.mat svn_mime_002dtype=application%2Foctet-stream
 libs/thirdparty/UMFPACK/Tcov/badnum.umf svn_mime_002dtype=application%2Foctet-stream
 libs/thirdparty/UMFPACK/Tcov/badsym.umf svn_mime_002dtype=application%2Foctet-stream
+libs/thirdparty/llvm-2.5/docs/img/Debugging.gif svn_mime_002dtype=application%2Foctet-stream
+libs/thirdparty/llvm-2.5/docs/img/libdeps.gif svn_mime_002dtype=application%2Foctet-stream
+libs/thirdparty/llvm-2.5/docs/img/lines.gif svn_mime_002dtype=application%2Foctet-stream
+libs/thirdparty/llvm-2.5/docs/img/objdeps.gif svn_mime_002dtype=application%2Foctet-stream
+libs/thirdparty/llvm-2.5/docs/img/venusflytrap.jpg svn_mime_002dtype=application%2Foctet-stream
+libs/thirdparty/llvm-2.5/docs/tutorial/JITTutorial2-1.png svn_mime_002dtype=application%2Foctet-stream
+libs/thirdparty/llvm-2.5/docs/tutorial/LangImpl5-cfg.png svn_mime_002dtype=application%2Foctet-stream
+libs/thirdparty/llvm-2.5/tools/llvmc/doc/img/lines.gif svn_mime_002dtype=application%2Foctet-stream
 src/DumbTerminal.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/DumbTerminal.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/FreeMat.qrc svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
