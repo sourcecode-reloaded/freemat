@@ -614,6 +614,12 @@ libs/libXP/VariablesTool.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dst
 libs/libXP/highlighter.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libXP/highlighter.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/thirdparty/AMD/Doc/AMD_UserGuide.pdf svn_mime_002dtype=application%2Foctet-stream
+libs/thirdparty/UMFPACK/Doc/QuickStart.pdf svn_mime_002dtype=application%2Foctet-stream
+libs/thirdparty/UMFPACK/Doc/UserGuide.pdf svn_mime_002dtype=application%2Foctet-stream
+libs/thirdparty/UMFPACK/MATLAB/lcc_lib/libmwlapack.lib svn_mime_002dtype=application%2Foctet-stream
+libs/thirdparty/UMFPACK/MATLAB/west.mat svn_mime_002dtype=application%2Foctet-stream
+libs/thirdparty/UMFPACK/Tcov/badnum.umf svn_mime_002dtype=application%2Foctet-stream
+libs/thirdparty/UMFPACK/Tcov/badsym.umf svn_mime_002dtype=application%2Foctet-stream
 src/DumbTerminal.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/DumbTerminal.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 src/FreeMat.qrc svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
