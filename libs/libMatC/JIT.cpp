@@ -138,13 +138,13 @@ JITScalar JIT::ToBool(JITScalar x) {
 
 JITScalar JIT::ToDouble(JITScalar x) {
   if (IsDouble(x)) return x;
-  return CastInst::create(CastInst::getCastOpcode(x,true,BoolType(),true),
+  return CastInst::Create(CastInst::getCastOpcode(x,true,BoolType(),true),
 			  x,BoolType(),"",ip);
 }
 
 JITScalar JIT::ToFloat(JITScalar x) {
   if (IsFloat(x)) return x;
-  return CastInst::create(CastInst::getCastOpcode(x,true,FloatType(),true),
+  return CastInst::Create(CastInst::getCastOpcode(x,true,FloatType(),true),
 			  x,FloatType(),"",ip);
 }
 
@@ -152,7 +152,7 @@ JITScalar JIT::ToType(JITScalar x, JITType t) {
   if (IsBool(t))
     return ToBool(x);
   else
-    return CastInst::create(CastInst::getCastOpcode(x,true,t,true),x,t,"",ip);
+    return CastInst::Create(CastInst::getCastOpcode(x,true,t,true),x,t,"",ip);
 }
 
 bool JIT::IsBool(JITScalar x) {
@@ -209,10 +209,10 @@ JITBlock JIT::NewBlock(QString name) {
 JITScalar JIT::JITBinOp(Instruction::BinaryOps op, JITScalar A, JITScalar B) {
   // Mimics ComputeTypes
   if (IsFloat(A) && IsFloat(B))
-    return BinaryOperator::create(op,A,B,"",ip);
+    return BinaryOperator::Create(op,A,B,"",ip);
   if (IsFloat(A) || IsFloat(B))
-    return ToFloat(BinaryOperator::create(op,ToDouble(A),ToDouble(B),"",ip));
-  return BinaryOperator::create(op,ToDouble(A),ToDouble(B),"",ip);  
+    return ToFloat(BinaryOperator::Create(op,ToDouble(A),ToDouble(B),"",ip));
+  return BinaryOperator::Create(op,ToDouble(A),ToDouble(B),"",ip);  
 }
 
 JITScalar JIT::Mul(JITScalar A, JITScalar B) {
@@ -232,15 +232,15 @@ JITScalar JIT::Add(JITScalar A, JITScalar B) {
 }
 
 JITScalar JIT::And(JITScalar A, JITScalar B) {
-  return BinaryOperator::create(Instruction::And,ToBool(A),ToBool(B),"",ip);
+  return BinaryOperator::Create(Instruction::And,ToBool(A),ToBool(B),"",ip);
 }
 
 JITScalar JIT::Or(JITScalar A, JITScalar B) {
-  return BinaryOperator::create(Instruction::Or,ToBool(A),ToBool(B),"",ip);
+  return BinaryOperator::Create(Instruction::Or,ToBool(A),ToBool(B),"",ip);
 }
 
 JITScalar JIT::Xor(JITScalar A, JITScalar B) {
-  return BinaryOperator::create(Instruction::Xor,ToBool(A),ToBool(B),"",ip);
+  return BinaryOperator::Create(Instruction::Xor,ToBool(A),ToBool(B),"",ip);
 }
 
 JITScalar JIT::LessThan(JITScalar A, JITScalar B) {
@@ -268,11 +268,11 @@ JITScalar JIT::GreaterEquals(JITScalar A, JITScalar B) {
 }
 
 JITScalar JIT::Negate(JITScalar A) {
-  return BinaryOperator::createNeg(A,"",ip);
+  return BinaryOperator::CreateNeg(A,"",ip);
 }
 
 JITScalar JIT::Not(JITScalar A) {
-  return BinaryOperator::createNot(A,"",ip);
+  return BinaryOperator::CreateNot(A,"",ip);
 }
 
 void JIT::Store(JITScalar Value, JITScalar Address) {
