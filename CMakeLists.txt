@@ -118,7 +118,36 @@ ELSE (FORCE_BUNDLED_ARPACK OR NOT SYSTEM_ARPACK_AVAILABLE)
 ENDIF (FORCE_BUNDLED_ARPACK OR NOT SYSTEM_ARPACK_AVAILABLE)
 ADD_DEFINITIONS( -DHAVE_ARPACK )
 
-#Find AVCALL Library
+######################################################################
+# PCRE Package
+######################################################################
+FIND_LIBRARY(PCRE_SYS_LIBRARY NAMES pcre DOC "Location of the PCRE library" PATHS ${LOCAL_PATH})
+FIND_PATH(PCRE_SYS_INCLUDE_DIR NAMES pcre.h DOC "Location of pcre.h" PATHS ${LOCAL_PATH})
+
+IF (PCRE_SYS_LIBRARY AND PCRE_SYS_INCLUDE_DIR)
+  SET (SYSTEM_PCRE_AVAILABLE TRUE)
+ELSE (PCRE_SYS_LIBRARY AND PCRE_SYS_INCLUDE_DIR)
+  SET (SYSTEM_PCRE_AVAILABLE FALSE)
+ENDIF (PCRE_SYS_LIBRARY AND PCRE_SYS_INCLUDE_DIR)
+
+OPTION(FORCE_BUNDLED_PCRE "Force use of bundled PCRE" OFF)
+
+IF (FORCE_BUNDLED_PCRE OR NOT SYSTEM_PCRE_AVAILABLE)
+  ADD_SUBDIRECTORY(libs/thirdparty/pcre)
+  INCLUDE_DIRECTORIES(libs/thirdparty/pcre)
+  SET (PCRE_LIBRARY pcre)
+ELSE (FORCE_BUNDLED_PCRE OR NOT SYSTEM_PCRE_AVAILABLE)
+  INCLUDE_DIRECTORIES(${PCRE_SYS_INCLUDE_DIR})
+  SET (PCRE_LIBRARY ${PCRE_SYS_LIBRARY})
+ENDIF (FORCE_BUNDLED_PCRE OR NOT SYSTEM_PCRE_AVAILABLE)
+ADD_DEFINITIONS( -DHAVE_PCRE)
+SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PCRE_LIBRARY})
+
+
+######################################################################
+# AVCALL Package
+######################################################################
+
 FIND_LIBRARY(AVCALL_LIBRARY NAMES avcall DOC "Location of the AVCALL library" PATHS ${LOCAL_PATH})
 FIND_PATH(AVCALL_INCLUDE_DIR NAMES avcall.h DOC "Location of avcall.h" PATHS ${LOCAL_PATH} /mingw/include)
 IF( AVCALL_LIBRARY AND AVCALL_INCLUDE_DIR ) 
@@ -127,7 +156,10 @@ IF( AVCALL_LIBRARY AND AVCALL_INCLUDE_DIR )
         SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${AVCALL_LIBRARY} )
 ENDIF( AVCALL_LIBRARY AND AVCALL_INCLUDE_DIR )	
 
-#Find FFTW and FFTWF (single precision)
+######################################################################
+# FFTW Package
+######################################################################
+
 FIND_LIBRARY(FFTW_LIBRARY NAMES fftw3 fftw3-3 libfftw3-3 DOC "Location of the FFTW library" PATHS ${LOCAL_PATH} )
 FIND_PATH(FFTW_INCLUDE_DIR NAMES fftw3.h DOC "Location of fftw3.h" PATHS ${LOCAL_PATH} /mingw/include)
 IF( FFTW_LIBRARY AND FFTW_INCLUDE_DIR ) 
@@ -136,12 +168,20 @@ IF( FFTW_LIBRARY AND FFTW_INCLUDE_DIR )
         SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${FFTW_LIBRARY} )
 ENDIF( FFTW_LIBRARY AND FFTW_INCLUDE_DIR )	
 
+######################################################################
+# FFTWF Package
+######################################################################
+
 FIND_LIBRARY(FFTWF_LIBRARY NAMES fftw3f fftw3f-3 libfftw3f-3 DOC "Location of the FFTW (single precision) library" PATHS ${LOCAL_PATH} )
 IF( FFTWF_LIBRARY AND FFTW_INCLUDE_DIR ) 
 	ADD_DEFINITIONS( -DHAVE_FFTWF )
 	INCLUDE_DIRECTORIES( ${FFTW_INCLUDE_DIR} )
         SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${FFTWF_LIBRARY} )
 ENDIF( FFTWF_LIBRARY AND FFTW_INCLUDE_DIR )	
+
+######################################################################
+# ZLIB Package
+######################################################################
 
 FIND_LIBRARY(ZLIB_LIBRARY NAMES z zlib zlib1 DOC "Location of ZLIB library" PATHS ${LOCAL_PATH})
 FIND_PATH(ZLIB_INCLUDE_DIR NAMES zlib.h DOC "Location of zlib.h" PATHS ${LOCAL_PATH})
@@ -150,30 +190,59 @@ IF( ZLIB_LIBRARY AND ZLIB_INCLUDE_DIR )
         SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${ZLIB_LIBRARY} )
 ENDIF( ZLIB_LIBRARY AND ZLIB_INCLUDE_DIR )	
 
-FIND_LIBRARY(UMFPACK_LIBRARY NAMES umfpack DOC "Location of the UMFPACK library" PATHS /mingw/lib)
-FIND_PATH(UMFPACK_INCLUDE_DIR NAMES umfpack.h DOC "Location of umfpack.h" PATHS /mingw/include /usr/include/ufsparse /usr/include/suitesparse)
-FIND_LIBRARY(AMD_LIBRARY NAMES amd DOC "Location of the AMD library" PATHS /mingw/lib)
-FIND_PATH(AMD_INCLUDE_DIR NAMES amd.h DOC "Location of amd.h" PATHS /mingw/include /usr/include/ufsparse /usr/include/suitesparse)
-IF( UMFPACK_LIBRARY AND UMFPACK_INCLUDE_DIR AND AMD_LIBRARY AND AMD_INCLUDE_DIR) 
- 	ADD_DEFINITIONS( -DHAVE_UMFPACK )
-         INCLUDE_DIRECTORIES( ${UMFPACK_INCLUDE_DIR} )
-         INCLUDE_DIRECTORIES( ${AMD_INCLUDE_DIR} )
-        SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${UMFPACK_LIBRARY} ${AMD_LIBRARY})
-ENDIF( UMFPACK_LIBRARY AND UMFPACK_INCLUDE_DIR AND AMD_LIBRARY AND AMD_INCLUDE_DIR )	
+######################################################################
+# AMD Package
+######################################################################
 
+FIND_LIBRARY(AMD_SYS_LIBRARY NAMES amd DOC "Location of the AMD library" PATHS ${LOCAL_PATH})
+FIND_PATH(AMD_SYS_INCLUDE_DIR NAMES amd.h DOC "Location of amd.h" PATHS ${LOCAL_PATH} /usr/include/ufsparse /usr/include/suitesparse)
 
-###
-###ADD_SUBDIRECTORY(libs/libMath/libARPACK_C)
-###SET ( ARPACK_LIBRARY arpack_c )
-###ADD_SUBDIRECTORY(libs/libMath/libBLAS_C)
-###SET ( BLAS_LIBRARY blas_c )
-###
-####FIND_LIBRARY(ARPACK_LIBRARY NAMES arpack DOC "Location of ARPACK library" PATHS ${LOCAL_PATH})
-###   IF( ARPACK_LIBRARY ) 
-###     ADD_DEFINITIONS( -DHAVE_ARPACK )
-###     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${ARPACK_LIBRARY})
-###   ENDIF( ARPACK_LIBRARY )	
-###
+IF (AMD_SYS_LIBRARY AND AMD_SYS_INCLUDE_DIR)
+  SET (SYSTEM_AMD_AVAILABLE TRUE)
+ELSE (AMD_SYS_LIBRARY AND AMD_SYS_INCLUDE_DIR)
+  SET (SYSTEM_AMD_AVAILABLE FALSE)
+ENDIF (AMD_SYS_LIBRARY AND AMD_SYS_INCLUDE_DIR)
+
+OPTION(FORCE_BUNDLED_AMD "Force use of bundled AMD" OFF)
+
+IF (FORCE_BUNDLED_AMD OR NOT SYSTEM_AMD_AVAILABLE)
+  ADD_SUBDIRECTORY(libs/thirdparty/AMD)
+  INCLUDE_DIRECTORIES(libs/thirdparty/AMD/Include)
+  INCLUDE_DIRECTORIES(libs/thirdparty/UFConfig)
+  SET (AMD_LIBRARY amd)
+ELSE (FORCE_BUNDLED_AMD OR NOT SYSTEM_AMD_AVAILABLE)
+  INCLUDE_DIRECTORIES(${AMD_SYS_INCLUDE_DIR})
+  SET (AMD_LIBRARY ${AMD_SYS_LIBRARY})
+ENDIF (FORCE_BUNDLED_AMD OR NOT SYSTEM_AMD_AVAILABLE)
+ADD_DEFINITIONS( -DHAVE_AMD)
+SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${AMD_LIBRARY})
+
+######################################################################
+# UMFPACK Package
+######################################################################
+
+FIND_LIBRARY(UMFPACK_SYS_LIBRARY NAMES umfpack DOC "Location of the UMFPACK library" PATHS ${LOCAL_PATH})
+FIND_PATH(UMFPACK_SYS_INCLUDE_DIR NAMES umfpack.h DOC "Location of umfpack.h" PATHS ${LOCAL_PATH} /usr/include/ufsparse /usr/include/suitesparse)
+
+IF (UMFPACK_SYS_LIBRARY AND UMFPACK_SYS_INCLUDE_DIR)
+  SET (SYSTEM_UMFPACK_AVAILABLE TRUE)
+ELSE (UMFPACK_SYS_LIBRARY AND UMFPACK_SYS_INCLUDE_DIR)
+  SET (SYSTEM_UMFPACK_AVAILABLE FALSE)
+ENDIF (UMFPACK_SYS_LIBRARY AND UMFPACK_SYS_INCLUDE_DIR)
+
+OPTION(FORCE_BUNDLED_UMFPACK "Force use of bundled UMFPACK" OFF)
+
+IF (FORCE_BUNDLED_UMFPACK OR NOT SYSTEM_UMFPACK_AVAILABLE)
+  ADD_SUBDIRECTORY(libs/thirdparty/UMFPACK)
+  INCLUDE_DIRECTORIES(libs/thirdparty/UMFPACK/Include)
+  INCLUDE_DIRECTORIES(libs/thirdparty/UFConfig)
+  SET (UMFPACK_LIBRARY umfpack)
+ELSE (FORCE_BUNDLED_UMFPACK OR NOT SYSTEM_UMFPACK_AVAILABLE)
+  INCLUDE_DIRECTORIES(${UMFPACK_SYS_INCLUDE_DIR})
+  SET (UMFPACK_LIBRARY ${UMFPACK_SYS_LIBRARY})
+ENDIF (FORCE_BUNDLED_UMFPACK OR NOT SYSTEM_UMFPACK_AVAILABLE)
+ADD_DEFINITIONS( -DHAVE_UMFPACK)
+SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${UMFPACK_LIBRARY})
 
 ######################################################################
 # VOLPACK Support
@@ -195,100 +264,205 @@ ENDIF( USE_VOLPACK)
 ######################################################################
 OPTION(USE_LLVM "Build with LLVM support?" ON)
 IF( USE_LLVM )
+
+ADD_SUBDIRECTORY(libs/thirdparty/llvm-2.5)
+LINK_DIRECTORIES(${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5)
 IF( MSVC )
-	SET( LLVM_LIB_DEBUG_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm/build/lib/Debug )	
-	SET( LLVM_LIB_RELEASE_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm/build/lib/Release )	
-	
-	MACRO(ADD_LLVM_LINK_LIBS executable libs)
-		SET_TARGET_PROPERTIES(${executable}
-			PROPERTIES
-			LINK_FLAGS "/INCLUDE:_X86TargetMachineModule"
-		)
-		FOREACH(c ${libs})
-			TARGET_LINK_LIBRARIES(${executable} debug ${LLVM_LIB_DEBUG_PATH}/${c} optimized ${LLVM_LIB_RELEASE_PATH}/${c})
-		ENDFOREACH(c)
-	ENDMACRO(ADD_LLVM_LINK_LIBS executable libs)
-
-	SET( LLVM_SEARCH_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm/include/llvm )
-	FIND_PATH( LLVM_INCLUDE_DIR NAMES Module.h PATHS ${LLVM_SEARCH_PATH} DOC "Top level include directory for LLVM" )
-
-	SET(LLVM_LIBS 	
-		LLVMSupport.lib
-		LLVMSystem.lib
-		LLVMVMCore.lib
-		LLVMCodeGen.lib
-		LLVMSelectionDAG.lib
-		LLVMAsmPrinter.lib
-		LLVMBitReader.lib
-		LLVMBitWriter.lib
-		LLVMTransformUtils.lib
-		LLVMInstrumentation.lib
-		LLVMScalarOpts.lib
-		LLVMipo.lib
-		LLVMHello.lib
-		LLVMLinker.lib
-		LLVMAnalysis.lib
-		LLVMipa.lib
-		LLVMX86CodeGen.lib
-		LLVMX86AsmPrinter.lib
-		LLVMExecutionEngine.lib
-		LLVMInterpreter.lib
-		LLVMJIT.lib
-		LLVMTarget.lib
-		LLVMAsmParser.lib
-		LLVMDebugger.lib
-		LLVMArchive.lib
-	)
-	
-	IF( LLVM_INCLUDE_DIR  )
-		INCLUDE_DIRECTORIES( ${LLVM_INCLUDE_DIR} ${LLVM_INCLUDE_DIR}/../  ${PROJECT_SOURCE_DIR}/dependencies/llvm/build/include )
-		SET( LLVM_FOUND TRUE )
-		ADD_DEFINITIONS( -DHAVE_LLVM )
-    ENDIF( LLVM_INCLUDE_DIR )
-ELSE( MSVC )
-	FIND_PROGRAM( LLVM_CONFIG llvm-config )
-        EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --libfiles jit interpreter nativecodegen ipo instrumentation scalaropts OUTPUT_VARIABLE LLVM_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
-	EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --libdir OUTPUT_VARIABLE LLVM_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
-	EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --includedir OUTPUT_VARIABLE LLVM_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-  	SEPARATE_ARGUMENTS( LLVM_LIBS )
-#	STRING( REGEX MATCHALL "[^ ;][a-zA-Z0-9/]*\\.o([ ;]|$)" X86TARGET_OBJ "${LLVM_LIB1}" )
-#	STRING( REGEX MATCHALL "[^ ;][a-zA-Z0-9/]*\\.a([ ;]|$)" LLVM_LIB "${LLVM_LIB1}" )
-
-	SET( LLVM_FOUND TRUE )
-	ADD_DEFINITIONS( -DHAVE_LLVM )
-	INCLUDE_DIRECTORIES( ${LLVM_INCLUDE_DIR} )
-
-	MACRO(ADD_LLVM_LINK_LIBS executable libs)
-		FOREACH(c ${libs})
-			TARGET_LINK_LIBRARIES(${executable} ${c})
-		ENDFOREACH(c)
-	ENDMACRO(ADD_LLVM_LINK_LIBS executable libs)
-
+  MACRO(ADD_LLVM_LINK_LIBS executable libs)
+    SET_TARGET_PROPERTIES(${executable}
+	PROPERTIES
+	LINK_FLAGS "/INCLUDE:_X86TargetMachineModule"
+    )
+    FOREACH(c ${libs})
+	TARGET_LINK_LIBRARIES(${executable} LLVM${c}.lib)
+    ENDFOREACH(c)
+  ENDMACRO(ADD_LLVM_LINK_LIBS executable libs)
+#  SET(LLVM_LIBS 	
+#         Support
+#		System
+#		VMCore
+#		CodeGen
+#		SelectionDAG
+#		AsmPrinter
+#		BitReader
+#		BitWriter
+#		TransformUtils
+#		Instrumentation
+#		ScalarOpts
+#		ipo
+#		Linker
+#		Analysis
+#		ipa
+#		X86CodeGen
+#		X86AsmPrinter
+#		ExecutionEngine
+#		Interpreter
+#		JIT
+#		Target
+#		AsmParser
+#		Debugger
+#		Archive
+#	)
+  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMSupport)
+  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMSystem)
+  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMCore)
+  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMCodeGen)
+  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMSelectionDAG)
+  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMAsmPrinter)
+  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMBitReader)
+  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMBitWriter)
+  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMTransformUtils)
+  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMInstrumentation)
+  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMScalarOpts)
+  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMipo)
+  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMAnalysis)
+  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMipa)
+  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMX86CodeGen)
+  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMExecutionEngine)
+  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMInterpreter)
+  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMJIT)
+  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMTarget)
 ENDIF( MSVC )
 
-ELSE( USE_LLVM)
-
-	MACRO(ADD_LLVM_LINK_LIBS executable libs)
-		FOREACH(c ${libs})
-			TARGET_LINK_LIBRARIES(${executable} ${c})
-		ENDFOREACH(c)
-	ENDMACRO(ADD_LLVM_LINK_LIBS executable libs)
-
-
+  INCLUDE_DIRECTORIES( ${PROJECT_SOURCE_DIR}/libs/thirdparty/llvm-2.5/include )
+  INCLUDE_DIRECTORIES( ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/include )
+  ADD_DEFINITIONS( -DHAVE_LLVM )
+#	
+#	IF( LLVM_INCLUDE_DIR  )
+#		INCLUDE_DIRECTORIES( ${LLVM_INCLUDE_DIR} ${LLVM_INCLUDE_DIR}/../  ${PROJECT_SOURCE_DIR}/dependencies/llvm/build/include )
+#		SET( LLVM_FOUND TRUE )
+#		ADD_DEFINITIONS( -DHAVE_LLVM )
+#    ENDIF( LLVM_INCLUDE_DIR )
+#ELSE( MSVC )
+#	FIND_PROGRAM( LLVM_CONFIG llvm-config )
+#        EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --libfiles jit interpreter nativecodegen ipo instrumentation scalaropts OUTPUT_VARIABLE LLVM_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
+#	EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --libdir OUTPUT_VARIABLE LLVM_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+#	EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --includedir OUTPUT_VARIABLE LLVM_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+#
+#  	SEPARATE_ARGUMENTS( LLVM_LIBS )
+##	STRING( REGEX MATCHALL "[^ ;][a-zA-Z0-9/]*\\.o([ ;]|$)" X86TARGET_OBJ "${LLVM_LIB1}" )
+##	STRING( REGEX MATCHALL "[^ ;][a-zA-Z0-9/]*\\.a([ ;]|$)" LLVM_LIB "${LLVM_LIB1}" )
+#
+#	SET( LLVM_FOUND TRUE )
+#	INCLUDE_DIRECTORIES( ${LLVM_INCLUDE_DIR} )
+#
+#	MACRO(ADD_LLVM_LINK_LIBS executable libs)
+#		FOREACH(c ${libs})
+#			TARGET_LINK_LIBRARIES(${executable} ${c})
+#		ENDFOREACH(c)
+#	ENDMACRO(ADD_LLVM_LINK_LIBS executable libs)
+#
+#ENDIF( MSVC )
+#
+#ELSE( USE_LLVM)
+#
+#	MACRO(ADD_LLVM_LINK_LIBS executable libs)
+#		FOREACH(c ${libs})
+#			TARGET_LINK_LIBRARIES(${executable} ${c})
+#		ENDFOREACH(c)
+#	ENDMACRO(ADD_LLVM_LINK_LIBS executable libs)
+#
+#
 ENDIF( USE_LLVM )
+
+
+
+#SET(LLVM_LINK_COMPONENTS jit interpreter nativecodegen)
+#
+#IF( MSVC )
+#	SET( LLVM_LIB_DEBUG_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm/build/lib/Debug )	
+#	SET( LLVM_LIB_RELEASE_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm/build/lib/Release )	
+#	
+#	MACRO(ADD_LLVM_LINK_LIBS executable libs)
+#		SET_TARGET_PROPERTIES(${executable}
+#			PROPERTIES
+#			LINK_FLAGS "/INCLUDE:_X86TargetMachineModule"
+#		)
+#		FOREACH(c ${libs})
+#			TARGET_LINK_LIBRARIES(${executable} debug ${LLVM_LIB_DEBUG_PATH}/${c} optimized ${LLVM_LIB_RELEASE_PATH}/${c})
+#		ENDFOREACH(c)
+#	ENDMACRO(ADD_LLVM_LINK_LIBS executable libs)
+#
+#	SET( LLVM_SEARCH_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm/include/llvm )
+#	FIND_PATH( LLVM_INCLUDE_DIR NAMES Module.h PATHS ${LLVM_SEARCH_PATH} DOC "Top level include directory for LLVM" )
+#
+#	SET(LLVM_LIBS 	
+#		LLVMSupport.lib
+#		LLVMSystem.lib
+#		LLVMVMCore.lib
+#		LLVMCodeGen.lib
+#		LLVMSelectionDAG.lib
+#		LLVMAsmPrinter.lib
+#		LLVMBitReader.lib
+#		LLVMBitWriter.lib
+#		LLVMTransformUtils.lib
+#		LLVMInstrumentation.lib
+#		LLVMScalarOpts.lib
+#		LLVMipo.lib
+#		LLVMHello.lib
+#		LLVMLinker.lib
+#		LLVMAnalysis.lib
+#		LLVMipa.lib
+#		LLVMX86CodeGen.lib
+#		LLVMX86AsmPrinter.lib
+#		LLVMExecutionEngine.lib
+#		LLVMInterpreter.lib
+#		LLVMJIT.lib
+#		LLVMTarget.lib
+#		LLVMAsmParser.lib
+#		LLVMDebugger.lib
+#		LLVMArchive.lib
+#	)
+#	
+#	IF( LLVM_INCLUDE_DIR  )
+#		INCLUDE_DIRECTORIES( ${LLVM_INCLUDE_DIR} ${LLVM_INCLUDE_DIR}/../  ${PROJECT_SOURCE_DIR}/dependencies/llvm/build/include )
+#		SET( LLVM_FOUND TRUE )
+#		ADD_DEFINITIONS( -DHAVE_LLVM )
+#    ENDIF( LLVM_INCLUDE_DIR )
+#ELSE( MSVC )
+#	FIND_PROGRAM( LLVM_CONFIG llvm-config )
+#        EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --libfiles jit interpreter nativecodegen ipo instrumentation scalaropts OUTPUT_VARIABLE LLVM_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
+#	EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --libdir OUTPUT_VARIABLE LLVM_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+#	EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --includedir OUTPUT_VARIABLE LLVM_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+#
+#  	SEPARATE_ARGUMENTS( LLVM_LIBS )
+##	STRING( REGEX MATCHALL "[^ ;][a-zA-Z0-9/]*\\.o([ ;]|$)" X86TARGET_OBJ "${LLVM_LIB1}" )
+##	STRING( REGEX MATCHALL "[^ ;][a-zA-Z0-9/]*\\.a([ ;]|$)" LLVM_LIB "${LLVM_LIB1}" )
+#
+#	SET( LLVM_FOUND TRUE )
+#	ADD_DEFINITIONS( -DHAVE_LLVM )
+#	INCLUDE_DIRECTORIES( ${LLVM_INCLUDE_DIR} )
+#
+#	MACRO(ADD_LLVM_LINK_LIBS executable libs)
+#		FOREACH(c ${libs})
+#			TARGET_LINK_LIBRARIES(${executable} ${c})
+#		ENDFOREACH(c)
+#	ENDMACRO(ADD_LLVM_LINK_LIBS executable libs)
+#
+#ENDIF( MSVC )
+#
+#ELSE( USE_LLVM)
+#
+#	MACRO(ADD_LLVM_LINK_LIBS executable libs)
+#		FOREACH(c ${libs})
+#			TARGET_LINK_LIBRARIES(${executable} ${c})
+#		ENDFOREACH(c)
+#	ENDMACRO(ADD_LLVM_LINK_LIBS executable libs)
+#
+#
+#ENDIF( USE_LLVM )
 
 #FIND_LIBRARY(LAPACK_LIBRARY NAMES lapack clapack DOC "Location of LAPACK library" PATHS ${LOCAL_PATH}  )
 
-##############################################################################
-#PCRE library
-FIND_LIBRARY(PCRE_LIBRARY NAMES pcre DOC "Location of PCRE library" PATHS ${LOCAL_PATH})
-FIND_PATH(PCRE_INCLUDE_DIR NAMES pcre.h DOC "Location of pcre.h" PATHS ${LOCAL_PATH})
-IF( PCRE_LIBRARY AND PCRE_INCLUDE_DIR ) 
-	INCLUDE_DIRECTORIES( ${PCRE_INCLUDE_DIR} )
-	ADD_DEFINITIONS( -DHAVE_PCRE )
-        SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PCRE_LIBRARY} )
-ENDIF( PCRE_LIBRARY AND PCRE_INCLUDE_DIR )	
+###############################################################################
+##PCRE library
+#FIND_LIBRARY(PCRE_LIBRARY NAMES pcre DOC "Location of PCRE library" PATHS ${LOCAL_PATH})
+#FIND_PATH(PCRE_INCLUDE_DIR NAMES pcre.h DOC "Location of pcre.h" PATHS ${LOCAL_PATH})
+#IF( PCRE_LIBRARY AND PCRE_INCLUDE_DIR ) 
+#	INCLUDE_DIRECTORIES( ${PCRE_INCLUDE_DIR} )
+#	ADD_DEFINITIONS( -DHAVE_PCRE )
+#        SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PCRE_LIBRARY} )
+#ENDIF( PCRE_LIBRARY AND PCRE_INCLUDE_DIR )	
 
 ##############################################################################
 ##LEVMAR library
@@ -308,7 +482,7 @@ IF(NOT MSVC)
 	SET(EXTRA_LIBRARIES ${NCURSES_LIBRARY}  )  
         #FIND_LIBRARY(G2C_LIBRARY NAMES g2c DOC "Location of Fortran to C (g2c) library" PATHS /mingw/lib)
 ELSE(NOT MSVC)
-	FIND_LIBRARY(SOCKS_LIBRARY NAMES wsock32 ws2_32 DOC "Location of the winsock library." PATH /mingw/lib)
+	FIND_LIBRARY(SOCKS_LIBRARY NAMES wsock32 ws2_32 DOC "Location of the winsock library." PATH ${LOCAL_PATH})
         SET(EXTRA_LIBRARIES ${SOCKS_LIBRARY} )  
 ENDIF(NOT MSVC)
 
