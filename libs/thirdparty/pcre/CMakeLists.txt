@@ -28,16 +28,16 @@
 # 2008-04-22 PH modified READLINE support so it finds NCURSES when needed.
 # 2008-07-03 PH updated for revised UCP property support (change of files)
 
-PROJECT(PCRE C CXX)
+#PROJECT(PCRE C CXX)
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.4.6)
+#CMAKE_MINIMUM_REQUIRED(VERSION 2.4.6)
 
-SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake) # for FindReadline.cmake
+#SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake) # for FindReadline.cmake
 
 # external packages
-FIND_PACKAGE( BZip2 )
-FIND_PACKAGE( ZLIB )
-FIND_PACKAGE( Readline )
+#FIND_PACKAGE( BZip2 )
+#FIND_PACKAGE( ZLIB )
+#FIND_PACKAGE( Readline )
 
 # Configuration checks
 
@@ -70,10 +70,10 @@ CHECK_TYPE_SIZE("unsigned long long"    UNSIGNED_LONG_LONG)
 # (Note: CMakeSetup displays these in alphabetical order, regardless of
 # the order we use here)
 
-SET(BUILD_SHARED_LIBS OFF CACHE BOOL
-    "Build shared libraries instead of static ones.")
+#SET(BUILD_SHARED_LIBS OFF CACHE BOOL
+#    "Build shared libraries instead of static ones.")
 
-OPTION(PCRE_BUILD_PCRECPP "Build the PCRE C++ library (pcrecpp)." ON)
+#OPTION(PCRE_BUILD_PCRECPP "Build the PCRE C++ library (pcrecpp)." ON)
 
 SET(PCRE_EBCDIC OFF CACHE BOOL
     "Use EBCDIC coding instead of ASCII. (This is rarely used outside of mainframe systems)")
@@ -105,6 +105,7 @@ SET(PCRE_SUPPORT_UTF8 OFF CACHE BOOL
 SET(PCRE_SUPPORT_BSR_ANYCRLF OFF CACHE BOOL
     "ON=Backslash-R matches only LF CR and CRLF, OFF=Backslash-R matches all Unicode Linebreaks")
 
+MARK_AS_ADVANCED(PCRE_MATCH_LIMIT PCRE_MATCH_LIMIT_RECURSION PCRE_NEWLINE PCRE_NO_RECURSE PCRE_POSIX_MALLOC_THRESHOLD PCRE_SUPPORT_UNICODE_PROPERTIES PCRE_SUPPORT_UTF8 PCRE_SUPPORT_BSR_ANYCRLF PCRE_EBCDIC PCRE_LINK_SIZE)
 
 IF (MINGW)
   OPTION(NON_STANDARD_LIB_PREFIX
@@ -234,22 +235,22 @@ ENDIF(PCRE_NO_RECURSE)
 # Output files
 
 CONFIGURE_FILE(config-cmake.h.in
-               ${CMAKE_BINARY_DIR}/config.h
+               ${PROJECT_SOURCE_DIR}/libs/thirdparty/pcre/config.h
                @ONLY)
 
 CONFIGURE_FILE(pcre.h.generic
-               ${CMAKE_BINARY_DIR}/pcre.h
+               ${PROJECT_SOURCE_DIR}/libs/thirdparty/pcre/pcre.h
                COPYONLY)
 
 # What about pcre-config and libpcre.pc?
 
 IF(PCRE_BUILD_PCRECPP)
         CONFIGURE_FILE(pcre_stringpiece.h.in
-                       ${CMAKE_BINARY_DIR}/pcre_stringpiece.h
+                       ${PROJECT_SOURCE_DIR}/libs/thirdparty/pcre/pcre_stringpiece.h
                        @ONLY)
 
         CONFIGURE_FILE(pcrecpparg.h.in
-                       ${CMAKE_BINARY_DIR}/pcrecpparg.h
+                       ${PROJECT_SOURCE_DIR}/libs/thirdparty/pcre/pcrecpparg.h
                        @ONLY)
 ENDIF(PCRE_BUILD_PCRECPP)
 
@@ -265,21 +266,23 @@ IF(PCRE_REBUILD_CHARTABLES)
     COMMENT "Generating character tables (pcre_chartables.c) for current locale"
     DEPENDS dftables
     COMMAND ${DFTABLES_EXE}
-    ARGS        ${CMAKE_BINARY_DIR}/pcre_chartables.c
-    OUTPUT      ${CMAKE_BINARY_DIR}/pcre_chartables.c
+    ARGS        ${PROJECT_SOURCE_DIR}/libs/thirdparty/pcre/pcre_chartables.c
+    OUTPUT      ${PROJECT_SOURCE_DIR}/libs/thirdparty/pcre/pcre_chartables.c
   )
 ELSE(PCRE_REBUILD_CHARTABLES)
-  CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/pcre_chartables.c.dist
-                    ${CMAKE_BINARY_DIR}/pcre_chartables.c
+  CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/libs/thirdparty/pcre/pcre_chartables.c.dist
+                    ${PROJECT_SOURCE_DIR}/libs/thirdparty/pcre/pcre_chartables.c
                     COPYONLY)
 ENDIF(PCRE_REBUILD_CHARTABLES)
 
+MARK_AS_ADVANCED(PCRE_REBUILD_CHARTABLES)
+
 # Source code
 
-SET(PCRE_HEADERS ${CMAKE_BINARY_DIR}/pcre.h)
+SET(PCRE_HEADERS ${PROJECT_SOURCE_DIR}/libs/thirdparty/pcre/pcre.h)
 
 SET(PCRE_SOURCES
-  ${CMAKE_BINARY_DIR}/pcre_chartables.c
+  ${PROJECT_SOURCE_DIR}/libs/thirdparty/pcre/pcre_chartables.c
   pcre_compile.c
   pcre_config.c
   pcre_dfa_exec.c
@@ -308,8 +311,8 @@ SET(PCREPOSIX_SOURCES pcreposix.c)
 SET(PCRECPP_HEADERS
   pcrecpp.h
   pcre_scanner.h
-  ${CMAKE_BINARY_DIR}/pcrecpparg.h
-  ${CMAKE_BINARY_DIR}/pcre_stringpiece.h
+  ${PROJECT_SOURCE_DIR}/libs/thirdparty/pcre/pcrecpparg.h
+  ${PROJECT_SOURCE_DIR}/libs/thirdparty/pcre/pcre_stringpiece.h
 )
 
 SET(PCRECPP_SOURCES
@@ -335,18 +338,18 @@ ENDIF(WIN32)
 
 # Libraries
 # pcre
-ADD_LIBRARY(pcre ${PCRE_HEADERS} ${PCRE_SOURCES} ${CMAKE_BINARY_DIR}/config.h)
-ADD_LIBRARY(pcreposix ${PCREPOSIX_HEADERS} ${PCREPOSIX_SOURCES})
-TARGET_LINK_LIBRARIES(pcreposix pcre)
+ADD_LIBRARY(pcre ${PCRE_HEADERS} ${PCRE_SOURCES} ${PROJECT_SOURCE_DIR}/libs/thirdparty/pcre/config.h)
+#ADD_LIBRARY(pcreposix ${PCREPOSIX_HEADERS} ${PCREPOSIX_SOURCES})
+TARGET_LINK_LIBRARIES(pcre)
 IF(MINGW AND NOT PCRE_STATIC)
   IF(NON_STANDARD_LIB_PREFIX)
-    SET_TARGET_PROPERTIES(pcre pcreposix
+    SET_TARGET_PROPERTIES(pcre 
                         PROPERTIES PREFIX ""
     )
   ENDIF(NON_STANDARD_LIB_PREFIX)
 
   IF(NON_STANDARD_LIB_SUFFIX)
-    SET_TARGET_PROPERTIES(pcre pcreposix
+    SET_TARGET_PROPERTIES(pcre 
                         PROPERTIES SUFFIX "-0.dll"
     )
   ENDIF(NON_STANDARD_LIB_SUFFIX)
@@ -376,11 +379,11 @@ ENDIF(PCRE_BUILD_PCRECPP)
 
 # Executables
 
-ADD_EXECUTABLE(pcretest pcretest.c)
-TARGET_LINK_LIBRARIES(pcretest pcreposix ${PCRETEST_LIBS})
+#ADD_EXECUTABLE(pcretest pcretest.c)
+#TARGET_LINK_LIBRARIES(pcretest  ${PCRETEST_LIBS})
 
-ADD_EXECUTABLE(pcregrep pcregrep.c)
-TARGET_LINK_LIBRARIES(pcregrep pcreposix ${PCREGREP_LIBS})
+#ADD_EXECUTABLE(pcregrep pcregrep.c)
+#TARGET_LINK_LIBRARIES(pcregrep  ${PCREGREP_LIBS})
 
 # Removed by PH (2008-01-23) because pcredemo shouldn't really be built
 # automatically, and it gave trouble in some environments anyway.
@@ -418,19 +421,19 @@ GET_TARGET_PROPERTY(PCRETEST_EXE pcretest DEBUG_LOCATION)
 # Write out a CTest configuration file that sets some needed environment
 # variables for the test scripts.
 #
-FILE(WRITE ${CMAKE_BINARY_DIR}/CTestCustom.ctest
+FILE(WRITE ${PROJECT_SOURCE_DIR}/libs/thirdparty/pcre/CTestCustom.ctest
 "# This is a generated file.
-SET(ENV{srcdir} ${CMAKE_SOURCE_DIR})
+SET(ENV{srcdir} ${PROJECT_SOURCE_DIR}/libs/thirdparty/pcre)
 SET(ENV{pcregrep} ${PCREGREP_EXE})
 SET(ENV{pcretest} ${PCRETEST_EXE})
 ")
 
 IF(UNIX)
-        ADD_TEST(pcre_test      ${CMAKE_SOURCE_DIR}/RunTest)
-        ADD_TEST(pcre_grep_test ${CMAKE_SOURCE_DIR}/RunGrepTest)
+        ADD_TEST(pcre_test      ${PROJECT_SOURCE_DIR}/libs/thirdparty/pcre/RunTest)
+        ADD_TEST(pcre_grep_test ${PROJECT_SOURCE_DIR}/libs/thirdparty/pcre/RunGrepTest)
 ENDIF(UNIX)
 IF(WIN32)
-        ADD_TEST(pcre_test cmd /C ${CMAKE_SOURCE_DIR}/RunTest.bat)
+        ADD_TEST(pcre_test cmd /C ${PROJECT_SOURCE_DIR}/libs/thirdparty/pcre/RunTest.bat)
 ENDIF(WIN32)
 
 GET_TARGET_PROPERTY(PCRECPP_UNITTEST_EXE
@@ -451,18 +454,18 @@ ADD_TEST(pcre_stringpiece_test ${PCRE_STRINGPIECE_UNITTEST_EXE})
 
 # Installation
 
-SET(CMAKE_INSTALL_ALWAYS 1)
+#SET(CMAKE_INSTALL_ALWAYS 1)
 
-INSTALL(TARGETS pcre pcreposix pcregrep pcretest
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib)
+#INSTALL(TARGETS pcre pcreposix pcregrep pcretest
+#        RUNTIME DESTINATION bin
+#        LIBRARY DESTINATION lib
+#        ARCHIVE DESTINATION lib)
+#
+#INSTALL(FILES ${PCRE_HEADERS} ${PCREPOSIX_HEADERS} DESTINATION include)
 
-INSTALL(FILES ${PCRE_HEADERS} ${PCREPOSIX_HEADERS} DESTINATION include)
-
-FILE(GLOB html ${CMAKE_SOURCE_DIR}/doc/html/*.html)
-FILE(GLOB man1 ${CMAKE_SOURCE_DIR}/doc/*.1)
-FILE(GLOB man3 ${CMAKE_SOURCE_DIR}/doc/*.3)
+FILE(GLOB html ${PROJECT_SOURCE_DIR}/libs/thirdparty/pcre/doc/html/*.html)
+FILE(GLOB man1 ${PROJECT_SOURCE_DIR}/libs/thirdparty/pcre/doc/*.1)
+FILE(GLOB man3 ${PROJECT_SOURCE_DIR}/libs/thirdparty/pcre/doc/*.3)
 
 IF(PCRE_BUILD_PCRECPP)
         INSTALL(TARGETS pcrecpp
@@ -482,10 +485,10 @@ ELSE(PCRE_BUILD_PCRECPP)
 ENDIF(PCRE_BUILD_PCRECPP)
 
 
-INSTALL(FILES ${man1} DESTINATION man/man1)
-INSTALL(FILES ${man3} DESTINATION man/man3)
-INSTALL(FILES ${html} DESTINATION share/doc/pcre/html)
-
+#INSTALL(FILES ${man1} DESTINATION man/man1)
+#INSTALL(FILES ${man3} DESTINATION man/man3)
+#INSTALL(FILES ${html} DESTINATION share/doc/pcre/html)
+#
 # help, only for nice output
 IF(BUILD_SHARED_LIBS)
   SET(BUILD_STATIC_LIBS OFF)
