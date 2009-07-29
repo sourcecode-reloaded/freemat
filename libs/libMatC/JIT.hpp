@@ -6,6 +6,9 @@
 #ifndef __STDC_LIMIT_MACROS
 #define __STDC_LIMIT_MACROS
 #endif
+#ifndef __STDC_CONSTANT_MACROS
+#define __STDC_CONSTANT_MACROS
+#endif
 #include "Types.hpp"
 
 #include "llvm/Module.h"
@@ -19,7 +22,6 @@
 #include "llvm/Function.h"
 #include "llvm/PassManager.h"
 #include "llvm/ExecutionEngine/JIT.h"
-#include "llvm/ExecutionEngine/Interpreter.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
 
 #include <QString>
