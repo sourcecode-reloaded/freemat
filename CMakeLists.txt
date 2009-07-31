@@ -263,216 +263,57 @@ ENDIF( USE_VOLPACK)
 # LLVM Support
 ######################################################################
 OPTION(USE_LLVM "Build with LLVM support?" ON)
+
 IF( USE_LLVM )
-
-ADD_SUBDIRECTORY(libs/thirdparty/llvm-2.5)
-LINK_DIRECTORIES(${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5)
-IF( MSVC )
-  MACRO(ADD_LLVM_LINK_LIBS executable libs)
-    SET_TARGET_PROPERTIES(${executable}
-	PROPERTIES
-	LINK_FLAGS "/INCLUDE:_X86TargetMachineModule"
-    )
-    FOREACH(c ${libs})
-	TARGET_LINK_LIBRARIES(${executable} LLVM${c}.lib)
-    ENDFOREACH(c)
-  ENDMACRO(ADD_LLVM_LINK_LIBS executable libs)
-#  SET(LLVM_LIBS 	
-#         Support
-#		System
-#		VMCore
-#		CodeGen
-#		SelectionDAG
-#		AsmPrinter
-#		BitReader
-#		BitWriter
-#		TransformUtils
-#		Instrumentation
-#		ScalarOpts
-#		ipo
-#		Linker
-#		Analysis
-#		ipa
-#		X86CodeGen
-#		X86AsmPrinter
-#		ExecutionEngine
-#		Interpreter
-#		JIT
-#		Target
-#		AsmParser
-#		Debugger
-#		Archive
-#	)
-  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMSupport)
-  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMSystem)
-  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMCore)
-  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMCodeGen)
-  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMSelectionDAG)
-  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMAsmPrinter)
-  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMBitReader)
-  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMBitWriter)
-  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMTransformUtils)
-  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMInstrumentation)
-  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMScalarOpts)
-  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMipo)
-  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMAnalysis)
-  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMipa)
-  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMX86CodeGen)
-  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMExecutionEngine)
-  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMInterpreter)
-  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMJIT)
-  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMTarget)
-ENDIF( MSVC )
-
+  ADD_SUBDIRECTORY(libs/thirdparty/llvm-2.5)
   INCLUDE_DIRECTORIES( ${PROJECT_SOURCE_DIR}/libs/thirdparty/llvm-2.5/include )
   INCLUDE_DIRECTORIES( ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/include )
   ADD_DEFINITIONS( -DHAVE_LLVM )
-#	
-#	IF( LLVM_INCLUDE_DIR  )
-#		INCLUDE_DIRECTORIES( ${LLVM_INCLUDE_DIR} ${LLVM_INCLUDE_DIR}/../  ${PROJECT_SOURCE_DIR}/dependencies/llvm/build/include )
-#		SET( LLVM_FOUND TRUE )
-#		ADD_DEFINITIONS( -DHAVE_LLVM )
-#    ENDIF( LLVM_INCLUDE_DIR )
-#ELSE( MSVC )
-#	FIND_PROGRAM( LLVM_CONFIG llvm-config )
-#        EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --libfiles jit interpreter nativecodegen ipo instrumentation scalaropts OUTPUT_VARIABLE LLVM_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
-#	EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --libdir OUTPUT_VARIABLE LLVM_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
-#	EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --includedir OUTPUT_VARIABLE LLVM_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
-#
-#  	SEPARATE_ARGUMENTS( LLVM_LIBS )
-##	STRING( REGEX MATCHALL "[^ ;][a-zA-Z0-9/]*\\.o([ ;]|$)" X86TARGET_OBJ "${LLVM_LIB1}" )
-##	STRING( REGEX MATCHALL "[^ ;][a-zA-Z0-9/]*\\.a([ ;]|$)" LLVM_LIB "${LLVM_LIB1}" )
-#
-#	SET( LLVM_FOUND TRUE )
-#	INCLUDE_DIRECTORIES( ${LLVM_INCLUDE_DIR} )
-#
-#	MACRO(ADD_LLVM_LINK_LIBS executable libs)
-#		FOREACH(c ${libs})
-#			TARGET_LINK_LIBRARIES(${executable} ${c})
-#		ENDFOREACH(c)
-#	ENDMACRO(ADD_LLVM_LINK_LIBS executable libs)
-#
-#ENDIF( MSVC )
-#
-#ELSE( USE_LLVM)
-#
-#	MACRO(ADD_LLVM_LINK_LIBS executable libs)
-#		FOREACH(c ${libs})
-#			TARGET_LINK_LIBRARIES(${executable} ${c})
-#		ENDFOREACH(c)
-#	ENDMACRO(ADD_LLVM_LINK_LIBS executable libs)
-#
-#
-ENDIF( USE_LLVM )
+  IF (MSVC)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMInstrumentation)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMipo)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMX86CodeGen)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMSelectionDAG)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMAsmPrinter)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMExecutionEngine)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMJIT)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMCodeGen)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMScalarOpts)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMTransformUtils)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMipa)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMAnalysis)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMTarget)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMCore)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMSupport)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} LLVMSystem)
+  ELSE (MSVC)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/libLLVMInstrumentation.a)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/libLLVMipo.a)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/LLVMX86CodeGen.o)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/libLLVMSelectionDAG.a)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/libLLVMAsmPrinter.a)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/LLVMExecutionEngine.o)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/LLVMJIT.o)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/libLLVMCodeGen.a)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/libLLVMScalarOpts.a)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/libLLVMTransformUtils.a)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/libLLVMipa.a)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/libLLVMAnalysis.a)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/libLLVMTarget.a)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/libLLVMCore.a)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/libLLVMSupport.a)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/libLLVMSystem.a)
+  ENDIF (MSVC)
+#  FIND_PROGRAM( LLVM_CONFIG llvm-config )
+#  EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --libfiles jit nativecodegen ipo instrumentation scalaropts OUTPUT_VARIABLE LLVM_LIBS #OUTPUT_STRIP_TRAILING_WHITESPACE)
+#  EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --libdir OUTPUT_VARIABLE LLVM_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+#  EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --includedir OUTPUT_VARIABLE LLVM_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)   
+#  ADD_DEFINITIONS( -DHAVE_LLVM )
+#  INCLUDE_DIRECTORIES( ${LLVM_INCLUDE_DIR} )
+#  SEPARATE_ARGUMENTS( LLVM_LIBS )
+#  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${LLVM_LIBS})
+ENDIF (USE_LLVM)
 
-
-
-#SET(LLVM_LINK_COMPONENTS jit interpreter nativecodegen)
-#
-#IF( MSVC )
-#	SET( LLVM_LIB_DEBUG_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm/build/lib/Debug )	
-#	SET( LLVM_LIB_RELEASE_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm/build/lib/Release )	
-#	
-#	MACRO(ADD_LLVM_LINK_LIBS executable libs)
-#		SET_TARGET_PROPERTIES(${executable}
-#			PROPERTIES
-#			LINK_FLAGS "/INCLUDE:_X86TargetMachineModule"
-#		)
-#		FOREACH(c ${libs})
-#			TARGET_LINK_LIBRARIES(${executable} debug ${LLVM_LIB_DEBUG_PATH}/${c} optimized ${LLVM_LIB_RELEASE_PATH}/${c})
-#		ENDFOREACH(c)
-#	ENDMACRO(ADD_LLVM_LINK_LIBS executable libs)
-#
-#	SET( LLVM_SEARCH_PATH ${PROJECT_SOURCE_DIR}/dependencies/llvm/include/llvm )
-#	FIND_PATH( LLVM_INCLUDE_DIR NAMES Module.h PATHS ${LLVM_SEARCH_PATH} DOC "Top level include directory for LLVM" )
-#
-#	SET(LLVM_LIBS 	
-#		LLVMSupport.lib
-#		LLVMSystem.lib
-#		LLVMVMCore.lib
-#		LLVMCodeGen.lib
-#		LLVMSelectionDAG.lib
-#		LLVMAsmPrinter.lib
-#		LLVMBitReader.lib
-#		LLVMBitWriter.lib
-#		LLVMTransformUtils.lib
-#		LLVMInstrumentation.lib
-#		LLVMScalarOpts.lib
-#		LLVMipo.lib
-#		LLVMHello.lib
-#		LLVMLinker.lib
-#		LLVMAnalysis.lib
-#		LLVMipa.lib
-#		LLVMX86CodeGen.lib
-#		LLVMX86AsmPrinter.lib
-#		LLVMExecutionEngine.lib
-#		LLVMInterpreter.lib
-#		LLVMJIT.lib
-#		LLVMTarget.lib
-#		LLVMAsmParser.lib
-#		LLVMDebugger.lib
-#		LLVMArchive.lib
-#	)
-#	
-#	IF( LLVM_INCLUDE_DIR  )
-#		INCLUDE_DIRECTORIES( ${LLVM_INCLUDE_DIR} ${LLVM_INCLUDE_DIR}/../  ${PROJECT_SOURCE_DIR}/dependencies/llvm/build/include )
-#		SET( LLVM_FOUND TRUE )
-#		ADD_DEFINITIONS( -DHAVE_LLVM )
-#    ENDIF( LLVM_INCLUDE_DIR )
-#ELSE( MSVC )
-#	FIND_PROGRAM( LLVM_CONFIG llvm-config )
-#        EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --libfiles jit interpreter nativecodegen ipo instrumentation scalaropts OUTPUT_VARIABLE LLVM_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
-#	EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --libdir OUTPUT_VARIABLE LLVM_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
-#	EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --includedir OUTPUT_VARIABLE LLVM_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
-#
-#  	SEPARATE_ARGUMENTS( LLVM_LIBS )
-##	STRING( REGEX MATCHALL "[^ ;][a-zA-Z0-9/]*\\.o([ ;]|$)" X86TARGET_OBJ "${LLVM_LIB1}" )
-##	STRING( REGEX MATCHALL "[^ ;][a-zA-Z0-9/]*\\.a([ ;]|$)" LLVM_LIB "${LLVM_LIB1}" )
-#
-#	SET( LLVM_FOUND TRUE )
-#	ADD_DEFINITIONS( -DHAVE_LLVM )
-#	INCLUDE_DIRECTORIES( ${LLVM_INCLUDE_DIR} )
-#
-#	MACRO(ADD_LLVM_LINK_LIBS executable libs)
-#		FOREACH(c ${libs})
-#			TARGET_LINK_LIBRARIES(${executable} ${c})
-#		ENDFOREACH(c)
-#	ENDMACRO(ADD_LLVM_LINK_LIBS executable libs)
-#
-#ENDIF( MSVC )
-#
-#ELSE( USE_LLVM)
-#
-#	MACRO(ADD_LLVM_LINK_LIBS executable libs)
-#		FOREACH(c ${libs})
-#			TARGET_LINK_LIBRARIES(${executable} ${c})
-#		ENDFOREACH(c)
-#	ENDMACRO(ADD_LLVM_LINK_LIBS executable libs)
-#
-#
-#ENDIF( USE_LLVM )
-
-#FIND_LIBRARY(LAPACK_LIBRARY NAMES lapack clapack DOC "Location of LAPACK library" PATHS ${LOCAL_PATH}  )
-
-###############################################################################
-##PCRE library
-#FIND_LIBRARY(PCRE_LIBRARY NAMES pcre DOC "Location of PCRE library" PATHS ${LOCAL_PATH})
-#FIND_PATH(PCRE_INCLUDE_DIR NAMES pcre.h DOC "Location of pcre.h" PATHS ${LOCAL_PATH})
-#IF( PCRE_LIBRARY AND PCRE_INCLUDE_DIR ) 
-#	INCLUDE_DIRECTORIES( ${PCRE_INCLUDE_DIR} )
-#	ADD_DEFINITIONS( -DHAVE_PCRE )
-#        SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PCRE_LIBRARY} )
-#ENDIF( PCRE_LIBRARY AND PCRE_INCLUDE_DIR )	
-
-##############################################################################
-##LEVMAR library
-#FIND_LIBRARY(LEVMAR_LIBRARY NAMES levmar DOC "Location of levmar library" PATHS ${LOCAL_PATH})
-#FIND_PATH(LEVMAR_INCLUDE_DIR NAMES lm.h DOC "Location of lm.h" PATHS ${LOCAL_PATH})
-#IF (LEVMAR_LIBRARY AND LEVMAR_INCLUDE_DIR)
-#   INCLUDE_DIRECTORIES(${LEVMAR_INCLUDE_DIR})
-#   ADD_DEFINITIONS( -DHAVE_LEVMAR )
-#   SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${LEVMAR_LIBRARY} )
-#ENDIF(LEVMAR_LIBRARY AND LEVMAR_INCLUDE_DIR)
 
 ##############################################################################
 #Extra libraries
