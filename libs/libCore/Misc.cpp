@@ -385,7 +385,7 @@ ArrayVector DoCLIFunction(int nargout, const ArrayVector& arg, Interpreter* eval
   Context *context = eval->getContext();
   context->deactivateCurrentScope();
   FuncPtr funcDef;
-  if (context->lookupFunction("startup",funcDef)) {
+  if (eval->lookupFunction("startup",funcDef)) {
     funcDef->updateCode(eval);
     if (funcDef->scriptFlag) {
       try {
