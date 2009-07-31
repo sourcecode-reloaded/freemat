@@ -296,7 +296,6 @@ void Interpreter::updateFileTool() {
 
 void Interpreter::rescanPath() {
   if (!context) return;
-  qDebug() << "rescanning";
   context->flushTemporaryGlobalFunctions();
   for (int i=0;i<m_basePath.size();i++)
     scanDirectory(m_basePath[i],false,"");
@@ -609,6 +608,10 @@ void Interpreter::sendGreeting() {
   outputMessage("      <pathtool> to set or change your path\n");
   outputMessage(" Use <dbauto on/off> to control stop-on-error behavior\n");
   outputMessage(" Use ctrl-b to stop execution of a function/script\n");
+#ifdef HAVE_LLVM
+  outputMessage(" JIT is enabled by default\n");
+#endif
+  outputMessage("");
 }
 
 bool Interpreter::inMFile() const {
@@ -2026,7 +2029,6 @@ int num_for_loop_iter( double first, double step, double last )
 
 #ifdef HAVE_LLVM
 static bool compileJITBlock(Interpreter *interp, const Tree & t, JITInfo & ref) {
-  qDebug() << "Compiling";
   delete ref.JITFunction();
   JITFunc *cg = new JITFunc(interp);
   bool success = false;
@@ -2036,8 +2038,8 @@ static bool compileJITBlock(Interpreter *interp, const Tree & t, JITInfo & ref) 
     ref.setJITState(JITInfo::SUCCEEDED);
     ref.setJITFunction(cg);
   } catch (Exception &e) {
-    dbout << e.msg() << "\r\n";
-    interp->warningMessage(QString("Can't compile code. Using interpreter. Reason: ")+e.msg());
+    //    dbout << e.msg() << "\r\n";
+    //    interp->warningMessage(QString("Can't compile code. Using interpreter. Reason: ")+e.msg());
     delete cg;
     success = false;
     ref.setJITState(JITInfo::FAILED);
@@ -2051,8 +2053,8 @@ static bool prepJITBlock(JITInfo & t) {
     t.JITFunction()->prep();
     success = true;
   } catch (Exception &e) {
-    dbout << e.msg() << "\r\n";
-    t.JITFunction()->eval->warningMessage(QString("Can not compile code. Using interpreter. Reason: ")+e.msg());
+    //   dbout << e.msg() << "\r\n";
+    //    t.JITFunction()->eval->warningMessage(QString("Can not compile code. Using interpreter. Reason: ")+e.msg());
     success = false;
   }
   return success;
@@ -5237,7 +5239,7 @@ Interpreter::Interpreter(Context* aContext) {
   printLimit = 1000;
   autostop = false;
   intryblock = false;
-  jitcontrol = false;
+  jitcontrol = true;
   stopoverload = false;
   m_skipflag = false;
   m_liveUpdateFlag = false;
