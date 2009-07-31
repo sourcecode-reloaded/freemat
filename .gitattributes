@@ -2,13 +2,6 @@
 /ChangeLog svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 /INSTALL svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 /NOTES.TXT svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-dependencies/AMD/Doc/AMD_UserGuide.pdf svn_mime_002dtype=application%2Foctet-stream
-dependencies/UMFPACK/Doc/QuickStart.pdf svn_mime_002dtype=application%2Foctet-stream
-dependencies/UMFPACK/Doc/UserGuide.pdf svn_mime_002dtype=application%2Foctet-stream
-dependencies/UMFPACK/MATLAB/lcc_lib/libmwlapack.lib svn_mime_002dtype=application%2Foctet-stream
-dependencies/UMFPACK/MATLAB/west.mat svn_mime_002dtype=application%2Foctet-stream
-dependencies/UMFPACK/Tcov/badnum.umf svn_mime_002dtype=application%2Foctet-stream
-dependencies/UMFPACK/Tcov/badsym.umf svn_mime_002dtype=application%2Foctet-stream
 dependencies/bin/Debug/portaudio_x86.dll svn_mime_002dtype=application%2Foctet-stream
 dependencies/bin/Debug/portaudio_x86.lib svn_mime_002dtype=application%2Foctet-stream
 dependencies/bin/Debug/portaudio_x86.pdb svn_mime_002dtype=application%2Foctet-stream
@@ -33,22 +26,6 @@ dependencies/bin/zlib1.lib svn_mime_002dtype=application%2Foctet-stream
 dependencies/ffcall/avcall/tests.output/i386-pc-win32-gcc svn_mime_002dtype=application%2Foctet-stream
 dependencies/ffcall/trampoline/tramp-mips64.old.o.irix6.2 svn_mime_002dtype=application%2Foctet-stream
 dependencies/lapack/install/lawn81.pdf svn_mime_002dtype=application%2Foctet-stream
-dependencies/llvm/docs/img/Debugging.gif svn_mime_002dtype=application%2Foctet-stream
-dependencies/llvm/docs/img/libdeps.gif svn_mime_002dtype=application%2Foctet-stream
-dependencies/llvm/docs/img/lines.gif svn_mime_002dtype=application%2Foctet-stream
-dependencies/llvm/docs/img/objdeps.gif svn_mime_002dtype=application%2Foctet-stream
-dependencies/llvm/docs/img/venusflytrap.jpg svn_mime_002dtype=application%2Foctet-stream
-dependencies/llvm/docs/tutorial/JITTutorial2-1.png svn_mime_002dtype=application%2Foctet-stream
-dependencies/llvm/docs/tutorial/LangImpl5-cfg.png svn_mime_002dtype=application%2Foctet-stream
-dependencies/llvm/test/Archive/MacOSX.toc svn_mime_002dtype=application%2Foctet-stream
-dependencies/llvm/test/Archive/very_long_bytecode_file_name.bc svn_mime_002dtype=application%2Foctet-stream
-dependencies/llvm/test/Bitcode/AutoUpgradeIntrinsics.ll.bc svn_mime_002dtype=application%2Foctet-stream
-dependencies/llvm/test/Bitcode/sse2_loadl_pd.ll.bc svn_mime_002dtype=application%2Foctet-stream
-dependencies/llvm/test/Bitcode/sse2_movl_dq.ll.bc svn_mime_002dtype=application%2Foctet-stream
-dependencies/llvm/test/Bitcode/sse2_movs_d.ll.bc svn_mime_002dtype=application%2Foctet-stream
-dependencies/llvm/test/Bitcode/sse2_punpck_qdq.ll.bc svn_mime_002dtype=application%2Foctet-stream
-dependencies/llvm/test/Bitcode/sse2_shuf_pd.ll.bc svn_mime_002dtype=application%2Foctet-stream
-dependencies/llvm/test/Bitcode/sse2_unpck_pd.ll.bc svn_mime_002dtype=application%2Foctet-stream
 dependencies/volpack-1.0c7/doc/vp_userguide.pdf svn_mime_002dtype=application%2Foctet-stream
 dependencies/volpack-1.0c7/examples/.libs/classifyvolume svn_mime_002dtype=application%2Foctet-stream
 dependencies/volpack-1.0c7/examples/.libs/makeoctree svn_mime_002dtype=application%2Foctet-stream
