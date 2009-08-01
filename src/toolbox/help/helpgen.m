@@ -11,7 +11,7 @@ function helpgen(source_path,test_only)
   %  rmdir([source_path,'/help'],'s');
   %  rmdir([source_path,'/toolbox'],'s');
   rmdir([source_path,'/help/tmp']);
-  
+
   mkdir([source_path,'/help/html']);
   mkdir([source_path,'/help/tmp']);
   mkdir([source_path,'/help/latex']);
