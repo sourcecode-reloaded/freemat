@@ -6,22 +6,6 @@
 %     str = blanks(n)
 % 
 % Create a string str containing n blank charaters.
-% BLANKS BLANKS Create a blank string
-% 
-% Usage
-% 
-% 
-%     str = blanks(n)
-% 
-% Create a string str containing n blank charaters.
-% BLANKS BLANKS Create a blank string
-% 
-% Usage
-% 
-% 
-%     str = blanks(n)
-% 
-% Create a string str containing n blank charaters.
 
 function str = blanks(n)
   if ~isscalar(n)

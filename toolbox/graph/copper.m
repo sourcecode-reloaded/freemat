@@ -6,22 +6,6 @@
 % 
 %    y = copper
 % 
-% COPPER COPPER Copper Colormap
-% 
-% Usage
-% 
-% Returns a copper colormap.  The syntax for its use is
-% 
-%    y = copper
-% 
-% COPPER COPPER Copper Colormap
-% 
-% Usage
-% 
-% Returns a copper colormap.  The syntax for its use is
-% 
-%    y = copper
-% 
 
 % Copyright (c) 2002-2006 Samit Basu
 % Licensed under the GPL
