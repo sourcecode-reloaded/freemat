@@ -10,6 +10,7 @@ function helpgen(source_path,test_only)
   % These are not SVN friendly
   %  rmdir([source_path,'/help'],'s');
   %  rmdir([source_path,'/toolbox'],'s');
+  rmdir([source_path,'/help/tmp']);
   
   mkdir([source_path,'/help/html']);
   mkdir([source_path,'/help/tmp']);
@@ -30,7 +31,14 @@ function helpgen(source_path,test_only)
   end
 
   file_list = {};
-  file_list = [file_list;helpgen_rdir([source_path,'/libs'])];
+  file_list = [file_list;helpgen_rdir([source_path,'/libs/libXP'])];
+  file_list = [file_list;helpgen_rdir([source_path,'/libs/libCore'])];
+  file_list = [file_list;helpgen_rdir([source_path,'/libs/libFN'])];
+  file_list = [file_list;helpgen_rdir([source_path,'/libs/libFreeMat'])];
+  file_list = [file_list;helpgen_rdir([source_path,'/libs/libGraphics'])];
+  file_list = [file_list;helpgen_rdir([source_path,'/libs/libMatC'])];
+  file_list = [file_list;helpgen_rdir([source_path,'/libs/libMath'])];
+  file_list = [file_list;helpgen_rdir([source_path,'/libs/libMex'])];
   file_list = [file_list;helpgen_rdir([source_path,'/src'])];
 
   cd([sourcepath,'/help/tmp']);
