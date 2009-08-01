@@ -8,33 +8,3 @@ Set a breakpoint.  The syntax for this is:
 
 where funcname is the name of the function where we want
 to set the breakpoint, and linenumber is the line number.
-DBSTOP DBSTOP
-
-Usage
-
-Set a breakpoint.  The syntax for this is:
-
-  dbstop(funcname,linenumber)
-
-where funcname is the name of the function where we want
-to set the breakpoint, and linenumber is the line number.
-DBSTOP DBSTOP
-
-Usage
-
-Set a breakpoint.  The syntax for this is:
-
-  dbstop(funcname,linenumber)
-
-where funcname is the name of the function where we want
-to set the breakpoint, and linenumber is the line number.
-DBSTOP DBSTOP
-
-Usage
-
-Set a breakpoint.  The syntax for this is:
-
-  dbstop(funcname,linenumber)
-
-where funcname is the name of the function where we want
-to set the breakpoint, and linenumber is the line number.
