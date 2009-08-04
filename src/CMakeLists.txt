@@ -5,7 +5,6 @@ QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/FuncMode.hpp ${CMAKE_CURRENT_SOURC
 QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/MainApp.hpp ${CMAKE_CURRENT_SOURCE_DIR}/MainApp.moc.cpp )
 QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/Terminal.hpp ${CMAKE_CURRENT_SOURCE_DIR}/Terminal.moc.cpp )
 QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/DumbTerminal.hpp ${CMAKE_CURRENT_SOURCE_DIR}/DumbTerminal.moc.cpp )
-QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/DebugStream.hpp ${CMAKE_CURRENT_SOURCE_DIR}/DebugStream.moc.cpp )
 
 QT4_ADD_RESOURCES( FreeMat_qrc ${CMAKE_CURRENT_SOURCE_DIR}/FreeMat.qrc  )
 
@@ -21,8 +20,6 @@ main.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/DumbTerminal.moc.cpp
 DumbTerminal.cpp 
 ${CMAKE_CURRENT_SOURCE_DIR}/Terminal.moc.cpp
-DebugStream.cpp
-${CMAKE_CURRENT_SOURCE_DIR}/DebugStream.moc.cpp
 Terminal.cpp 
 ${FreeMat_qrc}
 freemat.rc 

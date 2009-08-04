@@ -47,7 +47,7 @@
 #include "AnonFunc.hpp"
 #include "Stats.hpp"
 #include <QtGui>
-#include "DebugStream.h"
+#include "DebugStream.hpp"
 
 #ifdef WIN32
 #define PATHSEP ";"
@@ -413,13 +413,13 @@ ArrayVector Interpreter::doFunction(FuncPtr f, ArrayVector& m,
     if (!gfxErrorOccured && gfx_buffer.empty()) {
       gfxBufferNotEmpty.wait(&mutex);
     } else {
-      dbout << "Wha??\r";
+      dbout << "Wha??\n";
     }
     if (gfxErrorOccured) {
       throw Exception(gfxError);
     }
     if (gfx_buffer.empty())
-      dbout << "Warning! graphics empty on return\r";
+      dbout << "Warning! graphics empty on return\n";
     ArrayVector ret(gfx_buffer.front());
     gfx_buffer.erase(gfx_buffer.begin());
     context->popScope();
@@ -2038,9 +2038,13 @@ static bool compileJITBlock(Interpreter *interp, const Tree & t, JITInfo & ref) 
     success = true;
     ref.setJITState(JITInfo::SUCCEEDED);
     ref.setJITFunction(cg);
-    dbout << "Block JIT compiled";
+    dbout << "Block JIT compiled at line " 
+	  << LineNumber(interp->getContext()->scopeTokenID())
+	  << " of " << interp->getContext()->scopeName() << "\n";
   } catch (Exception &e) {
-    dbout << "JIT compile failed:" << e.msg();
+    dbout << "JIT compile failed:" << e.msg() << " at line" 
+      	  << LineNumber(interp->getContext()->scopeTokenID())
+	  << " of " << interp->getContext()->scopeName() << "\n";
     delete cg;
     success = false;
     ref.setJITState(JITInfo::FAILED);
@@ -2054,7 +2058,7 @@ static bool prepJITBlock(JITInfo & t) {
     t.JITFunction()->prep();
     success = true;
   } catch (Exception &e) {
-    dbout << "JIT Prep failed: " << e.msg();
+    dbout << "JIT Prep failed: " << e.msg() << "\n";
     success = false;
   }
   return success;
