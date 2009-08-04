@@ -5,7 +5,6 @@
 #include <ctype.h>
 #include "Exception.hpp"
 #include <algorithm>
-#include "DebugStream.hpp"
 #include <QMutexLocker>
 #include <QMutex>
 
@@ -312,10 +311,6 @@ void Scanner::fetchBlob() {
 const Token& Scanner::next() {
   while (!m_tokValid) {
     fetch();
-    //     if (m_tokValid && m_debugFlag)
-    //    dbout << m_tok;
-    //     if (m_tokValid)
-    //       dbout << TokenToString(m_tok);
     if ((m_ptr < m_strlen) && (current() == '\n'))
       m_linenumber++;
   }

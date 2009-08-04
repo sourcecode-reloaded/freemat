@@ -229,6 +229,9 @@ void ApplicationWindow::createToolBox() {
   m_variables = new VariablesTool(this);
   addDockWidget(Qt::LeftDockWidgetArea, m_variables);
   toolsMenu->addAction(m_variables->toggleViewAction());
+  m_debug = new DebugWin(this);
+  addDockWidget(Qt::LeftDockWidgetArea, m_debug);
+  toolsMenu->addAction(m_debug->toggleViewAction());
 }
 
 void ApplicationWindow::initializeTools() {
@@ -255,6 +258,7 @@ void ApplicationWindow::closeEvent(QCloseEvent* ce) {
   delete m_filetool;
   delete m_history;
   delete m_variables;
+  delete m_debug;
   m_keys->WriteHistory();
   ce->accept();
   qApp->exit(0);

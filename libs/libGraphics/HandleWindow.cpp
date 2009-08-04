@@ -26,7 +26,6 @@
 #include <QtGui>
 #include <math.h>
 #include "IEEEFP.hpp"
-#include "DebugStream.hpp"
 
 class BaseFigureQt : public QWidget {
   HandleFigure *hfig;
@@ -41,16 +40,12 @@ public:
 
 QSize BaseFigureQt::sizeHint() const {
   HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
-  dbout << "Size hint " << (htv->Data()[0]) << "," << (htv->Data()[1]) << "\r\n";
   return QSize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
   //  return QSize(10000,10000);
 }
 
 void BaseFigureQt::resizeEvent(QResizeEvent *e) {
   QWidget::resizeEvent(e);
-  //  dbout << "resize " << width() << " " << height() << "\r\n";
-  //   backStore = QPixmap(qMax(8,width()),
-  // 		      qMax(8,height()));
   hfig->Resize(qMax(8,e->size().width()),qMax(8,e->size().height()));
 }
 
@@ -125,9 +120,7 @@ void BaseFigureGL::resizeGL(int width, int height) {
 
 QSize BaseFigureGL::sizeHint() const {
     HPTwoVector *htv = (HPTwoVector*) hfig->LookupProperty("figsize");
-    //dbout << "Size hint " << (htv->Data()[0]) << "," << (htv->Data()[1]) << "\r\n";
     return QSize((int)(htv->Data()[0]),(int)(htv->Data()[1]));
-   //  return QSize(10000,10000);
   }
 
 #if 0
@@ -166,7 +159,6 @@ void HandleWindow::closeEvent(QCloseEvent* e) {
 bool HandleWindow::event(QEvent* e) {
   if (e->type() == QEvent::WindowActivate) {
     NotifyFigureActive(handle);
-    //    dbout << "focus event " << handle << "\n";
   }
   return QWidget::event(e);
 }
@@ -349,16 +341,13 @@ void HandleWindow::GetClick(int &x, int &y) {
 
 
 HandleAxis* GetContainingAxis(HandleFigure *fig, int x, int y) {
-  //  dbout << "Click " << x << "," << y;
   HPHandles *cp = (HPHandles*) fig->LookupProperty("children");
   QVector<unsigned> children(cp->Data());
-  //  dbout << "Click " << x << "," << y;
   for (int i=0;i<children.size();i++) {
     HandleObject* hp = LookupHandleObject(children[i]);
     if (hp->IsType("axes")) {
       // Get the axis extents
       QVector<double> position(((HandleAxis*) hp)->GetClientAreaInPixels());
-      //      dbout << "Axis: " << position[0] << "," << position[1] << "," << position[2] << "," << position[3];
       if ((x >= position[0]) && (x < (position[0]+position[2])) &&
       	  (y >= position[1]) && (y < (position[1]+position[3])))
       	return (HandleAxis*)hp;
@@ -589,8 +578,6 @@ void HandleWindow::mouseReleaseEvent(QMouseEvent * e) {
 	    double xmaxfrac = (remapX(rect.x()+rect.width()) - x)/width;
 	    double yminfrac = (remapY(rect.y()+rect.height()) - y)/height;
 	    double ymaxfrac = (remapY(rect.y()) - y)/height;
-	    // 	    dbout << "xrange " << xminfrac << "," << xmaxfrac;
-	    //	    dbout << "yrange " << yminfrac << "," << ymaxfrac;
 	    xminfrac = qMax(0.,qMin(1.,xminfrac));
 	    xmaxfrac = qMax(0.,qMin(1.,xmaxfrac));
 	    yminfrac = qMax(0.,qMin(1.,yminfrac));

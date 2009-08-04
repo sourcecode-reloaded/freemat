@@ -135,8 +135,6 @@ void MainApp::SetupGUICase() {
   QObject::connect(this,SIGNAL(Initialize()),m_win,SLOT(init()));
   m_term = gui;
   QObject::connect(m_term,SIGNAL(showFileAtLine(QString,int)),this,SLOT(showFileAtLine(QString,int)));
-  if( debugwin )
-      DbgWin();
 }
 
 void createEditor(Interpreter* eval){
@@ -1221,16 +1219,4 @@ int MainApp::Run() {
   return 0;
 }
 
-void MainApp::DbgWin(){
-    DebugWin* dbwin = new DebugWin();
-    dbwin->show();
-
-  //setWindowIcon(QPixmap(":/images/freemat_small_mod_64.png"));
-  //setWindowTitle(QString("Debug Output");
-  //createActions();
-  //createMenus();
-  //createToolBars();
-  //createStatusBar();
-  //readSettings();
-}
 

@@ -63,7 +63,6 @@ public slots:
   void OpenFile();
   void NewFile();
   void HelpWin();
-  void DbgWin();
   void PathTool();
   void Editor();
   void ExecuteLine(QString txt);

@@ -47,6 +47,7 @@
 #include "AnonFunc.hpp"
 #include "Stats.hpp"
 #include <QtGui>
+#include "DebugStream.h"
 
 #ifdef WIN32
 #define PATHSEP ";"
@@ -2037,9 +2038,9 @@ static bool compileJITBlock(Interpreter *interp, const Tree & t, JITInfo & ref) 
     success = true;
     ref.setJITState(JITInfo::SUCCEEDED);
     ref.setJITFunction(cg);
+    dbout << "Block JIT compiled";
   } catch (Exception &e) {
-    //    dbout << e.msg() << "\r\n";
-    //    interp->warningMessage(QString("Can't compile code. Using interpreter. Reason: ")+e.msg());
+    dbout << "JIT compile failed:" << e.msg();
     delete cg;
     success = false;
     ref.setJITState(JITInfo::FAILED);
@@ -2053,8 +2054,7 @@ static bool prepJITBlock(JITInfo & t) {
     t.JITFunction()->prep();
     success = true;
   } catch (Exception &e) {
-    //   dbout << e.msg() << "\r\n";
-    //    t.JITFunction()->eval->warningMessage(QString("Can not compile code. Using interpreter. Reason: ")+e.msg());
+    dbout << "JIT Prep failed: " << e.msg();
     success = false;
   }
   return success;
@@ -4512,7 +4512,6 @@ MFunctionDef* Interpreter::lookupFullPath(QString fname) {
 static int bpList = 1;
 // Add a breakpoint - name is used to track to a full filename
 void Interpreter::addBreakpoint(QString name, int line) {
-  //  dbout << "Add bp " << QString::fromStdQString(name) << " : " << line << "";
   FuncPtr val;
   // Map the name argument to a full file name.
   QString fullFileName;

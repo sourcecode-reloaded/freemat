@@ -428,7 +428,6 @@ bool MFunctionDef::updateCode(Interpreter *m_eval) {
 	  // clutter in the name space, but solves the troublesome
 	  // issue of local functions being flushed by the CD command.
 	  m_eval->getContext()->insertFunction(fp,false);
-	  //	  dbout << "Registering " << QString::fromStdString(fp->name);
 	  RegisterNested(fp->code,m_eval,this);
 	}
 	functionCompiled = true;

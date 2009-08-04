@@ -613,11 +613,9 @@ void QTTerm::updateScrollbarSettings() {
 void QTTerm::paintEvent(QPaintEvent *e) {
   QPainter p(viewport());
   p.setFont(fnt);
-  //  dbout << "Current font: " << p.font().toString();
-//   p.setBackground(qApp->palette().brush(QPalette::Highlight));
-//   p.setPen(qApp->palette().color(QPalette::HighlightedText));
+  //   p.setBackground(qApp->palette().brush(QPalette::Highlight));
+  //   p.setPen(qApp->palette().color(QPalette::HighlightedText));
   int offset = verticalScrollBar()->value();
-  //  dbout << "offset = " << offset;
   for (int i=0;i<m_term_height;i++) 
     if ((i+offset) < buffer.size())
       drawLine(i+offset,&p,i);

@@ -30,17 +30,17 @@
 #include <QTextStream>
 #include "DebugWin.hpp"
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
 #define ENABLEDBSTREAM (true)
-#else
-#define ENABLEDBSTREAM (false)
-#endif
+//#else
+//#define ENABLEDBSTREAM (false)
+//#endif
 
 class DebugStream : public QObject 
 {
     Q_OBJECT
 private:
-    QTextEdit* dbwin;   
+    DebugWin* dbwin;   
     QString stream;
     QTextStream ts;
     bool bEnabled;
@@ -55,9 +55,10 @@ public:
     inline void setDisabled( void ) { bEnabled=false; }
     inline bool isEnabled( void ) { return bEnabled && ENABLEDBSTREAM; }
 
-    void setWin( QTextEdit* _dbwin ) { 
+    void setWin( DebugWin* _dbwin ) { 
 	dbwin = _dbwin; 
-	QObject::connect( this, SIGNAL( SendMessage( const QString& ) ), dbwin, SLOT( insertPlainText( const QString& ) ) );
+	QObject::connect( this, SIGNAL( SendMessage( const QString& ) ), 
+			  dbwin, SLOT( addString( const QString& ) ) );
     };
 
     DebugStream &sync(void);

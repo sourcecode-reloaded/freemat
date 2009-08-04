@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Eugene Ingerman
+ * Copyright (c) 2008, 2009 Eugene Ingerman, Samit Basu
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,33 +16,23 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
-#include <QVBoxLayout>
-#include <QTextDocument>
-#include <QTextCursor>
+#include <QtGui>
 #include "DebugWin.hpp"
 #include "DebugStream.hpp"
 
 DebugStream dbout;
 
-DebugWin::DebugWin()
-{
-  //QDialog* dbg_dialog = new QDialog( m_win );
-  QVBoxLayout* layout = new QVBoxLayout( this );
-  dbwin = new QTextEdit(this);
-  dbwin->setReadOnly(true);
-  layout->addWidget( dbwin );
-
-  //textdoc = new QTextDocument( dbwin );
-  //textcursor = new QTextCursor( textdoc );
-  //dbwin->setDocument( textdoc );
-  dbout.setWin( dbwin );
-
-  QObject::connect( dbwin, SIGNAL( textChanged() ), this, SLOT( updateCursor() ) );
-  this->show();
-//  dbwin->show();
+DebugWin::DebugWin(QWidget *parent) : QDockWidget("Debug",parent) {
+  m_list = new QTextEdit(this);
+  setWidget(m_list);
+  m_popup = new QMenu;
+  m_popup->addAction("Save");
+  m_popup->addAction("Clear");
+  m_popup->addAction("Copy");
+  dbout.setWin(this);
 }
 
-void DebugWin::updateCursor( void )
-{
-    dbwin->ensureCursorVisible();
+void DebugWin::addString(const QString &t) {
+  m_list->append(t);
+  m_list->ensureCursorVisible();
 }

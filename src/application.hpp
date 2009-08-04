@@ -53,6 +53,7 @@ class ApplicationWindow : public QMainWindow {
   FileTool *m_filetool;
   HistoryWidget *m_history;
   VariablesTool *m_variables;
+  DebugWin *m_debug;
   //  ToolDock *m_tool;
   QHttp *m_http;
   QBuffer m_buffer;

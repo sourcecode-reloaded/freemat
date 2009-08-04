@@ -234,7 +234,6 @@ void KeyManager::Redisplay() {
 }
 
 void KeyManager::setTerminalWidth(int w) {
-  //  dbout << "Set terminal width " << w << "\n";
   ncolumn = w; 
 }
 

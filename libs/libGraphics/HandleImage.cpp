@@ -20,7 +20,6 @@
 #include "HandleAxis.hpp"
 #include "HandleFigure.hpp"
 #include <QMatrix>
-#include "DebugStream.hpp" 
 
 HandleImage::HandleImage() {
   ConstructProperties();

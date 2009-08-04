@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Eugene Ingerman
+ * Copyright (c) 2008-2009 Eugene Ingerman, Samit Basu
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,20 +16,30 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
+#ifndef __DebugWin_hpp__
+#define __DebugWin_hpp__
 
-#ifndef __DEBUGWIN_H__
-#define __DEBUGWIN_H__
-
-#include <QDialog>
+#include <QWidget>
 #include <QTextEdit>
+#include <QDockWidget>
 
-class DebugWin : public QDialog {
+class DebugWin : public QDockWidget {
   Q_OBJECT
-  QTextEdit* dbwin;
 public:
-  DebugWin();
-public slots:
-  void updateCursor( void );
+  DebugWin(QWidget *parent);
+  void clear();
+private:
+  QTextEdit *m_list;
+  QMenu *m_popup;
+  //  void readSettings();
+protected:
+  //  void contextMenuEvent(QContextMenuEvent *e);
+  //  void closeEvent(QCloseEvent*);
+protected slots:
+  void addString(const QString &t);
+  //signals:
+  //  void clearDebugWin();
+  //  void writeDebugWin();
 };
 
-#endif /*__DEBUGWIN_H__*/
+#endif
