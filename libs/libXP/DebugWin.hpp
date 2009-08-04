@@ -30,16 +30,8 @@ public:
   void clear();
 private:
   QTextEdit *m_list;
-  QMenu *m_popup;
-  //  void readSettings();
-protected:
-  //  void contextMenuEvent(QContextMenuEvent *e);
-  //  void closeEvent(QCloseEvent*);
 protected slots:
   void addString(const QString &t);
-  //signals:
-  //  void clearDebugWin();
-  //  void writeDebugWin();
 };
 
 #endif

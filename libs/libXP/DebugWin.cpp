@@ -24,11 +24,9 @@ DebugStream dbout;
 
 DebugWin::DebugWin(QWidget *parent) : QDockWidget("Debug",parent) {
   m_list = new QTextEdit(this);
+  m_list->setReadOnly(true);
   setWidget(m_list);
-  m_popup = new QMenu;
-  m_popup->addAction("Save");
-  m_popup->addAction("Clear");
-  m_popup->addAction("Copy");
+  setObjectName("Debug");
   dbout.setWin(this);
 }
 
