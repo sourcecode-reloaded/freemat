@@ -229,7 +229,7 @@
 //function A = jit_test022
 //  A = 1:1000000;
 //  B = 0;
-//  for i=1:numel(A);
+//  for i=1:1000000;
 //    B = B + A(i);
 //  end
 //  A = B;
@@ -237,7 +237,7 @@
 //@{ jit_test023.m
 //function A = jit_test023
 //  A = zeros(1,100000);
-//  for i=1:numel(A);
+//  for i=1:100000;
 //    A(i) = i/5.0;
 //  end
 //@}
