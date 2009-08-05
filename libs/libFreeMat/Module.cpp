@@ -371,7 +371,7 @@ static inline bool issep(QChar t) {
 
 ArrayVector ImportFunction(int nargout, const ArrayVector& arg, 
 			   Interpreter* eval)  {
-#ifdef HAVE_AVCALL
+#ifdef HAVE_LLVM
   QString libfile;
   QString symbolname;
   QString funcname;
@@ -454,13 +454,14 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
 						      types,
 						      arguments,
 						      checks,
-						      rettype);
+						      rettype,
+						      funcname);
   fptr->name = funcname;
   eval->getContext()->insertFunction(fptr,false);
   DynamicFunctions.push_back(fptr->name);
   return ArrayVector();
 #else
-  throw Exception("Support for the import command requires that the avcall library be installed.  FreeMat was compiled without this library being available, and hence imported functions are unavailable.  To enable imported commands, please install avcall and recompile FreeMat.");
+  throw Exception("Support for the import command requires that the LLVM library be installed.  FreeMat was compiled without this library being available, and hence imported functions are unavailable.  To enable imported commands, please install llvm and recompile FreeMat.");
 #endif
 }
   

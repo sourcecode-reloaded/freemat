@@ -188,12 +188,28 @@ JITType JIT::MapTypeCode(QChar c) {
     return VoidType();
   case 'b':
     return BoolType();
+  case 'c':
+    return IntegerType::get(8);
+  case 's':
+    return IntegerType::get(16);
+  case 'i':
+    return IntegerType::get(32);
+  case 'l':
+    return IntegerType::get(64);
   case 'f':
     return FloatType();
   case 'd':
     return DoubleType();
   case 'B':
     return PointerType(BoolType());
+  case 'C':
+    return PointerType(IntegerType::get(8));
+  case 'S':
+    return PointerType(IntegerType::get(16));
+  case 'I':
+    return PointerType(IntegerType::get(32));
+  case 'L':
+    return PointerType(IntegerType::get(64));
   case 'F':
     return PointerType(FloatType());
   case 'D':
@@ -287,7 +303,6 @@ JITScalar JIT::Alloc(JITType T, QString name) {
 }
 
 JITScalar JIT::String(QString text) {
-  dbout << "Allocate string :" << text << ":\n";
   ArrayType* ty = ArrayType::get(IntegerType::get(8),text.size()+1);
   GlobalVariable* gv = new GlobalVariable(ty,true,
 					  GlobalValue::InternalLinkage,0,".str",m);
@@ -322,6 +337,10 @@ JITBlock JIT::CurrentBlock() {
 }
 
 JITScalar JIT::Call(JITFunction F, std::vector<JITScalar> args) {
+  return CallInst::Create(F,args.begin(),args.end(),"",ip);
+}
+
+JITScalar JIT::Call(JITScalar F, std::vector<JITScalar> args) {
   return CallInst::Create(F,args.begin(),args.end(),"",ip);
 }
 
@@ -441,6 +460,18 @@ JITGeneric JIT::Invoke(JITFunction f, JITGeneric arg) {
   std::vector<JITGeneric> args;
   args.push_back(arg);
   return ee->runFunction(f,args);
+}
+
+JITGeneric JIT::Invoke(JITFunction f, std::vector<JITGeneric> arg) {
+  return ee->runFunction(f,arg);
+}
+
+static JIT* g_theJITPointer = NULL;
+
+JIT* JIT::Instance() {
+  if (!g_theJITPointer) 
+    g_theJITPointer = new JIT;
+  return g_theJITPointer;
 }
 
 #endif

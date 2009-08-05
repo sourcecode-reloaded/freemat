@@ -55,9 +55,10 @@ private:
   JITOptimizer opt;
   bool initialized;
   JITScalar JITBinOp(llvm::Instruction::BinaryOps op, JITScalar A, JITScalar B);
-public:
   JIT();
   ~JIT();
+public:
+  static JIT* Instance();
   // Optimize the function -- cannot be modified once this is called
   void            OptimizeCode();
   JITFunctionType FunctionType(JITType rettype, std::vector<JITType> args);
@@ -132,6 +133,7 @@ public:
   void SetCurrentBlock(JITBlock B);
   JITBlock CurrentBlock();
   JITScalar Call(JITFunction, std::vector<JITScalar> args);
+  JITScalar Call(JITScalar, std::vector<JITScalar> args);
   JITScalar Call(JITFunction, JITScalar arg1);
   JITScalar Call(JITFunction, JITScalar arg1, JITScalar arg2);
   JITScalar Call(JITFunction, JITScalar arg1, JITScalar arg2, JITScalar arg3);
@@ -154,6 +156,7 @@ public:
   void Dump( const QString& fname );
   void Dump( const QString& fname, JITFunction f );
   JITGeneric Invoke(JITFunction f, JITGeneric arg);
+  JITGeneric Invoke(JITFunction f, std::vector<JITGeneric> arg);
 };
 
 #else

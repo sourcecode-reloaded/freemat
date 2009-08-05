@@ -34,10 +34,6 @@
 #include "Algorithms.hpp"
 #include "FuncPtr.hpp"
 
-#if HAVE_AVCALL
-#include "avcall.h"
-#endif
-
 #define MSGBUFLEN 2048
 
 QMutex functiondefmutex;
@@ -555,25 +551,96 @@ bool FunctionDef::referenced() {
 FunctionDef::~FunctionDef() {
 }
 
+static QChar MapImportTypeToJITCode(QString imptype) {
+  if (imptype == "uint8" || imptype == "int8") return QChar('c');
+  if (imptype == "uint16" || imptype == "int16") return QChar('s');
+  if (imptype == "uint32" || imptype == "int32") return QChar('i');
+  if (imptype == "uint64" || imptype == "int64") return QChar('l');
+  if (imptype == "string") return QChar('c');
+  if (imptype == "float") return QChar('f');
+  if (imptype == "double") return QChar('d');
+  if (imptype == "void") return QChar('v');
+  throw Exception("unrecognized type " + imptype + " in imported function setup");
+}
+
+bool ImportedFunctionDef::isPassedAsPointer(int arg) {
+  return (arguments[arg].startsWith("&") || (types[arg] == "string")
+	  || sizeCheckExpressions[arg].valid());
+}
+
+static int importCounter = 0;
 
 ImportedFunctionDef::ImportedFunctionDef(GenericFuncPointer address_arg,
 					 StringVector types_arg,
 					 StringVector arguments_arg,
 					 TreeList sizeChecks,
-					 QString retType_arg) {
+					 QString retType_arg,
+					 QString name) {
   address = address_arg;
   types = types_arg;
   arguments = arguments_arg;
   sizeCheckExpressions = sizeChecks;
   retType = retType_arg;
-  /*
-   * Set up the cif...
-   */
   argCount = types_arg.size();
   if (retType == "void") 
     retCount = 0;
   else
     retCount = 1;
+#if HAVE_LLVM
+  /*
+   * Build the JIT function that is a stub to the called function.
+   * The stub should be:
+   *  ret_type _genstub_fcn(ptr_to_fun,addr1,addr2,...,addrn)
+   * where addr1 through addrn are the address of the arguments.
+   * The stub function shall internally convert those arguments
+   * that are to be passed by value to value arguments, and then
+   * invoke the function at the given address.  The arguments are
+   * untyped pointers.
+   */
+  JIT* jit = JIT::Instance();  
+  QString jit_ret_code = QString(MapImportTypeToJITCode(retType));
+  /*
+   * Our stub takes N+1 void* arguments, where N is the number of
+   * arguments that the function itself takes, and one extra for
+   * the address of the function.
+   */
+  QString jit_arg_code = QString(types.size()+1,QChar('V'));
+  fcnStub = jit->DefineFunction(jit->FunctionType(jit_ret_code,jit_arg_code),QString("genstub%1").arg(importCounter++));
+  jit->SetCurrentFunction(fcnStub);
+  JITBlock main = jit->NewBlock("main_body");
+  /*						
+   * Build the signature for the actual function -- 
+   * the stub uses this to decide which parameters to 
+   * pass by value
+   */
+  QString jit_fcn_sig;
+  for (int i=0;i<types.size();i++) {
+    if (isPassedAsPointer(i))
+      jit_fcn_sig += "V";
+    else
+      jit_fcn_sig += MapImportTypeToJITCode(types[i]);
+  }
+  jit->SetCurrentBlock(main);
+  /*
+   * Loop over the arguments to the function
+   */
+  llvm::Function::arg_iterator args = fcnStub->arg_begin();
+  JITScalar func_addr = args; args++;
+  std::vector<JITScalar> func_args;
+  for (int i=0;i<types.size();i++) {
+    if (isPassedAsPointer(i))
+      func_args.push_back(args);
+    else
+      func_args.push_back(jit->Load(jit->ToType(args,jit->PointerType(jit->MapTypeCode(MapImportTypeToJITCode(types[i]))))));
+    args++;
+  }
+  if (retType != "void")
+    jit->Return(jit->Call(jit->ToType(func_addr,jit->PointerType(jit->FunctionType(jit_ret_code,jit_fcn_sig))),func_args));
+  else {
+    jit->Call(jit->ToType(func_addr,jit->PointerType(jit->FunctionType(jit_ret_code,jit_fcn_sig))),func_args);
+    jit->Return();
+  }
+#endif
 }
 
 ImportedFunctionDef::~ImportedFunctionDef() {
@@ -581,7 +648,7 @@ ImportedFunctionDef::~ImportedFunctionDef() {
 
 void ImportedFunctionDef::printMe(Interpreter *) {
 }
-#if HAVE_AVCALL
+
 static DataClass mapTypeNameToClass(QString name) {
   if (name == "uint8") return UInt8;
   if (name == "int8") return Int8;
@@ -597,13 +664,23 @@ static DataClass mapTypeNameToClass(QString name) {
   if (name == "void") return Int32;
   throw Exception("unrecognized type " + name + " in imported function setup");
 }
-#endif
 
+static QString TrimAmpersand(QString name) {
+  if (!name.startsWith("&")) return name;
+  name.remove(0,1);
+  return name;
+}
+/**
+ * Note: Pass-by-reference only really matters for strings, and that
+ * is only because for strings, we convert them from Unicode to C strings
+ * when passing down, and only bother converting them back if they
+ * were passed by reference.
+ */
 ArrayVector ImportedFunctionDef::evaluateFunc(Interpreter *walker,
 					      ArrayVector& inputs,
 					      int nargout,
 					      VariableTable*) {
-#if HAVE_AVCALL
+#ifdef HAVE_LLVM
   /**
    * To actually evaluate the function, we have to process each of
    * the arguments and get them into the right form.
@@ -612,14 +689,14 @@ ArrayVector ImportedFunctionDef::evaluateFunc(Interpreter *walker,
   for (i=0;i<inputs.size();i++)
     inputs[i] = inputs[i].asDenseArray().toClass(mapTypeNameToClass(types[i]));
   /**
-   * Next, we count how many of the inputs are to be passed by
-   * reference.
+   * Strings are converted to C strings and stored here
    */
-  int passByReference = 0;
-  for (int j=0;j<inputs.size();j++)
-    if ((arguments[j][0] == '&') || (types[j] == "string") ||
-	(sizeCheckExpressions[j].valid()))
-      passByReference++;
+  std::vector<char*> string_store;
+  for (i=0;i<inputs.size();i++)
+    if (types[i] == "string")
+      string_store.push_back(strdup(qPrintable(inputs[i].asString())));
+    else
+      string_store.push_back(NULL);
   /**
    * Next, we check to see if any bounds-checking expressions are
    * active.
@@ -637,13 +714,7 @@ ArrayVector ImportedFunctionDef::evaluateFunc(Interpreter *walker,
     Context* context = walker->getContext();
     context->pushScope("bounds_check",name);
     for (i=0;i<inputs.size();i++) {
-      if (arguments[i][0] != '&') {
-	context->insertVariableLocally(arguments[i],inputs[i]);
-      } else {
-	QString nme(arguments[i]);
-	nme.remove(0,1);
-	context->insertVariableLocally(nme,inputs[i]);
-      }
+      context->insertVariableLocally(TrimAmpersand(arguments[i]),inputs[i]);
     }
     /*
      * Next, evaluate each size check expression
@@ -654,7 +725,7 @@ ArrayVector ImportedFunctionDef::evaluateFunc(Interpreter *walker,
 	ret = ret.toClass(Int32);
 	int len = ret.asInteger();
 	if (len != (int)(inputs[i].length())) {
-	  throw Exception("array input " + arguments[i] + 
+	  throw Exception("array input " + TrimAmpersand(arguments[i]) + 
 			  " length different from computed bounds" + 
 			  " check length");
 	}
@@ -662,133 +733,46 @@ ArrayVector ImportedFunctionDef::evaluateFunc(Interpreter *walker,
     }
     context->popScope();
   }
-      
-  /**
-   * Allocate an array of pointers to store for variables passed
-   * by reference.
-   */
-  MemBlock<void*> retBlock(passByReference);
-  void **refPointers = &retBlock;
-  /** 
-   * Allocate an array of value pointers...
-   */
-  MemBlock<void*> valBlock(inputs.size());
-  void **values = &valBlock;
-  int ptr = 0;
-  for (i=0;i<inputs.size();i++) {
-    if (types[i] != "string") {
-      if ((arguments[i][0] == '&') || (sizeCheckExpressions[i].valid())) {
-	refPointers[ptr] = inputs[i].getVoidPointer();
-	values[i] = &refPointers[ptr];
-	ptr++;
-      } else {
-	values[i] = inputs[i].getVoidPointer();
-      }
-    } else {
-      refPointers[ptr] = strdup(qPrintable(inputs[i].asString()));
-      values[i] = &refPointers[ptr];
-      ptr++;
-    }
-  }
-
-
-  Array retArray;
-  // The argument list object
-  av_alist alist;
-  // Holders for the return values
-  uint8 ret_uint8;
-  int8 ret_int8;
-  uint16 ret_uint16;
-  int16 ret_int16;
-  uint32 ret_uint32;
-  int32 ret_int32;
-  float ret_float;
-  double ret_double;
-
-  // First pass - based on the return type, call the right version of av_start_*
-  if (retType == "uint8") {
-    av_start_uchar(alist,address,&ret_uint8);
-  } else if (retType == "int8") {      
-    av_start_schar(alist,address,&ret_int8);
-  } else if (retType == "uint16") {
-    av_start_ushort(alist,address,&ret_uint16);
-  } else if (retType == "int16") {
-    av_start_short(alist,address,&ret_int16);
-  } else if (retType == "uint32") {
-    av_start_uint(alist,address,&ret_uint32);
-  } else if (retType == "int32") {
-    av_start_int(alist,address,&ret_int32);
-  } else if (retType == "float") {
-    av_start_float(alist,address,&ret_float);
-  } else if (retType == "double") {
-    av_start_double(alist,address,&ret_double);
-  } else if (retType == "void") {
-    av_start_void(alist,address);
-  } else
-    throw Exception("Unsupported return type " + retType + " in imported function call");
-    
-  // Second pass - Loop through the arguments
+  JIT *jit = JIT::Instance();
+  std::vector<JITGeneric> alist;
+  alist.push_back(JITGeneric((void*)address));
   for (i=0;i<types.size();i++) {
-    if (arguments[i][0] == '&' || types[i] == "string" ||
-	sizeCheckExpressions[i].valid())
-      av_ptr(alist,void*,*((void**)values[i]));
-    else {
-      if (types[i] == "uint8")
-	av_uchar(alist,*((uint8*)values[i]));
-      else if (types[i] == "int8")
-	av_char(alist,*((int8*)values[i]));
-      else if (types[i] == "uint16")
-	av_ushort(alist,*((uint16*)values[i]));
-      else if (types[i] == "int16")
-	av_short(alist,*((int16*)values[i]));
-      else if (types[i] == "uint32")
-	av_uint(alist,*((uint32*)values[i]));
-      else if (types[i] == "int32")
-	av_int(alist,*((int32*)values[i]));
-      else if (types[i] == "float")
-	av_float(alist,*((float*)values[i]));
-      else if (types[i] == "double")
-	av_double(alist,*((double*)values[i]));
-    }
+    if (types[i] != "string")
+      alist.push_back(JITGeneric(inputs[i].getVoidPointer()));
+    else
+      alist.push_back(JITGeneric((void*)(string_store[i])));
   }
-
-  // Call the function
-  av_call(alist);
-
-  // Extract the return value
+  JITGeneric retval = jit->Invoke(fcnStub,alist);
+  Array retArray;
   if (retType == "uint8") {
-    retArray = Array(ret_uint8);
+    retArray = Array(uint8(retval.IntVal.getZExtValue()));
   } else if (retType == "int8") {
-    retArray = Array(ret_int8);
+    retArray = Array(int8(retval.IntVal.getZExtValue()));
   } else if (retType == "uint16") {
-    retArray = Array(ret_uint16);
+    retArray = Array(uint16(retval.IntVal.getZExtValue()));
   } else if (retType == "int16") {
-    retArray = Array(ret_int16);
+    retArray = Array(int16(retval.IntVal.getZExtValue()));
   } else if (retType== "uint32") {
-    retArray = Array(ret_uint32);
+    retArray = Array(uint32(retval.IntVal.getZExtValue()));
   } else if (retType == "int32") {
-    retArray = Array(ret_int32);
+    retArray = Array(int32(retval.IntVal.getZExtValue()));
   } else if (retType == "float") {
-    retArray = Array(ret_float);
+    retArray = Array(float(retval.FloatVal));
   } else if (retType == "double") {
-    retArray = Array(ret_double);
-  } else {
+    retArray = Array(double(retval.DoubleVal));
+  } else
     retArray = EmptyConstructor();
-  }
-    
   // Strings that were passed by reference have to be
   // special-cased
-  ptr = 0;
   for (i=0;i<inputs.size();i++) {
-    if ((arguments[i][0] == '&') || (types[i] == "string")) {
-      if ((types[i] == "string") && (arguments[i][0] == '&'))
-	inputs[i] = Array(QString((char*) refPointers[ptr]));
-      ptr++;
-    }
+    if (arguments[i].startsWith("&") && (types[i] == "string"))
+      inputs[i] = Array(QString(string_store[i]));
   }
+  for (i=0;i<inputs.size();i++)
+    if (string_store[i]) free(string_store[i]);
   return ArrayVector(retArray);
 #else
-  throw Exception("Support for the import command requires that the avcall library be installed.  FreeMat was compiled without this library being available, and hence imported functions are unavailable. To enable imported commands, please install avcall and recompile FreeMat.");
+  throw Exception("Support for the import command requires that the LLVM library be installed.  FreeMat was compiled without this library being available, and hence imported functions are unavailable. To enable imported commands, please install LLVM and recompile FreeMat.");
 #endif
 }
 

@@ -5257,22 +5257,12 @@ Interpreter::Interpreter(Context* aContext) {
   m_capture = "";
   m_profile = false;
   m_quietlevel = 0;
-  m_jit = NULL;
   context->pushScope("base","base",false);
 }
 
-JIT* Interpreter::JITPointer() {
-  if (m_jit)
-    return m_jit;
-  else {
-    m_jit = new JIT;
-    return m_jit;
-  }
-}
 
 Interpreter::~Interpreter() {
   delete context;
-  if (m_jit) delete m_jit;
 }
 
 

@@ -497,10 +497,6 @@ public:
   inline bool JITControl() {return jitcontrol;}
   inline void setJITControl(bool a) {jitcontrol = a;}
   /**
-   * Get the JIT pointer
-   */
-  JIT* JITPointer();
-  /**
    * Set the print limit (number of element printed prior to truncation).
    */
   void setPrintLimit(int);

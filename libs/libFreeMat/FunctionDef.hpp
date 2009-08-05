@@ -27,6 +27,7 @@
 #include <QSharedData>
 #include <QDateTime>
 #include "Scope.hpp"
+#include "JIT.hpp"
 
 using namespace std;
 
@@ -370,6 +371,12 @@ public:
    * The return type of the function
    */
   QString retType;
+#ifdef HAVE_LLVM
+  /**
+   * The stub function that does the foreign function call work.
+   */
+  JITFunction fcnStub;
+#endif
   /**
    * Default constructor
    */
@@ -377,7 +384,8 @@ public:
 		      StringVector types_arg,
 		      StringVector arguments_arg,
 		      TreeList sizeChecks,
-		      QString retType_arg);
+		      QString retType_arg,
+		      QString name);
   /**
    * Default destructor
    */
@@ -403,6 +411,10 @@ public:
    * Evaluate the function and return the values.
    */
   virtual ArrayVector evaluateFunc(Interpreter *, ArrayVector& , int, VariableTable *);    
+  /**
+   * Helper function -- is the ith argument passed as a pointer
+   */
+  bool isPassedAsPointer(int arg);
 };
 
 typedef void (*mexFuncPtr)(int, mxArray**, int, const mxArray**);

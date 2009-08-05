@@ -167,7 +167,7 @@ SymbolInfo* JITFunc::add_argument_scalar(QString name, JITScalar val, bool overr
 }
 
 JITFunc::JITFunc(Interpreter *p_eval) {
-  jit = p_eval->JITPointer();
+  jit = JIT::Instance();
   eval = p_eval;
 }
 

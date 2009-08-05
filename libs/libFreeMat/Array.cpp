@@ -778,8 +778,14 @@ void Array::addField(QString name) {
     structPtr().insert(name,BasicArray<Array>());
 }
 
-#define MacroGetVoidPointer(ctype,cls) \
-  case cls: return (void*)(real<ctype>().data());
+#define MacroGetVoidPointer(ctype,cls)					\
+  case cls:								\
+  if (m_type.Scalar == 1)						\
+    return (void*)(&(m_real.cls));					\
+  else if (m_type.Sparse == 1)						\
+    throw Exception("getVoidPointer not supported for sparse arrays");	\
+  else									\
+    return (void*)(real<ctype>().data());
 
 void* Array::getVoidPointer() {
   switch (dataClass()) {
@@ -791,8 +797,14 @@ void* Array::getVoidPointer() {
 
 #undef MacroGetVoidPointer
 
-#define MacroGetConstVoidPointer(ctype,cls) \
-  case cls: return (const void*)(constReal<ctype>().constData());
+#define MacroGetConstVoidPointer(ctype,cls)				\
+  case cls:								\
+  if (m_type.Scalar == 1)						\
+    return (const void*)(&(m_real.cls));				\
+  else if (m_type.Sparse == 1)						\
+    throw Exception("getConstVoidPointer not supported for sparse arrays"); \
+  else									\
+    return (const void*)(constReal<ctype>().constData());
 
 const void* Array::getConstVoidPointer() const {
   switch (dataClass()) {
