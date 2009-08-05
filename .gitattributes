@@ -7,7 +7,6 @@ dependencies/bin/Debug/portaudio_x86.lib svn_mime_002dtype=application%2Foctet-s
 dependencies/bin/Debug/portaudio_x86.pdb svn_mime_002dtype=application%2Foctet-stream
 dependencies/bin/Release/portaudio_x86.dll svn_mime_002dtype=application%2Foctet-stream
 dependencies/bin/Release/portaudio_x86.lib svn_mime_002dtype=application%2Foctet-stream
-dependencies/bin/avcall.lib svn_mime_002dtype=application%2Foctet-stream
 dependencies/bin/blas_generic.dll svn_mime_002dtype=application%2Foctet-stream
 dependencies/bin/libfftw3-3.dll svn_mime_002dtype=application%2Foctet-stream
 dependencies/bin/libfftw3-3.exp svn_mime_002dtype=application%2Foctet-stream
