@@ -25,6 +25,7 @@ DebugStream dbout;
 DebugWin::DebugWin(QWidget *parent) : QDockWidget("Debug",parent) {
   m_list = new QTextEdit(this);
   m_list->setReadOnly(true);
+  m_list->setFocusPolicy(Qt::NoFocus);
   setWidget(m_list);
   setObjectName("Debug");
   dbout.setWin(this);

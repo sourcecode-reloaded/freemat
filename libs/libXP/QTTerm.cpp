@@ -42,6 +42,7 @@ QTTerm::QTTerm() {
   m_timer_blink->start(settings.value("console/blinkspeed",1000).toInt());
   fnt = QFont("Courier",10);
   hasSelection = false;
+  setFocusPolicy(Qt::StrongFocus);
 }
 
 int QTTerm::getScrollbackLimit() {
@@ -367,7 +368,8 @@ void QTTerm::mousePressEvent( QMouseEvent *e ) {
     
     selectionStart = qMax(0,verticalScrollBar()->value()*m_term_width + clickcol + clickrow*m_term_width);
     selectionStop = selectionStart;
-  }
+  } else
+    e->ignore();
   viewport()->update();
 }
 
