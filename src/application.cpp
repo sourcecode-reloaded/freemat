@@ -33,6 +33,7 @@
 #include <QDebug>
 #include "PathTool.hpp"
 #include "ToolDock.hpp"
+#include "QStdOutRedirector.hpp"
 
 const int about_linecount = 21;
 const char *about_strings[] = {"Julie Maya & Neil - My Fan Club",
@@ -65,12 +66,6 @@ ApplicationWindow::~ApplicationWindow() {
 }
 
 void ApplicationWindow::createActions() {
-  //  filetoolAct = new QAction("&File Browser",this);
-  //  connect(filetoolAct,SIGNAL(triggered()),this,SLOT(filetool()));
-  //  workAct = new QAction("&Workspace Tool",this);
-  //  connect(workAct,SIGNAL(triggered()),this,SLOT(workspacetool()));
-  //  historyAct = new QAction("Show &History Tool",this);
-  //  connect(historyAct,SIGNAL(triggered()),this,SLOT(history()));
   cleanHistoryAct = new QAction("&Clear History Tool",this);
   connect(cleanHistoryAct,SIGNAL(triggered()),this,SLOT(cleanhistory()));
   editorAct = new QAction(QIcon(":/images/freemat_editor_small_mod_64.png"),"&Editor",this);
@@ -301,6 +296,9 @@ void ApplicationWindow::tclose() {
 void ApplicationWindow::SetGUITerminal(QTTerm* term) {
   m_term = term;
   setCentralWidget(term);
+  QStdOutRedirector *redirector = new QStdOutRedirector;
+  connect(redirector,SIGNAL(sendString(QString)),m_term,SLOT(OutputRawString(QString)));
+  redirector->start();
 }
 
 void ApplicationWindow::clearconsole() {

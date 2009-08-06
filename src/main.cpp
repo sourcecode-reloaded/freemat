@@ -107,7 +107,6 @@ int main(int argc, char *argv[]) {
   //  int noplastique = parseFlagArg(argc,argv,"-noplastique",false);
   int installMode = parseFlagArg(argc,argv,"-i",true);
   int pathMode = parseFlagArg(argc,argv,"-p",true);
-  int debugWindow = parseFlagArg( argc, argv, "-debugwin", false);
 
   signal(SIGINT,sigDoNothing);
   
@@ -138,7 +137,6 @@ int main(int argc, char *argv[]) {
 
   if (scriptMode) nogui = 1;
   m_app = new MainApp;
-  m_app->debugwin = debugWindow;
   if (!nogui)
     m_app->SetupGUICase();
   else if (!scriptMode) 
