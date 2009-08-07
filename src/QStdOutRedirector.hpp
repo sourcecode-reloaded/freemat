@@ -128,8 +128,6 @@ class QStdOutRedirector : public QObject
 	poller = new StdinPoll( fdguistd[0] );
 	poller->start();
 	connect( poller, SIGNAL( sendString(QString) ), this, SIGNAL( sendString( QString ) ) );
-	for(int k=1; k<2000; k++)
-	    printf("blah: %d\n", k);
       }
   }
   
