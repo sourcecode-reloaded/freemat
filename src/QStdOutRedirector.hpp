@@ -15,7 +15,7 @@
 #include <unistd.h>
 #endif
 #include <QTextEdit> 
-#include <QTimer>
+#include <QThread>
 #include "DebugWin.hpp"
 
 #ifdef WIN32
@@ -33,6 +33,51 @@
 #define OBIN O_BINARY
 #define READ read
 #endif
+
+class StdinPoll : public QThread
+{
+    Q_OBJECT
+    int fdstd;
+    bool running;
+
+public:
+
+    StdinPoll( int fd ) : fdstd( fd ), running( false ) {};
+
+    void run( void ){
+	while( 1 ){
+	    if ( !running )
+	    {
+		running = true;
+		int n_out;
+		char buffer[4096];
+		QString str;
+
+
+		n_out = READ(fdstd, buffer, 4096);                
+
+		if( n_out > 1 ) 
+		{            
+		    str.append( QString( buffer ) );            
+		    int con = str.lastIndexOf( '\n' );            
+		    int remv = str.at( con - 1 ) == '\n' ? 1 : 0;            
+
+		    if( con ) 
+		    {
+			str = str.remove( con - remv, str.length() );
+			emit sendString(str);
+		    }        
+		}     
+		running = false;
+	    }
+	}
+	msleep( 100 );
+    }
+
+signals:
+  void sendString(QString);
+};
+
 
 class QStdOutRedirector : public QObject
 {    
@@ -80,50 +125,21 @@ class QStdOutRedirector : public QObject
   {
     if (online)
       {
-	redirTimer = new QTimer;
-	connect(redirTimer, SIGNAL(timeout()), this, SLOT(readOutsToTF()));
-	redirTimer->start(millisecs);    
+	poller = new StdinPoll( fdguistd[0] );
+	poller->start();
+	connect( poller, SIGNAL( sendString(QString) ), this, SIGNAL( sendString( QString ) ) );
+	for(int k=1; k<2000; k++)
+	    printf("blah: %d\n", k);
       }
   }
   
-public slots:
-  
-  void readOutsToTF()    
-  {        
-    if ( !running )
-      {
-	running = true;
-	int n_out;
-	char buffer[4096];
-	QString str;
-        
-	//char buffer[512];        
-	printf("\n");        
-	fflush( stdout );         
-        
-	n_out = READ(fdguistd[0], buffer, 4096);                
-	
-	if( n_out > 1 ) 
-	  {            
-	    str.append( QString( buffer ) );            
-	    int con = str.lastIndexOf( '\n' );            
-	    int remv = str.at( con - 1 ) == '\n' ? 1 : 0;            
-            
-	    if( con ) 
-	      {
-		str = str.remove( con - remv, str.length() );
-		emit sendString(str);
-	      }        
-	  }     
-	running = false;
-      }
-  }
   
 signals:
   void sendString(QString);
 
 private:    
-  QTimer          *redirTimer;
+  StdinPoll  *poller;
+
   bool            online;
   int             fStdOut; 
   int             fdStdOut;    
