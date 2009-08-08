@@ -322,49 +322,12 @@ ENDIF (USE_LLVM)
 #Extra libraries
 IF(NOT MSVC)
 	FIND_LIBRARY(NCURSES_LIBRARY NAMES ncurses DOC "Location of the ncurses library." PATH /mingw/lib)
-	#FIND_LIBRARY(SOCKS_LIBRARY NAMES socks wsock32 DOC "Location of the winsock library." PATH /mingw/lib)
 	SET(EXTRA_LIBRARIES ${NCURSES_LIBRARY}  )  
         #FIND_LIBRARY(G2C_LIBRARY NAMES g2c DOC "Location of Fortran to C (g2c) library" PATHS /mingw/lib)
-ELSE(NOT MSVC)
-	FIND_LIBRARY(SOCKS_LIBRARY NAMES wsock32 ws2_32 DOC "Location of the winsock library." PATH ${LOCAL_PATH})
-        SET(EXTRA_LIBRARIES ${SOCKS_LIBRARY} )  
 ENDIF(NOT MSVC)
-
-
-
-###########################################################################
-# F2C setup
-#IF( MSVC )
-#	FIND_PROGRAM( F2C_PROG NAMES f2c.exe f2c PATHS ${LOCAL_PATH} DOC "Fortran to C translator" )
-#	FIND_LIBRARY( F2C_LIBRARY NAMES vcf2c f2c PATHS ${LOCAL_PATH} DOC "Fortran to C Library" )
-#	FIND_PATH( F2C_INCLUDE_DIR f2c.h PATHS ${LOCAL_PATH} DOC "Path to f2c.h" )
-#	INCLUDE_DIRECTORIES(${F2C_INCLUDE_DIR}) 
-#	SET( EXTRA_LIBRARIES ${EXTRA_LIBRARIES} ${F2C_LIBRARY} )
-#ENDIF( MSVC )
-
-###########################################################################
-# Macro for f2c conversion
-#MACRO( CONVERT_F2C dep C_FILES )
-#	IF( MSVC AND F2C_PROG )
-#		FOREACH( nm ${ARGN} )
-#			GET_FILENAME_COMPONENT(outfile ${nm} NAME_WE)
-#			ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${outfile}.c 
-#			  COMMAND ${F2C_PROG} 
-#			  ARGS -d${CMAKE_CURRENT_BINARY_DIR} -g -c ${nm}
-#			  #MAIN_DEPENDENCY ${dep}
-#			  DEPENDS ${nm}
-#			  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-#			  VERBATIM
-#			) 
-#			MACRO_ADD_FILE_DEPENDENCIES(${nm} ${CMAKE_CURRENT_BINARY_DIR}/${outfile}.c )
-#			SET( ${C_FILES} ${${C_FILES}} ${CMAKE_CURRENT_BINARY_DIR}/${outfile}.c )
-#		ENDFOREACH( nm ${ARGN} )
-#	ENDIF( MSVC AND F2C_PROG )
-#ENDMACRO( CONVERT_F2C dep C_FILES )
 
 INCLUDE_DIRECTORIES( libs/libFreeMat libs/libGraphics 
 libs/libMex libs/libXP libs/libCore libs/libFN libs/libMatC ${QT_LIBRARIES} src)   
-
 
 OPTION(USE_DYNLINK "Link BLAS dynamically" OFF)
 IF( USE_DYNLINK )
@@ -379,7 +342,6 @@ ELSE( USE_DYNLINK )
  ENDIF( NOT MSVC )
 ENDIF( USE_DYNLINK )
 
-
 if( MSVC )
   add_definitions( -D_CRT_SECURE_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS )
   add_definitions( -D_SCL_SECURE_NO_WARNINGS -DCRT_NONSTDC_NO_WARNINGS )
@@ -388,7 +350,6 @@ if( MSVC )
   #add_definitions( -wd4355 -wd4715 )
 endif( MSVC )
 
-#ADD_SUBDIRECTORY( dependencies )
 ADD_SUBDIRECTORY( libs )
 ADD_SUBDIRECTORY( src )
 
@@ -415,8 +376,6 @@ IF( MSVC )
 		SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PORTAUDIO_LIBRARY} )
 	ENDIF( PORTAUDIO_LIBRARY AND PORTAUDIO_INCLUDE_DIR )	
 ENDIF( MSVC )
-
-
 
 ####################################################################################
 #Install section

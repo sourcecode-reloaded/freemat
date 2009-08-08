@@ -23,13 +23,7 @@
 #include "Struct.hpp"
 #include <stdio.h>
 #include "SparseCCS.hpp"
-
-#ifdef WIN32
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-
+#include <QtEndian>
 
 Serialize::Serialize(QIODevice *sck) {
   endianSwap = false;
@@ -87,17 +81,17 @@ void Serialize::handshakeClient() {
 
 void Serialize::sendSignature(char type, int count) {
   s->write((const char*) &type,1);
-  long netcount;
-  netcount = htonl(count);
-  s->write((const char*) &netcount,sizeof(long));
+  int netcount;
+  netcount = qToBigEndian(count);
+  s->write((const char*) &netcount,sizeof(int));
 }
 
 void Serialize::checkSignature(char type, int count) {
   char rtype;
-  long rcount;
+  int rcount;
   s->read((char*) &rtype,1);
-  s->read((char*) &rcount,sizeof(long));
-  rcount = ntohl(rcount);
+  s->read((char*) &rcount,sizeof(int));
+  rcount = qFromBigEndian(rcount);
   if (!((type == rtype) && (count == rcount))) {
     char buffer[1000];
     sprintf(buffer,"Serialization Mismatch: expected <%c,%d>, got <%c,%ld>",
