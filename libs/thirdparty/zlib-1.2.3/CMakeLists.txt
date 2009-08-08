@@ -4,7 +4,7 @@ ADD_LIBRARY( zlib
 adler32.c
 compress.c
 crc32.c
-gzip.c
+gzio.c
 uncompr.c
 deflate.c
 trees.c
