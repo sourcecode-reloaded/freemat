@@ -1116,6 +1116,11 @@ void WarningMessage(QString txt) {
     m_eval->warningMessage(txt);
 }
 
+void ImportPrintMessage(const char* t) {
+  Interpreter *m_eval = m_threadHandles.lookupHandle(m_mainID);
+  if (m_eval) m_eval->outputMessage(QString(t));
+}
+
 int MainApp::StartNewInterpreterThread() {
   Interpreter *p_eval = new Interpreter(NewContext());
   p_eval->setBasePath(basePath);

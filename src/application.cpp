@@ -33,7 +33,6 @@
 #include <QDebug>
 #include "PathTool.hpp"
 #include "ToolDock.hpp"
-#include "QStdOutRedirector.hpp"
 
 const int about_linecount = 21;
 const char *about_strings[] = {"Julie Maya & Neil - My Fan Club",
@@ -296,9 +295,6 @@ void ApplicationWindow::tclose() {
 void ApplicationWindow::SetGUITerminal(QTTerm* term) {
   m_term = term;
   setCentralWidget(term);
-  QStdOutRedirector *redirector = new QStdOutRedirector;
-  connect(redirector,SIGNAL(sendString(QString)),m_term,SLOT(OutputRawString(QString)));
-  redirector->start();
 }
 
 void ApplicationWindow::clearconsole() {
