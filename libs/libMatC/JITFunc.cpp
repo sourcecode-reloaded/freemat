@@ -433,11 +433,13 @@ JITScalar JITFunc::compile_expression(const Tree & t) {
   case TOK_DOTLDIV: 
     return jit->Div(compile_expression(t.second()),compile_expression(t.first()));
   case TOK_SOR: 
-  case '|':
     return compile_or_statement(t);
+  case '|':
+    return jit->Or(compile_expression(t.first()),compile_expression(t.second()));
   case TOK_SAND: 
-  case '&': 
     return compile_and_statement(t);
+  case '&': 
+    return jit->And(compile_expression(t.first()),compile_expression(t.second()));
   case '<': 
     return jit->LessThan(compile_expression(t.first()),compile_expression(t.second()));
   case TOK_LE: 

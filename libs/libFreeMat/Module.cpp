@@ -328,6 +328,39 @@ char* parseBoundsCheck(const char* &cp) {
 //mechanism, the FreeMat code must allocate the proper arrays, and then
 //pass them by reference to the external function.
 //
+//\emph{Sending text to the FreeMat console:}
+//Starting with FreeMat 4.0, it is possible for external code that is 
+//called using the @|import| statement to send text to the FreeMat console.
+//To do so, you must define in each library that wants to send text a 
+//function with the name @|freemat_io_handler| that captures its 
+//argument (a function pointer), and stores it
+//for use by functions in the library.  That function pointer takes a 
+//standard C string argument.  Here is a snippet of code to demonstrate
+//how this works:
+//@[
+//  /* just to make it readable */
+//  typedef void (*strfunc)(const char*); 
+//
+//  /* The name we want to use for the function */
+//  strfunc FreeMatText;                  
+//
+//  /* this name is case sensitive and must not be mangled (i.e., use extern "C") */
+//  void freemat_io_handler(strfunc printFunc) {
+//     FreeMatText = printFunc;
+//  }
+//
+//  double SomeImportedFunction(double t) {
+//     FreeMatText("I am going to double that argument!\n");
+//     return (t*2);
+//  }
+//@]
+//In this case, once @|SomeImportedFunction| is called from within FreeMat, the
+//text @|"I am going to double that argument"| will appear in the FreeMat console.
+//
+//Your @|freemat_io_handler| function is automatically called when your library is
+//loaded by FreeMat, which happens with the first @|import| statement that references
+//it.
+//
 //@@Example
 //Here is a complete example.  We have a @|C| function that adds
 //two float vectors of the same length, and stores the result in a third array 
@@ -367,6 +400,19 @@ char* parseBoundsCheck(const char* &cp) {
 
 static inline bool issep(QChar t) {
   return ((t=='/') || (t=='\\'));
+}
+
+// This is defined in MainApp.cpp
+void ImportPrintMessage(const char* t);
+
+typedef void (*strfunc)(const char*);
+typedef void (*handler)(strfunc);
+
+void InitializeIOHandlers(DynLib *lib) {
+  void* func = lib->GetSymbol("freemat_io_handler");
+  if (!func) return;
+  handler h_func = (handler) func;
+  h_func(ImportPrintMessage);
 }
 
 ArrayVector ImportFunction(int nargout, const ArrayVector& arg, 
@@ -412,6 +458,7 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
   if (!ptr) {
     lib = new DynLib(libfullpath);
     libPointers.insertSymbol(libfullpath,lib);
+    InitializeIOHandlers(lib);
   } else
     lib = *ptr;
   func = lib->GetSymbol(symbolname);
