@@ -35,16 +35,6 @@ IF (MSVC)
    ${CMAKE_CURRENT_SOURCE_DIR}/src/common/pa_skeleton.c
    ${CMAKE_CURRENT_SOURCE_DIR}/src/common/pa_stream.c
    ${CMAKE_CURRENT_SOURCE_DIR}/src/common/pa_trace.c
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/hostapi/asio/pa_asio.cpp
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/hostapi/asio/ASIOSDK/common/asio.cpp
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/hostapi/asio/ASIOSDK/host/ASIOConvertSamples.cpp
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/hostapi/asio/ASIOSDK/host/asiodrivers.cpp
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/hostapi/asio/ASIOSDK/host/pc/asiolist.cpp
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/hostapi/asio/ASIOSDK/common/combase.cpp
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/hostapi/asio/ASIOSDK/common/debugmessage.cpp
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/hostapi/asio/ASIOSDK/common/register.cpp
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/hostapi/dsound/pa_win_ds.c
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/hostapi/dsound/pa_win_ds_dynlink.c
    ${CMAKE_CURRENT_SOURCE_DIR}/src/hostapi/wmme/pa_win_wmme.c
    ${CMAKE_CURRENT_SOURCE_DIR}/src/hostapi/wasapi/pa_win_wasapi.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/os/win/pa_win_hostapis.c
