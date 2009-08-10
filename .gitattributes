@@ -1,6 +1,5 @@
 /COPYING svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 /ChangeLog svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-/INSTALL svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 dependencies/bin/blas_generic.dll svn_mime_002dtype=application%2Foctet-stream
 dependencies/bin/libfftw3-3.dll svn_mime_002dtype=application%2Foctet-stream
 dependencies/bin/libfftw3-3.exp svn_mime_002dtype=application%2Foctet-stream
