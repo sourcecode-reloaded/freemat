@@ -343,23 +343,14 @@ IF( USE_LLVM )
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/libLLVMSupport.a)
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/libLLVMSystem.a)
   ENDIF (MSVC)
-#  FIND_PROGRAM( LLVM_CONFIG llvm-config )
-#  EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --libfiles jit nativecodegen ipo instrumentation scalaropts OUTPUT_VARIABLE LLVM_LIBS #OUTPUT_STRIP_TRAILING_WHITESPACE)
-#  EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --libdir OUTPUT_VARIABLE LLVM_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
-#  EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --includedir OUTPUT_VARIABLE LLVM_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)   
-#  ADD_DEFINITIONS( -DHAVE_LLVM )
-#  INCLUDE_DIRECTORIES( ${LLVM_INCLUDE_DIR} )
-#  SEPARATE_ARGUMENTS( LLVM_LIBS )
-#  SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${LLVM_LIBS})
 ENDIF (USE_LLVM)
 
 
 ##############################################################################
 #Extra libraries
 IF(NOT MSVC)
-	FIND_LIBRARY(NCURSES_LIBRARY NAMES ncurses DOC "Location of the ncurses library." PATH /mingw/lib)
-	SET(EXTRA_LIBRARIES ${NCURSES_LIBRARY}  )  
-        #FIND_LIBRARY(G2C_LIBRARY NAMES g2c DOC "Location of Fortran to C (g2c) library" PATHS /mingw/lib)
+  FIND_LIBRARY(NCURSES_LIBRARY NAMES ncurses DOC "Location of the ncurses library." PATH /mingw/lib)
+  SET(EXTRA_LIBRARIES ${NCURSES_LIBRARY}  )  
 ENDIF(NOT MSVC)
 
 INCLUDE_DIRECTORIES( libs/libFreeMat libs/libGraphics 
@@ -400,18 +391,6 @@ ADD_SUBDIRECTORY( src )
   
 ##ADD_SUBDIRECTORY( images )
 ##ADD_SUBDIRECTORY( tools )
-
-####################################################################################
-#Portable Audio section
-IF( MSVC )
-	FIND_LIBRARY(PORTAUDIO_LIBRARY NAMES portaudio_x86.lib DOC "Location of portable audio library" PATHS ${LOCAL_PATH} ${LOCAL_PATH}/Release)
-	FIND_PATH(PORTAUDIO_INCLUDE_DIR NAMES portaudio.h DOC "Location of portaudio.h" PATHS ${LOCAL_PATH})
-	IF( PORTAUDIO_LIBRARY AND PORTAUDIO_INCLUDE_DIR ) 
-		INCLUDE_DIRECTORIES( ${PORTAUDIO_INCLUDE_DIR} )
-		ADD_DEFINITIONS( -DHAVE_PORTAUDIO19 )
-		SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PORTAUDIO_LIBRARY} )
-	ENDIF( PORTAUDIO_LIBRARY AND PORTAUDIO_INCLUDE_DIR )	
-ENDIF( MSVC )
 
 ####################################################################################
 #Install section
