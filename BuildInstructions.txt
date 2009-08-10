@@ -78,6 +78,7 @@ Windows / Visual Studio Express / CMake
     - Open the Visual Studio Command prompt, and cd to this directory
     - Configure QT with "configure"
     - make QT with "nmake"
+- FFTW is bundled (as a binary) with the FreeMat source code, so you do not need to get it seperately.
 - Download the FreeMat source package
 - Unpack the source package
 - Run CMake (or CMakeSetup.exe)  Select the build type that corresponds to your version of Visual Studio.
