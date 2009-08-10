@@ -329,6 +329,11 @@ IF( USE_LLVM )
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/libLLVMInstrumentation.a)
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/libLLVMipo.a)
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/LLVMX86CodeGen.o)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/LLVMARMCodeGen.o)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/LLVMAlphaCodeGen.o)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/LLVMCellSPUCodeGen.o)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/LLVMPowerPCCodeGen.o)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/LLVMSparcCodeGen.o)
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/libLLVMSelectionDAG.a)
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/libLLVMAsmPrinter.a)
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PROJECT_BINARY_DIR}/libs/thirdparty/llvm-2.5/lib/LLVMExecutionEngine.o)
@@ -379,18 +384,6 @@ endif( MSVC )
 
 ADD_SUBDIRECTORY( libs )
 ADD_SUBDIRECTORY( src )
-
-#FILE( GLOB_RECURSE TOOLBOX_M_FILES ${PROJECT_SOURCE_DIR}/src/toolbox/*.m )
-#ADD_CUSTOM_COMMAND( OUTPUT toolbox/help/helpgen.m
-#  MAIN_DEPENDENCY FreeMat
-#  DEPENDS TOOLBOX_M_FILES
-#  COMMAND ${FreeMat} -f run_helpgen
-#  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-#  COMMENT "Build toolboxes"
-#  )
-  
-##ADD_SUBDIRECTORY( images )
-##ADD_SUBDIRECTORY( tools )
 
 ####################################################################################
 #Install section
