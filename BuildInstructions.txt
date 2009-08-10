@@ -1,9 +1,9 @@
 Build Instructions
 
-Starting with version 4.0, FreeMat is fairly straightforward to build.  With a couple of 
+Starting with version 4.0, FreeMat is fairly straightforward to build.  With a few  
 notable exceptions, all of the dependencies needed to build a complete version of FreeMat
-are bundled with the source code.  The exceptions are QT, CMake and FFTW, both of which are
-far to complex to embed within the FreeMat build tree.  So the build procedure is essentially:
+are bundled with the source code.  The exceptions are QT, CMake and FFTW, all of which are
+too complex to embed within the FreeMat build tree.  So the build procedure is essentially:
    - Install Qt 4.5
    - Install FFTW
    - Install CMake
@@ -12,7 +12,9 @@ far to complex to embed within the FreeMat build tree.  So the build procedure i
    - Build FreeMat, which will automatically build all of the necessary dependencies.
    - Install FreeMat
 The procedure is essentially the same on Linux, Mac OS X and Windows, but for completeness, each OS is
-described in a little more detail below.
+described in a little more detail below.  Note that FreeMat's build setup will look for installed
+libraries whenever possible, so that the bundled dependencies are used only when system-wide libraries
+are not available or not compatible.
 
 
 Linux
