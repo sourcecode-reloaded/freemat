@@ -35,6 +35,15 @@
 
 #ifdef DYN_BLAS
 
+extern "C" {
+int xerbla(char*, int*, int) {return 0;}
+int xerbla_(char*, int*, int) {return 0;}
+int _xerbla(char*, int*, int) {return 0;}
+int XERBLA(char*, int*, int) {return 0;}
+int XERBLA_(char*, int*, int) {return 0;}
+int _XERBLA(char*, int*, int) {return 0;}
+}
+
 BlasWrapper::BlasWrapper()
 {  
 }

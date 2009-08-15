@@ -113,7 +113,7 @@ postamble=\
 """
 fout.write( postamble )
 
-fout=file('blas/blas_ref.def','w')
+fout=file('../libBLAS_C/blas_ref.def','w')
 fout.write("""
 LIBRARY blas_ref
 EXPORTS

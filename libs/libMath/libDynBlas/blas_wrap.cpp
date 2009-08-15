@@ -1,5 +1,4 @@
 //This is a generated file. Do not edit!
-#ifdef DYN_BLAS
 #include <QString>
 #include <QLibrary> 
 #include "blas_wrap.h"
@@ -151,6 +150,7 @@ typedef void (* p_ztrmm )(char *side, char *uplo, char *transa, char *diag, int 
 typedef void (* p_ztrmv )(char *uplo, char *trans, char *diag, int *n, doublecomplex *a, int *lda, doublecomplex *x, int *incx, int uplo_len, int trans_len, int diag_len);
 typedef void (* p_ztrsm )(char *side, char *uplo, char *transa, char *diag, int *m, int *n, doublecomplex *alpha, doublecomplex *a, int *lda, doublecomplex *b, int *ldb, int side_len, int uplo_len, int transa_len, int diag_len);
 typedef void (* p_ztrsv )(char *uplo, char *trans, char *diag, int *n, doublecomplex *a, int *lda, doublecomplex *x, int *incx, int uplo_len, int trans_len, int diag_len);
+typedef void (* p_lsame )(char *ca, char *cb, int ca_len, int cb_len);
 
 
 void caxpy_(int *n, complex *alpha, complex *x, int *incx, complex *y, int *incy)
@@ -1265,9 +1265,16 @@ void ztrsv_(char *uplo, char *trans, char *diag, int *n, doublecomplex *a, int *
 
 }
 
+void lsame_(char *ca, char *cb, int ca_len, int cb_len)
+{
+	if( !wrapper.fn[139] )
+		wrapper.fn[139] = wrapper.Resolve("lsame");
+	(* reinterpret_cast<p_lsame>(wrapper.fn[139]))( ca, cb, ca_len, cb_len );
+
+}
+
 
 
 #ifdef __cplusplus 
 }
 #endif /* __cplusplus */
-#endif
