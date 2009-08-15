@@ -21,7 +21,26 @@
 //
 // Do we handle float types too?
 //
+// Consider the problem of extending the JIT to handle general expressions.  For example:
+//   for i=1:512
+//     for j=1:512
+//       b = [i;j];
+//       c = T*b;
+//       A(i,j) = A(i,j) + proj(c);
+//     end
+//   end
+// In this case, we have to handle a bunch of operations.
 //
+// Generally speaking, we now have the situation in which an expression, when evaluated can be an 
+// array as well as (or instead of) a scalar.  However, the actual array is not available when
+// the JIT is compiled.  Only the type and the fact that it is an array is available.  What is also
+// apparent is that the array has to be stored somewhere.  The JIT will then have to create a symbol
+// table.  And what happens to intermediate values then?  In the limit, the JIT must address all of 
+// the same conditions as the interpreter.  
+//
+// In the example above, 
+//
+
 #ifdef HAVE_LLVM
 
 #include <QString>

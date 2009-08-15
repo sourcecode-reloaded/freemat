@@ -1,11 +1,11 @@
 //This is a generated file. Do not edit!
 #ifdef DYN_BLAS
+#include <QString>
+#include <QLibrary> 
 #include "blas_wrap.h"
 #include "blas_dyn_link.h"
 #include <iostream>
 #include <vector>
-#include <QString>
-#include <QLibrary> 
 
 BlasWrapper wrapper;
 
