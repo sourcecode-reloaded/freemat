@@ -1063,15 +1063,10 @@ Context *MainApp::NewContext() {
     InitializeHandleGraphics();
     InitializeFileSubsystem();
   }
-  //  LoadModuleFunctions(context); -- done
 #ifdef DYN_BLAS
   void LoadBlasFunctions( void );
   LoadBlasFunctions();
 #endif
-  //    LoadGUICoreFunctions(context); -- done
-  //    LoadHandleGraphicsFunctions(context); -- done 
-  //  }
-  //  LoadThreadFunctions(context);
   return context;
 }
 
