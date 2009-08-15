@@ -182,7 +182,7 @@ add_subdirectory(lib/Transforms/Utils)
 add_subdirectory(lib/Transforms/Instrumentation)
 add_subdirectory(lib/Transforms/Scalar)
 add_subdirectory(lib/Transforms/IPO)
-#add_subdirectory(lib/Transforms/Hello)
+add_subdirectory(lib/Transforms/Hello)
 add_subdirectory(lib/Linker)
 add_subdirectory(lib/Analysis)
 add_subdirectory(lib/Analysis/IPA)
@@ -207,15 +207,15 @@ add_subdirectory(lib/Archive)
 
 #add_subdirectory(examples)
 
-#install(DIRECTORY include
-#  DESTINATION .
-#  PATTERN ".svn" EXCLUDE
-#  PATTERN "*.cmake" EXCLUDE
-#  PATTERN "*.in" EXCLUDE
-#  )
-#
-#install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include
-#  DESTINATION .
-#  )
+install(DIRECTORY include
+  DESTINATION .
+  PATTERN ".svn" EXCLUDE
+  PATTERN "*.cmake" EXCLUDE
+  PATTERN "*.in" EXCLUDE
+  )
+
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include
+  DESTINATION .
+  )
 
 # TODO: make and install documentation.
