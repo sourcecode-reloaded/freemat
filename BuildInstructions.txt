@@ -80,14 +80,29 @@ Windows / Visual Studio Express / CMake
     - Open the Visual Studio Command prompt, and cd to this directory
     - Configure QT with "configure"
     - make QT with "nmake"
+    - install QT with "nmake install"
+    - Add the binary directory to your path, e.g. My Computer->properties->Advanced->Environment Variables, edit the "PATH" variable, and append "c:\qt\bin" to the definition of the "PATH".
 - FFTW is bundled (as a binary) with the FreeMat source code, so you do not need to get it seperately.
 - Download the FreeMat source package
-- Unpack the source package
-- Run CMake (or CMakeSetup.exe)  Select the build type that corresponds to your version of Visual Studio.
-- Enter path to <CMake source> in cmake source directory edit box. Enter path to build directory
+- Unpack the source package into, e.g. C:\FreeMat4
+- Build LLVM using CMake
+    - Run CMake
+    - Choose C:\FreeMat4\dependencies\llvm-2.5 for the "where is the source code"
+    - Choose C:\FreeMat4\build\llvm-2.5 for "where to build the binaries"
+    - click "Configure", and select the build type that corresponds to your version of Visual Studio.
+    - Choose "OK" for creating the build directory
+    - "Configure", then "OK"
+    - Open C:\FreeMat4\build\llvm-2.5\LLVM.sln using Visual Studio
+    - Right click on "ALL_BUILD" and choose "Build"
+    - Get a nice cup of tea while LLVM builds
+    - Right click on "INSTALL" and choose "Build"
+    - LLVM will install into c:/Program Files/LLVM by default.
+- Build FreeMat using CMake
+    - Run CMake (or CMakeSetup.exe)  Select the build type that corresponds to your version of Visual Studio.
+    - Enter path to <CMake source> in cmake source directory edit box. Enter path to build directory
 	(it is strongly suggested that the build directory should be outside the source tree.)
-- Click Configure button. 
-- Press "Ok" to generate VS solution files.
-- Open FreeMat.sln from the build directory
-- Build FreeMat
+    - Click Configure button. 
+    - Press "Ok" to generate VS solution files.
+    - Open FreeMat.sln from the build directory
+    - Build FreeMat
 
