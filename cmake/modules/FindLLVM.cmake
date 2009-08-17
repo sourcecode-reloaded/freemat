@@ -47,12 +47,14 @@ else (LLVM_INCLUDE_DIR)
 		  ${LIB_LLVMScalarOpts} ${LIB_LLVMTransformUtils} ${LIB_LLVMipa} ${LIB_LLVMAnalysis} 
 		  ${LIB_LLVMTarget} ${LIB_LLVMCore} ${LIB_LLVMSupport} ${LIB_LLVMSystem} 
 		  CACHE STRING "LLVM Link Libraries" )
+	set(LLVM_VERSION "2.5")
     endif (LLVM_INCLUDE_DIR)
   else (MSVC)
     find_program(LLVM_CONFIG llvm-config)
     execute_process(COMMAND ${LLVM_CONFIG} --libfiles jit nativecodegen ipo instrumentation scalaropts 
     			    OUTPUT_VARIABLE LLVM_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
     execute_process(COMMAND ${LLVM_CONFIG} --includedir OUTPUT_VARIABLE LLVM_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(COMMAND ${LLVM_CONFIG} --version OUTPUT_VARIABLE LLVM_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
     separate_arguments(LLVM_LIBS) 
  endif (MSVC)
   if(LLVM_INCLUDE_DIR)
