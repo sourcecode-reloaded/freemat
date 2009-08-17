@@ -5,9 +5,10 @@ notable exceptions, all of the dependencies needed to build a complete version o
 are bundled with the source code.  The exceptions are QT, CMake and FFTW, all of which are
 too complex to embed within the FreeMat build tree.  So the build procedure is essentially:
    - Install Qt 4.5
-   - Install FFTW
+   - Install FFTW (optional)
    - Install CMake
    - Download the FreeMat source code
+   - Install LLVM 2.5 (optional)
    - Configure the source using CMake (there are tutorials on how to use CMake available on the WWW)
    - Build FreeMat, which will automatically build all of the necessary dependencies.
    - Install FreeMat
@@ -61,6 +62,11 @@ Mac OS X
 - Install CMake (version 2.6.4 or later) for Mac OS X from http://www.cmake.org
 - Download the FreeMat source package
 - Unpack the source package
+- Install LLVM-2.5
+    - cd dependencies/llvm-2.5
+    - ./configure --prefix=/usr/local --enable-optimized
+    - make
+    - sudo make install
 - Run CMake (or CMakeSetup.exe)  Select the build type you want (e.g., makefiles).
 - Enter path to <CMake source> in cmake source directory edit box. Enter path to build directory
 	(it is strongly suggested that the build directory should be outside the source tree.)
