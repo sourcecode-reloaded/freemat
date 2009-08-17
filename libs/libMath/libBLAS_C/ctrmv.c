@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int ctrmv_(char *uplo, char *trans, char *diag, integer *n, 
+/* Subroutine */ int REF_ctrmv_(char *uplo, char *trans, char *diag, integer *n, 
 	complex *a, integer *lda, complex *x, integer *incx, ftnlen uplo_len, 
 	ftnlen trans_len, ftnlen diag_len)
 {

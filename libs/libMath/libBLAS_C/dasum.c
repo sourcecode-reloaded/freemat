@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-doublereal dasum_(integer *n, doublereal *dx, integer *incx)
+doublereal REF_dasum_(integer *n, doublereal *dx, integer *incx)
 {
     /* System generated locals */
     integer i__1, i__2;

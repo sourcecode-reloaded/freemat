@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int sscal_(integer *n, real *sa, real *sx, integer *incx)
+/* Subroutine */ int REF_sscal_(integer *n, real *sa, real *sx, integer *incx)
 {
     /* System generated locals */
     integer i__1, i__2;

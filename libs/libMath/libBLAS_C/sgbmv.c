@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int sgbmv_(char *trans, integer *m, integer *n, integer *kl, 
+/* Subroutine */ int REF_sgbmv_(char *trans, integer *m, integer *n, integer *kl, 
 	integer *ku, real *alpha, real *a, integer *lda, real *x, integer *
 	incx, real *beta, real *y, integer *incy, ftnlen trans_len)
 {

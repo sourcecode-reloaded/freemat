@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-doublereal dnrm2_(integer *n, doublereal *x, integer *incx)
+doublereal REF_dnrm2_(integer *n, doublereal *x, integer *incx)
 {
     /* System generated locals */
     integer i__1, i__2;

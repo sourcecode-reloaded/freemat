@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int cgerc_(integer *m, integer *n, complex *alpha, complex *
+/* Subroutine */ int REF_cgerc_(integer *m, integer *n, complex *alpha, complex *
 	x, integer *incx, complex *y, integer *incy, complex *a, integer *lda)
 {
     /* System generated locals */

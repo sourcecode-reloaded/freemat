@@ -50,12 +50,19 @@ for fn in fns:
     fout.write(fdef)
 fout.write('\n\n')
 
+# Put reference BLAS declarations
+fout.write('extern "C" {\n');
+for fn in fns:
+    fdef = fn.return_type + ' REF_' + fn.function_name + '_' + fn.parameter_string + ';\n'
+    fout.write(fdef)
+fout.write('}\n\n')
+
 # put wrapper function definitions
 i = 0
 for fn in fns:
     fdecl = fn.return_type + ' ' + fn.function_name + '_' + fn.parameter_string + '\n{\n'
     fdecl = fdecl + '\tif( !wrapper.fn['+ str(i) + '] )\n'
-    fdecl = fdecl + '\t\twrapper.fn['+ str(i) + '] = wrapper.Resolve(\"' + fn.function_name + '\");\n'
+    fdecl = fdecl + '\t\twrapper.fn['+ str(i) + '] = wrapper.Resolve(\"' + fn.function_name + '\",(void (*)()) REF_' + fn.function_name + '_);\n'
     if fn.return_type != 'void':
        fdecl = fdecl+ '\treturn '
     else:
@@ -82,7 +89,7 @@ fout.write("""#ifndef __BLAS_WRAP_H
 #define __BLAS_WRAP_H
 """)
 fout.write("#define BLAS_NUM_FNS %d \n" % nblasfns)
-fout.write("#endif /*_BLAS_WRAP_H*/")
+fout.write("#endif /*_BLAS_WRAP_H*/\n\n")
 fout.close()
 
 fout=file('blas.h','w')
@@ -122,4 +129,5 @@ i=1
 for fn in fns:
     fout.write(fn.function_name + '_' + '\t@' + str(i) + '\n')
     i=i+1
+fout.write('\n\n');
 fout.close()

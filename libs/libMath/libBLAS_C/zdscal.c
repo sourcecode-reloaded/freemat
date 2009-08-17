@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int zdscal_(integer *n, doublereal *da, doublecomplex *zx, 
+/* Subroutine */ int REF_zdscal_(integer *n, doublereal *da, doublecomplex *zx, 
 	integer *incx)
 {
     /* System generated locals */

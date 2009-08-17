@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int crotg_(complex *ca, complex *cb, real *c__, complex *s)
+/* Subroutine */ int REF_crotg_(complex *ca, complex *cb, real *c__, complex *s)
 {
     /* System generated locals */
     real r__1, r__2;

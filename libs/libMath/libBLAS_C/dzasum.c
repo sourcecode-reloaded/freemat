@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-doublereal dzasum_(integer *n, doublecomplex *zx, integer *incx)
+doublereal REF_dzasum_(integer *n, doublecomplex *zx, integer *incx)
 {
     /* System generated locals */
     integer i__1;

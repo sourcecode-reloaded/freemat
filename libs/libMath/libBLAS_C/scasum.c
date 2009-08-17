@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-doublereal scasum_(integer *n, complex *cx, integer *incx)
+doublereal REF_scasum_(integer *n, complex *cx, integer *incx)
 {
     /* System generated locals */
     integer i__1, i__2, i__3;

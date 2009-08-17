@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-doublereal sasum_(integer *n, real *sx, integer *incx)
+doublereal REF_sasum_(integer *n, real *sx, integer *incx)
 {
     /* System generated locals */
     integer i__1, i__2;

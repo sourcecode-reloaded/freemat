@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int strsm_(char *side, char *uplo, char *transa, char *diag, 
+/* Subroutine */ int REF_strsm_(char *side, char *uplo, char *transa, char *diag, 
 	integer *m, integer *n, real *alpha, real *a, integer *lda, real *b, 
 	integer *ldb, ftnlen side_len, ftnlen uplo_len, ftnlen transa_len, 
 	ftnlen diag_len)

@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int dsyr2_(char *uplo, integer *n, doublereal *alpha, 
+/* Subroutine */ int REF_dsyr2_(char *uplo, integer *n, doublereal *alpha, 
 	doublereal *x, integer *incx, doublereal *y, integer *incy, 
 	doublereal *a, integer *lda, ftnlen uplo_len)
 {

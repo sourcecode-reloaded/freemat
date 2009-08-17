@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int ztrsv_(char *uplo, char *trans, char *diag, integer *n, 
+/* Subroutine */ int REF_ztrsv_(char *uplo, char *trans, char *diag, integer *n, 
 	doublecomplex *a, integer *lda, doublecomplex *x, integer *incx, 
 	ftnlen uplo_len, ftnlen trans_len, ftnlen diag_len)
 {

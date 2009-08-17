@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int dger_(integer *m, integer *n, doublereal *alpha, 
+/* Subroutine */ int REF_dger_(integer *m, integer *n, doublereal *alpha, 
 	doublereal *x, integer *incx, doublereal *y, integer *incy, 
 	doublereal *a, integer *lda)
 {

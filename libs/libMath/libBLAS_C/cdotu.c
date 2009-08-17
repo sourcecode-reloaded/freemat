@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Complex */ VOID cdotu_(complex * ret_val, integer *n, complex *cx, integer 
+/* Complex */ VOID REF_cdotu_(complex * ret_val, integer *n, complex *cx, integer 
 	*incx, complex *cy, integer *incy)
 {
     /* System generated locals */

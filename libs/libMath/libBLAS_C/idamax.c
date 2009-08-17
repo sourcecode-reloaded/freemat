@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-integer idamax_(integer *n, doublereal *dx, integer *incx)
+integer REF_idamax_(integer *n, doublereal *dx, integer *incx)
 {
     /* System generated locals */
     integer ret_val, i__1;

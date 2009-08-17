@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int zgemm_(char *transa, char *transb, integer *m, integer *
+/* Subroutine */ int REF_zgemm_(char *transa, char *transb, integer *m, integer *
 	n, integer *k, doublecomplex *alpha, doublecomplex *a, integer *lda, 
 	doublecomplex *b, integer *ldb, doublecomplex *beta, doublecomplex *
 	c__, integer *ldc, ftnlen transa_len, ftnlen transb_len)

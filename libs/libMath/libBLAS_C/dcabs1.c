@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-doublereal dcabs1_(doublecomplex *z__)
+doublereal REF_dcabs1_(doublecomplex *z__)
 {
     /* System generated locals */
     doublereal ret_val;

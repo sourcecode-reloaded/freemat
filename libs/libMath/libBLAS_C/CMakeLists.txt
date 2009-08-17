@@ -1,14 +1,2 @@
 FILE (GLOB c_src *.c )
-IF( USE_DYNLINK )
-	IF( MSVC )
-		ADD_LIBRARY( blas_ref SHARED ${c_src} blas_ref.def)
-    ELSE( MSVC )
-		ADD_LIBRARY( blas_ref SHARED ${c_src})
-    ENDIF( MSVC )
-    
-	INSTALL(TARGETS blas_ref RUNTIME DESTINATION bin LIBRARY DESTINATION bin )
-
-ELSE( USE_DYNLINK )
-	ADD_LIBRARY( blas_ref ${c_src} )
-    GET_TARGET_PROPERTY(BLAS_LIBRARY blas_ref LOCATION)
-ENDIF( USE_DYNLINK )
+ADD_LIBRARY( blasref ${c_src} )

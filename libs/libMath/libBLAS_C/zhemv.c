@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int zhemv_(char *uplo, integer *n, doublecomplex *alpha, 
+/* Subroutine */ int REF_zhemv_(char *uplo, integer *n, doublecomplex *alpha, 
 	doublecomplex *a, integer *lda, doublecomplex *x, integer *incx, 
 	doublecomplex *beta, doublecomplex *y, integer *incy, ftnlen uplo_len)
 {

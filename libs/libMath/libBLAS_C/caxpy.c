@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int caxpy_(integer *n, complex *ca, complex *cx, integer *
+/* Subroutine */ int REF_caxpy_(integer *n, complex *ca, complex *cx, integer *
 	incx, complex *cy, integer *incy)
 {
     /* System generated locals */

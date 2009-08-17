@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int zsyr2k_(char *uplo, char *trans, integer *n, integer *k, 
+/* Subroutine */ int REF_zsyr2k_(char *uplo, char *trans, integer *n, integer *k, 
 	doublecomplex *alpha, doublecomplex *a, integer *lda, doublecomplex *
 	b, integer *ldb, doublecomplex *beta, doublecomplex *c__, integer *
 	ldc, ftnlen uplo_len, ftnlen trans_len)

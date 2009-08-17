@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int zgeru_(integer *m, integer *n, doublecomplex *alpha, 
+/* Subroutine */ int REF_zgeru_(integer *m, integer *n, doublecomplex *alpha, 
 	doublecomplex *x, integer *incx, doublecomplex *y, integer *incy, 
 	doublecomplex *a, integer *lda)
 {

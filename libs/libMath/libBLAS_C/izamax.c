@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-integer izamax_(integer *n, doublecomplex *zx, integer *incx)
+integer REF_izamax_(integer *n, doublecomplex *zx, integer *incx)
 {
     /* System generated locals */
     integer ret_val, i__1;

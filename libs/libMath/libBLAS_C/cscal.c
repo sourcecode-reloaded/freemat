@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int cscal_(integer *n, complex *ca, complex *cx, integer *
+/* Subroutine */ int REF_cscal_(integer *n, complex *ca, complex *cx, integer *
 	incx)
 {
     /* System generated locals */

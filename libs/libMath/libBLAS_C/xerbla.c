@@ -16,7 +16,7 @@
 
 static integer c__1 = 1;
 
-/* Subroutine */ int xerbla_(char *srname, integer *info, ftnlen srname_len)
+/* Subroutine */ int REF_xerbla_(char *srname, integer *info, ftnlen srname_len)
 {
 //    /* Format strings */
 //    static char fmt_9999[] = "(\002 ** On entry to \002,a6,\002 parameter nu"

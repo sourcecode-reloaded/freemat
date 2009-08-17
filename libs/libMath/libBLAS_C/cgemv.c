@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int cgemv_(char *trans, integer *m, integer *n, complex *
+/* Subroutine */ int REF_cgemv_(char *trans, integer *m, integer *n, complex *
 	alpha, complex *a, integer *lda, complex *x, integer *incx, complex *
 	beta, complex *y, integer *incy, ftnlen trans_len)
 {

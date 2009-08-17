@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int sswap_(integer *n, real *sx, integer *incx, real *sy, 
+/* Subroutine */ int REF_sswap_(integer *n, real *sx, integer *incx, real *sy, 
 	integer *incy)
 {
     /* System generated locals */

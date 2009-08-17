@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int dspr_(char *uplo, integer *n, doublereal *alpha, 
+/* Subroutine */ int REF_dspr_(char *uplo, integer *n, doublereal *alpha, 
 	doublereal *x, integer *incx, doublereal *ap, ftnlen uplo_len)
 {
     /* System generated locals */

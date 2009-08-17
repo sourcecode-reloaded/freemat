@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int zhpr2_(char *uplo, integer *n, doublecomplex *alpha, 
+/* Subroutine */ int REF_zhpr2_(char *uplo, integer *n, doublecomplex *alpha, 
 	doublecomplex *x, integer *incx, doublecomplex *y, integer *incy, 
 	doublecomplex *ap, ftnlen uplo_len)
 {

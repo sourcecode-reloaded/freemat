@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int dsymm_(char *side, char *uplo, integer *m, integer *n, 
+/* Subroutine */ int REF_dsymm_(char *side, char *uplo, integer *m, integer *n, 
 	doublereal *alpha, doublereal *a, integer *lda, doublereal *b, 
 	integer *ldb, doublereal *beta, doublereal *c__, integer *ldc, ftnlen 
 	side_len, ftnlen uplo_len)

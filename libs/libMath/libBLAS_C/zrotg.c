@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int zrotg_(doublecomplex *ca, doublecomplex *cb, doublereal *
+/* Subroutine */ int REF_zrotg_(doublecomplex *ca, doublecomplex *cb, doublereal *
 	c__, doublecomplex *s)
 {
     /* System generated locals */

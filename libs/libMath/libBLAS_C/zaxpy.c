@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int zaxpy_(integer *n, doublecomplex *za, doublecomplex *zx, 
+/* Subroutine */ int REF_zaxpy_(integer *n, doublecomplex *za, doublecomplex *zx, 
 	integer *incx, doublecomplex *zy, integer *incy)
 {
     /* System generated locals */

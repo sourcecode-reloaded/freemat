@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int zsymm_(char *side, char *uplo, integer *m, integer *n, 
+/* Subroutine */ int REF_zsymm_(char *side, char *uplo, integer *m, integer *n, 
 	doublecomplex *alpha, doublecomplex *a, integer *lda, doublecomplex *
 	b, integer *ldb, doublecomplex *beta, doublecomplex *c__, integer *
 	ldc, ftnlen side_len, ftnlen uplo_len)

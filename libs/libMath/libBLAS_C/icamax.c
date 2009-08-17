@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-integer icamax_(integer *n, complex *cx, integer *incx)
+integer REF_icamax_(integer *n, complex *cx, integer *incx)
 {
     /* System generated locals */
     integer ret_val, i__1, i__2;

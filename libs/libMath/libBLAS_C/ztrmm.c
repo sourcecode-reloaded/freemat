@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int ztrmm_(char *side, char *uplo, char *transa, char *diag, 
+/* Subroutine */ int REF_ztrmm_(char *side, char *uplo, char *transa, char *diag, 
 	integer *m, integer *n, doublecomplex *alpha, doublecomplex *a, 
 	integer *lda, doublecomplex *b, integer *ldb, ftnlen side_len, ftnlen 
 	uplo_len, ftnlen transa_len, ftnlen diag_len)

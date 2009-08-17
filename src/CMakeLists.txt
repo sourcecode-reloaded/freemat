@@ -57,6 +57,7 @@ ${OPTIONAL_LIBS}
 arpack_c
 lapack_c
 dynblas
+blasref
 )
 
 IF(MSVC)

@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int chemv_(char *uplo, integer *n, complex *alpha, complex *
+/* Subroutine */ int REF_chemv_(char *uplo, integer *n, complex *alpha, complex *
 	a, integer *lda, complex *x, integer *incx, complex *beta, complex *y,
 	 integer *incy, ftnlen uplo_len)
 {

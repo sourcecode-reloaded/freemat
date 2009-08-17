@@ -44,7 +44,7 @@ int XERBLA_(char*, int*, int) {return 0;}
 int _XERBLA(char*, int*, int) {return 0;}
 }
 
-BlasWrapper::BlasWrapper()
+BlasWrapper::BlasWrapper() : useReference(true)
 {  
 }
 
@@ -53,36 +53,40 @@ void BlasWrapper::Init( void )
 	blasLib = new QLibrary();
 	InitFunctions();
 	DiscoverBlasLibrary();
-	if( libList.empty() )
-		throw Exception("No appropriate BLAS libraries found!");
+	if( libList.empty() ) return;
 	LoadLib( *(libList.begin()) );
 }
 
 std::string BlasWrapper::ComputerType( void )
 {
 #ifdef Q_WS_WIN
-	if( QSysInfo::WindowsVersion & QSysInfo::WV_NT_based )
-		return std::string("Win32");
-	throw Exception("Unsupported Windows version.");
+  if( QSysInfo::WindowsVersion & QSysInfo::WV_NT_based )
+    return std::string("Win32");
+  return "Unknown";
 #endif
 #ifdef Q_WS_MAC
-	return std::string( "OSX" );
+  return std::string( "OSX" );
 #endif
 
-	switch( QSysInfo::WordSize ){
-	case 32:
-		return std::string( "Linux32" );
-		break;
-	case 64:
-		return std::string( "Linux64" );
-		break;
-	}
-	throw Exception( "Unknown word size." );
+  switch( QSysInfo::WordSize ){
+  case 32:
+    return std::string( "Linux32" );
+    break;
+  case 64:
+    return std::string( "Linux64" );
+    break;
+  }
+  return std::string("unknown");
 }
 
 void BlasWrapper::ListLibraries( std::string& msg )
 {
-	std::list<LibConf>::iterator it = libList.begin();
+  if (useReference) {
+    msg = std::string("Internal reference BLAS. Unoptimized");
+    return;
+  }
+	
+  std::list<LibConf>::iterator it = libList.begin();
 
 	msg.clear();
 	while( it != libList.end() ){
@@ -111,8 +115,8 @@ void BlasWrapper::LoadLib( const LibConf& libConf )
 
 	currentLib = libConf;
 	blasLib->setFileName( currentLib.fileName );
-	if( !blasLib->load() )
-		throw Exception( blasLib->errorString() );
+	if( !blasLib->load() ) return;
+	useReference = false;
 }
 
 void BlasWrapper::DiscoverBlasLibrary( void )
@@ -146,8 +150,9 @@ void BlasWrapper::DiscoverBlasLibrary( void )
 	return;
 }
 
-void* BlasWrapper::Resolve( const char* function_name )
+void* BlasWrapper::Resolve( const char* function_name, void (*default_fcn)() )
 {
+  if (useReference) return (void*)(default_fcn);
 	void *p;
 	QString fname( function_name );
 	if( currentLib.capitalized )

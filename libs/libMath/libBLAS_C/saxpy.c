@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int saxpy_(integer *n, real *sa, real *sx, integer *incx, 
+/* Subroutine */ int REF_saxpy_(integer *n, real *sa, real *sx, integer *incx, 
 	real *sy, integer *incy)
 {
     /* System generated locals */

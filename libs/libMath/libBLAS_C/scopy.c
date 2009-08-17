@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int scopy_(integer *n, real *sx, integer *incx, real *sy, 
+/* Subroutine */ int REF_scopy_(integer *n, real *sx, integer *incx, real *sy, 
 	integer *incy)
 {
     /* System generated locals */

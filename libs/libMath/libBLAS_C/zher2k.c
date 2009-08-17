@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int zher2k_(char *uplo, char *trans, integer *n, integer *k, 
+/* Subroutine */ int REF_zher2k_(char *uplo, char *trans, integer *n, integer *k, 
 	doublecomplex *alpha, doublecomplex *a, integer *lda, doublecomplex *
 	b, integer *ldb, doublereal *beta, doublecomplex *c__, integer *ldc, 
 	ftnlen uplo_len, ftnlen trans_len)

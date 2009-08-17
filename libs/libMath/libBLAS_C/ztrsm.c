@@ -16,7 +16,7 @@
 
 static doublecomplex c_b1 = {1.,0.};
 
-/* Subroutine */ int ztrsm_(char *side, char *uplo, char *transa, char *diag, 
+/* Subroutine */ int REF_ztrsm_(char *side, char *uplo, char *transa, char *diag, 
 	integer *m, integer *n, doublecomplex *alpha, doublecomplex *a, 
 	integer *lda, doublecomplex *b, integer *ldb, ftnlen side_len, ftnlen 
 	uplo_len, ftnlen transa_len, ftnlen diag_len)

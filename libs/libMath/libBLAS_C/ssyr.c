@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int ssyr_(char *uplo, integer *n, real *alpha, real *x, 
+/* Subroutine */ int REF_ssyr_(char *uplo, integer *n, real *alpha, real *x, 
 	integer *incx, real *a, integer *lda, ftnlen uplo_len)
 {
     /* System generated locals */

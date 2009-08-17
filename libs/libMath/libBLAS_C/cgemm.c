@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int cgemm_(char *transa, char *transb, integer *m, integer *
+/* Subroutine */ int REF_cgemm_(char *transa, char *transb, integer *m, integer *
 	n, integer *k, complex *alpha, complex *a, integer *lda, complex *b, 
 	integer *ldb, complex *beta, complex *c__, integer *ldc, ftnlen 
 	transa_len, ftnlen transb_len)

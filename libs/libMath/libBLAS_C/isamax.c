@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-integer isamax_(integer *n, real *sx, integer *incx)
+integer REF_isamax_(integer *n, real *sx, integer *incx)
 {
     /* System generated locals */
     integer ret_val, i__1;

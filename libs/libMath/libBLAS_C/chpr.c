@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int chpr_(char *uplo, integer *n, real *alpha, complex *x, 
+/* Subroutine */ int REF_chpr_(char *uplo, integer *n, real *alpha, complex *x, 
 	integer *incx, complex *ap, ftnlen uplo_len)
 {
     /* System generated locals */

@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-doublereal ddot_(integer *n, doublereal *dx, integer *incx, doublereal *dy, 
+doublereal REF_ddot_(integer *n, doublereal *dx, integer *incx, doublereal *dy, 
 	integer *incy)
 {
     /* System generated locals */

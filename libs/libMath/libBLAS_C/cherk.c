@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int cherk_(char *uplo, char *trans, integer *n, integer *k, 
+/* Subroutine */ int REF_cherk_(char *uplo, char *trans, integer *n, integer *k, 
 	real *alpha, complex *a, integer *lda, real *beta, complex *c__, 
 	integer *ldc, ftnlen uplo_len, ftnlen trans_len)
 {

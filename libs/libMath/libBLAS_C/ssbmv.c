@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int ssbmv_(char *uplo, integer *n, integer *k, real *alpha, 
+/* Subroutine */ int REF_ssbmv_(char *uplo, integer *n, integer *k, real *alpha, 
 	real *a, integer *lda, real *x, integer *incx, real *beta, real *y, 
 	integer *incy, ftnlen uplo_len)
 {

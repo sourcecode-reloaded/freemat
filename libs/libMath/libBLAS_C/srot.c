@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int srot_(integer *n, real *sx, integer *incx, real *sy, 
+/* Subroutine */ int REF_srot_(integer *n, real *sx, integer *incx, real *sy, 
 	integer *incy, real *c__, real *s)
 {
     /* System generated locals */

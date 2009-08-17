@@ -45,14 +45,14 @@ class BlasWrapper{
     };
     std::list<LibConf> libList;
     LibConf currentLib;
-
     QLibrary* blasLib;
+    bool useReference;
 public:
     BlasWrapper();
     ~BlasWrapper() { if(blasLib && blasLib->isLoaded()) blasLib->unload(); delete blasLib; blasLib = NULL;};
     void Init( void );
     bool LoadLibByName( const std::string& name, std::string& msg );
-    void* Resolve( const char* function_name );
+    void* Resolve( const char* function_name, void (*default_fcn) () );
     void ListLibraries( std::string& msg );
 
 private:

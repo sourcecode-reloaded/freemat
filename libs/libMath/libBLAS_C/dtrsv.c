@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int dtrsv_(char *uplo, char *trans, char *diag, integer *n, 
+/* Subroutine */ int REF_dtrsv_(char *uplo, char *trans, char *diag, integer *n, 
 	doublereal *a, integer *lda, doublereal *x, integer *incx, ftnlen 
 	uplo_len, ftnlen trans_len, ftnlen diag_len)
 {

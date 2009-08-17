@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int cswap_(integer *n, complex *cx, integer *incx, complex *
+/* Subroutine */ int REF_cswap_(integer *n, complex *cx, integer *incx, complex *
 	cy, integer *incy)
 {
     /* System generated locals */

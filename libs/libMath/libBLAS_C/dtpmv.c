@@ -12,7 +12,7 @@
 
 #include "f2c.h"
 
-/* Subroutine */ int dtpmv_(char *uplo, char *trans, char *diag, integer *n, 
+/* Subroutine */ int REF_dtpmv_(char *uplo, char *trans, char *diag, integer *n, 
 	doublereal *ap, doublereal *x, integer *incx, ftnlen uplo_len, ftnlen 
 	trans_len, ftnlen diag_len)
 {
