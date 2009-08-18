@@ -113,7 +113,7 @@ void MainApp::SetupGUICase() {
   if (inBundleMode()) {
     QDir dir(QApplication::applicationDirPath());
     dir.cdUp();
-    dir.cd("Plugins");
+    dir.cd("plugins");
     QString dummy(dir.absolutePath());
     QApplication::setLibraryPaths(QStringList() << dir.absolutePath());
   }
