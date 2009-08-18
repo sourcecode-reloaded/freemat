@@ -14,8 +14,8 @@ cd $1
 mkdir Contents
 mkdir Contents/lib
 mkdir Contents/Resources
-mv help Contents/Resources/.
-mv toolbox Contents/Resources/.
+mv share/*/* Contents/Resources/.
+rm -rf share
 mv bin Contents/.
 cp /usr/local/lib/libQtCore.so.4 Contents/lib/.
 cp /usr/local/lib/libQtGui.so.4 Contents/lib/.
