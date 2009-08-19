@@ -3,21 +3,21 @@
 #include "Types.hpp"
 #include "IEEEFP.hpp"
 
-# define INT8_MIN		(-128)
-# define INT16_MIN		(-32767-1)
-# define INT32_MIN		(-2147483647-1)
-# define INT64_MIN		(-Q_INT64_C(9223372036854775807)-1)
+# define FMINT8_MIN		(-128)
+# define FMINT16_MIN		(-32767-1)
+# define FMINT32_MIN		(-2147483647-1)
+# define FMINT64_MIN		(-Q_INT64_C(9223372036854775807)-1)
 /* Maximum of signed integral types.  */
-# define INT8_MAX		(127)
-# define INT16_MAX		(32767)
-# define INT32_MAX		(2147483647)
-# define INT64_MAX		(Q_INT64_C(9223372036854775807))
+# define FMINT8_MAX		(127)
+# define FMINT16_MAX		(32767)
+# define FMINT32_MAX		(2147483647)
+# define FMINT64_MAX		(Q_INT64_C(9223372036854775807))
 
 /* Maximum of unsigned integral types.  */
-# define UINT8_MAX		(255)
-# define UINT16_MAX		(65535)
-# define UINT32_MAX		(4294967295U)
-# define UINT64_MAX		(Q_UINT64_C(18446744073709551615))
+# define FMUINT8_MAX		(255)
+# define FMUINT16_MAX		(65535)
+# define FMUINT32_MAX		(4294967295U)
+# define FMUINT64_MAX		(Q_UINT64_C(18446744073709551615))
 
 
 #if defined(_MSC_VER)  
@@ -76,14 +76,14 @@ MacroBoolOut(double);
   }
 
 #define MacroCastLimitXformAll(source,round)				\
-  MacroCastLimitXform(uint64,source,0,UINT64_MAX,round); \
-  MacroCastLimitXform(uint32,source,0,UINT32_MAX,round);	\
-  MacroCastLimitXform(uint16,source,0,UINT16_MAX,round);		\
-  MacroCastLimitXform(uint8,source,0,UINT8_MAX,round);			\
-  MacroCastLimitXform(int64,source,INT64_MIN,INT64_MAX,round); \
-  MacroCastLimitXform(int32,source,INT32_MIN,INT32_MAX,round);	\
-  MacroCastLimitXform(int16,source,INT16_MIN,INT16_MAX,round);	\
-  MacroCastLimitXform(int8,source,INT8_MIN,INT8_MAX,round);		
+  MacroCastLimitXform(uint64,source,0,FMUINT64_MAX,round); \
+  MacroCastLimitXform(uint32,source,0,FMUINT32_MAX,round);	\
+  MacroCastLimitXform(uint16,source,0,FMUINT16_MAX,round);		\
+  MacroCastLimitXform(uint8,source,0,FMUINT8_MAX,round);			\
+  MacroCastLimitXform(int64,source,FMINT64_MIN,FMINT64_MAX,round); \
+  MacroCastLimitXform(int32,source,FMINT32_MIN,FMINT32_MAX,round);	\
+  MacroCastLimitXform(int16,source,FMINT16_MIN,FMINT16_MAX,round);	\
+  MacroCastLimitXform(int8,source,FMINT8_MIN,FMINT8_MAX,round);		
 
 MacroCastLimitXformAll(double,round);
 MacroCastLimitXformAll(float,roundf);
@@ -126,31 +126,31 @@ MacroCastLimitXformAll(float,roundf);
   }
 
 MacroCastNoOp(uint64,uint64);
-MacroCastUpLimit(uint32,uint64,UINT32_MAX);			
-MacroCastUpLimit(uint16,uint64,UINT16_MAX);			
-MacroCastUpLimit(uint8,uint64,UINT8_MAX);				
-MacroCastUpLimit(int64,uint64,INT64_MAX); 
-MacroCastUpLimit(int32,uint64,INT32_MAX);	
-MacroCastUpLimit(int16,uint64,INT16_MAX);		
-MacroCastUpLimit(int8,uint64,INT8_MAX);
+MacroCastUpLimit(uint32,uint64,FMUINT32_MAX);			
+MacroCastUpLimit(uint16,uint64,FMUINT16_MAX);			
+MacroCastUpLimit(uint8,uint64,FMUINT8_MAX);				
+MacroCastUpLimit(int64,uint64,FMINT64_MAX); 
+MacroCastUpLimit(int32,uint64,FMINT32_MAX);	
+MacroCastUpLimit(int16,uint64,FMINT16_MAX);		
+MacroCastUpLimit(int8,uint64,FMINT8_MAX);
 
 MacroCastNoLimit(uint64,uint32);
 MacroCastNoOp(uint32,uint32);
-MacroCastUpLimit(uint16,uint32,UINT16_MAX);			
-MacroCastUpLimit(uint8,uint32,UINT8_MAX);				
+MacroCastUpLimit(uint16,uint32,FMUINT16_MAX);			
+MacroCastUpLimit(uint8,uint32,FMUINT8_MAX);				
 MacroCastNoLimit(int64,uint32);
-MacroCastUpLimit(int32,uint32,INT32_MAX);	
-MacroCastUpLimit(int16,uint32,INT16_MAX);		
-MacroCastUpLimit(int8,uint32,INT8_MAX);
+MacroCastUpLimit(int32,uint32,FMINT32_MAX);	
+MacroCastUpLimit(int16,uint32,FMINT16_MAX);		
+MacroCastUpLimit(int8,uint32,FMINT8_MAX);
 
 MacroCastNoLimit(uint64,uint16);
 MacroCastNoLimit(uint32,uint16);
 MacroCastNoOp(uint16,uint16);
-MacroCastUpLimit(uint8,uint16,UINT8_MAX);				
+MacroCastUpLimit(uint8,uint16,FMUINT8_MAX);				
 MacroCastNoLimit(int64,uint16);
 MacroCastNoLimit(int32,uint16);
-MacroCastUpLimit(int16,uint16,INT16_MAX);		
-MacroCastUpLimit(int8,uint16,INT8_MAX);
+MacroCastUpLimit(int16,uint16,FMINT16_MAX);		
+MacroCastUpLimit(int8,uint16,FMINT8_MAX);
 
 MacroCastNoLimit(uint64,uint8);
 MacroCastNoLimit(uint32,uint8);
@@ -159,34 +159,34 @@ MacroCastNoOp(uint8,uint8);
 MacroCastNoLimit(int64,uint8);
 MacroCastNoLimit(int32,uint8);
 MacroCastNoLimit(int16,uint8);
-MacroCastUpLimit(int8,uint8,INT8_MAX);
+MacroCastUpLimit(int8,uint8,FMINT8_MAX);
 
-MacroCastLimit(uint64,int64,0,INT64_MAX);	
-MacroCastLimit(uint32,int64,0,UINT32_MAX);			
-MacroCastLimit(uint16,int64,0,UINT16_MAX);			
-MacroCastLimit(uint8,int64,0,UINT8_MAX);				
+MacroCastLimit(uint64,int64,0,FMINT64_MAX);	
+MacroCastLimit(uint32,int64,0,FMUINT32_MAX);			
+MacroCastLimit(uint16,int64,0,FMUINT16_MAX);			
+MacroCastLimit(uint8,int64,0,FMUINT8_MAX);				
 MacroCastNoOp(int64,int64);
-MacroCastLimit(int32,int64,INT32_MIN,INT32_MAX);	
-MacroCastLimit(int16,int64,INT16_MIN,INT16_MAX);		
-MacroCastLimit(int8,int64,INT8_MIN,INT8_MAX);
+MacroCastLimit(int32,int64,FMINT32_MIN,FMINT32_MAX);	
+MacroCastLimit(int16,int64,FMINT16_MIN,FMINT16_MAX);		
+MacroCastLimit(int8,int64,FMINT8_MIN,FMINT8_MAX);
 
 MacroCastPosLimit(uint64,int32);	
 MacroCastPosLimit(uint32,int32);
-MacroCastLimit(uint16,int32,0,UINT16_MAX);			
-MacroCastLimit(uint8,int32,0,UINT8_MAX);				
+MacroCastLimit(uint16,int32,0,FMUINT16_MAX);			
+MacroCastLimit(uint8,int32,0,FMUINT8_MAX);				
 MacroCastNoLimit(int64,int32);
 MacroCastNoOp(int32,int32);
-MacroCastLimit(int16,int32,INT16_MIN,INT16_MAX);		
-MacroCastLimit(int8,int32,INT8_MIN,INT8_MAX);
+MacroCastLimit(int16,int32,FMINT16_MIN,FMINT16_MAX);		
+MacroCastLimit(int8,int32,FMINT8_MIN,FMINT8_MAX);
 
 MacroCastPosLimit(uint64,int16);	
 MacroCastPosLimit(uint32,int16);			
 MacroCastPosLimit(uint16,int16);
-MacroCastLimit(uint8,int16,0,UINT8_MAX);				
+MacroCastLimit(uint8,int16,0,FMUINT8_MAX);				
 MacroCastNoLimit(int64,int16);
 MacroCastNoLimit(int32,int16);
 MacroCastNoOp(int16,int16);
-MacroCastLimit(int8,int16,INT8_MIN,INT8_MAX);
+MacroCastLimit(int8,int16,FMINT8_MIN,FMINT8_MAX);
 
 MacroCastPosLimit(uint64,int8);
 MacroCastPosLimit(uint32,int8);

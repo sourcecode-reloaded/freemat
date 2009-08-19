@@ -9,6 +9,7 @@
 #include "FastList.hpp"
 #include "Cast.hpp"
 #include "IEEEFP.hpp"
+#include "Vector.hpp"
 
 template <typename T>
 class BasicArray;
@@ -28,26 +29,23 @@ class ConstBasicIterator;
 
 template <typename T>
 class BasicArray {
-  QVector<T> m_data;
+  Vector<T> m_data;
   NTuple m_dims;
   index_t m_offset;
   index_t m_count;
 public:
   BasicArray() : m_data(), m_dims(0,0), m_offset(0), m_count(0) {}
   explicit BasicArray(const NTuple& dim) : 
-    m_data(), m_dims(dim), m_offset(0), m_count(dim.count()) {
-    m_data.resize((int64)(m_dims.count()));
+    m_data(size_t(dim.count())), m_dims(dim), m_offset(0), m_count(dim.count()) {
   }
-  explicit BasicArray(T val) {
-    m_data << val; 
+  explicit BasicArray(T val) : m_data(1) {
+    m_data[0] = val;
     m_dims = NTuple(1,1); 
     m_offset = 0;
     m_count = 1;
   }
   ~BasicArray() {}
   inline index_t offset() const {return m_offset;}
-  //  inline QVector<T>& data() {return m_data;}
-  //inline const QVector<T>& data() const {return m_data;}
   inline const NTuple dimensions() const {return m_dims;}
   inline index_t rows() const {return m_dims.rows();}
   inline index_t columns() const {return m_dims.cols();}
@@ -61,39 +59,39 @@ public:
   inline bool isVector() const {return isColumnVector() || isRowVector();}
   inline const T operator[](const NTuple& pos) const {
     if (m_dims.validate(pos))
-      return m_data[(int64)(m_dims.map(pos)+m_offset-1)];
+      return m_data[(size_t)(m_dims.map(pos)+m_offset-1)];
     throw Exception("out of range");
   }
   inline T& operator[](const NTuple& pos) {
     if (m_dims.validate(pos))
-      return m_data[(int64)(m_dims.map(pos)+m_offset-1)];
+      return m_data[(size_t)(m_dims.map(pos)+m_offset-1)];
     throw Exception("out of range");
   }
   inline const T operator[](index_t pos) const {
     if ((pos > 0) && (pos <= length()))
-      return m_data[(int64)(pos+m_offset-1)];
+      return m_data[(size_t)(pos+m_offset-1)];
     throw Exception("out of range");
   }
   inline T& operator[](index_t pos) {
     if ((pos > 0) && (pos <= length()))
-      return m_data[(int64)(pos+m_offset-1)];
+      return m_data[(size_t)(pos+m_offset-1)];
     throw Exception("out of range");
   }
   inline const T* constData() const {
     if (length() > 0)
-      return &(m_data.at(int64(m_offset)));
+      return m_data.data() + size_t(m_offset);
     else
       return NULL;
   }
   inline T* data() {
     if (length() > 0)
-      return &(m_data[int64(m_offset)]);
+      return &(m_data[size_t(m_offset)]);
     else
       return NULL;
   }
   void fill(T val) {
     for (index_t i=1;i<=length();i++) 
-      m_data[(int64)(i+m_offset-1)] = val;
+      m_data[(size_t)(i+m_offset-1)] = val;
   }
   bool operator==(const BasicArray<T>& b) const {
     for (index_t i=1;i<=b.length();i++) 
@@ -102,28 +100,28 @@ public:
   }
   inline void set(const NTuple& pos, const T& val) {
     if (!(pos <= dimensions())) resize(max(dimensions(),pos));
-    m_data[(int64)(m_dims.map(pos)+m_offset-1)] = val;
+    m_data[(size_t)(m_dims.map(pos)+m_offset-1)] = val;
   }
   inline void set(index_t pos, const T& val) {
     if (m_count < pos) resize(pos);
-    m_data[(int64)(pos+m_offset-1)] = val;
+    m_data[(size_t)(pos+m_offset-1)] = val;
   }
   inline void setNoBoundsCheck(index_t pos, const T& val) {
-    m_data.data()[(int64)(pos+m_offset-1)] = val;
+    m_data.data()[(size_t)(pos+m_offset-1)] = val;
   }
   inline const T get(index_t pos) const {
     if ((pos<1) || (pos>length())) 
       throw Exception("index is out of bounds");
-    return m_data[(int64)(pos+m_offset-1)];
+    return m_data[(size_t)(pos+m_offset-1)];
   }
   inline const T get(const NTuple& pos) const {
     if (m_dims.validate(pos))
-      return m_data[(int64)(m_dims.map(pos)+m_offset-1)];
+      return m_data[(size_t)(m_dims.map(pos)+m_offset-1)];
     else
       throw Exception("index is out of bounds");
   }
   inline const T getNoBoundsCheck(index_t pos) const {
-    return m_data.data()[(int64)(pos+m_offset-1)];    
+    return m_data.data()[(size_t)(pos+m_offset-1)];    
   }
   BasicArray<T> slice(const IndexArrayVector& index) const {
     index_t offset = getSliceIndex(dimensions(),index);
@@ -214,7 +212,7 @@ public:
       newDim = NTuple(1,newSize);
     else
       newDim = NTuple(newSize,1);
-    QVector<T> rdata((int64)newSize);
+    Vector<T> rdata((size_t)newSize);
     int j=0;
     for (index_t i=1;i<=map.length();i++)
       if (!map[i]) rdata[j++] = get(i);
@@ -549,8 +547,8 @@ BasicArray<T> ConvertBasicArray(const BasicArray<S>& source) {
   BasicArray<T> dest(source.dimensions());
   T* ret = dest.data();
   const S* src = source.constData();
-  uint64 len = uint64(source.length());
-  for (uint64 i=0;i<len;i++)
+  size_t len = size_t(source.length());
+  for (size_t i=0;i<len;i++)
     ret[i] = CastConvert<T,S>(src[i]);
   return dest;
 }
