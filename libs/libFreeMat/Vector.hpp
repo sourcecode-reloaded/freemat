@@ -11,15 +11,20 @@ class VectorData : public QSharedData
   T* m_data;
   size_t m_len;
 
+  void allocate(size_t len) {
+    try {
+      m_data = new T[len];
+      if (sizeof(T) <= 8)
+	memset(m_data,0,sizeof(T)*len);
+    } catch (const std::bad_alloc& x) {
+      throw Exception(QString("Cannot allocate enough memory to store an array of size %1").arg(m_len));
+    }
+  }
   void copyvec(const VectorData& copy) {
     if (m_data) delete[] m_data;
     m_len = copy.m_len;
     if (m_len) {
-      try {
-	m_data = new T[m_len];
-      } catch (const std::bad_alloc& x) {
-	throw Exception(QString("Cannot allocate enough memory to store an array of size %1").arg(m_len));
-      }
+      allocate(m_len);
       for (size_t i=0;i<m_len;i++)
 	m_data[i] = copy.m_data[i];
     }
@@ -28,8 +33,8 @@ public:
   inline VectorData() : m_data(0), m_len(0) {}
   inline VectorData(size_t dim) {
     try {
-      m_data = new T[dim];
       m_len = dim;
+      allocate(m_len);
     } catch (const std::bad_alloc& x) {
       throw Exception(QString("Cannot allocate enough memory to store an array of size %1").arg(dim));
     }
@@ -54,7 +59,9 @@ public:
   }
   inline void clear() {
     m_len = 0;
-    if (m_data) delete[] m_data;
+    if (m_data) 
+      delete[] m_data;
+    m_data = 0;
   }
 };
 
