@@ -145,7 +145,6 @@ void ztrmm_(char *side, char *uplo, char *transa, char *diag, int *m, int *n, do
 void ztrmv_(char *uplo, char *trans, char *diag, int *n, doublecomplex *a, int *lda, doublecomplex *x, int *incx, int uplo_len, int trans_len, int diag_len);
 void ztrsm_(char *side, char *uplo, char *transa, char *diag, int *m, int *n, doublecomplex *alpha, doublecomplex *a, int *lda, doublecomplex *b, int *ldb, int side_len, int uplo_len, int transa_len, int diag_len);
 void ztrsv_(char *uplo, char *trans, char *diag, int *n, doublecomplex *a, int *lda, doublecomplex *x, int *incx, int uplo_len, int trans_len, int diag_len);
-void lsame_(char *ca, char *cb, int ca_len, int cb_len);
 
 
 #ifdef __cplusplus 
