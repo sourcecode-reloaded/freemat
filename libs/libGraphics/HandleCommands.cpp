@@ -933,6 +933,9 @@ bool PrintBaseFigure(HandleWindow* g, QString filename,
   double cr, cg, cb;
   cr = color->At(0); cg = color->At(1); cb = color->At(2);
   h->SetThreeVectorDefault("color",1,1,1);
+
+  bool bRepaintFlag = GfxEnableFlag();
+
   GfxEnableRepaint();
   h->UpdateState();
   while (h->isDirty())
@@ -967,7 +970,8 @@ bool PrintBaseFigure(HandleWindow* g, QString filename,
   h->markDirty();
   while (h->isDirty())
     qApp->processEvents();
-  GfxDisableRepaint();
+  if( !bRepaintFlag )
+    GfxDisableRepaint();
   return retval;
 }
   
