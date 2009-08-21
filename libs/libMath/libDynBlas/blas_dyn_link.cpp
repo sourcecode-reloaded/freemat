@@ -152,6 +152,7 @@ void BlasWrapper::DiscoverBlasLibrary( void )
 
 void* BlasWrapper::Resolve( const char* function_name, void (*default_fcn)() )
 {
+  std::cout << "Resolve of " << function_name << "\n";
   if (useReference) return (void*)(default_fcn);
 	void *p;
 	QString fname( function_name );
@@ -160,7 +161,7 @@ void* BlasWrapper::Resolve( const char* function_name, void (*default_fcn)() )
 	//TODO: handle prefix, suffix.
 	fname = currentLib.prefix + fname + currentLib.suffix;
 	if( !(p = blasLib->resolve( fname.toAscii() ))){
-		throw Exception( blasLib->errorString() );
+	  return (void*)(default_fcn);
 	}
 	return p;
 }

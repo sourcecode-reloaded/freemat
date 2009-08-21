@@ -137,4 +137,3 @@ extern void ZTRMM(char *side, char *uplo, char *transa, char *diag, int *m, int 
 extern void ZTRMV(char *uplo, char *trans, char *diag, int *n, doublecomplex *a, int *lda, doublecomplex *x, int *incx, int uplo_len, int trans_len, int diag_len);
 extern void ZTRSM(char *side, char *uplo, char *transa, char *diag, int *m, int *n, doublecomplex *alpha, doublecomplex *a, int *lda, doublecomplex *b, int *ldb, int side_len, int uplo_len, int transa_len, int diag_len);
 extern void ZTRSV(char *uplo, char *trans, char *diag, int *n, doublecomplex *a, int *lda, doublecomplex *x, int *incx, int uplo_len, int trans_len, int diag_len);
-extern void LSAME(char *ca, char *cb, int ca_len, int cb_len);

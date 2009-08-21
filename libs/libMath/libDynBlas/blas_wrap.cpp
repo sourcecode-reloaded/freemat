@@ -293,7 +293,6 @@ void REF_ztrmm_(char *side, char *uplo, char *transa, char *diag, int *m, int *n
 void REF_ztrmv_(char *uplo, char *trans, char *diag, int *n, doublecomplex *a, int *lda, doublecomplex *x, int *incx, int uplo_len, int trans_len, int diag_len);
 void REF_ztrsm_(char *side, char *uplo, char *transa, char *diag, int *m, int *n, doublecomplex *alpha, doublecomplex *a, int *lda, doublecomplex *b, int *ldb, int side_len, int uplo_len, int transa_len, int diag_len);
 void REF_ztrsv_(char *uplo, char *trans, char *diag, int *n, doublecomplex *a, int *lda, doublecomplex *x, int *incx, int uplo_len, int trans_len, int diag_len);
-void REF_lsame_(char *ca, char *cb, int ca_len, int cb_len);
 }
 
 void caxpy_(int *n, complex *alpha, complex *x, int *incx, complex *y, int *incy)
@@ -1405,14 +1404,6 @@ void ztrsv_(char *uplo, char *trans, char *diag, int *n, doublecomplex *a, int *
 	if( !wrapper.fn[138] )
 		wrapper.fn[138] = wrapper.Resolve("ztrsv",(void (*)()) REF_ztrsv_);
 	(* reinterpret_cast<p_ztrsv>(wrapper.fn[138]))( uplo, trans, diag, n, a, lda, x, incx, uplo_len, trans_len, diag_len );
-
-}
-
-void lsame_(char *ca, char *cb, int ca_len, int cb_len)
-{
-	if( !wrapper.fn[139] )
-		wrapper.fn[139] = wrapper.Resolve("lsame",(void (*)()) REF_lsame_);
-	(* reinterpret_cast<p_lsame>(wrapper.fn[139]))( ca, cb, ca_len, cb_len );
 
 }
 
