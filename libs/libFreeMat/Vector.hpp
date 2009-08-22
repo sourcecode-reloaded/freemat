@@ -91,7 +91,7 @@ public:
     d->clear();
   }
 private:
-  VectorData<T> *d;
+  QSharedDataPointer<VectorData<T> > d;
 };
 
 #endif
