@@ -32,6 +32,7 @@
 
 #include "Array.hpp"
 #include "Exception.hpp"
+#include "DebugStream.hpp"
 
 #ifdef DYN_BLAS
 
@@ -152,7 +153,7 @@ void BlasWrapper::DiscoverBlasLibrary( void )
 
 void* BlasWrapper::Resolve( const char* function_name, void (*default_fcn)() )
 {
-  std::cout << "Resolve of " << function_name << "\n";
+  dbout << "Resolve of " << function_name << "\n";
   if (useReference) return (void*)(default_fcn);
 	void *p;
 	QString fname( function_name );
