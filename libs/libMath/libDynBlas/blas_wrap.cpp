@@ -13,8 +13,8 @@ extern "C" {
 #endif /* __cplusplus */ 
 typedef void (* p_caxpy )(int *n, complex *alpha, complex *x, int *incx, complex *y, int *incy);
 typedef void (* p_ccopy )(int *n, complex *x, int *incx, complex *y, int *incy);
-typedef complex (* p_cdotc )(complex *ret_val, int *n, complex *x, int *incx, complex *y, int *incy);
-typedef complex (* p_cdotu )(complex *ret_val, int *n, complex *x, int *incx, complex *y, int *incy);
+typedef void (* p_cdotc )(complex *ret_val, int *n, complex *x, int *incx, complex *y, int *incy);
+typedef void (* p_cdotu )(complex *ret_val, int *n, complex *x, int *incx, complex *y, int *incy);
 typedef void (* p_cgbmv )(char *trans, int *m, int *n, int *kl, int *ku, complex *alpha, complex *a, int *lda, complex *x, int *incx, complex *beta, complex *y, int *incy, int trans_len);
 typedef void (* p_cgemm )(char *transa, char *transb, int *m, int *n, int *k, complex *alpha, complex *a, int *lda, complex *b, int *ldb, complex *beta, complex *c, int *ldc, int transa_len, int transb_len);
 typedef void (* p_cgemv )(char *trans, int *m, int *n, complex *alpha, complex *a, int *lda, complex *x, int *incx, complex *beta, complex *y, int *incy, int trans_len);
@@ -118,8 +118,8 @@ typedef void (* p_strsm )(char *side, char *uplo, char *transa, char *diag, int 
 typedef void (* p_strsv )(char *uplo, char *trans, char *diag, int *n, float *a, int *lda, float *x, int *incx, int uplo_len, int trans_len, int diag_len);
 typedef void (* p_zaxpy )(int *n, doublecomplex *alpha, doublecomplex *x, int *incx, doublecomplex *y, int *incy);
 typedef void (* p_zcopy )(int *n, doublecomplex *x, int *incx, doublecomplex *y, int *incy);
-typedef doublecomplex (* p_zdotc )(doublecomplex *ret_val, int *n, doublecomplex *x, int *incx, doublecomplex *y, int *incy);
-typedef doublecomplex (* p_zdotu )(doublecomplex *ret_val, int *n, doublecomplex *x, int *incx, doublecomplex *y, int *incy);
+typedef void (* p_zdotc )(doublecomplex *ret_val, int *n, doublecomplex *x, int *incx, doublecomplex *y, int *incy);
+typedef void (* p_zdotu )(doublecomplex *ret_val, int *n, doublecomplex *x, int *incx, doublecomplex *y, int *incy);
 typedef void (* p_zdscal )(int *n, double *alpha, doublecomplex *x, int *incx);
 typedef void (* p_zgbmv )(char *trans, int *m, int *n, int *kl, int *ku, doublecomplex *alpha, doublecomplex *a, int *lda, doublecomplex *x, int *incx, doublecomplex *beta, doublecomplex *y, int *incy, int trans_len);
 typedef void (* p_zgemm )(char *transa, char *transb, int *m, int *n, int *k, doublecomplex *alpha, doublecomplex *a, int *lda, doublecomplex *b, int *ldb, doublecomplex *beta, doublecomplex *c, int *ldc, int transa_len, int transb_len);
@@ -310,7 +310,7 @@ void ccopy_(int *n, complex *x, int *incx, complex *y, int *incy)
 
 }
 
-complex cdotc_(complex *ret_val, int *n, complex *x, int *incx, complex *y, int *incy)
+void cdotc_(complex *ret_val, int *n, complex *x, int *incx, complex *y, int *incy)
 {
 	if( !wrapper.fn[2] )
 		wrapper.fn[2] = wrapper.Resolve("cdotc",(void (*)()) REF_cdotc_);
@@ -318,7 +318,7 @@ complex cdotc_(complex *ret_val, int *n, complex *x, int *incx, complex *y, int 
 
 }
 
-complex cdotu_(complex *ret_val, int *n, complex *x, int *incx, complex *y, int *incy)
+void cdotu_(complex *ret_val, int *n, complex *x, int *incx, complex *y, int *incy)
 {
 	if( !wrapper.fn[3] )
 		wrapper.fn[3] = wrapper.Resolve("cdotu",(void (*)()) REF_cdotu_);
@@ -1150,7 +1150,7 @@ void zcopy_(int *n, doublecomplex *x, int *incx, doublecomplex *y, int *incy)
 
 }
 
-doublecomplex zdotc_(doublecomplex *ret_val, int *n, doublecomplex *x, int *incx, doublecomplex *y, int *incy)
+void zdotc_(doublecomplex *ret_val, int *n, doublecomplex *x, int *incx, doublecomplex *y, int *incy)
 {
 	if( !wrapper.fn[107] )
 		wrapper.fn[107] = wrapper.Resolve("zdotc",(void (*)()) REF_zdotc_);
@@ -1158,7 +1158,7 @@ doublecomplex zdotc_(doublecomplex *ret_val, int *n, doublecomplex *x, int *incx
 
 }
 
-doublecomplex zdotu_(doublecomplex *ret_val, int *n, doublecomplex *x, int *incx, doublecomplex *y, int *incy)
+void zdotu_(doublecomplex *ret_val, int *n, doublecomplex *x, int *incx, doublecomplex *y, int *incy)
 {
 	if( !wrapper.fn[108] )
 		wrapper.fn[108] = wrapper.Resolve("zdotu",(void (*)()) REF_zdotu_);

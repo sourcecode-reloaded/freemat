@@ -8,8 +8,8 @@ extern "C" {
 
 void caxpy_(int *n, complex *alpha, complex *x, int *incx, complex *y, int *incy);
 void ccopy_(int *n, complex *x, int *incx, complex *y, int *incy);
-complex cdotc_(complex *ret_val, int *n, complex *x, int *incx, complex *y, int *incy);
-complex cdotu_(complex *ret_val, int *n, complex *x, int *incx, complex *y, int *incy);
+void cdotc_(complex *ret_val, int *n, complex *x, int *incx, complex *y, int *incy);
+void cdotu_(complex *ret_val, int *n, complex *x, int *incx, complex *y, int *incy);
 void cgbmv_(char *trans, int *m, int *n, int *kl, int *ku, complex *alpha, complex *a, int *lda, complex *x, int *incx, complex *beta, complex *y, int *incy, int trans_len);
 void cgemm_(char *transa, char *transb, int *m, int *n, int *k, complex *alpha, complex *a, int *lda, complex *b, int *ldb, complex *beta, complex *c, int *ldc, int transa_len, int transb_len);
 void cgemv_(char *trans, int *m, int *n, complex *alpha, complex *a, int *lda, complex *x, int *incx, complex *beta, complex *y, int *incy, int trans_len);
@@ -113,8 +113,8 @@ void strsm_(char *side, char *uplo, char *transa, char *diag, int *m, int *n, fl
 void strsv_(char *uplo, char *trans, char *diag, int *n, float *a, int *lda, float *x, int *incx, int uplo_len, int trans_len, int diag_len);
 void zaxpy_(int *n, doublecomplex *alpha, doublecomplex *x, int *incx, doublecomplex *y, int *incy);
 void zcopy_(int *n, doublecomplex *x, int *incx, doublecomplex *y, int *incy);
-doublecomplex zdotc_(doublecomplex *ret_val, int *n, doublecomplex *x, int *incx, doublecomplex *y, int *incy);
-doublecomplex zdotu_(doublecomplex *ret_val, int *n, doublecomplex *x, int *incx, doublecomplex *y, int *incy);
+void zdotc_(doublecomplex *ret_val, int *n, doublecomplex *x, int *incx, doublecomplex *y, int *incy);
+void zdotu_(doublecomplex *ret_val, int *n, doublecomplex *x, int *incx, doublecomplex *y, int *incy);
 void zdscal_(int *n, double *alpha, doublecomplex *x, int *incx);
 void zgbmv_(char *trans, int *m, int *n, int *kl, int *ku, doublecomplex *alpha, doublecomplex *a, int *lda, doublecomplex *x, int *incx, doublecomplex *beta, doublecomplex *y, int *incy, int trans_len);
 void zgemm_(char *transa, char *transb, int *m, int *n, int *k, doublecomplex *alpha, doublecomplex *a, int *lda, doublecomplex *b, int *ldb, doublecomplex *beta, doublecomplex *c, int *ldc, int transa_len, int transb_len);
