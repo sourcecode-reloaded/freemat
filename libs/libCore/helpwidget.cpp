@@ -234,6 +234,9 @@ void HelpWindow::readSettings() {
 }
 
 void HelpWindow::createActions() {
+  QList<QKeySequence> stemp;
+  stemp.clear();
+
   zoominAct = new QAction(QIcon(":/images/zoomin.png"),"Zoom &In",this);
   zoominAct->setShortcut(Qt::Key_Plus | Qt::CTRL); 
   connect(zoominAct,SIGNAL(triggered()),tb,SLOT(zoomIn()));
@@ -241,7 +244,11 @@ void HelpWindow::createActions() {
   zoomoutAct->setShortcut(Qt::Key_Minus | Qt::CTRL); 
   connect(zoomoutAct,SIGNAL(triggered()),tb,SLOT(zoomOut()));
   copyAct = new QAction(QIcon(":/images/copy.png"),"&Copy Selection",this);
-  copyAct->setShortcut(Qt::Key_C | Qt::CTRL); 
+  stemp.clear();
+  stemp.push_back(QKeySequence(Qt::Key_C | Qt::CTRL));
+  stemp.push_back(QKeySequence(Qt::Key_Insert | Qt::CTRL));
+  copyAct->setShortcuts(stemp);
+
   connect(copyAct,SIGNAL(triggered()),tb,SLOT(copy()));
   exitAct = new QAction(QIcon(":/images/quit.png"),"&Exit Help",this);
   exitAct->setShortcut(Qt::Key_Q | Qt::CTRL); 

@@ -1390,6 +1390,9 @@ void FMEditor::documentWasModified() {
 }
 
 void FMEditor::createActions() {
+  QList<QKeySequence> stemp;
+  stemp.clear();
+
   newAct = new QAction(QIcon(":/images/new.png"),"&New Tab",this);
   newAct->setShortcut(Qt::Key_N | Qt::CTRL);
   connect(newAct,SIGNAL(triggered()),this,SLOT(addTab()));
@@ -1415,12 +1418,25 @@ void FMEditor::createActions() {
   connect(closeAct,SIGNAL(triggered()),this,SLOT(closeTab()));
   closeAllAct = new QAction("Close All Tab",this);
   connect(closeAllAct,SIGNAL(triggered()),this,SLOT(closeAllTabs()));
+
   copyAct = new QAction(QIcon(":/images/copy.png"),"&Copy",this);
-  copyAct->setShortcut(Qt::Key_C | Qt::CTRL);
+  stemp.clear();
+  stemp.push_back(QKeySequence(Qt::Key_C | Qt::CTRL));
+  stemp.push_back(QKeySequence(Qt::Key_Insert | Qt::CTRL));
+  copyAct->setShortcuts(stemp);
+  
   cutAct = new QAction(QIcon(":/images/cut.png"),"Cu&t",this);
-  cutAct->setShortcut(Qt::Key_X | Qt::CTRL);
+  stemp.clear();
+  stemp.push_back(QKeySequence(Qt::Key_X | Qt::CTRL));
+  stemp.push_back(QKeySequence(Qt::Key_Delete | Qt::CTRL));
+  cutAct->setShortcuts(stemp);
+
   pasteAct = new QAction(QIcon(":/images/paste.png"),"&Paste",this);
-  pasteAct->setShortcut(Qt::Key_V | Qt::CTRL);
+  stemp.clear();
+  stemp.push_back(QKeySequence(Qt::Key_V | Qt::CTRL));
+  stemp.push_back(QKeySequence(Qt::Key_Insert | Qt::SHIFT));
+  pasteAct->setShortcuts(stemp);
+
   fontAct = new QAction("&Font",this);
   connect(fontAct,SIGNAL(triggered()),this,SLOT(font()));
   findAct = new QAction(QIcon(":/images/find.png"),"&Find",this);

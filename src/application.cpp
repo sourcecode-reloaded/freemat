@@ -65,6 +65,9 @@ ApplicationWindow::~ApplicationWindow() {
 }
 
 void ApplicationWindow::createActions() {
+  QList<QKeySequence> stemp;
+  stemp.clear();
+
   cleanHistoryAct = new QAction("&Clear History Tool",this);
   connect(cleanHistoryAct,SIGNAL(triggered()),this,SLOT(cleanhistory()));
   editorAct = new QAction(QIcon(":/images/freemat_editor_small_mod_64.png"),"&Editor",this);
@@ -85,12 +88,18 @@ void ApplicationWindow::createActions() {
   quitAct->setShortcut(Qt::Key_Q | Qt::CTRL); 
   connect(quitAct,SIGNAL(triggered()),this,SLOT(close()));
   copyAct = new QAction(QIcon(":/images/copy.png"),"&Copy",this);
-  copyAct->setShortcut(Qt::Key_C | Qt::CTRL);
+  stemp.clear();
+  stemp.push_back(QKeySequence(Qt::Key_C | Qt::CTRL));
+  stemp.push_back(QKeySequence(Qt::Key_Insert | Qt::CTRL));
+  copyAct->setShortcuts(stemp);
   connect(copyAct,SIGNAL(triggered()),this,SLOT(copy()));
   pasteAct = new QAction(QIcon(":/images/paste.png"),"&Paste",this);
   clearAct = new QAction(QIcon(":/images/clear.png"),"&Clear Console",this);
   connect(clearAct,SIGNAL(triggered()),this,SLOT(clearconsole()));
-  pasteAct->setShortcut(Qt::Key_V | Qt::CTRL);
+  stemp.clear();
+  stemp.push_back(QKeySequence(Qt::Key_V | Qt::CTRL));
+  stemp.push_back(QKeySequence(Qt::Key_Insert | Qt::SHIFT));
+  pasteAct->setShortcuts(stemp);
   connect(pasteAct,SIGNAL(triggered()),this,SLOT(paste()));
   fontAct = new QAction("&Font",this);
   connect(fontAct,SIGNAL(triggered()),this,SLOT(font()));
