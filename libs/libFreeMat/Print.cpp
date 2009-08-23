@@ -228,6 +228,18 @@ static inline void emitIntegerReal(Interpreter* io, T val,
 
 template <class T>
 static inline void emitFloatReal(Interpreter*io, T val, const ArrayFormatInfo &format) {
+  if( IsNaN( val ) ){
+    io->outputMessage("NaN");
+    return;
+  }
+  if( !IsFinite( val ) ){
+      if( val > 0 )
+	io->outputMessage("Inf");
+      else
+	io->outputMessage("-Inf");
+    return;
+  }
+
   if (val != 0) 
     if (format.expformat)
       io->outputMessage("%*.*e",format.width,format.decimals,val);
@@ -242,11 +254,30 @@ static inline void emitFloatComplex(Interpreter* io, T real, T imag,
 			     const ArrayFormatInfo &format) {
   int width = format.width/2-2;
   if ((real != 0) || (imag != 0)) {
-    if (format.expformat)
+    if( IsNaN( real ) ){
+	io->outputMessage("NaN");
+    }
+    else if( !IsFinite( real ) ){
+	if( real > 0 )
+	    io->outputMessage("Inf");
+	  else
+	    io->outputMessage("-Inf");
+    }
+    else if (format.expformat)
       io->outputMessage("%*.*e",width,format.decimals,real);
     else
       io->outputMessage("%*.*f",width,format.decimals,real/format.scalefact);
-    if (imag < 0) {
+
+    if( IsNaN( imag ) ){
+	io->outputMessage(" + NaNi");
+    }
+    else if( !IsFinite( imag ) ){
+	if( imag > 0 )
+	    io->outputMessage(" + Infi");
+	else
+	    io->outputMessage(" - Infi");
+    }
+    else if (imag < 0) {
       if (format.expformat)
 	io->outputMessage(" -%*.*ei",width,format.decimals,-imag);
       else
