@@ -927,7 +927,6 @@ static void DNAUPARPACKError(int info) {
   throw Exception("Could not build an Arnoldi factorization.");
 }
 
-#if HAVE_ARPACK
 extern "C" {
   int znaupd_(int *ido, char *bmat, int *n, const char*
 	      which, int *nev, double *tol, double *resid, int *ncv,
@@ -964,7 +963,6 @@ extern "C" {
 	      *iparam, int *ipntr, double *workd, double *workl, 
 	      int *lworkl, int *info);
 }
-#endif
 
 
 #define min(a,b) ((a) < (b) ? (a) : (b))
@@ -1122,7 +1120,6 @@ static ArrayVector SparseDecodeResults(int rvec, int nconv, double *dr, double *
 
 static ArrayVector SparseEigDecomposeNonsymmetricReal(const SparseMatrix<double> &a,
 						      int nev, int nargout, QString which) {
-#if HAVE_ARPACK
   // Initialization call
   int ido = 0;
   char bmat = 'I';
@@ -1182,15 +1179,11 @@ static ArrayVector SparseEigDecomposeNonsymmetricReal(const SparseMatrix<double>
   if (ierr != 0)
     DNEUPARPACKError(ierr);
   return SparseDecodeResults(rvec,nconv,dr,di,nev,z,n,nargout);
-#else
-  throw Exception("Eigenvalue decomposition problems for sparse matrices requires the ARPACK support library, which was not available at compile time.  You must have ARPACK installed at compile time for FreeMat to enable this functionality.");
-#endif
 } 
 
 
 static ArrayVector SparseEigDecomposeSymmetricReal(const SparseMatrix<double> &a,
 						   int nev, int nargout, QString which) {
-#if HAVE_ARPACK
   // Initialization call
   char *which_cstr = strdup(qPrintable(which));
   int ido = 0;
@@ -1267,15 +1260,11 @@ static ArrayVector SparseEigDecomposeSymmetricReal(const SparseMatrix<double> &a
     retval.push_back(DiagonalArray(db));
   }
   return retval;
-#else
-  throw Exception("Eigenvalue decomposition problems for sparse matrices requires the ARPACK support library, which was not available at compile time.  You must have ARPACK installed at compile time for FreeMat to enable this functionality.");
-#endif
 } 
 
 ArrayVector SparseEigDecomposeNonsymmetricComplex(const SparseMatrix<double> &a_real,
 						  const SparseMatrix<double> &a_imag,
 						  int nev, int nargout, QString which) {
-#if HAVE_ARPACK
   // Initialization call
   int ido = 0;
   char bmat = 'I';
@@ -1335,9 +1324,6 @@ ArrayVector SparseEigDecomposeNonsymmetricComplex(const SparseMatrix<double> &a_
   if (ierr != 0)
     DNEUPARPACKError(ierr);
   return SparseDecodeComplexResults(rvec,nconv,d,z,nev,n,nargout);
-#else
-  throw Exception("Eigenvalue decomposition problems for sparse matrices requires the ARPACK support library, which was not available at compile time.  You must have ARPACK installed at compile time for FreeMat to enable this functionality.");
-#endif
 } 
 
 static SparseMatrix<double> MakeSparseScaledIdentityReal(double shift, int size) {
@@ -1354,7 +1340,7 @@ static SparseMatrix<double> MakeSparseScaledIdentityReal(double shift, int size)
 // UMFPack routines, and then use the result in repeated solutions.
 ArrayVector SparseEigDecomposeNonsymmetricRealShifted(const SparseMatrix<double> &A,
 						      int nev, int nargout, double shift) {
-#if HAVE_UMFPACK & HAVE_ARPACK
+#if HAVE_UMFPACK
   // Set up the scaled identity matrix
   int rows = int(A.rows());
   Array scI(MakeSparseScaledIdentityReal(shift, rows));
@@ -1454,7 +1440,7 @@ ArrayVector SparseEigDecomposeNonsymmetricRealShifted(const SparseMatrix<double>
 ArrayVector SparseEigDecomposeNonsymmetricComplexShifted(const SparseMatrix<double> &Areal,
 							 const SparseMatrix<double> &Aimag,
 							 int nev, int nargout, double *shift) {
-#if HAVE_UMFPACK & HAVE_ARPACK
+#if HAVE_UMFPACK
   // Set up the scaled identity matrix
   int rows = int(Areal.rows());
   Array scI(MakeSparseScaledIdentityReal(shift[0],rows),
