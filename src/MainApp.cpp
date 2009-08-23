@@ -107,7 +107,11 @@ void MainApp::HelpWin() {
   HelpWinFunction(0,dummy,m_eval);
 }
 
-bool inBundleMode();
+bool inBundleMode()  {
+  QDir dir(QApplication::applicationDirPath());
+  dir.cdUp();
+  return (dir.dirName() == "Contents");
+}
 
 void MainApp::SetupGUICase() {
   if (inBundleMode()) {
@@ -1070,37 +1074,114 @@ Context *MainApp::NewContext() {
   return context;
 }
 
+QString GetRootPath() {
+  if (inBundleMode()) {
+    QDir dir(qApp->applicationDirPath() + "/../Resources");
+    if (dir.exists())
+      return dir.canonicalPath();
+    else
+      return "";
+  }
+  QSettings settings("FreeMat", Interpreter::getVersionString());
+  QDir dir(settings.value("root", RESOURCEDIR).toString());
+  if (dir.exists())
+    return dir.canonicalPath();
+  else
+#ifdef Q_WS_WIN
+    return qApp->applicationDirPath()+QString("/../");
+#else
+    return "";
+#endif
+}
+
+void MainApp::UpdateBasePath(QString rootpath) {
+  QDir dir1(rootpath + "/toolbox");
+  if (dir1.exists()) {
+    QString path1(dir1.canonicalPath());
+    basePath += GetRecursiveDirList(path1);
+  } else {
+    WarningMessage("Cannot find toolbox directory at " + rootpath + "/toobox.  Please adjust your rootpath.");
+  }
+  QDir dir2(rootpath + "/help/text");
+  if (dir2.exists()) {
+    QString path2(dir2.canonicalPath());
+    basePath += GetRecursiveDirList(path2);
+  } else {
+    WarningMessage("Cannot find help directory at " + rootpath + "/help/text.  Please adjust your rootpath.");
+  }
+}
+
+void MainApp::SetRootPath(QString path, Interpreter* eval) {
+  if (inBundleMode()) 
+    eval->warningMessage("FreeMat is in bundle mode.  The rootpath function has no effect.");
+  QDir dir(path);
+  if (!dir.exists())
+    eval->warningMessage("Root path <" + path + "> does not exist!");
+  QSettings settings("FreeMat", Interpreter::getVersionString());
+  settings.setValue("root",path);
+  UpdateBasePath(path);
+  eval->setBasePath(basePath);
+  eval->rescanPath();
+}
+
 void MainApp::UpdatePaths() {
   static bool paths_set = false;
   if (!paths_set) {
-    if (inBundleMode()) {
-      QDir dir1(qApp->applicationDirPath() + "/../Resources/toolbox");
-      if (dir1.exists()) {
-	QString path1(dir1.canonicalPath());
-	basePath += GetRecursiveDirList(path1);
-      }
-      QDir dir2(qApp->applicationDirPath() + "/../Resources/help/text");
-      if (dir2.exists()) {
-	QString path2(dir2.canonicalPath());
-	basePath += GetRecursiveDirList(path2);
-      }
-    } else {
-      QSettings settings("FreeMat", Interpreter::getVersionString());
-      QDir dir1(QString(settings.value("root", RESOURCEDIR).toString())+"/toolbox");   
-      if (dir1.exists()) {
-	QString path1(dir1.canonicalPath());
-	basePath += GetRecursiveDirList(path1);
-      }
-      QDir dir2(QString(settings.value("root", RESOURCEDIR).toString())+"/help/text");
-      if (dir2.exists()) {
-	QString path2(dir2.canonicalPath());
-	basePath += GetRecursiveDirList(path2);
-      }
-    }
+    QString rootpath = GetRootPath();
+    UpdateBasePath(rootpath);
     QSettings settings("FreeMat", Interpreter::getVersionString());
     userPath = settings.value("interpreter/path").toStringList();
     paths_set = true;
   }
+}
+
+//!
+//@Module ROOTPATH Set FreeMat Root Path
+//@@Section FREEMAT
+//@@Usage
+//In order to function properly, FreeMat needs to know where to
+//find the @|toolbox| directory as well as the @|help| directory.
+//These directories are located on what is known as the @|root path|.
+//Normally, FreeMat should know where these directories are located.
+//However under some circumstances (usually when FreeMat is installed
+//into a non-default location), it may be necessary to indicate
+//a different root path location, or to specify a particular one.
+//Note that on the Mac OS platform, FreeMat is installed as a bundle,
+//and will use the toolbox that is installed in the bundle regardless of
+//the setting for @|rootpath|.
+//For Linux, FreeMat will typically use @|/usr/local/share/FreeMat-<Version>/|
+//for the root path.  Installations from source code will generally work,
+//but binary installations (e.g., from an @|RPM|) may need to have the
+//rootpath set.
+//
+//The @|rootpath| function has two forms.  The first form takes no arguments
+//and allows you to browse to the rootpath directory
+//@[
+//   rootpath
+//@]
+//The second form will set a rootpath directly from the command line
+//@[
+//   rootpath(path)
+//@]
+//where @|path| is the full path to where the @|toolbox| and @|help| 
+//directories are located.  For example, @|rootpath('/usr/share/FreeMat-4.0')|.
+//Changes to @|rootpath| are persistent (you do not need to run it every
+//time you start FreeMat).
+//@@Signature
+//sgfunction rootpath RootPathFunction
+//inputs path
+//outptus none
+//!
+ArrayVector RootPathFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
+  if (inBundleMode()) 
+    eval->warningMessage("FreeMat is in bundle mode.  The rootpath function has no effect.");
+  QString path;
+  if (arg.size() != 0) 
+    path = arg[0].asString();
+  else
+    path = QFileDialog::getExistingDirectory(0,QString("Select FreeMat root path"),GetRootPath()); 
+  m_app->SetRootPath(path,eval);
+  return ArrayVector(Array(GetRootPath()));
 }
 
 static int m_mainID;

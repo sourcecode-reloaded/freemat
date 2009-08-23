@@ -467,14 +467,12 @@ public:
 	if (!t) {
 	  dbout << "addFunction for function " << 
 	    name << " is wrong!\n";
-	  exit(1);
 	}
 	args.push_back(t);
       }
       if (va_arg(argp,const char *) != NULL) {
 	dbout << "addFunction for function " << 
 	  name << " is wrong!\n";
-	exit(1);
       }
       va_end(argp);
     }
@@ -486,6 +484,8 @@ public:
     f2def->fptr = fptr;
     f2def->arguments = args;
     insertFunction(f2def,false);  
+    if (builtinTab.hasSymbol(name))
+      dbout << "function " << name << " is already in the builtin table";
     builtinTab.insertSymbol(name,f2def);
   }
   /**
@@ -501,14 +501,12 @@ public:
 	if (!t) {
 	  dbout << "addSpecialFunction for function " << 
 	    (name) << " is wrong!\n";
-	  exit(1);
 	}
 	args.push_back(t);
       }
       if (va_arg(argp,const char *) != NULL) {
 	dbout << "addSpecialFunction for function " << 
 	  (name) << " is wrong!\n";
-	exit(1);
       }
       va_end(argp);
     }
@@ -520,6 +518,8 @@ public:
     f2def->fptr = fptr;
     f2def->arguments = args;
     insertFunction(f2def,false);
+    if (builtinTab.hasSymbol(name))
+      dbout << "function " << name << " is already in the builtin table";
     builtinTab.insertSymbol(name,f2def);
   }
   /**
@@ -536,14 +536,12 @@ public:
 	if (!t) {
 	  dbout << "addGfxFunction for function " << 
 	    (name) << " is wrong!\n";
-	  exit(1);
 	}
 	args.push_back(t);
       }
       if (va_arg(argp,const char *) != NULL) {
 	dbout << "addGfxFunction for function " << 
 	  (name) << " is wrong!\n";
-	exit(1);
       }
       va_end(argp);
     }
@@ -556,6 +554,8 @@ public:
     f2def->arguments = args;
     f2def->graphicsFunction = true;
     insertFunction(f2def,false);  
+    if (builtinTab.hasSymbol(name))
+      dbout << "function " << name << " is already in the builtin table";
     builtinTab.insertSymbol(name,f2def);
   }
   /**
@@ -572,14 +572,12 @@ public:
 	if (!t) {
 	  dbout << "addGfxSpecialFunction for function " << 
 	    (name) << " is wrong!\n";
-	  exit(1);
 	}
 	args.push_back(t);
       }
       if (va_arg(argp,const char *) != NULL) {
 	dbout << "addGfxSpecialFunction for function " << 
 	  (name) << " is wrong!\n";
-	exit(1);
       }
       va_end(argp);
     }
@@ -592,6 +590,8 @@ public:
     f2def->arguments = args;
     f2def->graphicsFunction = true;
     insertFunction(f2def,false);
+    if (builtinTab.hasSymbol(name))
+      dbout << "function " << name << " is already in the builtin table";
     builtinTab.insertSymbol(name,f2def);
   }
   

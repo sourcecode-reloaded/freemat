@@ -308,7 +308,8 @@ ArrayVector ThreadKillFunction(int, const ArrayVector&);
 ArrayVector ThreadFreeFunction(int, const ArrayVector&);
 ArrayVector ClcFunction(int, const ArrayVector&);
 ArrayVector ProfilerFunction(int, const ArrayVector&);
-ArrayVector TraceFunction(int, const ArrayVector&, Interpreter*);
+ArrayVector RootPathFunction(int, const ArrayVector&, Interpreter*);
+
 
 void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("abs",AbsFunction,1,1,"x",NULL);
@@ -389,7 +390,6 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addSpecialFunction("eval",EvalFunction,2,-1,"try_clause","catch_clause",NULL);
   context->addSpecialFunction("evalin",EvalInFunction,2,3,"workspace","expression",NULL);
   context->addSpecialFunction("assignin",AssignInFunction,3,0,"workspace","variablename","value",NULL);
-  context->addSpecialFunction("trace",TraceFunction,0,0,NULL);
   context->addSpecialFunction("feval",FevalFunction,-1,-1,NULL);
   context->addSpecialFunction("exist",ExistFunction,2,1,"item","kind",NULL);
   context->addFunction("fft",FFTFunction,3,1,"x","len","dim",NULL);
@@ -452,7 +452,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addSpecialFunction("diary",DiaryFunction,1,1,"x",NULL);
   context->addSpecialFunction("quiet",QuietFunction,1,1,"mode",NULL);
   context->addSpecialFunction("source",SourceFunction,1,0,"filename",NULL);
-  context->addSpecialFunction("type",TypeFunction,1,0,"filename",NULL);
+  context->addSpecialFunction("type",TypeFunction,1,0,"function",NULL);
   context->addSpecialFunction("builtin",BuiltinFunction,-1,-1,NULL);
   context->addSpecialFunction("docli",DoCLIFunction,0,0,NULL);
   context->addFunction("system",SystemFunction,1,1,"cmd",NULL);
@@ -650,6 +650,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
    if (guiflag)
      context->addGfxFunction("clc",ClcFunction,0,0,NULL);
   context->addFunction("profiler",ProfilerFunction,-1,0,NULL);
-  context->addFunction("blaslib",BlaslibFunction,-1,0,NULL);
+   if (guiflag)
+     context->addGfxSpecialFunction("rootpath",RootPathFunction,1,2,"path",NULL);
 }
 

@@ -610,8 +610,9 @@ void Interpreter::sendGreeting() {
   outputMessage(" Use <dbauto on/off> to control stop-on-error behavior\n");
   outputMessage(" Use ctrl-b to stop execution of a function/script\n");
 #ifdef HAVE_LLVM
-  outputMessage(" JIT is enabled by default\n");
+  outputMessage(" JIT is enabled by default - use jitcontrol to change it\n");
 #endif
+  outputMessage(" Use <rootpath> to set/change where the FreeMat toolbox is installed\n");
   outputMessage("");
 }
 

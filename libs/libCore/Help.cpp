@@ -79,11 +79,8 @@ ArrayVector HelpFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
 
 static HelpWindow *m_helpwin=0;
 
-bool inBundleMode() {
-  QDir dir(QApplication::applicationDirPath());
-  dir.cdUp();
-  return (dir.dirName() == "Contents");
-}
+bool inBundleMode();
+QString GetRootPath();
 
 //!
 //@Module HELPWIN Online Help Window
@@ -101,22 +98,7 @@ bool inBundleMode() {
 //outputs none
 //!
 ArrayVector HelpWinFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {  
-  QDir dir;
-  if (inBundleMode()) {
-    dir = QDir(QString(qApp->applicationDirPath() + "/../Resources/help/html"));
-  } else {
-    QSettings settings("FreeMat", Interpreter::getVersionString());
-#ifdef Q_WS_WIN
-    QString dirpath = QString(settings.value("root", "").toString());
-    
-    if( dirpath.isEmpty() )
-	dirpath = QCoreApplication::applicationDirPath()+QString("/../");
-
-    dir = QDir(dirpath+"/help/html");
-#else
-    dir = QDir(QString(settings.value("root", RESOURCEDIR).toString())+"/help/html");
-#endif
-  }
+  QDir dir(GetRootPath()+"/help/html");
   if (!m_helpwin){
     m_helpwin = new HelpWindow(dir.canonicalPath());
     QObject::connect(m_helpwin,SIGNAL(EvaluateText(QString)),m_app->GetKeyManager(),SLOT(QueueMultiString(QString)));

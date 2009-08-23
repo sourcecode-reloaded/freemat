@@ -56,6 +56,8 @@ public:
   Context *NewContext();
   int  StartNewInterpreterThread();
   void UpdatePaths();
+  void UpdateBasePath(QString rootpath);
+  void SetRootPath(QString path, Interpreter* eval);
   void ControlProfiler(bool enableflag);
   bool debugwin;
 public slots:

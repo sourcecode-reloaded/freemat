@@ -36,6 +36,9 @@ namespace FM { //have to use namespace to avoid conflict with llvm::SymbolTable
 		} 
 		return 0;
 	  }
+	  bool hasSymbol(const QString& key) {
+	    return map.contains(key);
+	  }
 	  void deleteSymbol(const QString& key) {
 		map.remove(key);
 	  }
