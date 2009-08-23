@@ -11,6 +11,19 @@
 %   y = det(A)
 % 
 % where A is a square matrix.
+% DET DET Determinant of a Matrix
+% 
+% Usage
+% 
+% Calculates the determinant of a matrix.  Note that for all but
+% very small problems, the determinant is not particularly useful.
+% The condition number cond gives a more reasonable estimate as
+% to the suitability of a matrix for inversion than comparing det(A)
+% to zero.  In any case, the syntax for its use is
+% 
+%   y = det(A)
+% 
+% where A is a square matrix.
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL

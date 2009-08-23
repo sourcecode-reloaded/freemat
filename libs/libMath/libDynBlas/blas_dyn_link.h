@@ -23,14 +23,14 @@
 #include <QString>
 #include <QLibrary> 
 #include <vector>
-typedef long int integer;
+typedef int integer;
 typedef char *address;
-typedef short int shortint;
+typedef short shortint;
 typedef float real;
 typedef double doublereal;
 typedef struct { real r, i; } complex;
 typedef struct { doublereal r, i; } doublecomplex;
-typedef short int shortlogical;
+typedef short shortlogical;
 typedef char logical1;
 typedef char integer1;
 

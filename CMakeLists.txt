@@ -279,6 +279,7 @@ libs/libMath/libDynBlas ${QT_LIBRARIES} src)
 ##############################################################################
 # BLAS is always linked dynamically
 ADD_DEFINITIONS( -DDYN_BLAS )
+
 INSTALL( FILES ${PROJECT_SOURCE_DIR}/tools/blas.ini DESTINATION bin )
 
 if( MSVC )

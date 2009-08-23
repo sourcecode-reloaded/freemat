@@ -42,6 +42,9 @@ public:
   inline VectorData(const VectorData& copy) : QSharedData(copy), m_data(0), m_len(0) {
     copyvec(copy);
   }
+  inline ~VectorData() {
+    if (m_data) delete[] m_data;
+  }
   inline T operator[](size_t p) const {
     return m_data[p];
   }

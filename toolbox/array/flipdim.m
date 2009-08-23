@@ -7,6 +7,24 @@
 %    y = flipdim(x,n)
 % 
 % where x is matrix, and n is the dimension to reverse.
+% FLIPDIM FLIPDIM Reverse a Matrix Along a Given Dimension
+% 
+% Usage
+% 
+% Reverses an array along the given dimension.  The syntax for its use is
+% 
+%    y = flipdim(x,n)
+% 
+% where x is matrix, and n is the dimension to reverse.
+% FLIPDIM FLIPDIM Reverse a Matrix Along a Given Dimension
+% 
+% Usage
+% 
+% Reverses an array along the given dimension.  The syntax for its use is
+% 
+%    y = flipdim(x,n)
+% 
+% where x is matrix, and n is the dimension to reverse.
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL

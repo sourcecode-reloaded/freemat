@@ -150,6 +150,40 @@ are not allowed to return pointers.  As a result, as a general operating
 mechanism, the FreeMat code must allocate the proper arrays, and then
 pass them by reference to the external function.
 
+\emph{Sending text to the FreeMat console:}
+Starting with FreeMat 4.0, it is possible for external code that is 
+called using the <code>import</code> statement to send text to the FreeMat console.
+To do so, you must define in each library that wants to send text a 
+function with the name <code>freemat_io_handler</code> that captures its 
+argument (a function pointer), and stores it
+for use by functions in the library.  That function pointer takes a 
+standard C string argument.  Here is a snippet of code to demonstrate
+how this works:
+<PRE>
+  /* just to make it readable */
+  typedef void (*strfunc)(const char*); 
+
+  /* The name we want to use for the function */
+  strfunc FreeMatText;                  
+
+  /* this name is case sensitive and must not be mangled (i.e., use extern "C") */
+  void freemat_io_handler(strfunc printFunc) {
+     FreeMatText = printFunc;
+  }
+
+  double SomeImportedFunction(double t) {
+     FreeMatText("I am going to double that argument!\n");
+     return (t*2);
+  }
+</PRE>
+<P>
+In this case, once <code>SomeImportedFunction</code> is called from within FreeMat, the
+text <code>"I am going to double that argument"</code> will appear in the FreeMat console.
+
+Your <code>freemat_io_handler</code> function is automatically called when your library is
+loaded by FreeMat, which happens with the first <code>import</code> statement that references
+it.
+
 <H3>Example</H3>
 Here is a complete example.  We have a <code>C</code> function that adds
 two float vectors of the same length, and stores the result in a third array 
