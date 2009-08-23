@@ -16,7 +16,7 @@ class VectorData : public QSharedData
       m_data = new T[len];
       if (sizeof(T) <= 8)
 	memset(m_data,0,sizeof(T)*len);
-    } catch (const std::bad_alloc& x) {
+    } catch (const std::bad_alloc& ) {
       throw Exception(QString("Cannot allocate enough memory to store an array of size %1").arg(m_len));
     }
   }
@@ -35,7 +35,7 @@ public:
     try {
       m_len = dim;
       allocate(m_len);
-    } catch (const std::bad_alloc& x) {
+    } catch (const std::bad_alloc& ) {
       throw Exception(QString("Cannot allocate enough memory to store an array of size %1").arg(dim));
     }
   }
