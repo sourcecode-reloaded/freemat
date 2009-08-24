@@ -570,7 +570,8 @@ ArrayVector SparseFunction(int nargout, const ArrayVector& arg, Interpreter* eva
     const BasicArray<index_t> &jp(jp_typed.constReal<index_t>());
     return ArrayVector(IJVToSparse(ip,jp,arg[2]));
   } else if (arg.size() >= 5) {
-    eval->warningMessage("extra arguments to sparse (nnz to reserve) ignored");
+    if (arg.size() > 5)
+      eval->warningMessage("extra arguments to sparse (nnz to reserve) ignored");
     const Array &ip_typed(arg[0].asDenseArray().toClass(Index));
     const Array &jp_typed(arg[1].asDenseArray().toClass(Index));
     const BasicArray<index_t> &ip(ip_typed.constReal<index_t>());
