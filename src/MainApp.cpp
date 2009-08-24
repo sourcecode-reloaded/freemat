@@ -1187,7 +1187,10 @@ ArrayVector RootPathFunction(int nargout, const ArrayVector& arg, Interpreter* e
 static int m_mainID;
 
 void WarningMessage(QString txt) {
-  Interpreter *m_eval = m_threadHandles.lookupHandle(m_mainID);
+  Interpreter *m_eval = NULL;
+  try {
+    m_eval = m_threadHandles.lookupHandle(m_mainID);
+  } catch (Exception &e) { }
   if (m_eval)
     m_eval->warningMessage(txt);
 }
