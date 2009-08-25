@@ -1501,6 +1501,12 @@ ArrayVector StrFindFunction(int nargout, const ArrayVector& arg) {
 //where @|format| is the specifier string.
 //@@Tests
 //@$exact#y1=num2str(x1)
+//@{ test_num2str1.m
+//function x = test_num2str1
+//   % Added for bug 1918315
+//   inum = 100;
+//   x = all('100.data' == [num2str(inum),'.data']);
+//@}
 //@@Signature
 //function num2str Num2StrFunction
 //inputs x format
