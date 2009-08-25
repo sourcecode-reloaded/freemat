@@ -125,6 +125,24 @@ ArrayVector PermuteFunction(int nargout, const ArrayVector& arg) {
 //@$exact#y1=repmat(x1,[5,1])
 //@$exact#y1=repmat(x1,1,2)
 //@$exact#y1=repmat(x1,2,1)
+//@{ test_repmat1.m
+//function test_val = test_repmat1
+//  s = ones(2,2,1);
+//  p = repmat(s,[2 2]);
+//  test_val = all(p == ones(4));
+//@}
+//@{ test_repmat2.m
+//function test_val = test_repmat2
+//  s = ones(2,2);
+//  p = repmat(s,[2 2 1]);
+//  test_val = all(p == ones(4));
+//@}
+//@{ test_repmat3.m
+//function test_val = test_repmat3
+//  s = ones(2,2,2);
+//  p = repmat(s,[2 2 1]);
+//  test_val = all(p == ones(4,4,2));
+//@}
 //@@Signature
 //function repmat RepMatFunction
 //inputs x rows cols
