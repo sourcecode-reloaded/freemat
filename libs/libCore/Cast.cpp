@@ -316,6 +316,10 @@ ArrayVector UInt32Function(int nargout, const ArrayVector& arg) {
 //@>
 //@@Tests
 //@$exact#y1=uint64(x1)
+//@{ test_uint64_1.m
+//function x = test_uint64_1
+//  x = (uint64(0) == 0) && (uint64(1) == 1);
+//@}
 //@@Signature
 //function uint64 UInt64Function
 //inputs x
