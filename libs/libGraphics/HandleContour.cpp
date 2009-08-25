@@ -352,8 +352,10 @@ void HandleContour::UpdateState() {
   QList<double> levels;
   if (StringCheck("levellistmode","auto")) {
     levels = GetTicksInner(zmin,zmax,false,10);
-    if (levels.front() == zmin) levels.pop_front();
-    if (levels.back() == zmax) levels.pop_back();
+    if (levels.size() > 0)  {
+      if (levels.front() == zmin) levels.pop_front();
+      if (levels.back() == zmax) levels.pop_back();
+    }
     QVector<double> ulevels;
     for (int i=0;i<levels.size();i++)
       ulevels.push_back(levels[i]);
@@ -487,6 +489,12 @@ void HandleContour::ConstructProperties() {
   //  \item @|zdata| - @|matrix| - The matrix of z values that are to
   // be contoured.
   //\end{itemize}
+  //@@Tests
+  //@{ test_contour1.m
+  //function y = test_contour1
+  //  contour(zeros(10));
+  //  y = true;
+  //@}
   //!
   AddProperty(new HPArray,"contourmatrix");      //done
   AddProperty(new HPHandles,"children");         //done
