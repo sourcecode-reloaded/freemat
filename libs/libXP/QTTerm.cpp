@@ -588,6 +588,7 @@ void QTTerm::calcGeometry() {
   m_char_w = fmi.width("w");
   m_char_h = fmi.height();
   m_term_width = viewport()->width()/m_char_w;// - 1;
+  if (m_term_width > maxlen-1) m_term_width = maxlen-1;
   m_term_height = viewport()->height()/m_char_h;
   emit SetTextWidth(m_term_width);
 }
