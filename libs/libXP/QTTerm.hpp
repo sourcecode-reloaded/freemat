@@ -54,7 +54,7 @@ class tagChar
   bool operator == (const tagChar& b) {return (v==b.v) && (flags==b.flags);};
 };
 
-const int maxlen = 256;
+const int maxlen = 512;
 
 class tagLine {
 public:
