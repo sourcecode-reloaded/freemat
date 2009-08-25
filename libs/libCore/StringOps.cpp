@@ -1243,6 +1243,10 @@ ArrayVector RegExpRepDriverFunction(int nargout, const ArrayVector& arg) {
 //@>
 //@@Tests
 //@$exact#y1=deblank(x1)
+//@{ test_deblank_1.m
+//function x = test_deblank_1
+//   x = isempty(deblank('   '));
+//@}
 //@@Signature
 //function deblank DeblankFunction
 //inputs x
