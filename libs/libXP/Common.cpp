@@ -39,9 +39,9 @@ QStringList GetRecursiveDirList(QString basedir) {
 
 StringVector GetCompletionList(QString pattern) {
   StringVector completions;
-  QString Pattern(pattern);
+  QString Pattern(QDir::fromNativeSeparators(pattern));
   QDir dir(QDir::current());
-  if (Pattern.count(QDir::separator()) > 0) {
+  if (Pattern.count("/") > 0) { //Qt uses universal directory separator '/'
     // Completion includes a directory name...  Have to split it out
     QFileInfo t(Pattern);
     if (!dir.cd(t.path())) return StringVector();
@@ -49,24 +49,24 @@ StringVector GetCompletionList(QString pattern) {
     for (int i=0;i<((int)list.size());i++) {
       QFileInfo fileInfo = list.at(i);
       if (fileInfo.isDir()) 
-	if (!t.path().endsWith(QDir::separator())) 
-	  completions.push_back(t.path() + QDir::separator() + fileInfo.fileName() + QDir::separator());
+	if (!t.path().endsWith("/")) 
+	    completions.push_back(QDir::toNativeSeparators(t.path() + "/" + fileInfo.fileName() + "/"));
 	else
-	  completions.push_back(t.path() + fileInfo.fileName() + QDir::separator());
+	    completions.push_back(QDir::toNativeSeparators(t.path() + fileInfo.fileName() + "/"));
       else
-	if (!t.path().endsWith(QDir::separator())) 
-	  completions.push_back(t.path() + QDir::separator() + fileInfo.fileName());
+	if (!t.path().endsWith("/")) 
+	    completions.push_back(QDir::toNativeSeparators(t.path() + "/" + fileInfo.fileName()));
 	else	
-	  completions.push_back(t.path() + fileInfo.fileName());
+	    completions.push_back(QDir::toNativeSeparators(t.path() + fileInfo.fileName()));
     }
   } else {
     QFileInfoList list = dir.entryInfoList(QStringList() << (pattern + "*"));
     for (int i=0;i<((int)list.size());i++) {
       QFileInfo fileInfo = list.at(i);
       if (fileInfo.isDir())
-	completions.push_back(fileInfo.fileName() + QDir::separator());
+	  completions.push_back(QDir::toNativeSeparators(fileInfo.fileName() + "/"));
       else
-	completions.push_back(fileInfo.fileName());
+	  completions.push_back(QDir::toNativeSeparators(fileInfo.fileName()));
     }
   }
   return completions;
