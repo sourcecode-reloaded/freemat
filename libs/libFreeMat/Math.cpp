@@ -2238,7 +2238,7 @@ Array RightDivide(const Array& A, const Array& B) {
  *   3. scalar-square - Decompose 
  */
 //!
-//@Module POWER Matrix Power Operator
+//@Module MATRIXPOWER Matrix Power Operator
 //@@Section OPERATORS
 //@@Usage
 //The power operator for scalars and square matrices.  This operator is really a 
