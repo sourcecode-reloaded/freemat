@@ -24,6 +24,10 @@
 #include "Array.hpp"
 #include "Print.hpp"
 #include "FMFontDialog.hpp"
+#ifndef WIN32
+// Added for sleep
+#include <unistd.h>
+#endif
 
 static QString lastfile;
 static bool lastfile_set = false;
