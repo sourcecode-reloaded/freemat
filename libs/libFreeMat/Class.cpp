@@ -125,7 +125,7 @@ static QMap<QString,UserClassMetaInfo> classTable;
 static Array ClassAux(const Array &s, QString classname, const StringVector &parentNames, 
 		      const ArrayVector &parents) {
   QMutexLocker lock(&classMutex);
-  if (s.dataClass() != Struct)
+  if (!s.isEmpty() && (s.dataClass() != Struct))
     throw Exception("first argument to 'class' function must be a structure");
   // First look up the class ID
   UserClassMetaInfo meta;
