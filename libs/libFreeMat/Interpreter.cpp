@@ -1027,8 +1027,14 @@ void Interpreter::multiexpr(const Tree & t, ArrayVector &q, index_t lhsCount, bo
       q.push_back(*ptr);
       return;
     }
-    if (ptr->isUserClass() && !stopoverload && 
-	!inMethodCall(ptr->className())) {
+    if (ptr->isUserClass()) {
+      dbout << "multiexpr called\n";
+      dbout << "user class " << ptr->className() << "\n";
+      dbout << "scope detail string " << context->scopeDetailString() << "\n";
+      dbout << "stop overload " << stopoverload << "\n";
+      dbout << "inMethodCall " << inMethodCall(ptr->className()) << "\n";
+    }
+    if (ptr->isUserClass() && !stopoverload) {
       q += ClassRHSExpression(*ptr,t,this);
       return;
     }
@@ -5217,7 +5223,7 @@ void Interpreter::deref(Array &r, const Tree & s) {
    }
    if (t.numChildren() == 1)
      return *ptr;
-   if (ptr->isUserClass() && !stopoverload && !inMethodCall(ptr->className())) {
+   if (ptr->isUserClass() && !stopoverload) {
      ArrayVector m(ClassRHSExpression(*ptr,t,this));
      m = handleReindexing(t,m);
      if (m.size() >= 1)
