@@ -102,8 +102,8 @@ function ohandle = contour(varargin)
     axes(handle);
     % Have to decrypt the mode...
     % strip off the linespec, if provided
-    color = []; marker = []; line = [];
-    linespec_given = islinespec(varargin{end},color,marker,line);
+    color = []; marker = []; linetype = [];
+    linespec_given = islinespec(varargin{end},color,marker,linetype);
     if (linespec_given)
       varargin(end) = [];
       nargin = nargin - 1;
@@ -140,7 +140,7 @@ function ohandle = contour(varargin)
       end
     end
     if (linespec_given)
-      set(h,'linestyle',line,'linecolor',color);
+      set(h,'linestyle',linetype,'linecolor',color);
     end
     axes(saveca);
     if (nargout > 0)
