@@ -94,12 +94,13 @@
 
 function ohandle = contour(varargin)
   % Check for an axes handle 
-    if (nargin>=2)
+    nargsin = nargin;
+    if (nargsin>=2)
       if (isnumeric(varargin{1}) && (length(varargin{1})==1) && ...
           ishandle(varargin{1},'axes'))
         handle = varargin{1}(1);
         varargin(1) = [];
-        nargin = nargin - 1;
+        nargsin = nargsin - 1;
       else
         handle = newplot;
       end
@@ -110,15 +111,15 @@ function ohandle = contour(varargin)
     axes(handle);
     % Have to decrypt the mode...
     % strip off the linespec, if provided
-    color = []; marker = []; line = [];
-    linespec_given = islinespec(varargin{end},color,marker,line);
+    color = []; marker = []; linestyle = [];
+    linespec_given = islinespec(varargin{end},color,marker,linestyle);
     if (linespec_given)
       varargin(end) = [];
-      nargin = nargin - 1;
+      nargsin = nargsin - 1;
     end
-    if (nargin == 1)
+    if (nargsin == 1)
       h = hcontour('zdata',varargin{1});
-    elseif (nargin == 2)
+    elseif (nargsin == 2)
       if (numel(varargin{2}) == 1)
         zdata = varargin{1};
         zmin = min(zdata(:));
@@ -128,12 +129,12 @@ function ohandle = contour(varargin)
       else
         h = hcontour('zdata',varargin{1},'levellist',varargin{2});
       end
-    elseif (nargin == 3)
+    elseif (nargsin == 3)
       xdata = varargin{1};
       ydata = varargin{2};
       zdata = varargin{3};
       h = hcontour('xdata',xdata,'ydata',ydata,'zdata',zdata);
-    elseif (nargin == 4)
+    elseif (nargsin == 4)
       xdata = varargin{1};
       ydata = varargin{2};
       zdata = varargin{3};
@@ -148,7 +149,7 @@ function ohandle = contour(varargin)
       end
     end
     if (linespec_given)
-      set(h,'linestyle',line,'linecolor',color);
+      set(h,'linestyle',linestyle,'linecolor',color);
     end
     axes(saveca);
     if (nargout > 0)
