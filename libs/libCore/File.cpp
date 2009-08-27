@@ -564,7 +564,7 @@ int64 Twrite(QFile* fp, const Array &A, bool swapflag) {
   else {
     MemBlock<T> pbuf(size_t(A.length()));
     T* pb = &pbuf;
-    memcpy(pb,A.constReal<T>().constData(),size_t(A.length()));
+    memcpy(pb,A.constReal<T>().constData(),bufsize);
     SwapBuffer((char*)pb,size_t(A.length()),sizeof(T));
     return fp->write((const char*)pb,bufsize);
   }
