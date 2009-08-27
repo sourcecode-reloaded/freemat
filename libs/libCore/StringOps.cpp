@@ -1814,7 +1814,8 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 						      if (fp->atEnd())
 							      values.push_back(Array::scalarConstructor(Double));
 						      else {
-							      values.push_back(Array(QFileReadFloat(fp)));
+							      double v = QFileReadFloat(fp);
+							      values.push_back(Array(v));
 							      stringarg = false; ++nNumRead; ++nRead;
 						      }
 						      break;

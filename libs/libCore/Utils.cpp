@@ -463,8 +463,9 @@ double QFileReadFloat(QFile *fp) {
     buf[i++] = c;
   }
     
-  if (i == 0)
-    return 0;
+  if (i == 0){
+      throw Exception("Not a floating point number");
+  }
 
   double f;
   // ### Number parsing should really be handled by QLocale.
