@@ -35,13 +35,13 @@
 %is a single character that determines the corresponding characteristic.  First, the 
 %@|colorspec|:
 %\begin{itemize}
-%  \item @|'r'| - Color Red
-%  \item @|'g'| - Color Green
 %  \item @|'b'| - Color Blue
-%  \item @|'k'| - Color Black
+%  \item @|'g'| - Color Green
+%  \item @|'r'| - Color Red
 %  \item @|'c'| - Color Cyan
 %  \item @|'m'| - Color Magenta
 %  \item @|'y'| - Color Yellow
+%  \item @|'k'| - Color Black
 %\end{itemize}
 %The @|symbolspec| specifies the (optional) symbol to be drawn at each data point:
 %\begin{itemize}
