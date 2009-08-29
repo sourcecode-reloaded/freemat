@@ -79,6 +79,11 @@ public:
     inline DebugStream &operator<<(double t) { if( isEnabled() ) ts << t; return sync(); }
     inline DebugStream &operator<<(const char* t) { if( isEnabled() ) ts << QString::fromAscii(t); return sync(); }
     inline DebugStream &operator<<(const QString & t) { if( isEnabled() ) ts << "\"" << t  << "\""; return sync(); }
+    inline DebugStream &operator<<(const QStringList & t) { 
+      for (int i=0;i<t.size();i++) 
+	if( isEnabled() ) ts << "\"" << t[i]  << "\"\n"; 
+      return sync(); 
+    }
     inline DebugStream &operator<<(const std::string & t) { if( isEnabled() ) ts << "\"" << t.c_str()  << "\""; return sync(); }
     inline DebugStream &operator<<(const QLatin1String &t) { if( isEnabled() ) ts << "\""  << t.latin1() << "\""; return sync(); }
     inline DebugStream &operator<<(const QByteArray & t) { if( isEnabled() ) ts  << "\"" << t << "\""; return sync(); }

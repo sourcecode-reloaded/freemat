@@ -35,3 +35,6 @@ if (giveup)
 else
   b = 1;
 end
+if (strcmp(markerspec,'none') && strcmp(linespec,'none'))
+  linespec = '-';
+end

@@ -1,5 +1,6 @@
 #include "StackTool.hpp"
 #include <QtGui>
+#include "DebugStream.hpp"
 
 StackTool::StackTool(QWidget *parent) :
   QWidget(parent) {
@@ -19,6 +20,7 @@ void StackTool::cbActivated(int x) {
 }
 
 void StackTool::updateStackView(QStringList p) {
+  if (m_text == p)  return;
   cb->clear();
   m_activeDepth = 0;
   for (int i=0;i<p.size();i++) {
@@ -30,4 +32,5 @@ void StackTool::updateStackView(QStringList p) {
       cb->addItem(entry);
   }
   cb->setCurrentIndex(m_activeDepth);
+  m_text = p;
 }

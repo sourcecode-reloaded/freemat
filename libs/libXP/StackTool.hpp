@@ -8,6 +8,7 @@ class StackTool : public QWidget {
 
   QComboBox *cb;
   int m_activeDepth;
+  QStringList m_text;
 public:
   StackTool(QWidget *parent = 0);
 signals:
