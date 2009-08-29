@@ -1859,10 +1859,6 @@ void HandleAxis::RePackFigure(RenderEngine &gc) {
   QRect sze(fm.boundingRect("|"));
   tickHeight =  sze.height();
 
-  std::cout << "xlabelheight = " << xlabelHeight << "\n";
-  std::cout << "ylabelheight = " << ylabelHeight << "\n";
-  std::cout << "zlabelheight = " << zlabelHeight << "\n";
-  std::cout << "titleheight = " << titleHeight << "\n";
   // Take the maximum of the title, and label sizes to compute
   // the padding...
   maxLabelHeight = qMax(titleHeight,xlabelHeight);
