@@ -537,6 +537,10 @@ void HandleAxis::ConstructProperties() {
   // interacts with the @|dataaspectratiomode| and the axis limits.
   //  \item @|position| - @|fourvector| - The normalized coordinates of the plot box space.
   // Should be inside the rectable defined by @|outerposition|.
+  //  \item @|positionmode| - @|{'auto','manual'}| - the position mode is normally @|'auto'|
+  // which means that FreeMat computes the position vector to fit the plot inside the @|outerposition|
+  // vector.  If you set the @|position| vector manually (using a @|set| command), this @|mode|
+  // flag becomes @|'manual'| and remains that way until reset to @|'auto'.
   //  \item @|projection| - Not used.
   //  \item @|selected| - Not used.
   //  \item @|selectionhighlight| - Not used.
@@ -697,6 +701,7 @@ void HandleAxis::ConstructProperties() {
   AddProperty(new HPThreeVector,"plotboxaspectratio");
   AddProperty(new HPAutoManual,"plotboxaspectratiomode");
   AddProperty(new HPFourVector,"position");
+  AddProperty(new HPAutoManual,"positionmode");
   AddProperty(new HPProjectionMode,"projection");
   AddProperty(new HPOnOff,"selected");
   AddProperty(new HPOnOff,"selectionhighlight");
@@ -807,7 +812,8 @@ void HandleAxis::SetupDefaults() {
   SetConstrainedStringDefault("nextplot","replace");
   SetThreeVectorDefault("plotboxaspectratio",1,1,1);
   SetConstrainedStringDefault("plotboxaspectratiomode","auto");
-  SetFourVectorDefault("position",0.13,0.11,0.775,0.815);
+  SetFourVectorDefault("position",0.13,0.11,0.775,0.815); // x0, y0, delx, dely
+  SetConstrainedStringDefault("positionmode","auto");
   SetConstrainedStringDefault("projection","orthographic");
   SetConstrainedStringDefault("selected","off");
   SetConstrainedStringDefault("selectionhighlight","on");
@@ -1792,6 +1798,7 @@ void HandleAxis::RecalculateTicks(RenderEngine& gc) {
 }
 
 void HandleAxis::RePackFigure(RenderEngine &gc) {
+  if (!IsAuto("positionmode")) return;
   int titleHeight = 0;
   int xlabelHeight = 0;
   int ylabelHeight = 0;
@@ -1851,6 +1858,11 @@ void HandleAxis::RePackFigure(RenderEngine &gc) {
   }
   QRect sze(fm.boundingRect("|"));
   tickHeight =  sze.height();
+
+  std::cout << "xlabelheight = " << xlabelHeight << "\n";
+  std::cout << "ylabelheight = " << ylabelHeight << "\n";
+  std::cout << "zlabelheight = " << zlabelHeight << "\n";
+  std::cout << "titleheight = " << titleHeight << "\n";
   // Take the maximum of the title, and label sizes to compute
   // the padding...
   maxLabelHeight = qMax(titleHeight,xlabelHeight);
@@ -1858,6 +1870,7 @@ void HandleAxis::RePackFigure(RenderEngine &gc) {
   maxLabelHeight = qMax(maxLabelHeight,zlabelHeight);
   // Get the outer position vector...
   QVector<double> outerpos(GetPropertyVectorAsPixels(gc,"outerposition"));
+
   // Special case - no labels at all --> super tight packing
   unsigned width = gc.width();
   unsigned height = gc.height();
@@ -1867,12 +1880,15 @@ void HandleAxis::RePackFigure(RenderEngine &gc) {
 	      outerpos[2]/width,outerpos[3]/height);
     return;
   }
-  // Generate a candidate position vector based on the default
+  // To avoid recursion - we take a linear fit approach
+  // First, we compute a candidate position vector from the outerposition
+  // rectangle
   double posx0,posy0,poswidth,posheight;
-  posx0 = qMax(0.1*outerpos[2]+maxTickWidth,0.13*outerpos[2]);
-  posy0 = qMax(0.1*outerpos[3]+maxTickHeight,0.11*outerpos[2]);
-  poswidth = outerpos[2]-2*posx0;
-  posheight = outerpos[3]-2*posy0;
+  posx0 = outerpos[2]*0.1+outerpos[0];
+  posy0 = outerpos[3]*0.1+outerpos[1];
+  poswidth = outerpos[2]*0.8;
+  posheight = outerpos[3]*.8;
+
   //     poswidth = qMin(0.9*outerpos[2]-2*maxTickWidth,0.775*outerpos[2]);
   //     posheight = qMin(0.815*outerpos[2],0.9*outerpos[3]-2*maxTickHeight);
   // Pad the label height
@@ -1890,15 +1906,11 @@ void HandleAxis::RePackFigure(RenderEngine &gc) {
   if ((outerpos[3] - posheight) < 2*maxLabelHeight) {
     posheight = outerpos[3] - 2*maxLabelHeight;
   }
-  // Normalize
-  poswidth = poswidth/width;
-  posheight = posheight/height;
-  posx0 = (posx0+outerpos[0])/width;
-  posy0 = (posy0+outerpos[1])/height;
-  poswidth = qMax(0.0,poswidth);
-  posheight = qMax(0.0,posheight);
+
   HPFourVector *hp = (HPFourVector*) LookupProperty("position");
-  hp->Value(posx0,posy0,poswidth,posheight);
+  //  hp->Value(posx0,posy0,poswidth,posheight);
+  hp->Value(posx0/width,posy0/height,poswidth/width,posheight/height);
+  hp->ClearModified();
 }
 
 void HandleAxis::UpdateLimits(bool x, bool y, bool z, bool a, bool c) {
@@ -2038,6 +2050,7 @@ void HandleAxis::UpdateState() {
   if (HasChanged("xticklabel")) ToManual("xticklabelmode");
   if (HasChanged("yticklabel")) ToManual("yticklabelmode");
   if (HasChanged("zticklabel")) ToManual("zticklabelmode");
+  if (HasChanged("position")) ToManual("positionmode");
   tset.push_back("fontangle");  tset.push_back("fontname");
   tset.push_back("fontsize");   tset.push_back("fontunits");
   tset.push_back("fontweight"); tset.push_back("xticklabel");
