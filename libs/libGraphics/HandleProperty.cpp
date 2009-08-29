@@ -146,6 +146,8 @@ void HPVector::Set(Array num) {
 }
   
 void HPFixedVector::Set(Array num) {
+  if (num.length() != m_len)
+    throw Exception(QString("Expect a vector of length %1, got a vector of length %2").arg(m_len).arg(num.length()));
   HandleProperty::Set(num);
   num = num.asDenseArray().toClass(Double);
   const double *dp = num.constReal<double>().constData();
