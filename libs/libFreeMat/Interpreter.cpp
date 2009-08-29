@@ -5325,6 +5325,7 @@ void Interpreter::dbtraceStatement(const Tree & t) {
   // Get the current function
   FuncPtr val;
   if (context->scopeDetailString() == "base") return;
+  ParentScopeLocker lock(context);
   if (!lookupFunction(context->scopeDetailString(),val)) {
     warningMessage(QString("unable to find function ") + context->scopeDetailString() + " to single step");
     return;
