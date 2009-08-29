@@ -55,8 +55,6 @@ protected:
   char escseq[50];
   mapping *esc_seq_array;
   int esc_seq_count;
-  QVector<QString> flist;
-  QList<QString> enteredLines;
   int nline;
 public:
   Terminal();
