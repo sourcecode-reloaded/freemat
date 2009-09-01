@@ -5225,7 +5225,6 @@ void Interpreter::deref(Array &r, const Tree & s) {
      return *ptr;
    if (ptr->isUserClass() && !stopoverload) {
      ArrayVector m(ClassRHSExpression(*ptr,t,this));
-     m = handleReindexing(t,m);
      if (m.size() >= 1)
        return m[0];
      else
