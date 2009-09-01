@@ -39,6 +39,9 @@ Tree::~Tree() {}
 static int indentlevel = 0;
 void Tree::print() const {
   QTextStream out(stdout);
+  out << QString(indentlevel,QChar(' '));
+  out << TokenToString(d->m_node) << "\n";
+  out.flush();
   indentlevel+=3;
   for (int i=0;i<d->m_children.size();i++)
     d->m_children[i].print();
