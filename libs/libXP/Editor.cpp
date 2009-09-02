@@ -258,7 +258,7 @@ void FMTextEdit::uncomment() {
       else if (pos.selectedText() == "%") {
         pos.deleteChar();
         pos.movePosition(QTextCursor::Right,QTextCursor::KeepAnchor);
-        if (pos.selectedText() == " " || pos.selectedText() == "\t")
+	if (pos.selectedText() == " ")
           pos.deleteChar();
         break;
       }
@@ -1350,7 +1350,8 @@ QString FMEditor::shownPath() {
     QString sName(strippedName(currentFilename()));
     sPath = QFileInfo(currentFilename()).filePath();
     sPath.chop(sName.length());
-    sPath = " (" + sPath + ")";
+    if (!sPath.trimmed().isEmpty())
+      sPath = " (" + sPath + ")";
   }
   return sPath;
 }
@@ -2205,6 +2206,9 @@ void FMEditor::loadFile(const QString &fileName)
             .arg(fname));
     return;
   }
+
+  if (fn.lastIndexOf(QDir::separator ()) < 0) //need to add fullpath so that breakpoint can be applied
+    fname = QDir::currentPath() + QDir::separator () + fn;
   else
     fname = fn;
     
