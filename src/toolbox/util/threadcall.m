@@ -24,7 +24,7 @@
 % Licensed under the GPL
 
 function varargout = threadcall(id,timeout,funcname,varargin)
-  threadstart(id,funcname,numel(nargout),varargin{:});
+  threadstart(id,funcname,nargout,varargin{:});
   if (~threadwait(id,timeout))
     error(sprintf('Timeout on call to %s',funcname));
   end
