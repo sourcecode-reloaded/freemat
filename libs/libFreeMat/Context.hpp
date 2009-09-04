@@ -759,4 +759,26 @@ public:
   }
 };
 
+class PopContext {
+  Context *m_context;
+  int m_popSpec;
+  int m_scopeDepth;
+public:
+  PopContext(Context* context, int popSpec) {
+    m_context = context;
+    m_popSpec = popSpec;
+    m_scopeDepth = context->scopeDepth();
+    if (popSpec == 0) return;
+    if (popSpec == -1)
+      while (context->activeScopeName() != "base") context->bypassScope(1);
+    else
+      context->bypassScope(popSpec);
+  }
+  ~PopContext() {
+    while (m_context->scopeDepth() < m_scopeDepth) m_context->restoreScope(1);
+    while (m_context->scopeDepth() > m_scopeDepth) m_context->popScope();
+  }
+};
+
+
 #endif
