@@ -348,6 +348,7 @@ HandleAxis* GetContainingAxis(HandleFigure *fig, int x, int y) {
     if (hp->IsType("axes")) {
       // Get the axis extents
       QVector<double> position(((HandleAxis*) hp)->GetClientAreaInPixels());
+      if (position.size() != 4) return NULL;
       if ((x >= position[0]) && (x < (position[0]+position[2])) &&
       	  (y >= position[1]) && (y < (position[1]+position[3])))
       	return (HandleAxis*)hp;
