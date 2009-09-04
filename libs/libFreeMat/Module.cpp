@@ -409,7 +409,12 @@ typedef void (*strfunc)(const char*);
 typedef void (*handler)(strfunc);
 
 void InitializeIOHandlers(DynLib *lib) {
-  void* func = lib->GetSymbol("freemat_io_handler");
+  void* func;
+  try {
+    func = lib->GetSymbol("freemat_io_handler");
+  } catch (Exception&) {
+    return;
+  }
   if (!func) return;
   handler h_func = (handler) func;
   h_func(ImportPrintMessage);
