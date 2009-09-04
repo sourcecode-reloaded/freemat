@@ -405,9 +405,8 @@ void Interpreter::RegisterGfxError(QString msg) {
 ArrayVector Interpreter::doFunction(FuncPtr f, ArrayVector& m, 
 				    int narg_out, VariableTable *vtable) {
   CLIDisabler dis(this);
-  context->pushScope(f->functionName(),f->detailedName(),false);
   PopContext saver(context,0);
-  //  stackTrace();
+  context->pushScope(f->functionName(),f->detailedName(),false);
   if (f->graphicsFunction) {
     gfxErrorOccured = false;
     QMutexLocker lock(&mutex);

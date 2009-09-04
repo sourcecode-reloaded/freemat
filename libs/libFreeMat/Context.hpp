@@ -168,10 +168,10 @@ public:
   }
   void debugDump() {
     for (int i=0;i<scopestack.size();i++) {
-      qDebug() << "Scope " << i << " " << scopestack[i]->getName();
+      qDebug() << "Scope " << i << " " << scopestack[i]->getName() << scopestack[i]->isActive() << scopestack[i]->listAllVariables();
     }
     for (int i=0;i<bypassstack.size();i++) {
-      qDebug() << "bypass " << i << " " << bypassstack[i]->getName();
+      qDebug() << "bypass " << i << " " << bypassstack[i]->getName() << bypassstack[i]->isActive() << scopestack[i]->listAllVariables();
     }
   }
   /**
