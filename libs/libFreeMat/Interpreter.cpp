@@ -140,7 +140,7 @@ void Interpreter::setLiveUpdateFlag(bool t) {
   m_liveUpdateFlag = t;
   if (t) {
     connect(&m_watch,SIGNAL(directoryChanged(const QString &)),
-	    this,SLOT(updateFileTool(const QString &)));
+ 	    this,SLOT(updateFileTool(const QString &)));
   }
 }
 
@@ -406,6 +406,8 @@ ArrayVector Interpreter::doFunction(FuncPtr f, ArrayVector& m,
 				    int narg_out, VariableTable *vtable) {
   CLIDisabler dis(this);
   context->pushScope(f->functionName(),f->detailedName(),false);
+  PopContext saver(context,0);
+  //  stackTrace();
   if (f->graphicsFunction) {
     gfxErrorOccured = false;
     QMutexLocker lock(&mutex);
@@ -422,7 +424,6 @@ ArrayVector Interpreter::doFunction(FuncPtr f, ArrayVector& m,
       dbout << "Warning! graphics empty on return\n";
     ArrayVector ret(gfx_buffer.front());
     gfx_buffer.erase(gfx_buffer.begin());
-    context->popScope();
     return ret;
   } else {
     ArrayVector ret(f->evaluateFunc(this,m,narg_out,vtable));
@@ -433,7 +434,6 @@ ArrayVector Interpreter::doFunction(FuncPtr f, ArrayVector& m,
 		     " -- setting single step mode\n");
       context->setScopeStepTrap(0);
     }
-    context->popScope();
     return ret;
   }
 }
@@ -621,6 +621,16 @@ bool Interpreter::inMFile() const {
 }
 
 void Interpreter::debugDump() {
+  int depth = context->scopeDepth();
+  qDebug() << "******************************\n";
+  for (int i=0;i<depth;i++) {
+    if (context->isScopeActive())
+      qDebug() << "In " << context->scopeName() << " (" << context->scopeDetailString() << ")*";
+    else
+      qDebug() << "In " << context->scopeName() << " (" << context->scopeDetailString() << ")";
+    context->bypassScope(1);
+  }
+  context->restoreScope(depth);
 }
 
 void Interpreter::dbup() {
@@ -2678,7 +2688,7 @@ void Interpreter::persistentStatement(const Tree & t) {
 
 void Interpreter::doDebugCycle() {
   depth++;
-  int debug_stackdepth = context->scopeDepth();
+  PopContext saver(context,0);
   context->pushScope("keyboard","keyboard");
   context->setScopeActive(false);
   try {
@@ -2690,10 +2700,6 @@ void Interpreter::doDebugCycle() {
     depth--;
     throw;
   }
-  // Reset the debug stack
-  // FIXME
-  context->restoreBypassedScopes();
-  while (context->scopeDepth() > debug_stackdepth) context->popScope();
   depth--;
 }
 
@@ -2857,6 +2863,7 @@ void Interpreter::assign(ArrayReference r, const Tree & s, Array &data) {
 
 ArrayReference Interpreter::createVariable(QString name) {
   FuncPtr p;
+  PopContext saver(context,0);
   if (context->lookupFunction(name,p))
     warningMessage("Newly defined variable " + name + " shadows a function of the same name.  Use clear " + name + " to recover access to the function");
   // Are we in a nested scope?
@@ -2880,7 +2887,6 @@ ArrayReference Interpreter::createVariable(QString name) {
     // a scope that (at least theoretically) accesses a variable with 
     // the given name.
     context->insertVariable(name,EmptyConstructor());
-    context->restoreBypassedScopes();
   } 
   ArrayReference np(context->lookupVariable(name));
   if (!np.valid()) 
@@ -5251,7 +5257,7 @@ Interpreter::Interpreter(Context* aContext) {
   printLimit = 1000;
   autostop = false;
   intryblock = false;
-  jitcontrol = true;
+  jitcontrol = false;
   stopoverload = false;
   m_skipflag = false;
   m_liveUpdateFlag = false;
