@@ -123,7 +123,7 @@ QList<QVariant> ComputeVariableStats(const Array *x) {
   empty << QVariant() << QVariant() << QVariant() << QVariant() << QVariant() << QVariant();
   if (x->isSparse() || x->isString() ||
       x->isReferenceType() || x->isUserClass() ||
-      x->isEmpty() || x->length() > 500000 || x->isScalar()) {
+      x->isEmpty() || x->length() > 5000 || x->isScalar()) {
     return empty;
   } else {
     switch (x->dataClass()) {
