@@ -271,7 +271,7 @@ void ApplicationWindow::readSettings() {
   QSettings settings("FreeMat", Interpreter::getVersionString());
   QPoint pos = settings.value("mainwindow/pos", QPoint(200, 200)).toPoint();
   QSize size = settings.value("mainwindow/size", QSize(600, 400)).toSize();
-  if ((pos.x() < 0) || (pos.y() < 0))
+  if (((pos.x()+size.height()) < 0) || ((pos.y()+size.width()) < 0))
     pos = QPoint(200,200);
   resize(size);
   move(pos);
