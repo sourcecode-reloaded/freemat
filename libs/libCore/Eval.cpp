@@ -383,9 +383,7 @@ ArrayVector FevalFunction(int nargout, const ArrayVector& arg,Interpreter* eval)
     throw Exception("feval function requires at least one argument");
   if (!arg[0].isString())
     throw Exception("first argument to feval must be the name of a function (i.e., a string) a function handle, or a user defined class");
-  eval->debugDump();
   eval->getContext()->deactivateCurrentScope(); // Make feval call invisible
-  eval->debugDump();
   FuncPtr funcDef;
   if (arg[0].isString()) {
     QString fname = arg[0].asString();
@@ -399,7 +397,5 @@ ArrayVector FevalFunction(int nargout, const ArrayVector& arg,Interpreter* eval)
     throw Exception("cannot use feval on a script");
   ArrayVector newarg(arg);
   newarg.pop_front();
-  ArrayVector retvec = eval->doFunction(funcDef,newarg,nargout);
-  eval->debugDump();
-  return retvec;
+  return eval->doFunction(funcDef,newarg,nargout);
 }
