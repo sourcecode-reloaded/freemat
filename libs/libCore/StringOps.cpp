@@ -2049,16 +2049,18 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
     }
     else{ //all string input
 	QString outstring;
-
+	
 	for( int i=0; i<values.size(); i++ ){
 	    if( values[i].isString() ){
 		outstring.append( values[i].asString() );
-		nElem += values[i].length();
 	    }
 	    else{
 		throw Exception("Internal Error in sscanf.");
 	    }
 	}
+	for( int i=outstring.length(); i<nElem; ++i)
+	    outstring.push_back(QChar('\0'));
+
 	ret.push_front( Array( outstring ) );
 	dim=NTuple(1,nElem);
     }
