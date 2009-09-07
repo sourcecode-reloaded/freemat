@@ -2207,8 +2207,8 @@ void FMEditor::loadFile(const QString &fileName)
     return;
   }
 
-  if (fn.lastIndexOf(QDir::separator ()) < 0) //need to add fullpath so that breakpoint can be applied
-    fname = QDir::currentPath() + QDir::separator () + fn;
+  if (fn.lastIndexOf(QDir::separator ()) < 0 && fn.lastIndexOf("/") < 0 ) //need to add fullpath so that breakpoint can be applied
+    fname = QDir::currentPath() + "/" + fn;
   else
     fname = fn;
     
@@ -2258,8 +2258,8 @@ void FMEditor::loadOrCreateFile(const QString &fileName)
   QString fname = fileName;
   QString fn = getFullFileName(fname);
   if (fn.isEmpty()) {
-    if (fname.lastIndexOf(QDir::separator ()) < 0)
-       fname = QDir::currentPath() + QDir::separator () + fname;
+    if (fname.lastIndexOf(QDir::separator ()) < 0 && fname.lastIndexOf("/") < 0)
+       fname = QDir::currentPath() + "/" + fname;
     if (!fname.endsWith(".m"))
        fname = fname + ".m";
     if (QMessageBox::question(this, tr("FreeMat"),
