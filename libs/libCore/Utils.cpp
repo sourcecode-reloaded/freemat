@@ -185,170 +185,173 @@ int digitvalue(char x) {
   return (x-'0');
 }
 
-double QFileReadInteger(QFile *fp, int base) {
-  SkipWhiteSpace(fp);
-  // detect int encoding
-  if (base == 0) {
-    char ch;
-    if (!fp->getChar(&ch))
-      return 0;
-    if (ch == '0') {
-      char ch2;
-      if (!fp->getChar(&ch2)) {
-	// Result is the number 0
-	return 0;
-      }
-      ch2 = tolower(ch2);
-      if (ch2 == 'x') {
-	base = 16;
-      } else if (ch2 == 'b') {
-	base = 2;
-      } else if (isdigit(ch2) && 
-		 digitvalue(ch2) >= 0 &&
-		 digitvalue(ch2) <= 7) {
-	base = 8;
-      } else {
-	base = 10;
-      }
-      fp->ungetChar(ch2);
-    } else if (ch == '-' || ch == '+' || isdigit(ch)) {
-      base = 10;
-    } else {
-      //fp->ungetChar(ch);
-      throw Exception("Scanf can't interpret numerical value");
-      return 0;
-    }
-    fp->ungetChar(ch);
-    // State of the stream is now the same as on entry
-    // (cursor is at prefix),
-    // and local variable 'base' has been set appropriately.
-  }
-  double val=0;
-  switch (base) {
-  case 2: {
-    char pf1, pf2, dig;
-    // Parse prefix '0b'
-    if (!fp->getChar(&pf1) || pf1 != '0')
-      return 0;
-    if (!fp->getChar(&pf2) || tolower(pf2) != 'b')
-      return 0;
-    // Parse digits
-    int ndigits = 0;
-    while (fp->getChar(&dig)) {
-      int n = tolower(dig);
-      if (n == '0' || n == '1') {
-	val *= 2;
-	val += n - '0';
-      } else {
-	fp->ungetChar(dig);
-	break;
-      }
-      ndigits++;
-    }
-    if (ndigits == 0) {
-      // Unwind the prefix and abort
-      fp->ungetChar(pf2);
-      fp->ungetChar(pf1);
-      return 0;
-    }
-    break;
-  }
-  case 8: {
-    char pf, dig;
-    // Parse prefix '0'
-    if (!fp->getChar(&pf) || pf != '0')
-      return 0;
-    // Parse digits
-    int ndigits = 0;
-    while (fp->getChar(&dig)) {
-      int n = tolower(dig);
-      if (n >= '0' && n <= '7') {
-	val *= 8;
-	val += n - '0';
-      } else {
-	fp->ungetChar(dig);
-	break;
-      }
-      ndigits++;
-    }
-    if (ndigits == 0) {
-      // Unwind the prefix and abort
-      fp->ungetChar(pf);
-      return 0;
-    }
-    break;
-  }
-  case 10: {
-    // Parse sign (or first digit)
-    char sign;
-    int ndigits = 0;
-    if (!fp->getChar(&sign))
-      return 0;
-    if (sign != '-' && sign != '+') {
-      if (!isdigit(sign)) {
-	fp->ungetChar(sign);
-	return 0;
-      }
-      val += digitvalue(sign);
-      ndigits++;
-    }
-    // Parse digits
-    char ch;
-    while (fp->getChar(&ch)) {
-      if (isdigit(ch)) {
-	val *= 10;
-	val += digitvalue(ch);
-      } else {
-	fp->ungetChar(ch);
-	break;
-      }
-      ndigits++;
-    }
-    if (ndigits == 0)
-      return 0;
-    if (sign == '-') 
-      val = -val;
-    break;
-  }
-  case 16: {
-    char pf1, pf2, dig;
-    // Parse prefix ' 0x'
-    if (!fp->getChar(&pf1) || pf1 != '0')
-      return 0;
-    if (!fp->getChar(&pf2) || tolower(pf2) != 'x')
-      return 0;
-    // Parse digits
-    int ndigits = 0;
-    while (fp->getChar(&dig)) {
-      int n = tolower(dig);
-      if (n >= '0' && n <= '9') {
-	val *= 16;
-	val += n - '0';
-      } else if (n >= 'a' && n <= 'f') {
-	val *= 16;
-	val += 10 + (n - 'a');
-      } else {
-	fp->ungetChar(dig);
-	break;
-      }
-      ndigits++;
-    }
-    if (ndigits == 0) {
-      return 0;
-    }
-    break;
-  }
+double QFileReadInteger(QFile *fp, int base, int nMaxDigits) {
+	nMaxDigits = (nMaxDigits>0)? nMaxDigits : 1024;
+	SkipWhiteSpace(fp);
+	// detect int encoding
+	if (base == 0) {
+		char ch;
+		if (!fp->getChar(&ch))
+			return 0;
+		if (ch == '0') {
+			char ch2;
+			if (!fp->getChar(&ch2)) {
+				// Result is the number 0
+				return 0;
+			}
+			ch2 = tolower(ch2);
+			if (ch2 == 'x') {
+				base = 16;
+			} else if (ch2 == 'b') {
+				base = 2;
+			} else if (isdigit(ch2) && 
+				digitvalue(ch2) >= 0 &&
+				digitvalue(ch2) <= 7) {
+					base = 8;
+			} else {
+				base = 10;
+			}
+			fp->ungetChar(ch2);
+		} else if (ch == '-' || ch == '+' || isdigit(ch)) {
+			base = 10;
+		} else {
+			//fp->ungetChar(ch);
+			throw Exception("Scanf can't interpret numerical value");
+			return 0;
+		}
+		fp->ungetChar(ch);
+		// State of the stream is now the same as on entry
+		// (cursor is at prefix),
+		// and local variable 'base' has been set appropriately.
+	}
+	double val=0;
+	switch (base) {
+		  case 2: {
+			  char pf1, pf2, dig;
+			  // Parse prefix '0b'
+			  if (!fp->getChar(&pf1) || pf1 != '0')
+				  return 0;
+			  if (!fp->getChar(&pf2) || tolower(pf2) != 'b')
+				  return 0;
+			  // Parse digits
+			  int ndigits = 0;
+			  while (fp->getChar(&dig) && ndigits < nMaxDigits) {
+				  int n = tolower(dig);
+				  if (n == '0' || n == '1') {
+					  val *= 2;
+					  val += n - '0';
+				  } else {
+					  fp->ungetChar(dig);
+					  break;
+				  }
+				  ndigits++;
+			  }
+			  if (ndigits == 0) {
+				  // Unwind the prefix and abort
+				  fp->ungetChar(pf2);
+				  fp->ungetChar(pf1);
+				  return 0;
+			  }
+			  break;
+				  }
+		  case 8: {
+			  char pf, dig;
+			  // Parse prefix '0'
+			  if (!fp->getChar(&pf) || pf != '0')
+				  return 0;
+			  // Parse digits
+			  int ndigits = 0;
+			  while (fp->getChar(&dig) && ndigits < nMaxDigits ) {
+				  int n = tolower(dig);
+				  if (n >= '0' && n <= '7') {
+					  val *= 8;
+					  val += n - '0';
+				  } else {
+					  fp->ungetChar(dig);
+					  break;
+				  }
+				  ndigits++;
+			  }
+			  if (ndigits == 0) {
+				  // Unwind the prefix and abort
+				  fp->ungetChar(pf);
+				  return 0;
+			  }
+			  break;
+				  }
+		  case 10: {
+			  // Parse sign (or first digit)
+			  char sign;
+			  int ndigits = 0;
+			  if (!fp->getChar(&sign))
+				  return 0;
+			  if (sign != '-' && sign != '+') {
+				  if (!isdigit(sign)) {
+					  fp->ungetChar(sign);
+					  return 0;
+				  }
+				  val += digitvalue(sign);
+				  ndigits++;
+			  }
+			  // Parse digits
+			  char ch;
+			  while (fp->getChar(&ch) && ndigits < nMaxDigits) {
+				  if (isdigit(ch)) {
+					  val *= 10;
+					  val += digitvalue(ch);
+				  } else {
+					  fp->ungetChar(ch);
+					  break;
+				  }
+				  ndigits++;
+			  }
+			  if (ndigits == 0)
+				  return 0;
+			  if (sign == '-') 
+				  val = -val;
+			  break;
+				   }
+		  case 16: {
+			  char pf1, pf2, dig;
+			  // Parse prefix ' 0x'
+			  if (!fp->getChar(&pf1) || pf1 != '0')
+				  return 0;
+			  if (!fp->getChar(&pf2) || tolower(pf2) != 'x')
+				  return 0;
+			  // Parse digits
+			  int ndigits = 0;
+			  while (fp->getChar(&dig) && ndigits < nMaxDigits) {
+				  int n = tolower(dig);
+				  if (n >= '0' && n <= '9') {
+					  val *= 16;
+					  val += n - '0';
+				  } else if (n >= 'a' && n <= 'f') {
+					  val *= 16;
+					  val += 10 + (n - 'a');
+				  } else {
+					  fp->ungetChar(dig);
+					  break;
+				  }
+				  ndigits++;
+			  }
+			  if (ndigits == 0) {
+				  return 0;
+			  }
+			  break;
+				   }
   default:
-      {
-	// Unsupported integerBase
-	throw Exception("Scanf can't interpret numerical value");
-	return 0;
-      }
-  }
-  return val;
+	  {
+		  // Unsupported integerBase
+		  throw Exception("Scanf can't interpret numerical value");
+		  return 0;
+	  }
+	}
+	return val;
 }
 
-double QFileReadFloat(QFile *fp) {
+double QFileReadFloat(QFile *fp, int nMaxDigits) {
+	nMaxDigits = (nMaxDigits>0)? nMaxDigits : 1024;
+
   // This code comes from qtextstream.cpp
   // We use a table-driven FSM to parse floating point numbers
   // strtod() cannot be used directly since we may be reading from a
@@ -409,7 +412,7 @@ double QFileReadFloat(QFile *fp) {
   int i = 0;
 
   char c;
-  while (fp->getChar(&c)) {
+  while (fp->getChar(&c) && i < nMaxDigits ) {
     switch (c) {
     case '+':
     case '-':
@@ -487,6 +490,25 @@ double QFileReadFloat(QFile *fp) {
   return f;
 }
 
-QString QFileReadString(QFile *fp) {
-  return "Hello";
+QString QFileReadString(QFile *fp,int nMaxChars) {
+	nMaxChars = (nMaxChars>0)? nMaxChars : 65535;
+	
+	SkipWhiteSpace(fp);
+	QString val("");
+	int nChars = 0;
+	char tmp;
+
+	while( fp->getChar( &tmp ) && nChars < nMaxChars ){
+		if( isspace( tmp ) )
+			break;
+		val.append( tmp );
+		++nChars;
+	}
+	return val;
+}
+
+char QFileReadChar(QFile *fp) {
+	char tmp;
+	fp->getChar( &tmp );
+  return tmp;
 }

@@ -504,7 +504,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("strtrim",StrTrimFunction,1,1,"x",NULL);
   context->addFunction("strfind",StrFindFunction,2,1,"x","pattern",NULL);
   context->addFunction("num2str",Num2StrFunction,2,1,"x","format",NULL);
-  context->addFunction("sscanf",SscanfFunction,2,-1,"text","format",NULL);
+  context->addFunction("sscanf",SscanfFunction,-1,-1,NULL);
   context->addFunction("struct",StructFunction,-1,1,NULL);
   context->addFunction("sum",SumFunction,2,1,"x","dim",NULL);
   context->addFunction("svd",SVDFunction,2,3,"A","flag",NULL);

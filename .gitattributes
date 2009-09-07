@@ -772,6 +772,7 @@ tests/parse/bad6.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 tests/parse/bad7.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 tests/parse/bad8.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 tests/parse/bad9.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+tests/sscanf_ref.mat svn_mime_002dtype=application%2Foctet-stream
 toolbox/test/reference/wbinputs.mat svn_mime_002dtype=application%2Foctet-stream
 toolbox/test/reference/wbtest_abs_1_ref.mat svn_mime_002dtype=application%2Foctet-stream
 toolbox/test/reference/wbtest_acos_1_ref.mat svn_mime_002dtype=application%2Foctet-stream

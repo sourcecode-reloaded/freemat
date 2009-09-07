@@ -35,16 +35,19 @@ double ArrayMax(const Array& dp);
 
 Array DoubleVectorFromQList(QList<uint32> &ref);
 
+int digitvalue(char x);
+
 void SwapBuffer(char* cp, int count, int elsize);
 
 QString ReadQStringFromFile(QFile *fp);
 
 void WriteQStringToFile(QFile *fp, QString txt);
 
-double QFileReadInteger(QFile *fp, int base);
+double QFileReadInteger(QFile *fp, int base, int nMaxDigits = 1024 );
 
-double QFileReadFloat(QFile *fp);
+double QFileReadFloat(QFile *fp, int nMaxDigits = 1024 );
 
-QString QFileReadString(QFile *fp);
+QString QFileReadString(QFile *fp, int nMaxChars = 65535 );
 
+char QFileReadChar(QFile *fp);
 #endif
