@@ -1860,6 +1860,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 			      if( !FormatSkipFlag )
 				  values.push_back( val );
 			  }
+			  ++nRead;
 			  RESET_FORMAT;
 		      }
 		      break;
@@ -1869,6 +1870,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 			      Array val( QFileReadInteger(fp, 10, FormatFieldWidth) );
 			      if( !FormatSkipFlag )
 				  values.push_back( val );
+			      ++nRead;
 			  }
 			  catch( const Exception &e ){
 			      ErrorState = ErrorNoMatch;
@@ -1884,6 +1886,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 			      Array val( QFileReadFloat(fp, FormatFieldWidth) );
 			      if( !FormatSkipFlag )
 				  values.push_back( val );
+			      ++nRead;
 			  }
 			  catch( const Exception &e ){
 			      ErrorState = ErrorNoMatch;
@@ -1899,6 +1902,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 			      Array val( QFileReadInteger(fp, 0, FormatFieldWidth) ); //autodetect base
 			      if( !FormatSkipFlag )
 				  values.push_back( val );
+			      ++nRead;
 			  }
 			  catch( const Exception &e ){
 			      ErrorState = ErrorNoMatch;
@@ -1915,6 +1919,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 			      Array val( QFileReadInteger(fp, 8, FormatFieldWidth) );
 			      if( !FormatSkipFlag )
 				  values.push_back( val );
+			      ++nRead;
 			  }
 			  catch( const Exception &e ){
 			      ErrorState = ErrorNoMatch;
@@ -1931,6 +1936,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 			      Array val( QFileReadString(fp, FormatFieldWidth) );
 			      if( !FormatSkipFlag )
 				  values.push_back( val );
+			      ++nRead;
 			  }
 			  catch( const Exception &e ){
 			      ErrorState = ErrorNoMatch;
@@ -1946,6 +1952,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 			      Array val( QFileReadInteger(fp, 10, FormatFieldWidth) );
 			      if( !FormatSkipFlag )
 				  values.push_back( val );
+			      ++nRead;
 			  }
 			  catch( const Exception &e ){
 			      ErrorState = ErrorNoMatch;
@@ -1962,6 +1969,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 			      Array val( QFileReadInteger(fp, 16, FormatFieldWidth) );
 			      if( !FormatSkipFlag )
 				  values.push_back( val );
+			      ++nRead;
 			  }
 			  catch( const Exception &e ){
 			      ErrorState = ErrorNoMatch;
@@ -2021,7 +2029,10 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 
     if( firstdim > 0 ){
 	seconddim = (nElem / static_cast<int>(firstdim)) + 1;
-	nElem = static_cast<int>(firstdim*seconddim);
+	if( seconddim > 1 )
+	    nElem = static_cast<int>(firstdim*seconddim);
+	else
+	    firstdim = nElem;
     }
     else{
 	firstdim = nElem;
@@ -2076,11 +2087,12 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 //@@Usage
 //Reads values from a string.  The general syntax for its use is
 //@[
-//  [a1,...,an] = sscanf(text,format)
+//  [a, count, errmsg, nextind] = sscanf(text,format,[size])
 //@]
 //Here @|format| is the format string, which is a string that
-//controls the format of the input.  Each value that is parsed
-//from the @|text| occupies one output slot.  See @|printf|
+//controls the format of the input, @|size| specifies the amount of data to be read. Values that are parsed
+//from the @|text| are stored in a. Note that sscanf is vectorized - the format string is reused as long as
+//there are entries in the @|text| string. See @|printf|
 //for a description of the format.
 //@@Tests
 //@{ test_sscanf1.m
