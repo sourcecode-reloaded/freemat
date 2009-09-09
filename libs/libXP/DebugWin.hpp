@@ -20,7 +20,8 @@
 #define __DebugWin_hpp__
 
 #include <QWidget>
-#include <QTextEdit>
+#include <QListWidget>
+#include <QMenu>
 #include <QDockWidget>
 
 class DebugWin : public QDockWidget {
@@ -28,8 +29,11 @@ class DebugWin : public QDockWidget {
 public:
   DebugWin(QWidget *parent);
   void clear();
+protected:
+  void contextMenuEvent(QContextMenuEvent *e);
 private:
-  QTextEdit *m_list;
+  QListWidget *m_list;
+  QMenu *m_popup;		    
 protected slots:
   void addString(const QString &t);
 };
