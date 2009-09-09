@@ -1036,13 +1036,6 @@ void Interpreter::multiexpr(const Tree & t, ArrayVector &q, index_t lhsCount, bo
       q.push_back(*ptr);
       return;
     }
-    if (ptr->isUserClass()) {
-      dbout << "multiexpr called\n";
-      dbout << "user class " << ptr->className() << "\n";
-      dbout << "scope detail string " << context->scopeDetailString() << "\n";
-      dbout << "stop overload " << stopoverload << "\n";
-      dbout << "inMethodCall " << inMethodCall(ptr->className()) << "\n";
-    }
     if (ptr->isUserClass() && !stopoverload) {
       q += ClassRHSExpression(*ptr,t,this);
       return;
@@ -2058,7 +2051,7 @@ static bool compileJITBlock(Interpreter *interp, const Tree & t, JITInfo & ref) 
 	  << LineNumber(interp->getContext()->scopeTokenID())
 	  << " of " << interp->getContext()->scopeName() << "\n";
   } catch (Exception &e) {
-    dbout << "JIT compile failed:" << e.msg() << " at line" 
+    dbout << "JIT compile failed:" << e.msg() << " at line " 
       	  << LineNumber(interp->getContext()->scopeTokenID())
 	  << " of " << interp->getContext()->scopeName() << "\n";
     delete cg;
