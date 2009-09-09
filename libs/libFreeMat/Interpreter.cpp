@@ -488,12 +488,24 @@ void Interpreter::errorMessage(QString msg) {
 }
 
 void Interpreter::warningMessage(QString msg) {
+  static QString lastWarning;
+  static bool lastWarningRepeat = false;
   if (m_diaryState) diaryMessage("Warning: " + msg + "\n");
   if (m_captureState) 
     m_capture += "Warning: " + msg + "\n";
   else
-    if (m_quietlevel < 2)
-      emit outputRawText(TranslateString("Warning: " +msg + "\r\n"));
+    if (m_quietlevel < 2) {
+      if (lastWarning != msg) {
+	emit outputRawText(TranslateString("Warning: " +msg + "\r\n"));
+	lastWarningRepeat = false;
+	lastWarning = msg;
+      } else {
+	if (!lastWarningRepeat) {
+	  emit outputRawText(TranslateString("Warning: Last warning repeats... suppressing more of these\r\n"));
+	  lastWarningRepeat = true;
+	}
+      }
+    }
 }
 
 static bool isMFile(QString arg) {
