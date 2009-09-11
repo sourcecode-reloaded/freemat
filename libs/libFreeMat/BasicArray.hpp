@@ -264,6 +264,8 @@ public:
       throw Exception("Illegal reshape");
   }
   inline index_t bytes() const {
+    if (sizeof(T) <= 8)
+      return sizeof(T)*length();
     index_t total = 0;
     for (index_t i=1;i<=length();i++)
       total += TSizeOf<T>(get(i));
