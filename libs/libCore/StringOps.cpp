@@ -1737,7 +1737,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
     values.clear();
 
     try{
-	while( !alldone && (nRead <= nMaxRead) ){
+	while( !alldone && (nRead < nMaxRead) ){
 	    switch( FormatState ){
 		  case ParsingMatch:
 		      if( *frmt_iter == '%' ){

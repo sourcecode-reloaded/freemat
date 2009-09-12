@@ -235,7 +235,7 @@ double QFileReadInteger(QFile *fp, int base, int nMaxDigits) {
 			  return 0;
 		      // Parse digits
 		      int ndigits = 0;
-		      while (fp->getChar(&dig) && ndigits < nMaxDigits) {
+		      while (ndigits < nMaxDigits && fp->getChar(&dig)) {
 			  int n = tolower(dig);
 			  if (n == '0' || n == '1') {
 			      val *= 2;
@@ -261,7 +261,7 @@ double QFileReadInteger(QFile *fp, int base, int nMaxDigits) {
 			  return 0;
 		      // Parse digits
 		      int ndigits = 0;
-		      while (fp->getChar(&dig) && ndigits < nMaxDigits ) {
+		      while (ndigits < nMaxDigits && fp->getChar(&dig)) {
 			  int n = tolower(dig);
 			  if (n >= '0' && n <= '7') {
 			      val *= 8;
@@ -295,7 +295,7 @@ double QFileReadInteger(QFile *fp, int base, int nMaxDigits) {
 		      }
 		      // Parse digits
 		      char ch;
-		      while (fp->getChar(&ch) && ndigits < nMaxDigits) {
+		      while (ndigits < nMaxDigits && fp->getChar(&ch) ) {
 			  if (isdigit(ch)) {
 			      val *= 10;
 			      val += digitvalue(ch);
@@ -320,7 +320,7 @@ double QFileReadInteger(QFile *fp, int base, int nMaxDigits) {
 			  return 0;
 		      // Parse digits
 		      int ndigits = 0;
-		      while (fp->getChar(&dig) && ndigits < nMaxDigits) {
+		      while (ndigits < nMaxDigits && fp->getChar(&dig) ) {
 			  int n = tolower(dig);
 			  if (n >= '0' && n <= '9') {
 			      val *= 16;
