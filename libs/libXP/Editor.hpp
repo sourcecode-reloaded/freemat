@@ -229,8 +229,7 @@ class FMEditor : public QMainWindow {
   FMReplaceDialog *m_replace;
   QMenu *m_popup;
   Interpreter *m_eval;
-  QStringList varNameList, varTypeList, varFlagsList, varSizeList, varValueList;
-  Context *context;
+  QMap<QString, QString> varTips;
   bool isShowToolTip;
   bool isMatchBracket;
   bool isSaveBeforeRun;
@@ -296,7 +295,6 @@ private slots:
   void undo();
   void redo();
   void RefreshBPLists();
-  void refreshContext();
   void IllegalLineOrCurrentPath(QString name, int line);
   void dbstep();
   void dbtrace();
@@ -318,11 +316,11 @@ private slots:
   void openSelection();
 public:
   void closeEvent(QCloseEvent *event);
-  void setContext(Context *watch);
   void addTabIfEmpty();
   void addTabUntitled();
 public slots:
   void ShowActiveLine(QString name, int line);
+  void updateVarView(QVariant);
 };
 
 #endif

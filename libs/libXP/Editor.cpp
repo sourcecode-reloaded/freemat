@@ -176,6 +176,8 @@ FMTextEdit::FMTextEdit() : QTextEdit() {
   matchingEnd = -1;
   setLineWrapMode(QTextEdit::NoWrap);
   connect( this, SIGNAL( cursorPositionChanged() ), this, SLOT( slotCursorOrTextChanged()));
+  // For some reason, OS X requires this
+  setToolTip("tip");
 }
 
 FMTextEdit::~FMTextEdit() {
@@ -456,8 +458,10 @@ bool FMTextEdit::event(QEvent *event){
     QString textSelected = BeginCursor.selectedText();
     if (!textSelected.isEmpty() && textSelected.at(0).isLetter())
       emit showDataTips(helpEvent->globalPos(), textSelected);
-  }
-  return QTextEdit::event(event);
+    event->accept();
+    return true;
+  } else
+    return QTextEdit::event(event);
 }
 
 QString simplifyMCode(const QString Str)
@@ -1972,81 +1976,35 @@ FMEditPane* FMEditor::currentPane() {
   return te;
 }
 
-void FMEditor::refreshContext() {
-  if (!context) return;
-  
-  //Reset all the values
-  varNameList = QStringList();
-  varTypeList = QStringList();
-  varFlagsList = QStringList();
-  varSizeList = QStringList();
-  varValueList = QStringList();
-
-  StringVector varnames = StringVector(context->listAllVariables());
-  qSort(varnames.begin(),varnames.end());
-  for (int i=0;i<varnames.size();i++) {
-    QString name(varnames[i]);
-    QString type;
-    QString flags;
-    QString size;
-    QString value;
-    Array lookup;
-    ArrayReference ptr;
-    ptr = context->lookupVariable(varnames[i]);
-    if (!ptr.valid()) {
-      type = "undefined";
-    } else {
-      lookup = *ptr;
-      type = lookup.className();
-      if (lookup.isSparse())
-	flags = "Sparse ";
-      if (context->isVariableGlobal(varnames[i])) {
-	flags += "Global ";
-      } else if (context->isVariablePersistent(varnames[i])) {
-	flags += "Persistent ";
-      }
-      size = lookup.dimensions().toString();
-      try {
-	value = ArrayToPrintableString(lookup);
-      } catch (Exception& e) {
-      }
+void FMEditor::updateVarView(QVariant var) {
+  varTips.clear();
+  QList<QVariant> list = var.toList();
+  for (int i=0;i<list.size();i++) {
+    QList<QVariant> entry = list[i].toList();
+    // Structure of this list i icon, name, class, value, size, stats
+    if (entry.size() > 5) {
+      QString myname = entry[1].toString();
+      QString myvalue = entry[3].toString();
+      QString tiptext = myname + ": " + myvalue;
+      varTips[myname] = tiptext;
     }
-    varNameList << name;
-    varTypeList << type;
-    varFlagsList << flags;
-    varSizeList << "["+size.replace(' ','x')+"]";
-    varValueList << value;	    
   }
-}
-
-void FMEditor::setContext(Context *watch) {
-  context = watch;
-  refreshContext();
 }
 
 void FMEditor::showDataTips(QPoint pos, QString textSelected) {
   if (!isShowToolTip)
      return;
-     
   bool foundTip = false;
   if (!textSelected.isEmpty()) {
     //split selected text into smaller parts and match with existing variable names
     QStringList list = textSelected.split(QRegExp("\\W+"), QString::SkipEmptyParts);
-    for (int j = 0; j < list.size(); j++)
-      for (int i = 0; i < varNameList.size(); i++)
-	if (list.at(j) == varNameList.at(i)) {
-	  foundTip = true;
-	  if (varValueList.at(i).isEmpty())
-	    QToolTip::showText(pos, varNameList.at(i) + ": " + 
-			       varSizeList.at(i) + " " + 
-			       varTypeList.at(i));
-	  else
-	    QToolTip::showText(pos, varNameList.at(i) + ": " + 
-			       varSizeList.at(i) + " " + 
-			       varTypeList.at(i) + " =\n    " + 
-			       varValueList.at(i) );
-	  break;
-	}
+    for (int j = 0; j < list.size(); j++) {
+      if (varTips.contains(list.at(j))) {
+	foundTip = true;
+	QToolTip::showText(pos,varTips[list.at(j)]);
+	break;
+      }
+    }
     if (!foundTip)
       QToolTip::hideText();
   }

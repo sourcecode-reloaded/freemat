@@ -153,14 +153,12 @@ void createEditor(Interpreter* eval){
     // Because of the threading setup, we need the keymanager to relay commands
     // from the editor to the interpreter.  
     QObject::connect(edit, SIGNAL(EvaluateText(QString)),
-        m_app->GetKeyManager(), SLOT(QueueMultiString(QString)));
-    //Allow Editor to see the Context and refresh the content at the right time
-    edit->setContext(m_app->GetKeyManager()->GetCompletionContext());
-    QObject::connect(m_app->GetKeyManager(),SIGNAL(UpdateInfoViews()),
-            edit,SLOT(refreshContext()));
+		     m_app->GetKeyManager(), SLOT(QueueMultiString(QString)));
+    // Connect the editor to the variable update signal from the interpreter
+    QObject::connect(eval, SIGNAL(updateVarView(QVariant)), edit, SLOT(updateVarView(QVariant)));
     //Ask to change current path when setting breakpoint
     QObject::connect(eval, SIGNAL(IllegalLineOrCurrentPath(QString, int)), edit,
-        SLOT(IllegalLineOrCurrentPath(QString, int)));
+		     SLOT(IllegalLineOrCurrentPath(QString, int)));
   }
 }
 
