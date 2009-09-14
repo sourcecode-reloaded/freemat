@@ -44,7 +44,7 @@ QTTerm::QTTerm() {
   hasSelection = false;
   setFocusPolicy(Qt::StrongFocus);
   selectionStart = 0;
-  selecionStop = 0;
+  selectionStop = 0;
 }
 
 int QTTerm::getScrollbackLimit() {
