@@ -43,6 +43,8 @@ QTTerm::QTTerm() {
   fnt = QFont("Courier",10);
   hasSelection = false;
   setFocusPolicy(Qt::StrongFocus);
+  selectionStart = 0;
+  selecionStop = 0;
 }
 
 int QTTerm::getScrollbackLimit() {
@@ -644,6 +646,8 @@ QString QTTerm::getSelectionText() {
   int sel_row_stop = lSelectionStop/m_term_width;
   sel_row_start = qMin(sel_row_start,buffer.size()-1);
   sel_row_stop = qMin(sel_row_stop,buffer.size()-1);
+  sel_row_start = qMax(0,sel_row_start);
+  sel_row_stop = qMax(0,sel_row_stop);
   QString ret;
   for (int i=sel_row_start;i<=sel_row_stop;i++) {
     for (int j=0;j<maxlen;j++)
