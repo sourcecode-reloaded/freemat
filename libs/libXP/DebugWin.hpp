@@ -33,9 +33,14 @@ protected:
   void contextMenuEvent(QContextMenuEvent *e);
 private:
   QListWidget *m_list;
-  QMenu *m_popup;		    
+  QMenu *m_popup;
+  QAction *m_selectall;
+  QAction *m_copy;		      
 protected slots:
   void addString(const QString &t);
+public slots:
+  void selectall();
+  void copy();
 };
 
 #endif

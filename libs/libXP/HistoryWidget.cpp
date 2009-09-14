@@ -34,33 +34,44 @@ HistoryWidget::HistoryWidget(QWidget *parent) : QDockWidget("History",parent) {
 	  this,SLOT(doubleClicked(QTreeWidgetItem*,int)));
   setObjectName("history");
   m_popup = new QMenu;
-  m_popup->addAction("Execute");
-  m_popup->addAction("Clear All");
-  m_popup->addAction("Copy");
+  m_execute = new QAction("Execute selection",this);
+  connect(m_execute,SIGNAL(triggered()),this,SLOT(execute()));
+  m_clearall = new QAction("Clear all",this);
+  connect(m_clearall,SIGNAL(triggered()),this,SLOT(clearall()));
+  m_copy = new QAction("Copy selection",this);
+  m_copy->setShortcut(Qt::Key_C | Qt::CTRL);
+  connect(m_copy,SIGNAL(triggered()),this,SLOT(copy()));
+  m_popup->addAction(m_execute);
+  m_popup->addAction(m_clearall);
+  m_popup->addAction(m_copy);
   m_flist->setSelectionMode(QAbstractItemView::ExtendedSelection);
+  setFocusPolicy(Qt::StrongFocus);
   m_flist->scrollToBottom();
   m_last_added = m_parent;
 }
 
+void HistoryWidget::execute() {
+  QList<QTreeWidgetItem *>items = m_flist->selectedItems();
+  if (items.size() > 0)
+    for (int i=0;i<items.size();i++)
+      emit sendCommand(items[i]->text(0));
+}
+
+void HistoryWidget::clearall() {
+  clear();
+}
+
+void HistoryWidget::copy() {
+  QString txt;
+  QList<QTreeWidgetItem *>items = m_flist->selectedItems();
+  if (items.size() > 0)
+    for (int i=0;i<items.size();i++)
+      txt += items[i]->text(0) + "\n";
+  QApplication::clipboard()->setText(txt,QClipboard::Clipboard);
+}
+
 void HistoryWidget::contextMenuEvent(QContextMenuEvent *e) {
-  QAction *p = m_popup->exec(e->globalPos());
-  if (!p) return;
-  if (p->text() == "Execute") {
-    QList<QTreeWidgetItem *>items = m_flist->selectedItems();
-    if (items.size() > 0)
-      for (int i=0;i<items.size();i++)
-	emit sendCommand(items[i]->text(0));
-  } else if (p->text() == "Clear All") {
-    clear();
-  } else if (p->text() == "Copy") {
-    QString txt;
-    QList<QTreeWidgetItem *>items = m_flist->selectedItems();
-    if (items.size() > 0)
-      for (int i=0;i<items.size();i++)
-	txt += items[i]->text(0) + "\n";
-    QApplication::clipboard()->setText(txt,QClipboard::Clipboard);
-  }
-  
+  m_popup->exec(e->globalPos());
 }
 
 void HistoryWidget::doubleClicked(QTreeWidgetItem* item, int) {

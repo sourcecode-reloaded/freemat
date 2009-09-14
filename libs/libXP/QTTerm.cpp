@@ -71,6 +71,12 @@ void QTTerm::blink() {
   viewport()->update();
 }
 
+void QTTerm::copy() {
+  QString copytextbuf = getSelectionText();
+  QClipboard *cb = QApplication::clipboard();
+  cb->setText(copytextbuf, QClipboard::Clipboard);
+}
+
 void QTTerm::ensureCursorVisible() {
   // For the cursor to be visible
   // the scroll bar must be at 

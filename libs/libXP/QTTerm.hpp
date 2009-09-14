@@ -118,6 +118,7 @@ public slots:
   void MoveBOL();
   void ClearDisplay();
   void OutputRawString(QString txt);
+  void copy();
 signals:
   void OnChar(int c);
   void SetTextWidth(int);

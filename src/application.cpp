@@ -368,9 +368,13 @@ void ApplicationWindow::save() {
 }
 
 void ApplicationWindow::copy() {
-  QString copytextbuf = m_term->getSelectionText();
-  QClipboard *cb = QApplication::clipboard();
-  cb->setText(copytextbuf, QClipboard::Clipboard);
+  if (m_term->hasFocus()) {
+    m_term->copy();
+  } else if (m_history->widget()->hasFocus()) {
+    m_history->copy();
+  }  else if (m_debug->widget()->hasFocus()) {
+    m_debug->copy();
+  }
 }
 
 void ApplicationWindow::paste() {

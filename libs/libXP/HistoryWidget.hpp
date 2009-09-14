@@ -22,6 +22,7 @@
 #include <QWidget>
 #include <QTreeWidget>
 #include <QDockWidget>
+#include <QAction>
 
 class HistoryWidget : public QDockWidget {
   Q_OBJECT
@@ -33,13 +34,17 @@ private:
   QTreeWidgetItem *m_parent;
   QTreeWidgetItem *m_last_added;
   QMenu *m_popup;
+  QAction *m_execute, *m_clearall, *m_copy;
   void readSettings();
 protected:
   void contextMenuEvent(QContextMenuEvent *e);
   void closeEvent(QCloseEvent*);
-protected slots:
+public slots:
   void addCommand(QString t);
   void doubleClicked(QTreeWidgetItem* item, int column);
+  void execute();
+  void clearall();
+  void copy();
 signals:
   void sendCommand(QString t);
   void clearHistory();

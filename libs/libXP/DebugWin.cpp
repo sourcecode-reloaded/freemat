@@ -24,14 +24,20 @@ DebugStream dbout;
 
 DebugWin::DebugWin(QWidget *parent) : QDockWidget("Debug",parent) {
   m_list = new QListWidget(this);
-  m_list->setFocusPolicy(Qt::NoFocus);
+  m_list->setFocusPolicy(Qt::StrongFocus);
   m_list->setWordWrap(true);
   m_list->setSelectionMode(QAbstractItemView::ContiguousSelection);
   m_popup = new QMenu;
-  m_popup->addAction("Select All");
-  m_popup->addAction("Copy");
+  m_selectall = new QAction("Select all",this);
+  connect(m_selectall,SIGNAL(triggered()),this,SLOT(selectall()));
+  m_copy = new QAction("Copy selection",this);
+  m_copy->setShortcut(Qt::Key_C | Qt::CTRL);
+  connect(m_copy,SIGNAL(triggered()),this,SLOT(copy()));
+  m_popup->addAction(m_selectall);
+  m_popup->addAction(m_copy);
   setWidget(m_list);
   setObjectName("Debug");
+  setFocusPolicy(Qt::StrongFocus);
   dbout.setWin(this);
 }
 
@@ -45,17 +51,19 @@ void DebugWin::addString(const QString &t) {
     delete m_list->takeItem(0);
 }
 
+void DebugWin::selectall() {
+  m_list->selectAll();
+}
+
+void DebugWin::copy() {
+  QString txt;
+  QList<QListWidgetItem *>items = m_list->selectedItems();
+  if (items.size() > 0)
+    for (int i=0;i<items.size();i++)
+      txt += items[i]->text() + "\n";
+  QApplication::clipboard()->setText(txt,QClipboard::Clipboard);    
+}
+
 void DebugWin::contextMenuEvent(QContextMenuEvent *e) {
-  QAction *p = m_popup->exec(e->globalPos());
-  if (!p) return;
-  if (p->text() == "Select All") {
-    m_list->selectAll();
-  } else if (p->text() == "Copy") {
-    QString txt;
-    QList<QListWidgetItem *>items = m_list->selectedItems();
-    if (items.size() > 0)
-      for (int i=0;i<items.size();i++)
-	txt += items[i]->text() + "\n";
-    QApplication::clipboard()->setText(txt,QClipboard::Clipboard);    
-  }
+  m_popup->exec(e->globalPos());
 }
