@@ -23,6 +23,8 @@ void InitializeReservedTable() {
   fm_reserved["continue"] = TOK_CONTINUE;
   fm_reserved["dbstep"] = TOK_DBSTEP;
   fm_reserved["dbtrace"] = TOK_DBTRACE;
+  fm_reserved["dbdown"] = TOK_DBDOWN;
+  fm_reserved["dbup"] = TOK_DBUP;
   fm_reserved["else"] = TOK_ELSE;
   fm_reserved["elseif"] = TOK_ELSEIF;
   fm_reserved["end"] = TOK_END;

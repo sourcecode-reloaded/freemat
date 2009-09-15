@@ -433,6 +433,8 @@ Tree Parser::statement() {
     return singletonStatement();
   if (match(TOK_CONTINUE))
     return singletonStatement();
+  if (match(TOK_DBUP) || match(TOK_DBDOWN))
+    return singletonStatement();
   if (match(TOK_WHILE))
     return whileStatement();
   if (match(TOK_DBSTEP) || match(TOK_DBTRACE))

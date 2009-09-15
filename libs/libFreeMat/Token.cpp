@@ -114,6 +114,8 @@ QString TokenToString(const Token& b) {
   case TOK_ANONYMOUS_FUNC: return "anon func";
   case TOK_NEST_FUNC: return "nest func";
   case TOK_TYPE_DECL: return "type decl";
+  case TOK_DBUP: return "dbup";
+  case TOK_DBDOWN: return "dbdown";
   }
   return QString(1,QChar(b.value()))+QString(" val = %1").arg(b.value());
 }

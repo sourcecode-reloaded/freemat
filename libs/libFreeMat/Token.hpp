@@ -74,6 +74,8 @@ const TokenValueType TOK_SCRIPT = 191;
 const TokenValueType TOK_ANONYMOUS_FUNC = 192;
 const TokenValueType TOK_NEST_FUNC = 193;
 const TokenValueType TOK_TYPE_DECL = 194;
+const TokenValueType TOK_DBUP = 195;
+const TokenValueType TOK_DBDOWN = 196;
 
 class Serialize;
 

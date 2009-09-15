@@ -664,36 +664,26 @@ void Interpreter::dbup() {
   // 
 
   context->reserveScope();
-  // Save the one for the "keyboard" command that we are currently in
-  context->reserveScope();
-  // Bypass any keyboards
   while (InKeyboardScope(context))
     context->bypassScope(1);
-   // Save the one for the "dbup" command
   if (!InSpecificScope(context,"base","base") &&
       !InSpecificScope(context,"docli","builtin")) {
     // Bypass a single non-keyboard context
     context->bypassScope(1);
   }
-  // Bypass any keyboards after it
   while (InKeyboardScope(context))
     context->bypassScope(1);
-  // Restore the "keyboard" scope that belongs to us
-  context->unreserveScope();
-  // Restore the "dbup" scope that belongs to us
   context->unreserveScope();
 }
 
 void Interpreter::dbdown() {
   // Save the one for the "dbdown" command
-  context->reserveScope();
   // Save the one for the "keyboard" command that we are currently in
   context->reserveScope();
   // Restore until we get a non-"keyboard" scope
   context->restoreScope(1);
   while (InKeyboardScope(context))
     context->restoreScope(1);
-  context->unreserveScope();
   context->unreserveScope();
   dbdown_executed = true;
 }
@@ -2693,16 +2683,19 @@ void Interpreter::persistentStatement(const Tree & t) {
 void Interpreter::doDebugCycle() {
   depth++;
   PopContext saver(context,0);
-  context->pushScope("keyboard","keyboard");
-  context->setScopeActive(false);
-  try {
-    evalCLI();
-  } catch (InterpreterContinueException& e) {
-  } catch (InterpreterBreakException& e) {
-  } catch (InterpreterReturnException& e) {
-  } catch (InterpreterRetallException& e) {
-    depth--;
-    throw;
+  {
+    context->pushScope("keyboard","keyboard");
+    PopContext saver2(context,0);
+    context->setScopeActive(false);
+    try {
+      evalCLI();
+    } catch (InterpreterContinueException& e) {
+    } catch (InterpreterBreakException& e) {
+    } catch (InterpreterReturnException& e) {
+    } catch (InterpreterRetallException& e) {
+      depth--;
+      throw;
+    }
   }
   depth--;
 }
@@ -3488,6 +3481,12 @@ void Interpreter::statementType(const Tree & t, bool printIt) {
     dbtraceStatement(t);
     emit RefreshBPLists();
     throw InterpreterReturnException();
+    break;
+  case TOK_DBUP:
+    dbup();
+    break;
+  case TOK_DBDOWN:
+    dbdown();
     break;
   case TOK_RETURN:
     throw InterpreterReturnException();
@@ -5304,6 +5303,7 @@ void Interpreter::setStopOverload(bool flag) {
 //   if (cstack.size() < 2) return cstack[0];
 //   return cstack[cstack.size()-2];
 // }
+
 
 // We want dbstep(n) to cause us to advance n statements and then
 // stop.  we execute statement-->set step trap,

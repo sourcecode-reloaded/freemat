@@ -171,7 +171,10 @@ public:
       qDebug() << "Scope " << i << " " << scopestack[i]->getName() << scopestack[i]->isActive() << scopestack[i]->listAllVariables();
     }
     for (int i=0;i<bypassstack.size();i++) {
-      qDebug() << "bypass " << i << " " << bypassstack[i]->getName() << bypassstack[i]->isActive() << scopestack[i]->listAllVariables();
+      qDebug() << "bypass " << i << " " << bypassstack[i]->getName() << bypassstack[i]->isActive() << bypassstack[i]->listAllVariables();
+    }
+    for (int i=0;i<reserveStack.size();i++) {
+      qDebug() << "reserve " << i << " " << reserveStack[i]->getName() << reserveStack[i]->isActive() << reserveStack[i]->listAllVariables();
     }
   }
   /**

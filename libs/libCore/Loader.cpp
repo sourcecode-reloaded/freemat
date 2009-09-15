@@ -364,8 +364,8 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addSpecialFunction("ctypethaw",CtypeThawFunction,3,2,"x","type","count",NULL);
   context->addFunction("cumprod",CumprodFunction,2,1,"x","dimensions",NULL);
   context->addFunction("cumsum",CumsumFunction,2,1,"x","dimension",NULL);
-  context->addSpecialFunction("dbup",DbUpFunction,0,0,NULL);
-  context->addSpecialFunction("dbdown",DbDownFunction,0,0,NULL);
+  //  context->addSpecialFunction("dbup",DbUpFunction,0,0,NULL);
+  //  context->addSpecialFunction("dbdown",DbDownFunction,0,0,NULL);
   context->addSpecialFunction("dbdelete",DbDeleteFunction,1,0,"num",NULL);
   context->addSpecialFunction("dblist",DbListFunction,0,0,NULL);
   context->addSpecialFunction("dbstop",DbStopFunction,2,0,"funcname","linenumber",NULL);
