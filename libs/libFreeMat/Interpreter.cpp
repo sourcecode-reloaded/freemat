@@ -662,7 +662,8 @@ void Interpreter::dbup() {
   // We need the "keyboard" states on the stack because they
   // capture the context updates for the command line routines.
   // 
-
+  if (InSpecificScope(context,"docli","builtin")) 
+    return;
   context->reserveScope();
   while (InKeyboardScope(context))
     context->bypassScope(1);
@@ -5464,7 +5465,12 @@ void Interpreter::evalCLI() {
       }
       fname = context->scopeName();
       line = LineNumber(context->scopeTokenID());
-      prompt = QString("[%1,%2]--> ").arg(context->scopeDetailString()).arg(line);
+      QString scopename = context->scopeDetailString();
+      if (scopename == "builtin")
+	scopename = context->scopeName();
+      if (scopename == "docli") 
+	scopename = "base";
+      prompt = QString("[%1,%2]--> ").arg(scopename).arg(line);
       context->restoreScope(bypasscount);
       rootCLI = false;
     }
