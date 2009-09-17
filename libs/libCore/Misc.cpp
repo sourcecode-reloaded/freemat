@@ -240,6 +240,7 @@ ArrayVector SourceFunction(int nargout, const ArrayVector& arg, Interpreter* eva
     throw Exception("unable to open file " + filename + " for reading");
   QTextStream fstr(&fp);
   QString scriptText(fstr.readAll());
+  if (!scriptText.endsWith("\n")) scriptText += "\n";
   Scanner S(scriptText,filename);
   Parser P(S);
   Tree pcode(P.process());
