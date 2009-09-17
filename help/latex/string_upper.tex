@@ -18,6 +18,16 @@ in which case each string in the cell array is converted to upper case.
 \subsection{Example}
 
 A simple example:
-@>
+\begin{verbatim}
+--> upper('this Is Strange CAPitalizaTion')
+
+ans = 
+THIS IS STRANGE CAPITALIZATION
+\end{verbatim}
 and a more complex example with a cell array of strings
-@>
+\begin{verbatim}
+--> upper({'This','Is','Strange','CAPitalizaTion'})
+
+ans = 
+ [THIS] [IS] [STRANGE] [CAPITALIZATION] 
+\end{verbatim}

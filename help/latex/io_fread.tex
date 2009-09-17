@@ -64,13 +64,39 @@ of \verb|'double => float'| should be used.
 \subsection{Example}
 
 First, we create an array of \verb|512 x 512| Gaussian-distributed \verb|float| random variables, and then writing them to a file called \verb|test.dat|.
-@>
+\begin{verbatim}
+--> A = float(randn(512));
+--> fp = fopen('test.dat','w');
+--> fwrite(fp,A);
+--> fclose(fp);
+\end{verbatim}
 Read as many floats as possible into a row vector
-@>
+\begin{verbatim}
+--> fp = fopen('test.dat','r');
+--> x = fread(fp,[1,inf],'float');
+--> fclose(fp);
+--> who x
+  Variable Name       Type   Flags             Size
+              x    double                    [1 262144]
+\end{verbatim}
 Note that \verb|x| is a \verb|double| array.  This behavior is new to FreeMat 4.
 Read the same floats into a 2-D float array.
-@>
+\begin{verbatim}
+--> fp = fopen('test.dat','r');
+--> x = fread(fp,[512,inf],'float');
+--> fclose(fp);
+--> who x
+  Variable Name       Type   Flags             Size
+              x    double                    [512 512]
+\end{verbatim}
 To read them as a single precision float array, we can use the
 following form:
-@>
+\begin{verbatim}
+--> fp = fopen('test.dat','r');
+--> x = fread(fp,[512,inf],'*float');
+--> fclose(fp);
+--> who x
+  Variable Name       Type   Flags             Size
+              x    single                    [512 512]
+\end{verbatim}
 

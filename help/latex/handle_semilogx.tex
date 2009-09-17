@@ -12,13 +12,19 @@ x axis to have a logarithmic scale.
 
 Here is an example of an exponential signal plotted first on a linear
 plot:
-@>
+\begin{verbatim}
+--> y = linspace(0,2);
+--> x = (10).^y;
+--> plot(x,y,'r-');
+\end{verbatim}
 
 
 \centerline{\includegraphics[width=8cm]{semilogx1}}
 
 and now with a logarithmic x axis
-@>
+\begin{verbatim}
+--> semilogx(x,y,'r-');
+\end{verbatim}
 
 
 \centerline{\includegraphics[width=8cm]{semilogx2}}

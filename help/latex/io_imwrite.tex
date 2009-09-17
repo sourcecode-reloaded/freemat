@@ -27,6 +27,17 @@ be in the range [0,1].  \verb|map| contains the colormap information
 
 Here is a simple example of \verb|imread|/\verb|imwrite|.  First, we generate
 a grayscale image and save it to an image file.
-@>
+\begin{verbatim}
+--> a =  uint8(255*rand(64));
+--> figure(1), image(a), colormap(gray)
+--> title('image to save')
+Warning: Newly defined variable nargin shadows a function of the same name.  Use clear nargin to recover access to the function
+--> imwrite(a, 'test.bmp')
+\end{verbatim}
 Then, we read image file and show it:
-@>
+\begin{verbatim}
+--> b = imread('test.bmp');
+--> figure(2), image(b), colormap(gray)
+--> title('loaded image')
+Warning: Newly defined variable nargin shadows a function of the same name.  Use clear nargin to recover access to the function
+\end{verbatim}

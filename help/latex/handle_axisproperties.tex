@@ -149,6 +149,11 @@ Below is a summary of the properties for the axis.
 \item  \verb|position| - \verb|fourvector| - The normalized coordinates of the plot box space.
  Should be inside the rectable defined by \verb|outerposition|.
 
+\item  \verb|positionmode| - \verb|{'auto','manual'}| - the position mode is normally \verb|'auto'|
+ which means that FreeMat computes the position vector to fit the plot inside the \verb|outerposition|
+ vector.  If you set the \verb|position| vector manually (using a \verb|set| command), this \verb|mode|
+ flag becomes \verb|'manual'| and remains that way until reset to @|'auto'.
+
 \item  \verb|projection| - Not used.
 
 \item  \verb|selected| - Not used.

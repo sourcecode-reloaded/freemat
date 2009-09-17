@@ -48,6 +48,8 @@ function run_tests
         printf('   Test %s failed\n',failed{i});
      end
    end
+   quiet normal;
+   
 
 function list = filelist(pattern)
    q = dir(pattern);

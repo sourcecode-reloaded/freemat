@@ -11,19 +11,6 @@
 % The resulting vector p forms the coefficients of
 % the optimal polynomial (in descending degree) that fit
 % y with x.  
-% POLYFIT POLYFIT Fit Polynomial To Data
-% 
-% Usage
-% 
-% The polyfit routine has the following syntax
-% 
-%   p = polyfit(x,y,n)
-% 
-% where x and y are vectors of the same size, and
-% n is the degree of the approximating polynomial.  
-% The resulting vector p forms the coefficients of
-% the optimal polynomial (in descending degree) that fit
-% y with x.  
 
 % Copyright (c) 2002-2006 Samit Basu
 % Licensed under the GPL

@@ -23,6 +23,20 @@ limit by calling
 where <code>n</code> is the new limit to use.
 <H3>Example</H3>
 Setting a smaller print limit avoids pages of output when you forget the semicolon on an expression.
-@&gt;
+<PRE>
+--&gt; A = randn(512);
+--&gt; setprintlimit(10)
+--&gt; A
+
+ans = 
+
+ Columns 1 to 7
+
+   -0.2911   -2.2394    0.7388    0.4197    0.4382   -0.1399    0.9364 
+    0.6263    0.5764   -0.3614
+Print limit has been reached.  Use setprintlimit function to enable longer printouts
+--&gt; setprintlimit(1000)
+</PRE>
+<P>
 </BODY>
 </HTML>

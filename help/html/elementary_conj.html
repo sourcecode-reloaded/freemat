@@ -22,10 +22,28 @@ is the same numerical type as the input.  The <code>conj</code> function does
 nothing to real and integer types.
 <H3>Example</H3>
 The following demonstrates the complex conjugate applied to a complex scalar.
-@&gt;
+<PRE>
+--&gt; conj(3+4*i)
+
+ans = 
+   3.0000 -  4.0000i 
+</PRE>
+<P>
 The <code>conj</code> function has no effect on real arguments:
-@&gt;
+<PRE>
+--&gt; conj([2,3,4])
+
+ans = 
+ 2 3 4 
+</PRE>
+<P>
 For a double-precision complex array,
-@&gt;
+<PRE>
+--&gt; conj([2.0+3.0*i,i])
+
+ans = 
+   2.0000 -  3.0000i   0.0000 -  1.0000i 
+</PRE>
+<P>
 </BODY>
 </HTML>

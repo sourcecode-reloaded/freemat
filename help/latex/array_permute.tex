@@ -16,6 +16,36 @@ the matrix transpose operation.
 
 Here we use \verb|permute| to transpose a simple matrix (note that permute
 also works for sparse matrices):
-@>
+\begin{verbatim}
+--> A = [1,2;4,5]
+
+A = 
+ 1 2 
+ 4 5 
+
+--> permute(A,[2,1])
+
+ans = 
+ 1 4 
+ 2 5 
+
+--> A'
+
+ans = 
+ 1 4 
+ 2 5 
+\end{verbatim}
 Now we permute a larger n-dimensional array:
-@>
+\begin{verbatim}
+--> A = randn(13,5,7,2);
+--> size(A)
+
+ans = 
+ 13  5  7  2 
+
+--> B = permute(A,[3,4,2,1]);
+--> size(B)
+
+ans = 
+  7  2  5 13 
+\end{verbatim}

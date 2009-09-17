@@ -34,6 +34,17 @@ is
 Here we generate <code>10</code> binomial random variables, corresponding
 to <code>N=100</code> trials, each with probability <code>p=0.1</code>, using
 both <code>randbin</code> and then again using <code>rand</code> (to simulate the trials):
-@&gt;
+<PRE>
+--&gt; randbin(100,.1*ones(1,10))
+
+ans = 
+ 13  6  8  9 11  9  6  9  7 10 
+
+--&gt; sum(rand(100,10)&lt;0.1)
+
+ans = 
+  8 12 10  7 12  4 11  8  9  6 
+</PRE>
+<P>
 </BODY>
 </HTML>

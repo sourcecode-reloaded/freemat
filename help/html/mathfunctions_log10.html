@@ -26,7 +26,13 @@ For negative and complex arguments, the output is complex.
 <H3>Example</H3>
 The following piece of code plots the real-valued <code>log10</code>
 function over the interval <code>[1,100]</code>:
-@&gt;
+<PRE>
+--&gt; x = linspace(1,100);
+--&gt; plot(x,log10(x))
+--&gt; xlabel('x');
+--&gt; ylabel('log10(x)');
+</PRE>
+<P>
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="log10plot.png">

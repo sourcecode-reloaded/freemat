@@ -19,8 +19,27 @@ that call <code>threadid</code> from the new thread will return their
 handles.
 <H3>Example</H3>
 From the main thread, we have
-@&gt;
+<PRE>
+--&gt; threadid
+
+ans = 
+ 2 
+</PRE>
+<P>
 But from a launched auxilliary thread, we have
-@&gt;
+<PRE>
+--&gt; t_id = threadnew
+
+t_id = 
+ 3 
+
+--&gt; id = threadcall(t_id,1000,'threadid')
+
+id = 
+ 3 
+
+--&gt; threadfree(t_id);
+</PRE>
+<P>
 </BODY>
 </HTML>

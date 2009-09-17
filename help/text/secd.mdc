@@ -8,23 +8,3 @@ for sec). The syntax for its use is
 
    y = secd(x)
 
-SECD SECD Secant Degrees Function
-
-Usage
-
-Computes the secant of the argument, but takes
-the argument in degrees instead of radians (as is the case
-for sec). The syntax for its use is
-
-   y = secd(x)
-
-SECD SECD Secant Degrees Function
-
-Usage
-
-Computes the secant of the argument, but takes
-the argument in degrees instead of radians (as is the case
-for sec). The syntax for its use is
-
-   y = secd(x)
-

@@ -14,4 +14,14 @@ delimiter is a semicolon.  For all other systems, the delimiter is a colon.
 
 @Example
 The \verb|setpath| function is straightforward.
-@>
+\begin{verbatim}
+--> getpath
+
+ans = 
+  Empty array 1 0
+--> setpath('/usr/local/FreeMat/MFiles:/localhome/basu/MFiles')
+--> getpath
+
+ans = 
+/usr/local/FreeMat/MFiles:/localhome/basu/MFiles
+\end{verbatim}

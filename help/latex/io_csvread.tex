@@ -44,12 +44,36 @@ Here is an example of a CSV file that we wish to read in
 21, 33, 14, 44, 01, 00
 \end{verbatim}
 We start by reading the entire file
-@>
+\begin{verbatim}
+--> csvread('sample_data.csv')
+
+ans = 
+ 10 12 13  0 45 16 
+  9 11 52 93  5  6 
+  1  3  4  4 90 -3 
+ 14 17 13 67 30 43 
+ 21 33 14 44  1  0 
+\end{verbatim}
 Next, we read everything starting with the second row, and third column
-@>
+\begin{verbatim}
+--> csvread('sample_data.csv',1,2)
+
+ans = 
+ 52 93  5  6 
+  4  4 90 -3 
+ 13 67 30 43 
+ 14 44  1  0 
+\end{verbatim}
 Finally, we specify that we only want the \verb|3 x 3| submatrix starting
 with the second row, and third column
-@>
+\begin{verbatim}
+--> csvread('sample_data.csv',1,2,[1,2,3,4])
+
+ans = 
+ 52 93  5 
+  4  4 90 
+ 13 67 30 
+\end{verbatim}
 \begin{verbatim}
     sample_data.csv
 10, 12, 13, 00, 45, 16

@@ -17,6 +17,16 @@ in which case each string in the cell array is deblanked.
 \subsection{Example}
 
 A simple example
-@>
+\begin{verbatim}
+--> deblank('hello   ')
+
+ans = 
+hello
+\end{verbatim}
 and a more complex example with a cell array of strings
-@>
+\begin{verbatim}
+--> deblank({'hello  ','there ','  is  ','  sign  '})
+
+ans = 
+ [hello] [there] [  is] [  sign] 
+\end{verbatim}

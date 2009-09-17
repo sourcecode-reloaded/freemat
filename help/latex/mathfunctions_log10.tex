@@ -17,7 +17,12 @@ For negative and complex arguments, the output is complex.
 
 The following piece of code plots the real-valued \verb|log10|
 function over the interval \verb|[1,100]|:
-@>
+\begin{verbatim}
+--> x = linspace(1,100);
+--> plot(x,log10(x))
+--> xlabel('x');
+--> ylabel('log10(x)');
+\end{verbatim}
 
 
 \centerline{\includegraphics[width=8cm]{log10plot}}

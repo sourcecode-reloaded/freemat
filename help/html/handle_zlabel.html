@@ -35,7 +35,22 @@ for that label using the syntax
 <P>
 <H3>Example</H3>
 Here is an example of a simple plot with a label on the <code>z</code>-axis.
-@&gt;
+<PRE>
+--&gt; t = linspace(0,5*pi);
+--&gt; x = cos(t);
+--&gt; y = sin(t);
+--&gt; z = t;
+--&gt; plot3(x,y,z,'r-');
+Warning: Newly defined variable xlim shadows a function of the same name.  Use clear xlim to recover access to the function
+Warning: Newly defined variable ylim shadows a function of the same name.  Use clear ylim to recover access to the function
+Warning: Newly defined variable zlim shadows a function of the same name.  Use clear zlim to recover access to the function
+--&gt; view(3);
+Warning: Newly defined variable xlim shadows a function of the same name.  Use clear xlim to recover access to the function
+Warning: Newly defined variable ylim shadows a function of the same name.  Use clear ylim to recover access to the function
+Warning: Newly defined variable zlim shadows a function of the same name.  Use clear zlim to recover access to the function
+--&gt; zlabel('time');
+</PRE>
+<P>
 which results in the following plot.
 <P>
 <DIV ALIGN="CENTER">

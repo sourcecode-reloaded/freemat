@@ -24,10 +24,53 @@ which \verb|size(x,p) == 1|).
 
 Here are some simple examples of using \verb|shiftdim| to remove the singleton
 dimensions of an array, and then restore them:
-@>
+\begin{verbatim}
+--> x = uint8(10*randn(1,1,1,3,2));
+--> [y,n] = shiftdim(x);
+--> n
+
+ans = 
+ 3 
+
+--> size(y)
+
+ans = 
+ 3 2 
+
+--> c = shiftdim(y,-n);
+--> size(c)
+
+ans = 
+ 1 1 1 3 2 
+
+--> any(c~=x)
+
+ans = 
+
+(:,:,1,1,1) = 
+ 0 
+
+(:,:,1,1,2) = 
+ 0 
+\end{verbatim}
 Note that these operations (where shifting involves only singleton dimensions)
 do not actually cause data to be resorted, only the size of the arrays change.
 This is not true for the following example, which triggers a call to \verb|permute|:
-@>
+\begin{verbatim}
+--> z = shiftdim(x,4);
+\end{verbatim}
  Note that \verb|z| is now the transpose of \verb|x|
-@>
+\begin{verbatim}
+--> squeeze(x)
+
+ans = 
+ 0 0 
+ 0 3 
+ 0 0 
+
+--> squeeze(z)
+
+ans = 
+ 0 0 0 
+ 0 3 0 
+\end{verbatim}

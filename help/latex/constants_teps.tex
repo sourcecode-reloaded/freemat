@@ -14,4 +14,14 @@ compute epsilon based on the type of the array.
 
 The following example demonstrates the use of the \verb|teps| function,
 and one of its numerical consequences.
-@>
+\begin{verbatim}
+--> teps(float(3.4))
+
+ans = 
+ 1.1921e-07 
+
+--> teps(complex(3.4+i*2))
+
+ans = 
+ 2.2204e-16 
+\end{verbatim}

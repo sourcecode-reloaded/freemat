@@ -26,10 +26,28 @@ the return type is <code>double</code>.  The <code>real</code> function does
 nothing to real and integer types.
 <H3>Example</H3>
 The following demonstrates the <code>real</code> applied to a complex scalar.
-@&gt;
+<PRE>
+--&gt; real(3+4*i)
+
+ans = 
+ 3 
+</PRE>
+<P>
 The <code>real</code> function has no effect on real arguments:
-@&gt;
+<PRE>
+--&gt; real([2,3,4])
+
+ans = 
+ 2 3 4 
+</PRE>
+<P>
 For a double-precision complex array,
-@&gt;
+<PRE>
+--&gt; real([2.0+3.0*i,i])
+
+ans = 
+ 2 0 
+</PRE>
+<P>
 </BODY>
 </HTML>

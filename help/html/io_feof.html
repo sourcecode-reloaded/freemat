@@ -29,6 +29,20 @@ At first pass, we force a read of the contents of the file by specifying
 end of file, and somewhat counter-intuitively, the answer is <code>false</code>.
 We then attempt to read past the end of the file, which causes an
 error.  An <code>feof</code> test now returns the expected value of <code>true</code>.
-@&gt;
+<PRE>
+--&gt; fp = fopen('test.dat','rb');
+--&gt; x = fread(fp,[512,inf],'float');
+--&gt; feof(fp)
+
+ans = 
+ 1 
+
+--&gt; x = fread(fp,[1,1],'float');
+--&gt; feof(fp)
+
+ans = 
+ 1 
+</PRE>
+<P>
 </BODY>
 </HTML>

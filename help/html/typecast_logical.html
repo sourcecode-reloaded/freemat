@@ -21,8 +21,20 @@ where <code>x</code> is an <code>n</code>-dimensional numerical array.  Any nonz
 element maps to a logical 1.
 <H3>Example</H3>
 Here we convert an integer array to <code>logical</code>:
-@&gt;
+<PRE>
+--&gt; logical([1,2,3,0,0,0,5,2,2])
+
+ans = 
+ 1 1 1 0 0 0 1 1 1 
+</PRE>
+<P>
 The same example with double precision values:
-@&gt;
+<PRE>
+--&gt; logical([pi,pi,0,e,0,-1])
+
+ans = 
+ 1 1 0 1 0 1 
+</PRE>
+<P>
 </BODY>
 </HTML>

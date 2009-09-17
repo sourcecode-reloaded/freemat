@@ -60,7 +60,14 @@ and each column is thus the Minimum Norm vector <code>y_i</code> that satisfies 
 In the event that the matrix <code>A</code> is neither full row rank nor full column rank, a solution is returned, that is the minimum norm least squares solution.  The solution is computed using an orthogonal factorization technique that is documented in the LAPACK User's Guide (see the References section for details).
 <H3>Examples</H3>
 Here are some simple examples of the divide operator.  We start with a simple example of a full rank, square matrix:
-@&gt;
+<PRE>
+--&gt; A = [1,1;0,1]
+
+A = 
+ 1 1 
+ 0 1 
+</PRE>
+<P>
 Suppose we wish to solve
 <P>
 <DIV ALIGN="CENTER">
@@ -68,7 +75,20 @@ Suppose we wish to solve
 </DIV>
 <P>
 (which by inspection has the solution <code>y_1 = 1</code>, <code>y_2 = 2</code>).  Thus we compute:
-@&gt;
+<PRE>
+--&gt; B = [3;2]
+
+B = 
+ 3 
+ 2 
+
+--&gt; Y = A\B
+
+Y = 
+ 1 
+ 2 
+</PRE>
+<P>
 
 Suppose we wish to solve a trivial Least Squares (LS) problem.  We want to find a simple scaling of the vector <code>[1;1]</code> that is closest to the point <code>[2,1]</code>.  This is equivalent to solving
 <P>
@@ -89,7 +109,25 @@ Taking a derivative with respect to <code>y</code>, and setting to zero (which w
 </DIV>
 <P>
 which we can simplify to <code>4y = 6</code> or <code>y = 3/2</code> (we must, technically, check to make sure this is a minimum, and not a maximum or an inflection point).  Here is the same calculation performed using FreeMat:
-@&gt;
+<PRE>
+--&gt; A = [1;1]
+
+A = 
+ 1 
+ 1 
+
+--&gt; B = [2;1]
+
+B = 
+ 2 
+ 1 
+
+--&gt; A\B
+
+ans = 
+    1.5000 
+</PRE>
+<P>
 which is the same solution.
 </BODY>
 </HTML>

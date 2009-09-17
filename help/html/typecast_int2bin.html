@@ -23,6 +23,39 @@ to it than the input.  The bits are expanded along this extra dimension.
 <H3>Example</H3>
 The following piece of code demonstrates various uses of the int2bin
 function.  First the simplest example:
-@&gt;
+<PRE>
+--&gt; A = [2;5;6;2]
+
+A = 
+ 2 
+ 5 
+ 6 
+ 2 
+
+--&gt; int2bin(A,8)
+
+ans = 
+ 0 0 0 0 0 0 1 0 
+ 0 0 0 0 0 1 0 1 
+ 0 0 0 0 0 1 1 0 
+ 0 0 0 0 0 0 1 0 
+
+--&gt; A = [1;2;-5;2]
+
+A = 
+  1 
+  2 
+ -5 
+  2 
+
+--&gt; int2bin(A,8)
+
+ans = 
+ 0 0 0 0 0 0 0 1 
+ 0 0 0 0 0 0 1 0 
+ 1 1 1 1 1 0 1 1 
+ 0 0 0 0 0 0 1 0 
+</PRE>
+<P>
 </BODY>
 </HTML>

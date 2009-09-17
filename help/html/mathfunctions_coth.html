@@ -26,7 +26,12 @@ The <code>coth</code> function is computed from the formula
 <P>
 <H3>Examples</H3>
 Here is a simple plot of the hyperbolic cotangent function
-@&gt;
+<PRE>
+--&gt; x1 = -pi+.01:.01:-.01;
+--&gt; x2 = .01:.01:pi-.01;
+--&gt; plot(x1,coth(x1),x2,coth(x2)); grid('on');
+</PRE>
+<P>
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="cothplot.png">

@@ -106,6 +106,26 @@ the results later.
 </UL>
 <H3>Example</H3>
 Some examples of using the <code>regexp</code> function
-@&gt;
+<PRE>
+--&gt; [start,stop,tokenExtents,match,tokens,named] = regexp('quick down town zoo','(.)own')
+start = 
+  7 12 
+
+stop = 
+ 10 15 
+
+tokenExtents = 
+ [1 2 double array] [1 2 double array] 
+
+match = 
+ [down] [town] 
+
+tokens = 
+ [1 1 cell array] [1 1 cell array] 
+
+named = 
+  []
+</PRE>
+<P>
 </BODY>
 </HTML>

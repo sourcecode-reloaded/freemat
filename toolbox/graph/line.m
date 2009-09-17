@@ -7,15 +7,6 @@
 %    handle = line(x,y,z,properties...)
 % 
 % where...
-% LINE LINE Line Display Function
-% 
-% Usage
-% 
-% The line command has the following general syntax
-% 
-%    handle = line(x,y,z,properties...)
-% 
-% where...
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL

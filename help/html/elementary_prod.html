@@ -33,10 +33,32 @@ first non-singleton dimension of <code>x</code>. Note that by definition
 <H3>Example</H3>
 The following piece of code demonstrates various uses of the product
 function
-@&gt;
+<PRE>
+--&gt; A = [5,1,3;3,2,1;0,3,1]
+
+A = 
+ 5 1 3 
+ 3 2 1 
+ 0 3 1 
+</PRE>
+<P>
 We start by calling <code>prod</code> without a dimension argument, in which case it defaults to the first nonsingular dimension (in this case, along the columns or <code>d = 1</code>).
-@&gt;
+<PRE>
+--&gt; prod(A)
+
+ans = 
+ 0 6 3 
+</PRE>
+<P>
 Next, we take the product along the rows.
-@&gt;
+<PRE>
+--&gt; prod(A,2)
+
+ans = 
+ 15 
+  6 
+  0 
+</PRE>
+<P>
 </BODY>
 </HTML>

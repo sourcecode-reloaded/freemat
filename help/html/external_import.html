@@ -210,6 +210,22 @@ command would then be:
 We could then exercise the function exactly as if it had been written
 in FreeMat.  The following only works on systems using the GNU
 C Compiler:
-@&gt;
+<PRE>
+--&gt; if (strcmp(computer,'MAC')) system('gcc -bundle -flat_namespace -undefined suppress -o add.so addArrays.c'); end;
+--&gt; if (~strcmp(computer,'MAC')) system('gcc -shared -fPIC -o add.so addArrays.c'); end;
+--&gt; import('add.so','addArrays','addArrays','void','int32 N, float[N] a, float[N] b, float[N] &amp;c');
+--&gt; a = [3,2,3,1];
+--&gt; b = [5,6,0,2]; 
+--&gt; c = [0,0,0,0];
+--&gt; addArrays(length(a),a,b,c)
+
+ans = 
+  []
+--&gt; c
+
+ans = 
+ 8 8 3 3 
+</PRE>
+<P>
 </BODY>
 </HTML>

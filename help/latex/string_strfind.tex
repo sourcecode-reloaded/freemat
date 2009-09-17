@@ -18,6 +18,25 @@ and applies the search operation to each string in the cell array.
 \subsection{Example}
 
 Here we apply \verb|strfind| to a simple string
-@>
+\begin{verbatim}
+--> a = 'how now brown cow?'
+
+a = 
+how now brown cow?
+--> b = strfind(a,'ow')
+
+b = 
+  2  6 11 16 
+\end{verbatim}
 Here we search over multiple strings contained in a cell array.
-@>
+\begin{verbatim}
+--> a = {'how now brown cow','quick brown fox','coffee anyone?'}
+
+a = 
+ [how now brown cow] [quick brown fox] [coffee anyone?] 
+
+--> b = strfind(a,'ow')
+
+b = 
+ [1 4 double array] [9] [] 
+\end{verbatim}

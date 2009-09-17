@@ -14,4 +14,9 @@ where \verb|x1| and \verb|x2| are in the \verb|clock| output format
 \subsection{Example}
 
 Here we use \verb|etime| as a substitute for \verb|tic| and \verb|toc|
-@>
+\begin{verbatim}
+--> x1 = clock;
+--> sleep(1);
+--> x2 = clock;
+--> etime(x2,x1);
+\end{verbatim}

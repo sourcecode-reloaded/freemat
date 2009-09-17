@@ -29,7 +29,20 @@ The remaining property/value pairs are passed to the <code>text</code> function
 to control the parameters of the generated text labels.  See the 
 <code>text properties</code> for the details on what can be used in those labels.
 <H3>Example</H3>
-@&gt;
+<PRE>
+--&gt; [x,y] = meshgrid(linspace(-1,1,50));
+--&gt; z = x.*exp(-(x.^2+y.^2));
+--&gt; h = contour(z);
+--&gt; clabel(h,'backgroundcolor',[1,1,.6],'edgecolor',[.7,.7,.7]);
+In /home/basu/dev/branches/FreeMat4/src/toolbox/graph/text.m(text) at line 72
+    In /home/basu/dev/branches/FreeMat4/src/toolbox/graph/clabel.m(clabel) at line 71
+    In scratch() at line 1
+    In base(base)
+    In base()
+    In global()
+Error: Got error Expect a vector of length 3, got a vector of length 2 for property position
+</PRE>
+<P>
 which results in
 <P>
 <DIV ALIGN="CENTER">
@@ -37,7 +50,18 @@ which results in
 </DIV>
 <P>
 Alternately, we can just label a subset of the contours
-@&gt;
+<PRE>
+--&gt; h = contour(z);
+--&gt; clabel(h,[-.2,0,.3]);
+In /home/basu/dev/branches/FreeMat4/src/toolbox/graph/text.m(text) at line 72
+    In /home/basu/dev/branches/FreeMat4/src/toolbox/graph/clabel.m(clabel) at line 71
+    In scratch() at line 1
+    In base(base)
+    In base()
+    In global()
+Error: Got error Expect a vector of length 3, got a vector of length 2 for property position
+</PRE>
+<P>
 which results in
 <P>
 <DIV ALIGN="CENTER">

@@ -28,6 +28,27 @@ where <code>x</code> must be in the form of the output of <code>clock</code>, th
 <P>
 <H3>Example</H3>
 Here is an example of using <code>clocktotime</code> to time a delay of 1 second
-@&gt;
+<PRE>
+--&gt; x = clock
+
+x = 
+
+   1.0e+03 * 
+    2.0090    0.0090    0.0160    0.0230    0.0180    0.0526 
+
+--&gt; sleep(1)
+--&gt; y = clock
+
+y = 
+
+   1.0e+03 * 
+    2.0090    0.0090    0.0160    0.0230    0.0180    0.0536 
+
+--&gt; clocktotime(y) - clocktotime(x)
+
+ans = 
+    1.0020 
+</PRE>
+<P>
 </BODY>
 </HTML>

@@ -38,6 +38,31 @@ where <code>B(a,b)</code> is the beta function.
 <H3>Example</H3>
 Here we use <code>randf</code> to generate some F-distributed random variables,
 and then again using the <code>randchi</code> function:
-@&gt;
+<PRE>
+--&gt; randf(5*ones(1,9),7)
+
+ans = 
+
+ Columns 1 to 7
+
+    1.1944    0.9069    0.7558    1.5029    0.0621    1.3860    1.8161 
+
+ Columns 8 to 9
+
+    0.3755    3.5794 
+
+--&gt; randchi(5*ones(1,9))./randchi(7*ones(1,9))
+
+ans = 
+
+ Columns 1 to 7
+
+    1.3085    1.2693    1.0684    0.4377    1.1158    0.7171    0.4151 
+
+ Columns 8 to 9
+
+    1.8022    1.4606 
+</PRE>
+<P>
 </BODY>
 </HTML>

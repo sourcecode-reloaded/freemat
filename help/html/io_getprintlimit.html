@@ -25,6 +25,25 @@ and then restore it to the previous value (see the examples).
 where <code>n</code> is the current limit in use.
 <H3>Example</H3>
 Here is an example of using <code>getprintlimit</code> along with <code>setprintlimit</code> to temporarily change the output behavior of FreeMat.
-@&gt;
+<PRE>
+--&gt; A = randn(100,1);
+--&gt; n = getprintlimit
+
+n = 
+ 1000 
+
+--&gt; setprintlimit(5);
+--&gt; A
+
+ans = 
+    0.6674 
+   -0.1948 
+    0.5671 
+   -0.6562 
+   -0.4182
+Print limit has been reached.  Use setprintlimit function to enable longer printouts
+--&gt; setprintlimit(n)
+</PRE>
+<P>
 </BODY>
 </HTML>

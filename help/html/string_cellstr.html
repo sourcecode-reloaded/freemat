@@ -22,6 +22,22 @@ are removed.  The syntax for the command is
 where <code>x</code> is an <code>N x M</code> array of characters as a string.
 <H3>Example</H3>
 Here is an example of how to use <code>cellstr</code>
-@&gt;
+<PRE>
+--&gt; a = ['quick';'brown';'fox  ';'is   ']
+
+a = 
+quick
+brown
+fox  
+is   
+--&gt; cellstr(a)
+
+ans = 
+ [quick] 
+ [brown] 
+ [fox] 
+ [is] 
+</PRE>
+<P>
 </BODY>
 </HTML>

@@ -16,6 +16,28 @@ string.
 \subsection{Example}
 
 First we write a couple of strings to a test file.
-@>
+\begin{verbatim}
+--> fp = fopen('testtext','w');
+--> fprintf(fp,'String 1\n');
+--> fprintf(fp,'String 2\n');
+--> fclose(fp);
+\end{verbatim}
 Next, we read then back.
-@>
+\begin{verbatim}
+--> fp = fopen('testtext','r')
+
+fp = 
+ 10 
+
+--> fgetline(fp)
+
+ans = 
+String 1
+
+--> fgetline(fp)
+
+ans = 
+String 2
+
+--> fclose(fp);
+\end{verbatim}

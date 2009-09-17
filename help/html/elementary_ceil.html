@@ -28,11 +28,44 @@ is not defined for <code>complex</code> or <code>dcomplex</code> types.
 The following demonstrates the <code>ceil</code> function applied to various
 (numerical) arguments.  For integer arguments, the ceil function has
 no effect:
-@&gt;
+<PRE>
+--&gt; ceil(3)
+
+ans = 
+ 3 
+
+--&gt; ceil(-3)
+
+ans = 
+ -3 
+</PRE>
+<P>
 Next, we take the <code>ceil</code> of a floating point value:
-@&gt;
+<PRE>
+--&gt; ceil(float(3.023))
+
+ans = 
+ 4 
+
+--&gt; ceil(float(-2.341))
+
+ans = 
+ -2 
+</PRE>
+<P>
 Note that the return type is a <code>float</code> also.  Finally, for a <code>double</code>
 type:
-@&gt;
+<PRE>
+--&gt; ceil(4.312)
+
+ans = 
+ 5 
+
+--&gt; ceil(-5.32)
+
+ans = 
+ -5 
+</PRE>
+<P>
 </BODY>
 </HTML>

@@ -20,6 +20,14 @@ The <code>tic</code> takes no arguments, and returns no outputs.  You must use
 <P>
 <H3>Example</H3>
 Here is an example of timing the solution of a large matrix equation.
-@&gt;
+<PRE>
+--&gt; A = rand(100);
+--&gt; b = rand(100,1);
+--&gt; tic; c = A\b; toc
+
+ans = 
+    0.0020 
+</PRE>
+<P>
 </BODY>
 </HTML>

@@ -12,13 +12,19 @@ x and y axis to have a logarithmic scale.
 
 Here is an example of a doubly exponential signal plotted first on a linear
 plot:
-@>
+\begin{verbatim}
+--> x = linspace(1,100);
+--> y = x;
+--> plot(x,y,'r-');
+\end{verbatim}
 
 
 \centerline{\includegraphics[width=8cm]{loglog1}}
 
 and now on a log-log plot
-@>
+\begin{verbatim}
+--> loglog(x,y,'r-');
+\end{verbatim}
 
 
 \centerline{\includegraphics[width=8cm]{loglog2}}

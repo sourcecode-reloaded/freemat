@@ -39,6 +39,31 @@ is effectively the sum of <code>r</code> exponential random variables with param
 Here we use the <code>randgamma</code> function to generate Gamma-distributed
 random variables, and then generate them again using the <code>randexp</code>
 function.
-@&gt;
+<PRE>
+--&gt; randgamma(1,15*ones(1,9))
+
+ans = 
+
+ Columns 1 to 7
+
+   22.7804   11.5514   16.8537   12.7457   16.2303   10.7442   19.3942 
+
+ Columns 8 to 9
+
+   16.3611   17.4772 
+
+--&gt; sum(randexp(ones(15,9)))
+
+ans = 
+
+ Columns 1 to 7
+
+   14.6404   15.1860   13.3147   11.4380    7.2307   10.8225   14.5271 
+
+ Columns 8 to 9
+
+   12.4631   11.8753 
+</PRE>
+<P>
 </BODY>
 </HTML>

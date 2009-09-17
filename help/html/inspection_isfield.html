@@ -24,6 +24,31 @@ a logical <code>0</code> if the argument <code>x</code> is not a structure array
 <H3>Example</H3>
 Here we define a simple struct, and then test for some 
 fields
-@&gt;
+<PRE>
+--&gt; a.foo = 32
+
+a = 
+    foo: 32
+--&gt; a.goo = 64
+
+a = 
+    foo: 32
+    goo: 64
+--&gt; isfield(a,'goo')
+
+ans = 
+ 1 
+
+--&gt; isfield(a,'got')
+
+ans = 
+ 0 
+
+--&gt; isfield(pi,'round')
+
+ans = 
+ 0 
+</PRE>
+<P>
 </BODY>
 </HTML>

@@ -34,7 +34,13 @@ capture ability.
 \subsection{Example}
 
 Here is a simple example of how the figures in this manual are generated.
-@>
+\begin{verbatim}
+--> x = linspace(-1,1);
+--> y = cos(5*pi*x);
+--> plot(x,y,'r-');
+--> print('printfig1.jpg')
+--> print('printfig1.png')
+\end{verbatim}
 which creates two plots \verb|printfig1.png|, which is a Portable
 Net Graphics file, and \verb|printfig1.jpg| which is a JPEG file.
 

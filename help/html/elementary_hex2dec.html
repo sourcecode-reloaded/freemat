@@ -20,8 +20,22 @@ The syntax for its use is
 where <code>x</code> is a character matrix where each row represents an integer
 in hexadecimal form.  The output is of type <code>Double</code>.
 <H3>Examples</H3>
-@&gt;
+<PRE>
+--&gt; hex2dec('3ff')
+
+ans = 
+ 1023 
+</PRE>
+<P>
 Or for a more complex example
-@&gt;
+<PRE>
+--&gt; hex2dec(['0ff';'2de';'123'])
+
+ans = 
+ 255 
+ 734 
+ 291 
+</PRE>
+<P>
 </BODY>
 </HTML>

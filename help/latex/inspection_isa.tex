@@ -44,7 +44,31 @@ the name of that class is returned.
 \subsection{Examples}
 
 Here are some examples of the \verb|isa| call.
-@>
+\begin{verbatim}
+--> a = {1}
+
+a = 
+ [1] 
+
+--> isa(a,'char')
+
+ans = 
+ 0 
+
+--> isa(a,'cell')
+
+ans = 
+ 1 
+\end{verbatim}
 Here we use \verb|isa| along with shortcut boolean evaluation to 
 safely determine if a variable contains the string \verb|'hello'|
-@>
+\begin{verbatim}
+--> a = 'hello'
+
+a = 
+hello
+--> isa(a,'char') && strcmp(a,'hello')
+
+ans = 
+ 1 
+\end{verbatim}

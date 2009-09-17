@@ -45,6 +45,41 @@ function freecount
 <P>
 We now launch this function in a thread, and use <code>threadkill</code> to
 stop it:
-@&gt;
+<PRE>
+--&gt; a = threadnew;
+--&gt; global count                   % register the global variable count
+--&gt; count = 0;
+--&gt; threadstart(a,'freecount',0)   % start the thread
+--&gt; count                          % it is counting
+
+ans = 
+ 5074 
+
+--&gt; sleep(1)                       % Wait a bit
+--&gt; count                          % it is still counting
+
+ans = 
+ 493304 
+
+--&gt; threadkill(a)                  % kill the counter
+--&gt; threadwait(a,1000)             % wait for it to finish
+
+ans = 
+ 1 
+
+--&gt; count                          % The count will no longer increase
+
+ans = 
+ 493305 
+
+--&gt; sleep(1)
+--&gt; count
+
+ans = 
+ 493305 
+
+--&gt; threadfree(a)
+</PRE>
+<P>
 </BODY>
 </HTML>

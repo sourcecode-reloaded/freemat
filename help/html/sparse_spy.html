@@ -24,7 +24,15 @@ which uses a default color and symbol.  Alternately, you can use
 where <code>colspec</code> is any valid color and symbol spec accepted by <code>plot</code>.
 <H3>Example</H3>
 First, an example of a random sparse matrix.
-@&gt;
+<PRE>
+--&gt; y = sprand(1000,1000,.001);
+Warning: Newly defined variable i shadows a function of the same name.  Use clear i to recover access to the function
+Warning: Newly defined variable j shadows a function of the same name.  Use clear j to recover access to the function
+--&gt; spy(y,'ro')
+Warning: Newly defined variable i shadows a function of the same name.  Use clear i to recover access to the function
+Warning: Newly defined variable j shadows a function of the same name.  Use clear j to recover access to the function
+</PRE>
+<P>
 which is shown here
 <P>
 <DIV ALIGN="CENTER">
@@ -34,7 +42,14 @@ which is shown here
 Here is a sparse matrix with a little more structure.  First we build a 
 sparse matrix with block diagonal structure, and then use <code>spy</code> to 
 visualize the structure.
-@&gt;
+<PRE>
+--&gt; A = sparse(1000,1000);
+--&gt; for i=1:25; A((1:40) + 40*(i-1),(1:40) + 40*(i-1)) = 1; end;
+--&gt; spy(A,'gx')
+Warning: Newly defined variable i shadows a function of the same name.  Use clear i to recover access to the function
+Warning: Newly defined variable j shadows a function of the same name.  Use clear j to recover access to the function
+</PRE>
+<P>
 with the result shown here
 <P>
 <DIV ALIGN="CENTER">

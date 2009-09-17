@@ -38,4 +38,15 @@ and is used in the equation \verb|Y B = A|.
 \subsection{Examples}
 
 The right-divide operator is much less frequently used than the left-divide operator, but the concepts are similar.  It can be used to find least-squares and minimum norm solutions.  It can also be used to solve systems of equations in much the same way.  Here's a simple example:
-@>
+\begin{verbatim}
+--> B = [1,1;0,1];
+--> A = [4,5]
+
+A = 
+ 4 5 
+
+--> A/B
+
+ans = 
+ 4 1 
+\end{verbatim}

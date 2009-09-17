@@ -33,7 +33,13 @@ a chi-square random variable is
 <P>
 <H3>Example</H3>
 First, a plot of the PDF for a family of chi-square random variables
-@&gt;
+<PRE>
+--&gt; f = zeros(7,100);
+--&gt; x = (1:100)/10;
+--&gt; for n=1:7;t=x.^(n/2-1).*exp(-x/2);f(n,:)=10*t/sum(t);end
+--&gt; plot(x,f');
+</PRE>
+<P>
 The PDF is below:
 <P>
 <DIV ALIGN="CENTER">
@@ -42,6 +48,17 @@ The PDF is below:
 <P>
 Here is an example of using <code>randchi</code> and <code>randn</code> to compute
 some chi-square random variables with four degrees of freedom.
-@&gt;
+<PRE>
+--&gt; randchi(4*ones(1,6))
+
+ans = 
+    8.9675    4.0015    3.2578    5.5461    2.5090    5.7587 
+
+--&gt; sum(randn(4,6).^2)
+
+ans = 
+    1.1941   10.6441    3.6228    8.4425    2.5031    1.9058 
+</PRE>
+<P>
 </BODY>
 </HTML>

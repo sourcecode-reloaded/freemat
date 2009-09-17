@@ -13,8 +13,23 @@ nothing to real and integer types.
 \subsection{Example}
 
 The following demonstrates the complex conjugate applied to a complex scalar.
-@>
+\begin{verbatim}
+--> conj(3+4*i)
+
+ans = 
+   3.0000 -  4.0000i 
+\end{verbatim}
 The \verb|conj| function has no effect on real arguments:
-@>
+\begin{verbatim}
+--> conj([2,3,4])
+
+ans = 
+ 2 3 4 
+\end{verbatim}
 For a double-precision complex array,
-@>
+\begin{verbatim}
+--> conj([2.0+3.0*i,i])
+
+ans = 
+   2.0000 -  3.0000i   0.0000 -  1.0000i 
+\end{verbatim}

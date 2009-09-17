@@ -158,6 +158,11 @@ Below is a summary of the properties for the axis.
 <LI>  <code>position</code> - <code>fourvector</code> - The normalized coordinates of the plot box space.
  Should be inside the rectable defined by <code>outerposition</code>.
  </LI>
+<LI>  <code>positionmode</code> - <code>{'auto','manual'}</code> - the position mode is normally <code>'auto'</code>
+ which means that FreeMat computes the position vector to fit the plot inside the <code>outerposition</code>
+ vector.  If you set the <code>position</code> vector manually (using a <code>set</code> command), this <code>mode</code>
+ flag becomes <code>'manual'</code> and remains that way until reset to @|'auto'.
+ </LI>
 <LI>  <code>projection</code> - Not used.
  </LI>
 <LI>  <code>selected</code> - Not used.

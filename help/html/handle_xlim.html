@@ -30,7 +30,16 @@ automatically.  The <code>xlim('mode')</code> form returns the current mode for 
 (either <code>'auto'</code> or <code>'manual'</code>).  Finally, you can specify the handle of an
 axis to manipulate instead of using the current one.
 <H3>Example</H3>
-@&gt;
+<PRE>
+--&gt; x = linspace(-1,1);
+--&gt; y = sin(2*pi*x);
+--&gt; plot(x,y,'r-');
+--&gt; xlim  % what are the current limits?
+
+ans = 
+ -1  1 
+</PRE>
+<P>
 which results in
 <P>
 <DIV ALIGN="CENTER">
@@ -38,7 +47,11 @@ which results in
 </DIV>
 <P>
 Next, we zoom in on the plot using the <code>xlim</code> function
-@&gt;
+<PRE>
+--&gt; plot(x,y,'r-')
+--&gt; xlim([-0.2,0.2])
+</PRE>
+<P>
 which results in
 <P>
 <DIV ALIGN="CENTER">

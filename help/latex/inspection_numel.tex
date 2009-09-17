@@ -20,6 +20,22 @@ In that case, the output of \verb|numel| is
 
 For a \verb|4 x 4 x 3| matrix, the length is \verb|4|, not \verb|48|, as you 
 might expect, but \verb|numel| is \verb|48|.
-@>
+\begin{verbatim}
+--> x = rand(4,4,3);
+--> length(x)
+
+ans = 
+ 4 
+
+--> numel(x)
+
+ans = 
+ 48 
+\end{verbatim}
 Here is an example of using \verb|numel| with indexing expressions.
-@>
+\begin{verbatim}
+--> numel(x,1:3,1:2,2)
+
+ans = 
+ 6 
+\end{verbatim}

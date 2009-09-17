@@ -67,6 +67,7 @@ function helpgen(source_path,test_only)
   for i=1:numel(genfiles)
     copyfile([source_path,'/help/tmp/',genfiles{i}],[source_path,'/toolbox/test']);
   end
+  copyfile([source_path,'/src/toolbox/test/reference/*.mat'],[source_path,'/toolbox/test/reference'])
   printf('To complete documentation generation -- run pdflatex on main.tex\n');
   printf('in help/latex directory -- several runs are required to get index\n');
   printf('and table of content generation.\n');

@@ -117,14 +117,44 @@ or where the values show progressively larger amounts of accumulated
 roundoff error.
 <H3>Examples</H3>
 Some simple examples of index generation.
-@&gt;
+<PRE>
+--&gt; y = 1:4
+
+y = 
+ 1 2 3 4 
+</PRE>
+<P>
 Now by half-steps:
-@&gt;
+<PRE>
+--&gt; y = 1:.5:4
+
+y = 
+    1.0000    1.5000    2.0000    2.5000    3.0000    3.5000    4.0000 
+</PRE>
+<P>
 Now going backwards (negative steps)
-@&gt;
+<PRE>
+--&gt; y = 4:-.5:1
+
+y = 
+    4.0000    3.5000    3.0000    2.5000    2.0000    1.5000    1.0000 
+</PRE>
+<P>
 If the endpoints are the same, one point is generated, regardless of the step size (middle argument)
-@&gt;
+<PRE>
+--&gt; y = 4:1:4
+
+y = 
+ 4 
+</PRE>
+<P>
 If the endpoints define an empty interval, the output is an empty matrix:
-@&gt;
+<PRE>
+--&gt; y = 5:4
+
+y = 
+  Empty array 1 0
+</PRE>
+<P>
 </BODY>
 </HTML>

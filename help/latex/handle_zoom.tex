@@ -30,7 +30,13 @@ more details).  This is the default zoom level for images displayed with the
 To demonstrate the use of the \verb|zoom| function, we create a rectangular image 
 of a Gaussian pulse.  We start with a display of the image using the \verb|image|
 command, and a zoom of 1.
-@>
+\begin{verbatim}
+--> x = linspace(-1,1,300)'*ones(1,600);
+--> y = ones(300,1)*linspace(-1,1,600);
+--> Z = exp(-(x.^2+y.^2)/0.3);
+--> image(Z);
+--> zoom(1.0);
+\end{verbatim}
 
 
 \centerline{\includegraphics[width=8cm]{zoom1}}
@@ -42,14 +48,20 @@ greater than zero, the size of the image is fixed.
 If we change the zoom to another factor larger than 1, we enlarge the image by
 the specified factor (or shrink it, for zoom factors \verb|0 < x < 1|.  Here is the
 same image zoomed out to 60%
-@>
+\begin{verbatim}
+--> image(Z);
+--> zoom(0.6);
+\end{verbatim}
 
 
 \centerline{\includegraphics[width=8cm]{zoom3}}
 
 
 Similarly, we can enlarge it to 130%
-@>
+\begin{verbatim}
+--> image(Z)
+--> zoom(1.3);
+\end{verbatim}
 
 
 \centerline{\includegraphics[width=8cm]{zoom4}}
@@ -58,7 +70,11 @@ Similarly, we can enlarge it to 130%
 The ``free'' zoom of \verb|x = 0| results in the image being zoomed to fit the window
 without changing the aspect ratio.  The image is zoomed as much as possible in
 one direction.
-@>
+\begin{verbatim}
+--> image(Z);
+--> zoom(0);
+--> sizefig(200,400);
+\end{verbatim}
 
 
 \centerline{\includegraphics[width=8cm]{zoom5}}
@@ -66,7 +82,11 @@ one direction.
 
 The case of a negative zoom \verb|x < 0| results in the image being scaled arbitrarily.
 This allows the image aspect ratio to be changed, as in the following example.
-@>
+\begin{verbatim}
+--> image(Z);
+--> zoom(-1);
+--> sizefig(200,400);
+\end{verbatim}
 
 
 \centerline{\includegraphics[width=8cm]{zoom6}}

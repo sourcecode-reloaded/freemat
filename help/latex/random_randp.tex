@@ -24,4 +24,14 @@ The Poisson distribution is given by
 Here is an exmaple of using \verb|randp| to generate some Poisson
 random variables, and also using \verb|randbin| to do the same
 using \verb|N=1000| trials to approximate the Poisson result.
-@>
+\begin{verbatim}
+--> randp(33*ones(1,10))
+
+ans = 
+ 31 33 34 44 32 29 34 30 32 32 
+
+--> randbin(1000*ones(1,10),33/1000*ones(1,10))
+
+ans = 
+ 32 36 36 39 33 34 41 33 42 32 
+\end{verbatim}

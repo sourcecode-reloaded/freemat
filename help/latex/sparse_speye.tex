@@ -19,4 +19,21 @@ matrix type is a \verb|float| single precision matrix.
 The following creates a 5000 by 5000 identity matrix, which would be
 difficult to do using \verb|sparse(eye(5000))| because of the large amount
 of intermediate storage required.
-@>
+\begin{verbatim}
+--> I = speye(5000);
+--> which I
+Function I is unknown!
+--> full(I(1:10,1:10))
+
+ans = 
+ 1 0 0 0 0 0 0 0 0 0 
+ 0 1 0 0 0 0 0 0 0 0 
+ 0 0 1 0 0 0 0 0 0 0 
+ 0 0 0 1 0 0 0 0 0 0 
+ 0 0 0 0 1 0 0 0 0 0 
+ 0 0 0 0 0 1 0 0 0 0 
+ 0 0 0 0 0 0 1 0 0 0 
+ 0 0 0 0 0 0 0 1 0 0 
+ 0 0 0 0 0 0 0 0 1 0 
+ 0 0 0 0 0 0 0 0 0 1 
+\end{verbatim}

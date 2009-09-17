@@ -34,14 +34,20 @@ exponential
 
 The following piece of code plots the real-valued \verb|exp|
 function over the interval \verb|[-1,1]|:
-@>
+\begin{verbatim}
+--> x = linspace(-1,1);
+--> plot(x,exp(x))
+\end{verbatim}
 
 
 \centerline{\includegraphics[width=8cm]{expplot1}}
 
 In the second example, we plot the unit circle in the 
 complex plane \verb|e^{i 2 pi x}| for \verb|x in [-1,1]|.
-@>
+\begin{verbatim}
+--> x = linspace(-1,1);
+--> plot(exp(-i*x*2*pi))
+\end{verbatim}
 
 
 \centerline{\includegraphics[width=8cm]{expplot2}}

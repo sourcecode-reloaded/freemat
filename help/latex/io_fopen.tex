@@ -81,11 +81,59 @@ Here are some examples of how to use \verb|fopen|.  First, we create a new
 file, which we want to be little-endian, regardless of the type of the machine.
 We also use the \verb|fwrite| function to write some floating point data to
 the file.
-@>
+\begin{verbatim}
+--> fp = fopen('test.dat','w','ieee-le')
+
+fp = 
+ 8 
+
+--> fwrite(fp,float([1.2,4.3,2.1]))
+
+ans = 
+ 12 
+
+--> fclose(fp)
+\end{verbatim}
 Next, we open the file and read the data back
-@>
+\begin{verbatim}
+--> fp = fopen('test.dat','r','ieee-le')
+
+fp = 
+ 8 
+
+--> fread(fp,[1,3],'float')
+
+ans = 
+    1.2000    4.3000    2.1000 
+
+--> fclose(fp)
+\end{verbatim}
 Now, we re-open the file in append mode and add two additional \verb|float|s to the
 file.
-@>
+\begin{verbatim}
+--> fp = fopen('test.dat','a+','le')
+
+fp = 
+ 8 
+
+--> fwrite(fp,float([pi,e]))
+
+ans = 
+ 8 
+
+--> fclose(fp)
+\end{verbatim}
 Finally, we read all 5 \verb|float| values from the file
-@>
+\begin{verbatim}
+--> fp = fopen('test.dat','r','ieee-le')
+
+fp = 
+ 8 
+
+--> fread(fp,[1,5],'float')
+
+ans = 
+    1.2000    4.3000    2.1000    3.1416    2.7183 
+
+--> fclose(fp)
+\end{verbatim}

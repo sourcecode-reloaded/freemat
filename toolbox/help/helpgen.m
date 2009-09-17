@@ -7,9 +7,12 @@ function helpgen(source_path,test_only)
   diary([source_path,'/help_diary.txt']);
 
   genfiles = {};
-  % These are not SVN friendly
-  %  rmdir([source_path,'/help'],'s');
-  %  rmdir([source_path,'/toolbox'],'s');
+  printf('Cleaning up help directories...\n');
+  delete_set(helpgen_rdir([source_path,'/help']));
+  printf('Cleaning up toolbox directories...\n');
+  delete_set(helpgen_rdir([source_path,'/toolbox']));
+  
+  % This one is not monitored by svn -- we can just delete it.
   rmdir([source_path,'/help/tmp']);
 
   mkdir([source_path,'/help/html']);
@@ -29,7 +32,6 @@ function helpgen(source_path,test_only)
                      testwriter});
     skipexec = false;
   end
-
   file_list = {};
   file_list = [file_list;helpgen_rdir([source_path,'/libs/libXP'])];
   file_list = [file_list;helpgen_rdir([source_path,'/libs/libCore'])];
@@ -44,7 +46,7 @@ function helpgen(source_path,test_only)
   cd([sourcepath,'/help/tmp']);
 
   for i=1:numel(file_list)
-    [path,name,suffix] = fileparts(file_list{i});
+    [mpath,name,suffix] = fileparts(file_list{i});
     if (~strcmp(name,'MPIWrap'))
       helpgen_processfile(file_list{i},p);
     end
@@ -65,6 +67,7 @@ function helpgen(source_path,test_only)
   for i=1:numel(genfiles)
     copyfile([source_path,'/help/tmp/',genfiles{i}],[source_path,'/toolbox/test']);
   end
+  copyfile([source_path,'/src/toolbox/test/reference/*.mat'],[source_path,'/toolbox/test/reference'])
   printf('To complete documentation generation -- run pdflatex on main.tex\n');
   printf('in help/latex directory -- several runs are required to get index\n');
   printf('and table of content generation.\n');
@@ -72,7 +75,7 @@ function helpgen(source_path,test_only)
   
 function merge_mfile(filename)
   global sourcepath
-  [path,name,suffix] = fileparts(filename);
+  [mpath,name,suffix] = fileparts(filename);
   if (~strcmp(suffix,'.m')) return; end
   printf('Merging comments with file %s\n',filename);
   headertext = [];
@@ -87,8 +90,8 @@ function merge_mfile(filename)
   end
   h = fopen(filename,'r');
   newname = strrep(filename,'src/toolbox','toolbox');
-  [path,name,suffix] = fileparts(newname);
-  mkdir(path);
+  [mpath,name,suffix] = fileparts(newname);
+  mkdir(mpath);
   g = fopen(newname,'w');
   while (~feof(h))
     text = getline(h);
@@ -109,8 +112,8 @@ function read_section_descriptors
   global sourcepath section_descriptors
   fp = fopen([sourcepath,'/src/toolbox/help/section_descriptors.txt'],'r');
   while (~feof(fp))
-    line = fgetline(fp);
-    p = regexp(line,'(\w*)\s*([^\n]*)','tokens');
+    pline = fgetline(fp);
+    p = regexp(pline,'(\w*)\s*([^\n]*)','tokens');
     section_descriptors.(p{1}{1}) = p{1}{2};
   end
   fclose(fp);
@@ -118,7 +121,7 @@ function read_section_descriptors
 
 function helpgen_processfile(filename,&writers)
   global sourcepath section_descriptors
-  [path,name,suffix] = fileparts(filename);
+  [mpath,name,suffix] = fileparts(filename);
   if (strcmp(suffix,'.cpp'))
     comment = '//';
   elseif (strcmp(suffix,'.m'))
@@ -140,48 +143,48 @@ function helpgen_processfile(filename,&writers)
       fclose(fp);
       return;
     end
-    line = getline(fp);
-    if (testmatch(line,pset.docblock))
-      line = getline(fp);
-      modname = mustmatch(line,pset.modulename);
+    pline = getline(fp);
+    if (testmatch(pline,pset.docblock))
+      pline = getline(fp);
+      modname = mustmatch(pline,pset.modulename);
       printf('    Module %s...\n',lower(modname));
-      moddesc = mustmatch(line,pset.moduledesc);
-      line = getline(fp);
-      secname = mustmatch(line,pset.sectionname);
+      moddesc = mustmatch(pline,pset.moduledesc);
+      pline = getline(fp);
+      secname = mustmatch(pline,pset.sectionname);
       beginmodule(writers,sourcepath,modname,moddesc,secname,section_descriptors);
-      line = getline(fp);
+      pline = getline(fp);
       exec_id = threadnew;
-      while (~feof(fp) && ~testmatch(line,pset.docblock))
-         groupname = mustmatch(line,pset.groupname);
+      while (~feof(fp) && ~testmatch(pline,pset.docblock))
+         groupname = mustmatch(pline,pset.groupname);
          if (testmatch(groupname,'Signature'))
-             line = getline(fp);
-             while (~feof(fp) && ~testmatch(line,pset.groupname) ...
-                 && ~testmatch(line,pset.docblock))
-                 line = getline(fp);
+             pline = getline(fp);
+             while (~feof(fp) && ~testmatch(pline,pset.groupname) ...
+                 && ~testmatch(pline,pset.docblock))
+                 pline = getline(fp);
              end
          else
              begingroup(writers,groupname);	 
-             line = getline(fp);
-             while (~feof(fp) && ~testmatch(line,pset.groupname) ...
-                 && ~testmatch(line,pset.docblock))
-                 if (testmatch(line,pset.execin))
-                     handle_exec(line,fp,pset,writers,exec_id);
-                 elseif (testmatch(line,pset.verbatimin)) 
-                     handle_verbatim(line,fp,pset,writers);
-                 elseif (testmatch(line,pset.figure))
-                     handle_figure(line,fp,pset,writers);
-                 elseif (testmatch(line,pset.eqnin))
-                     handle_equation(line,fp,pset,writers);
-                 elseif (testmatch(line,pset.fnin))
-                     handle_filedump(line,fp,pset,writers);
-                 elseif (testmatch(line,pset.enumeratein))
-                     handle_enumerate(line,fp,pset,writers);
-                 elseif (testmatch(line,pset.itemizein))
-                     handle_itemize(line,fp,pset,writers);
-                 elseif (testmatch(line,pset.ccomment))
-                     handle_output(line,fp,pset,writers);
+             pline = getline(fp);
+             while (~feof(fp) && ~testmatch(pline,pset.groupname) ...
+                 && ~testmatch(pline,pset.docblock))
+                 if (testmatch(pline,pset.execin))
+                     handle_exec(pline,fp,pset,writers,exec_id);
+                 elseif (testmatch(pline,pset.verbatimin)) 
+                     handle_verbatim(pline,fp,pset,writers);
+                 elseif (testmatch(pline,pset.figure))
+                     handle_figure(pline,fp,pset,writers);
+                 elseif (testmatch(pline,pset.eqnin))
+                     handle_equation(pline,fp,pset,writers);
+                 elseif (testmatch(pline,pset.fnin))
+                     handle_filedump(pline,fp,pset,writers);
+                 elseif (testmatch(pline,pset.enumeratein))
+                     handle_enumerate(pline,fp,pset,writers);
+                 elseif (testmatch(pline,pset.itemizein))
+                     handle_itemize(pline,fp,pset,writers);
+                 elseif (testmatch(pline,pset.ccomment))
+                     handle_output(pline,fp,pset,writers);
                  else
-                     error('Unprocessed line:%s',line);
+                     error('Unprocessed line:%s',pline);
                  end
              end
          end
@@ -214,28 +217,28 @@ function pset = get_pattern_set(prefix)
   pset.itemizeout =   [prefix '\\end{itemize}'];
   pset.item =         [prefix '\s*\\item(.*)'];
 
-function line = getline(fp)
+function pline = getline(fp)
   persistent version
   if (~exist('version'))
     b = regexp(verstring,'v(.*)','tokens');
     version = b{:}{1};
   end;
-  line = fgetline(fp);
-  line = strrep(line,'<VERSION_NUMBER>',version);
+  pline = fgetline(fp);
+  pline = strrep(pline,'<VERSION_NUMBER>',version);
 
-function tok = mustmatch(line,pattern)
-  toks = regexpi(line,pattern,'tokens');
-  if (isempty(toks)) error(sprintf('Error on line: %s',line)); end;
+function tok = mustmatch(pline,pattern)
+  toks = regexpi(pline,pattern,'tokens');
+  if (isempty(toks)) error(sprintf('Error on line: %s',pline)); end;
   tok = toks{1}{1};
 
-function handle_filedump(&line,fp,pset,&writers)
+function handle_filedump(&pline,fp,pset,&writers)
   global genfiles
-  fname = mustmatch(line,pset.fnin);
-  line = getline(fp);
+  fname = mustmatch(pline,pset.fnin);
+  pline = getline(fp);
   fn = '';
-  while (~feof(fp) && ~testmatch(line,pset.fnout))
-    fn = [fn mustmatch(line,pset.ccomment)];
-    line = getline(fp);
+  while (~feof(fp) && ~testmatch(pline,pset.fnout))
+    fn = [fn mustmatch(pline,pset.ccomment)];
+    pline = getline(fp);
   end
   genfiles = [genfiles,{fname}];
   zp = fopen(fname,'w');
@@ -244,91 +247,90 @@ function handle_filedump(&line,fp,pset,&writers)
   if (isempty(regexp(fname,'test_\w+')))
     dofile(writers,fname,fn);
   end
-  line = getline(fp);
+  pline = getline(fp);
 
-function handle_equation(&line,fp,pset,&writers)
-  line = getline(fp);
+function handle_equation(&pline,fp,pset,&writers)
+  pline = getline(fp);
   eqn = '';
-  while (~feof(fp) && ~testmatch(line,pset.eqnout))
-     eqn = [eqn,mustmatch(line,pset.ccomment)];
-	line = getline(fp);
+  while (~feof(fp) && ~testmatch(pline,pset.eqnout))
+     eqn = [eqn,mustmatch(pline,pset.ccomment)];
+	pline = getline(fp);
   end
   doequation(writers,eqn);
-  line = getline(fp);
+  pline = getline(fp);
 
-function handle_figure(&line,fp,pset,&writers)
-  dofigure(writers,mustmatch(line,pset.figure));
-  line = getline(fp);
+function handle_figure(&pline,fp,pset,&writers)
+  dofigure(writers,mustmatch(pline,pset.figure));
+  pline = getline(fp);
 
-function handle_verbatim(&line,fp,pset,&writers)
-  line = getline(fp);
+function handle_verbatim(&pline,fp,pset,&writers)
+  pline = getline(fp);
   beginverbatim(writers);
-  while (~feof(fp) && ~testmatch(line,pset.verbatimout))
-    outputtext(writers,mustmatch(line,pset.ccomment));
-    line = getline(fp);
+  while (~feof(fp) && ~testmatch(pline,pset.verbatimout))
+    outputtext(writers,mustmatch(pline,pset.ccomment));
+    pline = getline(fp);
   end
   endverbatim(writers);
   if (feof(fp))
      error('unmatched verbatim block detected!');
   end
-  line = getline(fp);
+  pline = getline(fp);
 
-function handle_enumerate(&line,fp,pset,&writers)
-  line = getline(fp);
+function handle_enumerate(&pline,fp,pset,&writers)
+  pline = getline(fp);
   itemlist = {};
-  while (~feof(fp) && ~testmatch(line,pset.enumerateout))
-    item = mustmatch(line,pset.item);
-    line = getline(fp);
-    while (~testmatch(line,pset.item) && ...
-           ~testmatch(line,pset.enumerateout) && ...
+  while (~feof(fp) && ~testmatch(pline,pset.enumerateout))
+    item = mustmatch(pline,pset.item);
+    pline = getline(fp);
+    while (~testmatch(pline,pset.item) && ...
+           ~testmatch(pline,pset.enumerateout) && ...
 	   ~feof(fp))
-      item = [item, mustmatch(line,pset.ccomment)];
-      line = getline(fp);
+      item = [item, mustmatch(pline,pset.ccomment)];
+      pline = getline(fp);
     end
     itemlist = [itemlist,{item}];
   end
   if (feof(fp)), error('unmatched enumeration block'); end
-  line = getline(fp);
+  pline = getline(fp);
   doenumerate(writers,itemlist);
  
-function handle_itemize(&line,fp,pset,&writers)
-  line = getline(fp);
+function handle_itemize(&pline,fp,pset,&writers)
+  pline = getline(fp);
   itemlist = {};
-  while (~feof(fp) && ~testmatch(line,pset.itemizeout))
-    item = mustmatch(line,pset.item);
-    line = getline(fp);
-    while (~testmatch(line,pset.item) && ...
-           ~testmatch(line,pset.itemizeout) && ...
+  while (~feof(fp) && ~testmatch(pline,pset.itemizeout))
+    item = mustmatch(pline,pset.item);
+    pline = getline(fp);
+    while (~testmatch(pline,pset.item) && ...
+           ~testmatch(pline,pset.itemizeout) && ...
 	   ~feof(fp))
-      item = [item, mustmatch(line,pset.ccomment)];
-      line = getline(fp);
+      item = [item, mustmatch(pline,pset.ccomment)];
+      pline = getline(fp);
     end
     itemlist = [itemlist,{item}];
   end
   if (feof(fp)), error('unmatched enumeration block'); end
-  line = getline(fp);
+  pline = getline(fp);
   doitemize(writers,itemlist);
 
-function handle_output(&line,fp,pset,&writers)
-  line = mustmatch(line,pset.ccomment);
-  outputtext(writers,line);
-  line = getline(fp);
+function handle_output(&pline,fp,pset,&writers)
+  pline = mustmatch(pline,pset.ccomment);
+  outputtext(writers,pline);
+  pline = getline(fp);
 
-function handle_exec(&line,fp,pset,&writers,exec_id)
+function handle_exec(&pline,fp,pset,&writers,exec_id)
   global sourcepath skipexec
-  line = mustmatch(line,pset.execin);
-  errors_expected = str2num(line);
+  pline = mustmatch(pline,pset.execin);
+  errors_expected = str2num(pline);
   cmdlist = {};
-  line = getline(fp);
-  while (~feof(fp) && ~testmatch(line,pset.execout))
-    if (testmatch(line,pset.ccomment))
-      cmdlist = [cmdlist,{mustmatch(line,pset.ccomment)}];
+  pline = getline(fp);
+  while (~feof(fp) && ~testmatch(pline,pset.execout))
+    if (testmatch(pline,pset.ccomment))
+      cmdlist = [cmdlist,{mustmatch(pline,pset.ccomment)}];
     end
-    line = getline(fp);
+    pline = getline(fp);
   end
   docomputeblock(writers,cmdlist,errors_expected);
   if (skipexec) return; end;
-  return;
   cd([sourcepath,'/help/tmp']);
   beginverbatim(writers);
   etext = threadcall(exec_id,100000,'simkeys',cmdlist);
@@ -343,5 +345,10 @@ function handle_exec(&line,fp,pset,&writers,exec_id)
     end
   end
   cd([sourcepath,'/help/tmp']);
-  line = getline(fp);
+  pline = getline(fp);
 
+  
+function delete_set(p)
+for i=1:numel(p)
+  delete(p{i});
+end

@@ -23,6 +23,29 @@ representation of a function, you probably do not need the
 sparse representation.
 <H3>Example</H3>
 Here we convert a full matrix to a sparse one, and back again.
-@&gt;
+<PRE>
+--&gt; a = [1,0,4,2,0;0,0,0,0,0;0,1,0,0,2]
+
+a = 
+ 1 0 4 2 0 
+ 0 0 0 0 0 
+ 0 1 0 0 2 
+
+--&gt; A = sparse(a)
+
+A = 
+ 1 1 1
+ 3 2 1
+ 1 3 4
+ 1 4 2
+ 3 5 2
+--&gt; full(A)
+
+ans = 
+ 1 0 4 2 0 
+ 0 0 0 0 0 
+ 0 1 0 0 2 
+</PRE>
+<P>
 </BODY>
 </HTML>

@@ -21,12 +21,41 @@ of the class.
 
 Here is an example of using \verb|feval| to call the \verb|cos| 
 function indirectly.
-@>
+\begin{verbatim}
+--> feval('cos',pi/4)
+
+ans = 
+    0.7071 
+\end{verbatim}
 Now, we call it through a function handle
-@>
+\begin{verbatim}
+--> c = @cos
+
+c = 
+ @cos
+--> feval(c,pi/4)
+
+ans = 
+    0.7071 
+\end{verbatim}
 Here we construct an inline object (which is a user-defined class)
 and use \verb|feval| to call it
-@>
+\begin{verbatim}
+--> afunc = inline('cos(t)+sin(t)','t')
+
+afunc = 
+  inline function object
+  f(t) = cos(t)+sin(t)
+--> feval(afunc,pi)
+
+ans = 
+   -1.0000 
+
+--> afunc(pi)
+
+ans = 
+   -1.0000 
+\end{verbatim}
 In both cases, (the \verb|feval| call and the direct invokation), FreeMat
 calls the \verb|subsref| method of the class, which computes the requested 
 function.

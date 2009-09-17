@@ -33,8 +33,38 @@ dimension results in a square matrix output.
 <H3>Example</H3>
 The following examples demonstrate generation of some zero arrays 
 using the first form.
-@&gt;
+<PRE>
+--&gt; cell(2,3,2)
+
+ans = 
+
+(:,:,1) = 
+ [] [] [] 
+ [] [] [] 
+
+(:,:,2) = 
+ [] [] [] 
+ [] [] [] 
+
+--&gt; cell(1,3)
+
+ans = 
+ [] [] [] 
+</PRE>
+<P>
 The same expressions, using the second form.
-@&gt;
+<PRE>
+--&gt; cell([2,6])
+
+ans = 
+ [] [] [] [] [] [] 
+ [] [] [] [] [] [] 
+
+--&gt; cell([1,3])
+
+ans = 
+ [] [] [] 
+</PRE>
+<P>
 </BODY>
 </HTML>

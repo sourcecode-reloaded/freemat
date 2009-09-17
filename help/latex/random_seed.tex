@@ -14,4 +14,16 @@ in \verb|ranlib|, the values of \verb|s,t| must be between \verb|0 <= s,t <= 2^3
 
 Here's an example of how the seed value can be used to reproduce
 a specific random number sequence.
-@>
+\begin{verbatim}
+--> seed(32,41);
+--> rand(1,5)
+
+ans = 
+    0.8589    0.3727    0.5551    0.9557    0.7367 
+
+--> seed(32,41);
+--> rand(1,5)
+
+ans = 
+    0.8589    0.3727    0.5551    0.9557    0.7367 
+\end{verbatim}

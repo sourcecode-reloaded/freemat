@@ -41,9 +41,28 @@ first two forms of the command.
 The <code>pwd</code> command returns the current directory location.  First, 
 we use the simplest form of the <code>cd</code> command, in which the directory 
 name argument is given unquoted.
-@&gt;
+<PRE>
+--&gt; pwd
+
+ans = 
+/home/basu/dev/branches/FreeMat4/help/tmp
+--&gt; cd ..
+--&gt; pwd
+
+ans = 
+/home/basu/dev/branches/FreeMat4/help
+</PRE>
+<P>
 Next, we use the ``traditional'' form of the function call, using 
 both the parenthesis and a variable to store the quoted string.
-@&gt;
+<PRE>
+--&gt; a = pwd;
+--&gt; cd(a)
+--&gt; pwd
+
+ans = 
+/home/basu/dev/branches/FreeMat4/help/tmp
+</PRE>
+<P>
 </BODY>
 </HTML>

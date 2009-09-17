@@ -46,15 +46,85 @@ The returned string is one of
 <H3>Example</H3>
 The following piece of code demonstrates the output of the <code>typeof</code> 
 command for each possible type.  The first example is with a simple cell array.
-@&gt;
+<PRE>
+--&gt; typeof({1})
+
+ans = 
+cell
+</PRE>
+<P>
 The next example uses the <code>struct</code> constructor to make a simple scalar struct.
-@&gt;
+<PRE>
+--&gt; typeof(struct('foo',3))
+
+ans = 
+struct
+</PRE>
+<P>
 The next example uses a comparison between two scalar integers to generate 
 a scalar logical type.
-@&gt;
+<PRE>
+--&gt; typeof(3&gt;5)
+
+ans = 
+logical
+</PRE>
+<P>
 For the integers, the typecast operations are used to generate the arguments.
-@&gt;
+<PRE>
+--&gt; typeof(uint8(3))
+
+ans = 
+uint8
+--&gt; typeof(int8(8))
+
+ans = 
+int8
+--&gt; typeof(uint16(3))
+
+ans = 
+uint16
+--&gt; typeof(int16(8))
+
+ans = 
+int16
+--&gt; typeof(uint32(3))
+
+ans = 
+uint32
+--&gt; typeof(int32(3))
+
+ans = 
+int32
+--&gt; typeof(uint64(3))
+
+ans = 
+uint64
+--&gt; typeof(int64(3))
+
+ans = 
+int64
+</PRE>
+<P>
 Float, and double can be created using the suffixes.
-@&gt;
+<PRE>
+--&gt; typeof(1.0f)
+
+ans = 
+single
+--&gt; typeof(1.0D)
+
+ans = 
+double
+--&gt; typeof(1.0f+i)
+
+ans = 
+single
+--&gt; typeof(1.0D+2.0D*i)
+
+ans = 
+double
+</PRE>
+<P>
 </BODY>
 </HTML>

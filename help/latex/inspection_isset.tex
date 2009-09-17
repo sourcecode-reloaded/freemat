@@ -18,4 +18,23 @@ a 0 otherwise.
 \subsection{Example}
 
 Some simple examples of using \verb|isset|
-@>
+\begin{verbatim}
+--> who
+  Variable Name       Type   Flags             Size
+--> isset('a')
+
+ans = 
+ 0 
+
+--> a = [];
+--> isset('a')
+
+ans = 
+ 0 
+
+--> a = 2;
+--> isset('a')
+
+ans = 
+ 1 
+\end{verbatim}

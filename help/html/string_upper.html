@@ -28,8 +28,20 @@ with a cell array of strings
 in which case each string in the cell array is converted to upper case.
 <H3>Example</H3>
 A simple example:
-@&gt;
+<PRE>
+--&gt; upper('this Is Strange CAPitalizaTion')
+
+ans = 
+THIS IS STRANGE CAPITALIZATION
+</PRE>
+<P>
 and a more complex example with a cell array of strings
-@&gt;
+<PRE>
+--&gt; upper({'This','Is','Strange','CAPitalizaTion'})
+
+ans = 
+ [THIS] [IS] [STRANGE] [CAPITALIZATION] 
+</PRE>
+<P>
 </BODY>
 </HTML>

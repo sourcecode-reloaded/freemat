@@ -38,13 +38,39 @@ is mapped to \verb|[0,1]| via:
 The window level function is fairly easy to demonstrate.  Consider
 the following image, which is a Gaussian pulse image that is very 
 narrow:
-@>
+\begin{verbatim}
+--> t = linspace(-1,1,256);
+--> xmat = ones(256,1)*t; ymat = xmat';
+--> A = exp(-(xmat.^2 + ymat.^2)*100);
+--> image(A);
+\end{verbatim}
 The data range of \verb|A| is \verb|[0,1]|, as we can verify numerically:
-@>
+\begin{verbatim}
+--> min(A(:))
+
+ans = 
+ 1.3839e-87 
+
+--> max(A(:))
+
+ans = 
+    0.9969 
+\end{verbatim}
 To see the tail behavior, we use the \verb|winlev| command to force FreeMat
 to map a smaller range of \verb|A| to the colormap.
-@>
+\begin{verbatim}
+--> image(A);
+--> winlev(1e-4,0.5e-4)
+\end{verbatim}
 The result is a look at more of the tail behavior of \verb|A|.
 We can also use the winlev function to find out what the
 window and level are once set, as in the following example.
-@>
+\begin{verbatim}
+--> image(A);
+--> winlev(1e-4,0.5e-4)
+--> winlev
+Warning: Newly defined variable clim shadows a function of the same name.  Use clear clim to recover access to the function
+
+ans = 
+ 1.0000e-04 
+\end{verbatim}

@@ -35,13 +35,47 @@ via <code>cellstr</code> (so that trailing spaces are removed), before being
 compared.
 <H3>Example</H3>
 The following piece of code compares two strings:
-@&gt;
+<PRE>
+--&gt; x1 = 'astring';
+--&gt; x2 = 'bstring';
+--&gt; x3 = 'astring';
+--&gt; strncmp(x1,x2,4)
+
+ans = 
+ 0 
+
+--&gt; strncmp(x1,x3,4)
+
+ans = 
+ 1 
+</PRE>
+<P>
 Here we use a cell array strings
-@&gt;
+<PRE>
+--&gt; x = {'ast','bst',43,'astr'}
+
+x = 
+ [ast] [bst] [43] [astr] 
+
+--&gt; p = strncmp(x,'ast',3)
+
+p = 
+ 1 0 0 1 
+</PRE>
+<P>
 Here we compare two cell arrays of strings
-@&gt;
+<PRE>
+--&gt; strncmp({'this','is','a','pickle'},{'think','is','to','pickle'},3)
+
+ans = 
+ 1 0 0 1 
+</PRE>
+<P>
 Finally, the case where one of the arguments is a matrix
 string
-@&gt;
+<PRE>
+--&gt; strncmp({'this','is','a','pickle'},['peter ';'piper ';'hated ';'pickle'],4);
+</PRE>
+<P>
 </BODY>
 </HTML>

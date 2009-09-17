@@ -6,11 +6,3 @@ Returns a gray colormap.  The syntax for its use is
 
    y = gray
 
-GRAY GRAY Gray Colormap
-
-Usage
-
-Returns a gray colormap.  The syntax for its use is
-
-   y = gray
-

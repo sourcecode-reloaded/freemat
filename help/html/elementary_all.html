@@ -37,13 +37,41 @@ If <code>d</code> is omitted, then the minimum is taken over all elements of
 <H3>Example</H3>
 The following piece of code demonstrates various uses of the <code>all</code>
 function
-@&gt;
+<PRE>
+--&gt; A = [1,0,0;1,0,0;0,0,1]
+
+A = 
+ 1 0 0 
+ 1 0 0 
+ 0 0 1 
+</PRE>
+<P>
 We start by calling <code>all</code> without a dimension argument, in which 
 case it defaults to testing all values of <code>A</code>
-@&gt;
+<PRE>
+--&gt; all(A)
+
+ans = 
+ 0 0 0 
+</PRE>
+<P>
 The <code>all</code> function is useful in expressions also.
-@&gt;
+<PRE>
+--&gt; all(A&gt;=0)
+
+ans = 
+ 1 1 1 
+</PRE>
+<P>
 Next, we apply the <code>all</code> operation along the rows.
-@&gt;
+<PRE>
+--&gt; all(A,2)
+
+ans = 
+ 0 
+ 0 
+ 0 
+</PRE>
+<P>
 </BODY>
 </HTML>

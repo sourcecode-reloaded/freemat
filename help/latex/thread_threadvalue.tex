@@ -34,11 +34,32 @@ for more information.
 Here we do something very simple.  We want to obtain a listing of
 all files on the system, but do not want the results to stop our
 computation.  So we run the \verb|system| call in a thread.
-@>
+\begin{verbatim}
+--> a = threadnew;                         % Create the thread
+--> threadstart(a,'system',1,'ls -lrt /'); % Start the thread
+--> b = rand(100)\rand(100,1);             % Solve some equations simultaneously
+--> c = threadvalue(a);                    % Retrieve the file list
+--> size(c)                                % It is large!
+
+ans = 
+  1 20 
+
+--> threadfree(a);
+\end{verbatim}
 In this example, we force the threaded function to cause an
 exception (by calling the \verb|error| function as the thread 
 function).  When we call \verb|threadvalue|, we get an error, instead
 of the return value of the function
-@>
+\begin{verbatim}
+--> a = threadnew
+
+a = 
+ 3 
+
+--> threadstart(a,'error',0,'Hello world!'); % Will immediately stop due to error
+--> c = threadvalue(a)                     % The error comes to us
+Error: Thread: Hello world!
+--> threadfree(a)
+\end{verbatim}
 Note that the error has the text \verb|Thread:| prepended to the message
 to help you identify that this was an error in a different thread.

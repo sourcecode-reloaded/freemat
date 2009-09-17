@@ -38,10 +38,48 @@ y(m_1,\ldots,m_d) = a(m_1,\ldots,m_d) + b.
 Here are some examples of using the addition operator.  First, a 
 straight-forward usage of the plus operator.  The first example
 is straightforward:
-@>
+\begin{verbatim}
+--> 3 + 8
+
+ans = 
+ 11 
+\end{verbatim}
 Next, we add a scalar to a vector of values:
-@>
+\begin{verbatim}
+--> 3.1 + [2,4,5,6,7]
+
+ans = 
+    5.1000    7.1000    8.1000    9.1000   10.1000 
+\end{verbatim}
 With complex values
-@>
+\begin{verbatim}
+--> a = 3 + 4*i
+
+a = 
+   3.0000 +  4.0000i 
+
+--> b = a + 2
+
+b = 
+   5.0000 +  4.0000i 
+\end{verbatim}
 Finally, the element-wise version:
-@>
+\begin{verbatim}
+--> a = [1,2;3,4]
+
+a = 
+ 1 2 
+ 3 4 
+
+--> b = [2,3;6,7]
+
+b = 
+ 2 3 
+ 6 7 
+
+--> c = a + b
+
+c = 
+  3  5 
+  9 11 
+\end{verbatim}

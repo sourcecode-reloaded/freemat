@@ -11,19 +11,6 @@
 % where x,y are the coordinates in the current axes of the click.  This 
 % function has changed since FreeMat 1.10.  If the click is not inside the
 % active area of any set of axes, a pair of NaNs are returned.
-% POINT POINT Get Axis Position From Mouse Click
-% 
-% Usage
-% 
-% Returns information about the currently displayed image based on a use
-% supplied mouse-click.  The general syntax for its use is
-% 
-%    t = point
-% 
-% The returned vector y has two elements: 
-% where x,y are the coordinates in the current axes of the click.  This 
-% function has changed since FreeMat 1.10.  If the click is not inside the
-% active area of any set of axes, a pair of NaNs are returned.
 
 % Copyright (c) 2002-2006 Samit Basu
 % Licensed under the GPL

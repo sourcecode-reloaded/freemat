@@ -17,9 +17,39 @@ is not defined for \verb|complex| or \verb|dcomplex| types.
 The following demonstrates the \verb|round| function applied to various
 (numerical) arguments.  For integer arguments, the round function has
 no effect:
-@>
+\begin{verbatim}
+--> round(3)
+
+ans = 
+ 3 
+
+--> round(-3)
+
+ans = 
+ -3 
+\end{verbatim}
 Next, we take the \verb|round| of a floating point value:
-@>
+\begin{verbatim}
+--> round(3.023f)
+
+ans = 
+ 3 
+
+--> round(-2.341f)
+
+ans = 
+ -2 
+\end{verbatim}
 Note that the return type is a \verb|float| also.  Finally, for a \verb|double|
 type:
-@>
+\begin{verbatim}
+--> round(4.312)
+
+ans = 
+ 4 
+
+--> round(-5.32)
+
+ans = 
+ -5 
+\end{verbatim}

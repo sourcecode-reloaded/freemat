@@ -37,7 +37,11 @@ are allowed for \verb|y1|.
 Here is an example of simple linear interpolation with the different
 extrapolation modes.  We start with a fairly coarse sampling of a 
 cosine.
-@>
+\begin{verbatim}
+--> x = linspace(-pi*7/8,pi*7/8,15);
+--> y = cos(x);
+--> plot(x,y,'ro');
+\end{verbatim}
 which is shown here
 
 
@@ -46,7 +50,14 @@ which is shown here
 Next, we generate a finer sampling over a slightly broader range
 (in this case \verb|[-pi,pi]|).  First, we demonstrate the \verb|'nan'| 
 extrapolation method
-@>
+\begin{verbatim}
+--> xi = linspace(-4,4,100);
+--> yi_nan = interplin1(x,y,xi,'nan');
+--> yi_zero = interplin1(x,y,xi,'zero');
+--> yi_endpoint = interplin1(x,y,xi,'endpoint');
+--> yi_extrap = interplin1(x,y,xi,'extrap');
+--> plot(x,y,'ro',xi,yi_nan,'g-x',xi,yi_zero,'g-x',xi,yi_endpoint,'g-x',xi,yi_extrap,'g-x');
+\end{verbatim}
 which is shown here
 
 

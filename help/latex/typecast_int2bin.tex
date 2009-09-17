@@ -14,4 +14,36 @@ to it than the input.  The bits are expanded along this extra dimension.
 
 The following piece of code demonstrates various uses of the int2bin
 function.  First the simplest example:
-@>
+\begin{verbatim}
+--> A = [2;5;6;2]
+
+A = 
+ 2 
+ 5 
+ 6 
+ 2 
+
+--> int2bin(A,8)
+
+ans = 
+ 0 0 0 0 0 0 1 0 
+ 0 0 0 0 0 1 0 1 
+ 0 0 0 0 0 1 1 0 
+ 0 0 0 0 0 0 1 0 
+
+--> A = [1;2;-5;2]
+
+A = 
+  1 
+  2 
+ -5 
+  2 
+
+--> int2bin(A,8)
+
+ans = 
+ 0 0 0 0 0 0 0 1 
+ 0 0 0 0 0 0 1 0 
+ 1 1 1 1 1 0 1 1 
+ 0 0 0 0 0 0 1 0 
+\end{verbatim}

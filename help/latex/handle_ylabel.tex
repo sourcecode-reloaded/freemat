@@ -22,7 +22,12 @@ You can also specify properties for that label using the syntax
 \subsection{Example}
 
 Here is an example of a simple plot with a label on the \verb|y|-axis.
-@>
+\begin{verbatim}
+--> x = linspace(-1,1);
+--> y = cos(2*pi*x);
+--> plot(x,y,'r-');
+--> ylabel('cost');
+\end{verbatim}
 which results in the following plot.
 
 

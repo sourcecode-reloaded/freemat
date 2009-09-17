@@ -24,6 +24,23 @@ they are usually not used as identifiers in expressions, the strings
  <code>'pi','inf','nan','eps','i','j'</code> are ignored.
 <H3>Example</H3>
 Here are some simple examples:
-@&gt;
+<PRE>
+--&gt; symvar('x^2+sqrt(x)')  % sqrt is eliminated as a function
+
+ans = 
+ [x] 
+
+--&gt; symvar('pi+3')         % No identifiers here
+
+ans = 
+  Empty array 0 1
+--&gt; symvar('x + t*alpha')  % x, t and alpha
+
+ans = 
+ [alpha] 
+ [t] 
+ [x] 
+</PRE>
+<P>
 </BODY>
 </HTML>

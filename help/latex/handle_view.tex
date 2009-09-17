@@ -18,19 +18,44 @@ you set the viewpoint to azimuth \verb|az| and elevation \verb|el|.
 
 Here is a 3D surface plot shown with a number of viewpoints.
 First, the default view for a 3D plot.
-@>
+\begin{verbatim}
+--> x = repmat(linspace(-1,1),[100,1]);
+--> y = x';
+--> r = x.^2+y.^2;
+--> z = exp(-r*3).*cos(5*pi*r);
+--> surf(x,y,z);
+--> axis equal
+--> view(3)
+Warning: Newly defined variable xlim shadows a function of the same name.  Use clear xlim to recover access to the function
+Warning: Newly defined variable ylim shadows a function of the same name.  Use clear ylim to recover access to the function
+Warning: Newly defined variable zlim shadows a function of the same name.  Use clear zlim to recover access to the function
+\end{verbatim}
 
 
 \centerline{\includegraphics[width=8cm]{view1}}
 
 Next, we look at it as a 2D plot
-@>
+\begin{verbatim}
+--> surf(x,y,z);
+--> axis equal
+--> view(2)
+Warning: Newly defined variable xlim shadows a function of the same name.  Use clear xlim to recover access to the function
+Warning: Newly defined variable ylim shadows a function of the same name.  Use clear ylim to recover access to the function
+Warning: Newly defined variable zlim shadows a function of the same name.  Use clear zlim to recover access to the function
+\end{verbatim}
 
 
 \centerline{\includegraphics[width=8cm]{view2}}
 
 Finally, we generate a different view of the same surface.
-@>
+\begin{verbatim}
+--> surf(x,y,z);
+--> axis equal
+--> view(25,50);
+Warning: Newly defined variable xlim shadows a function of the same name.  Use clear xlim to recover access to the function
+Warning: Newly defined variable ylim shadows a function of the same name.  Use clear ylim to recover access to the function
+Warning: Newly defined variable zlim shadows a function of the same name.  Use clear zlim to recover access to the function
+\end{verbatim}
 
 
 \centerline{\includegraphics[width=8cm]{view3}}

@@ -24,6 +24,12 @@ where <code>x1</code> and <code>x2</code> are in the <code>clock</code> output f
 <P>
 <H3>Example</H3>
 Here we use <code>etime</code> as a substitute for <code>tic</code> and <code>toc</code>
-@&gt;
+<PRE>
+--&gt; x1 = clock;
+--&gt; sleep(1);
+--&gt; x2 = clock;
+--&gt; etime(x2,x1);
+</PRE>
+<P>
 </BODY>
 </HTML>

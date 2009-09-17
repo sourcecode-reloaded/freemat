@@ -17,7 +17,51 @@ is a matrix with \verb|x| set to the \verb|n|-th diagonal.
 
 Here is an example of \verb|diag| being used to extract
 a diagonal from a matrix.
-@>
+\begin{verbatim}
+--> A = int32(10*rand(4,5))
+
+A = 
+ 2 8 3 2 2 
+ 6 8 6 8 5 
+ 8 9 3 9 0 
+ 8 3 7 8 2 
+
+--> diag(A)
+
+ans = 
+ 2 
+ 8 
+ 3 
+ 8 
+
+--> diag(A,1)
+
+ans = 
+ 8 
+ 6 
+ 9 
+ 2 
+\end{verbatim}
 Here is an example of the second form of \verb|diag|, being
 used to construct a diagonal matrix.
-@>
+\begin{verbatim}
+--> x = int32(10*rand(1,3))
+
+x = 
+  1  1 10 
+
+--> diag(x)
+
+ans = 
+  1  0  0 
+  0  1  0 
+  0  0 10 
+
+--> diag(x,-1)
+
+ans = 
+  0  0  0  0 
+  1  0  0  0 
+  0  1  0  0 
+  0  0 10  0 
+\end{verbatim}

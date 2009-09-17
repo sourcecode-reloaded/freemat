@@ -46,7 +46,12 @@ due to the periodicities of  <code>cos(x)</code> and <code>sin(x)</code>.
 <H3>Example</H3>
 The following code demonstates the difference between the <code>atan2</code> 
 function and the <code>atan</code> function over the range <code>[-pi,pi]</code>.
-@&gt;
+<PRE>
+--&gt; x = linspace(-pi,pi);
+--&gt; sx = sin(x); cx = cos(x);
+--&gt; plot(x,atan(sx./cx),x,atan2(sx,cx))
+</PRE>
+<P>
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="atan2plot.png">

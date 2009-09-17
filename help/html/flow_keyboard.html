@@ -63,6 +63,49 @@ puts us at depth 2.  We can confirm that we are in the second
 invocation of the function by examining the arguments.  We
 then issue two <code>return</code> statements to return to the base
 workspace.
-@&gt;
+<PRE>
+--&gt; key_one(1,2)
+[key_one,3]--&gt; key_one(5,7)
+[key_one,3]--&gt; a
+
+ans = 
+ 5 
+
+[key_one,3]--&gt; b
+
+ans = 
+ 7 
+
+[key_one,3]--&gt; c
+
+ans = 
+ 12 
+
+[key_one,3]--&gt; return
+
+ans = 
+ 12 
+
+[key_one,3]--&gt; a
+
+ans = 
+ 1 
+
+[key_one,3]--&gt; b
+
+ans = 
+ 2 
+
+[key_one,3]--&gt; c
+
+ans = 
+ 3 
+
+[key_one,3]--&gt; return
+
+ans = 
+ 3 
+</PRE>
+<P>
 </BODY>
 </HTML>

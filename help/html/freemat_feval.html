@@ -30,12 +30,44 @@ of the class.
 <H3>Example</H3>
 Here is an example of using <code>feval</code> to call the <code>cos</code> 
 function indirectly.
-@&gt;
+<PRE>
+--&gt; feval('cos',pi/4)
+
+ans = 
+    0.7071 
+</PRE>
+<P>
 Now, we call it through a function handle
-@&gt;
+<PRE>
+--&gt; c = @cos
+
+c = 
+ @cos
+--&gt; feval(c,pi/4)
+
+ans = 
+    0.7071 
+</PRE>
+<P>
 Here we construct an inline object (which is a user-defined class)
 and use <code>feval</code> to call it
-@&gt;
+<PRE>
+--&gt; afunc = inline('cos(t)+sin(t)','t')
+
+afunc = 
+  inline function object
+  f(t) = cos(t)+sin(t)
+--&gt; feval(afunc,pi)
+
+ans = 
+   -1.0000 
+
+--&gt; afunc(pi)
+
+ans = 
+   -1.0000 
+</PRE>
+<P>
 In both cases, (the <code>feval</code> call and the direct invokation), FreeMat
 calls the <code>subsref</code> method of the class, which computes the requested 
 function.

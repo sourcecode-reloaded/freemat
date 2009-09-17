@@ -94,12 +94,37 @@ roundoff error.
 \subsection{Examples}
 
 Some simple examples of index generation.
-@>
+\begin{verbatim}
+--> y = 1:4
+
+y = 
+ 1 2 3 4 
+\end{verbatim}
 Now by half-steps:
-@>
+\begin{verbatim}
+--> y = 1:.5:4
+
+y = 
+    1.0000    1.5000    2.0000    2.5000    3.0000    3.5000    4.0000 
+\end{verbatim}
 Now going backwards (negative steps)
-@>
+\begin{verbatim}
+--> y = 4:-.5:1
+
+y = 
+    4.0000    3.5000    3.0000    2.5000    2.0000    1.5000    1.0000 
+\end{verbatim}
 If the endpoints are the same, one point is generated, regardless of the step size (middle argument)
-@>
+\begin{verbatim}
+--> y = 4:1:4
+
+y = 
+ 4 
+\end{verbatim}
 If the endpoints define an empty interval, the output is an empty matrix:
-@>
+\begin{verbatim}
+--> y = 5:4
+
+y = 
+  Empty array 1 0
+\end{verbatim}

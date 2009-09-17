@@ -14,22 +14,6 @@
 % 
 %      y = fftshift(x,dim).
 % 
-% FFTSHIFT FFTSHIFT Shift FFT Output
-% 
-% Usage
-% 
-% The fftshift function shifts the DC component (zero-frequency)
-% of the output from an FFT to the center of the array.  For vectors
-% this means swapping the two halves of the vector.  For matrices,
-% the first and third quadrants are swapped.  So on for N-dimensional
-% arrays.  The syntax for its use is
-% 
-%      y = fftshift(x).
-% 
-% Alternately, you can specify that only one dimension be shifted
-% 
-%      y = fftshift(x,dim).
-% 
 
 % Copyright (c) 2002-2006 Samit Basu
 % Licensed under the GPL

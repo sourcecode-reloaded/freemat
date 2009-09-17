@@ -44,7 +44,14 @@ use a seperate utility or your operating system's built in screen
 capture ability.
 <H3>Example</H3>
 Here is a simple example of how the figures in this manual are generated.
-@&gt;
+<PRE>
+--&gt; x = linspace(-1,1);
+--&gt; y = cos(5*pi*x);
+--&gt; plot(x,y,'r-');
+--&gt; print('printfig1.jpg')
+--&gt; print('printfig1.png')
+</PRE>
+<P>
 which creates two plots <code>printfig1.png</code>, which is a Portable
 Net Graphics file, and <code>printfig1.jpg</code> which is a JPEG file.
 <P>

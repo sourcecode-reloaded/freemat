@@ -30,7 +30,64 @@ in which case the output is signed.
 <H3>Example</H3>
 The following piece of code demonstrates various uses of the int2bin
 function.  First the simplest example:
-@&gt;
+<PRE>
+--&gt; A = [2;5;6;2]
+
+A = 
+ 2 
+ 5 
+ 6 
+ 2 
+
+--&gt; B = int2bin(A,8)
+
+B = 
+ 0 0 0 0 0 0 1 0 
+ 0 0 0 0 0 1 0 1 
+ 0 0 0 0 0 1 1 0 
+ 0 0 0 0 0 0 1 0 
+
+--&gt; bin2int(B)
+
+ans = 
+ 2 
+ 5 
+ 6 
+ 2 
+
+--&gt; A = [1;2;-5;2]
+
+A = 
+  1 
+  2 
+ -5 
+  2 
+
+--&gt; B = int2bin(A,8)
+
+B = 
+ 0 0 0 0 0 0 0 1 
+ 0 0 0 0 0 0 1 0 
+ 1 1 1 1 1 0 1 1 
+ 0 0 0 0 0 0 1 0 
+
+--&gt; bin2int(B)
+
+ans = 
+   1 
+   2 
+ 251 
+   2 
+
+--&gt; int32(bin2int(B))
+
+ans = 
+   1 
+   2 
+ 251 
+   2 
+</PRE>
+<P>
 <H3>Tets</H3>
 </BODY>
 </HTML>

@@ -21,6 +21,30 @@ This function returns the number of nonzero elements
 in a matrix or array.  This function works for both
 sparse and non-sparse arrays.  For 
 <H3>Example</H3>
-@&gt;
+<PRE>
+--&gt; a = [1,0,0,5;0,3,2,0]
+
+a = 
+ 1 0 0 5 
+ 0 3 2 0 
+
+--&gt; nnz(a)
+
+ans = 
+ 4 
+
+--&gt; A = sparse(a)
+
+A = 
+ 1 1 1
+ 2 2 3
+ 2 3 2
+ 1 4 5
+--&gt; nnz(A)
+
+ans = 
+ 4 
+</PRE>
+<P>
 </BODY>
 </HTML>

@@ -48,7 +48,11 @@ exponential
 <H3>Example</H3>
 The following piece of code plots the real-valued <code>exp</code>
 function over the interval <code>[-1,1]</code>:
-@&gt;
+<PRE>
+--&gt; x = linspace(-1,1);
+--&gt; plot(x,exp(x))
+</PRE>
+<P>
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="expplot1.png">
@@ -56,7 +60,11 @@ function over the interval <code>[-1,1]</code>:
 <P>
 In the second example, we plot the unit circle in the 
 complex plane <code>e^{i 2 pi x}</code> for <code>x in [-1,1]</code>.
-@&gt;
+<PRE>
+--&gt; x = linspace(-1,1);
+--&gt; plot(exp(-i*x*2*pi))
+</PRE>
+<P>
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="expplot2.png">

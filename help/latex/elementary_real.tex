@@ -17,8 +17,23 @@ nothing to real and integer types.
 \subsection{Example}
 
 The following demonstrates the \verb|real| applied to a complex scalar.
-@>
+\begin{verbatim}
+--> real(3+4*i)
+
+ans = 
+ 3 
+\end{verbatim}
 The \verb|real| function has no effect on real arguments:
-@>
+\begin{verbatim}
+--> real([2,3,4])
+
+ans = 
+ 2 3 4 
+\end{verbatim}
 For a double-precision complex array,
-@>
+\begin{verbatim}
+--> real([2.0+3.0*i,i])
+
+ans = 
+ 2 0 
+\end{verbatim}

@@ -21,7 +21,12 @@ where <code>x</code> is either a <code>float</code> or <code>double</code> array
 vector <code>y</code> is the same size (and type) as <code>x</code>.
 <H3>Example</H3>
 Here is a plot of the <code>gammaln</code> function over the range <code>[-5,5]</code>.
-@&gt;
+<PRE>
+--&gt; x = linspace(0,10);
+--&gt; y = gammaln(x);
+--&gt; plot(x,y); xlabel('x'); ylabel('gammaln(x)');
+</PRE>
+<P>
 which results in the following plot.
 <P>
 <DIV ALIGN="CENTER">

@@ -53,7 +53,12 @@ This function uses \verb|fitfun|.
 \subsection{Example}
 
 Suppose we want to fit a cycle of a cosine using a Gaussian shape.
-@>
+\begin{verbatim}
+--> t = linspace(-pi,pi); 
+--> y = cos(t);
+--> [mu,sigma,dc,gain,yhat] = gausfit(t,y);
+--> plot(t,y,'rx',t,yhat,'g-');
+\end{verbatim}
 Which results in the following plot
 
 

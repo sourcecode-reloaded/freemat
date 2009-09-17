@@ -29,7 +29,17 @@ function ret = return_func(a,b)
 \end{verbatim}
 Next we exercise the function with a few simple test
 cases:
-@>
+\begin{verbatim}
+--> return_func(1,3)
+finishing up...
+
+ans = 
+b is greater
+--> return_func(5,2)
+
+ans = 
+a is greater
+\end{verbatim}
 In the second example, we take the function and rewrite
 it to use a \verb|keyboard| statement inside the \verb|if| statement.
 \begin{verbatim}
@@ -47,4 +57,30 @@ Now, we call the function with a larger first argument, which
 triggers the \verb|keyboard| session.  After verifying a few
 values inside the \verb|keyboard| session, we issue a \verb|return|
 statement to resume execution.
-@>
+\begin{verbatim}
+--> return_func2(2,4)
+finishing up...
+
+ans = 
+b is greater
+--> return_func2(5,1)
+[return_func2,4]--> ret
+
+ans = 
+a is greater
+[return_func2,4]--> a
+
+ans = 
+ 5 
+
+[return_func2,4]--> b
+
+ans = 
+ 1 
+
+[return_func2,4]--> return
+finishing up...
+
+ans = 
+a is greater
+\end{verbatim}

@@ -43,64 +43,18 @@
 %   handle = contour(...)
 % 
 % To place labels on the contour plot, use the clabel function.
-% CONTOUR CONTOUR Contour Plot Function
-% 
-% Usage
-% 
-% This command generates contour plots.  There are several syntaxes for
-% the command.  The simplest is
-% 
-%   contour(Z)
-% 
-% which generates a contour plot of the data in matrix Z, and will
-% automatically select the contour levels.  The x,y coordinates of the
-% contour default to 1:n and 1:m, where n is the number of
-% columns and m is the number of rows in the Z matrix.  Alternately,
-% you can specify a scalar n
-% 
-%   contour(Z,n)
-% 
-% which indicates that you want n contour levels.  For more control,
-% you can provide a vector v containing the levels to contour.  If you
-% want to generate a contour for a particular level, you must pass a
-% vector [t,t] where t is the level you want to contour.  If you
-% have data that lies on a particular X,Y grid, you can pass either
-% vectors x,y or matrices X,Y to the contour function via
-% 
-%   contour(X,Y,Z)
-%   contour(X,Y,Z,n)
-%   contour(X,Y,Z,v)
-% 
-% Each form of contour can optionally take a line spec to indicate the
-% color and linestyle of the contours to draw:
-% 
-%   contour(...,linespec)
-% 
-% or any of the other forms of contour.  Furthermore, you can supply an
-% axis to target the contour plot to (so that it does not get added to
-% the current axis, which is the default):
-% 
-%   contour(axis_handle,...)
-% 
-% Finally, the contour command returns a handle to the newly returned
-% contour plot. 
-% 
-%   handle = contour(...)
-% 
-% To place labels on the contour plot, use the clabel function.
 
 % Copyright (c) 2002-2007 Samit Basu
 % Licensed under the GPL
 
 function ohandle = contour(varargin)
   % Check for an axes handle 
-    nargsin = nargin;
-    if (nargsin>=2)
+    if (nargin>=2)
       if (isnumeric(varargin{1}) && (length(varargin{1})==1) && ...
           ishandle(varargin{1},'axes'))
         handle = varargin{1}(1);
         varargin(1) = [];
-        nargsin = nargsin - 1;
+        nargin = nargin - 1;
       else
         handle = newplot;
       end
@@ -111,15 +65,15 @@ function ohandle = contour(varargin)
     axes(handle);
     % Have to decrypt the mode...
     % strip off the linespec, if provided
-    color = []; marker = []; linestyle = [];
-    linespec_given = islinespec(varargin{end},color,marker,linestyle);
+    color = []; marker = []; linetype = [];
+    linespec_given = islinespec(varargin{end},color,marker,linetype);
     if (linespec_given)
       varargin(end) = [];
-      nargsin = nargsin - 1;
+      nargin = nargin - 1;
     end
-    if (nargsin == 1)
+    if (nargin == 1)
       h = hcontour('zdata',varargin{1});
-    elseif (nargsin == 2)
+    elseif (nargin == 2)
       if (numel(varargin{2}) == 1)
         zdata = varargin{1};
         zmin = min(zdata(:));
@@ -129,12 +83,12 @@ function ohandle = contour(varargin)
       else
         h = hcontour('zdata',varargin{1},'levellist',varargin{2});
       end
-    elseif (nargsin == 3)
+    elseif (nargin == 3)
       xdata = varargin{1};
       ydata = varargin{2};
       zdata = varargin{3};
       h = hcontour('xdata',xdata,'ydata',ydata,'zdata',zdata);
-    elseif (nargsin == 4)
+    elseif (nargin == 4)
       xdata = varargin{1};
       ydata = varargin{2};
       zdata = varargin{3};
@@ -149,7 +103,7 @@ function ohandle = contour(varargin)
       end
     end
     if (linespec_given)
-      set(h,'linestyle',linestyle,'linecolor',color);
+      set(h,'linestyle',linetype,'linecolor',color);
     end
     axes(saveca);
     if (nargout > 0)

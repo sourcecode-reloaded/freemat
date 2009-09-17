@@ -35,14 +35,36 @@ via
 <P>
 <H3>Example</H3>
 Here is an example of a few labels being added to a random plot:
-@&gt;
+<PRE>
+--&gt; plot(rand(1,4))
+--&gt; text([2,3],[0.5,0.5],{'hello','there'})
+Warning: Newly defined variable i shadows a function of the same name.  Use clear i to recover access to the function
+In /home/basu/dev/branches/FreeMat4/src/toolbox/graph/text.m(text) at line 72
+    In scratch() at line 1
+    In base(base)
+    In base()
+    In global()
+Error: Got error Expect a vector of length 3, got a vector of length 2 for property position
+</PRE>
+<P>
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="text1.png">
 </DIV>
 <P>
 Here is the same example, but with larger labels:
-@&gt;
+<PRE>
+--&gt; plot(rand(1,4))
+--&gt; text([2,3],[0.5,0.5],{'hello','there'},'fontsize',20)
+Warning: Newly defined variable i shadows a function of the same name.  Use clear i to recover access to the function
+In /home/basu/dev/branches/FreeMat4/src/toolbox/graph/text.m(text) at line 72
+    In scratch() at line 1
+    In base(base)
+    In base()
+    In global()
+Error: Got error Expect a vector of length 3, got a vector of length 2 for property position
+</PRE>
+<P>
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="text2.png">

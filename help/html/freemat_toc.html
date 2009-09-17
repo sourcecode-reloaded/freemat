@@ -20,6 +20,14 @@ The <code>toc</code> function takes no arguments, and returns no outputs.  You m
 <P>
 <H3>Example</H3>
 Here is an example of timing the solution of a large matrix equation.
-@&gt;
+<PRE>
+--&gt; A = rand(100);
+--&gt; b = rand(100,1);
+--&gt; tic; c = A\b; toc
+
+ans = 
+    0.0160 
+</PRE>
+<P>
 </BODY>
 </HTML>

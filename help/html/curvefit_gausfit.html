@@ -62,7 +62,13 @@ are estimated using the first and second order moments of <code>y</code>.
 This function uses <code>fitfun</code>.
 <H3>Example</H3>
 Suppose we want to fit a cycle of a cosine using a Gaussian shape.
-@&gt;
+<PRE>
+--&gt; t = linspace(-pi,pi); 
+--&gt; y = cos(t);
+--&gt; [mu,sigma,dc,gain,yhat] = gausfit(t,y);
+--&gt; plot(t,y,'rx',t,yhat,'g-');
+</PRE>
+<P>
 Which results in the following plot
 <P>
 <DIV ALIGN="CENTER">

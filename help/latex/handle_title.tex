@@ -24,7 +24,13 @@ for the operation
 \subsection{Example}
 
 Here is an example of a simple plot with a title.
-@>
+\begin{verbatim}
+--> x = linspace(-1,1);
+--> y = cos(2*pi*x);
+--> plot(x,y,'r-');
+--> title('cost over time');
+Warning: Newly defined variable nargin shadows a function of the same name.  Use clear nargin to recover access to the function
+\end{verbatim}
 which results in the following plot.
 
 
@@ -32,7 +38,10 @@ which results in the following plot.
 
 We now increase the size of the font using the properties
 of the \verb|label|
-@>
+\begin{verbatim}
+--> title('cost over time','fontsize',20);
+Warning: Newly defined variable nargin shadows a function of the same name.  Use clear nargin to recover access to the function
+\end{verbatim}
 
 
 \centerline{\includegraphics[width=8cm]{title2}}

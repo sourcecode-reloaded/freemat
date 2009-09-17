@@ -14,22 +14,6 @@
 % 
 % which forms an n x n sparse matrix with ones on the main diagonal.  The
 % matrix type is a float single precision matrix.
-% SPEYE SPEYE Sparse Identity Matrix
-% 
-% Usage
-% 
-% Creates a sparse identity matrix of the given size.  The syntax for
-% its use is
-% 
-%   y = speye(m,n)
-% 
-% which forms an m x n sparse matrix with ones on the main diagonal,
-% or
-% 
-%   y = speye(n)
-% 
-% which forms an n x n sparse matrix with ones on the main diagonal.  The
-% matrix type is a float single precision matrix.
 
 % Copyright (c) 2002-2006 Samit Basu
 % Licensed under the GPL

@@ -112,7 +112,18 @@ function c = addtest(a,b)
 
 </PRE>
 <P>
-@&gt;
+<PRE>
+--&gt; addtest(1,3)
+
+ans = 
+ 7 
+
+--&gt; addtest(3,0)
+
+ans = 
+ 3 
+</PRE>
+<P>
 Suppose, however, we want to replace the value of the first 
 argument by the computed sum.  A first attempt at doing so
 has no effect:
@@ -124,7 +135,29 @@ function addtest2(a,b)
 
 </PRE>
 <P>
-@&gt;
+<PRE>
+--&gt; arg1 = 1
+
+arg1 = 
+ 1 
+
+--&gt; arg2 = 3
+
+arg2 = 
+ 3 
+
+--&gt; addtest2(arg1,arg2)
+--&gt; arg1
+
+ans = 
+ 1 
+
+--&gt; arg2
+
+ans = 
+ 3 
+</PRE>
+<P>
 The values of <code>arg1</code> and <code>arg2</code> are unchanged, because they are
 passed by value, so that any changes to <code>a</code> and <code>b</code> inside 
 the function do not affect <code>arg1</code> and <code>arg2</code>.  We can change
@@ -139,7 +172,29 @@ function addtest3(&amp;a,b)
 <P>
 Note that it is now illegal to pass a literal value for <code>a</code> when
 calling <code>addtest3</code>:
-@&gt;
+<PRE>
+--&gt; addtest3(3,4)
+
+a = 
+ 11 
+
+Error: Must have lvalue in argument passed by reference
+--&gt; addtest3(arg1,arg2)
+
+a = 
+ 7 
+
+--&gt; arg1
+
+ans = 
+ 7 
+
+--&gt; arg2
+
+ans = 
+ 3 
+</PRE>
+<P>
 The first example fails because we cannot pass a literal like the
 number <code>3</code> by reference.  However, the second call succeeds, and
 note that <code>arg1</code> has now changed.  Note: please be careful when
@@ -163,6 +218,17 @@ function square_me(&amp;t)
 
 </PRE>
 <P>
-@&gt;
+<PRE>
+--&gt; euclidlength(3,4)
+
+ans = 
+ 5 
+
+--&gt; euclidlength(2,0)
+
+ans = 
+ 2 
+</PRE>
+<P>
 </BODY>
 </HTML>

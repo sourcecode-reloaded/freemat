@@ -21,14 +21,25 @@ automatically.  The \verb|xlim('mode')| form returns the current mode for the ax
 axis to manipulate instead of using the current one.
 \subsection{Example}
 
-@>
+\begin{verbatim}
+--> x = linspace(-1,1);
+--> y = sin(2*pi*x);
+--> plot(x,y,'r-');
+--> xlim  % what are the current limits?
+
+ans = 
+ -1  1 
+\end{verbatim}
 which results in
 
 
 \centerline{\includegraphics[width=8cm]{xlim1}}
 
 Next, we zoom in on the plot using the \verb|xlim| function
-@>
+\begin{verbatim}
+--> plot(x,y,'r-')
+--> xlim([-0.2,0.2])
+\end{verbatim}
 which results in
 
 

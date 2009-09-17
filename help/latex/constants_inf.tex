@@ -43,6 +43,46 @@ Note that infinities are not preserved under type conversion to integer types (s
 \subsection{Example}
 
 The following examples demonstrate the various properties of the infinity constant.
-@>
+\begin{verbatim}
+--> inf*0
+
+ans = 
+ NaN 
+
+--> inf*2
+
+ans = 
+ Inf 
+
+--> inf*-2
+
+ans = 
+ -Inf 
+
+--> inf/inf
+
+ans = 
+ NaN 
+
+--> inf/0
+
+ans = 
+ Inf 
+
+--> inf/nan
+
+ans = 
+ NaN 
+\end{verbatim}
 Note that infinities are preserved under type conversion to floating point types (i.e., \verb|float|, \verb|double|, \verb|complex| and \verb|dcomplex| types), but not integer  types.
-@>
+\begin{verbatim}
+--> uint32(inf)
+
+ans = 
+ 4294967295 
+
+--> complex(inf)
+
+ans = 
+ Inf 
+\end{verbatim}

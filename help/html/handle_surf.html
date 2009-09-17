@@ -47,7 +47,20 @@ via
 <P>
 <H3>Example</H3>
 Here we generate a surface specifying all four components.
-@&gt;
+<PRE>
+--&gt; x = repmat(linspace(-1,1),[100,1]);
+--&gt; y = x';
+--&gt; r = x.^2+y.^2;
+--&gt; z = exp(-r*3).*cos(5*r);
+--&gt; c = r;
+--&gt; surf(x,y,z,c)
+--&gt; axis equal
+--&gt; view(3)
+Warning: Newly defined variable xlim shadows a function of the same name.  Use clear xlim to recover access to the function
+Warning: Newly defined variable ylim shadows a function of the same name.  Use clear ylim to recover access to the function
+Warning: Newly defined variable zlim shadows a function of the same name.  Use clear zlim to recover access to the function
+</PRE>
+<P>
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="surf1.png">
@@ -55,7 +68,15 @@ Here we generate a surface specifying all four components.
 <P>
 If we allow FreeMat to specify the color component, we see that
 the colorfield is the same as the height
-@&gt;
+<PRE>
+--&gt; surf(x,y,z)
+--&gt; axis equal
+--&gt; view(3)
+Warning: Newly defined variable xlim shadows a function of the same name.  Use clear xlim to recover access to the function
+Warning: Newly defined variable ylim shadows a function of the same name.  Use clear ylim to recover access to the function
+Warning: Newly defined variable zlim shadows a function of the same name.  Use clear zlim to recover access to the function
+</PRE>
+<P>
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="surf2.png">

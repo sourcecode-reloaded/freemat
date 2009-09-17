@@ -44,7 +44,13 @@ In the event that the matrix \verb|A| is neither full row rank nor full column r
 \subsection{Examples}
 
 Here are some simple examples of the divide operator.  We start with a simple example of a full rank, square matrix:
-@>
+\begin{verbatim}
+--> A = [1,1;0,1]
+
+A = 
+ 1 1 
+ 0 1 
+\end{verbatim}
 Suppose we wish to solve
 \[
   \begin{bmatrix} 1 & 1 \\ 0 & 1 \end{bmatrix}
@@ -53,7 +59,19 @@ Suppose we wish to solve
   \begin{bmatrix} 3 \\ 2 \end{bmatrix}
 \]
 (which by inspection has the solution \verb|y_1 = 1|, \verb|y_2 = 2|).  Thus we compute:
-@>
+\begin{verbatim}
+--> B = [3;2]
+
+B = 
+ 3 
+ 2 
+
+--> Y = A\B
+
+Y = 
+ 1 
+ 2 
+\end{verbatim}
 
 Suppose we wish to solve a trivial Least Squares (LS) problem.  We want to find a simple scaling of the vector \verb|[1;1]| that is closest to the point \verb|[2,1]|.  This is equivalent to solving
 \[
@@ -68,5 +86,22 @@ Taking a derivative with respect to \verb|y|, and setting to zero (which we must
   2 (y-2) + 2 (y-1) = 0
 \]
 which we can simplify to \verb|4y = 6| or \verb|y = 3/2| (we must, technically, check to make sure this is a minimum, and not a maximum or an inflection point).  Here is the same calculation performed using FreeMat:
-@>
+\begin{verbatim}
+--> A = [1;1]
+
+A = 
+ 1 
+ 1 
+
+--> B = [2;1]
+
+B = 
+ 2 
+ 1 
+
+--> A\B
+
+ans = 
+    1.5000 
+\end{verbatim}
 which is the same solution.

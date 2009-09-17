@@ -28,9 +28,9 @@ Mathematical Operators
 +(operators) HERMITIAN Matrix Hermitian (Conjugate Transpose) Operator
 +(operators) LEFTDIVIDE Matrix Equation Solver/Divide Operator
 +(operators) LOGICALOPS Logical Array Operators
++(operators) MATRIXPOWER Matrix Power Operator
 +(operators) MINUS Subtraction Operator
 +(operators) PLUS Addition Operator
-+(operators) POWER Matrix Power Operator
 +(operators) RIGHTDIVIDE Matrix Equation Solver/Divide Operator
 +(operators) TIMES Matrix Multiply Operator
 +(operators) TRANSPOSE Matrix Transpose Operator
@@ -82,6 +82,7 @@ FreeMat Functions
 +(freemat) QUIT Quit Program
 +(freemat) REHASH Rehash Directory Caches
 +(freemat) RESCAN Rescan M Files for Changes
++(freemat) ROOTPATH Set FreeMat Root Path
 +(freemat) SIMKEYS Simulate Keypresses from the User
 +(freemat) SLEEP Sleep For Specified Number of Seconds
 +(freemat) SOURCE Execute an Arbitrary File
@@ -94,11 +95,9 @@ FreeMat Functions
 Debugging FreeMat Code
 +(debug) DBAUTO Control Dbauto Functionality
 +(debug) DBDELETE Delete a Breakpoint
-+(debug) DBDown Move Down One Debug Level
 +(debug) DBLIST List Breakpoints
 +(debug) DBSTEP Step N Statements
 +(debug) DBSTOP
-+(debug) DBUP Move Up One Debug Level
 +(debug) FDUMP Dump Information on Function
 Sparse Matrix Support
 +(sparse) EIGS Sparse Matrix Eigendecomposition
@@ -155,6 +154,8 @@ Mathematical Functions
 +(mathfunctions) LOG1P Natural Logarithm of 1+P Function
 +(mathfunctions) LOG2 Base-2 Logarithm Function
 +(mathfunctions) MOD Modulus Operation
++(mathfunctions) MPOWER Matrix Power Function
++(mathfunctions) POWER Element-wise Power Function
 +(mathfunctions) RAD2DEG Radians To Degrees Conversion Function
 +(mathfunctions) REM Remainder After Division
 +(mathfunctions) SEC Trigonometric Secant Function

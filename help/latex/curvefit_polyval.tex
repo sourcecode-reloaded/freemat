@@ -24,7 +24,16 @@ then the calculation is performed as
 \subsection{Example}
 
 Here is a plot of \verb|x^3| generated using polyval
-@>
+\begin{verbatim}
+--> p = [1 0 0 0]
+
+p = 
+ 1 0 0 0 
+
+--> x = linspace(-1,1);
+--> y = polyval(p,x);
+--> plot(x,y,'r-')
+\end{verbatim}
 Here is the resulting plot
 
 

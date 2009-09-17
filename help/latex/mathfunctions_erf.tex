@@ -19,7 +19,11 @@ and is the integral of the normal distribution.
 \subsection{Example}
 
 Here is a plot of the erf function over the range \verb|[-5,5]|.
-@>
+\begin{verbatim}
+--> x = linspace(-5,5);
+--> y = erf(x);
+--> plot(x,y); xlabel('x'); ylabel('erf(x)');
+\end{verbatim}
 which results in the following plot.
 
 

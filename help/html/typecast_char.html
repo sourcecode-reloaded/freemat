@@ -39,13 +39,38 @@ where each row contains a string from the corresponding argument.
 <H3>Example</H3>
 Here is an example of the first technique being used to generate
 a string containing some ASCII characters
-@&gt;
+<PRE>
+--&gt; char([32:64;65:97])
+
+ans = 
+ !"#$%&amp;'()*+,-./0123456789:;&lt;=&gt;?@
+ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`a
+</PRE>
+<P>
 In the next example, we form a character array from a set of
 strings in a cell array.  Note that the character array is padded
 with spaces to make the rows all have the same length.
-@&gt;
+<PRE>
+--&gt; char({'hello','to','the','world'})
+
+ans = 
+hello
+to   
+the  
+world
+</PRE>
+<P>
 In the last example, we pass the individual strings as explicit
 arguments to <code>char</code>
-@&gt;
+<PRE>
+--&gt; char('hello','to','the','world')
+
+ans = 
+hello
+to   
+the  
+world
+</PRE>
+<P>
 </BODY>
 </HTML>

@@ -34,6 +34,26 @@ Finally, you can add a classname of either \verb|'single'| or \verb|'double'|.
 \subsection{Example}
 
 The following examples demonstrate a few calculations with the not-a-number constant.
-@>
+\begin{verbatim}
+--> nan*0
+
+ans = 
+ NaN 
+
+--> nan-nan
+
+ans = 
+ NaN 
+\end{verbatim}
 Note that \verb|NaN|s are preserved under type conversion to floating point types (i.e., \verb|float|, \verb|double|, \verb|complex| and \verb|dcomplex| types), but not integer  types.
-@>
+\begin{verbatim}
+--> uint32(nan)
+
+ans = 
+ 0 
+
+--> complex(nan)
+
+ans = 
+ NaN 
+\end{verbatim}

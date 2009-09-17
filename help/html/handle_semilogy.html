@@ -21,14 +21,22 @@ y axis to have a logarithmic scale.
 <H3>Example</H3>
 Here is an example of an exponential signal plotted first on a linear
 plot:
-@&gt;
+<PRE>
+--&gt; x = linspace(0,2);
+--&gt; y = 10.0.^x;
+--&gt; plot(x,y,'r-');
+</PRE>
+<P>
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="semilogy1.png">
 </DIV>
 <P>
 and now with a logarithmic y axis
-@&gt;
+<PRE>
+--&gt; semilogy(x,y,'r-');
+</PRE>
+<P>
 <P>
 <DIV ALIGN="CENTER">
 <IMG SRC="semilogy2.png">

@@ -33,8 +33,28 @@ coefficients are assumed to be in decreasing degree.
 Contributed by Paulo Xavier Candeias under GPL
 <H3>Example</H3>
 Here are some examples of the use of <code>polyder</code>
-@&gt;
-@&gt;
-@&gt;
+<PRE>
+--&gt; polyder([2,3,4])
+
+ans = 
+ 4 3 
+</PRE>
+<P>
+<PRE>
+--&gt; polyder([2,3,4],7)
+
+ans = 
+ 28 21 
+</PRE>
+<P>
+<PRE>
+--&gt; [n,d] = polyder([2,3,4],5)
+n = 
+ -20 -15 
+
+d = 
+ 25 
+</PRE>
+<P>
 </BODY>
 </HTML>

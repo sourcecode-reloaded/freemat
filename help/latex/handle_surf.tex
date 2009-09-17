@@ -35,14 +35,33 @@ via
 \subsection{Example}
 
 Here we generate a surface specifying all four components.
-@>
+\begin{verbatim}
+--> x = repmat(linspace(-1,1),[100,1]);
+--> y = x';
+--> r = x.^2+y.^2;
+--> z = exp(-r*3).*cos(5*r);
+--> c = r;
+--> surf(x,y,z,c)
+--> axis equal
+--> view(3)
+Warning: Newly defined variable xlim shadows a function of the same name.  Use clear xlim to recover access to the function
+Warning: Newly defined variable ylim shadows a function of the same name.  Use clear ylim to recover access to the function
+Warning: Newly defined variable zlim shadows a function of the same name.  Use clear zlim to recover access to the function
+\end{verbatim}
 
 
 \centerline{\includegraphics[width=8cm]{surf1}}
 
 If we allow FreeMat to specify the color component, we see that
 the colorfield is the same as the height
-@>
+\begin{verbatim}
+--> surf(x,y,z)
+--> axis equal
+--> view(3)
+Warning: Newly defined variable xlim shadows a function of the same name.  Use clear xlim to recover access to the function
+Warning: Newly defined variable ylim shadows a function of the same name.  Use clear ylim to recover access to the function
+Warning: Newly defined variable zlim shadows a function of the same name.  Use clear zlim to recover access to the function
+\end{verbatim}
 
 
 \centerline{\includegraphics[width=8cm]{surf2}}

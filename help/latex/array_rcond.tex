@@ -14,10 +14,21 @@ where \verb|A| is a matrix.
 
 Here is the reciprocal condition number for a random square
 matrix
-@>
+\begin{verbatim}
+--> A = rand(30);
+--> rcond(A)
+
+ans = 
+ 3.5040e-04 
+\end{verbatim}
 And here we calculate the same value using the definition of
 (reciprocal) condition number
-@>
+\begin{verbatim}
+--> 1/(norm(A,1)*norm(inv(A),1))
+
+ans = 
+ 3.5040e-04 
+\end{verbatim}
 Note that the values are very similar.  LAPACKs \verb|rcond|
 function is far more efficient than the explicit calculation
 (which is also used by the \verb|cond| function.

@@ -27,7 +27,10 @@ function wrapcall(fname,varargin)
 \end{verbatim}
 Now we show a call of the \verb|wrapcall| function with a number
 of arguments
-@>
+\begin{verbatim}
+--> wrapcall('printf','%f...%f\n',pi,e)
+3.141593...2.718282
+\end{verbatim}
 A more serious driver routine could, for example, optimize
 a one dimensional function that takes a number of auxilliary
 parameters that are passed through \verb|varargin|.

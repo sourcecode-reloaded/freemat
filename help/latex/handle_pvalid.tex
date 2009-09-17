@@ -15,4 +15,19 @@ property to test for.
 \subsection{Example}
 
 Here we test for some properties on an \verb|axes| object.
-@>
+\begin{verbatim}
+--> pvalid('axes','type')
+
+ans = 
+ 1 
+
+--> pvalid('axes','children')
+
+ans = 
+ 1 
+
+--> pvalid('axes','foobar')
+
+ans = 
+ 0 
+\end{verbatim}
