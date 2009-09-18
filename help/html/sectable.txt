@@ -95,9 +95,11 @@ FreeMat Functions
 Debugging FreeMat Code
 +(debug) DBAUTO Control Dbauto Functionality
 +(debug) DBDELETE Delete a Breakpoint
++(debug) DBDown Move Down One Debug Level
 +(debug) DBLIST List Breakpoints
 +(debug) DBSTEP Step N Statements
 +(debug) DBSTOP
++(debug) DBUP Move Up One Debug Level
 +(debug) FDUMP Dump Information on Function
 Sparse Matrix Support
 +(sparse) EIGS Sparse Matrix Eigendecomposition
