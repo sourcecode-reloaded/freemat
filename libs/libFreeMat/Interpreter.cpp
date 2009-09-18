@@ -644,6 +644,16 @@ void Interpreter::debugDump() {
   context->restoreScope(depth);
 }
 
+//!
+//@Module DBUP Move Up One Debug Level
+//@@Section DEBUG
+//@@Usage
+//The @|dbup| function moves up one level in the debug
+//hierarchy.  The syntax for the @|dbup| function is
+//@[
+// dbup
+//@]
+//!
 void Interpreter::dbup() {
   // The stack should look like -- 
   // base, foo, keyboard, dbup
@@ -677,6 +687,16 @@ void Interpreter::dbup() {
   context->unreserveScope();
 }
 
+//!
+//@Module DBDown Move Down One Debug Level
+//@@Section DEBUG
+//@@Usage
+//The @|dbdown| function moves up one level in the debug
+//hierarchy.  The syntax for the @|dbdown| function is
+//@[
+// dbdown
+//@]
+//!
 void Interpreter::dbdown() {
   // Save the one for the "dbdown" command
   // Save the one for the "keyboard" command that we are currently in
