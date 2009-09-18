@@ -1,4 +1,4 @@
-\section{POWER Matrix Power Operator}
+\section{MATRIXPOWER Matrix Power Operator}
 
 \subsection{Usage}
 
@@ -40,8 +40,31 @@ Then \verb|a| raised to the power \verb|b| is defined as
 \subsection{Examples}
 
 We first define a simple \verb|2 x 2| symmetric matrix
-@>
+\begin{verbatim}
+--> A = 1.5
+
+A = 
+    1.5000 
+
+--> B = [1,.2;.2,1]
+
+B = 
+    1.0000    0.2000 
+    0.2000    1.0000 
+\end{verbatim}
 First, we raise \verb|B| to the (scalar power) \verb|A|:
-@>
+\begin{verbatim}
+--> C = B^A
+
+C = 
+    1.0150    0.2995 
+    0.2995    1.0150 
+\end{verbatim}
 Next, we raise \verb|A| to the matrix power \verb|B|:
-@>
+\begin{verbatim}
+--> C = A^B
+
+C = 
+    1.5049    0.1218 
+    0.1218    1.5049 
+\end{verbatim}
