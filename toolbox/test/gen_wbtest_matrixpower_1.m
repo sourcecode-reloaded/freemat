@@ -1,4 +1,4 @@
-function gen_wbtest_power_1(verbose)
+function gen_wbtest_matrixpower_1(verbose)
   load reference/wbinputs.mat
   n_ = numel(wbinputs);
   error_refs = zeros(n_,n_);
@@ -18,5 +18,5 @@ function gen_wbtest_power_1(verbose)
       end
     end
   end
-  save reference/wbtest_power_1_ref.mat error_refs  y1_refs 
+  save reference/wbtest_matrixpower_1_ref.mat error_refs  y1_refs 
 end

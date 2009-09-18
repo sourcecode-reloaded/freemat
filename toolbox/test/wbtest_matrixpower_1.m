@@ -1,6 +1,6 @@
-function test_val = wbtest_power_1(verbose)
+function test_val = wbtest_matrixpower_1(verbose)
   load reference/wbinputs.mat
-  load reference/wbtest_power_1_ref.mat
+  load reference/wbtest_matrixpower_1_ref.mat
   fail_count = 0;
   for loopi=1:numel(wbinputs)
     for loopj=1:numel(wbinputs)
