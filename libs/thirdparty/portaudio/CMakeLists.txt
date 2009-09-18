@@ -25,6 +25,7 @@ IF (MSVC)
    ADD_DEFINITIONS(-DPA_USE_WDMKSDEVICE_INFO)
    ADD_DEFINITIONS( -DPA_NO_ASIO )
    ADD_DEFINITIONS( -DPA_NO_DS )
+   ADD_DEFINITIONS( -DPA_NO_WASAPI )
 
 
    INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src/os/win)
@@ -40,7 +41,7 @@ IF (MSVC)
    ${CMAKE_CURRENT_SOURCE_DIR}/src/common/pa_stream.c
    ${CMAKE_CURRENT_SOURCE_DIR}/src/common/pa_trace.c
    ${CMAKE_CURRENT_SOURCE_DIR}/src/hostapi/wmme/pa_win_wmme.c
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/hostapi/wasapi/pa_win_wasapi.cpp
+   #${CMAKE_CURRENT_SOURCE_DIR}/src/hostapi/wasapi/pa_win_wasapi.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/os/win/pa_win_hostapis.c
    ${CMAKE_CURRENT_SOURCE_DIR}/src/os/win/pa_win_util.c
    ${CMAKE_CURRENT_SOURCE_DIR}/src/os/win/pa_win_waveformat.c
