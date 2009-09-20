@@ -44,8 +44,9 @@ DebugWin::DebugWin(QWidget *parent) : QDockWidget("Debug",parent) {
 void DebugWin::addString(const QString &t) {
   QStringList list = t.split(QRegExp("\\n"));
   for (int i=0;i<list.size();i++)
-    if (list[i].size() > 0)
-      m_list->addItem(list[i]);
+    if (list[i].size() > 0) {
+      m_list->addItem(list[i].replace('\r',""));
+    }
   m_list->scrollToBottom();
   while (m_list->count() > 10000)
     delete m_list->takeItem(0);
