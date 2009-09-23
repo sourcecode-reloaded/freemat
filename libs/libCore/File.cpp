@@ -842,16 +842,17 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg );
 //@@Usage
 //Reads values from a file.  The general syntax for its use is
 //@[
-//  [a1,...,an] = fscanf(handle,format)
+//  [a,count] = fscanf(handle,format,[size])
 //@]
 //Here @|format| is the format string, which is a string that
-//controls the format of the input.  Each value that is parsed from
-//the file described by @|handle| occupies one output slot.
+//controls the format of the input, @|size| specifies the amount of data to be read. Values that are parsed
+//from the @|text| are stored in a. Note that fscanf is vectorized - the format string is reused as long as
+//there are entries in the @|text| string.
 //See @|printf| for a description of the format.  Note that if
 //the file is at the end-of-file, the fscanf will return 
 //@@Signature
 //function fscanf FscanfFunction
-//inputs handle format
+//inputs varargin
 //outputs varargout
 //!
 ArrayVector FscanfFunction(int nargout, const ArrayVector& arg) {

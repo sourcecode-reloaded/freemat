@@ -403,7 +403,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("feof",FeofFunction,1,1,"handle",NULL);
   context->addFunction("fseek",FseekFunction,3,0,"handle","offset","style",NULL);
   context->addFunction("fgetline",FgetlineFunction,1,1,"handle",NULL);
-  context->addFunction("fscanf",FscanfFunction,2,-1,"handle","format",NULL);
+  context->addFunction("fscanf",FscanfFunction,-1,-1,NULL);
   context->addFunction("find",FindFunction,3,3,"x","keep","flag",NULL);
   context->addFunction("floor",FloorFunction,1,1,"x",NULL);
   context->addFunction("fix",FixFunction,1,1,"x",NULL);

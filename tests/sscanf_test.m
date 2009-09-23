@@ -42,8 +42,10 @@ else
             [a b c d] = sscanf(s{k}{1},s{k}{2},s{k}{3});
         end
         try
-            if any(any(a~=ra{k})) %|| any(b~=rb{k}) ||  any(c~=rc{k}) || any(d~=rd{k}) %
+            if any(any(a~=ra{k})) || any(b~=rb{k}) ||  any(c~=rc{k}) || any(d~=rd{k}) %
                 sprintf('Mismatch in %d: %s %s\n', k, s{k}{1},s{k}{2})
+                {a b c d}
+                {ra{k} rb{k} rc{k} rd{k}}
             end
         catch
             sprintf('Error in %d: %s %s\n', k, s{k}{1},s{k}{2})
