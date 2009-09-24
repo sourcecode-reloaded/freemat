@@ -482,3 +482,8 @@ zunmqr.c
 zunmr3.c
 zunmrz.c
 )
+
+IF( CMAKE_COMPILER_IS_GNUCC)
+#workaround for gcc/lapack bug - optimizations mess with code that determines floating point precision
+	SET_SOURCE_FILES_PROPERTIES( dlamch.c slamch.c PROPERTIES COMPILE_FLAGS "-ffloat-store" )
+ENDIF( CMAKE_COMPILER_IS_GNUCC)
