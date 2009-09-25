@@ -486,4 +486,9 @@ zunmrz.c
 IF( CMAKE_COMPILER_IS_GNUCC)
 #workaround for gcc/lapack bug - optimizations mess with code that determines floating point precision
 	SET_SOURCE_FILES_PROPERTIES( dlamch.c slamch.c PROPERTIES COMPILE_FLAGS "-ffloat-store" )
+	IF( NOT MSVC )
+		MESSAGE("Compiler optimization may lead to broken Lapack build. 
+		If release build produces incorrect results (e.g. svd(rand(4)) is all NaN) 
+		you should to disable optimization when compiling dlamch.c and slamch.c ")
+	ENDIF( NOT MSVC )
 ENDIF( CMAKE_COMPILER_IS_GNUCC)
