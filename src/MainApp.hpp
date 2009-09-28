@@ -58,8 +58,8 @@ public:
   void UpdatePaths();
   void UpdateBasePath(QString rootpath);
   void SetRootPath(QString path, Interpreter* eval);
-  void ControlProfiler(bool enableflag);
   bool debugwin;
+  void EnableProfiler( bool bEnable );
 public slots:
   int Run();
   void OpenFile();
@@ -78,9 +78,11 @@ public slots:
   void CollectProfileSample();
   void RefreshFigures();
   void showFileAtLine(QString fileName, int lineNumber);
+  void ControlProfiler(bool enableflag);
 signals:
   void Shutdown();
   void Initialize();
+  void SetEnable( bool );
 };
 
 #endif

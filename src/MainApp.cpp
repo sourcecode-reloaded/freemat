@@ -987,9 +987,9 @@ ArrayVector ProfilerFunction(int nargout, const ArrayVector& arg) {
       throw Exception("second argument to profile function must be either on/off/list");
     QString txt = arg[0].asString().toUpper();
     if (txt == "ON")
-      m_app->ControlProfiler(true);
+      m_app->EnableProfiler(true);
     else if (txt == "OFF")
-      m_app->ControlProfiler(false);
+      m_app->EnableProfiler(false);
     else if (txt == "DUMP")
       DumpProfileDB();
 //     else if (txt == "LIST") {
@@ -1238,11 +1238,17 @@ void MainApp::CollectProfileSample() {
   QString ip_name = m_eval->sampleInstructionPointer(linenumber);
   if ((linenumber != 0) || (ip_name != "CLI")) {
     ProfileVector &p(m_profileDB[ip_name]);
-    if (p.size() < linenumber) p.resize(linenumber+1);
+    if (p.size() <= linenumber) 
+	p.resize(linenumber+1);
     p[linenumber]++;
   }
   // Register this as a data sample
   //  profileDB[ip_name][linenumber]++;
+}
+
+void MainApp::EnableProfiler( bool bEnable )
+{
+    emit SetEnable( bEnable );
 }
 
 void MainApp::ControlProfiler(bool enableflag) {
@@ -1280,6 +1286,8 @@ int MainApp::Run() {
   // Start out with a sampling frequency of 1/100 sec
   profilerTimer->setInterval(10); 
   connect(profilerTimer,SIGNAL(timeout()),this,SLOT(CollectProfileSample()));
+  connect( this, SIGNAL( SetEnable( bool ) ), this, SLOT( ControlProfiler( bool ) ) );
+
   refreshTimer = new QTimer(this);
   refreshTimer->setSingleShot(false);
   refreshTimer->setInterval(50);
