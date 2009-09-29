@@ -33,6 +33,7 @@
 #include "Array.hpp"
 #include "Exception.hpp"
 #include "DebugStream.hpp"
+#include "Interpreter.hpp"
 
 #ifdef DYN_BLAS
 
@@ -55,7 +56,9 @@ void BlasWrapper::Init( void )
 	InitFunctions();
 	DiscoverBlasLibrary();
 	if( libList.empty() ) return;
-	LoadLib( *(libList.begin()) );
+	QSettings settings("FreeMat",Interpreter::getVersionString());
+	if (!LoadLibByName(settings.value("interpreter/blas","").toString().toStdString()))
+	  LoadLib( *(libList.begin()) );
 }
 
 std::string BlasWrapper::ComputerType( void )
@@ -91,12 +94,14 @@ void BlasWrapper::ListLibraries( std::string& msg )
 
 	msg.clear();
 	while( it != libList.end() ){
-		msg.append( it->Name.toStdString() + "\t-\t" + it->desc.toStdString() + "\n" );
-		++it;
+	  if (it->Name == currentLib.Name)
+	    msg.append("*");
+	  msg.append( it->Name.toStdString() + "\t-\t" + it->desc.toStdString() + "\n" );
+	  ++it;
 	}
 }
 
-bool BlasWrapper::LoadLibByName( const std::string& name, std::string& msg )
+bool BlasWrapper::LoadLibByName( const std::string& name )
 {
 	std::list<LibConf>::iterator it = libList.begin();
 	while( it != libList.end() ){
@@ -118,6 +123,8 @@ void BlasWrapper::LoadLib( const LibConf& libConf )
 	blasLib->setFileName( currentLib.fileName );
 	if( !blasLib->load() ) return;
 	useReference = false;
+	QSettings settings("FreeMat",Interpreter::getVersionString());
+	settings.setValue("interpreter/blas",libConf.Name);
 }
 
 void BlasWrapper::DiscoverBlasLibrary( void )

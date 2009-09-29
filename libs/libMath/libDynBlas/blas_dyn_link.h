@@ -51,7 +51,7 @@ public:
     BlasWrapper();
     ~BlasWrapper() { if(blasLib && blasLib->isLoaded()) blasLib->unload(); delete blasLib; blasLib = NULL;};
     void Init( void );
-    bool LoadLibByName( const std::string& name, std::string& msg );
+    bool LoadLibByName( const std::string& name);
     void* Resolve( const char* function_name, void (*default_fcn) () );
     void ListLibraries( std::string& msg );
 

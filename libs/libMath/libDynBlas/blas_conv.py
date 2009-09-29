@@ -61,14 +61,18 @@ fout.write('}\n\n')
 i = 0
 for fn in fns:
     fdecl = fn.return_type + ' ' + fn.function_name + '_' + fn.parameter_string + '\n{\n'
-    fdecl = fdecl + '\tif( !wrapper.fn['+ str(i) + '] )\n'
-    fdecl = fdecl + '\t\twrapper.fn['+ str(i) + '] = wrapper.Resolve(\"' + fn.function_name + '\",(void (*)()) REF_' + fn.function_name + '_);\n'
-    if fn.return_type != 'void':
-       fdecl = fdecl+ '\treturn '
+    if ((fn.function_name != 'zdotu') and (fn.function_name != 'zdotc') and \
+            (fn.function_name != 'cdotu') and (fn.function_name != 'cdotc')):
+        fdecl = fdecl + '\tif( !wrapper.fn['+ str(i) + '] )\n'
+        fdecl = fdecl + '\t\twrapper.fn['+ str(i) + '] = wrapper.Resolve(\"' + fn.function_name + '\",(void (*)()) REF_' + fn.function_name + '_);\n'
+        if fn.return_type != 'void':
+            fdecl = fdecl+ '\treturn '
+        else:
+            fdecl = fdecl+ '\t'
+        fdecl = fdecl + \
+                '(* reinterpret_cast<p_'+fn.function_name+'>(wrapper.fn[' + str(i) + ']))' + fn.call_params +';\n'
     else:
-       fdecl = fdecl+ '\t'
-    fdecl = fdecl + \
-    '(* reinterpret_cast<p_'+fn.function_name+'>(wrapper.fn[' + str(i) + ']))' + fn.call_params +';\n'
+        fdecl = fdecl + '\tREF_' + fn.function_name + '_' + fn.call_params  + ';';
     fout.write(fdecl+'\n}\n\n')
     i=i+1
 nblasfns = i    

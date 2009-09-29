@@ -1,7 +1,7 @@
 extern void CAXPY(int *n, complex *alpha, complex *x, int *incx, complex *y, int *incy);
 extern void CCOPY(int *n, complex *x, int *incx, complex *y, int *incy);
-extern complex CDOTC(complex *ret_val, int *n, complex *x, int *incx, complex *y, int *incy);
-extern complex CDOTU(complex *ret_val, int *n, complex *x, int *incx, complex *y, int *incy);
+extern void CDOTC(int *n, complex *x, int *incx, complex *y, int *incy, complex *ret_val);
+extern void CDOTU(int *n, complex *x, int *incx, complex *y, int *incy, complex *ret_val);
 extern void CGBMV(char *trans, int *m, int *n, int *kl, int *ku, complex *alpha, complex *a, int *lda, complex *x, int *incx, complex *beta, complex *y, int *incy, int trans_len);
 extern void CGEMM(char *transa, char *transb, int *m, int *n, int *k, complex *alpha, complex *a, int *lda, complex *b, int *ldb, complex *beta, complex *c, int *ldc, int transa_len, int transb_len);
 extern void CGEMV(char *trans, int *m, int *n, complex *alpha, complex *a, int *lda, complex *x, int *incx, complex *beta, complex *y, int *incy, int trans_len);
@@ -105,8 +105,8 @@ extern void STRSM(char *side, char *uplo, char *transa, char *diag, int *m, int 
 extern void STRSV(char *uplo, char *trans, char *diag, int *n, float *a, int *lda, float *x, int *incx, int uplo_len, int trans_len, int diag_len);
 extern void ZAXPY(int *n, doublecomplex *alpha, doublecomplex *x, int *incx, doublecomplex *y, int *incy);
 extern void ZCOPY(int *n, doublecomplex *x, int *incx, doublecomplex *y, int *incy);
-extern doublecomplex ZDOTC(doublecomplex *ret_val, int *n, doublecomplex *x, int *incx, doublecomplex *y, int *incy);
-extern doublecomplex ZDOTU(doublecomplex *ret_val, int *n, doublecomplex *x, int *incx, doublecomplex *y, int *incy);
+extern void ZDOTC(int *n, doublecomplex *x, int *incx, doublecomplex *y, int *incy, doublecomplex *ret_val);
+extern void ZDOTU(int *n, doublecomplex *x, int *incx, doublecomplex *y, int *incy, doublecomplex *ret_val);
 extern void ZDSCAL(int *n, double *alpha, doublecomplex *x, int *incx);
 extern void ZGBMV(char *trans, int *m, int *n, int *kl, int *ku, doublecomplex *alpha, doublecomplex *a, int *lda, doublecomplex *x, int *incx, doublecomplex *beta, doublecomplex *y, int *incy, int trans_len);
 extern void ZGEMM(char *transa, char *transb, int *m, int *n, int *k, doublecomplex *alpha, doublecomplex *a, int *lda, doublecomplex *b, int *ldb, doublecomplex *beta, doublecomplex *c, int *ldc, int transa_len, int transb_len);
