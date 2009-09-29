@@ -518,11 +518,10 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
 }
   
 //!
-//@Module BLASLIB Control Profiling
+//@Module BLASLIB Select BLAS library
 //@@Section FREEMAT
 //@@Usage
-//The @|blaslib| function allows you to select the FreeMat blas library, 
-//when dynamic linking is enabled.
+//The @|blaslib| function allows you to select the FreeMat blas library.
 //It has two modes of operation.  The first is to select blas library:
 //@[
 //  blaslib LIB_NAME
@@ -532,6 +531,9 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
 //@[
 //   blaslib
 //@]
+//the returned list of libraries will include an asterix next to the library
+//currently selected.  If no library is selected, FreeMat will use its internal
+//(reference) BLAS implementation, which is slow, but portable.
 //@@Signature
 //function blaslib BlaslibFunction
 //inputs varargin
@@ -540,26 +542,25 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
 #ifdef DYN_BLAS
 #include "blas_dyn_link.h"
 ArrayVector BlaslibFunction(int nargout, const ArrayVector& arg) {
-extern BlasWrapper wrapper;
-if (arg.size() < 1) {
-ArrayVector liblist;
-std::string list;
-wrapper.ListLibraries( list );
-return ArrayVector(Array(QString(list.c_str())));
-} else {
-if (!arg[0].isString())
-throw Exception("argument to blaslib function must be a string");
-QString txt = arg[0].asString();
-std::string msg;
-if( !wrapper.LoadLibByName( txt.toStdString(), msg ) ){
-throw Exception("Library by this name does not exist.");
-}
-}
-return ArrayVector();
+  extern BlasWrapper wrapper;
+  if (arg.size() < 1) {
+    ArrayVector liblist;
+    std::string list;
+    wrapper.ListLibraries( list );
+    return ArrayVector(Array(QString(list.c_str())));
+  } else {
+    if (!arg[0].isString())
+      throw Exception("argument to blaslib function must be a string");
+    QString txt = arg[0].asString();
+    if( !wrapper.LoadLibByName( txt.toStdString()) ){
+      throw Exception("Library by this name does not exist.");
+    }
+  }
+  return ArrayVector();
 }
 #else
 ArrayVector BlaslibFunction(int nargout, const ArrayVector& arg) {
-throw Exception("BLAS library is loaded statically.");
+  throw Exception("BLAS library is loaded statically.");
 return ArrayVector();
 }
 #endif
