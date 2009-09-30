@@ -37,6 +37,7 @@
 #include "DebugWin.hpp"
 #include "DebugStream.hpp"
 #include "Platform.hpp"
+#include "MemPtr.hpp"
 
 HandleList<Interpreter*> m_threadHandles;
 
@@ -944,6 +945,15 @@ static void DumpProfileDB() {
   }
 }
 
+class SampleList{
+public:
+    QString module;
+    int line;
+    int samples;
+    SampleList( const QString& module_, int line_, int samples_ ) : module( module_ ), line( line_ ), samples( samples_ ){};
+    static bool CompSample( SampleList p1, SampleList p2 ){ return p1.samples > p2.samples; }
+};
+
 //!
 //@Module PROFILER Control Profiling
 //@@Section FREEMAT
@@ -963,20 +973,19 @@ static void DumpProfileDB() {
 //are not profiled.  To see information that has accumulated in a
 //profile, you use the variant of the command:
 //@[
-//  profiler list symbol1 symbol2 ...
+//  profiler list
 //@]
-//where @|symbol1|, @|symbol2| are the functions or scripts on which
-//profiling information is desired.  If you want to see current profile
+//which lists current sorted profiling resuls  If you want to see current profile
 //status issue a @|profile| command with no arguments.
 //@[
 //   profiler
 //@]
 //@@Signature
-//function profiler ProfilerFunction
+//sfunction profiler ProfilerFunction
 //inputs varargin
 //outputs none
 //!
-ArrayVector ProfilerFunction(int nargout, const ArrayVector& arg) {
+ArrayVector ProfilerFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   if (arg.size() < 1) {
     if (m_profiler_active)
       return ArrayVector(Array(QString("on")));
@@ -992,52 +1001,26 @@ ArrayVector ProfilerFunction(int nargout, const ArrayVector& arg) {
       m_app->EnableProfiler(false);
     else if (txt == "DUMP")
       DumpProfileDB();
-//     else if (txt == "LIST") {
-//       for (int i=1;i<arg.size();i++) {
-// 	string symbol = arg[i].getContentsAsString();
-// 	FuncPtr val;
-// 	if (!eval->lookupFunction(symbol,val))
-// 	  eval->warningMessage("Unable to resolve " + symbol + " to a function/script");
-// 	else if (val->type() != FM_M_FUNCTION)
-// 	  eval->warningMessage("Function " + symbol + "  is not an M function");
-// 	else {
-// 	  MFunctionDef *ptr = (MFunctionDef*)val;
-// 	  string filename = ptr->fileName;
-// 	  // Read the file
-// 	  QFile f(QString::fromStdString(filename));
-// 	  if (!f.open(QIODevice::ReadOnly)) {
-// 	    eval->warningMessage("Unable to read file " + filename);
-// 	    return ArrayVector();
-// 	  }	    
-// 	  QTextStream str(&f);
-// 	  QString filetext(str.readAll());
-// 	  QStringList lines(filetext.split("\n"));
-// 	  // Allocate the timing vector
-// 	  MemBlock<double> timeBlock(lines.size()+1);
-// 	  double *tblock = &timeBlock;
-// 	  MemBlock<double> pctBlock(lines.size()+1);
-// 	  double *pctblock = &pctBlock;
-// 	  double accum = 0;
-// 	  for (int k=0;k<lines.size()+1;k++)
-// 	    accum += tblock[k];
-// 	  accum++;
-// 	  for (int k=0;k<lines.size()+1;k++)
-// 	    pctblock[k] = tblock[k]/accum*100.0;
-// 	  // Look for all functions
-// 	  StringVector localfuncs = eval->getContext()->getCompletions(symbol);
-// 	  for (int k=0;k<localfuncs.size();k++)
-// 	    DumpFunctionProfileData(eval,localfuncs[k],tblock);
-// 	  eval->outputMessage("Profile information for " + symbol + " (" + filename + ")\n");
-// 	  eval->outputMessage(string("Line Ticks % Code\n"));
-// 	  for (int j=1;j<lines.size()+1;j++) {
-// 	    char msg[1024];
-// 	    sprintf(msg,"%03d %g %f %s\n",j,tblock[j-1],pctblock[j-1],
-// 		    lines[j-1].toStdString().c_str());
-// 	    eval->outputMessage(string(msg));
-// 	  }
-// 	}
-//       }
-//     }
+     else if (txt == "LIST") {
+	 std::vector<SampleList> sl;
+
+	  for (ProfileDB::const_iterator i=m_profileDB.begin();i!=m_profileDB.end();i++) {
+	    const ProfileVector &p(i->second);
+	    for (int j=0;j<p.size();j++) {
+	      if (p[j] > 0)
+		    sl.push_back( SampleList( i->first, j, p[j] ) );
+	    }
+	  }
+	  sort( sl.begin(), sl.end(), SampleList::CompSample );
+
+	  for( std::vector<SampleList>::const_iterator i=sl.begin(); i!=sl.end(); ++i ){
+	      if( i->line == 0 )
+		  eval->outputMessage(QString("%1% %2 (built-in)\n").arg((double)i->samples/m_profiler_ticks*100.,5,'f',3).arg( i->module ));
+	      else
+		  eval->outputMessage(QString("%1% %2:%3\n").arg((double)i->samples/m_profiler_ticks*100.,5,'f',3).arg( i->module ).arg(i->line));
+	  }
+
+     }
   }
   return ArrayVector();
 }

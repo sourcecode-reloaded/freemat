@@ -307,7 +307,7 @@ ArrayVector ThreadWaitFunction(int, const ArrayVector&);
 ArrayVector ThreadKillFunction(int, const ArrayVector&);
 ArrayVector ThreadFreeFunction(int, const ArrayVector&);
 ArrayVector ClcFunction(int, const ArrayVector&);
-ArrayVector ProfilerFunction(int, const ArrayVector&);
+ArrayVector ProfilerFunction(int, const ArrayVector&, Interpreter* );
 ArrayVector RootPathFunction(int, const ArrayVector&, Interpreter*);
 
 
@@ -649,7 +649,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("threadfree",ThreadFreeFunction,2,0,"handle","timeout",NULL);
    if (guiflag)
      context->addGfxFunction("clc",ClcFunction,0,0,NULL);
-  context->addFunction("profiler",ProfilerFunction,-1,0,NULL);
+  context->addSpecialFunction("profiler",ProfilerFunction,-1,0,NULL);
    if (guiflag)
      context->addGfxSpecialFunction("rootpath",RootPathFunction,1,2,"path",NULL);
 }
