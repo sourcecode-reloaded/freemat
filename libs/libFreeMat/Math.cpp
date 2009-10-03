@@ -2287,9 +2287,10 @@ Array RightDivide(const Array& A, const Array& B) {
 //@<
 //C = A^B
 //@>
-//@@Tests
-//@$near#y1=x1^x2#(any(loopi==[2,18,64,50:52])||(any(loopj==[50:52])))
 //!
+// Commented out this test for the 4.0 release (reference file was lost).
+//Tests
+//$near#y1=x1^x2#(any(loopi==[2,18,64,50:52])||(any(loopj==[50:52])))
 
 // Raises Scalar^Matrix
 static Array PowerScalarMatrix(const Array &A, const Array &B) {
