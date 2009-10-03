@@ -53,7 +53,7 @@ if (nargout > 0)
 end
 
 for (i=1:numel(xvec))
-  h = htext('position',[xvec(i),yvec(i),1],'string',labelarray{i},varargin{:});
+  h = htext('position',[xvec(i),yvec(i)],'string',labelarray{i},varargin{:});
   if (nargout > 0)
     handles = [handles,h];
   end
