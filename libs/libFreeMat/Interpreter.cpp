@@ -2882,7 +2882,7 @@ void Interpreter::assign(ArrayReference r, const Tree & s, Array &data) {
 ArrayReference Interpreter::createVariable(QString name) {
   FuncPtr p;
   PopContext saver(context,0);
-  if (context->lookupFunction(name,p))
+  if (context->lookupFunction(name,p) && (name.size() > 1))
     warningMessage("Newly defined variable " + name + " shadows a function of the same name.  Use clear " + name + " to recover access to the function");
   // Are we in a nested scope?
   if (!context->isCurrentScopeNested() || context->variableLocalToCurrentScope(name)) {
