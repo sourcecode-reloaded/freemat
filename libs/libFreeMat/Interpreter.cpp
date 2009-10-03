@@ -68,7 +68,8 @@ QMap<int,JITInfo> m_codesegments;
  * The file system watcher -- watches for changes to the file system
  * Only one interpreter thread should use this watcher at a time.
  */
-QFileSystemWatcher m_watch;
+//QFileSystemWatcher m_watch;
+
 
 #define SaveEndInfo  \
   ArrayReference oldEndRef = endRef; \
@@ -139,8 +140,8 @@ QString Interpreter::getPath() {
 void Interpreter::setLiveUpdateFlag(bool t) {
   m_liveUpdateFlag = t;
   if (t) {
-    connect(&m_watch,SIGNAL(directoryChanged(const QString &)),
- 	    this,SLOT(updateFileTool(const QString &)));
+    //    connect(&m_watch,SIGNAL(directoryChanged(const QString &)),
+    // 	    this,SLOT(updateFileTool(const QString &)));
   }
 }
 
@@ -151,20 +152,20 @@ static bool DirExists(const QString & path) {
 
 void Interpreter::setupWatcher() {
   if (!m_liveUpdateFlag) return;
-  QStringList pathLists(m_watch.directories());
-  if (!pathLists.isEmpty())
-    m_watch.removePaths(pathLists);
-  if (!m_userPath.isEmpty()) {
-    for (int i=0;i<m_userPath.size();i++)
-      if (DirExists(m_userPath[i]))
-	m_watch.addPath(m_userPath[i]);
-  }
-  if (!m_basePath.isEmpty()) {
-    for (int i=0;i<m_basePath.size();i++)
-      if (DirExists(m_basePath[i]))
-	m_watch.addPath(m_basePath[i]);
-  }
-  m_watch.addPath(QDir::currentPath());
+  //  QStringList pathLists(m_watch.directories());
+  //  if (!pathLists.isEmpty())
+  //    m_watch.removePaths(pathLists);
+  //   if (!m_userPath.isEmpty()) {
+  //     for (int i=0;i<m_userPath.size();i++)
+  //       if (DirExists(m_userPath[i]))
+  // 	m_watch.addPath(m_userPath[i]);
+  //   }
+  //   if (!m_basePath.isEmpty()) {
+  //     for (int i=0;i<m_basePath.size();i++)
+  //       if (DirExists(m_basePath[i]))
+  // 	m_watch.addPath(m_basePath[i]);
+  //   }
+  //   m_watch.addPath(QDir::currentPath());
 }
 
 void Interpreter::changeDir(QString path) {
