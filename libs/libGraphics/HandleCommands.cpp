@@ -171,8 +171,8 @@ static void DoDrawNow() {
   if (in_DoDrawNow) return;
   in_DoDrawNow = true;
   while (AnyDirty())
-    qApp->processEvents();
-  in_DoDrawNow = false;
+    qApp->processEvents(QEventLoop::AllEvents, 50);
+  while (AnyDirty())  in_DoDrawNow = false;
 }
 
 //!
