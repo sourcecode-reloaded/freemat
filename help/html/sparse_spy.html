@@ -26,11 +26,7 @@ where <code>colspec</code> is any valid color and symbol spec accepted by <code>
 First, an example of a random sparse matrix.
 <PRE>
 --&gt; y = sprand(1000,1000,.001);
-Warning: Newly defined variable i shadows a function of the same name.  Use clear i to recover access to the function
-Warning: Newly defined variable j shadows a function of the same name.  Use clear j to recover access to the function
 --&gt; spy(y,'ro')
-Warning: Newly defined variable i shadows a function of the same name.  Use clear i to recover access to the function
-Warning: Newly defined variable j shadows a function of the same name.  Use clear j to recover access to the function
 </PRE>
 <P>
 which is shown here
@@ -46,8 +42,6 @@ visualize the structure.
 --&gt; A = sparse(1000,1000);
 --&gt; for i=1:25; A((1:40) + 40*(i-1),(1:40) + 40*(i-1)) = 1; end;
 --&gt; spy(A,'gx')
-Warning: Newly defined variable i shadows a function of the same name.  Use clear i to recover access to the function
-Warning: Newly defined variable j shadows a function of the same name.  Use clear j to recover access to the function
 </PRE>
 <P>
 with the result shown here

@@ -52,7 +52,7 @@ Flow Control
 FreeMat Functions
 +(freemat) ADDPATH Add 
 +(freemat) ASSIGNIN Assign Variable in Workspace
-+(freemat) BLASLIB Control Profiling
++(freemat) BLASLIB Select BLAS library
 +(freemat) BUILTIN Evaulate Builtin Function
 +(freemat) CLC Clear Dislplay
 +(freemat) CLOCK Get Current Time

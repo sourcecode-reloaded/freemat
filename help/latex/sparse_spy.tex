@@ -16,11 +16,7 @@ where \verb|colspec| is any valid color and symbol spec accepted by \verb|plot|.
 First, an example of a random sparse matrix.
 \begin{verbatim}
 --> y = sprand(1000,1000,.001);
-Warning: Newly defined variable i shadows a function of the same name.  Use clear i to recover access to the function
-Warning: Newly defined variable j shadows a function of the same name.  Use clear j to recover access to the function
 --> spy(y,'ro')
-Warning: Newly defined variable i shadows a function of the same name.  Use clear i to recover access to the function
-Warning: Newly defined variable j shadows a function of the same name.  Use clear j to recover access to the function
 \end{verbatim}
 which is shown here
 
@@ -34,8 +30,6 @@ visualize the structure.
 --> A = sparse(1000,1000);
 --> for i=1:25; A((1:40) + 40*(i-1),(1:40) + 40*(i-1)) = 1; end;
 --> spy(A,'gx')
-Warning: Newly defined variable i shadows a function of the same name.  Use clear i to recover access to the function
-Warning: Newly defined variable j shadows a function of the same name.  Use clear j to recover access to the function
 \end{verbatim}
 with the result shown here
 

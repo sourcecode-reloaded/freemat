@@ -2,17 +2,16 @@
 
 <HTML>
 <HEAD>
-<TITLE>BLASLIB Control Profiling
+<TITLE>BLASLIB Select BLAS library
 </TITLE>
 </HEAD>
 <BODY>
-<H2>BLASLIB Control Profiling
+<H2>BLASLIB Select BLAS library
 </H2>
 <P>
 Section: <A HREF=sec_freemat.html> FreeMat Functions </A>
 <H3>Usage</H3>
-The <code>blaslib</code> function allows you to select the FreeMat blas library, 
-when dynamic linking is enabled.
+The <code>blaslib</code> function allows you to select the FreeMat blas library.
 It has two modes of operation.  The first is to select blas library:
 <PRE>
   blaslib LIB_NAME
@@ -24,5 +23,8 @@ issue a <code>blaslib</code> command with no arguments.
    blaslib
 </PRE>
 <P>
+the returned list of libraries will include an asterix next to the library
+currently selected.  If no library is selected, FreeMat will use its internal
+(reference) BLAS implementation, which is slow, but portable.
 </BODY>
 </HTML>

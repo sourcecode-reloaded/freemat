@@ -34,13 +34,6 @@ to control the parameters of the generated text labels.  See the
 --&gt; z = x.*exp(-(x.^2+y.^2));
 --&gt; h = contour(z);
 --&gt; clabel(h,'backgroundcolor',[1,1,.6],'edgecolor',[.7,.7,.7]);
-In /home/basu/dev/branches/FreeMat4/src/toolbox/graph/text.m(text) at line 72
-    In /home/basu/dev/branches/FreeMat4/src/toolbox/graph/clabel.m(clabel) at line 71
-    In scratch() at line 1
-    In base(base)
-    In base()
-    In global()
-Error: Got error Expect a vector of length 3, got a vector of length 2 for property position
 </PRE>
 <P>
 which results in
@@ -53,13 +46,6 @@ Alternately, we can just label a subset of the contours
 <PRE>
 --&gt; h = contour(z);
 --&gt; clabel(h,[-.2,0,.3]);
-In /home/basu/dev/branches/FreeMat4/src/toolbox/graph/text.m(text) at line 72
-    In /home/basu/dev/branches/FreeMat4/src/toolbox/graph/clabel.m(clabel) at line 71
-    In scratch() at line 1
-    In base(base)
-    In base()
-    In global()
-Error: Got error Expect a vector of length 3, got a vector of length 2 for property position
 </PRE>
 <P>
 which results in

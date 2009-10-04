@@ -146,14 +146,15 @@ void HPVector::Set(Array num) {
 }
   
 void HPFixedVector::Set(Array num) {
-  if (num.length() != m_len)
-    throw Exception(QString("Expect a vector of length %1, got a vector of length %2").arg(m_len).arg(num.length()));
   HandleProperty::Set(num);
   num = num.asDenseArray().toClass(Double);
   const double *dp = num.constReal<double>().constData();
   data.clear();
-  for (int i=0;i<qMin(m_len,int(num.length()));i++)
+  int m = qMin(m_len,int(num.length()));
+  for (int i=0;i<m;i++)
     data.push_back(dp[i]);
+  for (int i=m;i<m_len;i++)
+    data.push_back(0);
 }
 
 double& HPVector::At(int ndx) {

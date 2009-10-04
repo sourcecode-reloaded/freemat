@@ -34,8 +34,6 @@ x =
  1 0 0 
 
 --> y = sprandn(x)
-Warning: Newly defined variable i shadows a function of the same name.  Use clear i to recover access to the function
-Warning: Newly defined variable j shadows a function of the same name.  Use clear j to recover access to the function
 
 y = 
  1 1 0.770419
@@ -52,8 +50,6 @@ The more generic version with a density of \verb|0.001|.  On many systems the
 following is impossible using full matrices
 \begin{verbatim}
 --> y = sprandn(10000,10000,.001);
-Warning: Newly defined variable i shadows a function of the same name.  Use clear i to recover access to the function
-Warning: Newly defined variable j shadows a function of the same name.  Use clear j to recover access to the function
 --> nnz(y)/10000^2
 
 ans = 

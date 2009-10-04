@@ -1,9 +1,8 @@
-BLASLIB BLASLIB Control Profiling
+BLASLIB BLASLIB Select BLAS library
 
 Usage
 
-The blaslib function allows you to select the FreeMat blas library, 
-when dynamic linking is enabled.
+The blaslib function allows you to select the FreeMat blas library.
 It has two modes of operation.  The first is to select blas library:
 
   blaslib LIB_NAME
@@ -13,3 +12,6 @@ issue a blaslib command with no arguments.
 
    blaslib
 
+the returned list of libraries will include an asterix next to the library
+currently selected.  If no library is selected, FreeMat will use its internal
+(reference) BLAS implementation, which is slow, but portable.

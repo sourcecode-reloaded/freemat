@@ -1,9 +1,8 @@
-\section{BLASLIB Control Profiling}
+\section{BLASLIB Select BLAS library}
 
 \subsection{Usage}
 
-The \verb|blaslib| function allows you to select the FreeMat blas library, 
-when dynamic linking is enabled.
+The \verb|blaslib| function allows you to select the FreeMat blas library.
 It has two modes of operation.  The first is to select blas library:
 \begin{verbatim}
   blaslib LIB_NAME
@@ -13,3 +12,6 @@ issue a \verb|blaslib| command with no arguments.
 \begin{verbatim}
    blaslib
 \end{verbatim}
+the returned list of libraries will include an asterix next to the library
+currently selected.  If no library is selected, FreeMat will use its internal
+(reference) BLAS implementation, which is slow, but portable.
