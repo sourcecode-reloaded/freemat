@@ -939,7 +939,7 @@ bool PrintBaseFigure(HandleWindow* g, QString filename,
   GfxEnableRepaint();
   h->UpdateState();
   while (h->isDirty())
-    qApp->processEvents();
+    qApp->processEvents(QEventLoop::AllEvents, 50);
   if ((type == "PDF") || (type == "PS") || (type == "EPS")){
     QPrinter prnt;
     if (type == "PDF")
@@ -969,7 +969,7 @@ bool PrintBaseFigure(HandleWindow* g, QString filename,
   h->SetThreeVectorDefault("color",cr,cg,cb);
   h->markDirty();
   while (h->isDirty())
-    qApp->processEvents();
+    qApp->processEvents(QEventLoop::AllEvents, 50);
   if( !bRepaintFlag )
     GfxDisableRepaint();
   return retval;
