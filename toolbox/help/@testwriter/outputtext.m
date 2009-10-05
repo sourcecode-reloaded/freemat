@@ -49,8 +49,9 @@ function outputtext(&p,text)
     error(sprintf('unable to open %s for output',filename));
   end
   fprintf(fp,'function test_val = %s(verbose)\n',funcname);
-  fprintf(fp,'  load reference/wbinputs.mat\n');
-  fprintf(fp,'  load reference/%s_ref.mat\n',funcname);
+  fprintf(fp,'  myloc=fileparts(which(''%s''));\n',funcname);
+  fprintf(fp,'  load([myloc,dirsep,''reference'',dirsep,''wbinputs.mat''])\n');
+  fprintf(fp,'  load([myloc,dirsep,''reference'',dirsep,''%s_ref.mat''])\n',funcname);
   fprintf(fp,'  fail_count = 0;\n');
   if (in_count == 0)
     fprintf(fp,'  error_flag = 0;\n');
@@ -130,7 +131,8 @@ function outputtext(&p,text)
     error(sprintf('unable to open %s for output',filename));
   end
   fprintf(fp,'function gen_%s(verbose)\n',funcname);
-  fprintf(fp,'  load reference/wbinputs.mat\n');
+  fprintf(fp,'  myloc=fileparts(which(''%s''));\n',funcname);
+  fprintf(fp,'  load([myloc,dirsep,''reference'',dirsep,''wbinputs.mat''])\n');
   if (in_count == 0)
     fprintf(fp,'  error_refs = 0;\n');
     for k=1:out_count

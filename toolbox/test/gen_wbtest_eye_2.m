@@ -1,5 +1,6 @@
 function gen_wbtest_eye_2(verbose)
-  load reference/wbinputs.mat
+  myloc=fileparts(which('wbtest_eye_2'));
+  load([myloc,dirsep,'reference',dirsep,'wbinputs.mat'])
   error_refs = 0;
   y1 = []; y1_refs = {};
   try

@@ -1,5 +1,6 @@
 function gen_wbtest_rcond_1(verbose)
-  load reference/wbinputs.mat
+  myloc=fileparts(which('wbtest_rcond_1'));
+  load([myloc,dirsep,'reference',dirsep,'wbinputs.mat'])
   n_ = numel(wbinputs);
   error_refs = zeros(n_,1);
   y1_refs = cell(n_,1);

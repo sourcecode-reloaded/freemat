@@ -1,5 +1,6 @@
 function gen_wbtest_pi_1(verbose)
-  load reference/wbinputs.mat
+  myloc=fileparts(which('wbtest_pi_1'));
+  load([myloc,dirsep,'reference',dirsep,'wbinputs.mat'])
   error_refs = 0;
   y1 = []; y1_refs = {};
   try

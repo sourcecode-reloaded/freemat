@@ -1,6 +1,7 @@
 function test_val = wbtest_strfind_2(verbose)
-  load reference/wbinputs.mat
-  load reference/wbtest_strfind_2_ref.mat
+  myloc=fileparts(which('wbtest_strfind_2'));
+  load([myloc,dirsep,'reference',dirsep,'wbinputs.mat'])
+  load([myloc,dirsep,'reference',dirsep,'wbtest_strfind_2_ref.mat'])
   fail_count = 0;
   for loopi=1:numel(wbinputs)
     x1 = wbinputs{loopi};

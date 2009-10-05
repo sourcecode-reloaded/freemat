@@ -1,9 +1,10 @@
 function gen_wbtest_csvread_1(verbose)
-  load reference/wbinputs.mat
+  myloc=fileparts(which('wbtest_csvread_1'));
+  load([myloc,dirsep,'reference',dirsep,'wbinputs.mat'])
   error_refs = 0;
   y1 = []; y1_refs = {};
   try
-    y1=csvread('sample_data.csv');
+    fn=[fileparts(which('wbtest_csvread_1')),dirsep,'sample_data.csv'];y1=csvread(fn);
   catch
     error_refs = 1;
   end

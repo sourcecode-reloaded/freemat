@@ -1,5 +1,6 @@
 function gen_wbtest_sort_3(verbose)
-  load reference/wbinputs.mat
+  myloc=fileparts(which('wbtest_sort_3'));
+  load([myloc,dirsep,'reference',dirsep,'wbinputs.mat'])
   n_ = numel(wbinputs);
   error_refs = zeros(n_,1);
   y1_refs = cell(n_,1);

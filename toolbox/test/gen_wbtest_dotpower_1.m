@@ -1,5 +1,6 @@
 function gen_wbtest_dotpower_1(verbose)
-  load reference/wbinputs.mat
+  myloc=fileparts(which('wbtest_dotpower_1'));
+  load([myloc,dirsep,'reference',dirsep,'wbinputs.mat'])
   n_ = numel(wbinputs);
   error_refs = zeros(n_,n_);
   for loopi=1:n_

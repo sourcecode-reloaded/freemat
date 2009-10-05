@@ -4,7 +4,7 @@
 
 function writeindex(&p)
   secnames = fieldnames(p.section_descriptors);
-  fp = fopen(sprintf('%s/help/latex/FreeMat%s.tex',p.sourcepath,version),'w');
+  fp = fopen(sprintf('%s/help/latex/FreeMat-%s.tex',p.sourcepath,version),'w');
   fprintf(fp,'\\documentclass{book}\n');
   fprintf(fp,'\\usepackage{graphicx}\n');
   fprintf(fp,'\\usepackage{amsmath}\n');

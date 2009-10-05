@@ -1,6 +1,7 @@
 function test_val = wbtest_typerules_2(verbose)
-  load reference/wbinputs.mat
-  load reference/wbtest_typerules_2_ref.mat
+  myloc=fileparts(which('wbtest_typerules_2'));
+  load([myloc,dirsep,'reference',dirsep,'wbinputs.mat'])
+  load([myloc,dirsep,'reference',dirsep,'wbtest_typerules_2_ref.mat'])
   fail_count = 0;
   error_flag = 0;
   y1 = [];

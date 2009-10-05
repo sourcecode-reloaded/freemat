@@ -1,6 +1,7 @@
 function test_val = wbtest_typeof_1(verbose)
-  load reference/wbinputs.mat
-  load reference/wbtest_typeof_1_ref.mat
+  myloc=fileparts(which('wbtest_typeof_1'));
+  load([myloc,dirsep,'reference',dirsep,'wbinputs.mat'])
+  load([myloc,dirsep,'reference',dirsep,'wbtest_typeof_1_ref.mat'])
   fail_count = 0;
   for loopi=1:numel(wbinputs)
     x1 = wbinputs{loopi};

@@ -27,25 +27,25 @@ Here is a simple example of the <code>fix</code> operation on some values
 
 a = 
 
- Columns 1 to 3
+ Columns 1 to 4
 
-  -1.8000 +  0.0000i   3.1416 +  0.0000i   8.0000 +  0.0000i 
+  -1.8000 +  0.0000i   3.1416 +  0.0000i   8.0000 +  0.0000i  -3.1416 +  0.0000i 
 
- Columns 4 to 6
+ Columns 5 to 6
 
-  -3.1416 +  0.0000i  -0.0010 +  0.0000i   2.3000 +  0.3000i 
+  -0.0010 +  0.0000i   2.3000 +  0.3000i 
 
 --&gt; fix(a)
 
 ans = 
 
- Columns 1 to 3
+ Columns 1 to 4
 
-  -1.0000 +  0.0000i   3.0000 +  0.0000i   8.0000 +  0.0000i 
+  -1.0000 +  0.0000i   3.0000 +  0.0000i   8.0000 +  0.0000i  -3.0000 +  0.0000i 
 
- Columns 4 to 6
+ Columns 5 to 6
 
-  -3.0000 +  0.0000i        0             2.0000 +  0.0000i 
+        0             2.0000 +  0.0000i 
 </PRE>
 <P>
 </BODY>
