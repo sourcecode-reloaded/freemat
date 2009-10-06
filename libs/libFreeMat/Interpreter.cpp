@@ -624,7 +624,7 @@ void Interpreter::sendGreeting() {
 #ifdef HAVE_LLVM
   outputMessage(" JIT is enabled by default - use jitcontrol to change it\n");
 #endif
-  outputMessage(" Use <rootpath> to set/change where the FreeMat toolbox is installed\n");
+  outputMessage(" Use <rootpath gui> to set/change where the FreeMat toolbox is installed\n");
   outputMessage("");
 }
 

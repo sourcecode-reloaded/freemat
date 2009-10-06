@@ -1070,8 +1070,10 @@ QString GetRootPath() {
   else
 #ifdef Q_WS_WIN
     return qApp->applicationDirPath()+QString("/../");
-#else
+#elif Q_WS_MAC
     return "";
+#else
+    return QDir(qApp->applicationDirPath()+QString("/../share/FreeMat-" VERSION)).canonicalPath();
 #endif
 }
 
@@ -1136,7 +1138,7 @@ void MainApp::UpdatePaths() {
 //rootpath set.
 //
 //The @|rootpath| function has two forms.  The first form takes no arguments
-//and allows you to browse to the rootpath directory
+//and returns the current root path
 //@[
 //   rootpath
 //@]
@@ -1146,6 +1148,12 @@ void MainApp::UpdatePaths() {
 //@]
 //where @|path| is the full path to where the @|toolbox| and @|help| 
 //directories are located.  For example, @|rootpath('/usr/share/FreeMat-4.0')|.
+//The third form enables the GUI form 
+//@[
+//   rootpath gui
+//@]
+//which activates a dialog box to pick a directory that is the root directory
+//of the FreeMat installation (e.g., where @|help| and @|toolbox| are located.
 //Changes to @|rootpath| are persistent (you do not need to run it every
 //time you start FreeMat).
 //@@Signature
@@ -1157,11 +1165,12 @@ ArrayVector RootPathFunction(int nargout, const ArrayVector& arg, Interpreter* e
   if (inBundleMode()) 
     eval->warningMessage("FreeMat is in bundle mode.  The rootpath function has no effect.");
   QString path;
-  if (arg.size() != 0) 
+  if (arg.size() != 0) {
     path = arg[0].asString();
-  else
-    path = QFileDialog::getExistingDirectory(0,QString("Select FreeMat root path"),GetRootPath()); 
-  m_app->SetRootPath(path,eval);
+    if (path == "gui" || path == "GUI")
+      path = QFileDialog::getExistingDirectory(0,QString("Select FreeMat root path"),GetRootPath()); 
+    m_app->SetRootPath(path,eval);
+  }
   return ArrayVector(Array(GetRootPath()));
 }
 
