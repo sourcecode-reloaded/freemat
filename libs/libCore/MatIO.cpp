@@ -466,7 +466,7 @@ void MatIO::Align64Bit() {
       m_fp->seek(m_fp->pos()+adjustBytes);
     } else {
       uint8 dummy[8];
-      adjustBytes = (8-((zstream->total_out) & 0x7));
+      adjustBytes = ((8-(zstream->total_out)) & 0x7);
       ReadCompressedBytes(dummy,adjustBytes);
     }
   } else {
