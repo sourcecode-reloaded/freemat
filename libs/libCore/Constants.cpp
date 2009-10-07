@@ -186,7 +186,6 @@ struct OpEps {
 //outputs y
 //!
 ArrayVector EpsFunction(int nargout, const ArrayVector& arg) {
-  bool isDouble = true;
   ArrayVector retval;
   
   if( arg.size()> 1 )

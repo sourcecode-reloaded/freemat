@@ -416,7 +416,7 @@ QVector<QVector<cpoint> > HandleSurface::BuildQuadsNoTexMap(HPConstrainedStringC
     QRgb *cbits2 = NULL;
     QRgb *abits1 = NULL;
     QRgb *abits2 = NULL;
-    int col_lim, alp_lim;
+    int col_lim = 0, alp_lim = 0;
     if (cp->Is("interp")) {
       cbits1 = (QRgb*) img.scanLine(i);
       cbits2 = (QRgb*) img.scanLine(i+1);

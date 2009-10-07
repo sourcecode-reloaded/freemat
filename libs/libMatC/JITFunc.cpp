@@ -85,7 +85,7 @@ static JITFunction func_vector_store_double, func_vector_store_float, func_vecto
 static JITFunction func_matrix_load_double, func_matrix_load_float, func_matrix_load_bool;
 static JITFunction func_matrix_store_double, func_matrix_store_float, func_matrix_store_bool;
 static JITFunction func_check_for_interrupt;
-static JITFunction func_niter_for_loop, func_debug_out_i, func_debug_out_d;
+static JITFunction func_niter_for_loop, func_debug_out_d;
 
 SymbolInfo* JITFunc::add_argument_array(QString name, bool createIfMissing=false) {
   if (symbol_prefix.size() > 0)
@@ -898,11 +898,7 @@ extern "C" {
     return true;
   }
   JIT_EXPORT double niter_for_loop( double first, double step, double last ){
-    double x = num_for_loop_iter( first, step, last );
     return (double)(num_for_loop_iter( first, step, last ));
-  }
-  JIT_EXPORT void debug_out_i( int32 t ){
-      dbout << t << "\n";
   }
   JIT_EXPORT void debug_out_d( double t ){
     qDebug() << t;

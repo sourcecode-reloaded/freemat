@@ -719,7 +719,6 @@ bool FMTextEdit::findmatch()
         else
             return false;
             
-        int codeLength = simpleCodes.size();
         while(pos >= 0 && pos < simpleCodes.length())
         {
             QChar chr = simpleCodes.at(pos);
@@ -1044,7 +1043,6 @@ void FMIndent::updateSelection() {
     QTextCursor final(cursor);
     // Get the current cursor position relative to the start of the line
     final.movePosition(QTextCursor::StartOfLine,QTextCursor::KeepAnchor);
-    int curpos = final.selectedText().length();
     cursor.movePosition(QTextCursor::StartOfLine);
     cursor.movePosition(QTextCursor::EndOfLine,QTextCursor::KeepAnchor);
     QString toIndent(cursor.selectedText());
@@ -1091,7 +1089,7 @@ FMEditPane::FMEditPane(Interpreter* eval) : QWidget() {
   connect(tEditor,SIGNAL(indent()),ind,SLOT(update()));
   connect(tEditor,SIGNAL(smart_Indent()),ind,SLOT(updateSelection()));
   connect(this,SIGNAL(gotoLine(int)),tEditor,SLOT(gotoLine(int)));
-  Highlighter *highlight = new Highlighter(tEditor->document());
+  new Highlighter(tEditor->document());
   ind->setDocument(tEditor);
 }
 
@@ -2026,7 +2024,6 @@ void FMEditor::closeTab() {
 void FMEditor::closeAllTabs() {
   /* check for unsaved buffered */
   for (int i=0;i<tab->count();i++) {
-    QWidget *w = tab->widget(i);
     tab->setCurrentIndex(i);
     maybeSave();
   }
@@ -2090,7 +2087,6 @@ void FMEditor::closeEvent(QCloseEvent *event) {
   lastSessionList.clear();
   /* save modified files and session */
   for (int i=0;i<tab->count();i++) {
-    QWidget *w = tab->widget(i);
     tab->setCurrentIndex(i);
     if (!maybeSave()) {
       event->ignore();

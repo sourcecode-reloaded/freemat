@@ -91,18 +91,6 @@ static char* validateFormatSpec(char* cp) {
     return 0;
 }
 
-static char* validateScanFormatSpec(char* cp) {
-  if (*cp == '%') return cp+1;
-  while ((*cp) && flagChar(*cp)) cp++;
-  while ((*cp) && isdigit(*cp)) cp++;
-  while ((*cp) && (*cp == '.')) cp++;
-  while ((*cp) && isdigit(*cp)) cp++;
-  if ((*cp) && (convspec(*cp) || (*cp == 'h') || (*cp == 'l')))
-    return cp+1;
-  else
-    return 0;
-}
-
 QString ConvertEscapeSequences(const QString &src) {
   QString dest;
   int i=0;
@@ -144,9 +132,6 @@ private:
 	hasMoreData = false;
       }
     }
-  };
-  Array GetCurrentArg(void){
-
   };
 
 public:

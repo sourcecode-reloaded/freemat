@@ -71,15 +71,10 @@ std::string BlasWrapper::ComputerType( void )
 #ifdef Q_WS_MAC
   return std::string( "OSX" );
 #endif
-
-  switch( QSysInfo::WordSize ){
-  case 32:
+  if (QSysInfo::WordSize == 32)
     return std::string( "Linux32" );
-    break;
-  case 64:
+  if (QSysInfo::WordSize == 64)
     return std::string( "Linux64" );
-    break;
-  }
   return std::string("unknown");
 }
 

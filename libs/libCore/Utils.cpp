@@ -89,7 +89,7 @@ double ArrayRange(const Array& dp) {
     const Array &tmp(dp.asDenseArray().toClass(Double));
     const BasicArray<double> &rp(tmp.constReal<double>());
     if (rp.length() == 0) return 0;
-    double result;
+    double result = 0;
     bool init = false;
     for (index_t i=1;i<=rp.length();i++) {
 	if (!IsNaN(rp[i])) {
@@ -110,7 +110,7 @@ double ArrayMin(const Array& dp) {
     const Array &tmp(dp.asDenseArray().toClass(Double));
     const BasicArray<double> &rp(tmp.constReal<double>());
     if (rp.length() == 0) return 0;
-    double result;
+    double result = 0;
     bool init = false;
     for (index_t i=1;i<=rp.length();i++) {
 	if (!IsNaN(rp[i])) {
@@ -131,7 +131,7 @@ double ArrayMax(const Array& dp) {
     const Array &tmp(dp.asDenseArray().toClass(Double));
     const BasicArray<double> &rp(tmp.constReal<double>());
     if (rp.length() == 0) return 0;
-    double result;
+    double result = 0;
     bool init = false;
     for (index_t i=1;i<=rp.length();i++) {
 	if (!IsNaN(rp[i])) {

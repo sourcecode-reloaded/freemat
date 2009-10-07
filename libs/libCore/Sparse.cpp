@@ -596,6 +596,7 @@ ArrayVector SparseFunction(int nargout, const ArrayVector& arg, Interpreter* eva
     const BasicArray<index_t> &jp(jp_typed.constReal<index_t>());
     return ArrayVector(IJVToSparse(ip,jp,arg[2],arg[3].asDouble(),arg[4].asDouble()));
   }
+  return ArrayVector();
 }
 
 //!

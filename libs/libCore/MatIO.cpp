@@ -138,8 +138,9 @@ MatIO::mxArrayTypes GetArrayType(DataClass x) {
   case Float:       return MatIO::mxSINGLE_CLASS;
   case Double:      return MatIO::mxDOUBLE_CLASS;
   case StringArray: return MatIO::mxCHAR_CLASS;
+  default:
+    throw Exception("unhandled type in GetArrayType");
   }  
-  throw Exception("unhandled type in GetArrayType");
 }
 
 DataClass ToFreeMatClass(MatTypes x) {
@@ -209,7 +210,6 @@ Array MatIO::getSparseArray(NTuple dm, bool complexFlag) {
   Array ir(getDataElement().toClass(Index));
   Array jc(getDataElement().toClass(Index));
   Array pr(getDataElement());
-  index_t nnz = pr.length();
   Array pi;
   if (complexFlag) pi = getDataElement();
   return MatIJVToSparse(ir,jc,pr,pi,complexFlag);
@@ -466,7 +466,7 @@ void MatIO::Align64Bit() {
       m_fp->seek(m_fp->pos()+adjustBytes);
     } else {
       uint8 dummy[8];
-      adjustBytes = (8-(zstream->total_out) & 0x7);
+      adjustBytes = (8-((zstream->total_out) & 0x7));
       ReadCompressedBytes(dummy,adjustBytes);
     }
   } else {

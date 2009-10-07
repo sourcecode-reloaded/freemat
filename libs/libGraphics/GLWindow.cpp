@@ -153,7 +153,6 @@ void GLWidget::paintAssembly(QString aname) {
 void GLWidget::paintLines(QString aname) {
   GLLines &node(linesmap[aname]);
   int n=0;
-  double p1[3];
   float color[4];
   color[0] = node.color[0];
   color[1] = node.color[1];

@@ -68,9 +68,6 @@ MFunctionDef::MFunctionDef() {
   functionCompiled = false;
   localFunction = false;
   pcodeFunction = false;
-#if !defined(_MSC_VER)
-#warning - check pcode
-#endif
   nestedFunction = false;
 }
 

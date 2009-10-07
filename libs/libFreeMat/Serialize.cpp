@@ -94,7 +94,7 @@ void Serialize::checkSignature(char type, int count) {
   rcount = qFromBigEndian(rcount);
   if (!((type == rtype) && (count == rcount))) {
     char buffer[1000];
-    sprintf(buffer,"Serialization Mismatch: expected <%c,%d>, got <%c,%ld>",
+    sprintf(buffer,"Serialization Mismatch: expected <%c,%d>, got <%c,%d>",
 	    type,count,rtype,rcount);
     throw Exception(buffer);
   }

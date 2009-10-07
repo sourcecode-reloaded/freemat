@@ -428,12 +428,14 @@ static ArrayVector SVDFunction(BasicArray<T> &A, bool computevectors, bool compa
   // A matrix to store the right singular vectors
   BasicArray<T> vtmat;
   if (computevectors) 
-    if (!compactform) {
-      umat = BasicArray<T>(NTuple(nrows,nrows));
-      vtmat = BasicArray<T>(NTuple(ncols,ncols));
-    } else {
-      umat = BasicArray<T>(NTuple(nrows,mindim));
-      vtmat = BasicArray<T>(NTuple(ncols,ncols));
+    {
+      if (!compactform) {
+	umat = BasicArray<T>(NTuple(nrows,nrows));
+	vtmat = BasicArray<T>(NTuple(ncols,ncols));
+      } else {
+	umat = BasicArray<T>(NTuple(nrows,mindim));
+	vtmat = BasicArray<T>(NTuple(ncols,ncols));
+      }
     }
   TSVD<T>(nrows,ncols,umat,vtmat,svals,A,compactform,computevectors);
   ArrayVector retval;
@@ -468,12 +470,14 @@ static ArrayVector SVDFunction(BasicArray<T> &A_real,
   // A matrix to store the right singular vectors
   BasicArray<T> vtmat;
   if (computevectors) 
-    if (!compactform) {
-      umat = BasicArray<T>(NTuple(2*nrows,nrows));
-      vtmat = BasicArray<T>(NTuple(2*ncols,ncols));
-    } else {
-      umat = BasicArray<T>(NTuple(2*nrows,mindim));
-      vtmat = BasicArray<T>(NTuple(2*ncols,ncols));
+    {
+      if (!compactform) {
+	umat = BasicArray<T>(NTuple(2*nrows,nrows));
+	vtmat = BasicArray<T>(NTuple(2*ncols,ncols));
+      } else {
+	umat = BasicArray<T>(NTuple(2*nrows,mindim));
+	vtmat = BasicArray<T>(NTuple(2*ncols,ncols));
+      }
     }
   TSVD<T>(nrows,ncols,umat,vtmat,svals,A_real,A_imag,compactform,computevectors);
   ArrayVector retval;
@@ -1017,8 +1021,6 @@ ArrayVector SVDFunction(int nargout, const ArrayVector& arg) {
     throw Exception("SVD does not work with sparse matrices.");
   if (AnyNotFinite(A))
     throw Exception("SVD only defined for matrices with finite entries.");
-  int nrows = int(A.rows());
-  int ncols = int(A.cols());
   bool computevectors = (nargout>1);
   switch (A.dataClass()) {
   default: throw Exception("illegal argument type to svd");

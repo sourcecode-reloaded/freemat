@@ -35,11 +35,6 @@
 #include "Utils.hpp"
 #include "IEEEFP.hpp"
 
-static int flagChar(char c) {
-    return ((c == '#') ||  (c == '0') || (c == '-') ||  
-	(c == ' ') ||  (c == '+'));
-}
-
 static int convspec(char c) {
     return ((c == 'd') || (c == 'i') || (c == 'o') || 
 	(c == 'u') || (c == 'x') || (c == 'X') ||
@@ -49,18 +44,6 @@ static int convspec(char c) {
 	(c == 's'));
 }
 
-
-static char* validateScanFormatSpec(char* cp) {
-    if (*cp == '%') return cp+1;
-    while ((*cp) && flagChar(*cp)) cp++;
-    while ((*cp) && isdigit(*cp)) cp++;
-    while ((*cp) && (*cp == '.')) cp++;
-    while ((*cp) && isdigit(*cp)) cp++;
-    if ((*cp) && (convspec(*cp) || (*cp == 'h') || (*cp == 'l')))
-	return cp+1;
-    else
-	return 0;
-}
 
 //!
 //@Module STRCMP String Compare Function

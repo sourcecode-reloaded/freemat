@@ -271,7 +271,6 @@ static void realEigenDecompose(int n, T *v, T *d, T *a,
   T ABNRM;
   MemBlock<T> RCONDE(n);
   MemBlock<T> RCONDV(n);
-  int maxN = (N < 6) ? 6 : N;
   int LWORK;
   T WORKSZE;
   MemBlock<int> IWORK(2*n-2);
@@ -1387,6 +1386,8 @@ ArrayVector SparseEigDecomposeNonsymmetricRealShifted(const SparseMatrix<double>
       int res = umfpack_di_solve(UMFPACK_A, (const int*) colstart.data(), 
 				 (const int*) rowindx.data(), accsdata.data(), 
 				 workd+ipntr[1]-1,workd+ipntr[0]-1,Numeric, null, null);
+      if (res != 0)
+	throw Exception("UMFPACK solution failed!");
     }
     else if (ido == 2)
       memcpy( workd+ipntr[1]-1, workd+ipntr[0]-1, sizeof(double)*rows);

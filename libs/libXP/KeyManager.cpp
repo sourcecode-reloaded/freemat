@@ -472,7 +472,6 @@ int KeyManager::DisplayPrompt() {
 void KeyManager::OutputChar(QChar c, QChar pad) {
   QString ostring;
   int nchar;
-  int i;
   /*
    * Check for special characters.
    */

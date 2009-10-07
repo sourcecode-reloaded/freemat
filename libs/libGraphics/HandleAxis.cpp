@@ -323,10 +323,10 @@ static QString TrimPrint(double val, bool scientificNotation) {
     while ((label[ePtr] != 'e') && (label[ePtr] != 'E'))
       ePtr--;
     ePtr+=2;
-    while ((label[ePtr] == '0') && ePtr < label.size()) {
+    while ((label[ePtr] == '0') && ePtr < (unsigned int)(label.size())) {
       label.remove(ePtr,1);
     }
-    if (ePtr == label.size())
+    if (ePtr == (unsigned int)(label.size()))
       label.append("0");
     return label;
   }

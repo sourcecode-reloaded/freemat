@@ -448,7 +448,7 @@ void QTRenderEngine::releaseDirectDraw() {
 
 void QTRenderEngine::getProjectionMatrix(double aproj[16]) {
   for (int i=0;i<16;i++)
-    aproj[i] = proj[16];
+    aproj[i] = proj[i];
 }
 
 void QTRenderEngine::getModelviewMatrix(double amodel[16]) {
@@ -754,11 +754,7 @@ void QTRenderEngine::drawPatch(const FaceList& faces)
 	}
 	    
 	while( vert_it != face.vertices.constEnd() ){
-	    double x, y, z;
-	    bool bClipped;
 	    point v = *vert_it;
-	    //toPixels( v.x, v.y, v.z, x, y, z, bClipped );
-	    //poly.push_back( QPointF( x, y ) );
 	    poly.push_back( Map( v.x, v.y, v.z ));
 	    ++vert_it;
 	}

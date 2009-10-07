@@ -88,7 +88,7 @@ ArrayVector PermuteFunction(int nargout, const ArrayVector& arg) {
   bool *d = &p;
   for (index_t i=1;i<=perm_dp.length();i++) 
     d[perm_dp[i]-1] = true;
-  for (int i=0;i<max_perm_value;i++)
+  for (uint32 i=0;i<max_perm_value;i++)
     if (!d[i]) throw Exception("second argument is not a valid permutation");
   // Convert to an N-Tuple
   NTuple perm(ConvertArrayToNTuple(permutation));

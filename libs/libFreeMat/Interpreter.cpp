@@ -145,10 +145,10 @@ void Interpreter::setLiveUpdateFlag(bool t) {
   }
 }
 
-static bool DirExists(const QString & path) {
-  QDir tmp(path);
-  return tmp.exists();
-}
+// static bool DirExists(const QString & path) {
+//   QDir tmp(path);
+//   return tmp.exists();
+// }
 
 void Interpreter::setupWatcher() {
   if (!m_liveUpdateFlag) return;
@@ -2243,7 +2243,9 @@ void Interpreter::forStatement(const Tree & t) {
 	DataClass loopType(indexSet.dataClass());
 	ContextLoopLocker lock(context);
 	switch(loopType) {
-	  case Struct:
+	  case Invalid:
+  	      throw Exception("Invalid arrays not supported");
+  	  case Struct:
 	      throw Exception("Structure arrays are not supported as for loop index sets");
 	  case CellArray:
 	      ForLoopHelper<Array>(codeBlock,indexSet,
@@ -5365,16 +5367,16 @@ void Interpreter::dbtraceStatement(const Tree & t) {
   tracecurrentline = LineNumber(context->scopeTokenID());
 }
 
-static QString EvalPrep(QString line) {
-  QString buf1 = line;
-  if (buf1.endsWith('\n'))
-    buf1.chop(1);
-  if (buf1.endsWith('\r'))
-    buf1.chop(1);
-  if (buf1.size() > 20)
-    buf1 = buf1.left(20) + "...";
-  return buf1;
-}
+// static QString EvalPrep(QString line) {
+//   QString buf1 = line;
+//   if (buf1.endsWith('\n'))
+//     buf1.chop(1);
+//   if (buf1.endsWith('\r'))
+//     buf1.chop(1);
+//   if (buf1.size() > 20)
+//     buf1 = buf1.left(20) + "...";
+//   return buf1;
+// }
 
 void Interpreter::ExecuteLine(QString txt) {
   mutex.lock();
@@ -5437,7 +5439,7 @@ bool NeedsMoreInput(Interpreter *eval, QString txt) {
   try {
     Scanner S(txt,"");
     Parser P(S);
-    const Tree & root(P.process());
+    P.process();
     return false;
   } catch (Exception &e) {
     if (e.msg().left(13) == "Expecting end") {

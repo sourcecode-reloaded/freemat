@@ -32,8 +32,8 @@ QVariant ComplexVariant(double real, double imag) {
 template <typename T>
 static QList<QVariant> TComputeVariableStatsReal(const BasicArray<T> &dp) {
   QVariant vmin, vmax, vrange, vmean, vstd, vvar;
-  T dmin, dmax, drange;
-  double dmean, dstd, dvar;
+  T dmin, dmax;
+  double dmean;
   bool init = false;
   index_t len = dp.length();
   double norm = 1.0/len;
@@ -75,9 +75,8 @@ template <typename T>
 static QList<QVariant> TComputeVariableStatsComplex(const BasicArray<T> &dp_real, 
 						    const BasicArray<T> &dp_imag) {
   QVariant vmin, vmax, vrange, vmean, vstd, vvar;
-  T dmin_real, dmax_real; double drange_real, dmean_real;
-  T dmin_imag, dmax_imag; double drange_imag, dmean_imag;
-  double dstd, dvar;
+  T dmin_real = 0, dmax_real = 0; double dmean_real = 0;
+  T dmin_imag = 0, dmax_imag = 0; double dmean_imag = 0;
   index_t len = dp_real.length();
   bool init = false;
   double norm = 1.0/len;

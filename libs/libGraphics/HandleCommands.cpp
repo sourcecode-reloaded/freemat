@@ -479,8 +479,6 @@ ArrayVector HSetFunction(int nargout, const ArrayVector& arg) {
       HSetChildrenFunction(fp,arg[ptr+1]);
     else if ((handle < HANDLE_OFFSET_OBJECT) && (propname == "figsize")) {
       fp->LookupProperty(propname)->Set(arg[ptr+1]);
-      HandleFigure *fig = (HandleFigure*) fp;
-      //FIXME      fig->SetSize();
     } else {
       try {
 	fp->LookupProperty(propname)->Set(arg[ptr+1]);

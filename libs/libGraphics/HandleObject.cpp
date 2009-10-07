@@ -259,11 +259,13 @@ double VecMin(QVector<double> &v) {
   bool first = true;
   for (int i=0;i<v.size();i++) {
     if (IsFinite(v[i]))
-      if (first) {
-	first = false;
-	min = v[i];
-      } else if (v[i] < min) {
-	min = v[i];
+      {
+	if (first) {
+	  first = false;
+	  min = v[i];
+	} else if (v[i] < min) {
+	  min = v[i];
+	}
       }
   }
   return min;
@@ -274,11 +276,13 @@ double VecMax(QVector<double> &v) {
   bool first = true;
   for (int i=0;i<v.size();i++) {
     if (IsFinite(v[i]))
-      if (first) {
-	first = false;
-	max = v[i];
-      } else if (v[i] > max) {
-	max = v[i];
+      {
+	if (first) {
+	  first = false;
+	  max = v[i];
+	} else if (v[i] > max) {
+	  max = v[i];
+	}
       }
   }
   return max;
@@ -293,11 +297,13 @@ double ArrayMin(Array a) {
   bool first = true;
   for (int i=0;i<len;i++) {
     if (IsFinite(v[i]))
-      if (first) {
-	first = false;
-	min = v[i];
-      } else if (v[i] < min) {
-	min = v[i];
+      {
+	if (first) {
+	  first = false;
+	  min = v[i];
+	} else if (v[i] < min) {
+	  min = v[i];
+	}
       }
   }
   return min;
@@ -312,11 +318,13 @@ double ArrayMax(Array a) {
   bool first = true;
   for (int i=0;i<len;i++) {
     if (IsFinite(v[i]))
-      if (first) {
-	first = false;
-	max = v[i];
-      } else if (v[i] > max) {
-	max = v[i];
+      {
+	if (first) {
+	  first = false;
+	  max = v[i];
+	} else if (v[i] > max) {
+	  max = v[i];
+	}
       }
   }
   return max;

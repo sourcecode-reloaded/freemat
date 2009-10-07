@@ -133,11 +133,11 @@ public:
    * Construct a scope with the given name.
    */
   Scope(QString scopeName, bool nested) : mutex(NULL), refcount(0),
-					  name(scopeName), loopLevel(0), 
-					  anyPersistents(false), anyGlobals(false),
-					  isNested(nested), tokid(0), steptrap(0), 
-					  stepcurrentline(0), active(true) {}
-
+					  name(scopeName), tokid(0), steptrap(0), 
+					  stepcurrentline(0), active(true), 
+					  loopLevel(0), anyPersistents(false), anyGlobals(false),
+					  isNested(nested)
+  {}
   inline bool isActive() const {
     return active;
   }

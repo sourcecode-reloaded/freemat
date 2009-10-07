@@ -325,7 +325,6 @@ void QTTerm::getErrorAndShow() {
 //  sel_row_stop = qMin(sel_row_stop,buffer.size()-1);
   QString ret;
   int i,j;
-  bool isBreak = false;
   for (i=sel_row_start;i<=sel_row_stop;i++) {
     if (i>sel_row_start)
         sel_column_start = 0;

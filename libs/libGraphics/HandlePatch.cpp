@@ -36,7 +36,6 @@ QVector<double> HandlePatch::GetLimits() {
   Array vertexdata(ArrayPropertyLookup("vertices"));
   vertexdata = vertexdata.toClass(Double);
   int nrows = vertexdata.rows();
-  int ncols = vertexdata.columns();
 
   const double *pVertDataX = vertexdata.constReal<double>().constData();
   const double *pVertDataY = pVertDataX+nrows;

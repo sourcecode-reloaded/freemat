@@ -935,7 +935,7 @@ static void DumpProfileDB() {
     dbout << "Module " << i->first << "\r\n";
     const ProfileVector &p(i->second);
     double ticks_this_module = 0;
-    for (int j=0;j<p.size();j++) {
+    for (unsigned j=0;j<p.size();j++) {
       //      if (p[j] > 0)
 	dbout << "Line " << j << " " << p[j] << " counts " << p[j]/m_profiler_ticks*100.0 << "%\r\n";
       ticks_this_module += p[j];
@@ -1006,7 +1006,7 @@ ArrayVector ProfilerFunction(int nargout, const ArrayVector& arg, Interpreter* e
 
 	  for (ProfileDB::const_iterator i=m_profileDB.begin();i!=m_profileDB.end();i++) {
 	    const ProfileVector &p(i->second);
-	    for (int j=0;j<p.size();j++) {
+	    for (unsigned j=0;j<p.size();j++) {
 	      if (p[j] > 0)
 		    sl.push_back( SampleList( i->first, j, p[j] ) );
 	    }
