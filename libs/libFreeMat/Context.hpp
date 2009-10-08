@@ -29,6 +29,7 @@
 #include <vector>
 #include <QList>
 #include <QMutex>
+#include <QMutexLocker>
 #include <stdarg.h>
 #include "DebugStream.hpp"
 
@@ -230,6 +231,7 @@ public:
     activeScope->setNargout(x);
   }
   inline void updateScopePointers() {
+    QMutexLocker lock(&mutex);
     if (!scopestack.isEmpty()) {
       topScope = scopestack.front();
       bottomScope = scopestack.back();
@@ -239,11 +241,13 @@ public:
     }    
   }
   inline void reserveScope() {
+    QMutexLocker lock(&mutex);
     reserveStack.push_back(scopestack.back());
     scopestack.pop_back();
     updateScopePointers();
   }
   inline void unreserveScope() {
+    QMutexLocker lock(&mutex);
     if (reserveStack.size()>0) {
       scopestack.push_back(reserveStack.back());
       reserveStack.pop_back();
@@ -257,6 +261,7 @@ public:
    * a count of -1 means all scopes are bypassed (except the base scope)
    */
   inline void bypassScope(int count) {
+    QMutexLocker lock(&mutex);
     if (count < 0) 
       count = (scopestack.size()-2);
     if (count > scopestack.size()) return;
@@ -267,6 +272,7 @@ public:
     updateScopePointers();
   }
   inline void restoreScope(int count) {
+    QMutexLocker lock(&mutex);
     if (count > bypassstack.size()) return;
     for (int i=0;i<count;i++) {
       scopestack.push_back(bypassstack.back());
@@ -279,12 +285,14 @@ public:
    * restoreBypassedScopes, or memory leaks will occur.
    */
   inline void restoreBypassedScopes() {
+    QMutexLocker lock(&mutex);
     for (int i=0;i<bypassstack.size();i++)
       scopestack.push_back(bypassstack[bypassstack.size()-1-i]);
     bypassstack.clear();
     updateScopePointers();
   }
   inline ScopePtr lastActiveScope() {
+    QMutexLocker lock(&mutex);
     for (int i=scopestack.size()-1;i>=0;i--)
       if (scopestack[i]->isActive()) return scopestack[i];
     return scopestack.front();
@@ -293,6 +301,7 @@ public:
    * Push the given scope onto the bottom of the scope stack.
    */
   inline void pushScope(QString name, QString detail = QString(), bool nestflag = false) {
+    QMutexLocker lock(&mutex);
     if (scopestack.size() > 100)
       throw Exception("Allowable stack depth exceeded...");
     Scope *t = new Scope(name,nestflag);
@@ -307,6 +316,7 @@ public:
    * Throws an Exception if the global scope is popped.
    */
   inline void popScope() {
+    QMutexLocker lock(&mutex);
     if (scopestack.size() == 1)
       throw Exception("Attempt to pop global scope off of context stack!");
     scopestack.pop_back();
