@@ -374,8 +374,7 @@ public:
    */
   inline QString sampleInstructionPointer(unsigned &ctxt) const {
     if (!InCLI) {
-      ctxt = context->scopeTokenID() & 0x0000FFFF; 
-      return context->scopeName();
+	return context->sampleIP( ctxt );
     } else {
       ctxt = 0;
       return "CLI";

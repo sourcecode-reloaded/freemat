@@ -756,6 +756,15 @@ public:
   inline bool isVariablePersistent(const QString& varName) {
     return activeScope->isVariablePersistent(varName);
   }
+
+  /**
+   * Returns function and line number
+   */
+  inline QString sampleIP(unsigned &ctxt){
+      QMutexLocker lock(&mutex);
+      ctxt = this->scopeTokenID() & 0x0000FFFF; 
+      return this->scopeName();
+  }
 };
 
 // Use this class to get access to a parent scope.  It automatically
