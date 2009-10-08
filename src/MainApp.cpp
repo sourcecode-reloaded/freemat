@@ -1225,10 +1225,10 @@ int MainApp::StartNewInterpreterThread() {
 // instruction pointer with a mutex when profiling is on.
 //
 void MainApp::CollectProfileSample() {
-  m_profiler_ticks++;
   unsigned linenumber;
   QString ip_name = m_eval->sampleInstructionPointer(linenumber);
   if ((linenumber != 0) || (ip_name != "CLI")) {
+	m_profiler_ticks++;
     ProfileVector &p(m_profileDB[ip_name]);
     if (p.size() <= linenumber) 
 	p.resize(linenumber+1);
