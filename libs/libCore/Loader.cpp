@@ -649,7 +649,7 @@ void LoadBuiltinFunctions(Context *context, bool guiflag) {
   context->addFunction("threadfree",ThreadFreeFunction,2,0,"handle","timeout",NULL);
    if (guiflag)
      context->addGfxFunction("clc",ClcFunction,0,0,NULL);
-  context->addSpecialFunction("profiler",ProfilerFunction,-1,0,NULL);
+  context->addSpecialFunction("profiler",ProfilerFunction,-1,-1,NULL);
    if (guiflag)
      context->addGfxSpecialFunction("rootpath",RootPathFunction,1,2,"path",NULL);
 }

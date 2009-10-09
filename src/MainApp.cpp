@@ -983,9 +983,12 @@ public:
 //@@Signature
 //sfunction profiler ProfilerFunction
 //inputs varargin
-//outputs none
+//outputs varargout
 //!
 ArrayVector ProfilerFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
+	//Array ret;
+	ArrayVector ret;
+
   if (arg.size() < 1) {
     if (m_profiler_active)
       return ArrayVector(Array(QString("on")));
@@ -1014,15 +1017,28 @@ ArrayVector ProfilerFunction(int nargout, const ArrayVector& arg, Interpreter* e
 	  sort( sl.begin(), sl.end(), SampleList::CompSample );
 
 	  for( std::vector<SampleList>::const_iterator i=sl.begin(); i!=sl.end(); ++i ){
-	      if( i->line == 0 )
-		  eval->outputMessage(QString("%1% %2 (built-in)\n").arg((double)i->samples/m_profiler_ticks*100.,5,'f',3).arg( i->module ));
-	      else
-		  eval->outputMessage(QString("%1% %2:%3\n").arg((double)i->samples/m_profiler_ticks*100.,5,'f',3).arg( i->module ).arg(i->line));
-	  }
 
+		  QString out;
+	      if( i->line == 0 ){
+			out=(QString("%1% %2 (built-in)\n").arg((double)i->samples/m_profiler_ticks*100.,5,'f',3).arg( i->module ));
+			if( nargout == 1 ){
+				ret << StructConstructor( StringVector() << "sample_fraction" << "module" << "line", ArrayVector() << Array( (double)i->samples/m_profiler_ticks ) << CellArrayFromStringVector( QStringList(i->module) ) << Array(0.));
+			}
+		  }
+		  else{
+			out=(QString("%1% %2:%3\n").arg((double)i->samples/m_profiler_ticks*100.,5,'f',3).arg( i->module ).arg(i->line));
+			if( nargout == 1 ){
+				ret << StructConstructor( StringVector() << "sample_fraction" << "module" << "line", ArrayVector() << Array( (double)i->samples/m_profiler_ticks ) << CellArrayFromStringVector( QStringList(i->module) ) << Array( i->line ));
+			}
+
+		  }
+
+		  eval->outputMessage( out );
+	  }
+		//retall << ret;
      }
   }
-  return ArrayVector();
+  return ret;
 }
 
 
