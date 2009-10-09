@@ -4,13 +4,13 @@ Starting with version 4.0, FreeMat is fairly straightforward to build.  With a f
 notable exceptions, all of the dependencies needed to build a complete version of FreeMat
 are bundled with the source code.  The exceptions are QT, CMake and FFTW, all of which are
 too complex to embed within the FreeMat build tree.  So the build procedure is essentially:
-   - Install Qt 4.5
+   - Install Qt 4.5.2 or newer (earlier versions have a bug that leads to memory leaks)
    - Install FFTW (optional)
    - Install CMake
    - Download the FreeMat source code
-   - Install LLVM 2.5 (optional)
    - Configure the source using CMake (there are tutorials on how to use CMake available on the WWW)
-   - Build FreeMat, which will automatically build all of the necessary dependencies.
+   - Configure, build and install LLVM from dependencies/llvm-2.5 directory.
+   - Configure and build FreeMat, which will automatically build all of the necessary dependencies.
    - Install FreeMat
 The procedure is essentially the same on Linux, Mac OS X and Windows, but for completeness, each OS is
 described in a little more detail below.  Note that FreeMat's build setup will look for installed
@@ -20,7 +20,7 @@ are not available or not compatible.
 
 Linux
 
-- Install Qt 4.5 (http://www.qtsoftware.com/downloads)
+- Install Qt 4.5.2 (http://www.qtsoftware.com/downloads)
 - Install fftw and fftwf from http://www.fftw.org
     - wget http://www.fftw.org/fftw-3.2.2.tar.gz
     - tar xvfz fftw-3.2.2.tar.gz
@@ -45,7 +45,7 @@ Linux
 Mac OS X
 
 - Install Developer Tools
-- Install Qt 4.5 (the prebuilt version for Cocoa works fine)
+- Install Qt 4.5.2 (the prebuilt version for Cocoa works fine)
 - Install fftw and fftwf into /usr/local - we build these in two seperate directories 
     - wget http://www.fftw.org/fftw-3.2.2.tar.gz
     - tar xvfz fftw-3.2.2.tar.gz
@@ -80,8 +80,8 @@ Windows / Visual Studio Express / CMake
 - Install Visual C++ 2008 Express
 - Install CMake (version 2.6.4 or later) for Win32 from http://www.cmake.org
 - If optimized BLAS libraries are available (vendor or ATLAS BLAS) install those.
-- Install Qt 4.5
-    - Download the source package from http://download.qtsoftware.com/qt/source/qt-win-opensource-src-4.5.0.zip
+- Install Qt 4.5.2
+    - Download the source package from http://download.qtsoftware.com/qt/source/qt-win-opensource-src-4.5.2.zip
     - Unpack the source code into, e.g. c:\qt
     - Open the Visual Studio Command prompt, and cd to this directory
     - Configure QT with "configure"
