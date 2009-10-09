@@ -1091,7 +1091,7 @@ QString GetRootPath() {
   else
 #ifdef Q_WS_WIN
     return qApp->applicationDirPath()+QString("/../");
-#elif Q_WS_MAC
+#elifdef Q_WS_MAC
     return "";
 #else
     return QDir(qApp->applicationDirPath()+QString("/../share/FreeMat-" VERSION)).canonicalPath();
