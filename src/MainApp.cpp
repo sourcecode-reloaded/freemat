@@ -975,7 +975,12 @@ public:
 //@[
 //  profiler list
 //@]
-//which lists current sorted profiling resuls  If you want to see current profile
+//which lists current sorted profiling resuls. You can use this form to obtain 
+//profiler results as a cell array
+//@[
+//  r=profiler('list')
+//@]
+//If you want to see current profile
 //status issue a @|profile| command with no arguments.
 //@[
 //   profiler
@@ -986,7 +991,7 @@ public:
 //outputs varargout
 //!
 ArrayVector ProfilerFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-	//Array ret;
+	ArrayVector retall;
 	ArrayVector ret;
 
   if (arg.size() < 1) {
@@ -1035,10 +1040,10 @@ ArrayVector ProfilerFunction(int nargout, const ArrayVector& arg, Interpreter* e
 
 		  eval->outputMessage( out );
 	  }
-		//retall << ret;
+		retall << CellConstructor(ret);
      }
   }
-  return ret;
+  return retall;
 }
 
 
