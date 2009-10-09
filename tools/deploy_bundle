@@ -23,9 +23,10 @@ DEVS=$(hdiutil attach $2Uncompressed.dmg | cut -f 1)
 DEV=$(echo $DEVS | cut -f 1 -d ' ')
 VOLUME=$(mount |grep ${DEV} | cut -f 3 -d ' ')
 echo "Installing FreeMat"
+cp FreeMat.app/Contents/Resources/bin/blas.ini FreeMat.app/Contents/MacOS/.
 cp -Rp FreeMat.app ${VOLUME}/.
 ln -s /Applications/ ${VOLUME}/Applications
-cp FreeMat.app/Contents/Resources/help/latex/*.pdf ${VOLUME}/.
+cp FreeMat.app/Contents/Resources/help/pdf/*.pdf ${VOLUME}/.
 echo "Unmounting DMG"
 hdiutil detach $DEV
 echo "Compressing DMG"
