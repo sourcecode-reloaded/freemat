@@ -109,15 +109,19 @@ void QTTerm::focusInEvent(QFocusEvent *e) {
 
 void QTTerm::setChar(char t, bool flush) {
   if (t == '\r') {
-    //MoveBOL();
+    prevWasBOL = true;
     return;
   }
   if (t == '\n') {
     buffer[cursor_y].data[cursor_x].v = t;
     nextLine();
+    prevWasBOL = false;
     return;
   }
-
+  if (prevWasBOL) {
+    MoveBOL();
+  }
+  prevWasBOL = false;
   blinkEnable = false;
   buffer[cursor_y].data[cursor_x].clearCursor();
   buffer[cursor_y].data[cursor_x].v = t;
