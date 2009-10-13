@@ -1,3 +1,11 @@
+FreeMat/libs/Makefile.in
+FreeMat/libs/libCore/Makefile.in
+FreeMat/libs/libFN/Makefile.in
+FreeMat/libs/libFreeMat/Makefile.in
+FreeMat/libs/libGraphics/Makefile.in
+FreeMat/libs/libMex/Makefile.in
+FreeMat/libs/libXP/Makefile.in
+FreeMat/src/Makefile.in
 FreeMat2/Makefile.in
 FreeMat2/aclocal.m4
 FreeMat2/autom4te.cache
