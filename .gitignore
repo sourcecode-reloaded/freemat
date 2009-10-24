@@ -11,4 +11,5 @@ documentation/*.iws
 documentation/site/*.iml
 documentation/site/.project
 documentation/site/out
+documentation/site/pages/*.html
 documentation/site/site
