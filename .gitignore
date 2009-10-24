@@ -6,5 +6,9 @@ FreeMat/libs/libGraphics/Makefile.in
 FreeMat/libs/libMex/Makefile.in
 FreeMat/libs/libXP/Makefile.in
 FreeMat/src/Makefile.in
+documentation/*.ipr
+documentation/*.iws
+documentation/site/*.iml
+documentation/site/.project
 documentation/site/out
 documentation/site/site
