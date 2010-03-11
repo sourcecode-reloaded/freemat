@@ -26,8 +26,6 @@
 
 template <typename T>
 static inline void* Tconstruct(Type t, const void *copy) {
-  if (t.Scalar == 1)
-    throw Exception("Tconstruct called for scalar object!");
   if (t.Sparse == 1) {
     const SparseMatrix<T> *p = reinterpret_cast<const SparseMatrix<T>*>(copy);
     return reinterpret_cast<void*>(new SparseMatrix<T>(*p));
@@ -53,8 +51,6 @@ static inline void* construct(Type t, const void *copy) {
 
 template <typename T>
 static inline void* Tconstruct_sized(Type t, const NTuple &dims) {
-  if (t.Scalar == 1)
-    throw Exception("Tconstruct_sized called for scalar object");
   if (t.Sparse == 1) {
     return reinterpret_cast<void*>(new SparseMatrix<T>(dims));
   }
@@ -82,8 +78,6 @@ static inline void* construct_sized(Type t, const NTuple &dims) {
 
 template <typename T>
 static inline void Tdestruct(Type t, void *todelete) {
-  if (t.Scalar == 1)
-    throw Exception("Tdestruct called on scalar");
   if (t.Sparse == 1) {
     delete reinterpret_cast<SparseMatrix<T>*>(todelete);
     return;
@@ -139,7 +133,6 @@ Array::Array(DataClass t, const NTuple &dims) {
   m_type.Class = t;
   m_type.Complex = 0;
   m_type.Sparse = 0;
-  m_type.Scalar = 0;
   m_real.p = new SharedObject(m_type,construct_sized(m_type,dims));
 }
 
@@ -147,7 +140,6 @@ Array::Array(const StructArray& real) {
   m_type.Class = Struct;
   m_type.Complex = 0;
   m_type.Sparse = 0;
-  m_type.Scalar = 0;
   m_real.p = new SharedObject(m_type,new StructArray(real));
 }
 
@@ -159,7 +151,6 @@ Array::Array(const QChar &t) {
   m_type.Class = StringArray;
   m_type.Complex = 0;
   m_type.Sparse = 0;
-  m_type.Scalar = 0;
   m_real.p = new SharedObject(m_type,
 			      construct_sized(m_type,
 					      NTuple(1,1)));
@@ -171,7 +162,6 @@ Array::Array(const QString &text) {
   m_type.Class = StringArray;
   m_type.Complex = 0;
   m_type.Sparse = 0;
-  m_type.Scalar = 0;
   m_real.p = new SharedObject(m_type,
 			      construct_sized(m_type,
 					      NTuple(1,text.size())));
@@ -192,7 +182,6 @@ static inline const NTuple Tdim(const Array *ptr) {
   case cls: return Tdim<ctype>(this);
 
 const NTuple Array::dimensions() const {
-  if (m_type.Scalar == 1) return NTuple(1,1);
   switch (m_type.Class) {
   default:
     throw Exception("unhandled type");
@@ -272,7 +261,6 @@ static inline const void Tset_struct_scalar(Array*ptr, S ndx, const Array &rhs) 
   case cls: Tset_scalar<index_t,ctype>(this,index,data.toClass(this->dataClass())); return;
 
 void Array::set(index_t index, const Array& data) {
-  ensureNotScalarEncoded();
   switch (m_type.Class) {
     MacroExpandCasesAll(MacroSetIndexT);
   case Struct: Tset_struct_scalar<index_t>(this,index,data); return;
@@ -287,7 +275,6 @@ void Array::set(index_t index, const Array& data) {
   case cls: Tset_scalar<const NTuple&,ctype>(this,index,data.toClass(this->dataClass())); return;
 
 void Array::set(const NTuple& index, const Array& data) {
-  ensureNotScalarEncoded();
   switch (m_type.Class) {
     MacroExpandCasesAll(MacroSetNTuple);
   case Struct: Tset_struct_scalar<const NTuple&>(this,index,data); return;
@@ -352,7 +339,6 @@ static inline const void Tset_struct(Array*ptr, S ndx, const Array &rhs) {
   case cls: return Tset<const IndexArray&,ctype>(this,index,data);
 
 void Array::set(const IndexArray& index, const Array& data) {
-  ensureNotScalarEncoded();
   switch (m_type.Class) {
     MacroExpandCasesAll(MacroSetIndexArray);
   case Struct: Tset_struct<const IndexArray&>(this,index,data); return;
@@ -367,7 +353,6 @@ void Array::set(const IndexArray& index, const Array& data) {
   case cls: return Tset<const IndexArrayVector&,ctype>(this,index,data);
 
 void Array::set(const IndexArrayVector& index, const Array& data) {
-  ensureNotScalarEncoded();
   switch (m_type.Class) {
     MacroExpandCasesAll(MacroSetIndexArrayVector);
   case Struct: Tset_struct<const IndexArrayVector&>(this,index,data); return;
@@ -402,7 +387,6 @@ static inline void Treshape(Array* ptr, S ndx) {
   case cls: return Treshape<const NTuple&, ctype>(this,size); 
 
 void Array::reshape(const NTuple &size) {
-  ensureNotScalarEncoded();
   switch (m_type.Class) {
     MacroExpandCasesAll(MacroReshapeNTuple);
   case Struct: return Treshape_struct<const NTuple&>(this,size);
@@ -438,7 +422,6 @@ static inline void Tresize(Array* ptr, S ndx) {
   case cls: return Tresize<const NTuple&,ctype>(this,size);
 
 void Array::resize(const NTuple &size) {
-  ensureNotScalarEncoded();
   switch (m_type.Class) {
     MacroExpandCasesAll(MacroResizeNTuple);
   case Struct: return Tresize_struct<const NTuple&>(this,size);
@@ -452,7 +435,6 @@ void Array::resize(const NTuple &size) {
   case cls: return Tresize<index_t,ctype>(this,size);
 
 void Array::resize(index_t size) {
-  ensureNotScalarEncoded();
   switch (m_type.Class) {
     MacroExpandCasesAll(MacroResizeIndex);
   case Struct: return Tresize_struct<index_t>(this,size);
@@ -526,8 +508,6 @@ static inline const Array Tget(const Array *ptr, S ndx) {
   case cls: return Tget<const IndexArray&,ctype>(this,index);
 
 const Array Array::get(const IndexArray& index) const {
-  if (m_type.Scalar == 1)
-    return asDenseArray().get(index);
   switch (m_type.Class) {
   default: 
     throw Exception("Unsupported type for get(index_t)");
@@ -543,8 +523,6 @@ const Array Array::get(const IndexArray& index) const {
   case cls: return Tget<const IndexArrayVector&,ctype>(this,index);
 
 const Array Array::get(const IndexArrayVector& index) const {
-  if (m_type.Scalar == 1)
-    return asDenseArray().get(index);
   switch (m_type.Class) {
   default:
     throw Exception("Unsupported type for get(indexarrayvector)");
@@ -558,13 +536,6 @@ const Array Array::get(const IndexArrayVector& index) const {
 
 template <typename T, typename S>
 inline static const Array Tcast(DataClass t, const Array *ptr) {
-  if (ptr->type().Scalar == 1) {
-    if (ptr->allReal())
-      return Array(CastConvert<T,S>(ptr->constRealScalar<S>()));
-    else
-      return Array(CastConvert<T,S>(ptr->constRealScalar<S>()),
-		   CastConvert<T,S>(ptr->constImagScalar<S>()));
-  }
   if (ptr->isSparse()) {
     if (ptr->allReal())
       return Array(ConvertSparseArray<T,S>(ptr->constRealSparse<S>()));
@@ -703,8 +674,6 @@ static inline Array Tget_cell_scalar(const Array* ptr, S ndx) {
   case cls: return Tget_scalar<const NTuple&,ctype>(this,index);
 
 const Array Array::get(const NTuple& index) const {
-  if ((m_type.Scalar == 1) && index.isScalar())
-    return *this;
   switch (m_type.Class) {
   default:
     throw Exception("Unsupported type for get(const NTuple&)");
@@ -721,8 +690,6 @@ const Array Array::get(const NTuple& index) const {
   case cls: return Tget_scalar<index_t,ctype>(this,index);
 
 const Array Array::get(index_t index) const {
-  if ((m_type.Scalar == 1) && (index == 1))
-    return *this;
   switch (m_type.Class) {
   default:
     throw Exception("Unhandled case for get(index)");
@@ -798,9 +765,7 @@ void Array::addField(QString name) {
 
 #define MacroGetVoidPointer(ctype,cls)					\
   case cls:								\
-  if (m_type.Scalar == 1)						\
-    return (void*)(&(m_real.cls));					\
-  else if (m_type.Sparse == 1)						\
+  if (m_type.Sparse == 1)						\
     throw Exception("getVoidPointer not supported for sparse arrays");	\
   else									\
     return (void*)(real<ctype>().data());
@@ -817,9 +782,7 @@ void* Array::getVoidPointer() {
 
 #define MacroGetConstVoidPointer(ctype,cls)				\
   case cls:								\
-  if (m_type.Scalar == 1)						\
-    return (const void*)(&(m_real.cls));				\
-  else if (m_type.Sparse == 1)						\
+  if (m_type.Sparse == 1)						\
     throw Exception("getConstVoidPointer not supported for sparse arrays"); \
   else									\
     return (const void*)(constReal<ctype>().constData());
@@ -837,15 +800,11 @@ static inline index_t Tbytes(const Array *ptr) {
   index_t count = 0;
   if (ptr->type().Sparse == 1)
     count = ptr->constRealSparse<T>().bytes();
-  else if (ptr->type().Scalar == 1) 
-    count = TSizeOf<T>(ptr->constRealScalar<T>());
   else
     count = ptr->constReal<T>().bytes();
   if (!ptr->allReal()) {
     if (ptr->type().Sparse == 1)
       count += ptr->constImagSparse<T>().bytes();
-    else if (ptr->type().Scalar == 1) 
-      count += TSizeOf<T>(ptr->constImagScalar<T>());
     else
       count += ptr->constImag<T>().bytes();
   }
@@ -866,16 +825,12 @@ index_t Array::bytes() const {
 }
 
 index_t Array::address() const {
-  if (m_type.Scalar == 1)
-    return 0;
-  else {
     union l {
       void *p;
       uint32 y;
     } u;
     u.p = m_real.p->ptr();
     return (index_t)(u.y);
-  }
 }
 
 template <typename T>
@@ -907,9 +862,7 @@ const index_t Array::asIndexScalar() const {
 template <typename T>
 static inline void T_force_complex(Array *ptr) {
   if (!ptr->allReal()) return;
-  if (ptr->type().Scalar == 1) {
-    ptr->imagScalar<T>() = 0;
-  } else if (ptr->type().Sparse == 1) {
+  if (ptr->type().Sparse == 1) {
     ptr->imagSparse<T>();
   } else {
     ptr->imag<T>();
@@ -1068,15 +1021,9 @@ static inline Array Tsparse_to_dense(const Array *ptr) {
   case cls: return Tsparse_to_dense<ctype>(this);
 
 Array Array::asDenseArray() const {
-  if ((m_type.Scalar == 0) && (m_type.Sparse == 0))
+  if (m_type.Sparse == 0)
     return *this;
-  if (m_type.Scalar == 1) {
-    switch (m_type.Class) {
-    default:
-      throw Exception("Cannot convert supplied array to dense type");
-      MacroExpandCasesSimple(MacroScalarToDense);
-    }
-  }
+
   switch (m_type.Class) {
   default:
     throw Exception("Cannot convert supplied sparse array to dense type");

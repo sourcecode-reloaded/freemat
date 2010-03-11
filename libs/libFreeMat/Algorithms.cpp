@@ -136,10 +136,6 @@ static void ValidateIndex(const Array &d) {
 }
 
 const IndexArray IndexArrayFromArray(const Array &index) {
-  if ((index.dataClass() == Bool) && (index.type().Scalar == 1)) {
-    const Array &index_dense(index.asDenseArray());
-    return Find(index_dense.constReal<bool>());
-  }
   if (index.type().Sparse == 1)
     throw Exception("Sparse indexing not supported currently");
   if (!index.allReal())

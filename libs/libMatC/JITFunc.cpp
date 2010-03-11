@@ -699,10 +699,7 @@ template<class T>
 inline void scalar_store(void* base, double argnum, T value) {
   JITFunc *tptr = static_cast<JITFunc*>(base);
   Array* a = tptr->array_inputs[(int)(argnum)];
-  if( a->isArray() )
-    a->set(1,Array(value));
-  else
-    a->realScalar<T>() = value;
+  a->set(1,Array(value));
 }
 
 template<class T>
@@ -983,11 +980,11 @@ void JITFunc::compile(const Tree & t) {
   jit->SetCurrentBlock(epilog);
   jit->Return(jit->Load(retcode));
   //#ifndef NDEBUG
-  //  jit->Dump("unoptimized.bc.txt",func);
+    jit->Dump("unoptimized.bc.txt",func);
   //#endif
   jit->OptimizeCode();
   //#ifndef NDEBUG
-  //  jit->Dump("optimized.bc.txt",func);
+    jit->Dump("optimized.bc.txt",func);
   //#endif
   if (failed) throw exception_store;
 }

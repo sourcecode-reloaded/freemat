@@ -491,7 +491,6 @@ void PrintArrayClassic(Array A, int printlimit, Interpreter* io) {
     }
     return;
   }
-  if (A.isScalar()) A = A.asDenseArray();
   if (A.dataClass() == Struct)
     return PrintStructArray(A,io);
   if ((A.dataClass() != CellArray) && (A.dataClass() != StringArray) && (A.dataClass() != Float))

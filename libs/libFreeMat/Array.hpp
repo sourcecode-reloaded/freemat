@@ -66,7 +66,6 @@ size_t ByteSizeOfDataClass(DataClass);
 
 typedef struct {
   int Class : 5;
-  unsigned Scalar : 1;
   unsigned Complex : 1;
   unsigned Sparse : 1;
 } Type;
@@ -85,30 +84,15 @@ public:
 
 typedef struct {
   QSharedDataPointer<SharedObject> p;
-  union {
-    bool Bool;
-    int8 Int8;
-    uint8 UInt8;
-    int16 Int16;
-    uint16 UInt16;
-    int32 Int32;
-    uint32 UInt32;
-    int64 Int64;
-    uint64 UInt64;
-    float Float;
-    double Double;
-  };
 } Data;
 
 class Array {
 public:
   inline Array() {
-    m_real.Double = 0; 
-    m_imag.Double = 0; 
     m_type.Class = Double; 
     m_type.Complex = 0;
     m_type.Sparse = 0;
-    m_type.Scalar = 1;
+    m_real.p = new SharedObject(m_type, new BasicArray<double>(0.));
   }
   // Defined in ArrayPrivate
   template <typename T> inline explicit Array(T real); 
@@ -118,7 +102,6 @@ public:
     m_type.Class = GetDataClass<T>(T(0));
     m_type.Complex = 0;
     m_type.Sparse = 0;
-    m_type.Scalar = 0;
     m_real.p = new SharedObject(m_type, new BasicArray<T>(r));
   }
   template <typename T> 
@@ -126,7 +109,6 @@ public:
     m_type.Class = GetDataClass<T>(T(0));
     m_type.Complex = 1;
     m_type.Sparse = 0;
-    m_type.Scalar = 0;
     m_real.p = new SharedObject(m_type, new BasicArray<T>(r));
     m_imag.p = new SharedObject(m_type, new BasicArray<T>(i));
   }
@@ -135,7 +117,6 @@ public:
     m_type.Class = GetDataClass<T>(T(0));
     m_type.Complex = 0;
     m_type.Sparse = 0;
-    m_type.Scalar = 0;
     m_real.p = new SharedObject(m_type,r);
   }
   template <typename T>
@@ -143,7 +124,6 @@ public:
     m_type.Class = GetDataClass<T>(T(0));
     m_type.Complex = 1;
     m_type.Sparse = 0;
-    m_type.Scalar = 0;
     m_real.p = new SharedObject(m_type,r);
     m_imag.p = new SharedObject(m_type,i);
   }
@@ -156,7 +136,6 @@ public:
     m_type.Class = GetDataClass<T>(T(0));
     m_type.Complex = 0;
     m_type.Sparse = 1;
-    m_type.Scalar = 0;
     m_real.p = new SharedObject(m_type,new SparseMatrix<T>(real));
   }
   template <typename T>
@@ -164,7 +143,6 @@ public:
     m_type.Class = GetDataClass<T>(T(0));
     m_type.Complex = 1;
     m_type.Sparse = 1;
-    m_type.Scalar = 0;
     m_real.p = new SharedObject(m_type,new SparseMatrix<T>(real));
     m_imag.p = new SharedObject(m_type,new SparseMatrix<T>(imag));
   }
@@ -174,7 +152,6 @@ public:
     ret.m_type.Class = t;
     ret.m_type.Complex = 0;
     ret.m_type.Sparse = 0;
-    ret.m_type.Scalar = 1;
     return ret;
   }
   const NTuple dimensions() const;
@@ -186,7 +163,6 @@ public:
   inline const DataClass dataClass() const {return DataClass(m_type.Class);}
   QString className() const;
   bool isUserClass() const;
-  inline bool isArray() const {return (m_type.Scalar == 0);}
   inline bool isVector() const {return dimensions().isVector();}
   inline bool isColumnVector() const {return dimensions().isColumnVector();}
   inline bool isRowVector() const {return dimensions().isRowVector();}
@@ -203,7 +179,7 @@ public:
   double asDouble() const;
   inline bool isDouble() const {return dataClass() == Double;}
   inline bool isScalar() const {
-    return ((m_type.Scalar == 1) || dimensions().isScalar());
+    return (dimensions().isScalar());
   }
   template <typename T>
   inline BasicArray<T>& real() {
@@ -330,7 +306,6 @@ public:
   void reshape(const NTuple &size);
 
   Array asDenseArray() const;
-  void ensureNotScalarEncoded() {if (m_type.Scalar == 1) *this = asDenseArray();}
   inline bool isEmpty() const {return ((dataClass() == Invalid) || (length() == 0));}
 
   bool operator==(const Array &b) const;

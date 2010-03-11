@@ -1292,7 +1292,6 @@ static index_t GetTrimCount(const BasicArray<T> &rp) {
 
 template <typename T>
 static Array DeblankDouble(Array arg) {
-    arg.ensureNotScalarEncoded();
     index_t real_trim = GetTrimCount(arg.constReal<T>());
     Array z;
     if (arg.allReal())

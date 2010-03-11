@@ -66,9 +66,7 @@
   inline ctype & Array::realScalar() {			\
     if (dataClass() != cls)				\
       throw Exception("type mismatch");			\
-    if (m_type.Scalar == 1)				\
-      return m_real.cls;				\
-    else if (m_type.Sparse == 1)			\
+    if (m_type.Sparse == 1)			\
       return realSparse<ctype>()[1];			\
     else						\
       return real<ctype>()[1];				\
@@ -82,9 +80,7 @@
     if (dataClass() != cls)						\
       throw Exception("type mismatch");					\
     m_type.Complex = 1;							\
-    if (m_type.Scalar == 1)						\
-      return m_imag.cls;						\
-    else if (m_type.Sparse == 1)					\
+	if (m_type.Sparse == 1)					\
       return imagSparse<ctype>()[1];					\
     else								\
       return imag<ctype>()[1];						\
@@ -95,9 +91,7 @@
   inline ctype Array::constRealScalar() const {	\
     if (dataClass() != cls)			\
       throw Exception("type mismatch");		\
-    if (m_type.Scalar == 1)			\
-      return m_real.cls;			\
-    else if (m_type.Sparse == 1)		\
+    if (m_type.Sparse == 1)		\
       return constRealSparse<ctype>()[1];	\
     else					\
       return constReal<ctype>()[1];		\
@@ -112,31 +106,29 @@
       throw Exception("type mismatch");					\
     if (m_type.Complex == 0)						\
       return 0;								\
-    if (m_type.Scalar == 1)						\
-      return m_imag.cls;						\
-    else if (m_type.Sparse == 1)					\
+    if (m_type.Sparse == 1)					\
       return constImagSparse<ctype>()[1];				\
     else								\
       return constImag<ctype>()[1];					\
-  }
+  };
 
 #define MacroArrayComplexConstructor(ctype,cls)		     \
   template <>						     \
   inline Array::Array(ctype real, ctype imag) {		     \
     if (cls == Bool)					     \
       throw Exception("Complex logical values not allowed"); \
-    m_real.cls = real; m_imag.cls = imag;		     \
     m_type.Class = cls;	 m_type.Complex = 1;		     \
-    m_type.Sparse = 0; m_type.Scalar = 1;		     \
+    m_type.Sparse = 0;		     \
+    m_real.p = new SharedObject(m_type, new BasicArray<ctype>(real)); \
+	m_imag.p = new SharedObject(m_type, new BasicArray<ctype>(imag)); \
   };
 
 #define MacroArrayRealConstructor(ctype,cls)				\
   template <>								\
   inline Array::Array(ctype real) {					\
-    m_real.cls = real; m_imag.cls = 0;					\
     m_type.Class = cls;  m_type.Complex = 0;				\
-    m_type.Sparse = 0;   m_type.Scalar = 1;				\
-  };
+    m_type.Sparse = 0;   				\
+	m_real.p = new SharedObject(m_type, new BasicArray< ctype >(real)); };
 
 #define MacroArrayRealScalarArrayEncodedOnly(ctype,cls) \
   template <>						\

@@ -235,7 +235,6 @@ ArrayVector BitcmpFunction(int nargout, const ArrayVector& arg) {
   if (arg[0].isComplex()) throw Exception("bitcmp argument must be real valued");
   if (arg[0].isSparse()) throw Exception("bitcmp is not defined for sparse matrices");
   Array y(arg[0]);
-  y.ensureNotScalarEncoded();
   switch (arg[0].dataClass()) {
   default:
     throw Exception("type not supported by bitcmp");
