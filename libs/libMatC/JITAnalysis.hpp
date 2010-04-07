@@ -18,8 +18,46 @@
  */
 #ifndef __JITAnalysis_hpp__
 #define __JITAnalysis_hpp__
-
+#include "JIT.hpp"
 #include "Tree.hpp"
+#include "SymbolTable.hpp"
+#include "Array.hpp"
 
+class VariableInfo {
+	bool isUndefined; 
+  bool isScalar;
+  int argument_num;
+  DataClass type;
+
+  VariableInfo(bool is_Undefined, bool is_scalar, int arg_num, DataClass base_type) :
+    isUndefined(is_Undefined), isScalar(is_scalar), argument_num(arg_num), type(base_type) {}
+  friend class JITAnalysis;
+
+public:
+  VariableInfo(const VariableInfo &other) { this->isUndefined = other.isUndefined; this->isScalar = other.isScalar; this->argument_num = other.argument_num; this->type = other.type; }
+  VariableInfo &operator=(const VariableInfo &other) { this->isUndefined = other.isUndefined; this->isScalar = other.isScalar; this->argument_num = other.argument_num; this->type = other.type; return *this;}
+  VariableInfo() {} //need default constructor for SymbolTable
+};
+
+class JITAnalysis{
+private:
+	JIT *jit;
+	Interpreter *eval;
+	FM::SymbolTable<VariableInfo> symbols;
+
+public:
+	JITAnalysis(Interpreter *p_eval) : eval(p_eval) { jit = JIT::Instance(); }
+	void ProcessTree( const Tree& t );
+private:
+
+	void add_variable( QString name, DataClass type, bool isScalar, bool isLoopVariable = false );
+
+
+	void process_statement_type( const Tree& t );
+	void process_assignment( const Tree& t );
+	void process_for_block( const Tree& t );
+	void process_if_statement( const Tree& t );
+	void process_expression( const Tree& t );
+};
 
 #endif

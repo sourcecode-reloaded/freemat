@@ -63,6 +63,7 @@
 
 #include <QString>
 #include "JITFunc.hpp"
+#include "JITAnalysis.hpp"
 #include "Context.hpp"
 #include "Interpreter.hpp"
 #include "Array.hpp"
@@ -952,7 +953,10 @@ static int countm = 0;
 void JITFunc::compile(const Tree & t) {
 	// The signature for the compiled function should be:
 	// bool func(void** inputs);
-	dbout << t << '\n';
+	
+	JITAnalysis *an = new JITAnalysis( eval );
+	an->ProcessTree( t );
+	delete an;
 
 	countm++;
 	initialize();
