@@ -74,7 +74,10 @@ private:
 	VariableInfo process_expression( const Tree& t );
 	void process_statement(const Tree & t);
 	void process_block(const Tree & t);
+	VariableInfo process_binary_operation( const Tree& t );
 	VariableInfo process_variable( const Tree& t );
+	DataClass BinaryOpResultType( DataClass v1, DataClass v2 );
+
 };
 
 #endif

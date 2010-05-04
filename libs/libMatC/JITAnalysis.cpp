@@ -237,6 +237,47 @@ VariableInfo JITAnalysis::process_variable( const Tree& t )
 	return vi;
 }
 
+DataClass JITAnalysis::BinaryOpResultType( DataClass v1, DataClass v2 )
+{
+	bool v1FP = false; 
+	bool v2FP = false;
+	DataClass retType = Invalid;
+
+	//if one of the arguments is unknown - the result has to be unknown
+	if( v1==Invalid || v2==Invalid )
+		return Invalid;
+
+	v1FP = ( v1 == Double || v1 == Float )? true:false;
+	v2FP = ( v2 == Double || v2 == Float )? true:false;
+	//float+double => float
+	if( v1FP && v2FP ){
+		retType = ( (v1==Double) && (v2==Double) )? Double:Float;
+		return retType;
+	}
+
+	//integer type can only be combined with the same integer type
+	if( v1 == v2 )
+		return v1;
+	
+	throw Exception("Integers can only be combined with the same type integers or with doubles");
+	return Invalid;
+}
+
+VariableInfo JITAnalysis::process_binary_operation( const Tree& t )
+{
+	VariableInfo v1 = process_expression( t.first() );
+	VariableInfo v2 = process_expression( t.second() );
+
+	bool isResultScalar = v1.isScalarVariable() && v2.isScalarVariable();
+	
+	DataClass retType = BinaryOpResultType( v1.data_class(), v2.data_class() );
+
+	dbout << "---->  process_variable: " << t.first().text() << " " << t.numChildren() << "\n";
+	VariableInfo vi( false, false, 0, retType );
+	return vi;
+}
+
+
 VariableInfo JITAnalysis::process_expression( const Tree& t )
 {
 	switch(t.token()) {
@@ -262,8 +303,10 @@ VariableInfo JITAnalysis::process_expression( const Tree& t )
 		  case ':':
 		  case TOK_MATDEF: 
 		  case TOK_CELLDEF:      throw Exception("JIT compiler does not support complex, string, END, matrix or cell defs");
+*/
 		  case '+':
-			  return jit->Add(compile_expression(t.first()),compile_expression(t.second()));
+			  return process_binary_operation( t );
+/*
 		  case '-': 
 			  return jit->Sub(compile_expression(t.first()),compile_expression(t.second()));
 		  case '*': 
