@@ -28,14 +28,19 @@
 
 void JITVariableTable::add_variable( QString name, DataClass type, bool isScalar, bool isLoopVariable )
 {
-	ArrayReference ptr(eval->getContext()->lookupVariable(name));
-	if (!ptr.valid()){
+	if (!symbols.hasSymbol( name )){
 		symbols.insertSymbol( name, VariableInfo( false, isScalar, 0, type ) );
 		dbout << "Defining vars new: " << name << '\n';
 	}
 	else{
-		DataClass aclass = ptr->dataClass();
-		dbout << "Defining vars existing " << name << '\n';
+		VariableInfo* vi = symbols.findSymbol( name );
+		
+		if( type != vi->data_class() ){
+			symbols.deleteSymbol( name );
+			symbols.insertSymbol( name, VariableInfo( true, false, 0, Invalid ) );
+			dbout << "Defining vars existing " << name << '\n';
+		}
+		
 	}
 
 }
@@ -44,10 +49,12 @@ void JITVariableTable::rhs_index_assignment( QString name, const VariableInfo& l
 {
 	ArrayReference ptr(eval->getContext()->lookupVariable(name));
 	if (!ptr.valid()){
-		add_variable( name, lhs_type.data_class(), lhs_type.isScalarVariable(), false );
+		add_variable( name, lhs_type.data_class(), lhs_type.isScalarVariable() );
 	}
 	else{
-		assert("TODO: check type",0);
+
+		add_variable( name, ptr->dataClass(), ptr->isScalar() );
+		//assert(0); //TODO: check type
 	}
 }
 
@@ -305,16 +312,13 @@ VariableInfo JITAnalysis::process_expression( const Tree& t )
 		  case TOK_CELLDEF:      throw Exception("JIT compiler does not support complex, string, END, matrix or cell defs");
 */
 		  case '+':
-			  return process_binary_operation( t );
-/*
-		  case '-': 
-			  return jit->Sub(compile_expression(t.first()),compile_expression(t.second()));
+		  case '-':
 		  case '*': 
 		  case TOK_DOTTIMES: 
-			  return jit->Mul(compile_expression(t.first()),compile_expression(t.second()));
 		  case '/': 
 		  case TOK_DOTRDIV:
-			  return jit->Div(compile_expression(t.first()),compile_expression(t.second()));
+			  return process_binary_operation( t );
+/*
 		  case '\\': 
 		  case TOK_DOTLDIV: 
 			  return jit->Div(compile_expression(t.second()),compile_expression(t.first()));
