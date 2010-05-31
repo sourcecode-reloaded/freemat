@@ -956,6 +956,8 @@ void JITFunc::compile(const Tree & t) {
 	
 	JITAnalysis *an = new JITAnalysis( eval );
 	an->ProcessTree( t );
+	an->DumpAnalysisResults();
+
 	delete an;
 
 	countm++;

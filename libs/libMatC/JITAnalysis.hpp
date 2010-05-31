@@ -39,6 +39,8 @@ public:
 	VariableInfo() {} //need default constructor for SymbolTable
 	bool isScalarVariable(void) const { return isScalar; }
 	void setScalar(bool Scalar) { isScalar = Scalar; }
+	bool isUndefinedType(void) const { return isUndefined; }
+
 	DataClass data_class( void ) const { return type; }
 };
 
@@ -51,7 +53,18 @@ public:
 	void rhs_assignment( QString name, const VariableInfo& lhs_type );
 	void rhs_index_assignment( QString name, const VariableInfo& lhs_type );
 	void new_loop_index( QString name, const VariableInfo& lhs_type );
-	
+	void DumpTable( void ){ 
+		StringVector vars = symbols.getCompletions( "" );  
+		QStringListIterator vars_iterator( vars );
+		FILE *f = fopen( "type_output.txt", "a" );
+		while( vars_iterator.hasNext() ){
+			QString var_name = vars_iterator.next();
+			VariableInfo* var_info = symbols.findSymbol( var_name );
+			fprintf(f, "%10s : %2d : %8s : %10s\n", var_name.toStdString().c_str(), (int)var_info->data_class(), 
+				var_info->isScalarVariable() ? "Scalar" : "Array", var_info->isUndefinedType()?"Undefined":"Defined" );
+		}
+		fclose( f );
+	};
 private:
 	void add_variable( QString name, DataClass type, bool isScalar, bool isLoopVariable = false );
 };
@@ -65,6 +78,7 @@ private:
 public:
 	JITAnalysis(Interpreter *p_eval) : variables( p_eval), eval(p_eval) { jit = JIT::Instance(); }
 	void ProcessTree( const Tree& t );
+	void DumpAnalysisResults( void ){ variables.DumpTable(); }
 
 private:
 	void process_statement_type( const Tree& t );
