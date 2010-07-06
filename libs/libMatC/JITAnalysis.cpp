@@ -237,11 +237,33 @@ void JITAnalysis::process_if_statement( const Tree& t )
 {
 }
 
+
+MultiVariableInfo JITAnalysis::process_function( const Tree& t )
+{
+	//TODO: Fix this
+	MultiVariableInfo ret;
+	ret.append( VariableInfo( true, true, 0, Double ) );
+	return ret;
+}
+
 VariableInfo JITAnalysis::process_variable( const Tree& t )
 {
-	dbout << "---->  process_variable: " << t.first().text() << " " << t.numChildren() << "\n";
-	VariableInfo vi( false, false, 0, Double );
-	return vi;
+	QString symname = symbol_prefix+t.first().text();
+
+	dbout << "---->  process_variable: " << symname << " " << t.numChildren() << "\n";
+	VariableInfo* vi = variables.find_by_name( symname );	
+	if ( !vi ) {
+		FuncPtr funcval;
+		if (!eval->lookupFunction(symname,funcval)) 
+			throw Exception("Couldn't find function " + symname);
+		funcval->updateCode(eval);
+		MultiVariableInfo mvi = process_function( t );
+		vi = &( mvi[0] ); 
+	}
+
+	if( !vi )
+		throw Exception("Use of uninitialized variable on the rhs");
+	return *vi;
 }
 
 DataClass JITAnalysis::BinaryOpResultType( DataClass v1, DataClass v2 )

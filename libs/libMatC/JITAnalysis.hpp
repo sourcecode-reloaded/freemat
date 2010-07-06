@@ -22,6 +22,7 @@
 #include "Tree.hpp"
 #include "SymbolTable.hpp"
 #include "Array.hpp"
+#include <QVector>
 
 class VariableInfo {
 	bool isUndefined; 
@@ -44,6 +45,8 @@ public:
 	DataClass data_class( void ) const { return type; }
 };
 
+typedef QVector<VariableInfo> MultiVariableInfo;
+
 class JITVariableTable{
 private:
 	Interpreter *eval;
@@ -65,6 +68,8 @@ public:
 		}
 		fclose( f );
 	};
+	VariableInfo* find_by_name( const QString name ){ return symbols.findSymbol( name ); }
+
 private:
 	void add_variable( QString name, DataClass type, bool isScalar, bool isLoopVariable = false );
 };
@@ -74,7 +79,7 @@ private:
 	JIT *jit;
 	Interpreter *eval;
 	JITVariableTable variables;
-
+	QString symbol_prefix;
 public:
 	JITAnalysis(Interpreter *p_eval) : variables( p_eval), eval(p_eval) { jit = JIT::Instance(); }
 	void ProcessTree( const Tree& t );
@@ -88,6 +93,9 @@ private:
 	VariableInfo process_expression( const Tree& t );
 	void process_statement(const Tree & t);
 	void process_block(const Tree & t);
+	
+	MultiVariableInfo process_function( const Tree & t );
+
 	VariableInfo process_binary_operation( const Tree& t );
 	VariableInfo process_variable( const Tree& t );
 	DataClass BinaryOpResultType( DataClass v1, DataClass v2 );
