@@ -300,7 +300,7 @@ JITScalar JITFunc::compile_built_in_function_call(const Tree & t) {
 	}
 }
 
-static QString uid_string(int uid) {
+QString uid_string(int uid) {
 	return QString("%1").arg(uid);
 }
 

@@ -35,12 +35,18 @@ class VariableInfo {
 public:
 	VariableInfo(bool is_Undefined, bool is_scalar, int arg_num, DataClass base_type) :
 		isUndefined(is_Undefined), isScalar(is_scalar), argument_num(arg_num), type(base_type) {}
+	
 	VariableInfo(const VariableInfo &other) { this->isUndefined = other.isUndefined; this->isScalar = other.isScalar; this->argument_num = other.argument_num; this->type = other.type; }
+	
 	VariableInfo &operator=(const VariableInfo &other) { this->isUndefined = other.isUndefined; this->isScalar = other.isScalar; this->argument_num = other.argument_num; this->type = other.type; return *this;}
-	VariableInfo() {} //need default constructor for SymbolTable
+	
+	VariableInfo() : isUndefined(true), isScalar(true), type(Invalid) {} //need default constructor for SymbolTable
+
 	bool isScalarVariable(void) const { return isScalar; }
 	void setScalar(bool Scalar) { isScalar = Scalar; }
 	bool isUndefinedType(void) const { return isUndefined; }
+	void setDefined( void ) { isUndefined = false; }
+	void setDataClass( DataClass _type ) { type = _type; }
 
 	DataClass data_class( void ) const { return type; }
 };
@@ -53,6 +59,8 @@ private:
 	FM::SymbolTable<VariableInfo> symbols;
 public:
 	JITVariableTable(Interpreter *p_eval) : eval(p_eval){};
+	void function_arg( QString name, const VariableInfo& vi );
+	void internal_variable( QString name, const VariableInfo& vi );
 	void rhs_assignment( QString name, const VariableInfo& lhs_type );
 	void rhs_index_assignment( QString name, const VariableInfo& lhs_type );
 	void new_loop_index( QString name, const VariableInfo& lhs_type );
@@ -68,7 +76,7 @@ public:
 		}
 		fclose( f );
 	};
-	VariableInfo* find_by_name( const QString name ){ return symbols.findSymbol( name ); }
+	VariableInfo* find_by_name( const QString name ); 
 
 private:
 	void add_variable( QString name, DataClass type, bool isScalar, bool isLoopVariable = false );
@@ -80,8 +88,9 @@ private:
 	Interpreter *eval;
 	JITVariableTable variables;
 	QString symbol_prefix;
+	int uid;
 public:
-	JITAnalysis(Interpreter *p_eval) : variables( p_eval), eval(p_eval) { jit = JIT::Instance(); }
+	JITAnalysis(Interpreter *p_eval) : variables( p_eval), eval(p_eval), uid(0), symbol_prefix("") { jit = JIT::Instance(); }
 	void ProcessTree( const Tree& t );
 	void DumpAnalysisResults( void ){ variables.DumpTable(); }
 

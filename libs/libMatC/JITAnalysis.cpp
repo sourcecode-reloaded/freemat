@@ -26,6 +26,8 @@
 #include "Context.hpp"
 #include "Interpreter.hpp"
 
+extern QString uid_string(int uid);
+
 void JITVariableTable::add_variable( QString name, DataClass type, bool isScalar, bool isLoopVariable )
 {
 	if (!symbols.hasSymbol( name )){
@@ -40,22 +42,43 @@ void JITVariableTable::add_variable( QString name, DataClass type, bool isScalar
 			symbols.insertSymbol( name, VariableInfo( true, false, 0, Invalid ) );
 			dbout << "Defining vars existing " << name << '\n';
 		}
-		
 	}
+}
 
+VariableInfo* JITVariableTable::find_by_name( const QString name )
+{ 
+	if (!symbols.hasSymbol( name )){ //we first check our table, if missing - we ask the interpreter
+		ArrayReference ptr(eval->getContext()->lookupVariable(name));
+		if (ptr.valid()){
+			add_variable( name, ptr->dataClass(), ptr->isScalar() );
+		}
+		//if symbol is unknown to the interpreter findSymbol at the end will fail, as it should
+	}
+	return symbols.findSymbol( name ); 
 }
 
 void JITVariableTable::rhs_index_assignment( QString name, const VariableInfo& lhs_type )
 {
-	ArrayReference ptr(eval->getContext()->lookupVariable(name));
-	if (!ptr.valid()){
-		add_variable( name, lhs_type.data_class(), lhs_type.isScalarVariable() );
+	VariableInfo* vi = find_by_name( name );
+	if( !vi ){
+		add_variable( name, lhs_type.data_class(), false /*lhs_type.isScalarVariable()*/ );
 	}
 	else{
-
-		add_variable( name, ptr->dataClass(), ptr->isScalar() );
-		//assert(0); //TODO: check type
+		if( vi->isScalarVariable() ){ //index assignment to vector variable - assume it is vector type
+			vi->setScalar( false /*lhs_type.isScalarVariable()*/ );
+		}
+		//since vector assignment can't change variable type - don't match it with lhs.
 	}
+}
+
+void JITVariableTable::function_arg( QString name, const VariableInfo& vi )
+{
+	add_variable( name, vi.data_class(), vi.isScalarVariable(), false );
+}
+
+void JITVariableTable::internal_variable( QString name, const VariableInfo& vi )
+{
+	add_variable( name, vi.data_class(), vi.isScalarVariable(), false );
 }
 
 void JITVariableTable::rhs_assignment( QString name, const VariableInfo& lhs_type )
@@ -132,7 +155,6 @@ void JITAnalysis::process_block(const Tree & t) {
 void JITAnalysis::process_assignment( const Tree& t )
 {
 	const Tree & s(t.first());
-	QString symbol_prefix("");
 	QString symname(symbol_prefix+s.first().text());
 
 	const Tree & rhs( t.second() );
@@ -240,9 +262,51 @@ void JITAnalysis::process_if_statement( const Tree& t )
 
 MultiVariableInfo JITAnalysis::process_function( const Tree& t )
 {
-	//TODO: Fix this
 	MultiVariableInfo ret;
-	ret.append( VariableInfo( true, true, 0, Double ) );
+	// First, make sure it is a function
+	QString symname(t.first().text());
+	FuncPtr funcval;
+	if (!eval->lookupFunction(symname,funcval)) 
+		throw Exception("Couldn't find function " + symname);
+	if (funcval->type() != FM_M_FUNCTION)
+		throw Exception("Expected M function");
+	MFunctionDef *fptr = (MFunctionDef*) funcval;
+	if ((fptr->inputArgCount() < 0) || (fptr->outputArgCount() < 0))
+		throw Exception("Variable argument functions not handled");
+	if (fptr->nestedFunction /*ei || fptr->capturedFunction*/)
+		throw Exception("Nested and/or captured functions not handled");
+	if (fptr->scriptFlag) 
+		throw Exception("scripts not handled");
+
+	// Set up the prefix
+	QString new_symbol_prefix = symbol_prefix + "$" + symname + "_" + uid_string(uid);
+	uid++;
+	// Loop through the arguments to the function,
+	// and map them from the defined arguments of the tree
+	if (t.numChildren() < 2) 
+		throw Exception("function takes no arguments - not currently supported");
+	const Tree & s(t.second());
+	int args_defed = fptr->arguments.size();
+	if (args_defed > s.numChildren())
+		args_defed = s.numChildren();
+	for (int i=0;i<args_defed;i++) {
+		VariableInfo vi = process_expression(s.child(i));
+		variables.function_arg( new_symbol_prefix + fptr->arguments[i], vi );
+	}
+	variables.internal_variable( new_symbol_prefix+"nargout", VariableInfo( false, true, 0, Double ));
+	variables.internal_variable( new_symbol_prefix+"nargin", VariableInfo( false, true, 0, Double ));
+
+	QString save_prefix = symbol_prefix;
+	symbol_prefix = new_symbol_prefix;
+	process_block(fptr->code);
+
+	//does not yet handle correctly variadic functions
+	for( int k = 0; k < fptr->outputArgCount(); ++k ){
+		VariableInfo *v = variables.find_by_name(new_symbol_prefix+fptr->returnVals[k]);
+		if (!v) throw Exception("function failed to define return value");
+		ret.append( *v );
+	}
+	symbol_prefix = save_prefix;
 	return ret;
 }
 
@@ -258,7 +322,8 @@ VariableInfo JITAnalysis::process_variable( const Tree& t )
 			throw Exception("Couldn't find function " + symname);
 		funcval->updateCode(eval);
 		MultiVariableInfo mvi = process_function( t );
-		vi = &( mvi[0] ); 
+		if( !mvi.empty() )
+			return( mvi[0] ); 
 	}
 
 	if( !vi )
@@ -302,7 +367,7 @@ VariableInfo JITAnalysis::process_binary_operation( const Tree& t )
 	DataClass retType = BinaryOpResultType( v1.data_class(), v2.data_class() );
 
 	dbout << "---->  process_variable: " << t.first().text() << " " << t.numChildren() << "\n";
-	VariableInfo vi( false, false, 0, retType );
+	VariableInfo vi( false, isResultScalar, 0, retType );
 	return vi;
 }
 
@@ -311,28 +376,24 @@ VariableInfo JITAnalysis::process_expression( const Tree& t )
 {
 	switch(t.token()) {
 		  case TOK_VARIABLE:     return process_variable(t);
-/*		  case TOK_REAL:
+
+		  case TOK_REAL:
 		  case TOK_REALF:
-			  if( t.array().isScalar() ){
-				  switch( t.array().dataClass() ){
-					  case Bool:
-						  return jit->BoolValue( t.array().constRealScalar<bool>() );
-					  case Float:
-						  return jit->FloatValue( t.array().constRealScalar<float>() );
-					  case Double:
-						  return jit->DoubleValue( t.array().constRealScalar<double>() );
-					  default:
-						  throw Exception("Unsupported scalar type.");
+			  {
+				  VariableInfo vi;
+				  if( t.array().isScalar() ){
+					  vi.setScalar( true );
 				  }
+				  vi.setDataClass( t.array().dataClass() );
+				  vi.setDefined();
+				  return vi;
 			  }
-			  else
-				  throw Exception("Unsupported type.");
-		  case TOK_STRING:
-		  case TOK_END:
-		  case ':':
-		  case TOK_MATDEF: 
-		  case TOK_CELLDEF:      throw Exception("JIT compiler does not support complex, string, END, matrix or cell defs");
-*/
+			  /*		  case TOK_STRING:
+			  case TOK_END:
+			  case ':':
+			  case TOK_MATDEF: 
+			  case TOK_CELLDEF:      throw Exception("JIT compiler does not support complex, string, END, matrix or cell defs");
+			  */
 		  case '+':
 		  case '-':
 		  case '*': 
@@ -340,43 +401,45 @@ VariableInfo JITAnalysis::process_expression( const Tree& t )
 		  case '/': 
 		  case TOK_DOTRDIV:
 			  return process_binary_operation( t );
-/*
-		  case '\\': 
-		  case TOK_DOTLDIV: 
+			  /*
+			  case '\\': 
+			  case TOK_DOTLDIV: 
 			  return jit->Div(compile_expression(t.second()),compile_expression(t.first()));
-		  case TOK_SOR: 
+			  case TOK_SOR: 
 			  return compile_or_statement(t);
-		  case '|':
+			  case '|':
 			  return jit->Or(compile_expression(t.first()),compile_expression(t.second()));
-		  case TOK_SAND: 
+			  case TOK_SAND: 
 			  return compile_and_statement(t);
-		  case '&': 
+			  case '&': 
 			  return jit->And(compile_expression(t.first()),compile_expression(t.second()));
-		  case '<': 
+			  case '<': 
 			  return jit->LessThan(compile_expression(t.first()),compile_expression(t.second()));
-		  case TOK_LE: 
+			  case TOK_LE: 
 			  return jit->LessEquals(compile_expression(t.first()),compile_expression(t.second()));
-		  case '>': 
+			  case '>': 
 			  return jit->GreaterThan(compile_expression(t.first()),compile_expression(t.second()));
-		  case TOK_GE: 
+			  case TOK_GE: 
 			  return jit->GreaterEquals(compile_expression(t.first()),compile_expression(t.second()));
-		  case TOK_EQ: 
+			  case TOK_EQ: 
 			  return jit->Equals(compile_expression(t.first()),compile_expression(t.second()));
-		  case TOK_NE: 
+			  case TOK_NE: 
 			  return jit->NotEqual(compile_expression(t.first()),compile_expression(t.second()));
-		  case TOK_UNARY_MINUS: 
+			  case TOK_UNARY_MINUS: 
 			  return jit->Negate(compile_expression(t.first()));
-		  case TOK_UNARY_PLUS: 
+			  case TOK_UNARY_PLUS: 
 			  return compile_expression(t.first());
-		  case '~': 
+			  case '~': 
 			  return jit->Not(compile_expression(t.first()));
-		  case '^':               throw Exception("^ is not currently handled by the JIT compiler");
-		  case TOK_DOTPOWER:      throw Exception(".^ is not currently handled by the JIT compiler");
-		  case '\'':              throw Exception("' is not currently handled by the JIT compiler");
-		  case TOK_DOTTRANSPOSE:  throw Exception(".' is not currently handled by the JIT compiler");
-		  case '@':               throw Exception("@ is not currently handled by the JIT compiler");
-		  default:                throw Exception("Unrecognized expression!");
-	*/}  
+			  case '^':               throw Exception("^ is not currently handled by the JIT compiler");
+			  case TOK_DOTPOWER:      throw Exception(".^ is not currently handled by the JIT compiler");
+			  case '\'':              throw Exception("' is not currently handled by the JIT compiler");
+			  case TOK_DOTTRANSPOSE:  throw Exception(".' is not currently handled by the JIT compiler");
+			  case '@':               throw Exception("@ is not currently handled by the JIT compiler");
+			  default:                throw Exception("Unrecognized expression!");
+			  */
+	} 
+	throw Exception(" process_expression missing case ");
 }
 
 
