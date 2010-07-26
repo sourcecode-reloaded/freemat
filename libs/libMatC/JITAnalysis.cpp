@@ -257,6 +257,16 @@ void JITAnalysis::process_for_block( const Tree& t )
 
 void JITAnalysis::process_if_statement( const Tree& t )
 {
+	process_block(t.second()); //analyze if(true) part
+
+	int n=2;
+	while (n < t.numChildren() && t.child(n).is(TOK_ELSEIF)) {
+			process_block(t.child(n).second());
+			n++;
+	}
+	if (t.last().is(TOK_ELSE))
+		process_block(t.last().first());
+
 }
 
 
@@ -394,6 +404,20 @@ VariableInfo JITAnalysis::process_expression( const Tree& t )
 			  case TOK_MATDEF: 
 			  case TOK_CELLDEF:      throw Exception("JIT compiler does not support complex, string, END, matrix or cell defs");
 			  */
+		  case TOK_MATDEF:   
+			  //{
+				 // if (t.numChildren() == 0) 
+					//  return VariableInfo( false, true, 0, Double );
+				 // for (int i=0;i<t.numChildren();i++) {
+					//  const Tree & s(t.child(i));
+					//  ArrayVector n;
+					//  for (int j=0;j<s.numChildren();j++)
+					//	  multiexpr(s.child(j),n);
+					//  m.push_back(n);
+				 // }
+
+			  //}
+			  throw Exception("JIT compiler does not support complex, string, END, matrix or cell defs");
 		  case '+':
 		  case '-':
 		  case '*': 
