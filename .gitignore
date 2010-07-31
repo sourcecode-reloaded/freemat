@@ -1,0 +1,8 @@
+libs/Makefile.in
+libs/libCore/Makefile.in
+libs/libFN/Makefile.in
+libs/libFreeMat/Makefile.in
+libs/libGraphics/Makefile.in
+libs/libMex/Makefile.in
+libs/libXP/Makefile.in
+src/Makefile.in
