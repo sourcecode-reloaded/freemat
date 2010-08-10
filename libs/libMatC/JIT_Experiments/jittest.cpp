@@ -465,6 +465,10 @@ int main( void )
 	//hsopt.AddPath("C:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\include", clang::frontend::System, false, false );
 	//hsopt.AddPath("C:\\MinGW\\include", clang::frontend::System, false, false );
 	//hsopt.AddPath("C:\\MinGW\\include\\c++\\4.2.1", clang::frontend::System, false, false );
+
+        hsopt.AddPath("C:\\Qt\\2010.04\\mingw\\include", clang::frontend::System, false, false );
+        hsopt.AddPath("C:\\Qt\\2010.04\\mingw\\lib\\gcc\\mingw32\\4.4.0\\include", clang::frontend::System, false, false );
+        hsopt.AddPath("C:\\Qt\\2010.04\\qt\\include", clang::frontend::System, false, false );
 	hsopt.AddPath("C:\\Qt\\Qt4\\include", clang::frontend::System, false, false );
 
 	FrontendOptions feopt;

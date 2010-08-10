@@ -17,35 +17,29 @@ set( LLVM_LIB_LIST
     clangParse
     clangLex
     clangBasic
-LLVMAnalysis
-LLVMArchive
-LLVMAsmParser
+LLVMInstrumentation
+LLVMipo
+LLVMX86CodeGen
+LLVMX86Info
+LLVMSelectionDAG
 LLVMAsmPrinter
+LLVMJIT
+LLVMExecutionEngine
+LLVMCodeGen
+LLVMScalarOpts
+LLVMInstCombine
+LLVMTransformUtils
+LLVMipa
+LLVMAnalysis
+LLVMTarget
+LLVMMC
 LLVMBitReader
 LLVMBitWriter
-LLVMCodeGen
 LLVMCore
-LLVMExecutionEngine
-LLVMInstCombine
-LLVMInstrumentation
-LLVMInterpreter
-LLVMipa
-LLVMipo
-LLVMJIT
-LLVMLinker
-LLVMMC
-LLVMMCParser
-LLVMScalarOpts
-LLVMSelectionDAG
 LLVMSupport
-LLVMSystem
-LLVMTarget
-LLVMTransformUtils
 LLVMX86AsmParser
-LLVMX86AsmPrinter
-LLVMX86CodeGen
-LLVMX86Disassembler
-LLVMX86Info
+LLVMAsmParser
+LLVMSystem
 )
 
 IF( USE_LLVM )
@@ -114,5 +108,16 @@ jittest.cpp
 
 TARGET_LINK_LIBRARIES( jittest
 ${LLVM_LIBS}
+imagehlp
+psapi
 )
 
+#LLVMArchive
+#LLVMAsmParser
+#LLVMBitReader
+#LLVMBitWriter
+#LLVMInterpreter
+#LLVMLinker
+#LLVMMCParser
+#LLVMX86AsmPrinter
+#LLVMX86Disassembler
