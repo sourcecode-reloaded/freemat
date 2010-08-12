@@ -221,6 +221,9 @@ ELSE (FORCE_BUNDLED_PORTAUDIO OR NOT SYSTEM_PORTAUDIO_AVAILABLE AND NOT FORCE_SY
 ENDIF (FORCE_BUNDLED_PORTAUDIO OR NOT SYSTEM_PORTAUDIO_AVAILABLE AND NOT FORCE_SYSTEM_LIBS)
 ADD_DEFINITIONS( -DHAVE_PORTAUDIO19)
 SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PORTAUDIO_LIBRARY})
+IF (MINGW)
+SET(EXTRA_SYS_LIBS ${EXTRA_SYS_LIBS} winmm)
+ENDIF (MINGW)
 IF (APPLE)
    FIND_LIBRARY(COREAUDIO_LIBRARY CoreAudio)
    FIND_LIBRARY(AUDIOTOOLBOX_LIBRARY AudioToolbox)
@@ -290,14 +293,72 @@ IF( USE_LLVM )
 		  CACHE STRING "LLVM Link Libraries" )
 	set(LLVM_VERSION "2.7" CACHE STRING "LLVM Version found")
     endif (LLVM_INCLUDE_DIR)
-  else (MSVC)
-    find_program(LLVM_CONFIG llvm-config)
-    execute_process(COMMAND ${LLVM_CONFIG} --libfiles jit nativecodegen ipo instrumentation scalaropts 
-    			    OUTPUT_VARIABLE LLVM_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
-    execute_process(COMMAND ${LLVM_CONFIG} --includedir OUTPUT_VARIABLE LLVM_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
-    execute_process(COMMAND ${LLVM_CONFIG} --version OUTPUT_VARIABLE LLVM_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
-    separate_arguments(LLVM_LIBS) 
+  elseif (MINGW)
+        set( LLVM_LIB_LIST
+            clangFrontend
+            clangDriver
+            clangCodeGen
+            clangSema
+            clangChecker
+            clangIndex
+            clangAnalysis
+            clangRewrite
+            clangAST
+            clangParse
+            clangLex
+            clangBasic
+        LLVMInstrumentation
+        LLVMipo
+        LLVMX86CodeGen
+        LLVMX86Info
+        LLVMSelectionDAG
+        LLVMAsmPrinter
+        LLVMJIT
+        LLVMExecutionEngine
+        LLVMCodeGen
+        LLVMScalarOpts
+        LLVMInstCombine
+        LLVMTransformUtils
+        LLVMipa
+        LLVMAnalysis
+        LLVMTarget
+        LLVMMC
+        LLVMBitReader
+        LLVMBitWriter
+        LLVMCore
+        LLVMSupport
+        LLVMX86AsmParser
+        LLVMAsmParser
+        LLVMSystem
+        )
+        set(LLVM_ROOT "C:/Program Files/LLVM-mingw" CACHE PATH "Directory where LLVM is installed")
+        macro(FIND_LLVM_MSVC_LIB __libname__ )
+          find_library(LIB_${__libname__} ${__libname__} DOC "Location of ${__libname__}.lib"
+                                      PATHS ${LOCAL_PATH} "${LLVM_ROOT}/lib" "C:/Program Files/LLVM/lib")
+          mark_as_advanced(LIB_${__libname__})
+        endmacro(FIND_LLVM_MSVC_LIB)
+        find_path(LLVM_INCLUDE_DIR NAMES llvm-c/Core.h DOC "Location of llvm-c"
+                                   PATHS ${LOCAL_PATH} ${LLVM_ROOT}/include)
+        if (LLVM_INCLUDE_DIR)
+                    foreach( libname IN ITEMS ${LLVM_LIB_LIST} )
+                            FIND_LLVM_MSVC_LIB( ${libname} )
+                            list(APPEND LLVM_LIBL ${LIB_${libname}})
+                    endforeach( )
+            set(LLVM_VERSION "2.7" CACHE STRING "LLVM Version found")
+            set(LLVM_LIBS ${LLVM_LIBL} CACHE STRING "LLVM Link Libraries" )
+        endif (LLVM_INCLUDE_DIR)
+        SET(EXTRA_SYS_LIBS ${EXTRA_SYS_LIBS} imagehlp psapi )
+    else (MINGW)
+        find_program(LLVM_CONFIG llvm-config)
+        execute_process(COMMAND ${LLVM_CONFIG} --libfiles jit nativecodegen ipo instrumentation scalaropts
+                                OUTPUT_VARIABLE LLVM_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
+        execute_process(COMMAND ${LLVM_CONFIG} --includedir OUTPUT_VARIABLE LLVM_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+        execute_process(COMMAND ${LLVM_CONFIG} --version OUTPUT_VARIABLE LLVM_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+        separate_arguments(LLVM_LIBS)
+
   endif (MSVC)
+
+
 #  if (NOT LLVM_VERSION STREQUAL "2.5")
 #    message(FATAL_ERROR "LLVM version 2.5 required.")
 #    set(USE_LLVM FALSE)
@@ -312,10 +373,10 @@ ENDIF (USE_LLVM)
 
 ##############################################################################
 #Extra libraries
-IF(NOT MSVC)
+IF(NOT MSVC AND NOT MINGW)
   FIND_LIBRARY(NCURSES_LIBRARY NAMES ncurses DOC "Location of the ncurses library." PATH /mingw/lib)
   SET(EXTRA_LIBRARIES ${NCURSES_LIBRARY}  )  
-ENDIF(NOT MSVC)
+ENDIF(NOT MSVC AND NOT MINGW)
 
 INCLUDE_DIRECTORIES( libs/libFreeMat libs/libGraphics 
 libs/libMex libs/libXP libs/libCore libs/libFN libs/libMatC 

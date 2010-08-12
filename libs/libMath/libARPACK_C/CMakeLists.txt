@@ -1,3 +1,7 @@
+IF (MINGW)
+ADD_DEFINITIONS( -DUSE_CLOCK )
+ENDIF (MINGW)
+
 ADD_LIBRARY( arpack_c 
 d_cnjg.c
 d_imag.c

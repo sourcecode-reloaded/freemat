@@ -438,7 +438,9 @@ int main( void )
 	lang.CPlusPlus = 1;
 	lang.C99 = 1;
 	lang.CPlusPlus0x = 1;
-	lang.Microsoft = 1;
+        lang.GNUKeywords = 1;
+        lang.GNUMode = 1;
+        lang.Microsoft = 0;
 	lang.Bool = 1;
 	lang.RTTI = 1;
 	//lang.AccessControl = 1;
@@ -466,10 +468,11 @@ int main( void )
 	//hsopt.AddPath("C:\\MinGW\\include", clang::frontend::System, false, false );
 	//hsopt.AddPath("C:\\MinGW\\include\\c++\\4.2.1", clang::frontend::System, false, false );
 
-        hsopt.AddPath("C:\\Qt\\2010.04\\mingw\\include", clang::frontend::System, false, false );
-        hsopt.AddPath("C:\\Qt\\2010.04\\mingw\\lib\\gcc\\mingw32\\4.4.0\\include", clang::frontend::System, false, false );
-        hsopt.AddPath("C:\\Qt\\2010.04\\qt\\include", clang::frontend::System, false, false );
-	hsopt.AddPath("C:\\Qt\\Qt4\\include", clang::frontend::System, false, false );
+        hsopt.AddPath("C:\\Qt\\Qt4.6.3\\mingw\\lib\\gcc\\mingw32\\4.4.0\\include", clang::frontend::System, false, false );
+        hsopt.AddPath("C:\\Qt\\Qt4.6.3\\mingw\\lib\\gcc\\mingw32\\4.4.0\\include\\c++", clang::frontend::System, false, false );
+        hsopt.AddPath("C:\\Qt\\Qt4.6.3\\mingw\\lib\\gcc\\mingw32\\4.4.0\\include\\c++\\mingw32", clang::frontend::System, false, false );
+        hsopt.AddPath("C:\\Qt\\Qt4.6.3\\mingw\\include", clang::frontend::System, false, false );
+        hsopt.AddPath("C:\\Qt\\Qt4.6.3\\qt\\include", clang::frontend::System, false, false );
 
 	FrontendOptions feopt;
 	InitializePreprocessor(pp, ppio, hsopt, feopt );

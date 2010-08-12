@@ -21,7 +21,7 @@ IF (APPLE)
    ${CMAKE_CURRENT_SOURCE_DIR}/src/os/unix/pa_unix_util.c )
 ENDIF (APPLE) 
 
-IF (MSVC)
+IF (MSVC OR MINGW)
    ADD_DEFINITIONS(-DPA_USE_WDMKSDEVICE_INFO)
    ADD_DEFINITIONS( -DPA_NO_ASIO )
    ADD_DEFINITIONS( -DPA_NO_DS )
@@ -45,11 +45,19 @@ IF (MSVC)
    ${CMAKE_CURRENT_SOURCE_DIR}/src/os/win/pa_win_hostapis.c
    ${CMAKE_CURRENT_SOURCE_DIR}/src/os/win/pa_win_util.c
    ${CMAKE_CURRENT_SOURCE_DIR}/src/os/win/pa_win_waveformat.c
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/os/win/pa_win_wdmks_utils.c
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/os/win/pa_x86_plain_converters.c)
-ENDIF (MSVC)
+    #${CMAKE_CURRENT_SOURCE_DIR}/src/os/win/pa_win_wdmks_utils.c
+   #${CMAKE_CURRENT_SOURCE_DIR}/src/os/win/pa_x86_plain_converters.c
+    )
+    IF (MSVC)
+       ADD_LIBRARY(portaudio
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/os/win/pa_win_wdmks_utils.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/os/win/pa_x86_plain_converters.c
+       )
+    ENDIF (MSVC)
 
-IF (NOT MSVC AND NOT APPLE)
+ENDIF (MSVC OR MINGW )
+
+IF (NOT MSVC AND NOT APPLE AND NOT MINGW)
    FIND_FILE(HAVE_SYS_SOUNDCARD_H sys/soundcard.h)
    FIND_FILE(HAVE_LINUX_SOUNDCARD_H linux/soundcard.h)
    FIND_FILE(HAVE_MACHINE_SOUNDCARD_H machine/soundcard.h)
@@ -80,4 +88,4 @@ IF (NOT MSVC AND NOT APPLE)
    ${CMAKE_CURRENT_SOURCE_DIR}/src/hostapi/oss/pa_unix_oss.c
    ${CMAKE_CURRENT_SOURCE_DIR}/src/os/unix/pa_unix_hostapis.c
    ${CMAKE_CURRENT_SOURCE_DIR}/src/os/unix/pa_unix_util.c )
-ENDIF (NOT MSVC AND NOT APPLE)
+ENDIF (NOT MSVC AND NOT APPLE AND NOT MINGW)
