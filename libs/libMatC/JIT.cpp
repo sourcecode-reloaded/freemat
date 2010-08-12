@@ -263,7 +263,7 @@ JITScalar JIT::JITBinOp(Instruction::BinaryOps op, JITScalar A, JITScalar B) {
 }
 
 JITScalar JIT::Mul(JITScalar A, JITScalar B) {
-  return JITBinOp(Instruction::Mul,A,B);
+  return JITBinOp(Instruction::FMul,A,B);
 }
 
 JITScalar JIT::Div(JITScalar A, JITScalar B) {
@@ -271,11 +271,11 @@ JITScalar JIT::Div(JITScalar A, JITScalar B) {
 }
 
 JITScalar JIT::Sub(JITScalar A, JITScalar B) {
-  return JITBinOp(Instruction::Sub,A,B);
+  return JITBinOp(Instruction::FSub,A,B);
 }
 
 JITScalar JIT::Add(JITScalar A, JITScalar B) {
-  return JITBinOp(Instruction::Add,A,B);
+  return JITBinOp(Instruction::FAdd,A,B);
 }
 
 JITScalar JIT::And(JITScalar A, JITScalar B) {
