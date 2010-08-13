@@ -69,7 +69,8 @@
 #include <sstream>
 #include <math.h>
 
-#if defined(_MSC_VER )
+//#if defined(_MSC_VER ) || defined( __MINGW32__ )
+#if defined(_WIN32 )
     #define JIT_EXPORT __declspec( dllexport )
 #else
     #define JIT_EXPORT
