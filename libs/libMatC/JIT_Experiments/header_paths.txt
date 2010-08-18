@@ -1,0 +1,5 @@
+C:\Qt\Qt4.6.3\mingw\lib\gcc\mingw32\4.4.0\include
+C:\Qt\Qt4.6.3\mingw\lib\gcc\mingw32\4.4.0\include\c++
+C:\Qt\Qt4.6.3\mingw\lib\gcc\mingw32\4.4.0\include\c++\mingw32
+C:\Qt\Qt4.6.3\mingw\include
+C:\Qt\Qt4.6.3\qt\include

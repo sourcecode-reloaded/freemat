@@ -1,5 +1,6 @@
 #define __STDC_LIMIT_MACROS
 #define __STDC_CONSTANT_MACROS
+#include <stdio.h>
 #include <iostream>
 
 #include <llvm/Support/raw_os_ostream.h>
@@ -46,8 +47,6 @@
 #include "clang/AST/DeclGroup.h"
 #include "clang/CodeGen/BackendUtil.h"
 
-
-
 #include "clang/CodeGen/ModuleBuilder.h"
 
 #include "clang/Frontend/CompilerInstance.h"
@@ -65,210 +64,210 @@ using namespace clang;
 using namespace llvm;
 
 namespace {
-  class JITConsumer : public ASTConsumer {
-    Diagnostic &Diags;
-    BackendAction Action;
-    const CodeGenOptions &CodeGenOpts;
-    const TargetOptions &TargetOpts;
-    llvm::raw_ostream *AsmOutStream;
-    ASTContext *Context;
-    Timer LLVMIRGeneration;
-    llvm::OwningPtr<CodeGenerator> Gen;
-    llvm::OwningPtr<llvm::Module> TheModule;
+    class JITConsumer : public ASTConsumer {
+        Diagnostic &Diags;
+        BackendAction Action;
+        const CodeGenOptions &CodeGenOpts;
+        const TargetOptions &TargetOpts;
+        llvm::raw_ostream *AsmOutStream;
+        ASTContext *Context;
+        Timer LLVMIRGeneration;
+        llvm::OwningPtr<CodeGenerator> Gen;
+        llvm::OwningPtr<llvm::Module> TheModule;
 
-  public:
-    JITConsumer(BackendAction action, Diagnostic &_Diags,
-                    const CodeGenOptions &compopts,
-                    const TargetOptions &targetopts, bool TimePasses,
-                    const std::string &infile, llvm::raw_ostream *OS,
-                    LLVMContext &C) :
-      Diags(_Diags),
-      Action(action),
-      CodeGenOpts(compopts),
-      TargetOpts(targetopts),
-      AsmOutStream(OS),
-      LLVMIRGeneration("LLVM IR Generation Time"),
-      Gen(CreateLLVMCodeGen(Diags, infile, compopts, C)) {
-      llvm::TimePassesIsEnabled = TimePasses;
-    }
+    public:
+        JITConsumer(BackendAction action, Diagnostic &_Diags,
+                const CodeGenOptions &compopts,
+                const TargetOptions &targetopts, bool TimePasses,
+                const std::string &infile, llvm::raw_ostream *OS,
+                LLVMContext &C) :
+                    Diags(_Diags),
+                    Action(action),
+                    CodeGenOpts(compopts),
+                    TargetOpts(targetopts),
+                    AsmOutStream(OS),
+                    LLVMIRGeneration("LLVM IR Generation Time"),
+                    Gen(CreateLLVMCodeGen(Diags, infile, compopts, C)) {
+            llvm::TimePassesIsEnabled = TimePasses;
+        }
 
-    llvm::Module *takeModule() { return TheModule.take(); }
+        llvm::Module *takeModule() { return TheModule.take(); }
 
-    virtual void Initialize(ASTContext &Ctx) {
-      Context = &Ctx;
+        virtual void Initialize(ASTContext &Ctx) {
+            Context = &Ctx;
 
-      if (llvm::TimePassesIsEnabled)
-        LLVMIRGeneration.startTimer();
+            if (llvm::TimePassesIsEnabled)
+                LLVMIRGeneration.startTimer();
 
-      Gen->Initialize(Ctx);
+            Gen->Initialize(Ctx);
 
-      TheModule.reset(Gen->GetModule());
+            TheModule.reset(Gen->GetModule());
 
-      if (llvm::TimePassesIsEnabled)
-        LLVMIRGeneration.stopTimer();
-    }
+            if (llvm::TimePassesIsEnabled)
+                LLVMIRGeneration.stopTimer();
+        }
 
-    virtual void HandleTopLevelDecl(DeclGroupRef D) {
-      PrettyStackTraceDecl CrashInfo(*D.begin(), SourceLocation(),
-                                     Context->getSourceManager(),
-                                     "LLVM IR generation of declaration");
+        virtual void HandleTopLevelDecl(DeclGroupRef D) {
+            PrettyStackTraceDecl CrashInfo(*D.begin(), SourceLocation(),
+                    Context->getSourceManager(),
+                    "LLVM IR generation of declaration");
 
-      if (llvm::TimePassesIsEnabled)
-        LLVMIRGeneration.startTimer();
+            if (llvm::TimePassesIsEnabled)
+                LLVMIRGeneration.startTimer();
 
-      Gen->HandleTopLevelDecl(D);
+            Gen->HandleTopLevelDecl(D);
 
-      if (llvm::TimePassesIsEnabled)
-        LLVMIRGeneration.stopTimer();
-    }
+            if (llvm::TimePassesIsEnabled)
+                LLVMIRGeneration.stopTimer();
+        }
 
-    virtual void HandleTranslationUnit(ASTContext &C) {
-      {
-        PrettyStackTraceString CrashInfo("Per-file LLVM IR generation");
-        if (llvm::TimePassesIsEnabled)
-          LLVMIRGeneration.startTimer();
+        virtual void HandleTranslationUnit(ASTContext &C) {
+            {
+                PrettyStackTraceString CrashInfo("Per-file LLVM IR generation");
+                if (llvm::TimePassesIsEnabled)
+                    LLVMIRGeneration.startTimer();
 
-        Gen->HandleTranslationUnit(C);
+                Gen->HandleTranslationUnit(C);
 
-        if (llvm::TimePassesIsEnabled)
-          LLVMIRGeneration.stopTimer();
-      }
+                if (llvm::TimePassesIsEnabled)
+                    LLVMIRGeneration.stopTimer();
+            }
 
-      // Silently ignore if we weren't initialized for some reason.
-      if (!TheModule)
-        return;
+            // Silently ignore if we weren't initialized for some reason.
+            if (!TheModule)
+                return;
 
-      // Make sure IR generation is happy with the module. This is released by
-      // the module provider.
-      Module *M = Gen->ReleaseModule();
-      if (!M) {
-        // The module has been released by IR gen on failures, do not double
-        // free.
-        TheModule.take();
-        return;
-      }
+            // Make sure IR generation is happy with the module. This is released by
+            // the module provider.
+            Module *M = Gen->ReleaseModule();
+            if (!M) {
+                // The module has been released by IR gen on failures, do not double
+                // free.
+                TheModule.take();
+                return;
+            }
 
-      assert(TheModule.get() == M &&
-             "Unexpected module change during IR generation");
+            assert(TheModule.get() == M &&
+                    "Unexpected module change during IR generation");
 
-      // Install an inline asm handler so that diagnostics get printed through
-      // our diagnostics hooks.
-      LLVMContext &Ctx = TheModule->getContext();
-      void *OldHandler = Ctx.getInlineAsmDiagnosticHandler();
-      void *OldContext = Ctx.getInlineAsmDiagnosticContext();
-      Ctx.setInlineAsmDiagnosticHandler((void*)(intptr_t)InlineAsmDiagHandler,
-                                        this);
+            // Install an inline asm handler so that diagnostics get printed through
+            // our diagnostics hooks.
+            LLVMContext &Ctx = TheModule->getContext();
+            void *OldHandler = Ctx.getInlineAsmDiagnosticHandler();
+            void *OldContext = Ctx.getInlineAsmDiagnosticContext();
+            Ctx.setInlineAsmDiagnosticHandler((void*)(intptr_t)InlineAsmDiagHandler,
+                    this);
 
 
 
-      EmitBackendOutput(Diags, CodeGenOpts, TargetOpts,
-                        TheModule.get(), Action, AsmOutStream);
-      
-      Ctx.setInlineAsmDiagnosticHandler(OldHandler, OldContext);
-    }
+            EmitBackendOutput(Diags, CodeGenOpts, TargetOpts,
+                    TheModule.get(), Action, AsmOutStream);
 
-    virtual void HandleTagDeclDefinition(TagDecl *D) {
-      PrettyStackTraceDecl CrashInfo(D, SourceLocation(),
-                                     Context->getSourceManager(),
-                                     "LLVM IR generation of declaration");
-      Gen->HandleTagDeclDefinition(D);
-    }
+            Ctx.setInlineAsmDiagnosticHandler(OldHandler, OldContext);
+        }
 
-    virtual void CompleteTentativeDefinition(VarDecl *D) {
-      Gen->CompleteTentativeDefinition(D);
-    }
+        virtual void HandleTagDeclDefinition(TagDecl *D) {
+            PrettyStackTraceDecl CrashInfo(D, SourceLocation(),
+                    Context->getSourceManager(),
+                    "LLVM IR generation of declaration");
+            Gen->HandleTagDeclDefinition(D);
+        }
 
-    virtual void HandleVTable(CXXRecordDecl *RD, bool DefinitionRequired) {
-      Gen->HandleVTable(RD, DefinitionRequired);
-    }
+        virtual void CompleteTentativeDefinition(VarDecl *D) {
+            Gen->CompleteTentativeDefinition(D);
+        }
 
-    static void InlineAsmDiagHandler(const llvm::SMDiagnostic &SM,void *Context,
-                                     unsigned LocCookie) {
-      SourceLocation Loc = SourceLocation::getFromRawEncoding(LocCookie);
-      ((JITConsumer*)Context)->InlineAsmDiagHandler2(SM, Loc);
-    }
+        virtual void HandleVTable(CXXRecordDecl *RD, bool DefinitionRequired) {
+            Gen->HandleVTable(RD, DefinitionRequired);
+        }
 
-    void InlineAsmDiagHandler2(const llvm::SMDiagnostic &,
-                               SourceLocation LocCookie);
-							   
-	virtual void ExecuteModule( void ){
-		std::string errorstring;
+        static void InlineAsmDiagHandler(const llvm::SMDiagnostic &SM,void *Context,
+                unsigned LocCookie) {
+            SourceLocation Loc = SourceLocation::getFromRawEncoding(LocCookie);
+            ((JITConsumer*)Context)->InlineAsmDiagHandler2(SM, Loc);
+        }
 
-		if( !Diags.hasErrorOccurred() ) {
-			ExecutionEngine* ee = ExecutionEngine::createJIT(TheModule.get(), &errorstring);
-			Function* fn = ee->FindFunctionNamed( "f_t" );
-			std::vector<GenericValue> arg;
-			GenericValue ret = ee->runFunction( fn, arg );
-		}
-		else{
-			printf("Error!!! !!!");
-		}
-	}
-  };
+        void InlineAsmDiagHandler2(const llvm::SMDiagnostic &,
+                SourceLocation LocCookie);
+
+        virtual void ExecuteModule( void ){
+            std::string errorstring;
+
+            if( !Diags.hasErrorOccurred() ) {
+                ExecutionEngine* ee = ExecutionEngine::createJIT(TheModule.get(), &errorstring);
+                Function* fn = ee->FindFunctionNamed( "f_t" );
+                std::vector<GenericValue> arg;
+                GenericValue ret = ee->runFunction( fn, arg );
+            }
+            else{
+                printf("Error!!! !!!");
+            }
+        }
+    };
 }
 
 /// ConvertBackendLocation - Convert a location in a temporary llvm::SourceMgr
 /// buffer to be a valid FullSourceLoc.
 static FullSourceLoc ConvertBackendLocation(const llvm::SMDiagnostic &D,
-                                            SourceManager &CSM) {
-  // Get both the clang and llvm source managers.  The location is relative to
-  // a memory buffer that the LLVM Source Manager is handling, we need to add
-  // a copy to the Clang source manager.
-  const llvm::SourceMgr &LSM = *D.getSourceMgr();
+        SourceManager &CSM) {
+    // Get both the clang and llvm source managers.  The location is relative to
+    // a memory buffer that the LLVM Source Manager is handling, we need to add
+    // a copy to the Clang source manager.
+    const llvm::SourceMgr &LSM = *D.getSourceMgr();
 
-  // We need to copy the underlying LLVM memory buffer because llvm::SourceMgr
-  // already owns its one and clang::SourceManager wants to own its one.
-  const MemoryBuffer *LBuf =
-  LSM.getMemoryBuffer(LSM.FindBufferContainingLoc(D.getLoc()));
+    // We need to copy the underlying LLVM memory buffer because llvm::SourceMgr
+    // already owns its one and clang::SourceManager wants to own its one.
+    const MemoryBuffer *LBuf =
+            LSM.getMemoryBuffer(LSM.FindBufferContainingLoc(D.getLoc()));
 
-  // Create the copy and transfer ownership to clang::SourceManager.
-  llvm::MemoryBuffer *CBuf =
-  llvm::MemoryBuffer::getMemBufferCopy(LBuf->getBuffer(),
-                                       LBuf->getBufferIdentifier());
-  FileID FID = CSM.createFileIDForMemBuffer(CBuf);
+    // Create the copy and transfer ownership to clang::SourceManager.
+    llvm::MemoryBuffer *CBuf =
+            llvm::MemoryBuffer::getMemBufferCopy(LBuf->getBuffer(),
+                    LBuf->getBufferIdentifier());
+    FileID FID = CSM.createFileIDForMemBuffer(CBuf);
 
-  // Translate the offset into the file.
-  unsigned Offset = D.getLoc().getPointer()  - LBuf->getBufferStart();
-  SourceLocation NewLoc =
-  CSM.getLocForStartOfFile(FID).getFileLocWithOffset(Offset);
-  return FullSourceLoc(NewLoc, CSM);
+    // Translate the offset into the file.
+    unsigned Offset = D.getLoc().getPointer()  - LBuf->getBufferStart();
+    SourceLocation NewLoc =
+            CSM.getLocForStartOfFile(FID).getFileLocWithOffset(Offset);
+    return FullSourceLoc(NewLoc, CSM);
 }
 
 /// InlineAsmDiagHandler2 - This function is invoked when the backend hits an
 /// error parsing inline asm.  The SMDiagnostic indicates the error relative to
 /// the temporary memory buffer that the inline asm parser has set up.
 void JITConsumer::InlineAsmDiagHandler2(const llvm::SMDiagnostic &D,
-                                            SourceLocation LocCookie) {
-  // There are a couple of different kinds of errors we could get here.  First,
-  // we re-format the SMDiagnostic in terms of a clang diagnostic.
+        SourceLocation LocCookie) {
+    // There are a couple of different kinds of errors we could get here.  First,
+    // we re-format the SMDiagnostic in terms of a clang diagnostic.
 
-  // Strip "error: " off the start of the message string.
-  llvm::StringRef Message = D.getMessage();
-  if (Message.startswith("error: "))
-    Message = Message.substr(7);
+    // Strip "error: " off the start of the message string.
+    llvm::StringRef Message = D.getMessage();
+    if (Message.startswith("error: "))
+        Message = Message.substr(7);
 
-  // If the SMDiagnostic has an inline asm source location, translate it.
-  FullSourceLoc Loc;
-  if (D.getLoc() != SMLoc())
-    Loc = ConvertBackendLocation(D, Context->getSourceManager());
+    // If the SMDiagnostic has an inline asm source location, translate it.
+    FullSourceLoc Loc;
+    if (D.getLoc() != SMLoc())
+        Loc = ConvertBackendLocation(D, Context->getSourceManager());
 
-  // If this problem has clang-level source location information, report the
-  // issue as being an error in the source with a note showing the instantiated
-  // code.
-  if (LocCookie.isValid()) {
-    Diags.Report(FullSourceLoc(LocCookie, Context->getSourceManager()),
-                 diag::err_fe_inline_asm).AddString(Message);
-    
-    if (D.getLoc().isValid())
-      Diags.Report(Loc, diag::note_fe_inline_asm_here);
+    // If this problem has clang-level source location information, report the
+    // issue as being an error in the source with a note showing the instantiated
+    // code.
+    if (LocCookie.isValid()) {
+        Diags.Report(FullSourceLoc(LocCookie, Context->getSourceManager()),
+                diag::err_fe_inline_asm).AddString(Message);
 
-    return;
-  }
-  
-  // Otherwise, report the backend error as occuring in the generated .s file.
-  // If Loc is invalid, we still need to report the error, it just gets no
-  // location info.
-  Diags.Report(Loc, diag::err_fe_inline_asm).AddString(Message);
+        if (D.getLoc().isValid())
+            Diags.Report(Loc, diag::note_fe_inline_asm_here);
+
+        return;
+    }
+
+    // Otherwise, report the backend error as occuring in the generated .s file.
+    // If Loc is invalid, we still need to report the error, it just gets no
+    // location info.
+    Diags.Report(Loc, diag::err_fe_inline_asm).AddString(Message);
 }
 
 //
@@ -280,115 +279,115 @@ CodeGenAction::~CodeGenAction() {}
 bool CodeGenAction::hasIRSupport() const { return true; }
 
 void CodeGenAction::EndSourceFileAction() {
-  // If the consumer creation failed, do nothing.
-  if (!getCompilerInstance().hasASTConsumer())
-    return;
+    // If the consumer creation failed, do nothing.
+    if (!getCompilerInstance().hasASTConsumer())
+        return;
 
-  // Steal the module from the consumer.
-  JITConsumer *Consumer = static_cast<JITConsumer*>(
-    &getCompilerInstance().getASTConsumer());
+    // Steal the module from the consumer.
+    JITConsumer *Consumer = static_cast<JITConsumer*>(
+            &getCompilerInstance().getASTConsumer());
 
-  TheModule.reset(Consumer->takeModule());
+    TheModule.reset(Consumer->takeModule());
 }
 
 llvm::Module *CodeGenAction::takeModule() {
-  return TheModule.take();
+    return TheModule.take();
 }
 
 static raw_ostream *GetOutputStream(CompilerInstance &CI,
-                                    llvm::StringRef InFile,
-                                    BackendAction Action) {
+        llvm::StringRef InFile,
+        BackendAction Action) {
 
-  switch (Action) {
-  case Backend_EmitAssembly:
-    return CI.createDefaultOutputFile(false, InFile, "s");
+    switch (Action) {
+        case Backend_EmitAssembly:
+            return CI.createDefaultOutputFile(false, InFile, "s");
 
-  case Backend_EmitLL:
-    return CI.createDefaultOutputFile(false, InFile, "ll");
+        case Backend_EmitLL:
+            return CI.createDefaultOutputFile(false, InFile, "ll");
 
-  case Backend_EmitBC:
-    return CI.createDefaultOutputFile(true, InFile, "bc");
+        case Backend_EmitBC:
+            return CI.createDefaultOutputFile(true, InFile, "bc");
 
-  case Backend_EmitNothing:
+        case Backend_EmitNothing:
+            return 0;
+        case Backend_EmitMCNull:
+
+        case Backend_EmitObj:
+            return CI.createDefaultOutputFile(true, InFile, "o");
+
+    }
+
+    assert(0 && "Invalid action!");
     return 0;
-  case Backend_EmitMCNull:
-
-  case Backend_EmitObj:
-    return CI.createDefaultOutputFile(true, InFile, "o");
-
-  }
-
-  assert(0 && "Invalid action!");
-  return 0;
 }
 
 ASTConsumer *CodeGenAction::CreateASTConsumer(CompilerInstance &CI,
-                                              llvm::StringRef InFile) {
-  BackendAction BA = static_cast<BackendAction>(Act);
-  llvm::OwningPtr<llvm::raw_ostream> OS(GetOutputStream(CI, InFile, BA));
-  if (BA != Backend_EmitNothing && !OS)
-    return 0;
+        llvm::StringRef InFile) {
+    BackendAction BA = static_cast<BackendAction>(Act);
+    llvm::OwningPtr<llvm::raw_ostream> OS(GetOutputStream(CI, InFile, BA));
+    if (BA != Backend_EmitNothing && !OS)
+        return 0;
 
-  return new JITConsumer(BA, CI.getDiagnostics(),
-                             CI.getCodeGenOpts(), CI.getTargetOpts(),
-                             CI.getFrontendOpts().ShowTimers, InFile, OS.take(),
-                             CI.getLLVMContext());
+    return new JITConsumer(BA, CI.getDiagnostics(),
+            CI.getCodeGenOpts(), CI.getTargetOpts(),
+            CI.getFrontendOpts().ShowTimers, InFile, OS.take(),
+            CI.getLLVMContext());
 }
 
 void CodeGenAction::ExecuteAction() {
-  // If this is an IR file, we have to treat it specially.
-  if (getCurrentFileKind() == IK_LLVM_IR) {
-    BackendAction BA = static_cast<BackendAction>(Act);
-    CompilerInstance &CI = getCompilerInstance();
-    raw_ostream *OS = GetOutputStream(CI, getCurrentFile(), BA);
-    if (BA != Backend_EmitNothing && !OS)
-      return;
+    // If this is an IR file, we have to treat it specially.
+    if (getCurrentFileKind() == IK_LLVM_IR) {
+        BackendAction BA = static_cast<BackendAction>(Act);
+        CompilerInstance &CI = getCompilerInstance();
+        raw_ostream *OS = GetOutputStream(CI, getCurrentFile(), BA);
+        if (BA != Backend_EmitNothing && !OS)
+            return;
 
-    bool Invalid;
-    SourceManager &SM = CI.getSourceManager();
-    const llvm::MemoryBuffer *MainFile = SM.getBuffer(SM.getMainFileID(),
-                                                      &Invalid);
-    if (Invalid)
-      return;
+        bool Invalid;
+        SourceManager &SM = CI.getSourceManager();
+        const llvm::MemoryBuffer *MainFile = SM.getBuffer(SM.getMainFileID(),
+                &Invalid);
+        if (Invalid)
+            return;
 
-    // FIXME: This is stupid, IRReader shouldn't take ownership.
-    llvm::MemoryBuffer *MainFileCopy =
-      llvm::MemoryBuffer::getMemBufferCopy(MainFile->getBuffer(),
-                                           getCurrentFile().c_str());
+        // FIXME: This is stupid, IRReader shouldn't take ownership.
+        llvm::MemoryBuffer *MainFileCopy =
+                llvm::MemoryBuffer::getMemBufferCopy(MainFile->getBuffer(),
+                        getCurrentFile().c_str());
 
-    llvm::SMDiagnostic Err;
-    TheModule.reset(ParseIR(MainFileCopy, Err, CI.getLLVMContext()));
-    if (!TheModule) {
-      // Translate from the diagnostic info to the SourceManager location.
-      SourceLocation Loc = SM.getLocation(
-        SM.getFileEntryForID(SM.getMainFileID()), Err.getLineNo(),
-        Err.getColumnNo() + 1);
+        llvm::SMDiagnostic Err;
+        TheModule.reset(ParseIR(MainFileCopy, Err, CI.getLLVMContext()));
+        if (!TheModule) {
+            // Translate from the diagnostic info to the SourceManager location.
+            SourceLocation Loc = SM.getLocation(
+                    SM.getFileEntryForID(SM.getMainFileID()), Err.getLineNo(),
+                    Err.getColumnNo() + 1);
 
-      // Get a custom diagnostic for the error. We strip off a leading
-      // diagnostic code if there is one.
-      llvm::StringRef Msg = Err.getMessage();
-      if (Msg.startswith("error: "))
-        Msg = Msg.substr(7);
-      unsigned DiagID = CI.getDiagnostics().getCustomDiagID(Diagnostic::Error,
-                                                            Msg);
+            // Get a custom diagnostic for the error. We strip off a leading
+            // diagnostic code if there is one.
+            llvm::StringRef Msg = Err.getMessage();
+            if (Msg.startswith("error: "))
+                Msg = Msg.substr(7);
+            unsigned DiagID = CI.getDiagnostics().getCustomDiagID(Diagnostic::Error,
+                    Msg);
 
-      CI.getDiagnostics().Report(FullSourceLoc(Loc, SM), DiagID);
-      return;
+            CI.getDiagnostics().Report(FullSourceLoc(Loc, SM), DiagID);
+            return;
+        }
+
+        EmitBackendOutput(CI.getDiagnostics(), CI.getCodeGenOpts(),
+                CI.getTargetOpts(), TheModule.get(),
+                BA, OS);
+        return;
     }
 
-    EmitBackendOutput(CI.getDiagnostics(), CI.getCodeGenOpts(),
-                      CI.getTargetOpts(), TheModule.get(),
-                      BA, OS);
-    return;
-  }
-
-  // Otherwise follow the normal AST path.
-  this->ASTFrontendAction::ExecuteAction();
+    // Otherwise follow the normal AST path.
+    this->ASTFrontendAction::ExecuteAction();
 }
 
 //
 EmitAssemblyAction::EmitAssemblyAction()
-  : CodeGenAction(Backend_EmitAssembly) {}
+: CodeGenAction(Backend_EmitAssembly) {}
 
 EmitBCAction::EmitBCAction() : CodeGenAction(Backend_EmitBC) {}
 
@@ -403,131 +402,152 @@ EmitObjAction::EmitObjAction() : CodeGenAction(Backend_EmitObj) {}
 
 //
 JITConsumer *CreateJITConsumer(BackendAction Action,
-                                          Diagnostic &Diags,
-                                          const CodeGenOptions &CodeGenOpts,
-                                          const TargetOptions &TargetOpts,
-                                          bool TimePasses,
-                                          const std::string& InFile,
-                                          llvm::raw_ostream* OS,
-                                          LLVMContext& C) {
-  return new JITConsumer(Action, Diags, CodeGenOpts,
-                             TargetOpts, TimePasses, InFile, OS, C);
+        Diagnostic &Diags,
+        const CodeGenOptions &CodeGenOpts,
+        const TargetOptions &TargetOpts,
+        bool TimePasses,
+        const std::string& InFile,
+        llvm::raw_ostream* OS,
+        LLVMContext& C) {
+    return new JITConsumer(Action, Diags, CodeGenOpts,
+            TargetOpts, TimePasses, InFile, OS, C);
 }
 
 //
 int main( void )
 {
-	InitializeNativeTarget();
+    InitializeNativeTarget();
 
-	//std::filebuf fb;
-	//fb.open("t.err",std::ios::out);
-	//std::ostream ostr( &fb );
-	//llvm::raw_os_ostream ost( ostr );
-	std::string ErrorInfo1;
-	llvm::raw_ostream * ost = new llvm::raw_fd_ostream("t.err",ErrorInfo1);
+    //std::filebuf fb;
+    //fb.open("t.err",std::ios::out);
+    //std::ostream ostr( &fb );
+    //llvm::raw_os_ostream ost( ostr );
+    std::string ErrorInfo1;
+    llvm::raw_ostream * ost = new llvm::raw_fd_ostream("t.err",ErrorInfo1);
 
-	//llvm::raw_stderr_ostream ost;
+    //llvm::raw_stderr_ostream ost;
 
-	DiagnosticOptions diag_opts;
-	diag_opts.BinaryOutput = 0;
-	diag_opts.ShowCarets = 1;
-	
-	TextDiagnosticPrinter tdp(*ost, diag_opts);
-	Diagnostic diag(&tdp);
-	LangOptions lang;
-	lang.CPlusPlus = 1;
-	lang.C99 = 1;
-	lang.CPlusPlus0x = 1;
-        lang.GNUKeywords = 1;
-        lang.GNUMode = 1;
-        lang.Microsoft = 0;
-	lang.Bool = 1;
-	lang.RTTI = 1;
-	//lang.AccessControl = 1;
-	lang.ShortWChar = 1;
-	lang.Exceptions = 1;
-	lang.MathErrno = 1;
-	lang.HeinousExtensions = 1;
+    DiagnosticOptions diag_opts;
+    diag_opts.BinaryOutput = 0;
+    diag_opts.ShowCarets = 1;
 
-	SourceManager sm( diag );
-	FileManager fm;
+    TextDiagnosticPrinter tdp(*ost, diag_opts);
+    Diagnostic diag(&tdp);
+    LangOptions lang;
+    lang.CPlusPlus = 1;
+    lang.C99 = 1;
+    lang.CPlusPlus0x = 1;
+    lang.GNUKeywords = 1;
+    lang.GNUMode = 1;
+    lang.Microsoft = 0;
+    lang.Bool = 1;
+    lang.RTTI = 1;
+    //lang.AccessControl = 1;
+    lang.ShortWChar = 1;
+    lang.Exceptions = 1;
+    lang.MathErrno = 1;
+    //lang.HeinousExtensions = 1;
 
-	HeaderSearch headers(fm);
-	
+    SourceManager sm( diag );
+    FileManager fm;
 
-	TargetOptions target_opts;
-	target_opts.Triple = LLVM_HOSTTRIPLE;
-	//target_opts.CXXABI = "microsoft";
-
-	TargetInfo *ti = TargetInfo::CreateTargetInfo(diag, target_opts);
-	Preprocessor pp(diag, lang, *ti, sm, headers);
-
-	PreprocessorOptions ppio;
-	HeaderSearchOptions hsopt;
-	//hsopt.AddPath("C:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\include", clang::frontend::System, false, false );
-	//hsopt.AddPath("C:\\MinGW\\include", clang::frontend::System, false, false );
-	//hsopt.AddPath("C:\\MinGW\\include\\c++\\4.2.1", clang::frontend::System, false, false );
-
-        hsopt.AddPath("C:\\Qt\\Qt4.6.3\\mingw\\lib\\gcc\\mingw32\\4.4.0\\include", clang::frontend::System, false, false );
-        hsopt.AddPath("C:\\Qt\\Qt4.6.3\\mingw\\lib\\gcc\\mingw32\\4.4.0\\include\\c++", clang::frontend::System, false, false );
-        hsopt.AddPath("C:\\Qt\\Qt4.6.3\\mingw\\lib\\gcc\\mingw32\\4.4.0\\include\\c++\\mingw32", clang::frontend::System, false, false );
-        hsopt.AddPath("C:\\Qt\\Qt4.6.3\\mingw\\include", clang::frontend::System, false, false );
-        hsopt.AddPath("C:\\Qt\\Qt4.6.3\\qt\\include", clang::frontend::System, false, false );
-
-	FrontendOptions feopt;
-	InitializePreprocessor(pp, ppio, hsopt, feopt );
-
-	tdp.BeginSourceFile( lang, &pp );
-
-	const FileEntry *file = fm.getFile("t.cpp");
-	sm.createMainFileID(file, SourceLocation());
-	//pp.EnterMainSourceFile();
+    HeaderSearch headers(fm);
 
 
-	IdentifierTable tab(lang);
-	//MyAction action(pp);
-	//Parser p(pp, action);
-	//p.ParseTranslationUnit();
-	//tab.PrintStats();
+    TargetOptions target_opts;
+    target_opts.Triple = LLVM_HOSTTRIPLE;
+    //target_opts.CXXABI = "microsoft";
 
-	SelectorTable sel;
-	Builtin::Context builtins(*ti);
-	CodeGenOptions codeGenOpts;
-	codeGenOpts.DebugInfo = 0;
-	codeGenOpts.OptimizationLevel = 3; //TODO: change to 4
+    TargetInfo *ti = TargetInfo::CreateTargetInfo(diag, target_opts);
+    Preprocessor pp(diag, lang, *ti, sm, headers);
 
-	std::string ErrorInfo;
-	llvm::raw_ostream* os = new llvm::raw_fd_ostream("t.a",ErrorInfo);
+    PreprocessorOptions ppio;
+    HeaderSearchOptions hsopt;
 
-	LLVMContext llvmContext;
+    FILE *f = fopen("header_paths.txt","r");
+    char path[1024];
+    while (!feof(f)) {
+        fgets(path, 1024, f);
+        hsopt.AddPath(path, clang::frontend::System, false, false );
+    }
+    fclose( f );
 
-	JITConsumer *c = CreateJITConsumer(Backend_EmitLL, diag, 
-                               codeGenOpts, target_opts,
-                               true, "mymodule",
-                               os, llvmContext);
 
-	
-	ASTContext ctx(lang, sm, *ti, tab, sel, builtins, 0);
-	ParseAST(pp, c, ctx, false, true);
-	
-	c->ExecuteModule();
+    FrontendOptions feopt;
+    InitializePreprocessor(pp, ppio, hsopt, feopt );
 
-	tdp.EndSourceFile();
+    tdp.BeginSourceFile( lang, &pp );
 
-	//Token Tok;
+    f = fopen("sources.txt","r");
+    fgets(path, 1024, f);
 
-	//do {
-	//	pp.Lex(Tok);
-	//	if(diag.hasErrorOccurred())
-	//		break;
-	//	pp.DumpToken(Tok);
-	//	std::cerr << std::endl;
-	//} while(Tok.isNot(tok::eof));
-	//
+    const FileEntry *file = fm.getFile(path);
+    sm.createMainFileID(file, SourceLocation());
 
-	return 0;
+    while (!feof(f)) {
+        fgets(path, 1024, f);
+        file = fm.getFile(path);
+        hsopt.AddPath(path, clang::frontend::System, false, false );
+        sm.createFileID( file, SourceLocation(), SrcMgr::C_User );
+    }
+    fclose( f );
+
+    //pp.EnterMainSourceFile();
+
+
+    IdentifierTable tab(lang);
+    //MyAction action(pp);
+    //Parser p(pp, action);
+    //p.ParseTranslationUnit();
+    //tab.PrintStats();
+
+    SelectorTable sel;
+    Builtin::Context builtins(*ti);
+    CodeGenOptions codeGenOpts;
+    codeGenOpts.DebugInfo = 0;
+    codeGenOpts.OptimizationLevel = 3; //TODO: change to 4
+
+    std::string ErrorInfo;
+    llvm::raw_ostream* os = new llvm::raw_fd_ostream("t.a",ErrorInfo);
+
+    LLVMContext llvmContext;
+
+    JITConsumer *c = CreateJITConsumer(Backend_EmitLL, diag,
+            codeGenOpts, target_opts,
+            true, "mymodule",
+            os, llvmContext);
+
+
+    ASTContext ctx(lang, sm, *ti, tab, sel, builtins, 0);
+    ParseAST(pp, c, ctx, false, true);
+
+    c->ExecuteModule();
+
+    tdp.EndSourceFile();
+
+    //Token Tok;
+
+    //do {
+    //	pp.Lex(Tok);
+    //	if(diag.hasErrorOccurred())
+    //		break;
+    //	pp.DumpToken(Tok);
+    //	std::cerr << std::endl;
+    //} while(Tok.isNot(tok::eof));
+    //
+
+    return 0;
 }
 
+//    hsopt.AddPath("C:\\Qt\\Qt4.6.3\\mingw\\lib\\gcc\\mingw32\\4.4.0\\include", clang::frontend::System, false, false );
+//    hsopt.AddPath("C:\\Qt\\Qt4.6.3\\mingw\\lib\\gcc\\mingw32\\4.4.0\\include\\c++", clang::frontend::System, false, false );
+//    hsopt.AddPath("C:\\Qt\\Qt4.6.3\\mingw\\lib\\gcc\\mingw32\\4.4.0\\include\\c++\\mingw32", clang::frontend::System, false, false );
+//    hsopt.AddPath("C:\\Qt\\Qt4.6.3\\mingw\\include", clang::frontend::System, false, false );
+//    hsopt.AddPath("C:\\Qt\\Qt4.6.3\\qt\\include", clang::frontend::System, false, false );
+
+//hsopt.AddPath("C:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\include", clang::frontend::System, false, false );
+//hsopt.AddPath("C:\\MinGW\\include", clang::frontend::System, false, false );
+//hsopt.AddPath("C:\\MinGW\\include\\c++\\4.2.1", clang::frontend::System, false, false );
 
 //using namespace clang;
 //

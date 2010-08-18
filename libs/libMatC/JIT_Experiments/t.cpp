@@ -1,5 +1,3 @@
-#define QT_NO_STL
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <QtCore/QVector>
@@ -32,7 +30,7 @@ bool f_1( int a )
 	return a;
 }
 
-int _main( void )
+int main( void )
 {
 	A c;
 	c.a_1( true );
