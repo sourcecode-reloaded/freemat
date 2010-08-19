@@ -1,4 +1,4 @@
-project(jittest CXX)
+project(jittest C CXX)
 cmake_minimum_required(VERSION 2.8)
 
 
@@ -101,6 +101,10 @@ IF( USE_LLVM )
 ENDIF (USE_LLVM)
 
 
+FIND_PACKAGE(Qt4 REQUIRED)
+
+ADD_DEFINITIONS( ${QT_DEFINITIONS} ) 
+INCLUDE_DIRECTORIES( ${QT_INCLUDE_DIR} )
 
 add_executable( jittest 
 jittest.cpp
@@ -108,6 +112,8 @@ jittest.cpp
 
 TARGET_LINK_LIBRARIES( jittest
 ${LLVM_LIBS}
+${QT_QTCORE_LIBRARY}
+${QT_QTMAIN_LIBRARY}
 imagehlp
 psapi
 )

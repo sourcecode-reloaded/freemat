@@ -3,6 +3,10 @@
 #include <stdio.h>
 #include <iostream>
 
+#include <QtCore/QFile>
+#include <QtCore/QString>
+#include <QtCore/QTextStream>
+
 #include <llvm/Support/raw_os_ostream.h>
 #include <llvm/Support/raw_ostream.h>
 
@@ -464,13 +468,15 @@ int main( void )
     PreprocessorOptions ppio;
     HeaderSearchOptions hsopt;
 
-    FILE *f = fopen("header_paths.txt","r");
-    char path[1024];
-    while (!feof(f)) {
-        fgets(path, 1024, f);
-        hsopt.AddPath(path, clang::frontend::System, false, false );
+    QFile f("header_paths.txt");
+    f.open(QIODevice::ReadOnly | QIODevice::Text);
+    QTextStream in(&f);
+    QString path;
+    while (!in.atEnd()) {
+        path = in.readLine();
+        hsopt.AddPath(path.toStdString(), clang::frontend::System, false, false );
     }
-    fclose( f );
+    f.close();
 
 
     FrontendOptions feopt;
@@ -478,19 +484,21 @@ int main( void )
 
     tdp.BeginSourceFile( lang, &pp );
 
-    f = fopen("sources.txt","r");
-    fgets(path, 1024, f);
+    f.setFileName("sources.txt");
+    f.open(QIODevice::ReadOnly | QIODevice::Text);
+    in.setDevice(&f);
+    path = in.readLine();
 
-    const FileEntry *file = fm.getFile(path);
+    const FileEntry *file = fm.getFile(path.toStdString());
     sm.createMainFileID(file, SourceLocation());
 
-    while (!feof(f)) {
-        fgets(path, 1024, f);
-        file = fm.getFile(path);
-        hsopt.AddPath(path, clang::frontend::System, false, false );
+    while (!in.atEnd()) {
+        path = in.readLine();
+        file = fm.getFile(path.toStdString());
+        hsopt.AddPath(path.toStdString(), clang::frontend::System, false, false );
         sm.createFileID( file, SourceLocation(), SrcMgr::C_User );
     }
-    fclose( f );
+    f.close();
 
     //pp.EnterMainSourceFile();
 
