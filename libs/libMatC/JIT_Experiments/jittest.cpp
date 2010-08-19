@@ -440,7 +440,7 @@ int main( void )
     LangOptions lang;
     lang.CPlusPlus = 1;
     lang.C99 = 1;
-    lang.CPlusPlus0x = 1;
+    lang.CPlusPlus0x = 0;
     lang.GNUKeywords = 1;
     lang.GNUMode = 1;
     lang.Microsoft = 0;
@@ -468,6 +468,8 @@ int main( void )
     PreprocessorOptions ppio;
     HeaderSearchOptions hsopt;
 
+    pp.getBuiltinInfo().InitializeBuiltins(pp.getIdentifierTable(),
+                                               pp.getLangOptions().NoBuiltin);
     QFile f("header_paths.txt");
     f.open(QIODevice::ReadOnly | QIODevice::Text);
     QTextStream in(&f);
