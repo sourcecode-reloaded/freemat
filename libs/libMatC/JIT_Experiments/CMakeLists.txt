@@ -22,8 +22,11 @@ LLVMipo
 LLVMX86CodeGen
 LLVMX86Info
 LLVMSelectionDAG
-LLVMAsmPrinter
 LLVMJIT
+LLVMCBackend
+LLVMCBackendInfo
+LLVMCPPBackend
+LLVMCPPBackendInfo
 LLVMExecutionEngine
 LLVMCodeGen
 LLVMScalarOpts
@@ -32,13 +35,21 @@ LLVMTransformUtils
 LLVMipa
 LLVMAnalysis
 LLVMTarget
-LLVMMC
 LLVMBitReader
 LLVMBitWriter
+LLVMLinker
 LLVMCore
 LLVMSupport
+LLVMX86AsmPrinter
+LLVMAsmPrinter
+LLVMMC
 LLVMX86AsmParser
 LLVMAsmParser
+LLVMMCParser
+LLVMBitReader
+LLVMBitWriter
+LLVMInterpreter
+LLVMX86Disassembler
 LLVMSystem
 )
 
@@ -108,6 +119,7 @@ INCLUDE_DIRECTORIES( ${QT_INCLUDE_DIR} )
 
 add_executable( jittest 
 jittest.cpp
+Compiler.cpp
 )
 
 TARGET_LINK_LIBRARIES( jittest
@@ -123,7 +135,4 @@ psapi
 #LLVMBitReader
 #LLVMBitWriter
 #LLVMInterpreter
-#LLVMLinker
-#LLVMMCParser
-#LLVMX86AsmPrinter
 #LLVMX86Disassembler
