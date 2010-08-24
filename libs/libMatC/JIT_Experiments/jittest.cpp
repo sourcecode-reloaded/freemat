@@ -17,7 +17,10 @@ int main( void )
 
 
     QFile f("header_paths.txt");
-    f.open(QIODevice::ReadOnly | QIODevice::Text);
+    if(!f.open(QIODevice::ReadOnly | QIODevice::Text)){
+        printf("Error opening: header_paths\n");
+        return 1;
+    }
     QTextStream in(&f);
     QString path;
     while (!in.atEnd()) {
@@ -28,14 +31,20 @@ int main( void )
 
 
     f.setFileName("sources.txt");
-    f.open(QIODevice::ReadOnly | QIODevice::Text);
+    if( !f.open(QIODevice::ReadOnly | QIODevice::Text) ){
+        printf("Error opening: sources\n");
+        return 2;
+    }
     in.setDevice(&f);
     while (!in.atEnd()) {
         path = in.readLine();
         QFile fsource(path);
-        f.open(QIODevice::ReadOnly | QIODevice::Text);
-        QTextStream insource(&f);
-        QString source_code = insource.read(1000000);
+        if( !fsource.open(QIODevice::ReadOnly | QIODevice::Text) ){
+            printf("Error opening: %s\n", path.toStdString().c_str());
+            return 3;
+        }
+        QTextStream insource(&fsource);
+        QString source_code = insource.readAll();
         c->add_source(source_code);
     }
     f.close();
@@ -45,8 +54,9 @@ int main( void )
 
     jit = c->jit();
 
-    //c->link();
+    c->dump("t.a");
 
+    //c->link();
 
     delete c;
     return 0;

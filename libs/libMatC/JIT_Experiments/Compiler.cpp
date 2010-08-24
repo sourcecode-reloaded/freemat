@@ -53,7 +53,7 @@
 #include "llvm/Support/MemoryBuffer.h"
 //#include "llvm/Support/PassNameParser.h"
 //#include "llvm/Support/PrettyStackTrace.h"
-//#include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/raw_ostream.h"
 //#include "llvm/System/DynamicLibrary.h"
 //#include "llvm/System/Host.h"
 //#include "llvm/System/Path.h"
@@ -142,7 +142,7 @@ void Compiler :: clear() {
 
 bool Compiler :: add_source(const QString& code)
 {
-    const char * src = (char*)code.data();
+    const char * src = code.toStdString().c_str();
     llvm::MemoryBuffer *buffer = llvm::MemoryBuffer::getMemBufferCopy(src,  "src");
     if(!buffer) {
         printf("couldn't create buffer\n");
@@ -266,8 +266,13 @@ bool Compiler :: readbitcode(std::string path) {
     return true;
 }
 
-void Compiler :: dump() {
-    mImpl->module->dump();
+void Compiler :: dump(std::string path) {
+    //mImpl->module->dump();
+    std::string ErrorInfo;
+    llvm::raw_ostream* os = new llvm::raw_fd_ostream(path.c_str(),ErrorInfo);
+    mImpl->module->print( *os, 0 );
+    os->flush();
+    delete os;
 }
 
 JIT * Compiler :: jit() {

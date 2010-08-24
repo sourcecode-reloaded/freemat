@@ -86,7 +86,7 @@ public:
     /*
         print module to stdout
     */
-    void dump();
+    void dump(std::string path);
 
 private:
     friend class ModuleImpl;
