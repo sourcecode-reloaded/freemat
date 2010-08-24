@@ -140,10 +140,10 @@ void Compiler :: clear() {
     }
 }
 
-bool Compiler :: add_source(const QString& code)
+bool Compiler :: add_source(const QString& code, const QString& name)
 {
     const char * src = code.toStdString().c_str();
-    llvm::MemoryBuffer *buffer = llvm::MemoryBuffer::getMemBufferCopy(src,  "src");
+    llvm::MemoryBuffer *buffer = llvm::MemoryBuffer::getMemBufferCopy(src,  name.toStdString().c_str());
     if(!buffer) {
         printf("couldn't create buffer\n");
     }
@@ -156,8 +156,13 @@ bool Compiler :: compile( void ) {
     CompilerInstance CI;
     CI.createDiagnostics(0, NULL);
     Diagnostic & Diags = CI.getDiagnostics();
-    TextDiagnosticBuffer client;
+    
+    DiagnosticOptions diag_opts;
+    std::string Err;
+    llvm::raw_fd_ostream err_stream("t.err",Err);
+    TextDiagnosticPrinter client(err_stream,diag_opts);
     Diags.setClient(&client);
+
     CompilerInvocation::CreateFromArgs(CI.getInvocation(), NULL, NULL, Diags);
 
 //  // list standard invocation args:
@@ -182,7 +187,7 @@ bool Compiler :: compile( void ) {
     CI.getSourceManager().createMainFileIDForMemBuffer(sources_buffer.first().data());
     sources_buffer.pop_front();
     foreach(LLVMMemSharedPtr ptr, sources_buffer){
-        CI.getSourceManager().createFileIDForMemBuffer(sources_buffer.first().data());
+        CI.getSourceManager().createFileIDForMemBuffer(ptr.data());
     }
 
 
@@ -244,7 +249,7 @@ bool Compiler :: compile( void ) {
 
     printf("compile errors\n");
 
-    int ecount = 0;
+/*    int ecount = 0;
     for(TextDiagnosticBuffer::const_iterator it = client.err_begin();
         it != client.err_end();
         ++it)
@@ -257,7 +262,7 @@ bool Compiler :: compile( void ) {
         ecount++;
         if(ecount > 250) break;
     }
-    clear();
+    clear();*/
     return false;
 }
 

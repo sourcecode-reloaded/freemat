@@ -65,7 +65,7 @@ public:
     /*
         Note: successive compiles/bitcode reads are linked together.
     */
-    bool add_source(const QString& code);
+    bool add_source(const QString& code, const QString& name);
     bool compile( void );
     bool readbitcode(std::string path);
     bool writebitcode(std::string path);

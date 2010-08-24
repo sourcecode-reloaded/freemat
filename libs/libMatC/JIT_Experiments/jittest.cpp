@@ -45,7 +45,7 @@ int main( void )
         }
         QTextStream insource(&fsource);
         QString source_code = insource.readAll();
-        c->add_source(source_code);
+        c->add_source(source_code, path);
     }
     f.close();
 
