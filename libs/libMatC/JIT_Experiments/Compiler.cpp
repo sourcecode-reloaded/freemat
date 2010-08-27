@@ -22,7 +22,7 @@
 #include "clang/Frontend/Utils.h"
 //#include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/Preprocessor.h"
-#include "clang/Sema/ParseAST.h"
+#include "clang/Parse/ParseAST.h"
 //#include "clang/Sema/CodeCompleteConsumer.h"
 
 //#include "llvm/ADT/OwningPtr.h"
@@ -176,22 +176,30 @@ bool Compiler :: compile( void ) {
 
     LangOptions& lang = CI.getInvocation().getLangOpts();
     // The fateful line
-    lang.CPlusPlus = options.CPlusPlus;
-    lang.Bool = 1;
-    lang.BCPLComment = 1;
-    lang.RTTI = 0;
     lang.PICLevel = 1;
-
+    lang.CPlusPlus = 1;
+    lang.C99 = 1;
+    lang.CPlusPlus0x = 0;
+    lang.GNUKeywords = 1;
+    lang.GNUMode = 1;
+    lang.Microsoft = 0;
+    lang.Bool = 1;
+    lang.RTTI = 1;
+    //lang.AccessControl = 1;
+    lang.ShortWChar = 1;
+    lang.Exceptions = 1;
+    lang.MathErrno = 1;
 
     CI.createSourceManager();
+    CI.createFileManager();
+
     CI.getSourceManager().createMainFileIDForMemBuffer(sources_buffer.first().data());
-    sources_buffer.pop_front();
+    //sources_buffer.pop_front();
     foreach(LLVMMemSharedPtr ptr, sources_buffer){
         CI.getSourceManager().createFileIDForMemBuffer(ptr.data());
     }
 
 
-    CI.createFileManager();
 
     // Create the target instance.
     CI.setTarget(TargetInfo::CreateTargetInfo(CI.getDiagnostics(), CI.getTargetOpts()));
@@ -204,20 +212,22 @@ bool Compiler :: compile( void ) {
 
     CI.createPreprocessor();
     Preprocessor &PP = CI.getPreprocessor();
-
+    client.BeginSourceFile( lang, &PP );
+    
     // Header paths:
     HeaderSearchOptions& headeropts = CI.getHeaderSearchOpts();
     for (int i=0; i<options.system_includes.size(); i++) {
-        headeropts.AddPath(options.system_includes[i].toStdString(), clang::frontend::Angled, true, false);
+        headeropts.AddPath(options.system_includes[i].toStdString(), clang::frontend::Angled, true, false, false);
     }
     for (int i=0; i<options.user_includes.size(); i++) {
-        headeropts.AddPath(options.user_includes[i].toStdString(), clang::frontend::Quoted, true, false);
+        headeropts.AddPath(options.user_includes[i].toStdString(), clang::frontend::Quoted, true, false, false);
     }
     ApplyHeaderSearchOptions(PP.getHeaderSearchInfo(), headeropts, lang, CI.getTarget().getTriple());
 
     PP.getBuiltinInfo().InitializeBuiltins(PP.getIdentifierTable(), PP.getLangOptions().NoBuiltin);
 
 
+    
 
     CI.createASTContext();
 //  llvm::SmallVector<const char *, 32> BuiltinNames;
@@ -228,7 +238,7 @@ bool Compiler :: compile( void ) {
 //  }
 
 
-    CodeGenOptions CGO;
+    CodeGenOptions CGO; 
     CodeGenerator * codegen = CreateLLVMCodeGen(Diags, "mymodule", CGO, mImpl->llvmContext );
 
 
@@ -240,6 +250,10 @@ bool Compiler :: compile( void ) {
             0);
 
     llvm::Module* module = codegen->ReleaseModule();
+    
+    //llvm::raw_fd_ostream dump_stream("t.a",Err);
+    //module->print(dump_stream, 0);
+    
     delete codegen;
 
     if (module) {
@@ -248,7 +262,7 @@ bool Compiler :: compile( void ) {
     }
 
     printf("compile errors\n");
-
+    client.EndSourceFile();
 /*    int ecount = 0;
     for(TextDiagnosticBuffer::const_iterator it = client.err_begin();
         it != client.err_end();
