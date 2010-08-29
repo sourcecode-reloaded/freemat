@@ -4,8 +4,9 @@ cmake_minimum_required(VERSION 2.8)
 
 OPTION(USE_LLVM "Build with LLVM support?" ON)
 
-set( LLVM_LIB_LIST 
+set( CLANG_LIB_LIST
     clangFrontend
+    clangFrontendTool
     clangDriver
     clangCodeGen
     clangSema
@@ -16,14 +17,21 @@ set( LLVM_LIB_LIST
     clangAST
     clangParse
     clangLex
+    clangSerialization
     clangBasic
+)
+set( LLVM_LIB_LIST 
+${CLANG_LIB_LIST}
 LLVMInstrumentation
 LLVMipo
 LLVMX86CodeGen
 LLVMX86Info
 LLVMSelectionDAG
-LLVMAsmPrinter
 LLVMJIT
+LLVMCBackend
+LLVMCBackendInfo
+LLVMCPPBackend
+LLVMCPPBackendInfo
 LLVMExecutionEngine
 LLVMCodeGen
 LLVMScalarOpts
@@ -32,13 +40,21 @@ LLVMTransformUtils
 LLVMipa
 LLVMAnalysis
 LLVMTarget
-LLVMMC
 LLVMBitReader
 LLVMBitWriter
+LLVMLinker
 LLVMCore
 LLVMSupport
+LLVMX86AsmPrinter
+LLVMAsmPrinter
+LLVMMC
 LLVMX86AsmParser
 LLVMAsmParser
+LLVMMCParser
+LLVMBitReader
+LLVMBitWriter
+LLVMInterpreter
+LLVMX86Disassembler
 LLVMSystem
 )
 
@@ -83,10 +99,14 @@ IF( USE_LLVM )
     endif (LLVM_INCLUDE_DIR)
   else (MINGW)
     find_program(LLVM_CONFIG llvm-config)
-    execute_process(COMMAND ${LLVM_CONFIG} --libfiles jit nativecodegen ipo instrumentation scalaropts 
+    execute_process(COMMAND ${LLVM_CONFIG} --libs all
     			    OUTPUT_VARIABLE LLVM_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
     execute_process(COMMAND ${LLVM_CONFIG} --includedir OUTPUT_VARIABLE LLVM_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
     execute_process(COMMAND ${LLVM_CONFIG} --version OUTPUT_VARIABLE LLVM_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+    set( LLVM_LIBS
+      ${CLANG_LIB_LIST}
+      ${LLVM_LIBS}
+    )
     separate_arguments(LLVM_LIBS) 
   endif (MSVC)
 #  if (NOT LLVM_VERSION STREQUAL "2.5")
@@ -114,8 +134,8 @@ TARGET_LINK_LIBRARIES( jittest
 ${LLVM_LIBS}
 ${QT_QTCORE_LIBRARY}
 ${QT_QTMAIN_LIBRARY}
-imagehlp
-psapi
+#imagehlp
+#psapi
 )
 
 #LLVMArchive
