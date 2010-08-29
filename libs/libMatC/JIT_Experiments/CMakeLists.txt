@@ -128,6 +128,7 @@ INCLUDE_DIRECTORIES( ${QT_INCLUDE_DIR} )
 
 add_executable( jittest 
 jittest.cpp
+JITCompiler.cpp
 )
 
 TARGET_LINK_LIBRARIES( jittest
