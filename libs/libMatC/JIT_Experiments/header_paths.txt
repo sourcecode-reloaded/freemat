@@ -1,5 +1,10 @@
-/usr/lib/gcc/i586-suse-linux/4.5/include
-/usr/include/c++/4.5/i586-suse-linux/
-/usr/include
-/usr/local/include
+/usr/lib/gcc/i586-suse-linux/4.5/include/usr/include/c++/4.5
+/usr/include/c++/4.5/i586-suse-linux
 /usr/include/c++/4.5
+/usr/local/include
+/usr/lib/gcc/i586-suse-linux/4.5/include
+/usr/lib/gcc/i586-suse-linux/4.5/include-fixed
+/usr/lib/gcc/i586-suse-linux/4.5/../../../../i586-suse-linux/include
+/usr/include
+/usr/include/QtCore
+/home/eugening/freemat/FreeMat4/libs/libFreeMat

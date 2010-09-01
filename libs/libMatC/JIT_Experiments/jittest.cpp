@@ -42,9 +42,9 @@ int main( void )
             continue;
         }
         QTextStream insource(&fsource);
-        QString *source_code = new QString(insource.readAll());
-	if( !source_code->isEmpty() )
-	  jit->add_source_from_string(*source_code, path);
+        QString source_code = insource.readAll()+'\0';
+	if( !source_code.isEmpty() )
+	  jit->add_source_from_string(source_code, path);
     }
 
     jit->compile();    

@@ -10,6 +10,7 @@
 #include <QtCore/QSharedPointer>
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/LLVMContext.h"
+#include "llvm/Module.h"
 
 typedef QSharedPointer<llvm::MemoryBuffer> LLVMMemSharedPtr;
 class JITConsumer;
@@ -22,6 +23,8 @@ private:
     QSharedPointer< JITConsumer > jit;
     llvm::LLVMContext llvmContext;
 
+    llvm::Module* TheModule;
+    
 public:
     JITCompiler();
     ~JITCompiler();

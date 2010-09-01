@@ -1,2 +1,8 @@
 /home/eugening/freemat/FreeMat4/libs/libMatC/JIT_Experiments/t.cpp
 /home/eugening/freemat/FreeMat4/libs/libMatC/JIT_Experiments/t1.cpp
+/home/eugening/freemat/FreeMat4/libs/libMatC/JIT_Experiments/t_arr.cpp
+/home/eugening/freemat/FreeMat4/libs/libFreeMat/Array.cpp
+/home/eugening/freemat/FreeMat4/libs/libFreeMat/IndexArray.cpp
+/home/eugening/freemat/FreeMat4/libs/libFreeMat/Math.cpp
+/home/eugening/freemat/FreeMat4/libs/libFreeMat/Algorithms.cpp
+/home/eugening/freemat/FreeMat4/libs/libFreeMat/Class.cpp

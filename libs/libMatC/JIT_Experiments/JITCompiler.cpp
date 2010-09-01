@@ -40,6 +40,7 @@
 #include "llvm/LLVMContext.h"
 #include "llvm/Module.h"
 #include "llvm/Pass.h"
+#include "llvm/Linker.h"
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/Support/IRReader.h"
 #include "llvm/Support/MemoryBuffer.h"
@@ -178,20 +179,6 @@ public:
     void InlineAsmDiagHandler2(const llvm::SMDiagnostic &,
                                SourceLocation LocCookie);
 
-    virtual void ExecuteFunction( QString name ) {
-        std::string errorstring;
-
-        if ( !Diags.hasErrorOccurred() ) {
-            ExecutionEngine* ee = ExecutionEngine::createJIT(TheModule.get(), &errorstring);
-            Function* fn = ee->FindFunctionNamed( name.toStdString().c_str() );
-            std::vector<GenericValue> arg;
-            GenericValue ret = ee->runFunction( fn, arg );
-            ee->freeMachineCodeForFunction(fn);
-        }
-        else {
-            printf("Error!!! !!!");
-        }
-    }
 };
 
 /// ConvertBackendLocation - Convert a location in a temporary llvm::SourceMgr
@@ -405,11 +392,13 @@ JITConsumer *CreateJITConsumer(BackendAction Action,
 
 JITCompiler::JITCompiler()
 {
-  InitializeNativeTarget();
+    InitializeNativeTarget();
+    TheModule = NULL;
 }
 
 JITCompiler::~JITCompiler()
 {
+    delete TheModule;
 }
 
 void JITCompiler::add_user_include_path( QString path)
@@ -424,11 +413,9 @@ void JITCompiler::add_system_include_path(QString path)
 
 void JITCompiler::add_source_from_string( QString code, QString name)
 {
-    llvm::StringRef src( *(new std::string(code.toStdString())));
-    
-    llvm::StringRef n( *(new std::string(name.toStdString())));
+    llvm::StringRef src( *(new std::string(code.toStdString()))); //TODO: fix mem leak here
 
-    llvm::MemoryBuffer *buffer = llvm::MemoryBuffer::getMemBufferCopy(src,  name.toStdString().c_str());
+    llvm::MemoryBuffer *buffer = llvm::MemoryBuffer::getMemBuffer(src,  name.toStdString());
     if (!buffer) {
         printf("couldn't create buffer\n");
     }
@@ -444,7 +431,7 @@ void JITCompiler::compile( void )
     //std::ostream ostr( &fb );
     //llvm::raw_os_ostream ost( ostr );
     std::string ErrorInfo1;
-    llvm::raw_ostream * ost = new llvm::raw_fd_ostream("t.err",ErrorInfo1);
+    llvm::raw_ostream * ost = new llvm::raw_fd_ostream("t.err",ErrorInfo1); //TODO: fix this memory leak
 
     //llvm::raw_stderr_ostream ost;
 
@@ -486,79 +473,88 @@ void JITCompiler::compile( void )
     PreprocessorOptions ppio;
     HeaderSearchOptions hsopt;
 
-    foreach( QString p, system_includes ){
+    foreach( QString p, system_includes ) {
         hsopt.AddPath(p.toStdString(), clang::frontend::System, false, false, false );
     }
-    foreach( QString p, user_includes ){
+    foreach( QString p, user_includes ) {
         hsopt.AddPath(p.toStdString(), clang::frontend::Angled, true, false, false );
     }
 
 
-    FrontendOptions feopt;
-    InitializePreprocessor(pp, ppio, hsopt, feopt );
-    pp.getBuiltinInfo().InitializeBuiltins(pp.getIdentifierTable(), pp.getLangOptions().NoBuiltin);
-
-    tdp->BeginSourceFile( lang, &pp );
-
-
-    bool isFirst = true;
-    foreach( llvm::MemoryBuffer* pBuf, sources_buffer ) {
-      if( isFirst ){
-        sm.createMainFileIDForMemBuffer(sources_buffer.first());
-        isFirst = false;
-      }
-      else{
-        sm.createFileIDForMemBuffer( pBuf );
-      }
-    }
-
-    //pp.EnterMainSourceFile();
-
-
-    //IdentifierTable tab(lang);
-    //MyAction action(pp);
-    //Parser p(pp, action);
-    //p.ParseTranslationUnit();
-    //tab.PrintStats();
-
-    //SelectorTable sel;
-
     CodeGenOptions codeGenOpts;
     codeGenOpts.DebugInfo = 0;
     codeGenOpts.OptimizationLevel = 3; //TODO: change to 4
+    codeGenOpts.TimePasses = 1;
 
-    std::string ErrorInfo;
-    llvm::raw_ostream* os = new llvm::raw_fd_ostream("t.a",ErrorInfo);
+    bool isFirst = true;
+    foreach( llvm::MemoryBuffer* pBuf, sources_buffer ) {
 
-    
+        FrontendOptions feopt;
 
-    jit = QSharedPointer<JITConsumer>( CreateJITConsumer(Backend_EmitLL, diag,
-                                       codeGenOpts, target_opts,
-                                       true, "mymodule",
-                                       os, llvmContext) );
 
-    ASTContext ctx(pp.getLangOptions(), pp.getSourceManager(), pp.getTargetInfo(), pp.getIdentifierTable(), pp.getSelectorTable(), pp.getBuiltinInfo(), 0);
+        InitializePreprocessor(pp, ppio, hsopt, feopt );
+        pp.getBuiltinInfo().InitializeBuiltins(pp.getIdentifierTable(), pp.getLangOptions().NoBuiltin);
 
-    ParseAST(pp, jit.data(), ctx, true, true);
+        tdp->BeginSourceFile( lang, &pp );
 
-    tdp->EndSourceFile();
 
-    //Token Tok;
+        if ( isFirst ) {
+            sm.createMainFileIDForMemBuffer(pBuf);
+            isFirst = false;
+        }
+        else {
+            sm.createFileIDForMemBuffer( pBuf );
+        }
 
-    //do {
-    //  pp.Lex(Tok);
-    //  if(diag.hasErrorOccurred())
-    //          break;
-    //  pp.DumpToken(Tok);
-    //  std::cerr << std::endl;
-    //} while(Tok.isNot(tok::eof));
-    //
+
+
+        std::string ErrorInfo;
+        std::string llout_name( pBuf->getBufferIdentifier() );
+        llout_name.append(".a");
+
+        llvm::raw_ostream* os = new llvm::raw_fd_ostream(llout_name.c_str(),ErrorInfo);
+
+
+        jit = QSharedPointer<JITConsumer>( CreateJITConsumer(Backend_EmitLL, diag,
+                                           codeGenOpts, target_opts,
+                                           true, "mymodule",
+                                           os, llvmContext) );
+
+        ASTContext ctx(pp.getLangOptions(), pp.getSourceManager(), pp.getTargetInfo(), pp.getIdentifierTable(), pp.getSelectorTable(), pp.getBuiltinInfo(), 0);
+
+        ParseAST(pp, jit.data(), ctx, false, true);
+
+        if ( !TheModule ) {
+            TheModule = jit->takeModule();
+        }
+        else {
+            std::string err;
+            llvm::Module * child = jit->takeModule();
+            llvm::Linker::LinkModules(TheModule, child, &err);
+            delete child;
+            if (err.length()) {
+                printf("link error %s\n", err.data());
+            }
+
+        }
+        tdp->EndSourceFile();
+    }
 
 }
 
 void JITCompiler::run_function(QString name)
 {
-    jit->ExecuteFunction(name);
+    std::string errorstring;
+    ExecutionEngine* ee = ExecutionEngine::createJIT(TheModule, &errorstring);
+    Function* fn = ee->FindFunctionNamed( name.toStdString().c_str() );
+    if ( fn ) {
+        std::vector<GenericValue> arg;
+        GenericValue ret = ee->runFunction( fn, arg );
+        ee->freeMachineCodeForFunction(fn);
+    }
+    else {
+        printf("Error: %s\n", errorstring.c_str());
+    }
 }
 
 // kate: indent-mode cstyle; space-indent on; indent-width 0; 
