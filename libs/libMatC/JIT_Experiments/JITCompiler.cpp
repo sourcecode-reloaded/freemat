@@ -468,8 +468,6 @@ void JITCompiler::compile( void )
     //target_opts.CXXABI = "microsoft";
 
     TargetInfo *ti = TargetInfo::CreateTargetInfo(diag, target_opts);
-    Preprocessor pp(diag, lang, *ti, sm, headers);
-
     PreprocessorOptions ppio;
     HeaderSearchOptions hsopt;
 
@@ -490,14 +488,16 @@ void JITCompiler::compile( void )
     foreach( llvm::MemoryBuffer* pBuf, sources_buffer ) {
 
         FrontendOptions feopt;
-
-
+        
+        Preprocessor pp(diag, lang, *ti, sm, headers);
         InitializePreprocessor(pp, ppio, hsopt, feopt );
         pp.getBuiltinInfo().InitializeBuiltins(pp.getIdentifierTable(), pp.getLangOptions().NoBuiltin);
 
         tdp->BeginSourceFile( lang, &pp );
 
 
+        printf("File: %s\n%s\n",pBuf->getBufferIdentifier(), pBuf->getBufferStart());
+        
         if ( isFirst ) {
             sm.createMainFileIDForMemBuffer(pBuf);
             isFirst = false;
@@ -510,19 +510,22 @@ void JITCompiler::compile( void )
 
         std::string ErrorInfo;
         std::string llout_name( pBuf->getBufferIdentifier() );
+        std::string llout_name2( pBuf->getBufferIdentifier() );
         llout_name.append(".a");
 
         llvm::raw_ostream* os = new llvm::raw_fd_ostream(llout_name.c_str(),ErrorInfo);
 
 
-        jit = QSharedPointer<JITConsumer>( CreateJITConsumer(Backend_EmitLL, diag,
+        jit = CreateJITConsumer(Backend_EmitLL, diag,
                                            codeGenOpts, target_opts,
-                                           true, "mymodule",
-                                           os, llvmContext) );
+                                           true, llout_name2,
+                                           os, llvmContext);
 
+                                           
         ASTContext ctx(pp.getLangOptions(), pp.getSourceManager(), pp.getTargetInfo(), pp.getIdentifierTable(), pp.getSelectorTable(), pp.getBuiltinInfo(), 0);
 
-        ParseAST(pp, jit.data(), ctx, false, true);
+        jit->Initialize(ctx);
+        ParseAST(pp, jit, ctx, false, true);
 
         if ( !TheModule ) {
             TheModule = jit->takeModule();
@@ -530,14 +533,18 @@ void JITCompiler::compile( void )
         else {
             std::string err;
             llvm::Module * child = jit->takeModule();
-            llvm::Linker::LinkModules(TheModule, child, &err);
-            delete child;
+            if( child ){
+              llvm::Linker::LinkModules(TheModule, child, &err);
+              delete child;
+            }
             if (err.length()) {
                 printf("link error %s\n", err.data());
             }
 
         }
         tdp->EndSourceFile();
+        delete jit;
+
     }
 
 }

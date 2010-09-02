@@ -20,7 +20,7 @@ private:
     QVector<QString> user_includes;
 
     QVector< llvm::MemoryBuffer* > sources_buffer;
-    QSharedPointer< JITConsumer > jit;
+    JITConsumer* jit;
     llvm::LLVMContext llvmContext;
 
     llvm::Module* TheModule;
