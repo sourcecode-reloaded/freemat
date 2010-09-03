@@ -456,7 +456,6 @@ void JITCompiler::compile( void )
     lang.MathErrno = 1;
     //lang.HeinousExtensions = 1;
 
-    SourceManager sm( diag );
     FileManager fm;
 
     HeaderSearch headers(fm);
@@ -478,7 +477,8 @@ void JITCompiler::compile( void )
         hsopt.AddPath(p.toStdString(), clang::frontend::Angled, true, false, false );
     }
 
-
+    ApplyHeaderSearchOptions(headers, hsopt, lang, ti->getTriple() );
+    
     CodeGenOptions codeGenOpts;
     codeGenOpts.DebugInfo = 0;
     codeGenOpts.OptimizationLevel = 3; //TODO: change to 4
@@ -486,6 +486,7 @@ void JITCompiler::compile( void )
 
     bool isFirst = true;
     foreach( llvm::MemoryBuffer* pBuf, sources_buffer ) {
+        SourceManager sm( diag );
 
         FrontendOptions feopt;
         
@@ -496,11 +497,11 @@ void JITCompiler::compile( void )
         tdp->BeginSourceFile( lang, &pp );
 
 
-        printf("File: %s\n%s\n",pBuf->getBufferIdentifier(), pBuf->getBufferStart());
+       // printf("File: %s\n%s\n",pBuf->getBufferIdentifier(), pBuf->getBufferStart());
         
         if ( isFirst ) {
             sm.createMainFileIDForMemBuffer(pBuf);
-            isFirst = false;
+            //isFirst = false;
         }
         else {
             sm.createFileIDForMemBuffer( pBuf );

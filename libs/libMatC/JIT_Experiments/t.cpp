@@ -9,6 +9,7 @@
 int blah = 10;
 bool blah1 = false;
 double blah2 = 100.e3;
+bool f_2( double a );
 
 class A{
 	private:
@@ -22,6 +23,7 @@ extern "C" int f_t( void )
 {
 //	int a = 42;
 	int a = atoi("42");
+	f_2(20.);
 	printf("%d\n", a);
 	return a;
 }
