@@ -40,12 +40,16 @@
 #include "llvm/LLVMContext.h"
 #include "llvm/Module.h"
 #include "llvm/Pass.h"
+#include "llvm/PassManager.h"
+#include "llvm/LinkAllPasses.h"
 #include "llvm/Linker.h"
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/Support/IRReader.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/SourceMgr.h"
+#include "llvm/Support/StandardPasses.h"
 #include "llvm/Support/Timer.h"
+#include "llvm/Target/TargetData.h"
 
 using namespace clang;
 using namespace llvm;
@@ -445,8 +449,8 @@ void JITCompiler::compile( void )
     lang.CPlusPlus = 1;
     lang.C99 = 1;
     lang.CPlusPlus0x = 0;
-    lang.GNUKeywords = 1;
-    lang.GNUMode = 1;
+    lang.GNUKeywords = 0;
+    lang.GNUMode = 0;
     lang.Microsoft = 0;
     lang.Bool = 1;
     lang.RTTI = 1;
@@ -477,20 +481,20 @@ void JITCompiler::compile( void )
         hsopt.AddPath(p.toStdString(), clang::frontend::Angled, true, false, false );
     }
 
-    ApplyHeaderSearchOptions(headers, hsopt, lang, ti->getTriple() );
     
     CodeGenOptions codeGenOpts;
     codeGenOpts.DebugInfo = 0;
-    codeGenOpts.OptimizationLevel = 3; //TODO: change to 4
+    codeGenOpts.OptimizationLevel = 4; //TODO: change to 4
     codeGenOpts.TimePasses = 1;
 
-    bool isFirst = true;
     foreach( llvm::MemoryBuffer* pBuf, sources_buffer ) {
         SourceManager sm( diag );
 
         FrontendOptions feopt;
-        
+        headers.ClearFileInfo();
+        ApplyHeaderSearchOptions(headers, hsopt, lang, ti->getTriple() );
         Preprocessor pp(diag, lang, *ti, sm, headers);
+        
         InitializePreprocessor(pp, ppio, hsopt, feopt );
         pp.getBuiltinInfo().InitializeBuiltins(pp.getIdentifierTable(), pp.getLangOptions().NoBuiltin);
 
@@ -499,14 +503,7 @@ void JITCompiler::compile( void )
 
        // printf("File: %s\n%s\n",pBuf->getBufferIdentifier(), pBuf->getBufferStart());
         
-        if ( isFirst ) {
-            sm.createMainFileIDForMemBuffer(pBuf);
-            //isFirst = false;
-        }
-        else {
-            sm.createFileIDForMemBuffer( pBuf );
-        }
-
+        sm.createMainFileIDForMemBuffer(pBuf);
 
 
         std::string ErrorInfo;
@@ -516,6 +513,10 @@ void JITCompiler::compile( void )
 
         llvm::raw_ostream* os = new llvm::raw_fd_ostream(llout_name.c_str(),ErrorInfo);
 
+//         PreprocessorOutputOptions ppopts;
+//         ppopts.ShowHeaderIncludes=1;
+//         DoPrintPreprocessedInput(pp,os,ppopts);
+//         continue;
 
         jit = CreateJITConsumer(Backend_EmitLL, diag,
                                            codeGenOpts, target_opts,
@@ -554,7 +555,23 @@ void JITCompiler::run_function(QString name)
 {
     std::string errorstring;
     ExecutionEngine* ee = ExecutionEngine::createJIT(TheModule, &errorstring);
+    
+    llvm::raw_ostream * os = new llvm::raw_fd_ostream("moduledump.txt",errorstring); //TODO: fix this memory leak
+    // Create the optimizer thingy
+    
+  PassManager* opt = new PassManager();
+  
+  opt->add(new TargetData(TheModule));
+  
+  createStandardFunctionPasses(opt,4);
+  createStandardModulePasses(opt, 4, false, true, true, true, true, NULL);
+  createStandardLTOPasses(opt, false, true, true);
+    opt->run(*TheModule);
+    TheModule->print(*os,NULL);
+    
+    
     Function* fn = ee->FindFunctionNamed( name.toStdString().c_str() );
+    delete os;
     if ( fn ) {
         std::vector<GenericValue> arg;
         GenericValue ret = ee->runFunction( fn, arg );
