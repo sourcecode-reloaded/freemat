@@ -497,7 +497,14 @@ void JITCompiler::compile( void )
         
         InitializePreprocessor(pp, ppio, hsopt, feopt );
         pp.getBuiltinInfo().InitializeBuiltins(pp.getIdentifierTable(), pp.getLangOptions().NoBuiltin);
-
+        
+        std::string predefines = pp.getPredefines();
+        predefines.append("#define QT_ARCH_GENERIC\n");
+        pp.setPredefines(predefines);
+        
+        
+        printf("Predefs: %s\n", pp.getPredefines().c_str() );
+        
         tdp->BeginSourceFile( lang, &pp );
 
 
@@ -566,6 +573,7 @@ void JITCompiler::run_function(QString name)
   createStandardFunctionPasses(opt,4);
   createStandardModulePasses(opt, 4, false, true, true, true, true, NULL);
   createStandardLTOPasses(opt, false, true, true);
+  createStandardFunctionPasses(opt,4);
     opt->run(*TheModule);
     TheModule->print(*os,NULL);
     
