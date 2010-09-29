@@ -86,6 +86,10 @@ public:
         return TheModule.take();
     }
 
+    llvm::Module *getModule() {
+        return TheModule.get();
+    }
+
     virtual void Initialize(ASTContext &Ctx) {
         Context = &Ctx;
 
@@ -425,11 +429,20 @@ void JITCompiler::add_source_from_string( QString code, QString name)
     }
     this->sources_buffer.push_back(buffer);
 }
+
 //add_source_file(const QString& code);
+void JITCompiler::add_builtins ( void )
+{
+    QString str = QString("int QBasicAtomicInt_fetchAndAddOrdered(volatile int *p, int v){return __sync_fetch_and_add( p, v );}");
+    add_source_from_string( str, "atomic.cpp");
+}
 
 void JITCompiler::compile( void )
 {
-
+    add_builtins();
+    
+    
+    
     //std::filebuf fb;
     //fb.open("t.err",std::ios::out);
     //std::ostream ostr( &fb );

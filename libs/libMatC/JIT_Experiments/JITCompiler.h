@@ -34,6 +34,7 @@ public:
     void add_source_from_string( QString code, QString name);
     //add_source_file(const QString& code);
 
+    void add_builtins( void );
     void compile( void );
     void run_function(QString name);
 };
