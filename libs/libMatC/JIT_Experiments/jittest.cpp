@@ -36,7 +36,13 @@ int main( void )
     in.setDevice(&f);
     while (!in.atEnd()) {
         path = in.readLine();
-        QFile fsource(path);
+	try{
+	  jit->add_source_file( path );
+	}
+	catch(...){
+	  continue;
+	}
+/*        QFile fsource(path);
         if( !fsource.open(QIODevice::ReadOnly | QIODevice::Text) ){
             printf("Error opening: %s\n", path.toStdString().c_str());
             continue;
@@ -44,8 +50,10 @@ int main( void )
         QTextStream insource(&fsource);
         QString source_code = insource.readAll()+'\0';
 	if( !source_code.isEmpty() )
-	  jit->add_source_from_string(source_code, path);
+	  jit->add_source_from_string(source_code, path);*/
     }
+
+
 
     jit->compile();    
     jit->run_function("f_t");

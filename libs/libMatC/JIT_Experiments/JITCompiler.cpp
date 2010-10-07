@@ -1,6 +1,11 @@
 #include "JITCompiler.h"
 #include <stdio.h>
 
+#include <QtCore/QFile>
+#include <QtCore/QDateTime>
+#include <QtCore/QFileInfo>
+#include <QtCore/QTextStream>
+
 #include <llvm/Support/raw_os_ostream.h>
 #include <llvm/Support/raw_ostream.h>
 
@@ -24,6 +29,7 @@
 #include <llvm/Target/TargetSelect.h>
 #include "llvm/ExecutionEngine/JIT.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
+#include "llvm/Bitcode/ReaderWriter.h"
 
 #include "clang/CodeGen/CodeGenAction.h"
 #include "clang/Basic/SourceManager.h"
@@ -65,20 +71,21 @@ class JITConsumer : public ASTConsumer {
     Timer LLVMIRGeneration;
     llvm::OwningPtr<CodeGenerator> Gen;
     llvm::OwningPtr<llvm::Module> TheModule;
-
+    std::string infile;
 public:
     JITConsumer(BackendAction action, Diagnostic &_Diags,
                 const CodeGenOptions &compopts,
                 const TargetOptions &targetopts, bool TimePasses,
-                const std::string &infile, llvm::raw_ostream *OS,
+                const std::string &_infile, llvm::raw_ostream *OS,
                 LLVMContext &C) :
             Diags(_Diags),
             Action(action),
             CodeGenOpts(compopts),
             TargetOpts(targetopts),
             AsmOutStream(OS),
+            infile(_infile),
             LLVMIRGeneration("LLVM IR Generation Time"),
-            Gen(CreateLLVMCodeGen(Diags, infile, compopts, C)) {
+            Gen(CreateLLVMCodeGen(Diags, _infile, compopts, C)) {
         llvm::TimePassesIsEnabled = TimePasses;
     }
 
@@ -155,10 +162,30 @@ public:
         Ctx.setInlineAsmDiagnosticHandler((void*)(intptr_t)InlineAsmDiagHandler,
                                           this);
 
-
-
+        std::string ErrorInfo;
+        std::string outfile = infile;
+        outfile.append(".a");
+        llvm::raw_ostream* os = new llvm::raw_fd_ostream(outfile.c_str(),ErrorInfo);
         EmitBackendOutput(Diags, CodeGenOpts, TargetOpts,
-                          TheModule.get(), Action, AsmOutStream);
+                          TheModule.get(), Backend_EmitLL, os);
+        os->flush();
+        delete os;
+
+        /*        outfile = infile;
+                outfile.append(".asm");
+                os = new llvm::raw_fd_ostream(outfile.c_str(),ErrorInfo);
+                EmitBackendOutput(Diags, CodeGenOpts, TargetOpts,
+                                  TheModule.get(), Backend_EmitAssembly, os);
+                os->flush();
+                delete os;*/
+
+        outfile = infile;
+        outfile.append(".bc");
+        os = new llvm::raw_fd_ostream(outfile.c_str(),ErrorInfo);
+        EmitBackendOutput(Diags, CodeGenOpts, TargetOpts,
+                          TheModule.get(), Backend_EmitBC, os);
+        os->flush();
+        delete os;
 
         Ctx.setInlineAsmDiagnosticHandler(OldHandler, OldContext);
     }
@@ -430,6 +457,32 @@ void JITCompiler::add_source_from_string( QString code, QString name)
     this->sources_buffer.push_back(buffer);
 }
 
+void JITCompiler::add_source_file(const QString& path)
+{
+    QFile fsource(path);
+    QFileInfo fsource_info(fsource);
+    QFileInfo f_bc_info(path+".bc");
+
+    if ( fsource_info.lastModified() < f_bc_info.lastModified() ) {
+        add_bc_file(path+".bc");
+        return;
+    }
+
+    if ( !fsource.open(QIODevice::ReadOnly | QIODevice::Text) ) {
+        printf("Error opening file: %s\n", path.toStdString().c_str());
+        throw;
+    }
+    QTextStream insource(&fsource);
+    QString source_code = insource.readAll()+'\0';
+    if ( !source_code.isEmpty() )
+        this->add_source_from_string(source_code, path);
+}
+
+void JITCompiler::add_bc_file( const QString& path)
+{
+    this->bc_files.push_back( path );
+}
+
 //add_source_file(const QString& code);
 void JITCompiler::add_builtins ( void )
 {
@@ -440,9 +493,7 @@ void JITCompiler::add_builtins ( void )
 void JITCompiler::compile( void )
 {
     add_builtins();
-    
-    
-    
+
     //std::filebuf fb;
     //fb.open("t.err",std::ios::out);
     //std::ostream ostr( &fb );
@@ -494,7 +545,7 @@ void JITCompiler::compile( void )
         hsopt.AddPath(p.toStdString(), clang::frontend::Angled, true, false, false );
     }
 
-    
+
     CodeGenOptions codeGenOpts;
     codeGenOpts.DebugInfo = 0;
     codeGenOpts.OptimizationLevel = 4; //TODO: change to 4
@@ -507,31 +558,28 @@ void JITCompiler::compile( void )
         headers.ClearFileInfo();
         ApplyHeaderSearchOptions(headers, hsopt, lang, ti->getTriple() );
         Preprocessor pp(diag, lang, *ti, sm, headers);
-        
+
         InitializePreprocessor(pp, ppio, hsopt, feopt );
         pp.getBuiltinInfo().InitializeBuiltins(pp.getIdentifierTable(), pp.getLangOptions().NoBuiltin);
-        
+
         std::string predefines = pp.getPredefines();
         predefines.append("#define QT_ARCH_GENERIC\n");
         pp.setPredefines(predefines);
-        
-        
-        printf("Predefs: %s\n", pp.getPredefines().c_str() );
-        
+
+
+        //printf("Predefs: %s\n", pp.getPredefines().c_str() );
+
         tdp->BeginSourceFile( lang, &pp );
 
 
-       // printf("File: %s\n%s\n",pBuf->getBufferIdentifier(), pBuf->getBufferStart());
-        
+        // printf("File: %s\n%s\n",pBuf->getBufferIdentifier(), pBuf->getBufferStart());
+
         sm.createMainFileIDForMemBuffer(pBuf);
 
 
         std::string ErrorInfo;
         std::string llout_name( pBuf->getBufferIdentifier() );
         std::string llout_name2( pBuf->getBufferIdentifier() );
-        llout_name.append(".a");
-
-        llvm::raw_ostream* os = new llvm::raw_fd_ostream(llout_name.c_str(),ErrorInfo);
 
 //         PreprocessorOutputOptions ppopts;
 //         ppopts.ShowHeaderIncludes=1;
@@ -539,11 +587,11 @@ void JITCompiler::compile( void )
 //         continue;
 
         jit = CreateJITConsumer(Backend_EmitLL, diag,
-                                           codeGenOpts, target_opts,
-                                           true, llout_name2,
-                                           os, llvmContext);
+                                codeGenOpts, target_opts,
+                                true, llout_name2,
+                                NULL, llvmContext);
 
-                                           
+
         ASTContext ctx(pp.getLangOptions(), pp.getSourceManager(), pp.getTargetInfo(), pp.getIdentifierTable(), pp.getSelectorTable(), pp.getBuiltinInfo(), 0);
 
         jit->Initialize(ctx);
@@ -555,9 +603,9 @@ void JITCompiler::compile( void )
         else {
             std::string err;
             llvm::Module * child = jit->takeModule();
-            if( child ){
-              llvm::Linker::LinkModules(TheModule, child, &err);
-              delete child;
+            if ( child ) {
+                llvm::Linker::LinkModules(TheModule, child, &err);
+                delete child;
             }
             if (err.length()) {
                 printf("link error %s\n", err.data());
@@ -568,29 +616,62 @@ void JITCompiler::compile( void )
         delete jit;
 
     }
+    llvm::Timer bc_reader_timer("BitcodeReading");
+    bc_reader_timer.startTimer();
+    foreach( QString bc_fname, bc_files ) { //load bitcode files
 
+        std::string ErrMsg;
+
+        llvm::MemoryBuffer *buffer = MemoryBuffer::getFileOrSTDIN(bc_fname.toStdString().c_str(), &ErrMsg);
+
+        if (isBitcode((const unsigned char *)buffer->getBufferStart(),
+                      (const unsigned char *)buffer->getBufferEnd())) {
+
+            Module * module = ParseBitcodeFile(buffer, llvmContext, &ErrMsg);
+
+            if ( !TheModule ) {
+                TheModule = module;
+            }
+            else {
+                std::string err;
+                llvm::Module * child = module;
+                if ( child ) {
+                    llvm::Linker::LinkModules(TheModule, child, &err);
+                    delete child;
+                }
+                if (err.length()) {
+                    printf("link error %s\n", err.data());
+                }
+
+            }
+        }
+        else {
+            printf("not a bitcode file %s\n",bc_fname.toStdString().c_str());
+        }
+    }
+    bc_reader_timer.stopTimer();
 }
 
 void JITCompiler::run_function(QString name)
 {
     std::string errorstring;
     ExecutionEngine* ee = ExecutionEngine::createJIT(TheModule, &errorstring);
-    
+
     llvm::raw_ostream * os = new llvm::raw_fd_ostream("moduledump.txt",errorstring); //TODO: fix this memory leak
     // Create the optimizer thingy
-    
-  PassManager* opt = new PassManager();
-  
-  opt->add(new TargetData(TheModule));
-  
-  createStandardFunctionPasses(opt,4);
-  createStandardModulePasses(opt, 4, false, true, true, true, true, NULL);
-  createStandardLTOPasses(opt, false, true, true);
-  createStandardFunctionPasses(opt,4);
+
+    PassManager* opt = new PassManager();
+
+    opt->add(new TargetData(TheModule));
+
+    createStandardFunctionPasses(opt,4);
+    createStandardModulePasses(opt, 4, false, true, true, true, true, NULL);
+    createStandardLTOPasses(opt, false, true, true);
+    createStandardFunctionPasses(opt,4);
     opt->run(*TheModule);
     TheModule->print(*os,NULL);
-    
-    
+
+
     Function* fn = ee->FindFunctionNamed( name.toStdString().c_str() );
     delete os;
     if ( fn ) {
@@ -603,4 +684,4 @@ void JITCompiler::run_function(QString name)
     }
 }
 
-// kate: indent-mode cstyle; space-indent on; indent-width 0; 
+// kate: indent-mode cstyle; space-indent on; indent-width 0;

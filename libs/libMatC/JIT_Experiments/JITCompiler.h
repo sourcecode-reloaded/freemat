@@ -20,6 +20,8 @@ private:
     QVector<QString> user_includes;
 
     QVector< llvm::MemoryBuffer* > sources_buffer;
+    QVector< QString > bc_files;
+    
     JITConsumer* jit;
     llvm::LLVMContext llvmContext;
 
@@ -32,7 +34,8 @@ public:
     void add_user_include_path( QString path);
     void add_system_include_path(QString path);
     void add_source_from_string( QString code, QString name);
-    //add_source_file(const QString& code);
+    void add_source_file(const QString& code);
+    void add_bc_file( const QString& code);
 
     void add_builtins( void );
     void compile( void );
