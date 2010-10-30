@@ -504,7 +504,6 @@ void JITCompiler::compile( void )
     //llvm::raw_stderr_ostream ost;
 
     DiagnosticOptions diag_opts;
-    diag_opts.BinaryOutput = 0;
     diag_opts.ShowCarets = 1;
 
     TextDiagnosticPrinter *tdp = new TextDiagnosticPrinter(*ost, diag_opts);
@@ -551,6 +550,39 @@ void JITCompiler::compile( void )
     codeGenOpts.OptimizationLevel = 4; //TODO: change to 4
     codeGenOpts.TimePasses = 1;
 
+    llvm::Timer bc_reader_timer("BitcodeReading");
+    bc_reader_timer.startTimer();
+    foreach( QString bc_fname, bc_files ) { //load bitcode files
+
+        std::string ErrMsg;
+
+        llvm::MemoryBuffer *buffer = MemoryBuffer::getFileOrSTDIN(bc_fname.toStdString().c_str(), &ErrMsg);
+
+        if (isBitcode((const unsigned char *)buffer->getBufferStart(),
+                      (const unsigned char *)buffer->getBufferEnd())) {
+
+            Module * module = getLazyBitcodeModule(buffer, llvmContext, &ErrMsg);
+
+            if ( !TheModule ) {
+                TheModule = module;
+            }
+            else {
+                std::string err;
+                llvm::Module * child = module;
+                if ( child ) {
+                    llvm::Linker::LinkModules(TheModule, child, &err);
+                    delete child;
+                }
+                if (err.length()) {
+                    printf("link error %s\n", err.data());
+                }
+
+            }
+        }
+        else {
+            printf("not a bitcode file %s\n",bc_fname.toStdString().c_str());
+        }
+    }
     foreach( llvm::MemoryBuffer* pBuf, sources_buffer ) {
         SourceManager sm( diag );
 
@@ -581,10 +613,10 @@ void JITCompiler::compile( void )
         std::string llout_name( pBuf->getBufferIdentifier() );
         std::string llout_name2( pBuf->getBufferIdentifier() );
 
-//         PreprocessorOutputOptions ppopts;
-//         ppopts.ShowHeaderIncludes=1;
-//         DoPrintPreprocessedInput(pp,os,ppopts);
-//         continue;
+        //         PreprocessorOutputOptions ppopts;
+        //         ppopts.ShowHeaderIncludes=1;
+        //         DoPrintPreprocessedInput(pp,os,ppopts);
+        //         continue;
 
         jit = CreateJITConsumer(Backend_EmitLL, diag,
                                 codeGenOpts, target_opts,
@@ -616,39 +648,7 @@ void JITCompiler::compile( void )
         delete jit;
 
     }
-    llvm::Timer bc_reader_timer("BitcodeReading");
-    bc_reader_timer.startTimer();
-    foreach( QString bc_fname, bc_files ) { //load bitcode files
 
-        std::string ErrMsg;
-
-        llvm::MemoryBuffer *buffer = MemoryBuffer::getFileOrSTDIN(bc_fname.toStdString().c_str(), &ErrMsg);
-
-        if (isBitcode((const unsigned char *)buffer->getBufferStart(),
-                      (const unsigned char *)buffer->getBufferEnd())) {
-
-            Module * module = ParseBitcodeFile(buffer, llvmContext, &ErrMsg);
-
-            if ( !TheModule ) {
-                TheModule = module;
-            }
-            else {
-                std::string err;
-                llvm::Module * child = module;
-                if ( child ) {
-                    llvm::Linker::LinkModules(TheModule, child, &err);
-                    delete child;
-                }
-                if (err.length()) {
-                    printf("link error %s\n", err.data());
-                }
-
-            }
-        }
-        else {
-            printf("not a bitcode file %s\n",bc_fname.toStdString().c_str());
-        }
-    }
     bc_reader_timer.stopTimer();
 }
 
@@ -664,10 +664,10 @@ void JITCompiler::run_function(QString name)
 
     opt->add(new TargetData(TheModule));
 
-    createStandardFunctionPasses(opt,4);
+    //createStandardFunctionPasses(opt,4);
     createStandardModulePasses(opt, 4, false, true, true, true, true, NULL);
-    createStandardLTOPasses(opt, false, true, true);
-    createStandardFunctionPasses(opt,4);
+    //createStandardLTOPasses(opt, true, true, false);
+    //createStandardFunctionPasses(opt,4);
     opt->run(*TheModule);
     TheModule->print(*os,NULL);
 
@@ -684,4 +684,4 @@ void JITCompiler::run_function(QString name)
     }
 }
 
-// kate: indent-mode cstyle; space-indent on; indent-width 0;
+// kate: indent-mode cstyle; space-indent on; indent-width 0; 
