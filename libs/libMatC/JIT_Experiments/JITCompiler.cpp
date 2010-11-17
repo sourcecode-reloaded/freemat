@@ -524,8 +524,10 @@ void JITCompiler::compile( void )
     //lang.HeinousExtensions = 1;
 
     FileManager fm;
-
-    HeaderSearch headers(fm);
+    FileSystemOptions fsopts;
+    
+    
+    HeaderSearch headers(fm, fsopts);
 
 
     TargetOptions target_opts;
@@ -535,63 +537,31 @@ void JITCompiler::compile( void )
 
     TargetInfo *ti = TargetInfo::CreateTargetInfo(diag, target_opts);
     PreprocessorOptions ppio;
-    HeaderSearchOptions hsopt;
 
+    HeaderSearchOptions hsopt;
+    
     foreach( QString p, system_includes ) {
         hsopt.AddPath(p.toStdString(), clang::frontend::System, false, false, false );
     }
     foreach( QString p, user_includes ) {
         hsopt.AddPath(p.toStdString(), clang::frontend::Angled, true, false, false );
     }
-
-
+    
     CodeGenOptions codeGenOpts;
     codeGenOpts.DebugInfo = 0;
-    codeGenOpts.OptimizationLevel = 4; //TODO: change to 4
+    codeGenOpts.OptimizationLevel = 1; //TODO: change to 4
     codeGenOpts.TimePasses = 1;
 
-    llvm::Timer bc_reader_timer("BitcodeReading");
-    bc_reader_timer.startTimer();
-    foreach( QString bc_fname, bc_files ) { //load bitcode files
-
-        std::string ErrMsg;
-
-        llvm::MemoryBuffer *buffer = MemoryBuffer::getFileOrSTDIN(bc_fname.toStdString().c_str(), &ErrMsg);
-
-        if (isBitcode((const unsigned char *)buffer->getBufferStart(),
-                      (const unsigned char *)buffer->getBufferEnd())) {
-
-            Module * module = getLazyBitcodeModule(buffer, llvmContext, &ErrMsg);
-
-            if ( !TheModule ) {
-                TheModule = module;
-            }
-            else {
-                std::string err;
-                llvm::Module * child = module;
-                if ( child ) {
-                    llvm::Linker::LinkModules(TheModule, child, &err);
-                    delete child;
-                }
-                if (err.length()) {
-                    printf("link error %s\n", err.data());
-                }
-
-            }
-        }
-        else {
-            printf("not a bitcode file %s\n",bc_fname.toStdString().c_str());
-        }
-    }
     foreach( llvm::MemoryBuffer* pBuf, sources_buffer ) {
-        SourceManager sm( diag );
+       
+        SourceManager sm( diag, fm, fsopts);
 
         FrontendOptions feopt;
         headers.ClearFileInfo();
         ApplyHeaderSearchOptions(headers, hsopt, lang, ti->getTriple() );
         Preprocessor pp(diag, lang, *ti, sm, headers);
 
-        InitializePreprocessor(pp, ppio, hsopt, feopt );
+        InitializePreprocessor(pp, fsopts, ppio, hsopt, feopt );
         pp.getBuiltinInfo().InitializeBuiltins(pp.getIdentifierTable(), pp.getLangOptions().NoBuiltin);
 
         std::string predefines = pp.getPredefines();
@@ -648,7 +618,40 @@ void JITCompiler::compile( void )
         delete jit;
 
     }
+    llvm::Timer bc_reader_timer("BitcodeReading");
+    bc_reader_timer.startTimer();
+    foreach( QString bc_fname, bc_files ) { //load bitcode files
 
+        std::string ErrMsg;
+        
+        llvm::MemoryBuffer *buffer = MemoryBuffer::getFileOrSTDIN(bc_fname.toStdString().c_str(), &ErrMsg);
+        
+        if (isBitcode((const unsigned char *)buffer->getBufferStart(),
+            (const unsigned char *)buffer->getBufferEnd())) {
+            
+        //Module * module = getLazyBitcodeModule(buffer, llvmContext, &ErrMsg);
+        Module * module = ParseBitcodeFile(buffer, llvmContext, &ErrMsg);
+        
+        if ( !TheModule ) {
+            TheModule = module;
+        }
+        else {
+            std::string err;
+            llvm::Module * child = module;
+            if ( child ) {
+                llvm::Linker::LinkModules(TheModule, child, &err);
+                //delete child;
+            }
+            if (err.length()) {
+                printf("link error %s\n", err.data());
+            }
+            
+        }
+            }
+            else {
+                printf("not a bitcode file %s\n",bc_fname.toStdString().c_str());
+            }
+    }
     bc_reader_timer.stopTimer();
 }
 
@@ -657,6 +660,8 @@ void JITCompiler::run_function(QString name)
     std::string errorstring;
     ExecutionEngine* ee = ExecutionEngine::createJIT(TheModule, &errorstring);
 
+    ee->DisableLazyCompilation(true);
+    
     llvm::raw_ostream * os = new llvm::raw_fd_ostream("moduledump.txt",errorstring); //TODO: fix this memory leak
     // Create the optimizer thingy
 
@@ -672,7 +677,7 @@ void JITCompiler::run_function(QString name)
     TheModule->print(*os,NULL);
 
 
-    Function* fn = ee->FindFunctionNamed( name.toStdString().c_str() );
+    Function* fn = TheModule->getFunction(name.toStdString().c_str()); //ee->FindFunctionNamed( name.toStdString().c_str() );
     delete os;
     if ( fn ) {
         std::vector<GenericValue> arg;
