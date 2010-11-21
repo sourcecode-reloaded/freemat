@@ -157,11 +157,11 @@ public:
         // Install an inline asm handler so that diagnostics get printed through
         // our diagnostics hooks.
         LLVMContext &Ctx = TheModule->getContext();
-        void *OldHandler = Ctx.getInlineAsmDiagnosticHandler();
+        LLVMContext::InlineAsmDiagHandlerTy OldHandler =
+        Ctx.getInlineAsmDiagnosticHandler();
         void *OldContext = Ctx.getInlineAsmDiagnosticContext();
-        Ctx.setInlineAsmDiagnosticHandler((void*)(intptr_t)InlineAsmDiagHandler,
-                                          this);
-
+        Ctx.setInlineAsmDiagnosticHandler(InlineAsmDiagHandler, this);
+        
         std::string ErrorInfo;
         std::string outfile = infile;
         outfile.append(".a");
@@ -507,7 +507,9 @@ void JITCompiler::compile( void )
     diag_opts.ShowCarets = 1;
 
     TextDiagnosticPrinter *tdp = new TextDiagnosticPrinter(*ost, diag_opts);
-    Diagnostic diag(tdp);
+    llvm::IntrusiveRefCntPtr<Diagnostic> diag = CompilerInstance::createDiagnostics(diag_opts, 0, 0);
+    diag->setClient(tdp);
+    
     LangOptions lang;
     lang.CPlusPlus = 1;
     lang.C99 = 1;
@@ -535,7 +537,7 @@ void JITCompiler::compile( void )
 
     //target_opts.CXXABI = "microsoft";
 
-    TargetInfo *ti = TargetInfo::CreateTargetInfo(diag, target_opts);
+    TargetInfo *ti = TargetInfo::CreateTargetInfo(*diag, target_opts);
     PreprocessorOptions ppio;
 
     HeaderSearchOptions hsopt;
@@ -549,17 +551,17 @@ void JITCompiler::compile( void )
     
     CodeGenOptions codeGenOpts;
     codeGenOpts.DebugInfo = 0;
-    codeGenOpts.OptimizationLevel = 1; //TODO: change to 4
+    codeGenOpts.OptimizationLevel = 3; //TODO: change to 4
     codeGenOpts.TimePasses = 1;
 
     foreach( llvm::MemoryBuffer* pBuf, sources_buffer ) {
        
-        SourceManager sm( diag, fm, fsopts);
+        SourceManager sm( *diag, fm, fsopts);
 
         FrontendOptions feopt;
         headers.ClearFileInfo();
         ApplyHeaderSearchOptions(headers, hsopt, lang, ti->getTriple() );
-        Preprocessor pp(diag, lang, *ti, sm, headers);
+        Preprocessor pp(*diag, lang, *ti, sm, headers);
 
         InitializePreprocessor(pp, fsopts, ppio, hsopt, feopt );
         pp.getBuiltinInfo().InitializeBuiltins(pp.getIdentifierTable(), pp.getLangOptions().NoBuiltin);
@@ -588,7 +590,7 @@ void JITCompiler::compile( void )
         //         DoPrintPreprocessedInput(pp,os,ppopts);
         //         continue;
 
-        jit = CreateJITConsumer(Backend_EmitLL, diag,
+        jit = CreateJITConsumer(Backend_EmitLL, *diag,
                                 codeGenOpts, target_opts,
                                 true, llout_name2,
                                 NULL, llvmContext);
@@ -670,7 +672,7 @@ void JITCompiler::run_function(QString name)
     opt->add(new TargetData(TheModule));
 
     //createStandardFunctionPasses(opt,4);
-    createStandardModulePasses(opt, 4, false, true, true, true, true, NULL);
+    //createStandardModulePasses(opt, 3, false, true, true, true, true, NULL);
     //createStandardLTOPasses(opt, true, true, false);
     //createStandardFunctionPasses(opt,4);
     opt->run(*TheModule);
