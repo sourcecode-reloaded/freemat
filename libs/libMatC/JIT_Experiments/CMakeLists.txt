@@ -5,20 +5,8 @@ cmake_minimum_required(VERSION 2.8)
 OPTION(USE_LLVM "Build with LLVM support?" ON)
 
 set( CLANG_LIB_LIST
-    clangFrontend
-    clangFrontendTool
-    clangDriver
     clangCodeGen
-    clangSema
-    clangChecker
-    clangIndex
-    clangAnalysis
-    clangRewrite
-    clangAST
-    clangParse
-    clangLex
-    clangSerialization
-    clangBasic
+    libclang
 )
 set( LLVM_LIB_LIST 
 ${CLANG_LIB_LIST}

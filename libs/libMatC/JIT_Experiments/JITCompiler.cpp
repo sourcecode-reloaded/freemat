@@ -674,7 +674,7 @@ void JITCompiler::run_function(QString name)
     //createStandardFunctionPasses(opt,4);
     //createStandardModulePasses(opt, 3, false, true, true, true, true, NULL);
     //createStandardLTOPasses(opt, true, true, false);
-    //createStandardFunctionPasses(opt,4);
+    //createStandardFunctionPasses(opt,3);
     opt->run(*TheModule);
     TheModule->print(*os,NULL);
 
