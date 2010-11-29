@@ -38,6 +38,8 @@
 #include <string>
 #include "DebugStream.hpp"
 
+#include "JIT_Experiments/JITCompiler.h"
+
 // We want some basic functions to be available to the JIT
 // such as sin, cos, abs, x^n, tan
 // we also need division to work.
@@ -45,6 +47,20 @@
 using namespace llvm;
 
 JIT::JIT() {
+    
+    jc = new JITCompiler();
+    jc->add_bc_file("/home/eugening/freemat/build/libs/libMatC/libF.bc");
+    
+    QString str = "extern \"C\" int f_t( void ){ return 42;}\n";
+    
+    jc->add_source_from_string(str, "a.cpp");
+    
+    jc->compile();
+    jc->run_function("f_t");
+    
+    
+    
+    
   //  llvm::DebugFlag = true;
   m = new Module("test", llvm::getGlobalContext());
 
@@ -98,6 +114,9 @@ JIT::JIT() {
   opt->add((Pass*)createDeadStoreEliminationPass()); // Delete dead stores
   opt->add((Pass*)createAggressiveDCEPass());        // SSA based 'Aggressive DCE'
   opt->add((Pass*)createCFGSimplificationPass());    // Merge & remove BBs
+
+    
+  
 }
 
 JIT::~JIT() {

@@ -48,6 +48,10 @@ arpack_c
 lapack_c
 dynblas
 blasref
+
+    clangCodeGen
+    libclang
+
 ${QT_QTCORE_LIBRARY}
 ${QT_QTGUI_LIBRARY} 
 ${QT_QTNETWORK_LIBRARY} 

@@ -6,11 +6,11 @@ ADD_LIBRARY( MatC
 	JITFunc.cpp
 	JIT_Experiments/JITCompiler.cpp
 )
-
-TARGET_LINK_LIBRARIES( MatC
-    clangCodeGen
-    libclang
-)
+# 
+# TARGET_LINK_LIBRARIES( MatC
+#     clangCodeGen
+#     libclang
+# )
 
 set( CLANG_LIB_SOURCES 
     ${CMAKE_SOURCE_DIR}/libs/libFreeMat/Array.cpp
@@ -20,8 +20,8 @@ set( CLANG_LIB_SOURCES
 
 
 
-configure_file( sources.txt.in sources.txt )
-configure_file( header_paths.txt.in header_paths.txt )
+#configure_file( sources.txt.in sources.txt )
+#configure_file( header_paths.txt.in header_paths.txt )
 
 # add_executable( jitlib
 #     jitlib.cpp

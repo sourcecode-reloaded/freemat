@@ -51,6 +51,7 @@
 #include "llvm/ExecutionEngine/GenericValue.h"
 
 #include <QString>
+#include "JIT_Experiments/JITCompiler.h"
 
 typedef llvm::Value* JITScalar;
 typedef const llvm::Type* JITType;
@@ -77,6 +78,8 @@ private:
   JITEngine ee;
   JITModule m;
   JITOptimizer opt;
+  JITCompiler* jc;
+  
   bool initialized;
   JITScalar JITBinOp(llvm::Instruction::BinaryOps op, JITScalar A, JITScalar B);
   JIT();
