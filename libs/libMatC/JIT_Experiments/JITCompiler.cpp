@@ -179,13 +179,13 @@ public:
                 os->flush();
                 delete os;*/
 
-        outfile = infile;
-        outfile.append(".bc");
-        os = new llvm::raw_fd_ostream(outfile.c_str(),ErrorInfo);
-        EmitBackendOutput(Diags, CodeGenOpts, TargetOpts,
-                          TheModule.get(), Backend_EmitBC, os);
-        os->flush();
-        delete os;
+//         outfile = infile;
+//         outfile.append(".bc");
+//         os = new llvm::raw_fd_ostream(outfile.c_str(),ErrorInfo);
+//         EmitBackendOutput(Diags, CodeGenOpts, TargetOpts,
+//                           TheModule.get(), Backend_EmitBC, os);
+//         os->flush();
+//         delete os;
 
         Ctx.setInlineAsmDiagnosticHandler(OldHandler, OldContext);
     }
@@ -688,6 +688,16 @@ void JITCompiler::run_function(QString name)
     }
     else {
         printf("Error: %s\n", errorstring.c_str());
+    }
+}
+
+void JITCompiler::SaveBitcode( QString path ){ 
+    llvm::Module * module = getModule();
+    std::string err;
+    llvm::raw_ostream* os = new llvm::raw_fd_ostream(path.toStdString().c_str(),err);
+    
+    if( module && os ){
+        WriteBitcodeToFile(module,*os);
     }
 }
 

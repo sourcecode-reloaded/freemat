@@ -1,0 +1,11 @@
+${CMAKE_SOURCE_DIR}/libs/libFreeMat
+${CMAKE_SOURCE_DIR}/libs/libXP
+${CMAKE_SOURCE_DIR}/libs/libMex
+${CMAKE_SOURCE_DIR}/libs/libMatC
+/usr/include/QtCore
+/usr/include/QtGui
+/usr/include/c++/4.5
+/usr/include/c++/4.5/i586-suse-linux
+/usr/local/include
+/usr/local/lib/clang/2.8/include
+/usr/include

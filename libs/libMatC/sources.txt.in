@@ -1,0 +1,3 @@
+${CMAKE_SOURCE_DIR}/libs/libFreeMat/Array.cpp
+${CMAKE_SOURCE_DIR}/libs/libFreeMat/IndexArray.cpp
+${CMAKE_SOURCE_DIR}/libs/libFreeMat/Exception.cpp

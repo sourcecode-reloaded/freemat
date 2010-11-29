@@ -40,6 +40,9 @@ public:
     void add_builtins( void );
     void compile( void );
     void run_function(QString name);
+    
+    llvm::Module* getModule( void ){ return TheModule; }
+    void SaveBitcode( QString path );
 };
 
 
