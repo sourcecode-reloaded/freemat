@@ -1,10 +1,6 @@
 #ifndef __JITCOMPILER_H_
 #define __JITCOMPILER_H_
 
-#define __STDC_LIMIT_MACROS
-#define __STDC_CONSTANT_MACROS
-
-
 #include <QtCore/QVector>
 #include <QtCore/QString>
 #include <QtCore/QSharedPointer>

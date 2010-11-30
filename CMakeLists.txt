@@ -352,7 +352,7 @@ IF( USE_LLVM )
         SET(EXTRA_SYS_LIBS ${EXTRA_SYS_LIBS} imagehlp psapi )
     else (MINGW)
         find_program(LLVM_CONFIG llvm-config)
-        execute_process(COMMAND ${LLVM_CONFIG} --libfiles jit nativecodegen ipo instrumentation scalaropts linker bitreader bitwriter
+        execute_process(COMMAND ${LLVM_CONFIG} --libfiles jit nativecodegen ipo instrumentation scalaropts linker bitreader bitwriter asmparser asmprinter
                                 OUTPUT_VARIABLE LLVM_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
 
         execute_process(COMMAND ${LLVM_CONFIG} --includedir OUTPUT_VARIABLE LLVM_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
