@@ -35,9 +35,9 @@ set( CLANG_LIB_SOURCES
 #     ${OPTIONAL_LIBS}
 # )
 
-#TODO: Fix the flags!
+
 add_custom_command( TARGET MatC PRE_BUILD
-    COMMAND clang++ ARGS -O3 -emit-llvm -c ${CLANG_LIB_SOURCES}  -I/usr/include/QtCore -I/usr/include/QtGui -I/home/eugening/freemat/FreeMat4/libs/libFreeMat -I/home/eugening/freemat/FreeMat4/libs/libXP -I/home/eugening/freemat/FreeMat4/libs/libMex -I/home/eugening/freemat/FreeMat4/libs/libMatC
+    COMMAND clang++ ARGS -O3 -emit-llvm -c ${CLANG_LIB_SOURCES}  -DQT_ARCH_GENERIC -I${QT_QTCORE_INCLUDE_DIR} -I${QT_QTGUI_INCLUDE_DIR} -I${CMAKE_SOURCE_DIR}/libs/libFreeMat -I${CMAKE_SOURCE_DIR}/libs/libXP -I${CMAKE_SOURCE_DIR}/libs/libMex -I${CMAKE_SOURCE_DIR}/libs/libMatC
     COMMAND llvm-ld *.o -stats -time-passes -link-as-library -o libF.bc
     DEPENDS ${CLANG_LIB_SOURCES}
 )
