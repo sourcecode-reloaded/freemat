@@ -68,6 +68,7 @@
 #include "Array.hpp"
 #include <sstream>
 #include <math.h>
+#include <dependencies/llvm-2.7/tools/clang/include/clang/Driver/Options.td>
 
 //#if defined(_MSC_VER ) || defined( __MINGW32__ )
 #if defined(_WIN32 )
@@ -207,9 +208,43 @@ SymbolInfo* JITFunc::add_argument_scalar(QString name, JITScalar val, bool overr
 JITFunc::JITFunc(Interpreter *p_eval) {
   jit = JIT::Instance();
   eval = p_eval;
+  
+  
+  QTime t;
+  
+  jc = new JITCompiler();
+  t.start();
+  jc->add_bc_file("/home/eugening/freemat/build/libs/libMatC/libF.bc");
+  dbout << "BC add time " << t.restart() << " ms\n";
+  
+  jc->add_system_include_path("/home/eugening/freemat/FreeMat4/libs/libFreeMat");
+  jc->add_system_include_path("/home/eugening/freemat/FreeMat4/libs/libXP");
+  jc->add_system_include_path("/home/eugening/freemat/FreeMat4/libs/libMex");
+  jc->add_system_include_path("/home/eugening/freemat/FreeMat4/libs/libMatC");
+  jc->add_system_include_path("/usr/include/QtCore");
+  jc->add_system_include_path("/usr/include/QtGui");
+  jc->add_system_include_path("/usr/include/c++/4.5");
+  jc->add_system_include_path("/usr/include/c++/4.5/i586-suse-linux");
+  jc->add_system_include_path("/usr/local/include");
+  jc->add_system_include_path("/usr/local/lib/clang/2.9/include");
+  
+  code.append("#include <QtCore/QVector>\n    #include <Array.hpp>\n");
+  code.append("extern \"C\" int f_t(){ %1; \n}\n");
+  
+  jc->add_source_from_string(code, "a.cpp");
+  dbout << "Add source time " << t.restart() << " ms\n";
+  jc->compile();
+  dbout << "Compile time " << t.restart() << " ms\n";
+  jc->run_function("f_t");
+  dbout << "Run once time " << t.restart() << " ms\n";
+  jc->run_function("f_t");
+  dbout << "Run twice time " << t.elapsed() << " ms\n";
+  
+  
+  
 }
 
-void JITFunc::compile_block(const Tree & t) {
+QString JITFunc::compile_block(const Tree & t) {
   const TreeList &statements(t.children());
   for (TreeList::const_iterator i=statements.begin();i!=statements.end();i++) 
     compile_statement(*i);
@@ -957,6 +992,7 @@ void JITFunc::compile(const Tree & t) {
   // The signature for the compiled function should be:
   // bool func(void** inputs);
   countm++;
+
   initialize();
   argument_count = 0;
   func = jit->DefineFunction(jit->FunctionType("b","V"),QString("main_%1").arg(countm));
@@ -973,7 +1009,9 @@ void JITFunc::compile(const Tree & t) {
   this_ptr->setName("this_ptr");
   bool failed = false;
   try {
-    compile_for_block(t);
+    QString t = compile_for_block(t);
+    code = code.arg(t);
+    
   } catch (Exception &e) {
     failed = true;
     exception_store = e;
@@ -993,65 +1031,51 @@ void JITFunc::compile(const Tree & t) {
   if (failed) throw exception_store;
 }
 
-//TODO: handle other types for loop variables
-void JITFunc::compile_for_block(const Tree & t) {
-  JITScalar loop_start, loop_stop, loop_step;
+QString JITFunc::ToDouble( QString args )
+{
+    return QString("(static_cast<double>( %1 ) )").arg( args );
+}
 
+//TODO: handle other types for loop variables
+QString JITFunc::compile_for_block(const Tree & t) {
+  QString code;
+    QString loop_start, loop_stop, loop_step;
+    bool failed = false;
+    
   if (!(t.first().is('=') && t.first().second().is(':'))) 
     throw Exception("For loop cannot be compiled - need scalar bounds");
   
   if (t.first().second().first().is(':')){ //triple format 
-    loop_start = jit->ToDouble( compile_expression(t.first().second().first().first()) );
-    loop_step = jit->ToDouble( compile_expression(t.first().second().first().second()) );
-    loop_stop = jit->ToDouble( compile_expression(t.first().second().second()) );
+    loop_start = ToDouble( compile_expression(t.first().second().first().first()) );
+    loop_step = ToDouble( compile_expression(t.first().second().first().second()) );
+    loop_stop = ToDouble( compile_expression(t.first().second().second()) );
   }
   else{ //double format
-    loop_start = jit->ToDouble( compile_expression(t.first().second().first()) );
-    loop_step = jit->DoubleValue( 1 );
-    loop_stop = jit->ToDouble( compile_expression(t.first().second().second()) );
+    loop_start = ToDouble( compile_expression(t.first().second().first()) );
+    loop_step = QString( "1." );
+    loop_stop = ToDouble( compile_expression(t.first().second().second()) );
   }
+  
   QString loop_index_name(t.first().first().text());
-  SymbolInfo* v = add_argument_scalar(loop_index_name,loop_start,true);
-  JITScalar loop_index_address = v->address;
-  jit->Store(loop_start,loop_index_address);
+  add_argument_scalar(loop_index_name,loop_start,true);
 
-  JITScalar loop_nsteps = jit->Call( func_niter_for_loop, loop_start, loop_step, loop_stop );
-
-  JITBlock ip(jit->CurrentBlock());
-  jit->SetCurrentBlock(prolog);
-  JITScalar loop_ind = jit->Alloc(jit->DoubleType(),"loop_ind_"+loop_index_name); 
-  jit->SetCurrentBlock(ip);
-  jit->Store(jit->DoubleValue(0),loop_ind); 
-
-  JITBlock loopbody = jit->NewBlock("for_body");
-  JITBlock loopcheck = jit->NewBlock("for_check");
-  JITBlock looptest = jit->NewBlock("for_test");
-  JITBlock loopincr = jit->NewBlock("for_increment");
-  JITBlock loopexit = jit->NewBlock("for_exit");
-  jit->Jump(looptest);
-  // Create 3 blocks
-  jit->SetCurrentBlock(loopbody);
-  bool failed = false;
+  QString loop_nsteps_name = "___nsteps_" + loop_index_name;
+  QString loop_step_index_name =  "___loop_ind_" + loop_index_name;
+  
+  code = QString("int %1 = niter_for_loop( %2, %3, %4 );\n").arg( loop_nsteps_name, loop_start, loop_step, loop_stop );
+  code.append( QString("%1 = %2;\n").arg( loop_index_name, loop_start ));
+  code.append(QString("for(int %1 = 0; %1 < %2; ++%1 ){\n").arg(loop_step_index_name, loop_nsteps_name));
+  code.append(QString("%1+=%2*%3;\n").arg(loop_index_name,loop_step_index_name,loop_step));
   try {
-    compile_block(t.second());
+      code.append(compile_block(t.second()));
   } catch(Exception &e) {
-    exception_store = e;
-    failed = true;
+      exception_store = e;
+      failed = true;
   }
-  jit->Jump(loopcheck);
-  jit->SetCurrentBlock(loopcheck);
-  JITScalar abort_called = jit->Call(func_check_for_interrupt, this_ptr);
-  jit->Branch(epilog,looptest,abort_called);
-  jit->SetCurrentBlock(looptest);
-  JITScalar loop_comparison = jit->LessThan( jit->Load( loop_ind ), loop_nsteps);
-  jit->Branch(loopincr,loopexit,loop_comparison);
-  jit->SetCurrentBlock(loopincr);
-  //loop variable equal: loop_start+loop_ind*loop_step
-  JITScalar next_loop_value = jit->Add(loop_start, jit->Mul( jit->Load( loop_ind ), loop_step ) );
-  jit->Store(next_loop_value,loop_index_address);
-  jit->Store( jit->Add( jit->Load( loop_ind ), jit->DoubleValue( 1 ) ), loop_ind );
-  jit->Jump( loopbody );
-  jit->SetCurrentBlock(loopexit);
+  
+  //TODO: add interrupt check
+  code.append("\n}");
+  
   if (failed) throw exception_store;
 }
 

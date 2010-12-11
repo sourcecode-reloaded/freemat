@@ -82,14 +82,19 @@ public:
   JITScalar compile_or_statement(const Tree & t);
   JITScalar compile_and_statement(const Tree & t);
   void compile_if_statement(const Tree & t);
-  void compile_for_block(const Tree & t);
+  QString compile_for_block(const Tree& t);
   void compile_assignment(const Tree & t);
   void compile_statement(const Tree & t);
   void compile_statement_type(const Tree & t);
-  void compile_block(const Tree & t);
+  QString compile_block(const Tree& t);
   void compile(const Tree & t);
   void prep();
   void run();
+    QString ToDouble(JITScalar arg1);
+  
+  QString code, init_block;
+  JITCompiler* jc;
+  
 };
 
 #endif

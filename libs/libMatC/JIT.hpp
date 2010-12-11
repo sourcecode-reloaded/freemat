@@ -78,7 +78,9 @@ private:
   JITEngine ee;
   JITModule m;
   JITOptimizer opt;
-  JITCompiler* jc;
+  
+  QString code, init_block;
+  
   
   bool initialized;
   JITScalar JITBinOp(llvm::Instruction::BinaryOps op, JITScalar A, JITScalar B);

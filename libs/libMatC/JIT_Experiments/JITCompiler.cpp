@@ -525,11 +525,11 @@ void JITCompiler::compile( void )
     lang.MathErrno = 1;
     //lang.HeinousExtensions = 1;
 
-    FileManager fm;
     FileSystemOptions fsopts;
+    FileManager fm(fsopts);
     
     
-    HeaderSearch headers(fm, fsopts);
+    HeaderSearch headers(fm);
 
 
     TargetOptions target_opts;
@@ -556,15 +556,15 @@ void JITCompiler::compile( void )
 
     foreach( llvm::MemoryBuffer* pBuf, sources_buffer ) {
        
-        SourceManager sm( *diag, fm, fsopts);
+        SourceManager sm( *diag, fm);
 
         FrontendOptions feopt;
         headers.ClearFileInfo();
         ApplyHeaderSearchOptions(headers, hsopt, lang, ti->getTriple() );
         Preprocessor pp(*diag, lang, *ti, sm, headers);
 
-        InitializePreprocessor(pp, fsopts, ppio, hsopt, feopt );
-        pp.getBuiltinInfo().InitializeBuiltins(pp.getIdentifierTable(), pp.getLangOptions().NoBuiltin);
+        InitializePreprocessor(pp, ppio, hsopt, feopt );
+        pp.getBuiltinInfo().InitializeBuiltins(pp.getIdentifierTable(), pp.getLangOptions());
 
         std::string predefines = pp.getPredefines();
         predefines.append("#define QT_ARCH_GENERIC\n");
@@ -684,7 +684,7 @@ void JITCompiler::run_function(QString name)
     if ( fn ) {
         std::vector<GenericValue> arg;
         GenericValue ret = ee->runFunction( fn, arg );
-        ee->freeMachineCodeForFunction(fn);
+        //ee->freeMachineCodeForFunction(fn);
     }
     else {
         printf("Error: %s\n", errorstring.c_str());

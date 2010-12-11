@@ -48,38 +48,7 @@
 using namespace llvm;
 
 JIT::JIT() {
-    QTime t;
-    
-    jc = new JITCompiler();
-    t.start();
-    jc->add_bc_file("/home/eugening/freemat/build/libs/libMatC/libF.bc");
-    dbout << "BC add time " << t.restart() << " ms\n";
-
-    jc->add_system_include_path("/home/eugening/freemat/FreeMat4/libs/libFreeMat");
-    jc->add_system_include_path("/home/eugening/freemat/FreeMat4/libs/libXP");
-    jc->add_system_include_path("/home/eugening/freemat/FreeMat4/libs/libMex");
-    jc->add_system_include_path("/home/eugening/freemat/FreeMat4/libs/libMatC");
-    jc->add_system_include_path("/usr/include/QtCore");
-    jc->add_system_include_path("/usr/include/QtGui");
-    jc->add_system_include_path("/usr/include/c++/4.5");
-    jc->add_system_include_path("/usr/include/c++/4.5/i586-suse-linux");
-    jc->add_system_include_path("/usr/local/include");
-    jc->add_system_include_path("/usr/local/lib/clang/2.9/include");
-    
-    code.append("#include <QtCore/QVector>\n    #include <Array.hpp>\n");
-    code.append("extern \"C\" int f_t(){ Array arr(42);\n int a = arr.length();\n return a+17;}\n");
-    
-    jc->add_source_from_string(code, "a.cpp");
-    dbout << "Add source time " << t.restart() << " ms\n";
-    jc->compile();
-    dbout << "Compile time " << t.restart() << " ms\n";
-    jc->run_function("f_t");
-    dbout << "Run once time " << t.restart() << " ms\n";
-    jc->run_function("f_t");
-    dbout << "Run twice time " << t.elapsed() << " ms\n";
-    
-    
-    
+   
     
   //  llvm::DebugFlag = true;
   m = new Module("test", llvm::getGlobalContext());
