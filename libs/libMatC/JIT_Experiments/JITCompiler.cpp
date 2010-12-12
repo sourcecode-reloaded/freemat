@@ -655,39 +655,45 @@ void JITCompiler::compile( void )
             }
     }
     bc_reader_timer.stopTimer();
-}
 
-void JITCompiler::run_function(QString name)
-{
     std::string errorstring;
-    ExecutionEngine* ee = ExecutionEngine::createJIT(TheModule, &errorstring);
-
-    ee->DisableLazyCompilation(true);
+    ee = ExecutionEngine::createJIT(TheModule, &errorstring);
+    if( !errorstring.empty() ){
+        printf("Error: %s\n", errorstring.c_str());
+    }
+    ee->DisableLazyCompilation(false);
     
     llvm::raw_ostream * os = new llvm::raw_fd_ostream("moduledump.txt",errorstring); //TODO: fix this memory leak
     // Create the optimizer thingy
-
+    if( !errorstring.empty() ){
+        printf("Error: %s\n", errorstring.c_str());
+    }
+        
     PassManager* opt = new PassManager();
-
+    
     opt->add(new TargetData(TheModule));
-
+    
     //createStandardFunctionPasses(opt,4);
     //createStandardModulePasses(opt, 3, false, true, true, true, true, NULL);
     //createStandardLTOPasses(opt, true, true, false);
     //createStandardFunctionPasses(opt,3);
     opt->run(*TheModule);
     TheModule->print(*os,NULL);
+    os->flush();
+    delete os;
+}
 
+void JITCompiler::run_function(QString name)
+{
 
     Function* fn = TheModule->getFunction(name.toStdString().c_str()); //ee->FindFunctionNamed( name.toStdString().c_str() );
-    delete os;
     if ( fn ) {
         std::vector<GenericValue> arg;
         GenericValue ret = ee->runFunction( fn, arg );
         //ee->freeMachineCodeForFunction(fn);
     }
     else {
-        printf("Error: %s\n", errorstring.c_str());
+        printf("Error getting pointer to %s\n", name.toStdString().c_str());
     }
 }
 

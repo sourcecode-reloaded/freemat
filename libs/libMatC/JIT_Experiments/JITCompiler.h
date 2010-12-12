@@ -7,6 +7,7 @@
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/LLVMContext.h"
 #include "llvm/Module.h"
+#include "llvm/ExecutionEngine/JIT.h"
 
 typedef QSharedPointer<llvm::MemoryBuffer> LLVMMemSharedPtr;
 class JITConsumer;
@@ -22,6 +23,7 @@ private:
     llvm::LLVMContext llvmContext;
 
     llvm::Module* TheModule;
+    llvm::ExecutionEngine* ee;
     
 public:
     JITCompiler();

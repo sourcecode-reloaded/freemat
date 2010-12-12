@@ -84,15 +84,15 @@ public:
   void compile_if_statement(const Tree & t);
   QString compile_for_block(const Tree& t);
   void compile_assignment(const Tree & t);
-  void compile_statement(const Tree & t);
-  void compile_statement_type(const Tree & t);
+  QString compile_statement(const Tree & t);
+  QString compile_statement_type(const Tree & t);
   QString compile_block(const Tree& t);
-  void compile(const Tree & t);
+  QString compile(const Tree & t);
   void prep();
   void run();
-    QString ToDouble(JITScalar arg1);
+    QString ToDouble(QString arg1);
   
-  QString code, init_block;
+  QString code, init_block, prep_block;
   JITCompiler* jc;
   
 };
