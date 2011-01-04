@@ -96,8 +96,8 @@ SymbolInfo* JITFunc::add_argument_array(QString name, bool createIfMissing=false
 
     if (!ptr.valid()) {
         if ( createIfMissing ) {
-            JITType type(map_dataclass(Double));
-            symbols.insertSymbol(name,SymbolInfo(false,argument_count++,NULL,type));
+            symbols.insertSymbol(name,SymbolInfo(false,argument_count++, Double));
+	    QTextStream(&init_block) << "Array* " << name << " = new Array(Double);\n"; 
             return symbols.findSymbol(name);
         }
         else {
@@ -105,102 +105,48 @@ SymbolInfo* JITFunc::add_argument_array(QString name, bool createIfMissing=false
         }
     }
 
-    if (!ptr->is2D())
-        throw Exception("Cannot JIT multi-dimensional array:" + name);
-    if (ptr->isString() || ptr->isReferenceType())
-        throw Exception("Cannot JIT strings or reference types:" + name);
-    if (ptr->isComplex())
-        throw Exception("Cannot JIT complex arrays:" + name);
     aclass = ptr->dataClass();
     // Map the array class to an llvm type
-    JITType type(map_dataclass(aclass));
-    symbols.insertSymbol(name,SymbolInfo(false,argument_count++,NULL,type));
+    QTextStream(&init_block) << "Array* " << name << " = new( " << ptr->address() << ") Array(  (DataClass)"<< aclass << ");\n"; 
+    symbols.insertSymbol(name,SymbolInfo(false,argument_count++,aclass));
     return symbols.findSymbol(name);
 }
 
-DataClass JITFunc::map_dataclass(JITScalar val) {
-    if (jit->IsDouble(val))
-        return Double;
-    else if (jit->IsFloat(val))
-        return Float;
-    else if (jit->IsBool(val))
-        return Bool;
-    throw Exception("Unhandled type in map_dataclass for JIT");
-}
 
-DataClass JITFunc::map_dataclass(JITType type) {
-    if (jit->IsDouble(type))
-        return Double;
-    else if (jit->IsFloat(type))
-        return Float;
-    else if (jit->IsBool(type))
-        return Bool;
-    throw Exception("Unhandled type in map_dataclass for JIT");
-}
-
-JITType JITFunc::map_dataclass(DataClass aclass) {
-    switch (aclass) {
-    default:
-        throw Exception("JIT does not support");
-    case Bool:
-        return jit->BoolType();
-    case Float:
-        return jit->FloatType();
-    case Double:
-        return jit->DoubleType();
-    }
-    return NULL;
-}
-
-SymbolInfo* JITFunc::define_local_symbol(QString name, JITScalar val) {
-    if (!val) throw Exception("undefined variable or argument " + name);
-    JITBlock ip(jit->CurrentBlock());
-    jit->SetCurrentBlock(prolog);
-    JITScalar address = jit->Alloc(jit->TypeOf(val),name);
-    symbols.insertSymbol(name,SymbolInfo(true,-1,address,jit->TypeOf(val)));
-    jit->SetCurrentBlock(ip);
-    jit->Store(val,address);
-    return symbols.findSymbol(name);
-}
+// //TODO: fix this
+// SymbolInfo* JITFunc::define_local_symbol(QString name, JITScalar val) {
+//     if (!val) throw Exception("undefined variable or argument " + name);
+//     JITBlock ip(jit->CurrentBlock());
+//     jit->SetCurrentBlock(prolog);
+//     JITScalar address = jit->Alloc(jit->TypeOf(val),name);
+//     symbols.insertSymbol(name,SymbolInfo(true,-1,address,jit->TypeOf(val)));
+//     jit->SetCurrentBlock(ip);
+//     jit->Store(val,address);
+//     return symbols.findSymbol(name);
+// }
 
 // FIXME - Simplify
 SymbolInfo* JITFunc::add_argument_scalar(QString name, QString val, bool override) {
     DataClass aclass;
-    if (symbol_prefix.size() > 0)
-        return define_local_symbol(name,val);
+/*    if (symbol_prefix.size() > 0)
+        return define_local_symbol(name,val);*/
+    
     ArrayReference ptr(eval->getContext()->lookupVariable(name));
-    aclass = Invalid;
-    if (!val && !ptr.valid()) return NULL;
+    //aclass = Invalid;
+    //if (!val && !ptr.valid()) return NULL;
     if (!ptr.valid() || override) {
-        aclass = map_dataclass(val);
+        aclass = Double;
+	symbols.insertSymbol(name,SymbolInfo(true,argument_count++,type));
+	QTextStream(&init_block) << "Array* " << name << " = new Array(  "<< val << ");\n"; 
+	return symbols.findSymbol(name);
+	
     } else {
-        if (!ptr->isScalar())
-            throw Exception("Expect " + name + " to be a scalar");
-        if (ptr->isString() || ptr->isReferenceType())
-            throw Exception("Cannot JIT strings or reference types:" + name);
-        if (ptr->isComplex())
-            throw Exception("Cannot JIT complex arrays:" + name);
         aclass = ptr->dataClass();
     }
-    JITType type(map_dataclass(aclass));
-    JITBlock ip(jit->CurrentBlock());
-    jit->SetCurrentBlock(prolog);
-    JITScalar address = jit->Alloc(type,name);
-    symbols.insertSymbol(name,SymbolInfo(true,argument_count++,address,type));
-    if (jit->IsDouble(type))
-        jit->Store(jit->Call(func_scalar_load_double, this_ptr, jit->DoubleValue(argument_count-1)), address);
-    else if (jit->IsFloat(type))
-        jit->Store(jit->Call(func_scalar_load_float, this_ptr, jit->DoubleValue(argument_count-1)), address);
-    else if (jit->IsBool(type))
-        jit->Store(jit->Call(func_scalar_load_bool, this_ptr, jit->DoubleValue(argument_count-1)), address);
-    jit->SetCurrentBlock(epilog);
-    if (jit->IsDouble(type))
-        jit->Call(func_scalar_store_double, this_ptr, jit->DoubleValue(argument_count-1), jit->Load(address));
-    else if (jit->IsFloat(type))
-        jit->Call(func_scalar_store_float, this_ptr, jit->DoubleValue(argument_count-1), jit->Load(address));
-    else if (jit->IsBool(type))
-        jit->Call(func_scalar_store_bool, this_ptr, jit->DoubleValue(argument_count-1), jit->Load(address));
-    jit->SetCurrentBlock(ip);
+    // Map the array class to an llvm type
+    //TODO: Fix this
+    QTextStream(&init_block) << "Array* " << name << " = new(" << ptr->address() << ") Array(  "<< val << ");\n"; 
+    symbols.insertSymbol(name,SymbolInfo(true,argument_count++,type));
     return symbols.findSymbol(name);
 }
 
@@ -238,8 +184,6 @@ JITFunc::JITFunc(Interpreter *p_eval) {
     dbout << "Run once time " << t.restart() << " ms\n";
     jc->run_function("f_t");
     dbout << "Run twice time " << t.elapsed() << " ms\n";
-
-
 
 }
 
@@ -689,13 +633,9 @@ JITScalar JITFunc::compile_and_statement(const Tree & t) {
     return jit->Load(address);
 }
 
-void JITFunc::compile_if_statement(const Tree & t) {
-    JITScalar main_cond(jit->ToBool(compile_expression(t.first())));
-    JITBlock if_true = jit->NewBlock("if_true");
-    JITBlock if_continue = jit->NewBlock("if_continue");
-    JITBlock if_exit = jit->NewBlock("if_exit");
-    jit->Branch(if_true,if_continue,main_cond);
-    jit->SetCurrentBlock(if_true);
+QString JITFunc::compile_if_statement(const Tree & t) {
+    QString condition = compile_expression(t.first());
+    
     bool failed = false;
     try {
         compile_block(t.second());
@@ -964,6 +904,7 @@ void JITFunc::register_std_function(QString name) {
 void JITFunc::initialize() {
     symbol_prefix = "";
     uid = 0;
+/*    
     // Initialize the standard function
     register_std_function("cos");
     register_std_function("sin");
@@ -1004,29 +945,16 @@ void JITFunc::initialize() {
     func_niter_for_loop = jit->DefineLinkFunction("niter_for_loop","d","ddd");
     //  func_debug_out_i = jit->DefineLinkFunction("debug_out_i","v","i");
     func_debug_out_d = jit->DefineLinkFunction("debug_out_d","d","d");
+    */
 }
 
 static int countm = 0;
 
 QString JITFunc::compile(const Tree& t) {
-    // The signature for the compiled function should be:
-    // bool func(void** inputs);
     countm++;
 
     initialize();
     argument_count = 0;
-    func = jit->DefineFunction(jit->FunctionType("b","V"),QString("main_%1").arg(countm));
-    jit->SetCurrentFunction(func);
-    prolog = jit->NewBlock("prolog");
-    main_body = jit->NewBlock("main_body");
-    epilog = jit->NewBlock("epilog");
-    jit->SetCurrentBlock(prolog);
-    retcode = jit->Alloc(jit->BoolType(),"_retcode");
-    jit->Store(jit->BoolValue(true),retcode);
-    jit->SetCurrentBlock(main_body);
-    llvm::Function::arg_iterator args = func->arg_begin();
-    this_ptr = args;
-    this_ptr->setName("this_ptr");
     bool failed = false;
     try {
         QString temp = compile_for_block(t);
@@ -1036,24 +964,19 @@ QString JITFunc::compile(const Tree& t) {
         failed = true;
         exception_store = e;
     }
-    jit->Jump(epilog);
-    jit->SetCurrentBlock(prolog);
-    jit->Jump(main_body);
-    jit->SetCurrentBlock(epilog);
-    jit->Return(jit->Load(retcode));
     //#ifndef NDEBUG
-    jit->Dump("unoptimized.bc.txt");
+    //jit->Dump("unoptimized.bc.txt");
     //#endif
-    jit->OptimizeCode();
+    //jit->OptimizeCode();
     //#ifndef NDEBUG
-    jit->Dump("optimized.bc.txt");
+    //jit->Dump("optimized.bc.txt");
     //#endif
     if (failed) throw exception_store;
 }
 
 QString JITFunc::ToDouble( QString arg1 )
 {
-    return QString("(static_cast<double>( %1 ) )").arg( args );
+    return QString("(static_cast<double>( %1 ) )").arg( arg1 );
 }
 
 //TODO: handle other types for loop variables
@@ -1120,16 +1043,16 @@ QString JITFunc::prep( void ) {
             if (v->isScalar && (!ptr->isScalar()))
                 throw Exception("Expected symbol to be a scalar, and it is not");
 
-            QTextStream(&prep_block)<< "Array* " << argumentList[i] << "new(" << ptr.pointer() << ") Array();\n";
+            QTextStream(&prep_block)<< "const Array* __ptr__" << argumentList[i] << " = " << ptr.pointer() << ";\n";
 
         }
     }
+}
 
-    void JITFunc::run() {
-        save_this = this;
-        JITGeneric gv = jit->Invoke(func,JITGeneric((void*) this));
-        if (gv.IntVal == 0)
-            throw exception_store;
-    }
-
+void JITFunc::run() {
+    save_this = this;
+    JITGeneric gv = jit->Invoke(func,JITGeneric((void*) this));
+    if (gv.IntVal == 0)
+	throw exception_store;
+}
 #endif

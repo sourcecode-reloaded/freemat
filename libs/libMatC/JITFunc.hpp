@@ -30,16 +30,15 @@
 class SymbolInfo {
   bool isScalar;
   int argument_num;
-  JITScalar address;
-  JITType type;
+  DataClass type;
 
-  SymbolInfo(bool is_scalar, int arg_num, JITScalar base_address, JITType base_type) :
-    isScalar(is_scalar), argument_num(arg_num), address(base_address), type(base_type) {}
+  SymbolInfo(bool is_scalar, int arg_num, DataClass base_type) :
+    isScalar(is_scalar), argument_num(arg_num), type(base_type) {}
   friend class JITFunc;
 
 public:
-  SymbolInfo(const SymbolInfo &other) { this->isScalar = other.isScalar; this->argument_num = other.argument_num; this->address = other.address; this->type = other.type; }
-  SymbolInfo &operator=(const SymbolInfo &other) { this->isScalar = other.isScalar; this->argument_num = other.argument_num; this->address = other.address; this->type = other.type; return *this;}
+  SymbolInfo(const SymbolInfo &other) { this->isScalar = other.isScalar; this->argument_num = other.argument_num; this->type = other.type; }
+  SymbolInfo &operator=(const SymbolInfo &other) { this->isScalar = other.isScalar; this->argument_num = other.argument_num; this->type = other.type; return *this;}
   SymbolInfo() {} //need default constructor for SymbolTable
 };
 
@@ -65,13 +64,13 @@ public:
   int uid;
   void register_std_function(QString name);
   SymbolInfo* add_argument_array(QString name, bool createIfMissing);
-  SymbolInfo* add_argument_scalar(QString name, JITScalar val = NULL, bool override = false);
+  SymbolInfo* add_argument_scalar(QString name, QString val = "0", bool override = false);
   JITType map_dataclass(DataClass aclass);
   DataClass map_dataclass(JITType type);
   DataClass map_dataclass(JITScalar val);
   void handle_success_code(JITScalar success);
   void initialize();
-  SymbolInfo* define_local_symbol(QString name, JITScalar val);
+  //SymbolInfo* define_local_symbol(QString name, JITScalar val);
   JITFunc(Interpreter *eval);
   JITScalar compile_expression(const Tree & t);
   JITScalar compile_rhs(const Tree & t);
