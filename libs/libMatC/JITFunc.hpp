@@ -73,9 +73,9 @@ public:
   //SymbolInfo* define_local_symbol(QString name, JITScalar val);
   JITFunc(Interpreter *eval);
   JITScalar compile_expression(const Tree & t);
-  JITScalar compile_rhs(const Tree & t);
-  JITScalar compile_function_call(const Tree & t);
-  JITScalar compile_m_function_call(const Tree & t);
+  QString compile_rhs(const Tree & t);
+  QString compile_function_call(const Tree& t);
+  QString compile_m_function_call(const Tree& t);
   JITScalar compile_built_in_function_call(const Tree & t);
   JITScalar compile_constant_function(QString symname);
   JITScalar compile_or_statement(const Tree & t);

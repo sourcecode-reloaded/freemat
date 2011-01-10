@@ -289,7 +289,8 @@ static QString uid_string(int uid) {
     return QString("%1").arg(uid);
 }
 
-JITScalar JITFunc::compile_m_function_call(const Tree & t) {
+QString JITFunc::compile_m_function_call(const Tree & t) {
+    QString output;
     // First, make sure it is a function
     QString symname(t.first().text());
     FuncPtr funcval;
@@ -316,24 +317,26 @@ JITScalar JITFunc::compile_m_function_call(const Tree & t) {
     if (args_defed > s.numChildren())
         args_defed = s.numChildren();
     for (int i=0;i<args_defed;i++) {
-        JITScalar arg = compile_expression(s.child(i));
-        define_local_symbol(new_symbol_prefix + fptr->arguments[i],arg);
+        QString arg = compile_expression(s.child(i));
+        output.append(define_local_symbol(new_symbol_prefix + fptr->arguments[i],arg));
     }
-    define_local_symbol(new_symbol_prefix+"nargout",jit->DoubleValue(1));
-    define_local_symbol(new_symbol_prefix+"nargin",jit->DoubleValue(args_defed));
+    output.append(define_local_symbol(new_symbol_prefix+"nargout","1"));
+    output.append(define_local_symbol(new_symbol_prefix+"nargin","args_defed"));
     // compile the code for the function
     fptr->code.print();
     QString save_prefix = symbol_prefix;
     symbol_prefix = new_symbol_prefix;
-    compile_block(fptr->code);
+    output.append(compile_block(fptr->code));
     // Lookup the result and return it
     SymbolInfo *v = symbols.findSymbol(new_symbol_prefix+fptr->returnVals[0]);
     if (!v) throw Exception("function failed to define return value");
+    //TODO: Not sure how to return params
+    //QTextStream(&output) << (new_symbol_prefix+fptr->returnVals[0]) << " = " << 
     symbol_prefix = save_prefix;
     return jit->Load(v->address);
 }
 
-JITScalar JITFunc::compile_function_call(const Tree & t) {
+QString JITFunc::compile_function_call(const Tree & t) {
     // First, make sure it is a function
     QString symname(t.first().text());
     FuncPtr funcval;
@@ -349,37 +352,30 @@ JITScalar JITFunc::compile_function_call(const Tree & t) {
     throw Exception("Unsupported function type");
 }
 
-void JITFunc::handle_success_code(JITScalar success_code) {
-    JITBlock if_failed = jit->NewBlock("exported_call_failed");
-    JITBlock if_success = jit->NewBlock("exported_call_sucess");
-    // Add the branch logic
-    jit->Branch(if_success,if_failed,success_code);
-    jit->SetCurrentBlock(if_failed);
-    jit->Store(success_code,retcode);
-    jit->Jump(epilog);
-    jit->SetCurrentBlock(if_success);
-}
+// void JITFunc::handle_success_code(JITScalar success_code) {
+//     JITBlock if_failed = jit->NewBlock("exported_call_failed");
+//     JITBlock if_success = jit->NewBlock("exported_call_sucess");
+//     // Add the branch logic
+//     jit->Branch(if_success,if_failed,success_code);
+//     jit->SetCurrentBlock(if_failed);
+//     jit->Store(success_code,retcode);
+//     jit->Jump(epilog);
+//     jit->SetCurrentBlock(if_success);
+// }
 
-JITScalar JITFunc::compile_rhs(const Tree & t) {
+QString JITFunc::compile_rhs(const Tree & t) {
+    QString output;
     QString symname(symbol_prefix+t.first().text());
     SymbolInfo *v = symbols.findSymbol(symname);
     if (!v) {
-        if (t.numChildren() == 1)
-            v = add_argument_scalar(symname);
-        else
-            v = add_argument_array(symname);
+        v = add_argument_array(symname);
         if (!v)
             return compile_function_call(t);
     }
-    if (t.numChildren() == 1) {
-        if (!v->isScalar)
-            throw Exception("non-scalar reference returned in scalar context!");
-        return jit->Load(v->address);
-    }
+    
     if (t.numChildren() > 2)
         throw Exception("multiple levels of dereference not handled yet...");
-    if (v->isScalar)
-        throw Exception("array indexing of scalar values...");
+
     const Tree & s(t.second());
     if (!s.is(TOK_PARENS))
         throw Exception("non parenthetical dereferences not handled yet...");
@@ -388,37 +384,17 @@ JITScalar JITFunc::compile_rhs(const Tree & t) {
     if (s.numChildren() > 2)
         throw Exception("Expecting at most 2 array references for dereference...");
     if (s.numChildren() == 1) {
-        JITScalar arg1 = jit->ToDouble(compile_expression(s.first()));
-        JITScalar ret;
-        if (jit->IsDouble(v->type))
-            ret = jit->Call(func_vector_load_double, this_ptr, jit->DoubleValue(v->argument_num), arg1, retcode);
-        else if (jit->IsFloat(v->type))
-            ret = jit->Call(func_vector_load_float, this_ptr, jit->DoubleValue(v->argument_num), arg1, retcode);
-        else if (jit->IsBool(v->type))
-            ret = jit->Call(func_vector_load_bool, this_ptr, jit->DoubleValue(v->argument_num), arg1, retcode);
-        else
-            throw Exception("Unsupported JIT type in Load");
-        handle_success_code(jit->Load(retcode));
-        return ret;
+        QTextStream(&output) << symname << ".get(NTuple( " << (compile_expression(s.first())) << " ) ) ";
+	return output;
     } else if (s.numChildren() == 2) {
-        JITScalar arg1 = jit->ToDouble(compile_expression(s.first()));
-        JITScalar arg2 = jit->ToDouble(compile_expression(s.second()));
-        JITScalar ret;
-        if (jit->IsDouble(v->type))
-            ret = jit->Call(func_matrix_load_double, this_ptr, jit->DoubleValue(v->argument_num), arg1, arg2, retcode);
-        else if (jit->IsFloat(v->type))
-            ret = jit->Call(func_matrix_load_float, this_ptr, jit->DoubleValue(v->argument_num), arg1, arg2, retcode);
-        else if (jit->IsBool(v->type))
-            ret = jit->Call(func_matrix_load_bool, this_ptr, jit->DoubleValue(v->argument_num), arg1, arg2, retcode);
-        else
-            throw Exception("Unsupported JIT type in Load");
-        handle_success_code(jit->Load(retcode));
-        return ret;
+	QTextStream(&output) << symname << ".get(NTuple( " << (compile_expression(s.first())) << ", " << (compile_expression(s.second())) << " ) ) ";
+        return output;
     }
     throw Exception("dereference not handled yet...");
 }
 
-JITScalar JITFunc::compile_expression(const Tree & t) {
+QString JITFunc::compile_expression(const Tree & t) {
+    QString output;
     switch (t.token()) {
     case TOK_VARIABLE:
         return compile_rhs(t);
@@ -427,11 +403,11 @@ JITScalar JITFunc::compile_expression(const Tree & t) {
         if ( t.array().isScalar() ) {
             switch ( t.array().dataClass() ) {
             case Bool:
-                return jit->BoolValue( t.array().constRealScalar<bool>() );
+                return QTextStream( &output ) << "static_cast<bool>( " << t.text() << " )";
             case Float:
-                return jit->FloatValue( t.array().constRealScalar<float>() );
+		return QTextStream( &output ) << "static_cast<float>( " << t.text() << " )";
             case Double:
-                return jit->DoubleValue( t.array().constRealScalar<double>() );
+		return QTextStream( &output ) << "static_cast<double>( " << t.text() << " )";
             default:
                 throw Exception("Unsupported scalar type.");
             }
@@ -445,44 +421,59 @@ JITScalar JITFunc::compile_expression(const Tree & t) {
     case TOK_CELLDEF:
         throw Exception("JIT compiler does not support complex, string, END, matrix or cell defs");
     case '+':
-        return jit->Add(compile_expression(t.first()),compile_expression(t.second()));
+	QTextStream( &output ) << "Add( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
+        return output;
     case '-':
-        return jit->Sub(compile_expression(t.first()),compile_expression(t.second()));
+	QTextStream( &output ) << "Subtract( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
+	return output;
     case '*':
     case TOK_DOTTIMES:
-        return jit->Mul(compile_expression(t.first()),compile_expression(t.second()));
+	QTextStream( &output ) << "DotMultiply( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
+	return output;
     case '/':
     case TOK_DOTRDIV:
-        return jit->Div(compile_expression(t.first()),compile_expression(t.second()));
+	QTextStream( &output ) << "DotRightDivide( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
+	return output;
     case '\\':
     case TOK_DOTLDIV:
-        return jit->Div(compile_expression(t.second()),compile_expression(t.first()));
+	QTextStream( &output ) << "DotLeftDivide( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
+	return output;
     case TOK_SOR:
         return compile_or_statement(t);
     case '|':
-        return jit->Or(compile_expression(t.first()),compile_expression(t.second()));
+	QTextStream( &output ) << "Or( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
+	return output;
     case TOK_SAND:
         return compile_and_statement(t);
     case '&':
-        return jit->And(compile_expression(t.first()),compile_expression(t.second()));
+	QTextStream( &output ) << "And( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
+	return output;
     case '<':
-        return jit->LessThan(compile_expression(t.first()),compile_expression(t.second()));
+	QTextStream( &output ) << "LessThan( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
+	return output;
     case TOK_LE:
-        return jit->LessEquals(compile_expression(t.first()),compile_expression(t.second()));
+	QTextStream( &output ) << "LessEquals( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
+	return output;
     case '>':
-        return jit->GreaterThan(compile_expression(t.first()),compile_expression(t.second()));
+	QTextStream( &output ) << "GreaterThan( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
+	return output;
     case TOK_GE:
-        return jit->GreaterEquals(compile_expression(t.first()),compile_expression(t.second()));
+	QTextStream( &output ) << "GreaterEquals( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
+	return output;
     case TOK_EQ:
-        return jit->Equals(compile_expression(t.first()),compile_expression(t.second()));
+	QTextStream( &output ) << "Equals( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
+	return output;
     case TOK_NE:
-        return jit->NotEqual(compile_expression(t.first()),compile_expression(t.second()));
+	QTextStream( &output ) << "NotEqual( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
+	return output;
     case TOK_UNARY_MINUS:
-        return jit->Negate(compile_expression(t.first()));
+	QTextStream( &output ) << "Negate( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
+	return output;
     case TOK_UNARY_PLUS:
         return compile_expression(t.first());
     case '~':
-        return jit->Not(compile_expression(t.first()));
+	QTextStream( &output ) << "Not( " << compile_expression(t.first()) << " )";
+	return output;
     case '^':
         throw Exception("^ is not currently handled by the JIT compiler");
     case TOK_DOTPOWER:
