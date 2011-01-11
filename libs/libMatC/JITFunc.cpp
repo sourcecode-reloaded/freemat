@@ -136,7 +136,7 @@ SymbolInfo* JITFunc::add_argument_scalar(QString name, QString val, bool overrid
     //if (!val && !ptr.valid()) return NULL;
     if (!ptr.valid() || override) {
         aclass = Double;
-	symbols.insertSymbol(name,SymbolInfo(true,argument_count++,type));
+	symbols.insertSymbol(name,SymbolInfo(true,argument_count++,aclass));
 	QTextStream(&init_block) << "Array* " << name << " = new Array(  "<< val << ");\n"; 
 	return symbols.findSymbol(name);
 	
@@ -146,7 +146,7 @@ SymbolInfo* JITFunc::add_argument_scalar(QString name, QString val, bool overrid
     // Map the array class to an llvm type
     //TODO: Fix this
     QTextStream(&init_block) << "Array* " << name << " = new(" << ptr->address() << ") Array(  "<< val << ");\n"; 
-    symbols.insertSymbol(name,SymbolInfo(true,argument_count++,type));
+    symbols.insertSymbol(name,SymbolInfo(true,argument_count++,aclass));
     return symbols.findSymbol(name);
 }
 
@@ -489,30 +489,23 @@ QString JITFunc::compile_expression(const Tree & t) {
     }
 }
 
-void JITFunc::compile_assignment(const Tree & t) {
+QString JITFunc::compile_assignment(const Tree & t) {
+    QString output;
     const Tree & s(t.first());
     QString symname(symbol_prefix+s.first().text());
-    JITScalar rhs(compile_expression(t.second()));
+    QString rhs(compile_expression(t.second()));
     SymbolInfo *v = symbols.findSymbol(symname);
     if (!v) {
-        if (s.numChildren() == 1)
-            v = add_argument_scalar(symname,rhs,false);
-        else
-            v = add_argument_array(symname, true /*createIfMissing*/ );
+        v = add_argument_array(symname, true /*createIfMissing*/ );
         if (!v) throw Exception("Undefined variable reference:" + symname);
     }
     if (s.numChildren() == 1) {
-        if (v->type != jit->TypeOf(rhs))
-            throw Exception("polymorphic assignment to scalar detected.");
-        if (!v->isScalar)
-            throw Exception("scalar assignment to array variable.");
-        jit->Store(rhs, v->address);
-        return;
+	QTextStream(&output) << symname << " = " << rhs << ";\n";
+        return output;
     }
     if (s.numChildren() > 2)
         throw Exception("multiple levels of dereference not handled yet...");
-    if (v->isScalar)
-        throw Exception("array indexing of scalar values...");
+
     const Tree & q(s.second());
     if (!q.is(TOK_PARENS))
         throw Exception("non parenthetical dereferences not handled yet...");
@@ -521,39 +514,17 @@ void JITFunc::compile_assignment(const Tree & t) {
     if (q.numChildren() > 2)
         throw Exception("Expecting at most 2 array references for dereference...");
     if (q.numChildren() == 1) {
-        JITScalar arg1 = jit->ToDouble(compile_expression(q.first()));
-        JITScalar success_code;
-        if (jit->IsDouble(v->type))
-            success_code = jit->Call(func_vector_store_double, this_ptr, jit->DoubleValue(v->argument_num), arg1,
-                                     jit->ToType(rhs,v->type));
-        else if (jit->IsFloat(v->type))
-            success_code = jit->Call(func_vector_store_float, this_ptr, jit->DoubleValue(v->argument_num), arg1,
-                                     jit->ToType(rhs,v->type));
-        else if (jit->IsBool(v->type))
-            success_code = jit->Call(func_vector_store_bool, this_ptr, jit->DoubleValue(v->argument_num), arg1,
-                                     jit->ToType(rhs,v->type));
-        else
-            throw Exception("unhandled type for vector store");
-        handle_success_code(success_code);
-        return;
+        QString arg1(compile_expression(q.first()));
+	QTextStream(&output) << symname << ".set( NTuple( " << arg1 << " ), " << rhs << ");\n";
+        return output;
     } else if (q.numChildren() == 2) {
         JITScalar arg1 = jit->ToDouble(compile_expression(q.first()));
         JITScalar arg2 = jit->ToDouble(compile_expression(q.second()));
-        JITScalar success_code;
-        if (jit->IsDouble(v->type))
-            success_code = jit->Call(func_matrix_store_double, this_ptr, jit->DoubleValue(v->argument_num),
-                                     arg1, arg2, jit->ToType(rhs,v->type));
-        else if (jit->IsFloat(v->type))
-            success_code = jit->Call(func_matrix_store_float, this_ptr, jit->DoubleValue(v->argument_num),
-                                     arg1, arg2, jit->ToType(rhs,v->type));
-        else if (jit->IsBool(v->type))
-            success_code = jit->Call(func_matrix_store_bool, this_ptr, jit->DoubleValue(v->argument_num),
-                                     arg1, arg2, jit->ToType(rhs,v->type));
-        else
-            throw Exception("unhandled type for matrix store");
-        handle_success_code(success_code);
-        return;
+	QTextStream(&output) << symname << ".set( NTuple( " << arg1 << ", " << arg2 << " ), " << rhs << ");\n";
+	return output;
     }
+    throw Exception("Unexpected error in compile_assignment");
+    return output;
 }
 
 // x = a || b
@@ -566,28 +537,12 @@ void JITFunc::compile_assignment(const Tree & t) {
 //   x = false;
 // end
 
-JITScalar JITFunc::compile_or_statement(const Tree & t) {
-    JITBlock ip(jit->CurrentBlock());
-    jit->SetCurrentBlock(prolog);
-    JITScalar address = jit->Alloc(jit->BoolType(),"or_result");
-    jit->SetCurrentBlock(ip);
-    JITBlock or_true = jit->NewBlock("or_true");
-    JITBlock or_first_false = jit->NewBlock("or_first_false");
-    JITBlock or_false = jit->NewBlock("or_false");
-    JITBlock or_exit = jit->NewBlock("or_exit");
-    JITScalar first_value(compile_expression(t.first()));
-    jit->Branch(or_true,or_first_false,first_value);
-    jit->SetCurrentBlock(or_first_false);
-    JITScalar second_value(compile_expression(t.second()));
-    jit->Branch(or_true,or_false,second_value);
-    jit->SetCurrentBlock(or_true);
-    jit->Store(jit->BoolValue(true),address);
-    jit->Jump(or_exit);
-    jit->SetCurrentBlock(or_false);
-    jit->Store(jit->BoolValue(false),address);
-    jit->Jump(or_exit);
-    jit->SetCurrentBlock(or_exit);
-    return jit->Load(address);
+QString JITFunc::compile_or_statement(const Tree & t) {
+    QString output;
+    QString first_value(compile_expression(t.first()));
+    QString second_value(compile_expression(t.second()));
+    QTextStream(&output) << "( " << first_value << " || " << second_value << " )";
+    return output;
 }
 
 // x = a && b
@@ -600,296 +555,49 @@ JITScalar JITFunc::compile_or_statement(const Tree & t) {
 //   x = true;
 // end
 
-JITScalar JITFunc::compile_and_statement(const Tree & t) {
-    JITBlock ip(jit->CurrentBlock());
-    jit->SetCurrentBlock(prolog);
-    JITScalar address = jit->Alloc(jit->BoolType(),"and_result");
-    jit->SetCurrentBlock(ip);
-    JITBlock and_true = jit->NewBlock("and_true");
-    JITBlock and_first_true = jit->NewBlock("and_first_true");
-    JITBlock and_false = jit->NewBlock("and_false");
-    JITBlock and_exit = jit->NewBlock("and_exit");
-    JITScalar first_value(compile_expression(t.first()));
-    jit->Branch(and_first_true,and_false,first_value);
-    jit->SetCurrentBlock(and_first_true);
-    JITScalar second_value(compile_expression(t.second()));
-    jit->Branch(and_true,and_false,second_value);
-    jit->SetCurrentBlock(and_true);
-    jit->Store(jit->BoolValue(true),address);
-    jit->Jump(and_exit);
-    jit->SetCurrentBlock(and_false);
-    jit->Store(jit->BoolValue(false),address);
-    jit->Jump(and_exit);
-    jit->SetCurrentBlock(and_exit);
-    return jit->Load(address);
+QString JITFunc::compile_and_statement(const Tree & t) {
+    QString output;
+    QString first_value(compile_expression(t.first()));
+    QString second_value(compile_expression(t.second()));
+    QTextStream(&output) << "( " << first_value << " && " << second_value << " )";
+    return output;
 }
 
 QString JITFunc::compile_if_statement(const Tree & t) {
+    QString output;
     QString condition = compile_expression(t.first());
+
+    QTextStream(&output) << "if( " << condition << " ){\n";
     
     bool failed = false;
     try {
-        compile_block(t.second());
+	QTextStream(&output) << compile_block(t.second()) << " \n}\n";
     } catch (Exception &e) {
         exception_store = e;
         failed = true;
     }
-    jit->Jump(if_exit);
     int n=2;
     while (n < t.numChildren() && t.child(n).is(TOK_ELSEIF)) {
         jit->SetCurrentBlock(if_continue);
-        JITScalar ttest(jit->ToBool(compile_expression(t.child(n).first())));
-        if_true = jit->NewBlock("elseif_true");
-        if_continue = jit->NewBlock("elseif_continue");
-        jit->Branch(if_true,if_continue,ttest);
-        jit->SetCurrentBlock(if_true);
+        QString ttest(compile_expression(t.child(n).first()));
+	QTextStream(&output) << "if( " << condition << " ){\n";
         try {
-            compile_block(t.child(n).second());
+	    QTextStream(&output) << compile_block(t.child(n).second()) << " \n}\n";
         } catch (Exception &e) {
             exception_store = e;
             failed = true;
         }
-        jit->Jump(if_exit);
         n++;
     }
     if (t.last().is(TOK_ELSE)) {
-        jit->SetCurrentBlock(if_continue);
         try {
-            compile_block(t.last().first());
+	    QTextStream(&output) << "else {" << compile_block(t.last().first()) << " \n}\n";
         } catch (Exception &e) {
             exception_store = e;
             failed = true;
         }
-        jit->Jump(if_exit);
-    } else {
-        jit->SetCurrentBlock(if_continue);
-        jit->Jump(if_exit);
     }
-    jit->SetCurrentBlock(if_exit);
     if (failed) throw exception_store;
-}
-
-template<class T>
-inline T scalar_load(void* base, double argnum) {
-    JITFunc *tptr = static_cast<JITFunc*>(base);
-    Array* a = tptr->array_inputs[(int)(argnum)];
-    return a->constRealScalar<T>();
-}
-
-template<class T>
-inline void scalar_store(void* base, double argnum, T value) {
-    JITFunc *tptr = static_cast<JITFunc*>(base);
-    Array* a = tptr->array_inputs[(int)(argnum)];
-    if ( a->isArray() )
-        a->set(1,Array(value));
-    else
-        a->realScalar<T>() = value;
-}
-
-template<class T>
-inline T vector_load(void* base, double argnum, double ndx, bool *success) {
-    int iargnum = argnum;
-    try {
-        JITFunc *tptr = static_cast<JITFunc*>(base);
-        if (ndx < 1) {
-            tptr->exception_store = Exception("Array index < 1 not allowed");
-            success[0] = false;
-            return 0;
-        }
-        if (ndx > tptr->cache_array_rows[iargnum]*tptr->cache_array_cols[iargnum]) {
-            tptr->exception_store = Exception("Array bounds exceeded in A(n) expression");
-            success[0] = false;
-            return 0;
-        }
-        success[0] = true;
-        return (((T*)(tptr->cache_array_bases[iargnum]))[(int64)(ndx-1)]);
-    } catch (Exception &e) {
-        JITFunc *tptr = static_cast<JITFunc*>(base);
-        tptr->exception_store = e;
-        success[0] = false;
-        return 0;
-    }
-    success[0] = false;
-    return 0;
-}
-
-template<class T>
-inline bool vector_store(void* base, double argnum, double ndx, T value) {
-    int iargnum = argnum;
-    try {
-        JITFunc *tptr = static_cast<JITFunc*>(base);
-        if (ndx < 1) {
-            tptr->exception_store = Exception("Array index < 1 not allowed");
-            return false;
-        }
-        if (ndx > tptr->cache_array_rows[iargnum]*tptr->cache_array_cols[iargnum]) {
-            Array* a = tptr->array_inputs[(int)argnum];
-            a->set(ndx, Array( value ));
-            tptr->cache_array_bases[iargnum] = (void*)(a->real<T>().data());
-            tptr->cache_array_rows[iargnum] = a->rows();
-            tptr->cache_array_cols[iargnum] = a->cols();
-        } else
-            ((T*)(tptr->cache_array_bases[iargnum]))[(int64)(ndx-1)] = value;
-        return true;
-    } catch (Exception &e) {
-        JITFunc *tptr = static_cast<JITFunc*>(base);
-        tptr->exception_store = e;
-        return false;
-    }
-    return true;
-}
-
-template<class T>
-inline T matrix_load(void* base, double argnum, double row, double col, bool* success) {
-    int iargnum = argnum;
-    try {
-        JITFunc *tptr = static_cast<JITFunc*>(base);
-        if ((row < 1) || (col < 1)) {
-            tptr->exception_store = Exception("Array index < 1 not allowed");
-            success[0] = false;
-            return 0;
-        }
-        if ((row > tptr->cache_array_rows[iargnum]) ||
-                (col > tptr->cache_array_cols[iargnum])) {
-            tptr->exception_store = Exception("Array index exceed bounds");
-            success[0] = false;
-            return 0;
-        }
-        success[0] = true;
-        return (((T*)(tptr->cache_array_bases[iargnum]))
-                [(int64)(row-1+(col-1)*tptr->cache_array_rows[iargnum])]);
-    } catch (Exception &e) {
-        JITFunc *tptr = static_cast<JITFunc*>(base);
-        tptr->exception_store = e;
-        success[0] = false;
-        return 0;
-    }
-    success[0] = false;
-    return 0;
-}
-
-// Nominal time 280 ms
-//
-template<class T>
-inline bool matrix_store(void* base, double argnum, double row, double col, T value) {
-    int iargnum = argnum;
-    try {
-        JITFunc *tptr = static_cast<JITFunc*>(base);
-        if ((row < 1) || (col < 1)) {
-            tptr->exception_store = Exception("Array index < 1 not allowed");
-            return false;
-        }
-        if ((row > tptr->cache_array_rows[iargnum]) ||
-                (col > tptr->cache_array_cols[iargnum])) {
-            Array *a = tptr->array_inputs[iargnum];
-            a->set(NTuple(row,col),Array(value));
-            tptr->cache_array_bases[iargnum] = (void*)(a->real<T>().data());
-            tptr->cache_array_rows[iargnum] = a->rows();
-            tptr->cache_array_cols[iargnum] = a->cols();
-        } else
-            ((T*)(tptr->cache_array_bases[iargnum]))
-            [(int64)(row-1+(col-1)*tptr->cache_array_rows[iargnum])] = value;
-        return true;
-    } catch (Exception &e) {
-        JITFunc *tptr = static_cast<JITFunc*>(base);
-        tptr->exception_store = e;
-        return false;
-    }
-    return true;
-}
-
-extern "C" {
-    JIT_EXPORT double scalar_load_double(void* base, double argnum) {
-        return scalar_load<double>(base,argnum);
-    }
-    JIT_EXPORT float scalar_load_float(void* base, double argnum) {
-        return scalar_load<float>(base,argnum);
-    }
-    JIT_EXPORT bool scalar_load_bool(void* base, double argnum) {
-        return scalar_load<bool>(base,argnum);
-    }
-    JIT_EXPORT void scalar_store_double(void* base, double argnum, double val) {
-        scalar_store<double>(base,argnum,val);
-    }
-    JIT_EXPORT void scalar_store_float(void* base, double argnum, float val) {
-        scalar_store<float>(base,argnum,val);
-    }
-    JIT_EXPORT void scalar_store_bool(void* base, double argnum, bool val) {
-        scalar_store<bool>(base,argnum,val);
-    }
-    JIT_EXPORT double vector_load_double(void* base, double argnum, double ndx, bool* success) {
-        return vector_load<double>(base,argnum,ndx,success);
-    }
-    JIT_EXPORT float vector_load_float(void* base, double argnum, double ndx, bool* success) {
-        return vector_load<float>(base,argnum,ndx,success);
-    }
-    JIT_EXPORT bool vector_load_bool(void* base, double argnum, double ndx, bool* success) {
-        return vector_load<bool>(base,argnum,ndx,success);
-    }
-    JIT_EXPORT bool vector_store_double(void* base, double argnum, double ndx, double val) {
-        return vector_store<double>(base,argnum,ndx,val);
-    }
-    JIT_EXPORT bool vector_store_float(void* base, double argnum, double ndx, float val) {
-        return vector_store<float>(base,argnum,ndx,val);
-    }
-    JIT_EXPORT bool vector_store_bool(void* base, double argnum, double ndx, bool val) {
-        return vector_store<bool>(base,argnum,ndx,val);
-    }
-    JIT_EXPORT double matrix_load_double(void* base, double argnum, double row, double col, bool* success) {
-        return matrix_load<double>(base,argnum,row,col,success);
-    }
-    JIT_EXPORT float matrix_load_float(void* base, double argnum, double row, double col, bool* success) {
-        return matrix_load<float>(base,argnum,row,col,success);
-    }
-    JIT_EXPORT bool matrix_load_bool(void* base, double argnum, double row, double col, bool* success) {
-        return matrix_load<bool>(base,argnum,row,col,success);
-    }
-    JIT_EXPORT bool matrix_store_double(void* base, double argnum, double row, double col, double val) {
-        return matrix_store<double>(base,argnum,row,col,val);
-    }
-    JIT_EXPORT bool matrix_store_float(void* base, double argnum, double row, double col, float val) {
-        return matrix_store<float>(base,argnum,row,col,val);
-    }
-    JIT_EXPORT bool matrix_store_bool(void* base, double argnum, double row, double col, bool val) {
-        return matrix_store<bool>(base,argnum,row,col,val);
-    }
-    JIT_EXPORT double csc(double t) {
-        return 1.0/sin(t);
-    }
-    JIT_EXPORT float cscf(float t) {
-        return 1.0f/sinf(t);
-    }
-    JIT_EXPORT double sec(double t) {
-        return 1.0/cos(t);
-    }
-    JIT_EXPORT float secf(float t) {
-        return 1.0f/cosf(t);
-    }
-    JIT_EXPORT double cot(double t) {
-        return 1.0/tan(t);
-    }
-    JIT_EXPORT float cotf(float t) {
-        return 1.0f/tanf(t);
-    }
-    JIT_EXPORT bool check_for_interrupt(void *base) {
-        JITFunc *tptr = static_cast<JITFunc*>(base);
-        if (!tptr->eval->interrupt()) return false;
-        tptr->eval->outputMessage("Interrupt (ctrl-b) encountered in JIT code\n");
-        tptr->eval->stackTrace(0);
-        return true;
-    }
-    JIT_EXPORT double niter_for_loop( double first, double step, double last ) {
-        return (double)(num_for_loop_iter( first, step, last ));
-    }
-    JIT_EXPORT void debug_out_d( double t ) {
-        qDebug() << t;
-    }
-
-}
-
-void JITFunc::register_std_function(QString name) {
-    double_funcs.insertSymbol(name,jit->DefineLinkFunction(name,"d","d"));
-    float_funcs.insertSymbol(name,jit->DefineLinkFunction(name+"f","f","f"));
 }
 
 void JITFunc::initialize() {
