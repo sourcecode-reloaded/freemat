@@ -62,6 +62,9 @@
 #ifdef HAVE_LLVM
 
 #include <QString>
+#include <QFile>
+#include <QTextStream>
+
 #include "JITFunc.hpp"
 #include "Context.hpp"
 #include "Interpreter.hpp"
@@ -114,16 +117,12 @@ SymbolInfo* JITFunc::add_argument_array(QString name, bool createIfMissing=false
 
 
 // //TODO: fix this
-// SymbolInfo* JITFunc::define_local_symbol(QString name, JITScalar val) {
-//     if (!val) throw Exception("undefined variable or argument " + name);
-//     JITBlock ip(jit->CurrentBlock());
-//     jit->SetCurrentBlock(prolog);
-//     JITScalar address = jit->Alloc(jit->TypeOf(val),name);
-//     symbols.insertSymbol(name,SymbolInfo(true,-1,address,jit->TypeOf(val)));
-//     jit->SetCurrentBlock(ip);
-//     jit->Store(val,address);
-//     return symbols.findSymbol(name);
-// }
+QString JITFunc::define_local_symbol(QString name, QString val) {
+    QString output;
+     symbols.insertSymbol(name,SymbolInfo(true,-1,Double));
+     QTextStream(&output) << "Array* " << name << " = new Array(  "<< val << ");\n"; 
+     return output;
+}
 
 // FIXME - Simplify
 SymbolInfo* JITFunc::add_argument_scalar(QString name, QString val, bool override) {
@@ -151,7 +150,7 @@ SymbolInfo* JITFunc::add_argument_scalar(QString name, QString val, bool overrid
 }
 
 JITFunc::JITFunc(Interpreter *p_eval) {
-    jit = JIT::Instance();
+    
     eval = p_eval;
 
 
@@ -176,14 +175,14 @@ JITFunc::JITFunc(Interpreter *p_eval) {
     code.append("#include <QtCore/QVector>\n    #include <Array.hpp>\n");
     code.append("extern \"C\" int f_t(){ %1; \n}\n");
 
-    jc->add_source_from_string(code, "a.cpp");
-    dbout << "Add source time " << t.restart() << " ms\n";
-    jc->compile();
-    dbout << "Compile time " << t.restart() << " ms\n";
-    jc->run_function("f_t");
-    dbout << "Run once time " << t.restart() << " ms\n";
-    jc->run_function("f_t");
-    dbout << "Run twice time " << t.elapsed() << " ms\n";
+//     jc->add_source_from_string(code, "a.cpp");
+//     dbout << "Add source time " << t.restart() << " ms\n";
+//     jc->compile();
+//     dbout << "Compile time " << t.restart() << " ms\n";
+//     jc->run_function("f_t");
+//     dbout << "Run once time " << t.restart() << " ms\n";
+//     jc->run_function("f_t");
+//     dbout << "Run twice time " << t.elapsed() << " ms\n";
 
 }
 
@@ -318,6 +317,7 @@ QString JITFunc::compile_m_function_call(const Tree & t) {
         args_defed = s.numChildren();
     for (int i=0;i<args_defed;i++) {
         QString arg = compile_expression(s.child(i));
+	
         output.append(define_local_symbol(new_symbol_prefix + fptr->arguments[i],arg));
     }
     output.append(define_local_symbol(new_symbol_prefix+"nargout","1"));
@@ -333,7 +333,7 @@ QString JITFunc::compile_m_function_call(const Tree & t) {
     //TODO: Not sure how to return params
     //QTextStream(&output) << (new_symbol_prefix+fptr->returnVals[0]) << " = " << 
     symbol_prefix = save_prefix;
-    return jit->Load(v->address);
+    return output;
 }
 
 QString JITFunc::compile_function_call(const Tree & t) {
@@ -403,11 +403,14 @@ QString JITFunc::compile_expression(const Tree & t) {
         if ( t.array().isScalar() ) {
             switch ( t.array().dataClass() ) {
             case Bool:
-                return QTextStream( &output ) << "static_cast<bool>( " << t.text() << " )";
+		QTextStream( &output ) << "static_cast<bool>( " << t.text() << " )";
+                return output;
             case Float:
-		return QTextStream( &output ) << "static_cast<float>( " << t.text() << " )";
+		QTextStream( &output ) << "static_cast<float>( " << t.text() << " )";
+		return output;
             case Double:
-		return QTextStream( &output ) << "static_cast<double>( " << t.text() << " )";
+		QTextStream( &output ) << "static_cast<double>( " << t.text() << " )";
+		return output;
             default:
                 throw Exception("Unsupported scalar type.");
             }
@@ -518,8 +521,8 @@ QString JITFunc::compile_assignment(const Tree & t) {
 	QTextStream(&output) << symname << ".set( NTuple( " << arg1 << " ), " << rhs << ");\n";
         return output;
     } else if (q.numChildren() == 2) {
-        JITScalar arg1 = jit->ToDouble(compile_expression(q.first()));
-        JITScalar arg2 = jit->ToDouble(compile_expression(q.second()));
+        QString arg1 = ToDouble(compile_expression(q.first()));
+        QString arg2 = ToDouble(compile_expression(q.second()));
 	QTextStream(&output) << symname << ".set( NTuple( " << arg1 << ", " << arg2 << " ), " << rhs << ");\n";
 	return output;
     }
@@ -578,7 +581,6 @@ QString JITFunc::compile_if_statement(const Tree & t) {
     }
     int n=2;
     while (n < t.numChildren() && t.child(n).is(TOK_ELSEIF)) {
-        jit->SetCurrentBlock(if_continue);
         QString ttest(compile_expression(t.child(n).first()));
 	QTextStream(&output) << "if( " << condition << " ){\n";
         try {
@@ -734,7 +736,7 @@ QString JITFunc::prep( void ) {
             if (!ptr.valid()) {
                 //if (!v->isScalar) throw Exception("cannot create array types in the loop");
                 eval->getContext()->insertVariable(argumentList[i],
-                                                   Array(map_dataclass(v->type),
+                                                   Array(v->type,
                                                          NTuple(1,1)));
                 ptr = eval->getContext()->lookupVariable(argumentList[i]);
                 if (!ptr.valid()) throw Exception("unable to create variable " + argumentList[i]);
@@ -750,8 +752,14 @@ QString JITFunc::prep( void ) {
 
 void JITFunc::run() {
     save_this = this;
-    JITGeneric gv = jit->Invoke(func,JITGeneric((void*) this));
-    if (gv.IntVal == 0)
-	throw exception_store;
+    QFile fout("FileDump.cpp");
+    fout.open(QIODevice::WriteOnly);
+    QTextStream out(&fout);
+    out<<prep_block<<"\n//--------------\n"<<init_block<<"\n//--------------\n"<<code;
+    out.flush();
+    
+    jc->add_source_from_string(code,"b.cpp"); //TODO: this is incorrect
+    jc->compile();
+    jc->run_function("f_t");
 }
 #endif

@@ -56,10 +56,9 @@ public:
   double* cache_array_rows;
   double* cache_array_cols;
   int argument_count;
-  JITFunction func;
-  JITBlock prolog, main_body, epilog;
-  JITScalar this_ptr, retcode;
-  Exception exception_store;
+  
+  
+   Exception exception_store;
   QString symbol_prefix;
   int uid;
   void register_std_function(QString name);
@@ -70,7 +69,7 @@ public:
   DataClass map_dataclass(JITScalar val);
   void handle_success_code(JITScalar success);
   void initialize();
-  //SymbolInfo* define_local_symbol(QString name, JITScalar val);
+  QString define_local_symbol(QString name, QString val);
   JITFunc(Interpreter *eval);
   QString compile_expression(const Tree & t);
   QString compile_rhs(const Tree & t);
@@ -87,7 +86,7 @@ public:
   QString compile_statement_type(const Tree & t);
   QString compile_block(const Tree& t);
   QString compile(const Tree & t);
-  void prep();
+  QString prep();
   void run();
     QString ToDouble(QString arg1);
   
