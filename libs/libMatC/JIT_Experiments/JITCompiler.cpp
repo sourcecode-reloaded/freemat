@@ -626,13 +626,14 @@ void JITCompiler::compile( void )
 
         std::string ErrMsg;
         
-        llvm::MemoryBuffer *buffer = MemoryBuffer::getFileOrSTDIN(bc_fname.toStdString().c_str(), &ErrMsg);
+        OwningPtr< llvm::MemoryBuffer > buffer;
+        llvm::error_code err = MemoryBuffer::getFileOrSTDIN(bc_fname.toStdString().c_str(), buffer);
         
         if (isBitcode((const unsigned char *)buffer->getBufferStart(),
             (const unsigned char *)buffer->getBufferEnd())) {
             
         //Module * module = getLazyBitcodeModule(buffer, llvmContext, &ErrMsg);
-        Module * module = ParseBitcodeFile(buffer, llvmContext, &ErrMsg);
+        Module * module = ParseBitcodeFile(buffer.get(), llvmContext, &ErrMsg);
         
         if ( !TheModule ) {
             TheModule = module;

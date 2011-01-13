@@ -172,8 +172,8 @@ JITFunc::JITFunc(Interpreter *p_eval) {
     jc->add_system_include_path("/usr/local/include");
     jc->add_system_include_path("/usr/local/lib/clang/2.9/include");
 
-    code.append("#include <QtCore/QVector>\n    #include <Array.hpp>\n");
-    code.append("extern \"C\" int f_t(){ %1; \n}\n");
+    QTextStream(&code)<< "#include <QtCore/QVector>\n    #include <Array.hpp>\n" << "extern \"C\" int f_t(){ %1; \n}\n";
+
 
 //     jc->add_source_from_string(code, "a.cpp");
 //     dbout << "Add source time " << t.restart() << " ms\n";
@@ -372,7 +372,10 @@ QString JITFunc::compile_rhs(const Tree & t) {
         if (!v)
             return compile_function_call(t);
     }
-    
+
+    if (t.numChildren() == 1) {
+	return symname;
+    }
     if (t.numChildren() > 2)
         throw Exception("multiple levels of dereference not handled yet...");
 
@@ -682,7 +685,7 @@ QString JITFunc::ToDouble( QString arg1 )
 
 //TODO: handle other types for loop variables
 QString JITFunc::compile_for_block(const Tree & t) {
-    QString code;
+    QString output;
     QString loop_start, loop_stop, loop_step;
     bool failed = false;
 
@@ -706,21 +709,22 @@ QString JITFunc::compile_for_block(const Tree & t) {
     QString loop_nsteps_name = "___nsteps_" + loop_index_name;
     QString loop_step_index_name =  "___loop_ind_" + loop_index_name;
 
-    code = QString("int %1 = niter_for_loop( %2, %3, %4 );\n").arg( loop_nsteps_name, loop_start, loop_step, loop_stop );
-    code.append( QString("%1 = %2;\n").arg( loop_index_name, loop_start ));
-    code.append(QString("for(int %1 = 0; %1 < %2; ++%1 ){\n").arg(loop_step_index_name, loop_nsteps_name));
-    code.append(QString("%1+=%2*%3;\n").arg(loop_index_name,loop_step_index_name,loop_step));
+    output = QString("int %1 = niter_for_loop( %2, %3, %4 );\n").arg( loop_nsteps_name, loop_start, loop_step, loop_stop );
+    output.append( QString("%1 = %2;\n").arg( loop_index_name, loop_start ));
+    output.append(QString("for(int %1 = 0; %1 < %2; ++%1 ){\n").arg(loop_step_index_name, loop_nsteps_name));
+    output.append(QString("%1+=%2*%3;\n").arg(loop_index_name,loop_step_index_name,loop_step));
     try {
-        code.append(compile_block(t.second()));
+        output.append(compile_block(t.second()));
     } catch (Exception &e) {
         exception_store = e;
         failed = true;
     }
 
     //TODO: add interrupt check
-    code.append("\n}");
+    output.append("\n}");
 
     if (failed) throw exception_store;
+    return output;
 }
 
 QString JITFunc::prep( void ) {
