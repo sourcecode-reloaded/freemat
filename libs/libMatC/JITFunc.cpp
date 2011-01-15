@@ -110,7 +110,7 @@ SymbolInfo* JITFunc::add_argument_array(QString name, bool createIfMissing=false
 
     aclass = ptr->dataClass();
     // Map the array class to an llvm type
-    QTextStream(&init_block) << "Array* " << name << " = new( " << ptr->address() << ") Array(  (DataClass)"<< aclass << ");\n"; 
+    QTextStream(&init_block) << "Array* " << name << " = new( __ptr__" << name << " ) Array(  (DataClass)"<< aclass << ");\n"; 
     symbols.insertSymbol(name,SymbolInfo(false,argument_count++,aclass));
     return symbols.findSymbol(name);
 }
@@ -172,7 +172,7 @@ JITFunc::JITFunc(Interpreter *p_eval) {
     jc->add_system_include_path("/usr/local/include");
     jc->add_system_include_path("/usr/local/lib/clang/2.9/include");
 
-    QTextStream(&code)<< "#include <QtCore/QVector>\n    #include <Array.hpp>\n" << "extern \"C\" int f_t(){ %1; \n}\n";
+    QTextStream(&prep_block)<< "#include <QtCore/QVector>\n#include <Array.hpp>\n" ;
 
 
 //     jc->add_source_from_string(code, "a.cpp");
@@ -187,11 +187,11 @@ JITFunc::JITFunc(Interpreter *p_eval) {
 }
 
 QString JITFunc::compile_block(const Tree & t) {
-    QString c;
+    QString output;
     const TreeList &statements(t.children());
     for (TreeList::const_iterator i=statements.begin();i!=statements.end();i++)
-        c.append(compile_statement(*i));
-    return c;
+        output.append(compile_statement(*i));
+    return output;
 }
 
 QString JITFunc::compile_statement_type(const Tree& t) {
@@ -493,6 +493,7 @@ QString JITFunc::compile_expression(const Tree & t) {
     default:
         throw Exception("Unrecognized expression!");
     }
+    return output;
 }
 
 QString JITFunc::compile_assignment(const Tree & t) {
@@ -603,6 +604,7 @@ QString JITFunc::compile_if_statement(const Tree & t) {
         }
     }
     if (failed) throw exception_store;
+    return output;
 }
 
 void JITFunc::initialize() {
@@ -662,7 +664,7 @@ QString JITFunc::compile(const Tree& t) {
     bool failed = false;
     try {
         QString temp = compile_for_block(t);
-        code = code.arg(temp);
+	QTextStream(&code) << "extern \"C\" int f_t(){\n" << temp << "\n}\n";
 
     } catch (Exception &e) {
         failed = true;
@@ -676,6 +678,7 @@ QString JITFunc::compile(const Tree& t) {
     //jit->Dump("optimized.bc.txt");
     //#endif
     if (failed) throw exception_store;
+    return code;
 }
 
 QString JITFunc::ToDouble( QString arg1 )
@@ -729,7 +732,7 @@ QString JITFunc::compile_for_block(const Tree & t) {
 
 QString JITFunc::prep( void ) {
     // Collect the list of arguments
-    prep_block.clear();
+    //prep_block.clear();
 
     StringVector argumentList(symbols.getCompletions(""));
 
@@ -752,6 +755,7 @@ QString JITFunc::prep( void ) {
 
         }
     }
+    return prep_block;
 }
 
 void JITFunc::run() {
