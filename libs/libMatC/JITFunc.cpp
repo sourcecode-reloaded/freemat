@@ -79,17 +79,25 @@
 #define JIT_EXPORT
 #endif
 
+
+const char num_iter_text[] = "inline double niter_for_loop( double first, double step, double last )\n \
+{\n \
+    int signum = (step > 0) - (step < 0);\n \
+    int nsteps = (int) floor( ( last - first ) / step ) + 1;\n \
+    if( nsteps < 0 )\n \
+	return 0;\n \
+    \
+    double mismatch = signum*(first + nsteps*step - last);\n \
+    if( (mismatch > 0) && ( mismatch < 3.*feps(last) ) && ( step != rint(step) ) ) //allow overshoot by 3 eps in some cases\n \
+	nsteps++;\n \
+    \
+    return nsteps;\n \
+}\n ";
+
+
 JITFunc *save_this;
 
 
-static JITFunction func_scalar_load_double, func_scalar_load_float, func_scalar_load_bool;
-static JITFunction func_scalar_store_double, func_scalar_store_float, func_scalar_store_bool;
-static JITFunction func_vector_load_double, func_vector_load_float, func_vector_load_bool;
-static JITFunction func_vector_store_double, func_vector_store_float, func_vector_store_bool;
-static JITFunction func_matrix_load_double, func_matrix_load_float, func_matrix_load_bool;
-static JITFunction func_matrix_store_double, func_matrix_store_float, func_matrix_store_bool;
-static JITFunction func_check_for_interrupt;
-static JITFunction func_niter_for_loop, func_debug_out_d;
 
 SymbolInfo* JITFunc::add_argument_array(QString name, bool createIfMissing=false) {
     if (symbol_prefix.size() > 0)
@@ -100,7 +108,7 @@ SymbolInfo* JITFunc::add_argument_array(QString name, bool createIfMissing=false
     if (!ptr.valid()) {
         if ( createIfMissing ) {
             symbols.insertSymbol(name,SymbolInfo(false,argument_count++, Double));
-	    QTextStream(&init_block) << "Array* " << name << " = new Array(Double);\n"; 
+            QTextStream(&init_block) << "Array " << name << "(Double);\n";
             return symbols.findSymbol(name);
         }
         else {
@@ -110,7 +118,7 @@ SymbolInfo* JITFunc::add_argument_array(QString name, bool createIfMissing=false
 
     aclass = ptr->dataClass();
     // Map the array class to an llvm type
-    QTextStream(&init_block) << "Array* " << name << " = new( __ptr__" << name << " ) Array(  (DataClass)"<< aclass << ");\n"; 
+    QTextStream(&init_block) << "Array " << name << "(  __ptr__" << name << ");\n";
     symbols.insertSymbol(name,SymbolInfo(false,argument_count++,aclass));
     return symbols.findSymbol(name);
 }
@@ -120,12 +128,12 @@ SymbolInfo* JITFunc::add_argument_array(QString name, bool createIfMissing=false
 QString JITFunc::define_local_symbol(QString name, QString val) {
     QString output;
      symbols.insertSymbol(name,SymbolInfo(true,-1,Double));
-     QTextStream(&output) << "Array* " << name << " = new Array(  "<< val << ");\n"; 
+     QTextStream(&output) << "Array " << name << "( "<< val << " );\n";
      return output;
 }
 
 // FIXME - Simplify
-SymbolInfo* JITFunc::add_argument_scalar(QString name, QString val, bool override) {
+SymbolInfo* JITFunc::add_argument_scalar(QString name, bool override) {
     DataClass aclass;
 /*    if (symbol_prefix.size() > 0)
         return define_local_symbol(name,val);*/
@@ -136,7 +144,7 @@ SymbolInfo* JITFunc::add_argument_scalar(QString name, QString val, bool overrid
     if (!ptr.valid() || override) {
         aclass = Double;
 	symbols.insertSymbol(name,SymbolInfo(true,argument_count++,aclass));
-	QTextStream(&init_block) << "Array* " << name << " = new Array(  "<< val << ");\n"; 
+        QTextStream(&init_block) << "Array " << name << "(  __ptr__" << name << ");\n";
 	return symbols.findSymbol(name);
 	
     } else {
@@ -144,7 +152,7 @@ SymbolInfo* JITFunc::add_argument_scalar(QString name, QString val, bool overrid
     }
     // Map the array class to an llvm type
     //TODO: Fix this
-    QTextStream(&init_block) << "Array* " << name << " = new(" << ptr->address() << ") Array(  "<< val << ");\n"; 
+    QTextStream(&init_block) << "Array " << name << " ( __ptr__" << name << ");\n";
     symbols.insertSymbol(name,SymbolInfo(true,argument_count++,aclass));
     return symbols.findSymbol(name);
 }
@@ -172,7 +180,7 @@ JITFunc::JITFunc(Interpreter *p_eval) {
     jc->add_system_include_path("/usr/local/include");
     jc->add_system_include_path("/usr/local/lib/clang/2.9/include");
 
-    QTextStream(&prep_block)<< "#include <QtCore/QVector>\n#include <Array.hpp>\n" ;
+    QTextStream(&prep_block)<< "#include <QtCore/QVector>\n#include <Array.hpp>\n#include <math.h>\n#include <Math.hpp>\n\n" << num_iter_text << "\n";
 
 
 //     jc->add_source_from_string(code, "a.cpp");
@@ -374,7 +382,8 @@ QString JITFunc::compile_rhs(const Tree & t) {
     }
 
     if (t.numChildren() == 1) {
-	return symname;
+        QTextStream(&output) << symname;
+	return output;
     }
     if (t.numChildren() > 2)
         throw Exception("multiple levels of dereference not handled yet...");
@@ -390,7 +399,7 @@ QString JITFunc::compile_rhs(const Tree & t) {
         QTextStream(&output) << symname << ".get(NTuple( " << (compile_expression(s.first())) << " ) ) ";
 	return output;
     } else if (s.numChildren() == 2) {
-	QTextStream(&output) << symname << ".get(NTuple( " << (compile_expression(s.first())) << ", " << (compile_expression(s.second())) << " ) ) ";
+        QTextStream(&output) << symname << ".get(NTuple( " << (compile_expression(s.first())) << ", " << (compile_expression(s.second())) << " ) ) ";
         return output;
     }
     throw Exception("dereference not handled yet...");
@@ -507,7 +516,7 @@ QString JITFunc::compile_assignment(const Tree & t) {
         if (!v) throw Exception("Undefined variable reference:" + symname);
     }
     if (s.numChildren() == 1) {
-	QTextStream(&output) << symname << " = " << rhs << ";\n";
+        QTextStream(&output) << symname << " = " << rhs << ";\n";
         return output;
     }
     if (s.numChildren() > 2)
@@ -522,12 +531,12 @@ QString JITFunc::compile_assignment(const Tree & t) {
         throw Exception("Expecting at most 2 array references for dereference...");
     if (q.numChildren() == 1) {
         QString arg1(compile_expression(q.first()));
-	QTextStream(&output) << symname << ".set( NTuple( " << arg1 << " ), " << rhs << ");\n";
+        QTextStream(&output) << symname << ".set( ( " << arg1 << " ), " << rhs << ");\n";
         return output;
     } else if (q.numChildren() == 2) {
         QString arg1 = ToDouble(compile_expression(q.first()));
         QString arg2 = ToDouble(compile_expression(q.second()));
-	QTextStream(&output) << symname << ".set( NTuple( " << arg1 << ", " << arg2 << " ), " << rhs << ");\n";
+        QTextStream(&output) << symname << ".set( ( " << arg1 << ", " << arg2 << " ), " << rhs << ");\n";
 	return output;
     }
     throw Exception("Unexpected error in compile_assignment");
@@ -707,15 +716,15 @@ QString JITFunc::compile_for_block(const Tree & t) {
     }
 
     QString loop_index_name(t.first().first().text());
-    add_argument_scalar(loop_index_name,loop_start,true);
+    add_argument_scalar(loop_index_name,true);
 
     QString loop_nsteps_name = "___nsteps_" + loop_index_name;
     QString loop_step_index_name =  "___loop_ind_" + loop_index_name;
 
     output = QString("int %1 = niter_for_loop( %2, %3, %4 );\n").arg( loop_nsteps_name, loop_start, loop_step, loop_stop );
-    output.append( QString("%1 = %2;\n").arg( loop_index_name, loop_start ));
+    output.append( QString("%1.set(1., Array(%2));\n").arg( loop_index_name, loop_start ));
     output.append(QString("for(int %1 = 0; %1 < %2; ++%1 ){\n").arg(loop_step_index_name, loop_nsteps_name));
-    output.append(QString("%1+=%2*%3;\n").arg(loop_index_name,loop_step_index_name,loop_step));
+    output.append(QString("%1=Add(%1,Array(%2*%3));\n").arg(loop_index_name,loop_step_index_name,loop_step));
     try {
         output.append(compile_block(t.second()));
     } catch (Exception &e) {
@@ -751,7 +760,7 @@ QString JITFunc::prep( void ) {
             if (v->isScalar && (!ptr->isScalar()))
                 throw Exception("Expected symbol to be a scalar, and it is not");
 
-            QTextStream(&prep_block)<< "const Array* __ptr__" << argumentList[i] << " = " << ptr.pointer() << ";\n";
+            QTextStream(&prep_block)<< "const Array* __ptr__" << argumentList[i] << " = (Array*)" << ptr.pointer() << ";\n";
 
         }
     }

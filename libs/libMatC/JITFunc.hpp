@@ -63,7 +63,7 @@ public:
   int uid;
   void register_std_function(QString name);
   SymbolInfo* add_argument_array(QString name, bool createIfMissing);
-  SymbolInfo* add_argument_scalar(QString name, QString val = "0", bool override = false);
+  SymbolInfo* add_argument_scalar(QString name, bool override = false);
   JITType map_dataclass(DataClass aclass);
   DataClass map_dataclass(JITType type);
   DataClass map_dataclass(JITScalar val);
