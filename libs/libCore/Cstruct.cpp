@@ -347,7 +347,7 @@ ArrayVector CenumFunction(int nargout, const ArrayVector& arg) {
   if (!CtypeTable.contains(enumname))
     throw Exception("type " + enumname + " is not defined");
   Ctype* p = CtypeTable.lookup(enumname);
-  Cenum* q = dynamic_cast<Cenum*>(p);
+  Cenum* q = static_cast<Cenum*>(p);
   if (!q)
     throw Exception("type " + enumname + " is not an enumerated type");
   if (arg[1].isString()) {
