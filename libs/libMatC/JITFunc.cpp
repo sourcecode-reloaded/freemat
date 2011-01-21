@@ -771,11 +771,13 @@ void JITFunc::run() {
     save_this = this;
     QFile fout("FileDump.cpp");
     fout.open(QIODevice::WriteOnly);
-    QTextStream out(&fout);
+    QString str;
+    QTextStream out(&str);
     out<<prep_block<<"\n//--------------\n"<<init_block<<"\n//--------------\n"<<code;
+    QTextStream(&fout) << str;
     out.flush();
     
-    jc->add_source_from_string(code,"b.cpp"); //TODO: this is incorrect
+    jc->add_source_from_string(str,"b.cpp"); //TODO: this is incorrect
     jc->compile();
     jc->run_function("f_t");
 }

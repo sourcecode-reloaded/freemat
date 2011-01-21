@@ -551,7 +551,7 @@ void JITCompiler::compile( void )
     
     CodeGenOptions codeGenOpts;
     codeGenOpts.DebugInfo = 0;
-    codeGenOpts.OptimizationLevel = 3; //TODO: change to 4
+    codeGenOpts.OptimizationLevel = 1; //TODO: change to 4
     codeGenOpts.TimePasses = 1;
 
     foreach( llvm::MemoryBuffer* pBuf, sources_buffer ) {
