@@ -57,6 +57,11 @@
 #include "llvm/Support/Timer.h"
 #include "llvm/Target/TargetData.h"
 
+
+namespace llvm{
+extern bool JITEmitDebugInfo;
+}
+
 using namespace clang;
 using namespace llvm;
 
@@ -428,6 +433,7 @@ JITConsumer *CreateJITConsumer(BackendAction Action,
 JITCompiler::JITCompiler()
 {
     InitializeNativeTarget();
+    llvm::JITEmitDebugInfo = true;
     TheModule = NULL;
 }
 
@@ -690,6 +696,7 @@ void JITCompiler::run_function(QString name)
     Function* fn = TheModule->getFunction(name.toStdString().c_str()); //ee->FindFunctionNamed( name.toStdString().c_str() );
     if ( fn ) {
         std::vector<GenericValue> arg;
+        ee->runStaticConstructorsDestructors(TheModule,false);
         GenericValue ret = ee->runFunction( fn, arg );
         //ee->freeMachineCodeForFunction(fn);
     }

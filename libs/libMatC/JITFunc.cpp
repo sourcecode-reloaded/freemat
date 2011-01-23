@@ -92,6 +92,22 @@ const char num_iter_text[] = "inline double niter_for_loop( double first, double
 	nsteps++;\n \
     \
     return nsteps;\n \
+}\n  \
+extern \"C\"\n \
+{\n \
+void *__dso_handle = NULL;\n \
+}\n \
+#include <stdio.h>\n \
+#include <unistd.h>\n \
+void checkpoint( int v = 0 )\n \
+{\n \
+    static FILE* f = 0;\n \
+    static int count = 0;\n \
+    if( !f ){ \n \
+	f = fopen(\"checkpoints.txt\",\"w\");\n \
+    }\n \
+    fprintf(f,\"%d  %d\\n\",count++, v); fflush(f);\n \
+    sync();\n \
 }\n ";
 
 
@@ -108,7 +124,7 @@ SymbolInfo* JITFunc::add_argument_array(QString name, bool createIfMissing=false
     if (!ptr.valid()) {
         if ( createIfMissing ) {
             symbols.insertSymbol(name,SymbolInfo(false,argument_count++, Double));
-            QTextStream(&init_block) << "Array " << name << "(Double);\n";
+            QTextStream(&init_block) << "Array* " << name << "=new Array(Double);\n";
             return symbols.findSymbol(name);
         }
         else {
@@ -118,7 +134,7 @@ SymbolInfo* JITFunc::add_argument_array(QString name, bool createIfMissing=false
 
     aclass = ptr->dataClass();
     // Map the array class to an llvm type
-    QTextStream(&init_block) << "Array " << name << "(  __ptr__" << name << ");\n";
+    QTextStream(&init_block) << "Array* " << name << "=( __ptr__" << name << ");\n";
     symbols.insertSymbol(name,SymbolInfo(false,argument_count++,aclass));
     return symbols.findSymbol(name);
 }
@@ -128,7 +144,7 @@ SymbolInfo* JITFunc::add_argument_array(QString name, bool createIfMissing=false
 QString JITFunc::define_local_symbol(QString name, QString val) {
     QString output;
      symbols.insertSymbol(name,SymbolInfo(true,-1,Double));
-     QTextStream(&output) << "Array " << name << "( "<< val << " );\n";
+     QTextStream(&output) << "Array* " << name << "=new Array( "<< val << " );\n";
      return output;
 }
 
@@ -144,7 +160,7 @@ SymbolInfo* JITFunc::add_argument_scalar(QString name, bool override) {
     if (!ptr.valid() || override) {
         aclass = Double;
 	symbols.insertSymbol(name,SymbolInfo(true,argument_count++,aclass));
-        QTextStream(&init_block) << "Array " << name << "(  __ptr__" << name << ");\n";
+        QTextStream(&init_block) << "Array* " << name << "=( __ptr__" << name << ");\n";
 	return symbols.findSymbol(name);
 	
     } else {
@@ -152,7 +168,7 @@ SymbolInfo* JITFunc::add_argument_scalar(QString name, bool override) {
     }
     // Map the array class to an llvm type
     //TODO: Fix this
-    QTextStream(&init_block) << "Array " << name << " ( __ptr__" << name << ");\n";
+    QTextStream(&init_block) << "Array* " << name << "=(__ptr__" << name << ");\n";
     symbols.insertSymbol(name,SymbolInfo(true,argument_count++,aclass));
     return symbols.findSymbol(name);
 }
@@ -204,6 +220,7 @@ QString JITFunc::compile_block(const Tree & t) {
 
 QString JITFunc::compile_statement_type(const Tree& t) {
     QString c;
+    c.append("checkpoint();\n");
     switch (t.token()) {
     case '=':
         c.append(compile_assignment(t));
@@ -382,7 +399,7 @@ QString JITFunc::compile_rhs(const Tree & t) {
     }
 
     if (t.numChildren() == 1) {
-        QTextStream(&output) << symname;
+        QTextStream(&output) << "(* " << symname <<  " )";
 	return output;
     }
     if (t.numChildren() > 2)
@@ -396,10 +413,10 @@ QString JITFunc::compile_rhs(const Tree & t) {
     if (s.numChildren() > 2)
         throw Exception("Expecting at most 2 array references for dereference...");
     if (s.numChildren() == 1) {
-        QTextStream(&output) << symname << ".get(NTuple( " << (compile_expression(s.first())) << " ) ) ";
+        QTextStream(&output) << symname << "->get(NTuple( " << (compile_expression(s.first())) << " ) ) ";
 	return output;
     } else if (s.numChildren() == 2) {
-        QTextStream(&output) << symname << ".get(NTuple( " << (compile_expression(s.first())) << ", " << (compile_expression(s.second())) << " ) ) ";
+        QTextStream(&output) << symname << "->get(NTuple( " << (compile_expression(s.first())) << ", " << (compile_expression(s.second())) << " ) ) ";
         return output;
     }
     throw Exception("dereference not handled yet...");
@@ -516,7 +533,7 @@ QString JITFunc::compile_assignment(const Tree & t) {
         if (!v) throw Exception("Undefined variable reference:" + symname);
     }
     if (s.numChildren() == 1) {
-        QTextStream(&output) << symname << " = " << rhs << ";\n";
+        QTextStream(&output) << "(* " << symname << " ) = " << rhs << ";\n";
         return output;
     }
     if (s.numChildren() > 2)
@@ -531,12 +548,12 @@ QString JITFunc::compile_assignment(const Tree & t) {
         throw Exception("Expecting at most 2 array references for dereference...");
     if (q.numChildren() == 1) {
         QString arg1(compile_expression(q.first()));
-        QTextStream(&output) << symname << ".set( ( " << arg1 << " ), " << rhs << ");\n";
+        QTextStream(&output) << symname << "->set( ( " << arg1 << " ), " << rhs << ");\n";
         return output;
     } else if (q.numChildren() == 2) {
         QString arg1 = ToDouble(compile_expression(q.first()));
         QString arg2 = ToDouble(compile_expression(q.second()));
-        QTextStream(&output) << symname << ".set( ( " << arg1 << ", " << arg2 << " ), " << rhs << ");\n";
+        QTextStream(&output) << symname << "->set( ( " << arg1 << ", " << arg2 << " ), " << rhs << ");\n";
 	return output;
     }
     throw Exception("Unexpected error in compile_assignment");
@@ -673,7 +690,7 @@ QString JITFunc::compile(const Tree& t) {
     bool failed = false;
     try {
         QString temp = compile_for_block(t);
-	QTextStream(&code) << "extern \"C\" int f_t(){\n" << temp << "\n}\n";
+	QTextStream(&code) << "extern \"C\" int f_t(){\n" << temp << "\nreturn 0;\n}\n";
 
     } catch (Exception &e) {
         failed = true;
@@ -701,6 +718,7 @@ QString JITFunc::compile_for_block(const Tree & t) {
     QString loop_start, loop_stop, loop_step;
     bool failed = false;
 
+    output.append("checkpoint();");
     if (!(t.first().is('=') && t.first().second().is(':')))
         throw Exception("For loop cannot be compiled - need scalar bounds");
 
@@ -722,9 +740,17 @@ QString JITFunc::compile_for_block(const Tree & t) {
     QString loop_step_index_name =  "___loop_ind_" + loop_index_name;
 
     output = QString("int %1 = niter_for_loop( %2, %3, %4 );\n").arg( loop_nsteps_name, loop_start, loop_step, loop_stop );
-    output.append( QString("%1.set(1., Array(%2));\n").arg( loop_index_name, loop_start ));
+    output.append("checkpoint();");
+    output.append(QString("checkpoint((int)%1);").arg("(__ptr__i)" /*loop_index_name*/));
+    output.append(QString("checkpoint(%1.dataClass());").arg("(*__ptr__i)" /*loop_index_name*/));
+    output.append(QString("checkpoint((int)%1);").arg(loop_index_name));
+    output.append(QString("checkpoint((*%1).dataClass());").arg(loop_index_name));
+    output.append( QString("%1->set(0., Array(%2));\n").arg( loop_index_name, loop_start ));
+    output.append("checkpoint();");
     output.append(QString("for(int %1 = 0; %1 < %2; ++%1 ){\n").arg(loop_step_index_name, loop_nsteps_name));
-    output.append(QString("%1=Add(%1,Array(%2*%3));\n").arg(loop_index_name,loop_step_index_name,loop_step));
+    output.append("checkpoint();");
+    output.append(QString("*%1=Add(*%1,Array(%2*%3));\n").arg(loop_index_name,loop_step_index_name,loop_step));
+    output.append("checkpoint();");
     try {
         output.append(compile_block(t.second()));
     } catch (Exception &e) {
@@ -760,7 +786,7 @@ QString JITFunc::prep( void ) {
             if (v->isScalar && (!ptr->isScalar()))
                 throw Exception("Expected symbol to be a scalar, and it is not");
 
-            QTextStream(&prep_block)<< "const Array* __ptr__" << argumentList[i] << " = (Array*)" << ptr.pointer() << ";\n";
+            QTextStream(&prep_block)<< "Array* __ptr__" << argumentList[i] << " = (Array*)" << ptr.pointer() << ";\n";
 
         }
     }
