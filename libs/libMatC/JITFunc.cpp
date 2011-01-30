@@ -690,7 +690,7 @@ QString JITFunc::compile(const Tree& t) {
     bool failed = false;
     try {
         QString temp = compile_for_block(t);
-	QTextStream(&code) << "extern \"C\" int f_t(){\n" << temp << "\nreturn 0;\n}\n";
+	QTextStream(&code) << "extern \"C\" int f_t(){\n" << init_block << temp << "\nreturn 0;\n}\n";
 
     } catch (Exception &e) {
         failed = true;
@@ -741,15 +741,15 @@ QString JITFunc::compile_for_block(const Tree & t) {
 
     output = QString("int %1 = niter_for_loop( %2, %3, %4 );\n").arg( loop_nsteps_name, loop_start, loop_step, loop_stop );
     output.append("checkpoint();");
-    output.append(QString("checkpoint((int)%1);").arg("(__ptr__i)" /*loop_index_name*/));
+//    output.append(QString("checkpoint((int)%1);").arg("(__ptr__i)" /*loop_index_name*/));
     output.append(QString("checkpoint(%1.dataClass());").arg("(*__ptr__i)" /*loop_index_name*/));
-    output.append(QString("checkpoint((int)%1);").arg(loop_index_name));
-    output.append(QString("checkpoint((*%1).dataClass());").arg(loop_index_name));
+//    output.append(QString("checkpoint((int)%1);").arg(loop_index_name));
+//    output.append(QString("checkpoint((*%1).dataClass());").arg(loop_index_name));
     output.append( QString("%1->set(0., Array(%2));\n").arg( loop_index_name, loop_start ));
     output.append("checkpoint();");
     output.append(QString("for(int %1 = 0; %1 < %2; ++%1 ){\n").arg(loop_step_index_name, loop_nsteps_name));
     output.append("checkpoint();");
-    output.append(QString("*%1=Add(*%1,Array(%2*%3));\n").arg(loop_index_name,loop_step_index_name,loop_step));
+    output.append(QString("%1->set(0., Array(%2*%3));\n").arg(loop_index_name,loop_step_index_name,loop_step));
     output.append("checkpoint();");
     try {
         output.append(compile_block(t.second()));
@@ -799,7 +799,7 @@ void JITFunc::run() {
     fout.open(QIODevice::WriteOnly);
     QString str;
     QTextStream out(&str);
-    out<<prep_block<<"\n//--------------\n"<<init_block<<"\n//--------------\n"<<code;
+    out<<prep_block<<"\n//--------------\n" /*<<init_block*/ <<"\n//--------------\n"<<code;
     QTextStream(&fout) << str;
     out.flush();
     

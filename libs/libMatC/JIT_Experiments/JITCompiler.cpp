@@ -696,7 +696,7 @@ void JITCompiler::run_function(QString name)
     Function* fn = TheModule->getFunction(name.toStdString().c_str()); //ee->FindFunctionNamed( name.toStdString().c_str() );
     if ( fn ) {
         std::vector<GenericValue> arg;
-        ee->runStaticConstructorsDestructors(TheModule,false);
+        //ee->runStaticConstructorsDestructors(TheModule,false);
         GenericValue ret = ee->runFunction( fn, arg );
         //ee->freeMachineCodeForFunction(fn);
     }
