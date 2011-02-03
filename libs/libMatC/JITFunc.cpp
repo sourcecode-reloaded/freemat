@@ -745,11 +745,11 @@ QString JITFunc::compile_for_block(const Tree & t) {
     output.append(QString("checkpoint(%1.dataClass());").arg("(*__ptr__i)" /*loop_index_name*/));
 //    output.append(QString("checkpoint((int)%1);").arg(loop_index_name));
 //    output.append(QString("checkpoint((*%1).dataClass());").arg(loop_index_name));
-    output.append( QString("%1->set(0., Array(%2));\n").arg( loop_index_name, loop_start ));
+    output.append( QString("%1->set(1., Array(%2));\n").arg( loop_index_name, loop_start ));
     output.append("checkpoint();");
     output.append(QString("for(int %1 = 0; %1 < %2; ++%1 ){\n").arg(loop_step_index_name, loop_nsteps_name));
     output.append("checkpoint();");
-    output.append(QString("%1->set(0., Array(%2*%3));\n").arg(loop_index_name,loop_step_index_name,loop_step));
+    output.append(QString("%1->set(1., Array(%2*%3));\n").arg(loop_index_name,loop_step_index_name,loop_step));
     output.append("checkpoint();");
     try {
         output.append(compile_block(t.second()));
@@ -783,8 +783,8 @@ QString JITFunc::prep( void ) {
                 ptr = eval->getContext()->lookupVariable(argumentList[i]);
                 if (!ptr.valid()) throw Exception("unable to create variable " + argumentList[i]);
             }
-            if (v->isScalar && (!ptr->isScalar()))
-                throw Exception("Expected symbol to be a scalar, and it is not");
+            //if (v->isScalar && (!ptr->isScalar()))
+            //    throw Exception("Expected symbol to be a scalar, and it is not");
 
             QTextStream(&prep_block)<< "Array* __ptr__" << argumentList[i] << " = (Array*)" << ptr.pointer() << ";\n";
 
