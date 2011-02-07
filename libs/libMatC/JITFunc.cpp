@@ -134,7 +134,7 @@ SymbolInfo* JITFunc::add_argument_array(QString name, bool createIfMissing=false
 
     aclass = ptr->dataClass();
     // Map the array class to an llvm type
-    QTextStream(&init_block) << "Array* " << name << "=( __ptr__" << name << ");\n";
+    QTextStream(&init_block) << "Array* " << name << "= eval->getContext()->lookupVariable(\"" << name << "\").pointer();\n";
     symbols.insertSymbol(name,SymbolInfo(false,argument_count++,aclass));
     return symbols.findSymbol(name);
 }
@@ -160,7 +160,7 @@ SymbolInfo* JITFunc::add_argument_scalar(QString name, bool override) {
     if (!ptr.valid() || override) {
         aclass = Double;
 	symbols.insertSymbol(name,SymbolInfo(true,argument_count++,aclass));
-        QTextStream(&init_block) << "Array* " << name << "=( __ptr__" << name << ");\n";
+        QTextStream(&init_block) << "Array* " << name << "= eval->getContext()->lookupVariable(\"" << name << "\").pointer();\n";
 	return symbols.findSymbol(name);
 	
     } else {
@@ -168,7 +168,7 @@ SymbolInfo* JITFunc::add_argument_scalar(QString name, bool override) {
     }
     // Map the array class to an llvm type
     //TODO: Fix this
-    QTextStream(&init_block) << "Array* " << name << "=(__ptr__" << name << ");\n";
+    QTextStream(&init_block) << "Array* " << name << "= eval->getContext()->lookupVariable(\"" << name << "\").pointer();\n";
     symbols.insertSymbol(name,SymbolInfo(true,argument_count++,aclass));
     return symbols.findSymbol(name);
 }
@@ -182,7 +182,7 @@ JITFunc::JITFunc(Interpreter *p_eval) {
 
     jc = new JITCompiler();
     t.start();
-    jc->add_bc_file("/home/eugening/freemat/build/libs/libMatC/libF.bc");
+    //jc->add_bc_file("/home/eugening/freemat/build/libs/libMatC/libF.bc");
     dbout << "BC add time " << t.restart() << " ms\n";
 
     jc->add_system_include_path("/home/eugening/freemat/FreeMat4/libs/libFreeMat");
@@ -196,7 +196,7 @@ JITFunc::JITFunc(Interpreter *p_eval) {
     jc->add_system_include_path("/usr/local/include");
     jc->add_system_include_path("/usr/local/lib/clang/2.9/include");
 
-    QTextStream(&prep_block)<< "#include <QtCore/QVector>\n#include <Array.hpp>\n#include <math.h>\n#include <Math.hpp>\n\n" << num_iter_text << "\n";
+    QTextStream(&prep_block)<< "#include <QtCore/QVector>\n#include <Array.hpp>\n#include <math.h>\n#include <Math.hpp>\n#include <Interpreter.hpp>\n\n" << num_iter_text << "\n";
 
 
 //     jc->add_source_from_string(code, "a.cpp");
@@ -220,7 +220,7 @@ QString JITFunc::compile_block(const Tree & t) {
 
 QString JITFunc::compile_statement_type(const Tree& t) {
     QString c;
-    c.append("checkpoint();\n");
+    //c.append("checkpoint();\n");
     switch (t.token()) {
     case '=':
         c.append(compile_assignment(t));
@@ -499,7 +499,7 @@ QString JITFunc::compile_expression(const Tree & t) {
 	QTextStream( &output ) << "NotEqual( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
 	return output;
     case TOK_UNARY_MINUS:
-	QTextStream( &output ) << "Negate( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
+	QTextStream( &output ) << "Negate( " << compile_expression(t.first()) << " )";
 	return output;
     case TOK_UNARY_PLUS:
         return compile_expression(t.first());
@@ -718,7 +718,7 @@ QString JITFunc::compile_for_block(const Tree & t) {
     QString loop_start, loop_stop, loop_step;
     bool failed = false;
 
-    output.append("checkpoint();");
+    //output.append("checkpoint();");
     if (!(t.first().is('=') && t.first().second().is(':')))
         throw Exception("For loop cannot be compiled - need scalar bounds");
 
@@ -740,17 +740,17 @@ QString JITFunc::compile_for_block(const Tree & t) {
     QString loop_step_index_name =  "___loop_ind_" + loop_index_name;
 
     output = QString("int %1 = niter_for_loop( %2, %3, %4 );\n").arg( loop_nsteps_name, loop_start, loop_step, loop_stop );
-    output.append("checkpoint();");
+    //output.append("checkpoint();");
 //    output.append(QString("checkpoint((int)%1);").arg("(__ptr__i)" /*loop_index_name*/));
-    output.append(QString("checkpoint(%1.dataClass());").arg("(*__ptr__i)" /*loop_index_name*/));
+    //output.append(QString("checkpoint(%1.dataClass());").arg("(*__ptr__i)" /*loop_index_name*/));
 //    output.append(QString("checkpoint((int)%1);").arg(loop_index_name));
 //    output.append(QString("checkpoint((*%1).dataClass());").arg(loop_index_name));
     output.append( QString("%1->set(1., Array(%2));\n").arg( loop_index_name, loop_start ));
-    output.append("checkpoint();");
+    //output.append("checkpoint();");
     output.append(QString("for(int %1 = 0; %1 < %2; ++%1 ){\n").arg(loop_step_index_name, loop_nsteps_name));
-    output.append("checkpoint();");
+    //output.append("checkpoint();");
     output.append(QString("%1->set(1., Array(%2*%3));\n").arg(loop_index_name,loop_step_index_name,loop_step));
-    output.append("checkpoint();");
+    //output.append("checkpoint();");
     try {
         output.append(compile_block(t.second()));
     } catch (Exception &e) {
@@ -786,10 +786,10 @@ QString JITFunc::prep( void ) {
             //if (v->isScalar && (!ptr->isScalar()))
             //    throw Exception("Expected symbol to be a scalar, and it is not");
 
-            QTextStream(&prep_block)<< "Array* __ptr__" << argumentList[i] << " = (Array*)" << ptr.pointer() << ";\n";
 
         }
     }
+    QTextStream(&prep_block)<< "Interpreter *eval " << " = (Interpreter*)" << eval << ";\n";
     return prep_block;
 }
 
