@@ -182,7 +182,7 @@ JITFunc::JITFunc(Interpreter *p_eval) {
 
     jc = new JITCompiler();
     t.start();
-    //jc->add_bc_file("/home/eugening/freemat/build/libs/libMatC/libF.bc");
+    jc->add_bc_file("/home/eugening/freemat/build/libs/libMatC/libF.bc");
     dbout << "BC add time " << t.restart() << " ms\n";
 
     jc->add_system_include_path("/home/eugening/freemat/FreeMat4/libs/libFreeMat");
@@ -793,7 +793,8 @@ QString JITFunc::prep( void ) {
     return prep_block;
 }
 
-void JITFunc::run() {
+void JITFunc::prep_executable( void )
+{
     save_this = this;
     QFile fout("FileDump.cpp");
     fout.open(QIODevice::WriteOnly);
@@ -805,6 +806,10 @@ void JITFunc::run() {
     
     jc->add_source_from_string(str,"b.cpp"); //TODO: this is incorrect
     jc->compile();
+}
+
+void JITFunc::run() 
+{
     jc->run_function("f_t");
 }
 #endif

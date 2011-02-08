@@ -87,6 +87,7 @@ public:
   QString compile_block(const Tree& t);
   QString compile(const Tree & t);
   QString prep();
+  void prep_executable( void );
   void run();
     QString ToDouble(QString arg1);
   

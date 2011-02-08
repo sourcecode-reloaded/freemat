@@ -2205,6 +2205,7 @@ void Interpreter::forStatement(const Tree & t) {
       if (success)
 	success = prepJITBlock(ref);
       if (success) {
+	ref.JITFunction()->prep_executable();
 	ref.JITFunction()->run();
 	return;
       } 
@@ -2212,8 +2213,10 @@ void Interpreter::forStatement(const Tree & t) {
       bool success = prepJITBlock(ref);
       if (!success) {
 	success = compileJITBlock(this,t,ref);
-	if (success)
+	if (success){
 	  success = prepJITBlock(ref);
+	  ref.JITFunction()->prep_executable();
+	}
       }
       if (success) {
 	ref.JITFunction()->run();
