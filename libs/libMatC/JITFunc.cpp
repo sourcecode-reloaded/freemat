@@ -124,7 +124,8 @@ SymbolInfo* JITFunc::add_argument_array(QString name, bool createIfMissing=false
     if (!ptr.valid()) {
         if ( createIfMissing ) {
             symbols.insertSymbol(name,SymbolInfo(false,argument_count++, Double));
-            QTextStream(&init_block) << "Array* " << name << "=new Array(Double);\n";
+            QTextStream(&init_block) << "eval->getContext()->insertVariableLocally(\"" << name << "\",Array(Double));\n";
+            QTextStream(&init_block) << "Array* " << name << "=eval->getContext()->lookupVariableLocally(\"" << name <<"\");\n";
             return symbols.findSymbol(name);
         }
         else {
@@ -144,7 +145,8 @@ SymbolInfo* JITFunc::add_argument_array(QString name, bool createIfMissing=false
 QString JITFunc::define_local_symbol(QString name, QString val) {
     QString output;
      symbols.insertSymbol(name,SymbolInfo(true,-1,Double));
-     QTextStream(&output) << "Array* " << name << "=new Array( "<< val << " );\n";
+     QTextStream(&output) << "eval->getContext()->insertVariableLocally(" << name << ",Array(Double));\n";
+     QTextStream(&output) << "Array* " << name << "=eval->getContext()->lookupVariableLocally(\"" << name <<"\").pointer();\n";
      return output;
 }
 
@@ -196,7 +198,7 @@ JITFunc::JITFunc(Interpreter *p_eval) {
     jc->add_system_include_path("/usr/local/include");
     jc->add_system_include_path("/usr/local/lib/clang/2.9/include");
 
-    QTextStream(&prep_block)<< "#include <QtCore/QVector>\n#include <Array.hpp>\n#include <math.h>\n#include <Math.hpp>\n#include <Interpreter.hpp>\n\n" << num_iter_text << "\n";
+    QTextStream(&prep_block)<< "#include <QtCore/QVector>\n#include <Array.hpp>\n#include <math.h>\n#include <Math.hpp>\n#include <Interpreter.hpp>\n#include <Algorithms.hpp>\n\n" << num_iter_text << "\n";
 
 
 //     jc->add_source_from_string(code, "a.cpp");
@@ -432,13 +434,13 @@ QString JITFunc::compile_expression(const Tree & t) {
         if ( t.array().isScalar() ) {
             switch ( t.array().dataClass() ) {
             case Bool:
-		QTextStream( &output ) << "static_cast<bool>( " << t.text() << " )";
+		QTextStream( &output ) << "(static_cast<bool>( " << t.text() << " ))";
                 return output;
             case Float:
-		QTextStream( &output ) << "static_cast<float>( " << t.text() << " )";
+		QTextStream( &output ) << "(static_cast<float>( " << t.text() << " ))";
 		return output;
             case Double:
-		QTextStream( &output ) << "static_cast<double>( " << t.text() << " )";
+		QTextStream( &output ) << "(static_cast<double>( " << t.text() << " ))";
 		return output;
             default:
                 throw Exception("Unsupported scalar type.");
@@ -481,30 +483,30 @@ QString JITFunc::compile_expression(const Tree & t) {
 	QTextStream( &output ) << "And( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
 	return output;
     case '<':
-	QTextStream( &output ) << "LessThan( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
+	QTextStream( &output ) << "LessThan( Array( " << compile_expression(t.first()) << " ), Array( " << compile_expression(t.second()) << " ))";
 	return output;
     case TOK_LE:
-	QTextStream( &output ) << "LessEquals( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
+	QTextStream( &output ) << "LessEquals( Array(" << compile_expression(t.first()) << " ), Array(" << compile_expression(t.second()) << " ))";
 	return output;
     case '>':
-	QTextStream( &output ) << "GreaterThan( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
+	QTextStream( &output ) << "GreaterThan( Array(" << compile_expression(t.first()) << " ), Array(" << compile_expression(t.second()) << " ))";
 	return output;
     case TOK_GE:
-	QTextStream( &output ) << "GreaterEquals( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
+	QTextStream( &output ) << "GreaterEquals( Array(" << compile_expression(t.first()) << " ), Array(" << compile_expression(t.second()) << " ))";
 	return output;
     case TOK_EQ:
-	QTextStream( &output ) << "Equals( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
+	QTextStream( &output ) << "Equals( Array(" << compile_expression(t.first()) << " ), Array(" << compile_expression(t.second()) << " ))";
 	return output;
     case TOK_NE:
-	QTextStream( &output ) << "NotEqual( " << compile_expression(t.first()) << ", " << compile_expression(t.second()) << " )";
+	QTextStream( &output ) << "NotEqual( Array(" << compile_expression(t.first()) << " ), Array( " << compile_expression(t.second()) << " ))";
 	return output;
     case TOK_UNARY_MINUS:
-	QTextStream( &output ) << "Negate( " << compile_expression(t.first()) << " )";
+	QTextStream( &output ) << "Negate( Array( " << compile_expression(t.first()) << " ))";
 	return output;
     case TOK_UNARY_PLUS:
         return compile_expression(t.first());
     case '~':
-	QTextStream( &output ) << "Not( " << compile_expression(t.first()) << " )";
+	QTextStream( &output ) << "Not( Array(" << compile_expression(t.first()) << " ))";
 	return output;
     case '^':
         throw Exception("^ is not currently handled by the JIT compiler");
@@ -548,12 +550,12 @@ QString JITFunc::compile_assignment(const Tree & t) {
         throw Exception("Expecting at most 2 array references for dereference...");
     if (q.numChildren() == 1) {
         QString arg1(compile_expression(q.first()));
-        QTextStream(&output) << symname << "->set( ( " << arg1 << " ), " << rhs << ");\n";
+        QTextStream(&output) << symname << "->set( NTuple( " << arg1 << ".constRealScalar<double>() ), Array(" << rhs << "));\n";
         return output;
     } else if (q.numChildren() == 2) {
-        QString arg1 = ToDouble(compile_expression(q.first()));
-        QString arg2 = ToDouble(compile_expression(q.second()));
-        QTextStream(&output) << symname << "->set( ( " << arg1 << ", " << arg2 << " ), " << rhs << ");\n";
+        QString arg1 = compile_expression(q.first());
+        QString arg2 = compile_expression(q.second());
+        QTextStream(&output) << symname << "->set( NTuple( " << arg1 << ".constRealScalar<double>(), " << arg2 << ".constRealScalar<double>() ), Array(" << rhs << "));\n";
 	return output;
     }
     throw Exception("Unexpected error in compile_assignment");
@@ -574,7 +576,7 @@ QString JITFunc::compile_or_statement(const Tree & t) {
     QString output;
     QString first_value(compile_expression(t.first()));
     QString second_value(compile_expression(t.second()));
-    QTextStream(&output) << "( " << first_value << " || " << second_value << " )";
+    QTextStream(&output) << "Or( " << first_value << ", " << second_value << " )";
     return output;
 }
 
@@ -592,7 +594,7 @@ QString JITFunc::compile_and_statement(const Tree & t) {
     QString output;
     QString first_value(compile_expression(t.first()));
     QString second_value(compile_expression(t.second()));
-    QTextStream(&output) << "( " << first_value << " && " << second_value << " )";
+    QTextStream(&output) << "And( " << first_value << ", " << second_value << " )";
     return output;
 }
 
@@ -600,7 +602,7 @@ QString JITFunc::compile_if_statement(const Tree & t) {
     QString output;
     QString condition = compile_expression(t.first());
 
-    QTextStream(&output) << "if( " << condition << " ){\n";
+    QTextStream(&output) << "if( !( RealAllZeros( " << condition << " ) ) ) {\n";
     
     bool failed = false;
     try {
@@ -612,7 +614,7 @@ QString JITFunc::compile_if_statement(const Tree & t) {
     int n=2;
     while (n < t.numChildren() && t.child(n).is(TOK_ELSEIF)) {
         QString ttest(compile_expression(t.child(n).first()));
-	QTextStream(&output) << "if( " << condition << " ){\n";
+	QTextStream(&output) << "if( !RealAllZeros( " << condition << " ) ) {\n";
         try {
 	    QTextStream(&output) << compile_block(t.child(n).second()) << " \n}\n";
         } catch (Exception &e) {
@@ -636,48 +638,6 @@ QString JITFunc::compile_if_statement(const Tree & t) {
 void JITFunc::initialize() {
     symbol_prefix = "";
     uid = 0;
-/*    
-    // Initialize the standard function
-    register_std_function("cos");
-    register_std_function("sin");
-    register_std_function("sec");
-    register_std_function("csc");
-    register_std_function("tan");
-    register_std_function("atan");
-    register_std_function("cot");
-    register_std_function("exp");
-    register_std_function("expm1");
-    register_std_function("ceil");
-    register_std_function("floor");
-    register_std_function("round");
-    double_funcs.insertSymbol("rint",jit->DefineLinkFunction("rint","d","d"));
-    double_funcs.insertSymbol("abs",jit->DefineLinkFunction("fabs","d","d"));
-    float_funcs.insertSymbol("abs",jit->DefineLinkFunction("fabsf","f","f"));
-    constants.insertSymbol("pi",jit->DoubleValue(4.0*atan(1.0)));
-    constants.insertSymbol("e",jit->DoubleValue(exp(1.0)));
-    func_scalar_load_bool = jit->DefineLinkFunction("scalar_load_bool","b","Vd");
-    func_scalar_load_double = jit->DefineLinkFunction("scalar_load_double","d","Vd");
-    func_scalar_load_float = jit->DefineLinkFunction("scalar_load_float","f","Vd");
-    func_scalar_store_bool = jit->DefineLinkFunction("scalar_store_bool","v","Vdb");
-    func_scalar_store_double = jit->DefineLinkFunction("scalar_store_double","v","Vdd");
-    func_scalar_store_float = jit->DefineLinkFunction("scalar_store_float","v","Vdf");
-    func_vector_load_bool = jit->DefineLinkFunction("vector_load_bool","b","VddB");
-    func_vector_load_double = jit->DefineLinkFunction("vector_load_double","d","VddB");
-    func_vector_load_float = jit->DefineLinkFunction("vector_load_float","f","VddB");
-    func_vector_store_bool = jit->DefineLinkFunction("vector_store_bool","b","Vddb");
-    func_vector_store_double = jit->DefineLinkFunction("vector_store_double","b","Vddd");
-    func_vector_store_float = jit->DefineLinkFunction("vector_store_float","b","Vddf");
-    func_matrix_load_bool = jit->DefineLinkFunction("matrix_load_bool","b","VdddB");
-    func_matrix_load_double = jit->DefineLinkFunction("matrix_load_double","d","VdddB");
-    func_matrix_load_float = jit->DefineLinkFunction("matrix_load_float","f","VdddB");
-    func_matrix_store_bool = jit->DefineLinkFunction("matrix_store_bool","b","Vdddb");
-    func_matrix_store_double = jit->DefineLinkFunction("matrix_store_double","b","Vdddd");
-    func_matrix_store_float = jit->DefineLinkFunction("matrix_store_float","b","Vdddf");
-    func_check_for_interrupt = jit->DefineLinkFunction("check_for_interrupt","b","V");
-    func_niter_for_loop = jit->DefineLinkFunction("niter_for_loop","d","ddd");
-    //  func_debug_out_i = jit->DefineLinkFunction("debug_out_i","v","i");
-    func_debug_out_d = jit->DefineLinkFunction("debug_out_d","d","d");
-    */
 }
 
 static int countm = 0;
@@ -749,7 +709,7 @@ QString JITFunc::compile_for_block(const Tree & t) {
     //output.append("checkpoint();");
     output.append(QString("for(int %1 = 0; %1 < %2; ++%1 ){\n").arg(loop_step_index_name, loop_nsteps_name));
     //output.append("checkpoint();");
-    output.append(QString("%1->set(1., Array(%2*%3));\n").arg(loop_index_name,loop_step_index_name,loop_step));
+    output.append(QString("%1->set(1., Array(%2+%3*%4));\n").arg(loop_index_name,loop_start, loop_step_index_name,loop_step));
     //output.append("checkpoint();");
     try {
         output.append(compile_block(t.second()));
