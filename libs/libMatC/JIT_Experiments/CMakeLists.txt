@@ -6,7 +6,9 @@ OPTION(USE_LLVM "Build with LLVM support?" ON)
 
 set( CLANG_LIB_LIST
     clangCodeGen
-    libclang
+    clang
+    clangSema
+    clangAST
 )
 set( LLVM_LIB_LIST 
 ${CLANG_LIB_LIST}
@@ -43,6 +45,7 @@ LLVMBitReader
 LLVMBitWriter
 LLVMInterpreter
 LLVMX86Disassembler
+LLVMX86Utils
 LLVMSystem
 )
 

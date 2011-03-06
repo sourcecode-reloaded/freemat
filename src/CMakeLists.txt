@@ -50,8 +50,8 @@ dynblas
 blasref
 
     clangCodeGen
-    libclang
-
+    clang
+    clangSema
 ${QT_QTCORE_LIBRARY}
 ${QT_QTGUI_LIBRARY} 
 ${QT_QTNETWORK_LIBRARY} 

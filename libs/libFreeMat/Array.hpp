@@ -347,7 +347,10 @@ public:
   void reshape(const NTuple &size);
 
   Array asDenseArray() const;
-  void ensureNotScalarEncoded() {if (m_type.Scalar == 1) *this = asDenseArray();}
+  void ensureNotScalarEncoded() {
+      if (m_type.Scalar == 1) 
+	  *this = asDenseArray();
+  }
   inline bool isEmpty() const {return ((dataClass() == Invalid) || (length() == 0));}
 
   bool operator==(const Array &b) const;
