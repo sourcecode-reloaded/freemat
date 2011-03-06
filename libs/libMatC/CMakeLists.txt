@@ -37,7 +37,7 @@ set( CLANG_LIB_SOURCES
 
 
 add_custom_command( TARGET MatC PRE_BUILD
-    COMMAND clang++ ARGS -O3 -emit-llvm -c ${CLANG_LIB_SOURCES}  -DQT_ARCH_GENERIC -I${QT_QTCORE_INCLUDE_DIR} -I${QT_QTGUI_INCLUDE_DIR} -I${CMAKE_SOURCE_DIR}/libs/libFreeMat -I${CMAKE_SOURCE_DIR}/libs/libXP -I${CMAKE_SOURCE_DIR}/libs/libMex -I${CMAKE_SOURCE_DIR}/libs/libMatC
+COMMAND clang++ ARGS -O3 -emit-llvm -c ${CLANG_LIB_SOURCES}  -DQT_ARCH_GENERIC -I${QT_INCLUDE_DIR} -I${QT_QTCORE_INCLUDE_DIR} -I${QT_QTGUI_INCLUDE_DIR} -I${CMAKE_SOURCE_DIR}/libs/libFreeMat -I${CMAKE_SOURCE_DIR}/libs/libXP -I${CMAKE_SOURCE_DIR}/libs/libMex -I${CMAKE_SOURCE_DIR}/libs/libMatC
     COMMAND llvm-ld *.o -stats -time-passes -link-as-library -o libF.bc
     DEPENDS ${CLANG_LIB_SOURCES}
 )
