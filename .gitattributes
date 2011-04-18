@@ -487,8 +487,6 @@ FreeMat/libs/libCore/Directory.cpp svn_keywords=Author+Date+Id+Revision svn_eol_
 FreeMat/libs/libCore/FFT.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/libs/libCore/IO.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/libs/libCore/Inspect.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat/libs/libCore/MPIWrap.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-FreeMat/libs/libCore/MPIWrap.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/libs/libCore/Misc.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/libs/libCore/RanLib.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/libs/libCore/RanLib.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
