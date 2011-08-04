@@ -697,6 +697,9 @@ FreeMat/libs/thirdparty/UMFPACK/MATLAB/lcc_lib/libmwlapack.lib svn_mime_002dtype
 FreeMat/libs/thirdparty/UMFPACK/MATLAB/west.mat svn_mime_002dtype=application%2Foctet-stream
 FreeMat/libs/thirdparty/UMFPACK/Tcov/badnum.umf svn_mime_002dtype=application%2Foctet-stream
 FreeMat/libs/thirdparty/UMFPACK/Tcov/badsym.umf svn_mime_002dtype=application%2Foctet-stream
+FreeMat/libs/thirdparty/portaudio/doc/src/images/portaudio-external-architecture-diagram.png svn_mime_002dtype=application%2Foctet-stream
+FreeMat/libs/thirdparty/portaudio/src/hostapi/asio/Callback_adaptation_.pdf svn_mime_002dtype=application%2Foctet-stream
+FreeMat/libs/thirdparty/portaudio/src/hostapi/asio/Pa_ASIO.pdf svn_mime_002dtype=application%2Foctet-stream
 FreeMat/libs/thirdparty/zlib-1.2.3/contrib/blast/test.pk svn_mime_002dtype=application%2Foctet-stream
 FreeMat/libs/thirdparty/zlib-1.2.3/contrib/dotzlib/DotZLib.chm svn_mime_002dtype=application%2Foctet-stream
 FreeMat/libs/thirdparty/zlib-1.2.3/contrib/masmx64/gvmat64.obj svn_mime_002dtype=application%2Foctet-stream
