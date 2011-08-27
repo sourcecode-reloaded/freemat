@@ -21,6 +21,8 @@
 // the JIT to use.
 #ifndef __CArray_hpp__
 #define __CArray_hpp__
+#define GC_THREADS
+#include <gc_cpp.h>
 
 extern "C"
 {

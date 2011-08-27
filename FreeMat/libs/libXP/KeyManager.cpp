@@ -20,6 +20,8 @@
 /*
  * To-add: copy/paste/select - typeahead
  */
+#define GC_THREADS
+#include <gc.h>
 
 #include <algorithm>
 #include "KeyManager.hpp"

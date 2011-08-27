@@ -18,6 +18,8 @@
  */
 #ifndef __FastList_hpp__
 #define __FastList_hpp__
+#define GC_THREADS
+#include <gc_cpp.h>
 
 #include <QVector>
 #include "Exception.hpp"

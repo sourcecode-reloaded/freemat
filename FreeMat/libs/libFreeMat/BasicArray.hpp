@@ -19,6 +19,9 @@
 #ifndef __BasicArray_hpp__
 #define __BasicArray_hpp__
 
+#define GC_THREADS
+#include <gc_cpp.h>
+
 #include <QVector>
 #include "CommonIterator.hpp"
 #include "NTuple.hpp"

@@ -16,6 +16,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
+#define GC_THREADS
+#include <gc.h>
+
 #include <QDir>
 #include <QtGui>
 #include <QDebug>
@@ -117,6 +120,8 @@ int main(int argc, char *argv[]) {
   int rootpathMode = parseFlagArg(argc,argv,"-r",true);
 
   signal(SIGINT,sigDoNothing);
+ 
+  GC_init();
   
   if (installMode) {
     app = new QCoreApplication(argc, argv);

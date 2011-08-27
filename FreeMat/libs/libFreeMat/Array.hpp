@@ -19,7 +19,9 @@
 #ifndef __Array_hpp__
 #define __Array_hpp__
 
-#include <QSharedData>
+#define GC_THREADS
+#include <gc_cpp.h>
+
 #include "Types.hpp"
 #include "BasicArray.hpp"
 #include "IndexArray.hpp"
@@ -71,7 +73,7 @@ typedef struct {
   unsigned Sparse : 1;
 } Type;
 
-class SharedObject : public QSharedData {
+class SharedObject : public gc {
   Type m_type;
   void *m_p;
 public:
@@ -84,7 +86,7 @@ public:
 };
 
 typedef struct {
-  QSharedDataPointer<SharedObject> p;
+  SharedObject* p;
   union {
     bool Bool;
     int8 Int8;
@@ -100,7 +102,7 @@ typedef struct {
   };
 } Data;
 
-class Array {
+class Array : public gc {
 public:
   inline Array() {
     m_real.Double = 0; 

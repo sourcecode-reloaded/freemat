@@ -18,6 +18,8 @@
  */
 #ifndef __SparseMatrix_hpp__
 #define __SparseMatrix_hpp__
+#define GC_THREADS
+#include <gc_cpp.h>
 
 #include <QMap>
 #include <QtGlobal>

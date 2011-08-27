@@ -19,6 +19,9 @@
 #ifndef __InterpreterThread_hpp__
 #define __InterpreterThread_hpp__
 
+#define GC_THREADS
+#include <gc.h>
+
 #include <QThread>
 #include <QMutex>
 #include <QWaitCondition>

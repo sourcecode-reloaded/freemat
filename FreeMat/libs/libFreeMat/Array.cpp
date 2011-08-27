@@ -16,6 +16,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
+
+#define GC_THREADS
+#include <gc_cpp.h>
+
 #include "Array.hpp"
 #include "GetSet.hpp"
 #include <QStringList>
@@ -30,10 +34,10 @@ static inline void* Tconstruct(Type t, const void *copy) {
     throw Exception("Tconstruct called for scalar object!");
   if (t.Sparse == 1) {
     const SparseMatrix<T> *p = reinterpret_cast<const SparseMatrix<T>*>(copy);
-    return reinterpret_cast<void*>(new SparseMatrix<T>(*p));
+    return reinterpret_cast<void*>(new(UseGC) SparseMatrix<T>(*p));
   }
   const BasicArray<T> *p = reinterpret_cast<const BasicArray<T>*>(copy);
-  return reinterpret_cast<void*>(new BasicArray<T>(*p));
+  return reinterpret_cast<void*>(new(UseGC) BasicArray<T>(*p));
 }
 
 #define MacroTConstructCopy(ctype,cls)		\
@@ -45,7 +49,7 @@ static inline void* construct(Type t, const void *copy) {
     throw Exception("Unsupported construct");
     MacroExpandCasesAll(MacroTConstructCopy);
   case Struct:
-    return reinterpret_cast<void*>(new StructArray(*(reinterpret_cast<const StructArray*>(copy))));
+    return reinterpret_cast<void*>(new(UseGC) StructArray(*(reinterpret_cast<const StructArray*>(copy))));
   }
 }
 
@@ -56,9 +60,9 @@ static inline void* Tconstruct_sized(Type t, const NTuple &dims) {
   if (t.Scalar == 1)
     throw Exception("Tconstruct_sized called for scalar object");
   if (t.Sparse == 1) {
-    return reinterpret_cast<void*>(new SparseMatrix<T>(dims));
+    return reinterpret_cast<void*>(new(UseGC) SparseMatrix<T>(dims));
   }
-  return reinterpret_cast<void*>(new BasicArray<T>(dims));
+  return reinterpret_cast<void*>(new(UseGC) BasicArray<T>(dims));
 }
 
 #define MacroTConstructSized(ctype,cls) \
@@ -71,7 +75,7 @@ static inline void* construct_sized(Type t, const NTuple &dims) {
     MacroExpandCasesAll(MacroTConstructSized);
   case Struct: 
     {
-      StructArray *p = new StructArray;
+      StructArray *p = new(UseGC) StructArray;
       p->setDimensions(dims);
       return reinterpret_cast<void*>(p);
     }
@@ -82,28 +86,28 @@ static inline void* construct_sized(Type t, const NTuple &dims) {
 
 template <typename T>
 static inline void Tdestruct(Type t, void *todelete) {
-  if (t.Scalar == 1)
+/*GC  if (t.Scalar == 1)
     throw Exception("Tdestruct called on scalar");
   if (t.Sparse == 1) {
     delete reinterpret_cast<SparseMatrix<T>*>(todelete);
     return;
   }
   delete reinterpret_cast<BasicArray<T>*>(todelete);
-  return;
+  return;*/
 }
 
 #define MacroTDestruct(ctype,cls) \
   case cls: return Tdestruct<ctype>(t,todelete);
 
 static inline void destruct(Type t, void *todelete) {
-  switch (t.Class) {
+/*GC  switch (t.Class) {
   default:
     throw Exception("Unsupported construct");
     MacroExpandCasesAll(MacroTDestruct);
   case Struct:
     delete reinterpret_cast<StructArray*>(todelete);
     return;
-  }
+  }*/
 }
 
 #undef MacroTDestruct
@@ -117,7 +121,7 @@ static inline bool AllNonBoolScalars(const ArrayVector& index) {
 SharedObject::SharedObject(Type t, void* p) : m_type(t), m_p(p) {}
 
 SharedObject::SharedObject(const SharedObject& copy) : 
-  QSharedData(copy), m_type(copy.m_type) {
+  m_type(copy.m_type) {
   m_p = construct(m_type,copy.m_p);
 }
 

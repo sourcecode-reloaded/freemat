@@ -18,6 +18,8 @@
  */
 #ifndef __NTuple_hpp__
 #define __NTuple_hpp__
+#define GC_THREADS
+#include <gc_cpp.h>
 
 #include <QString>
 #include <iostream>

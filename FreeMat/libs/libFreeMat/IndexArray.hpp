@@ -18,6 +18,8 @@
  */
 #ifndef __IndexArray_hpp__
 #define __IndexArray_hpp__
+#define GC_THREADS
+#include <gc_cpp.h>
 
 #include "BasicArray.hpp"
 

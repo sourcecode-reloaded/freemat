@@ -22,7 +22,6 @@
 #include <QObject>
 #include <QUrl>
 #include <QFile>
-#include <QThread>
 #include <QDebug>
 #include <QHttp>
 #include <QEventLoop>
