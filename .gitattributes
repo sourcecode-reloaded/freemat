@@ -1,7 +1,6 @@
 FreeMat/COPYING svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/ChangeLog svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 FreeMat/dependencies/bin/blas_generic.dll svn_mime_002dtype=application%2Foctet-stream
-FreeMat/dependencies/bin/libboost_math_c99-mgw34-mt.lib svn_mime_002dtype=application%2Foctet-stream
 FreeMat/dependencies/bin/libfftw3-3.dll svn_mime_002dtype=application%2Foctet-stream
 FreeMat/dependencies/bin/libfftw3-3.exp svn_mime_002dtype=application%2Foctet-stream
 FreeMat/dependencies/bin/libfftw3-3.lib svn_mime_002dtype=application%2Foctet-stream
