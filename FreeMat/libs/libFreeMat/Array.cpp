@@ -17,9 +17,6 @@
  *
  */
 
-#define GC_THREADS
-#include <gc_cpp.h>
-
 #include "Array.hpp"
 #include "GetSet.hpp"
 #include <QStringList>
@@ -27,6 +24,9 @@
 #include "Algorithms.hpp"
 #include "Cast.hpp"
 #include "Math.hpp"
+
+#define GC_THREADS
+#include <gc_cpp.h>
 
 template <typename T>
 static inline void* Tconstruct(Type t, const void *copy) {

@@ -19,9 +19,6 @@
 #ifndef __BasicArray_hpp__
 #define __BasicArray_hpp__
 
-#define GC_THREADS
-#include <gc_cpp.h>
-
 #include <QVector>
 #include "CommonIterator.hpp"
 #include "NTuple.hpp"
@@ -31,6 +28,10 @@
 #include "Cast.hpp"
 #include "IEEEFP.hpp"
 #include "Vector.hpp"
+
+#define GC_THREADS
+#include <gc_cpp.h>
+
 
 template <typename T>
 class BasicArray;

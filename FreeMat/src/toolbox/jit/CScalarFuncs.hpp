@@ -8,6 +8,28 @@
 // 
 
 // Here, each function gets prototyped.
+  double _jit_erfc(double a0);
+  double _jit_erf(double a0);
+  double _jit_erfinv(double a0);
+  double _jit_gamma(double a0);
+  double _jit_gammaln(double a0);
+  double _jit_ceil(double a0);
+  double _jit_isnan(double a0);
+  double _jit_isinf(double a0);
+  double _jit_min(double a0,double a1);
+  double _jit_tanh(double a0);
+  double _jit_cosh(double a0);
+  double _jit_sinh(double a0);
+  double _jit_exp(double a0);
+  double _jit_expm1(double a0);
+  double _jit_pi();
+  double _jit_e();
+  double _jit_bitand(double a0,double a1);
+  double _jit_bitor(double a0,double a1);
+  double _jit_bitxor(double a0,double a1);
+  double _jit_infp();
+  double _jit_nan();
+  double _jit_NaN();
   double _jit_cos(double a0);
   double _jit_cosd(double a0);
   double _jit_sin(double a0);
@@ -22,33 +44,11 @@
   double _jit_cotd(double a0);
   double _jit_atan(double a0);
   double _jit_atan2(double a0,double a1);
-  double _jit_ceil(double a0);
-  double _jit_infp();
-  double _jit_nan();
-  double _jit_NaN();
-  double _jit_bitand(double a0,double a1);
-  double _jit_bitor(double a0,double a1);
-  double _jit_bitxor(double a0,double a1);
-  double _jit_pi();
-  double _jit_e();
-  double _jit_isnan(double a0);
-  double _jit_isinf(double a0);
-  double _jit_floor(double a0);
-  double _jit_fix(double a0);
-  double _jit_tanh(double a0);
-  double _jit_cosh(double a0);
-  double _jit_sinh(double a0);
-  double _jit_exp(double a0);
-  double _jit_expm1(double a0);
   double _jit_abs(double a0);
   double _jit_round(double a0);
-  double _jit_min(double a0,double a1);
+  double _jit_floor(double a0);
+  double _jit_fix(double a0);
   double _jit_max(double a0,double a1);
-  double _jit_erfc(double a0);
-  double _jit_erf(double a0);
-  double _jit_erfinv(double a0);
-  double _jit_gamma(double a0);
-  double _jit_gammaln(double a0);
-static const char* jit_scalar_list[] = {"cos","cosd","sin","sind","tan","tand","csc","cscd","sec","secd","cot","cotd","atan","atan2","ceil","infp","nan","NaN","bitand","bitor","bitxor","pi","e","isnan","isinf","floor","fix","tanh","cosh","sinh","exp","expm1","abs","round","min","max","erfc","erf","erfinv","gamma","gammaln",""};
+static const char* jit_scalar_list[] = {"erfc","erf","erfinv","gamma","gammaln","ceil","isnan","isinf","min","tanh","cosh","sinh","exp","expm1","pi","e","bitand","bitor","bitxor","infp","nan","NaN","cos","cosd","sin","sind","tan","tand","csc","cscd","sec","secd","cot","cotd","atan","atan2","abs","round","floor","fix","max",""};
 static const int jit_scalar_list_len = sizeof(jit_scalar_list)/sizeof(jit_scalar_list[0]);
 #endif

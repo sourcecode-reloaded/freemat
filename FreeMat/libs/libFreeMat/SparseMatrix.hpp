@@ -18,9 +18,6 @@
  */
 #ifndef __SparseMatrix_hpp__
 #define __SparseMatrix_hpp__
-#define GC_THREADS
-#include <gc_cpp.h>
-
 #include <QMap>
 #include <QtGlobal>
 #include <iostream>
@@ -29,6 +26,9 @@
 #include "BasicArray.hpp"
 #include "Cast.hpp"
 #include <cmath>
+
+#define GC_THREADS
+#include <gc_cpp.h>
 
 template <typename T>
 class SparseSlice : public QMap<index_t,T> {

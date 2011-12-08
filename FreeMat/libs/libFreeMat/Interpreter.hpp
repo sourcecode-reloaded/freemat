@@ -20,9 +20,6 @@
 #ifndef __Interpreter_h__
 #define __Interpreter_h__
 
-#define GC_THREADS
-#include <gc.h>
-
 #include "Tree.hpp"
 #include "Context.hpp"
 #include "FunctionDef.hpp"
@@ -36,6 +33,9 @@
 #include <QWaitCondition>
 #include <QThread>
 #include <QFileSystemWatcher>
+
+#define GC_THREADS
+#include <gc.h>
 
 class InterpreterContinueException : public exception {};
 class InterpreterBreakException : public exception {};

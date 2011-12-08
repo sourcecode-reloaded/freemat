@@ -16,8 +16,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
-#define GC_THREADS
-#include <gc.h>
 
 #include <QDir>
 #include <QtGui>
@@ -38,6 +36,8 @@
 #include "FuncMode.hpp"
 #include "ScriptMode.hpp"
 
+#define GC_THREADS
+#include <gc.h>
 
 MainApp *m_app;
 FuncMode *m_func;

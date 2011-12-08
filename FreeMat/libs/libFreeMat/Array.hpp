@@ -19,15 +19,16 @@
 #ifndef __Array_hpp__
 #define __Array_hpp__
 
-#define GC_THREADS
-#include <gc_cpp.h>
-
 #include "Types.hpp"
 #include "BasicArray.hpp"
 #include "IndexArray.hpp"
 #include "FastList.hpp"
 #include "SparseMatrix.hpp"
 #include "Exception.hpp"
+
+#define GC_THREADS
+#include <gc_cpp.h>
+
 class StringArray;
 class StructArray;
 class Array;

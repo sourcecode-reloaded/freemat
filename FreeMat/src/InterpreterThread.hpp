@@ -19,14 +19,14 @@
 #ifndef __InterpreterThread_hpp__
 #define __InterpreterThread_hpp__
 
-#define GC_THREADS
-#include <gc.h>
-
 #include <QThread>
 #include <QMutex>
 #include <QWaitCondition>
 #include "Interpreter.hpp"
 #include "Context.hpp"
+#define GC_THREADS
+#include <gc.h>
+
 
 using namespace FreeMat;
 

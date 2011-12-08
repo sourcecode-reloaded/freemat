@@ -18,13 +18,13 @@
  */
 #ifndef __NTuple_hpp__
 #define __NTuple_hpp__
-#define GC_THREADS
-#include <gc_cpp.h>
-
 #include <QString>
 #include <iostream>
 
 #include "Types.hpp"
+
+#define GC_THREADS
+#include <gc_cpp.h>
 
 #if defined(_MSC_VER)  
 double round( double x );

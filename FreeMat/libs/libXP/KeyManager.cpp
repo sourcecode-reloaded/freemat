@@ -20,9 +20,6 @@
 /*
  * To-add: copy/paste/select - typeahead
  */
-#define GC_THREADS
-#include <gc.h>
-
 #include <algorithm>
 #include "KeyManager.hpp"
 #include "Interpreter.hpp"
@@ -32,6 +29,10 @@
 #include <QtCore>
 #include <QThread>
 #include <iostream>
+
+#define GC_THREADS
+#include <gc.h>
+
 
 #define TAB_WIDTH 8
 /*

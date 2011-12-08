@@ -18,10 +18,11 @@
  */
 #ifndef __IndexArray_hpp__
 #define __IndexArray_hpp__
-#define GC_THREADS
-#include <gc_cpp.h>
 
 #include "BasicArray.hpp"
+
+#define GC_THREADS
+#include <gc_cpp.h>
 
 BasicArray<bool> GetDeletionMap(const IndexArray& vec, index_t length);
 

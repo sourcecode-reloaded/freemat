@@ -149,8 +149,10 @@ int main(int argc, const char **argv, char * const *envp) {
 
   int Res = 255;
   if (llvm::Module *Module = Act->takeModule())
+  {
+    llvm::errs() << (*Module);
     Res = Execute(Module, envp);
-
+  }
   // Shutdown.
 
   llvm::llvm_shutdown();
