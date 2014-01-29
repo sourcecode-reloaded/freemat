@@ -21,6 +21,7 @@
 
 #include <QMap>
 #include <QtGlobal>
+#include <QSet>
 #include <iostream>
 #include "Types.hpp"
 #include "NTuple.hpp"

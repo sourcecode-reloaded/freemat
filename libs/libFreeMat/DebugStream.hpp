@@ -28,6 +28,8 @@
 #include <QTextCursor>
 #include <QString>
 #include <QTextStream>
+
+#if 0
 #include "DebugWin.hpp"
 
 //#ifndef NDEBUG
@@ -98,4 +100,8 @@ public:
 };
 
 extern DebugStream dbout;
+#endif
+
+//#define qDebug() dbout
+
 #endif /* __DEBUGSTREAM_HPP__ */

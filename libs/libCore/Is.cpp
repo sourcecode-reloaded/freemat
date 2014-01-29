@@ -335,12 +335,10 @@ ArrayVector IsSparseFunction(int nargout, const ArrayVector& arg) {
 }
 
 struct OpIsNaN {
-  static inline float func(float t) {return (IsNaN(t) ? 1.0 : 0.0);}
-  static inline double func(double t) {return (IsNaN(t) ? 1.0 : 0.0);}
-  static inline void func(float x, float y, float &rx, float &ry) {
-    rx = (IsNaN(x) || IsNaN(y)) ? 1.0 : 0.0; ry = 0;
-  }
-  static inline void func(double x, double y, double &rx, double &ry) {
+  template <typename T>
+  static inline T func(T t) {return (IsNaN(t) ? 1.0 : 0.0);}
+  template <typename T>
+  static inline void func(T x, T y, T &rx, T &ry) {
     rx = (IsNaN(x) || IsNaN(y)) ? 1.0 : 0.0; ry = 0;
   }
 };
@@ -364,12 +362,10 @@ ArrayVector IsNaNFunction(int nargout, const ArrayVector& arg) {
 JitScalarFunc1(isnan,OpIsNaN::func);
 
 struct OpIsInf {
-  static inline float func(float t) {return (IsInfinite(t) ? 1.0 : 0.0);}
-  static inline double func(double t) {return (IsInfinite(t) ? 1.0 : 0.0);}
-  static inline void func(float x, float y, float &rx, float &ry) {
-    rx = (IsInfinite(x) || IsInfinite(y)) ? 1.0 : 0.0; ry = 0;
-  }
-  static inline void func(double x, double y, double &rx, double &ry) {
+  template <typename T>
+  static inline T func(T t) {return (IsInfinite(t) ? 1.0 : 0.0);}
+  template <typename T>
+  static inline void func(T x, T y, T &rx, T &ry) {
     rx = (IsInfinite(x) || IsInfinite(y)) ? 1.0 : 0.0; ry = 0;
   }
 };
@@ -391,6 +387,33 @@ ArrayVector IsInfFunction(int nargout, const ArrayVector& arg) {
 
 JitScalarFunc1(isinf,OpIsInf::func);
 
+
+
+struct OpIsFinite {
+  template <typename T>
+  static inline T func(T t) {return (IsFinite(t) ? 1.0 : 0.0);}
+  template <typename T>
+  static inline void func(T x, T y, T &rx, T &ry) {
+    rx = (IsFinite(x) && IsFinite(y)) ? 1.0 : 0.0; ry = 0;
+  }
+};
+
+
+//@@Signature
+//function isfinite IsFiniteFunction
+//inputs x
+//outputs y
+//@@Signature
+//function finite IsFiniteFunction
+//inputs x
+//outputs y
+ArrayVector IsFiniteFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() != 1)
+   throw Exception("isfinite/finite function takes one argument - the array to test");
+  return ArrayVector(UnaryOp<OpIsFinite>(arg[0]).toClass(Bool));
+}
+
+
 //@@Signature
 //function isreal IsRealFunction
 //inputs x
@@ -401,6 +424,17 @@ ArrayVector IsRealFunction(int nargout, const ArrayVector& arg) {
     throw Exception("isreal function takes one argument - the array to test");
   return ArrayVector(Array((arg[0].dataClass() != CellArray) && 
 			   (arg[0].allReal())));
+}
+
+//@@Signature
+//function iscomplex IsComplexFunction
+//inputs x
+//outputs y
+ArrayVector IsComplexFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() != 1)
+    throw Exception("iscomplex function takes one argument - the array to test");
+  return ArrayVector(Array((arg[0].dataClass() != CellArray) && 
+			   (!arg[0].allReal())));
 }
 
 //@@Signature

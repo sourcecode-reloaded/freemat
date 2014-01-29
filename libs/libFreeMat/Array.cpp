@@ -18,7 +18,8 @@
  */
 #include "Array.hpp"
 #include "GetSet.hpp"
-#include <QStringList>
+#include <QVector>
+#include <QSet>
 #include "Struct.hpp"
 #include "Algorithms.hpp"
 #include "Cast.hpp"
@@ -117,7 +118,7 @@ static inline bool AllNonBoolScalars(const ArrayVector& index) {
 SharedObject::SharedObject(Type t, void* p) : m_type(t), m_p(p) {}
 
 SharedObject::SharedObject(const SharedObject& copy) : 
-  QSharedData(copy), m_type(copy.m_type) {
+  m_type(copy.m_type) {
   m_p = construct(m_type,copy.m_p);
 }
 
@@ -140,7 +141,7 @@ Array::Array(DataClass t, const NTuple &dims) {
   m_type.Complex = 0;
   m_type.Sparse = 0;
   m_type.Scalar = 0;
-  m_real.p = new SharedObject(m_type,construct_sized(m_type,dims));
+  m_real.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type,construct_sized(m_type,dims)));
 }
 
 Array::Array(const StructArray& real) {
@@ -148,7 +149,7 @@ Array::Array(const StructArray& real) {
   m_type.Complex = 0;
   m_type.Sparse = 0;
   m_type.Scalar = 0;
-  m_real.p = new SharedObject(m_type,new StructArray(real));
+  m_real.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type,new StructArray(real)));
 }
 
 Array::Array(const QChar &, const QChar &) {
@@ -160,9 +161,9 @@ Array::Array(const QChar &t) {
   m_type.Complex = 0;
   m_type.Sparse = 0;
   m_type.Scalar = 0;
-  m_real.p = new SharedObject(m_type,
-			      construct_sized(m_type,
-					      NTuple(1,1)));
+  m_real.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type,
+							      construct_sized(m_type,
+									      NTuple(1,1))));
   BasicArray<QChar> &p(real<QChar>());
   p[1] = t;
 }
@@ -172,9 +173,9 @@ Array::Array(const QString &text) {
   m_type.Complex = 0;
   m_type.Sparse = 0;
   m_type.Scalar = 0;
-  m_real.p = new SharedObject(m_type,
-			      construct_sized(m_type,
-					      NTuple(1,text.size())));
+  m_real.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type,
+							      construct_sized(m_type,
+									      NTuple(1,text.size()))));
   BasicArray<QChar> &p(real<QChar>());
   for (int i=0;i<text.size();i++) 
     p[i+1] = text[i];

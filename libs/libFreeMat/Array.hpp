@@ -19,7 +19,8 @@
 #ifndef __Array_hpp__
 #define __Array_hpp__
 
-#include <QSharedData>
+#include <boost/shared_ptr.hpp>
+#include <QString>
 #include "Types.hpp"
 #include "BasicArray.hpp"
 #include "IndexArray.hpp"
@@ -71,7 +72,7 @@ typedef struct {
   unsigned Sparse : 1;
 } Type;
 
-class SharedObject : public QSharedData {
+class SharedObject {
   Type m_type;
   void *m_p;
 public:
@@ -84,7 +85,7 @@ public:
 };
 
 typedef struct {
-  QSharedDataPointer<SharedObject> p;
+  boost::shared_ptr<SharedObject> p;
   union {
     bool Bool;
     int8 Int8;
@@ -123,7 +124,7 @@ public:
     m_type.Complex = 0;
     m_type.Sparse = 0;
     m_type.Scalar = 0;
-    m_real.p = new SharedObject(m_type, new BasicArray<T>(r));
+    m_real.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type, new BasicArray<T>(r)));
   }
 
   template <typename T> static inline Array create(const BasicArray<T> &r) { return Array( r ); }
@@ -134,8 +135,8 @@ public:
     m_type.Complex = 1;
     m_type.Sparse = 0;
     m_type.Scalar = 0;
-    m_real.p = new SharedObject(m_type, new BasicArray<T>(r));
-    m_imag.p = new SharedObject(m_type, new BasicArray<T>(i));
+    m_real.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type, new BasicArray<T>(r)));
+    m_imag.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type, new BasicArray<T>(i)));
   }
   template <typename T> static inline Array create(const BasicArray<T> &r, const BasicArray<T> &i) { return Array( r, i ); }
 
@@ -145,7 +146,7 @@ public:
     m_type.Complex = 0;
     m_type.Sparse = 0;
     m_type.Scalar = 0;
-    m_real.p = new SharedObject(m_type,r);
+    m_real.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type,r));
   }
   template <typename T>  static inline Array create(BasicArray<T> *r) { return Array( r ); }
   
@@ -156,8 +157,8 @@ public:
     m_type.Complex = 1;
     m_type.Sparse = 0;
     m_type.Scalar = 0;
-    m_real.p = new SharedObject(m_type,r);
-    m_imag.p = new SharedObject(m_type,i);
+    m_real.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type,r));
+    m_imag.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type,i));
   }
   template <typename T> static inline Array create(BasicArray<T> *r, BasicArray<T> *i) { return Array( r, i ); }
   
@@ -174,7 +175,7 @@ public:
     m_type.Complex = 0;
     m_type.Sparse = 1;
     m_type.Scalar = 0;
-    m_real.p = new SharedObject(m_type,new SparseMatrix<T>(real));
+    m_real.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type,new SparseMatrix<T>(real)));
   }
   template <typename T>
   Array(const SparseMatrix<T>& real, const SparseMatrix<T>& imag) {
@@ -182,8 +183,8 @@ public:
     m_type.Complex = 1;
     m_type.Sparse = 1;
     m_type.Scalar = 0;
-    m_real.p = new SharedObject(m_type,new SparseMatrix<T>(real));
-    m_imag.p = new SharedObject(m_type,new SparseMatrix<T>(imag));
+    m_real.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type,new SparseMatrix<T>(real)));
+    m_imag.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type,new SparseMatrix<T>(imag)));
   }
   Array(const StructArray& real);
   static Array scalarConstructor(DataClass t) {
@@ -267,7 +268,7 @@ public:
   template <typename T>
   inline SparseMatrix<T>& imagSparse() {
     if (!m_imag.p) {
-      m_imag.p = new SharedObject(m_type, new SparseMatrix<T>(dimensions()));
+      m_imag.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type, new SparseMatrix<T>(dimensions())));
       m_type.Complex = 1;
     }
     if (m_type.Class != GetDataClass(T(0))) throw Exception("data type mismatch in array -- bug");
@@ -285,7 +286,7 @@ public:
   template <typename T>
   inline BasicArray<T>& imag() {
     if (!m_imag.p) {
-      m_imag.p = new SharedObject(m_type, new BasicArray<T>(dimensions()));
+      m_imag.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type, new BasicArray<T>(dimensions())));
       m_type.Complex = true;
     }
     if (m_type.Class != GetDataClass(T(0))) throw Exception("data type mismatch in array -- bug");

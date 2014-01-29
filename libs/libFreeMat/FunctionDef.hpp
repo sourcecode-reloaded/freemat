@@ -37,7 +37,8 @@ typedef enum {
   FM_BUILT_IN_FUNCTION,
   FM_SPECIAL_FUNCTION,
   FM_IMPORTED_FUNCTION,
-  FM_MEX_FUNCTION
+  FM_MEX_FUNCTION,
+  FM_PYTHON_FUNCTION
 } FunctionType;
 
 class Interpreter;

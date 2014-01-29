@@ -19,6 +19,7 @@
 
 #include "Operators.hpp"
 #include "Array.hpp"
+#include "Complex.hpp"
 #include <cmath>
 
 struct OpFloor {
@@ -62,11 +63,8 @@ struct OpFix {
     else
       return t;
   }
-  static inline void func(float x, float y, float &rx, float &ry) {
-    rx = OpFix::func(x);
-    ry = OpFix::func(y);
-  }
-  static inline void func(double x, double y, double &rx, double &ry) {
+  template <typename T>
+  static inline void func(T x, T y, T &rx, T &ry) {
     rx = OpFix::func(x);
     ry = OpFix::func(y);
   }
@@ -83,4 +81,36 @@ ArrayVector FixFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() < 1)
     throw Exception("fix requires one argument");
   return ArrayVector(UnaryOp<OpFix>(arg[0]));
+}
+
+struct OpRem {
+  template <typename T>
+  static inline T func(T x, T n) {
+    return x - OpFix::func(x/n)*n;
+  }
+  template <typename T>
+  static inline void func(T x_real, T x_imag, T n_real, T n_imag, T &z_real, T &z_imag) {
+    T q_real, q_imag;
+    complex_divide(x_real,x_imag,n_real,n_imag,q_real,q_imag);
+    T r_real, r_imag;
+    OpFix::func(q_real,q_imag,r_real,r_imag);
+    T s_real, s_imag;
+    complex_multiply(r_real,r_imag,n_real,n_imag,s_real,s_imag);
+    z_real = x_real - s_real;
+    z_imag = x_imag - s_imag;
+  }
+};
+
+
+JitScalarFunc2(rem,OpRem::func);
+
+//@@Signature
+//function rem RemFunction
+//input x n
+//output y
+//DOCBLOCK mathfunctions_rem
+ArrayVector RemFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 2)
+    throw Exception("rem requires two arguments");
+  return ArrayVector(DotOp<OpRem>(arg[0],arg[1]));
 }

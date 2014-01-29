@@ -546,7 +546,7 @@ CTypeInfo CJitFunc::compile_function_call(const Tree & t) {
   CSymbol symbol = lookup_symbol(symname,false);
   if (!symbol.isFunction()) 
     throw Exception("function call compile called without a function...");
-  if (!symbol.isMFunction() && !symbol.isJITsafe())
+  if (!symbol.isMFunction() && !symbol.isJITsafe() && !isjitscalarfunc(symname))
     throw Exception("Call to function " + symname + " is not JIT-safe");
   if (symbol.retcount() < 1)
     throw Exception("function must return 1 value to be JIT compiled");

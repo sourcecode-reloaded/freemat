@@ -46,6 +46,7 @@ protected:
   void fetchString();
   void fetchBlob();
   bool tryFetchBinary(const char* op, TokenValueType tok);
+  bool tryFetchTrinary(const char* op, TokenValueType tok);
   void setToken(TokenValueType tok, QString text = QString());
   bool isBreakpointLine(int num);
   void deleteBreakpoint(int num);

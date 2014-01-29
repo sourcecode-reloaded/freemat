@@ -55,17 +55,17 @@ bool Token::isRightAssociative() const {
   return (m_tok == '^');
 }
 
-//QTextStream& operator<<(QTextStream& o, const Token& b) {
-//  o << TokenToString(b) << " (" << (b.position() >> 16)
-//    << "," << (b.position() & 0xffff) << ")\r\n";
-//  return o;
-//}
-
-DebugStream& operator<<(DebugStream& o, const Token& b) {
+QTextStream& operator<<(QTextStream& o, const Token& b) {
   o << TokenToString(b) << " (" << (b.position() >> 16)
-    << "," << (LineNumber(b.position())) << ")\n";
+    << "," << (b.position() & 0xffff) << ")\r\n";
   return o;
 }
+
+// DebugStream& operator<<(DebugStream& o, const Token& b) {
+//   o << TokenToString(b) << " (" << (b.position() >> 16)
+//     << "," << (LineNumber(b.position())) << ")\n";
+//   return o;
+// }
 
 
 QString TokenToString(const Token& b) {

@@ -112,6 +112,37 @@ ArrayVector EpsFunction(int nargout, const ArrayVector& arg) {
 }
 
 //@@Signature
+//function realmax RealMaxFunction jitsafe
+//inputs varargin
+//outputs y
+ArrayVector RealMaxFunction(int nargout, const ArrayVector &arg) {
+  ArrayVector retval;
+  if( arg.size()> 1 )
+    throw Exception("realmax takes no more than 1 argument");
+  if( arg.size()==1 ){
+    Array a( arg[0] );
+    if( a.isString() ){
+      QString str = a.asString().toLower();
+      if( str == QString( "double" ) ){
+	retval << Array( DBL_MAX ); 
+      }
+      else if( str == QString( "single" ) ){
+	retval << Array( FLT_MAX );
+      }
+      else{
+	throw Exception("Class must be 'double' or 'single'");
+      }
+    }
+    else 
+      throw Exception("argument must be double or single");
+  } else{
+    retval << Array( DBL_MAX );
+  }
+  return retval;
+  
+}
+
+//@@Signature
 //function feps FepsFunction
 //inputs none
 //outputs y

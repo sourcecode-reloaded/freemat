@@ -104,6 +104,16 @@ void Set(T& arg, const IndexArrayVector& index, const T& data) {
 	else
 	  ndx.push_back(index[i]);
       }
+      // Additional correction (from Octave) - 
+      // if we assign
+      // A(2,:) = rhs
+      // then we add additional colons to the expression
+      // to cover all non-singular dimensions of A
+      if (IsColonOp(index.back()))
+	{
+	  for (int i=ndx.size();i<arg.dimensions().lastNotOne();i++)
+	    ndx.push_back(IndexRange(1,data.dimensions()[i]));
+	}
     }
     for (int i=0;i<ndx.size();i++) {
       secdims[i] = ndx[i].length();
@@ -115,8 +125,21 @@ void Set(T& arg, const IndexArrayVector& index, const T& data) {
       secdims[i] = ndx[i].length();
       maxsze[i] = MaxValue(ndx[i]);
     }
+    // Additional correction (from Octave) - 
+    // if we assign
+    // A(2,:) = rhs
+    // then we add additional colons to the expression
+    // to cover all non-singular dimensions of A
+    if (IsColonOp(index.back()))
+      {
+	for (int i=ndx.size();i<arg.dimensions().lastNotOne();i++)
+	  {
+	    ndx.push_back(IndexRange(1,arg.dimensions()[i]));
+	    secdims[i] = ndx[i].length();
+	    maxsze[i] = MaxValue(ndx[i]);
+	  }
+      }
   }
-  
   if (secdims.count() != data.length())
     throw Exception("mismatch in size for assignment A(I1,I2,...) = B");
   if (!(maxsze <= arg.dimensions()))
@@ -125,7 +148,7 @@ void Set(T& arg, const IndexArrayVector& index, const T& data) {
   index_t j=1;
   while (pos <= secdims) {
     NTuple qp;
-    for (int i=0;i<index.size();i++)
+    for (int i=0;i<ndx.size();i++)
       qp[i] = ndx[i].get(pos[i]);
     arg.set(qp,data.get(j++));
     secdims.increment(pos);

@@ -310,7 +310,14 @@ Tree Parser::declarationStatement() {
   Tree root(next());
   consume();
   while (match(TOK_IDENT))
-    root.addChild(identifier());
+    {
+      Tree declarationNode(identifier());
+      if (match('=')) {
+	consume();
+	declarationNode.addChild(expression());
+      }
+      root.addChild(declarationNode);
+    }
   return root;
 }
 
@@ -408,6 +415,20 @@ Tree Parser::variableDereference(bool blankRefOK) {
   return root;
 }
 
+// Handles +=, -=, etc.
+Tree Parser::opEqualsStatement(Tree ident, TokenValueType opcode) {
+  Token opr(next());
+  consume();
+  opr.setValue('=');
+  Tree root(opr);
+  Tree expr = expression();
+  opr.setValue(opcode);
+  Tree adder(opr);
+  adder.addChildren(ident,expr);
+  root.addChildren(ident,adder);
+  return root;  
+}
+
 Tree Parser::assignmentStatement() {
   Tree ident = variableDereference(false);
   if (!octCompat || match('='))
@@ -417,32 +438,12 @@ Tree Parser::assignmentStatement() {
       root.addChildren(ident,expr);
       return root;
     }
-  if (match(TOK_PLUS_EQ))
-    {
-      Token opr(next());
-      consume();
-      opr.setValue('=');
-      Tree root(opr);
-      Tree expr = expression();
-      opr.setValue('+');
-      Tree adder(opr);
-      adder.addChildren(ident,expr);
-      root.addChildren(ident,adder);
-      return root;
-    }
-  if (match(TOK_MINUS_EQ))
-    {
-      Token opr(next());
-      consume();
-      opr.setValue('=');
-      Tree root(opr);
-      Tree expr = expression();
-      opr.setValue('-');
-      Tree adder(opr);
-      adder.addChildren(ident,expr);
-      root.addChildren(ident,adder);
-      return root;
-    }
+  if (match(TOK_PLUS_EQ)) return opEqualsStatement(ident,'+');
+  if (match(TOK_MINUS_EQ)) return opEqualsStatement(ident,'-');
+  if (match(TOK_AND_EQ)) return opEqualsStatement(ident,'&');
+  if (match(TOK_OR_EQ)) return opEqualsStatement(ident,'|');
+  if (match(TOK_TIMES_EQ)) return opEqualsStatement(ident,'*');
+  if (match(TOK_DOTTIMES_EQ)) return opEqualsStatement(ident,TOK_DOTTIMES);
   serror("Not an assignment statement");
 }
 

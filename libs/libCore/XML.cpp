@@ -25,13 +25,13 @@
 #include "XML.hpp"
 #include "Algorithms.hpp"
 
-//@@Signature
+//Signature
 //function xmlread XMLReadFunction
 //inputs filename
 //outputs p
 //DOCBLOCK io_xmlread
 
-//@@Signature
+//Signature
 //function htmlread HTMLReadFunction
 //inputs filename
 //outputs p
@@ -146,7 +146,7 @@ ArrayVector HTMLReadFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector() << QDomElementToArray(docElem);
 }
 
-//@@Signature
+//Signature
 //function urlwrite URLWriteFunction
 //inputs url filename timeout
 //outouts filename

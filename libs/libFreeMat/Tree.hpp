@@ -71,6 +71,6 @@ public:
   void freeze(Serialize *s) const;
 };
 
-DebugStream& operator<<(DebugStream& o, const Tree& b);
+//DebugStream& operator<<(DebugStream& o, const Tree& b);
 
 #endif

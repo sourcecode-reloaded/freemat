@@ -64,6 +64,7 @@ private:
   Tree primaryExpression();
   Tree anonymousFunction();
   Tree statementList();
+  Tree opEqualsStatement(Tree ident, TokenValueType opcode);
 public:
   Parser(Scanner& lex, bool octaveCompatibility = false);
   Tree process();

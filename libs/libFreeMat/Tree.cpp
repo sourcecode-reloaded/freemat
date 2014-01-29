@@ -84,7 +84,7 @@ Tree::Tree(Serialize *s) {
 }
 
 static int indentlvl = 0;
-DebugStream& operator<<(DebugStream& o, const Tree& b) {
+QTextStream& operator<<(QTextStream& o, const Tree& b) {
     for( int i=0; i<indentlvl; i++ )
 	o << "  ";
     o << b.node();

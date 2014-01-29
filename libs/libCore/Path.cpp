@@ -19,7 +19,7 @@
 
 #include "Array.hpp"
 #include "Interpreter.hpp"
-#include "PathTool.hpp"
+//#include "PathTool.hpp"
 #include <QSettings>
 
 //@@Signature
@@ -47,17 +47,17 @@ ArrayVector SetPathFunction(int nargout, const ArrayVector& arg, Interpreter* ev
   return ArrayVector();
 }
 
-//@@Signature
+//Signature
 //sgfunction pathtool PathToolFunction
 //inputs none
 //outputs none
 //DOCBLOCK freemat_pathtool
 ArrayVector PathToolFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  PathTool p;
-  p.exec();
-  QSettings settings("FreeMat",Interpreter::getVersionString());
-  QStringList userPath = settings.value("interpreter/path").toStringList();
-  eval->setUserPath(userPath);
-  eval->rescanPath();
+  // PathTool p;
+  // p.exec();
+  // QSettings settings("FreeMat",Interpreter::getVersionString());
+  // QStringList userPath = settings.value("interpreter/path").toStringList();
+  // eval->setUserPath(userPath);
+  // eval->rescanPath();
   return ArrayVector();
 }

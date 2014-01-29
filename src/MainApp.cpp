@@ -107,8 +107,8 @@ MainApp::~MainApp() {
 ArrayVector HelpWinFunction(int, const ArrayVector &, Interpreter *);
 
 void MainApp::HelpWin() {
-  ArrayVector dummy;
-  HelpWinFunction(0,dummy,m_eval);
+  // ArrayVector dummy;
+  // HelpWinFunction(0,dummy,m_eval);
 }
 
 bool inBundleMode()  {
@@ -118,86 +118,86 @@ bool inBundleMode()  {
 }
 
 void MainApp::SetupGUICase() {
-  if (inBundleMode()) {
-    QDir dir(QApplication::applicationDirPath());
-    dir.cdUp();
-    dir.cd("plugins");
-    QString dummy(dir.absolutePath());
-    QApplication::setLibraryPaths(QStringList() << dir.absolutePath());
-  }
-  m_win = new ApplicationWindow;
-  QTTerm *gui = new QTTerm;
-  m_keys->RegisterTerm(gui);
-  m_win->SetGUITerminal(gui);
-  m_win->SetKeyManager(m_keys);
-  m_win->readSettings();
-  m_win->show();
-  gui->setFocus();
-  QObject::connect(m_win,SIGNAL(newfile()),this,SLOT(NewFile()));
-  QObject::connect(m_win,SIGNAL(openfile()),this,SLOT(OpenFile()));
-  QObject::connect(m_win,SIGNAL(startHelp()),this,SLOT(HelpWin()));
-  QObject::connect(m_win,SIGNAL(startEditor()),this,SLOT(Editor()));
-  QObject::connect(m_win,SIGNAL(startPathTool()),this,SLOT(PathTool()));
-  QObject::connect(qApp,SIGNAL(lastWindowClosed()),qApp,SLOT(quit()));
-  QObject::connect(this,SIGNAL(Shutdown()),m_win,SLOT(close()));
-  QObject::connect(this,SIGNAL(Initialize()),m_win,SLOT(init()));
-  m_term = gui;
-  QObject::connect(m_term,SIGNAL(showFileAtLine(QString,int)),this,SLOT(showFileAtLine(QString,int)));
+  // if (inBundleMode()) {
+  //   QDir dir(QApplication::applicationDirPath());
+  //   dir.cdUp();
+  //   dir.cd("plugins");
+  //   QString dummy(dir.absolutePath());
+  //   QApplication::setLibraryPaths(QStringList() << dir.absolutePath());
+  // }
+  // m_win = new ApplicationWindow;
+  // QTTerm *gui = new QTTerm;
+  // m_keys->RegisterTerm(gui);
+  // m_win->SetGUITerminal(gui);
+  // m_win->SetKeyManager(m_keys);
+  // m_win->readSettings();
+  // m_win->show();
+  // gui->setFocus();
+  // QObject::connect(m_win,SIGNAL(newfile()),this,SLOT(NewFile()));
+  // QObject::connect(m_win,SIGNAL(openfile()),this,SLOT(OpenFile()));
+  // QObject::connect(m_win,SIGNAL(startHelp()),this,SLOT(HelpWin()));
+  // QObject::connect(m_win,SIGNAL(startEditor()),this,SLOT(Editor()));
+  // QObject::connect(m_win,SIGNAL(startPathTool()),this,SLOT(PathTool()));
+  // QObject::connect(qApp,SIGNAL(lastWindowClosed()),qApp,SLOT(quit()));
+  // QObject::connect(this,SIGNAL(Shutdown()),m_win,SLOT(close()));
+  // QObject::connect(this,SIGNAL(Initialize()),m_win,SLOT(init()));
+  // m_term = gui;
+  // QObject::connect(m_term,SIGNAL(showFileAtLine(QString,int)),this,SLOT(showFileAtLine(QString,int)));
 }
 
 void createEditor(Interpreter* eval){
-  if (edit == NULL) {
-    edit = new FMEditor(eval);
-    QObject::connect(eval, SIGNAL(RefreshBPLists()), edit, SLOT(RefreshBPLists()));
-    QObject::connect(eval, SIGNAL(ShowActiveLine(QString,int)),
-		     edit, SLOT(ShowActiveLine(QString,int)));
-    ApplicationWindow *m_win = m_app->getApplicationWindow();
-    QObject::connect(m_win,SIGNAL(shutdown()),edit,SLOT(close()));
-    QObject::connect(edit,SIGNAL(checkEditorExist(bool)),m_win,SLOT(checkEditorExist(bool)));
-    // Because of the threading setup, we need the keymanager to relay commands
-    // from the editor to the interpreter.  
-    QObject::connect(edit, SIGNAL(EvaluateText(QString)),
-		     m_app->GetKeyManager(), SLOT(QueueMultiString(QString)));
-    // Connect the editor to the variable update signal from the interpreter
-    QObject::connect(eval, SIGNAL(updateVarView(QVariant)), edit, SLOT(updateVarView(QVariant)));
-    //Ask to change current path when setting breakpoint
-    QObject::connect(eval, SIGNAL(IllegalLineOrCurrentPath(QString, int)), edit,
-		     SLOT(IllegalLineOrCurrentPath(QString, int)));
-  }
+  // if (edit == NULL) {
+  //   edit = new FMEditor(eval);
+  //   QObject::connect(eval, SIGNAL(RefreshBPLists()), edit, SLOT(RefreshBPLists()));
+  //   QObject::connect(eval, SIGNAL(ShowActiveLine(QString,int)),
+  // 		     edit, SLOT(ShowActiveLine(QString,int)));
+  //   ApplicationWindow *m_win = m_app->getApplicationWindow();
+  //   QObject::connect(m_win,SIGNAL(shutdown()),edit,SLOT(close()));
+  //   QObject::connect(edit,SIGNAL(checkEditorExist(bool)),m_win,SLOT(checkEditorExist(bool)));
+  //   // Because of the threading setup, we need the keymanager to relay commands
+  //   // from the editor to the interpreter.  
+  //   QObject::connect(edit, SIGNAL(EvaluateText(QString)),
+  // 		     m_app->GetKeyManager(), SLOT(QueueMultiString(QString)));
+  //   // Connect the editor to the variable update signal from the interpreter
+  //   QObject::connect(eval, SIGNAL(updateVarView(QVariant)), edit, SLOT(updateVarView(QVariant)));
+  //   //Ask to change current path when setting breakpoint
+  //   QObject::connect(eval, SIGNAL(IllegalLineOrCurrentPath(QString, int)), edit,
+  // 		     SLOT(IllegalLineOrCurrentPath(QString, int)));
+  // }
 }
 
 void MainApp::showFileAtLine(QString fileName, int lineNumber) {
-  createEditor(m_eval);
-  edit->ShowActiveLine(fileName, lineNumber);
-  edit->showNormal();
-  edit->raise();
+  // createEditor(m_eval);
+  // edit->ShowActiveLine(fileName, lineNumber);
+  // edit->showNormal();
+  // edit->raise();
 }
 
 void MainApp::NewFile() {
-  createEditor(m_eval);
-  edit->addTabUntitled();
-  edit->showNormal();
-  edit->raise();
+  // createEditor(m_eval);
+  // edit->addTabUntitled();
+  // edit->showNormal();
+  // edit->raise();
 }
 
 void MainApp::OpenFile() {
-  QString currentPath = QDir::currentPath();
-  QStringList fileNames = QFileDialog::getOpenFileNames(
-                         m_win,
-                         "Select one or more files to open",
-                         currentPath,
-                         "M files (*.m);;Text files (*.txt);;All files (*)");
-  QStringList::Iterator it = fileNames.begin();
-  if (!fileNames.isEmpty()) {
-    createEditor(m_eval);
-    while(it != fileNames.end()) {
-      QString fileName = *it;
-      edit->loadFile(fileName);
-      ++it;
-    }
-    edit->showNormal();
-    edit->raise();
-  }
+  // QString currentPath = QDir::currentPath();
+  // QStringList fileNames = QFileDialog::getOpenFileNames(
+  //                        m_win,
+  //                        "Select one or more files to open",
+  //                        currentPath,
+  //                        "M files (*.m);;Text files (*.txt);;All files (*)");
+  // QStringList::Iterator it = fileNames.begin();
+  // if (!fileNames.isEmpty()) {
+  //   createEditor(m_eval);
+  //   while(it != fileNames.end()) {
+  //     QString fileName = *it;
+  //     edit->loadFile(fileName);
+  //     ++it;
+  //   }
+  //   edit->showNormal();
+  //   edit->raise();
+  // }
 }
 
 
@@ -312,11 +312,11 @@ ArrayVector SaveRetValueFunction(int nargout, const ArrayVector& arg)
 //outputs none
 //DOCBLOCK freemat_editor
 ArrayVector EditorFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  createEditor(eval);
-  edit->loadLastSession();
-  edit->addTabIfEmpty();
-  edit->showNormal();
-  edit->raise();
+  // createEditor(eval);
+  // edit->loadLastSession();
+  // edit->addTabIfEmpty();
+  // edit->showNormal();
+  // edit->raise();
   return ArrayVector();
 }
 
@@ -326,33 +326,33 @@ ArrayVector EditorFunction(int nargout, const ArrayVector& arg, Interpreter* eva
 //outputs none
 //DOCBLOCK freemat_edit
 ArrayVector EditFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  //Open the editor
-  createEditor(eval);
-  edit->loadLastSession();
-  if (arg.size() == 0)
-    //Create untitled.m if without argument
-    edit->addTabUntitled();
-  else {
-    //Load files listed in the command argument
-    for (int i=0; i<arg.size(); ++i ) {
-      if (arg[i].isString()) {
-        QString fname = arg[i].asString();
-        edit->loadOrCreateFile(fname);
-      }
-      else {
-      throw Exception("Illegal file name");
-      }
-    }
-  }
-  edit->showNormal();
-  edit->raise();
-  return ArrayVector();
+//  //Open the editor
+//  createEditor(eval);
+//  edit->loadLastSession();
+//  if (arg.size() == 0)
+//    //Create untitled.m if without argument
+//    edit->addTabUntitled();
+//  else {
+//    //Load files listed in the command argument
+//    for (int i=0; i<arg.size(); ++i ) {
+//      if (arg[i].isString()) {
+//        QString fname = arg[i].asString();
+//        edit->loadOrCreateFile(fname);
+//      }
+//      else {
+//      throw Exception("Illegal file name");
+//      }
+//    }
+//  }
+//  edit->showNormal();
+//  edit->raise();
+//  return ArrayVector();
 }
 
 
 void MainApp::Editor() {
-  ArrayVector dummy;
-  EditorFunction(0,dummy,m_eval);
+  // ArrayVector dummy;
+  // EditorFunction(0,dummy,m_eval);
 }
 
 void MainApp::SetGUIMode(bool mode) {
@@ -418,7 +418,8 @@ void MainApp::CheckNonClosable() {
 }
 
 void MainApp::DoGraphicsCall(Interpreter* interp, FuncPtr f, ArrayVector m, int narg) { 
-  CheckNonClosable();
+  qDebug() << "GFX Call " << f->name << "\r\n";
+  //  CheckNonClosable();
   try {
     ArrayVector n(f->evaluateFunc(interp,m,narg));
     interp->RegisterGfxResults(n);
@@ -705,16 +706,16 @@ ArrayVector ProfilerFunction(int nargout, const ArrayVector& arg, Interpreter* e
 
 
 void MainApp::EnableRepaint() {
-  GfxEnableRepaint();
+  //  GfxEnableRepaint();
 }
 
 void MainApp::DisableRepaint() {
-  GfxDisableRepaint();
+  //  GfxDisableRepaint();
 }
 
 void  LoadBuiltinFunctionsFreeMat(Context* context,bool guimode);
 void  LoadBuiltinFunctionsCore(Context* context,bool guimode);
-void  LoadBuiltinFunctionsGraphics(Context* context,bool guimode);
+//void  LoadBuiltinFunctionsGraphics(Context* context,bool guimode);
 void  LoadBuiltinFunctionsFN(Context* context,bool guimode);
 void  LoadBuiltinFunctionsMain(Context* context,bool guimode);
 
@@ -743,7 +744,7 @@ void LoadBuiltinFunctions(Context *context, bool guimode)
 {
   LoadBuiltinFunctionsFreeMat(context,guimode);
   LoadBuiltinFunctionsCore(context,guimode);
-  LoadBuiltinFunctionsGraphics(context,guimode);
+  //  LoadBuiltinFunctionsGraphics(context,guimode);
   LoadBuiltinFunctionsFN(context,guimode);
   LoadBuiltinFunctionsMain(context,guimode);
 #ifdef HAVE_VTK
@@ -775,7 +776,7 @@ Context *MainApp::NewContext() {
   LoadBuiltinFunctions(context,guimode);
   if (first_time) {
     first_time = false;
-    InitializeHandleGraphics();
+    //    InitializeHandleGraphics();
     InitializeFileSubsystem();
   }
 #ifdef DYN_BLAS
@@ -954,7 +955,7 @@ void MainApp::RegisterInterrupt() {
 }
 
 void MainApp::RefreshFigures() {
-  RefreshFigs();
+  //  RefreshFigs();
 }
 
 int MainApp::Run() {
@@ -980,7 +981,7 @@ int MainApp::Run() {
   refreshTimer->setInterval(50);
   connect(refreshTimer,SIGNAL(timeout()),this,SLOT(RefreshFigures()));
   // Get a new thread
-  GfxEnableRepaint();
+  //  GfxEnableRepaint();
   m_mainID = StartNewInterpreterThread();
   // Assign this to the main thread
   m_eval = m_threadHandles.lookupHandle(m_mainID);

@@ -462,6 +462,20 @@ tests/matcompat/tough.mat svn_mime_002dtype=application%2Foctet-stream
 tests/matcompat/tough_with_fp.mat svn_mime_002dtype=application%2Foctet-stream
 tests/matcompat/wb_testmatrix.mat svn_mime_002dtype=application%2Foctet-stream
 tests/matcompat/west.mat svn_mime_002dtype=application%2Foctet-stream
+tests/mplcompat/test.pdf svn_mime_002dtype=application%2Fpdf
+tests/mplcompat/test.png svn_mime_002dtype=image%2Fpng
+tests/mplcompat/test1.jpg svn_mime_002dtype=image%2Fjpeg
+tests/mplcompat/test1.pdf svn_mime_002dtype=application%2Fpdf
+tests/mplcompat/test1.png svn_mime_002dtype=image%2Fpng
+tests/mplcompat/test1.svg svn_mime_002dtype=image%2Fsvg%2Bxml
+tests/mplcompat/test2.jpg svn_mime_002dtype=image%2Fjpeg
+tests/mplcompat/test2.pdf svn_mime_002dtype=application%2Fpdf
+tests/mplcompat/test2.png svn_mime_002dtype=image%2Fpng
+tests/mplcompat/test2.svg svn_mime_002dtype=image%2Fsvg%2Bxml
+tests/mplcompat/test3.jpg svn_mime_002dtype=image%2Fjpeg
+tests/mplcompat/test3.pdf svn_mime_002dtype=application%2Fpdf
+tests/mplcompat/test3.png svn_mime_002dtype=image%2Fpng
+tests/mplcompat/test3.svg svn_mime_002dtype=image%2Fsvg%2Bxml
 tests/parse/bad1.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 tests/parse/bad10.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 tests/parse/bad11.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
@@ -885,32 +899,10 @@ toolbox/func/@inline/subsref.m svn_keywords=Author+Date+Id+Revision svn_eol_002d
 toolbox/general/install.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 toolbox/general/license.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 toolbox/geom/cross.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/axis.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/cla.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/clf.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/colorbar.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/colormap.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/copper.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/gray.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/grid.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/hold.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/image.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/legend.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/newplot.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/plot.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/plot3.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 toolbox/graph/point.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/subplot.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/surf.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 toolbox/graph/testtube.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/text.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/title.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 toolbox/graph/tubeplot.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/view.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 toolbox/graph/winlev.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/xlabel.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/ylabel.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-toolbox/graph/zlabel.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 toolbox/graph/zoom.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 toolbox/help/mprint.m svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 toolbox/help/section_descriptors.txt svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native

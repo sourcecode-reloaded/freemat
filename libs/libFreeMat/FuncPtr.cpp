@@ -37,6 +37,12 @@
 static HandleList<VariableTable*> scopeHandles;
 
 FuncPtr FuncPtrLookup(Interpreter *eval, Array ptr) {
+  if (ptr.isString())
+    {
+      FuncPtr ret;
+      if (eval->lookupFunction(ptr.asString(),ret)) return ret;
+      throw Exception("unable to map " + ptr.asString() + " to a function");
+    }
   if ((!ptr.isUserClass()) || (ptr.className() != "functionpointer"))
     throw Exception("expected function pointer here, instead got " + ptr.className());
   QString name = LOOKUP(ptr,"name").asString();

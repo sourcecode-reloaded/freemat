@@ -19,10 +19,9 @@
 #ifndef __BasicArray_hpp__
 #define __BasicArray_hpp__
 
-#include <QVector>
+#include <vector>
 #include "CommonIterator.hpp"
 #include "NTuple.hpp"
-#include <QDebug>
 #include "Types.hpp"
 #include "FastList.hpp"
 #include "Cast.hpp"
@@ -163,9 +162,10 @@ public:
     // The strategy for dealing with deletions is simplified relative
     // to 3.x code.  An NDim deletion is only valid if there is one
     // dimension that is not covered.
-    QVector<bool> covered(index.size());
+    std::vector<bool> covered(index.size());
     for (int i=0;i<index.size();i++) {
       index_t dimLen = dimensions()[i];
+      if (index[i].length() == 0) return;
       covered[i] = (IsColonOp(index[i]) || DimensionCovered(index[i],dimLen));
     }
     // Count the number of uncovered dimensions

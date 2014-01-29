@@ -157,6 +157,17 @@ bool Scanner::tryFetchBinary(const char* op, TokenValueType tok) {
   return false;
 }
 
+bool Scanner::tryFetchTrinary(const char* op, TokenValueType tok) {
+  if ((current() == op[0]) && 
+      (ahead(1) == op[1]) &&
+      (ahead(2) == op[2])) {
+    setToken(tok);
+    m_ptr += 3;
+    return true;
+  }
+  return false;
+}
+
 void Scanner::fetchComment() {
   while ((current() != '\n') && (m_ptr < m_strlen))
     m_ptr++;

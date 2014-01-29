@@ -25,6 +25,8 @@ BasicArray<bool> GetDeletionMap(const IndexArray& vec, index_t length);
 
 bool IsColonOp(const IndexArray& ndx);
 
+IndexArray IndexRange(index_t lb, index_t ub);
+
 IndexArray ExpandColons(const IndexArray& ndx, index_t len);
 
 bool isSliceIndexCase(const NTuple &dims, const IndexArrayVector& index);

@@ -103,6 +103,10 @@ const TokenValueType TOK_INCR_POSTFIX = 202;
 const TokenValueType TOK_DECR_POSTFIX = 203;
 const TokenValueType TOK_PLUS_EQ = 204;
 const TokenValueType TOK_MINUS_EQ = 205;
+const TokenValueType TOK_AND_EQ = 206;
+const TokenValueType TOK_OR_EQ = 207;
+const TokenValueType TOK_TIMES_EQ = 208;
+const TokenValueType TOK_DOTTIMES_EQ = 209;
 
 class Serialize;
 
@@ -145,7 +149,7 @@ public:
 
 QString TokenToString(const Token& b);
 
-DebugStream& operator<<(DebugStream& o, const Token& b);
+//DebugStream& operator<<(DebugStream& o, const Token& b);
 
 void FreezeToken(const Token& a, Serialize *s);
 

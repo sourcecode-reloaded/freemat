@@ -33,3 +33,60 @@ ArrayVector CellFunction(int nargout, const ArrayVector& arg) {
   }
   return ArrayVector(p);
 }
+
+//@@Signature
+//function cellslices CellSlicesFunction
+//inputs varargin
+//outputs y
+ArrayVector CellSlicesFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() < 3)
+    throw Exception("cellslices expects three arguments: x, lb, ub - with an optional fourth argument dim");
+  Array x = arg[0];
+  Array lb = arg[1];
+  Array ub = arg[2];
+  index_t dim = 0;
+  if (arg.size() > 3)
+    {
+      Array dimarg = arg[3].toClass(Index);
+      dim = dimarg.realScalar<index_t>()-1;
+    }
+  if (lb.length() != ub.length())
+    throw Exception("cellslices expects lb and ub to be the same length");
+  BasicArray<index_t> lbdata = lb.toClass(Index).asDenseArray().constReal<index_t>();
+  BasicArray<index_t> ubdata = ub.toClass(Index).asDenseArray().constReal<index_t>();
+  int n = lbdata.length();
+  Array ret(CellArray,NTuple(1,n));
+  BasicArray<Array> &dp(ret.real<Array>());
+  // Loop over the slices
+  for (int i=0;i<n;i++)
+    {
+      // Calculate the size for this slice
+      index_t lbval = lbdata[i+1];
+      index_t ubval = ubdata[i+1];
+      std::cout << "Slice from " << lbval << " to " << ubval << "\n";
+      NTuple xdims = x.dimensions();
+      xdims[dim] = std::max<index_t>((ubval-lbval)+1,0);
+      if (xdims.count() == 0)
+	dp[NTuple(1,i+1)] = Array(x.dataClass(),xdims);
+      else
+	{
+	  // Have to do something.
+	  // Build an index array
+	  IndexArrayVector subset;
+	  // Fill with colons
+	  for (int j=0;j<NDims;j++)
+	    subset.push_back(IndexRange(1,xdims[j]));
+	  // Replace the dimension with a range
+	  subset[dim] = IndexRange(lbval,ubval);
+	  // Print them out
+	  for (int j=0;j<NDims;j++)
+	    {
+	      std::cout << "Dim " << j << "\n";
+	      subset[j].printMe(std::cout);
+	    }
+	  // Stuff it in
+	  dp[NTuple(1,i+1)] = x.get(subset);
+	}
+    }
+  return ArrayVector(ret);
+}

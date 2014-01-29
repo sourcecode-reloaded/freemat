@@ -52,12 +52,11 @@ ENDIF(MINGW)
 ADD_DEFINITIONS(-D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS)
 
 
-SET(QT_USE_QTNETWORK TRUE)
-SET(QT_USE_QTXML TRUE)
-SET(QT_USE_QTOPENGL TRUE)
-SET(QT_USE_QTSVG TRUE)
-SET(QT_USE_QTWEBKIT TRUE)
-
+#SET(QT_USE_QTNETWORK TRUE)
+#SET(QT_USE_QTXML TRUE)
+#SET(QT_USE_QTOPENGL TRUE)
+#SET(QT_USE_QTSVG TRUE)
+#SET(QT_USE_QTWEBKIT TRUE)
 FIND_PACKAGE(Qt4 REQUIRED)
 
 FIND_PACKAGE(PythonInterp REQUIRED)
@@ -98,6 +97,15 @@ OPTION( FORCE_SYSTEM_LIBS "Only use system libraries. Don't build third party li
 include(ExternalProject)
 SET(external_base ${CMAKE_CURRENT_BINARY_DIR}/deps/base CACHE PATH "Path where external dependencies that were built are installed")
 SET(CMAKE_FIND_ROOT_PATH ${external_base}/Install ${CMAKE_FIND_ROOT_PATH})
+
+######################################################################
+# CPython Package
+######################################################################
+
+FIND_PACKAGE(PythonLibs)
+INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
+SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${PYTHON_LIBRARIES})
+
 
 ######################################################################
 # PCRE Package
@@ -269,7 +277,7 @@ IF(NOT WIN32)
 ENDIF(NOT WIN32)
 
 INCLUDE_DIRECTORIES( libs/libFreeMat libs/libGraphics
-libs/libMex libs/libXP libs/libCore libs/libFN libs/libMatC
+libs/libMex libs/libXP libs/libCore libs/libFN libs/libMatC libs/QtSub
 libs/libMath/libDynBlas ${QT_LIBRARIES} src toolbox/jit)
 
 
@@ -410,7 +418,7 @@ add_custom_target( mergem
 
 add_custom_target( jitgen
         COMMENT "Building list of scalar JIT functions"
-	COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/jitgen.py ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src/toolbox/jit/CScalarFuncs.hpp
+	COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/jitgen.py ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/toolbox/jit/CScalarFuncs.hpp
 	VERBATIM
 	)
 

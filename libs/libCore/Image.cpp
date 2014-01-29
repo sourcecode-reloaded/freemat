@@ -26,7 +26,7 @@
 #include "Interpreter.hpp"
 #include "Math.hpp"
 
-//@@Signature
+//Signature
 //sgfunction imread ImReadFunction
 //inputs filename
 //outputs A map alpha
@@ -151,7 +151,7 @@ ArrayVector ImReadFunction(int nargout, const ArrayVector& arg,
   return ArrayVector();
 }
 
-//@@Signature
+//Signature
 //sgfunction imwrite ImWriteFunction
 //inputs filename A map alpha
 //outputs none

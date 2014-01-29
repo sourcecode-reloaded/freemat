@@ -425,13 +425,13 @@ ArrayVector Interpreter::doFunction(FuncPtr f, ArrayVector& m,
     if (!gfxErrorOccured && gfx_buffer.empty()) {
       gfxBufferNotEmpty.wait(&mutex);
     } else {
-      dbout << "Wha??\n";
+      qDebug() << "Wha??\n";
     }
     if (gfxErrorOccured) {
       throw Exception(gfxError);
     }
     if (gfx_buffer.empty())
-      dbout << "Warning! graphics empty on return\n";
+      qDebug() << "Warning! graphics empty on return\n";
     ArrayVector ret(gfx_buffer.front());
     gfx_buffer.erase(gfx_buffer.begin());
     return ret;
@@ -854,12 +854,62 @@ ArrayVector Interpreter::handleReindexing(const Tree & t, const ArrayVector &p) 
 	r = p[0];
       else
 	r = EmptyConstructor();
-      for (int index = 2;index < t.numChildren();index++)
+      for (int index = 2;index < t.numChildren()-1;index++)
 	deref(r,t.child(index));
-      return ArrayVector() << r;
+      ArrayVector q;
+      finishMultivaluedIndexingExpression(t.last(),r,q);
+      return q;
     }
   else
     return p;
+}
+
+void Interpreter::finishMultivaluedIndexingExpression(const Tree & s,
+						      Array &r,
+						      ArrayVector &q) {
+  SaveEndInfo;
+  endRef = &r;
+  if (s.is(TOK_PARENS)) {
+    ArrayVector m;
+    endTotal = s.numChildren();
+    if (s.numChildren() == 0)
+      q.push_back(r);
+    else {
+      for (int p = 0;p < s.numChildren(); p++) {
+	endCount = m.size();
+	multiexpr(s.child(p),m);
+      }
+      subsindex(m);
+      if (m.size() == 1)
+	q.push_back(r.get(m.front()));
+      else
+	q.push_back(r.get(m));
+    }
+  } else if (s.is(TOK_BRACES)) {
+    ArrayVector m;
+    endTotal = s.numChildren();
+    for (int p = 0;p < s.numChildren(); p++) {
+      endCount = m.size();
+      multiexpr(s.child(p),m);
+    }
+    subsindex(m);
+    if (m.size() == 1)
+      q += ArrayVectorFromCellArray(r.get(m.front()));
+    else
+      q += ArrayVectorFromCellArray(r.get(m));
+  } else if (s.is('.')) {
+    q += r.get(s.first().text());
+  } else if (s.is(TOK_DYN)) {
+    QString field;
+    try {
+      Array fname(expression(s.first()));
+      field = fname.asString();
+    } catch (Exception &e) {
+      throw Exception("dynamic field reference to structure requires a string argument");
+    }
+    q += r.get(field);
+  }
+  RestoreEndInfo;
 }
 
 void Interpreter::multiexpr(const Tree & t, ArrayVector &q, index_t lhsCount, bool output_optional) {
@@ -882,50 +932,7 @@ void Interpreter::multiexpr(const Tree & t, ArrayVector &q, index_t lhsCount, bo
     Array r(*ptr);
     for (int index = 1;index < t.numChildren()-1;index++)
       deref(r,t.child(index));
-    SaveEndInfo;
-    endRef = &r;
-    const Tree & s(t.last());
-    if (s.is(TOK_PARENS)) {
-      ArrayVector m;
-      endTotal = s.numChildren();
-      if (s.numChildren() == 0)
-	q.push_back(r);
-      else {
-	for (int p = 0;p < s.numChildren(); p++) {
-	  endCount = m.size();
-	  multiexpr(s.child(p),m);
-	}
-	subsindex(m);
-	if (m.size() == 1)
-	  q.push_back(r.get(m.front()));
-	else
-	  q.push_back(r.get(m));
-      }
-    } else if (s.is(TOK_BRACES)) {
-      ArrayVector m;
-      endTotal = s.numChildren();
-      for (int p = 0;p < s.numChildren(); p++) {
-	endCount = m.size();
-	multiexpr(s.child(p),m);
-      }
-      subsindex(m);
-      if (m.size() == 1)
-	q += ArrayVectorFromCellArray(r.get(m.front()));
-      else
-	q += ArrayVectorFromCellArray(r.get(m));
-    } else if (s.is('.')) {
-      q += r.get(s.first().text());
-    } else if (s.is(TOK_DYN)) {
-      QString field;
-      try {
-	Array fname(expression(s.first()));
-	field = fname.asString();
-      } catch (Exception &e) {
-	throw Exception("dynamic field reference to structure requires a string argument");
-      }
-      q += r.get(field);
-    }
-    RestoreEndInfo;
+    finishMultivaluedIndexingExpression(t.last(),r,q);
   } else if (!t.is(TOK_KEYWORD))
     q.push_back(expression(t));
 }
@@ -1229,11 +1236,11 @@ static bool compileJITBlock(Interpreter *interp, const Tree & t, JITInfo & ref, 
     ref.setJITState(JITInfo::SUCCEEDED);
     ref.setJITFunction(cg);
     interp->incrementJITCounter();
-    dbout << "Block JIT compiled at line "
+    qDebug() << "Block JIT compiled at line "
 	  << LineNumber(interp->getContext()->scopeTokenID())
 	  << " of " << interp->getContext()->scopeName() << "\n";
   } catch (Exception &e) {
-    dbout << "JIT compile failed:" << e.msg() << " at line "
+    qDebug() << "JIT compile failed:" << e.msg() << " at line "
       	  << LineNumber(interp->getContext()->scopeTokenID())
 	  << " of " << interp->getContext()->scopeName() << "\n";
     delete cg;
@@ -1266,7 +1273,7 @@ bool Interpreter::tryJitCode(const Tree & t) {
                 if (stat == CJIT_Success)
                     return true;
                 // If the prep stage failed, we can try to recompile
-                dbout << "Prep failed for JIT block retrying\n";
+                qDebug() << "Prep failed for JIT block retrying\n";
                 if (stat == CJIT_Prepfail)
                 {
                     bool success = compileJITBlock(this,t,ref,jitcontrol);
@@ -1560,20 +1567,32 @@ void Interpreter::forStatement(const Tree & t) {
 //DOCBLOCK variables_global
 void Interpreter::globalStatement(const Tree & t) {
   for (int i=0;i<t.numChildren();i++) {
-    QString name = t.child(i).text();
+    const Tree & var = t.child(i);
+    QString name = var.text();
     context->addGlobalVariable(name);
     if (!context->lookupVariable(name).valid())
-      context->insertVariable(name,EmptyConstructor());
+      {
+	if (var.hasChildren())
+	  context->insertVariable(name,expression(var.first()));
+	else
+	  context->insertVariable(name,EmptyConstructor());
+      }
   }
 }
 
 //DOCBLOCK variables_persistent
 void Interpreter::persistentStatement(const Tree & t) {
   for (int i=0;i<t.numChildren();i++) {
-    QString name = t.child(i).text();
+    const Tree & var = t.child(i);
+    QString name = var.text();
     context->addPersistentVariable(name);
     if (!context->lookupVariable(name).valid())
-      context->insertVariable(name,EmptyConstructor());
+      {
+	if (var.hasChildren())
+	  context->insertVariable(name,expression(var.first()));
+	else
+	  context->insertVariable(name,EmptyConstructor());
+      }
   }
 }
 

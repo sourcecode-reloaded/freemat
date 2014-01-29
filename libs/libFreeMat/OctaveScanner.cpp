@@ -91,6 +91,7 @@ void OctaveScanner::fetchWhitespace() {
 
 void OctaveScanner::fetchOther() {
   if (current() == '.') {
+    if (tryFetchTrinary(".*=",TOK_DOTTIMES_EQ)) return;
     if (tryFetchBinary(".*",TOK_DOTTIMES)) return;
     if (tryFetchBinary("./",TOK_DOTRDIV)) return;
     if (tryFetchBinary(".\\",TOK_DOTLDIV)) return;
@@ -101,6 +102,9 @@ void OctaveScanner::fetchOther() {
   if (tryFetchBinary("--",TOK_DECR)) return;
   if (tryFetchBinary("+=",TOK_PLUS_EQ)) return;
   if (tryFetchBinary("-=",TOK_MINUS_EQ)) return;
+  if (tryFetchBinary("&=",TOK_AND_EQ)) return;
+  if (tryFetchBinary("|=",TOK_OR_EQ)) return;
+  if (tryFetchBinary("*=",TOK_TIMES_EQ)) return;
   if (tryFetchBinary("<=",TOK_LE)) return;
   if (tryFetchBinary(">=",TOK_GE)) return;
   if (tryFetchBinary("==",TOK_EQ)) return;

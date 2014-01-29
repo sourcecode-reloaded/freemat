@@ -1,8 +1,8 @@
 
-INCLUDE_DIRECTORIES( ${QT_INCLUDE_DIR} ${QT_QTCORE_INCLUDE_DIR} ${QT_QTGUI_INCLUDE_DIR}  ${QT_QTNETWORK_INCLUDE_DIR} ${QT_QTXML_INCLUDE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+#INCLUDE_DIRECTORIES( ${QT_INCLUDE_DIR} ${QT_QTCORE_INCLUDE_DIR} ${QT_QTGUI_INCLUDE_DIR}  ${QT_QTNETWORK_INCLUDE_DIR} ${QT_QTXML_INCLUDE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
-QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/helpwidget.hpp ${CMAKE_CURRENT_BINARY_DIR}/helpwidget.moc.cpp )
-QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/XML.hpp ${CMAKE_CURRENT_BINARY_DIR}/XML.moc.cpp )
+#QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/helpwidget.hpp ${CMAKE_CURRENT_BINARY_DIR}/helpwidget.moc.cpp )
+#QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/XML.hpp ${CMAKE_CURRENT_BINARY_DIR}/XML.moc.cpp )
 
 set(CORE_SOURCES
 Abs.cpp 
@@ -35,8 +35,8 @@ Cell.cpp
 Struct.cpp 
 Directory.cpp 
 FFT.cpp 
-helpwidget.cpp 
-Help.cpp 
+#helpwidget.cpp 
+#Help.cpp 
 Hex.cpp 
 Clear.cpp 
 Exist.cpp 
@@ -48,7 +48,7 @@ Inspect.cpp
 Audio.cpp 
 Random.cpp 
 RanLib.cpp 
-Image.cpp 
+#Image.cpp 
 File.cpp 
 Printf.cpp 
 IO.cpp 
@@ -69,11 +69,13 @@ Transcendental.cpp
 Trigonometric.cpp 
 Utils.cpp 
 MatIO.cpp 
-XML.cpp 
+#XML.cpp 
 Cstruct.cpp 
 Control.cpp 
 Sparse.cpp 
-Matrix.cpp )
+Matrix.cpp
+PythonIF.cpp
+ )
 
 
 
@@ -90,5 +92,6 @@ add_custom_command(
 ADD_LIBRARY( Core 
 ${CORE_SOURCES}
 ${CMAKE_CURRENT_BINARY_DIR}/Loader.cpp
-${CMAKE_CURRENT_BINARY_DIR}/helpwidget.moc.cpp
-${CMAKE_CURRENT_BINARY_DIR}/XML.moc.cpp )
+#${CMAKE_CURRENT_BINARY_DIR}/helpwidget.moc.cpp
+#${CMAKE_CURRENT_BINARY_DIR}/XML.moc.cpp
+ )

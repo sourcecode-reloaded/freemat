@@ -31,6 +31,7 @@
 #include <QMutex>
 #include <QMutexLocker>
 #include <stdarg.h>
+#include <QDebug>
 #include "DebugStream.hpp"
 
 /**
@@ -478,13 +479,13 @@ public:
       for (int i=0;i<argc_in;i++) {
 	const char *t = va_arg(argp, const char *);
 	if (!t) {
-	  dbout << "addFunction for function " << 
+	  qDebug() << "addFunction for function " << 
 	    name << " is wrong!\n";
 	}
 	args.push_back(t);
       }
       if (va_arg(argp,const char *) != NULL) {
-	dbout << "addFunction for function " << 
+	qDebug() << "addFunction for function " << 
 	  name << " is wrong!\n";
       }
       va_end(argp);
@@ -499,7 +500,7 @@ public:
     f2def->jitsafe = jitsafe;
     insertFunction(f2def,false);  
     if (builtinTab.hasSymbol(name))
-      dbout << "function " << name << " is already in the builtin table";
+      qDebug() << "function " << name << " is already in the builtin table";
     builtinTab.insertSymbol(name,f2def);
   }
   /**
@@ -513,13 +514,13 @@ public:
       for (int i=0;i<argc_in;i++) {
 	const char *t = va_arg(argp, const char *);
 	if (!t) {
-	  dbout << "addSpecialFunction for function " << 
+	  qDebug() << "addSpecialFunction for function " << 
 	    (name) << " is wrong!\n";
 	}
 	args.push_back(t);
       }
       if (va_arg(argp,const char *) != NULL) {
-	dbout << "addSpecialFunction for function " << 
+	qDebug() << "addSpecialFunction for function " << 
 	  (name) << " is wrong!\n";
       }
       va_end(argp);
@@ -534,7 +535,7 @@ public:
     f2def->jitsafe = jitsafe;
     insertFunction(f2def,false);
     if (builtinTab.hasSymbol(name))
-      dbout << "function " << name << " is already in the builtin table";
+      qDebug() << "function " << name << " is already in the builtin table";
     builtinTab.insertSymbol(name,f2def);
   }
   /**
@@ -549,13 +550,13 @@ public:
       for (int i=0;i<argc_in;i++) {
 	const char *t = va_arg(argp, const char *);
 	if (!t) {
-	  dbout << "addGfxFunction for function " << 
+	  qDebug() << "addGfxFunction for function " << 
 	    (name) << " is wrong!\n";
 	}
 	args.push_back(t);
       }
       if (va_arg(argp,const char *) != NULL) {
-	dbout << "addGfxFunction for function " << 
+	qDebug() << "addGfxFunction for function " << 
 	  (name) << " is wrong!\n";
       }
       va_end(argp);
@@ -571,7 +572,7 @@ public:
     f2def->jitsafe = jitsafe;
     insertFunction(f2def,false);  
     if (builtinTab.hasSymbol(name))
-      dbout << "function " << name << " is already in the builtin table";
+      qDebug() << "function " << name << " is already in the builtin table";
     builtinTab.insertSymbol(name,f2def);
   }
   /**
@@ -586,13 +587,13 @@ public:
       for (int i=0;i<argc_in;i++) {
 	const char *t = va_arg(argp, const char *);
 	if (!t) {
-	  dbout << "addGfxSpecialFunction for function " << 
+	  qDebug() << "addGfxSpecialFunction for function " << 
 	    (name) << " is wrong!\n";
 	}
 	args.push_back(t);
       }
       if (va_arg(argp,const char *) != NULL) {
-	dbout << "addGfxSpecialFunction for function " << 
+	qDebug() << "addGfxSpecialFunction for function " << 
 	  (name) << " is wrong!\n";
       }
       va_end(argp);
@@ -608,7 +609,7 @@ public:
     f2def->jitsafe = jitsafe;
     insertFunction(f2def,false);
     if (builtinTab.hasSymbol(name))
-      dbout << "function " << name << " is already in the builtin table";
+      qDebug() << "function " << name << " is already in the builtin table";
     builtinTab.insertSymbol(name,f2def);
   }
   

@@ -33,12 +33,17 @@ bool IsColonOp(const IndexArray& ndx) {
   return (ndx.get(1) == -1);
 }
 
+IndexArray IndexRange(index_t lb, index_t ub) {
+  index_t len = ub - lb + 1;
+  IndexArray retvec(NTuple(len,1));
+  for (int i=0;i<len;i++)
+    retvec.set(i+1,lb+i);
+  return retvec;
+}
+
 IndexArray ExpandColons(const IndexArray& ndx, index_t len) {
   if (!IsColonOp(ndx)) return ndx;
-  IndexArray retvec(NTuple(len,1));
-  for (int i=0;i<len;i++) 
-    retvec.set(i+1,i+1);
-  return retvec;
+  return IndexRange(1,len);
 }
 
 bool isSliceIndexCase(const NTuple &dims, const IndexArrayVector& index) {

@@ -30,7 +30,7 @@ bool inBundleMode();
 QString GetRootPath();
 
 
-//@@Signature
+//Signature
 //sfunction help HelpFunction
 //inputs function
 //outputs none
@@ -76,7 +76,7 @@ ArrayVector HelpFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
 
 static HelpWindow *m_helpwin=0;
 
-//@@Signature
+//Signature
 //sgfunction helpwin HelpWinFunction
 //inputs functionname
 //outputs none

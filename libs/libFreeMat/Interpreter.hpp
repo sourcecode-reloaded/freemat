@@ -776,6 +776,8 @@ private:
 
   ArrayVector handleReindexing(const Tree & t, const ArrayVector &p);
   
+  void finishMultivaluedIndexingExpression(const Tree & s, Array &r, ArrayVector &q);
+
   /**
    * Evaluate the expression into a variable-array
    */

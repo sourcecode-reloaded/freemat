@@ -43,3 +43,31 @@ ArrayVector AbsFunction(int nargout, const ArrayVector& arg) {
 }
 
 JitScalarFunc1(abs,OpAbs::func);
+
+struct OpSign {
+  template <typename T>
+  static inline T func(T t) 
+  {  
+    if (t < 0) return -1;
+    if (t > 0) return 1;
+    if (t == 0) return 0;
+    return NaN();
+  }
+  template <typename T>
+  static inline void func(T x, T y, T &rx, T &ry) {
+    T denom = complex_abs(x,y);
+    rx = x/denom;
+    ry = y/denom;
+  }
+};
+
+
+//@@Signature
+//function sign SignFunction
+//inputs x
+//outputs y
+ArrayVector SignFunction(int nargout, const ArrayVector& arg) {
+  if (arg.size() != 1)
+    throw Exception("sign function requires 1 argument");
+  return ArrayVector(UnaryOp<OpSign>(arg[0]));
+}
