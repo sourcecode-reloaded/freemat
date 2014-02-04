@@ -36,7 +36,7 @@ bool GeneralizedEigenDecomposeCompactSymmetric(Array A, Array B, Array& D);
 bool GeneralizedEigenDecomposeFullSymmetric(Array A,  Array B, Array& V, Array& D);
 void GeneralizedEigenDecomposeFullGeneral(Array A, Array B, Array& V, Array& D);
 void GeneralizedEigenDecomposeCompactGeneral(Array A, Array B, Array& D);
-ArrayVector SparseEigDecompose(int nargout, Array A, int k, QString whichFlag);
+ArrayVector SparseEigDecompose(int nargout, Array A, int k, FMString whichFlag);
 ArrayVector SparseEigDecomposeShifted(int nargout, Array A, int k, double shift[2]);
 
 #endif

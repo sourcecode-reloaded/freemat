@@ -91,11 +91,11 @@ ArrayVector EpsFunction(int nargout, const ArrayVector& arg) {
   if( arg.size()==1 ){
     Array a( arg[0] );
     if( a.isString() ){
-      QString str = a.asString().toLower();
-      if( str == QString( "double" ) ){
+      FMString str = a.asString().toLower();
+      if( str == FMString( "double" ) ){
 	retval << Array( feps( 1. ) ); 
       }
-      else if( str == QString( "single" ) ){
+      else if( str == FMString( "single" ) ){
 	retval << Array( fepsf( 1. ) );
       }
       else{
@@ -122,11 +122,11 @@ ArrayVector RealMaxFunction(int nargout, const ArrayVector &arg) {
   if( arg.size()==1 ){
     Array a( arg[0] );
     if( a.isString() ){
-      QString str = a.asString().toLower();
-      if( str == QString( "double" ) ){
+      FMString str = a.asString().toLower();
+      if( str == FMString( "double" ) ){
 	retval << Array( DBL_MAX ); 
       }
-      else if( str == QString( "single" ) ){
+      else if( str == FMString( "single" ) ){
 	retval << Array( FLT_MAX );
       }
       else{

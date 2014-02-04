@@ -20,7 +20,6 @@
 #include "Array.hpp"
 #include "Struct.hpp"
 #include "MemPtr.hpp"
-#include <QtCore>
 #include "Algorithms.hpp"
 #include "FuncPtr.hpp"
 #include "AnonFunc.hpp"

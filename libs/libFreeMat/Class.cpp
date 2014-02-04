@@ -29,8 +29,8 @@ struct UserClassMetaInfo {
 };
 
 // Class information is mapped to a class template through an ID number
-static QMutex classMutex;
-static QMap<QString,UserClassMetaInfo> classTable;
+static FMMutex classMutex;
+static FMMap<FMString,UserClassMetaInfo> classTable;
 
 // some behavioral observations on classes.
 //  The first call to "class" is the definitive one.
@@ -135,9 +135,9 @@ static QMap<QString,UserClassMetaInfo> classTable;
 //   a.class1.class2.foo = 32
 //  But I don't really see the point for it. 
 
-static Array ClassAux(const Array &s, QString classname, const StringVector &parentNames, 
+static Array ClassAux(const Array &s, FMString classname, const StringVector &parentNames, 
 		      const ArrayVector &parents) {
-  QMutexLocker lock(&classMutex);
+  FMMutexLocker lock(&classMutex);
   if (!s.isEmpty() && (s.dataClass() != Struct))
     throw Exception("first argument to 'class' function must be a structure");
   // First look up the class ID
@@ -155,7 +155,7 @@ static Array ClassAux(const Array &s, QString classname, const StringVector &par
   StringVector s_fields(FieldNames(s));
   if (meta.fieldNames != s_fields)
     {
-      qDebug() << "Registered names " << meta.fieldNames << " vs passed " << s_fields;
+      dbout << "Registered names " << meta.fieldNames << " vs passed " << s_fields;
       throw Exception("fieldnames of structure provided must match the fieldnames for the registered class");
     }
   // Now check to make sure all of the parent objects are the same size as the source object
@@ -263,16 +263,16 @@ ArrayVector ClassFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(ClassAux(arg[0],arg[1].asString(),parentNames,parents));
 }
 
-static QVector<int> MarkUserClasses(ArrayVector t) {
-  QVector<int> set;
+static FMVector<int> MarkUserClasses(ArrayVector t) {
+  FMVector<int> set;
   for (int j=0;j<t.size();j++) 
     if (t[j].isUserClass()) set.push_back(j);
   return set;
 }
  
 static bool ClassSearchOverload(Interpreter* eval, ArrayVector t, 
-				QVector<int> userset, FuncPtr &val,
-				QString name) {
+				FMVector<int> userset, FuncPtr &val,
+				FMString name) {
   bool overload = false;
   int k = 0;
   while (k<userset.size() && !overload) {
@@ -291,7 +291,7 @@ Array ClassMatrixConstructor(ArrayMatrix m, Interpreter* eval) {
   for (int i=0;i<m.size();i++) {
     // check this row - make a list of columns that are
     // user classes
-    QVector<int> userset(MarkUserClasses(m[i]));
+    FMVector<int> userset(MarkUserClasses(m[i]));
     if (userset.empty()) {
       ArrayMatrix n;
       n.push_back(m[i]);
@@ -320,7 +320,7 @@ Array ClassMatrixConstructor(ArrayMatrix m, Interpreter* eval) {
   // At this point we have a vector arrays that have to vertically
   // concatenated.  There may not be any objects in it, so we have 
   // to rescan.
-  QVector<int> userset(MarkUserClasses(rows));
+  FMVector<int> userset(MarkUserClasses(rows));
   if (userset.empty()) {
     // OK - we don't have any user-defined classes anymore,
     // so we want to call matrix constructor, which needs
@@ -346,7 +346,7 @@ Array ClassMatrixConstructor(ArrayMatrix m, Interpreter* eval) {
   return EmptyConstructor();
 }
 
-Array ClassUnaryOperator(Array a, QString funcname, Interpreter* eval) {
+Array ClassUnaryOperator(Array a, FMString funcname, Interpreter* eval) {
   FuncPtr val;
   ArrayVector m, n;
   if (eval->getContext()->lookupFunction(ClassMangleName(a.className(),funcname),val)) {
@@ -363,7 +363,7 @@ Array ClassUnaryOperator(Array a, QString funcname, Interpreter* eval) {
 }
 
 // ClassResolveHelper
-static bool ClassResolveHelper(Interpreter* eval, QString className, QString funcName, FuncPtr& val) {
+static bool ClassResolveHelper(Interpreter* eval, FMString className, FMString funcName, FuncPtr& val) {
   Context *context = eval->getContext();
   if (context->lookupFunction(ClassMangleName(className,funcName),val))
     return true;
@@ -375,7 +375,7 @@ static bool ClassResolveHelper(Interpreter* eval, QString className, QString fun
   return false;
 }
 
-bool isParentClass(QString parent, QString child)
+bool isParentClass(FMString parent, FMString child)
 {
   UserClassMetaInfo einfo = classTable[child];
   for (int i=0;i<einfo.parentClasses.size();i++)
@@ -383,7 +383,7 @@ bool isParentClass(QString parent, QString child)
   return false;
 }
 
-bool ClassResolveFunction(Interpreter* eval, Array& args, QString funcName, FuncPtr& val) {
+bool ClassResolveFunction(Interpreter* eval, Array& args, FMString funcName, FuncPtr& val) {
   Context *context = eval->getContext();
   return ClassResolveHelper(eval,args.className(),funcName,val);
 }
@@ -413,40 +413,40 @@ static Array ClassTriOp(Array a, Array b, Array c, FuncPtr val, Interpreter *eva
     return EmptyConstructor();
 }
 
-Array ClassTrinaryOperator(Array a, Array b, Array c, QString funcname,
+Array ClassTrinaryOperator(Array a, Array b, Array c, FMString funcname,
 			   Interpreter* eval) {
   FuncPtr val;
   if (a.isUserClass()) {
     if (eval->getContext()->lookupFunction(ClassMangleName(a.className(),funcname),val)) 
       return ClassTriOp(a,b,c,val,eval);
-    throw Exception(QString("Unable to find a definition of ") + funcname + 
+    throw Exception(FMString("Unable to find a definition of ") + funcname + 
 		    " for arguments of class " + a.className());
   } else if (b.isUserClass()) {
     if (eval->getContext()->lookupFunction(ClassMangleName(b.className(),funcname),val)) 
       return ClassTriOp(a,b,c,val,eval);
-    throw Exception(QString("Unable to find a definition of ") + funcname + 
+    throw Exception(FMString("Unable to find a definition of ") + funcname + 
 		    " for arguments of class " + b.className());
   } else if (c.isUserClass()) {
     if (eval->getContext()->lookupFunction(ClassMangleName(c.className(),funcname),val)) 
       return ClassTriOp(a,b,c,val,eval);
-    throw Exception(QString("Unable to find a definition of ") + funcname + 
+    throw Exception(FMString("Unable to find a definition of ") + funcname + 
 		    " for arguments of class " + c.className());
   }
   throw Exception("unexpected argument types for classtrinaryoperator");
 }
 
-Array ClassBinaryOperator(Array a, Array b, QString funcname,
+Array ClassBinaryOperator(Array a, Array b, FMString funcname,
 			  Interpreter* eval) {
   FuncPtr val;
   if (a.isUserClass()) {
     if (eval->getContext()->lookupFunction(ClassMangleName(a.className(),funcname),val)) 
       return ClassBiOp(a,b,val,eval);
-    throw Exception(QString("Unable to find a definition of ") + funcname + 
+    throw Exception(FMString("Unable to find a definition of ") + funcname + 
 		    " for arguments of class " + a.className());
   } else if (b.isUserClass()) {
     if (eval->getContext()->lookupFunction(ClassMangleName(b.className(),funcname),val)) 
       return ClassBiOp(a,b,val,eval);
-    throw Exception(QString("Unable to find a definition of ") + funcname + 
+    throw Exception(FMString("Unable to find a definition of ") + funcname + 
 		    " for arguments of class " + b.className());
   }
   throw Exception("unexpected argument types for classbinaryoperator");
@@ -475,7 +475,7 @@ Array IndexExpressionToStruct(Interpreter* eval, const Tree & t, Array r) {
 
       // Take the arguments and push them into a cell array...
       ArrayMatrix q;	q.push_back(m);
-      type_args.push_back(Array(QString("()")));
+      type_args.push_back(Array(FMString("()")));
       subs_args.push_back(CellConstructor(q));
     }
     if (t.child(index).is(TOK_BRACES)) {
@@ -490,11 +490,11 @@ Array IndexExpressionToStruct(Interpreter* eval, const Tree & t, Array r) {
 	throw Exception("Expected indexing expression!");
       // Take the arguments and push them into a cell array...
       ArrayMatrix q;	q.push_back(m);
-      type_args.push_back(Array(QString("{}")));
+      type_args.push_back(Array(FMString("{}")));
       subs_args.push_back(CellConstructor(q));
     }
     if (t.child(index).is('.')) {
-      type_args.push_back(Array(QString(".")));
+      type_args.push_back(Array(FMString(".")));
       subs_args.push_back(Array(t.child(index).first().text()));
     }
   }
@@ -515,7 +515,7 @@ static ArrayVector ClassSubsrefCall(Interpreter* eval, const Tree & t, Array r, 
   return n;
 }
 
-bool ClassHandleMethod(Array r, QString funcName, Interpreter* eval)
+bool ClassHandleMethod(Array r, FMString funcName, Interpreter* eval)
 {
   FuncPtr p;
   if (!ClassResolveFunction(eval,r,funcName,p)) return false;
@@ -616,7 +616,7 @@ ArrayVector ClassRHSExpression(Array r, const Tree & t, Interpreter* eval)
       }
     }
     if (t.child(index).is(TOK_DYN)) {
-      QString field;
+      FMString field;
       try {
 	Array fname(eval->expression(t.child(index).first()));
 	field = fname.asString();
@@ -638,7 +638,7 @@ ArrayVector ClassRHSExpression(Array r, const Tree & t, Interpreter* eval)
 void ClassAssignExpression(ArrayReference dst, const Tree & t, const Array& value, Interpreter* eval) {
   FuncPtr val;
   if (!ClassResolveFunction(eval,*dst,"subsasgn",val))
-    throw Exception(QString("The method 'subsasgn' is not defined for objects of class ") + 
+    throw Exception(FMString("The method 'subsasgn' is not defined for objects of class ") + 
 		    dst->className());
   ArrayVector p;
   p.push_back(*dst);
@@ -652,14 +652,14 @@ void ClassAssignExpression(ArrayReference dst, const Tree & t, const Array& valu
   if (!n.empty())
     *dst = n[0];
   else
-    eval->warningMessage(QString("'subsasgn' for class ") + dst->className() + 
-			 QString(" did not return a value... operation has no effect."));
+    eval->warningMessage(FMString("'subsasgn' for class ") + dst->className() + 
+			 FMString(" did not return a value... operation has no effect."));
 }
 
 // Ideally, this would be the only place where the class name is mangled.
 // However, currently, the same op is repeated in the Interface implementation
 // code.
-QString ClassMangleName(QString className, QString funcName) {
+FMString ClassMangleName(FMString className, FMString funcName) {
   return "@" + className + ":" + funcName;
 }
 
@@ -667,17 +667,17 @@ void clearUserClasses() {
   classTable.clear();
 }
 
-void defineHierarchyForClass(QString classname, StringVector parents)
+void defineHierarchyForClass(FMString classname, StringVector parents)
 {
-  QMutexLocker lock(&classMutex);
+  FMMutexLocker lock(&classMutex);
   UserClassMetaInfo info;
   info.parentClasses = parents;
   classTable[classname] = info;
 }
 
-bool isUserClassDefined(QString classname)
+bool isUserClassDefined(FMString classname)
 {
-  QMutexLocker lock(&classMutex);
+  FMMutexLocker lock(&classMutex);
   return (classTable.contains(classname));
 }
 

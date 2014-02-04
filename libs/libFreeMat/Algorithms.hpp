@@ -21,7 +21,7 @@
 
 #include "Array.hpp"
 
-void WarningMessage(QString msg);
+void WarningMessage(FMString msg);
 
 bool IsColonOp(const Array &arg);
 bool IsNonNegative(const Array &arg);
@@ -36,19 +36,19 @@ const Array CellArrayFromArrayVector(ArrayVector &arg, index_t cnt);
 const Array CellArrayFromArrayVector(ArrayVector arg);
 const Array CellArrayFromArray(const Array &arg);
 const Array CellArrayFromStringVector(const StringVector& arg);
-const Array StringArrayFromStringVector(const StringVector& arg, QChar pad);
+const Array StringArrayFromStringVector(const StringVector& arg, FMChar pad);
 StringVector StringVectorFromArray(const Array &arg);
 
 void SetCellContents(Array &cell, const Array& index, ArrayVector& data);
 void SetCellContents(Array &cell, const ArrayVector& index, ArrayVector& data);
-QStringList FieldNames(const Array& arg);
+FMStringList FieldNames(const Array& arg);
 
 bool IsCellStringArray(const Array &arg);
 
 Array Vectorize(const Array& arg);
 
 template <typename T>
-BasicArray<T> ToBasicArray(const QVector<T> &x) {
+BasicArray<T> ToBasicArray(const FMVector<T> &x) {
   BasicArray<T> retvec(NTuple(index_t(x.size()),1));
   for (int i=0;i<x.size();i++)
     retvec[index_t(i)+1] = x[i];

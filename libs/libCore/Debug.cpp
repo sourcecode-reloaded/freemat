@@ -69,11 +69,11 @@ ArrayVector FdumpFunction(int nargout, const ArrayVector& arg,Interpreter* eval)
     throw Exception("fdump function requires at least one argument");
   if (!(arg[0].isString()))
     throw Exception("first argument to fdump must be the name of a function (i.e., a string)");
-  QString fname = arg[0].asString();
+  FMString fname = arg[0].asString();
   Context *context = eval->getContext();
   FuncPtr funcDef;
   if (!context->lookupFunction(fname,funcDef))
-    throw Exception(QString("function ") + fname + " undefined!");
+    throw Exception(FMString("function ") + fname + " undefined!");
   funcDef->updateCode(eval);
   funcDef->printMe(eval);
   return ArrayVector();

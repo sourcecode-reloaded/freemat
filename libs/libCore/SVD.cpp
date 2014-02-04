@@ -20,7 +20,7 @@
 #include "MemPtr.hpp"
 #include "LAPACK.hpp"
 #include "Algorithms.hpp"
-#include <QtCore>
+
 
 
 template <typename T>
@@ -224,14 +224,14 @@ static void TSVD(int nrows, int ncols, BasicArray<T> &U, BasicArray<T> &VT,
   LWORK = -1;
   Tgesvd(&JOBU,&JOBVT,&M,&N,A.data(),&LDA,S.data(),U.data(),&LDU,VT.data(),&LDVT,&WORKSIZE,&LWORK,&INFO,1,1);
   if (INFO < 0)
-    WarningMessage(QString("svd (real) had illegal value for parameter (workspace) %1").arg(-INFO));
+    WarningMessage(FMString("svd (real) had illegal value for parameter (workspace) ") + Stringify(-INFO));
   LWORK = (int) WORKSIZE;
   MemBlock<T> WORK(LWORK);
   Tgesvd(&JOBU,&JOBVT,&M,&N,A.data(),&LDA,S.data(),U.data(),&LDU,VT.data(),&LDVT,&WORK,&LWORK,&INFO,1,1);
   if (INFO > 0)
-    WarningMessage(QString("svd did not converge"));
+    WarningMessage(FMString("svd did not converge"));
   if (INFO < 0)
-    WarningMessage(QString("svd (real) had illegal value for parameter %1").arg(-INFO));
+    WarningMessage(FMString("svd (real) had illegal value for parameter ") + Stringify(-INFO));
 }
 
 template <typename T>
@@ -411,9 +411,9 @@ static void TSVD(int nrows, int ncols, BasicArray<T> &U, BasicArray<T> &VT,
   Tgesvd( &JOBU, &JOBVT, &M, &N, A.data(), &LDA, S.data(), U.data(), &LDU, VT.data(), &LDVT, 
 	  &WORK, &LWORK, &RWORK, &INFO, 1, 1);
   if (INFO > 0)
-    WarningMessage(QString("svd did not converge"));
+    WarningMessage(FMString("svd did not converge"));
   if (INFO < 0)
-    WarningMessage(QString("svd had illegal value for parameter %1").arg(-INFO));
+    WarningMessage(FMString("svd had illegal value for parameter ") + Stringify(-INFO));
 }
 
 

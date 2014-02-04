@@ -50,7 +50,7 @@ MacroDefIsSame(int32);
 MacroDefIsSame(uint32);
 MacroDefIsSame(int64);
 MacroDefIsSame(uint64);
-MacroDefIsSame(QChar);
+MacroDefIsSame(FMChar);
 
 template <>
 bool IsSame(const float& a, const float& b) {
@@ -128,7 +128,7 @@ ArrayVector IsSameFunction(int nargout, const ArrayVector& arg) {
 ArrayVector IsSetFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   if (arg.size() < 1)
     throw Exception("isset function takes at least one argument - the name of the variable to check for");
-  QString fname = arg[0].asString();
+  FMString fname = arg[0].asString();
   bool isDefed;
   ParentScopeLocker lock(eval->getContext());
   ArrayReference d = eval->getContext()->lookupVariable(fname);
@@ -163,7 +163,7 @@ MacroDefIsEqual(int32);
 MacroDefIsEqual(uint32);
 MacroDefIsEqual(int64);
 MacroDefIsEqual(uint64);
-MacroDefIsEqual(QChar);
+MacroDefIsEqual(FMChar);
 MacroDefIsEqual(float);
 MacroDefIsEqual(double);
 
@@ -250,7 +250,7 @@ MacroDefIsEqualWithEqualNaNs(int32);
 MacroDefIsEqualWithEqualNaNs(uint32);
 MacroDefIsEqualWithEqualNaNs(int64);
 MacroDefIsEqualWithEqualNaNs(uint64);
-MacroDefIsEqualWithEqualNaNs(QChar);
+MacroDefIsEqualWithEqualNaNs(FMChar);
 
 
 template <>

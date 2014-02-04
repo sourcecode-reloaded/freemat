@@ -25,7 +25,7 @@
 //outputs verstring
 //DOCBLOCK freemat_version
 ArrayVector VersionFunction(int nargout, const ArrayVector& arg) {
-  return ArrayVector(Array(QString(FREEMAT_VERSION)));
+  return ArrayVector(Array(FMString(FREEMAT_VERSION)));
 }
 
 

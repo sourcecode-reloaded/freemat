@@ -24,12 +24,14 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+
+
+#if 0
 #include <QObject>
 #include <QTextCursor>
 #include <QString>
 #include <QTextStream>
 
-#if 0
 #include "DebugWin.hpp"
 
 //#ifndef NDEBUG
@@ -103,5 +105,7 @@ extern DebugStream dbout;
 #endif
 
 //#define qDebug() dbout
+
+#define dbout std::cout
 
 #endif /* __DEBUGSTREAM_HPP__ */

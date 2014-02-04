@@ -41,7 +41,7 @@ ArrayVector InfFunction(int nargout, const ArrayVector& arg) {
       // Check for the classname
       dataclass = Invalid;
       // Get the classname as a string
-      QString cp = trim_arg.back().asString().toLower();
+      FMString cp = trim_arg.back().asString().toLower();
       if (cp == "single") dataclass = Float;
       if (cp == "double") dataclass = Double;
       if (cp == "float") dataclass = Float;
@@ -82,7 +82,7 @@ ArrayVector NaNFunction(int nargout, const ArrayVector& arg) {
       // Check for the classname
       dataclass = Invalid;
       // Get the classname as a string
-      QString cp = trim_arg.back().asString().toLower();
+      FMString cp = trim_arg.back().asString().toLower();
       if (cp == "single") dataclass = Float;
       if (cp == "double") dataclass = Double;
       if (cp == "float") dataclass = Float;
@@ -122,7 +122,7 @@ ArrayVector ZerosFunction(int nargout, const ArrayVector& arg) {
       // Check for the classname
       dataclass = Invalid;
       // Get the classname as a string
-      QString cp = trim_arg.back().asString().toLower();
+      FMString cp = trim_arg.back().asString().toLower();
       MacroExpandCasesSimple(MacroZeros);
       if (cp == "single") dataclass = Float;
       if (cp == "logical") dataclass = Bool;

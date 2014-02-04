@@ -38,14 +38,14 @@ ArrayVector JITControlFunction(int nargout, const ArrayVector& arg, Interpreter*
     JITControlFlag flag = eval->JITControl();
     switch (flag)
       {
-      case JITOff: return ArrayVector(Array(QString("off")));
-      case JITOn: return ArrayVector(Array(QString("on")));
-      case JITTrace: return ArrayVector(Array(QString("trace")));
+      case JITOff: return ArrayVector(Array(FMString("off")));
+      case JITOn: return ArrayVector(Array(FMString("on")));
+      case JITTrace: return ArrayVector(Array(FMString("trace")));
       }
   } else {
     if (!arg[0].isString())
       throw Exception("jitcontrol function takes only a single, string argument");
-    QString txt = arg[0].asString().toUpper();
+    FMString txt = arg[0].asString().toUpper();
     if (txt == "ON")
       eval->setJITControl(JITOn);
     else if (txt == "OFF")
@@ -70,13 +70,13 @@ ArrayVector JITControlFunction(int nargout, const ArrayVector& arg, Interpreter*
 ArrayVector DbAutoFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   if (arg.size() < 1) {
     if (eval->AutoStop()) 
-      return ArrayVector(Array(QString("on")));
+      return ArrayVector(Array(FMString("on")));
     else 
-      return ArrayVector(Array(QString("off")));
+      return ArrayVector(Array(FMString("off")));
   } else {
     if (!arg[0].isString())
       throw Exception("dbauto function takes only a single, string argument");
-    QString txt = arg[0].asString().toUpper();
+    FMString txt = arg[0].asString().toUpper();
     if (txt == "ON")
       eval->setAutoStop(true);
     else if (txt == "OFF")

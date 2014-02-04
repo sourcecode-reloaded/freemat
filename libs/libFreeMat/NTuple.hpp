@@ -19,7 +19,7 @@
 #ifndef __NTuple_hpp__
 #define __NTuple_hpp__
 
-#include <QString>
+#include "FMLib.hpp"
 #include <iostream>
 
 #include "Types.hpp"
@@ -255,11 +255,11 @@ public:
 	   (last_singular > 0)) last_singular--;
     return last_singular;
   }
-  inline QString toString() const {
+  inline FMString toString() const {
     int last_not_one = lastNotOne();
-    QString ret = QString("%1").arg(m_data[0]);
+    FMString ret = Stringify(m_data[0]);
     for (int i=1;i<last_not_one;i++)
-      ret += QString("x%1").arg(m_data[i]);
+      ret += FMString("x") + Stringify(m_data[i]);
     return ret;
   }
 };

@@ -20,7 +20,7 @@
 #ifndef __Exception_hpp__
 #define __Exception_hpp__
 
-#include <QString>
+#include "FMLib.hpp"
 
 class Interpreter;
 
@@ -31,14 +31,14 @@ class Interpreter;
  * the exception types are not encoded using RTTI...
  */
 class Exception {
-  QString m_msg;
+  FMString m_msg;
   bool handled;
 public:
   Exception() :  m_msg(""), handled(false)  {}
   /**
    * Construct an exception object with a given STL-string.
    */
-  Exception(QString msg_in);
+  Exception(FMString msg_in);
   /**
    * Output the contents of the exception to the console.
    */
@@ -46,14 +46,14 @@ public:
   /**
    * Returns true if 
    */
-  bool matches(QString tst_msg);
+  bool matches(FMString tst_msg);
   inline bool wasHandled() {return handled;}
   inline void markAsHandled() {handled = true;}
-  bool operator==(QString tst_msg) {return matches(tst_msg);}
+  bool operator==(FMString tst_msg) {return matches(tst_msg);}
   /**
    * Get a copy of the message 
    */
-  inline QString msg() {return m_msg;}
+  inline FMString msg() {return m_msg;}
 };
 
 void printExceptionCount();

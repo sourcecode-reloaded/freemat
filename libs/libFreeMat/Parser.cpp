@@ -590,7 +590,7 @@ const Token& Parser::next() {
   return m_lex.next();
 }
 
-void Parser::serror(QString errmsg) {
+void Parser::serror(FMString errmsg) {
   if (m_lex.contextNum() > lastpos) {
     lasterr = errmsg;
     lastpos = m_lex.contextNum();
@@ -598,13 +598,13 @@ void Parser::serror(QString errmsg) {
   throw ParseException(m_lex.contextNum(),errmsg);
 }
 
-const Token & Parser::expect(TokenValueType a, QString because) {
+const Token & Parser::expect(TokenValueType a, FMString because) {
   const Token & ret(next());
   if (!m_lex.next().is(a)) {
     if (a != TOK_EOF)
-      serror(QString("Expecting ") + TokenToString(Token(a,0)) + " for " + because);
+      serror(FMString("Expecting ") + TokenToString(Token(a,0)) + " for " + because);
     else
-      serror(QString("Unexpected input"));
+      serror(FMString("Unexpected input"));
   }  else {
     consume();
   }
@@ -855,13 +855,13 @@ Tree Parser::processStatementList() {
   return statementList();
 }
 
-Tree ParseString(QString arg) {
+Tree ParseString(FMString arg) {
   Scanner S(arg,"");
   Parser P(S);
   return P.processStatementList();
 }
 
-Tree ParseExpressionString(QString arg) {
+Tree ParseExpressionString(FMString arg) {
   Scanner S(arg,"");
   Parser P(S);
   try {

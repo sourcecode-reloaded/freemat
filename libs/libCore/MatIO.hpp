@@ -23,7 +23,6 @@
 #include "Array.hpp"
 #include <string>
 #include <zlib.h>
-#include <QFile>
 
 enum MatTypes {
   miINT8 = 1,
@@ -72,11 +71,11 @@ public:
   };
 
 private:
-  QFile *m_fp;
-  QString m_filename;
+  FMFile *m_fp;
+  FMString m_filename;
   bool m_endianSwap;
   openMode m_mode;
-  QString m_txt;
+  FMString m_txt;
   bool m_compressed_data;
   uint8* m_compression_buffer;
   z_streamp zstream;
@@ -97,7 +96,7 @@ private:
   void putStructArray(const Array &x);
   void putCellArray(const Array &x);
   void putDataElement(const Array &x);
-  void putArraySpecific(const Array &x, Array aFlags, QString name, mxArrayTypes arrayType);
+  void putArraySpecific(const Array &x, Array aFlags, FMString name, mxArrayTypes arrayType);
   // Align us to the next 64 bit boundary.
   void Align64Bit();
   // Elementary read/write operations
@@ -123,20 +122,20 @@ private:
   void WriteData(const void *dest, uint32 towrite);
 public:
   // Constructor pairs
-  MatIO(QString filename, MatIO::openMode mode);
+  MatIO(FMString filename, MatIO::openMode mode);
   ~MatIO();
   // Get/Put for arrays
-  Array getArray(bool &atEof, QString &name, bool &match, bool &isGlobal);
-  void putArray(const Array &x, QString name = QString(), bool isGlobal = false);
-  void putArrayCompressed(const Array &x, QString name);
+  Array getArray(bool &atEof, FMString &name, bool &match, bool &isGlobal);
+  void putArray(const Array &x, FMString name = FMString(), bool isGlobal = false);
+  void putArrayCompressed(const Array &x, FMString name);
   // Header routines
-  QString getHeader();
-  void putHeader(QString header);
+  FMString getHeader();
+  void putHeader(FMString header);
 };
 
-ArrayVector MatLoadFunction(int nargout, QString filename, StringVector varnames, 
+ArrayVector MatLoadFunction(int nargout, FMString filename, StringVector varnames, 
 			    bool regexp, Interpreter *eval);
-ArrayVector MatSaveFunction(QString filename, StringVector names, Interpreter *eval);
+ArrayVector MatSaveFunction(FMString filename, StringVector names, Interpreter *eval);
 
 
 #endif

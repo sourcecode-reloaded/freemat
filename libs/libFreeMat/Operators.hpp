@@ -1178,11 +1178,11 @@ static inline Array StringOp(const Array &arg) {
     StringVector p(StringVectorFromArray(arg));
     StringVector q;
     for (int i=0;i<p.size();i++) {
-      QString x(p[i]);
+      FMString x(p[i]);
       Array y(Op::func(Array(x)));
       q.push_back(y.asString());
     }
-    return StringArrayFromStringVector(q,QChar(' '));
+    return StringArrayFromStringVector(q,FMChar(' '));
   }
   if (arg.dataClass() != CellArray)
     return Array(Op::func(arg));

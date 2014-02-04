@@ -19,16 +19,16 @@
 #ifndef __Tree_hpp__
 #define __Tree_hpp__
 
-#include <QString>
+#include "FMLib.hpp"
 #include "Token.hpp"
 #include "Array.hpp"
 #include "DebugStream.hpp"
 
 class Tree;
 
-typedef QList<Tree> TreeList;
+typedef FMVector<Tree> TreeList;
 
-class TreeNode : public QSharedData {
+class TreeNode {
 public:
   Token m_node;
   TreeList m_children;
@@ -36,7 +36,7 @@ public:
 
 class Tree {
 private:
-  QSharedDataPointer<TreeNode> d;
+  boost::shared_ptr<TreeNode> d;
 public:
   Tree();
   Tree(const Token& tok);
@@ -56,11 +56,11 @@ public:
   inline TokenValueType token() const {return d->m_node.value();}
   inline int numChildren() const {return d->m_children.size();}
   inline bool hasChildren() const {return (d->m_children.size()>0);}
-  inline QString text() const {return d->m_node.text();}
-  inline void setText(QString t) {d->m_node.setText(t);}
+  inline FMString text() const {return d->m_node.text();}
+  inline void setText(FMString t) {d->m_node.setText(t);}
   inline Array array() const {return d->m_node.array();}
   inline const TreeList& children() const {return d->m_children;}
-  inline Tree last() const {return d->m_children.back();}
+  inline const Tree last() const {return d->m_children.back();}
   inline Tree child(unsigned n) const {return d->m_children.at(n);}
   inline Token& node() {return d->m_node;}
   inline void addChild(Tree t_child) {d->m_children.push_back(t_child);}

@@ -19,7 +19,6 @@
 #ifndef __JITInfo_hpp__
 #define __JITInfo_hpp__
 
-#include <QSharedDataPointer>
 #include "JITFuncBase.hpp"
 
 class JITInfo {

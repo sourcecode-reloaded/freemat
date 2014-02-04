@@ -24,12 +24,12 @@
 #include "Types.hpp"
 
 
-Array ClassTrinaryOperator(Array a, Array b, Array c, QString funcname, Interpreter* eval);
+Array ClassTrinaryOperator(Array a, Array b, Array c, FMString funcname, Interpreter* eval);
 
-Array ClassBinaryOperator(Array a, Array b, QString funcname,
+Array ClassBinaryOperator(Array a, Array b, FMString funcname,
 			  Interpreter* eval);
 
-Array ClassUnaryOperator(Array a, QString funcname,
+Array ClassUnaryOperator(Array a, FMString funcname,
 			 Interpreter* eval);
 
 Array ClassMatrixConstructor(ArrayMatrix m, Interpreter* eval);
@@ -40,24 +40,24 @@ ArrayVector ClassRHSExpression(Array a, const Tree & t, Interpreter* eval);
 
 void ClassAssignExpression(ArrayReference r, const Tree & t, const Array& value, Interpreter* eval);
   
-bool ClassResolveFunction(Interpreter* eval, Array &args, QString funcName, FuncPtr& val);
+bool ClassResolveFunction(Interpreter* eval, Array &args, FMString funcName, FuncPtr& val);
   
-QString ClassMangleName(QString className, QString funcName);
+FMString ClassMangleName(FMString className, FMString funcName);
 
 void LoadClassFunction(Context* context);
 
 /**
  * Returns true if a userclass with the given name is defined
  */
-bool isUserClassDefined(QString classname);
+bool isUserClassDefined(FMString classname);
 /**
  * Lookup a user class.
  */
-UserClassTemplate lookupUserClass(QString classname);
+UserClassTemplate lookupUserClass(FMString classname);
 /**
  * Register a new user class.
  */
-void registerUserClass(QString classname, UserClassTemplate cdata);
+void registerUserClass(FMString classname, UserClassTemplate cdata);
 /**
  * Clear the registered class table
  */
@@ -66,8 +66,8 @@ void clearUserClasses();
 /**
  * Define the hierarchy for a class
  */
-void defineHierarchyForClass(QString classname, StringVector parents);
+void defineHierarchyForClass(FMString classname, StringVector parents);
 
-bool isParentClass(QString parent, QString child);
+bool isParentClass(FMString parent, FMString child);
 
 #endif

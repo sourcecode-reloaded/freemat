@@ -24,8 +24,10 @@
  * A Scope is a combination of a variable hashtable and a function hashtable.
  */
 #include <string>
-#include <QMutex>
-#include <QHash>
+#include "FMLib.hpp"
+// TODO - move this mutex into a global variable...
+//#include <QMutex>
+//#include <QHash>
 #include <algorithm>
 
 #include "Array.hpp"
@@ -47,7 +49,7 @@ class Scope {
    * have access to the scope.  For all scopes (except the global
    * one, this mutex is unused.
    */
-  QMutex *mutex;
+  FMMutex *mutex;
   /**
    * The reference count for this Scope
    */
@@ -63,11 +65,11 @@ class Scope {
   /**
    * The name of the scope.
    */
-  QString name;
+  FMString name;
   /**
    * Detailed information that indicates where the scope is from.
    */
-  QString detail;
+  FMString detail;
   /**
    * The context information (currently executed token ID)
    */
@@ -132,7 +134,7 @@ public:
   /**
    * Construct a scope with the given name.
    */
-  Scope(QString scopeName, bool nested) : mutex(NULL), refcount(0),
+  Scope(FMString scopeName, bool nested) : mutex(NULL), refcount(0),
 					  name(scopeName), tokid(0), steptrap(0), 
 					  stepcurrentline(0), active(true), 
 					  loopLevel(0), anyPersistents(false), anyGlobals(false),
@@ -174,16 +176,16 @@ public:
   inline void setNargout(int x) {
     numargout = x;
   }
-  inline QString detailString() {
+  inline FMString detailString() {
     return detail;
   }
-  inline void setDetailString(QString x) {
+  inline void setDetailString(FMString x) {
     detail = x;
   }
   inline void setVariablesAccessed(StringVector varList) {
     variablesAccessed = varList;
   }
-  inline bool variableAccessed(QString varName) {
+  inline bool variableAccessed(FMString varName) {
     for (int i=0;i<variablesAccessed.size();i++)
       if (variablesAccessed[i] == varName) return true;
     return false;
@@ -197,7 +199,7 @@ public:
   inline StringVector getLocalVariablesList() {
     return localVariables;
   }
-  inline bool variableLocal(QString varName) {
+  inline bool variableLocal(FMString varName) {
     for (int i=0;i<localVariables.size();i++) 
       if (localVariables[i] == varName) return true;
     return false;
@@ -208,14 +210,14 @@ public:
   inline void setNestingFlag(bool x) {
     isNested = x;
   }
-  inline bool nests(QString peerName) {
+  inline bool nests(FMString peerName) {
     // Nesting requires that our peer have a strictly more 
     // qualified (longer) name, and that our name is a prefix
     // of that name.
     return ((name.size() < peerName.size()) && 
 	    (peerName.left(name.size()) == name));
   }
-  static bool nests(QString name, QString peerName) {
+  static bool nests(FMString name, FMString peerName) {
     // Nesting requires that our peer have a strictly more 
     // qualified (longer) name, and that our name is a prefix
     // of that name.
@@ -241,14 +243,15 @@ public:
   inline void mutexSetup() {
     if (mutex) 
       delete mutex;
-    mutex = new QMutex(QMutex::Recursive);
+    //    mutex = new FMMutex(FMMutex::Recursive);
+    mutex = new FMMutex();
   }
   /**
    * Insert a variable with the given name.  If the variable
    * already exists in the Scope, then the previous definition
    * is replaced with the given one.
    */
-  inline void insertVariable(const QString& varName, const Array& val) {
+  inline void insertVariable(const FMString& varName, const Array& val) {
     symTab.insertSymbol(varName,val);
   }
   /**
@@ -257,13 +260,13 @@ public:
    * because in write-back assignments (e.g., A(:,346) = b) it is critical 
    * to manage the number of copies.
    */
-  inline Array* lookupVariable(const QString& varName) {
+  inline Array* lookupVariable(const FMString& varName) {
     return symTab.findSymbol(varName);
   }
   /**
    * Add a variable name to the global variables list.
    */
-  inline void addGlobalVariablePointer(QString varName) {
+  inline void addGlobalVariablePointer(FMString varName) {
     if (!isVariableGlobal(varName)) {
       globalVars.push_back(varName);
       anyGlobals = true;
@@ -275,7 +278,7 @@ public:
   /**
    * Delete a variable name from the global variables list.
    */
-  inline void deleteGlobalVariablePointer(QString varName) {
+  inline void deleteGlobalVariablePointer(FMString varName) {
     StringVector::iterator i = std::find(globalVars.begin(),
 					 globalVars.end(),
 					 varName);
@@ -286,7 +289,7 @@ public:
   /**
    * Check to see if a variable is globally defined.
    */
-  inline bool isVariableGlobal(const QString& varName) {
+  inline bool isVariableGlobal(const FMString& varName) {
     if (!anyGlobals) return false;
     bool foundName = false;
     int i = 0;
@@ -300,7 +303,7 @@ public:
   /**
    * Add a variable name to the persistent variables list.
    */
-  inline void addPersistentVariablePointer(QString varName) {
+  inline void addPersistentVariablePointer(FMString varName) {
     if (!isVariablePersistent(varName)) {
       persistentVars.push_back(varName);
       anyPersistents = true;
@@ -312,7 +315,7 @@ public:
   /**
    * Delete a variable name from the persistent variables list.
    */
-  inline void deletePersistentVariablePointer(QString varName) {
+  inline void deletePersistentVariablePointer(FMString varName) {
     StringVector::iterator i = std::find(persistentVars.begin(),
 					 persistentVars.end(),
 					 varName);
@@ -324,7 +327,7 @@ public:
    * Check to see if a variable is defined in the persistent
    * list.
    */
-  inline bool isVariablePersistent(const QString& varName) {
+  inline bool isVariablePersistent(const FMString& varName) {
     if (!anyPersistents) return false;
     bool foundName = false;
     int i = 0;
@@ -339,13 +342,13 @@ public:
    * Mangle the name of a variable by prepending
    * a "_scopename_" to the name of the variable.
    */
-  inline QString getMangledName(QString varName) {
-    return (QString("_") + name + QString("_") + varName);
+  inline FMString getMangledName(FMString varName) {
+    return (FMString("_") + name + FMString("_") + varName);
   }
   /**
    * Get the name of the scope.
    */
-  inline QString getName() {
+  inline FMString getName() {
     return name;
   }
   /**
@@ -370,7 +373,7 @@ public:
    * Get a list of all possible completions of the given
    * string.
    */
-   inline StringVector getCompletions(const QString& prefix) {
+   inline StringVector getCompletions(const FMString& prefix) {
      return symTab.getCompletions(prefix);
    }
   /**
@@ -390,7 +393,7 @@ public:
    * replace the variable with an empty variable, but deletes
    * the variable from the symbol table completely.
    */
-  inline void deleteVariable(QString var) {
+  inline void deleteVariable(FMString var) {
     symTab.deleteSymbol(var);
   }
   /**

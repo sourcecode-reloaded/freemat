@@ -20,7 +20,6 @@
 #define __CommonIterator_hpp__
 
 #include "NTuple.hpp"
-#include <QtGlobal>
 
 template <typename S, typename T>
 class BaseIterator {
@@ -86,7 +85,7 @@ class Transformer {
 public:
   inline Transformer(S* dest, const S* src, int destdim = 0, int srcdim = 0)
     : m_dest(dest,destdim), m_source(src,srcdim) {}
-  inline index_t size() const {return qMin(m_source.size(),m_dest.size());}
+  inline index_t size() const {return std::min<index_t>(m_source.size(),m_dest.size());}
   inline bool isValid() const {return (m_dest.isValid() && m_source.isValid());}
   inline void next() {m_dest.next(); m_source.next();}
   inline void nextSlice() {m_dest.nextSlice(); m_source.nextSlice();}

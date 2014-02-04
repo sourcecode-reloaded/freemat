@@ -20,10 +20,8 @@
 #define __Token_hpp__
 
 #include "Array.hpp"
-#include <QTextStream>
-#include <QChar>
-#include "DebugStream.hpp"
-#include <QSharedData>
+#include "FMLib.hpp"
+//#include "DebugStream.hpp"
 
 typedef uint16 TokenValueType;
 
@@ -112,22 +110,22 @@ class Serialize;
 
 class ParseException {
   unsigned m_pos;
-  QString m_text;
+  FMString m_text;
 public:
-  ParseException(unsigned pos = 0, QString text = QString()) : m_pos(pos), m_text(text) {}
+  ParseException(unsigned pos = 0, FMString text = FMString()) : m_pos(pos), m_text(text) {}
   unsigned Position() {return m_pos;}
-  QString Text() {return m_text;}
+  FMString Text() {return m_text;}
 };
 
 class Token {
   TokenValueType m_tok;
   unsigned m_pos;
-  QString m_text;
+  FMString m_text;
   Array m_array;
   int m_UID;
 public:
   Token();
-  Token(TokenValueType tok, unsigned pos = 0, QString text = QString());
+  Token(TokenValueType tok, unsigned pos = 0, FMString text = FMString());
   Token(Serialize *s);
   void freeze(Serialize *s) const;
   bool is(TokenValueType tok) const {return m_tok == tok;}
@@ -140,14 +138,14 @@ public:
   TokenValueType value() const {return m_tok;}
   void setValue(TokenValueType a) {m_tok = a;}
   unsigned position()  const {return m_pos;}
-  QString text()  const {return m_text;}
-  void setText(QString txt) {m_text = txt;}
+  FMString text()  const {return m_text;}
+  void setText(FMString txt) {m_text = txt;}
   Array array() const {return m_array;}
   void fillArray();
-  void print(QTextStream& o) const;
+  void print(FMTextStream& o) const;
 };
 
-QString TokenToString(const Token& b);
+FMString TokenToString(const Token& b);
 
 //DebugStream& operator<<(DebugStream& o, const Token& b);
 

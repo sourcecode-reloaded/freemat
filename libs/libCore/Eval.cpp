@@ -26,13 +26,13 @@
 //inputs try_clause catch_clause
 //outputs varargout
 //DOCBLOCK freemat_eval
-static QString PrePendCallVars(QString line, int nargout) {
-  QString gp;
+static FMString PrePendCallVars(FMString line, int nargout) {
+  FMString gp;
   if (nargout > 1)
     gp += "[";
   for (int i=0;i<nargout-1;i++)
-    gp += QString("t___%1,").arg(i);
-  gp += QString("t___%1").arg(nargout-1);
+    gp += FMString("t___") + Stringify(i) + ",";
+  gp += FMString("t___") + Stringify(nargout-1);
   if (nargout > 1)
     gp += "] = " + line + ";\n";
   else
@@ -43,7 +43,7 @@ static QString PrePendCallVars(QString line, int nargout) {
 static ArrayVector RetrieveCallVars(Interpreter *eval, int nargout) {
   ArrayVector retval;
   for (int i=0;i<nargout;i++) {
-    QString tname = QString("t___%1").arg(i);
+    FMString tname = FMString("t___") + Stringify(i);
     Array tval;
     ArrayReference ptr = eval->getContext()->lookupVariable(tname);
     if (!ptr.valid())
@@ -57,8 +57,8 @@ static ArrayVector RetrieveCallVars(Interpreter *eval, int nargout) {
 }
 
 
-static ArrayVector EvalTryFunction(int nargout, Interpreter* eval, QString try_buf, 
-				   QString catch_buf, bool retrieveVars, int popSpec) {
+static ArrayVector EvalTryFunction(int nargout, Interpreter* eval, FMString try_buf, 
+				   FMString catch_buf, bool retrieveVars, int popSpec) {
   ArrayVector retval;
   bool autostop;
   autostop = eval->AutoStop();
@@ -86,16 +86,16 @@ static ArrayVector EvalTryFunction(int nargout, Interpreter* eval, QString try_b
 
 static ArrayVector EvalTryFunction(int nargout, const ArrayVector& arg, Interpreter* eval, int popSpec) {
   if (nargout > 0) {
-    QString try_line = arg[0].asString();
-    QString try_buf = PrePendCallVars(try_line,nargout);
-    QString catch_line = arg[1].asString();
-    QString catch_buf = PrePendCallVars(catch_line,nargout);
+    FMString try_line = arg[0].asString();
+    FMString try_buf = PrePendCallVars(try_line,nargout);
+    FMString catch_line = arg[1].asString();
+    FMString catch_buf = PrePendCallVars(catch_line,nargout);
     return EvalTryFunction(nargout,eval,try_buf,catch_buf,true,popSpec);
    } else {
-    QString try_line = arg[0].asString();
-    QString catch_line = arg[1].asString();
-    QString try_buf = try_line + "\n";
-    QString catch_buf = catch_line + "\n";
+    FMString try_line = arg[0].asString();
+    FMString catch_line = arg[1].asString();
+    FMString try_buf = try_line + "\n";
+    FMString catch_buf = catch_line + "\n";
     return EvalTryFunction(nargout,eval,try_buf,catch_buf,false,popSpec);
   }
 }
@@ -104,14 +104,14 @@ ArrayVector TraceFunction(int nargout, const ArrayVector& arg, Interpreter* eval
 
 static ArrayVector EvalNoTryFunction(int nargout, const ArrayVector& arg, Interpreter* eval, int popSpec) {
   if (nargout > 0) {
-    QString line = arg[0].asString();
-    QString buf = PrePendCallVars(line,nargout);
+    FMString line = arg[0].asString();
+    FMString buf = PrePendCallVars(line,nargout);
     PopContext saver(eval->getContext(),popSpec);
     eval->evaluateString(buf);
     return RetrieveCallVars(eval,nargout);
   } else {
-    QString line = arg[0].asString();
-    QString buf = line + "\n";
+    FMString line = arg[0].asString();
+    FMString buf = line + "\n";
     PopContext saver(eval->getContext(),popSpec);
     eval->evaluateString(buf);
     return ArrayVector();
@@ -135,7 +135,7 @@ ArrayVector EvalFunction(int nargout, const ArrayVector& arg,Interpreter* eval){
 ArrayVector EvalInFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   if (arg.size() < 2)
     throw Exception("evalin function requires a workspace (scope) specifier (either 'caller' or 'base') and an expression to evaluate");
-  QString spec_str = arg[0].asString();
+  FMString spec_str = arg[0].asString();
   int popspec = 0;
   if (spec_str=="base")
     popspec = -1;
@@ -159,7 +159,7 @@ ArrayVector EvalInFunction(int nargout, const ArrayVector& arg, Interpreter* eva
 ArrayVector AssignInFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   if (arg.size() < 3)
     throw Exception("assignin function requires a workspace (scope) specifier (either 'caller' or 'base') a variable name and a value to assign");
-  QString spec_str = arg[0].asString();
+  FMString spec_str = arg[0].asString();
   int popspec = 0;
   if (spec_str=="base")
     popspec = -1;
@@ -167,7 +167,7 @@ ArrayVector AssignInFunction(int nargout, const ArrayVector& arg, Interpreter* e
     popspec = 2;
   else
     throw Exception("assignin function requires the first argument to be either 'caller' or 'base'");
-  QString varname = arg[1].asString();
+  FMString varname = arg[1].asString();
   Array varvalue = arg[2];
   PopContext saver(eval->getContext(),popspec);
   eval->getContext()->insertVariable(varname,varvalue);
@@ -176,16 +176,16 @@ ArrayVector AssignInFunction(int nargout, const ArrayVector& arg, Interpreter* e
 
 
 ArrayVector TraceFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  qDebug() << "**********************************************************************\n";
+  dbout << "**********************************************************************\n";
   // walk the trace of 
   while (eval->getContext()->activeScopeName() != "base") {
-    qDebug() << "Scope is " << eval->getContext()->activeScopeName();
-    qDebug() << "Variables " << eval->getContext()->listAllVariables();
+    dbout << "Scope is " << eval->getContext()->activeScopeName();
+    dbout << "Variables " << eval->getContext()->listAllVariables();
     eval->getContext()->bypassScope(1);
   }
-  qDebug() << "Scope is " << eval->getContext()->activeScopeName();
-  qDebug() << "Variables " << eval->getContext()->listAllVariables();
-  qDebug() << "**********************************************************************\n";
+  dbout << "Scope is " << eval->getContext()->activeScopeName();
+  dbout << "Variables " << eval->getContext()->listAllVariables();
+  dbout << "**********************************************************************\n";
   eval->getContext()->restoreBypassedScopes();
   return ArrayVector();
 }
@@ -203,9 +203,9 @@ ArrayVector FevalFunction(int nargout, const ArrayVector& arg,Interpreter* eval)
   eval->getContext()->deactivateCurrentScope(); // Make feval call invisible
   FuncPtr funcDef;
   if (arg[0].isString()) {
-    QString fname = arg[0].asString();
+    FMString fname = arg[0].asString();
     if (!eval->lookupFunction(fname,funcDef)) {
-      throw Exception(QString("function ") + fname + " undefined!");
+      throw Exception(FMString("function ") + fname + " undefined!");
     }
   } else 
     throw Exception("argument to feval must be a string");

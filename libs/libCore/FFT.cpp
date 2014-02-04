@@ -137,7 +137,7 @@ public:
     if (src_real.length() == 0) return;
     int N = dest_real.length();
     int P = src_real.length();
-    QVector<float> tbuf(N*2);
+    FMVector<float> tbuf(N*2);
     int L = qMin(P,N);
     for (index_t i=1;i<=L;i++) {
       tbuf[int(2*i-1)-1] = src_real[i];
@@ -156,7 +156,7 @@ public:
     if (src_real.length() == 0) return;
     int N = dest_real.length();
     int P = src_real.length();
-    QVector<double> tbuf(N*2);
+    FMVector<double> tbuf(N*2);
     int L = qMin(P,N);
     for (index_t i=1;i<=L;i++) {
       tbuf[int(2*i-1)-1] = src_real[i];
@@ -196,7 +196,7 @@ public:
     if (src_real.length() == 0) return;
     int N = dest_real.length();
     int P = src_real.length();
-    QVector<float> tbuf(N*2);
+    FMVector<float> tbuf(N*2);
     int L = qMin(P,N);
     for (index_t i=1;i<=L;i++) {
       tbuf[int(2*i-1)-1] = src_real[i];
@@ -215,7 +215,7 @@ public:
     if (src_real.length() == 0) return;
     int N = dest_real.length();
     int P = src_real.length();
-    QVector<double> tbuf(N*2);
+    FMVector<double> tbuf(N*2);
     int L = qMin(P,N);
     for (index_t i=1;i<=L;i++) {
       tbuf[int(2*i-1)-1] = src_real[i];

@@ -28,10 +28,14 @@
 //outputs none
 //DOCBLOCK inspection_clear
 
-static void ClearVariable(Interpreter* eval, QString name) {
+static void ClearVariable(Interpreter* eval, FMString name) {
   Context *context = eval->getContext();
   ParentScopeLocker lock(context);
   context->deleteVariable(name);
+}
+
+//FIXME
+void ClearLibs(Interpreter* eval) {
 }
 
 static void ClearAllFunction(Interpreter* eval) {

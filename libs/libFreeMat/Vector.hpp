@@ -19,7 +19,7 @@
 #ifndef __Vector_hpp__
 #define __Vector_hpp__
 
-#include <QSharedData>
+#include <boost/shared_ptr.hpp>
 #include <new>
 #include "Exception.hpp"
 
@@ -47,7 +47,7 @@ inline void copy_memory(T* dest, const T* src, size_t count)
 
 
 template <typename T>
-class VectorData : public QSharedData
+class VectorData
 {
   T* m_data;
   size_t m_len;
@@ -58,7 +58,8 @@ class VectorData : public QSharedData
       m_data = new T[len];
       initialize_memory(m_data,len);
     } catch (const std::bad_alloc& ) {
-      throw Exception(QString("Cannot allocate enough memory to store an array of size %1").arg(m_len));
+      throw Exception(FMString("Cannot allocate enough memory to store an array of size") + 
+			      Stringify(m_len));
     }
   }
   void copyvec(const VectorData& copy) {
@@ -78,10 +79,11 @@ public:
       m_capacity = compute_initial_capacity(m_len);
       allocate(m_capacity);
     } catch (const std::bad_alloc& ) {
-      throw Exception(QString("Cannot allocate enough memory to store an array of size %1").arg(dim));
+      throw Exception(FMString("Cannot allocate enough memory to store an array of size")
+		      + Stringify(dim));
     }
   }
-  inline VectorData(const VectorData& copy) : QSharedData(copy), m_data(0), m_len(0), m_capacity(0) {
+  inline VectorData(const VectorData& copy) :  m_data(0), m_len(0), m_capacity(0) {
     copyvec(copy);
   }
   inline ~VectorData() {
@@ -102,7 +104,8 @@ public:
 	  m_capacity = new_capacity;
 	  m_data = new_data;
 	} catch (const std::bad_alloc&) {
-	  throw Exception(QString("Cannot allocate enough memory to resize array to size %1").arg(new_len));
+	  throw Exception(FMString("Cannot allocate enough memory to resize array to size") + 
+			  Stringify(new_len));
 	}
       }
   }
@@ -133,8 +136,8 @@ template <typename T>
 class Vector
 {
 public:
-  inline Vector() {d = new VectorData<T>();}
-  inline Vector(size_t dim) {d = new VectorData<T>(dim);}
+  inline Vector() {d = boost::shared_ptr<VectorData<T> >(new VectorData<T>());}
+  inline Vector(size_t dim) {d = boost::shared_ptr<VectorData<T> >(new VectorData<T>(dim));}
   inline Vector(const Vector& copy) : d(copy.d) {}
   inline T operator[](size_t p) const {
     return (*d)[p];
@@ -158,7 +161,7 @@ public:
     d->resize(newlen);
   }
 private:
-  QSharedDataPointer<VectorData<T> > d;
+  boost::shared_ptr<VectorData<T> > d;
 };
 
 #endif

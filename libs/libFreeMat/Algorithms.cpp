@@ -21,12 +21,12 @@
 #include "IEEEFP.hpp"
 #include "SparseCCS.hpp"
 
-const Array StringArrayFromStringVector(const StringVector& arg, QChar pad) {
+const Array StringArrayFromStringVector(const StringVector& arg, FMChar pad) {
   int maxlen = 0;
   for (int i=0;i<arg.size();i++)
-    maxlen = qMax(maxlen,arg[i].size());
+    maxlen = std::max<size_t>(maxlen,arg[i].size());
   Array ret(StringArray,NTuple(arg.size(),maxlen));
-  BasicArray<QChar> &sp(ret.real<QChar>());
+  BasicArray<FMChar> &sp(ret.real<FMChar>());
   for (int i=0;i<arg.size();i++) {
     for (int j=0;j<arg[i].size();j++)
       sp.set(NTuple(index_t(i+1),index_t(j+1)),arg[i][j]);
@@ -223,11 +223,11 @@ StringVector StringVectorFromArray(const Array &arg) {
   if (arg.dataClass() == Double) 
     return StringVectorFromArray(arg.toClass(StringArray));
   if (arg.isString()) {
-    const BasicArray<QChar> &ap(arg.constReal<QChar>());
-    ConstBasicIterator<QChar> iter(&ap,1);
+    const BasicArray<FMChar> &ap(arg.constReal<FMChar>());
+    ConstBasicIterator<FMChar> iter(&ap,1);
     StringVector ret;
     while (iter.isValid()) {
-      QString t(int(iter.size()),QChar(0));
+      FMString t(int(iter.size()),FMChar(0));
       for (index_t i=1;i<=iter.size();i++) {
 	t[int(i-1)] = iter.get();
 	iter.next();
@@ -284,7 +284,7 @@ void SetCellContents(Array &cell, const ArrayVector& index,
   cell.set(addr,CellArrayFromArrayVector(data,dims.count()));
 }
 
-QStringList FieldNames(const Array& arg) {
+FMStringList FieldNames(const Array& arg) {
   if (arg.dataClass() != Struct)
     throw Exception("fieldnames only valid for structure arrays");
   const StructArray &rp(arg.constStructPtr());
@@ -421,9 +421,9 @@ BasicArray<Array> ArrayVectorToBasicArray(const ArrayVector& a) {
 
 NTuple ConvertArrayToNTuple(const Array &A) {
   if (A.length() > NDims)
-    throw Exception(QString("MAT Variable has more dimensions ") + 
-		    QString("than maxDims (currently set to ") + 
-		    NDims + ")."); // FIXME - more graceful ways to do this
+    throw Exception(FMString("MAT Variable has more dimensions ") + 
+		    FMString("than maxDims (currently set to ") + 
+		    Stringify(NDims) + ")."); // FIXME - more graceful ways to do this
   Array B(A.asDenseArray().toClass(Index));
   const BasicArray<index_t> &rp(B.constReal<index_t>());
   NTuple dm;
@@ -954,7 +954,7 @@ Array NCat(const ArrayVector& pdata, int catdim) {
   DataClass cls = ComputeCatType(pdata);
   // Check for the case of concatenation of user defined classes
   bool userClassCase = false;
-  QString classname;
+  FMString classname;
   if ((cls == Struct) && pdata[0].isUserClass()) {
     classname = pdata[0].className();
     for (int i=1;i<pdata.size();i++)
@@ -991,7 +991,10 @@ Array NCat(const ArrayVector& pdata, int catdim) {
       } else {
 	for (int j=0;j<NDims;j++)
 	  if ((eldims[j] != outdims[j]) && (j != catdim))
-	    throw Exception(QString("Mismatch in dimension %1 for elements being concatenated along dimension %2").arg(j+1).arg(catdim+1));
+	    throw Exception(FMString("Mismatch in dimension ") 
+			    + Stringify(j+1) + 
+			    FMString(" for elements being concatenated along dimension ")
+			    + Stringify(catdim+1));
 	outdims[catdim] += eldims[catdim];
       }
     }
@@ -1263,9 +1266,9 @@ Array MatIJVToSparse(const Array &ir, const Array &jc,
 
 template <typename T>
 void SparseToIJVReal(const SparseMatrix<T> &x, Array &rows, Array &cols, Array &vals) {
-  QVector<uint32> rowstart;
-  QVector<uint32> colstart;
-  QVector<T> xdata;
+  FMVector<uint32> rowstart;
+  FMVector<uint32> colstart;
+  FMVector<T> xdata;
   SparseToCCS(x,rowstart,colstart,xdata);
   rows = Array(ToBasicArray(rowstart)).toClass(Index);
   cols = Array(ToBasicArray(colstart)).toClass(Index);
@@ -1275,10 +1278,10 @@ void SparseToIJVReal(const SparseMatrix<T> &x, Array &rows, Array &cols, Array &
 template <typename T>
 void SparseToIJVComplex(const SparseMatrix<T> &xr, const SparseMatrix<T> &xi,
 			Array &rows, Array &cols, Array &vals) {
-  QVector<uint32> rowstart;
-  QVector<uint32> colstart;
-  QVector<T> xdata_real;
-  QVector<T> xdata_imag;
+  FMVector<uint32> rowstart;
+  FMVector<uint32> colstart;
+  FMVector<T> xdata_real;
+  FMVector<T> xdata_imag;
   SparseToCCS(xr,rowstart,colstart,xdata_real);
   SparseToCCS(xi,rowstart,colstart,xdata_imag);
   rows = Array(ToBasicArray(rowstart)).toClass(Index);

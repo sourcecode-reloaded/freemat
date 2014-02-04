@@ -52,22 +52,24 @@ public:
 };
 
 template <typename T>
-static QString TSummarizeArrayCellEntryScalar(const Array &dp) {
+static FMString TSummarizeArrayCellEntryScalar(const Array &dp) {
   if (dp.allReal())
-    return QString("%1").arg(dp.constRealScalar<T>());
+    return Stringify(dp.constRealScalar<T>());
   else
     if (dp.constImagScalar<T>() > 0)
-      return QString("%1+%2i").arg(dp.constRealScalar<T>()).arg(dp.constImagScalar<T>());
+      return Stringify(dp.constRealScalar<T>()) + 
+	FMString("+") + Stringify(dp.constImagScalar<T>());
     else
-      return QString("%1%2i").arg(dp.constRealScalar<T>()).arg(dp.constImagScalar<T>());
+      return Stringify(dp.constRealScalar<T>()) + 
+	Stringify(dp.constImagScalar<T>());
 }
 
 #define MacroSummarize(ctype,cls) \
   case cls: return TSummarizeArrayCellEntryScalar<ctype>(a);
 
-QString SummarizeArrayCellEntry(const Array &a) {
+FMString SummarizeArrayCellEntry(const Array &a) {
   // Special cases
-  if (a.isEmpty()) return QString("");
+  if (a.isEmpty()) return FMString("");
   if (a.isString() && a.rows() == 1) return a.asString();
   if (a.isScalar() && !a.isReferenceType()) {
     switch (a.dataClass()) {
@@ -76,7 +78,7 @@ QString SummarizeArrayCellEntry(const Array &a) {
       ;
     }
   }
-  QString sparseFlag;
+  FMString sparseFlag;
   if (a.isSparse()) sparseFlag = " sparse";
   return a.dimensions().toString() + " " + 
     a.className() + sparseFlag + " array";
@@ -347,7 +349,7 @@ static void Emit(Interpreter* io, const Array &rp,
     MacroEmitFloat(float,Float);
     MacroEmitFloat(double,Double);
   case StringArray:
-    io->outputMessage(QString(rp.constReal<QChar>().get(1)));
+    io->outputMessage(FMString(rp.constReal<FMChar>().get(1)));
     return;
   case CellArray:
     io->outputMessage("[" + 
@@ -416,7 +418,12 @@ static void PrintSparse(const SparseMatrix<T> &A, Interpreter* io, const ArrayFo
   if (!i.isValid())
     io->outputMessage("  <empty>\n");
   while (i.isValid()) {
-    io->outputMessage(QString(" %1 %2 %3\n").arg(i.row()).arg(i.col()).arg(i.value()));
+    io->outputMessage(FMString(" ") + 
+		      Stringify(i.row()) + 
+		      FMString(" ") + 
+		      Stringify(i.col()) + 
+		      FMString(" ") + 
+		      Stringify(i.value()));
     i.next();
   }
 }
@@ -428,11 +435,24 @@ static void PrintSparse(const SparseMatrix<T> &Areal, const SparseMatrix<T> &Aim
     io->outputMessage("  <empty>\n");
   while (i.isValid()) {
     if (i.imagValue() >= 0)
-      io->outputMessage(QString(" %1 %2 %3+%4i").arg(i.row()).arg(i.col()).
-			arg(i.realValue()).arg(i.imagValue()));
+      io->outputMessage(FMString(" ") + 
+			Stringify(i.row()) + 
+			FMString(" ") + 
+			Stringify(i.col()) + 
+			FMString(" ") + 
+			Stringify(i.realValue()) + 
+			FMString("+") + 
+			Stringify(i.imagValue()) + 
+			FMString("i"));
     else
-      io->outputMessage(QString(" %1 %2 %3%4i").arg(i.row()).arg(i.col()).
-			arg(i.realValue()).arg(i.imagValue()));	
+      io->outputMessage(FMString(" ") + 
+			Stringify(i.row()) + 
+			FMString(" ") + 
+			Stringify(i.col()) + 
+			FMString(" ") + 
+			Stringify(i.realValue()) + 
+			Stringify(i.imagValue()) + 
+			FMString("i"));
     io->outputMessage("\n");
     i.next();
   }
@@ -533,7 +553,7 @@ void PrintArrayClassic(Array A, int printlimit, Interpreter* io) {
     while (wdims <= A.dimensions()) {
       io->outputMessage("(:,:");
       for (int m=2;m<A.dimensions().lastNotOne();m++) 
-	io->outputMessage(QString(",%1").arg(wdims[m]));
+	io->outputMessage(FMString(",") + Stringify(wdims[m]));
       io->outputMessage(") = \n");
       PrintSheet(io,format,offset,A,termWidth,printlimit,complexFlag);
       offset += rows*columns;
@@ -547,15 +567,15 @@ void PrintArrayClassic(Array A, int printlimit, Interpreter* io) {
 
 #undef MacroSparse
 
-QString ArrayToPrintableString(const Array& a) {
-  if (a.isEmpty()) return QString("[]");
-  if (a.isSparse()) return QString("");
+FMString ArrayToPrintableString(const Array& a) {
+  if (a.isEmpty()) return FMString("[]");
+  if (a.isSparse()) return FMString("");
   if (a.isString()) return a.asString();
-  if (a.isReferenceType()) return QString("");
-  if (!a.isScalar() && !a.isString()) return QString("");
+  if (a.isReferenceType()) return FMString("");
+  if (!a.isScalar() && !a.isString()) return FMString("");
   switch (a.dataClass()) {
   default:
-    return QString("?");
+    return FMString("?");
     MacroExpandCases(MacroSummarize);
   }
 }

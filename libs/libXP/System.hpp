@@ -22,5 +22,5 @@
 
 #include "Types.hpp"
 
-StringVector DoSystemCallCaptured(QString cmd);
+StringVector DoSystemCallCaptured(FMString cmd);
 #endif

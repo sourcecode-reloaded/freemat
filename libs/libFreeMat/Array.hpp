@@ -20,7 +20,7 @@
 #define __Array_hpp__
 
 #include <boost/shared_ptr.hpp>
-#include <QString>
+#include "FMLib.hpp"
 #include "Types.hpp"
 #include "BasicArray.hpp"
 #include "IndexArray.hpp"
@@ -32,7 +32,7 @@ class StructArray;
 class Array;
 
 typedef FastList<Array> ArrayVector;
-typedef QVector<ArrayVector> ArrayMatrix;
+typedef FMVector<ArrayVector> ArrayMatrix;
 
 // Assume this has to fit in 32 bits
 //   scalar flag  - 1 bit
@@ -166,9 +166,9 @@ public:
   Array(DataClass t, const NTuple &dims = NTuple(0,0));
   static inline Array create( DataClass t, const NTuple &dims = NTuple(0,0)) { return Array( t, dims ); }
   
-  explicit Array(const QChar &t);
-  explicit Array(const QChar &, const QChar &);
-  explicit Array(const QString &text);
+  explicit Array(const FMChar &t);
+  explicit Array(const FMChar &, const FMChar &);
+  explicit Array(const FMString &text);
   template <typename T>
   inline Array(const SparseMatrix<T>& real) {
     m_type.Class = GetDataClass<T>(T(0));
@@ -202,7 +202,7 @@ public:
   const index_t cols() const {return dimensions()[1];}
   inline const Type type() const { return m_type; }
   inline const DataClass dataClass() const {return DataClass(m_type.Class);}
-  QString className() const;
+  FMString className() const;
   bool isUserClass() const;
   inline bool isArray() const {return (m_type.Scalar == 0);}
   inline bool isVector() const {return dimensions().isVector();}
@@ -216,7 +216,7 @@ public:
     return ((dataClass() == Invalid) || (dataClass() == CellArray) ||
 	    (dataClass() == Struct));
   }
-  QString asString() const;
+  FMString asString() const;
   int asInteger() const;
   double asDouble() const;
   inline bool isDouble() const {return dataClass() == Double;}
@@ -328,7 +328,7 @@ public:
   const Array get(const IndexArray& index) const;
   const Array get(const Array& index) const;
   const Array get(index_t index) const;
-  const ArrayVector get(const QString& field) const;
+  const ArrayVector get(const FMString& field) const;
 
   const Array get(const NTuple& index) const;
   const Array get(const IndexArrayVector& indices) const;
@@ -341,7 +341,7 @@ public:
   void set(const ArrayVector& index, const Array& data);
   void set(const IndexArrayVector& index, const Array& data);
   void set(const NTuple& index, const Array& data);
-  void set(const QString& field, ArrayVector& data);
+  void set(const FMString& field, ArrayVector& data);
 
   void resize(const NTuple &size);
   void resize(index_t size);
@@ -353,7 +353,7 @@ public:
 
   bool operator==(const Array &b) const;
   inline bool operator!=(const Array &b) const {return !(*this == b);}
-  void addField(QString name);
+  void addField(FMString name);
   void* getVoidPointer();
   const void* getConstVoidPointer() const;
 

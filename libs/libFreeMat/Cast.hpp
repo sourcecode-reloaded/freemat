@@ -24,18 +24,18 @@
 # define FMINT8_MIN		(-128)
 # define FMINT16_MIN		(-32767-1)
 # define FMINT32_MIN		(-2147483647-1)
-# define FMINT64_MIN		(-Q_INT64_C(9223372036854775807)-1)
+# define FMINT64_MIN		(-FM_INT64_C(9223372036854775807)-1)
 /* Maximum of signed integral types.  */
 # define FMINT8_MAX		(127)
 # define FMINT16_MAX		(32767)
 # define FMINT32_MAX		(2147483647)
-# define FMINT64_MAX		(Q_INT64_C(9223372036854775807))
+# define FMINT64_MAX		(FM_INT64_C(9223372036854775807))
 
 /* Maximum of unsigned integral types.  */
 # define FMUINT8_MAX		(255)
 # define FMUINT16_MAX		(65535)
 # define FMUINT32_MAX		(4294967295U)
-# define FMUINT64_MAX		(Q_UINT64_C(18446744073709551615))
+# define FMUINT64_MAX		(FM_UINT64_C(18446744073709551615))
 
 
 #if defined(_MSC_VER)  
@@ -240,86 +240,86 @@ MacroCastNoLimit(double,uint64);
 
 MacroCastNoOp(double,double);
 MacroCastNoOp(float,float);
-MacroCastNoOp(QChar,QChar);
+MacroCastNoOp(FMChar,FMChar);
 MacroCastNoOp(bool,bool);
 
 template <>
-inline bool CastConvert(QChar val) {
-  return (val != QChar(0));
+inline bool CastConvert(FMChar val) {
+  return (val != FMChar(0));
 }
 
 template <>
-inline QChar CastConvert(bool val) {
-  if (val) return QChar(1); 
-  return QChar(0);
+inline FMChar CastConvert(bool val) {
+  if (val) return FMChar(1); 
+  return FMChar(0);
 }
 
 template <>
-inline uint8 CastConvert(QChar val) {
-  return uint8(val.toAscii());
+inline uint8 CastConvert(FMChar val) {
+  return uint8(val);
 }
 
 template <>
-inline int8 CastConvert(QChar val) {
-  return int8(val.toAscii());
+inline int8 CastConvert(FMChar val) {
+  return int8(val);
 }
 
-#define MacroCastFromQChar(outtype)			\
+#define MacroCastFromFMChar(outtype)			\
   template <>						\
-  inline outtype CastConvert(QChar val) {		\
-    return outtype(val.unicode());			\
+  inline outtype CastConvert(FMChar val) {		\
+    return outtype(val);			\
   }
 
-MacroCastFromQChar(int16);
-MacroCastFromQChar(int32);
-MacroCastFromQChar(int64);
-MacroCastFromQChar(uint16);
-MacroCastFromQChar(uint32);
-MacroCastFromQChar(uint64);
-MacroCastFromQChar(float);
-MacroCastFromQChar(double);
+MacroCastFromFMChar(int16);
+MacroCastFromFMChar(int32);
+MacroCastFromFMChar(int64);
+MacroCastFromFMChar(uint16);
+MacroCastFromFMChar(uint32);
+MacroCastFromFMChar(uint64);
+MacroCastFromFMChar(float);
+MacroCastFromFMChar(double);
 
-#define MacroCastToQChar(intype)			\
+#define MacroCastToFMChar(intype)			\
   template <>						\
-  inline QChar CastConvert(intype val) {		\
-    return QChar(uint32(val));				\
+  inline FMChar CastConvert(intype val) {		\
+    return FMChar(uint32(val));				\
   }
 
-MacroCastToQChar(uint8);
+MacroCastToFMChar(uint8);
 
-#define MacroCastToQCharLower(intype)			\
+#define MacroCastToFMCharLower(intype)			\
   template <>						\
-  inline QChar CastConvert(intype val) {		\
+  inline FMChar CastConvert(intype val) {		\
     if (val < 0) val = 0;				\
-    return QChar(uint32(val));				\
+    return FMChar(uint32(val));				\
   }
 
-MacroCastToQCharLower(int8);
-MacroCastToQCharLower(int16);
+MacroCastToFMCharLower(int8);
+MacroCastToFMCharLower(int16);
 
-#define MacroCastToQCharUpper(intype)			\
+#define MacroCastToFMCharUpper(intype)			\
   template <>						\
-  inline QChar CastConvert(intype val) {		\
+  inline FMChar CastConvert(intype val) {		\
     if (val > 16367) val = 16367;			\
-    return QChar(uint32(val));				\
+    return FMChar(uint32(val));				\
   }
 
-MacroCastToQCharUpper(uint16);
-MacroCastToQCharUpper(uint32);
-MacroCastToQCharUpper(uint64);
+MacroCastToFMCharUpper(uint16);
+MacroCastToFMCharUpper(uint32);
+MacroCastToFMCharUpper(uint64);
 
 
-#define MacroCastToQCharViaInt(intype)			\
+#define MacroCastToFMCharViaInt(intype)			\
   template <>						\
-  inline QChar CastConvert(intype val) {		\
+  inline FMChar CastConvert(intype val) {		\
     if (val < 0) val = 0;				\
     if (val > 16367) val = 16367;			\
-    return QChar(uint32(val));				\
+    return FMChar(uint32(val));				\
   }
 
-MacroCastToQCharViaInt(int32);
-MacroCastToQCharViaInt(int64);
-MacroCastToQCharViaInt(float);
-MacroCastToQCharViaInt(double);
+MacroCastToFMCharViaInt(int32);
+MacroCastToFMCharViaInt(int64);
+MacroCastToFMCharViaInt(float);
+MacroCastToFMCharViaInt(double);
 
 #endif

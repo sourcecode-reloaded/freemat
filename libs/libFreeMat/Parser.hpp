@@ -19,19 +19,19 @@
 #ifndef __Parser_hpp__
 #define __Parser_hpp__
 
-#include <QString>
+#include "FMLib.hpp"
 #include "Scanner.hpp"
 #include "Tree.hpp"
 
 class Parser {
   Scanner &m_lex;
   unsigned lastpos;
-  QString lasterr;
+  FMString lasterr;
   bool octCompat;
-  void serror(QString);
+  void serror(FMString);
   bool match(TokenValueType t);
   void consume();
-  const Token& expect(TokenValueType t, QString because = "");
+  const Token& expect(TokenValueType t, FMString because = "");
   const Token& next();
   bool matchNumber();
   void flushSeperators();
@@ -69,14 +69,14 @@ public:
   Parser(Scanner& lex, bool octaveCompatibility = false);
   Tree process();
   Tree processStatementList();
-  QString lastErr() {return lasterr;}
+  FMString lastErr() {return lasterr;}
   unsigned lastPos() {return lastpos;}
   void dump(); 
 
-  friend Tree ParseExpressionString(QString);
+  friend Tree ParseExpressionString(FMString);
 };
 
-Tree ParseString(QString arg);
-Tree ParseExpressionString(QString arg);
+Tree ParseString(FMString arg);
+Tree ParseExpressionString(FMString arg);
 
 #endif

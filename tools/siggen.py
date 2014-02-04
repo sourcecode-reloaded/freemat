@@ -58,7 +58,7 @@ def writeloader(dirname,gfuncs,classdefs,loadername,outdir):
 
 
 dirname = sys.argv[1]
-names = os.listdir(dirname)
+names = sys.argv[4:]
 gfuncs = [];
 classdefs = [];
 for name in names:

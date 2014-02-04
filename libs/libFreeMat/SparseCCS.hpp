@@ -19,19 +19,19 @@
 #ifndef __SparseCCS_hpp__
 #define __SparseCCS_hpp__
 
-#include <QVector>
+#include "FMLib.hpp"
 #include "SparseMatrix.hpp"
 #include "Array.hpp"
 
-QVector<uint32> CompressCCSCols(const QVector<uint32> &cols, index_t colcount);
-QVector<uint32> DecompressCCSCols(const QVector<uint32> &ccols, index_t colcount);
+FMVector<uint32> CompressCCSCols(const FMVector<uint32> &cols, index_t colcount);
+FMVector<uint32> DecompressCCSCols(const FMVector<uint32> &ccols, index_t colcount);
 
 template <typename T>
 void SparseToCCS(const SparseMatrix<T>&A,
-		 QVector<uint32> &rowstart,
-		 QVector<uint32> &colstart,
-		 QVector<T> &Adata) {
-  QVector<uint32> cols;
+		 FMVector<uint32> &rowstart,
+		 FMVector<uint32> &colstart,
+		 FMVector<T> &Adata) {
+  FMVector<uint32> cols;
   ConstSparseIterator<T> iter(&A);
   while (iter.isValid()) {
     cols << uint32(iter.col());
@@ -44,10 +44,10 @@ void SparseToCCS(const SparseMatrix<T>&A,
 
 template <typename T>
 void CCSToSparse(SparseMatrix<T> &A,
-		 const QVector<uint32> &rowstart,
-		 const QVector<uint32> &colstart,
-		 const QVector<T> &Adata) {
-  QVector<uint32> cols = DecompressCCSCols(colstart,A.cols());
+		 const FMVector<uint32> &rowstart,
+		 const FMVector<uint32> &colstart,
+		 const FMVector<T> &Adata) {
+  FMVector<uint32> cols = DecompressCCSCols(colstart,A.cols());
   for (int i=0;i<cols.size();i++) 
     A.set(NTuple(rowstart[i]+1,cols[i]),Adata[i]);
 }
@@ -55,11 +55,11 @@ void CCSToSparse(SparseMatrix<T> &A,
 template <typename T>
 void CCSToSparse(SparseMatrix<T> &Areal,
 		 SparseMatrix<T> &Aimag,
-		 const QVector<uint32> &rowstart,
-		 const QVector<uint32> &colstart,
-		 const QVector<T> &Areal_part,
-		 const QVector<T> &Aimag_part) {
-  QVector<uint32> cols = DecompressCCSCols(colstart,Areal.cols());
+		 const FMVector<uint32> &rowstart,
+		 const FMVector<uint32> &colstart,
+		 const FMVector<T> &Areal_part,
+		 const FMVector<T> &Aimag_part) {
+  FMVector<uint32> cols = DecompressCCSCols(colstart,Areal.cols());
   for (int i=0;i<cols.size();i++) {
     Areal.set(NTuple(rowstart[i]+1,cols[i]),Areal_part[i]);
     Aimag.set(NTuple(rowstart[i]+1,cols[i]),Aimag_part[i]);
@@ -70,11 +70,11 @@ void CCSToSparse(SparseMatrix<T> &Areal,
 template <typename T>
 void SparseToCCS(const SparseMatrix<T> &Areal, 
 		 const SparseMatrix<T> &Aimag,
-		 QVector<uint32> &rowstart,
-		 QVector<uint32> &colstart,
-		 QVector<T> &Areal_part,
-		 QVector<T> &Aimag_part) {
-  QVector<uint32> cols;
+		 FMVector<uint32> &rowstart,
+		 FMVector<uint32> &colstart,
+		 FMVector<T> &Areal_part,
+		 FMVector<T> &Aimag_part) {
+  FMVector<uint32> cols;
   ConstComplexSparseIterator<T> iter(&Areal,&Aimag);
   while (iter.isValid()) {
     cols << uint32(iter.col());
@@ -94,7 +94,7 @@ Array SparseToIJV(const Array &a, Array &rows, Array &cols);
 
 template <class T>
 class RLEEncoderComplex {
-  QVector<T> buffer;
+  FMVector<T> buffer;
   int m;
   int zlen;
   int state;
@@ -152,7 +152,7 @@ public:
     }
     state = 0;
   }
-  QVector<T> copyout() {
+  FMVector<T> copyout() {
     return buffer;
   }
 };
@@ -160,7 +160,7 @@ public:
 
 template <class T>
 class RLEEncoder {
-  QVector<T> buffer;
+  FMVector<T> buffer;
   int m;
   int zlen;
   int state;
@@ -212,19 +212,19 @@ public:
     }
     state = 0;
   }
-  QVector<T> copyout() {
+  FMVector<T> copyout() {
     return buffer;
   }
 };
 
 template <class T>
 class RLEDecoder {
-  const QVector<T> &data;
+  const FMVector<T> &data;
   int m;
   int n;
   int len;
 public:
-  RLEDecoder(const QVector<T> &str) : data(str) {
+  RLEDecoder(const FMVector<T> &str) : data(str) {
     m = 0;
     n = 1;
     len = str.size();
@@ -276,12 +276,12 @@ public:
 
 template <class T>
 class RLEDecoderComplex {
-  const QVector<T>& data;
+  const FMVector<T>& data;
   int m;
   int n;
   int len;
 public:
-  RLEDecoderComplex(const QVector<T>& str) : data(str) {
+  RLEDecoderComplex(const FMVector<T>& str) : data(str) {
     m = 0;
     n = 1;
     len = str.size();
@@ -335,7 +335,7 @@ public:
 
 
 template <typename T>
-Array FM3Sparse(const QVector<QVector<T> >& arg, NTuple dims) {
+Array FM3Sparse(const FMVector<FMVector<T> >& arg, NTuple dims) {
   SparseMatrix<T> retval(dims);
   for (int i=0;i<arg.size();i++) {
     RLEDecoder<T> rle(arg[i]);
@@ -349,7 +349,7 @@ Array FM3Sparse(const QVector<QVector<T> >& arg, NTuple dims) {
 }
 
 template <typename T>
-Array FM3SparseComplex(const QVector<QVector<T> >&arg, NTuple dims) {
+Array FM3SparseComplex(const FMVector<FMVector<T> >&arg, NTuple dims) {
   SparseMatrix<T> real(dims);
   SparseMatrix<T> imag(dims);
   for (int i=0;i<arg.size();i++) {
@@ -365,8 +365,8 @@ Array FM3SparseComplex(const QVector<QVector<T> >&arg, NTuple dims) {
 }
 
 template <typename T>
-QVector<QVector<T> > SparseFM3(const SparseMatrix<T>& arg) {
-  QVector<QVector<T> > ret(int(arg.cols()));
+FMVector<FMVector<T> > SparseFM3(const SparseMatrix<T>& arg) {
+  FMVector<FMVector<T> > ret(int(arg.cols()));
   ConstSparseIterator<T> iter(&arg);
   while (iter.isValid()) {
     RLEEncoder<T> rle;
@@ -383,8 +383,8 @@ QVector<QVector<T> > SparseFM3(const SparseMatrix<T>& arg) {
 }
 
 template <typename T>
-QVector<QVector<T> > SparseFM3(const SparseMatrix<T>& real, const SparseMatrix<T>& imag) {
-  QVector<QVector<T> > ret(int(real.cols()));
+FMVector<FMVector<T> > SparseFM3(const SparseMatrix<T>& real, const SparseMatrix<T>& imag) {
+  FMVector<FMVector<T> > ret(int(real.cols()));
   ConstComplexSparseIterator<T> iter(&real,&imag);
   while (iter.isValid()) {
     RLEEncoderComplex<T> rle;

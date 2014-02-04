@@ -150,7 +150,7 @@ static Array Conv2FunctionValidXY(Array X, Array Y) {
   return Conv2FunctionDispatch(X,Y,Cm,Cn,Cm_offset,Cn_offset);    
 }
 
-static Array Conv2FunctionXY(Array X, Array Y, QString type) {
+static Array Conv2FunctionXY(Array X, Array Y, FMString type) {
   // Check the arguments
   if (X.isReferenceType() || Y.isReferenceType())
     throw Exception("cannot apply conv2 to reference types.");
@@ -165,7 +165,7 @@ static Array Conv2FunctionXY(Array X, Array Y, QString type) {
   throw Exception("could not recognize the arguments to conv2");
 }
 
-static Array Conv2FunctionRCX(Array hcol, Array hrow, Array X, QString type) {
+static Array Conv2FunctionRCX(Array hcol, Array hrow, Array X, FMString type) {
   if (hcol.isReferenceType() || hrow.isReferenceType() ||
       X.isReferenceType())
     throw Exception("cannot apply conv2 to reference types.");

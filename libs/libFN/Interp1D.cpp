@@ -268,7 +268,7 @@ ArrayVector Interplin1Function(int nargout, const ArrayVector& arg) {
   if (arg.size() == 4) {
     if (!arg[3].isString())
       throw Exception("extrapolation flag must be a string");
-    QString xtrap_c = arg[3].asString();
+    FMString xtrap_c = arg[3].asString();
     if (xtrap_c=="nan")
       xtrap = 0;
     else if (xtrap_c=="zero")

@@ -22,10 +22,9 @@
 
 #include "Types.hpp"
 #include "Array.hpp"
-#include <QString>
-#include <QFile>
+#include "FMLib.hpp"
 
-bool contains(StringVector& list, QString s, bool regexpmode);
+bool contains(StringVector& list, FMString s, bool regexpmode);
 
 NTuple ArrayVectorAsDimensions(const ArrayVector &arg);
 
@@ -33,21 +32,21 @@ double ArrayRange(const Array& dp);
 double ArrayMin(const Array& dp);
 double ArrayMax(const Array& dp);
 
-Array DoubleVectorFromQList(QList<uint32> &ref);
+Array DoubleVectorFromFMList(FMList<uint32> &ref);
 
 int digitvalue(char x);
 
 void SwapBuffer(char* cp, int count, int elsize);
 
-QString ReadQStringFromFile(QFile *fp);
+FMString ReadFMStringFromFile(FMFile *fp);
 
-void WriteQStringToFile(QFile *fp, QString txt);
+void WriteFMStringToFile(FMFile *fp, FMString txt);
 
-double QFileReadInteger(QFile *fp, int base, int nMaxDigits = 1024 );
+double FMFileReadInteger(FMFile *fp, int base, int nMaxDigits = 1024 );
 
-double QFileReadFloat(QFile *fp, int nMaxDigits = 1024 );
+double FMFileReadFloat(FMFile *fp, int nMaxDigits = 1024 );
 
-QString QFileReadString(QFile *fp, int nMaxChars = 65535 );
+FMString FMFileReadString(FMFile *fp, int nMaxChars = 65535 );
 
-char QFileReadChar(QFile *fp);
+char FMFileReadChar(FMFile *fp);
 #endif

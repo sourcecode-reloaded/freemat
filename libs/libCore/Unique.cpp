@@ -20,7 +20,7 @@
 #include "Math.hpp"
 #include "Complex.hpp"
 #include "Algorithms.hpp"
-#include <QtCore>
+#include "QString.hpp"
 
 //@@Signature
 //function unique UniqueFunction

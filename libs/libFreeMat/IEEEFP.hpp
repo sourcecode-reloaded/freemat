@@ -47,8 +47,8 @@ bool IsFinite(uint16);
 bool IsFinite(uint32);
 bool IsFinite(uint64);
 
-QString ToHexString(float t);
-QString ToHexString(double t);
+FMString ToHexString(float t);
+FMString ToHexString(double t);
 double NaN(void);
 double Inf(void);
 

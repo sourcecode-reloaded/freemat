@@ -80,7 +80,7 @@ ArrayVector EigFunction(int nargout, const ArrayVector& arg) {
   else {
     Array b(arg[1]);
     if (b.isString()) {
-      QString b2 = b.asString().toUpper();
+      FMString b2 = b.asString().toUpper();
       if (b2=="NOBALANCE")
 	balance = false;
     }
@@ -148,7 +148,7 @@ ArrayVector EigsFunction(int nargout, const ArrayVector& arg) {
   if (A.dataClass() != Double) 
     throw Exception("eigs only works on double data class");
   bool shiftFlag;
-  QString whichflag;
+  FMString whichflag;
   double sigma[2];
   if (arg.size() < 3) {
     shiftFlag = false;
@@ -157,7 +157,7 @@ ArrayVector EigsFunction(int nargout, const ArrayVector& arg) {
     Array S(arg[2]);
     if (S.isString()) {
       shiftFlag = false;
-      QString stxt = S.asString().toUpper();
+      FMString stxt = S.asString().toUpper();
       if ((stxt == "LM") || (stxt == "SM") || (stxt == "LA") || (stxt == "SA") ||
 	  (stxt == "BE") || (stxt == "LR") || (stxt == "SR") || (stxt == "LI") ||
 	  (stxt == "SI"))

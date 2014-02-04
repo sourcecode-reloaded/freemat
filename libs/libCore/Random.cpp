@@ -352,7 +352,7 @@ static void InitializeRandGen() {
 }
 
 static ArrayVector RandStateControl(const ArrayVector& arg) {
-  QString key = arg[0].asString().toUpper();
+  FMString key = arg[0].asString().toUpper();
   if (!(key=="STATE"))
     throw Exception("expecting string 'state' as first argument");
   if (arg.size() == 1) {

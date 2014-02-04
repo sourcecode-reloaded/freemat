@@ -7,7 +7,7 @@
 #include "Algorithms.hpp"
 
 
-QString getPythonTraceback()
+FMString getPythonTraceback()
 {
     // Python equivilant:
     // import traceback, sys
@@ -16,7 +16,7 @@ QString getPythonTraceback()
 
     PyObject *type, *value, *traceback;
     PyObject *tracebackModule;
-    QString chrRetval;
+    FMString chrRetval;
 
     PyErr_Fetch(&type, &value, &traceback);
 
@@ -37,7 +37,7 @@ QString getPythonTraceback()
         strRetval = PyObject_CallMethod(emptyString, "join",
             "O", tbList);
 
-        chrRetval = QString(PyString_AsString(strRetval));
+        chrRetval = FMString(PyString_AsString(strRetval));
 
         Py_DECREF(tbList);
         Py_DECREF(emptyString);
@@ -46,7 +46,7 @@ QString getPythonTraceback()
     }
     else
     {
-        chrRetval = QString("Unable to import traceback module.");
+        chrRetval = FMString("Unable to import traceback module.");
     }
 
     Py_DECREF(type);
@@ -63,7 +63,7 @@ Array MakePythonObject(PyObject* p, Interpreter *eval, bool nodelete)
   Py_INCREF(p);
   sap->insert("pointer",Array(reinterpret_cast<uint64>(p)));
   sap->insert("nodelete",Array(nodelete));
-  sap->setClassName(QString("pythonobject"));
+  sap->setClassName(FMString("pythonobject"));
   // Make it a handle-semantics class
   StructArray hsap(sap,eval);
   return Array(hsap);
@@ -175,9 +175,9 @@ Array PythonToArray(PyObject* t, Interpreter *eval)
 {
   //  std::cout << "Python to array: " << PyString_AsString(PyObject_Repr(t)) << "\r\n";
   if (PyString_Check(t))
-    return Array(QString(PyString_AsString(t)));
+    return Array(FMString(PyString_AsString(t)));
   if (PyUnicode_Check(t))
-    return Array(QString(PyString_AsString(PyUnicode_AsASCIIString(t))));
+    return Array(FMString(PyString_AsString(PyUnicode_AsASCIIString(t))));
   if (PyInt_Check(t))
     return Array::create(int(PyInt_AsLong(t)));
   if (PyFloat_Check(t))
@@ -203,7 +203,7 @@ Array PythonToArray(PyObject* t, Interpreter *eval)
       //      std::cout << "Size is " << PyList_Size(t) << "\r\n";
       index_t list_size = PyList_Size(t);
       Array retval(Struct,NTuple(list_size,1));
-      retval.structPtr().setClassName(QString("pythonobject"));
+      retval.structPtr().setClassName(FMString("pythonobject"));
       for (index_t i=1;i<=list_size;i++)
 	retval.set(i,MakePythonObject(PyList_GetItem(t,i-1),eval,true));
       return retval;
@@ -216,7 +216,7 @@ Array PythonToArray(PyObject* t, Interpreter *eval)
       //      std::cout << "Size is " << PyTuple_Size(t) << "\r\n";
       index_t list_size = PyTuple_Size(t);
       Array retval(Struct,NTuple(list_size,1));
-      retval.structPtr().setClassName(QString("pythonobject"));
+      retval.structPtr().setClassName(FMString("pythonobject"));
       for (index_t i=1;i<=list_size;i++)
 	retval.set(i,MakePythonObject(PyTuple_GetItem(t,i-1),eval,true));
       return retval;      
@@ -367,8 +367,8 @@ public:
     graphicsFunction = true;
   }
   const FunctionType type() {return FM_PYTHON_FUNCTION;}
-  QString functionName() {return name;}
-  QString detailedName() {return name;}
+  FMString functionName() {return name;}
+  FMString detailedName() {return name;}
   int inputArgCount() {return -1;}
   int outputArgCount() {return -1;}
   void printMe(Interpreter *eval) {
@@ -393,7 +393,7 @@ public:
 
 
 //@@Signature
-//gfunction @pythonobject:horzcat PythonObjectHorzCatFunction
+//function @pythonobject:horzcat PythonObjectHorzCatFunction
 //input varargin
 //output x
 ArrayVector PythonObjectHorzCatFunction(int nargout, const ArrayVector& arg) {
@@ -406,7 +406,7 @@ ArrayVector PythonObjectHorzCatFunction(int nargout, const ArrayVector& arg) {
 }
 
 //@@Signature
-//gfunction @pythonobject:delete PythonObjectDeleteFunction
+//function @pythonobject:delete PythonObjectDeleteFunction
 //input x
 //output none
 ArrayVector PythonObjectDeleteFunction(int nargout, const ArrayVector& arg) {
@@ -415,7 +415,7 @@ ArrayVector PythonObjectDeleteFunction(int nargout, const ArrayVector& arg) {
 }
 
 //@@Signature
-//sgfunction @pythonobject:display PythonObjectDispFunction
+//sfunction @pythonobject:display PythonObjectDispFunction
 //input x
 //output none
 ArrayVector PythonObjectDispFunction(int nargout, const ArrayVector& arg,
@@ -429,7 +429,7 @@ ArrayVector PythonObjectDispFunction(int nargout, const ArrayVector& arg,
     }
   PyObject* t = ArrayToPython(x);
   PyObject* t_str = PyObject_Repr(t);
-  eval->outputMessage(" " + QString(PyString_AsString(t_str)) + "\n");
+  eval->outputMessage(" " + FMString(PyString_AsString(t_str)) + "\n");
   //  Py_XDECREF(t);
   //  Py_XDECREF(t_str);
   return ArrayVector();
@@ -464,7 +464,7 @@ static void PyInit() {
 }
 
 //@@Signature
-//sgfunction pyimport PyImportFunction
+//sfunction pyimport PyImportFunction
 //inputs name
 //outputs module
 ArrayVector PyImportFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
@@ -493,7 +493,7 @@ ArrayVector PyImportFunction(int nargout, const ArrayVector& arg, Interpreter* e
       {
 	//	std::cout << "Key: " << PyString_AsString(key) << "\r\n";
 	PythonFunctionDef *pfunc = new PythonFunctionDef(value);
-	pfunc->name = QString(PyString_AsString(key));
+	pfunc->name = FMString(PyString_AsString(key));
 	eval->getContext()->insertFunction(pfunc,false);
       }
   }  
@@ -502,7 +502,7 @@ ArrayVector PyImportFunction(int nargout, const ArrayVector& arg, Interpreter* e
 
 
 //@@Signature
-//gfunction pyeval PyEvalFunction
+//function pyeval PyEvalFunction
 //inputs command
 //outputs none
 ArrayVector PyEvalFunction(int nargout, const ArrayVector& arg) {

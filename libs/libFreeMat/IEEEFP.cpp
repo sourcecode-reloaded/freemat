@@ -17,6 +17,7 @@
  *
  */
 #include "IEEEFP.hpp"
+#include <stdio.h>
 
 static bool endianDetected = false;
 static bool bigEndian = false;
@@ -159,31 +160,37 @@ double Inf() {
   return u.f;
 }
 
-QString ToHexString(float t) {
+FMString ToHexString(unsigned int t) {
+  char buffer[256];
+  sprintf(buffer,"%08x",t);
+  return FMString(buffer);
+}
+
+FMString ToHexString(float t) {
   union {
     float f;
     unsigned int i;
   } u;
   if (IsNaN(t))
-    return QString("fff80000");
+    return FMString("fff80000");
   u.f = t;
-  return QString("%1").arg(uint(u.i),int(8),int(16),QChar('0'));
+  return ToHexString(u.i);
 }
 
-QString ToHexString(double t) {
+FMString ToHexString(double t) {
   union {
     double f;
     unsigned int i[2];
   } u;
   if (IsNaN(t))
-    return QString("fff8000000000000");
+    return FMString("fff8000000000000");
   u.f = t;
   if (!endianDetected) 
     CheckBigEndian();
   if (!bigEndian) 
-    return QString("%1%2").arg(uint(u.i[1]),int(8),int(16),QChar('0')).arg(uint(u.i[0]),int(8),int(16),QChar('0'));
+    return ToHexString(u.i[1]) + ToHexString(u.i[0]);
   else
-    return QString("%1%2").arg(uint(u.i[0]),int(8),int(16),QChar('0')).arg(uint(u.i[1]),int(8),int(16),QChar('0'));
+    return ToHexString(u.i[0]) + ToHexString(u.i[1]);
 }
 
 

@@ -20,18 +20,18 @@
 #include "ArrayPrivate.hpp"
 #include "Complex.hpp"
 
-QVariant ComplexVariant(double real, double imag) {
+FMString ComplexString(double real, double imag) {
   if (imag == 0) 
-    return QVariant(real);
+    return FMString(Stringify(real));
   if (imag > 0)
-    return QVariant(QString("%1+%2i").arg(real).arg(imag));
+    return Stringify(real)+"+"+Stringify(imag)+"i";
   else
-    return QVariant(QString("%1%2i").arg(real).arg(imag));
+    return Stringify(real)+Stringify(imag)+"i";
 }
 
 template <typename T>
-static QList<QVariant> TComputeVariableStatsReal(const BasicArray<T> &dp) {
-  QVariant vmin, vmax, vrange, vmean, vstd, vvar;
+static FMList<FMString> TComputeVariableStatsReal(const BasicArray<T> &dp) {
+  FMString vmin, vmax, vrange, vmean, vstd, vvar;
   T dmin, dmax;
   double dmean;
   bool init = false;
@@ -53,10 +53,10 @@ static QList<QVariant> TComputeVariableStatsReal(const BasicArray<T> &dp) {
     }
   }
   if (init) {
-    vmin = QVariant(dmin);
-    vmax = QVariant(dmax);
-    vrange = QVariant(dmax - dmin);
-    vmean = QVariant(dmean);
+    vmin = FMString(dmin);
+    vmax = FMString(dmax);
+    vrange = FMString(dmax - dmin);
+    vmean = FMString(dmean);
   }
   if (init && (len > 1)) {
     double vnorm = 1.0/(len-1.0);
@@ -65,16 +65,16 @@ static QList<QVariant> TComputeVariableStatsReal(const BasicArray<T> &dp) {
       T val = dp[i] - dmean;
       dvar += val*val*vnorm;
     }
-    vvar = QVariant(dvar);
-    vstd = QVariant(sqrt(dvar));
+    vvar = FMString(dvar);
+    vstd = FMString(sqrt(dvar));
   }					       
-  return QList<QVariant>() << vmin << vmax << vrange << vmean << vstd << vvar;
+  return FMList<FMString>() << vmin << vmax << vrange << vmean << vstd << vvar;
 }
 
 template <typename T>
-static QList<QVariant> TComputeVariableStatsComplex(const BasicArray<T> &dp_real, 
+static FMList<FMString> TComputeVariableStatsComplex(const BasicArray<T> &dp_real, 
 						    const BasicArray<T> &dp_imag) {
-  QVariant vmin, vmax, vrange, vmean, vstd, vvar;
+  FMString vmin, vmax, vrange, vmean, vstd, vvar;
   T dmin_real = 0, dmax_real = 0; double dmean_real = 0;
   T dmin_imag = 0, dmax_imag = 0; double dmean_imag = 0;
   index_t len = dp_real.length();
@@ -103,10 +103,10 @@ static QList<QVariant> TComputeVariableStatsComplex(const BasicArray<T> &dp_real
     }
   }
   if (init) {
-    vmin = ComplexVariant(dmin_real,dmin_imag);
-    vmax = ComplexVariant(dmax_real,dmax_imag);
-    vrange = ComplexVariant(dmax_real - dmin_real,dmax_imag - dmin_imag);
-    vmean = ComplexVariant(dmean_real,dmean_imag);
+    vmin = ComplexString(dmin_real,dmin_imag);
+    vmax = ComplexString(dmax_real,dmax_imag);
+    vrange = ComplexString(dmax_real - dmin_real,dmax_imag - dmin_imag);
+    vmean = ComplexString(dmean_real,dmean_imag);
   }
   if (init && (len > 1)) {
     double vnorm = 1.0/(len-1.0);
@@ -116,14 +116,14 @@ static QList<QVariant> TComputeVariableStatsComplex(const BasicArray<T> &dp_real
       T val_imag = dp_imag[i] - dmean_imag;
       dvar += complex_abs(val_real,val_imag)*vnorm;
     }
-    vvar = QVariant(dvar);
-    vstd = QVariant(sqrt(dvar));
+    vvar = FMString(dvar);
+    vstd = FMString(sqrt(dvar));
   }					       
-  return QList<QVariant>() << vmin << vmax << vrange << vmean << vstd << vvar;  
+  return FMList<FMString>() << vmin << vmax << vrange << vmean << vstd << vvar;  
 }
 
 template <typename T>
-static QList<QVariant> TComputeVariableStats(const Array *x) {
+static FMList<FMString> TComputeVariableStats(const Array *x) {
   if (x->allReal()) {
     return TComputeVariableStatsReal<T>(x->constReal<T>());
   } else {
@@ -135,9 +135,9 @@ static QList<QVariant> TComputeVariableStats(const Array *x) {
 #define MacroTCompute(ctype,cls)  \
   case cls: return TComputeVariableStats<ctype>(x);
 
-QList<QVariant> ComputeVariableStats(const Array *x) {
-  QList<QVariant> empty;
-  empty << QVariant() << QVariant() << QVariant() << QVariant() << QVariant() << QVariant();
+FMList<FMString> ComputeVariableStats(const Array *x) {
+  FMList<FMString> empty;
+  empty << FMString() << FMString() << FMString() << FMString() << FMString() << FMString();
   if (x->isSparse() || x->isString() ||
       x->isReferenceType() || x->isUserClass() ||
       x->isEmpty() || x->length() > 5000 || x->isScalar()) {

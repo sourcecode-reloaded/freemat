@@ -19,13 +19,13 @@ Prod.cpp
 RCond.cpp 
 Round.cpp 
 Sum.cpp 
-Time.cpp 
+#Time.cpp 
 Variance.cpp 
 RealImag.cpp 
 Sort.cpp 
-Unique.cpp 
+#Unique.cpp 
 XNorm.cpp 
-Analyze.cpp 
+#Analyze.cpp 
 Cast.cpp 
 Constants.cpp 
 Reshape.cpp 
@@ -33,25 +33,25 @@ Zeros.cpp
 Ones.cpp 
 Cell.cpp 
 Struct.cpp 
-Directory.cpp 
+#Directory.cpp 
 FFT.cpp 
 #helpwidget.cpp 
 #Help.cpp 
-Hex.cpp 
+#Hex.cpp 
 Clear.cpp 
-Exist.cpp 
+#Exist.cpp 
 Find.cpp 
 Is.cpp 
 Size.cpp 
-Path.cpp 
-Inspect.cpp 
+#Path.cpp 
+#Inspect.cpp 
 Audio.cpp 
 Random.cpp 
 RanLib.cpp 
 #Image.cpp 
-File.cpp 
-Printf.cpp 
-IO.cpp 
+#File.cpp 
+#Printf.cpp 
+#IO.cpp 
 Conv.cpp 
 Eval.cpp 
 Debug.cpp 
@@ -64,13 +64,13 @@ Version.cpp
 Error.cpp 
 Misc.cpp 
 Mean.cpp 
-StringOps.cpp 
+#StringOps.cpp 
 Transcendental.cpp 
 Trigonometric.cpp 
 Utils.cpp 
 MatIO.cpp 
 #XML.cpp 
-Cstruct.cpp 
+#Cstruct.cpp 
 Control.cpp 
 Sparse.cpp 
 Matrix.cpp
@@ -84,7 +84,7 @@ add_custom_command(
 	DEPENDS ${CORE_SOURCES}
 	COMMAND ${PYTHON_EXECUTABLE}
 	ARGS ${CMAKE_SOURCE_DIR}/tools/siggen.py
-	${CMAKE_CURRENT_SOURCE_DIR} Core ${CMAKE_CURRENT_BINARY_DIR}
+	${CMAKE_CURRENT_SOURCE_DIR} Core ${CMAKE_CURRENT_BINARY_DIR} ${CORE_SOURCES}
 	COMMENT "Generating function signatures"
 	VERBATIM
 	)

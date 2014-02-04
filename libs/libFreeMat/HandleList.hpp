@@ -20,17 +20,15 @@
 #ifndef __HandleList_hpp__
 #define __HandleList_hpp__
 #include <map>
-#include <QMutex>
-#include <QMutexLocker>
+#include "FMLib.hpp"
 #include "Exception.hpp"
-#include <QFile>
 
 template<class T>
 class HandleList {
   typedef T value_type;
   std::map<unsigned int, T, std::less<unsigned int> > handles;
   unsigned int max_handle;
-  QMutex mutex;
+  FMMutex mutex;
 public:
   HandleList() : max_handle(0) {
   }
@@ -42,7 +40,7 @@ public:
   }
 
   unsigned int assignHandle(T val) {
-    QMutexLocker locker(&mutex);
+    FMMutexLocker locker(&mutex);
     unsigned nxt = 0;
     bool freeHandleFound = false;
     while ((nxt < max_handle) && !freeHandleFound) {
@@ -55,14 +53,14 @@ public:
   }
 
   T lookupHandle(unsigned int handle) {
-    QMutexLocker locker(&mutex);
+    FMMutexLocker locker(&mutex);
     if (handles.count(handle-1) == 0)
       throw Exception("Invalid handle!");
     return handles[handle-1];
   }
 
   void deleteHandle(unsigned int handle) {
-    QMutexLocker locker(&mutex);
+    FMMutexLocker locker(&mutex);
     if (handle == max_handle) 
       max_handle--;
     handles.erase(handle-1);
@@ -71,7 +69,7 @@ public:
 
 class FilePtr {
 public:
-  QFile *fp;
+  FMFile *fp;
   bool swapflag;
 };
 

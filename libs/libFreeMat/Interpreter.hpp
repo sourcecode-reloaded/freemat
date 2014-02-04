@@ -27,12 +27,7 @@
 #include <stack>
 #include <string>
 #include <vector>
-#include <QStringList>
-#include <QObject>
-#include <QMutex>
-#include <QWaitCondition>
-#include <QThread>
-#include <QFileSystemWatcher>
+#include "FMLib.hpp"
 
 class InterpreterContinueException : public exception {};
 class InterpreterBreakException : public exception {};
@@ -50,8 +45,8 @@ enum JITControlFlag
 
 class stackentry {
 public:
-  QString cname;
-  QString detail;
+  FMString cname;
+  FMString detail;
   int tokid;
   int number;
   int steptrap;
@@ -59,7 +54,7 @@ public:
   int contextnumber;
     
   // A number of -1 corresponds to a temporary breakpoint 
-  stackentry(QString cntxt, QString det, int id,
+  stackentry(FMString cntxt, FMString det, int id,
 	     int num = 0, int strp = 0, int stcl = 0,
 	     int ctxt = -1) :
     cname(cntxt), detail(det), tokid(id), number(num),
@@ -79,8 +74,77 @@ typedef Array (*UnaryFunc)(const Array &);
  * This is the class that implements the interpreter - it generally
  * operates on abstract syntax trees (ASTs).
  */
-class Interpreter : public QThread {
-  Q_OBJECT
+
+class InterpreterDelegate {
+public:
+  virtual ~InterpreterDelegate() {}
+  /**
+   * Send a string of text to a terminal somewhere
+   */
+  virtual void outputRawText(FMString)= 0;
+  /**
+   * Flush the I/O buffers
+   */ 
+  virtual void Flush()= 0;
+  /**
+   * Send info on the current working directory
+   */
+  //  void updateDirView(FMVariant)= 0;
+  /**
+   * Send variable info to the variable viewer
+   */
+  //  void updateVarView(FMVariant)= 0;
+  /**
+   * Send the workspace info
+   */
+  virtual void updateStackView(FMStringList)= 0;
+  /**
+   * User has changed the current working directory
+   */
+  virtual void CWDChanged(FMString)= 0;
+  /**
+   * Change the prompt
+   */
+  virtual void SetPrompt(FMString)= 0;
+  /**
+   * Dispatch a graphics call
+   */
+  virtual void doGraphicsCall(Interpreter*, FuncPtr, ArrayVector, int)= 0;
+  /**
+   * All done.
+   */
+  virtual void QuitSignal()= 0;
+  /**
+   * Something went wrong...
+   */
+  virtual void CrashedSignal()= 0;
+  /**
+   * Refresh the breakpoints 
+   */
+  virtual void RefreshBPLists()= 0;
+  /**
+   * Show the current active line
+   */
+  virtual void IllegalLineOrCurrentPath(FMString name, int line)= 0;
+  /**
+   * Inform the editor of illegal line or file not on current path
+   */
+  virtual void ShowActiveLine(FMString name, int line)= 0;
+  /**
+   * Enable repainting
+   */
+  virtual void EnableRepaint()= 0;
+  /**
+   * Disable repainting
+   */
+  virtual void DisableRepaint()= 0;
+  /**
+   * Update the stack trace
+   */
+  virtual void UpdateStackTrace(FMStringList trace)= 0;  
+};
+
+class Interpreter {
 
   /******************************************
    *  Class Members for the Interpreter     *
@@ -121,7 +185,7 @@ class Interpreter : public QThread {
   /**
    * The last error that occured.
    */
-  QString lasterr;
+  FMString lasterr;
   /**
    * autostop storage flag
    */
@@ -151,37 +215,9 @@ class Interpreter : public QThread {
    */
   bool m_disablerescan;
   /**
-   * This mutex protects the command buffer.
-   */
-  QMutex mutex;
-  /**
-   * The command buffer
-   */
-  StringVector cmd_buffer;
-  /**
-   * A buffer of return values from graphics calls
-   */
-  QVector<ArrayVector> gfx_buffer;
-  /**
-   * A flag to indicate that the gfx call failed
-   */
-  bool gfxErrorOccured;
-  /**
-   * The corresponding exception.
-   */
-  QString gfxError;
-  /**
-   * A synchronization variable to wait on when the command buffer is empty
-   */
-  QWaitCondition bufferNotEmpty;
-  /**
-   * A synchronization variable to wait on when the gfx buffer is empty
-   */
-  QWaitCondition gfxBufferNotEmpty;
-  /**
    * A list of breakpoints
    */
-  QVector<stackentry> bpStack;
+  FMVector<stackentry> bpStack;
   /**
    * True if the interpreter is in single-step mode
    */
@@ -193,16 +229,16 @@ class Interpreter : public QThread {
   /**
    * The base path - contains all of the directories for FreeMat-shipped code
    */
-  QStringList m_basePath;
+  FMStringList m_basePath;
   /**
    * The user path - contains all of the directories for user defined FreeMat code
    */
-  QStringList m_userPath;
+  FMStringList m_userPath;
   /**
    * The user path as a string -- used for the path cache (to avoid rescanning)
    * This could be derived from m_userPath theoretically.
    */
-  QString m_userCachePath;
+  FMString m_userCachePath;
   /**
    * The width of the output in characters
    */
@@ -215,31 +251,6 @@ class Interpreter : public QThread {
    * Setting this flag suppresses the prompt
    */
   bool m_noprompt;
-  /**
-   * Our thread ID
-   */
-  int m_threadID;
-  /**
-   * The thread function we are executing
-   */
-  FunctionDef *m_threadFunc;
-  /**
-   * The arguments to the thread function we are executing
-   */
-  ArrayVector m_threadFuncArgs;
-  /**
-   * The number of return arguments expected
-   */
-  int m_threadNargout;
-  /**
-   * The return value of the thread function
-   */
-  ArrayVector m_threadFuncRets;
-  /**
-   * The error state of the thread function (true if an exception
-   * occured).
-   */
-  bool m_threadErrorState;
   /**
    * Interrupt the current thread at the next opportunity
    */
@@ -255,11 +266,11 @@ class Interpreter : public QThread {
   /**
    * The filename for the diary
    */
-  QString m_diaryFilename;
+  FMString m_diaryFilename;
   /**
    * The capture string
    */
-  QString m_capture;
+  FMString m_capture;
   /**
    * The capture state
    */
@@ -281,6 +292,8 @@ class Interpreter : public QThread {
    * Enable or disable warning messages
    */
   bool m_enableWarnings;
+
+  InterpreterDelegate *m_delegate;
   /******************************************
    *  Public Methods for the Interpreter    *
    ******************************************/
@@ -294,25 +307,6 @@ public:
    * Destruct the Interpreter object.
    */
   ~Interpreter();
-  /**
-   * Set the thread ID to the given number...
-   */
-  inline void setThreadID(int threadID) {m_threadID = threadID;}
-  /**
-   * Return the thread ID
-   */
-  inline int getThreadID() const {return m_threadID;}
-  /**
-   * Set the thread function and the arguments
-   */
-  inline void setThreadFunc(FunctionDef *threadFunc, 
-			    int nargout,
-			    ArrayVector threadFuncArgs) { 
-    m_threadFunc = threadFunc;  
-    m_threadFuncArgs = threadFuncArgs; 
-    m_threadNargout = nargout;
-    m_threadErrorState = false;
-  }
   /**
    * Manipulate the quiet level
    */
@@ -328,8 +322,8 @@ public:
    */
   inline bool getDiaryState() {return m_diaryState;}
   inline void setDiaryState(bool t) {m_diaryState = t;}
-  inline void setDiaryFilename(QString name) {m_diaryFilename = name;}
-  void diaryMessage(QString msg);
+  inline void setDiaryFilename(FMString name) {m_diaryFilename = name;}
+  void diaryMessage(FMString msg);
   /**
    * Manipulate the warning enable state
    */
@@ -340,7 +334,7 @@ public:
    */
   inline void clearCaptureString() {m_capture = "";}
   inline void setCaptureState(bool t) {m_captureState = t;}
-  inline QString getCaptureString() {return m_capture;}
+  inline FMString getCaptureString() {return m_capture;}
   /**
    * Manipulate the profile state
    */
@@ -351,15 +345,6 @@ public:
    */
   void setLiveUpdateFlag(bool t);
   inline bool liveUpdateFlag() {return m_liveUpdateFlag;}
-  /**
-   * Get the result of the thread function evaluation
-   */
-  inline ArrayVector getThreadFuncReturn() {return m_threadFuncRets;}
-  /**
-   * Get the error state - is true if the thread function throws
-   * an exception.
-   */
-  inline bool getLastErrorState() {return m_threadErrorState;}
   /**
    * Activate the interrupt for the thread - so that it stops.
    */
@@ -379,12 +364,12 @@ public:
   /**
    * Queue a command for execution
    */
-  void ExecuteLine(QString txt);
+  void ExecuteLine(FMString txt);
   /**
    * Retrieve data about the current location of the instruction pointer
    */
-  QString getMFileName();
-  QString getInstructionPointerFileName();
+  FMString getMFileName();
+  FMString getInstructionPointerFileName();
   /**
    * SET/GET for the instruction pointer
    */
@@ -400,7 +385,7 @@ public:
   /**
    * Sample the instruction pointer
    */
-  inline QString sampleInstructionPointer(unsigned &ctxt) const {
+  inline FMString sampleInstructionPointer(unsigned &ctxt) const {
     if (!InCLI) {
 	return context->sampleIP( ctxt );
     } else {
@@ -411,23 +396,23 @@ public:
   /**
    * The Base Path is the one that contains .m files in the current app bundle
    */
-  void setBasePath(QStringList);
+  void setBasePath(FMStringList);
   /**
    * The User Path is the one that the user can tinker with.
    */
-  void setUserPath(QStringList);
+  void setUserPath(FMStringList);
   /**
    * Get the current path set for the interface. (user path - legacy interface)
    */
-  QString getPath();
+  FMString getPath();
   /**
    * Get the current path set for the interface (base path + user path)
    */
-  QString getTotalPath();
+  FMString getTotalPath();
   /**
    * Set the path for the interface. (user path - legacy interface)
    */
-  void setPath(QString);
+  void setPath(FMString);
   /**
    * Return the width of the current "terminal" in
    * characters.
@@ -440,16 +425,16 @@ public:
   /**
    * Output the following text message.
    */
-  void outputMessage(QString msg);
+  void outputMessage(FMString msg);
   void outputMessage(const char* format,...);
   /**
    * Output the following error message.
    */
-  void errorMessage(QString msg);
+  void errorMessage(FMString msg);
   /**
    * Output the following warning message.
    */
-  void warningMessage(QString msg);
+  void warningMessage(FMString msg);
   /**
    * Start the interpreter running.
    */
@@ -467,7 +452,7 @@ public:
   /**
    * Retrieve the version string for the interpreter
    */
-  static QString getVersionString();
+  static FMString getVersionString();
   /**
    * Retrieve the number of errors that occured.  The
    * side effect is that the error count is set to zero.
@@ -476,7 +461,7 @@ public:
   /**
    * True if we are currently in the method of a class
    */
-  bool inMethodCall(QString classname);
+  bool inMethodCall(FMString classname);
   /**
    * Get the context for the interface.
    */
@@ -489,9 +474,9 @@ public:
   /**
    * Add a new breakpoint
    */
-  MFunctionDef* lookupFullPath(QString name);
+  MFunctionDef* lookupFullPath(FMString name);
   void addBreakpoint(stackentry bp);
-  void addBreakpoint(QString name, int line) ;
+  void addBreakpoint(FMString name, int line) ;
   /**
    * Activate a breakpoint in the code.  If the line number for the
    * breakpoint is negative, the breakpoint is set as a step trap.  
@@ -546,15 +531,15 @@ public:
    * and execute it.  The flag indicates whether or not exceptions
    * are propogated or printed.
    */
-  void evaluateString(QString line, bool propogateExceptions = false);
+  void evaluateString(FMString line, bool propogateExceptions = false);
   /**
    * Get the last error that occurred.
    */
-  QString getLastErrorString();
+  FMString getLastErrorString();
   /**
    * Set the text for the last error.
    */
-  void setLastErrorString(QString txt);
+  void setLastErrorString(FMString txt);
   /**
    * Set to false to turn off the greeting.
    */
@@ -570,15 +555,15 @@ public:
   /**
    * Register an error that occurs with a gfx call
    */
-  void RegisterGfxError(QString msg);
+  void RegisterGfxError(FMString msg);
   /**
    * Simplified interface for function lookup.
    */
-  bool lookupFunction(QString funcName, FuncPtr& val);
+  bool lookupFunction(FMString funcName, FuncPtr& val);
    /**
    * Prompt the user for input, and return the answer.
    */
-  QString getLine(QString prompt);
+  FMString getLine(FMString prompt);
   /**
    * Go to sleep for the specified number of milliseconds
    */
@@ -601,13 +586,13 @@ public:
    */
   void evalCLI();
 
-  bool isBPSet(QString fname, int lineNumber);
-  bool isInstructionPointer(QString fname, int lineNumber);
-  void toggleBP(QString fname, int lineNumber);
+  bool isBPSet(FMString fname, int lineNumber);
+  bool isInstructionPointer(FMString fname, int lineNumber);
+  void toggleBP(FMString fname, int lineNumber);
   /**
    * Change the current working directory
    */
-  void changeDir(QString path);
+  void changeDir(FMString path);
   /**
    * Force a rescan of the current path to look for 
    * new function files.
@@ -627,83 +612,21 @@ public:
    * where the handles have all been deleted.
    */
   void deleteHandleClass(StructArray *ap);
-public slots:
+public:
   /**
    * Send file info to the file tool
    */
   void updateFileTool();
-  void updateFileTool(const QString & m);
+  void updateFileTool(const FMString & m);
   void updateVariablesTool();
   void updateStackTool();
 
   /******************************************
    *  Signals for the Interpreter           *
    ******************************************/
-signals:
-  /**
-   * Send a string of text to a terminal somewhere
-   */
-  void outputRawText(QString);
-  /**
-   * Flush the I/O buffers
-   */ 
-  void Flush();
-  /**
-   * Send info on the current working directory
-   */
-  void updateDirView(QVariant);
-  /**
-   * Send variable info to the variable viewer
-   */
-  void updateVarView(QVariant);
-  /**
-   * Send the workspace info
-   */
-  void updateStackView(QStringList);
-  /**
-   * User has changed the current working directory
-   */
-  void CWDChanged(QString);
-  /**
-   * Change the prompt
-   */
-  void SetPrompt(QString);
-  /**
-   * Dispatch a graphics call
-   */
-  void doGraphicsCall(Interpreter*, FuncPtr, ArrayVector, int);
-  /**
-   * All done.
-   */
-  void QuitSignal();
-  /**
-   * Something went wrong...
-   */
-  void CrashedSignal();
-  /**
-   * Refresh the breakpoints 
-   */
-  void RefreshBPLists();
-  /**
-   * Show the current active line
-   */
-  void IllegalLineOrCurrentPath(QString name, int line);
-  /**
-   * Inform the editor of illegal line or file not on current path
-   */
-  void ShowActiveLine(QString name, int line);
-  /**
-   * Enable repainting
-   */
-  void EnableRepaint();
-  /**
-   * Disable repainting
-   */
-  void DisableRepaint();
-  /**
-   * Update the stack trace
-   */
-  void UpdateStackTrace(QStringList trace);
+  void setDelegate(InterpreterDelegate *p) {m_delegate = p;}
+  InterpreterDelegate* getDelegate() const {return m_delegate;}
+  
   /******************************************
    *  Private Methods for the Interpreter   *
    ******************************************/
@@ -732,15 +655,15 @@ private:
   /**
    * Create a variable in the correct scope, and return a reference to it
    */
-  ArrayReference createVariable(QString name);
+  ArrayReference createVariable(FMString name);
   /**
    * Perform a binary operator with the given name
    */
-  Array DoBinaryOperator(const Tree & t, BinaryFunc fnc, QString fname);
+  Array DoBinaryOperator(const Tree & t, BinaryFunc fnc, FMString fname);
   /**
    * Perform a unary operator with the given name
    */
-  Array DoUnaryOperator(const Tree & t, UnaryFunc fnc, QString fname);
+  Array DoUnaryOperator(const Tree & t, UnaryFunc fnc, FMString fname);
   /**
    * Handle the construction of a function pointer
    */
@@ -854,7 +777,7 @@ private:
    * Look up an identifier as a potential function name, using a
    * rescan if the identifier is not found on the first pass.
    */
-  bool lookupFunction(QString funcName, FuncPtr& val, 
+  bool lookupFunction(FMString funcName, FuncPtr& val, 
 		      ArrayVector& args, bool disableOverload = false);
   /**
    * Special case the single assignment statement 'A = B' for speed.
@@ -1111,8 +1034,8 @@ private:
   /**
    * Mangle a function name to get the private version (if it exists)
    */
-  QString getPrivateMangledName(QString fname);
-  QString getLocalMangledName(QString fname);
+  FMString getPrivateMangledName(FMString fname);
+  FMString getLocalMangledName(FMString fname);
   /**
    * Convert variables into indexes, calls "subsindex" for user classes.
    */
@@ -1131,19 +1054,19 @@ private:
    * is true, then these functions are marked as temporary (so changing
    * the working directory flushes them).
    */
-  void scanDirectory(QString scdir, bool tempfunc, QString prefixo);
+  void scanDirectory(FMString scdir, bool tempfunc, FMString prefixo);
   /**
    * Add the specified .m file to the current context
    */
-  void procFileM(QString fname, QString fullname, bool tempfunc);
+  void procFileM(FMString fname, FMString fullname, bool tempfunc);
   /**
    * Add the specified .p file to the current context
    */
-  void procFileP(QString fname, QString fullname, bool tempfunc);
+  void procFileP(FMString fname, FMString fullname, bool tempfunc);
   /**
    * Add the specified .mex file to the current context
    */
-  void procFileMex(QString fname, QString fullname, bool tempfunc);
+  void procFileMex(FMString fname, FMString fullname, bool tempfunc);
 
   friend Array IndexExpressionToStruct(Interpreter*, const Tree &, Array);
   friend ArrayVector ClassRHSExpression(Array, const Tree &, Interpreter*);
@@ -1158,10 +1081,10 @@ private:
 void ClearJITCache();
 
 void sigInterrupt(int arg);
-QString TrimFilename(QString);
-QString TildeExpand(QString);
+FMString TrimFilename(FMString);
+FMString TildeExpand(FMString);
 
-void WarningMessage(QString);
+void WarningMessage(FMString);
 extern "C"
 {
   double num_for_loop_iter( double first, double step, double last );

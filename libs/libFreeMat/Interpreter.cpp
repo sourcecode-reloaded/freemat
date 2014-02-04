@@ -33,8 +33,6 @@
 #include "Class.hpp"
 #include "Print.hpp"
 #include "MemPtr.hpp"
-#include <qeventloop.h>
-#include <QtCore>
 #include <fstream>
 #include <stdarg.h>
 #include "JITFactory.hpp"
@@ -45,7 +43,6 @@
 #include "FuncPtr.hpp"
 #include "AnonFunc.hpp"
 #include "Stats.hpp"
-#include <QtGui>
 #include "DebugStream.hpp"
 #include "CArray.hpp"
 
@@ -66,7 +63,7 @@ const int max_line_count = 1000000;
 /**
  * The database of compiled code segments
  */
-QMap<int,JITInfo> m_codesegments;
+FMMap<int,JITInfo> m_codesegments;
 
 
 void ClearJITCache() {
@@ -77,7 +74,7 @@ void ClearJITCache() {
  * The file system watcher -- watches for changes to the file system
  * Only one interpreter thread should use this watcher at a time.
  */
-//QFileSystemWatcher m_watch;
+//FMFileSystemWatcher m_watch;
 
 
 #define SaveEndInfo  \
@@ -90,10 +87,10 @@ void ClearJITCache() {
   endCount = oldEndCount; \
   endTotal = oldEndTotal;  \
 
-QString TildeExpand(QString path) {
+FMString TildeExpand(FMString path) {
   if ((path.size() > 0) && (path[0] == '~')) {
     path.remove(0,1);
-    return QDir::homePath() + path;
+    return FMDir::homePath() + path;
   }
   return path;
 }
@@ -111,13 +108,13 @@ public:
   }
 };
 
-void Interpreter::setPath(QString path) {
+void Interpreter::setPath(FMString path) {
   if (path == m_userCachePath) return;
-  QStringList pathset(path.split(PATHSEP,QString::SkipEmptyParts));
+  FMStringList pathset(path.split(PATHSEP,true));
   m_userPath.clear();
   for (int i=0;i<pathset.size();i++)
     if (pathset[i] != ".") {
-      QDir tpath(TildeExpand(pathset[i]));
+      FMDir tpath(TildeExpand(pathset[i]));
       m_userPath << tpath.absolutePath();
     }
   setupWatcher();
@@ -126,9 +123,9 @@ void Interpreter::setPath(QString path) {
   m_userCachePath = path;
 }
 
-QString Interpreter::getTotalPath() {
-  QString retpath;
-  QStringList totalPath(QStringList() << m_basePath << m_userPath);
+FMString Interpreter::getTotalPath() {
+  FMString retpath;
+  FMStringList totalPath(FMStringList() << m_basePath << m_userPath);
   for (int i=0;i<totalPath.size()-1;i++)
     retpath = retpath + totalPath[i] + PATHSEP;
   if (totalPath.size() > 0)
@@ -136,9 +133,9 @@ QString Interpreter::getTotalPath() {
   return retpath;
 }
 
-QString Interpreter::getPath() {
-  QString retpath;
-  QStringList totalPath(m_userPath);
+FMString Interpreter::getPath() {
+  FMString retpath;
+  FMStringList totalPath(m_userPath);
   for (int i=0;i<totalPath.size()-1;i++)
     retpath = retpath + totalPath[i] + PATHSEP;
   if (totalPath.size() > 0)
@@ -149,19 +146,19 @@ QString Interpreter::getPath() {
 void Interpreter::setLiveUpdateFlag(bool t) {
   m_liveUpdateFlag = t;
   if (t) {
-    //    connect(&m_watch,SIGNAL(directoryChanged(const QString &)),
-    // 	    this,SLOT(updateFileTool(const QString &)));
+    //    connect(&m_watch,SIGNAL(directoryChanged(const FMString &)),
+    // 	    this,SLOT(updateFileTool(const FMString &)));
   }
 }
 
-// static bool DirExists(const QString & path) {
-//   QDir tmp(path);
+// static bool DirExists(const FMString & path) {
+//   FMDir tmp(path);
 //   return tmp.exists();
 // }
 
 void Interpreter::setupWatcher() {
   if (!m_liveUpdateFlag) return;
-  //  QStringList pathLists(m_watch.directories());
+  //  FMStringList pathLists(m_watch.directories());
   //  if (!pathLists.isEmpty())
   //    m_watch.removePaths(pathLists);
   //   if (!m_userPath.isEmpty()) {
@@ -174,16 +171,16 @@ void Interpreter::setupWatcher() {
   //       if (DirExists(m_basePath[i]))
   // 	m_watch.addPath(m_basePath[i]);
   //   }
-  //   m_watch.addPath(QDir::currentPath());
+  //   m_watch.addPath(FMDir::currentPath());
 }
 
-void Interpreter::changeDir(QString path) {
-  if (QDir(path) == QDir::currentPath())
+void Interpreter::changeDir(FMString path) {
+  if (FMDir(path) == FMDir::currentPath())
     return;
-  if (!QDir::setCurrent(path))
+  if (!FMDir::setCurrent(path))
     throw Exception("Unable to change to specified directory: " + path);
   if (m_liveUpdateFlag)
-    emit CWDChanged(QDir::currentPath());
+    m_delegate->CWDChanged(FMDir::currentPath());
   setupWatcher();
   rescanPath();
   //  updateFileTool();
@@ -191,36 +188,37 @@ void Interpreter::changeDir(QString path) {
 
 void Interpreter::updateVariablesTool() {
   if (!m_liveUpdateFlag) return;
-  StringVector varList(context->listAllVariables());
-  QList<QVariant> vars;
+/*  StringVector varList(context->listAllVariables());
+  FMList<FMVariant> vars;
   for (int i=0;i<varList.size();i++) {
-    QList<QVariant> entry;
+    FMList<FMVariant> entry;
     // Icon
-    entry << QVariant();
-    entry << QVariant(varList[i]);
+    entry << FMVariant();
+    entry << FMVariant(varList[i]);
     Array *dp = context->lookupVariableLocally(varList[i]);
     if (dp) {
       // class
       if (dp->allReal())
-	entry << QVariant(dp->className());
+	entry << FMVariant(dp->className());
       else
-	entry << QVariant(dp->className() + " (complex)");
+	entry << FMVariant(dp->className() + " (complex)");
       // value
-      entry << QVariant(SummarizeArrayCellEntry(*dp));
+      entry << FMVariant(SummarizeArrayCellEntry(*dp));
       // size
-      entry << QVariant(dp->dimensions().toString());
+      entry << FMVariant(dp->dimensions().toString());
       // bytes min, max, range, mean, var, std
-      entry << QVariant(double(dp->bytes()));
+      entry << FMVariant(double(dp->bytes()));
       entry += ComputeVariableStats(dp);
     }
     for (int i=entry.size();i<10;i++)
-      entry << QVariant();
-    vars << QVariant(entry);
+      entry << FMVariant();
+    vars << FMVariant(entry);
   }
-  emit updateVarView(QVariant(vars));
+m_delegate->updateVarView(FMVariant(vars));
+*/
 }
 
-static bool InSpecificScope(Context *context, QString name, QString detail) {
+static bool InSpecificScope(Context *context, FMString name, FMString detail) {
   return ((context->scopeName() == name) &&
 	  (context->scopeDetailString() == detail));
 }
@@ -229,16 +227,16 @@ static bool InKeyboardScope(Context *context) {
   return InSpecificScope(context,"keyboard","keyboard");
 }
 
-static QString GetStackToolDescription(Context *context) {
+static FMString GetStackToolDescription(Context *context) {
   int line = int(LineNumber(context->scopeTokenID()));
   if (line > 0)
-    return QString(context->scopeDetailString() + QString("(%1)").arg(line));
+    return FMString(context->scopeDetailString() + Stringify(line));
   else
     return context->scopeDetailString();
 }
 
 void Interpreter::updateStackTool() {
-  QStringList stackInfo;
+  FMStringList stackInfo;
   // Do a complete dump...
   // Suppose we start with
   int f_depth = context->scopeDepth();
@@ -255,7 +253,7 @@ void Interpreter::updateStackTool() {
 	!InSpecificScope(context,"docli","builtin") &&
 	!context->scopeDetailString().isEmpty()) {
       if (firstline) {
-	stackInfo << QString("*") + GetStackToolDescription(context);
+	stackInfo << FMString("*") + GetStackToolDescription(context);
 	firstline = false;
       } else
 	stackInfo << GetStackToolDescription(context);
@@ -264,45 +262,47 @@ void Interpreter::updateStackTool() {
   }
   context->restoreBypassedScopes();
   while (context->scopeDepth() > f_depth) context->bypassScope(1);
-  emit updateStackView(stackInfo);
+  m_delegate->updateStackView(stackInfo);
 }
 
-void Interpreter::updateFileTool(const QString &) {
+void Interpreter::updateFileTool(const FMString &) {
   updateFileTool();
 }
 
 void Interpreter::updateFileTool() {
+  /*
   // Build the info to send to the file tool
-  QDir dir(QDir::currentPath());
-  dir.setFilter(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot);
-  QFileInfoList list(dir.entryInfoList());
-  QList<QVariant> files;
-  QList<QVariant> entry;
-  entry << QVariant(QString("dir"));
-  entry << QVariant(" .. (Parent Folder)");
-  entry << QVariant();
-  entry << QVariant();
-  entry << QVariant("Folder");
-  files << QVariant(entry);
+  FMDir dir(FMDir::currentPath());
+  dir.setFilter(FMDir::Files|FMDir::Dirs|FMDir::NoDotAndDotDot);
+  FMFileInfoList list(dir.entryInfoList());
+  FMList<FMVariant> files;
+  FMList<FMVariant> entry;
+  entry << FMVariant(FMString("dir"));
+  entry << FMVariant(" .. (Parent Folder)");
+  entry << FMVariant();
+  entry << FMVariant();
+  entry << FMVariant("Folder");
+  files << FMVariant(entry);
   for (int i=0;i<((int)list.size());i++) {
-    QList<QVariant> entry;
-    QFileInfo fileInfo(list.at(i));
+    FMList<FMVariant> entry;
+    FMFileInfo fileInfo(list.at(i));
     if (fileInfo.isDir())
-      entry << QVariant(QString("dir"));
+      entry << FMVariant(FMString("dir"));
     else
-      entry << QVariant(QString("file"));
-    entry << QVariant(fileInfo.fileName());
-    entry << QVariant(fileInfo.size());
-    entry << QVariant(fileInfo.lastModified());
+      entry << FMVariant(FMString("file"));
+    entry << FMVariant(fileInfo.fileName());
+    entry << FMVariant(fileInfo.size());
+    entry << FMVariant(fileInfo.lastModified());
     if (fileInfo.isDir())
-      entry << QVariant(QString("Folder"));
+      entry << FMVariant(FMString("Folder"));
     else if (fileInfo.suffix().isEmpty())
-      entry << QVariant("File");
+      entry << FMVariant("File");
     else
-      entry << QVariant(QString(fileInfo.suffix() + " File"));
-    files << QVariant(entry);
+      entry << FMVariant(FMString(fileInfo.suffix() + " File"));
+    files << FMVariant(entry);
   }
-  emit updateDirView(QVariant(files));
+  emit updateDirView(FMVariant(files));
+  */
 }
 
 void Interpreter::rescanPath() {
@@ -314,64 +314,86 @@ void Interpreter::rescanPath() {
   for (int i=0;i<m_userPath.size();i++)
     scanDirectory(m_userPath[i],false,"");
   // Scan the current working directory.
-  scanDirectory(QDir::currentPath(),true,"");
+  scanDirectory(FMDir::currentPath(),true,"");
   updateFileTool();
 }
 
 
-void Interpreter::setBasePath(QStringList pth) {
+void Interpreter::setBasePath(FMStringList pth) {
   m_basePath = pth;
 }
 
-void Interpreter::setUserPath(QStringList pth) {
+void Interpreter::setUserPath(FMStringList pth) {
   m_userPath = pth;
 }
 
-static QString mexExtension() {
-#ifdef Q_OS_LINUX
+static FMString mexExtension() {
+#ifdef FM_OS_LINUX
   return "fmxglx";
 #endif
-#ifdef Q_OS_MACX
+#ifdef FM_OS_MACX
   return "fmxmac";
 #endif
-#ifdef Q_OS_WIN32
+#ifdef FM_OS_WIN32
   return "fmxw32";
 #endif
   return "fmx";
 }
 
-void Interpreter::scanDirectory(QString scdir, bool tempfunc,
-				QString prefix) {
-  QDir dir(scdir);
-  dir.setFilter(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot);
-  dir.setNameFilters(QStringList() << "*.m" << "*.p"
-		     << "@*" << "private" << "*."+mexExtension());
-  QFileInfoList list(dir.entryInfoList());
-  for (int i=0;i<((int)list.size());i++) {
-    QFileInfo fileInfo(list.at(i));
-    QString fileSuffix(fileInfo.suffix());
-    QString fileBaseName(fileInfo.baseName());
-    QString fileAbsoluteFilePath(fileInfo.absoluteFilePath());
-    if (fileSuffix == "m" || fileSuffix == "M")
-      if (prefix.isEmpty())
-	procFileM(fileBaseName,fileAbsoluteFilePath,tempfunc);
-      else
-	procFileM(prefix + ":" + fileBaseName,fileAbsoluteFilePath,tempfunc);
-    else if (fileSuffix == "p" || fileSuffix == "P")
-      if (prefix.isEmpty())
-	procFileP(fileBaseName,fileAbsoluteFilePath,tempfunc);
-      else
-	procFileP(prefix + ":" + fileBaseName,fileAbsoluteFilePath,tempfunc);
-    else if (fileBaseName[0] == '@')
-      scanDirectory(fileAbsoluteFilePath,tempfunc,fileBaseName);
-    else if (fileBaseName == "private")
-      scanDirectory(fileAbsoluteFilePath,tempfunc,fileAbsoluteFilePath);
-    else
-      procFileMex(fileBaseName,fileAbsoluteFilePath,tempfunc);
-  }
+void Interpreter::scanDirectory(FMString scdir, bool tempfunc,
+				FMString prefix) {
+  FMDir dir(scdir);
+  boost::filesystem::directory_iterator iter(dir.boostPath());
+  while (iter != boost::filesystem::directory_iterator())
+    {
+      boost::filesystem::path p = *iter;
+      FMString filename = p.filename().string();
+      FMStringList filenameParts = filename.split(".");
+      FMString fileBaseName = "";
+      if (!filenameParts.isEmpty()) fileBaseName = filenameParts[0];
+      FMString fileAbsoluteFilePath = boost::filesystem::absolute(p).string();
+      if (filename.endsWith(".m") || filename.endsWith(".M"))
+	if (prefix.isEmpty())
+	  procFileM(fileBaseName,fileAbsoluteFilePath,tempfunc);
+	else
+	  procFileM(prefix+":"+fileBaseName,fileAbsoluteFilePath,tempfunc);
+      else if (fileBaseName.startsWith("@"))
+	scanDirectory(fileAbsoluteFilePath,tempfunc,fileBaseName);
+      else if (fileBaseName == "private")
+	scanDirectory(fileAbsoluteFilePath,tempfunc,fileAbsoluteFilePath);
+      ++iter;
+    }
+  
+  // FMDir dir(scdir);
+  // dir.setFilter(FMDir::Files|FMDir::Dirs|FMDir::NoDotAndDotDot);
+  // dir.setNameFilters(FMStringList() << "*.m" << "*.p"
+  // 		     << "@*" << "private" << "*."+mexExtension());
+  // FMFileInfoList list(dir.entryInfoList());
+  // for (int i=0;i<((int)list.size());i++) {
+  //   FMFileInfo fileInfo(list.at(i));
+  //   FMString fileSuffix(fileInfo.suffix());
+  //   FMString fileBaseName(fileInfo.baseName());
+  //   FMString fileAbsoluteFilePath(fileInfo.absoluteFilePath());
+  //   if (fileSuffix == "m" || fileSuffix == "M")
+  //     if (prefix.isEmpty())
+  // 	procFileM(fileBaseName,fileAbsoluteFilePath,tempfunc);
+  //     else
+  // 	procFileM(prefix + ":" + fileBaseName,fileAbsoluteFilePath,tempfunc);
+  //   else if (fileSuffix == "p" || fileSuffix == "P")
+  //     if (prefix.isEmpty())
+  // 	procFileP(fileBaseName,fileAbsoluteFilePath,tempfunc);
+  //     else
+  // 	procFileP(prefix + ":" + fileBaseName,fileAbsoluteFilePath,tempfunc);
+  //   else if (fileBaseName[0] == '@')
+  //     scanDirectory(fileAbsoluteFilePath,tempfunc,fileBaseName);
+  //   else if (fileBaseName == "private")
+  //     scanDirectory(fileAbsoluteFilePath,tempfunc,fileAbsoluteFilePath);
+  //   else
+  //     procFileMex(fileBaseName,fileAbsoluteFilePath,tempfunc);
+  // }
 }
 
-void Interpreter::procFileM(QString fname, QString fullname, bool tempfunc) {
+void Interpreter::procFileM(FMString fname, FMString fullname, bool tempfunc) {
   MFunctionDef *adef;
   adef = new MFunctionDef();
   adef->name = fname;
@@ -384,11 +406,12 @@ void Interpreter::procFileM(QString fname, QString fullname, bool tempfunc) {
   context->insertFunction(adef, tempfunc);
 }
 
-void Interpreter::procFileP(QString fname, QString fullname, bool tempfunc) {
+void Interpreter::procFileP(FMString fname, FMString fullname, bool tempfunc) {
   throw Exception("P-files are not supported in this version of FreeMat");
 }
 
-void Interpreter::procFileMex(QString fname, QString fullname, bool tempfunc) {
+void Interpreter::procFileMex(FMString fname, FMString fullname, bool tempfunc) {
+  /*
   MexFunctionDef *adef;
   adef = new MexFunctionDef(fullname);
   adef->name = fname;
@@ -396,21 +419,22 @@ void Interpreter::procFileMex(QString fname, QString fullname, bool tempfunc) {
     context->insertFunction((MFunctionDef*)adef,tempfunc);
   else
     delete adef;
+  */
 }
 
 void Interpreter::RegisterGfxResults(ArrayVector m) {
-  mutex.lock();
-  gfx_buffer.push_back(m);
-  gfxBufferNotEmpty.wakeAll();
-  mutex.unlock();
+  // mutex.lock();
+  // gfx_buffer.push_back(m);
+  // gfxBufferNotEmpty.wakeAll();
+  // mutex.unlock();
 }
 
-void Interpreter::RegisterGfxError(QString msg) {
-  mutex.lock();
-  gfxError = msg;
-  gfxErrorOccured = true;
-  gfxBufferNotEmpty.wakeAll();
-  mutex.unlock();
+void Interpreter::RegisterGfxError(FMString msg) {
+  // mutex.lock();
+  // gfxError = msg;
+  // gfxErrorOccured = true;
+  // gfxBufferNotEmpty.wakeAll();
+  // mutex.unlock();
 }
 
 ArrayVector Interpreter::doFunction(FuncPtr f, ArrayVector& m,
@@ -418,24 +442,24 @@ ArrayVector Interpreter::doFunction(FuncPtr f, ArrayVector& m,
   CLIDisabler dis(this);
   PopContext saver(context,0);
   context->pushScope(f->functionName(),f->detailedName(),false);
-  if (f->graphicsFunction) {
-    gfxErrorOccured = false;
-    QMutexLocker lock(&mutex);
-    emit doGraphicsCall(this,f,m,narg_out);
-    if (!gfxErrorOccured && gfx_buffer.empty()) {
-      gfxBufferNotEmpty.wait(&mutex);
-    } else {
-      qDebug() << "Wha??\n";
-    }
-    if (gfxErrorOccured) {
-      throw Exception(gfxError);
-    }
-    if (gfx_buffer.empty())
-      qDebug() << "Warning! graphics empty on return\n";
-    ArrayVector ret(gfx_buffer.front());
-    gfx_buffer.erase(gfx_buffer.begin());
-    return ret;
-  } else {
+  // if (f->graphicsFunction) {
+  //   gfxErrorOccured = false;
+  //   FMMutexLocker lock(&mutex);
+  //   emit doGraphicsCall(this,f,m,narg_out);
+  //   if (!gfxErrorOccured && gfx_buffer.empty()) {
+  //     gfxBufferNotEmpty.wait(&mutex);
+  //   } else {
+  //     dbout << "Wha??\n";
+  //   }
+  //   if (gfxErrorOccured) {
+  //     throw Exception(gfxError);
+  //   }
+  //   if (gfx_buffer.empty())
+  //     dbout << "Warning! graphics empty on return\n";
+  //   ArrayVector ret(gfx_buffer.front());
+  //   gfx_buffer.erase(gfx_buffer.begin());
+  //   return ret;
+  // } else {
     ArrayVector ret(f->evaluateFunc(this,m,narg_out,vtable));
     if (context->scopeStepTrap() >= 1) {
       tracetrap = 1;
@@ -445,39 +469,39 @@ ArrayVector Interpreter::doFunction(FuncPtr f, ArrayVector& m,
       context->setScopeStepTrap(0);
     }
     return ret;
-  }
+  // }
 }
 
 void Interpreter::setTerminalWidth(int ncols) {
-  mutex.lock();
+  //  mutex.lock();
   m_ncols = ncols;
-  mutex.unlock();
+  //  mutex.unlock();
 }
 
 int Interpreter::getTerminalWidth() {
   return m_ncols;
 }
 
-QString TranslateString(QString x) {
+FMString TranslateString(FMString x) {
   return x.replace("\n","\r\n");
 }
 
-void Interpreter::diaryMessage(QString msg) {
-  QFile file(m_diaryFilename);
-  if (file.open(QIODevice::WriteOnly | QIODevice::Append)) {
-    QTextStream os(&file);
+void Interpreter::diaryMessage(FMString msg) {
+  std::ofstream os;
+  os.open(m_diaryFilename.c_str(), std::ofstream::app);
+  if (os.is_open())
     os << msg;
-  }
+  os.close();
 }
 
 
-void Interpreter::outputMessage(QString msg) {
+void Interpreter::outputMessage(FMString msg) {
   if (m_diaryState) diaryMessage(msg);
   if (m_captureState)
     m_capture += msg;
   else
     if (m_quietlevel < 2)
-      emit outputRawText(TranslateString(msg));
+      m_delegate->outputRawText(TranslateString(msg));
 }
 
 void Interpreter::outputMessage(const char* format,...) {
@@ -486,20 +510,20 @@ void Interpreter::outputMessage(const char* format,...) {
   va_start(ap,format);
   vsnprintf(buffer,4096,format,ap);
   va_end(ap);
-  outputMessage(QString(buffer));
+  outputMessage(FMString(buffer));
 }
 
-void Interpreter::errorMessage(QString msg) {
+void Interpreter::errorMessage(FMString msg) {
   if (m_diaryState) diaryMessage("Error: " + msg + "\n");
   if (m_captureState)
     m_capture += "Error: " + msg + "\n";
   else
     if (m_quietlevel < 2)
-      emit outputRawText(TranslateString("Error: " + msg + "\r\n"));
+      m_delegate->outputRawText(TranslateString("Error: " + msg + "\r\n"));
 }
 
-void Interpreter::warningMessage(QString msg) {
-  static QString lastWarning;
+void Interpreter::warningMessage(FMString msg) {
+  static FMString lastWarning;
   static bool lastWarningRepeat = false;
   if (!m_enableWarnings) return;
   if (m_diaryState) diaryMessage("Warning: " + msg + "\n");
@@ -508,42 +532,42 @@ void Interpreter::warningMessage(QString msg) {
   else
     if (m_quietlevel < 2) {
       if (lastWarning != msg) {
-	emit outputRawText(TranslateString("Warning: " +msg + "\r\n"));
+	m_delegate->outputRawText(TranslateString("Warning: " +msg + "\r\n"));
 	lastWarningRepeat = false;
 	lastWarning = msg;
       } else {
 	if (!lastWarningRepeat) {
-	  emit outputRawText(TranslateString("Warning: Last warning repeats... suppressing more of these\r\n"));
+	  m_delegate->outputRawText(TranslateString("Warning: Last warning repeats... suppressing more of these\r\n"));
 	  lastWarningRepeat = true;
 	}
       }
     }
 }
 
-static bool isMFile(QString arg) {
+static bool isMFile(FMString arg) {
   // Not completely right...
   return (((arg[arg.size()-1] == 'm') ||
 	   (arg[arg.size()-1] == 'p')) &&
 	  (arg[arg.size()-2] == '.'));
 }
 
-QString TrimFilename(QString arg) {
-  int ndx = arg.lastIndexOf(QDir::separator());
+FMString TrimFilename(FMString arg) {
+  int ndx = arg.lastIndexOf(FMDir::separator());
   if (ndx>=0)
     arg.remove(0,ndx+1);
   return arg;
 }
 
-QString TrimExtension(QString arg) {
+FMString TrimExtension(FMString arg) {
   if (arg.size() > 2 && arg[arg.size()-2] == '.')
     arg.remove(arg.size()-2,arg.size());
   return arg;
 }
 
-static QString PrivateMangleName(QString currentFunctionPath, QString fname) {
+static FMString PrivateMangleName(FMString currentFunctionPath, FMString fname) {
   if (currentFunctionPath.isEmpty()) return "";
   // First look to see if we are already a private function
-  QString separator("/");
+  FMString separator("/");
   int ndx1 = currentFunctionPath.lastIndexOf(separator + "private" + separator);
   if (ndx1>=0) {
     // The current function is already in a private directory
@@ -558,24 +582,25 @@ static QString PrivateMangleName(QString currentFunctionPath, QString fname) {
   return currentFunctionPath + "private:" + fname;
 }
 
-static QString LocalMangleName(QString currentFunctionPath, QString fname) {
+static FMString LocalMangleName(FMString currentFunctionPath, FMString fname) {
   int ndx = currentFunctionPath.lastIndexOf("/");
   if (ndx >= 0)
     currentFunctionPath.remove(ndx,currentFunctionPath.size());
-  QString tmp = currentFunctionPath + "/" + fname;
+  FMString tmp = currentFunctionPath + "/" + fname;
   return currentFunctionPath + "/" + fname;
 }
 
-static QString NestedMangleName(QString cfunc, QString fname) {
+static FMString NestedMangleName(FMString cfunc, FMString fname) {
   return cfunc + "/" + fname;
 }
 
-QString Interpreter::getVersionString() {
-  return QString("FreeMat v" FREEMAT_VERSION);
+FMString Interpreter::getVersionString() {
+  return FMString("FreeMat v" FREEMAT_VERSION);
 }
 
 // Run the thread function
 void Interpreter::run() {
+  /*
   if (m_threadFunc) {
     try {
       m_threadFuncRets = doFunction(m_threadFunc,m_threadFuncArgs,m_threadNargout);
@@ -596,11 +621,12 @@ void Interpreter::run() {
       lasterr = "thread crashed!! - you have encountered a bug in FreeMat - please file bug report describing what happened";
     }
   }
+  */
 }
 
 void Interpreter::doCLI() {
   //  rescanPath();
-  emit CWDChanged(QDir::currentPath());
+  m_delegate->CWDChanged(FMDir::currentPath());
   updateFileTool();
   if (!m_skipflag)
     sendGreeting();
@@ -615,12 +641,12 @@ void Interpreter::doCLI() {
       while (context->scopeDepth() > scope_stackdepth) context->popScope();
     }
   } catch (InterpreterQuitException &e) {
-    emit QuitSignal();
+    m_delegate->QuitSignal();
   } catch (std::exception& e) {
-    qDebug() << "crash: " << e.what();
-    emit CrashedSignal();
+    dbout << "crash: " << e.what();
+    m_delegate->CrashedSignal();
   } catch (...) {
-    emit CrashedSignal();
+    m_delegate->CrashedSignal();
   }
 }
 
@@ -644,12 +670,12 @@ bool Interpreter::inMFile() const {
 
 void Interpreter::debugDump() {
   int depth = context->scopeDepth();
-  qDebug() << "******************************\n";
+  dbout << "******************************\n";
   for (int i=0;i<depth;i++) {
     if (context->isScopeActive())
-      qDebug() << "In " << context->scopeName() << " (" << context->scopeDetailString() << ")*";
+      dbout << "In " << context->scopeName() << " (" << context->scopeDetailString() << ")*";
     else
-      qDebug() << "In " << context->scopeName() << " (" << context->scopeDetailString() << ")";
+      dbout << "In " << context->scopeName() << " (" << context->scopeDetailString() << ")";
     context->bypassScope(1);
   }
   context->restoreScope(depth);
@@ -702,8 +728,8 @@ void Interpreter::dbdown() {
   dbdown_executed = true;
 }
 
-QString Interpreter::getLocalMangledName(QString fname) {
-  QString ret;
+FMString Interpreter::getLocalMangledName(FMString fname) {
+  FMString ret;
   if (isMFile(context->activeScopeName()))
     ret = LocalMangleName(context->activeScopeDetailString(),fname);
   else
@@ -711,40 +737,40 @@ QString Interpreter::getLocalMangledName(QString fname) {
   return ret;
 }
 
-QString Interpreter::getPrivateMangledName(QString fname) {
-  QString ret;
+FMString Interpreter::getPrivateMangledName(FMString fname) {
+  FMString ret;
   if (isMFile(context->scopeName()))
     ret = PrivateMangleName(context->scopeName(),fname);
   else {
-    ret = QDir::currentPath() +
-      QString(QDir::separator()) +
-      QString("private:" + fname);
+    ret = FMDir::currentPath() +
+      FMString(FMDir::separator()) +
+      FMString("private:" + fname);
   }
   return ret;
 }
 
-QString Interpreter::getMFileName() {
+FMString Interpreter::getMFileName() {
   if (isMFile(context->scopeName()))
     return TrimFilename(TrimExtension(context->scopeName()));
   // TESTME
   //   for (int i=cstack.size()-1;i>=0;i--)
   //     if (isMFile(cstack[i].cname))
   //       return TrimFilename(TrimExtension(cstack[i].cname));
-  return QString("");
+  return FMString("");
 }
 
 // called by editor
-QString Interpreter::getInstructionPointerFileName() {
-  if (!InCLI) return QString("");
+FMString Interpreter::getInstructionPointerFileName() {
+  if (!InCLI) return FMString("");
   ParentScopeLocker lock(context);
-  QString filename(context->scopeName());
+  FMString filename(context->scopeName());
   if (isMFile(filename))
     return filename;
-  return QString("");
+  return FMString("");
 }
 
 Array Interpreter::DoBinaryOperator(const Tree & t, BinaryFunc fnc,
-				    QString funcname) {
+				    FMString funcname) {
   Array a(expression(t.first()));
   Array b(expression(t.second()));
   if (!(a.isUserClass() || b.isUserClass()))
@@ -753,7 +779,7 @@ Array Interpreter::DoBinaryOperator(const Tree & t, BinaryFunc fnc,
 }
 
 Array Interpreter::DoUnaryOperator(const Tree & t, UnaryFunc fnc,
-				   QString funcname) {
+				   FMString funcname) {
   Array a(expression(t.first()));
   if (!a.isUserClass())
     return fnc(a);
@@ -900,7 +926,7 @@ void Interpreter::finishMultivaluedIndexingExpression(const Tree & s,
   } else if (s.is('.')) {
     q += r.get(s.first().text());
   } else if (s.is(TOK_DYN)) {
-    QString field;
+    FMString field;
     try {
       Array fname(expression(s.first()));
       field = fname.asString();
@@ -991,7 +1017,7 @@ Array Interpreter::expression(const Tree & t) {
       return Array(double(endRef->dimensions()[endCount]));
   case ':':
     if (t.numChildren() == 0) {
-      return Array(QString(":"));
+      return Array(FMString(":"));
     } else if (t.first().is(':')) {
       return doubleColon(t);
     } else {
@@ -1218,6 +1244,7 @@ void Interpreter::ifStatement(const Tree & t) {
     block(t.last().first());
 }
 
+/*
 static bool compileJITBlock(Interpreter *interp, const Tree & t, JITInfo & ref, JITControlFlag jitflag) {
   delete ref.JITFunction();
   ref.setJITState(JITInfo::FAILED);
@@ -1236,11 +1263,11 @@ static bool compileJITBlock(Interpreter *interp, const Tree & t, JITInfo & ref, 
     ref.setJITState(JITInfo::SUCCEEDED);
     ref.setJITFunction(cg);
     interp->incrementJITCounter();
-    qDebug() << "Block JIT compiled at line "
+    dbout << "Block JIT compiled at line "
 	  << LineNumber(interp->getContext()->scopeTokenID())
 	  << " of " << interp->getContext()->scopeName() << "\n";
   } catch (Exception &e) {
-    qDebug() << "JIT compile failed:" << e.msg() << " at line "
+    dbout << "JIT compile failed:" << e.msg() << " at line "
       	  << LineNumber(interp->getContext()->scopeTokenID())
 	  << " of " << interp->getContext()->scopeName() << "\n";
     delete cg;
@@ -1249,6 +1276,7 @@ static bool compileJITBlock(Interpreter *interp, const Tree & t, JITInfo & ref, 
   }
   return success;
 }
+*/
 
 bool Interpreter::tryJitCode(const Tree & t) {
     // Try to compile this block to an instruction stream
@@ -1257,7 +1285,7 @@ bool Interpreter::tryJitCode(const Tree & t) {
         JITInfo & ref = m_codesegments[UID];
         try{
             if (ref.JITState() == JITInfo::UNTRIED) {
-                bool success = compileJITBlock(this,t,ref,jitcontrol);
+	      bool success = false; // FIXME compileJITBlock(this,t,ref,jitcontrol);
                 if (success)
                 {
                     if (ref.JITFunction()->run() == CJIT_Success)
@@ -1273,10 +1301,10 @@ bool Interpreter::tryJitCode(const Tree & t) {
                 if (stat == CJIT_Success)
                     return true;
                 // If the prep stage failed, we can try to recompile
-                qDebug() << "Prep failed for JIT block retrying\n";
+                dbout << "Prep failed for JIT block retrying\n";
                 if (stat == CJIT_Prepfail)
                 {
-                    bool success = compileJITBlock(this,t,ref,jitcontrol);
+		  bool success = false; //FIXME compileJITBlock(this,t,ref,jitcontrol);
                     if (success)
                     {
                         if (ref.JITFunction()->run() == CJIT_Success)
@@ -1346,7 +1374,7 @@ inline bool IsIntegerDataClass( const Array& a )
 
 template <class T>
 void ForLoopHelper(const Tree & codeBlock, const Array& indexSet,
-		   index_t count, const QString& indexName, Interpreter *eval) {
+		   index_t count, const FMString& indexName, Interpreter *eval) {
   for (index_t m=1;m<=count;m++) {
     Array *vp = eval->getContext()->lookupVariableLocally( indexName );
     if ((!vp) || (!vp->isScalar())) {
@@ -1364,7 +1392,7 @@ void ForLoopHelper(const Tree & codeBlock, const Array& indexSet,
   }
 }
 
-void ForLoopIterator( const Tree & codeBlock, QString indexName,
+void ForLoopIterator( const Tree & codeBlock, FMString indexName,
 		     Array& first, Array& last, Array& step, Interpreter *eval)
 {
     int nsteps;
@@ -1461,7 +1489,7 @@ double num_for_loop_iter( double first, double step, double last )
 void Interpreter::forStatement(const Tree & t) {
   if (tryJitCode(t)) return;
   Array indexSet;
-  QString indexVarName;
+  FMString indexVarName;
     /* Get the name of the indexing variable */
     if( !t.first().is('=') )
 	throw Exception( "Incorrect format of for operator" );
@@ -1568,7 +1596,7 @@ void Interpreter::forStatement(const Tree & t) {
 void Interpreter::globalStatement(const Tree & t) {
   for (int i=0;i<t.numChildren();i++) {
     const Tree & var = t.child(i);
-    QString name = var.text();
+    FMString name = var.text();
     context->addGlobalVariable(name);
     if (!context->lookupVariable(name).valid())
       {
@@ -1584,7 +1612,7 @@ void Interpreter::globalStatement(const Tree & t) {
 void Interpreter::persistentStatement(const Tree & t) {
   for (int i=0;i<t.numChildren();i++) {
     const Tree & var = t.child(i);
-    QString name = var.text();
+    FMString name = var.text();
     context->addPersistentVariable(name);
     if (!context->lookupVariable(name).valid())
       {
@@ -1661,7 +1689,7 @@ void Interpreter::expressionStatement(const Tree & s, bool printIt) {
       } else
 	b = m[0];
       if (printIt && (!emptyOutput)) {
-	outputMessage(QString("\nans = \n"));
+	outputMessage(FMString("\nans = \n"));
 	displayArray(b);
       }
     } else {
@@ -1671,12 +1699,12 @@ void Interpreter::expressionStatement(const Tree & s, bool printIt) {
       else {
 	b = m[0];
 	if (printIt) {
-	  outputMessage(QString("\nans = \n"));
+	  outputMessage(FMString("\nans = \n"));
 	  for (int j=0;j<m.size();j++) {
 	    char buffer[1000];
 	    if (m.size() > 1) {
 	      sprintf(buffer,"\n%d of %d:\n",j+1,m.size());
-	      outputMessage(QString(buffer));
+	      outputMessage(FMString(buffer));
 	    }
 	    displayArray(m[j]);
 	  }
@@ -1686,7 +1714,7 @@ void Interpreter::expressionStatement(const Tree & s, bool printIt) {
   } else {
     b = expression(t);
     if (printIt) {
-      outputMessage(QString("\nans = \n"));
+      outputMessage(FMString("\nans = \n"));
       displayArray(b);
     }
   }
@@ -1726,7 +1754,7 @@ void Interpreter::multiassign(ArrayReference r, const Tree & s, ArrayVector &dat
   } else if (s.is('.')) {
     r->set(s.first().text(),data);
   } else if (s.is(TOK_DYN)) {
-    QString field;
+    FMString field;
     try {
       Array fname(expression(s.first()));
       field = fname.asString();
@@ -1772,7 +1800,7 @@ void Interpreter::assign(ArrayReference r, const Tree & s, Array &data) {
     ArrayVector datav(data);
     r->set(s.first().text(),datav);
   } else if (s.is(TOK_DYN)) {
-    QString field;
+    FMString field;
     try {
       Array fname(expression(s.first()));
       field = fname.asString();
@@ -1786,7 +1814,7 @@ void Interpreter::assign(ArrayReference r, const Tree & s, Array &data) {
 }
 
 
-ArrayReference Interpreter::createVariable(QString name) {
+ArrayReference Interpreter::createVariable(FMString name) {
   FuncPtr p;
   PopContext saver(context,0);
   // This is annoying.
@@ -1798,7 +1826,7 @@ ArrayReference Interpreter::createVariable(QString name) {
     context->insertVariable(name,EmptyConstructor());
   } else {
     // if so - walk up the scope chain until we are no longer nested
-    QString localScopeName = context->scopeName();
+    FMString localScopeName = context->scopeName();
     context->bypassScope(1);
     while (context->currentScopeNests(localScopeName))
       context->bypassScope(1);
@@ -1846,7 +1874,7 @@ ArrayReference Interpreter::createVariable(QString name) {
 
 //DOCBLOCK array_assign
 void Interpreter::assignment(const Tree & var, bool printIt, Array &b) {
-  QString name(var.first().text());
+  FMString name(var.first().text());
   ArrayReference ptr(context->lookupVariable(name));
   if (!ptr.valid())
     ptr = createVariable(name);
@@ -1956,12 +1984,12 @@ void Interpreter::statementType(const Tree & t, bool printIt) {
     break;
   case TOK_DBSTEP:
     dbstepStatement(t);
-    emit RefreshBPLists();
+    m_delegate->RefreshBPLists();
     throw InterpreterReturnException();
     break;
   case TOK_DBTRACE:
     dbtraceStatement(t);
-    emit RefreshBPLists();
+    m_delegate->RefreshBPLists();
     throw InterpreterReturnException();
     break;
   case TOK_DBUP:
@@ -2120,7 +2148,7 @@ index_t Interpreter::countLeftHandSides(const Tree & t) {
 
 Array Interpreter::AllColonReference(Array v, int index, int count) {
   if (v.isUserClass()) return EmptyConstructor();
-  return Array(QString(":"));
+  return Array(FMString(":"));
 }
 
 //test
@@ -2144,7 +2172,7 @@ void Interpreter::setBreakpoint(stackentry bp, bool enableFlag) {
   FuncPtr val;
   bool isFun = lookupFunction(bp.detail,val);
   if (!isFun) {
-    warningMessage(QString("unable to find function ") +
+    warningMessage(FMString("unable to find function ") +
 		   bp.detail + " to set breakpoint");
     return;
   }
@@ -2163,7 +2191,7 @@ void Interpreter::setBreakpoint(stackentry bp, bool enableFlag) {
 void Interpreter::addBreakpoint(stackentry bp) {
   bpStack.push_back(bp);
   refreshBreakpoints();
-  emit RefreshBPLists();
+  m_delegate->RefreshBPLists();
 }
 
 void Interpreter::refreshBreakpoints() {
@@ -2211,7 +2239,7 @@ void Interpreter::multiFunctionCall(const Tree & t, bool printIt) {
   int index;
   for (index=0;(index<s.size()) && (m.size() > 0);index++) {
     const Tree & var(s[index]);
-    QString name(var.first().text());
+    FMString name(var.first().text());
     ArrayReference ptr(context->lookupVariable(name));
     if (!ptr.valid())
       ptr = createVariable(name);
@@ -2266,9 +2294,9 @@ void Interpreter::multiFunctionCall(const Tree & t, bool printIt) {
     warningMessage("one or more outputs not assigned in call.");
 }
 
-int getArgumentIndex(StringVector list, QString t) {
+int getArgumentIndex(StringVector list, FMString t) {
   bool foundArg = false;
-  QString q;
+  FMString q;
   int i = 0;
   while (i<list.size() && !foundArg) {
     q = list[i];
@@ -2412,7 +2440,7 @@ void Interpreter::handlePassByReference(Tree q, StringVector arguments,
       if (qindx >= q.second().numChildren())
 	qindx = q.second().numChildren()-1;
     }
-    QString args(arguments[i]);
+    FMString args(arguments[i]);
     if (args[0] == '&') {
       args.remove(0,1);
       // This argument was passed by reference
@@ -2464,9 +2492,9 @@ void Interpreter::functionExpression(const Tree & t,
   if (funcDef->updateCode(this)) refreshBreakpoints();
   if (funcDef->scriptFlag) {
     if (t.numChildren()>=2)
-      throw Exception(QString("Cannot use arguments in a call to a script."));
+      throw Exception(FMString("Cannot use arguments in a call to a script."));
     if ((narg_out > 0) && !outputOptional)
-      throw Exception(QString("Cannot assign outputs in a call to a script."));
+      throw Exception(FMString("Cannot assign outputs in a call to a script."));
     context->pushScope(((MFunctionDef*)funcDef)->fileName,
 		       ((MFunctionDef*)funcDef)->name,false);
     context->setScopeActive(false);
@@ -2488,10 +2516,10 @@ void Interpreter::functionExpression(const Tree & t,
       argTypeMap = NULL;
     if ((funcDef->inputArgCount() >= 0) &&
 	(m.size() > funcDef->inputArgCount()))
-      throw Exception(QString("Too many inputs to function ")+t.first().text());
+      throw Exception(FMString("Too many inputs to function ")+t.first().text());
     if ((funcDef->outputArgCount() >= 0) &&
 	(narg_out > funcDef->outputArgCount() && !outputOptional))
-      throw Exception(QString("Too many outputs to function ")+t.first().text());
+      throw Exception(FMString("Too many outputs to function ")+t.first().text());
     n = doFunction(funcDef,m,narg_out);
     // Check for any pass by reference
     if (t.hasChildren() && (funcDef->arguments.size() > 0))
@@ -2508,9 +2536,9 @@ void Interpreter::functionExpression(const Tree & t,
 }
 
 
-void Interpreter::toggleBP(QString fname, int lineNumber) {
+void Interpreter::toggleBP(FMString fname, int lineNumber) {
   if (isBPSet(fname,lineNumber)) {
-    QString fname_string(fname);
+    FMString fname_string(fname);
     for (int i=0;i<bpStack.size();i++)
       if ((bpStack[i].cname == fname_string) &&
 	  (LineNumber(bpStack[i].tokid) == lineNumber)) {
@@ -2522,7 +2550,7 @@ void Interpreter::toggleBP(QString fname, int lineNumber) {
   }
 }
 
-MFunctionDef* Interpreter::lookupFullPath(QString fname) {
+MFunctionDef* Interpreter::lookupFullPath(FMString fname) {
   StringVector allFuncs(context->listAllFunctions());
   FuncPtr val;
   for (int i=0;i<allFuncs.size();i++) {
@@ -2539,10 +2567,10 @@ MFunctionDef* Interpreter::lookupFullPath(QString fname) {
 
 static int bpList = 1;
 // Add a breakpoint - name is used to track to a full filename
-void Interpreter::addBreakpoint(QString name, int line) {
+void Interpreter::addBreakpoint(FMString name, int line) {
   FuncPtr val;
   // Map the name argument to a full file name.
-  QString fullFileName;
+  FMString fullFileName;
   if (context->lookupFunction(name,val) && (val->type() == FM_M_FUNCTION))
     fullFileName = ((MFunctionDef*) val)->fileName;
   else
@@ -2592,14 +2620,14 @@ void Interpreter::addBreakpoint(QString name, int line) {
     }
   }
   if (best_dist > max_line_count)
-//    warningMessage(QString("Cannot set breakpoint at line ")+line+" of file "+name + ".  \r\nThis can be caused by an illegal line number, or a function that is not on the path or in the current directory.");
-    emit IllegalLineOrCurrentPath(name, line);
+//    warningMessage(FMString("Cannot set breakpoint at line ")+line+" of file "+name + ".  \r\nThis can be caused by an illegal line number, or a function that is not on the path or in the current directory.");
+    m_delegate->IllegalLineOrCurrentPath(name, line);
   else {
     addBreakpoint(stackentry(fullFileName,allFuncs[best_func],best_dist+line,bpList++));
   }
 }
 
-bool Interpreter::isBPSet(QString fname, int lineNumber) {
+bool Interpreter::isBPSet(FMString fname, int lineNumber) {
   for (int i=0;i<bpStack.size();i++)
     if ((bpStack[i].cname == fname) &&
 	(LineNumber(bpStack[i].tokid) == lineNumber)) return true;
@@ -2607,10 +2635,10 @@ bool Interpreter::isBPSet(QString fname, int lineNumber) {
 }
 
 // called by editor
-bool Interpreter::isInstructionPointer(QString fname, int lineNumber) {
+bool Interpreter::isInstructionPointer(FMString fname, int lineNumber) {
   if (!InCLI) return false;
   ParentScopeLocker lock(context);
-  QString filename(context->scopeName());
+  FMString filename(context->scopeName());
   int token(context->scopeTokenID());
   return ((fname == filename) && ((lineNumber == LineNumber(token)) ||
 				  ((lineNumber == 1) && (LineNumber(token) == 0))));
@@ -2618,8 +2646,9 @@ bool Interpreter::isInstructionPointer(QString fname, int lineNumber) {
 
 void Interpreter::listBreakpoints() {
   for (int i=0;i<bpStack.size();i++) {
-    QString buffer = QString("%1   %2 line %3\n").arg(bpStack[i].number)
-      .arg(bpStack[i].cname).arg(LineNumber(bpStack[i].tokid));
+    FMString buffer = Stringify(bpStack[i].number) + "   " + 
+      Stringify(bpStack[i].cname) + " line " + 
+      Stringify(LineNumber(bpStack[i].tokid));
     outputMessage(buffer);
   }
 }
@@ -2628,11 +2657,11 @@ void Interpreter::deleteBreakpoint(int number) {
   for (int i=0;i<bpStack.size();i++)
     if (bpStack[i].number == number) {
       bpStack.remove(i);
-      emit RefreshBPLists();
+      m_delegate->RefreshBPLists();
       return;
     }
   warningMessage("Unable to delete specified breakpoint (does not exist)");
-  emit RefreshBPLists();
+  m_delegate->RefreshBPLists();
   return;
 }
 
@@ -2649,35 +2678,35 @@ void Interpreter::stackTrace(int skiplevels) {
     if (firstline) {
       firstline = false;
     } else
-      outputMessage(QString("    "));
-    outputMessage(QString("In ") + context->scopeName() + "("
+      outputMessage(FMString("    "));
+    outputMessage(FMString("In ") + context->scopeName() + "("
 		  + context->scopeDetailString() + ")");
     int line = int(LineNumber(context->scopeTokenID()));
     if (line > 0)
-      outputMessage(QString(" at line " +
-			    QString().setNum(LineNumber(context->scopeTokenID()))));
+      outputMessage(FMString(" at line ") + 
+		    Stringify(LineNumber(context->scopeTokenID())));
     outputMessage("\r\n");
     context->bypassScope(1);
   }
   context->restoreScope(depth);
 }
 
-bool Interpreter::inMethodCall(QString classname) {
+bool Interpreter::inMethodCall(FMString classname) {
   if (context->scopeDetailString().isEmpty()) return false;
   if (context->scopeDetailString()[0] != '@') return false;
   return (context->scopeDetailString().mid(1,classname.size()) == classname);
 }
 
-bool Interpreter::lookupFunction(QString funcName, FuncPtr& val) {
+bool Interpreter::lookupFunction(FMString funcName, FuncPtr& val) {
   ArrayVector dummy;
   return(lookupFunction(funcName,val,dummy));
 }
 
-bool IsNestedName(QString basename) {
+bool IsNestedName(FMString basename) {
   return (basename.lastIndexOf("/") >= 0);
 }
 
-QString StripNestLevel(QString basename) {
+FMString StripNestLevel(FMString basename) {
   int ndx = basename.lastIndexOf("/");
   if (ndx >= 0)
     basename.remove(ndx,basename.size());
@@ -2688,7 +2717,7 @@ QString StripNestLevel(QString basename) {
 
 // Look up a function by name.  Use the arguments (if available) to assist
 // in resolving method calls for objects
-bool Interpreter::lookupFunction(QString funcName, FuncPtr& val,
+bool Interpreter::lookupFunction(FMString funcName, FuncPtr& val,
 				 ArrayVector &args, bool disableOverload) {
   int passcount = 0;
   while(passcount < 2) {
@@ -2704,7 +2733,7 @@ bool Interpreter::lookupFunction(QString funcName, FuncPtr& val,
     // Not a nested function of the current scope.  We have to look for nested
     // functions of all parent scopes. Sigh.
     if (context->isCurrentScopeNested()) {
-      QString basename = context->scopeDetailString();
+      FMString basename = context->scopeDetailString();
       while (!basename.isEmpty()) {
 	if (context->lookupFunction(NestedMangleName(basename,funcName),val))
 	  return true;
@@ -2813,7 +2842,7 @@ void Interpreter::deref(Array &r, const Tree & s) {
   } else if (s.is('.')) {
     r = r.get(s.first().text()).front();
   } else if (s.is(TOK_DYN)) {
-    QString field;
+    FMString field;
     try {
       Array fname(expression(s.first()));
       field = fname.asString();
@@ -2860,7 +2889,7 @@ int Interpreter::getErrorCount() {
 
 Interpreter::Interpreter(Context* aContext) {
   errorCount = 0;
-  lasterr = QString("");
+  lasterr = FMString("");
   context = aContext;
   depth = 0;
   printLimit = 1000;
@@ -2935,7 +2964,7 @@ void Interpreter::dbstepStatement(const Tree & t) {
   if (context->scopeName() == "base") return;
   ParentScopeLocker lock(context);
   if (!lookupFunction(context->scopeDetailString(),val)) {
-    warningMessage(QString("unable to find function ") + context->scopeDetailString() + " to single step");
+    warningMessage(FMString("unable to find function ") + context->scopeDetailString() + " to single step");
     return;
   }
   context->setScopeStepTrap(lines);
@@ -2953,15 +2982,15 @@ void Interpreter::dbtraceStatement(const Tree & t) {
   if (context->scopeDetailString() == "base") return;
   ParentScopeLocker lock(context);
   if (!lookupFunction(context->scopeDetailString(),val)) {
-    warningMessage(QString("unable to find function ") + context->scopeDetailString() + " to single step");
+    warningMessage(FMString("unable to find function ") + context->scopeDetailString() + " to single step");
     return;
   }
   tracetrap = lines;
   tracecurrentline = LineNumber(context->scopeTokenID());
 }
 
-// static QString EvalPrep(QString line) {
-//   QString buf1 = line;
+// static FMString EvalPrep(FMString line) {
+//   FMString buf1 = line;
 //   if (buf1.endsWith('\n'))
 //     buf1.chop(1);
 //   if (buf1.endsWith('\r'))
@@ -2971,16 +3000,16 @@ void Interpreter::dbtraceStatement(const Tree & t) {
 //   return buf1;
 // }
 
-void Interpreter::ExecuteLine(QString txt) {
-  mutex.lock();
-  cmd_buffer.push_back(txt);
-  bufferNotEmpty.wakeAll();
-  mutex.unlock();
-  if (m_diaryState) diaryMessage(txt);
+void Interpreter::ExecuteLine(FMString txt) {
+  // mutex.lock();
+  // cmd_buffer.push_back(txt);
+  // bufferNotEmpty.wakeAll();
+  // mutex.unlock();
+  // if (m_diaryState) diaryMessage(txt);
 }
 
 //PORT
-void Interpreter::evaluateString(QString line, bool propogateExceptions) {
+void Interpreter::evaluateString(FMString line, bool propogateExceptions) {
   Tree b;
   Tree t;
   m_interrupt = false;
@@ -3008,11 +3037,11 @@ void Interpreter::evaluateString(QString line, bool propogateExceptions) {
   }
 }
 
-QString Interpreter::getLastErrorString() {
+FMString Interpreter::getLastErrorString() {
   return lasterr;
 }
 
-void Interpreter::setLastErrorString(QString txt) {
+void Interpreter::setLastErrorString(FMString txt) {
   lasterr = txt;
 }
 
@@ -3024,7 +3053,7 @@ void Interpreter::setNoPromptFlag(bool noprompt) {
   m_noprompt = noprompt;
 }
 
-bool NeedsMoreInput(Interpreter *eval, QString txt) {
+bool NeedsMoreInput(Interpreter *eval, FMString txt) {
   // Check for ... or an open []
   try {
     Scanner S(txt,"");
@@ -3047,32 +3076,34 @@ bool NeedsMoreInput(Interpreter *eval, QString txt) {
 }
 
 void Interpreter::sleepMilliseconds(unsigned long msecs) {
-  QThread::msleep(msecs);
+  //FMThread::msleep(msecs);
 }
 
-QString Interpreter::getLine(QString prompt) {
-  if (!m_noprompt) emit SetPrompt(prompt);
-  if (m_diaryState) diaryMessage(prompt);
-  QString retstring;
-  emit EnableRepaint();
-  mutex.lock();
-  if (cmd_buffer.isEmpty())
-    bufferNotEmpty.wait(&mutex);
-  retstring = cmd_buffer.front();
-  cmd_buffer.erase(cmd_buffer.begin());
-  mutex.unlock();
-  emit DisableRepaint();
-  return retstring;
+FMString Interpreter::getLine(FMString prompt) {
+  // if (!m_noprompt) m_delegate->SetPrompt(prompt);
+  // if (m_diaryState) diaryMessage(prompt);
+  // FMString retstring;
+  // m_delegate->EnableRepaint();
+  // mutex.lock();
+  // if (cmd_buffer.isEmpty())
+  //   bufferNotEmpty.wait(&mutex);
+  // retstring = cmd_buffer.front();
+  // cmd_buffer.erase(cmd_buffer.begin());
+  // mutex.unlock();
+  // m_delegate->DisableRepaint();
+  // return retstring;
+  return "";
 }
 
 // This is a "generic" CLI routine.  The user interface (non-debug)
 // version of this is "docli"
 void Interpreter::evalCLI() {
-  QString prompt;
+  FMString prompt;
+  /*
   bool rootCLI;
   setupWatcher();
   while(1) {
-    QString fname;
+    FMString fname;
     int line = 0;
     if ((depth == 0) || (context->scopeDepth() < 2)) {
       prompt = "--> ";
@@ -3085,12 +3116,12 @@ void Interpreter::evalCLI() {
       }
       fname = context->scopeName();
       line = LineNumber(context->scopeTokenID());
-      QString scopename = context->scopeDetailString();
+      FMString scopename = context->scopeDetailString();
       if (scopename == "builtin")
 	scopename = context->scopeName();
       if (scopename == "docli")
 	scopename = "base";
-      prompt = QString("[%1,%2]--> ").arg(scopename).arg(line);
+      prompt = FMString("[%1,%2]--> ").arg(scopename).arg(line);
       context->restoreScope(bypasscount);
       rootCLI = false;
     }
@@ -3101,17 +3132,17 @@ void Interpreter::evalCLI() {
     if (m_captureState)
       m_capture += prompt;
     else {
-      if (!m_noprompt) emit SetPrompt(prompt);
+      if (!m_noprompt) m_delegate->SetPrompt(prompt);
       if (m_diaryState) diaryMessage(prompt);
     }
     if (m_liveUpdateFlag) {
       updateVariablesTool();
       updateStackTool();
-      emit ShowActiveLine(fname,line);
+      m_delegate->ShowActiveLine(fname,line);
     }
-    QString cmdset;
-    QString cmdline;
-    emit EnableRepaint();
+    FMString cmdset;
+    FMString cmdline;
+    m_delegate->EnableRepaint();
     mutex.lock();
 
     while ((cmdset.isEmpty() ||
@@ -3125,7 +3156,7 @@ void Interpreter::evalCLI() {
 	m_capture += cmdline;
     }
     mutex.unlock();
-    emit DisableRepaint();
+    m_delegate->DisableRepaint();
     if (m_interrupt) {
       m_interrupt = false;
       continue;
@@ -3138,6 +3169,7 @@ void Interpreter::evalCLI() {
       while (context->scopeDepth() > scope_stackdepth) context->popScope();
     }
   }
+  */
 }
 
 

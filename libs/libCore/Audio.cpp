@@ -158,7 +158,7 @@ static PlayBack *pb_obj;
 void PAInit() {
   err = Pa_Initialize();
   if (err != paNoError) 
-    throw Exception(QString("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
+    throw Exception(FMString("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
 }
 
 void PAShutdown() {
@@ -174,7 +174,7 @@ void PAShutdown() {
 
   err = Pa_CloseStream(stream);
   if (err != paNoError) 
-    throw Exception(QString("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
+    throw Exception(FMString("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
   Pa_Terminate();
   delete pb_obj;
   RunningStream = false;
@@ -228,10 +228,10 @@ void DoPlayBack(const void *data, int count, int channels,
 		      pb_obj);
 #endif
   if (err != paNoError) 
-    throw Exception(QString("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
+    throw Exception(FMString("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
   err = Pa_StartStream(stream);
   if (err != paNoError) 
-    throw Exception(QString("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
+    throw Exception(FMString("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
   if (!asyncMode)
     PAShutdown();
   else
@@ -285,10 +285,10 @@ void DoRecord(void *data, int count, int channels,
 		      pb_obj);
 #endif
   if (err != paNoError) 
-    throw Exception(QString("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
+    throw Exception(FMString("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
   err = Pa_StartStream(stream);
   if (err != paNoError) 
-    throw Exception(QString("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
+    throw Exception(FMString("An error occured while using the portaudio stream: ") + Pa_GetErrorText(err));
   PAShutdown();
 }
 #endif
@@ -305,7 +305,7 @@ ArrayVector WavPlayFunction(int nargout, const ArrayVector& argv) {
     throw Exception("wavplay requires at least one argument (the audio data to playback)");
   Array y(argv[0].asDenseArray());
   int SampleRate = 11025;
-  QString mode = "SYNC";
+  FMString mode = "SYNC";
   if (argv.size() > 1)
     SampleRate = argv[1].asInteger();
   if (argv.size() > 2)
@@ -377,7 +377,7 @@ ArrayVector WavRecordFunction(int nargout, const ArrayVector& argv) {
   DataClass datatype = Double;
   ArrayVector argvCopy(argv);
   if ((argvCopy.size() > 1) && (argvCopy.back().isString())) {
-    QString typestring = argvCopy.back().asString().toUpper();
+    FMString typestring = argvCopy.back().asString().toUpper();
     if ((typestring == "FLOAT") || (typestring == "SINGLE"))
       datatype = Float;
     else if (typestring == "DOUBLE")

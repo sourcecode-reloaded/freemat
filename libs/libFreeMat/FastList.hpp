@@ -19,14 +19,15 @@
 #ifndef __FastList_hpp__
 #define __FastList_hpp__
 
-#include <QVector>
+#include <vector>
 #include "Exception.hpp"
+#include "FMLib.hpp"
 
 template <typename T>
 class FastList {
   T m_slot1;
   T m_slot2;
-  QVector<T> *m_vec;
+  FMVector<T> *m_vec;
   int m_size;
 public:
   inline FastList() : m_vec(0), m_size(0) {}
@@ -41,7 +42,7 @@ public:
     m_slot2(copy.m_slot2),
     m_size(copy.m_size) {
     if (copy.m_vec)
-      m_vec = new QVector<T>(*copy.m_vec);
+      m_vec = new FMVector<T>(*copy.m_vec);
     else
       m_vec = 0;
   }
@@ -54,7 +55,7 @@ public:
     if (copy.m_vec) {
       if( m_vec )
 	delete m_vec;
-      m_vec = new QVector<T>(*copy.m_vec);
+      m_vec = new FMVector<T>(*copy.m_vec);
     }
     return *this;
   }
@@ -75,7 +76,7 @@ public:
     else if (m_size == 1)
       m_slot2 = el;
     else {
-      if (!m_vec) m_vec = new QVector<T>();
+      if (!m_vec) m_vec = new FMVector<T>();
       m_vec->push_back(el);
     }
     m_size++;
@@ -110,7 +111,7 @@ public:
       m_slot2 = m_slot1;
       m_slot1 = value;
     } else {
-      if (!m_vec) m_vec = new QVector<T>();
+      if (!m_vec) m_vec = new FMVector<T>();
       m_vec->push_front(m_slot2);
       m_slot2 = m_slot1;
       m_slot1 = value;

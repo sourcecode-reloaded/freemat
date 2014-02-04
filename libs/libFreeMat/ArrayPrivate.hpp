@@ -49,7 +49,7 @@
 
 #define MacroExpandCasesNoCell(func)		\
   MacroExpandCasesSimple(func);			\
-  func(QChar,StringArray);
+  func(FMChar,StringArray);
 
 #define MacroExpandCasesAll(func)		\
   MacroExpandCasesNoCell(func);			\
@@ -177,16 +177,16 @@ MacroExpandCases(MacroArrayConstRealScalar);
 MacroExpandCases(MacroArrayConstImagScalar);
 MacroExpandCases(MacroArrayComplexConstructor);
 MacroArrayRealScalarArrayEncodedOnly(Array,CellArray);
-MacroArrayRealScalarArrayEncodedOnly(QChar,StringArray);
+MacroArrayRealScalarArrayEncodedOnly(FMChar,StringArray);
 MacroArrayImagScalarArrayEncodedOnly(Array,CellArray);
-MacroArrayImagScalarArrayEncodedOnly(QChar,StringArray);
+MacroArrayImagScalarArrayEncodedOnly(FMChar,StringArray);
 MacroArrayConstRealScalarArrayEncodedOnly(Array,CellArray);
-MacroArrayConstRealScalarArrayEncodedOnly(QChar,StringArray);
+MacroArrayConstRealScalarArrayEncodedOnly(FMChar,StringArray);
 MacroArrayConstImagScalarArrayEncodedOnly(Array,CellArray);
-MacroArrayConstImagScalarArrayEncodedOnly(QChar,StringArray);
+MacroArrayConstImagScalarArrayEncodedOnly(FMChar,StringArray);
 MacroExpandCases(MacroArrayRealConstructor);
 MacroExpandCases(MacroGetDataClass);
-MacroGetDataClass(QChar,StringArray);
+MacroGetDataClass(FMChar,StringArray);
 MacroGetDataClass(Array,CellArray);
 
 #undef MacroArrayRealScalar
@@ -229,7 +229,7 @@ MacroSizeSimple(uint32);
 MacroSizeSimple(uint64);
 MacroSizeSimple(float);
 MacroSizeSimple(double);
-MacroSizeSimple(QChar);
+MacroSizeSimple(FMChar);
 
 template <>
 inline index_t TSizeOf(Array x) { 

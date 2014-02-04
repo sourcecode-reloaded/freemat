@@ -27,17 +27,17 @@
 #include "SymbolTable.hpp"
 #include "Types.hpp"
 #include "MexInterface.hpp"
-#include <QFile>
-#include <QFileInfo>
-#include <QDir>
+#include "FMLib.hpp"
 #include <sys/stat.h>
 #include "MemPtr.hpp"
 #include "Algorithms.hpp"
 #include "FuncPtr.hpp"
+#include <fstream>
+
 
 #define MSGBUFLEN 2048
 
-QMutex functiondefmutex;
+FMMutex functiondefmutex;
 
 StringVector IdentifierList(const Tree & t) {
   StringVector retval;
@@ -138,7 +138,7 @@ ArrayVector MFunctionDef::evaluateFunc(Interpreter *walker,
     minCount = (((int)inputs.size()) < arguments.size()) ? 
       inputs.size() : arguments.size();
     for (int i=0;i<minCount;i++) {
-      QString arg(arguments[i]);
+      FMString arg(arguments[i]);
       if (arg[0] == '&')
 	arg.remove(0,1);
       context->insertVariableLocally(arg,inputs[i]);
@@ -155,7 +155,7 @@ ArrayVector MFunctionDef::evaluateFunc(Interpreter *walker,
     minCount = (explicitCount < inputCount) ? explicitCount : inputCount;
     int i;
     for (i=0;i<minCount;i++) {
-      QString arg(arguments[i]);
+      FMString arg(arguments[i]);
       if (arg[0] == '&')
 	arg.remove(0,1);
       context->insertVariableLocally(arg,inputs[i]);
@@ -163,7 +163,7 @@ ArrayVector MFunctionDef::evaluateFunc(Interpreter *walker,
     inputCount -= minCount;
     // Put minCount...inputCount 
     ArrayVector varargin(inputs.mid(minCount,inputCount));
-    context->insertVariableLocally(QString("varargin"),
+    context->insertVariableLocally(FMString("varargin"),
 				   CellArrayFromArrayVector(varargin,varargin.size()));
   }
   context->setScopeNargout(nargout);
@@ -257,7 +257,7 @@ ArrayVector MFunctionDef::evaluateFunc(Interpreter *walker,
     // Check for arguments that were passed by reference, and 
     // update their values.
     for (int i=0;i<minCount;i++) {
-      QString arg(arguments[i]);
+      FMString arg(arguments[i]);
       if (arg[0] == '&')
 	arg.remove(0,1);
       Array *ptr = context->lookupVariableLocally(arg);
@@ -297,15 +297,6 @@ ArrayVector MFunctionDef::evaluateFunc(Interpreter *walker,
   }
 }
   
-inline QString ReadFileIntoString(QString filename) {
-  QFile fp(filename);
-  if (!fp.open(QIODevice::ReadOnly)) 
-    throw Exception(QString("Unable to open file :") + filename);
-  QTextStream io(&fp);
-  QString txt(io.readAll());
-  if (!txt.endsWith("\n")) txt += "\n";
-  return txt;
-}
 
 //MFunctionDef* ConvertParseTreeToMFunctionDef(tree t, string fileName) {
 //  MFunctionDef *fp = new MFunctionDef;
@@ -353,10 +344,12 @@ static void RegisterNested(const Tree & t, Interpreter *m_eval, MFunctionDef *pa
       RegisterNested(t.child(i),m_eval,parent);
 }
 
-static Tree ParseMFile(QString fileName) {
+static Tree ParseMFile(FMString fileName) {
   // Read the file into a string
-  QString fileText = ReadFileIntoString(fileName);
-  if (!fileName.contains(QDir::separator()+QString("+octave")+QDir::separator()))
+  bool failed;
+  FMString fileText = ReadFileIntoString(fileName,failed);
+  if (failed) return Tree();
+  if (!fileName.contains(FMDir::separator()+FMString("+octave")+FMDir::separator()))
     {
       Scanner S(fileText,fileName);
       Parser P(S);
@@ -378,26 +371,24 @@ bool MFunctionDef::updateCode(Interpreter *m_eval) {
   if (pcodeFunction) return false;
   if (nestedFunction) return false;
   // First, stat the file to get its time stamp
-  QFileInfo filestat(fileName);
-  if (!functionCompiled || (filestat.lastModified() != timeStamp)) {
+  if (!functionCompiled || (boost::filesystem::last_write_time(fileName) != timeStamp)) {
     // Record the time stamp
-    timeStamp = filestat.lastModified();
-    QFile fp(fileName);
-    if (!fp.open(QIODevice::ReadOnly))
-      throw Exception(QString("Unable to open file :") + fileName);
+    timeStamp = boost::filesystem::last_write_time(fileName);
+    std::ifstream fp(fileName.c_str(), std::ios::in);
+    if (!fp)
+      throw Exception(FMString("Unable to open file :") + fileName);
     bool commentsOnly = true;
     helpText.clear();
-    QTextStream io(&fp);
-    QString cp;
-    while (!io.atEnd() && commentsOnly) {
-      cp = io.readLine();
-      while ((cp.size() > 1) && (cp.at(0).isSpace()))
+    FMString cp;
+    while (!fp.eof() && commentsOnly) {
+      getline(fp,cp);
+      while ((cp.size() > 1) && (isspace(cp.at(0))))
 	cp.remove(0,1);
       if (cp == "\n" || cp.isEmpty()) continue;
-      if (cp.at(0) != QChar('%'))
+      if (cp.at(0) != FMChar('%'))
 	commentsOnly = false;
       else {
-	if ((cp.size() > 1) && (!cp.endsWith(QChar('\n'))))
+	if ((cp.size() > 1) && (!cp.endsWith(FMChar('\n'))))
 	  helpText.push_back(cp + "\n");
 	else
 	  helpText.push_back(cp);
@@ -487,9 +478,9 @@ unsigned MFunctionDef::ClosestLine(unsigned line) {
   bestline = 1000000000;
   TreeLine(code,bestline,line);
   if (bestline == 1000000000)
-    throw Exception(QString("Unable to find a line close to ") + 
-		    QString::number(line) + 
-		    QString(" in routine ") + name);
+    throw Exception(FMString("Unable to find a line close to ") + 
+		    Stringify(line) + 
+		    FMString(" in routine ") + name);
   return bestline;
 }
 
@@ -511,8 +502,8 @@ int BuiltInFunctionDef::outputArgCount() {
 void BuiltInFunctionDef::printMe(Interpreter *eval) {
   eval->outputMessage(" Function name:" + name);
   eval->outputMessage(" Function class: Built in\n");
-  eval->outputMessage(QString(" Return count: %1\n").arg(retCount));
-  eval->outputMessage(QString(" Argument count: %1\n").arg(argCount));
+  eval->outputMessage(FMString(" Return count: ") + Stringify(retCount) + "\n");
+  eval->outputMessage(FMString(" Argument count: ") + Stringify(argCount) + "\n");
 }
 
 
@@ -547,17 +538,17 @@ FunctionDef::FunctionDef() {
 }
 
 void FunctionDef::lock() {
-  QMutexLocker lockit(&functiondefmutex);
+  FMMutexLocker lockit(&functiondefmutex);
   refcount++;
 }
 
 void FunctionDef::unlock() {
-  QMutexLocker lockit(&functiondefmutex);
+  FMMutexLocker lockit(&functiondefmutex);
   refcount--;
 }
 
 bool FunctionDef::referenced() {
-  QMutexLocker lockit(&functiondefmutex);
+  FMMutexLocker lockit(&functiondefmutex);
   return (refcount>0);
 }
 
@@ -569,7 +560,7 @@ bool ImportedFunctionDef::isPassedAsPointer(int arg) {
 	  || sizeCheckExpressions[arg].valid());
 }
 
-static DataClass mapTypeNameToClass(QString name) {
+static DataClass mapTypeNameToClass(FMString name) {
   if (name == "uint8") return UInt8;
   if (name == "int8") return Int8;
   if (name == "uint16") return UInt16;
@@ -585,7 +576,7 @@ static DataClass mapTypeNameToClass(QString name) {
   throw Exception("unrecognized type " + name + " in imported function setup");
 }
 
-static ffi_type* mapTypeNameToFFIType(QString name) {
+static ffi_type* mapTypeNameToFFIType(FMString name) {
   if (name == "uint8") return &ffi_type_uint8;
   if (name == "int8") return &ffi_type_sint8;
   if (name == "uint16") return &ffi_type_uint16;
@@ -606,8 +597,8 @@ ImportedFunctionDef::ImportedFunctionDef(GenericFuncPointer address_arg,
 					 StringVector types_arg,
 					 StringVector arguments_arg,
 					 TreeList sizeChecks,
-					 QString retType_arg,
-					 QString name) {
+					 FMString retType_arg,
+					 FMString name) {
   address = address_arg;
   types = types_arg;
   arguments = arguments_arg;
@@ -640,7 +631,7 @@ void ImportedFunctionDef::printMe(Interpreter *) {
 }
 
 
-static QString TrimAmpersand(QString name) {
+static FMString TrimAmpersand(FMString name) {
   if (!name.startsWith("&")) return name;
   name.remove(0,1);
   return name;
@@ -781,14 +772,15 @@ ArrayVector ImportedFunctionDef::evaluateFunc(Interpreter *walker,
   // special-cased
   for (i=0;i<inputs.size();i++) {
     if (arguments[i].startsWith("&") && (types[i] == "string"))
-      inputs[i] = Array(QString(string_store[i]));
+      inputs[i] = Array(FMString(string_store[i]));
   }
   for (i=0;i<inputs.size();i++)
     if (string_store[i]) free(string_store[i]);
   return ArrayVector(retArray);
 }
 
-MexFunctionDef::MexFunctionDef(QString fullpathname) {
+/*
+MexFunctionDef::MexFunctionDef(FMString fullpathname) {
   fullname = fullpathname;
   importSuccess = false;
   lib = new DynLib(fullname);
@@ -823,7 +815,7 @@ ArrayVector MexFunctionDef::evaluateFunc(Interpreter *walker,
   mxArray** rets = new mxArray*[lhsCount];
   try {
     address(lhsCount,rets,inputs.size(),(const mxArray**)args);
-  } catch (QString &e) {
+  } catch (FMString &e) {
     throw Exception(e);
   }
   ArrayVector retvec;
@@ -834,3 +826,4 @@ ArrayVector MexFunctionDef::evaluateFunc(Interpreter *walker,
   delete[] rets;
   return retvec;
 }
+*/

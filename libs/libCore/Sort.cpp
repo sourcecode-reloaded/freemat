@@ -19,6 +19,7 @@
 #include "Operators.hpp"
 #include "Math.hpp"
 #include "Complex.hpp"
+#include <algorithm>
 
 template <class T>
 struct XNEntryReal {
@@ -81,11 +82,11 @@ struct OpVecSortAscend {
   static inline void func(const BasicArray<T> &src,
 			  BasicArray<T> &dest,
 			  BasicArray<index_t>& dest_index) {
-    QVector<XNEntryReal<T> > tmp(int(src.length()));
+    FMVector<XNEntryReal<T> > tmp(int(src.length()));
     for (index_t i=1;i<=src.length();i++) {
       tmp[int(i-1)].n = i; tmp[int(i-1)].x = src[i];
     }
-    qStableSort(tmp.begin(),tmp.end(),RealLess<T>);
+    std::stable_sort(tmp.begin(),tmp.end(),RealLess<T>);
     for (int i=0;i<tmp.size();i++) {
       dest[i+1] = tmp[i].x;
       dest_index[i+1] = tmp[i].n;
@@ -97,13 +98,13 @@ struct OpVecSortAscend {
 			  BasicArray<T> & dest_real,
 			  BasicArray<T> & dest_imag,
 			  BasicArray<index_t>& dest_index) {
-    QVector<XNEntryComplex<T> > tmp(int(src_real.length()));
+    FMVector<XNEntryComplex<T> > tmp(int(src_real.length()));
     for (index_t i=1;i<=src_real.length();i++) {
       tmp[int(i-1)].n = i; 
       tmp[int(i-1)].x = src_real[i];
       tmp[int(i-1)].y = src_imag[i];
     }
-    qStableSort(tmp.begin(),tmp.end(),ComplexLess<T>);
+    std::stable_sort(tmp.begin(),tmp.end(),ComplexLess<T>);
     for (int i=0;i<tmp.size();i++) {
       dest_real[index_t(i+1)] = tmp[i].x;
       dest_imag[index_t(i+1)] = tmp[i].y;
@@ -129,11 +130,11 @@ struct OpVecSortDescend {
   static inline void func(const BasicArray<T> &src,
 			  BasicArray<T> &dest,
 			  BasicArray<index_t>& dest_index) {
-    QVector<XNEntryReal<T> > tmp(int(src.length()));
+    FMVector<XNEntryReal<T> > tmp(int(src.length()));
     for (index_t i=1;i<=src.length();i++) {
       tmp[int(i-1)].n = i; tmp[int(i-1)].x = src[i];
     }
-    qStableSort(tmp.begin(),tmp.end(),RealGreater<T>);
+    std::stable_sort(tmp.begin(),tmp.end(),RealGreater<T>);
     for (int i=0;i<tmp.size();i++) {
       dest[i+1] = tmp[i].x;
       dest_index[i+1] = tmp[i].n;
@@ -145,13 +146,13 @@ struct OpVecSortDescend {
 			  BasicArray<T> & dest_real,
 			  BasicArray<T> & dest_imag,
 			  BasicArray<index_t>& dest_index) {
-    QVector<XNEntryComplex<T> > tmp(int(src_real.length()));
+    FMVector<XNEntryComplex<T> > tmp(int(src_real.length()));
     for (index_t i=1;i<=src_real.length();i++) {
       tmp[int(i-1)].n = i; 
       tmp[int(i-1)].x = src_real[i];
       tmp[int(i-1)].y = src_imag[i];
     }
-    qStableSort(tmp.begin(),tmp.end(),ComplexGreater<T>);
+    std::stable_sort(tmp.begin(),tmp.end(),ComplexGreater<T>);
     for (int i=0;i<tmp.size();i++) {
       dest_real[index_t(i+1)] = tmp[i].x;
       dest_imag[index_t(i+1)] = tmp[i].y;
@@ -183,7 +184,7 @@ ArrayVector SortFunction(int nargout, const ArrayVector& arg) {
     workDim = input.dimensions().firstNonsingular();
   bool ascendSort = true;
   if (arg.size() >= 3) {
-    QString tdir(arg[2].asString().toLower());
+    FMString tdir(arg[2].asString().toLower());
     if (tdir[0] == 'a') 
       ascendSort = true;
     else if (tdir[0] == 'd')

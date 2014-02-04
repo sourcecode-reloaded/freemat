@@ -155,7 +155,7 @@ void BlasWrapper::DiscoverBlasLibrary( void )
 
 void* BlasWrapper::Resolve( const char* function_name, void (*default_fcn)() )
 {
-  qDebug() << "Resolve of " << function_name << "\n";
+  dbout << "Resolve of " << function_name << "\n";
   if (useReference) return (void*)(default_fcn);
 	void *p;
 	QString fname( function_name );

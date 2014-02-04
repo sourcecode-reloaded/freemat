@@ -258,12 +258,12 @@ static void realSolveLeastSq(int m, int n, int k, T *c, T *a, T *b) {
   if (M > N) {
     // Problem should be overdetermined, rank should be N
     if (RANK < N) {
-      WarningMessage(QString("Matrix is rank deficient to machine precision.  RANK = %1\n").arg(RANK));
+      WarningMessage(FMString("Matrix is rank deficient to machine precision.  RANK = ") + Stringify(RANK) + "\n");
     }
   } else
     // Problem should be underdetermined, rank should be M
     if (RANK < M) {
-      WarningMessage(QString("Matrix is rank deficient to machine precision.  RANK = %1\n").arg(RANK));
+      WarningMessage(FMString("Matrix is rank deficient to machine precision.  RANK = ") + Stringify(RANK) + "\n");
     }
   changeStride(c,n,&B,Bsize,n,k);
 }
@@ -460,11 +460,11 @@ static void complexSolveLeastSq(int m, int n, int k, T *c, T *a, T*b) {
   if (M > N) {
     // Problem should be overdetermined, rank should be N
     if (RANK < N)
-      WarningMessage(QString("Matrix is rank deficient to machine precision.  RANK = %1\n").arg(RANK));
+      WarningMessage(FMString("Matrix is rank deficient to machine precision.  RANK = ") + Stringify(RANK) + "\n");
   } else
     // Problem should be underderemined, rank should be M
     if (RANK < M) 
-      WarningMessage(QString("Matrix is rank deficient to machine precision.  RANK = %1\n").arg(RANK));
+      WarningMessage(FMString("Matrix is rank deficient to machine precision.  RANK = ") + Stringify(RANK) + "\n");
   changeStride(c,2*n,&B,2*Bsize,2*n,k);
 }
 

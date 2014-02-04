@@ -45,13 +45,13 @@ FuncPtr FuncPtrLookup(Interpreter *eval, Array ptr) {
     }
   if ((!ptr.isUserClass()) || (ptr.className() != "functionpointer"))
     throw Exception("expected function pointer here, instead got " + ptr.className());
-  QString name = LOOKUP(ptr,"name").asString();
-  QString type = LOOKUP(ptr,"type").asString();
+  FMString name = LOOKUP(ptr,"name").asString();
+  FMString type = LOOKUP(ptr,"type").asString();
   if (type == "builtin") 
     return eval->getContext()->lookupBuiltinFunction(name);
   if (type == "mfunction") {
     // Retrieve it from the cache of 
-    QString filename = LOOKUP(ptr,"location").asString();
+    FMString filename = LOOKUP(ptr,"location").asString();
     FuncPtr val = eval->getContext()->lookupCapturedMFunction(name,filename);
     if (!val)
       throw Exception("Function pointed to by function pointer does not exist!");
@@ -69,7 +69,7 @@ Array FuncPtrConstructor(Interpreter *eval, FuncPtr val) {
   fields.push_back("workspace");
   ArrayVector values;
   values.push_back(Array(val->name));
-  QString typecode;
+  FMString typecode;
   switch (val->type()) {
   default:
     typecode = "unknown";
@@ -87,7 +87,7 @@ Array FuncPtrConstructor(Interpreter *eval, FuncPtr val) {
     break;
   }
   values.push_back(Array(typecode));
-  QString location = "";
+  FMString location = "";
   if (val->type() == FM_M_FUNCTION) {
     MFunctionDef *mptr;
     mptr = (MFunctionDef *) val;
@@ -124,7 +124,7 @@ ArrayVector Func2StrFunction(int nargout, const ArrayVector& arg, Interpreter *e
 //output ptr
 ArrayVector Str2FuncFunction(int nargout, const ArrayVector& arg, Interpreter *eval) {
   if (arg.size() == 0) return ArrayVector();
-  QString txt = arg[0].asString();
+  FMString txt = arg[0].asString();
   if (txt.startsWith('@'))
     {
       Tree t = ParseExpressionString(txt+"\n");
@@ -248,8 +248,8 @@ static void CaptureFunctionPointer(Array &inp, Interpreter *walker,
   MFunctionDef* mptr = (MFunctionDef*) ptr;
   if (LOOKUP(inp,"captured").toClass(Bool).constRealScalar<bool>()) return;
   Context* context = walker->getContext();
-  QString myScope = context->scopeName();
-  QString parentScope;
+  FMString myScope = context->scopeName();
+  FMString parentScope;
   {
     ParentScopeLocker lock(context);
     parentScope = context->scopeName();

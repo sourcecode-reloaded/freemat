@@ -3,8 +3,7 @@
 
 #include "Scanner.hpp"
 #include "Token.hpp"
-#include <QString>
-#include <QStack>
+#include "FMLib.hpp"
 
 class OctaveScanner : public Scanner {
 protected:
@@ -14,7 +13,7 @@ protected:
   virtual void fetchWhitespace();
   virtual void fetchOctString();
 public:
-  OctaveScanner(QString buf, QString fname);
+  OctaveScanner(FMString buf, FMString fname);
   virtual ~OctaveScanner() {}
 };
 

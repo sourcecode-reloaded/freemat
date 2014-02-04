@@ -20,11 +20,11 @@
 #include "File.hpp"
 #include "Exception.hpp"
 
-File::File(QString filename, QString accessmode) {
+File::File(FMString filename, FMString accessmode) {
   fp = fopen(qPrintable(filename),qPrintable(accessmode));
   if (fp == NULL)
-    throw Exception(QString("unable to open file ") + filename + 
-		    QString(" with file mode ") + accessmode);
+    throw Exception(FMString("unable to open file ") + filename + 
+		    FMString(" with file mode ") + accessmode);
   autoclose = true;
 }
 

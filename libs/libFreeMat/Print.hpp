@@ -29,8 +29,8 @@
 
 class Interpreter;
 void PrintArrayClassic(Array A, int printLimit, Interpreter *eval);
-QString ArrayToPrintableString(const Array& a);
-QString SummarizeArrayCellEntry(const Array &a);
+FMString ArrayToPrintableString(const Array& a);
+FMString SummarizeArrayCellEntry(const Array &a);
 
 typedef enum {
   format_native,

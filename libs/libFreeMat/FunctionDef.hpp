@@ -24,8 +24,7 @@
 #include "Tree.hpp"
 #include "DynLib.hpp"
 #include "mex.h"
-#include <QSharedData>
-#include <QDateTime>
+#include "FMLib.hpp"
 #include "Scope.hpp"
 
 #include "ffi.h"
@@ -71,7 +70,7 @@ public:
   /**
    * The name of the function - must follow identifier rules.
    */
-  QString name;
+  FMString name;
   /**
    * The reference count for this functiondef
    */
@@ -130,11 +129,11 @@ public:
   /**
    * Returns the name of the function
    */
-  virtual QString functionName() = 0;
+  virtual FMString functionName() = 0;
   /**
    * Returns the "detailed" name of the function -- a full path for example
    */
-  virtual QString detailedName() = 0;
+  virtual FMString detailedName() = 0;
   /**
    * Print a description of the function
    */
@@ -192,11 +191,11 @@ public:
   /**
    * Location of the function's defining file in the current filesystem.
    */
-  QString fileName;
+  FMString fileName;
   /**
    * Time function was last modified.
    */
-  QDateTime timeStamp;
+  time_t timeStamp;
   /**
    * Set to true for all of the localFunctions.  
    */
@@ -223,8 +222,8 @@ public:
   /** The type of the function
    */
   virtual const FunctionType type() {return FM_M_FUNCTION;}
-  virtual QString functionName() {return fileName;}
-  virtual QString detailedName() {return name;}
+  virtual FMString functionName() {return fileName;}
+  virtual FMString detailedName() {return name;}
   /** Print a description of the function
    */
   virtual void printMe(Interpreter* io);
@@ -288,8 +287,8 @@ public:
    * The type of the function is FM_BUILT_IN_FUNCTION.
    */
   virtual const FunctionType type() {return FM_BUILT_IN_FUNCTION;}
-  virtual QString functionName() {return name;}
-  virtual QString detailedName() {return "builtin";}
+  virtual FMString functionName() {return name;}
+  virtual FMString detailedName() {return "builtin";}
   /** Print a description of the function
    */
   virtual void printMe(Interpreter *io);
@@ -332,8 +331,8 @@ public:
    * The type of the function is FM_SPECIAL_FUNCTION.
    */
   virtual const FunctionType type() {return FM_SPECIAL_FUNCTION;}
-  virtual QString functionName() {return name;}
-  virtual QString detailedName() {return "builtin";}
+  virtual FMString functionName() {return name;}
+  virtual FMString detailedName() {return "builtin";}
   /** Print a description of the function
    */
   virtual void printMe(Interpreter *);
@@ -382,7 +381,7 @@ public:
   /**
    * The return type of the function
    */
-  QString retType;
+  FMString retType;
   /**
    * Default constructor
    */
@@ -390,8 +389,8 @@ public:
 		      StringVector types_arg,
 		      StringVector arguments_arg,
 		      TreeList sizeChecks,
-		      QString retType_arg,
-		      QString name);
+		      FMString retType_arg,
+		      FMString name);
   /**
    * Default destructor
    */
@@ -400,8 +399,8 @@ public:
    * The type of the function is FM_IMPORTED_FUNCTION.
    */
   virtual const FunctionType type() {return FM_IMPORTED_FUNCTION;}
-  virtual QString functionName() {return name;}
-  virtual QString detailedName() {return "imported";}
+  virtual FMString functionName() {return name;}
+  virtual FMString detailedName() {return "imported";}
   /** Print a description of the function
    */
   virtual void printMe(Interpreter *);
@@ -430,7 +429,7 @@ public:
   /**
    * The full name of the library to link to
    */
-  QString fullname;
+  FMString fullname;
   /**
    * The dynamic library object
    */
@@ -447,7 +446,7 @@ public:
   /**
    * Default constructor
    */
-  MexFunctionDef(QString fullpathname);
+  MexFunctionDef(FMString fullpathname);
   /**
    * Default destructor
    */
@@ -457,8 +456,8 @@ public:
    * The type of the function is FM_MEX_FUNCTION.
    */
   virtual const FunctionType type() {return FM_MEX_FUNCTION;}
-  virtual QString functionName() {return name;}
-  virtual QString detailedName() {return "mex";}
+  virtual FMString functionName() {return name;}
+  virtual FMString detailedName() {return "mex";}
 
   /** Print a description of the function
    */

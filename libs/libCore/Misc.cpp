@@ -22,7 +22,6 @@
 #include "Scanner.hpp"
 #include "Parser.hpp"
 #include "System.hpp"
-#include <QtCore>
 #include "Algorithms.hpp"
 #include "PathSearch.hpp"
 
@@ -42,7 +41,7 @@ ArrayVector SimKeysFunction(int nargout, const ArrayVector& arg,
     throw Exception("simkeys requires a cell array of strings");
   const BasicArray<Array> &dp(arg[0].constReal<Array>());
   for (index_t i=1;i<=dp.length();i++) {
-    QString txt(dp[i].asString());
+    FMString txt(dp[i].asString());
     if ((txt.size() > 0) && (!txt.endsWith('\n')))
       txt.push_back('\n');
     eval->ExecuteLine(txt);
@@ -76,7 +75,7 @@ ArrayVector DiaryFunction(int nargout, const ArrayVector& arg, Interpreter* eval
     eval->setDiaryState(!eval->getDiaryState());
     return ArrayVector();
   }
-  QString diaryString(arg[0].asString());
+  FMString diaryString(arg[0].asString());
   if (diaryString.toLower() == "on")
     eval->setDiaryState(true);
   else if (diaryString.toLower() == "off")
@@ -96,7 +95,7 @@ ArrayVector DiaryFunction(int nargout, const ArrayVector& arg, Interpreter* eval
 //DOCBLOCK freemat_quiet
 ArrayVector QuietFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   if (arg.size() > 0) {
-    QString qtype(arg[0].asString().toUpper());
+    FMString qtype(arg[0].asString().toUpper());
     if (qtype == "NORMAL")
       eval->setQuietLevel(0);
     else if (qtype == "QUIET")
@@ -106,7 +105,7 @@ ArrayVector QuietFunction(int nargout, const ArrayVector& arg, Interpreter* eval
     else
       throw Exception("quiet function takes one argument - the quiet level (normal, quiet, or silent) as a string");
   }
-  QString rtype;
+  FMString rtype;
   if (eval->getQuietLevel() == 0)
     rtype = "normal";
   else if (eval->getQuietLevel() == 1)
@@ -124,13 +123,11 @@ ArrayVector QuietFunction(int nargout, const ArrayVector& arg, Interpreter* eval
 ArrayVector SourceFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   if (arg.size() != 1)
     throw Exception("source function takes exactly one argument - the filename of the script to execute");
-  QString filename = arg[0].asString();
-  QFile fp(filename);
-  if (!fp.open(QFile::ReadOnly))
-    throw Exception("unable to open file " + filename + " for reading");
-  QTextStream fstr(&fp);
-  QString scriptText(fstr.readAll());
-  if (!scriptText.endsWith("\n")) scriptText += "\n";
+  FMString filename = arg[0].asString();
+  bool failed;
+  FMString scriptText(ReadFileIntoString(filename,failed));
+  if (failed)
+    throw Exception("Unable to open file " + filename + " for reading");
   Scanner S(scriptText,filename);
   Parser P(S);
   Tree pcode(P.process());
@@ -153,7 +150,7 @@ ArrayVector BuiltinFunction(int nargout, const ArrayVector& arg,Interpreter* eva
   if (!(arg[0].isString()))
     throw Exception("first argument to builtin must be the name of a function (i.e., a string)");
   FuncPtr funcDef;
-  QString fname = arg[0].asString();
+  FMString fname = arg[0].asString();
   Context *context = eval->getContext();
   if (!context->lookupFunction(fname,funcDef))
     throw Exception("function " + fname + " undefined!");
@@ -189,7 +186,7 @@ ArrayVector DoCLIFunction(int nargout, const ArrayVector& arg, Interpreter* eval
 	eval->errorMessage("Startup script error:\n" + e.msg());
       }
     } else {
-      eval->outputMessage(QString("startup.m must be a script"));
+      eval->outputMessage(FMString("startup.m must be a script"));
     }
   }
   eval->doCLI();
@@ -203,12 +200,13 @@ ArrayVector DoCLIFunction(int nargout, const ArrayVector& arg, Interpreter* eval
 //DOCBLOCK os_getenv
 ArrayVector GetEnvFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1) throw Exception("getenv requires one string argument");
-  QString name(arg[0].asString());
-  QByteArray ret = qgetenv(qPrintable(name));
-  return Array(QString(ret));
+  FMString name(arg[0].asString());
+  return Array(FMString(getenv(qPrintable(name))));
 }
 
-//@@Signature
+#if 0
+//TODO - move to Python
+//Signature
 //function system SystemFunction
 //inputs cmd
 //outputs results
@@ -216,13 +214,13 @@ ArrayVector GetEnvFunction(int nargout, const ArrayVector& arg) {
 ArrayVector SystemFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() != 1) 
     throw Exception("System function takes one string argument");
-  QString systemArg(arg[0].asString());
+  FMString systemArg(arg[0].asString());
   if (systemArg.size() == 0) 
     return ArrayVector();
   StringVector cp(DoSystemCallCaptured(systemArg));
   return CellArrayFromStringVector(cp);
 }
-
+#endif
 
 
 

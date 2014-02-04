@@ -35,7 +35,6 @@
 #include "FuncMode.hpp"
 #include "ScriptMode.hpp"
 
-
 MainApp *m_app;
 FuncMode *m_func;
 ScriptMode *m_script;
@@ -138,9 +137,15 @@ int main(int argc, char *argv[]) {
   }
 
   if (help || help2) usage();
-  app = new QCoreApplication(argc, argv);
+  if (!noX) {
+    app = new QApplication(argc, argv);
+  } else {
+    app = new QCoreApplication(argc, argv);
+    nogui = true;
+  }
   
   QLocale::setDefault( QLocale::C );
+
 
   if (pathMode) {
     QSettings settings("FreeMat", Interpreter::getVersionString());
@@ -160,11 +165,13 @@ int main(int argc, char *argv[]) {
       funcMode = 0;
     }
   m_app = new MainApp;
-  if (!dumbTerminal) 
+  if (!nogui)
+    m_app->SetupGUICase();
+  else if (!dumbTerminal) 
     m_app->SetupInteractiveTerminalCase();
   else
     m_app->SetupDumbTerminalCase();
-  m_app->SetGUIMode(false);
+  m_app->SetGUIMode(!noX);
   m_app->SetSkipGreeting(nogreet);
   if (scriptMode)
     m_app->SetNoPrompt(true);

@@ -24,9 +24,9 @@
 #include "Exception.hpp"
 #include "IEEEFP.hpp"
 #include <math.h>
-#include <QTextCodec>
 #include "Algorithms.hpp"
 
+/*
 bool contains(StringVector& list, QString s, bool regexpmode) {
     QRegExp t;
     for (int i=0;i<list.size();i++) {
@@ -40,6 +40,7 @@ bool contains(StringVector& list, QString s, bool regexpmode) {
     }
     return false;
 }
+*/
 
 NTuple ArrayVectorAsDimensions(const ArrayVector &arg) {
     NTuple dims;
@@ -148,7 +149,7 @@ double ArrayMax(const Array& dp) {
     return result;
 }
 
-Array DoubleVectorFromQList(QList<uint32> &ref) {
+Array DoubleVectorFromFMList(FMList<uint32> &ref) {
     BasicArray<double> retvec(NTuple(1,ref.size()));
     for (int i=0;i<ref.size();i++)
 	retvec[i+1] = ref[i];
@@ -165,17 +166,15 @@ void SwapBuffer(char* cp, int count, int elsize) {
 	}    
 }
 
-QString ReadQStringFromFile(QFile *fp) {
-    QByteArray ret(fp->readLine());
-    return (QTextCodec::codecForLocale()->toUnicode(ret));
+FMString ReadFMStringFromFile(FMFile *fp) {
+  return fp->readLine();
 }
 
-void WriteQStringToFile(QFile *fp, QString txt) {
-    QByteArray dat(QTextCodec::codecForLocale()->fromUnicode(txt));
-    fp->write(dat);
+void WriteFMStringToFile(FMFile *fp, FMString txt) {
+  fp->write(txt);
 }
 
-static void SkipWhiteSpace(QFile *fp) {
+static void SkipWhiteSpace(FMFile *fp) {
     char w;
     while ((fp->getChar(&w)) && isspace(w));
     fp->ungetChar(w);
@@ -185,7 +184,7 @@ int digitvalue(char x) {
     return (x-'0');
 }
 
-double QFileReadInteger(QFile *fp, int base, int nMaxDigits) {
+double FMFileReadInteger(FMFile *fp, int base, int nMaxDigits) {
     nMaxDigits = (nMaxDigits>0)? nMaxDigits : 1024;
     SkipWhiteSpace(fp);
     // detect int encoding
@@ -355,13 +354,13 @@ double QFileReadInteger(QFile *fp, int base, int nMaxDigits) {
     return val;
 }
 
-double QFileReadFloat(QFile *fp, int nMaxDigits) {
+double FMFileReadFloat(FMFile *fp, int nMaxDigits) {
     nMaxDigits = (nMaxDigits>0)? nMaxDigits : 1024;
 
     // This code comes from qtextstream.cpp
     // We use a table-driven FSM to parse floating point numbers
     // strtod() cannot be used directly since we may be reading from a
-    // QIODevice.
+    // FMIODevice.
     enum ParserState {
 	Init = 0,
 	Sign = 1,
@@ -391,7 +390,7 @@ double QFileReadFloat(QFile *fp, int nMaxDigits) {
 	InputT = 9
     };
 
-    static uchar table[13][10] = {
+    static uint8 table[13][10] = {
 	// None InputSign InputDigit InputDot InputExp InputI    InputN    InputF    InputA    InputT
 	{ 0,    Sign,     Mantissa,  Dot,     0,       Inf1,     Nan1,     0,        0,        0      }, // 0  Init
 	{ 0,    0,        Mantissa,  Dot,     0,       Inf1,     Nan1,     0,        0,        0      }, // 1  Sign
@@ -477,7 +476,7 @@ double QFileReadFloat(QFile *fp, int nMaxDigits) {
     }
 
     double f;
-    // ### Number parsing should really be handled by QLocale.
+    // ### Number parsing should really be handled by FMLocale.
     char c0 = buf[0] | 32; // tolower
     char c1 = buf[1] | 32; // tolower
     bool sign = true;
@@ -496,11 +495,11 @@ double QFileReadFloat(QFile *fp, int nMaxDigits) {
     return f;
 }
 
-QString QFileReadString(QFile *fp,int nMaxChars) {
+FMString FMFileReadString(FMFile *fp,int nMaxChars) {
     nMaxChars = (nMaxChars>0)? nMaxChars : 65535;
 
     SkipWhiteSpace(fp);
-    QString val("");
+    FMString val("");
     int nChars = 0;
     char tmp;
 
@@ -515,7 +514,7 @@ QString QFileReadString(QFile *fp,int nMaxChars) {
     return val;
 }
 
-char QFileReadChar(QFile *fp) {
+char FMFileReadChar(FMFile *fp) {
     char tmp;
     fp->getChar( &tmp );
     return tmp;

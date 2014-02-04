@@ -23,14 +23,13 @@
 #include <ctype.h>
 #include "Exception.hpp"
 #include <algorithm>
-#include <QMutexLocker>
-#include <QMutex>
+#include "FMLib.hpp"
 
-static QHash<QString, TokenValueType> fm_reserved;
+static FMMap<FMString, TokenValueType> fm_reserved;
 
 static bool fm_reserved_initialized = false;
 
-QMutex lock;
+FMMutex lock;
 static int TokenID = 1;
 
 void InitializeReservedTable() {
@@ -74,9 +73,9 @@ unsigned Scanner::contextNum() {
   return (m_ptr << 16 | m_linenumber);
 }
 
-void Scanner::setToken(TokenValueType tok, QString text) {
+void Scanner::setToken(TokenValueType tok, FMString text) {
   m_tok = Token(tok,m_ptr << 16 | m_linenumber,text);
-  QMutexLocker locker(&lock);
+  FMMutexLocker locker(&lock);
   m_tok.setUID(TokenID++);
 }
 
@@ -88,7 +87,7 @@ bool Scanner::peek(int chars, TokenValueType tok) {
   return (ahead(chars) == tok);
 }
 
-Scanner::Scanner(QString buf, QString fname) {
+Scanner::Scanner(FMString buf, FMString fname) {
   InitializeReservedTable();
   m_text = buf;
   m_filename = fname;
@@ -187,7 +186,7 @@ void Scanner::fetchOther() {
   if (tryFetchBinary("~=",TOK_NE)) return;
   if (tryFetchBinary("&&",TOK_SAND)) return;
   if (tryFetchBinary("||",TOK_SOR)) return;
-  setToken(m_text[m_ptr].unicode());
+  setToken(m_text[m_ptr]);
   if (m_text[m_ptr] == '[')
     m_bracketDepth++;
   if (m_text[m_ptr] == ']')
@@ -213,7 +212,7 @@ void Scanner::fetchString() {
   }
   if (ahead(len+1) == '\n')
     throw Exception("unterminated string" + context());
-  QString ret(m_text.mid(m_ptr+1,len));
+  FMString ret(m_text.mid(m_ptr+1,len));
   ret.replace("''","'");
   setToken(TOK_STRING,ret);
   m_ptr += len+2;
@@ -289,7 +288,7 @@ void Scanner::fetchNumber() {
 	(ahead(lookahead) == '\\') ||
 	(ahead(lookahead) == '^') ||
 	(ahead(lookahead) == '\'')))) lookahead--;
-  QString numtext(m_text.mid(m_ptr,lookahead));
+  FMString numtext(m_text.mid(m_ptr,lookahead));
   m_ptr += lookahead;
   if (imagnumber)
     m_ptr++;
@@ -310,7 +309,7 @@ void Scanner::fetchIdentifier() {
   int len = 0;
   while (isalnumus(ahead(len))) len++;
   // Collect the identifier into a string
-  QString ident(m_text.mid(m_ptr,len));
+  FMString ident(m_text.mid(m_ptr,len));
   if (fm_reserved.contains(ident))
     setToken(fm_reserved[ident]);
   else
@@ -364,14 +363,14 @@ void Scanner::consume() {
 
 TokenValueType Scanner::current() {
   if (m_ptr < m_strlen)
-    return m_text.at(m_ptr).unicode();
+    return m_text.at(m_ptr);
   else
     return 0;
 }
 
 TokenValueType Scanner::previous() {
   if (m_ptr)
-    return m_text.at(m_ptr-1).unicode();
+    return m_text.at(m_ptr-1);
   else
     return 0;
 }
@@ -388,34 +387,34 @@ TokenValueType Scanner::ahead(int n) {
   if ((m_ptr+n) >= (int)(m_text.size()))
     return 0;
   else
-    return m_text.at(m_ptr+n).unicode();
+    return m_text.at(m_ptr+n);
 }
 
-QString Scanner::context() {
+FMString Scanner::context() {
   return context(contextNum());
 }
 
-QString Scanner::snippet(unsigned pos1, unsigned pos2) {
+FMString Scanner::snippet(unsigned pos1, unsigned pos2) {
   unsigned ptr1 = pos1 >> 16;
   unsigned ptr2 = pos2 >> 16;
   return m_text.mid(ptr1,ptr2-ptr1-1);
 }
 
-QString Scanner::context(unsigned pos) {
+FMString Scanner::context(unsigned pos) {
   pos = pos >> 16;
   int line_start = 0;
   int linenumber = 1;
   int line_stop = m_text.indexOf("\n");
-  QString prevline;
+  FMString prevline;
   while ((int(pos) > line_stop) && (linenumber < 10000)) {
     prevline = m_text.mid(line_start,line_stop-line_start);
     line_start = line_stop+1;
     line_stop = m_text.indexOf("\n",line_start);
     linenumber++;
   }
-  QString retstring;
+  FMString retstring;
   if ((m_filename.size() > 0) && (linenumber < 10000)) {
-    retstring = " at line number: " + QString::number(linenumber);
+    retstring = " at line number: " + Stringify(linenumber);
     retstring += " of file " + m_filename + "\n";
   }  else
     retstring += "\n";
@@ -423,6 +422,6 @@ QString Scanner::context(unsigned pos) {
   retstring += "     " + m_text.mid(line_start,line_stop-line_start);
   int offset = pos-line_start-1;
   if (offset < 0) offset = 0;
-  retstring += "\n     " + QString(offset,' ') + "^";
+  retstring += "\n     " + FMString(offset,' ') + "^";
   return(retstring);
 }

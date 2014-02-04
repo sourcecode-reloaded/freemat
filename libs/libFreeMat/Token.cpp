@@ -17,11 +17,11 @@
  *
  */
 #include "Token.hpp"
-#include "Serialize.hpp"
+//#include "Serialize.hpp"
 #include <errno.h>
 #include <limits.h>
 
-Token::Token(TokenValueType tok, unsigned pos, QString text) :
+Token::Token(TokenValueType tok, unsigned pos, FMString text) :
   m_tok(tok), m_pos(pos), m_text(text) { }
 
 Token::Token() {
@@ -55,20 +55,20 @@ bool Token::isRightAssociative() const {
   return (m_tok == '^');
 }
 
-QTextStream& operator<<(QTextStream& o, const Token& b) {
+//FMTextStream& operator<<(FMTextStream& o, const Token& b) {
+//  o << TokenToString(b) << " (" << (b.position() >> 16)
+//    << "," << (b.position() & 0xffff) << ")\r\n";
+//  return o;
+//}
+
+std::ostream& operator<<(std::ostream& o, const Token& b) {
   o << TokenToString(b) << " (" << (b.position() >> 16)
-    << "," << (b.position() & 0xffff) << ")\r\n";
+    << "," << (LineNumber(b.position())) << ")\n";
   return o;
 }
 
-// DebugStream& operator<<(DebugStream& o, const Token& b) {
-//   o << TokenToString(b) << " (" << (b.position() >> 16)
-//     << "," << (LineNumber(b.position())) << ")\n";
-//   return o;
-// }
 
-
-QString TokenToString(const Token& b) {
+FMString TokenToString(const Token& b) {
   switch(b.value()) {
   case TOK_IDENT: return "(ident)"+b.text();
   case TOK_SPACE: return "space";
@@ -145,10 +145,15 @@ QString TokenToString(const Token& b) {
   case TOK_DECR_POSTFIX: return "--(post)";
   case TOK_PLUS_EQ: return "+=";
   case TOK_MINUS_EQ: return "-=";
+  case TOK_AND_EQ: return "&=";
+  case TOK_OR_EQ: return "|=";
+  case TOK_TIMES_EQ: return "*=";
+  case TOK_DOTTIMES_EQ: return ".*=";
   }
-  return QString(1,QChar(b.value()))+QString(" val = %1").arg(b.value());
+  return FMString(1,FMChar(b.value()))+FMString(" val = ") + Stringify(b.value());
 }
 
+/*
 void Token::freeze(Serialize *s) const {
   s->putShort(m_tok);
   s->putInt(m_pos);
@@ -161,6 +166,7 @@ Token::Token(Serialize *s) {
   m_text = s->getString();
   fillArray();
 }
+*/
 
 void Token::fillArray() {
   Array retval;
@@ -169,28 +175,28 @@ void Token::fillArray() {
     return;
   case TOK_REAL:
     {
-      QString mt(m_text);
+      FMString mt(m_text);
       if (mt.toUpper().endsWith("D")) mt.chop(1);
       retval = Array(double(mt.toDouble()));
       break;
     }
   case TOK_IMAG:
     {
-      QString mt(m_text);
+      FMString mt(m_text);
       if (mt.toUpper().endsWith("D")) mt.chop(1);
       retval = Array(double(0),double(mt.toDouble()));
       break;
     }
   case TOK_REALF:
     {
-      QString mt(m_text);
+      FMString mt(m_text);
       if (mt.toUpper().endsWith("F")) mt.chop(1);
       retval = Array(float(mt.toFloat()));
       break;
     }
   case TOK_IMAGF:
     {
-      QString mt(m_text);
+      FMString mt(m_text);
       if (mt.toUpper().endsWith("F")) mt.chop(1);
       retval = Array(float(0),float(mt.toFloat()));
       break;

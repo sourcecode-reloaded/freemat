@@ -20,27 +20,24 @@
 #ifndef __Types_hpp__
 #define __Types_hpp__
 
-#include <QStringList>
-#include <QVector>
-#include <QtGlobal>
-#include <QList>
-#include <QRegExp>
+#include "FMLib.hpp"
 #include <cmath>
+#include <stdint.h>
 #include "FastList.hpp"
 
 typedef bool      logical;
-typedef qint8     int8;
-typedef quint8    uint8;
-typedef qint16    int16;
-typedef quint16   uint16;
-typedef qint32    int32;
-typedef quint32   uint32;
-typedef qint64    int64;
-typedef quint64   uint64;
+typedef int8_t     int8;
+typedef uint8_t    uint8;
+typedef int16_t    int16;
+typedef uint16_t   uint16;
+typedef int32_t    int32;
+typedef uint32_t   uint32;
+typedef int64_t    int64;
+typedef uint64_t   uint64;
 typedef double index_t;
 const int NDims = 6;
 
-typedef QStringList StringVector;
+typedef FMStringList StringVector;
 
 #if defined(_MSC_VER )
 extern "C"{
@@ -54,7 +51,7 @@ inline bool IsInteger(float x) {
 }
 
 inline bool IsInteger(double x) {
-  return ((fabs(x) < Q_UINT64_C(4503599627370496)) && (rint(x) == x));
+  return ((fabs(x) < FM_UINT64_C(4503599627370496)) && (rint(x) == x));
 }
 
 inline bool IsInteger(int8 x) { return true; }

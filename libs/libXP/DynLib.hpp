@@ -20,14 +20,13 @@
 #ifndef __DynLib_hpp__
 #define __DynLib_hpp__
 
-#include <QString>
-#include <QLibrary>
+#include "FMLib.hpp"
 
 class DynLib {
-  QLibrary lib;
+  FMLibrary lib;
 public:
-  DynLib(QString filename);
-  void* GetSymbol(QString symbolName);
+  DynLib(FMString filename);
+  void* GetSymbol(FMString symbolName);
 };
 
 #endif

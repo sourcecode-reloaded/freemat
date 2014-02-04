@@ -53,8 +53,8 @@ public:
 
 class StructArray {
   StringVector m_fields;
-  QVector<BasicArray<Array> > m_data;
-  QString m_class;
+  FMVector<BasicArray<Array> > m_data;
+  FMString m_class;
   NTuple m_dims;
   bool m_handleType;
   uint32 m_refCount;
@@ -81,13 +81,13 @@ public:
       return m_ptr->isUserClass();
     return !m_class.isEmpty();
   }
-  QString className() const 
+  FMString className() const 
   {
     if (isHandleClass())
       return m_ptr->className();
     return m_class;
   }
-  void setClassName(const QString& className) 
+  void setClassName(const FMString& className) 
   {
     if (isHandleClass())
       return m_ptr->setClassName(className);
@@ -100,7 +100,7 @@ public:
     return m_fields;
   }
   void setFieldNamesAndData(const StringVector& fields,
-			    const QVector<BasicArray<Array> > data) 
+			    const FMVector<BasicArray<Array> > data) 
   {
     if (isHandleClass())
       {
@@ -117,7 +117,7 @@ public:
       return m_ptr->fieldCount();
     return m_fields.size();
   }
-  QString fieldName(int i) const 
+  FMString fieldName(int i) const 
   {
     if (isHandleClass())
       return m_ptr->fieldName(i);
@@ -129,12 +129,12 @@ public:
       return m_ptr->bytes();
     index_t count = 0;
     for (int i=0;i<m_fields.size();i++) {
-      count += m_fields[i].size()*sizeof(QChar);
+      count += m_fields[i].size()*sizeof(FMChar);
       count += m_data[i].bytes();
     }
     return count;
   }
-  int fieldIndex(QString name) const 
+  int fieldIndex(FMString name) const 
   {
     if (isHandleClass())
       return m_ptr->fieldIndex(name);
@@ -142,13 +142,13 @@ public:
       return m_fields.indexOf(name);
     throw Exception("Fieldname " + name + " not defined");
   }
-  bool contains(QString name) const 
+  bool contains(FMString name) const 
   { 
     if (isHandleClass())
       return m_ptr->contains(name);
     return m_fields.contains(name); 
   }
-  void insert(QString name, const BasicArray<Array> &t) 
+  void insert(FMString name, const BasicArray<Array> &t) 
   {
     if (isHandleClass())
       return m_ptr->insert(name,t);
@@ -160,7 +160,7 @@ public:
     }
     updateDims();
   }
-  void insert(QString name, const Array &t)
+  void insert(FMString name, const Array &t)
   {
     BasicArray<Array> ba(t);
     insert(name,ba);
@@ -204,7 +204,7 @@ public:
       return (*m_ptr)[i];
     return m_data[i];
   }
-  BasicArray<Array>& operator[](QString name) 
+  BasicArray<Array>& operator[](FMString name) 
   {
     if (isHandleClass())
       return (*m_ptr)[name];
@@ -214,7 +214,7 @@ public:
     }
     return m_data[fieldIndex(name)];
   }
-  const BasicArray<Array>& operator[](QString name) const 
+  const BasicArray<Array>& operator[](FMString name) const 
   {
     if (isHandleClass())
       return (*m_ptr)[name];

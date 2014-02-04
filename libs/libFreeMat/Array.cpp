@@ -18,8 +18,7 @@
  */
 #include "Array.hpp"
 #include "GetSet.hpp"
-#include <QVector>
-#include <QSet>
+#include "FMLib.hpp"
 #include "Struct.hpp"
 #include "Algorithms.hpp"
 #include "Cast.hpp"
@@ -152,11 +151,11 @@ Array::Array(const StructArray& real) {
   m_real.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type,new StructArray(real)));
 }
 
-Array::Array(const QChar &, const QChar &) {
+Array::Array(const FMChar &, const FMChar &) {
   throw Exception("Complex strings are not supported");
 }
 
-Array::Array(const QChar &t) {
+Array::Array(const FMChar &t) {
   m_type.Class = StringArray;
   m_type.Complex = 0;
   m_type.Sparse = 0;
@@ -164,11 +163,11 @@ Array::Array(const QChar &t) {
   m_real.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type,
 							      construct_sized(m_type,
 									      NTuple(1,1))));
-  BasicArray<QChar> &p(real<QChar>());
+  BasicArray<FMChar> &p(real<FMChar>());
   p[1] = t;
 }
 
-Array::Array(const QString &text) {
+Array::Array(const FMString &text) {
   m_type.Class = StringArray;
   m_type.Complex = 0;
   m_type.Sparse = 0;
@@ -176,7 +175,7 @@ Array::Array(const QString &text) {
   m_real.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type,
 							      construct_sized(m_type,
 									      NTuple(1,text.size()))));
-  BasicArray<QChar> &p(real<QChar>());
+  BasicArray<FMChar> &p(real<FMChar>());
   for (int i=0;i<text.size();i++) 
     p[i+1] = text[i];
 }
@@ -240,9 +239,9 @@ static inline void Tset_scalar(Array *ptr, S ndx, const Array& data) {
 template <typename S>
 static inline const void Tset_string_scalar(Array*ptr, S ndx, const Array &rhs) {
   if (rhs.isEmpty())
-    ptr->real<QChar>().del(ndx);
+    ptr->real<FMChar>().del(ndx);
   else
-    ptr->real<QChar>().set(ndx,rhs.constReal<QChar>()[1]);
+    ptr->real<FMChar>().set(ndx,rhs.constReal<FMChar>()[1]);
 }
 
 template <typename S>
@@ -464,7 +463,7 @@ void Array::resize(index_t size) {
 
 #undef MacroResizeIndex
 
-void Array::set(const QString& field, ArrayVector& data) {
+void Array::set(const FMString& field, ArrayVector& data) {
   if (isEmpty() && m_type.Class != Struct)
     *this = Array::create(Struct);
   if (m_type.Class != Struct) throw Exception("Unsupported type for A.field=B");
@@ -483,7 +482,7 @@ void Array::set(const QString& field, ArrayVector& data) {
   rp.updateDims();
 }
 
-const ArrayVector Array::get(const QString& field) const {
+const ArrayVector Array::get(const FMString& field) const {
   if (m_type.Class != Struct) throw Exception("Unsupported type for get(string)");
   const StructArray &rp(constStructPtr());
   if (!rp.contains(field)) throw Exception("Reference to non-existent field " + field);
@@ -581,20 +580,20 @@ inline static const Array Tcast(DataClass t, const Array *ptr) {
 }
 
 #define MacroClassName(ctype,cls) \
-  case cls: return QString(#cls).toLower();
+  case cls: return FMString(#cls).toLower();
 
-QString Array::className() const {
+FMString Array::className() const {
   if ((dataClass() == Struct) && (constStructPtr().isUserClass()))
     return constStructPtr().className();
   else {
-    if (dataClass() == Float) return QString("single");
+    if (dataClass() == Float) return FMString("single");
     switch (dataClass()) {
     default: throw Exception("Unknown class?!");
-    case Invalid: return QString("");
-    case CellArray: return QString("cell");
-    case Struct: return QString("struct");
-    case StringArray: return QString("char");
-    case Bool: return QString("logical");
+    case Invalid: return FMString("");
+    case CellArray: return FMString("cell");
+    case Struct: return FMString("struct");
+    case StringArray: return FMString("char");
+    case Bool: return FMString("logical");
       MacroExpandCasesNoBool(MacroClassName);
     }
   }
@@ -635,7 +634,7 @@ inline static const Array TcastCase(DataClass t, const Array *ptr) {
   default:
     throw Exception("Cannot perform type conversions with this type");
     MacroExpandCases(MacroTcast);
-    MacroTcast(QChar,StringArray);
+    MacroTcast(FMChar,StringArray);
   }
 }
 
@@ -652,7 +651,7 @@ const Array Array::toClass(DataClass t) const {
   default:
     throw Exception("unhandled case for type conversion");
     MacroExpandCasesSimple(MacroTcastCase);
-    MacroTcastCase(QChar,StringArray);
+    MacroTcastCase(FMChar,StringArray);
   }
 }
 
@@ -688,8 +687,8 @@ static inline Array Tget_struct_scalar(const Array*ptr, S ndx) {
 
 template <typename S>
 static inline Array Tget_string_scalar(const Array* ptr, S ndx) {
-  BasicArray<QChar> ret(NTuple(1,1));
-  ret.set(1,ptr->constReal<QChar>()[ndx]);
+  BasicArray<FMChar> ret(NTuple(1,1));
+  ret.set(1,ptr->constReal<FMChar>()[ndx]);
   return ret;
 }
 
@@ -792,7 +791,7 @@ void Array::set(const ArrayVector& index, const Array& data) {
   }
 }
 
-void Array::addField(QString name) {
+void Array::addField(FMString name) {
   if (dataClass() != Struct)
     throw Exception("addField only valid for structure arrays");
   if (!structPtr().contains(name))
@@ -953,7 +952,7 @@ static inline bool Tequals_struct(const Array *pA, const Array *pB) {
 }
 
 static inline bool Tequals_string(const Array *pA, const Array *pB) {
-  return (pA->constReal<QChar>() == pB->constReal<QChar>());
+  return (pA->constReal<FMChar>() == pB->constReal<FMChar>());
 }
 
 static inline bool Tequals_cell(const Array *pA, const Array *pB) {
@@ -1034,11 +1033,11 @@ double Array::asDouble() const {
   return (this->toClass(Double).constRealScalar<double>());
 }
 
-QString Array::asString() const {
-  if (isEmpty()) return QString();
+FMString Array::asString() const {
+  if (isEmpty()) return FMString();
   if (m_type.Class != StringArray) throw Exception("Cannot convert array to string");
-  const BasicArray<QChar> &p(constReal<QChar>());
-  QString ret;
+  const BasicArray<FMChar> &p(constReal<FMChar>());
+  FMString ret;
   for (int i=0;i<p.length();i++)
     ret += p[i+1];
   return ret;

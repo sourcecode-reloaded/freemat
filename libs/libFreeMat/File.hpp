@@ -21,14 +21,14 @@
 #define __File_hpp__
 #include <stdio.h>
 #include "Stream.hpp"
-#include <QString>
+#include "FMLib.hpp"
 
 class File : public Stream{
   bool autoclose;
   FILE *fp;
 public:
   // Create a file with the given access code
-  File(QString filename, QString accessmode);
+  File(FMString filename, FMString accessmode);
   File(FILE*afp);
   // Close the file
   virtual ~File();

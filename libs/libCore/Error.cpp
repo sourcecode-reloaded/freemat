@@ -44,7 +44,7 @@ ArrayVector ErrorCountFunction(int nargout, const ArrayVector& arg,
   return ArrayVector(Array(double(eval->getErrorCount())));
 }
 
-static QString BoolToFlag(bool t)
+static FMString BoolToFlag(bool t)
 {
   if (t) return "on";
   return "off";
@@ -60,7 +60,7 @@ ArrayVector WarningFunction(int nargout, const ArrayVector& arg, Interpreter* ev
     return Array(BoolToFlag(eval->getEnableWarnings()));
   if (!(arg[0].isString()))
     throw Exception("Input to error function must be a string");
-  QString txt = arg[0].asString();
+  FMString txt = arg[0].asString();
   if (txt.toLower() == "on")
     {
       Array ret = Array(BoolToFlag(eval->getEnableWarnings()));
@@ -85,7 +85,7 @@ ArrayVector WarningFunction(int nargout, const ArrayVector& arg, Interpreter* ev
 ArrayVector ErrorFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0)
     return ArrayVector();
-  QString etxt(arg[0].asString());
+  FMString etxt(arg[0].asString());
   if (!etxt.isEmpty()) 
     throw Exception(etxt);
   return ArrayVector();

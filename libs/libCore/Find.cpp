@@ -249,7 +249,7 @@ ArrayVector FindFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() > 1)
     k  = arg[1].asInteger();
   if (arg.size() == 3) {
-    QString flag = arg[2].asString().toLower();
+    FMString flag = arg[2].asString().toLower();
     if (flag=="first")
       first_flag = true;
     else if (flag=="last")

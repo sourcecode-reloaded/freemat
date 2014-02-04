@@ -20,8 +20,7 @@
 #ifndef __BLAS_DYN_LINK_H
 #define __BLAS_DYN_LINK_H
 
-#include <QString>
-#include <QLibrary> 
+#include "QString.hpp"
 #include <vector>
 typedef int integer;
 typedef char *address;

@@ -27,11 +27,8 @@
 #include "Exception.hpp"
 #include "Types.hpp"
 #include <vector>
-#include <QList>
-#include <QMutex>
-#include <QMutexLocker>
+#include "FMLib.hpp"
 #include <stdarg.h>
-#include <QDebug>
 #include "DebugStream.hpp"
 
 /**
@@ -112,16 +109,16 @@ class Context {
   /**
    * The normal stack of scopes.
    */
-  QVector<ScopePtr> scopestack;
+  FMVector<ScopePtr> scopestack;
   /**
    * The stack of scopes that have been "bypassed"
    */
-  QList<ScopePtr> bypassstack;
+  FMList<ScopePtr> bypassstack;
   /**
    * The stack of scopes that have been "reserved" -- need it
    * because we need to move scopes out of sequence.
    */
-  QList<ScopePtr> reserveStack;
+  FMList<ScopePtr> reserveStack;
   /**
    * The table of functions
    */
@@ -137,11 +134,11 @@ class Context {
   /**
    * The set of captured mfunctions
    */ 
-  QMultiMap<QString,FuncPtr> mFunctions;
+  FMMultiMap<FMString,FuncPtr> mFunctions;
   /**
    * Mutex to control access to this context class.
    */
-  QMutex mutex;
+  //  FMMutex mutex;
   /**
    * Pointer to current scope - must be an active scope -- 
    * inactive scopes are used for debug tracking only
@@ -160,7 +157,7 @@ public:
    * Create a context and initialize it with a global scope and a 
    * base scope.
    */
-  Context(ScopePtr global) : mutex(QMutex::Recursive) {
+  Context(ScopePtr global) {//: mutex() {  //FMMutex::Recursive) {
     scopestack.push_back(global);
     pushScope("base");
     topScope = scopestack.front();
@@ -170,13 +167,13 @@ public:
   }
   void debugDump() {
     for (int i=0;i<scopestack.size();i++) {
-      qDebug() << "Scope " << i << " " << scopestack[i]->getName() << scopestack[i]->isActive() << scopestack[i]->listAllVariables();
+      dbout << "Scope " << i << " " << scopestack[i]->getName() << scopestack[i]->isActive() << scopestack[i]->listAllVariables();
     }
     for (int i=0;i<bypassstack.size();i++) {
-      qDebug() << "bypass " << i << " " << bypassstack[i]->getName() << bypassstack[i]->isActive() << bypassstack[i]->listAllVariables();
+      dbout << "bypass " << i << " " << bypassstack[i]->getName() << bypassstack[i]->isActive() << bypassstack[i]->listAllVariables();
     }
     for (int i=0;i<reserveStack.size();i++) {
-      qDebug() << "reserve " << i << " " << reserveStack[i]->getName() << reserveStack[i]->isActive() << reserveStack[i]->listAllVariables();
+      dbout << "reserve " << i << " " << reserveStack[i]->getName() << reserveStack[i]->isActive() << reserveStack[i]->listAllVariables();
     }
   }
   /**
@@ -185,9 +182,9 @@ public:
    * to access the context (which is "owned" by the Interpreter
    * thread).
    */
-  inline QMutex* getMutex() {
-    return &mutex;
-  }
+  // inline FMMutex* getMutex() {
+  //   return &mutex;
+  // }
   inline bool isScopeActive() const {
     return bottomScope->isActive();
   }
@@ -213,10 +210,10 @@ public:
   inline void setScopeTokenID(int x) {
     bottomScope->setTokenID(x);
   }
-  inline QString scopeDetailString() {
+  inline FMString scopeDetailString() {
     return bottomScope->detailString();
   }
-  inline void setScopeDetailString(QString x) {
+  inline void setScopeDetailString(FMString x) {
     bottomScope->setDetailString(x);
   }
   inline int scopeNargin() {
@@ -232,7 +229,7 @@ public:
     activeScope->setNargout(x);
   }
   inline void updateScopePointers() {
-    QMutexLocker lock(&mutex);
+    //    FMMutexLocker lock(&mutex);
     if (!scopestack.isEmpty()) {
       topScope = scopestack.front();
       bottomScope = scopestack.back();
@@ -242,13 +239,13 @@ public:
     }    
   }
   inline void reserveScope() {
-    QMutexLocker lock(&mutex);
+    //    FMMutexLocker lock(&mutex);
     reserveStack.push_back(scopestack.back());
     scopestack.pop_back();
     updateScopePointers();
   }
   inline void unreserveScope() {
-    QMutexLocker lock(&mutex);
+    //    FMMutexLocker lock(&mutex);
     if (reserveStack.size()>0) {
       scopestack.push_back(reserveStack.back());
       reserveStack.pop_back();
@@ -262,7 +259,7 @@ public:
    * a count of -1 means all scopes are bypassed (except the base scope)
    */
   inline void bypassScope(int count) {
-    QMutexLocker lock(&mutex);
+    //    FMMutexLocker lock(&mutex);
     if (count < 0) 
       count = (scopestack.size()-2);
     if (count > scopestack.size()) return;
@@ -273,7 +270,7 @@ public:
     updateScopePointers();
   }
   inline void restoreScope(int count) {
-    QMutexLocker lock(&mutex);
+    //    FMMutexLocker lock(&mutex);
     if (count > bypassstack.size()) return;
     for (int i=0;i<count;i++) {
       scopestack.push_back(bypassstack.back());
@@ -286,14 +283,14 @@ public:
    * restoreBypassedScopes, or memory leaks will occur.
    */
   inline void restoreBypassedScopes() {
-    QMutexLocker lock(&mutex);
+    //    FMMutexLocker lock(&mutex);
     for (int i=0;i<bypassstack.size();i++)
       scopestack.push_back(bypassstack[bypassstack.size()-1-i]);
     bypassstack.clear();
     updateScopePointers();
   }
   inline ScopePtr lastActiveScope() {
-    QMutexLocker lock(&mutex);
+    //    FMMutexLocker lock(&mutex);
     for (int i=scopestack.size()-1;i>=0;i--)
       if (scopestack[i]->isActive()) return scopestack[i];
     return scopestack.front();
@@ -301,8 +298,8 @@ public:
   /**
    * Push the given scope onto the bottom of the scope stack.
    */
-  inline void pushScope(QString name, QString detail = QString(), bool nestflag = false) {
-    QMutexLocker lock(&mutex);
+  inline void pushScope(FMString name, FMString detail = FMString(), bool nestflag = false) {
+    //    FMMutexLocker lock(&mutex);
     if (scopestack.size() > 100)
       throw Exception("Allowable stack depth exceeded...");
     Scope *t = new Scope(name,nestflag);
@@ -317,7 +314,7 @@ public:
    * Throws an Exception if the global scope is popped.
    */
   inline void popScope() {
-    QMutexLocker lock(&mutex);
+    //    FMMutexLocker lock(&mutex);
     if (scopestack.size() == 1)
       throw Exception("Attempt to pop global scope off of context stack!");
     scopestack.pop_back();
@@ -333,9 +330,9 @@ public:
    * scope if the array is in the global list, and mangled in
    * global list if it is persistent.  
    */
-  inline void insertVariable(const QString& varName, const Array& var) {
+  inline void insertVariable(const FMString& varName, const Array& var) {
     ScopePtr active;
-    QString mapName;
+    FMString mapName;
 
     if (activeScope->isVariablePersistent(varName)) {
       mapName = activeScope->getMangledName(varName);
@@ -354,7 +351,7 @@ public:
    * Insert a variable into the local scope - do not check the
    * global list.
    */
-  inline void insertVariableLocally(QString varName, const Array& var) {
+  inline void insertVariableLocally(FMString varName, const Array& var) {
     activeScope->insertVariable(varName,var);
   }
   /**
@@ -371,9 +368,9 @@ public:
    * with the given name, and inserted into the scope that was
    * searched.  A pointer to this newly created variable is returned.
    */
-  inline ArrayReference lookupVariable(const QString& varName) {
+  inline ArrayReference lookupVariable(const FMString& varName) {
     ScopePtr active;
-    QString mapName;
+    FMString mapName;
     bool global = false;
     if (activeScope->isVariablePersistent(varName)) {
       mapName = activeScope->getMangledName(varName);
@@ -405,7 +402,7 @@ public:
     }
     return (ArrayReference(active->lookupVariable(mapName),global,active));
   }
-  inline bool variableLocalToCurrentScope(QString varName) {
+  inline bool variableLocalToCurrentScope(FMString varName) {
     return activeScope->variableLocal(varName);
   }
   inline void setVariablesAccessed(StringVector va) {
@@ -417,7 +414,7 @@ public:
   /**
    * Look for a variable, but only locally.
    */
-  inline Array* lookupVariableLocally(QString varName) {
+  inline Array* lookupVariableLocally(FMString varName) {
     return activeScope->lookupVariable(varName);
   }
   /**
@@ -431,7 +428,7 @@ public:
   /**
    * Remove a function definition from the code table.
    */
-  inline void deleteFunction(const QString& funcName) {
+  inline void deleteFunction(const FMString& funcName) {
     codeTab.deleteSymbol(funcName);
   }
   /**
@@ -451,8 +448,8 @@ public:
   /**
    * Lookup a captured m function
    */
-  inline FuncPtr lookupCapturedMFunction(const QString& name, const QString& filename) {
-    QList<FuncPtr> matches = mFunctions.values(name);
+  inline FuncPtr lookupCapturedMFunction(const FMString& name, const FMString& filename) {
+    FMList<FuncPtr> matches = mFunctions.values(name);
     for (int i=0;i<matches.size();i++)
       if (((MFunctionDef*)matches[i])->fileName == filename)
 	return matches[i];
@@ -461,7 +458,7 @@ public:
   /**
    * Lookup a builtin function
    */
-  inline FuncPtr lookupBuiltinFunction(const QString& funcName) {
+  inline FuncPtr lookupBuiltinFunction(const FMString& funcName) {
     FuncPtr* ret = builtinTab.findSymbol(funcName);
     if (ret) 
       return *ret;
@@ -471,7 +468,7 @@ public:
   /**
    * Add a built in function to the global scope with the given name.
    */
-  inline void addFunction(QString name, BuiltInFuncPtr fptr, bool jitsafe, int argc_in, int argc_out, ...) {
+  inline void addFunction(FMString name, BuiltInFuncPtr fptr, bool jitsafe, int argc_in, int argc_out, ...) {
     StringVector args;
     va_list argp;
     if (argc_in>0) {
@@ -479,13 +476,13 @@ public:
       for (int i=0;i<argc_in;i++) {
 	const char *t = va_arg(argp, const char *);
 	if (!t) {
-	  qDebug() << "addFunction for function " << 
+	  dbout << "addFunction for function " << 
 	    name << " is wrong!\n";
 	}
 	args.push_back(t);
       }
       if (va_arg(argp,const char *) != NULL) {
-	qDebug() << "addFunction for function " << 
+	dbout << "addFunction for function " << 
 	  name << " is wrong!\n";
       }
       va_end(argp);
@@ -500,13 +497,13 @@ public:
     f2def->jitsafe = jitsafe;
     insertFunction(f2def,false);  
     if (builtinTab.hasSymbol(name))
-      qDebug() << "function " << name << " is already in the builtin table";
+      dbout << "function " << name << " is already in the builtin table";
     builtinTab.insertSymbol(name,f2def);
   }
   /**
    * Add a special function to the global scope with the given name.
    */
-  inline void addSpecialFunction(QString name, SpecialFuncPtr fptr, bool jitsafe, int argc_in, int argc_out, ...) {
+  inline void addSpecialFunction(FMString name, SpecialFuncPtr fptr, bool jitsafe, int argc_in, int argc_out, ...) {
     StringVector args;
     va_list argp;
     if (argc_in>0) {
@@ -514,13 +511,13 @@ public:
       for (int i=0;i<argc_in;i++) {
 	const char *t = va_arg(argp, const char *);
 	if (!t) {
-	  qDebug() << "addSpecialFunction for function " << 
+	  dbout << "addSpecialFunction for function " << 
 	    (name) << " is wrong!\n";
 	}
 	args.push_back(t);
       }
       if (va_arg(argp,const char *) != NULL) {
-	qDebug() << "addSpecialFunction for function " << 
+	dbout << "addSpecialFunction for function " << 
 	  (name) << " is wrong!\n";
       }
       va_end(argp);
@@ -535,14 +532,14 @@ public:
     f2def->jitsafe = jitsafe;
     insertFunction(f2def,false);
     if (builtinTab.hasSymbol(name))
-      qDebug() << "function " << name << " is already in the builtin table";
+      dbout << "function " << name << " is already in the builtin table";
     builtinTab.insertSymbol(name,f2def);
   }
   /**
    * Add a built in function to the global scope with the given name
    * and tag it as a graphics function
    */
-  inline void addGfxFunction(QString name, BuiltInFuncPtr fptr, bool jitsafe, int argc_in, int argc_out, ...) {
+  inline void addGfxFunction(FMString name, BuiltInFuncPtr fptr, bool jitsafe, int argc_in, int argc_out, ...) {
     StringVector args;
     va_list argp;
     if (argc_in>0) {
@@ -550,13 +547,13 @@ public:
       for (int i=0;i<argc_in;i++) {
 	const char *t = va_arg(argp, const char *);
 	if (!t) {
-	  qDebug() << "addGfxFunction for function " << 
+	  dbout << "addGfxFunction for function " << 
 	    (name) << " is wrong!\n";
 	}
 	args.push_back(t);
       }
       if (va_arg(argp,const char *) != NULL) {
-	qDebug() << "addGfxFunction for function " << 
+	dbout << "addGfxFunction for function " << 
 	  (name) << " is wrong!\n";
       }
       va_end(argp);
@@ -572,14 +569,14 @@ public:
     f2def->jitsafe = jitsafe;
     insertFunction(f2def,false);  
     if (builtinTab.hasSymbol(name))
-      qDebug() << "function " << name << " is already in the builtin table";
+      dbout << "function " << name << " is already in the builtin table";
     builtinTab.insertSymbol(name,f2def);
   }
   /**
    * Add a special function to the global scope with the given name, and
    * tag it as a graphics function
    */
-  inline void addGfxSpecialFunction(QString name, SpecialFuncPtr fptr, bool jitsafe, int argc_in, int argc_out, ...) {
+  inline void addGfxSpecialFunction(FMString name, SpecialFuncPtr fptr, bool jitsafe, int argc_in, int argc_out, ...) {
     StringVector args;
     va_list argp;
     if (argc_in>0) {
@@ -587,13 +584,13 @@ public:
       for (int i=0;i<argc_in;i++) {
 	const char *t = va_arg(argp, const char *);
 	if (!t) {
-	  qDebug() << "addGfxSpecialFunction for function " << 
+	  dbout << "addGfxSpecialFunction for function " << 
 	    (name) << " is wrong!\n";
 	}
 	args.push_back(t);
       }
       if (va_arg(argp,const char *) != NULL) {
-	qDebug() << "addGfxSpecialFunction for function " << 
+	dbout << "addGfxSpecialFunction for function " << 
 	  (name) << " is wrong!\n";
       }
       va_end(argp);
@@ -609,7 +606,7 @@ public:
     f2def->jitsafe = jitsafe;
     insertFunction(f2def,false);
     if (builtinTab.hasSymbol(name))
-      qDebug() << "function " << name << " is already in the builtin table";
+      dbout << "function " << name << " is already in the builtin table";
     builtinTab.insertSymbol(name,f2def);
   }
   
@@ -635,7 +632,7 @@ public:
     activeScope->clearPersistentVariableList();
   }
 
-  inline StringVector getCompletions(const QString& prefix) {
+  inline StringVector getCompletions(const FMString& prefix) {
     StringVector local_completions = activeScope->getCompletions(prefix);
     StringVector global_completions = topScope->getCompletions(prefix);
     StringVector code_completions = codeTab.getCompletions(prefix);
@@ -647,7 +644,7 @@ public:
     return completions;
   }
 
-  inline bool lookupFunction(QString funcName, FuncPtr& val) {
+  inline bool lookupFunction(FMString funcName, FuncPtr& val) {
     FuncPtr* ret = codeTab.findSymbol(funcName);
     if (ret) {
       val = *ret;
@@ -665,7 +662,7 @@ public:
    *     persistent variable.  If the variable does not exist in the
    *     global scope, then an empty variable is inserted.
    */
-  inline void addPersistentVariable(QString var) {
+  inline void addPersistentVariable(FMString var) {
     // Delete local variables with this name
     activeScope->deleteVariable(var);
     // Delete global variables with this name
@@ -677,7 +674,7 @@ public:
    * scope.  If the variable does not exist in the global scope, an
    * empty variable is added.
    */
-  inline void addGlobalVariable(QString var) {
+  inline void addGlobalVariable(FMString var) {
     // Delete local variables with this name
     activeScope->deleteVariable(var);
     // Delete global persistent variables with this name
@@ -685,14 +682,14 @@ public:
     // Add a point in the local scope to the global variable
     activeScope->addGlobalVariablePointer(var);
   }
-  inline void deleteGlobalVariable(QString var) {
+  inline void deleteGlobalVariable(FMString var) {
     topScope->deleteVariable(var);
   }
   /**
    * Delete a variable if its defined.  Handles global and persistent
    * variables also.
    */
-  inline void deleteVariable(QString var) {
+  inline void deleteVariable(FMString var) {
     if (isVariableGlobal(var)) {
       topScope->deleteVariable(var);
       activeScope->deleteGlobalVariablePointer(var);
@@ -723,19 +720,19 @@ public:
   inline void setScopeNesting(bool x) {
     bottomScope->setNestingFlag(x);
   }
-  inline QString activeScopeName() {
+  inline FMString activeScopeName() {
     return activeScope->getName();
   }
-  inline QString activeScopeDetailString() {
+  inline FMString activeScopeDetailString() {
     return activeScope->detailString();
   }
-  inline QString scopeName() {
+  inline FMString scopeName() {
     return bottomScope->getName();
   }
-  inline bool currentScopeNests(QString name) {
+  inline bool currentScopeNests(FMString name) {
     return activeScope->nests(name);
   }
-  inline bool currentScopeVariableAccessed(QString name) {
+  inline bool currentScopeVariableAccessed(FMString name) {
     return activeScope->variableAccessed(name);
   }
   inline void deactivateCurrentScope() {
@@ -752,21 +749,21 @@ public:
   /**
    * Returns true if the given variable is global.
    */
-  inline bool isVariableGlobal(const QString& varName) {
+  inline bool isVariableGlobal(const FMString& varName) {
     return activeScope->isVariableGlobal(varName);
   }
   /**
    * Returns true if the given variable is persistent
    */
-  inline bool isVariablePersistent(const QString& varName) {
+  inline bool isVariablePersistent(const FMString& varName) {
     return activeScope->isVariablePersistent(varName);
   }
 
   /**
    * Returns function and line number
    */
-  inline QString sampleIP(unsigned &ctxt){
-      QMutexLocker lock(&mutex);
+  inline FMString sampleIP(unsigned &ctxt){
+    //      FMMutexLocker lock(&mutex);
       ctxt = this->scopeTokenID() & 0x0000FFFF; 
       return this->scopeName();
   }

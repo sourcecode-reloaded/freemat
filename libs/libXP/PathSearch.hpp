@@ -20,20 +20,19 @@
 #ifndef __PathSearch_hpp__
 #define __PathSearch_hpp__
 
-#include <QString>
-#include <QStringList>
+#include "FMLib.hpp"
 
 class PathSearcher{
-  QString path;
-  QStringList pathList;
+  FMString path;
+  FMStringList pathList;
 public:
-  PathSearcher(QString mpath);
-  QString ResolvePath(QString fname);
+  PathSearcher(FMString mpath);
+  FMString ResolvePath(FMString fname);
 };
-bool FileExists(QString filename);
-QString GetPathOnly(QString a);
-QString GetFilenameOnly(QString a);
-QString CheckEndSlash(QString a);
+bool FileExists(FMString filename);
+FMString GetPathOnly(FMString a);
+FMString GetFilenameOnly(FMString a);
+FMString CheckEndSlash(FMString a);
 
 #endif  
 

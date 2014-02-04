@@ -21,9 +21,9 @@
 #include "HandleList.hpp"
 #include "Algorithms.hpp"
 #include "Utils.hpp"
-#include <QTextCodec>
-#include <QFile>
-#include <QTextStream>
+#include "QString.hpp"
+//#include <QFile>
+//#include <QTextStream>
 
 extern HandleList<FilePtr*> fileHandles;
 

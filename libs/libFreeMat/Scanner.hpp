@@ -20,17 +20,16 @@
 #define __Scanner_hpp__
 
 #include "Token.hpp"
-#include <QString>
-#include <QStack>
+#include "FMLib.hpp"
 
 class Scanner {
 protected:
-  QString m_filename;
-  QString m_text;
+  FMString m_filename;
+  FMString m_text;
   int m_ptr;
   int m_strlen;
   int m_linenumber;
-  QStack<bool> m_ignorews;
+  FMStack<bool> m_ignorews;
   Token m_tok;
   bool m_tokValid;
   bool m_debugFlag;
@@ -47,7 +46,7 @@ protected:
   void fetchBlob();
   bool tryFetchBinary(const char* op, TokenValueType tok);
   bool tryFetchTrinary(const char* op, TokenValueType tok);
-  void setToken(TokenValueType tok, QString text = QString());
+  void setToken(TokenValueType tok, FMString text = FMString());
   bool isBreakpointLine(int num);
   void deleteBreakpoint(int num);
   virtual void fetchWhitespace();
@@ -55,7 +54,7 @@ protected:
   virtual void fetch();
   virtual void fetchIdentifier();
 public:
-  Scanner(QString buf, QString fname);
+  Scanner(FMString buf, FMString fname);
   virtual ~Scanner() {}
   // Methods accessed by the parser
   const Token& next();
@@ -71,9 +70,9 @@ public:
   bool peek(int chars, TokenValueType tok);
   unsigned position() {return m_ptr;}
   unsigned contextNum();
-  QString context(unsigned pos);
-  QString context();
-  QString snippet(unsigned pos1, unsigned pos2);
+  FMString context(unsigned pos);
+  FMString context();
+  FMString snippet(unsigned pos1, unsigned pos2);
   bool inContinuationState();
   bool inBracket();
 };

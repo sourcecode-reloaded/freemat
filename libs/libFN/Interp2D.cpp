@@ -197,7 +197,7 @@ ArrayVector Interp2Function(int nargout, const ArrayVector& arg) {
   if (arg.size() >= 4) {
     if (!arg[3].isString())
       throw Exception("method must be a string");
-    QString method_c = arg[3].asString();
+    FMString method_c = arg[3].asString();
     if (method_c=="nearest")
       method = 0;
     else if (method_c=="linear")

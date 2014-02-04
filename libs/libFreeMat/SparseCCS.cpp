@@ -30,8 +30,8 @@
 // In: 1 1 2 2 3 3 3 3 4 5 5
 // out: 
 
-QVector<uint32> CompressCCSCols(const QVector<uint32> &cols, index_t colcount) {
-  QVector<uint32> y(int(colcount+1));
+FMVector<uint32> CompressCCSCols(const FMVector<uint32> &cols, index_t colcount) {
+  FMVector<uint32> y(int(colcount+1));
   // Scan through the columns
   int mp=0;
   for (unsigned col=1;col<=unsigned(colcount+1);col++) {
@@ -41,8 +41,8 @@ QVector<uint32> CompressCCSCols(const QVector<uint32> &cols, index_t colcount) {
   return y;
 }
 
-QVector<uint32> DecompressCCSCols(const QVector<uint32> &colstart, index_t colcount) {
-  QVector<uint32> x;
+FMVector<uint32> DecompressCCSCols(const FMVector<uint32> &colstart, index_t colcount) {
+  FMVector<uint32> x;
   for (int p=1;p<colstart.size();p++) {
     for (unsigned n=0;n<unsigned(colstart[p] - colstart[p-1]);n++)
       x << p;
@@ -51,8 +51,8 @@ QVector<uint32> DecompressCCSCols(const QVector<uint32> &colstart, index_t colco
 }
 
 template <typename T>
-static void TSparseMatToIJV(const SparseMatrix<T>&A, QVector<index_t> &rows,
-			    QVector<index_t> &cols, QVector<T> &Adata) {
+static void TSparseMatToIJV(const SparseMatrix<T>&A, FMVector<index_t> &rows,
+			    FMVector<index_t> &cols, FMVector<T> &Adata) {
   ConstSparseIterator<T> iter(&A);
   while (iter.isValid()) {
     cols << iter.col();
@@ -64,8 +64,8 @@ static void TSparseMatToIJV(const SparseMatrix<T>&A, QVector<index_t> &rows,
 
 template <typename T>
 static void TSparseMatToIJV(const SparseMatrix<T> &Areal, const SparseMatrix<T> &Aimag,
-			    QVector<index_t> &rows,	QVector<index_t> &cols,
-			    QVector<T> &Areal_part,	QVector<T> &Aimag_part) {
+			    FMVector<index_t> &rows,	FMVector<index_t> &cols,
+			    FMVector<T> &Areal_part,	FMVector<T> &Aimag_part) {
   ConstComplexSparseIterator<T> iter(&Areal,&Aimag);
   while (iter.isValid()) {
     cols << iter.col();
@@ -78,10 +78,10 @@ static void TSparseMatToIJV(const SparseMatrix<T> &Areal, const SparseMatrix<T> 
 
 template <typename T>
 static Array TSparseToIJV(const Array &A, Array &rows, Array &cols) {
-  QVector<index_t> adata_rows;
-  QVector<index_t> adata_cols;
-  QVector<T> adata_real;
-  QVector<T> adata_imag;
+  FMVector<index_t> adata_rows;
+  FMVector<index_t> adata_cols;
+  FMVector<T> adata_real;
+  FMVector<T> adata_imag;
   if (A.allReal()) {
     TSparseMatToIJV(A.constRealSparse<T>(),adata_rows,adata_cols,adata_real);
     rows = Array(ToBasicArray(adata_rows));

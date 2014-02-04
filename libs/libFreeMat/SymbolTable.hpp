@@ -19,35 +19,35 @@
 
 #ifndef __SYMBOLTABLE_HPP__
 #define __SYMBOLTABLE_HPP__
-#include <QHash>
+#include "FMLib.hpp"
 #include "Types.hpp"
 
 namespace FM { //have to use namespace to avoid conflict with llvm::SymbolTable
 
 	template <class T>
 	class SymbolTable {
-	  QHash<QString,T> map;
+	  FMMap<FMString,T> map;
 	public:
 	  SymbolTable() { }
 	  ~SymbolTable() { }
-	  T* findSymbol(const QString& key) {
+	  T* findSymbol(const FMString& key) {
 		if (map.contains(key)) {
 		  return &(map[key]);
 		} 
 		return 0;
 	  }
-	  bool hasSymbol(const QString& key) {
+	  bool hasSymbol(const FMString& key) {
 	    return map.contains(key);
 	  }
-	  void deleteSymbol(const QString& key) {
+	  void deleteSymbol(const FMString& key) {
 		map.remove(key);
 	  }
-	  void insertSymbol(const QString& key, const T& val) {
+	  void insertSymbol(const FMString& key, const T& val) {
 		map.insert(key,val);
 	  }
-	  StringVector getCompletions(const QString& prefix) {
+	  StringVector getCompletions(const FMString& prefix) {
 		StringVector retvec;
-		for (typename QHash<QString,T>::const_iterator i=map.constBegin();i != map.constEnd();++i) {
+		for (typename FMMap<FMString,T>::const_iterator i=map.constBegin();i != map.constEnd();++i) {
 		  if ((i.key().size() > prefix.size()) &&
 		  (i.key().left(prefix.size()) == prefix))
 		retvec << i.key();

@@ -43,7 +43,7 @@ Array AnonFuncConstructor(Interpreter* eval, const Tree & t) {
   }
   Array workspace(StructConstructor(fields,vals));
   Array args(CellArrayFromArray(CellArrayFromStringVector(arguments)));
-  Array expr(Array(QString(t.text())));
+  Array expr(Array(FMString(t.text())));
   StringVector fieldnames;
   fieldnames << "args" << "workspace" << "expr";
   ArrayVector values;
@@ -53,9 +53,9 @@ Array AnonFuncConstructor(Interpreter* eval, const Tree & t) {
   return ret;
 }
 
-QString AnonFuncToString(const Array &a)
+FMString AnonFuncToString(const Array &a)
 {
-  QString ret = " @(";
+  FMString ret = " @(";
   StringVector argnames(StringVectorFromArray(LOOKUP(a,"args")));
   if (argnames.size() > 0) 
     ret += argnames[0];
@@ -90,8 +90,8 @@ ArrayVector AnonFuncSubsrefFunction(int nargout, const ArrayVector& arg, Interpr
   Context *context = eval->getContext();
   // Borrow the callers scope name and detail... hope this doesn't
   // have unintended side effects... err...
-  QString scopeName;
-  QString scopeDetail;
+  FMString scopeName;
+  FMString scopeDetail;
   {
     ParentScopeLocker lock(context);
     scopeName = context->scopeName();
@@ -113,7 +113,7 @@ ArrayVector AnonFuncSubsrefFunction(int nargout, const ArrayVector& arg, Interpr
   }
   // Assign the arguments to internal variables.
   StringVector args(StringVectorFromArray(LOOKUP(arg[0],"args")));
-  for (int i=0;i<qMin(argSet.size(),args.size());i++) 
+  for (int i=0;i<qMin<int>(argSet.size(),args.size());i++) 
     context->insertVariableLocally(args[i],argSet[i]);
   // We need to build a parse tree
   const Tree & expTree(ParseExpressionString(LOOKUP(arg[0],"expr").asString()));
@@ -141,8 +141,8 @@ ArrayVector AnonFuncFevalFunction(int nargout, const ArrayVector& arg, Interpret
   Context *context = eval->getContext();
   // Borrow the callers scope name and detail... hope this doesn't
   // have unintended side effects... err...
-  QString scopeName;
-  QString scopeDetail;
+  FMString scopeName;
+  FMString scopeDetail;
   {
     ParentScopeLocker lock(context);
     scopeName = context->scopeName();
@@ -154,7 +154,7 @@ ArrayVector AnonFuncFevalFunction(int nargout, const ArrayVector& arg, Interpret
     context->insertVariableLocally(sp.fieldName(i),sp[i].get(1));
   // Assign the arguments to internal variables.
   StringVector argnames(StringVectorFromArray(LOOKUP(arg[0],"args")));
-  for (int i=0;i<qMin(arg.size()-1,argnames.size());i++) 
+  for (int i=0;i<qMin<int>(arg.size()-1,argnames.size());i++) 
     context->insertVariableLocally(argnames[i],arg[i+1]);
   // We need to build a parse tree
   const Tree & expTree(ParseExpressionString(LOOKUP(arg[0],"expr").asString()));

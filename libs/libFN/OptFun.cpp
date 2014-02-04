@@ -67,11 +67,11 @@ ArrayVector FitFunFunction(int nargout, const ArrayVector& arg, Interpreter* eva
   FuncPtr funcDef;
   Array fptr(arg[0]);
   if (fptr.isString())  {
-    QString fname = fptr.asString();
+    FMString fname = fptr.asString();
     Context *context = eval->getContext();
     eval->rescanPath();
     if (!context->lookupFunction(fname,funcDef))
-      throw Exception(QString("function ") + fname + " undefined!");
+      throw Exception(FMString("function ") + fname + " undefined!");
     funcDef->updateCode(eval);
     if (funcDef->scriptFlag)
       throw Exception("cannot use feval on a script");

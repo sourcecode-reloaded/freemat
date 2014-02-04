@@ -19,7 +19,7 @@
 #include <QtCore>
 #include "Array.hpp"
 
-//@@Signature
+//Signature
 //function tic TicFunction jitsafe
 //inputs none
 //outputs none
@@ -32,7 +32,7 @@ ArrayVector TicFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector();
 }
 
-//@@Signature
+//Signature
 //function clock ClockFunction jitsafe
 //inputs none
 //outputs y
@@ -50,7 +50,7 @@ ArrayVector ClockFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(retvec);
 }
 
-//@@Signature
+//Signature
 //function clocktotime ClockToTimeFunction jitsafe
 //inputs x
 //outputs y
@@ -72,7 +72,7 @@ ArrayVector ClockToTimeFunction(int nargout, const ArrayVector& arg) {
 }
   
 
-//@@Signature
+//Signature
 //function toc TocFunction jitsafe
 //inputs none
 //outputs y

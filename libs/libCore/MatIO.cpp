@@ -27,7 +27,6 @@
 #include <time.h>
 #include "SparseCCS.hpp"
 #include "Struct.hpp"
-#include <QtCore>
 #include <zlib.h>
 #include "Algorithms.hpp"
 
@@ -246,17 +245,17 @@ Array MatIO::getStructArray(NTuple dm) {
     for (int j=0;j<fieldNameLen;j++)
       if (dp[i*fieldNameLen+j+1])
 	namelen++;
-    QString buffer(namelen,QChar(0));
+    FMString buffer(namelen,FMChar(0));
     for (int j=0;j<namelen;j++)
-      buffer[j] = QChar(dp[i*fieldNameLen+j+1]);
+      buffer[j] = FMChar(dp[i*fieldNameLen+j+1]);
     names.push_back(buffer);
   }
-  QVector<BasicArray<Array> > data;
+  FMVector<BasicArray<Array> > data;
   data.resize(fieldNameCount);
   for (int j=0;j<fieldNameCount;j++) {
     BasicArray<Array> dp(dm);
     for (index_t i=1;i<=dm.count();i++) {
-      bool atEof; QString name; bool match; bool global;
+      bool atEof; FMString name; bool match; bool global;
       dp[i] = getArray(atEof,name,match,global);
     }
     data[j] = dp;
@@ -269,7 +268,7 @@ Array MatIO::getStructArray(NTuple dm) {
 Array MatIO::getCellArray(NTuple dm) {
   BasicArray<Array> rp(dm);
   for (index_t i=1;i<=dm.count();i++) {
-    bool ateof; QString name; bool match; bool global;
+    bool ateof; FMString name; bool match; bool global;
     rp[i] = getArray(ateof,name,match,global);
   }
   return Array(rp);
@@ -308,9 +307,9 @@ void MatIO::putDataElement(const Array &x) {
   putUint32((uint32)DataType);
   putUint32(ByteCount);
   if (x.isString()) {
-    const BasicArray<QChar> &xdat(x.constReal<QChar>());
+    const BasicArray<FMChar> &xdat(x.constReal<FMChar>());
     for (index_t i=1;i<=xdat.length();i++) {
-      unsigned short code = xdat.get(i).unicode();
+      unsigned short code = xdat.get(i);
       WriteData(&code,2);
     }
   } else if (x.isScalar()) {
@@ -397,7 +396,7 @@ void MatIO::ReadCompressedBytes(void *dest, uint32 toread) {
   while (zstream->avail_out) {
     int ret = inflate(zstream,Z_SYNC_FLUSH);
     if (ret < 0)
-      throw Exception(QString("inflate failed with code: ") + ret);
+      throw Exception(FMString("inflate failed with code: ") + Stringify(ret));
   }
 }
 
@@ -489,7 +488,7 @@ void MatIO::putStructArray(const Array &x) {
   // Write it as an int32 
   Array fieldNameLength = Array(int32(maxlen));
   putDataElement(fieldNameLength);
-  Array fieldNameText(Transpose(StringArrayFromStringVector(fnames,QChar(0))));
+  Array fieldNameText(Transpose(StringArrayFromStringVector(fnames,FMChar(0))));
   fieldNameText.resize(NTuple(fieldNameText.rows()+1,fieldNameText.cols()));
   putDataElement(fieldNameText.toClass(Int8));
   for (int i=0;i<fieldNameCount;i++) {
@@ -500,7 +499,7 @@ void MatIO::putStructArray(const Array &x) {
 }
 
 void MatIO::putClassArray(const Array &x) {
-  QString className = x.constStructPtr().className();
+  FMString className = x.constStructPtr().className();
   Array classNameArray(className);
   putDataElement(classNameArray.toClass(Int8));
   putStructArray(x);
@@ -518,7 +517,7 @@ void MatIO::putCellArray(const Array &x) {
     putArray(rp[i]);
 }
 
-void MatIO::putArrayCompressed(const Array &x, QString name) {
+void MatIO::putArrayCompressed(const Array &x, FMString name) {
   int64 spos, fpos;
   // Set the write count to zero
   m_writecount = 0;
@@ -542,7 +541,7 @@ void MatIO::putArrayCompressed(const Array &x, QString name) {
 }
 
 //Write a matrix to the stream
-void MatIO::putArray(const Array &x, QString name, bool isGlobal) {
+void MatIO::putArray(const Array &x, FMString name, bool isGlobal) {
   Array aFlags(UInt32,NTuple(1,2));
   BasicArray<uint32> &dp(aFlags.real<uint32>());
   bool isComplex = x.isComplex();
@@ -571,7 +570,7 @@ void MatIO::putArray(const Array &x, QString name, bool isGlobal) {
 
 
 void MatIO::putArraySpecific(const Array &x, Array aFlags, 
-			     QString name, mxArrayTypes arrayType) {
+			     FMString name, mxArrayTypes arrayType) {
   putDataElement(aFlags);
   putDataElement(ConvertNTupleToArray(x.dimensions()).toClass(Int32));
   putDataElement(Array(name).toClass(Int8));
@@ -587,7 +586,7 @@ void MatIO::putArraySpecific(const Array &x, Array aFlags,
     putClassArray(x);
   else if (arrayType == mxSPARSE_CLASS)
     putSparseArray(x);
-  else throw Exception(QString("Unable to do this one :") + arrayType);
+  else throw Exception(FMString("Unable to do this one :") + Stringify(arrayType));
 }
 
 void MatIO::putNumericArray(const Array &x) {
@@ -599,7 +598,7 @@ void MatIO::putNumericArray(const Array &x) {
   }
 }
 
-Array MatIO::getArray(bool &atEof, QString &name, bool &match, bool &isGlobal) {
+Array MatIO::getArray(bool &atEof, FMString &name, bool &match, bool &isGlobal) {
   if (!m_compressed_data && m_fp->atEnd()) {
     atEof = true;
     return Array();
@@ -646,7 +645,7 @@ Array MatIO::getArray(bool &atEof, QString &name, bool &match, bool &isGlobal) {
   NTuple dm(ConvertArrayToNTuple(dims));
   Array namedata(getDataElement());
   Array namearray(namedata.toClass(StringArray));
-  QString tname = namearray.asString();
+  FMString tname = namearray.asString();
   match = true;
   name = tname;
   Array toret;
@@ -663,20 +662,20 @@ Array MatIO::getArray(bool &atEof, QString &name, bool &match, bool &isGlobal) {
   else if (arrayType == mxFUNCTION_CLASS)
     toret = getClassArray(dm);
   else
-    throw Exception(QString("Unable to do this one :") + arrayType);
+    throw Exception(FMString("Unable to do this one :") + Stringify(arrayType));
   if (isLogical)
     toret = toret.toClass(Bool);
   return toret;
 }
 
-MatIO::MatIO(QString filename, openMode mode) :
+MatIO::MatIO(FMString filename, openMode mode) :
   m_filename(filename), m_mode(mode), m_compressed_data(false) {
-  m_fp = new QFile(filename);
+  m_fp = new FMFile(filename);
   if (m_mode == writeMode) {
-    if (!m_fp->open(QIODevice::WriteOnly))
+    if (!m_fp->open("wb"))
       throw Exception("Unable to open file " + filename + " for writing");
   } else {
-    if (!m_fp->open(QIODevice::ReadOnly))
+    if (!m_fp->open("rb"))
       throw Exception("Unable to open file " + filename + " for reading");
   }
   m_endianSwap = false;
@@ -684,7 +683,7 @@ MatIO::MatIO(QString filename, openMode mode) :
   m_writecount = 0;
 }
 
-QString MatIO::getHeader() {
+FMString MatIO::getHeader() {
   // Read the header...
   char hdrtxt[124];
   if (m_fp->read(hdrtxt,124) != 124) throw Exception("Unable to read header - MAT file is corrupted or truncated");
@@ -697,14 +696,14 @@ QString MatIO::getHeader() {
     m_endianSwap = true;
   else 
     throw Exception("Unable to determine the byte order of the MAT file");
-  return QString(hdrtxt);
+  return FMString(hdrtxt);
 }
 
-void MatIO::putHeader(QString hdr) {
+void MatIO::putHeader(FMString hdr) {
   const char *hd = qPrintable(hdr);
   char hdrtxt[124];
   memset(hdrtxt,0,124);
-  memcpy(hdrtxt,hd,qMin(123,hdr.size()));
+  memcpy(hdrtxt,hd,qMin<int>(123,hdr.size()));
   if (m_fp->write(hdrtxt,124) != 124) throw Exception("Unable to write header - MAT file is corrupted");
   putUint16(0x100);
   putUint16('M' << 8 | 'I');
@@ -715,7 +714,7 @@ MatIO::~MatIO() {
   delete m_fp;
 }
 
-ArrayVector MatLoadFunction(int nargout, QString filename, 
+ArrayVector MatLoadFunction(int nargout, FMString filename, 
 			    StringVector varnames, bool regexpmode, Interpreter *eval) {
   StringVector fieldnames;
   ArrayVector fieldvalues;
@@ -724,7 +723,7 @@ ArrayVector MatLoadFunction(int nargout, QString filename,
   bool ateof = false;
   ParentScopeLocker lock(eval->getContext());
   while(!ateof) {
-    QString name;
+    FMString name;
     bool globalFlag = false;
     bool match = false;
     Array a(m.getArray(ateof,name,match,globalFlag));
@@ -747,7 +746,7 @@ ArrayVector MatLoadFunction(int nargout, QString filename,
     return ArrayVector(StructConstructor(fieldnames,fieldvalues));
 }
 
-ArrayVector MatSaveFunction(QString filename, StringVector names, Interpreter *eval) {
+ArrayVector MatSaveFunction(FMString filename, StringVector names, Interpreter *eval) {
   MatIO m(filename,MatIO::writeMode);
   Context *cntxt = eval->getContext();
   char header[116];
@@ -760,7 +759,7 @@ ArrayVector MatSaveFunction(QString filename, StringVector names, Interpreter *e
     if (toWrite.valid())
       m.putArray(*toWrite,names[i],cntxt->isVariableGlobal(names[i]));
     else
-      eval->warningMessage(QString("variable ") + names[i] + " does not exist to save");
+      eval->warningMessage(FMString("variable ") + names[i] + " does not exist to save");
   }
   return ArrayVector();
 }

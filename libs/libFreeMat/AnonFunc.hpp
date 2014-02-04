@@ -25,6 +25,6 @@
 #include "Tree.hpp"
 
 Array AnonFuncConstructor(Interpreter*, const Tree &);
-QString AnonFuncToString(const Array &a);
+FMString AnonFuncToString(const Array &a);
 
 #endif

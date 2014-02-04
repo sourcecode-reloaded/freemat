@@ -24,7 +24,7 @@
 #include "Exception.hpp"
 #include <algorithm>
 
-static QHash<QString, TokenValueType> fm_oct_reserved;
+static FMMap<FMString, TokenValueType> fm_oct_reserved;
 
 static bool fm_oct_reserved_initialized = false;
 
@@ -78,7 +78,7 @@ static bool isablank(TokenValueType a) {
   return (a==' ' || a=='\t' || a=='\r');
 }
 
-OctaveScanner::OctaveScanner(QString buf, QString fname) : Scanner(buf,fname) {
+OctaveScanner::OctaveScanner(FMString buf, FMString fname) : Scanner(buf,fname) {
   InitializeReservedTable();
 }
 
@@ -117,7 +117,7 @@ void OctaveScanner::fetchOther() {
       m_ptr++;
       return;
     }
-  setToken(m_text[m_ptr].unicode());
+  setToken(m_text[m_ptr]);
   if (m_text[m_ptr] == '[')
     m_bracketDepth++;
   if (m_text[m_ptr] == ']')
@@ -134,7 +134,7 @@ void OctaveScanner::fetchIdentifier() {
   int len = 0;
   while (isalnumus(ahead(len))) len++;
   // Collect the identifier into a string
-  QString ident(m_text.mid(m_ptr,len));
+  FMString ident(m_text.mid(m_ptr,len));
   if (fm_oct_reserved.contains(ident))
     setToken(fm_oct_reserved[ident]);
   else
@@ -150,7 +150,7 @@ void OctaveScanner::fetchOctString() {
   }
   if (ahead(len+1) == '\n')
     throw Exception("unterminated string" + context());
-  QString ret(m_text.mid(m_ptr+1,len));
+  FMString ret(m_text.mid(m_ptr+1,len));
   setToken(TOK_STRING,ret);
   m_ptr += len+2;
 }

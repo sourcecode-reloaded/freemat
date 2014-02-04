@@ -404,7 +404,7 @@ static void realSolveLinEq(int m, int n, T *c, T* a, T *b) {
   Tgesvx(&FACT, &TRANS, &N, &NRHS, A, &LDA, &AF, &LDAF, &IPIV, &EQUED, &R, &C, B,
 	 &LDB, X, &LDX, &RCOND, &FERR, &BERR, &WORK, &IWORK, &INFO,1,1,1);
   if ((INFO == N) || (INFO == N+1) || (RCOND < lamch<T>()))
-    WarningMessage(QString("Matrix is singular to working precision.  RCOND = %1\n").arg(RCOND));
+    WarningMessage(FMString("Matrix is singular to working precision.  RCOND = ") + Stringify(RCOND) + "\n");
 }
 
 // Solve A*C = B, where A is m x m, and B is m x n, all quantities are real.
@@ -714,7 +714,7 @@ static void complexSolveLinEq(int m, int n, T *c, T* a, T* b) {
   Tgesvx(&FACT, &TRANS, &N, &NRHS, A, &LDA, &AF, &LDAF, &IPIV, &EQUED, &R, &C, B,
 	 &LDB, X, &LDX, &RCOND, &FERR, &BERR, &WORK, &RWORK, &INFO, 1, 1, 1);
   if ((INFO == N) || (INFO == N+1) || (RCOND < lamch<T>())) {
-    WarningMessage(QString("Matrix is singular to working precision.  RCOND = %1\n").arg(RCOND));
+    WarningMessage(FMString("Matrix is singular to working precision.  RCOND = ") + Stringify(RCOND) + "\n");
   }
 }
 
@@ -735,8 +735,8 @@ static Array SolveLinearEqComplex(BasicArray<T> A, BasicArray<T> B) {
 // Only double precision currently supported by umfpack
 Array SparseSolveLinEq(const SparseMatrix<double> &A, const BasicArray<double> &B) {
 #if HAVE_UMFPACK
-  QVector<uint32> rowindx, colstart;
-  QVector<double> accsdata;
+  FMVector<uint32> rowindx, colstart;
+  FMVector<double> accsdata;
   SparseToCCS(A,rowindx,colstart,accsdata);
   double *null = (double *) NULL ;
   void *Symbolic, *Numeric ;
@@ -765,8 +765,8 @@ Array SparseSolveLinEq(const SparseMatrix<double> &A, const BasicArray<double> &
 Array SparseSolveLinEq(const SparseMatrix<double> &Ar, const SparseMatrix<double> &Ai,
 		      const BasicArray<double> &Br, const BasicArray<double> &Bi) {
 #if HAVE_UMFPACK
-  QVector<uint32> rowindx, colstart;
-  QVector<double> accsreal, accsimag;
+  FMVector<uint32> rowindx, colstart;
+  FMVector<double> accsreal, accsimag;
   SparseToCCS(Ar,Ai,rowindx,colstart,accsreal,accsimag);
   double *null = (double *) NULL ;
   void *Symbolic, *Numeric ;

@@ -19,22 +19,20 @@
 #ifndef __SparseMatrix_hpp__
 #define __SparseMatrix_hpp__
 
-#include <QMap>
-#include <QtGlobal>
-#include <QSet>
 #include <iostream>
 #include "Types.hpp"
 #include "NTuple.hpp"
 #include "BasicArray.hpp"
 #include "Cast.hpp"
 #include <cmath>
+#include "FMLib.hpp"
 
 template <typename T>
-class SparseSlice : public QMap<index_t,T> {
+class SparseSlice : public FMMap<index_t,T> {
 };
 
 template <typename T>
-class SparseData : public QMap<index_t,SparseSlice<T> > {
+class SparseData : public FMMap<index_t,SparseSlice<T> > {
 };
 
 template <typename T>
@@ -50,7 +48,9 @@ public:
   }
   const SparseData<T>& constData() const {return m_data;}
   SparseData<T>& data() {return m_data;}
-  SparseMatrix(QVector<index_t> row, QVector<index_t> col, QVector<T> val) {
+  SparseMatrix(FMVector<index_t> row, 
+	       FMVector<index_t> col, 
+	       FMVector<T> val) {
     if (!((row.size() == col.size()) &&
 	  (row.size() == val.size())))
       throw Exception("Invalid sizes for IJV style constructor");
@@ -58,8 +58,8 @@ public:
     index_t maxrow = 0;
     for (int i=0;i<row.size();i++) {
       m_data[col[i]][row[i]] = val[i];
-      maxcol = qMax(maxcol,col[i]);
-      maxrow = qMax(maxrow,row[i]);
+      maxcol = std::max<index_t>(maxcol,col[i]);
+      maxrow = std::max<index_t>(maxrow,row[i]);
     }
     m_dims = NTuple(maxrow,maxcol);
   }
@@ -155,7 +155,7 @@ public:
     return ret;
   }
   void deleteColumns(const IndexArray& index) {
-    QSet<uint64> delete_set;
+    FMSet<uint64> delete_set;
     for (index_t i=1;i<=index.length();i++)
       delete_set.insert(uint64(index.get(i)));
     SparseData<T> copy;
@@ -172,7 +172,7 @@ public:
     m_data = copy;
   }
   void deleteRows(const IndexArray& index) {
-    QSet<uint64> delete_set;
+    FMSet<uint64> delete_set;
     for (index_t i=1;i<=index.length();++i)
       delete_set.insert(uint64(index.get(i)));
     for (typename SparseData<T>::iterator i=m_data.begin();i!=m_data.end();++i) {
@@ -197,7 +197,7 @@ public:
       *this = SparseMatrix(NTuple(0,0));
       return;
     }
-    QSet<uint64> delete_set;
+    FMSet<uint64> delete_set;
     for (index_t i=1;i<=index.length();i++)
       delete_set.insert(uint64(index.get(i)));
     index_t newSize = length() - delete_set.count();
@@ -590,14 +590,14 @@ template <typename T>
 SparseMatrix<T> GetDiagonal(const SparseMatrix<T>& arg, int diagonal) {
   index_t outLen;
   if (diagonal < 0) {
-    outLen = qMax(index_t(0),qMin(arg.rows()+diagonal,arg.cols()));
+    outLen = std::max<index_t>(index_t(0),std::min<index_t>(arg.rows()+diagonal,arg.cols()));
     if (outLen == 0) return SparseMatrix<T>(NTuple(0,0));
     SparseMatrix<T> retvec(NTuple(outLen,1));
     for (index_t i=1;i<=outLen;i++)
       retvec[i] = arg[NTuple(i-diagonal,i)];
     return retvec;
   } else {
-    outLen = qMax(index_t(0),qMin(arg.rows(),arg.cols()-diagonal));
+    outLen = std::max<index_t>(index_t(0),std::min<index_t>(arg.rows(),arg.cols()-diagonal));
     if (outLen == 0) return SparseMatrix<T>(NTuple(0,0));
     SparseMatrix<T> retvec(NTuple(outLen,1));
     for (index_t i=1;i<=outLen;i++)

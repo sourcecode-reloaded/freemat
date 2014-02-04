@@ -26,7 +26,9 @@ void PrintMe(const SparseMatrix<T> &ar, Interpreter* io) {
   while (source.isValid()) {
     while (source.moreInSlice()) {
       NTuple pos(source.pos());
-      io->outputMessage(QString(" %1 %2 %3\n").arg(pos[1]).arg(pos[0]).arg(source.value()));
+      io->outputMessage(FMString(" ") + Stringify(pos[1]) +
+			FMString(" ") + Stringify(pos[0]) + 
+			FMString(" ") + Stringify(source.value()));
       source.next();
     }
     source.nextSlice();
@@ -40,15 +42,16 @@ void PrintMe(const SparseMatrix<T> &ar, const SparseMatrix<T> &ai, Interpreter* 
     while (source.moreInSlice()) {
       NTuple pos(source.pos());
       if (source.imagValue() < 0)
-	io->outputMessage(QString(" %1 %2 %3%4 i\n").arg(pos[1])
-			  .arg(pos[0])
-			  .arg(source.realValue())
-			  .arg(source.imagValue()));
+	io->outputMessage(FMString(" ") + Stringify(pos[1]) + 
+			  FMString(" ") + Stringify(pos[0]) + 
+			  FMString(" ") + Stringify(source.realValue()) + 
+			  Stringify(source.imagValue()) + FMString(" i\n"));
       else 
-	io->outputMessage(QString(" %1 %2 %3+%4 i\n").arg(pos[1])
-			  .arg(pos[0])
-			  .arg(source.realValue())
-			  .arg(source.imagValue()));
+	io->outputMessage(FMString(" ") + Stringify(pos[1]) + 
+			  FMString(" ") + Stringify(pos[0]) + 
+			  FMString(" ") + Stringify(source.realValue()) + 
+			  FMString("+") + Stringify(source.imagValue()) + 
+			  FMString(" i\n"));
       source.next();
     }
     source.nextSlice();

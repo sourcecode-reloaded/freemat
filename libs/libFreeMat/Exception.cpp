@@ -24,7 +24,7 @@
 #include "Exception.hpp"
 #include "Interpreter.hpp"
 
-Exception::Exception(QString msg_in) {
+Exception::Exception(FMString msg_in) {
   m_msg = msg_in; 
   handled = false;
 }
@@ -33,7 +33,7 @@ void Exception::printMe(Interpreter *eval) {
   eval->errorMessage(m_msg);
 }
 
-bool Exception::matches(QString tst_msg) {
+bool Exception::matches(FMString tst_msg) {
   return (tst_msg == m_msg);
 }
 

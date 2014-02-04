@@ -1131,7 +1131,7 @@ static ArrayVector SparseDecodeResults(int rvec, int nconv, double *dr, double *
 }
 
 static ArrayVector SparseEigDecomposeNonsymmetricReal(const SparseMatrix<double> &a,
-						      int nev, int nargout, QString which) {
+						      int nev, int nargout, FMString which) {
   // Initialization call
   int ido = 0;
   char bmat = 'I';
@@ -1195,7 +1195,7 @@ static ArrayVector SparseEigDecomposeNonsymmetricReal(const SparseMatrix<double>
 
 
 static ArrayVector SparseEigDecomposeSymmetricReal(const SparseMatrix<double> &a,
-						   int nev, int nargout, QString which) {
+						   int nev, int nargout, FMString which) {
   // Initialization call
   char *which_cstr = strdup(qPrintable(which));
   int ido = 0;
@@ -1276,7 +1276,7 @@ static ArrayVector SparseEigDecomposeSymmetricReal(const SparseMatrix<double> &a
 
 ArrayVector SparseEigDecomposeNonsymmetricComplex(const SparseMatrix<double> &a_real,
 						  const SparseMatrix<double> &a_imag,
-						  int nev, int nargout, QString which) {
+						  int nev, int nargout, FMString which) {
   // Initialization call
   int ido = 0;
   char bmat = 'I';
@@ -1357,8 +1357,8 @@ ArrayVector SparseEigDecomposeNonsymmetricRealShifted(const SparseMatrix<double>
   int rows = int(A.rows());
   Array scI(MakeSparseScaledIdentityReal(shift, rows));
   Array C(Subtract(Array(A),scI));
-  QVector<uint32> rowindx, colstart;
-  QVector<double> accsdata;
+  FMVector<uint32> rowindx, colstart;
+  FMVector<double> accsdata;
   SparseToCCS(C.constRealSparse<double>(),rowindx,colstart,accsdata);
   // Factor it...
   double *null = (double *) NULL;
@@ -1460,8 +1460,8 @@ ArrayVector SparseEigDecomposeNonsymmetricComplexShifted(const SparseMatrix<doub
   Array scI(MakeSparseScaledIdentityReal(shift[0],rows),
 	    MakeSparseScaledIdentityReal(shift[1],rows));
   Array C(Subtract(Array(Areal,Aimag),scI));
-  QVector<uint32> rowindx, colstart;
-  QVector<double> accsreal, accsimag;
+  FMVector<uint32> rowindx, colstart;
+  FMVector<double> accsreal, accsimag;
   SparseToCCS(C.constRealSparse<double>(),C.constImagSparse<double>(),
 	      rowindx,colstart,accsreal,accsimag);
   // Factor it...
@@ -1561,7 +1561,7 @@ ArrayVector SparseEigDecomposeNonsymmetricComplexShifted(const SparseMatrix<doub
 #endif
 } 
 
-ArrayVector SparseEigDecompose(int nargout, Array A, int k, QString whichFlag) {
+ArrayVector SparseEigDecompose(int nargout, Array A, int k, FMString whichFlag) {
   if (A.isComplex()) {
     return SparseEigDecomposeNonsymmetricComplex(A.constRealSparse<double>(),
 						 A.constImagSparse<double>(),
