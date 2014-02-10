@@ -17,13 +17,30 @@
  *
  */
 
-#ifndef __Stream_hpp__
-#define __Stream_hpp__
+#include "PathSearch.hpp"
+#include "Exception.hpp"
 
-class Stream {
-public:
-  virtual ~Stream() {}
-  virtual void writeBytes(const void* data, int len) = 0;
-  virtual void readBytes(void* data, int len) = 0;
-};
+#ifdef WIN32
+#define PATHSEP ";"
+#else
+#define PATHSEP ":"
 #endif
+
+PathSearcher::PathSearcher(FMString mpath) {
+  path = mpath;
+  pathList = path.split(PATHSEP,true);
+}
+
+FMString PathSearcher::ResolvePath(FMString fname) {
+  if (exists(boost::filesystem::path(fname)))
+    return fname;
+  if (exists(FMDir::current().boostPath() / fname))
+    return fname;
+  for (int i=0;i<pathList.size();i++) {
+    FMDir pdir(pathList[i]);
+    if (exists(pdir.boostPath() / fname))
+      return boost::filesystem::absolute(pdir.boostPath() / fname).string();
+  }
+  return FMString();
+}
+

@@ -47,6 +47,8 @@ bool IsFinite(uint16);
 bool IsFinite(uint32);
 bool IsFinite(uint64);
 
+FMString ToHexString(unsigned int t);
+unsigned int FromHexString(FMString t);
 FMString ToHexString(float t);
 FMString ToHexString(double t);
 double NaN(void);

@@ -140,7 +140,7 @@ Array::Array(DataClass t, const NTuple &dims) {
   m_type.Complex = 0;
   m_type.Sparse = 0;
   m_type.Scalar = 0;
-  m_real.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type,construct_sized(m_type,dims)));
+  m_real.p = FMSharedDataPointer<SharedObject>(new SharedObject(m_type,construct_sized(m_type,dims)));
 }
 
 Array::Array(const StructArray& real) {
@@ -148,7 +148,7 @@ Array::Array(const StructArray& real) {
   m_type.Complex = 0;
   m_type.Sparse = 0;
   m_type.Scalar = 0;
-  m_real.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type,new StructArray(real)));
+  m_real.p = FMSharedDataPointer<SharedObject>(new SharedObject(m_type,new StructArray(real)));
 }
 
 Array::Array(const FMChar &, const FMChar &) {
@@ -160,7 +160,7 @@ Array::Array(const FMChar &t) {
   m_type.Complex = 0;
   m_type.Sparse = 0;
   m_type.Scalar = 0;
-  m_real.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type,
+  m_real.p = FMSharedDataPointer<SharedObject>(new SharedObject(m_type,
 							      construct_sized(m_type,
 									      NTuple(1,1))));
   BasicArray<FMChar> &p(real<FMChar>());
@@ -172,7 +172,7 @@ Array::Array(const FMString &text) {
   m_type.Complex = 0;
   m_type.Sparse = 0;
   m_type.Scalar = 0;
-  m_real.p = boost::shared_ptr<SharedObject>(new SharedObject(m_type,
+  m_real.p = FMSharedDataPointer<SharedObject>(new SharedObject(m_type,
 							      construct_sized(m_type,
 									      NTuple(1,text.size()))));
   BasicArray<FMChar> &p(real<FMChar>());

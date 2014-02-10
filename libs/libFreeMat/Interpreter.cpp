@@ -28,7 +28,6 @@
 #include "Scanner.hpp"
 #include "Token.hpp"
 #include "Module.hpp"
-#include "File.hpp"
 #include <signal.h>
 #include "Class.hpp"
 #include "Print.hpp"
@@ -347,12 +346,10 @@ void Interpreter::scanDirectory(FMString scdir, bool tempfunc,
   while (iter != boost::filesystem::directory_iterator())
     {
       boost::filesystem::path p = *iter;
-      FMString filename = p.filename().string();
-      FMStringList filenameParts = filename.split(".");
-      FMString fileBaseName = "";
-      if (!filenameParts.isEmpty()) fileBaseName = filenameParts[0];
+      FMString extension = p.extension().string();
+      FMString fileBaseName = p.stem().string();
       FMString fileAbsoluteFilePath = boost::filesystem::absolute(p).string();
-      if (filename.endsWith(".m") || filename.endsWith(".M"))
+      if ((extension == ".m") || (extension == ".M"))
 	if (prefix.isEmpty())
 	  procFileM(fileBaseName,fileAbsoluteFilePath,tempfunc);
 	else
@@ -2914,6 +2911,7 @@ Interpreter::Interpreter(Context* aContext) {
   m_quietlevel = 0;
   m_enableWarnings = true;
   m_disablerescan = false;
+  m_ncols = 80;
   context->pushScope("base","base",false);
 }
 

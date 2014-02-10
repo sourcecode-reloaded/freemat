@@ -779,13 +779,12 @@ ArrayVector ImportedFunctionDef::evaluateFunc(Interpreter *walker,
   return ArrayVector(retArray);
 }
 
-/*
 MexFunctionDef::MexFunctionDef(FMString fullpathname) {
   fullname = fullpathname;
   importSuccess = false;
-  lib = new DynLib(fullname);
+  lib = new FMLibrary(fullname);
   try {
-    address = (mexFuncPtr) lib->GetSymbol("mexFunction");  
+    address = (mexFuncPtr) lib->resolve("mexFunction");  
     importSuccess = true;
   } catch (Exception& e) {
   }
@@ -826,4 +825,3 @@ ArrayVector MexFunctionDef::evaluateFunc(Interpreter *walker,
   delete[] rets;
   return retvec;
 }
-*/

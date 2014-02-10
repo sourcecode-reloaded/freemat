@@ -22,7 +22,6 @@
 
 #include "Array.hpp"
 #include "Tree.hpp"
-#include "DynLib.hpp"
 #include "mex.h"
 #include "FMLib.hpp"
 #include "Scope.hpp"
@@ -433,7 +432,7 @@ public:
   /**
    * The dynamic library object
    */
-  DynLib *lib;
+  FMLibrary *lib;
   /**
    * The following flag is set to true if the library is
    * successfully imported

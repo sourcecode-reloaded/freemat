@@ -336,13 +336,14 @@ libs/libFreeMat/MatrixMultiply.hpp svn_keywords=Author+Date+Id+Revision svn_eol_
 libs/libFreeMat/MemPtr.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libFreeMat/Module.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libFreeMat/Module.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+libs/libFreeMat/PathSearch.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
+libs/libFreeMat/PathSearch.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libFreeMat/QRDecompose.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libFreeMat/QRDecompose.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libFreeMat/Scope.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libFreeMat/Scope.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libFreeMat/Serialize.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libFreeMat/Serialize.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
-libs/libFreeMat/Stream.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libFreeMat/SymbolTable.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libFreeMat/Types.hpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native
 libs/libGraphics/GLLabel.cpp svn_keywords=Author+Date+Id+Revision svn_eol_002dstyle=native

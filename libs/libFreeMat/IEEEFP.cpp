@@ -160,6 +160,12 @@ double Inf() {
   return u.f;
 }
 
+unsigned int FromHexString(FMString t) {
+  unsigned int p;
+  sscanf(t.c_str(),"%x",&p);
+  return p;
+}
+
 FMString ToHexString(unsigned int t) {
   char buffer[256];
   sprintf(buffer,"%08x",t);

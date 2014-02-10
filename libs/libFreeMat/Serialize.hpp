@@ -20,17 +20,16 @@
 #ifndef __Serialize_hpp__
 #define __Serialize_hpp__
 
-#include "Stream.hpp"
 #include "Array.hpp"
-#include <QIODevice>
+#include "FMLib.hpp"
 
 // This is the cross-platform serialization object...
 
 class Serialize {
-  QIODevice *s;
+  FMFile *s;
   bool endianSwap;
 public:
-  Serialize(QIODevice*);
+  Serialize(FMFile*);
   ~Serialize();
   // Handshake between two serialize objects
   void handshakeServer();
@@ -47,7 +46,7 @@ public:
   void putFloats(const float* ptr, int count);
   void putDoubles(const double* ptr, int count);
   // Send a scalar object
-  void putString(QString t);
+  void putString(FMString t);
   void putByte(char t);
   void putShort(short t);
   void putInt(int t);
@@ -63,7 +62,7 @@ public:
   void getFloats(float* ptr, int count);
   void getDoubles(double* ptr, int count);
   // Get a scalar object
-  QString  getString();
+  FMString  getString();
   char   getByte();
   short  getShort();
   int    getInt();
@@ -76,7 +75,7 @@ public:
   void putArray(const Array& dat);
   void putDimensions(const NTuple& dim);
   // Get an array
-  DataClass getDataClass(bool& sparseflag, QString& className, bool& complexflag);
+  DataClass getDataClass(bool& sparseflag, FMString& className, bool& complexflag);
   void getArray(Array& dat);
   NTuple getDimensions();
 };

@@ -23,9 +23,12 @@
 #include "Struct.hpp"
 #include <stdio.h>
 #include "SparseCCS.hpp"
-#include <QtEndian>
+#include <sys/types.h>
+#include <netinet/in.h>
 
-Serialize::Serialize(QIODevice *sck) {
+
+
+Serialize::Serialize(FMFile *sck) {
   endianSwap = false;
   s = sck;
 }
@@ -82,7 +85,7 @@ void Serialize::handshakeClient() {
 void Serialize::sendSignature(char type, int count) {
   s->write((const char*) &type,1);
   int netcount;
-  netcount = qToBigEndian(count);
+  netcount = htonl(count);
   s->write((const char*) &netcount,sizeof(int));
 }
 
@@ -91,7 +94,7 @@ void Serialize::checkSignature(char type, int count) {
   int rcount;
   s->read((char*) &rtype,1);
   s->read((char*) &rcount,sizeof(int));
-  rcount = qFromBigEndian(rcount);
+  rcount = ntohl(rcount);
   if (!((type == rtype) && (count == rcount))) {
     char buffer[1000];
     sprintf(buffer,"Serialization Mismatch: expected <%c,%d>, got <%c,%d>",
@@ -131,7 +134,7 @@ void Serialize::putDoubles(const double *ptr, int count) {
   s->write((const char*) ptr,count*sizeof(double));
 }
 
-void Serialize::putString(QString p) {
+void Serialize::putString(FMString p) {
   unsigned int len;
   sendSignature('x',0);
   len = p.size()+1;
@@ -262,14 +265,14 @@ void Serialize::getDoubles(double *ptr, int count) {
   }
 }
 
-QString Serialize::getString() {
+FMString Serialize::getString() {
   checkSignature('x',0);
   unsigned int len;
   getInts((int*) &len,1);
-  if (len == 0) return QString();
+  if (len == 0) return FMString();
   char *cp = (char*) malloc(len*sizeof(char));
   getBytes(cp,len);
-  QString ret(cp);
+  FMString ret(cp);
   free(cp);
   return ret;
 }
@@ -304,7 +307,7 @@ double Serialize::getDouble() {
   return t;
 }
 
-DataClass Serialize::getDataClass(bool& sparseflag, QString& className, bool& complexflag) {
+DataClass Serialize::getDataClass(bool& sparseflag, FMString& className, bool& complexflag) {
   checkSignature('a',1);
   unsigned char a = getByte();
   sparseflag = (a & 16) > 0;
@@ -353,7 +356,7 @@ DataClass Serialize::getDataClass(bool& sparseflag, QString& className, bool& co
   case 128: {
     int cnt(getInt());
     for (int i=0;i<cnt;i++)
-      className.push_back(getString());
+      className += getString(); //?? FIXME ??
     return Struct;
   }    
   default:
@@ -513,7 +516,7 @@ void Serialize::putArray(const Array& dat) {
   case Int16: MacroPutCase(putShorts,short,Int16,int16);
   case Int32: 
     if (dat.isSparse()) {
-      QVector<QVector<int32> > dp(SparseFM3(dat.constRealSparse<int32>()));
+      FMVector<FMVector<int32> > dp(SparseFM3(dat.constRealSparse<int32>()));
       for (int i=0;i<dat.cols();i++) {
 	putInt(1+dp[i][0]);
 	putInts((const int*) dp[i].constData(),int(1+dp[i][0]));
@@ -525,7 +528,7 @@ void Serialize::putArray(const Array& dat) {
   case Float: 
     if (dat.allReal()) {
       if (dat.isSparse()) {
-	QVector<QVector<float> > dp(SparseFM3(dat.constRealSparse<float>()));
+	FMVector<FMVector<float> > dp(SparseFM3(dat.constRealSparse<float>()));
 	for (int i=0;i<dat.cols();i++) {
 	  putFloat(1+dp[i][0]);
 	  putFloats((const float*) dp[i].constData(),int(1+dp[i][0]));
@@ -535,7 +538,7 @@ void Serialize::putArray(const Array& dat) {
 	MacroPutCase(putFloats,float,Float,float);
     } else {
       if (dat.isSparse()) {
-	QVector<QVector<float> > dp(SparseFM3(dat.constRealSparse<float>(),dat.constImagSparse<float>()));
+	FMVector<FMVector<float> > dp(SparseFM3(dat.constRealSparse<float>(),dat.constImagSparse<float>()));
 	for (int i=0;i<dat.cols();i++) {
 	  putFloat(1+dp[i][0]);
 	  putFloats((const float*) dp[i].constData(),int(1+dp[i][0]));
@@ -546,7 +549,7 @@ void Serialize::putArray(const Array& dat) {
   case Double:
     if (dat.allReal()) {
       if (dat.isSparse()) {
-	QVector<QVector<double> > dp(SparseFM3(dat.constRealSparse<double>()));
+	FMVector<FMVector<double> > dp(SparseFM3(dat.constRealSparse<double>()));
 	for (int i=0;i<dat.cols();i++) {
 	  putDouble(1+dp[i][0]);
 	  putDoubles((const double*) dp[i].constData(),int(1+dp[i][0]));
@@ -556,7 +559,7 @@ void Serialize::putArray(const Array& dat) {
 	MacroPutCase(putDoubles,double,Double,double);
     } else {
       if (dat.isSparse()) {
-	QVector<QVector<double> > dp(SparseFM3(dat.constRealSparse<double>(),dat.constImagSparse<double>()));
+	FMVector<FMVector<double> > dp(SparseFM3(dat.constRealSparse<double>(),dat.constImagSparse<double>()));
 	for (int i=0;i<dat.cols();i++) {
 	  putDouble(1+dp[i][0]);
 	  putDoubles((const double*) dp[i].constData(),int(1+dp[i][0]));
@@ -586,7 +589,7 @@ void Serialize::putArray(const Array& dat) {
 void Serialize::getArray(Array& dat) {
   checkSignature('A',1);
   bool sparseflag;
-  QString className;
+  FMString className;
   bool complexflag;
   DataClass dclass(getDataClass(sparseflag,className,complexflag));
   NTuple dims(getDimensions());
@@ -628,10 +631,10 @@ void Serialize::getArray(Array& dat) {
   case Int64: MacroGetCase(getI64s,int64,Int64,int64);
   case Int32:
     if (sparseflag) {
-      QVector<QVector<int32> > dp;
+      FMVector<FMVector<int32> > dp;
       for (index_t i=1;i<=dims.cols();i++) {
 	int len = getInt();
-	QVector<int32> col(len);
+	FMVector<int32> col(len);
 	getInts(col.data(),len);
 	dp << col;
       }
@@ -642,10 +645,10 @@ void Serialize::getArray(Array& dat) {
   case Float:
     if (!complexflag) {
       if (sparseflag) {
-	QVector<QVector<float> > dp;
+	FMVector<FMVector<float> > dp;
 	for (index_t i=1;i<=dims.cols();i++) {
 	  int len = int(getFloat());
-	  QVector<float> col(len);
+	  FMVector<float> col(len);
 	  getFloats(col.data(),len);
 	  dp << col;
 	}
@@ -655,10 +658,10 @@ void Serialize::getArray(Array& dat) {
 	MacroGetCase(getFloats,float,Float,float);
     } else {
       if (sparseflag) {
-	QVector<QVector<float> > dp;
+	FMVector<FMVector<float> > dp;
 	for (index_t i=1;i<=dims.cols();i++) {
 	  int len = int(getFloat());
-	  QVector<float> col(len);
+	  FMVector<float> col(len);
 	  getFloats(col.data(),len);
 	  dp << col;
 	}
@@ -670,10 +673,10 @@ void Serialize::getArray(Array& dat) {
   case Double:
     if (!complexflag) {
       if (sparseflag) {
-	QVector<QVector<double> > dp;
+	FMVector<FMVector<double> > dp;
 	for (index_t i=1;i<=dims.cols();i++) {
 	  int len = int(getDouble());
-	  QVector<double> col(len);
+	  FMVector<double> col(len);
 	  getDoubles(col.data(),len);
 	  dp << col;
 	}
@@ -683,10 +686,10 @@ void Serialize::getArray(Array& dat) {
 	MacroGetCase(getDoubles,double,Double,double);
     } else {
       if (sparseflag) {
-	QVector<QVector<double> > dp;
+	FMVector<FMVector<double> > dp;
 	for (index_t i=1;i<=dims.cols();i++) {
 	  int len = int(getDouble());
-	  QVector<double> col(len);
+	  FMVector<double> col(len);
 	  getDoubles(col.data(),len);
 	  dp << col;
 	}

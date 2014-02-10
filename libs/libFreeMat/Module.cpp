@@ -17,7 +17,7 @@
  *
  */
 
-#include "DynLib.hpp"
+#include "FMLib.hpp"
 #include "Module.hpp"
 #include "FunctionDef.hpp"
 #include "Interpreter.hpp"
@@ -25,15 +25,14 @@
 #include "Context.hpp"
 #include "Parser.hpp"
 #include "PathSearch.hpp"
-#include <QDir>
 
-FM::SymbolTable<DynLib*> libPointers;
+FM::SymbolTable<FMLibrary*> libPointers;
 StringVector DynamicFunctions;
 
 void ClearLibs(Interpreter* eval) {
   StringVector libnames(libPointers.getCompletions(""));
   for (int i=0;i<libnames.size();i++) {
-    DynLib **ptr = libPointers.findSymbol(libnames[i]);
+    FMLibrary **ptr = libPointers.findSymbol(libnames[i]);
     libPointers.deleteSymbol(libnames[i]);
     delete *ptr;
   }
@@ -54,9 +53,9 @@ void ClearLibs(Interpreter* eval) {
 
 ArrayVector LoadLibFunction(int c_nargout,const ArrayVector& narg,
 			    Interpreter* eval) {
-  QString libfile;
-  QString symbolName;
-  QString funcName;
+  FMString libfile;
+  FMString symbolName;
+  FMString funcName;
   int nargin;
   int nargout;
   ArrayVector arg(narg);
@@ -78,8 +77,8 @@ ArrayVector LoadLibFunction(int c_nargout,const ArrayVector& narg,
   else
     funcName = arg[2].asString();
   void *func;
-  DynLib *lib = new DynLib(libfile);
-  func = lib->GetSymbol(symbolName);
+  FMLibrary *lib = new FMLibrary(libfile);
+  func = lib->resolve(symbolName);
   BuiltInFunctionDef *fdef = new BuiltInFunctionDef;
   fdef->retCount = nargout;
   fdef->argCount = nargin;
@@ -144,7 +143,7 @@ char* parseArgumentName(const char* &cp) {
   }
   skipWS(cp);
   if (!isalpha(*cp))
-    throw Exception(QString("malformed import function prototype") + 
+    throw Exception(FMString("malformed import function prototype") + 
 		    " - error starting at " + cp);
   rp = cp;
   cp++;
@@ -177,7 +176,7 @@ char* parseBoundsCheck(const char* &cp) {
     cp++;
   }
   if (bracketDepth > 0)
-    throw Exception(QString("malformed bounds check - error starting at ") + 
+    throw Exception(FMString("malformed bounds check - error starting at ") + 
 		    cp);
   char *op;
   int bcLength;
@@ -195,7 +194,7 @@ char* parseBoundsCheck(const char* &cp) {
 //outputs none 
 //DOCBLOCK external_import
 
-static inline bool issep(QChar t) {
+static inline bool issep(FMChar t) {
   return ((t=='/') || (t=='\\'));
 }
 
@@ -205,10 +204,10 @@ void ImportPrintMessage(const char* t);
 typedef void (*strfunc)(const char*);
 typedef void (*handler)(strfunc);
 
-void InitializeIOHandlers(DynLib *lib) {
+void InitializeIOHandlers(FMLibrary *lib) {
   void* func;
   try {
-    func = lib->GetSymbol("freemat_io_handler");
+    func = lib->resolve("freemat_io_handler");
   } catch (Exception&) {
     return;
   }
@@ -219,27 +218,27 @@ void InitializeIOHandlers(DynLib *lib) {
 
 ArrayVector ImportFunction(int nargout, const ArrayVector& arg, 
 			   Interpreter* eval)  {
-  QString libfile;
-  QString symbolname;
-  QString funcname;
-  QString rettype;
-  QString arglist;
+  FMString libfile;
+  FMString symbolname;
+  FMString funcname;
+  FMString rettype;
+  FMString arglist;
 
   PathSearcher psearch(eval->getPath());
 
-  QString libfullpath;
+  FMString libfullpath;
 
   if (arg.size() < 5)
-    throw Exception(QString("import requires 5 arguments:") + 
+    throw Exception(FMString("import requires 5 arguments:") + 
 		    "library name, symbol name, imported function name" +
 		    "return type, argument list");
   libfile = arg[0].asString();
   libfullpath = psearch.ResolvePath(libfile);
   
-  if( libfullpath.isNull() )
+  if( libfullpath.size() == 0 )
 	  throw Exception( "unable to find file " + libfile );
 
-  QString current(QDir::currentPath());
+  FMString current(FMDir::currentPath());
   // Prepend the current working directory... ugly, but necessary
 #ifdef WIN32
   if (!(issep(libfullpath[0]) || ((libfullpath[1] == ':') && 
@@ -257,15 +256,15 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
   rettype = arg[3].asString();
   arglist = arg[4].asString();
   void *func;
-  DynLib *lib, **ptr;
+  FMLibrary *lib, **ptr;
   ptr = libPointers.findSymbol(libfullpath);
   if (!ptr) {
-    lib = new DynLib(libfullpath);
+    lib = new FMLibrary(libfullpath);
     libPointers.insertSymbol(libfullpath,lib);
     InitializeIOHandlers(lib);
   } else
     lib = *ptr;
-  func = lib->GetSymbol(symbolname);
+  func = lib->resolve(symbolname);
   StringVector types;
   StringVector arguments;
   TreeList checks;
@@ -282,9 +281,9 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
     const char *tn;
     tn = parseTypeName(cp);
     if (tn == NULL) 
-      throw Exception(QString("illegal syntax in function") + 
-		      QString(" prototype (argument list) - ") + 
-		      QString("expecting a valid type name"));
+      throw Exception(FMString("illegal syntax in function") + 
+		      FMString(" prototype (argument list) - ") + 
+		      FMString("expecting a valid type name"));
     types.push_back(tn);
     char *bc = parseBoundsCheck(cp);
     if (bc != NULL) {
@@ -319,28 +318,7 @@ ArrayVector ImportFunction(int nargout, const ArrayVector& arg,
 //inputs varargin
 //outputs none
 //DOCBLOCK freemat_blaslib
-#ifdef DYN_BLAS
-#include "blas_dyn_link.h"
-ArrayVector BlaslibFunction(int nargout, const ArrayVector& arg) {
-  extern BlasWrapper wrapper;
-  if (arg.size() < 1) {
-    ArrayVector liblist;
-    std::string list;
-    wrapper.ListLibraries( list );
-    return ArrayVector(Array(QString(list.c_str())));
-  } else {
-    if (!arg[0].isString())
-      throw Exception("argument to blaslib function must be a string");
-    QString txt = arg[0].asString();
-    if( !wrapper.LoadLibByName( txt.toStdString()) ){
-      throw Exception("Library by this name does not exist.");
-    }
-  }
-  return ArrayVector();
-}
-#else
 ArrayVector BlaslibFunction(int nargout, const ArrayVector& arg) {
   throw Exception("BLAS library is loaded statically.");
 return ArrayVector();
 }
-#endif

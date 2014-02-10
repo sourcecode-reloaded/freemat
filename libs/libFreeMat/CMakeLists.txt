@@ -5,13 +5,13 @@ INCLUDE_DIRECTORIES( ${CMAKE_CURRENT_BINARY_DIR}  ${LOCAL_PATH})
 #QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/DebugStream.hpp ${CMAKE_CURRENT_BINARY_DIR}/DebugStream.moc.cpp )
 
 set (FREEMAT_SOURCES
+Module.cpp 
 Interpreter.cpp 
 Array.cpp 
 Algorithms.cpp 
 Context.cpp 
 EigenDecompose.cpp 
 Exception.cpp 
-File.cpp 
 IEEEFP.cpp 
 IndexArray.cpp 
 LAPACK.cpp 
@@ -33,9 +33,9 @@ AnonFunc.cpp
 SparseCCS.cpp 
 Stats.cpp
 Struct.cpp
-#Module.cpp 
-#Serialize.cpp 
+Serialize.cpp 
 FunctionDef.cpp 
+PathSearch.cpp
 )
 
 add_custom_command(
@@ -55,7 +55,7 @@ ${CMAKE_CURRENT_BINARY_DIR}/Loader.cpp
 ADD_EXECUTABLE( FMT
 main.cpp)
 
-TARGET_LINK_LIBRARIES(FMT  Core FN FreeMatlib levmar 
-			   boost_system boost_filesystem 
+TARGET_LINK_LIBRARIES(FMT  Core FN FreeMatlib levmar Mex
+			   boost_system boost_filesystem boost_timer boost_chrono boost_regex
 			   lapack_c readline blasref 
 			   ${EXTRA_LIBRARIES} ${OPTIONAL_LIBS})

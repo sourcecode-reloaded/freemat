@@ -53,10 +53,10 @@ static FMList<FMString> TComputeVariableStatsReal(const BasicArray<T> &dp) {
     }
   }
   if (init) {
-    vmin = FMString(dmin);
-    vmax = FMString(dmax);
-    vrange = FMString(dmax - dmin);
-    vmean = FMString(dmean);
+    vmin = Stringify(dmin);
+    vmax = Stringify(dmax);
+    vrange = Stringify(dmax - dmin);
+    vmean = Stringify(dmean);
   }
   if (init && (len > 1)) {
     double vnorm = 1.0/(len-1.0);
@@ -65,8 +65,8 @@ static FMList<FMString> TComputeVariableStatsReal(const BasicArray<T> &dp) {
       T val = dp[i] - dmean;
       dvar += val*val*vnorm;
     }
-    vvar = FMString(dvar);
-    vstd = FMString(sqrt(dvar));
+    vvar = Stringify(dvar);
+    vstd = Stringify(sqrt(dvar));
   }					       
   return FMList<FMString>() << vmin << vmax << vrange << vmean << vstd << vvar;
 }
@@ -116,8 +116,8 @@ static FMList<FMString> TComputeVariableStatsComplex(const BasicArray<T> &dp_rea
       T val_imag = dp_imag[i] - dmean_imag;
       dvar += complex_abs(val_real,val_imag)*vnorm;
     }
-    vvar = FMString(dvar);
-    vstd = FMString(sqrt(dvar));
+    vvar = Stringify(dvar);
+    vstd = Stringify(sqrt(dvar));
   }					       
   return FMList<FMString>() << vmin << vmax << vrange << vmean << vstd << vvar;  
 }
