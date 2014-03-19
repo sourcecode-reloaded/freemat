@@ -5,6 +5,10 @@
 #QT4_GENERATE_MOC( ${CMAKE_CURRENT_SOURCE_DIR}/XML.hpp ${CMAKE_CURRENT_BINARY_DIR}/XML.moc.cpp )
 
 set(CORE_SOURCES
+IO.cpp 
+Printf.cpp 
+File.cpp 
+StringOps.cpp 
 Abs.cpp 
 Binary.cpp 
 Ceil.cpp 
@@ -19,13 +23,12 @@ Prod.cpp
 RCond.cpp 
 Round.cpp 
 Sum.cpp 
-#Time.cpp 
+Time.cpp 
 Variance.cpp 
 RealImag.cpp 
 Sort.cpp 
-#Unique.cpp 
+Unique.cpp 
 XNorm.cpp 
-#Analyze.cpp 
 Cast.cpp 
 Constants.cpp 
 Reshape.cpp 
@@ -33,25 +36,19 @@ Zeros.cpp
 Ones.cpp 
 Cell.cpp 
 Struct.cpp 
-#Directory.cpp 
+Directory.cpp 
 FFT.cpp 
-#helpwidget.cpp 
-#Help.cpp 
-#Hex.cpp 
+Hex.cpp 
 Clear.cpp 
-#Exist.cpp 
+Exist.cpp 
 Find.cpp 
 Is.cpp 
 Size.cpp 
-#Path.cpp 
-#Inspect.cpp 
+Path.cpp 
+Inspect.cpp 
 Audio.cpp 
 Random.cpp 
 RanLib.cpp 
-#Image.cpp 
-#File.cpp 
-#Printf.cpp 
-#IO.cpp 
 Conv.cpp 
 Eval.cpp 
 Debug.cpp 
@@ -64,17 +61,19 @@ Version.cpp
 Error.cpp 
 Misc.cpp 
 Mean.cpp 
-#StringOps.cpp 
 Transcendental.cpp 
 Trigonometric.cpp 
 Utils.cpp 
 MatIO.cpp 
-#XML.cpp 
-#Cstruct.cpp 
+Cstruct.cpp 
 Control.cpp 
 Sparse.cpp 
 Matrix.cpp
 PythonIF.cpp
+Help.cpp 
+#helpwidget.cpp 
+#Image.cpp 
+#XML.cpp 
  )
 
 

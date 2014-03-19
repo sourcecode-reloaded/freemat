@@ -25,7 +25,7 @@
 #include "Print.hpp"
 #include "Utils.hpp"
 #include "MatIO.hpp"
-#include <QtCore>
+#include "FMLib.hpp"
 #include "Algorithms.hpp"
 
 //@@Signature
@@ -35,7 +35,7 @@
 //DOCBLOCK io_format
 ArrayVector FormatFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() > 0) {
-    QString argtxt;
+    FMString argtxt;
     for (int i=0;i<arg.size();i++) argtxt += arg[i].asString().toUpper();
     if (argtxt == "NATIVE") SetPrintFormatMode(format_native);
     else if (argtxt == "SHORT") SetPrintFormatMode(format_short);
@@ -47,17 +47,17 @@ ArrayVector FormatFunction(int nargout, const ArrayVector& arg) {
   if (nargout > 0) {
     switch(GetPrintFormatMode()) {
     case format_native:
-      return ArrayVector(Array(QString("native")));
+      return ArrayVector(Array(FMString("native")));
     case format_short:
-      return ArrayVector(Array(QString("short")));
+      return ArrayVector(Array(FMString("short")));
     case format_long:
-      return ArrayVector(Array(QString("long")));
+      return ArrayVector(Array(FMString("long")));
     case format_short_e:
-      return ArrayVector(Array(QString("short e")));
+      return ArrayVector(Array(FMString("short e")));
     case format_long_e:
-      return ArrayVector(Array(QString("long e")));
+      return ArrayVector(Array(FMString("long e")));
     }
-    return ArrayVector(Array(QString("unknown?")));
+    return ArrayVector(Array(FMString("unknown?")));
   }
   return ArrayVector();
 }
@@ -84,9 +84,9 @@ ArrayVector GetPrintLimitFunction(int nargout, const ArrayVector& arg, Interpret
   return ArrayVector(Array(double(eval->getPrintLimit())));
 }
   
-static ArrayVector SaveNativeFunction(QString filename, StringVector names, Interpreter* eval) {
-  QFile ofile(filename);
-  if (!ofile.open(QIODevice::WriteOnly))
+static ArrayVector SaveNativeFunction(FMString filename, StringVector names, Interpreter* eval) {
+  FMFile ofile(filename);
+  if (!ofile.open("w"))
     throw Exception("Unable to open " + filename + " for saving");
   Serialize output(&ofile);
   output.handshakeServer();
@@ -97,7 +97,7 @@ static ArrayVector SaveNativeFunction(QString filename, StringVector names, Inte
     if (!(names[i].compare("ans") == 0)) {
       toWrite = cntxt->lookupVariable(names[i]);
       if (!toWrite.valid())
-	throw Exception(QString("unable to find variable ")+
+	throw Exception(FMString("unable to find variable ")+
 			names[i]+" to save to file "+filename);
       flags = 'n';
       if (cntxt->isVariableGlobal(names[i]))
@@ -113,10 +113,10 @@ static ArrayVector SaveNativeFunction(QString filename, StringVector names, Inte
   return ArrayVector();
 }
   
-static ArrayVector SaveASCIIFunction(QString filename, StringVector names, bool tabsMode,
+static ArrayVector SaveASCIIFunction(FMString filename, StringVector names, bool tabsMode,
 				     bool doubleMode, Interpreter* eval) {
-  QFile fp(filename);
-  if (!fp.open(QIODevice::WriteOnly))
+  std::ofstream fp(filename.c_str(), std::ios::out);
+  if (!fp.is_open())
     throw Exception("unable to open file " + filename + " for writing.");
   Context *cntxt = eval->getContext();
   for (int i=0;i<names.size();i++) {
@@ -139,23 +139,23 @@ static ArrayVector SaveASCIIFunction(QString filename, StringVector names, bool 
       int rows = int(A.rows());
       int cols = int(A.columns());
       const BasicArray<double> &dp(A.constReal<double>());
-      QTextStream out(&fp);
       if (doubleMode)
-	out.setRealNumberPrecision(15);
+	fp.precision(15);
       else
-	out.setRealNumberPrecision(7);
+	fp.precision(7);
       for (int i=0;i<rows;i++) {
 	for (int j=0;j<cols;j++) {
-	  out << dp[j*rows+i+1];
+	  fp << dp[j*rows+i+1];
 	  if (tabsMode && (j < (cols-1)))
-	    out << "\t";
+	    fp << "\t";
 	  else
-	    out << " ";
+	    fp << " ";
 	}
-	out << "\n";
+	fp << "\n";
       }
     }
   }
+  fp.close();
   return ArrayVector();
 }
 
@@ -190,11 +190,11 @@ ArrayVector SaveFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
       argCopy << arg[i];
   }
   if (argCopy.size() < 1) throw Exception("save requires a filename argument");
-  QString fname(argCopy[0].asString());
+  FMString fname(argCopy[0].asString());
   if (!asciiMode && !matMode) {
-    if (fname.endsWith(".mat",Qt::CaseInsensitive))
+    if (fname.endsWith(".mat",true))
       matMode = true;
-    if (fname.endsWith(".txt",Qt::CaseInsensitive))
+    if (fname.endsWith(".txt",true))
       asciiMode = true;
   }
   StringVector names;
@@ -221,18 +221,18 @@ ArrayVector SaveFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
     return SaveNativeFunction(fname,toSave,eval);
 }
 
-static int ParseNumber(QString tx) {
+static int ParseNumber(FMString tx) {
   int lookahead = 0;
   int len = 0;
   if ((tx[len] == '+') || (tx[len] == '-'))
     len++;
   lookahead = len;
-  while (tx[len].isDigit()) len++;
+  while (isdigit(tx[len])) len++;
   lookahead = len;
   if (tx[lookahead] == '.') {
     lookahead++;
     len = 0;
-    while (tx[len+lookahead].isDigit()) len++;
+    while (isdigit(tx[len+lookahead])) len++;
     lookahead+=len;
   }
   if ((tx[lookahead] == 'E') || (tx[lookahead] == 'e')) {
@@ -241,17 +241,17 @@ static int ParseNumber(QString tx) {
       lookahead++;
     }
     len = 0;
-    while (tx[len+lookahead].isDigit()) len++;
+    while (isdigit(tx[len+lookahead])) len++;
     lookahead+=len;
   }
   return lookahead;
 }
 
-static void ParseComplexValue(QString tx, double &real, double &imag) {
+static void ParseComplexValue(FMString tx, double &real, double &imag) {
   int lnum = ParseNumber(tx);
   int rnum = ParseNumber(tx.mid(lnum));
-  QString num1 = tx.left(lnum);
-  QString num2 = tx.mid(lnum,rnum);
+  FMString num1 = tx.left(lnum);
+  FMString num2 = tx.mid(lnum,rnum);
   if (num1.isEmpty() && num2.isEmpty()) {
     real = 0; imag = 1;
     return;
@@ -269,9 +269,9 @@ static void ParseComplexValue(QString tx, double &real, double &imag) {
   }
 }
 
-static int DecodeSpreadsheetColumn(QString tx) {
+static int DecodeSpreadsheetColumn(FMString tx) {
   tx.toUpper();
-  QByteArray txb(tx.toLatin1());
+  FMByteArray txb(tx.c_str());
   for (int i=0;i<txb.count();i++) 
     txb[i] = txb[i] - 'A';
   int ret = 0;
@@ -280,27 +280,27 @@ static int DecodeSpreadsheetColumn(QString tx) {
   return ret;
 }
 
-static void DecodeSpreadsheetRange(QString tx, int &startrow, int &startcol,
+static void DecodeSpreadsheetRange(FMString tx, int &startrow, int &startcol,
 			    int &stoprow, int &stopcol) {
-  QString colstart;
-  QString rowstart;
-  QString colstop;
-  QString rowstop;
-  while (tx.at(0).isLetter()) {
+  FMString colstart;
+  FMString rowstart;
+  FMString colstop;
+  FMString rowstop;
+  while (isalpha(tx.at(0))) {
     colstart += tx.left(1);
     tx = tx.mid(1);
   }
-  while (tx.at(0).isDigit()) {
+  while (isdigit(tx.at(0))) {
     rowstart += tx.left(1);
     tx = tx.mid(1);
   }
   tx = tx.mid(1);
   tx = tx.mid(1);
-  while (tx.at(0).isLetter()) {
+  while (isalpha(tx.at(0))) {
     colstop += tx.left(1);
     tx = tx.mid(1);
   }
-  while (tx.at(0).isDigit()) {
+  while (isdigit(tx.at(0))) {
     rowstop += tx.left(1);
     tx = tx.mid(1);
   }
@@ -318,41 +318,42 @@ static void DecodeSpreadsheetRange(QString tx, int &startrow, int &startcol,
 ArrayVector DlmReadFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() == 0) 
     throw Exception("dlmread expects a filename");
-  QFile ifile(arg[0].asString());
-  if (!ifile.open(QFile::ReadOnly))
+  FMFile ifile(arg[0].asString());
+  if (!ifile.open("r"))
     throw Exception("filename " + arg[0].asString() + " could not be opened");
   bool no_delimiter = true;
-  QString delimiter;
+  FMString delimiter;
   if (arg.size() >= 2) {
     delimiter = arg[1].asString();
     no_delimiter = (delimiter.size() == 0);
   }
   int col_count = 0;
   int row_count = 0;
-  QList<QList<double> > data_real;
-  QList<QList<double> > data_imag;
-  QTextStream str(&ifile);
-  while (!str.atEnd()) {
-    QString whole_line = str.readLine(0);
-    QStringList line_pieces(whole_line.split("\r"));
+  FMList<FMList<double> > data_real;
+  FMList<FMList<double> > data_imag;
+  while (!ifile.atEnd()) {
+    FMString whole_line = ifile.readLine();
+    FMStringList line_pieces(whole_line.split("\r"));
     for (int i=0;i<line_pieces.size();i++) {
-      QString line = line_pieces[i];
-      QStringList elements;
+      FMString line = line_pieces[i];
+      FMStringList elements;
       if (no_delimiter) {
-	if (line.contains(QRegExp("[,;:]")))
-	  elements = line.split(QRegExp("[,;:]"));
+	if (line.contains(",") ||
+	    line.contains(";") ||
+	    line.contains("]"))
+	  elements = line.split(",;:");
 	else {
 	  line = line.simplified();
 	  elements = line.split(' ');
 	}
       } else {
-	elements = line.split(QString(delimiter)[0]);
+	elements = line.split(FMString(delimiter)[0]);
       }
-      QList<double> row_data_real;
-      QList<double> row_data_imag;
+      FMList<double> row_data_real;
+      FMList<double> row_data_imag;
       row_count++;
       for (int i=0;i<elements.size();i++) {
-	QString element(elements[i]);
+	FMString element(elements[i]);
 	element.replace(" ","");
 	if (element.contains('i') || element.contains('I') ||
 	    element.contains('j') || element.contains('J')) {
@@ -365,7 +366,7 @@ ArrayVector DlmReadFunction(int nargout, const ArrayVector& arg) {
 	  row_data_imag << 0;
 	}
       }
-      col_count = qMax(col_count,elements.size());
+      col_count = qMax<size_t>(col_count,elements.size());
       data_real << row_data_real;
       data_imag << row_data_imag;
     }
@@ -400,7 +401,7 @@ ArrayVector DlmReadFunction(int nargout, const ArrayVector& arg) {
   if ((numrows > 0) && (numcols > 0) && (row_count > 0) && (col_count > 0)) {
     bool anyNonzeroImaginary = false;
     for (int i=startrow;i<=stoprow;i++) 
-      for (int j=0;j<=qMin(data_real[i].size()-1,stopcol);j++) 
+      for (int j=0;j<=qMin<size_t>(data_real[i].size()-1,stopcol);j++) 
 	if (data_imag[i][j] != 0) anyNonzeroImaginary = true;
     if (!anyNonzeroImaginary) {
       A = Array(Double,NTuple(numrows,numcols));
@@ -424,21 +425,20 @@ ArrayVector DlmReadFunction(int nargout, const ArrayVector& arg) {
   return ArrayVector(A);
 }
 
-static ArrayVector LoadASCIIFunction(int nargout, QString filename, Interpreter* eval) {
+static ArrayVector LoadASCIIFunction(int nargout, FMString filename, Interpreter* eval) {
   // Hmmm...
-  QFile ifile(filename);
-  if (!ifile.open(QFile::ReadOnly))
+  FMFile ifile(filename);
+  if (!ifile.open("r"))
     throw Exception("filename " + filename + " could not be opened");
-  QTextStream str(&ifile);
   int i=0;
   int col_count = 0;
   int row_count = 0;
-  QList<double> data;
+  FMList<double> data;
   bool evenData = true;
-  while (!str.atEnd() && evenData) {
-    QString line = str.readLine(0);
+  while (!ifile.atEnd() && evenData) {
+    FMString line = ifile.readLine();
     line = line.simplified();
-    QStringList elements(line.split(' '));
+    FMStringList elements(line.split(' '));
     if (row_count == 0) 
       col_count = elements.size();
     else if (elements.size() != col_count)
@@ -463,21 +463,21 @@ static ArrayVector LoadASCIIFunction(int nargout, QString filename, Interpreter*
   if (nargout == 1)
     return ArrayVector(A);
   else {
-    QFileInfo fi(filename);
+    boost::filesystem::path p(filename);
     ParentScopeLocker lock(eval->getContext());
-    eval->getContext()->insertVariable(fi.baseName(),A);
+    eval->getContext()->insertVariable(p.stem().string(),A);
   }
   return ArrayVector();
 }
 
-static ArrayVector LoadNativeFunction(int nargout, QString filename,
+static ArrayVector LoadNativeFunction(int nargout, FMString filename,
 				      StringVector names, bool regexpmode, Interpreter* eval) {
-  QFile ofile(filename);
-  if (!ofile.open(QIODevice::ReadOnly))
+  FMFile ofile(filename);
+  if (!ofile.open("rb"))
     throw Exception("Unable to open " + filename + " to read data");
   Serialize input(&ofile);
   input.handshakeClient();
-  QString arrayName = input.getString();
+  FMString arrayName = input.getString();
   StringVector fieldnames;
   ArrayVector fieldvalues;
   ParentScopeLocker lock(eval->getContext());
@@ -498,8 +498,8 @@ static ArrayVector LoadNativeFunction(int nargout, QString filename,
 	eval->getContext()->addPersistentVariable(arrayName);
 	break;
       default:
-	throw Exception(QString("unrecognized variable flag ") + flag + 
-			QString(" on variable ") + arrayName);
+	throw Exception(FMString("unrecognized variable flag ") + flag + 
+			FMString(" on variable ") + arrayName);
       }
       eval->getContext()->insertVariable(arrayName,toRead);
     } else {
@@ -542,19 +542,19 @@ ArrayVector LoadFunction(int nargout, const ArrayVector& arg,
       argCopy << arg[i];
   }
   if (argCopy.size() < 1)  throw Exception("load requries a filename argument");
-  QString fname(argCopy[0].asString());
+  FMString fname(argCopy[0].asString());
   // If one of the filemode flags has not been specified, try to 
   // guess if it is an ASCII file or a MAT file
   if (!matMode && !asciiMode) {
-    if (fname.endsWith(".mat",Qt::CaseInsensitive))
+    if (fname.endsWith(".mat",true))
       matMode = true;
-    if (fname.endsWith(".txt",Qt::CaseInsensitive)) {
+    else if (fname.endsWith(".txt",true)) {
       asciiMode = true;
     } else {
       // Could be an ASCII file - try to open it native
       try {
-	QFile of(fname);
-	if (!of.open(QIODevice::ReadOnly))
+	FMFile of(fname);
+	if (!of.open("rb"))
 	  throw Exception("nope");
 	Serialize input(&of);
 	input.handshakeClient();
@@ -589,7 +589,7 @@ ArrayVector LoadFunction(int nargout, const ArrayVector& arg,
 //outputs string
 //DOCBLOCK io_getline
 ArrayVector GetLineFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  QString prompt;
+  FMString prompt;
   if (arg.size() < 1)
     prompt = "";
   else {

@@ -27,13 +27,11 @@
 #endif
 #include <pcre.h>
 #endif
-#include <QtCore>
-#include <QChar>
-#include <QString>
 #include "Printf.hpp"
 #include "Algorithms.hpp"
 #include "Utils.hpp"
 #include "IEEEFP.hpp"
+#include "FMLib.hpp"
 
 static int convspec(char c) {
     return ((c == 'd') || (c == 'i') || (c == 'o') || 
@@ -44,6 +42,9 @@ static int convspec(char c) {
 	(c == 's'));
 }
 
+bool isnull(char p) {
+  return p == 0;
+}
 
 //@@Signature
 //function strcmp StrCmpFunction
@@ -194,7 +195,7 @@ ArrayVector StrRepFunction(int nargout, const ArrayVector& arg) {
 //outputs y
 //DOCBLOCK string_regexp
 #if HAVE_PCRE
-static bool isSlotSpec(QString t) {
+static bool isSlotSpec(FMString t) {
     return ((t == "start") ||
 	(t == "end") ||
 	(t == "tokenExtents") ||
@@ -222,15 +223,15 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
     int count_slots = 6;
 
     // This is a cut-paste-hack of the pcredemo program that comes with pcre
-    QList<uint32> startList;
-    QList<uint32> stopList;
-    QList<uint32> tokenStartList;
-    QList<uint32> tokenStopList;
-    QList<QList<uint32> > tokenExtentsList;
-    QList<StringVector> tokenList;
+    FMList<uint32> startList;
+    FMList<uint32> stopList;
+    FMList<uint32> tokenStartList;
+    FMList<uint32> tokenStopList;
+    FMList<FMList<uint32> > tokenExtentsList;
+    FMList<StringVector> tokenList;
     StringVector matchList;
     StringVector namedTokenNames;
-    QList<StringVector> namedTokenValues;
+    FMList<StringVector> namedTokenValues;
 
     pcre *re;
     const char *error;
@@ -260,7 +261,7 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
 	    count_slots = 0;
 	    // Process inputs
 	    for (int i2=2;i2<stringed_args.size();i2++) {
-		QString t = stringed_args[i2];
+		FMString t = stringed_args[i2];
 		if (t == "start")  start_slot = count_slots++;
 		if (t == "end") end_slot = count_slots++;
 		if (t == "tokenExtents") tokenExtents_slot = count_slots++;
@@ -294,12 +295,12 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
 		literalSpacing = false;
 	}
 
-	QByteArray pattern_ba(stringed_args[1].toAscii());
-	QByteArray subject_ba(stringed_args[0].toAscii());
+	FMByteArray pattern_ba(stringed_args[1].toAscii());
+	FMByteArray subject_ba(stringed_args[0].toAscii());
 	pattern = pattern_ba.constData();
 	subject = subject_ba.constData();
 	subject_length = (int)strlen(subject);
-	QString qsubject(subject);
+	FMString qsubject(subject);
 
 	int options = 0;
 
@@ -323,8 +324,8 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
 	/* Compilation failed: print the error message and exit */
 
 	if (re == NULL) 
-	    throw Exception(QString("regular expression compilation failed at offset ") + 
-	    QString("%1").arg(erroffset) + ": " + error);
+	    throw Exception(FMString("regular expression compilation failed at offset ") + 
+	    Stringify(erroffset) + ": " + error);
 
 	/* Determine how many capture expressions there are */
 	int captureCount;
@@ -378,7 +379,7 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
 	/* Show substrings stored in the output vector by number. Obviously, in a real
 	application you might want to do things other than print them. */
 
-	QList<uint32> tEList;
+	FMList<uint32> tEList;
 	StringVector   tList;
 	for (i = 1; i < rc; i++)
 	{
@@ -427,7 +428,7 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
 	    {
 		namedTokenValues << StringVector();
 		int n = (tabptr[0] << 8) | tabptr[1];
-		namedTokenNames << QString((char*)(tabptr+2)).left(name_entry_size-3);
+		namedTokenNames << FMString((char*)(tabptr+2)).left(name_entry_size-3);
 		namedTokenValues[i] << qsubject.mid(ovector[2*n],ovector[2*n+1]-ovector[2*n]);
 		tabptr += name_entry_size;
 	    }
@@ -518,7 +519,7 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
 		stopList << ovector[1];
 		matchList << qsubject.mid(ovector[0],ovector[1]-ovector[0]);
 
-		QList<uint32> tEList;
+		FMList<uint32> tEList;
 		StringVector   tList;
 		for (i = 1; i < rc; i++)
 		{
@@ -544,8 +545,8 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
 	}
 
 	// Return this data to the user
-	Array start(DoubleVectorFromQList(startList));
-	Array end(DoubleVectorFromQList(stopList));
+	Array start(DoubleVectorFromFMList(startList));
+	Array end(DoubleVectorFromFMList(stopList));
 	Array matches(CellArrayFromStringVector(matchList));
 	// Now build the tokens array
 	ArrayVector tokensArrayContents;
@@ -555,7 +556,7 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
 	// Finally the token extents array
 	ArrayVector tokensExtentsContents;
 	for (int i=0;i<tokenExtentsList.size();i++)
-	    tokensExtentsContents << DoubleVectorFromQList(tokenExtentsList[i]);
+	    tokensExtentsContents << DoubleVectorFromFMList(tokenExtentsList[i]);
 	Array tokenExtents(CellConstructor(tokensExtentsContents));
 	// The named token data has to be resliced
 	ArrayVector namedTokenValueContents;
@@ -588,7 +589,7 @@ static ArrayVector RegExpCoreFunction(StringVector stringed_args, bool defaultMa
 //  <o1 o2 o3 o4>
 // ...
 // We want to perform a transpose
-static ArrayVector CellifyRegexpResults(QList<ArrayVector> res, const NTuple &dims) {
+static ArrayVector CellifyRegexpResults(FMList<ArrayVector> res, const NTuple &dims) {
     ArrayVector retVec;
     if (res.size() == 0) return ArrayVector();
     for (int i=0;i<res[0].size();i++) {
@@ -618,7 +619,7 @@ static ArrayVector RegExpWrapperFunction(int nargout, const ArrayVector& arg,
 						 return RegExpCoreFunction(stringed_args,caseMatch);
 					     } else if (IsCellStringArray(arg[0]) && arg[1].isString()) {
 						 StringVector arg0(StringVectorFromArray(arg[0]));
-						 QList<ArrayVector> results;
+						 FMList<ArrayVector> results;
 						 for (int j=0;j<arg0.size();j++) {
 						     StringVector stringed_args;
 						     stringed_args << arg0[j];
@@ -629,7 +630,7 @@ static ArrayVector RegExpWrapperFunction(int nargout, const ArrayVector& arg,
 						 return CellifyRegexpResults(results,arg[0].dimensions());
 					     } else if (arg[0].isString() && IsCellStringArray(arg[1])) {
 						 StringVector arg1(StringVectorFromArray(arg[1]));
-						 QList<ArrayVector> results;
+						 FMList<ArrayVector> results;
 						 for (int j=0;j<arg1.size();j++) {
 						     StringVector stringed_args;
 						     stringed_args << arg[0].asString();
@@ -644,7 +645,7 @@ static ArrayVector RegExpWrapperFunction(int nargout, const ArrayVector& arg,
 						     throw Exception("cell-arrays of strings as the first two arguments to regexp must be the same size");
 						 StringVector dp(StringVectorFromArray(arg[0]));
 						 StringVector sp(StringVectorFromArray(arg[1]));
-						 QList<ArrayVector> results;
+						 FMList<ArrayVector> results;
 						 for (int j=0;j<arg[0].length();j++) {
 						     StringVector stringed_args;
 						     stringed_args << dp[j];
@@ -669,8 +670,8 @@ ArrayVector RegExpIFunction(int nargout, const ArrayVector& arg) {
 }
 
 // Perform a replace 
-QString RegExpRepCoreFunction(QString subject,
-			      QString pattern,
+FMString RegExpRepCoreFunction(FMString subject,
+			      FMString pattern,
 			      StringVector modes,
 			      StringVector replacements) {
 #if HAVE_PCRE
@@ -719,7 +720,7 @@ QString RegExpRepCoreFunction(QString subject,
 				  * and errors that are detected.                                          *
 				  *************************************************************************/
 
-				  QByteArray pattern_ba(pattern.toAscii());
+				  FMByteArray pattern_ba(pattern.toAscii());
 				  re = pcre_compile(
 				      pattern_ba.constData(),      /* the pattern */
 				      options,              /* default options */
@@ -730,8 +731,8 @@ QString RegExpRepCoreFunction(QString subject,
 				  /* Compilation failed: print the error message and exit */
 
 				  if (re == NULL) 
-				      throw Exception(QString("regular expression compilation failed at offset ") + 
-				      erroffset + ": " + error);
+				      throw Exception(FMString("regular expression compilation failed at offset ") + 
+						      Stringify(erroffset) + ": " + error);
 
 				  /* Determine how many capture expressions there are */
 				  int captureCount;
@@ -748,7 +749,7 @@ QString RegExpRepCoreFunction(QString subject,
 				  * further matching is needed, it will be done below.                     *
 				  *************************************************************************/
 
-				  QByteArray subject_ba(subject.toAscii());
+				  FMByteArray subject_ba(subject.toAscii());
 				  rc = pcre_exec(
 				      re,                   /* the compiled pattern */
 				      NULL,                 /* no extra data - we didn't study the pattern */
@@ -766,8 +767,8 @@ QString RegExpRepCoreFunction(QString subject,
 				      return subject;
 				  }
 
-				  QString outputString;
-				  QString tokenSelect;
+				  FMString outputString;
+				  FMString tokenSelect;
 				  int nextReplacement = 0;
 				  int inputPointer = 0;
 				  int outputPtr = 0;
@@ -782,11 +783,11 @@ QString RegExpRepCoreFunction(QString subject,
 					  outputString += replacements[nextReplacement][outputPtr++];
 				      else
 					  if ((outputPtr < (replacementLength-1)) &&
-					      replacements[nextReplacement][outputPtr+1].isDigit()) {
+					      isdigit(replacements[nextReplacement][outputPtr+1])) {
 						  // Try to collect a token name
 						  digitFinder = outputPtr+1;
 						  while ((digitFinder < replacementLength) && 
-						      replacements[nextReplacement][digitFinder].isDigit()) {
+							 isdigit(replacements[nextReplacement][digitFinder])) {
 							  // Add this digit to the token name
 							  tokenSelect += replacements[nextReplacement][digitFinder];
 							  digitFinder++;
@@ -831,7 +832,7 @@ QString RegExpRepCoreFunction(QString subject,
 
 					  /* Run the next matching operation */
 
-					  QByteArray subject_ba(subject.toAscii());
+					  FMByteArray subject_ba(subject.toAscii());
 					  rc = pcre_exec(
 					      re,                   /* the compiled pattern */
 					      NULL,                 /* no extra data - we didn't study the pattern */
@@ -885,11 +886,11 @@ QString RegExpRepCoreFunction(QString subject,
 						  outputString += replacements[nextReplacement][outputPtr++];
 					      else
 						  if ((outputPtr < (replacementLength-1)) &&
-						      replacements[nextReplacement][outputPtr+1].isDigit()) {
+						      isdigit(replacements[nextReplacement][outputPtr+1])) {
 							  // Try to collect a token name
 							  digitFinder = outputPtr+1;
 							  while ((digitFinder < replacementLength) && 
-							      replacements[nextReplacement][digitFinder].isDigit()) {
+								 isdigit(replacements[nextReplacement][digitFinder])) {
 								  // Add this digit to the token name
 								  tokenSelect += replacements[nextReplacement][digitFinder];
 								  digitFinder++;
@@ -936,8 +937,8 @@ ArrayVector RegExpRepDriverFunction(int nargout, const ArrayVector& arg) {
     StringVector modes;
     for (int i=3;i<arg.size();i++)
 	modes << arg[i].asString();
-    QString subject = arg[0].asString();
-    QString pattern = arg[1].asString();
+    FMString subject = arg[0].asString();
+    FMString pattern = arg[1].asString();
     StringVector replist;
     if (arg[2].isString())
 	replist << arg[2].asString();
@@ -958,9 +959,9 @@ ArrayVector RegExpRepDriverFunction(int nargout, const ArrayVector& arg) {
 //DOCBLOCK string_deblank
 struct OpDeblank {
     static inline Array func(const Array& arg) {
-	QString txt(arg.asString());
-	while ((txt.length() >= 1) && (txt.right(1).at(0).isSpace() ||
-	    txt.right(1).at(0).isNull()))
+	FMString txt(arg.asString());
+	while ((txt.length() >= 1) && (isspace(txt.right(1).at(0)) ||
+				       (txt.right(1).at(0) == 0)))
 	    txt.chop(1);
 	Array z(txt);
 	if (z.isEmpty() && z.is2D())
@@ -1067,12 +1068,12 @@ ArrayVector DeblankFunction(int nargout, const ArrayVector& arg) {
 
 struct OpStrTrim {
     static inline Array func(const Array& arg) {
-	QString txt(arg.asString());
-	while ((txt.length() >= 1) && (txt.right(1).at(0).isSpace() ||
-	    txt.right(1).at(0).isNull()))
+	FMString txt(arg.asString());
+	while ((txt.length() >= 1) && (isspace(txt.right(1).at(0)) ||
+				       (txt.right(1).at(0) == 0)))
 	    txt.chop(1);
-	while ((txt.length() >= 1) && (txt.left(1).at(0).isSpace() ||
-	    txt.left(1).at(0).isNull()))
+	while ((txt.length() >= 1) && (isspace(txt.left(1).at(0)) ||
+				       (txt.left(1).at(0) == 0)))
 	    txt.remove(0,1);
 	Array z(txt);
 	if (z.isEmpty() && z.is2D())
@@ -1092,10 +1093,10 @@ ArrayVector StrTrimFunction(int nargout, const ArrayVector& arg) {
 //inputs x pattern
 //outputs y
 //DOCBLOCK string_strfind
-static Array StrFindFunc(const Array &r, const QString &pattern) {
+static Array StrFindFunc(const Array &r, const FMString &pattern) {
     if (!r.isString()) return EmptyConstructor();
-    QString x = r.asString();
-    QVector<double> v;
+    FMString x = r.asString();
+    FMVector<double> v;
     int from = 0;
     while (x.indexOf(pattern,from) >= 0) {
 	from = x.indexOf(pattern,from) + 1;
@@ -1112,7 +1113,7 @@ ArrayVector StrFindFunction(int nargout, const ArrayVector& arg) {
 	throw Exception("strfind requires at least two arguments");
     Array y(arg[0]);
     if (!arg[1].isString()) throw Exception("second argument to strfind must be a string");
-    QString pattern(arg[1].asString());
+    FMString pattern(arg[1].asString());
     if (y.dataClass() != CellArray)
 	y = CellArrayFromArray(y);
     const BasicArray<Array> &rp(y.constReal<Array>());
@@ -1135,9 +1136,9 @@ static void StripLeadingSpaces(StringVector& all_rows) {
     // Trim out leading spaces
     int leadspaces = 1000000;
     for (int i=0;i<all_rows.size();i++) {
-	QString t = all_rows[i];
+	FMString t = all_rows[i];
 	int whitelead = 0;
-	while (whitelead < t.size() && t[whitelead] == QChar(' ')) whitelead++;
+	while (whitelead < t.size() && t[whitelead] == FMChar(' ')) whitelead++;
 	leadspaces = qMin(leadspaces,whitelead);
     }
     for (int i=0;i<all_rows.size();i++)
@@ -1153,7 +1154,9 @@ static Array Num2StrHelperReal(const BasicArray<T> &dp, const char *formatspec) 
     while (iter1.isValid()) {
 	for (index_t i=1;i<=iter1.size();i++) {
 	    allint = allint && (iter1.get() == round(iter1.get()));
-	    maxlen = qMax(maxlen,QString().sprintf(formatspec,fabs(static_cast<double>(iter1.get()))).length());
+	    char buffer[4096];
+	    sprintf(buffer,formatspec,fabs(static_cast<double>(iter1.get())));
+	    maxlen = qMax<int>(maxlen,strlen(buffer));
 	    iter1.next();
 	}
 	iter1.nextSlice();
@@ -1162,12 +1165,14 @@ static Array Num2StrHelperReal(const BasicArray<T> &dp, const char *formatspec) 
     ConstBasicIterator<T> iter(&dp,1);
     StringVector all_rows;
     while (iter.isValid()) {
-	QString row_string;
+	FMString row_string;
 	for (index_t i=1;i<=iter.size();i++) {
-	    QString d(QString().sprintf(formatspec,iter.get()));
-	    d.replace(QString("inf"),QString("Inf"));
-	    d.replace(QString("nan"),QString("NaN"));
-	    QString pad(maxlen-d.length()+2,QChar(' '));
+	  char buffer[4096];
+	  sprintf(buffer,formatspec,iter.get());
+	  FMString d(buffer);
+	    d.replace(FMString("inf"),FMString("Inf"));
+	    d.replace(FMString("nan"),FMString("NaN"));
+	    FMString pad(maxlen-d.length()+2,FMChar(' '));
 	    row_string += pad;
 	    row_string += d;
 	    iter.next();
@@ -1176,7 +1181,7 @@ static Array Num2StrHelperReal(const BasicArray<T> &dp, const char *formatspec) 
 	iter.nextSlice();
     }
     StripLeadingSpaces(all_rows);
-    return StringArrayFromStringVector(all_rows,QChar(' '));
+    return StringArrayFromStringVector(all_rows,FMChar(' '));
 }
 
 template <class T>
@@ -1189,9 +1194,12 @@ Array Num2StrHelperComplex(const BasicArray<T> &rp, const BasicArray<T> &ip, con
 	for (index_t i=1;i<=iter_real1.size();i++) {
 	    allint = allint && (iter_real1.get() == round(iter_real1.get()));
 	    allint = allint && (iter_imag1.get() == round(iter_imag1.get()));
-	    QString dr = QString().sprintf(formatspec,iter_real1.get());
-	    QString di = QString().sprintf(formatspec,iter_imag1.get());
-	    maxlen = qMax(maxlen,dr.length()+di.length());
+	    char buffer[4096];
+	    sprintf(buffer,formatspec,iter_real1.get());
+	    FMString dr = FMString(buffer);
+	    sprintf(buffer,formatspec,iter_imag1.get());
+	    FMString di = FMString(buffer);
+	    maxlen = qMax<int>(maxlen,dr.length()+di.length());
 	    iter_real1.next();
 	    iter_imag1.next();
 	}
@@ -1203,27 +1211,30 @@ Array Num2StrHelperComplex(const BasicArray<T> &rp, const BasicArray<T> &ip, con
     ConstBasicIterator<T> iter_imag(&ip,1);
     StringVector all_rows;
     while (iter_real.isValid() && iter_imag.isValid()) {
-	QString row_string;
+	FMString row_string;
 	for (index_t i=1;i<=iter_real.size();i++) {
-	    QString dr(QString().sprintf(formatspec,iter_real.get()));
-	    dr.replace(QString("inf"),QString("Inf"));
-	    dr.replace(QString("nan"),QString("NaN"));
-	    QString di(QString().sprintf(formatspec,iter_imag.get()));
-	    di.replace(QString("inf"),QString("Inf"));
-	    di.replace(QString("nan"),QString("NaN"));
-	    if (iter_imag.get() >= 0) di = "+" + di;
-	    QString d = dr+di;
-	    QString pad(maxlen-d.length()+4,QChar(' '));
-	    row_string += pad + d + "i";
-	    iter_real.next();
-	    iter_imag.next();
+	  char buffer[4096];
+	  sprintf(buffer,formatspec,iter_real.get());
+	  FMString dr(buffer);
+	  dr.replace(FMString("inf"),FMString("Inf"));
+	  dr.replace(FMString("nan"),FMString("NaN"));
+	  sprintf(buffer,formatspec,iter_imag.get());
+	  FMString di(buffer);
+	  di.replace(FMString("inf"),FMString("Inf"));
+	  di.replace(FMString("nan"),FMString("NaN"));
+	  if (iter_imag.get() >= 0) di = FMString("+") + di;
+	  FMString d = dr+di;
+	  FMString pad(maxlen-d.length()+4,FMChar(' '));
+	  row_string += pad + d + FMString("i");
+	  iter_real.next();
+	  iter_imag.next();
 	}
 	all_rows << row_string;
 	iter_real.nextSlice();
 	iter_imag.nextSlice();
     }
     StripLeadingSpaces(all_rows);
-    return StringArrayFromStringVector(all_rows,QChar(' '));
+    return StringArrayFromStringVector(all_rows,FMChar(' '));
 }
 
 template <typename T>
@@ -1296,10 +1307,10 @@ ArrayVector Num2StrFunction(int nargout, const ArrayVector& arg) {
 // not contain whitespaces...
 // a mismatch - 
 
-ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
+ArrayVector ScanfHelperFunction( FMFile *fp, const ArrayVector& arg )
 {
     Array format(arg[0]);
-    Array errormsg = Array( QString("") );
+    Array errormsg = Array( FMString("") );
     NTuple dims;
     index_t firstdim = -1, seconddim = 1;
     index_t nMaxRead = 1.e9; //good approximation of infinity
@@ -1320,8 +1331,8 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 	}
     }
 
-    QString frmt = format.asString();
-    QString::iterator frmt_iter = frmt.begin();
+    FMString frmt = format.asString();
+    FMString::iterator frmt_iter = frmt.begin();
 
     bool stringarg = true;
     bool alldone = false;
@@ -1337,8 +1348,8 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
     ErrorStateType ErrorState = ErrorNone;
 
     char MatchChar('\0');
-    QChar FormatSpec('\0');
-    QChar FormatWidthSpec('\0');
+    FMChar FormatSpec('\0');
+    FMChar FormatWidthSpec('\0');
     bool FormatSkipFlag = false;
     int FormatFieldWidth = 0;
 
@@ -1358,7 +1369,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 			  ReadState = ExpectNone;
 		      }
 		      else{
-			  MatchChar = (*frmt_iter).toAscii();
+			MatchChar = *frmt_iter;
 			  if( iscntrl(MatchChar) || isspace( MatchChar ) ){
 			      ReadState = ExpectNone;
 			      break;
@@ -1368,30 +1379,29 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 		      break;
 		  case ParsingFormat:
 		      {
-			  char curr_char = (*frmt_iter).toAscii();
+			  char curr_char = *frmt_iter;
 			  if( convspec( curr_char ) ){
 			      FormatSpec = curr_char;
 			      FormatState = ParsingMatch;
 
 			      ReadState = ExpectNone;
 
-			      if( FormatSpec.toLower() == 'c' )
+			      if( tolower(FormatSpec) == 'c' )
 				  ReadState = ExpectChar;
-			      if( FormatSpec.toLower() == 'd' )
+			      if( tolower(FormatSpec) == 'd' )
 				  ReadState = ExpectInt;
-			      if( FormatSpec.toLower() == 'e' || FormatSpec.toLower() == 'f' || FormatSpec.toLower() == 'g' )
+			      if( tolower(FormatSpec) == 'e' || tolower(FormatSpec) == 'f' || tolower(FormatSpec) == 'g' )
 				  ReadState = ExpectDouble;
-			      if( FormatSpec.toLower() == 'i' )
+			      if( tolower(FormatSpec) == 'i' )
 				  ReadState = ExpectIntBase;
-			      if( FormatSpec.toLower() == 'o' )
+			      if( tolower(FormatSpec) == 'o' )
 				  ReadState = ExpectOctal;
-			      if( FormatSpec.toLower() == 's' )
+			      if( tolower(FormatSpec) == 's' )
 				  ReadState = ExpectString;
-			      if( FormatSpec.toLower() == 'u' )
+			      if( tolower(FormatSpec) == 'u' )
 				  ReadState = ExpectSignedInt;
-			      if( FormatSpec.toLower() == 'x' )
+			      if( tolower(FormatSpec) == 'x' )
 				  ReadState = ExpectHex;
-
 			      if( ReadState == ExpectNone ){
 				  ErrorState = ErrorInvalidFormat;
 				  alldone = true;
@@ -1400,7 +1410,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 			  }
 			  else{
 			      if( curr_char == 'h' || curr_char =='l' ){
-				  if( !FormatSpec.isNull() || !FormatWidthSpec.isNull() ){
+				if( !isnull(FormatSpec) || !isnull(FormatWidthSpec) ){
 				      ErrorState = ErrorInvalidFormat;
 				      alldone = true;
 				      continue;
@@ -1410,7 +1420,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 			      else{
 
 				  if( isdigit( curr_char ) ){
-				      if( !FormatSpec.isNull() ){
+				    if( !isnull(FormatSpec) ){
 					  ErrorState = ErrorInvalidFormat;
 					  alldone = true;
 					  continue;
@@ -1419,7 +1429,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 				  }
 				  else{
 				      if( curr_char == '*' ){
-					  if( FormatFieldWidth > 0 || !FormatSpec.isNull() ){
+					if( FormatFieldWidth > 0 || !isnull(FormatSpec) ){
 					      ErrorState = ErrorInvalidFormat;
 					      alldone = true;
 					      continue;
@@ -1455,7 +1465,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 		      break;
 		  case ExpectMatch:
 		      {
-			  if( QFileReadChar( fp ) != MatchChar ){
+			  if( FMFileReadChar( fp ) != MatchChar ){
 			      ErrorState = ErrorNoMatch;
 			      alldone = true;
 			  }
@@ -1464,12 +1474,12 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 		  case ExpectChar:
 		      {
 			  if( FormatFieldWidth == 0 ){
-			      Array val( QString(QFileReadChar(fp)) );
+			      Array val( FMString(FMFileReadChar(fp)) );
 			      if( !FormatSkipFlag )
 				  values.push_back( val );
 			  }
 			  else{
-			      Array val( QFileReadString( fp, FormatFieldWidth ) );
+			      Array val( FMFileReadString( fp, FormatFieldWidth ) );
 			      if( !FormatSkipFlag )
 				  values.push_back( val );
 			  }
@@ -1480,7 +1490,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 		  case ExpectInt:
 		      {
 			  try{
-			      Array val( QFileReadInteger(fp, 10, FormatFieldWidth) );
+			      Array val( FMFileReadInteger(fp, 10, FormatFieldWidth) );
 			      if( !FormatSkipFlag )
 				  values.push_back( val );
 			      ++nRead;
@@ -1496,7 +1506,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 		  case ExpectDouble:
 		      {
 			  try{
-			      Array val( QFileReadFloat(fp, FormatFieldWidth) );
+			      Array val( FMFileReadFloat(fp, FormatFieldWidth) );
 			      if( !FormatSkipFlag )
 				  values.push_back( val );
 			      ++nRead;
@@ -1512,7 +1522,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 		  case ExpectIntBase:
 		      {
 			  try{
-			      Array val( QFileReadInteger(fp, 0, FormatFieldWidth) ); //autodetect base
+			      Array val( FMFileReadInteger(fp, 0, FormatFieldWidth) ); //autodetect base
 			      if( !FormatSkipFlag )
 				  values.push_back( val );
 			      ++nRead;
@@ -1529,7 +1539,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 		  case ExpectOctal:
 		      {
 			  try{ 
-			      Array val( QFileReadInteger(fp, 8, FormatFieldWidth) );
+			      Array val( FMFileReadInteger(fp, 8, FormatFieldWidth) );
 			      if( !FormatSkipFlag )
 				  values.push_back( val );
 			      ++nRead;
@@ -1546,7 +1556,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 		  case ExpectString:
 		      {
 			  try{
-			      Array val( QFileReadString(fp, FormatFieldWidth) );
+			      Array val( FMFileReadString(fp, FormatFieldWidth) );
 			      if( !FormatSkipFlag )
 				  values.push_back( val );
 			      ++nRead;
@@ -1562,7 +1572,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 		  case ExpectSignedInt:
 		      {
 			  try{
-			      Array val( QFileReadInteger(fp, 10, FormatFieldWidth) );
+			      Array val( FMFileReadInteger(fp, 10, FormatFieldWidth) );
 			      if( !FormatSkipFlag )
 				  values.push_back( val );
 			      ++nRead;
@@ -1579,7 +1589,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 		  case ExpectHex:
 		      {
 			  try{
-			      Array val( QFileReadInteger(fp, 16, FormatFieldWidth) );
+			      Array val( FMFileReadInteger(fp, 16, FormatFieldWidth) );
 			      if( !FormatSkipFlag )
 				  values.push_back( val );
 			      ++nRead;
@@ -1600,7 +1610,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 		      break;
 		  case ExpectReadSkip:
 		      {
-			  QFileReadChar( fp ); //just skip over a character
+			  FMFileReadChar( fp ); //just skip over a character
 		      }
 		      break;
 		  default:
@@ -1624,10 +1634,10 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 	  ret.push_front( Array() );
 	  break;
       case ErrorInvalidFormat:
-	  ret.push_front( Array(QString("Invalid Format")) );
+	  ret.push_front( Array(FMString("Invalid Format")) );
 	  break;
       case ErrorNoMatch:
-	  ret.push_front( Array(QString("Matching failure in format.")) );
+	  ret.push_front( Array(FMString("Matching failure in format.")) );
 	  break;
     }
     ret.push_front( Array( static_cast<double>(values.size()) ) );
@@ -1660,9 +1670,9 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 
 	for( int i=0; i<values.size(); i++ ){
 	    if( values[i].isString() ){
-		QString str( values[i].asString() );
+		FMString str( values[i].asString() );
 		for( int j=0; j < str.length(); j++ ){
-		    out.set(ind++, Array(QChar(str[j])));
+		    out.set(ind++, Array(FMChar(str[j])));
 		}
 	    }
 	    else{
@@ -1672,7 +1682,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 	ret.push_front( out );
     }
     else{ //all string input
-	QString outstring;
+	FMString outstring;
 	
 	for( int i=0; i<values.size(); i++ ){
 	    if( values[i].isString() ){
@@ -1683,7 +1693,7 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 	    }
 	}
 	for( int i=outstring.length(); i<nElem; ++i)
-	    outstring.push_back(QChar('\0'));
+	    outstring.push_back(FMChar('\0'));
 
 	ret.push_front( Array( outstring ) );
 	dim=NTuple(1,nElem);
@@ -1702,12 +1712,10 @@ ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg )
 ArrayVector SscanfFunction(int nargout, const ArrayVector& arg) {
     if ((arg.size() > 3) || (arg.size() < 2) || (!arg[0].isString()) || (!arg[1].isString()))
 	throw Exception("incorrect number or types or the parameters");
-    QTemporaryFile fp;
-    if (!fp.open())
+    FMFile fp(tmpfile());
+    if (!fp.valid())
 	throw Exception("sscanf was unable to open a temp file (and so it won't work)");
-    QTextStream out(&fp);
-    out << arg[0].asString();
-    out.seek(0);
+    fp.write(arg[0].asString());
     fp.seek(0);
 
     ArrayVector helper_arg; 

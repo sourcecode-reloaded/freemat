@@ -19,7 +19,7 @@
 #include "Array.hpp"
 #include "IEEEFP.hpp"
 #include "Algorithms.hpp"
-#include <QString>
+#include "FMLib.hpp"
 
 //@@Signature
 //function hex2dec Hex2DecFunction
@@ -35,13 +35,13 @@ ArrayVector Hex2DecFunction(int nargout, const ArrayVector& arg) {
   Array x(arg[0]);
   if (x.dataClass() == Double) x = x.toClass(StringArray);
   if (x.isVector()) 
-    return ArrayVector(Array(double(x.asString().toLongLong(0,16))));
+    return ArrayVector(Array(double(FromHexString(x.asString()))));
   else {
     StringVector sv(StringVectorFromArray(x));
     Array rp(Double,NTuple(sv.size(),1));
     BasicArray<double> &qp(rp.real<double>());
     for (int i=0;i<sv.size();i++)
-      qp[index_t(i+1)] = sv[i].toInt(0,16);
+      qp[index_t(i+1)] = FromHexString(sv[i]);
     return ArrayVector(rp);
   }
   return ArrayVector();
@@ -64,15 +64,15 @@ ArrayVector Dec2HexFunction(int nargout, const ArrayVector& arg) {
   StringVector ret;
   int maxlen = 0;
   for (index_t i=1;i<=xp.length();i++) {
-    QString t = QString("%1").arg(xp[i],n,16,QChar('0'));
-    maxlen = qMax(maxlen,t.size());
+    FMString t = ToHexString((unsigned int)(xp[i])).rightJustified(n,'0');
+    maxlen = qMax<int>(maxlen,t.size());
   }
   if (n == 0) n = maxlen;
   for (index_t i=1;i<=xp.length();i++) {
-    QString t = QString("%1").arg(xp[i],n,16,QChar('0')).toUpper();
+    FMString t = ToHexString((unsigned int)(xp[i])).rightJustified(n,'0');
     ret << t;
   }
-  return ArrayVector(StringArrayFromStringVector(ret,QChar(' ')));
+  return ArrayVector(StringArrayFromStringVector(ret,FMChar(' ')));
 }
 
 
@@ -89,7 +89,7 @@ static inline Array Num2HexFunction(const BasicArray<T> &data) {
   StringVector st;
   for (index_t i=1;i<=data.length();i++)
     st.push_back(ToHexString(data[i]));
-  return StringArrayFromStringVector(st,QChar(' '));
+  return StringArrayFromStringVector(st,FMChar(' '));
 }
 
 ArrayVector Num2HexFunction(int nargout, const ArrayVector& arg) {

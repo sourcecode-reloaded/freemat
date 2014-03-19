@@ -36,6 +36,7 @@ Struct.cpp
 Serialize.cpp 
 FunctionDef.cpp 
 PathSearch.cpp
+Compiler.cpp
 )
 
 add_custom_command(
@@ -57,5 +58,5 @@ main.cpp)
 
 TARGET_LINK_LIBRARIES(FMT  Core FN FreeMatlib levmar Mex
 			   boost_system boost_filesystem boost_timer boost_chrono boost_regex
-			   lapack_c readline blasref 
+			   lapack_c readline blasref dl
 			   ${EXTRA_LIBRARIES} ${OPTIONAL_LIBS})

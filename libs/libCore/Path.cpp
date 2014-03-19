@@ -19,8 +19,6 @@
 
 #include "Array.hpp"
 #include "Interpreter.hpp"
-//#include "PathTool.hpp"
-#include <QSettings>
 
 //@@Signature
 //sfunction getpath GetPathFunction
@@ -39,25 +37,8 @@ ArrayVector GetPathFunction(int nargout, const ArrayVector& arg, Interpreter* ev
 ArrayVector SetPathFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   if (arg.size() != 1)
     throw Exception("setpath function requires exactly one string argument");
-  QSettings settings("FreeMat",Interpreter::getVersionString());
-  settings.setValue("interpreter/path",arg[0].asString());
-  settings.sync();
+  setenv("FREEMAT_PATH",arg[0].asString().c_str(),1);
   eval->setPath(arg[0].asString());
   eval->rescanPath();
-  return ArrayVector();
-}
-
-//Signature
-//sgfunction pathtool PathToolFunction
-//inputs none
-//outputs none
-//DOCBLOCK freemat_pathtool
-ArrayVector PathToolFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  // PathTool p;
-  // p.exec();
-  // QSettings settings("FreeMat",Interpreter::getVersionString());
-  // QStringList userPath = settings.value("interpreter/path").toStringList();
-  // eval->setUserPath(userPath);
-  // eval->rescanPath();
   return ArrayVector();
 }

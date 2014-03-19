@@ -76,6 +76,7 @@ class SharedObject : public FMSharedData {
   Type m_type;
   void *m_p;
 public:
+  SharedObject() :  m_p(0) {}
   SharedObject(Type t, void* p);
   SharedObject(const SharedObject& copy);
   SharedObject& operator=(const SharedObject &copy);
@@ -221,7 +222,7 @@ public:
   double asDouble() const;
   inline bool isDouble() const {return dataClass() == Double;}
   inline bool isScalar() const {
-    return ((m_type.Scalar == 1) || dimensions().isScalar());
+    return ((m_type.Scalar == 1) || (dimensions().isScalar() && (dataClass() != StringArray)));
   }
   template <typename T>
   inline BasicArray<T>& real() {

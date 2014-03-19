@@ -20,7 +20,7 @@
 #include "Math.hpp"
 #include "Complex.hpp"
 #include "Algorithms.hpp"
-#include "QString.hpp"
+#include "FMLib.hpp"
 
 //@@Signature
 //function unique UniqueFunction
@@ -54,20 +54,20 @@ bool operator<(const UniqueEntryReal<Array> &A, const UniqueEntryReal<Array> &B)
 template <class T>
 void UniqueFunctionReal(const BasicArray<T> &data, BasicArray<T> &u_data, 
 			BasicArray<index_t> &m_array, BasicArray<index_t> &n_array) {
-  QMap<UniqueEntryReal<T>,index_t> qSet;
+  FMMultiMap<UniqueEntryReal<T>,index_t> qSet;
   for (index_t i=1;i<=data.rows();i++) {
     UniqueEntryReal<T> tmp;
     tmp.real = BasicArray<T>(NTuple(1,data.cols()));
     for (index_t j=1;j<=data.cols();j++)
       tmp.real[j] = data.get(NTuple(i,j));
-    qSet.insertMulti(tmp,i);
+    qSet.insert(tmp,i);
   }
-  QList<UniqueEntryReal<T> > qKeys(qSet.uniqueKeys());
+  FMList<UniqueEntryReal<T> > qKeys(qSet.uniqueKeys());
   u_data = BasicArray<T>(NTuple(qKeys.size(),data.cols()));
   m_array = BasicArray<index_t>(NTuple(qKeys.size(),1));
   n_array = BasicArray<index_t>(NTuple(data.rows(),1));
   for (int i=0;i<qKeys.size();i++) {
-    QList<index_t> qValues(qSet.values(qKeys[i]));
+    FMList<index_t> qValues(qSet.values(qKeys[i]));
     for (index_t j=1;j<=data.cols();j++)
       u_data.set(NTuple(i+1,j),qKeys[i].real[j]);
     // To add support for "least" "most" modes of occurance,
@@ -106,7 +106,7 @@ void UniqueFunctionComplex(const BasicArray<T> &data_real,
 			   BasicArray<T> &u_data_imag,
 			   BasicArray<index_t> &m_array, 
 			   BasicArray<index_t> &n_array) {
-  QMap<UniqueEntryComplex<T>,index_t> qSet;
+  FMMultiMap<UniqueEntryComplex<T>,index_t> qSet;
   for (index_t i=1;i<=data_real.rows();i++) {
     UniqueEntryComplex<T> tmp;
     tmp.real = BasicArray<T>(NTuple(1,data_real.cols()));
@@ -115,15 +115,15 @@ void UniqueFunctionComplex(const BasicArray<T> &data_real,
       tmp.real[j] = data_real.get(NTuple(i,j));
       tmp.imag[j] = data_imag.get(NTuple(i,j));
     }
-    qSet.insertMulti(tmp,i);
+    qSet.insert(tmp,i);
   }
-  QList<UniqueEntryComplex<T> > qKeys(qSet.uniqueKeys());
+  FMList<UniqueEntryComplex<T> > qKeys(qSet.uniqueKeys());
   u_data_real = BasicArray<T>(NTuple(qKeys.size(),data_real.cols()));
   u_data_imag = BasicArray<T>(NTuple(qKeys.size(),data_real.cols()));
   m_array = BasicArray<index_t>(NTuple(qKeys.size(),1));
   n_array = BasicArray<index_t>(NTuple(data_real.rows(),1));
   for (int i=0;i<qKeys.size();i++) {
-    QList<index_t> qValues(qSet.values(qKeys[i]));
+    FMList<index_t> qValues(qSet.values(qKeys[i]));
     for (index_t j=1;j<=data_real.cols();j++) {
       u_data_real.set(NTuple(i+1,j),qKeys[i].real[j]);
       u_data_imag.set(NTuple(i+1,j),qKeys[i].imag[j]);
@@ -186,7 +186,7 @@ static inline ArrayVector UniqueFunctionAux(const Array &arg) {
   default:
     throw Exception("Unhandled type for unique function");
     MacroExpandCasesSimple(MacroUnique);
-  case StringArray: return UniqueFunctionAuxReal<QChar>(arg);
+  case StringArray: return UniqueFunctionAuxReal<FMChar>(arg);
   case CellArray: return UniqueFunctionAux<Array>(arg);
   }
 }

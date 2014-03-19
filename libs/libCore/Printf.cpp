@@ -21,9 +21,7 @@
 #include "HandleList.hpp"
 #include "Algorithms.hpp"
 #include "Utils.hpp"
-#include "QString.hpp"
-//#include <QFile>
-//#include <QTextStream>
+#include "FMLib.hpp"
 
 extern HandleList<FilePtr*> fileHandles;
 
@@ -34,12 +32,11 @@ public:
 
 class PrintfFileStream : public PrintfStream{
 private:
-  QFile* fp;
-  QTextStream ts;
+  FMFile* fp;
 public:
-  PrintfFileStream( QFile* fp_ ) : fp( fp_ ) { ts.setDevice( fp ); };
+  PrintfFileStream( FMFile* fp_ ) : fp( fp_ ) {}
   virtual PrintfFileStream& operator <<( const char* data ){
-    ts << data;
+    fp->write(data,strlen(data));
     return *this;
   };
   ~PrintfFileStream() { fp->flush(); };
@@ -47,11 +44,11 @@ public:
 
 class PrintfStringStream : public PrintfStream{
 private:
-  QString* str;
+  FMString* str;
 public:
-  PrintfStringStream( QString* str_ ) : str(str_){};
+  PrintfStringStream( FMString* str_ ) : str(str_){};
   virtual PrintfStringStream& operator <<( const char* data ){
-    (*str) += QString( data );
+    (*str) += FMString( data );
     return *this;
   };
 };
@@ -91,8 +88,8 @@ static char* validateFormatSpec(char* cp) {
     return 0;
 }
 
-QString ConvertEscapeSequences(const QString &src) {
-  QString dest;
+FMString ConvertEscapeSequences(const FMString &src) {
+  FMString dest;
   int i=0;
   while (i < src.size()) {
     if ((src[i] != '\\') || (i == (src.size()-1))) {
@@ -163,10 +160,10 @@ public:
     Array d(arg[ vec_ind ]);
     if (!d.isEmpty()) {
       if( d.isString() ){
-	QString s = d.asString();
-	QChar* data = s.data();
+	FMString s = d.asString();
+	const char* data = s.data();
 	while( elem_ind < s.length() ){
-	  str.push_back((data + elem_ind++)->toAscii());
+	  str.push_back(*(data + elem_ind++));
 	}
       }else{
 	str.push_back(d.get(elem_ind+1).asInteger());
@@ -185,13 +182,13 @@ public:
 //want escape-translation off.  So this common routine prints
 //the contents to a string, which is then processed by each 
 //subroutine.
-void PrintfHelperFunction(int nargout, const ArrayVector& arg, PrintfStream& output, QByteArray& errmsg, Array& ret, bool convEscape = false ) 
+void PrintfHelperFunction(int nargout, const ArrayVector& arg, PrintfStream& output, FMByteArray& errmsg, Array& ret, bool convEscape = false ) 
 {
   Array format(arg[0]);
-  QString frmt = format.asString();
+  FMString frmt = format.asString();
 
   std::vector<char> buff( frmt.length()+1 ); //vectors are contiguous in memory. we'll use it instead of char[]
-  strncpy(&buff[0], frmt.toStdString().c_str(), frmt.length()+1 );
+  strncpy(&buff[0], frmt.c_str(), frmt.length()+1 );
 
   // Search for the start of a format subspec
   char *dp = &buff[0];
@@ -256,7 +253,7 @@ void PrintfHelperFunction(int nargout, const ArrayVector& arg, PrintfStream& out
     if (*dp == '%' && *(dp+1)) {
       np = validateFormatSpec(dp+1);
       if (!np)
-	throw Exception("erroneous format specification " + QString(dp));
+	throw Exception("erroneous format specification " + FMString(dp));
       else {
 	if (*(np-1) == '%') {
 	  nprn = snprintf(nbuff,BUFSIZE,"%%"); nbuff[std::min(nprn+1,BUFSIZE-1)]='\0'; noutput += nbuf_ind;
@@ -321,9 +318,9 @@ ArrayVector SprintfFunction(int nargout, const ArrayVector& arg) {
   if (!arg[0].isString())
     throw Exception("sprintf format argument must be a string");
 
-  QString outf;
+  FMString outf;
   PrintfStringStream textstream( &outf );
-  QByteArray errmsg;
+  FMByteArray errmsg;
   Array output;
 
   PrintfHelperFunction( nargout, arg, textstream, errmsg, output, true );
@@ -347,10 +344,10 @@ ArrayVector PrintfFunction(int nargout, const ArrayVector& arg,
   if (!format.isString())
     throw Exception("printf format argument must be a string");
   
-  QString outf;
+  FMString outf;
   PrintfStringStream textstream( &outf );
   
-  QByteArray errmsg;
+  FMByteArray errmsg;
   Array output;
   
   PrintfHelperFunction( nargout, arg, textstream, errmsg, output, true );
@@ -392,7 +389,7 @@ ArrayVector FprintfFunction(int nargout, const ArrayVector& arg,
   FilePtr *fptr=(fileHandles.lookupHandle(handle+1));
 
   PrintfFileStream textstream( fptr->fp );
-  QByteArray errmsg;
+  FMByteArray errmsg;
   Array output;
 
   PrintfHelperFunction( nargout, argcopy, textstream, errmsg, output, true );

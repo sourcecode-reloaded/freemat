@@ -20,9 +20,9 @@
 #include "Array.hpp"
 #include "Interpreter.hpp"
 #include "PathSearch.hpp"
-#include <QtCore>
+#include "FMLib.hpp"
 
-static int ExistBuiltinFunction(QString fname, Interpreter* eval) {    
+static int ExistBuiltinFunction(FMString fname, Interpreter* eval) {    
   bool isDefed;
   FuncPtr d;
   isDefed = eval->getContext()->lookupFunction(fname,d);
@@ -34,22 +34,22 @@ static int ExistBuiltinFunction(QString fname, Interpreter* eval) {
   return 0;
 }
 
-static int ExistDirFunction(QString fname, Interpreter* eval) {
+static int ExistDirFunction(FMString fname, Interpreter* eval) {
   // Check for extra termination
   int flen = fname.size();
   if ((fname[flen-1] == '/') ||
       (fname[flen-1] == '\\'))
     fname[flen-1] = 0;
-  QFileInfo filestat(fname);
-  if (!filestat.exists()) return 0;
-  if (filestat.isDir()) return 7;
+  boost::filesystem::path p(fname);
+  if (!exists(p)) return 0;
+  if (is_directory(p)) return 7;
   return 0;
 }
 
-static int ExistFileFunction(QString fname, Interpreter* eval) {
+static int ExistFileFunction(FMString fname, Interpreter* eval) {
   PathSearcher src(eval->getPath());
-  QString path = src.ResolvePath(fname);
-  if( !path.isNull() )
+  FMString path = src.ResolvePath(fname);
+  if( path.size()==0 )
 	return 2;
 
   bool isDefed;
@@ -60,7 +60,7 @@ static int ExistFileFunction(QString fname, Interpreter* eval) {
   return 0;
 }
 
-static int ExistVariableFunction(QString fname, Interpreter* eval) {
+static int ExistVariableFunction(FMString fname, Interpreter* eval) {
   ParentScopeLocker lock(eval->getContext());
   bool isDefed = (eval->getContext()->lookupVariable(fname).valid());
   if (isDefed)
@@ -69,7 +69,7 @@ static int ExistVariableFunction(QString fname, Interpreter* eval) {
     return 0;
 }
 
-static int ExistAllFunction(QString fname, Interpreter* eval) {
+static int ExistAllFunction(FMString fname, Interpreter* eval) {
   int ret;
   ret = ExistVariableFunction(fname,eval);
   if (ret) return ret;
@@ -90,8 +90,8 @@ static int ExistAllFunction(QString fname, Interpreter* eval) {
 ArrayVector ExistFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
   if (arg.size() < 1)
     throw Exception("exist function takes at least one argument - the name of the object to check for");
-  QString fname = arg[0].asString();
-  QString stype;
+  FMString fname = arg[0].asString();
+  FMString stype;
   if (arg.size() > 1) {
     stype = arg[1].asString();
   } else {

@@ -56,6 +56,7 @@ void InitializeReservedTable() {
   fm_reserved["retall"] = TOK_RETALL;
   fm_reserved["return"] = TOK_RETURN;
   fm_reserved["switch"] = TOK_SWITCH;
+  fm_reserved["throw"] = TOK_THROW;
   fm_reserved["try"] = TOK_TRY;
   fm_reserved["while"] = TOK_WHILE;
   fm_reserved_initialized = true;

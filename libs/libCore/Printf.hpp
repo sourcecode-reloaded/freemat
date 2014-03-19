@@ -21,9 +21,8 @@
 
 #include "Array.hpp"
 #include "Interpreter.hpp"
-#include <QString>
-#include <QFile>
+#include "FMLib.hpp"
 
-QString ConvertEscapeSequences(const QString &src);
+FMString ConvertEscapeSequences(const FMString &src);
 ArrayVector PrintfFunction(int nargout, const ArrayVector& arg, Interpreter* eval);
 #endif

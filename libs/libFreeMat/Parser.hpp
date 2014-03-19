@@ -46,6 +46,7 @@ private:
   Tree ifStatement();
   Tree switchStatement();
   Tree tryStatement();
+  Tree throwStatement();
   Tree expression();
   Tree statement();
   Tree declarationStatement();

@@ -34,9 +34,7 @@ static void ClearVariable(Interpreter* eval, FMString name) {
   context->deleteVariable(name);
 }
 
-//FIXME
-void ClearLibs(Interpreter* eval) {
-}
+void ClearLibs(Interpreter* eval);
 
 static void ClearAllFunction(Interpreter* eval) {
   ClearLibs(eval);

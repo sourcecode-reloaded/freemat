@@ -17,7 +17,6 @@
  *
  */
 
-#include <QtCore>
 #include "Array.hpp"
 #include "HandleList.hpp"
 #include "IEEEFP.hpp"
@@ -25,6 +24,7 @@
 #include "Printf.hpp"
 #include "Algorithms.hpp"
 #include "Utils.hpp"
+#include <boost/regex.hpp>
 
 HandleList<FilePtr*> fileHandles;
 
@@ -34,18 +34,15 @@ void InitializeFileSubsystem() {
   if (init) 
     return;
   FilePtr *fptr = new FilePtr();
-  fptr->fp = new QFile();
-  fptr->fp->open(stdin,QIODevice::ReadOnly);
+  fptr->fp = new FMFile(stdin);
   fptr->swapflag = false;
   fileHandles.assignHandle(fptr);
   fptr = new FilePtr();
-  fptr->fp = new QFile();
-  fptr->fp->open(stdout,QIODevice::WriteOnly);
+  fptr->fp = new FMFile(stdout);
   fptr->swapflag = false;
   fileHandles.assignHandle(fptr);
   fptr = new FilePtr();
-  fptr->fp = new QFile();
-  fptr->fp->open(stderr,QIODevice::WriteOnly);
+  fptr->fp = new FMFile(stderr);
   fptr->swapflag = false;
   fileHandles.assignHandle(fptr);
   init = true;
@@ -54,7 +51,7 @@ void InitializeFileSubsystem() {
 
 #define MATCH(x) (prec==x)
 
-static DataClass processPrecisionString(QString prec) {
+static DataClass processPrecisionString(FMString prec) {
   prec = prec.trimmed().toLower();
   if (MATCH("uint8") || MATCH("uchar") || MATCH("unsigned char"))
     return UInt8;
@@ -80,14 +77,14 @@ static DataClass processPrecisionString(QString prec) {
 }
 #undef MATCH
 
-void ComputePrecisionString(QString cmd, DataClass &in, DataClass &out) {
+void ComputePrecisionString(FMString cmd, DataClass &in, DataClass &out) {
   // Check for type => type
-  QRegExp rxlen("(.*)=>(.*)");
-  int pos = rxlen.indexIn(cmd);
-  if (pos > -1) {
-    in = processPrecisionString(rxlen.cap(1));
-    out = processPrecisionString(rxlen.cap(2));
-    if (rxlen.cap(2).trimmed().toLower() == "char") out = StringArray;
+  boost::regex rxlen("(.*)=>(.*)");
+  boost::smatch what;
+  if (boost::regex_match(cmd,what,rxlen,boost::match_extra)) {
+    in = processPrecisionString(FMString(what[0]));
+    out = processPrecisionString(FMString(what[1]));
+    if (FMString(what[1]).trimmed().toLower() == "char") out = StringArray;
     return;
   }
   if (cmd.startsWith("*")) {
@@ -121,8 +118,8 @@ ArrayVector FopenFunction(int nargout, const ArrayVector& arg) {
       throw Exception("fopen requires at least one argument (a filename)");
     if (!(arg[0].isString()))
       throw Exception("First argument to fopen must be a filename");
-    QString fname = arg[0].asString();
-    QString mode = "r";
+    FMString fname = arg[0].asString();
+    FMString mode = "r";
     if (arg.size() > 1) {
       if (!arg[1].isString())
 	throw Exception("Access mode to fopen must be a string");
@@ -130,7 +127,7 @@ ArrayVector FopenFunction(int nargout, const ArrayVector& arg) {
     }
     bool swapendian = false;
     if (arg.size() > 2) {
-      QString swapflag = arg[2].asString();
+      FMString swapflag = arg[2].asString();
       if (swapflag=="swap") {
 	swapendian = true;
       } else if ((swapflag=="le") ||
@@ -154,38 +151,10 @@ ArrayVector FopenFunction(int nargout, const ArrayVector& arg) {
       } else if (!arg[2].isEmpty())
 	throw Exception("swap flag must be 'swap' or an endian spec (see help fopen for the complete list)");
     }
-    QFlags<QIODevice::OpenModeFlag> modeFlag;
-    mode = mode.toLower();
-    // r  means ReadOnly && MustExist
-    // r+ means ReadOnly | WriteOnly && MustExist
-    // w  means Writeonly | Truncate
-    // w+ means ReadOnly | WriteOnly | Truncate
-    // a  means Append | WriteOnly
-    // a+ means Append | WriteOnly | ReadOnly
-    // t  means * | Text 
-    bool mustExist = false;
-    bool has_r = mode.contains("r");
-    bool has_p = mode.contains("+");
-    bool has_w = mode.contains("w");
-    bool has_a = mode.contains("a");
-    bool has_t = mode.contains("t");
-    if (has_r) {
-      modeFlag |= QIODevice::ReadOnly;
-      mustExist = true;
-    }
-    if (has_w) modeFlag |= QIODevice::WriteOnly;
-    if (has_p) modeFlag |= QIODevice::ReadOnly;
-    if (has_p && has_r)  modeFlag |= QIODevice::WriteOnly;
-    if (has_w) modeFlag |= QIODevice::Truncate;
-    if (has_a) modeFlag |= QIODevice::Append | QIODevice::WriteOnly;
-    if (has_t) modeFlag |= QIODevice::Text;
-    
     FilePtr *fptr = new FilePtr();
-    fptr->fp = new QFile(fname);
-    if (mustExist && !fptr->fp->exists())
-      return Array(double(-1));
-    if (!fptr->fp->open(modeFlag))
-      throw Exception(fptr->fp->errorString() + QString(" for fopen argument ") + fname);
+    fptr->fp = new FMFile(fname);
+    if (!fptr->fp->open(mode))
+      throw Exception(fptr->fp->errorString() + FMString(" for fopen argument ") + fname);
     fptr->swapflag = swapendian;
     unsigned int rethan = fileHandles.assignHandle(fptr);
     return ArrayVector(Array(double(rethan-1)));
@@ -210,7 +179,7 @@ ArrayVector FcloseFunction(int nargout, const ArrayVector& arg) {
     throw Exception("Fclose must have one argument, either 'all' or a file handle");
   bool closingAll = false;
   if (arg[0].isString()) {
-    QString allflag = arg[0].asString().toLower();
+    FMString allflag = arg[0].asString().toLower();
     if (allflag == "all") {
       closingAll = true;
       int maxHandle(fileHandles.maxHandle());
@@ -245,7 +214,7 @@ ArrayVector FcloseFunction(int nargout, const ArrayVector& arg) {
 //DOCBLOCK io_fread
 
 template <typename T>
-Array Tread(QFile* fp, NTuple dim, bool swapflag) {
+Array Tread(FMFile* fp, NTuple dim, bool swapflag) {
   size_t bufsize = sizeof(T)*size_t(dim.count());
   if ((fp->size() - fp->pos()) < bufsize) {
     bufsize = fp->size() - fp->pos();
@@ -277,7 +246,7 @@ ArrayVector FreadFunction(int nargout, const ArrayVector& arg) {
   FilePtr *fptr=(fileHandles.lookupHandle(handle+1));
   if (!arg[2].isString())
     throw Exception("second argument to fread must be a precision");
-  QString prec = arg[2].asString().toLower();
+  FMString prec = arg[2].asString().toLower();
   // Get the size argument
   Array sze(arg[1].asDenseArray().toClass(Index));
   // Check for a single infinity
@@ -328,7 +297,7 @@ ArrayVector FreadFunction(int nargout, const ArrayVector& arg) {
 //DOCBLOCK io_fwrite
 
 template <typename T>
-int64 Twrite(QFile* fp, const Array &A, bool swapflag) {
+int64 Twrite(FMFile* fp, const Array &A, bool swapflag) {
   size_t bufsize = sizeof(T)*size_t(A.length());
   if (!swapflag)
     return fp->write((const char*)(A.constReal<T>().constData()),bufsize);
@@ -354,7 +323,7 @@ ArrayVector FwriteFunction(int nargout, const ArrayVector& arg) {
   if (arg.size() >= 3) {
     if (!arg[2].isString())
       throw Exception("type argument must be a string");
-    QString prec = arg[2].asString();
+    FMString prec = arg[2].asString();
     x = x.toClass(processPrecisionString(prec));
   }
   if (x.isString()) x = x.toClass(UInt8);
@@ -418,7 +387,7 @@ ArrayVector FseekFunction(int nargout, const ArrayVector& arg) {
   int64 offset = int64(arg[1].asDouble());
   int style;
   if (arg[2].isString()) {
-    QString styleflag = arg[2].asString().toLower();
+    FMString styleflag = arg[2].asString().toLower();
     if (styleflag=="bof")
       style = -1;
     else if (styleflag=="cof")
@@ -462,10 +431,10 @@ ArrayVector FgetlineFunction(int nargout, const ArrayVector& arg) {
   if (fptr->fp->atEnd())
     return ArrayVector(EmptyConstructor());
   else 
-    return ArrayVector(Array(ReadQStringFromFile(fptr->fp)));
+    return ArrayVector(Array(ReadFMStringFromFile(fptr->fp)));
 }
 
-ArrayVector ScanfHelperFunction( QFile *fp, const ArrayVector& arg );
+ArrayVector ScanfHelperFunction( FMFile *fp, const ArrayVector& arg );
 //@@Signature
 //function fscanf FscanfFunction
 //inputs varargin

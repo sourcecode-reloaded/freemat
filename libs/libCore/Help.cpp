@@ -19,16 +19,9 @@
 
 #include "Interpreter.hpp"
 #include "Array.hpp"
-#include "helpwidget.hpp"
-#include <QtCore>
-#include <QApplication>
 #include "PathSearch.hpp"
-#include "MainApp.hpp"
 
-extern MainApp *m_app;
-bool inBundleMode();
-QString GetRootPath();
-
+extern FMString GetRootPath();
 
 //Signature
 //sfunction help HelpFunction
@@ -41,8 +34,8 @@ ArrayVector HelpFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
 
   if (arg.size() != 1)
     throw Exception("help function requires a single argument (the function or script name)");
-  QString fname = arg[0].asString();
-  bool mdcexists = !(psearch.ResolvePath(fname+".mdc").isNull());
+  FMString fname = arg[0].asString();
+  bool mdcexists = !(psearch.ResolvePath(fname+".mdc").size() == 0);
   bool isFun;
   FuncPtr val;
   isFun = eval->getContext()->lookupFunction(fname,val);
@@ -55,17 +48,16 @@ ArrayVector HelpFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
     return ArrayVector();
   } else {
     // Check for a mdc file with the given name
-    QString mdcname = fname + ".mdc";
+    FMString mdcname = fname + ".mdc";
     mdcname = psearch.ResolvePath(mdcname);
-    if( mdcname.isNull() )
+    if( mdcname.size() == 0 )
       throw Exception("no help available on " + fname);
     
-    QFile fp(mdcname);
-    if (!fp.open(QIODevice::ReadOnly))
-      throw Exception(QString("No help available on ") + fname);
-    QTextStream io(&fp);
-    while (!io.atEnd()) {
-      QString cp = io.readLine();
+    FMFile fp(mdcname);
+    if (!fp.open("r"))
+      throw Exception(FMString("No help available on ") + fname);
+    while (!fp.atEnd()) {
+      FMString cp = fp.readLine();
       eval->outputMessage("\n       ");
       eval->outputMessage(cp);
     }
@@ -74,30 +66,3 @@ ArrayVector HelpFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
   throw Exception("no help for that topic");
 }
 
-static HelpWindow *m_helpwin=0;
-
-//Signature
-//sgfunction helpwin HelpWinFunction
-//inputs functionname
-//outputs none
-//DOCBLOCK freemat_helpwin
-ArrayVector HelpWinFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {  
-  QDir dir(GetRootPath()+"/help/html");
-  if (!m_helpwin){
-    m_helpwin = new HelpWindow(dir.canonicalPath());
-    QObject::connect(m_helpwin,SIGNAL(EvaluateText(QString)),m_app->GetKeyManager(),SLOT(QueueMultiString(QString)));
-  }
-  if (arg.size() == 0) {
-    m_helpwin->show();
-    m_helpwin->raise();
-  }
-  else if (arg.size() == 1) {
-    QString fulltext = arg[0].asString();
-    m_helpwin->helpText(fulltext);
-    m_helpwin->show();
-    m_helpwin->raise();
-  }
-  else
-    throw Exception("helpwin function accepts at most 1 argument.");
-  return ArrayVector();
-}

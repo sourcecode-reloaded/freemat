@@ -25,22 +25,20 @@
 #include "IEEEFP.hpp"
 #include <math.h>
 #include "Algorithms.hpp"
+#include <boost/regex.hpp>
 
-/*
-bool contains(StringVector& list, QString s, bool regexpmode) {
-    QRegExp t;
-    for (int i=0;i<list.size();i++) {
-	if (regexpmode) {
-	    t = QRegExp(list[i]);
-	    if (t.exactMatch(s) &&
-		(t.matchedLength() == s.size())) return true;
-	} else {
-	    if (list[i] == s) return true;
-	}
+bool contains(StringVector& list, FMString s, bool regexpmode) {
+  for (int i=0;i<list.size();i++) {
+    if (regexpmode) {
+      boost::regex t(list[i]);
+      boost::smatch what;
+      if (boost::regex_match(s,what,t)) return true;
+    } else {
+      if (list[i] == s) return true;
     }
-    return false;
+  }
+  return false;
 }
-*/
 
 NTuple ArrayVectorAsDimensions(const ArrayVector &arg) {
     NTuple dims;

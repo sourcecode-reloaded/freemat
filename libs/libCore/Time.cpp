@@ -16,41 +16,47 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
-#include <QtCore>
+#include <boost/timer/timer.hpp>
+#include <time.h>
 #include "Array.hpp"
 
-//Signature
+//@@Signature
 //function tic TicFunction jitsafe
 //inputs none
 //outputs none
 //DOCBLOCK freemat_tic
   
-static QTime ticvalue;
+static boost::timer::cpu_timer *timer = NULL;
 
 ArrayVector TicFunction(int nargout, const ArrayVector& arg) {
-  ticvalue.start();
+  if (!timer)
+    timer = new boost::timer::cpu_timer;
+  timer->start();
   return ArrayVector();
 }
 
-//Signature
+//@@Signature
 //function clock ClockFunction jitsafe
 //inputs none
 //outputs y
 //DOCBLOCK freemat_clock
 ArrayVector ClockFunction(int nargout, const ArrayVector& arg) {
-  QDateTime ctime(QDateTime::currentDateTime());
+  time_t rawtime;
+  struct tm * timeinfo;
+  time(&rawtime);
+  timeinfo = localtime(&rawtime);
   Array retvec(Double,NTuple(1,6));
   BasicArray<double> &dp(retvec.real<double>());
-  dp[1] = ctime.date().year();
-  dp[2] = ctime.date().month();
-  dp[3] = ctime.date().day();
-  dp[4] = ctime.time().hour();
-  dp[5] = ctime.time().minute();
-  dp[6] = ctime.time().second() + ctime.time().msec()/1.0e3;
+  dp[1] = timeinfo->tm_year;
+  dp[2] = timeinfo->tm_mon;
+  dp[3] = timeinfo->tm_mday;
+  dp[4] = timeinfo->tm_hour;
+  dp[5] = timeinfo->tm_min;
+  dp[6] = timeinfo->tm_sec;
   return ArrayVector(retvec);
 }
 
-//Signature
+//@@Signature
 //function clocktotime ClockToTimeFunction jitsafe
 //inputs x
 //outputs y
@@ -62,21 +68,22 @@ ArrayVector ClockToTimeFunction(int nargout, const ArrayVector& arg) {
   if (targ.length() != 6)
     throw Exception("clocktotime expects 1 argument - a vector in clock format: [year month day hour minute seconds]");
   const BasicArray<double> &dp(targ.constReal<double>());
-  QDate t_date;
-  t_date.setDate(int(dp[1]),int(dp[2]),int(dp[3]));
-  QTime t_time;
-  t_time.setHMS(int(dp[4]),int(dp[5]),int(dp[6]));
-  QDateTime t_datetime(t_date,t_time);
-  double retval = t_datetime.toTime_t() + (dp[6] - int(dp[6]));
+  struct tm timeinfo;
+  timeinfo.tm_year = int(dp[1]);
+  timeinfo.tm_mon = int(dp[2]);
+  timeinfo.tm_mday = int(dp[3]);
+  timeinfo.tm_hour = int(dp[4]);
+  timeinfo.tm_min = int(dp[5]);
+  timeinfo.tm_sec = int(dp[6]);
+  double retval = mktime(&timeinfo);
   return ArrayVector(Array(retval));
 }
-  
 
-//Signature
+//@@Signature
 //function toc TocFunction jitsafe
 //inputs none
 //outputs y
 //DOCBLOCK freemat_toc
 ArrayVector TocFunction(int nargout, const ArrayVector& arg) {
-  return ArrayVector(Array(ticvalue.elapsed()/1.0e3));
+  return ArrayVector(Array(timer->elapsed().wall/1.0e9));
 }

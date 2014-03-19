@@ -149,8 +149,9 @@ FMString TokenToString(const Token& b) {
   case TOK_OR_EQ: return "|=";
   case TOK_TIMES_EQ: return "*=";
   case TOK_DOTTIMES_EQ: return ".*=";
+  case TOK_THROW: return "throw";
   }
-  return FMString(1,FMChar(b.value()))+FMString(" val = ") + Stringify(b.value());
+  return FMString(1,FMChar(b.value()));
 }
 
 /*

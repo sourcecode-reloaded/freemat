@@ -19,7 +19,6 @@
 
 #include "Array.hpp"
 #include "Interpreter.hpp"
-#include <QtCore>
 #include "Algorithms.hpp"
 #include "Struct.hpp"
 
@@ -60,18 +59,18 @@ ArrayVector WhoFunction(int nargout, const ArrayVector& arg, Interpreter* eval) 
   else
     for (int i=0;i<arg.size();i++)
       names.push_back(arg[i].asString());
-  qSort(names.begin(),names.end());
+  std::sort(names.begin(),names.end());
   eval->outputMessage("  Variable Name       Type   Flags             Size\n");
   for (int i=0;i<names.size();i++) {
     Array lookup;
     ArrayReference ptr;
-    eval->outputMessage(names[i].rightJustified(15,' ',false));
+    eval->outputMessage(names[i].rightJustified(15,' '));
     ptr = eval->getContext()->lookupVariable(names[i]);
     if (!ptr.valid())
       eval->outputMessage("   <undefined>");
     else {
       lookup = *ptr;
-      eval->outputMessage(lookup.className().rightJustified(10,' ',false));
+      eval->outputMessage(lookup.className().rightJustified(10,' '));
       if (lookup.isSparse())
 	eval->outputMessage("   sparse");
       else
@@ -83,9 +82,9 @@ ArrayVector WhoFunction(int nargout, const ArrayVector& arg, Interpreter* eval) 
       } else {
 	eval->outputMessage("         ");
       }
-      eval->outputMessage(QString("  [") + 
+      eval->outputMessage(FMString("  [") + 
 			  lookup.dimensions().toString() + 
-			  QString("]"));
+			  FMString("]"));
     }
     eval->outputMessage("\n");
   }
@@ -114,18 +113,18 @@ ArrayVector WhosFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
   else
     for (int i=0;i<arg.size();i++)
       names.push_back(arg[i].asString());
-  qSort(names.begin(),names.end());
+  std::sort(names.begin(),names.end());
   eval->outputMessage("  Variable Name       Type   Flags             Size       Bytes\n");
   for (int i=0;i<names.size();i++) {
     Array lookup;
     ArrayReference ptr;
-    eval->outputMessage(names[i].rightJustified(15,' ',false));
+    eval->outputMessage(names[i].rightJustified(15,' '));
     ptr = eval->getContext()->lookupVariable(names[i]);
     if (!ptr.valid())
       eval->outputMessage("   <undefined>");
     else {
       lookup = *ptr;
-      eval->outputMessage(lookup.className().rightJustified(10,' ',false));
+      eval->outputMessage(lookup.className().rightJustified(10,' '));
       if (lookup.isSparse())
 	eval->outputMessage("   sparse");
       else
@@ -137,11 +136,11 @@ ArrayVector WhosFunction(int nargout, const ArrayVector& arg, Interpreter* eval)
       } else {
 	eval->outputMessage("         ");
       }
-      QString txt(QString("  [") + 
+      FMString txt(FMString("  [") + 
 		  lookup.dimensions().toString() + 
-		  QString("]"));
-      eval->outputMessage(txt.leftJustified(15,' ',false));
-      eval->outputMessage(QString("   %1").arg(lookup.bytes()));
+		  FMString("]"));
+      eval->outputMessage(txt.leftJustified(15,' '));
+      eval->outputMessage(FMString("   ") + Stringify(lookup.bytes()));
     }
     eval->outputMessage("\n");
   }
@@ -198,7 +197,7 @@ ArrayVector NarginFunction(int nargout, const ArrayVector& arg, Interpreter* eva
       return ArrayVector() << Array(double(nargin));
     }
   Array a = arg[0];
-  QString txt;
+  FMString txt;
   if (a.className() == "functionpointer")
     txt = LOOKUP(a,"name").asString();
   else
@@ -223,7 +222,7 @@ ArrayVector NargoutFunction(int, const ArrayVector&arg, Interpreter* eval) {
       return ArrayVector() << Array(double(nargout));
     }
   Array a = arg[0];
-  QString txt;
+  FMString txt;
   if (a.className() == "functionpointer")
     txt = LOOKUP(a,"name").asString();
   else
@@ -244,7 +243,7 @@ ArrayVector WhichFunction(int nargout, const ArrayVector& arg,
 			  Interpreter* eval) {
   if (arg.size() != 1)
     throw Exception("which function takes one string argument (the name of the function to look up)");
-  QString fname = arg[0].asString();
+  FMString fname = arg[0].asString();
   bool isFun;
   FuncPtr val;
   isFun = eval->lookupFunction(fname,val);
@@ -307,7 +306,7 @@ ArrayVector WhichFunction(int nargout, const ArrayVector& arg,
 //outputs filename
 //DOCBLOCK freemat_mfilename
 ArrayVector MFilenameFunction(int nargout, const ArrayVector& arg, Interpreter* eval) {
-  return ArrayVector(Array(QFileInfo(eval->getMFileName()).fileName()));
+  return ArrayVector(Array(FMString(boost::filesystem::path(eval->getMFileName()).filename().string())));
 }
 
 //@@Signature
@@ -317,11 +316,11 @@ ArrayVector MFilenameFunction(int nargout, const ArrayVector& arg, Interpreter* 
 //DOCBLOCK freemat_computer
 ArrayVector ComputerFunction(int nargout, const ArrayVector& arg) {
 #ifdef WIN32
-  return ArrayVector(Array(QString("PCWIN")));
+  return ArrayVector(Array(FMString("PCWIN")));
 #elif defined(__APPLE__)
-  return ArrayVector(Array(QString("MAC")));
+  return ArrayVector(Array(FMString("MAC")));
 #else
-  return ArrayVector(Array(QString("UNIX")));
+  return ArrayVector(Array(FMString("UNIX")));
 #endif
 }
 

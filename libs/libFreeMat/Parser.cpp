@@ -321,6 +321,21 @@ Tree Parser::declarationStatement() {
   return root;
 }
 
+Tree Parser::throwStatement() {
+  Tree root(expect(TOK_THROW));
+  if (match('('))
+    {
+      consume();
+      Tree expr(expression());
+      root.addChild(expr);
+      expect(')');
+      return root;
+    }
+  Tree expr(expression());
+  root.addChild(expr);
+  return root;
+}
+
 Tree Parser::tryStatement() {
   Tree root(expect(TOK_TRY));
   statementSeperator();
@@ -504,6 +519,8 @@ Tree Parser::statement() {
     return switchStatement();
   if (match(TOK_TRY))
     return tryStatement();
+  if (match(TOK_THROW))
+    return throwStatement();
   if (match(TOK_KEYBOARD) || match(TOK_RETURN) || 
       match(TOK_RETALL) || match(TOK_QUIT))
     return singletonStatement();

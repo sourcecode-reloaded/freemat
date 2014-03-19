@@ -22,13 +22,7 @@
 
 #include <iostream>
 #include <vector>
-#include <QtGlobal>
-#include <QCoreApplication>
-#include <QString>
-#include <QStringList>
-#include <QLibrary> 
-#include <QSettings>
-#include <QSysInfo>
+#include "FMLib.hpp"
 
 #include "Array.hpp"
 #include "Exception.hpp"
@@ -52,30 +46,25 @@ BlasWrapper::BlasWrapper() : useReference(true)
 
 void BlasWrapper::Init( void )
 {
-	blasLib = new QLibrary();
+	blasLib = new FMLibrary();
 	InitFunctions();
 	DiscoverBlasLibrary();
 	if( libList.empty() ) return;
-	QSettings settings("FreeMat",Interpreter::getVersionString());
-	if (!LoadLibByName(settings.value("interpreter/blas","").toString().toStdString()))
+	if (!LoadLibByName(getenv("BLAS_LIB")))
 	  LoadLib( *(libList.begin()) );
 }
 
 std::string BlasWrapper::ComputerType( void )
 {
 #ifdef Q_WS_WIN
-  if( QSysInfo::WindowsVersion & QSysInfo::WV_NT_based )
-    return std::string("Win32");
-  return "Unknown";
+  return std::string("Win32");
 #endif
 #ifdef Q_WS_MAC
   return std::string( "OSX" );
 #endif
-  if (QSysInfo::WordSize == 32)
+  if (sizeof(void*) == 4)
     return std::string( "Linux32" );
-  if (QSysInfo::WordSize == 64)
-    return std::string( "Linux64" );
-  return std::string("unknown");
+  return std::string( "Linux64" );
 }
 
 void BlasWrapper::ListLibraries( std::string& msg )
@@ -118,8 +107,7 @@ void BlasWrapper::LoadLib( const LibConf& libConf )
 	blasLib->setFileName( currentLib.fileName );
 	if( !blasLib->load() ) return;
 	useReference = false;
-	QSettings settings("FreeMat",Interpreter::getVersionString());
-	settings.setValue("interpreter/blas",libConf.Name);
+	setenv("BLAS_LIB",libConf.Name.c_str());
 }
 
 void BlasWrapper::DiscoverBlasLibrary( void )
@@ -158,7 +146,7 @@ void* BlasWrapper::Resolve( const char* function_name, void (*default_fcn)() )
   dbout << "Resolve of " << function_name << "\n";
   if (useReference) return (void*)(default_fcn);
 	void *p;
-	QString fname( function_name );
+	FMString fname( function_name );
 	if( currentLib.capitalized )
 		fname = fname.toUpper();
 	//TODO: handle prefix, suffix.

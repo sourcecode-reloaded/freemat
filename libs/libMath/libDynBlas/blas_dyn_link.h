@@ -20,7 +20,7 @@
 #ifndef __BLAS_DYN_LINK_H
 #define __BLAS_DYN_LINK_H
 
-#include "QString.hpp"
+#include "FMLib.hpp"
 #include <vector>
 typedef int integer;
 typedef char *address;
@@ -35,16 +35,16 @@ typedef char integer1;
 
 class BlasWrapper{
     struct LibConf{
-	QString Name;
-	QString fileName;
-	QString prefix;
-	QString suffix;
+	FMString Name;
+	FMString fileName;
+	FMString prefix;
+	FMString suffix;
 	bool capitalized;
-	QString desc;
+	FMString desc;
     };
     std::list<LibConf> libList;
     LibConf currentLib;
-    QLibrary* blasLib;
+    FMLibrary* blasLib;
     bool useReference;
 public:
     BlasWrapper();

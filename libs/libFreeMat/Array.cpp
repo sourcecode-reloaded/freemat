@@ -747,6 +747,7 @@ const Array Array::get(const Array& index) const {
 }
 
 const Array Array::get(const ArrayVector& index) const {
+  if (index.size() == 1) return this->get(index[0]);
   if (AllNonBoolScalars(index)) {
     NTuple addr(1,1);
     for (int i=0;i<index.size();i++)
@@ -775,6 +776,7 @@ void Array::set(const Array& index, const Array& data) {
 }
 
 void Array::set(const ArrayVector& index, const Array& data) {
+  if (index.size() == 1) return set(index[0], data);
   if (isEmpty() && dataClass() != data.dataClass())
     *this = toClass(data.dataClass());
   if (AllNonBoolScalars(index)) {
@@ -995,7 +997,8 @@ static inline bool Tequals_array(const Array *pA, const Array *pB) {
 
 // Need to make this more general - how so?
 bool Array::operator==(const Array &b) const {
-  if (!isReferenceType() && !b.isReferenceType() && isScalar() && b.isScalar()) {
+  if (!isReferenceType() && !b.isReferenceType() 
+      && isScalar() && b.isScalar()) {
     if (allReal() ^ b.allReal()) return false;
     if (dataClass() != b.dataClass()) return false;
     switch (dataClass()) {

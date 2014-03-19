@@ -17,7 +17,6 @@
  *
  */
 //This is a generated file. Do not edit!
-#include "QString.hpp"
 #include "blas_wrap.h"
 #include "blas_dyn_link.h"
 #include <iostream>

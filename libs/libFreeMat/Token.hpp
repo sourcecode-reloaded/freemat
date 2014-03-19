@@ -105,6 +105,7 @@ const TokenValueType TOK_AND_EQ = 206;
 const TokenValueType TOK_OR_EQ = 207;
 const TokenValueType TOK_TIMES_EQ = 208;
 const TokenValueType TOK_DOTTIMES_EQ = 209;
+const TokenValueType TOK_THROW = 210;
 
 class Serialize;
 

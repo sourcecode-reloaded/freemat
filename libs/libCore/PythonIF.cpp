@@ -7,6 +7,7 @@
 #include "Algorithms.hpp"
 
 
+
 FMString getPythonTraceback()
 {
     // Python equivilant:
@@ -500,6 +501,22 @@ ArrayVector PyImportFunction(int nargout, const ArrayVector& arg, Interpreter* e
   return ArrayVector();
 }
 
+
+//@@Signature
+//function pyhook PyHookFunction
+//inputs none
+//outputs none
+ArrayVector PyHookFunction(int nargout, const ArrayVector& arg) {
+  if (PyOS_InputHook)
+    {
+      PyOS_InputHook();
+    }
+  else
+    {
+      std::cout << "Input hook not defined!\n";
+    }
+  return ArrayVector();
+}
 
 //@@Signature
 //function pyeval PyEvalFunction

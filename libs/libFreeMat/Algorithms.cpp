@@ -268,6 +268,7 @@ void SetCellContents(Array &cell, const Array& index,
 
 void SetCellContents(Array &cell, const ArrayVector& index, 
 		     ArrayVector& data) {
+  if (index.size() == 1) return SetCellContents(cell,index[0],data);
   if (cell.dataClass() != CellArray)
     throw Exception("A{B1,B2,...BN} = B only supported for cell arrays.");
   IndexArrayVector addr;
