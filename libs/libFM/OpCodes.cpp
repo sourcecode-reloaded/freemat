@@ -4,22 +4,22 @@ opcodemode getOpCodeMode(op_t opcode)
   {
     case OP_NOP: return no_arguments;
     case OP_RETURN: return no_arguments;
-    case OP_PUSH: return one_register;
-    case OP_POP: return one_register;
+    case OP_PUSH: return two_registers;
+    case OP_POP: return two_registers;
     case OP_CALL: return constant;
     case OP_LOAD_FREE: return register_free;
     case OP_SAVE_FREE: return register_free;
     case OP_LOAD_CAPTURED: return register_captured;
     case OP_SAVE_CAPTURED: return register_captured;
     case OP_SAVE: return register_variable;
-    case OP_DCOLON: return one_register;
+    case OP_DCOLON: return two_registers;
     case OP_SUBSASGN: return register_variable;
     case OP_LOAD_CONST: return register_constant;
     case OP_LOAD: return register_variable;
     case OP_START_LIST: return one_register;
     case OP_END_LIST: return one_register;
     case OP_LOAD_STACK: return register_constant;
-    case OP_SUBSREF: return one_register;
+    case OP_SUBSREF: return three_registers;
     case OP_COLON: return three_registers;
     case OP_ADD: return three_registers;
     case OP_MINUS: return three_registers;
@@ -73,6 +73,9 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_SUBSASGN_FREE: return register_free;
     case OP_SUBSASGN_DYNAMIC: return register_name;
     case OP_LOOPCOUNT: return one_register;
+    case OP_NEW_LIST: return one_register;
+    case OP_LOAD_INT: return register_int;
+    case OP_PUSH_INT: return register_int;
     default:
       return three_registers;
   }
@@ -154,5 +157,8 @@ std::string getOpCodeName(op_t opcode)
     case OP_SUBSASGN_FREE: return "SUBSASGN_FREE";
     case OP_SUBSASGN_DYNAMIC: return "SUBSASGN_DYN";
     case OP_LOOPCOUNT: return "LOOPCOUNT";
+    case OP_NEW_LIST: return "NEW_LIST";
+    case OP_LOAD_INT: return "LOAD_INT";
+    case OP_PUSH_INT: return "PUSH_INT";
   }
 }

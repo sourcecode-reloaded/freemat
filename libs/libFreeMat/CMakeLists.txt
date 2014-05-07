@@ -37,6 +37,10 @@ Serialize.cpp
 FunctionDef.cpp 
 PathSearch.cpp
 Compiler.cpp
+Register.cpp
+Symbol.cpp
+Assembler.cpp
+VM.cpp
 )
 
 add_custom_command(

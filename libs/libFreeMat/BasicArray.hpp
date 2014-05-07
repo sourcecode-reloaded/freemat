@@ -106,6 +106,12 @@ public:
     else
       return NULL;
   }
+  inline T getScalarValue() const {
+    return *(m_data.data());
+  }
+  inline void setScalarValue(T val) {
+    *(m_data.data()) = val;
+  }
   void fill(T val) {
     for (index_t i=1;i<=length();i++) 
       m_data[(size_t)(i+m_offset-1)] = val;
@@ -156,6 +162,14 @@ public:
     retvec.m_offset = m_offset + offset;
     retvec.m_data = m_data;
     retvec.m_count = retvec.m_dims.count();
+    return retvec;
+  }
+  BasicArray<T> slice(index_t start, index_t len) const {
+    BasicArray<T> retvec;
+    retvec.m_dims = NTuple(len,1);
+    retvec.m_offset = start;
+    retvec.m_data = m_data;
+    retvec.m_count = len;
     return retvec;
   }
   void del(const IndexArrayVector& index) {

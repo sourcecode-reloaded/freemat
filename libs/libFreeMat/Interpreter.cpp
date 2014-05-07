@@ -492,7 +492,7 @@ void Interpreter::diaryMessage(FMString msg) {
 }
 
 
-void Interpreter::outputMessage(FMString msg) {
+void Interpreter::outputMessage(const FMString &msg) {
   if (m_diaryState) diaryMessage(msg);
   if (m_captureState)
     m_capture += msg;
@@ -510,7 +510,7 @@ void Interpreter::outputMessage(const char* format,...) {
   outputMessage(FMString(buffer));
 }
 
-void Interpreter::errorMessage(FMString msg) {
+void Interpreter::errorMessage(const FMString & msg) {
   if (m_diaryState) diaryMessage("Error: " + msg + "\n");
   if (m_captureState)
     m_capture += "Error: " + msg + "\n";
@@ -519,7 +519,7 @@ void Interpreter::errorMessage(FMString msg) {
       m_delegate->outputRawText(TranslateString("Error: " + msg + "\r\n"));
 }
 
-void Interpreter::warningMessage(FMString msg) {
+void Interpreter::warningMessage(const FMString & msg) {
   static FMString lastWarning;
   static bool lastWarningRepeat = false;
   if (!m_enableWarnings) return;

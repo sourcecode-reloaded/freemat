@@ -19,7 +19,6 @@
 #ifndef __Array_hpp__
 #define __Array_hpp__
 
-#include <boost/shared_ptr.hpp>
 #include "FMLib.hpp"
 #include "Types.hpp"
 #include "BasicArray.hpp"
@@ -334,6 +333,8 @@ public:
   const Array get(const NTuple& index) const;
   const Array get(const IndexArrayVector& indices) const;
   const Array get(const ArrayVector& indices) const;
+
+  const Array column(index_t index) const;
 
   void set(const Array& index, const Array& data);
   void set(const IndexArray& index, const Array& data);

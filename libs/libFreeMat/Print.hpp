@@ -19,16 +19,10 @@
 
 #ifndef __Print_hpp__
 #define __Print_hpp__
-#include <iostream>
-#include <vector>
-#include <list>
-#include <string>
-#include <stdlib.h>
-#include <stdio.h>
 #include "Array.hpp"
 
-class Interpreter;
-void PrintArrayClassic(Array A, int printLimit, Interpreter *eval);
+class TermIF;
+void PrintArrayClassic(Array A, int printLimit, TermIF *io);
 FMString ArrayToPrintableString(const Array& a);
 FMString SummarizeArrayCellEntry(const Array &a);
 

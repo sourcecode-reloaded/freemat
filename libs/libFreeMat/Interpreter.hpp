@@ -21,6 +21,7 @@
 #define __Interpreter_h__
 
 #include "Tree.hpp"
+#include "TermIF.hpp"
 #include "Context.hpp"
 #include "FunctionDef.hpp"
 #include "Array.hpp"
@@ -144,7 +145,7 @@ public:
   virtual void UpdateStackTrace(FMStringList trace)= 0;  
 };
 
-class Interpreter {
+class Interpreter : public TermIF {
 
   /******************************************
    *  Class Members for the Interpreter     *
@@ -425,16 +426,16 @@ public:
   /**
    * Output the following text message.
    */
-  void outputMessage(FMString msg);
+  void outputMessage(const FMString &msg);
   void outputMessage(const char* format,...);
   /**
    * Output the following error message.
    */
-  void errorMessage(FMString msg);
+  void errorMessage(const FMString &msg);
   /**
    * Output the following warning message.
    */
-  void warningMessage(FMString msg);
+  void warningMessage(const FMString &msg);
   /**
    * Start the interpreter running.
    */

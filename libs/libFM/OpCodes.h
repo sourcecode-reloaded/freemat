@@ -69,3 +69,6 @@ const op_t OP_SUBSASGN_CAPTURED = 67;
 const op_t OP_SUBSASGN_FREE = 68;
 const op_t OP_SUBSASGN_DYNAMIC = 69;
 const op_t OP_LOOPCOUNT = 70;
+const op_t OP_NEW_LIST = 71;
+const op_t OP_LOAD_INT = 74;
+const op_t OP_PUSH_INT = 75;

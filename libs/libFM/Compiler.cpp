@@ -1,8 +1,13 @@
 #include "Compiler.hpp"
-#include "Algorithms.hpp"
-#include "Print.hpp"
-#include "Math.hpp"
-#include "Struct.hpp"
+#include <iostream>
+#include "BaseTypes.hpp"
+
+//#include "Algorithms.hpp"
+//#include "Print.hpp"
+//#include "Math.hpp"
+//#include "Struct.hpp"
+
+using namespace FM;
 
 // Assembler issues.
 // 
@@ -316,11 +321,13 @@
 
   GLOBAL and PERSISTENT - error - cannot be both
 
-
-  Are there pros and cons to having lists built on the stack versus in a List object?
-
+  - TODO - add an opcode to load an integer into a register, so that 0, 1, 2, ... are not stored as unique constants
+  - Change idx_t to const_t 
+  - Triple opcodes should use indirect references to registers
 
 */
+
+
 
 
 // Code object
@@ -373,6 +380,8 @@ std::string Compiler::opcodeDecodeArgs(op_t opcode, int32_t val)
       return Stringify(constant(val)) + "  ; " ;
     case register_constant:
       return "r" + Stringify(reg1(val)) + ", " + Stringify(constant(val)) + "  ; " ;
+    case register_int:
+      return "r" + Stringify(reg1(val)) + ", " + Stringify(constant(val)) + "  ; " ;
 	//	+ SummarizeArrayCellEntry(_code->_constlist[constant(val)]);
     case register_variable:
       return "r" + Stringify(reg1(val)) + ", " + Stringify(constant(val)) + "  ; " 
@@ -387,7 +396,7 @@ std::string Compiler::opcodeDecodeArgs(op_t opcode, int32_t val)
       return "r" + Stringify(reg1(val)) + ", " + Stringify(constant(val)) + "  ; " 
 	+ _code->_namelist[constant(val)];
     case constant:
-      return Stringify(constant(val)) + "  ; " + SummarizeArrayCellEntry(_code->_constlist[constant(val)]);
+      return Stringify(constant(val)) + "  ; " + _code->_constlist[constant(val)].description();
     default:
       return "unknown";
     }
@@ -407,6 +416,8 @@ std::string Compiler::opcodeDecode(op_t opcode, int32_t val)
       return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val)) + ", r" + Stringify(reg3(val));
     case register_constant:
       return "r" + Stringify(reg1(val)) + ", Const[" + Stringify(constant(val)) +"]";
+    case register_int:
+      return "r" + Stringify(reg1(val)) + ", " + Stringify(constant(val));
     case register_variable:
       return "r" + Stringify(reg1(val)) + ", Var[" + Stringify(constant(val)) + "]";
     case register_captured:
@@ -459,10 +470,28 @@ void Compiler::emit(int8_t opcode, reg_t reg1, reg_t reg2, reg_t reg3)
   _code->_currentBlock->_insnlist.push_back(i);
 }
 
+void Compiler::emit(int8_t opcode, reg_t reg1, reg_t reg2, idx_t reg3)
+{
+  Instruction i;
+  i._opcode = opcode | (reg1->num() << 8) | (reg2->num() << 16) | (reg3 << 24);
+  i._target = 0;
+  i._position = 0;
+  _code->_currentBlock->_insnlist.push_back(i);
+}
+
 void Compiler::emit(int8_t opcode, reg_t reg1, reg_t reg2)
 {
   Instruction i;
   i._opcode = opcode | (reg1->num() << 8) | (reg2->num() << 16);
+  i._target = 0;
+  i._position = 0;
+  _code->_currentBlock->_insnlist.push_back(i);
+}
+
+void Compiler::emit(int8_t opcode, reg_t reg1, idx_t reg2)
+{
+  Instruction i;
+  i._opcode = opcode | (reg1->num() << 8) | (reg2 << 16);
   i._target = 0;
   i._position = 0;
   _code->_currentBlock->_insnlist.push_back(i);
@@ -523,17 +552,18 @@ void Compiler::emit(int8_t opcode)
 //
 // Calls a function and then returns a pointer to the base
 // of the return args on the stack
-void Compiler::doFunctionExpression(const Tree &t, reg_t narg_out) {
-  reg_t sp = startStackList();
+reg_t Compiler::doFunctionExpression(const Tree &t, reg_t narg_out) {
+  reg_t sp = startList();
+  pushList(sp,narg_out);
   FMString funcname = t.first().text();
   if ((t.numChildren() >= 2) && t.second().is(TOK_PARENS)) {
     const Tree &s(t.second());
     for (int p=0;p<s.numChildren();p++)
-      multiexpr(s.child(p));
+      multiexpr(sp,s.child(p));
   }
-  endStackList(sp);
-  push(narg_out);
-  emit(OP_CALL,getNameID(funcname));
+  reg_t rp = getRegister();
+  emit(OP_CALL,rp,sp,getNameID(funcname));
+  return rp;
 }
 
 reg_t Compiler::getRegister()
@@ -541,36 +571,17 @@ reg_t Compiler::getRegister()
   return _regpool->getRegister();
 }
 
-void Compiler::push(reg_t x)
-{
-  emit(OP_PUSH,x);
-}
-
-reg_t Compiler::popStack()
-{
-  reg_t x = getRegister();
-  emit(OP_POP,x);
-  return x;
-}
-
-void Compiler::doPushConstantString(const FMString & t)
-{
-  push(fetchConstantString(t));
-}
-
-void Compiler::doPushConstant(int32_t x)
-{
-  push(fetchConstant(Array(x)));
-}
-
 // Invoke a function, but we expect a scalar argument
 // -- expressionStatement, rhs
 reg_t Compiler::doScalarFunctionExpression(const Tree &t, bool optional_output) {
-  reg_t nargout = fetchConstant(Array(int32(optional_output ? 0 : 1)));
+  /*
+  // FIXME - broken
+  reg_t nargout = fetchConstant(_types->_int32->makeScalar(optional_output ? 0 : 1));
   reg_t sp = getStackRegister();
   doFunctionExpression(t,nargout);
   reg_t x = readFromStack(sp);
   return x;
+  */
 }
 
 reg_t Compiler::doBinaryOperator(const Tree &t, op_t opcode) {
@@ -589,38 +600,39 @@ reg_t Compiler::doUnaryOperator(const Tree &t, op_t opcode) {
 }
 
 reg_t Compiler::doubleColon(const Tree &t) {
-  push(expression(t.first().first()));
-  push(expression(t.first().second()));
-  push(expression(t.second()));
+  reg_t args = startList();
+  pushList(args,expression(t.first().first()));
+  pushList(args,expression(t.first().second()));
+  pushList(args,expression(t.second()));
   reg_t r0 = getRegister();
-  emit(OP_DCOLON,r0); // Pops args 0,1,2 off of top of stack
+  emit(OP_DCOLON,r0,args); // Pops args 0,1,2 off of top of stack
   return r0;
 }
 
 
 //TODO - Collapse into getID(varname,flags)...
 
-const_t Compiler::getVariableID(const FMString & t) {
+idx_t Compiler::getVariableID(const FMString & t) {
   return _code->_varlist.indexOf(t);
 }
 
-const_t Compiler::getNameID(const FMString & t) {
+idx_t Compiler::getNameID(const FMString & t) {
   return _code->_namelist.indexOf(t);
 }
 
-const_t Compiler::getCapturedID(const FMString & t) {
+idx_t Compiler::getCapturedID(const FMString & t) {
   return _code->_capturedlist.indexOf(t);
 }
 
-const_t Compiler::getFreeID(const FMString &t) {
+idx_t Compiler::getFreeID(const FMString &t) {
   return _code->_freelist.indexOf(t);
 }
 
 const_t Compiler::getConstantID(const FMString & t) {
-  return getConstantID(Array(t));
+  return getConstantID(_types->_string->makeString(t));
 }
 
-const_t Compiler::getConstantID(const Array & t) {
+const_t Compiler::getConstantID(const Object & t) {
   for (int i=0;i<_code->_constlist.size();++i)
     if (_code->_constlist[i] == t) return i;
   _code->_constlist.push_back(t);
@@ -645,6 +657,12 @@ void Compiler::saveRegisterToName(const FMString &varname, reg_t b) {
     throw Exception("Unhandled save case");
 }
 
+// FIXME - 
+// Requires more arguments than are available.
+// SUBSASGN A(list) = b
+// means I need to access 3 pieces of info in the op
+// namely: A, list, and b
+// Proposed solution - let b be at the end of the list
 void Compiler::assignment(const Tree &t, bool printIt, reg_t b) {
   FMString varname = t.first().text();
   if (t.numChildren() == 1)
@@ -652,73 +670,70 @@ void Compiler::assignment(const Tree &t, bool printIt, reg_t b) {
       saveRegisterToName(varname,b);
       return;
     }
-  flattenDereferenceTreeToStack(t,1);
+  reg_t args = flattenDereferenceTreeToStack(t,1);
   int symflags = _code->_syms->syms[varname];
   if (IS_LOCAL(symflags))
-    emit(OP_SUBSASGN,b,getVariableID(varname));
+    emit(OP_SUBSASGN,args,b,getVariableID(varname));
   else if (IS_GLOBAL(symflags))
-    emit(OP_SUBSASGN_GLOBAL,b,getNameID(varname));
+    emit(OP_SUBSASGN_GLOBAL,args,b,getNameID(varname));
   else if (IS_PERSIST(symflags))
-    emit(OP_SUBSASGN_PERSIST,b,getNameID(varname));
+    emit(OP_SUBSASGN_PERSIST,args,b,getNameID(varname));
   else if (IS_CAPTURED(symflags))
-    emit(OP_SUBSASGN_CAPTURED,b,getCapturedID(varname));
+    emit(OP_SUBSASGN_CAPTURED,args,b,getCapturedID(varname));
   else if (IS_FREE(symflags))
-    emit(OP_SUBSASGN_FREE,b,getFreeID(varname));
+    emit(OP_SUBSASGN_FREE,args,b,getFreeID(varname));
   else if (IS_DYNAMIC(symflags))
-    emit(OP_SUBSASGN_DYNAMIC,b,getNameID(varname));
+    emit(OP_SUBSASGN_DYNAMIC,args,b,getNameID(varname));
   else
     throw Exception("Unhandled subsasgn case");
 }
 
 // We want to map a dereference tree to the stack.
-void Compiler::flattenDereferenceTreeToStack(const Tree &s, int first_child) {
-  reg_t x = startStackList();
+reg_t Compiler::flattenDereferenceTreeToStack(const Tree &s, int first_child) {
+  reg_t x = startList();
   for (int index = first_child; index < s.numChildren();index++)
-    deref(s.child(index));
-  endStackList(x);
+    deref(x,s.child(index));
+  return x;
 }
 
-void Compiler::deref(const Tree &s) {
+void Compiler::deref(reg_t args, const Tree &s) {
   switch (s.token())
     {
     case TOK_PARENS:
       {
-	doPushConstantString("()");
-	reg_t x = startStackList();
+	emit(OP_PUSH_INT,args,const_t(0));
+	reg_t x = startList();
 	for (int p=0;p<s.numChildren();p++)
-	  multiexpr(s.child(p));
-	endStackList(x);
+	  multiexpr(x,s.child(p));
+	pushList(args,x);
 	break;
       }
     case TOK_BRACES:
       {
-	doPushConstantString("{}");
-	reg_t x = startStackList();
+	emit(OP_PUSH_INT,args,const_t(1));
+	reg_t x = startList();
 	for (int p=0;p<s.numChildren();p++)
-	  multiexpr(s.child(p));
-	endStackList(x);
+	  multiexpr(x,s.child(p));
+	pushList(args,x);
 	break;
       }
     case '.':
       {
-	doPushConstantString(".");
-	doPushConstantString(s.first().text());
-	doPushConstant(1);
+	emit(OP_PUSH_INT,args,const_t(2));
+	pushList(args,fetchConstantString(s.first().text()));
 	break;
       }
     case TOK_DYN:
       {
-	doPushConstantString(".");
-	reg_t p = expression(s.first());
-	emit(OP_PUSH,p);
-	doPushConstant(1);
+	emit(OP_PUSH_INT,args,const_t(2));
+	pushList(args,expression(s.first()));
       }
     default:
       throw Exception("Unknown expression!");
     }
 }
 
-reg_t Compiler::fetchConstant(const Array &constant)
+reg_t Compiler::fetchConstant(const Object &constant)
 {
   reg_t r0 = getRegister();
   emit(OP_LOAD_CONST,r0,getConstantID(constant));
@@ -727,7 +742,7 @@ reg_t Compiler::fetchConstant(const Array &constant)
 
 reg_t Compiler::fetchConstantString(const FMString &constant)
 {
-  return fetchConstant(Array(constant));
+  return fetchConstant(_types->_string->makeString(constant));
 }
 
 reg_t Compiler::fetchVariable(const FMString &varname, int flags)
@@ -748,37 +763,16 @@ reg_t Compiler::fetchVariable(const FMString &varname, int flags)
   return x;
 }
 
-reg_t Compiler::startStackList()
+reg_t Compiler::startList()
 {
   reg_t x = getRegister();
-  emit(OP_START_LIST,x);
+  emit(OP_NEW_LIST,x);
   return x;
 }
 
-void Compiler::endStackList(reg_t start)
+void Compiler::pushList(reg_t list, reg_t x)
 {
-  emit(OP_END_LIST,start); // Push sp-start onto stack
-}
-
-reg_t Compiler::getStackRegister()
-{
-  reg_t x = getRegister();
-  emit(OP_START_LIST,x);
-  return x;
-}
-
-void Compiler::restoreStack(reg_t x, const_t offset)
-{
-  emit(OP_LOAD_STACK,x,offset);
-}
-
-reg_t Compiler::readFromStack(reg_t addr)
-{
-  reg_t sp = getStackRegister();
-  emit(OP_LOAD_STACK,addr,const_t(1));
-  reg_t x = popStack();
-  emit(OP_LOAD_STACK,sp,const_t(0));
-  return x;  
+  emit(OP_PUSH,list,x);
 }
 
 reg_t Compiler::doShortcutOr(const Tree &t) {
@@ -788,14 +782,14 @@ reg_t Compiler::doShortcutOr(const Tree &t) {
   BasicBlock *fail2 = new BasicBlock;
   BasicBlock *end = new BasicBlock;
   emit(OP_JUMP_ZERO,expression(t.first()),fail1);
-  emit(OP_LOAD_CONST,ret,getConstantID(Array(bool(true))));
+  emit(OP_LOAD_CONST,ret,getConstantID(_types->_bool->makeScalar(true)));
   emit(OP_JUMP,end);
   useBlock(fail1);
   emit(OP_JUMP_ZERO,expression(t.second()),fail2);
-  emit(OP_LOAD_CONST,ret,getConstantID(Array(bool(true))));
+  emit(OP_LOAD_CONST,ret,getConstantID(_types->_bool->makeScalar(true)));
   emit(OP_JUMP,end);
   useBlock(fail2);
-  emit(OP_LOAD_CONST,ret,getConstantID(Array(bool(false))));
+  emit(OP_LOAD_CONST,ret,getConstantID(_types->_bool->makeScalar(false)));
   emit(OP_JUMP,end);
   useBlock(end);
   return ret;
@@ -809,10 +803,10 @@ reg_t Compiler::doShortcutAnd(const Tree &t) {
   BasicBlock *end = new BasicBlock;
   emit(OP_JUMP_ZERO,expression(t.first()),fail);
   emit(OP_JUMP_ZERO,expression(t.second()),fail);
-  emit(OP_LOAD_CONST,ret,getConstantID(Array(bool(true))));
+  emit(OP_LOAD_CONST,ret,getConstantID(_types->_bool->makeScalar(true)));
   emit(OP_JUMP,end);
   useBlock(fail);
-  emit(OP_LOAD_CONST,ret,getConstantID(Array(bool(false))));
+  emit(OP_LOAD_CONST,ret,getConstantID(_types->_bool->makeScalar(false)));
   emit(OP_JUMP,end);
   useBlock(end);
   return ret;
@@ -822,7 +816,7 @@ reg_t Compiler::doShortcutAnd(const Tree &t) {
 // expands it (possibly into multiple values).  They
 // are left on the stack.  Caller is responsible
 // for removing them.
-void Compiler::rhs(const Tree &t) {
+void Compiler::rhs(reg_t list, const Tree &t) {
   FMString varname = t.first().text();
   int min_children_to_reindex = 1;
   reg_t x;
@@ -830,12 +824,9 @@ void Compiler::rhs(const Tree &t) {
   x = fetchVariable(varname,symflags);
   min_children_to_reindex = 1;
   if (t.numChildren() > min_children_to_reindex)
-    {
-      flattenDereferenceTreeToStack(t,min_children_to_reindex);
-      emit(OP_SUBSREF,x);
-    }
+    emit(OP_SUBSREF,list,x,flattenDereferenceTreeToStack(t,min_children_to_reindex));
   else
-    push(x);
+    pushList(list,x);
 }
 
 // TODO - what about "ans"?
@@ -845,42 +836,38 @@ void Compiler::expressionStatement(const Tree &t, bool printIt) {
 }
 
 reg_t Compiler::cellDefinition(const Tree &t) {
-  reg_t y = startStackList();
+  reg_t y = startList();
   for (int i=0;i<t.numChildren();++i) {
     const Tree & s(t.child(i));
-    reg_t x = startStackList();
+    reg_t x = startList();
     for (int j=0;j<s.numChildren();j++)
-      multiexpr(s.child(j));
-    endStackList(x);
-    emit(OP_CELLROWDEF);
+      multiexpr(x,s.child(j));
+    emit(OP_CELLROWDEF,y,x);
   }
-  endStackList(y);
   reg_t z = getRegister();
-  emit(OP_VCAT,z);
+  emit(OP_VCAT,z,y);
   return z;
 }
 
 reg_t Compiler::matrixDefinition(const Tree &t) {
-  reg_t y = startStackList();
+  reg_t y = startList();
   for (int i=0;i<t.numChildren();++i) {
     const Tree & s(t.child(i));
-    reg_t x = startStackList();
+    reg_t x = startList();
     for (int j=0;j<s.numChildren();j++)
-      multiexpr(s.child(j));
-    endStackList(x);
-    emit(OP_HCAT);
+      multiexpr(x,s.child(j));
+    emit(OP_HCAT,y,x);
   }
-  endStackList(y);
   reg_t z = getRegister();
-  emit(OP_VCAT,z);
+  emit(OP_VCAT,z,y);
   return z;
 }
 
-void Compiler::multiexpr(const Tree &t) {
+void Compiler::multiexpr(reg_t list, const Tree &t) {
   if (t.is(TOK_VARIABLE))
-    rhs(t);
+    rhs(list,t);
   else if (!t.is(TOK_KEYWORD))
-    push(expression(t));
+    pushList(list,expression(t));
 }
 
 reg_t Compiler::expression(const Tree &t) {
@@ -900,18 +887,39 @@ reg_t Compiler::expression(const Tree &t) {
 	    }
 	  return q;
 	}
-      reg_t sp = getStackRegister();
-      rhs(t);
-      restoreStack(sp,1);
-      return popStack();
+      reg_t sp = startList();
+      rhs(sp,t);
+      reg_t ret = getRegister();
+      emit(OP_POP,ret,sp);
+      return ret;
     }
   case TOK_REAL:
+    {
+      FMString mt(t.text());
+      if (mt.toUpper().endsWith("D")) mt.chop(1);
+      return fetchConstant(_types->_double->makeScalar(mt.toDouble()));
+    }
   case TOK_IMAG:
+    {
+      FMString mt(t.text());
+      if (mt.toUpper().endsWith("D")) mt.chop(1);
+      return fetchConstant(_types->_double->makeComplex(0,mt.toDouble()));
+    }
   case TOK_REALF:
+    {
+      FMString mt(t.text());
+      if (mt.toUpper().endsWith("F")) mt.chop(1);
+      return fetchConstant(_types->_single->makeScalar(mt.toFloat()));
+    }
   case TOK_IMAGF:
+    {
+      FMString mt(t.text());
+      if (mt.toUpper().endsWith("F")) mt.chop(1);
+      return fetchConstant(_types->_single->makeComplex(0,mt.toFloat()));
+    }
   case TOK_STRING:
     {
-      return fetchConstant(t.array());
+      return fetchConstant(_types->_string->makeString(t.text()));
     }
   case TOK_END:
     // Rewrite the tree to remove TOK_END...
@@ -998,8 +1006,6 @@ void Compiler::incrementRegister(reg_t x) {
 void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
   if (!t.first().is(TOK_BRACKETS))
     throw Exception("Illegal left hand side in multifunction expression");
-  reg_t fp = getStackRegister();
-  reg_t sp = getStackRegister();
   TreeList s = t.first().children();
   reg_t lhsCount = getRegister();
   emit(OP_ZERO,lhsCount);
@@ -1010,13 +1016,10 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
       if (t.numChildren() == 1 || t.last().is(TOK_PARENS))
 	incrementRegister(lhsCount);
       else
-	{
-	  flattenDereferenceTreeToStack(t,1);
-	  emit(OP_LHSCOUNT,lhsCount,getVariableID(varname));
-	}
+	emit(OP_LHSCOUNT,lhsCount,flattenDereferenceTreeToStack(t,1),getVariableID(varname));
     }
   // Make the function call here
-  doFunctionExpression(t.second(),lhsCount);
+  reg_t ans = doFunctionExpression(t.second(),lhsCount);
   // Now we allocate the resulting assignments
   for (int ind=0;ind<s.size();++ind)
     {
@@ -1024,20 +1027,18 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
       FMString varname = t.first().text();
       if (t.numChildren() == 1)
 	{
-	  reg_t b = readFromStack(sp);
-	  incrementRegister(sp);
+	  reg_t b = getRegister();
+	  emit(OP_POP,b,ans);
 	  saveRegisterToName(varname,b);
 	}
       else
-	{
-	  flattenDereferenceTreeToStack(t,1);
-	  emit(OP_SUBSASGNM,sp,getVariableID(varname));
-	}
+	emit(OP_SUBSASGNM,ans,flattenDereferenceTreeToStack(t,1),getVariableID(varname));
     }
-  restoreStack(fp);
 }
 
-Compiler::Compiler() {
+Compiler::Compiler(BaseTypes *b) {
+  assert(b);
+  _types = b;
   _regpool = new RegisterBlock(256);
   _code = new CodeBlock;
 }
@@ -1082,7 +1083,7 @@ void Compiler::forStatement(const Tree &t) {
     reg_t iterCount = getRegister();
     emit(OP_NUMCOLS,iterCount,indexSet);
     // Allocate a register to track the column number
-    reg_t colnum = fetchConstant(Array(index_t(1)));
+    reg_t colnum = fetchConstant(_types->_index->makeScalar(1));
     // Start a new block
     BasicBlock *loop = new BasicBlock;
     // Need to rebind indexVarName to a local variable here
@@ -1109,13 +1110,14 @@ void Compiler::forStatement(const Tree &t) {
   } else if (t.first().second().first().is(':')) {
     reg_t first = expression(t.first().second().first().first());
     reg_t step = expression(t.first().second().first().second());
-    push(first);
-    push(step);
-    push(expression(t.first().second().second()));
+    reg_t args = startList();
+    pushList(args,first);
+    pushList(args,step);
+    pushList(args,expression(t.first().second().second()));
     reg_t iter_count = getRegister();
     const Tree & codeBlock(t.second());
-    emit(OP_LOOPCOUNT,iter_count); // Pops args 0, 1, 2 off of top of stack - computes loop count, and stores in register
-    reg_t loop_index = fetchConstant(Array(double(0)));
+    emit(OP_LOOPCOUNT,iter_count,args);
+    reg_t loop_index = fetchConstant(_types->_double->makeScalar(0));
     BasicBlock *loop = new BasicBlock;
     emit(OP_JUMP,loop);
     useBlock(loop);
@@ -1441,7 +1443,7 @@ void Compiler::dump() {
       std::cout << "************************************************************\n";      
       std::cout << "Const: ";
       for (int i=0;i<_code->_constlist.size();i++)
-	std::cout << SummarizeArrayCellEntry(_code->_constlist[i]) << " ";
+	std::cout << _code->_constlist[i].description() << " ";
       std::cout << "\n";
       std::cout << "Vars:  " << _code->_varlist << "\n";
       std::cout << "Captured:  " << _code->_capturedlist << "\n";
@@ -1519,7 +1521,7 @@ void PrintCodeBlock(CodeBlock *_code)
   std::cout << "************************************************************\n";      
   std::cout << "Const: ";
   for (int i=0;i<_code->_constlist.size();i++)
-    std::cout << SummarizeArrayCellEntry(_code->_constlist[i]) << " ";
+    std::cout << _code->_constlist[i].description() << " ";
   std::cout << "\n";
   std::cout << "Vars:  " << _code->_varlist << "\n";
   std::cout << "Captured:  " << _code->_capturedlist << "\n";
@@ -1566,23 +1568,25 @@ void PrintRawInsn(int ip, uint32_t insn)
   printf("\n");
 }
 
-void Disassemble(const Array &p)
+void FM::Disassemble(BaseTypes *_types, const Object &p)
 {
-  if (!p.isUserClass() || p.className() != "code_object")
-    throw Exception("argument to disassemble is not a code_object");
-  const StructArray &qp = p.constStructPtr();
-  std::cout << "Name: " << qp["name"][1].asString() << "\n";
-  std::cout << "Captured: " << StringVectorFromArray(qp["captured"][1]) << "\n";
-  std::cout << "Free: " << StringVectorFromArray(qp["free"][1]) << "\n";
-  std::cout << "Vars: " << StringVectorFromArray(qp["vars"][1]) << "\n";
-  std::cout << "Names: " << StringVectorFromArray(qp["names"][1]) << "\n";
-  const BasicArray<Array>& cp(qp["consts"][1].constReal<Array>());
+  //  if (!p.isUserClass() || p.className() != "code_object")
+  //    throw Exception("argument to disassemble is not a code_object");
+  assert(p.type()->code() == TypeStruct);
+  std::cout << "Name: " << _types->_struct->getScalar(p,"name").description() << "\n";
+  std::cout << "Captured: " << _types->makeStringsFromCell(_types->_struct->getScalar(p,"captured")) << "\n";
+  std::cout << "Free: " << _types->makeStringsFromCell(_types->_struct->getScalar(p,"free")) << "\n";
+  std::cout << "Vars: " << _types->makeStringsFromCell(_types->_struct->getScalar(p,"vars")) << "\n";
+  std::cout << "Names: " << _types->makeStringsFromCell(_types->_struct->getScalar(p,"names")) << "\n";
+  Object consts = _types->_struct->getScalar(p,"consts");
+  const Object* cp = _types->_cell->readOnlyData(consts);
   std::cout << "Consts: ";
-  for (index_t i=1;i<=cp.length();++i)
-    std::cout << SummarizeArrayCellEntry(cp[i]) << " ";
+  for (dim_t i=0;i<consts.dims().elementCount();i++)
+    std::cout << cp[i].description() << " ";
   std::cout << "\n";
-  const BasicArray<uint32_t>& opcodes(qp["code"][1].constReal<uint32_t>());
-  std::cout << "Code: " << opcodes.length() << " length\n";
-  for (index_t i=1;i<=opcodes.length();++i)
-    PrintRawInsn(i-1,opcodes[i]);
+  Object code = _types->_struct->getScalar(p,"code");
+  const uint32_t *opcodes = _types->_uint32->readOnlyData(code);
+  std::cout << "Code: " << code.dims().elementCount() << " length\n";
+  for (dim_t i=0;i<code.dims().elementCount();++i)
+    PrintRawInsn(i,opcodes[i]);
 }

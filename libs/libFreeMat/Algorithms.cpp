@@ -1337,3 +1337,10 @@ bool Equals(const StringVector& a, const StringVector& b) {
     if (a[i] != b[i]) return false;
   return true;
 }
+
+Array IterationColumns(const Array &x)
+{
+  if (x.rows() == 0) return Array(index_t(0));
+  return Array(index_t(x.length()/x.rows()));
+}
+

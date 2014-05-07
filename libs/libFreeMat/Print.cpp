@@ -17,6 +17,13 @@
  *
  */
 #include "Print.hpp"
+#include <iostream>
+#include <vector>
+#include <list>
+#include <string>
+#include <stdlib.h>
+#include <stdio.h>
+#include "TermIF.hpp"
 #include "IEEEFP.hpp"
 #include "FunctionDef.hpp"
 #include "Interpreter.hpp"
@@ -237,7 +244,7 @@ static ArrayFormatInfo ComputeArrayFormatInfo(const Array &ref) {
 #undef MacroComputeArrayFormat
 
 template <class T>
-static inline void emitIntegerReal(Interpreter* io, T val, 
+static inline void emitIntegerReal(TermIF* io, T val, 
 			    const ArrayFormatInfo &format,
 			    bool sgned) {
   if (sgned) 
@@ -247,7 +254,7 @@ static inline void emitIntegerReal(Interpreter* io, T val,
 }
 
 template <class T>
-static inline void emitFloatReal(Interpreter*io, T val, const ArrayFormatInfo &format) {
+static inline void emitFloatReal(TermIF*io, T val, const ArrayFormatInfo &format) {
   if( IsNaN( val ) ){
     io->outputMessage("NaN");
     return;
@@ -270,7 +277,7 @@ static inline void emitFloatReal(Interpreter*io, T val, const ArrayFormatInfo &f
 }
 
 template <class T>
-static inline void emitFloatComplex(Interpreter* io, T real, T imag, 
+static inline void emitFloatComplex(TermIF* io, T real, T imag, 
 			     const ArrayFormatInfo &format) {
   int width = format.width/2-2;
   if ((real != 0) || (imag != 0)) {
@@ -313,14 +320,14 @@ static inline void emitFloatComplex(Interpreter* io, T real, T imag,
 }
 
 template <typename T>
-static inline void EmitInteger(Interpreter* io, const Array &rp,
+static inline void EmitInteger(TermIF* io, const Array &rp,
 			       const ArrayFormatInfo &format, 
 			       bool complex, bool sgned) {
   emitIntegerReal(io,rp.constRealScalar<T>(),format,sgned); 
 }
 
 template <typename T>
-static inline void EmitFloat(Interpreter* io, const Array &rp,
+static inline void EmitFloat(TermIF* io, const Array &rp,
 			     const ArrayFormatInfo &format,
 			     bool complex) {
   if (format.floatasint)
@@ -340,7 +347,7 @@ static inline void EmitFloat(Interpreter* io, const Array &rp,
 #define MacroEmitFloat(ctype,cls) \
   case cls: return EmitFloat<ctype>(io,rp,format,complex);
 
-static void Emit(Interpreter* io, const Array &rp, 
+static void Emit(TermIF* io, const Array &rp, 
 		 const ArrayFormatInfo &format, bool complex) {
   switch (rp.dataClass()) {
   default: throw Exception("unexpected class for Emit");
@@ -364,7 +371,7 @@ static void Emit(Interpreter* io, const Array &rp,
 #undef MacroEmitSignedInt
 
 
-static inline void PrintSheet(Interpreter *io, const ArrayFormatInfo &format,
+static inline void PrintSheet(TermIF *io, const ArrayFormatInfo &format,
 			      index_t offset, const Array &rp, int termWidth, 
 			      int &printlimit, bool complex) {
   if (printlimit == 0) return;
@@ -413,7 +420,7 @@ static inline void PrintSheet(Interpreter *io, const ArrayFormatInfo &format,
  
 
 template <class T>
-static void PrintSparse(const SparseMatrix<T> &A, Interpreter* io, const ArrayFormatInfo &format) {
+static void PrintSparse(const SparseMatrix<T> &A, TermIF* io, const ArrayFormatInfo &format) {
   ConstSparseIterator<T> i(&A);
   if (!i.isValid())
     io->outputMessage("  <empty>\n");
@@ -429,7 +436,7 @@ static void PrintSparse(const SparseMatrix<T> &A, Interpreter* io, const ArrayFo
 }
 
 template <class T>
-static void PrintSparse(const SparseMatrix<T> &Areal, const SparseMatrix<T> &Aimag, Interpreter* io, const ArrayFormatInfo &format) {
+static void PrintSparse(const SparseMatrix<T> &Areal, const SparseMatrix<T> &Aimag, TermIF* io, const ArrayFormatInfo &format) {
   ConstComplexSparseIterator<T> i(&Areal,&Aimag);
   if (!i.isValid())
     io->outputMessage("  <empty>\n");
@@ -459,14 +466,14 @@ static void PrintSparse(const SparseMatrix<T> &Areal, const SparseMatrix<T> &Aim
 }
 
 template <class T>
-static void PrintSparseMatrix(const Array& A, Interpreter* io, const ArrayFormatInfo &format) {
+static void PrintSparseMatrix(const Array& A, TermIF* io, const ArrayFormatInfo &format) {
   if (A.allReal())
     PrintSparse(A.constRealSparse<T>(),io,format);
   else
     PrintSparse(A.constRealSparse<T>(),A.constImagSparse<T>(),io,format);
 }
 
-static void PrintStructArray(const Array& A, Interpreter* io) {
+static void PrintStructArray(const Array& A, TermIF* io) {
   const StructArray &rp(A.constStructPtr());
   if (A.isScalar()) {
     for (int i=0;i<rp.fieldCount();i++) {
@@ -491,7 +498,7 @@ static void PrintStructArray(const Array& A, Interpreter* io) {
 
 // width=3, fai = false, decimals=0 expformat = false, scalefact = 1
 
-void PrintArrayClassic(Array A, int printlimit, Interpreter* io) {
+void PrintArrayClassic(Array A, int printlimit, TermIF* io) {
   if (printlimit == 0) return;
   int termWidth = io->getTerminalWidth();
   NTuple Adims(A.dimensions());

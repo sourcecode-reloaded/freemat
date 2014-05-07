@@ -146,4 +146,6 @@ static inline BasicArray<T> BasicArrayFromNative(const T* data, NTuple dims) {
 
 Array NCat(const ArrayVector& pdata, int catdim);
 
+Array IterationColumns(const Array &x);
+
 #endif

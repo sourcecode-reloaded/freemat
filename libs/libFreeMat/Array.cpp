@@ -539,6 +539,35 @@ const Array Array::get(const IndexArray& index) const {
 
 #undef MacroGetIndexArray
 
+
+template <typename T>
+static inline const Array Tcolumn(const Array *ptr, index_t index) {
+  if (ptr->isSparse())
+    // FIXME - handle sparse arguments to for loop
+    throw Exception("Column slicing not supported for sparse matrices yet");
+  index_t rows = ptr->rows();
+  if (ptr->allReal())
+    return Array(ptr->constReal<T>().slice(rows*(index-1),rows));
+  else
+    return Array(ptr->constReal<T>().slice(rows*(index-1),rows),
+		 ptr->constImag<T>().slice(rows*(index-1),rows));
+}
+
+#define MacroTColumn(ctype,cls) \
+  case cls: return Tcolumn<ctype>(this,index);
+
+const Array Array::column(index_t index) const
+{
+  if (m_type.Scalar == 1) return *this;
+  switch (m_type.Class) {
+  default:
+    throw Exception("Unsupported type for slicing");
+    MacroExpandCasesAll(MacroTColumn);
+  }
+}
+
+#undef MacroTColumn
+
 #define MacroGetIndexArrayVector(ctype,cls) \
   case cls: return Tget<const IndexArrayVector&,ctype>(this,index);
 
