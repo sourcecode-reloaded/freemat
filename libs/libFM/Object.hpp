@@ -31,7 +31,7 @@ namespace FM
   template <class T>
   class PODArrayType;
 
-  template <class T>
+  template <class T, bool _objtype>
   class PODType;
 
   class StringType;
@@ -39,12 +39,11 @@ namespace FM
 
   // Flags like complexity must be carried at this level, since the 
   // type does not indicate complexity.
-  const int OBJECT_EMPTY_FLAG = 1;
-  const int OBJECT_SCALAR_FLAG = 2;
   const int OBJECT_COMPLEX_FLAG = 4;
 
   class ObjectBase {
   private:
+    ObjectBase();
     ObjectBase& operator=(const ObjectBase& t);
     //! The pointer to the actual data.  Must not be NULL.
     Data *data;
@@ -65,9 +64,18 @@ namespace FM
     Tuple dims;
     //! The flags for the object
     int flags;
+    //! The ultimate capacity of the object.  Allows for expansion
+    // without reallocating/copying
+    dim_t capacity;
   public:
-    ObjectBase(Data*p) : data(p) {
+    ObjectBase(Data* p, Type* _type, size_t _offset, Tuple _dims, int _flags, size_t _capacity) : data(p) {
       data->refcnt++;
+      type = _type;
+      offset = _offset;
+      dims = _dims;
+      flags = _flags;
+      capacity = _capacity;
+      refcnt = 0;
     }
     ObjectBase(const ObjectBase& t) {
       type = t.type;
@@ -77,15 +85,17 @@ namespace FM
       data = t.data;
       data->refcnt++;
       flags = t.flags;
+      capacity = t.capacity;
     }
     friend class Object;
     friend class Type;
     template <class T>  friend class PODArrayType;
-    template <class T> friend class PODType;
+    template <class T, bool _objtype> friend class PODType;
     friend class DoubleType;
     friend class SingleType;
     friend class StringType;
     friend class StructType;
+    friend class ListType;
     //  friend class PODArrayType<double>;
   };
 
@@ -107,6 +117,10 @@ namespace FM
     inline const Tuple& dims() const {
       return d->dims;
     }
+    inline Tuple& dims() {
+      detach();
+      return d->dims;
+    }
     inline dim_t rows() const {
       if (!d) return 0;
       return d->dims.rows();
@@ -117,7 +131,7 @@ namespace FM
     }
     inline bool isEmpty() const {
       if (!d) return false;
-      return ((d->flags & OBJECT_EMPTY_FLAG) != 0);
+      return (elementCount() == 0);
     }
     inline bool isComplex() const {
       if (!d) return false;
@@ -125,7 +139,11 @@ namespace FM
     }
     inline bool isScalar() const {
       if (!d) return false;
-      return ((d->flags & OBJECT_SCALAR_FLAG) != 0);
+      return (elementCount() == 1);
+    }
+    inline bool is2D() const {
+      if (!d) return false;
+      return (d->dims.is2D());
     }
     inline int flags() const {
       if (!d) return 0;
@@ -141,12 +159,19 @@ namespace FM
     inline Object asIndex(dim_t max) const {
       return d->type->asIndex(*this,max);
     }
+    inline Object asIndexNoBoundsCheck() const {
+      return d->type->asIndexNoBoundsCheck(*this);
+    }
+    inline double asDouble() const {
+      return d->type->doubleValue(*this);
+    }
     Object& operator=(const Object& copy) {
       if (this == &copy) return *this;
       if (d && ((--d->refcnt) == 0))
 	d->type->destroyObject(d);
       d = copy.d;
       if (d) d->refcnt++;
+      return *this;
     }
     inline void detach() 
     {
@@ -156,7 +181,7 @@ namespace FM
 	d->refcnt++;
       }
       if (d->data->refcnt > 1) {
-	d->data = d->type->duplicateData(d);
+	d->data = d->type->duplicateData(d,d->capacity);
 	d->offset = 0;
       }
     }
@@ -170,8 +195,8 @@ namespace FM
       return static_cast<S*>(d->type);
     }
     friend class PODArrayType<double>;
-    friend class PODType<double>;
-    template <class T> friend class PODType;
+    friend class PODType<double, false>;
+    template <class T, bool _objtype> friend class PODType;
     friend class DoubleType;
     friend class SingleType;
     friend class IndexType;
@@ -179,6 +204,7 @@ namespace FM
     friend class BoolType;
     friend class StringType;
     friend class StructType;
+    friend class ListType;
 
 
     bool operator==(const Object& b) const {

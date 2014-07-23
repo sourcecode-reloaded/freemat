@@ -462,6 +462,7 @@ Tree Parser::assignmentStatement() {
   if (match(TOK_TIMES_EQ)) return opEqualsStatement(ident,'*');
   if (match(TOK_DOTTIMES_EQ)) return opEqualsStatement(ident,TOK_DOTTIMES);
   serror("Not an assignment statement");
+    return Tree();
 }
 
 void Parser::flushSeperators() {

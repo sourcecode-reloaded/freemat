@@ -107,6 +107,7 @@ void SymbolPass::walkFunction(const Tree &t, bool nested) {
 }
 
 void SymbolPass::walkCode(const Tree &t, int blockDepth) {
+  std::cout << "Walking Token: " << TokenToString(t.token()) << "\n";
   switch (t.token())
     {
     case '=':
@@ -114,8 +115,9 @@ void SymbolPass::walkCode(const Tree &t, int blockDepth) {
 	walkCode(t.second(),blockDepth);
 	const Tree &lhs = t.first();
 	addSymbol(lhs.first().text(),SYM_LOCAL_DEF,blockDepth);
-	for (int index=1;index < lhs.first().numChildren();++index) 
-	  walkCode(lhs.first().child(index),blockDepth);
+	//	for (int index=1;index < lhs.first().numChildren();++index) 
+	//	  walkCode(lhs.first().child(index),blockDepth);
+	walkChildren(t.first(), blockDepth);
 	break;
       }
     case TOK_GLOBAL:

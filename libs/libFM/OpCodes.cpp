@@ -5,7 +5,7 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_NOP: return no_arguments;
     case OP_RETURN: return no_arguments;
     case OP_PUSH: return two_registers;
-    case OP_POP: return two_registers;
+    case OP_FIRST: return two_registers;
     case OP_CALL: return constant;
     case OP_LOAD_FREE: return register_free;
     case OP_SAVE_FREE: return register_free;
@@ -13,13 +13,11 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_SAVE_CAPTURED: return register_captured;
     case OP_SAVE: return register_variable;
     case OP_DCOLON: return two_registers;
-    case OP_SUBSASGN: return register_variable;
+    case OP_SUBSASGN: return register_register_variable;
     case OP_LOAD_CONST: return register_constant;
     case OP_LOAD: return register_variable;
-    case OP_START_LIST: return one_register;
-    case OP_END_LIST: return one_register;
-    case OP_LOAD_STACK: return register_constant;
-    case OP_SUBSREF: return three_registers;
+    case OP_NEW_LIST: return one_register;
+    case OP_SUBSREF: return register_register_variable;
     case OP_COLON: return three_registers;
     case OP_ADD: return three_registers;
     case OP_MINUS: return three_registers;
@@ -48,12 +46,12 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_HERMITIAN: return two_registers;
     case OP_TRANSPOSE: return two_registers;
     case OP_INCR: return one_register;
-    case OP_LHSCOUNT: return register_variable;
-    case OP_SUBSASGNM: return register_variable;
+    case OP_LHSCOUNT: return register_register_variable;
+    case OP_SUBSASGNM: return register_register_variable;
     case OP_ZERO: return one_register;
     case OP_CELLROWDEF: return no_arguments;
-    case OP_HCAT: return no_arguments;
-    case OP_VCAT: return one_register;
+    case OP_HCAT: return two_registers;
+    case OP_VCAT: return two_registers;
     case OP_LOAD_GLOBAL: return register_name;
     case OP_LOAD_PERSIST: return register_name;
     case OP_LOAD_DYNAMIC: return register_name;
@@ -67,13 +65,12 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_THROW: return one_register;
     case OP_PRINT: return one_register;
     case OP_DEREF: return two_registers;
-    case OP_SUBSASGN_GLOBAL: return register_name;
-    case OP_SUBSASGN_PERSIST: return register_name;
-    case OP_SUBSASGN_CAPTURED: return register_captured;
-    case OP_SUBSASGN_FREE: return register_free;
-    case OP_SUBSASGN_DYNAMIC: return register_name;
+    case OP_SUBSASGN_GLOBAL: return register_register_name;
+    case OP_SUBSASGN_PERSIST: return register_register_name;
+    case OP_SUBSASGN_CAPTURED: return register_register_captured;
+    case OP_SUBSASGN_FREE: return register_register_free;
+    case OP_SUBSASGN_DYNAMIC: return register_register_name;
     case OP_LOOPCOUNT: return one_register;
-    case OP_NEW_LIST: return one_register;
     case OP_LOAD_INT: return register_int;
     case OP_PUSH_INT: return register_int;
     default:
@@ -89,7 +86,7 @@ std::string getOpCodeName(op_t opcode)
     case OP_NOP: return "NOP";
     case OP_RETURN: return "RETURN";
     case OP_PUSH: return "PUSH";
-    case OP_POP: return "POP";
+    case OP_FIRST: return "FIRST";
     case OP_CALL: return "CALL";
     case OP_LOAD_FREE: return "LOAD_FREE";
     case OP_SAVE_FREE: return "SAVE_FREE";
@@ -100,9 +97,7 @@ std::string getOpCodeName(op_t opcode)
     case OP_SUBSASGN: return "SUBSASGN";
     case OP_LOAD_CONST: return "LOAD_CONST";
     case OP_LOAD: return "LOAD";
-    case OP_START_LIST: return "START_LIST";
-    case OP_END_LIST: return "END_LIST";
-    case OP_LOAD_STACK: return "LOAD_STACK";
+    case OP_NEW_LIST: return "NEW_LIST";
     case OP_SUBSREF: return "SUBSREF";
     case OP_COLON: return "COLON";
     case OP_ADD: return "ADD";
@@ -157,8 +152,8 @@ std::string getOpCodeName(op_t opcode)
     case OP_SUBSASGN_FREE: return "SUBSASGN_FREE";
     case OP_SUBSASGN_DYNAMIC: return "SUBSASGN_DYN";
     case OP_LOOPCOUNT: return "LOOPCOUNT";
-    case OP_NEW_LIST: return "NEW_LIST";
     case OP_LOAD_INT: return "LOAD_INT";
     case OP_PUSH_INT: return "PUSH_INT";
+    default: return "UNK";
   }
 }

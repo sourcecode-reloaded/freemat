@@ -3,12 +3,12 @@
 
 #include "NumericType.hpp"
 #include "BinOp.hpp"
-#include "OpAdd.hpp"
+#include "Operators.hpp"
 
 namespace FM
 {
 
-  class BaseTypes;
+  struct BaseTypes;
 
   template <class T, FM::DataCode codeNum>
   class IntegerType : public NumericType<T,codeNum> {
@@ -29,10 +29,12 @@ namespace FM
 	  throw Exception("Unsupported type combination of " + a.type()->name() + " and " + b.type()->name());
 	}
     }
-    virtual Object add(const Object &a, const Object &b) 
+    virtual Object Add(const Object &a, const Object &b) 
     {
       return binop<OpAdd>(a,b);
     }
+    virtual void computeArrayFormatInfo(FMFormatMode mode, const Object &a, ArrayFormatInfo &format);
+    virtual void printElement(const Object &a, TermIF &io, const ArrayFormatInfo &format, ndx_t offset);
   };
 
   class Int32Type : public IntegerType<int32_t,TypeInt32>
@@ -47,6 +49,20 @@ namespace FM
   public:
     UInt32Type(BaseTypes *base) : IntegerType<uint32_t,TypeUInt32>(base,"uint32") {}
     virtual ~UInt32Type() {}
+  };
+
+  class Int64Type : public IntegerType<int64_t,TypeInt64>
+  {
+  public:
+    Int64Type(BaseTypes *base) : IntegerType<int64_t,TypeInt64>(base,"int64") {}
+    virtual ~Int64Type() {}
+  };
+
+  class UInt64Type : public IntegerType<uint64_t,TypeUInt64>
+  {
+  public:
+    UInt64Type(BaseTypes *base) : IntegerType<uint64_t,TypeUInt64>(base,"uint64") {}
+    virtual ~UInt64Type() {}
   };
 
   class IndexType : public IntegerType<ndx_t,TypeIndex>

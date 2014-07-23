@@ -35,3 +35,12 @@ Object& Frame::getDynamicVarRef(const FMString &name)
 Frame::Frame()
 {
 }
+
+void Frame::dump()
+{
+  std::cout << "Frame: " << _name << "\n";
+  std::cout << "  Dynamic vars\n";
+  for (FMMap<FMString,int>::const_iterator i=_symtab.constBegin();
+       i!=_symtab.constEnd();++i)
+    std::cout << "    " << i.key() << " : " << getDynamicVar(i.key()).description() << "\n";
+}

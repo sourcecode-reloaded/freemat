@@ -2,12 +2,50 @@
 #include "Object.hpp"
 #include "ListType.hpp"
 #include "IntegerType.hpp"
+#include "BaseTypes.hpp"
 
 using namespace FM;
 
-Object Type::add(const Object &a, const Object &b)
+Object Type::asLogical(const Object &a)
 {
-  throw Exception("Add is unsupported for objects of type " + this->name());
+  throw Exception("asLogical(a) is unsupported for objects of type " + this->name());
+}
+
+Object Type::asIndex(const Object &a, dim_t max)
+{
+  throw Exception("object of type " + this->name() + " cannot be used as an index");
+}
+
+Object Type::asIndexNoBoundsCheck(const Object &a)
+{
+  throw Exception("object of type " + this->name() + " cannot be used as an index");  
+}
+
+#define NoSupportOp(x) \
+  Object Type::x(const Object &a, const Object &b) {throw Exception(#x " is unsupported for objects of type " + this->name());}
+
+NoSupportOp(LessEquals);
+NoSupportOp(Add);
+NoSupportOp(LessThan);
+NoSupportOp(DotMultiply);
+NoSupportOp(Subtract);
+NoSupportOp(Colon);
+
+Object Type::DoubleColon(const Object &a, const Object &b, const Object &c)
+{
+  throw Exception("Colon(a,b,c) is unsupported for objects of type " + this->name());
+}
+
+void Type::setParens(Object &a, const Object &args, const Object &b) {
+  throw Exception("() indexing is unsupported for objects of type " + this->name());
+}
+
+void Type::setBraces(Object &a, const Object &args, const Object &b) {
+  throw Exception("{} indexing is unsupported for objects of type " + this->name());
+}
+
+void Type::setField(Object &a, const Object &args, const Object &b) {
+  throw Exception(". indexing is unsupported for objects of type " + this->name());
 }
 
 Object Type::getParens(const Object &a, const Object &b) {
@@ -22,13 +60,25 @@ Object Type::getField(const Object &a, const Object &b) {
   throw Exception(". indexing is unsupported for objects of type " + this->name());
 }
 
+void Type::resize(Object &a, const Tuple &newsize) {
+  throw Exception("resize is unsupported for objects of type " + this->name());
+}
+
+void Type::print(const Object &a, TermIF &io) {
+  io.output(a.description());
+}
+
+double Type::doubleValue(const Object &a) {
+  throw Exception("Type cannot be converted to double scalar");
+}
+
 Object Type::get(const Object &a, const Object &b) {
   Object c;
   int ptr = 0;
   const Object *bp = b.asType<ListType>()->readOnlyData(b);
   if ((b.elementCount() == 2) &&
       (bp[0].asType<Int32Type>()->scalarValue(bp[0]) == 0))
-    return a.type()->getParens(a,bp[1]);
+    return b.asType<ListType>()->makeScalar(a.type()->getParens(a,bp[1]));
   c = a;
   while (ptr < b.elementCount())
     {
@@ -47,6 +97,57 @@ Object Type::get(const Object &a, const Object &b) {
 	}
       ptr += 2;
     }
-  return c;
+  return b.asType<ListType>()->makeScalar(c);
 }
 
+// The usual unwinding algorithm
+//
+// A(1,3).foo = 7
+//
+// set(A,(1,3), set(get(A,(1,3)),.foo,7))
+//
+// if args.elementcount == 2, do a straightforward set
+//
+// else
+//
+//  asub = get(A,args.first()) || empty
+//
+//  set(asub,args.but_first(),b)
+//  set(A,args.first(),asub)
+//
+
+
+void Type::set(Object &a, const Object &args, const Object &b) {
+  const Object *argp = args.asType<ListType>()->readOnlyData(args);
+  if (args.elementCount() == 2)
+    {
+      int setType = argp[0].asType<Int32Type>()->scalarValue(argp[0]);
+      switch (setType)
+	{
+	case 0:
+	  a.type()->setParens(a,argp[1],b);
+	  break;
+	case 1:
+	  if (a.isEmpty() && (a.type()->code() != TypeCellArray))
+	    a = a.type()->_base->_cell->zeroArrayOfSize(a.dims(),false);
+	  a.type()->setBraces(a,argp[1],b);
+	  break;
+	case 2:
+	  if (a.isEmpty() && (a.type()->code() != TypeStruct))
+	    {
+	      // FIXME	      a = a.type()->_base->_struct->makeStruct(Tuple(1,1),FMStringList(argp[1]
+	    }
+	  a.type()->setField(a,argp[1],b);
+	  break;
+	}
+    }
+  else
+    {
+      dim_t arg_count = args.elementCount();
+      Object args_first = args.asType<ListType>()->makeMatrix(2,1);
+      Object args_rest = args.asType<ListType>()->makeMatrix(arg_count-2,1);
+      Object asub = a.type()->get(a,args_first);
+      set(asub,args_rest,b);
+      set(a,args_first,asub);
+    }
+}

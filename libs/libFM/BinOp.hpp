@@ -11,11 +11,11 @@ namespace FM
   template <class ctype, class atype, class btype, class vtype, class Op>
   inline Object dispatch_binop_lev2(const Object &a, const Object &b, Type *o, bool isComplex)
   {
-    PODType<ctype> *otype = static_cast<PODType<ctype> *>(o);
+    PODType<ctype,false> *otype = static_cast<PODType<ctype,false> *>(o);
     Object c = otype->zeroArrayOfSize(Tuple::computeDotOpSize(a.dims(),b.dims()),isComplex);
     ctype *cptr = otype->readWriteData(c);
-    const atype *aptr = static_cast<PODType<atype>*>(a.type())->readOnlyData(a);
-    const btype *bptr = static_cast<PODType<btype>*>(b.type())->readOnlyData(b);
+    const atype *aptr = static_cast<PODType<atype,false>*>(a.type())->readOnlyData(a);
+    const btype *bptr = static_cast<PODType<btype,false>*>(b.type())->readOnlyData(b);
     size_t aincr = (a.isScalar() ? 0 : 1);
     size_t bincr = (b.isScalar() ? 0 : 1);
     size_t elcnt = c.elementCount();

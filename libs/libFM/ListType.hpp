@@ -6,18 +6,72 @@
 
 namespace FM
 {
-  class BaseTypes;
+  struct BaseTypes;
 
-  class ListType : public PODType<Object> {
+  class ListType : public PODType<Object,true> {
   public:
-    ListType(BaseTypes *base) : PODType<Object>(base,"list",true) {}
+    ListType(BaseTypes *base) : PODType<Object,true>(base,"list") {}
     virtual DataCode code() const {return TypeListArray;}
     virtual Type* typeInstance() {return this;}
     virtual FMString describe(const Object &a) {
-      return (a.dims().toString() + " " + this->name() + " list");
+      FMString ret = "[";
+      const Object *ap = this->readOnlyData(a);
+      for (dim_t i=0;i<a.elementCount();i++)
+	{
+	  ret += ap[i].description();
+	  if (i < a.elementCount() - 1) ret += " ";
+	}
+      ret += "]";
+      return ret;
     }
-    virtual Object asIndex(const Object &, dim_t) {
-      throw Exception("Lists cannot be used as index arrays");
+    Object first(const Object &a) {
+      if (a.isEmpty()) throw Exception("Attempt to take first element of empty object");
+      return *(this->readOnlyData(a));
+    }
+    Object fetch(const Object &a, dim_t ndx) {
+      return this->readOnlyData(a)[ndx];
+    }
+    ndx_t indexOf(const Object &a, const Object &b) {
+      dim_t a_size = a.elementCount();
+      const Object *ap = this->readOnlyData(a);
+      for (dim_t i=0;i<a_size;i++)
+	if (ap[i] == b) return i;
+      return -1;
+    }
+    void push(Object &a, const Object &b) {
+      dim_t a_size = a.elementCount();
+      if (a.d->capacity > (a_size+1))
+	{
+	  a.detach();
+	  // Resize is not required. 
+	  a.dims().setMatrixSize(a_size+1,1);
+	  Object *ap = static_cast<Object*>(a.d->data->ptr);
+	  ap[a_size] = b;
+	}
+      else 
+	{
+	  // Resize is required.  
+	  Object na = this->makeMatrix(a_size+1,1,false);
+	  Object *nap = this->readWriteData(na);
+	  const Object *ap = this->readOnlyData(a);
+	  for (dim_t i=0;i<a_size;i++)
+	    nap[i] = ap[i];
+	  nap[a_size] = b;
+	  a = na;
+	}
+    }
+    // FIXME - Make this more efficient?
+    void merge(Object &a, const Object &b) {
+      const Object *bp = this->readOnlyData(b);
+      for (dim_t i=0;i<b.elementCount();i++)
+	this->push(a,bp[i]);
+    }
+    void computeArrayFormatInfo(FMFormatMode, const Object &a, ArrayFormatInfo &format) {
+      format.width = 80;
+    }
+    void printElement(const Object &a, TermIF &o, const ArrayFormatInfo &info, ndx_t ndx) {
+      const Object *t = this->readOnlyData(a);
+      o.output(t[ndx].description());
     }
   };
 };

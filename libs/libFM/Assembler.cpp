@@ -2,6 +2,9 @@
 #include "StructType.hpp"
 #include "CellType.hpp"
 //#include "Algorithms.hpp"
+#include "Compiler.hpp"
+
+std::string getOpCodeName(FM::op_t);
 
 using namespace FM;
 
@@ -18,14 +21,14 @@ void Assembler::run()
 
 void Assembler::computeJumpOffsets()
 {
-  std::cout << "Jump Offset computation!\n";
   int total_size = 0;
   for (int i=0;i<_postorder.size();++i)
     {
       total_size += _postorder[i]->_insnlist.size();
-      printf("Block %x - offset %d\n",_postorder[i],total_size);
       _postorder[i]->_offset = total_size;
     }
+  for (int i=0;i<_postorder.size();++i)
+    _postorder[i]->_offset = total_size - _postorder[i]->_offset;
   // Update the jump offsets
   for (int i=0;i<_postorder.size();++i)
     {
@@ -35,8 +38,8 @@ void Assembler::computeJumpOffsets()
 	  if (b->_insnlist[j]._target)
 	    {
 	      // Compute the address of the jump target
-	      int target_address = total_size-b->_insnlist[j]._target->_offset;
-	      b->_insnlist[j]._opcode |= (target_address << 16);
+	      int target_address = b->_insnlist[j]._target->_offset;
+	      b->_insnlist[j]._opcode |= (target_address << (opcode_width + reg_width));
 	    }
 	}
     }
@@ -56,7 +59,6 @@ void Assembler::depthFirstSearch(BasicBlock *b)
 
 void Assembler::assemble()
 {
-  int ip = 0;
   for (int i=0;i<_postorder.size();i++)
     {
       BasicBlock *b = _postorder[_postorder.size()-1-i];
@@ -71,18 +73,14 @@ Object Assembler::codeObject(BaseTypes *_b)
   fields << "name" << "code" << "captured" << "free" << "vars" << "names" << "consts" << "locals";
   Object qp = _b->_struct->makeScalarStruct(fields);
   _b->_struct->setScalar(qp,"name",_b->_string->makeString(_code->_name));
-  Object op = _b->_uint32->makeMatrix(_vm_codes.size(),1);
-  memcpy(_b->_uint32->readWriteData(op),&(_vm_codes[0]),_vm_codes.size()*sizeof(uint32_t));
+  Object op = _b->_uint64->makeMatrix(_vm_codes.size(),1);
+  memcpy(_b->_uint64->readWriteData(op),&(_vm_codes[0]),_vm_codes.size()*sizeof(uint64_t));
   _b->_struct->setScalar(qp,"code",op);
-  _b->_struct->setScalar(qp,"captured",_b->makeCellFromStrings(_code->_capturedlist));
-  _b->_struct->setScalar(qp,"free",_b->makeCellFromStrings(_code->_freelist));
-  _b->_struct->setScalar(qp,"vars",_b->makeCellFromStrings(_code->_varlist));
-  _b->_struct->setScalar(qp,"names",_b->makeCellFromStrings(_code->_namelist));
-  op = _b->_cell->makeMatrix(1,_code->_constlist.size());
-  Object* opp = _b->_cell->readWriteData(op);
-  for (int i=0;i<_code->_constlist.size();i++)
-    opp[i] = _code->_constlist[i];
-  _b->_struct->setScalar(qp,"consts",op);
+  _b->_struct->setScalar(qp,"captured",_code->_capturedlist);
+  _b->_struct->setScalar(qp,"free",_code->_freelist);
+  _b->_struct->setScalar(qp,"vars",_code->_varlist);
+  _b->_struct->setScalar(qp,"names",_code->_namelist);
+  _b->_struct->setScalar(qp,"consts",_code->_constlist);
   _b->_struct->setScalar(qp,"locals",_b->_cell->makeMatrix(0,0));
   return qp;
 }

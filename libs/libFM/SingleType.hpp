@@ -1,17 +1,17 @@
 #ifndef __SingleType_hpp__
 #define __SingleType_hpp__
 
-#include "PODType.hpp"
+#include "FloatType.hpp"
 #include "BinOp.hpp"
-#include "OpAdd.hpp"
+#include "Operators.hpp"
 
 namespace FM
 {
-  class BaseTypes;
+  struct BaseTypes;
 
-  class SingleType : public NumericType<float,TypeSingle> {
+  class SingleType : public FloatType<float,TypeSingle> {
   public:
-    SingleType(BaseTypes *base) : NumericType(base,"single") {}
+    SingleType(BaseTypes *base) : FloatType<float,TypeSingle>(base,"single") {}
     virtual Type* typeInstance() {return this;}
     template <class Op>
     inline Object binop(const Object &a, const Object &b)
@@ -34,7 +34,7 @@ namespace FM
 			  FMString(" and ") + b.type()->name());
 	}
     }
-    virtual Object add(const Object &a, const Object &b)
+    virtual Object Add(const Object &a, const Object &b)
     {
       return binop<OpAdd>(a,b);
     }

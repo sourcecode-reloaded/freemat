@@ -1,4 +1,6 @@
 #include <boost/timer/timer.hpp>
+#include <boost/unordered_map.hpp>
+#include <unordered_map>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "Object.hpp"
@@ -8,6 +10,8 @@
 #include "BaseTypes.hpp"
 #include "Compiler.hpp"
 #include "Assembler.hpp"
+#include "VM.hpp"
+#include "fnv.hh"
 
 // What is the strategy for get?
 //
@@ -27,7 +31,7 @@ BaseTypes base;
 
 Object ADDFUNC(const Object &a, const Object &b)
 {
-  return a.type()->add(a,b);
+  return a.type()->Add(a,b);
 }
 
 double SCALARVALUE(const Object &a)
@@ -101,16 +105,230 @@ void printMatrix(const Object &a)
   for (int i=0;i<rows;i++)
     {
       for (int j=0;j<cols;j++)
-	std::cout << p[i+j*rows] << " ";
+	printf("%6g ",p[i+j*rows]);
       std::cout << "\n";
+    }
+  std::cout << "\n";
+}
+
+void printList(const Object &a)
+{
+  int rows = a.rows();
+  const Object *p = static_cast<ListType*>(a.type())->readOnlyData(a);
+  for (int i=0;i<rows;i++)
+    {
+      std::cout << "i = " << i << "\n";
+      std::cout << "  " << p[i].description() << "\n";
     }
 }
 
+std::vector<std::string> & operator<< (std::vector<std::string> & vec, const std::string &s) {
+  vec.push_back(s);
+  return vec;
+}
 
 int main(int argc, char *argv[])
 {
 
   assert(sizeof(Complex<char>) == 2*sizeof(char));
+
+#if 0
+  {
+    boost::timer::cpu_timer x;
+    FMStringList fields;
+    fields << "name" << "code" << "captured" << "free" << "foo" << "A" << "x";
+    FMMap<FMString,int> tmap;
+    int fieldnum = fields.size();
+    for (int i=0;i<fieldnum;i++)
+      tmap[fields[i]] = i;
+    int hits = 0;
+    x.start();
+    for (int i=0;i<10000000;i++)
+      {
+	int j = random() % 7;
+	bool pop = tmap.contains(fields[j]);
+	if (pop) hits++;
+      }
+    x.stop();
+    std::cout << "Test 1:" << hits << " Execution time " << x.elapsed().wall/1.0e9 - 0.05 << " secs\n";
+  }
+
+  {
+    boost::timer::cpu_timer x;
+    std::vector<std::string> fields;
+    fields << "name" << "code" << "captured" << "free" << "foo" << "A" << "x";
+    boost::unordered_map<std::string,int> tmap;
+    int fieldnum = fields.size();
+    for (int i=0;i<fieldnum;i++)
+      tmap[fields[i]] = i;
+    int hits = 0;
+    x.start();
+    for (int i=0;i<10000000;i++)
+      {
+	int j = random() % 7;
+	bool pop = tmap.find(fields[j]) != tmap.end();
+	if (pop) hits++;
+      }
+    x.stop();
+    std::cout << "Test 1b:" << hits << " Execution time " << x.elapsed().wall/1.0e9 - 0.05 << " secs\n";
+  }
+    
+ {
+    boost::timer::cpu_timer x;
+    FMStringList fields;
+    fields << "name" << "code" << "captured" << "free" << "foo" << "A" << "x";
+    FMMap<FMString,int> tmap;
+    int fieldnum = fields.size();
+    for (int i=0;i<fieldnum;i++)
+      tmap[fields[i]] = i;
+    int hits = 0;
+    x.start();
+    hash::fnv<32> hsh;
+    for (int i=0;i<10000000;i++)
+      {
+	int j = random() % 7;
+	const char *p = fields[j].c_str();
+	int len = fields[j].size();
+	int q = hsh(p,len);
+        hits += q;
+      }
+    x.stop();
+    std::cout << "Test 2:" << hits << " Execution time " << x.elapsed().wall/1.0e9 - 0.05 << " secs\n";
+  }
+    
+
+ {
+    boost::timer::cpu_timer x;
+    FMStringList fields;
+    fields << "name" << "code" << "captured" << "free" << "foo" << "A" << "x";
+    FMMap<FMString,int> tmap;
+    int fieldnum = fields.size();
+    for (int i=0;i<fieldnum;i++)
+      tmap[fields[i]] = i;
+    int hits = 0;
+    x.start();
+    for (int i=0;i<10000000;i++)
+      {
+	int j = random() % 7;
+	const char *p = fields[j].c_str();
+	int len = fields[j].size();
+        hits += len;
+      }
+    x.stop();
+    std::cout << "Test 3:" << hits << " Execution time " << x.elapsed().wall/1.0e9 - 0.05 << " secs\n";
+  }
+    
+
+
+  {
+    boost::timer::cpu_timer x;
+    FMStringList fields;
+    fields << "name" << "code" << "captured" << "free" << "foo" << "A" << "x";
+    FMMap<int,int> tmap;
+    int fieldnum = fields.size();
+    for (int i=0;i<fieldnum;i++)
+      tmap[fields[i].size()] = i;
+    int hits = 0;
+    x.start();
+    for (int i=0;i<10000000;i++)
+      {
+	int j = random() % 7;
+	bool pop = tmap.contains(fields[j].size());
+	if (pop) hits++;
+      }
+    x.stop();
+    std::cout << "Test 4:" << hits << " Execution time " << x.elapsed().wall/1.0e9  - 0.05  << " secs\n";
+  }
+
+  {
+    boost::timer::cpu_timer x;
+    FMStringList fields;
+    fields << "name" << "code" << "captured" << "free" << "foo" << "A" << "x";
+    FMMap<int,int> tmap;
+    hash::fnv<32> hsh;
+    int fieldnum = fields.size();
+    for (int i=0;i<fieldnum;i++)
+      tmap[hsh(fields[i].c_str(),fields[i].size())] = i;
+    int hits = 0;
+    x.start();
+    for (int i=0;i<10000000;i++)
+      {
+	int j = random() % 7;
+	bool pop = tmap.contains(hsh(fields[j].c_str(),fields[j].size()));
+	if (pop) hits++;
+      }
+    x.stop();
+    std::cout << "Test 4h:" << hits << " Execution time " << x.elapsed().wall/1.0e9  - 0.05  << " secs\n";
+  }
+
+
+  {
+    boost::timer::cpu_timer x;
+    FMStringList fields;
+    fields << "name" << "code" << "captured" << "free" << "foo" << "A" << "x";
+    FMMap<int,int> tmap;
+    int fieldnum = fields.size();
+    for (int i=0;i<fieldnum;i++)
+      tmap[fields[i].size()] = i;
+    int hits = 0;
+    x.start();
+    for (int i=0;i<10000000;i++)
+      {
+	int j = random() % 7;
+	bool pop = tmap.contains(fields[j].size());
+	if (pop) hits++;
+      }
+    x.stop();
+    std::cout << "Test 5:" << hits << " Execution time " << x.elapsed().wall/1.0e9  - 0.05 << " secs\n";
+  }
+
+
+  {
+    boost::timer::cpu_timer x;
+    FMStringList fields;
+    fields << "name" << "code" << "captured" << "free" << "foo" << "A" << "x";
+    int cache[256];
+    int fieldnum = fields.size();
+    for (int i=0;i<fieldnum;i++)
+      cache[fields[i].size() % 256] = i;
+    int hits = 0;
+    x.start();
+    for (int i=0;i<10000000;i++)
+      {
+	int j = random() % 7;
+	bool pop = cache[fields[j].size() % 256];
+	if (pop) hits++;
+      }
+    x.stop();
+    std::cout << "Test 6:" << hits << " Execution time " << x.elapsed().wall/1.0e9  - 0.05 << " secs\n";
+  }
+    
+  {
+    boost::timer::cpu_timer x;
+    FMStringList fields;
+    fields << "name" << "code" << "captured" << "free" << "foo" << "A" << "x";
+    std::vector<int> cache[256];
+    int fieldnum = fields.size();
+    for (int i=0;i<fieldnum;i++)
+      cache[fields[i].size() % 256].push_back(fields[i].size());
+    int hits = 0;
+    x.start();
+    for (int i=0;i<10000000;i++)
+      {
+	int j = random() % 7;
+	int m = fields[j].size();
+	std::vector<int> &q = cache[m % 256];
+	bool pop = false;
+	for (int k=0;k<q.size();k++)
+	  if (q[k] == m) pop = true;
+	if (pop) hits++;
+      }
+    x.stop();
+    std::cout << "Test 7:" << hits << " Execution time " << x.elapsed().wall/1.0e9 - 0.05  << " secs\n";
+  }
+    
+
+#endif
 
   BaseTypes *mytype = new BaseTypes;
 
@@ -118,6 +336,10 @@ int main(int argc, char *argv[])
   double *dp = mytype->_double->readWriteData(d);
   for (int i=0;i<16;i++) dp[i] = i;
   printMatrix(d);
+
+  Object c = d;
+  mytype->_double->resize(c,Tuple(6,5));
+  printMatrix(c);
 
   Object r = mytype->_double->makeMatrix(3,1);
   double *rp = mytype->_double->readWriteData(r);
@@ -134,7 +356,36 @@ int main(int argc, char *argv[])
   pp[1] = r;
   ndp[1] = p; // For a(r,r)
   
-  printMatrix(d.type()->get(d,nd));
+  printMatrix(mytype->_list->first(d.type()->get(d,nd)));
+
+  d.type()->set(d,nd,mytype->_double->makeScalar(42));
+  
+  printMatrix(d);
+
+  /*
+  Object lst = mytype->_list->empty();
+  for (int i=0;i<15;i++)
+    {
+      mytype->_list->push(lst,mytype->_double->makeScalar(3));
+      mytype->_list->push(lst,mytype->_double->makeScalar(5));
+    }
+  std::cout << "Loop 1 completed\n"; 
+  Object lst2 = lst;
+
+  for (int j=0;j<10;j++)
+    mytype->_list->push(lst,mytype->_string->makeString("Hello"));
+  printList(lst);
+  printList(lst2);
+  */
+
+  for (int i=0;i<50000;i++)
+    {
+      Object p = mytype->_list->empty();
+      mytype->_list->push(p,mytype->_double->makeScalar(42));
+      mytype->_list->push(p,mytype->_double->makeScalar(47));
+      Object q = mytype->_list->empty();
+      mytype->_list->push(q,p);
+    }
 
   // return 0;
 
@@ -163,12 +414,17 @@ int main(int argc, char *argv[])
 
   // Object c = mytype->_double->makeMatrix(3,1);
   // double *cp = mytype->_double->readWriteData(c);
+
+  boost::timer::cpu_timer timer;
   
+  VM vm(mytype);
   while (1)
     {
       char *p = readline("--> ");
       if (p && *p)
 	add_history(p);
+      if (!p)
+	return 0;
       FMString body(p);
       body += "\n\n";
       try {
@@ -184,6 +440,11 @@ int main(int argc, char *argv[])
 	Object p = A.codeObject(mytype);
 	std::cout << "Code object: " << p.description() << "\n";
 	Disassemble(mytype,p);
+	timer.start();
+	vm.executeScript(p);
+	timer.stop();
+	std::cout << " Execution time " << timer.elapsed().wall/1.0e9 << "\n";
+	//	vm.dump();
       } catch (const FM::Exception &e) {
 	std::cout << "Exception: " << e.msg() << "\n";
       }
@@ -193,7 +454,6 @@ int main(int argc, char *argv[])
     }
 
 
-  boost::timer::cpu_timer timer;
 
   {
     double p = 1.0;

@@ -11,6 +11,9 @@ namespace FM
     BoolType(BaseTypes *base) : IntegerType<bool,TypeBool>(base,"bool") {}
     virtual ~BoolType() {}
     virtual Object asIndex(const Object &a, dim_t max);
+    virtual Object asIndexNoBoundsCheck(const Object &a);
+    bool any(const Object &a);
+    bool all(const Object &a);
   };
 }
 

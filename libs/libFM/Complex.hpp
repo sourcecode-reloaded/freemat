@@ -45,6 +45,27 @@ namespace FM
     c.i = a.i;
     return c;
   }
+
+  template <class elem>
+  static bool operator<(const Complex<elem> &a , const Complex<elem> &b)
+  {
+    return a.r < b.r;
+  }
+
+  template <class elem>
+  static bool operator<=(const Complex<elem> &a , const Complex<elem> &b)
+  {
+    return a.r <= b.r;
+  }
+
+  template <class elem>
+  static Complex<elem> operator*(const Complex<elem> &a , const Complex<elem> &b)
+  {
+    Complex<elem> c;
+    c.r = a.r*b.r - a.i*b.i;
+    c.i = a.r*b.i + a.i*b.r;
+    return c;
+  }
 }
 
 

@@ -5,7 +5,7 @@
 
 namespace FM
 {
-  class BaseTypes;
+  struct BaseTypes;
 
   class StringType : public IntegerType<FMChar,TypeString>
   {
@@ -31,6 +31,13 @@ namespace FM
       if (o.dims().is2D() && (o.dims().rows() == 1))
 	return FMString("'") + this->getString(o) + FMString("'");
       return IntegerType<FMChar,TypeString>::describe(o);
+    }
+    void computeArrayFormatInfo(FMFormatMode, const Object &, ArrayFormatInfo &format) {
+      format.width = 1;
+    }
+    void printElement(const Object &a, TermIF &io, const ArrayFormatInfo &format, ndx_t ndx) {
+      const FMChar *t = this->readOnlyData(a);
+      io.output("%c",t[ndx]);
     }
   };
 }

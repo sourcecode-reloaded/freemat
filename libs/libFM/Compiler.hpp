@@ -82,7 +82,7 @@ incr_prefix:
 */
 namespace FM
 {
-  class BaseTypes;
+  struct BaseTypes;
 
   class Compiler
   {
@@ -95,13 +95,11 @@ namespace FM
     std::stack<BasicBlock *> _breakblock;
     BaseTypes *_types;
   private:
-    std::string opcodeDecodeArgs(op_t opcode, int32_t val);
     void useBlock(BasicBlock *b);
     void emit(int8_t opcode, reg_t reg1);
     void emit(int8_t opcode, reg_t reg1, reg_t reg2);
     void emit(int8_t opcode, reg_t reg1, reg_t reg2, reg_t reg3);
     void emit(int8_t opcode, reg_t reg1, reg_t reg2, idx_t reg3);
-    void emit(int8_t opcode, reg_t reg1, idx_t arg);
     void emit(int8_t opcode, reg_t reg1, const_t arg);
     void emit(int8_t opcode, const_t arg);
     void emit(int8_t opcode);
@@ -155,12 +153,12 @@ namespace FM
     static std::string opcodeDecode(op_t opcode, int32_t val);
     Compiler(BaseTypes *b);
     void compile(const Tree &t);
-    void dump();
     Module* module();
   };
 
   void Disassemble(BaseTypes *_types, const Object &p);
 
+  void DumpBasicBlock(BasicBlock *k, int offset);
 }
 
 #endif

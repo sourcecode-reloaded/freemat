@@ -356,51 +356,6 @@ using namespace FM;
 
 #include "OpCodes.cpp"
 
-#define opcode(x) ((x) & 0xFF)
-#define reg1(x) (((x) >> 8) & 0xFF)
-#define reg2(x) (((x) >> 16) & 0xFF)
-#define reg3(x) (((x) >> 24) & 0xFF)
-#define constant(x) (((x) >> 16) & 0xFFFF)
-
-std::string Compiler::opcodeDecodeArgs(op_t opcode, int32_t val)
-{
-  switch (getOpCodeMode(opcode))
-    {
-    case no_arguments:
-      return "";
-    case one_register:
-      return "r" + Stringify(reg1(val));
-    case two_registers:
-      return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val));
-    case three_registers:
-      return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val)) + ", r" + Stringify(reg3(val));
-    case register_offset:
-      return "r" + Stringify(reg1(val)) + ", " + Stringify(constant(val)) + "  ; " ;
-    case offset:
-      return Stringify(constant(val)) + "  ; " ;
-    case register_constant:
-      return "r" + Stringify(reg1(val)) + ", " + Stringify(constant(val)) + "  ; " ;
-    case register_int:
-      return "r" + Stringify(reg1(val)) + ", " + Stringify(constant(val)) + "  ; " ;
-	//	+ SummarizeArrayCellEntry(_code->_constlist[constant(val)]);
-    case register_variable:
-      return "r" + Stringify(reg1(val)) + ", " + Stringify(constant(val)) + "  ; " 
-	+ _code->_varlist[constant(val)];
-    case register_free:
-      return "r" + Stringify(reg1(val)) + ", " + Stringify(constant(val)) + "  ; " 
-	+ _code->_freelist[constant(val)];
-    case register_captured:
-      return "r" + Stringify(reg1(val)) + ", " + Stringify(constant(val)) + "  ; " 
-	+ _code->_capturedlist[constant(val)];
-    case register_name:
-      return "r" + Stringify(reg1(val)) + ", " + Stringify(constant(val)) + "  ; " 
-	+ _code->_namelist[constant(val)];
-    case constant:
-      return Stringify(constant(val)) + "  ; " + _code->_constlist[constant(val)].description();
-    default:
-      return "unknown";
-    }
-}
 
 std::string Compiler::opcodeDecode(op_t opcode, int32_t val)
 {
@@ -418,6 +373,14 @@ std::string Compiler::opcodeDecode(op_t opcode, int32_t val)
       return "r" + Stringify(reg1(val)) + ", Const[" + Stringify(constant(val)) +"]";
     case register_int:
       return "r" + Stringify(reg1(val)) + ", " + Stringify(constant(val));
+    case register_register_variable:
+      return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val)) + ", Var[" + Stringify(idx3(val)) + "]";
+    case register_register_captured:
+      return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val)) + ", Cap[" + Stringify(idx3(val)) + "]";
+    case register_register_free:
+      return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val)) + ", Free[" + Stringify(idx3(val)) + "]";
+    case register_register_name:
+      return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val)) + ", Name[" + Stringify(idx3(val)) + "]";
     case register_variable:
       return "r" + Stringify(reg1(val)) + ", Var[" + Stringify(constant(val)) + "]";
     case register_captured:
@@ -443,10 +406,11 @@ void Compiler::useBlock(BasicBlock *p)
   _code->_currentBlock = p;
 }
 
+
 void Compiler::emit(int8_t opcode, reg_t reg1, BasicBlock *blk)
 {
   Instruction i;
-  i._opcode = opcode | (reg1->num() << 8);
+  i._opcode = opcode | (reg1->num() << shift_reg1);
   i._target = blk;
   i._position = 0;
   _code->_currentBlock->_insnlist.push_back(i);
@@ -464,16 +428,16 @@ void Compiler::emit(int8_t opcode, BasicBlock *blk)
 void Compiler::emit(int8_t opcode, reg_t reg1, reg_t reg2, reg_t reg3)
 {
   Instruction i;
-  i._opcode = opcode | (reg1->num() << 8) | (reg2->num() << 16) | (reg3->num() << 24);
+  i._opcode = opcode | (reg1->num() << shift_reg1) | (reg2->num() << shift_reg2) | (reg3->num() << shift_reg3);
   i._target = 0;
   i._position = 0;
   _code->_currentBlock->_insnlist.push_back(i);
 }
 
-void Compiler::emit(int8_t opcode, reg_t reg1, reg_t reg2, idx_t reg3)
+void Compiler::emit(int8_t opcode, reg_t reg1, reg_t reg2, idx_t ndx)
 {
   Instruction i;
-  i._opcode = opcode | (reg1->num() << 8) | (reg2->num() << 16) | (reg3 << 24);
+  i._opcode = opcode | (reg1->num() << shift_reg1) | (reg2->num() << shift_reg2) | (ndx << shift_reg3);
   i._target = 0;
   i._position = 0;
   _code->_currentBlock->_insnlist.push_back(i);
@@ -482,16 +446,7 @@ void Compiler::emit(int8_t opcode, reg_t reg1, reg_t reg2, idx_t reg3)
 void Compiler::emit(int8_t opcode, reg_t reg1, reg_t reg2)
 {
   Instruction i;
-  i._opcode = opcode | (reg1->num() << 8) | (reg2->num() << 16);
-  i._target = 0;
-  i._position = 0;
-  _code->_currentBlock->_insnlist.push_back(i);
-}
-
-void Compiler::emit(int8_t opcode, reg_t reg1, idx_t reg2)
-{
-  Instruction i;
-  i._opcode = opcode | (reg1->num() << 8) | (reg2 << 16);
+  i._opcode = opcode | (reg1->num() << shift_reg1) | (reg2->num() << shift_reg2);
   i._target = 0;
   i._position = 0;
   _code->_currentBlock->_insnlist.push_back(i);
@@ -500,7 +455,7 @@ void Compiler::emit(int8_t opcode, reg_t reg1, idx_t reg2)
 void Compiler::emit(int8_t opcode, reg_t reg1)
 {
   Instruction i;
-  i._opcode = opcode | (reg1->num() << 8);
+  i._opcode = opcode | (reg1->num() << shift_reg1);
   i._target = 0;
   i._position = 0;
   _code->_currentBlock->_insnlist.push_back(i);
@@ -510,7 +465,7 @@ void Compiler::emit(int8_t opcode, reg_t reg1)
 void Compiler::emit(int8_t opcode, reg_t reg1, const_t arg)
 {
   Instruction i;
-  i._opcode = opcode | (reg1->num() << 8) | (arg << 16);
+  i._opcode = opcode | (reg1->num() << shift_reg1) | (arg << shift_reg2);
   i._target = 0;
   i._position = 0;
   _code->_currentBlock->_insnlist.push_back(i);
@@ -519,7 +474,7 @@ void Compiler::emit(int8_t opcode, reg_t reg1, const_t arg)
 void Compiler::emit(int8_t opcode, const_t arg)
 {
   Instruction i;
-  i._opcode = opcode | (arg << 16);
+  i._opcode = opcode | (arg << shift_reg1);
   i._target = 0;
   i._position = 0;
   _code->_currentBlock->_insnlist.push_back(i);
@@ -562,7 +517,7 @@ reg_t Compiler::doFunctionExpression(const Tree &t, reg_t narg_out) {
       multiexpr(sp,s.child(p));
   }
   reg_t rp = getRegister();
-  emit(OP_CALL,rp,sp,getNameID(funcname));
+  //  emit(OP_CALL,rp,sp,getNameID(funcname));
   return rp;
 }
 
@@ -609,23 +564,22 @@ reg_t Compiler::doubleColon(const Tree &t) {
   return r0;
 }
 
-
 //TODO - Collapse into getID(varname,flags)...
 
 idx_t Compiler::getVariableID(const FMString & t) {
-  return _code->_varlist.indexOf(t);
+  return _types->indexOfStringInList(_code->_varlist,t);
 }
 
 idx_t Compiler::getNameID(const FMString & t) {
-  return _code->_namelist.indexOf(t);
+  return _types->indexOfStringInList(_code->_namelist,t);
 }
 
 idx_t Compiler::getCapturedID(const FMString & t) {
-  return _code->_capturedlist.indexOf(t);
+  return _types->indexOfStringInList(_code->_capturedlist,t);
 }
 
 idx_t Compiler::getFreeID(const FMString &t) {
-  return _code->_freelist.indexOf(t);
+  return _types->indexOfStringInList(_code->_freelist,t);
 }
 
 const_t Compiler::getConstantID(const FMString & t) {
@@ -633,10 +587,13 @@ const_t Compiler::getConstantID(const FMString & t) {
 }
 
 const_t Compiler::getConstantID(const Object & t) {
-  for (int i=0;i<_code->_constlist.size();++i)
-    if (_code->_constlist[i] == t) return i;
-  _code->_constlist.push_back(t);
-  return _code->_constlist.size()-1;
+  ndx_t ndx = _types->_list->indexOf(_code->_constlist,t);
+  if (ndx < 0)
+    {
+      _types->_list->push(_code->_constlist,t);
+      return _code->_constlist.elementCount()-1;
+    }
+  return ndx;
 }
 
 void Compiler::saveRegisterToName(const FMString &varname, reg_t b) {
@@ -668,6 +625,7 @@ void Compiler::assignment(const Tree &t, bool printIt, reg_t b) {
   if (t.numChildren() == 1)
     {
       saveRegisterToName(varname,b);
+      if (printIt) emit(OP_PRINT,b);
       return;
     }
   reg_t args = flattenDereferenceTreeToStack(t,1);
@@ -686,6 +644,8 @@ void Compiler::assignment(const Tree &t, bool printIt, reg_t b) {
     emit(OP_SUBSASGN_DYNAMIC,args,b,getNameID(varname));
   else
     throw Exception("Unhandled subsasgn case");
+  if (printIt)
+    emit(OP_PRINT,fetchVariable(varname,symflags));
 }
 
 // We want to map a dereference tree to the stack.
@@ -777,7 +737,6 @@ void Compiler::pushList(reg_t list, reg_t x)
 
 reg_t Compiler::doShortcutOr(const Tree &t) {
   reg_t ret = getRegister();
-  BasicBlock *next = new BasicBlock;
   BasicBlock *fail1 = new BasicBlock;
   BasicBlock *fail2 = new BasicBlock;
   BasicBlock *end = new BasicBlock;
@@ -798,7 +757,6 @@ reg_t Compiler::doShortcutOr(const Tree &t) {
 
 reg_t Compiler::doShortcutAnd(const Tree &t) {
   reg_t ret = getRegister();
-  BasicBlock *next = new BasicBlock;
   BasicBlock *fail = new BasicBlock;
   BasicBlock *end = new BasicBlock;
   emit(OP_JUMP_ZERO,expression(t.first()),fail);
@@ -836,6 +794,8 @@ void Compiler::expressionStatement(const Tree &t, bool printIt) {
 }
 
 reg_t Compiler::cellDefinition(const Tree &t) {
+  if (t.numChildren() == 0)
+    return fetchConstant(_types->_cell->empty());
   reg_t y = startList();
   for (int i=0;i<t.numChildren();++i) {
     const Tree & s(t.child(i));
@@ -850,6 +810,8 @@ reg_t Compiler::cellDefinition(const Tree &t) {
 }
 
 reg_t Compiler::matrixDefinition(const Tree &t) {
+  if (t.numChildren() == 0)
+    return fetchConstant(_types->_double->empty());
   reg_t y = startList();
   for (int i=0;i<t.numChildren();++i) {
     const Tree & s(t.child(i));
@@ -890,7 +852,7 @@ reg_t Compiler::expression(const Tree &t) {
       reg_t sp = startList();
       rhs(sp,t);
       reg_t ret = getRegister();
-      emit(OP_POP,ret,sp);
+      emit(OP_FIRST,ret,sp);
       return ret;
     }
   case TOK_REAL:
@@ -997,6 +959,7 @@ reg_t Compiler::expression(const Tree &t) {
   default:
     throw Exception("Unrecognized expression!");
   }  
+  throw Exception("Unrecognized expression!");
 }
 
 void Compiler::incrementRegister(reg_t x) {
@@ -1028,7 +991,7 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
       if (t.numChildren() == 1)
 	{
 	  reg_t b = getRegister();
-	  emit(OP_POP,b,ans);
+	  emit(OP_FIRST,b,ans);
 	  saveRegisterToName(varname,b);
 	}
       else
@@ -1123,7 +1086,7 @@ void Compiler::forStatement(const Tree &t) {
     useBlock(loop);
     BasicBlock *end = new BasicBlock;
     reg_t test_res = getRegister();
-    emit(OP_LE,test_res,loop_index,iter_count);
+    emit(OP_LT,test_res,loop_index,iter_count);
     emit(OP_JUMP_ZERO,test_res,end);
     reg_t r1 = getRegister();
     emit(OP_TIMES,r1,loop_index,step);
@@ -1139,7 +1102,6 @@ void Compiler::forStatement(const Tree &t) {
 }
 
 void Compiler::whileStatement(const Tree &t) {
-  BasicBlock *body = new BasicBlock;
   BasicBlock *end = new BasicBlock;
   BasicBlock *test = new BasicBlock;
   emit(OP_JUMP, test);
@@ -1293,6 +1255,7 @@ void Compiler::compile(const Tree &t) {
   walkCode(t);
 }
 
+
 void Compiler::walkFunction(const Tree &t, bool nested) {
   CodeBlock *cp = new CodeBlock;
   cp->_syms = _currentSym;
@@ -1300,30 +1263,35 @@ void Compiler::walkFunction(const Tree &t, bool nested) {
   _code = cp;
   // Build up the variable list
   // By convention, the arguments are first
+  _code->_varlist = _types->_list->empty();
+  _code->_capturedlist = _types->_list->empty();
+  _code->_freelist = _types->_list->empty();
+  _code->_namelist = _types->_list->empty();
+  _code->_constlist = _types->_list->empty();
 
   for (FMMap<FMString, int>::const_iterator s = _code->_syms->syms.constBegin();
        s != _code->_syms->syms.constEnd(); ++s)
     {
       if (IS_LOCAL(s.value()))
-	_code->_varlist += s.key();
+	_types->addStringToList(_code->_varlist,s.key());
       else if (IS_CAPTURED(s.value()))
-	_code->_capturedlist += s.key();
+	_types->addStringToList(_code->_capturedlist,s.key());
       else if (IS_FREE(s.value()))
-	_code->_freelist += s.key();
+	_types->addStringToList(_code->_freelist,s.key());
       else if (IS_DYNAMIC(s.value()))
 	{
-	  _code->_namelist += s.key();
-	  _code->_varlist += s.key();
+	  _types->addStringToList(_code->_namelist,s.key());
+	  _types->addStringToList(_code->_varlist,s.key());
 	}
       else
-	_code->_namelist += s.key();
+	_types->addStringToList(_code->_namelist,s.key());
     }
   std::cout << "Compiling function " << t.child(1).text() << "\n";
   _code->_name = t.child(1).text();
   std::cout << "Symbol table is " << _currentSym->name << "\n";
-  const Tree &rets = t.child(0);
+  //const Tree &rets = t.child(0);
   //  beginFunction(t.child(1).text(),nested);
-  const Tree &args = t.child(2);
+  //const Tree &args = t.child(2);
   const Tree &code = t.child(3);
   // Create a basic block, and push it on the list
   useBlock(new BasicBlock);
@@ -1354,22 +1322,27 @@ void Compiler::walkScript(const Tree &t) {
   _codestack.push(cp);
   _code = cp;
   // Build up the variable list
+  _code->_varlist = _types->_list->empty();
+  _code->_capturedlist = _types->_list->empty();
+  _code->_freelist = _types->_list->empty();
+  _code->_namelist = _types->_list->empty();
+  _code->_constlist = _types->_list->empty();
   for (FMMap<FMString, int>::const_iterator s = _code->_syms->syms.constBegin();
        s != _code->_syms->syms.constEnd(); ++s)
     {
       if (IS_LOCAL(s.value()))
-	_code->_varlist += s.key();
+	_types->addStringToList(_code->_varlist,s.key());
       else if (IS_CAPTURED(s.value()))
-	_code->_capturedlist += s.key();
+	_types->addStringToList(_code->_capturedlist,s.key());
       else if (IS_FREE(s.value()))
-	_code->_freelist += s.key();
+	_types->addStringToList(_code->_freelist,s.key());
       else if (IS_DYNAMIC(s.value()))
 	{
-	  _code->_namelist += s.key();
-	  _code->_varlist += s.key();
+	  _types->addStringToList(_code->_namelist,s.key());
+	  _types->addStringToList(_code->_varlist,s.key());
 	}
       else
-	_code->_namelist += s.key();
+	_types->addStringToList(_code->_namelist,s.key());
     }
   useBlock(new BasicBlock);
   block(t.first());
@@ -1432,43 +1405,6 @@ Module* Compiler::module() {
   return mod;
 }
 
-void Compiler::dump() {
-  while (!_codestack.empty())
-    {
-      _code = _codestack.top();
-      std::cout << "************************************************************\n";
-      std::cout << "Symbols for function: " << _code->_syms->name << "\n";
-      for (FMMap<FMString, int>::const_iterator s=_code->_syms->syms.constBegin(); s != _code->_syms->syms.constEnd(); ++s)
-	std::cout << "   Symbol: " << s.key() << " flags: " << symbolFlagsToString(s.value()) << "\n";
-      std::cout << "************************************************************\n";      
-      std::cout << "Const: ";
-      for (int i=0;i<_code->_constlist.size();i++)
-	std::cout << _code->_constlist[i].description() << " ";
-      std::cout << "\n";
-      std::cout << "Vars:  " << _code->_varlist << "\n";
-      std::cout << "Captured:  " << _code->_capturedlist << "\n";
-      std::cout << "Free:  " << _code->_freelist << "\n";
-      std::cout << "Names:  " << _code->_namelist << "\n";
-      std::cout << "Code:\n";
-      for (int j=0;j<_code->_blocklist.size();j++)
-	{
-	  printf("  Block %0x\n",_code->_blocklist[j]);
-	  BasicBlock *b = _code->_blocklist[j];
-	  for (int i=0;i<b->_insnlist.size();i++)
-	    {
-	      printf("%03d   ",i);
-	      Instruction insn = b->_insnlist[i];
-	      int8_t opcode = opcode(insn._opcode);
-	      printf("%-15s",getOpCodeName(opcode).c_str());
-	      printf("%-25s",opcodeDecodeArgs(opcode,insn._opcode).c_str());
-	      if (insn._target)	printf("%-15x",insn._target);
-	      printf("\n");
-	    }
-	}
-      _codestack.pop();
-    }
-}
-
 
 // To add peer functions to the current symboltable,
 // newSibling() {
@@ -1501,13 +1437,13 @@ void PrintInsn(int ip, const Instruction &i)
   printf("%-20s",getOpCodeName(op).c_str());
   printf("%-20s",Compiler::opcodeDecode(op,i._opcode).c_str());
   if (i._target)	
-    printf("%-15x",i._target);
+    printf("%-15p",i._target);
   printf("\n");
 }
 
 void PrintBasicBlock(BasicBlock *b)
 {
-  printf("  Block %0x\n",b);
+  printf("  Block %p\n",b);
   for (int i=0;i<b->_insnlist.size();i++)
     PrintInsn(i,b->_insnlist[i]);
 }
@@ -1520,8 +1456,9 @@ void PrintCodeBlock(CodeBlock *_code)
     std::cout << "   Symbol: " << s.key() << " flags: " << symbolFlagsToString(s.value()) << "\n";
   std::cout << "************************************************************\n";      
   std::cout << "Const: ";
-  for (int i=0;i<_code->_constlist.size();i++)
-    std::cout << _code->_constlist[i].description() << " ";
+  ListType *lt = _code->_constlist.asType<ListType>();
+  for (int i=0;i<_code->_constlist.elementCount();i++)
+    std::cout << lt->fetch(_code->_constlist,i).description() << " ";
   std::cout << "\n";
   std::cout << "Vars:  " << _code->_varlist << "\n";
   std::cout << "Captured:  " << _code->_capturedlist << "\n";
@@ -1549,19 +1486,19 @@ void PrintModule(Module* mod)
 }
 
 
-void DumpBasicBlock(BasicBlock *b, int offset)
+void FM::DumpBasicBlock(BasicBlock *b, int offset)
 {
-  printf("Basic Block : %x\n",b);
+  printf("Basic Block : %p\n",b);
   printf("  offset    : %d\n",b->_offset);
   printf("  seen      : %d\n",b->_seen);
-  printf("  insn count: %d\n",b->_insnlist.size());
+  printf("  insn count: %lu\n",b->_insnlist.size());
   for (int i=0;i<b->_insnlist.size();++i)
     PrintInsn(i+offset,b->_insnlist[i]);
 }
 
 void PrintRawInsn(int ip, uint32_t insn)
 {
-  printf("%03d   ",ip);
+  printf("%03d   %08x %02x %02x ",ip,insn,reg1(insn),reg2(insn));
   int8_t opcode = insn & 0xFF;
   printf("%-15s",getOpCodeName(opcode).c_str());
   printf("%-25s",Compiler::opcodeDecode(opcode,insn).c_str());
@@ -1574,10 +1511,10 @@ void FM::Disassemble(BaseTypes *_types, const Object &p)
   //    throw Exception("argument to disassemble is not a code_object");
   assert(p.type()->code() == TypeStruct);
   std::cout << "Name: " << _types->_struct->getScalar(p,"name").description() << "\n";
-  std::cout << "Captured: " << _types->makeStringsFromCell(_types->_struct->getScalar(p,"captured")) << "\n";
-  std::cout << "Free: " << _types->makeStringsFromCell(_types->_struct->getScalar(p,"free")) << "\n";
-  std::cout << "Vars: " << _types->makeStringsFromCell(_types->_struct->getScalar(p,"vars")) << "\n";
-  std::cout << "Names: " << _types->makeStringsFromCell(_types->_struct->getScalar(p,"names")) << "\n";
+  std::cout << "Captured: " << _types->_struct->getScalar(p,"captured") << "\n";
+  std::cout << "Free: " << _types->_struct->getScalar(p,"free") << "\n";
+  std::cout << "Vars: " << _types->_struct->getScalar(p,"vars") << "\n";
+  std::cout << "Names: " << _types->_struct->getScalar(p,"names") << "\n";
   Object consts = _types->_struct->getScalar(p,"consts");
   const Object* cp = _types->_cell->readOnlyData(consts);
   std::cout << "Consts: ";

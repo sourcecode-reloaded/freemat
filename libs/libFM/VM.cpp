@@ -1,19 +1,37 @@
+// TODO - LOAD/SAVE Dynamic is about 2.5 x slower than LOAD/SAVE local
+// 
+
 #include "VM.hpp"
+#include <cmath>
+#include <float.h>
+//#include <values.h>
 //#include "Print.hpp"
-//#include "Algorithms.hpp"
 //#include "Struct.hpp"
 //#include "Math.hpp"
 //#include "TermIF.hpp"
 #include <boost/timer/timer.hpp>
+#include "Compiler.hpp"
+
+std::string getOpCodeName(FM::op_t);
+
+//returns distance to the next nearest double value
+inline double feps( double x ){
+  if (x >= 0)
+    return nextafter( x , DBL_MAX ) - x;
+  else
+    return x - nextafter( x, -DBL_MAX);
+}
+
+//returns distance to the next nearest float value
+inline float fepsf( float x ){
+  if (x >= 0)
+    return nextafterf( x , FLT_MAX ) - x;
+  else
+    return x - nextafterf(x, -FLT_MAX);
+}
+
 
 using namespace FM;
-
-#define opcode(x) ((x) & 0xFF)
-#define reg1(x) (((x) >> 8) & 0xFF)
-#define reg2(x) (((x) >> 16) & 0xFF)
-#define reg3(x) (((x) >> 24) & 0xFF)
-#define constant(x) (((x) >> 16) & 0xFFFF)
-
 
 //A = 0; A(100000,1) = 0; for i= 1:1:100000; A(i) = i; end
 
@@ -60,8 +78,8 @@ VM::VM(BaseTypes *types)
   _types = types;
 }
 
-void VM::dump()
-{
+//void VM::dump()
+//{
   /*
   std::cout << "Stack:" << "\n";
   for (int i=0;i<_sp;i++)
@@ -82,181 +100,36 @@ void VM::dump()
     }
   std::cout << "\n";
   */
-}
+//}
 
 #define REG1 f->_regfile[reg1(insn)]
 #define REG2 f->_regfile[reg2(insn)]
 #define REG3 f->_regfile[reg3(insn)]
 
 #define UNARYOP(fnc,funcname)				\
-  if (!(REG2.isUserClass()))				\
-    REG1 = fnc(REG2); 					\
-  else							\
-    printf("unhandled class op!"); //REG1 = ClassUnaryOperator(REG2) ;
+    REG1 = REG2.type()->fnc(REG2);			
 
 #define BINOP(fnc,funcname) 				\
-  if (!(REG2.isUserClass() || REG3.isUserClass())) 	\
-    REG1 = fnc(REG2,REG3);				\
-  else							\
-    printf("Unhandled class op!"); //REG1 = ClassBinaryOperator(REG2,REG3,funcname);	\ 
+  REG1 = REG2.type()->fnc(REG2,REG3);			
 
-// TODO - optimize
-void VM::decodeAssignments(std::vector<assignment> &assignments)
+
+void VM::dump()
 {
-  int32_t argptr = _types->_int32->scalarValue(_stack[_sp-1])-1;
-  int32_t arg_len = argptr+1;
-  while (argptr > 0)
-    {
-      assignment x;
-      int32_t cnt = _types->_int32->scalarValue(_stack[argptr]);
-      for (int i=0;i<cnt;i++)
-	x.second.push_back(_stack[argptr-cnt+i]);
-      x.first = _types->_string->getString(_stack[argptr-cnt-1]);
-      argptr -= (cnt+2);
-      assignments.push_back(x);
-    }
-  _sp -= (arg_len+1);
+  _frames[0]->dump();
 }
-
-// TODO - optimize
-void VM::popVector(ObjectVector &x)
-{
-  int32_t cnt = _types->_int32->scalarValue(_stack[_sp-1]);
-  for (int i=0;i<cnt;i++)
-    x.push_back(_stack[_sp-1-cnt+i]);
-  _sp -= (cnt+1);
-}
-
-// FIXME
-Object VM::deref(const assignment& p, const Object &var )
-{
-  if (p.first == "()")
-    return var.get(p.second);
-  else if (p.first == "{}")
-    return ObjectFromCellObject(var.get(p.second));
-  else if (p.first == ".")
-    {
-      ObjectVector v = var.get(p.second[0].asString());
-      if (v.size() > 1) throw Exception("Illegal expression");
-      return v[0];
-    }
-}
-
-// A possible refinement here - we can check for user-defined classes in the loop 
-// and dispatch as subsref calls.  That allows a.foo(32) to be dispatched correctly
-// if a.foo is a userclass.
-
-//FIXME
-void VM::doSubsrefOp( Object & ref)
-{
-  // First, we rebuild the assignment instruction
-  std::vector<assignment> assignments;
-  decodeAssignments(assignments);
-  /*
-  for (int i=0;i<assignments.size();i++)
-    {
-      std::cout << "Assignment : " << i << "\n";
-      std::cout << "  Type : " << assignments[i].first << "\n";
-      std::cout << "  Params : < ";
-      for (int j=0;j<assignments[i].second.size();j++) {
-	std::cout << SummarizeObjectCellEntry(assignments[i].second[j]) << " ";
-      }
-      std::cout << ">\n";
-    }
-  */
-  Object var = ref;
-  // Loop through the assignments
-  for (int i=assignments.size()-1;i>=1;--i)
-    var = deref(assignments[i],var);
-  assignment &p = assignments[0];
-  if (p.first == "()")
-    _stack[_sp++] = var.get(p.second);
-  else if (p.first == "{}")
-    {
-      ObjectVector q = ObjectVectorFromCellObject(var.get(p.second));
-      for (int i=0;i<q.size();i++)
-	_stack[_sp++] = q[i];
-    }
-  else
-    {
-      ObjectVector q = var.get(p.second[0].asString());
-      for (int i=0;i<q.size();i++)
-	_stack[_sp++] = q[i];
-    }
-}
-
-//FIXME
-Object VM::assign(Object A, const assignment & p, const Object &b)
-{
-  if (p.first == "()")
-    A.set(p.second,b);
-  else if (p.first == "{}")
-    {
-      ObjectVector c(b);
-      SetCellContents(A,p.second,c);
-    }
-  else
-    {
-      ObjectVector c(b);
-      A.set(p.second[0].asString(),c);
-    }
-  return A;
-}
-
-// FIXME
-Object VM::doAssign(Object A, const std::vector<assignment> &assignments, const Object &b)
-{
-  if (assignments.size() == 1) 
-    return assign(A,assignments[0],b);
-  std::vector<assignment> copy_assignments(assignments);
-  copy_assignments.pop_back();
-  Object Asub;
-  try
-    {
-      Asub = deref(assignments.back(),A);
-    }
-  catch (Exception &e)
-    {
-      Asub = EmptyConstructor();
-    }
-  return assign(A,assignments.back(),doAssign(Asub,copy_assignments,b));
-}
-
-// This would be so much cleaner if get could return a reference
-// to an element in the array - but it cannot, except for an 
-// array of arrays.
-void VM::doSubsasgnOp(Object &ref, const Object & b)
-{
-  // First, we rebuild the assignment instruction
-  std::vector<assignment> assignments;
-  decodeAssignments(assignments);
-  // for (int i=0;i<assignments.size();i++)
-  //   {
-  //     std::cout << "Assignment : " << i << "\n";
-  //     std::cout << "  Type : " << assignments[i].first << "\n";
-  //     std::cout << "  Params : < ";
-  //     for (int j=0;j<assignments[i].second.size();j++) {
-  // 	std::cout << SummarizeObjectCellEntry(assignments[i].second[j]) << " ";
-  //     }
-  //     std::cout << ">\n";
-  //   }
-  ref = doAssign(ref, assignments, b);
-}
-
 
 void VM::executeScript(const Object &codeObject)
 {
   Frame *f = new Frame;
-  const StructObject &qp = codeObject.constStructPtr();
-  f->_name = qp["name"][1].asString();
+  f->_name = _types->_string->getString(_types->_struct->getScalar(codeObject,"name"));
   f->_regfile.resize(256);
-  f->_localvars.resize(qp["vars"][1].length());
-  f->_dynflags.resize(qp["names"][1].length());
-  const BasicObject<Object>& vars(qp["vars"][1].constReal<Object>());
-  const Object *varlist = vars.constData();
-  for (int i=0;i<vars.length();i++)
+  f->_localvars.resize(_types->_struct->getScalar(codeObject,"vars").elementCount());
+  f->_dynflags.resize(_types->_struct->getScalar(codeObject,"names").elementCount());
+  Object vars = _types->_struct->getScalar(codeObject,"vars");
+  const Object *varlist = _types->_list->readOnlyData(vars);
+  for (int i=0;i<vars.elementCount();i++)
     {
-      FMString varname = varlist[i].asString();
+      FMString varname = _types->_string->getString(varlist[i]);
       f->_symtab[varname] = VM_LOCALVAR | (i << 16);
     }
   f->_closed = false;
@@ -269,22 +142,44 @@ void VM::executeScript(const Object &codeObject)
 }
 
 
-extern "C"
-double num_for_loop_iter( double first, double step, double last );
+double num_for_loop_iter( double first, double step, double last )
+{
+    int signum = (step > 0) - (step < 0);
+    int nsteps = (int) floor( ( last - first ) / step ) + 1;
+    if( nsteps < 0 )
+	return 0;
+
+    double mismatch = signum*(first + nsteps*step - last);
+    if( (mismatch > 0) && ( mismatch < 3.*feps(last) ) && ( step != rint(step) ) ) //allow overshoot by 3 eps in some cases
+	nsteps++;
+
+    return nsteps;  
+}
 
 // Dynamic load/stores - these behave differently 
 // depending on if we are a script or not.  If we are
 // a script, a dynamic load/store can see the calling
 // scopes - up until we encounter a closed scope.
+
+// Benchmark : A = 0; for i=1:1:1e7; A = A + i; end - 4.256 seconds
+// Benchmark : function foo; A = 0; for i=1:1:1e7; A = A + i; end - 1.447 seconds
+// Bnechmark : A = 0; for i=1:1:10000000; A(1) = A(1) + i; end
+// function foo; a = 32; for i=1:1:100000000; a = a + i; end;a, end - 15 seconds or 19 seconds??  And then vector-> Object* reduces to 1
+// function foo; a = 0; a(512,512) = 0; for k=1:1:20; for i=1:1:512; for j=1:1:512; a(j,i) = i+j; end; end; end
+
+
 void VM::executeCodeObject(const Object &codeObject)
 {
-  const StructObject &qp = codeObject.constStructPtr();
-  const BasicObject<Object>& consts(qp["consts"][1].constReal<Object>());
-  const BasicObject<uint32_t>& opcodes(qp["code"][1].constReal<uint32_t>());
-  const BasicObject<Object>& names(qp["names"][1].constReal<Object>());
+  Object consts = _types->_struct->getScalar(codeObject,"consts");
+  Object opcodes = _types->_struct->getScalar(codeObject,"code");
+  Object names = _types->_struct->getScalar(codeObject,"names");
+
+  const Object *const_list = _types->_list->readOnlyData(consts);
+  const uint64_t *code = _types->_uint64->readOnlyData(opcodes);
+  const Object *names_list = _types->_list->readOnlyData(names);
 
   std::vector<double> etimes;
-  etimes.resize(opcodes.length());
+  etimes.resize(opcodes.elementCount());
 
   int ip = 0;
   
@@ -294,11 +189,9 @@ void VM::executeCodeObject(const Object &codeObject)
   
   // FIXME - do something with the argument vector
   bool returnFound = false;
-  const uint32_t *code = opcodes.constData();
-  const Object *const_list = consts.constData();
-  const Object *names_list = names.constData();
+
   Frame *f = _frames.back();
-  Frame *closed_frame;
+    Frame *closed_frame = NULL;
   for (int i=0;i<_frames.size();i++)
     if (_frames[i]->_closed)
       {
@@ -306,19 +199,31 @@ void VM::executeCodeObject(const Object &codeObject)
 	break;
       }
   if (!closed_frame)  throw Exception("Closed frame not found!  Should never happen!");
+
   StdIOTermIF io;
-  bool timeit = false;
+
+  // const bool timeit = true;
+
   int save_ip;
   boost::timer::cpu_timer timer;
-
+  
   while (!returnFound)
     {
-      if (timeit) 
-	{
-	  timer.start();
-	  save_ip = ip;
-	}
+      // if (timeit) 
+      // 	{
+      // 	  timer.start();
+      // 	  save_ip = ip;
+      // 	}
       uint32_t insn = code[ip];
+
+      /*
+      printf(">>%03d   ",ip);
+      int8_t opcode = opcode(insn);
+      printf("%-15s",getOpCodeName(opcode).c_str());
+      printf("%-20s",Compiler::opcodeDecode(opcode,insn).c_str());
+      std::cout << "\n";
+      */
+
       switch (opcode(insn))
 	{
 	case OP_NOP:
@@ -327,10 +232,10 @@ void VM::executeCodeObject(const Object &codeObject)
 	  returnFound = true;
 	  break;
 	case OP_PUSH:
-	  _stack[_sp++] = REG1;
+	  _types->_list->push(REG1,REG2);
 	  break;
-	case OP_POP:
-	  REG1 = _stack[--_sp];
+ 	case OP_FIRST:
+	  REG1 = _types->_list->first(REG2);
 	  break;
 	case OP_CALL:
 	case OP_LOAD_FREE:
@@ -343,11 +248,13 @@ void VM::executeCodeObject(const Object &codeObject)
 	  f->_localvars[constant(insn)] = REG1;
 	  break;
 	case OP_DCOLON:
-	  REG1 = DoubleColon(_stack[_sp-2], _stack[_sp-1], _stack[_sp]);
-	  _sp -= 3;
-	  break;
+	  {
+	    const Object *ap = _types->_list->readOnlyData(REG2);
+	    REG1 = ap[0].type()->DoubleColon(ap[0],ap[1],ap[2]);
+	    break;
+	  }
 	case OP_SUBSASGN:
-	  doSubsasgnOp(f->_localvars[constant(insn)],REG1);
+	  f->_localvars[idx3(insn)].type()->set(f->_localvars[idx3(insn)],REG1,REG2);
 	  break;
 	case OP_LOAD_CONST:
 	  REG1 = const_list[constant(insn)];
@@ -355,27 +262,33 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_LOAD:
 	  REG1 = f->_localvars[constant(insn)];
 	  break;
-	case OP_START_LIST:
-	  REG1 = Object(double(_sp));
-	  break;
-	case OP_END_LIST:
-	  _stack[_sp] = Object(double(_sp - REG1.asInteger()));
-	  _sp++;
-	  break;
-	case OP_LOAD_STACK:
-	  _sp = REG1.asInteger() + constant(insn);
+	case OP_NEW_LIST:
+	  REG1 = _types->_list->empty();
 	  break;
 	case OP_SUBSREF:
-	  doSubsrefOp(REG1);
+	  _types->_list->merge(REG1,REG2.type()->get(REG2,REG3));
 	  break;
 	case OP_COLON:
-	  REG1 = UnitColon(REG2,REG3);
+	  BINOP(Colon,"colon");
 	  break;
 	case OP_ADD:
 	  BINOP(Add,"plus");
 	  break;
 	case OP_MINUS:
 	  BINOP(Subtract,"minus");
+	  break;
+	case OP_LE:
+	  BINOP(LessEquals,"le");
+	  break;
+	case OP_LT:
+	  BINOP(LessThan,"lt");
+	  break;
+	case OP_TIMES:
+	  BINOP(DotMultiply,"times");
+	  break;
+	  /*
+	case  OP_NUMCOLS:
+	  REG1 = IterationColumns(REG2);
 	  break;
 	case OP_MTIMES:
 	  BINOP(Multiply,"mtimes");
@@ -395,9 +308,6 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_LT:
 	  BINOP(LessThan,"lt");
 	  break;
-	case OP_LE:
-	  BINOP(LessEquals,"le");
-	  break;
 	case OP_GT:
 	  BINOP(GreaterThan,"gt");
 	  break;
@@ -409,9 +319,6 @@ void VM::executeCodeObject(const Object &codeObject)
 	  break;
 	case OP_NE:
 	  BINOP(NotEquals,"ne");
-	  break;
-	case OP_TIMES:
-	  BINOP(DotMultiply,"times");
 	  break;
 	case OP_RDIVIDE:
 	  BINOP(DotRightDivide,"rdivide");
@@ -449,45 +356,49 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_TRANSPOSE:
 	  UNARYOP(Transpose,"transpose");
 	  break;
+	  */
 	case OP_INCR:
-	  REG1 = Object(double(REG1.asDouble() + 1));
+	  REG1 = _types->_double->makeScalar(_types->_double->scalarValue(REG1)+1);
 	  break;
-	case OP_LHSCOUNT:
+	  /*	case OP_LHSCOUNT:
 	  // FIXME
 	  break;
-	case OP_SUBSASGNM:
+	  case OP_SUBSASGNM:
 	  // FIXME
 	  break;
+	  */
 	case OP_ZERO:
-	  REG1 = Object(double(0));
+	  REG1 = _types->_double->zeroScalar();
 	  break;
+	  /*
 	case OP_CELLROWDEF:
 	  {
-	    ObjectVector x;
-	    popVector(x);
-	    _stack[_sp++] = CellObjectFromObjectVector(x,x.size());
+	    // ObjectVector x;
+	    // popVector(x);
+	    // _stack[_sp++] = CellObjectFromObjectVector(x,x.size());
 	    break;
 	  }
 	case OP_HCAT:
 	  {
-	    ObjectVector x;
-	    popVector(x);
-	    _stack[_sp++] = NCat(x,1);
+	    // ObjectVector x;
+	    // popVector(x);
+	    // _stack[_sp++] = NCat(x,1);
 	    break;
 	  }
 	case OP_VCAT:
 	  {
-	    ObjectVector x;
-	    popVector(x);
-	    REG1 = NCat(x,0);
+	    // ObjectVector x;
+	    // popVector(x);
+	    // REG1 = NCat(x,0);
 	    break;
 	  }
 	case OP_LOAD_GLOBAL:
 	case OP_LOAD_PERSIST:
 	  break;
+	  */
 	case OP_LOAD_DYNAMIC:
 	  {
-	    FMString name = names_list[constant(insn)].asString();
+	    FMString name = _types->_string->getString(names_list[constant(insn)]);
 	    REG1 = closed_frame->getDynamicVar(name);
 	    break;
 	  }
@@ -495,14 +406,15 @@ void VM::executeCodeObject(const Object &codeObject)
 	  break;
 	case OP_SAVE_DYNAMIC:
 	  {
-	    FMString name = names_list[constant(insn)].asString();
+	    FMString name = _types->_string->getString(names_list[constant(insn)]);
 	    closed_frame->getDynamicVarRef(name) = REG1;
 	    break;
 	  }
 	case OP_SAVE_PERSIST:
 	case OP_JUMP_ZERO:
 	  {
-	    if (!RealAllNonZeros(REG1)) ip = constant(insn)-1;
+	    if (_types->_double->scalarValue(REG1) == 0)
+	      ip = constant(insn)-1;
 	    break;
 	  }
 	case OP_JUMP:
@@ -515,7 +427,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_THROW:
 	case OP_PRINT:
 	  {
-	    PrintObjectClassic(REG1,1000,&io);
+	    REG1.type()->print(REG1,io);
 	    break;
 	  }
 	case OP_DEREF:
@@ -531,30 +443,53 @@ void VM::executeCodeObject(const Object &codeObject)
 	  break;
 	case OP_SUBSASGN_DYNAMIC:
  	  {
-	    FMString name = names_list[constant(insn)].asString();
-	    doSubsasgnOp(closed_frame->getDynamicVarRef(name),REG1);
+	    FMString name = _types->_string->getString(names_list[idx3(insn)]);
+	    Object &var = closed_frame->getDynamicVarRef(name);
+	    var.type()->set(var,REG1,REG2);
 	    break;
 	  }
 	case OP_LOOPCOUNT:
 	  {
-	    double last = _stack[--_sp].asDouble();
-	    double step = _stack[--_sp].asDouble();
-	    double first = _stack[--_sp].asDouble();
-	    REG1 = Object(double(num_for_loop_iter(first,step,last)));
+	    const Object *ap = _types->_list->readOnlyData(REG2);
+	    double last = _types->_double->scalarValue(ap[2]);
+	    double step = _types->_double->scalarValue(ap[1]);
+	    double first = _types->_double->scalarValue(ap[0]);
+	    REG1 = _types->_double->makeScalar(num_for_loop_iter(first,step,last));
 	    break;
+	  }
+	case OP_LOAD_INT:
+	  {
+	    REG1 = _types->_double->makeScalar(constant(insn));
+	    break;
+	  }
+	case OP_PUSH_INT:
+	  {
+	    _types->_list->push(REG1,_types->_int32->makeScalar(constant(insn)));
+	    break;
+	  }
+	default:
+	  {
+	    std::cerr << "Unknown opcode " << opcode(insn) << "\n";
+	    printf("%03d   ",ip);
+	    int8_t opcode = opcode(insn);
+	    printf("%-15s",getOpCodeName(opcode).c_str());
+	    printf("%-20s",Compiler::opcodeDecode(opcode,insn).c_str());
+	    std::cout << "\n";
+	    exit(1);
 	  }
 	}
       ip++;
-      if (timeit)
-	{
-	  timer.stop();
-	  etimes[save_ip] += timer.elapsed().wall;
-	}
+      // if (timeit)
+      // 	{
+      // 	  timer.stop();
+      // 	  etimes[save_ip] += timer.elapsed().wall;
+      // 	}
     }
-  for (int i=0;i<etimes.size();i++)
-    {
-      std::cout << "OPCode " << i << " time " << etimes[i]/1.0e9 << "\n";
-    }
+  // if (timeit)
+  //   for (int i=0;i<etimes.size();i++)
+  //     {
+  // 	std::cout << "OPCode " << i << " time " << etimes[i]/1.0e9 << "\n";
+  //     }
 }
 
 void VM::executeBlock(const Object &codeObject, bool singleStep)

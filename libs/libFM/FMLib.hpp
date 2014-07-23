@@ -412,8 +412,8 @@ inline std::ostream& operator<<(std::ostream& o, const FMStringList& p)
 // This will need to be ported to Win32
 class FMLibrary
 {
-  void *lib;
   FMString filename;
+  void *lib;
 public:
   FMLibrary(const FMString& libname) : filename(libname), lib(0) {}
   FMLibrary() : filename(""), lib(0) {}
@@ -464,11 +464,12 @@ public:
   }
 };
 
+/*
 class FMDateTime 
 {
   std::time_t _time;
 public:
-};
+};*/
 
 template <class S, class T>
 class FMMultiMap : public std::multimap<S,T>

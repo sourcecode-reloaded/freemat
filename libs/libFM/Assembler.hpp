@@ -12,7 +12,7 @@ class Assembler
 {
   std::vector<BasicBlock*> _postorder;
   CodeBlock *_code;
-  std::vector<uint32_t> _vm_codes;
+  std::vector<uint64_t> _vm_codes;
   void depthFirstSearch(BasicBlock* p);
   void computeJumpOffsets();
 public:

@@ -22,20 +22,12 @@ namespace FM
     std::vector<Frame*> _frames;
     int _sp;
     BaseTypes *_types;
-  private:
-    void doSubsasgnOp( Object &ref, const Object &b);
-    void doSubsrefOp( Object & ref);
-    void popVector(ObjectVector &x);
-    void decodeAssignments(std::vector<assignment> & assignments);
-    void dump();
-    Object deref(const assignment&, const Object &);
-    Object assign(Object A, const assignment & p, const Object &b);
-    Object doAssign(Object A, const std::vector<assignment> & assignments, const Object &b);
   public:
     VM(BaseTypes *types);
     void executeBlock(const Object &codeObject, bool singleStep = false);
     void executeScript(const Object &codeObject);
     void executeCodeObject(const Object &codeObject);
+    void dump();
   };
 }
 

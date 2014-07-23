@@ -2,7 +2,7 @@
 
 using namespace FM;
 
-Register::Register(int num, RegisterBlock *block) : _num(num), _block(block)
+Register::Register(int num, RegisterBlock *block) : _block(block), _num(num)
 {
 }
 
