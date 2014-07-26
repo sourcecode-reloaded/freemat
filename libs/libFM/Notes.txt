@@ -1,0 +1,281 @@
+
+What is a dynamic variable?  Consider the following function
+
+function foo
+   A = fft(1:10);
+
+In this case, we might think that "fft" is an external (global) symbol.  But 
+not necessarily.  Consider the case of an eval statement:
+
+function foo
+   eval('fft = 1:10');
+   A = fft(1:10);
+
+The presence of an eval means that "fft" is now a variable.  So when we lookup
+fft, we get a variable instead of the function.  The "eval" could just as
+easily be hidden in a script
+
+function foo
+   do_script
+   A = fft(1:10);
+
+do_script
+  fft = 1:10
+
+So dynamic variables are ones that just ones that have to be defined at runtime.
+
+Note that there is a problem in the current definition of local variables.  Consider
+
+function foo
+   a = 3;
+   a = a + 5;
+
+In this case, because "a" is not visible outside the scope of function "foo", it 
+would be marked a local variable (it is defined before being used).  But what happens
+if the variable is deleted?  Something like this:
+
+function foo
+   fft = 3;
+   clear('fft');
+   a = fft(1:15);
+
+The "clear" function will delete the local variable "fft", and the next call to "fft"
+will be mapped to the function "fft", not the local variable.  Yuck.  The presence of
+"clear" means that "local" variables are an optimization that we cannot really make.
+Instead, all variables that are not declared as global, persistent or defined as 
+parameters are dynamic.
+
+Instead of trying to do a bunch of complex analysis at compile time, I should have developed
+a better cache mechanism so that variables could be looked up without a big penalty.  
+Double yuck.
+
+OK - so variables only come in the following flavors:
+
+Global     - variables that belong to the global scope.
+Persistent - variables that are "static".
+Parameter  - variables that are passed as parameters (could be value or reference).
+Return     - variables that are returned from a function.
+Dynamic    - variables that are otherwise undefined.
+
+The notion of "local" variables is dropped.  There is no real meaningful way to 
+guarantee that a variable is truly local, except in the case of for loop variables.
+And even in that case, it's really a function of speed - nothing else.  
+
+What about "captured/free" variables?  This was considerably more difficult than regular
+variables.  The situation was driven by the need/ability to nest functions.
+
+function a = foo(y)
+  x = 3+y
+  function b = bar(g)
+     b = x+g
+  end
+end
+
+In this case, when the function "bar" is executed, it needs access to the variable "x", which
+is in the parent function scope.  A fully dynamic version of this would be to create a code
+object for "bar" that included a static scope with it.  The static scope would contain the 
+variable "x".  When the function "bar" is executed outside the scope of "foo", it would
+search through the static scope to find variables that are not defined in it.  So when we
+return a function pointer
+
+function a = foo(y)
+  x = 3+y
+  function b = bar(g)
+     b = x+g
+  end
+  a = @bar
+end
+
+then "a" contains the code for "bar" and a workspace that defines "x".  So far, that's fine.
+The question is what happens when we have to start chaining through scopes?  For example,
+
+function a = foo(y)
+  x = y + 2;
+  function b = bar(g)
+    k = x + g;
+    function c = baz(p)
+      c = p + k + x;
+    end
+    b = @baz
+  end
+  a = @b
+end
+
+So in this case, "baz" needs to access a variable "x" in the scope of "foo".  It seems that 
+when we create the function pointer 
+
+b = @baz
+
+we need to create a workspace to store with it.  At that point, we walk through the function
+scopes until we get to the parent scope and collect all variables that are defined.  So in this
+case the function pointer b will have
+
+b.code = <code>
+b.workspace.x = <value for x>
+b.workspace.k = <value for k>
+
+When the code for "b" is executed, a "LOAD_DYN" reference for "x" will need to search the workspace
+first.  
+
+From a cache-implementation standpoint, the setup is a bit more complicated than earlier.  Ideally,
+we want to mimic a normal implementation.  In a normal implementation, there is a global vector of
+objects (memory).  Every object can then be uniquely defined by an address in global memory.  That
+is fine without threads.  For threads, we want to have thread local and global memory.  Furthermore,
+we don't want threads to stomp on each others memory addresses.  Thus, we need two different address
+spaces.  Something like:
+
+vector<Object> global_memory;
+vector<Object> local_memory;
+
+As I observe later, we also need a third address space for functions:
+
+vector<Object> function_memory;
+
+Where local_memory is specific to the given thread, and global_memory and function_memory is shared across all threads.
+Each object can then be mapped to an address, which is simply the location of that object in memory.
+A frame is then marked by simply taking a series of locations from local_memory.  Essentially, local_memory
+is the stack for the VM, and global_memory is the (shared) global memory.  That works pretty well.
+Persistent variables can be simply be allocated in global_memory, and given an address (depending on if they
+are thread local or not).  
+
+The use of addresses eliminates the need for string searches at runtime.  A frame will then consist of
+the following operations:
+
+frame::begin()
+  local_memory.reserve(variables_used)
+  registers.reserve(registers_used)
+  name_cache.reserve(variables_used)
+end
+
+A LOAD opcode will then do the following.  If the name index referred to by the LOAD opcode has a memory
+location, it will simply load the object from local_memory.  A LOAD opcode can also be mapped to global
+memory.  Consider, for example, the implicit search for functions.
+
+function b = foo(a)
+   b = a + pi
+end
+
+Here, "pi" is a symbol defined in global memory (it is a function).  The OP_LOAD for "pi" will search
+the symbol table for the frame.  As the symbol is not defined, it will search the global memory space for
+the symbol.  If found, the value will be loaded and stored in local_memory in the space reserved for the
+"pi" symbol.  This fetch operation is lazy, and triggered by a reference to a variable.  What happens when
+we use "eval" to do the same thing?
+
+function b = foo(a)
+  eval('b = a + pi')
+end
+
+Essentially, the "eval" will be compiled into a series of opcodes that contain a reference to "pi".  That continues
+the question to one of open frames.  For open frames, we do not want to reserve memory for the variables.  Those
+variables are supposed to exist in the parent scope.  However, that is not guaranteed.  Consider for example
+
+function b = foo(a)
+  do_script_makes_x
+  b = x + a
+end
+
+In this case, the script "do_script_makes_x" creates the variable "x", which is not present in the scope of function
+"foo".  So this variable needs to be added to the local_memory allocated in the parent frame, and assigned an
+address.  As a result, the OP_LOAD looks something like this:
+
+OP_LOAD:
+  Does symbol have a mapping?
+    Yes --> load value from designated local memory location
+    No  --> Does symbol exist in current frame?
+                --> Yes, save mapping and return value
+                --> Does symbol exist in function_memory?
+                         Yes --> Fetch value from function_memory, and store in local cache & save mapping
+                         No  --> throw exception "variable not defined"
+
+OP_SAVE:
+  Does symbol have a mapping?
+    Yes --> save value to designated location
+    No  --> Create symbol in current frame
+                --> save mapping
+                --> save value to designated location
+              
+
+So declared variables (globals, returns, etc.) will always have defined mappings.  Dynamic variables will just be added
+to the current symbol table.  
+
+If we don't use the processor stack for the frame.  We have something like
+
+std::vector<Object> stack;
+
+frame::begin(std::vector<Object> &stack)
+{
+  int sp = stack.size();
+  stack.resize(stack.size() + num_registers + num_vars);
+  Object *reg = &stack[sp-1];
+  Object *var = &stack[sp+num_registers-1];
+}
+
+frame::end(std::vector<Object> &stack)
+{
+  stack.resize(sp);
+}
+
+In some cases, a frame will contain variables for which it has no references.  Consider
+
+function foo
+   script_that_defines_x
+   script_that_uses_x
+
+In this case, no reference to symbol "x" will exist in foo's frame.  Nor will the code segment
+contain references to a variable x.  In fact, only the two names of the symbols will be defined
+in foo's name list.  This means a frame must have a dynamic map of strings to indexes.  
+
+frame {
+  Object *registers;
+  Object *variables;
+  std::vector<Object> *stack;
+  std::map<FMString,int> symbols;
+}
+
+Because the symbols map will require heap manipulation, it's not entirely clear what the 
+advantage of avoiding it for registers and variables is.  It's certainly simpler to do
+
+frame {
+  std::vector<Object> registers;
+  std::vector<Object> variables;
+  std::map<FMString,int> symbols;
+}
+
+
+The OP_SAVE opcode can then do something like:
+
+OP_SAVE reg,ndx
+  - if (address[ndx])
+      _closed_frame->variables[address[ndx]
+
+
+Actually, that's not strictly true.  We can avoid the dynamic allocation of the symbol map
+by doing the following.  
+
+frame {
+  Object *registers;
+  Object *variables;
+  std::vector<Object> *stack;
+  std::map<FMString,int> dyn_symbols;
+}
+
+We can leave dyn_symbols unused unless a script inserts a new symbol into the frame.  The
+search and resolve procedure for an OP_SAVE can then add the symbol to the frame.  Something
+like:
+
+OP_SAVE reg, ndx
+  - if (address[ndx])
+      _closed_frame->variables[address[ndx]]
+    else
+    {
+      // Check to see if frame already has a symbol with this name
+      if (f->has_symbol_named(names[ndx]))
+        address[ndx] = f->get_symbol_address(names[ndx])
+      else
+      {
+        f->add_dynamic_symbol(names[ndx])
+        address[ndx] = f->get_symbol_address(names[ndx])
+      } 
+      f->variables[address[ndx]] = reg
+    }
+

@@ -6,6 +6,12 @@
 namespace FM
 {
 
+  // A simplified symbol pass - we now realize that variables only 
+  // come in the following flavors:
+  //  Global, persistent, parameters (value and reference), return, dynamic
+  // A dynamic variable is one that is bound at run time.  It can be locally
+  // defined (i.e., in the current code's closed scope), or it can be a 
+  // captured variable. 
   const int16_t SYM_GLOBAL = 1;
   const int16_t SYM_PERSISTENT = (1 << 1);
   const int16_t SYM_LOCAL_DEF = (1 << 2);

@@ -201,7 +201,7 @@ void VM::executeCodeObject(const Object &codeObject)
   if (!closed_frame)  throw Exception("Closed frame not found!  Should never happen!");
 
   // The closed frame is fixed.  We build a cache at this point.
-  std::vector<int> dyn_cache;
+  std::vector<Object*> dyn_cache;
   dyn_cache.resize(names.elementCount());
 
   StdIOTermIF io;

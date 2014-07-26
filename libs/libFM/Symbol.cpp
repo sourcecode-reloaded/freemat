@@ -165,7 +165,7 @@ void SymbolPass::walkCode(const Tree &t, int blockDepth) {
 	walkCode(rhs,blockDepth);
 	break;
       }
-      //    case TOK_FUNCTION_DEFS:
+    case TOK_FUNCTION_DEFS:
     case TOK_FUNCTION:
       {
 	walkFunction(t);
