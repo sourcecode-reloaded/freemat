@@ -191,7 +191,7 @@ void VM::executeCodeObject(const Object &codeObject)
   bool returnFound = false;
 
   Frame *f = _frames.back();
-    Frame *closed_frame = NULL;
+  Frame *closed_frame = NULL;
   for (int i=0;i<_frames.size();i++)
     if (_frames[i]->_closed)
       {
@@ -199,6 +199,10 @@ void VM::executeCodeObject(const Object &codeObject)
 	break;
       }
   if (!closed_frame)  throw Exception("Closed frame not found!  Should never happen!");
+
+  // The closed frame is fixed.  We build a cache at this point.
+  std::vector<int> dyn_cache;
+  dyn_cache.resize(names.elementCount());
 
   StdIOTermIF io;
 
@@ -214,13 +218,13 @@ void VM::executeCodeObject(const Object &codeObject)
       // 	  timer.start();
       // 	  save_ip = ip;
       // 	}
-      uint32_t insn = code[ip];
+      insn_t insn = code[ip];
 
       /*
       printf(">>%03d   ",ip);
-      int8_t opcode = opcode(insn);
-      printf("%-15s",getOpCodeName(opcode).c_str());
-      printf("%-20s",Compiler::opcodeDecode(opcode,insn).c_str());
+      int8_t opcode_num = opcode(insn);
+      printf("%-15s",getOpCodeName(opcode_num).c_str());
+      printf("%-20s",Compiler::opcodeDecode(opcode_num,insn).c_str());
       std::cout << "\n";
       */
 
@@ -245,7 +249,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	  // Finish me
 	  break;
 	case OP_SAVE:
-	  f->_localvars[constant(insn)] = REG1;
+	  f->_localvars[get_constant(insn)] = REG1;
 	  break;
 	case OP_DCOLON:
 	  {
@@ -254,13 +258,13 @@ void VM::executeCodeObject(const Object &codeObject)
 	    break;
 	  }
 	case OP_SUBSASGN:
-	  f->_localvars[idx3(insn)].type()->set(f->_localvars[idx3(insn)],REG1,REG2);
+	  f->_localvars[get_constant(insn)].type()->set(f->_localvars[get_constant(insn)],REG1,REG2);
 	  break;
 	case OP_LOAD_CONST:
-	  REG1 = const_list[constant(insn)];
+	  REG1 = const_list[get_constant(insn)];
 	  break;
 	case OP_LOAD:
-	  REG1 = f->_localvars[constant(insn)];
+	  REG1 = f->_localvars[get_constant(insn)];
 	  break;
 	case OP_NEW_LIST:
 	  REG1 = _types->_list->empty();
@@ -398,28 +402,37 @@ void VM::executeCodeObject(const Object &codeObject)
 	  */
 	case OP_LOAD_DYNAMIC:
 	  {
-	    FMString name = _types->_string->getString(names_list[constant(insn)]);
-	    REG1 = closed_frame->getDynamicVar(name);
+	    // Check the cache
+	    if (!dyn_cache[get_constant(insn)])
+	      {
+		FMString name = _types->_string->getString(names_list[get_constant(insn)]);
+		dyn_cache[get_constant(insn)] = closed_frame->getDynamicVarPtr(name);
+	      }
+	    REG1 = *(dyn_cache[get_constant(insn)]);
 	    break;
 	  }
 	case OP_SAVE_GLOBAL:
 	  break;
 	case OP_SAVE_DYNAMIC:
 	  {
-	    FMString name = _types->_string->getString(names_list[constant(insn)]);
-	    closed_frame->getDynamicVarRef(name) = REG1;
+	    if (!dyn_cache[get_constant(insn)])
+	      {
+		FMString name = _types->_string->getString(names_list[get_constant(insn)]);
+		dyn_cache[get_constant(insn)] = &closed_frame->getDynamicVarRef(name);
+	      }
+	    *(dyn_cache[get_constant(insn)]) = REG1;
 	    break;
 	  }
 	case OP_SAVE_PERSIST:
 	case OP_JUMP_ZERO:
 	  {
 	    if (_types->_double->scalarValue(REG1) == 0)
-	      ip = constant(insn)-1;
+	      ip = get_constant(insn)-1;
 	    break;
 	  }
 	case OP_JUMP:
 	  {
-	    ip = constant(insn)-1;
+	    ip = get_constant(insn)-1;
 	    break;
 	  }
 	case OP_TRY_BEGIN:
@@ -443,7 +456,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	  break;
 	case OP_SUBSASGN_DYNAMIC:
  	  {
-	    FMString name = _types->_string->getString(names_list[idx3(insn)]);
+	    FMString name = _types->_string->getString(names_list[get_constant(insn)]);
 	    Object &var = closed_frame->getDynamicVarRef(name);
 	    var.type()->set(var,REG1,REG2);
 	    break;
@@ -459,21 +472,21 @@ void VM::executeCodeObject(const Object &codeObject)
 	  }
 	case OP_LOAD_INT:
 	  {
-	    REG1 = _types->_double->makeScalar(constant(insn));
+	    REG1 = _types->_double->makeScalar(get_constant(insn));
 	    break;
 	  }
 	case OP_PUSH_INT:
 	  {
-	    _types->_list->push(REG1,_types->_int32->makeScalar(constant(insn)));
+	    _types->_list->push(REG1,_types->_int32->makeScalar(get_constant(insn)));
 	    break;
 	  }
 	default:
 	  {
 	    std::cerr << "Unknown opcode " << opcode(insn) << "\n";
 	    printf("%03d   ",ip);
-	    int8_t opcode = opcode(insn);
-	    printf("%-15s",getOpCodeName(opcode).c_str());
-	    printf("%-20s",Compiler::opcodeDecode(opcode,insn).c_str());
+	    int8_t op = opcode(insn);
+	    printf("%-15s",getOpCodeName(op).c_str());
+	    printf("%-20s",Compiler::opcodeDecode(op,insn).c_str());
 	    std::cout << "\n";
 	    exit(1);
 	  }
@@ -527,20 +540,20 @@ void VM::executeBlock(const Object &codeObject, bool singleStep)
 	  // Finish me
 	  break;
 	case OP_SAVE:
-	  _vars[constant(insn)] = REG1;
+	  _vars[get_constant(insn)] = REG1;
 	  break;
 	case OP_DCOLON:
 	  REG1 = DoubleColon(_stack[_sp-2], _stack[_sp-1], _stack[_sp]);
 	  _sp -= 3;
 	  break;
 	case OP_SUBSASGN:
-	  doSubsasgnOp(_vars[constant(insn)],REG1);
+	  doSubsasgnOp(_vars[get_constant(insn)],REG1);
 	  break;
 	case OP_LOAD_CONST:
-	  REG1 = code->_constlist[constant(insn)];
+	  REG1 = code->_constlist[get_constant(insn)];
 	  break;
 	case OP_LOAD:
-	  REG1 = _vars[constant(insn)];
+	  REG1 = _vars[get_constant(insn)];
 	  break;
 	case OP_START_LIST:
 	  REG1 = Object(double(_sp));
@@ -550,7 +563,7 @@ void VM::executeBlock(const Object &codeObject, bool singleStep)
 	  _sp++;
 	  break;
 	case OP_LOAD_STACK:
-	  _sp = REG1.asInteger() + constant(insn);
+	  _sp = REG1.asInteger() + get_constant(insn);
 	  break;
 	case OP_SUBSREF:
 	  doSubsrefOp(REG1);

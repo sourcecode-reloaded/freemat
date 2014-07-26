@@ -50,48 +50,37 @@
 namespace FM
 {
 
-struct VMInstruction
-{
-  unsigned opcode : 8;
-  unsigned reg1 : 10;
-  unsigned reg2 : 10;
-  unsigned reg3 : 10;
-  int constant : 26;  
-};
-
-  /*
-  struct OpCode
-  {
-    int8_t opcode;
-    int8_t opreg0;
-    int8_t opreg1;
-    int8_t opreg2;
-    };*/
+  // A VM instruction is a 64 bit integer laid out as
+  // [ flags(4 bits) | constant(20 bits) | reg3(10 bits) | reg2(10 bits) | reg1(10 bits) | opcode(8 bits) ]
+  typedef uint64_t insn_t;
 
   typedef uint8_t op_t;
-  typedef int16_t const_t;
-  typedef int16_t idx_t;
+  typedef int32_t const_t;
 
-const int opcode_width = 8;
-const int reg_width = 7;
-const int const_width = 16;
-const int idx_width = 10;
-const int opcode_mask = (1 << opcode_width) - 1;
-const int reg_mask = (1 << reg_width) - 1;
-const int const_mask = (1 << const_width) - 1;
-const int idx_mask = (1 << idx_width) - 1;
+  const int opcode_width = 8;
+  const int reg_width = 10;
+  const int const_width = 20;
+  const int opcode_mask = (1 << opcode_width) - 1;
+  const int reg_mask = (1 << reg_width) - 1;
+  const int const_mask = (1 << const_width) - 1;
 
-const int shift_reg1 = opcode_width;
-const int shift_reg2 = opcode_width+reg_width;
-const int shift_reg3 = opcode_width+reg_width*2;
+  const int shift_reg1 = opcode_width;
+  const int shift_reg2 = opcode_width+reg_width;
+  const int shift_reg3 = opcode_width+reg_width*2;
+  const int shift_constant = opcode_width+reg_width*3;
 
-#define opcode(x) ((x) & opcode_mask)
-#define reg1(x) (((x) >> shift_reg1) & reg_mask)
-#define reg2(x) (((x) >> shift_reg2) & reg_mask)
-#define reg3(x) (((x) >> shift_reg3) & reg_mask)
-#define idx3(x) (((x) >> shift_reg3) & idx_mask)
-#define constant(x) (((x) >> shift_reg2) & const_mask)
-
+  //#define opcode(x) ((x) & opcode_mask)
+  //#define reg1(x) (((x) >> shift_reg1) & reg_mask)
+  //#define reg2(x) (((x) >> shift_reg2) & reg_mask)
+  //#define reg3(x) (((x) >> shift_reg3) & reg_mask)
+  //#define idx3(x) (((x) >> shift_reg3) & idx_mask)
+  //#define constant(x) (((x) >> shift_reg2) & const_mask)
+  
+  inline int32_t get_constant(insn_t x) {return int32_t((x >> shift_constant) & const_mask);}
+  inline uint16_t reg1(insn_t x) {return uint16_t((x >> shift_reg1) & reg_mask);}
+  inline uint16_t reg2(insn_t x) {return uint16_t((x >> shift_reg2) & reg_mask);}
+  inline uint16_t reg3(insn_t x) {return uint16_t((x >> shift_reg3) & reg_mask);}
+  inline uint8_t opcode(insn_t x) {return uint8_t(x & opcode_mask);}
 #include "OpCodes.h"
 
   enum opcodemode
@@ -118,7 +107,7 @@ const int shift_reg3 = opcode_width+reg_width*2;
 
   struct Instruction
   {
-    int32_t _opcode;
+    insn_t _opcode;
     class BasicBlock *_target;
     int32_t _position;
   };

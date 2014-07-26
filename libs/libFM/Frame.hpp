@@ -22,6 +22,7 @@ namespace FM
     bool defines(const FMString &name);
     Object getDynamicVar(const FMString &name);
     Object& getDynamicVarRef(const FMString &name);
+    Object* getDynamicVarPtr(const FMString &name);
     void dump();
   };
 };

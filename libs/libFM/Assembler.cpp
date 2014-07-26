@@ -38,8 +38,8 @@ void Assembler::computeJumpOffsets()
 	  if (b->_insnlist[j]._target)
 	    {
 	      // Compute the address of the jump target
-	      int target_address = b->_insnlist[j]._target->_offset;
-	      b->_insnlist[j]._opcode |= (target_address << (opcode_width + reg_width));
+	      insn_t target_address = b->_insnlist[j]._target->_offset;
+	      b->_insnlist[j]._opcode |= (target_address << shift_constant);
 	    }
 	}
     }

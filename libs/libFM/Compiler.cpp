@@ -357,7 +357,7 @@ using namespace FM;
 #include "OpCodes.cpp"
 
 
-std::string Compiler::opcodeDecode(op_t opcode, int32_t val)
+std::string Compiler::opcodeDecode(op_t opcode, insn_t val)
 {
   switch (getOpCodeMode(opcode))
     {
@@ -370,30 +370,30 @@ std::string Compiler::opcodeDecode(op_t opcode, int32_t val)
     case three_registers:
       return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val)) + ", r" + Stringify(reg3(val));
     case register_constant:
-      return "r" + Stringify(reg1(val)) + ", Const[" + Stringify(constant(val)) +"]";
+      return "r" + Stringify(reg1(val)) + ", Const[" + Stringify(get_constant(val)) +"]";
     case register_int:
-      return "r" + Stringify(reg1(val)) + ", " + Stringify(constant(val));
+      return "r" + Stringify(reg1(val)) + ", " + Stringify(get_constant(val));
     case register_register_variable:
-      return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val)) + ", Var[" + Stringify(idx3(val)) + "]";
+      return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val)) + ", Var[" + Stringify(get_constant(val)) + "]";
     case register_register_captured:
-      return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val)) + ", Cap[" + Stringify(idx3(val)) + "]";
+      return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val)) + ", Cap[" + Stringify(get_constant(val)) + "]";
     case register_register_free:
-      return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val)) + ", Free[" + Stringify(idx3(val)) + "]";
+      return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val)) + ", Free[" + Stringify(get_constant(val)) + "]";
     case register_register_name:
-      return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val)) + ", Name[" + Stringify(idx3(val)) + "]";
+      return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val)) + ", Name[" + Stringify(get_constant(val)) + "]";
     case register_variable:
-      return "r" + Stringify(reg1(val)) + ", Var[" + Stringify(constant(val)) + "]";
+      return "r" + Stringify(reg1(val)) + ", Var[" + Stringify(get_constant(val)) + "]";
     case register_captured:
-      return "r" + Stringify(reg1(val)) + ", Cap[" + Stringify(constant(val)) + "]";
+      return "r" + Stringify(reg1(val)) + ", Cap[" + Stringify(get_constant(val)) + "]";
     case register_free:
-      return "r" + Stringify(reg1(val)) + ", Free[" + Stringify(constant(val)) + "]";
+      return "r" + Stringify(reg1(val)) + ", Free[" + Stringify(get_constant(val)) + "]";
     case register_name:
-      return "r" + Stringify(reg1(val)) + ", Name[" + Stringify(constant(val)) + "]";
+      return "r" + Stringify(reg1(val)) + ", Name[" + Stringify(get_constant(val)) + "]";
     case register_offset:
-      return "r" + Stringify(reg1(val)) + ", " + Stringify(constant(val));
+      return "r" + Stringify(reg1(val)) + ", " + Stringify(get_constant(val));
     case offset:
     case constant:
-      return Stringify(constant(val));
+      return Stringify(get_constant(val));
     default:
       return "unknown";
     }
@@ -428,16 +428,16 @@ void Compiler::emit(int8_t opcode, BasicBlock *blk)
 void Compiler::emit(int8_t opcode, reg_t reg1, reg_t reg2, reg_t reg3)
 {
   Instruction i;
-  i._opcode = opcode | (reg1->num() << shift_reg1) | (reg2->num() << shift_reg2) | (reg3->num() << shift_reg3);
+  i._opcode = opcode | (insn_t(reg1->num()) << shift_reg1) | (insn_t(reg2->num()) << shift_reg2) | (insn_t(reg3->num()) << shift_reg3);
   i._target = 0;
   i._position = 0;
   _code->_currentBlock->_insnlist.push_back(i);
 }
 
-void Compiler::emit(int8_t opcode, reg_t reg1, reg_t reg2, idx_t ndx)
+void Compiler::emit(int8_t opcode, reg_t reg1, reg_t reg2, const_t ndx)
 {
   Instruction i;
-  i._opcode = opcode | (reg1->num() << shift_reg1) | (reg2->num() << shift_reg2) | (ndx << shift_reg3);
+  i._opcode = opcode | (insn_t(reg1->num()) << shift_reg1) | (insn_t(reg2->num()) << shift_reg2) | (insn_t(ndx) << shift_constant);
   i._target = 0;
   i._position = 0;
   _code->_currentBlock->_insnlist.push_back(i);
@@ -446,7 +446,7 @@ void Compiler::emit(int8_t opcode, reg_t reg1, reg_t reg2, idx_t ndx)
 void Compiler::emit(int8_t opcode, reg_t reg1, reg_t reg2)
 {
   Instruction i;
-  i._opcode = opcode | (reg1->num() << shift_reg1) | (reg2->num() << shift_reg2);
+  i._opcode = opcode | (insn_t(reg1->num()) << shift_reg1) | (insn_t(reg2->num()) << shift_reg2);
   i._target = 0;
   i._position = 0;
   _code->_currentBlock->_insnlist.push_back(i);
@@ -455,7 +455,7 @@ void Compiler::emit(int8_t opcode, reg_t reg1, reg_t reg2)
 void Compiler::emit(int8_t opcode, reg_t reg1)
 {
   Instruction i;
-  i._opcode = opcode | (reg1->num() << shift_reg1);
+  i._opcode = opcode | (insn_t(reg1->num()) << shift_reg1);
   i._target = 0;
   i._position = 0;
   _code->_currentBlock->_insnlist.push_back(i);
@@ -465,7 +465,7 @@ void Compiler::emit(int8_t opcode, reg_t reg1)
 void Compiler::emit(int8_t opcode, reg_t reg1, const_t arg)
 {
   Instruction i;
-  i._opcode = opcode | (reg1->num() << shift_reg1) | (arg << shift_reg2);
+  i._opcode = opcode | (insn_t(reg1->num()) << shift_reg1) | (insn_t(arg) << shift_constant);
   i._target = 0;
   i._position = 0;
   _code->_currentBlock->_insnlist.push_back(i);
@@ -474,7 +474,7 @@ void Compiler::emit(int8_t opcode, reg_t reg1, const_t arg)
 void Compiler::emit(int8_t opcode, const_t arg)
 {
   Instruction i;
-  i._opcode = opcode | (arg << shift_reg1);
+  i._opcode = opcode | (insn_t(arg) << shift_constant);
   i._target = 0;
   i._position = 0;
   _code->_currentBlock->_insnlist.push_back(i);
@@ -566,19 +566,19 @@ reg_t Compiler::doubleColon(const Tree &t) {
 
 //TODO - Collapse into getID(varname,flags)...
 
-idx_t Compiler::getVariableID(const FMString & t) {
+const_t Compiler::getVariableID(const FMString & t) {
   return _types->indexOfStringInList(_code->_varlist,t);
 }
 
-idx_t Compiler::getNameID(const FMString & t) {
+const_t Compiler::getNameID(const FMString & t) {
   return _types->indexOfStringInList(_code->_namelist,t);
 }
 
-idx_t Compiler::getCapturedID(const FMString & t) {
+const_t Compiler::getCapturedID(const FMString & t) {
   return _types->indexOfStringInList(_code->_capturedlist,t);
 }
 
-idx_t Compiler::getFreeID(const FMString &t) {
+const_t Compiler::getFreeID(const FMString &t) {
   return _types->indexOfStringInList(_code->_freelist,t);
 }
 
@@ -1496,9 +1496,9 @@ void FM::DumpBasicBlock(BasicBlock *b, int offset)
     PrintInsn(i+offset,b->_insnlist[i]);
 }
 
-void PrintRawInsn(int ip, uint32_t insn)
+void PrintRawInsn(int ip, insn_t insn)
 {
-  printf("%03d   %08x %02x %02x ",ip,insn,reg1(insn),reg2(insn));
+  printf("%03d   %016llx %03x %03x %03x %06x ",ip,insn,reg1(insn),reg2(insn),reg3(insn),get_constant(insn));
   int8_t opcode = insn & 0xFF;
   printf("%-15s",getOpCodeName(opcode).c_str());
   printf("%-25s",Compiler::opcodeDecode(opcode,insn).c_str());
@@ -1522,7 +1522,7 @@ void FM::Disassemble(BaseTypes *_types, const Object &p)
     std::cout << cp[i].description() << " ";
   std::cout << "\n";
   Object code = _types->_struct->getScalar(p,"code");
-  const uint32_t *opcodes = _types->_uint32->readOnlyData(code);
+  const insn_t *opcodes = _types->_uint64->readOnlyData(code);
   std::cout << "Code: " << code.dims().elementCount() << " length\n";
   for (dim_t i=0;i<code.dims().elementCount();++i)
     PrintRawInsn(i,opcodes[i]);

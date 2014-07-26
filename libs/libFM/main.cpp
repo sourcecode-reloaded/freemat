@@ -132,7 +132,22 @@ int main(int argc, char *argv[])
 
   assert(sizeof(Complex<char>) == 2*sizeof(char));
 
-#if 0
+  /*
+  std::cout << "Sizeof VMInstruction = " << sizeof(VMInstruction) << "\n";
+
+  assert(sizeof(VMInstruction) == sizeof(uint64_t));
+
+    {
+  VMInstruction p;
+
+  p.opcode = 143;
+  p.reg1 = 412;
+  p.reg2 = 54;
+  p.constant = 5123;
+
+  std::cout << "Opcode = " << p.opcode << "\n";
+    }
+  */ 
   {
     boost::timer::cpu_timer x;
     FMStringList fields;
@@ -173,6 +188,7 @@ int main(int argc, char *argv[])
     std::cout << "Test 1b:" << hits << " Execution time " << x.elapsed().wall/1.0e9 - 0.05 << " secs\n";
   }
     
+#if 0
  {
     boost::timer::cpu_timer x;
     FMStringList fields;

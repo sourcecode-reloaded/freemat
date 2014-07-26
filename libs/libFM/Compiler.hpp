@@ -99,7 +99,7 @@ namespace FM
     void emit(int8_t opcode, reg_t reg1);
     void emit(int8_t opcode, reg_t reg1, reg_t reg2);
     void emit(int8_t opcode, reg_t reg1, reg_t reg2, reg_t reg3);
-    void emit(int8_t opcode, reg_t reg1, reg_t reg2, idx_t reg3);
+    void emit(int8_t opcode, reg_t reg1, reg_t reg2, const_t arg);
     void emit(int8_t opcode, reg_t reg1, const_t arg);
     void emit(int8_t opcode, const_t arg);
     void emit(int8_t opcode);
@@ -117,10 +117,10 @@ namespace FM
     reg_t getRegister();
     const_t getConstantID(const Object &);
     const_t getConstantID(const FMString &);
-    idx_t getVariableID(const FMString &);
-    idx_t getFreeID(const FMString &);
-    idx_t getCapturedID(const FMString &);
-    idx_t getNameID(const FMString &);
+    const_t getVariableID(const FMString &);
+    const_t getFreeID(const FMString &);
+    const_t getCapturedID(const FMString &);
+    const_t getNameID(const FMString &);
     reg_t cellDefinition(const Tree &t);
     reg_t matrixDefinition(const Tree &t);
     reg_t fetchConstant(const Object &);
@@ -150,7 +150,7 @@ namespace FM
     void walkCode(const Tree &t);
     void walkFunction(const Tree &t, bool nested = false);
   public:
-    static std::string opcodeDecode(op_t opcode, int32_t val);
+    static std::string opcodeDecode(op_t opcode, insn_t val);
     Compiler(BaseTypes *b);
     void compile(const Tree &t);
     Module* module();
