@@ -234,9 +234,6 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_CALL:
 	  // Finish me
 	  break;
-	// case OP_SAVE:
-	//   f->_localvars[get_constant(insn)] = REG1;
-	//   break;
 	case OP_DCOLON:
 	  {
 	    const Object *ap = _types->_list->readOnlyData(REG2);
@@ -388,14 +385,12 @@ void VM::executeCodeObject(const Object &codeObject)
 	  */
 	case OP_LOAD:
 	  {
-	    // std::cout << "LOAD op " << get_constant(insn) << " - cache value " << f->_addr[get_constant(insn)] << "\n";
 	    register int ndx = get_constant(insn);
 	    register int addr = f->_addr[ndx];
 	    if (!addr)
 	      {
 		FMString name = _types->_string->getString(names_list[ndx]);
 		f->_addr[ndx] = closed_frame->getAddress(name);
-		// std::cout << "LOAD cache setup for " << name << " is " << f->_addr[ndx] << "\n";
 		if (!f->_addr[ndx])
 		  throw Exception("Reference to undefined variable " + name);
 		addr = f->_addr[ndx];
@@ -409,17 +404,12 @@ void VM::executeCodeObject(const Object &codeObject)
 	  {
 	    register int ndx = get_constant(insn);
 	    register int addr = f->_addr[ndx];
-	    // std::cout << "SAVE op " << get_constant(insn) << " - cache value " << f->_addr[get_constant(insn)] << "\n";
 	    if (!addr)
 	      {
 		FMString name = _types->_string->getString(names_list[get_constant(insn)]);
 		f->_addr[get_constant(insn)] = closed_frame->getAddress(name);
-		// std::cout << "SAVE cache setup for " << name << " is " << f->_addr[get_constant(insn)] << "\n";		
 		if (!f->_addr[get_constant(insn)])
-		  {
-		    f->_addr[get_constant(insn)] = closed_frame->allocateVariable(name);
-		    // std::cout << "SAVE cache allocate for " << name << " is " << f->_addr[get_constant(insn)] << "\n";		
-		  }
+		  f->_addr[get_constant(insn)] = closed_frame->allocateVariable(name);
 		addr = f->_addr[ndx];
 	      }
 	    closed_frame->_vars[addr-1] = REG1;
@@ -455,8 +445,17 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_SUBSASGN_PERSIST:
 	case OP_SUBSASGN:
  	  {
-	    FMString name = _types->_string->getString(names_list[get_constant(insn)]);
-	    Object &var = closed_frame->getDynamicVarRef(name);
+	    register int ndx = get_constant(insn);
+	    register int addr = f->_addr[ndx];
+	    if (!addr)
+	      {
+		FMString name = _types->_string->getString(names_list[get_constant(insn)]);
+		f->_addr[get_constant(insn)] = closed_frame->getAddress(name);
+		if (!f->_addr[get_constant(insn)])
+		  f->_addr[get_constant(insn)] = closed_frame->allocateVariable(name);
+		addr = f->_addr[ndx];
+	      }
+	    Object &var = closed_frame->_vars[addr-1];
 	    var.type()->set(var,REG1,REG2);
 	    break;
 	  }
