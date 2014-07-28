@@ -443,9 +443,9 @@ int main(int argc, char *argv[])
       if (!p)
 	return 0;
       FMString body(p);
-      bool failed;
-      body = ReadFileIntoString(body,failed);
-      //      body += "\n\n";
+      // bool failed;
+      // body = ReadFileIntoString(body,failed);
+      body += "\n\n";
       try {
 	Scanner S(body,"");
 	Parser P(S);
@@ -453,8 +453,7 @@ int main(int argc, char *argv[])
 	b.print();
 	Compiler C(mytype);
 	C.compile(b);
-	//	C.dump();
-	/*
+	//C.dump();
 	Assembler A(C.module()->_main);
 	A.run();
 	Object p = A.codeObject(mytype);
@@ -464,7 +463,6 @@ int main(int argc, char *argv[])
 	vm.executeScript(p);
 	timer.stop();
 	std::cout << " Execution time " << timer.elapsed().wall/1.0e9 << "\n";
-	*/
 	//	vm.dump();
       } catch (const FM::Exception &e) {
 	std::cout << "Exception: " << e.msg() << "\n";

@@ -122,16 +122,10 @@ void VM::executeScript(const Object &codeObject)
 {
   Frame *f = new Frame;
   f->_name = _types->_string->getString(_types->_struct->getScalar(codeObject,"name"));
+  // Space for registers
   f->_regfile.resize(256);
-  f->_localvars.resize(_types->_struct->getScalar(codeObject,"vars").elementCount());
-  f->_dynflags.resize(_types->_struct->getScalar(codeObject,"names").elementCount());
-  Object vars = _types->_struct->getScalar(codeObject,"vars");
-  const Object *varlist = _types->_list->readOnlyData(vars);
-  for (int i=0;i<vars.elementCount();i++)
-    {
-      FMString varname = _types->_string->getString(varlist[i]);
-      f->_symtab[varname] = VM_LOCALVAR | (i << 16);
-    }
+  // Space to store the address maps for variables
+  f->_addr.resize(_types->_struct->getScalar(codeObject,"names").elementCount());
   f->_closed = false;
   _frames.push_back(f);
   // execute the code
@@ -200,10 +194,6 @@ void VM::executeCodeObject(const Object &codeObject)
       }
   if (!closed_frame)  throw Exception("Closed frame not found!  Should never happen!");
 
-  // The closed frame is fixed.  We build a cache at this point.
-  std::vector<Object*> dyn_cache;
-  dyn_cache.resize(names.elementCount());
-
   StdIOTermIF io;
 
   // const bool timeit = true;
@@ -242,30 +232,26 @@ void VM::executeCodeObject(const Object &codeObject)
 	  REG1 = _types->_list->first(REG2);
 	  break;
 	case OP_CALL:
-	case OP_LOAD_FREE:
-	case OP_SAVE_FREE:
-	case OP_LOAD_CAPTURED:
-	case OP_SAVE_CAPTURED:
 	  // Finish me
 	  break;
-	case OP_SAVE:
-	  f->_localvars[get_constant(insn)] = REG1;
-	  break;
+	// case OP_SAVE:
+	//   f->_localvars[get_constant(insn)] = REG1;
+	//   break;
 	case OP_DCOLON:
 	  {
 	    const Object *ap = _types->_list->readOnlyData(REG2);
 	    REG1 = ap[0].type()->DoubleColon(ap[0],ap[1],ap[2]);
 	    break;
 	  }
-	case OP_SUBSASGN:
-	  f->_localvars[get_constant(insn)].type()->set(f->_localvars[get_constant(insn)],REG1,REG2);
-	  break;
+	// case OP_SUBSASGN:
+	//   f->_localvars[get_constant(insn)].type()->set(f->_localvars[get_constant(insn)],REG1,REG2);
+	//   break;
 	case OP_LOAD_CONST:
 	  REG1 = const_list[get_constant(insn)];
 	  break;
-	case OP_LOAD:
-	  REG1 = f->_localvars[get_constant(insn)];
-	  break;
+	// case OP_LOAD:
+	//   REG1 = f->_localvars[get_constant(insn)];
+	//   break;
 	case OP_NEW_LIST:
 	  REG1 = _types->_list->empty();
 	  break;
@@ -400,27 +386,43 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_LOAD_PERSIST:
 	  break;
 	  */
-	case OP_LOAD_DYNAMIC:
+	case OP_LOAD:
 	  {
-	    // Check the cache
-	    if (!dyn_cache[get_constant(insn)])
+	    // std::cout << "LOAD op " << get_constant(insn) << " - cache value " << f->_addr[get_constant(insn)] << "\n";
+	    register int ndx = get_constant(insn);
+	    register int addr = f->_addr[ndx];
+	    if (!addr)
 	      {
-		FMString name = _types->_string->getString(names_list[get_constant(insn)]);
-		dyn_cache[get_constant(insn)] = closed_frame->getDynamicVarPtr(name);
+		FMString name = _types->_string->getString(names_list[ndx]);
+		f->_addr[ndx] = closed_frame->getAddress(name);
+		// std::cout << "LOAD cache setup for " << name << " is " << f->_addr[ndx] << "\n";
+		if (!f->_addr[ndx])
+		  throw Exception("Reference to undefined variable " + name);
+		addr = f->_addr[ndx];
 	      }
-	    REG1 = *(dyn_cache[get_constant(insn)]);
+	    REG1 = closed_frame->_vars[addr-1];
 	    break;
 	  }
 	case OP_SAVE_GLOBAL:
 	  break;
-	case OP_SAVE_DYNAMIC:
+	case OP_SAVE:
 	  {
-	    if (!dyn_cache[get_constant(insn)])
+	    register int ndx = get_constant(insn);
+	    register int addr = f->_addr[ndx];
+	    // std::cout << "SAVE op " << get_constant(insn) << " - cache value " << f->_addr[get_constant(insn)] << "\n";
+	    if (!addr)
 	      {
 		FMString name = _types->_string->getString(names_list[get_constant(insn)]);
-		dyn_cache[get_constant(insn)] = &closed_frame->getDynamicVarRef(name);
+		f->_addr[get_constant(insn)] = closed_frame->getAddress(name);
+		// std::cout << "SAVE cache setup for " << name << " is " << f->_addr[get_constant(insn)] << "\n";		
+		if (!f->_addr[get_constant(insn)])
+		  {
+		    f->_addr[get_constant(insn)] = closed_frame->allocateVariable(name);
+		    // std::cout << "SAVE cache allocate for " << name << " is " << f->_addr[get_constant(insn)] << "\n";		
+		  }
+		addr = f->_addr[ndx];
 	      }
-	    *(dyn_cache[get_constant(insn)]) = REG1;
+	    closed_frame->_vars[addr-1] = REG1;
 	    break;
 	  }
 	case OP_SAVE_PERSIST:
@@ -451,10 +453,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	  }
 	case OP_SUBSASGN_GLOBAL:
 	case OP_SUBSASGN_PERSIST:
-	case OP_SUBSASGN_CAPTURED:
-	case OP_SUBSASGN_FREE:
-	  break;
-	case OP_SUBSASGN_DYNAMIC:
+	case OP_SUBSASGN:
  	  {
 	    FMString name = _types->_string->getString(names_list[get_constant(insn)]);
 	    Object &var = closed_frame->getDynamicVarRef(name);

@@ -117,9 +117,6 @@ namespace FM
     reg_t getRegister();
     const_t getConstantID(const Object &);
     const_t getConstantID(const FMString &);
-    const_t getVariableID(const FMString &);
-    const_t getFreeID(const FMString &);
-    const_t getCapturedID(const FMString &);
     const_t getNameID(const FMString &);
     reg_t cellDefinition(const Tree &t);
     reg_t matrixDefinition(const Tree &t);

@@ -70,17 +70,13 @@ void Assembler::assemble()
 Object Assembler::codeObject(BaseTypes *_b)
 {
   FMStringList fields;
-  fields << "name" << "code" << "captured" << "free" << "vars" << "names" << "consts" << "locals";
+  fields << "name" << "code" << "names" << "consts";
   Object qp = _b->_struct->makeScalarStruct(fields);
   _b->_struct->setScalar(qp,"name",_b->_string->makeString(_code->_name));
   Object op = _b->_uint64->makeMatrix(_vm_codes.size(),1);
   memcpy(_b->_uint64->readWriteData(op),&(_vm_codes[0]),_vm_codes.size()*sizeof(uint64_t));
   _b->_struct->setScalar(qp,"code",op);
-  _b->_struct->setScalar(qp,"captured",_code->_capturedlist);
-  _b->_struct->setScalar(qp,"free",_code->_freelist);
-  _b->_struct->setScalar(qp,"vars",_code->_varlist);
   _b->_struct->setScalar(qp,"names",_code->_namelist);
   _b->_struct->setScalar(qp,"consts",_code->_constlist);
-  _b->_struct->setScalar(qp,"locals",_b->_cell->makeMatrix(0,0));
   return qp;
 }

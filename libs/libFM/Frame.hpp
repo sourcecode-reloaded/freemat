@@ -11,11 +11,9 @@ namespace FM
   public:
     FMString _name;
     std::vector<Object> _regfile;
-    std::vector<Object> _localvars;
-    std::vector<Object> _localnames;
-    std::vector<bool> _dynflags;
-    std::vector<Object> _dynvars;
+    std::vector<Object> _vars;
     FMMap<FMString,int> _symtab;
+    std::vector<int> _addr;
     bool _closed;
   public:
     Frame();
@@ -23,6 +21,8 @@ namespace FM
     Object getDynamicVar(const FMString &name);
     Object& getDynamicVarRef(const FMString &name);
     Object* getDynamicVarPtr(const FMString &name);
+    int getAddress(const FMString &name);
+    int allocateVariable(const FMString &name);
     void dump();
   };
 };

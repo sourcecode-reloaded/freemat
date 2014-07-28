@@ -128,9 +128,6 @@ namespace FM
     SymbolTable *_syms;
     std::vector<BasicBlock*> _blocklist;
     BasicBlock* _currentBlock;
-    Object _capturedlist;
-    Object _freelist;
-    Object _varlist;
     Object _namelist;
     Object _constlist; 
   };

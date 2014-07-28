@@ -564,22 +564,8 @@ reg_t Compiler::doubleColon(const Tree &t) {
   return r0;
 }
 
-//TODO - Collapse into getID(varname,flags)...
-
-const_t Compiler::getVariableID(const FMString & t) {
-  return _types->indexOfStringInList(_code->_varlist,t);
-}
-
 const_t Compiler::getNameID(const FMString & t) {
   return _types->indexOfStringInList(_code->_namelist,t);
-}
-
-const_t Compiler::getCapturedID(const FMString & t) {
-  return _types->indexOfStringInList(_code->_capturedlist,t);
-}
-
-const_t Compiler::getFreeID(const FMString &t) {
-  return _types->indexOfStringInList(_code->_freelist,t);
 }
 
 const_t Compiler::getConstantID(const FMString & t) {
@@ -598,20 +584,14 @@ const_t Compiler::getConstantID(const Object & t) {
 
 void Compiler::saveRegisterToName(const FMString &varname, reg_t b) {
   int symflags = _code->_syms->syms[varname];
-  if (IS_LOCAL(symflags))
-    emit(OP_SAVE,b,getVariableID(varname));
-  else if (IS_GLOBAL(symflags))
+  if (IS_GLOBAL(symflags))
     emit(OP_SAVE_GLOBAL,b,getNameID(varname));
   else if (IS_PERSIST(symflags))
     emit(OP_SAVE_PERSIST,b,getNameID(varname));
-  else if (IS_CAPTURED(symflags))
-    emit(OP_SAVE_CAPTURED,b,getCapturedID(varname));
-  else if (IS_FREE(symflags))
-    emit(OP_SAVE_FREE,b,getFreeID(varname));
   else if (IS_DYNAMIC(symflags))
-    emit(OP_SAVE_DYNAMIC,b,getNameID(varname));
+    emit(OP_SAVE,b,getNameID(varname));
   else
-    throw Exception("Unhandled save case");
+    throw Exception("Unhandled save case for variable " + varname + " flags = " + Stringify(symflags));
 }
 
 // FIXME - 
@@ -630,18 +610,12 @@ void Compiler::assignment(const Tree &t, bool printIt, reg_t b) {
     }
   reg_t args = flattenDereferenceTreeToStack(t,1);
   int symflags = _code->_syms->syms[varname];
-  if (IS_LOCAL(symflags))
-    emit(OP_SUBSASGN,args,b,getVariableID(varname));
-  else if (IS_GLOBAL(symflags))
+  if (IS_GLOBAL(symflags))
     emit(OP_SUBSASGN_GLOBAL,args,b,getNameID(varname));
   else if (IS_PERSIST(symflags))
     emit(OP_SUBSASGN_PERSIST,args,b,getNameID(varname));
-  else if (IS_CAPTURED(symflags))
-    emit(OP_SUBSASGN_CAPTURED,args,b,getCapturedID(varname));
-  else if (IS_FREE(symflags))
-    emit(OP_SUBSASGN_FREE,args,b,getFreeID(varname));
   else if (IS_DYNAMIC(symflags))
-    emit(OP_SUBSASGN_DYNAMIC,args,b,getNameID(varname));
+    emit(OP_SUBSASGN,args,b,getNameID(varname));
   else
     throw Exception("Unhandled subsasgn case");
   if (printIt)
@@ -708,18 +682,12 @@ reg_t Compiler::fetchConstantString(const FMString &constant)
 reg_t Compiler::fetchVariable(const FMString &varname, int flags)
 {
   reg_t x = getRegister();
-  if (IS_LOCAL(flags))
-    emit(OP_LOAD,x,getVariableID(varname));
-  else if (IS_GLOBAL(flags))
+  if (IS_GLOBAL(flags))
     emit(OP_LOAD_GLOBAL,x,getNameID(varname));
   else if (IS_PERSIST(flags))
     emit(OP_LOAD_PERSIST,x,getNameID(varname));
-  else if (IS_CAPTURED(flags))
-    emit(OP_LOAD_CAPTURED,x,getCapturedID(varname));
-  else if (IS_FREE(flags))
-    emit(OP_LOAD_FREE,x,getCapturedID(varname));
   else
-    emit(OP_LOAD_DYNAMIC,x,getNameID(varname));
+    emit(OP_LOAD,x,getNameID(varname));
   return x;
 }
 
@@ -979,7 +947,7 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
       if (t.numChildren() == 1 || t.last().is(TOK_PARENS))
 	incrementRegister(lhsCount);
       else
-	emit(OP_LHSCOUNT,lhsCount,flattenDereferenceTreeToStack(t,1),getVariableID(varname));
+	emit(OP_LHSCOUNT,lhsCount,flattenDereferenceTreeToStack(t,1),getNameID(varname));
     }
   // Make the function call here
   reg_t ans = doFunctionExpression(t.second(),lhsCount);
@@ -995,7 +963,7 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
 	  saveRegisterToName(varname,b);
 	}
       else
-	emit(OP_SUBSASGNM,ans,flattenDereferenceTreeToStack(t,1),getVariableID(varname));
+	emit(OP_SUBSASGNM,ans,flattenDereferenceTreeToStack(t,1),getNameID(varname));
     }
 }
 
@@ -1049,13 +1017,6 @@ void Compiler::forStatement(const Tree &t) {
     reg_t colnum = fetchConstant(_types->_index->makeScalar(1));
     // Start a new block
     BasicBlock *loop = new BasicBlock;
-    // Need to rebind indexVarName to a local variable here
-    // FIXME - Don't think this is correct - 
-    // Consider case of a script
-    // with a for loop.  After the for loop completes,
-    // the value of the index needs to be restored to the
-    // parent scope.
-    _code->_syms->syms[indexVarName] = SYM_LOCAL_DEF | SYM_USED;
     emit(OP_JUMP,loop);
     useBlock(loop);
     BasicBlock *end = new BasicBlock;
@@ -1247,8 +1208,7 @@ void Compiler::compile(const Tree &t) {
   // Start the code walk at a depth of 1 - if it's a function
   // definition instead of a script, the internal blocks will
   // be processed at the correct depth.
-  p.walkCode(t,1);
-  p.findCaptured();
+  p.walkCode(t);
   p.dump();
   _symsRoot = p.getRoot();
   _currentSym = _symsRoot;
@@ -1263,29 +1223,12 @@ void Compiler::walkFunction(const Tree &t, bool nested) {
   _code = cp;
   // Build up the variable list
   // By convention, the arguments are first
-  _code->_varlist = _types->_list->empty();
-  _code->_capturedlist = _types->_list->empty();
-  _code->_freelist = _types->_list->empty();
   _code->_namelist = _types->_list->empty();
   _code->_constlist = _types->_list->empty();
 
   for (FMMap<FMString, int>::const_iterator s = _code->_syms->syms.constBegin();
        s != _code->_syms->syms.constEnd(); ++s)
-    {
-      if (IS_LOCAL(s.value()))
-	_types->addStringToList(_code->_varlist,s.key());
-      else if (IS_CAPTURED(s.value()))
-	_types->addStringToList(_code->_capturedlist,s.key());
-      else if (IS_FREE(s.value()))
-	_types->addStringToList(_code->_freelist,s.key());
-      else if (IS_DYNAMIC(s.value()))
-	{
-	  _types->addStringToList(_code->_namelist,s.key());
-	  _types->addStringToList(_code->_varlist,s.key());
-	}
-      else
-	_types->addStringToList(_code->_namelist,s.key());
-    }
+    _types->addStringToList(_code->_namelist,s.key());
   std::cout << "Compiling function " << t.child(1).text() << "\n";
   _code->_name = t.child(1).text();
   std::cout << "Symbol table is " << _currentSym->name << "\n";
@@ -1322,28 +1265,11 @@ void Compiler::walkScript(const Tree &t) {
   _codestack.push(cp);
   _code = cp;
   // Build up the variable list
-  _code->_varlist = _types->_list->empty();
-  _code->_capturedlist = _types->_list->empty();
-  _code->_freelist = _types->_list->empty();
   _code->_namelist = _types->_list->empty();
   _code->_constlist = _types->_list->empty();
   for (FMMap<FMString, int>::const_iterator s = _code->_syms->syms.constBegin();
        s != _code->_syms->syms.constEnd(); ++s)
-    {
-      if (IS_LOCAL(s.value()))
-	_types->addStringToList(_code->_varlist,s.key());
-      else if (IS_CAPTURED(s.value()))
-	_types->addStringToList(_code->_capturedlist,s.key());
-      else if (IS_FREE(s.value()))
-	_types->addStringToList(_code->_freelist,s.key());
-      else if (IS_DYNAMIC(s.value()))
-	{
-	  _types->addStringToList(_code->_namelist,s.key());
-	  _types->addStringToList(_code->_varlist,s.key());
-	}
-      else
-	_types->addStringToList(_code->_namelist,s.key());
-    }
+    _types->addStringToList(_code->_namelist,s.key());
   useBlock(new BasicBlock);
   block(t.first());
   emit(OP_RETURN);
@@ -1460,9 +1386,6 @@ void PrintCodeBlock(CodeBlock *_code)
   for (int i=0;i<_code->_constlist.elementCount();i++)
     std::cout << lt->fetch(_code->_constlist,i).description() << " ";
   std::cout << "\n";
-  std::cout << "Vars:  " << _code->_varlist << "\n";
-  std::cout << "Captured:  " << _code->_capturedlist << "\n";
-  std::cout << "Free:  " << _code->_freelist << "\n";
   std::cout << "Names:  " << _code->_namelist << "\n";
   std::cout << "Code:\n";
   for (int j=0;j<_code->_blocklist.size();j++)
@@ -1511,9 +1434,6 @@ void FM::Disassemble(BaseTypes *_types, const Object &p)
   //    throw Exception("argument to disassemble is not a code_object");
   assert(p.type()->code() == TypeStruct);
   std::cout << "Name: " << _types->_struct->getScalar(p,"name").description() << "\n";
-  std::cout << "Captured: " << _types->_struct->getScalar(p,"captured") << "\n";
-  std::cout << "Free: " << _types->_struct->getScalar(p,"free") << "\n";
-  std::cout << "Vars: " << _types->_struct->getScalar(p,"vars") << "\n";
   std::cout << "Names: " << _types->_struct->getScalar(p,"names") << "\n";
   Object consts = _types->_struct->getScalar(p,"consts");
   const Object* cp = _types->_cell->readOnlyData(consts);
