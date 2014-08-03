@@ -14,22 +14,6 @@
 
 std::string getOpCodeName(FM::op_t);
 
-//returns distance to the next nearest double value
-inline double feps( double x ){
-  if (x >= 0)
-    return nextafter( x , DBL_MAX ) - x;
-  else
-    return x - nextafter( x, -DBL_MAX);
-}
-
-//returns distance to the next nearest float value
-inline float fepsf( float x ){
-  if (x >= 0)
-    return nextafterf( x , FLT_MAX ) - x;
-  else
-    return x - nextafterf(x, -FLT_MAX);
-}
-
 
 using namespace FM;
 
@@ -240,15 +224,9 @@ void VM::executeCodeObject(const Object &codeObject)
 	    REG1 = ap[0].type()->DoubleColon(ap[0],ap[1],ap[2]);
 	    break;
 	  }
-	// case OP_SUBSASGN:
-	//   f->_localvars[get_constant(insn)].type()->set(f->_localvars[get_constant(insn)],REG1,REG2);
-	//   break;
 	case OP_LOAD_CONST:
 	  REG1 = const_list[get_constant(insn)];
 	  break;
-	// case OP_LOAD:
-	//   REG1 = f->_localvars[get_constant(insn)];
-	//   break;
 	case OP_NEW_LIST:
 	  REG1 = _types->_list->empty();
 	  break;
@@ -273,6 +251,24 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_TIMES:
 	  BINOP(DotMultiply,"times");
 	  break;
+	case OP_GT:
+	  BINOP(GreaterThan,"gt");
+	  break;
+	case OP_GE:
+	  BINOP(GreaterEquals,"ge");
+	  break;
+	case OP_EQ:
+	  BINOP(Equals,"eq");
+	  break;
+	case OP_NE:
+	  BINOP(NotEquals,"ne");
+	  break;
+	case OP_OR:
+	  BINOP(Or,"or");
+	  break;
+	case OP_AND:
+	  BINOP(And,"and");
+	  break;
 	  /*
 	case  OP_NUMCOLS:
 	  REG1 = IterationColumns(REG2);
@@ -285,27 +281,6 @@ void VM::executeCodeObject(const Object &codeObject)
 	  break;
 	case OP_MLDIVIDE:
 	  BINOP(LeftDivide,"mldivide");
-	  break;
-	case OP_OR:
-	  BINOP(Or,"or");
-	  break;
-	case OP_AND:
-	  BINOP(And,"and");
-	  break;
-	case OP_LT:
-	  BINOP(LessThan,"lt");
-	  break;
-	case OP_GT:
-	  BINOP(GreaterThan,"gt");
-	  break;
-	case OP_GE:
-	  BINOP(GreaterEquals,"ge");
-	  break;
-	case OP_EQ:
-	  BINOP(Equals,"eq");
-	  break;
-	case OP_NE:
-	  BINOP(NotEquals,"ne");
 	  break;
 	case OP_RDIVIDE:
 	  BINOP(DotRightDivide,"rdivide");
@@ -357,26 +332,18 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_ZERO:
 	  REG1 = _types->_double->zeroScalar();
 	  break;
+	case OP_HCAT:
+	  //	  REG1 = NCat(REG2,1);
+	  break;
+	case OP_VCAT:
+	  //	  REG1 = NCat(REG2,0);
+	  break;
 	  /*
 	case OP_CELLROWDEF:
 	  {
 	    // ObjectVector x;
 	    // popVector(x);
 	    // _stack[_sp++] = CellObjectFromObjectVector(x,x.size());
-	    break;
-	  }
-	case OP_HCAT:
-	  {
-	    // ObjectVector x;
-	    // popVector(x);
-	    // _stack[_sp++] = NCat(x,1);
-	    break;
-	  }
-	case OP_VCAT:
-	  {
-	    // ObjectVector x;
-	    // popVector(x);
-	    // REG1 = NCat(x,0);
 	    break;
 	  }
 	case OP_LOAD_GLOBAL:

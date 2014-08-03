@@ -21,15 +21,26 @@ Object Type::asIndexNoBoundsCheck(const Object &a)
   throw Exception("object of type " + this->name() + " cannot be used as an index");  
 }
 
-#define NoSupportOp(x) \
+#define NoSupportBinOp(x) \
   Object Type::x(const Object &a, const Object &b) {throw Exception(#x " is unsupported for objects of type " + this->name());}
 
-NoSupportOp(LessEquals);
-NoSupportOp(Add);
-NoSupportOp(LessThan);
-NoSupportOp(DotMultiply);
-NoSupportOp(Subtract);
-NoSupportOp(Colon);
+#define NoSupportUnaryOp(x) \
+  Object Type::x(const Object &a) {throw Exception(#x " is unsupported for objects of type " + this->name());}
+
+NoSupportBinOp(LessEquals);
+NoSupportBinOp(Add);
+NoSupportBinOp(LessThan);
+NoSupportBinOp(DotMultiply);
+NoSupportBinOp(Subtract);
+NoSupportBinOp(Colon);
+NoSupportBinOp(GreaterThan);
+NoSupportBinOp(GreaterEquals);
+NoSupportBinOp(Equals);
+NoSupportBinOp(NotEquals);
+NoSupportBinOp(Or);
+NoSupportBinOp(And);
+NoSupportUnaryOp(Neg);
+NoSupportUnaryOp(Plus);
 
 Object Type::DoubleColon(const Object &a, const Object &b, const Object &c)
 {

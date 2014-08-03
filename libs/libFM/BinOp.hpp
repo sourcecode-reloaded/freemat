@@ -37,5 +37,18 @@ namespace FM
       return dispatch_binop_lev2<Complex<ctype>,Complex<atype>,Complex<btype>,Complex<vtype>,Op>(a,b,otype,ComplexCase);
   }
 
+  template <class ctype, class atype, class btype, class vtype, class Op>
+  static inline Object dispatch_cmpop(const Object &a, const Object &b, Type *otype)
+  {
+    if (!a.isComplex() && !b.isComplex())
+      return dispatch_binop_lev2<ctype,atype,btype,vtype,Op>(a,b,otype,RealCase);
+    else if (a.isComplex() && !b.isComplex())
+      return dispatch_binop_lev2<ctype,Complex<atype>,btype,Complex<vtype>,Op>(a,b,otype,RealCase);
+    else if (!a.isComplex() && b.isComplex())
+      return dispatch_binop_lev2<ctype,atype,Complex<btype>,Complex<vtype>,Op>(a,b,otype,RealCase);
+    else
+      return dispatch_binop_lev2<ctype,Complex<atype>,Complex<btype>,Complex<vtype>,Op>(a,b,otype,RealCase);
+  }
+
 }
 #endif

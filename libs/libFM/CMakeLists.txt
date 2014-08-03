@@ -33,6 +33,7 @@ FMLib.hpp
 IntegerType.hpp
 IntegerType.cpp
 Object.hpp
+#IEEEFP.cpp
 Operators.hpp
 OpCodes.h
 Parser.hpp

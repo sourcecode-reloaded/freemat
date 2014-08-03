@@ -66,6 +66,12 @@ namespace FM
       for (dim_t i=0;i<b.elementCount();i++)
 	this->push(a,bp[i]);
     }
+    Type* anyElementsWithDataCode(const Object &a, DataCode t) {
+      const Object *bp = this->readOnlyData(a);
+      for (dim_t i=0;i<a.elementCount();i++)
+	if (bp[i].type()->code() == t) return bp[i].type();
+      return NULL;
+    }
     void computeArrayFormatInfo(FMFormatMode, const Object &a, ArrayFormatInfo &format) {
       format.width = 80;
     }

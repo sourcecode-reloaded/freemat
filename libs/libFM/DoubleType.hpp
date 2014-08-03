@@ -30,25 +30,25 @@ namespace FM
       switch (b.type()->code())
 	{
 	case TypeDouble:
-	  return dispatch_binop<bool,double,double,double,Op>(a,b,o);
+	  return dispatch_cmpop<bool,double,double,double,Op>(a,b,o);
 	case TypeSingle:
-	  return dispatch_binop<bool,double,float,float,Op>(a,b,o);
+	  return dispatch_cmpop<bool,double,float,float,Op>(a,b,o);
 	case TypeInt64:
-	  return dispatch_binop<bool,double,int64_t,double,Op>(a,b,o);
+	  return dispatch_cmpop<bool,double,int64_t,double,Op>(a,b,o);
 	case TypeUInt64:
-	  return dispatch_binop<bool,double,uint64_t,double,Op>(a,b,o);
+	  return dispatch_cmpop<bool,double,uint64_t,double,Op>(a,b,o);
 	case TypeInt32:
-	  return dispatch_binop<bool,double,int32_t,double,Op>(a,b,o);
+	  return dispatch_cmpop<bool,double,int32_t,double,Op>(a,b,o);
 	case TypeUInt32:
-	  return dispatch_binop<bool,double,uint32_t,double,Op>(a,b,o);
+	  return dispatch_cmpop<bool,double,uint32_t,double,Op>(a,b,o);
 	case TypeInt16:
-	  return dispatch_binop<bool,double,int16_t,double,Op>(a,b,o);
+	  return dispatch_cmpop<bool,double,int16_t,double,Op>(a,b,o);
 	case TypeUInt16:
-	  return dispatch_binop<bool,double,uint16_t,double,Op>(a,b,o);
+	  return dispatch_cmpop<bool,double,uint16_t,double,Op>(a,b,o);
 	case TypeInt8:
-	  return dispatch_binop<bool,double,int8_t,double,Op>(a,b,o);
+	  return dispatch_cmpop<bool,double,int8_t,double,Op>(a,b,o);
 	case TypeUInt8:
-	  return dispatch_binop<bool,double,uint8_t,double,Op>(a,b,o);
+	  return dispatch_cmpop<bool,double,uint8_t,double,Op>(a,b,o);
 	default:
 	  throw Exception("Unhanded type arguments to binary operator");
 	}      
@@ -89,16 +89,18 @@ namespace FM
 	  throw Exception("Unhanded type arguments to binary operator");
 	}
     }
-    virtual Object Add(const Object &a, const Object &b)
-    {
-      return binop<OpAdd>(a,b);
-    }
-    virtual Object DotMultiply(const Object &a, const Object &b)
-    {
-      return binop<OpDotMultiply>(a,b);
-    }
+    virtual Object Add(const Object &a, const Object &b) {return binop<OpAdd>(a,b);}
+    virtual Object Subtract(const Object &a, const Object &b) {return binop<OpSubtract>(a,b);}
+    virtual Object DotMultiply(const Object &a, const Object &b) {return binop<OpDotMultiply>(a,b);}
+    virtual Object DotDivide(const Object &a, const Object &b) {return binop<OpDotDivide>(a,b);}
     virtual Object LessEquals(const Object &a, const Object &b);
     virtual Object LessThan(const Object &a, const Object &b);
+    virtual Object GreaterEquals(const Object &a, const Object &b);
+    virtual Object GreaterThan(const Object &a, const Object &b);
+    virtual Object Equals(const Object &a, const Object &b);
+    virtual Object NotEquals(const Object &a, const Object &b);    
+    virtual Object Or(const Object &a, const Object &b);
+    virtual Object And(const Object &a, const Object &b);
     virtual Object Colon(const Object &a, const Object &b)
     {
       if (!a.isScalar() || !b.isScalar()) throw Exception("arguments to : operator must be scalars");

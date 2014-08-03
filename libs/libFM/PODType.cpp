@@ -343,6 +343,16 @@ void PODType<T,_objType>::print(const Object &a, TermIF &io)
 }
 
 
+// Preconditions - all objects must be the same size
+// Zero objects are removed
+template <class T, bool _objType>
+Object PODType<T,_objType>::NCat(const Object& p, int dim)
+{
+  
+}
+
+
+
 template class PODType<char,false>;
 template class PODType<float,false>;
 template class PODType<double,false>;

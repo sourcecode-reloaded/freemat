@@ -54,6 +54,14 @@ namespace FM {
     virtual Object Subtract(const Object &a, const Object &b);
     virtual Object LessEquals(const Object &a, const Object &b);
     virtual Object LessThan(const Object &a, const Object &b);
+    virtual Object GreaterThan(const Object &a, const Object &b);
+    virtual Object GreaterEquals(const Object &a, const Object &b);
+    virtual Object NotEquals(const Object &a, const Object &b);
+    virtual Object Equals(const Object &a, const Object &b);
+    virtual Object Or(const Object &a, const Object &b);
+    virtual Object And(const Object &a, const Object &b);
+    virtual Object Neg(const Object &a);
+    virtual Object Plus(const Object &a);
     virtual Object Colon(const Object &a, const Object &b);
     virtual Object DoubleColon(const Object &a, const Object &b, const Object &c);
     virtual bool equals(const Object &a, const Object &b) = 0;
@@ -73,7 +81,6 @@ namespace FM {
     virtual void resize(Object &a, const Tuple &newsize);
     virtual void print(const Object &a, TermIF &io);
   };
-
 }
 
 #endif
