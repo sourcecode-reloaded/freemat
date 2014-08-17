@@ -50,6 +50,7 @@ namespace FM {
     virtual void destroyObject(ObjectBase* p) = 0;
     virtual Data* duplicateData(const ObjectBase * p, dim_t &reserve) const = 0;
     virtual Object Add(const Object &a, const Object &b);
+    virtual Object Multiply(const Object &a, const Object &b);
     virtual Object DotMultiply(const Object &a, const Object &b);
     virtual Object Subtract(const Object &a, const Object &b);
     virtual Object LessEquals(const Object &a, const Object &b);
@@ -63,6 +64,7 @@ namespace FM {
     virtual Object Neg(const Object &a);
     virtual Object Plus(const Object &a);
     virtual Object Colon(const Object &a, const Object &b);
+    virtual Object NCat(const Object &p, int dimension);
     virtual Object DoubleColon(const Object &a, const Object &b, const Object &c);
     virtual bool equals(const Object &a, const Object &b) = 0;
     virtual FMString describe(const Object &a) = 0;
@@ -72,6 +74,7 @@ namespace FM {
     virtual Object getParens(const Object &a, const Object &b);
     virtual Object getBraces(const Object &a, const Object &b);
     virtual Object getField(const Object &a, const Object &b);
+    virtual Object convert(const Object &a);
     virtual double doubleValue(const Object &a);
     virtual void setParens(Object &a, const Object &args, const Object &b);
     virtual void setBraces(Object &a, const Object &args, const Object &b);

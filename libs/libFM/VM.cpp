@@ -11,6 +11,7 @@
 //#include "TermIF.hpp"
 #include <boost/timer/timer.hpp>
 #include "Compiler.hpp"
+#include "NCat.hpp"
 
 std::string getOpCodeName(FM::op_t);
 
@@ -269,12 +270,12 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_AND:
 	  BINOP(And,"and");
 	  break;
+	case OP_MTIMES:
+	  BINOP(Multiply,"mtimes");
+	  break;
 	  /*
 	case  OP_NUMCOLS:
 	  REG1 = IterationColumns(REG2);
-	  break;
-	case OP_MTIMES:
-	  BINOP(Multiply,"mtimes");
 	  break;
 	case OP_MRDIVIDE:
 	  BINOP(RightDivide,"mrdivide");
@@ -333,10 +334,10 @@ void VM::executeCodeObject(const Object &codeObject)
 	  REG1 = _types->_double->zeroScalar();
 	  break;
 	case OP_HCAT:
-	  //	  REG1 = NCat(REG2,1);
+	  REG1 = NCat(REG2,1);
 	  break;
 	case OP_VCAT:
-	  //	  REG1 = NCat(REG2,0);
+	  REG1 = NCat(REG2,0);
 	  break;
 	  /*
 	case OP_CELLROWDEF:

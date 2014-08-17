@@ -1,5 +1,9 @@
 #include "NCat.hpp"
+#include "ListType.hpp"
 
+using namespace FM;
+
+/*
 static DataClass ComputeCatType(const ArrayVector& pdata) {
   if (AnyOfType(pdata,CellArray))
     return CellArray;
@@ -101,12 +105,12 @@ Array NCat(const ArrayVector& pdata, int catdim) {
     retval.structPtr().setClassName(classname);
   return retval;
 }
+*/
 
-
-Object NCat(const Object &x, int dimension) {
+Object FM::NCat(const Object &x, int dimension) {
   ListType *_list = x.asType<ListType>();
-  
-
-
-
+  if (x.elementCount() == 0) return Object();
+  if (x.elementCount() == 1) return _list->first(x);
+  Object ret = _list->first(x).type()->NCat(x,dimension);
+  return ret;
 }

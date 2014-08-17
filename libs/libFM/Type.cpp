@@ -21,16 +21,23 @@ Object Type::asIndexNoBoundsCheck(const Object &a)
   throw Exception("object of type " + this->name() + " cannot be used as an index");  
 }
 
+Object Type::NCat(const Object &a, int dimension)
+{
+  throw Exception("object of type " + this->name() + " does not support vcat/hcat");
+}
+
 #define NoSupportBinOp(x) \
   Object Type::x(const Object &a, const Object &b) {throw Exception(#x " is unsupported for objects of type " + this->name());}
 
 #define NoSupportUnaryOp(x) \
   Object Type::x(const Object &a) {throw Exception(#x " is unsupported for objects of type " + this->name());}
 
+
 NoSupportBinOp(LessEquals);
 NoSupportBinOp(Add);
 NoSupportBinOp(LessThan);
 NoSupportBinOp(DotMultiply);
+NoSupportBinOp(Multiply);
 NoSupportBinOp(Subtract);
 NoSupportBinOp(Colon);
 NoSupportBinOp(GreaterThan);
@@ -41,6 +48,10 @@ NoSupportBinOp(Or);
 NoSupportBinOp(And);
 NoSupportUnaryOp(Neg);
 NoSupportUnaryOp(Plus);
+
+Object Type::convert(const Object &a) {
+  throw Exception("Cannot convert objects to type " + this->name());
+}
 
 Object Type::DoubleColon(const Object &a, const Object &b, const Object &c)
 {

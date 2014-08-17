@@ -101,6 +101,7 @@ namespace FM
     virtual Object NotEquals(const Object &a, const Object &b);    
     virtual Object Or(const Object &a, const Object &b);
     virtual Object And(const Object &a, const Object &b);
+    virtual Object Multiply(const Object &a, const Object &b);
     virtual Object Colon(const Object &a, const Object &b)
     {
       if (!a.isScalar() || !b.isScalar()) throw Exception("arguments to : operator must be scalars");

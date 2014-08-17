@@ -15,6 +15,7 @@ namespace FM
     virtual ~NumericType() {}
     virtual DataCode code() const {return codeNum;}
     virtual Object asLogical(const Object &a);
+    virtual Object asComplex(const Object &a);
     virtual Object asIndex(const Object &a, dim_t max);
     virtual Object asIndexNoBoundsCheck(const Object &a);
     double doubleValue(const Object &a) {
@@ -42,6 +43,7 @@ namespace FM
     }
     virtual Object getBraces(const Object &a, const Object &b) {throw Exception("{} indexing unsupported for numeric arrays");}
     virtual Object getField(const Object &a, const Object &b) {throw Exception(". indexing unsupported for numeric arrays");}
+    virtual Object convert(const Object &a);
   };
 }
 

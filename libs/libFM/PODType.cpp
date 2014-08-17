@@ -5,6 +5,24 @@
 using namespace FM;
 
 template <class T>
+static void copyPage(T* op, dim_t &outputOffset, const T* ip, dim_t &input_offset, dim_t pagesize)
+{
+  for (dim_t j=0;j<pagesize;j++)
+    op[outputOffset+j] = ip[input_offset+j];
+  outputOffset += pagesize;
+  input_offset += pagesize;
+}
+
+template <class T>
+static void copyPagePromote(Complex<T>* op, dim_t outputOffset, const T* ip, dim_t &input_offset, dim_t pagesize)
+{
+  for (dim_t j=0;j<pagesize;j++)
+    op[outputOffset+j] = Complex<T>(ip[input_offset+j]);
+  outputOffset += pagesize;
+  input_offset += pagesize;
+}
+
+template <class T>
 static void moveLoop(T* ap, const Tuple &outdims, const Tuple &adims)
 {
   dim_t iterations = 1;
@@ -345,12 +363,70 @@ void PODType<T,_objType>::print(const Object &a, TermIF &io)
 
 // Preconditions - all objects must be the same size
 // Zero objects are removed
+// Mixed real/complex objects are all promoted to 
+// Complex case needs to be considered!
 template <class T, bool _objType>
 Object PODType<T,_objType>::NCat(const Object& p, int dim)
 {
-  
+  int objectCount = p.elementCount();
+  const Object *dp = _base->_list->readOnlyData(p);
+  if (objectCount == 0) return this->empty();
+  // Compute the size of the output
+  Tuple outputSize = dp[0].dims();
+  // Sum the components along the given dimension
+  dim_t aggregated_size = 0;
+  for (int i=0;i<objectCount;i++)
+    aggregated_size += dp[i].dims().dimension(dim);
+  outputSize.set(dim,aggregated_size);
+  std::cout << "Aggregated size: " << aggregated_size << "  " << outputSize.toString() << "\n";
+  // Cache the pointers to the objects
+  std::vector<const T*> pointers(objectCount);
+  // Cache the current indices into each object
+  std::vector<dim_t> offsets(objectCount);
+  // Cache the page size for each object
+  std::vector<dim_t> pagesize(objectCount);
+  // Cache the promotion flag for each object
+  std::vector<bool> promotionRequired(objectCount);
+  // Determine if promotion to complex is required
+  // Required if any of the objects is complex, but
+  // not all of them.
+  bool anyComplex = false;
+  bool allComplex = true;
+  for (int i=0;i<objectCount;i++)
+    {
+      anyComplex |= dp[i].isComplex();
+      allComplex &= dp[i].isComplex();
+    }
+  for (int i=0;i<objectCount;i++)
+    {
+      pointers[i] = this->readOnlyData(dp[i]);
+      offsets[i] = 0;
+      dim_t pagesze = 1;
+      for (int j=0;j<=dim;j++)
+	pagesze *= dp[i].dims().dimension(j);
+      pagesize[i] = pagesze;
+      promotionRequired[i] = anyComplex && (!allComplex) && (!dp[i].isComplex());
+    }
+  // Allocate the output object
+  Object retObject = this->zeroArrayOfSize(outputSize,anyComplex);
+  dim_t outputOffset = 0;
+  dim_t outputCount = outputSize.elementCount();
+  int k = 0;
+  T* op = this->readWriteData(retObject);
+  while (outputOffset < outputCount)
+    {
+      if (!anyComplex)
+	copyPage<T>(op,outputOffset,pointers[k],offsets[k],pagesize[k]);
+      else if (anyComplex && !promotionRequired[k])
+	copyPage<Complex<T> >(reinterpret_cast<Complex<T>*>(op),outputOffset,
+			      reinterpret_cast<const Complex<T>*>(pointers[k]),offsets[k],pagesize[k]);
+      else
+	copyPagePromote<T>(reinterpret_cast<Complex<T>*>(op),outputOffset,
+			   pointers[k],offsets[k],pagesize[k]);
+      k = (k + 1) % objectCount;
+    }
+  return retObject;
 }
-
 
 
 template class PODType<char,false>;

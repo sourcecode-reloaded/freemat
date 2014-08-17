@@ -38,6 +38,8 @@ namespace FM
     {
       return binop<OpAdd>(a,b);
     }
+    virtual Object DotMultiply(const Object &a, const Object &b) {return binop<OpDotMultiply>(a,b);}
+    virtual Object Multiply(const Object &a, const Object &b);
   };
 }
 

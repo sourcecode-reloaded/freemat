@@ -203,7 +203,7 @@ namespace FM
     virtual Object getParens(const Object &a, const Object &b);
     virtual void setParens(Object &a, const Object &args, const Object &b);
     virtual void resize(Object &a, const Tuple &newsize);
-    virtual Object NCat(const Object *bp, int cnt);
+    virtual Object NCat(const Object &p, int dimension);
   };
 
 }

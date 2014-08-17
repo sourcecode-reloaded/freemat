@@ -3,6 +3,9 @@
 
 #include "Object.hpp"
 
-Object NCat(const Object &x, int dimension);
+namespace FM
+{
+  Object NCat(const Object &x, int dimension);
+}
 
 #endif

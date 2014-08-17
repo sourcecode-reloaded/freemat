@@ -1,5 +1,6 @@
 #include "NumericType.hpp"
 #include "BaseTypes.hpp"
+#include "Convert.hpp"
 
 using namespace FM;
 
@@ -81,6 +82,59 @@ Object NumericType<T,codeNum>::asIndex(const Object &a, dim_t max)
     }
   return output;  
 }
+
+
+template <class T, FM::DataCode codeNum>
+Object NumericType<T,codeNum>::asComplex(const Object &a)
+{
+  if (a.isComplex()) return a;
+  if (a.isScalar())
+    return this->makeComplex(this->scalarValue(a),0);
+  Object ret = this->zeroArrayOfSize(a.dims(),true);
+  dim_t len = a.dims().elementCount();
+  Complex<T> *op = this->readWriteDataComplex(ret);
+  const T*ip = this->readOnlyData(a);
+  for (dim_t i=0;i<len;i++)
+    op[i] = Complex<T>(ip[i]);
+  return ret;
+}
+
+template <class T, FM::DataCode codeNum>
+Object NumericType<T,codeNum>::convert(const Object &a)
+{
+  if (this->code() == a.type()->code()) return a;
+  Object ret = this->zeroArrayOfSize(a.dims(),a.isComplex());
+  dim_t len = a.dims().elementCount();
+  T* op = this->readWriteData(ret);
+  if (a.isComplex()) len *= 2;
+  switch (a.type()->code())
+    {
+    case TypeSingle:
+      convertLoop<T,float>(Type::_base->_single->readOnlyData(a),op,len);
+      break;
+    case TypeDouble:
+      convertLoop<T,double>(Type::_base->_double->readOnlyData(a),op,len);
+      break;
+    case TypeInt32:
+      convertLoop<T,int32_t>(Type::_base->_int32->readOnlyData(a),op,len);
+      break;
+    case TypeUInt32:
+      convertLoop<T,uint32_t>(Type::_base->_uint32->readOnlyData(a),op,len);
+      break;
+    case TypeInt64:
+      convertLoop<T,int64_t>(Type::_base->_int64->readOnlyData(a),op,len);
+      break;
+    case TypeUInt64:
+      convertLoop<T,uint64_t>(Type::_base->_uint64->readOnlyData(a),op,len);
+      break;
+    default:
+      throw Exception("Type conversion from " + a.type()->name() + " to " + this->name() + " is unsupported.");
+      // FIXME - Add remaining integer types
+    }
+  return ret;
+}
+
+
 
 template class NumericType<float,TypeSingle>;
 template class NumericType<double,TypeDouble>;

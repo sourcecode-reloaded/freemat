@@ -786,7 +786,9 @@ reg_t Compiler::matrixDefinition(const Tree &t) {
     reg_t x = startList();
     for (int j=0;j<s.numChildren();j++)
       multiexpr(x,s.child(j));
-    emit(OP_HCAT,y,x);
+    reg_t z = getRegister();
+    emit(OP_HCAT,z,x);
+    emit(OP_PUSH,y,z);
   }
   reg_t z = getRegister();
   emit(OP_VCAT,z,y);

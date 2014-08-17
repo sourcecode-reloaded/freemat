@@ -5,12 +5,26 @@ FIND_PACKAGE(PythonInterp REQUIRED)
 FIND_PACKAGE(Boost COMPONENTS system timer chrono)
 include_directories(${Boost_INCLUDE_DIRS})
 
+#FIND_PACKAGE(BLAS REQUIRED)
+
+find_library(ACCELERATE_LIB NAMES Accelerate) 
+find_path(ACCELERATE_PATH NAMES accelerate.h)
+add_definitions(-DHAVE_ACCELERATE)
+add_definitions(-DHAVE_CBLAS)
+
+include_directories(${ACCELERATE_PATH})
+
+#find_library(VEC_LIB NAMES Veclib) 
+
 #FIND_PACKAGE(readline)
 #FIND_PACKAGE(history)
 
 add_executable( FMT
 Tree.cpp
+BLAS.cpp
+NCat.cpp
 DoubleType.cpp
+SingleType.cpp
 FloatType.cpp
 Token.cpp
 Scanner.cpp
@@ -59,10 +73,11 @@ NumericType.cpp
 NumericType.hpp
 VM.cpp
 VM.hpp
+MatrixMultiply.cpp
 ArrayFormatInfo.cpp
 ArrayFormatInfo.hpp
 )
-target_link_libraries(FMT ${Boost_LIBRARIES} readline)
+target_link_libraries(FMT ${Boost_LIBRARIES} readline ${ACCELERATE_LIB})
 
 add_custom_command(
 OUTPUT ${CMAKE_SOURCE_DIR}/OpCodes.cpp ${CMAKE_SOURCE_DIR}/OpCodes.h

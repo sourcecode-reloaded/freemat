@@ -1,6 +1,7 @@
 #include "DoubleType.hpp"
 #include "BaseTypes.hpp"
 #include "BoolType.hpp"
+#include "MatrixMultiply.hpp"
 
 namespace FM
 {
@@ -35,5 +36,15 @@ namespace FM
   Object DoubleType::And(const Object &a, const Object &b) {
     return cmpop<OpAnd>(a,b,_base->_bool);
   }
-
+  Object DoubleType::Multiply(const Object &a, const Object &b) {
+    if (a.isScalar() || b.isScalar()) return DotMultiply(a,b);
+    switch (b.type()->code())
+      {
+      case TypeDouble:
+	return MatrixMultiplyDouble(a,b);
+      default:
+	return this->convert(MatrixMultiplyDouble(a,this->convert(b)));
+      }
+    return this->empty();
+  }
 }
