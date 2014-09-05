@@ -23,7 +23,13 @@ add_executable( FMT
 Tree.cpp
 BLAS.cpp
 NCat.cpp
+DenseSolver.cpp
 DoubleType.cpp
+Transpose.cpp  
+Hermitian.cpp  
+LAPACK.cpp
+MatrixLeftDivide.cpp  
+MatrixRightDivide.cpp  
 SingleType.cpp
 FloatType.cpp
 Token.cpp

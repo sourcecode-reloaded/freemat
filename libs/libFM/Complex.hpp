@@ -21,6 +21,14 @@ namespace FM
     }
   };
 
+  template <typename elem>
+  static inline Complex<elem> complex_conj(const Complex<elem> &a)
+  {
+    Complex<elem> c;
+    c.r = a.r;
+    c.i = -a.i;
+    return c;
+  }
 
   template <typename T>
   static inline void complex_divide(const T& ar, const T& ai,

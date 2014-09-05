@@ -63,6 +63,13 @@ VM::VM(BaseTypes *types)
   _types = types;
 }
 
+void VM::defineBaseVariable(const FMString &name, const Object &value)
+{
+  int addr = _frames[0]->getAddress(name);
+  if (addr == 0) addr = _frames[0]->allocateVariable(name);
+  _frames[0]->_vars[addr-1] = value;
+}
+
 //void VM::dump()
 //{
   /*
@@ -101,6 +108,52 @@ VM::VM(BaseTypes *types)
 void VM::dump()
 {
   _frames[0]->dump();
+}
+
+// Execute a function object, given a list of parameters (params).  Returns a list
+// of returns.
+Object VM::executeFunction(const Object &codeObject, const Object &parameters)
+{
+  // Create a new frame for the function
+  Frame *f = new Frame;
+  f->_name = _types->_string->getString(_types->_struct->getScalar(codeObject,"name"));
+  // Space for registers
+  f->_regfile.resize(256);
+  // Space to store the address maps for variables
+  f->_addr.resize(_types->_struct->getScalar(codeObject,"names").elementCount());
+  // Function scopes are closed
+  f->_closed = true;
+  // Populate the arguments
+  const Object * args = _types->_list->readOnlyData(parameters);
+  const Object * param_names = _types->_list->readOnlyData(_types->_struct->getScalar(codeObject,"params"));
+  int to_use = std::min<int>(parameters.elementCount(),_types->_struct->getScalar(codeObject,"params").elementCount());
+  for (int i=0;i<to_use;i++)
+    {
+      int addr = f->allocateVariable(_types->_string->getString(param_names[i]));
+      f->_vars[addr-1] = args[i];
+    }
+  _frames.push_back(f);
+  // execute the code
+  executeCodeObject(codeObject);
+  // Collect return values
+  Object retvec = _types->_list->empty();
+  int to_return = _types->_struct->getScalar(codeObject,"returns").elementCount();
+  const Object * return_names = _types->_list->readOnlyData(_types->_struct->getScalar(codeObject,"returns"));
+  for (int i=0;i<to_return;i++)
+    {
+      FMString name = _types->_string->getString(return_names[i]);
+      int addr = f->getAddress(name);
+      if (!addr)
+	{
+	  std::cout << "Warning: not all outputs assigned";
+	  _types->_list->push(retvec,_types->_double->empty());
+	}
+      else
+	_types->_list->push(retvec,f->_vars[addr-1]);
+    }
+  _frames.pop_back();
+  delete f;  
+  return retvec;
 }
 
 void VM::executeScript(const Object &codeObject)
@@ -171,13 +224,16 @@ void VM::executeCodeObject(const Object &codeObject)
 
   Frame *f = _frames.back();
   Frame *closed_frame = NULL;
-  for (int i=0;i<_frames.size();i++)
+  for (int i=_frames.size()-1;i>=0;--i)
     if (_frames[i]->_closed)
       {
 	closed_frame = _frames[i];
 	break;
       }
   if (!closed_frame)  throw Exception("Closed frame not found!  Should never happen!");
+
+  std::cout << "Current frame: " << f->_name << "\n";
+  std::cout << "Closed frame: " << closed_frame->_name << "\n";
 
   StdIOTermIF io;
 
@@ -273,36 +329,33 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_MTIMES:
 	  BINOP(Multiply,"mtimes");
 	  break;
-	  /*
-	case  OP_NUMCOLS:
-	  REG1 = IterationColumns(REG2);
-	  break;
 	case OP_MRDIVIDE:
-	  BINOP(RightDivide,"mrdivide");
+	  REG1 = REG2.type()->RightDivide(REG2,REG3,&io);
 	  break;
 	case OP_MLDIVIDE:
-	  BINOP(LeftDivide,"mldivide");
+	  REG1 = REG2.type()->LeftDivide(REG2,REG3,&io);
 	  break;
 	case OP_RDIVIDE:
 	  BINOP(DotRightDivide,"rdivide");
+	  break;
+	case OP_LDIVIDE:
+	  BINOP(DotLeftDivide,"ldivide");
+	  break;
+	case OP_PLUS:
+	  UNARYOP(Plus,"uplus");
+	  break;
+	case OP_NEG:
+	  UNARYOP(Neg,"negate");
+	  break;
+	  /*
+	case  OP_NUMCOLS:
+	  REG1 = IterationColumns(REG2);
 	  break;
 	case OP_CASE:
 	  // FIXME
 	  break;
 	case OP_COLUMN:
 	  REG1 = REG2.column(REG3.asDouble());
-	  break;
-	case OP_LDIVIDE:
-	  BINOP(DotLeftDivide,"ldivide");
-	  break;
-	case  OP_NUMCOLS:
-	  REG1 = IterationColumns(REG2);
-	  break;
-	case OP_NEG:
-	  UNARYOP(Negate,"uminus");
-	  break;
-	case OP_PLUS:
-	  UNARYOP(Plus,"uplus");
 	  break;
 	case OP_NOT:
 	  UNARYOP(Not,"not");
@@ -313,13 +366,13 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_DOTPOWER:
 	  BINOP(DotPower,"power");
 	  break;
+	  */
 	case OP_HERMITIAN:
 	  UNARYOP(Hermitian,"ctranspose");
 	  break;
 	case OP_TRANSPOSE:
 	  UNARYOP(Transpose,"transpose");
 	  break;
-	  */
 	case OP_INCR:
 	  REG1 = _types->_double->makeScalar(_types->_double->scalarValue(REG1)+1);
 	  break;

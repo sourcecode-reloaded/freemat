@@ -92,7 +92,8 @@ namespace FM
     virtual Object Add(const Object &a, const Object &b) {return binop<OpAdd>(a,b);}
     virtual Object Subtract(const Object &a, const Object &b) {return binop<OpSubtract>(a,b);}
     virtual Object DotMultiply(const Object &a, const Object &b) {return binop<OpDotMultiply>(a,b);}
-    virtual Object DotDivide(const Object &a, const Object &b) {return binop<OpDotDivide>(a,b);}
+    virtual Object DotRightDivide(const Object &a, const Object &b) {return binop<OpDotRightDivide>(a,b);}
+    virtual Object DotLeftDivide(const Object &a, const Object &b) {return binop<OpDotLeftDivide>(a,b);}
     virtual Object LessEquals(const Object &a, const Object &b);
     virtual Object LessThan(const Object &a, const Object &b);
     virtual Object GreaterEquals(const Object &a, const Object &b);
@@ -102,6 +103,8 @@ namespace FM
     virtual Object Or(const Object &a, const Object &b);
     virtual Object And(const Object &a, const Object &b);
     virtual Object Multiply(const Object &a, const Object &b);
+    virtual Object LeftDivide(const Object &a, const Object &b, TermIF *io);
+    virtual Object RightDivide(const Object &a, const Object &b, TermIF *io);
     virtual Object Colon(const Object &a, const Object &b)
     {
       if (!a.isScalar() || !b.isScalar()) throw Exception("arguments to : operator must be scalars");

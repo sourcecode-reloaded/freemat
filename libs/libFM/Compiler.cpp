@@ -1437,6 +1437,8 @@ void FM::Disassemble(BaseTypes *_types, const Object &p)
   assert(p.type()->code() == TypeStruct);
   std::cout << "Name: " << _types->_struct->getScalar(p,"name").description() << "\n";
   std::cout << "Names: " << _types->_struct->getScalar(p,"names") << "\n";
+  std::cout << "Parameters: " << _types->_struct->getScalar(p,"params") << "\n";
+  std::cout << "Returns: " << _types->_struct->getScalar(p,"returns") << "\n";
   Object consts = _types->_struct->getScalar(p,"consts");
   const Object* cp = _types->_cell->readOnlyData(consts);
   std::cout << "Consts: ";

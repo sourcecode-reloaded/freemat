@@ -28,12 +28,21 @@ struct OpDotMultiply
   }
 };
 
-struct OpDotDivide
+struct OpDotRightDivide
 {
   template <class ctype, class atype, class btype, class vtype>
   inline static void func(ctype *c, const atype *a, const btype *b)
   {
     *c = static_cast<vtype>(*a) / static_cast<vtype>(*b);
+  }
+};
+
+struct OpDotLeftDivide
+{
+  template <class ctype, class atype, class btype, class vtype>
+  inline static void func(ctype *c, const atype *a, const btype *b)
+  {
+    *c = static_cast<vtype>(*b) / static_cast<vtype>(*a);
   }
 };
 
@@ -109,5 +118,13 @@ struct OpAnd
   }
 };
 
+struct OpNeg
+{
+  template <class T>
+  inline static void func(T* c, const T* a)
+  {
+    *c = -*a;
+  }
+};
 
 #endif

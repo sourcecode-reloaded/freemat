@@ -3,6 +3,7 @@
 
 #include "NumericType.hpp"
 #include "BinOp.hpp"
+#include "UnaryOp.hpp"
 #include "Operators.hpp"
 
 namespace FM
@@ -35,6 +36,17 @@ namespace FM
     }
     virtual void computeArrayFormatInfo(FMFormatMode mode, const Object &a, ArrayFormatInfo &format);
     virtual void printElement(const Object &a, TermIF &io, const ArrayFormatInfo &format, ndx_t offset);
+  };
+
+  template <class T, FM::DataCode codeNum>
+  class SignedIntegerType : public IntegerType<T,codeNum> {
+    SignedIntegerType(BaseTypes* base, const FMString &name) : IntegerType<T,codeNum>(base,name) {}
+    virtual ~SignedIntegerType() {}
+    virtual Type* typeInstance() {return this;}
+    virtual Object Neg(const Object & a)
+    {
+      return dispatch_unaryop<T,OpNeg>(a,this);
+    }
   };
 
   class Int32Type : public IntegerType<int32_t,TypeInt32>

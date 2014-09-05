@@ -78,5 +78,15 @@ Object Assembler::codeObject(BaseTypes *_b)
   _b->_struct->setScalar(qp,"code",op);
   _b->_struct->setScalar(qp,"names",_code->_namelist);
   _b->_struct->setScalar(qp,"consts",_code->_constlist);
+  // Walk the symbol table and collect up the list of arguments
+  Object param_list = _b->_list->empty();
+  Object return_list = _b->_list->empty();
+  for (FMMap<FMString,int>::const_iterator i=_code->_syms->syms.constBegin();i != _code->_syms->syms.constEnd(); ++i)
+    {
+      if (IS_PARAMETER(i.value())) _b->addStringToList(param_list,i.key());
+      if (IS_RETURN(i.value())) _b->addStringToList(return_list,i.key());
+    }
+  _b->_struct->setScalar(qp,"params",param_list);
+  _b->_struct->setScalar(qp,"returns",return_list);
   return qp;
 }

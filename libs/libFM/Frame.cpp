@@ -67,6 +67,7 @@ int Frame::getAddress(const FMString &name)
 
 int Frame::allocateVariable(const FMString &name)
 {
+  if (_symtab.contains(name)) return _symtab.value(name);
   int addr = _vars.size() + 1;
   //  std::cout << "Allocating variable named " << name << " with address " << addr <<"\n";
   _symtab.insert(name,addr);

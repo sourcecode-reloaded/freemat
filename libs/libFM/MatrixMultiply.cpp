@@ -16,7 +16,7 @@ Object FM::MatrixMultiplyDouble(const Object &a, const Object &b) {
 		   reinterpret_cast<double*>(dt->readWriteDataComplex(ret)));
   else
     FM::BLAS_dgemm(a.rows(),a.cols(),b.cols(),
-		 dt->readOnlyData(a),dt->readOnlyData(b),dt->readWriteData(ret));
+		   dt->readOnlyData(a),dt->readOnlyData(b),dt->readWriteData(ret));
   return ret;
 }
 

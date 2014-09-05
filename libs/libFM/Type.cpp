@@ -32,12 +32,17 @@ Object Type::NCat(const Object &a, int dimension)
 #define NoSupportUnaryOp(x) \
   Object Type::x(const Object &a) {throw Exception(#x " is unsupported for objects of type " + this->name());}
 
+Object Type::LeftDivide(const Object &a, const Object &b, TermIF *io) {throw Exception("Left divide is unsupported for objects of type " + this->name());}
+
+Object Type::RightDivide(const Object &a, const Object &b, TermIF *io) {throw Exception("Right divide is unsupported for objects of type " + this->name());}
 
 NoSupportBinOp(LessEquals);
 NoSupportBinOp(Add);
 NoSupportBinOp(LessThan);
 NoSupportBinOp(DotMultiply);
 NoSupportBinOp(Multiply);
+NoSupportBinOp(DotLeftDivide);
+NoSupportBinOp(DotRightDivide);
 NoSupportBinOp(Subtract);
 NoSupportBinOp(Colon);
 NoSupportBinOp(GreaterThan);
@@ -48,6 +53,8 @@ NoSupportBinOp(Or);
 NoSupportBinOp(And);
 NoSupportUnaryOp(Neg);
 NoSupportUnaryOp(Plus);
+NoSupportUnaryOp(Transpose);
+NoSupportUnaryOp(Hermitian);
 
 Object Type::convert(const Object &a) {
   throw Exception("Cannot convert objects to type " + this->name());

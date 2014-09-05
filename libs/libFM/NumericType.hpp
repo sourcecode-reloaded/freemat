@@ -21,6 +21,9 @@ namespace FM
     double doubleValue(const Object &a) {
       return static_cast<double>(this->scalarValue(a));
     }
+    virtual Object Plus(const Object &a) {
+      return a;
+    }
     virtual T minValue(const Object &a)
     {
       if (a.isEmpty() || a.isComplex()) throw Exception("Complex or empty arguments do no support maxValue");

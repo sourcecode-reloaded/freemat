@@ -433,8 +433,43 @@ int main(int argc, char *argv[])
   // double *cp = mytype->_double->readWriteData(c);
 
   boost::timer::cpu_timer timer;
-  
+
   VM vm(mytype);
+
+  // For now - hard code a single function to preload
+  {
+    std::cout << "Preloading add.m\n";
+    bool failed;
+    FMString body = ReadFileIntoString("add.m",failed);
+    body += "\n\n";
+    std::cout << "Reading of function defintion: " << (failed ? "failed" : "succeeded") << "\n";
+    std::cout << "************************************************************\n";
+    std::cout << body;
+    std::cout << "************************************************************\n";
+    {
+      Scanner S(body,"");
+      Parser P(S);
+      Tree b(P.process());
+      Compiler C(mytype);
+      C.compile(b);
+      Assembler A(C.module()->_main);
+      A.run();
+      Object p = A.codeObject(mytype);
+      Disassemble(mytype,p);
+      vm.defineBaseVariable("add",p);
+      Object q = base._list->empty();
+      base._list->push(q,base._double->makeScalar(3));
+      base._list->push(q,base._double->makeScalar(7));
+      try {
+	Object y = vm.executeFunction(p,q);
+	std::cout << base._list->first(y).description() << "\n";
+      } catch (const FM::Exception &e) {
+	std::cout << "Exception: " << e.msg() << "\n";
+      }
+    }
+  }  
+  
+  
   while (1)
     {
       char *p = readline("--> ");

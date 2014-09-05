@@ -51,6 +51,10 @@ namespace FM {
     virtual Data* duplicateData(const ObjectBase * p, dim_t &reserve) const = 0;
     virtual Object Add(const Object &a, const Object &b);
     virtual Object Multiply(const Object &a, const Object &b);
+    virtual Object LeftDivide(const Object &a, const Object &b, TermIF *io);
+    virtual Object RightDivide(const Object &a, const Object &b, TermIF *io);
+    virtual Object DotLeftDivide(const Object &a, const Object &b);
+    virtual Object DotRightDivide(const Object &a, const Object &b);
     virtual Object DotMultiply(const Object &a, const Object &b);
     virtual Object Subtract(const Object &a, const Object &b);
     virtual Object LessEquals(const Object &a, const Object &b);
@@ -66,6 +70,8 @@ namespace FM {
     virtual Object Colon(const Object &a, const Object &b);
     virtual Object NCat(const Object &p, int dimension);
     virtual Object DoubleColon(const Object &a, const Object &b, const Object &c);
+    virtual Object Transpose(const Object &a);
+    virtual Object Hermitian(const Object &a);
     virtual bool equals(const Object &a, const Object &b) = 0;
     virtual FMString describe(const Object &a) = 0;
     virtual Object asIndex(const Object &a, dim_t max);

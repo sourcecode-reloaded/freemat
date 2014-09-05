@@ -26,7 +26,9 @@ namespace FM
     VM(BaseTypes *types);
     void executeBlock(const Object &codeObject, bool singleStep = false);
     void executeScript(const Object &codeObject);
+    Object executeFunction(const Object &codeObject, const Object &parameters);
     void executeCodeObject(const Object &codeObject);
+    void defineBaseVariable(const FMString &name, const Object &value);
     void dump();
   };
 }

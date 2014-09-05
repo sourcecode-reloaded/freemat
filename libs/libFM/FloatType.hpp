@@ -2,6 +2,8 @@
 #define __FloatType_hpp__
 
 #include "NumericType.hpp"
+#include "Operators.hpp"
+#include "UnaryOp.hpp"
 
 namespace FM
 {
@@ -16,6 +18,7 @@ namespace FM
     virtual Type* typeInstance() {return this;}
     virtual void computeArrayFormatInfo(FMFormatMode mode, const Object &rp, ArrayFormatInfo &info);
     virtual void printElement(const Object &a, TermIF &io, const ArrayFormatInfo &format, ndx_t offset);
+    virtual Object Neg(const Object &a) {return FM::dispatch_unaryop<T,OpNeg>(a,this);};
   };
 };
 

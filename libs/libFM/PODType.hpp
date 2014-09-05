@@ -6,6 +6,8 @@
 #include "FixedPool.hpp"
 #include "Complex.hpp"
 #include "ArrayFormatInfo.hpp"
+#include "Transpose.hpp"
+#include "Hermitian.hpp"
 #include <iostream>
 
 // Manages N-dimensional arrays of blocks of opaque data - 
@@ -204,6 +206,13 @@ namespace FM
     virtual void setParens(Object &a, const Object &args, const Object &b);
     virtual void resize(Object &a, const Tuple &newsize);
     virtual Object NCat(const Object &p, int dimension);
+    virtual Object Transpose(const Object &a) {return MatrixTranspose<T,_objectType>(a);}
+    virtual Object Hermitian(const Object &a) {
+      if (_objectType) 
+	return Transpose(a);
+      else
+	return MatrixHermitian<T>(a);
+    }
   };
 
 }
