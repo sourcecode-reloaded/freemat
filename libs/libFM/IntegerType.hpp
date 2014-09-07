@@ -9,12 +9,12 @@
 namespace FM
 {
 
-  struct BaseTypes;
+  struct ThreadContext;
 
   template <class T, FM::DataCode codeNum>
   class IntegerType : public NumericType<T,codeNum> {
   public:
-    IntegerType(BaseTypes* base, const FMString& name) : NumericType<T,codeNum>(base,name) {}
+    IntegerType(ThreadContext* ctxt, const FMString& name) : NumericType<T,codeNum>(ctxt,name) {}
     virtual ~IntegerType() {}
     virtual Type* typeInstance() {return this;}
     template <class Op>
@@ -35,12 +35,12 @@ namespace FM
       return binop<OpAdd>(a,b);
     }
     virtual void computeArrayFormatInfo(FMFormatMode mode, const Object &a, ArrayFormatInfo &format);
-    virtual void printElement(const Object &a, TermIF &io, const ArrayFormatInfo &format, ndx_t offset);
+    virtual void printElement(const Object &a, const ArrayFormatInfo &format, ndx_t offset);
   };
 
   template <class T, FM::DataCode codeNum>
   class SignedIntegerType : public IntegerType<T,codeNum> {
-    SignedIntegerType(BaseTypes* base, const FMString &name) : IntegerType<T,codeNum>(base,name) {}
+    SignedIntegerType(ThreadContext* ctxt, const FMString &name) : IntegerType<T,codeNum>(ctxt,name) {}
     virtual ~SignedIntegerType() {}
     virtual Type* typeInstance() {return this;}
     virtual Object Neg(const Object & a)
@@ -52,35 +52,35 @@ namespace FM
   class Int32Type : public IntegerType<int32_t,TypeInt32>
   {
   public:
-    Int32Type(BaseTypes *base) : IntegerType<int32_t,TypeInt32>(base,"int32") {}
+    Int32Type(ThreadContext *ctxt) : IntegerType<int32_t,TypeInt32>(ctxt,"int32") {}
     virtual ~Int32Type() {}
   };
 
   class UInt32Type : public IntegerType<uint32_t,TypeUInt32>
   {
   public:
-    UInt32Type(BaseTypes *base) : IntegerType<uint32_t,TypeUInt32>(base,"uint32") {}
+    UInt32Type(ThreadContext *ctxt) : IntegerType<uint32_t,TypeUInt32>(ctxt,"uint32") {}
     virtual ~UInt32Type() {}
   };
 
   class Int64Type : public IntegerType<int64_t,TypeInt64>
   {
   public:
-    Int64Type(BaseTypes *base) : IntegerType<int64_t,TypeInt64>(base,"int64") {}
+    Int64Type(ThreadContext *ctxt) : IntegerType<int64_t,TypeInt64>(ctxt,"int64") {}
     virtual ~Int64Type() {}
   };
 
   class UInt64Type : public IntegerType<uint64_t,TypeUInt64>
   {
   public:
-    UInt64Type(BaseTypes *base) : IntegerType<uint64_t,TypeUInt64>(base,"uint64") {}
+    UInt64Type(ThreadContext *ctxt) : IntegerType<uint64_t,TypeUInt64>(ctxt,"uint64") {}
     virtual ~UInt64Type() {}
   };
 
   class IndexType : public IntegerType<ndx_t,TypeIndex>
   {
   public:
-    IndexType(BaseTypes *base) : IntegerType<ndx_t,TypeIndex>(base,"index") {}
+    IndexType(ThreadContext *ctxt) : IntegerType<ndx_t,TypeIndex>(ctxt,"index") {}
     virtual ~IndexType() {}
     bool isColon(const Object &a) {
       return (a.isScalar() && this->scalarValue(a) == -1);

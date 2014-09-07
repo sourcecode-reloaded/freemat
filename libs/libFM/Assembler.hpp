@@ -2,25 +2,27 @@
 #define __Assembler_hpp__
 
 #include <vector>
-#include "BaseTypes.hpp"
 #include "Code.hpp"
 
 namespace FM
 {
 
-class Assembler
-{
-  std::vector<BasicBlock*> _postorder;
-  CodeBlock *_code;
-  std::vector<uint64_t> _vm_codes;
-  void depthFirstSearch(BasicBlock* p);
-  void computeJumpOffsets();
-public:
-  Assembler(CodeBlock *code);
-  void run();
-  void assemble();
-  Object codeObject(BaseTypes *b);
-};
+  struct ThreadContext;
 
+  class Assembler
+  {
+    ThreadContext *_ctxt;
+
+    std::vector<BasicBlock*> _postorder;
+    CodeBlock *_code;
+    std::vector<uint64_t> _vm_codes;
+    void depthFirstSearch(BasicBlock* p);
+    void computeJumpOffsets();
+    Object codeObject();
+    void assemble();
+  public:
+    Assembler(ThreadContext *ctxt) : _ctxt(ctxt) {};
+    Object run(CodeBlock* code);
+  };
 }
 #endif

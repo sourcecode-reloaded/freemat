@@ -2,7 +2,8 @@
 #include "Object.hpp"
 #include "ListType.hpp"
 #include "IntegerType.hpp"
-#include "BaseTypes.hpp"
+#include "CellType.hpp"
+#include "ThreadContext.hpp"
 
 using namespace FM;
 
@@ -32,10 +33,6 @@ Object Type::NCat(const Object &a, int dimension)
 #define NoSupportUnaryOp(x) \
   Object Type::x(const Object &a) {throw Exception(#x " is unsupported for objects of type " + this->name());}
 
-Object Type::LeftDivide(const Object &a, const Object &b, TermIF *io) {throw Exception("Left divide is unsupported for objects of type " + this->name());}
-
-Object Type::RightDivide(const Object &a, const Object &b, TermIF *io) {throw Exception("Right divide is unsupported for objects of type " + this->name());}
-
 NoSupportBinOp(LessEquals);
 NoSupportBinOp(Add);
 NoSupportBinOp(LessThan);
@@ -43,6 +40,8 @@ NoSupportBinOp(DotMultiply);
 NoSupportBinOp(Multiply);
 NoSupportBinOp(DotLeftDivide);
 NoSupportBinOp(DotRightDivide);
+NoSupportBinOp(LeftDivide);
+NoSupportBinOp(RightDivide);
 NoSupportBinOp(Subtract);
 NoSupportBinOp(Colon);
 NoSupportBinOp(GreaterThan);
@@ -93,8 +92,8 @@ void Type::resize(Object &a, const Tuple &newsize) {
   throw Exception("resize is unsupported for objects of type " + this->name());
 }
 
-void Type::print(const Object &a, TermIF &io) {
-  io.output(a.description());
+void Type::print(const Object &a) {
+  _ctxt->_io->output(a.description());
 }
 
 double Type::doubleValue(const Object &a) {
@@ -158,7 +157,7 @@ void Type::set(Object &a, const Object &args, const Object &b) {
 	  break;
 	case 1:
 	  if (a.isEmpty() && (a.type()->code() != TypeCellArray))
-	    a = a.type()->_base->_cell->zeroArrayOfSize(a.dims(),false);
+	    a = _ctxt->_cell->zeroArrayOfSize(a.dims(),false);
 	  a.type()->setBraces(a,argp[1],b);
 	  break;
 	case 2:

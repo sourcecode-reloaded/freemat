@@ -16,7 +16,7 @@
 
 namespace FM
 {
-  struct BaseTypes;
+  struct ThreadContext;
   
   const size_t min_capacity = 100;
 
@@ -25,9 +25,9 @@ namespace FM
     FixedPool<ObjectBase*> *pool;
     FMString _name;
   public:
-    PODType(BaseTypes* base, const FMString &name) :
+    PODType(ThreadContext* ctxt, const FMString &name) :
       _name(name) {
-      _base = base;
+      _ctxt = ctxt;
       pool = new FixedPool<ObjectBase*>(1000);
     }
     virtual ~PODType() {
@@ -187,10 +187,10 @@ namespace FM
     inline Complex<T>* readWriteDataComplex(Object &p) const {
       return reinterpret_cast<Complex<T>*>(readWriteData(p));
     }
-    void print(const Object &a, TermIF &io);
+    void print(const Object &a);
     virtual void computeArrayFormatInfo(FMFormatMode mode, const Object &a, ArrayFormatInfo &format) = 0;
-    virtual void printElement(const Object &a, TermIF &io, const ArrayFormatInfo &format, ndx_t offset) = 0;
-    void printSheet(const Object &a, TermIF &io, const ArrayFormatInfo &format, ndx_t offset);
+    virtual void printElement(const Object &a, const ArrayFormatInfo &format, ndx_t offset) = 0;
+    void printSheet(const Object &a, const ArrayFormatInfo &format, ndx_t offset);
     Object sliceColumn(Object &p, ndx_t col) {
       // Check!
       ObjectBase *q = new ObjectBase(p.d->data,p.d->type,

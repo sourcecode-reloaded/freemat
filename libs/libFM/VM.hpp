@@ -4,7 +4,6 @@
 #include "Object.hpp"
 #include "Code.hpp"
 #include "Frame.hpp"
-#include "BaseTypes.hpp"
 
 #define VM_LOCALVAR 1
 #define VM_DYNVAR 2
@@ -15,15 +14,17 @@ namespace FM
 {
 
   typedef std::pair<FMString,ObjectVector> assignment;
+  
+  struct ThreadContext;
 
   class VM
   {
     std::vector<Object> _stack;
     std::vector<Frame*> _frames;
     int _sp;
-    BaseTypes *_types;
+    ThreadContext *_ctxt;
   public:
-    VM(BaseTypes *types);
+    VM(ThreadContext *ctxt);
     void executeBlock(const Object &codeObject, bool singleStep = false);
     void executeScript(const Object &codeObject);
     Object executeFunction(const Object &codeObject, const Object &parameters);

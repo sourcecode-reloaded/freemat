@@ -1,5 +1,8 @@
 #include "NumericType.hpp"
-#include "BaseTypes.hpp"
+#include "IntegerType.hpp"
+#include "DoubleType.hpp"
+#include "SingleType.hpp"
+#include "ThreadContext.hpp"
 #include "Convert.hpp"
 
 using namespace FM;
@@ -11,7 +14,7 @@ Object NumericType<T,codeNum>::asIndexNoBoundsCheck(const Object &a)
     {
       T aval = this->scalarValue(a);
       if (aval < 1) throw Exception("Index out of range");
-      return Type::_base->_index->makeScalar(static_cast<ndx_t>(aval)-1);
+      return Type::_ctxt->_index->makeScalar(static_cast<ndx_t>(aval)-1);
     }
   if (a.isComplex())
     {
@@ -19,8 +22,8 @@ Object NumericType<T,codeNum>::asIndexNoBoundsCheck(const Object &a)
       std::cout << "WARNING: Complex part of index ignored\r\n";
     }
   dim_t len = a.dims().elementCount();
-  Object output = Type::_base->_index->makeMatrix(len,1);
-  ndx_t *op = Type::_base->_index->readWriteData(output);
+  Object output = Type::_ctxt->_index->makeMatrix(len,1);
+  ndx_t *op = Type::_ctxt->_index->readWriteData(output);
   const T *ip = this->readOnlyData(a);
   dim_t incr = (a.isComplex() ? 2 : 1);
   for (dim_t i=0;i<len;i++)
@@ -36,8 +39,8 @@ template <class T, FM::DataCode codeNum>
 Object NumericType<T,codeNum>::asLogical(const Object &a)
 {
   if (codeNum == TypeBool) return a;
-  Object output = Type::_base->_bool->zeroArrayOfSize(a.dims(),false);
-  bool *op = Type::_base->_bool->readWriteData(output);
+  Object output = Type::_ctxt->_bool->zeroArrayOfSize(a.dims(),false);
+  bool *op = Type::_ctxt->_bool->readWriteData(output);
   dim_t len = a.dims().elementCount();
   if (a.isComplex())
     {
@@ -61,7 +64,7 @@ Object NumericType<T,codeNum>::asIndex(const Object &a, dim_t max)
     {
       T aval = this->scalarValue(a);
       if ((aval < 1) || (aval > max)) throw Exception("Index out of range");
-      return Type::_base->_index->makeScalar(static_cast<ndx_t>(aval)-1);
+      return Type::_ctxt->_index->makeScalar(static_cast<ndx_t>(aval)-1);
     }
   if (a.isComplex())
     {
@@ -69,8 +72,8 @@ Object NumericType<T,codeNum>::asIndex(const Object &a, dim_t max)
       std::cout << "WARNING: Complex part of index ignored\r\n";
     }
   dim_t len = a.dims().elementCount();
-  Object output = Type::_base->_index->makeMatrix(len,1);
-  ndx_t *op = Type::_base->_index->readWriteData(output);
+  Object output = Type::_ctxt->_index->makeMatrix(len,1);
+  ndx_t *op = Type::_ctxt->_index->readWriteData(output);
   const T *ip = this->readOnlyData(a);
   dim_t incr = (a.isComplex() ? 2 : 1);
   for (dim_t i=0;i<len;i++)
@@ -110,22 +113,22 @@ Object NumericType<T,codeNum>::convert(const Object &a)
   switch (a.type()->code())
     {
     case TypeSingle:
-      convertLoop<T,float>(Type::_base->_single->readOnlyData(a),op,len);
+      convertLoop<T,float>(Type::_ctxt->_single->readOnlyData(a),op,len);
       break;
     case TypeDouble:
-      convertLoop<T,double>(Type::_base->_double->readOnlyData(a),op,len);
+      convertLoop<T,double>(Type::_ctxt->_double->readOnlyData(a),op,len);
       break;
     case TypeInt32:
-      convertLoop<T,int32_t>(Type::_base->_int32->readOnlyData(a),op,len);
+      convertLoop<T,int32_t>(Type::_ctxt->_int32->readOnlyData(a),op,len);
       break;
     case TypeUInt32:
-      convertLoop<T,uint32_t>(Type::_base->_uint32->readOnlyData(a),op,len);
+      convertLoop<T,uint32_t>(Type::_ctxt->_uint32->readOnlyData(a),op,len);
       break;
     case TypeInt64:
-      convertLoop<T,int64_t>(Type::_base->_int64->readOnlyData(a),op,len);
+      convertLoop<T,int64_t>(Type::_ctxt->_int64->readOnlyData(a),op,len);
       break;
     case TypeUInt64:
-      convertLoop<T,uint64_t>(Type::_base->_uint64->readOnlyData(a),op,len);
+      convertLoop<T,uint64_t>(Type::_ctxt->_uint64->readOnlyData(a),op,len);
       break;
     default:
       throw Exception("Type conversion from " + a.type()->name() + " to " + this->name() + " is unsupported.");

@@ -2,6 +2,7 @@
 #include "TermIF.hpp"
 #include "Complex.hpp"
 #include "ArrayFormatInfo.hpp"
+#include "ThreadContext.hpp"
 #include <math.h>
 
 using namespace FM;
@@ -51,60 +52,60 @@ void FloatType<T,codeNum>::computeArrayFormatInfo(FMFormatMode mode, const Objec
 }
 
 
-static inline void printDouble(double val, TermIF &io, const ArrayFormatInfo &format, bool includeSign = false) {
+static inline void printDouble(double val, TermIF *io, const ArrayFormatInfo &format, bool includeSign = false) {
   if (isnan(val)) {
     if (includeSign)
-      io.output(" + ");
-    io.output("NaN");
+      io->output(" + ");
+    io->output("NaN");
     return;
   }
   if (!std::isfinite(val)) {
     if (val > 0)
       {
-	if (includeSign) io.output(" + ");
-	io.output("Inf");
+	if (includeSign) io->output(" + ");
+	io->output("Inf");
       }
     else
-      io.output("-Inf");
+      io->output("-Inf");
     return;
   }
   if (val != 0)
     if (format.expformat)
       {
 	if (includeSign)
-	  io.output("%+*.*e",format.width,format.decimals,double(val));
+	  io->output("%+*.*e",format.width,format.decimals,double(val));
 	else
-	  io.output("%*.*e",format.width,format.decimals,double(val));
+	  io->output("%*.*e",format.width,format.decimals,double(val));
       }
     else
       {
 	if (includeSign)
-	  io.output("%+*.*f",format.width,format.decimals,double(val)/format.scalefact);
+	  io->output("%+*.*f",format.width,format.decimals,double(val)/format.scalefact);
 	else
-	  io.output("%*.*f",format.width,format.decimals,double(val)/format.scalefact);
+	  io->output("%*.*f",format.width,format.decimals,double(val)/format.scalefact);
       }
   else
     {
       if (includeSign)
-	io.output("%+*d",format.width,0);
+	io->output("%+*d",format.width,0);
       else
-	io.output("%*d",format.width,0);
+	io->output("%*d",format.width,0);
     }
 }
 
 template <typename T, FM::DataCode codeNum>
-void FloatType<T,codeNum>::printElement(const Object &a, TermIF &io, const ArrayFormatInfo &format, ndx_t offset) {
+void FloatType<T,codeNum>::printElement(const Object &a, const ArrayFormatInfo &format, ndx_t offset) {
   if (!a.isComplex())
     {
       const T* dp = this->readOnlyData(a);
-      printDouble(dp[offset],io,format);
+      printDouble(dp[offset],Type::_ctxt->_io,format);
     }
   else
     {
       const Complex<T>* dp = this->readOnlyDataComplex(a);
-      printDouble(dp[offset].r,io,format);
-      printDouble(dp[offset].i,io,format,true);
-      io.output("i");
+      printDouble(dp[offset].r,Type::_ctxt->_io,format);
+      printDouble(dp[offset].i,Type::_ctxt->_io,format,true);
+      Type::_ctxt->_io->output("i");
     }
 }
 

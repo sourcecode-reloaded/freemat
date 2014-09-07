@@ -1,6 +1,15 @@
 #include "Compiler.hpp"
 #include <iostream>
-#include "BaseTypes.hpp"
+#include "ThreadContext.hpp"
+#include "TypeUtils.hpp"
+#include "CellType.hpp"
+#include "BoolType.hpp"
+#include "CodeType.hpp"
+#include "DoubleType.hpp"
+#include "SingleType.hpp"
+#include "StructType.hpp"
+#include "Scanner.hpp"
+#include "Parser.hpp"
 
 //#include "Algorithms.hpp"
 //#include "Print.hpp"
@@ -565,18 +574,18 @@ reg_t Compiler::doubleColon(const Tree &t) {
 }
 
 const_t Compiler::getNameID(const FMString & t) {
-  return _types->indexOfStringInList(_code->_namelist,t);
+  return indexOfStringInList(_ctxt,_code->_namelist,t);
 }
 
 const_t Compiler::getConstantID(const FMString & t) {
-  return getConstantID(_types->_string->makeString(t));
+  return getConstantID(_ctxt->_string->makeString(t));
 }
 
 const_t Compiler::getConstantID(const Object & t) {
-  ndx_t ndx = _types->_list->indexOf(_code->_constlist,t);
+  ndx_t ndx = _ctxt->_list->indexOf(_code->_constlist,t);
   if (ndx < 0)
     {
-      _types->_list->push(_code->_constlist,t);
+      _ctxt->_list->push(_code->_constlist,t);
       return _code->_constlist.elementCount()-1;
     }
   return ndx;
@@ -676,7 +685,7 @@ reg_t Compiler::fetchConstant(const Object &constant)
 
 reg_t Compiler::fetchConstantString(const FMString &constant)
 {
-  return fetchConstant(_types->_string->makeString(constant));
+  return fetchConstant(_ctxt->_string->makeString(constant));
 }
 
 reg_t Compiler::fetchVariable(const FMString &varname, int flags)
@@ -709,14 +718,14 @@ reg_t Compiler::doShortcutOr(const Tree &t) {
   BasicBlock *fail2 = new BasicBlock;
   BasicBlock *end = new BasicBlock;
   emit(OP_JUMP_ZERO,expression(t.first()),fail1);
-  emit(OP_LOAD_CONST,ret,getConstantID(_types->_bool->makeScalar(true)));
+  emit(OP_LOAD_CONST,ret,getConstantID(_ctxt->_bool->makeScalar(true)));
   emit(OP_JUMP,end);
   useBlock(fail1);
   emit(OP_JUMP_ZERO,expression(t.second()),fail2);
-  emit(OP_LOAD_CONST,ret,getConstantID(_types->_bool->makeScalar(true)));
+  emit(OP_LOAD_CONST,ret,getConstantID(_ctxt->_bool->makeScalar(true)));
   emit(OP_JUMP,end);
   useBlock(fail2);
-  emit(OP_LOAD_CONST,ret,getConstantID(_types->_bool->makeScalar(false)));
+  emit(OP_LOAD_CONST,ret,getConstantID(_ctxt->_bool->makeScalar(false)));
   emit(OP_JUMP,end);
   useBlock(end);
   return ret;
@@ -729,10 +738,10 @@ reg_t Compiler::doShortcutAnd(const Tree &t) {
   BasicBlock *end = new BasicBlock;
   emit(OP_JUMP_ZERO,expression(t.first()),fail);
   emit(OP_JUMP_ZERO,expression(t.second()),fail);
-  emit(OP_LOAD_CONST,ret,getConstantID(_types->_bool->makeScalar(true)));
+  emit(OP_LOAD_CONST,ret,getConstantID(_ctxt->_bool->makeScalar(true)));
   emit(OP_JUMP,end);
   useBlock(fail);
-  emit(OP_LOAD_CONST,ret,getConstantID(_types->_bool->makeScalar(false)));
+  emit(OP_LOAD_CONST,ret,getConstantID(_ctxt->_bool->makeScalar(false)));
   emit(OP_JUMP,end);
   useBlock(end);
   return ret;
@@ -763,7 +772,7 @@ void Compiler::expressionStatement(const Tree &t, bool printIt) {
 
 reg_t Compiler::cellDefinition(const Tree &t) {
   if (t.numChildren() == 0)
-    return fetchConstant(_types->_cell->empty());
+    return fetchConstant(_ctxt->_cell->empty());
   reg_t y = startList();
   for (int i=0;i<t.numChildren();++i) {
     const Tree & s(t.child(i));
@@ -779,7 +788,7 @@ reg_t Compiler::cellDefinition(const Tree &t) {
 
 reg_t Compiler::matrixDefinition(const Tree &t) {
   if (t.numChildren() == 0)
-    return fetchConstant(_types->_double->empty());
+    return fetchConstant(_ctxt->_double->empty());
   reg_t y = startList();
   for (int i=0;i<t.numChildren();++i) {
     const Tree & s(t.child(i));
@@ -829,29 +838,29 @@ reg_t Compiler::expression(const Tree &t) {
     {
       FMString mt(t.text());
       if (mt.toUpper().endsWith("D")) mt.chop(1);
-      return fetchConstant(_types->_double->makeScalar(mt.toDouble()));
+      return fetchConstant(_ctxt->_double->makeScalar(mt.toDouble()));
     }
   case TOK_IMAG:
     {
       FMString mt(t.text());
       if (mt.toUpper().endsWith("D")) mt.chop(1);
-      return fetchConstant(_types->_double->makeComplex(0,mt.toDouble()));
+      return fetchConstant(_ctxt->_double->makeComplex(0,mt.toDouble()));
     }
   case TOK_REALF:
     {
       FMString mt(t.text());
       if (mt.toUpper().endsWith("F")) mt.chop(1);
-      return fetchConstant(_types->_single->makeScalar(mt.toFloat()));
+      return fetchConstant(_ctxt->_single->makeScalar(mt.toFloat()));
     }
   case TOK_IMAGF:
     {
       FMString mt(t.text());
       if (mt.toUpper().endsWith("F")) mt.chop(1);
-      return fetchConstant(_types->_single->makeComplex(0,mt.toFloat()));
+      return fetchConstant(_ctxt->_single->makeComplex(0,mt.toFloat()));
     }
   case TOK_STRING:
     {
-      return fetchConstant(_types->_string->makeString(t.text()));
+      return fetchConstant(_ctxt->_string->makeString(t.text()));
     }
   case TOK_END:
     // Rewrite the tree to remove TOK_END...
@@ -969,9 +978,9 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
     }
 }
 
-Compiler::Compiler(BaseTypes *b) {
+Compiler::Compiler(ThreadContext *b) {
   assert(b);
-  _types = b;
+  _ctxt = b;
   _regpool = new RegisterBlock(256);
   _code = new CodeBlock;
 }
@@ -1016,7 +1025,7 @@ void Compiler::forStatement(const Tree &t) {
     reg_t iterCount = getRegister();
     emit(OP_NUMCOLS,iterCount,indexSet);
     // Allocate a register to track the column number
-    reg_t colnum = fetchConstant(_types->_index->makeScalar(1));
+    reg_t colnum = fetchConstant(_ctxt->_index->makeScalar(1));
     // Start a new block
     BasicBlock *loop = new BasicBlock;
     emit(OP_JUMP,loop);
@@ -1043,7 +1052,7 @@ void Compiler::forStatement(const Tree &t) {
     reg_t iter_count = getRegister();
     const Tree & codeBlock(t.second());
     emit(OP_LOOPCOUNT,iter_count,args);
-    reg_t loop_index = fetchConstant(_types->_double->makeScalar(0));
+    reg_t loop_index = fetchConstant(_ctxt->_double->makeScalar(0));
     BasicBlock *loop = new BasicBlock;
     emit(OP_JUMP,loop);
     useBlock(loop);
@@ -1205,8 +1214,30 @@ void Compiler::statementType(const Tree &t, bool printIt) {
 
 // 
 
-void Compiler::compile(const Tree &t) {
+void Compiler::compile(const FMString &code) {
+  Scanner S(code,"");
+  Parser P(S);
+  Tree t(P.process());
   SymbolPass p;
+  delete _code;
+  _code = new CodeBlock;
+  delete _regpool;
+  _regpool = new RegisterBlock(256);
+  while (!_codestack.empty()) {
+    CodeBlock *p = _codestack.top();
+    delete p;
+    _codestack.pop();
+  }
+  while (!_continueblock.empty()) {
+    BasicBlock *b = _continueblock.top();
+    delete b;
+    _continueblock.pop();
+  }
+  while (!_breakblock.empty()) {
+    BasicBlock *b = _breakblock.top();
+    delete b;
+    _breakblock.pop();
+  }
   // Start the code walk at a depth of 1 - if it's a function
   // definition instead of a script, the internal blocks will
   // be processed at the correct depth.
@@ -1225,12 +1256,12 @@ void Compiler::walkFunction(const Tree &t, bool nested) {
   _code = cp;
   // Build up the variable list
   // By convention, the arguments are first
-  _code->_namelist = _types->_list->empty();
-  _code->_constlist = _types->_list->empty();
+  _code->_namelist = _ctxt->_list->empty();
+  _code->_constlist = _ctxt->_list->empty();
 
   for (FMMap<FMString, int>::const_iterator s = _code->_syms->syms.constBegin();
        s != _code->_syms->syms.constEnd(); ++s)
-    _types->addStringToList(_code->_namelist,s.key());
+    addStringToList(_ctxt,_code->_namelist,s.key());
   std::cout << "Compiling function " << t.child(1).text() << "\n";
   _code->_name = t.child(1).text();
   std::cout << "Symbol table is " << _currentSym->name << "\n";
@@ -1267,11 +1298,11 @@ void Compiler::walkScript(const Tree &t) {
   _codestack.push(cp);
   _code = cp;
   // Build up the variable list
-  _code->_namelist = _types->_list->empty();
-  _code->_constlist = _types->_list->empty();
+  _code->_namelist = _ctxt->_list->empty();
+  _code->_constlist = _ctxt->_list->empty();
   for (FMMap<FMString, int>::const_iterator s = _code->_syms->syms.constBegin();
        s != _code->_syms->syms.constEnd(); ++s)
-    _types->addStringToList(_code->_namelist,s.key());
+    addStringToList(_ctxt,_code->_namelist,s.key());
   useBlock(new BasicBlock);
   block(t.first());
   emit(OP_RETURN);
@@ -1430,23 +1461,24 @@ void PrintRawInsn(int ip, insn_t insn)
   printf("\n");
 }
 
-void FM::Disassemble(BaseTypes *_types, const Object &p)
+void FM::Disassemble(ThreadContext *_ctxt, const Object &p)
 {
   //  if (!p.isUserClass() || p.className() != "code_object")
   //    throw Exception("argument to disassemble is not a code_object");
-  assert(p.type()->code() == TypeStruct);
-  std::cout << "Name: " << _types->_struct->getScalar(p,"name").description() << "\n";
-  std::cout << "Names: " << _types->_struct->getScalar(p,"names") << "\n";
-  std::cout << "Parameters: " << _types->_struct->getScalar(p,"params") << "\n";
-  std::cout << "Returns: " << _types->_struct->getScalar(p,"returns") << "\n";
-  Object consts = _types->_struct->getScalar(p,"consts");
-  const Object* cp = _types->_cell->readOnlyData(consts);
+  assert(p.type()->code() == TypeCode);
+  const CodeData *dp = _ctxt->_code->readOnlyData(p);
+  std::cout << "Name: " << dp->m_name.description() << "\n";
+  std::cout << "Names: " << dp->m_names << "\n";
+  std::cout << "Parameters: " << dp->m_params << "\n";
+  std::cout << "Returns: " << dp->m_returns << "\n";
+  Object consts = dp->m_consts;
+  const Object* cp = _ctxt->_cell->readOnlyData(consts);
   std::cout << "Consts: ";
   for (dim_t i=0;i<consts.dims().elementCount();i++)
     std::cout << cp[i].description() << " ";
   std::cout << "\n";
-  Object code = _types->_struct->getScalar(p,"code");
-  const insn_t *opcodes = _types->_uint64->readOnlyData(code);
+  Object code = dp->m_code;
+  const insn_t *opcodes = _ctxt->_uint64->readOnlyData(code);
   std::cout << "Code: " << code.dims().elementCount() << " length\n";
   for (dim_t i=0;i<code.dims().elementCount();++i)
     PrintRawInsn(i,opcodes[i]);

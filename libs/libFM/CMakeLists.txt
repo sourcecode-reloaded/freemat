@@ -24,10 +24,16 @@ Tree.cpp
 BLAS.cpp
 NCat.cpp
 DenseSolver.cpp
+Type.cpp
+ThreadContext.cpp
 DoubleType.cpp
+CellType.cpp
+CodeType.cpp
+StringType.cpp
 Transpose.cpp  
 Hermitian.cpp  
 LAPACK.cpp
+ListType.cpp
 MatrixLeftDivide.cpp  
 MatrixRightDivide.cpp  
 SingleType.cpp
@@ -70,7 +76,6 @@ Token.hpp
 Tree.hpp
 Tuple.hpp
 Type.hpp
-Type.cpp
 Assembler.cpp
 Assembler.hpp
 Frame.cpp

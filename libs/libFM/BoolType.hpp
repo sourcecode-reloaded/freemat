@@ -5,10 +5,12 @@
 
 namespace FM
 {
+  class ThreadContext;
+
   class BoolType : public IntegerType<bool,TypeBool>
   {
   public:
-    BoolType(BaseTypes *base) : IntegerType<bool,TypeBool>(base,"bool") {}
+    BoolType(ThreadContext *ctxt) : IntegerType<bool,TypeBool>(ctxt,"bool") {}
     virtual ~BoolType() {}
     virtual Object asIndex(const Object &a, dim_t max);
     virtual Object asIndexNoBoundsCheck(const Object &a);

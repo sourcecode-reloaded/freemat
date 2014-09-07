@@ -12,7 +12,7 @@ namespace FM {
   typedef uint64_t dim_t;
 
   class ObjectBase;
-  class TermIF;
+  struct ThreadContext;
 
   enum DataCode {
     TypeInvalid = 0,
@@ -31,18 +31,18 @@ namespace FM {
     TypeSingle = 13,
     TypeDouble = 14,
     TypeIndex = 15,
-    TypeListArray = 16
+    TypeListArray = 16,
+    TypeCode = 17
   };
 
   class Object;
   class ObjectVector;
   class Tuple;
   struct Data;
-  struct BaseTypes;
 
   class Type {
   protected:
-    BaseTypes *_base;
+    ThreadContext *_ctxt;
   public:
     virtual ~Type() {}
     virtual DataCode code() const = 0;
@@ -51,8 +51,8 @@ namespace FM {
     virtual Data* duplicateData(const ObjectBase * p, dim_t &reserve) const = 0;
     virtual Object Add(const Object &a, const Object &b);
     virtual Object Multiply(const Object &a, const Object &b);
-    virtual Object LeftDivide(const Object &a, const Object &b, TermIF *io);
-    virtual Object RightDivide(const Object &a, const Object &b, TermIF *io);
+    virtual Object LeftDivide(const Object &a, const Object &b);
+    virtual Object RightDivide(const Object &a, const Object &b);
     virtual Object DotLeftDivide(const Object &a, const Object &b);
     virtual Object DotRightDivide(const Object &a, const Object &b);
     virtual Object DotMultiply(const Object &a, const Object &b);
@@ -88,7 +88,7 @@ namespace FM {
     virtual Object get(const Object &a, const Object &b);
     virtual void set(Object &a, const Object &args, const Object &b);
     virtual void resize(Object &a, const Tuple &newsize);
-    virtual void print(const Object &a, TermIF &io);
+    virtual void print(const Object &a);
   };
 }
 

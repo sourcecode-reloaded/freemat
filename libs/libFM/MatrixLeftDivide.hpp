@@ -3,8 +3,12 @@
 
 #include "Object.hpp"
 
+
 namespace FM
 {
+
+  class TermIF;
+
   Object MatrixLeftDivideDouble(const Object &a, const Object &b, TermIF *io);
   //  Object MatrixLeftDivideSingle(const Object &a, const Object &b);
 };

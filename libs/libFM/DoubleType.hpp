@@ -10,11 +10,11 @@
 namespace FM
 {
 
-  struct BaseTypes;
+  struct ThreadContext;
 
   class DoubleType : public FloatType<double,TypeDouble> {
   public:
-    DoubleType(BaseTypes* base) : FloatType<double,TypeDouble>(base,"double") {}
+    DoubleType(ThreadContext* ctxt) : FloatType<double,TypeDouble>(ctxt,"double") {}
     virtual ~DoubleType() {}
     virtual Type* typeInstance() {return this;}
     template <class Op>
@@ -103,8 +103,8 @@ namespace FM
     virtual Object Or(const Object &a, const Object &b);
     virtual Object And(const Object &a, const Object &b);
     virtual Object Multiply(const Object &a, const Object &b);
-    virtual Object LeftDivide(const Object &a, const Object &b, TermIF *io);
-    virtual Object RightDivide(const Object &a, const Object &b, TermIF *io);
+    virtual Object LeftDivide(const Object &a, const Object &b);
+    virtual Object RightDivide(const Object &a, const Object &b);
     virtual Object Colon(const Object &a, const Object &b)
     {
       if (!a.isScalar() || !b.isScalar()) throw Exception("arguments to : operator must be scalars");

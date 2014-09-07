@@ -6,12 +6,12 @@
 namespace FM
 {
 
-  struct BaseTypes;
+  struct ThreadContext;
 
   template <class T, FM::DataCode codeNum>
   class NumericType : public PODType<T,false> {
   public:
-    NumericType(BaseTypes *base, const FMString &name) : PODType<T,false>(base,name) {}
+    NumericType(ThreadContext *ctxt, const FMString &name) : PODType<T,false>(ctxt,name) {}
     virtual ~NumericType() {}
     virtual DataCode code() const {return codeNum;}
     virtual Object asLogical(const Object &a);

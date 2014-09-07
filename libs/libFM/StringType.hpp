@@ -5,12 +5,12 @@
 
 namespace FM
 {
-  struct BaseTypes;
+  struct ThreadContext;
 
   class StringType : public IntegerType<FMChar,TypeString>
   {
   public:
-    StringType(BaseTypes *base) : IntegerType<FMChar,TypeString>(base,"string") {}
+    StringType(ThreadContext *ctxt) : IntegerType<FMChar,TypeString>(ctxt,"string") {}
     virtual DataCode code() const {return TypeString;}
     virtual Type* typeInstance() {return this;}
     Object makeString(const FMString &x) {
@@ -35,10 +35,7 @@ namespace FM
     void computeArrayFormatInfo(FMFormatMode, const Object &, ArrayFormatInfo &format) {
       format.width = 1;
     }
-    void printElement(const Object &a, TermIF &io, const ArrayFormatInfo &format, ndx_t ndx) {
-      const FMChar *t = this->readOnlyData(a);
-      io.output("%c",t[ndx]);
-    }
+    void printElement(const Object &a, const ArrayFormatInfo &format, ndx_t ndx);
   };
 }
 

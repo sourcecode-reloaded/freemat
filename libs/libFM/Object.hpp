@@ -91,6 +91,7 @@ namespace FM
     friend class Type;
     template <class T>  friend class PODArrayType;
     template <class T, bool _objtype> friend class PODType;
+    template <class T> friend class AggregateType;
     friend class DoubleType;
     friend class SingleType;
     friend class StringType;
@@ -197,6 +198,7 @@ namespace FM
     friend class PODArrayType<double>;
     friend class PODType<double, false>;
     template <class T, bool _objtype> friend class PODType;
+    template <class T> friend class AggregateType;
     friend class DoubleType;
     friend class SingleType;
     friend class IndexType;

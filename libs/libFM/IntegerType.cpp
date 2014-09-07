@@ -1,4 +1,5 @@
 #include "IntegerType.hpp"
+#include "ThreadContext.hpp"
 #include "Type.hpp"
 
 using namespace FM;
@@ -30,17 +31,17 @@ void IntegerType<T,codeNum>::computeArrayFormatInfo(FMFormatMode, const Object &
 }
 
 template <class T, FM::DataCode codeNum>
-void IntegerType<T,codeNum>::printElement(const Object &a, TermIF &io, const ArrayFormatInfo &format, ndx_t ndx) {
+void IntegerType<T,codeNum>::printElement(const Object &a, const ArrayFormatInfo &format, ndx_t ndx) {
   if (!a.isComplex())
     {
       const T* dp = this->readOnlyData(a);
-      io.output("% *lld",format.width,(int64_t)(dp[ndx]));
+      Type::_ctxt->_io->output("% *lld",format.width,(int64_t)(dp[ndx]));
     }
   else
     {
       const Complex<T>* dp = this->readOnlyDataComplex(a);
-      io.output("% *lld",format.width,(int64_t)(dp[ndx].r));
-      io.output("% *+lldi",format.width,(int64_t)(dp[ndx].i));
+      Type::_ctxt->_io->output("% *lld",format.width,(int64_t)(dp[ndx].r));
+      Type::_ctxt->_io->output("% *+lldi",format.width,(int64_t)(dp[ndx].i));
     }
 }
 

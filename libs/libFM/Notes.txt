@@ -279,3 +279,15 @@ OP_SAVE reg, ndx
       f->variables[address[ndx]] = reg
     }
 
+
+Can the Type class itself be an Object?  Perhaps, but I think it's too
+difficult to do now.  
+
+The next problem is to address function calls.  A function call should
+be a pointer to a function with the following type signature.
+
+Object func(ThreadContext *ctxt, const Object & argList, int nargout)
+
+A function object can then have the following signature.
+
+

@@ -1,6 +1,8 @@
 #include "PODType.hpp"
 #include "BaseTypes.hpp"
 #include "IntegerType.hpp"
+#include "ListType.hpp"
+#include "ThreadContext.hpp"
 
 using namespace FM;
 
@@ -166,7 +168,7 @@ Object PODType<T,_objType>::getParens(const Object &a, const Object &b) {
   // TODO: Special case all-scalar indexing case
   Object c[MAXDIMS];
   int bsize = b.elementCount();
-  const Object *bp = b.asType<ListType>()->readOnlyData(b);
+  const Object *bp = _ctxt->_list->readOnlyData(b);
   for (int i=0;i<bsize;i++)
     c[i] = bp[i].asIndex(adims.dimension(i));
   // TODO: Add slice test here (c.f. isSliceIndexCase)
@@ -288,10 +290,10 @@ void PODType<T,_objType>::setParens(Object &a, const Object &args, const Object 
 }
 
 template <class T, bool _objType>
-void PODType<T,_objType>::printSheet(const Object &a, TermIF &io, const ArrayFormatInfo &format, ndx_t offset) {
+void PODType<T,_objType>::printSheet(const Object &a, const ArrayFormatInfo &format, ndx_t offset) {
   ndx_t columns = a.cols();
   ndx_t rows = a.rows();
-  int colsPerPage = (int) floor((io.getTerminalWidth()-1)/((double) format.width + 2));
+  int colsPerPage = (int) floor((_ctxt->_io->getTerminalWidth()-1)/((double) format.width + 2));
   colsPerPage = (colsPerPage < 1) ? 1 : colsPerPage;
   int pageCount = (int) ceil(columns/((double)colsPerPage));
   for (int k=0;k<pageCount;k++) {
@@ -300,33 +302,33 @@ void PODType<T,_objType>::printSheet(const Object &a, TermIF &io, const ArrayFor
     colsInThisPage = (colsInThisPage > colsPerPage) ? 
       colsPerPage : colsInThisPage;
     if ((rows*columns > 1) && (pageCount > 1))
-      io.output("\n Columns %d to %d\n\n",k*colsPerPage+1,k*colsPerPage+colsInThisPage);
+      _ctxt->_io->output("\n Columns %d to %d\n\n",k*colsPerPage+1,k*colsPerPage+colsInThisPage);
     for (int i=0;i<rows;i++) {
       for (int j=0;j<colsInThisPage;j++)
-	this->printElement(a,io,format,i+(k*colsPerPage+j)*rows+offset);
-      io.output("\n");
+	this->printElement(a,format,i+(k*colsPerPage+j)*rows+offset);
+      _ctxt->_io->output("\n");
     }
   }
-  io.output("\n");
+  _ctxt->_io->output("\n");
 }
 
 template <class T, bool _objType>
-void PODType<T,_objType>::print(const Object &a, TermIF &io)
+void PODType<T,_objType>::print(const Object &a)
 {
   if (a.isEmpty())
   {
     if (a.dims() == Tuple(0,0)) {
-      io.output("  []\n");
+      _ctxt->_io->output("  []\n");
     } else {
-      io.output("  Empty array ");
-      io.output(a.dims().toString());
-      io.output("\n");
+      _ctxt->_io->output("  Empty array ");
+      _ctxt->_io->output(a.dims().toString());
+      _ctxt->_io->output("\n");
     }
   }
   ArrayFormatInfo format;
-  this->computeArrayFormatInfo(io.getFormatMode(),a,format);
+  this->computeArrayFormatInfo(_ctxt->_io->getFormatMode(),a,format);
   if (!a.isScalar() && (format.scalefact != 1))
-    io.output("\n   %.1e * \n",format.scalefact);
+    _ctxt->_io->output("\n   %.1e * \n",format.scalefact);
   if (a.isScalar() && !format.floatasint) {
     if (fabs(log10(format.scalefact)) > 3) {
       format.expformat = true;
@@ -335,7 +337,7 @@ void PODType<T,_objType>::print(const Object &a, TermIF &io)
     }
   }
   if (a.is2D())
-    this->printSheet(a,io,format,0);
+    this->printSheet(a,format,0);
   else {
     /**
      * For N-ary arrays, data slice  -  start with 
@@ -343,18 +345,18 @@ void PODType<T,_objType>::print(const Object &a, TermIF &io)
      * print, incrementing from the highest dimension,
      * and rolling downwards.
      */
-    io.output("\n");
+    _ctxt->_io->output("\n");
     dim_t offset = 0;
     dim_t page = a.rows()*a.cols();
     dim_t page_count = a.elementCount()/page;
     for (dim_t p=0;p<page_count;p++)
       {
 	Tuple w = offset % a.dims();
-	io.output("(:,:");
+	_ctxt->_io->output("(:,:");
 	for (int m=2;m<w.dimensions();m++) 
-	  io.output(FMString(",") + Stringify(w.dimension(m)));
-	io.output(") = \n");
-	this->printSheet(a,io,format,offset);
+	  _ctxt->_io->output(FMString(",") + Stringify(w.dimension(m)));
+	_ctxt->_io->output(") = \n");
+	this->printSheet(a,format,offset);
 	offset += page;
       }
   }
@@ -369,7 +371,7 @@ template <class T, bool _objType>
 Object PODType<T,_objType>::NCat(const Object& p, int dim)
 {
   int objectCount = p.elementCount();
-  const Object *dp = _base->_list->readOnlyData(p);
+  const Object *dp = _ctxt->_list->readOnlyData(p);
   if (objectCount == 0) return this->empty();
   // Compute the size of the output
   Tuple outputSize = dp[0].dims();

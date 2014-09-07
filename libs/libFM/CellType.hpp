@@ -6,11 +6,11 @@
 
 namespace FM
 {
-  struct BaseTypes;
+  struct ThreadContext;
 
   class CellType : public PODType<Object,true> {
   public:
-    CellType(BaseTypes *base) : PODType<Object,true>(base,"cell") {}
+    CellType(ThreadContext *ctxt) : PODType<Object,true>(ctxt,"cell") {}
     virtual DataCode code() const {return TypeCellArray;}
     virtual Type* typeInstance() {return this;}
     virtual Object add(const Object &a, const Object &b) {throw Exception("Adding cell arrays is unsupported");}
@@ -30,10 +30,7 @@ namespace FM
 	maxwidth = std::max<ndx_t>(maxwidth,a.description().length());
       format.width = maxwidth+2;
     }
-    void printElement(const Object &a, TermIF &o, const ArrayFormatInfo &info, ndx_t ndx) {
-      const Object *t = this->readOnlyData(a);
-      o.output("[" + t[ndx].description() + "]");
-    }
+    void printElement(const Object &a, const ArrayFormatInfo &info, ndx_t ndx);
   };
 }
 

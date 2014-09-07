@@ -6,11 +6,11 @@
 
 namespace FM
 {
-  struct BaseTypes;
+  struct ThreadContext;
 
   class ListType : public PODType<Object,true> {
   public:
-    ListType(BaseTypes *base) : PODType<Object,true>(base,"list") {}
+    ListType(ThreadContext *ctxt) : PODType<Object,true>(ctxt,"list") {}
     virtual DataCode code() const {return TypeListArray;}
     virtual Type* typeInstance() {return this;}
     virtual FMString describe(const Object &a) {
@@ -75,10 +75,7 @@ namespace FM
     void computeArrayFormatInfo(FMFormatMode, const Object &a, ArrayFormatInfo &format) {
       format.width = 80;
     }
-    void printElement(const Object &a, TermIF &o, const ArrayFormatInfo &info, ndx_t ndx) {
-      const Object *t = this->readOnlyData(a);
-      o.output(t[ndx].description());
-    }
+    void printElement(const Object &a, const ArrayFormatInfo &info, ndx_t ndx);
   };
 };
 

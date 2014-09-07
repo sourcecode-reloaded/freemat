@@ -1,4 +1,4 @@
-#ifndef __BaseTypes_hpp__
+#if 0
 #define __BaseTypes_hpp__
 
 #include "BoolType.hpp"

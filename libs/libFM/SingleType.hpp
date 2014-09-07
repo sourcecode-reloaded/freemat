@@ -7,11 +7,11 @@
 
 namespace FM
 {
-  struct BaseTypes;
+  struct ThreadContext;
 
   class SingleType : public FloatType<float,TypeSingle> {
   public:
-    SingleType(BaseTypes *base) : FloatType<float,TypeSingle>(base,"single") {}
+    SingleType(ThreadContext *ctxt) : FloatType<float,TypeSingle>(ctxt,"single") {}
     virtual Type* typeInstance() {return this;}
     template <class Op>
     inline Object binop(const Object &a, const Object &b)

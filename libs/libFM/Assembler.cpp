@@ -1,22 +1,24 @@
 #include "Assembler.hpp"
 #include "StructType.hpp"
 #include "CellType.hpp"
-//#include "Algorithms.hpp"
+#include "CodeType.hpp"
 #include "Compiler.hpp"
+#include "TypeUtils.hpp"
 
 std::string getOpCodeName(FM::op_t);
 
 using namespace FM;
 
-Assembler::Assembler(CodeBlock *code) : _code(code)
+Object Assembler::run(CodeBlock *code)
 {
-}
-
-void Assembler::run()
-{
+  _code = code;
+  _vm_codes.clear();
+  for (int i=0;i<_postorder.size();i++) delete _postorder[i];
+  _postorder.clear();
   depthFirstSearch(_code->_blocklist[0]);
   computeJumpOffsets();
   assemble();
+  return codeObject();
 }
 
 void Assembler::computeJumpOffsets()
@@ -67,26 +69,25 @@ void Assembler::assemble()
     }
 }
 
-Object Assembler::codeObject(BaseTypes *_b)
+Object Assembler::codeObject()
 {
-  FMStringList fields;
-  fields << "name" << "code" << "names" << "consts";
-  Object qp = _b->_struct->makeScalarStruct(fields);
-  _b->_struct->setScalar(qp,"name",_b->_string->makeString(_code->_name));
-  Object op = _b->_uint64->makeMatrix(_vm_codes.size(),1);
-  memcpy(_b->_uint64->readWriteData(op),&(_vm_codes[0]),_vm_codes.size()*sizeof(uint64_t));
-  _b->_struct->setScalar(qp,"code",op);
-  _b->_struct->setScalar(qp,"names",_code->_namelist);
-  _b->_struct->setScalar(qp,"consts",_code->_constlist);
+  Object code = _ctxt->_code->makeCodeObject();
+  CodeData *cp = _ctxt->_code->readWriteData(code);
+  cp->m_name = _ctxt->_string->makeString(_code->_name);
+  Object op = _ctxt->_uint64->makeMatrix(_vm_codes.size(),1);
+  memcpy(_ctxt->_uint64->readWriteData(op),&(_vm_codes[0]),_vm_codes.size()*sizeof(uint64_t));
+  cp->m_code = op;
+  cp->m_names = _code->_namelist;
+  cp->m_consts = _code->_constlist;
   // Walk the symbol table and collect up the list of arguments
-  Object param_list = _b->_list->empty();
-  Object return_list = _b->_list->empty();
+  Object param_list = _ctxt->_list->empty();
+  Object return_list = _ctxt->_list->empty();
   for (FMMap<FMString,int>::const_iterator i=_code->_syms->syms.constBegin();i != _code->_syms->syms.constEnd(); ++i)
     {
-      if (IS_PARAMETER(i.value())) _b->addStringToList(param_list,i.key());
-      if (IS_RETURN(i.value())) _b->addStringToList(return_list,i.key());
+      if (IS_PARAMETER(i.value())) addStringToList(_ctxt,param_list,i.key());
+      if (IS_RETURN(i.value())) addStringToList(_ctxt,return_list,i.key());
     }
-  _b->_struct->setScalar(qp,"params",param_list);
-  _b->_struct->setScalar(qp,"returns",return_list);
-  return qp;
+  cp->m_params = param_list;
+  cp->m_returns = return_list;
+  return code;
 }

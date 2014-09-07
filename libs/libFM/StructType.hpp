@@ -3,6 +3,7 @@
 
 #include "PODType.hpp"
 #include "Object.hpp"
+#include "AggregateType.hpp"
 
 namespace FM
 {
@@ -11,31 +12,34 @@ namespace FM
     Object m_data; // Data is stored in a cell array.  Row dimension corresponds to field index.
   };
 
-  class StructType : public Type {
+  struct ThreadContext;
+
+  //  class StructType : public Type {
+  class StructType : public AggregateType<StructData> {
   public:
-    StructType(BaseTypes *base) {_base = base;}
+    StructType(ThreadContext *ctxt) {_ctxt = ctxt;}
     virtual DataCode code() const {return TypeStruct;}
     virtual const FMString& name() const {static FMString _name = "struct"; return _name;}
-    virtual void destroyObject(ObjectBase* p) 
-    {
-      if (--p->data->refcnt == 0)
-	{
-	  StructData *k = static_cast<StructData *>(p->data->ptr);
-	  delete k;
-	}
-      delete p->data;
-    }
-    virtual Data* duplicateData(const ObjectBase* p, dim_t &reserve) const
-    {
-      Data *q = new Data;
-      q->refcnt = 1;
-      dim_t elem_count = p->dims.elementCount();
-      const StructData *pdata = static_cast<const StructData *>(p->data->ptr);
-      StructData *copy = new StructData(*pdata);
-      q->ptr = copy;
-      reserve = elem_count; // FIXME
-      return q;
-    }
+    // virtual void destroyObject(ObjectBase* p) 
+    // {
+    //   if (--p->data->refcnt == 0)
+    // 	{
+    // 	  StructData *k = static_cast<StructData *>(p->data->ptr);
+    // 	  delete k;
+    // 	}
+    //   delete p->data;
+    // }
+    // virtual Data* duplicateData(const ObjectBase* p, dim_t &reserve) const
+    // {
+    //   Data *q = new Data;
+    //   q->refcnt = 1;
+    //   dim_t elem_count = p->dims.elementCount();
+    //   const StructData *pdata = static_cast<const StructData *>(p->data->ptr);
+    //   StructData *copy = new StructData(*pdata);
+    //   q->ptr = copy;
+    //   reserve = elem_count; // FIXME
+    //   return q;
+    // }
     Object makeStruct(const Tuple & dims, const FMStringList &fields);
       Object makeScalarStruct(const FMStringList &fields) {
           return makeStruct(Tuple(1,1),fields);
@@ -64,10 +68,11 @@ namespace FM
     virtual FMString describe(const Object &a);
     virtual bool equals(const Object &a, const Object &b)
     {
+      // FIXME - allow struct equality tests
       return false;
     }
     virtual Object asIndex(const Object &, dim_t) {
-      throw Exception("Cell arrays cannot be used as index arrays");
+      throw Exception("struct arrays cannot be used as index arrays");
     }
   };
 }

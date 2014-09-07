@@ -82,7 +82,7 @@ incr_prefix:
 */
 namespace FM
 {
-  struct BaseTypes;
+  struct ThreadContext;
 
   class Compiler
   {
@@ -93,7 +93,7 @@ namespace FM
     SymbolTable *_currentSym;
     std::stack<BasicBlock *> _continueblock;
     std::stack<BasicBlock *> _breakblock;
-    BaseTypes *_types;
+    ThreadContext *_ctxt;
   private:
     void useBlock(BasicBlock *b);
     void emit(int8_t opcode, reg_t reg1);
@@ -148,12 +148,12 @@ namespace FM
     void walkFunction(const Tree &t, bool nested = false);
   public:
     static std::string opcodeDecode(op_t opcode, insn_t val);
-    Compiler(BaseTypes *b);
-    void compile(const Tree &t);
+    Compiler(ThreadContext *b);
+    void compile(const FMString &code);
     Module* module();
   };
 
-  void Disassemble(BaseTypes *_types, const Object &p);
+  void Disassemble(ThreadContext *_ctxt, const Object &p);
 
   void DumpBasicBlock(BasicBlock *k, int offset);
 }

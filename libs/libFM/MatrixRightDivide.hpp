@@ -5,6 +5,8 @@
 
 namespace FM
 {
+  class TermIF;
+
   Object MatrixRightDivideDouble(const Object &a, const Object &b, TermIF *io);
 };
 

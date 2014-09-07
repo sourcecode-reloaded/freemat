@@ -12,6 +12,9 @@
 #include <boost/timer/timer.hpp>
 #include "Compiler.hpp"
 #include "NCat.hpp"
+#include "ThreadContext.hpp"
+#include "AllTypes.hpp"
+#include "CodeType.hpp"
 
 std::string getOpCodeName(FM::op_t);
 
@@ -52,7 +55,7 @@ using namespace FM;
 // What happens if the type of a register isn't Array?
 // 
 
-VM::VM(BaseTypes *types)
+VM::VM(ThreadContext *ctxt)
 {
   _stack.resize(1024);
   _sp = 0;
@@ -60,7 +63,7 @@ VM::VM(BaseTypes *types)
   f->_name = "base";
   f->_closed = true;
   _frames.push_back(f);
-  _types = types;
+  _ctxt = ctxt;
 }
 
 void VM::defineBaseVariable(const FMString &name, const Object &value)
@@ -116,40 +119,41 @@ Object VM::executeFunction(const Object &codeObject, const Object &parameters)
 {
   // Create a new frame for the function
   Frame *f = new Frame;
-  f->_name = _types->_string->getString(_types->_struct->getScalar(codeObject,"name"));
+  const CodeData *cp = _ctxt->_code->readOnlyData(codeObject);
+  f->_name = _ctxt->_string->getString(cp->m_name);
   // Space for registers
   f->_regfile.resize(256);
   // Space to store the address maps for variables
-  f->_addr.resize(_types->_struct->getScalar(codeObject,"names").elementCount());
+  f->_addr.resize(cp->m_names.elementCount());
   // Function scopes are closed
   f->_closed = true;
   // Populate the arguments
-  const Object * args = _types->_list->readOnlyData(parameters);
-  const Object * param_names = _types->_list->readOnlyData(_types->_struct->getScalar(codeObject,"params"));
-  int to_use = std::min<int>(parameters.elementCount(),_types->_struct->getScalar(codeObject,"params").elementCount());
+  const Object * args = _ctxt->_list->readOnlyData(parameters);
+  const Object * param_names = _ctxt->_list->readOnlyData(cp->m_params);
+  int to_use = std::min<int>(parameters.elementCount(),cp->m_params.elementCount());
   for (int i=0;i<to_use;i++)
     {
-      int addr = f->allocateVariable(_types->_string->getString(param_names[i]));
+      int addr = f->allocateVariable(_ctxt->_string->getString(param_names[i]));
       f->_vars[addr-1] = args[i];
     }
   _frames.push_back(f);
   // execute the code
   executeCodeObject(codeObject);
   // Collect return values
-  Object retvec = _types->_list->empty();
-  int to_return = _types->_struct->getScalar(codeObject,"returns").elementCount();
-  const Object * return_names = _types->_list->readOnlyData(_types->_struct->getScalar(codeObject,"returns"));
+  Object retvec = _ctxt->_list->empty();
+  int to_return = cp->m_returns.elementCount();
+  const Object * return_names = _ctxt->_list->readOnlyData(cp->m_returns);
   for (int i=0;i<to_return;i++)
     {
-      FMString name = _types->_string->getString(return_names[i]);
+      FMString name = _ctxt->_string->getString(return_names[i]);
       int addr = f->getAddress(name);
       if (!addr)
 	{
 	  std::cout << "Warning: not all outputs assigned";
-	  _types->_list->push(retvec,_types->_double->empty());
+	  _ctxt->_list->push(retvec,_ctxt->_double->empty());
 	}
       else
-	_types->_list->push(retvec,f->_vars[addr-1]);
+	_ctxt->_list->push(retvec,f->_vars[addr-1]);
     }
   _frames.pop_back();
   delete f;  
@@ -159,11 +163,12 @@ Object VM::executeFunction(const Object &codeObject, const Object &parameters)
 void VM::executeScript(const Object &codeObject)
 {
   Frame *f = new Frame;
-  f->_name = _types->_string->getString(_types->_struct->getScalar(codeObject,"name"));
+  const CodeData *cp = _ctxt->_code->readOnlyData(codeObject);
+  f->_name = _ctxt->_string->getString(cp->m_name);
   // Space for registers
   f->_regfile.resize(256);
   // Space to store the address maps for variables
-  f->_addr.resize(_types->_struct->getScalar(codeObject,"names").elementCount());
+  f->_addr.resize(cp->m_names.elementCount());
   f->_closed = false;
   _frames.push_back(f);
   // execute the code
@@ -202,16 +207,14 @@ double num_for_loop_iter( double first, double step, double last )
 
 void VM::executeCodeObject(const Object &codeObject)
 {
-  Object consts = _types->_struct->getScalar(codeObject,"consts");
-  Object opcodes = _types->_struct->getScalar(codeObject,"code");
-  Object names = _types->_struct->getScalar(codeObject,"names");
+  const CodeData *cp = _ctxt->_code->readOnlyData(codeObject);
 
-  const Object *const_list = _types->_list->readOnlyData(consts);
-  const uint64_t *code = _types->_uint64->readOnlyData(opcodes);
-  const Object *names_list = _types->_list->readOnlyData(names);
+  const Object *const_list = _ctxt->_list->readOnlyData(cp->m_consts);
+  const uint64_t *code = _ctxt->_uint64->readOnlyData(cp->m_code);
+  const Object *names_list = _ctxt->_list->readOnlyData(cp->m_names);
 
-  std::vector<double> etimes;
-  etimes.resize(opcodes.elementCount());
+  //  std::vector<double> etimes;
+  //  etimes.resize(opcodes.elementCount());
 
   int ip = 0;
   
@@ -232,8 +235,8 @@ void VM::executeCodeObject(const Object &codeObject)
       }
   if (!closed_frame)  throw Exception("Closed frame not found!  Should never happen!");
 
-  std::cout << "Current frame: " << f->_name << "\n";
-  std::cout << "Closed frame: " << closed_frame->_name << "\n";
+  //  std::cout << "Current frame: " << f->_name << "\n";
+  //  std::cout << "Closed frame: " << closed_frame->_name << "\n";
 
   StdIOTermIF io;
 
@@ -267,17 +270,17 @@ void VM::executeCodeObject(const Object &codeObject)
 	  returnFound = true;
 	  break;
 	case OP_PUSH:
-	  _types->_list->push(REG1,REG2);
+	  _ctxt->_list->push(REG1,REG2);
 	  break;
  	case OP_FIRST:
-	  REG1 = _types->_list->first(REG2);
+	  REG1 = _ctxt->_list->first(REG2);
 	  break;
 	case OP_CALL:
 	  // Finish me
 	  break;
 	case OP_DCOLON:
 	  {
-	    const Object *ap = _types->_list->readOnlyData(REG2);
+	    const Object *ap = _ctxt->_list->readOnlyData(REG2);
 	    REG1 = ap[0].type()->DoubleColon(ap[0],ap[1],ap[2]);
 	    break;
 	  }
@@ -285,10 +288,10 @@ void VM::executeCodeObject(const Object &codeObject)
 	  REG1 = const_list[get_constant(insn)];
 	  break;
 	case OP_NEW_LIST:
-	  REG1 = _types->_list->empty();
+	  REG1 = _ctxt->_list->empty();
 	  break;
 	case OP_SUBSREF:
-	  _types->_list->merge(REG1,REG2.type()->get(REG2,REG3));
+	  _ctxt->_list->merge(REG1,REG2.type()->get(REG2,REG3));
 	  break;
 	case OP_COLON:
 	  BINOP(Colon,"colon");
@@ -330,10 +333,10 @@ void VM::executeCodeObject(const Object &codeObject)
 	  BINOP(Multiply,"mtimes");
 	  break;
 	case OP_MRDIVIDE:
-	  REG1 = REG2.type()->RightDivide(REG2,REG3,&io);
+	  BINOP(RightDivide,"mrdivide");
 	  break;
 	case OP_MLDIVIDE:
-	  REG1 = REG2.type()->LeftDivide(REG2,REG3,&io);
+	  BINOP(LeftDivide,"mldivide");
 	  break;
 	case OP_RDIVIDE:
 	  BINOP(DotRightDivide,"rdivide");
@@ -374,7 +377,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	  UNARYOP(Transpose,"transpose");
 	  break;
 	case OP_INCR:
-	  REG1 = _types->_double->makeScalar(_types->_double->scalarValue(REG1)+1);
+	  REG1 = _ctxt->_double->makeScalar(_ctxt->_double->scalarValue(REG1)+1);
 	  break;
 	  /*	case OP_LHSCOUNT:
 	  // FIXME
@@ -384,7 +387,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	  break;
 	  */
 	case OP_ZERO:
-	  REG1 = _types->_double->zeroScalar();
+	  REG1 = _ctxt->_double->zeroScalar();
 	  break;
 	case OP_HCAT:
 	  REG1 = NCat(REG2,1);
@@ -410,7 +413,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	    register int addr = f->_addr[ndx];
 	    if (!addr)
 	      {
-		FMString name = _types->_string->getString(names_list[ndx]);
+		FMString name = _ctxt->_string->getString(names_list[ndx]);
 		f->_addr[ndx] = closed_frame->getAddress(name);
 		if (!f->_addr[ndx])
 		  throw Exception("Reference to undefined variable " + name);
@@ -427,7 +430,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	    register int addr = f->_addr[ndx];
 	    if (!addr)
 	      {
-		FMString name = _types->_string->getString(names_list[get_constant(insn)]);
+		FMString name = _ctxt->_string->getString(names_list[get_constant(insn)]);
 		f->_addr[get_constant(insn)] = closed_frame->getAddress(name);
 		if (!f->_addr[get_constant(insn)])
 		  f->_addr[get_constant(insn)] = closed_frame->allocateVariable(name);
@@ -439,7 +442,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_SAVE_PERSIST:
 	case OP_JUMP_ZERO:
 	  {
-	    if (_types->_double->scalarValue(REG1) == 0)
+	    if (_ctxt->_double->scalarValue(REG1) == 0)
 	      ip = get_constant(insn)-1;
 	    break;
 	  }
@@ -453,7 +456,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_THROW:
 	case OP_PRINT:
 	  {
-	    REG1.type()->print(REG1,io);
+	    REG1.type()->print(REG1);
 	    break;
 	  }
 	case OP_DEREF:
@@ -470,7 +473,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	    register int addr = f->_addr[ndx];
 	    if (!addr)
 	      {
-		FMString name = _types->_string->getString(names_list[get_constant(insn)]);
+		FMString name = _ctxt->_string->getString(names_list[get_constant(insn)]);
 		f->_addr[get_constant(insn)] = closed_frame->getAddress(name);
 		if (!f->_addr[get_constant(insn)])
 		  f->_addr[get_constant(insn)] = closed_frame->allocateVariable(name);
@@ -482,21 +485,21 @@ void VM::executeCodeObject(const Object &codeObject)
 	  }
 	case OP_LOOPCOUNT:
 	  {
-	    const Object *ap = _types->_list->readOnlyData(REG2);
-	    double last = _types->_double->scalarValue(ap[2]);
-	    double step = _types->_double->scalarValue(ap[1]);
-	    double first = _types->_double->scalarValue(ap[0]);
-	    REG1 = _types->_double->makeScalar(num_for_loop_iter(first,step,last));
+	    const Object *ap = _ctxt->_list->readOnlyData(REG2);
+	    double last = _ctxt->_double->scalarValue(ap[2]);
+	    double step = _ctxt->_double->scalarValue(ap[1]);
+	    double first = _ctxt->_double->scalarValue(ap[0]);
+	    REG1 = _ctxt->_double->makeScalar(num_for_loop_iter(first,step,last));
 	    break;
 	  }
 	case OP_LOAD_INT:
 	  {
-	    REG1 = _types->_double->makeScalar(get_constant(insn));
+	    REG1 = _ctxt->_double->makeScalar(get_constant(insn));
 	    break;
 	  }
 	case OP_PUSH_INT:
 	  {
-	    _types->_list->push(REG1,_types->_int32->makeScalar(get_constant(insn)));
+	    _ctxt->_list->push(REG1,_ctxt->_int32->makeScalar(get_constant(insn)));
 	    break;
 	  }
 	default:

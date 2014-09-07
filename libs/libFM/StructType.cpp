@@ -1,17 +1,18 @@
 #include "StructType.hpp"
-#include "BaseTypes.hpp"
+#include "ThreadContext.hpp"
+#include "CellType.hpp"
 
 using namespace FM;
 
 const Object *StructType::readOnlyData(const Object &p) const {
   const StructData *fp = static_cast<const StructData *>(p.d->data->ptr);
-  return (_base->_cell->readOnlyData(fp->m_data));
+  return (_ctxt->_cell->readOnlyData(fp->m_data));
 }
 
 Object * StructType::readWriteData(Object &p) const {
   p.detach();
   StructData *fp = static_cast<StructData *>(p.d->data->ptr);
-  return (_base->_cell->readWriteData(fp->m_data));
+  return (_ctxt->_cell->readWriteData(fp->m_data));
 }
 
 Object StructType::makeStruct(const Tuple &dims, const FMStringList &fields) {
@@ -23,7 +24,7 @@ Object StructType::makeStruct(const Tuple &dims, const FMStringList &fields) {
     sd->m_fields[fields[i]] = i;
   Tuple cdims(dims);
   cdims.prepend(fieldnum);
-  sd->m_data = _base->_cell->zeroArrayOfSize(cdims,false);
+  sd->m_data = _ctxt->_cell->zeroArrayOfSize(cdims,false);
   q->ptr = sd;
   ObjectBase *p = new ObjectBase(q,this,0,dims,0,1);
   return Object(p);      
@@ -36,7 +37,7 @@ void StructType::insertField(Object &p, const FMString &t) {
   fp->m_fields[t] = ndx++;
   Tuple newsize = p.dims();
   newsize.prepend(ndx);
-  _base->_cell->resize(fp->m_data,newsize);
+  _ctxt->_cell->resize(fp->m_data,newsize);
 }
 
 void StructType::setScalar(Object &q, const FMString &field, const Object &p) {
