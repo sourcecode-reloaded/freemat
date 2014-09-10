@@ -32,7 +32,7 @@ namespace FM
   template <class T, FM::DataCode codeNum>
   Object RangeConstructor(double minval, double stepsize, double maxval, bool vert, FloatType<T,codeNum> *type)
   {
-    Object ret;
+    Object ret(type->empty());
     if (stepsize == 0) 
       throw Exception("step size must be nonzero in colon expression");
     if (!std::isfinite(minval) || !std::isfinite(stepsize) || !std::isfinite(maxval))

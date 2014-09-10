@@ -211,6 +211,7 @@ void PODType<T,_objType>::resize(Object &a, const Tuple &newsize) {
     }
   // Determine if this is a move or a copy
   if (a.d->capacity > newsize.elementCount()) {
+    //    std::cout << "Move!\n";
     if (a.isComplex())
       moveLoop<Complex<T> >(this->readWriteDataComplex(a),
 			    newsize,a.dims());
@@ -260,7 +261,7 @@ void PODType<T,_objType>::setParens(Object &a, const Object &args, const Object 
 	c[i] = ip->expandColons(adims.dimension(i));
       argdim[i] = c[i].elementCount();
       coords[i] = ip->readOnlyData(c[i]);
-      outdim[i] = ip->maxValue(c[i])+1;
+      outdim[i] = std::max<dim_t>(adims.dimension(i),ip->maxValue(c[i])+1);
       outcount *= (outdim[i]+1);
       resize_required |= (outdim[i] > adims.dimension(i));
     }
@@ -270,6 +271,7 @@ void PODType<T,_objType>::setParens(Object &a, const Object &args, const Object 
       // StdIOTermIF io;
       // io.output("Before resize:\n");
       // a.type()->print(a,io);
+      assert(a.isValid());
       a.type()->resize(a,Tuple::RawTuple(outdim,argsize));
       // io.output("After resize:\n");
       // a.type()->print(a,io);
@@ -315,6 +317,8 @@ void PODType<T,_objType>::printSheet(const Object &a, const ArrayFormatInfo &for
 template <class T, bool _objType>
 void PODType<T,_objType>::print(const Object &a)
 {
+  if (a.isComplex())
+    _ctxt->_io->output("A is complex ");
   if (a.isEmpty())
   {
     if (a.dims() == Tuple(0,0)) {

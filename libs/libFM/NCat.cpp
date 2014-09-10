@@ -1,5 +1,7 @@
 #include "NCat.hpp"
 #include "ListType.hpp"
+#include "DoubleType.hpp"
+#include "ThreadContext.hpp"
 
 using namespace FM;
 
@@ -107,10 +109,9 @@ Array NCat(const ArrayVector& pdata, int catdim) {
 }
 */
 
-Object FM::NCat(const Object &x, int dimension) {
-  ListType *_list = x.asType<ListType>();
-  if (x.elementCount() == 0) return Object();
-  if (x.elementCount() == 1) return _list->first(x);
-  Object ret = _list->first(x).type()->NCat(x,dimension);
+Object FM::NCat(ThreadContext *ctxt, const Object &x, int dimension) {
+  if (x.elementCount() == 0) return ctxt->_double->empty();
+  if (x.elementCount() == 1) return ctxt->_list->first(x);
+  Object ret = ctxt->_list->first(x).type()->NCat(x,dimension);
   return ret;
 }

@@ -19,9 +19,10 @@ namespace FM
 
   class VM
   {
-    std::vector<Object> _stack;
+    std::vector<Object> _registers;
     std::vector<Frame*> _frames;
-    int _sp;
+    int _fp;
+    int _rp;
     ThreadContext *_ctxt;
   public:
     VM(ThreadContext *ctxt);

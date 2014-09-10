@@ -5,7 +5,9 @@
 
 namespace FM
 {
-  Object NCat(const Object &x, int dimension);
+  struct ThreadContext;
+
+  Object NCat(ThreadContext *ctxt, const Object &x, int dimension);
 }
 
 #endif

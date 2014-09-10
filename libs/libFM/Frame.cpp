@@ -1,89 +1,50 @@
 #include "Frame.hpp"
 #include "VM.hpp"
+#include "ListType.hpp"
+#include "StringType.hpp"
+#include "DoubleType.hpp"
 
 using namespace FM;
 
-
+// Can returns and arguments avoid "allocate variable"?
 
 bool Frame::defines(const FMString &name) 
 {
-  return _symtab.contains(name);
-}
-
-// int Frame::getDynamicAddress(const FMString &name)
-// {
-// }
-
-Object Frame::getDynamicVar(const FMString &name)
-{
-  /*
-  if (!_symtab.contains(name)) throw Exception("Variable " + name + " undefined!");
-  int flags = _symtab[name];
-  if (flags & VM_LOCALVAR)
-    return _localvars[flags >> 16];
-  else
-    return _dynvars[flags >> 16];
-  */
-}
-
-Object* Frame::getDynamicVarPtr(const FMString &name)
-{
-  /*
-  if (!_symtab.contains(name)) throw Exception("Variable " + name + " undefined!");
-  int flags = _symtab[name];
-  if (flags & VM_LOCALVAR)
-    return &_localvars[flags >> 16];
-  else
-    return &_dynvars[flags >> 16];
-  */
-}
-
-Object& Frame::getDynamicVarRef(const FMString &name)
-{
-  /*
-  if (!_symtab.contains(name))
-    {
-      _symtab[name] = VM_DYNVAR | (_dynvars.size() << 16);
-      _dynvars.push_back(Object());
-      return _dynvars.back();
-    }
-  int flags = _symtab[name];
-  if (flags & VM_LOCALVAR)
-    return _localvars[flags >> 16];
-  return _dynvars[flags >> 16];
-  */
+  return (getAddress(name) != -1);
 }
 
 int Frame::getAddress(const FMString &name)
 {
-  //  std::cout << "Get Address of " << name << "\n";
-  if (_symtab.contains(name)) 
-    {
-      //      std::cout << "Returning address " << _symtab.value(name) << "\n";
-      return _symtab.value(name);
-    }
-  return 0;
+  const Object *cp = _ctxt->_list->readOnlyData(_sym_names);
+  for (int i=0;i<_sym_names.elementCount();i++)
+    if (_ctxt->_string->getString(cp[i]) == name) return i;
+  return -1;
 }
 
 int Frame::allocateVariable(const FMString &name)
 {
-  if (_symtab.contains(name)) return _symtab.value(name);
-  int addr = _vars.size() + 1;
-  //  std::cout << "Allocating variable named " << name << " with address " << addr <<"\n";
-  _symtab.insert(name,addr);
-  _vars.push_back(Object());
-  return addr;
+  int p = getAddress(name);
+  if (p != -1) return p;
+  p = _sym_names.elementCount();
+  _ctxt->_list->push(_sym_names,_ctxt->_string->makeString(name));
+  _ctxt->_list->push(_vars,_ctxt->_double->empty());
+  return p;
 }
 
-Frame::Frame()
+void Frame::setVariableSlow(const FMString &name, const Object &value)
 {
+  int p = allocateVariable(name);
+  Object *cp = _ctxt->_list->readWriteData(_vars);
+  cp[p] = value;
 }
 
-void Frame::dump()
+Frame::Frame(ThreadContext *ctxt)
 {
-  std::cout << "Frame: " << _name << "\n";
-  std::cout << "  Dynamic vars\n";
-  for (FMMap<FMString,int>::const_iterator i=_symtab.constBegin();
-       i!=_symtab.constEnd();++i)
-    std::cout << "    " << i.key() << " : " << getDynamicVar(i.key()).description() << "\n";
+  _ctxt = ctxt;
+  _sym_names = _ctxt->_list->empty();
+  _vars = _ctxt->_list->empty();
+  _addrs = _ctxt->_index->empty();
+  _closed = false;
+  _reg_offset = 0;
 }
+

@@ -15,6 +15,7 @@
 #include "ThreadContext.hpp"
 #include "AllTypes.hpp"
 #include "CodeType.hpp"
+#include "config.h"
 
 std::string getOpCodeName(FM::op_t);
 
@@ -52,54 +53,34 @@ using namespace FM;
 // Execute the code
 //  push the arguments back onto the stack
 
-// What happens if the type of a register isn't Array?
+
+// Oops - Forgot about adding variables to frames that are already
+// allocated.  That makes things difficult.
+//
+// Crap.
 // 
 
 VM::VM(ThreadContext *ctxt)
 {
-  _stack.resize(1024);
-  _sp = 0;
-  Frame *f = new Frame;
-  f->_name = "base";
-  f->_closed = true;
-  _frames.push_back(f);
+  _registers.resize(register_stack_size);
+  for (int i=0;i<frame_stack_size;i++)
+    _frames.push_back(new Frame(ctxt)); // FIXME - Bad way to do this?
+  //  _frames.resize(frame_stack_size);
+  _frames[0]->_name = "base";
+  _frames[0]->_closed = true;
+  _fp = 0;
+  _rp = 0;
   _ctxt = ctxt;
 }
 
 void VM::defineBaseVariable(const FMString &name, const Object &value)
 {
-  int addr = _frames[0]->getAddress(name);
-  if (addr == 0) addr = _frames[0]->allocateVariable(name);
-  _frames[0]->_vars[addr-1] = value;
+  _frames[0]->setVariableSlow(name,value);
 }
 
-//void VM::dump()
-//{
-  /*
-  std::cout << "Stack:" << "\n";
-  for (int i=0;i<_sp;i++)
-    {
-      printf("%03d ",i); 
-      std::cout << SummarizeArrayCellEntry(_stack[i]) << "\n";
-    }
-  std::cout << "Vars:" << "\n";
-  for (int i=0;i<_varlist.size();i++)
-    {
-      printf("%-7s  ",_varlist[i].c_str());
-      std::cout << SummarizeArrayCellEntry(_vars[i]) << "\n";
-    }
-  std::cout << "Regs:" << "\n";
-  for (int i=0;i<10;i++)
-    {
-      std::cout << "r" << i << " = " << SummarizeArrayCellEntry(_regfile[i]) << "  ";
-    }
-  std::cout << "\n";
-  */
-//}
-
-#define REG1 f->_regfile[reg1(insn)]
-#define REG2 f->_regfile[reg2(insn)]
-#define REG3 f->_regfile[reg3(insn)]
+#define REG1 regfile[reg1(insn)]
+#define REG2 regfile[reg2(insn)]
+#define REG3 regfile[reg3(insn)]
 
 #define UNARYOP(fnc,funcname)				\
     REG1 = REG2.type()->fnc(REG2);			
@@ -110,72 +91,80 @@ void VM::defineBaseVariable(const FMString &name, const Object &value)
 
 void VM::dump()
 {
-  _frames[0]->dump();
+  //  _frames[0]->dump();
 }
 
 // Execute a function object, given a list of parameters (params).  Returns a list
 // of returns.
 Object VM::executeFunction(const Object &codeObject, const Object &parameters)
 {
+  // std::cout << "fp = " << _fp << " rp = " << _rp << "\n";
   // Create a new frame for the function
-  Frame *f = new Frame;
+  _fp++;
   const CodeData *cp = _ctxt->_code->readOnlyData(codeObject);
-  f->_name = _ctxt->_string->getString(cp->m_name);
-  // Space for registers
-  f->_regfile.resize(256);
-  // Space to store the address maps for variables
-  f->_addr.resize(cp->m_names.elementCount());
+  _frames[_fp]->_name = _ctxt->_string->getString(cp->m_name);
+  // For functions, all addresses are pre-set to point
+  // to the first N slots of the variables space
+  int N = cp->m_names.elementCount();
+  _frames[_fp]->_addrs = _ctxt->_index->makeMatrix(N,1);
+  ndx_t *ap = _ctxt->_index->readWriteData(_frames[_fp]->_addrs);
+  for (int i=0;i<N;i++) ap[i] = i;
+  _frames[_fp]->_sym_names = cp->m_names;
+  _frames[_fp]->_vars = _ctxt->_list->makeMatrix(N,1);
+  _frames[_fp]->_reg_offset = _rp;
+  _rp += 256; // FIXME
+  Object *sp = _ctxt->_list->readWriteData(_frames[_fp]->_vars);
   // Function scopes are closed
-  f->_closed = true;
+  _frames[_fp]->_closed = true;
   // Populate the arguments
+  // FIXME - need to only store the number of args and returns
   const Object * args = _ctxt->_list->readOnlyData(parameters);
   const Object * param_names = _ctxt->_list->readOnlyData(cp->m_params);
   int to_use = std::min<int>(parameters.elementCount(),cp->m_params.elementCount());
   for (int i=0;i<to_use;i++)
-    {
-      int addr = f->allocateVariable(_ctxt->_string->getString(param_names[i]));
-      f->_vars[addr-1] = args[i];
-    }
-  _frames.push_back(f);
+    sp[i] = args[i];
   // execute the code
   executeCodeObject(codeObject);
   // Collect return values
   Object retvec = _ctxt->_list->empty();
   int to_return = cp->m_returns.elementCount();
   const Object * return_names = _ctxt->_list->readOnlyData(cp->m_returns);
+  sp = _ctxt->_list->readWriteData(_frames[_fp]->_vars);
   for (int i=0;i<to_return;i++)
-    {
-      FMString name = _ctxt->_string->getString(return_names[i]);
-      int addr = f->getAddress(name);
-      if (!addr)
-	{
-	  std::cout << "Warning: not all outputs assigned";
-	  _ctxt->_list->push(retvec,_ctxt->_double->empty());
-	}
-      else
-	_ctxt->_list->push(retvec,f->_vars[addr-1]);
-    }
-  _frames.pop_back();
-  delete f;  
+    _ctxt->_list->push(retvec,sp[cp->m_params.elementCount()+i]);
+  _frames[_fp]->_sym_names = Object();
+  _frames[_fp]->_vars = Object();
+  _frames[_fp]->_addrs = Object();
+  // TODO: Clean up the registers
+  _rp = _frames[_fp]->_reg_offset;
+  _fp--;
   return retvec;
 }
 
 void VM::executeScript(const Object &codeObject)
 {
-  Frame *f = new Frame;
+  _fp++;
   const CodeData *cp = _ctxt->_code->readOnlyData(codeObject);
-  f->_name = _ctxt->_string->getString(cp->m_name);
-  // Space for registers
-  f->_regfile.resize(256);
-  // Space to store the address maps for variables
-  f->_addr.resize(cp->m_names.elementCount());
-  f->_closed = false;
-  _frames.push_back(f);
+  _frames[_fp]->_name = _ctxt->_string->getString(cp->m_name);
+  _frames[_fp]->_sym_names = _ctxt->_list->empty();
+  int N = cp->m_names.elementCount();
+  _frames[_fp]->_addrs = _ctxt->_index->makeMatrix(N,1);
+  _frames[_fp]->_reg_offset = _rp;
+  _frames[_fp]->_ctxt = _ctxt;
+  _frames[_fp]->_closed = false;
+  _rp += 256; // FIXME
+  ndx_t *ap = _ctxt->_index->readWriteData(_frames[_fp]->_addrs);
+  // Initialize the addresses to be unknown
+  for (int i=0;i<N;i++) ap[i] = -1;
+  _frames[_fp]->_closed = false;
   // execute the code
   executeCodeObject(codeObject);
   // No return values.. pop the frame
-  _frames.pop_back();
-  delete f;
+  _rp = _frames[_fp]->_reg_offset;
+  _frames[_fp]->_sym_names = Object();
+  _frames[_fp]->_vars = Object();
+  _frames[_fp]->_addrs = Object();
+  _fp--;
 }
 
 
@@ -204,6 +193,16 @@ double num_for_loop_iter( double first, double step, double last )
 // function foo; a = 32; for i=1:1:100000000; a = a + i; end;a, end - 15 seconds or 19 seconds??  And then vector-> Object* reduces to 1
 // function foo; a = 0; a(512,512) = 0; for k=1:1:20; for i=1:1:512; for j=1:1:512; a(j,i) = i+j; end; end; end
 
+// Idea:
+// When a function starts, each variable is allocated based on the name
+// The address of a variable is then base+ndx, where ndx is the offset of the variable name.
+// When a script starts, the variables must be mapped from a closed scope.  These cannot
+// be pre-allocated, as they may already be defined in the parent scope.  Furthermore,
+// given the dynamic nature, the lookup for the address needs a dictionary to find the
+// address.
+//
+// 
+
 
 void VM::executeCodeObject(const Object &codeObject)
 {
@@ -213,21 +212,11 @@ void VM::executeCodeObject(const Object &codeObject)
   const uint64_t *code = _ctxt->_uint64->readOnlyData(cp->m_code);
   const Object *names_list = _ctxt->_list->readOnlyData(cp->m_names);
 
-  //  std::vector<double> etimes;
-  //  etimes.resize(opcodes.elementCount());
-
   int ip = 0;
-  
-  //  int nargout = _stack[--_sp].asInteger();
-  //  ObjectVector args;
-  //  popVector(args);
-  
-  // FIXME - do something with the argument vector
   bool returnFound = false;
 
-  Frame *f = _frames.back();
   Frame *closed_frame = NULL;
-  for (int i=_frames.size()-1;i>=0;--i)
+  for (int i=_fp;i>=0;--i)
     if (_frames[i]->_closed)
       {
 	closed_frame = _frames[i];
@@ -235,32 +224,15 @@ void VM::executeCodeObject(const Object &codeObject)
       }
   if (!closed_frame)  throw Exception("Closed frame not found!  Should never happen!");
 
-  //  std::cout << "Current frame: " << f->_name << "\n";
-  //  std::cout << "Closed frame: " << closed_frame->_name << "\n";
-
-  StdIOTermIF io;
-
-  // const bool timeit = true;
+  Object *regfile = &(_registers[0]) + _frames[_fp]->_reg_offset;
+  ndx_t *addrfile = _ctxt->_index->readWriteData(_frames[_fp]->_addrs);
+  Object *varfile = _ctxt->_list->readWriteData(closed_frame->_vars);
 
   int save_ip;
-  boost::timer::cpu_timer timer;
-  
+
   while (!returnFound)
     {
-      // if (timeit) 
-      // 	{
-      // 	  timer.start();
-      // 	  save_ip = ip;
-      // 	}
       insn_t insn = code[ip];
-
-      /*
-      printf(">>%03d   ",ip);
-      int8_t opcode_num = opcode(insn);
-      printf("%-15s",getOpCodeName(opcode_num).c_str());
-      printf("%-20s",Compiler::opcodeDecode(opcode_num,insn).c_str());
-      std::cout << "\n";
-      */
 
       switch (opcode(insn))
 	{
@@ -350,10 +322,10 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_NEG:
 	  UNARYOP(Neg,"negate");
 	  break;
-	  /*
 	case  OP_NUMCOLS:
-	  REG1 = IterationColumns(REG2);
+	  REG1 = _ctxt->_index->makeScalar(REG2.elementCount()/REG2.rows());
 	  break;
+	  /*
 	case OP_CASE:
 	  // FIXME
 	  break;
@@ -390,10 +362,10 @@ void VM::executeCodeObject(const Object &codeObject)
 	  REG1 = _ctxt->_double->zeroScalar();
 	  break;
 	case OP_HCAT:
-	  REG1 = NCat(REG2,1);
+	  REG1 = NCat(_ctxt,REG2,1);
 	  break;
 	case OP_VCAT:
-	  REG1 = NCat(REG2,0);
+	  REG1 = NCat(_ctxt,REG2,0);
 	  break;
 	  /*
 	case OP_CELLROWDEF:
@@ -410,16 +382,16 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_LOAD:
 	  {
 	    register int ndx = get_constant(insn);
-	    register int addr = f->_addr[ndx];
-	    if (!addr)
+	    register int addr = addrfile[ndx];
+	    if (addr == -1)
 	      {
 		FMString name = _ctxt->_string->getString(names_list[ndx]);
-		f->_addr[ndx] = closed_frame->getAddress(name);
-		if (!f->_addr[ndx])
+		addrfile[ndx] = closed_frame->getAddress(name);
+		if (addrfile[ndx] == -1)
 		  throw Exception("Reference to undefined variable " + name);
-		addr = f->_addr[ndx];
+		addr = addrfile[ndx];
 	      }
-	    REG1 = closed_frame->_vars[addr-1];
+	    REG1 = varfile[addr];
 	    break;
 	  }
 	case OP_SAVE_GLOBAL:
@@ -427,16 +399,19 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_SAVE:
 	  {
 	    register int ndx = get_constant(insn);
-	    register int addr = f->_addr[ndx];
-	    if (!addr)
+	    register int addr = addrfile[ndx];
+	    if (addr == -1)
 	      {
 		FMString name = _ctxt->_string->getString(names_list[get_constant(insn)]);
-		f->_addr[get_constant(insn)] = closed_frame->getAddress(name);
-		if (!f->_addr[get_constant(insn)])
-		  f->_addr[get_constant(insn)] = closed_frame->allocateVariable(name);
-		addr = f->_addr[ndx];
+		addrfile[ndx] = closed_frame->getAddress(name);
+		if (addrfile[ndx] == -1)
+		  {
+		    addrfile[ndx] = closed_frame->allocateVariable(name);
+		    varfile = _ctxt->_list->readWriteData(closed_frame->_vars);
+		  }
+		addr = addrfile[ndx];
 	      }
-	    closed_frame->_vars[addr-1] = REG1;
+	    varfile[addr] = REG1;
 	    break;
 	  }
 	case OP_SAVE_PERSIST:
@@ -470,17 +445,19 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_SUBSASGN:
  	  {
 	    register int ndx = get_constant(insn);
-	    register int addr = f->_addr[ndx];
-	    if (!addr)
+	    register int addr = addrfile[ndx];
+	    if (addr == -1)
 	      {
 		FMString name = _ctxt->_string->getString(names_list[get_constant(insn)]);
-		f->_addr[get_constant(insn)] = closed_frame->getAddress(name);
-		if (!f->_addr[get_constant(insn)])
-		  f->_addr[get_constant(insn)] = closed_frame->allocateVariable(name);
-		addr = f->_addr[ndx];
+		addrfile[ndx] = closed_frame->getAddress(name);
+		if (addrfile[ndx] == -1)
+		  {
+		    addrfile[ndx] = closed_frame->allocateVariable(name);
+		    varfile = _ctxt->_list->readWriteData(closed_frame->_vars);
+		  }
+		addr = addrfile[ndx];
 	      }
-	    Object &var = closed_frame->_vars[addr-1];
-	    var.type()->set(var,REG1,REG2);
+	    varfile[addr].type()->set(varfile[addr],REG1,REG2);
 	    break;
 	  }
 	case OP_LOOPCOUNT:
@@ -514,17 +491,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	  }
 	}
       ip++;
-      // if (timeit)
-      // 	{
-      // 	  timer.stop();
-      // 	  etimes[save_ip] += timer.elapsed().wall;
-      // 	}
     }
-  // if (timeit)
-  //   for (int i=0;i<etimes.size();i++)
-  //     {
-  // 	std::cout << "OPCode " << i << " time " << etimes[i]/1.0e9 << "\n";
-  //     }
 }
 
 void VM::executeBlock(const Object &codeObject, bool singleStep)

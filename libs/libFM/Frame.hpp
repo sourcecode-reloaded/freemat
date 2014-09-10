@@ -3,6 +3,7 @@
 
 #include "Object.hpp"
 #include "FMLib.hpp"
+#include "ThreadContext.hpp"
 
 namespace FM
 {
@@ -10,20 +11,18 @@ namespace FM
   {
   public:
     FMString _name;
-    std::vector<Object> _regfile;
-    std::vector<Object> _vars;
-    FMMap<FMString,int> _symtab;
-    std::vector<int> _addr;
+    Object _sym_names;
+    Object _vars;
+    Object _addrs;
+    ThreadContext *_ctxt;
     bool _closed;
+    int _reg_offset;
   public:
-    Frame();
+    Frame(ThreadContext *ctxt);
     bool defines(const FMString &name);
-    Object getDynamicVar(const FMString &name);
-    Object& getDynamicVarRef(const FMString &name);
-    Object* getDynamicVarPtr(const FMString &name);
     int getAddress(const FMString &name);
     int allocateVariable(const FMString &name);
-    void dump();
+    void setVariableSlow(const FMString &name, const Object &value);
   };
 };
 

@@ -101,13 +101,12 @@ double Type::doubleValue(const Object &a) {
 }
 
 Object Type::get(const Object &a, const Object &b) {
-  Object c;
   int ptr = 0;
   const Object *bp = b.asType<ListType>()->readOnlyData(b);
   if ((b.elementCount() == 2) &&
       (bp[0].asType<Int32Type>()->scalarValue(bp[0]) == 0))
     return b.asType<ListType>()->makeScalar(a.type()->getParens(a,bp[1]));
-  c = a;
+    Object c = a;
   while (ptr < b.elementCount())
     {
       int getType = bp[ptr].asType<Int32Type>()->scalarValue(bp[ptr]);

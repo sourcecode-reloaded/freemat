@@ -5,7 +5,7 @@
 
 namespace FM
 {
-  class ThreadContext;
+  struct ThreadContext;
 
   class BoolType : public IntegerType<bool,TypeBool>
   {

@@ -1009,7 +1009,7 @@ void Compiler::switchStatement(const Tree &t) {
   useBlock(end);
 }
 
-
+// FIXME - Remove duplication
 void Compiler::forStatement(const Tree &t) {
   if (!t.first().is('='))  throw Exception("Incorrect format of for operator");
   FMString indexVarName = t.first().first().text();
@@ -1069,8 +1069,34 @@ void Compiler::forStatement(const Tree &t) {
     emit(OP_INCR,loop_index);
     emit(OP_JUMP,loop);
     useBlock(end);
-  } else
-    throw Exception("Unhandled for case...");
+  } else {
+    reg_t first = expression(t.first().second().first());
+    reg_t step = fetchConstant(_ctxt->_double->makeScalar(1));
+    reg_t args = startList();
+    pushList(args,first);
+    pushList(args,step);
+    pushList(args,expression(t.first().second().second()));
+    reg_t iter_count = getRegister();
+    const Tree & codeBlock(t.second());
+    emit(OP_LOOPCOUNT,iter_count,args);
+    reg_t loop_index = fetchConstant(_ctxt->_double->makeScalar(0));
+    BasicBlock *loop = new BasicBlock;
+    emit(OP_JUMP,loop);
+    useBlock(loop);
+    BasicBlock *end = new BasicBlock;
+    reg_t test_res = getRegister();
+    emit(OP_LT,test_res,loop_index,iter_count);
+    emit(OP_JUMP_ZERO,test_res,end);
+    reg_t r1 = getRegister();
+    emit(OP_TIMES,r1,loop_index,step);
+    reg_t r2 = getRegister();
+    emit(OP_ADD,r2,r1,first);
+    saveRegisterToName(indexVarName,r2);
+    block(codeBlock);
+    emit(OP_INCR,loop_index);
+    emit(OP_JUMP,loop);
+    useBlock(end);
+  }
 }
 
 void Compiler::whileStatement(const Tree &t) {

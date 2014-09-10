@@ -100,11 +100,16 @@ namespace FM
     //  friend class PODArrayType<double>;
   };
 
+
+  // Need to add a default constructor for Object that
+  // points to a global "Empty" object (maybe with its
+  // own type?).
   class Object
   {
     ObjectBase *d;
   public:
     inline Object() : d(0) {}
+    inline bool isValid() const {return (d!=0);}
     inline Object(ObjectBase *p) : d(p) {
       if (d) d->refcnt++;
     }
@@ -188,11 +193,15 @@ namespace FM
     }
     inline Type* type() const
     {
+      if (!d) 
+	throw Exception("Null objects have no type - internal FreeMat error");
       return d->type;
     }
     template <class S>
     inline S* asType() const
     {
+      if (!d) 
+	throw Exception("Null objects have no type - internal FreeMat error");
       return static_cast<S*>(d->type);
     }
     friend class PODArrayType<double>;

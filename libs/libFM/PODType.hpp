@@ -59,7 +59,7 @@ namespace FM
 	}
       return q;
     }
-    virtual void destroyObject(ObjectBase* p) {
+    virtual inline void destroyObject(ObjectBase* p) {
       if (pool && (p->dims.elementCount() <= min_capacity) && (p->data->refcnt == 1) && pool->push(p)) 
 	{
 	  if (_objectType)
@@ -108,27 +108,30 @@ namespace FM
     Object zeroArrayOfSize(const Tuple & dims, bool isComplex) {
       dim_t elementCount = dims.elementCount();
       if ((elementCount == 1) && !isComplex) return zeroScalar();
-      if (isComplex) elementCount *= 2;
+      if (isComplex && !_objectType) elementCount *= 2;
       dim_t capacity = (2*elementCount < min_capacity) ? min_capacity : 2*elementCount;
       ObjectBase *p = makeObjectBaseOfCapacity(capacity);
       p->dims = dims;
-      if (isComplex) p->flags = OBJECT_COMPLEX_FLAG;
+      p->flags = 0;
+      if (isComplex && (!_objectType)) p->flags = OBJECT_COMPLEX_FLAG;
       return Object(p);    
     }
     Object makeMatrix(dim_t rows, dim_t cols, bool isComplex = false) {
       if (rows == 1 && cols == 1 && !isComplex)
 	return zeroScalar();
       dim_t elementCount = rows*cols;
-      if (isComplex) elementCount *= 2;
+      if (isComplex && (!_objectType)) elementCount *= 2;
       dim_t capacity = (2*elementCount < min_capacity) ? min_capacity : 2*elementCount;
       ObjectBase *p = makeObjectBaseOfCapacity(capacity);
       p->dims.setMatrixSize(rows,cols);
-      if (isComplex) p->flags = OBJECT_COMPLEX_FLAG;
+      p->flags = 0;
+      if (isComplex && (!_objectType)) p->flags = OBJECT_COMPLEX_FLAG;
       return Object(p);
     }
     Object zeroScalar() {
       ObjectBase* p = getObjectBase(min_capacity);
       p->dims.setScalar();
+      p->flags = 0;
       static_cast<T*>(p->data->ptr)[0] = T();
       return Object(p);
     }
@@ -141,6 +144,7 @@ namespace FM
     Object makeScalar(const T& data) {
       ObjectBase* p = getObjectBase(min_capacity);
       p->dims.setScalar();
+      p->flags = 0;
       static_cast<T*>(p->data->ptr)[0] = data;
       return Object(p);
     }
@@ -155,9 +159,18 @@ namespace FM
       assert(a.isScalar());
       return static_cast<const T*>(a.d->data->ptr)[0];
     }
+    Complex<T> complexScalarValue(const Object &a) {
+      assert(a.isScalar());
+      return reinterpret_cast<const Complex<T>*>(readOnlyData(a))[0];
+    }
     FMString describe(const Object &a) {
       if (a.isScalar())	
-	return Stringify(scalarValue(a));
+	{
+	  if (a.isComplex())
+	    return Stringify(complexScalarValue(a));
+	  else
+	    return Stringify(scalarValue(a));
+	}
       return(a.dims().toString() + " " + this->name() + " array");
     }
     bool equals(const Object &a, const Object &b) {

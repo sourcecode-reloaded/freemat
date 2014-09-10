@@ -338,6 +338,13 @@ namespace FM
     complex_divide(a.r,a.i,b.r,b.i,c.r,c.i);
     return c;
   }
+
+  template <class elem>
+  inline std::stringstream& operator<<(std::stringstream& o, const Complex<elem> &a)
+  {
+    o << a.r << "+" << a.i << "i";
+    return o;
+  }
 }
 
 
