@@ -24,6 +24,7 @@ namespace FM
   class PODType : public Type {
     FixedPool<ObjectBase*> *pool;
     FMString _name;
+    Object getParensRowMode(const Object &a, const Tuple &dims, const Object &b);
   public:
     PODType(ThreadContext* ctxt, const FMString &name) :
       _name(name) {

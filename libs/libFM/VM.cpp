@@ -119,19 +119,19 @@ Object VM::executeFunction(const Object &codeObject, const Object &parameters)
   // Populate the arguments
   // FIXME - need to only store the number of args and returns
   const Object * args = _ctxt->_list->readOnlyData(parameters);
-  const Object * param_names = _ctxt->_list->readOnlyData(cp->m_params);
+  const Object * param_ndx = _ctxt->_list->readOnlyData(cp->m_params);
   int to_use = std::min<int>(parameters.elementCount(),cp->m_params.elementCount());
   for (int i=0;i<to_use;i++)
-    sp[i] = args[i];
+    sp[_ctxt->_index->scalarValue(param_ndx[i])] = args[i];
   // execute the code
   executeCodeObject(codeObject);
   // Collect return values
   Object retvec = _ctxt->_list->empty();
   int to_return = cp->m_returns.elementCount();
-  const Object * return_names = _ctxt->_list->readOnlyData(cp->m_returns);
+  const Object * return_ndx = _ctxt->_list->readOnlyData(cp->m_returns);
   sp = _ctxt->_list->readWriteData(_frames[_fp]->_vars);
   for (int i=0;i<to_return;i++)
-    _ctxt->_list->push(retvec,sp[cp->m_params.elementCount()+i]);
+    _ctxt->_list->push(retvec,sp[_ctxt->_index->scalarValue(return_ndx[i])]);
   _frames[_fp]->_sym_names = Object();
   _frames[_fp]->_vars = Object();
   _frames[_fp]->_addrs = Object();
@@ -247,9 +247,9 @@ void VM::executeCodeObject(const Object &codeObject)
  	case OP_FIRST:
 	  REG1 = _ctxt->_list->first(REG2);
 	  break;
-	case OP_CALL:
-	  // Finish me
-	  break;
+	// case OP_CALL:
+	//   // Finish me
+	//   break;
 	case OP_DCOLON:
 	  {
 	    const Object *ap = _ctxt->_list->readOnlyData(REG2);

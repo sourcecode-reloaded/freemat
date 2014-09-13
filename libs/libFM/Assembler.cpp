@@ -80,12 +80,24 @@ Object Assembler::codeObject()
   cp->m_names = _code->_namelist;
   cp->m_consts = _code->_constlist;
   // Walk the symbol table and collect up the list of arguments
+  const Object *strings = _ctxt->_list->readOnlyData(cp->m_names);
   Object param_list = _ctxt->_list->empty();
   Object return_list = _ctxt->_list->empty();
   for (FMMap<FMString,int>::const_iterator i=_code->_syms->syms.constBegin();i != _code->_syms->syms.constEnd(); ++i)
     {
-      if (IS_PARAMETER(i.value())) addStringToList(_ctxt,param_list,i.key());
-      if (IS_RETURN(i.value())) addStringToList(_ctxt,return_list,i.key());
+      // TODO: This should be more efficient
+      if (IS_PARAMETER(i.value())) 
+	{
+	  for (int j=0;j<cp->m_names.elementCount();j++)
+	    if (_ctxt->_string->getString(strings[j]) == i.key())
+	      addIndexToList(_ctxt,param_list,j);
+	}
+      if (IS_RETURN(i.value())) 
+	{
+	  for (int j=0;j<cp->m_names.elementCount();j++)
+	    if (_ctxt->_string->getString(strings[j]) == i.key())
+	      addIndexToList(_ctxt,return_list,j);
+	}
     }
   cp->m_params = param_list;
   cp->m_returns = return_list;

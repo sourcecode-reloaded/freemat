@@ -28,6 +28,8 @@
 
 using namespace FM;
 
+
+
 int main(int argc, char *argv[])
 {
 
@@ -40,28 +42,37 @@ int main(int argc, char *argv[])
 
   // For now - hard code a single function to preload
   {
-    std::cout << "Preloading add.m\n";
+    std::cout << "Preloading three.m\n";
     bool failed;
-    FMString body = ReadFileIntoString("add.m",failed);
-    body += "\n\n";
-    std::cout << "Reading of function defintion: " << (failed ? "failed" : "succeeded") << "\n";
-    std::cout << "************************************************************\n";
-    std::cout << body;
-    std::cout << "************************************************************\n";
+    FMString body_three = ReadFileIntoString("three.m",failed);
+    body_three += "\n\n";
+    FMString body_add = ReadFileIntoString("add.m",failed);
+    body_add += "\n\n";
+    // std::cout << "Reading of function defintion: " << (failed ? "failed" : "succeeded") << "\n";
+    // std::cout << "************************************************************\n";
+    // std::cout << body;
+    // std::cout << "************************************************************\n";
     {
-      ctxt->_compiler->compile(body);
+      ctxt->_compiler->compile(body_three);
       Object p = ctxt->_asm->run(ctxt->_compiler->module()->_main);
       Disassemble(ctxt,p);
+      ctxt->_vm->defineBaseVariable("three",p);
+      
+      ctxt->_compiler->compile(body_add);
+      p = ctxt->_asm->run(ctxt->_compiler->module()->_main);
+      Disassemble(ctxt,p);
+      
       ctxt->_vm->defineBaseVariable("add",p);
-      Object q = ctxt->_list->empty();
-      ctxt->_list->push(q,ctxt->_double->makeScalar(3));
-      ctxt->_list->push(q,ctxt->_double->makeScalar(7));
-      try {
-	Object y = ctxt->_vm->executeFunction(p,q);
-	std::cout << ctxt->_list->first(y).description() << "\n";
-      } catch (const FM::Exception &e) {
-	std::cout << "Exception: " << e.msg() << "\n";
-      }
+      
+      // Object q = ctxt->_list->empty();
+      // ctxt->_list->push(q,ctxt->_double->makeScalar(3));
+      // ctxt->_list->push(q,ctxt->_double->makeScalar(7));
+      // try {
+      // 	Object y = ctxt->_vm->executeFunction(p,q);
+      // 	std::cout << ctxt->_list->first(y).description() << "\n";
+      // } catch (const FM::Exception &e) {
+      // 	std::cout << "Exception: " << e.msg() << "\n";
+      // }
     }
   }  
   

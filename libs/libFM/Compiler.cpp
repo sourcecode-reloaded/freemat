@@ -960,8 +960,18 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
       else
 	emit(OP_LHSCOUNT,lhsCount,flattenDereferenceTreeToStack(t,1),getNameID(varname));
     }
-  // Make the function call here
-  reg_t ans = doFunctionExpression(t.second(),lhsCount);
+  const Tree &f = t.second();
+  FMString funcname = f.first().text();
+  reg_t func = fetchVariable(funcname,_code->_syms->syms[funcname]);
+  reg_t args = startList();
+  emit(OP_PUSH,args,lhsCount);
+  reg_t x = startList();
+  const Tree &s2 = f.second();
+  for (int p=0;p<s2.numChildren();p++)
+    multiexpr(x,s2.child(p));
+  pushList(args,x);
+  reg_t returns = getRegister();
+  emit(OP_CALL,returns,func,args);
   // Now we allocate the resulting assignments
   for (int ind=0;ind<s.size();++ind)
     {
@@ -970,11 +980,11 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
       if (t.numChildren() == 1)
 	{
 	  reg_t b = getRegister();
-	  emit(OP_FIRST,b,ans);
+	  emit(OP_FIRST,b,returns);
 	  saveRegisterToName(varname,b);
 	}
       else
-	emit(OP_SUBSASGNM,ans,flattenDereferenceTreeToStack(t,1),getNameID(varname));
+	emit(OP_SUBSASGNM,returns,flattenDereferenceTreeToStack(t,1),getNameID(varname));
     }
 }
 

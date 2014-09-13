@@ -6,7 +6,7 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_RETURN: return no_arguments;
     case OP_PUSH: return two_registers;
     case OP_FIRST: return two_registers;
-    case OP_CALL: return constant;
+    case OP_CALL: return three_registers;
     case OP_SAVE: return register_name;
     case OP_DCOLON: return two_registers;
     case LOP_SUBSASGN: return register_register_name;

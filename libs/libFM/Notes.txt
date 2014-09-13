@@ -290,4 +290,20 @@ Object func(ThreadContext *ctxt, const Object & argList, int nargout)
 
 A function object can then have the following signature.
 
+Need to build a function pool.  A function pool is a dictionary of
+objects (assuming that we have built-in functions as objects as well -
+I see no reason not to).
 
+Need classes
+
+Need closures
+
+Need multi-function calls
+ -- Change opcode so that passes the function argument count as an
+ argument
+ --- Something like:  OP_CALL <ret> <func> <arg> <retcount>
+ --  Doesn't work, but we can put the number of returns into the
+     return register, and then overwrite it.  Although it seems
+     cleaner to put it into the argument list.
+
+Need sparse matrices

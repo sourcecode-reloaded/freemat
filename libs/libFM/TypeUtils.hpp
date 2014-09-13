@@ -26,6 +26,10 @@ namespace FM
     return ret;
   }
 
+  inline void addIndexToList(ThreadContext *ctxt, Object &list, ndx_t val) {
+    ctxt->_list->push(list,ctxt->_index->makeScalar(val));
+  }
+
   inline void addStringToList(ThreadContext *ctxt, Object &list, const FMString &string) {
     ctxt->_list->push(list,ctxt->_string->makeString(string));
   }

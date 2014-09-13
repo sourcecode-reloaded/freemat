@@ -124,6 +124,13 @@ static void setLoop(T* op, const dim_t (&argdim) [MAXDIMS], const Tuple & adims,
 }
 
 template <class T>
+static void getRowLoop(T* op, const T* ip, const ndx_t *ndx, ndx_t count)
+{
+  for (int i=0;i<count;i++)
+    op[i] = ip[ndx[i]];
+}
+
+template <class T>
 static void getLoop(T* op, const T* ip, const dim_t (&outdim)[MAXDIMS], const Tuple & adims, int ndims, const ndx_t * (&coords)[MAXDIMS])
 {
   dim_t ndx[MAXDIMS];
@@ -160,9 +167,25 @@ static void getLoop(T* op, const T* ip, const dim_t (&outdim)[MAXDIMS], const Tu
 }
 
 template <class T, bool _objType>
+Object PODType<T,_objType>::getParensRowMode(const Object &a, const Tuple &dims, const Object &b)
+{
+  Object output = this->zeroArrayOfSize(dims,a.isComplex());
+  if (a.isComplex())
+    getRowLoop<Complex<T> >(this->readWriteDataComplex(output),this->readOnlyDataComplex(a),
+			    _ctxt->_index->readOnlyData(b),b.elementCount());
+  else
+    getRowLoop<T>(this->readWriteData(output),this->readOnlyData(a),
+		  _ctxt->_index->readOnlyData(b),b.elementCount());
+  return output;
+}
+
+template <class T, bool _objType>
 Object PODType<T,_objType>::getParens(const Object &a, const Object &b) {
-  // TODO: Row indexing mode
-  //      if (b.size() == 1) return getRowIndexMode(a,b[0].asIndex(a.dims()));
+  if (b.elementCount() == 1) 
+    {
+      Object ndx = _ctxt->_list->first(b);
+      return getParensRowMode(a,ndx.dims(),ndx.asIndex(a.elementCount()));
+    }
   const Tuple & adims(a.dims());
   // TODO: Trim trailing singular dimensions.  Make sure b.size() < a.numDims.
   // TODO: Special case all-scalar indexing case
