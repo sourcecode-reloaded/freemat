@@ -65,6 +65,7 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_LOOPCOUNT: return one_register;
     case OP_LOAD_INT: return register_int;
     case OP_PUSH_INT: return register_int;
+    case OP_LENGTH: return two_registers;
     default:
       return three_registers;
   }
@@ -138,6 +139,7 @@ std::string getOpCodeName(op_t opcode)
     case OP_LOOPCOUNT: return "LOOPCOUNT";
     case OP_LOAD_INT: return "LOAD_INT";
     case OP_PUSH_INT: return "PUSH_INT";
+    case OP_LENGTH: return "LENGTH";
     default: return "UNK";
   }
 }

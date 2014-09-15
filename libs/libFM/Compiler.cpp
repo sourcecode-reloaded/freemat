@@ -948,6 +948,7 @@ void Compiler::incrementRegister(reg_t x) {
 void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
   if (!t.first().is(TOK_BRACKETS))
     throw Exception("Illegal left hand side in multifunction expression");
+  t.print();
   TreeList s = t.first().children();
   reg_t lhsCount = getRegister();
   emit(OP_ZERO,lhsCount);
@@ -957,8 +958,26 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
       FMString varname = t.first().text();
       if (t.numChildren() == 1 || t.last().is(TOK_PARENS))
 	incrementRegister(lhsCount);
+      // else if (t.last().is(TOK_BRACES))
+      // 	{
+      // 	  const Tree &s = t.last();
+      // 	  reg_t x = startList();
+      // 	  for (int p=0;p<s.numChildren();p++)
+      // 	    multiexpr(x,s.child(p));
+      // 	  reg_t x_len = getRegister();
+      // 	  emit(OP_LENGTH,x_len,x);
+      // 	  emit(OP_ADD,lhsCount,lhsCount,x_len);
+      // 	}
       else
-	emit(OP_LHSCOUNT,lhsCount,flattenDereferenceTreeToStack(t,1),getNameID(varname));
+	{
+	  reg_t junk = startList();
+	  int symflags = _code->_syms->syms[varname];
+	  reg_t x = fetchVariable(varname,symflags);
+	  emit(OP_SUBSREF,junk,x,flattenDereferenceTreeToStack(t,1));
+	  reg_t len_junk = getRegister();
+	  emit(OP_LENGTH,len_junk,junk);
+	  emit(OP_ADD,lhsCount,lhsCount,len_junk);
+	}
     }
   const Tree &f = t.second();
   FMString funcname = f.first().text();

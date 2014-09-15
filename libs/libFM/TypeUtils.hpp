@@ -9,6 +9,15 @@
 
 namespace FM
 {
+  inline Object makeCellFromList(ThreadContext *ctxt, const Object &t) {
+    Object p = ctxt->_cell->makeMatrix(1,t.elementCount());
+    Object *q = ctxt->_cell->readWriteData(p);
+    const Object *h = ctxt->_list->readOnlyData(t);
+    for (size_t i=0;i<t.elementCount();i++)
+      q[i] = h[i];
+    return p;
+  }
+
   inline Object makeCellFromStrings(ThreadContext *ctxt, const FMStringList &t) {
     Object p = ctxt->_cell->makeMatrix(1,t.size());
     Object *q = ctxt->_cell->readWriteData(p);

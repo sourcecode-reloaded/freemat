@@ -36,3 +36,8 @@ Object CodeType::getParens(const Object &a, const Object &b)
   if (p.isEmpty()) return p;
   return _ctxt->_list->first(p);
 }
+
+Object CodeType::call(const Object &a, const Object &args, int nargout)
+{
+  return _ctxt->_vm->executeFunction(a,args);
+}

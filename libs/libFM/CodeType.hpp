@@ -28,7 +28,8 @@ namespace FM
     }
     Object makeCodeObject();
     virtual FMString describe(const Object &a);
-    Object getParens(const Object &a, const Object &b);
+    virtual Object getParens(const Object &a, const Object &b);
+    virtual Object call(const Object &a, const Object &args, int nargout);
   };
 }
 

@@ -16,6 +16,7 @@
 #include "AllTypes.hpp"
 #include "CodeType.hpp"
 #include "config.h"
+#include "TypeUtils.hpp"
 
 std::string getOpCodeName(FM::op_t);
 
@@ -246,10 +247,11 @@ void VM::executeCodeObject(const Object &codeObject)
 	  break;
  	case OP_FIRST:
 	  REG1 = _ctxt->_list->first(REG2);
+	  _ctxt->_list->pop(REG2);
 	  break;
-	// case OP_CALL:
-	//   // Finish me
-	//   break;
+	case OP_CALL:
+	  REG1 = REG2.type()->call(REG2,_ctxt->_list->second(REG3),_ctxt->_int32->scalarValue(_ctxt->_list->first(REG3)));
+	  break;
 	case OP_DCOLON:
 	  {
 	    const Object *ap = _ctxt->_list->readOnlyData(REG2);
@@ -264,6 +266,9 @@ void VM::executeCodeObject(const Object &codeObject)
 	  break;
 	case OP_SUBSREF:
 	  _ctxt->_list->merge(REG1,REG2.type()->get(REG2,REG3));
+	  break;
+	case OP_LHSCOUNT:
+	  REG1 = _ctxt->_double->makeScalar(REG2.type()->get(REG2,REG3).elementCount()); // FIXME - requires LHS vars be predefined
 	  break;
 	case OP_COLON:
 	  BINOP(Colon,"colon");
@@ -322,8 +327,8 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_NEG:
 	  UNARYOP(Neg,"negate");
 	  break;
-	case  OP_NUMCOLS:
-	  REG1 = _ctxt->_index->makeScalar(REG2.elementCount()/REG2.rows());
+	case OP_NUMCOLS:
+	  REG1 = _ctxt->_double->makeScalar(REG2.elementCount()/REG2.rows());
 	  break;
 	  /*
 	case OP_CASE:
@@ -351,6 +356,9 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_INCR:
 	  REG1 = _ctxt->_double->makeScalar(_ctxt->_double->scalarValue(REG1)+1);
 	  break;
+	case OP_LENGTH:
+	  REG1 = _ctxt->_double->makeScalar(REG2.elementCount());
+	  break;
 	  /*	case OP_LHSCOUNT:
 	  // FIXME
 	  break;
@@ -367,14 +375,10 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_VCAT:
 	  REG1 = NCat(_ctxt,REG2,0);
 	  break;
-	  /*
 	case OP_CELLROWDEF:
-	  {
-	    // ObjectVector x;
-	    // popVector(x);
-	    // _stack[_sp++] = CellObjectFromObjectVector(x,x.size());
-	    break;
-	  }
+	  REG1 = _ctxt->_list->makeScalar(makeCellFromList(_ctxt,REG2));
+	  break;
+	  /*
 	case OP_LOAD_GLOBAL:
 	case OP_LOAD_PERSIST:
 	  break;
@@ -476,7 +480,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	  }
 	case OP_PUSH_INT:
 	  {
-	    _ctxt->_list->push(REG1,_ctxt->_int32->makeScalar(get_constant(insn)));
+	    _ctxt->_list->push(REG1,_ctxt->_double->makeScalar(get_constant(insn)));
 	    break;
 	  }
 	default:

@@ -28,6 +28,10 @@ namespace FM
       if (a.isEmpty()) throw Exception("Attempt to take first element of empty object");
       return *(this->readOnlyData(a));
     }
+    Object second(const Object &a) {
+      if (a.elementCount() < 2) throw Exception("Attempt to take first element of empty object");
+      return (this->readOnlyData(a))[1];
+    }
     Object fetch(const Object &a, dim_t ndx) {
       return this->readOnlyData(a)[ndx];
     }
@@ -37,6 +41,12 @@ namespace FM
       for (dim_t i=0;i<a_size;i++)
 	if (ap[i] == b) return i;
       return -1;
+    }
+    void pop(Object &a) {
+      a.detach();
+      Tuple & adim = a.dims();
+      adim.setRows(adim.rows()-1);
+      a.d->offset++;
     }
     void push(Object &a, const Object &b) {
       dim_t a_size = a.elementCount();

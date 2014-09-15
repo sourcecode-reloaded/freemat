@@ -8,3 +8,4 @@ void CellType::printElement(const Object &a, const ArrayFormatInfo &info, ndx_t 
   const Object *t = this->readOnlyData(a);
   _ctxt->_io->output("[" + t[ndx].description() + "]");
 }
+

@@ -7,6 +7,11 @@
 
 using namespace FM;
 
+Object Type::call(const Object &a, const Object &args, int nargout)
+{
+  throw Exception("call is unsupported for objects of type " + this->name());
+}
+
 Object Type::asLogical(const Object &a)
 {
   throw Exception("asLogical(a) is unsupported for objects of type " + this->name());
@@ -104,13 +109,13 @@ Object Type::get(const Object &a, const Object &b) {
   int ptr = 0;
   const Object *bp = b.asType<ListType>()->readOnlyData(b);
   if ((b.elementCount() == 2) &&
-      (bp[0].asType<Int32Type>()->scalarValue(bp[0]) == 0))
+      (bp[0].asDouble() == 0))
     return b.asType<ListType>()->makeScalar(a.type()->getParens(a,bp[1]));
     Object c = a;
   while (ptr < b.elementCount())
     {
-      int getType = bp[ptr].asType<Int32Type>()->scalarValue(bp[ptr]);
-      switch (getType)
+      double getType = bp[ptr].asDouble();
+      switch (int(getType))
 	{
 	case 0:
 	  c = c.type()->getParens(c,bp[ptr+1]);
@@ -148,8 +153,8 @@ void Type::set(Object &a, const Object &args, const Object &b) {
   const Object *argp = args.asType<ListType>()->readOnlyData(args);
   if (args.elementCount() == 2)
     {
-      int setType = argp[0].asType<Int32Type>()->scalarValue(argp[0]);
-      switch (setType)
+      double setType = argp[0].asDouble();
+      switch (int(setType))
 	{
 	case 0:
 	  a.type()->setParens(a,argp[1],b);
