@@ -52,6 +52,9 @@ namespace FM {
     inline bool is2D() const {
       return (ndims <= 2);
     }
+    inline bool isVector() const {
+      return (is2D() && ((rows() == 1) || (cols() == 1)));
+    }
     inline dim_t elementCount() const {
       return elements;
     }

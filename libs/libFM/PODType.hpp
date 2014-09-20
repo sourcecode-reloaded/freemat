@@ -114,6 +114,7 @@ namespace FM
       ObjectBase *p = makeObjectBaseOfCapacity(capacity);
       p->dims = dims;
       p->flags = 0;
+      p->offset = 0;
       if (isComplex && (!_objectType)) p->flags = OBJECT_COMPLEX_FLAG;
       return Object(p);    
     }
@@ -126,6 +127,7 @@ namespace FM
       ObjectBase *p = makeObjectBaseOfCapacity(capacity);
       p->dims.setMatrixSize(rows,cols);
       p->flags = 0;
+      p->offset = 0;
       if (isComplex && (!_objectType)) p->flags = OBJECT_COMPLEX_FLAG;
       return Object(p);
     }
@@ -133,6 +135,7 @@ namespace FM
       ObjectBase* p = getObjectBase(min_capacity);
       p->dims.setScalar();
       p->flags = 0;
+      p->offset = 0;
       static_cast<T*>(p->data->ptr)[0] = T();
       return Object(p);
     }
@@ -140,12 +143,14 @@ namespace FM
       ObjectBase* p = getObjectBase(min_capacity);
       p->dims.setEmpty();
       p->flags = 0;
+      p->offset = 0;
       return Object(p);
     }
     Object makeScalar(const T& data) {
       ObjectBase* p = getObjectBase(min_capacity);
       p->dims.setScalar();
       p->flags = 0;
+      p->offset = 0;
       static_cast<T*>(p->data->ptr)[0] = data;
       return Object(p);
     }
@@ -158,11 +163,11 @@ namespace FM
     }
     T scalarValue(const Object &a) {
       assert(a.isScalar());
-      return static_cast<const T*>(a.d->data->ptr)[0];
+      return readOnlyData(a)[0];
     }
     Complex<T> complexScalarValue(const Object &a) {
       assert(a.isScalar());
-      return reinterpret_cast<const Complex<T>*>(readOnlyData(a))[0];
+      return readOnlyDataComplex(a)[0];
     }
     FMString describe(const Object &a) {
       if (a.isScalar())	
@@ -188,6 +193,7 @@ namespace FM
 	if (!(ap[i] == bp[i])) return false;
       return true;
     }
+    void promoteComplex(Object &a);
     inline const T* readOnlyData(const Object &p) const {
       return static_cast<const T *>(static_cast<const T *>(p.d->data->ptr) + p.d->offset);
     }
@@ -196,16 +202,17 @@ namespace FM
       return static_cast<T*>(p.d->data->ptr);
     }
     inline const Complex<T>* readOnlyDataComplex(const Object &p) const {
-      return reinterpret_cast<const Complex<T>*>(readOnlyData(p));
+      return static_cast<const Complex<T>*>(static_cast<const Complex<T>*>(p.d->data->ptr) + p.d->offset);
     }
     inline Complex<T>* readWriteDataComplex(Object &p) const {
-      return reinterpret_cast<Complex<T>*>(readWriteData(p));
+      p.detach();
+      return static_cast<Complex<T>*>(p.d->data->ptr);
     }
     void print(const Object &a);
     virtual void computeArrayFormatInfo(FMFormatMode mode, const Object &a, ArrayFormatInfo &format) = 0;
     virtual void printElement(const Object &a, const ArrayFormatInfo &format, ndx_t offset) = 0;
     void printSheet(const Object &a, const ArrayFormatInfo &format, ndx_t offset);
-    Object sliceColumn(Object &p, ndx_t col) {
+    Object sliceColumn(const Object &p, ndx_t col) {
       // Check!
       ObjectBase *q = new ObjectBase(p.d->data,p.d->type,
 				     (col-1)*p.d->dims.rows(),
@@ -216,7 +223,9 @@ namespace FM
       return Object(q);
     }
     Object getRowIndexMode(const Object &a, const Object &b);
+    Object getSliceMode(const Object &a, Object (&c)[MAXDIMS], int cnt, int last_colon);
     virtual Object getParens(const Object &a, const Object &b);
+    void setParensRowIndexMode(Object &a, const Object &ndx, const Object &b);
     virtual void setParens(Object &a, const Object &args, const Object &b);
     virtual void resize(Object &a, const Tuple &newsize);
     virtual Object NCat(const Object &p, int dimension);

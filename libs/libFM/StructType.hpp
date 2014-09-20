@@ -5,6 +5,9 @@
 #include "Object.hpp"
 #include "AggregateType.hpp"
 
+
+// This has heap allocations on it.  Not a good idea.
+
 namespace FM
 {
   struct StructData {

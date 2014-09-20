@@ -30,6 +30,7 @@ namespace FM
     virtual FMString describe(const Object &a);
     virtual Object getParens(const Object &a, const Object &b);
     virtual Object call(const Object &a, const Object &args, int nargout);
+    virtual Object deref(const Object &a);
   };
 }
 

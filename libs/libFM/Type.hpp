@@ -89,6 +89,7 @@ namespace FM {
     virtual void set(Object &a, const Object &args, const Object &b);
     virtual void resize(Object &a, const Tuple &newsize);
     virtual void print(const Object &a);
+    virtual Object deref(const Object &a);
     virtual Object call(const Object &a, const Object &args, int nargout);
   };
 }

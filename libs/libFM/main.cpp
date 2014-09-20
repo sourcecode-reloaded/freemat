@@ -29,6 +29,32 @@
 using namespace FM;
 
 
+void compileFunc(ThreadContext *ctxt, FMString name)
+{
+  bool failed;
+  FMString body = ReadFileIntoString(name+".m",failed);
+  body += "\n\n";
+  ctxt->_compiler->compile(body);
+  Object p = ctxt->_asm->run(ctxt->_compiler->module()->_main);
+  Disassemble(ctxt,p);
+  ctxt->_vm->defineBaseVariable(name,p);
+}
+
+void testMap(int cnt)
+{
+  FMStringList words;
+  // Generate a set of random words
+  for (int i=0;i<cnt;i++)
+    {
+      char buffer[4096];
+      int wlen = rand() % 32 + 1;
+      for (int j=0;j<wlen;j++)
+	buffer[j] = rand() % 26 + 'a';
+      buffer[wlen] = 0;
+      std::cout << "word: " << buffer << "\n";
+      words.push_back(FMString(buffer));
+    }
+}
 
 int main(int argc, char *argv[])
 {
@@ -40,41 +66,12 @@ int main(int argc, char *argv[])
 
   boost::timer::cpu_timer timer;
 
+  testMap(50);
+
   // For now - hard code a single function to preload
-  {
-    std::cout << "Preloading three.m\n";
-    bool failed;
-    FMString body_three = ReadFileIntoString("three.m",failed);
-    body_three += "\n\n";
-    FMString body_add = ReadFileIntoString("add.m",failed);
-    body_add += "\n\n";
-    // std::cout << "Reading of function defintion: " << (failed ? "failed" : "succeeded") << "\n";
-    // std::cout << "************************************************************\n";
-    // std::cout << body;
-    // std::cout << "************************************************************\n";
-    {
-      ctxt->_compiler->compile(body_three);
-      Object p = ctxt->_asm->run(ctxt->_compiler->module()->_main);
-      Disassemble(ctxt,p);
-      ctxt->_vm->defineBaseVariable("three",p);
-      
-      ctxt->_compiler->compile(body_add);
-      p = ctxt->_asm->run(ctxt->_compiler->module()->_main);
-      Disassemble(ctxt,p);
-      
-      ctxt->_vm->defineBaseVariable("add",p);
-      
-      // Object q = ctxt->_list->empty();
-      // ctxt->_list->push(q,ctxt->_double->makeScalar(3));
-      // ctxt->_list->push(q,ctxt->_double->makeScalar(7));
-      // try {
-      // 	Object y = ctxt->_vm->executeFunction(p,q);
-      // 	std::cout << ctxt->_list->first(y).description() << "\n";
-      // } catch (const FM::Exception &e) {
-      // 	std::cout << "Exception: " << e.msg() << "\n";
-      // }
-    }
-  }  
+  compileFunc(ctxt,"three");
+  compileFunc(ctxt,"add");
+  compileFunc(ctxt,"fixa");
   
   while (1)
     {

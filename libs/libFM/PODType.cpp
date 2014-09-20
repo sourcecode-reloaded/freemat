@@ -24,55 +24,106 @@ static void copyPagePromote(Complex<T>* op, dim_t outputOffset, const T* ip, dim
   input_offset += pagesize;
 }
 
+
+/**
+ * The move algorithm.  The original data samples are at:
+ *  old(i,j,k) = i + j*ax + k*ax*ay
+ * And data samples are now at
+ *  new(i,j,k) = i + j*nx + k*nx*ny
+ * where nx >= ax, ny >= ay, etc.
+ * The delta is then:
+ *  delta(i,j,k) = new(i,j,k) - old(i,j,k)
+ *               = j*(nx-ax) + k(nx*ny - ax*ay)
+ * This is why the current algorithm doesn't work.
+ */
 template <class T>
 static void moveLoop(T* ap, const Tuple &outdims, const Tuple &adims)
 {
+  int ndims = std::max<int>(adims.dimensions(),outdims.dimensions());
+  dim_t adimraw[MAXDIMS];
+  for (int i=0;i<ndims;i++) adimraw[i] = adims.dimension(i);
+  // Check for a no-op - if only the last dimension increases, 
+  // it's a no-op
+  bool allsame = true;
+  for (int i=0;i<ndims-1;i++)
+    allsame = allsame && (adimraw[i] == outdims.dimension(i));
+  if (allsame) return;
   dim_t iterations = 1;
-  for (int i=1;i<MAXDIMS;i++)
-    iterations *= adims.dimension(i);
-  // Calculate where the last sample from a has to move to
-  dim_t new_count = outdims.elementCount();
-  dim_t old_index = adims.elementCount()-1;
-  dim_t new_index = 0;
-  dim_t stride = 1;
-  for (int i=0;i<MAXDIMS;i++)
+  for (int i=1;i<ndims;i++)
+    iterations *= adimraw[i];
+  ndx_t ndx[MAXDIMS];
+  dim_t strides[MAXDIMS];
+  strides[0] = 1;
+  ndx[0] = adimraw[0]-1;
+  for (int i=1;i<ndims;i++)
     {
-      new_index += stride*(adims.dimension(i)-1);
-      stride *= outdims.dimension(i);
+      strides[i] = strides[i-1]*outdims.dimension(i-1);
+      ndx[i] = adimraw[i]-1;
     }
-  assert(new_index >= old_index);
-  // Zero out the tail of ap
-  for (dim_t n=new_index+1;n<new_count;n++)
-    ap[n] = T();  
   dim_t arows = adims.rows();
   dim_t orows = outdims.rows();
-  for (dim_t iter = 0;iter < iterations; iter++)
-    {
-      for (dim_t row = 0;row < arows; row++)
-	ap[new_index-row] = ap[old_index-row];
-      for (dim_t row = 0;row < orows-arows;row++)
-	ap[new_index+1+row] = T();
-      new_index -= orows;
-      old_index -= arows;
-    }
+  dim_t aoffset = adims.elementCount()-1;
+  for (dim_t iter=0;iter<iterations;iter++) {
+    // Compute the start address
+    dim_t start = 0;
+    for (int i=0;i<ndims;i++)
+      start += ndx[i]*strides[i];
+    assert(start >= aoffset);
+    if (aoffset != start)
+      for (dim_t row=0;row<arows;row++)
+      {
+	ap[start-row] = ap[aoffset-row];
+	ap[aoffset-row] = T();
+      }
+    aoffset -= arows;
+    for (dim_t row=0;row<orows-arows;row++)
+	ap[start+1+row] = T();
+    ndx[1]--;
+    for (int i=1;i<ndims;i++)
+      if (ndx[i] < 0)
+	{
+	  ndx[i] = adimraw[i] - 1;
+	  ndx[i+1]--;
+	}
+  }
 }
 
 template <class T>
 static void copyLoop(T* op, const T* ip, const Tuple & outdims, const Tuple & adims)
 {
   // Compute the number of iterations required by the RESIZE
-  // Excludes the first dimension.  
+  // Excludes the first dimension. 
+  int ndims = std::max<int>(adims.dimensions(),outdims.dimensions());
+  dim_t adimraw[MAXDIMS];
+  for (int i=0;i<ndims;i++) adimraw[i] = adims.dimension(i);
   dim_t iterations = 1;
-  for (int i=1;i<MAXDIMS;i++)
-    iterations *= adims.dimension(i);
+  for (int i=1;i<ndims;i++)
+    iterations *= adimraw[i];
+  ndx_t ndx[MAXDIMS];
+  dim_t strides[MAXDIMS];
+  strides[0] = 1;
+  for (int i=1;i<ndims;i++)
+    {
+      strides[i] = strides[i-1]*outdims.dimension(i-1);
+      ndx[i] = 0;
+    }
   // Loop over the iterations
   dim_t arows = adims.rows();
-  dim_t orows = outdims.rows();
   for (dim_t iter=0;iter<iterations;iter++) {
+    // Compute the start address
+    dim_t start = 0;
+    for (int i=1;i<ndims;i++)
+      start += ndx[i]*strides[i];
     for (dim_t row=0;row<arows;row++)
-      op[row] = ip[row];
+      op[row+start] = ip[row];
     ip += arows;
-    op += orows;
+    ndx[1]++;
+    for (int i=1;i<ndims;i++)
+      if (ndx[i] >= adimraw[i])
+	{
+	  ndx[i] = 0;
+	  ndx[i+1]++;
+	}
   }
 }
 
@@ -166,9 +217,16 @@ static void getLoop(T* op, const T* ip, const dim_t (&outdim)[MAXDIMS], const Tu
   }
 }
 
+// FIXME - Handle A(:)
 template <class T, bool _objType>
 Object PODType<T,_objType>::getParensRowMode(const Object &a, const Tuple &dims, const Object &b)
 {
+  if (_ctxt->_index->isColon(b))
+    {
+      Object output = a;
+      output.dims() = Tuple(a.elementCount(),1);
+      return output;
+    }
   Object output = this->zeroArrayOfSize(dims,a.isComplex());
   if (a.isComplex())
     getRowLoop<Complex<T> >(this->readWriteDataComplex(output),this->readOnlyDataComplex(a),
@@ -179,8 +237,52 @@ Object PODType<T,_objType>::getParensRowMode(const Object &a, const Tuple &dims,
   return output;
 }
 
+// TODO - handle (:,:,x) indexing!
+static inline int isSliceIndexCase(ThreadContext *ctxt, Object (&c)[MAXDIMS], int cnt)
+{
+  int last_colon = 0;
+  while (last_colon < cnt && ctxt->_index->isColon(c[last_colon])) last_colon++;
+  if (last_colon == 0) return 0; // Need at least one colon
+  for (int i=last_colon;i<cnt;i++)
+    if (ctxt->_index->isColon(c[i]) || !c[i].isScalar()) return 0;
+  return last_colon;
+}
+
+template <class T, bool _objType>
+Object PODType<T,_objType>::getSliceMode(const Object &a, Object (&c)[MAXDIMS], int cnt, int last_colon)
+{
+  // Compute the index of the first element of the array
+  dim_t offset = 0;
+  const Tuple& adims = a.dims();
+  dim_t stride = adims.dimension(0);
+  Tuple slicedims;
+  slicedims.setRows(adims.dimension(0));
+  for (int i=1;i<cnt;i++)
+    {
+      if (i >= last_colon)
+	{
+	  offset += stride*_ctxt->_index->scalarValue(c[i]);
+	  slicedims.set(i,1);
+	}
+      else
+	slicedims.set(i,adims.dimension(i));
+      stride *= adims.dimension(i);
+    }
+  if (cnt <= 2)
+    slicedims.set(1,1);
+  ObjectBase *q = new ObjectBase(a.d->data,
+				 a.d->type,
+				 offset,
+				 slicedims,
+				 a.d->flags,
+				 slicedims.elementCount());
+  q->refcnt = 0;
+  return Object(q);
+}
+
 template <class T, bool _objType>
 Object PODType<T,_objType>::getParens(const Object &a, const Object &b) {
+  // FIXME - b is empty?
   if (b.elementCount() == 1) 
     {
       Object ndx = _ctxt->_list->first(b);
@@ -195,6 +297,10 @@ Object PODType<T,_objType>::getParens(const Object &a, const Object &b) {
   for (int i=0;i<bsize;i++)
     c[i] = bp[i].asIndex(adims.dimension(i));
   // TODO: Add slice test here (c.f. isSliceIndexCase)
+  int last_colon = isSliceIndexCase(_ctxt,c,bsize);
+  if (last_colon > 0) {
+    return getSliceMode(a,c,bsize,last_colon);
+  }
   // Expand colons, and do bounds check
   if (bsize > MAXDIMS) 
     throw Exception(FMString("FreeMat is compiled for maximum ") 
@@ -233,8 +339,7 @@ void PODType<T,_objType>::resize(Object &a, const Tuple &newsize) {
       return;
     }
   // Determine if this is a move or a copy
-  if (a.d->capacity > newsize.elementCount()) {
-    //    std::cout << "Move!\n";
+  if (a.d->capacity > newsize.elementCount()) { 
     if (a.isComplex())
       moveLoop<Complex<T> >(this->readWriteDataComplex(a),
 			    newsize,a.dims());
@@ -254,10 +359,70 @@ void PODType<T,_objType>::resize(Object &a, const Tuple &newsize) {
   a.dims() = newsize;
 }
 
+template <class T>
+void setLoopRowMode(T* a, const ndx_t *addr, dim_t count, const T* b, bool bScalar)
+{
+  for (dim_t i=0;i<count;i++)
+    {
+      a[addr[i]] = *b;
+      if (!bScalar) ++b;
+    }
+}
+
+template <class T, bool _objType>
+void PODType<T,_objType>::setParensRowIndexMode(Object &a, const Object &ndx, const Object &b) {
+  // First check for resize
+  dim_t maxndx = _ctxt->_index->maxValue(ndx)+1;
+  if (maxndx > a.elementCount())
+    {
+      Tuple newdims;
+      // This logic is taken from BasicArray::resize(index_t) in FM4
+      if (a.isScalar() || a.isEmpty())
+	newdims = Tuple(1,maxndx);
+      else if (a.isVector()) {
+	if (a.rows() != 1)
+	  newdims = Tuple(maxndx,1);
+	else
+	  newdims = Tuple(1,maxndx);
+      } else {
+	newdims = Tuple(1,maxndx);
+      }
+      a.type()->resize(a,newdims);
+    }
+  const ndx_t *addr = _ctxt->_index->readOnlyData(ndx);
+  // TODO - handle b is complex, a is real
+  if (!a.isComplex() && b.isComplex())
+    this->promoteComplex(a);
+  if (a.isComplex())
+    setLoopRowMode<Complex<T> >(this->readWriteDataComplex(a),
+				addr,ndx.elementCount(),
+				this->readOnlyDataComplex(b),
+				b.isScalar());
+  else
+    setLoopRowMode<T>(this->readWriteData(a),
+		      addr,ndx.elementCount(),
+		      this->readOnlyData(b),
+		      b.isScalar());
+}
+
+template <class T, bool _objType>
+void PODType<T,_objType>::promoteComplex(Object &a) {
+  if (a.isComplex()) return;
+  Object o = zeroArrayOfSize(a.dims(),true);
+  Complex<T> *op = this->readWriteDataComplex(o);
+  const T *ip = this->readOnlyData(a);
+  for (dim_t i=0;i<a.elementCount();i++)
+    op[i] = Complex<T>(ip[i]);
+  a = o;
+}
+
 template <class T, bool _objType>
 void PODType<T,_objType>::setParens(Object &a, const Object &args, const Object &b) {
-  // TODO: Row indexing mode
-  //      if (b.size() == 1) return getRowIndexMode(a,b[0].asIndex(a.dims()));
+  if (args.elementCount() == 1)
+    {
+      Object ndx = _ctxt->_list->first(args);
+      return setParensRowIndexMode(a,ndx.asIndexNoBoundsCheck(),b);
+    }
   Tuple & adims(a.dims());
   // TODO: Trim trailing singular dimensions.  Make sure b.size() < a.numDims.
   // TODO: Special case all-scalar indexing case
@@ -285,25 +450,26 @@ void PODType<T,_objType>::setParens(Object &a, const Object &args, const Object 
       argdim[i] = c[i].elementCount();
       coords[i] = ip->readOnlyData(c[i]);
       outdim[i] = std::max<dim_t>(adims.dimension(i),ip->maxValue(c[i])+1);
-      outcount *= (outdim[i]+1);
+      outcount *= argdim[i];
       resize_required |= (outdim[i] > adims.dimension(i));
     }
   // Check if the output requires resizing of the array
   if (resize_required)
     {
       // StdIOTermIF io;
-      // io.output("Before resize:\n");
-      // a.type()->print(a,io);
+      //      _ctxt->_io->output("Before resize:\n");
+      //      a.type()->print(a);
       assert(a.isValid());
       a.type()->resize(a,Tuple::RawTuple(outdim,argsize));
-      // io.output("After resize:\n");
-      // a.type()->print(a,io);
+      //      _ctxt->_io->output("After resize:\n");
+      //      a.type()->print(a);
       adims = a.dims();
     }      
   // Check for validity of b
   if (!(b.isScalar() || b.elementCount() == outcount))
     throw Exception("Assignment A(...) = b requires b either be a scalar or have the correct number of elements");
-  // TODO - handle b is complex, a is real
+  if (!a.isComplex() && b.isComplex())
+    this->promoteComplex(a);
   if (a.isComplex())
     setLoop<Complex<T> >(this->readWriteDataComplex(a),
 			 argdim,adims,argsize,coords,

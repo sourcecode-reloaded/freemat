@@ -13,7 +13,7 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_LOAD_CONST: return register_constant;
     case OP_LOAD: return register_name;
     case OP_NEW_LIST: return one_register;
-    case OP_SUBSREF: return register_register_name;
+    case OP_SUBSREF: return three_registers;
     case OP_COLON: return three_registers;
     case OP_ADD: return three_registers;
     case OP_MINUS: return three_registers;
@@ -66,6 +66,7 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_LOAD_INT: return register_int;
     case OP_PUSH_INT: return register_int;
     case OP_LENGTH: return two_registers;
+    case OP_POP: return two_registers;
     default:
       return three_registers;
   }
@@ -140,6 +141,7 @@ std::string getOpCodeName(op_t opcode)
     case OP_LOAD_INT: return "LOAD_INT";
     case OP_PUSH_INT: return "PUSH_INT";
     case OP_LENGTH: return "LENGTH";
+    case OP_POP: return "POP";
     default: return "UNK";
   }
 }

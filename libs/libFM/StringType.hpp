@@ -19,6 +19,7 @@ namespace FM
       memcpy(t,&x[0],sizeof(FMChar)*x.length());
       return p;
     }
+    Object asIndex(const Object &a, dim_t ndx); 
     FMString getString(const Object &o) const {
       assert(o.type()->code() == TypeString);
       const FMChar *t = readOnlyData(o);

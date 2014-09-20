@@ -52,10 +52,8 @@ namespace FM
       dim_t a_size = a.elementCount();
       if (a.d->capacity > (a_size+1))
 	{
-	  a.detach();
-	  // Resize is not required. 
 	  a.dims().setMatrixSize(a_size+1,1);
-	  Object *ap = static_cast<Object*>(a.d->data->ptr);
+	  Object *ap = this->readWriteData(a);
 	  ap[a_size] = b;
 	}
       else 

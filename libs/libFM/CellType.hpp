@@ -20,9 +20,8 @@ namespace FM
       else
 	return(a.dims().toString() + " " + this->name() + " array");
     }
-    void setBraces(Object &a, const Object &args, const Object &b) {
-      setParens(a,args,this->makeScalar(b));
-    }
+    void setBraces(Object &a, const Object &args, const Object &b);
+    virtual Object getBraces(const Object &a, const Object &args);
     void computeArrayFormatInfo(FMFormatMode, const Object &a, ArrayFormatInfo &format) {
       int maxwidth = 1;
       //const Object *t = this->readOnlyData(a);

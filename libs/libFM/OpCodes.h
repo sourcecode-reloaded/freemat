@@ -62,3 +62,4 @@ const op_t OP_LOOPCOUNT = 70;
 const op_t OP_LOAD_INT = 71;
 const op_t OP_PUSH_INT = 72;
 const op_t OP_LENGTH = 73;
+const op_t OP_POP = 74;

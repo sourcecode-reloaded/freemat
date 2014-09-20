@@ -41,3 +41,9 @@ Object CodeType::call(const Object &a, const Object &args, int nargout)
 {
   return _ctxt->_vm->executeFunction(a,args);
 }
+
+Object CodeType::deref(const Object &a)
+{
+  Object args = _ctxt->_list->empty();
+  return _ctxt->_list->first(this->call(a,args,1));
+}

@@ -10,9 +10,20 @@
 namespace FM
 {
   inline Object makeCellFromList(ThreadContext *ctxt, const Object &t) {
+    assert(t.typeCode() == TypeListArray);
     Object p = ctxt->_cell->makeMatrix(1,t.elementCount());
     Object *q = ctxt->_cell->readWriteData(p);
     const Object *h = ctxt->_list->readOnlyData(t);
+    for (size_t i=0;i<t.elementCount();i++)
+      q[i] = h[i];
+    return p;
+  }
+
+  inline Object makeListFromCell(ThreadContext *ctxt, const Object &t) {
+    assert(t.typeCode() == TypeCellArray);
+    Object p = ctxt->_list->makeMatrix(t.elementCount(),1);
+    Object *q = ctxt->_list->readWriteData(p);
+    const Object *h = ctxt->_cell->readOnlyData(t);
     for (size_t i=0;i<t.elementCount();i++)
       q[i] = h[i];
     return p;

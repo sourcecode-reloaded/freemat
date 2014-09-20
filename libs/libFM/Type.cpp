@@ -3,6 +3,7 @@
 #include "ListType.hpp"
 #include "IntegerType.hpp"
 #include "CellType.hpp"
+#include "StructType.hpp"
 #include "ThreadContext.hpp"
 
 using namespace FM;
@@ -102,16 +103,18 @@ void Type::print(const Object &a) {
 }
 
 double Type::doubleValue(const Object &a) {
-  throw Exception("Type cannot be converted to double scalar");
+  throw Exception("Type " + this->name() + " cannot be converted to double scalar");
 }
 
 Object Type::get(const Object &a, const Object &b) {
+  // std::cout << "get arguments: " << a.description() << "\n";
+  // std::cout << "   b: " << b.description() << "\n";
   int ptr = 0;
   const Object *bp = b.asType<ListType>()->readOnlyData(b);
   if ((b.elementCount() == 2) &&
       (bp[0].asDouble() == 0))
     return b.asType<ListType>()->makeScalar(a.type()->getParens(a,bp[1]));
-    Object c = a;
+  Object c = a;
   while (ptr < b.elementCount())
     {
       double getType = bp[ptr].asDouble();
@@ -166,9 +169,7 @@ void Type::set(Object &a, const Object &args, const Object &b) {
 	  break;
 	case 2:
 	  if (a.isEmpty() && (a.type()->code() != TypeStruct))
-	    {
-	      // FIXME	      a = a.type()->_base->_struct->makeStruct(Tuple(1,1),FMStringList(argp[1]
-	    }
+	    a = _ctxt->_struct->makeScalarStruct(FMStringList());
 	  a.type()->setField(a,argp[1],b);
 	  break;
 	}
@@ -182,4 +183,8 @@ void Type::set(Object &a, const Object &args, const Object &b) {
       set(asub,args_rest,b);
       set(a,args_first,asub);
     }
+}
+
+Object Type::deref(const Object &a) {
+  return a;
 }

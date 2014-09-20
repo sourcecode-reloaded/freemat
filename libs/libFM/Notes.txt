@@ -483,3 +483,84 @@ addresses are local to each frame.  Which means you cannot pass an
 address from one frame to another.  
 
 Simpler would be to have
+
+Need slicing to work.
+
+How do we translate A.foo{1:3} into 
+
+A.foo{1},A.foo{2},A.foo{3}
+
+1.  Take the tree of the form:
+
+multi
+   []
+      variable
+         (ident)A
+         {}
+            :
+               (real)1
+               (real)3
+
+2.  We then want to select one of the various expressions (we know how
+many subexpressions there are from the NUMEL or LENGTH operation
+already complete.  How does the selector work?  
+
+If we call A{1:3,2} = b, then setBraces is passed an argument that is a
+_list_ of indices
+
+-- so setBraces should be
+
+CellType::setBraces(a, args, b)
+{
+	if (args is all scalars || b is scalar)
+}
+
+
+a = fixa
+a(3,3,3) = 9 --> doesn't work!
+
+
+(:,:,0) = 
+   1.0000   2.0000   3.0000   4.0000
+   5.0000   6.0000   7.0000   8.0000
+        0        0        0        0
+
+(:,:,1) = 
+        0        0        0        0
+        0        0        0        0
+        0        0        0        0
+
+(:,:,2) = 
+        0        0        0        0
+        0        0        0        0
+        0        0        0   9.0000
+
+
+(:,:,0) = 
+   1.0000   2.0000   1.0000   2.0000   3.0000
+   5.0000   6.0000   5.0000   6.0000   7.0000
+        0        0        0        0        0
+
+(:,:,1) = 
+   4.0000        0        0        0        0
+   8.0000        0        0        0        0
+        0        0        0        0        0
+
+(:,:,2) = 
+        0        0        0        0        0
+        0        0        0        0        0
+        0        0        0   9.0000   9.0000
+
+a = fixa
+a(3,4,3) = 9
+a(3,5,2) = 9
+
+
+********************************************************************************
+
+Structure indexing
+
+Next major hurdle is structure indexing.  Need to spend some time on
+this.
+
+Removal of Null objects

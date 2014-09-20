@@ -250,7 +250,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	  _ctxt->_list->pop(REG2);
 	  break;
 	case OP_CALL:
-	  REG1 = REG2.type()->call(REG2,_ctxt->_list->second(REG3),_ctxt->_int32->scalarValue(_ctxt->_list->first(REG3)));
+	  REG1 = REG2.type()->call(REG2,_ctxt->_list->second(REG3),_ctxt->_double->scalarValue(_ctxt->_list->first(REG3)));
 	  break;
 	case OP_DCOLON:
 	  {
@@ -440,8 +440,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	  }
 	case OP_DEREF:
 	  {
-	    // FIXME - handle function objects
-	    REG1 = REG2;
+	    REG1 = REG2.type()->deref(REG2);
 	    break;
 	  }
 	case OP_SUBSASGN_GLOBAL:
@@ -483,9 +482,16 @@ void VM::executeCodeObject(const Object &codeObject)
 	    _ctxt->_list->push(REG1,_ctxt->_double->makeScalar(get_constant(insn)));
 	    break;
 	  }
+	case OP_POP:
+	  {
+	    std::cout << "POP for " << _ctxt->_double->scalarValue(REG2) << "\n";
+	    for (int i=0;i<_ctxt->_double->scalarValue(REG2);i++)
+	      _ctxt->_list->pop(REG1);
+	    break;
+	  }
 	default:
 	  {
-	    std::cerr << "Unknown opcode " << opcode(insn) << "\n";
+	    std::cerr << "Unknown opcode " << int(opcode(insn)) << "\n";
 	    printf("%03d   ",ip);
 	    int8_t op = opcode(insn);
 	    printf("%-15s",getOpCodeName(op).c_str());

@@ -147,9 +147,17 @@ namespace FM
       if (!d) return false;
       return (elementCount() == 1);
     }
+    inline bool isList() const {
+      if (!d) return false;
+      return (typeCode() == TypeListArray);
+    }
     inline bool is2D() const {
       if (!d) return false;
       return (d->dims.is2D());
+    }
+    inline bool isVector() const {
+      if (!d) return false;
+      return (d->dims.isVector());
     }
     inline int flags() const {
       if (!d) return 0;
@@ -196,6 +204,10 @@ namespace FM
       if (!d) 
 	throw Exception("Null objects have no type - internal FreeMat error");
       return d->type;
+    }
+    inline DataCode typeCode() const
+    {
+      return type()->code();
     }
     template <class S>
     inline S* asType() const

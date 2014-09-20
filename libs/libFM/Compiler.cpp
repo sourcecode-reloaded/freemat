@@ -952,6 +952,7 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
   TreeList s = t.first().children();
   reg_t lhsCount = getRegister();
   emit(OP_ZERO,lhsCount);
+  std::vector<reg_t> lens;
   for (int ind=0;ind<s.size();ind++)
     {
       const Tree &t = s[ind];
@@ -974,9 +975,12 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
 	  int symflags = _code->_syms->syms[varname];
 	  reg_t x = fetchVariable(varname,symflags);
 	  emit(OP_SUBSREF,junk,x,flattenDereferenceTreeToStack(t,1));
+	  reg_t y = getRegister();
+	  emit(OP_FIRST,y,junk);
 	  reg_t len_junk = getRegister();
-	  emit(OP_LENGTH,len_junk,junk);
+	  emit(OP_LENGTH,len_junk,y);
 	  emit(OP_ADD,lhsCount,lhsCount,len_junk);
+	  lens.push_back(len_junk);
 	}
     }
   const Tree &f = t.second();
@@ -992,6 +996,7 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
   reg_t returns = getRegister();
   emit(OP_CALL,returns,func,args);
   // Now we allocate the resulting assignments
+  int ret_length_ptr = 0;
   for (int ind=0;ind<s.size();++ind)
     {
       const Tree &t = s[ind];
@@ -1003,7 +1008,10 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
 	  saveRegisterToName(varname,b);
 	}
       else
-	emit(OP_SUBSASGNM,returns,flattenDereferenceTreeToStack(t,1),getNameID(varname));
+	{
+	  emit(OP_SUBSASGN,flattenDereferenceTreeToStack(t,1),returns,getNameID(varname));
+	  emit(OP_POP,returns,lens[ret_length_ptr++]);
+	}
     }
 }
 
@@ -1038,7 +1046,7 @@ void Compiler::switchStatement(const Tree &t) {
   useBlock(end);
 }
 
-// FIXME - Remove duplication
+// TODO - Remove duplication
 void Compiler::forStatement(const Tree &t) {
   if (!t.first().is('='))  throw Exception("Incorrect format of for operator");
   FMString indexVarName = t.first().first().text();
