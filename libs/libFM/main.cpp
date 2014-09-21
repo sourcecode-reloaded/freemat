@@ -89,6 +89,7 @@ void testLinearSearch(int cnt)
       int k = rand() % cnt;
       const std::string & wtf = words[k];
       int ndx = 0;
+      //     while (words[ndx].size() != wtf.size()  || words[ndx] != wtf) ndx++;
       while (words[ndx] != wtf) ndx++;
       accum += ((ndx == k) ? 1 : 0);
     }
@@ -162,7 +163,7 @@ int main(int argc, char *argv[])
   ThreadContext *ctxt = BuildNewThreadContext(&io);
 
   boost::timer::cpu_timer timer;
-
+  /*
   for (int f=5;f<100; f+= 10)
     {
       timer.start();
@@ -186,7 +187,7 @@ int main(int argc, char *argv[])
       std::cout << " Execution time (sorted)" << timer.elapsed().wall/1.0e9 << " fields = " << f << "\n";
     }
   exit(1);
-
+*/
   // For now - hard code a single function to preload
   compileFunc(ctxt,"three");
   compileFunc(ctxt,"add");

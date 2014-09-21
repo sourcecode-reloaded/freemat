@@ -163,6 +163,10 @@ namespace FM
       if (!d) return 0;
       return d->flags;
     }
+    inline size_t capacity() const {
+      if (!d) return 0;
+      return d->capacity;
+    }
     inline FMString description() const {
       if (!d) return FMString("Null");
       return d->type->describe(*this);

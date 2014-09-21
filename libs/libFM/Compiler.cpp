@@ -1515,9 +1515,18 @@ void FM::DumpBasicBlock(BasicBlock *b, int offset)
     PrintInsn(i+offset,b->_insnlist[i]);
 }
 
-void PrintRawInsn(int ip, insn_t insn)
+static void PrintRawInsn(int ip, insn_t insn)
 {
   printf("%03d   %016llx %03x %03x %03x %06x ",ip,insn,reg1(insn),reg2(insn),reg3(insn),get_constant(insn));
+  int8_t opcode = insn & 0xFF;
+  printf("%-15s",getOpCodeName(opcode).c_str());
+  printf("%-25s",Compiler::opcodeDecode(opcode,insn).c_str());
+  printf("\n");
+}
+
+static void PrintInsn(int ip, insn_t insn)
+{
+  printf("%03d ",ip);
   int8_t opcode = insn & 0xFF;
   printf("%-15s",getOpCodeName(opcode).c_str());
   printf("%-25s",Compiler::opcodeDecode(opcode,insn).c_str());
@@ -1544,5 +1553,5 @@ void FM::Disassemble(ThreadContext *_ctxt, const Object &p)
   const insn_t *opcodes = _ctxt->_uint64->readOnlyData(code);
   std::cout << "Code: " << code.dims().elementCount() << " length\n";
   for (dim_t i=0;i<code.dims().elementCount();++i)
-    PrintRawInsn(i,opcodes[i]);
+    PrintInsn(i,opcodes[i]);
 }

@@ -11,8 +11,8 @@
 namespace FM
 {
   struct StructData {
-    FMMap<FMString,int> m_fields;
-    Object m_data; // Data is stored in a cell array.  Row dimension corresponds to field index.
+    Object m_fields; // List of strings that represent the field names
+    Object m_data; // Array of lists, each of which has the field data in it.
   };
 
   struct ThreadContext;
@@ -23,43 +23,22 @@ namespace FM
     StructType(ThreadContext *ctxt) {_ctxt = ctxt;}
     virtual DataCode code() const {return TypeStruct;}
     virtual const FMString& name() const {static FMString _name = "struct"; return _name;}
-    // virtual void destroyObject(ObjectBase* p) 
-    // {
-    //   if (--p->data->refcnt == 0)
-    // 	{
-    // 	  StructData *k = static_cast<StructData *>(p->data->ptr);
-    // 	  delete k;
-    // 	}
-    //   delete p->data;
+    Object empty();
+    // Object makeStruct(const Tuple & dims, const FMStringList &fields);
+    // Object makeScalarStruct(const FMStringList &fields) {
+    //   return makeStruct(Tuple(1,1),fields);
     // }
-    // virtual Data* duplicateData(const ObjectBase* p, dim_t &reserve) const
-    // {
-    //   Data *q = new Data;
-    //   q->refcnt = 1;
-    //   dim_t elem_count = p->dims.elementCount();
-    //   const StructData *pdata = static_cast<const StructData *>(p->data->ptr);
-    //   StructData *copy = new StructData(*pdata);
-    //   q->ptr = copy;
-    //   reserve = elem_count; // FIXME
-    //   return q;
+    // inline int fieldIndex(const Object &p, const FMString &t) const {
+    //   return static_cast<const StructData *>(p.d->data->ptr)->m_fields.value(t);
     // }
-    Object makeStruct(const Tuple & dims, const FMStringList &fields);
-      Object makeScalarStruct(const FMStringList &fields) {
-          return makeStruct(Tuple(1,1),fields);
-      }
-    inline int fieldIndex(const Object &p, const FMString &t) const {
-      return static_cast<const StructData *>(p.d->data->ptr)->m_fields.value(t);
-    }
-    inline bool hasField(const Object &p, const FMString &t) const {
-        const StructData * q = static_cast<const StructData *>(p.d->data->ptr);
-      return q->m_fields.contains(t);
-    }
-    void insertField(Object &p, const FMString &t);
-    const Object* readOnlyData(const Object &p) const;
-    Object* readWriteData(Object &p) const;
+    // inline bool hasField(const Object &p, const FMString &t) const {
+    //     const StructData * q = static_cast<const StructData *>(p.d->data->ptr);
+    //   return q->m_fields.contains(t);
+    // }
+    // void insertField(Object &p, const FMString &t);
     void setScalar(Object &q, const FMString &field, const Object &p);
     const Object & getScalar(const Object &q, const FMString &field);
-    FMStringList orderedFieldList(const Object &a) {
+    /*    FMStringList orderedFieldList(const Object &a) {
       const StructData *fp = static_cast<const StructData *>(a.d->data->ptr);
       FMStringList ret;
       ret.resize(fp->m_fields.count());
@@ -68,14 +47,17 @@ namespace FM
 	ret[i.value()] = i.key();
       return ret;
     }
+    */
+    int getFieldIndex(const Object &a, const Object &b);
     virtual FMString describe(const Object &a);
+    virtual Object getField(const Object &a, const Object &b);
+    virtual void setField(Object &a, const Object &args, const Object &b);
+    virtual Object getParens(const Object &a, const Object &args);
+    virtual void setParens(Object &a, const Object &args, const Object &b);
     virtual bool equals(const Object &a, const Object &b)
     {
       // FIXME - allow struct equality tests
       return false;
-    }
-    virtual Object asIndex(const Object &, dim_t) {
-      throw Exception("struct arrays cannot be used as index arrays");
     }
   };
 }

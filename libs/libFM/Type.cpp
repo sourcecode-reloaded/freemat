@@ -71,15 +71,15 @@ Object Type::DoubleColon(const Object &a, const Object &b, const Object &c)
 }
 
 void Type::setParens(Object &a, const Object &args, const Object &b) {
-  throw Exception("() indexing is unsupported for objects of type " + this->name());
+  throw Exception("() assignment is unsupported for objects of type " + this->name());
 }
 
 void Type::setBraces(Object &a, const Object &args, const Object &b) {
-  throw Exception("{} indexing is unsupported for objects of type " + this->name());
+  throw Exception("{} assignment is unsupported for objects of type " + this->name());
 }
 
 void Type::setField(Object &a, const Object &args, const Object &b) {
-  throw Exception(". indexing is unsupported for objects of type " + this->name());
+  throw Exception(". (field) assignment is unsupported for objects of type " + this->name());
 }
 
 Object Type::getParens(const Object &a, const Object &b) {
@@ -160,6 +160,10 @@ void Type::set(Object &a, const Object &args, const Object &b) {
       switch (int(setType))
 	{
 	case 0:
+	  // TODO - not sure about the case:
+	  // a = int8([])  - typed empty
+	  // a(3) = 5      - what type is it now?
+	  if (a.isEmpty()) a = b.type()->empty();
 	  a.type()->setParens(a,argp[1],b);
 	  break;
 	case 1:
@@ -169,7 +173,7 @@ void Type::set(Object &a, const Object &args, const Object &b) {
 	  break;
 	case 2:
 	  if (a.isEmpty() && (a.type()->code() != TypeStruct))
-	    a = _ctxt->_struct->makeScalarStruct(FMStringList());
+	    a = _ctxt->_struct->empty();
 	  a.type()->setField(a,argp[1],b);
 	  break;
 	}
@@ -177,9 +181,19 @@ void Type::set(Object &a, const Object &args, const Object &b) {
   else
     {
       dim_t arg_count = args.elementCount();
-      Object args_first = args.asType<ListType>()->makeMatrix(2,1);
-      Object args_rest = args.asType<ListType>()->makeMatrix(arg_count-2,1);
-      Object asub = a.type()->get(a,args_first);
+      Object args_rest = args;
+      Object args_first = _ctxt->_list->empty();
+      _ctxt->_list->push(args_first,_ctxt->_list->first(args_rest));
+      _ctxt->_list->pop(args_rest);
+      _ctxt->_list->push(args_first,_ctxt->_list->first(args_rest));
+      _ctxt->_list->pop(args_rest);
+      // TODO - is an exception here bad? If so, remove it
+      Object asub;
+      try {
+	asub = a.type()->get(a,args_first);
+      } catch (Exception &e) {
+	asub = a.type()->empty();
+      }
       set(asub,args_rest,b);
       set(a,args_first,asub);
     }
