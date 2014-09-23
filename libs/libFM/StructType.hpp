@@ -54,6 +54,7 @@ namespace FM
     virtual void setField(Object &a, const Object &args, const Object &b);
     virtual Object getParens(const Object &a, const Object &args);
     virtual void setParens(Object &a, const Object &args, const Object &b);
+    void addNewFields(Object &a, const Object &fields);
     virtual bool equals(const Object &a, const Object &b)
     {
       // FIXME - allow struct equality tests

@@ -79,7 +79,11 @@ int StructType::getFieldIndex(const Object &a, const Object &b) {
     if (fn[i] == b) return i;
   return -1;
 }
-
+/*
+Object* StructTyoe::getRWDP(StructData *sd) {
+  
+}
+*/
 Object StructType::getField(const Object &a, const Object &b) {
   int ndx = this->getFieldIndex(a,b);
   if (ndx == -1) throw Exception("Field " + b.description() + " is not defined for this struct");
@@ -105,6 +109,19 @@ Object StructType::getParens(const Object &a, const Object &args) {
   return ret;
 }
 
+void StructType::addNewFields(Object &a, const Object &fields) {
+  StructData *ad = this->readWriteData(a);
+  _ctxt->_list->merge(ad->m_fields,fields);
+  if (ad->m_data.isEmpty()) {
+    Object x = _ctxt->_list->makeMatrix(fields.elementCount(),1);
+    ad->m_data = _ctxt->_cell->makeScalar(x);
+    return;
+  }
+  Object *cp = _ctxt->_cell->readWriteData(ad->m_data);
+  for (dim_t i=0;i<ad->m_data.elementCount();i++)
+    _ctxt->_list->resize(cp[i],Tuple(ad->m_fields.elementCount(),1));
+}
+
 void StructType::setParens(Object &a, const Object &args, const Object &b) {
   // First the easy case
   // TODO - Type check b?
@@ -116,7 +133,23 @@ void StructType::setParens(Object &a, const Object &args, const Object &b) {
       a.d->dims = ad->m_data.dims();
     }
   else
-    throw Exception("Cannot handle twisted structure assignment.");
+    {
+      Object newfields = _ctxt->_list->empty();
+      const Object *bd_ptr = _ctxt->_list->readOnlyData(bd->m_fields);
+      std::vector<int> ndx_save;
+      for (int i=0;i<bd->m_fields.elementCount();i++)
+	{
+	  int ndx = this->getFieldIndex(a,bd_ptr[i]);
+	  ndx_save.push_back(ndx);
+	  if (ndx == -1) {
+	    _ctxt->_list->push(newfields,bd_ptr[i]);
+	  }
+	}
+      // add newfields
+      std::cout << "new fields: " << newfields.description() << "\n";
+      addNewFields(a,newfields);
+      throw Exception("Cannot handle twisted structure assignment.");
+    }
 }
 
 void StructType::setField(Object &a, const Object &args, const Object &b) {

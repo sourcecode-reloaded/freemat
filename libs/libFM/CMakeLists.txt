@@ -25,6 +25,7 @@ BLAS.cpp
 NCat.cpp
 DenseSolver.cpp
 Type.cpp
+HashMap.cpp
 ThreadContext.cpp
 DoubleType.cpp
 CellType.cpp

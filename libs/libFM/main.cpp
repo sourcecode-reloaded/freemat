@@ -13,6 +13,7 @@
 #include "Assembler.hpp"
 #include "VM.hpp"
 #include "fnv.hh"
+#include "HashMap.hpp"
 
 // What is the strategy for get?
 //
@@ -40,7 +41,9 @@ void compileFunc(ThreadContext *ctxt, FMString name)
   ctxt->_vm->defineBaseVariable(name,p);
 }
 
-void testSortedSearch(int cnt)
+const int ITERS = 1000000;
+
+int testSortedSearch(int cnt)
 {
   std::vector<std::string> words;
   // Generate a set of random words
@@ -57,18 +60,18 @@ void testSortedSearch(int cnt)
   std::sort(words.begin(),words.end());
   // Search through them a million times
   int accum = 0;
-  for (int j=0;j<10000000;j++)
+  for (int j=0;j<ITERS;j++)
     {
       int k = rand() % cnt;
       const std::string & wtf = words[k];
       int p = std::lower_bound(words.begin(),words.end(),wtf) - words.begin();
       accum += ((k == p) ? 1 : 0);
     }
-  std::cout << "accum hit rate: " << accum/1e6*100.0 << "%\n";
+  return accum;
 }
 
 
-void testLinearSearch(int cnt)
+int testLinearSearch(int cnt)
 {
   std::vector<std::string> words;
   // Generate a set of random words
@@ -84,7 +87,7 @@ void testLinearSearch(int cnt)
     }
   // Search through them a million times
   int accum = 0;
-  for (int j=0;j<10000000;j++)
+  for (int j=0;j<ITERS;j++)
     {
       int k = rand() % cnt;
       const std::string & wtf = words[k];
@@ -93,12 +96,12 @@ void testLinearSearch(int cnt)
       while (words[ndx] != wtf) ndx++;
       accum += ((ndx == k) ? 1 : 0);
     }
-  std::cout << "accum hit rate: " << accum/1e6*100.0 << "%\n";
+  return accum;
 }
 
 
 
-void testBoostMap(int cnt)
+int testBoostMap(int cnt)
 {
   std::vector<std::string> words;
   // Generate a set of random words
@@ -118,15 +121,88 @@ void testBoostMap(int cnt)
     fields[words[i]] = i;
   // Search through them a million times
   int accum = 0;
-  for (int j=0;j<10000000;j++)
+  for (int j=0;j<ITERS;j++)
     {
       int k = rand() % cnt;
       accum += ((fields[words[k]] == k) ? 1 : 0);
     }
-  std::cout << "accum hit rate: " << accum/1e6*100.0 << "%\n";
+  return accum;
 }
 
-void testMap(int cnt)
+
+struct ihash : std::unary_function<Object, std::size_t>
+{
+  std::size_t operator()(const Object &x) const
+  {
+    StringType *st = x.asType<StringType>();
+    dim_t len = x.elementCount();
+    size_t hash = 5381;
+    const FMChar *t = st->readOnlyData(x);
+    for (dim_t i=0;i<len;i++)
+      hash = hash * 33 + t[i];
+    return hash;
+  }
+};
+
+int testBoostMapPreHash(ThreadContext *_ctxt, int cnt)
+{
+  std::vector<Object> words;
+  // Generate a set of random words
+  for (int i=0;i<cnt;i++)
+    {
+      char buffer[4096];
+      int wlen = rand() % 32 + 1;
+      for (int j=0;j<wlen;j++)
+	buffer[j] = rand() % 26 + 'a';
+      buffer[wlen] = 0;
+      // std::cout << "word: " << buffer << "\n";
+      //      words.push_back(std::string(buffer));
+      words.push_back(_ctxt->_string->makeString(FMString(buffer)));
+    }
+  boost::unordered_map<Object,int,ihash> fields;
+  for (int i=0;i<cnt;i++)
+    fields[words[i]] = i;
+  // Search through them a million times
+  int accum = 0;
+  for (int j=0;j<ITERS;j++)
+    {
+      int k = rand() % cnt;
+      accum += ((fields[words[k]] == k) ? 1 : 0);
+    }
+  return accum;
+}
+
+
+int testFMHashMap(ThreadContext *_ctxt, int cnt)
+{
+  std::vector<Object> words;
+  // Generate a set of random words
+  for (int i=0;i<cnt;i++)
+    {
+      char buffer[4096];
+      int wlen = rand() % 32 + 1;
+      for (int j=0;j<wlen;j++)
+	buffer[j] = rand() % 26 + 'a';
+      buffer[wlen] = 0;
+      // std::cout << "word: " << buffer << "\n";
+      //      words.push_back(std::string(buffer));
+      words.push_back(_ctxt->_string->makeString(FMString(buffer)));
+    }
+  FM::HashMap<int> fields;
+  for (int i=0;i<cnt;i++)
+    fields.insert(words[i],i);
+  // Search through them a million times
+  int accum = 0;
+  for (int j=0;j<ITERS;j++)
+    {
+      int k = rand() % cnt;
+      accum += ((fields.at(words[k]) == k) ? 1 : 0);
+    }
+  return accum;
+}
+
+
+int testMap(int cnt)
 {
   FMStringList words;
   // Generate a set of random words
@@ -146,12 +222,12 @@ void testMap(int cnt)
     fields[words[i]] = i;
   // Search through them a million times
   int accum = 0;
-  for (int j=0;j<10000000;j++)
+  for (int j=0;j<ITERS;j++)
     {
       int k = rand() % cnt;
       accum += ((fields[words[k]] == k) ? 1 : 0);
     }
-  std::cout << "accum hit rate: " << accum/1e6*100.0 << "%\n";
+  return accum;
 }
 
 int main(int argc, char *argv[])
@@ -163,31 +239,43 @@ int main(int argc, char *argv[])
   ThreadContext *ctxt = BuildNewThreadContext(&io);
 
   boost::timer::cpu_timer timer;
-  /*
-  for (int f=5;f<100; f+= 10)
+  
+  std::cout << "f     map     boost  boost-obj  hashmap  lin   sort\n";
+
+  for (int f=1;f<100; f++)
     {
+      std::cout << f << "  ";
       timer.start();
       testMap(f);
       timer.stop();
-      std::cout << " Execution time (map) " << timer.elapsed().wall/1.0e9 << " fields = " << f << "\n";
+      std::cout << timer.elapsed().wall/1.0e9 << " ";
       
       timer.start();
       testBoostMap(f);
       timer.stop();
-      std::cout << " Execution time (boost) " << timer.elapsed().wall/1.0e9 << " fields = " << f << "\n";
+      std::cout << timer.elapsed().wall/1.0e9 << " ";
+      
+      timer.start();
+      testBoostMapPreHash(ctxt,f);
+      timer.stop();
+      std::cout << timer.elapsed().wall/1.0e9 << " ";
+      
+      timer.start();
+      testFMHashMap(ctxt,f);
+      timer.stop();
+      std::cout << timer.elapsed().wall/1.0e9 << " ";
       
       timer.start();
       testLinearSearch(f);
       timer.stop();
-      std::cout << " Execution time (linear)" << timer.elapsed().wall/1.0e9 << " fields = " << f << "\n";
+      std::cout << timer.elapsed().wall/1.0e9 << " ";
       
       timer.start();
       testSortedSearch(f);
       timer.stop();
-      std::cout << " Execution time (sorted)" << timer.elapsed().wall/1.0e9 << " fields = " << f << "\n";
+      std::cout << timer.elapsed().wall/1.0e9 << "\n";
     }
   exit(1);
-*/
   // For now - hard code a single function to preload
   compileFunc(ctxt,"three");
   compileFunc(ctxt,"add");
