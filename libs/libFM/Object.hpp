@@ -121,9 +121,12 @@ namespace FM
 	d->type->destroyObject(d);
     }
     inline const Tuple& dims() const {
+      static Tuple empty(0,0);
+      if (!d) return empty;
       return d->dims;
     }
     inline Tuple& dims() {
+      if (!d) throw Exception("Attempt to modify Null object - FreeMat internal error");
       detach();
       return d->dims;
     }
@@ -168,19 +171,23 @@ namespace FM
       return d->capacity;
     }
     inline FMString description() const {
-      if (!d) return FMString("Null");
+      if (!d) return FMString("[]");
       return d->type->describe(*this);
     }
     inline dim_t elementCount() const {
+      if (!d) return 0;
       return d->dims.elementCount();
     }
     inline Object asIndex(dim_t max) const {
+      if (!d) return Object();
       return d->type->asIndex(*this,max);
     }
     inline Object asIndexNoBoundsCheck() const {
+      if (!d) return Object();
       return d->type->asIndexNoBoundsCheck(*this);
     }
     inline double asDouble() const {
+      if (!d) return 0;
       return d->type->doubleValue(*this);
     }
     Object& operator=(const Object& copy) {
@@ -211,13 +218,13 @@ namespace FM
     }
     inline DataCode typeCode() const
     {
+      if (!d) return TypeInvalid;
       return type()->code();
     }
     template <class S>
     inline S* asType() const
     {
-      if (!d) 
-	throw Exception("Null objects have no type - internal FreeMat error");
+      if (!d) return 0;
       return static_cast<S*>(d->type);
     }
     friend class PODArrayType<double>;

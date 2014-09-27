@@ -563,4 +563,14 @@ Structure indexing
 Next major hurdle is structure indexing.  Need to spend some time on
 this.
 
+- multiple return values with structures
+
 Removal of Null objects
+
+- The main issue with Null objects is the following.  Default creation
+  of a NULL object has to lie in a particular thread context.  
+
+Deletion!
+
+Classes
+

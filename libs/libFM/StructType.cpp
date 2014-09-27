@@ -3,6 +3,7 @@
 #include "CellType.hpp"
 #include "ListType.hpp"
 #include "DoubleType.hpp"
+#include "StringType.hpp"
 
 using namespace FM;
 
@@ -11,92 +12,54 @@ Object StructType::empty() {
   Data *q = new Data;
   q->refcnt = 0;
   StructData *sd = new StructData;
-  sd->m_fields = _ctxt->_list->empty();
   sd->m_data = _ctxt->_cell->empty();
   q->ptr = sd;
-  ObjectBase *p = new ObjectBase(q,this,0,Tuple(0,0),0,sd->m_data.capacity());
+  ObjectBase *p = new ObjectBase(q,this,0,Tuple(0,0),0,0);
   return Object(p);
 };
-  
-/*
-Object StructType::makeStruct(const Tuple &dims, const FMStringList &fields) {
-  Data *q = new Data;
-  q->refcnt = 0;
-  StructData *sd = new StructData;
-  int fieldnum = fields.size();
-  for (int i=0;i<fieldnum;i++)
-    sd->m_fields[fields[i]] = i;
-  Tuple cdims(dims);
-  cdims.prepend(fieldnum);
-  sd->m_data = _ctxt->_cell->zeroArrayOfSize(cdims,false);
-  q->ptr = sd;
-  ObjectBase *p = new ObjectBase(q,this,0,dims,0,1);
-  return Object(p);      
-}
-*/
 
-/*
-void StructType::insertField(Object &p, const FMString &t) {
-  p.detach();
-  StructData *fp = static_cast<StructData *>(p.d->data->ptr);
-  int ndx = fp->m_fields.count();
-  fp->m_fields[t] = ndx++;
-  Tuple newsize = p.dims();
-  newsize.prepend(ndx);
-  _ctxt->_cell->resize(fp->m_data,newsize);
+static inline Object orderedFieldList(ThreadContext *ctxt, const StructData *sd) {
+  Object fields = ctxt->_list->makeMatrix(sd->m_fields.size(),1);
+  Object *fp = ctxt->_list->readWriteData(fields);
+  for (HashMap<int>::const_iterator i=sd->m_fields.begin();i!=sd->m_fields.end();++i)
+    fp[i->second] = i->first;
+  return fields;
 }
 
-void StructType::setScalar(Object &q, const FMString &field, const Object &p) {
-  assert(q.isScalar());
-  int n;
-  std::cout << "Set Scalar called, field = " << field << " value " << p.description() << "\n";
-  if (this->hasField(q,field))
-    n = this->fieldIndex(q,field);
-  else
-    {
-      std::cout << "Insert Called!\n";
-      this->insertField(q,field);
-      n = this->fieldIndex(q,field);
-    }
-  std::cout << "Writing to index " << n << "\n";
-  Object* c = readWriteData(q);
-  c[n] = p;
-}
-
-const Object & StructType::getScalar(const Object &q, const FMString &field) {
-  assert(q.isScalar());
-  int n = this->fieldIndex(q,field);
-  const Object* c = readOnlyData(q);
-  return c[n];
-}
-
-*/
-
-int StructType::getFieldIndex(const Object &a, const Object &b) {
+FMString StructType::describe(const Object &a) {
+  FMString ret = a.dims().toString() + " struct array with fields:\n";
   const StructData *sd = this->readOnlyData(a);
-  const Object *fn = _ctxt->_list->readOnlyData(sd->m_fields);
-  for (int i=0;i<sd->m_fields.elementCount();i++)
-    if (fn[i] == b) return i;
-  return -1;
+  Object fields = orderedFieldList(_ctxt,sd);
+  const Object *fp = _ctxt->_list->readOnlyData(fields);
+  if (a.isScalar()) {
+    const Object *cd = _ctxt->_cell->readOnlyData(_ctxt->_cell->scalarValue(sd->m_data));
+    for (int i=0;i<fields.elementCount();i++)
+      {
+	ret += "   " + _ctxt->_string->getString(fp[i]) + ": ";
+	int ndx = sd->m_fields.at(fp[i]);
+	ret += cd[ndx].description() + "\n";
+      }
+    return ret;
+  } else {
+    for (int i=0;i<fields.elementCount();i++)
+      ret += "   " + _ctxt->_string->getString(fp[i]) + "\n";
+    return ret;
+  }
 }
-/*
-Object* StructTyoe::getRWDP(StructData *sd) {
-  
-}
-*/
+
 Object StructType::getField(const Object &a, const Object &b) {
-  int ndx = this->getFieldIndex(a,b);
-  if (ndx == -1) throw Exception("Field " + b.description() + " is not defined for this struct");
   const StructData *sd = this->readOnlyData(a);
-  const Object *cd = _ctxt->_cell->readOnlyData(sd->m_data);
-  dim_t toret = sd->m_data.elementCount();
-  Object ret = _ctxt->_list->empty();
-  for (dim_t i=0;i<toret;i++)
-    {
-      const Object *rd = _ctxt->_list->readOnlyData(cd[i]);
-      _ctxt->_list->push(ret,rd[ndx]);
-    }
-  return ret;
+  const HashMap<int>::const_iterator i = sd->m_fields.find(b);
+  if (i == sd->m_fields.end()) throw Exception("Field " + b.description() + " is not defined for this struct");
+  int ndx = i->second;
+  Object output = _ctxt->_list->makeMatrix(a.elementCount(),1);
+  Object *op = _ctxt->_list->readWriteData(output);
+  const Object *cp = _ctxt->_cell->readOnlyData(sd->m_data);
+  for (dim_t i=0;i<a.elementCount();i++) {
+    const Object *rp = _ctxt->_list->readOnlyData(cp[i]);
+    op[i] = rp[ndx];
+  }
+  return output;
 }
 
 Object StructType::getParens(const Object &a, const Object &args) {
@@ -111,15 +74,70 @@ Object StructType::getParens(const Object &a, const Object &args) {
 
 void StructType::addNewFields(Object &a, const Object &fields) {
   StructData *ad = this->readWriteData(a);
-  _ctxt->_list->merge(ad->m_fields,fields);
+  const Object *fp = _ctxt->_list->readOnlyData(fields);
+  for (dim_t i=0;i<fields.elementCount();i++)
+    ad->m_fields[fp[i]] = ad->m_fields.size();
   if (ad->m_data.isEmpty()) {
-    Object x = _ctxt->_list->makeMatrix(fields.elementCount(),1);
+    Object x = _ctxt->_list->makeMatrix(ad->m_fields.size(),1);
     ad->m_data = _ctxt->_cell->makeScalar(x);
     return;
   }
   Object *cp = _ctxt->_cell->readWriteData(ad->m_data);
   for (dim_t i=0;i<ad->m_data.elementCount();i++)
-    _ctxt->_list->resize(cp[i],Tuple(ad->m_fields.elementCount(),1));
+    _ctxt->_list->resize(cp[i],Tuple(ad->m_fields.size(),1));
+}
+
+
+// Merge fields from object b into object a
+void StructType::mergeFields(Object &a, const Object &b) {
+  StructData *ad = this->readWriteData(a);
+  Object newfields = _ctxt->_list->empty();
+  const StructData *bd = this->readOnlyData(b);
+  Object bfields = orderedFieldList(_ctxt,bd);
+  const Object *bf_ptr = _ctxt->_list->readOnlyData(bfields);
+  for (int j=0;j<bfields.elementCount();j++)
+    {
+      const HashMap<int>::const_iterator i = ad->m_fields.find(bf_ptr[j]);
+      if (i == ad->m_fields.end())
+	_ctxt->_list->push(newfields,bf_ptr[j]);
+    }
+  // add newfields
+  std::cout << "new fields: " << newfields.description() << "\n";
+  addNewFields(a,newfields);
+}
+
+// Reorder the fields in a to match those in b
+void StructType::reorderFields(Object &a, const Object &b) {
+  StructData *ad = this->readWriteData(a);
+  Object aFieldList = orderedFieldList(_ctxt,ad);
+  std::vector<int> permutation;
+  int numFields = aFieldList.elementCount();
+  permutation.resize(numFields);
+  const StructData *bd = this->readOnlyData(b);
+  const Object *afp = _ctxt->_list->readOnlyData(aFieldList);
+  for (int i=0;i<numFields;i++)
+      permutation[i] = bd->m_fields.at(afp[i]);
+  Object temp = _ctxt->_list->makeMatrix(numFields,1);
+  Object *tp = _ctxt->_list->readWriteData(temp);
+  Object *cp = _ctxt->_cell->readWriteData(ad->m_data);
+  for (dim_t i=0;i<a.elementCount();i++)
+    {
+      Object *rp = _ctxt->_list->readWriteData(cp[i]);
+      for (int j=0;j<numFields;j++)
+	tp[permutation[j]] = rp[j];
+      for (int j=0;j<numFields;j++)
+	rp[j] = tp[j];
+    }
+  ad->m_fields = bd->m_fields;
+}
+
+void StructType::fillEmpties(Object &a) {
+  StructData *ad = this->readWriteData(a);
+  Object *rp = _ctxt->_cell->readWriteData(ad->m_data);
+  int fieldCount = ad->m_fields.size();
+  for (dim_t i=0;i<a.elementCount();i++)
+    if (!rp[i].isValid())
+      rp[i] = _ctxt->_list->makeMatrix(fieldCount,1);
 }
 
 void StructType::setParens(Object &a, const Object &args, const Object &b) {
@@ -134,64 +152,50 @@ void StructType::setParens(Object &a, const Object &args, const Object &b) {
     }
   else
     {
-      Object newfields = _ctxt->_list->empty();
-      const Object *bd_ptr = _ctxt->_list->readOnlyData(bd->m_fields);
-      std::vector<int> ndx_save;
-      for (int i=0;i<bd->m_fields.elementCount();i++)
-	{
-	  int ndx = this->getFieldIndex(a,bd_ptr[i]);
-	  ndx_save.push_back(ndx);
-	  if (ndx == -1) {
-	    _ctxt->_list->push(newfields,bd_ptr[i]);
-	  }
-	}
-      // add newfields
-      std::cout << "new fields: " << newfields.description() << "\n";
-      addNewFields(a,newfields);
-      throw Exception("Cannot handle twisted structure assignment.");
+      // Copy fields from b --> a
+      mergeFields(a,b);
+      // Copy fields from a --> b
+      Object bcopy = b;
+      mergeFields(bcopy,a);
+      // Permute the fields of b to match the field order of a
+      reorderFields(bcopy,a);
+      this->setParens(a,args,bcopy);
     }
+  fillEmpties(a);
 }
 
 void StructType::setField(Object &a, const Object &args, const Object &b) {
-  std::cout << "set: " << a.description() << " field: " << args.description() << " to " << b.description() << "\n";
-  int ndx = this->getFieldIndex(a,args);
   StructData *sd = this->readWriteData(a);
-  Object *cd = _ctxt->_cell->readWriteData(sd->m_data);
-  if (ndx == -1) {
-    _ctxt->_list->push(sd->m_fields,args);
-    for (dim_t i=0;i<sd->m_data.elementCount();i++)
-      _ctxt->_list->push(cd[i],_ctxt->_double->empty());
-    ndx = sd->m_fields.elementCount()-1;
+  const HashMap<int>::const_iterator i = sd->m_fields.find(args);
+  int ndx;
+  if (i == sd->m_fields.end()) {
+    addNewFields(a,_ctxt->_list->makeScalar(args));
+    ndx = sd->m_fields.size()-1; // New field will take last position
+  } else {
+    ndx = i->second;
   }
+  Object *cd = _ctxt->_cell->readWriteData(sd->m_data);
   if (sd->m_data.isEmpty()) {
-    Object x = _ctxt->_list->makeMatrix(sd->m_fields.elementCount(),1);
+    Object x = _ctxt->_list->makeMatrix(sd->m_fields.size(),1);
     sd->m_data = _ctxt->_cell->makeScalar(x);
   }
-  if (!sd->m_data.isScalar()) throw Exception("Multiple assignments not supported");
   cd = _ctxt->_cell->readWriteData(sd->m_data);
-  Object *rd = _ctxt->_list->readWriteData(cd[0]);
-  rd[ndx] = b;
+  // Case one - scalar to scalar assignment
+  dim_t num_assignments = a.elementCount();
+  const Object *bp = &b;
+  if (b.isList()) 
+    bp = _ctxt->_list->readOnlyData(b);
+  // TODO - Allow for mismatch, and use empty to fill out?
+  if (b.isList() && (num_assignments > b.elementCount()))
+      throw Exception("Mismatch in number of left and right hand sides in expression a.field = b");
+  for (dim_t n=0;n<num_assignments;n++)
+    {
+      Object *rd = _ctxt->_list->readWriteData(cd[n]);
+      rd[ndx] = *bp;
+      if (b.isList()) bp++;
+    }
   a.d->dims = sd->m_data.dims();
   std::cout << "result: " << a.description() << "\n";
 }
 
-FMString StructType::describe(const Object &a) {
-  if (a.isScalar()) {
-    FMString ret = a.dims().toString() + " struct array with fields:\n";
-    const StructData *sd = this->readOnlyData(a);
-    const Object *fn = _ctxt->_list->readOnlyData(sd->m_fields);
-    const Object *cd = _ctxt->_cell->readOnlyData(sd->m_data);
-    const Object *rd = _ctxt->_list->readOnlyData(cd[0]);
-    for (int i=0;i<sd->m_fields.elementCount();i++)
-      ret += "   " + fn[i].description() + ": " + rd[i].description() + "\n";
-    return ret;
-  } else {
-    FMString ret = a.dims().toString() + " struct array with fields:\n";
-    const StructData *sd = this->readOnlyData(a);
-    const Object *fn = _ctxt->_list->readOnlyData(sd->m_fields);
-    for (int i=0;i<sd->m_fields.elementCount();i++)
-      ret += "   " + fn[i].description() + "\n";
-    return ret;
-  }
-}
 

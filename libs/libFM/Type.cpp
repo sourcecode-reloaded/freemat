@@ -192,8 +192,11 @@ void Type::set(Object &a, const Object &args, const Object &b) {
       try {
 	asub = a.type()->get(a,args_first);
       } catch (Exception &e) {
-	asub = a.type()->empty();
+	asub = _ctxt->_list->makeScalar(a.type()->empty());
       }
+	if (!asub.isScalar()) 
+	  throw Exception("In complex indexing expressions (e.g., A(...).foo = x), the sub expressions (such as A(...)) must be single valued");
+      asub = _ctxt->_list->first(asub);
       set(asub,args_rest,b);
       set(a,args_first,asub);
     }

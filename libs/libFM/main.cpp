@@ -41,7 +41,7 @@ void compileFunc(ThreadContext *ctxt, FMString name)
   ctxt->_vm->defineBaseVariable(name,p);
 }
 
-const int ITERS = 1000000;
+const int ITERS = 10000000;
 
 int testSortedSearch(int cnt)
 {
@@ -190,7 +190,7 @@ int testFMHashMap(ThreadContext *_ctxt, int cnt)
     }
   FM::HashMap<int> fields;
   for (int i=0;i<cnt;i++)
-    fields.insert(words[i],i);
+    fields[words[i]] = i;
   // Search through them a million times
   int accum = 0;
   for (int j=0;j<ITERS;j++)
@@ -239,8 +239,9 @@ int main(int argc, char *argv[])
   ThreadContext *ctxt = BuildNewThreadContext(&io);
 
   boost::timer::cpu_timer timer;
-  
-  std::cout << "f     map     boost  boost-obj  hashmap  lin   sort\n";
+
+  /*  
+  std::cout << "f     map     boost  bst-obj hashmap  lin   sort\n";
 
   for (int f=1;f<100; f++)
     {
@@ -276,6 +277,7 @@ int main(int argc, char *argv[])
       std::cout << timer.elapsed().wall/1.0e9 << "\n";
     }
   exit(1);
+  */
   // For now - hard code a single function to preload
   compileFunc(ctxt,"three");
   compileFunc(ctxt,"add");

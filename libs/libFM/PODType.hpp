@@ -80,6 +80,7 @@ namespace FM
       }
       delete p;
     }
+    // use placement new?
     ObjectBase * makeObjectBaseOfCapacity(dim_t capacity) {
       Data *q = new Data;
       q->refcnt = 0;
@@ -131,6 +132,7 @@ namespace FM
       if (isComplex && (!_objectType)) p->flags = OBJECT_COMPLEX_FLAG;
       return Object(p);
     }
+    // Could move to NumericType
     Object zeroScalar() {
       ObjectBase* p = getObjectBase(min_capacity);
       p->dims.setScalar();
