@@ -188,7 +188,7 @@ void Type::set(Object &a, const Object &args, const Object &b) {
       _ctxt->_list->push(args_first,_ctxt->_list->first(args_rest));
       _ctxt->_list->pop(args_rest);
       // TODO - is an exception here bad? If so, remove it
-      Object asub;
+      Object asub(_ctxt);
       try {
 	asub = a.type()->get(a,args_first);
       } catch (Exception &e) {

@@ -23,8 +23,8 @@ template <class ElementType>
 Object FM::MatrixHermitian(const Object &a) {
   if (a.isScalar()) return a;
   if (!a.is2D()) throw Exception("Cannot transpose multidimensional arrays");
-  if (!a.isComplex()) return MatrixTranspose<ElementType,false>(a);
-  PODType<ElementType,false> *type = a.asType<PODType<ElementType,false> >();
+  if (!a.isComplex()) return MatrixTranspose<ElementType>(a);
+  PODType<ElementType> *type = a.asType<PODType<ElementType> >();
   Object ret = type->makeMatrix(a.cols(),a.rows(),a.isComplex());
   blocked_hermitian<ElementType,BLOCKSIZE>(type->readOnlyDataComplex(a),type->readWriteDataComplex(ret),
 					   a.rows(),a.cols());

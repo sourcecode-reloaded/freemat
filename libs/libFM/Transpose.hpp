@@ -5,7 +5,7 @@
 
 namespace FM
 {
-  template <class ElementType, bool _objectType>
+  template <class ElementType>
   Object MatrixTranspose(const Object &a);
 };
 

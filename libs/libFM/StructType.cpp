@@ -11,7 +11,7 @@ using namespace FM;
 Object StructType::empty() {
   Data *q = new Data;
   q->refcnt = 0;
-  StructData *sd = new StructData;
+  StructData *sd = new StructData(_ctxt);
   sd->m_data = _ctxt->_cell->empty();
   q->ptr = sd;
   ObjectBase *p = new ObjectBase(q,this,0,Tuple(0,0),0,0);
@@ -136,7 +136,7 @@ void StructType::fillEmpties(Object &a) {
   Object *rp = _ctxt->_cell->readWriteData(ad->m_data);
   int fieldCount = ad->m_fields.size();
   for (dim_t i=0;i<a.elementCount();i++)
-    if (!rp[i].isValid())
+    if (!rp[i].isList())
       rp[i] = _ctxt->_list->makeMatrix(fieldCount,1);
 }
 
@@ -181,7 +181,7 @@ void StructType::setField(Object &a, const Object &args, const Object &b) {
   }
   cd = _ctxt->_cell->readWriteData(sd->m_data);
   // Case one - scalar to scalar assignment
-  dim_t num_assignments = a.elementCount();
+  dim_t num_assignments = std::max<dim_t>(1,a.elementCount());
   const Object *bp = &b;
   if (b.isList()) 
     bp = _ctxt->_list->readOnlyData(b);

@@ -1,27 +1,27 @@
 #ifndef __ListType_hpp__
 #define __ListType_hpp__
 
-#include "PODType.hpp"
+#include "ObjectArrayType.hpp"
 #include "Object.hpp"
 
 namespace FM
 {
   struct ThreadContext;
 
-  class ListType : public PODType<Object,true> {
+  class ListType : public ObjectArrayType {
   public:
-    ListType(ThreadContext *ctxt) : PODType<Object,true>(ctxt,"list") {}
+    ListType(ThreadContext *ctxt) : ObjectArrayType(ctxt,"list") {}
     virtual DataCode code() const {return TypeListArray;}
     virtual Type* typeInstance() {return this;}
     virtual FMString describe(const Object &a) {
-      FMString ret = "[";
+      FMString ret = "<";
       const Object *ap = this->readOnlyData(a);
       for (dim_t i=0;i<a.elementCount();i++)
 	{
 	  ret += ap[i].description();
 	  if (i < a.elementCount() - 1) ret += " ";
 	}
-      ret += "]";
+      ret += ">";
       return ret;
     }
     Object first(const Object &a) {

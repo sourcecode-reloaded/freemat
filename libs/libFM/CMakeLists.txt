@@ -64,6 +64,9 @@ Object.hpp
 Operators.hpp
 OpCodes.h
 Parser.hpp
+ArrayType.hpp
+ArrayType.cpp
+ObjectArrayType.cpp
 PODType.hpp
 PODType.cpp
 Register.hpp

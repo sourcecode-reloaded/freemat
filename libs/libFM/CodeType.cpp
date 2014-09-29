@@ -8,7 +8,7 @@ using namespace FM;
 Object CodeType::makeCodeObject() {
   Data *q = new Data;
   q->refcnt = 0;
-  CodeData *cd = new CodeData;
+  CodeData *cd = new CodeData(_ctxt);
   q->ptr = cd;
   ObjectBase *p = new ObjectBase(q,this,0,Tuple(1,1),0,1);
   return Object(p);

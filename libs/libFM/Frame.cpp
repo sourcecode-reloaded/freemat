@@ -38,12 +38,14 @@ void Frame::setVariableSlow(const FMString &name, const Object &value)
   cp[p] = value;
 }
 
-Frame::Frame(ThreadContext *ctxt)
+Frame::Frame(ThreadContext *ctxt) : _sym_names(ctxt->_list->empty()), 
+				    _vars(ctxt->_list->empty()), 
+				    _addrs(ctxt->_index->empty())
 {
   _ctxt = ctxt;
-  _sym_names = _ctxt->_list->empty();
-  _vars = _ctxt->_list->empty();
-  _addrs = _ctxt->_index->empty();
+  //  _sym_names = _ctxt->_list->empty();
+  //  _vars = _ctxt->_list->empty();
+  //  _addrs = _ctxt->_index->empty();
   _closed = false;
   _reg_offset = 0;
 }

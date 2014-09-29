@@ -27,12 +27,14 @@ namespace FM
   };
 
   class ObjectBase;
+  
+  template <class T>
+  class ArrayType;
 
   template <class T>
-  class PODArrayType;
-
-  template <class T, bool _objtype>
   class PODType;
+
+  class ObjectArrayType;
 
   class StringType;
 
@@ -89,8 +91,9 @@ namespace FM
     }
     friend class Object;
     friend class Type;
-    template <class T>  friend class PODArrayType;
-    template <class T, bool _objtype> friend class PODType;
+    template <class T> friend class ArrayType;
+    template <class T> friend class PODType;
+    friend class ObjectArrayType;
     template <class T> friend class AggregateType;
     friend class DoubleType;
     friend class SingleType;
@@ -101,6 +104,8 @@ namespace FM
   };
 
 
+  struct ThreadContext;
+
   // Need to add a default constructor for Object that
   // points to a global "Empty" object (maybe with its
   // own type?).
@@ -108,99 +113,81 @@ namespace FM
   {
     ObjectBase *d;
   public:
-    inline Object() : d(0) {}
-    inline bool isValid() const {return (d!=0);}
+    inline Object(ThreadContext *ctxt);
     inline Object(ObjectBase *p) : d(p) {
-      if (d) d->refcnt++;
+      assert(d);
+      d->refcnt++;
     }
     inline Object(const Object &copy) : d(copy.d) {
-      if (d) d->refcnt++;
+      d->refcnt++;
     }
     inline ~Object() {
-      if (d && ((--d->refcnt) == 0))
+      if ((--d->refcnt) == 0)
 	d->type->destroyObject(d);
     }
     inline const Tuple& dims() const {
-      static Tuple empty(0,0);
-      if (!d) return empty;
       return d->dims;
     }
     inline Tuple& dims() {
-      if (!d) throw Exception("Attempt to modify Null object - FreeMat internal error");
       detach();
       return d->dims;
     }
     inline dim_t rows() const {
-      if (!d) return 0;
       return d->dims.rows();
     }
     inline dim_t cols() const {
-      if (!d) return 0;
       return d->dims.cols();
     }
     inline bool isEmpty() const {
-      if (!d) return false;
       return (elementCount() == 0);
     }
     inline bool isComplex() const {
-      if (!d) return false;
       return ((d->flags & OBJECT_COMPLEX_FLAG) != 0);
     }
     inline bool isScalar() const {
-      if (!d) return false;
       return (elementCount() == 1);
     }
     inline bool isList() const {
-      if (!d) return false;
       return (typeCode() == TypeListArray);
     }
     inline bool is2D() const {
-      if (!d) return false;
       return (d->dims.is2D());
     }
     inline bool isVector() const {
-      if (!d) return false;
       return (d->dims.isVector());
     }
     inline int flags() const {
-      if (!d) return 0;
       return d->flags;
     }
     inline size_t capacity() const {
-      if (!d) return 0;
       return d->capacity;
     }
     inline FMString description() const {
-      if (!d) return FMString("[]");
       return d->type->describe(*this);
     }
     inline dim_t elementCount() const {
-      if (!d) return 0;
       return d->dims.elementCount();
     }
     inline Object asIndex(dim_t max) const {
-      if (!d) return Object();
       return d->type->asIndex(*this,max);
     }
     inline Object asIndexNoBoundsCheck() const {
-      if (!d) return Object();
       return d->type->asIndexNoBoundsCheck(*this);
     }
     inline double asDouble() const {
-      if (!d) return 0;
       return d->type->doubleValue(*this);
     }
     Object& operator=(const Object& copy) {
       if (this == &copy) return *this;
-      if (d && ((--d->refcnt) == 0))
+      if ((--d->refcnt) == 0)
 	d->type->destroyObject(d);
       d = copy.d;
-      if (d) d->refcnt++;
+      assert(d);
+      d->refcnt++;
       return *this;
     }
     inline void detach() 
     {
-      if (!d) return;
       if (d->refcnt > 1) {
 	d = new ObjectBase(*d);
 	d->refcnt++;
@@ -212,24 +199,21 @@ namespace FM
     }
     inline Type* type() const
     {
-      if (!d) 
-	throw Exception("Null objects have no type - internal FreeMat error");
       return d->type;
     }
     inline DataCode typeCode() const
     {
-      if (!d) return TypeInvalid;
       return type()->code();
     }
     template <class S>
     inline S* asType() const
     {
-      if (!d) return 0;
       return static_cast<S*>(d->type);
     }
-    friend class PODArrayType<double>;
-    friend class PODType<double, false>;
-    template <class T, bool _objtype> friend class PODType;
+    template <class T> friend class ArrayType;
+    friend class PODType<double>;
+    template <class T> friend class PODType;
+    friend class ObjectArrayType;
     template <class T> friend class AggregateType;
     friend class DoubleType;
     friend class SingleType;
@@ -307,5 +291,14 @@ namespace FM
      }
   */
 }
+
+
+#include "ThreadContext.hpp"
+
+inline FM::Object::Object(FM::ThreadContext *ctxt) : d(ctxt->_empty) 
+{
+  d->refcnt++;
+}
+
 
 #endif

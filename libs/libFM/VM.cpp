@@ -61,9 +61,8 @@ using namespace FM;
 // Crap.
 // 
 
-VM::VM(ThreadContext *ctxt)
+VM::VM(ThreadContext *ctxt) : _registers(ctxt->_list->makeMatrix(register_stack_size,1))
 {
-  _registers.resize(register_stack_size);
   for (int i=0;i<frame_stack_size;i++)
     _frames.push_back(new Frame(ctxt)); // FIXME - Bad way to do this?
   //  _frames.resize(frame_stack_size);
@@ -133,9 +132,9 @@ Object VM::executeFunction(const Object &codeObject, const Object &parameters)
   sp = _ctxt->_list->readWriteData(_frames[_fp]->_vars);
   for (int i=0;i<to_return;i++)
     _ctxt->_list->push(retvec,sp[_ctxt->_index->scalarValue(return_ndx[i])]);
-  _frames[_fp]->_sym_names = Object();
-  _frames[_fp]->_vars = Object();
-  _frames[_fp]->_addrs = Object();
+  _frames[_fp]->_sym_names = _ctxt->_list->empty();
+  _frames[_fp]->_vars = _ctxt->_list->empty();
+  _frames[_fp]->_addrs = _ctxt->_index->empty();
   // TODO: Clean up the registers
   _rp = _frames[_fp]->_reg_offset;
   _fp--;
@@ -162,9 +161,9 @@ void VM::executeScript(const Object &codeObject)
   executeCodeObject(codeObject);
   // No return values.. pop the frame
   _rp = _frames[_fp]->_reg_offset;
-  _frames[_fp]->_sym_names = Object();
-  _frames[_fp]->_vars = Object();
-  _frames[_fp]->_addrs = Object();
+  _frames[_fp]->_sym_names = _ctxt->_list->empty();
+  _frames[_fp]->_vars = _ctxt->_list->empty();
+  _frames[_fp]->_addrs = _ctxt->_index->empty();
   _fp--;
 }
 
@@ -225,7 +224,7 @@ void VM::executeCodeObject(const Object &codeObject)
       }
   if (!closed_frame)  throw Exception("Closed frame not found!  Should never happen!");
 
-  Object *regfile = &(_registers[0]) + _frames[_fp]->_reg_offset;
+  Object *regfile = _ctxt->_list->readWriteData(_registers) + _frames[_fp]->_reg_offset;
   ndx_t *addrfile = _ctxt->_index->readWriteData(_frames[_fp]->_addrs);
   Object *varfile = _ctxt->_list->readWriteData(closed_frame->_vars);
 

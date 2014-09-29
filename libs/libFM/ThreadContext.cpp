@@ -12,6 +12,7 @@ ThreadContext* FM::BuildNewThreadContext(TermIF *io)
   ThreadContext *ctxt = new ThreadContext;
   ctxt->_bool = new BoolType(ctxt);
   ctxt->_double = new DoubleType(ctxt);
+  ctxt->_empty = ctxt->_double->emptyBase();
   ctxt->_single = new SingleType(ctxt);
   ctxt->_string = new StringType(ctxt);
   ctxt->_index = new IndexType(ctxt);

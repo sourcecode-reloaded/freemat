@@ -130,6 +130,7 @@ namespace FM
     BasicBlock* _currentBlock;
     Object _namelist;
     Object _constlist; 
+    CodeBlock(ThreadContext*ctxt) : _namelist(ctxt), _constlist(ctxt) {}
   };
 
   struct Module

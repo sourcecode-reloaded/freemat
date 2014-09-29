@@ -19,7 +19,7 @@ namespace FM
 
   class VM
   {
-    std::vector<Object> _registers;
+    Object _registers;
     std::vector<Frame*> _frames;
     int _fp;
     int _rp;

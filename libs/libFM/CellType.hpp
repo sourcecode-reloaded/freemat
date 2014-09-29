@@ -1,19 +1,18 @@
 #ifndef __CellType_hpp__
 #define __CellType_hpp__
 
-#include "PODType.hpp"
+#include "ObjectArrayType.hpp"
 #include "Object.hpp"
 
 namespace FM
 {
   struct ThreadContext;
 
-  class CellType : public PODType<Object,true> {
+  class CellType : public ObjectArrayType {
   public:
-    CellType(ThreadContext *ctxt) : PODType<Object,true>(ctxt,"cell") {}
+    CellType(ThreadContext *ctxt) : ObjectArrayType(ctxt,"cell") {}
     virtual DataCode code() const {return TypeCellArray;}
     virtual Type* typeInstance() {return this;}
-    virtual Object add(const Object &a, const Object &b) {throw Exception("Adding cell arrays is unsupported");}
     virtual FMString describe(const Object &a) {
       if (a.isScalar())
 	return FMString("[") + scalarValue(a).description() + FMString("]");

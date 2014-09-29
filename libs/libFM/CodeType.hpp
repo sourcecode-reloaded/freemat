@@ -7,13 +7,17 @@
 
 namespace FM
 {
-  struct CodeData {
+  class CodeData {
+  public:
     Object m_name;
     Object m_code;
     Object m_names;
     Object m_consts;
     Object m_params;
     Object m_returns;
+    CodeData(ThreadContext *ctxt) : 
+      m_name(ctxt), m_code(ctxt), m_names(ctxt), 
+      m_consts(ctxt), m_params(ctxt), m_returns(ctxt) {}
   };
 
   struct ThreadContext;

@@ -1019,7 +1019,7 @@ Compiler::Compiler(ThreadContext *b) {
   assert(b);
   _ctxt = b;
   _regpool = new RegisterBlock(256);
-  _code = new CodeBlock;
+  _code = new CodeBlock(b);
 }
 
 void Compiler::switchStatement(const Tree &t) {
@@ -1283,7 +1283,7 @@ void Compiler::compile(const FMString &code) {
   Tree t(P.process());
   SymbolPass p;
   delete _code;
-  _code = new CodeBlock;
+  _code = new CodeBlock(_ctxt);
   delete _regpool;
   _regpool = new RegisterBlock(256);
   while (!_codestack.empty()) {
@@ -1313,7 +1313,7 @@ void Compiler::compile(const FMString &code) {
 
 
 void Compiler::walkFunction(const Tree &t, bool nested) {
-  CodeBlock *cp = new CodeBlock;
+  CodeBlock *cp = new CodeBlock(_ctxt);
   cp->_syms = _currentSym;
   _codestack.push(cp);
   _code = cp;
@@ -1356,7 +1356,7 @@ void Compiler::walkFunctionCollection(const Tree &t) {
 }
 
 void Compiler::walkScript(const Tree &t) {
-  CodeBlock *cp = new CodeBlock;
+  CodeBlock *cp = new CodeBlock(_ctxt);
   cp->_syms = _currentSym;
   _codestack.push(cp);
   _code = cp;

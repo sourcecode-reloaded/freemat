@@ -10,7 +10,7 @@ namespace FM
   template <class T, class Op>
   inline Object dispatch_unaryop(const Object &a, Type *o)
   {
-    PODType<T,false> *otype = static_cast<PODType<T,false> *>(o);
+    PODType<T> *otype = static_cast<PODType<T> *>(o);
     Object c = otype->zeroArrayOfSize(a.dims(),a.isComplex());
     T *cptr = otype->readWriteData(c);
     const T* aptr = otype->readOnlyData(a);

@@ -574,3 +574,12 @@ Deletion!
 
 Classes
 
+
+- Null objects removed!  Yaay!  But 
+
+a.foo = 3 
+
+fails now.  Suspect that has more to do with the multiple assignment
+fix than the empty array.
+
+********************************************************************************

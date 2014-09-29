@@ -11,16 +11,18 @@
 
 namespace FM
 {
+  struct ThreadContext;
+
   // Struct is defined as a cell array of lists.  Each list entry corresponds
   // to the data element for a given field.  So it is effectively:
   //  {<f1,f2,f3>,<f1,f2,f3>,...}
   // where <f1,f2,f3> is a list of values for fields 1, 2 and 3 respectively.
-  struct StructData {
+  class StructData {
+  public:
     HashMap<int> m_fields; // Maps fields to index in the list for each cell
     Object m_data; // Cell array where each entry is a list of fields
+    StructData(ThreadContext *ctxt) : m_data(ctxt) {}
   };
-
-  struct ThreadContext;
 
   //  class StructType : public Type {
   class StructType : public AggregateType<StructData> {

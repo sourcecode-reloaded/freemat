@@ -30,6 +30,7 @@ namespace FM
   class Compiler;
   class Assembler;
   class TermIF;
+  class ObjectBase;
 
   struct ThreadContext
   {
@@ -52,6 +53,7 @@ namespace FM
     Compiler *_compiler;
     Assembler *_asm;
     TermIF *_io;
+    ObjectBase *_empty;
   };
 
   ThreadContext* BuildNewThreadContext(TermIF *io);
