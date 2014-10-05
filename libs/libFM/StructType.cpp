@@ -141,9 +141,15 @@ void StructType::fillEmpties(Object &a) {
 }
 
 void StructType::setParens(Object &a, const Object &args, const Object &b) {
-  // First the easy case
-  // TODO - Type check b?
   StructData *ad = this->readWriteData(a);
+  if (b.isEmpty())
+    {
+      _ctxt->_cell->setParens(ad->m_data,args,b);
+      a.d->dims = ad->m_data.dims();
+      return;
+    }
+  if (b.type() != this)
+    throw Exception("Cannot assign A(..) = b where A is a structure array, and b is not");
   const StructData *bd = this->readOnlyData(b);
   if (ad->m_fields == bd->m_fields)
     {

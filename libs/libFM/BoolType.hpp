@@ -16,6 +16,8 @@ namespace FM
     virtual Object asIndexNoBoundsCheck(const Object &a);
     bool any(const Object &a);
     bool all(const Object &a);
+    dim_t countOne(const Object &a);
+    dim_t countZero(const Object &a);
   };
 }
 

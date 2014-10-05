@@ -14,8 +14,9 @@ namespace FM
     virtual DataCode code() const {return TypeCellArray;}
     virtual Type* typeInstance() {return this;}
     virtual FMString describe(const Object &a) {
+      if (a.isEmpty()) return FMString("{}");
       if (a.isScalar())
-	return FMString("[") + scalarValue(a).description() + FMString("]");
+	return FMString("{") + scalarValue(a).description() + FMString("}");
       else
 	return(a.dims().toString() + " " + this->name() + " array");
     }

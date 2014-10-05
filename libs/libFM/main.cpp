@@ -15,6 +15,8 @@
 #include "fnv.hh"
 #include "HashMap.hpp"
 
+//#include <valarray>
+
 // What is the strategy for get?
 //
 // get(ObjectVector)
@@ -230,6 +232,14 @@ int testMap(int cnt)
   return accum;
 }
 
+class foo
+{
+  int x_;
+public:
+  foo() = delete;
+  foo(int t) : x_(t) {};
+};
+
 int main(int argc, char *argv[])
 {
 
@@ -239,6 +249,41 @@ int main(int argc, char *argv[])
   ThreadContext *ctxt = BuildNewThreadContext(&io);
 
   boost::timer::cpu_timer timer;
+
+  // There are some inefficiencies here.
+#if 0
+  for (int f=0;f<5;f++)
+    {
+      timer.start();
+      std::vector<double> x;
+      for (int i=0;i<1e8;i++)
+	x.push_back(i);
+      timer.stop();
+      std::cout << timer.elapsed().wall/1.0e9 << "\n";
+    }
+
+
+  /*  std::vector<foo> y;
+  y.resize(10);
+  */
+  
+  for (int f=0;f<5;f++)
+    {
+      timer.start();
+      Object x(ctxt->_double->empty());
+      for (int i=0;i<1e8;i++)
+	{
+	  ctxt->_double->resize(x,Tuple(i+1,1));
+	  double *xp = ctxt->_double->readWriteData(x);
+	  xp[i] = i;
+	}
+      timer.stop();
+      std::cout << timer.elapsed().wall/1.0e9 << "\n";
+    }
+
+
+  exit(1);
+#endif
 
   /*  
   std::cout << "f     map     boost  bst-obj hashmap  lin   sort\n";
@@ -282,6 +327,7 @@ int main(int argc, char *argv[])
   compileFunc(ctxt,"three");
   compileFunc(ctxt,"add");
   compileFunc(ctxt,"fixa");
+  compileFunc(ctxt,"dima");
   
   while (1)
     {

@@ -16,7 +16,7 @@ namespace FM
   template <class T>
   class PODType : public ArrayType<T> {
     virtual void* allocateArray(dim_t size) const {return calloc(size,sizeof(T));}
-    virtual void releaseData(T* dst, dim_t size) const {} // No release required
+    virtual void releaseData(T* dst, dim_t size) const {memset(dst,0,sizeof(T)*size);} // No release required
     virtual void freeData(T* ptr, dim_t size) const {free(ptr);}
     virtual T zeroElement() const {return T();}
   public:

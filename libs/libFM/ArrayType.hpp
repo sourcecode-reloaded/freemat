@@ -27,6 +27,12 @@ namespace FM
     ObjectBase *_emptyBase;
     bool _haveEmpty;
     Object getParensRowMode(const Object &a, const Tuple &dims, const Object &b);
+    void erase(Object &a, const Object &args);
+    void erasePlanes(Object &a, const Object &mask, const Tuple &outdims, int non_colon_index);
+    void eraseRowIndexMode(Object &a, const Object &ndx);
+    void eraseRows(Object &a, const Object &mask, const Tuple &outdims);
+    Object convertArgumentsToIndexingExpressions(const Object &args);
+    void resizeSlow(Object &a, const Tuple &newsize);
   protected:
     /* To make a concrete implementation of this class, you have to provide the following */
     virtual void* allocateArray(dim_t size) const = 0;
@@ -106,6 +112,12 @@ namespace FM
       p->flags = 0;
       p->offset = 0;
       if (isComplex) p->flags = OBJECT_COMPLEX_FLAG;
+      if (capacity < min_capacity)
+	{
+	  T* dp = static_cast<T*>(p->data->ptr);
+	  for (dim_t i=0;i<capacity;i++)
+	    dp[i] = zeroElement();
+	}
       return Object(p);    
     }
     Object makeMatrix(dim_t rows, dim_t cols, bool isComplex = false) {
@@ -119,6 +131,12 @@ namespace FM
       p->flags = 0;
       p->offset = 0;
       if (isComplex) p->flags = OBJECT_COMPLEX_FLAG;
+      if (capacity < min_capacity)
+	{
+	  T* dp = static_cast<T*>(p->data->ptr);
+	  for (dim_t i=0;i<capacity;i++)
+	    dp[i] = zeroElement();
+	}
       return Object(p);
     }
     // Could move to NumericType
@@ -209,7 +227,24 @@ namespace FM
     virtual Object getParens(const Object &a, const Object &b);
     void setParensRowIndexMode(Object &a, const Object &ndx, const Object &b);
     virtual void setParens(Object &a, const Object &args, const Object &b);
-    virtual void resize(Object &a, const Tuple &newsize);
+    virtual void resize(Object &a, const Tuple &newsize) {
+      if (a.elementCount() == 0)
+	{
+	  if (a.d->capacity > newsize.elementCount())
+	    {
+	      a.dims() = newsize;
+	      return;
+	    }
+	  a = this->zeroArrayOfSize(newsize,a.isComplex());
+	  return;
+	}
+      if (a.isVector() && newsize.isVector() && a.d->capacity > newsize.elementCount())
+	{
+	  a.dims() = newsize;
+	  return;
+	}
+      resizeSlow(a,newsize);
+    }
     virtual Object NCat(const Object &p, int dimension);
     virtual Object Transpose(const Object &a) {return MatrixTranspose<T>(a);}
   };

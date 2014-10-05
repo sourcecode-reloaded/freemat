@@ -20,6 +20,7 @@ namespace FM
       return p;
     }
     Object asIndex(const Object &a, dim_t ndx); 
+    Object asIndexNoBoundsCheck(const Object &a);
     inline FMString getString(const Object &o) const {
       assert(o.type()->code() == TypeString);
       const FMChar *t = readOnlyData(o);

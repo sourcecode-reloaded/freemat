@@ -53,3 +53,23 @@ bool BoolType::all(const Object &a)
     if (!ip[i]) return false;
   return true;
 }
+
+dim_t BoolType::countOne(const Object &a)
+{
+  const bool *ip = this->readOnlyData(a);
+  dim_t len = a.elementCount();
+  dim_t count = 0;
+  for (dim_t i=0;i<len;i++)
+    if (ip[i]) count++;
+  return count;
+}
+
+dim_t BoolType::countZero(const Object &a)
+{
+  const bool *ip = this->readOnlyData(a);
+  dim_t len = a.elementCount();
+  dim_t count = 0;
+  for (dim_t i=0;i<len;i++)
+    if (!ip[i]) count++;
+  return count;  
+}
