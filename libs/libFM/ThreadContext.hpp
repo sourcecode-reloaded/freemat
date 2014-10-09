@@ -1,6 +1,8 @@
 #ifndef __ThreadContext_hpp__
 #define __ThreadContext_hpp__
 
+#include "FMLib.hpp"
+
 // The context struct is meant to contain (pointers) to all objects needed by the execution
 // of the FM code.  Because of the new design of the array classes (and their lack of 
 // thread safe reference counting), each VM which operates in a thread must have access
@@ -10,6 +12,8 @@
 // different threads will need their own compilers and VM objects, and the ability to
 // inject code at run time means that functions need access to a compiler (consider the
 // eval statement).
+
+#include <map>
 
 namespace FM
 {
@@ -31,6 +35,7 @@ namespace FM
   class Assembler;
   class TermIF;
   class ObjectBase;
+  class Object;
 
   struct ThreadContext
   {
@@ -54,6 +59,8 @@ namespace FM
     Assembler *_asm;
     TermIF *_io;
     ObjectBase *_empty;
+    // Global functions
+    std::map<FMString,Object> *_globals;
   };
 
   ThreadContext* BuildNewThreadContext(TermIF *io);

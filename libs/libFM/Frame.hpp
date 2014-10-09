@@ -14,6 +14,7 @@ namespace FM
     Object _sym_names;
     Object _vars;
     Object _addrs;
+    Object _defined;
     ThreadContext *_ctxt;
     bool _closed;
     int _reg_offset;
@@ -23,6 +24,7 @@ namespace FM
     int getAddress(const FMString &name);
     int allocateVariable(const FMString &name);
     void setVariableSlow(const FMString &name, const Object &value);
+    int lookupAddressForName(const Object &name);
   };
 };
 

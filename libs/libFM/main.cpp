@@ -40,7 +40,8 @@ void compileFunc(ThreadContext *ctxt, FMString name)
   ctxt->_compiler->compile(body);
   Object p = ctxt->_asm->run(ctxt->_compiler->module()->_main);
   Disassemble(ctxt,p);
-  ctxt->_vm->defineBaseVariable(name,p);
+  ctxt->_globals->insert(std::make_pair(name,p));
+  //  ctxt->_vm->defineBaseVariable(name,p);
 }
 
 const int ITERS = 10000000;
@@ -328,6 +329,7 @@ int main(int argc, char *argv[])
   compileFunc(ctxt,"add");
   compileFunc(ctxt,"fixa");
   compileFunc(ctxt,"dima");
+  compileFunc(ctxt,"t4");
   
   while (1)
     {

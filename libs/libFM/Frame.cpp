@@ -13,6 +13,31 @@ bool Frame::defines(const FMString &name)
   return (getAddress(name) != -1);
 }
 
+int Frame::mapNameToVariableIndex(const Object &name) {
+  const Object *cp = _ctxt->_list->readOnlyData(_sym_names);
+  for (int i=0;i<_sym_names.elementCount();i++)
+    if (cp[i] == name) return i;
+  return -1;
+}
+
+int Frame::lookupAddressForName(const Object &name) {
+  // First lookup the address in the list of symbols
+  int ndx = this->mapNameToVariableIndex(name);
+  if (ndx == -1)
+    {
+      // Do not know the name at all
+      // Is it defined in the global scope?
+      if (_ctxt->_global->defines(name))
+	{
+	  // We are a proxy for someone who wants this symbol (not us!)
+	  // Allocate a space for it
+	  ndx = 
+	  int new_symbol_address = allocateVariable(name);
+	  
+	}
+    }
+}
+
 int Frame::getAddress(const FMString &name)
 {
   const Object *cp = _ctxt->_list->readOnlyData(_sym_names);
@@ -40,7 +65,8 @@ void Frame::setVariableSlow(const FMString &name, const Object &value)
 
 Frame::Frame(ThreadContext *ctxt) : _sym_names(ctxt->_list->empty()), 
 				    _vars(ctxt->_list->empty()), 
-				    _addrs(ctxt->_index->empty())
+				    _addrs(ctxt->_index->empty()),
+				    _defined(ctxt->_bool->empty())
 {
   _ctxt = ctxt;
   //  _sym_names = _ctxt->_list->empty();

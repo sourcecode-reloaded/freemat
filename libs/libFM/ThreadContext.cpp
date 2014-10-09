@@ -3,6 +3,7 @@
 #include "VM.hpp"
 #include "Compiler.hpp"
 #include "Assembler.hpp"
+#include "HashMap.hpp"
 
 using namespace FM;
 
@@ -27,6 +28,7 @@ ThreadContext* FM::BuildNewThreadContext(TermIF *io)
   ctxt->_vm = new VM(ctxt);
   ctxt->_compiler = new Compiler(ctxt);
   ctxt->_asm = new Assembler(ctxt);
+  ctxt->_globals = new std::map<FMString,Object>();
   ctxt->_io = io;
   return ctxt;
 }

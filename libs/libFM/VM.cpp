@@ -98,17 +98,42 @@ void VM::dump()
 // of returns.
 Object VM::executeFunction(const Object &codeObject, const Object &parameters)
 {
+  //
+  // The structure of a frame needs a little explanation.
+  // The _vars array holds the values for each name in the frame
+  // The _sym_names array holds the names defined in the frame
+  // The _addrs array contains the addresses of each name into the _vars array
+  // 
+  // Initially, when a frame is created, only variables that are known
+  // defined in the frame have addresses (i.e., the parameters to the 
+  // function call).  For a script, none of the variables are known at
+  // creation time.
+  //
+  //  Now consider a OP_LOAD
+  //
+  //   If the address is -1, we look up the variable in the closed scope.
+  //   If the variable is defined in the closed scope, we return it's address.
+  //
+  // The implication is that we need an additional flag per variable that
+  // indicated that the variable has been defined.  A fetch on a variable
+  // that has not been defined should trigger a search of the global scope for
+  // a function of the given name. 
+  //
   // std::cout << "fp = " << _fp << " rp = " << _rp << "\n";
   // Create a new frame for the function
   _fp++;
   const CodeData *cp = _ctxt->_code->readOnlyData(codeObject);
   _frames[_fp]->_name = _ctxt->_string->getString(cp->m_name);
+  std::cout << "Starting function: " << _frames[_fp]->_name << "\n";
   // For functions, all addresses are pre-set to point
   // to the first N slots of the variables space
   int N = cp->m_names.elementCount();
+  std::cout << "Names count = " << N << "\n";
   _frames[_fp]->_addrs = _ctxt->_index->makeMatrix(N,1);
   ndx_t *ap = _ctxt->_index->readWriteData(_frames[_fp]->_addrs);
-  for (int i=0;i<N;i++) ap[i] = i;
+  // FIXME - not right - parameters are defined when the function executes
+  for (int i=0;i<N;i++) ap[i] = -1;
+  _frames[_fp]->_defined = _ctxt->_bool->makeMatrix(N,1);
   _frames[_fp]->_sym_names = cp->m_names;
   _frames[_fp]->_vars = _ctxt->_list->makeMatrix(N,1);
   _frames[_fp]->_reg_offset = _rp;
@@ -121,6 +146,7 @@ Object VM::executeFunction(const Object &codeObject, const Object &parameters)
   const Object * args = _ctxt->_list->readOnlyData(parameters);
   const Object * param_ndx = _ctxt->_list->readOnlyData(cp->m_params);
   int to_use = std::min<int>(parameters.elementCount(),cp->m_params.elementCount());
+  std::cout << "to_use = " << to_use << "\n";
   for (int i=0;i<to_use;i++)
     sp[_ctxt->_index->scalarValue(param_ndx[i])] = args[i];
   // execute the code
@@ -135,6 +161,7 @@ Object VM::executeFunction(const Object &codeObject, const Object &parameters)
   _frames[_fp]->_sym_names = _ctxt->_list->empty();
   _frames[_fp]->_vars = _ctxt->_list->empty();
   _frames[_fp]->_addrs = _ctxt->_index->empty();
+  _frames[_fp]->_defined = _ctxt->_bool->empty();
   // TODO: Clean up the registers
   _rp = _frames[_fp]->_reg_offset;
   _fp--;
@@ -146,9 +173,11 @@ void VM::executeScript(const Object &codeObject)
   _fp++;
   const CodeData *cp = _ctxt->_code->readOnlyData(codeObject);
   _frames[_fp]->_name = _ctxt->_string->getString(cp->m_name);
+  std::cout << "Starting script: " << _frames[_fp]->_name << "\n";
   _frames[_fp]->_sym_names = _ctxt->_list->empty();
   int N = cp->m_names.elementCount();
   _frames[_fp]->_addrs = _ctxt->_index->makeMatrix(N,1);
+  _frames[_fp]->_defined = _ctxt->_bool->makeMatrix(N,1);
   _frames[_fp]->_reg_offset = _rp;
   _frames[_fp]->_ctxt = _ctxt;
   _frames[_fp]->_closed = false;
@@ -164,6 +193,7 @@ void VM::executeScript(const Object &codeObject)
   _frames[_fp]->_sym_names = _ctxt->_list->empty();
   _frames[_fp]->_vars = _ctxt->_list->empty();
   _frames[_fp]->_addrs = _ctxt->_index->empty();
+  _frames[_fp]->_defined = _ctxt->_bool->empty();
   _fp--;
 }
 
@@ -233,6 +263,13 @@ void VM::executeCodeObject(const Object &codeObject)
   while (!returnFound)
     {
       insn_t insn = code[ip];
+
+      {
+	int8_t op = opcode(insn);
+	printf("%-15s",getOpCodeName(op).c_str());
+	printf("%-20s",Compiler::opcodeDecode(op,insn).c_str());
+	std::cout << "\n";
+      }
 
       switch (opcode(insn))
 	{
@@ -384,15 +421,17 @@ void VM::executeCodeObject(const Object &codeObject)
 	  */
 	case OP_LOAD:
 	  {
+	    // We start by looking for the name in our address file
 	    register int ndx = get_constant(insn);
 	    register int addr = addrfile[ndx];
 	    if (addr == -1)
 	      {
-		FMString name = _ctxt->_string->getString(names_list[ndx]);
-		addrfile[ndx] = closed_frame->getAddress(name);
-		if (addrfile[ndx] == -1)
-		  throw Exception("Reference to undefined variable " + name);
-		addr = addrfile[ndx];
+		// The address for this index has not been defined yet in the current scope.
+		// First, see if the closed frame has the address for it.  In the process, the 
+		// closed frame will search the global namespace for the symbol.
+		addr = closed_frame->lookupAddressForName(names_list[ndx]);
+		if (addr == -1)
+		  throw Exception("Reference to undefined variable " + names_list[ndx]);
 	      }
 	    REG1 = varfile[addr];
 	    break;
@@ -405,14 +444,13 @@ void VM::executeCodeObject(const Object &codeObject)
 	    register int addr = addrfile[ndx];
 	    if (addr == -1)
 	      {
-		FMString name = _ctxt->_string->getString(names_list[get_constant(insn)]);
-		addrfile[ndx] = closed_frame->getAddress(name);
-		if (addrfile[ndx] == -1)
+		addr = closed_frame->lookupAddressForName(names_list[ndx]);
+		if (addr == -1)
 		  {
-		    addrfile[ndx] = closed_frame->allocateVariable(name);
+		    addr = closed_frame->defineNewSymbol(names_list[ndx]);
 		    varfile = _ctxt->_list->readWriteData(closed_frame->_vars);
 		  }
-		addr = addrfile[ndx];
+		addrfile[ndx] = addr;
 	      }
 	    varfile[addr] = REG1;
 	    break;
