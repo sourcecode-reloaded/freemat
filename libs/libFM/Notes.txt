@@ -679,7 +679,7 @@ Global
 
 Persistent
 
-Switch statement
+Switch statement - working - check corner cases
 
 Exceptions
 
