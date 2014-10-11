@@ -61,6 +61,10 @@ NoSupportUnaryOp(Plus);
 NoSupportUnaryOp(Transpose);
 NoSupportUnaryOp(Hermitian);
 
+Object Type::sliceColumn(const Object &a, ndx_t column) {
+  throw Exception("Cannot use objects of type " + this->name() + " in expressions of the type for i=<object>");
+}
+
 Object Type::convert(const Object &a) {
   throw Exception("Cannot convert objects to type " + this->name());
 }
@@ -205,3 +209,4 @@ void Type::set(Object &a, const Object &args, const Object &b) {
 Object Type::deref(const Object &a) {
   return a;
 }
+

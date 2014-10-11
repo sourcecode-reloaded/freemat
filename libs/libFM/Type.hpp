@@ -81,6 +81,7 @@ namespace FM {
     virtual Object getParens(const Object &a, const Object &b);
     virtual Object getBraces(const Object &a, const Object &b);
     virtual Object getField(const Object &a, const Object &b);
+    virtual Object sliceColumn(const Object &a, ndx_t column);
     virtual Object convert(const Object &a);
     virtual double doubleValue(const Object &a);
     virtual void setParens(Object &a, const Object &args, const Object &b);

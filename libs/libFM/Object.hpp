@@ -150,6 +150,9 @@ namespace FM
     inline bool isList() const {
       return (typeCode() == TypeListArray);
     }
+    inline bool isString() const {
+      return (typeCode() == TypeString);
+    }
     inline bool is2D() const {
       return (d->dims.is2D());
     }

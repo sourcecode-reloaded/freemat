@@ -663,7 +663,24 @@ TODO -
 
 Next steps
 
-Calling functions from functions doesn't work?
+Calling functions from functions doesn't work? - Done
 
+Review TODOs and FIXMEs
+
+end syntax?
+
+Test cases?
+
+nargin? nargout? varargin? varargout?
+
+Finish NCAT?
+
+Global
+
+Persistent
+
+Switch statement
+
+Exceptions
 
 

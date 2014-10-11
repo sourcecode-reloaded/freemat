@@ -29,6 +29,7 @@ HashMap.cpp
 ThreadContext.cpp
 DoubleType.cpp
 CellType.cpp
+EndRemover.cpp
 CodeType.cpp
 StringType.cpp
 Transpose.cpp  

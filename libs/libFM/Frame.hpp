@@ -18,13 +18,15 @@ namespace FM
     ThreadContext *_ctxt;
     bool _closed;
     int _reg_offset;
+    int mapNameToVariableIndex(const Object &name);
   public:
     Frame(ThreadContext *ctxt);
     bool defines(const FMString &name);
     int getAddress(const FMString &name);
     int allocateVariable(const FMString &name);
     void setVariableSlow(const FMString &name, const Object &value);
-    int lookupAddressForName(const Object &name);
+    int lookupAddressForName(const Object &name, bool searchGlobals);
+    int defineNewSymbol(const Object &name);
   };
 };
 

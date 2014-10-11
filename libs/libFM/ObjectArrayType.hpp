@@ -19,6 +19,13 @@ namespace FM
   public: 
     ObjectArrayType(ThreadContext* ctxt, const FMString &name) : ArrayType<Object>(ctxt,name) {}
     virtual ~ObjectArrayType() {}
+    ndx_t indexOf(const Object &a, const Object &b) {
+      dim_t a_size = a.elementCount();
+      const Object *ap = this->readOnlyData(a);
+      for (dim_t i=0;i<a_size;i++)
+	if (ap[i] == b) return i;
+      return -1;
+    }
   };
 }
 

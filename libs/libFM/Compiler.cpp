@@ -10,6 +10,7 @@
 #include "StructType.hpp"
 #include "Scanner.hpp"
 #include "Parser.hpp"
+#include "EndRemover.hpp"
 
 //#include "Algorithms.hpp"
 //#include "Print.hpp"
@@ -863,6 +864,7 @@ reg_t Compiler::expression(const Tree &t) {
       return fetchConstant(_ctxt->_string->makeString(t.text()));
     }
   case TOK_END:
+    std::cout << "TOK_END encountered!\n";
     // Rewrite the tree to remove TOK_END...
     // if (!endRef.valid())
     //   throw Exception("END keyword not allowed for undefined variables");
@@ -1062,7 +1064,7 @@ void Compiler::forStatement(const Tree &t) {
     reg_t iterCount = getRegister();
     emit(OP_NUMCOLS,iterCount,indexSet);
     // Allocate a register to track the column number
-    reg_t colnum = fetchConstant(_ctxt->_index->makeScalar(1));
+    reg_t colnum = fetchConstant(_ctxt->_double->makeScalar(1));
     // Start a new block
     BasicBlock *loop = new BasicBlock;
     emit(OP_JUMP,loop);
@@ -1281,6 +1283,9 @@ void Compiler::compile(const FMString &code) {
   Scanner S(code,"");
   Parser P(S);
   Tree t(P.process());
+  EndRemoverPass e;
+  t.print();
+  e.walkCode(t);
   SymbolPass p;
   delete _code;
   _code = new CodeBlock(_ctxt);

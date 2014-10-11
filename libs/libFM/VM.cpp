@@ -212,6 +212,17 @@ double num_for_loop_iter( double first, double step, double last )
     return nsteps;  
 }
 
+// s is the switch value to test, x is the values to test against
+// copied from Algorithms.cpp
+static inline Object TestForCaseMatch(ThreadContext *ctxt, const Object &s, const Object &x) {
+  if (!(s.isScalar() || s.isString()))
+    throw Exception("Switch argument must be a scalar or a string");
+  // If x is a scalar, we just need to call the scalar version
+  if (((x.typeCode() != TypeCellArray) && x.isScalar()) || x.isString())
+    return ctxt->_bool->makeScalar(s == x);
+  return ctxt->_bool->makeScalar(ctxt->_cell->indexOf(x,s) != -1);
+}
+
 // Dynamic load/stores - these behave differently 
 // depending on if we are a script or not.  If we are
 // a script, a dynamic load/store can see the calling
@@ -366,13 +377,13 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_NUMCOLS:
 	  REG1 = _ctxt->_double->makeScalar(REG2.elementCount()/REG2.rows());
 	  break;
-	  /*
 	case OP_CASE:
-	  // FIXME
+	  REG1 = TestForCaseMatch(_ctxt,REG2,REG3);
 	  break;
 	case OP_COLUMN:
-	  REG1 = REG2.column(REG3.asDouble());
+	  REG1 = REG2.type()->sliceColumn(REG2,_ctxt->_double->scalarValue(REG3));
 	  break;
+	  /*
 	case OP_NOT:
 	  UNARYOP(Not,"not");
 	  break;
@@ -395,9 +406,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	case OP_LENGTH:
 	  REG1 = _ctxt->_double->makeScalar(REG2.elementCount());
 	  break;
-	  /*	case OP_LHSCOUNT:
-	  // FIXME
-	  break;
+	  /*
 	  case OP_SUBSASGNM:
 	  // FIXME
 	  break;
@@ -426,12 +435,13 @@ void VM::executeCodeObject(const Object &codeObject)
 	    register int addr = addrfile[ndx];
 	    if (addr == -1)
 	      {
+		std::cout << "OP_LOAD for " << _ctxt->_string->getString(names_list[ndx]) << "\n";
 		// The address for this index has not been defined yet in the current scope.
 		// First, see if the closed frame has the address for it.  In the process, the 
 		// closed frame will search the global namespace for the symbol.
-		addr = closed_frame->lookupAddressForName(names_list[ndx]);
+		addr = closed_frame->lookupAddressForName(names_list[ndx],true);
 		if (addr == -1)
-		  throw Exception("Reference to undefined variable " + names_list[ndx]);
+		  throw Exception("Reference to undefined variable " + _ctxt->_string->getString(names_list[ndx]));
 	      }
 	    REG1 = varfile[addr];
 	    break;
@@ -444,7 +454,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	    register int addr = addrfile[ndx];
 	    if (addr == -1)
 	      {
-		addr = closed_frame->lookupAddressForName(names_list[ndx]);
+		addr = closed_frame->lookupAddressForName(names_list[ndx],false);
 		if (addr == -1)
 		  {
 		    addr = closed_frame->defineNewSymbol(names_list[ndx]);

@@ -35,13 +35,6 @@ namespace FM
     Object fetch(const Object &a, dim_t ndx) {
       return this->readOnlyData(a)[ndx];
     }
-    ndx_t indexOf(const Object &a, const Object &b) {
-      dim_t a_size = a.elementCount();
-      const Object *ap = this->readOnlyData(a);
-      for (dim_t i=0;i<a_size;i++)
-	if (ap[i] == b) return i;
-      return -1;
-    }
     void pop(Object &a) {
       a.detach();
       Tuple & adim = a.dims();

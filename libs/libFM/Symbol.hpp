@@ -47,9 +47,9 @@ namespace FM
     void newChild(SymbolTable *t);
     void popToParent();
     void dump(SymbolTable *t, int);
+    void walkChildren(const Tree &t);
   public:
     SymbolPass();
-    void walkChildren(const Tree &t);
     void walkCode(const Tree &t);
     SymbolTable *getRoot();
     void dump();

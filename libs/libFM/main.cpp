@@ -34,13 +34,17 @@ using namespace FM;
 
 void compileFunc(ThreadContext *ctxt, FMString name)
 {
-  bool failed;
-  FMString body = ReadFileIntoString(name+".m",failed);
-  body += "\n\n";
-  ctxt->_compiler->compile(body);
-  Object p = ctxt->_asm->run(ctxt->_compiler->module()->_main);
-  Disassemble(ctxt,p);
-  ctxt->_globals->insert(std::make_pair(name,p));
+  try {
+    bool failed;
+    FMString body = ReadFileIntoString(name+".m",failed);
+    body += "\n\n";
+    ctxt->_compiler->compile(body);
+    Object p = ctxt->_asm->run(ctxt->_compiler->module()->_main);
+    Disassemble(ctxt,p);
+    ctxt->_globals->insert(std::make_pair(name,p));
+  } catch (const FM::Exception &e) {
+    std::cout << "Exception: " << e.msg() << "\n";
+  }
   //  ctxt->_vm->defineBaseVariable(name,p);
 }
 
@@ -330,6 +334,7 @@ int main(int argc, char *argv[])
   compileFunc(ctxt,"fixa");
   compileFunc(ctxt,"dima");
   compileFunc(ctxt,"t4");
+  compileFunc(ctxt,"swit");
   
   while (1)
     {

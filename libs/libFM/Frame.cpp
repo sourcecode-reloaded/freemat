@@ -20,22 +20,49 @@ int Frame::mapNameToVariableIndex(const Object &name) {
   return -1;
 }
 
-int Frame::lookupAddressForName(const Object &name) {
+int Frame::lookupAddressForName(const Object &name, bool searchGlobals) {
   // First lookup the address in the list of symbols
   int ndx = this->mapNameToVariableIndex(name);
-  if (ndx == -1)
+  if ((ndx == -1) && searchGlobals)
     {
       // Do not know the name at all
       // Is it defined in the global scope?
-      if (_ctxt->_global->defines(name))
+      auto gfunc = _ctxt->_globals->find(_ctxt->_string->getString(name)); //TODO Remove conversion to string?
+      std::cout << "Searching globals for " << _ctxt->_string->getString(name) << "\n";
+      if (gfunc != _ctxt->_globals->end())
 	{
 	  // We are a proxy for someone who wants this symbol (not us!)
 	  // Allocate a space for it
-	  ndx = 
-	  int new_symbol_address = allocateVariable(name);
-	  
+	  ndx = _sym_names.elementCount();
+	  _ctxt->_list->push(_sym_names,name);
+	  _ctxt->_list->push(_vars,gfunc->second);
+	  // We don't need to cache the address for this symbol
+	  return ndx;
+	}
+      return -1;
+    }
+  // If the symbol is defined, cache it's address
+  // This is really a cue that the symbol has been
+  // searched before.  The VM will then skip the lookup
+  // step for this symbol (unless the scope changes).
+  const ndx_t *addrs = _ctxt->_index->readOnlyData(_addrs);
+  if (ndx && searchGlobals && (addrs[ndx] == -1))
+    {
+      // We have a symbol with the given name, but
+      // have not defined it yet.  This could be because
+      // of an error (i.e., an undefined symbol), or
+      // because the definition is in the global space.
+      // Check for the latter case.
+      auto gfunc = _ctxt->_globals->find(_ctxt->_string->getString(name)); //TODO Remove conversion to string?
+      std::cout << "Searching globals for named symbol " << _ctxt->_string->getString(name) << "\n";
+      if (gfunc != _ctxt->_globals->end())
+	{
+	  _ctxt->_list->readWriteData(_vars)[ndx] = gfunc->second;
+	  _ctxt->_index->readWriteData(_addrs)[ndx] = ndx;
+	  return ndx;
 	}
     }
+  return ndx;
 }
 
 int Frame::getAddress(const FMString &name)
@@ -52,6 +79,14 @@ int Frame::allocateVariable(const FMString &name)
   if (p != -1) return p;
   p = _sym_names.elementCount();
   _ctxt->_list->push(_sym_names,_ctxt->_string->makeString(name));
+  _ctxt->_list->push(_vars,_ctxt->_double->empty());
+  return p;
+}
+
+int Frame::defineNewSymbol(const Object &name)
+{
+  int p = _sym_names.elementCount();
+  _ctxt->_list->push(_sym_names,name);
   _ctxt->_list->push(_vars,_ctxt->_double->empty());
   return p;
 }
