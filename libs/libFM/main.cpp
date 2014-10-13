@@ -335,6 +335,8 @@ int main(int argc, char *argv[])
   compileFunc(ctxt,"dima");
   compileFunc(ctxt,"t4");
   compileFunc(ctxt,"swit");
+  compileFunc(ctxt,"exc");
+  compileFunc(ctxt,"excb");
   
   while (1)
     {

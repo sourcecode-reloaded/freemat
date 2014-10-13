@@ -9,7 +9,7 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_CALL: return three_registers;
     case OP_SAVE: return register_name;
     case OP_DCOLON: return two_registers;
-    case LOP_SUBSASGN: return register_register_name;
+    case OP_SUBSASGN: return register_register_name;
     case OP_LOAD_CONST: return register_constant;
     case OP_LOAD: return register_name;
     case OP_NEW_LIST: return one_register;
@@ -42,8 +42,6 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_HERMITIAN: return two_registers;
     case OP_TRANSPOSE: return two_registers;
     case OP_INCR: return one_register;
-    case OP_LHSCOUNT: return register_register_name;
-    case OP_SUBSASGNM: return register_register_name;
     case OP_ZERO: return one_register;
     case OP_CELLROWDEF: return no_arguments;
     case OP_HCAT: return two_registers;
@@ -61,12 +59,11 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_DEREF: return two_registers;
     case OP_SUBSASGN_GLOBAL: return register_register_name;
     case OP_SUBSASGN_PERSIST: return register_register_name;
-    case OP_SUBSASGN: return register_register_name;
     case OP_LOOPCOUNT: return one_register;
-    case OP_LOAD_INT: return register_int;
     case OP_PUSH_INT: return register_int;
     case OP_LENGTH: return two_registers;
     case OP_POP: return two_registers;
+    case OP_END: return three_registers;
     default:
       return three_registers;
   }
@@ -84,7 +81,7 @@ std::string getOpCodeName(op_t opcode)
     case OP_CALL: return "CALL";
     case OP_SAVE: return "SAVE";
     case OP_DCOLON: return "DCOLON";
-    case LOP_SUBSASGN: return "SUBSASGN";
+    case OP_SUBSASGN: return "SUBSASGN";
     case OP_LOAD_CONST: return "LOAD_CONST";
     case OP_LOAD: return "LOAD";
     case OP_NEW_LIST: return "NEW_LIST";
@@ -117,8 +114,6 @@ std::string getOpCodeName(op_t opcode)
     case OP_HERMITIAN: return "HERMITIAN";
     case OP_TRANSPOSE: return "TRANSPOSE";
     case OP_INCR: return "INCR";
-    case OP_LHSCOUNT: return "LHSCOUNT";
-    case OP_SUBSASGNM: return "SUBSASGNM";
     case OP_ZERO: return "ZERO";
     case OP_CELLROWDEF: return "CELLROWDEF";
     case OP_HCAT: return "HCAT";
@@ -136,12 +131,11 @@ std::string getOpCodeName(op_t opcode)
     case OP_DEREF: return "DEREF";
     case OP_SUBSASGN_GLOBAL: return "SUBSASGN_GLOBAL";
     case OP_SUBSASGN_PERSIST: return "SUBSASGN_PERSIST";
-    case OP_SUBSASGN: return "SUBSASGN";
     case OP_LOOPCOUNT: return "LOOPCOUNT";
-    case OP_LOAD_INT: return "LOAD_INT";
     case OP_PUSH_INT: return "PUSH_INT";
     case OP_LENGTH: return "LENGTH";
     case OP_POP: return "POP";
+    case OP_END: return "END";
     default: return "UNK";
   }
 }

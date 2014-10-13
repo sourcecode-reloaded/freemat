@@ -7,11 +7,10 @@ namespace FM
 {
   class EndRemoverPass
   {
-    void walkChildren(const Tree &t);
-    void walkReferences(const Tree &t, const Tree &s);
+    Tree augmentEndReferences(const Tree &t, const Tree &s, const Tree &arguments);
   public:
     EndRemoverPass();
-    void walkCode(const Tree &t);
+    Tree walkCode(const Tree &t);
   };
 
 };

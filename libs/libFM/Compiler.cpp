@@ -536,19 +536,6 @@ reg_t Compiler::getRegister()
   return _regpool->getRegister();
 }
 
-// Invoke a function, but we expect a scalar argument
-// -- expressionStatement, rhs
-reg_t Compiler::doScalarFunctionExpression(const Tree &t, bool optional_output) {
-  /*
-  // FIXME - broken
-  reg_t nargout = fetchConstant(_types->_int32->makeScalar(optional_output ? 0 : 1));
-  reg_t sp = getStackRegister();
-  doFunctionExpression(t,nargout);
-  reg_t x = readFromStack(sp);
-  return x;
-  */
-}
-
 reg_t Compiler::doBinaryOperator(const Tree &t, op_t opcode) {
   reg_t r1 = expression(t.first());
   reg_t r2 = expression(t.second());
@@ -864,15 +851,23 @@ reg_t Compiler::expression(const Tree &t) {
       return fetchConstant(_ctxt->_string->makeString(t.text()));
     }
   case TOK_END:
-    std::cout << "TOK_END encountered!\n";
-    // Rewrite the tree to remove TOK_END...
-    // if (!endRef.valid())
-    //   throw Exception("END keyword not allowed for undefined variables");
-    // if (endTotal == 1)
-    //   return Array(double(endRef->length()));
-    // else
-    //   return Array(double(endRef->dimensions()[endCount]));
-    break;
+    {
+      // Get the expression for the main variable
+      reg_t variableReferenced = expression(t.first());
+      reg_t endValue = getRegister();
+      if (t.numChildren() == 1)
+	emit(OP_LENGTH,endValue,variableReferenced);
+      else
+	{
+	  reg_t posList = startList();
+	  for (int i=0;i<t.second().numChildren();i++)
+	    pushList(posList,expression(t.second().child(i)));
+	  reg_t posLength = getRegister();
+	  emit(OP_LENGTH,posLength,posList);
+	  emit(OP_END,endValue,variableReferenced,posLength);
+	}
+      return endValue;
+    }
   case ':':
     if (t.numChildren() == 0) {
       return fetchConstantString(":");
@@ -1285,7 +1280,10 @@ void Compiler::compile(const FMString &code) {
   Tree t(P.process());
   EndRemoverPass e;
   t.print();
-  e.walkCode(t);
+  t = e.walkCode(t);
+  std::cout << "********************************************************************************\n";
+  t.print();
+  std::cout << "********************************************************************************\n";
   SymbolPass p;
   delete _code;
   _code = new CodeBlock(_ctxt);

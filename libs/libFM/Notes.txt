@@ -667,7 +667,7 @@ Calling functions from functions doesn't work? - Done
 
 Review TODOs and FIXMEs
 
-end syntax?
+end syntax? - Done
 
 Test cases?
 
@@ -681,6 +681,78 @@ Persistent
 
 Switch statement - working - check corner cases
 
-Exceptions
+Exceptions - Done!
+
+end syntax is working, but it does not cover the vector case yet.
+
+We have:
+
+a(end) --> end(a,[])
+
+And
+
+a(1,end) --> end(a,[1])
+
+Built in functions...
+
+
+Exceptions!!!
+
+How are these going to work?
+
+Exceptions have changed.  In FM4, the throw function was just missing!  
+
+We need to sort out objects for exception handling to work properly.
+But for now, a throw statement does the following:
+
+1. Stores it's argument in the VM's memory space:
+  vm->_exception = REG1
+2. Check the handler stack.  If it is empty, exit the VM loop (set
+  returnFound).
+3. If it is not empty, pop the address, and jump to the address.
+4. The OP_CATCH opcode will load the exception if necessary from
+  vm->_exception.
+
+This will handle all exception handling within a single function.
+What about situations in which one M function is calling another?
+One option is to convert the VM exception into a C++ exception.
+Then at the end of the VM loop, if the _exception is set, we throw an
+Exception.
+
+The flip side is an exception in the C++ code that needs to be
+propogated to the VM.  Consider an operation like this:
+
+try
+  expression_that_throws_exception
+catch
+  stuff
+end
+
+So in this case, the C++ code with throw an exception.  We have to
+catch that exception, which we can do _outside_ the VM execution
+loop.  The exception can then trigger the same logic as the throw
+Opcode.  Something like this
+
+
+while (!returnFound)
+{
+  try {
+    VMLoop
+  } catch (Exception & e) {
+    if vm_has_exception_handler_registered
+      vm->_exception = e (somehow)
+      vm->_ip = <pop_exception_handler_address>
+    else
+      throw;
+    end
+  }
+}
+
+Exceptions are done!  They were remarkably easy.  I think there are
+still some issues with stack unwinding and functions cleaning up after
+themselves.  The executeFunction and executeScript methods of the VM
+should use RAII to reserve and unwind the various stacks, variable
+allocations, etc.
+
 
 

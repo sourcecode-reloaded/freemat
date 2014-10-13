@@ -61,6 +61,7 @@ int Frame::lookupAddressForName(const Object &name, bool searchGlobals) {
 	  _ctxt->_index->readWriteData(_addrs)[ndx] = ndx;
 	  return ndx;
 	}
+      return -1;
     }
   return ndx;
 }

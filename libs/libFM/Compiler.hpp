@@ -108,7 +108,6 @@ namespace FM
     reg_t startList();
     void pushList(reg_t list, reg_t x);
     void multiexpr(reg_t list, const Tree &t);
-    reg_t doScalarFunctionExpression(const Tree&, bool);
     reg_t doBinaryOperator(const Tree&, op_t);
     reg_t doUnaryOperator(const Tree&, op_t);
     reg_t doShortcutOr(const Tree& t);

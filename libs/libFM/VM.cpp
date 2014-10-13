@@ -61,7 +61,8 @@ using namespace FM;
 // Crap.
 // 
 
-VM::VM(ThreadContext *ctxt) : _registers(ctxt->_list->makeMatrix(register_stack_size,1))
+VM::VM(ThreadContext *ctxt) : _registers(ctxt->_list->makeMatrix(register_stack_size,1)),
+			      _exception(ctxt)
 {
   for (int i=0;i<frame_stack_size;i++)
     _frames.push_back(new Frame(ctxt)); // FIXME - Bad way to do this?
@@ -136,6 +137,7 @@ Object VM::executeFunction(const Object &codeObject, const Object &parameters)
   _frames[_fp]->_defined = _ctxt->_bool->makeMatrix(N,1);
   _frames[_fp]->_sym_names = cp->m_names;
   _frames[_fp]->_vars = _ctxt->_list->makeMatrix(N,1);
+  _frames[_fp]->_exception_handlers.clear();
   _frames[_fp]->_reg_offset = _rp;
   _rp += 256; // FIXME
   Object *sp = _ctxt->_list->readWriteData(_frames[_fp]->_vars);
@@ -148,7 +150,11 @@ Object VM::executeFunction(const Object &codeObject, const Object &parameters)
   int to_use = std::min<int>(parameters.elementCount(),cp->m_params.elementCount());
   std::cout << "to_use = " << to_use << "\n";
   for (int i=0;i<to_use;i++)
-    sp[_ctxt->_index->scalarValue(param_ndx[i])] = args[i];
+    {
+      ndx_t param_location = _ctxt->_index->scalarValue(param_ndx[i]);
+      sp[param_location] = args[i];
+      ap[param_location] = param_location;
+    }
   // execute the code
   executeCodeObject(codeObject);
   // Collect return values
@@ -162,6 +168,7 @@ Object VM::executeFunction(const Object &codeObject, const Object &parameters)
   _frames[_fp]->_vars = _ctxt->_list->empty();
   _frames[_fp]->_addrs = _ctxt->_index->empty();
   _frames[_fp]->_defined = _ctxt->_bool->empty();
+  _frames[_fp]->_exception_handlers.clear();
   // TODO: Clean up the registers
   _rp = _frames[_fp]->_reg_offset;
   _fp--;
@@ -181,6 +188,7 @@ void VM::executeScript(const Object &codeObject)
   _frames[_fp]->_reg_offset = _rp;
   _frames[_fp]->_ctxt = _ctxt;
   _frames[_fp]->_closed = false;
+  _frames[_fp]->_exception_handlers.clear();
   _rp += 256; // FIXME
   ndx_t *ap = _ctxt->_index->readWriteData(_frames[_fp]->_addrs);
   // Initialize the addresses to be unknown
@@ -194,6 +202,7 @@ void VM::executeScript(const Object &codeObject)
   _frames[_fp]->_vars = _ctxt->_list->empty();
   _frames[_fp]->_addrs = _ctxt->_index->empty();
   _frames[_fp]->_defined = _ctxt->_bool->empty();
+  _frames[_fp]->_exception_handlers.clear();
   _fp--;
 }
 
@@ -268,457 +277,317 @@ void VM::executeCodeObject(const Object &codeObject)
   Object *regfile = _ctxt->_list->readWriteData(_registers) + _frames[_fp]->_reg_offset;
   ndx_t *addrfile = _ctxt->_index->readWriteData(_frames[_fp]->_addrs);
   Object *varfile = _ctxt->_list->readWriteData(closed_frame->_vars);
+  std::vector<int> *eh = &_frames[_fp]->_exception_handlers;
 
   int save_ip;
 
-  while (!returnFound)
+  while (1)
     {
-      insn_t insn = code[ip];
+      try {
+	while (!returnFound)
+	  {
+	    insn_t insn = code[ip];
+	    
+	    {
+	      int8_t op = opcode(insn);
+	      printf("%-15s",getOpCodeName(op).c_str());
+	      printf("%-20s",Compiler::opcodeDecode(op,insn).c_str());
+	      std::cout << "\n";
+	    }
 
-      {
-	int8_t op = opcode(insn);
-	printf("%-15s",getOpCodeName(op).c_str());
-	printf("%-20s",Compiler::opcodeDecode(op,insn).c_str());
-	std::cout << "\n";
+	    switch (opcode(insn))
+	      {
+	      case OP_NOP:
+		break;
+	      case OP_RETURN:
+		returnFound = true;
+		break;
+	      case OP_PUSH:
+		_ctxt->_list->push(REG1,REG2);
+		break;
+	      case OP_FIRST:
+		REG1 = _ctxt->_list->first(REG2);
+		_ctxt->_list->pop(REG2);
+		break;
+	      case OP_CALL:
+		REG1 = REG2.type()->call(REG2,_ctxt->_list->second(REG3),_ctxt->_double->scalarValue(_ctxt->_list->first(REG3)));
+		break;
+	      case OP_DCOLON:
+		{
+		  const Object *ap = _ctxt->_list->readOnlyData(REG2);
+		  REG1 = ap[0].type()->DoubleColon(ap[0],ap[1],ap[2]);
+		  break;
+		}
+	      case OP_LOAD_CONST:
+		REG1 = const_list[get_constant(insn)];
+		break;
+	      case OP_NEW_LIST:
+		REG1 = _ctxt->_list->empty();
+		break;
+	      case OP_SUBSREF:
+		_ctxt->_list->merge(REG1,REG2.type()->get(REG2,REG3));
+		break;
+	      case OP_COLON:
+		BINOP(Colon,"colon");
+		break;
+	      case OP_ADD:
+		BINOP(Add,"plus");
+		break;
+	      case OP_MINUS:
+		BINOP(Subtract,"minus");
+		break;
+	      case OP_LE:
+		BINOP(LessEquals,"le");
+		break;
+	      case OP_LT:
+		BINOP(LessThan,"lt");
+		break;
+	      case OP_TIMES:
+		BINOP(DotMultiply,"times");
+		break;
+	      case OP_GT:
+		BINOP(GreaterThan,"gt");
+		break;
+	      case OP_GE:
+		BINOP(GreaterEquals,"ge");
+		break;
+	      case OP_EQ:
+		BINOP(Equals,"eq");
+		break;
+	      case OP_NE:
+		BINOP(NotEquals,"ne");
+		break;
+	      case OP_OR:
+		BINOP(Or,"or");
+		break;
+	      case OP_AND:
+		BINOP(And,"and");
+		break;
+	      case OP_MTIMES:
+		BINOP(Multiply,"mtimes");
+		break;
+	      case OP_MRDIVIDE:
+		BINOP(RightDivide,"mrdivide");
+		break;
+	      case OP_MLDIVIDE:
+		BINOP(LeftDivide,"mldivide");
+		break;
+	      case OP_RDIVIDE:
+		BINOP(DotRightDivide,"rdivide");
+		break;
+	      case OP_LDIVIDE:
+		BINOP(DotLeftDivide,"ldivide");
+		break;
+	      case OP_PLUS:
+		UNARYOP(Plus,"uplus");
+		break;
+	      case OP_NEG:
+		UNARYOP(Neg,"negate");
+		break;
+	      case OP_NUMCOLS:
+		REG1 = _ctxt->_double->makeScalar(REG2.elementCount()/REG2.rows());
+		break;
+	      case OP_CASE:
+		REG1 = TestForCaseMatch(_ctxt,REG2,REG3);
+		break;
+	      case OP_COLUMN:
+		REG1 = REG2.type()->sliceColumn(REG2,_ctxt->_double->scalarValue(REG3));
+		break;
+		/*
+		  case OP_NOT:
+		  UNARYOP(Not,"not");
+		  break;
+		  case OP_POWER:
+		  BINOP(Power,"mpower");
+		  break;
+		  case OP_DOTPOWER:
+		  BINOP(DotPower,"power");
+		  break;
+		*/
+	      case OP_HERMITIAN:
+		UNARYOP(Hermitian,"ctranspose");
+		break;
+	      case OP_TRANSPOSE:
+		UNARYOP(Transpose,"transpose");
+		break;
+	      case OP_INCR:
+		REG1 = _ctxt->_double->makeScalar(_ctxt->_double->scalarValue(REG1)+1);
+		break;
+	      case OP_LENGTH:
+		REG1 = _ctxt->_double->makeScalar(REG2.elementCount());
+		break;
+		/*
+		  case OP_SUBSASGNM:
+		  // FIXME
+		  break;
+		*/
+	      case OP_ZERO:
+		REG1 = _ctxt->_double->zeroScalar();
+		break;
+	      case OP_HCAT:
+		REG1 = NCat(_ctxt,REG2,1);
+		break;
+	      case OP_VCAT:
+		REG1 = NCat(_ctxt,REG2,0);
+		break;
+	      case OP_CELLROWDEF:
+		REG1 = _ctxt->_list->makeScalar(makeCellFromList(_ctxt,REG2));
+		break;
+	      case OP_END:
+		REG1 = _ctxt->_double->makeScalar(REG2.dims().dimension(_ctxt->_double->scalarValue(REG3)));
+		break;
+		/*
+		  case OP_LOAD_GLOBAL:
+		  case OP_LOAD_PERSIST:
+		  break;
+		*/
+	      case OP_LOAD:
+		{
+		  // We start by looking for the name in our address file
+		  register int ndx = get_constant(insn);
+		  register int addr = addrfile[ndx];
+		  if (addr == -1)
+		    {
+		      std::cout << "OP_LOAD for " << _ctxt->_string->getString(names_list[ndx]) << "\n";
+		      // The address for this index has not been defined yet in the current scope.
+		      // First, see if the closed frame has the address for it.  In the process, the 
+		      // closed frame will search the global namespace for the symbol.
+		      addr = closed_frame->lookupAddressForName(names_list[ndx],true);
+		      if (addr == -1)
+			throw Exception("Reference to undefined variable " + _ctxt->_string->getString(names_list[ndx]));
+		      addrfile[ndx] = addr;
+		    }
+		  REG1 = varfile[addr];
+		  break;
+		}
+	      case OP_SAVE_GLOBAL:
+		break;
+	      case OP_SAVE:
+		{
+		  register int ndx = get_constant(insn);
+		  register int addr = addrfile[ndx];
+		  if (addr == -1)
+		    {
+		      addr = closed_frame->lookupAddressForName(names_list[ndx],false);
+		      if (addr == -1)
+			{
+			  addr = closed_frame->defineNewSymbol(names_list[ndx]);
+			  varfile = _ctxt->_list->readWriteData(closed_frame->_vars);
+			}
+		      addrfile[ndx] = addr;
+		    }
+		  varfile[addr] = REG1;
+		  break;
+		}
+	      case OP_SAVE_PERSIST:
+	      case OP_JUMP_ZERO:
+		{
+		  if (_ctxt->_double->scalarValue(REG1) == 0)
+		    ip = get_constant(insn)-1;
+		  break;
+		}
+	      case OP_JUMP:
+		{
+		  ip = get_constant(insn)-1;
+		  break;
+		}
+	      case OP_TRY_BEGIN:
+		{
+		  eh->push_back(get_constant(insn));
+		  break;
+		}
+	      case OP_TRY_END:
+		{
+		  eh->pop_back();
+		  break;
+		}
+	      case OP_THROW:
+		{
+		  _exception = REG1;
+		  std::cout << "Exception caught : " << _exception.description() << "\n";
+		  if (!eh->empty())
+		    {
+		      ip = eh->back()-1;
+		      eh->pop_back();
+		    }
+		  else
+		    throw Exception(_exception.description()); // FIXME
+		  break;
+		}
+	      case OP_PRINT:
+		{
+		  REG1.type()->print(REG1);
+		  break;
+		}
+	      case OP_DEREF:
+		{
+		  REG1 = REG2.type()->deref(REG2);
+		  break;
+		}
+	      case OP_SUBSASGN_GLOBAL:
+	      case OP_SUBSASGN_PERSIST:
+	      case OP_SUBSASGN:
+		{
+		  register int ndx = get_constant(insn);
+		  register int addr = addrfile[ndx];
+		  if (addr == -1)
+		    {
+		      FMString name = _ctxt->_string->getString(names_list[get_constant(insn)]);
+		      addrfile[ndx] = closed_frame->getAddress(name);
+		      if (addrfile[ndx] == -1)
+			{
+			  addrfile[ndx] = closed_frame->allocateVariable(name);
+			  varfile = _ctxt->_list->readWriteData(closed_frame->_vars);
+			}
+		      addr = addrfile[ndx];
+		    }
+		  varfile[addr].type()->set(varfile[addr],REG1,REG2);
+		  break;
+		}
+	      case OP_LOOPCOUNT:
+		{
+		  const Object *ap = _ctxt->_list->readOnlyData(REG2);
+		  double last = _ctxt->_double->scalarValue(ap[2]);
+		  double step = _ctxt->_double->scalarValue(ap[1]);
+		  double first = _ctxt->_double->scalarValue(ap[0]);
+		  REG1 = _ctxt->_double->makeScalar(num_for_loop_iter(first,step,last));
+		  break;
+		}
+	      case OP_PUSH_INT:
+		{
+		  _ctxt->_list->push(REG1,_ctxt->_double->makeScalar(get_constant(insn)));
+		  break;
+		}
+	      case OP_POP:
+		{
+		  std::cout << "POP for " << _ctxt->_double->scalarValue(REG2) << "\n";
+		  for (int i=0;i<_ctxt->_double->scalarValue(REG2);i++)
+		    _ctxt->_list->pop(REG1);
+		  break;
+		}
+	      default:
+		{
+		  std::cerr << "Unknown opcode " << int(opcode(insn)) << "\n";
+		  printf("%03d   ",ip);
+		  int8_t op = opcode(insn);
+		  printf("%-15s",getOpCodeName(op).c_str());
+		  printf("%-20s",Compiler::opcodeDecode(op,insn).c_str());
+		  std::cout << "\n";
+		  exit(1);
+		}
+	      }
+	    ip++;
+	  }
+      } catch (const Exception &e) {
+	_exception = _ctxt->_string->makeString(e.msg());
+	if (!eh->empty())
+	  {
+	    ip = eh->back();
+	    eh->pop_back();
+	  }
+	else
+	  throw;
       }
-
-      switch (opcode(insn))
-	{
-	case OP_NOP:
-	  break;
-	case OP_RETURN:
-	  returnFound = true;
-	  break;
-	case OP_PUSH:
-	  _ctxt->_list->push(REG1,REG2);
-	  break;
- 	case OP_FIRST:
-	  REG1 = _ctxt->_list->first(REG2);
-	  _ctxt->_list->pop(REG2);
-	  break;
-	case OP_CALL:
-	  REG1 = REG2.type()->call(REG2,_ctxt->_list->second(REG3),_ctxt->_double->scalarValue(_ctxt->_list->first(REG3)));
-	  break;
-	case OP_DCOLON:
-	  {
-	    const Object *ap = _ctxt->_list->readOnlyData(REG2);
-	    REG1 = ap[0].type()->DoubleColon(ap[0],ap[1],ap[2]);
-	    break;
-	  }
-	case OP_LOAD_CONST:
-	  REG1 = const_list[get_constant(insn)];
-	  break;
-	case OP_NEW_LIST:
-	  REG1 = _ctxt->_list->empty();
-	  break;
-	case OP_SUBSREF:
-	  _ctxt->_list->merge(REG1,REG2.type()->get(REG2,REG3));
-	  break;
-	case OP_LHSCOUNT:
-	  REG1 = _ctxt->_double->makeScalar(REG2.type()->get(REG2,REG3).elementCount()); // FIXME - requires LHS vars be predefined
-	  break;
-	case OP_COLON:
-	  BINOP(Colon,"colon");
-	  break;
-	case OP_ADD:
-	  BINOP(Add,"plus");
-	  break;
-	case OP_MINUS:
-	  BINOP(Subtract,"minus");
-	  break;
-	case OP_LE:
-	  BINOP(LessEquals,"le");
-	  break;
-	case OP_LT:
-	  BINOP(LessThan,"lt");
-	  break;
-	case OP_TIMES:
-	  BINOP(DotMultiply,"times");
-	  break;
-	case OP_GT:
-	  BINOP(GreaterThan,"gt");
-	  break;
-	case OP_GE:
-	  BINOP(GreaterEquals,"ge");
-	  break;
-	case OP_EQ:
-	  BINOP(Equals,"eq");
-	  break;
-	case OP_NE:
-	  BINOP(NotEquals,"ne");
-	  break;
-	case OP_OR:
-	  BINOP(Or,"or");
-	  break;
-	case OP_AND:
-	  BINOP(And,"and");
-	  break;
-	case OP_MTIMES:
-	  BINOP(Multiply,"mtimes");
-	  break;
-	case OP_MRDIVIDE:
-	  BINOP(RightDivide,"mrdivide");
-	  break;
-	case OP_MLDIVIDE:
-	  BINOP(LeftDivide,"mldivide");
-	  break;
-	case OP_RDIVIDE:
-	  BINOP(DotRightDivide,"rdivide");
-	  break;
-	case OP_LDIVIDE:
-	  BINOP(DotLeftDivide,"ldivide");
-	  break;
-	case OP_PLUS:
-	  UNARYOP(Plus,"uplus");
-	  break;
-	case OP_NEG:
-	  UNARYOP(Neg,"negate");
-	  break;
-	case OP_NUMCOLS:
-	  REG1 = _ctxt->_double->makeScalar(REG2.elementCount()/REG2.rows());
-	  break;
-	case OP_CASE:
-	  REG1 = TestForCaseMatch(_ctxt,REG2,REG3);
-	  break;
-	case OP_COLUMN:
-	  REG1 = REG2.type()->sliceColumn(REG2,_ctxt->_double->scalarValue(REG3));
-	  break;
-	  /*
-	case OP_NOT:
-	  UNARYOP(Not,"not");
-	  break;
-	case OP_POWER:
-	  BINOP(Power,"mpower");
-	  break;
-	case OP_DOTPOWER:
-	  BINOP(DotPower,"power");
-	  break;
-	  */
-	case OP_HERMITIAN:
-	  UNARYOP(Hermitian,"ctranspose");
-	  break;
-	case OP_TRANSPOSE:
-	  UNARYOP(Transpose,"transpose");
-	  break;
-	case OP_INCR:
-	  REG1 = _ctxt->_double->makeScalar(_ctxt->_double->scalarValue(REG1)+1);
-	  break;
-	case OP_LENGTH:
-	  REG1 = _ctxt->_double->makeScalar(REG2.elementCount());
-	  break;
-	  /*
-	  case OP_SUBSASGNM:
-	  // FIXME
-	  break;
-	  */
-	case OP_ZERO:
-	  REG1 = _ctxt->_double->zeroScalar();
-	  break;
-	case OP_HCAT:
-	  REG1 = NCat(_ctxt,REG2,1);
-	  break;
-	case OP_VCAT:
-	  REG1 = NCat(_ctxt,REG2,0);
-	  break;
-	case OP_CELLROWDEF:
-	  REG1 = _ctxt->_list->makeScalar(makeCellFromList(_ctxt,REG2));
-	  break;
-	  /*
-	case OP_LOAD_GLOBAL:
-	case OP_LOAD_PERSIST:
-	  break;
-	  */
-	case OP_LOAD:
-	  {
-	    // We start by looking for the name in our address file
-	    register int ndx = get_constant(insn);
-	    register int addr = addrfile[ndx];
-	    if (addr == -1)
-	      {
-		std::cout << "OP_LOAD for " << _ctxt->_string->getString(names_list[ndx]) << "\n";
-		// The address for this index has not been defined yet in the current scope.
-		// First, see if the closed frame has the address for it.  In the process, the 
-		// closed frame will search the global namespace for the symbol.
-		addr = closed_frame->lookupAddressForName(names_list[ndx],true);
-		if (addr == -1)
-		  throw Exception("Reference to undefined variable " + _ctxt->_string->getString(names_list[ndx]));
-	      }
-	    REG1 = varfile[addr];
-	    break;
-	  }
-	case OP_SAVE_GLOBAL:
-	  break;
-	case OP_SAVE:
-	  {
-	    register int ndx = get_constant(insn);
-	    register int addr = addrfile[ndx];
-	    if (addr == -1)
-	      {
-		addr = closed_frame->lookupAddressForName(names_list[ndx],false);
-		if (addr == -1)
-		  {
-		    addr = closed_frame->defineNewSymbol(names_list[ndx]);
-		    varfile = _ctxt->_list->readWriteData(closed_frame->_vars);
-		  }
-		addrfile[ndx] = addr;
-	      }
-	    varfile[addr] = REG1;
-	    break;
-	  }
-	case OP_SAVE_PERSIST:
-	case OP_JUMP_ZERO:
-	  {
-	    if (_ctxt->_double->scalarValue(REG1) == 0)
-	      ip = get_constant(insn)-1;
-	    break;
-	  }
-	case OP_JUMP:
-	  {
-	    ip = get_constant(insn)-1;
-	    break;
-	  }
-	case OP_TRY_BEGIN:
-	case OP_TRY_END:
-	case OP_THROW:
-	case OP_PRINT:
-	  {
-	    REG1.type()->print(REG1);
-	    break;
-	  }
-	case OP_DEREF:
-	  {
-	    REG1 = REG2.type()->deref(REG2);
-	    break;
-	  }
-	case OP_SUBSASGN_GLOBAL:
-	case OP_SUBSASGN_PERSIST:
-	case OP_SUBSASGN:
- 	  {
-	    register int ndx = get_constant(insn);
-	    register int addr = addrfile[ndx];
-	    if (addr == -1)
-	      {
-		FMString name = _ctxt->_string->getString(names_list[get_constant(insn)]);
-		addrfile[ndx] = closed_frame->getAddress(name);
-		if (addrfile[ndx] == -1)
-		  {
-		    addrfile[ndx] = closed_frame->allocateVariable(name);
-		    varfile = _ctxt->_list->readWriteData(closed_frame->_vars);
-		  }
-		addr = addrfile[ndx];
-	      }
-	    varfile[addr].type()->set(varfile[addr],REG1,REG2);
-	    break;
-	  }
-	case OP_LOOPCOUNT:
-	  {
-	    const Object *ap = _ctxt->_list->readOnlyData(REG2);
-	    double last = _ctxt->_double->scalarValue(ap[2]);
-	    double step = _ctxt->_double->scalarValue(ap[1]);
-	    double first = _ctxt->_double->scalarValue(ap[0]);
-	    REG1 = _ctxt->_double->makeScalar(num_for_loop_iter(first,step,last));
-	    break;
-	  }
-	case OP_LOAD_INT:
-	  {
-	    REG1 = _ctxt->_double->makeScalar(get_constant(insn));
-	    break;
-	  }
-	case OP_PUSH_INT:
-	  {
-	    _ctxt->_list->push(REG1,_ctxt->_double->makeScalar(get_constant(insn)));
-	    break;
-	  }
-	case OP_POP:
-	  {
-	    std::cout << "POP for " << _ctxt->_double->scalarValue(REG2) << "\n";
-	    for (int i=0;i<_ctxt->_double->scalarValue(REG2);i++)
-	      _ctxt->_list->pop(REG1);
-	    break;
-	  }
-	default:
-	  {
-	    std::cerr << "Unknown opcode " << int(opcode(insn)) << "\n";
-	    printf("%03d   ",ip);
-	    int8_t op = opcode(insn);
-	    printf("%-15s",getOpCodeName(op).c_str());
-	    printf("%-20s",Compiler::opcodeDecode(op,insn).c_str());
-	    std::cout << "\n";
-	    exit(1);
-	  }
-	}
-      ip++;
     }
 }
 
-void VM::executeBlock(const Object &codeObject, bool singleStep)
-{
-  /*
-  _vars.resize(code->_varlist.size());
-  _varlist = code->_varlist;
-  _stack.resize(256);
-  _regfile.resize(256);
-  _ip = 0;
-  _sp = 0;
-  while (_ip < code->_insnlist.size())
-    {
-      int32_t insn = code->_insnlist[_ip];
-      dump();
-      std::cout << "sp = " << _sp << "\n";
-      std::cout << "\n";
-      printf("%03d   ",_ip);
-      int8_t opcode = opcode(insn);
-      printf("%-15s",Compiler::getOpCodeName(opcode).c_str());
-      printf("%-20s",Compiler::opcodeDecode(opcode,insn).c_str());
-      std::cout << "\n";
-      if (singleStep) getchar();
-      switch (opcode(insn))
-	{
-	case OP_NOP:
-	  break;
-	case OP_PUSH:
-	  _stack[_sp++] = REG1;
-	  break;
-	case OP_POP:
-	  REG1 = _stack[--_sp];
-	  break;
-	case OP_CALL:
-	  // Finish me
-	  break;
-	case OP_SAVE:
-	  _vars[get_constant(insn)] = REG1;
-	  break;
-	case OP_DCOLON:
-	  REG1 = DoubleColon(_stack[_sp-2], _stack[_sp-1], _stack[_sp]);
-	  _sp -= 3;
-	  break;
-	case OP_SUBSASGN:
-	  doSubsasgnOp(_vars[get_constant(insn)],REG1);
-	  break;
-	case OP_LOAD_CONST:
-	  REG1 = code->_constlist[get_constant(insn)];
-	  break;
-	case OP_LOAD:
-	  REG1 = _vars[get_constant(insn)];
-	  break;
-	case OP_START_LIST:
-	  REG1 = Object(double(_sp));
-	  break;
-	case OP_END_LIST:
-	  _stack[_sp] = Object(double(_sp - REG1.asInteger()));
-	  _sp++;
-	  break;
-	case OP_LOAD_STACK:
-	  _sp = REG1.asInteger() + get_constant(insn);
-	  break;
-	case OP_SUBSREF:
-	  doSubsrefOp(REG1);
-	  break;
-	case OP_COLON:
-	  REG1 = UnitColon(REG2,REG3);
-	  break;
-	case OP_ADD:
-	  BINOP(Add,"plus");
-	  break;
-	case OP_MINUS:
-	  BINOP(Subtract,"minus");
-	  break;
-	case OP_MTIMES:
-	  BINOP(Multiply,"mtimes");
-	  break;
-	case OP_MRDIVIDE:
-	  BINOP(RightDivide,"mrdivide");
-	  break;
-	case OP_MLDIVIDE:
-	  BINOP(LeftDivide,"mldivide");
-	  break;
-	case OP_OR:
-	  BINOP(Or,"or");
-	  break;
-	case OP_AND:
-	  BINOP(And,"and");
-	  break;
-	case OP_LT:
-	  BINOP(LessThan,"lt");
-	  break;
-	case OP_LE:
-	  BINOP(LessEquals,"le");
-	  break;
-	case OP_GT:
-	  BINOP(GreaterThan,"gt");
-	  break;
-	case OP_GE:
-	  BINOP(GreaterEquals,"ge");
-	  break;
-	case OP_EQ:
-	  BINOP(Equals,"eq");
-	  break;
-	case OP_NE:
-	  BINOP(NotEquals,"ne");
-	  break;
-	case OP_TIMES:
-	  BINOP(DotMultiply,"times");
-	  break;
-	case OP_RDIVIDE:
-	  BINOP(DotRightDivide,"rdivide");
-	  break;
-	case OP_LDIVIDE:
-	  BINOP(DotLeftDivide,"ldivide");
-	  break;
-	case OP_NEG:
-	  UNARYOP(Negate,"uminus");
-	  break;
-	case OP_PLUS:
-	  UNARYOP(Plus,"uplus");
-	  break;
-	case OP_NOT:
-	  UNARYOP(Not,"not");
-	  break;
-	case OP_POWER:
-	  BINOP(Power,"mpower");
-	  break;
-	case OP_DOTPOWER:
-	  BINOP(DotPower,"power");
-	  break;
-	case OP_HERMITIAN:
-	  UNARYOP(Hermitian,"ctranspose");
-	  break;
-	case OP_TRANSPOSE:
-	  UNARYOP(Transpose,"transpose");
-	  break;
-	case OP_INCR:
-	  REG1 = Object(double(REG1.asDouble() + 1));
-	  break;
-	case OP_LHSCOUNT:
-	  break;
-	case OP_SUBSASGNM:
-	  break;
-	case OP_ZERO:
-	  REG1 = Object(double(0));
-	  break;
-	case OP_CELLROWDEF:
-	  {
-	    ObjectVector x;
-	    popVector(x);
-	    _stack[_sp++] = CellObjectFromObjectVector(x,x.size());
-	    break;
-	  }
-	case OP_HCAT:
-	  {
-	    ObjectVector x;
-	    popVector(x);
-	    _stack[_sp++] = NCat(x,1);
-	    break;
-	  }
-	case OP_VCAT:
-	  {
-	    ObjectVector x;
-	    popVector(x);
-	    REG1 = NCat(x,0);
-	    break;
-	  }
-	}
-      _ip++;
-    }
-  */
-}

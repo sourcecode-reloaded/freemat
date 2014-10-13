@@ -15,6 +15,7 @@ namespace FM
     Object _vars;
     Object _addrs;
     Object _defined;
+    std::vector<int> _exception_handlers;
     ThreadContext *_ctxt;
     bool _closed;
     int _reg_offset;
