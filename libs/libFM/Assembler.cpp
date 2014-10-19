@@ -71,7 +71,7 @@ void Assembler::assemble()
 
 Object Assembler::codeObject()
 {
-  Object code = _ctxt->_code->makeCodeObject();
+  Object code = _ctxt->_code->empty();
   CodeData *cp = _ctxt->_code->readWriteData(code);
   cp->m_name = _ctxt->_string->makeString(_code->_name);
   Object op = _ctxt->_uint64->makeMatrix(_vm_codes.size(),1);

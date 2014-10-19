@@ -281,7 +281,7 @@ void VM::executeCodeObject(const Object &codeObject)
 
   int save_ip;
 
-  while (1)
+  while (!returnFound)
     {
       try {
 	while (!returnFound)

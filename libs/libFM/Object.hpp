@@ -95,6 +95,7 @@ namespace FM
     template <class T> friend class PODType;
     friend class ObjectArrayType;
     template <class T> friend class AggregateType;
+    template <class T> friend class HandleType;
     friend class DoubleType;
     friend class SingleType;
     friend class StringType;
@@ -218,6 +219,7 @@ namespace FM
     template <class T> friend class PODType;
     friend class ObjectArrayType;
     template <class T> friend class AggregateType;
+    template <class T> friend class HandleType;
     friend class DoubleType;
     friend class SingleType;
     friend class IndexType;

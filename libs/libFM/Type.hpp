@@ -32,7 +32,9 @@ namespace FM {
     TypeDouble = 14,
     TypeIndex = 15,
     TypeListArray = 16,
-    TypeCode = 17
+    TypeMeta = 17,
+    TypeClass = 18,
+    TypeCode = 19
   };
 
   class Object;

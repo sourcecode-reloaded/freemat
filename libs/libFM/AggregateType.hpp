@@ -38,6 +38,13 @@ namespace FM
       p.detach();
       return static_cast<DataType *>(p.d->data->ptr);
     }
+    Object empty() {
+      Data *q = new Data;
+      q->refcnt = 0;
+      q->ptr = this->makeEmptyDataType();
+      return Object(new ObjectBase(q,this,0,Tuple(0,0),0,0));
+    }
+    virtual DataType* makeEmptyDataType() = 0;
   };
 }
 

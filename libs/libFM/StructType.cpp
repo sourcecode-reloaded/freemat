@@ -7,16 +7,11 @@
 
 using namespace FM;
 
-
-Object StructType::empty() {
-  Data *q = new Data;
-  q->refcnt = 0;
+StructData* StructType::makeEmptyDataType() {
   StructData *sd = new StructData(_ctxt);
   sd->m_data = _ctxt->_cell->empty();
-  q->ptr = sd;
-  ObjectBase *p = new ObjectBase(q,this,0,Tuple(0,0),0,0);
-  return Object(p);
-};
+  return sd;
+}
 
 static inline Object orderedFieldList(ThreadContext *ctxt, const StructData *sd) {
   Object fields = ctxt->_list->makeMatrix(sd->m_fields.size(),1);

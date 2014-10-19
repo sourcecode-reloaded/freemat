@@ -756,3 +756,6 @@ allocations, etc.
 
 
 
+Handle-type classes are tricky only because of the need to deal with
+circular references.  
+

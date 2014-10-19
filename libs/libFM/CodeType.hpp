@@ -30,12 +30,11 @@ namespace FM
     bool equals(const Object &a, const Object &b) {
       throw Exception("Code type doesn't support equals yet.");
     }
-    Object makeCodeObject();
     virtual FMString describe(const Object &a);
     virtual Object getParens(const Object &a, const Object &b);
     virtual Object call(const Object &a, const Object &args, int nargout);
     virtual Object deref(const Object &a);
-    virtual Object empty() {throw Exception("Code type cannot be empty.");}
+    virtual CodeData* makeEmptyDataType();
   };
 }
 

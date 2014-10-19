@@ -29,6 +29,8 @@ namespace FM
   class StructType;
   class CellType;
   class ListType;
+  class ClassMetaType;
+  class ClassType;
   class CodeType;
   class VM;
   class Compiler;
@@ -53,6 +55,8 @@ namespace FM
     CellType *_cell;
     ListType *_list;
     CodeType *_code;
+    ClassMetaType *_meta;
+    ClassType *_class;
     // Tools
     VM *_vm;
     Compiler *_compiler;

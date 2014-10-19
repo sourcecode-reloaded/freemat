@@ -10,5 +10,6 @@
 #include "CellType.hpp"
 #include "ListType.hpp"
 #include "CodeType.hpp"
+#include "ClassType.hpp"
 
 #endif

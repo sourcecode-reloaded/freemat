@@ -64,6 +64,8 @@ Object.hpp
 #IEEEFP.cpp
 Operators.hpp
 OpCodes.h
+ClassType.hpp
+ClassType.cpp
 Parser.hpp
 ArrayType.hpp
 ArrayType.cpp
