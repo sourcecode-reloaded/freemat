@@ -61,8 +61,15 @@ int main(int argc, char *argv[])
   // Create a new meta class
   Object fooMeta = ctxt->_meta->empty();
   ctxt->_meta->setName(fooMeta,"foo");
+  ctxt->_meta->addProperty(fooMeta,ctxt->_string->makeString("color"),
+			   ctxt->_string->makeString("RED"));
+  ctxt->_meta->addProperty(fooMeta,ctxt->_string->makeString("length"),
+			   ctxt->_double->makeScalar(32));
 
-  ctxt->_globals->insert(std::make_pair("foo",fooMeta));
+  ctxt->_globals->insert(std::make_pair("foo_meta",fooMeta));
+  Object foo = ctxt->_meta->construct(fooMeta);
+  ctxt->_globals->insert(std::make_pair("foo",foo));
+
 
   // For now - hard code a single function to preload
   compileFunc(ctxt,"three");

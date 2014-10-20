@@ -76,13 +76,15 @@ namespace FM
   public:
     HashMap<int> m_properties; // Maps property names to index in the list for each cell
     HashMap<Object> m_methods; // Methods for the class - maps method names to code objects
+    Object m_defaults;         // Default values for properties
     FMString m_name;           // Name of the  class.
+    ClassMetaData(ThreadContext *_ctxt);
   };
   
   class ClassMetaType : public HandleType<ClassMetaData> {
   public:
     ClassMetaType(ThreadContext *ctxt) {_ctxt = ctxt;}
-    //    void addProperty(const Object &name);
+    void addProperty(Object &meta, const Object &name, const Object &default_value);
     //    void addMethod(const Object &name, const Object &definition);
     void setName(Object &a, const FMString &name) {this->readWriteData(a)->m_name = name;}
     virtual DataCode code() const {return TypeMeta;}
@@ -93,7 +95,7 @@ namespace FM
     {
       return false;
     }
-    ClassMetaData* makeEmptyDataType() {return new ClassMetaData;}
+    ClassMetaData* makeEmptyDataType() {return new ClassMetaData(_ctxt);}
     Object construct(const Object &meta); // Construct an object with this class
   };
 
