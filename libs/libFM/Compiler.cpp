@@ -619,6 +619,18 @@ void Compiler::assignment(const Tree &t, bool printIt, reg_t b) {
     emit(OP_PRINT,fetchVariable(varname,symflags));
 }
 
+// We want to map a dereference tree to a list when the first child
+// is parens (), and therefore has been precomputed
+reg_t Compiler::flattenDereferenceTreeToStackParensPrecomputed(const Tree &s, reg_t paren_children, int first_child)
+{
+  reg_t x = startList();
+  emit(OP_PUSH_INT,x,const_t(0));
+  pushList(x,paren_children);
+  for (int index = first_child; index < s.numChildren();index++)
+    deref(x,s.child(index));
+  return x;
+}
+
 // We want to map a dereference tree to the stack.
 reg_t Compiler::flattenDereferenceTreeToStack(const Tree &s, int first_child) {
   reg_t x = startList();
@@ -688,6 +700,16 @@ reg_t Compiler::fetchVariable(const FMString &varname, int flags)
   return x;
 }
 
+reg_t Compiler::fetchVariableOrFunction(const FMString & varname, reg_t args)
+{
+  // We need to find a variable (or possibly a function)
+  // To find the right one, we need to know the arguments first
+  // This requires a different OPCODE.
+  reg_t x = getRegister();
+  emit(OP_LOOKUP,x,args,getNameID(varname));
+  return x;
+}
+
 reg_t Compiler::startList()
 {
   reg_t x = getRegister();
@@ -741,15 +763,35 @@ reg_t Compiler::doShortcutAnd(const Tree &t) {
 // for removing them.
 void Compiler::rhs(reg_t list, const Tree &t) {
   FMString varname = t.first().text();
-  int min_children_to_reindex = 1;
   reg_t x;
   int symflags = _code->_syms->syms[varname];
-  x = fetchVariable(varname,symflags);
-  min_children_to_reindex = 1;
-  if (t.numChildren() > min_children_to_reindex)
-    emit(OP_SUBSREF,list,x,flattenDereferenceTreeToStack(t,min_children_to_reindex));
+  if (t.numChildren() > 1)
+    {
+      // Check if we have A(...), where A isn't marked as global or persistent
+      if (t.second().is(TOK_PARENS) && !IS_GLOBAL(symflags) && !IS_PERSIST(symflags))
+	{
+	  // First, get the arguments
+	  reg_t argv = startList();
+	  const Tree &args = t.second();
+	  for (int p=0;p<args.numChildren();p++)
+	    multiexpr(argv,args.child(p));
+	  // Fetch the function
+	  x = fetchVariableOrFunction(varname,argv);
+	  emit(OP_SUBSREF,list,x,flattenDereferenceTreeToStackParensPrecomputed(t,argv,2));
+	}
+      else
+	{
+	  x = fetchVariable(varname,symflags);
+	  emit(OP_SUBSREF,list,x,flattenDereferenceTreeToStack(t,1));
+	}
+    }
   else
-    pushList(list,x);
+    {
+      x = fetchVariable(varname,symflags);
+      reg_t xv = getRegister();
+      emit(OP_DEREF,xv,x);
+      pushList(list,xv);
+    }
 }
 
 // TODO - what about "ans"?
@@ -803,19 +845,6 @@ reg_t Compiler::expression(const Tree &t) {
   switch(t.token()) {
   case TOK_VARIABLE:
     {
-      const FMString &varname = t.first().text();
-      int flags = _code->_syms->syms[varname];
-      reg_t q = fetchVariable(varname,flags);
-      if (t.numChildren() == 1)
-	{
-	  if (IS_DYNAMIC(flags))
-	    {
-	      reg_t p = getRegister();
-	      emit(OP_DEREF,p,q);
-	      return p;
-	    }
-	  return q;
-	}
       reg_t sp = startList();
       rhs(sp,t);
       reg_t ret = getRegister();
@@ -956,22 +985,10 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
       FMString varname = t.first().text();
       if (t.numChildren() == 1 || t.last().is(TOK_PARENS))
 	incrementRegister(lhsCount);
-      // else if (t.last().is(TOK_BRACES))
-      // 	{
-      // 	  const Tree &s = t.last();
-      // 	  reg_t x = startList();
-      // 	  for (int p=0;p<s.numChildren();p++)
-      // 	    multiexpr(x,s.child(p));
-      // 	  reg_t x_len = getRegister();
-      // 	  emit(OP_LENGTH,x_len,x);
-      // 	  emit(OP_ADD,lhsCount,lhsCount,x_len);
-      // 	}
       else
 	{
 	  reg_t junk = startList();
-	  int symflags = _code->_syms->syms[varname];
-	  reg_t x = fetchVariable(varname,symflags);
-	  emit(OP_SUBSREF,junk,x,flattenDereferenceTreeToStack(t,1));
+	  rhs(junk,t);
 	  reg_t y = getRegister();
 	  emit(OP_FIRST,y,junk);
 	  reg_t len_junk = getRegister();
@@ -982,7 +999,7 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
     }
   const Tree &f = t.second();
   FMString funcname = f.first().text();
-  reg_t func = fetchVariable(funcname,_code->_syms->syms[funcname]);
+  reg_t func = fetchVariable(funcname,_code->_syms->syms[funcname]); // USED
   reg_t args = startList();
   emit(OP_PUSH,args,lhsCount);
   reg_t x = startList();

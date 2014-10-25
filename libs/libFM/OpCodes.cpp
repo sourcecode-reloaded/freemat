@@ -64,6 +64,7 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_LENGTH: return two_registers;
     case OP_POP: return two_registers;
     case OP_END: return three_registers;
+    case OP_LOOKUP: return register_register_name;
     default:
       return three_registers;
   }
@@ -136,6 +137,7 @@ std::string getOpCodeName(op_t opcode)
     case OP_LENGTH: return "LENGTH";
     case OP_POP: return "POP";
     case OP_END: return "END";
+    case OP_LOOKUP: return "LOOKUP";
     default: return "UNK";
   }
 }

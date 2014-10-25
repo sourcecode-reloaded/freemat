@@ -31,8 +31,7 @@
 
 using namespace FM;
 
-
-void compileFunc(ThreadContext *ctxt, FMString name)
+Object compileFunc(ThreadContext *ctxt, FMString name)
 {
   try {
     bool failed;
@@ -41,11 +40,10 @@ void compileFunc(ThreadContext *ctxt, FMString name)
     ctxt->_compiler->compile(body);
     Object p = ctxt->_asm->run(ctxt->_compiler->module()->_main);
     Disassemble(ctxt,p);
-    ctxt->_globals->insert(std::make_pair(name,p));
+    return p;
   } catch (const FM::Exception &e) {
     std::cout << "Exception: " << e.msg() << "\n";
   }
-  //  ctxt->_vm->defineBaseVariable(name,p);
 }
 
 int main(int argc, char *argv[])
@@ -65,6 +63,8 @@ int main(int argc, char *argv[])
 			   ctxt->_string->makeString("RED"));
   ctxt->_meta->addProperty(fooMeta,ctxt->_string->makeString("length"),
 			   ctxt->_double->makeScalar(32));
+  ctxt->_meta->addMethod(fooMeta,ctxt->_string->makeString("incr"),
+			 compileFunc(ctxt,"incr"));
 
   ctxt->_globals->insert(std::make_pair("foo_meta",fooMeta));
   Object foo = ctxt->_meta->construct(fooMeta);
@@ -72,14 +72,14 @@ int main(int argc, char *argv[])
 
 
   // For now - hard code a single function to preload
-  compileFunc(ctxt,"three");
-  compileFunc(ctxt,"add");
-  compileFunc(ctxt,"fixa");
-  compileFunc(ctxt,"dima");
-  compileFunc(ctxt,"t4");
-  compileFunc(ctxt,"swit");
-  compileFunc(ctxt,"exc");
-  compileFunc(ctxt,"excb");
+  ctxt->_globals->insert(std::make_pair("three",compileFunc(ctxt,"three")));
+  ctxt->_globals->insert(std::make_pair("add",compileFunc(ctxt,"add")));
+  ctxt->_globals->insert(std::make_pair("fixa",compileFunc(ctxt,"fixa")));
+  ctxt->_globals->insert(std::make_pair("dima",compileFunc(ctxt,"dima")));
+  ctxt->_globals->insert(std::make_pair("t4",compileFunc(ctxt,"t4")));
+  ctxt->_globals->insert(std::make_pair("swit",compileFunc(ctxt,"swit")));
+  ctxt->_globals->insert(std::make_pair("exc",compileFunc(ctxt,"exc")));
+  ctxt->_globals->insert(std::make_pair("excb",compileFunc(ctxt,"excb")));
   
   while (1)
     {

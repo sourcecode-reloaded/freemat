@@ -460,6 +460,35 @@ void VM::executeCodeObject(const Object &codeObject)
 		  REG1 = varfile[addr];
 		  break;
 		}
+	      case OP_LOOKUP:
+		{
+		  register int ndx = get_constant(insn);
+		  register int addr = addrfile[ndx];
+		  if (addr == -1)
+		    {
+		      std::cout << "OP_LOOKUP for " << _ctxt->_string->getString(names_list[ndx]) << "\n";
+		      // check for user classes
+		      bool anyUserClasses = false;
+		      const Object *regs = _ctxt->_list->readOnlyData(REG2);
+		      for (int i=0;i<REG2.elementCount();i++)
+			anyUserClasses |= regs[i].isClass();
+		      if (anyUserClasses) 
+			for (int i=0;i<REG2.elementCount();i++)
+			  if (regs[i].isClass() && _ctxt->_class->hasMethod(regs[i],names_list[ndx],REG1)) 
+			    goto cont_lookup;
+		      // The address for this index has not been defined yet in the current scope.
+		      // First, see if the closed frame has the address for it.  In the process, the 
+		      // closed frame will search the global namespace for the symbol.
+		      addr = closed_frame->lookupAddressForName(names_list[ndx],true);
+		      if (addr == -1)
+			throw Exception("Reference to undefined variable " + _ctxt->_string->getString(names_list[ndx]));
+		      addrfile[ndx] = addr;
+		      // FIXME - if varfile[addr] is a variable, we can cache the address, otherwise, we can't
+		    }
+		  REG1 = varfile[addr];
+		cont_lookup:
+		  break;		  
+		}
 	      case OP_SAVE_GLOBAL:
 		break;
 	      case OP_SAVE:

@@ -122,6 +122,10 @@ Object Type::get(const Object &a, const Object &b) {
   while (ptr < b.elementCount())
     {
       double getType = bp[ptr].asDouble();
+      if (c.isList()) {
+	if (c.elementCount() > 1) throw Exception("Cannot apply indexing to multi-valued expressions (e.g. a.foo.bar means a.foo must be scalar valued)");
+	c = c.asType<ListType>()->first(c); //TODO a.foo.goo ? should throw error if a.foo is multi-valued
+      }
       switch (int(getType))
 	{
 	case 0:
@@ -136,6 +140,7 @@ Object Type::get(const Object &a, const Object &b) {
 	}
       ptr += 2;
     }
+  if (c.isList()) return c;
   return b.asType<ListType>()->makeScalar(c);
 }
 

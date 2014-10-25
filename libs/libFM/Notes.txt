@@ -755,7 +755,119 @@ should use RAII to reserve and unwind the various stacks, variable
 allocations, etc.
 
 
-
 Handle-type classes are tricky only because of the need to deal with
 circular references.  
 
+classdef sads
+    % Sensor Array data set class
+    properties (Access=private)
+        Wavelength   % Wavelength of sources (m)
+    end
+    properties (Constant)
+        c=3e8;       % Speed in medium (m/s)
+    end
+    properties (Dependent)
+        NumSensors   % Number of sensors
+        NumSamples   % Number of samples
+    end
+    properties
+        Data         % Sampled sensor data
+    end
+    properties (Access=private)
+        Spacing      % Spacing of array (m)
+        SampleRate   % Sample rate (Hz)
+        Name         % Sensor array test run name
+    end
+    methods
+        function obj=sads(Data, Wavelength,SampleRate,Spacing,Name)
+            % SADS Create sensor array data set
+            % Example:
+            %  sads(Data, Wavelength,SampleRate,Spacing,Name)
+
+            obj.Data=Data;
+            obj.SampleRate=SampleRate;
+            obj.Spacing = Spacing;
+            obj.Name=Name;
+            obj.Wavelength=Wavelength;
+        end
+        [mags, fflip]=magfft(obj,zeroPadTo)
+        function NumSensors=get.NumSensors(obj)
+            % Get NumSensors property
+            NumSensors=size(obj.Data,2);
+        end
+        function NumSamples=get.NumSamples(obj)
+            % Get NumSamples property
+            NumSamples=size(obj.Data,1);
+        end
+        plot(obj)
+        magfftplot(obj, zeroPadTo)
+        angles=doa(obj)
+        obj=steer(obj,theta)
+    end
+    methods (Static)
+        showarray(Targets,NumSensors,Spacing)
+    end
+end
+
+So there are two ways to dispatch a method call into an object.
+First, you can use the . syntax:
+
+a = a.incr(32)
+
+which should call the "incr" method on object a, with an implicit
+first argument of a.  Hence, this is equivalent to:
+
+a = incr(a,32)
+
+From an implementation perspective, they are very different.  In the
+case of the first one, the logical option is to bind the method to the
+object (logically at construction time).  This won't work for
+value-type objects.  As soon as the function is bound, the object
+becomes copied.  Instead, a late binding makes more sense (although it
+will be more expensive).  In this case, we generate a new function on
+the fly that binds the argument to the method function.  I don't know
+how quickly that can be done.  Essentially the compiled function looks
+like
+
+Name: ''
+Names: ''
+Parameters: <varargin>
+Returns: __obj
+Consts: <function def>, <a>
+
+Code:
+New List
+push <a>
+push <varargin{:}>
+call function def
+return first ret
+
+************************************************************
+
+The other case is more difficult.  
+
+a = incr(a,32)
+
+In this case, the incr function is fetched with a LOAD instruction,
+without any reference to a.  It seems as though this is not
+stretchable to the standard case.  Instead, we need to replace LOAD
+with a new instruction: LOOKUP.  Here, we collect the arguments of
+LOOKUP into a list, and then call LOOKUP.  Something like:
+
+new_list r3
+push     r3, a
+push     r3, 32
+lookup   r4, r3, name[1]
+subsref 
+
+The lookup OP code can then employ the following logic:
+
+1.  If name[1] is mapped to a local address (i.e., a variable), then
+return it's value.
+2.  If any user classes, compute the dominant class from r3, and
+lookup up name[1] in the methods of that class.  Continue looking
+until you find somethin.
+3.  Search the global namespace.
+
+The result of LOOKUP cannot be cached unless a local variable has been
+assigned.

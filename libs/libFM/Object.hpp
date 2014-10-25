@@ -154,6 +154,9 @@ namespace FM
     inline bool isString() const {
       return (typeCode() == TypeString);
     }
+    inline bool isClass() const {
+      return (typeCode() == TypeClass);
+    }
     inline bool is2D() const {
       return (d->dims.is2D());
     }

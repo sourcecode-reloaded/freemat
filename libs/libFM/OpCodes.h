@@ -60,3 +60,4 @@ const op_t OP_PUSH_INT = 72;
 const op_t OP_LENGTH = 73;
 const op_t OP_POP = 74;
 const op_t OP_END = 75;
+const op_t OP_LOOKUP = 76;

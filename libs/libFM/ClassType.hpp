@@ -85,7 +85,7 @@ namespace FM
   public:
     ClassMetaType(ThreadContext *ctxt) {_ctxt = ctxt;}
     void addProperty(Object &meta, const Object &name, const Object &default_value);
-    //    void addMethod(const Object &name, const Object &definition);
+    void addMethod(Object &meta, const Object &name, const Object &definition);
     void setName(Object &a, const FMString &name) {this->readWriteData(a)->m_name = name;}
     virtual DataCode code() const {return TypeMeta;}
     virtual const FMString& name() const {static FMString _name = "meta"; return _name;}
@@ -112,12 +112,11 @@ namespace FM
     virtual DataCode code() const {return TypeClass;}
     virtual const FMString& name() const {static FMString _name = "class"; return _name;}
     virtual FMString describe(const Object &a);
-    //    Object empty();
-    //    virtual FMString describe(const Object &a);
-    //    virtual Object getField(const Object &a, const Object &b);
-    //    virtual Object setField(const Object &a, const Object &args, const Object &b);
+    virtual Object getField(const Object &a, const Object &b);
+    virtual void setField(Object &a, const Object &args, const Object &b);
     //    virtual Object getParens(const Object &a, const Object &args);
     //    virtual void setParens(Object &a, const Object &args, const Object &b);
+    virtual bool hasMethod(const Object &a, const Object &name, Object &ret);
     virtual bool equals(const Object &a, const Object &b)
     {
       // FIXME - allow equality tests

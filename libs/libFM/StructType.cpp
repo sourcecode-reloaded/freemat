@@ -27,7 +27,7 @@ FMString StructType::describe(const Object &a) {
   Object fields = orderedFieldList(_ctxt,sd);
   const Object *fp = _ctxt->_list->readOnlyData(fields);
   if (a.isScalar()) {
-    const Object *cd = _ctxt->_cell->readOnlyData(_ctxt->_cell->scalarValue(sd->m_data));
+    const Object *cd = _ctxt->_list->readOnlyData(_ctxt->_cell->scalarValue(sd->m_data));
     for (int i=0;i<fields.elementCount();i++)
       {
 	ret += "   " + _ctxt->_string->getString(fp[i]) + ": ";

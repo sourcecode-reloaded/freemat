@@ -122,8 +122,10 @@ namespace FM
     reg_t fetchConstant(const Object &);
     reg_t fetchConstantString(const FMString &);
     reg_t fetchVariable(const FMString &, int flags);
+    reg_t fetchVariableOrFunction(const FMString &, reg_t args);
     void saveRegisterToName(const FMString &varname, reg_t b);
     reg_t flattenDereferenceTreeToStack(const Tree&, int);
+    reg_t flattenDereferenceTreeToStackParensPrecomputed(const Tree &s, reg_t paren_children, int first_child);
     void deref(reg_t args, const Tree&);
     void rhs(reg_t list, const Tree&);
     void expressionStatement(const Tree&, bool);
