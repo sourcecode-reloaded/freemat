@@ -81,8 +81,18 @@ Object Assembler::codeObject()
   cp->m_consts = _code->_constlist;
   // Walk the symbol table and collect up the list of arguments
   const Object *strings = _ctxt->_list->readOnlyData(cp->m_names);
-  Object param_list = _ctxt->_list->empty();
-  Object return_list = _ctxt->_list->empty();
+  // Count number of parametrs and returns
+  int param_count = 0;
+  int return_count = 0;
+  for (auto i=_code->_syms->syms.constBegin(); i != _code->_syms->syms.constEnd(); ++i)
+    {
+      if (IS_PARAMETER(i.value())) param_count++;
+      if (IS_RETURN(i.value())) return_count++;
+    }
+  Object param_list = _ctxt->_index->makeMatrix(param_count,1);
+  Object return_list = _ctxt->_index->makeMatrix(return_count,1);
+  ndx_t * param_ptr = _ctxt->_index->readWriteData(param_list);
+  ndx_t * return_ptr = _ctxt->_index->readWriteData(return_list);
   for (FMMap<FMString,int>::const_iterator i=_code->_syms->syms.constBegin();i != _code->_syms->syms.constEnd(); ++i)
     {
       // TODO: This should be more efficient
@@ -90,13 +100,13 @@ Object Assembler::codeObject()
 	{
 	  for (int j=0;j<cp->m_names.elementCount();j++)
 	    if (_ctxt->_string->getString(strings[j]) == i.key())
-	      addIndexToList(_ctxt,param_list,j);
+	      *param_ptr++ = j;
 	}
       if (IS_RETURN(i.value())) 
 	{
 	  for (int j=0;j<cp->m_names.elementCount();j++)
 	    if (_ctxt->_string->getString(strings[j]) == i.key())
-	      addIndexToList(_ctxt,return_list,j);
+	      *return_ptr++ = j;
 	}
     }
   cp->m_params = param_list;

@@ -202,9 +202,13 @@ namespace FM
     }
     void promoteComplex(Object &a);
     inline const T* readOnlyData(const Object &p) const {
+      // DEBUG ASSERT
+      assert(p.type()->code() == this->code());
       return static_cast<const T *>(static_cast<const T *>(p.d->data->ptr) + p.d->offset);
     }
     inline T* readWriteData(Object &p) const {
+      // DEBUG ASSERT
+      assert(p.type()->code() == this->code());
       p.detach();
       return static_cast<T*>(p.d->data->ptr);
     }

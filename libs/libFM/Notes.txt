@@ -871,3 +871,7 @@ until you find somethin.
 
 The result of LOOKUP cannot be cached unless a local variable has been
 assigned.
+
+
+
+VARIABLE arguments and returns!

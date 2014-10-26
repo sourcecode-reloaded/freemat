@@ -34,6 +34,7 @@ namespace FM
     virtual Object getParens(const Object &a, const Object &b);
     virtual Object call(const Object &a, const Object &args, int nargout);
     virtual Object deref(const Object &a);
+    Object bindFunction(const Object &code, const Object &argument);
     virtual CodeData* makeEmptyDataType();
   };
 }

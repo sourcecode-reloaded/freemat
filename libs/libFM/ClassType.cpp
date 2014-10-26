@@ -63,7 +63,8 @@ Object ClassType::getField(const Object &a, const Object &b) {
       return output;
     }
   auto j = cmd->m_methods.find(b);
-  if (j != cmd->m_methods.end()) return j->second; // FIXME - should bind function to the argument, i.e., func(obj,a,b) --> func_obj(a,b)
+  if (j != cmd->m_methods.end())
+    return _ctxt->_code->bindFunction(j->second,a);
   throw Exception("Property " + b.description() + " is not defined for class " + cmd->m_name);
 }
 
