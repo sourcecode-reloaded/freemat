@@ -56,6 +56,8 @@ namespace FM
     //Slicing means that one object has an internal (read-only)
     //view into another objects data.
     ref_t refcnt;
+    //! Indicates if the object is handle-style - i.e., shared.
+    bool handle;
     //! Pointer to the base metatype object that contains the 
     //method pointers for the object of interest.
     Type *type;
@@ -70,13 +72,14 @@ namespace FM
     // without reallocating/copying
     dim_t capacity;
   public:
-    ObjectBase(Data* p, Type* _type, size_t _offset, Tuple _dims, int _flags, size_t _capacity) : data(p) {
+    ObjectBase(Data* p, Type* _type, size_t _offset, Tuple _dims, int _flags, size_t _capacity, bool _handle = false) : data(p) {
       data->refcnt++;
       type = _type;
       offset = _offset;
       dims = _dims;
       flags = _flags;
       capacity = _capacity;
+      handle = _handle;
       refcnt = 0;
     }
     ObjectBase(const ObjectBase& t) {
@@ -88,13 +91,14 @@ namespace FM
       data->refcnt++;
       flags = t.flags;
       capacity = t.capacity;
+      handle = t.handle;
     }
     friend class Object;
     friend class Type;
     template <class T> friend class ArrayType;
     template <class T> friend class PODType;
     friend class ObjectArrayType;
-    template <class T> friend class AggregateType;
+    template <class T, bool H> friend class AggregateType;
     template <class T> friend class HandleType;
     friend class DoubleType;
     friend class SingleType;
@@ -169,6 +173,9 @@ namespace FM
     inline size_t capacity() const {
       return d->capacity;
     }
+    inline FMString brief() const {
+      return d->type->brief(*this);
+    }
     inline FMString description() const {
       return d->type->describe(*this);
     }
@@ -195,13 +202,15 @@ namespace FM
     }
     inline void detach() 
     {
-      if (d->refcnt > 1) {
-	d = new ObjectBase(*d);
-	d->refcnt++;
-      }
-      if (d->data->refcnt > 1) {
-	d->data = d->type->duplicateData(d,d->capacity);
-	d->offset = 0;
+      if (!d->handle) {
+	if (d->refcnt > 1) {
+	  d = new ObjectBase(*d);
+	  d->refcnt++;
+	}
+	if (d->data->refcnt > 1) {
+	  d->data = d->type->duplicateData(d,d->capacity);
+	  d->offset = 0;
+	}
       }
     }
     inline Type* type() const
@@ -221,7 +230,7 @@ namespace FM
     friend class PODType<double>;
     template <class T> friend class PODType;
     friend class ObjectArrayType;
-    template <class T> friend class AggregateType;
+    template <class T, bool H> friend class AggregateType;
     template <class T> friend class HandleType;
     friend class DoubleType;
     friend class SingleType;

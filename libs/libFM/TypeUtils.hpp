@@ -12,8 +12,8 @@ namespace FM
   inline Object makeCellFromList(ThreadContext *ctxt, const Object &t) {
     assert(t.typeCode() == TypeListArray);
     Object p = ctxt->_cell->makeMatrix(1,t.elementCount());
-    Object *q = ctxt->_cell->readWriteData(p);
-    const Object *h = ctxt->_list->readOnlyData(t);
+    Object *q = ctxt->_cell->rw(p);
+    const Object *h = ctxt->_list->ro(t);
     for (size_t i=0;i<t.elementCount();i++)
       q[i] = h[i];
     return p;
@@ -22,8 +22,8 @@ namespace FM
   inline Object makeListFromCell(ThreadContext *ctxt, const Object &t) {
     assert(t.typeCode() == TypeCellArray);
     Object p = ctxt->_list->makeMatrix(t.elementCount(),1);
-    Object *q = ctxt->_list->readWriteData(p);
-    const Object *h = ctxt->_cell->readOnlyData(t);
+    Object *q = ctxt->_list->rw(p);
+    const Object *h = ctxt->_cell->ro(t);
     for (size_t i=0;i<t.elementCount();i++)
       q[i] = h[i];
     return p;
@@ -31,7 +31,7 @@ namespace FM
 
   inline Object makeCellFromStrings(ThreadContext *ctxt, const FMStringList &t) {
     Object p = ctxt->_cell->makeMatrix(1,t.size());
-    Object *q = ctxt->_cell->readWriteData(p);
+    Object *q = ctxt->_cell->rw(p);
     for (size_t i=0;i<t.size();i++)
       q[i] = ctxt->_string->makeString(t[i]);
     return p;
@@ -40,7 +40,7 @@ namespace FM
   inline FMStringList makeStringsFromCell(ThreadContext *ctxt, const Object &t) {
     assert(t.type()->code() == TypeCellArray);
     FMStringList ret;
-    const Object *tptr = ctxt->_cell->readOnlyData(t);
+    const Object *tptr = ctxt->_cell->ro(t);
     for (dim_t i=0;i<t.dims().elementCount();i++)
       ret << ctxt->_string->getString(tptr[i]);
     return ret;

@@ -13,6 +13,13 @@ namespace FM
     CellType(ThreadContext *ctxt) : ObjectArrayType(ctxt,"cell") {}
     virtual DataCode code() const {return TypeCellArray;}
     virtual Type* typeInstance() {return this;}
+    virtual FMString brief(const Object &a) {
+      if (a.isEmpty()) return FMString("{}");
+      if (a.isScalar())
+	return FMString("{") + scalarValue(a).brief() + FMString("}");
+      else
+	return(a.dims().toString() + " " + this->name() + " array");      
+    }
     virtual FMString describe(const Object &a) {
       if (a.isEmpty()) return FMString("{}");
       if (a.isScalar())
@@ -24,7 +31,7 @@ namespace FM
     virtual Object getBraces(const Object &a, const Object &args);
     void computeArrayFormatInfo(FMFormatMode, const Object &a, ArrayFormatInfo &format) {
       int maxwidth = 1;
-      //const Object *t = this->readOnlyData(a);
+      //const Object *t = this->ro(a);
       for (ndx_t i=0;i<a.elementCount();i++)
 	maxwidth = std::max<ndx_t>(maxwidth,a.description().length());
       format.width = maxwidth+2;

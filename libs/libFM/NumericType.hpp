@@ -28,7 +28,7 @@ namespace FM
     virtual T minValue(const Object &a)
     {
       if (a.isEmpty() || a.isComplex()) throw Exception("Complex or empty arguments do no support maxValue");
-      const T* ap = this->readOnlyData(a);
+      const T* ap = this->ro(a);
       dim_t acnt = a.elementCount();
       T ret = ap[0];
       for (dim_t i=1;i<acnt;i++)
@@ -38,7 +38,7 @@ namespace FM
     virtual T maxValue(const Object &a) 
     {
       if (a.isEmpty() || a.isComplex()) throw Exception("Complex or empty arguments do no support maxValue");
-      const T* ap = this->readOnlyData(a);
+      const T* ap = this->ro(a);
       dim_t acnt = a.elementCount();
       T ret = ap[0];
       for (dim_t i=1;i<acnt;i++)

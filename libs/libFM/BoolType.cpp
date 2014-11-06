@@ -6,13 +6,13 @@ using namespace FM;
 
 Object BoolType::asIndexNoBoundsCheck(const Object &a)
 {
-  const bool *ip = this->readOnlyData(a);
+  const bool *ip = this->ro(a);
   dim_t len = a.elementCount();
   dim_t trueCount = 0;
   for (dim_t i=0;i<len;i++)
     if (ip[i]) trueCount++;
   Object output = _ctxt->_index->makeMatrix(trueCount,1);
-  ndx_t *op = _ctxt->_index->readWriteData(output);
+  ndx_t *op = _ctxt->_index->rw(output);
   trueCount = 0;
   for (dim_t i=0;i<len;i++)
     if (ip[i]) op[trueCount++] = i;
@@ -23,13 +23,13 @@ Object BoolType::asIndex(const Object &a, dim_t max)
 {
   if (a.dims().elementCount() > max)
     throw Exception("Index out of range");
-  const bool *ip = this->readOnlyData(a);
+  const bool *ip = this->ro(a);
   dim_t len = a.elementCount();
   dim_t trueCount = 0;
   for (dim_t i=0;i<len;i++)
     if (ip[i]) trueCount++;
   Object output = _ctxt->_index->makeMatrix(trueCount,1);
-  ndx_t *op = _ctxt->_index->readWriteData(output);
+  ndx_t *op = _ctxt->_index->rw(output);
   trueCount = 0;
   for (dim_t i=0;i<len;i++)
     if (ip[i]) op[trueCount++] = i;
@@ -38,7 +38,7 @@ Object BoolType::asIndex(const Object &a, dim_t max)
 
 bool BoolType::any(const Object &a)
 {
-  const bool *ip = this->readOnlyData(a);
+  const bool *ip = this->ro(a);
   dim_t len = a.elementCount();
   for (dim_t i=0;i<len;i++)
     if (ip[i]) return true;
@@ -47,7 +47,7 @@ bool BoolType::any(const Object &a)
 
 bool BoolType::all(const Object &a)
 {
-  const bool *ip = this->readOnlyData(a);
+  const bool *ip = this->ro(a);
   dim_t len = a.elementCount();
   for (dim_t i=0;i<len;i++)
     if (!ip[i]) return false;
@@ -56,7 +56,7 @@ bool BoolType::all(const Object &a)
 
 dim_t BoolType::countOne(const Object &a)
 {
-  const bool *ip = this->readOnlyData(a);
+  const bool *ip = this->ro(a);
   dim_t len = a.elementCount();
   dim_t count = 0;
   for (dim_t i=0;i<len;i++)
@@ -66,7 +66,7 @@ dim_t BoolType::countOne(const Object &a)
 
 dim_t BoolType::countZero(const Object &a)
 {
-  const bool *ip = this->readOnlyData(a);
+  const bool *ip = this->ro(a);
   dim_t len = a.elementCount();
   dim_t count = 0;
   for (dim_t i=0;i<len;i++)

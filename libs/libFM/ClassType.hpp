@@ -1,5 +1,5 @@
-#ifndef __Class_hpp__
-#define __Class_hpp__
+#ifndef __ClassType_hpp__
+#define __ClassType_hpp__
 
 #include "Object.hpp"
 #include "Type.hpp"
@@ -81,16 +81,17 @@ namespace FM
     ClassMetaData(ThreadContext *_ctxt);
   };
   
-  class ClassMetaType : public HandleType<ClassMetaData> {
+  class ClassMetaType : public AggregateType<ClassMetaData,HandleSemantics> {
   public:
     ClassMetaType(ThreadContext *ctxt) {_ctxt = ctxt;}
     void addProperty(Object &meta, const Object &name, const Object &default_value);
     void addMethod(Object &meta, const Object &name, const Object &definition);
-    void setName(Object &a, const FMString &name) {this->readWriteData(a)->m_name = name;}
+    void setName(Object &a, const FMString &name) {this->rw(a)->m_name = name;}
     virtual DataCode code() const {return TypeMeta;}
     virtual const FMString& name() const {static FMString _name = "meta"; return _name;}
     //    Object empty();
     virtual FMString describe(const Object &a);
+    virtual FMString brief(const Object &a);
     virtual bool equals(const Object &a, const Object &b)
     {
       return false;
@@ -106,17 +107,19 @@ namespace FM
     ClassData(ThreadContext *ctxt) : metaClass(ctxt), m_data(ctxt) {}
   };
 
-  class ClassType : public AggregateType<ClassData> {
+  class ClassType : public AggregateType<ClassData,ValueSemantics> {
   public:
     ClassType(ThreadContext *ctxt) {_ctxt = ctxt;}
     virtual DataCode code() const {return TypeClass;}
     virtual const FMString& name() const {static FMString _name = "class"; return _name;}
     virtual FMString describe(const Object &a);
+    virtual FMString brief(const Object &a);
     virtual Object getField(const Object &a, const Object &b);
     virtual void setField(Object &a, const Object &args, const Object &b);
     //    virtual Object getParens(const Object &a, const Object &args);
     //    virtual void setParens(Object &a, const Object &args, const Object &b);
     virtual bool hasMethod(const Object &a, const Object &name, Object &ret);
+    const FMString & className(const Object &a) const {return _ctxt->_meta->ro(this->ro(a)->metaClass)->m_name;}
     virtual bool equals(const Object &a, const Object &b)
     {
       // FIXME - allow equality tests

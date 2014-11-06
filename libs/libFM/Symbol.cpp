@@ -41,9 +41,47 @@ void SymbolPass::popToParent() {
   _current = _current->parent;
 }
 
-void SymbolPass::walkChildren(const Tree &t) {
+void SymbolPass::walkChildren(const Tree &t, bool nested) {
   for (int index=0;index < t.numChildren();++index)
-    walkCode(t.child(index));
+    walkCode(t.child(index),nested);
+}
+
+bool SymbolPass::parentScopeDefines(const FMString &name) {
+  if (_current == _root) return false;
+  SymbolTable *sp = _current->parent;
+  while (1) 
+    {
+      if (sp->syms.contains(name)) return true;
+      sp = sp->parent;
+      if (sp == _root) return false;
+    }
+  return false;
+}
+
+void SymbolPass::markParentSymbolCaptured(const FMString &name) {
+  if (_current == _root) return;
+  SymbolTable *sp = _current->parent;
+  while (1)
+    {
+      if (sp->syms.contains(name) && !IS_FREE(sp->syms[name]))
+	{
+	  symbol_flag_t old_flag = sp->syms[name];
+	  if (IS_CAPTURED(old_flag)) return;
+	  old_flag |= SYM_CAPTURED;
+	  old_flag &= ~SYM_DYNAMIC;
+	  std::cout << "CAPTURE " << name << "\n";
+	  std::cout << "  FLAG: " << symbolFlagsToString(old_flag) << "\n";
+	  sp->syms[name] = old_flag;
+	  return;
+	}
+      else
+	{
+	  sp->syms[name] = SYM_FREE;
+	  std::cout << "FLOW THROUGH: " << name << "\n";
+	}
+      sp = sp->parent;
+      if (sp == _root) return;
+    }
 }
 
 void SymbolPass::beginFunction(const FMString &name, bool nested)
@@ -56,17 +94,16 @@ void SymbolPass::beginFunction(const FMString &name, bool nested)
     newChild(t);
 }
 
-void SymbolPass::addSymbol(const FMString &name, int32_t flags)
+void SymbolPass::addSymbol(const FMString &name, symbol_flag_t flags)
 {
   if (!_current->syms.contains(name))
     {
-      // Adding a symbol - keep track of it's order
-      flags |= (_current->syms.count()+1) << 16;
       _current->syms[name] = flags;
+      std::cout << "Insert of symbol: " << name << " with flags " << symbolFlagsToString(flags) << "\n";
     }
   else
     {
-      int32_t oldflags = _current->syms[name];
+      symbol_flag_t oldflags = _current->syms[name];
       if ((oldflags | flags) != oldflags)
 	{
 	  std::cout << "Update of symbol: " << name 
@@ -85,16 +122,16 @@ void SymbolPass::walkFunction(const Tree &t, bool nested) {
   const Tree &code = t.child(3);
   for (int index=0;index < args.numChildren();index++)
     if (args.child(index).is('&'))
-      addSymbol(args.child(index).first().text(), SYM_REFERENCE | SYM_PARAMETER);
+      addSymbol(args.child(index).first().text(), SYM_REFERENCE | SYM_PARAMETER | (index << 12));
     else
-      addSymbol(args.child(index).text(), SYM_PARAMETER);
+      addSymbol(args.child(index).text(), SYM_PARAMETER | (index << 12));
   for (int index=0;index < rets.numChildren();index++)
-    addSymbol(rets.child(index).text(), SYM_RETURN);
-  walkCode(code);  
+    addSymbol(rets.child(index).text(), SYM_RETURN | (index << 20));
+  walkCode(code,nested);  
   if (nested) popToParent();
 }
 
-void SymbolPass::walkCode(const Tree &t) {
+void SymbolPass::walkCode(const Tree &t, bool nested) {
   switch (t.token())
     {
     case TOK_GLOBAL:
@@ -103,20 +140,34 @@ void SymbolPass::walkCode(const Tree &t) {
 	  {
 	    const Tree &s = t.child(index);
 	    addSymbol(s.text(),SYM_GLOBAL);
-	    walkChildren(s);
+	    walkChildren(s,nested);
 	  }
 	break;
       }
     case TOK_VARIABLE:
       {
-	addSymbol(t.first().text(),SYM_DYNAMIC);
-	walkChildren(t);
+	if (nested)
+	  {
+	    if (!_current->syms.contains(t.first().text()))
+	      {
+		if (parentScopeDefines(t.first().text()))
+		  {
+		    addSymbol(t.first().text(),SYM_FREE);
+		    markParentSymbolCaptured(t.first().text());
+		  }
+		else
+		  addSymbol(t.first().text(),SYM_DYNAMIC);
+	      }
+	  }
+	else
+	  addSymbol(t.first().text(),SYM_DYNAMIC);
+	walkChildren(t,nested);
 	break;
       }
     case TOK_FOR:
       {
 	addSymbol(t.first().first().text(),SYM_DYNAMIC);
-	walkChildren(t);
+	walkChildren(t,nested);
 	break;
       }
     case TOK_PERSISTENT:
@@ -125,7 +176,7 @@ void SymbolPass::walkCode(const Tree &t) {
 	  {
 	    const Tree &s = t.child(index);
 	    addSymbol(s.text(),SYM_PERSISTENT);
-	    walkChildren(s);
+	    walkChildren(s,nested);
 	  }
 	break;
       }
@@ -140,7 +191,7 @@ void SymbolPass::walkCode(const Tree &t) {
 	break;
       }
     default:
-      walkChildren(t);
+      walkChildren(t,nested);
     }
 }
 
@@ -155,22 +206,24 @@ void SymbolPass::dump(SymbolTable *t, int indent)
   std::string spacer(indent,' ');
   std::cout << "************************************************************\n";
   std::cout << spacer << "Symbols for function: " << t->name << "\n";
-  for (FMMap<FMString, int>::const_iterator s=t->syms.constBegin(); s != t->syms.constEnd(); ++s)
+  for (auto s=t->syms.constBegin(); s != t->syms.constEnd(); ++s)
     std::cout << spacer << "   Symbol: " << s.key() << " flags: " << symbolFlagsToString(s.value()) << "\n";
   for (int i=0;i<t->children.size();++i)
     dump(t->children[i],indent+3);
 }
 
-FMString FM::symbolFlagsToString(int32_t flag)
+FMString FM::symbolFlagsToString(symbol_flag_t flag)
 {
   FMString ret;
-  int32_t position = flag >> 16;
+  symbol_flag_t param_position = SYM_PARAM_POSITION(flag);
+  symbol_flag_t return_position = SYM_RETURN_POSITION(flag);
   if (flag & SYM_GLOBAL) ret += " global";
   if (flag & SYM_PERSISTENT) ret += " persist";
-  if (flag & SYM_PARAMETER) ret += " parameter";
   if (flag & SYM_REFERENCE) ret += " reference";
-  if (flag & SYM_RETURN) ret += " return";
   if (flag & SYM_DYNAMIC) ret += " dynamic";
-  ret += " pos=" + Stringify(position);
+  if (flag & SYM_PARAMETER) ret += (" parameter:" + Stringify(param_position));
+  if (flag & SYM_FREE) ret += " free";
+  if (flag & SYM_CAPTURED) ret += " captured";
+  if (flag & SYM_RETURN) ret += (" return:" + Stringify(return_position));
   return ret;
 }

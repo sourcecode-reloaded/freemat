@@ -15,7 +15,7 @@ namespace FM
     virtual Type* typeInstance() {return this;}
     inline Object makeString(const FMString &x) {
       Object p = makeMatrix(1,x.length());
-      FMChar *t = readWriteData(p);
+      FMChar *t = rw(p);
       memcpy(t,&x[0],sizeof(FMChar)*x.length());
       return p;
     }
@@ -23,7 +23,7 @@ namespace FM
     Object asIndexNoBoundsCheck(const Object &a);
     inline FMString getString(const Object &o) const {
       assert(o.type()->code() == TypeString);
-      const FMChar *t = readOnlyData(o);
+      const FMChar *t = ro(o);
       FMString ret;
       for (dim_t i=0;i<o.dims().elementCount();++i)
 	ret += t[i];

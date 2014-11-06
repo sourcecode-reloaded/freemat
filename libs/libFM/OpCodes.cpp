@@ -65,6 +65,8 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_POP: return two_registers;
     case OP_END: return three_registers;
     case OP_LOOKUP: return register_register_name;
+    case OP_LOAD_CELL: return register_cell;
+    case OP_SAVE_CELL: return register_cell;
     default:
       return three_registers;
   }
@@ -138,6 +140,8 @@ std::string getOpCodeName(op_t opcode)
     case OP_POP: return "POP";
     case OP_END: return "END";
     case OP_LOOKUP: return "LOOKUP";
+    case OP_LOAD_CELL: return "LOAD_CELL";
+    case OP_SAVE_CELL: return "SAVE_CELL";
     default: return "UNK";
   }
 }

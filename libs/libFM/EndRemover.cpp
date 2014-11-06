@@ -5,9 +5,9 @@ using namespace FM;
 EndRemoverPass::EndRemoverPass() {
 }
 
-bool childrenHaveEnd(const Tree &t);
+static bool childrenHaveEnd(const Tree &t);
 
-bool hasEnd(const Tree &t) {
+static bool hasEnd(const Tree &t) {
   switch (t.token()) 
     {
     case TOK_END: 
@@ -20,14 +20,14 @@ bool hasEnd(const Tree &t) {
   return false;
 }
 
-bool childrenHaveEnd(const Tree &t) {
+static bool childrenHaveEnd(const Tree &t) {
   bool anyEnd = false;
   for (int index=0;index < t.numChildren();++index)
     if (hasEnd(t.child(index))) return true;
   return false;
 }
 
-Tree copyTree(const Tree &t) {
+static Tree copyTree(const Tree &t) {
   Tree ret(t.node());
   for (int index=0;index<t.numChildren();++index)
     ret.addChild(copyTree(t.child(index)));

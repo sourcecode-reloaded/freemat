@@ -3,12 +3,15 @@
 
 namespace FM
 {
+  const bool ValueSemantics = false;
+  const bool HandleSemantics = true;
+
   // An AggregateType is a type where the data for the type consists
   // of automatically-managed memory objects.  For example, Objects
   // or STL containers.  In these cases, the copy and delete functions
   // can be simplified by using default C++ copy constructors and 
   // destructors.
-  template <typename DataType>
+  template <typename DataType, bool HandleStyle>
   class AggregateType : public Type {
   public:
     virtual void destroyObject(ObjectBase* p)
@@ -31,10 +34,12 @@ namespace FM
       reserve = elem_count; // FIXME
       return q;
     }
-    const DataType *readOnlyData(const Object &p) const {
+    const DataType *ro(const Object &p) const {
+      assert(p.type()->code() == this->code());
       return static_cast<const DataType *>(p.d->data->ptr);
     }
-    DataType * readWriteData(Object &p) const {
+    DataType * rw(Object &p) const {
+      assert(p.type()->code() == this->code());
       p.detach();
       return static_cast<DataType *>(p.d->data->ptr);
     }
@@ -42,7 +47,13 @@ namespace FM
       Data *q = new Data;
       q->refcnt = 0;
       q->ptr = this->makeEmptyDataType();
-      return Object(new ObjectBase(q,this,0,Tuple(0,0),0,0));
+      return Object(new ObjectBase(q,this,0,Tuple(0,0),0,0,HandleStyle));
+    }
+    Object makeScalar() {
+      Data *q = new Data;
+      q->refcnt = 0;
+      q->ptr = this->makeEmptyDataType();
+      return Object(new ObjectBase(q,this,0,Tuple(1,1),0,0,HandleStyle));
     }
     virtual DataType* makeEmptyDataType() = 0;
   };

@@ -324,8 +324,8 @@ Object ArrayType<T>::getParensRowMode(const Object &a, const Tuple &dims, const 
       return output;
     }
   Object output = this->zeroArrayOfSize(dims,a.isComplex());
-  getRowLoop<T>(this->readWriteData(output),this->readOnlyData(a),
-		_ctxt->_index->readOnlyData(b),b.elementCount(),a.isComplex());
+  getRowLoop<T>(this->rw(output),this->ro(a),
+		_ctxt->_index->ro(b),b.elementCount(),a.isComplex());
   return output;
 }
 
@@ -384,9 +384,9 @@ Object ArrayType<T>::getParens(const Object &a, const Object &b) {
   // TODO: Trim trailing singular dimensions.  Make sure b.size() < a.numDims.
   // TODO: Special case all-scalar indexing case
   Object carray(_ctxt->_list->makeMatrix(MAXDIMS,1));
-  Object *c = _ctxt->_list->readWriteData(carray);
+  Object *c = _ctxt->_list->rw(carray);
   int bsize = b.elementCount();
-  const Object *bp = _ctxt->_list->readOnlyData(b);
+  const Object *bp = _ctxt->_list->ro(b);
   for (int i=0;i<bsize;i++)
     c[i] = bp[i].asIndex(adims.dimension(i));
   // TODO: Add slice test here (c.f. isSliceIndexCase)
@@ -407,10 +407,10 @@ Object ArrayType<T>::getParens(const Object &a, const Object &b) {
       if (ip->isColon(c[i]))
 	c[i] = ip->expandColons(adims.dimension(i));
       outdim[i] = c[i].elementCount();
-      coords[i] = ip->readOnlyData(c[i]);
+      coords[i] = ip->ro(c[i]);
     }
     Object output = this->zeroArrayOfSize(Tuple::RawTuple(outdim,bsize),a.isComplex());
-    getLoop<T>(this->readWriteData(output),this->readOnlyData(a),outdim,adims,bsize,coords,a.isComplex());
+    getLoop<T>(this->rw(output),this->ro(a),outdim,adims,bsize,coords,a.isComplex());
   return output;
 }
 
@@ -419,11 +419,11 @@ void ArrayType<T>::resizeSlow(Object &a, const Tuple &newsize) {
   // Determine if this is a move or a copy
   T zero(this->zeroElement());
   if (a.d->capacity > newsize.elementCount()) { 
-    moveLoop<T>(this->readWriteData(a),newsize,a.dims(),zero,a.isComplex());
+    moveLoop<T>(this->rw(a),newsize,a.dims(),zero,a.isComplex());
   } else {
     // Copy
     Object na = this->zeroArrayOfSize(newsize,a.isComplex());
-    copyLoop<T>(this->readWriteData(na),this->readOnlyData(a),newsize,a.dims(),a.isComplex());
+    copyLoop<T>(this->rw(na),this->ro(a),newsize,a.dims(),a.isComplex());
     a = na;
   }
   a.dims() = newsize;
@@ -459,13 +459,13 @@ void ArrayType<T>::setParensRowIndexMode(Object &a, const Object &ndx, const Obj
     {
       a.type()->resize(a,ComputeRowResizedTuple(a,maxndx));
     }
-  const ndx_t *addr = _ctxt->_index->readOnlyData(ndx);
+  const ndx_t *addr = _ctxt->_index->ro(ndx);
   // TODO - handle b is complex, a is real
   if (!a.isComplex() && b.isComplex())
     this->promoteComplex(a);
-  setLoopRowMode<T>(this->readWriteData(a),
+  setLoopRowMode<T>(this->rw(a),
 		    addr,ndx.elementCount(),
-		    this->readOnlyData(b),
+		    this->ro(b),
 		    b.isScalar(),
 		    a.isComplex());
 }
@@ -474,8 +474,8 @@ template <class T>
 void ArrayType<T>::promoteComplex(Object &a) {
   if (a.isComplex()) return;
   Object o = zeroArrayOfSize(a.dims(),true);
-  T *op = this->readWriteData(o);
-  const T *ip = this->readOnlyData(a);
+  T *op = this->rw(o);
+  const T *ip = this->ro(a);
   for (dim_t i=0;i<a.elementCount();i++)
     op[2*i] = ip[i];
   a = o;
@@ -484,9 +484,9 @@ void ArrayType<T>::promoteComplex(Object &a) {
 template <class T>
 Object ArrayType<T>::convertArgumentsToIndexingExpressions(const Object &args) {
   Object carray = _ctxt->_list->makeMatrix(MAXDIMS,1);
-  Object *c = _ctxt->_list->readWriteData(carray);
+  Object *c = _ctxt->_list->rw(carray);
   int argsize = args.elementCount();
-  const Object *argsp = args.asType<ListType>()->readOnlyData(args);
+  const Object *argsp = args.asType<ListType>()->ro(args);
   for (int i=0;i<argsize;i++)
     c[i] = argsp[i].asIndexNoBoundsCheck();
   // TODO: Add slice test here (c.f. isSliceIndexCase)
@@ -504,9 +504,9 @@ static inline Object ComputeDeletionMap(ThreadContext *_ctxt, dim_t length_in_de
   // the deletion with a move.
   // Create a bit mask for the given dimension
   Object mask(_ctxt->_bool->zeroArrayOfSize(Tuple(length_in_deletion_dim,1),false));
-  bool *mp = _ctxt->_bool->readWriteData(mask);
+  bool *mp = _ctxt->_bool->rw(mask);
   // Loop over the non-colon dimension and fill in the columns to be deleted
-  const ndx_t *dp = _ctxt->_index->readOnlyData(deletion_index);
+  const ndx_t *dp = _ctxt->_index->ro(deletion_index);
   dim_t dp_len = deletion_index.elementCount();
   for (dim_t i=0;i<dp_len;i++)
     {
@@ -556,8 +556,8 @@ void ArrayType<T>::erasePlanes(Object &a, const Object &mask, const Tuple &outdi
   for (int i=non_colon_index+1;i<outdims.dimensions();i++) 
     iteration_count *= outdims.dimension(i);
   dim_t scan_dim = a.dims().dimension(non_colon_index);
-  const bool *mp = _ctxt->_bool->readOnlyData(mask);
-  T *ap = this->readWriteData(a);
+  const bool *mp = _ctxt->_bool->ro(mask);
+  T *ap = this->rw(a);
   dim_t srcptr = 0;
   dim_t dstptr = 0;
   for (dim_t iteration = 0;iteration < iteration_count;iteration++)
@@ -576,10 +576,10 @@ void ArrayType<T>::eraseRowIndexMode(Object &a, const Object &ndx)
 {
   // First compute the deletion map
   Object deletion_map(ComputeDeletionMap(_ctxt,a.elementCount(),ndx));
-  const bool *bp = _ctxt->_bool->readOnlyData(deletion_map);
+  const bool *bp = _ctxt->_bool->ro(deletion_map);
   // Determine the output dim
   dim_t outputLength = _ctxt->_bool->countZero(deletion_map);
-  T* ap = this->readWriteData(a);
+  T* ap = this->rw(a);
   dim_t adst = 0;
   if (!a.isComplex())
     {
@@ -603,7 +603,7 @@ void ArrayType<T>::eraseRowIndexMode(Object &a, const Object &ndx)
 template <class T>
 void ArrayType<T>::eraseRows(Object &a, const Object &mask, const Tuple &outdims)
 {
-  const bool *mp = _ctxt->_bool->readOnlyData(mask);
+  const bool *mp = _ctxt->_bool->ro(mask);
   // Calculate the number of iterations
   const Tuple &adims = a.dims();
   dim_t iterations = 1;
@@ -613,7 +613,7 @@ void ArrayType<T>::eraseRows(Object &a, const Object &mask, const Tuple &outdims
   dim_t dstptr = 0;
   for (dim_t iter=0;iter < iterations;iter++)
     {
-      deleteRowsLoop(this->readWriteData(a),mp,adims.rows(),srcptr,dstptr,a.isComplex());
+      deleteRowsLoop(this->rw(a),mp,adims.rows(),srcptr,dstptr,a.isComplex());
       srcptr += adims.rows();
       dstptr += outdims.rows();
     }
@@ -623,7 +623,7 @@ void ArrayType<T>::eraseRows(Object &a, const Object &mask, const Tuple &outdims
 template <class T>
 void ArrayType<T>::erase(Object &a, const Object &args) {
   Object carray(this->convertArgumentsToIndexingExpressions(args));
-  Object *c = _ctxt->_list->readWriteData(carray);
+  Object *c = _ctxt->_list->rw(carray);
   // Check to see if all but one dimension are covered with colons
   dim_t num_colons = 0;
   int non_colon_index = -1;
@@ -666,7 +666,7 @@ void ArrayType<T>::setParens(Object &a, const Object &args, const Object &b) {
   // TODO: Special case all-scalar indexing case
   Object carray(this->convertArgumentsToIndexingExpressions(args));
   int argsize = args.elementCount();
-  Object *c = _ctxt->_list->readWriteData(carray);
+  Object *c = _ctxt->_list->rw(carray);
   dim_t argdim[MAXDIMS];
   dim_t outdim[MAXDIMS];
   const ndx_t *coords[MAXDIMS];
@@ -678,7 +678,7 @@ void ArrayType<T>::setParens(Object &a, const Object &args, const Object &b) {
       if (ip->isColon(c[i]))
 	c[i] = ip->expandColons(adims.dimension(i));
       argdim[i] = c[i].elementCount();
-      coords[i] = ip->readOnlyData(c[i]);
+      coords[i] = ip->ro(c[i]);
       outdim[i] = std::max<dim_t>(adims.dimension(i),ip->maxValue(c[i])+1);
       outcount *= argdim[i];
       resize_required |= (outdim[i] > adims.dimension(i));
@@ -694,9 +694,9 @@ void ArrayType<T>::setParens(Object &a, const Object &args, const Object &b) {
     throw Exception("Assignment A(...) = b requires b either be a scalar or have the correct number of elements");
   if (!a.isComplex() && b.isComplex())
     this->promoteComplex(a);
-  setLoop<T>(this->readWriteData(a),
+  setLoop<T>(this->rw(a),
 	     argdim,adims,argsize,coords,
-	     this->readOnlyData(b),b.isScalar(),a.isComplex());
+	     this->ro(b),b.isScalar(),a.isComplex());
 }
 
 template <class T>
@@ -783,7 +783,7 @@ template <class T>
 Object ArrayType<T>::NCat(const Object& p, int dim)
 {
   int objectCount = p.elementCount();
-  const Object *dp = _ctxt->_list->readOnlyData(p);
+  const Object *dp = _ctxt->_list->ro(p);
   if (objectCount == 0) return this->empty();
   // Compute the size of the output
   Tuple outputSize = dp[0].dims();
@@ -812,7 +812,7 @@ Object ArrayType<T>::NCat(const Object& p, int dim)
     }
   for (int i=0;i<objectCount;i++)
     {
-      pointers[i] = this->readOnlyData(dp[i]);
+      pointers[i] = this->ro(dp[i]);
       offsets[i] = 0;
       dim_t pagesze = 1;
       for (int j=0;j<=dim;j++)
@@ -825,7 +825,7 @@ Object ArrayType<T>::NCat(const Object& p, int dim)
   dim_t outputOffset = 0;
   dim_t outputCount = outputSize.elementCount();
   int k = 0;
-  T* op = this->readWriteData(retObject);
+  T* op = this->rw(retObject);
   T zero(this->zeroElement());
   while (outputOffset < outputCount)
     {

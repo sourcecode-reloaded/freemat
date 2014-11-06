@@ -31,6 +31,8 @@ namespace FM
   class ListType;
   class ClassMetaType;
   class ClassType;
+  class ModuleType;
+  class CapturedType;
   class CodeType;
   class VM;
   class Compiler;
@@ -57,6 +59,8 @@ namespace FM
     CodeType *_code;
     ClassMetaType *_meta;
     ClassType *_class;
+    ModuleType *_module;
+    CapturedType *_captured;
     // Tools
     VM *_vm;
     Compiler *_compiler;

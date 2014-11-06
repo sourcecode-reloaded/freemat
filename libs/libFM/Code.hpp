@@ -100,6 +100,7 @@ namespace FM
       register_captured,
       register_free,
       register_int,
+      register_cell,
       constant,
       offset
     };
@@ -130,7 +131,10 @@ namespace FM
     BasicBlock* _currentBlock;
     Object _namelist;
     Object _constlist; 
-    CodeBlock(ThreadContext*ctxt) : _namelist(ctxt), _constlist(ctxt) {}
+    Object _freelist;
+    Object _capturedlist;
+    CodeBlock(ThreadContext*ctxt) : _namelist(ctxt), _constlist(ctxt), 
+				    _freelist(ctxt), _capturedlist(ctxt) {}
   };
 
   struct Module

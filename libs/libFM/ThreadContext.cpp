@@ -25,12 +25,14 @@ ThreadContext* FM::BuildNewThreadContext(TermIF *io)
   ctxt->_cell = new CellType(ctxt);
   ctxt->_list = new ListType(ctxt);
   ctxt->_code = new CodeType(ctxt);
+  ctxt->_module = new ModuleType(ctxt);
   ctxt->_vm = new VM(ctxt);
   ctxt->_compiler = new Compiler(ctxt);
   ctxt->_asm = new Assembler(ctxt);
   ctxt->_globals = new std::map<FMString,Object>();
   ctxt->_meta = new ClassMetaType(ctxt);
   ctxt->_class = new ClassType(ctxt);
+  ctxt->_captured = new CapturedType(ctxt);
   ctxt->_io = io;
   return ctxt;
 }

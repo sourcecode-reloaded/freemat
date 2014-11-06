@@ -23,14 +23,17 @@ namespace FM
     PODType(ThreadContext* ctxt, const FMString &name) : ArrayType<T>(ctxt,name) {}
     Complex<T> complexScalarValue(const Object &a) {
       assert(a.isScalar());
-      return readOnlyDataComplex(a)[0];
+      return roComplex(a)[0];
     }
-    inline const Complex<T>* readOnlyDataComplex(const Object &p) const {
+    inline const Complex<T>* roComplex(const Object &p) const {
       return static_cast<const Complex<T>*>(static_cast<const Complex<T>*>(p.d->data->ptr) + p.d->offset);
     }
-    inline Complex<T>* readWriteDataComplex(Object &p) const {
+    inline Complex<T>* rwComplex(Object &p) const {
       p.detach();
       return static_cast<Complex<T>*>(p.d->data->ptr);
+    }
+    FMString brief(const Object &a) {
+      return this->describe(a);
     }
     FMString describe(const Object &a) {
       if (a.isEmpty()) return FMString("[]");

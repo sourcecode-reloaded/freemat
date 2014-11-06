@@ -11,5 +11,7 @@
 #include "ListType.hpp"
 #include "CodeType.hpp"
 #include "ClassType.hpp"
+#include "ModuleType.hpp"
+#include "CapturedType.hpp"
 
 #endif

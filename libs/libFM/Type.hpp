@@ -34,7 +34,9 @@ namespace FM {
     TypeListArray = 16,
     TypeMeta = 17,
     TypeClass = 18,
-    TypeCode = 19
+    TypeCode = 19,
+    TypeModule = 20,
+    TypeCaptured = 21
   };
 
   class Object;
@@ -77,6 +79,7 @@ namespace FM {
     virtual Object Hermitian(const Object &a);
     virtual bool equals(const Object &a, const Object &b) = 0;
     virtual FMString describe(const Object &a) = 0;
+    virtual FMString brief(const Object &a) = 0;
     virtual Object asIndex(const Object &a, dim_t max);
     virtual Object asIndexNoBoundsCheck(const Object &a);
     virtual Object asLogical(const Object &a);

@@ -3,6 +3,7 @@
 #include "ListType.hpp"
 #include "StringType.hpp"
 #include "DoubleType.hpp"
+#include "ModuleType.hpp"
 
 using namespace FM;
 
@@ -14,7 +15,7 @@ bool Frame::defines(const FMString &name)
 }
 
 int Frame::mapNameToVariableIndex(const Object &name) {
-  const Object *cp = _ctxt->_list->readOnlyData(_sym_names);
+  const Object *cp = _ctxt->_list->ro(_sym_names);
   for (int i=0;i<_sym_names.elementCount();i++)
     if (cp[i] == name) return i;
   return -1;
@@ -26,9 +27,19 @@ int Frame::lookupAddressForName(const Object &name, bool searchGlobals) {
   if ((ndx == -1) && searchGlobals)
     {
       // Do not know the name at all
+      // First look in the module
+      std::cout << "Searching module for " << _ctxt->_string->getString(name) << "\n";
+      auto mfunc = _ctxt->_module->ro(_module)->m_locals.find(name);
+      if (mfunc != _ctxt->_module->ro(_module)->m_locals.end())
+	{
+	  ndx = _sym_names.elementCount();
+	  _ctxt->_list->push(_sym_names,name);
+	  _ctxt->_list->push(_vars,mfunc->second);
+	  return ndx;
+	}
       // Is it defined in the global scope?
-      auto gfunc = _ctxt->_globals->find(_ctxt->_string->getString(name)); //TODO Remove conversion to string?
       std::cout << "Searching globals for " << _ctxt->_string->getString(name) << "\n";
+      auto gfunc = _ctxt->_globals->find(_ctxt->_string->getString(name)); //TODO Remove conversion to string?
       if (gfunc != _ctxt->_globals->end())
 	{
 	  // We are a proxy for someone who wants this symbol (not us!)
@@ -45,20 +56,28 @@ int Frame::lookupAddressForName(const Object &name, bool searchGlobals) {
   // This is really a cue that the symbol has been
   // searched before.  The VM will then skip the lookup
   // step for this symbol (unless the scope changes).
-  const ndx_t *addrs = _ctxt->_index->readOnlyData(_addrs);
-  if (ndx && searchGlobals && (addrs[ndx] == -1))
+  const ndx_t *addrs = _ctxt->_index->ro(_addrs);
+  if ((ndx != -1) && searchGlobals && (addrs[ndx] == -1))
     {
       // We have a symbol with the given name, but
       // have not defined it yet.  This could be because
       // of an error (i.e., an undefined symbol), or
       // because the definition is in the global space.
       // Check for the latter case.
-      auto gfunc = _ctxt->_globals->find(_ctxt->_string->getString(name)); //TODO Remove conversion to string?
+      std::cout << "Searching module for " << _ctxt->_string->getString(name) << "\n";
+      auto mfunc = _ctxt->_module->ro(_module)->m_locals.find(name);
+      if (mfunc != _ctxt->_module->ro(_module)->m_locals.end())
+	{
+	  _ctxt->_list->rw(_vars)[ndx] = mfunc->second;
+	  _ctxt->_index->rw(_addrs)[ndx] = ndx;
+	  return ndx;
+	}      
       std::cout << "Searching globals for named symbol " << _ctxt->_string->getString(name) << "\n";
+      auto gfunc = _ctxt->_globals->find(_ctxt->_string->getString(name)); //TODO Remove conversion to string?
       if (gfunc != _ctxt->_globals->end())
 	{
-	  _ctxt->_list->readWriteData(_vars)[ndx] = gfunc->second;
-	  _ctxt->_index->readWriteData(_addrs)[ndx] = ndx;
+	  _ctxt->_list->rw(_vars)[ndx] = gfunc->second;
+	  _ctxt->_index->rw(_addrs)[ndx] = ndx;
 	  return ndx;
 	}
       return -1;
@@ -68,7 +87,7 @@ int Frame::lookupAddressForName(const Object &name, bool searchGlobals) {
 
 int Frame::getAddress(const FMString &name)
 {
-  const Object *cp = _ctxt->_list->readOnlyData(_sym_names);
+  const Object *cp = _ctxt->_list->ro(_sym_names);
   for (int i=0;i<_sym_names.elementCount();i++)
     if (_ctxt->_string->getString(cp[i]) == name) return i;
   return -1;
@@ -95,14 +114,15 @@ int Frame::defineNewSymbol(const Object &name)
 void Frame::setVariableSlow(const FMString &name, const Object &value)
 {
   int p = allocateVariable(name);
-  Object *cp = _ctxt->_list->readWriteData(_vars);
+  Object *cp = _ctxt->_list->rw(_vars);
   cp[p] = value;
 }
 
 Frame::Frame(ThreadContext *ctxt) : _sym_names(ctxt->_list->empty()), 
 				    _vars(ctxt->_list->empty()), 
 				    _addrs(ctxt->_index->empty()),
-				    _defined(ctxt->_bool->empty())
+				    _defined(ctxt->_bool->empty()),
+				    _module(ctxt->_module->empty())
 {
   _ctxt = ctxt;
   //  _sym_names = _ctxt->_list->empty();

@@ -16,6 +16,6 @@ Object StringType::asIndex(const Object &a, dim_t ndx)
 
 void StringType::printElement(const Object &a, const ArrayFormatInfo &format, ndx_t ndx)
 {
-  const FMChar *t = this->readOnlyData(a);
+  const FMChar *t = this->ro(a);
   _ctxt->_io->output("%c",t[ndx]);
 }

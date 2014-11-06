@@ -40,9 +40,9 @@ Object FM::MatrixTranspose(const Object &a) {
   ArrayType<ElementType> *type = a.asType<ArrayType<ElementType> >();
   Object ret = type->makeMatrix(a.cols(),a.rows(),a.isComplex());
   if (a.isComplex())
-    blocked_transpose_complex<ElementType,BLOCKSIZE>(type->readOnlyData(a),type->readWriteData(ret),a.rows(),a.cols());
+    blocked_transpose_complex<ElementType,BLOCKSIZE>(type->ro(a),type->rw(ret),a.rows(),a.cols());
   else
-    blocked_transpose<ElementType,BLOCKSIZE>(type->readOnlyData(a),type->readWriteData(ret),a.rows(),a.cols());
+    blocked_transpose<ElementType,BLOCKSIZE>(type->ro(a),type->rw(ret),a.rows(),a.cols());
   return ret;
 }
 

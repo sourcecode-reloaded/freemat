@@ -62,6 +62,7 @@ using namespace FM;
 // 
 
 VM::VM(ThreadContext *ctxt) : _registers(ctxt->_list->makeMatrix(register_stack_size,1)),
+			      _modules(ctxt->_list->makeMatrix(frame_stack_size,1)),
 			      _exception(ctxt)
 {
   for (int i=0;i<frame_stack_size;i++)
@@ -95,6 +96,16 @@ void VM::dump()
   //  _frames[0]->dump();
 }
 
+// Excuting a module is like executing a function, except that an additional stack is required
+Object VM::executeModule(const Object &moduleObject, const Object &parameters)
+{
+  // Push the module object onto the stack
+  _ctxt->_list->push(_modules,moduleObject);
+  Object ret = executeFunction(_ctxt->_module->ro(moduleObject)->m_main,parameters);
+  _ctxt->_list->pop(_modules);
+  return ret;
+}
+
 // Execute a function object, given a list of parameters (params).  Returns a list
 // of returns.
 Object VM::executeFunction(const Object &codeObject, const Object &parameters)
@@ -123,7 +134,7 @@ Object VM::executeFunction(const Object &codeObject, const Object &parameters)
   // std::cout << "fp = " << _fp << " rp = " << _rp << "\n";
   // Create a new frame for the function
   _fp++;
-  const CodeData *cp = _ctxt->_code->readOnlyData(codeObject);
+  const CodeData *cp = _ctxt->_code->ro(codeObject);
   _frames[_fp]->_name = _ctxt->_string->getString(cp->m_name);
   std::cout << "Starting function: " << _frames[_fp]->_name << "\n";
   // For functions, all addresses are pre-set to point
@@ -131,7 +142,7 @@ Object VM::executeFunction(const Object &codeObject, const Object &parameters)
   int N = cp->m_names.elementCount();
   std::cout << "Names count = " << N << "\n";
   _frames[_fp]->_addrs = _ctxt->_index->makeMatrix(N,1);
-  ndx_t *ap = _ctxt->_index->readWriteData(_frames[_fp]->_addrs);
+  ndx_t *ap = _ctxt->_index->rw(_frames[_fp]->_addrs);
   // FIXME - not right - parameters are defined when the function executes
   for (int i=0;i<N;i++) ap[i] = -1;
   _frames[_fp]->_defined = _ctxt->_bool->makeMatrix(N,1);
@@ -139,31 +150,59 @@ Object VM::executeFunction(const Object &codeObject, const Object &parameters)
   _frames[_fp]->_vars = _ctxt->_list->makeMatrix(N,1);
   _frames[_fp]->_exception_handlers.clear();
   _frames[_fp]->_reg_offset = _rp;
+  _frames[_fp]->_module = _ctxt->_list->last(_modules);
   _rp += 256; // FIXME
-  Object *sp = _ctxt->_list->readWriteData(_frames[_fp]->_vars);
+  Object *sp = _ctxt->_list->rw(_frames[_fp]->_vars);
   // Function scopes are closed
   _frames[_fp]->_closed = true;
   // Populate the arguments
   // FIXME - need to only store the number of args and returns
-  const Object * args = _ctxt->_list->readOnlyData(parameters);
-  const Object * param_ndx = _ctxt->_list->readOnlyData(cp->m_params);
-  int to_use = std::min<int>(parameters.elementCount(),cp->m_params.elementCount());
+  const Object * args = _ctxt->_list->ro(parameters);
+  const ndx_t * param_ndx = _ctxt->_index->ro(cp->m_params);
+  bool varargin_case = _ctxt->_index->scalarValue(cp->m_varargin) != -1;
+  int to_use;
+  if (!varargin_case)
+    to_use = std::min<int>(parameters.elementCount(),cp->m_params.elementCount());
+  else
+    to_use = std::min<int>(parameters.elementCount(),cp->m_params.elementCount()-1);
   std::cout << "to_use = " << to_use << "\n";
   for (int i=0;i<to_use;i++)
     {
-      ndx_t param_location = _ctxt->_index->scalarValue(param_ndx[i]);
-      sp[param_location] = args[i];
-      ap[param_location] = param_location;
+      sp[param_ndx[i]] = args[i];
+      ap[param_ndx[i]] = param_ndx[i];
+    }
+  if (varargin_case)
+    {
+      int to_push = std::max<int>(0,parameters.elementCount()-to_use);
+      Object varargin = _ctxt->_cell->makeMatrix(to_push,1);
+      Object *vip = _ctxt->_cell->rw(varargin);
+      for (int i=0;i<to_push;i++)
+	vip[i] = args[to_use+i];
+      int varargin_location = _ctxt->_index->scalarValue(cp->m_varargin);
+      sp[varargin_location] = varargin;
+      ap[varargin_location] = varargin_location;
     }
   // execute the code
   executeCodeObject(codeObject);
   // Collect return values
   Object retvec = _ctxt->_list->empty();
   int to_return = cp->m_returns.elementCount();
-  const Object * return_ndx = _ctxt->_list->readOnlyData(cp->m_returns);
-  sp = _ctxt->_list->readWriteData(_frames[_fp]->_vars);
+  bool varargout_case = _ctxt->_index->scalarValue(cp->m_varargout) != -1;
+  if (varargout_case) to_return -= 1;
+  const ndx_t * return_ndx = _ctxt->_index->ro(cp->m_returns);
+  sp = _ctxt->_list->rw(_frames[_fp]->_vars);
   for (int i=0;i<to_return;i++)
-    _ctxt->_list->push(retvec,sp[_ctxt->_index->scalarValue(return_ndx[i])]);
+    _ctxt->_list->push(retvec,sp[return_ndx[i]]);
+  if (varargout_case) {
+    std::cout << "to_return = " << to_return << "\n";
+    std::cout << "returns = " << cp->m_returns << "\n";
+    int varargout_location = _ctxt->_index->scalarValue(cp->m_varargout);
+    const Object & varargout = sp[varargout_location];
+    std::cout << "VARARGOUT " << varargout << "\n";
+    const Object * vip = _ctxt->_cell->ro(varargout);
+    for (int i=0;i<varargout.elementCount();i++)
+      _ctxt->_list->push(retvec,vip[i]);
+  }
   _frames[_fp]->_sym_names = _ctxt->_list->empty();
   _frames[_fp]->_vars = _ctxt->_list->empty();
   _frames[_fp]->_addrs = _ctxt->_index->empty();
@@ -178,7 +217,7 @@ Object VM::executeFunction(const Object &codeObject, const Object &parameters)
 void VM::executeScript(const Object &codeObject)
 {
   _fp++;
-  const CodeData *cp = _ctxt->_code->readOnlyData(codeObject);
+  const CodeData *cp = _ctxt->_code->ro(codeObject);
   _frames[_fp]->_name = _ctxt->_string->getString(cp->m_name);
   std::cout << "Starting script: " << _frames[_fp]->_name << "\n";
   _frames[_fp]->_sym_names = _ctxt->_list->empty();
@@ -190,7 +229,7 @@ void VM::executeScript(const Object &codeObject)
   _frames[_fp]->_closed = false;
   _frames[_fp]->_exception_handlers.clear();
   _rp += 256; // FIXME
-  ndx_t *ap = _ctxt->_index->readWriteData(_frames[_fp]->_addrs);
+  ndx_t *ap = _ctxt->_index->rw(_frames[_fp]->_addrs);
   // Initialize the addresses to be unknown
   for (int i=0;i<N;i++) ap[i] = -1;
   _frames[_fp]->_closed = false;
@@ -256,11 +295,11 @@ static inline Object TestForCaseMatch(ThreadContext *ctxt, const Object &s, cons
 
 void VM::executeCodeObject(const Object &codeObject)
 {
-  const CodeData *cp = _ctxt->_code->readOnlyData(codeObject);
+  const CodeData *cp = _ctxt->_code->ro(codeObject);
 
-  const Object *const_list = _ctxt->_list->readOnlyData(cp->m_consts);
-  const uint64_t *code = _ctxt->_uint64->readOnlyData(cp->m_code);
-  const Object *names_list = _ctxt->_list->readOnlyData(cp->m_names);
+  const Object *const_list = _ctxt->_list->ro(cp->m_consts);
+  const uint64_t *code = _ctxt->_uint64->ro(cp->m_code);
+  const Object *names_list = _ctxt->_list->ro(cp->m_names);
 
   int ip = 0;
   bool returnFound = false;
@@ -274,9 +313,9 @@ void VM::executeCodeObject(const Object &codeObject)
       }
   if (!closed_frame)  throw Exception("Closed frame not found!  Should never happen!");
 
-  Object *regfile = _ctxt->_list->readWriteData(_registers) + _frames[_fp]->_reg_offset;
-  ndx_t *addrfile = _ctxt->_index->readWriteData(_frames[_fp]->_addrs);
-  Object *varfile = _ctxt->_list->readWriteData(closed_frame->_vars);
+  Object *regfile = _ctxt->_list->rw(_registers) + _frames[_fp]->_reg_offset;
+  ndx_t *addrfile = _ctxt->_index->rw(_frames[_fp]->_addrs);
+  Object *varfile = _ctxt->_list->rw(closed_frame->_vars);
   std::vector<int> *eh = &_frames[_fp]->_exception_handlers;
 
   int save_ip;
@@ -314,7 +353,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		break;
 	      case OP_DCOLON:
 		{
-		  const Object *ap = _ctxt->_list->readOnlyData(REG2);
+		  const Object *ap = _ctxt->_list->ro(REG2);
 		  REG1 = ap[0].type()->DoubleColon(ap[0],ap[1],ap[2]);
 		  break;
 		}
@@ -469,13 +508,17 @@ void VM::executeCodeObject(const Object &codeObject)
 		      std::cout << "OP_LOOKUP for " << _ctxt->_string->getString(names_list[ndx]) << "\n";
 		      // check for user classes
 		      bool anyUserClasses = false;
-		      const Object *regs = _ctxt->_list->readOnlyData(REG2);
+		      const Object *regs = _ctxt->_list->ro(REG2);
 		      for (int i=0;i<REG2.elementCount();i++)
 			anyUserClasses |= regs[i].isClass();
 		      if (anyUserClasses) 
 			for (int i=0;i<REG2.elementCount();i++)
 			  if (regs[i].isClass() && _ctxt->_class->hasMethod(regs[i],names_list[ndx],REG1)) 
-			    goto cont_lookup;
+			    {
+			      std::cout << "User method found\n";
+			      goto cont_lookup;
+			    }
+		      std::cout << "No user defined classes\n";
 		      // The address for this index has not been defined yet in the current scope.
 		      // First, see if the closed frame has the address for it.  In the process, the 
 		      // closed frame will search the global namespace for the symbol.
@@ -501,7 +544,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		      if (addr == -1)
 			{
 			  addr = closed_frame->defineNewSymbol(names_list[ndx]);
-			  varfile = _ctxt->_list->readWriteData(closed_frame->_vars);
+			  varfile = _ctxt->_list->rw(closed_frame->_vars);
 			}
 		      addrfile[ndx] = addr;
 		    }
@@ -566,7 +609,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		      if (addrfile[ndx] == -1)
 			{
 			  addrfile[ndx] = closed_frame->allocateVariable(name);
-			  varfile = _ctxt->_list->readWriteData(closed_frame->_vars);
+			  varfile = _ctxt->_list->rw(closed_frame->_vars);
 			}
 		      addr = addrfile[ndx];
 		    }
@@ -575,7 +618,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		}
 	      case OP_LOOPCOUNT:
 		{
-		  const Object *ap = _ctxt->_list->readOnlyData(REG2);
+		  const Object *ap = _ctxt->_list->ro(REG2);
 		  double last = _ctxt->_double->scalarValue(ap[2]);
 		  double step = _ctxt->_double->scalarValue(ap[1]);
 		  double first = _ctxt->_double->scalarValue(ap[0]);

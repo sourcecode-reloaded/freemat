@@ -24,7 +24,7 @@ static int GetNominalWidthInteger(const T* qp, dim_t len) {
 
 template<class T, FM::DataCode codeNum>
 void IntegerType<T,codeNum>::computeArrayFormatInfo(FMFormatMode, const Object &a, ArrayFormatInfo &format) {
-  const T* dp = this->readOnlyData(a);
+  const T* dp = this->ro(a);
   dim_t cnt = a.elementCount();
   if (a.isComplex()) cnt *= 2;
   format.width = GetNominalWidthInteger(dp,cnt);
@@ -34,12 +34,12 @@ template <class T, FM::DataCode codeNum>
 void IntegerType<T,codeNum>::printElement(const Object &a, const ArrayFormatInfo &format, ndx_t ndx) {
   if (!a.isComplex())
     {
-      const T* dp = this->readOnlyData(a);
+      const T* dp = this->ro(a);
       Type::_ctxt->_io->output("% *lld",format.width,(int64_t)(dp[ndx]));
     }
   else
     {
-      const Complex<T>* dp = this->readOnlyDataComplex(a);
+      const Complex<T>* dp = this->roComplex(a);
       Type::_ctxt->_io->output("% *lld",format.width,(int64_t)(dp[ndx].r));
       Type::_ctxt->_io->output("% *+lldi",format.width,(int64_t)(dp[ndx].i));
     }

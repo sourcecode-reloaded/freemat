@@ -50,7 +50,7 @@ namespace FM
     Tree tryStatement();
     Tree throwStatement();
     Tree expression();
-    Tree statement();
+    Tree statement(bool nestsOK = false);
     Tree declarationStatement();
     Tree statementSeperator();
     Tree identifier();
@@ -66,8 +66,12 @@ namespace FM
     Tree exp(unsigned p);
     Tree primaryExpression();
     Tree anonymousFunction();
-    Tree statementList();
+    Tree statementList(bool nestsOK = false);
     Tree opEqualsStatement(Tree ident, TokenValueType opcode);
+    Tree classDefinition();
+    Tree classPropertiesDefinition();
+    Tree classMethodsDefinition();
+    void skipNewLines();
   public:
     Parser(Scanner& lex, bool octaveCompatibility = false);
     Tree process();

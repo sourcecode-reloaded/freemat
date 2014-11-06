@@ -44,7 +44,7 @@ namespace FM
 
     Object makeCellFromStrings(const FMStringList &t) {
       Object p = _cell->makeMatrix(1,t.size());
-      Object *q = _cell->readWriteData(p);
+      Object *q = _cell->rw(p);
       for (size_t i=0;i<t.size();i++)
 	q[i] = _string->makeString(t[i]);
       return p;
@@ -53,7 +53,7 @@ namespace FM
     FMStringList makeStringsFromCell(const Object &t) {
       assert(t.type()->code() == TypeCellArray);
       FMStringList ret;
-      const Object *tptr = _cell->readOnlyData(t);
+      const Object *tptr = _cell->ro(t);
       for (dim_t i=0;i<t.dims().elementCount();i++)
 	ret << _string->getString(tptr[i]);
       return ret;

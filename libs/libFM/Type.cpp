@@ -114,7 +114,7 @@ Object Type::get(const Object &a, const Object &b) {
   // std::cout << "get arguments: " << a.description() << "\n";
   // std::cout << "   b: " << b.description() << "\n";
   int ptr = 0;
-  const Object *bp = b.asType<ListType>()->readOnlyData(b);
+  const Object *bp = b.asType<ListType>()->ro(b);
   if ((b.elementCount() == 2) &&
       (bp[0].asDouble() == 0))
     return b.asType<ListType>()->makeScalar(a.type()->getParens(a,bp[1]));
@@ -162,7 +162,7 @@ Object Type::get(const Object &a, const Object &b) {
 
 
 void Type::set(Object &a, const Object &args, const Object &b) {
-  const Object *argp = args.asType<ListType>()->readOnlyData(args);
+  const Object *argp = args.asType<ListType>()->ro(args);
   if (args.elementCount() == 2)
     {
       double setType = argp[0].asDouble();

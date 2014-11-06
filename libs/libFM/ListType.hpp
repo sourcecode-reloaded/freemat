@@ -15,7 +15,7 @@ namespace FM
     virtual Type* typeInstance() {return this;}
     virtual FMString describe(const Object &a) {
       FMString ret = "<";
-      const Object *ap = this->readOnlyData(a);
+      const Object *ap = this->ro(a);
       for (dim_t i=0;i<a.elementCount();i++)
 	{
 	  ret += ap[i].description();
@@ -26,14 +26,18 @@ namespace FM
     }
     Object first(const Object &a) {
       if (a.isEmpty()) throw Exception("Attempt to take first element of empty object");
-      return *(this->readOnlyData(a));
+      return *(this->ro(a));
     }
     Object second(const Object &a) {
       if (a.elementCount() < 2) throw Exception("Attempt to take first element of empty object");
-      return (this->readOnlyData(a))[1];
+      return (this->ro(a))[1];
+    }
+    Object last(const Object &a) {
+      if (a.isEmpty()) throw Exception("Attempt to take last element of empty object");
+      return (this->ro(a))[a.elementCount()-1];
     }
     Object fetch(const Object &a, dim_t ndx) {
-      return this->readOnlyData(a)[ndx];
+      return this->ro(a)[ndx];
     }
     void pop(Object &a) {
       a.detach();
@@ -46,15 +50,15 @@ namespace FM
       if (a.d->capacity > (a_size+1))
 	{
 	  a.dims().setMatrixSize(a_size+1,1);
-	  Object *ap = this->readWriteData(a);
+	  Object *ap = this->rw(a);
 	  ap[a_size] = b;
 	}
       else 
 	{
 	  // Resize is required.  
 	  Object na = this->makeMatrix(a_size+1,1,false);
-	  Object *nap = this->readWriteData(na);
-	  const Object *ap = this->readOnlyData(a);
+	  Object *nap = this->rw(na);
+	  const Object *ap = this->ro(a);
 	  for (dim_t i=0;i<a_size;i++)
 	    nap[i] = ap[i];
 	  nap[a_size] = b;
@@ -63,15 +67,24 @@ namespace FM
     }
     // FIXME - Make this more efficient?
     void merge(Object &a, const Object &b) {
-      const Object *bp = this->readOnlyData(b);
+      const Object *bp = this->ro(b);
       for (dim_t i=0;i<b.elementCount();i++)
 	this->push(a,bp[i]);
     }
     Type* anyElementsWithDataCode(const Object &a, DataCode t) {
-      const Object *bp = this->readOnlyData(a);
+      const Object *bp = this->ro(a);
       for (dim_t i=0;i<a.elementCount();i++)
 	if (bp[i].type()->code() == t) return bp[i].type();
       return NULL;
+    }
+    inline ndx_t indexOf(const Object &a, const Object &b) {
+      const Object *ap = this->ro(a);
+      for (dim_t i=0;i<a.elementCount();i++)
+	if (ap[i] == b) return i;
+      return -1;
+    }
+    inline bool has(const Object &a, const Object &b) {
+      return (this->indexOf(a,b) != -1);
     }
     void computeArrayFormatInfo(FMFormatMode, const Object &a, ArrayFormatInfo &format) {
       format.width = 80;

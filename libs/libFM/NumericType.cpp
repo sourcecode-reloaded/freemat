@@ -23,8 +23,8 @@ Object NumericType<T,codeNum>::asIndexNoBoundsCheck(const Object &a)
     }
   dim_t len = a.dims().elementCount();
   Object output = Type::_ctxt->_index->makeMatrix(len,1);
-  ndx_t *op = Type::_ctxt->_index->readWriteData(output);
-  const T *ip = this->readOnlyData(a);
+  ndx_t *op = Type::_ctxt->_index->rw(output);
+  const T *ip = this->ro(a);
   dim_t incr = (a.isComplex() ? 2 : 1);
   for (dim_t i=0;i<len;i++)
     {
@@ -40,17 +40,17 @@ Object NumericType<T,codeNum>::asLogical(const Object &a)
 {
   if (codeNum == TypeBool) return a;
   Object output = Type::_ctxt->_bool->zeroArrayOfSize(a.dims(),false);
-  bool *op = Type::_ctxt->_bool->readWriteData(output);
+  bool *op = Type::_ctxt->_bool->rw(output);
   dim_t len = a.dims().elementCount();
   if (a.isComplex())
     {
-      const FM::Complex<T> *ip = reinterpret_cast<const FM::Complex<T> *>(this->readOnlyData(a));
+      const FM::Complex<T> *ip = reinterpret_cast<const FM::Complex<T> *>(this->ro(a));
       for (dim_t i=0;i<len;i++)	
 	op[i] = ((ip[i].r != 0) || (ip[i].i != 0));
     }
   else
     {
-      const T* ip = static_cast<const T*>(this->readOnlyData(a));
+      const T* ip = static_cast<const T*>(this->ro(a));
       for (dim_t i=0;i<len;i++)
 	op[i] = (ip[i] != 0);
     }
@@ -73,8 +73,8 @@ Object NumericType<T,codeNum>::asIndex(const Object &a, dim_t max)
     }
   dim_t len = a.dims().elementCount();
   Object output = Type::_ctxt->_index->makeMatrix(len,1);
-  ndx_t *op = Type::_ctxt->_index->readWriteData(output);
-  const T *ip = this->readOnlyData(a);
+  ndx_t *op = Type::_ctxt->_index->rw(output);
+  const T *ip = this->ro(a);
   dim_t incr = (a.isComplex() ? 2 : 1);
   for (dim_t i=0;i<len;i++)
     {
@@ -95,8 +95,8 @@ Object NumericType<T,codeNum>::asComplex(const Object &a)
     return this->makeComplex(this->scalarValue(a),0);
   Object ret = this->zeroArrayOfSize(a.dims(),true);
   dim_t len = a.dims().elementCount();
-  Complex<T> *op = this->readWriteDataComplex(ret);
-  const T*ip = this->readOnlyData(a);
+  Complex<T> *op = this->rwComplex(ret);
+  const T*ip = this->ro(a);
   for (dim_t i=0;i<len;i++)
     op[i] = Complex<T>(ip[i]);
   return ret;
@@ -108,27 +108,27 @@ Object NumericType<T,codeNum>::convert(const Object &a)
   if (this->code() == a.type()->code()) return a;
   Object ret = this->zeroArrayOfSize(a.dims(),a.isComplex());
   dim_t len = a.dims().elementCount();
-  T* op = this->readWriteData(ret);
+  T* op = this->rw(ret);
   if (a.isComplex()) len *= 2;
   switch (a.type()->code())
     {
     case TypeSingle:
-      convertLoop<T,float>(Type::_ctxt->_single->readOnlyData(a),op,len);
+      convertLoop<T,float>(Type::_ctxt->_single->ro(a),op,len);
       break;
     case TypeDouble:
-      convertLoop<T,double>(Type::_ctxt->_double->readOnlyData(a),op,len);
+      convertLoop<T,double>(Type::_ctxt->_double->ro(a),op,len);
       break;
     case TypeInt32:
-      convertLoop<T,int32_t>(Type::_ctxt->_int32->readOnlyData(a),op,len);
+      convertLoop<T,int32_t>(Type::_ctxt->_int32->ro(a),op,len);
       break;
     case TypeUInt32:
-      convertLoop<T,uint32_t>(Type::_ctxt->_uint32->readOnlyData(a),op,len);
+      convertLoop<T,uint32_t>(Type::_ctxt->_uint32->ro(a),op,len);
       break;
     case TypeInt64:
-      convertLoop<T,int64_t>(Type::_ctxt->_int64->readOnlyData(a),op,len);
+      convertLoop<T,int64_t>(Type::_ctxt->_int64->ro(a),op,len);
       break;
     case TypeUInt64:
-      convertLoop<T,uint64_t>(Type::_ctxt->_uint64->readOnlyData(a),op,len);
+      convertLoop<T,uint64_t>(Type::_ctxt->_uint64->ro(a),op,len);
       break;
     default:
       throw Exception("Type conversion from " + a.type()->name() + " to " + this->name() + " is unsupported.");

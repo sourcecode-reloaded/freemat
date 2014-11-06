@@ -12,8 +12,8 @@ namespace FM
   {
     PODType<T> *otype = static_cast<PODType<T> *>(o);
     Object c = otype->zeroArrayOfSize(a.dims(),a.isComplex());
-    T *cptr = otype->readWriteData(c);
-    const T* aptr = otype->readOnlyData(a);
+    T *cptr = otype->rw(c);
+    const T* aptr = otype->ro(a);
     size_t elcnt = c.elementCount();
     for (size_t i=0;i<elcnt;++i)
       Op::template func<T>(cptr+i,aptr+i);

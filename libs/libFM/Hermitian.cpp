@@ -26,7 +26,7 @@ Object FM::MatrixHermitian(const Object &a) {
   if (!a.isComplex()) return MatrixTranspose<ElementType>(a);
   PODType<ElementType> *type = a.asType<PODType<ElementType> >();
   Object ret = type->makeMatrix(a.cols(),a.rows(),a.isComplex());
-  blocked_hermitian<ElementType,BLOCKSIZE>(type->readOnlyDataComplex(a),type->readWriteDataComplex(ret),
+  blocked_hermitian<ElementType,BLOCKSIZE>(type->roComplex(a),type->rwComplex(ret),
 					   a.rows(),a.cols());
   return ret;
 }

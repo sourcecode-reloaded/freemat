@@ -106,8 +106,7 @@ Tree Parser::statementSeperator() {
   if (match(';')) {
     root = Tree(TOK_QSTATEMENT,AdjustContextOne(m_lex.contextNum()));
     consume();
-    if (match('\n')) 
-      consume();
+    skipNewLines();
   } else if (match('\n')) {
     root = Tree(TOK_STATEMENT,AdjustContextOne(m_lex.contextNum()));
     consume();
@@ -196,7 +195,7 @@ Tree Parser::functionDefinition() {
     root.addChild(Tree(TOK_PARENS,m_lex.contextNum()));
   }
   statementSeperator();
-  root.addChild(statementList());
+  root.addChild(statementList(true));
   return root;
 }
 
@@ -499,7 +498,7 @@ Tree Parser::switchStatement() {
   return root;
 }
 
-Tree Parser::statement() {
+Tree Parser::statement(bool nestsOK) {
   if (match(TOK_EOF))
     return Tree();
   if (match(TOK_END))
@@ -558,7 +557,7 @@ Tree Parser::statement() {
       m_lex = save;
     } 
   }
-  if (match(TOK_FUNCTION)) {
+  if (nestsOK && match(TOK_FUNCTION)) {
     try {
       Tree retval = functionDefinition();
       retval.rename(TOK_NEST_FUNC);
@@ -580,18 +579,23 @@ Tree Parser::statement() {
   return Tree();
 }
 
-Tree Parser::statementList() {
+Tree Parser::statementList(bool nestsOK) {
   Tree stlist = Tree(TOK_BLOCK,m_lex.contextNum());
   flushSeperators();
-  Tree s = statement();
+  Tree s = statement(nestsOK);
   while (s.valid()) {
-    Tree sep = statementSeperator();
-    if (!sep.valid()) 
-      return stlist;
-    sep.addChild(s);
-    stlist.addChild(sep);
+    if (s.is(TOK_NEST_FUNC))
+      stlist.addChild(s);
+    else
+      {
+	Tree sep = statementSeperator();
+	if (!sep.valid()) 
+	  return stlist;
+	sep.addChild(s);
+	stlist.addChild(sep);
+      }
     flushSeperators();
-    s = statement();
+    s = statement(nestsOK);
   }
   return stlist;
 }
@@ -820,6 +824,53 @@ void Parser::consume() {
   m_lex.consume();
 }
 
+
+Tree Parser::classPropertiesDefinition() {
+  Tree root(expect(TOK_PROPERTIES));
+  skipNewLines();
+  while (match(TOK_IDENT)) {
+    root.addChild(identifier());
+    skipNewLines();
+  }
+  expect(TOK_END,"properties");
+  return root;
+}
+
+Tree Parser::classMethodsDefinition() {
+  Tree root(expect(TOK_METHODS));
+  skipNewLines();
+  while (match(TOK_FUNCTION)) {
+    root.addChild(functionDefinition());
+    skipNewLines();
+    expect(TOK_END,"function");
+    skipNewLines();
+  }
+  expect(TOK_END,"methods");
+  return root;
+}
+
+// The structure of a class definition:
+//   classdef <classname>
+Tree Parser::classDefinition() {
+  // Parse a class definition
+  Tree root(expect(TOK_CLASSDEF));
+  // TODO - handle inheritance
+  root.addChild(identifier()); // Add the name of the class
+  skipNewLines();
+  while (!match(TOK_END)) {
+    if (match(TOK_PROPERTIES))
+      root.addChild(classPropertiesDefinition());
+    else if (match(TOK_METHODS))
+      root.addChild(classMethodsDefinition());
+    else
+      serror("Unknown block in classdef");
+    skipNewLines();
+  }
+  expect(TOK_END,"classdef");
+  skipNewLines();
+  return root;
+}
+
 // NOTES - 
 //   There are still some issues here...  
 //    We need to introduce another tentative parse for functions
@@ -834,28 +885,33 @@ void Parser::consume() {
 //  The current code will parse foo into a function,
 //   
 
+void Parser::skipNewLines() {
+  while (match('\n')) consume();
+}
+
 Tree Parser::process() {
   lastpos = 0;
   Tree root;
-  while (match('\n'))
-    consume();
+  skipNewLines();
   try {
     if (match(TOK_FUNCTION)) {
       root = Tree(TOK_FUNCTION_DEFS,m_lex.contextNum());
       while (match(TOK_FUNCTION)) {
 	Tree child(functionDefinition());
 	root.addChild(child);
-	while (match('\n')) consume();
+	skipNewLines();
       }
       if (HasNestedFunctions(root) || match(TOK_END))
 	expect(TOK_END);
-      while (match('\n')) consume();
+      skipNewLines();
       while (match(TOK_FUNCTION)) {
 	root.addChild(functionDefinition());
 	if (HasNestedFunctions(root) || match(TOK_END))
 	  expect(TOK_END);
-	while (match('\n')) consume();
+	skipNewLines();
       }
+    } else if (match(TOK_CLASSDEF)) {
+      root = classDefinition();
     } else {
       root = Tree(TOK_SCRIPT,m_lex.contextNum());
       root.addChild(statementList());

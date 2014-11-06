@@ -24,7 +24,7 @@ namespace FM
     StructData(ThreadContext *ctxt) : m_data(ctxt) {}
   };
 
-  class StructType : public AggregateType<StructData> {
+  class StructType : public AggregateType<StructData,ValueSemantics> {
     void addNewFields(Object &a, const Object &fields);
     void mergeFields(Object &a, const Object &b);
     void reorderFields(Object &a, const Object &b);
@@ -34,6 +34,7 @@ namespace FM
     virtual DataCode code() const {return TypeStruct;}
     virtual const FMString& name() const {static FMString _name = "struct"; return _name;}
     virtual StructData* makeEmptyDataType();
+    virtual FMString brief(const Object &a);
     virtual FMString describe(const Object &a);
     virtual Object getField(const Object &a, const Object &b);
     virtual void setField(Object &a, const Object &args, const Object &b);

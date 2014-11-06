@@ -54,9 +54,9 @@ namespace FM
     else
       ret = type->makeMatrix(1,npts);
     if (use_double_sided)
-      do_double_sided_algo_double<T>(minval,stepsize,maxval,type->readWriteData(ret),ndx_t(1),ndx_t(npts));
+      do_double_sided_algo_double<T>(minval,stepsize,maxval,type->rw(ret),ndx_t(1),ndx_t(npts));
     else
-      do_single_sided_algo_double<T>(minval,stepsize,type->readWriteData(ret),ndx_t(1),ndx_t(npts));
+      do_single_sided_algo_double<T>(minval,stepsize,type->rw(ret),ndx_t(1),ndx_t(npts));
     return ret;
   }
 };

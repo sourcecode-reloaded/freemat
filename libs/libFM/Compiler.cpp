@@ -1,16 +1,13 @@
 #include "Compiler.hpp"
+#include "Assembler.hpp"
 #include <iostream>
 #include "ThreadContext.hpp"
 #include "TypeUtils.hpp"
-#include "CellType.hpp"
-#include "BoolType.hpp"
-#include "CodeType.hpp"
-#include "DoubleType.hpp"
-#include "SingleType.hpp"
-#include "StructType.hpp"
+#include "AllTypes.hpp"
 #include "Scanner.hpp"
 #include "Parser.hpp"
 #include "EndRemover.hpp"
+#include "NestedFunctionMover.hpp"
 
 //#include "Algorithms.hpp"
 //#include "Print.hpp"
@@ -391,6 +388,8 @@ std::string Compiler::opcodeDecode(op_t opcode, insn_t val)
       return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val)) + ", Free[" + Stringify(get_constant(val)) + "]";
     case register_register_name:
       return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val)) + ", Name[" + Stringify(get_constant(val)) + "]";
+    case register_cell:
+      return "r"+ Stringify(reg1(val)) + ", Cell[" + Stringify(get_constant(val)) + "]";
     case register_variable:
       return "r" + Stringify(reg1(val)) + ", Var[" + Stringify(get_constant(val)) + "]";
     case register_captured:
@@ -561,6 +560,15 @@ reg_t Compiler::doubleColon(const Tree &t) {
   return r0;
 }
 
+const_t Compiler::getCellID(const FMString & t) {
+  ndx_t nd1 = indexOfStringInList(_ctxt,_code->_freelist,t);
+  if (nd1 != -1) return nd1;
+  nd1 = indexOfStringInList(_ctxt,_code->_capturedlist,t);
+  if (nd1 == -1) throw Exception("Cannot find cell ID for " + t);
+  nd1 += _code->_freelist.elementCount();
+  return nd1;
+}
+
 const_t Compiler::getNameID(const FMString & t) {
   return indexOfStringInList(_ctxt,_code->_namelist,t);
 }
@@ -587,6 +595,11 @@ void Compiler::saveRegisterToName(const FMString &varname, reg_t b) {
     emit(OP_SAVE_PERSIST,b,getNameID(varname));
   else if (IS_DYNAMIC(symflags))
     emit(OP_SAVE,b,getNameID(varname));
+  else if (IS_CELL(symflags))
+    {
+      emit(OP_SAVE_CELL,b,getCellID(varname));
+      std::cout << "CELL " << varname << " has ID " << getCellID(varname) << "\n";
+    }
   else
     throw Exception("Unhandled save case for variable " + varname + " flags = " + Stringify(symflags));
 }
@@ -695,8 +708,12 @@ reg_t Compiler::fetchVariable(const FMString &varname, int flags)
     emit(OP_LOAD_GLOBAL,x,getNameID(varname));
   else if (IS_PERSIST(flags))
     emit(OP_LOAD_PERSIST,x,getNameID(varname));
-  else
+  else if (IS_DYNAMIC(flags))
     emit(OP_LOAD,x,getNameID(varname));
+  else if (IS_CELL(flags))
+    emit(OP_LOAD_CELL,x,getCellID(varname));
+  else
+    throw Exception("Unhandled load case for variable " + varname + " flags = " + Stringify(flags));
   return x;
 }
 
@@ -999,7 +1016,6 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
     }
   const Tree &f = t.second();
   FMString funcname = f.first().text();
-  reg_t func = fetchVariable(funcname,_code->_syms->syms[funcname]); // USED
   reg_t args = startList();
   emit(OP_PUSH,args,lhsCount);
   reg_t x = startList();
@@ -1007,6 +1023,7 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
   for (int p=0;p<s2.numChildren();p++)
     multiexpr(x,s2.child(p));
   pushList(args,x);
+  reg_t func = fetchVariableOrFunction(funcname,args); 
   reg_t returns = getRegister();
   emit(OP_CALL,returns,func,args);
   // Now we allocate the resulting assignments
@@ -1280,28 +1297,14 @@ void Compiler::statementType(const Tree &t, bool printIt) {
   case TOK_EXPR:
     expressionStatement(t,printIt);
     break;
-  case TOK_NEST_FUNC:
-    _currentSym = _currentSym->children[0];
-    break;
   default:
     throw Exception("Unrecognized statement type");
   }  
 }
 
-
 // 
 
-void Compiler::compile(const FMString &code) {
-  Scanner S(code,"");
-  Parser P(S);
-  Tree t(P.process());
-  EndRemoverPass e;
-  t.print();
-  t = e.walkCode(t);
-  std::cout << "********************************************************************************\n";
-  t.print();
-  std::cout << "********************************************************************************\n";
-  SymbolPass p;
+void Compiler::reset() {
   delete _code;
   _code = new CodeBlock(_ctxt);
   delete _regpool;
@@ -1321,6 +1324,22 @@ void Compiler::compile(const FMString &code) {
     delete b;
     _breakblock.pop();
   }
+}
+
+void Compiler::compile(const FMString &code) {
+  Scanner S(code,"");
+  Parser P(S);
+  Tree t(P.process());
+  EndRemoverPass e;
+  t.print();
+  t = e.walkCode(t);
+  NestedFunctionMoverPass n;
+  t = n.walkCode(t);
+  std::cout << "********************************************************************************\n";
+  t.print();
+  std::cout << "********************************************************************************\n";
+  SymbolPass p;
+  reset();
   // Start the code walk at a depth of 1 - if it's a function
   // definition instead of a script, the internal blocks will
   // be processed at the correct depth.
@@ -1341,10 +1360,17 @@ void Compiler::walkFunction(const Tree &t, bool nested) {
   // By convention, the arguments are first
   _code->_namelist = _ctxt->_list->empty();
   _code->_constlist = _ctxt->_list->empty();
+  _code->_freelist = _ctxt->_list->empty();
+  _code->_capturedlist = _ctxt->_list->empty();
 
-  for (FMMap<FMString, int>::const_iterator s = _code->_syms->syms.constBegin();
-       s != _code->_syms->syms.constEnd(); ++s)
-    addStringToList(_ctxt,_code->_namelist,s.key());
+  for (auto s = _code->_syms->syms.constBegin(); s != _code->_syms->syms.constEnd(); ++s)
+    {
+      addStringToList(_ctxt,_code->_namelist,s.key());
+      if (IS_FREE(s.value()))
+	addStringToList(_ctxt,_code->_freelist,s.key());
+      if (IS_CAPTURED(s.value()))
+	addStringToList(_ctxt,_code->_capturedlist,s.key());
+    }
   std::cout << "Compiling function " << t.child(1).text() << "\n";
   _code->_name = t.child(1).text();
   std::cout << "Symbol table is " << _currentSym->name << "\n";
@@ -1383,12 +1409,78 @@ void Compiler::walkScript(const Tree &t) {
   // Build up the variable list
   _code->_namelist = _ctxt->_list->empty();
   _code->_constlist = _ctxt->_list->empty();
-  for (FMMap<FMString, int>::const_iterator s = _code->_syms->syms.constBegin();
-       s != _code->_syms->syms.constEnd(); ++s)
+  for (auto s = _code->_syms->syms.constBegin(); s != _code->_syms->syms.constEnd(); ++s)
     addStringToList(_ctxt,_code->_namelist,s.key());
   useBlock(new BasicBlock);
   block(t.first());
   emit(OP_RETURN);
+}
+
+void Compiler::walkMethods(const Tree &t, Object &metaClass) {
+  assert(t.is(TOK_METHODS));
+  for (int i=0;i<t.numChildren();i++)
+    {
+      /* FIXME - finish this when the interface is cleaned up */
+#if 0
+      reset();
+      SymbolPass p;
+      p.walkCode(t.child(i));
+      _symsRoot = p.getRoot();
+      _currentSym = _symsRoot;
+      SymbolTable *s = _symsRoot;
+      for (auto j=s->syms.constBegin();j!=s->syms.constEnd();++j)
+	{
+	  std::cout << "Symbol: " << j.key() << " val=" << j.value() << "\n";
+	}
+      walkFunction(t.child(i),false);
+      Module *mod = this->module();
+      Object code = _ctxt->_asm->run(mod->_main);
+      Disassemble(_ctxt,code);
+      _ctxt->_meta->addMethod(metaClass,
+			      _ctxt->_string->makeString(t.child(1).text()),
+			      code);
+#endif
+    }
+}
+
+void Compiler::walkProperties(const Tree &t, Object &metaClass) {
+  assert(t.is(TOK_PROPERTIES));
+  for (int i=0;i<t.numChildren();i++)
+    {
+      // TODO - handle default values
+      _ctxt->_meta->addProperty(metaClass,
+				_ctxt->_string->makeString(t.child(i).text()),
+				_ctxt->_double->empty());
+    }
+}
+
+void Compiler::walkClassDef(const Tree &t) {
+  FMString className = t.first().text();
+  FMString classMetaName = "?" + className;
+  if (_ctxt->_globals->count(classMetaName) > 0)
+    return; // Cannot define the same meta class more than once
+  Object fooMeta = _ctxt->_meta->makeScalar();
+  _ctxt->_meta->setName(fooMeta,classMetaName);
+  // Add the property definitions
+  for (int i=1;i<t.numChildren();i++)
+    {
+      switch (t.child(i).token())
+	{
+	case TOK_PROPERTIES:
+	  walkProperties(t.child(i),fooMeta);
+	  break;
+	case TOK_METHODS:
+	  walkMethods(t.child(i),fooMeta);
+	  break;
+	default:
+	  throw Exception("Unhandled classdef block");
+	}
+    }
+  _ctxt->_globals->insert(std::make_pair(classMetaName,fooMeta));
+  std::cout << "Inserting class definition with metaclass " << classMetaName << "\n";
+  std::cout << "meta class:" << fooMeta.description() << "\n";
+  std::cout << "Retrieved:\n";
+  std::cout << _ctxt->_globals->at(classMetaName) << "\n";
 }
 
 void Compiler::walkCode(const Tree &t) {
@@ -1404,6 +1496,11 @@ void Compiler::walkCode(const Tree &t) {
 	walkScript(t);
 	break;
       }
+    case TOK_CLASSDEF:
+      {
+	walkClassDef(t);
+	break;
+      }
     default:
       throw Exception("Unexpected code type for compilation");
     }
@@ -1414,6 +1511,10 @@ void Compiler::statement(const Tree &t) {
     statementType(t.first(),false);
   else if (t.is(TOK_STATEMENT))
     statementType(t.first(),true);
+  else if (t.is(TOK_NEST_FUNC))
+    {
+      _currentSym = _currentSym->children[0];
+    }
 }
 
 void Compiler::block(const Tree &t) {
@@ -1433,6 +1534,7 @@ Module* Compiler::module() {
       codelist.push(_codestack.top());
       _codestack.pop();
     }
+  if (codelist.size() == 0) return NULL;
   CodeBlock *main = codelist.top();
   codelist.pop();
   Module *mod = new Module;
@@ -1494,7 +1596,7 @@ void PrintCodeBlock(CodeBlock *_code)
 {
   std::cout << "************************************************************\n";
   std::cout << "Symbols for function: " << _code->_syms->name << "\n";
-  for (FMMap<FMString, int>::const_iterator s=_code->_syms->syms.constBegin(); s != _code->_syms->syms.constEnd(); ++s)
+  for (auto s=_code->_syms->syms.constBegin(); s != _code->_syms->syms.constEnd(); ++s)
     std::cout << "   Symbol: " << s.key() << " flags: " << symbolFlagsToString(s.value()) << "\n";
   std::cout << "************************************************************\n";      
   std::cout << "Const: ";
@@ -1503,6 +1605,8 @@ void PrintCodeBlock(CodeBlock *_code)
     std::cout << lt->fetch(_code->_constlist,i).description() << " ";
   std::cout << "\n";
   std::cout << "Names:  " << _code->_namelist << "\n";
+  std::cout << "Free:  " << _code->_freelist << "\n";
+  std::cout << "Captured:  " << _code->_capturedlist << "\n";
   std::cout << "Code:\n";
   for (int j=0;j<_code->_blocklist.size();j++)
     PrintBasicBlock(_code->_blocklist[j]);
@@ -1557,20 +1661,41 @@ void FM::Disassemble(ThreadContext *_ctxt, const Object &p)
 {
   //  if (!p.isUserClass() || p.className() != "code_object")
   //    throw Exception("argument to disassemble is not a code_object");
+  if (p.type()->code() == TypeModule)
+    {
+      const ModuleData *md = _ctxt->_module->ro(p);
+      std::cout << "Module: " << md->m_name << "\n";
+      std::cout << "  ** main routine **\n";
+      Disassemble(_ctxt,md->m_main);
+      for (auto i=md->m_locals.begin(); i!= md->m_locals.end(); ++i) {
+	std::cout << "  ** local routine " << i->first << " **\n";
+	Disassemble(_ctxt,i->second);
+      }
+      return;
+    }
   assert(p.type()->code() == TypeCode);
-  const CodeData *dp = _ctxt->_code->readOnlyData(p);
-  std::cout << "Name: " << dp->m_name.description() << "\n";
-  std::cout << "Names: " << dp->m_names << "\n";
-  std::cout << "Parameters: " << dp->m_params << "\n";
-  std::cout << "Returns: " << dp->m_returns << "\n";
-  Object consts = dp->m_consts;
-  const Object* cp = _ctxt->_cell->readOnlyData(consts);
-  std::cout << "Consts: ";
-  for (dim_t i=0;i<consts.dims().elementCount();i++)
+  const CodeData *dp = _ctxt->_code->ro(p);
+  std::cout << "Name      : " << dp->m_name.description() << "\n";
+  std::cout << "Names     : " << dp->m_names << "\n";
+  std::cout << "Captured  : " << dp->m_captured << "\n";
+  std::cout << "Free      : " << dp->m_free << "\n";
+  std::cout << "Parameters: [";
+  for (int i=0;i<dp->m_params.elementCount();i++)
+    std::cout << _ctxt->_index->ro(dp->m_params)[i] << " ";
+  std::cout << "]\n";
+  std::cout << "Returns   : [";
+  for (int i=0;i<dp->m_returns.elementCount();i++)
+    std::cout << _ctxt->_index->ro(dp->m_returns)[i] << " ";
+  std::cout << "]\n";
+  std::cout << "Varargin  : " << dp->m_varargin << "\n";
+  std::cout << "Varargout : " << dp->m_varargout << "\n";
+  const Object* cp = _ctxt->_list->ro(dp->m_consts);
+  std::cout << "Consts    : ";
+  for (dim_t i=0;i<dp->m_consts.elementCount();i++)
     std::cout << cp[i].description() << " ";
   std::cout << "\n";
   Object code = dp->m_code;
-  const insn_t *opcodes = _ctxt->_uint64->readOnlyData(code);
+  const insn_t *opcodes = _ctxt->_uint64->ro(code);
   std::cout << "Code: " << code.dims().elementCount() << " length\n";
   for (dim_t i=0;i<code.dims().elementCount();++i)
     PrintInsn(i,opcodes[i]);

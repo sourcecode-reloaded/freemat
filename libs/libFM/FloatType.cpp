@@ -43,11 +43,11 @@ void FloatType<T,codeNum>::computeArrayFormatInfo(FMFormatMode mode, const Objec
     //    if (IsInteger(rp.constReal<T>()))
     //      return ArrayFormatInfo(GetNominalWidthInteger(rp.constReal<T>()));
     info = GetArrayFormatForPOD<T>(mode);
-    ComputeScaleFactor(this->readOnlyData(rp),rp.elementCount(),info,false);
+    ComputeScaleFactor(this->ro(rp),rp.elementCount(),info,false);
     return;
   }
   info = GetArrayFormatForPOD<Complex<T> >(mode);
-  ComputeScaleFactor(this->readOnlyData(rp),rp.elementCount()*2,info,true);
+  ComputeScaleFactor(this->ro(rp),rp.elementCount()*2,info,true);
   return;  
 }
 
@@ -97,12 +97,12 @@ template <typename T, FM::DataCode codeNum>
 void FloatType<T,codeNum>::printElement(const Object &a, const ArrayFormatInfo &format, ndx_t offset) {
   if (!a.isComplex())
     {
-      const T* dp = this->readOnlyData(a);
+      const T* dp = this->ro(a);
       printDouble(dp[offset],Type::_ctxt->_io,format);
     }
   else
     {
-      const Complex<T>* dp = this->readOnlyDataComplex(a);
+      const Complex<T>* dp = this->roComplex(a);
       printDouble(dp[offset].r,Type::_ctxt->_io,format);
       printDouble(dp[offset].i,Type::_ctxt->_io,format,true);
       Type::_ctxt->_io->output("i");

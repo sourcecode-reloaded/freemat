@@ -176,14 +176,17 @@ namespace FM
     }
     Object makeComplex(const T& real, const T& imag) {
       Object p = makeMatrix(1,1,true);
-      T* p_data = readWriteData(p);
+      T* p_data = rw(p);
       p_data[0] = real;
       p_data[1] = imag;
       return p;
     }
     T scalarValue(const Object &a) {
       assert(a.isScalar());
-      return readOnlyData(a)[0];
+      return ro(a)[0];
+    }
+    FMString brief(const Object &a) {
+      return(a.dims().toString() + " " + this->name() + " array");      
     }
     FMString describe(const Object &a) {
       return(a.dims().toString() + " " + this->name() + " array");
@@ -194,19 +197,19 @@ namespace FM
       size_t byte_count = a.dims().elementCount()*sizeof(T);
       if ((a.flags() & OBJECT_COMPLEX_FLAG) ^ (b.flags() & OBJECT_COMPLEX_FLAG)) return false;
       if (a.flags() & OBJECT_COMPLEX_FLAG) byte_count *= 2;
-      const T* ap = this->readOnlyData(a);
-      const T* bp = this->readOnlyData(b);
+      const T* ap = this->ro(a);
+      const T* bp = this->ro(b);
       for (dim_t i=0;i<a.dims().elementCount();i++)
 	if (!(ap[i] == bp[i])) return false;
       return true;
     }
     void promoteComplex(Object &a);
-    inline const T* readOnlyData(const Object &p) const {
+    inline const T* ro(const Object &p) const {
       // DEBUG ASSERT
       assert(p.type()->code() == this->code());
       return static_cast<const T *>(static_cast<const T *>(p.d->data->ptr) + p.d->offset);
     }
-    inline T* readWriteData(Object &p) const {
+    inline T* rw(Object &p) const {
       // DEBUG ASSERT
       assert(p.type()->code() == this->code());
       p.detach();

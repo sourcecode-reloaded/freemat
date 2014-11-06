@@ -61,3 +61,5 @@ const op_t OP_LENGTH = 73;
 const op_t OP_POP = 74;
 const op_t OP_END = 75;
 const op_t OP_LOOKUP = 76;
+const op_t OP_LOAD_CELL = 77;
+const op_t OP_SAVE_CELL = 78;

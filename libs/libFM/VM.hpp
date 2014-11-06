@@ -20,6 +20,7 @@ namespace FM
   class VM
   {
     Object _registers;
+    Object _modules;
     std::vector<Frame*> _frames;
     int _fp;
     int _rp;
@@ -29,6 +30,7 @@ namespace FM
     VM(ThreadContext *ctxt);
     void executeScript(const Object &codeObject);
     Object executeFunction(const Object &codeObject, const Object &parameters);
+    Object executeModule(const Object &moduleObject, const Object &parameters);
     void executeCodeObject(const Object &codeObject);
     void defineBaseVariable(const FMString &name, const Object &value);
     void dump();

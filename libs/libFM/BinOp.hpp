@@ -13,9 +13,9 @@ namespace FM
   {
     PODType<ctype> *otype = static_cast<PODType<ctype> *>(o);
     Object c = otype->zeroArrayOfSize(Tuple::computeDotOpSize(a.dims(),b.dims()),isComplex);
-    ctype *cptr = otype->readWriteData(c);
-    const atype *aptr = static_cast<PODType<atype>*>(a.type())->readOnlyData(a);
-    const btype *bptr = static_cast<PODType<btype>*>(b.type())->readOnlyData(b);
+    ctype *cptr = otype->rw(c);
+    const atype *aptr = static_cast<PODType<atype>*>(a.type())->ro(a);
+    const btype *bptr = static_cast<PODType<btype>*>(b.type())->ro(b);
     size_t aincr = (a.isScalar() ? 0 : 1);
     size_t bincr = (b.isScalar() ? 0 : 1);
     size_t elcnt = c.elementCount();

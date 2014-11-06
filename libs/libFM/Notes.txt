@@ -790,7 +790,6 @@ classdef sads
             obj.Name=Name;
             obj.Wavelength=Wavelength;
         end
-        [mags, fflip]=magfft(obj,zeroPadTo)
         function NumSensors=get.NumSensors(obj)
             % Get NumSensors property
             NumSensors=size(obj.Data,2);
@@ -799,10 +798,6 @@ classdef sads
             % Get NumSamples property
             NumSamples=size(obj.Data,1);
         end
-        plot(obj)
-        magfftplot(obj, zeroPadTo)
-        angles=doa(obj)
-        obj=steer(obj,theta)
     end
     methods (Static)
         showarray(Targets,NumSensors,Spacing)
@@ -872,6 +867,444 @@ until you find somethin.
 The result of LOOKUP cannot be cached unless a local variable has been
 assigned.
 
+Consider, for example:
+
+a = {o1,o2,o3,...,oN}
+
+and then
+
+for i=1:N
+  foo(a{i})
+end
+
+Here, foo may be a different function for each object.
+
+So I will split the opcodes.  OP_LOAD will remain for expressions that
+do not get subrefed, like:
+
+A = B + 3
+
+In this case, the lookup for B should be an OP_LOAD.  In the case of
+
+A = B(4) + 3
+
+on the other hand, we need OP_LOOKUP, ans
 
 
-VARIABLE arguments and returns!
+Compiling function bind
+Symbol table is bind
+Name: 'bind'
+Names: <'add' 't' 'y'>
+Parameters: 1
+Returns: 2
+Consts: 6 
+Code: 15 length
+000 NEW_LIST       r0                       
+001 NEW_LIST       r1                       
+002 LOAD_CONST     r2, Const[0]             
+003 PUSH           r1, r2                   
+004 LOAD           r2, Name[1]              
+005 DEREF          r3, r2                   
+006 PUSH           r1, r3                   
+007 LOOKUP         r2, r1, Name[0]          
+008 NEW_LIST       r3                       
+009 PUSH_INT       r3, 0                    
+010 PUSH           r3, r1                   
+011 SUBSREF        r0, r2, r3               
+012 FIRST          r1, r0                   
+013 SAVE           r1, Name[2]              
+014 RETURN                                  
+
+
+function y = bind(t)
+  y = add(6,t);
+
+The code should be something like:
+
+NEW_LIST   r0
+PUSH_INT   r0,0
+NEW_LIST   r1
+LOAD_CONST r2, <add>
+PUSH       r1, r2
+LOAD       r2, <t>
+PUSH       r1, r2
+PUSH       r0, r1
+
+Should we use varargin?
+
+new_list r0
+push_int r0,0
+new_list r1
+load_const r2, <6>
+push     r1,r2
+load     r2, <t>
+push     r1,r2
+push     r0,r1
+load_const r2, <add>
+subsref  r3, r2, r0
+first    r4, r3
+save     r4, 'y'
+return
+
+function [z,g,r,a] = multi(x,r,t,c)
+
+      Symbol: a flags:  return dynamic pos=3
+      Symbol: c flags:  parameter dynamic pos=3
+      Symbol: g flags:  return dynamic pos=1
+      Symbol: r flags:  parameter return pos=3
+      Symbol: t flags:  parameter dynamic pos=2
+      Symbol: x flags:  parameter dynamic pos=0
+      Symbol: z flags:  return dynamic pos=0
+
+Names     : <'a' 'c' 'g' 'r' 't' 'x' 'z'>
+Parameters: [5 0 4 3 ] - x,a,t,r
+Returns   : [6 2 0 3 ] - z,g,a,r
+
+Also need inheritance and synthetic properties...
+
+************************************************************
+
+Handles are still buggy - fixed
+
+Need to add methods
+
+%classdef DocPolynom
+   % Documentation example
+   % A value class that implements a data type for polynonials
+   % See Implementing a Class for Polynomials in the
+   % MATLAB documentation for more information.
+   
+   properties
+      coef
+   end
+   
+   % Class methods
+   methods
+      function obj = DocPolynom(c)
+         % Construct a DocPolynom object using the coefficients supplied
+         if isa(c,'DocPolynom')
+            obj.coef = c.coef;
+         else
+            obj.coef = c(:).';
+         end
+      end % DocPolynom
+      function obj = set.coef(obj,val)
+         if ~isa(val,'double')
+            error('Coefficients must be of class double')
+         end         
+         ind = find(val(:).'~=0);
+         if ~isempty(ind);
+            obj.coef = val(ind(1):end);
+         else
+            obj.coef = val;
+         end
+      end % set.coef
+      
+      function c = double(obj)
+         c = obj.coef;
+      end % double
+      
+      function obj = uminus(obj)
+          obj = -1*obj;
+      end
+      
+      function [q,r] = mrdivide(obj1,obj2)
+          [q,r] = deconv(obj1.coef,obj2.coef);
+          if q ~= 0
+            q = DocPolynom(q);
+          end
+          flag = 0;
+          for i=1:length(r)
+              if r(i) ~= 0
+                  flag = 1;
+              end
+          end
+          if flag == 1
+              warning('Polynomial division resulted in a remainder')
+              r = DocPolynom(r);
+          end
+      end
+      
+      function str = char(obj)
+         % Created a formated display of the polynom
+         % as powers of x
+         if all(obj.coef == 0)
+            s = '0';
+            str = s;
+         else
+            d = length(obj.coef)-1;
+            s = cell(1,d);
+            ind = 1;
+            for a = obj.coef;
+               if a ~= 0;
+                  if ind ~= 1
+                     if a > 0
+                        s(ind) = {' + '};
+                        ind = ind + 1;
+                     else
+                        s(ind) = {' - '};
+                        a = -a; %#ok<FXSET>
+                        ind = ind + 1;
+                     end
+                  end
+                  if a ~= 1 || d == 0
+                     if a == -1
+                        s(ind) = {'-'};
+                        ind = ind + 1;
+                     else
+                        s(ind) = {num2str(a)};
+                        ind = ind + 1;
+                        if d > 0
+                           s(ind) = {'*'};
+                           ind = ind + 1;
+                        end
+                     end
+                  end
+                  if d >= 2
+                     s(ind) = {['x^' int2str(d)]};
+                     ind = ind + 1;
+                  elseif d == 1
+                     s(ind) = {'x'};
+                     ind = ind + 1;
+                  end
+               end
+               d = d - 1;
+            end
+            str = [s{:}];
+         end
+      end % char
+      
+      function disp(obj)
+         % DISP Display object in MATLAB syntax
+         c = char(obj);
+         if iscell(c)
+            disp(['     ' c{:}])
+         else
+            disp(c)
+         end
+      end % disp
+      
+      function b = subsref(a,s)
+         % SUBSREF Implementing the following syntax: 
+         % obj([1 ...])
+         % obj.coef
+         % obj.plot
+         % out = obj.method(args)
+         % out = obj.method
+         switch s(1).type
+            case '()'
+               ind = s.subs{:};
+               b = a.polyval(ind);
+            case '.'
+               switch s(1).subs
+                  case 'coef'
+                     b = a.coef;
+                  case 'plot'
+                     a.plot;
+                  otherwise
+                     if length(s)>1
+                        b = a.(s(1).subs)(s(2).subs{:});
+                     else
+                        b = a.(s.subs);
+                     end
+               end
+            otherwise
+               error('Specify value for x as obj(x)')
+         end
+      end % subsref
+      
+      function r = plus(obj1,obj2)
+         % PLUS  Implement obj1 + obj2 for DocPolynom
+         obj1 = DocPolynom(obj1);
+         obj2 = DocPolynom(obj2);
+         k = length(obj2.coef) - length(obj1.coef);
+         r = DocPolynom([zeros(1,k) obj1.coef] + [zeros(1,-k) obj2.coef]);
+      end % plus
+      
+      function r = mpower(obj1,x)
+          obj1 = DocPolynom(obj1);
+          if x < 1
+              error('DocPolynom can only handle positive, integer powers');
+          end
+          if (round(x)-x)~= 0
+              error('DocPolynom can only handle positive, integer powers');
+          end
+          r = obj1;
+          for i=1:x-1
+              r = r*obj1;
+          end
+      end
+      
+      function r = minus(obj1,obj2)
+         % MINUS Implement obj1 - obj2 for DocPolynoms.
+         obj1 = DocPolynom(obj1);
+         obj2 = DocPolynom(obj2);
+         k = length(obj2.coef) - length(obj1.coef);
+         r = DocPolynom([zeros(1,k) obj1.coef] - [zeros(1,-k) obj2.coef]);
+      end % minus
+      
+      function r = mtimes(obj1,obj2)
+         % MTIMES   Implement obj1 * obj2 for DocPolynoms.
+         obj1 = DocPolynom(obj1);
+         obj2 = DocPolynom(obj2);
+         r = DocPolynom(conv(obj1.coef,obj2.coef));
+      end % mtimes
+      
+      function r = roots(obj)
+         % ROOTS.  ROOTS(obj) is a vector containing the roots of obj.
+         r = roots(obj.coef);
+      end % roots
+      
+      function y = polyval(obj,x)
+         % POLYVAL  POLYVAL(obj,x) evaluates obj at the points x.
+         y = polyval(obj.coef,x);
+      end % polyval
+      
+      function q = diff(obj)
+         % DIFF  DIFF(obj) is the derivative of the polynom obj.
+         c = obj.coef;
+         d = length(c) - 1;  % degree
+         q = DocPolynom(obj.coef(1:d).*(d:-1:1));
+      end % diff
+      
+      function plot(obj,varargin)
+         % PLOT  PLOT(obj) plots the polynom obj
+         if nargin==1
+             r = max(abs(roots(obj)));
+             x = (-1.1:0.01:1.1)*r;
+         else
+             x = varargin{1};
+         end
+         y = polyval(obj,x);
+         plot(x,y);
+         c = char(obj);
+         title(['y = ' c{:}])
+         xlabel('X')
+         ylabel('Y','Rotation',0)
+         grid on
+      end % plot
+   end % methods 
+end % classdef
+
+-- Need to merge the assembler and compiler and clean up the
+   compiler.  The module/symbol/stuff is a mess.
+
+
+To do that, I need to understand the need for the complexity.  This
+means local functions and nested functions.
+
+For local functions, the case is relatively easy.  We need to have
+constant references to other functions in the same module.  This can
+be done by the assembler.
+
+Local functions cannot be stored as constants, because they can be
+replaced at run time.  Consider:
+
+function x = foo(y)
+  x = square(y);
+  square = x*x;
+  x = square+2;
+end
+
+function y = square(z)
+  y = z*z;
+end
+
+In this case, the first instance of square is a local function call,
+but the second instance is a variable.  If square is compiled with a
+LOAD_CONST opcode, then at runtime, the second invocation of square+2
+will load from the CONST pool instead of the variable pool.
+
+So this means that local functions are just scoped functions that can
+be accessed from within a module.
+
+Why not use the same concept as a class for a module? That means
+either a codeblock needs to have a handle class or something.  How
+about if we have a module class with the following:
+
+class ModuleMetaData {
+public:
+  HashMap<Object> m_local_functions;
+  Object m_main_function;
+  FMString m_name;
+};
+
+Modules work great!  Next step is to handle nested functions.  Recall
+that a nested function has access to the parent function's variables.
+In the case of Python, these are "cell variables".  So consider 
+
+function main1
+  x = 5;
+  nestfun1
+
+  function nestfun1
+    x = x + 1;
+  end
+end
+
+Idea 1: variables are captured when address of the function is taken.
+     - Cons - opcodes required are different.
+
+Idea 2: captured variables are put into a list.  Invokation of nested
+functions transfers captured variables to nested function with a
+MAKE_CLOSURE type of opcode.
+     - Cons - the transferred variables need to be transferred by
+     reference, not by value.  Otherwise, modifications in the nested
+     function won't be seen at the parent scope.
+
+So essentially a cell has reference semantics.  
+
+>>> def make_counter():
+...    i = 0
+...    def incr():
+...       nonlocal i
+...       i += 1
+...       return i
+...    def decr():
+...       nonlocal i
+...       i -= 1
+...       return i
+...    return (incr,decr)
+... 
+>>> (a,b) = make_counter()
+>>> a()
+1
+>>> a()
+2
+>>> a()
+3
+>>> b()
+2
+>>> b()
+1
+>>> 
+
+
+>>> dis.dis(make_counter)
+  2           0 LOAD_CONST               1 (0)
+              3 STORE_DEREF              0 (i)
+
+  3           6 LOAD_CLOSURE             0 (i)
+              9 BUILD_TUPLE              1
+             12 LOAD_CONST               2 (<code object incr at 0x1040e7ae0, file "<stdin>", line 3>)
+             15 LOAD_CONST               3 ('make_counter.<locals>.incr')
+             18 MAKE_CLOSURE             0
+             21 STORE_FAST               0 (incr)
+
+  7          24 LOAD_CLOSURE             0 (i)
+             27 BUILD_TUPLE              1
+             30 LOAD_CONST               4 (<code object decr at 0x1040e7db0, file "<stdin>", line 7>)
+             33 LOAD_CONST               5 ('make_counter.<locals>.decr')
+             36 MAKE_CLOSURE             0
+             39 STORE_FAST               1 (decr)
+
+ 11          42 LOAD_FAST                0 (incr)
+             45 LOAD_FAST                1 (decr)
+             48 BUILD_TUPLE              2
+             51 RETURN_VALUE
+
+
+Essentially, a cell is an unnamed global variable.  To get the same
+effect in FreeMat, we need to be able to allocate a global variable
+with Handle semantics.  
+

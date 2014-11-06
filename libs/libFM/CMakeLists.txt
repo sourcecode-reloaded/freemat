@@ -2,7 +2,7 @@ PROJECT(FMT CXX C)
 #ENABLE_LANGUAGE(Fortran)
 
 FIND_PACKAGE(PythonInterp REQUIRED)
-FIND_PACKAGE(Boost COMPONENTS system timer chrono)
+FIND_PACKAGE(Boost COMPONENTS system timer chrono filesystem)
 include_directories(${Boost_INCLUDE_DIRS})
 
 #FIND_PACKAGE(BLAS REQUIRED)
@@ -30,6 +30,7 @@ ThreadContext.cpp
 DoubleType.cpp
 CellType.cpp
 EndRemover.cpp
+NestedFunctionMover.cpp
 CodeType.cpp
 StringType.cpp
 Transpose.cpp  
@@ -94,6 +95,7 @@ VM.hpp
 MatrixMultiply.cpp
 ArrayFormatInfo.cpp
 ArrayFormatInfo.hpp
+ModuleType.cpp
 )
 target_link_libraries(FMT ${Boost_LIBRARIES} readline ${ACCELERATE_LIB})
 

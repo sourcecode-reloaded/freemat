@@ -87,7 +87,7 @@ namespace FM
     }
     Object expandColons(dim_t len) {
       Object output = this->makeMatrix(len,1);
-      ndx_t *op = this->readWriteData(output);
+      ndx_t *op = this->rw(output);
       for (dim_t i=0;i<len;i++)
 	op[i] = i;
       return output;

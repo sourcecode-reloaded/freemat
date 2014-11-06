@@ -39,6 +39,7 @@ void InitializeReservedTable() {
   fm_reserved["break"] = TOK_BREAK;
   fm_reserved["case"] = TOK_CASE;
   fm_reserved["catch"] = TOK_CATCH;
+  fm_reserved["classdef"] = TOK_CLASSDEF;
   fm_reserved["continue"] = TOK_CONTINUE;
   fm_reserved["dbstep"] = TOK_DBSTEP;
   fm_reserved["dbtrace"] = TOK_DBTRACE;
@@ -52,8 +53,10 @@ void InitializeReservedTable() {
   fm_reserved["global"] = TOK_GLOBAL;
   fm_reserved["if"] = TOK_IF;
   fm_reserved["keyboard"] = TOK_KEYBOARD;
+  fm_reserved["methods"] = TOK_METHODS; // FIXME - enable for classdef mode only
   fm_reserved["otherwise"] = TOK_OTHERWISE;
   fm_reserved["persistent"] = TOK_PERSISTENT;
+  fm_reserved["properties"] = TOK_PROPERTIES; // FIXME - enable for classdef mode only
   fm_reserved["quit"] = TOK_QUIT;
   fm_reserved["retall"] = TOK_RETALL;
   fm_reserved["return"] = TOK_RETURN;

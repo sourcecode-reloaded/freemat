@@ -53,6 +53,12 @@ namespace FM
     inline Tree first() const {return d->m_children.front();}
     inline Tree second() const {return d->m_children.at(1);}
     inline bool is(TokenValueType tok) const {return (token()==tok);}
+    inline bool anyChildrenAre(TokenValueType tok) const {
+      for (int i=0;i<d->m_children.size();i++) 
+	if (d->m_children.at(i).is(tok)) 
+	  return true; 
+      return false;
+    }
     inline TokenValueType token() const {return d->m_node.value();}
     inline int numChildren() const {return d->m_children.size();}
     inline bool hasChildren() const {return (d->m_children.size()>0);}

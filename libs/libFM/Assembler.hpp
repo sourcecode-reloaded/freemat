@@ -23,6 +23,7 @@ namespace FM
   public:
     Assembler(ThreadContext *ctxt) : _ctxt(ctxt) {};
     Object run(CodeBlock* code);
+    Object run(Module* mod);
   };
 }
 #endif
