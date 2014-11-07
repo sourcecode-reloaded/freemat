@@ -14,6 +14,8 @@
 //#include "Math.hpp"
 //#include "Struct.hpp"
 
+
+
 using namespace FM;
 
 // Assembler issues.
@@ -565,7 +567,7 @@ const_t Compiler::getCellID(const FMString & t) {
   if (nd1 != -1) return nd1;
   nd1 = indexOfStringInList(_ctxt,_code->_capturedlist,t);
   if (nd1 == -1) throw Exception("Cannot find cell ID for " + t);
-  nd1 += _code->_freelist.elementCount();
+  nd1 += _code->_freelist.count();
   return nd1;
 }
 
@@ -582,7 +584,7 @@ const_t Compiler::getConstantID(const Object & t) {
   if (ndx < 0)
     {
       _ctxt->_list->push(_code->_constlist,t);
-      return _code->_constlist.elementCount()-1;
+      return _code->_constlist.count()-1;
     }
   return ndx;
 }
@@ -593,7 +595,7 @@ void Compiler::saveRegisterToName(const FMString &varname, reg_t b) {
     emit(OP_SAVE_GLOBAL,b,getNameID(varname));
   else if (IS_PERSIST(symflags))
     emit(OP_SAVE_PERSIST,b,getNameID(varname));
-  else if (IS_DYNAMIC(symflags))
+  else if (IS_LOCAL(symflags))
     emit(OP_SAVE,b,getNameID(varname));
   else if (IS_CELL(symflags))
     {
@@ -624,7 +626,7 @@ void Compiler::assignment(const Tree &t, bool printIt, reg_t b) {
     emit(OP_SUBSASGN_GLOBAL,args,b,getNameID(varname));
   else if (IS_PERSIST(symflags))
     emit(OP_SUBSASGN_PERSIST,args,b,getNameID(varname));
-  else if (IS_DYNAMIC(symflags))
+  else if (IS_LOCAL(symflags))
     emit(OP_SUBSASGN,args,b,getNameID(varname));
   else
     throw Exception("Unhandled subsasgn case");
@@ -701,6 +703,37 @@ reg_t Compiler::fetchConstantString(const FMString &constant)
   return fetchConstant(_ctxt->_string->makeString(constant));
 }
 
+SymbolTable* Compiler::getSymbolTableForClosure(const FMString &varname)
+{
+  for (auto i=_currentSym->children.begin(); i!=_currentSym->children.end();++i)
+    if ((*i)->name == varname) return (*i);
+  return NULL;
+}
+
+reg_t Compiler::fetchCell(const FMString &cellname)
+{
+  reg_t x = getRegister();
+  emit(OP_LOAD_CELL,x,getCellID(cellname));
+  return x;
+}
+
+reg_t Compiler::fetchClosure(const FMString &varname)
+{
+  // Fetching a closure is complex work.  
+  SymbolTable* closure_sym = getSymbolTableForClosure(varname);
+  if (!closure_sym) throw Exception("Compiler error - unable to find symbol table for closure " + varname);
+  reg_t closure = startList();
+  for (auto s = closure_sym->syms.constBegin(); s != closure_sym->syms.constEnd(); ++s)
+    {
+      if (IS_FREE(s.value()))
+	emit(OP_PUSH_CELL,closure,getCellID(s.key()));
+    }
+  reg_t func = fetchConstant(_ctxt->_string->makeString("#"+varname));
+  reg_t fptr = getRegister();
+  emit(OP_MAKE_CLOSURE,fptr,func,closure);
+  return fptr;
+}
+
 reg_t Compiler::fetchVariable(const FMString &varname, int flags)
 {
   reg_t x = getRegister();
@@ -708,10 +741,12 @@ reg_t Compiler::fetchVariable(const FMString &varname, int flags)
     emit(OP_LOAD_GLOBAL,x,getNameID(varname));
   else if (IS_PERSIST(flags))
     emit(OP_LOAD_PERSIST,x,getNameID(varname));
-  else if (IS_DYNAMIC(flags))
+  else if (IS_LOCAL(flags))
     emit(OP_LOAD,x,getNameID(varname));
   else if (IS_CELL(flags))
     emit(OP_LOAD_CELL,x,getCellID(varname));
+  else if (IS_NESTED(flags))
+    x = fetchClosure(varname);
   else
     throw Exception("Unhandled load case for variable " + varname + " flags = " + Stringify(flags));
   return x;
@@ -785,7 +820,7 @@ void Compiler::rhs(reg_t list, const Tree &t) {
   if (t.numChildren() > 1)
     {
       // Check if we have A(...), where A isn't marked as global or persistent
-      if (t.second().is(TOK_PARENS) && !IS_GLOBAL(symflags) && !IS_PERSIST(symflags))
+      if (t.second().is(TOK_PARENS) && !IS_GLOBAL(symflags) && !IS_PERSIST(symflags)  && !IS_NESTED(symflags))
 	{
 	  // First, get the arguments
 	  reg_t argv = startList();
@@ -977,7 +1012,13 @@ reg_t Compiler::expression(const Tree &t) {
   case TOK_DOTTRANSPOSE:
     return doUnaryOperator(t,OP_TRANSPOSE);
   case '@':
-    //    return FunctionPointer(t);
+    { // TODO - is this all?
+      FMString fname = t.first().text();
+      int symflags = _code->_syms->syms[fname];
+      if (IS_NESTED(symflags))
+	return fetchClosure(fname);
+      throw Exception("Unhandled case for function pointers");
+    } 
   default:
     throw Exception("Unrecognized expression!");
   }  
@@ -1352,9 +1393,13 @@ void Compiler::compile(const FMString &code) {
 
 
 void Compiler::walkFunction(const Tree &t, bool nested) {
+  CodeBlock *save_code = _code;
   CodeBlock *cp = new CodeBlock(_ctxt);
   cp->_syms = _currentSym;
-  _codestack.push(cp);
+  if (!nested)
+    _codestack.push(cp);
+  else
+    save_code->_nested.push_back(cp);
   _code = cp;
   // Build up the variable list
   // By convention, the arguments are first
@@ -1382,6 +1427,7 @@ void Compiler::walkFunction(const Tree &t, bool nested) {
   useBlock(new BasicBlock);
   block(code);
   emit(OP_RETURN);
+  _code = save_code;
 }
 
 
@@ -1513,7 +1559,10 @@ void Compiler::statement(const Tree &t) {
     statementType(t.first(),true);
   else if (t.is(TOK_NEST_FUNC))
     {
+      SymbolTable *_saveSym = _currentSym;
       _currentSym = _currentSym->children[0];
+      walkFunction(t,true);
+      _currentSym = _saveSym;
     }
 }
 
@@ -1601,7 +1650,7 @@ void PrintCodeBlock(CodeBlock *_code)
   std::cout << "************************************************************\n";      
   std::cout << "Const: ";
   ListType *lt = _code->_constlist.asType<ListType>();
-  for (int i=0;i<_code->_constlist.elementCount();i++)
+  for (int i=0;i<_code->_constlist.count();i++)
     std::cout << lt->fetch(_code->_constlist,i).description() << " ";
   std::cout << "\n";
   std::cout << "Names:  " << _code->_namelist << "\n";
@@ -1666,10 +1715,10 @@ void FM::Disassemble(ThreadContext *_ctxt, const Object &p)
       const ModuleData *md = _ctxt->_module->ro(p);
       std::cout << "Module: " << md->m_name << "\n";
       std::cout << "  ** main routine **\n";
-      Disassemble(_ctxt,md->m_main);
+      Disassemble(_ctxt,_ctxt->_function->ro(md->m_main)->m_code);
       for (auto i=md->m_locals.begin(); i!= md->m_locals.end(); ++i) {
 	std::cout << "  ** local routine " << i->first << " **\n";
-	Disassemble(_ctxt,i->second);
+	Disassemble(_ctxt,_ctxt->_function->ro(i->second)->m_code);
       }
       return;
     }
@@ -1680,23 +1729,29 @@ void FM::Disassemble(ThreadContext *_ctxt, const Object &p)
   std::cout << "Captured  : " << dp->m_captured << "\n";
   std::cout << "Free      : " << dp->m_free << "\n";
   std::cout << "Parameters: [";
-  for (int i=0;i<dp->m_params.elementCount();i++)
+  for (int i=0;i<dp->m_params.count();i++)
     std::cout << _ctxt->_index->ro(dp->m_params)[i] << " ";
   std::cout << "]\n";
   std::cout << "Returns   : [";
-  for (int i=0;i<dp->m_returns.elementCount();i++)
+  for (int i=0;i<dp->m_returns.count();i++)
     std::cout << _ctxt->_index->ro(dp->m_returns)[i] << " ";
   std::cout << "]\n";
   std::cout << "Varargin  : " << dp->m_varargin << "\n";
   std::cout << "Varargout : " << dp->m_varargout << "\n";
   const Object* cp = _ctxt->_list->ro(dp->m_consts);
   std::cout << "Consts    : ";
-  for (dim_t i=0;i<dp->m_consts.elementCount();i++)
-    std::cout << cp[i].description() << " ";
+  for (dim_t i=0;i<dp->m_consts.count();i++)
+    std::cout << cp[i].brief() << ", ";
   std::cout << "\n";
   Object code = dp->m_code;
   const insn_t *opcodes = _ctxt->_uint64->ro(code);
-  std::cout << "Code: " << code.dims().elementCount() << " length\n";
-  for (dim_t i=0;i<code.dims().elementCount();++i)
+  std::cout << "Code: " << code.dims().count() << " length\n";
+  for (dim_t i=0;i<code.dims().count();++i)
     PrintInsn(i,opcodes[i]);
+  for (dim_t i=0;i<dp->m_consts.count();i++)
+    if (cp[i].is(TypeCode))
+      {
+	std::cout << "     ***** Nested Routine ****\n";
+	Disassemble(_ctxt,cp[i]);
+      }
 }

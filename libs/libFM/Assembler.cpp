@@ -6,6 +6,7 @@
 #include "Compiler.hpp"
 #include "TypeUtils.hpp"
 #include "ModuleType.hpp"
+#include "FunctionType.hpp"
 
 std::string getOpCodeName(FM::op_t);
 
@@ -16,11 +17,15 @@ Object Assembler::run(Module *mod)
   Object module = _ctxt->_module->makeScalar();
   ModuleData *mp = _ctxt->_module->rw(module);
   mp->m_name = mod->_name;
-  mp->m_main = this->run(mod->_main);
+  mp->m_main = _ctxt->_function->fromCode(this->run(mod->_main));
   for (auto i=mod->_locals.constBegin();
        i != mod->_locals.constEnd();++i)
-    mp->m_locals.insert(std::make_pair(_ctxt->_string->makeString(i.key()),
-					 this->run(i.value())));
+    {
+      Object co = this->run(i.value());
+      // Make into function object - no closures at the module level
+      Object fo = _ctxt->_function->fromCode(co);
+      mp->m_locals.insert(std::make_pair(_ctxt->_string->makeString(i.key()),fo));
+    }
   return module;
 }
 
@@ -28,11 +33,18 @@ Object Assembler::run(CodeBlock *code)
 {
   _code = code;
   _vm_codes.clear();
+  _nested_codes.clear();
   for (int i=0;i<_postorder.size();i++) delete _postorder[i];
   _postorder.clear();
   depthFirstSearch(_code->_blocklist[0]);
   computeJumpOffsets();
   assemble();
+  // Assemble the nested functions
+  for (int i=0;i<code->_nested.size();i++)
+    {
+      Assembler sub(_ctxt);
+      _nested_codes.push_back(sub.run(code->_nested[i]));
+    }
   return codeObject();
 }
 
@@ -115,19 +127,25 @@ Object Assembler::codeObject()
       // TODO: This should be more efficient
       if (IS_PARAMETER(i.value())) 
 	{
-	  for (int j=0;j<cp->m_names.elementCount();j++)
+	  for (int j=0;j<cp->m_names.count();j++)
 	    if (_ctxt->_string->getString(strings[j]) == i.key())
 	      {
-		param_ptr[SYM_PARAM_POSITION(i.value())] = j;
+		if (!IS_CAPTURED(i.value()))
+		  param_ptr[SYM_PARAM_POSITION(i.value())] = j;
+		else
+		  param_ptr[SYM_PARAM_POSITION(i.value())] = indexOfStringInList(_ctxt,_code->_capturedlist,i.key()) + 1000;
 		if (i.key() == "varargin") varargin_ndx = j;
 	      }
 	}
       if (IS_RETURN(i.value())) 
 	{
-	  for (int j=0;j<cp->m_names.elementCount();j++)
+	  for (int j=0;j<cp->m_names.count();j++)
 	    if (_ctxt->_string->getString(strings[j]) == i.key())
 	      {
-		return_ptr[SYM_RETURN_POSITION(i.value())] = j;
+		if (!IS_CAPTURED(i.value()))
+		  return_ptr[SYM_RETURN_POSITION(i.value())] = j;
+		else
+		  return_ptr[SYM_RETURN_POSITION(i.value())] = indexOfStringInList(_ctxt,_code->_capturedlist,i.key()) + 1000;
 		if (i.key() == "varargout") varargout_ndx = j;
 	      }
 	}
@@ -138,5 +156,18 @@ Object Assembler::codeObject()
   cp->m_captured = _code->_capturedlist;
   cp->m_varargin = _ctxt->_index->makeScalar(varargin_ndx);
   cp->m_varargout = _ctxt->_index->makeScalar(varargout_ndx);
+  // Mark up the constants to replace nested functions with their code blocks
+  for (int i=0;i<_nested_codes.size();i++)
+    {
+      const Object &myName = _ctxt->_string->makeString("#" + _ctxt->_string->getString(_ctxt->_code->ro(_nested_codes[i])->m_name));
+      std::cout << "Need home for code block: " << myName << "\n";
+      Object *ip = _ctxt->_list->rw(cp->m_consts);
+      for (int j=0;j<cp->m_consts.count();j++)
+	if (ip[j] == myName)
+	  {
+	    ip[j] = _nested_codes[i];
+	    break;
+	  }
+    }
   return code;
 }

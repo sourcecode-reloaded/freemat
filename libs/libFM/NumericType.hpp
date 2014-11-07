@@ -29,7 +29,7 @@ namespace FM
     {
       if (a.isEmpty() || a.isComplex()) throw Exception("Complex or empty arguments do no support maxValue");
       const T* ap = this->ro(a);
-      dim_t acnt = a.elementCount();
+      dim_t acnt = a.count();
       T ret = ap[0];
       for (dim_t i=1;i<acnt;i++)
 	ret = (ap[i] < ret) ? ap[i] : ret;
@@ -39,7 +39,7 @@ namespace FM
     {
       if (a.isEmpty() || a.isComplex()) throw Exception("Complex or empty arguments do no support maxValue");
       const T* ap = this->ro(a);
-      dim_t acnt = a.elementCount();
+      dim_t acnt = a.count();
       T ret = ap[0];
       for (dim_t i=1;i<acnt;i++)
 	ret = (ap[i] > ret) ? ap[i] : ret;

@@ -55,7 +55,7 @@ namespace FM {
     inline bool isVector() const {
       return (is2D() && ((rows() == 1) || (cols() == 1)));
     }
-    inline dim_t elementCount() const {
+    inline dim_t count() const {
       return elements;
     }
     inline void setRows(dim_t rows) {
@@ -112,7 +112,7 @@ namespace FM {
       return ret;
     }
     inline bool operator==(const Tuple &other) const {
-      if (this->elementCount() != other.elementCount()) return false;
+      if (this->count() != other.count()) return false;
       if (this->ndims == other.ndims)
 	{
 	  for (unsigned i=0;i<ndims;i++)
@@ -136,9 +136,9 @@ namespace FM {
       }
     // Potential performance issue!
     static Tuple computeDotOpSize(const Tuple &a, const Tuple &b) {
-      if ((a.elementCount() == 1) && (b.elementCount() == 1)) return a;
-      if (a.elementCount() == 1) return b;
-      if (b.elementCount() == 1) return a;
+      if ((a.count() == 1) && (b.count() == 1)) return a;
+      if (a.count() == 1) return b;
+      if (b.count() == 1) return a;
       if (a == b) return a;
       throw Exception("Incompatible arguments to operation");
     }

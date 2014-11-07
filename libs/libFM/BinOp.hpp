@@ -18,7 +18,7 @@ namespace FM
     const btype *bptr = static_cast<PODType<btype>*>(b.type())->ro(b);
     size_t aincr = (a.isScalar() ? 0 : 1);
     size_t bincr = (b.isScalar() ? 0 : 1);
-    size_t elcnt = c.elementCount();
+    size_t elcnt = c.count();
     for (size_t i=0;i<elcnt;++i)
       Op::template func<ctype,atype,btype,vtype>(cptr+i,aptr+i*aincr,bptr+i*bincr);
     return c;

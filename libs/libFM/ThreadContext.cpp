@@ -26,6 +26,7 @@ ThreadContext* FM::BuildNewThreadContext(TermIF *io)
   ctxt->_list = new ListType(ctxt);
   ctxt->_code = new CodeType(ctxt);
   ctxt->_module = new ModuleType(ctxt);
+  ctxt->_function = new FunctionType(ctxt);
   ctxt->_vm = new VM(ctxt);
   ctxt->_compiler = new Compiler(ctxt);
   ctxt->_asm = new Assembler(ctxt);

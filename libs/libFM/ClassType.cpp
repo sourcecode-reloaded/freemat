@@ -64,10 +64,10 @@ Object ClassType::getField(const Object &a, const Object &b) {
     {
       int ndx = i->second;
       // This is copied from structtype...
-      Object output = _ctxt->_list->makeMatrix(a.elementCount(),1);
+      Object output = _ctxt->_list->makeMatrix(a.count(),1);
       Object *op = _ctxt->_list->rw(output);
       const Object *cp = _ctxt->_list->ro(cd->m_data);
-      for (dim_t i=0;i<a.elementCount();i++) {
+      for (dim_t i=0;i<a.count();i++) {
 	const Object *rp = _ctxt->_list->ro(cp[i]);
 	op[i] = rp[ndx];
       }
@@ -91,11 +91,11 @@ void ClassType::setField(Object &a, const Object &args, const Object &b) {
   if (i == cmd->m_properties.end()) throw Exception("Property " + args.description() + " is not defined for class " + cmd->m_name);
   int ndx = i->second;
   Object *rp = _ctxt->_list->rw(cd->m_data);
-  dim_t num_assignments = std::max<dim_t>(1,a.elementCount());
+  dim_t num_assignments = std::max<dim_t>(1,a.count());
   const Object *bp = &b;
   if (b.isList())
     bp = _ctxt->_list->ro(b);
-  if (b.isList() && (num_assignments > b.elementCount()))
+  if (b.isList() && (num_assignments > b.count()))
     throw Exception("Mismatch in number of left and right hand sides in expression a.property = b");
   for (dim_t n=0;n<num_assignments;n++)
     {

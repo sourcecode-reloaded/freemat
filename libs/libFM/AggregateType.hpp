@@ -1,6 +1,9 @@
 #ifndef __AggregateType__
 #define __AggregateType__
 
+#include "Object.hpp"
+#include "Type.hpp"
+
 namespace FM
 {
   const bool ValueSemantics = false;
@@ -27,7 +30,7 @@ namespace FM
     {
       Data *q = new Data;
       q->refcnt = 1;
-      dim_t elem_count = p->dims.elementCount();
+      dim_t elem_count = p->dims.count();
       const DataType *pdata = static_cast<const DataType *>(p->data->ptr);
       DataType *copy = new DataType(*pdata);
       q->ptr = copy;
@@ -46,16 +49,15 @@ namespace FM
     Object empty() {
       Data *q = new Data;
       q->refcnt = 0;
-      q->ptr = this->makeEmptyDataType();
+      q->ptr = new DataType(_ctxt);
       return Object(new ObjectBase(q,this,0,Tuple(0,0),0,0,HandleStyle));
     }
     Object makeScalar() {
       Data *q = new Data;
       q->refcnt = 0;
-      q->ptr = this->makeEmptyDataType();
+      q->ptr = new DataType(_ctxt);
       return Object(new ObjectBase(q,this,0,Tuple(1,1),0,0,HandleStyle));
     }
-    virtual DataType* makeEmptyDataType() = 0;
   };
 }
 

@@ -20,7 +20,7 @@ namespace FM
     ObjectArrayType(ThreadContext* ctxt, const FMString &name) : ArrayType<Object>(ctxt,name) {}
     virtual ~ObjectArrayType() {}
     ndx_t indexOf(const Object &a, const Object &b) {
-      dim_t a_size = a.elementCount();
+      dim_t a_size = a.count();
       const Object *ap = this->ro(a);
       for (dim_t i=0;i<a_size;i++)
 	if (ap[i] == b) return i;

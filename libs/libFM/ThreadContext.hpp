@@ -40,6 +40,7 @@ namespace FM
   class TermIF;
   class ObjectBase;
   class Object;
+  class FunctionType;
 
   struct ThreadContext
   {
@@ -59,6 +60,7 @@ namespace FM
     CodeType *_code;
     ClassMetaType *_meta;
     ClassType *_class;
+    FunctionType *_function;
     ModuleType *_module;
     CapturedType *_captured;
     // Tools

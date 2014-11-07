@@ -21,7 +21,7 @@ namespace FM
   public:
     HashMap<int> m_fields; // Maps fields to index in the list for each cell
     Object m_data; // Cell array where each entry is a list of fields
-    StructData(ThreadContext *ctxt) : m_data(ctxt) {}
+    StructData(ThreadContext *ctxt);
   };
 
   class StructType : public AggregateType<StructData,ValueSemantics> {
@@ -33,7 +33,6 @@ namespace FM
     StructType(ThreadContext *ctxt) {_ctxt = ctxt;}
     virtual DataCode code() const {return TypeStruct;}
     virtual const FMString& name() const {static FMString _name = "struct"; return _name;}
-    virtual StructData* makeEmptyDataType();
     virtual FMString brief(const Object &a);
     virtual FMString describe(const Object &a);
     virtual Object getField(const Object &a, const Object &b);

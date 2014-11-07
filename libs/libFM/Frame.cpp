@@ -16,7 +16,7 @@ bool Frame::defines(const FMString &name)
 
 int Frame::mapNameToVariableIndex(const Object &name) {
   const Object *cp = _ctxt->_list->ro(_sym_names);
-  for (int i=0;i<_sym_names.elementCount();i++)
+  for (int i=0;i<_sym_names.count();i++)
     if (cp[i] == name) return i;
   return -1;
 }
@@ -32,7 +32,7 @@ int Frame::lookupAddressForName(const Object &name, bool searchGlobals) {
       auto mfunc = _ctxt->_module->ro(_module)->m_locals.find(name);
       if (mfunc != _ctxt->_module->ro(_module)->m_locals.end())
 	{
-	  ndx = _sym_names.elementCount();
+	  ndx = _sym_names.count();
 	  _ctxt->_list->push(_sym_names,name);
 	  _ctxt->_list->push(_vars,mfunc->second);
 	  return ndx;
@@ -44,7 +44,7 @@ int Frame::lookupAddressForName(const Object &name, bool searchGlobals) {
 	{
 	  // We are a proxy for someone who wants this symbol (not us!)
 	  // Allocate a space for it
-	  ndx = _sym_names.elementCount();
+	  ndx = _sym_names.count();
 	  _ctxt->_list->push(_sym_names,name);
 	  _ctxt->_list->push(_vars,gfunc->second);
 	  // We don't need to cache the address for this symbol
@@ -88,7 +88,7 @@ int Frame::lookupAddressForName(const Object &name, bool searchGlobals) {
 int Frame::getAddress(const FMString &name)
 {
   const Object *cp = _ctxt->_list->ro(_sym_names);
-  for (int i=0;i<_sym_names.elementCount();i++)
+  for (int i=0;i<_sym_names.count();i++)
     if (_ctxt->_string->getString(cp[i]) == name) return i;
   return -1;
 }
@@ -97,7 +97,7 @@ int Frame::allocateVariable(const FMString &name)
 {
   int p = getAddress(name);
   if (p != -1) return p;
-  p = _sym_names.elementCount();
+  p = _sym_names.count();
   _ctxt->_list->push(_sym_names,_ctxt->_string->makeString(name));
   _ctxt->_list->push(_vars,_ctxt->_double->empty());
   return p;
@@ -105,7 +105,7 @@ int Frame::allocateVariable(const FMString &name)
 
 int Frame::defineNewSymbol(const Object &name)
 {
-  int p = _sym_names.elementCount();
+  int p = _sym_names.count();
   _ctxt->_list->push(_sym_names,name);
   _ctxt->_list->push(_vars,_ctxt->_double->empty());
   return p;
@@ -122,7 +122,8 @@ Frame::Frame(ThreadContext *ctxt) : _sym_names(ctxt->_list->empty()),
 				    _vars(ctxt->_list->empty()), 
 				    _addrs(ctxt->_index->empty()),
 				    _defined(ctxt->_bool->empty()),
-				    _module(ctxt->_module->empty())
+				    _module(ctxt->_module->empty()),
+				    _captures(ctxt->_list->empty())
 {
   _ctxt = ctxt;
   //  _sym_names = _ctxt->_list->empty();

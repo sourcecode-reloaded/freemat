@@ -14,7 +14,7 @@ namespace FM
     Object c = otype->zeroArrayOfSize(a.dims(),a.isComplex());
     T *cptr = otype->rw(c);
     const T* aptr = otype->ro(a);
-    size_t elcnt = c.elementCount();
+    size_t elcnt = c.count();
     for (size_t i=0;i<elcnt;++i)
       Op::template func<T>(cptr+i,aptr+i);
     return c;

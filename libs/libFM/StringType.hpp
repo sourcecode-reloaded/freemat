@@ -25,7 +25,7 @@ namespace FM
       assert(o.type()->code() == TypeString);
       const FMChar *t = ro(o);
       FMString ret;
-      for (dim_t i=0;i<o.dims().elementCount();++i)
+      for (dim_t i=0;i<o.dims().count();++i)
 	ret += t[i];
       return ret;
     }

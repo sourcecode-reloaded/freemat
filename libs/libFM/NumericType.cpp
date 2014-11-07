@@ -21,7 +21,7 @@ Object NumericType<T,codeNum>::asIndexNoBoundsCheck(const Object &a)
       // TODO - add message catalog with numbers and translations
       std::cout << "WARNING: Complex part of index ignored\r\n";
     }
-  dim_t len = a.dims().elementCount();
+  dim_t len = a.dims().count();
   Object output = Type::_ctxt->_index->makeMatrix(len,1);
   ndx_t *op = Type::_ctxt->_index->rw(output);
   const T *ip = this->ro(a);
@@ -41,7 +41,7 @@ Object NumericType<T,codeNum>::asLogical(const Object &a)
   if (codeNum == TypeBool) return a;
   Object output = Type::_ctxt->_bool->zeroArrayOfSize(a.dims(),false);
   bool *op = Type::_ctxt->_bool->rw(output);
-  dim_t len = a.dims().elementCount();
+  dim_t len = a.dims().count();
   if (a.isComplex())
     {
       const FM::Complex<T> *ip = reinterpret_cast<const FM::Complex<T> *>(this->ro(a));
@@ -71,7 +71,7 @@ Object NumericType<T,codeNum>::asIndex(const Object &a, dim_t max)
       // TODO - add message catalog with numbers and translations
       std::cout << "WARNING: Complex part of index ignored\r\n";
     }
-  dim_t len = a.dims().elementCount();
+  dim_t len = a.dims().count();
   Object output = Type::_ctxt->_index->makeMatrix(len,1);
   ndx_t *op = Type::_ctxt->_index->rw(output);
   const T *ip = this->ro(a);
@@ -94,7 +94,7 @@ Object NumericType<T,codeNum>::asComplex(const Object &a)
   if (a.isScalar())
     return this->makeComplex(this->scalarValue(a),0);
   Object ret = this->zeroArrayOfSize(a.dims(),true);
-  dim_t len = a.dims().elementCount();
+  dim_t len = a.dims().count();
   Complex<T> *op = this->rwComplex(ret);
   const T*ip = this->ro(a);
   for (dim_t i=0;i<len;i++)
@@ -107,7 +107,7 @@ Object NumericType<T,codeNum>::convert(const Object &a)
 {
   if (this->code() == a.type()->code()) return a;
   Object ret = this->zeroArrayOfSize(a.dims(),a.isComplex());
-  dim_t len = a.dims().elementCount();
+  dim_t len = a.dims().count();
   T* op = this->rw(ret);
   if (a.isComplex()) len *= 2;
   switch (a.type()->code())

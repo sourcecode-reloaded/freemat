@@ -56,7 +56,7 @@ namespace FM
     virtual Data* duplicateData(const ObjectBase *p, dim_t &reserve) const {
       Data *q = new Data;
       q->refcnt = 1;
-      dim_t elem_count = p->dims.elementCount();
+      dim_t elem_count = p->dims.count();
       if ((p->flags & OBJECT_COMPLEX_FLAG) != 0) elem_count *= 2;
       reserve = std::max<size_t>(elem_count*2,min_capacity);
       q->ptr = allocateArray(reserve);
@@ -67,13 +67,13 @@ namespace FM
       return q;
     }
     virtual inline void destroyObject(ObjectBase* p) {
-      if (pool && (p->dims.elementCount() <= min_capacity) && (p->data->refcnt == 1) && pool->push(p)) 
+      if (pool && (p->dims.count() <= min_capacity) && (p->data->refcnt == 1) && pool->push(p)) 
 	{
-	  releaseData(static_cast<T*>(p->data->ptr),p->dims.elementCount());
+	  releaseData(static_cast<T*>(p->data->ptr),p->dims.count());
 	  return;
 	}
       if (--p->data->refcnt == 0) {
-	freeData(static_cast<T*>(p->data->ptr),p->dims.elementCount());
+	freeData(static_cast<T*>(p->data->ptr),p->dims.count());
 	delete p->data;
       }
       delete p;
@@ -103,10 +103,10 @@ namespace FM
       return makeObjectBaseOfCapacity(capacity);
     }
     Object zeroArrayOfSize(const Tuple & dims, bool isComplex) {
-      dim_t elementCount = dims.elementCount();
-      if ((elementCount == 1) && !isComplex) return zeroScalar();
-      if (isComplex) elementCount *= 2;
-      dim_t capacity = (2*elementCount < min_capacity) ? min_capacity : 2*elementCount;
+      dim_t count = dims.count();
+      if ((count == 1) && !isComplex) return zeroScalar();
+      if (isComplex) count *= 2;
+      dim_t capacity = (2*count < min_capacity) ? min_capacity : 2*count;
       ObjectBase *p = getObjectBase(capacity);
       p->dims = dims;
       p->flags = 0;
@@ -123,9 +123,9 @@ namespace FM
     Object makeMatrix(dim_t rows, dim_t cols, bool isComplex = false) {
       if (rows == 1 && cols == 1 && !isComplex)
 	return zeroScalar();
-      dim_t elementCount = rows*cols;
-      if (isComplex) elementCount *= 2;
-      dim_t capacity = (2*elementCount < min_capacity) ? min_capacity : 2*elementCount;
+      dim_t count = rows*cols;
+      if (isComplex) count *= 2;
+      dim_t capacity = (2*count < min_capacity) ? min_capacity : 2*count;
       ObjectBase *p = getObjectBase(capacity);
       p->dims.setMatrixSize(rows,cols);
       p->flags = 0;
@@ -194,12 +194,12 @@ namespace FM
     bool equals(const Object &a, const Object &b) {
       if (a.type()->code() != b.type()->code()) return false;
       if (!(a.dims() == b.dims())) return false;
-      size_t byte_count = a.dims().elementCount()*sizeof(T);
+      size_t byte_count = a.dims().count()*sizeof(T);
       if ((a.flags() & OBJECT_COMPLEX_FLAG) ^ (b.flags() & OBJECT_COMPLEX_FLAG)) return false;
       if (a.flags() & OBJECT_COMPLEX_FLAG) byte_count *= 2;
       const T* ap = this->ro(a);
       const T* bp = this->ro(b);
-      for (dim_t i=0;i<a.dims().elementCount();i++)
+      for (dim_t i=0;i<a.dims().count();i++)
 	if (!(ap[i] == bp[i])) return false;
       return true;
     }
@@ -235,9 +235,9 @@ namespace FM
     void setParensRowIndexMode(Object &a, const Object &ndx, const Object &b);
     virtual void setParens(Object &a, const Object &args, const Object &b);
     virtual void resize(Object &a, const Tuple &newsize) {
-      if (a.elementCount() == 0)
+      if (a.count() == 0)
 	{
-	  if (a.d->capacity > newsize.elementCount())
+	  if (a.d->capacity > newsize.count())
 	    {
 	      a.dims() = newsize;
 	      return;
@@ -245,7 +245,7 @@ namespace FM
 	  a = this->zeroArrayOfSize(newsize,a.isComplex());
 	  return;
 	}
-      if (a.isVector() && newsize.isVector() && a.d->capacity > newsize.elementCount())
+      if (a.isVector() && newsize.isVector() && a.d->capacity > newsize.count())
 	{
 	  a.dims() = newsize;
 	  return;

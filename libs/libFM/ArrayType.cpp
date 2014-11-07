@@ -114,7 +114,7 @@ static inline void moveLoop(T* ap, const Tuple &outdims, const Tuple &adims, con
     }
   dim_t arows = adims.rows();
   dim_t orows = outdims.rows();
-  dim_t aoffset = adims.elementCount()-1;
+  dim_t aoffset = adims.count()-1;
   for (dim_t iter=0;iter<iterations;iter++) {
     // Compute the start address
     dim_t start = 0;
@@ -320,12 +320,12 @@ Object ArrayType<T>::getParensRowMode(const Object &a, const Tuple &dims, const 
   if (_ctxt->_index->isColon(b))
     {
       Object output = a;
-      output.dims() = Tuple(a.elementCount(),1);
+      output.dims() = Tuple(a.count(),1);
       return output;
     }
   Object output = this->zeroArrayOfSize(dims,a.isComplex());
   getRowLoop<T>(this->rw(output),this->ro(a),
-		_ctxt->_index->ro(b),b.elementCount(),a.isComplex());
+		_ctxt->_index->ro(b),b.count(),a.isComplex());
   return output;
 }
 
@@ -367,7 +367,7 @@ Object ArrayType<T>::getSliceMode(const Object &a, Object *c, int cnt, int last_
 				 offset,
 				 slicedims,
 				 a.d->flags,
-				 slicedims.elementCount());
+				 slicedims.count());
   q->refcnt = 0;
   return Object(q);
 }
@@ -375,17 +375,17 @@ Object ArrayType<T>::getSliceMode(const Object &a, Object *c, int cnt, int last_
 template <class T>
 Object ArrayType<T>::getParens(const Object &a, const Object &b) {
   // FIXME - b is empty?
-  if (b.elementCount() == 1) 
+  if (b.count() == 1) 
     {
       Object ndx = _ctxt->_list->first(b);
-      return getParensRowMode(a,ndx.dims(),ndx.asIndex(a.elementCount()));
+      return getParensRowMode(a,ndx.dims(),ndx.asIndex(a.count()));
     }
   const Tuple & adims(a.dims());
   // TODO: Trim trailing singular dimensions.  Make sure b.size() < a.numDims.
   // TODO: Special case all-scalar indexing case
   Object carray(_ctxt->_list->makeMatrix(MAXDIMS,1));
   Object *c = _ctxt->_list->rw(carray);
-  int bsize = b.elementCount();
+  int bsize = b.count();
   const Object *bp = _ctxt->_list->ro(b);
   for (int i=0;i<bsize;i++)
     c[i] = bp[i].asIndex(adims.dimension(i));
@@ -406,7 +406,7 @@ Object ArrayType<T>::getParens(const Object &a, const Object &b) {
       IndexType *ip = static_cast<IndexType*>(c[i].type());
       if (ip->isColon(c[i]))
 	c[i] = ip->expandColons(adims.dimension(i));
-      outdim[i] = c[i].elementCount();
+      outdim[i] = c[i].count();
       coords[i] = ip->ro(c[i]);
     }
     Object output = this->zeroArrayOfSize(Tuple::RawTuple(outdim,bsize),a.isComplex());
@@ -418,7 +418,7 @@ template <class T>
 void ArrayType<T>::resizeSlow(Object &a, const Tuple &newsize) {
   // Determine if this is a move or a copy
   T zero(this->zeroElement());
-  if (a.d->capacity > newsize.elementCount()) { 
+  if (a.d->capacity > newsize.count()) { 
     moveLoop<T>(this->rw(a),newsize,a.dims(),zero,a.isComplex());
   } else {
     // Copy
@@ -455,7 +455,7 @@ template <class T>
 void ArrayType<T>::setParensRowIndexMode(Object &a, const Object &ndx, const Object &b) {
   // First check for resize
   dim_t maxndx = _ctxt->_index->maxValue(ndx)+1;
-  if (maxndx > a.elementCount())
+  if (maxndx > a.count())
     {
       a.type()->resize(a,ComputeRowResizedTuple(a,maxndx));
     }
@@ -464,7 +464,7 @@ void ArrayType<T>::setParensRowIndexMode(Object &a, const Object &ndx, const Obj
   if (!a.isComplex() && b.isComplex())
     this->promoteComplex(a);
   setLoopRowMode<T>(this->rw(a),
-		    addr,ndx.elementCount(),
+		    addr,ndx.count(),
 		    this->ro(b),
 		    b.isScalar(),
 		    a.isComplex());
@@ -476,7 +476,7 @@ void ArrayType<T>::promoteComplex(Object &a) {
   Object o = zeroArrayOfSize(a.dims(),true);
   T *op = this->rw(o);
   const T *ip = this->ro(a);
-  for (dim_t i=0;i<a.elementCount();i++)
+  for (dim_t i=0;i<a.count();i++)
     op[2*i] = ip[i];
   a = o;
 }
@@ -485,7 +485,7 @@ template <class T>
 Object ArrayType<T>::convertArgumentsToIndexingExpressions(const Object &args) {
   Object carray = _ctxt->_list->makeMatrix(MAXDIMS,1);
   Object *c = _ctxt->_list->rw(carray);
-  int argsize = args.elementCount();
+  int argsize = args.count();
   const Object *argsp = args.asType<ListType>()->ro(args);
   for (int i=0;i<argsize;i++)
     c[i] = argsp[i].asIndexNoBoundsCheck();
@@ -507,7 +507,7 @@ static inline Object ComputeDeletionMap(ThreadContext *_ctxt, dim_t length_in_de
   bool *mp = _ctxt->_bool->rw(mask);
   // Loop over the non-colon dimension and fill in the columns to be deleted
   const ndx_t *dp = _ctxt->_index->ro(deletion_index);
-  dim_t dp_len = deletion_index.elementCount();
+  dim_t dp_len = deletion_index.count();
   for (dim_t i=0;i<dp_len;i++)
     {
       if (dp[i] > length_in_deletion_dim) throw Exception("Out of range - in deletion A(..,x,..) = [] x exceeds size of array A");
@@ -575,7 +575,7 @@ template <class T>
 void ArrayType<T>::eraseRowIndexMode(Object &a, const Object &ndx)
 {
   // First compute the deletion map
-  Object deletion_map(ComputeDeletionMap(_ctxt,a.elementCount(),ndx));
+  Object deletion_map(ComputeDeletionMap(_ctxt,a.count(),ndx));
   const bool *bp = _ctxt->_bool->ro(deletion_map);
   // Determine the output dim
   dim_t outputLength = _ctxt->_bool->countZero(deletion_map);
@@ -583,12 +583,12 @@ void ArrayType<T>::eraseRowIndexMode(Object &a, const Object &ndx)
   dim_t adst = 0;
   if (!a.isComplex())
     {
-      for (dim_t i=0;i<a.elementCount();i++)
+      for (dim_t i=0;i<a.count();i++)
 	if (!bp[i]) ap[adst++] = ap[i];
     } 
   else
     {
-      for (dim_t i=0;i<a.elementCount();i++)
+      for (dim_t i=0;i<a.count();i++)
 	if (!bp[i]) {
 	  ap[2*adst] = ap[2*i];
 	  ap[2*adst+1] = ap[2*i+1];
@@ -627,7 +627,7 @@ void ArrayType<T>::erase(Object &a, const Object &args) {
   // Check to see if all but one dimension are covered with colons
   dim_t num_colons = 0;
   int non_colon_index = -1;
-  for (int i=0;i<args.elementCount();i++)
+  for (int i=0;i<args.count();i++)
     {
       if (_ctxt->_index->isColon(c[i])) 
 	num_colons++;
@@ -653,7 +653,7 @@ void ArrayType<T>::erase(Object &a, const Object &args) {
 
 template <class T>
 void ArrayType<T>::setParens(Object &a, const Object &args, const Object &b) {
-  if (args.elementCount() == 1)
+  if (args.count() == 1)
     {
       Object ndx = _ctxt->_list->first(args);
       if (b.isEmpty())
@@ -665,7 +665,7 @@ void ArrayType<T>::setParens(Object &a, const Object &args, const Object &b) {
   // TODO: Trim trailing singular dimensions.  Make sure b.size() < a.numDims.
   // TODO: Special case all-scalar indexing case
   Object carray(this->convertArgumentsToIndexingExpressions(args));
-  int argsize = args.elementCount();
+  int argsize = args.count();
   Object *c = _ctxt->_list->rw(carray);
   dim_t argdim[MAXDIMS];
   dim_t outdim[MAXDIMS];
@@ -677,7 +677,7 @@ void ArrayType<T>::setParens(Object &a, const Object &args, const Object &b) {
       IndexType *ip = static_cast<IndexType*>(c[i].type());
       if (ip->isColon(c[i]))
 	c[i] = ip->expandColons(adims.dimension(i));
-      argdim[i] = c[i].elementCount();
+      argdim[i] = c[i].count();
       coords[i] = ip->ro(c[i]);
       outdim[i] = std::max<dim_t>(adims.dimension(i),ip->maxValue(c[i])+1);
       outcount *= argdim[i];
@@ -690,7 +690,7 @@ void ArrayType<T>::setParens(Object &a, const Object &args, const Object &b) {
       adims = a.dims();
     }      
   // Check for validity of b
-  if (!(b.isScalar() || b.elementCount() == outcount))
+  if (!(b.isScalar() || b.count() == outcount))
     throw Exception("Assignment A(...) = b requires b either be a scalar or have the correct number of elements");
   if (!a.isComplex() && b.isComplex())
     this->promoteComplex(a);
@@ -760,7 +760,7 @@ void ArrayType<T>::print(const Object &a)
     _ctxt->_io->output("\n");
     dim_t offset = 0;
     dim_t page = a.rows()*a.cols();
-    dim_t page_count = a.elementCount()/page;
+    dim_t page_count = a.count()/page;
     for (dim_t p=0;p<page_count;p++)
       {
 	Tuple w = offset % a.dims();
@@ -782,7 +782,7 @@ void ArrayType<T>::print(const Object &a)
 template <class T>
 Object ArrayType<T>::NCat(const Object& p, int dim)
 {
-  int objectCount = p.elementCount();
+  int objectCount = p.count();
   const Object *dp = _ctxt->_list->ro(p);
   if (objectCount == 0) return this->empty();
   // Compute the size of the output
@@ -823,7 +823,7 @@ Object ArrayType<T>::NCat(const Object& p, int dim)
   // Allocate the output object
   Object retObject = this->zeroArrayOfSize(outputSize,anyComplex);
   dim_t outputOffset = 0;
-  dim_t outputCount = outputSize.elementCount();
+  dim_t outputCount = outputSize.count();
   int k = 0;
   T* op = this->rw(retObject);
   T zero(this->zeroElement());

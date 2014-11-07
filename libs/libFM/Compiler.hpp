@@ -119,9 +119,12 @@ namespace FM
     const_t getConstantID(const FMString &);
     const_t getNameID(const FMString &);
     const_t getCellID(const FMString &);
+    SymbolTable* getSymbolTableForClosure(const FMString &varname);
     reg_t cellDefinition(const Tree &t);
     reg_t matrixDefinition(const Tree &t);
     reg_t fetchConstant(const Object &);
+    reg_t fetchClosure(const FMString &);
+    reg_t fetchCell(const FMString &);
     reg_t fetchConstantString(const FMString &);
     reg_t fetchVariable(const FMString &, int flags);
     reg_t fetchVariableOrFunction(const FMString &, reg_t args);

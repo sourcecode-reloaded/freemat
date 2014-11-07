@@ -64,7 +64,8 @@ void compileFunc(ThreadContext *ctxt, FMString name)
       {
 	Object p = ctxt->_asm->run(mod->_main);
 	Disassemble(ctxt,p);
-	ctxt->_globals->insert(std::make_pair(name,p));
+	Object f = ctxt->_function->fromCode(p);
+	ctxt->_globals->insert(std::make_pair(name,f));
       }
   } catch (const FM::Exception &e) {
     std::cout << "Exception: " << e.msg() << "\n";
@@ -147,7 +148,7 @@ int main(int argc, char *argv[])
       {
 	FMString func = p->path().stem().string();
 	std::cout << "  Parsing function " << func << "\n";
-	//compileModule(ctxt,func);
+	compileModule(ctxt,func);
       }
     ++p;
   }
@@ -174,8 +175,9 @@ int main(int argc, char *argv[])
   //  compileModule(ctxt,"localfn");
   //  compileModule(ctxt,"three");
 
-  compileModule(ctxt,"nest1");
-
+  //  compileModule(ctxt,"nest1");
+  //  compileModule(ctxt,"counter");
+  //  compileModule(ctxt,"makeParabola");
 
   {
     // Create a variable

@@ -10,10 +10,6 @@
 
 using namespace FM;
 
-CodeData* CodeType::makeEmptyDataType() {
-  return(new CodeData(_ctxt));
-}
-
 FMString CodeType::brief(const Object &a) {
   return "code named " + this->ro(a)->m_name.description();
 }
@@ -36,25 +32,6 @@ FMString CodeType::describe(const Object &a) {
   }
 }
 
-Object CodeType::getParens(const Object &a, const Object &b) 
-{
-  Object p = _ctxt->_vm->executeFunction(a,b);
-  if (p.isEmpty()) return p;
-  return _ctxt->_list->first(p);
-}
-
-Object CodeType::call(const Object &a, const Object &args, int nargout)
-{
-  return _ctxt->_vm->executeFunction(a,args);
-}
-
-Object CodeType::deref(const Object &a)
-{
-  Object args = _ctxt->_list->empty();
-  return _ctxt->_list->first(this->call(a,args,1));
-}
-
-
 static inline uint64_t AsmReg(uint64_t code, uint64_t reg) {return code | reg << shift_reg1;}
 static inline uint64_t AsmRegReg(uint64_t code, uint64_t reg, uint64_t reg2) {return code | reg << shift_reg1 | reg2 << shift_reg2;}
 static inline uint64_t AsmRegRegReg(uint64_t code, uint64_t reg, uint64_t reg2, uint64_t reg3) {return code | reg << shift_reg1 | reg2 << shift_reg2 | reg3 << shift_reg3;}
@@ -74,36 +51,36 @@ Object CodeType::bindFunction(const Object &func, const Object &argument)
   _ctxt->_list->push(cp->m_consts,func); // const[0] = code
   _ctxt->_list->push(cp->m_consts,argument); // const[1] = object
   // For the arguments, we have to copy the arguments of the func block, and delete the first argument
-  cp->m_params = _ctxt->_index->makeMatrix(fp->m_params.elementCount()-1,1);
+  cp->m_params = _ctxt->_index->makeMatrix(fp->m_params.count()-1,1);
   cp->m_names = _ctxt->_list->empty();
   cp->m_returns = fp->m_returns;
   const Object *fp_names = _ctxt->_list->ro(fp->m_names);
   const ndx_t *fp_params = _ctxt->_index->ro(fp->m_params);
   ndx_t *cp_params = _ctxt->_index->rw(cp->m_params);
-  for (int i=1;i<fp->m_params.elementCount();++i) {
+  for (int i=1;i<fp->m_params.count();++i) {
     cp_params[i-1] = i-1;
     _ctxt->_list->push(cp->m_names,fp_names[fp_params[i]]);
   }
   // Next handle the returns
   const ndx_t *fp_rets = _ctxt->_index->ro(fp->m_returns);
   ndx_t *cp_rets = _ctxt->_index->rw(cp->m_returns);
-  for (int i=0;i<fp->m_returns.elementCount();++i) {
+  for (int i=0;i<fp->m_returns.count();++i) {
     const Object & retname = fp_names[fp_rets[i]];
     // Check to see if retname is in the list of names alread
     if (!_ctxt->_list->has(cp->m_names,retname))
       _ctxt->_list->push(cp->m_names,retname);
     cp_rets[i] = _ctxt->_list->indexOf(cp->m_names,retname);
   }
-  cp->m_code = _ctxt->_uint64->makeMatrix(10+2*cp->m_params.elementCount()+2*cp->m_returns.elementCount(),1);
+  cp->m_code = _ctxt->_uint64->makeMatrix(10+2*cp->m_params.count()+2*cp->m_returns.count(),1);
   uint64_t *code_ip = _ctxt->_uint64->rw(cp->m_code);
   int ip = 0;
   code_ip[ip++] = AsmReg(OP_NEW_LIST,0);                                   // r0 <- new list
-  code_ip[ip++] = AsmRegConst(OP_PUSH_INT,0,cp->m_returns.elementCount()); // r0 += num_returns
+  code_ip[ip++] = AsmRegConst(OP_PUSH_INT,0,cp->m_returns.count()); // r0 += num_returns
   code_ip[ip++] = AsmReg(OP_NEW_LIST,1);                                   // r1 <- new list
   code_ip[ip++] = AsmRegConst(OP_LOAD_CONST,2,1);                          // r2 <- const[1] = object
   code_ip[ip++] = AsmRegReg(OP_PUSH,1,2);                                  // r1 += r2
   // Push the arguments
-  for (int i=0;i<cp->m_params.elementCount();i++)
+  for (int i=0;i<cp->m_params.count();i++)
     {
       code_ip[ip++] = AsmRegConst(OP_LOAD,2,cp_params[i]);                 // r2 <- name[0] = t
       code_ip[ip++] = AsmRegReg(OP_PUSH,1,2);                              // r1 += r2
@@ -112,7 +89,7 @@ Object CodeType::bindFunction(const Object &func, const Object &argument)
   code_ip[ip++] = AsmReg(OP_NEW_LIST,3);                                   // r3 <- new list
   code_ip[ip++] = AsmRegReg(OP_PUSH,0,1);                                  // r0 += r1
   code_ip[ip++] = AsmRegRegReg(OP_CALL,3,2,0);                             // r3 <- call(r2,r0)
-  for (int i=0;i<cp->m_returns.elementCount();i++)
+  for (int i=0;i<cp->m_returns.count();i++)
     {
       code_ip[ip++] = AsmRegReg(OP_FIRST,4,3);
       code_ip[ip++] = AsmRegConst(OP_SAVE,4,cp_rets[i]);

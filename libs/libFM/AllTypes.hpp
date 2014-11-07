@@ -13,5 +13,6 @@
 #include "ClassType.hpp"
 #include "ModuleType.hpp"
 #include "CapturedType.hpp"
+#include "FunctionType.hpp"
 
 #endif

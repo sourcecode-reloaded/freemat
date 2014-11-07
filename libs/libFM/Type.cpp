@@ -115,15 +115,15 @@ Object Type::get(const Object &a, const Object &b) {
   // std::cout << "   b: " << b.description() << "\n";
   int ptr = 0;
   const Object *bp = b.asType<ListType>()->ro(b);
-  if ((b.elementCount() == 2) &&
+  if ((b.count() == 2) &&
       (bp[0].asDouble() == 0))
     return b.asType<ListType>()->makeScalar(a.type()->getParens(a,bp[1]));
   Object c = a;
-  while (ptr < b.elementCount())
+  while (ptr < b.count())
     {
       double getType = bp[ptr].asDouble();
       if (c.isList()) {
-	if (c.elementCount() > 1) throw Exception("Cannot apply indexing to multi-valued expressions (e.g. a.foo.bar means a.foo must be scalar valued)");
+	if (c.count() > 1) throw Exception("Cannot apply indexing to multi-valued expressions (e.g. a.foo.bar means a.foo must be scalar valued)");
 	c = c.asType<ListType>()->first(c); //TODO a.foo.goo ? should throw error if a.foo is multi-valued
       }
       switch (int(getType))
@@ -163,7 +163,7 @@ Object Type::get(const Object &a, const Object &b) {
 
 void Type::set(Object &a, const Object &args, const Object &b) {
   const Object *argp = args.asType<ListType>()->ro(args);
-  if (args.elementCount() == 2)
+  if (args.count() == 2)
     {
       double setType = argp[0].asDouble();
       switch (int(setType))
@@ -189,7 +189,7 @@ void Type::set(Object &a, const Object &args, const Object &b) {
     }
   else
     {
-      dim_t arg_count = args.elementCount();
+      dim_t arg_count = args.count();
       Object args_rest = args;
       Object args_first = _ctxt->_list->empty();
       _ctxt->_list->push(args_first,_ctxt->_list->first(args_rest));

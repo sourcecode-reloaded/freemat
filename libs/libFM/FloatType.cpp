@@ -43,11 +43,11 @@ void FloatType<T,codeNum>::computeArrayFormatInfo(FMFormatMode mode, const Objec
     //    if (IsInteger(rp.constReal<T>()))
     //      return ArrayFormatInfo(GetNominalWidthInteger(rp.constReal<T>()));
     info = GetArrayFormatForPOD<T>(mode);
-    ComputeScaleFactor(this->ro(rp),rp.elementCount(),info,false);
+    ComputeScaleFactor(this->ro(rp),rp.count(),info,false);
     return;
   }
   info = GetArrayFormatForPOD<Complex<T> >(mode);
-  ComputeScaleFactor(this->ro(rp),rp.elementCount()*2,info,true);
+  ComputeScaleFactor(this->ro(rp),rp.count()*2,info,true);
   return;  
 }
 

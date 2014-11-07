@@ -116,6 +116,19 @@ void SymbolPass::addSymbol(const FMString &name, symbol_flag_t flags)
 }
 
 void SymbolPass::walkFunction(const Tree &t, bool nested) {
+  if (nested)
+    {
+      FMString name = t.child(1).text();
+      if (_current->syms.contains(name))
+	{
+	  symbol_flag_t old_flag = _current->syms[name];
+	  old_flag |= SYM_NESTED;
+	  old_flag &= ~SYM_DYNAMIC;
+	  _current->syms[name] = old_flag;
+	}
+      else
+	addSymbol(t.child(1).text(), SYM_NESTED);
+    }
   const Tree &rets = t.child(0);
   beginFunction(t.child(1).text(),nested);
   const Tree &args = t.child(2);
@@ -224,6 +237,7 @@ FMString FM::symbolFlagsToString(symbol_flag_t flag)
   if (flag & SYM_PARAMETER) ret += (" parameter:" + Stringify(param_position));
   if (flag & SYM_FREE) ret += " free";
   if (flag & SYM_CAPTURED) ret += " captured";
+  if (flag & SYM_NESTED) ret += " nested";
   if (flag & SYM_RETURN) ret += (" return:" + Stringify(return_position));
   return ret;
 }

@@ -32,7 +32,7 @@ namespace FM
     void computeArrayFormatInfo(FMFormatMode, const Object &a, ArrayFormatInfo &format) {
       int maxwidth = 1;
       //const Object *t = this->ro(a);
-      for (ndx_t i=0;i<a.elementCount();i++)
+      for (ndx_t i=0;i<a.count();i++)
 	maxwidth = std::max<ndx_t>(maxwidth,a.description().length());
       format.width = maxwidth+2;
     }

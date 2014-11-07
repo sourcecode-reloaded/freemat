@@ -38,7 +38,6 @@ namespace FM
     {
       return false;
     }
-    ModuleData* makeEmptyDataType() {return new ModuleData(_ctxt);}
     virtual Object getParens(const Object &module, const Object &args);
     virtual Object call(const Object &module, const Object &args, int nargout);
     virtual Object deref(const Object &a);

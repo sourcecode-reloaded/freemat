@@ -133,6 +133,7 @@ namespace FM
     Object _constlist; 
     Object _freelist;
     Object _capturedlist;
+    std::vector<CodeBlock*> _nested;
     CodeBlock(ThreadContext*ctxt) : _namelist(ctxt), _constlist(ctxt), 
 				    _freelist(ctxt), _capturedlist(ctxt) {}
   };

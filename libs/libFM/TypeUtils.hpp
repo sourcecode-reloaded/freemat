@@ -11,20 +11,20 @@ namespace FM
 {
   inline Object makeCellFromList(ThreadContext *ctxt, const Object &t) {
     assert(t.typeCode() == TypeListArray);
-    Object p = ctxt->_cell->makeMatrix(1,t.elementCount());
+    Object p = ctxt->_cell->makeMatrix(1,t.count());
     Object *q = ctxt->_cell->rw(p);
     const Object *h = ctxt->_list->ro(t);
-    for (size_t i=0;i<t.elementCount();i++)
+    for (size_t i=0;i<t.count();i++)
       q[i] = h[i];
     return p;
   }
 
   inline Object makeListFromCell(ThreadContext *ctxt, const Object &t) {
     assert(t.typeCode() == TypeCellArray);
-    Object p = ctxt->_list->makeMatrix(t.elementCount(),1);
+    Object p = ctxt->_list->makeMatrix(t.count(),1);
     Object *q = ctxt->_list->rw(p);
     const Object *h = ctxt->_cell->ro(t);
-    for (size_t i=0;i<t.elementCount();i++)
+    for (size_t i=0;i<t.count();i++)
       q[i] = h[i];
     return p;
   }
@@ -41,7 +41,7 @@ namespace FM
     assert(t.type()->code() == TypeCellArray);
     FMStringList ret;
     const Object *tptr = ctxt->_cell->ro(t);
-    for (dim_t i=0;i<t.dims().elementCount();i++)
+    for (dim_t i=0;i<t.dims().count();i++)
       ret << ctxt->_string->getString(tptr[i]);
     return ret;
   }

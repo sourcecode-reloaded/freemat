@@ -54,7 +54,7 @@ namespace FM
       assert(t.type()->code() == TypeCellArray);
       FMStringList ret;
       const Object *tptr = _cell->ro(t);
-      for (dim_t i=0;i<t.dims().elementCount();i++)
+      for (dim_t i=0;i<t.dims().count();i++)
 	ret << _string->getString(tptr[i]);
       return ret;
     }

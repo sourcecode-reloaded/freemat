@@ -16,10 +16,10 @@ namespace FM
     virtual FMString describe(const Object &a) {
       FMString ret = "<";
       const Object *ap = this->ro(a);
-      for (dim_t i=0;i<a.elementCount();i++)
+      for (dim_t i=0;i<a.count();i++)
 	{
 	  ret += ap[i].description();
-	  if (i < a.elementCount() - 1) ret += " ";
+	  if (i < a.count() - 1) ret += " ";
 	}
       ret += ">";
       return ret;
@@ -29,12 +29,12 @@ namespace FM
       return *(this->ro(a));
     }
     Object second(const Object &a) {
-      if (a.elementCount() < 2) throw Exception("Attempt to take first element of empty object");
+      if (a.count() < 2) throw Exception("Attempt to take first element of empty object");
       return (this->ro(a))[1];
     }
     Object last(const Object &a) {
       if (a.isEmpty()) throw Exception("Attempt to take last element of empty object");
-      return (this->ro(a))[a.elementCount()-1];
+      return (this->ro(a))[a.count()-1];
     }
     Object fetch(const Object &a, dim_t ndx) {
       return this->ro(a)[ndx];
@@ -46,7 +46,7 @@ namespace FM
       a.d->offset++;
     }
     void push(Object &a, const Object &b) {
-      dim_t a_size = a.elementCount();
+      dim_t a_size = a.count();
       if (a.d->capacity > (a_size+1))
 	{
 	  a.dims().setMatrixSize(a_size+1,1);
@@ -68,18 +68,18 @@ namespace FM
     // FIXME - Make this more efficient?
     void merge(Object &a, const Object &b) {
       const Object *bp = this->ro(b);
-      for (dim_t i=0;i<b.elementCount();i++)
+      for (dim_t i=0;i<b.count();i++)
 	this->push(a,bp[i]);
     }
     Type* anyElementsWithDataCode(const Object &a, DataCode t) {
       const Object *bp = this->ro(a);
-      for (dim_t i=0;i<a.elementCount();i++)
+      for (dim_t i=0;i<a.count();i++)
 	if (bp[i].type()->code() == t) return bp[i].type();
       return NULL;
     }
     inline ndx_t indexOf(const Object &a, const Object &b) {
       const Object *ap = this->ro(a);
-      for (dim_t i=0;i<a.elementCount();i++)
+      for (dim_t i=0;i<a.count();i++)
 	if (ap[i] == b) return i;
       return -1;
     }

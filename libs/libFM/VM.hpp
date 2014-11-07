@@ -29,7 +29,7 @@ namespace FM
   public:
     VM(ThreadContext *ctxt);
     void executeScript(const Object &codeObject);
-    Object executeFunction(const Object &codeObject, const Object &parameters);
+    Object executeFunction(const Object &functionObject, const Object &parameters);
     Object executeModule(const Object &moduleObject, const Object &parameters);
     void executeCodeObject(const Object &codeObject);
     void defineBaseVariable(const FMString &name, const Object &value);

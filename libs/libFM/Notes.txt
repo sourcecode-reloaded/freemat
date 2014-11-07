@@ -1308,3 +1308,11 @@ Essentially, a cell is an unnamed global variable.  To get the same
 effect in FreeMat, we need to be able to allocate a global variable
 with Handle semantics.  
 
+
+Need to allocate slots in the consts list for code blocks.
+
+Migrate compiler to smart pointers?
+Write garbage collector?
+
+
+

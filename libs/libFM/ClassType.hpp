@@ -96,7 +96,6 @@ namespace FM
     {
       return false;
     }
-    ClassMetaData* makeEmptyDataType() {return new ClassMetaData(_ctxt);}
     Object construct(const Object &meta); // Construct an object with this class
   };
 
@@ -126,7 +125,6 @@ namespace FM
       return false;
     }
     Object empty() {throw Exception("Cannot create empty classes");}
-    ClassData* makeEmptyDataType() {throw Exception("Cannot create empty classes");}
   };
 };
 

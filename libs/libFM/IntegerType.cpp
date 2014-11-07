@@ -25,7 +25,7 @@ static int GetNominalWidthInteger(const T* qp, dim_t len) {
 template<class T, FM::DataCode codeNum>
 void IntegerType<T,codeNum>::computeArrayFormatInfo(FMFormatMode, const Object &a, ArrayFormatInfo &format) {
   const T* dp = this->ro(a);
-  dim_t cnt = a.elementCount();
+  dim_t cnt = a.count();
   if (a.isComplex()) cnt *= 2;
   format.width = GetNominalWidthInteger(dp,cnt);
 }

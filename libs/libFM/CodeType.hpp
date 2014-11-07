@@ -38,12 +38,7 @@ namespace FM
     }
     virtual FMString describe(const Object &a);
     virtual FMString brief(const Object &a);
-    virtual Object getParens(const Object &a, const Object &b);
-    virtual Object call(const Object &a, const Object &args, int nargout);
-    virtual Object deref(const Object &a);
-    Object emptyScalar();
     Object bindFunction(const Object &code, const Object &argument);
-    virtual CodeData* makeEmptyDataType();
   };
 }
 

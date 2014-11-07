@@ -108,7 +108,7 @@ Object VM::executeModule(const Object &moduleObject, const Object &parameters)
 
 // Execute a function object, given a list of parameters (params).  Returns a list
 // of returns.
-Object VM::executeFunction(const Object &codeObject, const Object &parameters)
+Object VM::executeFunction(const Object &functionObject, const Object &parameters)
 {
   //
   // The structure of a frame needs a little explanation.
@@ -134,12 +134,13 @@ Object VM::executeFunction(const Object &codeObject, const Object &parameters)
   // std::cout << "fp = " << _fp << " rp = " << _rp << "\n";
   // Create a new frame for the function
   _fp++;
-  const CodeData *cp = _ctxt->_code->ro(codeObject);
+  const FunctionData *fd = _ctxt->_function->ro(functionObject);
+  const CodeData *cp = _ctxt->_code->ro(fd->m_code);
   _frames[_fp]->_name = _ctxt->_string->getString(cp->m_name);
   std::cout << "Starting function: " << _frames[_fp]->_name << "\n";
   // For functions, all addresses are pre-set to point
   // to the first N slots of the variables space
-  int N = cp->m_names.elementCount();
+  int N = cp->m_names.count();
   std::cout << "Names count = " << N << "\n";
   _frames[_fp]->_addrs = _ctxt->_index->makeMatrix(N,1);
   ndx_t *ap = _ctxt->_index->rw(_frames[_fp]->_addrs);
@@ -151,6 +152,10 @@ Object VM::executeFunction(const Object &codeObject, const Object &parameters)
   _frames[_fp]->_exception_handlers.clear();
   _frames[_fp]->_reg_offset = _rp;
   _frames[_fp]->_module = _ctxt->_list->last(_modules);
+  _frames[_fp]->_captures = fd->m_closure;
+  // Allocate space for the captured variables (free ones come through the closure)
+  for (int i=0;i<cp->m_captured.count();i++)
+    _ctxt->_list->push(_frames[_fp]->_captures,_ctxt->_captured->empty());
   _rp += 256; // FIXME
   Object *sp = _ctxt->_list->rw(_frames[_fp]->_vars);
   // Function scopes are closed
@@ -162,18 +167,29 @@ Object VM::executeFunction(const Object &codeObject, const Object &parameters)
   bool varargin_case = _ctxt->_index->scalarValue(cp->m_varargin) != -1;
   int to_use;
   if (!varargin_case)
-    to_use = std::min<int>(parameters.elementCount(),cp->m_params.elementCount());
+    to_use = std::min<int>(parameters.count(),cp->m_params.count());
   else
-    to_use = std::min<int>(parameters.elementCount(),cp->m_params.elementCount()-1);
+    to_use = std::min<int>(parameters.count(),cp->m_params.count()-1);
   std::cout << "to_use = " << to_use << "\n";
   for (int i=0;i<to_use;i++)
     {
-      sp[param_ndx[i]] = args[i];
-      ap[param_ndx[i]] = param_ndx[i];
+      // Two cases here - one is that the parameter is normal, the other is that it is
+      // captured.  If it is normal:
+      if (param_ndx[i] < 1000) 
+	{
+	  sp[param_ndx[i]] = args[i];
+	  ap[param_ndx[i]] = param_ndx[i];
+	}
+      else
+	{
+	  ndx_t capture_slot = param_ndx[i] % 1000;
+	  std::cout << "Parameter " << i << " put into cell " << capture_slot << "\n";
+	  _ctxt->_captured->set(_ctxt->_list->rw(_frames[_fp]->_captures)[capture_slot],args[i]);
+	}
     }
   if (varargin_case)
     {
-      int to_push = std::max<int>(0,parameters.elementCount()-to_use);
+      int to_push = std::max<int>(0,parameters.count()-to_use);
       Object varargin = _ctxt->_cell->makeMatrix(to_push,1);
       Object *vip = _ctxt->_cell->rw(varargin);
       for (int i=0;i<to_push;i++)
@@ -183,16 +199,25 @@ Object VM::executeFunction(const Object &codeObject, const Object &parameters)
       ap[varargin_location] = varargin_location;
     }
   // execute the code
-  executeCodeObject(codeObject);
+  executeCodeObject(fd->m_code);
   // Collect return values
   Object retvec = _ctxt->_list->empty();
-  int to_return = cp->m_returns.elementCount();
+  int to_return = cp->m_returns.count();
   bool varargout_case = _ctxt->_index->scalarValue(cp->m_varargout) != -1;
   if (varargout_case) to_return -= 1;
   const ndx_t * return_ndx = _ctxt->_index->ro(cp->m_returns);
   sp = _ctxt->_list->rw(_frames[_fp]->_vars);
   for (int i=0;i<to_return;i++)
-    _ctxt->_list->push(retvec,sp[return_ndx[i]]);
+    {
+      if (return_ndx[i] < 1000)
+	_ctxt->_list->push(retvec,sp[return_ndx[i]]);
+      else
+	{
+	  ndx_t capture_slot = return_ndx[i] % 1000;
+	  std::cout << "Return " << i << " taken from cell " << capture_slot << "\n";
+	  _ctxt->_list->push(retvec,_ctxt->_captured->get(_ctxt->_list->ro(_frames[_fp]->_captures)[capture_slot]));
+	}
+    }
   if (varargout_case) {
     std::cout << "to_return = " << to_return << "\n";
     std::cout << "returns = " << cp->m_returns << "\n";
@@ -200,7 +225,7 @@ Object VM::executeFunction(const Object &codeObject, const Object &parameters)
     const Object & varargout = sp[varargout_location];
     std::cout << "VARARGOUT " << varargout << "\n";
     const Object * vip = _ctxt->_cell->ro(varargout);
-    for (int i=0;i<varargout.elementCount();i++)
+    for (int i=0;i<varargout.count();i++)
       _ctxt->_list->push(retvec,vip[i]);
   }
   _frames[_fp]->_sym_names = _ctxt->_list->empty();
@@ -221,7 +246,7 @@ void VM::executeScript(const Object &codeObject)
   _frames[_fp]->_name = _ctxt->_string->getString(cp->m_name);
   std::cout << "Starting script: " << _frames[_fp]->_name << "\n";
   _frames[_fp]->_sym_names = _ctxt->_list->empty();
-  int N = cp->m_names.elementCount();
+  int N = cp->m_names.count();
   _frames[_fp]->_addrs = _ctxt->_index->makeMatrix(N,1);
   _frames[_fp]->_defined = _ctxt->_bool->makeMatrix(N,1);
   _frames[_fp]->_reg_offset = _rp;
@@ -316,6 +341,7 @@ void VM::executeCodeObject(const Object &codeObject)
   Object *regfile = _ctxt->_list->rw(_registers) + _frames[_fp]->_reg_offset;
   ndx_t *addrfile = _ctxt->_index->rw(_frames[_fp]->_addrs);
   Object *varfile = _ctxt->_list->rw(closed_frame->_vars);
+  Object *capturesfile = _ctxt->_list->rw(_frames[_fp]->_captures);
   std::vector<int> *eh = &_frames[_fp]->_exception_handlers;
 
   int save_ip;
@@ -424,7 +450,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		UNARYOP(Neg,"negate");
 		break;
 	      case OP_NUMCOLS:
-		REG1 = _ctxt->_double->makeScalar(REG2.elementCount()/REG2.rows());
+		REG1 = _ctxt->_double->makeScalar(REG2.count()/REG2.rows());
 		break;
 	      case OP_CASE:
 		REG1 = TestForCaseMatch(_ctxt,REG2,REG3);
@@ -453,7 +479,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		REG1 = _ctxt->_double->makeScalar(_ctxt->_double->scalarValue(REG1)+1);
 		break;
 	      case OP_LENGTH:
-		REG1 = _ctxt->_double->makeScalar(REG2.elementCount());
+		REG1 = _ctxt->_double->makeScalar(REG2.count());
 		break;
 		/*
 		  case OP_SUBSASGNM:
@@ -480,6 +506,32 @@ void VM::executeCodeObject(const Object &codeObject)
 		  case OP_LOAD_PERSIST:
 		  break;
 		*/
+	      case OP_LOAD_CELL:
+		{
+		  register int ndx = get_constant(insn);
+		  REG1 = _ctxt->_captured->get(capturesfile[ndx]);
+		  std::cout << "    CELL LOAD: " << REG1.description() << "\n";
+		  break;
+		}
+	      case OP_PUSH_CELL:
+		{
+		  register int ndx = get_constant(insn);
+		  _ctxt->_list->push(REG1,capturesfile[ndx]);
+		  std::cout << "    CELL PUSH: " << capturesfile[ndx].description() << "\n";
+		  break;
+		}
+	      case OP_SAVE_CELL:
+		{
+		  register int ndx = get_constant(insn);
+		  _ctxt->_captured->set(capturesfile[ndx],REG1);
+		  std::cout << "    CELL SAVE: " << REG1.description() << "\n";
+		  break;
+		}
+	      case OP_MAKE_CLOSURE:
+		{
+		  REG1 = _ctxt->_function->fromCode(REG2,REG3);
+		  break;
+		}
 	      case OP_LOAD:
 		{
 		  // We start by looking for the name in our address file
@@ -509,10 +561,10 @@ void VM::executeCodeObject(const Object &codeObject)
 		      // check for user classes
 		      bool anyUserClasses = false;
 		      const Object *regs = _ctxt->_list->ro(REG2);
-		      for (int i=0;i<REG2.elementCount();i++)
+		      for (int i=0;i<REG2.count();i++)
 			anyUserClasses |= regs[i].isClass();
 		      if (anyUserClasses) 
-			for (int i=0;i<REG2.elementCount();i++)
+			for (int i=0;i<REG2.count();i++)
 			  if (regs[i].isClass() && _ctxt->_class->hasMethod(regs[i],names_list[ndx],REG1)) 
 			    {
 			      std::cout << "User method found\n";

@@ -144,13 +144,13 @@ namespace FM
       return d->dims.cols();
     }
     inline bool isEmpty() const {
-      return (elementCount() == 0);
+      return (count() == 0);
     }
     inline bool isComplex() const {
       return ((d->flags & OBJECT_COMPLEX_FLAG) != 0);
     }
     inline bool isScalar() const {
-      return (elementCount() == 1);
+      return (count() == 1);
     }
     inline bool isList() const {
       return (typeCode() == TypeListArray);
@@ -179,8 +179,8 @@ namespace FM
     inline FMString description() const {
       return d->type->describe(*this);
     }
-    inline dim_t elementCount() const {
-      return d->dims.elementCount();
+    inline dim_t count() const {
+      return d->dims.count();
     }
     inline Object asIndex(dim_t max) const {
       return d->type->asIndex(*this,max);
@@ -220,6 +220,10 @@ namespace FM
     inline DataCode typeCode() const
     {
       return type()->code();
+    }
+    inline bool is(DataCode a) const
+    {
+      return typeCode() == a;
     }
     template <class S>
     inline S* asType() const

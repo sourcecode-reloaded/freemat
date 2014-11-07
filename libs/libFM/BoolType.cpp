@@ -7,7 +7,7 @@ using namespace FM;
 Object BoolType::asIndexNoBoundsCheck(const Object &a)
 {
   const bool *ip = this->ro(a);
-  dim_t len = a.elementCount();
+  dim_t len = a.count();
   dim_t trueCount = 0;
   for (dim_t i=0;i<len;i++)
     if (ip[i]) trueCount++;
@@ -21,10 +21,10 @@ Object BoolType::asIndexNoBoundsCheck(const Object &a)
 
 Object BoolType::asIndex(const Object &a, dim_t max)
 {
-  if (a.dims().elementCount() > max)
+  if (a.dims().count() > max)
     throw Exception("Index out of range");
   const bool *ip = this->ro(a);
-  dim_t len = a.elementCount();
+  dim_t len = a.count();
   dim_t trueCount = 0;
   for (dim_t i=0;i<len;i++)
     if (ip[i]) trueCount++;
@@ -39,7 +39,7 @@ Object BoolType::asIndex(const Object &a, dim_t max)
 bool BoolType::any(const Object &a)
 {
   const bool *ip = this->ro(a);
-  dim_t len = a.elementCount();
+  dim_t len = a.count();
   for (dim_t i=0;i<len;i++)
     if (ip[i]) return true;
   return false;
@@ -48,7 +48,7 @@ bool BoolType::any(const Object &a)
 bool BoolType::all(const Object &a)
 {
   const bool *ip = this->ro(a);
-  dim_t len = a.elementCount();
+  dim_t len = a.count();
   for (dim_t i=0;i<len;i++)
     if (!ip[i]) return false;
   return true;
@@ -57,7 +57,7 @@ bool BoolType::all(const Object &a)
 dim_t BoolType::countOne(const Object &a)
 {
   const bool *ip = this->ro(a);
-  dim_t len = a.elementCount();
+  dim_t len = a.count();
   dim_t count = 0;
   for (dim_t i=0;i<len;i++)
     if (ip[i]) count++;
@@ -67,7 +67,7 @@ dim_t BoolType::countOne(const Object &a)
 dim_t BoolType::countZero(const Object &a)
 {
   const bool *ip = this->ro(a);
-  dim_t len = a.elementCount();
+  dim_t len = a.count();
   dim_t count = 0;
   for (dim_t i=0;i<len;i++)
     if (!ip[i]) count++;

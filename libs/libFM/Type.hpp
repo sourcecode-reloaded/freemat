@@ -36,7 +36,8 @@ namespace FM {
     TypeClass = 18,
     TypeCode = 19,
     TypeModule = 20,
-    TypeCaptured = 21
+    TypeCaptured = 21,
+    TypeFunction = 22
   };
 
   class Object;

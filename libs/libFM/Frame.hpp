@@ -14,6 +14,7 @@ namespace FM
     Object _sym_names;
     Object _vars;
     Object _addrs;
+    Object _captures;
     Object _defined;
     Object _module;
     std::vector<int> _exception_handlers;

@@ -23,6 +23,7 @@ namespace FM
   const symbol_flag_t SYM_DYNAMIC = (1 << 5);
   const symbol_flag_t SYM_FREE = (1 << 6);
   const symbol_flag_t SYM_CAPTURED = (1 << 7);
+  const symbol_flag_t SYM_NESTED = (1 << 8);
 
 #define IS_DYNAMIC(x) (((x) & SYM_DYNAMIC) != 0)
 #define IS_GLOBAL(x) (((x) & SYM_GLOBAL) != 0)
@@ -33,6 +34,8 @@ namespace FM
 #define IS_FREE(x) (((x) & SYM_FREE) != 0)
 #define IS_CAPTURED(x) (((x) & SYM_CAPTURED) != 0) 
 #define IS_CELL(x) (IS_FREE(x) || IS_CAPTURED(x))
+#define IS_NESTED(x) (((x) & SYM_NESTED) != 0)
+#define IS_LOCAL(x) ((IS_DYNAMIC(x) || IS_PARAMETER(x) || IS_RETURN(x)) && (!IS_CAPTURED(x)))
 #define SYM_PARAM_POSITION(x) (((x) >> 12) & 0xFF)
 #define SYM_RETURN_POSITION(x) (((x) >> 20) & 0xFF)
 

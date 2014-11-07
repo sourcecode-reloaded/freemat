@@ -110,8 +110,8 @@ Array NCat(const ArrayVector& pdata, int catdim) {
 */
 
 Object FM::NCat(ThreadContext *ctxt, const Object &x, int dimension) {
-  if (x.elementCount() == 0) return ctxt->_double->empty();
-  if (x.elementCount() == 1) return ctxt->_list->first(x);
+  if (x.count() == 0) return ctxt->_double->empty();
+  if (x.count() == 1) return ctxt->_list->first(x);
   Object ret = ctxt->_list->first(x).type()->NCat(x,dimension);
   return ret;
 }
