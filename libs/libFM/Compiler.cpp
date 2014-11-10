@@ -590,20 +590,20 @@ const_t Compiler::getConstantID(const Object & t) {
 }
 
 void Compiler::saveRegisterToName(const FMString &varname, reg_t b) {
-  int symflags = _code->_syms->syms[varname];
-  if (IS_GLOBAL(symflags))
+  symbol_flags_t symflags = _code->_syms->syms[varname];
+  if (symflags.is_global())
     emit(OP_SAVE_GLOBAL,b,getNameID(varname));
-  else if (IS_PERSIST(symflags))
+  else if (symflags.is_persistent())
     emit(OP_SAVE_PERSIST,b,getNameID(varname));
-  else if (IS_LOCAL(symflags))
+  else if (symflags.is_local())
     emit(OP_SAVE,b,getNameID(varname));
-  else if (IS_CELL(symflags))
+  else if (symflags.is_cell())
     {
       emit(OP_SAVE_CELL,b,getCellID(varname));
       std::cout << "CELL " << varname << " has ID " << getCellID(varname) << "\n";
     }
   else
-    throw Exception("Unhandled save case for variable " + varname + " flags = " + Stringify(symflags));
+    throw Exception("Unhandled save case for variable " + varname + " flags = " + symflags.str());
 }
 
 // FIXME - 
@@ -621,12 +621,12 @@ void Compiler::assignment(const Tree &t, bool printIt, reg_t b) {
       return;
     }
   reg_t args = flattenDereferenceTreeToStack(t,1);
-  int symflags = _code->_syms->syms[varname];
-  if (IS_GLOBAL(symflags))
+  symbol_flags_t symflags = _code->_syms->syms[varname];
+  if (symflags.is_global())
     emit(OP_SUBSASGN_GLOBAL,args,b,getNameID(varname));
-  else if (IS_PERSIST(symflags))
+  else if (symflags.is_persistent())
     emit(OP_SUBSASGN_PERSIST,args,b,getNameID(varname));
-  else if (IS_LOCAL(symflags))
+  else if (symflags.is_local())
     emit(OP_SUBSASGN,args,b,getNameID(varname));
   else
     throw Exception("Unhandled subsasgn case");
@@ -725,7 +725,7 @@ reg_t Compiler::fetchClosure(const FMString &varname)
   reg_t closure = startList();
   for (auto s = closure_sym->syms.constBegin(); s != closure_sym->syms.constEnd(); ++s)
     {
-      if (IS_FREE(s.value()))
+      if (s.value().is_free())
 	emit(OP_PUSH_CELL,closure,getCellID(s.key()));
     }
   reg_t func = fetchConstant(_ctxt->_string->makeString("#"+varname));
@@ -734,21 +734,21 @@ reg_t Compiler::fetchClosure(const FMString &varname)
   return fptr;
 }
 
-reg_t Compiler::fetchVariable(const FMString &varname, int flags)
+reg_t Compiler::fetchVariable(const FMString &varname, symbol_flags_t flags)
 {
   reg_t x = getRegister();
-  if (IS_GLOBAL(flags))
+  if (flags.is_global())
     emit(OP_LOAD_GLOBAL,x,getNameID(varname));
-  else if (IS_PERSIST(flags))
+  else if (flags.is_persistent())
     emit(OP_LOAD_PERSIST,x,getNameID(varname));
-  else if (IS_LOCAL(flags))
+  else if (flags.is_local())
     emit(OP_LOAD,x,getNameID(varname));
-  else if (IS_CELL(flags))
+  else if (flags.is_cell())
     emit(OP_LOAD_CELL,x,getCellID(varname));
-  else if (IS_NESTED(flags))
+  else if (flags.is_nested())
     x = fetchClosure(varname);
   else
-    throw Exception("Unhandled load case for variable " + varname + " flags = " + Stringify(flags));
+    throw Exception("Unhandled load case for variable " + varname + " flags = " + flags.str());
   return x;
 }
 
@@ -816,11 +816,11 @@ reg_t Compiler::doShortcutAnd(const Tree &t) {
 void Compiler::rhs(reg_t list, const Tree &t) {
   FMString varname = t.first().text();
   reg_t x;
-  int symflags = _code->_syms->syms[varname];
+  symbol_flags_t symflags = _code->_syms->syms[varname];
   if (t.numChildren() > 1)
     {
       // Check if we have A(...), where A isn't marked as global or persistent
-      if (t.second().is(TOK_PARENS) && !IS_GLOBAL(symflags) && !IS_PERSIST(symflags)  && !IS_NESTED(symflags))
+      if (t.second().is(TOK_PARENS) && !symflags.is_global() && !symflags.is_persistent()  && !symflags.is_nested())
 	{
 	  // First, get the arguments
 	  reg_t argv = startList();
@@ -1014,8 +1014,8 @@ reg_t Compiler::expression(const Tree &t) {
   case '@':
     { // TODO - is this all?
       FMString fname = t.first().text();
-      int symflags = _code->_syms->syms[fname];
-      if (IS_NESTED(symflags))
+      symbol_flags_t symflags = _code->_syms->syms[fname];
+      if (symflags.is_nested())
 	return fetchClosure(fname);
       throw Exception("Unhandled case for function pointers");
     } 
@@ -1410,9 +1410,9 @@ void Compiler::walkFunction(const Tree &t, bool nested) {
   for (auto s = _code->_syms->syms.constBegin(); s != _code->_syms->syms.constEnd(); ++s)
     {
       addStringToList(_ctxt,_code->_namelist,s.key());
-      if (IS_FREE(s.value()))
+      if (s.value().is_free())
 	addStringToList(_ctxt,_code->_freelist,s.key());
-      if (IS_CAPTURED(s.value()))
+      if (s.value().is_captured())
 	addStringToList(_ctxt,_code->_capturedlist,s.key());
     }
   std::cout << "Compiling function " << t.child(1).text() << "\n";
@@ -1679,7 +1679,7 @@ void PrintCodeBlock(CodeBlock *_code)
   std::cout << "************************************************************\n";
   std::cout << "Symbols for function: " << _code->_syms->name << "\n";
   for (auto s=_code->_syms->syms.constBegin(); s != _code->_syms->syms.constEnd(); ++s)
-    std::cout << "   Symbol: " << s.key() << " flags: " << symbolFlagsToString(s.value()) << "\n";
+    std::cout << "   Symbol: " << s.key() << " flags: " << s.value().str() << "\n";
   std::cout << "************************************************************\n";      
   std::cout << "Const: ";
   ListType *lt = _code->_constlist.asType<ListType>();

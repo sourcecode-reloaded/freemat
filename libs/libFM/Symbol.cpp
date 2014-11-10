@@ -63,20 +63,20 @@ void SymbolPass::markParentSymbolCaptured(const FMString &name) {
   SymbolTable *sp = _current->parent;
   while (1)
     {
-      if (sp->syms.contains(name) && !IS_FREE(sp->syms[name]))
+      if (sp->syms.contains(name) && !sp->syms[name].is_free())
 	{
-	  symbol_flag_t old_flag = sp->syms[name];
-	  if (IS_CAPTURED(old_flag)) return;
-	  old_flag |= SYM_CAPTURED;
-	  old_flag &= ~SYM_DYNAMIC;
+	  symbol_flags_t old_flag = sp->syms[name];
+	  if (old_flag.is_captured()) return;
+	  old_flag._captured = 1;
+	  old_flag._dynamic = 0;
 	  std::cout << "CAPTURE " << name << "\n";
-	  std::cout << "  FLAG: " << symbolFlagsToString(old_flag) << "\n";
+	  std::cout << "  FLAG: " << old_flag.str() << "\n";
 	  sp->syms[name] = old_flag;
 	  return;
 	}
       else
 	{
-	  sp->syms[name] = SYM_FREE;
+	  sp->syms[name] = symbol_flags_t::FREE();
 	  std::cout << "FLOW THROUGH: " << name << "\n";
 	}
       sp = sp->parent;
@@ -94,21 +94,21 @@ void SymbolPass::beginFunction(const FMString &name, bool nested)
     newChild(t);
 }
 
-void SymbolPass::addSymbol(const FMString &name, symbol_flag_t flags)
+void SymbolPass::addSymbol(const FMString &name, symbol_flags_t flags)
 {
   if (!_current->syms.contains(name))
     {
       _current->syms[name] = flags;
-      std::cout << "Insert of symbol: " << name << " with flags " << symbolFlagsToString(flags) << "\n";
+      std::cout << "Insert of symbol: " << name << " with flags " << flags.str() << "\n";
     }
   else
     {
-      symbol_flag_t oldflags = _current->syms[name];
+      symbol_flags_t oldflags = _current->syms[name];
       if ((oldflags | flags) != oldflags)
 	{
 	  std::cout << "Update of symbol: " << name 
-		    << " new flags [" << symbolFlagsToString(flags) 
-		    << "] old flags [" << symbolFlagsToString(oldflags) 
+		    << " new flags [" << flags.str() 
+		    << "] old flags [" << oldflags.str()
 		    << "]\n";
 	  _current->syms[name] = (oldflags | flags);
 	}
@@ -116,7 +116,7 @@ void SymbolPass::addSymbol(const FMString &name, symbol_flag_t flags)
 }
 
 void SymbolPass::walkProperty(const Tree &t) {
-  addSymbol(t.text(),SYM_PROPERTY);
+  addSymbol(t.text(),symbol_flags_t::PROPERTY());
   if (t.hasChildren())
     walkCode(t.first());
 }
@@ -147,20 +147,20 @@ void SymbolPass::walkFunction(const Tree &t, FunctionTypeEnum funcType) {
       FMString name = t.child(1).text();
       if (_current->syms.contains(name))
 	{
-	  symbol_flag_t old_flag = _current->syms[name];
-	  old_flag |= SYM_NESTED;
-	  old_flag &= ~SYM_DYNAMIC;
+	  symbol_flags_t old_flag = _current->syms[name];
+	  old_flag._nested = 1;
+	  old_flag._dynamic = 0;
 	  _current->syms[name] = old_flag;
 	}
       else
-	addSymbol(t.child(1).text(), SYM_NESTED);
+	addSymbol(t.child(1).text(), symbol_flags_t::NESTED());
     }
   else if (funcType == MethodFunction)
     {
       FMString name = t.child(1).text();
       if (_current->syms.contains(name))
 	throw Exception("Cannot redfine symbol " + name + " in class " + _current->name);
-      addSymbol(t.child(1).text(),SYM_METHOD);
+      addSymbol(t.child(1).text(), symbol_flags_t::METHOD());
     }
   const Tree &rets = t.child(0);
   beginFunction(t.child(1).text(),funcType == NestedFunction);
@@ -168,11 +168,11 @@ void SymbolPass::walkFunction(const Tree &t, FunctionTypeEnum funcType) {
   const Tree &code = t.child(3);
   for (int index=0;index < args.numChildren();index++)
     if (args.child(index).is('&'))
-      addSymbol(args.child(index).first().text(), SYM_REFERENCE | SYM_PARAMETER | (index << 12));
+      addSymbol(args.child(index).first().text(), symbol_flags_t::REFERENCE() | symbol_flags_t::PARAMETER(index));
     else
-      addSymbol(args.child(index).text(), SYM_PARAMETER | (index << 12));
+      addSymbol(args.child(index).text(), symbol_flags_t::PARAMETER(index));
   for (int index=0;index < rets.numChildren();index++)
-    addSymbol(rets.child(index).text(), SYM_RETURN | (index << 20));
+    addSymbol(rets.child(index).text(), symbol_flags_t::RETURN(index));
   walkCode(code,funcType == NestedFunction);  
   if (funcType == NestedFunction) popToParent();
 }
@@ -185,7 +185,7 @@ void SymbolPass::walkCode(const Tree &t, bool nested) {
 	for (int index=0;index < t.numChildren();++index)
 	  {
 	    const Tree &s = t.child(index);
-	    addSymbol(s.text(),SYM_GLOBAL);
+	    addSymbol(s.text(),symbol_flags_t::GLOBAL());
 	    walkChildren(s,nested);
 	  }
 	break;
@@ -198,21 +198,21 @@ void SymbolPass::walkCode(const Tree &t, bool nested) {
 	      {
 		if (parentScopeDefines(t.first().text()))
 		  {
-		    addSymbol(t.first().text(),SYM_FREE);
+		    addSymbol(t.first().text(),symbol_flags_t::FREE());
 		    markParentSymbolCaptured(t.first().text());
 		  }
 		else
-		  addSymbol(t.first().text(),SYM_DYNAMIC);
+		  addSymbol(t.first().text(),symbol_flags_t::DYNAMIC());
 	      }
 	  }
 	else
-	  addSymbol(t.first().text(),SYM_DYNAMIC);
+	  addSymbol(t.first().text(),symbol_flags_t::DYNAMIC());
 	walkChildren(t,nested);
 	break;
       }
     case TOK_FOR:
       {
-	addSymbol(t.first().first().text(),SYM_DYNAMIC);
+	addSymbol(t.first().first().text(),symbol_flags_t::DYNAMIC());
 	walkChildren(t,nested);
 	break;
       }
@@ -221,7 +221,7 @@ void SymbolPass::walkCode(const Tree &t, bool nested) {
 	for (int index=0;index < t.numChildren();++index)
 	  {
 	    const Tree &s = t.child(index);
-	    addSymbol(s.text(),SYM_PERSISTENT);
+	    addSymbol(s.text(),symbol_flags_t::PERSISTENT());
 	    walkChildren(s,nested);
 	  }
 	break;
@@ -258,11 +258,12 @@ void SymbolPass::dump(SymbolTable *t, int indent)
   std::cout << "************************************************************\n";
   std::cout << spacer << "Symbols for function: " << t->name << "\n";
   for (auto s=t->syms.constBegin(); s != t->syms.constEnd(); ++s)
-    std::cout << spacer << "   Symbol: " << s.key() << " flags: " << symbolFlagsToString(s.value()) << "\n";
+    std::cout << spacer << "   Symbol: " << s.key() << " flags: " << s.value().str() << "\n";
   for (int i=0;i<t->children.size();++i)
     dump(t->children[i],indent+3);
 }
 
+#if 0
 FMString FM::symbolFlagsToString(symbol_flag_t flag)
 {
   FMString ret;
@@ -278,6 +279,8 @@ FMString FM::symbolFlagsToString(symbol_flag_t flag)
   if (flag & SYM_NESTED) ret += " nested";
   if (flag & SYM_PROPERTY) ret += " property";
   if (flag & SYM_METHOD) ret += " method";
+  if (flag & SYM_CONSTRUCTOR) ret += " constructor";
   if (flag & SYM_RETURN) ret += (" return:" + Stringify(return_position));
   return ret;
 }
+#endif

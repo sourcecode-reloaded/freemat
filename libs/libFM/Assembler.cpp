@@ -113,8 +113,8 @@ Object Assembler::codeObject()
   int return_count = 0;
   for (auto i=_code->_syms->syms.constBegin(); i != _code->_syms->syms.constEnd(); ++i)
     {
-      if (IS_PARAMETER(i.value())) param_count++;
-      if (IS_RETURN(i.value())) return_count++;
+      if (i.value().is_parameter()) param_count++;
+      if (i.value().is_return()) return_count++;
     }
   Object param_list = _ctxt->_index->makeMatrix(param_count,1);
   Object return_list = _ctxt->_index->makeMatrix(return_count,1);
@@ -125,27 +125,27 @@ Object Assembler::codeObject()
   for (auto i=_code->_syms->syms.constBegin();i != _code->_syms->syms.constEnd(); ++i)
     {
       // TODO: This should be more efficient
-      if (IS_PARAMETER(i.value())) 
+      if (i.value().is_parameter())
 	{
 	  for (int j=0;j<cp->m_names.count();j++)
 	    if (_ctxt->_string->getString(strings[j]) == i.key())
 	      {
-		if (!IS_CAPTURED(i.value()))
-		  param_ptr[SYM_PARAM_POSITION(i.value())] = j;
+		if (!i.value().is_captured())
+		  param_ptr[i.value().param_position] = j;
 		else
-		  param_ptr[SYM_PARAM_POSITION(i.value())] = indexOfStringInList(_ctxt,_code->_capturedlist,i.key()) + 1000;
+		  param_ptr[i.value().param_position] = indexOfStringInList(_ctxt,_code->_capturedlist,i.key()) + 1000;
 		if (i.key() == "varargin") varargin_ndx = j;
 	      }
 	}
-      if (IS_RETURN(i.value())) 
+      if (i.value().is_return())
 	{
 	  for (int j=0;j<cp->m_names.count();j++)
 	    if (_ctxt->_string->getString(strings[j]) == i.key())
 	      {
-		if (!IS_CAPTURED(i.value()))
-		  return_ptr[SYM_RETURN_POSITION(i.value())] = j;
+		if (!i.value().is_captured())
+		  return_ptr[i.value().return_position] = j;
 		else
-		  return_ptr[SYM_RETURN_POSITION(i.value())] = indexOfStringInList(_ctxt,_code->_capturedlist,i.key()) + 1000;
+		  return_ptr[i.value().return_position] = indexOfStringInList(_ctxt,_code->_capturedlist,i.key()) + 1000;
 		if (i.key() == "varargout") varargout_ndx = j;
 	      }
 	}

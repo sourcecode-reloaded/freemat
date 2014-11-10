@@ -126,7 +126,7 @@ namespace FM
     reg_t fetchClosure(const FMString &);
     reg_t fetchCell(const FMString &);
     reg_t fetchConstantString(const FMString &);
-    reg_t fetchVariable(const FMString &, int flags);
+    reg_t fetchVariable(const FMString &, symbol_flags_t flags);
     reg_t fetchVariableOrFunction(const FMString &, reg_t args);
     void saveRegisterToName(const FMString &varname, reg_t b);
     reg_t flattenDereferenceTreeToStack(const Tree&, int);
