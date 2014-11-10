@@ -73,7 +73,7 @@ FMString FM::TokenToString(const Token& b) {
   switch(b.value()) {
   case TOK_IDENT: return "'"+b.text()+"'";
   case TOK_SPACE: return "space";
-  case TOK_STRING: return "(string)"+b.text();
+  case TOK_STRING: return "\""+b.text()+"\"";
   case TOK_KEYWORD: return "keyword";
   case TOK_BREAK: return "break";
   case TOK_CASE: return "case";

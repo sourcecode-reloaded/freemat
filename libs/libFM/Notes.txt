@@ -1311,8 +1311,72 @@ with Handle semantics.
 
 Need to allocate slots in the consts list for code blocks.
 
-Migrate compiler to smart pointers?
-Write garbage collector?
+Migrate compiler to smart pointers? Not at the moment...  Some clean
+up may be needed - check for leaks.
+
+Write garbage collector? - maybe later
+
+Add LLVM based JIT back in? - maybe later
+
+Next step is to add some more features to the classes
+
+Classes are broken at the moment.
+
+1.  Method invokations don't work.
+
+
+TODO:
+
+1.  Remove the codeblock stack from the compiler.  Instead, create a
+Module and put all code blocks into that module.
+2.  Add a typecode to the module to indicate what type of module it is
+(i.e., function, script or classdef).
+
+Can we adopt the same methodology as Python for class
+creation/definition.  Consider the simplest class
+
+classdef foo
+   properties
+      prop1
+   end
+end
+
+
+This class has just a single property.  The module could be marked as
+a classdef module.  The code could be something like:
+
+props = newlist
+push props, "prop1"
+methods = newlist
+name = "foo"
+make_class(name,props,methods)
+
+This could create a meta class named "foo" with the given properties
+and methods.
+
+Suppose now we have a default value for the property  It seems we
+really want more information on the properties:
+
+props = newlist
+prop1 = newlist
+push prop1, "prop1"
+push prop1, FLAG_NORMAL
+push prop1, <default_value> or <code_object to compute default value>
+push props, prop1
+methods = newlist
+name = "foo"
+make_class(name,props,methods)
+
+The problem is that you need a mechanism to load constants in the
+compiler that are later replaced by code blocks by the assembler.  For
+now, that means using the "#" notation to create placeholder objects
+in the consts list that will then be backpatched by the assembler.
+
+Suppose we now have a constructor
+
+
+
+
 
 
 

@@ -829,7 +829,16 @@ Tree Parser::classPropertiesDefinition() {
   Tree root(expect(TOK_PROPERTIES));
   skipNewLines();
   while (match(TOK_IDENT)) {
-    root.addChild(identifier());
+    Tree ident(identifier());
+    if (match('=')) {
+      Tree defroot(next());
+      consume();
+      Tree expr(expression());
+      defroot.addChild(expr);
+      statementSeperator();
+      ident.addChild(defroot);
+    }
+    root.addChild(ident);
     skipNewLines();
   }
   expect(TOK_END,"properties");

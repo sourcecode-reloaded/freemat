@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
       {
 	FMString func = p->path().stem().string();
 	std::cout << "  Parsing function " << func << "\n";
-	compileModule(ctxt,func);
+	//	compileModule(ctxt,func);
       }
     ++p;
   }
@@ -166,9 +166,10 @@ int main(int argc, char *argv[])
   ctxt->_globals->insert(std::make_pair("bind",compileFunc(ctxt,"bind")));
   */
 
-  // Object sclassMeta = ctxt->_globals->at("?sclass");
-  // Object soo = ctxt->_meta->construct(sclassMeta);
-  // ctxt->_globals->insert(std::make_pair("soo",soo));
+  compileModule(ctxt,"sclass");
+  Object sclassMeta = ctxt->_globals->at("?sclass");
+  Object soo = ctxt->_meta->construct(sclassMeta);
+   ctxt->_globals->insert(std::make_pair("soo",soo));
 
   //  compileFunc(ctxt,"sclass");
   

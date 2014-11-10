@@ -13,6 +13,17 @@ namespace FM
   // defined (i.e., in the current code's closed scope), or it can be a 
   // captured variable. 
 
+  // TODO - turn this into a struct... it's getting too ugly
+  // struct symbol_flag_t
+  // {
+  //   unsigned is_global : 1;
+  //   unsigned is_persistent : 1;
+  //   unsigned is_parameter : 1;
+  //   unsigned is_reference : 1;
+  //   unsigned is_return : 1;
+  //   unsigned is_dynamic : 1;    
+  // };
+
   typedef int32_t symbol_flag_t;
 
   const symbol_flag_t SYM_GLOBAL = 1;
@@ -24,6 +35,16 @@ namespace FM
   const symbol_flag_t SYM_FREE = (1 << 6);
   const symbol_flag_t SYM_CAPTURED = (1 << 7);
   const symbol_flag_t SYM_NESTED = (1 << 8);
+  const symbol_flag_t SYM_PROPERTY = (1 << 9);
+  const symbol_flag_t SYM_METHOD = (1 << 10);
+  const symbol_flag_t SYM_CONSTRUCTOR = (1 << 11);
+
+
+  enum FunctionTypeEnum {
+    NormalFunction = 0,
+    NestedFunction = 1,
+    MethodFunction = 2
+  };
 
 #define IS_DYNAMIC(x) (((x) & SYM_DYNAMIC) != 0)
 #define IS_GLOBAL(x) (((x) & SYM_GLOBAL) != 0)
@@ -36,6 +57,9 @@ namespace FM
 #define IS_CELL(x) (IS_FREE(x) || IS_CAPTURED(x))
 #define IS_NESTED(x) (((x) & SYM_NESTED) != 0)
 #define IS_LOCAL(x) ((IS_DYNAMIC(x) || IS_PARAMETER(x) || IS_RETURN(x)) && (!IS_CAPTURED(x)))
+#define IS_PROPERTY(x) (((x) & SYM_PROPERTY) != 0)
+#define IS_METHOD(x) (((x) & SYM_METHOD) != 0)
+#define IS_CONSTRUCTOR(x) (((x) & SYM_METHOD) != 0)
 #define SYM_PARAM_POSITION(x) (((x) >> 12) & 0xFF)
 #define SYM_RETURN_POSITION(x) (((x) >> 20) & 0xFF)
 
@@ -55,7 +79,9 @@ namespace FM
     SymbolTable *_current;
     void beginFunction(const FMString &name,bool nested);
     void addSymbol(const FMString &name, symbol_flag_t flags);
-    void walkFunction(const Tree &t, bool nested = false);
+    void walkFunction(const Tree &t, FunctionTypeEnum funcType = NormalFunction);
+    void walkClassDef(const Tree &t);
+    void walkProperty(const Tree &t);
     void newSibling(SymbolTable *t);
     void newChild(SymbolTable *t);
     void popToParent();

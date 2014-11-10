@@ -115,8 +115,34 @@ void SymbolPass::addSymbol(const FMString &name, symbol_flag_t flags)
     }
 }
 
-void SymbolPass::walkFunction(const Tree &t, bool nested) {
-  if (nested)
+void SymbolPass::walkProperty(const Tree &t) {
+  addSymbol(t.text(),SYM_PROPERTY);
+  if (t.hasChildren())
+    walkCode(t.first());
+}
+
+void SymbolPass::walkClassDef(const Tree &t) {
+  _current->name = t.first().text();
+  for (int i=1;i<t.numChildren();i++)
+    {
+      switch (t.child(i).token())
+	{
+	case TOK_PROPERTIES:
+	  for (int j=0;j<t.child(i).numChildren();j++)
+	    walkProperty(t.child(i).child(j));
+	  break;
+	case TOK_METHODS:
+	  for (int j=0;j<t.child(i).numChildren();j++)
+	    walkFunction(t.child(i).child(j),MethodFunction);
+	  break;
+	default:
+	  throw Exception("Unhandled classdef block");
+	}
+    }
+}
+
+void SymbolPass::walkFunction(const Tree &t, FunctionTypeEnum funcType) {
+  if (funcType == NestedFunction)
     {
       FMString name = t.child(1).text();
       if (_current->syms.contains(name))
@@ -129,8 +155,15 @@ void SymbolPass::walkFunction(const Tree &t, bool nested) {
       else
 	addSymbol(t.child(1).text(), SYM_NESTED);
     }
+  else if (funcType == MethodFunction)
+    {
+      FMString name = t.child(1).text();
+      if (_current->syms.contains(name))
+	throw Exception("Cannot redfine symbol " + name + " in class " + _current->name);
+      addSymbol(t.child(1).text(),SYM_METHOD);
+    }
   const Tree &rets = t.child(0);
-  beginFunction(t.child(1).text(),nested);
+  beginFunction(t.child(1).text(),funcType == NestedFunction);
   const Tree &args = t.child(2);
   const Tree &code = t.child(3);
   for (int index=0;index < args.numChildren();index++)
@@ -140,8 +173,8 @@ void SymbolPass::walkFunction(const Tree &t, bool nested) {
       addSymbol(args.child(index).text(), SYM_PARAMETER | (index << 12));
   for (int index=0;index < rets.numChildren();index++)
     addSymbol(rets.child(index).text(), SYM_RETURN | (index << 20));
-  walkCode(code,nested);  
-  if (nested) popToParent();
+  walkCode(code,funcType == NestedFunction);  
+  if (funcType == NestedFunction) popToParent();
 }
 
 void SymbolPass::walkCode(const Tree &t, bool nested) {
@@ -200,7 +233,12 @@ void SymbolPass::walkCode(const Tree &t, bool nested) {
       }
     case TOK_NEST_FUNC:
       {
-	walkFunction(t,true);
+	walkFunction(t,NestedFunction);
+	break;
+      }
+    case TOK_CLASSDEF:
+      {
+	walkClassDef(t);
 	break;
       }
     default:
@@ -238,6 +276,8 @@ FMString FM::symbolFlagsToString(symbol_flag_t flag)
   if (flag & SYM_FREE) ret += " free";
   if (flag & SYM_CAPTURED) ret += " captured";
   if (flag & SYM_NESTED) ret += " nested";
+  if (flag & SYM_PROPERTY) ret += " property";
+  if (flag & SYM_METHOD) ret += " method";
   if (flag & SYM_RETURN) ret += (" return:" + Stringify(return_position));
   return ret;
 }

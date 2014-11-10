@@ -1346,7 +1346,6 @@ void Compiler::statementType(const Tree &t, bool printIt) {
 // 
 
 void Compiler::reset() {
-  delete _code;
   _code = new CodeBlock(_ctxt);
   delete _regpool;
   _regpool = new RegisterBlock(256);
@@ -1500,6 +1499,36 @@ void Compiler::walkProperties(const Tree &t, Object &metaClass) {
     }
 }
 
+void Compiler::walkPropertyDefaults(const Tree &t, Object &metaClass) {
+  assert(t.is(TOK_PROPERTIES));
+  for (int i=0;i<t.numChildren();i++)
+    {
+      if (t.child(i).hasChildren())
+	{
+	  // Create a code block
+	  CodeBlock *cp = new CodeBlock(_ctxt);
+	  // Create a synthetic symbol table
+	  cp->_syms = new SymbolTable;
+	  // Insert the properies into the symbol table as dynamic vars
+	  const ClassMetaData *cmd = _ctxt->_meta->ro(metaClass);
+	  for (auto p=cmd->m_properties.begin();p!=cmd->m_properties.end();++p)
+	    {
+	      std::cout << "Property: " << p->first << "\n";
+	      //	      cp->_syms[p->first] = SYM_DYNAMIC;
+	    }
+	  // Build up the variable list
+	  _code = cp;
+	  // Build up the variable list
+	  _code->_namelist = _ctxt->_list->empty();
+	  _code->_constlist = _ctxt->_list->empty();
+	  for (auto s = _code->_syms->syms.constBegin(); s != _code->_syms->syms.constEnd(); ++s)
+	    addStringToList(_ctxt,_code->_namelist,s.key());
+	  useBlock(new BasicBlock);
+	  block(t.first());
+	}
+    }
+}
+
 void Compiler::walkClassDef(const Tree &t) {
   FMString className = t.first().text();
   FMString classMetaName = "?" + className;
@@ -1522,6 +1551,10 @@ void Compiler::walkClassDef(const Tree &t) {
 	  throw Exception("Unhandled classdef block");
 	}
     }
+  // Walk the defaults
+  for (int i=1;i<t.numChildren();i++)
+      if (t.child(i).is(TOK_PROPERTIES))
+	walkPropertyDefaults(t.child(i),fooMeta);
   _ctxt->_globals->insert(std::make_pair(classMetaName,fooMeta));
   std::cout << "Inserting class definition with metaclass " << classMetaName << "\n";
   std::cout << "meta class:" << fooMeta.description() << "\n";
