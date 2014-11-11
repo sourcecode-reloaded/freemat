@@ -14,6 +14,7 @@
 #include "VM.hpp"
 #include "fnv.hh"
 #include "HashMap.hpp"
+#include "Symbol.hpp"
 
 //#include <valarray>
 
@@ -107,6 +108,8 @@ int main(int argc, char *argv[])
 
   assert(sizeof(Complex<char>) == 2*sizeof(char));
 
+  
+
   StdIOTermIF io;
   ThreadContext *ctxt = BuildNewThreadContext(&io);
 
@@ -148,7 +151,7 @@ int main(int argc, char *argv[])
       {
 	FMString func = p->path().stem().string();
 	std::cout << "  Parsing function " << func << "\n";
-	//	compileModule(ctxt,func);
+	compileModule(ctxt,func);
       }
     ++p;
   }
@@ -167,9 +170,12 @@ int main(int argc, char *argv[])
   */
 
   compileModule(ctxt,"sclass");
-  Object sclassMeta = ctxt->_globals->at("?sclass");
-  Object soo = ctxt->_meta->construct(sclassMeta);
-   ctxt->_globals->insert(std::make_pair("soo",soo));
+
+  // Object sclassMeta = ctxt->_globals->at("?sclass");
+  // Object soo = ctxt->_meta->construct(sclassMeta);
+  //  ctxt->_globals->insert(std::make_pair("soo",soo));
+
+  //  std::cout << "Symbol flags size: " << sizeof(symbol_flags_t) << "\n";
 
   //  compileFunc(ctxt,"sclass");
   

@@ -28,15 +28,16 @@ namespace FM
     unsigned _property     : 1;
     unsigned _method       : 1;
     unsigned _constructor  : 1;
-    unsigned param_position  : 8;
-    unsigned return_position : 8;
+    unsigned param_position    : 8;
+    unsigned return_position   : 8;
+    unsigned property_position : 16;
 
     inline symbol_flags_t() : _global(0), _persistent(0),
 			      _parameter(0), _reference(0),
 			      _return(0), _dynamic(0),
 			      _free(0), _captured(0), _nested(0),
 			      _property(0), _method(0), _constructor(0),
-			      param_position(0), return_position(0) {}
+			      param_position(0), return_position(0), property_position(0) {}
 
     inline bool is_global() const {return _global != 0;}
     inline bool is_persistent() const {return _persistent != 0;}
@@ -63,7 +64,7 @@ namespace FM
       if (_free) ret += " free";
       if (_captured) ret += " captured";
       if (_nested) ret += " nested";
-      if (_property) ret += " property";
+      if (_property) ret += " property:" + Stringify(property_position);
       if (_method) ret += " method";
       if (_constructor) ret += " constructor";
       if (_return) ret += " return:" + Stringify(return_position);
@@ -79,7 +80,7 @@ namespace FM
     static symbol_flags_t FREE() {symbol_flags_t ret; ret._free = 1; return ret;}
     static symbol_flags_t CAPTURED() {symbol_flags_t ret; ret._captured = 1; return ret;}
     static symbol_flags_t NESTED() {symbol_flags_t ret; ret._nested = 1; return ret;}
-    static symbol_flags_t PROPERTY() {symbol_flags_t ret; ret._property = 1; return ret;}
+    static symbol_flags_t PROPERTY(unsigned pos) {symbol_flags_t ret; ret._property = 1; ret.property_position = pos; return ret;}
     static symbol_flags_t METHOD() {symbol_flags_t ret; ret._method = 1; return ret;}
     static symbol_flags_t CONSTRUCTOR() {symbol_flags_t ret; ret._constructor = 1; return ret;}
   };
@@ -98,7 +99,8 @@ namespace FM
 	     (a._method == b._method) ||
 	     (a._constructor == b._constructor) ||
 	     (a.param_position == b.param_position) ||
-	     (a.return_position == b.return_position));
+	     (a.return_position == b.return_position) ||
+	     (a.property_position == b.property_position));
   }
 
   inline symbol_flags_t operator|(const symbol_flags_t &a, const symbol_flags_t &b) {
@@ -119,24 +121,6 @@ namespace FM
     ret.return_position |= b.return_position;
     return ret;
   }
-  
-#if 0
-  typedef int32_t symbol_flag_t;
-
-  const symbol_flag_t SYM_GLOBAL = 1;
-  const symbol_flag_t SYM_PERSISTENT = (1 << 1);
-  const symbol_flag_t SYM_PARAMETER = (1 << 2);
-  const symbol_flag_t SYM_REFERENCE = (1 << 3);
-  const symbol_flag_t SYM_RETURN = (1 << 4);
-  const symbol_flag_t SYM_DYNAMIC = (1 << 5);
-  const symbol_flag_t SYM_FREE = (1 << 6);
-  const symbol_flag_t SYM_CAPTURED = (1 << 7);
-  const symbol_flag_t SYM_NESTED = (1 << 8);
-  const symbol_flag_t SYM_PROPERTY = (1 << 9);
-  const symbol_flag_t SYM_METHOD = (1 << 10);
-  const symbol_flag_t SYM_CONSTRUCTOR = (1 << 11);
-
-#endif
 
   enum FunctionTypeEnum {
     NormalFunction = 0,
@@ -145,25 +129,6 @@ namespace FM
   };
 
 
-#if 0
-#define IS_DYNAMIC(x) (((x) & SYM_DYNAMIC) != 0)
-#define IS_GLOBAL(x) (((x) & SYM_GLOBAL) != 0)
-#define IS_PERSIST(x) (((x) & SYM_PERSISTENT) != 0)
-#define IS_PARAMETER(x) (((x) & SYM_PARAMETER) != 0)
-#define IS_REFERENCE(x) (((x) & SYM_REFERENCE) != 0)
-#define IS_RETURN(x) (((x) & SYM_RETURN) != 0)
-#define IS_FREE(x) (((x) & SYM_FREE) != 0)
-#define IS_CAPTURED(x) (((x) & SYM_CAPTURED) != 0) 
-#define IS_CELL(x) (IS_FREE(x) || IS_CAPTURED(x))
-#define IS_NESTED(x) (((x) & SYM_NESTED) != 0)
-#define IS_LOCAL(x) ((IS_DYNAMIC(x) || IS_PARAMETER(x) || IS_RETURN(x)) && (!IS_CAPTURED(x)))
-#define IS_PROPERTY(x) (((x) & SYM_PROPERTY) != 0)
-#define IS_METHOD(x) (((x) & SYM_METHOD) != 0)
-#define IS_CONSTRUCTOR(x) (((x) & SYM_METHOD) != 0)
-#define SYM_PARAM_POSITION(x) (((x) >> 12) & 0xFF)
-#define SYM_RETURN_POSITION(x) (((x) >> 20) & 0xFF)
-#endif
-
   class SymbolTable
   {
   public:
@@ -171,6 +136,7 @@ namespace FM
     FMMap<FMString, symbol_flags_t> syms;
     FMVector<SymbolTable*> children;
     SymbolTable* parent;
+    int property_count;
   };
 
   // Walk an AST (for a function), and create the symbol table.
@@ -196,10 +162,6 @@ namespace FM
     SymbolTable *getRoot();
     void dump();
   };
-
-#if 0
-  FMString symbolFlagsToString(symbol_flag_t flag);
-#endif
 
 }
 

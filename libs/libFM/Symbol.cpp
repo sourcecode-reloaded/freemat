@@ -8,6 +8,7 @@ SymbolPass::SymbolPass() {
   _root = new SymbolTable;
   _root->parent = NULL;
   _root->name = "root";
+  _root->property_count = 0;
   _current = _root;
 }
 
@@ -88,6 +89,7 @@ void SymbolPass::beginFunction(const FMString &name, bool nested)
 {
   SymbolTable *t = new SymbolTable;
   t->name = name;
+  t->property_count = 0;
   if (!nested)
     newSibling(t);
   else
@@ -116,7 +118,9 @@ void SymbolPass::addSymbol(const FMString &name, symbol_flags_t flags)
 }
 
 void SymbolPass::walkProperty(const Tree &t) {
-  addSymbol(t.text(),symbol_flags_t::PROPERTY());
+  if (_current->syms.contains(t.text()))
+    throw Exception("Property " + t.text() + " cannot be defined more than once in definition of class " + _current->name);
+  addSymbol(t.text(),symbol_flags_t::PROPERTY(_current->property_count++));
   if (t.hasChildren())
     walkCode(t.first());
 }
@@ -160,7 +164,10 @@ void SymbolPass::walkFunction(const Tree &t, FunctionTypeEnum funcType) {
       FMString name = t.child(1).text();
       if (_current->syms.contains(name))
 	throw Exception("Cannot redfine symbol " + name + " in class " + _current->name);
-      addSymbol(t.child(1).text(), symbol_flags_t::METHOD());
+      if (name == _current->name)
+	addSymbol(t.child(1).text(), symbol_flags_t::CONSTRUCTOR());
+      else
+	addSymbol(t.child(1).text(), symbol_flags_t::METHOD());
     }
   const Tree &rets = t.child(0);
   beginFunction(t.child(1).text(),funcType == NestedFunction);
@@ -263,24 +270,3 @@ void SymbolPass::dump(SymbolTable *t, int indent)
     dump(t->children[i],indent+3);
 }
 
-#if 0
-FMString FM::symbolFlagsToString(symbol_flag_t flag)
-{
-  FMString ret;
-  symbol_flag_t param_position = SYM_PARAM_POSITION(flag);
-  symbol_flag_t return_position = SYM_RETURN_POSITION(flag);
-  if (flag & SYM_GLOBAL) ret += " global";
-  if (flag & SYM_PERSISTENT) ret += " persist";
-  if (flag & SYM_REFERENCE) ret += " reference";
-  if (flag & SYM_DYNAMIC) ret += " dynamic";
-  if (flag & SYM_PARAMETER) ret += (" parameter:" + Stringify(param_position));
-  if (flag & SYM_FREE) ret += " free";
-  if (flag & SYM_CAPTURED) ret += " captured";
-  if (flag & SYM_NESTED) ret += " nested";
-  if (flag & SYM_PROPERTY) ret += " property";
-  if (flag & SYM_METHOD) ret += " method";
-  if (flag & SYM_CONSTRUCTOR) ret += " constructor";
-  if (flag & SYM_RETURN) ret += (" return:" + Stringify(return_position));
-  return ret;
-}
-#endif

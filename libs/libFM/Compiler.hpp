@@ -152,8 +152,7 @@ namespace FM
     void walkScript(const Tree &t);
     void walkCode(const Tree &t);
     void walkFunction(const Tree &t, bool nested = false);
-    void walkProperties(const Tree &t, Object &metaClass);
-    void walkPropertyDefaults(const Tree &t, Object &metaClass);
+    void walkProperties(reg_t list, const Tree &t);
     void walkMethods(const Tree &t, Object &metaClass);
     void walkClassDef(const Tree &t);
   public:

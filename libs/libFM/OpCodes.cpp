@@ -69,6 +69,7 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_SAVE_CELL: return register_cell;
     case OP_MAKE_CLOSURE: return three_registers;
     case OP_PUSH_CELL: return register_cell;
+    case OP_CLASSDEF: return three_registers;
     default:
       return three_registers;
   }
@@ -146,6 +147,7 @@ std::string getOpCodeName(op_t opcode)
     case OP_SAVE_CELL: return "SAVE_CELL";
     case OP_MAKE_CLOSURE: return "MAKE_CLOSURE";
     case OP_PUSH_CELL: return "PUSH_CELL";
+    case OP_CLASSDEF: return "CLASSDEF";
     default: return "UNK";
   }
 }

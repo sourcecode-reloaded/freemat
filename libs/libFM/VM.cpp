@@ -106,6 +106,19 @@ Object VM::executeModule(const Object &moduleObject, const Object &parameters)
   return ret;
 }
 
+void VM::defineClass(const Object &name, const Object &parameters, const Object &methods)
+{
+  FMString className = _ctxt->_string->getString(name);
+  FMString classMetaName = "?" + className;
+  if (_ctxt->_globals->count(classMetaName) > 0) return;
+  Object fooMeta = _ctxt->_meta->makeScalar();
+  _ctxt->_meta->setName(fooMeta,classMetaName);
+  const Object *pp = _ctxt->_list->ro(parameters);
+  for (int i=0;i<parameters.count();i+=2)
+    _ctxt->_meta->addProperty(fooMeta,pp[i],pp[i+1]);
+  _ctxt->_globals->insert(std::make_pair(classMetaName,fooMeta));
+}
+
 // Execute a function object, given a list of parameters (params).  Returns a list
 // of returns.
 Object VM::executeFunction(const Object &functionObject, const Object &parameters)
@@ -687,6 +700,11 @@ void VM::executeCodeObject(const Object &codeObject)
 		  std::cout << "POP for " << _ctxt->_double->scalarValue(REG2) << "\n";
 		  for (int i=0;i<_ctxt->_double->scalarValue(REG2);i++)
 		    _ctxt->_list->pop(REG1);
+		  break;
+		}
+	      case OP_CLASSDEF:
+		{
+		  defineClass(REG1,REG2,REG3);
 		  break;
 		}
 	      default:

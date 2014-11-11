@@ -737,6 +737,7 @@ reg_t Compiler::fetchClosure(const FMString &varname)
 reg_t Compiler::fetchVariable(const FMString &varname, symbol_flags_t flags)
 {
   reg_t x = getRegister();
+  std::cout << "Fetch variable: " << varname << " with flags: " << flags.str() << "\n";
   if (flags.is_global())
     emit(OP_LOAD_GLOBAL,x,getNameID(varname));
   else if (flags.is_persistent())
@@ -1488,48 +1489,44 @@ void Compiler::walkMethods(const Tree &t, Object &metaClass) {
     }
 }
 
-void Compiler::walkProperties(const Tree &t, Object &metaClass) {
+void Compiler::walkProperties(reg_t list, const Tree &t) {
   assert(t.is(TOK_PROPERTIES));
   for (int i=0;i<t.numChildren();i++)
     {
-      // TODO - handle default values
-      _ctxt->_meta->addProperty(metaClass,
-				_ctxt->_string->makeString(t.child(i).text()),
-				_ctxt->_double->empty());
-    }
-}
-
-void Compiler::walkPropertyDefaults(const Tree &t, Object &metaClass) {
-  assert(t.is(TOK_PROPERTIES));
-  for (int i=0;i<t.numChildren();i++)
-    {
-      if (t.child(i).hasChildren())
-	{
-	  // Create a code block
-	  CodeBlock *cp = new CodeBlock(_ctxt);
-	  // Create a synthetic symbol table
-	  cp->_syms = new SymbolTable;
-	  // Insert the properies into the symbol table as dynamic vars
-	  const ClassMetaData *cmd = _ctxt->_meta->ro(metaClass);
-	  for (auto p=cmd->m_properties.begin();p!=cmd->m_properties.end();++p)
-	    {
-	      std::cout << "Property: " << p->first << "\n";
-	      //	      cp->_syms[p->first] = SYM_DYNAMIC;
-	    }
-	  // Build up the variable list
-	  _code = cp;
-	  // Build up the variable list
-	  _code->_namelist = _ctxt->_list->empty();
-	  _code->_constlist = _ctxt->_list->empty();
-	  for (auto s = _code->_syms->syms.constBegin(); s != _code->_syms->syms.constEnd(); ++s)
-	    addStringToList(_ctxt,_code->_namelist,s.key());
-	  useBlock(new BasicBlock);
-	  block(t.first());
-	}
+      const Tree &p = t.child(i);
+      pushList(list,fetchConstantString(p.text()));
+      if (p.hasChildren())
+	pushList(list,expression(p.first().first()));
+      else
+	pushList(list,fetchConstant(_ctxt->_double->empty()));
     }
 }
 
 void Compiler::walkClassDef(const Tree &t) {
+  CodeBlock *cp = new CodeBlock(_ctxt);
+  cp->_syms = _currentSym;
+  _codestack.push(cp);
+  _code = cp;
+  _code->_namelist = _ctxt->_list->empty();
+  _code->_constlist = _ctxt->_list->empty();
+  for (auto s = _currentSym->syms.constBegin(); s != _currentSym->syms.constEnd(); ++s)
+    addStringToList(_ctxt,_code->_namelist,s.key());
+  // Build up the property list
+  useBlock(new BasicBlock);
+  reg_t props = startList();
+  // Walk the properties
+  for (int i=1;i<t.numChildren();i++)
+    if (t.child(i).is(TOK_PROPERTIES))
+      walkProperties(props,t.child(i));
+  // for (auto i=cp->_syms->syms.begin();i!=cp->_syms->syms.end();++i)
+  //   if (i.value().is_property())
+  //     pushList(props,fetchConstantString(i.key()));
+  reg_t methods = startList();
+  reg_t name = fetchConstantString(cp->_syms->name);
+  emit(OP_CLASSDEF,name,props,methods);
+  emit(OP_RETURN);
+  /*  
+
   FMString className = t.first().text();
   FMString classMetaName = "?" + className;
   if (_ctxt->_globals->count(classMetaName) > 0)
@@ -1560,6 +1557,7 @@ void Compiler::walkClassDef(const Tree &t) {
   std::cout << "meta class:" << fooMeta.description() << "\n";
   std::cout << "Retrieved:\n";
   std::cout << _ctxt->_globals->at(classMetaName) << "\n";
+  */
 }
 
 void Compiler::walkCode(const Tree &t) {

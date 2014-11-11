@@ -33,6 +33,7 @@ namespace FM
     Object executeModule(const Object &moduleObject, const Object &parameters);
     void executeCodeObject(const Object &codeObject);
     void defineBaseVariable(const FMString &name, const Object &value);
+    void defineClass(const Object &name, const Object &properties, const Object &methods);
     void dump();
   };
 }
