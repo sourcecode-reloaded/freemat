@@ -1450,3 +1450,13 @@ Method attributes to handle:
 
 
 
+********************************************************************************
+
+Still need to handle a() where a is an array.  Not sure why this
+fails, but it does.
+
+Closures do not work from within class methods - why?
+
+
+
+

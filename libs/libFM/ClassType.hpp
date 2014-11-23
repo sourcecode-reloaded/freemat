@@ -71,6 +71,13 @@ namespace FM
   */
   //  This is a lot of C++ code... Is it really necessary?
 
+  class ClassMethodMetaData {
+  public:
+    bool m_static;
+    Object m_value;
+    ClassMethodMetaData(ThreadContext *_ctxt) : m_static(false), m_value(_ctxt) {}
+  };
+
   class ClassPropertyMetaData {
   public:
     bool m_constant;   // Set to true if the property is constant
@@ -82,15 +89,14 @@ namespace FM
     ClassPropertyMetaData(ThreadContext *_ctxt) : m_constant(false),
       m_default(_ctxt), m_dependent(false), m_getter(_ctxt),
       m_setter(_ctxt), m_index(0) {}
-    FMString description();
   };
 
   // Start with a  class.  Assume value type.
   class ClassMetaData {
   public:
     Object m_name;             // Name of the  class.
-    HashMap<ClassPropertyMetaData*> m_props;
-    HashMap<Object> m_methods; // Methods for the class - maps method names to code objects
+    HashMap<ClassPropertyMetaData*> m_properties; // Properties for the class 
+    HashMap<ClassMethodMetaData*> m_methods; // Methods for the class 
     Object m_defaults;
     ClassMetaData(ThreadContext *_ctxt);
   };
@@ -101,7 +107,8 @@ namespace FM
     void addProperty(Object &meta, const Object &name, bool constant, 
 		     bool dependent, const Object &default_value,
 		     const Object &getter, const Object &setter);
-    void addMethod(Object &meta, const Object &name, const Object &definition);
+    void addMethod(Object &meta, const Object &name, 
+		   const Object &definition, bool is_static);
     void setName(Object &a, const Object &name) {this->rw(a)->m_name = name;}
     virtual DataCode code() const {return TypeMeta;}
     virtual const FMString& name() const {static FMString _name = "meta"; return _name;}

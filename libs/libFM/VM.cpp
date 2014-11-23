@@ -126,8 +126,14 @@ void VM::defineClass(const Object &name, const Object &parameters, const Object 
 				pl[5]); // setter
     }
   const Object *mp = _ctxt->_list->ro(methods);
-  for (int i=0;i<methods.count();i+=2)
-    _ctxt->_meta->addMethod(fooMeta,mp[i],mp[i+1]);
+  for (int i=0;i<methods.count();i++)
+    {
+      const Object *ml = _ctxt->_list->ro(mp[i]);
+      _ctxt->_meta->addMethod(fooMeta,
+			      ml[0], // name
+			      ml[1], // code
+			      _ctxt->_bool->scalarValue(ml[2])); // is constant
+    }
   _ctxt->_globals->insert(std::make_pair(className,fooMeta));
 }
 

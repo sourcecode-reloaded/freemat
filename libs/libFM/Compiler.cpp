@@ -1639,8 +1639,11 @@ void Compiler::walkClassDef(const Tree &t) {
   for (auto s = _currentSym->syms.constBegin(); s != _currentSym->syms.constEnd(); ++s)
     if (s.value().is_method() && !s.value().is_getter() && !s.value().is_setter())
       {
-	pushList(methods,fetchConstantString(s.key()));
-	pushList(methods,fetchConstantString("#"+s.key()));
+	reg_t method_args = startList();
+	pushList(method_args,fetchConstantString(s.key()));
+	pushList(method_args,fetchConstantString("#"+s.key()));
+	pushList(method_args,fetchConstantBool(s.value().is_static()));
+	pushList(methods,method_args);
       }
   // Walk the methods
   for (int i=1;i<t.numChildren();i++)

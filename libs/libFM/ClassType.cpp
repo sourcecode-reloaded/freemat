@@ -8,6 +8,16 @@ ClassMetaData::ClassMetaData(ThreadContext *_ctxt) : m_name(_ctxt), m_defaults(_
   m_defaults = _ctxt->_list->empty();
 }
 
+Object ClassMetaType::getField(const Object &meta, const Object &fieldname) {
+  const ClassMetaData *cmd = this->ro(meta);
+  auto j = cmd->m_methods.find(fieldname);
+  if (j == cmd->m_methods.end())
+    throw Exception("Class " + cmd->m_name.description() + " has no method named " + fieldname.description());
+  if (!j->second->m_static)
+    throw Exception("Method " + fieldname.description() + " is not static for class " + cmd->m_name.description());
+  return j->second->m_value;
+}
+
 Object ClassMetaType::getParens(const Object &meta, const Object &b) {
   const ClassMetaData *cmd = this->ro(meta);
   auto j = cmd->m_methods.find(cmd->m_name);
@@ -21,7 +31,7 @@ Object ClassMetaType::getParens(const Object &meta, const Object &b) {
       // There is a constructor - just invoke it (no arguments)
       // the constructor will be responsible for calling OP_CONSTRUCT to construct the class.
       std::cout << "Constructor found - invoking\n";
-      return _ctxt->_function->getParens(j->second,b);
+      return _ctxt->_function->getParens(j->second->m_value,b);
     }
 }
 
@@ -51,7 +61,7 @@ Object ClassMetaType::deref(const Object &meta) {
       // There is a constructor - just invoke it (no arguments)
       // the constructor will be responsible for calling OP_CONSTRUCT to construct the class.
       std::cout << "Constructor found - invoking\n";
-      return _ctxt->_function->deref(j->second);
+      return _ctxt->_function->deref(j->second->m_value);
     }
 }
 
@@ -63,7 +73,7 @@ FMString ClassMetaType::describe(const Object &a) {
   const ClassMetaData *cmd = this->ro(a);
   FMString ret = "meta class " + _ctxt->_string->getString(cmd->m_name) + "\n";
   ret += "properties:\n";
-  for (auto i=cmd->m_props.begin(); i != cmd->m_props.end(); ++i)
+  for (auto i=cmd->m_properties.begin(); i != cmd->m_properties.end(); ++i)
     ret += FMString(" ") + i->first.description() + "\n";
   return ret;
 }
@@ -85,28 +95,16 @@ void ClassMetaType::addProperty(Object &meta, const Object &name, bool constant,
     }
   else
     cpmd->m_index = -1;
-  cmd->m_props[name] = cpmd;
+  cmd->m_properties[name] = cpmd;
 }
 
-Object ClassMetaType::getField(const Object &meta, const Object &fieldname) {
-  const ClassMetaData *cmd = this->ro(meta);
-  auto i = cmd->m_props.find(fieldname);
-  if (i == cmd->m_props.end())
-    throw Exception("Property " + fieldname.description() + " not defined for class " + cmd->m_name.description());
-  if (!i->second->m_constant)
-    throw Exception("Property " + fieldname.description() + " is not constant for class " + cmd->m_name.description());
-  return i->second->m_default;
-}
-
-void ClassMetaType::addMethod(Object &meta, const Object &name, const Object &definition) {
+void ClassMetaType::addMethod(Object &meta, const Object &name, const Object &definition, bool is_static) {
   ClassMetaData *cmd = this->rw(meta);
   FMString s_name = _ctxt->_string->getString(name);
-  // if (s_name.startsWith("get."))
-  //   cmd->m_getters.insert(std::pair<Object,Object>(_ctxt->_string->makeString(s_name.mid(4)),definition)); // TODO - Check that get.foo is a valid property name
-  // else if (s_name.startsWith("set."))
-  //   cmd->m_setters.insert(std::pair<Object,Object>(_ctxt->_string->makeString(s_name.mid(4)),definition)); // TODO - Check that set.foo is a valid property name
-  // else
-  cmd->m_methods.insert(std::pair<Object,Object>(name,definition));
+  ClassMethodMetaData *cmmd = new ClassMethodMetaData(_ctxt);
+  cmmd->m_value = definition;
+  cmmd->m_static = is_static;
+  cmd->m_methods.insert(std::pair<Object,ClassMethodMetaData*>(name,cmmd));
 }
 
 bool ClassType::hasMethod(const Object &a, const Object &name, Object &ret) {
@@ -116,7 +114,7 @@ bool ClassType::hasMethod(const Object &a, const Object &name, Object &ret) {
   auto j = cmd->m_methods.find(name);
   if (j != cmd->m_methods.end()) 
     {
-      ret = j->second;
+      ret = j->second->m_value;
       return true;
     }
   return false;
@@ -139,8 +137,8 @@ Object ClassType::getFieldNoGetters(const Object &a, const Object &b) {
   const ClassData *cd = this->ro(a);
   const Object &myMeta = cd->metaClass;
   const ClassMetaData *cmd = _ctxt->_meta->ro(myMeta);
-  auto i = cmd->m_props.find(b);
-  if (i != cmd->m_props.end()) 
+  auto i = cmd->m_properties.find(b);
+  if (i != cmd->m_properties.end()) 
     {
       ClassPropertyMetaData *cpmd = i->second;
       // This is copied from structtype...
@@ -167,12 +165,12 @@ Object ClassType::getField(const Object &a, const Object &b) {
   const ClassData *cd = this->ro(a);
   const Object &myMeta = cd->metaClass;
   const ClassMetaData *cmd = _ctxt->_meta->ro(myMeta);
-  auto k = cmd->m_props.find(b);
-  if (k == cmd->m_props.end()) {
+  auto k = cmd->m_properties.find(b);
+  if (k == cmd->m_properties.end()) {
     auto j = cmd->m_methods.find(b);
     if (j == cmd->m_methods.end())
       throw Exception("Property " + b.description() + " is not defined for class " + _ctxt->_string->getString(cmd->m_name));
-    return _ctxt->_bound->bindFunction(j->second,a);
+    return _ctxt->_bound->bindFunction(j->second->m_value,a);
   }
   ClassPropertyMetaData *cpmd = k->second;
   if (cpmd->m_getter.isEmpty())
@@ -186,8 +184,8 @@ void ClassType::setField(Object &a, const Object &args, const Object &b) {
   ClassData *cd = this->rw(a);
   const Object &myMeta = cd->metaClass;
   const ClassMetaData *cmd = _ctxt->_meta->ro(myMeta);
-  auto k = cmd->m_props.find(args);
-  if (k == cmd->m_props.end())
+  auto k = cmd->m_properties.find(args);
+  if (k == cmd->m_properties.end())
     throw Exception("Property " + b.description() + " is not defined for class " + _ctxt->_string->getString(cmd->m_name));
   ClassPropertyMetaData *cpmd = k->second;
   if (cpmd->m_setter.isEmpty())
@@ -209,8 +207,8 @@ void ClassType::setFieldNoSetters(Object &a, const Object &args, const Object &b
   ClassData *cd = this->rw(a);
   const Object &myMeta = cd->metaClass;
   const ClassMetaData *cmd = _ctxt->_meta->ro(myMeta);
-  auto i = cmd->m_props.find(args);
-  if (i == cmd->m_props.end()) throw Exception("Property " + args.description() + " is not defined for class " + cmd->m_name.description());
+  auto i = cmd->m_properties.find(args);
+  if (i == cmd->m_properties.end()) throw Exception("Property " + args.description() + " is not defined for class " + cmd->m_name.description());
   ClassPropertyMetaData *cpmd = i->second;
   if (cpmd->m_constant)
     throw Exception("Property " + args.description() + " is constant and cannot be changed for class " + cmd->m_name.description());
@@ -248,7 +246,7 @@ FMString ClassType::describe(const Object &a) {
     ret += "\n";
     const Object *rd = _ctxt->_list->ro(_ctxt->_list->scalarValue(cd->m_data));
     ret += "properties:\n";
-    for (auto i = cmd->m_props.begin(); i != cmd->m_props.end(); ++i)
+    for (auto i = cmd->m_properties.begin(); i != cmd->m_properties.end(); ++i)
       {
 	ClassPropertyMetaData *cpmd = i->second;
 	ret += "    " + _ctxt->_string->getString(i->first) + ": ";
@@ -258,7 +256,7 @@ FMString ClassType::describe(const Object &a) {
 	  }
 	else if (cpmd->m_dependent)
 	  {
-	    ret += " (dependent)\n";
+	    ret += _ctxt->_function->getParens(cpmd->m_getter,_ctxt->_list->makeScalar(a)).brief() + " (dependent)\n";
 	  }
 	else
 	  {
@@ -268,11 +266,16 @@ FMString ClassType::describe(const Object &a) {
   } else {
     ret += " " + a.dims().toString() + " array\n";
     ret += "properties:\n";
-    for (auto i = cmd->m_props.begin(); i != cmd->m_props.end(); ++i)
+    for (auto i = cmd->m_properties.begin(); i != cmd->m_properties.end(); ++i)
       ret += "    " + _ctxt->_string->getString(i->first) + "\n";
   }
   ret += "list of methods\n";
   for (auto i=cmd->m_methods.begin(); i != cmd->m_methods.end(); ++i)
-    ret += "    " + _ctxt->_string->getString(i->first) + "\n";
+    {
+      ret += "    " + _ctxt->_string->getString(i->first);
+      if (i->second->m_static)
+	ret += " (static)";
+      ret += "\n";
+    }
   return ret;
 }
