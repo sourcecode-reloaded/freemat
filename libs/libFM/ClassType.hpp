@@ -71,22 +71,38 @@ namespace FM
   */
   //  This is a lot of C++ code... Is it really necessary?
 
+  class ClassPropertyMetaData {
+  public:
+    bool m_constant;   // Set to true if the property is constant
+    bool m_dependent;  // Set to true if the property is dependent
+    Object m_default;  // Default value
+    Object m_getter;   // Getter (if it has one)
+    Object m_setter;   // Setter (if it has one)
+    int m_index;       // Index into the object instance's list of properties
+    ClassPropertyMetaData(ThreadContext *_ctxt) : m_constant(false),
+      m_default(_ctxt), m_dependent(false), m_getter(_ctxt),
+      m_setter(_ctxt), m_index(0) {}
+    FMString description();
+  };
+
   // Start with a  class.  Assume value type.
   class ClassMetaData {
   public:
-    HashMap<int> m_properties; // Maps property names to index in the list for each cell
+    Object m_name;             // Name of the  class.
+    HashMap<ClassPropertyMetaData*> m_props;
     HashMap<Object> m_methods; // Methods for the class - maps method names to code objects
-    Object m_defaults;         // Default values for properties
-    FMString m_name;           // Name of the  class.
+    Object m_defaults;
     ClassMetaData(ThreadContext *_ctxt);
   };
   
   class ClassMetaType : public AggregateType<ClassMetaData,HandleSemantics> {
   public:
     ClassMetaType(ThreadContext *ctxt) {_ctxt = ctxt;}
-    void addProperty(Object &meta, const Object &name, const Object &default_value);
+    void addProperty(Object &meta, const Object &name, bool constant, 
+		     bool dependent, const Object &default_value,
+		     const Object &getter, const Object &setter);
     void addMethod(Object &meta, const Object &name, const Object &definition);
-    void setName(Object &a, const FMString &name) {this->rw(a)->m_name = name;}
+    void setName(Object &a, const Object &name) {this->rw(a)->m_name = name;}
     virtual DataCode code() const {return TypeMeta;}
     virtual const FMString& name() const {static FMString _name = "meta"; return _name;}
     //    Object empty();
@@ -96,7 +112,10 @@ namespace FM
     {
       return false;
     }
-    Object construct(const Object &meta); // Construct an object with this class
+    Object construct(const Object &a);
+    virtual Object deref(const Object &a); // Construct an object without parameters
+    virtual Object getParens(const Object &a, const Object &b); // Construct with parameters
+    virtual Object getField(const Object &meta, const Object &fieldname);
   };
 
   class ClassData {
@@ -114,11 +133,13 @@ namespace FM
     virtual FMString describe(const Object &a);
     virtual FMString brief(const Object &a);
     virtual Object getField(const Object &a, const Object &b);
+    virtual Object getFieldNoGetters(const Object &a, const Object &b);
     virtual void setField(Object &a, const Object &args, const Object &b);
+    virtual void setFieldNoSetters(Object &a, const Object &args, const Object &b);
     //    virtual Object getParens(const Object &a, const Object &args);
     //    virtual void setParens(Object &a, const Object &args, const Object &b);
     virtual bool hasMethod(const Object &a, const Object &name, Object &ret);
-    const FMString & className(const Object &a) const {return _ctxt->_meta->ro(this->ro(a)->metaClass)->m_name;}
+    const Object & className(const Object &a) const {return _ctxt->_meta->ro(this->ro(a)->metaClass)->m_name;}
     virtual bool equals(const Object &a, const Object &b)
     {
       // FIXME - allow equality tests

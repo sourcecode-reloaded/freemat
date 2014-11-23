@@ -134,13 +134,18 @@ namespace FM
     Object _freelist;
     Object _capturedlist;
     std::vector<CodeBlock*> _nested;
+    bool _isgetset;
+    FMString _objectName;
+    FMString _propertyName;
     CodeBlock(ThreadContext*ctxt) : _namelist(ctxt), _constlist(ctxt), 
-				    _freelist(ctxt), _capturedlist(ctxt) {}
+				    _freelist(ctxt), _capturedlist(ctxt), 
+				    _isgetset(false) {}
   };
 
   struct Module
   {
     FMString _name;
+    bool _isclass;
     CodeBlock *_main;
     FMMap<FMString,CodeBlock*> _locals;
   };

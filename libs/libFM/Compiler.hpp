@@ -87,7 +87,7 @@ namespace FM
   class Compiler
   {
     RegisterBlock *_regpool;
-    std::stack<CodeBlock *> _codestack;
+    Module *_module;
     CodeBlock *_code;
     SymbolTable *_symsRoot;
     SymbolTable *_currentSym;
@@ -126,6 +126,8 @@ namespace FM
     reg_t fetchClosure(const FMString &);
     reg_t fetchCell(const FMString &);
     reg_t fetchConstantString(const FMString &);
+    reg_t fetchConstantBool(bool t);
+    reg_t fetchEmpty();
     reg_t fetchVariable(const FMString &, symbol_flags_t flags);
     reg_t fetchVariableOrFunction(const FMString &, reg_t args);
     void saveRegisterToName(const FMString &varname, reg_t b);
@@ -151,9 +153,9 @@ namespace FM
     void walkFunctionCollection(const Tree &t);
     void walkScript(const Tree &t);
     void walkCode(const Tree &t);
-    void walkFunction(const Tree &t, bool nested = false);
+    void walkFunction(const Tree &t, FunctionTypeEnum funcType = NormalFunction);
     void walkProperties(reg_t list, const Tree &t);
-    void walkMethods(const Tree &t, Object &metaClass);
+    void walkMethods(const Tree &t);
     void walkClassDef(const Tree &t);
   public:
     static std::string opcodeDecode(op_t opcode, insn_t val);

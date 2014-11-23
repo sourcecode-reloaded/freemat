@@ -66,3 +66,6 @@ const op_t OP_SAVE_CELL = 78;
 const op_t OP_MAKE_CLOSURE = 79;
 const op_t OP_PUSH_CELL = 80;
 const op_t OP_CLASSDEF = 81;
+const op_t OP_CONSTRUCT = 82;
+const op_t OP_SUBSREF_NOGS = 83;
+const op_t OP_SUBSASGN_NOGS = 84;

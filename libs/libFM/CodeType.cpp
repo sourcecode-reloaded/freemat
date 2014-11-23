@@ -45,7 +45,7 @@ Object CodeType::bindFunction(const Object &func, const Object &argument)
   Object code = this->makeScalar();
   CodeData *cp = this->rw(code);
   const CodeData *fp = this->ro(func);
-  cp->m_name = _ctxt->_string->makeString("Binding of " + fp->m_name.description() + " to " + _ctxt->_class->className(argument));
+  cp->m_name = _ctxt->_string->makeString("Binding of " + fp->m_name.description() + " to " + _ctxt->_class->className(argument).description());
   // There are two constants... the code object (0) and the argument (1)
   cp->m_consts = _ctxt->_list->empty();
   _ctxt->_list->push(cp->m_consts,func); // const[0] = code

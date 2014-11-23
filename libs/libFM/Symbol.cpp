@@ -117,12 +117,73 @@ void SymbolPass::addSymbol(const FMString &name, symbol_flags_t flags)
     }
 }
 
-void SymbolPass::walkProperty(const Tree &t) {
+void SymbolPass::walkProperty(const Tree &t, symbol_flags_t attr) {
   if (_current->syms.contains(t.text()))
     throw Exception("Property " + t.text() + " cannot be defined more than once in definition of class " + _current->name);
-  addSymbol(t.text(),symbol_flags_t::PROPERTY(_current->property_count++));
+  addSymbol(t.text(),symbol_flags_t::PROPERTY(_current->property_count++) | attr);
   if (t.hasChildren())
     walkCode(t.first());
+}
+
+
+static bool activeAttribute(const Tree &t, const FMString &name) {
+  if (t.numChildren() == 0) 
+    return (t.text().toLower() == name);
+  else
+    return ((t.text().toLower() == name) &&
+	    (t.first().text().toLower() == "true"));
+}
+
+
+symbol_flags_t SymbolPass::walkAttributes(const Tree &t) {
+  std::cout << "ATTRIBUTES\n";
+  symbol_flags_t p;
+  for (int i=0;i<t.numChildren();i++)
+    {
+      std::cout << "ATTRIBUTE:" << t.child(i).text() << "\n";
+      if (activeAttribute(t.child(i),"static"))
+	p._static = 1;
+      if (activeAttribute(t.child(i),"constant"))
+	p._constant = 1;
+      if (activeAttribute(t.child(i),"dependent"))
+	p._dependent = 1;
+    }
+  return p;
+}
+
+void SymbolPass::walkProperties(const Tree &t) {
+  int start = 0;
+  symbol_flags_t attr;
+  if ((t.numChildren() > 0) && t.first().is(TOK_ATTRIBUTES))
+    {
+      attr = walkAttributes(t.first());
+      start = 1;
+    }
+  for (int j=start;j<t.numChildren();j++)
+    walkProperty(t.child(j),attr);
+}
+
+void SymbolPass::walkMethods(const Tree &t) {
+  int start = 0;
+  symbol_flags_t attr;
+  if ((t.numChildren() > 0) && t.first().is(TOK_ATTRIBUTES))
+    {
+      attr = walkAttributes(t.first());
+      start = 1;
+    }
+  for (int j=start;j<t.numChildren();j++)
+    {
+      const Tree &p = t.child(j);
+      FMString fname = p.child(1).text();
+      if (fname == _current->name)
+	walkFunction(p,ConstructorFunction,attr);
+      else if (fname.startsWith("set."))
+	walkFunction(p,SetterFunction,attr);
+      else if (fname.startsWith("get."))
+	walkFunction(p,GetterFunction,attr);
+      else
+	walkFunction(p,MethodFunction,attr);
+    }
 }
 
 void SymbolPass::walkClassDef(const Tree &t) {
@@ -132,12 +193,10 @@ void SymbolPass::walkClassDef(const Tree &t) {
       switch (t.child(i).token())
 	{
 	case TOK_PROPERTIES:
-	  for (int j=0;j<t.child(i).numChildren();j++)
-	    walkProperty(t.child(i).child(j));
+	  walkProperties(t.child(i));
 	  break;
 	case TOK_METHODS:
-	  for (int j=0;j<t.child(i).numChildren();j++)
-	    walkFunction(t.child(i).child(j),MethodFunction);
+	  walkMethods(t.child(i));
 	  break;
 	default:
 	  throw Exception("Unhandled classdef block");
@@ -145,32 +204,54 @@ void SymbolPass::walkClassDef(const Tree &t) {
     }
 }
 
-void SymbolPass::walkFunction(const Tree &t, FunctionTypeEnum funcType) {
-  if (funcType == NestedFunction)
+void SymbolPass::walkFunction(const Tree &t, FunctionTypeEnum funcType, symbol_flags_t attr) {
+  FMString name = t.child(1).text();
+  switch (funcType)
     {
-      FMString name = t.child(1).text();
-      if (_current->syms.contains(name))
-	{
-	  symbol_flags_t old_flag = _current->syms[name];
-	  old_flag._nested = 1;
-	  old_flag._dynamic = 0;
-	  _current->syms[name] = old_flag;
-	}
-      else
-	addSymbol(t.child(1).text(), symbol_flags_t::NESTED());
-    }
-  else if (funcType == MethodFunction)
-    {
-      FMString name = t.child(1).text();
-      if (_current->syms.contains(name))
-	throw Exception("Cannot redfine symbol " + name + " in class " + _current->name);
-      if (name == _current->name)
-	addSymbol(t.child(1).text(), symbol_flags_t::CONSTRUCTOR());
-      else
-	addSymbol(t.child(1).text(), symbol_flags_t::METHOD());
+    case NestedFunction:
+      {
+	if (_current->syms.contains(name))
+	  {
+	    symbol_flags_t old_flag = _current->syms[name];
+	    old_flag._nested = 1;
+	    old_flag._dynamic = 0;
+	    _current->syms[name] = old_flag | attr;
+	  }
+	else
+	  addSymbol(name, symbol_flags_t::NESTED() | attr);
+	break;
+      }
+    case MethodFunction:
+      {
+	if (_current->syms.contains(name))
+	  throw Exception("Cannot redefine symbol " + name + " in class " + _current->name);
+	addSymbol(name, symbol_flags_t::METHOD() | attr);
+	break;
+      }
+    case ConstructorFunction:
+      {
+	if (_current->syms.contains(name))
+	  throw Exception("Only one constructor allowed for class " + _current->name);
+	addSymbol(name, symbol_flags_t::CONSTRUCTOR() | attr);
+	break;
+      }
+    case GetterFunction:
+      {
+	if (_current->syms.contains(name))
+	  throw Exception("Cannot redefine getter function " + name + " in class " + _current->name);
+	addSymbol(name, symbol_flags_t::GETTER() | attr);
+	break;
+      }
+    case SetterFunction:
+      {
+	if (_current->syms.contains(name))
+	  throw Exception("Cannot redefine setter function " + name + " in class " + _current->name);
+	addSymbol(name, symbol_flags_t::SETTER() | attr);
+	break;
+      }      
     }
   const Tree &rets = t.child(0);
-  beginFunction(t.child(1).text(),funcType == NestedFunction);
+  beginFunction(name,funcType == NestedFunction);
   const Tree &args = t.child(2);
   const Tree &code = t.child(3);
   for (int index=0;index < args.numChildren();index++)
@@ -181,7 +262,19 @@ void SymbolPass::walkFunction(const Tree &t, FunctionTypeEnum funcType) {
   for (int index=0;index < rets.numChildren();index++)
     addSymbol(rets.child(index).text(), symbol_flags_t::RETURN(index));
   walkCode(code,funcType == NestedFunction);  
-  if (funcType == NestedFunction) popToParent();
+  switch (funcType)
+    {
+    case NestedFunction:
+    case MethodFunction:
+    case GetterFunction:
+    case SetterFunction:
+      popToParent();
+      break;
+    case ConstructorFunction:
+      addSymbol(name,symbol_flags_t::DYNAMIC());
+      popToParent();
+      break;
+    }
 }
 
 void SymbolPass::walkCode(const Tree &t, bool nested) {

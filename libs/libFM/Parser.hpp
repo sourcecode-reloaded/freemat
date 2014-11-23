@@ -54,6 +54,7 @@ namespace FM
     Tree declarationStatement();
     Tree statementSeperator();
     Tree identifier();
+    Tree functionName();
     Tree assignmentStatement();
     void indexingExpressions(Tree&, bool blankRefOK);
     Tree variableDereference(bool blankRefOK = true);
@@ -71,6 +72,7 @@ namespace FM
     Tree classDefinition();
     Tree classPropertiesDefinition();
     Tree classMethodsDefinition();
+    Tree attributeList();
     void skipNewLines();
   public:
     Parser(Scanner& lex, bool octaveCompatibility = false);

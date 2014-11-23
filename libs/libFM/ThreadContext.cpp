@@ -27,6 +27,7 @@ ThreadContext* FM::BuildNewThreadContext(TermIF *io)
   ctxt->_code = new CodeType(ctxt);
   ctxt->_module = new ModuleType(ctxt);
   ctxt->_function = new FunctionType(ctxt);
+  ctxt->_builtin = new BuiltInType(ctxt);
   ctxt->_vm = new VM(ctxt);
   ctxt->_compiler = new Compiler(ctxt);
   ctxt->_asm = new Assembler(ctxt);
@@ -34,6 +35,7 @@ ThreadContext* FM::BuildNewThreadContext(TermIF *io)
   ctxt->_meta = new ClassMetaType(ctxt);
   ctxt->_class = new ClassType(ctxt);
   ctxt->_captured = new CapturedType(ctxt);
+  ctxt->_bound = new BoundFunctionType(ctxt);
   ctxt->_io = io;
   return ctxt;
 }

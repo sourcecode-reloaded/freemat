@@ -1374,9 +1374,79 @@ in the consts list that will then be backpatched by the assembler.
 
 Suppose we now have a constructor
 
+TODO - handle the constructor...
+
+1. Find the metaclass for the class
+2. Use the metaclass to construct an instance of the class
+3. Call the constructor on the instance.
+
+NO - that's not how it works.  The constructor is automatically
+called.  Consider:
+
+      function obj = DocPolynom(c)
+         % Construct a DocPolynom object using the coefficients supplied
+         if isa(c,'DocPolynom')
+            obj.coef = c.coef;
+         else
+            obj.coef = c(:).';
+         end
+      end % DocPolynom
+
+In this case, the constructor really has an implicit call of the form
+
+      function obj = DocPolynom(c)
+         obj = __construct('DocPolynom')  % <-- Implicit call goes here.
+         % Construct a DocPolynom object using the coefficients supplied
+         if isa(c,'DocPolynom')
+            obj.coef = c.coef;
+         else
+            obj.coef = c(:).';
+         end
+      end % DocPolynom
+
+That means we need a special call in the compiler - done - and a new
+Opcode has been added to the VM to call the constructor.  
+
+Constructors work.  Next _big_ task is to handle getters and setters
+for classes.  These are tricky primarily because of the need to avoid
+recursion, and the fact that we cannot a priori identify which element
+is the class of which we are a setter/getter.  For example:
+
+      function obj = set.coef(obj,val)
+         if ~isa(val,'double')
+            error('Coefficients must be of class double')
+         end         
+         ind = find(val(:).'~=0);
+         if ~isempty(ind);
+            obj.coef = val(ind(1):end);
+         else
+            obj.coef = val;
+         end
+      end % set.coef
+
+Actually, it's not so difficult at all.  When inside a getter or setter
+method, access to the class method that is associated with the get/set
+operation should bypass setters/getters.  
+
+That means - 
+
+1.  Symbol table needs to be extended to handle get/set operations
+2.  Parser needs to accept get/set as part of function name (in this
+circumstance only).
+3.  
 
 
 
+Property attributes to handle:
+ - constant
+ - dependent
+
+Method attributes to handle:
+ - abstract ?
+ - access ?
+ - hidden ? 
+ - sealed ?
+ - static
 
 
 

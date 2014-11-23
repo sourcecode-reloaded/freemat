@@ -21,9 +21,6 @@ namespace FM
     FunctionType(ThreadContext *ctxt) {_ctxt = ctxt;}
     virtual DataCode code() const {return TypeFunction;}
     virtual const FMString& name() const {static FMString _name = "function"; return _name;}
-    bool equals(const Object &a, const Object &b) {
-      throw Exception("Function type doesn't support equals yet.");
-    }
     virtual FMString describe(const Object &a);
     virtual FMString brief(const Object &a);
     virtual Object getParens(const Object &a, const Object &b);
@@ -32,5 +29,6 @@ namespace FM
     Object fromCode(const Object &codeObject, const Object &closure);
     Object fromCode(const Object &codeObject);
   };
+
 };
 #endif

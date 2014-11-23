@@ -17,14 +17,39 @@ Object Assembler::run(Module *mod)
   Object module = _ctxt->_module->makeScalar();
   ModuleData *mp = _ctxt->_module->rw(module);
   mp->m_name = mod->_name;
-  mp->m_main = _ctxt->_function->fromCode(this->run(mod->_main));
-  for (auto i=mod->_locals.constBegin();
-       i != mod->_locals.constEnd();++i)
+  Object main_code = this->run(mod->_main);
+  mp->is_class = mod->_isclass;
+  if (!mp->is_class)
     {
-      Object co = this->run(i.value());
-      // Make into function object - no closures at the module level
-      Object fo = _ctxt->_function->fromCode(co);
-      mp->m_locals.insert(std::make_pair(_ctxt->_string->makeString(i.key()),fo));
+      mp->m_main = _ctxt->_function->fromCode(main_code);
+      for (auto i=mod->_locals.constBegin();
+	   i != mod->_locals.constEnd();++i)
+	{
+	  Object co = this->run(i.value());
+	  // Make into function object - no closures at the module level
+	  Object fo = _ctxt->_function->fromCode(co);
+	  mp->m_locals.insert(std::make_pair(_ctxt->_string->makeString(i.key()),fo));
+	}
+    }
+  else
+    {
+      CodeData *cp = _ctxt->_code->rw(main_code);
+      // Compile the methods
+      for (auto i=mod->_locals.constBegin(); i!= mod->_locals.constEnd();++i)
+	{
+	  Object co = _ctxt->_function->fromCode(this->run(i.value()));
+	  const Object &myName = _ctxt->_string->makeString("#" + i.key());
+	  std::cout <<  "Need home for method code block: " << myName<< "\n";
+	  Object *ip = _ctxt->_list->rw(cp->m_consts);
+	  for (int j=0;j<cp->m_consts.count();j++)
+	    if (ip[j] == myName)
+	      {
+		ip[j] = co;
+		std::cout << "Home found!\n";
+		break;
+	      }
+	}
+      mp->m_main = _ctxt->_function->fromCode(main_code);
     }
   return module;
 }
@@ -169,5 +194,7 @@ Object Assembler::codeObject()
 	    break;
 	  }
     }
+  // For classes
+  
   return code;
 }

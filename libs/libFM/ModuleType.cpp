@@ -20,6 +20,10 @@ Object ModuleType::call(const Object &a, const Object &args, int nargout)
 Object ModuleType::deref(const Object &a)
 {
   Object args = _ctxt->_list->empty();
-  return _ctxt->_list->first(this->call(a,args,1));
+  Object ret = this->call(a,args,1);
+  if (this->ro(a)->is_class)
+    return _ctxt->_double->empty();
+  else
+    return _ctxt->_list->first(this->call(a,args,1));
 }
 

@@ -148,6 +148,22 @@ Tree Parser::multiFunctionCall() {
   return root;
 }
 
+// Generally, function names are identifiers, but certain object property getter/setters are allowed to have "get." or "set." as prefixes.
+Tree Parser::functionName() {
+  Tree funcName(identifier());
+  std::cout << "funcName = " << funcName.text() << "\n";
+  if (((funcName.text() == "get") || (funcName.text() == "set")) && match('.'))
+    {
+      FMString name = funcName.text();
+      expect('.');
+      name += ".";
+      Tree propname(identifier());
+      name += propname.text();
+      funcName.setText(name);
+    }
+  return funcName;
+}
+
 Tree Parser::functionDefinition() {
   Tree root(expect(TOK_FUNCTION));
   if (match('[')) {
@@ -160,16 +176,16 @@ Tree Parser::functionDefinition() {
     expect(']');
     root.addChild(lhs);
     expect('=');
-    root.addChild(identifier());
+    root.addChild(functionName());
   } else {
     // Two possible parses here
-    Tree save(identifier());
+    Tree save(identifier());      
     if (match('=')) {
       Tree lhs(TOK_BRACKETS,m_lex.contextNum());
       lhs.addChild(save);
       root.addChild(lhs);
       expect('=');
-      root.addChild(identifier());
+      root.addChild(functionName());
     } else {
       root.addChild(Tree(TOK_BRACKETS,m_lex.contextNum()));
       root.addChild(save);
@@ -827,6 +843,8 @@ void Parser::consume() {
 
 Tree Parser::classPropertiesDefinition() {
   Tree root(expect(TOK_PROPERTIES));
+  if (match('(')) 
+    root.addChild(attributeList());
   skipNewLines();
   while (match(TOK_IDENT)) {
     Tree ident(identifier());
@@ -845,8 +863,27 @@ Tree Parser::classPropertiesDefinition() {
   return root;
 }
 
+
+Tree Parser::attributeList() {
+  Tree attrs(TOK_ATTRIBUTES);
+  expect('(');
+  while (!match(')')) {
+    Tree prop(identifier());
+    if (match('=')) {
+      expect('=');
+      prop.addChild(identifier());
+    }
+    if (match(',')) expect(',');
+    attrs.addChild(prop);
+  }
+  expect(')');
+  return attrs;
+}
+
 Tree Parser::classMethodsDefinition() {
   Tree root(expect(TOK_METHODS));
+  if (match('(')) 
+    root.addChild(attributeList());
   skipNewLines();
   while (match(TOK_FUNCTION)) {
     root.addChild(functionDefinition());

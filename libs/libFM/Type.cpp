@@ -86,6 +86,10 @@ void Type::setField(Object &a, const Object &args, const Object &b) {
   throw Exception(". (field) assignment is unsupported for objects of type " + this->name());
 }
 
+void Type::setFieldNoSetters(Object &a, const Object &args, const Object &b) {
+  throw Exception(". (field) assignment (no setters called) is unsupported for objects of type " + this->name());
+}
+
 Object Type::getParens(const Object &a, const Object &b) {
   throw Exception("() indexing is unsupported for objects of type " + this->name());
 }
@@ -96,6 +100,10 @@ Object Type::getBraces(const Object &a, const Object &b) {
 
 Object Type::getField(const Object &a, const Object &b) {
   throw Exception(". indexing is unsupported for objects of type " + this->name());
+}
+
+Object Type::getFieldNoGetters(const Object &a, const Object &b) {
+  throw Exception(". indexing (no getter calls) is unsupported for objects of type " + this->name());
 }
 
 void Type::resize(Object &a, const Tuple &newsize) {
@@ -110,7 +118,7 @@ double Type::doubleValue(const Object &a) {
   throw Exception("Type " + this->name() + " cannot be converted to double scalar");
 }
 
-Object Type::get(const Object &a, const Object &b) {
+Object Type::get(const Object &a, const Object &b, bool invokeGetters) {
   // std::cout << "get arguments: " << a.description() << "\n";
   // std::cout << "   b: " << b.description() << "\n";
   int ptr = 0;
@@ -135,7 +143,10 @@ Object Type::get(const Object &a, const Object &b) {
 	  c = c.type()->getBraces(c,bp[ptr+1]);
 	  break;
 	case 2:
-	  c = c.type()->getField(c,bp[ptr+1]);
+	  if (invokeGetters)
+	    c = c.type()->getField(c,bp[ptr+1]);
+	  else
+	    c = c.type()->getFieldNoGetters(c,bp[ptr+1]);
 	  break;
 	}
       ptr += 2;
@@ -161,7 +172,9 @@ Object Type::get(const Object &a, const Object &b) {
 //
 
 
-void Type::set(Object &a, const Object &args, const Object &b) {
+void Type::set(Object &a, const Object &args, const Object &b, bool invokeSetters) {
+  if (!invokeSetters)
+    std::cout << "SET called with " << a.description() << " " << args.description() << " " << b.description() << " and invokeSetters = " << invokeSetters << "\n";
   const Object *argp = args.asType<ListType>()->ro(args);
   if (args.count() == 2)
     {
@@ -183,7 +196,10 @@ void Type::set(Object &a, const Object &args, const Object &b) {
 	case 2:
 	  if (a.isEmpty() && (a.type()->code() != TypeStruct))
 	    a = _ctxt->_struct->empty();
-	  a.type()->setField(a,argp[1],b);
+	  if (invokeSetters)
+	    a.type()->setField(a,argp[1],b);
+	  else
+	    a.type()->setFieldNoSetters(a,argp[1],b);
 	  break;
 	}
     }
@@ -199,15 +215,15 @@ void Type::set(Object &a, const Object &args, const Object &b) {
       // TODO - is an exception here bad? If so, remove it
       Object asub(_ctxt);
       try {
-	asub = a.type()->get(a,args_first);
+	asub = a.type()->get(a,args_first,true);
       } catch (Exception &e) {
 	asub = _ctxt->_list->makeScalar(a.type()->empty());
       }
 	if (!asub.isScalar()) 
 	  throw Exception("In complex indexing expressions (e.g., A(...).foo = x), the sub expressions (such as A(...)) must be single valued");
       asub = _ctxt->_list->first(asub);
-      set(asub,args_rest,b);
-      set(a,args_first,asub);
+      set(asub,args_rest,b,invokeSetters);
+      set(a,args_first,asub,invokeSetters);
     }
 }
 

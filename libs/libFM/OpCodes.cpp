@@ -70,6 +70,9 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_MAKE_CLOSURE: return three_registers;
     case OP_PUSH_CELL: return register_cell;
     case OP_CLASSDEF: return three_registers;
+    case OP_CONSTRUCT: return two_registers;
+    case OP_SUBSREF_NOGS: return three_registers;
+    case OP_SUBSASGN_NOGS: return register_register_name;
     default:
       return three_registers;
   }
@@ -148,6 +151,9 @@ std::string getOpCodeName(op_t opcode)
     case OP_MAKE_CLOSURE: return "MAKE_CLOSURE";
     case OP_PUSH_CELL: return "PUSH_CELL";
     case OP_CLASSDEF: return "CLASSDEF";
+    case OP_CONSTRUCT: return "CONSTRUCT";
+    case OP_SUBSREF_NOGS: return "SUBSREF_NOGS";
+    case OP_SUBSASGN_NOGS: return "SUBSASGN_NOGS";
     default: return "UNK";
   }
 }

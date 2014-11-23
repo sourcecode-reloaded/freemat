@@ -154,6 +154,7 @@ FMString FM::TokenToString(const Token& b) {
   case TOK_PROPERTIES: return "properties";
   case TOK_METHODS: return "methods";
   case TOK_THROW: return "throw";
+  case TOK_ATTRIBUTES: return "attributes";
   }
   return FMString(1,FMChar(b.value()));
 }

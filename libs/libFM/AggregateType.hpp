@@ -26,6 +26,9 @@ namespace FM
 	}
       delete p->data;
     }
+    bool equals(const Object &a, const Object &b) {
+      return this->ro(a) == this->ro(b);
+    }
     virtual Data* duplicateData(const ObjectBase *p, dim_t &reserve) const
     {
       Data *q = new Data;

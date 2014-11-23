@@ -37,7 +37,9 @@ namespace FM {
     TypeCode = 19,
     TypeModule = 20,
     TypeCaptured = 21,
-    TypeFunction = 22
+    TypeFunction = 22,
+    TypeBuiltIn = 23,
+    TypeBoundFunction = 24
   };
 
   class Object;
@@ -87,14 +89,16 @@ namespace FM {
     virtual Object getParens(const Object &a, const Object &b);
     virtual Object getBraces(const Object &a, const Object &b);
     virtual Object getField(const Object &a, const Object &b);
+    virtual Object getFieldNoGetters(const Object &a, const Object &b);
     virtual Object sliceColumn(const Object &a, ndx_t column);
     virtual Object convert(const Object &a);
     virtual double doubleValue(const Object &a);
     virtual void setParens(Object &a, const Object &args, const Object &b);
     virtual void setBraces(Object &a, const Object &args, const Object &b);
     virtual void setField(Object &a, const Object &args, const Object &b);
-    virtual Object get(const Object &a, const Object &b);
-    virtual void set(Object &a, const Object &args, const Object &b);
+    virtual void setFieldNoSetters(Object &a, const Object &args, const Object &b);
+    virtual Object get(const Object &a, const Object &b, bool invokeGetters);
+    virtual void set(Object &a, const Object &args, const Object &b, bool invokeSetters);
     virtual void resize(Object &a, const Tuple &newsize);
     virtual void print(const Object &a);
     virtual Object deref(const Object &a);

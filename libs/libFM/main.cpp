@@ -88,7 +88,10 @@ void compileModule(ThreadContext *ctxt, FMString name)
 	Disassemble(ctxt,p);
 	std::cout << "Compile: \n";
 	std::cout << p << "\n";
-	ctxt->_globals->insert(std::make_pair(name,p));
+	if (ctxt->_module->ro(p)->is_class)
+	  ctxt->_module->deref(p);
+	else
+	  ctxt->_globals->insert(std::make_pair(name,p));
       }
     else
       {
@@ -101,6 +104,11 @@ void compileModule(ThreadContext *ctxt, FMString name)
 
 void addStuff(TestType *type, Object metaClass, Object prop) {
   type->rw(metaClass)->m_defaults = prop;
+}
+
+Object print(const Object &args, int nargout, ThreadContext *ctxt) {
+  ctxt->_io->output("\n\nPrint:" + args.description() + "\n\n");
+  return ctxt->_double->empty();
 }
 
 int main(int argc, char *argv[])
@@ -127,20 +135,20 @@ int main(int argc, char *argv[])
   std::cout << "junk2 = " << junk2.description() << "\n";
 
   // Create a new meta class
-  Object fooMeta = ctxt->_meta->empty();
-  ctxt->_meta->setName(fooMeta,"foo");
-  ctxt->_meta->addProperty(fooMeta,ctxt->_string->makeString("color"),
-			   ctxt->_string->makeString("RED"));
-  ctxt->_meta->addProperty(fooMeta,ctxt->_string->makeString("length"),
-			   ctxt->_double->makeScalar(32));
+  // Object fooMeta = ctxt->_meta->empty();
+  // ctxt->_meta->setName(fooMeta,"foo");
+  // ctxt->_meta->addProperty(fooMeta,ctxt->_string->makeString("color"),
+  // 			   ctxt->_string->makeString("RED"));
+  // ctxt->_meta->addProperty(fooMeta,ctxt->_string->makeString("length"),
+  // 			   ctxt->_double->makeScalar(32));
   // ctxt->_meta->addMethod(fooMeta,ctxt->_string->makeString("incr"),
   // 			 compileFunc(ctxt,"incr"));
   // ctxt->_meta->addMethod(fooMeta,ctxt->_string->makeString("decr"),
   // 			 compileFunc(ctxt,"decr"));
 
-  ctxt->_globals->insert(std::make_pair("?foo",fooMeta));
-  Object foo = ctxt->_meta->construct(fooMeta);
-  ctxt->_globals->insert(std::make_pair("foo",foo));
+  // ctxt->_globals->insert(std::make_pair("?foo",fooMeta));
+  // Object foo = ctxt->_meta->construct(fooMeta);
+  // ctxt->_globals->insert(std::make_pair("foo",foo));
 
 
   boost::filesystem::path cwd(boost::filesystem::current_path());
@@ -151,7 +159,7 @@ int main(int argc, char *argv[])
       {
 	FMString func = p->path().stem().string();
 	std::cout << "  Parsing function " << func << "\n";
-	compileModule(ctxt,func);
+	//	compileModule(ctxt,func);
       }
     ++p;
   }
@@ -169,11 +177,15 @@ int main(int argc, char *argv[])
   ctxt->_globals->insert(std::make_pair("bind",compileFunc(ctxt,"bind")));
   */
 
+
+  // TODO - Fix this.
+  // This isn't completely correct -- we should delay metaclass construction until after
+  // the functions have been parsed.  Otherwise, e.g., pi.m may not be parsed before aclass.m.
   compileModule(ctxt,"sclass");
 
   // Object sclassMeta = ctxt->_globals->at("?sclass");
   // Object soo = ctxt->_meta->construct(sclassMeta);
-  //  ctxt->_globals->insert(std::make_pair("soo",soo));
+  // ctxt->_globals->insert(std::make_pair("soo",soo));
 
   //  std::cout << "Symbol flags size: " << sizeof(symbol_flags_t) << "\n";
 
@@ -200,6 +212,10 @@ int main(int argc, char *argv[])
     cap2 = cap1;
     ctxt->_globals->insert(std::make_pair("cap2",cap2));
   }
+
+  Object print_builtin = ctxt->_builtin->empty();
+  ctxt->_builtin->setAddressAndName(print_builtin,"print",print);
+  ctxt->_globals->insert(std::make_pair("print",print_builtin));
 
   // Global symbols
   for (auto i=ctxt->_globals->begin(); i != ctxt->_globals->end(); ++i)

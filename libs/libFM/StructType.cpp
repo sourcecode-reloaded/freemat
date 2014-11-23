@@ -19,6 +19,7 @@ static inline Object orderedFieldList(ThreadContext *ctxt, const StructData *sd)
 
 FMString StructType::brief(const Object &a) {
   FMString ret = a.dims().toString() + " struct array\n";
+  return ret;
 }
 
 FMString StructType::describe(const Object &a) {

@@ -72,6 +72,7 @@ Parser.hpp
 ArrayType.hpp
 ArrayType.cpp
 ObjectArrayType.cpp
+BoundFunctionType.cpp
 PODType.hpp
 PODType.cpp
 Register.hpp
@@ -97,6 +98,7 @@ MatrixMultiply.cpp
 ArrayFormatInfo.cpp
 ArrayFormatInfo.hpp
 ModuleType.cpp
+BuiltInType.cpp
 )
 target_link_libraries(FMT ${Boost_LIBRARIES} readline ${ACCELERATE_LIB})
 

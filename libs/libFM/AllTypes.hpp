@@ -14,5 +14,7 @@
 #include "ModuleType.hpp"
 #include "CapturedType.hpp"
 #include "FunctionType.hpp"
+#include "BoundFunctionType.hpp"
+#include "BuiltinType.hpp"
 
 #endif

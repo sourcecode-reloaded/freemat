@@ -15,6 +15,7 @@ namespace FM
     HashMap<Object> m_locals; // Local functions for this module
     Object m_main; // Main function for this module
     FMString m_name;
+    bool is_class;
     ModuleData(ThreadContext *_ctxt) : m_main(_ctxt) {}
   };
 

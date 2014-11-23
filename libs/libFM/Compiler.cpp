@@ -620,6 +620,11 @@ void Compiler::assignment(const Tree &t, bool printIt, reg_t b) {
       if (printIt) emit(OP_PRINT,b);
       return;
     }
+  bool subsasgn_case = true;
+  // Check for obj.property 
+  if (_code->_isgetset && (varname == _code->_objectName) &&
+      t.second().is('.') && (t.second().first().text() == _code->_propertyName))
+    subsasgn_case = false;
   reg_t args = flattenDereferenceTreeToStack(t,1);
   symbol_flags_t symflags = _code->_syms->syms[varname];
   if (symflags.is_global())
@@ -627,7 +632,12 @@ void Compiler::assignment(const Tree &t, bool printIt, reg_t b) {
   else if (symflags.is_persistent())
     emit(OP_SUBSASGN_PERSIST,args,b,getNameID(varname));
   else if (symflags.is_local())
-    emit(OP_SUBSASGN,args,b,getNameID(varname));
+    {
+      if (subsasgn_case)
+	emit(OP_SUBSASGN,args,b,getNameID(varname));
+      else
+	emit(OP_SUBSASGN_NOGS,args,b,getNameID(varname));
+    }
   else
     throw Exception("Unhandled subsasgn case");
   if (printIt)
@@ -696,6 +706,16 @@ reg_t Compiler::fetchConstant(const Object &constant)
   reg_t r0 = getRegister();
   emit(OP_LOAD_CONST,r0,getConstantID(constant));
   return r0;
+}
+
+reg_t Compiler::fetchEmpty()
+{
+  return fetchConstant(_ctxt->_double->empty());
+}
+
+reg_t Compiler::fetchConstantBool(bool t)
+{
+  return fetchConstant(_ctxt->_bool->makeScalar(t));
 }
 
 reg_t Compiler::fetchConstantString(const FMString &constant)
@@ -820,6 +840,11 @@ void Compiler::rhs(reg_t list, const Tree &t) {
   symbol_flags_t symflags = _code->_syms->syms[varname];
   if (t.numChildren() > 1)
     {
+      bool subsref_case = true;
+      // Check for the case of obj.prop inside a getter
+      if (_code->_isgetset && (varname == _code->_objectName) && 
+	  t.second().is('.') && (t.second().first().text() == _code->_propertyName))
+	subsref_case = false;
       // Check if we have A(...), where A isn't marked as global or persistent
       if (t.second().is(TOK_PARENS) && !symflags.is_global() && !symflags.is_persistent()  && !symflags.is_nested())
 	{
@@ -835,7 +860,10 @@ void Compiler::rhs(reg_t list, const Tree &t) {
       else
 	{
 	  x = fetchVariable(varname,symflags);
-	  emit(OP_SUBSREF,list,x,flattenDereferenceTreeToStack(t,1));
+	  if (subsref_case)
+	    emit(OP_SUBSREF,list,x,flattenDereferenceTreeToStack(t,1));
+	  else
+	    emit(OP_SUBSREF_NOGS,list,x,flattenDereferenceTreeToStack(t,1));
 	}
     }
   else
@@ -1093,6 +1121,7 @@ Compiler::Compiler(ThreadContext *b) {
   _ctxt = b;
   _regpool = new RegisterBlock(256);
   _code = new CodeBlock(b);
+  _module = 0;
 }
 
 void Compiler::switchStatement(const Tree &t) {
@@ -1350,11 +1379,14 @@ void Compiler::reset() {
   _code = new CodeBlock(_ctxt);
   delete _regpool;
   _regpool = new RegisterBlock(256);
-  while (!_codestack.empty()) {
-    CodeBlock *p = _codestack.top();
-    delete p;
-    _codestack.pop();
-  }
+  delete _module;
+  _module = new Module;
+  _module->_isclass = false;
+  // while (!_codestack.empty()) {
+  //   CodeBlock *p = _codestack.top();
+  //   delete p;
+  //   _codestack.pop();
+  // }
   while (!_continueblock.empty()) {
     BasicBlock *b = _continueblock.top();
     delete b;
@@ -1368,6 +1400,9 @@ void Compiler::reset() {
 }
 
 void Compiler::compile(const FMString &code) {
+  _module = new Module;
+  _module->_isclass = false;
+  std::cout << ">>>>_module = " << _module << "\n";
   Scanner S(code,"");
   Parser P(S);
   Tree t(P.process());
@@ -1391,15 +1426,28 @@ void Compiler::compile(const FMString &code) {
   walkCode(t);
 }
 
-
-void Compiler::walkFunction(const Tree &t, bool nested) {
+void Compiler::walkFunction(const Tree &t, FunctionTypeEnum funcType) {
   CodeBlock *save_code = _code;
   CodeBlock *cp = new CodeBlock(_ctxt);
+  FMString funcName = t.child(1).text();
   cp->_syms = _currentSym;
-  if (!nested)
-    _codestack.push(cp);
-  else
+  switch (funcType) {
+  case NormalFunction:
+    _module->_main = cp;
+    break;
+  case NestedFunction:
     save_code->_nested.push_back(cp);
+    break;
+  case LocalFunction:
+  case MethodFunction:
+  case GetterFunction:
+  case SetterFunction:
+  case ConstructorFunction:
+    _module->_locals.insert(funcName,cp); // Methods are stored as local functions
+    break;
+  default:
+    throw Exception("Unhandled function type");
+  }
   _code = cp;
   // Build up the variable list
   // By convention, the arguments are first
@@ -1416,15 +1464,58 @@ void Compiler::walkFunction(const Tree &t, bool nested) {
       if (s.value().is_captured())
 	addStringToList(_ctxt,_code->_capturedlist,s.key());
     }
-  std::cout << "Compiling function " << t.child(1).text() << "\n";
-  _code->_name = t.child(1).text();
+  std::cout << "Compiling function " << funcName << "\n";
+  _code->_name = funcName;
   std::cout << "Symbol table is " << _currentSym->name << "\n";
   //const Tree &rets = t.child(0);
-  //  beginFunction(t.child(1).text(),nested);
+  //  beginFunction(funcName,nested);
   //const Tree &args = t.child(2);
   const Tree &code = t.child(3);
   // Create a basic block, and push it on the list
   useBlock(new BasicBlock);
+  // TODO - clean this up
+  if (funcType == ConstructorFunction)
+    {
+      // Count the number of return symbols - should be exactly one
+      if (_currentSym->countReturnValues() != 1)
+	throw Exception("Constructor for class " + _currentSym->name + " must have exactly 1 return value");
+      FMString return_name = _currentSym->returnName(0);
+      if (_currentSym->syms[return_name].is_parameter())
+	throw Exception("Constructor for class " + _currentSym->name + " cannot take a parameter of the same name as the returned class object: " + return_name);
+      std::cout << "CONSTRUCTOR RETURN: " << return_name << "\n";
+      reg_t x = getRegister();
+      reg_t args = startList();
+      emit(OP_LOOKUP,x,args,getNameID(_currentSym->name)); // get the metaclass
+      reg_t y = getRegister();
+      emit(OP_CONSTRUCT,y,x);
+      saveRegisterToName(return_name,y);
+    }
+  else if (funcType == GetterFunction)
+    {
+      if (_currentSym->countParameterValues() != 1)
+	throw Exception("Getter for class " + _currentSym->name + " named " + funcName + " cannot have more than one parameter (object)");
+      if (_currentSym->countReturnValues() != 1)
+	throw Exception("Getter for class " + _currentSym->name + " named " + funcName + " must have one return value");
+      _code->_isgetset = true;
+      std::cout << "Set Get flag set to true\n";
+      _code->_objectName = _currentSym->parameterName(0);
+      std::cout << "Object name = " << _code->_objectName << "\n";
+      _code->_propertyName = funcName.mid(4);
+      std::cout << "Property name = " << _code->_propertyName << "\n";
+    }
+  else if (funcType == SetterFunction)
+    {
+      if (_currentSym->countParameterValues() < 2)
+	throw Exception("Setter for class " + _currentSym->name + " named " + funcName + " must take at least two parameters (object, value)");
+      if (_currentSym->countReturnValues() != 1)
+	throw Exception("Setter for class " + _currentSym->name + " named " + funcName + " must have one return value");
+      _code->_isgetset = true;
+      std::cout << "Set Get flag set to true\n";
+      _code->_objectName = _currentSym->parameterName(0);
+      std::cout << "Object name = " << _code->_objectName << "\n";
+      _code->_propertyName = funcName.mid(4);
+      std::cout << "Property name = " << _code->_propertyName << "\n";
+    }
   block(code);
   emit(OP_RETURN);
   _code = save_code;
@@ -1439,7 +1530,10 @@ void Compiler::walkFunctionCollection(const Tree &t) {
       case TOK_FUNCTION:
 	{
 	  _currentSym = _symsRoot->children[i];
-	  walkFunction(t.child(i));
+	  if (i == 0)
+	    walkFunction(t.child(i),NormalFunction);
+	  else
+	    walkFunction(t.child(i),LocalFunction);
 	  break;
 	}
       default:
@@ -1450,7 +1544,7 @@ void Compiler::walkFunctionCollection(const Tree &t) {
 void Compiler::walkScript(const Tree &t) {
   CodeBlock *cp = new CodeBlock(_ctxt);
   cp->_syms = _currentSym;
-  _codestack.push(cp);
+  _module->_main = cp;
   _code = cp;
   // Build up the variable list
   _code->_namelist = _ctxt->_list->empty();
@@ -1462,50 +1556,73 @@ void Compiler::walkScript(const Tree &t) {
   emit(OP_RETURN);
 }
 
-void Compiler::walkMethods(const Tree &t, Object &metaClass) {
+void Compiler::walkMethods(const Tree &t) {
   assert(t.is(TOK_METHODS));
-  for (int i=0;i<t.numChildren();i++)
+  int start = 0;
+  if (t.numChildren() > 1 && t.first().is(TOK_ATTRIBUTES)) start++;
+  for (int i=start;i<t.numChildren();i++)
     {
-      /* FIXME - finish this when the interface is cleaned up */
-#if 0
-      reset();
-      SymbolPass p;
-      p.walkCode(t.child(i));
-      _symsRoot = p.getRoot();
-      _currentSym = _symsRoot;
-      SymbolTable *s = _symsRoot;
-      for (auto j=s->syms.constBegin();j!=s->syms.constEnd();++j)
-	{
-	  std::cout << "Symbol: " << j.key() << " val=" << j.value() << "\n";
-	}
-      walkFunction(t.child(i),false);
-      Module *mod = this->module();
-      Object code = _ctxt->_asm->run(mod->_main);
-      Disassemble(_ctxt,code);
-      _ctxt->_meta->addMethod(metaClass,
-			      _ctxt->_string->makeString(t.child(1).text()),
-			      code);
-#endif
+      const Tree &p = t.child(i);
+      FMString methodName = p.child(1).text();
+      std::cout << "Compiling method named: " << methodName << "\n";
+      symbol_flags_t flags = _symsRoot->syms[methodName];
+      std::cout << "Symbol flags for this method are: " << flags.str() << "\n";
+      // Find symbol table for this method
+      for (int j=0;j<_symsRoot->children.size();j++)
+	if (_symsRoot->children[j]->name == p.child(1).text()) 
+	  {
+	    _currentSym = _symsRoot->children[j];
+	    break;
+	  }
+      if (flags.is_constructor())
+	walkFunction(p,ConstructorFunction);
+      else if (flags.is_getter())
+	walkFunction(p,GetterFunction);
+      else if (flags.is_setter())
+	walkFunction(p,SetterFunction);
+      else
+	walkFunction(p,MethodFunction);
     }
 }
 
 void Compiler::walkProperties(reg_t list, const Tree &t) {
   assert(t.is(TOK_PROPERTIES));
-  for (int i=0;i<t.numChildren();i++)
+  int start = 0;
+  if (t.numChildren() > 1 && t.first().is(TOK_ATTRIBUTES)) start++;
+  for (int i=start;i<t.numChildren();i++)
     {
       const Tree &p = t.child(i);
-      pushList(list,fetchConstantString(p.text()));
+      FMString propname = p.text();
+      // Create a list of arguments to OP_PROPERTY
+      // Name, isConstant, isDependent, defaultValue, getter, setter
+      reg_t prop_args = startList();
+      symbol_flags_t flags = _symsRoot->syms[propname];
+      pushList(prop_args,fetchConstantString(propname));
+      pushList(prop_args,fetchConstantBool(flags.is_constant()));
+      pushList(prop_args,fetchConstantBool(flags.is_dependent()));
       if (p.hasChildren())
-	pushList(list,expression(p.first().first()));
+	pushList(prop_args,expression(p.first().first()));
       else
-	pushList(list,fetchConstant(_ctxt->_double->empty()));
+	pushList(prop_args,fetchEmpty());
+      FMString gettername = "get." + propname;
+      if (_symsRoot->syms.contains(gettername))
+	pushList(prop_args,fetchConstantString("#"+gettername));
+      else
+	pushList(prop_args,fetchEmpty());
+      FMString settername = "set." + propname;
+      if (_symsRoot->syms.contains(settername))
+	pushList(prop_args,fetchConstantString("#"+settername));
+      else
+	pushList(prop_args,fetchEmpty());
+      pushList(list,prop_args);
     }
 }
 
 void Compiler::walkClassDef(const Tree &t) {
   CodeBlock *cp = new CodeBlock(_ctxt);
   cp->_syms = _currentSym;
-  _codestack.push(cp);
+  _module->_main = cp;
+  _module->_isclass = true;
   _code = cp;
   _code->_namelist = _ctxt->_list->empty();
   _code->_constlist = _ctxt->_list->empty();
@@ -1518,46 +1635,20 @@ void Compiler::walkClassDef(const Tree &t) {
   for (int i=1;i<t.numChildren();i++)
     if (t.child(i).is(TOK_PROPERTIES))
       walkProperties(props,t.child(i));
-  // for (auto i=cp->_syms->syms.begin();i!=cp->_syms->syms.end();++i)
-  //   if (i.value().is_property())
-  //     pushList(props,fetchConstantString(i.key()));
   reg_t methods = startList();
+  for (auto s = _currentSym->syms.constBegin(); s != _currentSym->syms.constEnd(); ++s)
+    if (s.value().is_method() && !s.value().is_getter() && !s.value().is_setter())
+      {
+	pushList(methods,fetchConstantString(s.key()));
+	pushList(methods,fetchConstantString("#"+s.key()));
+      }
+  // Walk the methods
+  for (int i=1;i<t.numChildren();i++)
+    if (t.child(i).is(TOK_METHODS))
+      walkMethods(t.child(i));
   reg_t name = fetchConstantString(cp->_syms->name);
   emit(OP_CLASSDEF,name,props,methods);
   emit(OP_RETURN);
-  /*  
-
-  FMString className = t.first().text();
-  FMString classMetaName = "?" + className;
-  if (_ctxt->_globals->count(classMetaName) > 0)
-    return; // Cannot define the same meta class more than once
-  Object fooMeta = _ctxt->_meta->makeScalar();
-  _ctxt->_meta->setName(fooMeta,classMetaName);
-  // Add the property definitions
-  for (int i=1;i<t.numChildren();i++)
-    {
-      switch (t.child(i).token())
-	{
-	case TOK_PROPERTIES:
-	  walkProperties(t.child(i),fooMeta);
-	  break;
-	case TOK_METHODS:
-	  walkMethods(t.child(i),fooMeta);
-	  break;
-	default:
-	  throw Exception("Unhandled classdef block");
-	}
-    }
-  // Walk the defaults
-  for (int i=1;i<t.numChildren();i++)
-      if (t.child(i).is(TOK_PROPERTIES))
-	walkPropertyDefaults(t.child(i),fooMeta);
-  _ctxt->_globals->insert(std::make_pair(classMetaName,fooMeta));
-  std::cout << "Inserting class definition with metaclass " << classMetaName << "\n";
-  std::cout << "meta class:" << fooMeta.description() << "\n";
-  std::cout << "Retrieved:\n";
-  std::cout << _ctxt->_globals->at(classMetaName) << "\n";
-  */
 }
 
 void Compiler::walkCode(const Tree &t) {
@@ -1592,7 +1683,7 @@ void Compiler::statement(const Tree &t) {
     {
       SymbolTable *_saveSym = _currentSym;
       _currentSym = _currentSym->children[0];
-      walkFunction(t,true);
+      walkFunction(t,NestedFunction);
       _currentSym = _saveSym;
     }
 }
@@ -1604,6 +1695,8 @@ void Compiler::block(const Tree &t) {
 }
 
 Module* Compiler::module() {
+  return _module;
+  /*
   // The first code block on the stack is the "main" function
   // The rest of the code blocks are local functions.  Reverse
   // the stack and move all the local functions into the local
@@ -1627,6 +1720,7 @@ Module* Compiler::module() {
       mod->_locals[local->_name] = local;
     }
   return mod;
+  */
 }
 
 
@@ -1753,6 +1847,14 @@ void FM::Disassemble(ThreadContext *_ctxt, const Object &p)
       }
       return;
     }
+  if (p.type()->code() == TypeFunction)
+    {
+      const FunctionData *fd = _ctxt->_function->ro(p);
+      std::cout << "Function: " << fd->m_name << "\n";
+      std::cout << "Closure: " << fd->m_closure << "\n";
+      Disassemble(_ctxt,fd->m_code);
+      return;
+    }
   assert(p.type()->code() == TypeCode);
   const CodeData *dp = _ctxt->_code->ro(p);
   std::cout << "Name      : " << dp->m_name.description() << "\n";
@@ -1780,7 +1882,7 @@ void FM::Disassemble(ThreadContext *_ctxt, const Object &p)
   for (dim_t i=0;i<code.dims().count();++i)
     PrintInsn(i,opcodes[i]);
   for (dim_t i=0;i<dp->m_consts.count();i++)
-    if (cp[i].is(TypeCode))
+    if (cp[i].is(TypeCode) || cp[i].is(TypeFunction))
       {
 	std::cout << "     ***** Nested Routine ****\n";
 	Disassemble(_ctxt,cp[i]);

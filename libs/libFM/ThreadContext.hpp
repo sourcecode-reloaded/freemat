@@ -41,6 +41,8 @@ namespace FM
   class ObjectBase;
   class Object;
   class FunctionType;
+  class BuiltInType;
+  class BoundFunctionType;
 
   struct ThreadContext
   {
@@ -58,11 +60,13 @@ namespace FM
     CellType *_cell;
     ListType *_list;
     CodeType *_code;
+    BuiltInType *_builtin;
     ClassMetaType *_meta;
     ClassType *_class;
     FunctionType *_function;
     ModuleType *_module;
     CapturedType *_captured;
+    BoundFunctionType *_bound;
     // Tools
     VM *_vm;
     Compiler *_compiler;

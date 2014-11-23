@@ -112,11 +112,23 @@ void VM::defineClass(const Object &name, const Object &parameters, const Object 
   FMString classMetaName = "?" + className;
   if (_ctxt->_globals->count(classMetaName) > 0) return;
   Object fooMeta = _ctxt->_meta->makeScalar();
-  _ctxt->_meta->setName(fooMeta,classMetaName);
+  _ctxt->_meta->setName(fooMeta,name);
   const Object *pp = _ctxt->_list->ro(parameters);
-  for (int i=0;i<parameters.count();i+=2)
-    _ctxt->_meta->addProperty(fooMeta,pp[i],pp[i+1]);
-  _ctxt->_globals->insert(std::make_pair(classMetaName,fooMeta));
+  for (int i=0;i<parameters.count();i++)
+    {
+      const Object *pl = _ctxt->_list->ro(pp[i]);
+      _ctxt->_meta->addProperty(fooMeta,
+				pl[0], // name
+				_ctxt->_bool->scalarValue(pl[1]), // isconstant
+				_ctxt->_bool->scalarValue(pl[2]), // isdependent
+				pl[3], // default value
+				pl[4], // getter
+				pl[5]); // setter
+    }
+  const Object *mp = _ctxt->_list->ro(methods);
+  for (int i=0;i<methods.count();i+=2)
+    _ctxt->_meta->addMethod(fooMeta,mp[i],mp[i+1]);
+  _ctxt->_globals->insert(std::make_pair(className,fooMeta));
 }
 
 // Execute a function object, given a list of parameters (params).  Returns a list
@@ -403,7 +415,10 @@ void VM::executeCodeObject(const Object &codeObject)
 		REG1 = _ctxt->_list->empty();
 		break;
 	      case OP_SUBSREF:
-		_ctxt->_list->merge(REG1,REG2.type()->get(REG2,REG3));
+		_ctxt->_list->merge(REG1,REG2.type()->get(REG2,REG3,true));
+		break;
+	      case OP_SUBSREF_NOGS:
+		_ctxt->_list->merge(REG1,REG2.type()->get(REG2,REG3,false));
 		break;
 	      case OP_COLON:
 		BINOP(Colon,"colon");
@@ -619,7 +634,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	      case OP_SAVE_PERSIST:
 	      case OP_JUMP_ZERO:
 		{
-		  if (_ctxt->_double->scalarValue(REG1) == 0)
+		  if (REG1.asDouble() == 0)
 		    ip = get_constant(insn)-1;
 		  break;
 		}
@@ -663,6 +678,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		}
 	      case OP_SUBSASGN_GLOBAL:
 	      case OP_SUBSASGN_PERSIST:
+	      case OP_SUBSASGN_NOGS:
 	      case OP_SUBSASGN:
 		{
 		  register int ndx = get_constant(insn);
@@ -678,7 +694,7 @@ void VM::executeCodeObject(const Object &codeObject)
 			}
 		      addr = addrfile[ndx];
 		    }
-		  varfile[addr].type()->set(varfile[addr],REG1,REG2);
+		  varfile[addr].type()->set(varfile[addr],REG1,REG2,(opcode(insn) != OP_SUBSASGN_NOGS));
 		  break;
 		}
 	      case OP_LOOPCOUNT:
@@ -705,6 +721,11 @@ void VM::executeCodeObject(const Object &codeObject)
 	      case OP_CLASSDEF:
 		{
 		  defineClass(REG1,REG2,REG3);
+		  break;
+		}
+	      case OP_CONSTRUCT:
+		{
+		  REG1 = _ctxt->_meta->construct(REG2);
 		  break;
 		}
 	      default:

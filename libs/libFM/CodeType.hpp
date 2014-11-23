@@ -38,7 +38,6 @@ namespace FM
     }
     virtual FMString describe(const Object &a);
     virtual FMString brief(const Object &a);
-    Object bindFunction(const Object &code, const Object &argument);
   };
 }
 
