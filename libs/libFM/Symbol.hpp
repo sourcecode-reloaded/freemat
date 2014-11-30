@@ -189,19 +189,23 @@ namespace FM
     FMString returnName(int ndx) {
       int ret_count = 0;
       for (auto s = syms.constBegin(); s!= syms.constEnd(); ++s)
-	if (s.value().is_return() && (ret_count == ndx)) 
-	  return s.key();
-	else
-	  ret_count++;
+	if (s.value().is_return()) {
+	  if (ret_count == ndx)
+	    return s.key();
+	  else
+	    ret_count++;
+	}
       return FMString();
     }
     FMString parameterName(int ndx) {
       int param_count = 0;
       for (auto s = syms.constBegin(); s!= syms.constEnd(); ++s)
-	if (s.value().is_parameter() && (param_count == ndx)) 
-	  return s.key();
-	else
-	  param_count++;
+	if (s.value().is_parameter()) {
+	  if (param_count == ndx)
+	    return s.key();
+	  else
+	    param_count++;
+	}
       return FMString();
     }
   };

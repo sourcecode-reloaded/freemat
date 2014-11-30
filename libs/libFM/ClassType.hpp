@@ -74,8 +74,8 @@ namespace FM
   class ClassMethodMetaData {
   public:
     bool m_static;
-    Object m_value;
-    ClassMethodMetaData(ThreadContext *_ctxt) : m_static(false), m_value(_ctxt) {}
+    Object m_definition;
+    ClassMethodMetaData(ThreadContext *_ctxt) : m_static(false), m_definition(_ctxt) {}
   };
 
   class ClassPropertyMetaData {
@@ -107,9 +107,9 @@ namespace FM
     void addProperty(Object &meta, const Object &name, bool constant, 
 		     bool dependent, const Object &default_value,
 		     const Object &getter, const Object &setter);
-    void addMethod(Object &meta, const Object &name, 
-		   const Object &definition, bool is_static);
+    void addMethod(Object &meta, const Object &name, const Object &definition, bool is_static);
     void setName(Object &a, const Object &name) {this->rw(a)->m_name = name;}
+    void addSuperClass(Object &meta, const Object &super);
     virtual DataCode code() const {return TypeMeta;}
     virtual const FMString& name() const {static FMString _name = "meta"; return _name;}
     //    Object empty();

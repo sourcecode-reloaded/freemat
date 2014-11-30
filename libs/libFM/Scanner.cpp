@@ -68,7 +68,7 @@ void InitializeReservedTable() {
 }
 
 static bool isalnumus(TokenValueType a) {
-  return (isalnum(a) || (a=='_'));
+  return (isalnum(a) || (a=='_') || (a=='@'));
 }
 
 static bool isablank(TokenValueType a) {

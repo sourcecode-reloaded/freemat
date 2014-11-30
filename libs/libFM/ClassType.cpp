@@ -15,7 +15,7 @@ Object ClassMetaType::getField(const Object &meta, const Object &fieldname) {
     throw Exception("Class " + cmd->m_name.description() + " has no method named " + fieldname.description());
   if (!j->second->m_static)
     throw Exception("Method " + fieldname.description() + " is not static for class " + cmd->m_name.description());
-  return j->second->m_value;
+  return j->second->m_definition;
 }
 
 Object ClassMetaType::getParens(const Object &meta, const Object &b) {
@@ -31,7 +31,7 @@ Object ClassMetaType::getParens(const Object &meta, const Object &b) {
       // There is a constructor - just invoke it (no arguments)
       // the constructor will be responsible for calling OP_CONSTRUCT to construct the class.
       std::cout << "Constructor found - invoking\n";
-      return _ctxt->_function->getParens(j->second->m_value,b);
+      return _ctxt->_function->getParens(j->second->m_definition,b);
     }
 }
 
@@ -61,7 +61,7 @@ Object ClassMetaType::deref(const Object &meta) {
       // There is a constructor - just invoke it (no arguments)
       // the constructor will be responsible for calling OP_CONSTRUCT to construct the class.
       std::cout << "Constructor found - invoking\n";
-      return _ctxt->_function->deref(j->second->m_value);
+      return _ctxt->_function->deref(j->second->m_definition);
     }
 }
 
@@ -98,11 +98,33 @@ void ClassMetaType::addProperty(Object &meta, const Object &name, bool constant,
   cmd->m_properties[name] = cpmd;
 }
 
+void ClassMetaType::addSuperClass(Object &meta, const Object &super) {
+  ClassMetaData *cmd = this->rw(meta);
+  const ClassMetaData *smd = this->ro(super);
+  for (auto i=smd->m_properties.begin(); i != smd->m_properties.end(); ++i)
+    // TODO - warn if conflict on properties
+    this->addProperty(meta,i->first,i->second->m_constant,
+		      i->second->m_dependent, i->second->m_default,
+		      i->second->m_getter, i->second->m_setter);
+  for (auto i=smd->m_methods.begin(); i != smd->m_methods.end(); ++i)
+    {
+      // Does this method already exist?
+      if (cmd->m_methods.find(i->first) != cmd->m_methods.end())
+	{
+	  // Yes, so insert it with the class name and a @ prepended to the name
+	  FMString fullname = _ctxt->_string->getString(smd->m_name) + "@" + _ctxt->_string->getString(i->first);
+	  this->addMethod(meta,_ctxt->_string->makeString(fullname),i->second->m_definition,i->second->m_static);
+	}
+      else
+	this->addMethod(meta,i->first,i->second->m_definition,i->second->m_static);
+    }
+}
+
 void ClassMetaType::addMethod(Object &meta, const Object &name, const Object &definition, bool is_static) {
   ClassMetaData *cmd = this->rw(meta);
   FMString s_name = _ctxt->_string->getString(name);
   ClassMethodMetaData *cmmd = new ClassMethodMetaData(_ctxt);
-  cmmd->m_value = definition;
+  cmmd->m_definition = definition;
   cmmd->m_static = is_static;
   cmd->m_methods.insert(std::pair<Object,ClassMethodMetaData*>(name,cmmd));
 }
@@ -114,7 +136,7 @@ bool ClassType::hasMethod(const Object &a, const Object &name, Object &ret) {
   auto j = cmd->m_methods.find(name);
   if (j != cmd->m_methods.end()) 
     {
-      ret = j->second->m_value;
+      ret = j->second->m_definition;
       return true;
     }
   return false;
@@ -170,7 +192,7 @@ Object ClassType::getField(const Object &a, const Object &b) {
     auto j = cmd->m_methods.find(b);
     if (j == cmd->m_methods.end())
       throw Exception("Property " + b.description() + " is not defined for class " + _ctxt->_string->getString(cmd->m_name));
-    return _ctxt->_bound->bindFunction(j->second->m_value,a);
+    return _ctxt->_bound->bindFunction(j->second->m_definition,a);
   }
   ClassPropertyMetaData *cpmd = k->second;
   if (cpmd->m_getter.isEmpty())

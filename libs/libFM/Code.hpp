@@ -147,7 +147,9 @@ namespace FM
     FMString _name;
     bool _isclass;
     CodeBlock *_main;
+    Object _dependencies;
     FMMap<FMString,CodeBlock*> _locals;
+    Module(ThreadContext *ctxt) : _dependencies(ctxt) {}
   };
 }
 

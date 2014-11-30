@@ -106,13 +106,18 @@ Object VM::executeModule(const Object &moduleObject, const Object &parameters)
   return ret;
 }
 
-void VM::defineClass(const Object &name, const Object &parameters, const Object &methods)
+void VM::defineClass(const Object &name, const Object &arguments)
 {
   FMString className = _ctxt->_string->getString(name);
   FMString classMetaName = "?" + className;
   if (_ctxt->_globals->count(classMetaName) > 0) return;
   Object fooMeta = _ctxt->_meta->makeScalar();
   _ctxt->_meta->setName(fooMeta,name);
+  const Object *ap = _ctxt->_list->ro(arguments);
+  // ap = [superclasses, properties, methods]
+  const Object &superclasses = ap[0];
+  const Object &parameters = ap[1];
+  const Object &methods = ap[2];
   const Object *pp = _ctxt->_list->ro(parameters);
   for (int i=0;i<parameters.count();i++)
     {
@@ -133,6 +138,14 @@ void VM::defineClass(const Object &name, const Object &parameters, const Object 
 			      ml[0], // name
 			      ml[1], // code
 			      _ctxt->_bool->scalarValue(ml[2])); // is constant
+    }
+  // We add superclasses last to get name resolution correct
+  const Object *sp = _ctxt->_list->ro(superclasses);
+  for (int i=0;i<superclasses.count();i++) 
+    {
+      Object super_meta = _ctxt->_globals->at(_ctxt->_string->getString(sp[i]));
+      std::cout << "Defining class " << className << " super class " << super_meta.description() << "\n";
+      _ctxt->_meta->addSuperClass(fooMeta,super_meta);
     }
   _ctxt->_globals->insert(std::make_pair(className,fooMeta));
 }
@@ -598,12 +611,15 @@ void VM::executeCodeObject(const Object &codeObject)
 		      for (int i=0;i<REG2.count();i++)
 			anyUserClasses |= regs[i].isClass();
 		      if (anyUserClasses) 
-			for (int i=0;i<REG2.count();i++)
-			  if (regs[i].isClass() && _ctxt->_class->hasMethod(regs[i],names_list[ndx],REG1)) 
-			    {
-			      std::cout << "User method found\n";
-			      goto cont_lookup;
-			    }
+			{
+			  std::cout << "Searching for " << names_list[ndx].description() << "\n";
+			  for (int i=0;i<REG2.count();i++)
+			    if (regs[i].isClass() && _ctxt->_class->hasMethod(regs[i],names_list[ndx],REG1)) 
+			      {
+				std::cout << "User method found\n";
+				goto cont_lookup;
+			      }
+			}
 		      std::cout << "No user defined classes\n";
 		      // The address for this index has not been defined yet in the current scope.
 		      // First, see if the closed frame has the address for it.  In the process, the 
@@ -726,7 +742,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		}
 	      case OP_CLASSDEF:
 		{
-		  defineClass(REG1,REG2,REG3);
+		  defineClass(REG1,REG2);
 		  break;
 		}
 	      case OP_CONSTRUCT:

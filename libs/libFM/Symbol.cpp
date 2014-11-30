@@ -198,6 +198,8 @@ void SymbolPass::walkClassDef(const Tree &t) {
 	case TOK_METHODS:
 	  walkMethods(t.child(i));
 	  break;
+	case '<':
+	  break;
 	default:
 	  throw Exception("Unhandled classdef block");
 	}

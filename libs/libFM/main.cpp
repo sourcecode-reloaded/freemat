@@ -89,7 +89,10 @@ void compileModule(ThreadContext *ctxt, FMString name)
 	std::cout << "Compile: \n";
 	std::cout << p << "\n";
 	if (ctxt->_module->ro(p)->is_class)
-	  ctxt->_module->deref(p);
+	  {
+	    // Check for dependencies...
+	    ctxt->_module->deref(p);
+	  }
 	else
 	  ctxt->_globals->insert(std::make_pair(name,p));
       }
@@ -181,7 +184,11 @@ int main(int argc, char *argv[])
   // TODO - Fix this.
   // This isn't completely correct -- we should delay metaclass construction until after
   // the functions have been parsed.  Otherwise, e.g., pi.m may not be parsed before aclass.m.
-  compileModule(ctxt,"sclass");
+  //  compileModule(ctxt,"sclass");
+
+  compileModule(ctxt,"mab");
+  compileModule(ctxt,"foo");
+  compileModule(ctxt,"bar");
 
   // Object sclassMeta = ctxt->_globals->at("?sclass");
   // Object soo = ctxt->_meta->construct(sclassMeta);

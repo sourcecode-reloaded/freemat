@@ -1457,6 +1457,92 @@ fails, but it does.
 
 Closures do not work from within class methods - why?
 
+Next major event - inheritance
+
+op.(go)
+
+There is a problem with the current implementation of properties as
+indexed.  Consider a class 
+
+class foo {
+ prop a;
+ prop b;
+};
+
+If foo maps a->0, b->1.  Then what happens when we subclass from foo?
+
+class bar : foo {
+  prop c;
+  prop d;
+}
+
+Now bar maps c->2, d->3.  This is OK, because bar knows that foo is a
+superclass, and therefor allocates slots appropriately.  On the other
+hand, if we inherit from two classes,
+
+class bar : foo1, foo2 {
+  prop e;
+  prop f;
+}
+
+We now have an issue, because there is no way to allocate slots so
+that both methods of foo1 and foo2 are satisfied.  Multiple
+inheritance implies that we must use a map for properties, because
+then the name is the key to the map for properties.  How does C++ do
+it?  It probably maps out the classes so that
+
+<foo1 properties>
+<foo2 properties>
+<bar properties>
+
+Then an offset into the class is used to correct the lookup for the
+property.  Why can't we just import all of the properties into a
+single metaclass?  So that in this case, bar's list of properties is
+
+bar: <foo1_props, foo2_props, bar_props>
+
+We can then import the _methods_ from foo1 and foo2 into the metatype
+for bar.  Furthermore, that means that when those functions are called
+they are mapped through bar's metatype, which routes them to the
+correct slot.  
+
+Inheritance brings the ambiguity in name resolution problem to front.
+Consider:
+
+classdef a
+      methods
+          function foo(x)
+	     % Do stuff
+          end
+      end
+end
+
+classdef b < a
+      methods
+          function foo(x)
+	    a@foo(x) % call a's method on x
+	    % Do other stuff
+	  end
+      end
+end
+
+In this case, if we have derived b by including the definition of a,
+then we must have two methods in class b:
+
+b@foo
+a@foo
+
+But we don't want to do a search for b.has('foo'), which is inside the
+VM loop.  To that extent, we could duplicate the method which has the
+unscoped name.  For example
+
+b@foo
+foo
+
+In this case, foo is an alias for a@foo.  But inherited functions will
+need to be renamed if/when they clash with existing names.  This
+suggests we should add inherited names _after_ local names, with
+renaming to avoid collisions.
 
 
 

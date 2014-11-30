@@ -902,6 +902,17 @@ Tree Parser::classDefinition() {
   Tree root(expect(TOK_CLASSDEF));
   // TODO - handle inheritance
   root.addChild(identifier()); // Add the name of the class
+  if (match('<'))
+    {
+      Tree superclasses(next());
+      consume();
+      superclasses.addChild(identifier());
+      while (match('&')) {
+	consume();
+	superclasses.addChild(identifier());
+      }
+      root.addChild(superclasses);
+    }
   skipNewLines();
   while (!match(TOK_END)) {
     if (match(TOK_PROPERTIES))

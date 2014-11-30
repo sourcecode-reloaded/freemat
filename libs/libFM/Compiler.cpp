@@ -1380,7 +1380,7 @@ void Compiler::reset() {
   delete _regpool;
   _regpool = new RegisterBlock(256);
   delete _module;
-  _module = new Module;
+  _module = new Module(_ctxt);
   _module->_isclass = false;
   // while (!_codestack.empty()) {
   //   CodeBlock *p = _codestack.top();
@@ -1400,7 +1400,7 @@ void Compiler::reset() {
 }
 
 void Compiler::compile(const FMString &code) {
-  _module = new Module;
+  _module = new Module(_ctxt);
   _module->_isclass = false;
   std::cout << ">>>>_module = " << _module << "\n";
   Scanner S(code,"");
@@ -1480,6 +1480,8 @@ void Compiler::walkFunction(const Tree &t, FunctionTypeEnum funcType) {
       if (_currentSym->countReturnValues() != 1)
 	throw Exception("Constructor for class " + _currentSym->name + " must have exactly 1 return value");
       FMString return_name = _currentSym->returnName(0);
+      if (!_currentSym->syms[return_name].is_return())
+	throw Exception("Constructor for class " + _currentSym->name + " must return a value");
       if (_currentSym->syms[return_name].is_parameter())
 	throw Exception("Constructor for class " + _currentSym->name + " cannot take a parameter of the same name as the returned class object: " + return_name);
       std::cout << "CONSTRUCTOR RETURN: " << return_name << "\n";
@@ -1623,6 +1625,7 @@ void Compiler::walkClassDef(const Tree &t) {
   cp->_syms = _currentSym;
   _module->_main = cp;
   _module->_isclass = true;
+  _module->_dependencies = _ctxt->_list->empty();
   _code = cp;
   _code->_namelist = _ctxt->_list->empty();
   _code->_constlist = _ctxt->_list->empty();
@@ -1630,6 +1633,18 @@ void Compiler::walkClassDef(const Tree &t) {
     addStringToList(_ctxt,_code->_namelist,s.key());
   // Build up the property list
   useBlock(new BasicBlock);
+  reg_t cd_args = startList();
+  // Walk the superclasses (if they exist)
+  reg_t superclasses = startList();
+  if (t.child(1).is('<'))
+    {
+      const Tree &s = t.child(1);
+      for (int j=0;j<s.numChildren();j++)
+	{
+	  pushList(superclasses,fetchConstantString(s.child(j).text()));
+	  _ctxt->_list->push(_module->_dependencies,_ctxt->_string->makeString(s.child(j).text()));
+	}
+    }
   reg_t props = startList();
   // Walk the properties
   for (int i=1;i<t.numChildren();i++)
@@ -1650,7 +1665,10 @@ void Compiler::walkClassDef(const Tree &t) {
     if (t.child(i).is(TOK_METHODS))
       walkMethods(t.child(i));
   reg_t name = fetchConstantString(cp->_syms->name);
-  emit(OP_CLASSDEF,name,props,methods);
+  pushList(cd_args,superclasses);
+  pushList(cd_args,props);
+  pushList(cd_args,methods);
+  emit(OP_CLASSDEF,name,cd_args);
   emit(OP_RETURN);
 }
 
@@ -1842,6 +1860,8 @@ void FM::Disassemble(ThreadContext *_ctxt, const Object &p)
     {
       const ModuleData *md = _ctxt->_module->ro(p);
       std::cout << "Module: " << md->m_name << "\n";
+      std::cout << "Is class: " << md->is_class << "\n";
+      std::cout << "Dependencies: " << md->m_dependencies.description() << "\n";
       std::cout << "  ** main routine **\n";
       Disassemble(_ctxt,_ctxt->_function->ro(md->m_main)->m_code);
       for (auto i=md->m_locals.begin(); i!= md->m_locals.end(); ++i) {

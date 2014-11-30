@@ -69,7 +69,7 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_SAVE_CELL: return register_cell;
     case OP_MAKE_CLOSURE: return three_registers;
     case OP_PUSH_CELL: return register_cell;
-    case OP_CLASSDEF: return three_registers;
+    case OP_CLASSDEF: return two_registers;
     case OP_CONSTRUCT: return two_registers;
     case OP_SUBSREF_NOGS: return three_registers;
     case OP_SUBSASGN_NOGS: return register_register_name;

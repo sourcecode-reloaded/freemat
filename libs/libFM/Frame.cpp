@@ -28,14 +28,17 @@ int Frame::lookupAddressForName(const Object &name, bool searchGlobals) {
     {
       // Do not know the name at all
       // First look in the module
-      std::cout << "Searching module for " << _ctxt->_string->getString(name) << "\n";
-      auto mfunc = _ctxt->_module->ro(_module)->m_locals.find(name);
-      if (mfunc != _ctxt->_module->ro(_module)->m_locals.end())
+      if (!_module.isEmpty())
 	{
-	  ndx = _sym_names.count();
-	  _ctxt->_list->push(_sym_names,name);
-	  _ctxt->_list->push(_vars,mfunc->second);
-	  return ndx;
+	  std::cout << "Searching module for " << _ctxt->_string->getString(name) << "\n";
+	  auto mfunc = _ctxt->_module->ro(_module)->m_locals.find(name);
+	  if (mfunc != _ctxt->_module->ro(_module)->m_locals.end())
+	    {
+	      ndx = _sym_names.count();
+	      _ctxt->_list->push(_sym_names,name);
+	      _ctxt->_list->push(_vars,mfunc->second);
+	      return ndx;
+	    }
 	}
       // Is it defined in the global scope?
       std::cout << "Searching globals for " << _ctxt->_string->getString(name) << "\n";
@@ -64,14 +67,17 @@ int Frame::lookupAddressForName(const Object &name, bool searchGlobals) {
       // of an error (i.e., an undefined symbol), or
       // because the definition is in the global space.
       // Check for the latter case.
-      std::cout << "Searching module for " << _ctxt->_string->getString(name) << "\n";
-      auto mfunc = _ctxt->_module->ro(_module)->m_locals.find(name);
-      if (mfunc != _ctxt->_module->ro(_module)->m_locals.end())
+      if (!_module.isEmpty())
 	{
-	  _ctxt->_list->rw(_vars)[ndx] = mfunc->second;
-	  _ctxt->_index->rw(_addrs)[ndx] = ndx;
-	  return ndx;
-	}      
+	  std::cout << "Searching module for " << _ctxt->_string->getString(name) << "\n";
+	  auto mfunc = _ctxt->_module->ro(_module)->m_locals.find(name);
+	  if (mfunc != _ctxt->_module->ro(_module)->m_locals.end())
+	    {
+	      _ctxt->_list->rw(_vars)[ndx] = mfunc->second;
+	      _ctxt->_index->rw(_addrs)[ndx] = ndx;
+	      return ndx;
+	    }      
+	}
       std::cout << "Searching globals for named symbol " << _ctxt->_string->getString(name) << "\n";
       auto gfunc = _ctxt->_globals->find(_ctxt->_string->getString(name)); //TODO Remove conversion to string?
       if (gfunc != _ctxt->_globals->end())

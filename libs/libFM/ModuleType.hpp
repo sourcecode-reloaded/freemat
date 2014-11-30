@@ -16,7 +16,8 @@ namespace FM
     Object m_main; // Main function for this module
     FMString m_name;
     bool is_class;
-    ModuleData(ThreadContext *_ctxt) : m_main(_ctxt) {}
+    Object m_dependencies; // Super classes if encountered
+    ModuleData(ThreadContext *_ctxt) : m_main(_ctxt), m_dependencies(_ctxt) {}
   };
 
   class ModuleType : public AggregateType<ModuleData,HandleSemantics> {
@@ -27,6 +28,7 @@ namespace FM
     virtual FMString describe(const Object &module) {
       FMString ret = "Module ";
       ret += this->ro(module)->m_name + "\n";
+      ret += "  dependencies: " + this->ro(module)->m_dependencies.description() + "\n";
       ret += "  locals:\n";
       for (auto i=this->ro(module)->m_locals.begin();i!=this->ro(module)->m_locals.end();++i)
 	{
