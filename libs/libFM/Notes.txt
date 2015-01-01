@@ -1544,5 +1544,186 @@ need to be renamed if/when they clash with existing names.  This
 suggests we should add inherited names _after_ local names, with
 renaming to avoid collisions.
 
+What remains is calling constructors for inherited classes.  This is a
+bit trickier, because the syntax for calling parent class constructors
+is a bit wierd.  If class B < class A, then we have an additional
+problem in the construction of the class.  Suppose we have that class
+A has a constructor which takes arguments:
+
+classdef A
+  methods
+    function obj = A(c)
+      % Stuff goes here
+    end
+  end
+end
+
+Now in this case, you can no longer construct an object of class A
+without an argument.  So a derived class now _must_ call A with a
+constructor. Consider this case
+
+classdef B < A
+  methods
+    function obj = B(c)
+      % implicit call to construct goes here.
+      obj = obj@A(c)
+    end
+  end
+end
+
+This means we must:
+1.  In the constructor, scan for invocations of superclasses.
+2.  Build a list of constructors that are explicitly called
+3.  Identify constructors that still need to be called
+4.  emit OP_CONSTRUCT for built-in constructor.
+
+So we need something like this:
+
+class constructor:
+1. For each superclass (A) that has no explicit reference, call
+meta(A)->deref
+
+A better strategy.
+
+1.  Every class will derive from ValueClass or HandleClass
+2.  Compiler tracks the invokation of all constructors done
+explicitly.
+3.  Constructors not invoked explicitly are implicitly invoked by the
+compiler:
+
+function obj = constructorA
+  % These are implicit invokations of constructors for base1 and base2
+  obj = obj@base1
+  obj = obj@base2
+  % Explicit invokations of constructors, possibly with arguments
+  obj = obj@base3(args)
+end
+
+4. Constructors are mapped to functions that take the object to be
+constructed as an argument.  This allows constructors from
+superclasses and subclasses to be reused.  Hmmm... Consider the case
+
+function obj = base1(c)
+  obj.foo = 32
+end
+
+In this case, we normally have obj magically assigned by the hidden
+OP_CONSTRUCT call inserted at the beginning.  I.e., the code is
+compiled as
+
+function obj = base1(c)
+  obj = OP_CONSTRUCT
+  obj.foo = 32
+end
+
+The problem with this is that normally the OP_CONSTRUCT call invokes
+the built-in class constructor.  Now, we have a more complicated case
+in which base1 is called as the superclass constructor of a derived
+class.  For example:
+
+function obj = classA
+  obj.goo = 4
+end
+
+When this is compiled, it needs to be compiled as
+
+function obj = classA
+  obj = OP_CONSTRUCT
+  obj = obj@base1 ??
+  obj.goo = 4
+end
+
+The problem is that we have already constructed obj.  So we cannot
+call OP_CONSTRUCT again.  Instead, we need to pass a partially
+constructed object to the constructor.  One option would be to have
+OP_CONSTRUCT take an argument object.  I.e., what if we have
+OP_CONSTRUCT have the following behavior:
+
+1. OP_CONSTRUCT - if called the first time, allocates and constructs
+the object with baseline values for all properties.
+2. OP_CONSTRUCT - if called subsequent times, returns the already
+constructed object.
+
+Examining the OP_CONSTRUCT opcode implementation:
+ REG1 = _ctxt->_meta->construct(REG2);
+
+Here REG2 is the metaclass, and REG1 is the returned object of a given
+class.  The problem is that there is nowhere to "stash" the partially
+constructed object.  Only the return value of construct is saved.  It
+would have to live in the current frame or worse, the current VM.
+Storing in the current VM or frame won't really work, as the frame
+will be pushed when subclass or superclass constructors are called,
+and the VM can't keep track of what class is being constructed.
+
+What we need is to make _explicit_ the need to call the original
+constructor.  That won't work if we have multiple class inheritance -
+e.g., if:
+
+a < b & c
+
+then the base constructor gets called twice.  Once for b and once for
+c.
+
+Another option is to add a hidden extra argument to the object
+constructor.  So for example,
+
+function obj = classA(n,m)
+end
+
+compiles as
+
+function obj = classA(obj,n,m)
+end
+
+where obj is the partially constructed object.  We must then in the
+setup for the function, handle the fact that obj and n and m are not
+equivalent to standard arguments.  Let's ignore this for a moment.
+Then when we call base constructors, we have something like this:
+
+function obj = classA(obj,n,m)
+  obj = obj@base1(m) --> base1(obj,m)
+end
+
+I.e., we add an implicit first argument to the class constructor that
+is the partial object.  We need to ensure that this implicit argument
+is removed and not counted by nargin.  The remaining problem is that
+when the class is constructed, we need to provide a base object.  This
+could be done by intercepting the constructor call at the meta object
+level.  So something like this:
+
+a = classA(3,4)
+
+--> REG1 = meta.classA.construct()
+--> REG1 = meta.classA.call(REG1,3,4)
+
+Here, we external to the constructor (at the VM level) construct the
+object A, and then use the constructor to fill in the details.  This
+notion of a "hidden" parameter to the function is the same as the
+binding, so it's a bit strange that we can't use the same mechanism as
+function binding.  This solves the issue for objects without
+constructors (REG1 is already the constructed object), and also for
+reusing constructors.  Consider if A < base1 & base2.  Then
+
+a = classA(3,4)
+
+REG1 = meta.classA.construct()
+REG1 = meta.classA.call(REG1,3,4)
+  REG1 = base1(REG1,3)
+  REG1 = base2(REG1,4)
+The calls to base1 and base2 do not include calls to the construct()
+method, so there is no conflict.  This also cleans up the need to
+insert OP_CONSTRUCT into the OpCode stream.  In fact, we can eliminate
+VM support for it completely.  
 
 
+********************************************************************************
+
+OK - so the problem was:
+
+1.  Constructors need to be passed an extra argument.
+2.  The argument is hidden.
+3.  The argument is the same as the return of the function.
+4.  Constructors are static functions.
+5.  Calling a constructor is a special invocation.
+
+Update.  

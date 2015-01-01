@@ -251,6 +251,9 @@ void SymbolPass::walkFunction(const Tree &t, FunctionTypeEnum funcType, symbol_f
 	addSymbol(name, symbol_flags_t::SETTER() | attr);
 	break;
       }      
+    default:
+      {
+      }
     }
   const Tree &rets = t.child(0);
   beginFunction(name,funcType == NestedFunction);
@@ -263,6 +266,19 @@ void SymbolPass::walkFunction(const Tree &t, FunctionTypeEnum funcType, symbol_f
       addSymbol(args.child(index).text(), symbol_flags_t::PARAMETER(index));
   for (int index=0;index < rets.numChildren();index++)
     addSymbol(rets.child(index).text(), symbol_flags_t::RETURN(index));
+  // Check that the constructor contains one return
+  // And that the return does not appear in the list of parameters.
+  if (funcType == ConstructorFunction)
+    {
+      if (_current->countReturnValues() != 1)
+	throw Exception("Constructor for " + _current->name + " must return exactly 1 value");
+      // Get the name of the object being constructed
+      FMString objname = _current->returnName(0);
+      // Check that it is not a parameter
+      symbol_flags_t objflags = _current->syms[objname];
+      if (objflags.is_parameter())
+	throw Exception("Object returned by constructor cannot appear as an argument: i.e., function A = ClassName(A,...) is not allowed");
+    }
   walkCode(code,funcType == NestedFunction);  
   switch (funcType)
     {
