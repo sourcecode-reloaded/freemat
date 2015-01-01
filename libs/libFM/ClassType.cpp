@@ -20,19 +20,14 @@ Object ClassMetaType::getField(const Object &meta, const Object &fieldname) {
 
 Object ClassMetaType::getParens(const Object &meta, const Object &b) {
   const ClassMetaData *cmd = this->ro(meta);
+  // Construct the object
+  Object obj = this->construct(meta);
+  // Check for a constructor -- TODO eliminate the search and store the constructor in a dedicated slot
   auto j = cmd->m_methods.find(cmd->m_name);
   if (j == cmd->m_methods.end())
-    {
-      // No constructor - just use default
-      throw Exception("Cannot invoke constructor for class " + cmd->m_name.description() + " with arguments - only the default constructor is available.");
-    }
-  else
-    {
-      // There is a constructor - just invoke it (no arguments)
-      // the constructor will be responsible for calling OP_CONSTRUCT to construct the class.
-      std::cout << "Constructor found - invoking\n";
-      return _ctxt->_function->getParens(j->second->m_definition,b);
-    }
+    // No constructor - just use default
+    return obj;
+  return _ctxt->_function->methodCall(j->second->m_definition,obj,b);
 }
 
 Object ClassMetaType::construct(const Object &meta) {

@@ -49,6 +49,7 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_LOAD_GLOBAL: return register_name;
     case OP_LOAD_PERSIST: return register_name;
     case OP_SAVE_GLOBAL: return register_name;
+    case OP_SAVE_OBJ: return one_register;
     case OP_SAVE_PERSIST: return register_name;
     case OP_JUMP_ZERO: return register_offset;
     case OP_JUMP: return offset;
@@ -73,6 +74,8 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_CONSTRUCT: return two_registers;
     case OP_SUBSREF_NOGS: return three_registers;
     case OP_SUBSASGN_NOGS: return register_register_name;
+    case OP_LOAD_OBJ: return one_register;
+    case OP_SUBSASGN_OBJ: return two_registers;
     default:
       return three_registers;
   }
@@ -130,6 +133,7 @@ std::string getOpCodeName(op_t opcode)
     case OP_LOAD_GLOBAL: return "LOAD_GLOBAL";
     case OP_LOAD_PERSIST: return "LOAD_PERSIST";
     case OP_SAVE_GLOBAL: return "SAVE_GLOBAL";
+    case OP_SAVE_OBJ: return "SAVE_OBJ";
     case OP_SAVE_PERSIST: return "SAVE_PERSIST";
     case OP_JUMP_ZERO: return "JUMP_ZERO";
     case OP_JUMP: return "JUMP";
@@ -154,6 +158,8 @@ std::string getOpCodeName(op_t opcode)
     case OP_CONSTRUCT: return "CONSTRUCT";
     case OP_SUBSREF_NOGS: return "SUBSREF_NOGS";
     case OP_SUBSASGN_NOGS: return "SUBSASGN_NOGS";
+    case OP_LOAD_OBJ: return "LOAD_OBJ";
+    case OP_SUBSASGN_OBJ: return "SUBSASGN_OBJ";
     default: return "UNK";
   }
 }

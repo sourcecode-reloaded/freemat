@@ -1726,4 +1726,54 @@ OK - so the problem was:
 4.  Constructors are static functions.
 5.  Calling a constructor is a special invocation.
 
-Update.  
+Update.  Some validation is now done on constructors.  For example,
+
+function A = classname(A)
+end
+
+or 
+
+function [A,B] = classname()
+
+should both cause errors (reuse of return name in constructor, and too
+many return values in a constructor respectively).  What is needed
+next is the ability to pass A into constructor without an object.  
+
+How to hide the argument?  Consider the seuqence for calling a
+constructor function:
+
+A bound function is different.  In the case of a bound function, the
+argument is _added_ to the list of arguments.  So that
+
+y = a.foo(c,d)
+
+becomes 
+
+y = foo(a,c,d)
+
+In this case, we want
+
+y = foo(c,d)
+
+to be converted into:
+
+a = meta(foo).construct(a,b)
+
+So far, this is fine.  
+
+y = foo(c,d)
+
+Then,
+
+1.  The meta class calls "construct" on the class.
+2.  The meta class passes control to the class constructor, using a
+hidden object parameter.
+3.  Calls to superclasses route through the same hidden object
+parameter
+
+The first two work.
+
+
+
+
+

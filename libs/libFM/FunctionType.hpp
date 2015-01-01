@@ -23,6 +23,7 @@ namespace FM
     virtual const FMString& name() const {static FMString _name = "function"; return _name;}
     virtual FMString describe(const Object &a);
     virtual FMString brief(const Object &a);
+    virtual Object methodCall(const Object &func, const Object &obj, const Object &args);
     virtual Object getParens(const Object &a, const Object &b);
     virtual Object call(const Object &a, const Object &args, int nargout);
     virtual Object deref(const Object &a);

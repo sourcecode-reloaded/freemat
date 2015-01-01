@@ -22,6 +22,13 @@ FMString FunctionType::describe(const Object &a) {
   }
 }
 
+Object FunctionType::methodCall(const Object & func, const Object &obj, const Object &args)
+{
+  Object p = _ctxt->_vm->executeFunction(func,args,&obj);
+  if (p.isEmpty()) return p;
+  return _ctxt->_list->first(p);
+}
+
 Object FunctionType::getParens(const Object &a, const Object &b) 
 {
   Object p = _ctxt->_vm->executeFunction(a,b);

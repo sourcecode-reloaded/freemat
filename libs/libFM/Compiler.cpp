@@ -595,6 +595,8 @@ void Compiler::saveRegisterToName(const FMString &varname, reg_t b) {
     emit(OP_SAVE_GLOBAL,b,getNameID(varname));
   else if (symflags.is_persistent())
     emit(OP_SAVE_PERSIST,b,getNameID(varname));
+  else if (symflags.is_object())
+    emit(OP_SAVE_OBJ,b);
   else if (symflags.is_local())
     emit(OP_SAVE,b,getNameID(varname));
   else if (symflags.is_cell())
@@ -631,6 +633,8 @@ void Compiler::assignment(const Tree &t, bool printIt, reg_t b) {
     emit(OP_SUBSASGN_GLOBAL,args,b,getNameID(varname));
   else if (symflags.is_persistent())
     emit(OP_SUBSASGN_PERSIST,args,b,getNameID(varname));
+  else if (symflags.is_object())
+    emit(OP_SUBSASGN_OBJ,args,b);
   else if (symflags.is_local())
     {
       if (subsasgn_case)
@@ -762,6 +766,8 @@ reg_t Compiler::fetchVariable(const FMString &varname, symbol_flags_t flags)
     emit(OP_LOAD_GLOBAL,x,getNameID(varname));
   else if (flags.is_persistent())
     emit(OP_LOAD_PERSIST,x,getNameID(varname));
+  else if (flags.is_object())
+    emit(OP_LOAD_OBJ,x);
   else if (flags.is_local())
     emit(OP_LOAD,x,getNameID(varname));
   else if (flags.is_cell())
@@ -1474,6 +1480,7 @@ void Compiler::walkFunction(const Tree &t, FunctionTypeEnum funcType) {
   // Create a basic block, and push it on the list
   useBlock(new BasicBlock);
   // TODO - clean this up
+  /*
   if (funcType == ConstructorFunction)
     {
       // Count the number of return symbols - should be exactly one
@@ -1492,7 +1499,8 @@ void Compiler::walkFunction(const Tree &t, FunctionTypeEnum funcType) {
       emit(OP_CONSTRUCT,y,x);
       saveRegisterToName(return_name,y);
     }
-  else if (funcType == GetterFunction)
+  */
+    if (funcType == GetterFunction)
     {
       if (_currentSym->countParameterValues() != 1)
 	throw Exception("Getter for class " + _currentSym->name + " named " + funcName + " cannot have more than one parameter (object)");

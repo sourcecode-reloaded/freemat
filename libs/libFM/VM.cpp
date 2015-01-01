@@ -150,9 +150,10 @@ void VM::defineClass(const Object &name, const Object &arguments)
   _ctxt->_globals->insert(std::make_pair(className,fooMeta));
 }
 
+
 // Execute a function object, given a list of parameters (params).  Returns a list
 // of returns.
-Object VM::executeFunction(const Object &functionObject, const Object &parameters)
+Object VM::executeFunction(const Object &functionObject, const Object &parameters, const Object *obj)
 {
   //
   // The structure of a frame needs a little explanation.
@@ -175,7 +176,6 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
   // that has not been defined should trigger a search of the global scope for
   // a function of the given name. 
   //
-  // std::cout << "fp = " << _fp << " rp = " << _rp << "\n";
   // Create a new frame for the function
   _fp++;
   const FunctionData *fd = _ctxt->_function->ro(functionObject);
@@ -197,6 +197,11 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
   _frames[_fp]->_reg_offset = _rp;
   _frames[_fp]->_module = _ctxt->_list->last(_modules);
   _frames[_fp]->_captures = fd->m_closure;
+  if (obj)
+    {
+      std::cout << "Stashing object " << obj->description() << " in object slot\n";
+      _frames[_fp]->_obj = *obj;
+    }
   // Allocate space for the captured variables (free ones come through the closure)
   for (int i=0;i<cp->m_captured.count();i++)
     _ctxt->_list->push(_frames[_fp]->_captures,_ctxt->_captured->empty());
@@ -246,32 +251,40 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
   executeCodeObject(fd->m_code);
   // Collect return values
   Object retvec = _ctxt->_list->empty();
-  int to_return = cp->m_returns.count();
-  bool varargout_case = _ctxt->_index->scalarValue(cp->m_varargout) != -1;
-  if (varargout_case) to_return -= 1;
-  const ndx_t * return_ndx = _ctxt->_index->ro(cp->m_returns);
-  sp = _ctxt->_list->rw(_frames[_fp]->_vars);
-  for (int i=0;i<to_return;i++)
+  // Special case object constructor invokation - force it to return the object
+  // FIXME - This is inelegant.
+  if (obj)
+    _ctxt->_list->push(retvec,_frames[_fp]->_obj);
+  else
     {
-      if (return_ndx[i] < 1000)
-	_ctxt->_list->push(retvec,sp[return_ndx[i]]);
-      else
+      int to_return = cp->m_returns.count();
+      bool varargout_case = _ctxt->_index->scalarValue(cp->m_varargout) != -1;
+      if (varargout_case) to_return -= 1;
+      const ndx_t * return_ndx = _ctxt->_index->ro(cp->m_returns);
+      sp = _ctxt->_list->rw(_frames[_fp]->_vars);
+      for (int i=0;i<to_return;i++)
 	{
-	  ndx_t capture_slot = return_ndx[i] % 1000;
-	  std::cout << "Return " << i << " taken from cell " << capture_slot << "\n";
-	  _ctxt->_list->push(retvec,_ctxt->_captured->get(_ctxt->_list->ro(_frames[_fp]->_captures)[capture_slot]));
+	  if (return_ndx[i] < 1000)
+	    _ctxt->_list->push(retvec,sp[return_ndx[i]]);
+	  else
+	    {
+	      ndx_t capture_slot = return_ndx[i] % 1000;
+	      std::cout << "Return " << i << " taken from cell " << capture_slot << "\n";
+	      _ctxt->_list->push(retvec,_ctxt->_captured->get(_ctxt->_list->ro(_frames[_fp]->_captures)[capture_slot]));
+	    }
 	}
+      if (varargout_case) {
+	std::cout << "to_return = " << to_return << "\n";
+	std::cout << "returns = " << cp->m_returns << "\n";
+	int varargout_location = _ctxt->_index->scalarValue(cp->m_varargout);
+	const Object & varargout = sp[varargout_location];
+	std::cout << "VARARGOUT " << varargout << "\n";
+	const Object * vip = _ctxt->_cell->ro(varargout);
+	for (int i=0;i<varargout.count();i++)
+	  _ctxt->_list->push(retvec,vip[i]);
+      }
     }
-  if (varargout_case) {
-    std::cout << "to_return = " << to_return << "\n";
-    std::cout << "returns = " << cp->m_returns << "\n";
-    int varargout_location = _ctxt->_index->scalarValue(cp->m_varargout);
-    const Object & varargout = sp[varargout_location];
-    std::cout << "VARARGOUT " << varargout << "\n";
-    const Object * vip = _ctxt->_cell->ro(varargout);
-    for (int i=0;i<varargout.count();i++)
-      _ctxt->_list->push(retvec,vip[i]);
-  }
+  _frames[_fp]->_obj = _ctxt->_double->empty();
   _frames[_fp]->_sym_names = _ctxt->_list->empty();
   _frames[_fp]->_vars = _ctxt->_list->empty();
   _frames[_fp]->_addrs = _ctxt->_index->empty();
@@ -579,6 +592,11 @@ void VM::executeCodeObject(const Object &codeObject)
 		  REG1 = _ctxt->_function->fromCode(REG2,REG3);
 		  break;
 		}
+	      case OP_LOAD_OBJ:
+		{
+		  REG1 = closed_frame->_obj;
+		  break;
+		}
 	      case OP_LOAD:
 		{
 		  // We start by looking for the name in our address file
@@ -636,6 +654,11 @@ void VM::executeCodeObject(const Object &codeObject)
 		}
 	      case OP_SAVE_GLOBAL:
 		break;
+	      case OP_SAVE_OBJ:
+		{
+		  closed_frame->_obj = REG1;
+		  break;
+		}
 	      case OP_SAVE:
 		{
 		  register int ndx = get_constant(insn);
@@ -717,6 +740,11 @@ void VM::executeCodeObject(const Object &codeObject)
 		      addr = addrfile[ndx];
 		    }
 		  varfile[addr].type()->set(varfile[addr],REG1,REG2,(opcode(insn) != OP_SUBSASGN_NOGS));
+		  break;
+		}
+	      case OP_SUBSASGN_OBJ:
+		{
+		  closed_frame->_obj.type()->set(closed_frame->_obj,REG1,REG2,false);
 		  break;
 		}
 	      case OP_LOOPCOUNT:

@@ -33,6 +33,7 @@ namespace FM
     unsigned _static       : 1;
     unsigned _constant     : 1;
     unsigned _dependent    : 1;
+    unsigned _object       : 1;
     unsigned param_position    : 8;
     unsigned return_position   : 8;
     unsigned property_position : 16;
@@ -44,7 +45,7 @@ namespace FM
 			      _property(0), _method(0), _constructor(0),
 			      _getter(0), _setter(0), param_position(0), 
 			      return_position(0), property_position(0),
-			      _static(0), _constant(0), _dependent(0) {}
+			      _static(0), _constant(0), _dependent(0), _object(0) {}
 
     inline bool is_global() const {return _global != 0;}
     inline bool is_persistent() const {return _persistent != 0;}
@@ -65,6 +66,7 @@ namespace FM
     inline bool is_static() const {return _static != 0;}
     inline bool is_constant() const {return _constant != 0;}
     inline bool is_dependent() const {return _dependent != 0;}
+    inline bool is_object() const {return _object != 0;}
 
     inline FMString str() const {
       FMString ret;
@@ -85,6 +87,7 @@ namespace FM
       if (_static) ret += " static";
       if (_constant) ret += " constant";
       if (_dependent) ret += " dependent";
+      if (_object) ret += " object";
       return ret;
     }
 		       
