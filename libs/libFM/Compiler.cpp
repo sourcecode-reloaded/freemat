@@ -836,6 +836,19 @@ reg_t Compiler::doShortcutAnd(const Tree &t) {
   return ret;
 }
 
+void Compiler::invokeSuperclassConstructor(reg_t list, const Tree &t) {
+  FMString varname = t.first().text();
+  int atndx = varname.indexOf("@");
+  FMString metaclass = varname.mid(atndx+1);
+  reg_t argv = startList();
+  if (t.numChildren() > 1) {
+    const Tree &args = t.second();
+    for (int p=0;p<args.numChildren();p++)
+      multiexpr(argv,args.child(p));
+  }
+  emit(OP_SUPER,list,argv,getNameID(metaclass));
+}
+
 // Takes an expression like A(...).foo{32} and
 // expands it (possibly into multiple values).  They
 // are left on the stack.  Caller is responsible
@@ -844,6 +857,8 @@ void Compiler::rhs(reg_t list, const Tree &t) {
   FMString varname = t.first().text();
   reg_t x;
   symbol_flags_t symflags = _code->_syms->syms[varname];
+  if (symflags.is_super())
+    return invokeSuperclassConstructor(list,t);
   if (t.numChildren() > 1)
     {
       bool subsref_case = true;

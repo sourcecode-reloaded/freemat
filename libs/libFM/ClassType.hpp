@@ -123,6 +123,7 @@ namespace FM
     virtual Object deref(const Object &a); // Construct an object without parameters
     virtual Object getParens(const Object &a, const Object &b); // Construct with parameters
     virtual Object getField(const Object &meta, const Object &fieldname);
+    virtual Object invokeConstructor(const Object &meta, const Object &self, const Object &args);
   };
 
   class ClassData {

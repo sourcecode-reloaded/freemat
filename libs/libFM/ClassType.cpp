@@ -22,12 +22,16 @@ Object ClassMetaType::getParens(const Object &meta, const Object &b) {
   const ClassMetaData *cmd = this->ro(meta);
   // Construct the object
   Object obj = this->construct(meta);
-  // Check for a constructor -- TODO eliminate the search and store the constructor in a dedicated slot
+  return this->invokeConstructor(meta,obj,b);
+}
+
+Object ClassMetaType::invokeConstructor(const Object &meta, const Object &self, const Object &args) {
+  const ClassMetaData *cmd = this->ro(meta);
   auto j = cmd->m_methods.find(cmd->m_name);
   if (j == cmd->m_methods.end())
     // No constructor - just use default
-    return obj;
-  return _ctxt->_function->methodCall(j->second->m_definition,obj,b);
+    return self;
+  return _ctxt->_function->methodCall(j->second->m_definition,self,args);  
 }
 
 Object ClassMetaType::construct(const Object &meta) {

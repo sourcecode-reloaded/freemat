@@ -659,6 +659,13 @@ void VM::executeCodeObject(const Object &codeObject)
 		  closed_frame->_obj = REG1;
 		  break;
 		}
+	      case OP_SUPER:
+		{
+		  FMString meta_name = _ctxt->_string->getString(names_list[get_constant(insn)]);
+		  Object super_meta = _ctxt->_globals->at(meta_name);
+		  _ctxt->_list->push(REG1,_ctxt->_meta->invokeConstructor(super_meta,closed_frame->_obj,REG2));
+		  break;
+		}
 	      case OP_SAVE:
 		{
 		  register int ndx = get_constant(insn);

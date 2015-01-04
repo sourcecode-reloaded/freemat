@@ -328,7 +328,24 @@ void SymbolPass::walkCode(const Tree &t, bool nested) {
 	      }
 	  }
 	else
-	  addSymbol(t.first().text(),symbol_flags_t::DYNAMIC());
+	  {
+	    FMString p = t.first().text();
+	    // Check for x@foo, where x is the object name
+	    bool supercase = false;
+	    if (p.contains("@")) {
+	      int atndx = p.indexOf("@");
+	      FMString prefixname = p.left(atndx);
+	      FMString postfixname = p.mid(atndx+1);
+	      if (_current->syms[prefixname].is_object())
+		{
+		  addSymbol(p,symbol_flags_t::SUPER());
+		  addSymbol(postfixname,symbol_flags_t::DYNAMIC());
+		  supercase = true;
+		}
+	    }
+	    if (!supercase)
+	      addSymbol(t.first().text(),symbol_flags_t::DYNAMIC());
+	  }
 	walkChildren(t,nested);
 	break;
       }

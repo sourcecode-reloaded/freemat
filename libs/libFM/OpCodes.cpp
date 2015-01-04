@@ -76,6 +76,7 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_SUBSASGN_NOGS: return register_register_name;
     case OP_LOAD_OBJ: return one_register;
     case OP_SUBSASGN_OBJ: return two_registers;
+    case OP_SUPER: return register_register_name;
     default:
       return three_registers;
   }
@@ -160,6 +161,7 @@ std::string getOpCodeName(op_t opcode)
     case OP_SUBSASGN_NOGS: return "SUBSASGN_NOGS";
     case OP_LOAD_OBJ: return "LOAD_OBJ";
     case OP_SUBSASGN_OBJ: return "SUBSASGN_OBJ";
+    case OP_SUPER: return "SUPER";
     default: return "UNK";
   }
 }

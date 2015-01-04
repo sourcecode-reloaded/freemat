@@ -134,6 +134,7 @@ namespace FM
     reg_t flattenDereferenceTreeToStack(const Tree&, int);
     reg_t flattenDereferenceTreeToStackParensPrecomputed(const Tree &s, reg_t paren_children, int first_child);
     void deref(reg_t args, const Tree&);
+    void invokeSuperclassConstructor(reg_t list, const Tree&);
     void rhs(reg_t list, const Tree&);
     void expressionStatement(const Tree&, bool);
     void incrementRegister(reg_t);
