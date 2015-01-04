@@ -44,24 +44,11 @@ Object ClassMetaType::construct(const Object &meta) {
   return Object(new ObjectBase(q,_ctxt->_class,0,Tuple(1,1),0,0)); // Capacity?
 }
 
-// FIXME - should have separate set of static methods... for now, 
-// assume that constructor must be static by definition
 Object ClassMetaType::deref(const Object &meta) {
   const ClassMetaData *cmd = this->ro(meta);
-  auto j = cmd->m_methods.find(cmd->m_name);
-  if (j == cmd->m_methods.end())
-    {
-      // No constructor - just use default
-      std::cout << "No constructor found - using default constructor for " << cmd->m_name << "\n";
-      return this->construct(meta);
-    }
-  else
-    {
-      // There is a constructor - just invoke it (no arguments)
-      // the constructor will be responsible for calling OP_CONSTRUCT to construct the class.
-      std::cout << "Constructor found - invoking\n";
-      return _ctxt->_function->deref(j->second->m_definition);
-    }
+  Object obj = this->construct(meta);
+  Object args = _ctxt->_list->empty();
+  return this->invokeConstructor(meta,obj,args);
 }
 
 FMString ClassMetaType::brief(const Object &a) {

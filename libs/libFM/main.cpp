@@ -189,6 +189,7 @@ int main(int argc, char *argv[])
   compileModule(ctxt,"mab");
   compileModule(ctxt,"foo");
   compileModule(ctxt,"bar");
+  compileModule(ctxt,"sclass");
 
   // Object sclassMeta = ctxt->_globals->at("?sclass");
   // Object soo = ctxt->_meta->construct(sclassMeta);

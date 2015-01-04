@@ -1771,7 +1771,8 @@ hidden object parameter.
 3.  Calls to superclasses route through the same hidden object
 parameter
 
-The first two work.
+The first two work - the third one works too.
+
 
 
 
