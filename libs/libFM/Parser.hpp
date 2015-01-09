@@ -74,6 +74,7 @@ namespace FM
     Tree classMethodsDefinition();
     Tree attributeList();
     void skipNewLines();
+    Tree methodCall();
   public:
     Parser(Scanner& lex, bool octaveCompatibility = false);
     Tree process();

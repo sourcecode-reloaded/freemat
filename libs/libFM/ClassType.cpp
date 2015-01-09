@@ -41,7 +41,8 @@ Object ClassMetaType::construct(const Object &meta) {
   Data *q = new Data;
   q->refcnt = 0;
   q->ptr = cd;
-  return Object(new ObjectBase(q,_ctxt->_class,0,Tuple(1,1),0,0)); // Capacity?
+  std::cout << "Constructing class with handle flag " << this->ro(meta)->m_ishandle << "\n";
+  return Object(new ObjectBase(q,_ctxt->_class,0,Tuple(1,1),0,0,this->ro(meta)->m_ishandle)); // Capacity?
 }
 
 Object ClassMetaType::deref(const Object &meta) {
@@ -169,17 +170,23 @@ Object ClassType::getFieldNoGetters(const Object &a, const Object &b) {
   throw Exception("Property " + b.description() + " is not defined for class " + _ctxt->_string->getString(cmd->m_name));
 }
 
+Object ClassType::getMethod(const Object &a, const Object &b) {
+  const ClassData *cd = this->ro(a);
+  const Object &myMeta = cd->metaClass;
+  const ClassMetaData *cmd = _ctxt->_meta->ro(myMeta);
+  auto j = cmd->m_methods.find(b);
+  if (j == cmd->m_methods.end())
+    throw Exception("Method " + b.description() + " is not defined for class " + _ctxt->_string->getString(cmd->m_name));
+  return _ctxt->_bound->bindFunction(j->second->m_definition,a);
+}
+
 Object ClassType::getField(const Object &a, const Object &b) {
   const ClassData *cd = this->ro(a);
   const Object &myMeta = cd->metaClass;
   const ClassMetaData *cmd = _ctxt->_meta->ro(myMeta);
   auto k = cmd->m_properties.find(b);
-  if (k == cmd->m_properties.end()) {
-    auto j = cmd->m_methods.find(b);
-    if (j == cmd->m_methods.end())
-      throw Exception("Property " + b.description() + " is not defined for class " + _ctxt->_string->getString(cmd->m_name));
-    return _ctxt->_bound->bindFunction(j->second->m_definition,a);
-  }
+  if (k == cmd->m_properties.end()) 
+    return this->getMethod(a,b);
   ClassPropertyMetaData *cpmd = k->second;
   if (cpmd->m_getter.isEmpty())
     return getFieldNoGetters(a,b);
@@ -244,6 +251,33 @@ FMString ClassType::brief(const Object &a) {
   return _ctxt->_string->getString(cmd->m_name);
 }
 
+ClassType::ClassType(ThreadContext *ctxt) : m_deletefunc(ctxt->_string->makeString("delete")) {
+  _ctxt = ctxt;
+}
+
+void ClassType::destroyObject(ObjectBase* p) {
+  ClassData *cd = static_cast<ClassData *>(p->ptr());
+  const Object &myMeta = cd->metaClass;
+  const ClassMetaData *cmd = _ctxt->_meta->ro(myMeta);
+  auto j = cmd->m_methods.find(m_deletefunc);
+  if (j != cmd->m_methods.end()) {
+    // Hmm... scary -- this is a pickle.  We need to destroy the object,
+    // without triggering a recursion.  Unfortunately, the original object has
+    // already been destroyed (or is in the process of being destroyed).  So
+    // we need to construct a proxy object that will hold the reference to
+    // the ObjectBase pointer, without itself becoming destroyed when this
+    // function ends.  This bit of dark magic is done using the swap function
+    // of the Object.  We create a sacrificial object, swap in our ObjectBase pointer,
+    // and then, before the object gets destroyed, swap it back out.  Not necessarily
+    // the cleanest solution, but it does work.
+    Object sacrificial(_ctxt);
+    ObjectBase *save = sacrificial.swap(p);
+    _ctxt->_function->call(j->second->m_definition,_ctxt->_list->makeScalar(sacrificial),1);
+    sacrificial.swap(save);
+  }
+  AggregateType::destroyObject(p);
+}
+
 FMString ClassType::describe(const Object &a) {
   // Get the meta class for this class
   const ClassData *cd = this->ro(a);
@@ -285,5 +319,6 @@ FMString ClassType::describe(const Object &a) {
 	ret += " (static)";
       ret += "\n";
     }
+  ret += "refcount = " + Stringify(a.refcnt()) + "\n";
   return ret;
 }

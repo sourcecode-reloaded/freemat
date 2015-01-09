@@ -72,6 +72,7 @@ std::ostream& operator<<(std::ostream& o, const Token& b) {
 FMString FM::TokenToString(const Token& b) {
   switch(b.value()) {
   case TOK_IDENT: return "'"+b.text()+"'";
+  case TOK_SCOPED_IDENT: return ":"+b.text()+":";
   case TOK_SPACE: return "space";
   case TOK_STRING: return "\""+b.text()+"\"";
   case TOK_KEYWORD: return "keyword";
@@ -155,6 +156,7 @@ FMString FM::TokenToString(const Token& b) {
   case TOK_METHODS: return "methods";
   case TOK_THROW: return "throw";
   case TOK_ATTRIBUTES: return "attributes";
+  case TOK_GET_METHOD: return "get_method";
   }
   return FMString(1,FMChar(b.value()));
 }

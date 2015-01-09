@@ -39,7 +39,8 @@ namespace FM {
     TypeCaptured = 21,
     TypeFunction = 22,
     TypeBuiltIn = 23,
-    TypeBoundFunction = 24
+    TypeBoundFunction = 24,
+    TypeFunctionHandle = 25
   };
 
   class Object;

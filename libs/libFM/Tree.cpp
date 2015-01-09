@@ -54,15 +54,20 @@ Tree::Tree(const Token& tok, Tree child1) {
 
 Tree::~Tree() {}
 
-static int indentlevel = 0;
 void Tree::print() const {
-  std::cout << FMString(indentlevel,FMChar(' '));
-  std::cout << TokenToString(d->m_node) << "\n";
-  std::cout.flush();
-  indentlevel+=3;
+  std::cout << this->str();
+}
+
+static int indentlevel = 0;
+FMString Tree::str() const {
+  FMString ret;
+  ret = FMString(indentlevel,FMChar(' '));
+  ret += TokenToString(d->m_node) + "\n";
+  indentlevel += 3;
   for (int i=0;i<d->m_children.size();i++)
-    d->m_children[i].print();
-  indentlevel-=3;
+    ret += d->m_children[i].str();
+  indentlevel -= 3;
+  return ret;
 }
 
 static int indentlvl = 0;

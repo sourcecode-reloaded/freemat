@@ -8,7 +8,9 @@
 #include "ModuleType.hpp"
 #include "FunctionType.hpp"
 
+
 std::string getOpCodeName(FM::op_t);
+FM::opcodemode getOpCodeMode(FM::op_t);
 
 using namespace FM;
 
@@ -132,6 +134,44 @@ Object Assembler::codeObject()
   cp->m_code = op;
   cp->m_names = _code->_namelist;
   cp->m_consts = _code->_constlist;
+  // Scan the opcodes to find the largest used register
+  int max_register = 0;
+  for (int i=0;i<_vm_codes.size();i++)
+    {
+      uint64_t insn = _vm_codes[i];
+      op_t opcode = insn & 0xFF;
+      switch (getOpCodeMode(opcode)) {
+      case no_arguments:
+	break;
+      case register_cell:
+      case register_variable:
+      case register_captured:
+      case register_free:
+      case register_name:
+      case register_offset:
+      case register_constant:
+      case one_register:
+      case register_int:
+	max_register = std::max<int>(max_register,reg1(insn));
+	break;
+      case register_register_captured:
+      case register_register_variable:
+      case register_register_free:
+      case register_register_name:
+      case two_registers:
+	max_register = std::max<int>(max_register,reg1(insn));
+	max_register = std::max<int>(max_register,reg2(insn));
+	break;
+      case three_registers:
+	max_register = std::max<int>(max_register,reg1(insn));
+	max_register = std::max<int>(max_register,reg2(insn));
+	max_register = std::max<int>(max_register,reg3(insn));
+	break;
+      default:
+	break;
+      }
+    }
+  cp->m_registers = max_register+1;
   // Walk the symbol table and collect up the list of arguments
   const Object *strings = _ctxt->_list->ro(cp->m_names);
   // Count number of parametrs and returns

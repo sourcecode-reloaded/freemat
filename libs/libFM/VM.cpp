@@ -141,12 +141,22 @@ void VM::defineClass(const Object &name, const Object &arguments)
     }
   // We add superclasses last to get name resolution correct
   const Object *sp = _ctxt->_list->ro(superclasses);
+  bool isHandle = false;
   for (int i=0;i<superclasses.count();i++) 
     {
-      Object super_meta = _ctxt->_globals->at(_ctxt->_string->getString(sp[i]));
-      std::cout << "Defining class " << className << " super class " << super_meta.description() << "\n";
-      _ctxt->_meta->addSuperClass(fooMeta,super_meta);
+      if (_ctxt->_string->getString(sp[i]) == "handle")
+	{
+	  isHandle = true;
+	  std::cout << "Defining class " << className << " as a handle class\n";
+	}
+      else
+	{
+	  Object super_meta = _ctxt->_globals->at(_ctxt->_string->getString(sp[i]));
+	  std::cout << "Defining class " << className << " super class " << super_meta.description() << "\n";
+	  _ctxt->_meta->addSuperClass(fooMeta,super_meta);
+	}
     }
+  _ctxt->_meta->rw(fooMeta)->m_ishandle = isHandle;
   _ctxt->_globals->insert(std::make_pair(className,fooMeta));
 }
 
@@ -205,7 +215,7 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
   // Allocate space for the captured variables (free ones come through the closure)
   for (int i=0;i<cp->m_captured.count();i++)
     _ctxt->_list->push(_frames[_fp]->_captures,_ctxt->_captured->empty());
-  _rp += 256; // FIXME
+  _rp += cp->m_registers;
   Object *sp = _ctxt->_list->rw(_frames[_fp]->_vars);
   // Function scopes are closed
   _frames[_fp]->_closed = true;
@@ -290,7 +300,11 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
   _frames[_fp]->_addrs = _ctxt->_index->empty();
   _frames[_fp]->_defined = _ctxt->_bool->empty();
   _frames[_fp]->_exception_handlers.clear();
-  // TODO: Clean up the registers
+  {
+    Object *regfile = _ctxt->_list->rw(_registers);
+    for (int i=_frames[_fp]->_reg_offset;i<_rp;i++)
+      regfile[i] = _ctxt->_double->empty();
+  }
   _rp = _frames[_fp]->_reg_offset;
   _fp--;
   return retvec;
@@ -310,7 +324,7 @@ void VM::executeScript(const Object &codeObject)
   _frames[_fp]->_ctxt = _ctxt;
   _frames[_fp]->_closed = false;
   _frames[_fp]->_exception_handlers.clear();
-  _rp += 256; // FIXME
+  _rp += cp->m_registers;
   ndx_t *ap = _ctxt->_index->rw(_frames[_fp]->_addrs);
   // Initialize the addresses to be unknown
   for (int i=0;i<N;i++) ap[i] = -1;
@@ -590,6 +604,20 @@ void VM::executeCodeObject(const Object &codeObject)
 	      case OP_MAKE_CLOSURE:
 		{
 		  REG1 = _ctxt->_function->fromCode(REG2,REG3);
+		  break;
+		}
+	      case OP_MAKE_FHANDLE:
+		{
+		  REG1 = _ctxt->_functionHandle->fromFunction(REG2);
+		  break;
+		}
+	      case OP_GET_METHOD:
+		{
+		  if (REG2.is(TypeMeta)) 
+		    // Case of a scoped pointer to a static method, i.e., Class::foo
+		    REG1 = REG2.type()->getField(REG2,REG3);
+		  else if (REG2.is(TypeClass))
+		    REG1 = _ctxt->_class->getMethod(REG2,REG3);
 		  break;
 		}
 	      case OP_LOAD_OBJ:

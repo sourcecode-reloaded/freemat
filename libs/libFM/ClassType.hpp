@@ -98,6 +98,7 @@ namespace FM
     HashMap<ClassPropertyMetaData*> m_properties; // Properties for the class 
     HashMap<ClassMethodMetaData*> m_methods; // Methods for the class 
     Object m_defaults;
+    bool m_ishandle;
     ClassMetaData(ThreadContext *_ctxt);
   };
   
@@ -134,12 +135,14 @@ namespace FM
   };
 
   class ClassType : public AggregateType<ClassData,ValueSemantics> {
+    Object m_deletefunc;
   public:
-    ClassType(ThreadContext *ctxt) {_ctxt = ctxt;}
+    ClassType(ThreadContext *ctxt);
     virtual DataCode code() const {return TypeClass;}
     virtual const FMString& name() const {static FMString _name = "class"; return _name;}
     virtual FMString describe(const Object &a);
     virtual FMString brief(const Object &a);
+    virtual Object getMethod(const Object &a, const Object &b);
     virtual Object getField(const Object &a, const Object &b);
     virtual Object getFieldNoGetters(const Object &a, const Object &b);
     virtual void setField(Object &a, const Object &args, const Object &b);
@@ -154,6 +157,7 @@ namespace FM
       return false;
     }
     Object empty() {throw Exception("Cannot create empty classes");}
+    virtual void destroyObject(ObjectBase* p);
   };
 };
 

@@ -1773,6 +1773,112 @@ parameter
 
 The first two work - the third one works too.
 
+********************************************************************************
+
+Still needed:
+
+1.  Notification.
+2.  Handle classes. - done
+3.  Dependency trees. - done
+4.  Priorities?
+5.  Implicit constructor calls.  FreeMat must call the no-arg
+constructors for all super classes that are not explicitly called. :(
+
+Handle classes work, but do not have garbage collection.  So there is
+still an issue with cycle detection.
+
+Next - notifications.
+
+Need to add two new types of function pointers:
+
+@obj.Method
+
+and
+
+@class.Method
+
+Also, we need to add sparse matrix support!
+
+Need to add destructor support for handle classes
+
+Operator overloading?
+
+There is a problem with the reference count.  It is too high - that
+was fixed.
+
+Need to add method and class function pointers.
+
+
+
+The current approach of putting '@' into alphanumerics for the scanner
+is wrong.  Need to take it out and treat it like an operator again.
+
+Function pointers also don't seem to work...  Ugh.
+
+
+The expression a = @add should create an object of class function
+pointer
+
+Pointers to anonymous functions is equivalent to closures.  So we
+should be able to piggy back on the closure mechanism for anonymous
+functions - not sure how just yet.
+
+Anonymous functions inside closed scopes work fine, I think.
+
+Yes - with some (significant!) tweaking, you can now return anonymous
+functions from inside closed scopes.  Something like:
+
+function y = foo(a,b)
+  y = @(n) a+b+n
+
+This works correctly.  However, what doesn't work is anonymous
+functions generated in scripts.  What happens in the case of something
+like
+
+function y = foo(a,b)
+  y = @(n) fft(a,b,n)
+
+In this case, we have a function fft, which isn't defined in the
+parent scope.  In this case, the add function is left as dynamic in
+the captured/nested function.  This means a definition of "add" must
+exist when the function is _called_.  But this is problematic.
+
+How to resolve?
+
+Ick.  Consider the case where we have:
+
+function y = foo(a,b)
+  y = @(n) foo(n,a,b)
+
+In the most general case, the function foo can depend on the types of
+the arguments.  That means it cannot be captured as a function when
+the closure is created.
+
+I have few alternatives.  One is to look for instances of variable
+references without arguments. 
+
+--- Need to think about this some more.
+
+What about function handles for class methods?
+
+y = class@method
+
+This should _always_ return a function handle.  
+
+How do function handles differ from function types?  At the moment,
+function types respond to "deref".  So consider the following
+
+y = pi;
+
+if pi is a function, then when we fetch it, we want a function object,
+not a handle.  On the other hand
+
+y = @pi
+
+is supposed to return a handle, not a function.  So I think that
+closures should be handles, not functions.
+
+For anonymous functions, we have to add a new function or 
 
 
 

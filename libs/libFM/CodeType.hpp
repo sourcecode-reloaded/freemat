@@ -19,6 +19,7 @@ namespace FM
     Object m_varargout; // NDX scalar - -1 if not varargout case, set to index of varargout name otherwise
     Object m_captured;  // LIST of captured variables
     Object m_free;      // LIST of free variables
+    int    m_registers; // Number of registers used by the code
     CodeData(ThreadContext *ctxt) : 
       m_name(ctxt), m_code(ctxt), m_names(ctxt), 
       m_consts(ctxt), m_params(ctxt), m_returns(ctxt), 

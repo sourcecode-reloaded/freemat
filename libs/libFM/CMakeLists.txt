@@ -32,6 +32,7 @@ CellType.cpp
 EndRemover.cpp
 NestedFunctionMover.cpp
 FunctionType.cpp
+FunctionHandleType.cpp
 CodeType.cpp
 StringType.cpp
 Transpose.cpp  

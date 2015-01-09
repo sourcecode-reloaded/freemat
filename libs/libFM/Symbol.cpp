@@ -54,7 +54,7 @@ bool SymbolPass::parentScopeDefines(const FMString &name) {
     {
       if (sp->syms.contains(name)) return true;
       sp = sp->parent;
-      if (sp == _root) return false;
+      if (!sp || (sp == _root)) return false;
     }
   return false;
 }
@@ -299,6 +299,24 @@ void SymbolPass::walkFunction(const Tree &t, FunctionTypeEnum funcType, symbol_f
     }
 }
 
+void SymbolPass::walkAnonymousFunction(const Tree &t) {
+  std::cout << "Walk anonymous function " << t.context() << "\n";
+  FMString fname = "anon" + Stringify(t.context());
+  addSymbol(fname, symbol_flags_t::NESTED());
+  SymbolTable *s = new SymbolTable;
+  s->name = fname;
+  s->property_count = 0;
+  newChild(s);
+  const Tree &args = t.child(0);
+  const Tree &code = t.child(1);
+  for (int index=0;index < args.numChildren();index++)
+    addSymbol(args.child(index).text(), symbol_flags_t::PARAMETER(index));
+  // Anonymous functions have an implicitly defined return value 
+  addSymbol("_", symbol_flags_t::RETURN(0));
+  walkCode(code,true);
+  popToParent();
+}
+
 void SymbolPass::walkCode(const Tree &t, bool nested) {
   switch (t.token())
     {
@@ -310,6 +328,22 @@ void SymbolPass::walkCode(const Tree &t, bool nested) {
 	    addSymbol(s.text(),symbol_flags_t::GLOBAL());
 	    walkChildren(s,nested);
 	  }
+	break;
+      }
+    case '@':
+      {
+	if (t.first().is(TOK_IDENT))
+	  {
+	    addSymbol(t.first().text(),symbol_flags_t::DYNAMIC());
+	  }
+	else
+	  walkAnonymousFunction(t.first());
+	break;
+      }
+    case TOK_GET_METHOD:
+      {
+	if (!_current->syms.contains(t.first().text()))
+	  addSymbol(t.first().text(),symbol_flags_t::DYNAMIC());
 	break;
       }
     case TOK_VARIABLE:
@@ -331,19 +365,17 @@ void SymbolPass::walkCode(const Tree &t, bool nested) {
 	  {
 	    FMString p = t.first().text();
 	    // Check for x@foo, where x is the object name
-	    bool supercase = false;
+	    bool scoped_case = false;
 	    if (p.contains("@")) {
 	      int atndx = p.indexOf("@");
 	      FMString prefixname = p.left(atndx);
 	      FMString postfixname = p.mid(atndx+1);
-	      if (_current->syms[prefixname].is_object())
-		{
-		  addSymbol(p,symbol_flags_t::SUPER());
-		  addSymbol(postfixname,symbol_flags_t::DYNAMIC());
-		  supercase = true;
-		}
+	      scoped_case = true;
+	      addSymbol(p,symbol_flags_t::SCOPED());
+	      addSymbol(postfixname,symbol_flags_t::DYNAMIC());
+	      addSymbol(prefixname,symbol_flags_t::DYNAMIC());
 	    }
-	    if (!supercase)
+	    if (!scoped_case)
 	      addSymbol(t.first().text(),symbol_flags_t::DYNAMIC());
 	  }
 	walkChildren(t,nested);

@@ -93,6 +93,10 @@ namespace FM
       capacity = t.capacity;
       handle = t.handle;
     }
+    int count() const {
+      return refcnt;
+    }
+    void *ptr() const {return data->ptr;}
     friend class Object;
     friend class Type;
     template <class T> friend class ArrayType;
@@ -111,6 +115,11 @@ namespace FM
 
   struct ThreadContext;
 
+  inline void debugTrap(FMString method, ObjectBase *p) {
+    std::cout << method << " count " << p->count() << " ptr " << p << "\n";
+  }
+    
+
   // Need to add a default constructor for Object that
   // points to a global "Empty" object (maybe with its
   // own type?).
@@ -122,13 +131,27 @@ namespace FM
     inline Object(ObjectBase *p) : d(p) {
       assert(d);
       d->refcnt++;
+      if (isClass()) debugTrap("Create",d);
     }
     inline Object(const Object &copy) : d(copy.d) {
       d->refcnt++;
+      if (isClass()) debugTrap("Copy",d);
     }
     inline ~Object() {
+      if (isClass()) debugTrap("Delete",d);
       if ((--d->refcnt) == 0)
 	d->type->destroyObject(d);
+    }
+    // Don't use this function!! It is only to be used by
+    // the destroyObject function in the ClassType.  It is
+    // used to substitute an ObjectBase into a sacrificial
+    // object.  That's the only good use for it!
+    inline ObjectBase* swap(ObjectBase *t) {
+      ObjectBase *q = d;
+      d = t;
+      d->refcnt++;
+      --q->refcnt;
+      return q;
     }
     inline const Tuple& dims() const {
       return d->dims;
@@ -192,6 +215,7 @@ namespace FM
       return d->type->doubleValue(*this);
     }
     Object& operator=(const Object& copy) {
+      if (isClass()) debugTrap("Assign",d);
       if (this == &copy) return *this;
       if ((--d->refcnt) == 0)
 	d->type->destroyObject(d);
@@ -202,6 +226,7 @@ namespace FM
     }
     inline void detach() 
     {
+      if (isClass()) debugTrap("Detach",d);
       if (!d->handle) {
 	if (d->refcnt > 1) {
 	  d = new ObjectBase(*d);
@@ -229,6 +254,9 @@ namespace FM
     inline S* asType() const
     {
       return static_cast<S*>(d->type);
+    }
+    inline int refcnt() const {
+      return d->refcnt;
     }
     template <class T> friend class ArrayType;
     friend class PODType<double>;

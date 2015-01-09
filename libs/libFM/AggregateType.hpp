@@ -19,6 +19,7 @@ namespace FM
   public:
     virtual void destroyObject(ObjectBase* p)
     {
+      if (HandleStyle) std::cout << "Destroy object called on object of type " + p->type->name() + "\n";
       if (--p->data->refcnt == 0)
 	{
 	  DataType *k = static_cast<DataType *>(p->data->ptr);

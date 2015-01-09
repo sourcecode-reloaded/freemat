@@ -751,6 +751,32 @@ Tree Parser::anonymousFunction() {
   return root;
 }
 
+Tree Parser::methodCall() {
+  FMString p = next().text();
+  int atndx = p.indexOf("@");
+  FMString prefixname = p.left(atndx);
+  FMString postfixname = p.mid(atndx+1);
+  Tree root(TOK_GET_METHOD);
+  Tree prefix(TOK_IDENT);
+  prefix.setText(prefixname);
+  Tree postfix(TOK_IDENT);
+  postfix.setText(postfixname);
+  root.addChild(prefix);
+  root.addChild(postfix);
+  consume();
+  if (match('(')) {
+    Tree sub = Tree(TOK_PARENS,m_lex.contextNum());
+    consume();
+    while (!match(')')) {
+      sub.addChild(expression());
+      if (!match(')')) expect(',');
+    }
+    consume();
+    root.addChild(sub);
+  }
+  return root;
+}
+
 Tree Parser::primaryExpression() {
   if (next().isUnaryOperator()) {
     Token opr(next());
@@ -785,6 +811,8 @@ Tree Parser::primaryExpression() {
     return transposeFixup(t);
   } else if (match(TOK_END)) {
     return transposeFixup(expect(TOK_END,"transpose"));
+  } else if (match(TOK_SCOPED_IDENT)) {
+    return transposeFixup(methodCall());
   } else if (match(TOK_IDENT)) {
     Tree t = variableDereference();
     return transposeFixup(t);

@@ -41,6 +41,7 @@ namespace FM
   class ObjectBase;
   class Object;
   class FunctionType;
+  class FunctionHandleType;
   class BuiltInType;
   class BoundFunctionType;
 
@@ -64,6 +65,7 @@ namespace FM
     ClassMetaType *_meta;
     ClassType *_class;
     FunctionType *_function;
+    FunctionHandleType *_functionHandle;
     ModuleType *_module;
     CapturedType *_captured;
     BoundFunctionType *_bound;

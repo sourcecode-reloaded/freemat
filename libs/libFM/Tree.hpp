@@ -47,6 +47,7 @@ namespace FM
     ~Tree();
     inline const Token& node() const {return d->m_node;}
     void print() const;
+    FMString str() const;
     inline void rename(TokenValueType newtok) {d->m_node.setValue(newtok);}
     inline unsigned context() const {return d->m_node.position();}
     inline bool valid() const {return !(d->m_node.is(TOK_INVALID));}

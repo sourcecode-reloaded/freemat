@@ -572,7 +572,10 @@ const_t Compiler::getCellID(const FMString & t) {
 }
 
 const_t Compiler::getNameID(const FMString & t) {
-  return indexOfStringInList(_ctxt,_code->_namelist,t);
+  ndx_t n = indexOfStringInList(_ctxt,_code->_namelist,t);
+  if (n == -1)
+    throw Exception("Internal compiler error - encountered unexpected name " + t);
+  return n;
 }
 
 const_t Compiler::getConstantID(const FMString & t) {
@@ -701,7 +704,7 @@ void Compiler::deref(reg_t args, const Tree &s) {
 	pushList(args,expression(s.first()));
       }
     default:
-      throw Exception("Unknown expression!");
+      throw Exception("Unknown expression!" + s.str());
     }
 }
 
@@ -727,13 +730,6 @@ reg_t Compiler::fetchConstantString(const FMString &constant)
   return fetchConstant(_ctxt->_string->makeString(constant));
 }
 
-SymbolTable* Compiler::getSymbolTableForClosure(const FMString &varname)
-{
-  for (auto i=_currentSym->children.begin(); i!=_currentSym->children.end();++i)
-    if ((*i)->name == varname) return (*i);
-  return NULL;
-}
-
 reg_t Compiler::fetchCell(const FMString &cellname)
 {
   reg_t x = getRegister();
@@ -741,14 +737,24 @@ reg_t Compiler::fetchCell(const FMString &cellname)
   return x;
 }
 
+reg_t Compiler::makeHandle(reg_t funcobj)
+{
+  reg_t x = getRegister();
+  emit(OP_MAKE_FHANDLE,x,funcobj);
+  return x;
+}
+
 reg_t Compiler::fetchClosure(const FMString &varname)
 {
   // Fetching a closure is complex work.  
-  SymbolTable* closure_sym = getSymbolTableForClosure(varname);
+  SymbolTable* closure_sym = _currentSym->childNamed(varname);
   if (!closure_sym) throw Exception("Compiler error - unable to find symbol table for closure " + varname);
   reg_t closure = startList();
   for (auto s = closure_sym->syms.constBegin(); s != closure_sym->syms.constEnd(); ++s)
     {
+      // For the given closure variable - two things are possible.  It might be 
+      // captured and well defined, or it might be undefined.  In the former case,
+      // we just pass the cell to the closure.
       if (s.value().is_free())
 	emit(OP_PUSH_CELL,closure,getCellID(s.key()));
     }
@@ -943,15 +949,72 @@ void Compiler::multiexpr(reg_t list, const Tree &t) {
     pushList(list,expression(t));
 }
 
+reg_t Compiler::doGetMethod(const Tree &t) {
+  reg_t args = startList();
+  reg_t obj = fetchVariableOrFunction(t.first().text(),args);
+  reg_t func = getRegister();
+  emit(OP_GET_METHOD,func,obj,fetchConstantString(t.second().text()));
+  reg_t funcHandle = makeHandle(func);
+  if (t.numChildren() > 2) {
+    reg_t list = startList();
+    emit(OP_SUBSREF, list, funcHandle, flattenDereferenceTreeToStack(t,2));
+    return listHead(list);
+  } 
+  return funcHandle;
+}
+
+reg_t Compiler::anonymousFunction(const Tree &t) {
+  FMString fname = "anon" + Stringify(t.first().context());
+  symbol_flags_t symflags = _code->_syms->syms[fname];
+  // Compile the function
+  CodeBlock *save_code = _code;
+  CodeBlock *cp = new CodeBlock(_ctxt);
+  save_code->_nested.push_back(cp);
+  SymbolTable *_saveSym = _currentSym;
+  cp->_syms = _currentSym->childNamed(fname);
+  if (!cp->_syms)
+    throw Exception("Internal compiler error - unable to find symbol table for anonymous function");
+  _module->_locals.insert(fname,cp);
+  _code = cp;
+  _code->_namelist = _ctxt->_list->empty();
+  _code->_constlist = _ctxt->_list->empty();
+  _code->_freelist = _ctxt->_list->empty();
+  _code->_capturedlist = _ctxt->_list->empty();
+  for (auto s = _code->_syms->syms.constBegin(); s != _code->_syms->syms.constEnd(); ++s)
+    {
+      addStringToList(_ctxt,_code->_namelist,s.key());
+      if (s.value().is_free())
+	addStringToList(_ctxt,_code->_freelist,s.key());
+      if (s.value().is_captured())
+	addStringToList(_ctxt,_code->_capturedlist,s.key());
+    }
+  std::cout << "Compiling function " << fname << "\n";
+  _code->_name = fname;
+  std::cout << "Symbol table is " << _currentSym->name << "\n";
+  const Tree &code = t.first().child(1);
+  // Create a basic block, and push it on the list
+  useBlock(new BasicBlock);
+  // The body of an anonymous function is an expression.  We assign it to "_"
+  reg_t return_value = expression(code);
+  saveRegisterToName("_",return_value);
+  emit(OP_RETURN);
+  _code = save_code;
+  return fetchClosure(fname);
+}
+
+reg_t Compiler::listHead(reg_t list) {
+  reg_t ret = getRegister();
+  emit(OP_FIRST,ret,list);
+  return ret;
+}
+
 reg_t Compiler::expression(const Tree &t) {
   switch(t.token()) {
   case TOK_VARIABLE:
     {
       reg_t sp = startList();
       rhs(sp,t);
-      reg_t ret = getRegister();
-      emit(OP_FIRST,ret,sp);
-      return ret;
+      return listHead(sp);
     }
   case TOK_REAL:
     {
@@ -1063,17 +1126,24 @@ reg_t Compiler::expression(const Tree &t) {
     return doUnaryOperator(t,OP_TRANSPOSE);
   case '@':
     { // TODO - is this all?
+      if (t.first().is(TOK_ANONYMOUS_FUNC))
+	return anonymousFunction(t);
       FMString fname = t.first().text();
       symbol_flags_t symflags = _code->_syms->syms[fname];
       if (symflags.is_nested())
-	return fetchClosure(fname);
-      throw Exception("Unhandled case for function pointers");
+	return makeHandle(fetchClosure(fname));
+      reg_t args = startList();
+      return makeHandle(fetchVariableOrFunction(fname,args)); // FIXME - shouldn't make variables into handles.
     } 
+  case TOK_GET_METHOD:
+    return doGetMethod(t);
   default:
     throw Exception("Unrecognized expression!");
   }  
   throw Exception("Unrecognized expression!");
 }
+
+
 
 void Compiler::incrementRegister(reg_t x) {
   emit(OP_INCR,x);
@@ -1097,8 +1167,7 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
 	{
 	  reg_t junk = startList();
 	  rhs(junk,t);
-	  reg_t y = getRegister();
-	  emit(OP_FIRST,y,junk);
+	  reg_t y = listHead(junk);
 	  reg_t len_junk = getRegister();
 	  emit(OP_LENGTH,len_junk,y);
 	  emit(OP_ADD,lhsCount,lhsCount,len_junk);
@@ -1125,9 +1194,7 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
       FMString varname = t.first().text();
       if (t.numChildren() == 1)
 	{
-	  reg_t b = getRegister();
-	  emit(OP_FIRST,b,returns);
-	  saveRegisterToName(varname,b);
+	  saveRegisterToName(varname,listHead(returns));
 	}
       else
 	{
@@ -1593,12 +1660,8 @@ void Compiler::walkMethods(const Tree &t) {
       symbol_flags_t flags = _symsRoot->syms[methodName];
       std::cout << "Symbol flags for this method are: " << flags.str() << "\n";
       // Find symbol table for this method
-      for (int j=0;j<_symsRoot->children.size();j++)
-	if (_symsRoot->children[j]->name == p.child(1).text()) 
-	  {
-	    _currentSym = _symsRoot->children[j];
-	    break;
-	  }
+      _currentSym = _symsRoot->childNamed(p.child(1).text());
+      if (!_currentSym) throw Exception("Internal compiler error: unable to find symbol table for method " + p.child(1).text());
       if (flags.is_constructor())
 	walkFunction(p,ConstructorFunction);
       else if (flags.is_getter())

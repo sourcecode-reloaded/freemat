@@ -318,6 +318,8 @@ void Scanner::fetchIdentifier() {
   FMString ident(m_text.mid(m_ptr,len));
   if (fm_reserved.contains(ident))
     setToken(fm_reserved[ident]);
+  else if (ident.contains('@'))
+    setToken(TOK_SCOPED_IDENT,m_text.mid(m_ptr,len));
   else
     setToken(TOK_IDENT,m_text.mid(m_ptr,len));
   m_ptr += len;
