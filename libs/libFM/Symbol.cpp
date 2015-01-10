@@ -278,9 +278,17 @@ void SymbolPass::walkFunction(const Tree &t, FunctionTypeEnum funcType, symbol_f
       symbol_flags_t objflags = _current->syms[objname];
       if (objflags.is_parameter())
 	throw Exception("Object returned by constructor cannot appear as an argument: i.e., function A = ClassName(A,...) is not allowed");
-      // Set the object flag on this symbol - at the moment, the only time we appear to be able to 
-      // definitively identify where the object is. :)
-      objflags._object = 1;
+      // Insert the object into the parameter list at the front.
+      objflags._parameter = 1;
+      objflags.param_position = 0;
+      for (auto i=_current->syms.begin();i!=_current->syms.end();++i)
+	{
+	  if (i.value().is_parameter()) {
+	    symbol_flags_t flags = i.value();
+	    flags.param_position++;
+	    i.value() = flags;
+	  }
+	}
       _current->syms[objname] = objflags;
     }
   if (funcType == NestedFunction)

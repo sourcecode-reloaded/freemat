@@ -33,10 +33,6 @@ namespace FM
     unsigned _static       : 1;
     unsigned _constant     : 1;
     unsigned _dependent    : 1;
-    unsigned _object       : 1;
-    unsigned _super        : 1;
-    unsigned _anonymous    : 1;
-    unsigned _scoped       : 1;
     unsigned param_position    : 8;
     unsigned return_position   : 8;
     unsigned property_position : 16;
@@ -48,8 +44,7 @@ namespace FM
 			      _property(0), _method(0), _constructor(0),
 			      _getter(0), _setter(0), param_position(0), 
 			      return_position(0), property_position(0),
-			      _static(0), _constant(0), _dependent(0), 
-			      _object(0), _super(0), _anonymous(0), _scoped(0) {}
+			      _static(0), _constant(0), _dependent(0) {} 
 
     inline bool is_global() const {return _global != 0;}
     inline bool is_persistent() const {return _persistent != 0;}
@@ -70,10 +65,6 @@ namespace FM
     inline bool is_static() const {return _static != 0;}
     inline bool is_constant() const {return _constant != 0;}
     inline bool is_dependent() const {return _dependent != 0;}
-    inline bool is_object() const {return _object != 0;}
-    inline bool is_super() const {return _super != 0;}
-    inline bool is_anonymous() const {return _anonymous != 0;}
-    inline bool is_scoped() const {return _scoped != 0;}
 
     inline FMString str() const {
       FMString ret;
@@ -94,10 +85,6 @@ namespace FM
       if (_static) ret += " static";
       if (_constant) ret += " constant";
       if (_dependent) ret += " dependent";
-      if (_object) ret += " object";
-      if (_super) ret += " super";
-      if (_anonymous) ret += " anonymous";
-      if (_scoped) ret += " scoped";
       return ret;
     }
 		       
@@ -107,8 +94,6 @@ namespace FM
     static symbol_flags_t REFERENCE() {symbol_flags_t ret; ret._reference = 1; return ret;}
     static symbol_flags_t RETURN(unsigned pos) {symbol_flags_t ret; ret._return = 1; ret.return_position = pos; return ret;}
     static symbol_flags_t DYNAMIC() {symbol_flags_t ret; ret._dynamic = 1; return ret;}
-    static symbol_flags_t SUPER() {symbol_flags_t ret; ret._super = 1; return ret;}
-    static symbol_flags_t ANONYMOUS() {symbol_flags_t ret; ret._anonymous = 1; return ret;}
     static symbol_flags_t FREE() {symbol_flags_t ret; ret._free = 1; return ret;}
     static symbol_flags_t CAPTURED() {symbol_flags_t ret; ret._captured = 1; return ret;}
     static symbol_flags_t NESTED() {symbol_flags_t ret; ret._nested = 1; return ret;}
@@ -120,7 +105,6 @@ namespace FM
     static symbol_flags_t STATIC() {symbol_flags_t ret; ret._static = 1; return ret;}
     static symbol_flags_t CONSTANT() {symbol_flags_t ret; ret._constant = 1; return ret;}
     static symbol_flags_t DEPENDENT() {symbol_flags_t ret; ret._dependent = 1; return ret;}
-    static symbol_flags_t SCOPED() {symbol_flags_t ret; ret._scoped = 1; return ret;}
   };
 
   inline bool operator != (const symbol_flags_t &a, const symbol_flags_t &b) {
@@ -143,11 +127,7 @@ namespace FM
 	     (a.property_position == b.property_position) &&
 	     (a._static == b._static) &&
 	     (a._constant == b._constant) &&
-	     (a._dependent == b._dependent) &&
-	     (a._object == b._object) &&
-	     (a._anonymous == b._anonymous) &&
-	     (a._scoped == b._scoped) &&
-	     (a._super == b._super));
+	     (a._dependent == b._dependent));
   }
 
   inline symbol_flags_t operator|(const symbol_flags_t &a, const symbol_flags_t &b) {
@@ -171,10 +151,6 @@ namespace FM
     ret._static |= b._static;
     ret._constant |= b._constant;
     ret._dependent |= b._dependent;
-    ret._object |= b._object;
-    ret._super |= b._super;
-    ret._anonymous |= b._anonymous;
-    ret._scoped |= b._scoped;
     return ret;
   }
 

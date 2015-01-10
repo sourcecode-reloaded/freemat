@@ -30,7 +30,7 @@ namespace FM
   public:
     VM(ThreadContext *ctxt);
     void executeScript(const Object &codeObject);
-    Object executeFunction(const Object &functionObject, const Object &parameters, const Object *obj = 0);
+    Object executeFunction(const Object &functionObject, const Object &parameters);
     Object executeAnonymousFunction(const Object &codeObject, const Object &parameters, const HashMap<Object> &captures);
     Object executeModule(const Object &moduleObject, const Object &parameters);
     void executeCodeObject(const Object &codeObject);

@@ -71,12 +71,8 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_MAKE_CLOSURE: return three_registers;
     case OP_PUSH_CELL: return register_cell;
     case OP_CLASSDEF: return two_registers;
-    case OP_CONSTRUCT: return two_registers;
     case OP_SUBSREF_NOGS: return three_registers;
     case OP_SUBSASGN_NOGS: return register_register_name;
-    case OP_LOAD_OBJ: return one_register;
-    case OP_SUBSASGN_OBJ: return two_registers;
-    case OP_SUPER: return register_register_name;
     case OP_MAKE_FHANDLE: return two_registers;
     case OP_GET_METHOD: return three_registers;
     case OP_MAKE_ANONYMOUS: return three_registers;
@@ -159,12 +155,8 @@ std::string getOpCodeName(op_t opcode)
     case OP_MAKE_CLOSURE: return "MAKE_CLOSURE";
     case OP_PUSH_CELL: return "PUSH_CELL";
     case OP_CLASSDEF: return "CLASSDEF";
-    case OP_CONSTRUCT: return "CONSTRUCT";
     case OP_SUBSREF_NOGS: return "SUBSREF_NOGS";
     case OP_SUBSASGN_NOGS: return "SUBSASGN_NOGS";
-    case OP_LOAD_OBJ: return "LOAD_OBJ";
-    case OP_SUBSASGN_OBJ: return "SUBSASGN_OBJ";
-    case OP_SUPER: return "SUPER";
     case OP_MAKE_FHANDLE: return "MAKE_FHANDLE";
     case OP_GET_METHOD: return "GET_METHOD";
     case OP_MAKE_ANONYMOUS: return "MAKE_ANONYMOUS";

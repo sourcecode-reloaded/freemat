@@ -1933,3 +1933,30 @@ classdef foo < bar
   end
 end
 
+************************************************************
+
+The solution for constructors is still ugly.  Instead, I need to use a
+more straightforward approach. For a constructor of the type:
+
+function obj = foo(n)
+end
+
+I will synthesize an argument in the list, so that it looks like this:
+
+function obj = foo(obj,n)
+end
+
+The constructor then becomes a static method on the meta class.
+However, it is not called directly - rather, the meta class calls
+"construct" to build the data structure in memory, and then invokes
+the constructor with the initial argument set to obj. 
+
+
+Things to check for objects:
+
+Base constructor - works
+Superclass constructor - works
+Object method - works
+Superclass method
+
+

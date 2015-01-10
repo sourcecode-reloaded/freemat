@@ -13,8 +13,8 @@ Object ClassMetaType::getField(const Object &meta, const Object &fieldname) {
   auto j = cmd->m_methods.find(fieldname);
   if (j == cmd->m_methods.end())
     throw Exception("Class " + cmd->m_name.description() + " has no method named " + fieldname.description());
-  if (!j->second->m_static)
-    throw Exception("Method " + fieldname.description() + " is not static for class " + cmd->m_name.description());
+  // if (!j->second->m_static)
+  //   throw Exception("Method " + fieldname.description() + " is not static for class " + cmd->m_name.description());
   return j->second->m_definition;
 }
 
@@ -95,14 +95,8 @@ void ClassMetaType::addSuperClass(Object &meta, const Object &super) {
 		      i->second->m_getter, i->second->m_setter);
   for (auto i=smd->m_methods.begin(); i != smd->m_methods.end(); ++i)
     {
-      // Does this method already exist?
-      if (cmd->m_methods.find(i->first) != cmd->m_methods.end())
-	{
-	  // Yes, so insert it with the class name and a @ prepended to the name
-	  FMString fullname = _ctxt->_string->getString(smd->m_name) + "@" + _ctxt->_string->getString(i->first);
-	  this->addMethod(meta,_ctxt->_string->makeString(fullname),i->second->m_definition,i->second->m_static);
-	}
-      else
+      // Does this method not exist?
+      if (cmd->m_methods.find(i->first) == cmd->m_methods.end())
 	this->addMethod(meta,i->first,i->second->m_definition,i->second->m_static);
     }
 }

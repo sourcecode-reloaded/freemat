@@ -129,8 +129,7 @@ Frame::Frame(ThreadContext *ctxt) : _sym_names(ctxt->_list->empty()),
 				    _addrs(ctxt->_index->empty()),
 				    _defined(ctxt->_bool->empty()),
 				    _module(ctxt->_module->empty()),
-				    _captures(ctxt->_list->empty()),
-				    _obj(ctxt->_double->empty())
+				    _captures(ctxt->_list->empty())
 {
   _ctxt = ctxt;
   //  _sym_names = _ctxt->_list->empty();

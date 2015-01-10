@@ -24,7 +24,10 @@ FMString FunctionType::describe(const Object &a) {
 
 Object FunctionType::methodCall(const Object & func, const Object &obj, const Object &args)
 {
-  Object p = _ctxt->_vm->executeFunction(func,args,&obj);
+  // FIXME - move this up and remove methodCall
+  Object olist = _ctxt->_list->makeScalar(obj);
+  _ctxt->_list->merge(olist,args);
+  Object p = _ctxt->_vm->executeFunction(func,olist);
   if (p.isEmpty()) return p;
   return _ctxt->_list->first(p);
 }
