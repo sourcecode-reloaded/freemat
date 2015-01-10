@@ -4,6 +4,7 @@
 #include "Object.hpp"
 #include "Code.hpp"
 #include "Frame.hpp"
+#include "HashMap.hpp"
 
 #define VM_LOCALVAR 1
 #define VM_DYNVAR 2
@@ -30,6 +31,7 @@ namespace FM
     VM(ThreadContext *ctxt);
     void executeScript(const Object &codeObject);
     Object executeFunction(const Object &functionObject, const Object &parameters, const Object *obj = 0);
+    Object executeAnonymousFunction(const Object &codeObject, const Object &parameters, const HashMap<Object> &captures);
     Object executeModule(const Object &moduleObject, const Object &parameters);
     void executeCodeObject(const Object &codeObject);
     void defineBaseVariable(const FMString &name, const Object &value);

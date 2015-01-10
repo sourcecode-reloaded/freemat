@@ -382,22 +382,10 @@ std::string Compiler::opcodeDecode(op_t opcode, insn_t val)
       return "r" + Stringify(reg1(val)) + ", Const[" + Stringify(get_constant(val)) +"]";
     case register_int:
       return "r" + Stringify(reg1(val)) + ", " + Stringify(get_constant(val));
-    case register_register_variable:
-      return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val)) + ", Var[" + Stringify(get_constant(val)) + "]";
-    case register_register_captured:
-      return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val)) + ", Cap[" + Stringify(get_constant(val)) + "]";
-    case register_register_free:
-      return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val)) + ", Free[" + Stringify(get_constant(val)) + "]";
     case register_register_name:
       return "r" + Stringify(reg1(val)) + ", r" + Stringify(reg2(val)) + ", Name[" + Stringify(get_constant(val)) + "]";
     case register_cell:
       return "r"+ Stringify(reg1(val)) + ", Cell[" + Stringify(get_constant(val)) + "]";
-    case register_variable:
-      return "r" + Stringify(reg1(val)) + ", Var[" + Stringify(get_constant(val)) + "]";
-    case register_captured:
-      return "r" + Stringify(reg1(val)) + ", Cap[" + Stringify(get_constant(val)) + "]";
-    case register_free:
-      return "r" + Stringify(reg1(val)) + ", Free[" + Stringify(get_constant(val)) + "]";
     case register_name:
       return "r" + Stringify(reg1(val)) + ", Name[" + Stringify(get_constant(val)) + "]";
     case register_offset:
@@ -974,6 +962,7 @@ reg_t Compiler::anonymousFunction(const Tree &t) {
   cp->_syms = _currentSym->childNamed(fname);
   if (!cp->_syms)
     throw Exception("Internal compiler error - unable to find symbol table for anonymous function");
+  _currentSym = cp->_syms;
   _module->_locals.insert(fname,cp);
   _code = cp;
   _code->_namelist = _ctxt->_list->empty();
@@ -999,7 +988,11 @@ reg_t Compiler::anonymousFunction(const Tree &t) {
   saveRegisterToName("_",return_value);
   emit(OP_RETURN);
   _code = save_code;
-  return fetchClosure(fname);
+  reg_t func = fetchConstant(_ctxt->_string->makeString("#"+fname));
+  reg_t desc = getRegister();
+  reg_t fptr = getRegister();
+  emit(OP_MAKE_ANONYMOUS,fptr,desc,func);
+  return fptr;
 }
 
 reg_t Compiler::listHead(reg_t list) {

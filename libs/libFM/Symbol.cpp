@@ -42,9 +42,9 @@ void SymbolPass::popToParent() {
   _current = _current->parent;
 }
 
-void SymbolPass::walkChildren(const Tree &t, bool nested) {
+void SymbolPass::walkChildren(const Tree &t, ScopeTypeEnum scopeType) {
   for (int index=0;index < t.numChildren();++index)
-    walkCode(t.child(index),nested);
+    walkCode(t.child(index),scopeType);
 }
 
 bool SymbolPass::parentScopeDefines(const FMString &name) {
@@ -283,7 +283,10 @@ void SymbolPass::walkFunction(const Tree &t, FunctionTypeEnum funcType, symbol_f
       objflags._object = 1;
       _current->syms[objname] = objflags;
     }
-  walkCode(code,funcType == NestedFunction);  
+  if (funcType == NestedFunction)
+    walkCode(code, NestedScopeType);  
+  else
+    walkCode(code, NormalScopeType);
   switch (funcType)
     {
     case NestedFunction:
@@ -313,11 +316,11 @@ void SymbolPass::walkAnonymousFunction(const Tree &t) {
     addSymbol(args.child(index).text(), symbol_flags_t::PARAMETER(index));
   // Anonymous functions have an implicitly defined return value 
   addSymbol("_", symbol_flags_t::RETURN(0));
-  walkCode(code,true);
+  walkCode(code,AnonymousScopeType);
   popToParent();
 }
 
-void SymbolPass::walkCode(const Tree &t, bool nested) {
+void SymbolPass::walkCode(const Tree &t, ScopeTypeEnum scopeType) {
   switch (t.token())
     {
     case TOK_GLOBAL:
@@ -326,7 +329,7 @@ void SymbolPass::walkCode(const Tree &t, bool nested) {
 	  {
 	    const Tree &s = t.child(index);
 	    addSymbol(s.text(),symbol_flags_t::GLOBAL());
-	    walkChildren(s,nested);
+	    walkChildren(s,scopeType);
 	  }
 	break;
       }
@@ -348,43 +351,36 @@ void SymbolPass::walkCode(const Tree &t, bool nested) {
       }
     case TOK_VARIABLE:
       {
-	if (nested)
+	switch (scopeType)
 	  {
-	    if (!_current->syms.contains(t.first().text()))
-	      {
-		if (parentScopeDefines(t.first().text()))
-		  {
-		    addSymbol(t.first().text(),symbol_flags_t::FREE());
-		    markParentSymbolCaptured(t.first().text());
-		  }
-		else
-		  addSymbol(t.first().text(),symbol_flags_t::DYNAMIC());
-	      }
-	  }
-	else
-	  {
-	    FMString p = t.first().text();
-	    // Check for x@foo, where x is the object name
-	    bool scoped_case = false;
-	    if (p.contains("@")) {
-	      int atndx = p.indexOf("@");
-	      FMString prefixname = p.left(atndx);
-	      FMString postfixname = p.mid(atndx+1);
-	      scoped_case = true;
-	      addSymbol(p,symbol_flags_t::SCOPED());
-	      addSymbol(postfixname,symbol_flags_t::DYNAMIC());
-	      addSymbol(prefixname,symbol_flags_t::DYNAMIC());
+	  case NestedScopeType:
+	    {
+	      if (!_current->syms.contains(t.first().text()))
+		{
+		  if (parentScopeDefines(t.first().text()))
+		    {
+		      addSymbol(t.first().text(),symbol_flags_t::FREE());
+		      markParentSymbolCaptured(t.first().text());
+		    }
+		  else
+		    addSymbol(t.first().text(),symbol_flags_t::DYNAMIC()); 
+		}
+	      break;
 	    }
-	    if (!scoped_case)
+	  case AnonymousScopeType:
+	  case NormalScopeType:
+	    {
 	      addSymbol(t.first().text(),symbol_flags_t::DYNAMIC());
+	      break;
+	    }
 	  }
-	walkChildren(t,nested);
+	walkChildren(t,scopeType);
 	break;
       }
     case TOK_FOR:
       {
 	addSymbol(t.first().first().text(),symbol_flags_t::DYNAMIC());
-	walkChildren(t,nested);
+	walkChildren(t,scopeType);
 	break;
       }
     case TOK_PERSISTENT:
@@ -393,7 +389,7 @@ void SymbolPass::walkCode(const Tree &t, bool nested) {
 	  {
 	    const Tree &s = t.child(index);
 	    addSymbol(s.text(),symbol_flags_t::PERSISTENT());
-	    walkChildren(s,nested);
+	    walkChildren(s,scopeType);
 	  }
 	break;
       }
@@ -413,7 +409,7 @@ void SymbolPass::walkCode(const Tree &t, bool nested) {
 	break;
       }
     default:
-      walkChildren(t,nested);
+      walkChildren(t,scopeType);
     }
 }
 

@@ -28,6 +28,7 @@ ThreadContext* FM::BuildNewThreadContext(TermIF *io)
   ctxt->_module = new ModuleType(ctxt);
   ctxt->_function = new FunctionType(ctxt);
   ctxt->_functionHandle = new FunctionHandleType(ctxt);
+  ctxt->_anonymous = new AnonymousType(ctxt);
   ctxt->_builtin = new BuiltInType(ctxt);
   ctxt->_vm = new VM(ctxt);
   ctxt->_compiler = new Compiler(ctxt);

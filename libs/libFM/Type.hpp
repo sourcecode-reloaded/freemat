@@ -40,7 +40,8 @@ namespace FM {
     TypeFunction = 22,
     TypeBuiltIn = 23,
     TypeBoundFunction = 24,
-    TypeFunctionHandle = 25
+    TypeFunctionHandle = 25,
+    TypeAnonymous = 26
   };
 
   class Object;

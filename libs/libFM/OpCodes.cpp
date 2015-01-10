@@ -79,6 +79,7 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_SUPER: return register_register_name;
     case OP_MAKE_FHANDLE: return two_registers;
     case OP_GET_METHOD: return three_registers;
+    case OP_MAKE_ANONYMOUS: return three_registers;
     default:
       return three_registers;
   }
@@ -166,6 +167,7 @@ std::string getOpCodeName(op_t opcode)
     case OP_SUPER: return "SUPER";
     case OP_MAKE_FHANDLE: return "MAKE_FHANDLE";
     case OP_GET_METHOD: return "GET_METHOD";
+    case OP_MAKE_ANONYMOUS: return "MAKE_ANONYMOUS";
     default: return "UNK";
   }
 }

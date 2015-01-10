@@ -144,9 +144,6 @@ Object Assembler::codeObject()
       case no_arguments:
 	break;
       case register_cell:
-      case register_variable:
-      case register_captured:
-      case register_free:
       case register_name:
       case register_offset:
       case register_constant:
@@ -154,9 +151,6 @@ Object Assembler::codeObject()
       case register_int:
 	max_register = std::max<int>(max_register,reg1(insn));
 	break;
-      case register_register_captured:
-      case register_register_variable:
-      case register_register_free:
       case register_register_name:
       case two_registers:
 	max_register = std::max<int>(max_register,reg1(insn));

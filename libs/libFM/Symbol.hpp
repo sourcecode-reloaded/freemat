@@ -189,6 +189,12 @@ namespace FM
     AnonymousFunction = 7
   };
 
+  enum ScopeTypeEnum {
+    NormalScopeType = 0,
+    NestedScopeType = 1,
+    AnonymousScopeType = 2
+  };
+
   class SymbolTable
   {
   public:
@@ -257,12 +263,12 @@ namespace FM
     void newChild(SymbolTable *t);
     void popToParent();
     void dump(SymbolTable *t, int);
-    void walkChildren(const Tree &t, bool nested);
+    void walkChildren(const Tree &t, ScopeTypeEnum scopeType);
     bool parentScopeDefines(const FMString &name);
     void markParentSymbolCaptured(const FMString &name);
   public:
     SymbolPass();
-    void walkCode(const Tree &t, bool nested = false);
+    void walkCode(const Tree &t, ScopeTypeEnum scopeType = NormalScopeType);
     SymbolTable *getRoot();
     void dump();
   };

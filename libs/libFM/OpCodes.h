@@ -75,3 +75,4 @@ const op_t OP_SUBSASGN_OBJ = 86;
 const op_t OP_SUPER = 87;
 const op_t OP_MAKE_FHANDLE = 88;
 const op_t OP_GET_METHOD = 89;
+const op_t OP_MAKE_ANONYMOUS = 90;

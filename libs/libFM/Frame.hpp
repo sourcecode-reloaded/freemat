@@ -22,9 +22,9 @@ namespace FM
     ThreadContext *_ctxt;
     bool _closed;
     int _reg_offset;
-    int mapNameToVariableIndex(const Object &name);
   public:
     Frame(ThreadContext *ctxt);
+    int mapNameToVariableIndex(const Object &name);
     bool defines(const FMString &name);
     int getAddress(const FMString &name);
     int allocateVariable(const FMString &name);

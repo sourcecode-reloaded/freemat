@@ -33,6 +33,7 @@ EndRemover.cpp
 NestedFunctionMover.cpp
 FunctionType.cpp
 FunctionHandleType.cpp
+AnonymousType.cpp
 CodeType.cpp
 StringType.cpp
 Transpose.cpp  

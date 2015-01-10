@@ -17,5 +17,6 @@
 #include "FunctionHandleType.hpp"
 #include "BoundFunctionType.hpp"
 #include "BuiltinType.hpp"
+#include "AnonymousType.hpp"
 
 #endif

@@ -1878,9 +1878,58 @@ y = @pi
 is supposed to return a handle, not a function.  So I think that
 closures should be handles, not functions.
 
-For anonymous functions, we have to add a new function or 
+For anonymous functions, we have a bit of a problem.  Consider
+
+y = @(x) foo(x)
+
+There are two possibilities.  One is that foo is defined and is a
+variable.  If that is the case, then all should be fine, and y should
+capture a copy of variable foo.
+
+The second case is that foo is a function and what function gets
+executed depends on the type of the argument x.
+
+In the first case, we capture foo as a variable in the caller's space,
+and in the second we don't.  This decision has to be made at runtime
+by the VM.  But it cannot be made until the function is invoked
+(unless it is a variable).  In that case, the instruction has to be
+rewritten (it is not an OP_LOAD_CELL), it is an OP_LOOKUP.
+
+It seems that the alternative for anonymous functions is to use a
+completely different mechanism.
+
+We want something like
+
+OP_LOOKUP foo, args
+
+How about the following.  First, we convert the expression into a code
+object.
+
+So
+
+y = @(x) x + n
+
+We assume all unknown variables are dynamic (i.e., as if it weren't
+nested)
+
+Then we have x as a parameter, and n as dynamic.
+
+We then have an opcode OP_MAKE_ANONYMOUS
+
+which takes a code object (constant), and creates an anonymous
+function object at run time.
 
 
+With much effort(!) anonymous functions work again.  So do scoped
+pointers.  Need to fix up calls to superclass constructors.
 
+And also handle non-static methods for superclasses.  E.g.,
 
+classdef foo < bar
+  methods
+    function x = baz(obj)
+      x = bar@junk(obj)  % Non-static method from super-class
+    end
+  end
+end
 

@@ -161,6 +161,74 @@ void VM::defineClass(const Object &name, const Object &arguments)
 }
 
 
+Object VM::executeAnonymousFunction(const Object &codeObject, const Object &parameters, const HashMap<Object> &captures)
+{
+  _fp++;
+  const CodeData *cp = _ctxt->_code->ro(codeObject);
+  _frames[_fp]->_name = _ctxt->_string->getString(cp->m_name);
+  // For functions, all addresses are pre-set to point
+  // to the first N slots of the variables space
+  int N = cp->m_names.count();
+  std::cout << "Names count = " << N << "\n";
+  _frames[_fp]->_addrs = _ctxt->_index->makeMatrix(N,1);
+  ndx_t *ap = _ctxt->_index->rw(_frames[_fp]->_addrs);
+  // FIXME - not right - parameters are defined when the function executes
+  for (int i=0;i<N;i++) ap[i] = -1;
+  _frames[_fp]->_defined = _ctxt->_bool->makeMatrix(N,1);
+  _frames[_fp]->_sym_names = cp->m_names;
+  _frames[_fp]->_vars = _ctxt->_list->makeMatrix(N,1);
+  _frames[_fp]->_exception_handlers.clear();
+  _frames[_fp]->_reg_offset = _rp;
+  _frames[_fp]->_module = _ctxt->_list->last(_modules);
+  _frames[_fp]->_captures = _ctxt->_list->empty();
+  _rp += cp->m_registers;
+  Object *sp = _ctxt->_list->rw(_frames[_fp]->_vars);
+  // Function scopes are closed
+  _frames[_fp]->_closed = true;
+  // Populate the arguments
+  // FIXME - need to only store the number of args and returns
+  const Object * args = _ctxt->_list->ro(parameters);
+  const ndx_t * param_ndx = _ctxt->_index->ro(cp->m_params);
+  int to_use = std::min<int>(parameters.count(),cp->m_params.count());
+  for (int i=0;i<to_use;i++)
+    {
+      sp[param_ndx[i]] = args[i];
+      ap[param_ndx[i]] = param_ndx[i];
+    }
+  Object *vars = _ctxt->_list->rw(_frames[_fp]->_vars);
+  ndx_t *addrfile = _ctxt->_index->rw(_frames[_fp]->_addrs);  
+  for (auto n=captures.begin();n!=captures.end();++n) {
+    int addr = _frames[_fp]->mapNameToVariableIndex(n->first);
+    if (addr != -1) {
+      vars[addr] = n->second;
+      addrfile[addr] = addr;
+    }
+  }
+  // execute the code
+  executeCodeObject(codeObject);
+  // Collect return values
+  Object retvec = _ctxt->_list->empty();
+  int to_return = cp->m_returns.count();
+  const ndx_t * return_ndx = _ctxt->_index->ro(cp->m_returns);
+  sp = _ctxt->_list->rw(_frames[_fp]->_vars);
+  for (int i=0;i<to_return;i++)
+    _ctxt->_list->push(retvec,sp[return_ndx[i]]);
+  _frames[_fp]->_obj = _ctxt->_double->empty();
+  _frames[_fp]->_sym_names = _ctxt->_list->empty();
+  _frames[_fp]->_vars = _ctxt->_list->empty();
+  _frames[_fp]->_addrs = _ctxt->_index->empty();
+  _frames[_fp]->_defined = _ctxt->_bool->empty();
+  _frames[_fp]->_exception_handlers.clear();
+  {
+    Object *regfile = _ctxt->_list->rw(_registers);
+    for (int i=_frames[_fp]->_reg_offset;i<_rp;i++)
+      regfile[i] = _ctxt->_double->empty();
+  }
+  _rp = _frames[_fp]->_reg_offset;
+  _fp--;
+  return retvec;  
+}
+
 // Execute a function object, given a list of parameters (params).  Returns a list
 // of returns.
 Object VM::executeFunction(const Object &functionObject, const Object &parameters, const Object *obj)
@@ -604,6 +672,11 @@ void VM::executeCodeObject(const Object &codeObject)
 	      case OP_MAKE_CLOSURE:
 		{
 		  REG1 = _ctxt->_function->fromCode(REG2,REG3);
+		  break;
+		}
+	      case OP_MAKE_ANONYMOUS:
+		{
+		  REG1 = _ctxt->_anonymous->build(REG2,REG3,closed_frame);
 		  break;
 		}
 	      case OP_MAKE_FHANDLE:

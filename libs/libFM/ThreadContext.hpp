@@ -44,6 +44,7 @@ namespace FM
   class FunctionHandleType;
   class BuiltInType;
   class BoundFunctionType;
+  class AnonymousType;
 
   struct ThreadContext
   {
@@ -69,6 +70,7 @@ namespace FM
     ModuleType *_module;
     CapturedType *_captured;
     BoundFunctionType *_bound;
+    AnonymousType *_anonymous;
     // Tools
     VM *_vm;
     Compiler *_compiler;
