@@ -160,6 +160,7 @@ namespace FM
     void walkProperties(reg_t list, const Tree &t);
     void walkMethods(const Tree &t);
     void walkClassDef(const Tree &t);
+    void insertPrefix(FMString funcName, FunctionTypeEnum funcType);
   public:
     static std::string opcodeDecode(op_t opcode, insn_t val);
     Compiler(ThreadContext *b);

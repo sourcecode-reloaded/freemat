@@ -33,6 +33,10 @@ namespace FM
     unsigned _static       : 1;
     unsigned _constant     : 1;
     unsigned _dependent    : 1;
+    unsigned _super        : 1;
+    unsigned _explicit     : 1;
+    unsigned _object       : 1;
+    unsigned _event        : 1;
     unsigned param_position    : 8;
     unsigned return_position   : 8;
     unsigned property_position : 16;
@@ -44,7 +48,8 @@ namespace FM
 			      _property(0), _method(0), _constructor(0),
 			      _getter(0), _setter(0), param_position(0), 
 			      return_position(0), property_position(0),
-			      _static(0), _constant(0), _dependent(0) {} 
+			      _static(0), _constant(0), _dependent(0),
+			      _super(0), _explicit(0), _object(0), _event(0) {} 
 
     inline bool is_global() const {return _global != 0;}
     inline bool is_persistent() const {return _persistent != 0;}
@@ -65,6 +70,10 @@ namespace FM
     inline bool is_static() const {return _static != 0;}
     inline bool is_constant() const {return _constant != 0;}
     inline bool is_dependent() const {return _dependent != 0;}
+    inline bool is_super() const {return _super != 0;}
+    inline bool is_explicit() const {return _explicit != 0;}
+    inline bool is_object() const {return _object != 0;}
+    inline bool is_event() const {return _event != 0;}
 
     inline FMString str() const {
       FMString ret;
@@ -85,6 +94,10 @@ namespace FM
       if (_static) ret += " static";
       if (_constant) ret += " constant";
       if (_dependent) ret += " dependent";
+      if (_super) ret += " super";
+      if (_explicit) ret += " explicit";
+      if (_object) ret += " object";
+      if (_event) ret += " event";
       return ret;
     }
 		       
@@ -105,6 +118,9 @@ namespace FM
     static symbol_flags_t STATIC() {symbol_flags_t ret; ret._static = 1; return ret;}
     static symbol_flags_t CONSTANT() {symbol_flags_t ret; ret._constant = 1; return ret;}
     static symbol_flags_t DEPENDENT() {symbol_flags_t ret; ret._dependent = 1; return ret;}
+    static symbol_flags_t SUPER() {symbol_flags_t ret; ret._super = 1; return ret;}
+    static symbol_flags_t OBJECT() {symbol_flags_t ret; ret._object = 1; return ret;}
+    static symbol_flags_t EVENT() {symbol_flags_t ret; ret._event = 1; return ret;}
   };
 
   inline bool operator != (const symbol_flags_t &a, const symbol_flags_t &b) {
@@ -127,7 +143,11 @@ namespace FM
 	     (a.property_position == b.property_position) &&
 	     (a._static == b._static) &&
 	     (a._constant == b._constant) &&
-	     (a._dependent == b._dependent));
+	     (a._dependent == b._dependent) &&
+	     (a._super == b._super) &&
+	     (a._explicit == b._explicit) &&
+	     (a._object == b._object) &&
+	     (a._event == b._event));
   }
 
   inline symbol_flags_t operator|(const symbol_flags_t &a, const symbol_flags_t &b) {
@@ -151,6 +171,10 @@ namespace FM
     ret._static |= b._static;
     ret._constant |= b._constant;
     ret._dependent |= b._dependent;
+    ret._super |= b._super;
+    ret._explicit |= b._explicit;
+    ret._object |= b._object;
+    ret._event |= b._event;
     return ret;
   }
 
@@ -163,12 +187,6 @@ namespace FM
     SetterFunction = 5,
     GetterFunction = 6,
     AnonymousFunction = 7
-  };
-
-  enum ScopeTypeEnum {
-    NormalScopeType = 0,
-    NestedScopeType = 1,
-    AnonymousScopeType = 2
   };
 
   class SymbolTable
@@ -230,21 +248,24 @@ namespace FM
     void addSymbol(const FMString &name, symbol_flags_t flags);
     void walkFunction(const Tree &t, FunctionTypeEnum funcType = NormalFunction, symbol_flags_t flags = symbol_flags_t());
     void walkClassDef(const Tree &t);
+    void walkSupers(const Tree &t);
     void walkProperty(const Tree &t, symbol_flags_t flags);
     void walkProperties(const Tree &t);
     void walkAnonymousFunction(const Tree &t);
     void walkMethods(const Tree &t);
+    void walkEvents(const Tree &t);
+    void walkEvent(const Tree &t);
     symbol_flags_t walkAttributes(const Tree &t);
     void newSibling(SymbolTable *t);
     void newChild(SymbolTable *t);
     void popToParent();
     void dump(SymbolTable *t, int);
-    void walkChildren(const Tree &t, ScopeTypeEnum scopeType);
+    void walkChildren(const Tree &t, FunctionTypeEnum scopeType);
     bool parentScopeDefines(const FMString &name);
     void markParentSymbolCaptured(const FMString &name);
   public:
     SymbolPass();
-    void walkCode(const Tree &t, ScopeTypeEnum scopeType = NormalScopeType);
+    void walkCode(const Tree &t, FunctionTypeEnum scopeType = NormalFunction);
     SymbolTable *getRoot();
     void dump();
   };

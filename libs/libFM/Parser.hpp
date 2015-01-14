@@ -72,6 +72,7 @@ namespace FM
     Tree classDefinition();
     Tree classPropertiesDefinition();
     Tree classMethodsDefinition();
+    Tree classEventsDefinition();
     Tree attributeList();
     void skipNewLines();
     Tree methodCall();

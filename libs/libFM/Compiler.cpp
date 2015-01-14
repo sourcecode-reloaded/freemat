@@ -562,7 +562,7 @@ const_t Compiler::getCellID(const FMString & t) {
 const_t Compiler::getNameID(const FMString & t) {
   ndx_t n = indexOfStringInList(_ctxt,_code->_namelist,t);
   if (n == -1)
-    throw Exception("Internal compiler error - encountered unexpected name " + t);
+    throw Exception("Internal compiler error - encountered unexpected name '" + t + "'");
   return n;
 }
 
@@ -1486,6 +1486,67 @@ void Compiler::compile(const FMString &code) {
   walkCode(t);
 }
 
+void Compiler::insertPrefix(FMString funcName, FunctionTypeEnum funcType) {
+  switch (funcType) {
+  case ConstructorFunction:
+    {
+      // Iterate over symbols - find all symbols marked as super classes
+      // without an explicit invokation - also find the name of the object
+      FMString objname;
+      FMStringList toInvoke;
+      for (auto s = _currentSym->parent->syms.constBegin(); s != _currentSym->parent->syms.constEnd(); ++s)
+	if (s.value().is_super() && (!s.value().is_explicit())) toInvoke.push_back(s.key());
+      for (auto s = _currentSym->syms.constBegin(); s != _currentSym->syms.constEnd(); ++s)
+	  if (s.value().is_object()) objname = s.key();
+      reg_t args = startList();
+      for (int i=0;i<toInvoke.size();i++)
+	{
+	  if (toInvoke[i] == "handle") continue;
+	  std::cout << "Adding prefix call for base class " << toInvoke[i] << "\n";
+	  reg_t obj = getRegister();
+	  emit(OP_LOAD,obj,getNameID(objname));
+	  reg_t func = getRegister();
+	  emit(OP_GET_METHOD,func,obj,fetchConstantString(toInvoke[i]));
+	  emit(OP_DEREF,obj,func);
+	  emit(OP_SAVE,obj,getNameID(objname));
+	}
+      break;
+    }
+  case GetterFunction:
+    {
+      if (_currentSym->countParameterValues() != 1)
+	throw Exception("Getter for class " + _currentSym->name + " named " + funcName + " cannot have more than one parameter (object)");
+      if (_currentSym->countReturnValues() != 1)
+	throw Exception("Getter for class " + _currentSym->name + " named " + funcName + " must have one return value");
+      _code->_isgetset = true;
+      std::cout << "Set Get flag set to true\n";
+      _code->_objectName = _currentSym->parameterName(0);
+      std::cout << "Object name = " << _code->_objectName << "\n";
+      _code->_propertyName = funcName.mid(4);
+      std::cout << "Property name = " << _code->_propertyName << "\n";
+      break;
+    }
+  case SetterFunction:
+    {
+      if (_currentSym->countParameterValues() < 2)
+	throw Exception("Setter for class " + _currentSym->name + " named " + funcName + " must take at least two parameters (object, value)");
+      if (_currentSym->countReturnValues() != 1)
+	throw Exception("Setter for class " + _currentSym->name + " named " + funcName + " must have one return value");
+      _code->_isgetset = true;
+      std::cout << "Set Get flag set to true\n";
+      _code->_objectName = _currentSym->parameterName(0);
+      std::cout << "Object name = " << _code->_objectName << "\n";
+      _code->_propertyName = funcName.mid(4);
+      std::cout << "Property name = " << _code->_propertyName << "\n";
+      break;
+    }
+  default:
+    {
+      // No prefix for default function types
+    }
+  }  
+}
+
 void Compiler::walkFunction(const Tree &t, FunctionTypeEnum funcType) {
   CodeBlock *save_code = _code;
   CodeBlock *cp = new CodeBlock(_ctxt);
@@ -1534,52 +1595,7 @@ void Compiler::walkFunction(const Tree &t, FunctionTypeEnum funcType) {
   // Create a basic block, and push it on the list
   useBlock(new BasicBlock);
   // TODO - clean this up
-  /*
-  if (funcType == ConstructorFunction)
-    {
-      // Count the number of return symbols - should be exactly one
-      if (_currentSym->countReturnValues() != 1)
-	throw Exception("Constructor for class " + _currentSym->name + " must have exactly 1 return value");
-      FMString return_name = _currentSym->returnName(0);
-      if (!_currentSym->syms[return_name].is_return())
-	throw Exception("Constructor for class " + _currentSym->name + " must return a value");
-      if (_currentSym->syms[return_name].is_parameter())
-	throw Exception("Constructor for class " + _currentSym->name + " cannot take a parameter of the same name as the returned class object: " + return_name);
-      std::cout << "CONSTRUCTOR RETURN: " << return_name << "\n";
-      reg_t x = getRegister();
-      reg_t args = startList();
-      emit(OP_LOOKUP,x,args,getNameID(_currentSym->name)); // get the metaclass
-      reg_t y = getRegister();
-      emit(OP_CONSTRUCT,y,x);
-      saveRegisterToName(return_name,y);
-    }
-  */
-    if (funcType == GetterFunction)
-    {
-      if (_currentSym->countParameterValues() != 1)
-	throw Exception("Getter for class " + _currentSym->name + " named " + funcName + " cannot have more than one parameter (object)");
-      if (_currentSym->countReturnValues() != 1)
-	throw Exception("Getter for class " + _currentSym->name + " named " + funcName + " must have one return value");
-      _code->_isgetset = true;
-      std::cout << "Set Get flag set to true\n";
-      _code->_objectName = _currentSym->parameterName(0);
-      std::cout << "Object name = " << _code->_objectName << "\n";
-      _code->_propertyName = funcName.mid(4);
-      std::cout << "Property name = " << _code->_propertyName << "\n";
-    }
-  else if (funcType == SetterFunction)
-    {
-      if (_currentSym->countParameterValues() < 2)
-	throw Exception("Setter for class " + _currentSym->name + " named " + funcName + " must take at least two parameters (object, value)");
-      if (_currentSym->countReturnValues() != 1)
-	throw Exception("Setter for class " + _currentSym->name + " named " + funcName + " must have one return value");
-      _code->_isgetset = true;
-      std::cout << "Set Get flag set to true\n";
-      _code->_objectName = _currentSym->parameterName(0);
-      std::cout << "Object name = " << _code->_objectName << "\n";
-      _code->_propertyName = funcName.mid(4);
-      std::cout << "Property name = " << _code->_propertyName << "\n";
-    }
+  insertPrefix(funcName, funcType);
   block(code);
   emit(OP_RETURN);
   _code = save_code;
@@ -1708,6 +1724,11 @@ void Compiler::walkClassDef(const Tree &t) {
   for (int i=1;i<t.numChildren();i++)
     if (t.child(i).is(TOK_PROPERTIES))
       walkProperties(props,t.child(i));
+  reg_t events = startList();
+  // Walk the events
+  for (auto s = _currentSym->syms.constBegin(); s != _currentSym->syms.constEnd(); ++s)
+    if (s.value().is_event())
+      pushList(events,fetchConstantString(s.key()));
   reg_t methods = startList();
   for (auto s = _currentSym->syms.constBegin(); s != _currentSym->syms.constEnd(); ++s)
     if (s.value().is_method() && !s.value().is_getter() && !s.value().is_setter())
@@ -1725,6 +1746,7 @@ void Compiler::walkClassDef(const Tree &t) {
   reg_t name = fetchConstantString(cp->_syms->name);
   pushList(cd_args,superclasses);
   pushList(cd_args,props);
+  pushList(cd_args,events);
   pushList(cd_args,methods);
   emit(OP_CLASSDEF,name,cd_args);
   emit(OP_RETURN);

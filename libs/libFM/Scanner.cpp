@@ -48,6 +48,7 @@ void InitializeReservedTable() {
   fm_reserved["else"] = TOK_ELSE;
   fm_reserved["elseif"] = TOK_ELSEIF;
   fm_reserved["end"] = TOK_END;
+  fm_reserved["events"] = TOK_EVENTS; // FIXME - enable for classdef mode only
   fm_reserved["for"] = TOK_FOR;
   fm_reserved["function"] = TOK_FUNCTION;
   fm_reserved["global"] = TOK_GLOBAL;

@@ -117,7 +117,8 @@ void VM::defineClass(const Object &name, const Object &arguments)
   // ap = [superclasses, properties, methods]
   const Object &superclasses = ap[0];
   const Object &parameters = ap[1];
-  const Object &methods = ap[2];
+  const Object &events = ap[2];
+  const Object &methods = ap[3];
   const Object *pp = _ctxt->_list->ro(parameters);
   for (int i=0;i<parameters.count();i++)
     {
@@ -157,6 +158,9 @@ void VM::defineClass(const Object &name, const Object &arguments)
 	}
     }
   _ctxt->_meta->rw(fooMeta)->m_ishandle = isHandle;
+  const Object *ep = _ctxt->_list->ro(events);
+  for (int i=0;i<events.count();i++)
+    _ctxt->_meta->addEvent(fooMeta,ep[i]);
   _ctxt->_globals->insert(std::make_pair(className,fooMeta));
 }
 

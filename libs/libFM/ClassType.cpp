@@ -4,8 +4,9 @@
 
 using namespace FM;
 
-ClassMetaData::ClassMetaData(ThreadContext *_ctxt) : m_name(_ctxt), m_defaults(_ctxt) {
+ClassMetaData::ClassMetaData(ThreadContext *_ctxt) : m_name(_ctxt), m_defaults(_ctxt), m_events(_ctxt) {
   m_defaults = _ctxt->_list->empty();
+  m_events = _ctxt->_list->empty();
 }
 
 Object ClassMetaType::getField(const Object &meta, const Object &fieldname) {
@@ -63,6 +64,11 @@ FMString ClassMetaType::describe(const Object &a) {
   for (auto i=cmd->m_properties.begin(); i != cmd->m_properties.end(); ++i)
     ret += FMString(" ") + i->first.description() + "\n";
   return ret;
+}
+
+void ClassMetaType::addEvent(Object &meta, const Object &event) {
+  ClassMetaData *cmd = this->rw(meta);
+  _ctxt->_list->push(cmd->m_events,event);
 }
 
 void ClassMetaType::addProperty(Object &meta, const Object &name, bool constant,
@@ -305,6 +311,10 @@ FMString ClassType::describe(const Object &a) {
     for (auto i = cmd->m_properties.begin(); i != cmd->m_properties.end(); ++i)
       ret += "    " + _ctxt->_string->getString(i->first) + "\n";
   }
+  ret += "list of events\n";
+  const Object *op = _ctxt->_list->ro(cmd->m_events);
+  for (int i=0;i<cmd->m_events.count();i++)
+    ret += "   " + op[i].description() + "\n";
   ret += "list of methods\n";
   for (auto i=cmd->m_methods.begin(); i != cmd->m_methods.end(); ++i)
     {

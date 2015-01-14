@@ -908,6 +908,18 @@ Tree Parser::attributeList() {
   return attrs;
 }
 
+Tree Parser::classEventsDefinition() {
+  Tree root(expect(TOK_EVENTS));
+  skipNewLines();
+  while (!match(TOK_END)) {
+    root.addChild(identifier());
+    consume();
+    skipNewLines();
+  }
+  expect(TOK_END,"events");
+  return root;
+}
+
 Tree Parser::classMethodsDefinition() {
   Tree root(expect(TOK_METHODS));
   if (match('(')) 
@@ -947,6 +959,8 @@ Tree Parser::classDefinition() {
       root.addChild(classPropertiesDefinition());
     else if (match(TOK_METHODS))
       root.addChild(classMethodsDefinition());
+    else if (match(TOK_EVENTS))
+      root.addChild(classEventsDefinition());
     else
       serror("Unknown block in classdef");
     skipNewLines();

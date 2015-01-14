@@ -42,9 +42,9 @@ void SymbolPass::popToParent() {
   _current = _current->parent;
 }
 
-void SymbolPass::walkChildren(const Tree &t, ScopeTypeEnum scopeType) {
+void SymbolPass::walkChildren(const Tree &t, FunctionTypeEnum funcType) {
   for (int index=0;index < t.numChildren();++index)
-    walkCode(t.child(index),scopeType);
+    walkCode(t.child(index),funcType);
 }
 
 bool SymbolPass::parentScopeDefines(const FMString &name) {
@@ -117,6 +117,10 @@ void SymbolPass::addSymbol(const FMString &name, symbol_flags_t flags)
     }
 }
 
+void SymbolPass::walkEvent(const Tree &t) {
+  addSymbol(t.text(),symbol_flags_t::EVENT());
+}
+
 void SymbolPass::walkProperty(const Tree &t, symbol_flags_t attr) {
   if (_current->syms.contains(t.text()))
     throw Exception("Property " + t.text() + " cannot be defined more than once in definition of class " + _current->name);
@@ -163,6 +167,11 @@ void SymbolPass::walkProperties(const Tree &t) {
     walkProperty(t.child(j),attr);
 }
 
+void SymbolPass::walkEvents(const Tree &t) {
+  for (int j=0;j<t.numChildren();j++)
+    walkEvent(t.child(j));
+}
+
 void SymbolPass::walkMethods(const Tree &t) {
   int start = 0;
   symbol_flags_t attr;
@@ -186,6 +195,12 @@ void SymbolPass::walkMethods(const Tree &t) {
     }
 }
 
+void SymbolPass::walkSupers(const Tree &t) {
+  for (int i=0;i<t.numChildren();i++) {
+    addSymbol(t.child(i).text(), symbol_flags_t::SUPER());
+  }
+}
+
 void SymbolPass::walkClassDef(const Tree &t) {
   _current->name = t.first().text();
   for (int i=1;i<t.numChildren();i++)
@@ -198,7 +213,11 @@ void SymbolPass::walkClassDef(const Tree &t) {
 	case TOK_METHODS:
 	  walkMethods(t.child(i));
 	  break;
+	case TOK_EVENTS:
+	  walkEvents(t.child(i));
+	  break;
 	case '<':
+	  walkSupers(t.child(i));
 	  break;
 	default:
 	  throw Exception("Unhandled classdef block");
@@ -280,6 +299,7 @@ void SymbolPass::walkFunction(const Tree &t, FunctionTypeEnum funcType, symbol_f
 	throw Exception("Object returned by constructor cannot appear as an argument: i.e., function A = ClassName(A,...) is not allowed");
       // Insert the object into the parameter list at the front.
       objflags._parameter = 1;
+      objflags._object = 1;
       objflags.param_position = 0;
       for (auto i=_current->syms.begin();i!=_current->syms.end();++i)
 	{
@@ -291,20 +311,14 @@ void SymbolPass::walkFunction(const Tree &t, FunctionTypeEnum funcType, symbol_f
 	}
       _current->syms[objname] = objflags;
     }
-  if (funcType == NestedFunction)
-    walkCode(code, NestedScopeType);  
-  else
-    walkCode(code, NormalScopeType);
+  walkCode(code, funcType);  
   switch (funcType)
     {
-    case NestedFunction:
-    case MethodFunction:
-    case GetterFunction:
-    case SetterFunction:
-      popToParent();
-      break;
     case ConstructorFunction:
       addSymbol(name,symbol_flags_t::DYNAMIC());
+      popToParent();
+      break;
+    default:
       popToParent();
       break;
     }
@@ -324,11 +338,11 @@ void SymbolPass::walkAnonymousFunction(const Tree &t) {
     addSymbol(args.child(index).text(), symbol_flags_t::PARAMETER(index));
   // Anonymous functions have an implicitly defined return value 
   addSymbol("_", symbol_flags_t::RETURN(0));
-  walkCode(code,AnonymousScopeType);
+  walkCode(code,AnonymousFunction);
   popToParent();
 }
 
-void SymbolPass::walkCode(const Tree &t, ScopeTypeEnum scopeType) {
+void SymbolPass::walkCode(const Tree &t, FunctionTypeEnum functionType) {
   switch (t.token())
     {
     case TOK_GLOBAL:
@@ -337,7 +351,7 @@ void SymbolPass::walkCode(const Tree &t, ScopeTypeEnum scopeType) {
 	  {
 	    const Tree &s = t.child(index);
 	    addSymbol(s.text(),symbol_flags_t::GLOBAL());
-	    walkChildren(s,scopeType);
+	    walkChildren(s,functionType);
 	  }
 	break;
       }
@@ -355,13 +369,24 @@ void SymbolPass::walkCode(const Tree &t, ScopeTypeEnum scopeType) {
       {
 	if (!_current->syms.contains(t.first().text()))
 	  addSymbol(t.first().text(),symbol_flags_t::DYNAMIC());
+	if (functionType == ConstructorFunction)
+	  {
+	    if (_current->syms[t.first().text()].is_object()) {
+	      if (_current->parent->syms.contains(t.second().text()) &&
+		  _current->parent->syms[t.second().text()].is_super()) {
+		symbol_flags_t oflags = _current->parent->syms[t.second().text()];
+		oflags._explicit = 1;
+		_current->parent->syms[t.second().text()] = oflags;
+	      }
+	    }
+	  }
 	break;
       }
     case TOK_VARIABLE:
       {
-	switch (scopeType)
+	switch (functionType)
 	  {
-	  case NestedScopeType:
+	  case NestedFunction:
 	    {
 	      if (!_current->syms.contains(t.first().text()))
 		{
@@ -375,20 +400,19 @@ void SymbolPass::walkCode(const Tree &t, ScopeTypeEnum scopeType) {
 		}
 	      break;
 	    }
-	  case AnonymousScopeType:
-	  case NormalScopeType:
+	  default:
 	    {
 	      addSymbol(t.first().text(),symbol_flags_t::DYNAMIC());
 	      break;
 	    }
 	  }
-	walkChildren(t,scopeType);
+	walkChildren(t,functionType);
 	break;
       }
     case TOK_FOR:
       {
 	addSymbol(t.first().first().text(),symbol_flags_t::DYNAMIC());
-	walkChildren(t,scopeType);
+	walkChildren(t,functionType);
 	break;
       }
     case TOK_PERSISTENT:
@@ -397,7 +421,7 @@ void SymbolPass::walkCode(const Tree &t, ScopeTypeEnum scopeType) {
 	  {
 	    const Tree &s = t.child(index);
 	    addSymbol(s.text(),symbol_flags_t::PERSISTENT());
-	    walkChildren(s,scopeType);
+	    walkChildren(s,functionType);
 	  }
 	break;
       }
@@ -417,7 +441,7 @@ void SymbolPass::walkCode(const Tree &t, ScopeTypeEnum scopeType) {
 	break;
       }
     default:
-      walkChildren(t,scopeType);
+      walkChildren(t,functionType);
     }
 }
 

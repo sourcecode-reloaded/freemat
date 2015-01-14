@@ -1957,6 +1957,53 @@ Things to check for objects:
 Base constructor - works
 Superclass constructor - works
 Object method - works
-Superclass method
+Superclass method - works
+
+At this point, there are no guards for the objects.  For example, if
+we have:
+
+class bar
+  method
+     foo
+
+Then we can call foo on an object that is _not_ derived from bar.
+
+x = junk
+bar@foo(x)
+
+This violates the contract.  We need to have some validation that
+non-static class methods are invoked on objects?  But there is no
+guarantee which argument of the method is supposed to be the object.
+So I don't think that will work.
+
+// todo - handle nargin for constructors
+// todo - base constructors for superclasses that are not explicitly
+called
+
+Base constructors -- we need to call the base constructors for each
+class that we derive from.  For example:
+
+classdef bar < foo & baz
+
+Then in the constructor for bar, we have to call the constructors for
+foo and baz.  Furthermore, we need to call any constructors for which
+the base constructor is not explicitly called.  
+
+Symbol pass now identifies them.. Need to add code to constructor to
+call implicit constructors!
+
+Notifications...
+
+Naming events
+
+Event parsing is completed -- but does handle inheritance work
+correctly?
 
 
+Handle inheritance doesn't work correctly.
+
+
+Solution!  Define the handle class as having a property is_handle = 1,
+or something.  Then every class can simply inherit from the handle
+class and it will automatically get a member indicating it is a handle
+class!
