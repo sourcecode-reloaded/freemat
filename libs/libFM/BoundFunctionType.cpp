@@ -24,16 +24,16 @@ FMString BoundFunctionType::brief(const Object &a) {
 Object BoundFunctionType::getParens(const Object &a, const Object &b) {
   Object args = _ctxt->_list->makeScalar(this->ro(a)->m_arg);
   _ctxt->_list->merge(args,b);
-  return _ctxt->_function->getParens(this->ro(a)->m_func,args);
+  return this->ro(a)->m_func.type()->getParens(this->ro(a)->m_func,args);
 }
 
 Object BoundFunctionType::call(const Object &a, const Object &args, int nargout) {
   Object all_args = _ctxt->_list->makeScalar(this->ro(a)->m_arg);
   _ctxt->_list->merge(all_args,args);
-  return _ctxt->_function->call(this->ro(a)->m_func,all_args,nargout);
+  return this->ro(a)->m_func.type()->call(this->ro(a)->m_func,all_args,nargout);
 }
 
 Object BoundFunctionType::deref(const Object &a) {
-  return _ctxt->_function->getParens(this->ro(a)->m_func,
-				     _ctxt->_list->makeScalar(this->ro(a)->m_arg));
+  return this->ro(a)->m_func.type()->getParens(this->ro(a)->m_func,
+					       _ctxt->_list->makeScalar(this->ro(a)->m_arg));
 }

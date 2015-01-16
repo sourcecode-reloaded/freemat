@@ -136,6 +136,23 @@ Object print(const Object &args, int nargout, ThreadContext *ctxt) {
   return ctxt->_double->empty();
 }
 
+// Create the built in Handle class
+void makeHandleClass(ThreadContext *ctxt) {
+  Object handle = ctxt->_meta->makeScalar();
+  ClassMetaData *cmd = ctxt->_meta->rw(handle);
+  ctxt->_meta->addProperty(handle,
+			   ctxt->_string->makeString("_ishandle"),
+			   true, // isconstant
+			   false, // isdependent
+			   ctxt->_bool->makeScalar(true), // value
+			   ctxt->_double->empty(), // getter
+			   ctxt->_double->empty());
+  cmd->m_name = ctxt->_string->makeString("handle");
+  cmd->m_constructor = ctxt->_builtin->pass();
+  ctxt->_globals->insert(std::make_pair("handle",handle));
+}
+
+
 int main(int argc, char *argv[])
 {
 
@@ -145,6 +162,8 @@ int main(int argc, char *argv[])
 
   StdIOTermIF io;
   ThreadContext *ctxt = BuildNewThreadContext(&io);
+
+  makeHandleClass(ctxt);
 
   boost::timer::cpu_timer timer;
 

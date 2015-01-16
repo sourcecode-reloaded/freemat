@@ -38,3 +38,15 @@ Object BuiltInType::deref(const Object &a)
     return _ctxt->_list->first(ret);
   return ret;
 }
+
+static Object _pass(const Object &args, int nargout, ThreadContext *ctxt) {
+  return args;
+}
+
+Object BuiltInType::pass()
+{
+  Object fpass = this->makeScalar();
+  this->rw(fpass)->m_name = _ctxt->_string->makeString("pass");
+  this->rw(fpass)->m_ptr = _pass;
+  return fpass;
+}

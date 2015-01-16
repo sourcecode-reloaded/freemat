@@ -2007,3 +2007,9 @@ Solution!  Define the handle class as having a property is_handle = 1,
 or something.  Then every class can simply inherit from the handle
 class and it will automatically get a member indicating it is a handle
 class!
+
+Fixed.  Much cleaner code throughout.  Have also solved the problem of
+binding functions that are not code based.  You can now bind any
+callable to a variable.  This is so that a.foo, where a is a class,
+and foo is a builtin function, will still work properly.
+

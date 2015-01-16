@@ -1501,7 +1501,6 @@ void Compiler::insertPrefix(FMString funcName, FunctionTypeEnum funcType) {
       reg_t args = startList();
       for (int i=0;i<toInvoke.size();i++)
 	{
-	  if (toInvoke[i] == "handle") continue;
 	  std::cout << "Adding prefix call for base class " << toInvoke[i] << "\n";
 	  reg_t obj = getRegister();
 	  emit(OP_LOAD,obj,getNameID(objname));
@@ -1639,6 +1638,7 @@ void Compiler::walkScript(const Tree &t) {
 void Compiler::walkMethods(const Tree &t) {
   assert(t.is(TOK_METHODS));
   int start = 0;
+  SymbolTable *saveSym = _currentSym;
   if (t.numChildren() > 1 && t.first().is(TOK_ATTRIBUTES)) start++;
   for (int i=start;i<t.numChildren();i++)
     {
@@ -1659,6 +1659,7 @@ void Compiler::walkMethods(const Tree &t) {
       else
 	walkFunction(p,MethodFunction);
     }
+  _currentSym = saveSym;
 }
 
 void Compiler::walkProperties(reg_t list, const Tree &t) {
@@ -1730,8 +1731,11 @@ void Compiler::walkClassDef(const Tree &t) {
     if (s.value().is_event())
       pushList(events,fetchConstantString(s.key()));
   reg_t methods = startList();
+  // Note - setters and getters are ignored here because they are 
+  // handled in the property construction (walkProperty).
+  // Constructors are special cased.
   for (auto s = _currentSym->syms.constBegin(); s != _currentSym->syms.constEnd(); ++s)
-    if (s.value().is_method() && !s.value().is_getter() && !s.value().is_setter())
+    if (s.value().is_method() && !s.value().is_getter() && !s.value().is_setter() && !s.value().is_constructor())
       {
 	reg_t method_args = startList();
 	pushList(method_args,fetchConstantString(s.key()));
@@ -1743,11 +1747,27 @@ void Compiler::walkClassDef(const Tree &t) {
   for (int i=1;i<t.numChildren();i++)
     if (t.child(i).is(TOK_METHODS))
       walkMethods(t.child(i));
+  // Find the constructor
+  bool explicit_constructor = false;
+  reg_t constructor;
+  for (auto s = _currentSym->syms.constBegin(); s != _currentSym->syms.constEnd(); ++s)
+    if (s.value().is_constructor())
+      {
+	explicit_constructor = true;
+	constructor = fetchConstantString("#" + s.key());
+	break;
+      }
+  if (!explicit_constructor)
+    {
+      std::cout << "Explicit constructor not found!\n";
+      constructor = fetchConstant(_ctxt->_builtin->pass());
+    }
   reg_t name = fetchConstantString(cp->_syms->name);
   pushList(cd_args,superclasses);
   pushList(cd_args,props);
   pushList(cd_args,events);
   pushList(cd_args,methods);
+  pushList(cd_args,constructor);
   emit(OP_CLASSDEF,name,cd_args);
   emit(OP_RETURN);
 }
@@ -1936,6 +1956,10 @@ void FM::Disassemble(ThreadContext *_ctxt, const Object &p)
 {
   //  if (!p.isUserClass() || p.className() != "code_object")
   //    throw Exception("argument to disassemble is not a code_object");
+  if (p.isEmpty()) {
+    std::cout << "Empty object of type " << p.type()->name() << "\n";
+    return;
+  }
   if (p.type()->code() == TypeModule)
     {
       const ModuleData *md = _ctxt->_module->ro(p);

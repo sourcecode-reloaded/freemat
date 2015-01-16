@@ -4,9 +4,10 @@
 
 using namespace FM;
 
-ClassMetaData::ClassMetaData(ThreadContext *_ctxt) : m_name(_ctxt), m_defaults(_ctxt), m_events(_ctxt) {
+ClassMetaData::ClassMetaData(ThreadContext *_ctxt) : m_name(_ctxt), m_defaults(_ctxt), m_events(_ctxt), m_constructor(_ctxt) {
   m_defaults = _ctxt->_list->empty();
   m_events = _ctxt->_list->empty();
+  m_constructor = _ctxt->_function->empty();
 }
 
 Object ClassMetaType::getField(const Object &meta, const Object &fieldname) {
@@ -28,11 +29,7 @@ Object ClassMetaType::getParens(const Object &meta, const Object &b) {
 
 Object ClassMetaType::invokeConstructor(const Object &meta, const Object &self, const Object &args) {
   const ClassMetaData *cmd = this->ro(meta);
-  auto j = cmd->m_methods.find(cmd->m_name);
-  if (j == cmd->m_methods.end())
-    // No constructor - just use default
-    return self;
-  return _ctxt->_function->methodCall(j->second->m_definition,self,args);  
+  return _ctxt->_function->methodCall(cmd->m_constructor,self,args);  
 }
 
 Object ClassMetaType::construct(const Object &meta) {
@@ -88,6 +85,8 @@ void ClassMetaType::addProperty(Object &meta, const Object &name, bool constant,
     }
   else
     cpmd->m_index = -1;
+  if (constant && (name == _ctxt->_string->makeString("_ishandle")))
+    cmd->m_ishandle = true;
   cmd->m_properties[name] = cpmd;
 }
 
@@ -105,6 +104,8 @@ void ClassMetaType::addSuperClass(Object &meta, const Object &super) {
       if (cmd->m_methods.find(i->first) == cmd->m_methods.end())
 	this->addMethod(meta,i->first,i->second->m_definition,i->second->m_static);
     }
+  // TODO - warn if method with same name as constructor already is defined
+  this->addMethod(meta,smd->m_name,smd->m_constructor,false);
 }
 
 void ClassMetaType::addMethod(Object &meta, const Object &name, const Object &definition, bool is_static) {

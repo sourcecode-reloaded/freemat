@@ -109,16 +109,18 @@ Object VM::executeModule(const Object &moduleObject, const Object &parameters)
 void VM::defineClass(const Object &name, const Object &arguments)
 {
   FMString className = _ctxt->_string->getString(name);
-  FMString classMetaName = "?" + className;
-  if (_ctxt->_globals->count(classMetaName) > 0) return;
+  if (_ctxt->_globals->count(className) > 0) return;
   Object fooMeta = _ctxt->_meta->makeScalar();
-  _ctxt->_meta->setName(fooMeta,name);
+  ClassMetaData *cmd = _ctxt->_meta->rw(fooMeta);
+  cmd->m_name = name;
   const Object *ap = _ctxt->_list->ro(arguments);
   // ap = [superclasses, properties, methods]
   const Object &superclasses = ap[0];
   const Object &parameters = ap[1];
   const Object &events = ap[2];
   const Object &methods = ap[3];
+  const Object &constructor = ap[4];
+  cmd->m_constructor = constructor;
   const Object *pp = _ctxt->_list->ro(parameters);
   for (int i=0;i<parameters.count();i++)
     {
@@ -142,22 +144,12 @@ void VM::defineClass(const Object &name, const Object &arguments)
     }
   // We add superclasses last to get name resolution correct
   const Object *sp = _ctxt->_list->ro(superclasses);
-  bool isHandle = false;
   for (int i=0;i<superclasses.count();i++) 
     {
-      if (_ctxt->_string->getString(sp[i]) == "handle")
-	{
-	  isHandle = true;
-	  std::cout << "Defining class " << className << " as a handle class\n";
-	}
-      else
-	{
-	  Object super_meta = _ctxt->_globals->at(_ctxt->_string->getString(sp[i]));
-	  std::cout << "Defining class " << className << " super class " << super_meta.description() << "\n";
-	  _ctxt->_meta->addSuperClass(fooMeta,super_meta);
-	}
+      Object super_meta = _ctxt->_globals->at(_ctxt->_string->getString(sp[i]));
+      std::cout << "Defining class " << className << " super class " << super_meta.description() << "\n";
+      _ctxt->_meta->addSuperClass(fooMeta,super_meta);
     }
-  _ctxt->_meta->rw(fooMeta)->m_ishandle = isHandle;
   const Object *ep = _ctxt->_list->ro(events);
   for (int i=0;i<events.count();i++)
     _ctxt->_meta->addEvent(fooMeta,ep[i]);

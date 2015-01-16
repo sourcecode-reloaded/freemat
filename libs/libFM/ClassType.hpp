@@ -97,6 +97,7 @@ namespace FM
     Object m_name;             // Name of the  class.
     HashMap<ClassPropertyMetaData*> m_properties; // Properties for the class 
     HashMap<ClassMethodMetaData*> m_methods; // Methods for the class 
+    Object m_constructor;
     Object m_events;
     Object m_defaults;
     bool m_ishandle;
@@ -110,7 +111,6 @@ namespace FM
 		     bool dependent, const Object &default_value,
 		     const Object &getter, const Object &setter);
     void addMethod(Object &meta, const Object &name, const Object &definition, bool is_static);
-    void setName(Object &a, const Object &name) {this->rw(a)->m_name = name;}
     void addSuperClass(Object &meta, const Object &super);
     void addEvent(Object &meta, const Object &event);
     virtual DataCode code() const {return TypeMeta;}
