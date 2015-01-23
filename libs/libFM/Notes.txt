@@ -2013,3 +2013,108 @@ binding functions that are not code based.  You can now bind any
 callable to a variable.  This is so that a.foo, where a is a class,
 and foo is a builtin function, will still work properly.
 
+Still a puzzle why in a script handles are not released
+properly. E.g., 
+
+a = sclass(4); % Where sclass < handle
+a = [] % a's destructor is not called here...
+
+* Script modules do not work correctly.  There is no mechanism for
+  capturing that the module is a script.
+
+* Script modules work now (I guess they never did before).  However,
+  we are still leaking object references somewhere.  In particular, if
+  we create a class in a script (e.g., g = sclass(9); is the last line
+  in the script), then reassigning g = 'hello' does not trigger the
+  destructor for sclass.
+
+
+From StackOverflow:
+
+n lldb, use command script import lldb.macosx.heap to install some memory-searching functions. The ptr_refs command should be able to do what you want; use ptr_refs --help to learn more.
+
+shareimprove this answer
+answered Jun 3 '13 at 20:18
+
+Greg Parker
+4,2611615
+1	 	
+ptr_refs is the way to go. If you launch your app with the MallocStackLogging=1 environment variable, you can do ptr_refs --stack ADDRESS and not only see all memory blocks that contain that address but the backtrace when that object / memory block was allocated or freed. Note that ptr_refs is only for Mac OS X apps at this point - the way it is implemented in Xcode 4.6 precludes it from working on iOS. –  Jason Molenda Jun 3 '13 at 23:11 
+
+Not sure base constructors are getting called in all circumstances.
+
+
+Tracking reference count issues:
+
+1. create with count 1
+2. Constructor invokation assigns the object to a list
+3. After constructor invokation, the reference count for the object is
+
+Starting script: 
+NEW_LIST       r0                  
+LOAD           r1, Name[1]         
+OP_LOAD for shnd
+Searching globals for shnd
+DEREF          r2, r1              
+Constructing class with handle flag 1
+Create count 1 ptr 0x7ff0cbc53a80 class class
+Assign_new count 2 ptr 0x7ff0cbc53a80 class class
+Copy count 3 ptr 0x7ff0cbc53a80 class class
+Assign_old count 2 ptr 0x7ff0cbc53a80 class class
+Delete count 1 ptr 0x7ff0cbc53a80 class class
+Assign_new count 2 ptr 0x7ff0cbc53a80 class class
+Delete count 1 ptr 0x7ff0cbc53a80 class class
+
+At this point r2 -> class
+
+PUSH           r0, r2              
+Assign_new count 2 ptr 0x7ff0cbc53a80 class class
+
+Now r2 -> class, and r0 -> [class]
+
+FIRST          r1, r0              
+Copy count 3 ptr 0x7ff0cbc53a80 class class
+
+Assign_new count 4 ptr 0x7ff0cbc53a80 class class
+Delete count 3 ptr 0x7ff0cbc53a80 class class
+
+Now r2 -> class, r0 -> [class], r1 -> class
+
+SAVE           r1, Name[0]         
+Writing shnd to address 1 at machine 0x7ff0cd720100
+Assign_new count 4 ptr 0x7ff0cbc53a80 class class
+
+Now r2 -> class, r0 -> [class], r1 -> class, name[0] -> class (4 references)
+
+LOAD_CONST     r0, Const[0]        
+SAVE           r0, Name[0]         
+Writing 3 to address 1 at machine 0x7ff0cd720100
+Assign_old count 3 ptr 0x7ff0cbc53a80 class class
+
+Now r2 -> class, r0 -> 3, r1 -> class, name[0] -> 3 (2 references)
+
+There shoud be 2 references, we see 3.  The LOAD_CONST call should
+have resulted in a free of the list that r0 had.  
+
+
+
+RETURN                             
+Clearing register 0
+Clearing register 1
+Assign_old count 2 ptr 0x7ff0cbc53a80 class class
+Clearing register 2
+Assign_old count 1 ptr 0x7ff0cbc53a80 class class
+
+The bug is in ListType::pop, believe it or not...
+
+The leak is fixed, but pop is still wrong.  Probably should just copy
+it.
+
+Next question - do registers need to be explicitly cleared?  So that
+we don't have extra references hanging around?  Scary thought.
+Something like an object's destructor doesn't get called because there
+is an extra register hanging onto a reference of it?
+
+
+
+

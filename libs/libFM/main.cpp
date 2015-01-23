@@ -109,7 +109,7 @@ void compileModule(ThreadContext *ctxt, FMString name, HashMap<Object> &classes)
 	Disassemble(ctxt,p);
 	std::cout << "Compile: \n";
 	std::cout << p << "\n";
-	if (ctxt->_module->ro(p)->is_class)
+	if (ctxt->_module->ro(p)->m_modtype == ClassdefModuleType)
 	  classes.insert(std::make_pair(ctxt->_string->makeString(name),p));
 	  // {
 	  //   // Check for dependencies...

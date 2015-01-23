@@ -21,9 +21,8 @@ Object ModuleType::deref(const Object &a)
 {
   Object args = _ctxt->_list->empty();
   Object ret = this->call(a,args,1);
-  if (this->ro(a)->is_class)
+  if (ret.isEmpty())
     return _ctxt->_double->empty();
-  else
-    return _ctxt->_list->first(this->call(a,args,1));
+  return _ctxt->_list->first(ret);
 }
 

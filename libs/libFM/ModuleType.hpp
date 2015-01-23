@@ -5,6 +5,7 @@
 #include "Type.hpp"
 #include "HashMap.hpp"
 #include "HandleType.hpp"
+#include "Code.hpp"
 
 namespace FM
 {
@@ -15,7 +16,7 @@ namespace FM
     HashMap<Object> m_locals; // Local functions for this module
     Object m_main; // Main function for this module
     FMString m_name;
-    bool is_class;
+    ModuleTypeCode m_modtype;
     Object m_dependencies; // Super classes if encountered
     ModuleData(ThreadContext *_ctxt) : m_main(_ctxt), m_dependencies(_ctxt) {}
   };
@@ -28,6 +29,7 @@ namespace FM
     virtual FMString describe(const Object &module) {
       FMString ret = "Module ";
       ret += this->ro(module)->m_name + "\n";
+      ret += "  type: " + ModuleTypeCodeToString(this->ro(module)->m_modtype) + "\n";
       ret += "  dependencies: " + this->ro(module)->m_dependencies.description() + "\n";
       ret += "  locals:\n";
       for (auto i=this->ro(module)->m_locals.begin();i!=this->ro(module)->m_locals.end();++i)

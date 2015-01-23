@@ -1441,7 +1441,7 @@ void Compiler::reset() {
   _regpool = new RegisterBlock(256);
   delete _module;
   _module = new Module(_ctxt);
-  _module->_isclass = false;
+  _module->_modtype = FunctionModuleType;
   // while (!_codestack.empty()) {
   //   CodeBlock *p = _codestack.top();
   //   delete p;
@@ -1461,7 +1461,7 @@ void Compiler::reset() {
 
 void Compiler::compile(const FMString &code) {
   _module = new Module(_ctxt);
-  _module->_isclass = false;
+  _module->_modtype = FunctionModuleType;
   std::cout << ">>>>_module = " << _module << "\n";
   Scanner S(code,"");
   Parser P(S);
@@ -1699,7 +1699,7 @@ void Compiler::walkClassDef(const Tree &t) {
   CodeBlock *cp = new CodeBlock(_ctxt);
   cp->_syms = _currentSym;
   _module->_main = cp;
-  _module->_isclass = true;
+  _module->_modtype = ClassdefModuleType;
   _module->_dependencies = _ctxt->_list->empty();
   _code = cp;
   _code->_namelist = _ctxt->_list->empty();
@@ -1782,6 +1782,7 @@ void Compiler::walkCode(const Tree &t) {
       }
     case TOK_SCRIPT:
       {
+	_module->_modtype = ScriptModuleType;
 	walkScript(t);
 	break;
       }
@@ -1964,7 +1965,7 @@ void FM::Disassemble(ThreadContext *_ctxt, const Object &p)
     {
       const ModuleData *md = _ctxt->_module->ro(p);
       std::cout << "Module: " << md->m_name << "\n";
-      std::cout << "Is class: " << md->is_class << "\n";
+      std::cout << "Type: " << ModuleTypeCodeToString(md->m_modtype) << "\n";
       std::cout << "Dependencies: " << md->m_dependencies.description() << "\n";
       std::cout << "  ** main routine **\n";
       Disassemble(_ctxt,_ctxt->_function->ro(md->m_main)->m_code);

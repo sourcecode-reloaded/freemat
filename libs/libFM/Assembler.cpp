@@ -20,9 +20,9 @@ Object Assembler::run(Module *mod)
   ModuleData *mp = _ctxt->_module->rw(module);
   mp->m_name = mod->_name;
   Object main_code = this->run(mod->_main);
-  mp->is_class = mod->_isclass;
+  mp->m_modtype = mod->_modtype;
   mp->m_dependencies = mod->_dependencies;
-  if (!mp->is_class)
+  if (mp->m_modtype != ClassdefModuleType)
     {
       mp->m_main = _ctxt->_function->fromCode(main_code);
       for (auto i=mod->_locals.constBegin();

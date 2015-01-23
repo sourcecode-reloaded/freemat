@@ -209,9 +209,9 @@ void Type::set(Object &a, const Object &args, const Object &b, bool invokeSetter
       Object args_rest = args;
       Object args_first = _ctxt->_list->empty();
       _ctxt->_list->push(args_first,_ctxt->_list->first(args_rest));
-      _ctxt->_list->pop(args_rest);
+      args_rest = _ctxt->_list->pop(args_rest);
       _ctxt->_list->push(args_first,_ctxt->_list->first(args_rest));
-      _ctxt->_list->pop(args_rest);
+      args_rest = _ctxt->_list->pop(args_rest);
       // TODO - is an exception here bad? If so, remove it
       Object asub(_ctxt);
       try {

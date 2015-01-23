@@ -39,11 +39,13 @@ namespace FM
     Object fetch(const Object &a, dim_t ndx) {
       return this->ro(a)[ndx];
     }
-    void pop(Object &a) {
-      a.detach();
-      Tuple & adim = a.dims();
-      adim.setRows(adim.rows()-1);
-      a.d->offset++;
+    Object pop(const Object &a) {
+      if (a.count() == 1) return this->empty();
+      // TODO - make this faster by using slicing?
+      Object r(this->makeMatrix(a.count()-1,1));
+      for (int i=1;i<a.count();i++)
+	this->rw(r)[i-1] = this->ro(a)[i];
+      return r;
     }
     void push(Object &a, const Object &b) {
       dim_t a_size = a.count();

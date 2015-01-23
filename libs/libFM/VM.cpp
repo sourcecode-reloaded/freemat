@@ -99,11 +99,20 @@ void VM::dump()
 // Excuting a module is like executing a function, except that an additional stack is required
 Object VM::executeModule(const Object &moduleObject, const Object &parameters)
 {
-  // Push the module object onto the stack
-  _ctxt->_list->push(_modules,moduleObject);
-  Object ret = executeFunction(_ctxt->_module->ro(moduleObject)->m_main,parameters);
-  _ctxt->_list->pop(_modules);
-  return ret;
+  const ModuleData *cmd = _ctxt->_module->ro(moduleObject);
+  if (cmd->m_modtype == ScriptModuleType) {
+    if (parameters.count() != 0)
+      throw Exception("Cannot use arguments in call to a script");
+    const FunctionData *fd = _ctxt->_function->ro(cmd->m_main);
+    executeScript(fd->m_code);
+    return _ctxt->_list->empty();
+  } else {
+    // Push the module object onto the stack
+    _ctxt->_list->push(_modules,moduleObject);
+    Object ret = executeFunction(_ctxt->_module->ro(moduleObject)->m_main,parameters);
+    _modules = _ctxt->_list->pop(_modules);
+    return ret;
+  }
 }
 
 void VM::defineClass(const Object &name, const Object &arguments)
@@ -157,28 +166,31 @@ void VM::defineClass(const Object &name, const Object &arguments)
 }
 
 
+void VM::defineFrame(const Object &names, int registerCount)
+{
+  int nameCount = names.count();
+  _frames[_fp]->_addrs = _ctxt->_index->makeMatrix(nameCount,1);
+  ndx_t *ap = _ctxt->_index->rw(_frames[_fp]->_addrs);
+  // FIXME - not right - parameters are defined when the function executes
+  for (int i=0;i<nameCount;i++) ap[i] = -1;
+  _frames[_fp]->_defined = _ctxt->_bool->makeMatrix(nameCount,1);
+  _frames[_fp]->_sym_names = names;
+  _frames[_fp]->_vars = _ctxt->_list->makeMatrix(nameCount,1);
+  _frames[_fp]->_exception_handlers.clear();
+  _frames[_fp]->_reg_offset = _rp;
+  _frames[_fp]->_module = _ctxt->_list->last(_modules);
+  _frames[_fp]->_captures = _ctxt->_list->empty();
+  _rp += registerCount;
+}
+
 Object VM::executeAnonymousFunction(const Object &codeObject, const Object &parameters, const HashMap<Object> &captures)
 {
   _fp++;
   const CodeData *cp = _ctxt->_code->ro(codeObject);
   _frames[_fp]->_name = _ctxt->_string->getString(cp->m_name);
-  // For functions, all addresses are pre-set to point
-  // to the first N slots of the variables space
-  int N = cp->m_names.count();
-  std::cout << "Names count = " << N << "\n";
-  _frames[_fp]->_addrs = _ctxt->_index->makeMatrix(N,1);
-  ndx_t *ap = _ctxt->_index->rw(_frames[_fp]->_addrs);
-  // FIXME - not right - parameters are defined when the function executes
-  for (int i=0;i<N;i++) ap[i] = -1;
-  _frames[_fp]->_defined = _ctxt->_bool->makeMatrix(N,1);
-  _frames[_fp]->_sym_names = cp->m_names;
-  _frames[_fp]->_vars = _ctxt->_list->makeMatrix(N,1);
-  _frames[_fp]->_exception_handlers.clear();
-  _frames[_fp]->_reg_offset = _rp;
-  _frames[_fp]->_module = _ctxt->_list->last(_modules);
-  _frames[_fp]->_captures = _ctxt->_list->empty();
-  _rp += cp->m_registers;
+  defineFrame(cp->m_names,cp->m_registers);
   Object *sp = _ctxt->_list->rw(_frames[_fp]->_vars);
+  ndx_t *ap = _ctxt->_index->rw(_frames[_fp]->_addrs);
   // Function scopes are closed
   _frames[_fp]->_closed = true;
   // Populate the arguments
@@ -255,25 +267,12 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
   const CodeData *cp = _ctxt->_code->ro(fd->m_code);
   _frames[_fp]->_name = _ctxt->_string->getString(cp->m_name);
   std::cout << "Starting function: " << _frames[_fp]->_name << "\n";
-  // For functions, all addresses are pre-set to point
-  // to the first N slots of the variables space
-  int N = cp->m_names.count();
-  std::cout << "Names count = " << N << "\n";
-  _frames[_fp]->_addrs = _ctxt->_index->makeMatrix(N,1);
+  defineFrame(cp->m_names,cp->m_registers);
   ndx_t *ap = _ctxt->_index->rw(_frames[_fp]->_addrs);
-  // FIXME - not right - parameters are defined when the function executes
-  for (int i=0;i<N;i++) ap[i] = -1;
-  _frames[_fp]->_defined = _ctxt->_bool->makeMatrix(N,1);
-  _frames[_fp]->_sym_names = cp->m_names;
-  _frames[_fp]->_vars = _ctxt->_list->makeMatrix(N,1);
-  _frames[_fp]->_exception_handlers.clear();
-  _frames[_fp]->_reg_offset = _rp;
-  _frames[_fp]->_module = _ctxt->_list->last(_modules);
   _frames[_fp]->_captures = fd->m_closure;
   // Allocate space for the captured variables (free ones come through the closure)
   for (int i=0;i<cp->m_captured.count();i++)
     _ctxt->_list->push(_frames[_fp]->_captures,_ctxt->_captured->empty());
-  _rp += cp->m_registers;
   Object *sp = _ctxt->_list->rw(_frames[_fp]->_vars);
   // Function scopes are closed
   _frames[_fp]->_closed = true;
@@ -366,28 +365,26 @@ void VM::executeScript(const Object &codeObject)
   const CodeData *cp = _ctxt->_code->ro(codeObject);
   _frames[_fp]->_name = _ctxt->_string->getString(cp->m_name);
   std::cout << "Starting script: " << _frames[_fp]->_name << "\n";
-  _frames[_fp]->_sym_names = _ctxt->_list->empty();
-  int N = cp->m_names.count();
-  _frames[_fp]->_addrs = _ctxt->_index->makeMatrix(N,1);
-  _frames[_fp]->_defined = _ctxt->_bool->makeMatrix(N,1);
-  _frames[_fp]->_reg_offset = _rp;
-  _frames[_fp]->_ctxt = _ctxt;
-  _frames[_fp]->_closed = false;
-  _frames[_fp]->_exception_handlers.clear();
-  _rp += cp->m_registers;
-  ndx_t *ap = _ctxt->_index->rw(_frames[_fp]->_addrs);
-  // Initialize the addresses to be unknown
-  for (int i=0;i<N;i++) ap[i] = -1;
+  defineFrame(cp->m_names,cp->m_registers);
+  _frames[_fp]->_sym_names = _ctxt->_list->empty(); // Our frame has no locally defined symbols
   _frames[_fp]->_closed = false;
   // execute the code
   executeCodeObject(codeObject);
   // No return values.. pop the frame
-  _rp = _frames[_fp]->_reg_offset;
   _frames[_fp]->_sym_names = _ctxt->_list->empty();
   _frames[_fp]->_vars = _ctxt->_list->empty();
   _frames[_fp]->_addrs = _ctxt->_index->empty();
   _frames[_fp]->_defined = _ctxt->_bool->empty();
   _frames[_fp]->_exception_handlers.clear();
+  {
+    Object *regfile = _ctxt->_list->rw(_registers);
+    for (int i=_frames[_fp]->_reg_offset;i<_rp;i++)
+      {
+	std::cout << "Clearing register " << i << "\n";
+	regfile[i] = _ctxt->_double->empty();
+      }
+  }
+  _rp = _frames[_fp]->_reg_offset;
   _fp--;
 }
 
@@ -493,7 +490,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		break;
 	      case OP_FIRST:
 		REG1 = _ctxt->_list->first(REG2);
-		_ctxt->_list->pop(REG2);
+		REG2 = _ctxt->_list->pop(REG2);
 		break;
 	      case OP_CALL:
 		REG1 = REG2.type()->call(REG2,_ctxt->_list->second(REG3),_ctxt->_double->scalarValue(_ctxt->_list->first(REG3)));
@@ -746,6 +743,7 @@ void VM::executeCodeObject(const Object &codeObject)
 			}
 		      addrfile[ndx] = addr;
 		    }
+		  std::cout << "Writing " << REG1.brief() << " to address " << addr << " at machine " << addrfile + ndx << "\n";
 		  varfile[addr] = REG1;
 		  break;
 		}
@@ -833,7 +831,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		{
 		  std::cout << "POP for " << _ctxt->_double->scalarValue(REG2) << "\n";
 		  for (int i=0;i<_ctxt->_double->scalarValue(REG2);i++)
-		    _ctxt->_list->pop(REG1);
+		    REG1 = _ctxt->_list->pop(REG1);
 		  break;
 		}
 	      case OP_CLASSDEF:

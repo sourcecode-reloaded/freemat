@@ -109,6 +109,7 @@ namespace FM
     friend class StringType;
     friend class StructType;
     friend class ListType;
+    friend void debugTrap(FMString,ObjectBase*);
     //  friend class PODArrayType<double>;
   };
 
@@ -116,7 +117,7 @@ namespace FM
   struct ThreadContext;
 
   inline void debugTrap(FMString method, ObjectBase *p) {
-    std::cout << method << " count " << p->count() << " ptr " << p << "\n";
+    std::cout << method << " count " << p->count() << " ptr " << p << " class " << p->type->name() << "\n";
   }
     
 
@@ -138,9 +139,9 @@ namespace FM
       if (isClass()) debugTrap("Copy",d);
     }
     inline ~Object() {
-      if (isClass()) debugTrap("Delete",d);
       if ((--d->refcnt) == 0)
 	d->type->destroyObject(d);
+      if (isClass()) debugTrap("Delete",d);
     }
     // Don't use this function!! It is only to be used by
     // the destroyObject function in the ClassType.  It is
@@ -215,13 +216,14 @@ namespace FM
       return d->type->doubleValue(*this);
     }
     Object& operator=(const Object& copy) {
-      if (isClass()) debugTrap("Assign",d);
       if (this == &copy) return *this;
       if ((--d->refcnt) == 0)
 	d->type->destroyObject(d);
+      if (isClass()) debugTrap("Assign_old",d);
       d = copy.d;
       assert(d);
       d->refcnt++;
+      if (isClass()) debugTrap("Assign_new",d);
       return *this;
     }
     inline void detach() 

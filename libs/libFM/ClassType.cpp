@@ -29,7 +29,11 @@ Object ClassMetaType::getParens(const Object &meta, const Object &b) {
 
 Object ClassMetaType::invokeConstructor(const Object &meta, const Object &self, const Object &args) {
   const ClassMetaData *cmd = this->ro(meta);
-  return _ctxt->_function->methodCall(cmd->m_constructor,self,args);  
+  Object olist = _ctxt->_list->makeScalar(self);
+  _ctxt->_list->merge(olist,args);
+  Object p = cmd->m_constructor.type()->call(cmd->m_constructor,olist,1);
+  if (p.count() == 0) throw Exception("Constructor must return object being constructed!");
+  return _ctxt->_list->first(p);
 }
 
 Object ClassMetaType::construct(const Object &meta) {

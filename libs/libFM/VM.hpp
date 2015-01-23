@@ -2,7 +2,6 @@
 #define __VM_hpp__
 
 #include "Object.hpp"
-#include "Code.hpp"
 #include "Frame.hpp"
 #include "HashMap.hpp"
 
@@ -36,6 +35,7 @@ namespace FM
     void executeCodeObject(const Object &codeObject);
     void defineBaseVariable(const FMString &name, const Object &value);
     void defineClass(const Object &name, const Object &arguments);
+    void defineFrame(const Object &names, int registerCount);
     void dump();
   };
 }
