@@ -2115,6 +2115,73 @@ we don't have extra references hanging around?  Scary thought.
 Something like an object's destructor doesn't get called because there
 is an extra register hanging onto a reference of it?
 
+Python doesn't have this problem (I assume) because it is stack
+based.  
+
+To make the same thing happen here, we have to explicitly clear
+registers before returning them to to the available pool.  So right
+now, we have:
+
+
+********************************************************************************
+
+Some more tweaks with handle objects and linear structures are now
+fixed up.  For example:
+
+a = shnd(9); b = shnd(a); c = shnd(b);
+
+Then a = [], b = [], c = []; frees all three
+
+What we are missing is cycle detection.
+
+To find cycles.
+
+1.  We need a list of all handle objects
+2.  We also need a list of all containers
+
+Why do we need containers?  Consider
+
+a = shnd(3);
+a.prop = a;
+
+This creates a self referential cycle.  It is the simplest cycle, but
+a practical cycle could be arbitrarily large.  Consider
+
+a = shnd(3);
+b = {a};
+a.prop = b;
+
+In this case, a cycle exists because a refers to itself (via b).  The
+problem, of course, is that when we clear a and b
+
+a = [];
+b = [];
+
+the object a does not get destroyed (because it contains a reference
+to itself).
+
+The Python algorithm is more general, because, e.g., a dictionary can
+contain a reference to itself.  This is not directly possible in
+FreeMat, because a dictionary contains values.  Every reference cycle
+_must_ include at least 1 handle object.
+
+That suggests that we keep a global list of handle objects.  Consider
+the task of findobj - it can find handle objects given property/value
+pairs.  So we _must_ keep a list (thread local at least) of all handle
+objects.  
+
+So the first step is to have a directory of handle objects that is
+updated.
+
+Done.  See ThreadContext->_handles for the set of all handle objects.
+
+The next step is to search this set for circular references.
+
+A GC func must traverse the objects and look for references to
+themselves.  A handle object with a reference count of 1 that is in a
+cycle will never be destroyed - is that right?
+
+
 
 
 

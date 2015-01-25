@@ -136,6 +136,14 @@ Object print(const Object &args, int nargout, ThreadContext *ctxt) {
   return ctxt->_double->empty();
 }
 
+Object handir(const Object &args, int nargout, ThreadContext *ctxt) {
+  for (auto p : ctxt->_handles) {
+    ctxt->_io->output(" Handle class: " + Stringify(p) + "\n");
+  }
+  return ctxt->_double->empty();
+}
+
+
 // Create the built in Handle class
 void makeHandleClass(ThreadContext *ctxt) {
   Object handle = ctxt->_meta->makeScalar();
@@ -340,6 +348,10 @@ int main(int argc, char *argv[])
   Object print_builtin = ctxt->_builtin->empty();
   ctxt->_builtin->setAddressAndName(print_builtin,"print",print);
   ctxt->_globals->insert(std::make_pair("print",print_builtin));
+
+  Object handir_builtin = ctxt->_builtin->empty();
+  ctxt->_builtin->setAddressAndName(handir_builtin,"handir",handir);
+  ctxt->_globals->insert(std::make_pair("handir",handir_builtin));
 
   // Global symbols
   for (auto i=ctxt->_globals->begin(); i != ctxt->_globals->end(); ++i)

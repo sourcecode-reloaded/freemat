@@ -349,11 +349,13 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
   _frames[_fp]->_addrs = _ctxt->_index->empty();
   _frames[_fp]->_defined = _ctxt->_bool->empty();
   _frames[_fp]->_exception_handlers.clear();
+  /* - TODO - Do we still need this?
   {
     Object *regfile = _ctxt->_list->rw(_registers);
     for (int i=_frames[_fp]->_reg_offset;i<_rp;i++)
       regfile[i] = _ctxt->_double->empty();
-  }
+      }
+  */
   _rp = _frames[_fp]->_reg_offset;
   _fp--;
   return retvec;
@@ -376,6 +378,7 @@ void VM::executeScript(const Object &codeObject)
   _frames[_fp]->_addrs = _ctxt->_index->empty();
   _frames[_fp]->_defined = _ctxt->_bool->empty();
   _frames[_fp]->_exception_handlers.clear();
+  /*
   {
     Object *regfile = _ctxt->_list->rw(_registers);
     for (int i=_frames[_fp]->_reg_offset;i<_rp;i++)
@@ -384,6 +387,7 @@ void VM::executeScript(const Object &codeObject)
 	regfile[i] = _ctxt->_double->empty();
       }
   }
+  */
   _rp = _frames[_fp]->_reg_offset;
   _fp--;
 }
@@ -609,6 +613,9 @@ void VM::executeCodeObject(const Object &codeObject)
 		*/
 	      case OP_ZERO:
 		REG1 = _ctxt->_double->zeroScalar();
+		break;
+	      case OP_CLEAR:
+		REG1 = _ctxt->_double->empty();
 		break;
 	      case OP_HCAT:
 		REG1 = NCat(_ctxt,REG2,1);

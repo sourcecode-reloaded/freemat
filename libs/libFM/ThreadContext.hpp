@@ -79,6 +79,7 @@ namespace FM
     ObjectBase *_empty;
     // Global functions
     std::map<FMString,Object> *_globals;
+    std::set<ObjectBase*> _handles;
   };
 
   ThreadContext* BuildNewThreadContext(TermIF *io);

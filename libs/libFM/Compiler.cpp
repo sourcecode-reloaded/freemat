@@ -398,6 +398,15 @@ std::string Compiler::opcodeDecode(op_t opcode, insn_t val)
     }
 }
 
+void Compiler::freeRegister(int index)
+{
+  Instruction i;
+  i._opcode = OP_CLEAR | (index << shift_reg1);
+  i._target = 0;
+  i._position = 0;
+  if ((_code) && (_code->_currentBlock))
+    _code->_currentBlock->_insnlist.push_back(i);
+}
 
 void Compiler::useBlock(BasicBlock *p)
 {
@@ -963,8 +972,10 @@ reg_t Compiler::anonymousFunction(const Tree &t) {
   // Create a basic block, and push it on the list
   useBlock(new BasicBlock);
   // The body of an anonymous function is an expression.  We assign it to "_"
-  reg_t return_value = expression(code);
-  saveRegisterToName("_",return_value);
+  {
+    reg_t return_value = expression(code);
+    saveRegisterToName("_",return_value);
+  }
   emit(OP_RETURN);
   _code = save_code;
   reg_t func = fetchConstant(_ctxt->_string->makeString("#"+fname));
@@ -1179,7 +1190,7 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
 Compiler::Compiler(ThreadContext *b) {
   assert(b);
   _ctxt = b;
-  _regpool = new RegisterBlock(256);
+  _regpool = new RegisterBlock(256,this);
   _code = new CodeBlock(b);
   _module = 0;
 }
@@ -1438,7 +1449,7 @@ void Compiler::statementType(const Tree &t, bool printIt) {
 void Compiler::reset() {
   _code = new CodeBlock(_ctxt);
   delete _regpool;
-  _regpool = new RegisterBlock(256);
+  _regpool = new RegisterBlock(256,this);
   delete _module;
   _module = new Module(_ctxt);
   _module->_modtype = FunctionModuleType;
@@ -1708,67 +1719,69 @@ void Compiler::walkClassDef(const Tree &t) {
     addStringToList(_ctxt,_code->_namelist,s.key());
   // Build up the property list
   useBlock(new BasicBlock);
-  reg_t cd_args = startList();
-  // Walk the superclasses (if they exist)
-  reg_t superclasses = startList();
-  if (t.child(1).is('<'))
-    {
-      const Tree &s = t.child(1);
-      for (int j=0;j<s.numChildren();j++)
+  {
+    reg_t cd_args = startList();
+    // Walk the superclasses (if they exist)
+    reg_t superclasses = startList();
+    if (t.child(1).is('<'))
+      {
+	const Tree &s = t.child(1);
+	for (int j=0;j<s.numChildren();j++)
+	  {
+	    pushList(superclasses,fetchConstantString(s.child(j).text()));
+	    _ctxt->_list->push(_module->_dependencies,_ctxt->_string->makeString(s.child(j).text()));
+	  }
+      }
+    reg_t props = startList();
+    // Walk the properties
+    for (int i=1;i<t.numChildren();i++)
+      if (t.child(i).is(TOK_PROPERTIES))
+	walkProperties(props,t.child(i));
+    reg_t events = startList();
+    // Walk the events
+    for (auto s = _currentSym->syms.constBegin(); s != _currentSym->syms.constEnd(); ++s)
+      if (s.value().is_event())
+	pushList(events,fetchConstantString(s.key()));
+    reg_t methods = startList();
+    // Note - setters and getters are ignored here because they are 
+    // handled in the property construction (walkProperty).
+    // Constructors are special cased.
+    for (auto s = _currentSym->syms.constBegin(); s != _currentSym->syms.constEnd(); ++s)
+      if (s.value().is_method() && !s.value().is_getter() && !s.value().is_setter() && !s.value().is_constructor())
 	{
-	  pushList(superclasses,fetchConstantString(s.child(j).text()));
-	  _ctxt->_list->push(_module->_dependencies,_ctxt->_string->makeString(s.child(j).text()));
+	  reg_t method_args = startList();
+	  pushList(method_args,fetchConstantString(s.key()));
+	  pushList(method_args,fetchConstantString("#"+s.key()));
+	  pushList(method_args,fetchConstantBool(s.value().is_static()));
+	  pushList(methods,method_args);
 	}
-    }
-  reg_t props = startList();
-  // Walk the properties
-  for (int i=1;i<t.numChildren();i++)
-    if (t.child(i).is(TOK_PROPERTIES))
-      walkProperties(props,t.child(i));
-  reg_t events = startList();
-  // Walk the events
-  for (auto s = _currentSym->syms.constBegin(); s != _currentSym->syms.constEnd(); ++s)
-    if (s.value().is_event())
-      pushList(events,fetchConstantString(s.key()));
-  reg_t methods = startList();
-  // Note - setters and getters are ignored here because they are 
-  // handled in the property construction (walkProperty).
-  // Constructors are special cased.
-  for (auto s = _currentSym->syms.constBegin(); s != _currentSym->syms.constEnd(); ++s)
-    if (s.value().is_method() && !s.value().is_getter() && !s.value().is_setter() && !s.value().is_constructor())
+    // Walk the methods
+    for (int i=1;i<t.numChildren();i++)
+      if (t.child(i).is(TOK_METHODS))
+	walkMethods(t.child(i));
+    // Find the constructor
+    bool explicit_constructor = false;
+    reg_t constructor;
+    for (auto s = _currentSym->syms.constBegin(); s != _currentSym->syms.constEnd(); ++s)
+      if (s.value().is_constructor())
+	{
+	  explicit_constructor = true;
+	  constructor = fetchConstantString("#" + s.key());
+	  break;
+	}
+    if (!explicit_constructor)
       {
-	reg_t method_args = startList();
-	pushList(method_args,fetchConstantString(s.key()));
-	pushList(method_args,fetchConstantString("#"+s.key()));
-	pushList(method_args,fetchConstantBool(s.value().is_static()));
-	pushList(methods,method_args);
+	std::cout << "Explicit constructor not found!\n";
+	constructor = fetchConstant(_ctxt->_builtin->pass());
       }
-  // Walk the methods
-  for (int i=1;i<t.numChildren();i++)
-    if (t.child(i).is(TOK_METHODS))
-      walkMethods(t.child(i));
-  // Find the constructor
-  bool explicit_constructor = false;
-  reg_t constructor;
-  for (auto s = _currentSym->syms.constBegin(); s != _currentSym->syms.constEnd(); ++s)
-    if (s.value().is_constructor())
-      {
-	explicit_constructor = true;
-	constructor = fetchConstantString("#" + s.key());
-	break;
-      }
-  if (!explicit_constructor)
-    {
-      std::cout << "Explicit constructor not found!\n";
-      constructor = fetchConstant(_ctxt->_builtin->pass());
-    }
-  reg_t name = fetchConstantString(cp->_syms->name);
-  pushList(cd_args,superclasses);
-  pushList(cd_args,props);
-  pushList(cd_args,events);
-  pushList(cd_args,methods);
-  pushList(cd_args,constructor);
-  emit(OP_CLASSDEF,name,cd_args);
+    reg_t name = fetchConstantString(cp->_syms->name);
+    pushList(cd_args,superclasses);
+    pushList(cd_args,props);
+    pushList(cd_args,events);
+    pushList(cd_args,methods);
+    pushList(cd_args,constructor);
+    emit(OP_CLASSDEF,name,cd_args);
+  }
   emit(OP_RETURN);
 }
 

@@ -109,6 +109,7 @@ namespace FM
     reg_t startList();
     void pushList(reg_t list, reg_t x);
     void multiexpr(reg_t list, const Tree &t);
+    void freeRegister(int index);
     reg_t doBinaryOperator(const Tree&, op_t);
     reg_t doUnaryOperator(const Tree&, op_t);
     reg_t doShortcutOr(const Tree& t);
@@ -166,6 +167,7 @@ namespace FM
     Compiler(ThreadContext *b);
     void compile(const FMString &code);
     Module* module();
+    friend class RegisterBlock;
   };
 
   void Disassemble(ThreadContext *_ctxt, const Object &p);

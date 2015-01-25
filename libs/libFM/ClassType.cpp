@@ -43,8 +43,11 @@ Object ClassMetaType::construct(const Object &meta) {
   Data *q = new Data;
   q->refcnt = 0;
   q->ptr = cd;
-  std::cout << "Constructing class with handle flag " << this->ro(meta)->m_ishandle << "\n";
-  return Object(new ObjectBase(q,_ctxt->_class,0,Tuple(1,1),0,0,this->ro(meta)->m_ishandle)); // Capacity?
+  ObjectBase *p = new ObjectBase(q,_ctxt->_class,0,Tuple(1,1),0,0,this->ro(meta)->m_ishandle);
+  std::cout << "Constructing class with handle flag " << this->ro(meta)->m_ishandle << " at address " << p << "\n";
+  if (this->ro(meta)->m_ishandle)
+    _ctxt->_handles.insert(p); // Add a reference to the global list
+  return Object(p); // Capacity?
 }
 
 Object ClassMetaType::deref(const Object &meta) {
@@ -277,7 +280,11 @@ void ClassType::destroyObject(ObjectBase* p) {
     // the cleanest solution, but it does work.
     Object sacrificial(_ctxt);
     ObjectBase *save = sacrificial.swap(p);
+    p->refcnt++;
+    std::cout << "Destroying object with address " << p << "\n";
     _ctxt->_function->call(j->second->m_definition,_ctxt->_list->makeScalar(sacrificial),1);
+    p->refcnt--;
+    _ctxt->_handles.erase(p);
     sacrificial.swap(save);
   }
   AggregateType::destroyObject(p);

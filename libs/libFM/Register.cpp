@@ -1,4 +1,5 @@
 #include "Register.hpp"
+#include "Compiler.hpp"
 
 using namespace FM;
 
@@ -11,7 +12,7 @@ Register::~Register()
   _block->returnRegister(_num);
 }
 
-RegisterBlock::RegisterBlock(int poolsize)
+RegisterBlock::RegisterBlock(int poolsize, Compiler *compiler) : _compiler(compiler)
 {
   for (int i=0;i<poolsize;i++)
     _pool.insert(i);
@@ -26,5 +27,6 @@ reg_t RegisterBlock::getRegister()
 
 void RegisterBlock::returnRegister(int num)
 {
+  _compiler->freeRegister(num);
   _pool.insert(num);
 }

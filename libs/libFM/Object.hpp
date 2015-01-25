@@ -109,6 +109,7 @@ namespace FM
     friend class StringType;
     friend class StructType;
     friend class ListType;
+    friend class ClassType;
     friend void debugTrap(FMString,ObjectBase*);
     //  friend class PODArrayType<double>;
   };
@@ -139,9 +140,12 @@ namespace FM
       if (isClass()) debugTrap("Copy",d);
     }
     inline ~Object() {
-      if ((--d->refcnt) == 0)
+      bool isc = isClass();
+      if ((--d->refcnt) == 0) {
 	d->type->destroyObject(d);
-      if (isClass()) debugTrap("Delete",d);
+	if (isc) debugTrap("Delete",d);
+	d = 0;
+      }
     }
     // Don't use this function!! It is only to be used by
     // the destroyObject function in the ClassType.  It is

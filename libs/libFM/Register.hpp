@@ -9,6 +9,7 @@ namespace FM
 {
 
   class RegisterBlock;
+  class Compiler;
 
   class Register
   {
@@ -25,8 +26,9 @@ namespace FM
   class RegisterBlock
   {
     std::set<int> _pool;
+    Compiler *_compiler;
   public:
-    RegisterBlock(int poolsize);
+    RegisterBlock(int poolsize, Compiler *compiler);
     reg_t getRegister();
     void returnRegister(int num);
   };
