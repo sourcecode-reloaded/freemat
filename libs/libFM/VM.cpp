@@ -205,10 +205,10 @@ Object VM::executeAnonymousFunction(const Object &codeObject, const Object &para
     }
   Object *vars = _ctxt->_list->rw(_frames[_fp]->_vars);
   ndx_t *addrfile = _ctxt->_index->rw(_frames[_fp]->_addrs);  
-  for (auto n=captures.begin();n!=captures.end();++n) {
-    int addr = _frames[_fp]->mapNameToVariableIndex(n->first);
+  for (auto n : captures) {
+    int addr = _frames[_fp]->mapNameToVariableIndex(n.first);
     if (addr != -1) {
-      vars[addr] = n->second;
+      vars[addr] = n.second;
       addrfile[addr] = addr;
     }
   }

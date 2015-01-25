@@ -26,15 +26,18 @@ namespace FM
     ModuleType(ThreadContext *ctxt) {_ctxt = ctxt;}
     virtual DataCode code() const {return TypeModule;}
     virtual const FMString& name() const {static FMString _name = "module"; return _name;}
+    virtual const Object* containedObjects(const ObjectBase *p, dim_t &count) const {
+      return nullptr;
+    }
     virtual FMString describe(const Object &module) {
       FMString ret = "Module ";
       ret += this->ro(module)->m_name + "\n";
       ret += "  type: " + ModuleTypeCodeToString(this->ro(module)->m_modtype) + "\n";
       ret += "  dependencies: " + this->ro(module)->m_dependencies.description() + "\n";
       ret += "  locals:\n";
-      for (auto i=this->ro(module)->m_locals.begin();i!=this->ro(module)->m_locals.end();++i)
+      for (auto i : this->ro(module)->m_locals)
 	{
-	  ret += "    " + i->first.description() + "\n";
+	  ret += "    " + i.first.description() + "\n";
 	}
       return ret;
     }

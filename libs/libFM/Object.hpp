@@ -45,8 +45,8 @@ namespace FM
 
   class ObjectBase {
   private:
-    ObjectBase();
-    ObjectBase& operator=(const ObjectBase& t);
+    ObjectBase() = delete;
+    ObjectBase& operator=(const ObjectBase& t) = delete;
     //! The pointer to the actual data.  Must not be NULL.
     Data *data;
     //! Reference count.  The Object is reference counted,
@@ -56,6 +56,9 @@ namespace FM
     //Slicing means that one object has an internal (read-only)
     //view into another objects data.
     ref_t refcnt;
+    //! Garbage collection reference count - used by the reference
+    //cycle garbage collector to fiddle with the reference count.
+    ref_t gc_refcnt;
     //! Indicates if the object is handle-style - i.e., shared.
     bool handle;
     //! Pointer to the base metatype object that contains the 
@@ -93,8 +96,11 @@ namespace FM
       capacity = t.capacity;
       handle = t.handle;
     }
-    int count() const {
+    ref_t& count() {
       return refcnt;
+    }
+    ref_t& gc_count() {
+      return gc_refcnt;
     }
     void *ptr() const {return data->ptr;}
     friend class Object;
@@ -110,6 +116,7 @@ namespace FM
     friend class StructType;
     friend class ListType;
     friend class ClassType;
+    friend class FunctionType;
     friend void debugTrap(FMString,ObjectBase*);
     //  friend class PODArrayType<double>;
   };

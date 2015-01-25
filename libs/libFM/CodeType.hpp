@@ -32,6 +32,9 @@ namespace FM
   class CodeType : public AggregateType<CodeData,ValueSemantics> {
   public:
     CodeType(ThreadContext *ctxt) {_ctxt = ctxt;}
+    virtual const Object* containedObjects(const ObjectBase *p, dim_t &count) const {
+      return nullptr;
+    }
     virtual DataCode code() const {return TypeCode;}
     virtual const FMString& name() const {static FMString _name = "code"; return _name;}
     bool equals(const Object &a, const Object &b) {

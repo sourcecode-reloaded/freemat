@@ -1825,8 +1825,7 @@ void Compiler::statement(const Tree &t) {
 
 void Compiler::block(const Tree &t) {
   const TreeList statements(t.children());
-  for (TreeList::const_iterator i=statements.begin(); i!= statements.end(); ++i)
-    statement(*i);
+  for (auto i : statements) statement(i);
 }
 
 Module* Compiler::module() {
@@ -1982,9 +1981,9 @@ void FM::Disassemble(ThreadContext *_ctxt, const Object &p)
       std::cout << "Dependencies: " << md->m_dependencies.description() << "\n";
       std::cout << "  ** main routine **\n";
       Disassemble(_ctxt,_ctxt->_function->ro(md->m_main)->m_code);
-      for (auto i=md->m_locals.begin(); i!= md->m_locals.end(); ++i) {
-	std::cout << "  ** local routine " << i->first << " **\n";
-	Disassemble(_ctxt,_ctxt->_function->ro(i->second)->m_code);
+      for (auto i : md->m_locals) {
+	std::cout << "  ** local routine " << i.first << " **\n";
+	Disassemble(_ctxt,_ctxt->_function->ro(i.second)->m_code);
       }
       return;
     }

@@ -12,8 +12,8 @@ StructData::StructData(ThreadContext *ctxt) : m_data(ctxt->_cell->empty()) {}
 static inline Object orderedFieldList(ThreadContext *ctxt, const StructData *sd) {
   Object fields = ctxt->_list->makeMatrix(sd->m_fields.size(),1);
   Object *fp = ctxt->_list->rw(fields);
-  for (HashMap<int>::const_iterator i=sd->m_fields.begin();i!=sd->m_fields.end();++i)
-    fp[i->second] = i->first;
+  for (auto i : sd->m_fields)
+    fp[i.second] = i.first;
   return fields;
 }
 

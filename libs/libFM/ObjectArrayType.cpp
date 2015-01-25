@@ -2,6 +2,11 @@
 
 using namespace FM;
 
+const Object* containedObjects(const ObjectBase *p, dim_t &count) const {
+  count = p->dims.count();
+  return (static_cast<const Object *>(p->data->ptr) + p->offset); 
+}
+
 void* ObjectArrayType::allocateArray(dim_t size) const {
   void *p = malloc(sizeof(Object)*size);
   Object *t = static_cast<Object *>(p);

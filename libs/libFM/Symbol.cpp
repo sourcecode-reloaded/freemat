@@ -301,7 +301,7 @@ void SymbolPass::walkFunction(const Tree &t, FunctionTypeEnum funcType, symbol_f
       objflags._parameter = 1;
       objflags._object = 1;
       objflags.param_position = 0;
-      for (auto i=_current->syms.begin();i!=_current->syms.end();++i)
+      for (auto i=_current->syms.begin(); i != _current->syms.end(); ++i)
 	{
 	  if (i.value().is_parameter()) {
 	    symbol_flags_t flags = i.value();

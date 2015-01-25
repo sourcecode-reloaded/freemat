@@ -18,6 +18,7 @@ namespace FM
     virtual Object zeroElement() const;
   public: 
     ObjectArrayType(ThreadContext* ctxt, const FMString &name) : ArrayType<Object>(ctxt,name) {}
+    const Object* containedObjects(const ObjectBase *p, dim_t &count) const;
     virtual ~ObjectArrayType() {}
     ndx_t indexOf(const Object &a, const Object &b) {
       dim_t a_size = a.count();

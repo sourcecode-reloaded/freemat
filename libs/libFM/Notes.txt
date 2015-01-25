@@ -2181,7 +2181,3 @@ A GC func must traverse the objects and look for references to
 themselves.  A handle object with a reference count of 1 that is in a
 cycle will never be destroyed - is that right?
 
-
-
-
-

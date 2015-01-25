@@ -144,6 +144,30 @@ Object handir(const Object &args, int nargout, ThreadContext *ctxt) {
 }
 
 
+using children_list = std::set<ObjectBase*>;
+using connections = std::map<ObjectBase*,children_list>;
+
+void trace_children(const Object &list, children_list &my_children) {
+  if (list.isEmpty()) return;
+  
+}
+
+void build_connections(const children_list &nodes, connections &edges) {
+  for (auto me : nodes) {
+    children_list my_children;
+    const ClassData *cd = static_cast<const ClassData *>(me->ptr);
+    trace_children(cd->m_data,my_children);
+  }
+}
+
+void gc(const Object &args, int nargout, ThreadContext *ctxt) {
+  // First, copy the refcnts to the gc_refcnts
+  for (auto p: ctxt->_handles) p->gc_count() = p->count();
+  // Next, build the edge list
+  
+}
+
+
 // Create the built in Handle class
 void makeHandleClass(ThreadContext *ctxt) {
   Object handle = ctxt->_meta->makeScalar();
