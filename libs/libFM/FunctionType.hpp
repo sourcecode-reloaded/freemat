@@ -20,10 +20,9 @@ namespace FM
   public:
     FunctionType(ThreadContext *ctxt) {_ctxt = ctxt;}
     // Note - Only the closure can contain references to handle objects
-    virtual const Object* containedObjects(const ObjectBase *p, dim_t &count) const {
-      const FunctionData *fd = static_cast<const FunctionData *>(p->data->ptr);
-      count = 1;
-      return &(fd->m_closure);
+    void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {
+      const FunctionData *fd = this->ro(p);
+      visitor(fd->m_closure);
     }
     virtual DataCode code() const {return TypeFunction;}
     virtual const FMString& name() const {static FMString _name = "function"; return _name;}

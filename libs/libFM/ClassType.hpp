@@ -110,6 +110,7 @@ namespace FM
     void addProperty(Object &meta, const Object &name, bool constant, 
 		     bool dependent, const Object &default_value,
 		     const Object &getter, const Object &setter);
+    void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {}
     void addMethod(Object &meta, const Object &name, const Object &definition, bool is_static);
     void addSuperClass(Object &meta, const Object &super);
     void addEvent(Object &meta, const Object &event);
@@ -142,6 +143,10 @@ namespace FM
     ClassType(ThreadContext *ctxt);
     virtual DataCode code() const {return TypeClass;}
     virtual const FMString& name() const {static FMString _name = "class"; return _name;}
+    void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const 
+    {
+      visitor(this->ro(p)->m_data);
+    }
     virtual FMString describe(const Object &a);
     virtual FMString brief(const Object &a);
     virtual Object getMethod(const Object &a, const Object &b);

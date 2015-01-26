@@ -19,6 +19,11 @@ namespace FM
   class FunctionHandleType : public AggregateType<FunctionHandleData,ValueSemantics> {
   public:
     FunctionHandleType(ThreadContext *ctxt) {_ctxt = ctxt;}
+    void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {
+      const FunctionHandleData *fhd = this->ro(p);
+      visitor(fhd->m_func);
+      visitor(fhd->m_class);
+    }
     virtual DataCode code() const {return TypeFunctionHandle;}
     virtual const FMString &name() const {static FMString _name = "function handle"; return _name;}
     virtual FMString describe(const Object &a);

@@ -35,14 +35,6 @@
 
 using namespace FM;
 
-class TestData {
-public:
-  Object m_defaults;
-  HashMap<int> m_props;
-  FMString m_name;
-  TestData(ThreadContext *_ctxt) : m_defaults(_ctxt) {}
-};
-
 typedef std::pair<int, int> Edge;
 
 struct cycle_detector : public boost::dfs_visitor<>
@@ -60,19 +52,6 @@ protected:
 };
 
 
-
-class TestType : public AggregateType<TestData,HandleSemantics> {
-public:
-  TestType(ThreadContext *ctxt) {_ctxt = ctxt;}
-  TestData* makeEmptyDataType() {return new TestData(_ctxt);}
-  const FMString& name() const {const static FMString _name = "Test"; return _name;}
-  bool equals(const Object &a, const Object &b) { return false;}
-  FMString describe(const Object &a) {return 
-      FMString("Junk:") + this->ro(a)->m_name + "\n" + 
-      this->ro(a)->m_defaults.description() + "\n";}
-  FMString brief(const Object &a) {return this->describe(a);}
-  DataCode code() const {return TypeCode;}
-};
 
 void compileFunc(ThreadContext *ctxt, FMString name)
 {
@@ -127,9 +106,6 @@ void compileModule(ThreadContext *ctxt, FMString name, HashMap<Object> &classes)
   }
 }
 
-void addStuff(TestType *type, Object metaClass, Object prop) {
-  type->rw(metaClass)->m_defaults = prop;
-}
 
 Object print(const Object &args, int nargout, ThreadContext *ctxt) {
   ctxt->_io->output("\n\nPrint:" + args.description() + "\n\n");
@@ -155,7 +131,7 @@ void trace_children(const Object &list, children_list &my_children) {
 void build_connections(const children_list &nodes, connections &edges) {
   for (auto me : nodes) {
     children_list my_children;
-    const ClassData *cd = static_cast<const ClassData *>(me->ptr);
+    const ClassData *cd = static_cast<const ClassData *>(me->ptr());
     trace_children(cd->m_data,my_children);
   }
 }
@@ -198,34 +174,6 @@ int main(int argc, char *argv[])
   makeHandleClass(ctxt);
 
   boost::timer::cpu_timer timer;
-
-  TestType *ttype = new TestType(ctxt);
-  {
-    Object junk = ttype->makeScalar();
-    Object value = ctxt->_string->makeString("FooFoo");
-    addStuff(ttype,junk,value);
-    std::cout << "junk = " << junk.description() << "\n";
-    ctxt->_globals->insert(std::make_pair("junk",junk));
-  }
-  Object junk2 = ctxt->_globals->at("junk");
-  std::cout << "junk2 = " << junk2.description() << "\n";
-
-  // Create a new meta class
-  // Object fooMeta = ctxt->_meta->empty();
-  // ctxt->_meta->setName(fooMeta,"foo");
-  // ctxt->_meta->addProperty(fooMeta,ctxt->_string->makeString("color"),
-  // 			   ctxt->_string->makeString("RED"));
-  // ctxt->_meta->addProperty(fooMeta,ctxt->_string->makeString("length"),
-  // 			   ctxt->_double->makeScalar(32));
-  // ctxt->_meta->addMethod(fooMeta,ctxt->_string->makeString("incr"),
-  // 			 compileFunc(ctxt,"incr"));
-  // ctxt->_meta->addMethod(fooMeta,ctxt->_string->makeString("decr"),
-  // 			 compileFunc(ctxt,"decr"));
-
-  // ctxt->_globals->insert(std::make_pair("?foo",fooMeta));
-  // Object foo = ctxt->_meta->construct(fooMeta);
-  // ctxt->_globals->insert(std::make_pair("foo",foo));
-
 
   boost::filesystem::path cwd(boost::filesystem::current_path());
   boost::filesystem::directory_iterator p(cwd);

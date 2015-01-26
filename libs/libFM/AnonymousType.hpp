@@ -21,6 +21,11 @@ namespace FM
   class AnonymousType : public AggregateType<AnonymousData,ValueSemantics> {
   public:
     AnonymousType(ThreadContext *ctxt) {_ctxt = ctxt;}
+    virtual void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {
+      const AnonymousData *ad = this->ro(p);
+      for (auto i : ad->m_captured)
+	visitor(i.second);
+    }
     virtual DataCode code() const {return TypeAnonymous;}
     virtual const FMString &name() const {static FMString _name = "anonymous function"; return _name;}
     virtual FMString describe(const Object &a);

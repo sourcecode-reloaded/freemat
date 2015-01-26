@@ -2,9 +2,10 @@
 
 using namespace FM;
 
-const Object* containedObjects(const ObjectBase *p, dim_t &count) const {
-  count = p->dims.count();
-  return (static_cast<const Object *>(p->data->ptr) + p->offset); 
+void ObjectArrayType::visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {
+  const Object * base = static_cast<const Object *>(p->data->ptr) + p->offset;
+  for (dim_t n=0;n<p->dims.count();n++)
+    visitor(base[n]);
 }
 
 void* ObjectArrayType::allocateArray(dim_t size) const {

@@ -20,6 +20,7 @@ namespace FM
   class BuiltInType : public AggregateType<BuiltInData,ValueSemantics> {
   public:
     BuiltInType(ThreadContext *ctxt) {_ctxt = ctxt;}
+    void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {}
     virtual DataCode code() const {return TypeBuiltIn;}
     virtual const FMString& name() const {static FMString _name = "builtin"; return _name;}
     virtual FMString brief(const Object &a);

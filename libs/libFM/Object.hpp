@@ -96,6 +96,9 @@ namespace FM
       capacity = t.capacity;
       handle = t.handle;
     }
+    Type* get_type() const {
+      return type;
+    }
     ref_t& count() {
       return refcnt;
     }

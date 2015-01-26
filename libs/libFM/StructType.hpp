@@ -31,9 +31,8 @@ namespace FM
     void fillEmpties(Object &a);
   public:
     StructType(ThreadContext *ctxt) {_ctxt = ctxt;}
-    virtual const Object* containedObjects(const ObjectBase *p, dim_t &count) const {
-      count = 1;
-      return &(static_cast<const StructData*>(p->data->ptr))->m_data;
+    void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {
+      visitor(this->ro(p)->m_data);
     }
     virtual DataCode code() const {return TypeStruct;}
     virtual const FMString& name() const {static FMString _name = "struct"; return _name;}

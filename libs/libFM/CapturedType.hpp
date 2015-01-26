@@ -22,6 +22,9 @@ namespace FM
     virtual FMString describe(const Object &captured) {
       return "Captured <<" + this->ro(captured)->m_data.description() + ">>\n";
     }
+    virtual void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {
+      visitor(this->ro(p)->m_data);
+    }
     virtual FMString brief(const Object &captured) {
       return "<<" + this->ro(captured)->m_data.brief() + ">>";
     }

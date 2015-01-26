@@ -45,6 +45,10 @@ namespace FM
       assert(p.type()->code() == this->code());
       return static_cast<const DataType *>(p.d->data->ptr);
     }
+    const DataType *ro(const ObjectBase *p) const {
+      assert(p->get_type()->code() == this->code());
+      return static_cast<const DataType *>(p->data->ptr);
+    }
     DataType * rw(Object &p) const {
       assert(p.type()->code() == this->code());
       p.detach();

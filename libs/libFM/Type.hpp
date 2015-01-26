@@ -49,6 +49,11 @@ namespace FM {
   class Tuple;
   struct Data;
 
+  class ObjectVisitor {
+  public:
+    virtual void operator()(const Object &p) = 0;
+  };
+
   class Type {
   protected:
     ThreadContext *_ctxt;
@@ -58,7 +63,7 @@ namespace FM {
     virtual const FMString& name() const = 0;
     virtual void destroyObject(ObjectBase* p) = 0;
     virtual Data* duplicateData(const ObjectBase * p, dim_t &reserve) const = 0;
-    virtual const Object* containedObjects(const ObjectBase *p, dim_t &count) const = 0;
+    virtual void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const = 0;
     virtual Object empty() = 0;
     virtual Object Add(const Object &a, const Object &b);
     virtual Object Multiply(const Object &a, const Object &b);

@@ -25,9 +25,7 @@ namespace FM
       assert(a.isScalar());
       return roComplex(a)[0];
     }
-    inline const Object* containedObjects(const ObjectBase *p, dim_t &count) const { 
-      return nullptr;
-    }
+    void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {}
     inline const Complex<T>* roComplex(const Object &p) const {
       return static_cast<const Complex<T>*>(static_cast<const Complex<T>*>(p.d->data->ptr) + p.d->offset);
     }

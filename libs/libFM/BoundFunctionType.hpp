@@ -19,6 +19,10 @@ namespace FM
   public:
     BoundFunctionType(ThreadContext *ctxt) {_ctxt = ctxt;}
     Object bindFunction(const Object &func, const Object &arg);
+    virtual void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {
+      visitor(this->ro(p)->m_arg);
+      visitor(this->ro(p)->m_func);
+    }
     virtual DataCode code() const {return TypeBoundFunction;}
     virtual const FMString& name() const {static FMString _name = "bound_function"; return _name;}
     virtual FMString describe(const Object &a);
