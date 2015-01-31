@@ -695,6 +695,7 @@ void Compiler::deref(reg_t args, const Tree &s) {
       {
 	emit(OP_PUSH_INT,args,const_t(2));
 	pushList(args,expression(s.first()));
+	break;
       }
     default:
       throw Exception("Unknown expression!" + s.str());

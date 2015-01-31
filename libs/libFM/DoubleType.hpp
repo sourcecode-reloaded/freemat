@@ -21,8 +21,8 @@ namespace FM
     inline Object cmpop(const Object &a, const Object &b, BoolType *o)
     {
       if (a.isScalar() && b.isScalar() && !a.isComplex() && !b.isComplex() && b.type()->code() == TypeDouble) {
-	const double * ap = static_cast<const double*>(a.d->data->ptr);
-	const double * bp = static_cast<const double*>(b.d->data->ptr);
+	const double * ap = this->ro(a);
+	const double * bp = this->ro(b);
 	bool p;
 	Op::template func<bool,double,double,double>(&p,ap,bp);
 	return o->makeScalar(p);
@@ -57,8 +57,8 @@ namespace FM
     inline Object binop(const Object &a, const Object &b)
     {
       if (a.isScalar() && b.isScalar() && !a.isComplex() && !b.isComplex() && b.type()->code() == TypeDouble) {
-	const double * ap = static_cast<const double*>(a.d->data->ptr);
-	const double * bp = static_cast<const double*>(b.d->data->ptr);
+	const double * ap = this->ro(a);
+	const double * bp = this->ro(b);
 	double p;
 	Op::template func<double,double,double,double>(&p,ap,bp);
 	return makeScalar(p);

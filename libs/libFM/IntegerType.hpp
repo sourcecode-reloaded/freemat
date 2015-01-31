@@ -18,7 +18,7 @@ namespace FM
     virtual ~IntegerType() {}
     virtual Type* typeInstance() {return this;}
     template <class Op>
-    Object binop(const Object &a, const Object &b)
+    inline Object binop(const Object &a, const Object &b)
     {
       switch (b.type()->code())
 	{
@@ -30,10 +30,8 @@ namespace FM
 	  throw Exception("Unsupported type combination of " + a.type()->name() + " and " + b.type()->name());
 	}
     }
-    virtual Object Add(const Object &a, const Object &b) 
-    {
-      return binop<OpAdd>(a,b);
-    }
+    virtual Object Add(const Object &a, const Object &b) {return binop<OpAdd>(a,b);}
+    virtual Object Equals(const Object &a, const Object &b);
     virtual void computeArrayFormatInfo(FMFormatMode mode, const Object &a, ArrayFormatInfo &format);
     virtual void printElement(const Object &a, const ArrayFormatInfo &format, ndx_t offset);
   };

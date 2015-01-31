@@ -147,6 +147,7 @@ namespace FM
     {
       visitor(this->ro(p)->m_data);
     }
+    bool isHandle(const Object &a);
     virtual FMString describe(const Object &a);
     virtual FMString brief(const Object &a);
     virtual Object getMethod(const Object &a, const Object &b);

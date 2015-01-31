@@ -101,6 +101,8 @@ ArrayFormatInfo.cpp
 ArrayFormatInfo.hpp
 ModuleType.cpp
 BuiltInType.cpp
+GarbageCollector.cpp
+HandleClass.cpp
 )
 target_link_libraries(FMT ${Boost_LIBRARIES} readline ${ACCELERATE_LIB})
 

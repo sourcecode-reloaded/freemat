@@ -30,6 +30,7 @@ namespace FM
     virtual Object deref(const Object &a);
     Object pass();
     void setAddressAndName(Object &a, FMString name, fncptr b);
+    Object makeBuiltin(FMString name, fncptr b);
   };
 };
 

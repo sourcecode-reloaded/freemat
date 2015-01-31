@@ -143,17 +143,17 @@ namespace FM
     inline Object(ObjectBase *p) : d(p) {
       assert(d);
       d->refcnt++;
-      if (isClass()) debugTrap("Create",d);
+      //      if (isClass()) debugTrap("Create",d);
     }
     inline Object(const Object &copy) : d(copy.d) {
       d->refcnt++;
-      if (isClass()) debugTrap("Copy",d);
+      //      if (isClass()) debugTrap("Copy",d);
     }
     inline ~Object() {
       bool isc = isClass();
       if ((--d->refcnt) == 0) {
 	d->type->destroyObject(d);
-	if (isc) debugTrap("Delete",d);
+	// if (isc) debugTrap("Delete",d);
 	d = 0;
       }
     }
@@ -167,6 +167,10 @@ namespace FM
       d->refcnt++;
       --q->refcnt;
       return q;
+    }
+    // FIXME - this shouldn't be available
+    inline ObjectBase* raw() const {
+      return d;
     }
     inline const Tuple& dims() const {
       return d->dims;
@@ -233,16 +237,16 @@ namespace FM
       if (this == &copy) return *this;
       if ((--d->refcnt) == 0)
 	d->type->destroyObject(d);
-      if (isClass()) debugTrap("Assign_old",d);
+      //      if (isClass()) debugTrap("Assign_old",d);
       d = copy.d;
       assert(d);
       d->refcnt++;
-      if (isClass()) debugTrap("Assign_new",d);
+      //      if (isClass()) debugTrap("Assign_new",d);
       return *this;
     }
     inline void detach() 
     {
-      if (isClass()) debugTrap("Detach",d);
+      //      if (isClass()) debugTrap("Detach",d);
       if (!d->handle) {
 	if (d->refcnt > 1) {
 	  d = new ObjectBase(*d);
@@ -288,7 +292,7 @@ namespace FM
     friend class StringType;
     friend class StructType;
     friend class ListType;
-
+    friend class VisitAncestors;
 
     bool operator==(const Object& b) const {
       if (type()->code() != b.type()->code()) return false;

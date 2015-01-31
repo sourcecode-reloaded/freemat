@@ -2181,3 +2181,67 @@ A GC func must traverse the objects and look for references to
 themselves.  A handle object with a reference count of 1 that is in a
 cycle will never be destroyed - is that right?
 
+Borrowing the algorithm from Python - uses five passes:
+
+1.  Copy the object reference count for every handle to gc_count (a
+temp)
+2.  Trace every object to find out which handles it points to - store
+in a graph
+3.  For each object, decrement the gc_count of every object that it
+points to.
+4.  For any objects that have a non-zero residual count, increment the
+count of all objects they point to.
+5.  Free objects with a zero count.
+
+Not sure if scripts are still leaking references... Need to
+investigate.  
+
+A problem with the current implementation, by describing the
+connections with a set, we have lost the multiplicity of the
+connections.  So, if, for example, a -> b five times (e.g., 
+
+a = {b,b,b,b,b}
+
+Then unless we keep track of this multiplicity, we loose the
+information.
+
+Done - replaced the set with a multi-set.  The reference cycle issue
+is now resolved.
+
+********************************************************************************
+
+a = {}
+a = [a,3] causes a crash
+a = [a,{3}] returns a 0x1 array
+
+Are dynamic subscripts supported? - Not yet!
+
+Also, cannot seem to do
+
+properties
+  goo 
+end
+methods
+  function x
+     x.goo.foo{end+1} = p
+  end 
+end
+
+Or more simply:
+
+
+
+What about the case:
+
+a = {}
+a = [a,3]
+
+This exposes the problem with NCat.
+
+Also, operators are missing for most classes.
+
+
+********************************************************************************
+
+The metaclass operator "?"
+

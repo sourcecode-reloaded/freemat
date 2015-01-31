@@ -36,6 +36,13 @@ Object ClassMetaType::invokeConstructor(const Object &meta, const Object &self, 
   return _ctxt->_list->first(p);
 }
 
+bool ClassType::isHandle(const Object &a) {
+  const ClassData *cd = this->ro(a);
+  const ClassMetaData *cmd = _ctxt->_meta->ro(cd->metaClass);
+  return cmd->m_ishandle;
+}
+
+
 Object ClassMetaType::construct(const Object &meta) {
   ClassData *cd = new ClassData(_ctxt);
   cd->metaClass = meta;

@@ -18,6 +18,8 @@
 #include "fnv.hh"
 #include "HashMap.hpp"
 #include "Symbol.hpp"
+#include "GarbageCollector.hpp"
+#include "HandleClass.hpp"
 
 //#include <valarray>
 
@@ -109,56 +111,24 @@ void compileModule(ThreadContext *ctxt, FMString name, HashMap<Object> &classes)
 
 Object print(const Object &args, int nargout, ThreadContext *ctxt) {
   ctxt->_io->output("\n\nPrint:" + args.description() + "\n\n");
-  return ctxt->_double->empty();
+  return ctxt->_list->empty();
 }
 
 Object handir(const Object &args, int nargout, ThreadContext *ctxt) {
   for (auto p : ctxt->_handles) {
     ctxt->_io->output(" Handle class: " + Stringify(p) + "\n");
   }
-  return ctxt->_double->empty();
+  return ctxt->_list->empty();
+}
+
+Object numel(const Object &args, int nargout, ThreadContext *ctxt) {
+  return ctxt->_list->makeScalar(ctxt->_double->makeScalar(ctxt->_list->ro(args)[0].count()));
 }
 
 
-using children_list = std::set<ObjectBase*>;
-using connections = std::map<ObjectBase*,children_list>;
-
-void trace_children(const Object &list, children_list &my_children) {
-  if (list.isEmpty()) return;
-  
-}
-
-void build_connections(const children_list &nodes, connections &edges) {
-  for (auto me : nodes) {
-    children_list my_children;
-    const ClassData *cd = static_cast<const ClassData *>(me->ptr());
-    trace_children(cd->m_data,my_children);
-  }
-}
-
-void gc(const Object &args, int nargout, ThreadContext *ctxt) {
-  // First, copy the refcnts to the gc_refcnts
-  for (auto p: ctxt->_handles) p->gc_count() = p->count();
-  // Next, build the edge list
-  
-}
+// Create an addlistener method for the handle class
 
 
-// Create the built in Handle class
-void makeHandleClass(ThreadContext *ctxt) {
-  Object handle = ctxt->_meta->makeScalar();
-  ClassMetaData *cmd = ctxt->_meta->rw(handle);
-  ctxt->_meta->addProperty(handle,
-			   ctxt->_string->makeString("_ishandle"),
-			   true, // isconstant
-			   false, // isdependent
-			   ctxt->_bool->makeScalar(true), // value
-			   ctxt->_double->empty(), // getter
-			   ctxt->_double->empty());
-  cmd->m_name = ctxt->_string->makeString("handle");
-  cmd->m_constructor = ctxt->_builtin->pass();
-  ctxt->_globals->insert(std::make_pair("handle",handle));
-}
 
 
 int main(int argc, char *argv[])
@@ -172,6 +142,7 @@ int main(int argc, char *argv[])
   ThreadContext *ctxt = BuildNewThreadContext(&io);
 
   makeHandleClass(ctxt);
+  //  makeListenerClass(ctxt);
 
   boost::timer::cpu_timer timer;
 
@@ -317,13 +288,10 @@ int main(int argc, char *argv[])
     ctxt->_globals->insert(std::make_pair("cap2",cap2));
   }
 
-  Object print_builtin = ctxt->_builtin->empty();
-  ctxt->_builtin->setAddressAndName(print_builtin,"print",print);
-  ctxt->_globals->insert(std::make_pair("print",print_builtin));
-
-  Object handir_builtin = ctxt->_builtin->empty();
-  ctxt->_builtin->setAddressAndName(handir_builtin,"handir",handir);
-  ctxt->_globals->insert(std::make_pair("handir",handir_builtin));
+  ctxt->_globals->insert(std::make_pair("print",ctxt->_builtin->makeBuiltin("print",print)));
+  ctxt->_globals->insert(std::make_pair("handir",ctxt->_builtin->makeBuiltin("handir",handir)));
+  ctxt->_globals->insert(std::make_pair("numel",ctxt->_builtin->makeBuiltin("numel",numel)));
+  ctxt->_globals->insert(std::make_pair("gc",ctxt->_builtin->makeBuiltin("gc",builtin_gc)));
 
   // Global symbols
   for (auto i=ctxt->_globals->begin(); i != ctxt->_globals->end(); ++i)

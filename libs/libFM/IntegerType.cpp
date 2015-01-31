@@ -1,6 +1,7 @@
 #include "IntegerType.hpp"
 #include "ThreadContext.hpp"
 #include "Type.hpp"
+#include "BoolType.hpp"
 
 using namespace FM;
 
@@ -20,6 +21,27 @@ static int GetNominalWidthInteger(const T* qp, dim_t len) {
     maxdigit = j;
   }
   return maxdigit;
+}
+
+template <class T, FM::DataCode codeNum, class Op>
+static inline Object int_cmpop(const Object &a, const Object &b, BoolType *o)
+{
+  if (a.isScalar() && b.isScalar() && !a.isComplex() && !b.isComplex() && b.type()->code() == a.type()->code()) {
+    const T * ap = static_cast<IntegerType<T,codeNum>*>(a.type())->ro(a);
+    const T * bp = static_cast<IntegerType<T,codeNum>*>(b.type())->ro(b);
+    bool p;
+    Op::template func<bool,T,T,T>(&p,ap,bp);
+    return o->makeScalar(p);
+  }
+  switch (b.type()->code())
+    {
+    case TypeDouble:
+      return dispatch_cmpop<bool,T,double,double,Op>(a,b,o);
+    case codeNum:
+      return dispatch_cmpop<bool,T,T,T,Op>(a,b,o);
+    default:
+      throw Exception("Unsupported type combination of " + a.type()->name() + " and " + b.type()->name());
+    }
 }
 
 template<class T, FM::DataCode codeNum>
@@ -43,6 +65,11 @@ void IntegerType<T,codeNum>::printElement(const Object &a, const ArrayFormatInfo
       Type::_ctxt->_io->output("% *lld",format.width,(int64_t)(dp[ndx].r));
       Type::_ctxt->_io->output("% *+lldi",format.width,(int64_t)(dp[ndx].i));
     }
+}
+
+template <class T, FM::DataCode codeNum>
+Object IntegerType<T,codeNum>::Equals(const Object &a, const Object &b) {
+  return int_cmpop<T,codeNum,OpEQ>(a,b,Type::_ctxt->_bool);
 }
 
 template class FM::IntegerType<bool,TypeBool>;

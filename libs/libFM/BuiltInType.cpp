@@ -45,8 +45,13 @@ static Object _pass(const Object &args, int nargout, ThreadContext *ctxt) {
 
 Object BuiltInType::pass()
 {
-  Object fpass = this->makeScalar();
-  this->rw(fpass)->m_name = _ctxt->_string->makeString("pass");
-  this->rw(fpass)->m_ptr = _pass;
-  return fpass;
+  return this->makeBuiltin("pass",_pass);
+}
+
+Object BuiltInType::makeBuiltin(FMString name, fncptr b)
+{
+  Object f = this->makeScalar();
+  this->rw(f)->m_name = _ctxt->_string->makeString(name);
+  this->rw(f)->m_ptr = b;
+  return f;
 }
