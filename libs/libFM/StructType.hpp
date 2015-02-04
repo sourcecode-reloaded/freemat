@@ -29,6 +29,7 @@ namespace FM
     void mergeFields(Object &a, const Object &b);
     void reorderFields(Object &a, const Object &b);
     void fillEmpties(Object &a);
+    Object expandStruct(const Object &s, const HashMap<int> &expanded_fields);
   public:
     StructType(ThreadContext *ctxt) {_ctxt = ctxt;}
     void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {
@@ -42,6 +43,12 @@ namespace FM
     virtual void setField(Object &a, const Object &args, const Object &b);
     virtual Object getParens(const Object &a, const Object &args);
     virtual void setParens(Object &a, const Object &args, const Object &b);
+    virtual Object NCat(const Object &p, int dim);
+    virtual Object convert(const Object &a) {
+      if (a.typeCode() == TypeStruct) return a;
+      if (a.isEmpty()) return this->empty();
+      throw Exception("Cannot convert objects of type " + a.type()->name() + " to structs");
+    }
     virtual bool equals(const Object &a, const Object &b)
     {
       // FIXME - allow struct equality tests

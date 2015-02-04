@@ -2272,3 +2272,5 @@ Problems with NCAT
 a = {}
 a = [a,{3}]
 
+NCAT works for the basic types.  Only problem is objects.  Indeed,
+overloading doesn't work for objects at all.

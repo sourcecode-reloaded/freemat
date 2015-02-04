@@ -45,7 +45,7 @@ FMString StructType::describe(const Object &a) {
 
 Object StructType::getField(const Object &a, const Object &b) {
   const StructData *sd = this->ro(a);
-  const HashMap<int>::const_iterator i = sd->m_fields.find(b);
+  auto i = sd->m_fields.find(b);
   if (i == sd->m_fields.end()) throw Exception("Field " + b.description() + " is not defined for this struct");
   int ndx = i->second;
   Object output = _ctxt->_list->makeMatrix(a.count(),1);
@@ -92,11 +92,8 @@ void StructType::mergeFields(Object &a, const Object &b) {
   Object bfields = orderedFieldList(_ctxt,bd);
   const Object *bf_ptr = _ctxt->_list->ro(bfields);
   for (int j=0;j<bfields.count();j++)
-    {
-      const HashMap<int>::const_iterator i = ad->m_fields.find(bf_ptr[j]);
-      if (i == ad->m_fields.end())
-	_ctxt->_list->push(newfields,bf_ptr[j]);
-    }
+    if (ad->m_fields.find(bf_ptr[j]) == ad->m_fields.end())
+      _ctxt->_list->push(newfields,bf_ptr[j]);
   // add newfields
   std::cout << "new fields: " << newfields.description() << "\n";
   addNewFields(a,newfields);
@@ -200,4 +197,61 @@ void StructType::setField(Object &a, const Object &args, const Object &b) {
   std::cout << "result: " << a.description() << "\n";
 }
 
+Object StructType::NCat(const Object &p, int dim) {
+  // Create a master list of fields
+  const Object *ip = _ctxt->_list->ro(p);
+  HashMap<int> group_fields;
+  int fieldcounter = 0;
+  for (ndx_t i=0;i<p.count();i++) {
+    const StructData *sd = this->ro(ip[i]);
+    for (auto field : sd->m_fields)
+      if (group_fields.find(field.first) == group_fields.end())
+	group_fields.insert(std::make_pair(field.first,fieldcounter++));
+  }
+  Object uniform = _ctxt->_list->makeMatrix(p.count(),1);
+  Object *rip = _ctxt->_list->rw(uniform);
+  // For each struct, permute the data and fill it so that it fits
+  for (ndx_t i=0;i<p.count();i++) 
+    rip[i] = expandStruct(ip[i],group_fields);
+  // Now that the uniforms are all of the same structure, we can kick the
+  // problem to NCat for the cell array
+  Object merged = _ctxt->_cell->NCat(uniform,dim);
+  // Create a new structure to return
+  Object ret = this->empty();
+  StructData *rd = this->rw(ret);
+  rd->m_fields = group_fields;
+  rd->m_data = merged;
+  ret.d->dims = rd->m_data.dims();
+  return ret;
+}
 
+Object StructType::expandStruct(const Object &s, const HashMap<int> &expanded_fields) {
+  // Set up the permutation
+  std::vector<int> permutation;
+  const StructData *sd = this->ro(s);
+  int oldfields_count = sd->m_fields.size();
+  permutation.resize(oldfields_count);
+  for (auto field : sd->m_fields) 
+    permutation[field.second] = expanded_fields.at(field.first);
+  Object outdata = _ctxt->_cell->zeroArrayOfSize(sd->m_data.dims(),false);
+  Object *op = _ctxt->_cell->rw(outdata);
+  const Object *ip = _ctxt->_cell->ro(sd->m_data);
+  int newfields_count = expanded_fields.size();
+  for (ndx_t m=0;m<sd->m_data.count();m++)
+    {
+      const Object *sf = _ctxt->_list->ro(ip[m]);
+      op[m] = _ctxt->_list->makeMatrix(newfields_count,1);
+      Object *rp = _ctxt->_list->rw(op[m]);
+      for (int k=0;k<oldfields_count;k++)
+	rp[permutation[k]] = sf[k];
+    }
+  return outdata;
+  /*
+  Object ret = this->empty();
+  StructData *rd = this->rw(ret);
+  rd->m_fields = expanded_fields;
+  rd->m_data = outdata;
+  ret.d->dims = rd->m_data.dims();
+  return ret;
+  */
+}
