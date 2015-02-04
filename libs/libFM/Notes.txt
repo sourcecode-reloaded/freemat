@@ -2245,3 +2245,30 @@ Also, operators are missing for most classes.
 
 The metaclass operator "?"
 
+This operator introduces another problem.  Consider the sequence:
+
+p = ?foo;
+
+p
+
+The expected result is that the second line prints the details of the
+metaclass.  But what happens in the current design is that p gets
+OP_DEREFed, which triggers the constructor for the underlying class.
+
+>> deferred - until later...
+
+********************************************************************************
+
+nargin? nargout? varargin? varargout?
+
+Finish NCAT?
+
+Global
+
+Persistent
+
+Problems with NCAT
+
+a = {}
+a = [a,{3}]
+

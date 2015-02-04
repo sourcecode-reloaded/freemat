@@ -73,3 +73,4 @@ const op_t OP_MAKE_FHANDLE = 88;
 const op_t OP_GET_METHOD = 89;
 const op_t OP_MAKE_ANONYMOUS = 90;
 const op_t OP_CLEAR = 91;
+const op_t OP_LOAD_META = 92;

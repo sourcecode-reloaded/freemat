@@ -77,6 +77,7 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_GET_METHOD: return three_registers;
     case OP_MAKE_ANONYMOUS: return three_registers;
     case OP_CLEAR: return one_register;
+    case OP_LOAD_META: return two_registers;
     default:
       return three_registers;
   }
@@ -162,6 +163,7 @@ std::string getOpCodeName(op_t opcode)
     case OP_GET_METHOD: return "GET_METHOD";
     case OP_MAKE_ANONYMOUS: return "MAKE_ANONYMOUS";
     case OP_CLEAR: return "CLEAR";
+    case OP_LOAD_META: return "LOAD_META";
     default: return "UNK";
   }
 }

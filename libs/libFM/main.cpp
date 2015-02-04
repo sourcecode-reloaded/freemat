@@ -126,6 +126,10 @@ Object numel(const Object &args, int nargout, ThreadContext *ctxt) {
 }
 
 
+Object int32(const Object &args, int nargout, ThreadContext *ctxt) {
+  return ctxt->_list->makeScalar(ctxt->_int32->convert(ctxt->_list->ro(args)[0]));
+}
+
 // Create an addlistener method for the handle class
 
 
@@ -291,6 +295,7 @@ int main(int argc, char *argv[])
   ctxt->_globals->insert(std::make_pair("print",ctxt->_builtin->makeBuiltin("print",print)));
   ctxt->_globals->insert(std::make_pair("handir",ctxt->_builtin->makeBuiltin("handir",handir)));
   ctxt->_globals->insert(std::make_pair("numel",ctxt->_builtin->makeBuiltin("numel",numel)));
+  ctxt->_globals->insert(std::make_pair("int32",ctxt->_builtin->makeBuiltin("int32",int32)));
   ctxt->_globals->insert(std::make_pair("gc",ctxt->_builtin->makeBuiltin("gc",builtin_gc)));
 
   // Global symbols

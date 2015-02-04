@@ -505,6 +505,17 @@ void VM::executeCodeObject(const Object &codeObject)
 		  REG1 = ap[0].type()->DoubleColon(ap[0],ap[1],ap[2]);
 		  break;
 		}
+	      case OP_LOAD_META:
+		{
+		  FMString classname = _ctxt->_string->getString(REG2);
+		  if (_ctxt->_globals->count(classname) == 0)
+		    throw Exception("No metaclass defined with name:" + classname);
+		  REG1 = _ctxt->_globals->at(classname);
+		  if (!REG1.is(TypeMeta))
+		    throw Exception("Name: " + classname + " is not associated with a class");
+		  // FIXME - return a proxy object, or convert to a regular class at this point.
+		  break;
+		}
 	      case OP_LOAD_CONST:
 		REG1 = const_list[get_constant(insn)];
 		break;

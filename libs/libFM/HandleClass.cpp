@@ -57,12 +57,10 @@ void FM::makeListenerClass(ThreadContext *ctxt) {
   ctxt->_globals->insert(std::make_pair("event",event_space));
 }
 
-
+/*
 Object addlistener(const Object &args, int nargout, ThreadContext *ctxt) {
   if (args.count() != 3)
     throw Exception("addlistener requires three arguments: obj, eventname, callback");
-  const Object &self = ctxt->_list->ro(args)[0];
-  const Object &eventname = ctxt->_list->ro(args)[1];
   const Object &callback = ctxt->_list->ro(args)[2];
   std::cout << "Check that eventname is valid\n";
   const ClassData *cd = ctxt->_class->ro(self);
@@ -70,6 +68,18 @@ Object addlistener(const Object &args, int nargout, ThreadContext *ctxt) {
   ndx_t ndx = ctxt->_list->indexOf(cmd->m_events,eventname);
   if (ndx == -1) throw Exception("Eventname " + eventname.description() + " is not valid");
   return ctxt->_list->makeScalar(eventname);
+}
+*/
+
+Object is_valid_event(const Object &args, int nargout, ThreadContext *ctxt) {
+  if (args.count() != 2)
+    throw Exception("is_valid_event requires two arguments: obj, eventname");
+  const Object &self = ctxt->_list->ro(args)[0];
+  const Object &eventname = ctxt->_list->ro(args)[1];
+  const ClassData *cd = ctxt->_class->ro(self);
+  const ClassMetaData *cmd = ctxt->_meta->ro(cd->metaClass);
+  ndx_t ndx = ctxt->_list->indexOf(cmd->m_events,eventname);
+  return ctxt->_list->makeScalar(ctxt->_bool->makeScalar(ndx != -1));
 }
 
 // Create the built in Handle class
@@ -83,6 +93,10 @@ void FM::makeHandleClass(ThreadContext *ctxt) {
 			   ctxt->_bool->makeScalar(true), // value
 			   ctxt->_double->empty(), // getter
 			   ctxt->_double->empty());
+  ctxt->_meta->addMethod(handle,
+			 ctxt->_string->makeString("is_valid_event"),
+			 ctxt->_builtin->makeBuiltin("is_valid_event",is_valid_event),
+			 false); // TODO remove boolean arguments - they are unclear
   // ctxt->_meta->addProperty(handle,
   // 			   ctxt->_string->makeString("_listeners"),
   // 			   false, // isconstant

@@ -57,6 +57,58 @@ namespace FM
   inline ndx_t indexOfStringInList(ThreadContext *ctxt, const Object &list, const FMString &string) {
     return ctxt->_list->indexOf(list,ctxt->_string->makeString(string));
   }
+
+  // TODO add remaining integer types
+  inline Object convertToCode(ThreadContext *ctxt, const Object &list, DataCode code) {
+    Type *tptr = nullptr;
+    switch (code) {
+    case TypeCellArray:
+      tptr = reinterpret_cast<Type*>(ctxt->_cell);
+      break;
+    case TypeStruct:
+      tptr = reinterpret_cast<Type*>(ctxt->_struct);
+      break;
+    case TypeString:
+      tptr = reinterpret_cast<Type*>(ctxt->_string);
+      break;
+    case TypeBool:
+      tptr = reinterpret_cast<Type*>(ctxt->_bool);
+      break;
+    case TypeInt32:
+      tptr = reinterpret_cast<Type*>(ctxt->_int32);
+      break;
+    case TypeUInt32:
+      tptr = reinterpret_cast<Type*>(ctxt->_uint32);
+      break;
+    case TypeInt64:
+      tptr = reinterpret_cast<Type*>(ctxt->_int64);
+      break;
+    case TypeUInt64:
+      tptr = reinterpret_cast<Type*>(ctxt->_uint64);
+      break;
+    case TypeSingle:
+      tptr = reinterpret_cast<Type*>(ctxt->_single);
+      break;
+    case TypeDouble:
+      tptr = reinterpret_cast<Type*>(ctxt->_double);
+      break;
+    case TypeIndex:
+      tptr = reinterpret_cast<Type*>(ctxt->_index);
+      break;
+    default:
+      throw Exception("Cannot convert objects to an invalid type");
+    }
+    Object output = ctxt->_list->makeMatrix(list.count(),1);
+    Object *op = ctxt->_list->rw(output);
+    const Object *ip = ctxt->_list->ro(list);
+    for (dim_t i=0;i<list.count();i++) {
+      if (ip[i].typeCode() == code)
+	op[i] = ip[i];
+      else
+	op[i] = tptr->convert(ip[i]);
+    }
+    return output;
+  }
 }
 
 #endif

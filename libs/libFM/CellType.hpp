@@ -27,6 +27,10 @@ namespace FM
       else
 	return(a.dims().toString() + " " + this->name() + " array");
     }
+    virtual Object convert(const Object &a) {
+      if (a.typeCode() == TypeCellArray) return a;
+      return this->makeScalar(a);
+    }
     void setBraces(Object &a, const Object &args, const Object &b);
     virtual Object getBraces(const Object &a, const Object &args);
     void computeArrayFormatInfo(FMFormatMode, const Object &a, ArrayFormatInfo &format) {

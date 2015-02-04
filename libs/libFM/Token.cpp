@@ -48,7 +48,8 @@ bool Token::isUnaryOperator() const {
 	  || (m_tok == TOK_UNARY_MINUS) || 
 	  (m_tok == TOK_UNARY_PLUS) ||
 	  (m_tok == TOK_INCR) ||
-	  (m_tok == TOK_DECR));
+	  (m_tok == TOK_DECR) ||
+	  (m_tok == '?'));
 }
 
 

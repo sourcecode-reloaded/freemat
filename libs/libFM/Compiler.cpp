@@ -1121,6 +1121,14 @@ reg_t Compiler::expression(const Tree &t) {
     } 
   case TOK_GET_METHOD:
     return doGetMethod(t);
+  case '?':
+    {
+      if (!(t.first().is(TOK_VARIABLE) && t.first().numChildren() == 1))
+	throw Exception("The ? operator can only be used with identifiers, i.e. a = ?sclass");
+      reg_t x = getRegister();
+      emit(OP_LOAD_META,x,fetchConstantString(t.first().first().text()));
+      return x;
+    }
   default:
     throw Exception("Unrecognized expression!");
   }  
