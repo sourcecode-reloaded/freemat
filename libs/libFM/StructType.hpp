@@ -54,6 +54,9 @@ namespace FM
       // FIXME - allow struct equality tests
       return false;
     }
+    void updateDims(Object &s) {
+      s.d->dims = this->ro(s)->m_data.dims();
+    }
   };
 }
 

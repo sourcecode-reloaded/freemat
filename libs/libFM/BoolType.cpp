@@ -4,6 +4,16 @@
 
 using namespace FM;
 
+Object BoolType::Not(const Object &a)
+{
+  Object output = _ctxt->_bool->zeroArrayOfSize(a.dims(),false);
+  bool *op = this->rw(output);
+  const bool *ip = this->ro(a);
+  for (dim_t i=0;i<a.count();i++)
+    op[i] = !ip[i];
+  return output;
+}
+
 Object BoolType::asIndexNoBoundsCheck(const Object &a)
 {
   const bool *ip = this->ro(a);

@@ -8,13 +8,12 @@
 #include "Parser.hpp"
 #include "EndRemover.hpp"
 #include "NestedFunctionMover.hpp"
+#include "LineNumbers.hpp"
 
 //#include "Algorithms.hpp"
 //#include "Print.hpp"
 //#include "Math.hpp"
 //#include "Struct.hpp"
-
-
 
 using namespace FM;
 
@@ -403,7 +402,7 @@ void Compiler::freeRegister(int index)
   Instruction i;
   i._opcode = OP_CLEAR | (index << shift_reg1);
   i._target = 0;
-  i._position = 0;
+  i._position = _currentLineNo;
   if ((_code) && (_code->_currentBlock))
     _code->_currentBlock->_insnlist.push_back(i);
 }
@@ -420,7 +419,7 @@ void Compiler::emit(int8_t opcode, reg_t reg1, BasicBlock *blk)
   Instruction i;
   i._opcode = opcode | (reg1->num() << shift_reg1);
   i._target = blk;
-  i._position = 0;
+  i._position = _currentLineNo;
   _code->_currentBlock->_insnlist.push_back(i);
 }
 
@@ -429,7 +428,7 @@ void Compiler::emit(int8_t opcode, BasicBlock *blk)
   Instruction i;
   i._opcode = opcode;
   i._target = blk;
-  i._position = 0;
+  i._position = _currentLineNo;
   _code->_currentBlock->_insnlist.push_back(i);
 }
 
@@ -438,7 +437,7 @@ void Compiler::emit(int8_t opcode, reg_t reg1, reg_t reg2, reg_t reg3)
   Instruction i;
   i._opcode = opcode | (insn_t(reg1->num()) << shift_reg1) | (insn_t(reg2->num()) << shift_reg2) | (insn_t(reg3->num()) << shift_reg3);
   i._target = 0;
-  i._position = 0;
+  i._position = _currentLineNo;
   _code->_currentBlock->_insnlist.push_back(i);
 }
 
@@ -447,7 +446,7 @@ void Compiler::emit(int8_t opcode, reg_t reg1, reg_t reg2, const_t ndx)
   Instruction i;
   i._opcode = opcode | (insn_t(reg1->num()) << shift_reg1) | (insn_t(reg2->num()) << shift_reg2) | (insn_t(ndx) << shift_constant);
   i._target = 0;
-  i._position = 0;
+  i._position = _currentLineNo;
   _code->_currentBlock->_insnlist.push_back(i);
 }
 
@@ -456,7 +455,7 @@ void Compiler::emit(int8_t opcode, reg_t reg1, reg_t reg2)
   Instruction i;
   i._opcode = opcode | (insn_t(reg1->num()) << shift_reg1) | (insn_t(reg2->num()) << shift_reg2);
   i._target = 0;
-  i._position = 0;
+  i._position = _currentLineNo;
   _code->_currentBlock->_insnlist.push_back(i);
 }
 
@@ -465,7 +464,7 @@ void Compiler::emit(int8_t opcode, reg_t reg1)
   Instruction i;
   i._opcode = opcode | (insn_t(reg1->num()) << shift_reg1);
   i._target = 0;
-  i._position = 0;
+  i._position = _currentLineNo;
   _code->_currentBlock->_insnlist.push_back(i);
 }
 
@@ -475,7 +474,7 @@ void Compiler::emit(int8_t opcode, reg_t reg1, const_t arg)
   Instruction i;
   i._opcode = opcode | (insn_t(reg1->num()) << shift_reg1) | (insn_t(arg) << shift_constant);
   i._target = 0;
-  i._position = 0;
+  i._position = _currentLineNo;
   _code->_currentBlock->_insnlist.push_back(i);
 }
 
@@ -484,7 +483,7 @@ void Compiler::emit(int8_t opcode, const_t arg)
   Instruction i;
   i._opcode = opcode | (insn_t(arg) << shift_constant);
   i._target = 0;
-  i._position = 0;
+  i._position = _currentLineNo;
   _code->_currentBlock->_insnlist.push_back(i);
 }
 
@@ -493,7 +492,7 @@ void Compiler::emit(int8_t opcode)
   Instruction i;
   i._opcode = opcode;
   i._target = 0;
-  i._position = 0;
+  i._position = _currentLineNo;
   _code->_currentBlock->_insnlist.push_back(i);
 }
 
@@ -620,20 +619,25 @@ void Compiler::assignment(const Tree &t, bool printIt, reg_t b) {
       if (printIt) emit(OP_PRINT,b);
       return;
     }
-  bool subsasgn_case = true;
   // Check for obj.property 
-  if (_code->_isgetset && (varname == _code->_objectName) &&
-      t.second().is('.') && (t.second().first().text() == _code->_propertyName))
-    subsasgn_case = false;
   reg_t args = flattenDereferenceTreeToStack(t,1);
   symbol_flags_t symflags = _code->_syms->syms[varname];
+  bool use_overloads = true;
+  if (_code->_isgetset && symflags.is_object() &&
+      t.second().is('.') && (t.second().first().text() == _code->_propertyName))
+    use_overloads = false;
+  if (_code->_issubsasgn && symflags.is_object())
+    use_overloads = false;
+  if (_code->_issubsasgn) {
+    std::cout << "subsasgn case\n";
+  }
   if (symflags.is_global())
     emit(OP_SUBSASGN_GLOBAL,args,b,getNameID(varname));
   else if (symflags.is_persistent())
     emit(OP_SUBSASGN_PERSIST,args,b,getNameID(varname));
   else if (symflags.is_local())
     {
-      if (subsasgn_case)
+      if (use_overloads)
 	emit(OP_SUBSASGN,args,b,getNameID(varname));
       else
 	emit(OP_SUBSASGN_NOGS,args,b,getNameID(varname));
@@ -844,13 +848,15 @@ void Compiler::rhs(reg_t list, const Tree &t) {
   symbol_flags_t symflags = _code->_syms->syms[varname];
   if (t.numChildren() > 1)
     {
-      bool subsref_case = true;
+      bool use_overloads = true;
       // Check for the case of obj.prop inside a getter
-      if (_code->_isgetset && (varname == _code->_objectName) && 
-	  t.second().is('.') && (t.second().first().text() == _code->_propertyName))
-	subsref_case = false;
+      if (_code->_isgetset && symflags.is_object() &&
+	  t.second().is('.') &&
+	  (t.second().first().text() == _code->_propertyName))
+	use_overloads = false;
+      if (_code->_issubsref && symflags.is_object()) use_overloads = false;
       // Check if we have A(...), where A isn't marked as global or persistent
-      if (t.second().is(TOK_PARENS) && !symflags.is_global() && !symflags.is_persistent()  && !symflags.is_nested())
+      if (t.second().is(TOK_PARENS) && !symflags.is_global() && !symflags.is_persistent()  && !symflags.is_nested() && use_overloads)
 	{
 	  // First, get the arguments
 	  reg_t argv = startList();
@@ -864,7 +870,7 @@ void Compiler::rhs(reg_t list, const Tree &t) {
       else
 	{
 	  x = fetchVariable(varname,symflags);
-	  if (subsref_case)
+	  if (use_overloads)
 	    emit(OP_SUBSREF,list,x,flattenDereferenceTreeToStack(t,1));
 	  else
 	    emit(OP_SUBSREF_NOGS,list,x,flattenDereferenceTreeToStack(t,1));
@@ -1479,7 +1485,10 @@ void Compiler::reset() {
   }
 }
 
+void PrintModule(Module* mod);
+
 void Compiler::compile(const FMString &code) {
+  _currentLineNo = 0;
   _module = new Module(_ctxt);
   _module->_modtype = FunctionModuleType;
   std::cout << ">>>>_module = " << _module << "\n";
@@ -1504,6 +1513,7 @@ void Compiler::compile(const FMString &code) {
   _symsRoot = p.getRoot();
   _currentSym = _symsRoot;
   walkCode(t);
+  PrintModule(_module);
 }
 
 void Compiler::insertPrefix(FMString funcName, FunctionTypeEnum funcType) {
@@ -1531,6 +1541,16 @@ void Compiler::insertPrefix(FMString funcName, FunctionTypeEnum funcType) {
 	}
       break;
     }
+  case SubsrefFunction:
+    {
+      _code->_issubsref = true;
+      break;
+    }
+  case SubsasgnFunction:
+    {
+      _code->_issubsasgn = true;
+      break;
+    }
   case GetterFunction:
     {
       if (_currentSym->countParameterValues() != 1)
@@ -1539,8 +1559,6 @@ void Compiler::insertPrefix(FMString funcName, FunctionTypeEnum funcType) {
 	throw Exception("Getter for class " + _currentSym->name + " named " + funcName + " must have one return value");
       _code->_isgetset = true;
       std::cout << "Set Get flag set to true\n";
-      _code->_objectName = _currentSym->parameterName(0);
-      std::cout << "Object name = " << _code->_objectName << "\n";
       _code->_propertyName = funcName.mid(4);
       std::cout << "Property name = " << _code->_propertyName << "\n";
       break;
@@ -1553,8 +1571,6 @@ void Compiler::insertPrefix(FMString funcName, FunctionTypeEnum funcType) {
 	throw Exception("Setter for class " + _currentSym->name + " named " + funcName + " must have one return value");
       _code->_isgetset = true;
       std::cout << "Set Get flag set to true\n";
-      _code->_objectName = _currentSym->parameterName(0);
-      std::cout << "Object name = " << _code->_objectName << "\n";
       _code->_propertyName = funcName.mid(4);
       std::cout << "Property name = " << _code->_propertyName << "\n";
       break;
@@ -1580,6 +1596,8 @@ void Compiler::walkFunction(const Tree &t, FunctionTypeEnum funcType) {
     break;
   case LocalFunction:
   case MethodFunction:
+  case SubsrefFunction:
+  case SubsasgnFunction:
   case GetterFunction:
   case SetterFunction:
   case ConstructorFunction:
@@ -1676,6 +1694,10 @@ void Compiler::walkMethods(const Tree &t) {
 	walkFunction(p,GetterFunction);
       else if (flags.is_setter())
 	walkFunction(p,SetterFunction);
+      else if (flags.is_subsref())
+	walkFunction(p,SubsrefFunction);
+      else if (flags.is_subsasgn())
+	walkFunction(p,SubsasgnFunction);
       else
 	walkFunction(p,MethodFunction);
     }
@@ -1819,6 +1841,7 @@ void Compiler::walkCode(const Tree &t) {
 }
 
 void Compiler::statement(const Tree &t) {
+  _currentLineNo = t.first().node().position() & 0xFFFF;
   if (t.is(TOK_QSTATEMENT))
     statementType(t.first(),false);
   else if (t.is(TOK_STATEMENT))
@@ -1893,7 +1916,7 @@ Module* Compiler::module() {
 
 void PrintInsn(int ip, const Instruction &i)
 {
-  printf("%03d   ",ip);
+  printf("%03d (%03d)  ",ip,i._position);
   int8_t op = opcode(i._opcode);
   printf("%-20s",getOpCodeName(op).c_str());
   printf("%-20s",Compiler::opcodeDecode(op,i._opcode).c_str());
@@ -1965,9 +1988,9 @@ static void PrintRawInsn(int ip, insn_t insn)
   printf("\n");
 }
 
-static void PrintInsn(int ip, insn_t insn)
+static void PrintInsn(uint16_t lineno, int ip, insn_t insn)
 {
-  printf("%03d ",ip);
+  printf("%03d (%03d) ",ip,lineno);
   int8_t opcode = insn & 0xFF;
   printf("%-15s",getOpCodeName(opcode).c_str());
   printf("%-25s",Compiler::opcodeDecode(opcode,insn).c_str());
@@ -2025,11 +2048,16 @@ void FM::Disassemble(ThreadContext *_ctxt, const Object &p)
   for (dim_t i=0;i<dp->m_consts.count();i++)
     std::cout << cp[i].brief() << ", ";
   std::cout << "\n";
+  std::cout << "Line No   : " << dp->m_lineno << "\n";
+  std::vector<uint16_t> line_nos;
+  rle_decode_line_nos(_ctxt->_uint32->ro(dp->m_lineno),
+		      dp->m_lineno.count(),line_nos);
   Object code = dp->m_code;
   const insn_t *opcodes = _ctxt->_uint64->ro(code);
   std::cout << "Code: " << code.dims().count() << " length\n";
+  assert(code.count() == line_nos.size());
   for (dim_t i=0;i<code.dims().count();++i)
-    PrintInsn(i,opcodes[i]);
+    PrintInsn(line_nos[i],i,opcodes[i]);
   for (dim_t i=0;i<dp->m_consts.count();i++)
     if (cp[i].is(TypeCode) || cp[i].is(TypeFunction))
       {

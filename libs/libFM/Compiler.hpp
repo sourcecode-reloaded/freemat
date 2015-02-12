@@ -94,6 +94,7 @@ namespace FM
     std::stack<BasicBlock *> _continueblock;
     std::stack<BasicBlock *> _breakblock;
     ThreadContext *_ctxt;
+    int _currentLineNo;
   private:
     void reset();
     void useBlock(BasicBlock *b);

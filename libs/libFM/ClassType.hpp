@@ -138,7 +138,36 @@ namespace FM
   };
 
   class ClassType : public AggregateType<ClassData,ValueSemantics> {
-    Object m_deletefunc;
+    Object m_deletefunc_name;
+    Object m_plusfunc_name;
+    Object m_mtimes_name;
+    Object m_mldivide_name;
+    Object m_mrdivide_name;
+    Object m_ldivide_name;
+    Object m_rdivide_name;
+    Object m_times_name;
+    Object m_subtract_name;
+    Object m_le_name;
+    Object m_lt_name;
+    Object m_gt_name;
+    Object m_ge_name;
+    Object m_ne_name;
+    Object m_eq_name;
+    Object m_or_name;
+    Object m_and_name;
+    Object m_neg_name;
+    Object m_uplus_name;
+    Object m_ctranspose_name;
+    Object m_transpose_name;
+    Object m_colon_name;
+    Object m_vertcat_name;
+    Object m_horzcat_name;
+    Object m_subsref_name;
+    Object m_subsasgn_name;
+    Object m_type_name;
+    Object m_subs_name;
+    Object bifunc(const Object &a, const Object &b, const Object &name);
+    Object ufunc(const Object &a, const Object &name);
   public:
     ClassType(ThreadContext *ctxt);
     virtual DataCode code() const {return TypeClass;}
@@ -166,6 +195,34 @@ namespace FM
     }
     Object empty() {throw Exception("Cannot create empty classes");}
     virtual void destroyObject(ObjectBase* p);
+    virtual Object Add(const Object &a, const Object &b) {return bifunc(a,b,m_plusfunc_name);}
+    virtual Object Multiply(const Object &a, const Object &b) {return bifunc(a,b,m_mtimes_name);}
+    virtual Object LeftDivide(const Object &a, const Object &b) {return bifunc(a,b,m_mldivide_name);}
+    virtual Object RightDivide(const Object &a, const Object &b) {return bifunc(a,b,m_mrdivide_name);}
+    virtual Object DotLeftDivide(const Object &a, const Object &b) {return bifunc(a,b,m_ldivide_name);}
+    virtual Object DotRightDivide(const Object &a, const Object &b) {return bifunc(a,b,m_rdivide_name);}
+    virtual Object DotMultiply(const Object &a, const Object &b) {return bifunc(a,b,m_times_name);}
+    virtual Object Subtract(const Object &a, const Object &b) {return bifunc(a,b,m_subtract_name);}
+    virtual Object LessEquals(const Object &a, const Object &b) {return bifunc(a,b,m_le_name);}
+    virtual Object LessThan(const Object &a, const Object &b) {return bifunc(a,b,m_lt_name);}
+    virtual Object GreaterThan(const Object &a, const Object &b) {return bifunc(a,b,m_gt_name);}
+    virtual Object GreaterEquals(const Object &a, const Object &b) {return bifunc(a,b,m_ge_name);}
+    virtual Object NotEquals(const Object &a, const Object &b) {return bifunc(a,b,m_ne_name);}
+    virtual Object Equals(const Object &a, const Object &b) {return bifunc(a,b,m_eq_name);}
+    virtual Object Or(const Object &a, const Object &b) {return bifunc(a,b,m_or_name);}
+    virtual Object And(const Object &a, const Object &b) {return bifunc(a,b,m_and_name);}
+    virtual Object Neg(const Object &a) {return ufunc(a,m_neg_name);}
+    virtual Object Plus(const Object &a) {return ufunc(a,m_uplus_name);}
+    virtual Object Colon(const Object &a, const Object &b) {return bifunc(a,b,m_colon_name);}
+    virtual Object NCat(const Object &p, int dimension);
+    virtual Object DoubleColon(const Object &a, const Object &b, const Object &c);
+    virtual Object Transpose(const Object &a) {return ufunc(a,m_transpose_name);}
+    virtual Object Hermitian(const Object &a) {return ufunc(a,m_ctranspose_name);}
+    bool hasSubsref(const Object &a);
+    Object subsref(const Object &a, const Object &b);
+    bool hasSubsasgn(const Object &a);
+    void subsasgn(Object &a, const Object &args, const Object &b);
+    Object makeSubstruct(const Object &b);
   };
 };
 

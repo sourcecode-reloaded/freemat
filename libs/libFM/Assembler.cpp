@@ -7,6 +7,7 @@
 #include "TypeUtils.hpp"
 #include "ModuleType.hpp"
 #include "FunctionType.hpp"
+#include "LineNumbers.hpp"
 
 
 std::string getOpCodeName(FM::op_t);
@@ -61,6 +62,7 @@ Object Assembler::run(CodeBlock *code)
 {
   _code = code;
   _vm_codes.clear();
+  _line_nos.clear();
   _nested_codes.clear();
   for (int i=0;i<_postorder.size();i++) delete _postorder[i];
   _postorder.clear();
@@ -119,8 +121,10 @@ void Assembler::assemble()
   for (int i=0;i<_postorder.size();i++)
     {
       BasicBlock *b = _postorder[_postorder.size()-1-i];
-      for (int j=0;j<b->_insnlist.size();j++)
+      for (int j=0;j<b->_insnlist.size();j++) {
 	_vm_codes.push_back(b->_insnlist[j]._opcode);
+	_line_nos.push_back(b->_insnlist[j]._position);
+      }
     }
 }
 
@@ -131,6 +135,11 @@ Object Assembler::codeObject()
   cp->m_name = _ctxt->_string->makeString(_code->_name);
   Object op = _ctxt->_uint64->makeMatrix(_vm_codes.size(),1);
   memcpy(_ctxt->_uint64->rw(op),&(_vm_codes[0]),_vm_codes.size()*sizeof(uint64_t));
+  std::vector<uint32_t> rle_linenumbers;
+  rle_encode_line_nos(_line_nos, rle_linenumbers);
+  Object rl = _ctxt->_uint32->makeMatrix(rle_linenumbers.size(),1);
+  memcpy(_ctxt->_uint32->rw(rl),&(rle_linenumbers[0]),rle_linenumbers.size()*sizeof(uint32_t));
+  cp->m_lineno = rl;
   cp->m_code = op;
   cp->m_names = _code->_namelist;
   cp->m_consts = _code->_constlist;

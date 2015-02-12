@@ -1,6 +1,7 @@
 #include "ClassType.hpp"
 #include "AllTypes.hpp"
 #include "Compiler.hpp"
+#include "TypeUtils.hpp"
 
 using namespace FM;
 
@@ -182,6 +183,9 @@ Object ClassType::getFieldNoGetters(const Object &a, const Object &b) {
       }
       return output;
     }
+  auto k = cmd->m_methods.find(b);
+  if (k != cmd->m_methods.end())
+    return _ctxt->_bound->bindFunction(k->second->m_definition,a);
   throw Exception("Property " + b.description() + " is not defined for class " + _ctxt->_string->getString(cmd->m_name));
 }
 
@@ -208,7 +212,6 @@ Object ClassType::getField(const Object &a, const Object &b) {
   else
     return _ctxt->_function->call(cpmd->m_getter,_ctxt->_list->makeScalar(a),1);
 }
-
 
 void ClassType::setField(Object &a, const Object &args, const Object &b) {
   ClassData *cd = this->rw(a);
@@ -266,7 +269,36 @@ FMString ClassType::brief(const Object &a) {
   return _ctxt->_string->getString(cmd->m_name);
 }
 
-ClassType::ClassType(ThreadContext *ctxt) : m_deletefunc(ctxt->_string->makeString("delete")) {
+ClassType::ClassType(ThreadContext *ctxt) :
+  m_deletefunc_name(ctxt->_string->makeString("delete")),
+  m_plusfunc_name(ctxt->_string->makeString("plus")),
+  m_mtimes_name(ctxt->_string->makeString("mtimes")),
+  m_mldivide_name(ctxt->_string->makeString("mldivide")),
+  m_mrdivide_name(ctxt->_string->makeString("mrdivide")),
+  m_ldivide_name(ctxt->_string->makeString("ldivide")),
+  m_rdivide_name(ctxt->_string->makeString("rdivide")),
+  m_times_name(ctxt->_string->makeString("times")),
+  m_subtract_name(ctxt->_string->makeString("subtract")),
+  m_le_name(ctxt->_string->makeString("le")),
+  m_lt_name(ctxt->_string->makeString("lt")),
+  m_gt_name(ctxt->_string->makeString("gt")),
+  m_ge_name(ctxt->_string->makeString("ge")),
+  m_ne_name(ctxt->_string->makeString("ne")),
+  m_eq_name(ctxt->_string->makeString("eq")),
+  m_or_name(ctxt->_string->makeString("or")),
+  m_and_name(ctxt->_string->makeString("and")),
+  m_neg_name(ctxt->_string->makeString("neg")),
+  m_uplus_name(ctxt->_string->makeString("uplus")),
+  m_ctranspose_name(ctxt->_string->makeString("ctranspose")),
+  m_transpose_name(ctxt->_string->makeString("transpose")),
+  m_colon_name(ctxt->_string->makeString("colon")),
+  m_vertcat_name(ctxt->_string->makeString("vertcat")),
+  m_horzcat_name(ctxt->_string->makeString("horzcat")),
+  m_subsref_name(ctxt->_string->makeString("subsref")),
+  m_subsasgn_name(ctxt->_string->makeString("subsasgn")),
+  m_type_name(ctxt->_string->makeString("type")),
+  m_subs_name(ctxt->_string->makeString("subs"))
+{
   _ctxt = ctxt;
 }
 
@@ -274,7 +306,7 @@ void ClassType::destroyObject(ObjectBase* p) {
   ClassData *cd = static_cast<ClassData *>(p->ptr());
   const Object &myMeta = cd->metaClass;
   const ClassMetaData *cmd = _ctxt->_meta->ro(myMeta);
-  auto j = cmd->m_methods.find(m_deletefunc);
+  auto j = cmd->m_methods.find(m_deletefunc_name);
   if (j != cmd->m_methods.end()) {
     // Hmm... scary -- this is a pickle.  We need to destroy the object,
     // without triggering a recursion.  Unfortunately, the original object has
@@ -295,6 +327,105 @@ void ClassType::destroyObject(ObjectBase* p) {
     sacrificial.swap(save);
   }
   AggregateType::destroyObject(p);
+}
+
+Object ClassType::ufunc(const Object &a, const Object &funcname) {
+  Object func(_ctxt);
+  if (!hasMethod(a,funcname,func))
+    throw Exception("No function " + funcname.description() + " defined for class ");
+  return _ctxt->_function->call(func,_ctxt->_list->makeScalar(a),1);
+}
+
+Object ClassType::bifunc(const Object &a, const Object &b, const Object &funcname) {
+  Object func(_ctxt);
+  if (!hasMethod(a,funcname,func))
+    throw Exception("No function " + funcname.description() + " defined for class ");
+  Object args = _ctxt->_list->empty();
+  _ctxt->_list->push(args,a);
+  _ctxt->_list->push(args,b);
+  return _ctxt->_function->call(func,args,1);
+}
+
+Object ClassType::DoubleColon(const Object &a, const Object &b, const Object &c) {
+  Object func(_ctxt);
+  if (!hasMethod(a,m_colon_name,func))
+    throw Exception("No function colon defined for class ");
+  Object args = _ctxt->_list->empty();
+  _ctxt->_list->push(args,a);
+  _ctxt->_list->push(args,b);
+  _ctxt->_list->push(args,c);
+  return _ctxt->_function->call(func,args,1);
+}
+
+Object ClassType::NCat(const Object &a, int dimension) {
+  // First, find the dominant class object
+  const Object *ap = _ctxt->_list->ro(a);
+  const Object *root = nullptr;
+  for (dim_t i=0;i<a.count();i++)
+    if (ap[i].isClass()) {
+      root = ap+i;
+      break;
+    }
+  if (!root) throw Exception("NCat called on class type, but no classes found!");
+  Object func(_ctxt);
+  if ((dimension == 0) && !hasMethod(*root,m_vertcat_name,func))
+    throw Exception("No vertcat method found for class");
+  if ((dimension == 1) && !hasMethod(*root,m_horzcat_name,func))
+    throw Exception("No horzcat method found for class");
+  return _ctxt->_function->call(func,a,1);
+}
+
+bool ClassType::hasSubsasgn(const Object &a) {
+  Object def(_ctxt);
+  return this->hasMethod(a,m_subsasgn_name,def);
+}
+
+bool ClassType::hasSubsref(const Object &a) {
+  Object def(_ctxt);
+  return this->hasMethod(a,m_subsref_name,def);
+}
+
+Object ClassType::makeSubstruct(const Object &b) {
+  Object s(_ctxt->_struct->empty());
+  StructData *sd = _ctxt->_struct->rw(s);
+  sd->m_fields.insert(std::make_pair(m_type_name,0));
+  sd->m_fields.insert(std::make_pair(m_subs_name,1));
+  sd->m_data = _ctxt->_cell->makeMatrix(b.count()/2,1);
+  Object *dp = _ctxt->_cell->rw(sd->m_data);
+  const Object *bp = _ctxt->_list->ro(b);
+  for (int i=0;i<b.count()/2;i++) {
+    Object entry = _ctxt->_list->makeMatrix(2,1);
+    Object *ep = _ctxt->_list->rw(entry);
+    switch(int(bp[2*i].asDouble())) {
+    case 0:
+      ep[0] = _ctxt->_string->makeString("()");
+      ep[1] = makeCellFromList(_ctxt,bp[2*i+1]);
+      break;
+    case 1:
+      ep[0] = _ctxt->_string->makeString("{}");
+      ep[1] = makeCellFromList(_ctxt,bp[2*i+1]);
+      break;
+    case 2:
+      ep[0] = _ctxt->_string->makeString(".");
+      ep[1] = bp[2*i+1];
+      break;
+    }
+    dp[i] = entry;
+  }
+  _ctxt->_struct->updateDims(s);
+  return s;
+}
+
+Object ClassType::subsref(const Object &a, const Object &b) {
+  Object subsref_func(_ctxt);
+  if (!hasMethod(a,m_subsref_name,subsref_func)) throw Exception("overloaded subsref called, but no method defined!");
+  return _ctxt->_function->call(subsref_func,_ctxt->_list->makePair(a,makeSubstruct(b)),1);
+}
+
+void ClassType::subsasgn(Object &a, const Object &args, const Object &b) {
+  Object subsasgn_func(_ctxt);
+  if (!hasMethod(a,m_subsasgn_name,subsasgn_func)) throw Exception("overloaded subsasgn called, but no method defined");
+  a = _ctxt->_list->first(_ctxt->_function->call(subsasgn_func,_ctxt->_list->makeTriple(a,makeSubstruct(args),b),1));
 }
 
 FMString ClassType::describe(const Object &a) {

@@ -108,6 +108,14 @@ void compileModule(ThreadContext *ctxt, FMString name, HashMap<Object> &classes)
   }
 }
 
+Object strcmp(const Object &args, int nargout, ThreadContext *ctxt) {
+  if (args.count() != 2) throw Exception("strcmp requires two arguments");
+  const Object &x = ctxt->_list->first(args);
+  const Object &y = ctxt->_list->second(args);
+  if (x.isString() && y.isString())
+    return ctxt->_list->makeScalar(ctxt->_bool->makeScalar(ctxt->_string->getString(x) == ctxt->_string->getString(y)));
+  return ctxt->_list->makeScalar(ctxt->_bool->makeScalar(false));
+}
 
 Object print(const Object &args, int nargout, ThreadContext *ctxt) {
   ctxt->_io->output("\n\nPrint:" + args.description() + "\n\n");
@@ -132,15 +140,18 @@ Object int32(const Object &args, int nargout, ThreadContext *ctxt) {
 
 // Create an addlistener method for the handle class
 
-
-
+Object classfunc(const Object &args, int nargout, ThreadContext *ctxt) {
+  const Object &x = ctxt->_list->ro(args)[0];
+  if (!x.isClass())
+    return ctxt->_list->makeScalar(ctxt->_string->makeString(x.type()->name()));
+  else
+    return ctxt->_list->makeScalar(ctxt->_class->className(x));
+}
 
 int main(int argc, char *argv[])
 {
 
   assert(sizeof(Complex<char>) == 2*sizeof(char));
-
-  
 
   StdIOTermIF io;
   ThreadContext *ctxt = BuildNewThreadContext(&io);
@@ -294,8 +305,10 @@ int main(int argc, char *argv[])
 
   ctxt->_globals->insert(std::make_pair("print",ctxt->_builtin->makeBuiltin("print",print)));
   ctxt->_globals->insert(std::make_pair("handir",ctxt->_builtin->makeBuiltin("handir",handir)));
+  ctxt->_globals->insert(std::make_pair("strcmp",ctxt->_builtin->makeBuiltin("strcmp",strcmp)));
   ctxt->_globals->insert(std::make_pair("numel",ctxt->_builtin->makeBuiltin("numel",numel)));
   ctxt->_globals->insert(std::make_pair("int32",ctxt->_builtin->makeBuiltin("int32",int32)));
+  ctxt->_globals->insert(std::make_pair("class",ctxt->_builtin->makeBuiltin("class",classfunc)));
   ctxt->_globals->insert(std::make_pair("gc",ctxt->_builtin->makeBuiltin("gc",builtin_gc)));
 
   // Global symbols

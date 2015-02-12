@@ -16,6 +16,7 @@ namespace FM
     std::vector<BasicBlock*> _postorder;
     CodeBlock *_code;
     std::vector<uint64_t> _vm_codes;
+    std::vector<uint16_t> _line_nos;
     std::vector<Object> _nested_codes;
     void depthFirstSearch(BasicBlock* p);
     void computeJumpOffsets();

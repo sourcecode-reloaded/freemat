@@ -37,6 +37,8 @@ namespace FM
     unsigned _explicit     : 1;
     unsigned _object       : 1;
     unsigned _event        : 1;
+    unsigned _subsref      : 1;
+    unsigned _subsasgn     : 1;
     unsigned param_position    : 8;
     unsigned return_position   : 8;
     unsigned property_position : 16;
@@ -49,7 +51,8 @@ namespace FM
 			      _getter(0), _setter(0), param_position(0), 
 			      return_position(0), property_position(0),
 			      _static(0), _constant(0), _dependent(0),
-			      _super(0), _explicit(0), _object(0), _event(0) {} 
+			      _super(0), _explicit(0), _object(0), _event(0),
+			      _subsref(0), _subsasgn(0) {} 
 
     inline bool is_global() const {return _global != 0;}
     inline bool is_persistent() const {return _persistent != 0;}
@@ -74,6 +77,8 @@ namespace FM
     inline bool is_explicit() const {return _explicit != 0;}
     inline bool is_object() const {return _object != 0;}
     inline bool is_event() const {return _event != 0;}
+    inline bool is_subsref() const {return _subsref != 0;}
+    inline bool is_subsasgn() const {return _subsasgn != 0;}
 
     inline FMString str() const {
       FMString ret;
@@ -98,6 +103,8 @@ namespace FM
       if (_explicit) ret += " explicit";
       if (_object) ret += " object";
       if (_event) ret += " event";
+      if (_subsref) ret += " subsref";
+      if (_subsasgn) ret += " subsasgn";
       return ret;
     }
 		       
@@ -121,6 +128,8 @@ namespace FM
     static symbol_flags_t SUPER() {symbol_flags_t ret; ret._super = 1; return ret;}
     static symbol_flags_t OBJECT() {symbol_flags_t ret; ret._object = 1; return ret;}
     static symbol_flags_t EVENT() {symbol_flags_t ret; ret._event = 1; return ret;}
+    static symbol_flags_t SUBSREF() {symbol_flags_t ret; ret._method = 1; ret._subsref = 1; return ret;}
+    static symbol_flags_t SUBSASGN() {symbol_flags_t ret; ret._method = 1; ret._subsasgn = 1; return ret;}
   };
 
   inline bool operator != (const symbol_flags_t &a, const symbol_flags_t &b) {
@@ -147,7 +156,9 @@ namespace FM
 	     (a._super == b._super) &&
 	     (a._explicit == b._explicit) &&
 	     (a._object == b._object) &&
-	     (a._event == b._event));
+	     (a._event == b._event) &&
+	     (a._subsref == b._subsref) &&
+	     (a._subsasgn == b._subsasgn));
   }
 
   inline symbol_flags_t operator|(const symbol_flags_t &a, const symbol_flags_t &b) {
@@ -175,6 +186,8 @@ namespace FM
     ret._explicit |= b._explicit;
     ret._object |= b._object;
     ret._event |= b._event;
+    ret._subsref |= b._subsref;
+    ret._subsasgn |= b._subsasgn;
     return ret;
   }
 
@@ -186,7 +199,9 @@ namespace FM
     ConstructorFunction = 4,
     SetterFunction = 5,
     GetterFunction = 6,
-    AnonymousFunction = 7
+    SubsrefFunction = 7,
+    SubsasgnFunction = 8,
+    AnonymousFunction = 9
   };
 
   class SymbolTable

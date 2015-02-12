@@ -14,6 +14,7 @@ namespace FM
     virtual ~BoolType() {}
     virtual Object asIndex(const Object &a, dim_t max);
     virtual Object asIndexNoBoundsCheck(const Object &a);
+    virtual Object Not(const Object &a);
     bool any(const Object &a);
     bool all(const Object &a);
     dim_t countOne(const Object &a);

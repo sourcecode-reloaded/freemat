@@ -594,10 +594,10 @@ void VM::executeCodeObject(const Object &codeObject)
 	      case OP_COLUMN:
 		REG1 = REG2.type()->sliceColumn(REG2,_ctxt->_double->scalarValue(REG3));
 		break;
+	      case OP_NOT:
+		UNARYOP(Not,"not");
+		break;
 		/*
-		  case OP_NOT:
-		  UNARYOP(Not,"not");
-		  break;
 		  case OP_POWER:
 		  BINOP(Power,"mpower");
 		  break;

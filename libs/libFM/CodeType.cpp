@@ -20,6 +20,7 @@ FMString CodeType::describe(const Object &a) {
     FMString ret = "code object\n";
     ret += "        name : " + cp->m_name.description() + "\n";
     ret += "        code : " + cp->m_code.description() + "\n";
+    ret += "      lineno : " + cp->m_lineno.description() + "\n";
     ret += "       names : " + cp->m_names.description() + "\n";
     ret += "      consts : " + cp->m_consts.description() + "\n";
     ret += "      params : " + cp->m_params.description() + "\n";

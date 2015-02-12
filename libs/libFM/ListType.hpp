@@ -32,6 +32,21 @@ namespace FM
       if (a.count() < 2) throw Exception("Attempt to take first element of empty object");
       return (this->ro(a))[1];
     }
+    Object makePair(const Object &a, const Object &b) {
+      Object ret = this->makeMatrix(2,1);
+      Object *rp = this->rw(ret);
+      rp[0] = a;
+      rp[1] = b;
+      return ret;
+    }
+    Object makeTriple(const Object &a, const Object &b, const Object &c) {
+      Object ret = this->makeMatrix(3,1);
+      Object *rp = this->rw(ret);
+      rp[0] = a;
+      rp[1] = b;
+      rp[2] = c;
+      return ret;
+    }
     Object last(const Object &a) {
       if (a.isEmpty()) throw Exception("Attempt to take last element of empty object");
       return (this->ro(a))[a.count()-1];

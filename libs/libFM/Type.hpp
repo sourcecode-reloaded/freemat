@@ -82,6 +82,7 @@ namespace FM {
     virtual Object Or(const Object &a, const Object &b);
     virtual Object And(const Object &a, const Object &b);
     virtual Object Neg(const Object &a);
+    virtual Object Not(const Object &a);
     virtual Object Plus(const Object &a);
     virtual Object Colon(const Object &a, const Object &b);
     virtual Object NCat(const Object &p, int dimension);

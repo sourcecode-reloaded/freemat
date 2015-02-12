@@ -92,11 +92,12 @@ namespace FM
     Object _capturedlist;
     std::vector<CodeBlock*> _nested;
     bool _isgetset;
-    FMString _objectName;
+    bool _issubsref;
+    bool _issubsasgn;
     FMString _propertyName;
     CodeBlock(ThreadContext*ctxt) : _namelist(ctxt), _constlist(ctxt), 
 				    _freelist(ctxt), _capturedlist(ctxt), 
-				    _isgetset(false) {}
+				    _isgetset(false), _issubsref(false) {}
   };
 
   enum ModuleTypeCode

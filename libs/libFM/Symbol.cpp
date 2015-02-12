@@ -186,6 +186,10 @@ void SymbolPass::walkMethods(const Tree &t) {
       FMString fname = p.child(1).text();
       if (fname == _current->name)
 	walkFunction(p,ConstructorFunction,attr);
+      else if (fname == "subsref")
+	walkFunction(p,SubsrefFunction,attr);
+      else if (fname == "subsasgn")
+	walkFunction(p,SubsasgnFunction,attr);
       else if (fname.startsWith("set."))
 	walkFunction(p,SetterFunction,attr);
       else if (fname.startsWith("get."))
@@ -256,6 +260,16 @@ void SymbolPass::walkFunction(const Tree &t, FunctionTypeEnum funcType, symbol_f
 	addSymbol(name, symbol_flags_t::CONSTRUCTOR() | attr);
 	break;
       }
+    case SubsrefFunction:
+      {
+	addSymbol(name, symbol_flags_t::SUBSREF() | attr);
+	break;
+      }
+    case SubsasgnFunction:
+      {
+	addSymbol(name, symbol_flags_t::SUBSASGN() | attr);
+	break;
+      }
     case GetterFunction:
       {
 	if (_current->syms.contains(name))
@@ -285,10 +299,22 @@ void SymbolPass::walkFunction(const Tree &t, FunctionTypeEnum funcType, symbol_f
       addSymbol(args.child(index).text(), symbol_flags_t::PARAMETER(index));
   for (int index=0;index < rets.numChildren();index++)
     addSymbol(rets.child(index).text(), symbol_flags_t::RETURN(index));
-  // Check that the constructor contains one return
-  // And that the return does not appear in the list of parameters.
-  if (funcType == ConstructorFunction)
+  // Post processing of the arguments
+  switch (funcType) {
+  case SubsrefFunction:
+  case SubsasgnFunction:
+  case SetterFunction:
+  case GetterFunction:
     {
+      // The first parameter is the object
+      FMString objname = _current->parameterName(0);
+      _current->syms[objname] = _current->syms[objname] | symbol_flags_t::OBJECT();
+      break;
+    }
+  case ConstructorFunction:
+    {
+      // Check that the constructor contains one return
+      // And that the return does not appear in the list of parameters.
       if (_current->countReturnValues() != 1)
 	throw Exception("Constructor for " + _current->name + " must return exactly 1 value");
       // Get the name of the object being constructed
@@ -301,7 +327,7 @@ void SymbolPass::walkFunction(const Tree &t, FunctionTypeEnum funcType, symbol_f
       objflags._parameter = 1;
       objflags._object = 1;
       objflags.param_position = 0;
-      for (auto i=_current->syms.begin(); i != _current->syms.end(); ++i)
+      for (auto i = _current->syms.begin(); i!= _current->syms.end(); ++i)
 	{
 	  if (i.value().is_parameter()) {
 	    symbol_flags_t flags = i.value();
@@ -310,7 +336,11 @@ void SymbolPass::walkFunction(const Tree &t, FunctionTypeEnum funcType, symbol_f
 	  }
 	}
       _current->syms[objname] = objflags;
+      break;
     }
+  default:
+    ;
+  }
   walkCode(code, funcType);  
   switch (funcType)
     {

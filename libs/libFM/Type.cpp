@@ -1,6 +1,7 @@
 #include "Type.hpp"
 #include "Object.hpp"
 #include "ListType.hpp"
+#include "ClassType.hpp"
 #include "IntegerType.hpp"
 #include "CellType.hpp"
 #include "StructType.hpp"
@@ -56,6 +57,7 @@ NoSupportBinOp(Equals);
 NoSupportBinOp(NotEquals);
 NoSupportBinOp(Or);
 NoSupportBinOp(And);
+NoSupportUnaryOp(Not);
 NoSupportUnaryOp(Neg);
 NoSupportUnaryOp(Plus);
 NoSupportUnaryOp(Transpose);
@@ -119,9 +121,12 @@ double Type::doubleValue(const Object &a) {
 }
 
 Object Type::get(const Object &a, const Object &b, bool invokeGetters) {
-  // std::cout << "get arguments: " << a.description() << "\n";
-  // std::cout << "   b: " << b.description() << "\n";
+  //  std::cout << "get arguments: " << a.description() << "\n";
+  //  std::cout << "   b: " << b.description() << "\n";
   int ptr = 0;
+  // Allow overload of get using "subsref" method
+  if (a.isClass() && _ctxt->_class->hasSubsref(a) && invokeGetters)
+      return _ctxt->_class->subsref(a,b);
   const Object *bp = b.asType<ListType>()->ro(b);
   if ((b.count() == 2) &&
       (bp[0].asDouble() == 0))
@@ -173,8 +178,11 @@ Object Type::get(const Object &a, const Object &b, bool invokeGetters) {
 
 
 void Type::set(Object &a, const Object &args, const Object &b, bool invokeSetters) {
-  if (!invokeSetters)
-    std::cout << "SET called with " << a.description() << " " << args.description() << " " << b.description() << " and invokeSetters = " << invokeSetters << "\n";
+  if (a.isClass() && _ctxt->_class->hasSubsasgn(a) && invokeSetters)
+    {
+      _ctxt->_class->subsasgn(a,args,b);
+      return;
+    }
   const Object *argp = args.asType<ListType>()->ro(args);
   if (args.count() == 2)
     {

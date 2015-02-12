@@ -2274,3 +2274,39 @@ a = [a,{3}]
 
 NCAT works for the basic types.  Only problem is objects.  Indeed,
 overloading doesn't work for objects at all.
+
+********************************************************************************
+
+Overloading of objects
+
+Class priorities (i.e., class a is inferior to class b, so a+b invokes
+class b's method, not class a's).
+
+The HCAT/VCAT thing isn't completely clear either.
+
+InferiorTo needs to be added to classdef.  
+
+Remaining methods that need explicit overload capability are:
+
+command window output display(a) Display method
+
+[a b] horzcat(a,b,...) Horizontal concatenation
+[a; b] vertcat(a,b,...) Vertical concatenation
+
+
+a(s1,s2,...sn) subsref(a,s) Subscripted reference
+a(s1,...,sn) = b subsasgn(a,s,b) Subscripted assignment
+b(a) subsindex(a) Subscript index
+
+As the functions become more complicated, debug information would be
+nice to have.  Need to figure out how to supplement the VM code with
+information about the source code so as to better be able to debug.
+
+Need to implement subsasgn and subsindex.  Both are missing.
+
+Also, setters and getters call the NOGS versions of subsref/subsasgn
+indiscriminantly.  It's probably not right.  Only subsref/subsasgn
+calls on the object should be routed to the NOGS version.
+
+Last is subsindex.  
+
