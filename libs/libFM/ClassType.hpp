@@ -166,6 +166,7 @@ namespace FM
     Object m_subsasgn_name;
     Object m_type_name;
     Object m_subs_name;
+    Object m_subsindex_name;
     Object bifunc(const Object &a, const Object &b, const Object &name);
     Object ufunc(const Object &a, const Object &name);
   public:
@@ -223,6 +224,7 @@ namespace FM
     bool hasSubsasgn(const Object &a);
     void subsasgn(Object &a, const Object &args, const Object &b);
     Object makeSubstruct(const Object &b);
+    virtual Object asIndex(const Object &a, dim_t);
   };
 };
 

@@ -297,7 +297,8 @@ ClassType::ClassType(ThreadContext *ctxt) :
   m_subsref_name(ctxt->_string->makeString("subsref")),
   m_subsasgn_name(ctxt->_string->makeString("subsasgn")),
   m_type_name(ctxt->_string->makeString("type")),
-  m_subs_name(ctxt->_string->makeString("subs"))
+  m_subs_name(ctxt->_string->makeString("subs")),
+  m_subsindex_name(ctxt->_string->makeString("subsindex"))
 {
   _ctxt = ctxt;
 }
@@ -383,6 +384,14 @@ bool ClassType::hasSubsasgn(const Object &a) {
 bool ClassType::hasSubsref(const Object &a) {
   Object def(_ctxt);
   return this->hasMethod(a,m_subsref_name,def);
+}
+
+Object ClassType::asIndex(const Object &a, dim_t)
+{
+  Object def(_ctxt);
+  if (!this->hasMethod(a,m_subsindex_name,def))
+    throw Exception("This class does not support being used as an index - you must overload subsindex to provde that functionality");
+  return _ctxt->_index->convert(_ctxt->_list->first(_ctxt->_function->call(def,_ctxt->_list->makeScalar(a),1)));
 }
 
 Object ClassType::makeSubstruct(const Object &b) {
