@@ -139,12 +139,12 @@ Object NumericType<T,codeNum>::convert(const Object &a)
 
 
 
-template class NumericType<float,TypeSingle>;
-template class NumericType<double,TypeDouble>;
-template class NumericType<int32_t,TypeInt32>;
-template class NumericType<uint32_t,TypeUInt32>;
-template class NumericType<int64_t,TypeInt64>;
-template class NumericType<uint64_t,TypeUInt64>;
-template class NumericType<bool,TypeBool>;
-template class NumericType<ndx_t,TypeIndex>;
-template class NumericType<FMChar,TypeString>;
+template class FM::NumericType<float,TypeSingle>;
+template class FM::NumericType<double,TypeDouble>;
+template class FM::NumericType<int32_t,TypeInt32>;
+template class FM::NumericType<uint32_t,TypeUInt32>;
+template class FM::NumericType<int64_t,TypeInt64>;
+template class FM::NumericType<uint64_t,TypeUInt64>;
+template class FM::NumericType<bool,TypeBool>;
+template class FM::NumericType<ndx_t,TypeIndex>;
+template class FM::NumericType<FMChar,TypeString>;

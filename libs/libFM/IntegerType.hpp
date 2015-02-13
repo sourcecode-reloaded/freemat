@@ -31,6 +31,10 @@ namespace FM
 	}
     }
     virtual Object Add(const Object &a, const Object &b) {return binop<OpAdd>(a,b);}
+    virtual Object Subtract(const Object &a, const Object &b) {return binop<OpSubtract>(a,b);}
+    virtual Object DotMultiply(const Object &a, const Object &b) {return binop<OpDotMultiply>(a,b);}
+    virtual Object DotRightDivide(const Object &a, const Object &b) {return binop<OpDotRightDivide>(a,b);}
+    virtual Object DotLeftDivide(const Object &a, const Object &b) {return binop<OpDotLeftDivide>(a,b);}
     virtual Object Equals(const Object &a, const Object &b);
     virtual void computeArrayFormatInfo(FMFormatMode mode, const Object &a, ArrayFormatInfo &format);
     virtual void printElement(const Object &a, const ArrayFormatInfo &format, ndx_t offset);

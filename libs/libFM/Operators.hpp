@@ -1,12 +1,14 @@
 #ifndef __Operators_hpp__
 #define __Operators_hpp__
 
+#include "Convert.hpp"
+
 struct OpAdd
 {
   template <class ctype, class atype, class btype, class vtype>
   inline static void func(ctype *c, const atype *a, const btype *b)
   {
-    *c = static_cast<vtype>(*a) + static_cast<vtype>(*b);
+    FM::OpRangeConvert<ctype,vtype>::rangeConvert(*c,static_cast<vtype>(*a) + static_cast<vtype>(*b));
   }
 };
 

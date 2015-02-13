@@ -940,7 +940,6 @@ Tree Parser::classMethodsDefinition() {
 Tree Parser::classDefinition() {
   // Parse a class definition
   Tree root(expect(TOK_CLASSDEF));
-  // TODO - handle inheritance
   root.addChild(identifier()); // Add the name of the class
   if (match('<'))
     {

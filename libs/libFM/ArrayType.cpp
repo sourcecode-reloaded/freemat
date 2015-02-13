@@ -841,13 +841,13 @@ Object ArrayType<T>::NCat(const Object& p, int dim)
 }
 
 
-template class ArrayType<char>;
-template class ArrayType<float>;
-template class ArrayType<double>;
-template class ArrayType<Object>;
-template class ArrayType<int32_t>;
-template class ArrayType<uint32_t>;
-template class ArrayType<int64_t>;
-template class ArrayType<uint64_t>;
-template class ArrayType<bool>;
+template class FM::ArrayType<char>;
+template class FM::ArrayType<float>;
+template class FM::ArrayType<double>;
+template class FM::ArrayType<Object>;
+template class FM::ArrayType<int32_t>;
+template class FM::ArrayType<uint32_t>;
+template class FM::ArrayType<int64_t>;
+template class FM::ArrayType<uint64_t>;
+template class FM::ArrayType<bool>;
 

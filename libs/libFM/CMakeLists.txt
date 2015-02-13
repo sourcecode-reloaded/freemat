@@ -1,6 +1,8 @@
 PROJECT(FMT CXX C)
 #ENABLE_LANGUAGE(Fortran)
 
+set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
+
 FIND_PACKAGE(PythonInterp REQUIRED)
 FIND_PACKAGE(Boost COMPONENTS system timer chrono filesystem)
 include_directories(${Boost_INCLUDE_DIRS})

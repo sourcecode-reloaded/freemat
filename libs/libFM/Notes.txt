@@ -2294,6 +2294,7 @@ command window output display(a) Display method
 [a; b] vertcat(a,b,...) Vertical concatenation
 
 
+
 a(s1,s2,...sn) subsref(a,s) Subscripted reference
 a(s1,...,sn) = b subsasgn(a,s,b) Subscripted assignment
 b(a) subsindex(a) Subscript index
@@ -2309,4 +2310,75 @@ indiscriminantly.  It's probably not right.  Only subsref/subsasgn
 calls on the object should be routed to the NOGS version.
 
 Last is subsindex.  
+
+********************************************************************************
+
+Computing with integers & floats and doubles:
+
+From:
+http://www.mathworks.com/company/newsletters/articles/integer-and-single-precision-math-in-matlab-7.html
+
+
+Integer and Single-Precision Math in MATLAB 7
+
+By Stuart McGarrity, MathWorks
+
+MATLAB 7 now provides integer and single-precision math. This new capability enables processing of integer and single-precision data in its native type, resulting in more efficient memory usage and the ability to process larger, nondouble data sets. This article describes the new MATLAB integer and single-precision math features with application examples for each case.
+
+Integer Math in MATLAB 7
+
+Before MATLAB 7, all numerical operations in MATLAB were performed in double precision. Double-precision variables, which use 64 bits (8 bytes) of memory storage, accurately represent values to approximately 15 decimal places. Double-precision is a floating-point data type with a large dynamic range.
+
+MATLAB 7 now supports arithmetic on the integers including unsigned integer types uint8, uint16, and uint32, and the signed types int8, int16, and int32. These data types require 8 to 32 bits to be stored in memory. Examples of integer data include output from sensors measuring real-world values, such as audio signals using 8 or 16 bits per sample, or image files using 8 or 24 bits per pixel.
+
+MATLAB supports all arithmetic operators such as +, -, .*, . ⁄, and .^ on these integer data types, as well as some elementary functions such as sum and sort. Other functions that are useful when dealing with integer data types are intmax, intmin, isinteger(x), isa(x,'integer'), cast, ones, zeros, eye and intwarning.
+
+The Benefits of Integer Math
+
+Like any computer application, MATLAB has a finite amount of addressable memory to store data. For example, on Windows XP in Release 14 the largest variable MATLAB can store is approximately 1.2GB. By leaving data in its native format and not requiring the conversion to doubles, MATLAB can now handle integer data sets up to eight times larger without running out of memory.
+
+Round-off Error and Saturation
+
+Storing real numbers as integers usually results in much larger conversion and arithmetic round-off errors than if they had been stored as doubles. In MATLAB 7 when variables are converted from another data type, the value is rounded to the nearest integer instead of always truncating (as in C), resulting in less round-off error.
+
+To convert a variable to an integer data type, you must pass it to the appropriate function, for example:
+
+>> a=6.4;
+>> aint=uint8(a)
+
+aint =
+6 
+
+Integer data types also have less dynamic range than floating-point data types, therefore the result of an operation can go out of range more easily. In MATLAB 7, if the result of an arithmetic operation is greater that the upper bound of the data type, the variable saturates (it is set to the upper bound). If the result is less than the lower bound of the data type, the variable is set to the lower bound. This is different from C, which wraps around through zero.
+
+When performing arithmetic on integer data types, issues such as round-off error and saturation must be managed by the programmer. One technique is to ensure the data set stays within the data type’s range throughout the execution of the algorithm.
+
+In order to precisely match the overflow and rounding effects that occur in the integer or fixed-point arithmetic of any C compiler or embedded processor, you can use the Fixed-Point Toolbox.
+
+Integer Math Rules
+
+You can combine numbers of an integer data type with numbers of the same integer data type or type scalar double. MATLAB performs arithmetic as if both inputs had type double and then converts the result to the same integer data type. The complete set of rules describing how integer types interact with other data is described in the MATLAB documentation.
+
+
+
+
+********************************************************************************
+Arithmetic Operations on Integer Classes
+
+http://www.mathworks.com/help/matlab/matlab_prog/integers.html#f2-98095
+
+MATLAB can perform integer arithmetic on the following types of data:
+
+Integers or integer arrays of the same integer data type. This yields a result that has the same data type as the operands:
+x = uint32([132 347 528]) .* uint32(75);
+class(x)
+ans =
+   uint32
+Integers or integer arrays and scalar double-precision floating-point numbers. This yields a result that has the same data type as the integer operands:
+x = uint32([132 347 528]) .* 75.49;
+class(x)
+ans =
+   uint32
+For all binary operations in which one operand is an array of integer data type (except 64-bit integers) and the other is a scalar double, MATLAB computes the operation using elementwise double-precision arithmetic, and then converts the result back to the original integer data type. For binary operations involving a 64-bit integer array and a scalar double, MATLAB computes the operation as if 80-bit extended-precision arithmetic were used, to prevent loss of precision.
+
 
