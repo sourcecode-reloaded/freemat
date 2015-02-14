@@ -72,9 +72,39 @@ Object IntegerType<T,codeNum>::Equals(const Object &a, const Object &b) {
   return int_cmpop<T,codeNum,OpEQ>(a,b,Type::_ctxt->_bool);
 }
 
+template <class T, FM::DataCode codeNum>
+Object IntegerType<T,codeNum>::NotEquals(const Object &a, const Object &b) {
+  return int_cmpop<T,codeNum,OpNE>(a,b,Type::_ctxt->_bool);
+}
+
+template <class T, FM::DataCode codeNum>
+Object IntegerType<T,codeNum>::LessEquals(const Object &a, const Object &b) {
+  return int_cmpop<T,codeNum,OpLE>(a,b,Type::_ctxt->_bool);
+}
+
+template <class T, FM::DataCode codeNum>
+Object IntegerType<T,codeNum>::LessThan(const Object &a, const Object &b) {
+  return int_cmpop<T,codeNum,OpLT>(a,b,Type::_ctxt->_bool);
+}
+
+template <class T, FM::DataCode codeNum>
+Object IntegerType<T,codeNum>::GreaterEquals(const Object &a, const Object &b) {
+  return int_cmpop<T,codeNum,OpGE>(a,b,Type::_ctxt->_bool);
+}
+
+template <class T, FM::DataCode codeNum>
+Object IntegerType<T,codeNum>::GreaterThan(const Object &a, const Object &b) {
+  return int_cmpop<T,codeNum,OpGT>(a,b,Type::_ctxt->_bool);
+}
+
+
 template class FM::IntegerType<bool,TypeBool>;
 template class FM::IntegerType<FMChar,TypeString>;
 template class FM::IntegerType<ndx_t,TypeIndex>;
+template class FM::IntegerType<uint8_t,TypeUInt8>;
+template class FM::IntegerType<int8_t,TypeInt8>;
+template class FM::IntegerType<uint16_t,TypeUInt16>;
+template class FM::IntegerType<int16_t,TypeInt16>;
 template class FM::IntegerType<uint32_t,TypeUInt32>;
 template class FM::IntegerType<int32_t,TypeInt32>;
 template class FM::IntegerType<uint64_t,TypeUInt64>;

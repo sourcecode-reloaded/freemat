@@ -10,7 +10,7 @@ namespace FM
   class BoolType : public IntegerType<bool,TypeBool>
   {
   public:
-    BoolType(ThreadContext *ctxt) : IntegerType<bool,TypeBool>(ctxt,"bool") {}
+    BoolType(ThreadContext *ctxt) : IntegerType<bool,TypeBool>(ctxt,"logical") {}
     virtual ~BoolType() {}
     virtual Object asIndex(const Object &a, dim_t max);
     virtual Object asIndexNoBoundsCheck(const Object &a);

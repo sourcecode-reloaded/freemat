@@ -31,14 +31,14 @@ FMString StructType::describe(const Object &a) {
     const Object *cd = _ctxt->_list->ro(_ctxt->_cell->scalarValue(sd->m_data));
     for (int i=0;i<fields.count();i++)
       {
-	ret += "   " + _ctxt->_string->getString(fp[i]) + ": ";
+	ret += "   " + _ctxt->_string->str(fp[i]) + ": ";
 	int ndx = sd->m_fields.at(fp[i]);
 	ret += cd[ndx].brief() + "\n";
       }
     return ret;
   } else {
     for (int i=0;i<fields.count();i++)
-      ret += "   " + _ctxt->_string->getString(fp[i]) + "\n";
+      ret += "   " + _ctxt->_string->str(fp[i]) + "\n";
     return ret;
   }
 }

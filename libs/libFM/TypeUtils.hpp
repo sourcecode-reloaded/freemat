@@ -42,7 +42,7 @@ namespace FM
     FMStringList ret;
     const Object *tptr = ctxt->_cell->ro(t);
     for (dim_t i=0;i<t.dims().count();i++)
-      ret << ctxt->_string->getString(tptr[i]);
+      ret << ctxt->_string->str(tptr[i]);
     return ret;
   }
 

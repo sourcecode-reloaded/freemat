@@ -21,17 +21,14 @@ namespace FM
     }
     Object asIndex(const Object &a, dim_t ndx); 
     Object asIndexNoBoundsCheck(const Object &a);
-    inline FMString getString(const Object &o) const {
+    inline FMString str(const Object &o) const {
       assert(o.type()->code() == TypeString);
       const FMChar *t = ro(o);
-      FMString ret;
-      for (dim_t i=0;i<o.dims().count();++i)
-	ret += t[i];
-      return ret;
+      return FMString (t,o.dims().count());
     }
     inline FMString describe(const Object &o) {
       if (o.dims().is2D() && (o.dims().rows() == 1))
-	return FMString("'") + this->getString(o) + FMString("'");
+	return FMString("'") + this->str(o) + FMString("'");
       return IntegerType<FMChar,TypeString>::describe(o);
     }
     inline void computeArrayFormatInfo(FMFormatMode, const Object &, ArrayFormatInfo &format) {

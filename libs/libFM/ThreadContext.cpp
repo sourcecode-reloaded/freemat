@@ -17,8 +17,12 @@ ThreadContext* FM::BuildNewThreadContext(TermIF *io)
   ctxt->_single = new SingleType(ctxt);
   ctxt->_string = new StringType(ctxt);
   ctxt->_index = new IndexType(ctxt);
+  ctxt->_int8 = new Int8Type(ctxt);
+  ctxt->_int16 = new Int16Type(ctxt);
   ctxt->_int32 = new Int32Type(ctxt);
   ctxt->_int64 = new Int64Type(ctxt);
+  ctxt->_uint8 = new UInt8Type(ctxt);
+  ctxt->_uint16 = new UInt16Type(ctxt);
   ctxt->_uint32 = new UInt32Type(ctxt);
   ctxt->_uint64 = new UInt64Type(ctxt);
   ctxt->_struct = new StructType(ctxt);

@@ -30,7 +30,7 @@ int Frame::lookupAddressForName(const Object &name, bool searchGlobals) {
       // First look in the module
       if (!_module.isEmpty())
 	{
-	  std::cout << "Searching module for " << _ctxt->_string->getString(name) << "\n";
+	  std::cout << "Searching module for " << _ctxt->_string->str(name) << "\n";
 	  auto mfunc = _ctxt->_module->ro(_module)->m_locals.find(name);
 	  if (mfunc != _ctxt->_module->ro(_module)->m_locals.end())
 	    {
@@ -41,8 +41,8 @@ int Frame::lookupAddressForName(const Object &name, bool searchGlobals) {
 	    }
 	}
       // Is it defined in the global scope?
-      std::cout << "Searching globals for " << _ctxt->_string->getString(name) << "\n";
-      auto gfunc = _ctxt->_globals->find(_ctxt->_string->getString(name)); //TODO Remove conversion to string?
+      std::cout << "Searching globals for " << _ctxt->_string->str(name) << "\n";
+      auto gfunc = _ctxt->_globals->find(_ctxt->_string->str(name)); //TODO Remove conversion to string?
       if (gfunc != _ctxt->_globals->end())
 	{
 	  // We are a proxy for someone who wants this symbol (not us!)
@@ -69,7 +69,7 @@ int Frame::lookupAddressForName(const Object &name, bool searchGlobals) {
       // Check for the latter case.
       if (!_module.isEmpty())
 	{
-	  std::cout << "Searching module for " << _ctxt->_string->getString(name) << "\n";
+	  std::cout << "Searching module for " << _ctxt->_string->str(name) << "\n";
 	  auto mfunc = _ctxt->_module->ro(_module)->m_locals.find(name);
 	  if (mfunc != _ctxt->_module->ro(_module)->m_locals.end())
 	    {
@@ -78,8 +78,8 @@ int Frame::lookupAddressForName(const Object &name, bool searchGlobals) {
 	      return ndx;
 	    }      
 	}
-      std::cout << "Searching globals for named symbol " << _ctxt->_string->getString(name) << "\n";
-      auto gfunc = _ctxt->_globals->find(_ctxt->_string->getString(name)); //TODO Remove conversion to string?
+      std::cout << "Searching globals for named symbol " << _ctxt->_string->str(name) << "\n";
+      auto gfunc = _ctxt->_globals->find(_ctxt->_string->str(name)); //TODO Remove conversion to string?
       if (gfunc != _ctxt->_globals->end())
 	{
 	  _ctxt->_list->rw(_vars)[ndx] = gfunc->second;
@@ -95,7 +95,7 @@ int Frame::getAddress(const FMString &name)
 {
   const Object *cp = _ctxt->_list->ro(_sym_names);
   for (int i=0;i<_sym_names.count();i++)
-    if (_ctxt->_string->getString(cp[i]) == name) return i;
+    if (_ctxt->_string->str(cp[i]) == name) return i;
   return -1;
 }
 

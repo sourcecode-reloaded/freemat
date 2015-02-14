@@ -2,6 +2,7 @@
 #include "IntegerType.hpp"
 #include "DoubleType.hpp"
 #include "SingleType.hpp"
+#include "StringType.hpp"
 #include "ThreadContext.hpp"
 #include "Convert.hpp"
 
@@ -112,11 +113,26 @@ Object NumericType<T,codeNum>::convert(const Object &a)
   if (a.isComplex()) len *= 2;
   switch (a.type()->code())
     {
+    case TypeString:
+      convertLoop<T,FMChar>(Type::_ctxt->_string->ro(a),op,len);
+      break;
     case TypeSingle:
       convertLoop<T,float>(Type::_ctxt->_single->ro(a),op,len);
       break;
     case TypeDouble:
       convertLoop<T,double>(Type::_ctxt->_double->ro(a),op,len);
+      break;
+    case TypeInt8:
+      convertLoop<T,int8_t>(Type::_ctxt->_int8->ro(a),op,len);
+      break;
+    case TypeUInt8:
+      convertLoop<T,uint8_t>(Type::_ctxt->_uint8->ro(a),op,len);
+      break;
+    case TypeInt16:
+      convertLoop<T,int16_t>(Type::_ctxt->_int16->ro(a),op,len);
+      break;
+    case TypeUInt16:
+      convertLoop<T,uint16_t>(Type::_ctxt->_uint16->ro(a),op,len);
       break;
     case TypeInt32:
       convertLoop<T,int32_t>(Type::_ctxt->_int32->ro(a),op,len);
@@ -132,7 +148,6 @@ Object NumericType<T,codeNum>::convert(const Object &a)
       break;
     default:
       throw Exception("Type conversion from " + a.type()->name() + " to " + this->name() + " is unsupported.");
-      // FIXME - Add remaining integer types
     }
   return ret;
 }
@@ -141,6 +156,10 @@ Object NumericType<T,codeNum>::convert(const Object &a)
 
 template class FM::NumericType<float,TypeSingle>;
 template class FM::NumericType<double,TypeDouble>;
+template class FM::NumericType<int8_t,TypeInt8>;
+template class FM::NumericType<uint8_t,TypeUInt8>;
+template class FM::NumericType<int16_t,TypeInt16>;
+template class FM::NumericType<uint16_t,TypeUInt16>;
 template class FM::NumericType<int32_t,TypeInt32>;
 template class FM::NumericType<uint32_t,TypeUInt32>;
 template class FM::NumericType<int64_t,TypeInt64>;

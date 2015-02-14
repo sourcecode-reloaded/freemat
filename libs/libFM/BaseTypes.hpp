@@ -55,7 +55,7 @@ namespace FM
       FMStringList ret;
       const Object *tptr = _cell->ro(t);
       for (dim_t i=0;i<t.dims().count();i++)
-	ret << _string->getString(tptr[i]);
+	ret << _string->str(tptr[i]);
       return ret;
     }
 

@@ -197,7 +197,7 @@ Object Assembler::codeObject()
       if (i.value().is_parameter())
 	{
 	  for (int j=0;j<cp->m_names.count();j++)
-	    if (_ctxt->_string->getString(strings[j]) == i.key())
+	    if (_ctxt->_string->str(strings[j]) == i.key())
 	      {
 		if (!i.value().is_captured())
 		  param_ptr[i.value().param_position] = j;
@@ -209,7 +209,7 @@ Object Assembler::codeObject()
       if (i.value().is_return())
 	{
 	  for (int j=0;j<cp->m_names.count();j++)
-	    if (_ctxt->_string->getString(strings[j]) == i.key())
+	    if (_ctxt->_string->str(strings[j]) == i.key())
 	      {
 		if (!i.value().is_captured())
 		  return_ptr[i.value().return_position] = j;
@@ -228,7 +228,7 @@ Object Assembler::codeObject()
   // Mark up the constants to replace nested functions with their code blocks
   for (int i=0;i<_nested_codes.size();i++)
     {
-      const Object &myName = _ctxt->_string->makeString("#" + _ctxt->_string->getString(_ctxt->_code->ro(_nested_codes[i])->m_name));
+      const Object &myName = _ctxt->_string->makeString("#" + _ctxt->_string->str(_ctxt->_code->ro(_nested_codes[i])->m_name));
       std::cout << "Need home for code block: " << myName << "\n";
       Object *ip = _ctxt->_list->rw(cp->m_consts);
       for (int j=0;j<cp->m_consts.count();j++)

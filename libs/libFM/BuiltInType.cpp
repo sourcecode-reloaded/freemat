@@ -6,7 +6,7 @@
 using namespace FM;
 
 FMString BuiltInType::brief(const Object &a) {
-  return FMString("builtin " + _ctxt->_string->getString(this->ro(a)->m_name));
+  return FMString("builtin " + _ctxt->_string->str(this->ro(a)->m_name));
 }
 
 FMString BuiltInType::describe(const Object &a) {

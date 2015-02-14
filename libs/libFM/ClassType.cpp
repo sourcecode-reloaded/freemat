@@ -66,12 +66,12 @@ Object ClassMetaType::deref(const Object &meta) {
 }
 
 FMString ClassMetaType::brief(const Object &a) {
-  return "meta class for type " + _ctxt->_string->getString(this->ro(a)->m_name);
+  return "meta class for type " + _ctxt->_string->str(this->ro(a)->m_name);
 }
 
 FMString ClassMetaType::describe(const Object &a) {
   const ClassMetaData *cmd = this->ro(a);
-  FMString ret = "meta class " + _ctxt->_string->getString(cmd->m_name) + "\n";
+  FMString ret = "meta class " + _ctxt->_string->str(cmd->m_name) + "\n";
   ret += "properties:\n";
   for (auto i : cmd->m_properties)
     ret += FMString(" ") + i.first.description() + "\n";
@@ -125,7 +125,7 @@ void ClassMetaType::addSuperClass(Object &meta, const Object &super) {
 
 void ClassMetaType::addMethod(Object &meta, const Object &name, const Object &definition, bool is_static) {
   ClassMetaData *cmd = this->rw(meta);
-  FMString s_name = _ctxt->_string->getString(name);
+  FMString s_name = _ctxt->_string->str(name);
   ClassMethodMetaData *cmmd = new ClassMethodMetaData(_ctxt);
   cmmd->m_definition = definition;
   cmmd->m_static = is_static;
@@ -186,7 +186,7 @@ Object ClassType::getFieldNoGetters(const Object &a, const Object &b) {
   auto k = cmd->m_methods.find(b);
   if (k != cmd->m_methods.end())
     return _ctxt->_bound->bindFunction(k->second->m_definition,a);
-  throw Exception("Property " + b.description() + " is not defined for class " + _ctxt->_string->getString(cmd->m_name));
+  throw Exception("Property " + b.description() + " is not defined for class " + _ctxt->_string->str(cmd->m_name));
 }
 
 Object ClassType::getMethod(const Object &a, const Object &b) {
@@ -195,7 +195,7 @@ Object ClassType::getMethod(const Object &a, const Object &b) {
   const ClassMetaData *cmd = _ctxt->_meta->ro(myMeta);
   auto j = cmd->m_methods.find(b);
   if (j == cmd->m_methods.end())
-    throw Exception("Method " + b.description() + " is not defined for class " + _ctxt->_string->getString(cmd->m_name));
+    throw Exception("Method " + b.description() + " is not defined for class " + _ctxt->_string->str(cmd->m_name));
   return _ctxt->_bound->bindFunction(j->second->m_definition,a);
 }
 
@@ -219,7 +219,7 @@ void ClassType::setField(Object &a, const Object &args, const Object &b) {
   const ClassMetaData *cmd = _ctxt->_meta->ro(myMeta);
   auto k = cmd->m_properties.find(args);
   if (k == cmd->m_properties.end())
-    throw Exception("Property " + b.description() + " is not defined for class " + _ctxt->_string->getString(cmd->m_name));
+    throw Exception("Property " + b.description() + " is not defined for class " + _ctxt->_string->str(cmd->m_name));
   ClassPropertyMetaData *cpmd = k->second;
   if (cpmd->m_setter.isEmpty())
     setFieldNoSetters(a,args,b);
@@ -266,7 +266,7 @@ FMString ClassType::brief(const Object &a) {
   const ClassData *cd = this->ro(a);
   const Object &myMeta = cd->metaClass;
   const ClassMetaData *cmd = _ctxt->_meta->ro(myMeta);
-  return _ctxt->_string->getString(cmd->m_name);
+  return _ctxt->_string->str(cmd->m_name);
 }
 
 ClassType::ClassType(ThreadContext *ctxt) :
@@ -442,7 +442,7 @@ FMString ClassType::describe(const Object &a) {
   const ClassData *cd = this->ro(a);
   const Object &myMeta = cd->metaClass;
   const ClassMetaData *cmd = _ctxt->_meta->ro(myMeta);
-  FMString ret = _ctxt->_string->getString(cmd->m_name);
+  FMString ret = _ctxt->_string->str(cmd->m_name);
   if (a.isScalar()) {
     ret += "\n";
     const Object *rd = _ctxt->_list->ro(_ctxt->_list->scalarValue(cd->m_data));
@@ -450,7 +450,7 @@ FMString ClassType::describe(const Object &a) {
     for (auto i : cmd->m_properties)
       {
 	ClassPropertyMetaData *cpmd = i.second;
-	ret += "    " + _ctxt->_string->getString(i.first) + ": ";
+	ret += "    " + _ctxt->_string->str(i.first) + ": ";
 	if (cpmd->m_constant)
 	  {
 	    ret += cpmd->m_default.brief() + " (constant)\n";
@@ -468,7 +468,7 @@ FMString ClassType::describe(const Object &a) {
     ret += " " + a.dims().toString() + " array\n";
     ret += "properties:\n";
     for (auto i : cmd->m_properties)
-      ret += "    " + _ctxt->_string->getString(i.first) + "\n";
+      ret += "    " + _ctxt->_string->str(i.first) + "\n";
   }
   ret += "list of events\n";
   const Object *op = _ctxt->_list->ro(cmd->m_events);
@@ -477,7 +477,7 @@ FMString ClassType::describe(const Object &a) {
   ret += "list of methods\n";
   for (auto i : cmd->m_methods)
     {
-      ret += "    " + _ctxt->_string->getString(i.first);
+      ret += "    " + _ctxt->_string->str(i.first);
       if (i.second->m_static)
 	ret += " (static)";
       ret += "\n";

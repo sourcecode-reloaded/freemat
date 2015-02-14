@@ -22,8 +22,12 @@ namespace FM
   class SingleType;
   class StringType;
   class IndexType;
+  class Int8Type;
+  class Int16Type;
   class Int32Type;
   class Int64Type;
+  class UInt8Type;
+  class UInt16Type;
   class UInt32Type;
   class UInt64Type;
   class StructType;
@@ -54,8 +58,12 @@ namespace FM
     SingleType *_single;
     StringType *_string;
     IndexType *_index;
+    Int8Type *_int8;
+    Int16Type *_int16;
     Int32Type *_int32;
     Int64Type *_int64;
+    UInt8Type *_uint8;
+    UInt16Type *_uint16;
     UInt32Type *_uint32;
     UInt64Type *_uint64;
     StructType *_struct;

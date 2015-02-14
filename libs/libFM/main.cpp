@@ -113,7 +113,7 @@ Object strcmp(const Object &args, int nargout, ThreadContext *ctxt) {
   const Object &x = ctxt->_list->first(args);
   const Object &y = ctxt->_list->second(args);
   if (x.isString() && y.isString())
-    return ctxt->_list->makeScalar(ctxt->_bool->makeScalar(ctxt->_string->getString(x) == ctxt->_string->getString(y)));
+    return ctxt->_list->makeScalar(ctxt->_bool->makeScalar(ctxt->_string->str(x) == ctxt->_string->str(y)));
   return ctxt->_list->makeScalar(ctxt->_bool->makeScalar(false));
 }
 
@@ -134,8 +134,44 @@ Object numel(const Object &args, int nargout, ThreadContext *ctxt) {
 }
 
 
-Object int32(const Object &args, int nargout, ThreadContext *ctxt) {
+Object to_int8(const Object &args, int nargout, ThreadContext *ctxt) {
+  return ctxt->_list->makeScalar(ctxt->_int8->convert(ctxt->_list->ro(args)[0]));
+}
+
+Object to_int16(const Object &args, int nargout, ThreadContext *ctxt) {
+  return ctxt->_list->makeScalar(ctxt->_int16->convert(ctxt->_list->ro(args)[0]));
+}
+
+Object to_int32(const Object &args, int nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->_int32->convert(ctxt->_list->ro(args)[0]));
+}
+
+Object to_int64(const Object &args, int nargout, ThreadContext *ctxt) {
+  return ctxt->_list->makeScalar(ctxt->_int64->convert(ctxt->_list->ro(args)[0]));
+}
+
+Object to_uint8(const Object &args, int nargout, ThreadContext *ctxt) {
+  return ctxt->_list->makeScalar(ctxt->_uint8->convert(ctxt->_list->ro(args)[0]));
+}
+
+Object to_uint16(const Object &args, int nargout, ThreadContext *ctxt) {
+  return ctxt->_list->makeScalar(ctxt->_uint16->convert(ctxt->_list->ro(args)[0]));
+}
+
+Object to_uint32(const Object &args, int nargout, ThreadContext *ctxt) {
+  return ctxt->_list->makeScalar(ctxt->_uint32->convert(ctxt->_list->ro(args)[0]));
+}
+
+Object to_uint64(const Object &args, int nargout, ThreadContext *ctxt) {
+  return ctxt->_list->makeScalar(ctxt->_uint64->convert(ctxt->_list->ro(args)[0]));
+}
+
+Object to_double(const Object &args, int nargout, ThreadContext *ctxt) {
+  return ctxt->_list->makeScalar(ctxt->_double->convert(ctxt->_list->ro(args)[0]));
+}
+
+Object to_single(const Object &args, int nargout, ThreadContext *ctxt) {
+  return ctxt->_list->makeScalar(ctxt->_single->convert(ctxt->_list->ro(args)[0]));
 }
 
 // Create an addlistener method for the handle class
@@ -190,8 +226,8 @@ int main(int argc, char *argv[])
   for (auto i=classes.begin();i!=classes.end();++i)
     {
       std::cout << "Assigning class " << i->first << " to node " << nodectr << "\n";
-      name_to_node_map[ctxt->_string->getString(i->first)] = nodectr;
-      node_to_name_map[nodectr] = ctxt->_string->getString(i->first);
+      name_to_node_map[ctxt->_string->str(i->first)] = nodectr;
+      node_to_name_map[nodectr] = ctxt->_string->str(i->first);
       nodectr++;
     }
 
@@ -200,11 +236,11 @@ int main(int argc, char *argv[])
 
   for (auto i=classes.begin();i!=classes.end();++i)
     {
-      int src = name_to_node_map[ctxt->_string->getString(i->first)];
+      int src = name_to_node_map[ctxt->_string->str(i->first)];
       Object dependencies = ctxt->_module->ro(i->second)->m_dependencies;
       for (int j=0;j<dependencies.count();j++) {
 	Object dependency = ctxt->_list->ro(dependencies)[j];
-	FMString dependency_name = ctxt->_string->getString(dependency);
+	FMString dependency_name = ctxt->_string->str(dependency);
 	if (name_to_node_map.contains(dependency_name))
 	  {
 	    int dst = name_to_node_map[dependency_name];
@@ -307,7 +343,16 @@ int main(int argc, char *argv[])
   ctxt->_globals->insert(std::make_pair("handir",ctxt->_builtin->makeBuiltin("handir",handir)));
   ctxt->_globals->insert(std::make_pair("strcmp",ctxt->_builtin->makeBuiltin("strcmp",strcmp)));
   ctxt->_globals->insert(std::make_pair("numel",ctxt->_builtin->makeBuiltin("numel",numel)));
-  ctxt->_globals->insert(std::make_pair("int32",ctxt->_builtin->makeBuiltin("int32",int32)));
+  ctxt->_globals->insert(std::make_pair("int8",ctxt->_builtin->makeBuiltin("int8",to_int8)));
+  ctxt->_globals->insert(std::make_pair("int16",ctxt->_builtin->makeBuiltin("int16",to_int16)));
+  ctxt->_globals->insert(std::make_pair("int32",ctxt->_builtin->makeBuiltin("int32",to_int32)));
+  ctxt->_globals->insert(std::make_pair("int64",ctxt->_builtin->makeBuiltin("int64",to_int64)));
+  ctxt->_globals->insert(std::make_pair("uint8",ctxt->_builtin->makeBuiltin("uint8",to_uint8)));
+  ctxt->_globals->insert(std::make_pair("uint16",ctxt->_builtin->makeBuiltin("uint16",to_uint16)));
+  ctxt->_globals->insert(std::make_pair("uint32",ctxt->_builtin->makeBuiltin("uint32",to_uint32)));
+  ctxt->_globals->insert(std::make_pair("uint64",ctxt->_builtin->makeBuiltin("uint64",to_uint64)));
+  ctxt->_globals->insert(std::make_pair("double",ctxt->_builtin->makeBuiltin("double",to_double)));
+  ctxt->_globals->insert(std::make_pair("single",ctxt->_builtin->makeBuiltin("single",to_single)));
   ctxt->_globals->insert(std::make_pair("class",ctxt->_builtin->makeBuiltin("class",classfunc)));
   ctxt->_globals->insert(std::make_pair("gc",ctxt->_builtin->makeBuiltin("gc",builtin_gc)));
 

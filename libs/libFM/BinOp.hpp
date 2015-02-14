@@ -9,7 +9,7 @@ namespace FM
 {
 
   template <class ctype, class atype, class btype, class vtype, class Op>
-  inline Object dispatch_binop_lev2(const Object &a, const Object &b, Type *o, bool isComplex)
+  static inline Object dispatch_binop_lev2(const Object &a, const Object &b, Type *o, bool isComplex)
   {
     PODType<ctype> *otype = static_cast<PODType<ctype> *>(o);
     Object c = otype->zeroArrayOfSize(Tuple::computeDotOpSize(a.dims(),b.dims()),isComplex);

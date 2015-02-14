@@ -117,7 +117,7 @@ Object VM::executeModule(const Object &moduleObject, const Object &parameters)
 
 void VM::defineClass(const Object &name, const Object &arguments)
 {
-  FMString className = _ctxt->_string->getString(name);
+  FMString className = _ctxt->_string->str(name);
   if (_ctxt->_globals->count(className) > 0) return;
   Object fooMeta = _ctxt->_meta->makeScalar();
   ClassMetaData *cmd = _ctxt->_meta->rw(fooMeta);
@@ -155,7 +155,7 @@ void VM::defineClass(const Object &name, const Object &arguments)
   const Object *sp = _ctxt->_list->ro(superclasses);
   for (int i=0;i<superclasses.count();i++) 
     {
-      Object super_meta = _ctxt->_globals->at(_ctxt->_string->getString(sp[i]));
+      Object super_meta = _ctxt->_globals->at(_ctxt->_string->str(sp[i]));
       std::cout << "Defining class " << className << " super class " << super_meta.description() << "\n";
       _ctxt->_meta->addSuperClass(fooMeta,super_meta);
     }
@@ -187,7 +187,7 @@ Object VM::executeAnonymousFunction(const Object &codeObject, const Object &para
 {
   _fp++;
   const CodeData *cp = _ctxt->_code->ro(codeObject);
-  _frames[_fp]->_name = _ctxt->_string->getString(cp->m_name);
+  _frames[_fp]->_name = _ctxt->_string->str(cp->m_name);
   defineFrame(cp->m_names,cp->m_registers);
   Object *sp = _ctxt->_list->rw(_frames[_fp]->_vars);
   ndx_t *ap = _ctxt->_index->rw(_frames[_fp]->_addrs);
@@ -265,7 +265,7 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
   _fp++;
   const FunctionData *fd = _ctxt->_function->ro(functionObject);
   const CodeData *cp = _ctxt->_code->ro(fd->m_code);
-  _frames[_fp]->_name = _ctxt->_string->getString(cp->m_name);
+  _frames[_fp]->_name = _ctxt->_string->str(cp->m_name);
   std::cout << "Starting function: " << _frames[_fp]->_name << "\n";
   defineFrame(cp->m_names,cp->m_registers);
   ndx_t *ap = _ctxt->_index->rw(_frames[_fp]->_addrs);
@@ -365,7 +365,7 @@ void VM::executeScript(const Object &codeObject)
 {
   _fp++;
   const CodeData *cp = _ctxt->_code->ro(codeObject);
-  _frames[_fp]->_name = _ctxt->_string->getString(cp->m_name);
+  _frames[_fp]->_name = _ctxt->_string->str(cp->m_name);
   std::cout << "Starting script: " << _frames[_fp]->_name << "\n";
   defineFrame(cp->m_names,cp->m_registers);
   _frames[_fp]->_sym_names = _ctxt->_list->empty(); // Our frame has no locally defined symbols
@@ -507,7 +507,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		}
 	      case OP_LOAD_META:
 		{
-		  FMString classname = _ctxt->_string->getString(REG2);
+		  FMString classname = _ctxt->_string->str(REG2);
 		  if (_ctxt->_globals->count(classname) == 0)
 		    throw Exception("No metaclass defined with name:" + classname);
 		  REG1 = _ctxt->_globals->at(classname);
@@ -697,13 +697,13 @@ void VM::executeCodeObject(const Object &codeObject)
 		  register int addr = addrfile[ndx];
 		  if (addr == -1)
 		    {
-		      std::cout << "OP_LOAD for " << _ctxt->_string->getString(names_list[ndx]) << "\n";
+		      std::cout << "OP_LOAD for " << _ctxt->_string->str(names_list[ndx]) << "\n";
 		      // The address for this index has not been defined yet in the current scope.
 		      // First, see if the closed frame has the address for it.  In the process, the 
 		      // closed frame will search the global namespace for the symbol.
 		      addr = closed_frame->lookupAddressForName(names_list[ndx],true);
 		      if (addr == -1)
-			throw Exception("Reference to undefined variable " + _ctxt->_string->getString(names_list[ndx]));
+			throw Exception("Reference to undefined variable " + _ctxt->_string->str(names_list[ndx]));
 		      addrfile[ndx] = addr;
 		    }
 		  REG1 = varfile[addr];
@@ -715,7 +715,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		  register int addr = addrfile[ndx];
 		  if (addr == -1)
 		    {
-		      std::cout << "OP_LOOKUP for " << _ctxt->_string->getString(names_list[ndx]) << "\n";
+		      std::cout << "OP_LOOKUP for " << _ctxt->_string->str(names_list[ndx]) << "\n";
 		      // check for user classes
 		      bool anyUserClasses = false;
 		      const Object *regs = _ctxt->_list->ro(REG2);
@@ -737,7 +737,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		      // closed frame will search the global namespace for the symbol.
 		      addr = closed_frame->lookupAddressForName(names_list[ndx],true);
 		      if (addr == -1)
-			throw Exception("Reference to undefined variable " + _ctxt->_string->getString(names_list[ndx]));
+			throw Exception("Reference to undefined variable " + _ctxt->_string->str(names_list[ndx]));
 		      addrfile[ndx] = addr;
 		      // FIXME - if varfile[addr] is a variable, we can cache the address, otherwise, we can't
 		    }
@@ -819,7 +819,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		  register int addr = addrfile[ndx];
 		  if (addr == -1)
 		    {
-		      FMString name = _ctxt->_string->getString(names_list[get_constant(insn)]);
+		      FMString name = _ctxt->_string->str(names_list[get_constant(insn)]);
 		      addrfile[ndx] = closed_frame->getAddress(name);
 		      if (addrfile[ndx] == -1)
 			{
