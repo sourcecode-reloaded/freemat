@@ -372,9 +372,21 @@ void SymbolPass::walkAnonymousFunction(const Tree &t) {
   popToParent();
 }
 
+void SymbolPass::walkStatement(const Tree &t, FunctionTypeEnum functionType) {
+  if (t.token() == TOK_EXPR)
+    addSymbol("ans",symbol_flags_t::DYNAMIC());
+  walkCode(t,functionType);
+}
+
 void SymbolPass::walkCode(const Tree &t, FunctionTypeEnum functionType) {
   switch (t.token())
     {
+    case TOK_QSTATEMENT:
+    case TOK_STATEMENT:
+      {
+	walkStatement(t.first(),functionType);
+	break;
+      }
     case TOK_GLOBAL:
       {
 	for (int index=0;index < t.numChildren();++index)

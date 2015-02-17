@@ -58,7 +58,6 @@ namespace FM
     return ctxt->_list->indexOf(list,ctxt->_string->makeString(string));
   }
 
-  // TODO add remaining integer types
   inline Object convertToCode(ThreadContext *ctxt, const Object &list, DataCode code) {
     Type *tptr = nullptr;
     switch (code) {

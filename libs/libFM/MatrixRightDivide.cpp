@@ -6,12 +6,15 @@
 
 using namespace FM;
 
-Object FM::MatrixRightDivideDouble(const Object &a, const Object &b, TermIF *io) {
+template <class T, FM::DataCode codeNum>
+Object FM::MatrixRightDivide(const Object &a, const Object &b, TermIF *io, FloatType<T,codeNum> *ft) {
   if (b.cols() != a.cols()) throw Exception("Matrix right division (e.g., a/B) requires a and B to have the same number of cols");
-  DoubleType *dt = a.asType<DoubleType>();
-  Object A = dt->Transpose(a);
-  Object B = dt->Transpose(b);
-  Object ret = MatrixLeftDivideDouble(B,A,io);
-  return dt->Transpose(ret);
+  Object A = ft->Transpose(a);
+  Object B = ft->Transpose(b);
+  Object ret = MatrixLeftDivide<T,codeNum>(B,A,io,ft);
+  return ft->Transpose(ret);
 }
+
+template Object FM::MatrixRightDivide(const Object &a, const Object &b, TermIF *io, FloatType<double,TypeDouble> *ft);
+template Object FM::MatrixRightDivide(const Object &a, const Object &b, TermIF *io, FloatType<float,TypeSingle> *ft);
 

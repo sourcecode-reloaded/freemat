@@ -117,6 +117,14 @@ Object strcmp(const Object &args, int nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->_bool->makeScalar(false));
 }
 
+Object size(const Object &args, int nargout, ThreadContext *ctxt) {
+  Tuple dims(Tuple::canonicalForm(ctxt->_list->ro(args)[0].dims()));
+  Object ret(ctxt->_double->makeMatrix(1,dims.dimensions()));
+  for (int i=0;i<dims.dimensions();i++)
+    ctxt->_double->rw(ret)[i] = dims.dimension(i);
+  return ctxt->_list->makeScalar(ret);
+}
+
 Object print(const Object &args, int nargout, ThreadContext *ctxt) {
   ctxt->_io->output("\n\nPrint:" + args.description() + "\n\n");
   return ctxt->_list->empty();
@@ -172,6 +180,10 @@ Object to_double(const Object &args, int nargout, ThreadContext *ctxt) {
 
 Object to_single(const Object &args, int nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->_single->convert(ctxt->_list->ro(args)[0]));
+}
+
+Object backtrace(const Object &args, int nargout, ThreadContext *ctxt) {
+  return ctxt->_list->makeScalar(ctxt->_vm->backtrace());
 }
 
 // Create an addlistener method for the handle class
@@ -339,6 +351,7 @@ int main(int argc, char *argv[])
     ctxt->_globals->insert(std::make_pair("cap2",cap2));
   }
 
+  ctxt->_globals->insert(std::make_pair("size",ctxt->_builtin->makeBuiltin("size",size)));
   ctxt->_globals->insert(std::make_pair("print",ctxt->_builtin->makeBuiltin("print",print)));
   ctxt->_globals->insert(std::make_pair("handir",ctxt->_builtin->makeBuiltin("handir",handir)));
   ctxt->_globals->insert(std::make_pair("strcmp",ctxt->_builtin->makeBuiltin("strcmp",strcmp)));
@@ -353,6 +366,7 @@ int main(int argc, char *argv[])
   ctxt->_globals->insert(std::make_pair("uint64",ctxt->_builtin->makeBuiltin("uint64",to_uint64)));
   ctxt->_globals->insert(std::make_pair("double",ctxt->_builtin->makeBuiltin("double",to_double)));
   ctxt->_globals->insert(std::make_pair("single",ctxt->_builtin->makeBuiltin("single",to_single)));
+  ctxt->_globals->insert(std::make_pair("backtrace",ctxt->_builtin->makeBuiltin("backtrace",backtrace)));
   ctxt->_globals->insert(std::make_pair("class",ctxt->_builtin->makeBuiltin("class",classfunc)));
   ctxt->_globals->insert(std::make_pair("gc",ctxt->_builtin->makeBuiltin("gc",builtin_gc)));
 
@@ -376,8 +390,6 @@ int main(int argc, char *argv[])
       if (!p)
 	return 0;
       FMString body(p);
-      // bool failed;
-      // body = ReadFileIntoString(body,failed);
       body += "\n\n";
       try {
 	ctxt->_compiler->compile(body);

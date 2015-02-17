@@ -885,10 +885,10 @@ void Compiler::rhs(reg_t list, const Tree &t) {
     }
 }
 
-// TODO - what about "ans"?
 void Compiler::expressionStatement(const Tree &t, bool printIt) {
   reg_t p = expression(t.first());
   if (printIt) emit(OP_PRINT,p);
+  saveRegisterToName("ans",p);
 }
 
 reg_t Compiler::cellDefinition(const Tree &t) {
@@ -1427,7 +1427,13 @@ void Compiler::statementType(const Tree &t, bool printIt) {
     //dbdown(t);
     break;
   case TOK_RETURN:
-    emit(OP_RETURN);
+    // An explicit return inside a script is unusual
+    // We map it to a unique opcode to distinguish it from
+    // a normal return.
+    if (_module->_modtype == ScriptModuleType)
+      emit(OP_RETSCRPT);
+    else
+      emit(OP_RETURN);
     break;
   case TOK_SWITCH:
     switchStatement(t);
@@ -1445,7 +1451,7 @@ void Compiler::statementType(const Tree &t, bool printIt) {
     //retallStatement();
     break;
   case TOK_KEYBOARD:
-    //doDebugCycle();
+    emit(OP_STOP);
     break;
   case TOK_GLOBAL:
     break;

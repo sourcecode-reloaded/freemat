@@ -14,10 +14,10 @@ namespace FM
   }
   Object DoubleType::LeftDivide(const Object &a, const Object &b) {
     if (a.isScalar() || b.isScalar()) return DotLeftDivide(a,b);
-    return b.type()->convert(MatrixLeftDivideDouble(a,this->convert(b),_ctxt->_io));
+    return b.type()->convert(MatrixLeftDivide<double,TypeDouble>(a,this->convert(b),_ctxt->_io,this));
   }
   Object DoubleType::RightDivide(const Object &a, const Object &b) {
     if (a.isScalar() || b.isScalar()) return DotRightDivide(a,b);
-    return b.type()->convert(MatrixRightDivideDouble(a,this->convert(b),_ctxt->_io));
+    return b.type()->convert(MatrixRightDivide<double,TypeDouble>(a,this->convert(b),_ctxt->_io,this));
   }
 }

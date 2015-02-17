@@ -2,15 +2,14 @@
 #define __MatrixLeftDivide_hpp__
 
 #include "Object.hpp"
-
+#include "FloatType.hpp"
 
 namespace FM
 {
-
   class TermIF;
 
-  Object MatrixLeftDivideDouble(const Object &a, const Object &b, TermIF *io);
-  //  Object MatrixLeftDivideSingle(const Object &a, const Object &b);
+  template <class T, FM::DataCode codeNum>
+  Object MatrixLeftDivide(const Object &a, const Object &b, TermIF *io, FloatType<T,codeNum> *ft);
 };
 
 #endif

@@ -67,9 +67,11 @@ namespace FM
     virtual Object GreaterThan(const Object &a, const Object &b) {return cmpop<OpGT>(a,b,_ctxt->_bool);}
     virtual Object Equals(const Object &a, const Object &b) {return cmpop<OpEQ>(a,b,_ctxt->_bool);}
     virtual Object NotEquals(const Object &a, const Object &b) {return cmpop<OpNE>(a,b,_ctxt->_bool);}
-    virtual Object Or(const Object &a, const Object &b);
-    virtual Object And(const Object &a, const Object &b);
+    virtual Object Or(const Object &a, const Object &b) {return cmpop<OpOr>(a,b,_ctxt->_bool);}
+    virtual Object And(const Object &a, const Object &b) {return cmpop<OpAnd>(a,b,_ctxt->_bool);}
     virtual Object Multiply(const Object &a, const Object &b);
+    virtual Object LeftDivide(const Object &a, const Object &b);
+    virtual Object RightDivide(const Object &a, const Object &b);
   };
 }
 

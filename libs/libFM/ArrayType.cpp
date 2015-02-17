@@ -313,7 +313,6 @@ static inline void getLoop(T* op, const T* ip, const dim_t (&outdim)[MAXDIMS], c
   }
 }
 
-// FIXME - Handle A(:)
 template <class T>
 Object ArrayType<T>::getParensRowMode(const Object &a, const Tuple &dims, const Object &b)
 {
@@ -329,7 +328,6 @@ Object ArrayType<T>::getParensRowMode(const Object &a, const Tuple &dims, const 
   return output;
 }
 
-// TODO - handle (:,:,x) indexing!
 static inline int isSliceIndexCase(ThreadContext *ctxt, Object *c, int cnt)
 {
   int last_colon = 0;
@@ -374,14 +372,12 @@ Object ArrayType<T>::getSliceMode(const Object &a, Object *c, int cnt, int last_
 
 template <class T>
 Object ArrayType<T>::getParens(const Object &a, const Object &b) {
-  // FIXME - b is empty?
   if (b.count() == 1) 
     {
       Object ndx = _ctxt->_list->first(b);
       return getParensRowMode(a,ndx.dims(),ndx.asIndex(a.count()));
     }
   const Tuple & adims(a.dims());
-  // TODO: Trim trailing singular dimensions.  Make sure b.size() < a.numDims.
   // TODO: Special case all-scalar indexing case
   Object carray(_ctxt->_list->makeMatrix(MAXDIMS,1));
   Object *c = _ctxt->_list->rw(carray);
@@ -389,7 +385,6 @@ Object ArrayType<T>::getParens(const Object &a, const Object &b) {
   const Object *bp = _ctxt->_list->ro(b);
   for (int i=0;i<bsize;i++)
     c[i] = bp[i].asIndex(adims.dimension(i));
-  // TODO: Add slice test here (c.f. isSliceIndexCase)
   int last_colon = isSliceIndexCase(_ctxt,c,bsize);
   if (last_colon > 0) {
     return getSliceMode(a,c,bsize,last_colon);
@@ -460,7 +455,6 @@ void ArrayType<T>::setParensRowIndexMode(Object &a, const Object &ndx, const Obj
       a.type()->resize(a,ComputeRowResizedTuple(a,maxndx));
     }
   const ndx_t *addr = _ctxt->_index->ro(ndx);
-  // TODO - handle b is complex, a is real
   if (!a.isComplex() && b.isComplex())
     this->promoteComplex(a);
   setLoopRowMode<T>(this->rw(a),
@@ -489,8 +483,6 @@ Object ArrayType<T>::convertArgumentsToIndexingExpressions(const Object &args) {
   const Object *argsp = args.asType<ListType>()->ro(args);
   for (int i=0;i<argsize;i++)
     c[i] = argsp[i].asIndexNoBoundsCheck();
-  // TODO: Add slice test here (c.f. isSliceIndexCase)
-  // Expand colons, and do bounds check
   if (argsize > MAXDIMS) 
     throw Exception(FMString("FreeMat is compiled for maximum ") 
 		    + Stringify(MAXDIMS) + FMString(" dimensions.  Indexing expression ")
@@ -662,7 +654,6 @@ void ArrayType<T>::setParens(Object &a, const Object &args, const Object &b) {
     }
   if (b.isEmpty()) return erase(a,args);
   Tuple & adims(a.dims());
-  // TODO: Trim trailing singular dimensions.  Make sure b.size() < a.numDims.
   // TODO: Special case all-scalar indexing case
   Object carray(this->convertArgumentsToIndexingExpressions(args));
   int argsize = args.count();

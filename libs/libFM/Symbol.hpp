@@ -212,7 +212,6 @@ namespace FM
     FMVector<SymbolTable*> children;
     SymbolTable* parent;
     int property_count;
-    //
     SymbolTable* childNamed(const FMString &name) {
       for (int i=0;i<children.size();i++)
 	if (children[i]->name == name) return children[i];
@@ -270,6 +269,7 @@ namespace FM
     void walkMethods(const Tree &t);
     void walkEvents(const Tree &t);
     void walkEvent(const Tree &t);
+    void walkStatement(const Tree &t, FunctionTypeEnum scopeType);
     symbol_flags_t walkAttributes(const Tree &t);
     void newSibling(SymbolTable *t);
     void newChild(SymbolTable *t);

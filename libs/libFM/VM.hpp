@@ -26,6 +26,8 @@ namespace FM
     int _rp;
     ThreadContext *_ctxt;
     Object _exception;
+    bool _retscrpt_found;
+    void debugCycle();
   public:
     VM(ThreadContext *ctxt);
     void executeScript(const Object &codeObject);
@@ -37,6 +39,7 @@ namespace FM
     void defineClass(const Object &name, const Object &arguments);
     void defineFrame(const Object &names, int registerCount);
     void dump();
+    Object backtrace();
   };
 }
 

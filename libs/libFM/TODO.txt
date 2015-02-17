@@ -39,9 +39,6 @@ Compiler.cpp:// TODO - Make sure function calls work
 Compiler.cpp:// TODO - SAVE_OP does it work for all types (persistant, global, etc...)?
 Compiler.cpp:  - TODO - add an opcode to load an integer into a register, so that 0, 1, 2, ... are not stored as unique constants
 Compiler.cpp://TODO - 
-Compiler.cpp:// TODO - what about "ans"?
-Compiler.cpp:      return fetchConstant(_ctxt->_double->makeScalar(mt.toDouble()));
-Compiler.cpp:      return fetchConstant(_ctxt->_double->makeComplex(0,mt.toDouble()));
 Compiler.cpp:    { // TODO - is this all?
 Compiler.cpp:// TODO - Remove duplication
 Compiler.cpp:  // TODO - clean this up
@@ -58,9 +55,12 @@ Symbol.hpp:  // TODO - turn this into a struct... it's getting too ugly
 Type.cpp:	c = c.asType<ListType>()->first(c); //TODO a.foo.goo ? should throw error if a.foo is multi-valued
 Type.cpp:	  // TODO - not sure about the case:
 Type.cpp:      // TODO - is an exception here bad? If so, remove it
-TypeUtils.hpp:  // TODO add remaining integer types
 VM.cpp:// TODO - LOAD/SAVE Dynamic is about 2.5 x slower than LOAD/SAVE local
 VM.cpp:  /* - TODO - Do we still need this?
 main.cpp:  // TODO - Fix this.
 
 TODO - Need to fix the various type conversion tools and finish the mathematical operators
+TODO - shortcut operators don't seem to work?
+
+TODO - Need to work on the debugger interface.
+

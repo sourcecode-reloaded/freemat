@@ -7,6 +7,8 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_PUSH: return two_registers;
     case OP_FIRST: return two_registers;
     case OP_CALL: return three_registers;
+    case OP_STOP: return no_arguments;
+    case OP_RETSCRPT: return no_arguments;
     case OP_SAVE: return register_name;
     case OP_DCOLON: return two_registers;
     case OP_SUBSASGN: return register_register_name;
@@ -93,6 +95,8 @@ std::string getOpCodeName(op_t opcode)
     case OP_PUSH: return "PUSH";
     case OP_FIRST: return "FIRST";
     case OP_CALL: return "CALL";
+    case OP_STOP: return "STOP";
+    case OP_RETSCRPT: return "RETSCRPT";
     case OP_SAVE: return "SAVE";
     case OP_DCOLON: return "DCOLON";
     case OP_SUBSASGN: return "SUBSASGN";

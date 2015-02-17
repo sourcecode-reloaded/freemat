@@ -9,6 +9,7 @@
 //#include "Struct.hpp"
 //#include "Math.hpp"
 //#include "TermIF.hpp"
+#include "Assembler.hpp"
 #include <boost/timer/timer.hpp>
 #include "Compiler.hpp"
 #include "NCat.hpp"
@@ -17,6 +18,8 @@
 #include "CodeType.hpp"
 #include "config.h"
 #include "TypeUtils.hpp"
+#include <readline/readline.h>
+#include <readline/history.h>
 
 std::string getOpCodeName(FM::op_t);
 
@@ -73,6 +76,15 @@ VM::VM(ThreadContext *ctxt) : _registers(ctxt->_list->makeMatrix(register_stack_
   _fp = 0;
   _rp = 0;
   _ctxt = ctxt;
+}
+
+Object VM::backtrace() {
+  Object list(_ctxt->_cell->makeMatrix(_fp,1));
+  Object *lp = _ctxt->_cell->rw(list);
+  for (int i=0;i<_fp;i++) {
+    lp[i] = _ctxt->_string->makeString(_frames[i]->_name);
+  }
+  return list;
 }
 
 void VM::defineBaseVariable(const FMString &name, const Object &value)
@@ -361,6 +373,34 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
   return retvec;
 }
 
+void VM::debugCycle()
+{
+  while (1)
+    {
+      char *p = readline("K--> ");
+      if (p && *p)
+	add_history(p);
+      if (!p)
+	return;
+      FMString body(p);
+      body += "\n\n";
+      try {
+	_ctxt->_compiler->compile(body);
+	Module *mod = _ctxt->_compiler->module();
+	if (mod)
+	  {
+	    Object p = _ctxt->_asm->run(mod->_main);
+	    this->executeScript(p);
+	    std::cout << "Execute script complete\n";
+	    if (_retscrpt_found) return;
+	  }
+      } catch (const FM::Exception &e) {
+	std::cout << "Exception: " << e.msg() << "\n";
+      }
+    }
+  
+}
+
 void VM::executeScript(const Object &codeObject)
 {
   _fp++;
@@ -450,6 +490,7 @@ void VM::executeCodeObject(const Object &codeObject)
 
   int ip = 0;
   bool returnFound = false;
+  _retscrpt_found = false;
 
   Frame *closed_frame = NULL;
   for (int i=_fp;i>=0;--i)
@@ -488,6 +529,10 @@ void VM::executeCodeObject(const Object &codeObject)
 		break;
 	      case OP_RETURN:
 		returnFound = true;
+		break;
+	      case OP_RETSCRPT:
+		returnFound = true;
+		_retscrpt_found = true;
 		break;
 	      case OP_PUSH:
 		_ctxt->_list->push(REG1,REG2);
@@ -785,6 +830,11 @@ void VM::executeCodeObject(const Object &codeObject)
 	      case OP_TRY_END:
 		{
 		  eh->pop_back();
+		  break;
+		}
+	      case OP_STOP:
+		{
+		  debugCycle();
 		  break;
 		}
 	      case OP_THROW:

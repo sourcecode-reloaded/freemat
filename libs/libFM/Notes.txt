@@ -2381,7 +2381,28 @@ ans =
    uint32
 For all binary operations in which one operand is an array of integer data type (except 64-bit integers) and the other is a scalar double, MATLAB computes the operation using elementwise double-precision arithmetic, and then converts the result back to the original integer data type. For binary operations involving a 64-bit integer array and a scalar double, MATLAB computes the operation as if 80-bit extended-precision arithmetic were used, to prevent loss of precision.
 
-
 Type conversion infrastructure is in place.  Need to populate.
+
+How do we return from a debug cycle?
+
+The resulting code has two op_returns.  Is there some way?  A return
+from a script is not normal..
+
+
+There are two fundamental approaches to debugging.  One way is to add
+a hardware support for debug to the code.  The debugger could set the
+instruction trap - but that means that the code has to be writable,
+and it also means that conditional breakpoints become very difficult.
+
+The trace approach is going to be a lot slower.  Here, we have a flag
+for the VM.  If the flag is set, then after each instruction, line, or
+call, we call the trace function.  The trace function can then enter a
+debug cycle if it decides to.  The trace function can also keep track
+of the location of breakpoints, as well as evaluate conditional
+breakpoints when needed.
+
+
+How about an intermediate approach?  We keep a vector of booleans for
+each instruction.
 
 
