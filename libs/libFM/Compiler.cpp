@@ -1421,10 +1421,10 @@ void Compiler::statementType(const Tree &t, bool printIt) {
     //    dbtraceStatement(t);
     break;
   case TOK_DBUP:
-    // dbupStatement(t);
+    emit(OP_DBUP);
     break;
   case TOK_DBDOWN:
-    //dbdown(t);
+    emit(OP_DBDOWN);
     break;
   case TOK_RETURN:
     // An explicit return inside a script is unusual

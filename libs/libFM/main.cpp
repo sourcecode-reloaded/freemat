@@ -186,6 +186,16 @@ Object backtrace(const Object &args, int nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->_vm->backtrace());
 }
 
+Object dbup(const Object &args, int nargout, ThreadContext *ctxt) {
+  ctxt->_vm->dbshift(-1);
+  return ctxt->_list->empty();
+}
+
+Object dbdown(const Object &args, int nargout, ThreadContext *ctxt) {
+  ctxt->_vm->dbshift(1);
+  return ctxt->_list->empty();
+}
+
 // Create an addlistener method for the handle class
 
 Object classfunc(const Object &args, int nargout, ThreadContext *ctxt) {
@@ -367,6 +377,8 @@ int main(int argc, char *argv[])
   ctxt->_globals->insert(std::make_pair("double",ctxt->_builtin->makeBuiltin("double",to_double)));
   ctxt->_globals->insert(std::make_pair("single",ctxt->_builtin->makeBuiltin("single",to_single)));
   ctxt->_globals->insert(std::make_pair("backtrace",ctxt->_builtin->makeBuiltin("backtrace",backtrace)));
+  ctxt->_globals->insert(std::make_pair("dbup",ctxt->_builtin->makeBuiltin("dbup",dbup)));
+  ctxt->_globals->insert(std::make_pair("dbdown",ctxt->_builtin->makeBuiltin("dbdown",dbdown)));
   ctxt->_globals->insert(std::make_pair("class",ctxt->_builtin->makeBuiltin("class",classfunc)));
   ctxt->_globals->insert(std::make_pair("gc",ctxt->_builtin->makeBuiltin("gc",builtin_gc)));
 

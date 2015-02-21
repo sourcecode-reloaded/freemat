@@ -2406,3 +2406,101 @@ How about an intermediate approach?  We keep a vector of booleans for
 each instruction.
 
 
+Here are the db functions to implement along with their official
+descriptions from the MATLAB website:
+
+dbstack
+
+Function call stack
+Syntax
+dbstack
+dbstack(n)
+dbstack('-completenames')
+[ST,I] = dbstack(...)
+
+Description
+
+dbstack displays the line numbers and file names of the function calls that led to the current breakpoint, listed in the order in which they were executed. The display lists the line number of the most recently executed function call (at which the current breakpoint occurred) first, followed by its calling function, which is followed by its calling function, and so on. This continues until the topmost MATLAB® function is reached. Each line number is a hyperlink you can click to go directly to that line in the Editor. The notation functionname>localfunctionname is used to describe the location of the local function.
+
+dbstack(n) omits the first n frames from the display. This is useful when issuing a dbstack from within an error handler, for example.
+
+dbstack('-completenames') outputs the "complete name" (the absolute file name and the entire sequence of functions that nests the function in the stack frame) of each function in the stack.
+
+Either none, one, or both n and '-completenames' can appear. If both appear, the order is irrelevant.
+
+[ST,I] = dbstack(...) returns the stack trace information in an m-by-1 structure, ST, with the fields:
+
+file	The file in which the function appears. This field is the empty string if there is no file.
+name	Function name within the file.
+line	Function line number.
+The current workspace index is returned in I.
+
+If you step past the end of a file, dbstack returns a negative line number value to identify that special case. For example, if the last line to be executed is line 15, then the dbstack line number is 15 before you execute that line and -15 afterwards.
+
+This example shows the information returned when you issue dbstack while debugging a MATLAB code file:
+
+dbstack
+
+In /usr/local/matlab/toolbox/matlab/cond.m at line 13
+In test1.m at line 2
+In test.m at line 3
+This example shows the information returned when you issue dbstack while debugging lengthofline.m to get the complete name of the file, the function name, and line number in which the function appears:
+
+[ST,I] = dbstack('-completenames')
+ST = 
+    file: 'I:\MATLABFiles\mymfiles\lengthofline.m'
+    name: 'lengthofline'
+    line: 28
+I =
+     1
+
+An intermediate solution is to set the line numbers inside the
+generated code.  I.e., add a series of debug instructions into the
+stream so that we have
+
+<op codes for line N>
+DBG N+1
+<op codes for line N+1>
+DBG N+2
+<op codes for line N+2>
+
+This approach allows us to "poll" the debugger only when line numbers
+change.  It also makes disassembly easier, as the line numbers are in
+line with the relevant code.  It may make the opcode generation
+tougher, or the assembler part, as the number of instructions is no
+longer determined by the compiler alone.  Alternately, the compiler
+could filter at the emit(op) level and set codes for the DBG
+instruction into the output stream.
+
+
+There is an additional problem - when we shift the active frame, we do
+not want to overwrite the other frames after it while in the
+debugger.  So we have something like this:
+
+frames
+
+0
+1
+2
+3 <-- closed active frame
+4
+5 <-- active frame
+6
+7
+8
+9 <-- debugger base frame
+10<-- function called while in debugging
+
+There are a couple of issues.  One is that after a dbup or dbdown, the
+cache variables in the VM have to be reloaded.  For example, varfile,
+which points to the variables in the current frame, will change
+depending on which frame is being pointed to.  Also, we have to
+invalidate the address file, as it changes when we move from one frame
+to another.
+
+This all means that dbup/dbdown can no longer be normal functions.
+They have to go back to being special purpose functions that have
+specific opcodes.  Of course, they could be trapped at the compiler
+instead of being trapped at the parser.  Still. :(
+
+

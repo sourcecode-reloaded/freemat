@@ -3,6 +3,7 @@
 
 #include "Object.hpp"
 #include "Frame.hpp"
+#include "Debug.hpp"
 #include "HashMap.hpp"
 
 #define VM_LOCALVAR 1
@@ -23,10 +24,13 @@ namespace FM
     Object _modules;
     std::vector<Frame*> _frames;
     int _fp;
+    int _fpmax;
     int _rp;
     ThreadContext *_ctxt;
     Object _exception;
     bool _retscrpt_found;
+    std::stack<Debug> _debugs;
+    bool _debug_mode;
     void debugCycle();
   public:
     VM(ThreadContext *ctxt);
@@ -37,9 +41,10 @@ namespace FM
     void executeCodeObject(const Object &codeObject);
     void defineBaseVariable(const FMString &name, const Object &value);
     void defineClass(const Object &name, const Object &arguments);
-    void defineFrame(const Object &names, int registerCount);
+    void defineFrame(const Object &names, int registerCount, bool closed);
     void dump();
     Object backtrace();
+    void dbshift(int n);
   };
 }
 

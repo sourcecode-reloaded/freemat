@@ -80,6 +80,8 @@ opcodemode getOpCodeMode(op_t opcode)
     case OP_MAKE_ANONYMOUS: return three_registers;
     case OP_CLEAR: return one_register;
     case OP_LOAD_META: return two_registers;
+    case OP_DBUP: return no_arguments;
+    case OP_DBDOWN: return no_arguments;
     default:
       return three_registers;
   }
@@ -168,6 +170,8 @@ std::string getOpCodeName(op_t opcode)
     case OP_MAKE_ANONYMOUS: return "MAKE_ANONYMOUS";
     case OP_CLEAR: return "CLEAR";
     case OP_LOAD_META: return "LOAD_META";
+    case OP_DBUP: return "DBUP";
+    case OP_DBDOWN: return "DBDOWN";
     default: return "UNK";
   }
 }

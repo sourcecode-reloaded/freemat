@@ -78,6 +78,10 @@ VM::VM(ThreadContext *ctxt) : _registers(ctxt->_list->makeMatrix(register_stack_
   _ctxt = ctxt;
 }
 
+void VM::dbshift(int n) {
+  
+}
+
 Object VM::backtrace() {
   Object list(_ctxt->_cell->makeMatrix(_fp,1));
   Object *lp = _ctxt->_cell->rw(list);
@@ -178,7 +182,7 @@ void VM::defineClass(const Object &name, const Object &arguments)
 }
 
 
-void VM::defineFrame(const Object &names, int registerCount)
+void VM::defineFrame(const Object &names, int registerCount, bool closed)
 {
   int nameCount = names.count();
   _frames[_fp]->_addrs = _ctxt->_index->makeMatrix(nameCount,1);
@@ -192,6 +196,22 @@ void VM::defineFrame(const Object &names, int registerCount)
   _frames[_fp]->_reg_offset = _rp;
   _frames[_fp]->_module = _ctxt->_list->last(_modules);
   _frames[_fp]->_captures = _ctxt->_list->empty();
+  _frames[_fp]->_closed = closed;
+  if (closed)
+    _frames[_fp]->_closedFrame = _frames[_fp];
+  else
+    {
+      // Open frames must be closed by searching backwards
+      Frame *closed_frame = NULL;
+      for (int i=_fp;i>=0;--i)
+	if (_frames[i]->_closed)
+	  {
+	    closed_frame = _frames[i];
+	    break;
+	  }
+      if (!closed_frame)  throw Exception("Closed frame not found!  Should never happen!");
+      _frames[_fp]->_closedFrame = closed_frame;
+    }  
   _rp += registerCount;
 }
 
@@ -200,11 +220,9 @@ Object VM::executeAnonymousFunction(const Object &codeObject, const Object &para
   _fp++;
   const CodeData *cp = _ctxt->_code->ro(codeObject);
   _frames[_fp]->_name = _ctxt->_string->str(cp->m_name);
-  defineFrame(cp->m_names,cp->m_registers);
+  defineFrame(cp->m_names,cp->m_registers,true);
   Object *sp = _ctxt->_list->rw(_frames[_fp]->_vars);
   ndx_t *ap = _ctxt->_index->rw(_frames[_fp]->_addrs);
-  // Function scopes are closed
-  _frames[_fp]->_closed = true;
   // Populate the arguments
   // FIXME - need to only store the number of args and returns
   const Object * args = _ctxt->_list->ro(parameters);
@@ -279,15 +297,13 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
   const CodeData *cp = _ctxt->_code->ro(fd->m_code);
   _frames[_fp]->_name = _ctxt->_string->str(cp->m_name);
   std::cout << "Starting function: " << _frames[_fp]->_name << "\n";
-  defineFrame(cp->m_names,cp->m_registers);
+  defineFrame(cp->m_names,cp->m_registers,true);
   ndx_t *ap = _ctxt->_index->rw(_frames[_fp]->_addrs);
   _frames[_fp]->_captures = fd->m_closure;
   // Allocate space for the captured variables (free ones come through the closure)
   for (int i=0;i<cp->m_captured.count();i++)
     _ctxt->_list->push(_frames[_fp]->_captures,_ctxt->_captured->empty());
   Object *sp = _ctxt->_list->rw(_frames[_fp]->_vars);
-  // Function scopes are closed
-  _frames[_fp]->_closed = true;
   // Populate the arguments
   // FIXME - need to only store the number of args and returns
   const Object * args = _ctxt->_list->ro(parameters);
@@ -375,6 +391,14 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
 
 void VM::debugCycle()
 {
+  // FIXME - this state should be a stack or something
+  // FIXME - also need to preserve the debug context.
+  Debug state;
+  state._fp_when_called = _fp;
+  for (int i=_fp;i>=0;--i)
+    if (_frames[_fp]->_closed)
+      state._activeFrame = _frames[_fp];
+  debugs.push(state);
   while (1)
     {
       char *p = readline("K--> ");
@@ -398,7 +422,7 @@ void VM::debugCycle()
 	std::cout << "Exception: " << e.msg() << "\n";
       }
     }
-  
+  debugs.pop();
 }
 
 void VM::executeScript(const Object &codeObject)
@@ -407,9 +431,10 @@ void VM::executeScript(const Object &codeObject)
   const CodeData *cp = _ctxt->_code->ro(codeObject);
   _frames[_fp]->_name = _ctxt->_string->str(cp->m_name);
   std::cout << "Starting script: " << _frames[_fp]->_name << "\n";
-  defineFrame(cp->m_names,cp->m_registers);
+  defineFrame(cp->m_names,cp->m_registers,false);
   _frames[_fp]->_sym_names = _ctxt->_list->empty(); // Our frame has no locally defined symbols
-  _frames[_fp]->_closed = false;
+  _frames[_fp]->_fp = _fp; // Capture the frame pointer
+  
   // execute the code
   executeCodeObject(codeObject);
   // No return values.. pop the frame
@@ -492,17 +517,9 @@ void VM::executeCodeObject(const Object &codeObject)
   bool returnFound = false;
   _retscrpt_found = false;
 
-  Frame *closed_frame = NULL;
-  for (int i=_fp;i>=0;--i)
-    if (_frames[i]->_closed)
-      {
-	closed_frame = _frames[i];
-	break;
-      }
-  if (!closed_frame)  throw Exception("Closed frame not found!  Should never happen!");
-
+  Frame *closed_frame = _frames[_fp]->_closedFrame;
   Object *regfile = _ctxt->_list->rw(_registers) + _frames[_fp]->_reg_offset;
-  ndx_t *addrfile = _ctxt->_index->rw(_frames[_fp]->_addrs);
+  ndx_t *addrfile = _ctxt->_index->rw(_frames[_fp]->_addrs); // FIXME - Isn't this illegal? Do scripts have space allocated for an address file!!
   Object *varfile = _ctxt->_list->rw(closed_frame->_vars);
   Object *capturesfile = _ctxt->_list->rw(_frames[_fp]->_captures);
   std::vector<int> *eh = &_frames[_fp]->_exception_handlers;
@@ -525,6 +542,20 @@ void VM::executeCodeObject(const Object &codeObject)
 
 	    switch (opcode(insn))
 	      {
+	      case OP_DBUP:
+		{
+		  // TODO - this will not persist across statements issued in the debugger
+		  for (int i=closed_frame->_fp-1;i>=0;--i)
+		    if (_frames[i]->_closed)
+		      {
+			closed_frame = _frames[i];
+			
+			break;
+		      }
+		}
+		break;
+	      case OP_DBDOWN:
+		break;
 	      case OP_NOP:
 		break;
 	      case OP_RETURN:
@@ -758,7 +789,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		{
 		  register int ndx = get_constant(insn);
 		  register int addr = addrfile[ndx];
-		  if (addr == -1)
+		  if ((addr == -1) || _debug_mode)
 		    {
 		      std::cout << "OP_LOOKUP for " << _ctxt->_string->str(names_list[ndx]) << "\n";
 		      // check for user classes
@@ -796,7 +827,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		{
 		  register int ndx = get_constant(insn);
 		  register int addr = addrfile[ndx];
-		  if (addr == -1)
+		  if ((addr == -1) || _debug_mode)
 		    {
 		      addr = closed_frame->lookupAddressForName(names_list[ndx],false);
 		      if (addr == -1)
@@ -867,7 +898,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		{
 		  register int ndx = get_constant(insn);
 		  register int addr = addrfile[ndx];
-		  if (addr == -1)
+		  if ((addr == -1) || _debug_mode)
 		    {
 		      FMString name = _ctxt->_string->str(names_list[get_constant(insn)]);
 		      addrfile[ndx] = closed_frame->getAddress(name);
