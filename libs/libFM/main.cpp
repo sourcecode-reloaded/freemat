@@ -54,35 +54,19 @@ protected:
 };
 
 
-
-void compileFunc(ThreadContext *ctxt, FMString name)
-{
-  try {
-    bool failed;
-    FMString body = ReadFileIntoString(name+".m",failed);
-    body += "\n\n";
-    ctxt->_compiler->compile(body);
-    Module *mod = ctxt->_compiler->module();
-    if (mod)
-      {
-	Object p = ctxt->_asm->run(mod->_main);
-	Disassemble(ctxt,p);
-	Object f = ctxt->_function->fromCode(p);
-	ctxt->_globals->insert(std::make_pair(name,f));
-      }
-  } catch (const FM::Exception &e) {
-    std::cout << "Exception: " << e.msg() << "\n";
-  }
+FMString resolve_full_path(const FMString &name) {
+  boost::filesystem::path path(name + ".m");
+  return absolute(path).c_str();
 }
 
-void compileModule(ThreadContext *ctxt, FMString name, HashMap<Object> &classes)
+void compileModule(ThreadContext *ctxt, const FMString &name, HashMap<Object> &classes)
 {
   std::cout << "Compiling module: " << name << "\n";
   try {
     bool failed;
     FMString body = ReadFileIntoString(name+".m",failed);
     body += "\n\n";
-    ctxt->_compiler->compile(body);
+    ctxt->_compiler->compile(body,resolve_full_path(name));
     Module *mod = ctxt->_compiler->module();
     if (mod)
       {
@@ -408,11 +392,12 @@ int main(int argc, char *argv[])
 	Module *mod = ctxt->_compiler->module();
 	if (mod)
 	  {
-	    Object p = ctxt->_asm->run(mod->_main);
+	    Object p = ctxt->_asm->run(mod);
 	    std::cout << "Code object: " << p.description() << "\n";
 	    Disassemble(ctxt,p);
 	    timer.start();
-	    ctxt->_vm->executeScript(p);
+	    Object params = ctxt->_list->empty();
+	    ctxt->_vm->executeModule(p,params);
 	    timer.stop();
 	    std::cout << " Execution time " << timer.elapsed().wall/1.0e9 << "\n";
 	  }

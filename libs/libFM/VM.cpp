@@ -18,6 +18,7 @@
 #include "CodeType.hpp"
 #include "config.h"
 #include "TypeUtils.hpp"
+#include "LineNUmbers.hpp"
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -182,7 +183,7 @@ void VM::defineClass(const Object &name, const Object &arguments)
 }
 
 
-void VM::defineFrame(const Object &names, int registerCount, bool closed)
+void VM::defineFrame(const Object &names, int registerCount, const FrameType &ftype)
 {
   int nameCount = names.count();
   _frames[_fp]->_addrs = _ctxt->_index->makeMatrix(nameCount,1);
@@ -196,8 +197,8 @@ void VM::defineFrame(const Object &names, int registerCount, bool closed)
   _frames[_fp]->_reg_offset = _rp;
   _frames[_fp]->_module = _ctxt->_list->last(_modules);
   _frames[_fp]->_captures = _ctxt->_list->empty();
-  _frames[_fp]->_closed = closed;
-  if (closed)
+  _frames[_fp]->_closed = (ftype == FrameType::closedFrame);
+  if (ftype == FrameType::closedFrame)
     _frames[_fp]->_closedFrame = _frames[_fp];
   else
     {
@@ -220,7 +221,8 @@ Object VM::executeAnonymousFunction(const Object &codeObject, const Object &para
   _fp++;
   const CodeData *cp = _ctxt->_code->ro(codeObject);
   _frames[_fp]->_name = _ctxt->_string->str(cp->m_name);
-  defineFrame(cp->m_names,cp->m_registers,true);
+  defineFrame(cp->m_names,cp->m_registers,FrameType::closedFrame);
+  _frames[_fp]->_code = codeObject;
   Object *sp = _ctxt->_list->rw(_frames[_fp]->_vars);
   ndx_t *ap = _ctxt->_index->rw(_frames[_fp]->_addrs);
   // Populate the arguments
@@ -297,7 +299,8 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
   const CodeData *cp = _ctxt->_code->ro(fd->m_code);
   _frames[_fp]->_name = _ctxt->_string->str(cp->m_name);
   std::cout << "Starting function: " << _frames[_fp]->_name << "\n";
-  defineFrame(cp->m_names,cp->m_registers,true);
+  defineFrame(cp->m_names,cp->m_registers,FrameType::closedFrame);
+  _frames[_fp]->_code = fd->m_code;
   ndx_t *ap = _ctxt->_index->rw(_frames[_fp]->_addrs);
   _frames[_fp]->_captures = fd->m_closure;
   // Allocate space for the captured variables (free ones come through the closure)
@@ -393,15 +396,20 @@ void VM::debugCycle()
 {
   // FIXME - this state should be a stack or something
   // FIXME - also need to preserve the debug context.
-  Debug state;
-  state._fp_when_called = _fp;
+
+  // Find the frame we want to debug
+  Frame *visited_frame = nullptr;
   for (int i=_fp;i>=0;--i)
-    if (_frames[_fp]->_closed)
-      state._activeFrame = _frames[_fp];
-  debugs.push(state);
+    if (_frames[i]->_closed) {
+      visited_frame = _frames[i];
+      break;
+    }
+  prepareFrameForDebugging(visited_frame);
+  char buffer[2048];
+  sprintf(buffer,"K [%d,%d] --> ",_debug_ip,visited_frame->_debug_line_nos[_debug_ip]);
   while (1)
     {
-      char *p = readline("K--> ");
+      char *p = readline(buffer);
       if (p && *p)
 	add_history(p);
       if (!p)
@@ -413,16 +421,74 @@ void VM::debugCycle()
 	Module *mod = _ctxt->_compiler->module();
 	if (mod)
 	  {
-	    Object p = _ctxt->_asm->run(mod->_main);
-	    this->executeScript(p);
-	    std::cout << "Execute script complete\n";
+	    Object p = _ctxt->_asm->run(mod);
+	    _fp++;
+	    bool save_mode = this->_debug_mode;
+	    this->_debug_mode = true;
+	    const CodeData *cp = _ctxt->_code->ro(p);
+	    _frames[_fp]->_name = _ctxt->_string->str(cp->m_name);
+	    std::cout << "Starting script: " << _frames[_fp]->_name << "\n";
+	    defineFrame(cp->m_names,cp->m_registers,FrameType::openFrame);
+	    _frames[_fp]->_sym_names = _ctxt->_list->empty(); // Our frame has no locally defined symbols
+	    _frames[_fp]->_fp = _fp; // Capture the frame pointer
+	    _frames[_fp]->_closedFrame = visited_frame;
+	    // execute the code
+	    try {
+	      executeCodeObject(p);
+	    } catch (const FM::Exception &e) {
+	      std::cout << "Exception: " << e.msg() << "\n";
+	    }
+	    visited_frame = _frames[_fp]->_closedFrame;
+	    // No return values.. pop the frame
+	    _frames[_fp]->_sym_names = _ctxt->_list->empty();
+	    _frames[_fp]->_vars = _ctxt->_list->empty();
+	    _frames[_fp]->_addrs = _ctxt->_index->empty();
+	    _frames[_fp]->_defined = _ctxt->_bool->empty();
+	    _frames[_fp]->_exception_handlers.clear();
+	    _rp = _frames[_fp]->_reg_offset;
+	    _fp--;
+	    this->_debug_mode = save_mode;
 	    if (_retscrpt_found) return;
 	  }
       } catch (const FM::Exception &e) {
 	std::cout << "Exception: " << e.msg() << "\n";
       }
     }
-  debugs.pop();
+}
+
+Frame* VM::findPreviousClosedFrame(Frame *p) {
+  // TODO - this will not persist across statements issued in the debugger
+  // Find the current frame
+  int cfp = 0;
+  for (int i=0;i<_fp;i++)
+    if (_frames[i] == p) {
+      cfp = i;
+      break;
+    }
+  for (int i=cfp-1;i>=0;--i)
+    if (_frames[i]->_closed) return _frames[i];
+  throw Exception("Cannot go up");
+}
+
+void VM::prepareFrameForDebugging(Frame *p) {
+  std::cout << "Preparing frame " << p->_name << " for debugging\n";
+  const CodeData *dp = _ctxt->_code->ro(p->_code);
+  rle_decode_line_nos(_ctxt->_uint32->ro(dp->m_lineno),
+		      dp->m_lineno.count(),
+		      p->_debug_line_nos);
+  Disassemble(_ctxt,p->_code);
+}
+
+Frame* VM::findNextClosedFrame(Frame *p) {
+  int cfp = 0;
+  for (int i=0;i<_fp;i++)
+    if (_frames[i] == p) {
+      cfp = i;
+      break;
+    }
+  for (int i=cfp+1;i<=_fp;i++)
+    if (_frames[i]->_closed) return _frames[i];
+  throw Exception("Cannot go down");
 }
 
 void VM::executeScript(const Object &codeObject)
@@ -431,7 +497,8 @@ void VM::executeScript(const Object &codeObject)
   const CodeData *cp = _ctxt->_code->ro(codeObject);
   _frames[_fp]->_name = _ctxt->_string->str(cp->m_name);
   std::cout << "Starting script: " << _frames[_fp]->_name << "\n";
-  defineFrame(cp->m_names,cp->m_registers,false);
+  defineFrame(cp->m_names,cp->m_registers,FrameType::openFrame);
+  _frames[_fp]->_code = codeObject;
   _frames[_fp]->_sym_names = _ctxt->_list->empty(); // Our frame has no locally defined symbols
   _frames[_fp]->_fp = _fp; // Capture the frame pointer
   
@@ -443,16 +510,6 @@ void VM::executeScript(const Object &codeObject)
   _frames[_fp]->_addrs = _ctxt->_index->empty();
   _frames[_fp]->_defined = _ctxt->_bool->empty();
   _frames[_fp]->_exception_handlers.clear();
-  /*
-  {
-    Object *regfile = _ctxt->_list->rw(_registers);
-    for (int i=_frames[_fp]->_reg_offset;i<_rp;i++)
-      {
-	std::cout << "Clearing register " << i << "\n";
-	regfile[i] = _ctxt->_double->empty();
-      }
-  }
-  */
   _rp = _frames[_fp]->_reg_offset;
   _fp--;
 }
@@ -519,12 +576,10 @@ void VM::executeCodeObject(const Object &codeObject)
 
   Frame *closed_frame = _frames[_fp]->_closedFrame;
   Object *regfile = _ctxt->_list->rw(_registers) + _frames[_fp]->_reg_offset;
-  ndx_t *addrfile = _ctxt->_index->rw(_frames[_fp]->_addrs); // FIXME - Isn't this illegal? Do scripts have space allocated for an address file!!
+  ndx_t *addrfile = _ctxt->_index->rw(_frames[_fp]->_addrs); 
   Object *varfile = _ctxt->_list->rw(closed_frame->_vars);
   Object *capturesfile = _ctxt->_list->rw(_frames[_fp]->_captures);
   std::vector<int> *eh = &_frames[_fp]->_exception_handlers;
-
-  int save_ip;
 
   while (!returnFound)
     {
@@ -544,17 +599,26 @@ void VM::executeCodeObject(const Object &codeObject)
 	      {
 	      case OP_DBUP:
 		{
-		  // TODO - this will not persist across statements issued in the debugger
-		  for (int i=closed_frame->_fp-1;i>=0;--i)
-		    if (_frames[i]->_closed)
-		      {
-			closed_frame = _frames[i];
-			
-			break;
-		      }
+		  closed_frame = findPreviousClosedFrame(closed_frame);
+		  _frames[_fp]->_closedFrame = closed_frame;
+		  _debug_mode = true;
 		}
 		break;
 	      case OP_DBDOWN:
+		{
+		  closed_frame = findNextClosedFrame(closed_frame);
+		  _frames[_fp]->_closedFrame = closed_frame;
+		  _debug_mode = true;
+		}
+		break;
+	      case OP_DBSTEP:
+		{
+		  // treat a step like setting a breakpoint on the next available line
+		  // 1. Get the argument from the opcode
+		  // 2. Add a one-shot breakpoint on the computed instruction
+		  // 3. force a return.
+		  //		  addBreakpoint
+		}
 		break;
 	      case OP_NOP:
 		break;
@@ -865,6 +929,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		}
 	      case OP_STOP:
 		{
+		  _debug_ip = ip;
 		  debugCycle();
 		  break;
 		}

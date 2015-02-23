@@ -10,6 +10,7 @@ namespace FM
   class CodeData {
   public:
     Object m_name;      // Name of the code block
+    Object m_module;    // Name of the code module
     Object m_code;      // Bytecodes themselves
     Object m_names;     // LIST of names used in the code
     Object m_consts;    // LIST of constants used in the code
@@ -22,7 +23,7 @@ namespace FM
     Object m_lineno;    // RLE line numbers for the bytecodes - an array of int32's
     int    m_registers; // Number of registers used by the code
     CodeData(ThreadContext *ctxt) : 
-      m_name(ctxt), m_code(ctxt), m_names(ctxt), 
+      m_name(ctxt), m_module(ctxt), m_code(ctxt), m_names(ctxt), 
       m_consts(ctxt), m_params(ctxt), m_returns(ctxt), 
       m_varargin(ctxt), m_varargout(ctxt), m_captured(ctxt),
       m_free(ctxt), m_lineno(ctxt) {}

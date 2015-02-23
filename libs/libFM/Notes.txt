@@ -2504,3 +2504,40 @@ specific opcodes.  Of course, they could be trapped at the compiler
 instead of being trapped at the parser.  Still. :(
 
 
+OK, moving DBUP/DBDOWN back to opcodes means that they work by
+directly manipulating the execution frame.  The next function needed
+is DBSTEP.  The idea here is a bit tricky - we cannot insert an
+instruction into the stream, so we use a deferred expensive operation.
+
+The idea is to (upon demand) create a series of line-number entries
+for each instruction.  This is done be expanding the RLE line numbers.
+
+For DBSTEP to work, we need to first get DBSTOP implemented.  It can
+then piggy back on the breakpoint mechanism.
+
+    
+    
+dbstop in file
+dbstop in file at location
+dbstop in file if expression
+dbstop in file at location if expression
+dbstop if condition
+dbstop(s)
+
+
+location can be a subfunction name
+location can be a line number
+location can be a line number with an anonymous function invokation
+specified
+
+Condition that causes execution to pause when that condition evaluates to true. Specify condition as one of the following:
+error— Run-time error that occurs outside a try/catch block. You cannot resume execution after an uncaught run-time error.
+If you want execution to pause only if a specific error occurs, specify the message id. For example:
+dbstop if error stops execution at the first run-time error that occurs outside a try/catch block.
+dbstop if error MATLAB:ls:InputsMustBeStrings pauses execution at the first run-time error outside a try/catch block that has a message ID of MATLAB:ls:InputsMustBeStrings.
+caught error — Run-time error that occurs within the try portion of a try/catch block. If you want execution to stop only if a specific error occurs, specify the message id. See the error condition for an example of specifying a message id.
+warning— Run-time warning occurs. If you want execution to pause only if a specific warning occurs, specify the message id. See the error condition for an example of specifying a message id.
+This condition has no effect if you disabled warnings with the warning off all command or if you disabled warnings for the specified id. For more information about disabling warnings, see warning.
+naninf and infnan
+The code returns an infinite value (Inf) or a value that is not a number (NaN) as a result of an operator, function call, or scalar assignment. The naninf and infnan conditions have identical effects.
+

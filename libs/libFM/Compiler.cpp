@@ -986,7 +986,7 @@ reg_t Compiler::anonymousFunction(const Tree &t) {
   emit(OP_RETURN);
   _code = save_code;
   reg_t func = fetchConstant(_ctxt->_string->makeString("#"+fname));
-  reg_t desc = getRegister();
+  reg_t desc = getRegister(); //TODO Descriptions for anonymous functions
   reg_t fptr = getRegister();
   emit(OP_MAKE_ANONYMOUS,fptr,desc,func);
   return fptr;
@@ -1340,6 +1340,32 @@ void Compiler::whileStatement(const Tree &t) {
   _breakblock.pop();
 }
 
+void Compiler::dbstepStatement(const Tree &t) {
+  reg_t arg = fetchConstant(_ctxt->_double->makeScalar(1));
+  if (t.hasChildren()) {
+    arg = expression(t.first());
+  }
+  emit(OP_DBSTEP,arg);
+}
+
+void Compiler::dbstopStatement(const Tree &t) {
+  reg_t args = startList();
+  if (t.hasChildren() && t.first().is(TOK_IN)) {
+    pushList(args,fetchConstantString(t.first().first().text()));
+  } else {
+    pushList(args,fetchEmpty());
+  }
+  if(t.numChildren()>=2 && t.second().is(TOK_AT)) {
+    pushList(args,fetchConstantString(t.second().first().text()));
+  } else {
+    pushList(args,fetchEmpty());
+  }
+  if(t.numChildren()>=3 && t.third().is(TOK_IF)) {
+    // TODO - finishme
+  }
+  emit(OP_DBSTOP,args);
+}
+
 void Compiler::ifStatement(const Tree &t) {
   reg_t condtest = expression(t.first());
   BasicBlock *next = new BasicBlock;
@@ -1415,7 +1441,7 @@ void Compiler::statementType(const Tree &t, bool printIt) {
     emit(OP_JUMP,_continueblock.top());
     break;
   case TOK_DBSTEP:
-    //    dbstepStatement(t);
+    dbstepStatement(t);
     break;
   case TOK_DBTRACE:
     //    dbtraceStatement(t);
@@ -1425,6 +1451,9 @@ void Compiler::statementType(const Tree &t, bool printIt) {
     break;
   case TOK_DBDOWN:
     emit(OP_DBDOWN);
+    break;
+  case TOK_DBSTOP:
+    dbstopStatement(t);
     break;
   case TOK_RETURN:
     // An explicit return inside a script is unusual
@@ -1493,11 +1522,8 @@ void Compiler::reset() {
 
 void PrintModule(Module* mod);
 
-void Compiler::compile(const FMString &code) {
+void Compiler::compile(const FMString &code, const FMString &name) {
   _currentLineNo = 0;
-  _module = new Module(_ctxt);
-  _module->_modtype = FunctionModuleType;
-  std::cout << ">>>>_module = " << _module << "\n";
   Scanner S(code,"");
   Parser P(S);
   Tree t(P.process());
@@ -1511,6 +1537,7 @@ void Compiler::compile(const FMString &code) {
   std::cout << "********************************************************************************\n";
   SymbolPass p;
   reset();
+  _module->_name = name;
   // Start the code walk at a depth of 1 - if it's a function
   // definition instead of a script, the internal blocks will
   // be processed at the correct depth.
@@ -2036,6 +2063,7 @@ void FM::Disassemble(ThreadContext *_ctxt, const Object &p)
   assert(p.type()->code() == TypeCode);
   const CodeData *dp = _ctxt->_code->ro(p);
   std::cout << "Name      : " << dp->m_name.description() << "\n";
+  std::cout << "Module    : " << dp->m_module.description() << "\n";
   std::cout << "Names     : " << dp->m_names << "\n";
   std::cout << "Captured  : " << dp->m_captured << "\n";
   std::cout << "Free      : " << dp->m_free << "\n";

@@ -53,6 +53,7 @@ namespace FM
     inline bool valid() const {return !(d->m_node.is(TOK_INVALID));}
     inline Tree first() const {return d->m_children.front();}
     inline Tree second() const {return d->m_children.at(1);}
+    inline Tree third() const {return d->m_children.at(2);}
     inline bool is(TokenValueType tok) const {return (token()==tok);}
     inline bool anyChildrenAre(TokenValueType tok) const {
       for (int i=0;i<d->m_children.size();i++) 

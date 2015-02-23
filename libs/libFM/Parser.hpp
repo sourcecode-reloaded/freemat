@@ -36,6 +36,7 @@ namespace FM
     const Token& expect(TokenValueType t, FMString because = "");
     const Token& next();
     bool matchNumber();
+    bool matchWord(const FMString &txt);
     void flushSeperators();
   private:
     Tree transposeFixup(Tree base);
@@ -44,6 +45,7 @@ namespace FM
     Tree forIndexExpression();
     Tree singletonStatement();
     Tree dBStepOrTraceStatement();
+    Tree dBStopStatement();
     Tree whileStatement();
     Tree ifStatement();
     Tree switchStatement();

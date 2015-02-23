@@ -147,6 +147,8 @@ namespace FM
     reg_t expression(const Tree &t);
     void block(const Tree & t);
     void statement(const Tree & t);
+    void dbstepStatement(const Tree &t);
+    void dbstopStatement(const Tree &t);
     void tryStatement(const Tree & t);
     void throwStatement(const Tree & t);
     void ifStatement(const Tree & t);
@@ -166,7 +168,7 @@ namespace FM
   public:
     static std::string opcodeDecode(op_t opcode, insn_t val);
     Compiler(ThreadContext *b);
-    void compile(const FMString &code);
+    void compile(const FMString &code, const FMString &name = FMString());
     Module* module();
     friend class RegisterBlock;
   };

@@ -20,7 +20,7 @@ Object Assembler::run(Module *mod)
   Object module = _ctxt->_module->makeScalar();
   ModuleData *mp = _ctxt->_module->rw(module);
   mp->m_name = mod->_name;
-  Object main_code = this->run(mod->_main);
+  Object main_code = this->run(mod->_main,mp->m_name);
   mp->m_modtype = mod->_modtype;
   mp->m_dependencies = mod->_dependencies;
   if (mp->m_modtype != ClassdefModuleType)
@@ -29,7 +29,7 @@ Object Assembler::run(Module *mod)
       for (auto i=mod->_locals.constBegin();
 	   i != mod->_locals.constEnd();++i)
 	{
-	  Object co = this->run(i.value());
+	  Object co = this->run(i.value(),mp->m_name);
 	  // Make into function object - no closures at the module level
 	  Object fo = _ctxt->_function->fromCode(co);
 	  mp->m_locals.insert(std::make_pair(_ctxt->_string->makeString(i.key()),fo));
@@ -41,7 +41,7 @@ Object Assembler::run(Module *mod)
       // Compile the methods
       for (auto i=mod->_locals.constBegin(); i!= mod->_locals.constEnd();++i)
 	{
-	  Object co = _ctxt->_function->fromCode(this->run(i.value()));
+	  Object co = _ctxt->_function->fromCode(this->run(i.value(),mp->m_name));
 	  const Object &myName = _ctxt->_string->makeString("#" + i.key());
 	  std::cout <<  "Need home for method code block: " << myName<< "\n";
 	  Object *ip = _ctxt->_list->rw(cp->m_consts);
@@ -58,7 +58,7 @@ Object Assembler::run(Module *mod)
   return module;
 }
 
-Object Assembler::run(CodeBlock *code)
+Object Assembler::run(CodeBlock *code, const FMString &name)
 {
   _code = code;
   _vm_codes.clear();
@@ -73,9 +73,9 @@ Object Assembler::run(CodeBlock *code)
   for (int i=0;i<code->_nested.size();i++)
     {
       Assembler sub(_ctxt);
-      _nested_codes.push_back(sub.run(code->_nested[i]));
+      _nested_codes.push_back(sub.run(code->_nested[i],name));
     }
-  return codeObject();
+  return codeObject(name);
 }
 
 void Assembler::computeJumpOffsets()
@@ -128,11 +128,12 @@ void Assembler::assemble()
     }
 }
 
-Object Assembler::codeObject()
+Object Assembler::codeObject(const FMString &name)
 {
   Object code = _ctxt->_code->makeScalar();
   CodeData *cp = _ctxt->_code->rw(code);
   cp->m_name = _ctxt->_string->makeString(_code->_name);
+  cp->m_module = _ctxt->_string->makeString(name);
   Object op = _ctxt->_uint64->makeMatrix(_vm_codes.size(),1);
   memcpy(_ctxt->_uint64->rw(op),&(_vm_codes[0]),_vm_codes.size()*sizeof(uint64_t));
   std::vector<uint32_t> rle_linenumbers;

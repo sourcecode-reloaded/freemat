@@ -20,11 +20,11 @@ namespace FM
     std::vector<Object> _nested_codes;
     void depthFirstSearch(BasicBlock* p);
     void computeJumpOffsets();
-    Object codeObject();
+    Object codeObject(const FMString &name);
     void assemble();
+    Object run(CodeBlock* code, const FMString &name);
   public:
     Assembler(ThreadContext *ctxt) : _ctxt(ctxt) {};
-    Object run(CodeBlock* code);
     Object run(Module* mod);
   };
 }

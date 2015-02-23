@@ -132,6 +132,33 @@ Tree Parser::dBStepOrTraceStatement() {
   return root;
 }
 
+Tree Parser::dBStopStatement() {
+  Tree root(next());
+  consume();
+  if (matchWord("in")) {
+    consume();
+    Tree inbranch(TOK_IN,m_lex.contextNum());
+    inbranch.addChild(next());
+    consume();
+    root.addChild(inbranch);
+    if (matchWord("at")) {
+      consume();
+      m_lex.setBlobMode(true);
+      Tree atbranch(TOK_AT,m_lex.contextNum());
+      atbranch.addChild(next());
+      consume();
+      m_lex.setBlobMode(false);
+      root.addChild(atbranch);
+    }
+    if (match(TOK_IF)) {
+      Tree ifbranch(next());
+      consume();
+      ifbranch.addChild(expression());
+      root.addChild(ifbranch);
+    }
+  }
+  return root;
+}
 
 Tree Parser::multiFunctionCall() {
   Tree root(expect('['));
@@ -220,6 +247,10 @@ bool Parser::matchNumber() {
 	  match(TOK_REALF) || match(TOK_IMAGF));
 }
 
+ bool Parser::matchWord(const FMString &txt) {
+   return (match(TOK_IDENT) && (m_lex.next().text() == txt));
+ }
+ 
 Tree Parser::specialFunctionCall() {
   m_lex.pushWSFlag(false);
   Tree root(TOK_SPECIAL,m_lex.contextNum());
@@ -531,6 +562,8 @@ Tree Parser::statement(bool nestsOK) {
     return whileStatement();
   if (match(TOK_DBSTEP) || match(TOK_DBTRACE))
     return dBStepOrTraceStatement();
+  if (match(TOK_DBSTOP))
+    return dBStopStatement();
   if (match(TOK_IF))
     return ifStatement();
   if (match(TOK_SWITCH))

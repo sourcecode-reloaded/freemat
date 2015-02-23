@@ -4,6 +4,7 @@
 #include "StringType.hpp"
 #include "DoubleType.hpp"
 #include "ModuleType.hpp"
+#include "CodeType.hpp"
 
 using namespace FM;
 
@@ -129,12 +130,10 @@ Frame::Frame(ThreadContext *ctxt) : _sym_names(ctxt->_list->empty()),
 				    _addrs(ctxt->_index->empty()),
 				    _defined(ctxt->_bool->empty()),
 				    _module(ctxt->_module->empty()),
-				    _captures(ctxt->_list->empty())
+				    _captures(ctxt->_list->empty()),
+				    _code(ctxt->_code->empty())
 {
   _ctxt = ctxt;
-  //  _sym_names = _ctxt->_list->empty();
-  //  _vars = _ctxt->_list->empty();
-  //  _addrs = _ctxt->_index->empty();
   _closed = false;
   _reg_offset = 0;
 }

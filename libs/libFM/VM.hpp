@@ -18,6 +18,8 @@ namespace FM
   
   struct ThreadContext;
 
+
+  
   class VM
   {
     Object _registers;
@@ -29,10 +31,15 @@ namespace FM
     ThreadContext *_ctxt;
     Object _exception;
     bool _retscrpt_found;
-    std::stack<Debug> _debugs;
     bool _debug_mode;
+    int _debug_ip;
     void debugCycle();
-  public:
+    Frame* findPreviousClosedFrame(Frame *b);
+    Frame* findNextClosedFrame(Frame *b);
+    void prepareFrameForDebugging(Frame *b);
+  public:    
+    enum class FrameType {openFrame, closedFrame};
+    
     VM(ThreadContext *ctxt);
     void executeScript(const Object &codeObject);
     Object executeFunction(const Object &functionObject, const Object &parameters);
@@ -41,7 +48,7 @@ namespace FM
     void executeCodeObject(const Object &codeObject);
     void defineBaseVariable(const FMString &name, const Object &value);
     void defineClass(const Object &name, const Object &arguments);
-    void defineFrame(const Object &names, int registerCount, bool closed);
+    void defineFrame(const Object &names, int registerCount, const FrameType &ftype);
     void dump();
     Object backtrace();
     void dbshift(int n);

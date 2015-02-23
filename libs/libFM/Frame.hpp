@@ -17,7 +17,9 @@ namespace FM
     Object _captures;
     Object _defined;
     Object _module;
+    Object _code;
     Frame *_closedFrame;
+    std::vector<uint16_t> _debug_line_nos;
     std::vector<int> _exception_handlers;
     ThreadContext *_ctxt;
     bool _closed;

@@ -19,6 +19,7 @@ FMString CodeType::describe(const Object &a) {
     const CodeData* cp = this->ro(a);
     FMString ret = "code object\n";
     ret += "        name : " + cp->m_name.description() + "\n";
+    ret += "      module : " + cp->m_module.description() + "\n";
     ret += "        code : " + cp->m_code.description() + "\n";
     ret += "      lineno : " + cp->m_lineno.description() + "\n";
     ret += "       names : " + cp->m_names.description() + "\n";

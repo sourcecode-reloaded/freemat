@@ -114,6 +114,9 @@ namespace FM
   const TokenValueType TOK_SCOPED_IDENT = 215;
   const TokenValueType TOK_GET_METHOD = 216;
   const TokenValueType TOK_EVENTS = 217;
+  const TokenValueType TOK_DBSTOP = 218;
+  const TokenValueType TOK_IN = 219;
+  const TokenValueType TOK_AT = 220;
 
   class ParseException {
     unsigned m_pos;
