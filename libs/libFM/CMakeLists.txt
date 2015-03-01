@@ -105,6 +105,7 @@ ModuleType.cpp
 BuiltInType.cpp
 GarbageCollector.cpp
 HandleClass.cpp
+Debug.cpp
 )
 target_link_libraries(FMT ${Boost_LIBRARIES} readline ${ACCELERATE_LIB})
 

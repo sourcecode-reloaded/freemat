@@ -1874,7 +1874,9 @@ void Compiler::walkCode(const Tree &t) {
 }
 
 void Compiler::statement(const Tree &t) {
-  _currentLineNo = t.first().node().position() & 0xFFFF;
+  _currentLineNo = t.node().position() & 0xFFFF;
+  if (t.first().is(TOK_FOR) || t.first().is(TOK_WHILE) || t.first().is(TOK_IF))
+    _currentLineNo = t.first().node().position() & 0xFFFF;
   if (t.is(TOK_QSTATEMENT))
     statementType(t.first(),false);
   else if (t.is(TOK_STATEMENT))

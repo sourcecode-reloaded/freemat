@@ -62,7 +62,7 @@ static int indentlevel = 0;
 FMString Tree::str() const {
   FMString ret;
   ret = FMString(indentlevel,FMChar(' '));
-  ret += TokenToString(d->m_node) + "\n";
+  ret += TokenToString(d->m_node) + "  <" + Stringify(LineNumber(d->m_node.position())) + ">\n";
   indentlevel += 3;
   for (int i=0;i<d->m_children.size();i++)
     ret += d->m_children[i].str();

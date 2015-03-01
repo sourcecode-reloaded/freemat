@@ -20,6 +20,8 @@
 #include "Symbol.hpp"
 #include "GarbageCollector.hpp"
 #include "HandleClass.hpp"
+#include "FileSystem.hpp"
+#include "Debug.hpp"
 
 //#include <valarray>
 
@@ -53,11 +55,6 @@ protected:
   std::list<Edge > &_bad_list;
 };
 
-
-FMString resolve_full_path(const FMString &name) {
-  boost::filesystem::path path(name + ".m");
-  return absolute(path).c_str();
-}
 
 void compileModule(ThreadContext *ctxt, const FMString &name, HashMap<Object> &classes)
 {
@@ -180,6 +177,15 @@ Object dbdown(const Object &args, int nargout, ThreadContext *ctxt) {
   return ctxt->_list->empty();
 }
 
+Object dblist(const Object &args, int nargout, ThreadContext *ctxt) {
+  std::lock_guard<std::mutex> guard(*(ctxt->_lock));
+  for (auto p : *ctxt->_bps) {
+    std::cout << "Breakpoint " << p->id << " Name " << p->frame_name << " Line "
+	      << p->line_number << "\n";
+  }
+  return ctxt->_list->empty();
+}
+
 // Create an addlistener method for the handle class
 
 Object classfunc(const Object &args, int nargout, ThreadContext *ctxt) {
@@ -196,7 +202,14 @@ int main(int argc, char *argv[])
   assert(sizeof(Complex<char>) == 2*sizeof(char));
 
   StdIOTermIF io;
+  std::mutex *lock = new std::mutex;
+  std::map<FMString,Object> *globals = new std::map<FMString,Object>();
+  BPSet *bps = new BPSet;
+  
   ThreadContext *ctxt = BuildNewThreadContext(&io);
+  ctxt->_globals = globals; // shared by all
+  ctxt->_lock = lock; // shared by all
+  ctxt->_bps = bps; // shared by all
 
   makeHandleClass(ctxt);
   //  makeListenerClass(ctxt);
@@ -363,6 +376,7 @@ int main(int argc, char *argv[])
   ctxt->_globals->insert(std::make_pair("backtrace",ctxt->_builtin->makeBuiltin("backtrace",backtrace)));
   ctxt->_globals->insert(std::make_pair("dbup",ctxt->_builtin->makeBuiltin("dbup",dbup)));
   ctxt->_globals->insert(std::make_pair("dbdown",ctxt->_builtin->makeBuiltin("dbdown",dbdown)));
+  ctxt->_globals->insert(std::make_pair("dblist",ctxt->_builtin->makeBuiltin("dblist",dblist)));
   ctxt->_globals->insert(std::make_pair("class",ctxt->_builtin->makeBuiltin("class",classfunc)));
   ctxt->_globals->insert(std::make_pair("gc",ctxt->_builtin->makeBuiltin("gc",builtin_gc)));
 

@@ -2541,3 +2541,10 @@ This condition has no effect if you disabled warnings with the warning off all c
 naninf and infnan
 The code returns an infinite value (Inf) or a value that is not a number (NaN) as a result of an operator, function call, or scalar assignment. The naninf and infnan conditions have identical effects.
 
+Some further issues - breakpoints currently fire on every instruction
+with a given line number, and lines that are expression statements are
+improperly numbered.
+
+Statement number is fixed, but it's not a clean fix - Need to check
+each statement type to see if it works.  DBSTEP is missing.
+Conditionals do not work yet.

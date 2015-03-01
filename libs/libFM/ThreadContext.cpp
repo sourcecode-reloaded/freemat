@@ -37,7 +37,6 @@ ThreadContext* FM::BuildNewThreadContext(TermIF *io)
   ctxt->_vm = new VM(ctxt);
   ctxt->_compiler = new Compiler(ctxt);
   ctxt->_asm = new Assembler(ctxt);
-  ctxt->_globals = new std::map<FMString,Object>();
   ctxt->_meta = new ClassMetaType(ctxt);
   ctxt->_class = new ClassType(ctxt);
   ctxt->_captured = new CapturedType(ctxt);

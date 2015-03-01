@@ -31,18 +31,22 @@ namespace FM
     ThreadContext *_ctxt;
     Object _exception;
     bool _retscrpt_found;
+    BPSet _mybps;
     bool _debug_mode;
     int _debug_ip;
     void debugCycle();
     Frame* findPreviousClosedFrame(Frame *b);
     Frame* findNextClosedFrame(Frame *b);
     void prepareFrameForDebugging(Frame *b);
+    bool checkBreakpoints(Frame *frame, int ip);
+    void updateDebugMode();
+    int mapIPToLineNumber(Frame *frame, int ip);
   public:    
     enum class FrameType {openFrame, closedFrame};
     
     VM(ThreadContext *ctxt);
-    void executeScript(const Object &codeObject);
-    Object executeFunction(const Object &functionObject, const Object &parameters);
+    void executeScript(const Object &codeObject, const FMString &debugname = "");
+    Object executeFunction(const Object &functionObject, const Object &parameters, const FMString &debugname = "");
     Object executeAnonymousFunction(const Object &codeObject, const Object &parameters, const HashMap<Object> &captures);
     Object executeModule(const Object &moduleObject, const Object &parameters);
     void executeCodeObject(const Object &codeObject);

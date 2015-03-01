@@ -11,6 +11,7 @@ namespace FM
   {
   public:
     FMString _name;
+    FMString _debugname;
     Object _sym_names;
     Object _vars;
     Object _addrs;
@@ -20,6 +21,7 @@ namespace FM
     Object _code;
     Frame *_closedFrame;
     std::vector<uint16_t> _debug_line_nos;
+    std::vector<bool> _debug_flag;
     std::vector<int> _exception_handlers;
     ThreadContext *_ctxt;
     bool _closed;
