@@ -34,6 +34,7 @@ namespace FM
     int getAddress(const FMString &name);
     int allocateVariable(const FMString &name);
     void setVariableSlow(const FMString &name, const Object &value);
+    bool getLocalVariableSlow(const FMString &name, Object &value);
     int lookupAddressForName(const Object &name, bool searchGlobals);
     int defineNewSymbol(const Object &name);
   };

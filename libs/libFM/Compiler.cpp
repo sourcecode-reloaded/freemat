@@ -1361,7 +1361,14 @@ void Compiler::dbstopStatement(const Tree &t) {
     pushList(args,fetchEmpty());
   }
   if(t.numChildren()>=3 && t.third().is(TOK_IF)) {
-    // TODO - finishme
+    // Compile the expression into a script object
+    Compiler texpr(_ctxt);
+    texpr.compile("dbstop__=("+t.third().first().text()+")\n;");
+    Assembler sm(_ctxt);
+    Object p = sm.run(texpr.module());
+    pushList(args,fetchConstant(p));
+  } else {
+    pushList(args,fetchEmpty());    
   }
   emit(OP_DBSTOP,args);
 }

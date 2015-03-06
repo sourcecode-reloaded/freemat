@@ -35,6 +35,16 @@ namespace FM
     void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {
       visitor(this->ro(p)->m_data);
     }
+    Object import(const Object &a) {
+      StructType *them = a.asType<StructType>();
+      Object ret = this->empty();
+      StructData *sd = this->rw(ret);
+      const StructData *csd = them->ro(a);
+      sd->m_fields = csd->m_fields;
+      sd->m_data = csd->m_data.exportTo(_ctxt);
+      updateDims(ret);
+      return ret;
+    }
     virtual DataCode code() const {return TypeStruct;}
     virtual const FMString& name() const {static FMString _name = "struct"; return _name;}
     virtual FMString brief(const Object &a);

@@ -1,6 +1,7 @@
 #include "HandleClass.hpp"
 #include "ThreadContext.hpp"
 #include "AllTypes.hpp"
+#include "Globals.hpp"
 
 using namespace FM;
 
@@ -47,14 +48,14 @@ void FM::makeListenerClass(ThreadContext *ctxt) {
 			   ctxt->_bool->makeScalar(false), // value
 			   ctxt->_double->empty(), // getter
 			   ctxt->_double->empty());
-  Object handle = ctxt->_globals->at("handle");
+  Object handle = ctxt->_globals->get("handle",ctxt);
   cmd->m_name = ctxt->_string->makeString("event.listener");
   cmd->m_constructor = ctxt->_builtin->pass();
   ctxt->_meta->addSuperClass(listener,handle);
   // This is one way to handle namespaces...
   Object event_space = ctxt->_struct->makeScalar();
   ctxt->_struct->setField(event_space,ctxt->_string->makeString("listener"),listener);
-  ctxt->_globals->insert(std::make_pair("event",event_space));
+  ctxt->_globals->set("event",event_space);
 }
 
 /*
@@ -110,5 +111,5 @@ void FM::makeHandleClass(ThreadContext *ctxt) {
   // 			 false);
   cmd->m_name = ctxt->_string->makeString("base_handle");
   cmd->m_constructor = ctxt->_builtin->pass();
-  ctxt->_globals->insert(std::make_pair("base_handle",handle));
+  ctxt->_globals->set("base_handle",handle);
 }

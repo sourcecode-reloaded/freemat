@@ -31,6 +31,16 @@ namespace FM
     Object pass();
     void setAddressAndName(Object &a, FMString name, fncptr b);
     Object makeBuiltin(FMString name, fncptr b);
+    Object import(const Object &foreign) {
+      BuiltInType *them = foreign.asType<BuiltInType>();
+      if (this == them) return foreign;
+      Object ret = this->makeScalar();
+      BuiltInData *bd = this->rw(ret);
+      const BuiltInData *cbd = them->ro(foreign);
+      bd->m_name = cbd->m_name.exportTo(_ctxt);
+      bd->m_ptr = cbd->m_ptr;
+      return ret;
+    }
   };
 };
 

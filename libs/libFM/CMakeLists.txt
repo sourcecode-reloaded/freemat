@@ -106,6 +106,8 @@ BuiltInType.cpp
 GarbageCollector.cpp
 HandleClass.cpp
 Debug.cpp
+BreakpointType.cpp
+Globals.cpp
 )
 target_link_libraries(FMT ${Boost_LIBRARIES} readline ${ACCELERATE_LIB})
 

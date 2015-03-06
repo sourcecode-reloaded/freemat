@@ -22,6 +22,8 @@
 #include "HandleClass.hpp"
 #include "FileSystem.hpp"
 #include "Debug.hpp"
+#include "TypeUtils.hpp"
+#include "Globals.hpp"
 
 //#include <valarray>
 
@@ -78,7 +80,7 @@ void compileModule(ThreadContext *ctxt, const FMString &name, HashMap<Object> &c
 	  //   ctxt->_module->deref(p);
 	  // }
 	else
-	  ctxt->_globals->insert(std::make_pair(name,p));
+	  ctxt->_globals->set(name,p);
       }
     else
       {
@@ -178,12 +180,13 @@ Object dbdown(const Object &args, int nargout, ThreadContext *ctxt) {
 }
 
 Object dblist(const Object &args, int nargout, ThreadContext *ctxt) {
-  std::lock_guard<std::mutex> guard(*(ctxt->_lock));
-  for (auto p : *ctxt->_bps) {
-    std::cout << "Breakpoint " << p->id << " Name " << p->frame_name << " Line "
-	      << p->line_number << "\n";
-  }
-  return ctxt->_list->empty();
+  if (ctxt->_globals->isDefined("_dblist"))
+    {
+      Object dblist = ctxt->_globals->get("_dblist",ctxt);
+      return ctxt->_list->makeScalar(makeCellFromList(ctxt,dblist));
+    }
+  else
+    return ctxt->_list->makeScalar(ctxt->_cell->empty());
 }
 
 // Create an addlistener method for the handle class
@@ -204,12 +207,10 @@ int main(int argc, char *argv[])
   StdIOTermIF io;
   std::mutex *lock = new std::mutex;
   std::map<FMString,Object> *globals = new std::map<FMString,Object>();
-  BPSet *bps = new BPSet;
   
-  ThreadContext *ctxt = BuildNewThreadContext(&io);
-  ctxt->_globals = globals; // shared by all
-  ctxt->_lock = lock; // shared by all
-  ctxt->_bps = bps; // shared by all
+  ThreadContext *ctxt = BuildNewThreadContext(&io); // Global context
+  //  globals->insert(std::make_pair("_dblist",ctxt->_cell->empty()));
+  ctxt->_globals = new Globals(ctxt); // shared by all
 
   makeHandleClass(ctxt);
   //  makeListenerClass(ctxt);
@@ -350,45 +351,45 @@ int main(int argc, char *argv[])
     Object cap1 = ctxt->_captured->makeScalar();
     ctxt->_captured->set(cap1,a);
     // Insert cap1 as a variable in the global workspace
-    ctxt->_globals->insert(std::make_pair("cap1",cap1));
+    ctxt->_globals->set("cap1",cap1);
 
     // Insert a copy of cap1 as another variable in the global workspace
     Object cap2 = ctxt->_captured->makeScalar();
     cap2 = cap1;
-    ctxt->_globals->insert(std::make_pair("cap2",cap2));
+    ctxt->_globals->set("cap2",cap2);
   }
 
-  ctxt->_globals->insert(std::make_pair("size",ctxt->_builtin->makeBuiltin("size",size)));
-  ctxt->_globals->insert(std::make_pair("print",ctxt->_builtin->makeBuiltin("print",print)));
-  ctxt->_globals->insert(std::make_pair("handir",ctxt->_builtin->makeBuiltin("handir",handir)));
-  ctxt->_globals->insert(std::make_pair("strcmp",ctxt->_builtin->makeBuiltin("strcmp",strcmp)));
-  ctxt->_globals->insert(std::make_pair("numel",ctxt->_builtin->makeBuiltin("numel",numel)));
-  ctxt->_globals->insert(std::make_pair("int8",ctxt->_builtin->makeBuiltin("int8",to_int8)));
-  ctxt->_globals->insert(std::make_pair("int16",ctxt->_builtin->makeBuiltin("int16",to_int16)));
-  ctxt->_globals->insert(std::make_pair("int32",ctxt->_builtin->makeBuiltin("int32",to_int32)));
-  ctxt->_globals->insert(std::make_pair("int64",ctxt->_builtin->makeBuiltin("int64",to_int64)));
-  ctxt->_globals->insert(std::make_pair("uint8",ctxt->_builtin->makeBuiltin("uint8",to_uint8)));
-  ctxt->_globals->insert(std::make_pair("uint16",ctxt->_builtin->makeBuiltin("uint16",to_uint16)));
-  ctxt->_globals->insert(std::make_pair("uint32",ctxt->_builtin->makeBuiltin("uint32",to_uint32)));
-  ctxt->_globals->insert(std::make_pair("uint64",ctxt->_builtin->makeBuiltin("uint64",to_uint64)));
-  ctxt->_globals->insert(std::make_pair("double",ctxt->_builtin->makeBuiltin("double",to_double)));
-  ctxt->_globals->insert(std::make_pair("single",ctxt->_builtin->makeBuiltin("single",to_single)));
-  ctxt->_globals->insert(std::make_pair("backtrace",ctxt->_builtin->makeBuiltin("backtrace",backtrace)));
-  ctxt->_globals->insert(std::make_pair("dbup",ctxt->_builtin->makeBuiltin("dbup",dbup)));
-  ctxt->_globals->insert(std::make_pair("dbdown",ctxt->_builtin->makeBuiltin("dbdown",dbdown)));
-  ctxt->_globals->insert(std::make_pair("dblist",ctxt->_builtin->makeBuiltin("dblist",dblist)));
-  ctxt->_globals->insert(std::make_pair("class",ctxt->_builtin->makeBuiltin("class",classfunc)));
-  ctxt->_globals->insert(std::make_pair("gc",ctxt->_builtin->makeBuiltin("gc",builtin_gc)));
+  ctxt->_globals->set("size",ctxt->_builtin->makeBuiltin("size",size));
+  ctxt->_globals->set("print",ctxt->_builtin->makeBuiltin("print",print));
+  ctxt->_globals->set("handir",ctxt->_builtin->makeBuiltin("handir",handir));
+  ctxt->_globals->set("strcmp",ctxt->_builtin->makeBuiltin("strcmp",strcmp));
+  ctxt->_globals->set("numel",ctxt->_builtin->makeBuiltin("numel",numel));
+  ctxt->_globals->set("int8",ctxt->_builtin->makeBuiltin("int8",to_int8));
+  ctxt->_globals->set("int16",ctxt->_builtin->makeBuiltin("int16",to_int16));
+  ctxt->_globals->set("int32",ctxt->_builtin->makeBuiltin("int32",to_int32));
+  ctxt->_globals->set("int64",ctxt->_builtin->makeBuiltin("int64",to_int64));
+  ctxt->_globals->set("uint8",ctxt->_builtin->makeBuiltin("uint8",to_uint8));
+  ctxt->_globals->set("uint16",ctxt->_builtin->makeBuiltin("uint16",to_uint16));
+  ctxt->_globals->set("uint32",ctxt->_builtin->makeBuiltin("uint32",to_uint32));
+  ctxt->_globals->set("uint64",ctxt->_builtin->makeBuiltin("uint64",to_uint64));
+  ctxt->_globals->set("double",ctxt->_builtin->makeBuiltin("double",to_double));
+  ctxt->_globals->set("single",ctxt->_builtin->makeBuiltin("single",to_single));
+  ctxt->_globals->set("backtrace",ctxt->_builtin->makeBuiltin("backtrace",backtrace));
+  ctxt->_globals->set("dbup",ctxt->_builtin->makeBuiltin("dbup",dbup));
+  ctxt->_globals->set("dbdown",ctxt->_builtin->makeBuiltin("dbdown",dbdown));
+  ctxt->_globals->set("dblist",ctxt->_builtin->makeBuiltin("dblist",dblist));
+  ctxt->_globals->set("class",ctxt->_builtin->makeBuiltin("class",classfunc));
+  ctxt->_globals->set("gc",ctxt->_builtin->makeBuiltin("gc",builtin_gc));
 
-  // Global symbols
-  for (auto i=ctxt->_globals->begin(); i != ctxt->_globals->end(); ++i)
-    {
-      std::cout << "Global symbol: " << i->first << ": " << i->second.brief() << "\n";
-    }
+  // // Global symbols
+  // for (auto i=ctxt->_globals->begin(); i != ctxt->_globals->end(); ++i)
+  //   {
+  //     std::cout << "Global symbol: " << i->first << ": " << i->second.brief() << "\n";
+  //   }
 
   // Look up the global symbol for cap1
   {
-    Object cap1ref = ctxt->_globals->at("cap1");
+    Object cap1ref = ctxt->_globals->get("cap1",ctxt);
     ctxt->_captured->set(cap1ref,ctxt->_double->makeScalar(2.78));
   }
 

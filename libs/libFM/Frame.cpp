@@ -5,6 +5,7 @@
 #include "DoubleType.hpp"
 #include "ModuleType.hpp"
 #include "CodeType.hpp"
+#include "Globals.hpp"
 
 using namespace FM;
 
@@ -42,15 +43,14 @@ int Frame::lookupAddressForName(const Object &name, bool searchGlobals) {
 	    }
 	}
       // Is it defined in the global scope?
-      std::cout << "Searching globals for " << _ctxt->_string->str(name) << "\n";
-      auto gfunc = _ctxt->_globals->find(_ctxt->_string->str(name)); //TODO Remove conversion to string?
-      if (gfunc != _ctxt->_globals->end())
+      const FMString & fname = _ctxt->_string->str(name);
+      if (_ctxt->_globals->isDefined(fname))
 	{
 	  // We are a proxy for someone who wants this symbol (not us!)
 	  // Allocate a space for it
 	  ndx = _sym_names.count();
 	  _ctxt->_list->push(_sym_names,name);
-	  _ctxt->_list->push(_vars,gfunc->second);
+	  _ctxt->_list->push(_vars,_ctxt->_globals->get(fname,_ctxt));
 	  // We don't need to cache the address for this symbol
 	  return ndx;
 	}
@@ -79,11 +79,11 @@ int Frame::lookupAddressForName(const Object &name, bool searchGlobals) {
 	      return ndx;
 	    }      
 	}
-      std::cout << "Searching globals for named symbol " << _ctxt->_string->str(name) << "\n";
-      auto gfunc = _ctxt->_globals->find(_ctxt->_string->str(name)); //TODO Remove conversion to string?
-      if (gfunc != _ctxt->_globals->end())
+      const FMString & fname = _ctxt->_string->str(name);
+      std::cout << "Searching globals for named symbol " << fname << "\n";
+      if (_ctxt->_globals->isDefined(fname))
 	{
-	  _ctxt->_list->rw(_vars)[ndx] = gfunc->second;
+	  _ctxt->_list->rw(_vars)[ndx] = _ctxt->_globals->get(fname,_ctxt);
 	  _ctxt->_index->rw(_addrs)[ndx] = ndx;
 	  return ndx;
 	}
@@ -123,6 +123,14 @@ void Frame::setVariableSlow(const FMString &name, const Object &value)
   int p = allocateVariable(name);
   Object *cp = _ctxt->_list->rw(_vars);
   cp[p] = value;
+}
+
+bool Frame::getLocalVariableSlow(const FMString &name, Object &value)
+{
+  int p = getAddress(name);
+  if (p == -1) return false;
+  value = _ctxt->_list->rw(_vars)[p];
+  return true;
 }
 
 Frame::Frame(ThreadContext *ctxt) : _sym_names(ctxt->_list->empty()), 

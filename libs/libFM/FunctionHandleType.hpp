@@ -31,6 +31,17 @@ namespace FM
     virtual Object getParens(const Object &a, const Object &b);
     virtual Object call(const Object &a, const Object &args, int nargout);
     Object fromFunction(const Object &func);
+    Object import(const Object &foreign) {
+      FunctionHandleType *them = foreign.asType<FunctionHandleType>();
+      if (this == them) return foreign;
+      Object ret = this->makeScalar();
+      FunctionHandleData *fhd = this->rw(ret);
+      const FunctionHandleData *cfhd = them->ro(foreign);
+      fhd->m_classMethod = cfhd->m_classMethod;
+      fhd->m_func = cfhd->m_func.exportTo(_ctxt);
+      fhd->m_class = cfhd->m_class.exportTo(_ctxt);
+      return ret;
+    }
   };
 }
 

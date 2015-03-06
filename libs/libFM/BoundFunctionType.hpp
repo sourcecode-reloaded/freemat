@@ -30,6 +30,16 @@ namespace FM
     virtual Object getParens(const Object &a, const Object &b);
     virtual Object call(const Object &a, const Object &args, int nargout);
     virtual Object deref(const Object &a);
+    Object import(const Object &foreign) {
+      BoundFunctionType *them = foreign.asType<BoundFunctionType>();
+      if (this == them) return foreign;
+      Object ret = this->makeScalar();
+      BoundFunctionData *bf = this->rw(ret);
+      const BoundFunctionData *cbf = them->ro(ret);
+      bf->m_func = cbf->m_func.exportTo(_ctxt);
+      bf->m_arg = cbf->m_arg.exportTo(_ctxt);
+      return ret;
+    }
   };
 };
 

@@ -33,6 +33,17 @@ namespace FM
     virtual Object deref(const Object &a);
     Object fromCode(const Object &codeObject, const Object &closure);
     Object fromCode(const Object &codeObject);
+    Object import(const Object &foreign) {
+      FunctionType *them = foreign.asType<FunctionType>();
+      if (this == them) return foreign;
+      Object ret = this->makeScalar();
+      FunctionData *fd = this->rw(ret);
+      const FunctionData *cfd = them->ro(foreign);
+      fd->m_name = cfd->m_name.exportTo(_ctxt);
+      fd->m_code = cfd->m_code.exportTo(_ctxt);
+      fd->m_closure = cfd->m_closure.exportTo(_ctxt);
+      return ret;
+    }
   };
 
 };

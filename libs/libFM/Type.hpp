@@ -41,7 +41,8 @@ namespace FM {
     TypeBuiltIn = 23,
     TypeBoundFunction = 24,
     TypeFunctionHandle = 25,
-    TypeAnonymous = 26
+    TypeAnonymous = 26,
+    TypeBreakpoint = 27
   };
 
   class Object;
@@ -59,12 +60,14 @@ namespace FM {
     ThreadContext *_ctxt;
   public:
     virtual ~Type() {}
+    ThreadContext *context() const {return _ctxt;}
     virtual DataCode code() const = 0;
     virtual const FMString& name() const = 0;
     virtual void destroyObject(ObjectBase* p) = 0;
     virtual Data* duplicateData(const ObjectBase * p, dim_t &reserve) const = 0;
     virtual void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const = 0;
     virtual Object empty() = 0;
+    virtual Object import(const Object &foreign) = 0;
     virtual Object Add(const Object &a, const Object &b);
     virtual Object Multiply(const Object &a, const Object &b);
     virtual Object LeftDivide(const Object &a, const Object &b);

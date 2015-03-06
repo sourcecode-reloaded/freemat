@@ -33,6 +33,15 @@ namespace FM
     }
     void set(Object &captured, const Object &contents) {this->rw(captured)->m_data = contents;}
     Object get(const Object &captured) {return(this->ro(captured)->m_data);}
+    Object import(const Object &foreign) {
+      CapturedType *them = foreign.asType<CapturedType>();
+      if (this == them) return foreign;
+      Object ret = this->makeScalar();
+      CapturedData *cd = this->rw(ret);
+      const CapturedData *ccd = them->ro(foreign);
+      cd->m_data = ccd->m_data.exportTo(_ctxt);
+      return ret;
+    }
   };
 };
 

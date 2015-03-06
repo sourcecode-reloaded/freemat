@@ -31,14 +31,14 @@ namespace FM
     ThreadContext *_ctxt;
     Object _exception;
     bool _retscrpt_found;
-    BPSet _mybps;
+    Object _mybps;
     bool _debug_mode;
     int _debug_ip;
     void debugCycle();
     Frame* findPreviousClosedFrame(Frame *b);
     Frame* findNextClosedFrame(Frame *b);
     void prepareFrameForDebugging(Frame *b);
-    bool checkBreakpoints(Frame *frame, int ip);
+    bool checkBreakpoints(Frame *frame, Frame *closed_frame, int ip);
     void updateDebugMode();
     int mapIPToLineNumber(Frame *frame, int ip);
   public:    

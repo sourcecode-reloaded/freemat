@@ -39,10 +39,12 @@ namespace FM
     bool m_inContinuationState;
     int  m_bracketDepth;
     bool m_blobFlag;
+    bool m_rolFlag;
     TokenValueType current();
     TokenValueType previous();
     TokenValueType ahead(int n);
     void fetchComment();
+    void fetchRestOfLine();
     void fetchContinuation();
     void fetchNumber();
     void fetchString();
@@ -67,6 +69,7 @@ namespace FM
     // Warning: Ugly Hack.  When in Special Call mode, the
     // rules for what constitutes a string change completely.
     void setBlobMode(bool blobFlag) {m_blobFlag = blobFlag;}
+    void setRolMode(bool rolFlag) {m_rolFlag = rolFlag;}
     void pushWSFlag(bool ignoreWS);
     void popWSFlag();
     bool done();

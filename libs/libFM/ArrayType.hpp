@@ -102,6 +102,19 @@ namespace FM
 	}
       return makeObjectBaseOfCapacity(capacity);
     }
+    Object import(const Object &target) {
+      // Import the object from the foreign context...
+      ArrayType* them = target.asType<ArrayType>();
+      if (this == them) return target;
+      Object ret = this->zeroArrayOfSize(target.dims(),target.isComplex());
+      T* op = this->rw(ret);
+      const T* ip = them->ro(target);
+      dim_t elem_count = ret.count();
+      if (target.isComplex()) elem_count *= 2;
+      for (dim_t i=0;i<elem_count;i++)
+	op[i] = ip[i];
+      return ret;
+    }
     Object zeroArrayOfSize(const Tuple & dims, bool isComplex) {
       dim_t count = dims.count();
       if ((count == 1) && !isComplex) return zeroScalar();

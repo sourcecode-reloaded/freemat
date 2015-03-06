@@ -42,6 +42,26 @@ namespace FM
     }
     virtual FMString describe(const Object &a);
     virtual FMString brief(const Object &a);
+    Object import(const Object &foreign) {
+      CodeType *them = foreign.asType<CodeType>();
+      Object ret = this->makeScalar();
+      CodeData *cd = this->rw(ret);
+      const CodeData *ccd = them->ro(ret);
+      cd->m_name = ccd->m_name.exportTo(_ctxt);
+      cd->m_module = ccd->m_module.exportTo(_ctxt);
+      cd->m_code = ccd->m_code.exportTo(_ctxt);
+      cd->m_names = ccd->m_names.exportTo(_ctxt);
+      cd->m_consts = ccd->m_consts.exportTo(_ctxt);
+      cd->m_params = ccd->m_params.exportTo(_ctxt);
+      cd->m_returns = ccd->m_returns.exportTo(_ctxt);
+      cd->m_varargin = ccd->m_varargin.exportTo(_ctxt);
+      cd->m_varargout = ccd->m_varargout.exportTo(_ctxt);
+      cd->m_captured = ccd->m_captured.exportTo(_ctxt);
+      cd->m_free = ccd->m_free.exportTo(_ctxt);
+      cd->m_lineno = ccd->m_lineno.exportTo(_ctxt);
+      cd->m_registers = ccd->m_registers;
+      return ret;
+    }
   };
 }
 

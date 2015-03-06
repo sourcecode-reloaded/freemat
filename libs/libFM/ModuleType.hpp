@@ -27,6 +27,19 @@ namespace FM
     void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {}
     virtual DataCode code() const {return TypeModule;}
     virtual const FMString& name() const {static FMString _name = "module"; return _name;}
+    Object import(const Object& foreign) {
+      ModuleType *them = foreign.asType<ModuleType>();
+      if (this == them) return foreign;
+      Object ret = this->makeScalar();
+      ModuleData *md = this->rw(ret);
+      const ModuleData *cmd = them->ro(ret);
+      for (auto i : cmd->m_locals)
+	md->m_locals.insert(std::make_pair(i.first.exportTo(_ctxt),i.second.exportTo(_ctxt)));
+      md->m_name = cmd->m_name;
+      md->m_modtype = cmd->m_modtype;
+      md->m_dependencies = cmd->m_dependencies.exportTo(_ctxt);
+      return ret;
+    }
     virtual FMString describe(const Object &module) {
       FMString ret = "Module ";
       ret += this->ro(module)->m_name + "\n";

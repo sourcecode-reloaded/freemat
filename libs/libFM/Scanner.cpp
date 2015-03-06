@@ -108,6 +108,7 @@ Scanner::Scanner(FMString buf, FMString fname) {
   m_ignorews.push(true);
   m_debugFlag = false;
   m_blobFlag = false;
+  m_rolFlag = false;
 }
 
 void Scanner::fetchContinuation() {
@@ -132,7 +133,9 @@ void Scanner::fetch() {
 	     (ahead(2) == '.')) {
     fetchContinuation();
     return;
-  } else if (m_blobFlag && !isablank(current()) && 
+  } else if (m_rolFlag)
+    fetchRestOfLine();
+  else if (m_blobFlag && !isablank(current()) && 
 	     (current() != '\n') && (current() != ';') &&
 	     (current() != ',') && (current() != '\'') &&
 	     (current() != '%')) 
@@ -345,6 +348,17 @@ void Scanner::fetchBlob() {
       m_ptr += len;
       m_tokValid = true;    
     } 
+  }
+}
+
+
+void Scanner::fetchRestOfLine() {
+  int len = 0;
+  while (ahead(len) != '\n') len++;
+  if (len > 0) {
+    setToken(TOK_STRING,m_text.mid(m_ptr,len));
+    m_ptr += len;
+    m_tokValid = true;
   }
 }
 

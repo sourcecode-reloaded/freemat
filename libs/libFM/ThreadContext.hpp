@@ -2,7 +2,7 @@
 #define __ThreadContext_hpp__
 
 #include "FMLib.hpp"
-#include "Breakpoint.hpp"
+#include "Type.hpp"
 
 // The context struct is meant to contain (pointers) to all objects needed by the execution
 // of the FM code.  Because of the new design of the array classes (and their lack of 
@@ -51,7 +51,8 @@ namespace FM
   class BuiltInType;
   class BoundFunctionType;
   class AnonymousType;
-  struct Breakpoint;
+  class BreakpointType;
+  class Globals;
   
   struct ThreadContext
   {
@@ -82,6 +83,7 @@ namespace FM
     CapturedType *_captured;
     BoundFunctionType *_bound;
     AnonymousType *_anonymous;
+    BreakpointType *_breakpoint;
     // Tools
     VM *_vm;
     Compiler *_compiler;
@@ -89,14 +91,14 @@ namespace FM
     TermIF *_io;
     ObjectBase *_empty;
     // Global functions
-    std::mutex *_lock;
-    std::map<FMString,Object> *_globals;
+    //    std::mutex *_lock;
+    //    std::map<FMString,Object> *_globals;
+    Globals *_globals;
     std::set<ObjectBase*> _handles;
-    BPSet *_bps;
   };
 
   ThreadContext* BuildNewThreadContext(TermIF *io);
-  
+  Type* GetTypeForCode(ThreadContext *ctxt, DataCode code);
 };
 
 

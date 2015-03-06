@@ -233,6 +233,10 @@ namespace FM
     inline double asDouble() const {
       return d->type->doubleValue(*this);
     }
+    inline Object exportTo(ThreadContext *dst) const;
+    inline ThreadContext* context() const {
+      return this->type()->context();
+    }
     Object& operator=(const Object& copy) {
       if (this == &copy) return *this;
       if ((--d->refcnt) == 0)
@@ -273,7 +277,7 @@ namespace FM
     template <class S>
     inline S* asType() const
     {
-      return static_cast<S*>(d->type);
+      return reinterpret_cast<S*>(d->type);
     }
     inline int refcnt() const {
       return d->refcnt;
@@ -369,5 +373,9 @@ inline FM::Object::Object(FM::ThreadContext *ctxt) : d(ctxt->_empty)
   d->refcnt++;
 }
 
+inline FM::Object FM::Object::exportTo(FM::ThreadContext *dst) const
+{
+  return GetTypeForCode(dst,this->typeCode())->import(*this);
+}
 
 #endif

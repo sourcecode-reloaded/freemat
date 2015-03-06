@@ -151,9 +151,12 @@ Tree Parser::dBStopStatement() {
       root.addChild(atbranch);
     }
     if (match(TOK_IF)) {
-      Tree ifbranch(next());
+      m_lex.setRolMode(true);
       consume();
-      ifbranch.addChild(expression());
+      Tree ifbranch(TOK_IF,m_lex.contextNum());
+      ifbranch.addChild(next());
+      consume();
+      m_lex.setRolMode(false);
       root.addChild(ifbranch);
     }
   }

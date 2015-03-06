@@ -2548,3 +2548,40 @@ improperly numbered.
 Statement number is fixed, but it's not a clean fix - Need to check
 each statement type to see if it works.  DBSTEP is missing.
 Conditionals do not work yet.
+
+How to move objects from one thread context to another (important
+because of breakpoint conditions).
+
+Option 1.  Use the global thread context as an intermediary.  Transfer
+the object to the global thread, and then transfer it from the global
+thread.
+
+Option 2.  Coordinate between the two threads and pass from one thread
+context to another.
+
+Option 3.  Place the object into a thread-safe container, and pass it
+that way.
+
+FM4 uses the signal-slot mechanism, and the objects are inherantly
+thread safe, so no help there.  Python uses a GIL so the fact that the
+objects are not thread safe doesn't matter.
+
+Ideally, we would have somthing like:
+
+_ctxt2->importObject(const Object &a, ThreadContext *ctxt1)
+
+But with some external mutex that protects the access to object a.
+E.g., if thread1 and thread2 have a mutex mutex12, then we would have
+
+mutex12.lock()
+ctxt2.import(a,ctxt1)
+mutex12.unlock()
+
+But this requires that thread 1 and thread 2 coordinate.  The globals
+space is not "local" to any thread, so it can be safely used to
+exchange threads.  That means that we have option 1.  Option 3 is more
+complicated, I would have to create an entire parallel class of
+datatypes to reflect thread-safe sharables.  Don't like that idea.
+
+
+

@@ -128,6 +128,35 @@ namespace FM
     virtual Object getParens(const Object &a, const Object &b); // Construct with parameters
     virtual Object getField(const Object &meta, const Object &fieldname);
     virtual Object invokeConstructor(const Object &meta, const Object &self, const Object &args);
+    Object import(const Object &foreign) {
+      ClassMetaType *them = foreign.asType<ClassMetaType>();
+      if (this == them) return foreign;
+      Object ret = this->makeScalar();
+      ClassMetaData *cmd = this->rw(ret);
+      const ClassMetaData *ccmd = them->ro(foreign);
+      cmd->m_name = ccmd->m_name.exportTo(_ctxt);
+      for (auto i : ccmd->m_properties) {
+	ClassPropertyMetaData *d = new ClassPropertyMetaData(_ctxt);
+	d->m_constant = i.second->m_constant;
+	d->m_dependent = i.second->m_dependent;
+	d->m_default = i.second->m_default.exportTo(_ctxt);
+	d->m_getter = i.second->m_getter.exportTo(_ctxt);
+	d->m_setter = i.second->m_setter.exportTo(_ctxt);
+	d->m_index = i.second->m_index;
+	cmd->m_properties.insert(std::make_pair(i.first.exportTo(_ctxt),d));
+      }
+      for (auto i : ccmd->m_methods) {
+	ClassMethodMetaData *d = new ClassMethodMetaData(_ctxt);
+	d->m_static = i.second->m_static;
+	d->m_definition = i.second->m_definition.exportTo(_ctxt);
+	cmd->m_methods.insert(std::make_pair(i.first.exportTo(_ctxt),d));
+      }
+      cmd->m_constructor = ccmd->m_constructor.exportTo(_ctxt);
+      cmd->m_events = ccmd->m_events.exportTo(_ctxt);
+      cmd->m_defaults = ccmd->m_defaults.exportTo(_ctxt);
+      cmd->m_ishandle = ccmd->m_ishandle;
+      return ret;
+    }
   };
 
   class ClassData {
@@ -176,6 +205,16 @@ namespace FM
     void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const 
     {
       visitor(this->ro(p)->m_data);
+    }
+    Object import(const Object &foreign) {
+      ClassType *them = foreign.asType<ClassType>();
+      if (this == them) return foreign;
+      Object ret = this->makeScalar();
+      ClassData *cd = this->rw(ret);
+      const ClassData *ccd = them->ro(foreign);
+      cd->metaClass = ccd->metaClass.exportTo(_ctxt);
+      cd->m_data = ccd->m_data.exportTo(_ctxt);
+      return ret;
     }
     bool isHandle(const Object &a);
     virtual FMString describe(const Object &a);

@@ -23,6 +23,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "Debug.hpp"
+#include "Globals.hpp"
 
 std::string getOpCodeName(FM::op_t);
 
@@ -69,7 +70,7 @@ using namespace FM;
 
 VM::VM(ThreadContext *ctxt) : _registers(ctxt->_list->makeMatrix(register_stack_size,1)),
 			      _modules(ctxt->_list->makeMatrix(frame_stack_size,1)),
-			      _exception(ctxt)
+			      _exception(ctxt), _mybps(ctxt->_list->empty())
 {
   for (int i=0;i<frame_stack_size;i++)
     _frames.push_back(new Frame(ctxt)); // FIXME - Bad way to do this?
@@ -117,11 +118,11 @@ void VM::dump()
 
 void VM::updateDebugMode()
 {
-  std::lock_guard<std::mutex> guard(*_ctxt->_lock);
-  this->_debug_mode = !_ctxt->_bps->empty();
+  this->_debug_mode = _ctxt->_globals->isDefined("_dblist");
   // Make a local copy of the breakpoints - avoids the
   // need to lock on each check
-  _mybps = *_ctxt->_bps;
+  if (this->_debug_mode)
+    this->_mybps = _ctxt->_globals->get("_dblist",_ctxt);
 }
 
 // Excuting a module is like executing a function, except that an additional stack is required
@@ -147,7 +148,7 @@ Object VM::executeModule(const Object &moduleObject, const Object &parameters)
 void VM::defineClass(const Object &name, const Object &arguments)
 {
   FMString className = _ctxt->_string->str(name);
-  if (_ctxt->_globals->count(className) > 0) return;
+  if (_ctxt->_globals->isDefined(className)) return;
   Object fooMeta = _ctxt->_meta->makeScalar();
   ClassMetaData *cmd = _ctxt->_meta->rw(fooMeta);
   cmd->m_name = name;
@@ -184,14 +185,14 @@ void VM::defineClass(const Object &name, const Object &arguments)
   const Object *sp = _ctxt->_list->ro(superclasses);
   for (int i=0;i<superclasses.count();i++) 
     {
-      Object super_meta = _ctxt->_globals->at(_ctxt->_string->str(sp[i]));
+      Object super_meta = _ctxt->_globals->get(_ctxt->_string->str(sp[i]),_ctxt);
       std::cout << "Defining class " << className << " super class " << super_meta.description() << "\n";
       _ctxt->_meta->addSuperClass(fooMeta,super_meta);
     }
   const Object *ep = _ctxt->_list->ro(events);
   for (int i=0;i<events.count();i++)
     _ctxt->_meta->addEvent(fooMeta,ep[i]);
-  _ctxt->_globals->insert(std::make_pair(className,fooMeta));
+  _ctxt->_globals->set(className,fooMeta);
 }
 
 
@@ -420,16 +421,28 @@ int VM::mapIPToLineNumber(Frame *frame, int ip)
   return frame->_debug_line_nos[ip];
 }
 
-bool VM::checkBreakpoints(Frame *frame, int ip)
+bool VM::checkBreakpoints(Frame *frame, Frame *closed_frame, int ip)
 {
   int lineno = mapIPToLineNumber(frame,ip);
   int plineno = mapIPToLineNumber(frame,ip-1);
   if (plineno == lineno) return false;
-  for (auto p : _mybps) {
-    std::cout << "Check BP: " << lineno << " name: " << p->frame_name << " vs: " << frame->_debugname << " line: " << p->line_number << "\n";
-    if ((p->frame_name == frame->_debugname) &&
-	(p->line_number == lineno))
-      return true;
+  const Object *bpset = _ctxt->_list->ro(this->_mybps);
+  for (int i=0;i<this->_mybps.count();i++) {
+    const BreakpointData *bd = _ctxt->_breakpoint->ro(bpset[i]);
+    std::cout << "Check BP: " << lineno << " name: " << bd->frame_name << " vs: " << frame->_debugname << " line: " << bd->line_number << "\n";
+    if ((bd->frame_name == frame->_debugname) &&
+	(bd->line_number == lineno)) {
+      if (!bd->m_condition.isEmpty()) {
+	std::cout << "Conditional breakpoint check.\n";
+	this->executeModule(bd->m_condition,_ctxt->_list->empty());
+	Object trap(_ctxt);
+	if (!closed_frame->getLocalVariableSlow("dbstop__",trap)) return false;
+	if ((trap.typeCode() == TypeBool) && (_ctxt->_bool->any(trap))) return true;
+	return false;
+      } else {
+	return true;
+      }
+    }
   }
   return false;
 }
@@ -520,6 +533,7 @@ void VM::prepareFrameForDebugging(Frame *p) {
 		      dp->m_lineno.count(),
 		      p->_debug_line_nos);
   // Loop through the set of breakpoints, and flag instructions that could trip a breakpoint
+#if 0
   p->_debug_flag.clear();
   p->_debug_flag.resize(p->_debug_line_nos.size());
   for (auto bp : _mybps) {
@@ -540,6 +554,7 @@ void VM::prepareFrameForDebugging(Frame *p) {
     }
     p->_debug_flag[bp->instruction] = true;
   }
+#endif
   //  Disassemble(_ctxt,p->_code);
 }
 
@@ -662,7 +677,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	      std::cout << "\n";
 	    }
 	    
-	    if (_debug_mode && checkBreakpoints(_frames[_fp],ip)) {
+	    if (_debug_mode && checkBreakpoints(_frames[_fp],closed_frame,ip)) {
 	      _debug_ip = ip;
 	      debugCycle();
 	    }
@@ -723,9 +738,9 @@ void VM::executeCodeObject(const Object &codeObject)
 	      case OP_LOAD_META:
 		{
 		  FMString classname = _ctxt->_string->str(REG2);
-		  if (_ctxt->_globals->count(classname) == 0)
+		  if (_ctxt->_globals->isDefined(classname))
 		    throw Exception("No metaclass defined with name:" + classname);
-		  REG1 = _ctxt->_globals->at(classname);
+		  REG1 = _ctxt->_globals->get(classname,_ctxt);
 		  if (!REG1.is(TypeMeta))
 		    throw Exception("Name: " + classname + " is not associated with a class");
 		  // FIXME - return a proxy object, or convert to a regular class at this point.
