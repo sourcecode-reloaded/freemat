@@ -434,11 +434,15 @@ bool VM::checkBreakpoints(Frame *frame, Frame *closed_frame, int ip)
 	(bd->line_number == lineno)) {
       if (!bd->m_condition.isEmpty()) {
 	std::cout << "Conditional breakpoint check.\n";
-	this->executeModule(bd->m_condition,_ctxt->_list->empty());
-	Object trap(_ctxt);
-	if (!closed_frame->getLocalVariableSlow("dbstop__",trap)) return false;
-	if ((trap.typeCode() == TypeBool) && (_ctxt->_bool->any(trap))) return true;
-	return false;
+	try {
+	  this->executeModule(bd->m_condition,_ctxt->_list->empty());
+	  Object trap(_ctxt);
+	  if (!closed_frame->getLocalVariableSlow("dbstop__",trap)) return false;
+	  if ((trap.typeCode() == TypeBool) && (_ctxt->_bool->any(trap))) return true;
+	  return false;
+	} catch (Exception &e) {
+	  return false;
+	}
       } else {
 	return true;
       }

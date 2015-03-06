@@ -2583,5 +2583,10 @@ exchange threads.  That means that we have option 1.  Option 3 is more
 complicated, I would have to create an entire parallel class of
 datatypes to reflect thread-safe sharables.  Don't like that idea.
 
-
-
+OK - at the moment, global exchange (option 1) is what is
+implemented.  The mechanisms for option 2 are in place if it becomes
+necessary for performance reasons.  But for now, the global mechanism
+allows thread contexts to safely exchange variables.  There is a
+double copy penalty for doing so (unless one of the threads owns the
+global exchange), but that _should_ be a rare occurance.  A side
+effect is that conditional breakpoints now work. 
