@@ -377,6 +377,7 @@ int main(int argc, char *argv[])
   ctxt->_globals->set("backtrace",ctxt->_builtin->makeBuiltin("backtrace",backtrace));
   ctxt->_globals->set("dbup",ctxt->_builtin->makeBuiltin("dbup",dbup));
   ctxt->_globals->set("dbdown",ctxt->_builtin->makeBuiltin("dbdown",dbdown));
+  ctxt->_globals->set("dbstop",ctxt->_builtin->makeBuiltin("dbstop",dbstop));
   ctxt->_globals->set("dblist",ctxt->_builtin->makeBuiltin("dblist",dblist));
   ctxt->_globals->set("class",ctxt->_builtin->makeBuiltin("class",classfunc));
   ctxt->_globals->set("gc",ctxt->_builtin->makeBuiltin("gc",builtin_gc));

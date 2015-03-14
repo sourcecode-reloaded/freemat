@@ -8,13 +8,15 @@ namespace FM
 
   struct ThreadContext;
   
-  enum class BreakpointTypeCode {Unknown, Unconditional, Conditional, Transient};
+  enum class BreakpointTypeCode {Unknown, Unconditional, Conditional, When, Transient};
+  enum class BreakpointWhen {Always, Error, CaughtError, Warning, NanInf};
 
   class BreakpointData {
   public:
     FMString           frame_name;
     int                line_number;
     BreakpointTypeCode bp_type;
+    BreakpointWhen     bp_when;
     int                id;
     int                instruction;
     Object             m_condition;
@@ -41,6 +43,7 @@ namespace FM
       bd->frame_name = cbd->frame_name;
       bd->line_number = cbd->line_number;
       bd->bp_type = cbd->bp_type;
+      bd->bp_when = cbd->bp_when;
       bd->id = cbd->id;
       bd->instruction = cbd->instruction;
       bd->m_condition = cbd->m_condition.exportTo(_ctxt);

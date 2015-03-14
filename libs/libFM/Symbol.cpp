@@ -373,7 +373,7 @@ void SymbolPass::walkAnonymousFunction(const Tree &t) {
 }
 
 void SymbolPass::walkStatement(const Tree &t, FunctionTypeEnum functionType) {
-  if (t.token() == TOK_EXPR)
+  if ((t.token() == TOK_EXPR) || (t.token() == TOK_SPECIAL))
     addSymbol("ans",symbol_flags_t::DYNAMIC());
   walkCode(t,functionType);
 }
@@ -449,6 +449,11 @@ void SymbolPass::walkCode(const Tree &t, FunctionTypeEnum functionType) {
 	    }
 	  }
 	walkChildren(t,functionType);
+	break;
+      }
+    case TOK_SPECIAL:
+      {
+	addSymbol(t.first().text(),symbol_flags_t::DYNAMIC());
 	break;
       }
     case TOK_FOR:

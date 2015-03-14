@@ -82,7 +82,6 @@ FMString FM::TokenToString(const Token& b) {
   case TOK_CATCH: return "catch";
   case TOK_CONTINUE: return "continue";
   case TOK_DBSTEP: return "dbstep";
-  case TOK_DBSTOP: return "dbstop";
   case TOK_ELSE: return "else";
   case TOK_ELSEIF: return "elseif";
   case TOK_END: return "end";
@@ -160,8 +159,6 @@ FMString FM::TokenToString(const Token& b) {
   case TOK_ATTRIBUTES: return "attributes";
   case TOK_GET_METHOD: return "get_method";
   case TOK_EVENTS: return "events";
-  case TOK_IN: return "in";
-  case TOK_AT: return "at";
   }
   return FMString(1,FMChar(b.value()));
 }

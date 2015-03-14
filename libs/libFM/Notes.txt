@@ -2590,3 +2590,58 @@ allows thread contexts to safely exchange variables.  There is a
 double copy penalty for doing so (unless one of the threads owns the
 global exchange), but that _should_ be a rare occurance.  A side
 effect is that conditional breakpoints now work. 
+
+// Next function to implement
+dbclear
+dbcont
+dbdown
+dbquit
+dbstack
+dbstep
+dbstop
+dbtype
+dbup
+
+dbclear requires a special syntax, like dbstop.  Kicked dbstop out of
+scanning and parsing - it is a special function call.  Special
+function calls are now supported.
+
+There is a problem with exceptions.  You cannot stop on "uncaught"
+exceptions, because there is no place to do so.  The VM uses the C++
+mechanism for exception handling, and that means that the VM doesn't
+actually know if an exception is being caught or not.  
+
+The simplest solution would be to add a flag to the VM so that if
+somewhere along a call chain, an exception handler is registered then
+we know it will be caught.  So if:
+
+a --> b --> c
+
+Then if a has a try/catch block, and an exception is thrown in c, the
+VM has marked that an exception handler exists (further upstream).
+The problem is how to decide when to set/unset that flag.  Really the
+flag represents the number of try/catch blocks between the current
+execution point and the root context.
+
+So we can add a counter that increments each time we enter a
+TRY_BEGIN, and decrements each time we see a TRY_END.  This counter
+will persist across frames, and will be an indicator if (at any given
+time) an exception handler is registered.
+
+Just need to be careful to make sure the counter does not become out
+of sync with the exception stack (say, for example, if an early return
+is issued from a debug session or something similar).
+
+**************************************************************************
+
+dbstop - seems to be complete
+
+dbclear
+dbcont
+dbdown
+dbquit
+dbstack
+dbstep
+dbtype
+dbup
+

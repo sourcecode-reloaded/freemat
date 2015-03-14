@@ -27,6 +27,10 @@
 
 std::string getOpCodeName(FM::op_t);
 
+const int dbstop_if_error = 1;
+const int dbstop_if_catch = 2;
+const int dbstop_if_warning = 4;
+const int dbstop_if_naninf = 8;
 
 using namespace FM;
 
@@ -80,6 +84,7 @@ VM::VM(ThreadContext *ctxt) : _registers(ctxt->_list->makeMatrix(register_stack_
   _fp = 0;
   _rp = 0;
   _ctxt = ctxt;
+  _try_depth = 0;
 }
 
 void VM::dbshift(int n) {
@@ -119,10 +124,36 @@ void VM::dump()
 void VM::updateDebugMode()
 {
   this->_debug_mode = _ctxt->_globals->isDefined("_dblist");
+  this->_debug_flags = 0;
   // Make a local copy of the breakpoints - avoids the
   // need to lock on each check
-  if (this->_debug_mode)
+  if (this->_debug_mode) {
     this->_mybps = _ctxt->_globals->get("_dblist",_ctxt);
+    // Loop through the breakpoints, and set the flags
+    const Object *bps = _ctxt->_list->ro(this->_mybps);
+    for (int i=0;i<_mybps.count();i++) {
+      const BreakpointData *bd = _ctxt->_breakpoint->ro(bps[i]);
+      if (bd->bp_type == BreakpointTypeCode::When) {
+	switch(bd->bp_when) {
+	case BreakpointWhen::Always: break;
+	case BreakpointWhen::Error:
+	  _debug_flags |= dbstop_if_error;
+	  break;
+	case BreakpointWhen::CaughtError:
+	  _debug_flags |= dbstop_if_catch;
+	  break;
+	case BreakpointWhen::Warning:
+	  _debug_flags |= dbstop_if_warning;
+	  break;
+	case BreakpointWhen::NanInf:
+	  _debug_flags |= dbstop_if_naninf;
+	  break;
+	}
+      }
+    }
+  }
+  std::cout << ">update debug mode to " << this->_debug_mode << "\n";
+  std::cout << ">update debug flags to " << this->_debug_flags << "\n";
 }
 
 // Excuting a module is like executing a function, except that an additional stack is required
@@ -432,7 +463,8 @@ bool VM::checkBreakpoints(Frame *frame, Frame *closed_frame, int ip)
     std::cout << "Check BP: " << lineno << " name: " << bd->frame_name << " vs: " << frame->_debugname << " line: " << bd->line_number << "\n";
     if ((bd->frame_name == frame->_debugname) &&
 	(bd->line_number == lineno)) {
-      if (!bd->m_condition.isEmpty()) {
+      if (bd->bp_type == BreakpointTypeCode::Unconditional) return true;
+      if (bd->bp_type == BreakpointTypeCode::Conditional) {
 	std::cout << "Conditional breakpoint check.\n";
 	try {
 	  this->executeModule(bd->m_condition,_ctxt->_list->empty());
@@ -711,9 +743,9 @@ void VM::executeCodeObject(const Object &codeObject)
 		  //		  addBreakpoint
 		}
 		break;
-	      case OP_DBSTOP:
-		DBStop(_ctxt,REG1);
-		break;
+		//	      case OP_DBSTOP:
+		//		DBStop(_ctxt,REG1);
+		//		break;
 	      case OP_NOP:
 		break;
 	      case OP_RETURN:
@@ -1014,11 +1046,13 @@ void VM::executeCodeObject(const Object &codeObject)
 	      case OP_TRY_BEGIN:
 		{
 		  eh->push_back(get_constant(insn));
+		  _try_depth++;
 		  break;
 		}
 	      case OP_TRY_END:
 		{
 		  eh->pop_back();
+		  _try_depth--;
 		  break;
 		}
 	      case OP_STOP:
@@ -1035,9 +1069,20 @@ void VM::executeCodeObject(const Object &codeObject)
 		    {
 		      ip = eh->back()-1;
 		      eh->pop_back();
+		      _try_depth--;
+		      if ((_debug_flags & dbstop_if_catch) != 0) {
+			_debug_ip = ip;
+			debugCycle();
+		      }
 		    }
 		  else
-		    throw Exception(_exception.description()); // FIXME
+		    {
+		      if (((_debug_flags & dbstop_if_error) != 0)  && (_try_depth == 0)) {
+			_debug_ip = ip;
+			debugCycle();
+		      }
+		      throw Exception(_exception.description()); // FIXME
+		    }
 		  break;
 		}
 	      case OP_PRINT:
@@ -1116,6 +1161,11 @@ void VM::executeCodeObject(const Object &codeObject)
 	  {
 	    ip = eh->back();
 	    eh->pop_back();
+	    _try_depth--;
+	    if ((_debug_flags & dbstop_if_catch) != 0) {
+	      _debug_ip = ip;
+	      debugCycle();
+	    }
 	  }
 	else
 	  throw;

@@ -1147,6 +1147,24 @@ void Compiler::incrementRegister(reg_t x) {
   emit(OP_INCR,x);
 }
 
+
+void Compiler::specialFunctionCall(const Tree &t, bool printIt) {
+  FMString funcname = t.first().text();
+  reg_t args = startList();
+  reg_t x = startList();
+  for (int i=1;i<t.numChildren();i++)
+    pushList(x,fetchConstantString(t.child(i).text()));
+  pushList(args,fetchConstant(_ctxt->_double->makeScalar(0)));
+  pushList(args,x);
+  reg_t func = fetchVariableOrFunction(funcname,x);
+  reg_t returns = getRegister();
+  emit(OP_CALL,returns,func,args);
+  reg_t toprint = getRegister();
+  emit(OP_FIRST,toprint,returns);
+  if (printIt) emit(OP_PRINT,toprint);
+  saveRegisterToName("ans",toprint);
+}
+
 void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
   if (!t.first().is(TOK_BRACKETS))
     throw Exception("Illegal left hand side in multifunction expression");
@@ -1181,7 +1199,7 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
   for (int p=0;p<s2.numChildren();p++)
     multiexpr(x,s2.child(p));
   pushList(args,x);
-  reg_t func = fetchVariableOrFunction(funcname,args); 
+  reg_t func = fetchVariableOrFunction(funcname,x);  // FIXME - use args? or x?
   reg_t returns = getRegister();
   emit(OP_CALL,returns,func,args);
   // Now we allocate the resulting assignments
@@ -1348,6 +1366,7 @@ void Compiler::dbstepStatement(const Tree &t) {
   emit(OP_DBSTEP,arg);
 }
 
+/*
 void Compiler::dbstopStatement(const Tree &t) {
   reg_t args = startList();
   if (t.hasChildren() && t.first().is(TOK_IN)) {
@@ -1372,6 +1391,7 @@ void Compiler::dbstopStatement(const Tree &t) {
   }
   emit(OP_DBSTOP,args);
 }
+*/
 
 void Compiler::ifStatement(const Tree &t) {
   reg_t condtest = expression(t.first());
@@ -1428,7 +1448,7 @@ void Compiler::statementType(const Tree &t, bool printIt) {
     multiFunctionCall(t,printIt);
     break;
   case TOK_SPECIAL:
-    //    specialFunctionCall(t,printIt);
+    specialFunctionCall(t,printIt);
     break;
   case TOK_FOR:
     forStatement(t);
@@ -1458,9 +1478,6 @@ void Compiler::statementType(const Tree &t, bool printIt) {
     break;
   case TOK_DBDOWN:
     emit(OP_DBDOWN);
-    break;
-  case TOK_DBSTOP:
-    dbstopStatement(t);
     break;
   case TOK_RETURN:
     // An explicit return inside a script is unusual

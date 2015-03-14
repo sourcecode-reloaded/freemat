@@ -7,7 +7,7 @@
 
 namespace FM
 {
-  void DBStop(ThreadContext *ctxt, const Object &args);
+  Object dbstop(const Object &args, int nargout, ThreadContext *ctxt);
 };
 
 #endif

@@ -10,7 +10,15 @@ BreakpointData::BreakpointData(ThreadContext *ctxt) :
 FMString BreakpointType::describe(const Object &a) {
   FMString ret;
   const BreakpointData *bd = this->ro(a);
-  ret += "BP: " + bd->frame_name + " " + Stringify(bd->line_number) + " >" + Stringify(bd->instruction);
+  ret += "BP: " + bd->frame_name + " " + Stringify(bd->line_number);
+  if (!bd->m_condition.isEmpty()) ret += " (conditional)";
+  switch (bd->bp_when) {
+  case BreakpointWhen::Always: ret += " always"; break;
+  case BreakpointWhen::Error: ret + " when error"; break;
+  case BreakpointWhen::CaughtError: ret + " when caught error"; break;
+  case BreakpointWhen::Warning: ret + " when warning"; break;
+  case BreakpointWhen::NanInf: ret + " when naninf"; break;
+  }
   return ret;
 }
 

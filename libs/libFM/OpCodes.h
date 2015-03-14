@@ -79,4 +79,3 @@ const op_t OP_LOAD_META = 92;
 const op_t OP_DBUP = 93;
 const op_t OP_DBDOWN = 94;
 const op_t OP_DBSTEP = 95;
-const op_t OP_DBSTOP = 96;

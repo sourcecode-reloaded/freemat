@@ -132,37 +132,6 @@ Tree Parser::dBStepOrTraceStatement() {
   return root;
 }
 
-Tree Parser::dBStopStatement() {
-  Tree root(next());
-  consume();
-  if (matchWord("in")) {
-    consume();
-    Tree inbranch(TOK_IN,m_lex.contextNum());
-    inbranch.addChild(next());
-    consume();
-    root.addChild(inbranch);
-    if (matchWord("at")) {
-      consume();
-      m_lex.setBlobMode(true);
-      Tree atbranch(TOK_AT,m_lex.contextNum());
-      atbranch.addChild(next());
-      consume();
-      m_lex.setBlobMode(false);
-      root.addChild(atbranch);
-    }
-    if (match(TOK_IF)) {
-      m_lex.setRolMode(true);
-      consume();
-      Tree ifbranch(TOK_IF,m_lex.contextNum());
-      ifbranch.addChild(next());
-      consume();
-      m_lex.setRolMode(false);
-      root.addChild(ifbranch);
-    }
-  }
-  return root;
-}
-
 Tree Parser::multiFunctionCall() {
   Tree root(expect('['));
   root.rename(TOK_MULTI);
@@ -565,8 +534,6 @@ Tree Parser::statement(bool nestsOK) {
     return whileStatement();
   if (match(TOK_DBSTEP) || match(TOK_DBTRACE))
     return dBStepOrTraceStatement();
-  if (match(TOK_DBSTOP))
-    return dBStopStatement();
   if (match(TOK_IF))
     return ifStatement();
   if (match(TOK_SWITCH))

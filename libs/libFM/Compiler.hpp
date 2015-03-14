@@ -143,12 +143,12 @@ namespace FM
     void expressionStatement(const Tree&, bool);
     void incrementRegister(reg_t);
     void multiFunctionCall(const Tree&, bool);
+    void specialFunctionCall(const Tree&, bool printIt);
     void assignment(const Tree &var, bool printIt, reg_t b);
     reg_t expression(const Tree &t);
     void block(const Tree & t);
     void statement(const Tree & t);
     void dbstepStatement(const Tree &t);
-    void dbstopStatement(const Tree &t);
     void tryStatement(const Tree & t);
     void throwStatement(const Tree & t);
     void ifStatement(const Tree & t);

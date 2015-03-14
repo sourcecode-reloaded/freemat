@@ -30,9 +30,11 @@ namespace FM
     int _rp;
     ThreadContext *_ctxt;
     Object _exception;
+    int _try_depth;
     bool _retscrpt_found;
     Object _mybps;
     bool _debug_mode;
+    int _debug_flags;
     int _debug_ip;
     void debugCycle();
     Frame* findPreviousClosedFrame(Frame *b);
