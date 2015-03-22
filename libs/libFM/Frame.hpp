@@ -26,7 +26,7 @@ namespace FM
     ThreadContext *_ctxt;
     bool _closed;
     int _reg_offset;
-    int _fp;
+       int _fp;    
   public:
     Frame(ThreadContext *ctxt);
     int mapNameToVariableIndex(const Object &name);

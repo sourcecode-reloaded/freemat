@@ -38,11 +38,10 @@ namespace FM {
     TypeModule = 20,
     TypeCaptured = 21,
     TypeFunction = 22,
-    TypeBuiltIn = 23,
-    TypeBoundFunction = 24,
-    TypeFunctionHandle = 25,
-    TypeAnonymous = 26,
-    TypeBreakpoint = 27
+    TypeBoundFunction = 23,
+    TypeFunctionHandle = 24,
+    TypeAnonymous = 25,
+    TypeBreakpoint = 26
   };
 
   class Object;

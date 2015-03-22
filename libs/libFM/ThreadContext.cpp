@@ -35,7 +35,6 @@ Type* FM::GetTypeForCode(ThreadContext *ctxt, DataCode code)
   case TypeModule: return ctxt->_module;
   case TypeCaptured: return ctxt->_captured;
   case TypeFunction: return ctxt->_function;
-  case TypeBuiltIn: return ctxt->_builtin;
   case TypeBoundFunction: return ctxt->_bound;
   case TypeFunctionHandle: return ctxt->_functionHandle;
   case TypeAnonymous: return ctxt->_anonymous;
@@ -70,7 +69,6 @@ ThreadContext* FM::BuildNewThreadContext(TermIF *io)
   ctxt->_function = new FunctionType(ctxt);
   ctxt->_functionHandle = new FunctionHandleType(ctxt);
   ctxt->_anonymous = new AnonymousType(ctxt);
-  ctxt->_builtin = new BuiltInType(ctxt);
   ctxt->_vm = new VM(ctxt);
   ctxt->_compiler = new Compiler(ctxt);
   ctxt->_asm = new Assembler(ctxt);

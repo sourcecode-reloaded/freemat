@@ -528,7 +528,7 @@ Tree Parser::statement(bool nestsOK) {
     return singletonStatement();
   if (match(TOK_CONTINUE))
     return singletonStatement();
-  if (match(TOK_DBUP) || match(TOK_DBDOWN))
+  if (match(TOK_DBUP) || match(TOK_DBDOWN) || match(TOK_DBCONT))
     return singletonStatement();
   if (match(TOK_WHILE))
     return whileStatement();

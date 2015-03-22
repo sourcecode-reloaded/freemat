@@ -11,6 +11,8 @@ namespace FM
 {
   struct ThreadContext;
 
+  typedef Object (*fncptr)(const Object &args, int nargout, ThreadContext *ctxt);  
+  
   class ModuleData {
   public:
     HashMap<Object> m_locals; // Local functions for this module
@@ -18,6 +20,7 @@ namespace FM
     FMString m_name;
     ModuleTypeCode m_modtype;
     Object m_dependencies; // Super classes if encountered
+    fncptr m_ptr; // Function pointer for builtin types
     ModuleData(ThreadContext *_ctxt) : m_main(_ctxt), m_dependencies(_ctxt) {}
   };
 
@@ -60,6 +63,8 @@ namespace FM
     virtual Object getParens(const Object &module, const Object &args);
     virtual Object call(const Object &module, const Object &args, int nargout);
     virtual Object deref(const Object &a);
+    virtual Object builtin(const FMString &name, fncptr addr);
+    virtual Object pass();
   };
 };
 

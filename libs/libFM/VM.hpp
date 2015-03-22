@@ -18,7 +18,11 @@ namespace FM
   
   struct ThreadContext;
 
-
+  class VMDBQuitException {
+  public:
+    int _catchCount;
+    VMDBQuitException(int p = 0) : _catchCount(p) {}
+  };
   
   class VM
   {
@@ -31,21 +35,30 @@ namespace FM
     ThreadContext *_ctxt;
     Object _exception;
     int _try_depth;
+    // Put these into a vector of flags?
     bool _retscrpt_found;
     Object _mybps;
     bool _debug_mode;
     int _debug_flags;
     int _debug_ip;
+    int _dbstepin_lineno;
     void debugCycle();
     Frame* findPreviousClosedFrame(Frame *b);
     Frame* findNextClosedFrame(Frame *b);
     void prepareFrameForDebugging(Frame *b);
     bool checkBreakpoints(Frame *frame, Frame *closed_frame, int ip);
-    void updateDebugMode();
+    void updateDebugMode(bool onEntry);
     int mapIPToLineNumber(Frame *frame, int ip);
+    void debugStep(int ip, int steps);
+    class FrameReserver {
+      VM *_vm;
+    public:
+      FrameReserver(VM *vm) : _vm(vm) {_vm->_fp++;}
+      ~FrameReserver();
+    };
+    
   public:    
     enum class FrameType {openFrame, closedFrame};
-    
     VM(ThreadContext *ctxt);
     void executeScript(const Object &codeObject, const FMString &debugname = "");
     Object executeFunction(const Object &functionObject, const Object &parameters, const FMString &debugname = "");
@@ -57,7 +70,7 @@ namespace FM
     void defineFrame(const Object &names, int registerCount, const FrameType &ftype);
     void dump();
     Object backtrace();
-    void dbshift(int n);
+    void dbquit(bool all);
   };
 }
 

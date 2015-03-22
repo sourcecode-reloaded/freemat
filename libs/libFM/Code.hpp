@@ -104,7 +104,8 @@ namespace FM
     {
       FunctionModuleType = 0,
       ClassdefModuleType = 1,
-      ScriptModuleType = 2
+      ScriptModuleType = 2,
+      BuiltinModuleType = 3
     };
 
   inline FMString ModuleTypeCodeToString(ModuleTypeCode code) {
@@ -115,6 +116,8 @@ namespace FM
       return "classdef";
     case ScriptModuleType:
       return "script";
+    case BuiltinModuleType:
+      return "builtin";
     }
   }
 

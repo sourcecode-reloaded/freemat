@@ -18,7 +18,7 @@
 #include "CodeType.hpp"
 #include "config.h"
 #include "TypeUtils.hpp"
-#include "LineNUmbers.hpp"
+#include "LineNumbers.hpp"
 #include "FileSystem.hpp"
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -31,9 +31,22 @@ const int dbstop_if_error = 1;
 const int dbstop_if_catch = 2;
 const int dbstop_if_warning = 4;
 const int dbstop_if_naninf = 8;
+const int dbstop_on_entry = 16;
 
 using namespace FM;
 
+
+VM::FrameReserver::~FrameReserver() {
+  assert(_vm->_fp > 0);
+  _vm->_frames[_vm->_fp]->_sym_names = _vm->_ctxt->_list->empty();
+  _vm->_frames[_vm->_fp]->_vars = _vm->_ctxt->_list->empty();
+  _vm->_frames[_vm->_fp]->_addrs = _vm->_ctxt->_index->empty();
+  _vm->_frames[_vm->_fp]->_defined = _vm->_ctxt->_bool->empty();
+  _vm->_frames[_vm->_fp]->_exception_handlers.clear();
+  _vm->_rp = _vm->_frames[_vm->_fp]->_reg_offset;
+  _vm->_fp--;
+}
+				 
 //A = 0; A(100000,1) = 0; for i= 1:1:100000; A(i) = i; end
 
 //A = []; A(512,512) = 0; for i=1:1:512; for j=1:1:512; A(i,j) = i-j; end; end
@@ -84,11 +97,7 @@ VM::VM(ThreadContext *ctxt) : _registers(ctxt->_list->makeMatrix(register_stack_
   _fp = 0;
   _rp = 0;
   _ctxt = ctxt;
-  _try_depth = 0;
-}
-
-void VM::dbshift(int n) {
-  
+  _try_depth = 0; // FIXME  - check if this is exception safe
 }
 
 Object VM::backtrace() {
@@ -121,8 +130,13 @@ void VM::dump()
   //  _frames[0]->dump();
 }
 
-void VM::updateDebugMode()
+void VM::updateDebugMode(bool loopEntry)
 {
+  if (loopEntry && (this->_dbstepin_lineno > 0)) {
+    this->_debug_flags = dbstop_on_entry;
+    this->_debug_mode = true;
+    return;
+  }
   this->_debug_mode = _ctxt->_globals->isDefined("_dblist");
   this->_debug_flags = 0;
   // Make a local copy of the breakpoints - avoids the
@@ -133,9 +147,16 @@ void VM::updateDebugMode()
     const Object *bps = _ctxt->_list->ro(this->_mybps);
     for (int i=0;i<_mybps.count();i++) {
       const BreakpointData *bd = _ctxt->_breakpoint->ro(bps[i]);
+      if (bd->bp_type == BreakpointTypeCode::Unconditional) {
+	std::cout << "Checking for Entry: " << bd->frame_name << " " <<
+	  _frames[_fp]->_debugname << " line " << bd->line_number << "\n";
+	if ((bd->frame_name == _frames[_fp]->_debugname) && (bd->line_number == 0))
+	  _debug_flags |= dbstop_on_entry;
+      }
       if (bd->bp_type == BreakpointTypeCode::When) {
 	switch(bd->bp_when) {
-	case BreakpointWhen::Always: break;
+	case BreakpointWhen::Always:
+	  break;
 	case BreakpointWhen::Error:
 	  _debug_flags |= dbstop_if_error;
 	  break;
@@ -161,18 +182,43 @@ Object VM::executeModule(const Object &moduleObject, const Object &parameters)
 {
   const ModuleData *cmd = _ctxt->_module->ro(moduleObject);
   std::cout << "Execute module : " << cmd->m_name << "\n";
-  if (cmd->m_modtype == ScriptModuleType) {
-    if (parameters.count() != 0)
-      throw Exception("Cannot use arguments in call to a script");
-    const FunctionData *fd = _ctxt->_function->ro(cmd->m_main);
-    executeScript(fd->m_code,cmd->m_name);
-    return _ctxt->_list->empty();
-  } else {
-    // Push the module object onto the stack
-    _ctxt->_list->push(_modules,moduleObject);
-    Object ret = executeFunction(_ctxt->_module->ro(moduleObject)->m_main,parameters,cmd->m_name);
-    _modules = _ctxt->_list->pop(_modules);
-    return ret;
+  switch (cmd->m_modtype) {
+  case ScriptModuleType:
+    {
+      if (parameters.count() != 0)
+	throw Exception("Cannot use arguments in call to a script");
+      const FunctionData *fd = _ctxt->_function->ro(cmd->m_main);
+      executeScript(fd->m_code,cmd->m_name);
+      return _ctxt->_list->empty();
+    }
+  case ClassdefModuleType:
+  case FunctionModuleType:
+    {
+      // Push the module object onto the stack
+      _ctxt->_list->push(_modules,moduleObject);
+      Object ret = executeFunction(_ctxt->_module->ro(moduleObject)->m_main,parameters,cmd->m_name);
+      _modules = _ctxt->_list->pop(_modules);
+      return ret;
+    }
+  case BuiltinModuleType:
+    {
+      // Check to see if there is a trap on this module
+      _ctxt->_list->push(_modules,moduleObject);
+      FrameReserver myframe(this);
+      const ModuleData *md = _ctxt->_module->ro(moduleObject);
+      _frames[_fp]->_name = md->m_name;
+      _frames[_fp]->_debugname = resolve_full_path(md->m_name);
+      _frames[_fp]->_closed = true;
+      updateDebugMode(false);
+      if (_debug_mode && (_debug_flags & dbstop_on_entry))
+	{
+	  _debug_flags ^= dbstop_on_entry;
+	  debugCycle();
+	}
+      Object ret = _ctxt->_module->ro(moduleObject)->m_ptr(parameters,1,_ctxt);
+      _modules = _ctxt->_list->pop(_modules);
+      return ret;
+    }
   }
 }
 
@@ -262,7 +308,7 @@ void VM::defineFrame(const Object &names, int registerCount, const FrameType &ft
 
 Object VM::executeAnonymousFunction(const Object &codeObject, const Object &parameters, const HashMap<Object> &captures)
 {
-  _fp++;
+  FrameReserver myframe(this);
   const CodeData *cp = _ctxt->_code->ro(codeObject);
   _frames[_fp]->_name = _ctxt->_string->str(cp->m_name);
   defineFrame(cp->m_names,cp->m_registers,FrameType::closedFrame);
@@ -297,18 +343,6 @@ Object VM::executeAnonymousFunction(const Object &codeObject, const Object &para
   sp = _ctxt->_list->rw(_frames[_fp]->_vars);
   for (int i=0;i<to_return;i++)
     _ctxt->_list->push(retvec,sp[return_ndx[i]]);
-  _frames[_fp]->_sym_names = _ctxt->_list->empty();
-  _frames[_fp]->_vars = _ctxt->_list->empty();
-  _frames[_fp]->_addrs = _ctxt->_index->empty();
-  _frames[_fp]->_defined = _ctxt->_bool->empty();
-  _frames[_fp]->_exception_handlers.clear();
-  {
-    Object *regfile = _ctxt->_list->rw(_registers);
-    for (int i=_frames[_fp]->_reg_offset;i<_rp;i++)
-      regfile[i] = _ctxt->_double->empty();
-  }
-  _rp = _frames[_fp]->_reg_offset;
-  _fp--;
   return retvec;  
 }
 
@@ -339,7 +373,7 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
   // a function of the given name. 
   //
   // Create a new frame for the function
-  _fp++;
+  FrameReserver myframe(this);
   const FunctionData *fd = _ctxt->_function->ro(functionObject);
   const CodeData *cp = _ctxt->_code->ro(fd->m_code);
   _frames[_fp]->_name = _ctxt->_string->str(cp->m_name);
@@ -421,20 +455,6 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
     for (int i=0;i<varargout.count();i++)
       _ctxt->_list->push(retvec,vip[i]);
   }
-  _frames[_fp]->_sym_names = _ctxt->_list->empty();
-  _frames[_fp]->_vars = _ctxt->_list->empty();
-  _frames[_fp]->_addrs = _ctxt->_index->empty();
-  _frames[_fp]->_defined = _ctxt->_bool->empty();
-  _frames[_fp]->_exception_handlers.clear();
-  /* - TODO - Do we still need this?
-  {
-    Object *regfile = _ctxt->_list->rw(_registers);
-    for (int i=_frames[_fp]->_reg_offset;i<_rp;i++)
-      regfile[i] = _ctxt->_double->empty();
-      }
-  */
-  _rp = _frames[_fp]->_reg_offset;
-  _fp--;
   return retvec;
 }
 
@@ -458,12 +478,18 @@ bool VM::checkBreakpoints(Frame *frame, Frame *closed_frame, int ip)
   int plineno = mapIPToLineNumber(frame,ip-1);
   if (plineno == lineno) return false;
   const Object *bpset = _ctxt->_list->ro(this->_mybps);
+  std::set<int> todelete;
   for (int i=0;i<this->_mybps.count();i++) {
     const BreakpointData *bd = _ctxt->_breakpoint->ro(bpset[i]);
     std::cout << "Check BP: " << lineno << " name: " << bd->frame_name << " vs: " << frame->_debugname << " line: " << bd->line_number << "\n";
+    if (lineno == _dbstepin_lineno) return true;
     if ((bd->frame_name == frame->_debugname) &&
 	(bd->line_number == lineno)) {
       if (bd->bp_type == BreakpointTypeCode::Unconditional) return true;
+      if (bd->bp_type == BreakpointTypeCode::Transient) {
+	_ctxt->_globals->set("_dblist",_ctxt->_list->deleteElement(this->_mybps,i));
+	return true;
+      }
       if (bd->bp_type == BreakpointTypeCode::Conditional) {
 	std::cout << "Conditional breakpoint check.\n";
 	try {
@@ -483,12 +509,31 @@ bool VM::checkBreakpoints(Frame *frame, Frame *closed_frame, int ip)
   return false;
 }
 
+void VM::debugStep(int ip, int steps)
+{
+  // Create a new breakpoint
+  if (steps >= 0) {
+    Object bp = _ctxt->_breakpoint->makeScalar();
+    BreakpointData *bpd = _ctxt->_breakpoint->rw(bp);
+    bpd->frame_name = _frames[_fp]->_closedFrame->_debugname;
+    bpd->line_number = mapIPToLineNumber(_frames[_fp]->_closedFrame,ip)+steps;
+    bpd->bp_type = BreakpointTypeCode::Transient;
+    bpd->bp_when = BreakpointWhen::Always;
+    bpd->id = 135;
+    _ctxt->_list->push(_mybps,bp);
+    _ctxt->_globals->set("_dblist",_mybps);
+  } else {
+    _dbstepin_lineno = mapIPToLineNumber(_frames[_fp]->_closedFrame,ip)+1;
+    std::cout << "Setting DBSTEP IN flag with line number: " << _dbstepin_lineno << "\n";
+  }
+}
+
 void VM::debugCycle()
 {
   // FIXME - this state should be a stack or something
   // FIXME - also need to preserve the debug context.
   // FIXME - keyboard in the base workspace dies
-
+  _dbstepin_lineno = 0;
   // Find the frame we want to debug
   Frame *visited_frame = nullptr;
   for (int i=_fp;i>=0;--i)
@@ -498,7 +543,7 @@ void VM::debugCycle()
     }
   int lineno = mapIPToLineNumber(visited_frame,_debug_ip);
   char buffer[2048];
-  sprintf(buffer,"K [%d,%d] --> ",_debug_ip,lineno);
+  sprintf(buffer,"K [%s,%d] --> ",visited_frame->_name.c_str(),lineno);
   while (1)
     {
       char *p = readline(buffer);
@@ -514,7 +559,7 @@ void VM::debugCycle()
 	if (mod)
 	  {
 	    Object p = _ctxt->_asm->run(mod);
-	    _fp++;
+	    FrameReserver myframe(this);
 	    const ModuleData *cmd = _ctxt->_module->ro(p);
 	    const FunctionData *fd = _ctxt->_function->ro(cmd->m_main);
 	    const CodeData *cp = _ctxt->_code->ro(fd->m_code);
@@ -530,20 +575,15 @@ void VM::debugCycle()
 	    } catch (const FM::Exception &e) {
 	      std::cout << "Exception: " << e.msg() << "\n";
 	    }
-	    updateDebugMode();
+	    updateDebugMode(false);
 	    visited_frame = _frames[_fp]->_closedFrame;
-	    // No return values.. pop the frame
-	    _frames[_fp]->_sym_names = _ctxt->_list->empty();
-	    _frames[_fp]->_vars = _ctxt->_list->empty();
-	    _frames[_fp]->_addrs = _ctxt->_index->empty();
-	    _frames[_fp]->_defined = _ctxt->_bool->empty();
-	    _frames[_fp]->_exception_handlers.clear();
-	    _rp = _frames[_fp]->_reg_offset;
-	    _fp--;
 	    if (_retscrpt_found) return;
 	  }
       } catch (const FM::Exception &e) {
 	std::cout << "Exception: " << e.msg() << "\n";
+      } catch (const VMDBQuitException &x) {
+	if (x._catchCount == -1) throw;
+	if (x._catchCount == 0) throw VMDBQuitException(1);
       }
     }
 }
@@ -608,7 +648,7 @@ Frame* VM::findNextClosedFrame(Frame *p) {
 
 void VM::executeScript(const Object &codeObject, const FMString &debugname)
 {
-  _fp++;
+  FrameReserver myframe(this);
   const CodeData *cp = _ctxt->_code->ro(codeObject);
   _frames[_fp]->_name = _ctxt->_string->str(cp->m_name);
   _frames[_fp]->_debugname = debugname;
@@ -617,17 +657,8 @@ void VM::executeScript(const Object &codeObject, const FMString &debugname)
   _frames[_fp]->_code = codeObject;
   _frames[_fp]->_sym_names = _ctxt->_list->empty(); // Our frame has no locally defined symbols
   _frames[_fp]->_fp = _fp; // Capture the frame pointer
-  
   // execute the code
   executeCodeObject(codeObject);
-  // No return values.. pop the frame
-  _frames[_fp]->_sym_names = _ctxt->_list->empty();
-  _frames[_fp]->_vars = _ctxt->_list->empty();
-  _frames[_fp]->_addrs = _ctxt->_index->empty();
-  _frames[_fp]->_defined = _ctxt->_bool->empty();
-  _frames[_fp]->_exception_handlers.clear();
-  _rp = _frames[_fp]->_reg_offset;
-  _fp--;
 }
 
 
@@ -697,7 +728,7 @@ void VM::executeCodeObject(const Object &codeObject)
   Object *capturesfile = _ctxt->_list->rw(_frames[_fp]->_captures);
   std::vector<int> *eh = &_frames[_fp]->_exception_handlers;
 
-  updateDebugMode();
+  updateDebugMode(true);
   
   while (!returnFound)
     {
@@ -715,6 +746,11 @@ void VM::executeCodeObject(const Object &codeObject)
 	    
 	    if (_debug_mode && checkBreakpoints(_frames[_fp],closed_frame,ip)) {
 	      _debug_ip = ip;
+	      debugCycle();
+	    }
+	    if (_debug_mode && (_debug_flags & dbstop_on_entry)) {
+	      _debug_ip = ip;
+	      _debug_flags = _debug_flags ^ dbstop_on_entry;
 	      debugCycle();
 	    }
 
@@ -735,17 +771,13 @@ void VM::executeCodeObject(const Object &codeObject)
 		}
 		break;
 	      case OP_DBSTEP:
-		{
-		  // treat a step like setting a breakpoint on the next available line
-		  // 1. Get the argument from the opcode
-		  // 2. Add a one-shot breakpoint on the computed instruction
-		  // 3. force a return.
-		  //		  addBreakpoint
-		}
+		// treat a step like setting a breakpoint on the next available line
+		// 1. Get the argument from the opcode
+		// 2. Add a one-shot breakpoint on the computed instruction
+		// 3. force a return.
+		debugStep(_debug_ip,int(_ctxt->_double->scalarValue(REG1)));
+		_retscrpt_found = true;
 		break;
-		//	      case OP_DBSTOP:
-		//		DBStop(_ctxt,REG1);
-		//		break;
 	      case OP_NOP:
 		break;
 	      case OP_RETURN:
@@ -913,21 +945,21 @@ void VM::executeCodeObject(const Object &codeObject)
 		*/
 	      case OP_LOAD_CELL:
 		{
-		  register int ndx = get_constant(insn);
+		  int ndx = get_constant(insn);
 		  REG1 = _ctxt->_captured->get(capturesfile[ndx]);
 		  std::cout << "    CELL LOAD: " << REG1.description() << "\n";
 		  break;
 		}
 	      case OP_PUSH_CELL:
 		{
-		  register int ndx = get_constant(insn);
+		  int ndx = get_constant(insn);
 		  _ctxt->_list->push(REG1,capturesfile[ndx]);
 		  std::cout << "    CELL PUSH: " << capturesfile[ndx].description() << "\n";
 		  break;
 		}
 	      case OP_SAVE_CELL:
 		{
-		  register int ndx = get_constant(insn);
+		  int ndx = get_constant(insn);
 		  _ctxt->_captured->set(capturesfile[ndx],REG1);
 		  std::cout << "    CELL SAVE: " << REG1.description() << "\n";
 		  break;
@@ -959,8 +991,8 @@ void VM::executeCodeObject(const Object &codeObject)
 	      case OP_LOAD:
 		{
 		  // We start by looking for the name in our address file
-		  register int ndx = get_constant(insn);
-		  register int addr = addrfile[ndx];
+		  int ndx = get_constant(insn);
+		  int addr = addrfile[ndx];
 		  if (addr == -1)
 		    {
 		      std::cout << "OP_LOAD for " << _ctxt->_string->str(names_list[ndx]) << "\n";
@@ -977,8 +1009,8 @@ void VM::executeCodeObject(const Object &codeObject)
 		}
 	      case OP_LOOKUP:
 		{
-		  register int ndx = get_constant(insn);
-		  register int addr = addrfile[ndx];
+		  int ndx = get_constant(insn);
+		  int addr = addrfile[ndx];
 		  if ((addr == -1) || _debug_mode)
 		    {
 		      std::cout << "OP_LOOKUP for " << _ctxt->_string->str(names_list[ndx]) << "\n";
@@ -1015,8 +1047,8 @@ void VM::executeCodeObject(const Object &codeObject)
 		break;
 	      case OP_SAVE:
 		{
-		  register int ndx = get_constant(insn);
-		  register int addr = addrfile[ndx];
+		  int ndx = get_constant(insn);
+		  int addr = addrfile[ndx];
 		  if ((addr == -1) || _debug_mode)
 		    {
 		      addr = closed_frame->lookupAddressForName(names_list[ndx],false);
@@ -1100,8 +1132,8 @@ void VM::executeCodeObject(const Object &codeObject)
 	      case OP_SUBSASGN_NOGS:
 	      case OP_SUBSASGN:
 		{
-		  register int ndx = get_constant(insn);
-		  register int addr = addrfile[ndx];
+		  int ndx = get_constant(insn);
+		  int addr = addrfile[ndx];
 		  if ((addr == -1) || _debug_mode)
 		    {
 		      FMString name = _ctxt->_string->str(names_list[get_constant(insn)]);

@@ -26,3 +26,21 @@ Object ModuleType::deref(const Object &a)
   return _ctxt->_list->first(ret);
 }
 
+Object ModuleType::builtin(const FMString &name, fncptr addr)
+{
+  Object b = this->makeScalar();
+  ModuleData *md = this->rw(b);
+  md->m_name = name;
+  md->m_modtype = BuiltinModuleType;
+  md->m_ptr = addr;
+  return b;
+}
+
+static Object _pass(const Object &args, int nargout, ThreadContext *ctxt) {
+  return args;
+}
+
+Object ModuleType::pass()
+{
+  return this->builtin("pass",_pass);  
+}

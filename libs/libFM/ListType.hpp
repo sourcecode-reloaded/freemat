@@ -3,6 +3,7 @@
 
 #include "ObjectArrayType.hpp"
 #include "Object.hpp"
+#include "DoubleType.hpp"
 
 namespace FM
 {
@@ -25,11 +26,11 @@ namespace FM
       return ret;
     }
     Object first(const Object &a) {
-      if (a.isEmpty()) throw Exception("Attempt to take first element of empty object");
+      if (a.isEmpty()) return _ctxt->_double->empty(); //throw Exception("Attempt to take first element of empty object");
       return *(this->ro(a));
     }
     Object second(const Object &a) {
-      if (a.count() < 2) throw Exception("Attempt to take first element of empty object");
+      if (a.count() < 2) throw Exception("Attempt to take second element of empty object");
       return (this->ro(a))[1];
     }
     Object makePair(const Object &a, const Object &b) {
@@ -55,11 +56,19 @@ namespace FM
       return this->ro(a)[ndx];
     }
     Object pop(const Object &a) {
-      if (a.count() == 1) return this->empty();
+      if (a.count() <= 1) return this->empty();
       // TODO - make this faster by using slicing?
       Object r(this->makeMatrix(a.count()-1,1));
       for (int i=1;i<a.count();i++)
 	this->rw(r)[i-1] = this->ro(a)[i];
+      return r;
+    }
+    Object deleteElement(const Object &a, int element) {
+      if (a.count() <= 1) return this->empty();
+      Object r(this->makeMatrix(a.count()-1,1));
+      int j = 0;
+      for (int i=0;i<a.count();i++)
+	if (i != element) this->rw(r)[j++] = this->ro(a)[i];
       return r;
     }
     void push(Object &a, const Object &b) {

@@ -41,6 +41,7 @@ void InitializeReservedTable() {
   fm_reserved["catch"] = TOK_CATCH;
   fm_reserved["classdef"] = TOK_CLASSDEF;
   fm_reserved["continue"] = TOK_CONTINUE;
+  fm_reserved["dbcont"] = TOK_DBCONT;
   fm_reserved["dbdown"] = TOK_DBDOWN;
   fm_reserved["dbstep"] = TOK_DBSTEP;
   fm_reserved["dbtrace"] = TOK_DBTRACE;

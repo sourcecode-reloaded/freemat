@@ -1479,6 +1479,9 @@ void Compiler::statementType(const Tree &t, bool printIt) {
   case TOK_DBDOWN:
     emit(OP_DBDOWN);
     break;
+  case TOK_DBCONT:
+    emit(OP_RETSCRPT);
+    break;
   case TOK_RETURN:
     // An explicit return inside a script is unusual
     // We map it to a unique opcode to distinguish it from
@@ -1860,7 +1863,7 @@ void Compiler::walkClassDef(const Tree &t) {
     if (!explicit_constructor)
       {
 	std::cout << "Explicit constructor not found!\n";
-	constructor = fetchConstant(_ctxt->_builtin->pass());
+	constructor = fetchConstant(_ctxt->_module->pass());
       }
     reg_t name = fetchConstantString(cp->_syms->name);
     pushList(cd_args,superclasses);

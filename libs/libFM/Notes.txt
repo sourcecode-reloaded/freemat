@@ -2636,12 +2636,74 @@ is issued from a debug session or something similar).
 
 dbstop - seems to be complete
 
-dbclear
-dbcont
-dbdown
-dbquit
-dbstack
+dbclear - works
+
+dbcont - just like a return - mapped to it's own token for parsing
+
+dbdown - done
+
+dbquit - I think this causes debugging to terminate the current
+function. - done
+
+dbstack - based off of backtrace
 dbstep
 dbtype
-dbup
+dbup - done
 
+Note - according to the M documentation, I have "special functions"
+parsed incorrectly.  The following is legal:
+
+
+dbstop in clear; foo(x) 
+
+Which means a semi-colon can terminate a special function call. 
+
+dbstop in a builtin function - fixed, removed builtin type in the
+process.
+
+Never mind - special functions were already handled correctly.
+
+Can dbquit be done without an exception?  Consider something like:
+
+foo --> func --> mapsto --> myfunc
+
+If we are stopped in myfunc, then when a dbquit is issued, we must
+check the state of the VM in mapsto to see if a premature quit was
+called.  An exception is actually cleaner.
+
+How do we handle the dbquit (no 'all') case?  Here, we are in a debug
+cycle, and we want to terminate the current debug loop _and_ throw the
+exception.
+
+So our execution stack looks something like this:
+
+root
+  |
+  |
+  func1
+     |
+     |
+     debug cycle
+        |
+	|
+	func2
+	   |
+	   |
+	   debug cycle
+
+When the exception is thrown we do _not_ want to catch it in the debug
+cycle.  Instead we want to issue dbquit.  If we count the number of
+times it is caught, we can decide when to actually stop.  A ret all
+can be done by throwing something that will never be caught.
+
+The frame handling needs RAII.  Frames are not getting cleaned up.
+
+dbstep and dbstep number of lines both work
+
+dbstep in - works, but requires special parsing, because dbstep in is
+not parsed correctly.  dbstep -1 does work, though.  It would be
+cleaner to put the instruction pointer into the frame.  That way, it
+could be accessed outside the executeCodeObject loop.  That makes
+debugStep an external function.  
+
+dbstep out - 

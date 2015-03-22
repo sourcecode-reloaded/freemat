@@ -50,7 +50,7 @@ void FM::makeListenerClass(ThreadContext *ctxt) {
 			   ctxt->_double->empty());
   Object handle = ctxt->_globals->get("handle",ctxt);
   cmd->m_name = ctxt->_string->makeString("event.listener");
-  cmd->m_constructor = ctxt->_builtin->pass();
+  cmd->m_constructor = ctxt->_module->pass();
   ctxt->_meta->addSuperClass(listener,handle);
   // This is one way to handle namespaces...
   Object event_space = ctxt->_struct->makeScalar();
@@ -96,7 +96,7 @@ void FM::makeHandleClass(ThreadContext *ctxt) {
 			   ctxt->_double->empty());
   ctxt->_meta->addMethod(handle,
 			 ctxt->_string->makeString("is_valid_event"),
-			 ctxt->_builtin->makeBuiltin("is_valid_event",is_valid_event),
+			 ctxt->_module->builtin("is_valid_event",is_valid_event),
 			 false); // TODO remove boolean arguments - they are unclear
   // ctxt->_meta->addProperty(handle,
   // 			   ctxt->_string->makeString("_listeners"),
@@ -110,6 +110,6 @@ void FM::makeHandleClass(ThreadContext *ctxt) {
   // 			 ctxt->_builtin->makeBuiltin("addlistener",addlistener),
   // 			 false);
   cmd->m_name = ctxt->_string->makeString("base_handle");
-  cmd->m_constructor = ctxt->_builtin->pass();
+  cmd->m_constructor = ctxt->_module->pass();
   ctxt->_globals->set("base_handle",handle);
 }

@@ -102,7 +102,6 @@ MatrixMultiply.cpp
 ArrayFormatInfo.cpp
 ArrayFormatInfo.hpp
 ModuleType.cpp
-BuiltInType.cpp
 GarbageCollector.cpp
 HandleClass.cpp
 Debug.cpp

@@ -169,16 +169,6 @@ Object backtrace(const Object &args, int nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->_vm->backtrace());
 }
 
-Object dbup(const Object &args, int nargout, ThreadContext *ctxt) {
-  ctxt->_vm->dbshift(-1);
-  return ctxt->_list->empty();
-}
-
-Object dbdown(const Object &args, int nargout, ThreadContext *ctxt) {
-  ctxt->_vm->dbshift(1);
-  return ctxt->_list->empty();
-}
-
 Object dblist(const Object &args, int nargout, ThreadContext *ctxt) {
   if (ctxt->_globals->isDefined("_dblist"))
     {
@@ -359,28 +349,28 @@ int main(int argc, char *argv[])
     ctxt->_globals->set("cap2",cap2);
   }
 
-  ctxt->_globals->set("size",ctxt->_builtin->makeBuiltin("size",size));
-  ctxt->_globals->set("print",ctxt->_builtin->makeBuiltin("print",print));
-  ctxt->_globals->set("handir",ctxt->_builtin->makeBuiltin("handir",handir));
-  ctxt->_globals->set("strcmp",ctxt->_builtin->makeBuiltin("strcmp",strcmp));
-  ctxt->_globals->set("numel",ctxt->_builtin->makeBuiltin("numel",numel));
-  ctxt->_globals->set("int8",ctxt->_builtin->makeBuiltin("int8",to_int8));
-  ctxt->_globals->set("int16",ctxt->_builtin->makeBuiltin("int16",to_int16));
-  ctxt->_globals->set("int32",ctxt->_builtin->makeBuiltin("int32",to_int32));
-  ctxt->_globals->set("int64",ctxt->_builtin->makeBuiltin("int64",to_int64));
-  ctxt->_globals->set("uint8",ctxt->_builtin->makeBuiltin("uint8",to_uint8));
-  ctxt->_globals->set("uint16",ctxt->_builtin->makeBuiltin("uint16",to_uint16));
-  ctxt->_globals->set("uint32",ctxt->_builtin->makeBuiltin("uint32",to_uint32));
-  ctxt->_globals->set("uint64",ctxt->_builtin->makeBuiltin("uint64",to_uint64));
-  ctxt->_globals->set("double",ctxt->_builtin->makeBuiltin("double",to_double));
-  ctxt->_globals->set("single",ctxt->_builtin->makeBuiltin("single",to_single));
-  ctxt->_globals->set("backtrace",ctxt->_builtin->makeBuiltin("backtrace",backtrace));
-  ctxt->_globals->set("dbup",ctxt->_builtin->makeBuiltin("dbup",dbup));
-  ctxt->_globals->set("dbdown",ctxt->_builtin->makeBuiltin("dbdown",dbdown));
-  ctxt->_globals->set("dbstop",ctxt->_builtin->makeBuiltin("dbstop",dbstop));
-  ctxt->_globals->set("dblist",ctxt->_builtin->makeBuiltin("dblist",dblist));
-  ctxt->_globals->set("class",ctxt->_builtin->makeBuiltin("class",classfunc));
-  ctxt->_globals->set("gc",ctxt->_builtin->makeBuiltin("gc",builtin_gc));
+  ctxt->_globals->set("size",ctxt->_module->builtin("size",size));
+  ctxt->_globals->set("print",ctxt->_module->builtin("print",print));
+  ctxt->_globals->set("handir",ctxt->_module->builtin("handir",handir));
+  ctxt->_globals->set("strcmp",ctxt->_module->builtin("strcmp",strcmp));
+  ctxt->_globals->set("numel",ctxt->_module->builtin("numel",numel));
+  ctxt->_globals->set("int8",ctxt->_module->builtin("int8",to_int8));
+  ctxt->_globals->set("int16",ctxt->_module->builtin("int16",to_int16));
+  ctxt->_globals->set("int32",ctxt->_module->builtin("int32",to_int32));
+  ctxt->_globals->set("int64",ctxt->_module->builtin("int64",to_int64));
+  ctxt->_globals->set("uint8",ctxt->_module->builtin("uint8",to_uint8));
+  ctxt->_globals->set("uint16",ctxt->_module->builtin("uint16",to_uint16));
+  ctxt->_globals->set("uint32",ctxt->_module->builtin("uint32",to_uint32));
+  ctxt->_globals->set("uint64",ctxt->_module->builtin("uint64",to_uint64));
+  ctxt->_globals->set("double",ctxt->_module->builtin("double",to_double));
+  ctxt->_globals->set("single",ctxt->_module->builtin("single",to_single));
+  ctxt->_globals->set("backtrace",ctxt->_module->builtin("backtrace",backtrace));
+  ctxt->_globals->set("dbstop",ctxt->_module->builtin("dbstop",dbstop));
+  ctxt->_globals->set("dbquit",ctxt->_module->builtin("dbquit",dbquit));
+  ctxt->_globals->set("dbclear",ctxt->_module->builtin("dbclear",dbclear));
+  ctxt->_globals->set("dblist",ctxt->_module->builtin("dblist",dblist));
+  ctxt->_globals->set("class",ctxt->_module->builtin("class",classfunc));
+  ctxt->_globals->set("gc",ctxt->_module->builtin("gc",builtin_gc));
 
   // // Global symbols
   // for (auto i=ctxt->_globals->begin(); i != ctxt->_globals->end(); ++i)
@@ -419,6 +409,7 @@ int main(int argc, char *argv[])
 	  }
       } catch (const FM::Exception &e) {
 	std::cout << "Exception: " << e.msg() << "\n";
+      } catch (const VMDBQuitException &x) {
       }
     }
 

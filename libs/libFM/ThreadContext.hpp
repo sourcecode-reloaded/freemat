@@ -48,7 +48,6 @@ namespace FM
   class Object;
   class FunctionType;
   class FunctionHandleType;
-  class BuiltInType;
   class BoundFunctionType;
   class AnonymousType;
   class BreakpointType;
@@ -74,7 +73,6 @@ namespace FM
     CellType *_cell;
     ListType *_list;
     CodeType *_code;
-    BuiltInType *_builtin;
     ClassMetaType *_meta;
     ClassType *_class;
     FunctionType *_function;
