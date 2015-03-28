@@ -35,6 +35,9 @@ const int dbstop_on_entry = 16;
 
 using namespace FM;
 
+VM::FrameReserver::FrameReserver(VM *vm) : _vm(vm) {
+  _vm->_fp++;
+}
 
 VM::FrameReserver::~FrameReserver() {
   assert(_vm->_fp > 0);
@@ -43,6 +46,8 @@ VM::FrameReserver::~FrameReserver() {
   _vm->_frames[_vm->_fp]->_addrs = _vm->_ctxt->_index->empty();
   _vm->_frames[_vm->_fp]->_defined = _vm->_ctxt->_bool->empty();
   _vm->_frames[_vm->_fp]->_exception_handlers.clear();
+  _vm->_frames[_vm->_fp]->_debug_line_nos.clear();
+  _vm->_frames[_vm->_fp]->_transient_bp = 0;
   _vm->_rp = _vm->_frames[_vm->_fp]->_reg_offset;
   _vm->_fp--;
 }
@@ -94,6 +99,7 @@ VM::VM(ThreadContext *ctxt) : _registers(ctxt->_list->makeMatrix(register_stack_
   //  _frames.resize(frame_stack_size);
   _frames[0]->_name = "base";
   _frames[0]->_closed = true;
+  _frames[0]->_closedFrame = _frames[0];
   _fp = 0;
   _rp = 0;
   _ctxt = ctxt;
@@ -132,6 +138,13 @@ void VM::dump()
 
 void VM::updateDebugMode(bool loopEntry)
 {
+  if (loopEntry && (_frames[_fp]->_prevFrame->_state == FrameRunStateCode::StepIn)) {
+    this->_debug_flags = dbstop_on_entry;
+    this->_debug_mode = true;
+    _frames[_fp]->_prevFrame->_state = FrameRunStateCode::Normal;
+    _frames[_fp]->_prevFrame->_transient_bp = 0;
+    return;
+  }
   if (loopEntry && (this->_dbstepin_lineno > 0)) {
     this->_debug_flags = dbstop_on_entry;
     this->_debug_mode = true;
@@ -207,8 +220,8 @@ Object VM::executeModule(const Object &moduleObject, const Object &parameters)
       FrameReserver myframe(this);
       const ModuleData *md = _ctxt->_module->ro(moduleObject);
       _frames[_fp]->_name = md->m_name;
-      _frames[_fp]->_debugname = resolve_full_path(md->m_name);
-      _frames[_fp]->_closed = true;
+      _frames[_fp]->_debugname = md->m_name;
+      defineFrame(_ctxt->_list->empty(),0,FrameTypeCode::Builtin);
       updateDebugMode(false);
       if (_debug_mode && (_debug_flags & dbstop_on_entry))
 	{
@@ -273,7 +286,7 @@ void VM::defineClass(const Object &name, const Object &arguments)
 }
 
 
-void VM::defineFrame(const Object &names, int registerCount, const FrameType &ftype)
+void VM::defineFrame(const Object &names, int registerCount, const FrameTypeCode &ftype)
 {
   int nameCount = names.count();
   _frames[_fp]->_addrs = _ctxt->_index->makeMatrix(nameCount,1);
@@ -287,9 +300,12 @@ void VM::defineFrame(const Object &names, int registerCount, const FrameType &ft
   _frames[_fp]->_reg_offset = _rp;
   _frames[_fp]->_module = _ctxt->_list->last(_modules);
   _frames[_fp]->_captures = _ctxt->_list->empty();
-  _frames[_fp]->_closed = (ftype == FrameType::closedFrame);
-  if (ftype == FrameType::closedFrame)
-    _frames[_fp]->_closedFrame = _frames[_fp];
+  _frames[_fp]->_type = ftype;
+  _frames[_fp]->_closed = (ftype == FrameTypeCode::Function) ||
+    (ftype == FrameTypeCode::Builtin);
+  _frames[_fp]->_ip = 0;
+  _frames[_fp]->_state = FrameRunStateCode::Normal;
+  if (_frames[_fp]->_closed) _frames[_fp]->_closedFrame = _frames[_fp];
   else
     {
       // Open frames must be closed by searching backwards
@@ -302,7 +318,10 @@ void VM::defineFrame(const Object &names, int registerCount, const FrameType &ft
 	  }
       if (!closed_frame)  throw Exception("Closed frame not found!  Should never happen!");
       _frames[_fp]->_closedFrame = closed_frame;
-    }  
+    }
+  _frames[_fp]->_prevFrame = _fp ? _frames[_fp-1] : nullptr;
+  if (_frames[_fp]->_prevFrame) _frames[_fp]->_prevFrame->_nextFrame = _frames[_fp];
+  _frames[_fp]->_nextFrame = nullptr;
   _rp += registerCount;
 }
 
@@ -311,7 +330,7 @@ Object VM::executeAnonymousFunction(const Object &codeObject, const Object &para
   FrameReserver myframe(this);
   const CodeData *cp = _ctxt->_code->ro(codeObject);
   _frames[_fp]->_name = _ctxt->_string->str(cp->m_name);
-  defineFrame(cp->m_names,cp->m_registers,FrameType::closedFrame);
+  defineFrame(cp->m_names,cp->m_registers,FrameTypeCode::Function);
   _frames[_fp]->_code = codeObject;
   Object *sp = _ctxt->_list->rw(_frames[_fp]->_vars);
   ndx_t *ap = _ctxt->_index->rw(_frames[_fp]->_addrs);
@@ -379,7 +398,7 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
   _frames[_fp]->_name = _ctxt->_string->str(cp->m_name);
   _frames[_fp]->_debugname = debugname;
   std::cout << "Starting function: " << _frames[_fp]->_name << "\n";
-  defineFrame(cp->m_names,cp->m_registers,FrameType::closedFrame);
+  defineFrame(cp->m_names,cp->m_registers,FrameTypeCode::Function);
   _frames[_fp]->_code = fd->m_code;
   ndx_t *ap = _ctxt->_index->rw(_frames[_fp]->_addrs);
   _frames[_fp]->_captures = fd->m_closure;
@@ -458,25 +477,22 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
   return retvec;
 }
 
-int VM::mapIPToLineNumber(Frame *frame, int ip)
-{
-  if (ip < 0) return -1;
-  if (frame->_debug_line_nos.empty()) {
-    const CodeData *dp = _ctxt->_code->ro(frame->_code);
-    if (dp->m_lineno.isEmpty()) return -1;
-    rle_decode_line_nos(_ctxt->_uint32->ro(dp->m_lineno),
-			dp->m_lineno.count(),
-			frame->_debug_line_nos);
-  }
-  if (ip >= frame->_debug_line_nos.size()) return -1;
-  return frame->_debug_line_nos[ip];
-}
 
 bool VM::checkBreakpoints(Frame *frame, Frame *closed_frame, int ip)
 {
-  int lineno = mapIPToLineNumber(frame,ip);
-  int plineno = mapIPToLineNumber(frame,ip-1);
+  int lineno = frame->mapIPToLineNumber(ip);
+  int plineno = frame->mapIPToLineNumber(ip-1);
   if (plineno == lineno) return false;
+  if (frame->_state == FrameRunStateCode::StepOut) {
+    frame->_state = FrameRunStateCode::Normal;
+    return true;
+  }
+  // Loop through the transient breakpoints
+  if (frame->_transient_bp == lineno) {
+    frame->_transient_bp = 0;
+    return true;
+  }
+  frame->_state = FrameRunStateCode::Normal;
   const Object *bpset = _ctxt->_list->ro(this->_mybps);
   std::set<int> todelete;
   for (int i=0;i<this->_mybps.count();i++) {
@@ -486,10 +502,6 @@ bool VM::checkBreakpoints(Frame *frame, Frame *closed_frame, int ip)
     if ((bd->frame_name == frame->_debugname) &&
 	(bd->line_number == lineno)) {
       if (bd->bp_type == BreakpointTypeCode::Unconditional) return true;
-      if (bd->bp_type == BreakpointTypeCode::Transient) {
-	_ctxt->_globals->set("_dblist",_ctxt->_list->deleteElement(this->_mybps,i));
-	return true;
-      }
       if (bd->bp_type == BreakpointTypeCode::Conditional) {
 	std::cout << "Conditional breakpoint check.\n";
 	try {
@@ -509,43 +521,62 @@ bool VM::checkBreakpoints(Frame *frame, Frame *closed_frame, int ip)
   return false;
 }
 
-void VM::debugStep(int ip, int steps)
-{
-  // Create a new breakpoint
-  if (steps >= 0) {
-    Object bp = _ctxt->_breakpoint->makeScalar();
-    BreakpointData *bpd = _ctxt->_breakpoint->rw(bp);
-    bpd->frame_name = _frames[_fp]->_closedFrame->_debugname;
-    bpd->line_number = mapIPToLineNumber(_frames[_fp]->_closedFrame,ip)+steps;
-    bpd->bp_type = BreakpointTypeCode::Transient;
-    bpd->bp_when = BreakpointWhen::Always;
-    bpd->id = 135;
-    _ctxt->_list->push(_mybps,bp);
-    _ctxt->_globals->set("_dblist",_mybps);
-  } else {
-    _dbstepin_lineno = mapIPToLineNumber(_frames[_fp]->_closedFrame,ip)+1;
-    std::cout << "Setting DBSTEP IN flag with line number: " << _dbstepin_lineno << "\n";
-  }
-}
-
 void VM::debugCycle()
 {
+  FrameReserver myframe(this);
+  activeFrame()->_name = "keyboard";
+  defineFrame(_ctxt->_list->empty(),0,FrameTypeCode::Debug);
   // FIXME - this state should be a stack or something
   // FIXME - also need to preserve the debug context.
   // FIXME - keyboard in the base workspace dies
   _dbstepin_lineno = 0;
-  // Find the frame we want to debug
+  // Find the frame we want to debug - why does it have to be closed?
+  // FIXME - does this not work for scripts?
   Frame *visited_frame = nullptr;
   for (int i=_fp;i>=0;--i)
     if (_frames[i]->_closed) {
       visited_frame = _frames[i];
       break;
     }
-  int lineno = mapIPToLineNumber(visited_frame,_debug_ip);
+  Frame *debug = _frames[_fp];
+  while (debug && (debug->_type != FrameTypeCode::Function) && (debug->_type != FrameTypeCode::Script))
+    debug = debug->_prevFrame;
+  if (!debug) return; // Nothing to debug?
+  int lineno = debug->mapIPToLineNumber(debug->_ip);
+  char state[20];
+  switch (debug->_state) {
+  case FrameRunStateCode::Normal:
+    sprintf(state,"N");
+    break;
+  case FrameRunStateCode::Debug:
+    sprintf(state,"D");
+    break;
+  case FrameRunStateCode::StepIn:
+    sprintf(state,"I");
+    break;
+  case FrameRunStateCode::StepOut:
+    sprintf(state,"O");
+    break;
+  }
   char buffer[2048];
-  sprintf(buffer,"K [%s,%d] --> ",visited_frame->_name.c_str(),lineno);
   while (1)
     {
+      int shift = 0;
+      Object dbshift(_ctxt);
+      bool dbshiftExists = activeFrame()->getLocalVariableSlow("dbshift__",dbshift);
+      if (dbshiftExists) shift = dbshift.asDouble();
+      Frame *active = activeFrame()->_prevFrame;
+      std::cout << "active frame name is " << active->_name << "\n";
+      for (int i=0;i<shift;i++) {
+	if (!active->_prevFrame) {
+	  dbshift = _ctxt->_double->makeScalar(i-1);
+	  activeFrame()->setVariableSlow("dbshift__",dbshift);
+	  break;
+	}
+	active = active->_prevFrame;
+	std::cout << "dbshift " << i << " to frame " << active->_name << "\n";
+      }
+      sprintf(buffer,"K [%s,%d (%d) <%d>] %s --> ",active->_name.c_str(),lineno,debug->_ip,shift,state);
       char *p = readline(buffer);
       if (p && *p)
 	add_history(p);
@@ -563,12 +594,12 @@ void VM::debugCycle()
 	    const ModuleData *cmd = _ctxt->_module->ro(p);
 	    const FunctionData *fd = _ctxt->_function->ro(cmd->m_main);
 	    const CodeData *cp = _ctxt->_code->ro(fd->m_code);
-	    _frames[_fp]->_name = _ctxt->_string->str(cp->m_name);
+	    _frames[_fp]->_name = ">>debug";
 	    std::cout << "Starting script: " << _frames[_fp]->_name << "\n";
-	    defineFrame(cp->m_names,cp->m_registers,FrameType::openFrame);
+	    defineFrame(cp->m_names,cp->m_registers,FrameTypeCode::Script);
 	    _frames[_fp]->_sym_names = _ctxt->_list->empty(); // Our frame has no locally defined symbols
-	    _frames[_fp]->_fp = _fp; // Capture the frame pointer
-	    _frames[_fp]->_closedFrame = visited_frame;
+	    //	    _frames[_fp]->_closedFrame = visited_frame;
+	    _frames[_fp]->_closedFrame = active->_closedFrame;
 	    // execute the code
 	    try {
 	      executeCodeObject(fd->m_code);
@@ -576,7 +607,7 @@ void VM::debugCycle()
 	      std::cout << "Exception: " << e.msg() << "\n";
 	    }
 	    updateDebugMode(false);
-	    visited_frame = _frames[_fp]->_closedFrame;
+	    //	    visited_frame = _frames[_fp]->_closedFrame;
 	    if (_retscrpt_found) return;
 	  }
       } catch (const FM::Exception &e) {
@@ -602,38 +633,6 @@ Frame* VM::findPreviousClosedFrame(Frame *p) {
   throw Exception("Cannot go up");
 }
 
-void VM::prepareFrameForDebugging(Frame *p) {
-  std::cout << "Preparing frame " << p->_name << " for debugging\n";
-  const CodeData *dp = _ctxt->_code->ro(p->_code);
-  rle_decode_line_nos(_ctxt->_uint32->ro(dp->m_lineno),
-		      dp->m_lineno.count(),
-		      p->_debug_line_nos);
-  // Loop through the set of breakpoints, and flag instructions that could trip a breakpoint
-#if 0
-  p->_debug_flag.clear();
-  p->_debug_flag.resize(p->_debug_line_nos.size());
-  for (auto bp : _mybps) {
-    std::cout << "Breakpoint set on " << bp->frame_name << " at line " << bp->line_number << "\n";
-    if (!bp->instruction) {
-      std::cout << "Breakpoint instruction not set... Calculating\n";
-      // First look for an exact match
-      bool match = false;
-      for (int i=0;i<p->_debug_line_nos.size();i++)
-	if (p->_debug_line_nos[i] >= bp->line_number) {
-	  match = true;
-	  bp->instruction = i;
-	  std::cout << "Instruction found for line " << bp->line_number << " at IP = " << i << "\n";
-	  break;
-	}
-    } else {
-      std::cout << "Breakpoint instruction set to " << bp->instruction << "\n";
-    }
-    p->_debug_flag[bp->instruction] = true;
-  }
-#endif
-  //  Disassemble(_ctxt,p->_code);
-}
-
 Frame* VM::findNextClosedFrame(Frame *p) {
   int cfp = 0;
   for (int i=0;i<_fp;i++)
@@ -650,13 +649,12 @@ void VM::executeScript(const Object &codeObject, const FMString &debugname)
 {
   FrameReserver myframe(this);
   const CodeData *cp = _ctxt->_code->ro(codeObject);
-  _frames[_fp]->_name = _ctxt->_string->str(cp->m_name);
+  _frames[_fp]->_name = get_basename_from_full_path(debugname);
   _frames[_fp]->_debugname = debugname;
-  std::cout << "Starting script: " << _frames[_fp]->_name << "\n";
-  defineFrame(cp->m_names,cp->m_registers,FrameType::openFrame);
+  std::cout << "Starting script: " << _frames[_fp]->_name << " " << _frames[_fp]->_debugname << "\n";
+  defineFrame(cp->m_names,cp->m_registers,FrameTypeCode::Script);
   _frames[_fp]->_code = codeObject;
   _frames[_fp]->_sym_names = _ctxt->_list->empty(); // Our frame has no locally defined symbols
-  _frames[_fp]->_fp = _fp; // Capture the frame pointer
   // execute the code
   executeCodeObject(codeObject);
 }
@@ -717,11 +715,11 @@ void VM::executeCodeObject(const Object &codeObject)
   const uint64_t *code = _ctxt->_uint64->ro(cp->m_code);
   const Object *names_list = _ctxt->_list->ro(cp->m_names);
 
-  int ip = 0;
+  int &ip = _frames[_fp]->_ip;
   bool returnFound = false;
   _retscrpt_found = false;
 
-  Frame *closed_frame = _frames[_fp]->_closedFrame;
+  Frame* &closed_frame = _frames[_fp]->_closedFrame;
   Object *regfile = _ctxt->_list->rw(_registers) + _frames[_fp]->_reg_offset;
   ndx_t *addrfile = _ctxt->_index->rw(_frames[_fp]->_addrs); 
   Object *varfile = _ctxt->_list->rw(closed_frame->_vars);
@@ -743,7 +741,6 @@ void VM::executeCodeObject(const Object &codeObject)
 	      printf("%-20s",Compiler::opcodeDecode(op,insn).c_str());
 	      std::cout << "\n";
 	    }
-	    
 	    if (_debug_mode && checkBreakpoints(_frames[_fp],closed_frame,ip)) {
 	      _debug_ip = ip;
 	      debugCycle();
@@ -756,28 +753,6 @@ void VM::executeCodeObject(const Object &codeObject)
 
 	    switch (opcode(insn))
 	      {
-	      case OP_DBUP:
-		{
-		  closed_frame = findPreviousClosedFrame(closed_frame);
-		  _frames[_fp]->_closedFrame = closed_frame;
-		  _debug_mode = true;
-		}
-		break;
-	      case OP_DBDOWN:
-		{
-		  closed_frame = findNextClosedFrame(closed_frame);
-		  _frames[_fp]->_closedFrame = closed_frame;
-		  _debug_mode = true;
-		}
-		break;
-	      case OP_DBSTEP:
-		// treat a step like setting a breakpoint on the next available line
-		// 1. Get the argument from the opcode
-		// 2. Add a one-shot breakpoint on the computed instruction
-		// 3. force a return.
-		debugStep(_debug_ip,int(_ctxt->_double->scalarValue(REG1)));
-		_retscrpt_found = true;
-		break;
 	      case OP_NOP:
 		break;
 	      case OP_RETURN:

@@ -6,6 +6,7 @@
 #include "ModuleType.hpp"
 #include "CodeType.hpp"
 #include "Globals.hpp"
+#include "LineNumbers.hpp"
 
 using namespace FM;
 
@@ -146,3 +147,16 @@ Frame::Frame(ThreadContext *ctxt) : _sym_names(ctxt->_list->empty()),
   _reg_offset = 0;
 }
 
+int Frame::mapIPToLineNumber(int ip)
+{
+  if (ip < 0) return -1;
+  if (_debug_line_nos.empty()) {
+    const CodeData *dp = _ctxt->_code->ro(_code);
+    if (dp->m_lineno.isEmpty()) return -1;
+    rle_decode_line_nos(_ctxt->_uint32->ro(dp->m_lineno),
+			dp->m_lineno.count(),
+			_debug_line_nos);
+  }
+  if (ip >= _debug_line_nos.size()) return -1;
+  return _debug_line_nos[ip];  
+}

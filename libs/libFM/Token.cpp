@@ -81,7 +81,6 @@ FMString FM::TokenToString(const Token& b) {
   case TOK_CASE: return "case";
   case TOK_CATCH: return "catch";
   case TOK_CONTINUE: return "continue";
-  case TOK_DBSTEP: return "dbstep";
   case TOK_ELSE: return "else";
   case TOK_ELSEIF: return "elseif";
   case TOK_END: return "end";
@@ -133,12 +132,9 @@ FMString FM::TokenToString(const Token& b) {
   case TOK_IMAG: return "(imag)" + b.text();
   case TOK_FUNCTION_DEFS: return "functions:";
   case TOK_SCRIPT: return "script:";
-  case TOK_DBTRACE: return "dbtrace";
   case TOK_ANONYMOUS_FUNC: return "anon func";
   case TOK_NEST_FUNC: return "nest func";
   case TOK_TYPE_DECL: return "type decl";
-  case TOK_DBUP: return "dbup";
-  case TOK_DBDOWN: return "dbdown";
   case TOK_REINDEX: return "reindex";
   case TOK_INCR: return "++";
   case TOK_DECR: return "--";
@@ -159,7 +155,6 @@ FMString FM::TokenToString(const Token& b) {
   case TOK_ATTRIBUTES: return "attributes";
   case TOK_GET_METHOD: return "get_method";
   case TOK_EVENTS: return "events";
-  case TOK_DBCONT: return "dbcont";
   }
   return FMString(1,FMChar(b.value()));
 }

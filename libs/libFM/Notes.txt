@@ -2707,3 +2707,31 @@ could be accessed outside the executeCodeObject loop.  That makes
 debugStep an external function.  
 
 dbstep out - 
+
+Can we handle dbstep in using a combination of a trap and a
+traditional breakpoint?
+
+How about:
+
+1. dbstep in sets a breakpoint (marked transient) for the current frame.
+2. dbstep sets the frame in dbstepin mode
+3. If the current frame is exited (or another frame is pushed), then
+transient breakpoints are removed.
+
+dbstep doesn't quite work - dbstepping out of a function doesn't
+correct the active frame.
+
+dbstepin works - but need to figure out dbstep out.
+
+What does dbstep out mean?  We need to set the state on the parent
+frame.
+
+dbstepin stops at an awkward place.  Transient breakpoints should
+still stick to valid lines.
+
+Kick dbup and dbdown out of OpCodes.
+
+TODO - Kick out dbcont also.
+
+
+

@@ -45,18 +45,15 @@ namespace FM
     void debugCycle();
     Frame* findPreviousClosedFrame(Frame *b);
     Frame* findNextClosedFrame(Frame *b);
-    void prepareFrameForDebugging(Frame *b);
     bool checkBreakpoints(Frame *frame, Frame *closed_frame, int ip);
     void updateDebugMode(bool onEntry);
-    int mapIPToLineNumber(Frame *frame, int ip);
-    void debugStep(int ip, int steps);
+
     class FrameReserver {
       VM *_vm;
     public:
-      FrameReserver(VM *vm) : _vm(vm) {_vm->_fp++;}
+      FrameReserver(VM *vm);
       ~FrameReserver();
     };
-    
   public:    
     enum class FrameType {openFrame, closedFrame};
     VM(ThreadContext *ctxt);
@@ -67,10 +64,12 @@ namespace FM
     void executeCodeObject(const Object &codeObject);
     void defineBaseVariable(const FMString &name, const Object &value);
     void defineClass(const Object &name, const Object &arguments);
-    void defineFrame(const Object &names, int registerCount, const FrameType &ftype);
+    void defineFrame(const Object &names, int registerCount, const FrameTypeCode &ftype);
     void dump();
+    Frame* activeFrame() {return _frames[_fp];}
     Object backtrace();
-    void dbquit(bool all);
+    void signalReturn() {_retscrpt_found = true;}
+    void setDBStepInLineNumber(int line) {_dbstepin_lineno = line;}
   };
 }
 

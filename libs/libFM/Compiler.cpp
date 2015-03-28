@@ -1358,41 +1358,6 @@ void Compiler::whileStatement(const Tree &t) {
   _breakblock.pop();
 }
 
-void Compiler::dbstepStatement(const Tree &t) {
-  reg_t arg = fetchConstant(_ctxt->_double->makeScalar(1));
-  if (t.hasChildren()) {
-    arg = expression(t.first());
-  }
-  emit(OP_DBSTEP,arg);
-}
-
-/*
-void Compiler::dbstopStatement(const Tree &t) {
-  reg_t args = startList();
-  if (t.hasChildren() && t.first().is(TOK_IN)) {
-    pushList(args,fetchConstantString(t.first().first().text()));
-  } else {
-    pushList(args,fetchEmpty());
-  }
-  if(t.numChildren()>=2 && t.second().is(TOK_AT)) {
-    pushList(args,fetchConstantString(t.second().first().text()));
-  } else {
-    pushList(args,fetchEmpty());
-  }
-  if(t.numChildren()>=3 && t.third().is(TOK_IF)) {
-    // Compile the expression into a script object
-    Compiler texpr(_ctxt);
-    texpr.compile("dbstop__=("+t.third().first().text()+")\n;");
-    Assembler sm(_ctxt);
-    Object p = sm.run(texpr.module());
-    pushList(args,fetchConstant(p));
-  } else {
-    pushList(args,fetchEmpty());    
-  }
-  emit(OP_DBSTOP,args);
-}
-*/
-
 void Compiler::ifStatement(const Tree &t) {
   reg_t condtest = expression(t.first());
   BasicBlock *next = new BasicBlock;
@@ -1466,21 +1431,6 @@ void Compiler::statementType(const Tree &t, bool printIt) {
   case TOK_CONTINUE:
     if (_continueblock.empty()) throw Exception("CONTINUE outside loop");
     emit(OP_JUMP,_continueblock.top());
-    break;
-  case TOK_DBSTEP:
-    dbstepStatement(t);
-    break;
-  case TOK_DBTRACE:
-    //    dbtraceStatement(t);
-    break;
-  case TOK_DBUP:
-    emit(OP_DBUP);
-    break;
-  case TOK_DBDOWN:
-    emit(OP_DBDOWN);
-    break;
-  case TOK_DBCONT:
-    emit(OP_RETSCRPT);
     break;
   case TOK_RETURN:
     // An explicit return inside a script is unusual

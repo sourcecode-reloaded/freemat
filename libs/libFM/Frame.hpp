@@ -7,6 +7,10 @@
 
 namespace FM
 {
+
+  enum class FrameTypeCode {Function, Script, Builtin, Debug};
+  enum class FrameRunStateCode {Normal, Debug, StepIn, StepOut};
+  
   class Frame
   {
   public:
@@ -20,13 +24,18 @@ namespace FM
     Object _module;
     Object _code;
     Frame *_closedFrame;
+    Frame *_prevFrame;
+    Frame *_nextFrame;
     std::vector<uint16_t> _debug_line_nos;
-    std::vector<bool> _debug_flag;
+    uint16_t _transient_bp;
     std::vector<int> _exception_handlers;
     ThreadContext *_ctxt;
     bool _closed;
     int _reg_offset;
-       int _fp;    
+    int _ip;
+    FrameTypeCode _type;
+    FrameRunStateCode _state;
+    int _stepin_lineno_trap;
   public:
     Frame(ThreadContext *ctxt);
     int mapNameToVariableIndex(const Object &name);
@@ -37,6 +46,11 @@ namespace FM
     bool getLocalVariableSlow(const FMString &name, Object &value);
     int lookupAddressForName(const Object &name, bool searchGlobals);
     int defineNewSymbol(const Object &name);
+    int mapIPToLineNumber(int ip);
+    bool isDebuggable() {
+      return ((_type == FrameTypeCode::Function) ||
+	      (_type == FrameTypeCode::Script));
+    }
   };
 };
 

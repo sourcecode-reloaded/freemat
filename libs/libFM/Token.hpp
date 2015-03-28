@@ -35,8 +35,6 @@ namespace FM
   const TokenValueType TOK_CASE = 136;
   const TokenValueType TOK_CATCH = 137;
   const TokenValueType TOK_CONTINUE = 138;
-  const TokenValueType TOK_DBSTEP = 139;
-  const TokenValueType TOK_DBTRACE = 140;
   const TokenValueType TOK_ELSE = 141;
   const TokenValueType TOK_ELSEIF = 142;
   const TokenValueType TOK_END = 143;
@@ -91,8 +89,6 @@ namespace FM
   const TokenValueType TOK_ANONYMOUS_FUNC = 192;
   const TokenValueType TOK_NEST_FUNC = 193;
   const TokenValueType TOK_TYPE_DECL = 194;
-  const TokenValueType TOK_DBUP = 195;
-  const TokenValueType TOK_DBDOWN = 196;
   const TokenValueType TOK_REINDEX = 197;
   const TokenValueType TOK_INCR = 198;
   const TokenValueType TOK_DECR = 199;
@@ -114,7 +110,6 @@ namespace FM
   const TokenValueType TOK_SCOPED_IDENT = 215;
   const TokenValueType TOK_GET_METHOD = 216;
   const TokenValueType TOK_EVENTS = 217;
-  const TokenValueType TOK_DBCONT = 218;
 
   class ParseException {
     unsigned m_pos;

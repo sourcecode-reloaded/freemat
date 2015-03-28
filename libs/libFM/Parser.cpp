@@ -123,14 +123,14 @@ Tree Parser::singletonStatement() {
   return root;
 }
 
-Tree Parser::dBStepOrTraceStatement() {
-  Tree root(next());
-  consume();
-  if (match(',') || match(';') || match('\n'))
-    return root;
-  root.addChild(expression());
-  return root;
-}
+// Tree Parser::dBStepOrTraceStatement() {
+//   Tree root(next());
+//   consume();
+//   if (match(',') || match(';') || match('\n'))
+//     return root;
+//   root.addChild(expression());
+//   return root;
+// }
 
 Tree Parser::multiFunctionCall() {
   Tree root(expect('['));
@@ -528,12 +528,8 @@ Tree Parser::statement(bool nestsOK) {
     return singletonStatement();
   if (match(TOK_CONTINUE))
     return singletonStatement();
-  if (match(TOK_DBUP) || match(TOK_DBDOWN) || match(TOK_DBCONT))
-    return singletonStatement();
   if (match(TOK_WHILE))
     return whileStatement();
-  if (match(TOK_DBSTEP) || match(TOK_DBTRACE))
-    return dBStepOrTraceStatement();
   if (match(TOK_IF))
     return ifStatement();
   if (match(TOK_SWITCH))

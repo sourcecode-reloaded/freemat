@@ -369,6 +369,9 @@ int main(int argc, char *argv[])
   ctxt->_globals->set("dbquit",ctxt->_module->builtin("dbquit",dbquit));
   ctxt->_globals->set("dbclear",ctxt->_module->builtin("dbclear",dbclear));
   ctxt->_globals->set("dblist",ctxt->_module->builtin("dblist",dblist));
+  ctxt->_globals->set("dbstep",ctxt->_module->builtin("dbstep",dbstep));
+  ctxt->_globals->set("dbup",ctxt->_module->builtin("dbup",dbup));
+  ctxt->_globals->set("dbdown",ctxt->_module->builtin("dbdown",dbdown));
   ctxt->_globals->set("class",ctxt->_module->builtin("class",classfunc));
   ctxt->_globals->set("gc",ctxt->_module->builtin("gc",builtin_gc));
 
@@ -394,7 +397,7 @@ int main(int argc, char *argv[])
       FMString body(p);
       body += "\n\n";
       try {
-	ctxt->_compiler->compile(body);
+	ctxt->_compiler->compile(body,"expr:"+body.trimmed().left(10)+"...");
 	Module *mod = ctxt->_compiler->module();
 	if (mod)
 	  {

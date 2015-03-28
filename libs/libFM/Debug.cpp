@@ -108,7 +108,6 @@ Object FM::dbclear(const Object &args, int nargout, ThreadContext *ctxt) {
   return ctxt->_list->empty(); // Nothing to do.
 }
 
-// TODO - Breakpoints should be across all threads...
 Object FM::dbstop(const Object &args, int nargout, ThreadContext *ctxt) {
   std::cout << "DBSTOP called: " << args.description() << "\n";
   const Object *rp = ctxt->_list->ro(args);
@@ -145,3 +144,90 @@ Object FM::dbstop(const Object &args, int nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(bp);
 }
 
+Object FM::dbup(const Object &args, int nargout, ThreadContext *ctxt) {
+  Frame *t = ctxt->_vm->activeFrame();
+  Frame *debug = t;
+  while (debug && (debug->_type != FrameTypeCode::Debug))
+    debug = debug->_prevFrame;
+  if (!debug) return ctxt->_list->empty();
+
+  Object dbshift(ctxt);
+  bool dboffset = debug->getLocalVariableSlow("dbshift__",dbshift);
+  if (!dboffset) dbshift = ctxt->_double->makeScalar(0);
+  // TODO - Detect at top of stack
+  dbshift = ctxt->_double->makeScalar(dbshift.asDouble() + 1);
+  debug->setVariableSlow("dbshift__",dbshift);
+  return ctxt->_list->empty();
+  
+  Frame *frame = debug->_closedFrame->_prevFrame;
+  while (frame && (!frame->_closed))
+    frame = frame->_prevFrame;
+  if (!frame)
+    throw Exception("Cannot go up");
+  debug->_closedFrame = frame;
+  //  ctxt->_vm->signalReturn();
+  return ctxt->_list->empty();
+}
+
+Object FM::dbdown(const Object &args, int nargout, ThreadContext *ctxt) {
+  Frame *t = ctxt->_vm->activeFrame();
+  Frame *debug = t;
+  while (debug && (debug->_type != FrameTypeCode::Debug))
+    debug = debug->_prevFrame;
+  if (!debug) return ctxt->_list->empty();
+  
+  Object dbshift(ctxt);
+  bool dboffset = debug->getLocalVariableSlow("dbshift__",dbshift);
+  if (!dboffset) throw Exception("Cannot go down");
+  if (dbshift.asDouble() <= 0) throw Exception("Cannot go down");
+  dbshift = ctxt->_double->makeScalar(dbshift.asDouble() - 1);
+  debug->setVariableSlow("dbshift__",dbshift);
+  return ctxt->_list->empty();
+    
+  Frame *frame = debug->_closedFrame->_nextFrame;
+  while (frame && (!frame->_closed))
+    frame = frame->_nextFrame;
+  if (!frame)
+    throw Exception("Cannot go up");
+  debug->_closedFrame = frame;
+  //  ctxt->_vm->signalReturn();
+  return ctxt->_list->empty();  
+}
+
+Object FM::dbstep(const Object &args, int nargout, ThreadContext *ctxt) {
+  std::cout << "DBSTEP called: " << args.description() << "\n";
+  // Skip parsing the arguments for now...
+  Frame *t = ctxt->_vm->activeFrame();
+  // t is our frame.  Search backwards for something we can meaningfully step in
+  Frame *debug = t;
+  while (debug && !debug->isDebuggable()) debug = debug->_prevFrame;
+  if (!debug) 
+    return ctxt->_list->empty(); // Couldn't find anything to step
+  int lineno = debug->mapIPToLineNumber(debug->_ip);
+  if (lineno == -1)
+    {
+      // Should be equivalent to dbstep out, I would think.
+      ctxt->_vm->signalReturn();
+      return ctxt->_list->empty();
+    }
+  if (args.count() > 0) {
+    const Object *ap = ctxt->_list->ro(args);
+    if (ap[0].isString() && (ctxt->_string->str(ap[0]).toLower() == "in"))
+      debug->_state = FrameRunStateCode::StepIn;
+    else if (ap[0].isString() && (ctxt->_string->str(ap[0]).toLower() == "out")) {
+      Frame *debug_parent = debug->_prevFrame;
+      while (debug_parent && (!debug_parent->isDebuggable())) debug_parent = debug_parent->_prevFrame;
+      if (!debug_parent) return ctxt->_list->empty();
+      debug_parent->_state = FrameRunStateCode::StepOut;
+    } else {
+      int skip_lines = ap[0].asDouble();
+      if (skip_lines < 1)
+	throw Exception("dbstep requires an argument >= 1 (or in/out)");
+      debug->_transient_bp = lineno+skip_lines;
+    }
+  } else {
+    debug->_transient_bp = lineno+1;
+  }
+  ctxt->_vm->signalReturn();
+  return ctxt->_list->empty();
+}

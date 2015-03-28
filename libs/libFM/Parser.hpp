@@ -44,7 +44,7 @@ namespace FM
     Tree functionDefinition();
     Tree forIndexExpression();
     Tree singletonStatement();
-    Tree dBStepOrTraceStatement();
+    //    Tree dBStepOrTraceStatement();
     Tree whileStatement();
     Tree ifStatement();
     Tree switchStatement();

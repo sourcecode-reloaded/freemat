@@ -9,6 +9,11 @@ namespace FM {
     boost::filesystem::path path(name + ".m");
     return absolute(path).c_str();
   }
+
+  inline FMString get_basename_from_full_path(const FMString &name) {
+    boost::filesystem::path path(name);
+    return path.stem().c_str();
+  }
 };
 
 
