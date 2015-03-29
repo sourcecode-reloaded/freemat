@@ -200,9 +200,11 @@ Object FM::dbstep(const Object &args, int nargout, ThreadContext *ctxt) {
   Frame *t = ctxt->_vm->activeFrame();
   // t is our frame.  Search backwards for something we can meaningfully step in
   Frame *debug = t;
-  while (debug && !debug->isDebuggable()) debug = debug->_prevFrame;
+  while (debug && debug->_type != FrameTypeCode::Debug) debug = debug->_prevFrame;
+  debug = debug->_prevFrame;
   if (!debug) 
     return ctxt->_list->empty(); // Couldn't find anything to step
+  assert(debug->_name != ">>debug"); // Shouldn't happen
   int lineno = debug->mapIPToLineNumber(debug->_ip);
   if (lineno == -1)
     {
@@ -212,15 +214,18 @@ Object FM::dbstep(const Object &args, int nargout, ThreadContext *ctxt) {
     }
   if (args.count() > 0) {
     const Object *ap = ctxt->_list->ro(args);
-    if (ap[0].isString() && (ctxt->_string->str(ap[0]).toLower() == "in"))
+    FMString arg = ctxt->_string->str(ap[0]).toLower();
+    if (arg == "in")
       debug->_state = FrameRunStateCode::StepIn;
-    else if (ap[0].isString() && (ctxt->_string->str(ap[0]).toLower() == "out")) {
+    else if (arg == "out") {
       Frame *debug_parent = debug->_prevFrame;
       while (debug_parent && (!debug_parent->isDebuggable())) debug_parent = debug_parent->_prevFrame;
       if (!debug_parent) return ctxt->_list->empty();
+      assert(debug_parent->_name != ">>debug"); // Shouldn't happen
+      std::cout << "Setting state for frame " << debug_parent->_name << " to StepOut\n";
       debug_parent->_state = FrameRunStateCode::StepOut;
     } else {
-      int skip_lines = ap[0].asDouble();
+      int skip_lines = arg.toInt();
       if (skip_lines < 1)
 	throw Exception("dbstep requires an argument >= 1 (or in/out)");
       debug->_transient_bp = lineno+skip_lines;

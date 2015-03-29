@@ -483,7 +483,8 @@ bool VM::checkBreakpoints(Frame *frame, Frame *closed_frame, int ip)
   int lineno = frame->mapIPToLineNumber(ip);
   int plineno = frame->mapIPToLineNumber(ip-1);
   if (plineno == lineno) return false;
-  if (frame->_state == FrameRunStateCode::StepOut) {
+  if ((frame->_state == FrameRunStateCode::StepOut)  ||
+      (frame->_state == FrameRunStateCode::StepIn)) {
     frame->_state = FrameRunStateCode::Normal;
     return true;
   }
