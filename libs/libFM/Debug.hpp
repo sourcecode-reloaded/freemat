@@ -12,6 +12,7 @@ namespace FM
   Object dbclear(const Object &args, int nargout, ThreadContext *ctxt);
   Object dbstep(const Object &args, int nargout, ThreadContext *ctxt);
   Object dbup(const Object &args, int nargout, ThreadContext *ctxt);
+  Object dbcont(const Object &args, int nargout, ThreadContext *ctxt);
   Object dbdown(const Object &args, int nargout, ThreadContext *ctxt);
 };
 

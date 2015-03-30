@@ -91,6 +91,7 @@ namespace FM
     virtual Type* typeInstance() {return this;}
     virtual Object Add(const Object &a, const Object &b) {return binop<OpAdd>(a,b);}
     virtual Object Subtract(const Object &a, const Object &b) {return binop<OpSubtract>(a,b);}
+    virtual Object DotPower(const Object &a, const Object &b) {return binop<OpDotPower>(a,b);}
     virtual Object DotMultiply(const Object &a, const Object &b) {return binop<OpDotMultiply>(a,b);}
     virtual Object DotRightDivide(const Object &a, const Object &b) {return binop<OpDotRightDivide>(a,b);}
     virtual Object DotLeftDivide(const Object &a, const Object &b) {return binop<OpDotLeftDivide>(a,b);}

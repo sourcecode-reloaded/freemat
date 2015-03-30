@@ -56,7 +56,7 @@ static inline void copyPage(T* op, dim_t &outputOffset, const T* ip, dim_t &inpu
     {
       for (dim_t j=0;j<pagesize;j++)
 	{
-	  op[2*(outputOffset+j)] = ip[2*(input_offset+j)+1];
+	  op[2*(outputOffset+j)] = ip[2*(input_offset+j)];
 	  op[2*(outputOffset+j)+1] = ip[2*(input_offset+j)+1];
 	}
     }

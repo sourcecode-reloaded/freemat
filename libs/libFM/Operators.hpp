@@ -21,6 +21,15 @@ struct OpSubtract
   }
 };
 
+struct OpDotPower
+{
+  template <class ctype, class atype, class btype, class vtype>
+  inline static void func(ctype *c, const atype *a, const btype *b)
+  {
+    FM::OpRangeConvert<ctype,vtype>::rangeConvert(*c,pow(static_cast<vtype>(*a),static_cast<vtype>(*b)));
+  }
+};
+
 struct OpDotMultiply
 {
   template <class ctype, class atype, class btype, class vtype>

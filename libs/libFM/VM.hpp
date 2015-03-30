@@ -40,8 +40,6 @@ namespace FM
     Object _mybps;
     bool _debug_mode;
     int _debug_flags;
-    int _debug_ip;
-    int _dbstepin_lineno;
     void debugCycle();
     Frame* findPreviousClosedFrame(Frame *b);
     Frame* findNextClosedFrame(Frame *b);
@@ -69,7 +67,6 @@ namespace FM
     Frame* activeFrame() {return _frames[_fp];}
     Object backtrace();
     void signalReturn() {_retscrpt_found = true;}
-    void setDBStepInLineNumber(int line) {_dbstepin_lineno = line;}
   };
 }
 

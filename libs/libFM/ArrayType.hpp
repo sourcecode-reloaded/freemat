@@ -207,12 +207,12 @@ namespace FM
     bool equals(const Object &a, const Object &b) {
       if (a.type()->code() != b.type()->code()) return false;
       if (!(a.dims() == b.dims())) return false;
-      size_t byte_count = a.dims().count()*sizeof(T);
+      size_t element_count = a.dims().count();
       if ((a.flags() & OBJECT_COMPLEX_FLAG) ^ (b.flags() & OBJECT_COMPLEX_FLAG)) return false;
-      if (a.flags() & OBJECT_COMPLEX_FLAG) byte_count *= 2;
+      if (a.flags() & OBJECT_COMPLEX_FLAG) element_count *= 2;
       const T* ap = this->ro(a);
       const T* bp = this->ro(b);
-      for (dim_t i=0;i<a.dims().count();i++)
+      for (dim_t i=0;i<element_count;i++)
 	if (!(ap[i] == bp[i])) return false;
       return true;
     }

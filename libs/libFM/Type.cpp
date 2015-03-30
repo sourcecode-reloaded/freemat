@@ -45,6 +45,8 @@ NoSupportBinOp(Add);
 NoSupportBinOp(LessThan);
 NoSupportBinOp(DotMultiply);
 NoSupportBinOp(Multiply);
+NoSupportBinOp(Power);
+NoSupportBinOp(DotPower);
 NoSupportBinOp(DotLeftDivide);
 NoSupportBinOp(DotRightDivide);
 NoSupportBinOp(LeftDivide);

@@ -30,7 +30,8 @@ inline void rle_encode_line_nos(const std::vector<uint16_t> &line_dat, std::vect
       }
     }
     rle.push_back(to_rle(prev,count));
-  }
+  } else
+    rle.push_back(to_rle(line_dat[0],1));
 }
 
 inline void rle_decode_line_nos(const uint32_t *p, int cnt, std::vector<uint16_t> &line_dat)

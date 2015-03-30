@@ -221,6 +221,28 @@ namespace FM
     yi = 2*xr*xi;
   }
 
+  template <typename T>
+  static inline void complex_pow(const T& ar, const T& ai,
+				 const T& br, const T& bi,
+				 T& cr, T& ci) {
+    T logr, logi, x, y;
+    T mag = complex_abs<T>(ar, ai);
+    if (mag == 0) {
+      cr = 0;
+      ci = 0;
+      return;
+    }
+    logr = log(mag);
+    logi = atan2(ai, ar);
+    
+    x = exp( logr * br - logi * bi );
+    y = logr * bi + logi * br;
+    
+    cr = x * cos(y);
+    ci = x * sin(y);
+  }
+
+  
   template <class elem>
   static Complex<elem> operator+(const Complex<elem> &a, const Complex<elem> &b)
   {
@@ -323,6 +345,14 @@ namespace FM
     return (a.r || a.i) && (b.r || b.i);
   }
 
+  template <class elem>
+  static Complex<elem> pow(const Complex<elem> &a, const Complex<elem> &b)
+  {
+    Complex<elem> c;
+    complex_pow(a.r,a.i,b.r,b.i,c.r,c.i);
+    return c;
+  }
+  
   template <class elem>
   static Complex<elem> operator*(const Complex<elem> &a , const Complex<elem> &b)
   {

@@ -75,6 +75,10 @@ Object FM::dbquit(const Object &args, int nargout, ThreadContext *ctxt) {
   throw VMDBQuitException(-1);
 }
 
+Object FM::dbcont(const Object &args, int nargout, ThreadContext *ctxt) {
+  ctxt->_vm->signalReturn();
+  return ctxt->_list->empty();
+}
 
 Object FM::dbclear(const Object &args, int nargout, ThreadContext *ctxt) {
   const Object *rp = ctxt->_list->ro(args);

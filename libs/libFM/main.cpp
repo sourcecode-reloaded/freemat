@@ -370,6 +370,7 @@ int main(int argc, char *argv[])
   ctxt->_globals->set("dbclear",ctxt->_module->builtin("dbclear",dbclear));
   ctxt->_globals->set("dblist",ctxt->_module->builtin("dblist",dblist));
   ctxt->_globals->set("dbstep",ctxt->_module->builtin("dbstep",dbstep));
+  ctxt->_globals->set("dbcont",ctxt->_module->builtin("dbcont",dbcont));
   ctxt->_globals->set("dbup",ctxt->_module->builtin("dbup",dbup));
   ctxt->_globals->set("dbdown",ctxt->_module->builtin("dbdown",dbdown));
   ctxt->_globals->set("class",ctxt->_module->builtin("class",classfunc));

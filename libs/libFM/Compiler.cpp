@@ -1161,7 +1161,7 @@ void Compiler::specialFunctionCall(const Tree &t, bool printIt) {
   emit(OP_CALL,returns,func,args);
   reg_t toprint = getRegister();
   emit(OP_FIRST,toprint,returns);
-  if (printIt) emit(OP_PRINT,toprint);
+  if (printIt) emit(OP_PRINTNE,toprint);
   saveRegisterToName("ans",toprint);
 }
 
@@ -2068,7 +2068,7 @@ void FM::Disassemble(ThreadContext *_ctxt, const Object &p)
   Object code = dp->m_code;
   const insn_t *opcodes = _ctxt->_uint64->ro(code);
   std::cout << "Code: " << code.dims().count() << " length\n";
-  assert(code.count() == line_nos.size());
+  //  assert(code.count() == line_nos.size());
   for (dim_t i=0;i<code.dims().count();++i)
     PrintInsn(line_nos[i],i,opcodes[i]);
   for (dim_t i=0;i<dp->m_consts.count();i++)

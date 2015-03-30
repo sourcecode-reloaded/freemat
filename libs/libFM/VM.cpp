@@ -145,11 +145,6 @@ void VM::updateDebugMode(bool loopEntry)
     _frames[_fp]->_prevFrame->_transient_bp = 0;
     return;
   }
-  if (loopEntry && (this->_dbstepin_lineno > 0)) {
-    this->_debug_flags = dbstop_on_entry;
-    this->_debug_mode = true;
-    return;
-  }
   this->_debug_mode = _ctxt->_globals->isDefined("_dblist");
   this->_debug_flags = 0;
   // Make a local copy of the breakpoints - avoids the
@@ -499,7 +494,6 @@ bool VM::checkBreakpoints(Frame *frame, Frame *closed_frame, int ip)
   for (int i=0;i<this->_mybps.count();i++) {
     const BreakpointData *bd = _ctxt->_breakpoint->ro(bpset[i]);
     std::cout << "Check BP: " << lineno << " name: " << bd->frame_name << " vs: " << frame->_debugname << " line: " << bd->line_number << "\n";
-    if (lineno == _dbstepin_lineno) return true;
     if ((bd->frame_name == frame->_debugname) &&
 	(bd->line_number == lineno)) {
       if (bd->bp_type == BreakpointTypeCode::Unconditional) return true;
@@ -530,7 +524,6 @@ void VM::debugCycle()
   // FIXME - this state should be a stack or something
   // FIXME - also need to preserve the debug context.
   // FIXME - keyboard in the base workspace dies
-  _dbstepin_lineno = 0;
   // Find the frame we want to debug - why does it have to be closed?
   // FIXME - does this not work for scripts?
   Frame *visited_frame = nullptr;
@@ -743,11 +736,9 @@ void VM::executeCodeObject(const Object &codeObject)
 	      std::cout << "\n";
 	    }
 	    if (_debug_mode && checkBreakpoints(_frames[_fp],closed_frame,ip)) {
-	      _debug_ip = ip;
 	      debugCycle();
 	    }
 	    if (_debug_mode && (_debug_flags & dbstop_on_entry)) {
-	      _debug_ip = ip;
 	      _debug_flags = _debug_flags ^ dbstop_on_entry;
 	      debugCycle();
 	    }
@@ -871,14 +862,12 @@ void VM::executeCodeObject(const Object &codeObject)
 	      case OP_NOT:
 		UNARYOP(Not,"not");
 		break;
-		/*
-		  case OP_POWER:
-		  BINOP(Power,"mpower");
-		  break;
-		  case OP_DOTPOWER:
-		  BINOP(DotPower,"power");
-		  break;
-		*/
+	      case OP_POWER:
+		BINOP(Power,"mpower");
+		break;
+	      case OP_DOTPOWER:
+		BINOP(DotPower,"power");
+		break;
 	      case OP_HERMITIAN:
 		UNARYOP(Hermitian,"ctranspose");
 		break;
@@ -1065,7 +1054,6 @@ void VM::executeCodeObject(const Object &codeObject)
 		}
 	      case OP_STOP:
 		{
-		  _debug_ip = ip;
 		  debugCycle();
 		  break;
 		}
@@ -1079,14 +1067,12 @@ void VM::executeCodeObject(const Object &codeObject)
 		      eh->pop_back();
 		      _try_depth--;
 		      if ((_debug_flags & dbstop_if_catch) != 0) {
-			_debug_ip = ip;
 			debugCycle();
 		      }
 		    }
 		  else
 		    {
 		      if (((_debug_flags & dbstop_if_error) != 0)  && (_try_depth == 0)) {
-			_debug_ip = ip;
 			debugCycle();
 		      }
 		      throw Exception(_exception.description()); // FIXME
@@ -1096,6 +1082,12 @@ void VM::executeCodeObject(const Object &codeObject)
 	      case OP_PRINT:
 		{
 		  REG1.type()->print(REG1);
+		  break;
+		}
+	      case OP_PRINTNE:
+		{
+		  if (!REG1.isEmpty())
+		    REG1.type()->print(REG1);
 		  break;
 		}
 	      case OP_DEREF:
@@ -1171,7 +1163,6 @@ void VM::executeCodeObject(const Object &codeObject)
 	    eh->pop_back();
 	    _try_depth--;
 	    if ((_debug_flags & dbstop_if_catch) != 0) {
-	      _debug_ip = ip;
 	      debugCycle();
 	    }
 	  }

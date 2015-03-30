@@ -69,11 +69,13 @@ namespace FM {
     virtual Object import(const Object &foreign) = 0;
     virtual Object Add(const Object &a, const Object &b);
     virtual Object Multiply(const Object &a, const Object &b);
+    virtual Object Power(const Object &a, const Object &b);
     virtual Object LeftDivide(const Object &a, const Object &b);
     virtual Object RightDivide(const Object &a, const Object &b);
     virtual Object DotLeftDivide(const Object &a, const Object &b);
     virtual Object DotRightDivide(const Object &a, const Object &b);
     virtual Object DotMultiply(const Object &a, const Object &b);
+    virtual Object DotPower(const Object &a, const Object &b);
     virtual Object Subtract(const Object &a, const Object &b);
     virtual Object LessEquals(const Object &a, const Object &b);
     virtual Object LessThan(const Object &a, const Object &b);
