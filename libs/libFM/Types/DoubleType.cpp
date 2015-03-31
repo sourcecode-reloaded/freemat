@@ -1,5 +1,4 @@
 #include "DoubleType.hpp"
-#include "BaseTypes.hpp"
 #include "BoolType.hpp"
 #include "MatrixMultiply.hpp"
 #include "MatrixLeftDivide.hpp"

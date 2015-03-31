@@ -1,5 +1,4 @@
 #include "ArrayType.hpp"
-#include "BaseTypes.hpp"
 #include "IntegerType.hpp"
 #include "BoolType.hpp"
 #include "ListType.hpp"
