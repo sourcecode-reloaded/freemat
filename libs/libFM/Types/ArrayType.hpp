@@ -133,6 +133,9 @@ namespace FM
 	}
       return Object(p);    
     }
+    Object makeMatrixComplex(dim_t rows, dim_t cols) {
+      return makeMatrix(rows,cols,true);
+    }
     Object makeMatrix(dim_t rows, dim_t cols, bool isComplex = false) {
       if (rows == 1 && cols == 1 && !isComplex)
 	return zeroScalar();

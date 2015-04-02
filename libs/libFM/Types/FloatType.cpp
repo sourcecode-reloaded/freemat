@@ -109,5 +109,6 @@ void FloatType<T,codeNum>::printElement(const Object &a, const ArrayFormatInfo &
     }
 }
 
+
 template class FM::FloatType<float,TypeSingle>;
 template class FM::FloatType<double,TypeDouble>;

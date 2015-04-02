@@ -13,6 +13,7 @@ namespace FM
     elem i;
     Complex() : r(0), i(0) {}
     Complex(elem real) : r(real), i(elem(0)) {}
+    Complex(elem real, elem imag) : r(real), i(imag) {}
     template <class elem2>
     Complex(Complex<elem2> other)
     {

@@ -49,6 +49,14 @@ namespace FM
     virtual Object getField(const Object &a, const Object &b) {throw Exception(". indexing unsupported for numeric arrays");}
     virtual Object convert(const Object &a);
     virtual Object Hermitian(const Object &a) {return MatrixHermitian<T>(a);}
+    bool anyNonzeroImaginary(const Object &a);
+    bool isNonNegative(const Object &a);
+    bool isIntegerValued(const Object &b);
+    bool isSymmetric(const Object &b);
+    Object asDiagonalMatrix(const Object &a);
+    Object getDiagonal(const Object &a);
+    Object realPart(const Object &a);
+    Object imagPart(const Object &a);
   };
 }
 

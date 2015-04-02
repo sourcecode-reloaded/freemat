@@ -2,6 +2,7 @@
 #define __Operators_hpp__
 
 #include "Convert.hpp"
+#include "Powfunc.hpp"
 
 struct OpAdd
 {
@@ -26,7 +27,7 @@ struct OpDotPower
   template <class ctype, class atype, class btype, class vtype>
   inline static void func(ctype *c, const atype *a, const btype *b)
   {
-    FM::OpRangeConvert<ctype,vtype>::rangeConvert(*c,pow(static_cast<vtype>(*a),static_cast<vtype>(*b)));
+    FM::OpRangeConvert<ctype,vtype>::rangeConvert(*c,FM::powfunc(static_cast<vtype>(*a),static_cast<vtype>(*b)));
   }
 };
 

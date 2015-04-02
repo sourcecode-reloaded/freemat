@@ -185,6 +185,9 @@ namespace FM
     inline dim_t cols() const {
       return d->dims.cols();
     }
+    inline dim_t columns() const {
+      return d->dims.cols();
+    }
     inline bool isEmpty() const {
       return (count() == 0);
     }

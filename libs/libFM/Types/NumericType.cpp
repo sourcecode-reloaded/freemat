@@ -152,6 +152,73 @@ Object NumericType<T,codeNum>::convert(const Object &a)
   return ret;
 }
 
+template <typename T, FM::DataCode codeNum>
+Object NumericType<T,codeNum>::realPart(const Object &a) {
+  if (!a.isComplex()) return a;
+  Object ret = this->zeroArrayOfSize(a.dims(),false);
+  const Complex<T>* dp = this->roComplex(a);
+  T* op = this->rw(ret);
+  for (ndx_t i=0;i<a.count();i++)
+    op[i] = dp[i].r;
+  return ret;
+}
+
+template <typename T, FM::DataCode codeNum>
+Object NumericType<T,codeNum>::imagPart(const Object &a) {
+  if (!a.isComplex()) return a;
+  Object ret = this->zeroArrayOfSize(a.dims(),false);
+  const Complex<T>* dp = this->roComplex(a);
+  T* op = this->rw(ret);
+  for (ndx_t i=0;i<a.count();i++)
+    op[i] = dp[i].i;
+  return ret;
+}
+
+template <typename T, FM::DataCode codeNum>
+bool NumericType<T,codeNum>::isNonNegative(const Object &a) {
+  if (a.isComplex()) return false;
+  const T* dp = this->ro(a);
+  for (ndx_t i=0;i<a.count();i++)
+    if (dp[i] < 0) return false;
+  return true;
+}
+
+template <typename T, FM::DataCode codeNum>
+bool NumericType<T,codeNum>::isIntegerValued(const Object &a) {
+  if (a.isComplex()) return false;
+  const T* dp = this->ro(a);
+  for (ndx_t i=0;i<a.count();i++)
+    if (dp[i] != int(dp[i])) return false;
+  return true;
+}
+
+template <typename T, FM::DataCode codeNum>
+bool NumericType<T,codeNum>::anyNonzeroImaginary(const Object &a) {
+  if (!a.isComplex()) return false;
+  const Complex<T>* dp = this->roComplex(a);
+  for (ndx_t i=0;i<a.count();i++)
+    if (dp[i].i != T(0)) return true;
+  return false;
+}
+
+template <typename T, FM::DataCode codeNum>
+Object NumericType<T,codeNum>::asDiagonalMatrix(const Object &a) {
+  ndx_t N = a.count();
+  Object ret = this->makeMatrix(N,N,a.isComplex());
+  if (a.isComplex()) {
+    const Complex<T> *ap = this->roComplex(a);
+    Complex<T> *rp = this->rwComplex(ret);
+    for (int i=0;i<N;i++)
+      rp[i*i] = ap[i];
+  } else {
+    const T *ap = this->ro(a);
+    T *rp = this->rw(ret);
+    for (int i=0;i<N;i++)
+      rp[i*i] = ap[i];
+  }
+  return ret;
+}
+
 
 
 template class FM::NumericType<float,TypeSingle>;

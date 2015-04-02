@@ -17,7 +17,8 @@ add_definitions(-DHAVE_CBLAS)
 include_directories(${ACCELERATE_PATH})
 
 include_directories(${PROJECT_SOURCE_DIR}/Types)  
-include_directories(${PROJECT_SOURCE_DIR}/Math)  
+include_directories(${PROJECT_SOURCE_DIR}/Math)   
+include_directories(${PROJECT_SOURCE_DIR}/Compiler)   
 include_directories(${PROJECT_SOURCE_DIR}) 
 
 #find_library(VEC_LIB NAMES Veclib) 
@@ -53,26 +54,25 @@ Math/Transpose.cpp
 Math/Hermitian.cpp  
 Math/LAPACK.cpp  
 Math/MatrixMultiply.cpp
-Tree.cpp
+Math/EigenDecompose.cpp
+Math/MatrixPower.cpp
+Compiler/Tree.cpp
+Compiler/EndRemover.cpp
+Compiler/NestedFunctionMover.cpp
+Compiler/Token.cpp
+Compiler/Scanner.cpp
+Compiler/Parser.cpp
+Compiler/Register.cpp
+Compiler/Compiler.cpp
+Compiler/Symbol.cpp
+Compiler/Assembler.cpp
 NCat.cpp
 HashMap.cpp
 ThreadContext.cpp
-EndRemover.cpp
-NestedFunctionMover.cpp
 MatrixLeftDivide.cpp  
 MatrixRightDivide.cpp  
-Token.cpp
-Scanner.cpp
-Parser.cpp
-Register.cpp
-Compiler.cpp
-Symbol.cpp
 main.cpp
-Object.hpp
 #IEEEFP.cpp
-Register.hpp
-Scanner.hpp
-Assembler.cpp
 Frame.cpp
 VM.cpp
 ArrayFormatInfo.cpp
