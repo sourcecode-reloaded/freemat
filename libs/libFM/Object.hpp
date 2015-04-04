@@ -209,6 +209,9 @@ namespace FM
     inline bool is2D() const {
       return (d->dims.is2D());
     }
+    inline bool isSquare() const {
+      return is2D() && (rows() == columns());
+    }
     inline bool isVector() const {
       return (d->dims.isVector());
     }
