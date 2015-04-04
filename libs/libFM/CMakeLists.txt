@@ -56,6 +56,7 @@ Math/LAPACK.cpp
 Math/MatrixMultiply.cpp
 Math/EigenDecompose.cpp
 Math/MatrixPower.cpp
+Math/MatrixInvert.cpp
 Compiler/Tree.cpp
 Compiler/EndRemover.cpp
 Compiler/NestedFunctionMover.cpp

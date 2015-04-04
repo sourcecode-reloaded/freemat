@@ -57,6 +57,8 @@ namespace FM
     Object getDiagonal(const Object &a);
     Object realPart(const Object &a);
     Object imagPart(const Object &a);
+    void fill(Object &a, T val);
+    void fillComplex(Object &a, Complex<T> val);
   };
 }
 

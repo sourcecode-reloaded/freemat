@@ -575,7 +575,7 @@ static void TEigenDecomposeFullSymmetric(Object &V, Object &D, Object A, FloatTy
   }
 }
 
-void EigenDecomposeFullSymmetric(const Object &A, Object& V, Object& D, ThreadContext *ctxt) {
+void FM::EigenDecomposeFullSymmetric(const Object &A, Object& V, Object& D, ThreadContext *ctxt) {
   if (!A.is2D())
     throw Exception("Cannot apply eigendecomposition to N-Dimensional arrays.");
   if (A.rows() != A.columns())
@@ -652,7 +652,7 @@ static void TEigenDecomposeFullGeneral(Object A, Object &V, Object &D,
   }
 }
 
-void EigenDecomposeFullGeneral(const Object &A, Object& V, Object& D, bool balanceFlag, ThreadContext *ctxt) {
+void FM::EigenDecomposeFullGeneral(const Object &A, Object& V, Object& D, bool balanceFlag, ThreadContext *ctxt) {
   if (!A.is2D())
     throw Exception("Cannot apply eigendecomposition to N-Dimensional arrays.");
   if (A.rows() != A.columns())
@@ -690,7 +690,7 @@ static void TEigenDecomposeCompactGeneral(Object A, Object& D,
   }
 }
 
-void EigenDecomposeCompactGeneral(Object A, Object& D, bool balanceFlag, ThreadContext *ctxt) {
+void FM::EigenDecomposeCompactGeneral(Object A, Object& D, bool balanceFlag, ThreadContext *ctxt) {
   if (!A.is2D())
     throw Exception("Cannot apply eigendecomposition to N-Dimensional arrays.");
   if (A.rows() != A.columns())

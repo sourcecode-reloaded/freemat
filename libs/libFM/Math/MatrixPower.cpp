@@ -1,4 +1,5 @@
 #include "MatrixPower.hpp"
+#include "MatrixInvert.hpp"
 #include "ThreadContext.hpp"
 #include "DoubleType.hpp"
 #include "SingleType.hpp"
@@ -52,7 +53,7 @@ Object FM::MatrixPower(const Object &a, const Object &b, ThreadContext *ctxt) {
   if (a.isEmpty() || b.isEmpty()) return a.type()->empty();
   if (a.isScalar() && b.isScalar()) return a.type()->DotPower(a,b);
   if (b.isScalar() && !b.isComplex() && (b.asDouble() == -1))
-    return InvertMatrix(a,ctxt);
+    return MatrixInvert(a,ctxt);
   if (!(a.isSquare() && b.isSquare()))
     throw Exception("Power (^) operator can only be applied to scalar and square arguments.");
   if (a.typeCode() != b.typeCode())

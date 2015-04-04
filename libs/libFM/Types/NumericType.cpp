@@ -202,6 +202,44 @@ bool NumericType<T,codeNum>::anyNonzeroImaginary(const Object &a) {
 }
 
 template <typename T, FM::DataCode codeNum>
+bool NumericType<T,codeNum>::isSymmetric(const Object &a) {
+  if (!a.isSquare()) throw Exception("Cannot test non-square matrices for symmetry");
+  ndx_t N = a.rows();
+  if (a.isComplex()) {
+    const Complex<T>* ap = this->roComplex(a);
+    for (ndx_t i=0;i<N;i++)
+      for (ndx_t j=0;j<=i;j++)
+	if (ap[i*N+j] != complex_conj(ap[j*N+i])) return false;
+    return true;
+  } else {
+    const T* ap = this->ro(a);
+    for (ndx_t i=0;i<N;i++)
+      for (ndx_t j=0;j<i;j++)
+	if (ap[i*N+j] != ap[j*N+i]) return false;
+    return true;
+  }
+}
+
+template <typename T, FM::DataCode codeNum>
+Object NumericType<T,codeNum>::getDiagonal(const Object &a) {
+  if (!a.isSquare()) throw Exception("Cannot get diagonal of non-square matrix");
+  ndx_t N = a.rows();
+  Object ret = this->makeMatrix(N,1,a.isComplex());
+  if (a.isComplex()) {
+    const Complex<T> *ap = this->roComplex(a);
+    Complex<T> *rp = this->rwComplex(ret);
+    for (int i=0;i<N;i++)
+      rp[i] = ap[i*N+i];
+  } else {
+    const T *ap = this->ro(a);
+    T *rp = this->rw(ret);
+    for (int i=0;i<N;i++)
+      rp[i] = ap[i*N+i];
+  }
+  return ret;
+}
+
+template <typename T, FM::DataCode codeNum>
 Object NumericType<T,codeNum>::asDiagonalMatrix(const Object &a) {
   ndx_t N = a.count();
   Object ret = this->makeMatrix(N,N,a.isComplex());
@@ -209,16 +247,29 @@ Object NumericType<T,codeNum>::asDiagonalMatrix(const Object &a) {
     const Complex<T> *ap = this->roComplex(a);
     Complex<T> *rp = this->rwComplex(ret);
     for (int i=0;i<N;i++)
-      rp[i*i] = ap[i];
+      rp[i*N+i] = ap[i];
   } else {
     const T *ap = this->ro(a);
     T *rp = this->rw(ret);
     for (int i=0;i<N;i++)
-      rp[i*i] = ap[i];
+      rp[i*N+i] = ap[i];
   }
   return ret;
 }
 
+template <typename T, FM::DataCode codeNum>
+void NumericType<T,codeNum>::fill(Object &a, T val) {
+  T* ap = this->rw(a);
+  for (ndx_t i=0;i<a.count();i++)
+    ap[i] = val;
+}
+
+template <typename T, FM::DataCode codeNum>
+void NumericType<T,codeNum>::fillComplex(Object &a, Complex<T> val) {
+  Complex<T> *ap = this->rwComplex(a);
+  for (ndx_t i=0;i<a.count();i++)
+    ap[i] = val;
+}
 
 
 template class FM::NumericType<float,TypeSingle>;
