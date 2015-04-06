@@ -18,7 +18,7 @@ namespace FM
 
   class FunctionType : public AggregateType<FunctionData,ValueSemantics> {
   public:
-    FunctionType(ThreadContext *ctxt) {_ctxt = ctxt;}
+    FunctionType(ThreadContext *ctxt) : AggregateType<FunctionData,ValueSemantics>(ctxt) {}
     // Note - Only the closure can contain references to handle objects
     void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {
       const FunctionData *fd = this->ro(p);

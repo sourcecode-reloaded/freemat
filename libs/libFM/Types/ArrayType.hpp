@@ -40,9 +40,7 @@ namespace FM
     virtual void freeData(T* ptr, dim_t size) const = 0;
     virtual T zeroElement() const = 0;
   public:
-    ArrayType(ThreadContext* ctxt, const FMString &name) :
-      _name(name) {
-      _ctxt = ctxt;
+    ArrayType(ThreadContext* ctxt, const FMString &name) : Type(ctxt), _name(name) {
       pool = new FixedPool<ObjectBase*>(10000);
       _haveEmpty = false;
     }

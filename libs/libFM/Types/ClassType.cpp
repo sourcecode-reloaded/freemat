@@ -269,7 +269,9 @@ FMString ClassType::brief(const Object &a) {
   return _ctxt->_string->str(cmd->m_name);
 }
 
+//TODO Add power functions
 ClassType::ClassType(ThreadContext *ctxt) :
+  AggregateType<FM::ClassData,ValueSemantics>(ctxt),
   m_deletefunc_name(ctxt->_string->makeString("delete")),
   m_plusfunc_name(ctxt->_string->makeString("plus")),
   m_mtimes_name(ctxt->_string->makeString("mtimes")),
@@ -300,7 +302,6 @@ ClassType::ClassType(ThreadContext *ctxt) :
   m_subs_name(ctxt->_string->makeString("subs")),
   m_subsindex_name(ctxt->_string->makeString("subsindex"))
 {
-  _ctxt = ctxt;
 }
 
 void ClassType::destroyObject(ObjectBase* p) {

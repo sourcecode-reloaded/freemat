@@ -40,6 +40,9 @@ namespace FM
   class ModuleType;
   class CapturedType;
   class CodeType;
+  class SparseLogicalType;
+  class SparseDoubleType;
+  class SparseComplexType;
   class VM;
   class Compiler;
   class Assembler;
@@ -70,6 +73,9 @@ namespace FM
     UInt32Type *_uint32;
     UInt64Type *_uint64;
     StructType *_struct;
+    SparseDoubleType *_spdouble;
+    SparseComplexType *_spcomplex;
+    SparseLogicalType *_splogical;
     CellType *_cell;
     ListType *_list;
     CodeType *_code;

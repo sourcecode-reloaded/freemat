@@ -17,7 +17,7 @@ namespace FM
 
   class BoundFunctionType : public AggregateType<BoundFunctionData,ValueSemantics> {
   public:
-    BoundFunctionType(ThreadContext *ctxt) {_ctxt = ctxt;}
+    BoundFunctionType(ThreadContext *ctxt) : AggregateType<BoundFunctionData,ValueSemantics>(ctxt) {}
     Object bindFunction(const Object &func, const Object &arg);
     virtual void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {
       visitor(this->ro(p)->m_arg);

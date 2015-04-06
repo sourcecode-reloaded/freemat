@@ -25,7 +25,7 @@ namespace FM
 
   class BreakpointType : public AggregateType<BreakpointData,ValueSemantics> {
   public:
-    BreakpointType(ThreadContext *ctxt) {_ctxt = ctxt;}
+    BreakpointType(ThreadContext *ctxt) : AggregateType<BreakpointData,ValueSemantics>(ctxt) {}
     virtual DataCode code() const {return TypeBreakpoint;}
     virtual const FMString& name() const {static FMString _name = "breakpoint"; return _name;}
     void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {

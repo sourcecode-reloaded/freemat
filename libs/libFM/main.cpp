@@ -24,6 +24,7 @@
 #include "Debug.hpp"
 #include "TypeUtils.hpp"
 #include "Globals.hpp"
+#include "SparseType.hpp"
 
 //#include <valarray>
 
@@ -347,6 +348,12 @@ int main(int argc, char *argv[])
     Object cap2 = ctxt->_captured->makeScalar();
     cap2 = cap1;
     ctxt->_globals->set("cap2",cap2);
+
+
+    SparseDoubleType *sp = new SparseDoubleType(ctxt);
+    Object cap3 = sp->makeScalar(43);
+    
+    ctxt->_globals->set("cap3",cap3);
   }
 
   ctxt->_globals->set("size",ctxt->_module->builtin("size",size));

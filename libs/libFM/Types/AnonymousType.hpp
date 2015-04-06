@@ -20,7 +20,7 @@ namespace FM
 
   class AnonymousType : public AggregateType<AnonymousData,ValueSemantics> {
   public:
-    AnonymousType(ThreadContext *ctxt) {_ctxt = ctxt;}
+    AnonymousType(ThreadContext *ctxt) : AggregateType<AnonymousData,ValueSemantics>(ctxt) {}
     virtual void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {
       const AnonymousData *ad = this->ro(p);
       for (auto i : ad->m_captured)

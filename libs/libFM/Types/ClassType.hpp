@@ -106,7 +106,7 @@ namespace FM
   
   class ClassMetaType : public AggregateType<ClassMetaData,HandleSemantics> {
   public:
-    ClassMetaType(ThreadContext *ctxt) {_ctxt = ctxt;}
+    ClassMetaType(ThreadContext *ctxt) : AggregateType<ClassMetaData,HandleSemantics>(ctxt) {}
     void addProperty(Object &meta, const Object &name, bool constant, 
 		     bool dependent, const Object &default_value,
 		     const Object &getter, const Object &setter);

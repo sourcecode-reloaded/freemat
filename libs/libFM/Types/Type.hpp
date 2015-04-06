@@ -41,7 +41,10 @@ namespace FM {
     TypeBoundFunction = 23,
     TypeFunctionHandle = 24,
     TypeAnonymous = 25,
-    TypeBreakpoint = 26
+    TypeBreakpoint = 26,
+    TypeSparseLogical = 27,
+    TypeSparseDouble = 28,
+    TypeSparseComplex = 29
   };
 
   class Object;
@@ -58,6 +61,7 @@ namespace FM {
   protected:
     ThreadContext *_ctxt;
   public:
+    Type(ThreadContext *ctxt) : _ctxt(ctxt) {}
     virtual ~Type() {}
     ThreadContext *context() const {return _ctxt;}
     virtual DataCode code() const = 0;

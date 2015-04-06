@@ -39,6 +39,9 @@ Type* FM::GetTypeForCode(ThreadContext *ctxt, DataCode code)
   case TypeFunctionHandle: return ctxt->_functionHandle;
   case TypeAnonymous: return ctxt->_anonymous;
   case TypeBreakpoint: return ctxt->_breakpoint;
+  case TypeSparseLogical: return ctxt->_splogical;
+  case TypeSparseDouble: return ctxt->_spdouble;
+  case TypeSparseComplex: return ctxt->_spcomplex;
   default:
     throw Exception("Unknown typecode found");
   }
@@ -62,6 +65,9 @@ ThreadContext* FM::BuildNewThreadContext(TermIF *io)
   ctxt->_uint32 = new UInt32Type(ctxt);
   ctxt->_uint64 = new UInt64Type(ctxt);
   ctxt->_struct = new StructType(ctxt);
+  ctxt->_splogical = new SparseLogicalType(ctxt);
+  ctxt->_spdouble = new SparseDoubleType(ctxt);
+  ctxt->_spcomplex = new SparseComplexType(ctxt);
   ctxt->_cell = new CellType(ctxt);
   ctxt->_list = new ListType(ctxt);
   ctxt->_code = new CodeType(ctxt);

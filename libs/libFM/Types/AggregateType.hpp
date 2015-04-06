@@ -17,6 +17,7 @@ namespace FM
   template <typename DataType, bool HandleStyle>
   class AggregateType : public Type {
   public:
+    AggregateType(ThreadContext *ctxt) : Type(ctxt) {}
     virtual void destroyObject(ObjectBase* p)
     {
       if (HandleStyle) std::cout << "Destroy object called on object of type " + p->type->name() + "\n";
@@ -60,7 +61,7 @@ namespace FM
       q->ptr = new DataType(_ctxt);
       return Object(new ObjectBase(q,this,0,Tuple(0,0),0,0,HandleStyle));
     }
-    Object makeScalar() {
+    virtual Object makeScalar() {
       Data *q = new Data;
       q->refcnt = 0;
       q->ptr = new DataType(_ctxt);

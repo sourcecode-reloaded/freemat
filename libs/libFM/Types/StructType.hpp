@@ -31,7 +31,7 @@ namespace FM
     void fillEmpties(Object &a);
     Object expandStruct(const Object &s, const HashMap<int> &expanded_fields);
   public:
-    StructType(ThreadContext *ctxt) {_ctxt = ctxt;}
+    StructType(ThreadContext *ctxt) : AggregateType(ctxt) {}
     void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {
       visitor(this->ro(p)->m_data);
     }

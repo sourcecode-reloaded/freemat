@@ -16,7 +16,7 @@ namespace FM
 
   class CapturedType : public AggregateType<CapturedData,HandleSemantics> {
   public:
-    CapturedType(ThreadContext *ctxt) {_ctxt = ctxt;}
+    CapturedType(ThreadContext *ctxt) : AggregateType<CapturedData,HandleSemantics>(ctxt) {}
     virtual DataCode code() const {return TypeCaptured;}
     virtual const FMString& name() const {static FMString _name = "captured"; return _name;}
     virtual FMString describe(const Object &captured) {

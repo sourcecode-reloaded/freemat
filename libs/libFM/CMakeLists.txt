@@ -48,6 +48,7 @@ Types/NumericType.cpp
 Types/ModuleType.cpp
 Types/BreakpointType.cpp
 Types/CodeType.cpp
+Types/SparseType.cpp
 Math/BLAS.cpp
 Math/DenseSolver.cpp
 Math/Transpose.cpp  

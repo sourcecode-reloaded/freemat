@@ -18,5 +18,6 @@
 #include "BoundFunctionType.hpp"
 #include "AnonymousType.hpp"
 #include "BreakpointType.hpp"
+#include "SparseType.hpp"
 
 #endif
