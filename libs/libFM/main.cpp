@@ -4,8 +4,6 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/topological_sort.hpp>
 #include <unordered_map>
-#include <readline/readline.h>
-#include <readline/history.h>
 #include "Object.hpp"
 #include "DoubleType.hpp"
 #include "Scanner.hpp"
@@ -25,6 +23,8 @@
 #include "TypeUtils.hpp"
 #include "Globals.hpp"
 #include "SparseType.hpp"
+#include <readline/readline.h>
+#include <readline/history.h>
 
 //#include <valarray>
 

@@ -1,10 +1,14 @@
 #include "BLAS.hpp"
 
+#ifdef HAVE_CBLASH
+extern "C" {
+#include <cblas.h>
+}
+#endif
+
 #ifdef HAVE_ACCELERATE
 #include <Accelerate.h>
 #endif
-
-#ifdef HAVE_CBLAS
 
 void FM::BLAS_dgemm(int Arows, int Acols, int Bcols,
 		    const double *A, const double *B,
@@ -37,6 +41,4 @@ void FM::BLAS_cgemm(int Arows, int Acols, int Bcols,
   float beta[] = {0,0};
   cblas_cgemm(CblasColMajor,CblasNoTrans,CblasNoTrans,Arows,Bcols,Acols,alpha,A,Arows,B,Acols,beta,C,Arows);
 }
-
-#endif
 

@@ -2,7 +2,7 @@
 #define __Operators_hpp__
 
 #include "Convert.hpp"
-#include "Powfunc.hpp"
+#include "PowFunc.hpp"
 
 struct OpAdd
 {

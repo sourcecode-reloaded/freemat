@@ -39,6 +39,12 @@ namespace FM
     const FMString& name() const {return _name;}
     FMString describe(const Object &a);
     FMString brief(const Object &a);
+    virtual Object makeScalar() {
+      Object ret = AggregateType<SparseData<T>,ValueSemantics>::makeScalar();
+      SparseData<T> *sd = this->rw(ret);
+      sd->m_nnz = 0;
+      return ret;
+    }      
     virtual Object makeScalar(T val) {
       Object ret = AggregateType<SparseData<T>,ValueSemantics>::makeScalar();
       SparseData<T> *sd = this->rw(ret);

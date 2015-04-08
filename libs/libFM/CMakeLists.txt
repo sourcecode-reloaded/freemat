@@ -1,18 +1,26 @@
 PROJECT(FMT CXX C)
 #ENABLE_LANGUAGE(Fortran)
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
 
 FIND_PACKAGE(PythonInterp REQUIRED)
 FIND_PACKAGE(Boost COMPONENTS system timer chrono filesystem)
 include_directories(${Boost_INCLUDE_DIRS})
 
-#FIND_PACKAGE(BLAS REQUIRED)
 
+if (NOT APPLE)
+set(CMAKE_CXX_FLAGS "-std=c++11")
+#FIND_PACKAGE(BLAS REQUIRED)
+find_library(BLAS_LIBRARIES NAMES openblas)
+FIND_PACKAGE(LAPACK REQUIRED)
+set(ACCELERATE_LIB ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+add_definitions(-DHAVE_CBLASH)
+else ()
+set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
 find_library(ACCELERATE_LIB NAMES Accelerate) 
 find_path(ACCELERATE_PATH NAMES accelerate.h)
 add_definitions(-DHAVE_ACCELERATE)
 add_definitions(-DHAVE_CBLAS)
+endif ()
 
 include_directories(${ACCELERATE_PATH})
 
