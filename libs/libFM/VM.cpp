@@ -20,8 +20,9 @@
 #include "TypeUtils.hpp"
 #include "LineNumbers.hpp"
 #include "FileSystem.hpp"
-#include <readline/readline.h>
-#include <readline/history.h>
+// TODO Move this out of VM...
+#include <readline.h>
+#include <history.h>
 #include "Debug.hpp"
 #include "Globals.hpp"
 
@@ -583,7 +584,7 @@ void VM::debugCycle()
 	Module *mod = _ctxt->_compiler->module();
 	if (mod)
 	  {
-	    Object p = _ctxt->_asm->run(mod);
+	    Object p = _ctxt->_assembler->run(mod);
 	    FrameReserver myframe(this);
 	    const ModuleData *cmd = _ctxt->_module->ro(p);
 	    const FunctionData *fd = _ctxt->_function->ro(cmd->m_main);

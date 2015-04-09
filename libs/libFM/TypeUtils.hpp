@@ -74,13 +74,13 @@ namespace FM
       tptr = reinterpret_cast<Type*>(ctxt->_bool);
       break;
     case TypeInt32:
-      tptr = reinterpret_cast<Type*>(ctxt->_int32);
+      tptr = reinterpret_cast<Type*>(ctxt->t_int32);
       break;
     case TypeUInt32:
       tptr = reinterpret_cast<Type*>(ctxt->_uint32);
       break;
     case TypeInt64:
-      tptr = reinterpret_cast<Type*>(ctxt->_int64);
+      tptr = reinterpret_cast<Type*>(ctxt->t_int64);
       break;
     case TypeUInt64:
       tptr = reinterpret_cast<Type*>(ctxt->_uint64);

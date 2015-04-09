@@ -3,17 +3,18 @@ PROJECT(FMT CXX C)
 
 
 FIND_PACKAGE(PythonInterp REQUIRED)
-FIND_PACKAGE(Boost COMPONENTS system timer chrono filesystem)
+set(Boost_USE_STATIC_LIBS ON)
+FIND_PACKAGE(Boost COMPONENTS system timer chrono filesystem thread date_time)
 include_directories(${Boost_INCLUDE_DIRS})
 
-
 if (NOT APPLE)
-set(CMAKE_CXX_FLAGS "-std=c++11")
+set(CMAKE_CXX_FLAGS "-std=c++11" ${CMAKE_CXX_FLAGS})
 #FIND_PACKAGE(BLAS REQUIRED)
-find_library(BLAS_LIBRARIES NAMES openblas)
-FIND_PACKAGE(LAPACK REQUIRED)
-set(ACCELERATE_LIB ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+find_library(OPENBLAS_LIBRARY NAMES openblas)
+find_path(OPENBLAS_INCLUDE_DIR NAMES cblas.h DOC "Location of cblas.h")
+set(ACCELERATE_LIB  ${OPENBLAS_LIBRARY})
 add_definitions(-DHAVE_CBLASH)
+include_directories(${OPENBLAS_INCLUDE_DIR})
 else ()
 set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
 find_library(ACCELERATE_LIB NAMES Accelerate) 
@@ -31,10 +32,68 @@ include_directories(${PROJECT_SOURCE_DIR})
 
 #find_library(VEC_LIB NAMES Veclib) 
 
-#FIND_PACKAGE(readline)
-#FIND_PACKAGE(history)
+find_library(READLINE_LIBRARY NAMES readline readline-32)
+find_path(READLINE_INCLUDE_DIR NAMES readline.h)
+include_directories(${READLINE_INCLUDE_DIR})
+
+set(HEADERS
+Algorithms.hpp
+ArrayFormatInfo.hpp
+BinOp.hpp
+Complex.hpp
+Convert.hpp
+Debug.hpp
+Exception.hpp
+FMLib.hpp
+FileSystem.hpp
+FixedPool.hpp
+Frame.hpp
+GarbageCollector.hpp
+Globals.hpp
+HandleClass.hpp
+HashMap.hpp
+IEEEFP.hpp
+LineNumbers.hpp
+Math.hpp
+MatrixDivide.hpp
+MatrixLeftDivide.hpp
+MatrixRightDivide.hpp
+MemPtr.hpp
+NCat.hpp
+Object.hpp
+OpAdd.hpp
+OpColon.hpp
+Operators.hpp
+TermIF.hpp
+ThreadContext.hpp
+Tuple.hpp
+TypeUtils.hpp
+UnaryOp.hpp
+VM.hpp
+Compiler/Assembler.hpp
+Compiler/Code.hpp
+Compiler/EndRemover.hpp
+Compiler/NestedFunctionMover.hpp
+Compiler/Parser.hpp
+Compiler/Register.hpp
+Compiler/Scanner.hpp
+Compiler/Symbol.hpp
+Compiler/Token.hpp
+Compiler/Tree.hpp
+Math/BLAS.hpp
+Math/DenseSolver.hpp
+Math/EigenDecompose.hpp
+Math/Hermitian.hpp
+Math/LAPACK.hpp
+Math/MatrixInvert.hpp
+Math/MatrixMultiply.hpp
+Math/MatrixPower.hpp
+Math/PowFunc.hpp
+Math/Transpose.hpp
+)
 
 add_executable( FMT
+${HEADERS}
 Types/IntegerType.cpp  
 Types/BoolType.cpp  
 Types/FloatType.cpp  
@@ -91,7 +150,8 @@ HandleClass.cpp
 Debug.cpp
 Globals.cpp
 )
-target_link_libraries(FMT ${Boost_LIBRARIES} readline ${ACCELERATE_LIB})
+
+target_link_libraries(FMT  ${READLINE_LIBRARY} ${ACCELERATE_LIB} ${Boost_LIBRARIES})
 
 add_custom_command(
 OUTPUT ${CMAKE_SOURCE_DIR}/OpCodes.cpp ${CMAKE_SOURCE_DIR}/OpCodes.h

@@ -127,7 +127,7 @@ Object FM::dbstop(const Object &args, int nargout, ThreadContext *ctxt) {
     {
       bpd->bp_type = BreakpointTypeCode::Conditional;
       ctxt->_compiler->compile("dbstop__=("+cmd_args.expr+");\n");
-      bpd->m_condition = ctxt->_asm->run(ctxt->_compiler->module());
+      bpd->m_condition = ctxt->_assembler->run(ctxt->_compiler->module());
     }
   bpd->bp_when = BreakpointWhen::Always;
   if (cmd_args.whenflag) {

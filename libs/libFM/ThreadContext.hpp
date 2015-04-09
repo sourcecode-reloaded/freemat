@@ -64,10 +64,10 @@ namespace FM
     SingleType *_single;
     StringType *_string;
     IndexType *_index;
-    Int8Type *_int8;
-    Int16Type *_int16;
-    Int32Type *_int32;
-    Int64Type *_int64;
+    Int8Type *t_int8;
+    Int16Type *t_int16;
+    Int32Type *t_int32;
+    Int64Type *t_int64;
     UInt8Type *_uint8;
     UInt16Type *_uint16;
     UInt32Type *_uint32;
@@ -91,7 +91,7 @@ namespace FM
     // Tools
     VM *_vm;
     Compiler *_compiler;
-    Assembler *_asm;
+    Assembler *_assembler;
     TermIF *_io;
     ObjectBase *_empty;
     // Global functions

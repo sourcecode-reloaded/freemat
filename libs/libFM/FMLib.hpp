@@ -16,7 +16,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/tokenizer.hpp>
-#include <dlfcn.h>
+//#include <dlfcn.h>
 
 //typedef std::wstring FMString;
 //class FMString : public std::wstring
@@ -286,7 +286,7 @@ inline const char *qPrintable(const FMString & c)
   return c.toAscii();
 }
 
-#define FM_INT64_C(c) __INT64_C(c)
+#define FMt_int64_C(c) _t_int64_C(c)
 #define FM_UINT64_C(c) __UINT64_C(c)
 
 template <class T>
@@ -411,6 +411,7 @@ inline std::ostream& operator<<(std::ostream& o, const FMStringList& p)
 
 
 // This will need to be ported to Win32
+#if 0
 class FMLibrary
 {
   FMString filename;
@@ -427,6 +428,7 @@ public:
     return dlsym(lib,symbolname.c_str());
   }
 };
+#endif
 
 class FMDir
 {
@@ -434,7 +436,7 @@ class FMDir
 public:
   FMDir(boost::filesystem::path q) : p(q) {}
   FMDir(FMString path) {
-    p = path;
+    p = boost::filesystem::path(path.c_str());
   }
   boost::filesystem::path boostPath() {
     return p;
@@ -460,7 +462,7 @@ public:
   }
   static bool setCurrent(const FMString& path) {
     boost::system::error_code ec;
-    boost::filesystem::current_path(path,ec);
+    boost::filesystem::current_path(path.c_str(),ec);
     return (ec == 0);
   }
 };

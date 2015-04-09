@@ -376,6 +376,13 @@ namespace FM
     o << a.r << "+" << a.i << "i";
     return o;
   }
+
+  template <>
+  inline std::stringstream& operator<<(std::stringstream& o, const Complex<int8_t> &a)
+  {
+	  o << int(a.r) << "+" << int(a.i) << "i";
+	  return o;
+  }
 }
 
 

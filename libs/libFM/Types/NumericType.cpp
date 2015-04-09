@@ -123,25 +123,25 @@ Object NumericType<T,codeNum>::convert(const Object &a)
       convertLoop<T,double>(Type::_ctxt->_double->ro(a),op,len);
       break;
     case TypeInt8:
-      convertLoop<T,int8_t>(Type::_ctxt->_int8->ro(a),op,len);
+      convertLoop<T,int8_t>(Type::_ctxt->t_int8->ro(a),op,len);
       break;
     case TypeUInt8:
       convertLoop<T,uint8_t>(Type::_ctxt->_uint8->ro(a),op,len);
       break;
     case TypeInt16:
-      convertLoop<T,int16_t>(Type::_ctxt->_int16->ro(a),op,len);
+      convertLoop<T,int16_t>(Type::_ctxt->t_int16->ro(a),op,len);
       break;
     case TypeUInt16:
       convertLoop<T,uint16_t>(Type::_ctxt->_uint16->ro(a),op,len);
       break;
     case TypeInt32:
-      convertLoop<T,int32_t>(Type::_ctxt->_int32->ro(a),op,len);
+      convertLoop<T,int32_t>(Type::_ctxt->t_int32->ro(a),op,len);
       break;
     case TypeUInt32:
       convertLoop<T,uint32_t>(Type::_ctxt->_uint32->ro(a),op,len);
       break;
     case TypeInt64:
-      convertLoop<T,int64_t>(Type::_ctxt->_int64->ro(a),op,len);
+      convertLoop<T,int64_t>(Type::_ctxt->t_int64->ro(a),op,len);
       break;
     case TypeUInt64:
       convertLoop<T,uint64_t>(Type::_ctxt->_uint64->ro(a),op,len);

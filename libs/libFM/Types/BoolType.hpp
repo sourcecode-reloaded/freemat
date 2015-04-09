@@ -19,6 +19,7 @@ namespace FM
     bool all(const Object &a);
     dim_t countOne(const Object &a);
     dim_t countZero(const Object &a);
+	// FIXME - overload/redefine the comparison operators?
   };
 }
 

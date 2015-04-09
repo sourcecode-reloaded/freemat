@@ -7,12 +7,12 @@ namespace FM {
   inline FMString resolve_full_path(const FMString &name) {
     // TODO - add path search in here
     boost::filesystem::path path(name + ".m");
-    return absolute(path).c_str();
+    return absolute(path).string();
   }
 
   inline FMString get_basename_from_full_path(const FMString &name) {
-    boost::filesystem::path path(name);
-    return path.stem().c_str();
+    boost::filesystem::path path(name.c_str());
+    return path.stem().string();
   }
 };
 

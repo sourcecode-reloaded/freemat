@@ -6,12 +6,12 @@ using namespace FM;
 using children_list = std::multiset<ObjectBase*>;
 using connections = std::map<ObjectBase*,children_list>;
 
-class VisitAncestors : public ObjectVisitor {
+class FM::VisitAncestors : public ObjectVisitor {
   ObjectBase* me;
   children_list &my_kids;
   ThreadContext *my_ctxt;
 public:
-  VisitAncestors(ObjectBase *root, children_list &descendents, ThreadContext *ctxt) : me(root), my_kids(descendents), my_ctxt(ctxt) 
+  FM::VisitAncestors(ObjectBase *root, children_list &descendents, ThreadContext *ctxt) : me(root), my_kids(descendents), my_ctxt(ctxt) 
   {
     std::cout << "Initializing visitor with base " << root << "\n";
   }

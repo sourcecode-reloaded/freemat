@@ -22,7 +22,7 @@
 #include <float.h>
 #include <math.h>
 
-#if defined(_MSC_VER )
+#if defined(_MSC_VERPO )
 
 extern "C"{
 	__declspec( dllexport ) double rint (double x);

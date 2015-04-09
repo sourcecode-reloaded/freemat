@@ -13,7 +13,7 @@
 #include "Compiler.hpp"
 #include "Assembler.hpp"
 #include "VM.hpp"
-#include "fnv.hh"
+//#include "fnv.hh"
 #include "HashMap.hpp"
 #include "Symbol.hpp"
 #include "GarbageCollector.hpp"
@@ -23,8 +23,8 @@
 #include "TypeUtils.hpp"
 #include "Globals.hpp"
 #include "SparseType.hpp"
-#include <readline/readline.h>
-#include <readline/history.h>
+#include <readline.h>
+#include <history.h>
 
 //#include <valarray>
 
@@ -70,7 +70,7 @@ void compileModule(ThreadContext *ctxt, const FMString &name, HashMap<Object> &c
     Module *mod = ctxt->_compiler->module();
     if (mod)
       {
-	Object p = ctxt->_asm->run(mod);
+	Object p = ctxt->_assembler->run(mod);
 	Disassemble(ctxt,p);
 	std::cout << "Compile: \n";
 	std::cout << p << "\n";
@@ -126,20 +126,20 @@ Object numel(const Object &args, int nargout, ThreadContext *ctxt) {
 }
 
 
-Object to_int8(const Object &args, int nargout, ThreadContext *ctxt) {
-  return ctxt->_list->makeScalar(ctxt->_int8->convert(ctxt->_list->ro(args)[0]));
+Object tot_int8(const Object &args, int nargout, ThreadContext *ctxt) {
+  return ctxt->_list->makeScalar(ctxt->t_int8->convert(ctxt->_list->ro(args)[0]));
 }
 
-Object to_int16(const Object &args, int nargout, ThreadContext *ctxt) {
-  return ctxt->_list->makeScalar(ctxt->_int16->convert(ctxt->_list->ro(args)[0]));
+Object tot_int16(const Object &args, int nargout, ThreadContext *ctxt) {
+  return ctxt->_list->makeScalar(ctxt->t_int16->convert(ctxt->_list->ro(args)[0]));
 }
 
-Object to_int32(const Object &args, int nargout, ThreadContext *ctxt) {
-  return ctxt->_list->makeScalar(ctxt->_int32->convert(ctxt->_list->ro(args)[0]));
+Object tot_int32(const Object &args, int nargout, ThreadContext *ctxt) {
+  return ctxt->_list->makeScalar(ctxt->t_int32->convert(ctxt->_list->ro(args)[0]));
 }
 
-Object to_int64(const Object &args, int nargout, ThreadContext *ctxt) {
-  return ctxt->_list->makeScalar(ctxt->_int64->convert(ctxt->_list->ro(args)[0]));
+Object tot_int64(const Object &args, int nargout, ThreadContext *ctxt) {
+  return ctxt->_list->makeScalar(ctxt->t_int64->convert(ctxt->_list->ro(args)[0]));
 }
 
 Object to_uint8(const Object &args, int nargout, ThreadContext *ctxt) {
@@ -361,10 +361,10 @@ int main(int argc, char *argv[])
   ctxt->_globals->set("handir",ctxt->_module->builtin("handir",handir));
   ctxt->_globals->set("strcmp",ctxt->_module->builtin("strcmp",strcmp));
   ctxt->_globals->set("numel",ctxt->_module->builtin("numel",numel));
-  ctxt->_globals->set("int8",ctxt->_module->builtin("int8",to_int8));
-  ctxt->_globals->set("int16",ctxt->_module->builtin("int16",to_int16));
-  ctxt->_globals->set("int32",ctxt->_module->builtin("int32",to_int32));
-  ctxt->_globals->set("int64",ctxt->_module->builtin("int64",to_int64));
+  ctxt->_globals->set("int8",ctxt->_module->builtin("int8",tot_int8));
+  ctxt->_globals->set("int16",ctxt->_module->builtin("int16",tot_int16));
+  ctxt->_globals->set("int32",ctxt->_module->builtin("int32",tot_int32));
+  ctxt->_globals->set("int64",ctxt->_module->builtin("int64",tot_int64));
   ctxt->_globals->set("uint8",ctxt->_module->builtin("uint8",to_uint8));
   ctxt->_globals->set("uint16",ctxt->_module->builtin("uint16",to_uint16));
   ctxt->_globals->set("uint32",ctxt->_module->builtin("uint32",to_uint32));
@@ -409,7 +409,7 @@ int main(int argc, char *argv[])
 	Module *mod = ctxt->_compiler->module();
 	if (mod)
 	  {
-	    Object p = ctxt->_asm->run(mod);
+	    Object p = ctxt->_assembler->run(mod);
 	    std::cout << "Code object: " << p.description() << "\n";
 	    Disassemble(ctxt,p);
 	    timer.start();
