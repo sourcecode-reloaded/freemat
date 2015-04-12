@@ -2733,5 +2733,11 @@ Kick dbup and dbdown out of OpCodes.
 
 TODO - Kick out dbcont also.
 
+FIXME - a shortcut or/and doesn't work with non-scalars.
+UGH!
+
+The dim_t, ndx_t, int, size_t stuff is crazy!!
+Replace all with one generic integer type (pick ndx_t).
+
 
 

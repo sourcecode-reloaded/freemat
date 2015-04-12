@@ -55,6 +55,7 @@ namespace FM
     {
       return dispatch_unaryop<T,OpNeg>(a,this);
     }
+    virtual Object Hermitian(const Object &a) {return MatrixHermitian<T>(a);}    
   };
 
   class Int8Type : public SignedIntegerType<int8_t,TypeInt8>
@@ -121,10 +122,10 @@ namespace FM
     bool isColon(const Object &a) {
       return (a.isScalar() && this->scalarValue(a) == -1);
     }
-    Object expandColons(dim_t len) {
+    Object expandColons(ndx_t len) {
       Object output = this->makeMatrix(len,1);
       ndx_t *op = this->rw(output);
-      for (dim_t i=0;i<len;i++)
+      for (ndx_t i=0;i<len;i++)
 	op[i] = i;
       return output;
     }

@@ -29,7 +29,7 @@ namespace FM
     virtual FMString describe(const Object &a);
     virtual FMString brief(const Object &a);
     virtual Object getParens(const Object &a, const Object &b);
-    virtual Object call(const Object &a, const Object &args, int nargout);
+    virtual Object call(const Object &a, const Object &args, ndx_t nargout);
     Object fromFunction(const Object &func);
     Object import(const Object &foreign) {
       FunctionHandleType *them = foreign.asType<FunctionHandleType>();

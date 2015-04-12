@@ -11,41 +11,41 @@ namespace FM {
   class Tuple {
     //! Stubbornly refusing to allow arbitrary dimensions of
     //data.  But it can be changed easily.
-    dim_t dims[MAXDIMS];
+    ndx_t dims[MAXDIMS];
     //! The number of dimensions actually used.  Performance
     //tests indicate its better to know than to assume its
     //just MAXDIMS
-    unsigned ndims;
+    ndx_t ndims;
     //! The element count described by the tuple (the product of the dimensions)
-    dim_t elements;
+    ndx_t elements;
   public:
       Tuple() : ndims(2), elements(0) {dims[0] = dims[1] = 0;}
-    Tuple(dim_t rows, dim_t cols) {
+    Tuple(ndx_t rows, ndx_t cols) {
       ndims = 2;
       dims[0] = rows;
       dims[1] = cols;
       elements = rows*cols;
     }
-   // Tuple(dim_t *ptr, int nd) : ndims(nd) {memcpy(dims,ptr,nd*sizeof(dim_t)); updateElementCount();}
-    inline void prepend(dim_t a) {
-      for (int i=0;i<ndims;i++)
+   // Tuple(ndx_t *ptr, int nd) : ndims(nd) {memcpy(dims,ptr,nd*sizeof(ndx_t)); updateElementCount();}
+    inline void prepend(ndx_t a) {
+      for (unsigned i=0;i<ndims;i++)
 	dims[ndims-i] = dims[ndims-i-1];
         ndims++;
       dims[0] = a;
       updateElementCount();
     }
-    inline dim_t rows() const {
+    inline ndx_t rows() const {
       if (ndims == 0) return 0;
       return dims[0];
     }
-    inline dim_t cols() const {
+    inline ndx_t cols() const {
       if (ndims < 2) return 0;
       return dims[1];
     }
-    inline int dimensions() const {
+    inline ndx_t dimensions() const {
       return ndims;
     }
-    inline dim_t dimension(int p) const {
+    inline ndx_t dimension(ndx_t p) const {
       if (p < ndims) return dims[p];
       return 1;
     }
@@ -55,28 +55,28 @@ namespace FM {
     inline bool isVector() const {
       return (is2D() && ((rows() == 1) || (cols() == 1)));
     }
-    inline dim_t count() const {
+    inline ndx_t count() const {
       return elements;
     }
-    inline void setRows(dim_t rows) {
+    inline void setRows(ndx_t rows) {
       if (ndims == 0) ndims = 1;
       dims[0] = rows;
       updateElementCount();
     }
-    inline void setCols(dim_t cols) {
+    inline void setCols(ndx_t cols) {
       if (ndims < 2) ndims = 2;
       dims[1] = cols;
       updateElementCount();
     }
-    inline void setMatrixSize(dim_t rows, dim_t cols) {
+    inline void setMatrixSize(ndx_t rows, ndx_t cols) {
       dims[0] = rows;
       dims[1] = cols;
       ndims = 2;
       elements = rows*cols;
     }
     // set(2,4) --> ndims -> 3
-    inline void set(int dim, dim_t val) {
-      for (int i=ndims;i<(dim+1);i++)
+    inline void set(ndx_t dim, ndx_t val) {
+      for (auto i=ndims;i<(dim+1);i++)
 	dims[i] = 1;
       ndims = (ndims > (dim+1)) ? ndims : (dim+1);
       dims[dim] = val;
@@ -107,7 +107,7 @@ namespace FM {
     inline FMString toString() const {
       FMString ret;
       ret = Stringify(dims[0]);
-      for (int i=1;i<ndims;i++)
+      for (unsigned i=1;i<ndims;i++)
 	ret += " x " + Stringify(dims[i]);
       return ret;
     }
@@ -126,11 +126,11 @@ namespace FM {
       while (ret.ndims > 2 && (ret.dims[ret.ndims-1] <= 1)) ret.ndims--;
       return ret;
     }
-      static Tuple RawTuple(dim_t *ptr, int nd)
+      static Tuple RawTuple(ndx_t *ptr, ndx_t nd)
       {
           Tuple p;
           p.ndims = nd;
-          memcpy(p.dims,ptr,nd*sizeof(dim_t));
+          memcpy(p.dims,ptr,size_t(nd*sizeof(ndx_t)));
           p.updateElementCount();
           return p;
       }
@@ -144,9 +144,9 @@ namespace FM {
     }
   };
 
-  inline Tuple operator%(dim_t vectorIndex, const Tuple & dims) {
+  inline Tuple operator%(ndx_t vectorIndex, const Tuple & dims) {
     Tuple ret = dims;
-    for (int i=0;i<ret.dimensions();i++)
+    for (auto i=0;i<ret.dimensions();i++)
       {
 	ret.set(i,vectorIndex % dims.dimension(i));
 	vectorIndex /= dims.dimension(i);

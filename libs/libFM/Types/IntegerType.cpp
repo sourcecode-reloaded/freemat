@@ -9,10 +9,10 @@ const int MSGBUFLEN = 100;
 
 // FIXME - replace with log10?
 template <class T>
-static int GetNominalWidthInteger(const T* qp, dim_t len) {
+static int GetNominalWidthInteger(const T* qp, ndx_t len) {
   char buffer[MSGBUFLEN];
   int maxdigit = 0;
-  for (dim_t i=0;i<len;i++) {
+  for (ndx_t i=0;i<len;i++) {
     memset(buffer,0,MSGBUFLEN);
     sprintf(buffer,"%lld",(int64_t)qp[i]);
     int j = maxdigit;
@@ -47,7 +47,7 @@ static inline Object int_cmpop(const Object &a, const Object &b, BoolType *o)
 template<class T, FM::DataCode codeNum>
 void IntegerType<T,codeNum>::computeArrayFormatInfo(FMFormatMode, const Object &a, ArrayFormatInfo &format) {
   const T* dp = this->ro(a);
-  dim_t cnt = a.count();
+  ndx_t cnt = a.count();
   if (a.isComplex()) cnt *= 2;
   format.width = GetNominalWidthInteger(dp,cnt);
 }
@@ -98,7 +98,6 @@ Object IntegerType<T,codeNum>::GreaterThan(const Object &a, const Object &b) {
 }
 
 
-template class FM::IntegerType<bool,TypeBool>;
 template class FM::IntegerType<FMChar,TypeString>;
 template class FM::IntegerType<ndx_t,TypeIndex>;
 template class FM::IntegerType<uint8_t,TypeUInt8>;

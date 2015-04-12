@@ -9,7 +9,7 @@ Object StringType::asIndexNoBoundsCheck(const Object &a)
   return _ctxt->_index->makeScalar(-1);
 }
 
-Object StringType::asIndex(const Object &a, dim_t ndx)
+Object StringType::asIndex(const Object &a, ndx_t ndx)
 {
   return _ctxt->_index->makeScalar(-1);
 }

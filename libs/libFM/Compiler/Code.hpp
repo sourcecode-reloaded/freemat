@@ -119,6 +119,7 @@ namespace FM
     case BuiltinModuleType:
       return "builtin";
     }
+	return "unknown";
   }
 
   struct Module

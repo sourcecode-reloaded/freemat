@@ -1,5 +1,5 @@
-#ifndef __FMString_hpp__
-#define __FMString_hpp__
+#ifndef __FMLib_hpp__
+#define __FMLib_hpp__
 
 #include <string>
 #include <set>
@@ -16,6 +16,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/tokenizer.hpp>
+
+
 //#include <dlfcn.h>
 
 //typedef std::wstring FMString;
@@ -97,7 +99,7 @@ public:
   {
     resize(strlen(p));
     char *dp = &(FMVector<char>::operator[](0));
-    for (int i=0;i<strlen(p);i++)
+    for (size_t i=0;i<strlen(p);i++)
       dp[i] = p[i];
   }
   FMByteArray() {}
@@ -156,13 +158,13 @@ public:
   }
   FMString toLower() const {
     FMString ret(this->size());
-    for (int i=0;i<this->size();i++)
+    for (size_t i=0;i<this->size();i++)
       ret[i] = tolower(this->at(i));
     return ret;
   }
   FMString toUpper() const {
     FMString ret(this->size());
-    for (int i=0;i<this->size();i++)
+    for (size_t i=0;i<this->size();i++)
       ret[i] = toupper(this->at(i));
     return ret;
   }
@@ -187,7 +189,7 @@ public:
     return atof(this->c_str());
   }
   float toFloat() const {
-    return atof(this->c_str());
+    return float(atof(this->c_str()));
   }
   FMString left(size_t len) const
   {
@@ -252,7 +254,7 @@ public:
     FMString copy = this->trimmed();
     FMString ret;
     bool inWhitespace = false;
-    int ptr = 0;
+    size_t ptr = 0;
     while (ptr < copy.size())
       {
 	if (!inWhitespace)
@@ -450,10 +452,7 @@ public:
   static FMDir current() {
     return FMDir(boost::filesystem::current_path());
   }
-  static FMString homePath() {
-    //TODO - Fix fir windows
-    return FMString(getenv("HOME"));
-  }
+  static FMString homePath();
   static FMString separator() {
     return FMString("/");
   }
@@ -642,11 +641,7 @@ public:
   {
     return (_fp != NULL);
   }
-  bool open(FMString mode)
-  {
-    _fp = fopen(_name.c_str(),mode.c_str());
-    return (_fp != NULL);
-  }
+  bool open(FMString mode);
   int read(void *ptr, int bytes)
   {
     return fread(ptr,1,bytes,_fp);
@@ -670,10 +665,7 @@ public:
   {
     fflush(_fp);
   }
-  FMString errorString() const
-  {
-    return FMString(strerror(errno));
-  }
+  FMString errorString() const;
   void ungetChar(FMChar t)
   {
     ungetc(t,_fp);
@@ -727,7 +719,7 @@ inline FMString ReadFileIntoString(FMString filename, bool& failed) {
   if (failed) return FMString();
   FMString contents;
   in.seekg(0, std::ios::end);
-  contents.resize(in.tellg());
+  contents.resize(unsigned(in.tellg()));
   in.seekg(0, std::ios::beg);
   in.read(&contents[0], contents.size());
   in.close();

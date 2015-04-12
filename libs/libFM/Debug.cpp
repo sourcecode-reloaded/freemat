@@ -30,7 +30,7 @@ static void ParseDBCommandArgs(ThreadContext *ctxt, const Object &args, dbargs& 
   result.whenflag = false;
   result.atflag = false;
   const Object *rp = ctxt->_list->ro(args);
-  int ip = 0;
+  ndx_t ip = 0;
   while (ip < args.count()) {
     if ((ctxt->_string->str(rp[ip]).toLower() == "in") && (args.count() >= (ip+1))) {
       result.module = ctxt->_string->str(rp[ip+1]);
@@ -42,11 +42,11 @@ static void ParseDBCommandArgs(ThreadContext *ctxt, const Object &args, dbargs& 
       ip += 2;
     } else if ((ctxt->_string->str(rp[ip]).toLower() == "if") && (args.count() >= (ip+1))) {
       FMString exp;
-      for (int i=ip+1;i<args.count();i++)
+      for (ndx_t i=ip+1;i<args.count();i++)
 	exp += ctxt->_string->str(rp[i]);
       result.expr = exp;
       result.expflag = true;
-      ip = args.count();
+      ip = int(args.count());
     } else if ((ctxt->_string->str(rp[ip]).toLower() == "all")) {
       result.allflag = true;
       ip++;
@@ -69,18 +69,18 @@ static void ParseDBCommandArgs(ThreadContext *ctxt, const Object &args, dbargs& 
   }
 }
 
-Object FM::dbquit(const Object &args, int nargout, ThreadContext *ctxt) {
+Object FM::dbquit(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   if (args.count() == 0)
     throw VMDBQuitException();
   throw VMDBQuitException(-1);
 }
 
-Object FM::dbcont(const Object &args, int nargout, ThreadContext *ctxt) {
+Object FM::dbcont(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   ctxt->_vm->signalReturn();
   return ctxt->_list->empty();
 }
 
-Object FM::dbclear(const Object &args, int nargout, ThreadContext *ctxt) {
+Object FM::dbclear(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   const Object *rp = ctxt->_list->ro(args);
   if (args.count() == 0) return ctxt->_list->empty();
   dbargs cmd_args;
@@ -95,7 +95,7 @@ Object FM::dbclear(const Object &args, int nargout, ThreadContext *ctxt) {
   Object dblist = ctxt->_globals->get("_dblist",ctxt);
   const Object *old = ctxt->_list->ro(dblist);
   Object dblist_filtered = ctxt->_list->empty();
-  for (int i=0;i<dblist.count();i++) {
+  for (ndx_t i=0;i<dblist.count();i++) {
     const BreakpointData *cbpd = ctxt->_breakpoint->ro(old[i]);
     bool keepit = true;
     if (cmd_args.inflag && !cmd_args.atflag && (cbpd->frame_name == resolve_full_path(cmd_args.module)))
@@ -112,7 +112,7 @@ Object FM::dbclear(const Object &args, int nargout, ThreadContext *ctxt) {
   return ctxt->_list->empty(); // Nothing to do.
 }
 
-Object FM::dbstop(const Object &args, int nargout, ThreadContext *ctxt) {
+Object FM::dbstop(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   std::cout << "DBSTOP called: " << args.description() << "\n";
   const Object *rp = ctxt->_list->ro(args);
   // There is a mini-grammar for dbstop
@@ -148,7 +148,7 @@ Object FM::dbstop(const Object &args, int nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(bp);
 }
 
-Object FM::dbup(const Object &args, int nargout, ThreadContext *ctxt) {
+Object FM::dbup(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   Frame *t = ctxt->_vm->activeFrame();
   Frame *debug = t;
   while (debug && (debug->_type != FrameTypeCode::Debug))
@@ -173,7 +173,7 @@ Object FM::dbup(const Object &args, int nargout, ThreadContext *ctxt) {
   return ctxt->_list->empty();
 }
 
-Object FM::dbdown(const Object &args, int nargout, ThreadContext *ctxt) {
+Object FM::dbdown(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   Frame *t = ctxt->_vm->activeFrame();
   Frame *debug = t;
   while (debug && (debug->_type != FrameTypeCode::Debug))
@@ -198,7 +198,7 @@ Object FM::dbdown(const Object &args, int nargout, ThreadContext *ctxt) {
   return ctxt->_list->empty();  
 }
 
-Object FM::dbstep(const Object &args, int nargout, ThreadContext *ctxt) {
+Object FM::dbstep(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   std::cout << "DBSTEP called: " << args.description() << "\n";
   // Skip parsing the arguments for now...
   Frame *t = ctxt->_vm->activeFrame();
@@ -209,7 +209,7 @@ Object FM::dbstep(const Object &args, int nargout, ThreadContext *ctxt) {
   if (!debug) 
     return ctxt->_list->empty(); // Couldn't find anything to step
   assert(debug->_name != ">>debug"); // Shouldn't happen
-  int lineno = debug->mapIPToLineNumber(debug->_ip);
+  ndx_t lineno = debug->mapIPToLineNumber(debug->_ip);
   if (lineno == -1)
     {
       // Should be equivalent to dbstep out, I would think.
@@ -229,13 +229,13 @@ Object FM::dbstep(const Object &args, int nargout, ThreadContext *ctxt) {
       std::cout << "Setting state for frame " << debug_parent->_name << " to StepOut\n";
       debug_parent->_state = FrameRunStateCode::StepOut;
     } else {
-      int skip_lines = arg.toInt();
+      ndx_t skip_lines = arg.toInt();
       if (skip_lines < 1)
 	throw Exception("dbstep requires an argument >= 1 (or in/out)");
-      debug->_transient_bp = lineno+skip_lines;
+      debug->_transient_bp = uint16_t(lineno+skip_lines);
     }
   } else {
-    debug->_transient_bp = lineno+1;
+    debug->_transient_bp = uint16_t(lineno+1);
   }
   ctxt->_vm->signalReturn();
   return ctxt->_list->empty();

@@ -27,7 +27,7 @@ Object FunctionHandleType::getParens(const Object &a, const Object &b)
   return fhd->m_func.type()->getParens(fhd->m_func,b);
 }
 
-Object FunctionHandleType::call(const Object &a, const Object &args, int nargout)
+Object FunctionHandleType::call(const Object &a, const Object &args, ndx_t nargout)
 {
   const FunctionHandleData *fhd = this->ro(a);
   return fhd->m_func.type()->call(fhd->m_func,args,nargout);

@@ -31,9 +31,9 @@ static Object TInvertMatrix(const Object &A,
   getri(&N,ft->rw(Acopy),&LDA,&Ipiv,&work,&IWORKSIZE,&INFO);
   if (INFO > 0) {
     if (A.isComplex())
-      ft->fillComplex(Acopy,Complex<T>(INFINITY,0));
+      ft->fillComplex(Acopy,Complex<T>(std::numeric_limits<T>::infinity(),0));
     else
-      ft->fill(Acopy,INFINITY);
+		ft->fill(Acopy, std::numeric_limits<T>::infinity());
   }
   return Acopy;
 }

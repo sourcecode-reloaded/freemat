@@ -95,7 +95,7 @@ void ClassMetaType::addProperty(Object &meta, const Object &name, bool constant,
   cpmd->m_setter = setter;
   if (!dependent && !constant)
     {
-      cpmd->m_index = cmd->m_defaults.count();
+      cpmd->m_index = int(cmd->m_defaults.count());
       _ctxt->_list->push(cmd->m_defaults,default_value);
     }
   else
@@ -170,7 +170,7 @@ Object ClassType::getFieldNoGetters(const Object &a, const Object &b) {
       Object output = _ctxt->_list->makeMatrix(a.count(),1);
       Object *op = _ctxt->_list->rw(output);
       const Object *cp = _ctxt->_list->ro(cd->m_data);
-      for (dim_t i=0;i<a.count();i++) {
+      for (ndx_t i=0;i<a.count();i++) {
 	if (!cpmd->m_constant && !cpmd->m_dependent)
 	  {
 	    const Object *rp = _ctxt->_list->ro(cp[i]);
@@ -248,13 +248,13 @@ void ClassType::setFieldNoSetters(Object &a, const Object &args, const Object &b
   if (cpmd->m_dependent)
     throw Exception("Property " + args.description() + " is dependant and cannot be changed directly without a setter for class " + cmd->m_name.description());
   Object *rp = _ctxt->_list->rw(cd->m_data);
-  dim_t num_assignments = std::max<dim_t>(1,a.count());
+  ndx_t num_assignments = std::max<ndx_t>(1,a.count());
   const Object *bp = &b;
   if (b.isList())
     bp = _ctxt->_list->ro(b);
   if (b.isList() && (num_assignments > b.count()))
     throw Exception("Mismatch in number of left and right hand sides in expression a.property = b");
-  for (dim_t n=0;n<num_assignments;n++)
+  for (ndx_t n=0;n<num_assignments;n++)
     {
       Object *rd = _ctxt->_list->rw(rp[n]);
       rd[cpmd->m_index] = *bp;
@@ -359,11 +359,11 @@ Object ClassType::DoubleColon(const Object &a, const Object &b, const Object &c)
   return _ctxt->_function->call(func,args,1);
 }
 
-Object ClassType::NCat(const Object &a, int dimension) {
+Object ClassType::NCat(const Object &a, ndx_t dimension) {
   // First, find the dominant class object
   const Object *ap = _ctxt->_list->ro(a);
   const Object *root = nullptr;
-  for (dim_t i=0;i<a.count();i++)
+  for (ndx_t i=0;i<a.count();i++)
     if (ap[i].isClass()) {
       root = ap+i;
       break;
@@ -387,7 +387,7 @@ bool ClassType::hasSubsref(const Object &a) {
   return this->hasMethod(a,m_subsref_name,def);
 }
 
-Object ClassType::asIndex(const Object &a, dim_t)
+Object ClassType::asIndex(const Object &a, ndx_t)
 {
   Object def(_ctxt);
   if (!this->hasMethod(a,m_subsindex_name,def))

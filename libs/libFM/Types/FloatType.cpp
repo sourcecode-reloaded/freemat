@@ -8,12 +8,12 @@
 using namespace FM;
 
 template <class T>
-static void ComputeScaleFactor(const T* array, dim_t count, ArrayFormatInfo &format, bool isComplex = false) {
+static void ComputeScaleFactor(const T* array, ndx_t count, ArrayFormatInfo &format, bool isComplex = false) {
   T max_amplitude = 0;
   if (count == 0) return;
   if (format.expformat) return;
   bool finiteElementFound = false;
-  for (dim_t i=0;i<count;i++) {
+  for (ndx_t i=0;i<count;i++) {
     if (std::isfinite(array[i]) && !finiteElementFound) {
       max_amplitude = array[i];
       finiteElementFound = true;
@@ -23,7 +23,7 @@ static void ComputeScaleFactor(const T* array, dim_t count, ArrayFormatInfo &for
       max_amplitude = array[i];
   }
   if (!finiteElementFound) return;
-  T maxval = isComplex ? 100 : 1000;
+  T maxval = isComplex ? T(100) : T(1000);
   if (max_amplitude >= maxval)
     format.scalefact = pow(double(10.0),double(floor(log10(max_amplitude))));
   else if (max_amplitude <= -maxval)
@@ -109,6 +109,24 @@ void FloatType<T,codeNum>::printElement(const Object &a, const ArrayFormatInfo &
     }
 }
 
+template <typename T, FM::DataCode codeNum>
+bool FloatType<T,codeNum>::isSymmetric(const Object &a) {
+  if (!a.isSquare()) throw Exception("Cannot test non-square matrices for symmetry");
+  ndx_t N = a.rows();
+  if (a.isComplex()) {
+    const Complex<T>* ap = this->roComplex(a);
+    for (ndx_t i=0;i<N;i++)
+      for (ndx_t j=0;j<=i;j++)
+	if (ap[i*N+j] != complex_conj(ap[j*N+i])) return false;
+    return true;
+  } else {
+    const T* ap = this->ro(a);
+    for (ndx_t i=0;i<N;i++)
+      for (ndx_t j=0;j<i;j++)
+	if (ap[i*N+j] != ap[j*N+i]) return false;
+    return true;
+  }
+}
 
 template class FM::FloatType<float,TypeSingle>;
 template class FM::FloatType<double,TypeDouble>;

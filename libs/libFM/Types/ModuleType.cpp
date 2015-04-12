@@ -12,7 +12,7 @@ Object ModuleType::getParens(const Object &a, const Object &b)
   return _ctxt->_list->first(p);
 }
 
-Object ModuleType::call(const Object &a, const Object &args, int nargout)
+Object ModuleType::call(const Object &a, const Object &args, ndx_t nargout)
 {
   return _ctxt->_vm->executeModule(a,args);
 }
@@ -36,7 +36,7 @@ Object ModuleType::builtin(const FMString &name, fncptr addr)
   return b;
 }
 
-static Object _pass(const Object &args, int nargout, ThreadContext *ctxt) {
+static Object _pass(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   return args;
 }
 

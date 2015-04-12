@@ -31,11 +31,11 @@ namespace FM
     bool equals(const Object &a, const Object &b) {
       return this->ro(a) == this->ro(b);
     }
-    virtual Data* duplicateData(const ObjectBase *p, dim_t &reserve) const
+    virtual Data* duplicateData(const ObjectBase *p, ndx_t &reserve) const
     {
       Data *q = new Data;
       q->refcnt = 1;
-      dim_t elem_count = p->dims.count();
+      ndx_t elem_count = p->dims.count();
       const DataType *pdata = static_cast<const DataType *>(p->data->ptr);
       DataType *copy = new DataType(*pdata);
       q->ptr = copy;

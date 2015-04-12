@@ -23,7 +23,7 @@ Object AnonymousType::getParens(const Object &a, const Object &b)
   return _ctxt->_list->first(p);
 }
 
-Object AnonymousType::call(const Object &a, const Object &args, int nargout)
+Object AnonymousType::call(const Object &a, const Object &args, ndx_t nargout)
 {
   const AnonymousData *ad = this->ro(a);
   return _ctxt->_vm->executeAnonymousFunction(ad->m_code,args,ad->m_captured);
@@ -38,8 +38,8 @@ Object AnonymousType::build(const Object &description, const Object &codeblock, 
   const CodeData *cd = _ctxt->_code->ro(codeblock);
   const Object *np = _ctxt->_list->ro(cd->m_names);
   const Object *vars = _ctxt->_list->ro(frame->_vars);
-  for (int i=0;i<cd->m_names.count();i++) {
-    int addr = frame->lookupAddressForName(np[i],false);
+  for (auto i=0;i<cd->m_names.count();i++) {
+    auto addr = frame->lookupAddressForName(np[i],false);
     if (addr != -1) {
       std::cout << "Capturing variable " << np[i].description() << "\n";
       ad->m_captured.insert(std::make_pair(np[i],vars[addr]));

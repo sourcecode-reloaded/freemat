@@ -19,12 +19,12 @@ namespace FM
       memcpy(t,&x[0],sizeof(FMChar)*x.length());
       return p;
     }
-    Object asIndex(const Object &a, dim_t ndx); 
+    Object asIndex(const Object &a, ndx_t ndx); 
     Object asIndexNoBoundsCheck(const Object &a);
     inline FMString str(const Object &o) const {
       assert(o.type()->code() == TypeString);
       const FMChar *t = ro(o);
-      return FMString (t,o.dims().count());
+      return FMString (t,size_t(o.dims().count()));
     }
     inline FMString describe(const Object &o) {
       if (o.dims().is2D() && (o.dims().rows() == 1))

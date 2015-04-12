@@ -27,7 +27,7 @@ public:
   }
 };
 
-Object FM::builtin_gc(const Object &args, int nargout, ThreadContext *ctxt) {
+Object FM::builtin_gc(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   // First, copy the refcnts to the gc_refcnts
   for (auto p: ctxt->_handles) {
     p->gc_count() = p->count();

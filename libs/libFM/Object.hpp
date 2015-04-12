@@ -34,6 +34,9 @@ namespace FM
   template <class T>
   class PODType;
 
+  template <class T>
+  class PODComplexType;
+
   class ObjectArrayType;
 
   class StringType;
@@ -66,16 +69,16 @@ namespace FM
     Type *type;
     //! The offset into the data vector.  This is 
     //used for slicing.
-    size_t offset;
+    ndx_t offset;
     //! The dimensions of the array
     Tuple dims;
     //! The flags for the object
     int flags;
     //! The ultimate capacity of the object.  Allows for expansion
     // without reallocating/copying
-    dim_t capacity;
+    ndx_t capacity;
   public:
-    ObjectBase(Data* p, Type* _type, size_t _offset, Tuple _dims, int _flags, size_t _capacity, bool _handle = false) : data(p) {
+    ObjectBase(Data* p, Type* _type, ndx_t _offset, Tuple _dims, int _flags, ndx_t _capacity, bool _handle = false) : data(p) {
       data->refcnt++;
       type = _type;
       offset = _offset;
@@ -110,6 +113,7 @@ namespace FM
     friend class Type;
     template <class T> friend class ArrayType;
     template <class T> friend class PODType;
+    template <class T> friend class PODComplexType;
     friend class ObjectArrayType;
     template <class T, bool H> friend class AggregateType;
     template <class T> friend class HandleType;
@@ -179,13 +183,23 @@ namespace FM
       detach();
       return d->dims;
     }
-    inline dim_t rows() const {
+	inline int irows() const {
+		if (rows() > std::numeric_limits<int>::max())
+			throw Exception("Matrix/array is too large for operation");
+		return int(rows());
+	}
+	inline int icols() const {
+		if (cols() > std::numeric_limits<int>::max())
+			throw Exception("Matrix/array is too large for operation");
+		return int(cols());
+	}
+    inline ndx_t rows() const {
       return d->dims.rows();
     }
-    inline dim_t cols() const {
+    inline ndx_t cols() const {
       return d->dims.cols();
     }
-    inline dim_t columns() const {
+    inline ndx_t columns() const {
       return d->dims.cols();
     }
     inline bool isEmpty() const {
@@ -218,7 +232,7 @@ namespace FM
     inline int flags() const {
       return d->flags;
     }
-    inline size_t capacity() const {
+    inline ndx_t capacity() const {
       return d->capacity;
     }
     inline FMString brief() const {
@@ -227,10 +241,10 @@ namespace FM
     inline FMString description() const {
       return d->type->describe(*this);
     }
-    inline dim_t count() const {
+    inline ndx_t count() const {
       return d->dims.count();
     }
-    inline Object asIndex(dim_t max) const {
+    inline Object asIndex(ndx_t max) const {
       return d->type->asIndex(*this,max);
     }
     inline Object asIndexNoBoundsCheck() const {
@@ -291,6 +305,7 @@ namespace FM
     template <class T> friend class ArrayType;
     friend class PODType<double>;
     template <class T> friend class PODType;
+    template <class T> friend class PODComplexType;
     friend class ObjectArrayType;
     template <class T, bool H> friend class AggregateType;
     template <class T> friend class HandleType;

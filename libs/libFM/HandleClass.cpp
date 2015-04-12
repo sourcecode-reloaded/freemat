@@ -59,7 +59,7 @@ void FM::makeListenerClass(ThreadContext *ctxt) {
 }
 
 /*
-Object addlistener(const Object &args, int nargout, ThreadContext *ctxt) {
+Object addlistener(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   if (args.count() != 3)
     throw Exception("addlistener requires three arguments: obj, eventname, callback");
   const Object &callback = ctxt->_list->ro(args)[2];
@@ -72,7 +72,7 @@ Object addlistener(const Object &args, int nargout, ThreadContext *ctxt) {
 }
 */
 
-Object is_valid_event(const Object &args, int nargout, ThreadContext *ctxt) {
+Object is_valid_event(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   if (args.count() != 2)
     throw Exception("is_valid_event requires two arguments: obj, eventname");
   const Object &self = ctxt->_list->ro(args)[0];

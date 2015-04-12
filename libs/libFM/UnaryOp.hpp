@@ -10,12 +10,12 @@ namespace FM
   template <class T, class Op>
   inline Object dispatch_unaryop(const Object &a, Type *o)
   {
-    PODType<T> *otype = static_cast<PODType<T> *>(o);
+    PODComplexType<T> *otype = static_cast<PODComplexType<T> *>(o);
     Object c = otype->zeroArrayOfSize(a.dims(),a.isComplex());
     T *cptr = otype->rw(c);
     const T* aptr = otype->ro(a);
-    size_t elcnt = c.count();
-    for (size_t i=0;i<elcnt;++i)
+    ndx_t elcnt = c.count();
+    for (ndx_t i=0;i<elcnt;++i)
       Op::template func<T>(cptr+i,aptr+i);
     return c;
   }

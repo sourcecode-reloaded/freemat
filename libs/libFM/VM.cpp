@@ -192,6 +192,8 @@ Object VM::executeModule(const Object &moduleObject, const Object &parameters)
   const ModuleData *cmd = _ctxt->_module->ro(moduleObject);
   std::cout << "Execute module : " << cmd->m_name << "\n";
   switch (cmd->m_modtype) {
+  default:
+	  throw Exception("Unknown module type!");
   case ScriptModuleType:
     {
       if (parameters.count() != 0)
@@ -284,11 +286,11 @@ void VM::defineClass(const Object &name, const Object &arguments)
 
 void VM::defineFrame(const Object &names, int registerCount, const FrameTypeCode &ftype)
 {
-  int nameCount = names.count();
+  auto nameCount = names.count();
   _frames[_fp]->_addrs = _ctxt->_index->makeMatrix(nameCount,1);
   ndx_t *ap = _ctxt->_index->rw(_frames[_fp]->_addrs);
   // FIXME - not right - parameters are defined when the function executes
-  for (int i=0;i<nameCount;i++) ap[i] = -1;
+  for (auto i=0;i<nameCount;i++) ap[i] = -1;
   _frames[_fp]->_defined = _ctxt->_bool->makeMatrix(nameCount,1);
   _frames[_fp]->_sym_names = names;
   _frames[_fp]->_vars = _ctxt->_list->makeMatrix(nameCount,1);
@@ -334,8 +336,8 @@ Object VM::executeAnonymousFunction(const Object &codeObject, const Object &para
   // FIXME - need to only store the number of args and returns
   const Object * args = _ctxt->_list->ro(parameters);
   const ndx_t * param_ndx = _ctxt->_index->ro(cp->m_params);
-  int to_use = std::min<int>(parameters.count(),cp->m_params.count());
-  for (int i=0;i<to_use;i++)
+  auto to_use = std::min<ndx_t>(parameters.count(),cp->m_params.count());
+  for (auto i=0;i<to_use;i++)
     {
       sp[param_ndx[i]] = args[i];
       ap[param_ndx[i]] = param_ndx[i];
@@ -353,10 +355,10 @@ Object VM::executeAnonymousFunction(const Object &codeObject, const Object &para
   executeCodeObject(codeObject);
   // Collect return values
   Object retvec = _ctxt->_list->empty();
-  int to_return = cp->m_returns.count();
+  auto to_return = cp->m_returns.count();
   const ndx_t * return_ndx = _ctxt->_index->ro(cp->m_returns);
   sp = _ctxt->_list->rw(_frames[_fp]->_vars);
-  for (int i=0;i<to_return;i++)
+  for (auto i=0;i<to_return;i++)
     _ctxt->_list->push(retvec,sp[return_ndx[i]]);
   return retvec;  
 }
@@ -407,13 +409,13 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
   const Object * args = _ctxt->_list->ro(parameters);
   const ndx_t * param_ndx = _ctxt->_index->ro(cp->m_params);
   bool varargin_case = _ctxt->_index->scalarValue(cp->m_varargin) != -1;
-  int to_use;
+  ndx_t to_use;
   if (!varargin_case)
-    to_use = std::min<int>(parameters.count(),cp->m_params.count());
+    to_use = std::min<ndx_t>(parameters.count(),cp->m_params.count());
   else
-    to_use = std::min<int>(parameters.count(),cp->m_params.count()-1);
+    to_use = std::min<ndx_t>(parameters.count(),cp->m_params.count()-1);
   std::cout << "to_use = " << to_use << "\n";
-  for (int i=0;i<to_use;i++)
+  for (auto i=0;i<to_use;i++)
     {
       // Two cases here - one is that the parameter is normal, the other is that it is
       // captured.  If it is normal:
@@ -431,12 +433,12 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
     }
   if (varargin_case)
     {
-      int to_push = std::max<int>(0,parameters.count()-to_use);
+      ndx_t to_push = std::max<ndx_t>(0,parameters.count()-to_use);
       Object varargin = _ctxt->_cell->makeMatrix(to_push,1);
       Object *vip = _ctxt->_cell->rw(varargin);
-      for (int i=0;i<to_push;i++)
+      for (auto i=0;i<to_push;i++)
 	vip[i] = args[to_use+i];
-      int varargin_location = _ctxt->_index->scalarValue(cp->m_varargin);
+      auto varargin_location = _ctxt->_index->scalarValue(cp->m_varargin);
       sp[varargin_location] = varargin;
       ap[varargin_location] = varargin_location;
     }
@@ -444,12 +446,12 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
   executeCodeObject(fd->m_code);
   // Collect return values
   Object retvec = _ctxt->_list->empty();
-  int to_return = cp->m_returns.count();
+  auto to_return = cp->m_returns.count();
   bool varargout_case = _ctxt->_index->scalarValue(cp->m_varargout) != -1;
   if (varargout_case) to_return -= 1;
   const ndx_t * return_ndx = _ctxt->_index->ro(cp->m_returns);
   sp = _ctxt->_list->rw(_frames[_fp]->_vars);
-  for (int i=0;i<to_return;i++)
+  for (auto i=0;i<to_return;i++)
     {
       if (return_ndx[i] < 1000)
 	_ctxt->_list->push(retvec,sp[return_ndx[i]]);
@@ -463,11 +465,11 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
   if (varargout_case) {
     std::cout << "to_return = " << to_return << "\n";
     std::cout << "returns = " << cp->m_returns << "\n";
-    int varargout_location = _ctxt->_index->scalarValue(cp->m_varargout);
+    auto varargout_location = _ctxt->_index->scalarValue(cp->m_varargout);
     const Object & varargout = sp[varargout_location];
     std::cout << "VARARGOUT " << varargout << "\n";
     const Object * vip = _ctxt->_cell->ro(varargout);
-    for (int i=0;i<varargout.count();i++)
+    for (auto i=0;i<varargout.count();i++)
       _ctxt->_list->push(retvec,vip[i]);
   }
   return retvec;
@@ -506,7 +508,7 @@ bool VM::checkBreakpoints(Frame *frame, Frame *closed_frame, int ip)
 	  if (!closed_frame->getLocalVariableSlow("dbstop__",trap)) return false;
 	  if ((trap.typeCode() == TypeBool) && (_ctxt->_bool->any(trap))) return true;
 	  return false;
-	} catch (Exception &e) {
+	} catch (Exception &) {
 	  return false;
 	}
       } else {
@@ -559,7 +561,7 @@ void VM::debugCycle()
       int shift = 0;
       Object dbshift(_ctxt);
       bool dbshiftExists = activeFrame()->getLocalVariableSlow("dbshift__",dbshift);
-      if (dbshiftExists) shift = dbshift.asDouble();
+      if (dbshiftExists) shift = int(dbshift.asDouble());
       Frame *active = activeFrame()->_prevFrame;
       std::cout << "active frame name is " << active->_name << "\n";
       for (int i=0;i<shift;i++) {
@@ -763,7 +765,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		REG2 = _ctxt->_list->pop(REG2);
 		break;
 	      case OP_CALL:
-		REG1 = REG2.type()->call(REG2,_ctxt->_list->second(REG3),_ctxt->_double->scalarValue(_ctxt->_list->first(REG3)));
+		REG1 = REG2.type()->call(REG2,_ctxt->_list->second(REG3),ndx_t(_ctxt->_double->scalarValue(_ctxt->_list->first(REG3))));
 		break;
 	      case OP_DCOLON:
 		{
@@ -852,13 +854,13 @@ void VM::executeCodeObject(const Object &codeObject)
 		UNARYOP(Neg,"negate");
 		break;
 	      case OP_NUMCOLS:
-		REG1 = _ctxt->_double->makeScalar(REG2.count()/REG2.rows());
+		REG1 = _ctxt->_double->makeScalar(double(REG2.count()/REG2.rows()));
 		break;
 	      case OP_CASE:
 		REG1 = TestForCaseMatch(_ctxt,REG2,REG3);
 		break;
 	      case OP_COLUMN:
-		REG1 = REG2.type()->sliceColumn(REG2,_ctxt->_double->scalarValue(REG3));
+		REG1 = REG2.type()->sliceColumn(REG2,ndx_t(_ctxt->_double->scalarValue(REG3)));
 		break;
 	      case OP_NOT:
 		UNARYOP(Not,"not");
@@ -879,7 +881,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		REG1 = _ctxt->_double->makeScalar(_ctxt->_double->scalarValue(REG1)+1);
 		break;
 	      case OP_LENGTH:
-		REG1 = _ctxt->_double->makeScalar(REG2.count());
+		REG1 = _ctxt->_double->makeScalar(double(REG2.count()));
 		break;
 		/*
 		  case OP_SUBSASGNM:
@@ -902,7 +904,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		REG1 = _ctxt->_list->makeScalar(makeCellFromList(_ctxt,REG2));
 		break;
 	      case OP_END:
-		REG1 = _ctxt->_double->makeScalar(REG2.dims().dimension(_ctxt->_double->scalarValue(REG3)));
+		REG1 = _ctxt->_double->makeScalar(double(REG2.dims().dimension(ndx_t(_ctxt->_double->scalarValue(REG3)))));
 		break;
 		/*
 		  case OP_LOAD_GLOBAL:
@@ -958,7 +960,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		{
 		  // We start by looking for the name in our address file
 		  int ndx = get_constant(insn);
-		  int addr = addrfile[ndx];
+		  ndx_t addr = addrfile[ndx];
 		  if (addr == -1)
 		    {
 		      std::cout << "OP_LOAD for " << _ctxt->_string->str(names_list[ndx]) << "\n";
@@ -976,7 +978,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	      case OP_LOOKUP:
 		{
 		  int ndx = get_constant(insn);
-		  int addr = addrfile[ndx];
+		  ndx_t addr = addrfile[ndx];
 		  if ((addr == -1) || _debug_mode)
 		    {
 		      std::cout << "OP_LOOKUP for " << _ctxt->_string->str(names_list[ndx]) << "\n";
@@ -1014,7 +1016,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	      case OP_SAVE:
 		{
 		  int ndx = get_constant(insn);
-		  int addr = addrfile[ndx];
+		  ndx_t addr = addrfile[ndx];
 		  if ((addr == -1) || _debug_mode)
 		    {
 		      addr = closed_frame->lookupAddressForName(names_list[ndx],false);
@@ -1102,7 +1104,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	      case OP_SUBSASGN:
 		{
 		  int ndx = get_constant(insn);
-		  int addr = addrfile[ndx];
+		  ndx_t addr = addrfile[ndx];
 		  if ((addr == -1) || _debug_mode)
 		    {
 		      FMString name = _ctxt->_string->str(names_list[get_constant(insn)]);

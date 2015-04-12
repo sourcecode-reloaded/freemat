@@ -29,7 +29,7 @@ Object FunctionType::getParens(const Object &a, const Object &b)
   return _ctxt->_list->first(p);
 }
 
-Object FunctionType::call(const Object &a, const Object &args, int nargout)
+Object FunctionType::call(const Object &a, const Object &args, ndx_t nargout)
 {
   return _ctxt->_vm->executeFunction(a,args);
 }

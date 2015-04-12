@@ -19,6 +19,8 @@ namespace FM
     virtual void computeArrayFormatInfo(FMFormatMode mode, const Object &rp, ArrayFormatInfo &info);
     virtual void printElement(const Object &a, const ArrayFormatInfo &format, ndx_t offset);
     virtual Object Neg(const Object &a) {return FM::dispatch_unaryop<T,OpNeg>(a,this);};
+    virtual Object Hermitian(const Object &a) {return MatrixHermitian<T>(a);}
+    bool isSymmetric(const Object &b);
   };
 };
 

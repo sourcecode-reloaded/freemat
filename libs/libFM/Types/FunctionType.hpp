@@ -29,7 +29,7 @@ namespace FM
     virtual FMString describe(const Object &a);
     virtual FMString brief(const Object &a);
     virtual Object getParens(const Object &a, const Object &b);
-    virtual Object call(const Object &a, const Object &args, int nargout);
+    virtual Object call(const Object &a, const Object &args, ndx_t nargout);
     virtual Object deref(const Object &a);
     Object fromCode(const Object &codeObject, const Object &closure);
     Object fromCode(const Object &codeObject);

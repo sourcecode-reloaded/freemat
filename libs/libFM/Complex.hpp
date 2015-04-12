@@ -17,11 +17,24 @@ namespace FM
     template <class elem2>
     Complex(Complex<elem2> other)
     {
-      r = other.r;
-      i = other.i;
+      r = elem(other.r);
+      i = elem(other.i);
+    }
+    template <class elem2>
+    Complex(const elem2 &other)
+    {
+      r = elem(other);
+      i = elem(0);
     }
   };
 
+
+  template <class elem>
+  static inline Complex<elem> complex_conj(const Complex<elem> &a) {
+    return Complex<elem>(a.r, -a.i);
+  }
+
+  /*
   template <typename elem>
   static inline Complex<elem> complex_conj(const Complex<elem> &a)
   {
@@ -30,7 +43,7 @@ namespace FM
     c.i = -a.i;
     return c;
   }
-
+  */
   template <typename T>
   static inline void complex_divide(const T& ar, const T& ai,
 				    const T& br, const T& bi,
@@ -70,22 +83,22 @@ namespace FM
 	if(abi == 0) {
 	  if (ai != 0 || ar != 0)
 	    abi = 1.;
-	  c1 = c0 = abi / abr;
+	  c1 = c0 = T(abi / abr);
 	  return;
 	}
 	ratio = br / bi ;
 	den = bi * (1 + ratio*ratio);
-	cr = (ar*ratio + ai) / den;
-	c1 = (ai*ratio - ar) / den;
+	cr = ((ar*ratio + ai) / den);
+	c1 = T((ai*ratio - ar) / den);
       }
     else
       {
 	ratio = bi / br ;
 	den = br * (1 + ratio*ratio);
-	cr = (ar + ai*ratio) / den;
-	c1 = (ai - ar*ratio) / den;
+	cr = ((ar + ai*ratio) / den);
+	c1 = T((ai - ar*ratio) / den);
       }
-    c0 = cr;
+    c0 = T(cr);
   }
 
   template <typename T>
@@ -101,9 +114,9 @@ namespace FM
   template <class T>
   inline T complex_abs(T real, T imag) {
     T swap;
-    if(real < 0)
+    if (real < 0)
       real = -real;
-    if(imag < 0)
+    if (imag < 0)
       imag = -imag;
     if(imag > real){
       swap = real;
@@ -115,6 +128,26 @@ namespace FM
     double temp = double(imag)/double(real);
     temp = real*sqrt(1.0 + temp*temp);  /*overflow!!*/
     return(T(temp));
+  }
+
+
+  template <>
+  inline int64_t complex_abs(int64_t real, int64_t imag) {
+	  int64_t swap;
+	  if (real < 0)
+		  real = -real;
+	  if (imag < 0)
+		  imag = -imag;
+	  if (imag > real){
+		  swap = real;
+		  real = imag;
+		  imag = swap;
+	  }
+	  if ((real + imag) == real)
+		  return(real);
+	  long double temp = long double(imag) / long double(real);
+	  temp = real*sqrtl(1.0 + temp*temp);  /*overflow!!*/
+	  return(int64_t(temp));
   }
 
   template <typename T>
@@ -142,23 +175,75 @@ namespace FM
   }
 
   template <typename T>
-  inline bool complex_lt(const T &ar, const T &ai, 
+  inline bool complex_lt(const T &ar, const T &ai,
 			 const T &br, const T &bi) {
-    T mag_a = complex_abs(ar,ai);
-    T mag_b = complex_abs(br,bi);
+    double mag_a = complex_abs<double>(ar,ai);
+    double mag_b = complex_abs<double>(br,bi);
     if ((mag_b-mag_a) > feps(mag_a)*4) return true;
     if ((mag_a-mag_b) > feps(mag_b)*4) return false;
-    return (complex_phase(ar,ai) < complex_phase(br,bi));
+    return (complex_phase<double>(ar,ai) < complex_phase<double>(br,bi));
+  }
+  
+  template <typename T>
+  inline bool complex_lt_64bit(const T &ar, const T &ai,
+			       const T &br, const T &bi) {
+    long double arl = (long double) ar;
+    long double ail = (long double) ai;
+    long double brl = (long double) br;
+    long double bil = (long double) bi;
+    long double mag_a = complex_abs(arl, ail);
+    long double mag_b = complex_abs(brl, bil);
+    if ((mag_b - mag_a) > fepsl(mag_a)*4) return true;
+    if ((mag_a - mag_b) > fepsl(mag_b) * 4) return false;
+    return (complex_phase(arl,ail) < complex_phase(brl,bil));
+  }
+
+  template <>
+  inline bool complex_lt(const int64_t &ar, const int64_t &ai,
+			 const int64_t &br, const int64_t &bi) {
+    return complex_lt_64bit(ar,ai,br,bi);
+  }
+
+  template <>
+  inline bool complex_lt(const uint64_t &ar, const uint64_t &ai,
+			 const uint64_t &br, const uint64_t &bi) {
+    return complex_lt_64bit(ar,ai,br,bi);
   }
 
   template <typename T>
   inline bool complex_gt(const T &ar, const T &ai, 
 			 const T &br, const T &bi) {
-    T mag_a = complex_abs(ar,ai);
-    T mag_b = complex_abs(br,bi);
+    double mag_a = complex_abs<double>(ar,ai);
+    double mag_b = complex_abs<double>(br,bi);
     if ((mag_b-mag_a) > feps(mag_a)*4) return false;
     if ((mag_a-mag_b) > feps(mag_b)*4) return true;
-    return (complex_phase(ar,ai) > complex_phase(br,bi));
+    return (complex_phase<double>(ar,ai) > complex_phase<double>(br,bi));
+  }
+
+  template <class T>
+  inline bool complex_gt_64bit(const T &ar, const T &ai,
+			       const T &br, const T &bi) {
+    long double arl = (long double) ar;
+    long double ail = (long double) ai;
+    long double brl = (long double) br;
+    long double bil = (long double) bi;
+    long double mag_a = complex_abs(arl, ail);
+    long double mag_b = complex_abs(brl, bil);
+    if ((mag_b-mag_a) > fepsl(mag_a)*4) return false;
+    if ((mag_a-mag_b) > fepsl(mag_b)*4) return true;
+    return (complex_phase<long double>(arl,ail) > complex_phase<long double>(brl,bil));
+  }
+
+  template <>
+  inline bool complex_gt(const int64_t &ar, const int64_t &ai,
+			 const int64_t &br, const int64_t &bi) {
+    return complex_gt_64bit(ar,ai,br,bi);
+  }
+
+  template <>
+  inline bool complex_gt(const uint64_t &ar, const uint64_t &ai,
+			 const uint64_t &br, const uint64_t &bi) {
+    return complex_gt_64bit(ar,ai,br,bi);
   }
 
   template <typename T>
@@ -380,8 +465,8 @@ namespace FM
   template <>
   inline std::stringstream& operator<<(std::stringstream& o, const Complex<int8_t> &a)
   {
-	  o << int(a.r) << "+" << int(a.i) << "i";
-	  return o;
+    o << int(a.r) << "+" << int(a.i) << "i";
+    return o;
   }
 }
 

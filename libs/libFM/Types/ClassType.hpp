@@ -85,7 +85,7 @@ namespace FM
     Object m_default;  // Default value
     Object m_getter;   // Getter (if it has one)
     Object m_setter;   // Setter (if it has one)
-    int m_index;       // Index into the object instance's list of properties
+    ndx_t m_index;       // Index into the object instance's list of properties
     ClassPropertyMetaData(ThreadContext *_ctxt) : m_constant(false),
       m_default(_ctxt), m_dependent(false), m_getter(_ctxt),
       m_setter(_ctxt), m_index(0) {}
@@ -254,7 +254,7 @@ namespace FM
     virtual Object Neg(const Object &a) {return ufunc(a,m_neg_name);}
     virtual Object Plus(const Object &a) {return ufunc(a,m_uplus_name);}
     virtual Object Colon(const Object &a, const Object &b) {return bifunc(a,b,m_colon_name);}
-    virtual Object NCat(const Object &p, int dimension);
+    virtual Object NCat(const Object &p, ndx_t dimension);
     virtual Object DoubleColon(const Object &a, const Object &b, const Object &c);
     virtual Object Transpose(const Object &a) {return ufunc(a,m_transpose_name);}
     virtual Object Hermitian(const Object &a) {return ufunc(a,m_ctranspose_name);}
@@ -263,7 +263,7 @@ namespace FM
     bool hasSubsasgn(const Object &a);
     void subsasgn(Object &a, const Object &args, const Object &b);
     Object makeSubstruct(const Object &b);
-    virtual Object asIndex(const Object &a, dim_t);
+    virtual Object asIndex(const Object &a, ndx_t);
   };
 };
 

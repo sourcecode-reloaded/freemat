@@ -17,7 +17,7 @@ namespace FM
     virtual FMString describe(const Object &a) {
       FMString ret = "<";
       const Object *ap = this->ro(a);
-      for (dim_t i=0;i<a.count();i++)
+      for (ndx_t i=0;i<a.count();i++)
 	{
 	  ret += ap[i].description();
 	  if (i < a.count() - 1) ret += " ";
@@ -52,27 +52,27 @@ namespace FM
       if (a.isEmpty()) throw Exception("Attempt to take last element of empty object");
       return (this->ro(a))[a.count()-1];
     }
-    Object fetch(const Object &a, dim_t ndx) {
+    Object fetch(const Object &a, ndx_t ndx) {
       return this->ro(a)[ndx];
     }
     Object pop(const Object &a) {
       if (a.count() <= 1) return this->empty();
       // TODO - make this faster by using slicing?
       Object r(this->makeMatrix(a.count()-1,1));
-      for (int i=1;i<a.count();i++)
+      for (auto i=1;i<a.count();i++)
 	this->rw(r)[i-1] = this->ro(a)[i];
       return r;
     }
-    Object deleteElement(const Object &a, int element) {
+    Object deleteElement(const Object &a, ndx_t element) {
       if (a.count() <= 1) return this->empty();
       Object r(this->makeMatrix(a.count()-1,1));
-      int j = 0;
-      for (int i=0;i<a.count();i++)
+      ndx_t j = 0;
+      for (auto i=0;i<a.count();i++)
 	if (i != element) this->rw(r)[j++] = this->ro(a)[i];
       return r;
     }
     void push(Object &a, const Object &b) {
-      dim_t a_size = a.count();
+      ndx_t a_size = a.count();
       if (a.d->capacity > (a_size+1))
 	{
 	  a.dims().setMatrixSize(a_size+1,1);
@@ -85,7 +85,7 @@ namespace FM
 	  Object na = this->makeMatrix(a_size+1,1,false);
 	  Object *nap = this->rw(na);
 	  const Object *ap = this->ro(a);
-	  for (dim_t i=0;i<a_size;i++)
+	  for (ndx_t i=0;i<a_size;i++)
 	    nap[i] = ap[i];
 	  nap[a_size] = b;
 	  a = na;
@@ -94,18 +94,18 @@ namespace FM
     // FIXME - Make this more efficient?
     void merge(Object &a, const Object &b) {
       const Object *bp = this->ro(b);
-      for (dim_t i=0;i<b.count();i++)
+      for (ndx_t i=0;i<b.count();i++)
 	this->push(a,bp[i]);
     }
     Type* anyElementsWithDataCode(const Object &a, DataCode t) {
       const Object *bp = this->ro(a);
-      for (dim_t i=0;i<a.count();i++)
+      for (ndx_t i=0;i<a.count();i++)
 	if (bp[i].type()->code() == t) return bp[i].type();
       return NULL;
     }
     inline ndx_t indexOf(const Object &a, const Object &b) {
       const Object *ap = this->ro(a);
-      for (dim_t i=0;i<a.count();i++)
+      for (ndx_t i=0;i<a.count();i++)
 	if (ap[i] == b) return i;
       return -1;
     }

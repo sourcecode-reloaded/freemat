@@ -505,7 +505,7 @@ void SymbolPass::dump(SymbolTable *t, int indent)
   std::cout << spacer << "Symbols for function: " << t->name << "\n";
   for (auto s=t->syms.constBegin(); s != t->syms.constEnd(); ++s)
     std::cout << spacer << "   Symbol: " << s.key() << " flags: " << s.value().str() << "\n";
-  for (int i=0;i<t->children.size();++i)
+  for (unsigned i=0;i<t->children.size();++i)
     dump(t->children[i],indent+3);
 }
 

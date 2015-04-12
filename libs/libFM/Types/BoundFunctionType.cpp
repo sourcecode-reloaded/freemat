@@ -27,7 +27,7 @@ Object BoundFunctionType::getParens(const Object &a, const Object &b) {
   return this->ro(a)->m_func.type()->getParens(this->ro(a)->m_func,args);
 }
 
-Object BoundFunctionType::call(const Object &a, const Object &args, int nargout) {
+Object BoundFunctionType::call(const Object &a, const Object &args, ndx_t nargout) {
   Object all_args = _ctxt->_list->makeScalar(this->ro(a)->m_arg);
   _ctxt->_list->merge(all_args,args);
   return this->ro(a)->m_func.type()->call(this->ro(a)->m_func,all_args,nargout);

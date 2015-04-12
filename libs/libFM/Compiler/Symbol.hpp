@@ -213,7 +213,7 @@ namespace FM
     SymbolTable* parent;
     int property_count;
     SymbolTable* childNamed(const FMString &name) {
-      for (int i=0;i<children.size();i++)
+      for (unsigned i=0;i<children.size();i++)
 	if (children[i]->name == name) return children[i];
       return NULL;
     }

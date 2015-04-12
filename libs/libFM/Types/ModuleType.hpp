@@ -11,7 +11,7 @@ namespace FM
 {
   struct ThreadContext;
 
-  typedef Object (*fncptr)(const Object &args, int nargout, ThreadContext *ctxt);  
+  typedef Object (*fncptr)(const Object &args, ndx_t nargout, ThreadContext *ctxt);  
   
   class ModuleData {
   public:
@@ -61,7 +61,7 @@ namespace FM
       return false;
     }
     virtual Object getParens(const Object &module, const Object &args);
-    virtual Object call(const Object &module, const Object &args, int nargout);
+    virtual Object call(const Object &module, const Object &args, ndx_t nargout);
     virtual Object deref(const Object &a);
     virtual Object builtin(const FMString &name, fncptr addr);
     virtual Object pass();

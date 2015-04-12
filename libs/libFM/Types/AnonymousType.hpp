@@ -31,7 +31,7 @@ namespace FM
     virtual FMString describe(const Object &a);
     virtual FMString brief(const Object &a);
     virtual Object getParens(const Object &a, const Object &b);
-    virtual Object call(const Object &a, const Object &args, int nargout);
+    virtual Object call(const Object &a, const Object &args, ndx_t nargout);
     Object build(const Object &description, const Object &codeblock, Frame *frame);
     Object import(const Object &foreign) {
       AnonymousType *them = foreign.asType<AnonymousType>();

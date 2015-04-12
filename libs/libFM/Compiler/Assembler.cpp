@@ -64,13 +64,13 @@ Object Assembler::run(CodeBlock *code, const FMString &name)
   _vm_codes.clear();
   _line_nos.clear();
   _nested_codes.clear();
-  for (int i=0;i<_postorder.size();i++) delete _postorder[i];
+  for (unsigned i=0;i<_postorder.size();i++) delete _postorder[i];
   _postorder.clear();
   depthFirstSearch(_code->_blocklist[0]);
   computeJumpOffsets();
   assemble();
   // Assemble the nested functions
-  for (int i=0;i<code->_nested.size();i++)
+  for (unsigned i=0;i<code->_nested.size();i++)
     {
       Assembler sub(_ctxt);
       _nested_codes.push_back(sub.run(code->_nested[i],name));
@@ -81,18 +81,18 @@ Object Assembler::run(CodeBlock *code, const FMString &name)
 void Assembler::computeJumpOffsets()
 {
   int total_size = 0;
-  for (int i=0;i<_postorder.size();++i)
+  for (unsigned i=0;i<_postorder.size();++i)
     {
       total_size += _postorder[i]->_insnlist.size();
       _postorder[i]->_offset = total_size;
     }
-  for (int i=0;i<_postorder.size();++i)
+  for (unsigned i=0;i<_postorder.size();++i)
     _postorder[i]->_offset = total_size - _postorder[i]->_offset;
   // Update the jump offsets
-  for (int i=0;i<_postorder.size();++i)
+  for (unsigned i=0;i<_postorder.size();++i)
     {
       BasicBlock *b = _postorder[i];
-      for (int j=0;j<b->_insnlist.size();j++)
+      for (unsigned j=0;j<b->_insnlist.size();j++)
 	{
 	  if (b->_insnlist[j]._target)
 	    {
@@ -108,7 +108,7 @@ void Assembler::depthFirstSearch(BasicBlock *b)
 {
   if (b->_seen) return;
   b->_seen = 1;
-  for (int i=0;i<b->_insnlist.size();++i)
+  for (unsigned i=0;i<b->_insnlist.size();++i)
     {
       if (b->_insnlist[i]._target)
 	depthFirstSearch(b->_insnlist[i]._target);
@@ -118,10 +118,10 @@ void Assembler::depthFirstSearch(BasicBlock *b)
 
 void Assembler::assemble()
 {
-  for (int i=0;i<_postorder.size();i++)
+  for (unsigned i=0;i<_postorder.size();i++)
     {
       BasicBlock *b = _postorder[_postorder.size()-1-i];
-      for (int j=0;j<b->_insnlist.size();j++) {
+      for (unsigned j=0;j<b->_insnlist.size();j++) {
 	_vm_codes.push_back(b->_insnlist[j]._opcode);
 	_line_nos.push_back(b->_insnlist[j]._position);
       }
@@ -146,7 +146,7 @@ Object Assembler::codeObject(const FMString &name)
   cp->m_consts = _code->_constlist;
   // Scan the opcodes to find the largest used register
   int max_register = 0;
-  for (int i=0;i<_vm_codes.size();i++)
+  for (unsigned i=0;i<_vm_codes.size();i++)
     {
       uint64_t insn = _vm_codes[i];
       op_t opcode = insn & 0xFF;
@@ -227,7 +227,7 @@ Object Assembler::codeObject(const FMString &name)
   cp->m_varargin = _ctxt->_index->makeScalar(varargin_ndx);
   cp->m_varargout = _ctxt->_index->makeScalar(varargout_ndx);
   // Mark up the constants to replace nested functions with their code blocks
-  for (int i=0;i<_nested_codes.size();i++)
+  for (unsigned i=0;i<_nested_codes.size();i++)
     {
       const Object &myName = _ctxt->_string->makeString("#" + _ctxt->_string->str(_ctxt->_code->ro(_nested_codes[i])->m_name));
       std::cout << "Need home for code block: " << myName << "\n";

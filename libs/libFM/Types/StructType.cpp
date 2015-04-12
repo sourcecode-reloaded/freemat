@@ -51,7 +51,7 @@ Object StructType::getField(const Object &a, const Object &b) {
   Object output = _ctxt->_list->makeMatrix(a.count(),1);
   Object *op = _ctxt->_list->rw(output);
   const Object *cp = _ctxt->_cell->ro(sd->m_data);
-  for (dim_t i=0;i<a.count();i++) {
+  for (ndx_t i=0;i<a.count();i++) {
     const Object *rp = _ctxt->_list->ro(cp[i]);
     op[i] = rp[ndx];
   }
@@ -71,7 +71,7 @@ Object StructType::getParens(const Object &a, const Object &args) {
 void StructType::addNewFields(Object &a, const Object &fields) {
   StructData *ad = this->rw(a);
   const Object *fp = _ctxt->_list->ro(fields);
-  for (dim_t i=0;i<fields.count();i++)
+  for (ndx_t i=0;i<fields.count();i++)
     ad->m_fields[fp[i]] = ad->m_fields.size();
   if (ad->m_data.isEmpty()) {
     Object x = _ctxt->_list->makeMatrix(ad->m_fields.size(),1);
@@ -79,7 +79,7 @@ void StructType::addNewFields(Object &a, const Object &fields) {
     return;
   }
   Object *cp = _ctxt->_cell->rw(ad->m_data);
-  for (dim_t i=0;i<ad->m_data.count();i++)
+  for (ndx_t i=0;i<ad->m_data.count();i++)
     _ctxt->_list->resize(cp[i],Tuple(ad->m_fields.size(),1));
 }
 
@@ -104,16 +104,16 @@ void StructType::reorderFields(Object &a, const Object &b) {
   StructData *ad = this->rw(a);
   Object aFieldList = orderedFieldList(_ctxt,ad);
   std::vector<int> permutation;
-  int numFields = aFieldList.count();
-  permutation.resize(numFields);
+  auto numFields = aFieldList.count();
+  permutation.resize(unsigned(numFields));
   const StructData *bd = this->ro(b);
   const Object *afp = _ctxt->_list->ro(aFieldList);
-  for (int i=0;i<numFields;i++)
+  for (auto i=0;i<numFields;i++)
       permutation[i] = bd->m_fields.at(afp[i]);
   Object temp = _ctxt->_list->makeMatrix(numFields,1);
   Object *tp = _ctxt->_list->rw(temp);
   Object *cp = _ctxt->_cell->rw(ad->m_data);
-  for (dim_t i=0;i<a.count();i++)
+  for (ndx_t i=0;i<a.count();i++)
     {
       Object *rp = _ctxt->_list->rw(cp[i]);
       for (int j=0;j<numFields;j++)
@@ -128,7 +128,7 @@ void StructType::fillEmpties(Object &a) {
   StructData *ad = this->rw(a);
   Object *rp = _ctxt->_cell->rw(ad->m_data);
   int fieldCount = ad->m_fields.size();
-  for (dim_t i=0;i<a.count();i++)
+  for (ndx_t i=0;i<a.count();i++)
     if (!rp[i].isList())
       rp[i] = _ctxt->_list->makeMatrix(fieldCount,1);
 }
@@ -180,14 +180,14 @@ void StructType::setField(Object &a, const Object &args, const Object &b) {
   }
   cd = _ctxt->_cell->rw(sd->m_data);
   // Case one - scalar to scalar assignment
-  dim_t num_assignments = std::max<dim_t>(1,a.count());
+  ndx_t num_assignments = std::max<ndx_t>(1,a.count());
   const Object *bp = &b;
   if (b.isList()) 
     bp = _ctxt->_list->ro(b);
   // TODO - Allow for mismatch, and use empty to fill out?
   if (b.isList() && (num_assignments > b.count()))
       throw Exception("Mismatch in number of left and right hand sides in expression a.field = b");
-  for (dim_t n=0;n<num_assignments;n++)
+  for (ndx_t n=0;n<num_assignments;n++)
     {
       Object *rd = _ctxt->_list->rw(cd[n]);
       rd[ndx] = *bp;
@@ -202,7 +202,7 @@ Object StructType::NCat(const Object &p, int dim) {
   const Object *ip = _ctxt->_list->ro(p);
   HashMap<int> group_fields;
   int fieldcounter = 0;
-  for (ndx_t i=0;i<p.count();i++) {
+  for (auto i=0;i<p.count();i++) {
     const StructData *sd = this->ro(ip[i]);
     for (auto field : sd->m_fields)
       if (group_fields.find(field.first) == group_fields.end())
@@ -211,7 +211,7 @@ Object StructType::NCat(const Object &p, int dim) {
   Object uniform = _ctxt->_list->makeMatrix(p.count(),1);
   Object *rip = _ctxt->_list->rw(uniform);
   // For each struct, permute the data and fill it so that it fits
-  for (ndx_t i=0;i<p.count();i++) 
+  for (auto i=0;i<p.count();i++) 
     rip[i] = expandStruct(ip[i],group_fields);
   // Now that the uniforms are all of the same structure, we can kick the
   // problem to NCat for the cell array
@@ -229,21 +229,21 @@ Object StructType::expandStruct(const Object &s, const HashMap<int> &expanded_fi
   // Set up the permutation
   std::vector<int> permutation;
   const StructData *sd = this->ro(s);
-  int oldfields_count = sd->m_fields.size();
+  auto oldfields_count = sd->m_fields.size();
   permutation.resize(oldfields_count);
   for (auto field : sd->m_fields) 
     permutation[field.second] = expanded_fields.at(field.first);
   Object outdata = _ctxt->_cell->zeroArrayOfSize(sd->m_data.dims(),false);
   Object *op = _ctxt->_cell->rw(outdata);
   const Object *ip = _ctxt->_cell->ro(sd->m_data);
-  int newfields_count = expanded_fields.size();
-  for (ndx_t m=0;m<sd->m_data.count();m++)
+  auto newfields_count = expanded_fields.size();
+  for (auto m=0;m<sd->m_data.count();m++)
     {
       const Object *sf = _ctxt->_list->ro(ip[m]);
       op[m] = _ctxt->_list->makeMatrix(newfields_count,1);
       Object *rp = _ctxt->_list->rw(op[m]);
-      for (int k=0;k<oldfields_count;k++)
-	rp[permutation[k]] = sf[k];
+      for (ndx_t k=0;k<oldfields_count;k++)
+	rp[permutation[unsigned(k)]] = sf[k];
     }
   return outdata;
   /*

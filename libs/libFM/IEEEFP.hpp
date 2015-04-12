@@ -43,6 +43,14 @@ extern "C"{
 #define nextafter _nextafter
 #endif
 
+//returns distance to the next nearest long double value
+inline long double fepsl(long double x) {
+	if (x >= 0)
+		return nextafterl(x, LDBL_MAX) - x;
+	else
+		return x - nextafterl(x, -LDBL_MAX);
+}
+
 //returns distance to the next nearest double value
 inline double feps( double x ){
   if (x >= 0)

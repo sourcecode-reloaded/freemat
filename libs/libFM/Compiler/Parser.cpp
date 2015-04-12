@@ -550,7 +550,7 @@ Tree Parser::statement(bool nestsOK) {
       Tree retval = assignmentStatement();
       lastpos = 0;
       return retval;
-    } catch (ParseException &e) {
+    } catch (ParseException &) {
       m_lex = save;
     } 
   }
@@ -559,7 +559,7 @@ Tree Parser::statement(bool nestsOK) {
       Tree retval = multiFunctionCall();
       lastpos = 0;
       return retval;
-    } catch (ParseException &e) {
+    } catch (ParseException &) {
       m_lex = save;
     }
   }
@@ -568,7 +568,7 @@ Tree Parser::statement(bool nestsOK) {
       Tree retval = specialFunctionCall();
       lastpos = 0;
       return retval;
-    } catch (ParseException &e) {
+    } catch (ParseException &) {
       m_lex = save;
     } 
   }
@@ -579,7 +579,7 @@ Tree Parser::statement(bool nestsOK) {
       expect(TOK_END, "FUNCTION definition");
       lastpos = 0;
       return retval;
-    } catch (ParseException &e) {
+    } catch (ParseException &) {
       m_lex = save;
     }
   }
@@ -588,7 +588,7 @@ Tree Parser::statement(bool nestsOK) {
     retval.addChild(expression());
     lastpos = 0;
     return retval;
-  } catch (ParseException &e) {
+  } catch (ParseException &) {
     m_lex = save;
   }
   return Tree();
@@ -1013,12 +1013,12 @@ Tree Parser::process() {
       root = Tree(TOK_SCRIPT,m_lex.contextNum());
       root.addChild(statementList());
     }
-  } catch(ParseException &e) {
+  } catch(ParseException &) {
     throw Exception(lastErr() + m_lex.context(lastPos()));
   }
   try {
     expect(TOK_EOF);
-  } catch (ParseException &e) {
+  } catch (ParseException &) {
     throw Exception("Unexpected input" + m_lex.context());
   }
   return root;

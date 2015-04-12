@@ -9,7 +9,7 @@
 
 using namespace FM;
 
-Object Type::call(const Object &a, const Object &args, int nargout)
+Object Type::call(const Object &a, const Object &args, ndx_t nargout)
 {
   throw Exception("call is unsupported for objects of type " + this->name());
 }
@@ -19,7 +19,7 @@ Object Type::asLogical(const Object &a)
   throw Exception("asLogical(a) is unsupported for objects of type " + this->name());
 }
 
-Object Type::asIndex(const Object &a, dim_t max)
+Object Type::asIndex(const Object &a, ndx_t max)
 {
   throw Exception("object of type " + this->name() + " cannot be used as an index");
 }
@@ -29,7 +29,7 @@ Object Type::asIndexNoBoundsCheck(const Object &a)
   throw Exception("object of type " + this->name() + " cannot be used as an index");  
 }
 
-Object Type::NCat(const Object &a, int dimension)
+Object Type::NCat(const Object &a, ndx_t dimension)
 {
   throw Exception("object of type " + this->name() + " does not support vcat/hcat");
 }
@@ -125,7 +125,7 @@ double Type::doubleValue(const Object &a) {
 Object Type::get(const Object &a, const Object &b, bool invokeGetters) {
   //  std::cout << "get arguments: " << a.description() << "\n";
   //  std::cout << "   b: " << b.description() << "\n";
-  int ptr = 0;
+  ndx_t ptr = 0;
   // Allow overload of get using "subsref" method
   if (a.isClass() && _ctxt->_class->hasSubsref(a) && invokeGetters)
       return _ctxt->_class->subsref(a,b);
@@ -215,7 +215,7 @@ void Type::set(Object &a, const Object &args, const Object &b, bool invokeSetter
     }
   else
     {
-      dim_t arg_count = args.count();
+      ndx_t arg_count = args.count();
       Object args_rest = args;
       Object args_first = _ctxt->_list->empty();
       _ctxt->_list->push(args_first,_ctxt->_list->first(args_rest));
@@ -226,7 +226,7 @@ void Type::set(Object &a, const Object &args, const Object &b, bool invokeSetter
       Object asub(_ctxt);
       try {
 	asub = a.type()->get(a,args_first,true);
-      } catch (Exception &e) {
+      } catch (Exception &) {
 	asub = _ctxt->_list->makeScalar(a.type()->empty());
       }
 	if (!asub.isScalar()) 

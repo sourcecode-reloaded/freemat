@@ -90,6 +90,33 @@ Math/MatrixMultiply.hpp
 Math/MatrixPower.hpp
 Math/PowFunc.hpp
 Math/Transpose.hpp
+Types/AggregateType.hpp
+Types/AllTypes.hpp
+Types/AnonymousType.hpp
+Types/ArrayType.hpp
+Types/BoolType.hpp
+Types/BoundFunctionType.hpp
+Types/BreakpointType.hpp
+Types/CapturedType.hpp
+Types/CellType.hpp
+Types/ClassType.hpp
+Types/CodeType.hpp
+Types/DoubleType.hpp
+Types/FloatType.hpp
+Types/FunctionHandleType.hpp
+Types/FunctionType.hpp
+Types/HandleType.hpp
+Types/IntegerType.hpp
+Types/ListType.hpp
+Types/ModuleType.hpp
+Types/NumericType.hpp
+Types/ObjectArrayType.hpp
+Types/PODType.hpp
+Types/SingleType.hpp
+Types/SparseType.hpp
+Types/StringType.hpp
+Types/StructType.hpp
+Types/Type.hpp
 )
 
 add_executable( FMT
@@ -142,6 +169,7 @@ MatrixLeftDivide.cpp
 MatrixRightDivide.cpp  
 main.cpp
 #IEEEFP.cpp
+FMLib.cpp
 Frame.cpp
 VM.cpp
 ArrayFormatInfo.cpp

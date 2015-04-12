@@ -10,13 +10,13 @@ Object FM::MatrixLeftDivide(const Object &a, const Object &b, TermIF *io, FloatT
   if (a.rows() != b.rows()) throw Exception("Matrix left division (e.g., A\b) requires A and b to have the same number of rows");
   Object ret = ft->makeMatrix(a.cols(),b.cols(),a.isComplex() || b.isComplex());
   if (a.isComplex() || b.isComplex())
-    DenseSolveComplex<T>(a.rows(),a.cols(),b.cols(),
+    DenseSolveComplex<T>(a.irows(),a.icols(),b.icols(),
 			 reinterpret_cast<T*>(ft->rwComplex(ret)),
 			 reinterpret_cast<const T*>(ft->roComplex(ft->asComplex(a))),
 			 reinterpret_cast<const T*>(ft->roComplex(ft->asComplex(b))),
 			 io);
   else
-    DenseSolve<T>(a.rows(),a.cols(),b.cols(),
+    DenseSolve<T>(a.irows(),a.icols(),b.icols(),
 		  ft->rw(ret),ft->ro(a),ft->ro(b),io);
   return ret;
 }

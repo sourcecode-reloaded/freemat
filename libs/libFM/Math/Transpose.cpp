@@ -8,10 +8,10 @@ using namespace FM;
 const int BLOCKSIZE = 100; // Optimize?
 
 template <class T, int block>
-static void blocked_transpose(const T *A, T *B, int N, int M)
+static void blocked_transpose(const T *A, T *B, ndx_t N, ndx_t M)
 {
-  for (int i=0;i<N;i+=block)
-    for (int j=0;j<M;j+=block)
+  for (ndx_t i=0;i<N;i+=block)
+    for (ndx_t j=0;j<M;j+=block)
       for (int k=0;k<block;k++)
 	for (int n=0;n<block;n++)
 	  if (((j+n) < M) && ((i+k) < N))
@@ -19,10 +19,10 @@ static void blocked_transpose(const T *A, T *B, int N, int M)
 }
 
 template <class T, int block>
-static void blocked_transpose_complex(const T *A, T *B, int N, int M)
+static void blocked_transpose_complex(const T *A, T *B, ndx_t N, ndx_t M)
 {
-  for (int i=0;i<N;i+=block)
-    for (int j=0;j<M;j+=block)
+  for (ndx_t i=0;i<N;i+=block)
+    for (ndx_t j=0;j<M;j+=block)
       for (int k=0;k<block;k++)
 	for (int n=0;n<block;n++)
 	  if (((j+n) < M) && ((i+k) < N))

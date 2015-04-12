@@ -34,11 +34,11 @@ namespace FM
     void setBraces(Object &a, const Object &args, const Object &b);
     virtual Object getBraces(const Object &a, const Object &args);
     void computeArrayFormatInfo(FMFormatMode, const Object &a, ArrayFormatInfo &format) {
-      int maxwidth = 1;
+      ndx_t maxwidth = 1;
       //const Object *t = this->ro(a);
       for (ndx_t i=0;i<a.count();i++)
 	maxwidth = std::max<ndx_t>(maxwidth,a.description().length());
-      format.width = maxwidth+2;
+      format.width = int(maxwidth+2);
     }
     void printElement(const Object &a, const ArrayFormatInfo &info, ndx_t ndx);
   };

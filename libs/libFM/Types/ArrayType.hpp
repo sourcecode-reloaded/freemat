@@ -28,16 +28,16 @@ namespace FM
     bool _haveEmpty;
     Object getParensRowMode(const Object &a, const Tuple &dims, const Object &b);
     void erase(Object &a, const Object &args);
-    void erasePlanes(Object &a, const Object &mask, const Tuple &outdims, int non_colon_index);
+    void erasePlanes(Object &a, const Object &mask, const Tuple &outdims, ndx_t non_colon_index);
     void eraseRowIndexMode(Object &a, const Object &ndx);
     void eraseRows(Object &a, const Object &mask, const Tuple &outdims);
     Object convertArgumentsToIndexingExpressions(const Object &args);
     void resizeSlow(Object &a, const Tuple &newsize);
   protected:
     /* To make a concrete implementation of this class, you have to provide the following */
-    virtual void* allocateArray(dim_t size) const = 0;
-    virtual void releaseData(T* dst, dim_t size) const = 0;
-    virtual void freeData(T* ptr, dim_t size) const = 0;
+    virtual void* allocateArray(ndx_t size) const = 0;
+    virtual void releaseData(T* dst, ndx_t size) const = 0;
+    virtual void freeData(T* ptr, ndx_t size) const = 0;
     virtual T zeroElement() const = 0;
   public:
     ArrayType(ThreadContext* ctxt, const FMString &name) : Type(ctxt), _name(name) {
@@ -51,16 +51,16 @@ namespace FM
     }
     virtual Type* typeInstance() = 0;
     virtual const FMString& name() const {return _name;}
-    virtual Data* duplicateData(const ObjectBase *p, dim_t &reserve) const {
+    virtual Data* duplicateData(const ObjectBase *p, ndx_t &reserve) const {
       Data *q = new Data;
       q->refcnt = 1;
-      dim_t elem_count = p->dims.count();
+      ndx_t elem_count = p->dims.count();
       if ((p->flags & OBJECT_COMPLEX_FLAG) != 0) elem_count *= 2;
-      reserve = std::max<size_t>(elem_count*2,min_capacity);
+      reserve = std::max<ndx_t>(elem_count*2,min_capacity);
       q->ptr = allocateArray(reserve);
       const T *pd = static_cast<const T*>(p->data->ptr) + p->offset;
       T *Tptr = static_cast<T*>(q->ptr);
-      for (dim_t i=0;i<elem_count;i++)
+      for (ndx_t i=0;i<elem_count;i++)
 	Tptr[i] = pd[i];
       return q;
     }
@@ -77,7 +77,7 @@ namespace FM
       delete p;
     }
     // use placement new?
-    ObjectBase * makeObjectBaseOfCapacity(dim_t capacity) {
+    ObjectBase * makeObjectBaseOfCapacity(ndx_t capacity) {
       Data *q = new Data;
       q->refcnt = 0;
       q->ptr = allocateArray(capacity);
@@ -91,7 +91,7 @@ namespace FM
 	pool->push(makeObjectBaseOfCapacity(min_capacity));
       }
     }
-    ObjectBase* getObjectBase(dim_t capacity) {
+    ObjectBase* getObjectBase(ndx_t capacity) {
       if (capacity <= min_capacity)
 	{
 	  if (pool->isEmpty())
@@ -107,17 +107,17 @@ namespace FM
       Object ret = this->zeroArrayOfSize(target.dims(),target.isComplex());
       T* op = this->rw(ret);
       const T* ip = them->ro(target);
-      dim_t elem_count = ret.count();
+      ndx_t elem_count = ret.count();
       if (target.isComplex()) elem_count *= 2;
-      for (dim_t i=0;i<elem_count;i++)
+      for (ndx_t i=0;i<elem_count;i++)
 	op[i] = ip[i];
       return ret;
     }
     Object zeroArrayOfSize(const Tuple & dims, bool isComplex) {
-      dim_t count = dims.count();
+      ndx_t count = dims.count();
       if ((count == 1) && !isComplex) return zeroScalar();
       if (isComplex) count *= 2;
-      dim_t capacity = (2*count < min_capacity) ? min_capacity : 2*count;
+      ndx_t capacity = (2*count < min_capacity) ? min_capacity : 2*count;
       ObjectBase *p = getObjectBase(capacity);
       p->dims = dims;
       p->flags = 0;
@@ -126,20 +126,20 @@ namespace FM
       if (capacity < min_capacity)
 	{
 	  T* dp = static_cast<T*>(p->data->ptr);
-	  for (dim_t i=0;i<capacity;i++)
+	  for (ndx_t i=0;i<capacity;i++)
 	    dp[i] = zeroElement();
 	}
       return Object(p);    
     }
-    Object makeMatrixComplex(dim_t rows, dim_t cols) {
+    Object makeMatrixComplex(ndx_t rows, ndx_t cols) {
       return makeMatrix(rows,cols,true);
     }
-    Object makeMatrix(dim_t rows, dim_t cols, bool isComplex = false) {
+    Object makeMatrix(ndx_t rows, ndx_t cols, bool isComplex = false) {
       if (rows == 1 && cols == 1 && !isComplex)
 	return zeroScalar();
-      dim_t count = rows*cols;
+      ndx_t count = rows*cols;
       if (isComplex) count *= 2;
-      dim_t capacity = (2*count < min_capacity) ? min_capacity : 2*count;
+      ndx_t capacity = (2*count < min_capacity) ? min_capacity : 2*count;
       ObjectBase *p = getObjectBase(capacity);
       p->dims.setMatrixSize(rows,cols);
       p->flags = 0;
@@ -148,7 +148,7 @@ namespace FM
       if (capacity < min_capacity)
 	{
 	  T* dp = static_cast<T*>(p->data->ptr);
-	  for (dim_t i=0;i<capacity;i++)
+	  for (ndx_t i=0;i<capacity;i++)
 	    dp[i] = zeroElement();
 	}
       return Object(p);
@@ -208,12 +208,12 @@ namespace FM
     bool equals(const Object &a, const Object &b) {
       if (a.type()->code() != b.type()->code()) return false;
       if (!(a.dims() == b.dims())) return false;
-      size_t element_count = a.dims().count();
+      ndx_t element_count = a.dims().count();
       if ((a.flags() & OBJECT_COMPLEX_FLAG) ^ (b.flags() & OBJECT_COMPLEX_FLAG)) return false;
       if (a.flags() & OBJECT_COMPLEX_FLAG) element_count *= 2;
       const T* ap = this->ro(a);
       const T* bp = this->ro(b);
-      for (dim_t i=0;i<element_count;i++)
+      for (ndx_t i=0;i<element_count;i++)
 	if (!(ap[i] == bp[i])) return false;
       return true;
     }
@@ -236,15 +236,15 @@ namespace FM
     Object sliceColumn(const Object &p, ndx_t col) {
       // TODO - Check!
       ObjectBase *q = new ObjectBase(p.d->data,p.d->type,
-				     (col-1)*p.d->dims.rows(),
+				     size_t((col-1)*p.d->dims.rows()),
 				     Tuple(p.d->dims.rows(),1),
 				     p.d->flags,
 				     p.d->dims.rows());
       q->refcnt = 0;
       return Object(q);
     }
-    Object getRowIndexMode(const Object &a, const Object &b);
-    Object getSliceMode(const Object &a, Object *c, int cnt, int last_colon);
+    //    Object getRowIndexMode(const Object &a, const Object &b);
+    Object getSliceMode(const Object &a, Object *c, ndx_t cnt, ndx_t last_colon);
     virtual Object getParens(const Object &a, const Object &b);
     void setParensRowIndexMode(Object &a, const Object &ndx, const Object &b);
     virtual void setParens(Object &a, const Object &args, const Object &b);
@@ -266,7 +266,7 @@ namespace FM
 	}
       resizeSlow(a,newsize);
     }
-    virtual Object NCat(const Object &p, int dimension);
+    virtual Object NCat(const Object &p, ndx_t dimension);
     virtual Object Transpose(const Object &a) {return MatrixTranspose<T>(a);}
   };
 

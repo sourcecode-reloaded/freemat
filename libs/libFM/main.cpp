@@ -92,7 +92,7 @@ void compileModule(ThreadContext *ctxt, const FMString &name, HashMap<Object> &c
   }
 }
 
-Object strcmp(const Object &args, int nargout, ThreadContext *ctxt) {
+Object strcmp(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   if (args.count() != 2) throw Exception("strcmp requires two arguments");
   const Object &x = ctxt->_list->first(args);
   const Object &y = ctxt->_list->second(args);
@@ -101,76 +101,76 @@ Object strcmp(const Object &args, int nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->_bool->makeScalar(false));
 }
 
-Object size(const Object &args, int nargout, ThreadContext *ctxt) {
+Object size(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   Tuple dims(Tuple::canonicalForm(ctxt->_list->ro(args)[0].dims()));
   Object ret(ctxt->_double->makeMatrix(1,dims.dimensions()));
-  for (int i=0;i<dims.dimensions();i++)
-    ctxt->_double->rw(ret)[i] = dims.dimension(i);
+  for (auto i=0;i<dims.dimensions();i++)
+    ctxt->_double->rw(ret)[i] = double(dims.dimension(i));
   return ctxt->_list->makeScalar(ret);
 }
 
-Object print(const Object &args, int nargout, ThreadContext *ctxt) {
+Object print(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   ctxt->_io->output("\n\nPrint:" + args.description() + "\n\n");
   return ctxt->_list->empty();
 }
 
-Object handir(const Object &args, int nargout, ThreadContext *ctxt) {
+Object handir(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   for (auto p : ctxt->_handles) {
     ctxt->_io->output(" Handle class: " + Stringify(p) + "\n");
   }
   return ctxt->_list->empty();
 }
 
-Object numel(const Object &args, int nargout, ThreadContext *ctxt) {
-  return ctxt->_list->makeScalar(ctxt->_double->makeScalar(ctxt->_list->ro(args)[0].count()));
+Object numel(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+	return ctxt->_list->makeScalar(ctxt->_double->makeScalar(double(ctxt->_list->ro(args)[0].count())));
 }
 
 
-Object tot_int8(const Object &args, int nargout, ThreadContext *ctxt) {
+Object tot_int8(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->t_int8->convert(ctxt->_list->ro(args)[0]));
 }
 
-Object tot_int16(const Object &args, int nargout, ThreadContext *ctxt) {
+Object tot_int16(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->t_int16->convert(ctxt->_list->ro(args)[0]));
 }
 
-Object tot_int32(const Object &args, int nargout, ThreadContext *ctxt) {
+Object tot_int32(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->t_int32->convert(ctxt->_list->ro(args)[0]));
 }
 
-Object tot_int64(const Object &args, int nargout, ThreadContext *ctxt) {
+Object tot_int64(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->t_int64->convert(ctxt->_list->ro(args)[0]));
 }
 
-Object to_uint8(const Object &args, int nargout, ThreadContext *ctxt) {
+Object to_uint8(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->_uint8->convert(ctxt->_list->ro(args)[0]));
 }
 
-Object to_uint16(const Object &args, int nargout, ThreadContext *ctxt) {
+Object to_uint16(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->_uint16->convert(ctxt->_list->ro(args)[0]));
 }
 
-Object to_uint32(const Object &args, int nargout, ThreadContext *ctxt) {
+Object to_uint32(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->_uint32->convert(ctxt->_list->ro(args)[0]));
 }
 
-Object to_uint64(const Object &args, int nargout, ThreadContext *ctxt) {
+Object to_uint64(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->_uint64->convert(ctxt->_list->ro(args)[0]));
 }
 
-Object to_double(const Object &args, int nargout, ThreadContext *ctxt) {
+Object to_double(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->_double->convert(ctxt->_list->ro(args)[0]));
 }
 
-Object to_single(const Object &args, int nargout, ThreadContext *ctxt) {
+Object to_single(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->_single->convert(ctxt->_list->ro(args)[0]));
 }
 
-Object backtrace(const Object &args, int nargout, ThreadContext *ctxt) {
+Object backtrace(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->_vm->backtrace());
 }
 
-Object dblist(const Object &args, int nargout, ThreadContext *ctxt) {
+Object dblist(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   if (ctxt->_globals->isDefined("_dblist"))
     {
       Object dblist = ctxt->_globals->get("_dblist",ctxt);
@@ -182,7 +182,7 @@ Object dblist(const Object &args, int nargout, ThreadContext *ctxt) {
 
 // Create an addlistener method for the handle class
 
-Object classfunc(const Object &args, int nargout, ThreadContext *ctxt) {
+Object classfunc(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   const Object &x = ctxt->_list->ro(args)[0];
   if (!x.isClass())
     return ctxt->_list->makeScalar(ctxt->_string->makeString(x.type()->name()));
@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
   // Use Boost to analyze the dependencies
   FMMap<FMString,int> name_to_node_map;
   FMMap<int,FMString> node_to_name_map;
-  int nodectr = 0;
+  auto nodectr = 0;
   for (auto i=classes.begin();i!=classes.end();++i)
     {
       std::cout << "Assigning class " << i->first << " to node " << nodectr << "\n";
@@ -247,14 +247,14 @@ int main(int argc, char *argv[])
 
   for (auto i=classes.begin();i!=classes.end();++i)
     {
-      int src = name_to_node_map[ctxt->_string->str(i->first)];
+      auto src = name_to_node_map[ctxt->_string->str(i->first)];
       Object dependencies = ctxt->_module->ro(i->second)->m_dependencies;
-      for (int j=0;j<dependencies.count();j++) {
+      for (auto j=0;j<dependencies.count();j++) {
 	Object dependency = ctxt->_list->ro(dependencies)[j];
 	FMString dependency_name = ctxt->_string->str(dependency);
 	if (name_to_node_map.contains(dependency_name))
 	  {
-	    int dst = name_to_node_map[dependency_name];
+	    auto dst = name_to_node_map[dependency_name];
 	    std::cout << "Class " << src << " depends on class " << dst << "\n";
 	    edge_list.push_back(std::make_pair(dst,src));
 	  }
@@ -420,7 +420,7 @@ int main(int argc, char *argv[])
 	  }
       } catch (const FM::Exception &e) {
 	std::cout << "Exception: " << e.msg() << "\n";
-      } catch (const VMDBQuitException &x) {
+      } catch (const VMDBQuitException &) {
       }
     }
 

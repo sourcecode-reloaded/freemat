@@ -22,12 +22,12 @@ Object NumericType<T,codeNum>::asIndexNoBoundsCheck(const Object &a)
       // TODO - add message catalog with numbers and translations
       std::cout << "WARNING: Complex part of index ignored\r\n";
     }
-  dim_t len = a.dims().count();
+  ndx_t len = a.dims().count();
   Object output = Type::_ctxt->_index->makeMatrix(len,1);
   ndx_t *op = Type::_ctxt->_index->rw(output);
   const T *ip = this->ro(a);
-  dim_t incr = (a.isComplex() ? 2 : 1);
-  for (dim_t i=0;i<len;i++)
+  ndx_t incr = (a.isComplex() ? 2 : 1);
+  for (ndx_t i=0;i<len;i++)
     {
       op[i] = static_cast<ndx_t>(*ip)-1;
       if (op[i] < 0) throw Exception("Index values must be >= 1");
@@ -42,42 +42,42 @@ Object NumericType<T,codeNum>::asLogical(const Object &a)
   if (codeNum == TypeBool) return a;
   Object output = Type::_ctxt->_bool->zeroArrayOfSize(a.dims(),false);
   bool *op = Type::_ctxt->_bool->rw(output);
-  dim_t len = a.dims().count();
+  ndx_t len = a.dims().count();
   if (a.isComplex())
     {
       const FM::Complex<T> *ip = reinterpret_cast<const FM::Complex<T> *>(this->ro(a));
-      for (dim_t i=0;i<len;i++)	
+      for (ndx_t i=0;i<len;i++)	
 	op[i] = ((ip[i].r != 0) || (ip[i].i != 0));
     }
   else
     {
       const T* ip = static_cast<const T*>(this->ro(a));
-      for (dim_t i=0;i<len;i++)
+      for (ndx_t i=0;i<len;i++)
 	op[i] = (ip[i] != 0);
     }
   return output;
 }
 
 template <class T, FM::DataCode codeNum>
-Object NumericType<T,codeNum>::asIndex(const Object &a, dim_t max)
+Object NumericType<T,codeNum>::asIndex(const Object &a, ndx_t max)
 {
   if (!a.isComplex() && a.isScalar())
     {
-      T aval = this->scalarValue(a);
+      ndx_t aval = static_cast<ndx_t>(this->scalarValue(a));
       if ((aval < 1) || (aval > max)) throw Exception("Index out of range");
-      return Type::_ctxt->_index->makeScalar(static_cast<ndx_t>(aval)-1);
+      return Type::_ctxt->_index->makeScalar(aval-1);
     }
   if (a.isComplex())
     {
       // TODO - add message catalog with numbers and translations
       std::cout << "WARNING: Complex part of index ignored\r\n";
     }
-  dim_t len = a.dims().count();
+  ndx_t len = a.dims().count();
   Object output = Type::_ctxt->_index->makeMatrix(len,1);
   ndx_t *op = Type::_ctxt->_index->rw(output);
   const T *ip = this->ro(a);
-  dim_t incr = (a.isComplex() ? 2 : 1);
-  for (dim_t i=0;i<len;i++)
+  ndx_t incr = (a.isComplex() ? 2 : 1);
+  for (ndx_t i=0;i<len;i++)
     {
       op[i] = static_cast<ndx_t>(*ip)-1;
       if (op[i] < 0) throw Exception("Index values must be >= 1");
@@ -95,10 +95,10 @@ Object NumericType<T,codeNum>::asComplex(const Object &a)
   if (a.isScalar())
     return this->makeComplex(this->scalarValue(a),0);
   Object ret = this->zeroArrayOfSize(a.dims(),true);
-  dim_t len = a.dims().count();
+  ndx_t len = a.dims().count();
   Complex<T> *op = this->rwComplex(ret);
   const T*ip = this->ro(a);
-  for (dim_t i=0;i<len;i++)
+  for (ndx_t i=0;i<len;i++)
     op[i] = Complex<T>(ip[i]);
   return ret;
 }
@@ -108,7 +108,7 @@ Object NumericType<T,codeNum>::convert(const Object &a)
 {
   if (this->code() == a.type()->code()) return a;
   Object ret = this->zeroArrayOfSize(a.dims(),a.isComplex());
-  dim_t len = a.dims().count();
+  ndx_t len = a.dims().count();
   T* op = this->rw(ret);
   if (a.isComplex()) len *= 2;
   switch (a.type()->code())
@@ -202,25 +202,6 @@ bool NumericType<T,codeNum>::anyNonzeroImaginary(const Object &a) {
 }
 
 template <typename T, FM::DataCode codeNum>
-bool NumericType<T,codeNum>::isSymmetric(const Object &a) {
-  if (!a.isSquare()) throw Exception("Cannot test non-square matrices for symmetry");
-  ndx_t N = a.rows();
-  if (a.isComplex()) {
-    const Complex<T>* ap = this->roComplex(a);
-    for (ndx_t i=0;i<N;i++)
-      for (ndx_t j=0;j<=i;j++)
-	if (ap[i*N+j] != complex_conj(ap[j*N+i])) return false;
-    return true;
-  } else {
-    const T* ap = this->ro(a);
-    for (ndx_t i=0;i<N;i++)
-      for (ndx_t j=0;j<i;j++)
-	if (ap[i*N+j] != ap[j*N+i]) return false;
-    return true;
-  }
-}
-
-template <typename T, FM::DataCode codeNum>
 Object NumericType<T,codeNum>::getDiagonal(const Object &a) {
   if (!a.isSquare()) throw Exception("Cannot get diagonal of non-square matrix");
   ndx_t N = a.rows();
@@ -228,12 +209,12 @@ Object NumericType<T,codeNum>::getDiagonal(const Object &a) {
   if (a.isComplex()) {
     const Complex<T> *ap = this->roComplex(a);
     Complex<T> *rp = this->rwComplex(ret);
-    for (int i=0;i<N;i++)
+    for (auto i=0;i<N;i++)
       rp[i] = ap[i*N+i];
   } else {
     const T *ap = this->ro(a);
     T *rp = this->rw(ret);
-    for (int i=0;i<N;i++)
+    for (auto i=0;i<N;i++)
       rp[i] = ap[i*N+i];
   }
   return ret;
@@ -260,14 +241,14 @@ Object NumericType<T,codeNum>::asDiagonalMatrix(const Object &a) {
 template <typename T, FM::DataCode codeNum>
 void NumericType<T,codeNum>::fill(Object &a, T val) {
   T* ap = this->rw(a);
-  for (ndx_t i=0;i<a.count();i++)
+  for (auto i=0;i<a.count();i++)
     ap[i] = val;
 }
 
 template <typename T, FM::DataCode codeNum>
 void NumericType<T,codeNum>::fillComplex(Object &a, Complex<T> val) {
   Complex<T> *ap = this->rwComplex(a);
-  for (ndx_t i=0;i<a.count();i++)
+  for (auto i=0;i<a.count();i++)
     ap[i] = val;
 }
 
@@ -282,6 +263,5 @@ template class FM::NumericType<int32_t,TypeInt32>;
 template class FM::NumericType<uint32_t,TypeUInt32>;
 template class FM::NumericType<int64_t,TypeInt64>;
 template class FM::NumericType<uint64_t,TypeUInt64>;
-template class FM::NumericType<bool,TypeBool>;
 template class FM::NumericType<ndx_t,TypeIndex>;
 template class FM::NumericType<FMChar,TypeString>;

@@ -560,18 +560,18 @@ reg_t Compiler::doubleColon(const Tree &t) {
 
 const_t Compiler::getCellID(const FMString & t) {
   ndx_t nd1 = indexOfStringInList(_ctxt,_code->_freelist,t);
-  if (nd1 != -1) return nd1;
+  if (nd1 != -1) return const_t(nd1);
   nd1 = indexOfStringInList(_ctxt,_code->_capturedlist,t);
   if (nd1 == -1) throw Exception("Cannot find cell ID for " + t);
   nd1 += _code->_freelist.count();
-  return nd1;
+  return const_t(nd1);
 }
 
 const_t Compiler::getNameID(const FMString & t) {
   ndx_t n = indexOfStringInList(_ctxt,_code->_namelist,t);
   if (n == -1)
     throw Exception("Internal compiler error - encountered unexpected name '" + t + "'");
-  return n;
+  return const_t(n);
 }
 
 const_t Compiler::getConstantID(const FMString & t) {
@@ -583,9 +583,9 @@ const_t Compiler::getConstantID(const Object & t) {
   if (ndx < 0)
     {
       _ctxt->_list->push(_code->_constlist,t);
-      return _code->_constlist.count()-1;
+      return const_t(_code->_constlist.count()-1);
     }
-  return ndx;
+  return const_t(ndx);
 }
 
 void Compiler::saveRegisterToName(const FMString &varname, reg_t b) {
@@ -1173,7 +1173,7 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
   reg_t lhsCount = getRegister();
   emit(OP_ZERO,lhsCount);
   std::vector<reg_t> lens;
-  for (int ind=0;ind<s.size();ind++)
+  for (unsigned ind=0;ind<s.size();ind++)
     {
       const Tree &t = s[ind];
       FMString varname = t.first().text();
@@ -1204,7 +1204,7 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
   emit(OP_CALL,returns,func,args);
   // Now we allocate the resulting assignments
   int ret_length_ptr = 0;
-  for (int ind=0;ind<s.size();++ind)
+  for (unsigned ind=0;ind<s.size();++ind)
     {
       const Tree &t = s[ind];
       FMString varname = t.first().text();
@@ -1940,7 +1940,7 @@ void PrintInsn(int ip, const Instruction &i)
 void PrintBasicBlock(BasicBlock *b)
 {
   printf("  Block %p\n",b);
-  for (int i=0;i<b->_insnlist.size();i++)
+  for (unsigned i=0;i<b->_insnlist.size();i++)
     PrintInsn(i,b->_insnlist[i]);
 }
 
@@ -1960,7 +1960,7 @@ void PrintCodeBlock(CodeBlock *_code)
   std::cout << "Free:  " << _code->_freelist << "\n";
   std::cout << "Captured:  " << _code->_capturedlist << "\n";
   std::cout << "Code:\n";
-  for (int j=0;j<_code->_blocklist.size();j++)
+  for (unsigned j=0;j<_code->_blocklist.size();j++)
     PrintBasicBlock(_code->_blocklist[j]);
 }
 
@@ -1987,7 +1987,7 @@ void FM::DumpBasicBlock(BasicBlock *b, int offset)
   printf("  offset    : %d\n",b->_offset);
   printf("  seen      : %d\n",b->_seen);
   printf("  insn count: %lu\n",b->_insnlist.size());
-  for (int i=0;i<b->_insnlist.size();++i)
+  for (unsigned i=0;i<b->_insnlist.size();++i)
     PrintInsn(i+offset,b->_insnlist[i]);
 }
 
@@ -2058,20 +2058,20 @@ void FM::Disassemble(ThreadContext *_ctxt, const Object &p)
   std::cout << "Varargout : " << dp->m_varargout << "\n";
   const Object* cp = _ctxt->_list->ro(dp->m_consts);
   std::cout << "Consts    : ";
-  for (dim_t i=0;i<dp->m_consts.count();i++)
+  for (ndx_t i=0;i<dp->m_consts.count();i++)
     std::cout << cp[i].brief() << ", ";
   std::cout << "\n";
   std::cout << "Line No   : " << dp->m_lineno << "\n";
   std::vector<uint16_t> line_nos;
   rle_decode_line_nos(_ctxt->_uint32->ro(dp->m_lineno),
-		      dp->m_lineno.count(),line_nos);
+			      unsigned(dp->m_lineno.count()),line_nos);
   Object code = dp->m_code;
   const insn_t *opcodes = _ctxt->_uint64->ro(code);
   std::cout << "Code: " << code.dims().count() << " length\n";
   //  assert(code.count() == line_nos.size());
-  for (dim_t i=0;i<code.dims().count();++i)
+  for (unsigned i=0;i<code.dims().count();++i)
     PrintInsn(line_nos[i],i,opcodes[i]);
-  for (dim_t i=0;i<dp->m_consts.count();i++)
+  for (ndx_t i=0;i<dp->m_consts.count();i++)
     if (cp[i].is(TypeCode) || cp[i].is(TypeFunction))
       {
 	std::cout << "     ***** Nested Routine ****\n";

@@ -56,7 +56,7 @@ namespace FM
     inline Tree third() const {return d->m_children.at(2);}
     inline bool is(TokenValueType tok) const {return (token()==tok);}
     inline bool anyChildrenAre(TokenValueType tok) const {
-      for (int i=0;i<d->m_children.size();i++) 
+      for (unsigned i=0;i<d->m_children.size();i++) 
 	if (d->m_children.at(i).is(tok)) 
 	  return true; 
       return false;

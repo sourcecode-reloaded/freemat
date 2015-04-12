@@ -20,7 +20,7 @@ inline void rle_encode_line_nos(const std::vector<uint16_t> &line_dat, std::vect
   if (line_dat.size() > 1) {
     uint16_t prev = line_dat[0];
     int count = 1;
-    for (int i=1;i<line_dat.size();i++) {
+    for (unsigned i=1;i<line_dat.size();i++) {
       if (line_dat[i] != prev) {
 	rle.push_back(to_rle(prev,count));
 	prev = line_dat[i];
@@ -34,15 +34,15 @@ inline void rle_encode_line_nos(const std::vector<uint16_t> &line_dat, std::vect
     rle.push_back(to_rle(line_dat[0],1));
 }
 
-inline void rle_decode_line_nos(const uint32_t *p, int cnt, std::vector<uint16_t> &line_dat)
+inline void rle_decode_line_nos(const uint32_t *p, unsigned cnt, std::vector<uint16_t> &line_dat)
 {
   line_dat.clear();
   int ptr = 0;
-  for (int i=0;i<cnt;i++) {
+  for (unsigned i=0;i<cnt;i++) {
     uint16_t rval;
     uint32_t rcnt;
     unpack_rle(p[i],rval,rcnt);
-    for (int j=0;j<rcnt;j++)
+    for (uint32_t j=0;j<rcnt;j++)
       line_dat.push_back(rval);
   }
 }

@@ -22,7 +22,7 @@ namespace FM
   template <class T, class S>
   struct OpRangeConvert<Complex<T>,Complex<S> >
   {
-    inline static void rangeConvert(Complex<T> &y, const Complex<T> &x) {
+    inline static void rangeConvert(Complex<T> &y, const Complex<S> &x) {
       OpRangeConvert<T,S>::rangeConvert(y.r,x.r);
       OpRangeConvert<T,S>::rangeConvert(y.i,x.i);
     }
@@ -117,14 +117,14 @@ namespace FM
   struct OpRangeConvert<float,double>
   {
     inline static void rangeConvert(float& y, const double &x) {
-      y = x; // Check for under/overflow?
+      y = float(x); // Check for under/overflow?
     }
   };
 
   template <class T, class S>
-  void convertLoop(const S* ip, T* op, dim_t len)
+  void convertLoop(const S* ip, T* op, ndx_t len)
   {
-    for (dim_t i=0;i<len;i++)
+    for (ndx_t i=0;i<len;i++)
       OpRangeConvert<T,S>::rangeConvert(op[i],ip[i]);
   }
 }

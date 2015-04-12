@@ -9,7 +9,7 @@
 namespace FM
 {
 
-  class ThreadContext;
+  struct ThreadContext;
   
   template <class T>
   using SparseSlice = FMMap<ndx_t, T>;

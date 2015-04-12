@@ -4,7 +4,7 @@
 #include "Object.hpp"
 
 namespace FM {
-  Object builtin_gc(const Object &args, int nargout, ThreadContext *ctxt);
+  Object builtin_gc(const Object &args, ndx_t nargout, ThreadContext *ctxt);
 }
 
 #endif
