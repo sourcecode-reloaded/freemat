@@ -23,8 +23,8 @@
 #include "TypeUtils.hpp"
 #include "Globals.hpp"
 #include "SparseType.hpp"
-#include <readline.h>
-#include <history.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 //#include <valarray>
 

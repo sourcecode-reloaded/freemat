@@ -133,21 +133,21 @@ namespace FM
 
   template <>
   inline int64_t complex_abs(int64_t real, int64_t imag) {
-	  int64_t swap;
-	  if (real < 0)
-		  real = -real;
-	  if (imag < 0)
-		  imag = -imag;
-	  if (imag > real){
-		  swap = real;
-		  real = imag;
-		  imag = swap;
-	  }
-	  if ((real + imag) == real)
-		  return(real);
-	  long double temp = long double(imag) / long double(real);
-	  temp = real*sqrtl(1.0 + temp*temp);  /*overflow!!*/
-	  return(int64_t(temp));
+    int64_t swap;
+    if (real < 0)
+      real = -real;
+    if (imag < 0)
+      imag = -imag;
+    if (imag > real){
+      swap = real;
+      real = imag;
+      imag = swap;
+    }
+    if ((real + imag) == real)
+      return(real);
+    long double temp = (long double)(imag) / (long double)(real);
+    temp = real*sqrtl(1.0 + temp*temp);  /*overflow!!*/
+    return(int64_t(temp));
   }
 
   template <typename T>

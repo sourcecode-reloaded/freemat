@@ -176,6 +176,9 @@ namespace FM
     inline ObjectBase* raw() const {
       return d;
     }
+    inline const Tuple& rodims() const {
+      return d->dims;
+    }
     inline const Tuple& dims() const {
       return d->dims;
     }

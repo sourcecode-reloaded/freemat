@@ -21,8 +21,8 @@
 #include "LineNumbers.hpp"
 #include "FileSystem.hpp"
 // TODO Move this out of VM...
-#include <readline.h>
-#include <history.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 #include "Debug.hpp"
 #include "Globals.hpp"
 
@@ -904,7 +904,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		REG1 = _ctxt->_list->makeScalar(makeCellFromList(_ctxt,REG2));
 		break;
 	      case OP_END:
-		REG1 = _ctxt->_double->makeScalar(double(REG2.dims().dimension(ndx_t(_ctxt->_double->scalarValue(REG3)))));
+		REG1 = _ctxt->_double->makeScalar(double(REG2.rodims().dimension(ndx_t(_ctxt->_double->scalarValue(REG3)))));
 		break;
 		/*
 		  case OP_LOAD_GLOBAL:

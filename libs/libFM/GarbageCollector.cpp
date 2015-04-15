@@ -6,26 +6,28 @@ using namespace FM;
 using children_list = std::multiset<ObjectBase*>;
 using connections = std::map<ObjectBase*,children_list>;
 
-class FM::VisitAncestors : public ObjectVisitor {
-  ObjectBase* me;
-  children_list &my_kids;
-  ThreadContext *my_ctxt;
-public:
-  FM::VisitAncestors(ObjectBase *root, children_list &descendents, ThreadContext *ctxt) : me(root), my_kids(descendents), my_ctxt(ctxt) 
-  {
-    std::cout << "Initializing visitor with base " << root << "\n";
-  }
-  void operator()(const Object &p) {
-    std::cout << "  Visit " << p.raw() << " of type code " << p.typeCode() << " with brief " << p.brief() << "\n";
-    if (p.isEmpty()) return;
-    if (p.isClass() && (my_ctxt->_class->isHandle(p))) {
-      std::cout << "Found descendant with base " << p.raw() << "\n";
-      my_kids.insert(p.raw());
-      return;
+namespace FM {
+  class VisitAncestors : public ObjectVisitor {
+    ObjectBase* me;
+    children_list &my_kids;
+    ThreadContext *my_ctxt;
+  public:
+    VisitAncestors(ObjectBase *root, children_list &descendents, ThreadContext *ctxt) : me(root), my_kids(descendents), my_ctxt(ctxt) 
+    {
+      std::cout << "Initializing visitor with base " << root << "\n";
     }
-    p.type()->visitContainedObjects(p.raw(),*this);
-  }
-};
+    void operator()(const Object &p) {
+      std::cout << "  Visit " << p.raw() << " of type code " << p.typeCode() << " with brief " << p.brief() << "\n";
+      if (p.isEmpty()) return;
+      if (p.isClass() && (my_ctxt->_class->isHandle(p))) {
+	std::cout << "Found descendant with base " << p.raw() << "\n";
+	my_kids.insert(p.raw());
+	return;
+      }
+      p.type()->visitContainedObjects(p.raw(),*this);
+    }
+  };
+}
 
 Object FM::builtin_gc(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   // First, copy the refcnts to the gc_refcnts

@@ -3,7 +3,9 @@ PROJECT(FMT CXX C)
 
 
 FIND_PACKAGE(PythonInterp REQUIRED)
-set(Boost_USE_STATIC_LIBS ON)
+if (WINDOWS)
+  set(Boost_USE_STATIC_LIBS ON)
+endif ()
 FIND_PACKAGE(Boost COMPONENTS system timer chrono filesystem thread date_time)
 include_directories(${Boost_INCLUDE_DIRS})
 
@@ -33,14 +35,14 @@ include_directories(${PROJECT_SOURCE_DIR})
 #find_library(VEC_LIB NAMES Veclib) 
 
 find_library(READLINE_LIBRARY NAMES readline readline-32)
-find_path(READLINE_INCLUDE_DIR NAMES readline.h)
+find_path(READLINE_INCLUDE_DIR NAMES readline.h PATH_SUFFIXES readline)
+
 include_directories(${READLINE_INCLUDE_DIR})
 
 set(HEADERS
 Algorithms.hpp
 ArrayFormatInfo.hpp
 BinOp.hpp
-Complex.hpp
 Convert.hpp
 Debug.hpp
 Exception.hpp
@@ -52,12 +54,6 @@ GarbageCollector.hpp
 Globals.hpp
 HandleClass.hpp
 HashMap.hpp
-IEEEFP.hpp
-LineNumbers.hpp
-Math.hpp
-MatrixDivide.hpp
-MatrixLeftDivide.hpp
-MatrixRightDivide.hpp
 MemPtr.hpp
 NCat.hpp
 Object.hpp
@@ -70,6 +66,7 @@ Tuple.hpp
 TypeUtils.hpp
 UnaryOp.hpp
 VM.hpp
+LineNumbers.hpp
 Compiler/Assembler.hpp
 Compiler/Code.hpp
 Compiler/EndRemover.hpp
@@ -90,6 +87,12 @@ Math/MatrixMultiply.hpp
 Math/MatrixPower.hpp
 Math/PowFunc.hpp
 Math/Transpose.hpp
+Math/IEEEFP.hpp
+Math/Math.hpp
+Math/MatrixDivide.hpp
+Math/MatrixLeftDivide.hpp
+Math/MatrixRightDivide.hpp
+Math/Complex.hpp
 Types/AggregateType.hpp
 Types/AllTypes.hpp
 Types/AnonymousType.hpp
@@ -152,6 +155,8 @@ Math/MatrixMultiply.cpp
 Math/EigenDecompose.cpp
 Math/MatrixPower.cpp
 Math/MatrixInvert.cpp
+Math/MatrixLeftDivide.cpp  
+Math/MatrixRightDivide.cpp  
 Compiler/Tree.cpp
 Compiler/EndRemover.cpp
 Compiler/NestedFunctionMover.cpp
@@ -165,8 +170,6 @@ Compiler/Assembler.cpp
 NCat.cpp
 HashMap.cpp
 ThreadContext.cpp
-MatrixLeftDivide.cpp  
-MatrixRightDivide.cpp  
 main.cpp
 #IEEEFP.cpp
 FMLib.cpp
