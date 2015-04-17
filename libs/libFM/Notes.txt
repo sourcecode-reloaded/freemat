@@ -2739,5 +2739,57 @@ UGH!
 The dim_t, ndx_t, int, size_t stuff is crazy!!
 Replace all with one generic integer type (pick ndx_t).
 
+********************************************************************************
+
+Need a readline-type interface.  Something like:
+
+
+1. Create an Interpreter class
+
+Interpreter {
+  void evaluateString(QString text);
+  void completeString(QString prefix);
+  QString getPrompt();
+}
+
+The problem is that the current design requires the VM to recurse on a
+call to "getline".  What we want here, is that when a debug context is
+entered, that the interpreter actually returns control to the caller.
+
+The problem is that currently, the C++ stack is helping the
+implementation of the VM.  Consider the case of a breakpoint, in which
+case the call stack will look like:
+
+evaluateString("foo")
+--> ReserveFrame("foo")
+--> DebugCycle()
+--> ??
+
+At this point, if DebugCycle exits, we will be left with the need to
+prevent the ReserveFrame destructor from cleaning up the frame.
+ 
+That leaves two possibilities.  One is to _not_ use the C++ stack, but
+implement a separate state stack that keeps track of exactly which
+frames should be popped from the execution stack.  The second
+possibility is to use a callback mechanism into the interpreter
+class.  This approach is simpler, but it isn't as clean from the
+client side.  We need something like:
+
+Interpreter {
+  void evaluateString(QString text);
+  void completeString(QString prefix);
+  QString getPrompt();
+  void setCallback(QString (*getString)(QString prompt));
+}
+
+For the first one, we could add a condition to the FrameReserver -
+something like:
+
+FrameReserver myframe(this)
+
+An alternative would be to use TermIF!  The debugCycle messenger could
+make calls to TermIF.  When an Interpreter is spun up, it could set up
+TermIF to do the right thing.  I like that idea...
+
 
 
