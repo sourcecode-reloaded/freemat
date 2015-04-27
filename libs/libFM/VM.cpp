@@ -20,9 +20,6 @@
 #include "TypeUtils.hpp"
 #include "LineNumbers.hpp"
 #include "FileSystem.hpp"
-// TODO Move this out of VM...
-#include <readline/readline.h>
-#include <readline/history.h>
 #include "Debug.hpp"
 #include "Globals.hpp"
 
@@ -574,12 +571,9 @@ void VM::debugCycle()
 	std::cout << "dbshift " << i << " to frame " << active->_name << "\n";
       }
       sprintf(buffer,"K [%s,%d (%d) <%d>] %s --> ",active->_name.c_str(),lineno,debug->_ip,shift,state);
-      char *p = readline(buffer);
-      if (p && *p)
-	add_history(p);
-      if (!p)
-	return;
-      FMString body(p);
+      FMString body;
+      if (!_ctxt->_io->getInputLine(FMString(buffer),body)) return;
+      if (body.size() == 0) return;
       body += "\n\n";
       try {
 	_ctxt->_compiler->compile(body);

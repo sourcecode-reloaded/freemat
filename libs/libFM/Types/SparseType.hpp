@@ -39,6 +39,7 @@ namespace FM
     const FMString& name() const {return _name;}
     FMString describe(const Object &a);
     FMString brief(const Object &a);
+    Object asFullMatrix(const Object &a);
     virtual Object makeScalar() {
       Object ret = AggregateType<SparseData<T>,ValueSemantics>::makeScalar();
       SparseData<T> *sd = this->rw(ret);
@@ -51,7 +52,8 @@ namespace FM
       sd->m_nnz = 1;
       sd->m_data[0][0] = val;
       return ret;
-    }      
+    }
+    virtual Object Add(const Object &a, const Object &b);
   };
 
   class SparseLogicalType : public SparseType<bool> {

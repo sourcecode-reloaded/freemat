@@ -23,6 +23,7 @@ namespace FM
     virtual void output(const char *format,...) = 0;
     virtual void error(const FMString &msg) = 0;
     virtual void warning(const FMString &msg) = 0;
+    virtual bool getInputLine(const FMString &prompt, FMString &buffer) = 0;
     virtual int getTerminalWidth() = 0;
     virtual FMFormatMode getFormatMode() = 0;
   };
@@ -54,6 +55,13 @@ namespace FM
     void warning(const FMString &msg)
     {
       std::cout << msg;
+    }
+    bool getInputLine(const FMString &prompt, FMString &buffer)
+    {
+      std::cout << prompt;
+      std::cout.flush();
+      std::cin >> buffer;
+      return true;
     }
     int getTerminalWidth()
     {
