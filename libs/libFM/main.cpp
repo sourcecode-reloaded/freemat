@@ -170,6 +170,24 @@ Object backtrace(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->_vm->backtrace());
 }
 
+Object mksparse(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+  return ctxt->_list->makeScalar(ctxt->_spdouble->convert(ctxt->_list->ro(args)[0]));
+}
+
+Object full(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+  const Object &x = ctxt->_list->ro(args)[0];
+  switch (x.typeCode()) {
+  case TypeSparseLogical:
+    return ctxt->_list->makeScalar(ctxt->_splogical->asFullMatrix(x));
+  case TypeSparseDouble:
+    return ctxt->_list->makeScalar(ctxt->_spdouble->asFullMatrix(x));
+  case TypeSparseComplex:
+    return ctxt->_list->makeScalar(ctxt->_spcomplex->asFullMatrix(x));
+  default:
+    return args;
+  }
+}
+
 Object dblist(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   if (ctxt->_globals->isDefined("_dblist"))
     {
@@ -372,6 +390,8 @@ int main(int argc, char *argv[])
   ctxt->_globals->set("double",ctxt->_module->builtin("double",to_double));
   ctxt->_globals->set("single",ctxt->_module->builtin("single",to_single));
   ctxt->_globals->set("backtrace",ctxt->_module->builtin("backtrace",backtrace));
+  ctxt->_globals->set("mksparse",ctxt->_module->builtin("mksparse",mksparse));
+  ctxt->_globals->set("full",ctxt->_module->builtin("full",full));
   ctxt->_globals->set("dbstop",ctxt->_module->builtin("dbstop",dbstop));
   ctxt->_globals->set("dbquit",ctxt->_module->builtin("dbquit",dbquit));
   ctxt->_globals->set("dbclear",ctxt->_module->builtin("dbclear",dbclear));

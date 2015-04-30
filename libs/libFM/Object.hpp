@@ -220,6 +220,11 @@ namespace FM
     inline bool isString() const {
       return (typeCode() == TypeString);
     }
+    inline bool isSparse() const {
+      return ((typeCode() == TypeSparseLogical) ||
+	      (typeCode() == TypeSparseDouble) ||
+	      (typeCode() == TypeSparseComplex));
+    }
     inline bool isClass() const {
       return (typeCode() == TypeClass);
     }
