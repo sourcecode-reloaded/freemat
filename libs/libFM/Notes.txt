@@ -2791,5 +2791,6 @@ An alternative would be to use TermIF!  The debugCycle messenger could
 make calls to TermIF.  When an Interpreter is spun up, it could set up
 TermIF to do the right thing.  I like that idea...
 
-
+Need to work on class hierarchy relationahips.  double+sparse -->
+sparse type, not to the double type.
 

@@ -854,7 +854,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		REG1 = TestForCaseMatch(_ctxt,REG2,REG3);
 		break;
 	      case OP_COLUMN:
-		REG1 = REG2.type()->sliceColumn(REG2,ndx_t(_ctxt->_double->scalarValue(REG3)));
+		REG1 = REG2.type()->sliceColumn(REG2,ndx_t(_ctxt->_double->scalarValue(REG3)-1));
 		break;
 	      case OP_NOT:
 		UNARYOP(Not,"not");

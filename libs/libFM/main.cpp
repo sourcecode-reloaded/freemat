@@ -171,7 +171,11 @@ Object backtrace(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
 }
 
 Object mksparse(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
-  return ctxt->_list->makeScalar(ctxt->_spdouble->convert(ctxt->_list->ro(args)[0]));
+  const Object &x = ctxt->_list->ro(args)[0];
+  if (x.isComplex())
+    return ctxt->_list->makeScalar(ctxt->_spcomplex->convert(x));
+  else
+    return ctxt->_list->makeScalar(ctxt->_spdouble->convert(x));
 }
 
 Object full(const Object &args, ndx_t nargout, ThreadContext *ctxt) {

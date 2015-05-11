@@ -236,7 +236,7 @@ namespace FM
     Object sliceColumn(const Object &p, ndx_t col) {
       // TODO - Check!
       ObjectBase *q = new ObjectBase(p.d->data,p.d->type,
-				     size_t((col-1)*p.d->dims.rows()),
+				     size_t(col*p.d->dims.rows()),
 				     Tuple(p.d->dims.rows(),1),
 				     p.d->flags,
 				     p.d->dims.rows());

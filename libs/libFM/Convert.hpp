@@ -37,11 +37,45 @@ namespace FM
     }
   };
 
+  template <>
+  struct OpRangeConvert<Complex<double>,double >
+  {
+    inline static void rangeConvert(Complex<double>& y, const double& x) {
+      y.r = x;
+      y.i = 0;
+    }
+  };
+
+  template <class T>
+  struct OpRangeConvert<T,Complex<T> >
+  {
+    inline static void rangeConvert(T& y, const Complex<T>& x) {
+      y = x.r;
+    }
+  };
+
   template <class S>
   struct OpRangeConvert<bool, S>
   {
     inline static void rangeConvert(bool&y, const S& x) {
       y = (x != 0);
+    }
+  };
+  
+  template <>
+  struct OpRangeConvert<bool, Complex<double> >
+  {
+    inline static void rangeConvert(bool&y, const Complex<double>& x) {
+      y = ((x.r != 0) || (x.i != 0));
+    }
+  };
+  
+  template <>
+  struct OpRangeConvert<Complex<double>, bool >
+  {
+    inline static void rangeConvert(Complex<double> &y, const bool& x) {
+      y.r = (x ? 1 : 0);
+      y.i = 0;
     }
   };
   

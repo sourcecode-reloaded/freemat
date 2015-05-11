@@ -62,81 +62,59 @@ namespace FM
     }
     Object convert(const Object &a);
     virtual Object Add(const Object &a, const Object &b);
+    virtual Object Subtract(const Object &a, const Object &b);
+    virtual Object DotLeftDivide(const Object &a, const Object &b);
+    virtual Object DotRightDivide(const Object &a, const Object &b);
+    virtual Object DotMultiply(const Object &a, const Object &b);
+    virtual Object DotPower(const Object &a, const Object &b);
+    virtual Object LessEquals(const Object &a, const Object &b);
+    virtual Object LessThan(const Object &a, const Object &b);
+    virtual Object GreaterThan(const Object &a, const Object &b);
+    virtual Object GreaterEquals(const Object &a, const Object &b);
+    virtual Object NotEquals(const Object &a, const Object &b);
+    virtual Object Equals(const Object &a, const Object &b);
+    virtual Object Or(const Object &a, const Object &b);
+    virtual Object And(const Object &a, const Object &b);
     T scalarValue(const Object &a) {
       if (!a.isScalar()) throw Exception("Illegal request for scalar contents of non-scalar sparse matrix");
       Object acopy(a);
       SparseData<T> *sd = this->rw(acopy);
       return sd->m_data[0][0];
     }
-  };
-
-  template <class T>
-  class ConstSparseIterator {
-    const SparseData<T> *m_ptr;
-    Tuple m_dims;
-    typename SparseMatrixData<T>::const_iterator m_col;
-    typename SparseSlice<T>::const_iterator m_row;
-  public:
-    ConstSparseIterator(const Object &a, SparseType<T> *t) {
-      m_ptr = t->ro(a);
-      m_col = m_ptr->m_data.begin();
-      if (m_col != m_ptr->m_data.end())
-	m_row = m_col->second.begin();
-      m_dims = a.dims();
+    Object scalarObject(const Object &a) {
+      if (!a.isScalar()) throw Exception("Illegal request for scalar object from non-scalar sparse matrix");
+      Object acopy(a);
+      Object ret = this->makeDenseBuffer(1);
+      SparseData<T> *sd = this->rw(acopy);
+      denseBufferPtr(ret)[0] = sd->m_data[0][0];
+      return ret;
     }
-    inline ndx_t rows() const {
-      return m_dims.rows();
-    }
-    inline bool valid() const {
-      return (m_col != m_ptr->m_data.end());
-    }
-    inline explicit operator bool() const {
-      return this->valid();
-    }
-    inline ConstSparseIterator& operator++() {
-      if (m_col == m_ptr->m_data.end())
-	throw Exception("Attempt to iterate past end of matrix");
-      ++m_row;
-      if (m_row == m_col->second.end()) {
-	++m_col;
-	if (m_col != m_ptr->m_data.end())
-	  m_row = m_col->second.begin();
+    Object makeDenseBuffer(ndx_t len);
+    T* denseBufferPtr(Object &a);
+    const T* denseBufferPtr(const Object &a);
+    void extractDenseColumn(const Object &a, ndx_t col, Object &buffer) {
+      T* ptr = denseBufferPtr(buffer);
+      memset(ptr,0,sizeof(T)*buffer.count());
+      const SparseData<T> *csd = this->ro(a);
+      if (csd->m_data.count(col)) {
+	for (auto row : csd->m_data.at(col))
+	  ptr[row.first] = row.second;
       }
-      return *this;
     }
-    const T&  operator*() {
-      return m_row->second;
+    Type* getDenseType() {
+      return dynamic_cast<Type*>(Type::_ctxt->_double);
     }
-    ndx_t row() const {
-      if (!this->valid()) return 0;
-      return m_row->first;
-    }
-    ndx_t col() const {
-      if (!this->valid()) return m_dims.cols();
-      return m_col->first;
-    }
-    const Tuple pos() const {
-      return Tuple(row(),col());
-    }
-    ndx_t ndx() const {
-      return row() + col()*m_dims.rows();
-    }
-    bool operator==(const ConstSparseIterator<T> &other) const {
-      return ((this->valid() && other.valid()) &&
-	      (this->row() == other.row()) &&
-	      (this->col() == other.col()));
-    }
-    bool operator!=(const ConstSparseIterator<T> &other) const {
-      return (this->ndx() == other.ndx());
-    }
-    bool operator<(const ConstSparseIterator<T> &other) const {
-      return (this->ndx() < other.ndx());
-    }
-    bool operator>(const ConstSparseIterator<T> &other) const {
-      return (this->ndx() > other.ndx());
+    void sparseifyColumn(Object &a, ndx_t col, const Object &buffer) {
+      const T*ptr = denseBufferPtr(buffer);
+      SparseData<T> *csd = this->rw(a);
+      for (ndx_t i=0;i<a.count();i++) {
+	if (ptr[i] != T()) {
+	  csd->m_data[col][i] = ptr[i];
+	  csd->m_nnz++;
+	}
+      }
     }
   };
-
 
   class SparseLogicalType : public SparseType<bool> {
   public:
