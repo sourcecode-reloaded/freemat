@@ -62,7 +62,9 @@ int Frame::lookupAddressForName(const Object &name, bool searchGlobals) {
   // searched before.  The VM will then skip the lookup
   // step for this symbol (unless the scope changes).
   const ndx_t *addrs = _ctxt->_index->ro(_addrs);
-  if ((ndx != -1) && searchGlobals && (addrs[ndx] == -1))
+  std::cout << "Frame LAFN ndx=" << ndx << " searchGlobals=" << searchGlobals << " addrs size = " << _addrs.count() << "\n";
+  if ((ndx != -1) && searchGlobals &&
+      ((ndx >= _addrs.count()) || (addrs[ndx] == -1)))
     {
       // We have a symbol with the given name, but
       // have not defined it yet.  This could be because

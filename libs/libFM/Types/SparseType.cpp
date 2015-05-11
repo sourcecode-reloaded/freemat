@@ -44,8 +44,9 @@ static Object convertSparseMatrixToSparseMatrix(const Object &a, SparseType<T> *
   return ret;
 }
 
+namespace FM {
 template <>
-Object FM::SparseType<double>::convert(const Object &a) {
+Object SparseType<double>::convert(const Object &a) {
   if (a.isSparse()) {
     switch (a.typeCode())
       {
@@ -67,7 +68,7 @@ Object FM::SparseType<double>::convert(const Object &a) {
 }
 
 template <>
-Object FM::SparseType<bool>::convert(const Object &a) {
+Object SparseType<bool>::convert(const Object &a) {
   if (a.isSparse()) {
     switch (a.typeCode())
       {
@@ -88,7 +89,7 @@ Object FM::SparseType<bool>::convert(const Object &a) {
 }
 
 template <>
-Object FM::SparseType<Complex<double> >::convert(const Object &a) {
+Object SparseType<Complex<double> >::convert(const Object &a) {
   if (a.isSparse()) {
     switch (a.typeCode())
       {
@@ -107,6 +108,7 @@ Object FM::SparseType<Complex<double> >::convert(const Object &a) {
   convertFullMatrixToSparse(ret,_ctxt->_double->roComplex(aconv),a.dims(),this);
   return ret;
 }
+}
 
 template <class T>
 static void convertSparseMatrixToFull(T* destp, const Object &src, SparseType<T> *t) {
@@ -116,77 +118,81 @@ static void convertSparseMatrixToFull(T* destp, const Object &src, SparseType<T>
       destp[row.first + column.first*src.rows()] = row.second;
 }
 
+namespace FM
+{
 template <>
-Object FM::SparseType<double>::asFullMatrix(const Object &a) {
+Object SparseType<double>::asFullMatrix(const Object &a) {
   Object af = _ctxt->_double->makeMatrix(a.rows(),a.cols());
   convertSparseMatrixToFull(_ctxt->_double->rw(af),a,this);
   return af;
 }
 
 template <>
-Object FM::SparseType<bool>::asFullMatrix(const Object &a) {
+Object SparseType<bool>::asFullMatrix(const Object &a) {
   Object af = _ctxt->_bool->makeMatrix(a.rows(),a.cols());
   convertSparseMatrixToFull(_ctxt->_bool->rw(af),a,this);
   return af;
 }
 
 template <>
-Object FM::SparseType<Complex<double> >::asFullMatrix(const Object &a) {
+Object SparseType<Complex<double> >::asFullMatrix(const Object &a) {
   Object af = _ctxt->_double->makeMatrix(a.rows(),a.cols(),true);
   convertSparseMatrixToFull(_ctxt->_double->rwComplex(af),a,this);
   return af;
 }
 
 template <>
-Type* FM::SparseType<bool>::getDenseType() {
+Type* SparseType<bool>::getDenseType() {
   return reinterpret_cast<Type*>(Type::_ctxt->_bool);
 }
 
 template <>
-Object FM::SparseType<bool>::makeDenseBuffer(ndx_t len) {
+Object SparseType<bool>::makeDenseBuffer(ndx_t len) {
   return context()->_bool->makeMatrix(len,1,false);
 }
 
 template <>
-Object FM::SparseType<double>::makeDenseBuffer(ndx_t len) {
+Object SparseType<double>::makeDenseBuffer(ndx_t len) {
   return context()->_double->makeMatrix(len,1,false);
 }
 
 template <>
-Object FM::SparseType<Complex<double> >::makeDenseBuffer(ndx_t len) {
+Object SparseType<Complex<double> >::makeDenseBuffer(ndx_t len) {
   return context()->_double->makeMatrix(len,1,true);
 }
 
 template <>
-bool* FM::SparseType<bool>::denseBufferPtr(Object &a) {
+bool* SparseType<bool>::denseBufferPtr(Object &a) {
   return context()->_bool->rw(a);
 }
 
 template <>
-double* FM::SparseType<double>::denseBufferPtr(Object &a) {
+double* SparseType<double>::denseBufferPtr(Object &a) {
   return context()->_double->rw(a);
 }
 
 template <>
-Complex<double>* FM::SparseType<Complex<double> >::denseBufferPtr(Object &a) {
+Complex<double>* SparseType<Complex<double> >::denseBufferPtr(Object &a) {
   return context()->_double->rwComplex(a);
 }
 
 template <>
-const bool* FM::SparseType<bool>::denseBufferPtr(const Object &a) {
+const bool* SparseType<bool>::denseBufferPtr(const Object &a) {
   return context()->_bool->ro(a);
 }
 
 template <>
-const double* FM::SparseType<double>::denseBufferPtr(const Object &a) {
+const double* SparseType<double>::denseBufferPtr(const Object &a) {
   return context()->_double->ro(a);
 }
 
 template <>
-const Complex<double>* FM::SparseType<Complex<double> >::denseBufferPtr(const Object &a) {
+const Complex<double>* SparseType<Complex<double> >::denseBufferPtr(const Object &a) {
   return context()->_double->roComplex(a);
 }
 
+}
+  
 typedef Object (Type::*TypeMemFn)(const Object &x, const Object &y);
 
 class ColumnIterator
@@ -457,76 +463,79 @@ static Object DispatchSparseSparseOperationComparison(const Object &a, const Obj
 
 //static Object DispatchSparseSparse
 
+namespace FM {
 template <class T>
-Object FM::SparseType<T>::LessEquals(const Object &a, const Object &b) {
+Object SparseType<T>::LessEquals(const Object &a, const Object &b) {
   return DispatchSparseSparseOperationComparison(a,b,Type::context(),&Type::LessEquals,SPARSE_OP_IS_BOOL_VALUED);
 }
 
 template <class T>
-Object FM::SparseType<T>::LessThan(const Object &a, const Object &b) {
+Object SparseType<T>::LessThan(const Object &a, const Object &b) {
   return DispatchSparseSparseOperationComparison(a,b,Type::context(),&Type::LessThan,SPARSE_OP_IS_BOOL_VALUED);
 }
 
 template <class T>
-Object FM::SparseType<T>::GreaterThan(const Object &a, const Object &b) {
+Object SparseType<T>::GreaterThan(const Object &a, const Object &b) {
   return DispatchSparseSparseOperationComparison(a,b,Type::context(),&Type::GreaterThan,SPARSE_OP_IS_BOOL_VALUED);
 }
 
 template <class T>
-Object FM::SparseType<T>::GreaterEquals(const Object &a, const Object &b) {
+Object SparseType<T>::GreaterEquals(const Object &a, const Object &b) {
   return DispatchSparseSparseOperationComparison(a,b,Type::context(),&Type::GreaterEquals,SPARSE_OP_IS_BOOL_VALUED);
 }
 
 template <class T>
-Object FM::SparseType<T>::NotEquals(const Object &a, const Object &b) {
+Object SparseType<T>::NotEquals(const Object &a, const Object &b) {
   return DispatchSparseSparseOperationComparison(a,b,Type::context(),&Type::NotEquals,SPARSE_OP_IS_BOOL_VALUED);
 }
 
 template <class T>
-Object FM::SparseType<T>::Equals(const Object &a, const Object &b) {
+Object SparseType<T>::Equals(const Object &a, const Object &b) {
   return DispatchSparseSparseOperationComparison(a,b,Type::context(),&Type::Equals,SPARSE_OP_IS_BOOL_VALUED);
 }
 
 template <class T>
-Object FM::SparseType<T>::Add(const Object &a, const Object &b) {
+Object SparseType<T>::Add(const Object &a, const Object &b) {
   return DispatchSparseSparseOperationNumerical(a,b,Type::context(),&Type::Add,0);
 }
 
 template <class T>
-Object FM::SparseType<T>::Subtract(const Object &a, const Object &b) {
+Object SparseType<T>::Subtract(const Object &a, const Object &b) {
   return DispatchSparseSparseOperationNumerical(a,b,Type::context(),&Type::Subtract,0);
 }
 
 template <class T>
-Object FM::SparseType<T>::DotLeftDivide(const Object &a, const Object &b) {
+Object SparseType<T>::DotLeftDivide(const Object &a, const Object &b) {
   return DispatchSparseSparseOperationNumerical(a,b,Type::context(),&Type::DotLeftDivide,0);
 }
 
 template <class T>
-Object FM::SparseType<T>::DotRightDivide(const Object &a, const Object &b) {
+Object SparseType<T>::DotRightDivide(const Object &a, const Object &b) {
   return DispatchSparseSparseOperationNumerical(a,b,Type::context(),&Type::DotRightDivide,0);
 }
 
 template <class T>
-Object FM::SparseType<T>::DotMultiply(const Object &a, const Object &b) {
+Object SparseType<T>::DotMultiply(const Object &a, const Object &b) {
   return DispatchSparseSparseOperationNumerical(a,b,Type::context(),&Type::DotMultiply,SPARSE_OP_PRESERVES_SPARSITY);
 }
 
 template <class T>
-Object FM::SparseType<T>::DotPower(const Object &a, const Object &b) {
+Object SparseType<T>::DotPower(const Object &a, const Object &b) {
   return DispatchSparseSparseOperationNumerical(a,b,Type::context(),&Type::DotPower,0);
 }
 
 template <class T>
-Object FM::SparseType<T>::Or(const Object &a, const Object &b) {
+Object SparseType<T>::Or(const Object &a, const Object &b) {
   return DispatchSparseSparse(a,b,Type::context()->_splogical,Type::context()->_splogical,Type::context(),&Type::Or,0);
 }
 
 template <class T>
-Object FM::SparseType<T>::And(const Object &a, const Object &b) {
+Object SparseType<T>::And(const Object &a, const Object &b) {
   return DispatchSparseSparse(a,b,Type::context()->_splogical,Type::context()->_splogical,Type::context(),&Type::And,0); // Sparse preserving
 }
 
-template class FM::SparseType<double>;
-template class FM::SparseType<bool>;
-template class FM::SparseType<Complex<double> >;
+template class SparseType<double>;
+template class SparseType<bool>;
+template class SparseType<Complex<double> >;
+
+}
