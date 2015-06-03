@@ -1,0 +1,66 @@
+Exceptions are done!  They were remarkably easy.  I think there are
+still some issues with stack unwinding and functions cleaning up after
+themselves.  The executeFunction and executeScript methods of the VM
+should use RAII to reserve and unwind the various stacks, variable
+allocations, etc.
+
+Closures do not work from within class methods - why?
+
+Also, we need to add sparse matrix support!
+
+// todo - handle nargin for constructors
+// todo - base constructors for superclasses that are not explicitly
+called
+
+Symbol pass now identifies them.. Need to add code to constructor to
+call implicit constructors!
+
+//todo - Add mechanism for garbage collection periodically
+//todo - Add ? operator
+nargin? nargout? varargin? varargout?
+
+command window output display(a) Display method
+
+Anonymous functions do not print out correctly.
+
+ArrayType.cpp:// TODO - handle (:,:,x) indexing!
+ArrayType.cpp:  // TODO: Trim trailing singular dimensions.  Make sure b.size() < a.numDims.
+ArrayType.cpp:  // TODO: Special case all-scalar indexing case
+ArrayType.cpp:  // TODO: Add slice test here (c.f. isSliceIndexCase)
+ArrayType.cpp:  // TODO - handle b is complex, a is real
+ArrayType.cpp:  // TODO: Add slice test here (c.f. isSliceIndexCase)
+ArrayType.cpp:  // TODO: Trim trailing singular dimensions.  Make sure b.size() < a.numDims.
+ArrayType.cpp:  // TODO: Special case all-scalar indexing case
+ArrayType.hpp:      // TODO - Check!
+Assembler.cpp:      // TODO: This should be more efficient
+ClassType.cpp:    // TODO - warn if conflict on properties
+ClassType.cpp:  // TODO - warn if method with same name as constructor already is defined
+Compiler.cpp:// TODO - Make sure function calls work
+Compiler.cpp:// TODO - SAVE_OP does it work for all types (persistant, global, etc...)?
+Compiler.cpp:  - TODO - add an opcode to load an integer into a register, so that 0, 1, 2, ... are not stored as unique constants
+Compiler.cpp://TODO - 
+Compiler.cpp:    { // TODO - is this all?
+Compiler.cpp:// TODO - Remove duplication
+Compiler.cpp:  // TODO - clean this up
+FMLib.hpp:    //TODO - Fix fir windows
+Frame.cpp:      auto gfunc = _ctxt->_globals->find(_ctxt->_string->getString(name)); //TODO Remove conversion to string?
+Frame.cpp:      auto gfunc = _ctxt->_globals->find(_ctxt->_string->getString(name)); //TODO Remove conversion to string?
+HandleClass.cpp:			 false); // TODO remove boolean arguments - they are unclear
+IEEEFP.cpp://TODO: implement actual floating point log1pf, expm1f
+ListType.hpp:      // TODO - make this faster by using slicing?
+NumericType.cpp:      // TODO - add message catalog with numbers and translations
+NumericType.cpp:      // TODO - add message catalog with numbers and translations
+StructType.cpp:  // TODO - Allow for mismatch, and use empty to fill out?
+Symbol.hpp:  // TODO - turn this into a struct... it's getting too ugly
+Type.cpp:	c = c.asType<ListType>()->first(c); //TODO a.foo.goo ? should throw error if a.foo is multi-valued
+Type.cpp:	  // TODO - not sure about the case:
+Type.cpp:      // TODO - is an exception here bad? If so, remove it
+VM.cpp:// TODO - LOAD/SAVE Dynamic is about 2.5 x slower than LOAD/SAVE local
+VM.cpp:  /* - TODO - Do we still need this?
+main.cpp:  // TODO - Fix this.
+
+TODO - Need to fix the various type conversion tools and finish the mathematical operators
+TODO - shortcut operators don't seem to work?
+
+TODO - Need to work on the debugger interface.
+

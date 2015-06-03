@@ -1,0 +1,2796 @@
+
+What is a dynamic variable?  Consider the following function
+
+function foo
+   A = fft(1:10);
+
+In this case, we might think that "fft" is an external (global) symbol.  But 
+not necessarily.  Consider the case of an eval statement:
+
+function foo
+   eval('fft = 1:10');
+   A = fft(1:10);
+
+The presence of an eval means that "fft" is now a variable.  So when we lookup
+fft, we get a variable instead of the function.  The "eval" could just as
+easily be hidden in a script
+
+function foo
+   do_script
+   A = fft(1:10);
+
+do_script
+  fft = 1:10
+
+So dynamic variables are ones that just ones that have to be defined at runtime.
+
+Note that there is a problem in the current definition of local variables.  Consider
+
+function foo
+   a = 3;
+   a = a + 5;
+
+In this case, because "a" is not visible outside the scope of function "foo", it 
+would be marked a local variable (it is defined before being used).  But what happens
+if the variable is deleted?  Something like this:
+
+function foo
+   fft = 3;
+   clear('fft');
+   a = fft(1:15);
+
+The "clear" function will delete the local variable "fft", and the next call to "fft"
+will be mapped to the function "fft", not the local variable.  Yuck.  The presence of
+"clear" means that "local" variables are an optimization that we cannot really make.
+Instead, all variables that are not declared as global, persistent or defined as 
+parameters are dynamic.
+
+Instead of trying to do a bunch of complex analysis at compile time, I should have developed
+a better cache mechanism so that variables could be looked up without a big penalty.  
+Double yuck.
+
+OK - so variables only come in the following flavors:
+
+Global     - variables that belong to the global scope.
+Persistent - variables that are "static".
+Parameter  - variables that are passed as parameters (could be value or reference).
+Return     - variables that are returned from a function.
+Dynamic    - variables that are otherwise undefined.
+
+The notion of "local" variables is dropped.  There is no real meaningful way to 
+guarantee that a variable is truly local, except in the case of for loop variables.
+And even in that case, it's really a function of speed - nothing else.  
+
+What about "captured/free" variables?  This was considerably more difficult than regular
+variables.  The situation was driven by the need/ability to nest functions.
+
+function a = foo(y)
+  x = 3+y
+  function b = bar(g)
+     b = x+g
+  end
+end
+
+In this case, when the function "bar" is executed, it needs access to the variable "x", which
+is in the parent function scope.  A fully dynamic version of this would be to create a code
+object for "bar" that included a static scope with it.  The static scope would contain the 
+variable "x".  When the function "bar" is executed outside the scope of "foo", it would
+search through the static scope to find variables that are not defined in it.  So when we
+return a function pointer
+
+function a = foo(y)
+  x = 3+y
+  function b = bar(g)
+     b = x+g
+  end
+  a = @bar
+end
+
+then "a" contains the code for "bar" and a workspace that defines "x".  So far, that's fine.
+The question is what happens when we have to start chaining through scopes?  For example,
+
+function a = foo(y)
+  x = y + 2;
+  function b = bar(g)
+    k = x + g;
+    function c = baz(p)
+      c = p + k + x;
+    end
+    b = @baz
+  end
+  a = @b
+end
+
+So in this case, "baz" needs to access a variable "x" in the scope of "foo".  It seems that 
+when we create the function pointer 
+
+b = @baz
+
+we need to create a workspace to store with it.  At that point, we walk through the function
+scopes until we get to the parent scope and collect all variables that are defined.  So in this
+case the function pointer b will have
+
+b.code = <code>
+b.workspace.x = <value for x>
+b.workspace.k = <value for k>
+
+When the code for "b" is executed, a "LOAD_DYN" reference for "x" will need to search the workspace
+first.  
+
+From a cache-implementation standpoint, the setup is a bit more complicated than earlier.  Ideally,
+we want to mimic a normal implementation.  In a normal implementation, there is a global vector of
+objects (memory).  Every object can then be uniquely defined by an address in global memory.  That
+is fine without threads.  For threads, we want to have thread local and global memory.  Furthermore,
+we don't want threads to stomp on each others memory addresses.  Thus, we need two different address
+spaces.  Something like:
+
+vector<Object> global_memory;
+vector<Object> local_memory;
+
+As I observe later, we also need a third address space for functions:
+
+vector<Object> function_memory;
+
+Where local_memory is specific to the given thread, and global_memory and function_memory is shared across all threads.
+Each object can then be mapped to an address, which is simply the location of that object in memory.
+A frame is then marked by simply taking a series of locations from local_memory.  Essentially, local_memory
+is the stack for the VM, and global_memory is the (shared) global memory.  That works pretty well.
+Persistent variables can be simply be allocated in global_memory, and given an address (depending on if they
+are thread local or not).  
+
+The use of addresses eliminates the need for string searches at runtime.  A frame will then consist of
+the following operations:
+
+frame::begin()
+  local_memory.reserve(variables_used)
+  registers.reserve(registers_used)
+  name_cache.reserve(variables_used)
+end
+
+A LOAD opcode will then do the following.  If the name index referred to by the LOAD opcode has a memory
+location, it will simply load the object from local_memory.  A LOAD opcode can also be mapped to global
+memory.  Consider, for example, the implicit search for functions.
+
+function b = foo(a)
+   b = a + pi
+end
+
+Here, "pi" is a symbol defined in global memory (it is a function).  The OP_LOAD for "pi" will search
+the symbol table for the frame.  As the symbol is not defined, it will search the global memory space for
+the symbol.  If found, the value will be loaded and stored in local_memory in the space reserved for the
+"pi" symbol.  This fetch operation is lazy, and triggered by a reference to a variable.  What happens when
+we use "eval" to do the same thing?
+
+function b = foo(a)
+  eval('b = a + pi')
+end
+
+Essentially, the "eval" will be compiled into a series of opcodes that contain a reference to "pi".  That continues
+the question to one of open frames.  For open frames, we do not want to reserve memory for the variables.  Those
+variables are supposed to exist in the parent scope.  However, that is not guaranteed.  Consider for example
+
+function b = foo(a)
+  do_script_makes_x
+  b = x + a
+end
+
+In this case, the script "do_script_makes_x" creates the variable "x", which is not present in the scope of function
+"foo".  So this variable needs to be added to the local_memory allocated in the parent frame, and assigned an
+address.  As a result, the OP_LOAD looks something like this:
+
+OP_LOAD:
+  Does symbol have a mapping?
+    Yes --> load value from designated local memory location
+    No  --> Does symbol exist in current frame?
+                --> Yes, save mapping and return value
+                --> Does symbol exist in function_memory?
+                         Yes --> Fetch value from function_memory, and store in local cache & save mapping
+                         No  --> throw exception "variable not defined"
+
+OP_SAVE:
+  Does symbol have a mapping?
+    Yes --> save value to designated location
+    No  --> Create symbol in current frame
+                --> save mapping
+                --> save value to designated location
+              
+
+So declared variables (globals, returns, etc.) will always have defined mappings.  Dynamic variables will just be added
+to the current symbol table.  
+
+If we don't use the processor stack for the frame.  We have something like
+
+std::vector<Object> stack;
+
+frame::begin(std::vector<Object> &stack)
+{
+  int sp = stack.size();
+  stack.resize(stack.size() + num_registers + num_vars);
+  Object *reg = &stack[sp-1];
+  Object *var = &stack[sp+num_registers-1];
+}
+
+frame::end(std::vector<Object> &stack)
+{
+  stack.resize(sp);
+}
+
+In some cases, a frame will contain variables for which it has no references.  Consider
+
+function foo
+   script_that_defines_x
+   script_that_uses_x
+
+In this case, no reference to symbol "x" will exist in foo's frame.  Nor will the code segment
+contain references to a variable x.  In fact, only the two names of the symbols will be defined
+in foo's name list.  This means a frame must have a dynamic map of strings to indexes.  
+
+frame {
+  Object *registers;
+  Object *variables;
+  std::vector<Object> *stack;
+  std::map<FMString,int> symbols;
+}
+
+Because the symbols map will require heap manipulation, it's not entirely clear what the 
+advantage of avoiding it for registers and variables is.  It's certainly simpler to do
+
+frame {
+  std::vector<Object> registers;
+  std::vector<Object> variables;
+  std::map<FMString,int> symbols;
+}
+
+
+The OP_SAVE opcode can then do something like:
+
+OP_SAVE reg,ndx
+  - if (address[ndx])
+      _closed_frame->variables[address[ndx]
+
+
+Actually, that's not strictly true.  We can avoid the dynamic allocation of the symbol map
+by doing the following.  
+
+frame {
+  Object *registers;
+  Object *variables;
+  std::vector<Object> *stack;
+  std::map<FMString,int> dyn_symbols;
+}
+
+We can leave dyn_symbols unused unless a script inserts a new symbol into the frame.  The
+search and resolve procedure for an OP_SAVE can then add the symbol to the frame.  Something
+like:
+
+OP_SAVE reg, ndx
+  - if (address[ndx])
+      _closed_frame->variables[address[ndx]]
+    else
+    {
+      // Check to see if frame already has a symbol with this name
+      if (f->has_symbol_named(names[ndx]))
+        address[ndx] = f->get_symbol_address(names[ndx])
+      else
+      {
+        f->add_dynamic_symbol(names[ndx])
+        address[ndx] = f->get_symbol_address(names[ndx])
+      } 
+      f->variables[address[ndx]] = reg
+    }
+
+
+Can the Type class itself be an Object?  Perhaps, but I think it's too
+difficult to do now.  
+
+The next problem is to address function calls.  A function call should
+be a pointer to a function with the following type signature.
+
+Object func(ThreadContext *ctxt, const Object & argList, int nargout)
+
+A function object can then have the following signature.
+
+Need to build a function pool.  A function pool is a dictionary of
+objects (assuming that we have built-in functions as objects as well -
+I see no reason not to).
+
+Need classes
+
+Need closures
+
+Need multi-function calls
+ -- Change opcode so that passes the function argument count as an
+ argument
+ --- Something like:  OP_CALL <ret> <func> <arg> <retcount>
+ --  Doesn't work, but we can put the number of returns into the
+     return register, and then overwrite it.  Although it seems
+     cleaner to put it into the argument list.
+
+Need sparse matrices
+
+http://www.ee.columbia.edu/~marios/matlab/Simplify%20your%20code%20with%20comma-separated%20lists.pdf
+
+Interesting.  Here are some relevant snippets.
+
+
+Comma-separated lists of variables, such as, x,y,z, appear frequently
+in MATLAB code; they are most commonly found inside of {}, () and []
+. In most cases, specifying the list of variables explicitly is
+sufficient, but sometimes you need a more flexible technique. You can
+store variable values in a cell array or structure array, and then
+expand your data into a comma-separated list via c{:}, if c is a cell,
+or via s.field, if s is a structure array. This simplifies certain
+problems involving indexing and cell or structure array manipulation
+and often allows you to write shorter, more efficient code. The
+comma-separated list economizes the syntax for extracting multiple
+values from cell and structure arrays. For example, c{:} is equivalent
+to c{1},c{2},c{3},...c{end}, a list of values separated by
+commas. Similarly for a structure array, s.field is equivalent to
+s(1).field,s(2).field,...s(end). field. The four uses of
+comma-separated lists are: 2003 Issues May 2003 2002 Issues October
+2002 February 2002 Cleve's Corners 1994-2002 Past Issues Spring 2001
+Winter 2001 Winter 2000 Summer 1999 Winter 1999 Subscribe Now ￼￼Within
+[] to perform horizontal matrix concatenation. For example, if c is a
+cell array containing scalars, where c{i} = i, you can create a matrix
+consisting of the individual elements of c using [c{:}]. This usage
+allows you to convert cell or structure arrays to numeric arrays in an
+efficient and convenient manner.  As input or output parameters to
+function calls. Functions that take a variable number of input
+arguments or return a variable number of outputs can use
+comma-separated lists. Use this technique when you need to build
+argument lists to functions while your program is executing or when
+you need to store the return values from functions in a single
+variable, i.e., a cell or structure, for later processing. This usage
+is common with functions that use varargin and varargout.  Within ()
+to create an indexed expression. This usage is effective when dealing
+with n- dimensional arrays (see Pattern 1, below).  Within {} to
+create cell arrays. For example, b = {c{:}, magic(3)} creates a cell
+array whose elements consists of the elements of cell c and a 3 -by-3
+magic square.  Writing code with cell or structure arrays allows you
+to take advantage of comma-separated list coding techniques, which are
+the foundation for some of the programming patterns in MATLAB.
+Pattern 1: Comma-separated lists and indexing Using comma-separated
+lists in indexing operations can simplify and speed up your code. For
+example, let’s look at the fftshift function.
+￼￼￼￼http://www.mathworks.com/company/newsletter/spring01/patterns.shtml
+6/8/2003 ￼MATLAB Programming Patterns Page 2 of 4 function y =
+fftshift(x) numDims = ndims(x); idx = for k cell(1, numDims); =
+1:numDims m = size(x, k); p = ceil(m/2); idx{k} = [p+1:m 1:p]; end y =
+x(idx{:}); Given an N-dimensional matrix, fftshift swaps "half-spaces"
+along each dimension. This is fundamentally an indexing operation:
+given, for example, the vector a = [5 6 7 8 9 0], we can swap the left
+and right halves of this vector with the command b = a([4:6 1:3]);
+note that since a is one-dimensional, swapping requires only one index
+vector. fftshift performs this kind of index-based swapping in N
+dimensions and thus must construct N index vectors. The swapping
+operation is simply y = x(index1,index2,..., indexN).  if ndims(x) ==
+1 y = x(index1); else if ndims(x) == 2 y = x(index1, index2); end If
+you are using explicit indexing, you’ll need to write one if statement
+for each dimension you want your function to handle. A comma-separated
+list makes it very easy to generalize this swapping operation to an
+arbitrary number of dimensions.  fftshift stores the index vectors in
+a cell array. Building this cell array is relatively simple. For each
+of the N dimensions, determine the size of that dimension and find the
+integer index nearest the midpoint. Then, construct a vector that
+swaps the two halves of that dimension. Once all the vectors have been
+collected into this cell array, a single MATLAB command performs the
+swap: y = x(idx{:}); This technique produces an algorithm that is
+dimension independent and compact.  Pattern 2: Manipulating data in
+structure arrays You will often find that using comma-separated lists
+to manipulate structure arrays makes it easier to write efficient
+code. For example, if you want to search for and replace a certain
+value in your structure array, you can easily create a function to do
+this.  function index = findinstruct(a, value) % findinstruct takes a
+% structure with the field value as its first % argument and a double
+search value as its % second argument. This function assumes that the
+% structure does not contain NaNs or empties.% Generate the indices of
+the desired value index = find([a.value] == value); First, use
+findinstruct to get the indices that match the value being
+replaced. Note that
+http://www.mathworks.com/company/newsletter/spring01/patterns.shtml
+6/8/2003 MATLAB Programming Patterns Page 3 of 4 findinstruct converts
+its input structure array to a numeric array using [] and a structure
+field comma-separated list. Next, replace the existing value with the
+new value by issuing this command: [a(index).value] = deal(newval);
+You must use the function deal here, rather than a simple assignment
+statement, because only functions can assign to multiple left-hand
+side values; in this case, deal copies its input into each element of
+the output. As a general rule, whenever you need to assign to or from
+a comma-separated list, use deal in conjunction with the []
+concatenation operator.  Comma-separated lists and objects MATLAB
+classes can change the behavior of the cell and structure indexing
+operators ({} and .) by overloading the subsref and subsasgn
+functions. MATLAB calls subsref when an indexing operation appears on
+the right hand side of an assignment statement, and subsasgn when the
+indexing appears on the left hand side. For example: subsref: a =
+obj{m:n}; subsasgn: obj.distance = value; If obj is an array of
+objects, MATLAB applies the same rules it uses for cell and structure
+arrays; thus the {} and . operators produce comma-separated
+lists. When a comma- separated list appears on either side of an
+assignment statement, MATLAB checks that the number of variables on
+the left side of the assignment matches the number of values on the
+right, and requires that you use deal to perform the assignment (see
+Pattern 2). MATLAB performs this test before executing the overloaded
+subsref and subsasgn functions by calling the numel function to count
+the number of elements in obj{m:n} and obj.distance. The built-in
+version of numel returns n—m+1 for the {m:n} case and prod(size(obj))
+in the obj.distance case. If there is a mismatch between the number of
+values on either side of the assignment as a result of calling numel,
+an error occurs and the overloaded subsref and subsasgn functions are
+not executed.  Therefore, if you want to modify the behavior of the
+comma- separated list operators with respect to object arrays (for
+example, your class may use {} to perform string indexing), you need
+to indicate to MATLAB that these operators return 1, for the number of
+elements. To do this you need to overload the numel function and have
+it return 1 for both {} and . cases. With this overloaded numel in
+place, the above example assignments do not require the explicit use
+of deal, and MATLAB executes the overloaded subsref
+andsubsasgnfunctions.  Summary See the help for numel for details on
+how to use it.  Using comma-separated lists helps you write compact,
+efficient, and extensible code. Because most cell and structure array
+operations are built-in functions, the convenience and flexibility
+does not come at the cost of performance. When working with
+comma-separated lists, you need to remember to use deal
+appropriately. And if you’re writing a MATLAB class, you should
+consider whether or not to overload numel for that class. With these
+points in mind, you will find comma-separated lists a powerful and
+effective technique, and a very useful tool to add to your programming
+toolkit.
+
+
+This is also supposed to work...
+
+C = cell(4, 6);
+for k = 1:24,   C{k} = k * 2;   end
+
+[c1 c2 c3 c4 c5 c6] = C{1,1:6};
+
+Ultimately, it seems as though I need the concept of a variable
+reference - i.e., something that acts as a pointer to an object.  This
+allows for two improvements.  One is that the list
+
+[a,b,c,d,e] = foo
+
+can be handled (I think!) by creating a list of LHS references, and
+then handling the assignments.  The other advantage is that variables
+that are passed by reference work cleaner.  
+
+But it's difficult to get right.  How does it work at the VM level?
+Something like:
+
+OP_LOAD_REF:
+  // Get address
+  REG1 = _ctxt->_objref->makeScalar(address);
+
+// When we do an assignment what happens?  We have somthing like this:
+
+a = 3;
+b = &a; // b is now a pointer to a
+b = 5;
+
+Then OP_SAVE needs to bo changed so that if varfile[addr] is an
+objref, that an additional level of indirection is used in the
+assignment.  So that
+
+OP_SAVE:
+  if (varfile[addr].isReference())
+    // decode address, and write it...
+
+This works for the above example.  But not in the more general case.
+How do you use it to pass arguments to functions?  Can't.  Because you
+don't know a priori that an argument is passed by reference.  Also,
+addresses are local to each frame.  Which means you cannot pass an
+address from one frame to another.  
+
+Simpler would be to have
+
+Need slicing to work.
+
+How do we translate A.foo{1:3} into 
+
+A.foo{1},A.foo{2},A.foo{3}
+
+1.  Take the tree of the form:
+
+multi
+   []
+      variable
+         (ident)A
+         {}
+            :
+               (real)1
+               (real)3
+
+2.  We then want to select one of the various expressions (we know how
+many subexpressions there are from the NUMEL or LENGTH operation
+already complete.  How does the selector work?  
+
+If we call A{1:3,2} = b, then setBraces is passed an argument that is a
+_list_ of indices
+
+-- so setBraces should be
+
+CellType::setBraces(a, args, b)
+{
+	if (args is all scalars || b is scalar)
+}
+
+
+a = fixa
+a(3,3,3) = 9 --> doesn't work!
+
+
+(:,:,0) = 
+   1.0000   2.0000   3.0000   4.0000
+   5.0000   6.0000   7.0000   8.0000
+        0        0        0        0
+
+(:,:,1) = 
+        0        0        0        0
+        0        0        0        0
+        0        0        0        0
+
+(:,:,2) = 
+        0        0        0        0
+        0        0        0        0
+        0        0        0   9.0000
+
+
+(:,:,0) = 
+   1.0000   2.0000   1.0000   2.0000   3.0000
+   5.0000   6.0000   5.0000   6.0000   7.0000
+        0        0        0        0        0
+
+(:,:,1) = 
+   4.0000        0        0        0        0
+   8.0000        0        0        0        0
+        0        0        0        0        0
+
+(:,:,2) = 
+        0        0        0        0        0
+        0        0        0        0        0
+        0        0        0   9.0000   9.0000
+
+a = fixa
+a(3,4,3) = 9
+a(3,5,2) = 9
+
+
+********************************************************************************
+
+Structure indexing
+
+Next major hurdle is structure indexing.  Need to spend some time on
+this.
+
+- multiple return values with structures
+
+Removal of Null objects
+
+- The main issue with Null objects is the following.  Default creation
+  of a NULL object has to lie in a particular thread context.  
+
+Deletion!
+
+Classes
+
+
+- Null objects removed!  Yaay!  But 
+
+a.foo = 3 
+
+fails now.  Suspect that has more to do with the multiple assignment
+fix than the empty array.
+
+********************************************************************************
+
+Deletion...
+
+
+Review code for opportunities to use
+
+auto
+range-for
+enum class
+std::complex?
+use vector instead of void *ptr in Data?
+move semantics?
+
+Back to the issue of deletion.  How can deletion be done?  
+
+Review use of makeMatrix for assumption of zeros...
+
+
+Still bugs with set:
+
+(:,:,0) = 
+   1.0000   2.0000   3.0000   4.0000
+   5.0000   6.0000   7.0000   8.0000
+   8.0000   7.0000   6.0000   4.0000
+
+(:,:,1) = 
+   1.0000   2.0000   3.0000   4.0000
+   5.0000   6.0000   7.0000   8.0000
+   8.0000   7.0000   6.0000   4.0000
+
+(:,:,2) = 
+   1.0000   2.0000   3.0000   4.0000
+   5.0000   6.0000   7.0000   8.0000
+   8.0000   7.0000   6.0000   4.0000
+
+ Execution time 0.000165641
+--> a(3,4,:) = 1:3
+
+(:,:,0) = 
+   1.0000   2.0000   3.0000   4.0000
+   5.0000   6.0000   7.0000   8.0000
+   8.0000   7.0000   6.0000   2.0000
+
+(:,:,1) = 
+   1.0000   2.0000   3.0000   4.0000
+   5.0000   6.0000   7.0000   8.0000
+   8.0000   7.0000   6.0000   1.0000
+
+(:,:,2) = 
+   1.0000   2.0000   3.0000   4.0000
+   5.0000   6.0000   7.0000   8.0000
+   8.0000   7.0000   6.0000   3.0000
+
+Deletions still do not work:
+
+a(:,[2,3],:) = []
+
+(:,:,0) = 
+   1.0000   4.0000
+   5.0000   8.0000
+   8.0000   2.0000
+
+(:,:,1) = 
+   3.0000   4.0000
+   7.0000   8.0000
+   6.0000   2.0000
+
+(:,:,2) = 
+   1.0000   2.0000
+   5.0000   6.0000
+   8.0000   7.0000
+
+TODO - 
+  Row delete
+  
+
+********************************************************************************
+
+Next steps
+
+Calling functions from functions doesn't work? - Done
+
+Review TODOs and FIXMEs
+
+end syntax? - Done
+
+Test cases?
+
+nargin? nargout? varargin? varargout?
+
+Finish NCAT?
+
+Global
+
+Persistent
+
+Switch statement - working - check corner cases
+
+Exceptions - Done!
+
+end syntax is working, but it does not cover the vector case yet.
+
+We have:
+
+a(end) --> end(a,[])
+
+And
+
+a(1,end) --> end(a,[1])
+
+Built in functions...
+
+
+Exceptions!!!
+
+How are these going to work?
+
+Exceptions have changed.  In FM4, the throw function was just missing!  
+
+We need to sort out objects for exception handling to work properly.
+But for now, a throw statement does the following:
+
+1. Stores it's argument in the VM's memory space:
+  vm->_exception = REG1
+2. Check the handler stack.  If it is empty, exit the VM loop (set
+  returnFound).
+3. If it is not empty, pop the address, and jump to the address.
+4. The OP_CATCH opcode will load the exception if necessary from
+  vm->_exception.
+
+This will handle all exception handling within a single function.
+What about situations in which one M function is calling another?
+One option is to convert the VM exception into a C++ exception.
+Then at the end of the VM loop, if the _exception is set, we throw an
+Exception.
+
+The flip side is an exception in the C++ code that needs to be
+propogated to the VM.  Consider an operation like this:
+
+try
+  expression_that_throws_exception
+catch
+  stuff
+end
+
+So in this case, the C++ code with throw an exception.  We have to
+catch that exception, which we can do _outside_ the VM execution
+loop.  The exception can then trigger the same logic as the throw
+Opcode.  Something like this
+
+
+while (!returnFound)
+{
+  try {
+    VMLoop
+  } catch (Exception & e) {
+    if vm_has_exception_handler_registered
+      vm->_exception = e (somehow)
+      vm->_ip = <pop_exception_handler_address>
+    else
+      throw;
+    end
+  }
+}
+
+Exceptions are done!  They were remarkably easy.  I think there are
+still some issues with stack unwinding and functions cleaning up after
+themselves.  The executeFunction and executeScript methods of the VM
+should use RAII to reserve and unwind the various stacks, variable
+allocations, etc.
+
+
+Handle-type classes are tricky only because of the need to deal with
+circular references.  
+
+classdef sads
+    % Sensor Array data set class
+    properties (Access=private)
+        Wavelength   % Wavelength of sources (m)
+    end
+    properties (Constant)
+        c=3e8;       % Speed in medium (m/s)
+    end
+    properties (Dependent)
+        NumSensors   % Number of sensors
+        NumSamples   % Number of samples
+    end
+    properties
+        Data         % Sampled sensor data
+    end
+    properties (Access=private)
+        Spacing      % Spacing of array (m)
+        SampleRate   % Sample rate (Hz)
+        Name         % Sensor array test run name
+    end
+    methods
+        function obj=sads(Data, Wavelength,SampleRate,Spacing,Name)
+            % SADS Create sensor array data set
+            % Example:
+            %  sads(Data, Wavelength,SampleRate,Spacing,Name)
+
+            obj.Data=Data;
+            obj.SampleRate=SampleRate;
+            obj.Spacing = Spacing;
+            obj.Name=Name;
+            obj.Wavelength=Wavelength;
+        end
+        function NumSensors=get.NumSensors(obj)
+            % Get NumSensors property
+            NumSensors=size(obj.Data,2);
+        end
+        function NumSamples=get.NumSamples(obj)
+            % Get NumSamples property
+            NumSamples=size(obj.Data,1);
+        end
+    end
+    methods (Static)
+        showarray(Targets,NumSensors,Spacing)
+    end
+end
+
+So there are two ways to dispatch a method call into an object.
+First, you can use the . syntax:
+
+a = a.incr(32)
+
+which should call the "incr" method on object a, with an implicit
+first argument of a.  Hence, this is equivalent to:
+
+a = incr(a,32)
+
+From an implementation perspective, they are very different.  In the
+case of the first one, the logical option is to bind the method to the
+object (logically at construction time).  This won't work for
+value-type objects.  As soon as the function is bound, the object
+becomes copied.  Instead, a late binding makes more sense (although it
+will be more expensive).  In this case, we generate a new function on
+the fly that binds the argument to the method function.  I don't know
+how quickly that can be done.  Essentially the compiled function looks
+like
+
+Name: ''
+Names: ''
+Parameters: <varargin>
+Returns: __obj
+Consts: <function def>, <a>
+
+Code:
+New List
+push <a>
+push <varargin{:}>
+call function def
+return first ret
+
+************************************************************
+
+The other case is more difficult.  
+
+a = incr(a,32)
+
+In this case, the incr function is fetched with a LOAD instruction,
+without any reference to a.  It seems as though this is not
+stretchable to the standard case.  Instead, we need to replace LOAD
+with a new instruction: LOOKUP.  Here, we collect the arguments of
+LOOKUP into a list, and then call LOOKUP.  Something like:
+
+new_list r3
+push     r3, a
+push     r3, 32
+lookup   r4, r3, name[1]
+subsref 
+
+The lookup OP code can then employ the following logic:
+
+1.  If name[1] is mapped to a local address (i.e., a variable), then
+return it's value.
+2.  If any user classes, compute the dominant class from r3, and
+lookup up name[1] in the methods of that class.  Continue looking
+until you find somethin.
+3.  Search the global namespace.
+
+The result of LOOKUP cannot be cached unless a local variable has been
+assigned.
+
+Consider, for example:
+
+a = {o1,o2,o3,...,oN}
+
+and then
+
+for i=1:N
+  foo(a{i})
+end
+
+Here, foo may be a different function for each object.
+
+So I will split the opcodes.  OP_LOAD will remain for expressions that
+do not get subrefed, like:
+
+A = B + 3
+
+In this case, the lookup for B should be an OP_LOAD.  In the case of
+
+A = B(4) + 3
+
+on the other hand, we need OP_LOOKUP, ans
+
+
+Compiling function bind
+Symbol table is bind
+Name: 'bind'
+Names: <'add' 't' 'y'>
+Parameters: 1
+Returns: 2
+Consts: 6 
+Code: 15 length
+000 NEW_LIST       r0                       
+001 NEW_LIST       r1                       
+002 LOAD_CONST     r2, Const[0]             
+003 PUSH           r1, r2                   
+004 LOAD           r2, Name[1]              
+005 DEREF          r3, r2                   
+006 PUSH           r1, r3                   
+007 LOOKUP         r2, r1, Name[0]          
+008 NEW_LIST       r3                       
+009 PUSH_INT       r3, 0                    
+010 PUSH           r3, r1                   
+011 SUBSREF        r0, r2, r3               
+012 FIRST          r1, r0                   
+013 SAVE           r1, Name[2]              
+014 RETURN                                  
+
+
+function y = bind(t)
+  y = add(6,t);
+
+The code should be something like:
+
+NEW_LIST   r0
+PUSH_INT   r0,0
+NEW_LIST   r1
+LOAD_CONST r2, <add>
+PUSH       r1, r2
+LOAD       r2, <t>
+PUSH       r1, r2
+PUSH       r0, r1
+
+Should we use varargin?
+
+new_list r0
+push_int r0,0
+new_list r1
+load_const r2, <6>
+push     r1,r2
+load     r2, <t>
+push     r1,r2
+push     r0,r1
+load_const r2, <add>
+subsref  r3, r2, r0
+first    r4, r3
+save     r4, 'y'
+return
+
+function [z,g,r,a] = multi(x,r,t,c)
+
+      Symbol: a flags:  return dynamic pos=3
+      Symbol: c flags:  parameter dynamic pos=3
+      Symbol: g flags:  return dynamic pos=1
+      Symbol: r flags:  parameter return pos=3
+      Symbol: t flags:  parameter dynamic pos=2
+      Symbol: x flags:  parameter dynamic pos=0
+      Symbol: z flags:  return dynamic pos=0
+
+Names     : <'a' 'c' 'g' 'r' 't' 'x' 'z'>
+Parameters: [5 0 4 3 ] - x,a,t,r
+Returns   : [6 2 0 3 ] - z,g,a,r
+
+Also need inheritance and synthetic properties...
+
+************************************************************
+
+Handles are still buggy - fixed
+
+Need to add methods
+
+%classdef DocPolynom
+   % Documentation example
+   % A value class that implements a data type for polynonials
+   % See Implementing a Class for Polynomials in the
+   % MATLAB documentation for more information.
+   
+   properties
+      coef
+   end
+   
+   % Class methods
+   methods
+      function obj = DocPolynom(c)
+         % Construct a DocPolynom object using the coefficients supplied
+         if isa(c,'DocPolynom')
+            obj.coef = c.coef;
+         else
+            obj.coef = c(:).';
+         end
+      end % DocPolynom
+      function obj = set.coef(obj,val)
+         if ~isa(val,'double')
+            error('Coefficients must be of class double')
+         end         
+         ind = find(val(:).'~=0);
+         if ~isempty(ind);
+            obj.coef = val(ind(1):end);
+         else
+            obj.coef = val;
+         end
+      end % set.coef
+      
+      function c = double(obj)
+         c = obj.coef;
+      end % double
+      
+      function obj = uminus(obj)
+          obj = -1*obj;
+      end
+      
+      function [q,r] = mrdivide(obj1,obj2)
+          [q,r] = deconv(obj1.coef,obj2.coef);
+          if q ~= 0
+            q = DocPolynom(q);
+          end
+          flag = 0;
+          for i=1:length(r)
+              if r(i) ~= 0
+                  flag = 1;
+              end
+          end
+          if flag == 1
+              warning('Polynomial division resulted in a remainder')
+              r = DocPolynom(r);
+          end
+      end
+      
+      function str = char(obj)
+         % Created a formated display of the polynom
+         % as powers of x
+         if all(obj.coef == 0)
+            s = '0';
+            str = s;
+         else
+            d = length(obj.coef)-1;
+            s = cell(1,d);
+            ind = 1;
+            for a = obj.coef;
+               if a ~= 0;
+                  if ind ~= 1
+                     if a > 0
+                        s(ind) = {' + '};
+                        ind = ind + 1;
+                     else
+                        s(ind) = {' - '};
+                        a = -a; %#ok<FXSET>
+                        ind = ind + 1;
+                     end
+                  end
+                  if a ~= 1 || d == 0
+                     if a == -1
+                        s(ind) = {'-'};
+                        ind = ind + 1;
+                     else
+                        s(ind) = {num2str(a)};
+                        ind = ind + 1;
+                        if d > 0
+                           s(ind) = {'*'};
+                           ind = ind + 1;
+                        end
+                     end
+                  end
+                  if d >= 2
+                     s(ind) = {['x^' int2str(d)]};
+                     ind = ind + 1;
+                  elseif d == 1
+                     s(ind) = {'x'};
+                     ind = ind + 1;
+                  end
+               end
+               d = d - 1;
+            end
+            str = [s{:}];
+         end
+      end % char
+      
+      function disp(obj)
+         % DISP Display object in MATLAB syntax
+         c = char(obj);
+         if iscell(c)
+            disp(['     ' c{:}])
+         else
+            disp(c)
+         end
+      end % disp
+      
+      function b = subsref(a,s)
+         % SUBSREF Implementing the following syntax: 
+         % obj([1 ...])
+         % obj.coef
+         % obj.plot
+         % out = obj.method(args)
+         % out = obj.method
+         switch s(1).type
+            case '()'
+               ind = s.subs{:};
+               b = a.polyval(ind);
+            case '.'
+               switch s(1).subs
+                  case 'coef'
+                     b = a.coef;
+                  case 'plot'
+                     a.plot;
+                  otherwise
+                     if length(s)>1
+                        b = a.(s(1).subs)(s(2).subs{:});
+                     else
+                        b = a.(s.subs);
+                     end
+               end
+            otherwise
+               error('Specify value for x as obj(x)')
+         end
+      end % subsref
+      
+      function r = plus(obj1,obj2)
+         % PLUS  Implement obj1 + obj2 for DocPolynom
+         obj1 = DocPolynom(obj1);
+         obj2 = DocPolynom(obj2);
+         k = length(obj2.coef) - length(obj1.coef);
+         r = DocPolynom([zeros(1,k) obj1.coef] + [zeros(1,-k) obj2.coef]);
+      end % plus
+      
+      function r = mpower(obj1,x)
+          obj1 = DocPolynom(obj1);
+          if x < 1
+              error('DocPolynom can only handle positive, integer powers');
+          end
+          if (round(x)-x)~= 0
+              error('DocPolynom can only handle positive, integer powers');
+          end
+          r = obj1;
+          for i=1:x-1
+              r = r*obj1;
+          end
+      end
+      
+      function r = minus(obj1,obj2)
+         % MINUS Implement obj1 - obj2 for DocPolynoms.
+         obj1 = DocPolynom(obj1);
+         obj2 = DocPolynom(obj2);
+         k = length(obj2.coef) - length(obj1.coef);
+         r = DocPolynom([zeros(1,k) obj1.coef] - [zeros(1,-k) obj2.coef]);
+      end % minus
+      
+      function r = mtimes(obj1,obj2)
+         % MTIMES   Implement obj1 * obj2 for DocPolynoms.
+         obj1 = DocPolynom(obj1);
+         obj2 = DocPolynom(obj2);
+         r = DocPolynom(conv(obj1.coef,obj2.coef));
+      end % mtimes
+      
+      function r = roots(obj)
+         % ROOTS.  ROOTS(obj) is a vector containing the roots of obj.
+         r = roots(obj.coef);
+      end % roots
+      
+      function y = polyval(obj,x)
+         % POLYVAL  POLYVAL(obj,x) evaluates obj at the points x.
+         y = polyval(obj.coef,x);
+      end % polyval
+      
+      function q = diff(obj)
+         % DIFF  DIFF(obj) is the derivative of the polynom obj.
+         c = obj.coef;
+         d = length(c) - 1;  % degree
+         q = DocPolynom(obj.coef(1:d).*(d:-1:1));
+      end % diff
+      
+      function plot(obj,varargin)
+         % PLOT  PLOT(obj) plots the polynom obj
+         if nargin==1
+             r = max(abs(roots(obj)));
+             x = (-1.1:0.01:1.1)*r;
+         else
+             x = varargin{1};
+         end
+         y = polyval(obj,x);
+         plot(x,y);
+         c = char(obj);
+         title(['y = ' c{:}])
+         xlabel('X')
+         ylabel('Y','Rotation',0)
+         grid on
+      end % plot
+   end % methods 
+end % classdef
+
+-- Need to merge the assembler and compiler and clean up the
+   compiler.  The module/symbol/stuff is a mess.
+
+
+To do that, I need to understand the need for the complexity.  This
+means local functions and nested functions.
+
+For local functions, the case is relatively easy.  We need to have
+constant references to other functions in the same module.  This can
+be done by the assembler.
+
+Local functions cannot be stored as constants, because they can be
+replaced at run time.  Consider:
+
+function x = foo(y)
+  x = square(y);
+  square = x*x;
+  x = square+2;
+end
+
+function y = square(z)
+  y = z*z;
+end
+
+In this case, the first instance of square is a local function call,
+but the second instance is a variable.  If square is compiled with a
+LOAD_CONST opcode, then at runtime, the second invocation of square+2
+will load from the CONST pool instead of the variable pool.
+
+So this means that local functions are just scoped functions that can
+be accessed from within a module.
+
+Why not use the same concept as a class for a module? That means
+either a codeblock needs to have a handle class or something.  How
+about if we have a module class with the following:
+
+class ModuleMetaData {
+public:
+  HashMap<Object> m_local_functions;
+  Object m_main_function;
+  FMString m_name;
+};
+
+Modules work great!  Next step is to handle nested functions.  Recall
+that a nested function has access to the parent function's variables.
+In the case of Python, these are "cell variables".  So consider 
+
+function main1
+  x = 5;
+  nestfun1
+
+  function nestfun1
+    x = x + 1;
+  end
+end
+
+Idea 1: variables are captured when address of the function is taken.
+     - Cons - opcodes required are different.
+
+Idea 2: captured variables are put into a list.  Invokation of nested
+functions transfers captured variables to nested function with a
+MAKE_CLOSURE type of opcode.
+     - Cons - the transferred variables need to be transferred by
+     reference, not by value.  Otherwise, modifications in the nested
+     function won't be seen at the parent scope.
+
+So essentially a cell has reference semantics.  
+
+>>> def make_counter():
+...    i = 0
+...    def incr():
+...       nonlocal i
+...       i += 1
+...       return i
+...    def decr():
+...       nonlocal i
+...       i -= 1
+...       return i
+...    return (incr,decr)
+... 
+>>> (a,b) = make_counter()
+>>> a()
+1
+>>> a()
+2
+>>> a()
+3
+>>> b()
+2
+>>> b()
+1
+>>> 
+
+
+>>> dis.dis(make_counter)
+  2           0 LOAD_CONST               1 (0)
+              3 STORE_DEREF              0 (i)
+
+  3           6 LOAD_CLOSURE             0 (i)
+              9 BUILD_TUPLE              1
+             12 LOAD_CONST               2 (<code object incr at 0x1040e7ae0, file "<stdin>", line 3>)
+             15 LOAD_CONST               3 ('make_counter.<locals>.incr')
+             18 MAKE_CLOSURE             0
+             21 STORE_FAST               0 (incr)
+
+  7          24 LOAD_CLOSURE             0 (i)
+             27 BUILD_TUPLE              1
+             30 LOAD_CONST               4 (<code object decr at 0x1040e7db0, file "<stdin>", line 7>)
+             33 LOAD_CONST               5 ('make_counter.<locals>.decr')
+             36 MAKE_CLOSURE             0
+             39 STORE_FAST               1 (decr)
+
+ 11          42 LOAD_FAST                0 (incr)
+             45 LOAD_FAST                1 (decr)
+             48 BUILD_TUPLE              2
+             51 RETURN_VALUE
+
+
+Essentially, a cell is an unnamed global variable.  To get the same
+effect in FreeMat, we need to be able to allocate a global variable
+with Handle semantics.  
+
+
+Need to allocate slots in the consts list for code blocks.
+
+Migrate compiler to smart pointers? Not at the moment...  Some clean
+up may be needed - check for leaks.
+
+Write garbage collector? - maybe later
+
+Add LLVM based JIT back in? - maybe later
+
+Next step is to add some more features to the classes
+
+Classes are broken at the moment.
+
+1.  Method invokations don't work.
+
+
+TODO:
+
+1.  Remove the codeblock stack from the compiler.  Instead, create a
+Module and put all code blocks into that module.
+2.  Add a typecode to the module to indicate what type of module it is
+(i.e., function, script or classdef).
+
+Can we adopt the same methodology as Python for class
+creation/definition.  Consider the simplest class
+
+classdef foo
+   properties
+      prop1
+   end
+end
+
+
+This class has just a single property.  The module could be marked as
+a classdef module.  The code could be something like:
+
+props = newlist
+push props, "prop1"
+methods = newlist
+name = "foo"
+make_class(name,props,methods)
+
+This could create a meta class named "foo" with the given properties
+and methods.
+
+Suppose now we have a default value for the property  It seems we
+really want more information on the properties:
+
+props = newlist
+prop1 = newlist
+push prop1, "prop1"
+push prop1, FLAG_NORMAL
+push prop1, <default_value> or <code_object to compute default value>
+push props, prop1
+methods = newlist
+name = "foo"
+make_class(name,props,methods)
+
+The problem is that you need a mechanism to load constants in the
+compiler that are later replaced by code blocks by the assembler.  For
+now, that means using the "#" notation to create placeholder objects
+in the consts list that will then be backpatched by the assembler.
+
+Suppose we now have a constructor
+
+TODO - handle the constructor...
+
+1. Find the metaclass for the class
+2. Use the metaclass to construct an instance of the class
+3. Call the constructor on the instance.
+
+NO - that's not how it works.  The constructor is automatically
+called.  Consider:
+
+      function obj = DocPolynom(c)
+         % Construct a DocPolynom object using the coefficients supplied
+         if isa(c,'DocPolynom')
+            obj.coef = c.coef;
+         else
+            obj.coef = c(:).';
+         end
+      end % DocPolynom
+
+In this case, the constructor really has an implicit call of the form
+
+      function obj = DocPolynom(c)
+         obj = __construct('DocPolynom')  % <-- Implicit call goes here.
+         % Construct a DocPolynom object using the coefficients supplied
+         if isa(c,'DocPolynom')
+            obj.coef = c.coef;
+         else
+            obj.coef = c(:).';
+         end
+      end % DocPolynom
+
+That means we need a special call in the compiler - done - and a new
+Opcode has been added to the VM to call the constructor.  
+
+Constructors work.  Next _big_ task is to handle getters and setters
+for classes.  These are tricky primarily because of the need to avoid
+recursion, and the fact that we cannot a priori identify which element
+is the class of which we are a setter/getter.  For example:
+
+      function obj = set.coef(obj,val)
+         if ~isa(val,'double')
+            error('Coefficients must be of class double')
+         end         
+         ind = find(val(:).'~=0);
+         if ~isempty(ind);
+            obj.coef = val(ind(1):end);
+         else
+            obj.coef = val;
+         end
+      end % set.coef
+
+Actually, it's not so difficult at all.  When inside a getter or setter
+method, access to the class method that is associated with the get/set
+operation should bypass setters/getters.  
+
+That means - 
+
+1.  Symbol table needs to be extended to handle get/set operations
+2.  Parser needs to accept get/set as part of function name (in this
+circumstance only).
+3.  
+
+
+
+Property attributes to handle:
+ - constant
+ - dependent
+
+Method attributes to handle:
+ - abstract ?
+ - access ?
+ - hidden ? 
+ - sealed ?
+ - static
+
+
+
+********************************************************************************
+
+Still need to handle a() where a is an array.  Not sure why this
+fails, but it does.
+
+Closures do not work from within class methods - why?
+
+Next major event - inheritance
+
+op.(go)
+
+There is a problem with the current implementation of properties as
+indexed.  Consider a class 
+
+class foo {
+ prop a;
+ prop b;
+};
+
+If foo maps a->0, b->1.  Then what happens when we subclass from foo?
+
+class bar : foo {
+  prop c;
+  prop d;
+}
+
+Now bar maps c->2, d->3.  This is OK, because bar knows that foo is a
+superclass, and therefor allocates slots appropriately.  On the other
+hand, if we inherit from two classes,
+
+class bar : foo1, foo2 {
+  prop e;
+  prop f;
+}
+
+We now have an issue, because there is no way to allocate slots so
+that both methods of foo1 and foo2 are satisfied.  Multiple
+inheritance implies that we must use a map for properties, because
+then the name is the key to the map for properties.  How does C++ do
+it?  It probably maps out the classes so that
+
+<foo1 properties>
+<foo2 properties>
+<bar properties>
+
+Then an offset into the class is used to correct the lookup for the
+property.  Why can't we just import all of the properties into a
+single metaclass?  So that in this case, bar's list of properties is
+
+bar: <foo1_props, foo2_props, bar_props>
+
+We can then import the _methods_ from foo1 and foo2 into the metatype
+for bar.  Furthermore, that means that when those functions are called
+they are mapped through bar's metatype, which routes them to the
+correct slot.  
+
+Inheritance brings the ambiguity in name resolution problem to front.
+Consider:
+
+classdef a
+      methods
+          function foo(x)
+	     % Do stuff
+          end
+      end
+end
+
+classdef b < a
+      methods
+          function foo(x)
+	    a@foo(x) % call a's method on x
+	    % Do other stuff
+	  end
+      end
+end
+
+In this case, if we have derived b by including the definition of a,
+then we must have two methods in class b:
+
+b@foo
+a@foo
+
+But we don't want to do a search for b.has('foo'), which is inside the
+VM loop.  To that extent, we could duplicate the method which has the
+unscoped name.  For example
+
+b@foo
+foo
+
+In this case, foo is an alias for a@foo.  But inherited functions will
+need to be renamed if/when they clash with existing names.  This
+suggests we should add inherited names _after_ local names, with
+renaming to avoid collisions.
+
+What remains is calling constructors for inherited classes.  This is a
+bit trickier, because the syntax for calling parent class constructors
+is a bit wierd.  If class B < class A, then we have an additional
+problem in the construction of the class.  Suppose we have that class
+A has a constructor which takes arguments:
+
+classdef A
+  methods
+    function obj = A(c)
+      % Stuff goes here
+    end
+  end
+end
+
+Now in this case, you can no longer construct an object of class A
+without an argument.  So a derived class now _must_ call A with a
+constructor. Consider this case
+
+classdef B < A
+  methods
+    function obj = B(c)
+      % implicit call to construct goes here.
+      obj = obj@A(c)
+    end
+  end
+end
+
+This means we must:
+1.  In the constructor, scan for invocations of superclasses.
+2.  Build a list of constructors that are explicitly called
+3.  Identify constructors that still need to be called
+4.  emit OP_CONSTRUCT for built-in constructor.
+
+So we need something like this:
+
+class constructor:
+1. For each superclass (A) that has no explicit reference, call
+meta(A)->deref
+
+A better strategy.
+
+1.  Every class will derive from ValueClass or HandleClass
+2.  Compiler tracks the invokation of all constructors done
+explicitly.
+3.  Constructors not invoked explicitly are implicitly invoked by the
+compiler:
+
+function obj = constructorA
+  % These are implicit invokations of constructors for base1 and base2
+  obj = obj@base1
+  obj = obj@base2
+  % Explicit invokations of constructors, possibly with arguments
+  obj = obj@base3(args)
+end
+
+4. Constructors are mapped to functions that take the object to be
+constructed as an argument.  This allows constructors from
+superclasses and subclasses to be reused.  Hmmm... Consider the case
+
+function obj = base1(c)
+  obj.foo = 32
+end
+
+In this case, we normally have obj magically assigned by the hidden
+OP_CONSTRUCT call inserted at the beginning.  I.e., the code is
+compiled as
+
+function obj = base1(c)
+  obj = OP_CONSTRUCT
+  obj.foo = 32
+end
+
+The problem with this is that normally the OP_CONSTRUCT call invokes
+the built-in class constructor.  Now, we have a more complicated case
+in which base1 is called as the superclass constructor of a derived
+class.  For example:
+
+function obj = classA
+  obj.goo = 4
+end
+
+When this is compiled, it needs to be compiled as
+
+function obj = classA
+  obj = OP_CONSTRUCT
+  obj = obj@base1 ??
+  obj.goo = 4
+end
+
+The problem is that we have already constructed obj.  So we cannot
+call OP_CONSTRUCT again.  Instead, we need to pass a partially
+constructed object to the constructor.  One option would be to have
+OP_CONSTRUCT take an argument object.  I.e., what if we have
+OP_CONSTRUCT have the following behavior:
+
+1. OP_CONSTRUCT - if called the first time, allocates and constructs
+the object with baseline values for all properties.
+2. OP_CONSTRUCT - if called subsequent times, returns the already
+constructed object.
+
+Examining the OP_CONSTRUCT opcode implementation:
+ REG1 = _ctxt->_meta->construct(REG2);
+
+Here REG2 is the metaclass, and REG1 is the returned object of a given
+class.  The problem is that there is nowhere to "stash" the partially
+constructed object.  Only the return value of construct is saved.  It
+would have to live in the current frame or worse, the current VM.
+Storing in the current VM or frame won't really work, as the frame
+will be pushed when subclass or superclass constructors are called,
+and the VM can't keep track of what class is being constructed.
+
+What we need is to make _explicit_ the need to call the original
+constructor.  That won't work if we have multiple class inheritance -
+e.g., if:
+
+a < b & c
+
+then the base constructor gets called twice.  Once for b and once for
+c.
+
+Another option is to add a hidden extra argument to the object
+constructor.  So for example,
+
+function obj = classA(n,m)
+end
+
+compiles as
+
+function obj = classA(obj,n,m)
+end
+
+where obj is the partially constructed object.  We must then in the
+setup for the function, handle the fact that obj and n and m are not
+equivalent to standard arguments.  Let's ignore this for a moment.
+Then when we call base constructors, we have something like this:
+
+function obj = classA(obj,n,m)
+  obj = obj@base1(m) --> base1(obj,m)
+end
+
+I.e., we add an implicit first argument to the class constructor that
+is the partial object.  We need to ensure that this implicit argument
+is removed and not counted by nargin.  The remaining problem is that
+when the class is constructed, we need to provide a base object.  This
+could be done by intercepting the constructor call at the meta object
+level.  So something like this:
+
+a = classA(3,4)
+
+--> REG1 = meta.classA.construct()
+--> REG1 = meta.classA.call(REG1,3,4)
+
+Here, we external to the constructor (at the VM level) construct the
+object A, and then use the constructor to fill in the details.  This
+notion of a "hidden" parameter to the function is the same as the
+binding, so it's a bit strange that we can't use the same mechanism as
+function binding.  This solves the issue for objects without
+constructors (REG1 is already the constructed object), and also for
+reusing constructors.  Consider if A < base1 & base2.  Then
+
+a = classA(3,4)
+
+REG1 = meta.classA.construct()
+REG1 = meta.classA.call(REG1,3,4)
+  REG1 = base1(REG1,3)
+  REG1 = base2(REG1,4)
+The calls to base1 and base2 do not include calls to the construct()
+method, so there is no conflict.  This also cleans up the need to
+insert OP_CONSTRUCT into the OpCode stream.  In fact, we can eliminate
+VM support for it completely.  
+
+
+********************************************************************************
+
+OK - so the problem was:
+
+1.  Constructors need to be passed an extra argument.
+2.  The argument is hidden.
+3.  The argument is the same as the return of the function.
+4.  Constructors are static functions.
+5.  Calling a constructor is a special invocation.
+
+Update.  Some validation is now done on constructors.  For example,
+
+function A = classname(A)
+end
+
+or 
+
+function [A,B] = classname()
+
+should both cause errors (reuse of return name in constructor, and too
+many return values in a constructor respectively).  What is needed
+next is the ability to pass A into constructor without an object.  
+
+How to hide the argument?  Consider the seuqence for calling a
+constructor function:
+
+A bound function is different.  In the case of a bound function, the
+argument is _added_ to the list of arguments.  So that
+
+y = a.foo(c,d)
+
+becomes 
+
+y = foo(a,c,d)
+
+In this case, we want
+
+y = foo(c,d)
+
+to be converted into:
+
+a = meta(foo).construct(a,b)
+
+So far, this is fine.  
+
+y = foo(c,d)
+
+Then,
+
+1.  The meta class calls "construct" on the class.
+2.  The meta class passes control to the class constructor, using a
+hidden object parameter.
+3.  Calls to superclasses route through the same hidden object
+parameter
+
+The first two work - the third one works too.
+
+********************************************************************************
+
+Still needed:
+
+1.  Notification.
+2.  Handle classes. - done
+3.  Dependency trees. - done
+4.  Priorities?
+5.  Implicit constructor calls.  FreeMat must call the no-arg
+constructors for all super classes that are not explicitly called. :(
+
+Handle classes work, but do not have garbage collection.  So there is
+still an issue with cycle detection.
+
+Next - notifications.
+
+Need to add two new types of function pointers:
+
+@obj.Method
+
+and
+
+@class.Method
+
+Also, we need to add sparse matrix support!
+
+Need to add destructor support for handle classes
+
+Operator overloading?
+
+There is a problem with the reference count.  It is too high - that
+was fixed.
+
+Need to add method and class function pointers.
+
+
+
+The current approach of putting '@' into alphanumerics for the scanner
+is wrong.  Need to take it out and treat it like an operator again.
+
+Function pointers also don't seem to work...  Ugh.
+
+
+The expression a = @add should create an object of class function
+pointer
+
+Pointers to anonymous functions is equivalent to closures.  So we
+should be able to piggy back on the closure mechanism for anonymous
+functions - not sure how just yet.
+
+Anonymous functions inside closed scopes work fine, I think.
+
+Yes - with some (significant!) tweaking, you can now return anonymous
+functions from inside closed scopes.  Something like:
+
+function y = foo(a,b)
+  y = @(n) a+b+n
+
+This works correctly.  However, what doesn't work is anonymous
+functions generated in scripts.  What happens in the case of something
+like
+
+function y = foo(a,b)
+  y = @(n) fft(a,b,n)
+
+In this case, we have a function fft, which isn't defined in the
+parent scope.  In this case, the add function is left as dynamic in
+the captured/nested function.  This means a definition of "add" must
+exist when the function is _called_.  But this is problematic.
+
+How to resolve?
+
+Ick.  Consider the case where we have:
+
+function y = foo(a,b)
+  y = @(n) foo(n,a,b)
+
+In the most general case, the function foo can depend on the types of
+the arguments.  That means it cannot be captured as a function when
+the closure is created.
+
+I have few alternatives.  One is to look for instances of variable
+references without arguments. 
+
+--- Need to think about this some more.
+
+What about function handles for class methods?
+
+y = class@method
+
+This should _always_ return a function handle.  
+
+How do function handles differ from function types?  At the moment,
+function types respond to "deref".  So consider the following
+
+y = pi;
+
+if pi is a function, then when we fetch it, we want a function object,
+not a handle.  On the other hand
+
+y = @pi
+
+is supposed to return a handle, not a function.  So I think that
+closures should be handles, not functions.
+
+For anonymous functions, we have a bit of a problem.  Consider
+
+y = @(x) foo(x)
+
+There are two possibilities.  One is that foo is defined and is a
+variable.  If that is the case, then all should be fine, and y should
+capture a copy of variable foo.
+
+The second case is that foo is a function and what function gets
+executed depends on the type of the argument x.
+
+In the first case, we capture foo as a variable in the caller's space,
+and in the second we don't.  This decision has to be made at runtime
+by the VM.  But it cannot be made until the function is invoked
+(unless it is a variable).  In that case, the instruction has to be
+rewritten (it is not an OP_LOAD_CELL), it is an OP_LOOKUP.
+
+It seems that the alternative for anonymous functions is to use a
+completely different mechanism.
+
+We want something like
+
+OP_LOOKUP foo, args
+
+How about the following.  First, we convert the expression into a code
+object.
+
+So
+
+y = @(x) x + n
+
+We assume all unknown variables are dynamic (i.e., as if it weren't
+nested)
+
+Then we have x as a parameter, and n as dynamic.
+
+We then have an opcode OP_MAKE_ANONYMOUS
+
+which takes a code object (constant), and creates an anonymous
+function object at run time.
+
+
+With much effort(!) anonymous functions work again.  So do scoped
+pointers.  Need to fix up calls to superclass constructors.
+
+And also handle non-static methods for superclasses.  E.g.,
+
+classdef foo < bar
+  methods
+    function x = baz(obj)
+      x = bar@junk(obj)  % Non-static method from super-class
+    end
+  end
+end
+
+************************************************************
+
+The solution for constructors is still ugly.  Instead, I need to use a
+more straightforward approach. For a constructor of the type:
+
+function obj = foo(n)
+end
+
+I will synthesize an argument in the list, so that it looks like this:
+
+function obj = foo(obj,n)
+end
+
+The constructor then becomes a static method on the meta class.
+However, it is not called directly - rather, the meta class calls
+"construct" to build the data structure in memory, and then invokes
+the constructor with the initial argument set to obj. 
+
+
+Things to check for objects:
+
+Base constructor - works
+Superclass constructor - works
+Object method - works
+Superclass method - works
+
+At this point, there are no guards for the objects.  For example, if
+we have:
+
+class bar
+  method
+     foo
+
+Then we can call foo on an object that is _not_ derived from bar.
+
+x = junk
+bar@foo(x)
+
+This violates the contract.  We need to have some validation that
+non-static class methods are invoked on objects?  But there is no
+guarantee which argument of the method is supposed to be the object.
+So I don't think that will work.
+
+// todo - handle nargin for constructors
+// todo - base constructors for superclasses that are not explicitly
+called
+
+Base constructors -- we need to call the base constructors for each
+class that we derive from.  For example:
+
+classdef bar < foo & baz
+
+Then in the constructor for bar, we have to call the constructors for
+foo and baz.  Furthermore, we need to call any constructors for which
+the base constructor is not explicitly called.  
+
+Symbol pass now identifies them.. Need to add code to constructor to
+call implicit constructors!
+
+Notifications...
+
+Naming events
+
+Event parsing is completed -- but does handle inheritance work
+correctly?
+
+
+Handle inheritance doesn't work correctly.
+
+
+Solution!  Define the handle class as having a property is_handle = 1,
+or something.  Then every class can simply inherit from the handle
+class and it will automatically get a member indicating it is a handle
+class!
+
+Fixed.  Much cleaner code throughout.  Have also solved the problem of
+binding functions that are not code based.  You can now bind any
+callable to a variable.  This is so that a.foo, where a is a class,
+and foo is a builtin function, will still work properly.
+
+Still a puzzle why in a script handles are not released
+properly. E.g., 
+
+a = sclass(4); % Where sclass < handle
+a = [] % a's destructor is not called here...
+
+* Script modules do not work correctly.  There is no mechanism for
+  capturing that the module is a script.
+
+* Script modules work now (I guess they never did before).  However,
+  we are still leaking object references somewhere.  In particular, if
+  we create a class in a script (e.g., g = sclass(9); is the last line
+  in the script), then reassigning g = 'hello' does not trigger the
+  destructor for sclass.
+
+
+From StackOverflow:
+
+n lldb, use command script import lldb.macosx.heap to install some memory-searching functions. The ptr_refs command should be able to do what you want; use ptr_refs --help to learn more.
+
+shareimprove this answer
+answered Jun 3 '13 at 20:18
+
+Greg Parker
+4,2611615
+1	 	
+ptr_refs is the way to go. If you launch your app with the MallocStackLogging=1 environment variable, you can do ptr_refs --stack ADDRESS and not only see all memory blocks that contain that address but the backtrace when that object / memory block was allocated or freed. Note that ptr_refs is only for Mac OS X apps at this point - the way it is implemented in Xcode 4.6 precludes it from working on iOS. –  Jason Molenda Jun 3 '13 at 23:11 
+
+Not sure base constructors are getting called in all circumstances.
+
+
+Tracking reference count issues:
+
+1. create with count 1
+2. Constructor invokation assigns the object to a list
+3. After constructor invokation, the reference count for the object is
+
+Starting script: 
+NEW_LIST       r0                  
+LOAD           r1, Name[1]         
+OP_LOAD for shnd
+Searching globals for shnd
+DEREF          r2, r1              
+Constructing class with handle flag 1
+Create count 1 ptr 0x7ff0cbc53a80 class class
+Assign_new count 2 ptr 0x7ff0cbc53a80 class class
+Copy count 3 ptr 0x7ff0cbc53a80 class class
+Assign_old count 2 ptr 0x7ff0cbc53a80 class class
+Delete count 1 ptr 0x7ff0cbc53a80 class class
+Assign_new count 2 ptr 0x7ff0cbc53a80 class class
+Delete count 1 ptr 0x7ff0cbc53a80 class class
+
+At this point r2 -> class
+
+PUSH           r0, r2              
+Assign_new count 2 ptr 0x7ff0cbc53a80 class class
+
+Now r2 -> class, and r0 -> [class]
+
+FIRST          r1, r0              
+Copy count 3 ptr 0x7ff0cbc53a80 class class
+
+Assign_new count 4 ptr 0x7ff0cbc53a80 class class
+Delete count 3 ptr 0x7ff0cbc53a80 class class
+
+Now r2 -> class, r0 -> [class], r1 -> class
+
+SAVE           r1, Name[0]         
+Writing shnd to address 1 at machine 0x7ff0cd720100
+Assign_new count 4 ptr 0x7ff0cbc53a80 class class
+
+Now r2 -> class, r0 -> [class], r1 -> class, name[0] -> class (4 references)
+
+LOAD_CONST     r0, Const[0]        
+SAVE           r0, Name[0]         
+Writing 3 to address 1 at machine 0x7ff0cd720100
+Assign_old count 3 ptr 0x7ff0cbc53a80 class class
+
+Now r2 -> class, r0 -> 3, r1 -> class, name[0] -> 3 (2 references)
+
+There shoud be 2 references, we see 3.  The LOAD_CONST call should
+have resulted in a free of the list that r0 had.  
+
+
+
+RETURN                             
+Clearing register 0
+Clearing register 1
+Assign_old count 2 ptr 0x7ff0cbc53a80 class class
+Clearing register 2
+Assign_old count 1 ptr 0x7ff0cbc53a80 class class
+
+The bug is in ListType::pop, believe it or not...
+
+The leak is fixed, but pop is still wrong.  Probably should just copy
+it.
+
+Next question - do registers need to be explicitly cleared?  So that
+we don't have extra references hanging around?  Scary thought.
+Something like an object's destructor doesn't get called because there
+is an extra register hanging onto a reference of it?
+
+Python doesn't have this problem (I assume) because it is stack
+based.  
+
+To make the same thing happen here, we have to explicitly clear
+registers before returning them to to the available pool.  So right
+now, we have:
+
+
+********************************************************************************
+
+Some more tweaks with handle objects and linear structures are now
+fixed up.  For example:
+
+a = shnd(9); b = shnd(a); c = shnd(b);
+
+Then a = [], b = [], c = []; frees all three
+
+What we are missing is cycle detection.
+
+To find cycles.
+
+1.  We need a list of all handle objects
+2.  We also need a list of all containers
+
+Why do we need containers?  Consider
+
+a = shnd(3);
+a.prop = a;
+
+This creates a self referential cycle.  It is the simplest cycle, but
+a practical cycle could be arbitrarily large.  Consider
+
+a = shnd(3);
+b = {a};
+a.prop = b;
+
+In this case, a cycle exists because a refers to itself (via b).  The
+problem, of course, is that when we clear a and b
+
+a = [];
+b = [];
+
+the object a does not get destroyed (because it contains a reference
+to itself).
+
+The Python algorithm is more general, because, e.g., a dictionary can
+contain a reference to itself.  This is not directly possible in
+FreeMat, because a dictionary contains values.  Every reference cycle
+_must_ include at least 1 handle object.
+
+That suggests that we keep a global list of handle objects.  Consider
+the task of findobj - it can find handle objects given property/value
+pairs.  So we _must_ keep a list (thread local at least) of all handle
+objects.  
+
+So the first step is to have a directory of handle objects that is
+updated.
+
+Done.  See ThreadContext->_handles for the set of all handle objects.
+
+The next step is to search this set for circular references.
+
+A GC func must traverse the objects and look for references to
+themselves.  A handle object with a reference count of 1 that is in a
+cycle will never be destroyed - is that right?
+
+Borrowing the algorithm from Python - uses five passes:
+
+1.  Copy the object reference count for every handle to gc_count (a
+temp)
+2.  Trace every object to find out which handles it points to - store
+in a graph
+3.  For each object, decrement the gc_count of every object that it
+points to.
+4.  For any objects that have a non-zero residual count, increment the
+count of all objects they point to.
+5.  Free objects with a zero count.
+
+Not sure if scripts are still leaking references... Need to
+investigate.  
+
+A problem with the current implementation, by describing the
+connections with a set, we have lost the multiplicity of the
+connections.  So, if, for example, a -> b five times (e.g., 
+
+a = {b,b,b,b,b}
+
+Then unless we keep track of this multiplicity, we loose the
+information.
+
+Done - replaced the set with a multi-set.  The reference cycle issue
+is now resolved.
+
+********************************************************************************
+
+a = {}
+a = [a,3] causes a crash
+a = [a,{3}] returns a 0x1 array
+
+Are dynamic subscripts supported? - Not yet!
+
+Also, cannot seem to do
+
+properties
+  goo 
+end
+methods
+  function x
+     x.goo.foo{end+1} = p
+  end 
+end
+
+Or more simply:
+
+
+
+What about the case:
+
+a = {}
+a = [a,3]
+
+This exposes the problem with NCat.
+
+Also, operators are missing for most classes.
+
+
+********************************************************************************
+
+The metaclass operator "?"
+
+This operator introduces another problem.  Consider the sequence:
+
+p = ?foo;
+
+p
+
+The expected result is that the second line prints the details of the
+metaclass.  But what happens in the current design is that p gets
+OP_DEREFed, which triggers the constructor for the underlying class.
+
+>> deferred - until later...
+
+********************************************************************************
+
+nargin? nargout? varargin? varargout?
+
+Finish NCAT?
+
+Global
+
+Persistent
+
+Problems with NCAT
+
+a = {}
+a = [a,{3}]
+
+NCAT works for the basic types.  Only problem is objects.  Indeed,
+overloading doesn't work for objects at all.
+
+********************************************************************************
+
+Overloading of objects
+
+Class priorities (i.e., class a is inferior to class b, so a+b invokes
+class b's method, not class a's).
+
+The HCAT/VCAT thing isn't completely clear either.
+
+InferiorTo needs to be added to classdef.  
+
+Remaining methods that need explicit overload capability are:
+
+command window output display(a) Display method
+
+[a b] horzcat(a,b,...) Horizontal concatenation
+[a; b] vertcat(a,b,...) Vertical concatenation
+
+
+
+a(s1,s2,...sn) subsref(a,s) Subscripted reference
+a(s1,...,sn) = b subsasgn(a,s,b) Subscripted assignment
+b(a) subsindex(a) Subscript index
+
+As the functions become more complicated, debug information would be
+nice to have.  Need to figure out how to supplement the VM code with
+information about the source code so as to better be able to debug.
+
+Need to implement subsasgn and subsindex.  Both are missing.
+
+Also, setters and getters call the NOGS versions of subsref/subsasgn
+indiscriminantly.  It's probably not right.  Only subsref/subsasgn
+calls on the object should be routed to the NOGS version.
+
+Last is subsindex.  
+
+********************************************************************************
+
+Computing with integers & floats and doubles:
+
+From:
+http://www.mathworks.com/company/newsletters/articles/integer-and-single-precision-math-in-matlab-7.html
+
+
+Integer and Single-Precision Math in MATLAB 7
+
+By Stuart McGarrity, MathWorks
+
+MATLAB 7 now provides integer and single-precision math. This new capability enables processing of integer and single-precision data in its native type, resulting in more efficient memory usage and the ability to process larger, nondouble data sets. This article describes the new MATLAB integer and single-precision math features with application examples for each case.
+
+Integer Math in MATLAB 7
+
+Before MATLAB 7, all numerical operations in MATLAB were performed in double precision. Double-precision variables, which use 64 bits (8 bytes) of memory storage, accurately represent values to approximately 15 decimal places. Double-precision is a floating-point data type with a large dynamic range.
+
+MATLAB 7 now supports arithmetic on the integers including unsigned integer types uint8, uint16, and uint32, and the signed types int8, int16, and int32. These data types require 8 to 32 bits to be stored in memory. Examples of integer data include output from sensors measuring real-world values, such as audio signals using 8 or 16 bits per sample, or image files using 8 or 24 bits per pixel.
+
+MATLAB supports all arithmetic operators such as +, -, .*, . ⁄, and .^ on these integer data types, as well as some elementary functions such as sum and sort. Other functions that are useful when dealing with integer data types are intmax, intmin, isinteger(x), isa(x,'integer'), cast, ones, zeros, eye and intwarning.
+
+The Benefits of Integer Math
+
+Like any computer application, MATLAB has a finite amount of addressable memory to store data. For example, on Windows XP in Release 14 the largest variable MATLAB can store is approximately 1.2GB. By leaving data in its native format and not requiring the conversion to doubles, MATLAB can now handle integer data sets up to eight times larger without running out of memory.
+
+Round-off Error and Saturation
+
+Storing real numbers as integers usually results in much larger conversion and arithmetic round-off errors than if they had been stored as doubles. In MATLAB 7 when variables are converted from another data type, the value is rounded to the nearest integer instead of always truncating (as in C), resulting in less round-off error.
+
+To convert a variable to an integer data type, you must pass it to the appropriate function, for example:
+
+>> a=6.4;
+>> aint=uint8(a)
+
+aint =
+6 
+
+Integer data types also have less dynamic range than floating-point data types, therefore the result of an operation can go out of range more easily. In MATLAB 7, if the result of an arithmetic operation is greater that the upper bound of the data type, the variable saturates (it is set to the upper bound). If the result is less than the lower bound of the data type, the variable is set to the lower bound. This is different from C, which wraps around through zero.
+
+When performing arithmetic on integer data types, issues such as round-off error and saturation must be managed by the programmer. One technique is to ensure the data set stays within the data type’s range throughout the execution of the algorithm.
+
+In order to precisely match the overflow and rounding effects that occur in the integer or fixed-point arithmetic of any C compiler or embedded processor, you can use the Fixed-Point Toolbox.
+
+Integer Math Rules
+
+You can combine numbers of an integer data type with numbers of the same integer data type or type scalar double. MATLAB performs arithmetic as if both inputs had type double and then converts the result to the same integer data type. The complete set of rules describing how integer types interact with other data is described in the MATLAB documentation.
+
+
+
+
+********************************************************************************
+Arithmetic Operations on Integer Classes
+
+http://www.mathworks.com/help/matlab/matlab_prog/integers.html#f2-98095
+
+MATLAB can perform integer arithmetic on the following types of data:
+
+Integers or integer arrays of the same integer data type. This yields a result that has the same data type as the operands:
+x = uint32([132 347 528]) .* uint32(75);
+class(x)
+ans =
+   uint32
+Integers or integer arrays and scalar double-precision floating-point numbers. This yields a result that has the same data type as the integer operands:
+x = uint32([132 347 528]) .* 75.49;
+class(x)
+ans =
+   uint32
+For all binary operations in which one operand is an array of integer data type (except 64-bit integers) and the other is a scalar double, MATLAB computes the operation using elementwise double-precision arithmetic, and then converts the result back to the original integer data type. For binary operations involving a 64-bit integer array and a scalar double, MATLAB computes the operation as if 80-bit extended-precision arithmetic were used, to prevent loss of precision.
+
+Type conversion infrastructure is in place.  Need to populate.
+
+How do we return from a debug cycle?
+
+The resulting code has two op_returns.  Is there some way?  A return
+from a script is not normal..
+
+
+There are two fundamental approaches to debugging.  One way is to add
+a hardware support for debug to the code.  The debugger could set the
+instruction trap - but that means that the code has to be writable,
+and it also means that conditional breakpoints become very difficult.
+
+The trace approach is going to be a lot slower.  Here, we have a flag
+for the VM.  If the flag is set, then after each instruction, line, or
+call, we call the trace function.  The trace function can then enter a
+debug cycle if it decides to.  The trace function can also keep track
+of the location of breakpoints, as well as evaluate conditional
+breakpoints when needed.
+
+
+How about an intermediate approach?  We keep a vector of booleans for
+each instruction.
+
+
+Here are the db functions to implement along with their official
+descriptions from the MATLAB website:
+
+dbstack
+
+Function call stack
+Syntax
+dbstack
+dbstack(n)
+dbstack('-completenames')
+[ST,I] = dbstack(...)
+
+Description
+
+dbstack displays the line numbers and file names of the function calls that led to the current breakpoint, listed in the order in which they were executed. The display lists the line number of the most recently executed function call (at which the current breakpoint occurred) first, followed by its calling function, which is followed by its calling function, and so on. This continues until the topmost MATLAB® function is reached. Each line number is a hyperlink you can click to go directly to that line in the Editor. The notation functionname>localfunctionname is used to describe the location of the local function.
+
+dbstack(n) omits the first n frames from the display. This is useful when issuing a dbstack from within an error handler, for example.
+
+dbstack('-completenames') outputs the "complete name" (the absolute file name and the entire sequence of functions that nests the function in the stack frame) of each function in the stack.
+
+Either none, one, or both n and '-completenames' can appear. If both appear, the order is irrelevant.
+
+[ST,I] = dbstack(...) returns the stack trace information in an m-by-1 structure, ST, with the fields:
+
+file	The file in which the function appears. This field is the empty string if there is no file.
+name	Function name within the file.
+line	Function line number.
+The current workspace index is returned in I.
+
+If you step past the end of a file, dbstack returns a negative line number value to identify that special case. For example, if the last line to be executed is line 15, then the dbstack line number is 15 before you execute that line and -15 afterwards.
+
+This example shows the information returned when you issue dbstack while debugging a MATLAB code file:
+
+dbstack
+
+In /usr/local/matlab/toolbox/matlab/cond.m at line 13
+In test1.m at line 2
+In test.m at line 3
+This example shows the information returned when you issue dbstack while debugging lengthofline.m to get the complete name of the file, the function name, and line number in which the function appears:
+
+[ST,I] = dbstack('-completenames')
+ST = 
+    file: 'I:\MATLABFiles\mymfiles\lengthofline.m'
+    name: 'lengthofline'
+    line: 28
+I =
+     1
+
+An intermediate solution is to set the line numbers inside the
+generated code.  I.e., add a series of debug instructions into the
+stream so that we have
+
+<op codes for line N>
+DBG N+1
+<op codes for line N+1>
+DBG N+2
+<op codes for line N+2>
+
+This approach allows us to "poll" the debugger only when line numbers
+change.  It also makes disassembly easier, as the line numbers are in
+line with the relevant code.  It may make the opcode generation
+tougher, or the assembler part, as the number of instructions is no
+longer determined by the compiler alone.  Alternately, the compiler
+could filter at the emit(op) level and set codes for the DBG
+instruction into the output stream.
+
+
+There is an additional problem - when we shift the active frame, we do
+not want to overwrite the other frames after it while in the
+debugger.  So we have something like this:
+
+frames
+
+0
+1
+2
+3 <-- closed active frame
+4
+5 <-- active frame
+6
+7
+8
+9 <-- debugger base frame
+10<-- function called while in debugging
+
+There are a couple of issues.  One is that after a dbup or dbdown, the
+cache variables in the VM have to be reloaded.  For example, varfile,
+which points to the variables in the current frame, will change
+depending on which frame is being pointed to.  Also, we have to
+invalidate the address file, as it changes when we move from one frame
+to another.
+
+This all means that dbup/dbdown can no longer be normal functions.
+They have to go back to being special purpose functions that have
+specific opcodes.  Of course, they could be trapped at the compiler
+instead of being trapped at the parser.  Still. :(
+
+
+OK, moving DBUP/DBDOWN back to opcodes means that they work by
+directly manipulating the execution frame.  The next function needed
+is DBSTEP.  The idea here is a bit tricky - we cannot insert an
+instruction into the stream, so we use a deferred expensive operation.
+
+The idea is to (upon demand) create a series of line-number entries
+for each instruction.  This is done be expanding the RLE line numbers.
+
+For DBSTEP to work, we need to first get DBSTOP implemented.  It can
+then piggy back on the breakpoint mechanism.
+
+    
+    
+dbstop in file
+dbstop in file at location
+dbstop in file if expression
+dbstop in file at location if expression
+dbstop if condition
+dbstop(s)
+
+
+location can be a subfunction name
+location can be a line number
+location can be a line number with an anonymous function invokation
+specified
+
+Condition that causes execution to pause when that condition evaluates to true. Specify condition as one of the following:
+error— Run-time error that occurs outside a try/catch block. You cannot resume execution after an uncaught run-time error.
+If you want execution to pause only if a specific error occurs, specify the message id. For example:
+dbstop if error stops execution at the first run-time error that occurs outside a try/catch block.
+dbstop if error MATLAB:ls:InputsMustBeStrings pauses execution at the first run-time error outside a try/catch block that has a message ID of MATLAB:ls:InputsMustBeStrings.
+caught error — Run-time error that occurs within the try portion of a try/catch block. If you want execution to stop only if a specific error occurs, specify the message id. See the error condition for an example of specifying a message id.
+warning— Run-time warning occurs. If you want execution to pause only if a specific warning occurs, specify the message id. See the error condition for an example of specifying a message id.
+This condition has no effect if you disabled warnings with the warning off all command or if you disabled warnings for the specified id. For more information about disabling warnings, see warning.
+naninf and infnan
+The code returns an infinite value (Inf) or a value that is not a number (NaN) as a result of an operator, function call, or scalar assignment. The naninf and infnan conditions have identical effects.
+
+Some further issues - breakpoints currently fire on every instruction
+with a given line number, and lines that are expression statements are
+improperly numbered.
+
+Statement number is fixed, but it's not a clean fix - Need to check
+each statement type to see if it works.  DBSTEP is missing.
+Conditionals do not work yet.
+
+How to move objects from one thread context to another (important
+because of breakpoint conditions).
+
+Option 1.  Use the global thread context as an intermediary.  Transfer
+the object to the global thread, and then transfer it from the global
+thread.
+
+Option 2.  Coordinate between the two threads and pass from one thread
+context to another.
+
+Option 3.  Place the object into a thread-safe container, and pass it
+that way.
+
+FM4 uses the signal-slot mechanism, and the objects are inherantly
+thread safe, so no help there.  Python uses a GIL so the fact that the
+objects are not thread safe doesn't matter.
+
+Ideally, we would have somthing like:
+
+_ctxt2->importObject(const Object &a, ThreadContext *ctxt1)
+
+But with some external mutex that protects the access to object a.
+E.g., if thread1 and thread2 have a mutex mutex12, then we would have
+
+mutex12.lock()
+ctxt2.import(a,ctxt1)
+mutex12.unlock()
+
+But this requires that thread 1 and thread 2 coordinate.  The globals
+space is not "local" to any thread, so it can be safely used to
+exchange threads.  That means that we have option 1.  Option 3 is more
+complicated, I would have to create an entire parallel class of
+datatypes to reflect thread-safe sharables.  Don't like that idea.
+
+OK - at the moment, global exchange (option 1) is what is
+implemented.  The mechanisms for option 2 are in place if it becomes
+necessary for performance reasons.  But for now, the global mechanism
+allows thread contexts to safely exchange variables.  There is a
+double copy penalty for doing so (unless one of the threads owns the
+global exchange), but that _should_ be a rare occurance.  A side
+effect is that conditional breakpoints now work. 
+
+// Next function to implement
+dbclear
+dbcont
+dbdown
+dbquit
+dbstack
+dbstep
+dbstop
+dbtype
+dbup
+
+dbclear requires a special syntax, like dbstop.  Kicked dbstop out of
+scanning and parsing - it is a special function call.  Special
+function calls are now supported.
+
+There is a problem with exceptions.  You cannot stop on "uncaught"
+exceptions, because there is no place to do so.  The VM uses the C++
+mechanism for exception handling, and that means that the VM doesn't
+actually know if an exception is being caught or not.  
+
+The simplest solution would be to add a flag to the VM so that if
+somewhere along a call chain, an exception handler is registered then
+we know it will be caught.  So if:
+
+a --> b --> c
+
+Then if a has a try/catch block, and an exception is thrown in c, the
+VM has marked that an exception handler exists (further upstream).
+The problem is how to decide when to set/unset that flag.  Really the
+flag represents the number of try/catch blocks between the current
+execution point and the root context.
+
+So we can add a counter that increments each time we enter a
+TRY_BEGIN, and decrements each time we see a TRY_END.  This counter
+will persist across frames, and will be an indicator if (at any given
+time) an exception handler is registered.
+
+Just need to be careful to make sure the counter does not become out
+of sync with the exception stack (say, for example, if an early return
+is issued from a debug session or something similar).
+
+**************************************************************************
+
+dbstop - seems to be complete
+
+dbclear - works
+
+dbcont - just like a return - mapped to it's own token for parsing
+
+dbdown - done
+
+dbquit - I think this causes debugging to terminate the current
+function. - done
+
+dbstack - based off of backtrace
+dbstep
+dbtype
+dbup - done
+
+Note - according to the M documentation, I have "special functions"
+parsed incorrectly.  The following is legal:
+
+
+dbstop in clear; foo(x) 
+
+Which means a semi-colon can terminate a special function call. 
+
+dbstop in a builtin function - fixed, removed builtin type in the
+process.
+
+Never mind - special functions were already handled correctly.
+
+Can dbquit be done without an exception?  Consider something like:
+
+foo --> func --> mapsto --> myfunc
+
+If we are stopped in myfunc, then when a dbquit is issued, we must
+check the state of the VM in mapsto to see if a premature quit was
+called.  An exception is actually cleaner.
+
+How do we handle the dbquit (no 'all') case?  Here, we are in a debug
+cycle, and we want to terminate the current debug loop _and_ throw the
+exception.
+
+So our execution stack looks something like this:
+
+root
+  |
+  |
+  func1
+     |
+     |
+     debug cycle
+        |
+	|
+	func2
+	   |
+	   |
+	   debug cycle
+
+When the exception is thrown we do _not_ want to catch it in the debug
+cycle.  Instead we want to issue dbquit.  If we count the number of
+times it is caught, we can decide when to actually stop.  A ret all
+can be done by throwing something that will never be caught.
+
+The frame handling needs RAII.  Frames are not getting cleaned up.
+
+dbstep and dbstep number of lines both work
+
+dbstep in - works, but requires special parsing, because dbstep in is
+not parsed correctly.  dbstep -1 does work, though.  It would be
+cleaner to put the instruction pointer into the frame.  That way, it
+could be accessed outside the executeCodeObject loop.  That makes
+debugStep an external function.  
+
+dbstep out - 
+
+Can we handle dbstep in using a combination of a trap and a
+traditional breakpoint?
+
+How about:
+
+1. dbstep in sets a breakpoint (marked transient) for the current frame.
+2. dbstep sets the frame in dbstepin mode
+3. If the current frame is exited (or another frame is pushed), then
+transient breakpoints are removed.
+
+dbstep doesn't quite work - dbstepping out of a function doesn't
+correct the active frame.
+
+dbstepin works - but need to figure out dbstep out.
+
+What does dbstep out mean?  We need to set the state on the parent
+frame.
+
+dbstepin stops at an awkward place.  Transient breakpoints should
+still stick to valid lines.
+
+Kick dbup and dbdown out of OpCodes.
+
+TODO - Kick out dbcont also.
+
+FIXME - a shortcut or/and doesn't work with non-scalars.
+UGH!
+
+The dim_t, ndx_t, int, size_t stuff is crazy!!
+Replace all with one generic integer type (pick ndx_t).
+
+********************************************************************************
+
+Need a readline-type interface.  Something like:
+
+
+1. Create an Interpreter class
+
+Interpreter {
+  void evaluateString(QString text);
+  void completeString(QString prefix);
+  QString getPrompt();
+}
+
+The problem is that the current design requires the VM to recurse on a
+call to "getline".  What we want here, is that when a debug context is
+entered, that the interpreter actually returns control to the caller.
+
+The problem is that currently, the C++ stack is helping the
+implementation of the VM.  Consider the case of a breakpoint, in which
+case the call stack will look like:
+
+evaluateString("foo")
+--> ReserveFrame("foo")
+--> DebugCycle()
+--> ??
+
+At this point, if DebugCycle exits, we will be left with the need to
+prevent the ReserveFrame destructor from cleaning up the frame.
+ 
+That leaves two possibilities.  One is to _not_ use the C++ stack, but
+implement a separate state stack that keeps track of exactly which
+frames should be popped from the execution stack.  The second
+possibility is to use a callback mechanism into the interpreter
+class.  This approach is simpler, but it isn't as clean from the
+client side.  We need something like:
+
+Interpreter {
+  void evaluateString(QString text);
+  void completeString(QString prefix);
+  QString getPrompt();
+  void setCallback(QString (*getString)(QString prompt));
+}
+
+For the first one, we could add a condition to the FrameReserver -
+something like:
+
+FrameReserver myframe(this)
+
+An alternative would be to use TermIF!  The debugCycle messenger could
+make calls to TermIF.  When an Interpreter is spun up, it could set up
+TermIF to do the right thing.  I like that idea...
+
+Need to work on class hierarchy relationahips.  double+sparse -->
+sparse type, not to the double type.
+
