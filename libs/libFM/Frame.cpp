@@ -1,3 +1,4 @@
+#include "Config.hpp"
 #include "Frame.hpp"
 #include "VM.hpp"
 #include "ListType.hpp"
@@ -33,7 +34,7 @@ int Frame::lookupAddressForName(const Object &name, bool searchGlobals) {
       // First look in the module
       if (!_module.isEmpty())
 	{
-	  std::cout << "Searching module for " << _ctxt->_string->str(name) << "\n";
+	  DBOUT(std::cout << "Searching module for " << _ctxt->_string->str(name) << "\n");
 	  auto mfunc = _ctxt->_module->ro(_module)->m_locals.find(name);
 	  if (mfunc != _ctxt->_module->ro(_module)->m_locals.end())
 	    {
@@ -62,9 +63,9 @@ int Frame::lookupAddressForName(const Object &name, bool searchGlobals) {
   // searched before.  The VM will then skip the lookup
   // step for this symbol (unless the scope changes).
   const ndx_t *addrs = _ctxt->_index->ro(_addrs);
-  std::cout << "Frame LAFN ndx=" << ndx << " searchGlobals=" << searchGlobals << " addrs size = " << _addrs.count() << "\n";
+  DBOUT(std::cout << "Frame LAFN ndx=" << ndx << " searchGlobals=" << searchGlobals << " addrs size = " << _addrs.count() << "\n");
   if ((ndx != -1) && searchGlobals &&
-      ((ndx >= _addrs.count()) || (addrs[ndx] == -1)))
+      ((ndx < _addrs.count()) && (addrs[ndx] == -1)))
     {
       // We have a symbol with the given name, but
       // have not defined it yet.  This could be because
@@ -73,7 +74,7 @@ int Frame::lookupAddressForName(const Object &name, bool searchGlobals) {
       // Check for the latter case.
       if (!_module.isEmpty())
 	{
-	  std::cout << "Searching module for " << _ctxt->_string->str(name) << "\n";
+	  DBOUT(std::cout << "Searching module for " << _ctxt->_string->str(name) << "\n");
 	  auto mfunc = _ctxt->_module->ro(_module)->m_locals.find(name);
 	  if (mfunc != _ctxt->_module->ro(_module)->m_locals.end())
 	    {
@@ -83,7 +84,7 @@ int Frame::lookupAddressForName(const Object &name, bool searchGlobals) {
 	    }      
 	}
       const FMString & fname = _ctxt->_string->str(name);
-      std::cout << "Searching globals for named symbol " << fname << "\n";
+      DBOUT(std::cout << "Searching globals for named symbol " << fname << "\n");
       if (_ctxt->_globals->isDefined(fname))
 	{
 	  _ctxt->_list->rw(_vars)[ndx] = _ctxt->_globals->get(fname,_ctxt);

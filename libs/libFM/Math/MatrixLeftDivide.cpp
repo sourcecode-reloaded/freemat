@@ -1,4 +1,4 @@
-#include "MatrixLeftDivide.hpp"
+#include "MatrixOps.hpp"
 #include "DenseSolver.hpp"
 #include "DoubleType.hpp"
 #include "SingleType.hpp"
@@ -7,7 +7,6 @@ using namespace FM;
 
 template <class T, FM::DataCode codeNum>
 Object FM::MatrixLeftDivide(const Object &a, const Object &b, TermIF *io, FloatType<T,codeNum> *ft) {
-  if (a.rows() != b.rows()) throw Exception("Matrix left division (e.g., A\b) requires A and b to have the same number of rows");
   Object ret = ft->makeMatrix(a.cols(),b.cols(),a.isComplex() || b.isComplex());
   if (a.isComplex() || b.isComplex())
     DenseSolveComplex<T>(a.irows(),a.icols(),b.icols(),

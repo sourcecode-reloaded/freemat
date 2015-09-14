@@ -33,36 +33,6 @@ namespace FM
     }
     virtual ~PODType() {}
   };
-
-  template <class T>
-  class PODComplexType : public PODType<T> {
-  public:
-    PODComplexType(ThreadContext *ctxt, const FMString &name) : PODType<T>(ctxt,name) {}
-    Complex<T> complexScalarValue(const Object &a) {
-      assert(a.isScalar());
-      return roComplex(a)[0];
-    }
-    inline const Complex<T>* roComplex(const Object &p) const {
-      return static_cast<const Complex<T>*>(static_cast<const Complex<T>*>(p.d->data->ptr) + p.d->offset);
-    }
-    inline Complex<T>* rwComplex(Object &p) const {
-      p.detach();
-      return static_cast<Complex<T>*>(p.d->data->ptr);
-    }    
-    FMString describe(const Object &a) {
-      if (a.isEmpty()) return FMString("[]");
-      if (a.isScalar())	
-	{
-	  if (a.isComplex())
-	    return Stringify(complexScalarValue(a));
-	  else
-	    return Stringify(this->scalarValue(a));
-	}
-      return(a.dims().toString() + " " + this->name() + " array");
-    }
-    virtual ~PODComplexType() {}
-  };
-  
 }
 
 #endif

@@ -18,8 +18,8 @@ void FM::BLAS_dgemm(int Arows, int Acols, int Bcols,
 }
 
 void FM::BLAS_zgemm(int Arows, int Acols, int Bcols,
-		    const double *A, const double *B,
-		    double *C)
+		    const Complex<double> *A, const Complex<double> *B,
+		    Complex<double> *C)
 {
   double alpha[] = {1,0};
   double beta[] = {0,0};
@@ -34,8 +34,8 @@ void FM::BLAS_sgemm(int Arows, int Acols, int Bcols,
 }
 
 void FM::BLAS_cgemm(int Arows, int Acols, int Bcols,
-		    const float *A, const float *B,
-		    float *C)
+		    const Complex<float> *A, const Complex<float> *B,
+		    Complex<float> *C)
 {
   float alpha[] = {1,0};
   float beta[] = {0,0};

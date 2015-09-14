@@ -28,7 +28,7 @@
 #include "SingleType.hpp"
 
 
-using namespace FM;
+namespace FM {
 
 // #include "Math.hpp"
 // #include "Algorithms.hpp"
@@ -42,204 +42,91 @@ using namespace FM;
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
-template <typename T>
-void Tsyev(char *JOBZ, char *UPLO, int *N, T *A, int *LDA, 
-	   T *W, T *WORK, int *LWORK, int *INFO, 
-	   ftnlen jobz_len, ftnlen uplo_len);
-
-template <>
-void Tsyev(char *JOBZ, char *UPLO, int *N, float *A, int *LDA, 
-	   float *W, float *WORK, int *LWORK, int *INFO, 
-	   ftnlen jobz_len, ftnlen uplo_len) {
-  return ssyev_(JOBZ,UPLO,N,A,LDA,W,WORK,LWORK,INFO,jobz_len,uplo_len);
-}
-
-template <>
-void Tsyev(char *JOBZ, char *UPLO, int *N, double *A, int *LDA, 
-	   double *W, double *WORK, int *LWORK, int *INFO, 
-	      ftnlen jobz_len, ftnlen uplo_len) {
-  return dsyev_(JOBZ,UPLO,N,A,LDA,W,WORK,LWORK,INFO,jobz_len,uplo_len);
-}
-
-template <typename T>
-static void Tgeevx(char * BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
-		   int* N, T* A, int* LDA, T* W, T* VL, 
-		   int *LDVL, T* VR, int *LDVR, int *ILO,
-		   int *IHI, T* SCALE, T* ABNRM, T* RCONDE,
-		   T* RCONDV, T *WORK, int *LWORK, T *RWORK,
+static void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
+		   int* N, Complex<float>* A, int* LDA, Complex<float>* W, Complex<float>* VL, 
+		   int *LDVL, Complex<float>* VR, int *LDVR, int *ILO,
+		   int *IHI, float* SCALE, float* ABNRM, float* RCONDE,
+		   float* RCONDV, Complex<float> *WORK, int *LWORK, float *RWORK,
 		   int *INFO, ftnlen balanc_len, 
-		   ftnlen jobvl_len, ftnlen jobvr_len, ftnlen sense_len);
-
-template <>
-void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
-	    int* N, float* A, int* LDA, float* W, float* VL, 
-	    int *LDVL, float* VR, int *LDVR, int *ILO,
-	    int *IHI, float* SCALE, float* ABNRM, float* RCONDE,
-	    float* RCONDV, float *WORK, int *LWORK, float *RWORK,
-	    int *INFO, ftnlen balanc_len, 
-	    ftnlen jobvl_len, ftnlen jobvr_len, ftnlen sense_len) {
+		   ftnlen jobvl_len, ftnlen jobvr_len, ftnlen sense_len) {
   return cgeevx_( BALANC, JOBVL, JOBVR, SENSE, N, A, LDA, W,
 		  VL, LDVL, VR, LDVR, ILO, IHI, SCALE, ABNRM,
 		  RCONDE, RCONDV, WORK, LWORK, RWORK, INFO, 
 		  balanc_len, jobvl_len, jobvr_len, sense_len );
 }
 
-template <>
-void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
-	    int* N, double* A, int* LDA, double* W, double* VL, 
-	    int *LDVL, double* VR, int *LDVR, int *ILO,
-	    int *IHI, double* SCALE, double* ABNRM, double* RCONDE,
-	    double* RCONDV, double *WORK, int *LWORK, double *RWORK,
-	    int *INFO, ftnlen balanc_len, 
-	    ftnlen jobvl_len, ftnlen jobvr_len, ftnlen sense_len) {
+static void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
+		   int* N, Complex<double>* A, int* LDA, Complex<double>* W, Complex<double>* VL, 
+		   int *LDVL, Complex<double>* VR, int *LDVR, int *ILO,
+		   int *IHI, double* SCALE, double* ABNRM, double* RCONDE,
+		   double* RCONDV, Complex<double> *WORK, int *LWORK, double *RWORK,
+		   int *INFO, ftnlen balanc_len, 
+		   ftnlen jobvl_len, ftnlen jobvr_len, ftnlen sense_len) {
   return zgeevx_( BALANC, JOBVL, JOBVR, SENSE, N, A, LDA, W,
 		  VL, LDVL, VR, LDVR, ILO, IHI, SCALE, ABNRM,
 		  RCONDE, RCONDV, WORK, LWORK, RWORK, INFO, 
 		  balanc_len, jobvl_len, jobvr_len, sense_len );
 }
 
-template <typename T>
 static void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
-		   int* N, T* A, int* LDA, T* WR, T* WI,
-		   T* VL, int *LDVL, T* VR, int *LDVR, int *ILO,
-		   int *IHI, T* SCALE, T* ABNRM, T* RCONDE,
-		   T* RCONDV, T *WORK, int *LWORK, int *IWORK,
+		   int* N, float* A, int* LDA, float* WR, float* WI,
+		   float* VL, int *LDVL, float* VR, int *LDVR, int *ILO,
+		   int *IHI, float* SCALE, float* ABNRM, float* RCONDE,
+		   float* RCONDV, float *WORK, int *LWORK, int *IWORK,
 		   int *INFO, ftnlen balanc_len, 
-		   ftnlen jobvl_len, ftnlen jobvr_len, ftnlen sense_len);
-
-template <>
-void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
-	    int* N, float* A, int* LDA, float* WR, float* WI,
-	    float* VL, int *LDVL, float* VR, int *LDVR, int *ILO,
-	    int *IHI, float* SCALE, float* ABNRM, float* RCONDE,
-	    float* RCONDV, float *WORK, int *LWORK, int *IWORK,
-	    int *INFO, ftnlen balanc_len, 
-	    ftnlen jobvl_len, ftnlen jobvr_len, ftnlen sense_len) {
+		   ftnlen jobvl_len, ftnlen jobvr_len, ftnlen sense_len) {
   return sgeevx_(BALANC,JOBVL,JOBVR,SENSE,N,A,LDA,WR,WI,
 		 VL,LDVL,VR,LDVR,ILO,IHI,SCALE,ABNRM,RCONDE,
 		 RCONDV,WORK,LWORK,IWORK,INFO, 
 		 balanc_len, jobvl_len, jobvr_len, sense_len);
 }
 
-template <>
-void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
-	    int* N, double* A, int* LDA, double* WR, double* WI,
-	    double* VL, int *LDVL, double* VR, int *LDVR, int *ILO,
-	    int *IHI, double* SCALE, double* ABNRM, double* RCONDE,
-	    double* RCONDV, double *WORK, int *LWORK, int *IWORK,
-	    int *INFO, ftnlen balanc_len, 
-	       ftnlen jobvl_len, ftnlen jobvr_len, ftnlen sense_len) {
+static void Tgeevx(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
+		   int* N, double* A, int* LDA, double* WR, double* WI,
+		   double* VL, int *LDVL, double* VR, int *LDVR, int *ILO,
+		   int *IHI, double* SCALE, double* ABNRM, double* RCONDE,
+		   double* RCONDV, double *WORK, int *LWORK, int *IWORK,
+		   int *INFO, ftnlen balanc_len, 
+		   ftnlen jobvl_len, ftnlen jobvr_len, ftnlen sense_len) {
   return dgeevx_(BALANC,JOBVL,JOBVR,SENSE,N,A,LDA,WR,WI,
 		 VL,LDVL,VR,LDVR,ILO,IHI,SCALE,ABNRM,RCONDE,
 		 RCONDV,WORK,LWORK,IWORK,INFO, 
 		 balanc_len, jobvl_len, jobvr_len, sense_len);
 }
 
-template <typename T>
-void Tggev(char *JOBVL, char *JOBVR, int *N, T *A, int *LDA, 
-	   T *B, int *LDB, T *ALPHAR, T *ALPHAI,
-	   T *BETA, T *VL, int *LDVL, T *VR, 
-	   int *LDVR, T *WORK, int *LWORK, int *INFO, ftnlen l1, ftnlen l2 );
 
-template <>
-void Tggev(char *JOBVL, char *JOBVR, int *N, float *A, int *LDA, 
-	   float *B, int *LDB, float *ALPHAR, float *ALPHAI,
-	   float *BETA, float *VL, int *LDVL, float *VR, 
-	   int *LDVR, float *WORK, int *LWORK, int *INFO, ftnlen l1, ftnlen l2 ) {
-  return sggev_(JOBVL,JOBVR,N,A,LDA,B,LDB,ALPHAR,ALPHAI,
-		BETA,VL,LDVL,VR,LDVR,WORK,LWORK,INFO,l1,l2);
+
+/*********************
+ * Symmetric case    *
+ *********************/
+
+void Tsyev(char *JOBZ, char *UPLO, int *N, float *A, int *LDA, 
+	   float *W, float *WORK, int *LWORK, int *INFO, 
+	   ftnlen jobz_len, ftnlen uplo_len) {
+  return ssyev_(JOBZ,UPLO,N,A,LDA,W,WORK,LWORK,INFO,jobz_len,uplo_len);
 }
 
-template <>
-void Tggev(char *JOBVL, char *JOBVR, int *N, double *A, int *LDA, 
-	   double *B, int *LDB, double *ALPHAR, double *ALPHAI,
-	   double *BETA, double *VL, int *LDVL, double *VR, 
-	   int *LDVR, double *WORK, int *LWORK, int *INFO, ftnlen l1, ftnlen l2 ) {
-  return dggev_(JOBVL,JOBVR,N,A,LDA,B,LDB,ALPHAR,ALPHAI,
-		BETA,VL,LDVL,VR,LDVR,WORK,LWORK,INFO,l1,l2);
+void Tsyev(char *JOBZ, char *UPLO, int *N, double *A, int *LDA, 
+	   double *W, double *WORK, int *LWORK, int *INFO, 
+	   ftnlen jobz_len, ftnlen uplo_len) {
+  return dsyev_(JOBZ,UPLO,N,A,LDA,W,WORK,LWORK,INFO,jobz_len,uplo_len);
 }
 
-template <typename T>
-void Tggev(char *JOBVL, char *JOBVR, int *N, T *A, int *LDA, 
-	   T *B, int *LDB, T *ALPHA, T *BETA, 
-	   T *VL, int *LDVL, T *VR, int *LDVR, 
-	   T *WORK, int *LWORK, T *RWORK, int *INFO, ftnlen l1, ftnlen l2 );
-
-template <>
-void Tggev(char *JOBVL, char *JOBVR, int *N, float *A, int *LDA, 
-	   float *B, int *LDB, float *ALPHA, float *BETA, 
-	   float *VL, int *LDVL, float *VR, int *LDVR, 
-	   float *WORK, int *LWORK, float *RWORK, int *INFO, ftnlen l1, ftnlen l2 ) {
-  return cggev_(JOBVL,JOBVR,N,A,LDA,B,LDB,ALPHA,BETA,VL,LDVL,VR,LDVR,
-		WORK,LWORK,RWORK,INFO,l1,l2);
-}
-
-template <>
-void Tggev(char *JOBVL, char *JOBVR, int *N, double *A, int *LDA, 
-	   double *B, int *LDB, double *ALPHA, double *BETA, 
-	   double *VL, int *LDVL, double *VR, int *LDVR, 
-	   double *WORK, int *LWORK, double *RWORK, int *INFO, ftnlen l1, ftnlen l2 ) {
-  return zggev_(JOBVL,JOBVR,N,A,LDA,B,LDB,ALPHA,BETA,VL,LDVL,VR,LDVR,
-		WORK,LWORK,RWORK,INFO,l1,l2);  
-}
-
-template <typename T>
-static void Tsygv(int *ITYPE, char *JOBZ, char *UPLO, int *N, T *A, 
-		  int *LDA, T *B, int *LDB, T *W, T *WORK,
-		  int *LWORK, int *INFO , ftnlen l1, ftnlen l2);
-
-template <>
-void Tsygv(int *ITYPE, char *JOBZ, char *UPLO, int *N, float *A, 
-	   int *LDA, float *B, int *LDB, float *W, float *WORK,
-	   int *LWORK, int *INFO, ftnlen l1, ftnlen l2 ) {
-  return ssygv_(ITYPE,JOBZ,UPLO,N,A,LDA,B,LDB,W,WORK,LWORK,INFO,l1,l2);
-}
-
-template <>
-void Tsygv(int *ITYPE, char *JOBZ, char *UPLO, int *N, double *A, 
-	   int *LDA, double *B, int *LDB, double *W, double *WORK,
-	   int *LWORK, int *INFO, ftnlen l1, ftnlen l2 ) {
-  return dsygv_(ITYPE,JOBZ,UPLO,N,A,LDA,B,LDB,W,WORK,LWORK,INFO,l1,l2);
-}
-
-template <typename T>
-static void Theev(char *JOBZ, char *UPLO, int *N, T *A, int *LDA, 
-		  T *W, T *WORK, int *LWORK, T *RWORK, int *INFO, ftnlen l1, ftnlen l2);
-
-template <>
-void Theev(char *JOBZ, char *UPLO, int *N, float *A, int *LDA, 
-		  float *W, float *WORK, int *LWORK, float *RWORK, int *INFO, ftnlen l1, ftnlen l2) {
+void Theev(char *JOBZ, char *UPLO, int *N, FM::Complex<float> *A, int *LDA, 
+	   float *W, FM::Complex<float> *WORK, int *LWORK, float *RWORK, int *INFO,
+	   ftnlen l1, ftnlen l2) {
   return cheev_(JOBZ,UPLO,N,A,LDA,W,WORK,LWORK,RWORK,INFO,l1,l2);
 }
 
-template <>
-void Theev(char *JOBZ, char *UPLO, int *N, double *A, int *LDA, 
-		  double *W, double *WORK, int *LWORK, double *RWORK, int *INFO, ftnlen l1, ftnlen l2) {
+void Theev(char *JOBZ, char *UPLO, int *N, FM::Complex<double> *A, int *LDA, 
+	   double *W, FM::Complex<double> *WORK, int *LWORK, double *RWORK,
+	   int *INFO, ftnlen l1, ftnlen l2) {
   return zheev_(JOBZ,UPLO,N,A,LDA,W,WORK,LWORK,RWORK,INFO,l1,l2);
 }
 
 template <typename T>
-static void Thegv(int *ITYPE, char *JOBZ, char *UPLO, int *N, T *A, 
-		  int *LDA, T *B, int *LDB, T *W, T *WORK,
-	   int *LWORK, T *RWORK, int *INFO , ftnlen l1, ftnlen l2);
-
-template <>
-void Thegv(int *ITYPE, char *JOBZ, char *UPLO, int *N, float *A, 
-		  int *LDA, float *B, int *LDB, float *W, float *WORK,
-	   int *LWORK, float *RWORK, int *INFO , ftnlen l1, ftnlen l2) {
-  return chegv_(ITYPE,JOBZ,UPLO,N,A,LDA,B,LDB,W,WORK,LWORK,RWORK,INFO,l1,l2);
-}
-
-template <>
-void Thegv(int *ITYPE, char *JOBZ, char *UPLO, int *N, double *A, 
-		  int *LDA, double *B, int *LDB, double *W, double *WORK,
-	   int *LWORK, double *RWORK, int *INFO , ftnlen l1, ftnlen l2) {
-  return zhegv_(ITYPE,JOBZ,UPLO,N,A,LDA,B,LDB,W,WORK,LWORK,RWORK,INFO,l1,l2);
-}
-
-template <typename T>
-static void realEigenDecomposeSymmetric(int n, T *v, T *d, T *a,
-					bool eigenvectors) {
+static void eigenDecomposeSymmetric(int n, T *v, T *d, T *a,
+				    bool eigenvectors) {
   char JOBZ;
   if (eigenvectors)
     JOBZ = 'V';
@@ -262,8 +149,100 @@ static void realEigenDecomposeSymmetric(int n, T *v, T *d, T *a,
 }
 
 template <typename T>
-static void realEigenDecompose(int n, T *v, T *d, T *a, 
-			       bool eigenvectors, bool balance) {
+static void eigenDecomposeSymmetric(int n, Complex<T> *v, T *d,
+				    Complex<T> *a, bool eigenvectors) {
+  char JOBZ;
+  if (eigenvectors)
+    JOBZ = 'V';
+  else
+    JOBZ = 'N';
+  char UPLO = 'U';
+  int N = n;
+  int LDA = n;
+  MemBlock<T> RWORK(MAX(1,3*N-2));
+  int LWORK;
+  int INFO;
+  Complex<T> WORKSZE;
+  LWORK = -1;
+  Theev(&JOBZ,&UPLO,&N,a,&LDA,d,&WORKSZE,&LWORK,&RWORK,&INFO,1,1);
+  LWORK = (int) WORKSZE.r;
+  MemBlock<Complex<T> > WORK(LWORK);
+  Theev(&JOBZ,&UPLO,&N,a,&LDA,d,&WORK,&LWORK,&RWORK,&INFO,1,1);
+  if (eigenvectors)
+    memcpy(v,a,n*n*sizeof(Complex<T>));
+}
+
+/**
+ * Eigen decomposition, symmetric matrix, compact decomposition case
+ */
+
+template <class dataclass>
+static void TEigenDecomposeCompactSymmetric(Object &a, Object &ret, dataclass _data) {
+  auto _eigen = _data->realType();
+  ret = _eigen->makeMatrix(a.cols(),1);
+  eigenDecomposeSymmetric(a.irows(),_data->null(),_eigen->rw(ret),_data->rw(a),false);
+}
+
+Object EigenDecomposeCompactSymmetric(const Object &a, ThreadContext *ctxt) {
+  if (a.rows() != a.cols()) throw Exception("A symmetric matrix must be square");
+  Object ret(ctxt);
+  Object acopy(a);
+  switch (a.typeCode()) {
+  case TypeDouble:
+    TEigenDecomposeCompactSymmetric(acopy,ret,ctxt->_double);
+    break;
+  case TypeSingle:
+    TEigenDecomposeCompactSymmetric(acopy,ret,ctxt->_single);
+    break;
+  case TypeZDouble:
+    TEigenDecomposeCompactSymmetric(acopy,ret,ctxt->_zdouble);
+    break;
+  case TypeZSingle:
+    TEigenDecomposeCompactSymmetric(acopy,ret,ctxt->_zsingle);
+    break;
+  default:
+    throw Exception("Unhandled type " + a.type()->name() + " in eigen decomposition");
+  }
+  return ret;
+}
+
+/**
+ * Eigen decomposition, symmetric matrix, full decomposition case
+ */
+
+template <class dataclass>
+static void TEigenDecomposeFullSymmetric(Object &a, Object &V, Object &D, dataclass _data) {
+  auto _eigen = _data->realType();
+  V = _data->makeMatrix(a.rows(),a.cols());
+  Object eigenvals(_eigen->makeMatrix(a.rows(),1));
+  eigenDecomposeSymmetric(a.irows(),_data->rw(V),_eigen->rw(eigenvals),_data->rw(a),true);
+  D = _eigen->asDiagonalMatrix(eigenvals);
+}
+
+void EigenDecomposeFullSymmetric(const Object &a, Object &V, Object &D, ThreadContext *ctxt) {
+  if (a.rows() != a.cols()) throw Exception("A symmetric matrix must be square");
+  Object acopy(a);
+  switch (a.typeCode()) {
+  case TypeDouble:
+    TEigenDecomposeFullSymmetric(acopy,V,D,ctxt->_double);
+    break;
+  case TypeSingle:
+    TEigenDecomposeFullSymmetric(acopy,V,D,ctxt->_single);
+    break;
+  case TypeZDouble:
+    TEigenDecomposeFullSymmetric(acopy,V,D,ctxt->_zdouble);
+    break;
+  case TypeZSingle:
+    TEigenDecomposeFullSymmetric(acopy,V,D,ctxt->_zsingle);
+    break;
+  default: 
+    throw Exception("Unhandled type " + a.type()->name() + " in eigen decomposition");
+ }
+}
+
+template <typename T>
+static void eigenDecompose(int n, T *v, Complex<T> *d, T *a, 
+			   bool eigenvectors, bool balance) {
   char BALANC;
   if (balance)
     BALANC = 'B';
@@ -297,116 +276,23 @@ static void realEigenDecompose(int n, T *v, T *d, T *a,
   int INFO;
 
   LWORK = -1;
-  Tgeevx<T>( &BALANC, &JOBVL, &JOBVR, &SENSE, &N, Ain, &LDA, &WR, &WI,
-	     VL, &LDVL, VR, &LDVR, &ILO, &IHI, &SCALE, &ABNRM,
-	     &RCONDE, &RCONDV, &WORKSZE, &LWORK, &IWORK, &INFO,1,1,1,1 );
+  Tgeevx( &BALANC, &JOBVL, &JOBVR, &SENSE, &N, Ain, &LDA, &WR, &WI,
+	  VL, &LDVL, VR, &LDVR, &ILO, &IHI, &SCALE, &ABNRM,
+	  &RCONDE, &RCONDV, &WORKSZE, &LWORK, &IWORK, &INFO,1,1,1,1 );
 
   LWORK = (int) WORKSZE;
   MemBlock<T> WORK(LWORK);
-  Tgeevx<T>( &BALANC, &JOBVL, &JOBVR, &SENSE, &N, Ain, &LDA, &WR, &WI,
-	     VL, &LDVL, VR, &LDVR, &ILO, &IHI, &SCALE, &ABNRM,
-	     &RCONDE, &RCONDV, &WORK, &LWORK, &IWORK, &INFO,1,1,1,1 );
-  for (int i=0;i<N;i++) {
-    d[2*i] = WR[i];
-    d[2*i+1] = WI[i];
-  }
+  Tgeevx( &BALANC, &JOBVL, &JOBVR, &SENSE, &N, Ain, &LDA, &WR, &WI,
+	  VL, &LDVL, VR, &LDVR, &ILO, &IHI, &SCALE, &ABNRM,
+	  &RCONDE, &RCONDV, &WORK, &LWORK, &IWORK, &INFO,1,1,1,1 );
+  for (int i=0;i<N;i++) 
+    d[i] = Complex<T>(WR[i],WI[i]);
 }
+
 
 template <typename T>
-static void realGenEigenDecompose(int n, T *v, T *d, T *a,
-				  T *b, bool eigenvectors) {
-  char JOBVL = 'N';
-  char JOBVR;
-  if (eigenvectors)
-    JOBVR = 'V';
-  else
-    JOBVR = 'N';
-  int N = n;
-  T *A = a;
-  int LDA = n;
-  T *B = b;
-  int LDB = n;
-  MemBlock<T> ALPHAR(n);
-  MemBlock<T> ALPHAI(n);
-  MemBlock<T> BETA(n);
-  T *VL = nullptr;
-  int LDVL = 1;
-  T *VR = v;
-  int LDVR = n;
-  T WORKSZE;
-  int LWORK = -1;
-  int INFO;
-  Tggev( &JOBVL, &JOBVR, &N, A, &LDA, B, &LDB, &ALPHAR, &ALPHAI,
-	 &BETA, VL, &LDVL, VR, &LDVR, &WORKSZE, &LWORK, &INFO,1,1 );
-  LWORK = (int) WORKSZE;
-  MemBlock<T> WORK(LWORK);
-  Tggev( &JOBVL, &JOBVR, &N, A, &LDA, B, &LDB, &ALPHAR, &ALPHAI,
-	 &BETA, VL, &LDVL, VR, &LDVR, &WORK, &LWORK, &INFO,1,1 );
-  int i;
-  for (i=0;i<n;i++) {
-    d[2*i] = ALPHAR[i]/BETA[i];
-    d[2*i+1] = ALPHAI[i]/BETA[i];
-  }
-}
-
-template <typename T>  
-static bool realGenEigenDecomposeSymmetric(int n, T *v, T *d,
-					   T *a, T *b, bool eigenvectors) {
-  int ITYPE = 1;
-  char JOBZ;
-  if (eigenvectors)
-    JOBZ = 'V';
-  else
-    JOBZ = 'N';
-  char UPLO = 'U';
-  int N = n;
-  T *A = a;
-  int LDA = n;
-  T *B = b;
-  int LDB = n;
-  T *W = d;
-  T WORKSIZE;
-  int LWORK = -1;
-  int INFO;
-  Tsygv( &ITYPE, &JOBZ, &UPLO, &N, A, &LDA, B, &LDB, W, &WORKSIZE, 
-	 &LWORK, &INFO,1,1 );
-  LWORK = (int) WORKSIZE;
-  MemBlock<T> WORK(LWORK);
-  Tsygv( &ITYPE, &JOBZ, &UPLO, &N, A, &LDA, B, &LDB, W, &WORK, 
-	 &LWORK, &INFO,1,1 );
-  if (INFO>N) return false;
-  if (eigenvectors)
-    memcpy(v,a,n*n*sizeof(T));
-  return true;
-}
-
-template <typename T>
-static void complexEigenDecomposeSymmetric(int n, T *v, T *d, T *a, 
-					   bool eigenvectors) {
-  char JOBZ;
-  if (eigenvectors)
-    JOBZ = 'V';
-  else
-    JOBZ = 'N';
-  char UPLO = 'U';
-  int N = n;
-  int LDA = n;
-  MemBlock<T> RWORK(MAX(1,3*N-2));
-  int LWORK;
-  int INFO;
-  T WORKSZE[2];
-  LWORK = -1;
-  Theev(&JOBZ,&UPLO,&N,a,&LDA,d,WORKSZE,&LWORK,&RWORK,&INFO,1,1);
-  LWORK = (int) WORKSZE[0];
-  MemBlock<T> WORK(2*LWORK);
-  Theev(&JOBZ,&UPLO,&N,a,&LDA,d,&WORK,&LWORK,&RWORK,&INFO,1,1);
-  if (eigenvectors)
-    memcpy(v,a,2*n*n*sizeof(T));
-}
-
-template <typename T>
-static void complexEigenDecompose(int n, T *v, T *d, T *a,
-				  bool eigenvectors, bool balance) {
+static void eigenDecompose(int n, Complex<T> *v, Complex<T> *d, Complex<T> *a,
+			   bool eigenvectors, bool balance) {
   char BALANC;
   if (balance)
     BALANC = 'B';
@@ -420,12 +306,12 @@ static void complexEigenDecompose(int n, T *v, T *d, T *a,
     JOBVR = 'N';
   char SENSE = 'N';
   int N = n;
-  T *Ain = a;
+  Complex<T> *Ain = a;
   int LDA = n;
-  T *W = d;
-  T *VL = nullptr;
+  Complex<T> *W = d;
+  Complex<T> *VL = nullptr;
   int LDVL = 1;
-  T *VR = v;
+  Complex<T> *VR = v;
   int LDVR = n;
   int ILO;
   int IHI;
@@ -436,160 +322,16 @@ static void complexEigenDecompose(int n, T *v, T *d, T *a,
   int LWORK;
   MemBlock<T> RWORK(2*n);
   int INFO;
-  T WORKSZE[2];
+  FM::Complex<T> WORKSZE;
   LWORK = -1;
-  Tgeevx<T>( &BALANC, &JOBVL, &JOBVR, &SENSE, &N, Ain, &LDA, W,
-	     VL, &LDVL, VR, &LDVR, &ILO, &IHI, &SCALE, &ABNRM,
-	     &RCONDE, &RCONDV, WORKSZE, &LWORK, &RWORK, &INFO,1,1,1,1 );
-  LWORK = (int) WORKSZE[0];
-  MemBlock<T> WORK(2*LWORK);
-  Tgeevx<T>( &BALANC, &JOBVL, &JOBVR, &SENSE, &N, Ain, &LDA, W,
-	     VL, &LDVL, VR, &LDVR, &ILO, &IHI, &SCALE, &ABNRM,
-	     &RCONDE, &RCONDV, &WORK, &LWORK, &RWORK, &INFO,1,1,1,1 );
-}
-
-template <typename T>
-static void complexGenEigenDecompose(int n, T *v, T *d, T *a, T *b, 
-				     bool eigenvectors) {
-  char JOBVL = 'N';
-  char JOBVR;
-  if (eigenvectors)
-    JOBVR = 'V';
-  else
-    JOBVR = 'N';
-  int N = n;
-  T *A = a;
-  int LDA = n;
-  T *B = b;
-  int LDB = N;
-  MemBlock<T> ALPHA(2*n);
-  MemBlock<T> BETA(2*n);
-  T *VL = nullptr;
-  int LDVL = n;
-  T *VR = v;
-  int LDVR = n;
-  MemBlock<T> RWORK(8*n);
-  T WORKSIZE[2];
-  int LWORK = -1;
-  int INFO;
-  Tggev( &JOBVL, &JOBVR, &N, A, &LDA, B, &LDB, &ALPHA, &BETA,
-	 VL, &LDVL, VR, &LDVR, &WORKSIZE[0], &LWORK, &RWORK, &INFO,1,1 );
-  LWORK = (int) WORKSIZE[0];
-  MemBlock<T> WORK(LWORK*2);
-  Tggev( &JOBVL, &JOBVR, &N, A, &LDA, B, &LDB, &ALPHA, &BETA,
-	 VL, &LDVL, VR, &LDVR, &WORK, &LWORK, &RWORK, &INFO,1,1 );
-  int i;
-  for (i=0;i<n;i++) 
-    complex_divide<T>(ALPHA[2*i],ALPHA[2*i+1],
-		      BETA[2*i],BETA[2*i+1],
-		      d[2*i],d[2*i+1]);
-}
-
-template <typename T>
-static bool complexGenEigenDecomposeSymmetric(int n, T *v, T *d, T *a, T *b, 
-					      bool eigenvectors) {
-  int ITYPE = 1;
-  char JOBZ;
-  if (eigenvectors)
-    JOBZ = 'V';
-  else
-    JOBZ = 'N';
-  char UPLO = 'U';
-  int N = n;
-  T *A = a;
-  int LDA = n;
-  T *B = b;
-  int LDB = n;
-  T *W = d;
-  MemBlock<T> RWORK(MAX(1,3*N-2));
-  int INFO;
-  int LWORK;
-  LWORK = MAX(1,2*N-1);
-  MemBlock<T> WORK(2*LWORK);
-  Thegv(&ITYPE, &JOBZ, &UPLO, &N, A, &LDA, B, &LDB, W, &WORK,
-	&LWORK, &RWORK, &INFO,1,1 );    
-  if (INFO>N) return false;
-  if (eigenvectors)
-    memcpy(v,a,2*n*n*sizeof(T));
-  return true;
-
-}
-
-/**
- * Eigen decomposition, symmetric matrix, compact decomposition case
- */
-template <typename T, FM::DataCode codeNum>
-static void TEigenDecomposeCompactSymmetric(Object &D, Object A, FloatType<T,codeNum> *ft) {
-  ndx_t N = A.rows();
-  if (!A.isComplex()) {
-    D = ft->makeMatrix(N,1);
-    realEigenDecomposeSymmetric(int(N), (T*) nullptr, ft->rw(D), 
-				ft->rw(A),false);
-  } else {
-    D = ft->makeMatrix(N,1);
-    complexEigenDecomposeSymmetric(int(N), (T*) nullptr, ft->rw(D),
-				   reinterpret_cast<T*>(ft->rwComplex(A)),false);
-  }
-}
-
-void FM::EigenDecomposeCompactSymmetric(Object A, Object& D, ThreadContext *ctxt) {
-  if (!A.is2D())
-    throw Exception("Cannot apply eigendecomposition to N-Dimensional arrays.");
-  if (A.rows() != A.columns())
-    throw Exception("Cannot eigendecompose a non-square matrix.");
-  // Create one square matrix to store the eigenvectors
-  switch (A.typeCode()) {
-  default: 
-    throw Exception("Unhandled type for symmetric eigendecomposition");
-  case TypeSingle:
-    TEigenDecomposeCompactSymmetric<float,TypeSingle>(D,A,ctxt->_single);
-    break;
-  case TypeDouble:
-    TEigenDecomposeCompactSymmetric<double,TypeDouble>(D,A,ctxt->_double);
-    break;
-  }
-}
-
-/**
- * Eigen decomposition, symmetric matrix, full decomposition case
- */
-template <typename T, FM::DataCode codeNum>
-static void TEigenDecomposeFullSymmetric(Object &V, Object &D, Object A, FloatType<T,codeNum> *ft) {
-  ndx_t N = A.rows();
-  if (!A.isComplex()) {
-    Object eigenvals = ft->makeMatrix(N,1);
-    V = ft->makeMatrix(N,N);
-    realEigenDecomposeSymmetric(int(N), ft->rw(V),
-				ft->rw(eigenvals), 
-				ft->rw(A),
-				true);
-    D = ft->asDiagonalMatrix(eigenvals);
-  } else {
-    Object eigenvals = ft->makeMatrix(N,1);
-    V = ft->makeMatrixComplex(N,N);
-    complexEigenDecomposeSymmetric(int(N), ft->rw(V),
-				   ft->rw(eigenvals),
-				   ft->rw(A),
-				   true);
-    D = ft->asDiagonalMatrix(eigenvals);
-  }
-}
-
-void FM::EigenDecomposeFullSymmetric(const Object &A, Object& V, Object& D, ThreadContext *ctxt) {
-  if (!A.is2D())
-    throw Exception("Cannot apply eigendecomposition to N-Dimensional arrays.");
-  if (A.rows() != A.columns())
-    throw Exception("Cannot eigendecompose a non-square matrix.");
-  // Select the eigenvector decomposition routine based on A's type
-  switch (A.typeCode()) {
-  default: throw Exception("Unhandled type for eigendecomposition");
-  case TypeSingle:
-    TEigenDecomposeFullSymmetric<float,TypeSingle>(V,D,A,ctxt->_single);
-    break;
-  case TypeDouble:
-    TEigenDecomposeFullSymmetric<double,TypeDouble>(V,D,A,ctxt->_double);
-    break;
-  }
+  Tgeevx( &BALANC, &JOBVL, &JOBVR, &SENSE, &N, Ain, &LDA, W,
+	  VL, &LDVL, VR, &LDVR, &ILO, &IHI, &SCALE, &ABNRM,
+	  &RCONDE, &RCONDV, &WORKSZE, &LWORK, &RWORK, &INFO,1,1,1,1 );
+  LWORK = (int) WORKSZE.r;
+  MemBlock<Complex<T> > WORK(2*LWORK);
+  Tgeevx( &BALANC, &JOBVL, &JOBVR, &SENSE, &N, Ain, &LDA, W,
+	  VL, &LDVL, VR, &LDVR, &ILO, &IHI, &SCALE, &ABNRM,
+	  &RCONDE, &RCONDV, &WORK, &LWORK, &RWORK, &INFO,1,1,1,1 );
 }
 
 /**
@@ -597,247 +339,63 @@ void FM::EigenDecomposeFullSymmetric(const Object &A, Object& V, Object& D, Thre
  * eigenvectors, and returns the eigenvalues in a diagonal matrix
  */
 
-template <typename T, FM::DataCode codeNum>
-static void HandleEigenVectorsRealMatrix(const Object &eigenvals, const Object &Vp, 
-					 ndx_t N, Object &D, Object &V, FloatType<T,codeNum> *ft) {
-  bool complexEigenvalues = ft->anyNonzeroImaginary(eigenvals);
-  if (!complexEigenvalues) {
-    D = ft->asDiagonalMatrix(ft->realPart(eigenvals));
-    V = Vp;
-  } else {
-    D = ft->asDiagonalMatrix(eigenvals);
-    V = ft->makeMatrixComplex(N,N);
-    ndx_t i = 0;
-    const Complex<T>* ep = ft->roComplex(eigenvals);
-    const T* vp = ft->ro(Vp);
-    Complex<T>* op = ft->rwComplex(V);
-    while (i < N) {
-      if (ep[i].i != 0) {
-	for (ndx_t j=0;j<N;j++) {
-	  op[j+i*N] = Complex<T>(vp[j+i*N],vp[j+(i+1)*N]);
-	  op[j+(i+1)*N] = Complex<T>(vp[j+i*N],-vp[j+(i+1)*N]);
-	}
-	i += 2;
-      } else {
-	for (ndx_t j=0;j<N;j++)
-	  op[j+i*N] = Complex<T>(vp[j+i*N],0);
-	i++;
-      }
-    }
-  }
+template <class T>
+void TEigenDecomposeCompact(Object &a, Object &ret, bool balanceFlag, T _data) {
+  auto _complex = _data->complexType();
+  ret = _complex->makeMatrix(a.rows(),1);
+  eigenDecompose(a.irows(),_data->null(),_complex->rw(ret),_data->rw(a),false,balanceFlag);
 }
 
-template <typename T, FM::DataCode codeNum>
-static void TEigenDecomposeFullGeneral(Object A, Object &V, Object &D,
-				      bool balanceFlag, FloatType<T,codeNum> *ft) {
-  ndx_t N = A.rows();
-  if (!A.isComplex()) {
-    Object eigenvals = ft->makeMatrixComplex(N,1);
-    // A temporary vector to store the eigenvalues
-    // For a real matrix, the eigenvectors are stored in a packed
-    // format - complex eigenvectors are stored as two successive 
-    // columns, corresponding to the real and imaginary parts of
-    // the vector.  Successive columns can be used because the 
-    // eigenvalues occur in conjugate pairs.
-    Object Vp = ft->makeMatrix(N,N);
-    realEigenDecompose(int(N), ft->rw(Vp), ft->rw(eigenvals), 
-		       ft->rw(A), true, balanceFlag);
-    HandleEigenVectorsRealMatrix(eigenvals, Vp, N, D, V, ft);
-  } else {
-    Object eigenvals = ft->makeMatrixComplex(N,1);
-    V = ft->makeMatrixComplex(N,N);
-    complexEigenDecompose(int(N), ft->rw(V), ft->rw(eigenvals), 
-			  ft->rw(A), true, balanceFlag);
-    D = ft->asDiagonalMatrix(eigenvals);
-  }
-}
-
-void FM::EigenDecomposeFullGeneral(const Object &A, Object& V, Object& D, bool balanceFlag, ThreadContext *ctxt) {
-  if (!A.is2D())
-    throw Exception("Cannot apply eigendecomposition to N-Dimensional arrays.");
-  if (A.rows() != A.columns())
-    throw Exception("Cannot eigendecompose a non-square matrix.");
-  // Select the eigenvector decomposition routine based on A's type
-  switch (A.typeCode()) {
-  default: throw Exception("Unhandled type for eigendecomposition");
-  case TypeSingle: 
-    TEigenDecomposeFullGeneral<float>(A,V,D,balanceFlag,ctxt->_single);
-    return;
+Object EigenDecomposeCompact(const Object &a, bool balanceFlag, ThreadContext *ctxt) {
+  if (a.rows() != a.cols()) throw Exception("Cannot handle non-square matrices in eigen-decomposition");
+  Object ret(ctxt);
+  Object acopy(a);
+  switch (a.typeCode()) {
   case TypeDouble:
-    TEigenDecomposeFullGeneral<double>(A,V,D,balanceFlag,ctxt->_double);
-    return;
-  }
-}
-
-/**
- * Perform an eigen decomposition of the matrix A - This version computes the 
- * eigenvalues only in a vector
- */
-template <typename T, FM::DataCode codeNum>
-static void TEigenDecomposeCompactGeneral(Object A, Object& D, 
-					  bool balanceFlag, FloatType<T,codeNum> *ft) {
-  ndx_t N = A.rows();
-  if (!A.isComplex()) {
-    D = ft->makeMatrixComplex(N,1);
-    realEigenDecompose(int(N), (T*) nullptr, ft->rw(D), 
-		       ft->rw(A), false, balanceFlag);
-    if (!ft->anyNonzeroImaginary(D))
-      D = ft->realPart(D);
-  } else {
-    D = ft->makeMatrixComplex(N,1);
-    complexEigenDecompose(int(N), (T*) nullptr, ft->rw(D),
-			  ft->rw(A), false, balanceFlag);
-  }
-}
-
-void FM::EigenDecomposeCompactGeneral(Object A, Object& D, bool balanceFlag, ThreadContext *ctxt) {
-  if (!A.is2D())
-    throw Exception("Cannot apply eigendecomposition to N-Dimensional arrays.");
-  if (A.rows() != A.columns())
-    throw Exception("Cannot eigendecompose a non-square matrix.");
-  switch (A.typeCode()) {
-  default: throw Exception("Unhandled type for eigendecomposition");
+    TEigenDecomposeCompact(acopy,ret,balanceFlag,ctxt->_double);
+    break;
   case TypeSingle:
-    TEigenDecomposeCompactGeneral<float>(A,D,balanceFlag,ctxt->_single);
-    return;
-  case TypeDouble:
-    TEigenDecomposeCompactGeneral<double>(A,D,balanceFlag,ctxt->_double);
-    return;
-  }
-}
-
-template <typename T, FM::DataCode codeNum>
-static bool TGeneralizedEigenDecomposeCompactSymmetric(Object A, Object B, 
-						       Object& D, FloatType<T,codeNum> *ft) {
-  ndx_t N = A.rows();
-  if (!A.isComplex()) {
-    D = ft->makeMatrix(N,1);
-    if (!realGenEigenDecomposeSymmetric(int(N), (T*) nullptr, ft->rw(D), 
-					ft->rw(A), ft->rw(B),false)) 
-      return false;
-  } else {
-    D = ft->makeMatrix(N,1);
-    if (!complexGenEigenDecomposeSymmetric(int(N), (T*) nullptr, ft->rw(D), 
-					   ft->rw(A), ft->rw(B), false)) 
-      return false;
-  }
-  return true;
-}
-
-bool GeneralizedEigenDecomposeCompactSymmetric(Object A, Object B, Object& D, ThreadContext *ctxt) {
-  switch (A.typeCode()) {
-  default: throw Exception("Unhandled type for eigendecomposition");
-  case TypeSingle:
-    return TGeneralizedEigenDecomposeCompactSymmetric<float>(A,B,D,ctxt->_single);
-  case TypeDouble:
-    return TGeneralizedEigenDecomposeCompactSymmetric<double>(A,B,D,ctxt->_double);
-  }
-  return false;
-}
-
-/**
- * Eigen decomposition, symmetric matrix, full decomposition case
- */
-
-template <typename T, FM::DataCode codeNum>
-static bool TGeneralizedEigenDecomposeFullSymmetric(Object A, Object B, Object &V, Object &D,
-						    FloatType<T,codeNum> *ft) {
-  ndx_t N = A.rows();
-  Object eigenvals = ft->makeMatrix(N,1);
-  if (!A.isComplex()) {
-      // A temporary vector to store the eigenvalues
-    V = ft->makeMatrix(N,N);
-    if (!realGenEigenDecomposeSymmetric(int(N), ft->rw(V), ft->rw(eigenvals), 
-					ft->rw(A), ft->rw(B), true))
-      return false;
-  } else {
-    V = ft->makeMatrixComplex(N,N);
-    if (!complexGenEigenDecomposeSymmetric(int(N), ft->rw(V), ft->rw(eigenvals),
-					   ft->rw(A), ft->rw(B), true))
-      return false;
-  }
-  D = ft->asDiagonalMatrix(eigenvals);
-  return true;
-}
-
-bool GeneralizedEigenDecomposeFullSymmetric(Object A, Object B, Object& V, Object& D, ThreadContext *ctxt) {
-  switch (A.typeCode()) {
+    TEigenDecomposeCompact(acopy,ret,balanceFlag,ctxt->_single);
+    break;
+  case TypeZDouble:
+    TEigenDecomposeCompact(acopy,ret,balanceFlag,ctxt->_zdouble);
+    break;
+  case TypeZSingle:
+    TEigenDecomposeCompact(acopy,ret,balanceFlag,ctxt->_zsingle);
+    break;
   default:
-    throw Exception("Unsupported type for eigendecomposition");
-  case TypeSingle:
-    return TGeneralizedEigenDecomposeFullSymmetric<float>(A,B,V,D,ctxt->_single);
-  case TypeDouble:
-    return TGeneralizedEigenDecomposeFullSymmetric<double>(A,B,V,D,ctxt->_double);
+    throw Exception("Unsupported type " + a.type()->name() + " for eigen decomposition");
   }
-  return false;
+  return ret;
 }
 
-/**
- * Perform an eigen decomposition of the matrix A - This version computes the 
- * eigenvectors, and returns the eigenvalues in a diagonal matrix
- */
-
-template <typename T, FM::DataCode codeNum>
-static void TGeneralizedEigenDecomposeFullGeneral(Object A, Object B, Object &V, Object &D,
-						 FloatType<T,codeNum> *ft) {
-  ndx_t N = A.rows();
-  // A temporary vector to store the eigenvalues
-  Object eigenvals = ft->makeMatrixComplex(N,1);
-  if (!A.isComplex()) {
-    // For a real matrix, the eigenvectors are stored in a packed
-    // format - complex eigenvectors are stored as two successive 
-    // columns, corresponding to the real and imaginary parts of
-    // the vector.  Successive columns can be used because the 
-    // eigenvalues occur in conjugate pairs.
-    Object Vp = ft->makeMatrix(N,N);
-    realGenEigenDecompose(int(N), ft->rw(Vp), ft->rw(eigenvals), 
-			  ft->rw(A),ft->rw(B),true);
-    HandleEigenVectorsRealMatrix(eigenvals, Vp, N, D, V, ft);
-  } else {
-    V = ft->makeMatrixComplex(N,N);
-    complexGenEigenDecompose(int(N), ft->rw(V), ft->rw(eigenvals), 
-			     ft->rw(A), ft->rw(B), true);
-    D = ft->asDiagonalMatrix(eigenvals);
-  }
+template <class T>
+void TEigenDecomposeFull(Object &a, Object &V, Object &D, bool balanceFlag, T _data) {
+  auto _complex = _data->complexType();
+  Object eigenvals(_complex->makeMatrix(a.rows(),1));
+  eigenDecompose(a.irows(),_data->rw(V),_complex->rw(eigenvals),_data->rw(a),true,balanceFlag);
+  D = _complex->asDiagonalMatrix(eigenvals);
 }
 
-void GeneralizedEigenDecomposeFullGeneral(Object A, Object B, Object& V, Object& D, ThreadContext *ctxt) {
-  // Select the eigenvector decomposition routine based on A's type
+void EigenDecomposeFull(const Object &A, Object &V, Object &D, bool balanceFlag, ThreadContext *ctxt) {
+  if (A.rows() != A.cols()) throw Exception("Matrix must be square");
+  Object acopy(A);
   switch (A.typeCode()) {
-  default: throw Exception("Unhandled type for eigendecomposition");
+  case TypeDouble:
+    TEigenDecomposeFull(acopy,V,D,balanceFlag,ctxt->_double);
+    break;
   case TypeSingle:
-    return TGeneralizedEigenDecomposeFullGeneral<float>(A,B,V,D,ctxt->_single);
-  case TypeDouble:
-    return TGeneralizedEigenDecomposeFullGeneral<double>(A,B,V,D,ctxt->_double);
-  }
-}
-
-/**
- * Perform an eigen decomposition of the matrix A - This version computes the 
- * eigenvalues only in a vector
- */
-template <typename T, FM::DataCode codeNum>
-static void TGeneralizedEigenDecomposeCompactGeneral(Object A, Object B, Object& D, FloatType<T,codeNum> *ft) {
-  ndx_t N = A.rows();
-  D = ft->makeMatrixComplex(N,1);
-  if (!A.isComplex()) {
-    realGenEigenDecompose(int(N), (T*) nullptr, ft->rw(D), ft->rw(A), ft->rw(B), false);
-    if (!ft->anyNonzeroImaginary(D)) D = ft->realPart(D);
-  } else 
-    complexGenEigenDecompose(int(N), (T*) nullptr, ft->rw(D), ft->rw(A), ft->rw(B), false);
-}
-
-void GeneralizedEigenDecomposeCompactGeneral(Object A, Object B, Object& D, ThreadContext *ctxt) {
-  // Select the eigenvector decomposition routine based on A's type
-  switch (A.typeCode()) {
-  default: 
-    throw Exception("Unhandled type for eigendecomposition");
-  case TypeSingle: 
-    TGeneralizedEigenDecomposeCompactGeneral<float>(A,B,D,ctxt->_single);
+    TEigenDecomposeFull(acopy,V,D,balanceFlag,ctxt->_single);
     break;
-  case TypeDouble:
-    TGeneralizedEigenDecomposeCompactGeneral<double>(A,B,D,ctxt->_double);
+  case TypeZDouble:
+    TEigenDecomposeFull(acopy,V,D,balanceFlag,ctxt->_zdouble);
     break;
-  }
+  case TypeZSingle:
+    TEigenDecomposeFull(acopy,V,D,balanceFlag,ctxt->_zsingle);
+    break;
+  default:
+    throw Exception("Unhandled type " + A.type()->name() + " in eigen decomposition");
+  }    
 }
 
+}

@@ -113,11 +113,13 @@ namespace FM
     friend class Type;
     template <class T> friend class ArrayType;
     template <class T> friend class PODType;
+    template <class T> friend class FloatType;
     template <class T> friend class PODComplexType;
     friend class ObjectArrayType;
     template <class T, bool H> friend class AggregateType;
     template <class T> friend class HandleType;
     friend class DoubleType;
+    friend class ComplexSingleType;
     friend class SingleType;
     friend class StringType;
     friend class StructType;
@@ -182,9 +184,9 @@ namespace FM
     inline const Tuple& dims() const {
       return d->dims;
     }
-    inline Tuple& dims() {
+    inline void setDims(const Tuple & dims) {
       detach();
-      return d->dims;
+      d->dims = dims;
     }
 	inline int irows() const {
 		if (rows() > std::numeric_limits<int>::max())
@@ -312,6 +314,7 @@ namespace FM
     }
     template <class T> friend class ArrayType;
     friend class PODType<double>;
+    template <class T> friend class FloatType;
     template <class T> friend class PODType;
     template <class T> friend class PODComplexType;
     friend class ObjectArrayType;
@@ -319,6 +322,7 @@ namespace FM
     template <class T> friend class HandleType;
     friend class DoubleType;
     friend class SingleType;
+    friend class ComplexSingleType;
     friend class IndexType;
     friend class Int32Type;
     friend class BoolType;
@@ -404,7 +408,7 @@ inline FM::Object::Object(FM::ThreadContext *ctxt) : d(ctxt->_empty)
 
 inline FM::Object FM::Object::exportTo(FM::ThreadContext *dst) const
 {
-  return GetTypeForCode(dst,this->typeCode())->import(*this);
+  return FM::ThreadContext::GetTypeForCode(dst,this->typeCode())->import(*this);
 }
 
 #endif

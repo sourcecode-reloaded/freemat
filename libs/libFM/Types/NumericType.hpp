@@ -10,17 +10,15 @@ namespace FM
 
   struct ThreadContext;
 
-  template <class T, FM::DataCode codeNum>
-  class NumericType : public PODComplexType<T> {
+  template <class T>
+  class NumericType : public PODType<T> {
   public:
-    NumericType(ThreadContext *ctxt, const FMString &name) : PODComplexType<T>(ctxt,name) {}
+    NumericType(ThreadContext *ctxt, const FMString &name) : PODType<T>(ctxt,name) {}
     virtual ~NumericType() {}
-    virtual DataCode code() const {return codeNum;}
     virtual Object asLogical(const Object &a);
-    virtual Object asComplex(const Object &a);
     virtual Object asIndex(const Object &a, ndx_t max);
     virtual Object asIndexNoBoundsCheck(const Object &a);
-    double doubleValue(const Object &a) {
+    virtual double doubleValue(const Object &a) {
       return static_cast<double>(this->scalarValue(a));
     }
     virtual Object Plus(const Object &a) {
@@ -28,7 +26,7 @@ namespace FM
     }
     virtual T minValue(const Object &a)
     {
-      if (a.isEmpty() || a.isComplex()) throw Exception("Complex or empty arguments do no support maxValue");
+      if (a.isEmpty()) throw Exception("Empty arguments do no support minValue");
       const T* ap = this->ro(a);
       ndx_t acnt = a.count();
       T ret = ap[0];
@@ -38,7 +36,7 @@ namespace FM
     }
     virtual T maxValue(const Object &a) 
     {
-      if (a.isEmpty() || a.isComplex()) throw Exception("Complex or empty arguments do no support maxValue");
+      if (a.isEmpty()) throw Exception("Empty arguments do no support maxValue");
       const T* ap = this->ro(a);
       ndx_t acnt = a.count();
       T ret = ap[0];
@@ -57,7 +55,6 @@ namespace FM
     Object realPart(const Object &a);
     Object imagPart(const Object &a);
     void fill(Object &a, T val);
-    void fillComplex(Object &a, Complex<T> val);
   };
 }
 

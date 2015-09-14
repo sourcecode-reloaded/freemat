@@ -8,15 +8,15 @@ namespace FM
 
   struct OpColon
   {
-    template <class ctype, FM::DataCode codeNum>
-    inline static Object binary(double minval, double maxval, FloatType<ctype,codeNum> *o)
+    template <class ctype>
+    inline static Object binary(double minval, double maxval, FloatType<ctype> *o)
     {
-      return RangeConstructor<ctype,codeNum>(minval,1.0,maxval,false,o);
+      return RangeConstructor<ctype>(minval,1.0,maxval,false,o);
     }
-    template <class ctype, FM::DataCode codeNum>
-    inline static Object trinary(double minval, double stepsize, double maxval, FloatType<ctype,codeNum> *o)
+    template <class ctype>
+    inline static Object trinary(double minval, double stepsize, double maxval, FloatType<ctype> *o)
     {
-      return RangeConstructor<ctype,codeNum>(minval,stepsize,maxval,false,o);
+      return RangeConstructor<ctype>(minval,stepsize,maxval,false,o);
     }
   };
 };

@@ -1,81 +1,23 @@
-#ifndef __Type_hpp__
-#define __Type_hpp__
+#ifndef __ComplexType_hpp__
+#define __ComplexType_hpp__
 
-#include "FMLib.hpp"
-#include "Exception.hpp"
+#include "DoubleType.hpp"
 
-namespace FM {
-
-  
-  typedef unsigned ref_t;
-  typedef int64_t ndx_t;
-
-  class ObjectBase;
+namespace FM
+{
   struct ThreadContext;
 
-  enum DataCode {
-    TypeInvalid = 0,
-    TypeCellArray = 1,
-    TypeStruct = 2,
-    TypeString = 3,
-    TypeBool = 4,
-    TypeDouble = 5,
-    TypeSingle = 6,    
-    TypeInt8 = 7,
-    TypeUInt8 = 8,
-    TypeInt16 = 9,
-    TypeUInt16 = 10,
-    TypeInt32 = 11,
-    TypeUInt32 = 12,
-    TypeInt64 = 13,
-    TypeUInt64 = 14,
-    TypeIndex = 15,
-    TypeZDouble = 16,
-    TypeZSingle = 17,
-    TypeZInt8 = 18,
-    TypeZUInt8 = 19,
-    TypeZInt16 = 20,
-    TypeZUInt16 = 21,
-    TypeZInt32 = 22,
-    TypeZUInt32 = 23,
-    TypeZInt64 = 24,
-    TypeZUInt64 = 25,
-    TypeListArray = 26,
-    TypeMeta = 27,
-    TypeClass = 28,
-    TypeCode = 29,
-    TypeModule = 30,
-    TypeCaptured = 31,
-    TypeFunction = 32,
-    TypeBoundFunction = 33,
-    TypeFunctionHandle = 34,
-    TypeAnonymous = 35,
-    TypeBreakpoint = 36,
-    TypeSparseLogical = 37,
-    TypeSparseDouble = 38,
-    TypeSparseComplex = 39
-  };
-
-  class Object;
-  class ObjectVector;
-  class Tuple;
-  struct Data;
-
-  class ObjectVisitor {
-  public:
-    virtual void operator()(const Object &p) = 0;
-  };
-
-  class Type {
-  protected:
-    ThreadContext *_ctxt;
-  public:
-    Type(ThreadContext *ctxt) : _ctxt(ctxt) {}
-    virtual ~Type() {}
-    ThreadContext *context() const {return _ctxt;}
-    virtual DataCode code() const = 0;
-    virtual const FMString& name() const = 0;
-    virtual void destroyObject(ObjectBase* p) = 0;
+  // This is a proxy type - ideally, we would eliminate the notion of a complex type (or
+  // use it everywhere complexity is required).  Unfortunately, that isn't really possible.
+  // So as a result, we build this proxy type which really just wraps the double type.  All
+  // operations are proxied to the underlying double type, with parameters set so that
+  // complex objects are created when necessary.  
+  class ComplexProxyType : public ArrayType<Complex<double> > {
+    ComplexProxyType(ThreadContext *ctxt) : FloatType(ctxt, "complex double proxy") {}
+    virtual ~ComplexProxyType() {}
+    virtual DataCode code() const {return ctxt->_double->code();}
+    virtual const FMString& name() const {return ctxt->_double->name();}
+    virtual void destroyObject(ObjectBase* p) {ctxt->_double->destroyObject(p);}
     virtual Data* duplicateData(const ObjectBase * p, ndx_t &reserve) const = 0;
     virtual void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const = 0;
     virtual Object empty() = 0;
@@ -128,9 +70,8 @@ namespace FM {
     virtual void resize(Object &a, const Tuple &newsize);
     virtual void print(const Object &a);
     virtual Object deref(const Object &a);
-    virtual Object call(const Object &a, const Object &args, ndx_t nargout);
-    virtual bool isComplexType() {return false;}
+    virtual Object call(const Object &a, const Object &args, ndx_t nargout);    
   };
-}
+};
 
 #endif

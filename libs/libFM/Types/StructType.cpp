@@ -233,7 +233,7 @@ Object StructType::expandStruct(const Object &s, const HashMap<int> &expanded_fi
   permutation.resize(oldfields_count);
   for (auto field : sd->m_fields) 
     permutation[field.second] = expanded_fields.at(field.first);
-  Object outdata = _ctxt->_cell->zeroArrayOfSize(sd->m_data.dims(),false);
+  Object outdata = _ctxt->_cell->zeroArrayOfSize(sd->m_data.dims());
   Object *op = _ctxt->_cell->rw(outdata);
   const Object *ip = _ctxt->_cell->ro(sd->m_data);
   auto newfields_count = expanded_fields.size();

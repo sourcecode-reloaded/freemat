@@ -10,8 +10,8 @@ namespace FM
   template <class T, class Op>
   inline Object dispatch_unaryop(const Object &a, Type *o)
   {
-    PODComplexType<T> *otype = static_cast<PODComplexType<T> *>(o);
-    Object c = otype->zeroArrayOfSize(a.dims(),a.isComplex());
+    PODType<T> *otype = static_cast<PODType<T> *>(o);
+    Object c = otype->zeroArrayOfSize(a.dims());
     T *cptr = otype->rw(c);
     const T* aptr = otype->ro(a);
     ndx_t elcnt = c.count();

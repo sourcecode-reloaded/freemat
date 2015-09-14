@@ -29,8 +29,8 @@ namespace FM
     }
   }
 
-  template <class T, FM::DataCode codeNum>
-  Object RangeConstructor(double minval, double stepsize, double maxval, bool vert, FloatType<T,codeNum> *type)
+  template <class T>
+  Object RangeConstructor(double minval, double stepsize, double maxval, bool vert, FloatType<T> *type)
   {
     Object ret(type->empty());
     if (stepsize == 0) 

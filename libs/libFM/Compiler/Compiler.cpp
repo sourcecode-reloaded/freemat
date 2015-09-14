@@ -1,3 +1,4 @@
+#include "Config.hpp"
 #include "Compiler.hpp"
 #include "Assembler.hpp"
 #include <iostream>
@@ -599,7 +600,7 @@ void Compiler::saveRegisterToName(const FMString &varname, reg_t b) {
   else if (symflags.is_cell())
     {
       emit(OP_SAVE_CELL,b,getCellID(varname));
-      std::cout << "CELL " << varname << " has ID " << getCellID(varname) << "\n";
+      DBOUT(std::cout << "CELL " << varname << " has ID " << getCellID(varname) << "\n");
     }
   else
     throw Exception("Unhandled save case for variable " + varname + " flags = " + symflags.str());
@@ -628,9 +629,9 @@ void Compiler::assignment(const Tree &t, bool printIt, reg_t b) {
     use_overloads = false;
   if (_code->_issubsasgn && symflags.is_object())
     use_overloads = false;
-  if (_code->_issubsasgn) {
-    std::cout << "subsasgn case\n";
-  }
+  DBOUT(if (_code->_issubsasgn) {
+      std::cout << "subsasgn case\n";
+    });
   if (symflags.is_global())
     emit(OP_SUBSASGN_GLOBAL,args,b,getNameID(varname));
   else if (symflags.is_persistent())
@@ -765,7 +766,7 @@ reg_t Compiler::fetchClosure(const FMString &varname)
 reg_t Compiler::fetchVariable(const FMString &varname, symbol_flags_t flags)
 {
   reg_t x = getRegister();
-  std::cout << "Fetch variable: " << varname << " with flags: " << flags.str() << "\n";
+  DBOUT(std::cout << "Fetch variable: " << varname << " with flags: " << flags.str() << "\n");
   if (flags.is_global())
     emit(OP_LOAD_GLOBAL,x,getNameID(varname));
   else if (flags.is_persistent())
@@ -972,9 +973,9 @@ reg_t Compiler::anonymousFunction(const Tree &t) {
       if (s.value().is_captured())
 	addStringToList(_ctxt,_code->_capturedlist,s.key());
     }
-  std::cout << "Compiling function " << fname << "\n";
+  DBOUT(std::cout << "Compiling function " << fname << "\n");
   _code->_name = fname;
-  std::cout << "Symbol table is " << _currentSym->name << "\n";
+  DBOUT(std::cout << "Symbol table is " << _currentSym->name << "\n");
   const Tree &code = t.first().child(1);
   // Create a basic block, and push it on the list
   useBlock(new BasicBlock);
@@ -1002,9 +1003,19 @@ reg_t Compiler::expression(const Tree &t) {
   switch(t.token()) {
   case TOK_VARIABLE:
     {
-      reg_t sp = startList();
-      rhs(sp,t);
-      return listHead(sp);
+      // Special case a scalar expression
+      if (t.numChildren() == 1) {
+	FMString varname = t.first().text();
+	symbol_flags_t symflags = _code->_syms->syms[varname];
+	reg_t x = fetchVariable(varname,symflags);
+	reg_t y = getRegister();
+	emit(OP_DEREF,y,x);
+	return y;
+      } else {
+	reg_t sp = startList();
+	rhs(sp,t);
+	return listHead(sp);
+      }
     }
   case TOK_REAL:
     {
@@ -1016,7 +1027,7 @@ reg_t Compiler::expression(const Tree &t) {
     {
       FMString mt(t.text());
       if (mt.toUpper().endsWith("D")) mt.chop(1);
-      return fetchConstant(_ctxt->_double->makeComplex(0,mt.toDouble()));
+      return fetchConstant(_ctxt->_zdouble->makeScalar(Complex<double>(0,mt.toDouble())));
     }
   case TOK_REALF:
     {
@@ -1028,7 +1039,7 @@ reg_t Compiler::expression(const Tree &t) {
     {
       FMString mt(t.text());
       if (mt.toUpper().endsWith("F")) mt.chop(1);
-      return fetchConstant(_ctxt->_single->makeComplex(0,mt.toFloat()));
+      return fetchConstant(_ctxt->_zsingle->makeScalar(Complex<float>(0,mt.toFloat())));
     }
   case TOK_STRING:
     {
@@ -1505,13 +1516,15 @@ void Compiler::compile(const FMString &code, const FMString &name) {
   Parser P(S);
   Tree t(P.process());
   EndRemoverPass e;
-  t.print();
+  DBOUT(t.print());
   t = e.walkCode(t);
   NestedFunctionMoverPass n;
   t = n.walkCode(t);
+  DBOUT({
   std::cout << "********************************************************************************\n";
   t.print();
   std::cout << "********************************************************************************\n";
+    });
   SymbolPass p;
   reset();
   _module->_name = name;
@@ -1519,11 +1532,11 @@ void Compiler::compile(const FMString &code, const FMString &name) {
   // definition instead of a script, the internal blocks will
   // be processed at the correct depth.
   p.walkCode(t);
-  p.dump();
+  DBOUT(p.dump());
   _symsRoot = p.getRoot();
   _currentSym = _symsRoot;
   walkCode(t);
-  PrintModule(_module);
+  DBOUT(PrintModule(_module));
 }
 
 void Compiler::insertPrefix(FMString funcName, FunctionTypeEnum funcType) {
@@ -1541,7 +1554,7 @@ void Compiler::insertPrefix(FMString funcName, FunctionTypeEnum funcType) {
       reg_t args = startList();
       for (int i=0;i<toInvoke.size();i++)
 	{
-	  std::cout << "Adding prefix call for base class " << toInvoke[i] << "\n";
+	  DBOUT(std::cout << "Adding prefix call for base class " << toInvoke[i] << "\n");
 	  reg_t obj = getRegister();
 	  emit(OP_LOAD,obj,getNameID(objname));
 	  reg_t func = getRegister();
@@ -1568,9 +1581,9 @@ void Compiler::insertPrefix(FMString funcName, FunctionTypeEnum funcType) {
       if (_currentSym->countReturnValues() != 1)
 	throw Exception("Getter for class " + _currentSym->name + " named " + funcName + " must have one return value");
       _code->_isgetset = true;
-      std::cout << "Set Get flag set to true\n";
+      DBOUT(std::cout << "Set Get flag set to true\n");
       _code->_propertyName = funcName.mid(4);
-      std::cout << "Property name = " << _code->_propertyName << "\n";
+      DBOUT(std::cout << "Property name = " << _code->_propertyName << "\n");
       break;
     }
   case SetterFunction:
@@ -1580,9 +1593,9 @@ void Compiler::insertPrefix(FMString funcName, FunctionTypeEnum funcType) {
       if (_currentSym->countReturnValues() != 1)
 	throw Exception("Setter for class " + _currentSym->name + " named " + funcName + " must have one return value");
       _code->_isgetset = true;
-      std::cout << "Set Get flag set to true\n";
+      DBOUT(std::cout << "Set Get flag set to true\n");
       _code->_propertyName = funcName.mid(4);
-      std::cout << "Property name = " << _code->_propertyName << "\n";
+      DBOUT(std::cout << "Property name = " << _code->_propertyName << "\n");
       break;
     }
   default:
@@ -1632,9 +1645,9 @@ void Compiler::walkFunction(const Tree &t, FunctionTypeEnum funcType) {
       if (s.value().is_captured())
 	addStringToList(_ctxt,_code->_capturedlist,s.key());
     }
-  std::cout << "Compiling function " << funcName << "\n";
+  DBOUT(std::cout << "Compiling function " << funcName << "\n");
   _code->_name = funcName;
-  std::cout << "Symbol table is " << _currentSym->name << "\n";
+  DBOUT(std::cout << "Symbol table is " << _currentSym->name << "\n");
   //const Tree &rets = t.child(0);
   //  beginFunction(funcName,nested);
   //const Tree &args = t.child(2);
@@ -1692,9 +1705,9 @@ void Compiler::walkMethods(const Tree &t) {
     {
       const Tree &p = t.child(i);
       FMString methodName = p.child(1).text();
-      std::cout << "Compiling method named: " << methodName << "\n";
+      DBOUT(std::cout << "Compiling method named: " << methodName << "\n");
       symbol_flags_t flags = _symsRoot->syms[methodName];
-      std::cout << "Symbol flags for this method are: " << flags.str() << "\n";
+      DBOUT(std::cout << "Symbol flags for this method are: " << flags.str() << "\n");
       // Find symbol table for this method
       _currentSym = _symsRoot->childNamed(p.child(1).text());
       if (!_currentSym) throw Exception("Internal compiler error: unable to find symbol table for method " + p.child(1).text());
@@ -1812,7 +1825,7 @@ void Compiler::walkClassDef(const Tree &t) {
 	}
     if (!explicit_constructor)
       {
-	std::cout << "Explicit constructor not found!\n";
+	DBOUT(std::cout << "Explicit constructor not found!\n");
 	constructor = fetchConstant(_ctxt->_module->pass());
       }
     reg_t name = fetchConstantString(cp->_syms->name);

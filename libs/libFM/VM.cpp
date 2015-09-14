@@ -1,6 +1,7 @@
 // TODO - LOAD/SAVE Dynamic is about 2.5 x slower than LOAD/SAVE local
 // 
 
+#include "Config.hpp"
 #include "VM.hpp"
 #include <cmath>
 #include <float.h>
@@ -154,8 +155,7 @@ void VM::updateDebugMode(bool loopEntry)
     for (int i=0;i<_mybps.count();i++) {
       const BreakpointData *bd = _ctxt->_breakpoint->ro(bps[i]);
       if (bd->bp_type == BreakpointTypeCode::Unconditional) {
-	std::cout << "Checking for Entry: " << bd->frame_name << " " <<
-	  _frames[_fp]->_debugname << " line " << bd->line_number << "\n";
+	DBOUT(std::cout << "Checking for Entry: " << bd->frame_name << " " << _frames[_fp]->_debugname << " line " << bd->line_number << "\n");
 	if ((bd->frame_name == _frames[_fp]->_debugname) && (bd->line_number == 0))
 	  _debug_flags |= dbstop_on_entry;
       }
@@ -179,15 +179,15 @@ void VM::updateDebugMode(bool loopEntry)
       }
     }
   }
-  std::cout << ">update debug mode to " << this->_debug_mode << "\n";
-  std::cout << ">update debug flags to " << this->_debug_flags << "\n";
+  DBOUT(std::cout << ">update debug mode to " << this->_debug_mode << "\n");
+  DBOUT(std::cout << ">update debug flags to " << this->_debug_flags << "\n");
 }
 
 // Excuting a module is like executing a function, except that an additional stack is required
 Object VM::executeModule(const Object &moduleObject, const Object &parameters)
 {
   const ModuleData *cmd = _ctxt->_module->ro(moduleObject);
-  std::cout << "Execute module : " << cmd->m_name << "\n";
+  DBOUT(std::cout << "Execute module : " << cmd->m_name << "\n");
   switch (cmd->m_modtype) {
   default:
 	  throw Exception("Unknown module type!");
@@ -271,7 +271,7 @@ void VM::defineClass(const Object &name, const Object &arguments)
   for (int i=0;i<superclasses.count();i++) 
     {
       Object super_meta = _ctxt->_globals->get(_ctxt->_string->str(sp[i]),_ctxt);
-      std::cout << "Defining class " << className << " super class " << super_meta.description() << "\n";
+      DBOUT(std::cout << "Defining class " << className << " super class " << super_meta.description() << "\n");
       _ctxt->_meta->addSuperClass(fooMeta,super_meta);
     }
   const Object *ep = _ctxt->_list->ro(events);
@@ -392,7 +392,7 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
   const CodeData *cp = _ctxt->_code->ro(fd->m_code);
   _frames[_fp]->_name = _ctxt->_string->str(cp->m_name);
   _frames[_fp]->_debugname = debugname;
-  std::cout << "Starting function: " << _frames[_fp]->_name << "\n";
+  DBOUT(std::cout << "Starting function: " << _frames[_fp]->_name << "\n");
   defineFrame(cp->m_names,cp->m_registers,FrameTypeCode::Function);
   _frames[_fp]->_code = fd->m_code;
   ndx_t *ap = _ctxt->_index->rw(_frames[_fp]->_addrs);
@@ -411,7 +411,7 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
     to_use = std::min<ndx_t>(parameters.count(),cp->m_params.count());
   else
     to_use = std::min<ndx_t>(parameters.count(),cp->m_params.count()-1);
-  std::cout << "to_use = " << to_use << "\n";
+  DBOUT(std::cout << "to_use = " << to_use << "\n");
   for (auto i=0;i<to_use;i++)
     {
       // Two cases here - one is that the parameter is normal, the other is that it is
@@ -424,7 +424,7 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
       else
 	{
 	  ndx_t capture_slot = param_ndx[i] % 1000;
-	  std::cout << "Parameter " << i << " put into cell " << capture_slot << "\n";
+	  DBOUT(std::cout << "Parameter " << i << " put into cell " << capture_slot << "\n");
 	  _ctxt->_captured->set(_ctxt->_list->rw(_frames[_fp]->_captures)[capture_slot],args[i]);
 	}
     }
@@ -455,16 +455,16 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
       else
 	{
 	  ndx_t capture_slot = return_ndx[i] % 1000;
-	  std::cout << "Return " << i << " taken from cell " << capture_slot << "\n";
+	  DBOUT(std::cout << "Return " << i << " taken from cell " << capture_slot << "\n");
 	  _ctxt->_list->push(retvec,_ctxt->_captured->get(_ctxt->_list->ro(_frames[_fp]->_captures)[capture_slot]));
 	}
     }
   if (varargout_case) {
-    std::cout << "to_return = " << to_return << "\n";
-    std::cout << "returns = " << cp->m_returns << "\n";
+    DBOUT(std::cout << "to_return = " << to_return << "\n");
+    DBOUT(std::cout << "returns = " << cp->m_returns << "\n");
     auto varargout_location = _ctxt->_index->scalarValue(cp->m_varargout);
     const Object & varargout = sp[varargout_location];
-    std::cout << "VARARGOUT " << varargout << "\n";
+    DBOUT(std::cout << "VARARGOUT " << varargout << "\n");
     const Object * vip = _ctxt->_cell->ro(varargout);
     for (auto i=0;i<varargout.count();i++)
       _ctxt->_list->push(retvec,vip[i]);
@@ -493,12 +493,12 @@ bool VM::checkBreakpoints(Frame *frame, Frame *closed_frame, int ip)
   std::set<int> todelete;
   for (int i=0;i<this->_mybps.count();i++) {
     const BreakpointData *bd = _ctxt->_breakpoint->ro(bpset[i]);
-    std::cout << "Check BP: " << lineno << " name: " << bd->frame_name << " vs: " << frame->_debugname << " line: " << bd->line_number << "\n";
+    DBOUT(std::cout << "Check BP: " << lineno << " name: " << bd->frame_name << " vs: " << frame->_debugname << " line: " << bd->line_number << "\n");
     if ((bd->frame_name == frame->_debugname) &&
 	(bd->line_number == lineno)) {
       if (bd->bp_type == BreakpointTypeCode::Unconditional) return true;
       if (bd->bp_type == BreakpointTypeCode::Conditional) {
-	std::cout << "Conditional breakpoint check.\n";
+	DBOUT(std::cout << "Conditional breakpoint check.\n");
 	try {
 	  this->executeModule(bd->m_condition,_ctxt->_list->empty());
 	  Object trap(_ctxt);
@@ -560,7 +560,7 @@ void VM::debugCycle()
       bool dbshiftExists = activeFrame()->getLocalVariableSlow("dbshift__",dbshift);
       if (dbshiftExists) shift = int(dbshift.asDouble());
       Frame *active = activeFrame()->_prevFrame;
-      std::cout << "active frame name is " << active->_name << "\n";
+      DBOUT(std::cout << "active frame name is " << active->_name << "\n");
       for (int i=0;i<shift;i++) {
 	if (!active->_prevFrame) {
 	  dbshift = _ctxt->_double->makeScalar(i-1);
@@ -568,7 +568,7 @@ void VM::debugCycle()
 	  break;
 	}
 	active = active->_prevFrame;
-	std::cout << "dbshift " << i << " to frame " << active->_name << "\n";
+	DBOUT(std::cout << "dbshift " << i << " to frame " << active->_name << "\n");
       }
       sprintf(buffer,"K [%s,%d (%d) <%d>] %s --> ",active->_name.c_str(),lineno,debug->_ip,shift,state);
       FMString body;
@@ -586,7 +586,7 @@ void VM::debugCycle()
 	    const FunctionData *fd = _ctxt->_function->ro(cmd->m_main);
 	    const CodeData *cp = _ctxt->_code->ro(fd->m_code);
 	    _frames[_fp]->_name = ">>debug";
-	    std::cout << "Starting script: " << _frames[_fp]->_name << "\n";
+	    DBOUT(std::cout << "Starting script: " << _frames[_fp]->_name << "\n");
 	    defineFrame(cp->m_names,cp->m_registers,FrameTypeCode::Script);
 	    _frames[_fp]->_sym_names = _ctxt->_list->empty(); // Our frame has no locally defined symbols
 	    //	    _frames[_fp]->_closedFrame = visited_frame;
@@ -642,7 +642,7 @@ void VM::executeScript(const Object &codeObject, const FMString &debugname)
   const CodeData *cp = _ctxt->_code->ro(codeObject);
   _frames[_fp]->_name = get_basename_from_full_path(debugname);
   _frames[_fp]->_debugname = debugname;
-  std::cout << "Starting script: " << _frames[_fp]->_name << " " << _frames[_fp]->_debugname << "\n";
+  DBOUT(std::cout << "Starting script: " << _frames[_fp]->_name << " " << _frames[_fp]->_debugname << "\n");
   defineFrame(cp->m_names,cp->m_registers,FrameTypeCode::Script);
   _frames[_fp]->_code = codeObject;
   _frames[_fp]->_sym_names = _ctxt->_list->empty(); // Our frame has no locally defined symbols
@@ -718,7 +718,10 @@ void VM::executeCodeObject(const Object &codeObject)
   std::vector<int> *eh = &_frames[_fp]->_exception_handlers;
 
   updateDebugMode(true);
-  
+
+  Object empty_double = _ctxt->_double->empty();
+  Object empty_list = _ctxt->_list->empty();
+
   while (!returnFound)
     {
       try {
@@ -726,12 +729,13 @@ void VM::executeCodeObject(const Object &codeObject)
 	  {
 	    insn_t insn = code[ip];
 	    
-	    {
-	      int8_t op = opcode(insn);
-	      printf("%-15s",getOpCodeName(op).c_str());
-	      printf("%-20s",Compiler::opcodeDecode(op,insn).c_str());
-	      std::cout << "\n";
-	    }
+	    DBOUT({
+		int8_t op = opcode(insn);
+		printf("%-15s",getOpCodeName(op).c_str());
+		printf("%-20s",Compiler::opcodeDecode(op,insn).c_str());
+		std::cout << "\n";
+	      });
+
 	    if (_debug_mode && checkBreakpoints(_frames[_fp],closed_frame,ip)) {
 	      debugCycle();
 	    }
@@ -739,7 +743,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	      _debug_flags = _debug_flags ^ dbstop_on_entry;
 	      debugCycle();
 	    }
-
+	    
 	    switch (opcode(insn))
 	      {
 	      case OP_NOP:
@@ -752,7 +756,10 @@ void VM::executeCodeObject(const Object &codeObject)
 		_retscrpt_found = true;
 		break;
 	      case OP_PUSH:
-		_ctxt->_list->push(REG1,REG2);
+		if (REG1.isEmpty())
+		  REG1 = _ctxt->_list->makeScalar(REG2);
+		else
+		  _ctxt->_list->push(REG1,REG2);
 		break;
 	      case OP_FIRST:
 		REG1 = _ctxt->_list->first(REG2);
@@ -782,7 +789,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		REG1 = const_list[get_constant(insn)];
 		break;
 	      case OP_NEW_LIST:
-		REG1 = _ctxt->_list->empty();
+		REG1 = empty_list;
 		break;
 	      case OP_SUBSREF:
 		_ctxt->_list->merge(REG1,REG2.type()->get(REG2,REG3,true));
@@ -886,7 +893,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		REG1 = _ctxt->_double->zeroScalar();
 		break;
 	      case OP_CLEAR:
-		REG1 = _ctxt->_double->empty();
+		REG1 = empty_double;
 		break;
 	      case OP_HCAT:
 		REG1 = NCat(_ctxt,REG2,1);
@@ -909,21 +916,21 @@ void VM::executeCodeObject(const Object &codeObject)
 		{
 		  int ndx = get_constant(insn);
 		  REG1 = _ctxt->_captured->get(capturesfile[ndx]);
-		  std::cout << "    CELL LOAD: " << REG1.description() << "\n";
+		  DBOUT(std::cout << "    CELL LOAD: " << REG1.description() << "\n");
 		  break;
 		}
 	      case OP_PUSH_CELL:
 		{
 		  int ndx = get_constant(insn);
 		  _ctxt->_list->push(REG1,capturesfile[ndx]);
-		  std::cout << "    CELL PUSH: " << capturesfile[ndx].description() << "\n";
+		  DBOUT(std::cout << "    CELL PUSH: " << capturesfile[ndx].description() << "\n");
 		  break;
 		}
 	      case OP_SAVE_CELL:
 		{
 		  int ndx = get_constant(insn);
 		  _ctxt->_captured->set(capturesfile[ndx],REG1);
-		  std::cout << "    CELL SAVE: " << REG1.description() << "\n";
+		  DBOUT(std::cout << "    CELL SAVE: " << REG1.description() << "\n");
 		  break;
 		}
 	      case OP_MAKE_CLOSURE:
@@ -957,7 +964,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		  ndx_t addr = addrfile[ndx];
 		  if (addr == -1)
 		    {
-		      std::cout << "OP_LOAD for " << _ctxt->_string->str(names_list[ndx]) << "\n";
+		      DBOUT(std::cout << "OP_LOAD for " << _ctxt->_string->str(names_list[ndx]) << "\n");
 		      // The address for this index has not been defined yet in the current scope.
 		      // First, see if the closed frame has the address for it.  In the process, the 
 		      // closed frame will search the global namespace for the symbol.
@@ -971,11 +978,13 @@ void VM::executeCodeObject(const Object &codeObject)
 		}
 	      case OP_LOOKUP:
 		{
+		  // FIXME - still not sure this is right...
+		  // User class method functions aren't cached.
 		  int ndx = get_constant(insn);
 		  ndx_t addr = addrfile[ndx];
 		  if ((addr == -1) || _debug_mode)
 		    {
-		      std::cout << "OP_LOOKUP for " << _ctxt->_string->str(names_list[ndx]) << "\n";
+		      DBOUT(std::cout << "OP_LOOKUP for " << _ctxt->_string->str(names_list[ndx]) << "\n");
 		      // check for user classes
 		      bool anyUserClasses = false;
 		      const Object *regs = _ctxt->_list->ro(REG2);
@@ -983,15 +992,15 @@ void VM::executeCodeObject(const Object &codeObject)
 			anyUserClasses |= regs[i].isClass();
 		      if (anyUserClasses) 
 			{
-			  std::cout << "Searching for " << names_list[ndx].description() << "\n";
+			  DBOUT(std::cout << "Searching for " << names_list[ndx].description() << "\n");
 			  for (int i=0;i<REG2.count();i++)
 			    if (regs[i].isClass() && _ctxt->_class->hasMethod(regs[i],names_list[ndx],REG1)) 
 			      {
-				std::cout << "User method found\n";
+				DBOUT(std::cout << "User method found\n");
 				goto cont_lookup;
 			      }
 			}
-		      std::cout << "No user defined classes\n";
+		      DBOUT(std::cout << "No user defined classes\n");
 		      // The address for this index has not been defined yet in the current scope.
 		      // First, see if the closed frame has the address for it.  In the process, the 
 		      // closed frame will search the global namespace for the symbol.
@@ -1005,8 +1014,8 @@ void VM::executeCodeObject(const Object &codeObject)
 		cont_lookup:
 		  break;		  
 		}
-	      case OP_SAVE_GLOBAL:
-		break;
+	      // case OP_SAVE_GLOBAL:
+	      // 	break;
 	      case OP_SAVE:
 		{
 		  int ndx = get_constant(insn);
@@ -1021,14 +1030,14 @@ void VM::executeCodeObject(const Object &codeObject)
 			}
 		      addrfile[ndx] = addr;
 		    }
-		  std::cout << "Writing " << REG1.brief() << " to address " << addr << " at machine " << addrfile + ndx << "\n";
+		  DBOUT(std::cout << "Writing " << REG1.brief() << " to address " << addr << " at machine " << addrfile + ndx << "\n");
 		  varfile[addr] = REG1;
 		  break;
 		}
-	      case OP_SAVE_PERSIST:
+	      // case OP_SAVE_PERSIST:
 	      case OP_JUMP_ZERO:
 		{
-		  if (REG1.asDouble() == 0)
+		  if (!_ctxt->_bool->scalarValue(REG1))
 		    ip = get_constant(insn)-1;
 		  break;
 		}
@@ -1092,8 +1101,8 @@ void VM::executeCodeObject(const Object &codeObject)
 		  REG1 = REG2.type()->deref(REG2);
 		  break;
 		}
-	      case OP_SUBSASGN_GLOBAL:
-	      case OP_SUBSASGN_PERSIST:
+		//	      case OP_SUBSASGN_GLOBAL:
+		//	      case OP_SUBSASGN_PERSIST:
 	      case OP_SUBSASGN_NOGS:
 	      case OP_SUBSASGN:
 		{
@@ -1129,7 +1138,7 @@ void VM::executeCodeObject(const Object &codeObject)
 		}
 	      case OP_POP:
 		{
-		  std::cout << "POP for " << _ctxt->_double->scalarValue(REG2) << "\n";
+		  DBOUT(std::cout << "POP for " << _ctxt->_double->scalarValue(REG2) << "\n");
 		  for (int i=0;i<_ctxt->_double->scalarValue(REG2);i++)
 		    REG1 = _ctxt->_list->pop(REG1);
 		  break;

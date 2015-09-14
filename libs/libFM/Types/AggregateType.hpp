@@ -3,6 +3,7 @@
 
 #include "Object.hpp"
 #include "Type.hpp"
+#include "Config.hpp"
 
 namespace FM
 {
@@ -20,7 +21,7 @@ namespace FM
     AggregateType(ThreadContext *ctxt) : Type(ctxt) {}
     virtual void destroyObject(ObjectBase* p)
     {
-      if (HandleStyle) std::cout << "Destroy object called on object of type " + p->type->name() + "\n";
+      DBOUT(if (HandleStyle) std::cout << "Destroy object called on object of type " + p->type->name() + "\n");
       if (--p->data->refcnt == 0)
 	{
 	  DataType *k = static_cast<DataType *>(p->data->ptr);

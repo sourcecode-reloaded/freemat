@@ -185,6 +185,14 @@ void Type::set(Object &a, const Object &args, const Object &b, bool invokeSetter
       _ctxt->_class->subsasgn(a,args,b);
       return;
     }
+  if (b.type()->code() != a.type()->code()) {
+    if (b.type()->isComplexType() && !a.type()->isComplexType()) {
+      a = ThreadContext::GetComplexTypeForCode(_ctxt,a.type()->code())->convert(a);
+      return set(a,args,b,invokeSetters);
+    }
+    Object bconv = a.type()->convert(b);
+    return set(a,args,bconv,invokeSetters);
+  }
   const Object *argp = args.asType<ListType>()->ro(args);
   if (args.count() == 2)
     {
@@ -200,7 +208,7 @@ void Type::set(Object &a, const Object &args, const Object &b, bool invokeSetter
 	  break;
 	case 1:
 	  if (a.isEmpty() && (a.type()->code() != TypeCellArray))
-	    a = _ctxt->_cell->zeroArrayOfSize(a.dims(),false);
+	    a = _ctxt->_cell->zeroArrayOfSize(a.dims());
 	  a.type()->setBraces(a,argp[1],b);
 	  break;
 	case 2:

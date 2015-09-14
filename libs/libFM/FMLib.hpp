@@ -249,6 +249,14 @@ public:
     }
     return copy;
   }
+  FMString rightTrimmed() const
+  {
+    FMString copy(*this);
+    while (copy.size() > 0 && (isspace(copy.back()))) {
+      copy.chop(1);
+    }
+    return copy;
+  }
   FMString simplified() const
   {
     FMString copy = this->trimmed();

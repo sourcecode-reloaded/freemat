@@ -82,16 +82,11 @@ Math/DenseSolver.hpp
 Math/EigenDecompose.hpp
 Math/Hermitian.hpp
 Math/LAPACK.hpp
-Math/MatrixInvert.hpp
-Math/MatrixMultiply.hpp
-Math/MatrixPower.hpp
 Math/PowFunc.hpp
 Math/Transpose.hpp
 Math/IEEEFP.hpp
 Math/Math.hpp
-Math/MatrixDivide.hpp
-Math/MatrixLeftDivide.hpp
-Math/MatrixRightDivide.hpp
+Math/MatrixOps.hpp
 Math/Complex.hpp
 Types/AggregateType.hpp
 Types/AllTypes.hpp
@@ -124,10 +119,10 @@ Types/Type.hpp
 
 add_executable( FMT
 ${HEADERS}
+Types/ArrayType.cpp
 Types/IntegerType.cpp  
 Types/BoolType.cpp  
 Types/FloatType.cpp  
-Types/SingleType.cpp  
 Types/ListType.cpp  
 Types/StringType.cpp  
 Types/AnonymousType.cpp  
@@ -135,9 +130,7 @@ Types/FunctionHandleType.cpp
 Types/FunctionType.cpp  
 Types/CellType.cpp  
 Types/Type.cpp   
-Types/DoubleType.cpp  
 Types/ClassType.cpp
-Types/ArrayType.cpp
 Types/ObjectArrayType.cpp
 Types/BoundFunctionType.cpp
 Types/StructType.cpp
@@ -150,13 +143,10 @@ Math/BLAS.cpp
 Math/DenseSolver.cpp
 Math/Transpose.cpp  
 Math/Hermitian.cpp  
-Math/LAPACK.cpp  
-Math/MatrixMultiply.cpp
-Math/EigenDecompose.cpp
+Math/LAPACK.cpp
+Math/MatrixOps.cpp
 Math/MatrixPower.cpp
-Math/MatrixInvert.cpp
-Math/MatrixLeftDivide.cpp  
-Math/MatrixRightDivide.cpp  
+Math/EigenDecompose.cpp
 Compiler/Tree.cpp
 Compiler/EndRemover.cpp
 Compiler/NestedFunctionMover.cpp

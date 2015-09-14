@@ -7,6 +7,19 @@ using namespace FM;
 
 const int MSGBUFLEN = 100;
 
+template <class S>
+static void printToStream(TermIF *io, int width, const S& val) {
+  io->output("% *lld",width,(int64_t)(val));
+}
+
+// FIXME - 
+template <class S>
+static void printToStream(TermIF *io, int width, const Complex<S> & val) {
+  io->output("% *lld +%lld",width,(int64_t)(val.r),(int64_t)(val.i));
+}
+
+
+
 // FIXME - replace with log10?
 template <class T>
 static int GetNominalWidthInteger(const T* qp, ndx_t len) {
@@ -23,89 +36,95 @@ static int GetNominalWidthInteger(const T* qp, ndx_t len) {
   return maxdigit;
 }
 
-template <class T, FM::DataCode codeNum, class Op>
-static inline Object int_cmpop(const Object &a, const Object &b, BoolType *o)
-{
-  if (a.isScalar() && b.isScalar() && !a.isComplex() && !b.isComplex() && b.type()->code() == a.type()->code()) {
-    const T * ap = static_cast<IntegerType<T,codeNum>*>(a.type())->ro(a);
-    const T * bp = static_cast<IntegerType<T,codeNum>*>(b.type())->ro(b);
-    bool p;
-    Op::template func<bool,T,T,T>(&p,ap,bp);
-    return o->makeScalar(p);
-  }
-  switch (b.type()->code())
-    {
-    case TypeDouble:
-      return dispatch_cmpop<bool,T,double,double,Op>(a,b,o);
-    case codeNum:
-      return dispatch_cmpop<bool,T,T,T,Op>(a,b,o);
-    default:
-      throw Exception("Unsupported type combination of " + a.type()->name() + " and " + b.type()->name());
-    }
+// FIXME - clean up
+template <class T>
+static int GetNominalWidthInteger(const Complex<T>* qp, ndx_t len) {
+  int maxlen = 0;
+  for (auto i=0;i<len;i++)
+    maxlen = std::max<int>(maxlen,
+			   GetNominalWidthInteger(&(qp[i].r),1)+
+			   GetNominalWidthInteger(&(qp[i].i),1)+3);
+  return maxlen;
 }
 
-template<class T, FM::DataCode codeNum>
-void IntegerType<T,codeNum>::computeArrayFormatInfo(FMFormatMode, const Object &a, ArrayFormatInfo &format) {
+template <class T, class Op>
+static inline Object int_cmpop(const Object &a, const Object &b, BoolType *o)
+{
+  if (a.isScalar() && b.isScalar() && b.type()->code() == a.type()->code()) {
+    const T * ap = static_cast<IntegerType<T>*>(a.type())->ro(a);
+    const T * bp = static_cast<IntegerType<T>*>(b.type())->ro(b);
+    bool p;
+    Op::template func<bool,T,T,T>(&p,*ap,*bp);
+    return o->makeScalar(p);
+  }
+  // TODO - Handle Complex+int combinations
+  if (b.type()->code() == TypeDouble)
+    return dispatch_cmpop<T,double,double,Op>(a,b,o);
+  else if (b.type()->code() == a.type()->code())
+    return dispatch_cmpop<T,T,double,Op>(a,b,o);
+  throw Exception("Unsupported type combination of " + a.type()->name() + " and " + b.type()->name());
+}
+
+template<class T>
+void IntegerType<T>::computeArrayFormatInfo(FMFormatMode, const Object &a, ArrayFormatInfo &format) {
   const T* dp = this->ro(a);
   ndx_t cnt = a.count();
   if (a.isComplex()) cnt *= 2;
   format.width = GetNominalWidthInteger(dp,cnt);
 }
 
-template <class T, FM::DataCode codeNum>
-void IntegerType<T,codeNum>::printElement(const Object &a, const ArrayFormatInfo &format, ndx_t ndx) {
-  if (!a.isComplex())
-    {
-      const T* dp = this->ro(a);
-      Type::_ctxt->_io->output("% *lld",format.width,(int64_t)(dp[ndx]));
-    }
-  else
-    {
-      const Complex<T>* dp = this->roComplex(a);
-      Type::_ctxt->_io->output("% *lld",format.width,(int64_t)(dp[ndx].r));
-      Type::_ctxt->_io->output("% *+lldi",format.width,(int64_t)(dp[ndx].i));
-    }
+template <class T>
+void IntegerType<T>::printElement(const Object &a, const ArrayFormatInfo &format, ndx_t ndx) {
+  const T* dp = this->ro(a);
+  printToStream(Type::_ctxt->_io,format.width,dp[ndx]);
 }
 
-template <class T, FM::DataCode codeNum>
-Object IntegerType<T,codeNum>::Equals(const Object &a, const Object &b) {
-  return int_cmpop<T,codeNum,OpEQ>(a,b,Type::_ctxt->_bool);
+template <class T>
+Object IntegerType<T>::Equals(const Object &a, const Object &b) {
+  return int_cmpop<T,OpEQ>(a,b,Type::_ctxt->_bool);
 }
 
-template <class T, FM::DataCode codeNum>
-Object IntegerType<T,codeNum>::NotEquals(const Object &a, const Object &b) {
-  return int_cmpop<T,codeNum,OpNE>(a,b,Type::_ctxt->_bool);
+template <class T>
+Object IntegerType<T>::NotEquals(const Object &a, const Object &b) {
+  return int_cmpop<T,OpNE>(a,b,Type::_ctxt->_bool);
 }
 
-template <class T, FM::DataCode codeNum>
-Object IntegerType<T,codeNum>::LessEquals(const Object &a, const Object &b) {
-  return int_cmpop<T,codeNum,OpLE>(a,b,Type::_ctxt->_bool);
+template <class T>
+Object IntegerType<T>::LessEquals(const Object &a, const Object &b) {
+  return int_cmpop<T,OpLE>(a,b,Type::_ctxt->_bool);
 }
 
-template <class T, FM::DataCode codeNum>
-Object IntegerType<T,codeNum>::LessThan(const Object &a, const Object &b) {
-  return int_cmpop<T,codeNum,OpLT>(a,b,Type::_ctxt->_bool);
+template <class T>
+Object IntegerType<T>::LessThan(const Object &a, const Object &b) {
+  return int_cmpop<T,OpLT>(a,b,Type::_ctxt->_bool);
 }
 
-template <class T, FM::DataCode codeNum>
-Object IntegerType<T,codeNum>::GreaterEquals(const Object &a, const Object &b) {
-  return int_cmpop<T,codeNum,OpGE>(a,b,Type::_ctxt->_bool);
+template <class T>
+Object IntegerType<T>::GreaterEquals(const Object &a, const Object &b) {
+  return int_cmpop<T,OpGE>(a,b,Type::_ctxt->_bool);
 }
 
-template <class T, FM::DataCode codeNum>
-Object IntegerType<T,codeNum>::GreaterThan(const Object &a, const Object &b) {
-  return int_cmpop<T,codeNum,OpGT>(a,b,Type::_ctxt->_bool);
+template <class T>
+Object IntegerType<T>::GreaterThan(const Object &a, const Object &b) {
+  return int_cmpop<T,OpGT>(a,b,Type::_ctxt->_bool);
 }
 
 
-template class FM::IntegerType<FMChar,TypeString>;
-template class FM::IntegerType<ndx_t,TypeIndex>;
-template class FM::IntegerType<uint8_t,TypeUInt8>;
-template class FM::IntegerType<int8_t,TypeInt8>;
-template class FM::IntegerType<uint16_t,TypeUInt16>;
-template class FM::IntegerType<int16_t,TypeInt16>;
-template class FM::IntegerType<uint32_t,TypeUInt32>;
-template class FM::IntegerType<int32_t,TypeInt32>;
-template class FM::IntegerType<uint64_t,TypeUInt64>;
-template class FM::IntegerType<int64_t,TypeInt64>;
-
+template class FM::IntegerType<FMChar>;
+template class FM::IntegerType<ndx_t>;
+template class FM::IntegerType<uint8_t>;
+template class FM::IntegerType<int8_t>;
+template class FM::IntegerType<uint16_t>;
+template class FM::IntegerType<int16_t>;
+template class FM::IntegerType<uint32_t>;
+template class FM::IntegerType<int32_t>;
+template class FM::IntegerType<uint64_t>;
+//template class FM::IntegerType<int64_t>;
+template class FM::IntegerType<Complex<uint8_t> >;
+template class FM::IntegerType<Complex<int8_t> >;
+template class FM::IntegerType<Complex<uint16_t> >;
+template class FM::IntegerType<Complex<int16_t> >;
+template class FM::IntegerType<Complex<uint32_t> >;
+template class FM::IntegerType<Complex<int32_t> >;
+template class FM::IntegerType<Complex<uint64_t> >;
+template class FM::IntegerType<Complex<int64_t> >;

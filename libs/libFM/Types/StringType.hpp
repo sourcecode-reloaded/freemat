@@ -7,10 +7,10 @@ namespace FM
 {
   struct ThreadContext;
 
-  class StringType : public IntegerType<FMChar,TypeString>
+  class StringType : public IntegerType<FMChar>
   {
   public:
-    StringType(ThreadContext *ctxt) : IntegerType<FMChar,TypeString>(ctxt,"string") {}
+    StringType(ThreadContext *ctxt) : IntegerType<FMChar>(ctxt,"string") {}
     virtual DataCode code() const {return TypeString;}
     virtual Type* typeInstance() {return this;}
     inline Object makeString(const FMString &x) {
@@ -29,7 +29,7 @@ namespace FM
     inline FMString describe(const Object &o) {
       if (o.dims().is2D() && (o.dims().rows() == 1))
 	return FMString("'") + this->str(o) + FMString("'");
-      return IntegerType<FMChar,TypeString>::describe(o);
+      return IntegerType<FMChar>::describe(o);
     }
     inline void computeArrayFormatInfo(FMFormatMode, const Object &, ArrayFormatInfo &format) {
       format.width = 1;

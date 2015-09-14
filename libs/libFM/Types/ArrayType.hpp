@@ -4,7 +4,6 @@
 #include "Type.hpp"
 #include "Object.hpp"
 #include "FixedPool.hpp"
-#include "Complex.hpp"
 #include "ArrayFormatInfo.hpp"
 #include "Transpose.hpp"
 #include "Hermitian.hpp"
@@ -55,7 +54,6 @@ namespace FM
       Data *q = new Data;
       q->refcnt = 1;
       ndx_t elem_count = p->dims.count();
-      if ((p->flags & OBJECT_COMPLEX_FLAG) != 0) elem_count *= 2;
       reserve = std::max<ndx_t>(elem_count*2,min_capacity);
       q->ptr = allocateArray(reserve);
       const T *pd = static_cast<const T*>(p->data->ptr) + p->offset;
@@ -87,6 +85,7 @@ namespace FM
     }
     void fillPool() {
       //      std::cout << "FILL! " << this->name() << " \n";
+      std::cout << "FILL!\n";
       while (!pool->isFull()) {
 	pool->push(makeObjectBaseOfCapacity(min_capacity));
       }
@@ -104,25 +103,22 @@ namespace FM
       // Import the object from the foreign context...
       ArrayType* them = target.asType<ArrayType>();
       if (this == them) return target;
-      Object ret = this->zeroArrayOfSize(target.dims(),target.isComplex());
+      Object ret = this->zeroArrayOfSize(target.dims());
       T* op = this->rw(ret);
       const T* ip = them->ro(target);
       ndx_t elem_count = ret.count();
-      if (target.isComplex()) elem_count *= 2;
       for (ndx_t i=0;i<elem_count;i++)
 	op[i] = ip[i];
       return ret;
     }
-    Object zeroArrayOfSize(const Tuple & dims, bool isComplex) {
+    Object zeroArrayOfSize(const Tuple & dims) {
       ndx_t count = dims.count();
-      if ((count == 1) && !isComplex) return zeroScalar();
-      if (isComplex) count *= 2;
+      if (count == 1) return zeroScalar();
       ndx_t capacity = (2*count < min_capacity) ? min_capacity : 2*count;
       ObjectBase *p = getObjectBase(capacity);
       p->dims = dims;
       p->flags = 0;
       p->offset = 0;
-      if (isComplex) p->flags = OBJECT_COMPLEX_FLAG;
       if (capacity < min_capacity)
 	{
 	  T* dp = static_cast<T*>(p->data->ptr);
@@ -131,20 +127,15 @@ namespace FM
 	}
       return Object(p);    
     }
-    Object makeMatrixComplex(ndx_t rows, ndx_t cols) {
-      return makeMatrix(rows,cols,true);
-    }
-    Object makeMatrix(ndx_t rows, ndx_t cols, bool isComplex = false) {
-      if (rows == 1 && cols == 1 && !isComplex)
+    Object makeMatrix(ndx_t rows, ndx_t cols) {
+      if (rows == 1 && cols == 1)
 	return zeroScalar();
       ndx_t count = rows*cols;
-      if (isComplex) count *= 2;
       ndx_t capacity = (2*count < min_capacity) ? min_capacity : 2*count;
       ObjectBase *p = getObjectBase(capacity);
       p->dims.setMatrixSize(rows,cols);
       p->flags = 0;
       p->offset = 0;
-      if (isComplex) p->flags = OBJECT_COMPLEX_FLAG;
       if (capacity < min_capacity)
 	{
 	  T* dp = static_cast<T*>(p->data->ptr);
@@ -188,13 +179,6 @@ namespace FM
       static_cast<T*>(p->data->ptr)[0] = data;
       return Object(p);
     }
-    Object makeComplex(const T& real, const T& imag) {
-      Object p = makeMatrix(1,1,true);
-      T* p_data = rw(p);
-      p_data[0] = real;
-      p_data[1] = imag;
-      return p;
-    }
     T scalarValue(const Object &a) {
       assert(a.isScalar());
       return ro(a)[0];
@@ -209,15 +193,18 @@ namespace FM
       if (a.type()->code() != b.type()->code()) return false;
       if (!(a.dims() == b.dims())) return false;
       ndx_t element_count = a.dims().count();
-      if ((a.flags() & OBJECT_COMPLEX_FLAG) ^ (b.flags() & OBJECT_COMPLEX_FLAG)) return false;
-      if (a.flags() & OBJECT_COMPLEX_FLAG) element_count *= 2;
       const T* ap = this->ro(a);
       const T* bp = this->ro(b);
       for (ndx_t i=0;i<element_count;i++)
 	if (!(ap[i] == bp[i])) return false;
       return true;
     }
-    void promoteComplex(Object &a);
+    inline const T* null() const {
+      return (const T*)(nullptr);
+    }
+    inline T* null() {
+      return (T*)(nullptr);
+    }
     inline const T* ro(const Object &p) const {
       // DEBUG ASSERT
       assert(p.type()->code() == this->code());
@@ -243,6 +230,18 @@ namespace FM
       q->refcnt = 0;
       return Object(q);
     }
+    void setColumn(Object &ret, ndx_t column, const Object &value) {
+      // Validate assumptions
+      assert(ret.rows() == value.rows());
+      assert(value.cols() == 1);
+      assert(column < ret.cols());
+      assert(ret.typeCode() == value.typeCode());
+      ndx_t rowsize = ret.rows();
+      T* rp = this->rw(ret);
+      const T* vp = this->ro(value);
+      for (auto i=0;i<rowsize;i++)
+	rp[i+column*rowsize] = vp[i];
+    }
     //    Object getRowIndexMode(const Object &a, const Object &b);
     Object getSliceMode(const Object &a, Object *c, ndx_t cnt, ndx_t last_colon);
     virtual Object getParens(const Object &a, const Object &b);
@@ -253,15 +252,15 @@ namespace FM
 	{
 	  if (a.d->capacity > newsize.count())
 	    {
-	      a.dims() = newsize;
+	      a.setDims(newsize);
 	      return;
 	    }
-	  a = this->zeroArrayOfSize(newsize,a.isComplex());
+	  a = this->zeroArrayOfSize(newsize);
 	  return;
 	}
       if (a.isVector() && newsize.isVector() && a.d->capacity > newsize.count())
 	{
-	  a.dims() = newsize;
+	  a.setDims(newsize);
 	  return;
 	}
       resizeSlow(a,newsize);

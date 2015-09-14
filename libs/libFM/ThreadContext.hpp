@@ -21,7 +21,9 @@ namespace FM
 {
   class BoolType;
   class DoubleType;
+  class ComplexDoubleType;
   class SingleType;
+  class ComplexSingleType;
   class StringType;
   class IndexType;
   class Int8Type;
@@ -32,6 +34,14 @@ namespace FM
   class UInt16Type;
   class UInt32Type;
   class UInt64Type;
+  class ComplexInt8Type;
+  class ComplexInt16Type;
+  class ComplexInt32Type;
+  class ComplexInt64Type;
+  class ComplexUInt8Type;
+  class ComplexUInt16Type;
+  class ComplexUInt32Type;
+  class ComplexUInt64Type;
   class StructType;
   class CellType;
   class ListType;
@@ -61,7 +71,9 @@ namespace FM
     // Type pool
     BoolType *_bool;
     DoubleType *_double;
+    ComplexDoubleType *_zdouble;
     SingleType *_single;
+    ComplexSingleType *_zsingle;
     StringType *_string;
     IndexType *_index;
     Int8Type *t_int8;
@@ -72,6 +84,14 @@ namespace FM
     UInt16Type *_uint16;
     UInt32Type *_uint32;
     UInt64Type *_uint64;
+    ComplexInt8Type *t_zint8;
+    ComplexInt16Type *t_zint16;
+    ComplexInt32Type *t_zint32;
+    ComplexInt64Type *t_zint64;
+    ComplexUInt8Type *_zuint8;
+    ComplexUInt16Type *_zuint16;
+    ComplexUInt32Type *_zuint32;
+    ComplexUInt64Type *_zuint64;
     StructType *_struct;
     SparseDoubleType *_spdouble;
     SparseComplexType *_spcomplex;
@@ -99,10 +119,12 @@ namespace FM
     //    std::map<FMString,Object> *_globals;
     Globals *_globals;
     std::set<ObjectBase*> _handles;
+
+    static ThreadContext* BuildNewThreadContext(TermIF *io);
+    static Type* GetTypeForCode(ThreadContext *ctxt, DataCode code);
+    static Type* GetComplexTypeForCode(ThreadContext *ctxt, DataCode code);
   };
 
-  ThreadContext* BuildNewThreadContext(TermIF *io);
-  Type* GetTypeForCode(ThreadContext *ctxt, DataCode code);
 };
 
 

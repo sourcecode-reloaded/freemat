@@ -16,7 +16,7 @@ static inline Object bool_op(const Object &a, const Object &b, BoolType *o)
   const bool *pa = o->ro(ta);
   const bool *pb = o->ro(tb);
   ndx_t count = std::max<ndx_t>(ta.count(),tb.count());
-  Object tc = o->zeroArrayOfSize(Tuple::computeDotOpSize(ta.dims(),tb.dims()),false);
+  Object tc = o->zeroArrayOfSize(Tuple::computeDotOpSize(ta.dims(),tb.dims()));
   bool *pc = o->rw(tc);
   for (ndx_t i=0;i<count;i++)
     Op::template func<bool,bool,bool,bool>(pc+i,pa+i*incr_a,pb+i*incr_b);
@@ -41,7 +41,7 @@ Object BoolType::NotEquals(const Object &a, const Object &b) {
 
 Object BoolType::Not(const Object &a)
 {
-  Object output = _ctxt->_bool->zeroArrayOfSize(a.dims(),false);
+  Object output = _ctxt->_bool->zeroArrayOfSize(a.dims());
   bool *op = this->rw(output);
   const bool *ip = this->ro(a);
   for (ndx_t i=0;i<a.count();i++)

@@ -2794,3 +2794,71 @@ TermIF to do the right thing.  I like that idea...
 Need to work on class hierarchy relationahips.  double+sparse -->
 sparse type, not to the double type.
 
+
+dispatch_binop needs a tweak now.  It used to be that the combination
+of two types always yielded a result that was one of the two source
+types.  Equivalently:
+
+A + B --> A or B
+
+Now, you can have a third type
+
+A + B --> C
+
+For example, Single + ZDouble --> ZSingle
+
+In this case, the output type isn't one of the source types.
+
+Next challenge is the transform on set one.  So if
+
+a = [1,2,3,4];
+
+a(2) = 3+4i
+
+_changes_ the type of a from double to zdouble.
+
+Oops.  This apparently didn't work at all before.
+
+Another oops.
+
+b(:) = 1
+
+doesn't appear to work...  Need a testing framework, like yesterday.
+
+ - OK here is the plan:
+
+1.  I like python's doctest module - that way, I can build tests just
+by executing command sequences and copy-n-pasting the output into the
+test.
+
+2.  To do so, I need to stabilize the output modules.  The test will
+be sensitive to these, so the output has to have the right format.
+Changing the output routines will invalidate all of the existing
+tests.
+
+Some initial observations:
+
+ Columns 1 to 7
+
+   1.0000   2.0000   3.0000   4.0000   5.0000   6.0000   7.0000
+
+ Columns 8 to 10
+
+   8.0000   9.0000  10.0000
+
+
+This is the output for 1:10.  Because the values are integers, they
+should be detected as such.
+
+For complex numbers, it's far worse:
+
+              1.0000             +2.0000i              2.0000             +3.0000i              4.0000             +5.0000i
+
+The terminal does not even wrap at the correct point.
+
+Wonky!
+
+--> [100+2i,300-4i,567+7i]
+
+   1.0e+02 * 
+ 100  +2i 300  -4i 567  +7i

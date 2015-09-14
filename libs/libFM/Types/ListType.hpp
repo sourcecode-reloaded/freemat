@@ -75,14 +75,14 @@ namespace FM
       ndx_t a_size = a.count();
       if (a.d->capacity > (a_size+1))
 	{
-	  a.dims().setMatrixSize(a_size+1,1);
+	  a.setDims(Tuple(a_size+1,1));
 	  Object *ap = this->rw(a);
 	  ap[a_size] = b;
 	}
       else 
 	{
 	  // Resize is required.  
-	  Object na = this->makeMatrix(a_size+1,1,false);
+	  Object na = this->makeMatrix(a_size+1,1);
 	  Object *nap = this->rw(na);
 	  const Object *ap = this->ro(a);
 	  for (ndx_t i=0;i<a_size;i++)

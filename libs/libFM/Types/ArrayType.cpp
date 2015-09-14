@@ -3,6 +3,7 @@
 #include "BoolType.hpp"
 #include "ListType.hpp"
 #include "ThreadContext.hpp"
+#include "Complex.hpp"
 
 using namespace FM;
 
@@ -44,37 +45,13 @@ static inline Tuple ComputeRowResizedTuple(const Object &a, ndx_t maxndx)
 }
 
 template <class T>
-static inline void copyPage(T* op, ndx_t &outputOffset, const T* ip, ndx_t &input_offset, ndx_t pagesize, bool isComplex)
-{
-  if (!isComplex)
-    {
-      for (ndx_t j=0;j<pagesize;j++)
-	op[outputOffset+j] = ip[input_offset+j];
-    }
-  else
-    {
-      for (ndx_t j=0;j<pagesize;j++)
-	{
-	  op[2*(outputOffset+j)] = ip[2*(input_offset+j)];
-	  op[2*(outputOffset+j)+1] = ip[2*(input_offset+j)+1];
-	}
-    }
-  outputOffset += pagesize;
-  input_offset += pagesize;
-}
-
-template <class T>
-static inline void copyPagePromote(T* op, ndx_t outputOffset, const T* ip, ndx_t &input_offset, ndx_t pagesize, const T& zero)
+static inline void copyPage(T* op, ndx_t &outputOffset, const T* ip, ndx_t &input_offset, ndx_t pagesize)
 {
   for (ndx_t j=0;j<pagesize;j++)
-    {
-      op[2*(outputOffset+j)] = ip[input_offset+j];
-      op[2*(outputOffset+j)+1] = zero;
-    }
+    op[outputOffset+j] = ip[input_offset+j];
   outputOffset += pagesize;
   input_offset += pagesize;
 }
-
 
 /**
  * The move algorithm.  The original data samples are at:
@@ -88,7 +65,7 @@ static inline void copyPagePromote(T* op, ndx_t outputOffset, const T* ip, ndx_t
  * This is why the current algorithm doesn't work.
  */
 template <class T>
-static inline void moveLoop(T* ap, const Tuple &outdims, const Tuple &adims, const T &zero, bool isComplex)
+static inline void moveLoop(T* ap, const Tuple &outdims, const Tuple &adims, const T &zero)
 {
   auto ndims = std::max(adims.dimensions(),outdims.dimensions());
   ndx_t adimraw[MAXDIMS];
@@ -122,45 +99,21 @@ static inline void moveLoop(T* ap, const Tuple &outdims, const Tuple &adims, con
     assert(start >= aoffset);
     if (aoffset != start)
       {
-      if (!isComplex)
-	{
-	  for (ndx_t row=0;row<arows;row++)
-	    {
-	      ap[start-row] = ap[aoffset-row];
-	      ap[aoffset-row] = zero;
-	    }
-	}
-      else
-	{
-	  for (ndx_t row=0;row<arows;row++)
-	    {
-	      ap[2*(start-row)] = ap[2*(aoffset-row)];
-	      ap[2*(start-row)+1] = ap[2*(aoffset-row)+1];
-	      ap[2*(aoffset-row)] = zero;
-	      ap[2*(aoffset-row)+1] = zero;
-	    }	  
-	}
-      }
-    aoffset -= arows;
-    if (!isComplex)
-      {
-	for (ndx_t row=0;row<orows-arows;row++)
-	  ap[start+1+row] = zero;
-      }
-    else
-      {
-	for (ndx_t row=0;row<orows-arows;row++)
+	for (ndx_t row=0;row<arows;row++)
 	  {
-	    ap[2*(start+1+row)] = zero;
-	    ap[2*(start+1+row)+1] = zero;
+	    ap[start-row] = ap[aoffset-row];
+	    ap[aoffset-row] = zero;
 	  }
       }
+    aoffset -= arows;
+    for (ndx_t row=0;row<orows-arows;row++)
+      ap[start+1+row] = zero;
     DecrementColumnsAndRipple(ndx,adimraw,ndims);
   }
 }
 
 template <class T>
-static inline void copyLoop(T* op, const T* ip, const Tuple & outdims, const Tuple & adims, bool isComplex)
+static inline void copyLoop(T* op, const T* ip, const Tuple & outdims, const Tuple & adims)
 {
   // Compute the number of iterations required by the RESIZE
   // Excludes the first dimension. 
@@ -185,21 +138,9 @@ static inline void copyLoop(T* op, const T* ip, const Tuple & outdims, const Tup
     ndx_t start = 0;
     for (auto i=1;i<ndims;i++)
       start += ndx[i]*strides[i];
-    if (!isComplex)
-      {
-	for (ndx_t row=0;row<arows;row++)
-	  op[row+start] = ip[row];
-	ip += arows;
-      }
-    else
-      {
-	for (ndx_t row=0;row<arows;row++)
-	  {
-	    op[2*(row+start)] = ip[2*row];
-	    op[2*(row+start)+1] = ip[2*row+1];
-	  }
-	ip += 2*arows;
-      }
+    for (ndx_t row=0;row<arows;row++)
+      op[row+start] = ip[row];
+    ip += arows;
     IncrementColumnsAndRipple(ndx,adimraw,ndims);
   }
 }
@@ -214,8 +155,7 @@ static inline void copyLoop(T* op, const T* ip, const Tuple & outdims, const Tup
 // isScalar - flag that indicates if RHS is a scalar, and so replication is required.
 
 template <class T>
-static inline void setLoop(T* op, const ndx_t (&argdim) [MAXDIMS], const Tuple & adims, ndx_t ndims, const ndx_t *(&coords)[MAXDIMS], const T* bp, bool isScalar,
-		    bool isComplex)
+static inline void setLoop(T* op, const ndx_t (&argdim) [MAXDIMS], const Tuple & adims, ndx_t ndims, const ndx_t *(&coords)[MAXDIMS], const T* bp, bool isScalar)
 {
   ndx_t ndx[MAXDIMS];
   ndx_t strides[MAXDIMS];
@@ -237,42 +177,23 @@ static inline void setLoop(T* op, const ndx_t (&argdim) [MAXDIMS], const Tuple &
     for (auto i=1;i<ndims;i++) 
       start += coords[i][ndx[i]]*strides[i];
     IncrementColumnsAndRipple(ndx,argdim,ndims);
-    if (!isComplex)
+    for (ndx_t row=0;row<argdim[0];row++)
       {
-	for (ndx_t row=0;row<argdim[0];row++)
-	  {
-	    op[start + coords[0][row]] = *bp;
-	    if (!isScalar) bp++;
-	  }
-      }
-    else
-      {
-	for (ndx_t row=0;row<argdim[0];row++)
-	  {
-	    op[2*(start + coords[0][row])] = bp[0];
-	    op[2*(start + coords[0][row])+1] = bp[1];
-	    if (!isScalar) bp+=2;
-	  }
+	op[start + coords[0][row]] = *bp;
+	if (!isScalar) bp++;
       }
   }
 }
 
 template <class T>
-static inline void getRowLoop(T* op, const T* ip, const ndx_t *ndx, ndx_t count, bool isComplex)
+static inline void getRowLoop(T* op, const T* ip, const ndx_t *ndx, ndx_t count)
 {
-  if (!isComplex)
-    for (auto i=0;i<count;i++)
-      op[i] = ip[ndx[i]];
-  else
-    for (auto i=0;i<count;i++)
-      {
-	op[2*i] = ip[2*ndx[i]];
-	op[2*i+1] = ip[2*ndx[i]+1];
-      }
+  for (auto i=0;i<count;i++)
+    op[i] = ip[ndx[i]];
 }
 
 template <class T>
-static inline void getLoop(T* op, const T* ip, const ndx_t (&outdim)[MAXDIMS], const Tuple & adims, ndx_t ndims, const ndx_t * (&coords)[MAXDIMS], bool isComplex)
+static inline void getLoop(T* op, const T* ip, const ndx_t (&outdim)[MAXDIMS], const Tuple & adims, ndx_t ndims, const ndx_t * (&coords)[MAXDIMS])
 {
   ndx_t ndx[MAXDIMS];
   ndx_t strides[MAXDIMS];
@@ -294,21 +215,9 @@ static inline void getLoop(T* op, const T* ip, const ndx_t (&outdim)[MAXDIMS], c
     for (auto i=1;i<ndims;i++) 
       start += coords[i][ndx[i]]*strides[i];
     IncrementColumnsAndRipple(ndx,outdim,ndims);
-    if (!isComplex)
-      {
-	for (ndx_t row=0;row<outdim[0];row++)
-	  op[row] = ip[start + coords[0][row]];
-	op += outdim[0];
-      }
-    else
-      {
-	for (ndx_t row=0;row<outdim[0];row++)
-	  {
-	    op[2*row] = ip[2*(start + coords[0][row])];
-	    op[2*row+1] = ip[2*(start + coords[0][row])+1];
-	  }
-	op += 2*outdim[0];
-      }
+    for (ndx_t row=0;row<outdim[0];row++)
+      op[row] = ip[start + coords[0][row]];
+    op += outdim[0];
   }
 }
 
@@ -318,12 +227,12 @@ Object ArrayType<T>::getParensRowMode(const Object &a, const Tuple &dims, const 
   if (_ctxt->_index->isColon(b))
     {
       Object output = a;
-      output.dims() = Tuple(a.count(),1);
+      output.setDims(Tuple(a.count(),1));
       return output;
     }
-  Object output = this->zeroArrayOfSize(dims,a.isComplex());
+  Object output = this->zeroArrayOfSize(dims);
   getRowLoop<T>(this->rw(output),this->ro(a),
-		_ctxt->_index->ro(b),b.count(),a.isComplex());
+		_ctxt->_index->ro(b),b.count());
   return output;
 }
 
@@ -403,8 +312,8 @@ Object ArrayType<T>::getParens(const Object &a, const Object &b) {
       outdim[i] = c[i].count();
       coords[i] = ip->ro(c[i]);
     }
-    Object output = this->zeroArrayOfSize(Tuple::RawTuple(outdim,bsize),a.isComplex());
-    getLoop<T>(this->rw(output),this->ro(a),outdim,adims,bsize,coords,a.isComplex());
+    Object output = this->zeroArrayOfSize(Tuple::RawTuple(outdim,bsize));
+    getLoop<T>(this->rw(output),this->ro(a),outdim,adims,bsize,coords);
   return output;
 }
 
@@ -413,35 +322,23 @@ void ArrayType<T>::resizeSlow(Object &a, const Tuple &newsize) {
   // Determine if this is a move or a copy
   T zero(this->zeroElement());
   if (a.d->capacity > newsize.count()) { 
-    moveLoop<T>(this->rw(a),newsize,a.dims(),zero,a.isComplex());
+    moveLoop<T>(this->rw(a),newsize,a.dims(),zero);
   } else {
     // Copy
-    Object na = this->zeroArrayOfSize(newsize,a.isComplex());
-    copyLoop<T>(this->rw(na),this->ro(a),newsize,a.dims(),a.isComplex());
+    Object na = this->zeroArrayOfSize(newsize);
+    copyLoop<T>(this->rw(na),this->ro(a),newsize,a.dims());
     a = na;
   }
-  a.dims() = newsize;
+  a.setDims(newsize);
 }
 
 template <class T>
-void setLoopRowMode(T* a, const ndx_t *addr, ndx_t count, const T* b, bool bScalar, bool isComplex)
+void setLoopRowMode(T* a, const ndx_t *addr, ndx_t count, const T* b, bool bScalar)
 {
-  if (!isComplex)
+  for (ndx_t i=0;i<count;i++)
     {
-      for (ndx_t i=0;i<count;i++)
-	{
-	  a[addr[i]] = *b;
-	  if (!bScalar) ++b;
-	}
-    }
-  else
-    {
-      for (ndx_t i=0;i<count;i++)
-	{
-	  a[2*addr[i]] = b[0];
-	  a[2*addr[i]+1] = b[1];
-	  if (!bScalar) b+=2;
-	}
+      a[addr[i]] = *b;
+      if (!bScalar) ++b;
     }
 }
 
@@ -454,25 +351,26 @@ void ArrayType<T>::setParensRowIndexMode(Object &a, const Object &ndx, const Obj
       a.type()->resize(a,ComputeRowResizedTuple(a,maxndx));
     }
   const ndx_t *addr = _ctxt->_index->ro(ndx);
-  if (!a.isComplex() && b.isComplex())
-    this->promoteComplex(a);
+  // FIXME
+  //  if (!a.isComplex() && b.isComplex())
+  //    this->promoteComplex(a);
   setLoopRowMode<T>(this->rw(a),
 		    addr,ndx.count(),
 		    this->ro(b),
-		    b.isScalar(),
-		    a.isComplex());
+		    b.isScalar());
 }
 
-template <class T>
-void ArrayType<T>::promoteComplex(Object &a) {
-  if (a.isComplex()) return;
-  Object o = zeroArrayOfSize(a.dims(),true);
-  T *op = this->rw(o);
-  const T *ip = this->ro(a);
-  for (ndx_t i=0;i<a.count();i++)
-    op[2*i] = ip[i];
-  a = o;
-}
+// FIXME
+// template <class T>
+// void ArrayType<T>::promoteComplex(Object &a) {
+//   if (a.isComplex()) return;
+//   Object o = zeroArrayOfSize(a.dims(),true);
+//   T *op = this->rw(o);
+//   const T *ip = this->ro(a);
+//   for (ndx_t i=0;i<a.count();i++)
+//     op[2*i] = ip[i];
+//   a = o;
+// }
 
 template <class T>
 Object ArrayType<T>::convertArgumentsToIndexingExpressions(const Object &args) {
@@ -494,7 +392,7 @@ static inline Object ComputeDeletionMap(ThreadContext *_ctxt, ndx_t length_in_de
   // A deletion of the planar type means we should be able to implement
   // the deletion with a move.
   // Create a bit mask for the given dimension
-  Object mask(_ctxt->_bool->zeroArrayOfSize(Tuple(length_in_deletion_dim,1),false));
+  Object mask(_ctxt->_bool->zeroArrayOfSize(Tuple(length_in_deletion_dim,1)));
   bool *mp = _ctxt->_bool->rw(mask);
   // Loop over the non-colon dimension and fill in the columns to be deleted
   const ndx_t *dp = _ctxt->_index->ro(deletion_index);
@@ -508,29 +406,17 @@ static inline Object ComputeDeletionMap(ThreadContext *_ctxt, ndx_t length_in_de
 }
 
 template <class T>
-static inline void deleteRowsLoop(T* ap, const bool *mp, ndx_t len, ndx_t srcptr, ndx_t dstptr, bool isComplex)
+static inline void deleteRowsLoop(T* ap, const bool *mp, ndx_t len, ndx_t srcptr, ndx_t dstptr)
 {
-  if (!isComplex)
-    for (ndx_t i=0;i<len;i++)
-      {
-	if (!mp[i]) 
-	  {
-	    ap[dstptr] = ap[srcptr];
-	    dstptr++;
-	  }
-	srcptr++;
-      }
-  else
-    for (ndx_t i=0;i<len;i++)
-      {
-	if (!mp[i]) 
-	  {
-	    ap[2*dstptr] = ap[2*srcptr];
-	    ap[2*dstptr+1] = ap[2*srcptr+1];
-	    dstptr++;
-	  }
-	srcptr++;
-      }    
+  for (ndx_t i=0;i<len;i++)
+    {
+      if (!mp[i]) 
+	{
+	  ap[dstptr] = ap[srcptr];
+	  dstptr++;
+	}
+      srcptr++;
+    }
 }
 
 template <class T>
@@ -555,7 +441,7 @@ void ArrayType<T>::erasePlanes(Object &a, const Object &mask, const Tuple &outdi
     {
       for (ndx_t scan = 0;scan < scan_dim;scan++)
 	if (!mp[scan])
-	  copyPage(ap,dstptr,ap,srcptr,page_size,a.isComplex());
+	  copyPage(ap,dstptr,ap,srcptr,page_size);
 	else
 	  srcptr += page_size;
     }
@@ -572,21 +458,9 @@ void ArrayType<T>::eraseRowIndexMode(Object &a, const Object &ndx)
   ndx_t outputLength = _ctxt->_bool->countZero(deletion_map);
   T* ap = this->rw(a);
   ndx_t adst = 0;
-  if (!a.isComplex())
-    {
-      for (ndx_t i=0;i<a.count();i++)
-	if (!bp[i]) ap[adst++] = ap[i];
-    } 
-  else
-    {
-      for (ndx_t i=0;i<a.count();i++)
-	if (!bp[i]) {
-	  ap[2*adst] = ap[2*i];
-	  ap[2*adst+1] = ap[2*i+1];
-	  adst++;
-	}
-    }
-  a.dims() = ComputeRowResizedTuple(a,outputLength);
+  for (ndx_t i=0;i<a.count();i++)
+    if (!bp[i]) ap[adst++] = ap[i];
+  a.setDims(ComputeRowResizedTuple(a,outputLength));
 }
 
 
@@ -604,7 +478,7 @@ void ArrayType<T>::eraseRows(Object &a, const Object &mask, const Tuple &outdims
   ndx_t dstptr = 0;
   for (ndx_t iter=0;iter < iterations;iter++)
     {
-      deleteRowsLoop(this->rw(a),mp,adims.rows(),srcptr,dstptr,a.isComplex());
+      deleteRowsLoop(this->rw(a),mp,adims.rows(),srcptr,dstptr);
       srcptr += adims.rows();
       dstptr += outdims.rows();
     }
@@ -638,7 +512,7 @@ void ArrayType<T>::erase(Object &a, const Object &args) {
     eraseRows(a,deletion_mask,outdims);
   else
     erasePlanes(a,deletion_mask,outdims,non_colon_index);
-  a.dims() = outdims;
+  a.setDims(outdims);
   return;  
 }
 
@@ -652,7 +526,7 @@ void ArrayType<T>::setParens(Object &a, const Object &args, const Object &b) {
       return setParensRowIndexMode(a,ndx.asIndexNoBoundsCheck(),b);
     }
   if (b.isEmpty()) return erase(a,args);
-  Tuple & adims(a.dims());
+  Tuple adims(a.dims());
   // TODO: Special case all-scalar indexing case
   Object carray(this->convertArgumentsToIndexingExpressions(args));
   auto argsize = args.count();
@@ -682,11 +556,12 @@ void ArrayType<T>::setParens(Object &a, const Object &args, const Object &b) {
   // Check for validity of b
   if (!(b.isScalar() || b.count() == outcount))
     throw Exception("Assignment A(...) = b requires b either be a scalar or have the correct number of elements");
-  if (!a.isComplex() && b.isComplex())
-    this->promoteComplex(a);
+  // FIXME
+  // if (!a.isComplex() && b.isComplex())
+  //   this->promoteComplex(a);
   setLoop<T>(this->rw(a),
 	     argdim,adims,argsize,coords,
-	     this->ro(b),b.isScalar(),a.isComplex());
+	     this->ro(b),b.isScalar());
 }
 
 template <class T>
@@ -791,6 +666,8 @@ Object ArrayType<T>::NCat(const Object& p, ndx_t dim)
   // Cache the page size for each object
   std::vector<ndx_t> pagesize;
   pagesize.resize(size_t(objectCount));
+  // FIXME - Promotion logic moves up a level
+  /*
   // Cache the promotion flag for each object
   std::vector<bool> promotionRequired;
   promotionRequired.resize(size_t(objectCount));
@@ -804,6 +681,7 @@ Object ArrayType<T>::NCat(const Object& p, ndx_t dim)
       anyComplex |= dp[i].isComplex();
       allComplex &= dp[i].isComplex();
     }
+  */
   for (ndx_t i=0;i<objectCount;i++)
     {
       pointers[unsigned(i)] = this->ro(dp[i]);
@@ -812,10 +690,10 @@ Object ArrayType<T>::NCat(const Object& p, ndx_t dim)
       for (auto j=0;j<=dim;j++)
 	pagesze *= dp[i].dims().dimension(j);
       pagesize[unsigned(i)] = pagesze;
-      promotionRequired[unsigned(i)] = anyComplex && (!allComplex) && (!dp[i].isComplex());
+      //      promotionRequired[unsigned(i)] = anyComplex && (!allComplex) && (!dp[i].isComplex());
     }
   // Allocate the output object
-  Object retObject = this->zeroArrayOfSize(outputSize,anyComplex);
+  Object retObject = this->zeroArrayOfSize(outputSize);
   ndx_t outputOffset = 0;
   ndx_t outputCount = outputSize.count();
   unsigned k = 0;
@@ -823,12 +701,7 @@ Object ArrayType<T>::NCat(const Object& p, ndx_t dim)
   T zero(this->zeroElement());
   while (outputOffset < outputCount)
     {
-      if (!anyComplex)
-	copyPage<T>(op,outputOffset,pointers[k],offsets[k],pagesize[k],false);
-      else if (anyComplex && !promotionRequired[k])
-	copyPage<T>(op,outputOffset,pointers[k],offsets[k],pagesize[k],true);
-      else
-	copyPagePromote<T>(op,outputOffset,pointers[k],offsets[k],pagesize[k],zero);
+      copyPage<T>(op,outputOffset,pointers[k],offsets[k],pagesize[k]);
       k = (k + 1) % objectCount;
     }
   return retObject;
@@ -837,15 +710,25 @@ Object ArrayType<T>::NCat(const Object& p, ndx_t dim)
 
 template class FM::ArrayType<char>;
 template class FM::ArrayType<float>;
+template class FM::ArrayType<Complex<float> >;
 template class FM::ArrayType<double>;
+template class FM::ArrayType<Complex<double> >;
 template class FM::ArrayType<Object>;
 template class FM::ArrayType<int8_t>;
+template class FM::ArrayType<Complex<int8_t> >;
 template class FM::ArrayType<uint8_t>;
+template class FM::ArrayType<Complex<uint8_t> >;
 template class FM::ArrayType<int16_t>;
+template class FM::ArrayType<Complex<int16_t> >;
 template class FM::ArrayType<uint16_t>;
+template class FM::ArrayType<Complex<uint16_t> >;
 template class FM::ArrayType<int32_t>;
+template class FM::ArrayType<Complex<int32_t> >;
 template class FM::ArrayType<uint32_t>;
+template class FM::ArrayType<Complex<uint32_t> >;
 template class FM::ArrayType<int64_t>;
+template class FM::ArrayType<Complex<int64_t> >;
 template class FM::ArrayType<uint64_t>;
+template class FM::ArrayType<Complex<uint64_t> >;
 template class FM::ArrayType<bool>;
 

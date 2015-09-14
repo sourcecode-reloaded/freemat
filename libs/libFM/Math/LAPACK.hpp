@@ -2,6 +2,7 @@
 #define __LAPACK_hpp__
 
 #include <string.h>
+#include "Complex.hpp"
 
 #define ftnlen short
 
@@ -20,11 +21,11 @@ extern "C" {
 	       ftnlen fact_len, ftnlen trans_len, ftnlen equed_len);
 
   void zgesvx_(char* FACT, char* TRANS, int * N, int * NRHS, 
-	       double *A, int * LDA, double * AF, int * LDAF, 
+	       FM::Complex<double> *A, int * LDA, FM::Complex<double> * AF, int * LDAF, 
 	       int * IPIV, char * EQUED, double * R, double * C, 
-	       double * B, int * LDB, double * X, int * LDX, 
+	       FM::Complex<double> * B, int * LDB, FM::Complex<double> * X, int * LDX, 
 	       double * RCOND, double * FERR, double * BERR,
-	       double * WORK, double * RWORK, int * INFO, 
+	       FM::Complex<double> * WORK, double * RWORK, int * INFO, 
 	       ftnlen fact_len, ftnlen trans_len, ftnlen equed_len);
 
   void sgesvx_(char* FACT, char* TRANS, int * N, int * NRHS, 
@@ -36,29 +37,29 @@ extern "C" {
 	       ftnlen fact_len, ftnlen trans_len, ftnlen equed_len);
 
   void cgesvx_(char* FACT, char* TRANS, int * N, int * NRHS, 
-	       float *A, int * LDA, float * AF, int * LDAF, 
+	       FM::Complex<float> *A, int * LDA, FM::Complex<float> * AF, int * LDAF, 
 	       int * IPIV, char * EQUED, float * R, float * C, 
-	       float * B, int * LDB, float * X, int * LDX, 
+	       FM::Complex<float> * B, int * LDB, FM::Complex<float> * X, int * LDX, 
 	       float * RCOND, float * FERR, float * BERR,
-	       float * WORK, float * RWORK, int * INFO, 
+	       FM::Complex<float> * WORK, float * RWORK, int * INFO, 
 	       ftnlen fact_len, ftnlen trans_len, ftnlen equed_len);
 
   void dgelsy_(int* M, int *N, int *NRHS, double* A, int *LDA,
 	       double *B, int *LDB, int *JPVT, double* RCOND,
 	       int *RANK, double *WORK, int* LWORK, int* INFO);
 
-  void zgelsy_(int* M, int *N, int *NRHS, double* A, int *LDA,
-	       double *B, int *LDB, int *JPVT, double* RCOND,
-	       int *RANK, double *WORK, int* LWORK, double* RWORK,
+  void zgelsy_(int* M, int *N, int *NRHS, FM::Complex<double*> A, int *LDA,
+	       FM::Complex<double> *B, int *LDB, int *JPVT, double* RCOND,
+	       int *RANK, FM::Complex<double> *WORK, int* LWORK, double* RWORK,
 	       int* INFO);
 
   void sgelsy_(int* M, int *N, int *NRHS, float* A, int *LDA,
 	       float *B, int *LDB, int *JPVT, float* RCOND,
 	       int *RANK, float *WORK, int* LWORK, int* INFO);
 
-  void cgelsy_(int* M, int *N, int *NRHS, float* A, int *LDA,
-	       float *B, int *LDB, int *JPVT, float* RCOND,
-	       int *RANK, float *WORK, int* LWORK, float* RWORK,
+  void cgelsy_(int* M, int *N, int *NRHS, FM::Complex<float*> A, int *LDA,
+	       FM::Complex<float> *B, int *LDB, int *JPVT, float* RCOND,
+	       int *RANK, FM::Complex<float> *WORK, int* LWORK, float* RWORK,
 	       int* INFO);
 
   void sgeevx_(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
@@ -78,18 +79,20 @@ extern "C" {
 	       ftnlen jobvl_len, ftnlen jobvr_len, ftnlen sense_len);
 
   void cgeevx_(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
-	       int* N, float* A, int* LDA, float* W, float* VL, 
-	       int *LDVL, float* VR, int *LDVR, int *ILO,
+	       int* N, FM::Complex<float>* A, int* LDA, FM::Complex<float>* W,
+	       FM::Complex<float>* VL, 
+	       int *LDVL, FM::Complex<float>* VR, int *LDVR, int *ILO,
 	       int *IHI, float* SCALE, float* ABNRM, float* RCONDE,
-	       float* RCONDV, float *WORK, int *LWORK, float *RWORK,
+	       float* RCONDV, FM::Complex<float> *WORK, int *LWORK, float *RWORK,
 	       int *INFO, ftnlen balanc_len, 
 	       ftnlen jobvl_len, ftnlen jobvr_len, ftnlen sense_len);
 
   void zgeevx_(char* BALANC, char* JOBVL, char* JOBVR, char* SENSE, 
-	       int* N, double* A, int* LDA, double* W, double* VL, 
-	       int *LDVL, double* VR, int *LDVR, int *ILO,
+	       int* N, FM::Complex<double>* A, int* LDA, FM::Complex<double>* W,
+	       FM::Complex<double>* VL, 
+	       int *LDVL, FM::Complex<double>* VR, int *LDVR, int *ILO,
 	       int *IHI, double* SCALE, double* ABNRM, double* RCONDE,
-	       double* RCONDV, double *WORK, int *LWORK, double *RWORK,
+	       double* RCONDV, FM::Complex<double> *WORK, int *LWORK, double *RWORK,
 	       int *INFO, ftnlen balanc_len, 
 	       ftnlen jobvl_len, ftnlen jobvr_len, ftnlen sense_len);
 
@@ -157,12 +160,12 @@ extern "C" {
 	      double *W, double *WORK, int *LWORK, int *INFO, 
 	      ftnlen jobz_len, ftnlen uplo_len);
 
-  void cheev_(char *JOBZ, char *UPLO, int *N, float *A, int *LDA, 
-	      float *W, float *WORK, int *LWORK, float *RWORK, int *INFO, 
+  void cheev_(char *JOBZ, char *UPLO, int *N, FM::Complex<float> *A, int *LDA, 
+	      float *W, FM::Complex<float> *WORK, int *LWORK, float *RWORK, int *INFO, 
 	      ftnlen jobz_len, ftnlen uplo_len);
 
-  void zheev_(char *JOBZ, char *UPLO, int *N, double *A, int *LDA, 
-	      double *W, double *WORK, int *LWORK, double *RWORK, int *INFO, 
+  void zheev_(char *JOBZ, char *UPLO, int *N, FM::Complex<double> *A, int *LDA, 
+	      double *W, FM::Complex<double> *WORK, int *LWORK, double *RWORK, int *INFO, 
 	      ftnlen jobz_len, ftnlen uplo_len);
 
   void sggev_(char *JOBVL, char *JOBVR, int *N, float *A, int *LDA, 
@@ -208,19 +211,19 @@ extern "C" {
 
   void sgetrf_(int *M, int *N, float *A, int *LDA, int *IPIV, int *INFO);
   
-  void cgetrf_(int *M, int *N, float *A, int *LDA, int *IPIV, int *INFO);
+  void cgetrf_(int *M, int *N, FM::Complex<float> *A, int *LDA, int *IPIV, int *INFO);
 
   void dgetrf_(int *M, int *N, double *A, int *LDA, int *IPIV, int *INFO);
   
-  void zgetrf_(int *M, int *N, double *A, int *LDA, int *IPIV, int *INFO);
+  void zgetrf_(int *M, int *N, FM::Complex<double> *A, int *LDA, int *IPIV, int *INFO);
 
   void sgetri_(int *N, float *A, int *LDA, int *IPIV, float *WORK, int *LWORK, int *INFO);
 
-  void cgetri_(int *N, float *A, int *LDA, int *IPIV, float *WORK, int *LWORK, int *INFO);
+  void cgetri_(int *N, FM::Complex<float> *A, int *LDA, int *IPIV, FM::Complex<float> *WORK, int *LWORK, int *INFO);
 
   void dgetri_(int *N, double *A, int *LDA, int *IPIV, double *WORK, int *LWORK, int *INFO);
   
-  void zgetri_(int *N, double *A, int *LDA, int *IPIV, double *WORK, int *LWORK, int *INFO);
+  void zgetri_(int *N, FM::Complex<double> *A, int *LDA, int *IPIV, FM::Complex<double> *WORK, int *LWORK, int *INFO);
 
   int xerbla_(char *srname, int *info);
 

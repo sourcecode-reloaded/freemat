@@ -25,6 +25,7 @@
 #include "SparseType.hpp"
 #include <readline/readline.h>
 #include <readline/history.h>
+#include "Config.hpp"
 
 //#include <valarray>
 
@@ -71,9 +72,9 @@ void compileModule(ThreadContext *ctxt, const FMString &name, HashMap<Object> &c
     if (mod)
       {
 	Object p = ctxt->_assembler->run(mod);
-	Disassemble(ctxt,p);
-	std::cout << "Compile: \n";
-	std::cout << p << "\n";
+	DBOUT(Disassemble(ctxt,p));
+	DBOUT(std::cout << "Compile: \n");
+	DBOUT(std::cout << p << "\n");
 	if (ctxt->_module->ro(p)->m_modtype == ClassdefModuleType)
 	  classes.insert(std::make_pair(ctxt->_string->makeString(name),p));
 	  // {
@@ -91,6 +92,68 @@ void compileModule(ThreadContext *ctxt, const FMString &name, HashMap<Object> &c
     std::cout << "Exception: " << e.msg() << "\n";
   }
 }
+
+// Here is an example of a reduction operation
+//
+//  The number of reductions to perform is prod(size(a)) with size(a)[reddim] = 1
+//  The output stride is 1
+//  The reduction length is size(a)[reddim]
+//  The input stride is trickier.  The amount to skip is prod(size(a)) for dims=1...reddim-1 - this is the stride
+//  The number of reductions to do is prod(size(a))/size(a)[reddim]
+//
+//  Consider a 3 dim array - rows x cols x slices
+//    where the reduction is along the cols
+//    reductionlen = cols
+//    howmany = rows*slices
+//    pagesize = rows*cols
+//    pagecount = slices
+//    stride = rows
+//
+//  Now consider a 4 dim arrat rows x cols x slices x cubes
+//  If we want to reduce along the slices direction
+//
+//    reductionlen = slices
+//    stride = rows*cols
+//    pagesize = rows*cols*slices
+//    pagecount = cubes
+//    rowcount = rows*cols
+//  For the input, we will loop through rows (pagesize).
+//  start = row + page*pagesize + ndx*stride
+
+template <class Input, class Output, class Op>
+inline static void dispatch_reduce(Output *op, const Input *ip, ndx_t reduxlen, ndx_t pagecount, ndx_t stride)
+{
+  ndx_t ptr = 0;
+  for (ndx_t page=0;page<pagecount;page++)
+    for (ndx_t row=0;row<stride;row++)
+      Op::func(op+(ptr++),ip+page*stride*reduxlen+row,reduxlen,stride);
+}
+
+Object reduce(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+  ndx_t dim = 0;
+  if (args.count() > 1)
+    dim = (ndx_t)(ctxt->_list->second(args).asDouble()) - 1;
+  const Object & x = ctxt->_list->first(args);
+  const Tuple &inputdims = x.rodims();
+  // Next calculate the output size
+  Tuple outputSize = inputdims;
+  outputSize.set(dim,1);
+  // Calculate the number of outputs
+  ndx_t howmany = outputSize.count();
+  ndx_t reduxlen = inputdims.dimension(dim);
+  ndx_t stride = 1;
+  for (ndx_t k=0;k<dim;k++) stride *= inputdims.dimension(k);
+  ndx_t pagecount = howmany/stride;
+  Object ret(ctxt->_double->zeroArrayOfSize(outputSize));
+  dispatch_reduce<double,double,OpSum>(ctxt->_double->rw(ret),ctxt->_double->ro(x),reduxlen,pagecount,stride);
+  return ctxt->_list->makeScalar(ret);
+}
+
+// All - is a reduction operation
+Object all(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+  
+}
+
 
 Object strcmp(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   if (args.count() != 2) throw Exception("strcmp requires two arguments");
@@ -127,7 +190,11 @@ Object numel(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
 
 
 Object tot_int8(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
-  return ctxt->_list->makeScalar(ctxt->t_int8->convert(ctxt->_list->ro(args)[0]));
+  const Object &arg(ctxt->_list->ro(args)[0]);
+  if (arg.type()->isComplexType())
+    return ctxt->_list->makeScalar(ctxt->t_zint8->convert(arg));
+  else
+    return ctxt->_list->makeScalar(ctxt->t_int8->convert(arg));
 }
 
 Object tot_int16(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
@@ -221,7 +288,7 @@ int main(int argc, char *argv[])
   std::mutex *lock = new std::mutex;
   std::map<FMString,Object> *globals = new std::map<FMString,Object>();
   
-  ThreadContext *ctxt = BuildNewThreadContext(&io); // Global context
+  ThreadContext *ctxt = ThreadContext::BuildNewThreadContext(&io); // Global context
   //  globals->insert(std::make_pair("_dblist",ctxt->_cell->empty()));
   ctxt->_globals = new Globals(ctxt); // shared by all
 
@@ -381,6 +448,7 @@ int main(int argc, char *argv[])
   ctxt->_globals->set("size",ctxt->_module->builtin("size",size));
   ctxt->_globals->set("print",ctxt->_module->builtin("print",print));
   ctxt->_globals->set("handir",ctxt->_module->builtin("handir",handir));
+  ctxt->_globals->set("all",ctxt->_module->builtin("all",all));
   ctxt->_globals->set("strcmp",ctxt->_module->builtin("strcmp",strcmp));
   ctxt->_globals->set("numel",ctxt->_module->builtin("numel",numel));
   ctxt->_globals->set("int8",ctxt->_module->builtin("int8",tot_int8));
@@ -395,6 +463,7 @@ int main(int argc, char *argv[])
   ctxt->_globals->set("single",ctxt->_module->builtin("single",to_single));
   ctxt->_globals->set("backtrace",ctxt->_module->builtin("backtrace",backtrace));
   ctxt->_globals->set("mksparse",ctxt->_module->builtin("mksparse",mksparse));
+  ctxt->_globals->set("reduce",ctxt->_module->builtin("reduce",reduce));
   ctxt->_globals->set("full",ctxt->_module->builtin("full",full));
   ctxt->_globals->set("dbstop",ctxt->_module->builtin("dbstop",dbstop));
   ctxt->_globals->set("dbquit",ctxt->_module->builtin("dbquit",dbquit));
@@ -434,7 +503,8 @@ int main(int argc, char *argv[])
 	if (mod)
 	  {
 	    Object p = ctxt->_assembler->run(mod);
-	    std::cout << "Code object: " << p.description() << "\n";
+	    DBOUT(std::cout << "Code object: " << p.description() << "\n");
+	    DBOUT(Disassemble(ctxt,p));
 	    Disassemble(ctxt,p);
 	    timer.start();
 	    Object params = ctxt->_list->empty();

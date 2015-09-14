@@ -26,6 +26,19 @@ namespace FM {
       dims[1] = cols;
       elements = rows*cols;
     }
+    Tuple(const Tuple &other) {
+      ndims = other.ndims;
+      elements = other.elements;
+      for (unsigned i=0;i<ndims;i++)
+	dims[i] = other.dims[i];
+    }
+    Tuple & operator=(const Tuple &other) {
+      ndims = other.ndims;
+      elements = other.elements;
+      for (unsigned i=0;i<ndims;i++)
+	dims[i] = other.dims[i];
+      return *this;
+    }
    // Tuple(ndx_t *ptr, int nd) : ndims(nd) {memcpy(dims,ptr,nd*sizeof(ndx_t)); updateElementCount();}
     inline void prepend(ndx_t a) {
       for (unsigned i=0;i<ndims;i++)

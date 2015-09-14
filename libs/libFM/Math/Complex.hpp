@@ -2,6 +2,7 @@
 #define __Complex_hpp__
 
 #include "IEEEFP.hpp"
+#include "Type.hpp"
 
 namespace FM
 {
@@ -26,8 +27,17 @@ namespace FM
       r = elem(other);
       i = elem(0);
     }
+    operator ndx_t () const
+    {
+      return static_cast<ndx_t>(r);
+    }
+
   };
 
+  template <class elem>
+  static inline elem complex_conj(const elem &a) {
+    return a;
+  }
 
   template <class elem>
   static inline Complex<elem> complex_conj(const Complex<elem> &a) {

@@ -1,4 +1,5 @@
 #include "Symbol.hpp"
+#include "Config.hpp"
 #include <iostream>
 #include "Exception.hpp"
 
@@ -70,15 +71,15 @@ void SymbolPass::markParentSymbolCaptured(const FMString &name) {
 	  if (old_flag.is_captured()) return;
 	  old_flag._captured = 1;
 	  old_flag._dynamic = 0;
-	  std::cout << "CAPTURE " << name << "\n";
-	  std::cout << "  FLAG: " << old_flag.str() << "\n";
+	  DBOUT(std::cout << "CAPTURE " << name << "\n");
+	  DBOUT(std::cout << "  FLAG: " << old_flag.str() << "\n");
 	  sp->syms[name] = old_flag;
 	  return;
 	}
       else
 	{
 	  sp->syms[name] = symbol_flags_t::FREE();
-	  std::cout << "FLOW THROUGH: " << name << "\n";
+	  DBOUT(std::cout << "FLOW THROUGH: " << name << "\n");
 	}
       sp = sp->parent;
       if (sp == _root) return;
@@ -101,17 +102,17 @@ void SymbolPass::addSymbol(const FMString &name, symbol_flags_t flags)
   if (!_current->syms.contains(name))
     {
       _current->syms[name] = flags;
-      std::cout << "Insert of symbol: " << name << " with flags " << flags.str() << "\n";
+      DBOUT(std::cout << "Insert of symbol: " << name << " with flags " << flags.str() << "\n");
     }
   else
     {
       symbol_flags_t oldflags = _current->syms[name];
       if ((oldflags | flags) != oldflags)
 	{
-	  std::cout << "Update of symbol: " << name 
-		    << " new flags [" << flags.str() 
-		    << "] old flags [" << oldflags.str()
-		    << "]\n";
+	  DBOUT( std::cout << "Update of symbol: " << name 
+		 << " new flags [" << flags.str() 
+		 << "] old flags [" << oldflags.str()
+		 << "]\n");
 	  _current->syms[name] = (oldflags | flags);
 	}
     }
@@ -140,11 +141,11 @@ static bool activeAttribute(const Tree &t, const FMString &name) {
 
 
 symbol_flags_t SymbolPass::walkAttributes(const Tree &t) {
-  std::cout << "ATTRIBUTES\n";
+  DBOUT(std::cout << "ATTRIBUTES\n");
   symbol_flags_t p;
   for (int i=0;i<t.numChildren();i++)
     {
-      std::cout << "ATTRIBUTE:" << t.child(i).text() << "\n";
+      DBOUT(std::cout << "ATTRIBUTE:" << t.child(i).text() << "\n");
       if (activeAttribute(t.child(i),"static"))
 	p._static = 1;
       if (activeAttribute(t.child(i),"constant"))
@@ -355,7 +356,7 @@ void SymbolPass::walkFunction(const Tree &t, FunctionTypeEnum funcType, symbol_f
 }
 
 void SymbolPass::walkAnonymousFunction(const Tree &t) {
-  std::cout << "Walk anonymous function " << t.context() << "\n";
+  DBOUT(std::cout << "Walk anonymous function " << t.context() << "\n");
   FMString fname = "anon" + Stringify(t.context());
   addSymbol(fname, symbol_flags_t::NESTED());
   SymbolTable *s = new SymbolTable;
