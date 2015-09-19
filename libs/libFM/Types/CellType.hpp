@@ -38,7 +38,7 @@ namespace FM
       //const Object *t = this->ro(a);
       for (ndx_t i=0;i<a.count();i++)
 	maxwidth = std::max<ndx_t>(maxwidth,a.description().length());
-      format.width = int(maxwidth+2);
+      format.total_width = int(maxwidth+2);
     }
     void printElement(const Object &a, const ArrayFormatInfo &info, ndx_t ndx);
   };

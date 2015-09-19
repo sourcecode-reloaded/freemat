@@ -2862,3 +2862,89 @@ Wonky!
 
    1.0e+02 * 
  100  +2i 300  -4i 567  +7i
+
+
+And.... we're back.
+
+Let's start with the display of integers.  This seems to work except
+that there is no scaling - so regardless of the magnitude, the full
+integer is printed out.  Also, negative numbers do not pad correctly.
+Should there be a difference between integers and real numbers?  What
+if all arrays were converted to double precision before printing?
+This would preserve numbers up to 2^54 or something, and allow all
+logic about formatting of the numbers to pass through a single path.
+
+positive integers - ok
+negative integers - ok
+mixed integers - ok
+
+positive floats - ok
+negative floats - ok
+mixed floats - ok
+
+positive complex integers - ok
+negative complex integers -ok
+mixed complex integers -ok
+
+complex floats - not ok
+
+
+strings- ok -- Check behavior with strings that are longwer than the
+width of the terminal.   Should they be paginated/broken up? Or not?
+
+Next complex numbers
+
+
+- Odd (1:10)+(1:10)*i caused an exception...
+(1:10)+(10:30)*i - actually, and that's OK - it should
+
+Concats with mixed complex, reals don't work.
+[a,b,c] = carray
+doesnt work
+
+Type check:
+
+    TypeInvalid = 0,
+    TypeCellArray = 1,
+    TypeStruct = 2,
+    TypeString = 3,
+    TypeBool = 4, - ok
+    TypeDouble = 5, - ok
+    TypeSingle = 6,   -ok
+    TypeInt8 = 7,- ok
+    TypeUInt8 = 8, -ok
+    TypeInt16 = 9,
+    TypeUInt16 = 10,
+    TypeInt32 = 11,
+    TypeUInt32 = 12,
+    TypeInt64 = 13,
+    TypeUInt64 = 14,
+    TypeIndex = 15,
+    TypeZDouble = 16,
+    TypeZSingle = 17,
+    TypeZInt8 = 18,
+    TypeZUInt8 = 19,
+    TypeZInt16 = 20,
+    TypeZUInt16 = 21,
+    TypeZInt32 = 22,
+    TypeZUInt32 = 23,
+    TypeZInt64 = 24,
+    TypeZUInt64 = 25,
+    TypeListArray = 26,
+    TypeMeta = 27,
+    TypeClass = 28,
+    TypeCode = 29,
+    TypeModule = 30,
+    TypeCaptured = 31,
+    TypeFunction = 32,
+    TypeBoundFunction = 33,
+    TypeFunctionHandle = 34,
+    TypeAnonymous = 35,
+    TypeBreakpoint = 36,
+    TypeSparseLogical = 37,
+    TypeSparseDouble = 38,
+    TypeSparseComplex = 39
+
+
+
+

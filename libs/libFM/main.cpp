@@ -188,41 +188,45 @@ Object numel(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
 	return ctxt->_list->makeScalar(ctxt->_double->makeScalar(double(ctxt->_list->ro(args)[0].count())));
 }
 
-
-Object tot_int8(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+template <class T, class S>
+Object tot_T(const Object &args, ThreadContext *ctxt, T* real_type, S* comp_type) {
   const Object &arg(ctxt->_list->ro(args)[0]);
   if (arg.type()->isComplexType())
-    return ctxt->_list->makeScalar(ctxt->t_zint8->convert(arg));
+    return ctxt->_list->makeScalar(comp_type->convert(arg));
   else
-    return ctxt->_list->makeScalar(ctxt->t_int8->convert(arg));
+    return ctxt->_list->makeScalar(real_type->convert(arg));
+}
+
+Object tot_int8(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+  return tot_T(args,ctxt,ctxt->t_int8,ctxt->t_zint8);
 }
 
 Object tot_int16(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
-  return ctxt->_list->makeScalar(ctxt->t_int16->convert(ctxt->_list->ro(args)[0]));
+  return tot_T(args,ctxt,ctxt->t_int16,ctxt->t_zint16);
 }
 
 Object tot_int32(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
-  return ctxt->_list->makeScalar(ctxt->t_int32->convert(ctxt->_list->ro(args)[0]));
+  return tot_T(args,ctxt,ctxt->t_int32,ctxt->t_zint32);
 }
 
 Object tot_int64(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
-  return ctxt->_list->makeScalar(ctxt->t_int64->convert(ctxt->_list->ro(args)[0]));
+  return tot_T(args,ctxt,ctxt->t_int64,ctxt->t_zint64);
 }
 
 Object to_uint8(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
-  return ctxt->_list->makeScalar(ctxt->_uint8->convert(ctxt->_list->ro(args)[0]));
+  return tot_T(args,ctxt,ctxt->_uint8,ctxt->_zuint8);
 }
 
 Object to_uint16(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
-  return ctxt->_list->makeScalar(ctxt->_uint16->convert(ctxt->_list->ro(args)[0]));
+  return tot_T(args,ctxt,ctxt->_uint16,ctxt->_zuint16);
 }
 
 Object to_uint32(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
-  return ctxt->_list->makeScalar(ctxt->_uint32->convert(ctxt->_list->ro(args)[0]));
+  return tot_T(args,ctxt,ctxt->_uint32,ctxt->_zuint32);
 }
 
 Object to_uint64(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
-  return ctxt->_list->makeScalar(ctxt->_uint64->convert(ctxt->_list->ro(args)[0]));
+  return tot_T(args,ctxt,ctxt->_uint64,ctxt->_zuint64);
 }
 
 Object to_double(const Object &args, ndx_t nargout, ThreadContext *ctxt) {

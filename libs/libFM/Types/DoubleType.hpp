@@ -181,6 +181,7 @@ namespace FM
     }
     virtual bool isComplexType() {return true;}
     virtual Object Add(const Object &a, const Object &b) {return dispatch_complex_binop<OpAdd>(a,b,Type::_ctxt,this);}
+    virtual Object DotMultiply(const Object &a, const Object &b) {return dispatch_complex_binop<OpDotMultiply>(a,b,Type::_ctxt,this);}
   };
 
 }

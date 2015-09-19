@@ -113,7 +113,7 @@ namespace FM
       return (this->indexOf(a,b) != -1);
     }
     void computeArrayFormatInfo(FMFormatMode, const Object &a, ArrayFormatInfo &format) {
-      format.width = 80;
+      format.total_width = 80;
     }
     void printElement(const Object &a, const ArrayFormatInfo &info, ndx_t ndx);
   };

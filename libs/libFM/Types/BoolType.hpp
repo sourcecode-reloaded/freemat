@@ -14,11 +14,11 @@ namespace FM
     virtual ~BoolType() {}
     virtual Type* typeInstance() {return this;}
     virtual void computeArrayFormatInfo(FMFormatMode, const Object &a, ArrayFormatInfo &format) {
-      format.width = 1;
+      format.total_width = 1;
     }
     virtual void printElement(const Object &a, const ArrayFormatInfo &format, ndx_t ndx) {
       const bool* dp = this->ro(a);
-      Type::_ctxt->_io->output("% d",dp[ndx]);
+      Type::_ctxt->_io->output("%d",dp[ndx]);
     }
     virtual DataCode code() const {return TypeBool;}
     virtual Object asIndex(const Object &a, ndx_t max);

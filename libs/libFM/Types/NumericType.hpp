@@ -55,6 +55,8 @@ namespace FM
     Object realPart(const Object &a);
     Object imagPart(const Object &a);
     void fill(Object &a, T val);
+    virtual void computeArrayFormatInfo(FMFormatMode mode, const Object &rp, ArrayFormatInfo &info);
+    virtual void printElement(const Object &a, const ArrayFormatInfo &format, ndx_t offset);
   };
 }
 

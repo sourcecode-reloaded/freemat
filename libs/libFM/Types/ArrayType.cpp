@@ -564,11 +564,15 @@ void ArrayType<T>::setParens(Object &a, const Object &args, const Object &b) {
 	     this->ro(b),b.isScalar());
 }
 
+const int print_pad = 2;
+
 template <class T>
 void ArrayType<T>::printSheet(const Object &a, const ArrayFormatInfo &format, ndx_t offset) {
   ndx_t columns = a.cols();
   ndx_t rows = a.rows();
-  int colsPerPage = (int) floor((_ctxt->_io->getTerminalWidth()-1)/((double) format.width + 2));
+  ndx_t elwidth = format.total_width;
+  if (format.needs_space) elwidth += print_pad; 
+  int colsPerPage = (int) floor((_ctxt->_io->getTerminalWidth()-1-print_pad)/((double) elwidth));
   colsPerPage = (colsPerPage < 1) ? 1 : colsPerPage;
   int pageCount = (int) ceil(columns/((double)colsPerPage));
   for (auto k=0;k<pageCount;k++) {
@@ -578,9 +582,12 @@ void ArrayType<T>::printSheet(const Object &a, const ArrayFormatInfo &format, nd
       colsPerPage : colsInThisPage;
     if ((rows*columns > 1) && (pageCount > 1))
       _ctxt->_io->output("\n Columns %d to %d\n\n",k*colsPerPage+1,k*colsPerPage+colsInThisPage);
+    _ctxt->_io->output(FMString(print_pad,' '));
     for (auto i=0;i<rows;i++) {
-      for (auto j=0;j<colsInThisPage;j++)
+      for (auto j=0;j<colsInThisPage;j++) {
 	this->printElement(a,format,i+(k*colsPerPage+j)*rows+offset);
+	if (format.needs_space && (j != (colsInThisPage-1))) _ctxt->_io->output(FMString(print_pad,' '));
+      }
       _ctxt->_io->output("\n");
     }
   }
@@ -604,6 +611,8 @@ void ArrayType<T>::print(const Object &a)
   }
   ArrayFormatInfo format;
   this->computeArrayFormatInfo(_ctxt->_io->getFormatMode(),a,format);
+  _ctxt->_io->output("Format width = %d\n",format.total_width);
+  _ctxt->_io->output("Format number_width = %d\n",format.number_width);
   if (!a.isScalar() && (format.scalefact != 1))
     _ctxt->_io->output("\n   %.1e * \n",format.scalefact);
   if (a.isScalar() && !format.floatasint) {

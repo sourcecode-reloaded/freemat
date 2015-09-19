@@ -32,7 +32,8 @@ namespace FM
       return IntegerType<FMChar>::describe(o);
     }
     inline void computeArrayFormatInfo(FMFormatMode, const Object &, ArrayFormatInfo &format) {
-      format.width = 1;
+      format.total_width = 1;
+      format.needs_space = false;
     }
     void printElement(const Object &a, const ArrayFormatInfo &format, ndx_t ndx);
   };

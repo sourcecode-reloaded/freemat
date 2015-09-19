@@ -134,7 +134,7 @@ class FMString : public std::string
 public:
   FMString(const char *p) : std::string(p) {}
   FMString(const std::string &q) : std::string(q) {}
-  FMString(size_t len, char p = 0) : std::string(len,p) {}
+  FMString(size_t len, FMChar p = 0) : std::string(len,p) {}
   FMString(const char *p, size_t len) : std::string(p,len) {}
   FMString(FMChar t) : std::string(1,t) {}
   FMString() : std::string() {}

@@ -19,34 +19,6 @@ static void printToStream(TermIF *io, int width, const Complex<S> & val) {
 }
 
 
-
-// FIXME - replace with log10?
-template <class T>
-static int GetNominalWidthInteger(const T* qp, ndx_t len) {
-  char buffer[MSGBUFLEN];
-  int maxdigit = 0;
-  for (ndx_t i=0;i<len;i++) {
-    memset(buffer,0,MSGBUFLEN);
-    sprintf(buffer,"%lld",(int64_t)qp[i]);
-    int j = maxdigit;
-    while (buffer[j] && j>=maxdigit)
-      j++;
-    maxdigit = j;
-  }
-  return maxdigit;
-}
-
-// FIXME - clean up
-template <class T>
-static int GetNominalWidthInteger(const Complex<T>* qp, ndx_t len) {
-  int maxlen = 0;
-  for (auto i=0;i<len;i++)
-    maxlen = std::max<int>(maxlen,
-			   GetNominalWidthInteger(&(qp[i].r),1)+
-			   GetNominalWidthInteger(&(qp[i].i),1)+3);
-  return maxlen;
-}
-
 template <class T, class Op>
 static inline Object int_cmpop(const Object &a, const Object &b, BoolType *o)
 {
@@ -65,19 +37,15 @@ static inline Object int_cmpop(const Object &a, const Object &b, BoolType *o)
   throw Exception("Unsupported type combination of " + a.type()->name() + " and " + b.type()->name());
 }
 
-template<class T>
-void IntegerType<T>::computeArrayFormatInfo(FMFormatMode, const Object &a, ArrayFormatInfo &format) {
-  const T* dp = this->ro(a);
-  ndx_t cnt = a.count();
-  if (a.isComplex()) cnt *= 2;
-  format.width = GetNominalWidthInteger(dp,cnt);
-}
+// template<class T>
+// void IntegerType<T>::computeArrayFormatInfo(FMFormatMode mode, const Object &a, ArrayFormatInfo &format) {
+//   GetArrayFormatForPODArray(mode,this->ro(a),a.count(),format);
+// }
 
-template <class T>
-void IntegerType<T>::printElement(const Object &a, const ArrayFormatInfo &format, ndx_t ndx) {
-  const T* dp = this->ro(a);
-  printToStream(Type::_ctxt->_io,format.width,dp[ndx]);
-}
+// template <class T>
+// void IntegerType<T>::printElement(const Object &a, const ArrayFormatInfo &format, ndx_t ndx) {
+//   PrintFormattedNumberToStream(Type::_ctxt->_io,format,this->ro(a)[offset]);
+// }
 
 template <class T>
 Object IntegerType<T>::Equals(const Object &a, const Object &b) {

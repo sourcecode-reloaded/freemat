@@ -37,8 +37,8 @@ namespace FM
     virtual Object GreaterThan(const Object &a, const Object &b);
     virtual Object Equals(const Object &a, const Object &b);
     virtual Object NotEquals(const Object &a, const Object &b);    
-    virtual void computeArrayFormatInfo(FMFormatMode mode, const Object &a, ArrayFormatInfo &format);
-    virtual void printElement(const Object &a, const ArrayFormatInfo &format, ndx_t offset);
+    // virtual void computeArrayFormatInfo(FMFormatMode mode, const Object &a, ArrayFormatInfo &format);
+    // virtual void printElement(const Object &a, const ArrayFormatInfo &format, ndx_t offset);
   };
 
   template <class T>

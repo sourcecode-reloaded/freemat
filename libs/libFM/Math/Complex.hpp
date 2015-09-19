@@ -169,9 +169,16 @@ namespace FM
   inline void complex_multiply(const T &ar, const T &ai, 
 			       const T &br, const T &bi, 
 			       T &cr, T &ci) {
+    // Check for denormals and infinite handling...
     if ((ai == 0) && (bi == 0)) {
       cr = ar * br;
       ci = 0;
+    } else if ((ai == 0) && (br == 0)) {
+      cr = 0;
+      ci = ar * bi;
+    } else if ((ar == 0) && (bi == 0)) {
+      cr = 0;
+      ci = ai * br;
     } else if (ai == 0) {
       cr = ar * br;
       ci = ar * bi;

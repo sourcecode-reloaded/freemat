@@ -231,6 +231,17 @@ void NumericType<T,codeNum>::fillComplex(Object &a, Complex<T> val) {
 }
 */
 
+template<class T>
+void NumericType<T>::computeArrayFormatInfo(FMFormatMode mode, const Object &a, ArrayFormatInfo &format) {
+  GetArrayFormatForPODArray(mode,this->ro(a),a.count(),format);
+}
+
+template <class T>
+void NumericType<T>::printElement(const Object &a, const ArrayFormatInfo &format, ndx_t ndx) {
+  Type::_ctxt->_io->output(FormattedNumber(format,this->ro(a)[ndx]));
+}
+
+
 template class FM::NumericType<float>;
 template class FM::NumericType<double>;
 template class FM::NumericType<int8_t>;

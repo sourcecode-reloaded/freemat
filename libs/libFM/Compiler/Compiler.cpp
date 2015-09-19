@@ -1206,9 +1206,11 @@ void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
   reg_t args = startList();
   emit(OP_PUSH,args,lhsCount);
   reg_t x = startList();
-  const Tree &s2 = f.second();
-  for (int p=0;p<s2.numChildren();p++)
-    multiexpr(x,s2.child(p));
+  if (f.numChildren() > 1) {
+    const Tree &s2 = f.second();
+    for (int p=0;p<s2.numChildren();p++)
+      multiexpr(x,s2.child(p));
+  }
   pushList(args,x);
   reg_t func = fetchVariableOrFunction(funcname,x);  // FIXME - use args? or x?
   reg_t returns = getRegister();
