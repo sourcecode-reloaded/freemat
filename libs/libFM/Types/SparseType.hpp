@@ -44,7 +44,7 @@ namespace FM
     AggregateType<SparseData<T>,ValueSemantics>(ctxt), _classname(name), _dense(dense) {
       _name = name + " (sparse)";
     }
-    virtual void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {}
+    virtual void visitContainedObjects(const ObjectBase *, ObjectVisitor &) const {}
     virtual Object import(const Object &foreign) {return foreign;}
     const FMString& name() const {return _name;}
     PODType<T> *dense() const {return _dense;}

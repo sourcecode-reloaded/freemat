@@ -150,7 +150,6 @@ Tree Parser::multiFunctionCall() {
 // Generally, function names are identifiers, but certain object property getter/setters are allowed to have "get." or "set." as prefixes.
 Tree Parser::functionName() {
   Tree funcName(identifier());
-  std::cout << "funcName = " << funcName.text() << "\n";
   if (((funcName.text() == "get") || (funcName.text() == "set")) && match('.'))
     {
       FMString name = funcName.text();

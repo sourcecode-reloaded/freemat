@@ -87,7 +87,7 @@ namespace FM
     Object m_setter;   // Setter (if it has one)
     ndx_t m_index;       // Index into the object instance's list of properties
     ClassPropertyMetaData(ThreadContext *_ctxt) : m_constant(false),
-      m_default(_ctxt), m_dependent(false), m_getter(_ctxt),
+      m_dependent(false), m_default(_ctxt), m_getter(_ctxt),
       m_setter(_ctxt), m_index(0) {}
   };
 
@@ -110,7 +110,7 @@ namespace FM
     void addProperty(Object &meta, const Object &name, bool constant, 
 		     bool dependent, const Object &default_value,
 		     const Object &getter, const Object &setter);
-    void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {}
+    void visitContainedObjects(const ObjectBase *, ObjectVisitor &) const {}
     void addMethod(Object &meta, const Object &name, const Object &definition, bool is_static);
     void addSuperClass(Object &meta, const Object &super);
     void addEvent(Object &meta, const Object &event);
@@ -119,7 +119,7 @@ namespace FM
     //    Object empty();
     virtual FMString describe(const Object &a);
     virtual FMString brief(const Object &a);
-    virtual bool equals(const Object &a, const Object &b)
+    virtual bool equals(const Object &, const Object &)
     {
       return false;
     }
@@ -228,7 +228,7 @@ namespace FM
     //    virtual void setParens(Object &a, const Object &args, const Object &b);
     virtual bool hasMethod(const Object &a, const Object &name, Object &ret);
     const Object & className(const Object &a) const {return _ctxt->_meta->ro(this->ro(a)->metaClass)->m_name;}
-    virtual bool equals(const Object &a, const Object &b)
+    virtual bool equals(const Object &, const Object &)
     {
       // FIXME - allow equality tests
       return false;

@@ -129,7 +129,7 @@ inline static void dispatch_reduce(Output *op, const Input *ip, ndx_t reduxlen, 
       Op::func(op+(ptr++),ip+page*stride*reduxlen+row,reduxlen,stride);
 }
 
-Object reduce(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object reduce(const Object &args, ndx_t, ThreadContext *ctxt) {
   ndx_t dim = 0;
   if (args.count() > 1)
     dim = (ndx_t)(ctxt->_list->second(args).asDouble()) - 1;
@@ -149,13 +149,8 @@ Object reduce(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ret);
 }
 
-// All - is a reduction operation
-Object all(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
-  
-}
 
-
-Object strcmp(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object strcmp(const Object &args, ndx_t, ThreadContext *ctxt) {
   if (args.count() != 2) throw Exception("strcmp requires two arguments");
   const Object &x = ctxt->_list->first(args);
   const Object &y = ctxt->_list->second(args);
@@ -164,7 +159,7 @@ Object strcmp(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->_bool->makeScalar(false));
 }
 
-Object size(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object size(const Object &args, ndx_t, ThreadContext *ctxt) {
   Tuple dims(Tuple::canonicalForm(ctxt->_list->ro(args)[0].dims()));
   Object ret(ctxt->_double->makeMatrix(1,dims.dimensions()));
   for (auto i=0;i<dims.dimensions();i++)
@@ -172,19 +167,19 @@ Object size(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ret);
 }
 
-Object print(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object print(const Object &args, ndx_t, ThreadContext *ctxt) {
   ctxt->_io->output("\n\nPrint:" + args.description() + "\n\n");
   return ctxt->_list->empty();
 }
 
-Object handir(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object handir(const Object &, ndx_t, ThreadContext *ctxt) {
   for (auto p : ctxt->_handles) {
     ctxt->_io->output(" Handle class: " + Stringify(p) + "\n");
   }
   return ctxt->_list->empty();
 }
 
-Object numel(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object numel(const Object & args, ndx_t, ThreadContext *ctxt) {
 	return ctxt->_list->makeScalar(ctxt->_double->makeScalar(double(ctxt->_list->ro(args)[0].count())));
 }
 
@@ -197,51 +192,51 @@ Object tot_T(const Object &args, ThreadContext *ctxt, T* real_type, S* comp_type
     return ctxt->_list->makeScalar(real_type->convert(arg));
 }
 
-Object tot_int8(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object tot_int8(const Object &args, ndx_t, ThreadContext *ctxt) {
   return tot_T(args,ctxt,ctxt->t_int8,ctxt->t_zint8);
 }
 
-Object tot_int16(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object tot_int16(const Object &args, ndx_t, ThreadContext *ctxt) {
   return tot_T(args,ctxt,ctxt->t_int16,ctxt->t_zint16);
 }
 
-Object tot_int32(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object tot_int32(const Object &args, ndx_t, ThreadContext *ctxt) {
   return tot_T(args,ctxt,ctxt->t_int32,ctxt->t_zint32);
 }
 
-Object tot_int64(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object tot_int64(const Object &args, ndx_t, ThreadContext *ctxt) {
   return tot_T(args,ctxt,ctxt->t_int64,ctxt->t_zint64);
 }
 
-Object to_uint8(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object to_uint8(const Object &args, ndx_t, ThreadContext *ctxt) {
   return tot_T(args,ctxt,ctxt->_uint8,ctxt->_zuint8);
 }
 
-Object to_uint16(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object to_uint16(const Object &args, ndx_t, ThreadContext *ctxt) {
   return tot_T(args,ctxt,ctxt->_uint16,ctxt->_zuint16);
 }
 
-Object to_uint32(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object to_uint32(const Object &args, ndx_t, ThreadContext *ctxt) {
   return tot_T(args,ctxt,ctxt->_uint32,ctxt->_zuint32);
 }
 
-Object to_uint64(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object to_uint64(const Object &args, ndx_t, ThreadContext *ctxt) {
   return tot_T(args,ctxt,ctxt->_uint64,ctxt->_zuint64);
 }
 
-Object to_double(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object to_double(const Object &args, ndx_t, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->_double->convert(ctxt->_list->ro(args)[0]));
 }
 
-Object to_single(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object to_single(const Object &args, ndx_t, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->_single->convert(ctxt->_list->ro(args)[0]));
 }
 
-Object backtrace(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object backtrace(const Object &, ndx_t, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(ctxt->_vm->backtrace());
 }
 
-Object mksparse(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object mksparse(const Object &args, ndx_t, ThreadContext *ctxt) {
   const Object &x = ctxt->_list->ro(args)[0];
   if (x.isComplex())
     return ctxt->_list->makeScalar(ctxt->_spcomplex->convert(x));
@@ -249,7 +244,7 @@ Object mksparse(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
     return ctxt->_list->makeScalar(ctxt->_spdouble->convert(x));
 }
 
-Object full(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object full(const Object &args, ndx_t, ThreadContext *ctxt) {
   const Object &x = ctxt->_list->ro(args)[0];
   switch (x.typeCode()) {
   case TypeSparseLogical:
@@ -263,7 +258,7 @@ Object full(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   }
 }
 
-Object dblist(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object dblist(const Object &, ndx_t, ThreadContext *ctxt) {
   if (ctxt->_globals->isDefined("_dblist"))
     {
       Object dblist = ctxt->_globals->get("_dblist",ctxt);
@@ -275,7 +270,7 @@ Object dblist(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
 
 // Create an addlistener method for the handle class
 
-Object classfunc(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object classfunc(const Object &args, ndx_t, ThreadContext *ctxt) {
   const Object &x = ctxt->_list->ro(args)[0];
   if (!x.isClass())
     return ctxt->_list->makeScalar(ctxt->_string->makeString(x.type()->name()));
@@ -283,18 +278,16 @@ Object classfunc(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
     return ctxt->_list->makeScalar(ctxt->_class->className(x));
 }
 
-int main(int argc, char *argv[])
+int main(int , char *[])
 {
 
   assert(sizeof(Complex<char>) == 2*sizeof(char));
 
   StdIOTermIF io;
-  std::mutex *lock = new std::mutex;
-  std::map<FMString,Object> *globals = new std::map<FMString,Object>();
   
   ThreadContext *ctxt = ThreadContext::BuildNewThreadContext(&io); // Global context
   //  globals->insert(std::make_pair("_dblist",ctxt->_cell->empty()));
-  ctxt->_globals = new Globals(ctxt); // shared by all
+  ctxt->_globals = new Globals(); // shared by all
 
   makeHandleClass(ctxt);
   //  makeListenerClass(ctxt);
@@ -433,7 +426,7 @@ int main(int argc, char *argv[])
     Object a = ctxt->_double->makeScalar(3.14);
     // Create a capture of it
     Object cap1 = ctxt->_captured->makeScalar();
-    ctxt->_captured->set(cap1,a);
+    ctxt->_captured->setContents(cap1,a);
     // Insert cap1 as a variable in the global workspace
     ctxt->_globals->set("cap1",cap1);
 
@@ -452,7 +445,7 @@ int main(int argc, char *argv[])
   ctxt->_globals->set("size",ctxt->_module->builtin("size",size));
   ctxt->_globals->set("print",ctxt->_module->builtin("print",print));
   ctxt->_globals->set("handir",ctxt->_module->builtin("handir",handir));
-  ctxt->_globals->set("all",ctxt->_module->builtin("all",all));
+  //  ctxt->_globals->set("all",ctxt->_module->builtin("all",all));
   ctxt->_globals->set("strcmp",ctxt->_module->builtin("strcmp",strcmp));
   ctxt->_globals->set("numel",ctxt->_module->builtin("numel",numel));
   ctxt->_globals->set("int8",ctxt->_module->builtin("int8",tot_int8));
@@ -489,7 +482,7 @@ int main(int argc, char *argv[])
   // Look up the global symbol for cap1
   {
     Object cap1ref = ctxt->_globals->get("cap1",ctxt);
-    ctxt->_captured->set(cap1ref,ctxt->_double->makeScalar(2.78));
+    ctxt->_captured->setContents(cap1ref,ctxt->_double->makeScalar(2.78));
   }
 
   while (1)

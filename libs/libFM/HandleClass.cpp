@@ -72,7 +72,7 @@ Object addlistener(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
 }
 */
 
-Object is_valid_event(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object is_valid_event(const Object &args, ndx_t, ThreadContext *ctxt) {
   if (args.count() != 2)
     throw Exception("is_valid_event requires two arguments: obj, eventname");
   const Object &self = ctxt->_list->ro(args)[0];

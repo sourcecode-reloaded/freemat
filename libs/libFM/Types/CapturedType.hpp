@@ -28,11 +28,11 @@ namespace FM
     virtual FMString brief(const Object &captured) {
       return "<<" + this->ro(captured)->m_data.brief() + ">>";
     }
-    virtual bool equals(const Object &a, const Object &b) {
+    virtual bool equals(const Object &, const Object &) {
       return false;
     }
-    void set(Object &captured, const Object &contents) {this->rw(captured)->m_data = contents;}
-    Object get(const Object &captured) {return(this->ro(captured)->m_data);}
+    void setContents(Object &captured, const Object &contents) {this->rw(captured)->m_data = contents;}
+    Object getContents(const Object &captured) {return(this->ro(captured)->m_data);}
     Object import(const Object &foreign) {
       CapturedType *them = foreign.asType<CapturedType>();
       if (this == them) return foreign;

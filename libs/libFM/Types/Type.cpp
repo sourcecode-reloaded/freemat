@@ -9,36 +9,36 @@
 
 using namespace FM;
 
-Object Type::call(const Object &a, const Object &args, ndx_t nargout)
+Object Type::call(const Object &, const Object &, ndx_t )
 {
   throw Exception("call is unsupported for objects of type " + this->name());
 }
 
-Object Type::asLogical(const Object &a)
+Object Type::asLogical(const Object &)
 {
   throw Exception("asLogical(a) is unsupported for objects of type " + this->name());
 }
 
-Object Type::asIndex(const Object &a, ndx_t max)
+Object Type::asIndex(const Object &, ndx_t)
 {
   throw Exception("object of type " + this->name() + " cannot be used as an index");
 }
 
-Object Type::asIndexNoBoundsCheck(const Object &a)
+Object Type::asIndexNoBoundsCheck(const Object &)
 {
   throw Exception("object of type " + this->name() + " cannot be used as an index");  
 }
 
-Object Type::NCat(const Object &a, ndx_t dimension)
+Object Type::NCat(const Object &, ndx_t)
 {
   throw Exception("object of type " + this->name() + " does not support vcat/hcat");
 }
 
 #define NoSupportBinOp(x) \
-  Object Type::x(const Object &a, const Object &b) {throw Exception(#x " is unsupported for objects of type " + this->name());}
+  Object Type::x(const Object &, const Object &) {throw Exception(#x " is unsupported for objects of type " + this->name());}
 
 #define NoSupportUnaryOp(x) \
-  Object Type::x(const Object &a) {throw Exception(#x " is unsupported for objects of type " + this->name());}
+  Object Type::x(const Object &) {throw Exception(#x " is unsupported for objects of type " + this->name());}
 
 NoSupportBinOp(LessEquals);
 NoSupportBinOp(Add);
@@ -65,52 +65,52 @@ NoSupportUnaryOp(Plus);
 NoSupportUnaryOp(Transpose);
 NoSupportUnaryOp(Hermitian);
 
-Object Type::sliceColumn(const Object &a, ndx_t column) {
+Object Type::sliceColumn(const Object &, ndx_t) {
   throw Exception("Cannot use objects of type " + this->name() + " in expressions of the type for i=<object>");
 }
 
-Object Type::convert(const Object &a) {
+Object Type::convert(const Object &) {
   throw Exception("Cannot convert objects to type " + this->name());
 }
 
-Object Type::DoubleColon(const Object &a, const Object &b, const Object &c)
+Object Type::DoubleColon(const Object &, const Object &, const Object &)
 {
   throw Exception("Colon(a,b,c) is unsupported for objects of type " + this->name());
 }
 
-void Type::setParens(Object &a, const Object &args, const Object &b) {
+void Type::setParens(Object &, const Object &, const Object &) {
   throw Exception("() assignment is unsupported for objects of type " + this->name());
 }
 
-void Type::setBraces(Object &a, const Object &args, const Object &b) {
+void Type::setBraces(Object &, const Object &, const Object &) {
   throw Exception("{} assignment is unsupported for objects of type " + this->name());
 }
 
-void Type::setField(Object &a, const Object &args, const Object &b) {
+void Type::setField(Object &, const Object &, const Object &) {
   throw Exception(". (field) assignment is unsupported for objects of type " + this->name());
 }
 
-void Type::setFieldNoSetters(Object &a, const Object &args, const Object &b) {
+void Type::setFieldNoSetters(Object &, const Object &, const Object &) {
   throw Exception(". (field) assignment (no setters called) is unsupported for objects of type " + this->name());
 }
 
-Object Type::getParens(const Object &a, const Object &b) {
+Object Type::getParens(const Object &, const Object &) {
   throw Exception("() indexing is unsupported for objects of type " + this->name());
 }
 
-Object Type::getBraces(const Object &a, const Object &b) {
+Object Type::getBraces(const Object &, const Object &) {
   throw Exception("{} indexing is unsupported for objects of type " + this->name());
 }
 
-Object Type::getField(const Object &a, const Object &b) {
+Object Type::getField(const Object &, const Object &) {
   throw Exception(". indexing is unsupported for objects of type " + this->name());
 }
 
-Object Type::getFieldNoGetters(const Object &a, const Object &b) {
+Object Type::getFieldNoGetters(const Object &, const Object &) {
   throw Exception(". indexing (no getter calls) is unsupported for objects of type " + this->name());
 }
 
-void Type::resize(Object &a, const Tuple &newsize) {
+void Type::resize(Object &, const Tuple &) {
   throw Exception("resize is unsupported for objects of type " + this->name());
 }
 
@@ -118,7 +118,7 @@ void Type::print(const Object &a) {
   _ctxt->_io->output(a.description());
 }
 
-double Type::doubleValue(const Object &a) {
+double Type::doubleValue(const Object &) {
   throw Exception("Type " + this->name() + " cannot be converted to double scalar");
 }
 
@@ -223,7 +223,6 @@ void Type::set(Object &a, const Object &args, const Object &b, bool invokeSetter
     }
   else
     {
-      ndx_t arg_count = args.count();
       Object args_rest = args;
       Object args_first = _ctxt->_list->empty();
       _ctxt->_list->push(args_first,_ctxt->_list->first(args_rest));

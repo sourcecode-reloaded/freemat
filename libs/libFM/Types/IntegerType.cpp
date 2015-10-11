@@ -5,8 +5,6 @@
 
 using namespace FM;
 
-const int MSGBUFLEN = 100;
-
 template <class S>
 static void printToStream(TermIF *io, int width, const S& val) {
   io->output("% *lld",width,(int64_t)(val));

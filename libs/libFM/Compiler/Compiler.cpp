@@ -949,12 +949,10 @@ reg_t Compiler::doGetMethod(const Tree &t) {
 
 reg_t Compiler::anonymousFunction(const Tree &t) {
   FMString fname = "anon" + Stringify(t.first().context());
-  symbol_flags_t symflags = _code->_syms->syms[fname];
   // Compile the function
   CodeBlock *save_code = _code;
   CodeBlock *cp = new CodeBlock(_ctxt);
   save_code->_nested.push_back(cp);
-  SymbolTable *_saveSym = _currentSym;
   cp->_syms = _currentSym->childNamed(fname);
   if (!cp->_syms)
     throw Exception("Internal compiler error - unable to find symbol table for anonymous function");
@@ -1176,7 +1174,7 @@ void Compiler::specialFunctionCall(const Tree &t, bool printIt) {
   saveRegisterToName("ans",toprint);
 }
 
-void Compiler::multiFunctionCall(const Tree & t, bool printIt) {
+void Compiler::multiFunctionCall(const Tree & t, bool) {
   if (!t.first().is(TOK_BRACKETS))
     throw Exception("Illegal left hand side in multifunction expression");
   t.print();
@@ -2006,6 +2004,7 @@ void FM::DumpBasicBlock(BasicBlock *b, int offset)
     PrintInsn(i+offset,b->_insnlist[i]);
 }
 
+/*
 static void PrintRawInsn(int ip, insn_t insn)
 {
   printf("%03d   %016llx %03x %03x %03x %06x ",ip,insn,reg1(insn),reg2(insn),reg3(insn),get_constant(insn));
@@ -2014,6 +2013,7 @@ static void PrintRawInsn(int ip, insn_t insn)
   printf("%-25s",Compiler::opcodeDecode(opcode,insn).c_str());
   printf("\n");
 }
+*/
 
 static void PrintInsn(uint16_t lineno, int ip, insn_t insn)
 {

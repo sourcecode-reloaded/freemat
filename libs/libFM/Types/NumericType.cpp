@@ -133,6 +133,36 @@ Object NumericType<T>::convert(const Object &a)
     case TypeUInt64:
       convertLoop<T,uint64_t>(Type::_ctxt->_uint64->ro(a),op,len);
       break;
+    case TypeZSingle:
+      convertLoop<T,Complex<float> >(Type::_ctxt->_zsingle->ro(a),op,len);
+      break;
+    case TypeZDouble:
+      convertLoop<T,Complex<double> >(Type::_ctxt->_zdouble->ro(a),op,len);
+      break;
+    case TypeZInt8:
+      convertLoop<T,Complex<int8_t> >(Type::_ctxt->t_zint8->ro(a),op,len);
+      break;
+    case TypeZUInt8:
+      convertLoop<T,Complex<uint8_t> >(Type::_ctxt->_zuint8->ro(a),op,len);
+      break;
+    case TypeZInt16:
+      convertLoop<T,Complex<int16_t> >(Type::_ctxt->t_zint16->ro(a),op,len);
+      break;
+    case TypeZUInt16:
+      convertLoop<T,Complex<uint16_t> >(Type::_ctxt->_zuint16->ro(a),op,len);
+      break;
+    case TypeZInt32:
+      convertLoop<T,Complex<int32_t> >(Type::_ctxt->t_zint32->ro(a),op,len);
+      break;
+    case TypeZUInt32:
+      convertLoop<T,Complex<uint32_t> >(Type::_ctxt->_zuint32->ro(a),op,len);
+      break;
+    case TypeZInt64:
+      convertLoop<T,Complex<int64_t> >(Type::_ctxt->t_zint64->ro(a),op,len);
+      break;
+    case TypeZUInt64:
+      convertLoop<T,Complex<uint64_t> >(Type::_ctxt->_zuint64->ro(a),op,len);
+      break;
     default:
       throw Exception("Type conversion from " + a.type()->name() + " to " + this->name() + " is unsupported.");
     }
@@ -140,7 +170,7 @@ Object NumericType<T>::convert(const Object &a)
 }
 
 /*
-template <typename T, FM::DataCode codeNum>
+  template <typename T,Complex< FM::DataCode codeNum> >
 Object NumericType<T,codeNum>::realPart(const Object &a) {
   if (!a.isComplex()) return a;
   Object ret = this->zeroArrayOfSize(a.dims());
@@ -177,7 +207,7 @@ bool NumericType<T>::isIntegerValued(const Object &a) {
   if (a.isComplex()) return false;
   const T* dp = this->ro(a);
   for (ndx_t i=0;i<a.count();i++)
-    if (dp[i] != int(dp[i])) return false;
+    if (dp[i] != T(ndx_t(dp[i]))) return false;
   return true;
 }
 

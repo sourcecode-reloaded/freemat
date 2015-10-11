@@ -9,10 +9,11 @@ namespace FM
   template <class T, class S>
   struct OpRangeConvert
   {
+    // FIXME - does using double here break int64?
     inline static void rangeConvert(T& y, const S& x) {
-      if (x < std::numeric_limits<T>::min())
+      if (double(x) < double(std::numeric_limits<T>::min()))
 	y = std::numeric_limits<T>::min();
-      else if (x > std::numeric_limits<T>::max())
+      else if (double(x) > double(std::numeric_limits<T>::max()))
 	y = std::numeric_limits<T>::max();
       else
 	y = (T)(x);

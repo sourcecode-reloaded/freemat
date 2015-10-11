@@ -48,11 +48,11 @@ namespace FM
 			      _return(0), _dynamic(0),
 			      _free(0), _captured(0), _nested(0),
 			      _property(0), _method(0), _constructor(0),
-			      _getter(0), _setter(0), param_position(0), 
-			      return_position(0), property_position(0),
+			      _getter(0), _setter(0), 
 			      _static(0), _constant(0), _dependent(0),
 			      _super(0), _explicit(0), _object(0), _event(0),
-			      _subsref(0), _subsasgn(0) {} 
+			      _subsref(0), _subsasgn(0), param_position(0), 
+			      return_position(0), property_position(0) {} 
 
     inline bool is_global() const {return _global != 0;}
     inline bool is_persistent() const {return _persistent != 0;}

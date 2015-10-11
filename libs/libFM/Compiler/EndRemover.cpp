@@ -21,7 +21,6 @@ static bool hasEnd(const Tree &t) {
 }
 
 static bool childrenHaveEnd(const Tree &t) {
-  bool anyEnd = false;
   for (int index=0;index < t.numChildren();++index)
     if (hasEnd(t.child(index))) return true;
   return false;

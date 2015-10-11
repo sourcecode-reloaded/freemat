@@ -27,7 +27,7 @@ namespace FM
   class ModuleType : public AggregateType<ModuleData,HandleSemantics> {
   public:
     ModuleType(ThreadContext *ctxt) : AggregateType<ModuleData,HandleSemantics> (ctxt) {}
-    void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {}
+    void visitContainedObjects(const ObjectBase *, ObjectVisitor &) const {}
     virtual DataCode code() const {return TypeModule;}
     virtual const FMString& name() const {static FMString _name = "module"; return _name;}
     Object import(const Object& foreign) {
@@ -56,7 +56,7 @@ namespace FM
       return ret;
     }
     virtual FMString brief(const Object &module) {return FMString("Module ") + this->ro(module)->m_name;}
-    virtual bool equals(const Object &a, const Object &b)
+    virtual bool equals(const Object &, const Object &)
     {
       return false;
     }

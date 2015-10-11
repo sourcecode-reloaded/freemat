@@ -4,8 +4,6 @@
 
 using namespace FM;
 
-Globals::Globals(ThreadContext *ctxt) : _myctxt(ctxt) {}
-
 void Globals::set(const FMString &name, const Object &value) {
   std::lock_guard<std::mutex> lock(this->_lock);
   auto p = _dict.find(name);

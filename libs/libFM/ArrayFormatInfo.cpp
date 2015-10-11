@@ -6,7 +6,7 @@
 namespace FM
 {
   template <class T>
-  ArrayFormatInfo GetArrayFormatForPOD(FMFormatMode formatMode, T x = 0) {
+  ArrayFormatInfo GetArrayFormatForPOD(FMFormatMode formatMode) {
     switch (formatMode)
       {
       case format_short:
@@ -23,7 +23,7 @@ namespace FM
   }
 
   template <>
-  ArrayFormatInfo GetArrayFormatForPOD(FMFormatMode formatMode, char) {
+  ArrayFormatInfo GetArrayFormatForPOD<char>(FMFormatMode) {
     ArrayFormatInfo p(1,1,false,0,false,1.0);
     p.needs_space = false;
     return p;
@@ -32,7 +32,7 @@ namespace FM
 
   //Visually Tuned
   template <>
-  ArrayFormatInfo GetArrayFormatForPOD(FMFormatMode formatMode, float) {
+  ArrayFormatInfo GetArrayFormatForPOD<float>(FMFormatMode formatMode) {
     switch (formatMode)
       {
       case format_short:
@@ -50,7 +50,7 @@ namespace FM
 
   //Visually Tuned
   template <>
-  ArrayFormatInfo GetArrayFormatForPOD(FMFormatMode formatMode, double) {
+  ArrayFormatInfo GetArrayFormatForPOD<double>(FMFormatMode formatMode) {
     switch (formatMode)
       {
       case format_short:
@@ -69,7 +69,7 @@ namespace FM
 
   //Visually Tuned
   template <>
-  ArrayFormatInfo GetArrayFormatForPOD(FMFormatMode formatMode, Complex<float>) {
+  ArrayFormatInfo GetArrayFormatForPOD<cfloat>(FMFormatMode formatMode) {
     switch (formatMode)
       {
       case format_short:
@@ -87,7 +87,7 @@ namespace FM
 
   //Visually Tuned
   template <>
-  ArrayFormatInfo GetArrayFormatForPOD(FMFormatMode formatMode, Complex<double>) {
+  ArrayFormatInfo GetArrayFormatForPOD<cdouble>(FMFormatMode formatMode) {
     switch (formatMode)
       {
       case format_short:
@@ -123,11 +123,11 @@ namespace FM
     if (format.expformat) return;
     bool finiteElementFound = false;
     for (ndx_t i=0;i<count;i++) {
-      if (std::isfinite(array[i]) && !finiteElementFound) {
+      if (isfinite(array[i]) && !finiteElementFound) {
 	max_amplitude = array[i];
 	finiteElementFound = true;
       }
-      if ((std::isfinite(array[i])) && 
+      if ((isfinite(array[i])) && 
 	  (fabs((double) array[i]) > fabs((double) max_amplitude)))
 	max_amplitude = array[i];
     }
@@ -142,17 +142,17 @@ namespace FM
     if (format.expformat) return;
     bool finiteElementFound = false;
     for (ndx_t i=0;i<count;i++) {
-      if (std::isfinite(array[i].r) && !finiteElementFound) {
+      if (isfinite(array[i].r) && !finiteElementFound) {
 	max_amplitude = array[i].r;
 	finiteElementFound = true;
       }
-      if (std::isfinite(array[i].i) && !finiteElementFound) {
+      if (isfinite(array[i].i) && !finiteElementFound) {
 	max_amplitude = array[i].i;
 	finiteElementFound = true;
       }
-      if (std::isfinite(array[i].r) && fabs((double)array[i].r) > fabs((double)max_amplitude))
+      if (isfinite(array[i].r) && fabs((double)array[i].r) > fabs((double)max_amplitude))
 	max_amplitude = array[i].r;
-      if (std::isfinite(array[i].i) && fabs((double)array[i].i) > fabs((double)max_amplitude))
+      if (isfinite(array[i].i) && fabs((double)array[i].i) > fabs((double)max_amplitude))
 	max_amplitude = array[i].i;
     }
     if (!finiteElementFound) return;
@@ -167,7 +167,7 @@ namespace FM
   }
 
   static inline bool isIntegerLike(double t) {
-    return (std::isfinite(t) &&
+    return (isfinite(t) &&
 	    ((ndx_t)(t) == t) &&
 	    (t > -10000) &&
 	    (t < 10000));
@@ -313,7 +313,7 @@ namespace FM
       io->output("NaN");
       return;
     }
-    if (!std::isfinite(val)) {
+    if (!isfinite(val)) {
       if (val > 0)
 	io->output("Inf");
       else
@@ -341,7 +341,7 @@ namespace FM
       sprintf(buffer,"NaN");
       return FMString(buffer);
     }
-    if (!std::isfinite(val)) {
+    if (!isfinite(val)) {
       if (val > 0)
 	sprintf(buffer,"Inf");
       else
@@ -378,12 +378,11 @@ namespace FM
     if (format.pure_imag) {
       return FormattedNumber(format,val.i) + FMString(" i");
     }
-    char buffer[4096];
     if ((val.r == 0) && (val.i==0)) {
       return FMString("0").rightJustified(format.number_width).leftJustified(format.total_width);
     }
     FMString build = FormattedNumber(format,val.r);
-    if ((!std::isfinite(val.i)) || (val.i >= 0)) {
+    if ((!isfinite(val.i)) || (val.i >= 0)) {
       build += FMString(" + ");
       build += FormattedNumber(format,val.i).trimmed().append(" i").leftJustified(format.number_width+2);
     } else {

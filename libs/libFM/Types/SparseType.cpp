@@ -4,7 +4,6 @@
 namespace FM {
 
   
-  static const int SPARSE_OP_NORMAL = 0;
   static const int SPARSE_OP_IS_BOOL_VALUED = 1;
   static const int SPARSE_OP_PRESERVES_SPARSITY = 2;
 

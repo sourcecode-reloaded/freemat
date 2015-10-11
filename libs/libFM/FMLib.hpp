@@ -12,7 +12,7 @@
 #include <map>
 #include <sys/types.h>
 #include <boost/shared_ptr.hpp>
-#include <boost/thread.hpp>
+//#include <boost/thread.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/tokenizer.hpp>
@@ -614,27 +614,27 @@ public:
 };
 
 
-class FMMutex : public boost::mutex
-{
+// class FMMutex : public boost::mutex
+// {
   
-};
+// };
 
-class FMWaitCondition : public boost::condition_variable
-{
-};
+// class FMWaitCondition : public boost::condition_variable
+// {
+// };
 
 
-class FMThread
-{
-};
+// class FMThread
+// {
+// };
 
-class FMMutexLocker
-{
-  FMMutex *p;
-public:
-  FMMutexLocker(FMMutex *ptr) : p(ptr) {p->lock();}
-  ~FMMutexLocker() {p->unlock();}
-};
+// class FMMutexLocker
+// {
+//   FMMutex *p;
+// public:
+//   FMMutexLocker(FMMutex *ptr) : p(ptr) {p->lock();}
+//   ~FMMutexLocker() {p->unlock();}
+// };
 
 typedef std::ostream FMTextStream;
 

@@ -707,7 +707,6 @@ Object ArrayType<T>::NCat(const Object& p, ndx_t dim)
   ndx_t outputCount = outputSize.count();
   unsigned k = 0;
   T* op = this->rw(retObject);
-  T zero(this->zeroElement());
   while (outputOffset < outputCount)
     {
       copyPage<T>(op,outputOffset,pointers[k],offsets[k],pagesize[k]);

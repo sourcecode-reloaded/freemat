@@ -5,7 +5,7 @@
 
 using namespace FM;
 
-ClassMetaData::ClassMetaData(ThreadContext *_ctxt) : m_name(_ctxt), m_defaults(_ctxt), m_events(_ctxt), m_constructor(_ctxt) {
+ClassMetaData::ClassMetaData(ThreadContext *_ctxt) : m_name(_ctxt), m_constructor(_ctxt), m_events(_ctxt), m_defaults(_ctxt)  {
   m_defaults = _ctxt->_list->empty();
   m_events = _ctxt->_list->empty();
   m_constructor = _ctxt->_function->empty();
@@ -22,7 +22,6 @@ Object ClassMetaType::getField(const Object &meta, const Object &fieldname) {
 }
 
 Object ClassMetaType::getParens(const Object &meta, const Object &b) {
-  const ClassMetaData *cmd = this->ro(meta);
   // Construct the object
   Object obj = this->construct(meta);
   return this->invokeConstructor(meta,obj,b);
@@ -59,7 +58,6 @@ Object ClassMetaType::construct(const Object &meta) {
 }
 
 Object ClassMetaType::deref(const Object &meta) {
-  const ClassMetaData *cmd = this->ro(meta);
   Object obj = this->construct(meta);
   Object args = _ctxt->_list->empty();
   return this->invokeConstructor(meta,obj,args);

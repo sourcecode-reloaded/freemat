@@ -5,7 +5,7 @@
 
 using namespace FM;
 
-void CellType::printElement(const Object &a, const ArrayFormatInfo &info, ndx_t ndx) {
+void CellType::printElement(const Object &a, const ArrayFormatInfo &, ndx_t ndx) {
   const Object *t = this->ro(a);
   _ctxt->_io->output("[" + t[ndx].description() + "]");
 }

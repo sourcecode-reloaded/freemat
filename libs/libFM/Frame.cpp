@@ -140,9 +140,9 @@ bool Frame::getLocalVariableSlow(const FMString &name, Object &value)
 Frame::Frame(ThreadContext *ctxt) : _sym_names(ctxt->_list->empty()), 
 				    _vars(ctxt->_list->empty()), 
 				    _addrs(ctxt->_index->empty()),
+				    _captures(ctxt->_list->empty()),
 				    _defined(ctxt->_bool->empty()),
 				    _module(ctxt->_module->empty()),
-				    _captures(ctxt->_list->empty()),
 				    _code(ctxt->_code->empty())
 {
   _ctxt = ctxt;

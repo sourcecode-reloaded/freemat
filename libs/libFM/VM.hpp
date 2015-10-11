@@ -30,7 +30,6 @@ namespace FM
     Object _modules;
     std::vector<Frame*> _frames;
     int _fp;
-    int _fpmax;
     int _rp;
     ThreadContext *_ctxt;
     Object _exception;

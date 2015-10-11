@@ -37,7 +37,6 @@ inline void rle_encode_line_nos(const std::vector<uint16_t> &line_dat, std::vect
 inline void rle_decode_line_nos(const uint32_t *p, unsigned cnt, std::vector<uint16_t> &line_dat)
 {
   line_dat.clear();
-  int ptr = 0;
   for (unsigned i=0;i<cnt;i++) {
     uint16_t rval;
     uint32_t rcnt;

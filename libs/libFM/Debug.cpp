@@ -69,19 +69,18 @@ static void ParseDBCommandArgs(ThreadContext *ctxt, const Object &args, dbargs& 
   }
 }
 
-Object FM::dbquit(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object FM::dbquit(const Object &args, ndx_t, ThreadContext *) {
   if (args.count() == 0)
     throw VMDBQuitException();
   throw VMDBQuitException(-1);
 }
 
-Object FM::dbcont(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object FM::dbcont(const Object &, ndx_t, ThreadContext *ctxt) {
   ctxt->_vm->signalReturn();
   return ctxt->_list->empty();
 }
 
-Object FM::dbclear(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
-  const Object *rp = ctxt->_list->ro(args);
+Object FM::dbclear(const Object &args, ndx_t, ThreadContext *ctxt) {
   if (args.count() == 0) return ctxt->_list->empty();
   dbargs cmd_args;
   ParseDBCommandArgs(ctxt,args,cmd_args);
@@ -112,9 +111,8 @@ Object FM::dbclear(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   return ctxt->_list->empty(); // Nothing to do.
 }
 
-Object FM::dbstop(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object FM::dbstop(const Object &args, ndx_t, ThreadContext *ctxt) {
   std::cout << "DBSTOP called: " << args.description() << "\n";
-  const Object *rp = ctxt->_list->ro(args);
   // There is a mini-grammar for dbstop
   dbargs cmd_args;
   ParseDBCommandArgs(ctxt,args,cmd_args);
@@ -148,7 +146,7 @@ Object FM::dbstop(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   return ctxt->_list->makeScalar(bp);
 }
 
-Object FM::dbup(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object FM::dbup(const Object &, ndx_t, ThreadContext *ctxt) {
   Frame *t = ctxt->_vm->activeFrame();
   Frame *debug = t;
   while (debug && (debug->_type != FrameTypeCode::Debug))
@@ -173,7 +171,7 @@ Object FM::dbup(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   return ctxt->_list->empty();
 }
 
-Object FM::dbdown(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object FM::dbdown(const Object &, ndx_t, ThreadContext *ctxt) {
   Frame *t = ctxt->_vm->activeFrame();
   Frame *debug = t;
   while (debug && (debug->_type != FrameTypeCode::Debug))
@@ -198,7 +196,7 @@ Object FM::dbdown(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
   return ctxt->_list->empty();  
 }
 
-Object FM::dbstep(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object FM::dbstep(const Object &args, ndx_t, ThreadContext *ctxt) {
   std::cout << "DBSTEP called: " << args.description() << "\n";
   // Skip parsing the arguments for now...
   Frame *t = ctxt->_vm->activeFrame();

@@ -17,7 +17,7 @@ namespace FM
 {
   struct ThreadContext;
   
-  const size_t min_capacity = 100;
+  const ndx_t min_capacity = 100;
 
   template <class T>
   class ArrayType : public Type {

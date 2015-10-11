@@ -4,6 +4,7 @@
 #ifdef NDEBUG
 #define DBOUT(x)
 #else
+#include <iostream>
 #define DBOUT(x)  x
 #endif
 

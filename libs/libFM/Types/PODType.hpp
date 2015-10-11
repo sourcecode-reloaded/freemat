@@ -17,11 +17,11 @@ namespace FM
   class PODType : public ArrayType<T> {
     virtual void* allocateArray(ndx_t size) const {return calloc(size_t(size),sizeof(T));}
     virtual void releaseData(T* dst, ndx_t size) const {memset(dst,0,size_t(sizeof(T)*size));} // No release required
-    virtual void freeData(T* ptr, ndx_t size) const {free(ptr);}
+    virtual void freeData(T* ptr, ndx_t) const {free(ptr);}
     virtual T zeroElement() const {return T();}
   public:
     PODType(ThreadContext* ctxt, const FMString &name) : ArrayType<T>(ctxt,name) {}
-    void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {}
+    void visitContainedObjects(const ObjectBase *, ObjectVisitor &) const {}
     FMString brief(const Object &a) {
       return this->describe(a);
     }

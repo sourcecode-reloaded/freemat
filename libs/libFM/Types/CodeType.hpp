@@ -36,8 +36,8 @@ namespace FM
     CodeType(ThreadContext *ctxt) : AggregateType<CodeData,ValueSemantics>(ctxt) {}
     virtual DataCode code() const {return TypeCode;}
     virtual const FMString& name() const {static FMString _name = "code"; return _name;}
-    void visitContainedObjects(const ObjectBase *p, ObjectVisitor &visitor) const {}
-    bool equals(const Object &a, const Object &b) {
+    void visitContainedObjects(const ObjectBase *, ObjectVisitor &) const {}
+    bool equals(const Object &, const Object &) {
       throw Exception("Code type doesn't support equals yet.");
     }
     virtual FMString describe(const Object &a);

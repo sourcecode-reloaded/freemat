@@ -425,7 +425,7 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
 	{
 	  ndx_t capture_slot = param_ndx[i] % 1000;
 	  DBOUT(std::cout << "Parameter " << i << " put into cell " << capture_slot << "\n");
-	  _ctxt->_captured->set(_ctxt->_list->rw(_frames[_fp]->_captures)[capture_slot],args[i]);
+	  _ctxt->_captured->setContents(_ctxt->_list->rw(_frames[_fp]->_captures)[capture_slot],args[i]);
 	}
     }
   if (varargin_case)
@@ -456,7 +456,7 @@ Object VM::executeFunction(const Object &functionObject, const Object &parameter
 	{
 	  ndx_t capture_slot = return_ndx[i] % 1000;
 	  DBOUT(std::cout << "Return " << i << " taken from cell " << capture_slot << "\n");
-	  _ctxt->_list->push(retvec,_ctxt->_captured->get(_ctxt->_list->ro(_frames[_fp]->_captures)[capture_slot]));
+	  _ctxt->_list->push(retvec,_ctxt->_captured->getContents(_ctxt->_list->ro(_frames[_fp]->_captures)[capture_slot]));
 	}
     }
   if (varargout_case) {
@@ -915,7 +915,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	      case OP_LOAD_CELL:
 		{
 		  int ndx = get_constant(insn);
-		  REG1 = _ctxt->_captured->get(capturesfile[ndx]);
+		  REG1 = _ctxt->_captured->getContents(capturesfile[ndx]);
 		  DBOUT(std::cout << "    CELL LOAD: " << REG1.description() << "\n");
 		  break;
 		}
@@ -929,7 +929,7 @@ void VM::executeCodeObject(const Object &codeObject)
 	      case OP_SAVE_CELL:
 		{
 		  int ndx = get_constant(insn);
-		  _ctxt->_captured->set(capturesfile[ndx],REG1);
+		  _ctxt->_captured->setContents(capturesfile[ndx],REG1);
 		  DBOUT(std::cout << "    CELL SAVE: " << REG1.description() << "\n");
 		  break;
 		}

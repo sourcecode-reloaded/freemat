@@ -28,7 +28,7 @@ void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS,
 	    double * RCOND, double * FERR, double * BERR,
 	    double * WORK, int * IWORK, int * INFO, ftnlen l1, ftnlen l2, ftnlen l3) {
   return dgesvx_(FACT,TRANS,N,NRHS,A,LDA,AF,LDAF,IPIV,EQUED,R,C,B,
-		 LDB,X,LDX,RCOND,FERR,BERR,WORK,IWORK,INFO,l1,l2,3);
+		 LDB,X,LDX,RCOND,FERR,BERR,WORK,IWORK,INFO,l1,l2,l3);
 }
 
 void Tgesvx(char* FACT, char* TRANS, int * N, int * NRHS, 

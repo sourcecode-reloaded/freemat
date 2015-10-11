@@ -44,8 +44,8 @@ namespace FM
 	ret = (ap[i] > ret) ? ap[i] : ret;
       return ret;
     }
-    virtual Object getBraces(const Object &a, const Object &b) {throw Exception("{} indexing unsupported for numeric arrays");}
-    virtual Object getField(const Object &a, const Object &b) {throw Exception(". indexing unsupported for numeric arrays");}
+    virtual Object getBraces(const Object &, const Object &) {throw Exception("{} indexing unsupported for numeric arrays");}
+    virtual Object getField(const Object &, const Object &) {throw Exception(". indexing unsupported for numeric arrays");}
     virtual Object convert(const Object &a);
     bool anyNonzeroImaginary(const Object &a);
     bool isNonNegative(const Object &a);

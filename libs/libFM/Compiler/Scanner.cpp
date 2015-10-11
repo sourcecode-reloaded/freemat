@@ -24,6 +24,7 @@
 #include "Exception.hpp"
 #include <algorithm>
 #include "FMLib.hpp"
+#include <mutex>
 
 using namespace FM;
 
@@ -31,7 +32,7 @@ static FMMap<FMString, TokenValueType> fm_reserved;
 
 static bool fm_reserved_initialized = false;
 
-FMMutex lock;
+std::mutex lock;
 static int TokenID = 1;
 
 void InitializeReservedTable() {
@@ -78,7 +79,7 @@ unsigned Scanner::contextNum() {
 
 void Scanner::setToken(TokenValueType tok, FMString text) {
   m_tok = Token(tok,m_ptr << 16 | m_linenumber,text);
-  FMMutexLocker locker(&lock);
+  std::lock_guard <std::mutex> locker(lock);
   m_tok.setUID(TokenID++);
 }
 

@@ -2,13 +2,6 @@
 
 using namespace FM;
 
-static Tree copyTree(const Tree &t) {
-  Tree ret(t.node());
-  for (int index=0;index<t.numChildren();++index)
-    ret.addChild(copyTree(t.child(index)));
-  return ret;
-}
-
 Tree NestedFunctionMoverPass::walkCode(const Tree &t) {
   Tree ret(t.node());
   // Pass 1, add the children that are not nested funcs

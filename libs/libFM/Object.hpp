@@ -133,11 +133,6 @@ namespace FM
 
   struct ThreadContext;
 
-  inline void debugTrap(FMString method, ObjectBase *p) {
-    std::cout << method << " count " << p->count() << " ptr " << p << " class " << p->type->name() << "\n";
-  }
-    
-
   // Need to add a default constructor for Object that
   // points to a global "Empty" object (maybe with its
   // own type?).
@@ -149,17 +144,13 @@ namespace FM
     inline Object(ObjectBase *p) : d(p) {
       assert(d);
       d->refcnt++;
-      //      if (isClass()) debugTrap("Create",d);
     }
     inline Object(const Object &copy) : d(copy.d) {
       d->refcnt++;
-      //      if (isClass()) debugTrap("Copy",d);
     }
     inline ~Object() {
-      bool isc = isClass();
       if ((--d->refcnt) == 0) {
 	d->type->destroyObject(d);
-	// if (isc) debugTrap("Delete",d);
 	d = 0;
       }
     }
@@ -271,16 +262,13 @@ namespace FM
       if (this == &copy) return *this;
       if ((--d->refcnt) == 0)
 	d->type->destroyObject(d);
-      //      if (isClass()) debugTrap("Assign_old",d);
       d = copy.d;
       assert(d);
       d->refcnt++;
-      //      if (isClass()) debugTrap("Assign_new",d);
       return *this;
     }
     inline void detach() 
     {
-      //      if (isClass()) debugTrap("Detach",d);
       if (!d->handle) {
 	if (d->refcnt > 1) {
 	  d = new ObjectBase(*d);

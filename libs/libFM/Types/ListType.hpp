@@ -112,7 +112,7 @@ namespace FM
     inline bool has(const Object &a, const Object &b) {
       return (this->indexOf(a,b) != -1);
     }
-    void computeArrayFormatInfo(FMFormatMode, const Object &a, ArrayFormatInfo &format) {
+    void computeArrayFormatInfo(FMFormatMode, const Object &, ArrayFormatInfo &format) {
       format.total_width = 80;
     }
     void printElement(const Object &a, const ArrayFormatInfo &info, ndx_t ndx);

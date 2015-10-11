@@ -485,6 +485,10 @@ namespace FM
     o << int(a.r) << "+" << int(a.i) << "i";
     return o;
   }
+
+
+  typedef Complex<float> cfloat;
+  typedef Complex<double> cdouble;
 }
 
 

@@ -14,7 +14,7 @@ namespace FM
     Object p = ctxt->_cell->makeMatrix(1,t.count());
     Object *q = ctxt->_cell->rw(p);
     const Object *h = ctxt->_list->ro(t);
-    for (size_t i=0;i<t.count();i++)
+    for (ndx_t i=0;i<t.count();i++)
       q[i] = h[i];
     return p;
   }

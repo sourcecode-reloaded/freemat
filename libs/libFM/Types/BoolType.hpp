@@ -13,10 +13,10 @@ namespace FM
     BoolType(ThreadContext *ctxt) : PODType<bool>(ctxt,"logical") {}
     virtual ~BoolType() {}
     virtual Type* typeInstance() {return this;}
-    virtual void computeArrayFormatInfo(FMFormatMode, const Object &a, ArrayFormatInfo &format) {
+    virtual void computeArrayFormatInfo(FMFormatMode, const Object &, ArrayFormatInfo &format) {
       format.total_width = 1;
     }
-    virtual void printElement(const Object &a, const ArrayFormatInfo &format, ndx_t ndx) {
+    virtual void printElement(const Object &a, const ArrayFormatInfo &, ndx_t ndx) {
       const bool* dp = this->ro(a);
       Type::_ctxt->_io->output("%d",dp[ndx]);
     }

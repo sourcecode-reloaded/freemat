@@ -23,7 +23,7 @@ Object AnonymousType::getParens(const Object &a, const Object &b)
   return _ctxt->_list->first(p);
 }
 
-Object AnonymousType::call(const Object &a, const Object &args, ndx_t nargout)
+Object AnonymousType::call(const Object &a, const Object &args, ndx_t)
 {
   const AnonymousData *ad = this->ro(a);
   return _ctxt->_vm->executeAnonymousFunction(ad->m_code,args,ad->m_captured);

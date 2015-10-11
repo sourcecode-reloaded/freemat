@@ -53,13 +53,13 @@ namespace FM
     virtual void setField(Object &a, const Object &args, const Object &b);
     virtual Object getParens(const Object &a, const Object &args);
     virtual void setParens(Object &a, const Object &args, const Object &b);
-    virtual Object NCat(const Object &p, int dim);
+    virtual Object NCat(const Object &p, ndx_t dim);
     virtual Object convert(const Object &a) {
       if (a.typeCode() == TypeStruct) return a;
       if (a.isEmpty()) return this->empty();
       throw Exception("Cannot convert objects of type " + a.type()->name() + " to structs");
     }
-    virtual bool equals(const Object &a, const Object &b)
+    virtual bool equals(const Object &, const Object &)
     {
       // FIXME - allow struct equality tests
       return false;

@@ -8,11 +8,10 @@ using connections = std::map<ObjectBase*,children_list>;
 
 namespace FM {
   class VisitAncestors : public ObjectVisitor {
-    ObjectBase* me;
     children_list &my_kids;
     ThreadContext *my_ctxt;
   public:
-    VisitAncestors(ObjectBase *root, children_list &descendents, ThreadContext *ctxt) : me(root), my_kids(descendents), my_ctxt(ctxt) 
+    VisitAncestors(ObjectBase *root, children_list &descendents, ThreadContext *ctxt) : my_kids(descendents), my_ctxt(ctxt) 
     {
       std::cout << "Initializing visitor with base " << root << "\n";
     }
@@ -29,7 +28,7 @@ namespace FM {
   };
 }
 
-Object FM::builtin_gc(const Object &args, ndx_t nargout, ThreadContext *ctxt) {
+Object FM::builtin_gc(const Object &, ndx_t, ThreadContext *ctxt) {
   // First, copy the refcnts to the gc_refcnts
   for (auto p: ctxt->_handles) {
     p->gc_count() = p->count();

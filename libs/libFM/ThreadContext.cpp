@@ -112,6 +112,10 @@ ThreadContext* FM::ThreadContext::BuildNewThreadContext(TermIF *io)
   ctxt->_uint16 = new UInt16Type(ctxt);
   ctxt->_uint32 = new UInt32Type(ctxt);
   ctxt->_uint64 = new UInt64Type(ctxt);
+  ctxt->_zuint8 = new ComplexUInt8Type(ctxt);
+  ctxt->_zuint16 = new ComplexUInt16Type(ctxt);
+  ctxt->_zuint32 = new ComplexUInt32Type(ctxt);
+  ctxt->_zuint64 = new ComplexUInt64Type(ctxt);
   ctxt->_struct = new StructType(ctxt);
   ctxt->_splogical = new SparseLogicalType(ctxt);
   ctxt->_spdouble = new SparseDoubleType(ctxt);

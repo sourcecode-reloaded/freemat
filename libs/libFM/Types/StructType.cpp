@@ -197,7 +197,7 @@ void StructType::setField(Object &a, const Object &args, const Object &b) {
   std::cout << "result: " << a.description() << "\n";
 }
 
-Object StructType::NCat(const Object &p, int dim) {
+Object StructType::NCat(const Object &p, ndx_t dim) {
   // Create a master list of fields
   const Object *ip = _ctxt->_list->ro(p);
   HashMap<int> group_fields;
@@ -229,7 +229,7 @@ Object StructType::expandStruct(const Object &s, const HashMap<int> &expanded_fi
   // Set up the permutation
   std::vector<int> permutation;
   const StructData *sd = this->ro(s);
-  auto oldfields_count = sd->m_fields.size();
+  ndx_t oldfields_count = sd->m_fields.size();
   permutation.resize(oldfields_count);
   for (auto field : sd->m_fields) 
     permutation[field.second] = expanded_fields.at(field.first);
