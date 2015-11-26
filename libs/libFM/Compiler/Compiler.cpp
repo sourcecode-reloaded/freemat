@@ -2079,13 +2079,13 @@ void FM::Disassemble(ThreadContext *_ctxt, const Object &p)
   std::cout << "Line No   : " << dp->m_lineno << "\n";
   std::vector<uint16_t> line_nos;
   rle_decode_line_nos(_ctxt->_uint32->ro(dp->m_lineno),
-			      unsigned(dp->m_lineno.count()),line_nos);
+		      unsigned(dp->m_lineno.count()),line_nos);
   Object code = dp->m_code;
-  const insn_t *opcodes = _ctxt->_uint64->ro(code);
+  const usint64_t *opcodes = _ctxt->_uint64->ro(code);
   std::cout << "Code: " << code.dims().count() << " length\n";
   //  assert(code.count() == line_nos.size());
   for (unsigned i=0;i<code.dims().count();++i)
-    PrintInsn(line_nos[i],i,opcodes[i]);
+    PrintInsn(line_nos[i],i,opcodes[i].val);
   for (ndx_t i=0;i<dp->m_consts.count();i++)
     if (cp[i].is(TypeCode) || cp[i].is(TypeFunction))
       {

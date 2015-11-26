@@ -29,11 +29,11 @@ namespace FM
 	case TypeDouble:
 	  return dispatch_binop<float,double,double,Op>(a,b,_ctxt->_single);
 	case TypeZDouble:
-	  return dispatch_binop<float,Complex<double>,double,Op>(a,b,_ctxt->_zsingle);
+	  return dispatch_binop<float,cdouble,double,Op>(a,b,_ctxt->_zsingle);
 	case TypeSingle:
 	  return dispatch_binop<float,float,float,Op>(a,b,_ctxt->_single);
 	case TypeZSingle:
-	  return dispatch_binop<float,Complex<float>,float,Op>(a,b,_ctxt->_zsingle);
+	  return dispatch_binop<float,cfloat,float,Op>(a,b,_ctxt->_zsingle);
 	default:
 	  throw Exception(FMString("Unsupported combination of ") + this->name() + 
 			  FMString(" and ") + b.type()->name());
@@ -64,7 +64,7 @@ namespace FM
     SingleType(ThreadContext *ctxt) : FloatType<float>(ctxt,"single") {}
     virtual DataCode code() const {return TypeSingle;}
     virtual Type* typeInstance() {return this;}
-    virtual Object Add(const Object &a, const Object &b) {return binop<OpAdd>(a,b);}
+    //    virtual Object Add(const Object &a, const Object &b) {return binop<OpAdd>(a,b);}
     virtual Object Subtract(const Object &a, const Object &b) {return binop<OpSubtract>(a,b);}
     virtual Object DotPower(const Object &a, const Object &b) {
       //FIXME - handle complex promotion case
@@ -72,9 +72,7 @@ namespace FM
       //	return binop<OpDotPower>(this->asComplex(a),this->asComplex(b));
       return binop<OpDotPower>(a,b);
     }
-    virtual Object Power(const Object &a, const Object &b) {
-      return MatrixPower(a,b,_ctxt);
-    }
+    virtual Object Power(const Object &a, const Object &b) {return MatrixPower(a,b,_ctxt);}
     virtual Object DotMultiply(const Object &a, const Object &b) {return binop<OpDotMultiply>(a,b);}
     virtual Object DotRightDivide(const Object &a, const Object &b) {return binop<OpDotRightDivide>(a,b);}
     virtual Object DotLeftDivide(const Object &a, const Object &b) {return binop<OpDotLeftDivide>(a,b);}
@@ -94,34 +92,61 @@ namespace FM
     }
   };
 
-  class ComplexSingleType : public FloatType<Complex<float> > {
+  
+  
+  class ComplexSingleType : public FloatType<cfloat > {
     template <class Op>
     inline Object binop(const Object &a, const Object &b)
     {
       if (a.isScalar() && b.isScalar() && b.type()->code() == TypeZSingle) {
-	const Complex<float> * ap = static_cast<const Complex<float>*>(a.d->data->ptr);
-	const Complex<float> * bp = static_cast<const Complex<float>*>(b.d->data->ptr);
-	Complex<float> p;
-	Op::template func<Complex<float>,Complex<float>,Complex<float>,Complex<float> >(&p,*ap,*bp);
+	const cfloat * ap = static_cast<const cfloat*>(a.d->data->ptr);
+	const cfloat * bp = static_cast<const cfloat*>(b.d->data->ptr);
+	cfloat p;
+	Op::template func<cfloat,cfloat,cfloat,cfloat >(&p,*ap,*bp);
 	return makeScalar(p);
       }
       switch (b.type()->code())
 	{
 	case TypeDouble:
-	  return dispatch_binop<Complex<float>,double,double,Op>(a,b,_ctxt->_zsingle);
+	  return dispatch_binop<cfloat,double,double,Op>(a,b,_ctxt->_zsingle);
 	case TypeZDouble:
-	  return dispatch_binop<Complex<float>,Complex<double>,double,Op>(a,b,_ctxt->_zsingle);
+	  return dispatch_binop<cfloat,cdouble,double,Op>(a,b,_ctxt->_zsingle);
 	case TypeSingle:
-	  return dispatch_binop<Complex<float>,float,float,Op>(a,b,_ctxt->_zsingle);
+	  return dispatch_binop<cfloat,float,float,Op>(a,b,_ctxt->_zsingle);
 	case TypeZSingle:
-	  return dispatch_binop<Complex<float>,Complex<float>,float,Op>(a,b,_ctxt->_zsingle);
+	  return dispatch_binop<cfloat,cfloat,float,Op>(a,b,_ctxt->_zsingle);
 	default:
 	  throw Exception(FMString("Unsupported combination of ") + this->name() + 
 			  FMString(" and ") + b.type()->name());	  
 	}
     }
+    template <class Op>
+    inline Object cmpop(const Object &a, const Object &b, BoolType *o)
+    {
+      if (a.isScalar() && b.isScalar() && b.type()->code() == TypeZSingle) {
+	const cfloat * ap = static_cast<const cfloat*>(a.d->data->ptr);
+	const cfloat * bp = static_cast<const cfloat*>(b.d->data->ptr);
+	bool p;
+	Op::template func<bool,cfloat,cfloat,cfloat>(&p,*ap,*bp);
+	return o->makeScalar(p);
+      }
+      switch (b.type()->code())
+	{
+	case TypeDouble:
+	  return dispatch_cmpop<cfloat,double,double,Op>(a,b,_ctxt->_bool);
+	case TypeZDouble:
+	  return dispatch_cmpop<cfloat,cdouble,double,Op>(a,b,_ctxt->_bool);
+	case TypeSingle:
+	  return dispatch_cmpop<cfloat,float,float,Op>(a,b,_ctxt->_bool);
+	case TypeZSingle:
+	  return dispatch_cmpop<cfloat,cfloat,float,Op>(a,b,_ctxt->_bool);
+	default:
+	  throw Exception(FMString("Unsupported combination of ") + this->name() + 
+			  FMString(" and ") + b.type()->name());
+	}
+    }
   public:
-    ComplexSingleType(ThreadContext* ctxt) : FloatType<Complex<float> >(ctxt,"zsingle") {}
+    ComplexSingleType(ThreadContext* ctxt) : FloatType<cfloat>(ctxt,"zsingle") {}
     virtual DataCode code() const {return TypeZSingle;}
     virtual ~ComplexSingleType() {}
     virtual Type* typeInstance() {return this;}
@@ -131,8 +156,22 @@ namespace FM
     ComplexSingleType* complexType() {
       return this;
     }
-    virtual bool isComplexType() {return true;}
-    virtual Object Add(const Object &a, const Object &b) {return dispatch_complex_binop<OpAdd>(a,b,Type::_ctxt,this);}
+    virtual bool isComplexType() const {return true;}
+    //    virtual Object Add(const Object &a, const Object &b) {return binop<OpAdd>(a,b);}
+    virtual Object Subtract(const Object &a, const Object &b) {return binop<OpSubtract>(a,b);}
+    virtual Object DotPower(const Object &a, const Object &b) {return binop<OpDotPower>(a,b);}
+    virtual Object Power(const Object &a, const Object &b) {return MatrixPower(a,b,_ctxt);}
+    virtual Object DotMultiply(const Object &a, const Object &b) {return binop<OpDotMultiply>(a,b);}
+    virtual Object DotRightDivide(const Object &a, const Object &b) {return binop<OpDotRightDivide>(a,b);}
+    virtual Object DotLeftDivide(const Object &a, const Object &b) {return binop<OpDotLeftDivide>(a,b);}
+    virtual Object LessEquals(const Object &a, const Object &b) {return cmpop<OpLE>(a,b,_ctxt->_bool);}
+    // virtual Object LessThan(const Object &a, const Object &b) {return dispatch_complex_cmpop<OpLT>(a,b,_ctxt->_bool,Type::_ctxt,this);}
+    // virtual Object GreaterEquals(const Object &a, const Object &b) {return dispatch_complex_cmpop<OpGE>(a,b,_ctxt->_bool,Type::_ctxt,this);}
+    // virtual Object GreaterThan(const Object &a, const Object &b) {return dispatch_complex_cmpop<OpGT>(a,b,_ctxt->_bool,Type::_ctxt,this);}
+    // virtual Object Equals(const Object &a, const Object &b) {return dispatch_complex_cmpop<OpEQ>(a,b,_ctxt->_bool,Type::_ctxt,this);}
+    // virtual Object NotEquals(const Object &a, const Object &b) {return dispatch_complex_cmpop<OpNE>(a,b,_ctxt->_bool,Type::_ctxt,this);}
+    // virtual Object Or(const Object &a, const Object &b) {return dispatch_complex_cmpop<OpOr>(a,b,_ctxt->_bool,Type::_ctxt,this);}
+    // virtual Object And(const Object &a, const Object &b) {return dispatch_complex_cmpop<OpAnd>(a,b,_ctxt->_bool,Type::_ctxt,this);}
   };
 
 }

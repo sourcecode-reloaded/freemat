@@ -3,6 +3,7 @@
 #include "PODType.hpp"
 #include "SingleType.hpp"
 #include "Complex.hpp"
+#include "SaturatingInteger.hpp"
 
 using namespace FM;
 
@@ -32,13 +33,13 @@ Object FM::MatrixHermitian(const Object &a) {
 template Object FM::MatrixHermitian<char>(const Object &a);
 template Object FM::MatrixHermitian<double>(const Object &a);
 template Object FM::MatrixHermitian<float>(const Object &a);
-template Object FM::MatrixHermitian<int8_t>(const Object &a);
-template Object FM::MatrixHermitian<int16_t>(const Object &a);
-template Object FM::MatrixHermitian<int32_t>(const Object &a);
-template Object FM::MatrixHermitian<int64_t>(const Object &a);
+template Object FM::MatrixHermitian<sint8_t>(const Object &a);
+template Object FM::MatrixHermitian<sint16_t>(const Object &a);
+template Object FM::MatrixHermitian<sint32_t>(const Object &a);
+template Object FM::MatrixHermitian<sint64_t>(const Object &a);
 template Object FM::MatrixHermitian<Complex<double> >(const Object &a);
 template Object FM::MatrixHermitian<Complex<float> >(const Object &a);
-template Object FM::MatrixHermitian<Complex<int8_t> >(const Object &a);
-template Object FM::MatrixHermitian<Complex<int16_t> >(const Object &a);
-template Object FM::MatrixHermitian<Complex<int32_t> >(const Object &a);
-template Object FM::MatrixHermitian<Complex<int64_t> >(const Object &a);
+template Object FM::MatrixHermitian<Complex<sint8_t> >(const Object &a);
+template Object FM::MatrixHermitian<Complex<sint16_t> >(const Object &a);
+template Object FM::MatrixHermitian<Complex<sint32_t> >(const Object &a);
+template Object FM::MatrixHermitian<Complex<sint64_t> >(const Object &a);

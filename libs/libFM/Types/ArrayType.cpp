@@ -4,6 +4,7 @@
 #include "ListType.hpp"
 #include "ThreadContext.hpp"
 #include "Complex.hpp"
+#include "SaturatingInteger.hpp"
 
 using namespace FM;
 
@@ -722,21 +723,22 @@ template class FM::ArrayType<Complex<float> >;
 template class FM::ArrayType<double>;
 template class FM::ArrayType<Complex<double> >;
 template class FM::ArrayType<Object>;
-template class FM::ArrayType<int8_t>;
-template class FM::ArrayType<Complex<int8_t> >;
-template class FM::ArrayType<uint8_t>;
-template class FM::ArrayType<Complex<uint8_t> >;
-template class FM::ArrayType<int16_t>;
-template class FM::ArrayType<Complex<int16_t> >;
-template class FM::ArrayType<uint16_t>;
-template class FM::ArrayType<Complex<uint16_t> >;
-template class FM::ArrayType<int32_t>;
-template class FM::ArrayType<Complex<int32_t> >;
-template class FM::ArrayType<uint32_t>;
-template class FM::ArrayType<Complex<uint32_t> >;
-template class FM::ArrayType<int64_t>;
-template class FM::ArrayType<Complex<int64_t> >;
-template class FM::ArrayType<uint64_t>;
-template class FM::ArrayType<Complex<uint64_t> >;
+template class FM::ArrayType<sint8_t>;
+template class FM::ArrayType<Complex<sint8_t> >;
+template class FM::ArrayType<usint8_t>;
+template class FM::ArrayType<Complex<usint8_t> >;
+template class FM::ArrayType<sint16_t>;
+template class FM::ArrayType<Complex<sint16_t> >;
+template class FM::ArrayType<usint16_t>;
+template class FM::ArrayType<Complex<usint16_t> >;
+template class FM::ArrayType<sint32_t>;
+template class FM::ArrayType<Complex<sint32_t> >;
+template class FM::ArrayType<usint32_t>;
+template class FM::ArrayType<Complex<usint32_t> >;
+template class FM::ArrayType<sint64_t>;
+template class FM::ArrayType<Complex<sint64_t> >;
+template class FM::ArrayType<usint64_t>;
+template class FM::ArrayType<Complex<usint64_t> >;
 template class FM::ArrayType<bool>;
+template class FM::ArrayType<ndx_t>;
 

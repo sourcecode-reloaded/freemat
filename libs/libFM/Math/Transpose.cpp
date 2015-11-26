@@ -2,6 +2,7 @@
 #include "PODType.hpp"
 #include "SingleType.hpp"
 #include "Complex.hpp"
+#include "SaturatingInteger.hpp"
 
 using namespace FM;
 
@@ -33,21 +34,22 @@ template Object FM::MatrixTranspose<bool>(const Object &a);
 template Object FM::MatrixTranspose<char>(const Object &a);
 template Object FM::MatrixTranspose<double>(const Object &a);
 template Object FM::MatrixTranspose<float>(const Object &a);
-template Object FM::MatrixTranspose<uint8_t>(const Object &a);
-template Object FM::MatrixTranspose<int8_t>(const Object &a);
-template Object FM::MatrixTranspose<uint16_t>(const Object &a);
-template Object FM::MatrixTranspose<int16_t>(const Object &a);
-template Object FM::MatrixTranspose<uint32_t>(const Object &a);
-template Object FM::MatrixTranspose<int32_t>(const Object &a);
-template Object FM::MatrixTranspose<uint64_t>(const Object &a);
-template Object FM::MatrixTranspose<int64_t>(const Object &a);
+template Object FM::MatrixTranspose<usint8_t>(const Object &a);
+template Object FM::MatrixTranspose<sint8_t>(const Object &a);
+template Object FM::MatrixTranspose<usint16_t>(const Object &a);
+template Object FM::MatrixTranspose<sint16_t>(const Object &a);
+template Object FM::MatrixTranspose<usint32_t>(const Object &a);
+template Object FM::MatrixTranspose<sint32_t>(const Object &a);
+template Object FM::MatrixTranspose<usint64_t>(const Object &a);
+template Object FM::MatrixTranspose<sint64_t>(const Object &a);
+template Object FM::MatrixTranspose<ndx_t>(const Object &a);
 template Object FM::MatrixTranspose<Complex<double> >(const Object &a);
 template Object FM::MatrixTranspose<Complex<float> >(const Object &a);
-template Object FM::MatrixTranspose<Complex<uint8_t> >(const Object &a);
-template Object FM::MatrixTranspose<Complex<int8_t> >(const Object &a);
-template Object FM::MatrixTranspose<Complex<uint16_t> >(const Object &a);
-template Object FM::MatrixTranspose<Complex<int16_t> >(const Object &a);
-template Object FM::MatrixTranspose<Complex<uint32_t> >(const Object &a);
-template Object FM::MatrixTranspose<Complex<int32_t> >(const Object &a);
-template Object FM::MatrixTranspose<Complex<uint64_t> >(const Object &a);
-template Object FM::MatrixTranspose<Complex<int64_t> >(const Object &a);
+template Object FM::MatrixTranspose<Complex<usint8_t> >(const Object &a);
+template Object FM::MatrixTranspose<Complex<sint8_t> >(const Object &a);
+template Object FM::MatrixTranspose<Complex<usint16_t> >(const Object &a);
+template Object FM::MatrixTranspose<Complex<sint16_t> >(const Object &a);
+template Object FM::MatrixTranspose<Complex<usint32_t> >(const Object &a);
+template Object FM::MatrixTranspose<Complex<sint32_t> >(const Object &a);
+template Object FM::MatrixTranspose<Complex<usint64_t> >(const Object &a);
+template Object FM::MatrixTranspose<Complex<sint64_t> >(const Object &a);

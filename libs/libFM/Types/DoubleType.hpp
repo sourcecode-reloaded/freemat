@@ -67,10 +67,10 @@ namespace FM
       switch (b.type()->code())
 	{
 	  // This seems very verbose - can it be replaced somehow?
-	case TypeDouble:
+ 	case TypeDouble:
 	  return dispatch_binop<double,double,double,Op>(a,b,_ctxt->_double);
 	case TypeZDouble:
-	  return dispatch_binop<double,Complex<double>,double,Op>(a,b,_ctxt->_zdouble);
+	  return dispatch_binop<double,cdouble,double,Op>(a,b,_ctxt->_zdouble);
 	case TypeSingle:
 	  return dispatch_binop<double,float,float,Op>(a,b,_ctxt->_single);
 	case TypeZSingle:
@@ -116,28 +116,28 @@ namespace FM
     virtual ~DoubleType() {}
     virtual DataCode code() const {return TypeDouble;}
     virtual Type* typeInstance() {return this;}
-    virtual Object Add(const Object &a, const Object &b) {return binop<OpAdd>(a,b);}
-    virtual Object Subtract(const Object &a, const Object &b) {return binop<OpSubtract>(a,b);}
-    virtual Object DotPower(const Object &a, const Object &b) {
-      // FIXME - dotpower can change types.
-      //      if (!this->isNonNegative(a) && !this->isIntegerValued(b)) 
-      //	return binop<OpDotPower>(this->asComplex(a),this->asComplex(b));
-      return binop<OpDotPower>(a,b);
-    }
-    virtual Object Power(const Object &a, const Object &b) {
-      return MatrixPower(a,b,_ctxt);
-    }
-    virtual Object DotMultiply(const Object &a, const Object &b) {return binop<OpDotMultiply>(a,b);}
-    virtual Object DotRightDivide(const Object &a, const Object &b) {return binop<OpDotRightDivide>(a,b);}
-    virtual Object DotLeftDivide(const Object &a, const Object &b) {return binop<OpDotLeftDivide>(a,b);}
-    virtual Object LessEquals(const Object &a, const Object &b) {return cmpop<OpLE>(a,b,_ctxt->_bool);}
-    virtual Object LessThan(const Object &a, const Object &b) {return cmpop<OpLT>(a,b,_ctxt->_bool);}
-    virtual Object GreaterEquals(const Object &a, const Object &b) {return cmpop<OpGE>(a,b,_ctxt->_bool);}
-    virtual Object GreaterThan(const Object &a, const Object &b) {return cmpop<OpGT>(a,b,_ctxt->_bool);}
-    virtual Object Equals(const Object &a, const Object &b) {return cmpop<OpEQ>(a,b,_ctxt->_bool);}
-    virtual Object NotEquals(const Object &a, const Object &b) {return cmpop<OpNE>(a,b,_ctxt->_bool);}
-    virtual Object Or(const Object &a, const Object &b) {return cmpop<OpOr>(a,b,_ctxt->_bool);}
-    virtual Object And(const Object &a, const Object &b) {return cmpop<OpAnd>(a,b,_ctxt->_bool);}
+    // virtual Object Add(const Object &a, const Object &b) {return binop<OpAdd>(a,b);}
+    // virtual Object Subtract(const Object &a, const Object &b) {return binop<OpSubtract>(a,b);}
+    // virtual Object DotPower(const Object &a, const Object &b) {
+    //   // FIXME - dotpower can change types.
+    //   //      if (!this->isNonNegative(a) && !this->isIntegerValued(b)) 
+    //   //	return binop<OpDotPower>(this->asComplex(a),this->asComplex(b));
+    //   return binop<OpDotPower>(a,b);
+    // }
+    // virtual Object Power(const Object &a, const Object &b) {
+    //   return MatrixPower(a,b,_ctxt);
+    // }
+    // virtual Object DotMultiply(const Object &a, const Object &b) {return binop<OpDotMultiply>(a,b);}
+    // virtual Object DotRightDivide(const Object &a, const Object &b) {return binop<OpDotRightDivide>(a,b);}
+    // virtual Object DotLeftDivide(const Object &a, const Object &b) {return binop<OpDotLeftDivide>(a,b);}
+    // virtual Object LessEquals(const Object &a, const Object &b) {return cmpop<OpLE>(a,b,_ctxt->_bool);}
+    // virtual Object LessThan(const Object &a, const Object &b) {return cmpop<OpLT>(a,b,_ctxt->_bool);}
+    // virtual Object GreaterEquals(const Object &a, const Object &b) {return cmpop<OpGE>(a,b,_ctxt->_bool);}
+    // virtual Object GreaterThan(const Object &a, const Object &b) {return cmpop<OpGT>(a,b,_ctxt->_bool);}
+    // virtual Object Equals(const Object &a, const Object &b) {return cmpop<OpEQ>(a,b,_ctxt->_bool);}
+    // virtual Object NotEquals(const Object &a, const Object &b) {return cmpop<OpNE>(a,b,_ctxt->_bool);}
+    // virtual Object Or(const Object &a, const Object &b) {return cmpop<OpOr>(a,b,_ctxt->_bool);}
+    // virtual Object And(const Object &a, const Object &b) {return cmpop<OpAnd>(a,b,_ctxt->_bool);}
     virtual Object Colon(const Object &a, const Object &b)
     {
       if (!a.isScalar() || !b.isScalar()) throw Exception("arguments to : operator must be scalars");
@@ -167,9 +167,9 @@ namespace FM
   };
 
 
-  class ComplexDoubleType : public FloatType<Complex<double>> {
+  class ComplexDoubleType : public FloatType<cdouble> {
   public:
-    ComplexDoubleType(ThreadContext* ctxt) : FloatType<Complex<double> >(ctxt,"zdouble") {}
+    ComplexDoubleType(ThreadContext* ctxt) : FloatType<cdouble >(ctxt,"zdouble") {}
     virtual ~ComplexDoubleType() {}
     virtual Type* typeInstance() {return this;}
     virtual DataCode code() const {return TypeZDouble;}
@@ -179,7 +179,7 @@ namespace FM
     ComplexDoubleType* complexType() {
       return this;
     }
-    virtual bool isComplexType() {return true;}
+    virtual bool isComplexType() const {return true;}
     virtual Object Add(const Object &a, const Object &b) {return dispatch_complex_binop<OpAdd>(a,b,Type::_ctxt,this);}
     virtual Object DotMultiply(const Object &a, const Object &b) {return dispatch_complex_binop<OpDotMultiply>(a,b,Type::_ctxt,this);}
   };

@@ -225,11 +225,11 @@ Object to_uint64(const Object &args, ndx_t, ThreadContext *ctxt) {
 }
 
 Object to_double(const Object &args, ndx_t, ThreadContext *ctxt) {
-  return ctxt->_list->makeScalar(ctxt->_double->convert(ctxt->_list->ro(args)[0]));
+  return tot_T(args,ctxt,ctxt->_double,ctxt->_zdouble);
 }
 
 Object to_single(const Object &args, ndx_t, ThreadContext *ctxt) {
-  return ctxt->_list->makeScalar(ctxt->_single->convert(ctxt->_list->ro(args)[0]));
+  return tot_T(args,ctxt,ctxt->_single,ctxt->_zsingle);
 }
 
 Object backtrace(const Object &, ndx_t, ThreadContext *ctxt) {
@@ -277,6 +277,24 @@ Object classfunc(const Object &args, ndx_t, ThreadContext *ctxt) {
   else
     return ctxt->_list->makeScalar(ctxt->_class->className(x));
 }
+
+class ScopeTimer
+{
+public:
+    ScopeTimer() : beg_(clock_::now()) {}
+    void reset() { beg_ = clock_::now(); }
+    double elapsed() const { 
+        return std::chrono::duration_cast<second_>
+            (clock_::now() - beg_).count(); }
+  ~ScopeTimer() {
+    std::cout << "Elapsed time : " << elapsed() << " seconds\n";
+  }
+private:
+    typedef std::chrono::high_resolution_clock clock_;
+    typedef std::chrono::duration<double, std::ratio<1> > second_;
+    std::chrono::time_point<clock_> beg_;
+};
+
 
 int main(int , char *[])
 {
@@ -485,6 +503,17 @@ int main(int , char *[])
     ctxt->_captured->setContents(cap1ref,ctxt->_double->makeScalar(2.78));
   }
 
+  // Object stack = ctxt->_list->makeMatrix(2000,1);
+  // {
+  //   ScopeTimer tic;
+  //   Object* sp = ctxt->_list->rw(stack);
+  //   for (size_t i=0;i<1e8;i++) {
+  //     Object x = sp[1432];
+  //     sp[1432] = ctxt->_double->makeScalar(ctxt->_double->scalarValue(x)+1);
+  //   }
+  // }
+
+  
   while (1)
     {
       char *p = readline("--> ");

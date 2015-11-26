@@ -1,6 +1,7 @@
 #include "ArrayFormatInfo.hpp"
 #include "Complex.hpp"
 #include "Exception.hpp"
+#include "SaturatingInteger.hpp"
 #include <math.h>
 
 namespace FM
@@ -123,13 +124,13 @@ namespace FM
     if (format.expformat) return;
     bool finiteElementFound = false;
     for (ndx_t i=0;i<count;i++) {
-      if (isfinite(array[i]) && !finiteElementFound) {
-	max_amplitude = array[i];
+      if (isfinite(static_cast<double>(array[i])) && !finiteElementFound) {
+	max_amplitude = static_cast<double>(array[i]);
 	finiteElementFound = true;
       }
-      if ((isfinite(array[i])) && 
+      if ((isfinite(static_cast<double>(array[i]))) && 
 	  (fabs((double) array[i]) > fabs((double) max_amplitude)))
-	max_amplitude = array[i];
+	max_amplitude = static_cast<double>(array[i]);
     }
     if (!finiteElementFound) return;
     updateArrayFormatInfoWithAmplitude(format,max_amplitude,1000);
@@ -142,18 +143,18 @@ namespace FM
     if (format.expformat) return;
     bool finiteElementFound = false;
     for (ndx_t i=0;i<count;i++) {
-      if (isfinite(array[i].r) && !finiteElementFound) {
-	max_amplitude = array[i].r;
+      if (isfinite(static_cast<double>(array[i].r)) && !finiteElementFound) {
+	max_amplitude = static_cast<double>(array[i].r);
 	finiteElementFound = true;
       }
-      if (isfinite(array[i].i) && !finiteElementFound) {
-	max_amplitude = array[i].i;
+      if (isfinite(static_cast<double>(array[i].i)) && !finiteElementFound) {
+	max_amplitude = static_cast<double>(array[i].i);
 	finiteElementFound = true;
       }
-      if (isfinite(array[i].r) && fabs((double)array[i].r) > fabs((double)max_amplitude))
-	max_amplitude = array[i].r;
-      if (isfinite(array[i].i) && fabs((double)array[i].i) > fabs((double)max_amplitude))
-	max_amplitude = array[i].i;
+      if (isfinite(static_cast<double>(array[i].r)) && fabs((double)array[i].r) > fabs((double)max_amplitude))
+	max_amplitude = static_cast<double>(array[i].r);
+      if (isfinite(static_cast<double>(array[i].i)) && fabs((double)array[i].i) > fabs((double)max_amplitude))
+	max_amplitude = static_cast<double>(array[i].i);
     }
     if (!finiteElementFound) return;
     updateArrayFormatInfoWithAmplitude(format,max_amplitude,100);  
@@ -173,6 +174,12 @@ namespace FM
 	    (t < 10000));
   }
 
+
+  template <class T>
+  static inline bool isIntegerLike(const SaturatingInt<T> &t) {
+    return isIntegerLike(static_cast<double>(t.val));
+  }
+  
   template <class T>
   static inline bool isIntegerLike(const Complex<T> &t) {
     return (isIntegerLike(t.r) && isIntegerLike(t.i));
@@ -181,6 +188,11 @@ namespace FM
   template <class T>
   static inline int integerWidth(const Complex<T> &t) {
     return (std::max(integerWidth(t.r),integerWidth(t.i,true)));
+  }
+
+  template <class T>
+  static inline int integerWidth(const SaturatingInt<T> &t, bool imaginary = false) {
+    return integerWidth(t.val, imaginary);
   }
 
   template <class T>
@@ -227,15 +239,15 @@ namespace FM
 
   template void GetArrayFormatForPODArray(FMFormatMode mode, const double* rv, ndx_t count, ArrayFormatInfo &info);
   template void GetArrayFormatForPODArray(FMFormatMode mode, const float* rv, ndx_t count, ArrayFormatInfo &info);
-  //  template void GetArrayFormatForPODArray(FMFormatMode mode, const ndx_t* rv, ndx_t count, ArrayFormatInfo &info);
-  template void GetArrayFormatForPODArray(FMFormatMode mode, const uint64_t* rv, ndx_t count, ArrayFormatInfo &info);
-  template void GetArrayFormatForPODArray(FMFormatMode mode, const int64_t* rv, ndx_t count, ArrayFormatInfo &info);
-  template void GetArrayFormatForPODArray(FMFormatMode mode, const uint32_t* rv, ndx_t count, ArrayFormatInfo &info);
-  template void GetArrayFormatForPODArray(FMFormatMode mode, const int32_t* rv, ndx_t count, ArrayFormatInfo &info);
-  template void GetArrayFormatForPODArray(FMFormatMode mode, const uint16_t* rv, ndx_t count, ArrayFormatInfo &info);
-  template void GetArrayFormatForPODArray(FMFormatMode mode, const int16_t* rv, ndx_t count, ArrayFormatInfo &info);
-  template void GetArrayFormatForPODArray(FMFormatMode mode, const uint8_t* rv, ndx_t count, ArrayFormatInfo &info);
-  template void GetArrayFormatForPODArray(FMFormatMode mode, const int8_t* rv, ndx_t count, ArrayFormatInfo &info);
+  template void GetArrayFormatForPODArray(FMFormatMode mode, const ndx_t* rv, ndx_t count, ArrayFormatInfo &info);
+  template void GetArrayFormatForPODArray(FMFormatMode mode, const usint64_t* rv, ndx_t count, ArrayFormatInfo &info);
+  template void GetArrayFormatForPODArray(FMFormatMode mode, const sint64_t* rv, ndx_t count, ArrayFormatInfo &info);
+  template void GetArrayFormatForPODArray(FMFormatMode mode, const usint32_t* rv, ndx_t count, ArrayFormatInfo &info);
+  template void GetArrayFormatForPODArray(FMFormatMode mode, const sint32_t* rv, ndx_t count, ArrayFormatInfo &info);
+  template void GetArrayFormatForPODArray(FMFormatMode mode, const usint16_t* rv, ndx_t count, ArrayFormatInfo &info);
+  template void GetArrayFormatForPODArray(FMFormatMode mode, const sint16_t* rv, ndx_t count, ArrayFormatInfo &info);
+  template void GetArrayFormatForPODArray(FMFormatMode mode, const usint8_t* rv, ndx_t count, ArrayFormatInfo &info);
+  template void GetArrayFormatForPODArray(FMFormatMode mode, const sint8_t* rv, ndx_t count, ArrayFormatInfo &info);
   template void GetArrayFormatForPODArray(FMFormatMode mode, const char* rv, ndx_t count, ArrayFormatInfo &info);
 
   template <typename T>
@@ -243,13 +255,13 @@ namespace FM
     // Check for all real case
     bool all_real_case = true;
     for (ndx_t i=0;i<count;i++)
-      if (rv[i].i != 0) {
+      if (rv[i].i != T(0)) {
 	all_real_case = false;
 	break;
       }
     bool all_imag_case = true;
     for (ndx_t i=0;i<count;i++)
-      if (rv[i].r != 0) {
+      if (rv[i].r != T(0)) {
 	all_imag_case = false;
 	break;
       }
@@ -291,15 +303,15 @@ namespace FM
 
   template void GetArrayFormatForPODArray(FMFormatMode mode, const Complex<double>* rv, ndx_t count, ArrayFormatInfo &info);
   template void GetArrayFormatForPODArray(FMFormatMode mode, const Complex<float>* rv, ndx_t count, ArrayFormatInfo &info);
-  //  template void GetArrayFormatForPODArray(FMFormatMode mode, const Complex<ndx_t>* rv, ndx_t count, ArrayFormatInfo &info);
-  template void GetArrayFormatForPODArray(FMFormatMode mode, const Complex<uint64_t>* rv, ndx_t count, ArrayFormatInfo &info);
-  template void GetArrayFormatForPODArray(FMFormatMode mode, const Complex<int64_t>* rv, ndx_t count, ArrayFormatInfo &info);
-  template void GetArrayFormatForPODArray(FMFormatMode mode, const Complex<uint32_t>* rv, ndx_t count, ArrayFormatInfo &info);
-  template void GetArrayFormatForPODArray(FMFormatMode mode, const Complex<int32_t>* rv, ndx_t count, ArrayFormatInfo &info);
-  template void GetArrayFormatForPODArray(FMFormatMode mode, const Complex<uint16_t>* rv, ndx_t count, ArrayFormatInfo &info);
-  template void GetArrayFormatForPODArray(FMFormatMode mode, const Complex<int16_t>* rv, ndx_t count, ArrayFormatInfo &info);
-  template void GetArrayFormatForPODArray(FMFormatMode mode, const Complex<uint8_t>* rv, ndx_t count, ArrayFormatInfo &info);
-  template void GetArrayFormatForPODArray(FMFormatMode mode, const Complex<int8_t>* rv, ndx_t count, ArrayFormatInfo &info);
+  template void GetArrayFormatForPODArray(FMFormatMode mode, const Complex<ndx_t>* rv, ndx_t count, ArrayFormatInfo &info);
+  template void GetArrayFormatForPODArray(FMFormatMode mode, const Complex<usint64_t>* rv, ndx_t count, ArrayFormatInfo &info);
+  template void GetArrayFormatForPODArray(FMFormatMode mode, const Complex<sint64_t>* rv, ndx_t count, ArrayFormatInfo &info);
+  template void GetArrayFormatForPODArray(FMFormatMode mode, const Complex<usint32_t>* rv, ndx_t count, ArrayFormatInfo &info);
+  template void GetArrayFormatForPODArray(FMFormatMode mode, const Complex<sint32_t>* rv, ndx_t count, ArrayFormatInfo &info);
+  template void GetArrayFormatForPODArray(FMFormatMode mode, const Complex<usint16_t>* rv, ndx_t count, ArrayFormatInfo &info);
+  template void GetArrayFormatForPODArray(FMFormatMode mode, const Complex<sint16_t>* rv, ndx_t count, ArrayFormatInfo &info);
+  template void GetArrayFormatForPODArray(FMFormatMode mode, const Complex<usint8_t>* rv, ndx_t count, ArrayFormatInfo &info);
+  template void GetArrayFormatForPODArray(FMFormatMode mode, const Complex<sint8_t>* rv, ndx_t count, ArrayFormatInfo &info);
   template void GetArrayFormatForPODArray(FMFormatMode mode, const Complex<char>* rv, ndx_t count, ArrayFormatInfo &info);  
 
 #if 0
@@ -337,18 +349,18 @@ namespace FM
       sprintf(buffer,"%*lld",format.number_width,(ndx_t)(val));
       return FMString(buffer);
     }
-    if (isnan(val)) {
+    if (isnan(static_cast<double>(val))) {
       sprintf(buffer,"NaN");
       return FMString(buffer);
     }
-    if (!isfinite(val)) {
-      if (val > 0)
+    if (!isfinite(static_cast<double>(val))) {
+      if (val > T(0))
 	sprintf(buffer,"Inf");
       else
 	sprintf(buffer,"-Inf");
       return FMString(buffer);
     }
-    if (val != 0)
+    if (val != T(0))
       if (format.expformat)
 	sprintf(buffer,"%*.*e",format.number_width,format.decimals,double(val));
       else
@@ -360,14 +372,15 @@ namespace FM
 
   template FMString FormattedNumber(const ArrayFormatInfo &, const double& val);
   template FMString FormattedNumber(const ArrayFormatInfo &, const float& val);
-  template FMString FormattedNumber(const ArrayFormatInfo &, const uint64_t& val);
-  template FMString FormattedNumber(const ArrayFormatInfo &, const int64_t& val);
-  template FMString FormattedNumber(const ArrayFormatInfo &, const uint32_t& val);
-  template FMString FormattedNumber(const ArrayFormatInfo &, const int32_t& val);
-  template FMString FormattedNumber(const ArrayFormatInfo &, const uint16_t& val);
-  template FMString FormattedNumber(const ArrayFormatInfo &, const int16_t& val);
-  template FMString FormattedNumber(const ArrayFormatInfo &, const uint8_t& val);
-  template FMString FormattedNumber(const ArrayFormatInfo &, const int8_t& val);
+  template FMString FormattedNumber(const ArrayFormatInfo &, const usint64_t& val);
+  template FMString FormattedNumber(const ArrayFormatInfo &, const sint64_t& val);
+  template FMString FormattedNumber(const ArrayFormatInfo &, const usint32_t& val);
+  template FMString FormattedNumber(const ArrayFormatInfo &, const sint32_t& val);
+  template FMString FormattedNumber(const ArrayFormatInfo &, const usint16_t& val);
+  template FMString FormattedNumber(const ArrayFormatInfo &, const sint16_t& val);
+  template FMString FormattedNumber(const ArrayFormatInfo &, const usint8_t& val);
+  template FMString FormattedNumber(const ArrayFormatInfo &, const sint8_t& val);
+  template FMString FormattedNumber(const ArrayFormatInfo &, const ndx_t& val);
   template FMString FormattedNumber(const ArrayFormatInfo &, const char& val);
 
   template <typename T>
@@ -378,11 +391,11 @@ namespace FM
     if (format.pure_imag) {
       return FormattedNumber(format,val.i) + FMString(" i");
     }
-    if ((val.r == 0) && (val.i==0)) {
+    if ((val.r == T(0)) && (val.i == T(0))) {
       return FMString("0").rightJustified(format.number_width).leftJustified(format.total_width);
     }
     FMString build = FormattedNumber(format,val.r);
-    if ((!isfinite(val.i)) || (val.i >= 0)) {
+    if ((!isfinite(static_cast<double>(val.i))) || (val.i >= T(0))) {
       build += FMString(" + ");
       build += FormattedNumber(format,val.i).trimmed().append(" i").leftJustified(format.number_width+2);
     } else {
@@ -394,14 +407,14 @@ namespace FM
 
   template FMString FormattedNumber(const ArrayFormatInfo &, const Complex<double>& val);
   template FMString FormattedNumber(const ArrayFormatInfo &, const Complex<float>& val);
-  template FMString FormattedNumber(const ArrayFormatInfo &, const Complex<uint64_t>& val);
-  template FMString FormattedNumber(const ArrayFormatInfo &, const Complex<int64_t>& val);
-  template FMString FormattedNumber(const ArrayFormatInfo &, const Complex<uint32_t>& val);
-  template FMString FormattedNumber(const ArrayFormatInfo &, const Complex<int32_t>& val);
-  template FMString FormattedNumber(const ArrayFormatInfo &, const Complex<uint16_t>& val);
-  template FMString FormattedNumber(const ArrayFormatInfo &, const Complex<int16_t>& val);
-  template FMString FormattedNumber(const ArrayFormatInfo &, const Complex<uint8_t>& val);
-  template FMString FormattedNumber(const ArrayFormatInfo &, const Complex<int8_t>& val);
+  template FMString FormattedNumber(const ArrayFormatInfo &, const Complex<usint64_t>& val);
+  template FMString FormattedNumber(const ArrayFormatInfo &, const Complex<sint64_t>& val);
+  template FMString FormattedNumber(const ArrayFormatInfo &, const Complex<usint32_t>& val);
+  template FMString FormattedNumber(const ArrayFormatInfo &, const Complex<sint32_t>& val);
+  template FMString FormattedNumber(const ArrayFormatInfo &, const Complex<usint16_t>& val);
+  template FMString FormattedNumber(const ArrayFormatInfo &, const Complex<sint16_t>& val);
+  template FMString FormattedNumber(const ArrayFormatInfo &, const Complex<usint8_t>& val);
+  template FMString FormattedNumber(const ArrayFormatInfo &, const Complex<sint8_t>& val);
   template FMString FormattedNumber(const ArrayFormatInfo &, const Complex<char>& val);
 
 }

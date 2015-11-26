@@ -45,52 +45,52 @@ static inline Object int_cmpop(const Object &a, const Object &b, BoolType *o)
 //   PrintFormattedNumberToStream(Type::_ctxt->_io,format,this->ro(a)[offset]);
 // }
 
-template <class T>
-Object IntegerType<T>::Equals(const Object &a, const Object &b) {
-  return int_cmpop<T,OpEQ>(a,b,Type::_ctxt->_bool);
-}
+// template <class T>
+// Object IntegerType<T>::Equals(const Object &a, const Object &b) {
+//   return int_cmpop<T,OpEQ>(a,b,Type::_ctxt->_bool);
+// }
 
-template <class T>
-Object IntegerType<T>::NotEquals(const Object &a, const Object &b) {
-  return int_cmpop<T,OpNE>(a,b,Type::_ctxt->_bool);
-}
+// template <class T>
+// Object IntegerType<T>::NotEquals(const Object &a, const Object &b) {
+//   return int_cmpop<T,OpNE>(a,b,Type::_ctxt->_bool);
+// }
 
-template <class T>
-Object IntegerType<T>::LessEquals(const Object &a, const Object &b) {
-  return int_cmpop<T,OpLE>(a,b,Type::_ctxt->_bool);
-}
+// template <class T>
+// Object IntegerType<T>::LessEquals(const Object &a, const Object &b) {
+//   return int_cmpop<T,OpLE>(a,b,Type::_ctxt->_bool);
+// }
 
-template <class T>
-Object IntegerType<T>::LessThan(const Object &a, const Object &b) {
-  return int_cmpop<T,OpLT>(a,b,Type::_ctxt->_bool);
-}
+// template <class T>
+// Object IntegerType<T>::LessThan(const Object &a, const Object &b) {
+//   return int_cmpop<T,OpLT>(a,b,Type::_ctxt->_bool);
+// }
 
-template <class T>
-Object IntegerType<T>::GreaterEquals(const Object &a, const Object &b) {
-  return int_cmpop<T,OpGE>(a,b,Type::_ctxt->_bool);
-}
+// template <class T>
+// Object IntegerType<T>::GreaterEquals(const Object &a, const Object &b) {
+//   return int_cmpop<T,OpGE>(a,b,Type::_ctxt->_bool);
+// }
 
-template <class T>
-Object IntegerType<T>::GreaterThan(const Object &a, const Object &b) {
-  return int_cmpop<T,OpGT>(a,b,Type::_ctxt->_bool);
-}
+// template <class T>
+// Object IntegerType<T>::GreaterThan(const Object &a, const Object &b) {
+//   return int_cmpop<T,OpGT>(a,b,Type::_ctxt->_bool);
+// }
 
 
-template class FM::IntegerType<FMChar>;
-template class FM::IntegerType<ndx_t>;
-template class FM::IntegerType<uint8_t>;
-template class FM::IntegerType<int8_t>;
-template class FM::IntegerType<uint16_t>;
-template class FM::IntegerType<int16_t>;
-template class FM::IntegerType<uint32_t>;
-template class FM::IntegerType<int32_t>;
-template class FM::IntegerType<uint64_t>;
-//template class FM::IntegerType<int64_t>;
-template class FM::IntegerType<Complex<uint8_t> >;
-template class FM::IntegerType<Complex<int8_t> >;
-template class FM::IntegerType<Complex<uint16_t> >;
-template class FM::IntegerType<Complex<int16_t> >;
-template class FM::IntegerType<Complex<uint32_t> >;
-template class FM::IntegerType<Complex<int32_t> >;
-template class FM::IntegerType<Complex<uint64_t> >;
-template class FM::IntegerType<Complex<int64_t> >;
+// template class FM::IntegerType<FMChar>;
+// template class FM::IntegerType<ndx_t>;
+// template class FM::IntegerType<uint8_t>;
+// template class FM::IntegerType<int8_t>;
+// template class FM::IntegerType<uint16_t>;
+// template class FM::IntegerType<int16_t>;
+// template class FM::IntegerType<uint32_t>;
+// template class FM::IntegerType<int32_t>;
+// template class FM::IntegerType<uint64_t>;
+// //template class FM::IntegerType<int64_t>;
+// template class FM::IntegerType<Complex<uint8_t> >;
+// template class FM::IntegerType<Complex<int8_t> >;
+// template class FM::IntegerType<Complex<uint16_t> >;
+// template class FM::IntegerType<Complex<int16_t> >;
+// template class FM::IntegerType<Complex<uint32_t> >;
+// template class FM::IntegerType<Complex<int32_t> >;
+// template class FM::IntegerType<Complex<uint64_t> >;
+// template class FM::IntegerType<Complex<int64_t> >;

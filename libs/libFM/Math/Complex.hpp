@@ -194,11 +194,12 @@ namespace FM
   template <typename T>
   inline bool complex_lt(const T &ar, const T &ai,
 			 const T &br, const T &bi) {
-    double mag_a = complex_abs<double>(ar,ai);
-    double mag_b = complex_abs<double>(br,bi);
+    double mag_a = complex_abs<double>(static_cast<double>(ar),static_cast<double>(ai));
+    double mag_b = complex_abs<double>(static_cast<double>(br),static_cast<double>(bi));
     if ((mag_b-mag_a) > feps(mag_a)*4) return true;
     if ((mag_a-mag_b) > feps(mag_b)*4) return false;
-    return (complex_phase<double>(ar,ai) < complex_phase<double>(br,bi));
+    return (complex_phase<double>(static_cast<double>(ar),static_cast<double>(ai)) <
+	    complex_phase<double>(static_cast<double>(br),static_cast<double>(bi)));
   }
   
   template <typename T>
@@ -230,11 +231,12 @@ namespace FM
   template <typename T>
   inline bool complex_gt(const T &ar, const T &ai, 
 			 const T &br, const T &bi) {
-    double mag_a = complex_abs<double>(ar,ai);
-    double mag_b = complex_abs<double>(br,bi);
+    double mag_a = complex_abs<double>(static_cast<double>(ar),static_cast<double>(ai));
+    double mag_b = complex_abs<double>(static_cast<double>(br),static_cast<double>(bi));
     if ((mag_b-mag_a) > feps(mag_a)*4) return false;
     if ((mag_a-mag_b) > feps(mag_b)*4) return true;
-    return (complex_phase<double>(ar,ai) > complex_phase<double>(br,bi));
+    return (complex_phase<double>(static_cast<double>(ar),static_cast<double>(ai)) >
+	    complex_phase<double>(static_cast<double>(br),static_cast<double>(bi)));
   }
 
   template <class T>
@@ -345,6 +347,17 @@ namespace FM
     ci = x * sin(y);
   }
 
+  template <class elem, class other>
+  static Complex<elem> operator+(const Complex<elem> &a, const Complex<other> &b)
+  {
+    throw Exception("Unimplemented combination of complex types");
+  }
+  
+  template <class elem, class other>
+  static Complex<elem> operator+(const Complex<elem> &a, const other &b)
+  {
+    throw Exception("Unimplemented combination of complex types");
+  }
   
   template <class elem>
   static Complex<elem> operator+(const Complex<elem> &a, const Complex<elem> &b)
@@ -355,14 +368,14 @@ namespace FM
     return c;
   }
 
-  template <class elem>
-  static Complex<elem> operator+(const elem &a, const Complex<elem> &b)
-  {
-    Complex<elem> c;
-    c.r = a + b.r;
-    c.i = b.i;
-    return c;
-  }
+  // template <class elem>
+  // static Complex<elem> operator+(const elem &a, const Complex<elem> &b)
+  // {
+  //   Complex<elem> c;
+  //   c.r = a + b.r;
+  //   c.i = b.i;
+  //   return c;
+  // }
 
   template <class elem>
   static Complex<elem> operator+(const Complex<elem> &a, const elem &b)

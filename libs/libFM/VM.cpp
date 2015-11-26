@@ -703,7 +703,7 @@ void VM::executeCodeObject(const Object &codeObject)
   const CodeData *cp = _ctxt->_code->ro(codeObject);
 
   const Object *const_list = _ctxt->_list->ro(cp->m_consts);
-  const uint64_t *code = _ctxt->_uint64->ro(cp->m_code);
+  const usint64_t *code = _ctxt->_uint64->ro(cp->m_code);
   const Object *names_list = _ctxt->_list->ro(cp->m_names);
 
   int &ip = _frames[_fp]->_ip;
@@ -727,7 +727,7 @@ void VM::executeCodeObject(const Object &codeObject)
       try {
 	while (!returnFound)
 	  {
-	    insn_t insn = code[ip];
+	    insn_t insn = code[ip].val;
 	    
 	    DBOUT({
 		int8_t op = opcode(insn);

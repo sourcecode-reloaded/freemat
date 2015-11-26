@@ -2,6 +2,9 @@
 #define __LineNumbers_hpp__
 
 #include <vector>
+#include "SaturatingInteger.hpp"
+
+namespace FM {
 
 inline uint32_t to_rle(uint16_t val, uint32_t count) {
   uint32_t r = val;
@@ -34,16 +37,17 @@ inline void rle_encode_line_nos(const std::vector<uint16_t> &line_dat, std::vect
     rle.push_back(to_rle(line_dat[0],1));
 }
 
-inline void rle_decode_line_nos(const uint32_t *p, unsigned cnt, std::vector<uint16_t> &line_dat)
+inline void rle_decode_line_nos(const usint32_t *p, unsigned cnt, std::vector<uint16_t> &line_dat)
 {
   line_dat.clear();
   for (unsigned i=0;i<cnt;i++) {
     uint16_t rval;
     uint32_t rcnt;
-    unpack_rle(p[i],rval,rcnt);
+    unpack_rle(static_cast<uint32_t>(p[i].val),rval,rcnt);
     for (uint32_t j=0;j<rcnt;j++)
       line_dat.push_back(rval);
   }
+}
 }
 
 #endif

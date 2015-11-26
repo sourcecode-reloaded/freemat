@@ -14,7 +14,7 @@ Object NumericType<T>::asIndexNoBoundsCheck(const Object &a)
   if (!a.isComplex() && a.isScalar())
     {
       T aval = this->scalarValue(a);
-      if (aval < 1) throw Exception("Index out of range");
+      if (aval < static_cast<T>(1)) throw Exception("Index out of range");
       return Type::_ctxt->_index->makeScalar(static_cast<ndx_t>(aval)-1);
     }
   if (a.isComplex())
@@ -27,6 +27,7 @@ Object NumericType<T>::asIndexNoBoundsCheck(const Object &a)
   ndx_t *op = Type::_ctxt->_index->rw(output);
   const T *ip = this->ro(a);
   ndx_t incr = (a.isComplex() ? 2 : 1);
+  // FIXME!!
   for (ndx_t i=0;i<len;i++)
     {
       op[i] = static_cast<ndx_t>(*ip)-1;
@@ -73,6 +74,17 @@ Object NumericType<T>::asIndex(const Object &a, ndx_t max)
   return output;  
 }
 
+/*
+template <class T>
+bool NumericType<T>::isComplexType() const {
+  return false;
+}
+
+template <class T>
+bool NumericType<Complex<T> >::isComplexType() const {
+  return true;
+}
+*/
 
 /*
 template <class T, FM::DataCode codeNum>
@@ -91,83 +103,6 @@ Object NumericType<T,codeNum>::asComplex(const Object &a)
 }
 */
 
-template <class T>
-Object NumericType<T>::convert(const Object &a)
-{
-  if (this->code() == a.type()->code()) return a;
-  Object ret = this->zeroArrayOfSize(a.dims());
-  ndx_t len = a.dims().count();
-  T* op = this->rw(ret);
-  switch (a.type()->code())
-    {
-    case TypeString:
-      convertLoop<T,FMChar>(Type::_ctxt->_string->ro(a),op,len);
-      break;
-    case TypeSingle:
-      convertLoop<T,float>(Type::_ctxt->_single->ro(a),op,len);
-      break;
-    case TypeDouble:
-      convertLoop<T,double>(Type::_ctxt->_double->ro(a),op,len);
-      break;
-    case TypeInt8:
-      convertLoop<T,int8_t>(Type::_ctxt->t_int8->ro(a),op,len);
-      break;
-    case TypeUInt8:
-      convertLoop<T,uint8_t>(Type::_ctxt->_uint8->ro(a),op,len);
-      break;
-    case TypeInt16:
-      convertLoop<T,int16_t>(Type::_ctxt->t_int16->ro(a),op,len);
-      break;
-    case TypeUInt16:
-      convertLoop<T,uint16_t>(Type::_ctxt->_uint16->ro(a),op,len);
-      break;
-    case TypeInt32:
-      convertLoop<T,int32_t>(Type::_ctxt->t_int32->ro(a),op,len);
-      break;
-    case TypeUInt32:
-      convertLoop<T,uint32_t>(Type::_ctxt->_uint32->ro(a),op,len);
-      break;
-    case TypeInt64:
-      convertLoop<T,int64_t>(Type::_ctxt->t_int64->ro(a),op,len);
-      break;
-    case TypeUInt64:
-      convertLoop<T,uint64_t>(Type::_ctxt->_uint64->ro(a),op,len);
-      break;
-    case TypeZSingle:
-      convertLoop<T,Complex<float> >(Type::_ctxt->_zsingle->ro(a),op,len);
-      break;
-    case TypeZDouble:
-      convertLoop<T,Complex<double> >(Type::_ctxt->_zdouble->ro(a),op,len);
-      break;
-    case TypeZInt8:
-      convertLoop<T,Complex<int8_t> >(Type::_ctxt->t_zint8->ro(a),op,len);
-      break;
-    case TypeZUInt8:
-      convertLoop<T,Complex<uint8_t> >(Type::_ctxt->_zuint8->ro(a),op,len);
-      break;
-    case TypeZInt16:
-      convertLoop<T,Complex<int16_t> >(Type::_ctxt->t_zint16->ro(a),op,len);
-      break;
-    case TypeZUInt16:
-      convertLoop<T,Complex<uint16_t> >(Type::_ctxt->_zuint16->ro(a),op,len);
-      break;
-    case TypeZInt32:
-      convertLoop<T,Complex<int32_t> >(Type::_ctxt->t_zint32->ro(a),op,len);
-      break;
-    case TypeZUInt32:
-      convertLoop<T,Complex<uint32_t> >(Type::_ctxt->_zuint32->ro(a),op,len);
-      break;
-    case TypeZInt64:
-      convertLoop<T,Complex<int64_t> >(Type::_ctxt->t_zint64->ro(a),op,len);
-      break;
-    case TypeZUInt64:
-      convertLoop<T,Complex<uint64_t> >(Type::_ctxt->_zuint64->ro(a),op,len);
-      break;
-    default:
-      throw Exception("Type conversion from " + a.type()->name() + " to " + this->name() + " is unsupported.");
-    }
-  return ret;
-}
 
 /*
   template <typename T,Complex< FM::DataCode codeNum> >
@@ -198,7 +133,7 @@ bool NumericType<T>::isNonNegative(const Object &a) {
   if (a.isComplex()) return false;
   const T* dp = this->ro(a);
   for (ndx_t i=0;i<a.count();i++)
-    if (dp[i] < 0) return false;
+    if (dp[i] < T(0)) return false;
   return true;
 }
 
@@ -274,23 +209,23 @@ void NumericType<T>::printElement(const Object &a, const ArrayFormatInfo &format
 
 template class FM::NumericType<float>;
 template class FM::NumericType<double>;
-template class FM::NumericType<int8_t>;
-template class FM::NumericType<uint8_t>;
-template class FM::NumericType<int16_t>;
-template class FM::NumericType<uint16_t>;
-template class FM::NumericType<int32_t>;
-template class FM::NumericType<uint32_t>;
-template class FM::NumericType<int64_t>;
-template class FM::NumericType<uint64_t>;
+template class FM::NumericType<sint8_t>;
+template class FM::NumericType<usint8_t>;
+template class FM::NumericType<sint16_t>;
+template class FM::NumericType<usint16_t>;
+template class FM::NumericType<sint32_t>;
+template class FM::NumericType<usint32_t>;
+template class FM::NumericType<sint64_t>;
+template class FM::NumericType<usint64_t>;
 template class FM::NumericType<Complex<float> >;
 template class FM::NumericType<Complex<double> >;
-template class FM::NumericType<Complex<int8_t> >;
-template class FM::NumericType<Complex<uint8_t> >;
-template class FM::NumericType<Complex<int16_t> >;
-template class FM::NumericType<Complex<uint16_t> >;
-template class FM::NumericType<Complex<int32_t> >;
-template class FM::NumericType<Complex<uint32_t> >;
-template class FM::NumericType<Complex<int64_t> >;
-template class FM::NumericType<Complex<uint64_t> >;
-//template class FM::NumericType<ndx_t>;
+template class FM::NumericType<Complex<sint8_t> >;
+template class FM::NumericType<Complex<usint8_t> >;
+template class FM::NumericType<Complex<sint16_t> >;
+template class FM::NumericType<Complex<usint16_t> >;
+template class FM::NumericType<Complex<sint32_t> >;
+template class FM::NumericType<Complex<usint32_t> >;
+template class FM::NumericType<Complex<sint64_t> >;
+template class FM::NumericType<Complex<usint64_t> >;
+template class FM::NumericType<ndx_t>;
 template class FM::NumericType<FMChar>;

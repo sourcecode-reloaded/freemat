@@ -160,7 +160,7 @@ namespace FM
   void convertLoop(const S* ip, T* op, ndx_t len)
   {
     for (ndx_t i=0;i<len;i++)
-      OpRangeConvert<T,S>::rangeConvert(op[i],ip[i]);
+      op[i] = static_cast<T>(ip[i]);
   }
 }
 
