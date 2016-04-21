@@ -183,12 +183,14 @@ namespace FM
     virtual ~ComplexUInt64Type() {}
   };
 
-  class IndexType : public IntegerType<ndx_t>
+  
+  class IndexType : public OrderedType<ndx_t>
   {
   public:
-    IndexType(ThreadContext *ctxt) : IntegerType<ndx_t>(ctxt,"index") {}
+    IndexType(ThreadContext *ctxt) : OrderedType<ndx_t>(ctxt,"index") {}
     virtual ~IndexType() {}
     virtual DataCode code() const {return TypeIndex;}
+    virtual Type* typeInstance() {return this;}
     bool isColon(const Object &a) {
       return (a.isScalar() && this->scalarValue(a) == -1);
     }

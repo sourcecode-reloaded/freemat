@@ -6,14 +6,27 @@
 
 namespace FM
 {
+  template <class elem>
+  struct Complex;
+  
+  template <typename T>
+  struct is_complex{
+    static constexpr const bool value = false;
+  };
+
+  template <typename T>
+  struct is_complex<Complex<T> >{
+    static constexpr const bool value = true;
+  };
 
   template <class elem>
   struct Complex
   {
+    static_assert(!is_complex<elem>::value,"Cannot build complex of complex type");
     elem r;
     elem i;
     Complex() : r(0), i(0) {}
-    Complex(elem real) : r(real), i(elem(0)) {}
+    explicit Complex(elem real) : r(real), i(elem(0)) {}
     Complex(elem real, elem imag) : r(real), i(imag) {}
     template <class elem2>
     Complex(Complex<elem2> other)
@@ -22,7 +35,7 @@ namespace FM
       i = elem(other.i);
     }
     template <class elem2>
-    Complex(const elem2 &other)
+    explicit Complex(const elem2 &other)
     {
       r = elem(other);
       i = elem(0);
@@ -346,72 +359,7 @@ namespace FM
     cr = x * cos(y);
     ci = x * sin(y);
   }
-
-  template <class elem, class other>
-  static Complex<elem> operator+(const Complex<elem> &a, const Complex<other> &b)
-  {
-    throw Exception("Unimplemented combination of complex types");
-  }
   
-  template <class elem, class other>
-  static Complex<elem> operator+(const Complex<elem> &a, const other &b)
-  {
-    throw Exception("Unimplemented combination of complex types");
-  }
-  
-  template <class elem>
-  static Complex<elem> operator+(const Complex<elem> &a, const Complex<elem> &b)
-  {
-    Complex<elem> c;
-    c.r = a.r + b.r;
-    c.i = a.i + b.i;
-    return c;
-  }
-
-  // template <class elem>
-  // static Complex<elem> operator+(const elem &a, const Complex<elem> &b)
-  // {
-  //   Complex<elem> c;
-  //   c.r = a + b.r;
-  //   c.i = b.i;
-  //   return c;
-  // }
-
-  template <class elem>
-  static Complex<elem> operator+(const Complex<elem> &a, const elem &b)
-  {
-    Complex<elem> c;
-    c.r = a.r + b;
-    c.i = a.i;
-    return c;
-  }
-
-  template <class elem>
-  static Complex<elem> operator-(const Complex<elem> &a, const Complex<elem> &b)
-  {
-    Complex<elem> c;
-    c.r = a.r - b.r;
-    c.i = a.i - b.i;
-    return c;
-  }
-
-  template <class elem>
-  static Complex<elem> operator-(const elem &a, const Complex<elem> &b)
-  {
-    Complex<elem> c;
-    c.r = a - b.r;
-    c.i = b.i;
-    return c;
-  }
-
-  template <class elem>
-  static Complex<elem> operator-(const Complex<elem> &a, const elem &b)
-  {
-    Complex<elem> c;
-    c.r = a.r - b;
-    c.i = a.i;
-    return c;
-  }
 
   template <class elem>
   static bool operator<(const Complex<elem> &a , const Complex<elem> &b)
@@ -469,6 +417,24 @@ namespace FM
     return c;
   }
   
+  template <class elem>
+  static Complex<elem> operator+(const Complex<elem> &a, const Complex<elem> &b)
+  {
+    Complex<elem> c;
+    c.r = a.r + b.r;
+    c.i = a.i + b.i;
+    return c;
+  }
+
+  template <class elem>
+  static Complex<elem> operator-(const Complex<elem> &a, const Complex<elem> &b)
+  {
+    Complex<elem> c;
+    c.r = a.r - b.r;
+    c.i = a.i - b.i;
+    return c;
+  }
+
   template <class elem>
   static Complex<elem> operator*(const Complex<elem> &a , const Complex<elem> &b)
   {

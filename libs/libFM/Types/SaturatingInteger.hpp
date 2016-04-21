@@ -1,6 +1,8 @@
 #ifndef __SaturatingInteger_hpp__
 #define __SaturatingInteger_hpp__
 
+#include "Complex.hpp"
+
 namespace FM
 {
   
@@ -24,38 +26,6 @@ namespace FM
     explicit operator float() const { return float(val);}
     explicit operator ndx_t() const { return ndx_t(val);}
     explicit operator FMChar() const { return FMChar(val);}
-    // Some repetition here...
-    template <class S>
-    SaturatingInt operator+(const S&) const {
-      throw Exception("Unsupported type combination of types");
-    }
-    SaturatingInt operator+(const SaturatingInt &a) const {
-      return fromDouble(static_cast<double>(val) + static_cast<double>(a.val));
-    }
-    SaturatingInt operator+(const double &a) const {
-      return fromDouble(static_cast<double>(val) + a);
-    }
-    SaturatingInt operator-() const {
-      return fromDouble(-static_cast<double>(val));
-    }
-    SaturatingInt operator-(const SaturatingInt &a) const {
-      return fromDouble(static_cast<double>(val) - static_cast<double>(a.val));
-    }
-    SaturatingInt operator-(const double &a) const {
-      return fromDouble(static_cast<double>(val) - a);
-    }
-    SaturatingInt operator*(const SaturatingInt &a) const {
-      return fromDouble(static_cast<double>(val) * static_cast<double>(a.val));
-    }
-    SaturatingInt operator*(const double &a) const {
-      return fromDouble(static_cast<double>(val) * a);
-    }
-    SaturatingInt operator/(const SaturatingInt &a) const {
-      return fromDouble(static_cast<double>(val) / static_cast<double>(a.val));
-    }
-    SaturatingInt operator/(const double &a) const {
-      return fromDouble(static_cast<double>(val) / a);
-    }
     bool operator==(const SaturatingInt<T> &a) const {
       return val == a.val;
     }
@@ -71,6 +41,9 @@ namespace FM
     bool operator<(const SaturatingInt<T> &a) const {
       return val < a.val;
     }
+    SaturatingInt operator-() const {
+      return fromDouble(-double(*this));
+    }
   };
 
   template <class T>
@@ -79,11 +52,6 @@ namespace FM
     return o;
   }
 
-  template <class T>
-  inline ndx_t operator+(const ndx_t &a, const SaturatingInt<T> &b) {
-    return a + static_cast<ndx_t>(b.val);
-  }
-  
   using sint8_t = SaturatingInt<std::int8_t>;
   using sint16_t = SaturatingInt<std::int16_t>;
   using sint32_t = SaturatingInt<std::int32_t>;

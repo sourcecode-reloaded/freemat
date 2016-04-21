@@ -48,7 +48,7 @@ extern "C" {
 	       double *B, int *LDB, int *JPVT, double* RCOND,
 	       int *RANK, double *WORK, int* LWORK, int* INFO);
 
-  void zgelsy_(int* M, int *N, int *NRHS, FM::Complex<double*> A, int *LDA,
+  void zgelsy_(int* M, int *N, int *NRHS, FM::Complex<double>* A, int *LDA,
 	       FM::Complex<double> *B, int *LDB, int *JPVT, double* RCOND,
 	       int *RANK, FM::Complex<double> *WORK, int* LWORK, double* RWORK,
 	       int* INFO);
@@ -57,7 +57,7 @@ extern "C" {
 	       float *B, int *LDB, int *JPVT, float* RCOND,
 	       int *RANK, float *WORK, int* LWORK, int* INFO);
 
-  void cgelsy_(int* M, int *N, int *NRHS, FM::Complex<float*> A, int *LDA,
+  void cgelsy_(int* M, int *N, int *NRHS, FM::Complex<float>* A, int *LDA,
 	       FM::Complex<float> *B, int *LDB, int *JPVT, float* RCOND,
 	       int *RANK, FM::Complex<float> *WORK, int* LWORK, float* RWORK,
 	       int* INFO);

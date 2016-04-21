@@ -135,7 +135,7 @@ void Tgelsy(int* M, int *N, int *NRHS, float* A, int *LDA,
 		 RANK,WORK,LWORK,INFO);  
 }
 
-void Tgelsy(int* M, int *N, int *NRHS, FM::Complex<float*> A, int *LDA,
+void Tgelsy(int* M, int *N, int *NRHS, FM::Complex<float>* A, int *LDA,
 	    FM::Complex<float> *B, int *LDB, int *JPVT, float* RCOND,
 	    int *RANK, FM::Complex<float> *WORK, int* LWORK, float* RWORK,
 	    int* INFO) {
@@ -143,7 +143,7 @@ void Tgelsy(int* M, int *N, int *NRHS, FM::Complex<float*> A, int *LDA,
 		 RANK,WORK,LWORK,RWORK,INFO);
 }
 
-void Tgelsy(int* M, int *N, int *NRHS, FM::Complex<double*> A, int *LDA,
+void Tgelsy(int* M, int *N, int *NRHS, FM::Complex<double>* A, int *LDA,
 	    FM::Complex<double> *B, int *LDB, int *JPVT, double* RCOND,
 	    int *RANK, FM::Complex<double> *WORK, int* LWORK, double* RWORK,
 	    int* INFO) {

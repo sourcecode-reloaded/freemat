@@ -17,7 +17,7 @@ namespace FM
     FloatType(ThreadContext* ctxt, const FMString &name) : NumericType<T>(ctxt,name) {}
     virtual ~FloatType() {}
     virtual Type* typeInstance() {return this;}
-    virtual Object Neg(const Object &a) {return FM::dispatch_unaryop<T,OpNeg>(a,this);};
+    //virtual Object Neg(const Object &a) {return FM::dispatch_unaryop<T,OpNeg>(a,this);};
     virtual Object Hermitian(const Object &a) {return MatrixHermitian<T>(a);}
     virtual Object Multiply(const Object &a, const Object &b) {
       if (a.isScalar() || b.isScalar()) return this->DotMultiply(a,b);
