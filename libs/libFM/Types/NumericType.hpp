@@ -13,20 +13,6 @@ namespace FM
   struct ThreadContext;
 
   // TODO - fix scalar/scalar case
-
-  template <DataCode x>
-  struct map_datacode_to_type
-  {
-    typedef double the_type;
-  };
-
-  template <>
-  struct map_datacode_to_type<TypeBool>
-  {
-    typedef bool the_type;
-  };
-
-  
  
   // Map type code to type
   template <class T>
@@ -170,7 +156,6 @@ namespace FM
     static PODType<ndx_t>* Type(ThreadContext *tc) {return reinterpret_cast<PODType<ndx_t>*>(tc->_index);}
   };
 
-
   template <class T>
   struct type_printer
   {
@@ -179,8 +164,6 @@ namespace FM
     }
   };
 
-  // TODO - Add a computable class?
-  
   // Generic binary op dispatch with resolved types
   template <bool enabled, class atype, class btype, class vtype, class ctype, class Func>
   struct disp_binop_helper_resolved {
@@ -254,40 +237,6 @@ namespace FM
   };
 
     
-    
-  
-  // Generic binary op dispatch - assumes that A's type is the result
-  template <class atype, class btype, class Func>
-  struct disp_binop_helper {
-    static inline Object dispatch(const Object &a, const Object &b, Func op)
-    {
-      using crt = compute_result_type<atype,btype>;
-      typedef typename crt::result_type ctypedef;
-      typedef typename crt::via_type vtypedef;
-      return disp_binop_helper_resolved<crt::is_valid,atype,btype,vtypedef,ctypedef,Func>::dispatch(a,b,op);
-    }
-  };
-
-  template <class atype, class btype, class Func>
-  struct disp_cmpop_helper {
-    static inline Object dispatch(const Object &a, const Object &b, Func op)
-    {
-      using crt = compare_result_type<atype,btype>;
-      typedef typename crt::via_type vtypedef;
-      return disp_binop_helper_resolved<crt::is_valid,atype,btype,vtypedef,bool,Func>::dispatch(a,b,op);
-    }
-  };
-  
-  template <class atype, class btype, class Func>
-  struct disp_ordop_helper {
-    static inline Object dispatch(const Object &a, const Object &b, Func op)
-    {
-      using crt = compute_result_type<atype,btype>;
-      typedef typename crt::via_type vtypedef;
-      return disp_binop_helper_resolved<crt::is_valid,atype,btype,vtypedef,bool,Func>::dispatch(a,b,op);
-    }
-  };
-
   template <class T, class Func, op_type OpType>
   struct btype_dispatch {
     static inline Object dispatch(const Object &a, const Object &b, Func op)
@@ -339,64 +288,6 @@ namespace FM
 	}
     }
   };
-  
-  /*
-  template <class atype, class btype, class Func>
-  struct disp_binop_helper<Complex<atype>, btype, Func> {
-    static inline Object dispatch(const Object &a, const Object &b, Func op)
-    {
-      unsigned aincr = (a.isScalar() ? 0 : 1);
-      unsigned bincr = (b.isScalar() ? 0 : 1);
-      auto typeobj_for_b = reinterpret_cast<PODType<btype>*>(b.type());
-      auto typeobj_for_a = reinterpret_cast<PODType<Complex<atype> >*>(a.type());
-      auto ap = typeobj_for_a->ro(a);
-      auto bp = typeobj_for_b->ro(b);
-      Object c = typeobj_for_a->zeroArrayOfSize(Tuple::computeDotOpSize(a.dims(),b.dims()));
-      auto cptr = typeobj_for_a->rw(c);
-      for (ndx_t i=0;i<c.count();i++)
-	cptr[i] = op(ap[i*aincr],Complex<btype>(bp[i*bincr],btype(0)));
-      return c;
-    }
-  };
-
-  template <class atype, class btype, class Func>
-  struct disp_binop_helper<atype, Complex<btype>, Func> {
-    static inline Object dispatch(const Object &a, const Object &b, Func op)
-    {
-      unsigned aincr = (a.isScalar() ? 0 : 1);
-      unsigned bincr = (b.isScalar() ? 0 : 1);
-      auto typeobj_for_b = reinterpret_cast<PODType<Complex<btype> >*>(b.type());
-      auto typeobj_for_a = reinterpret_cast<PODType<atype>*>(a.type());
-      auto ctype = ThreadContext::GetComplexTypeForCode(a.type()->context(),a.type()->code());
-      auto typeobj_for_c = reinterpret_cast<PODType<Complex<atype> >*>(ctype);
-      auto ap = typeobj_for_a->ro(a);
-      auto bp = typeobj_for_b->ro(b);
-      Object c = typeobj_for_c->zeroArrayOfSize(Tuple::computeDotOpSize(a.dims(),b.dims()));
-      auto cptr = typeobj_for_c->rw(c);
-      for (ndx_t i=0;i<c.count();i++)
-	cptr[i] = op(Complex<atype>(ap[i*aincr],atype(0)),bp[i*bincr]);
-      return c;
-    }
-  };
-
-  template <class atype, class btype, class Func>
-  struct disp_binop_helper<Complex<atype>, Complex<btype>, Func> {
-    static inline Object dispatch(const Object &a, const Object &b, Func op)
-    {
-      unsigned aincr = (a.isScalar() ? 0 : 1);
-      unsigned bincr = (b.isScalar() ? 0 : 1);
-      auto typeobj_for_b = reinterpret_cast<PODType<Complex<btype> >*>(b.type());
-      auto typeobj_for_a = reinterpret_cast<PODType<Complex<atype> >*>(a.type());
-      auto ap = typeobj_for_a->ro(a);
-      auto bp = typeobj_for_b->ro(b);
-      Object c = typeobj_for_a->zeroArrayOfSize(Tuple::computeDotOpSize(a.dims(),b.dims()));
-      auto cptr = typeobj_for_a->rw(c);
-      for (ndx_t i=0;i<c.count();i++)
-	cptr[i] = op(ap[i*aincr],bp[i*bincr]);
-      return c;
-    };
-  };
-  */
 
   template <class T>
   class OrderedType : public PODType<T> {
@@ -443,20 +334,6 @@ namespace FM
     }
     virtual Object Plus(const Object &a) {
       return a;
-    }
-    template <class btype, class Func>
-    inline Object disp_binop(const Object &a, const Object &b, Func op)
-    {
-      unsigned aincr = (a.isScalar() ? 0 : 1);
-      unsigned bincr = (b.isScalar() ? 0 : 1);
-      auto typeobj_for_b = reinterpret_cast<NumericType<btype>*>(b.type());
-      const T* ap = this->ro(a);
-      const btype* bp = typeobj_for_b->ro(b);
-      Object c = this->zeroArrayOfSize(Tuple::computeDotOpSize(a.dims(),b.dims()));
-      T* cptr = this->rw(c);
-      for (ndx_t i=0;i<c.count();i++)
-	cptr[i] = op(ap[i*aincr],bp[i*bincr]);
-      return c;
     }
     template <class Func>
     inline Object do_ordop(const Object &a, const Object &b, Func op)
