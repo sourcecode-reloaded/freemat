@@ -14,7 +14,20 @@ namespace FM
 
   // TODO - fix scalar/scalar case
 
+  template <DataCode x>
+  struct map_datacode_to_type
+  {
+    typedef double the_type;
+  };
+
+  template <>
+  struct map_datacode_to_type<TypeBool>
+  {
+    typedef bool the_type;
+  };
+
   
+ 
   // Map type code to type
   template <class T>
   struct datacode_type;
@@ -200,6 +213,48 @@ namespace FM
     }
   };
 
+  enum op_type {
+    ArithmeticOp = 0,
+    CompareOp = 1,
+    OrderOp = 2
+  };
+  
+  template <class atype, class btype, class Func, op_type OpType>
+  struct disp_helper;
+
+  template <class atype, class btype, class Func>
+  struct disp_helper<atype,btype,Func,ArithmeticOp> {
+    static inline Object dispatch(const Object &a, const Object &b, Func op)
+    {
+      using crt = compute_result_type<atype,btype>;
+      typedef typename crt::result_type ctypedef;
+      typedef typename crt::via_type vtypedef;
+      return disp_binop_helper_resolved<crt::is_valid,atype,btype,vtypedef,ctypedef,Func>::dispatch(a,b,op);
+    }    
+  };
+
+  template <class atype, class btype, class Func>
+  struct disp_helper<atype,btype,Func,CompareOp> {
+    static inline Object dispatch(const Object &a, const Object &b, Func op)
+    {
+      using crt = compare_result_type<atype,btype>;
+      typedef typename crt::via_type vtypedef;
+      return disp_binop_helper_resolved<crt::is_valid,atype,btype,vtypedef,bool,Func>::dispatch(a,b,op);
+    }
+  };
+
+  template <class atype, class btype, class Func>
+  struct disp_helper<atype,btype,Func,OrderOp> {
+    static inline Object dispatch(const Object &a, const Object &b, Func op)
+    {
+      using crt = compute_result_type<atype,btype>;
+      typedef typename crt::via_type vtypedef;
+      return disp_binop_helper_resolved<crt::is_valid,atype,btype,vtypedef,bool,Func>::dispatch(a,b,op);
+    }    
+  };
+
+    
+    
   
   // Generic binary op dispatch - assumes that A's type is the result
   template <class atype, class btype, class Func>
@@ -213,6 +268,78 @@ namespace FM
     }
   };
 
+  template <class atype, class btype, class Func>
+  struct disp_cmpop_helper {
+    static inline Object dispatch(const Object &a, const Object &b, Func op)
+    {
+      using crt = compare_result_type<atype,btype>;
+      typedef typename crt::via_type vtypedef;
+      return disp_binop_helper_resolved<crt::is_valid,atype,btype,vtypedef,bool,Func>::dispatch(a,b,op);
+    }
+  };
+  
+  template <class atype, class btype, class Func>
+  struct disp_ordop_helper {
+    static inline Object dispatch(const Object &a, const Object &b, Func op)
+    {
+      using crt = compute_result_type<atype,btype>;
+      typedef typename crt::via_type vtypedef;
+      return disp_binop_helper_resolved<crt::is_valid,atype,btype,vtypedef,bool,Func>::dispatch(a,b,op);
+    }
+  };
+
+  template <class T, class Func, op_type OpType>
+  struct btype_dispatch {
+    static inline Object dispatch(const Object &a, const Object &b, Func op)
+    {
+      switch (b.type()->code())
+	{
+	case TypeDouble:
+	  return disp_helper<T,double,Func,OpType>::dispatch(a,b,op);
+	case TypeSingle:
+	  return disp_helper<T,float,Func,OpType>::dispatch(a,b,op);
+	case TypeInt64:
+	  return disp_helper<T,sint64_t,Func,OpType>::dispatch(a,b,op);
+	case TypeUInt64:
+	  return disp_helper<T,usint64_t,Func,OpType>::dispatch(a,b,op);
+	case TypeInt32:
+	  return disp_helper<T,sint32_t,Func,OpType>::dispatch(a,b,op);
+	case TypeUInt32:
+	  return disp_helper<T,usint32_t,Func,OpType>::dispatch(a,b,op);
+	case TypeInt16:
+	  return disp_helper<T,sint16_t,Func,OpType>::dispatch(a,b,op);
+	case TypeUInt16:
+	  return disp_helper<T,usint16_t,Func,OpType>::dispatch(a,b,op);
+	case TypeInt8:
+	  return disp_helper<T,sint8_t,Func,OpType>::dispatch(a,b,op);
+	case TypeUInt8:
+	  return disp_helper<T,usint8_t,Func,OpType>::dispatch(a,b,op);
+	case TypeZDouble:
+	  return disp_helper<T,Complex<double>,Func,OpType>::dispatch(a,b,op);
+	case TypeZSingle:
+	  return disp_helper<T,Complex<float>,Func,OpType>::dispatch(a,b,op);
+	case TypeZInt64:
+	  return disp_helper<T,Complex<sint64_t>,Func,OpType>::dispatch(a,b,op);
+	case TypeZUInt64:
+	  return disp_helper<T,Complex<usint64_t>,Func,OpType>::dispatch(a,b,op); 
+	case TypeZInt32:
+	  return disp_helper<T,Complex<sint32_t>,Func,OpType>::dispatch(a,b,op);
+	case TypeZUInt32:
+	  return disp_helper<T,Complex<usint32_t>,Func,OpType>::dispatch(a,b,op);
+	case TypeZInt16:
+	  return disp_helper<T,Complex<sint16_t>,Func,OpType>::dispatch(a,b,op);
+	case TypeZUInt16:
+	  return disp_helper<T,Complex<usint16_t>,Func,OpType>::dispatch(a,b,op);
+	case TypeZInt8:
+	  return disp_helper<T,Complex<sint8_t>,Func,OpType>::dispatch(a,b,op);
+	case TypeZUInt8:
+	  return disp_helper<T,Complex<usint8_t>,Func,OpType>::dispatch(a,b,op);
+	default:
+	  throw Exception("Unhanded type arguments to binary operator");
+	}
+    }
+  };
+  
   /*
   template <class atype, class btype, class Func>
   struct disp_binop_helper<Complex<atype>, btype, Func> {
@@ -332,6 +459,28 @@ namespace FM
       return c;
     }
     template <class Func>
+    inline Object do_ordop(const Object &a, const Object &b, Func op)
+    {
+      auto logical = reinterpret_cast<PODType<bool>*>(this->context()->_bool);
+      if (a.isScalar() && b.isScalar() && b.type()->code() == this->code()) {
+	const T* ap = this->ro(a);
+	const T* bp = this->ro(b);
+	return logical->makeScalar(op(*ap,*bp));
+      }
+      return btype_dispatch<T,Func,OrderOp>::dispatch(a,b,op);
+    }
+    template <class Func>
+    inline Object do_cmpop(const Object &a, const Object &b, Func op)
+    {
+      auto logical = reinterpret_cast<PODType<bool>*>(this->context()->_bool);
+      if (a.isScalar() && b.isScalar() && b.type()->code() == this->code()) {
+	const T* ap = this->ro(a);
+	const T* bp = this->ro(b);
+	return logical->makeScalar(op(*ap,*bp));
+      }
+      return btype_dispatch<T,Func,CompareOp>::dispatch(a,b,op);
+    }
+    template <class Func>
     inline Object do_binop(const Object &a, const Object &b, Func op)
     {
       if (a.isScalar() && b.isScalar() && b.type()->code() == this->code()) {
@@ -343,51 +492,7 @@ namespace FM
 	  throw Exception("Unsupported operation for operands of type " + a.type()->name());
 	return this->makeScalar(T(op(vtypedef(*ap),vtypedef(*bp))));
       }
-      switch (b.type()->code())
-	{
-	case TypeDouble:
-	  return disp_binop_helper<T,double,Func>::dispatch(a,b,op);
-	case TypeSingle:
-	  return disp_binop_helper<T,float,Func>::dispatch(a,b,op);
-	case TypeInt64:
-	  return disp_binop_helper<T,sint64_t,Func>::dispatch(a,b,op);
-	case TypeUInt64:
-	  return disp_binop_helper<T,usint64_t,Func>::dispatch(a,b,op);
-	case TypeInt32:
-	  return disp_binop_helper<T,sint32_t,Func>::dispatch(a,b,op);
-	case TypeUInt32:
-	  return disp_binop_helper<T,usint32_t,Func>::dispatch(a,b,op);
-	case TypeInt16:
-	  return disp_binop_helper<T,sint16_t,Func>::dispatch(a,b,op);
-	case TypeUInt16:
-	  return disp_binop_helper<T,usint16_t,Func>::dispatch(a,b,op);
-	case TypeInt8:
-	  return disp_binop_helper<T,sint8_t,Func>::dispatch(a,b,op);
-	case TypeUInt8:
-	  return disp_binop_helper<T,usint8_t,Func>::dispatch(a,b,op);
-	case TypeZDouble:
-	  return disp_binop_helper<T,Complex<double>,Func>::dispatch(a,b,op);
-	case TypeZSingle:
-	  return disp_binop_helper<T,Complex<float>,Func>::dispatch(a,b,op);
-	case TypeZInt64:
-	  return disp_binop_helper<T,Complex<sint64_t>,Func>::dispatch(a,b,op);
-	case TypeZUInt64:
-	  return disp_binop_helper<T,Complex<usint64_t>,Func>::dispatch(a,b,op); 
-	case TypeZInt32:
-	  return disp_binop_helper<T,Complex<sint32_t>,Func>::dispatch(a,b,op);
-	case TypeZUInt32:
-	  return disp_binop_helper<T,Complex<usint32_t>,Func>::dispatch(a,b,op);
-	case TypeZInt16:
-	  return disp_binop_helper<T,Complex<sint16_t>,Func>::dispatch(a,b,op);
-	case TypeZUInt16:
-	  return disp_binop_helper<T,Complex<usint16_t>,Func>::dispatch(a,b,op);
-	case TypeZInt8:
-	  return disp_binop_helper<T,Complex<sint8_t>,Func>::dispatch(a,b,op);
-	case TypeZUInt8:
-	  return disp_binop_helper<T,Complex<usint8_t>,Func>::dispatch(a,b,op);
-	default:
-	  throw Exception("Unhanded type arguments to binary operator");
-	}
+      return btype_dispatch<T,Func,ArithmeticOp>::dispatch(a,b,op);
     }
     template <class S>
     void convertLoop(const Object &a, T* op, ndx_t len)
@@ -480,6 +585,12 @@ namespace FM
     virtual Object DotLeftDivide(const Object &a, const Object &b) {return do_binop(a,b,[](auto x, auto y) {return y / x;});}
     virtual Object getBraces(const Object &, const Object &) {throw Exception("{} indexing unsupported for numeric arrays");}
     virtual Object getField(const Object &, const Object &) {throw Exception(". indexing unsupported for numeric arrays");}
+    virtual Object LessEquals(const Object &a, const Object &b) {return do_ordop(a,b,[](auto x, auto y) {return x <= y;});}
+    virtual Object LessThan(const Object &a, const Object &b) {return do_ordop(a,b,[](auto x, auto y) {return x < y;});}
+    virtual Object GreaterThan(const Object &a, const Object &b) {return do_ordop(a,b,[](auto x, auto y) {return x > y;});}
+    virtual Object GreaterEquals(const Object &a, const Object &b) {return do_ordop(a,b,[](auto x, auto y) {return x >= y;});}
+    virtual Object NotEquals(const Object &a, const Object &b) {return do_cmpop(a,b,[](auto x, auto y) {return x != y;});}
+    virtual Object Equals(const Object &a, const Object &b) {return do_cmpop(a,b,[](auto x, auto y) {return x == y;});}
     bool anyNonzeroImaginary(const Object &a);
     bool isNonNegative(const Object &a);
     bool isIntegerValued(const Object &b);

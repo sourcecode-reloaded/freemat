@@ -7,7 +7,22 @@
 
 namespace FM
 {
-  
+
+  template <class atype, class btype>
+  struct compare_result_type
+  {
+    typedef double via_type;
+    enum { is_valid = false };
+  };
+
+  // All types can be compared with themselves
+  template <class T>
+  struct compare_result_type<T,T>
+  {
+    typedef T via_type;
+    enum { is_valid = true };
+  };
+
   // We start with a default case in which the type computation is not allowed.
   template <class atype, class btype>
   struct compute_result_type
@@ -16,33 +31,6 @@ namespace FM
     typedef double via_type;
     enum { is_valid = false };
   };
-
-  // In most cases, the intermediate type is double, result is same as either of the
-  // two cases.
-  // template <class T>
-  // struct compute_result_type<T,T>
-  // {
-  //   typedef T result_type;
-  //   typedef double via_type;
-  //   enum { is_valid = true };
-  // };
-
-  // template <class T, class S>
-  // struct compute_result_type<Complex<SaturatingInt<T> >, Complex<SaturatingInt<S> > >
-  // {
-  //   typedef Complex<SaturatingInt<T> > result_type;
-  //   typedef Complex<SaturatingInt<T> > via_type;
-  //   enum { is_valid = false };
-  // };
-
-  // template <class T>
-  // struct compute_result_type<Complex<SaturatingInt<T> >, Complex<SaturatingInt<T> > >
-  // {
-  //   typedef Complex<SaturatingInt<T> > result_type;
-  //   typedef Complex<SaturatingInt<T> > via_type;
-  //   enum { is_valid = true};
-  // };
-  
 
   // Be explicit with double precision
   template <>
@@ -154,24 +142,6 @@ namespace FM
     enum { is_valid = true};
   };
 
-  // Disable computation with complex integers
-  // template <class T, class S>
-  // struct compute_result_type<Complex<SaturatingInt<T> >, S>
-  // {
-  //   typedef S result_type;
-  //   typedef S via_type;
-  //   enum { is_valid = false };
-  // };
-
-  // template <class S, class T>
-  // struct compute_result_type<S, Complex<SaturatingInt<T> > >
-  // {
-  //   typedef S result_type;
-  //   typedef S via_type;
-  //   enum { is_valid = false };
-  // };
-
-  
   
 };
 

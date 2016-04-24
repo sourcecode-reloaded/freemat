@@ -41,6 +41,9 @@ namespace FM
     bool operator<(const SaturatingInt<T> &a) const {
       return val < a.val;
     }
+    bool operator<=(const SaturatingInt<T> &a) const {
+      return val <= a.val;
+    }
     SaturatingInt operator-() const {
       return fromDouble(-double(*this));
     }
