@@ -146,7 +146,7 @@ namespace FM
 	}
     }
   public:
-    ComplexSingleType(ThreadContext* ctxt) : FloatType<cfloat>(ctxt,"zsingle") {}
+    ComplexSingleType(ThreadContext* ctxt) : FloatType<cfloat>(ctxt,"single") {}
     virtual DataCode code() const {return TypeZSingle;}
     virtual ~ComplexSingleType() {}
     virtual Type* typeInstance() {return this;}

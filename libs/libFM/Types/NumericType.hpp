@@ -323,6 +323,7 @@ namespace FM
   public:
     NumericType(ThreadContext *ctxt, const FMString &name) : OrderedType<T>(ctxt,name) {}
     virtual ~NumericType() {}
+    virtual bool isNumericType() const {return true;}
     virtual Object asLogical(const Object &a);
     virtual Object asIndex(const Object &a, ndx_t max);
     virtual Object asIndexNoBoundsCheck(const Object &a);

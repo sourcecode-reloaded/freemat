@@ -14,32 +14,10 @@ namespace FM
 
   template <class T>
   class IntegerType : public NumericType<T> {
-    // template <class Op>
-    // inline Object binop(const Object &a, const Object &b)
-    // {
-    //   if (b.type()->code() == TypeDouble)
-    // 	return dispatch_binop<T,double,double,Op>(a,b,this);
-    //   else if (b.type()->code() == this->code())
-    // 	return dispatch_binop<T,T,double,Op>(a,b,this);
-    //   throw Exception("Unsupported type combination of " + a.type()->name() + " and " + b.type()->name());
-    // }
   public:
     IntegerType(ThreadContext* ctxt, const FMString& name) : NumericType<T>(ctxt,name) {}
     virtual ~IntegerType() {}
     virtual Type* typeInstance() {return this;}
-    //    virtual Object Add(const Object &a, const Object &b) {return binop<OpAdd>(a,b);}
-    // virtual Object Subtract(const Object &a, const Object &b) {return binop<OpSubtract>(a,b);}
-    // virtual Object DotMultiply(const Object &a, const Object &b) {return binop<OpDotMultiply>(a,b);}
-    // virtual Object DotRightDivide(const Object &a, const Object &b) {return binop<OpDotRightDivide>(a,b);}
-    // virtual Object DotLeftDivide(const Object &a, const Object &b) {return binop<OpDotLeftDivide>(a,b);}
-    // virtual Object LessEquals(const Object &a, const Object &b);
-    // virtual Object LessThan(const Object &a, const Object &b);
-    // virtual Object GreaterEquals(const Object &a, const Object &b);
-    // virtual Object GreaterThan(const Object &a, const Object &b);
-    // virtual Object Equals(const Object &a, const Object &b);
-    // virtual Object NotEquals(const Object &a, const Object &b);    
-    // virtual void computeArrayFormatInfo(FMFormatMode mode, const Object &a, ArrayFormatInfo &format);
-    // virtual void printElement(const Object &a, const ArrayFormatInfo &format, ndx_t offset);
   };
 
   template <class T>
@@ -48,10 +26,6 @@ namespace FM
     SignedIntegerType(ThreadContext* ctxt, const FMString &name) : IntegerType<T>(ctxt,name) {}
     virtual ~SignedIntegerType() {}
     virtual Type* typeInstance() {return this;}
-    // virtual Object Neg(const Object & a)
-    // {
-    //   return dispatch_unaryop<T,OpNeg>(a,this);
-    // }
     virtual Object Hermitian(const Object &a) {return MatrixHermitian<T>(a);}    
   };
 
@@ -66,7 +40,7 @@ namespace FM
   class ComplexInt8Type : public SignedIntegerType<Complex<sint8_t> >
   {
   public:
-    ComplexInt8Type(ThreadContext *ctxt) : SignedIntegerType<Complex<sint8_t> >(ctxt,"zint8") {}
+    ComplexInt8Type(ThreadContext *ctxt) : SignedIntegerType<Complex<sint8_t> >(ctxt,"int8") {}
     virtual DataCode code() const {return TypeZInt8;}
     virtual ~ComplexInt8Type() {}
   };
@@ -82,7 +56,7 @@ namespace FM
   class ComplexUInt8Type : public IntegerType<Complex<usint8_t> >
   {
   public:
-    ComplexUInt8Type(ThreadContext *ctxt) : IntegerType<Complex<usint8_t> >(ctxt,"zuint8") {}
+    ComplexUInt8Type(ThreadContext *ctxt) : IntegerType<Complex<usint8_t> >(ctxt,"uint8") {}
     virtual DataCode code() const {return TypeZUInt8;}
     virtual ~ComplexUInt8Type() {}
   };
@@ -98,7 +72,7 @@ namespace FM
   class ComplexInt16Type : public SignedIntegerType<Complex<sint16_t> >
   {
   public:
-    ComplexInt16Type(ThreadContext *ctxt) : SignedIntegerType<Complex<sint16_t> >(ctxt,"zint16") {}
+    ComplexInt16Type(ThreadContext *ctxt) : SignedIntegerType<Complex<sint16_t> >(ctxt,"int16") {}
     virtual DataCode code() const {return TypeZInt16;}
     virtual ~ComplexInt16Type() {}
   };
@@ -114,7 +88,7 @@ namespace FM
   class ComplexUInt16Type : public IntegerType<Complex<usint16_t> >
   {
   public:
-    ComplexUInt16Type(ThreadContext *ctxt) : IntegerType<Complex<usint16_t> >(ctxt,"zuint16") {}
+    ComplexUInt16Type(ThreadContext *ctxt) : IntegerType<Complex<usint16_t> >(ctxt,"uint16") {}
     virtual DataCode code() const {return TypeZUInt16;}
     virtual ~ComplexUInt16Type() {}
   };
@@ -130,7 +104,7 @@ namespace FM
   class ComplexInt32Type : public SignedIntegerType<Complex<sint32_t> >
   {
   public:
-    ComplexInt32Type(ThreadContext *ctxt) : SignedIntegerType<Complex<sint32_t> >(ctxt,"zint32") {}
+    ComplexInt32Type(ThreadContext *ctxt) : SignedIntegerType<Complex<sint32_t> >(ctxt,"int32") {}
     virtual DataCode code() const {return TypeZInt32;}
     virtual ~ComplexInt32Type() {}
   };
@@ -146,7 +120,7 @@ namespace FM
   class ComplexUInt32Type : public IntegerType<Complex<usint32_t> >
   {
   public:
-    ComplexUInt32Type(ThreadContext *ctxt) : IntegerType<Complex<usint32_t> >(ctxt,"zuint32") {}
+    ComplexUInt32Type(ThreadContext *ctxt) : IntegerType<Complex<usint32_t> >(ctxt,"uint32") {}
     virtual DataCode code() const {return TypeZUInt32;}
     virtual ~ComplexUInt32Type() {}
   };
@@ -162,7 +136,7 @@ namespace FM
   class ComplexInt64Type : public SignedIntegerType<Complex<sint64_t> >
   {
   public:
-    ComplexInt64Type(ThreadContext *ctxt) : SignedIntegerType<Complex<sint64_t> >(ctxt,"zint64") {}
+    ComplexInt64Type(ThreadContext *ctxt) : SignedIntegerType<Complex<sint64_t> >(ctxt,"int64") {}
     virtual DataCode code() const {return TypeZInt64;}
     virtual ~ComplexInt64Type() {}
   };
@@ -178,7 +152,7 @@ namespace FM
   class ComplexUInt64Type : public IntegerType<Complex<usint64_t> >
   {
   public:
-    ComplexUInt64Type(ThreadContext *ctxt) : IntegerType<Complex<usint64_t> >(ctxt,"zuint64") {}
+    ComplexUInt64Type(ThreadContext *ctxt) : IntegerType<Complex<usint64_t> >(ctxt,"uint64") {}
     virtual DataCode code() const {return TypeZUInt64;}
     virtual ~ComplexUInt64Type() {}
   };

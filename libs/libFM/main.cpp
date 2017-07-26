@@ -278,6 +278,20 @@ Object classfunc(const Object &args, ndx_t, ThreadContext *ctxt) {
     return ctxt->_list->makeScalar(ctxt->_class->className(x));
 }
 
+// Tests:
+// real('hello') == 'hello'
+// real(52) == 52
+// real(3+4i) == 3
+// real({4+3i}) == {4+3i}
+// class(real(3+4i)) == class(3+4i)
+// class(real(single(3+4i))) == class(single(3+4i))
+/*
+Object real(const Object &args, ndx_t, ThreadContext *ctxt) {
+  const Object &x = ctxt->_list->ro(args)[0];
+  if (!x.type()->isNumericType() || !x.type()->isComplexType()) return ctxt->_list->makeScalar(x);
+  
+}
+*/
 class ScopeTimer
 {
 public:

@@ -130,6 +130,7 @@ namespace FM {
     virtual Object deref(const Object &a);
     virtual Object call(const Object &a, const Object &args, ndx_t nargout);
     virtual bool isComplexType() const {return false;}
+    virtual bool isNumericType() const {return false;}
   };
 }
 

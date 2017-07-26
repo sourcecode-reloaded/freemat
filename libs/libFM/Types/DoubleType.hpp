@@ -169,7 +169,7 @@ namespace FM
 
   class ComplexDoubleType : public FloatType<cdouble> {
   public:
-    ComplexDoubleType(ThreadContext* ctxt) : FloatType<cdouble >(ctxt,"zdouble") {}
+    ComplexDoubleType(ThreadContext* ctxt) : FloatType<cdouble >(ctxt,"double") {}
     virtual ~ComplexDoubleType() {}
     virtual Type* typeInstance() {return this;}
     virtual DataCode code() const {return TypeZDouble;}
